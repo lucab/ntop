@@ -2152,10 +2152,15 @@ void trimString(char* str) {
   free(out);
 }
 
-/* *******************************/
+/* ****************************** */
 
 void setNBnodeNameType(HostTraffic *theHost,
 		       char nodeType, char* nbName) {
+  trimString(nbName);
+
+  if((nbName == NULL) || (strlen(nbName) == 0))
+    return;
+
   theHost->nbNodeType = (char)nodeType;
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
 
@@ -2254,3 +2259,111 @@ int isPassiveSession(u_long theHost, u_short thePort) {
 void initPassiveSessions() {
   memset(passiveSessions, 0, sizeof(passiveSessions));
 }
+
+/* ******************************* */
+
+int getPortByName(ServiceEntry **theSvc, char* portName) {
+  int idx;
+
+  for(idx=0; idx<numActServices; idx++) {
+
+#ifdef DEBUG
+    if(theSvc[idx] != NULL)
+      traceEvent(TRACE_INFO, "%d/%s [%s]\n",
+		 theSvc[idx]->port,
+		 theSvc[idx]->name, portName);
+#endif
+
+    if((theSvc[idx] != NULL)
+       && (strcmp(theSvc[idx]->name, portName) == 0))
+      return(theSvc[idx]->port);
+  }
+
+  return(-1);
+}
+
+/* ******************************* */
+
+char* getPortByNumber(ServiceEntry **theSvc, int port) {
+  int idx = port % numActServices;
+  ServiceEntry *scan;
+
+  for(;;) {
+    scan = theSvc[idx];
+
+    if((scan != NULL) && (scan->port == port))
+      return(scan->name);
+    else if(scan == NULL)
+      return(NULL);
+    else
+      idx = (idx+1) % numActServices;
+  }
+}
+
+/* ******************************* */
+
+char* getPortByNum(int port, int type) {
+  char* rsp;
+
+  if(type == IPPROTO_TCP) {
+    rsp = getPortByNumber(tcpSvc, port);
+  } else {
+    rsp = getPortByNumber(udpSvc, port);
+  }
+
+  return(rsp);
+}
+
+/* ******************************* */
+
+char* getAllPortByNum(int port) {
+  char* rsp;
+  static char staticBuffer[2][16];
+  static short portBufIdx=0;
+
+  rsp = getPortByNumber(tcpSvc, port); /* Try TCP first... */
+  if(rsp == NULL)
+    rsp = getPortByNumber(udpSvc, port);  /* ...then UDP */
+
+  if(rsp != NULL)
+    return(rsp);
+  else {
+    portBufIdx = (short)((portBufIdx+1)%2);
+    if(snprintf(staticBuffer[portBufIdx], 16, "%d", port) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    return(staticBuffer[portBufIdx]);
+  }
+}
+
+/* ******************************* */
+
+int getAllPortByName(char* portName) {
+  int rsp;
+
+  rsp = getPortByName(tcpSvc, portName); /* Try TCP first... */
+  if(rsp == -1)
+    rsp = getPortByName(udpSvc, portName);  /* ...then UDP */
+
+  return(rsp);
+}
+
+
+/* ******************************* */
+
+void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
+  int idx = port % numActServices;
+  ServiceEntry *scan;
+
+  for(;;) {
+    scan = theSvc[idx];
+
+    if(scan == NULL) {
+      theSvc[idx] = (ServiceEntry*)malloc(sizeof(ServiceEntry));
+      theSvc[idx]->port = (u_short)port;
+      theSvc[idx]->name = strdup(name);
+      break;
+    } else
+      idx = (idx+1) % numActServices;
+  }
+}
+

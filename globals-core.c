@@ -136,8 +136,8 @@ ntopInterface_t device[MAX_NUM_DEVICES];
 /* Monitored Protocols */
 char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS];
 u_short numIpProtosToMonitor, numIpPortsToHandle;
-int* ipPortMapper;
-ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
+int *ipPortMapper, numActServices;
+ServiceEntry **udpSvc, **tcpSvc;
 
 /* Packet Capture */
 #if defined(MULTITHREADED)

@@ -47,7 +47,7 @@
 
 void initIPServices(void) {
   FILE* fd;
-  int idx, i;
+  int idx, i, numSlots, len;
 
   traceEvent(TRACE_INFO, "Initializing IP services...");
 
@@ -60,12 +60,40 @@ void initIPServices(void) {
   initWinsock32();
 #endif
 
+  /* Let's count the entries first */
+  numSlots = 0;
+  for(idx=0; configFileDirs[idx] != NULL; idx++) {
+    char tmpStr[64];
+
+    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", configFileDirs[idx]) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    fd = fopen(tmpStr, "r");
+
+    if(fd != NULL) {
+      char tmpStr[512];
+
+      while(fgets(tmpStr, 512, fd))
+	if((tmpStr[0] != '#') && (strlen(tmpStr) > 10)) {
+	  /* discard  9/tcp sink null */
+	  numSlots++;
+	}
+      fclose(fd);
+    }
+  }
+    
+  numActServices = 2*numSlots; /* Double the hash */
+
+  /* ************************************* */
+
   memset(napsterSvr, 0, sizeof(napsterSvr));
 
   for(i=0; i<TOP_IP_PORT; i++) ipPortMapper[i] = -1;
 
-  memset(udpSvc, 0, sizeof(udpSvc));
-  memset(tcpSvc, 0, sizeof(tcpSvc));
+  len = sizeof(ServiceEntry*)*numActServices;
+  udpSvc = (ServiceEntry**)malloc(len);
+  memset(udpSvc, 0, len);
+  tcpSvc = (ServiceEntry**)malloc(len);
+  memset(tcpSvc, 0, len);
 
   for(idx=0; configFileDirs[idx] != NULL; idx++) {
     char tmpStr[64];

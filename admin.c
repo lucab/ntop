@@ -765,9 +765,10 @@ void addDefaultAdminUser(void) {
   addKeyIfMissing("1admin", "admin", 1);
 
   /* Add user 'admin' for URL 'show...' if not existing */
-  addKeyIfMissing("2showU",    "users=1admin", 0);
-  addKeyIfMissing("2modifyU",  "users=1admin", 0);
-  addKeyIfMissing("2deleteU",  "users=1admin", 0);
-  addKeyIfMissing("2shutdown", "users=1admin", 0);
+  addKeyIfMissing("2showU",      "users=1admin", 0);
+  addKeyIfMissing("2modifyU",    "users=1admin", 0);
+  addKeyIfMissing("2deleteU",    "users=1admin", 0);
+  addKeyIfMissing("2shutdown",   "users=1admin", 0);
+  addKeyIfMissing("2resetStats", "users=1admin", 0);
 }
 

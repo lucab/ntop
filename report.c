@@ -455,11 +455,11 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
 	  sendString("</TR>\n");
 	}
-      }
 
-      /* Avoid huge tables */
-      if(printedEntries++ > maxNumLines)
-	break;
+	/* Avoid huge tables */
+	if(printedEntries++ > maxNumLines)
+	break;	
+      }
     }
   } else
     idx = 0;
@@ -1200,11 +1200,11 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	  sendString(buf);
 	  sendString("</TR>\n");
 	}
-      }
 
-      /* Avoid huge tables */
-      if(printedEntries++ > maxNumLines)
-	break;
+	/* Avoid huge tables */
+	if(printedEntries++ > maxNumLines)
+	  break;	
+      }
     }
 
     sendString("</TABLE>"TABLE_OFF"<P>\n");
@@ -1699,11 +1699,11 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 		rcvdpct, separator) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-      }
 
-      /* Avoid huge tables */
-      if(printedEntries++ > maxNumLines)
-		break;
+	/* Avoid huge tables */
+	if(printedEntries++ > maxNumLines)
+	  break;	
+      }
     }
 
     sendString("</TABLE>"TABLE_OFF"\n");

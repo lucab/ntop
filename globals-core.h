@@ -136,8 +136,8 @@ extern ntopInterface_t device[MAX_NUM_DEVICES];
 /* Monitored Protocols */
 extern char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS]; /* array 0-numIpProtosToMonitor */
 extern u_short numIpProtosToMonitor, numIpPortsToHandle;
-extern int* ipPortMapper;
-extern ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
+extern int *ipPortMapper, numActServices;
+extern ServiceEntry **udpSvc, **tcpSvc;
 
 /* Packet Capture */
 #if defined(MULTITHREADED)
@@ -300,12 +300,6 @@ extern RETSIGTYPE cleanup(int signo);
 /* pbuf.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, char* file, int line);
-extern int getPortByName(ServiceEntry **theSvc, char* portName);
-extern char *getPortByNumber(ServiceEntry **theSvc, int port);
-extern char *getPortByNum(int port, int type);
-extern char *getAllPortByNum(int port);
-extern int getAllPortByName(char* portName);
-extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
 extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress);
 extern u_int findHostInfo(struct in_addr *hostIpAddress);
 extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr);
@@ -462,6 +456,12 @@ extern int strOnlyDigits(const char *s);
 extern void addPassiveSessionInfo(u_long theHost, u_short thePort);
 extern int isPassiveSession(u_long theHost, u_short thePort);
 extern void initPassiveSessions();
+extern int getPortByName(ServiceEntry **theSvc, char* portName);
+extern char *getPortByNumber(ServiceEntry **theSvc, int port);
+extern char *getPortByNum(int port, int type);
+extern char *getAllPortByNum(int port);
+extern int getAllPortByName(char* portName);
+extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

@@ -564,7 +564,8 @@ int isInitialSshData(char* packetData) {
 
 int isInitialFtpData(char* packetData) {
   /* 220 linux.local FTP server (Version 6.4/OpenBSD/Linux-ftpd-0.16) ready. */
-  if(strncmp(packetData, "220 ", 4) == 0)
+  if((strncmp(packetData, "220 ", 4) == 0)
+     || (strncmp(packetData, "530", 3) == 0))
     return(1);
   else
     return(0);

@@ -687,11 +687,11 @@ typedef struct simpleProtoTrafficInfo {
 
 typedef struct securityProbes {
   TrafficCounter synPkts, rstPkts, rstAckPkts, synFinPkts, finPushUrgPkts, nullPkts;
-  TrafficCounter ackScanSent, ackScanRcvd;
-  TrafficCounter xmasScanSent, xmasScanRcvd;
-  TrafficCounter finScanSent, finScanRcvd;
-  TrafficCounter nullScanSent, nullScanRcvd;
-  TrafficCounter udpToClosedPortSent, udpToClosedPortRcvd;
+  TrafficCounter ackScanSent,             ackScanRcvd;
+  TrafficCounter xmasScanSent,            xmasScanRcvd;
+  TrafficCounter finScanSent,             finScanRcvd;
+  TrafficCounter nullScanSent,            nullScanRcvd;
+  TrafficCounter udpToClosedPortSent,     udpToClosedPortRcvd;
 } SecurityProbes;
 
 /* *********************** */
@@ -723,6 +723,17 @@ typedef struct securityHostProbes {
   UsageCounter establishedTCPConnSent, establishedTCPConnRcvd;
   /* ********* */
   UsageCounter udpToClosedPortSent, udpToClosedPortRcvd;
+
+  UsageCounter udpToDiagnosticPortSent, udpToDiagnosticPortRcvd,
+                 tcpToDiagnosticPortSent, tcpToDiagnosticPortRcvd;
+  UsageCounter tinyFragmentSent,        tinyFragmentRcvd;
+  UsageCounter icmpFragmentSent,        icmpFragmentRcvd;
+  UsageCounter overlappingFragmentSent, overlappingFragmentRcvd;
+  UsageCounter closedEmptyTCPConnSent,  closedEmptyTCPConnRcvd;
+  UsageCounter icmpPortUnreachSent,     icmpPortUnreachRcvd;
+  UsageCounter icmpHostNetUnreachSent,  icmpHostNetUnreachRcvd;
+  UsageCounter icmpProtocolUnreachSent, icmpProtocolUnreachRcvd;
+  UsageCounter icmpAdminProhibitedSent, icmpAdminProhibitedRcvd;
 } SecurityHostProbes;
 
 /* **************************** */

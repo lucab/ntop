@@ -28,7 +28,7 @@
 void termIPServices(void) {
   int i;
 
-  for(i=0; i<SERVICE_HASH_SIZE; i++) {
+  for(i=0; i<numActServices; i++) {
     if(udpSvc[i] != NULL) {
       free(udpSvc[i]->name);
       free(udpSvc[i]);
@@ -39,6 +39,9 @@ void termIPServices(void) {
       free(tcpSvc[i]);
     }
   }
+
+  free(udpSvc);
+  free(tcpSvc);
 }
 
 

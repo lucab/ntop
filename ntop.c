@@ -274,7 +274,7 @@ static short handleProtocol(char* protoName, char *protocol) {
     return(1);
   }
  
-  for(i=1; i<SERVICE_HASH_SIZE; i++) {
+  for(i=1; i<numActServices; i++) {
     idx = -1;
 
     if((udpSvc[i] != NULL) && (strcmp(udpSvc[i]->name, protocol) == 0))

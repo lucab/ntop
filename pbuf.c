@@ -57,7 +57,8 @@
  /* #define MAPPING_DEBUG */
 
 
- #include "ntop.h"
+#include "ntop.h"
+
 
 static int numNapsterSvr = 0,napsterSvrInsertIdx = 0;
 static const struct pcap_pkthdr *h_save;
@@ -74,113 +75,6 @@ static const u_char *p_save;
 		"Index error idx=%u @ [%s:%d]\n",
 		idx, file, line);
    return(idx);
- }
-
- /* ******************************* */
-
- int getPortByName(ServiceEntry **theSvc, char* portName) {
-   int idx;
-
-   for(idx=0; idx<SERVICE_HASH_SIZE; idx++) {
-
- #ifdef DEBUG
-     if(theSvc[idx] != NULL)
-       traceEvent(TRACE_INFO, "%d/%s [%s]\n",
-		  theSvc[idx]->port,
-		  theSvc[idx]->name, portName);
- #endif
-
-     if((theSvc[idx] != NULL)
-	&& (strcmp(theSvc[idx]->name, portName) == 0))
-       return(theSvc[idx]->port);
-   }
-
-   return(-1);
- }
-
- /* ******************************* */
-
- char* getPortByNumber(ServiceEntry **theSvc, int port) {
-   int idx = port % SERVICE_HASH_SIZE;
-   ServiceEntry *scan;
-
-   for(;;) {
-     scan = theSvc[idx];
-
-     if((scan != NULL) && (scan->port == port))
-       return(scan->name);
-     else if(scan == NULL)
-       return(NULL);
-     else
-       idx = (idx+1) % SERVICE_HASH_SIZE;
-   }
- }
-
- /* ******************************* */
-
- char* getPortByNum(int port, int type) {
-   char* rsp;
-
-   if(type == IPPROTO_TCP) {
-     rsp = getPortByNumber(tcpSvc, port);
-   } else {
-     rsp = getPortByNumber(udpSvc, port);
-   }
-
-   return(rsp);
- }
-
- /* ******************************* */
-
- char* getAllPortByNum(int port) {
-   char* rsp;
-   static char staticBuffer[2][16];
-   static short portBufIdx=0;
-
-   rsp = getPortByNumber(tcpSvc, port); /* Try TCP first... */
-   if(rsp == NULL)
-     rsp = getPortByNumber(udpSvc, port);  /* ...then UDP */
-
-   if(rsp != NULL)
-     return(rsp);
-   else {
-     portBufIdx = (short)((portBufIdx+1)%2);
-     if(snprintf(staticBuffer[portBufIdx], 16, "%d", port) < 0)
-       traceEvent(TRACE_ERROR, "Buffer overflow!");
-     return(staticBuffer[portBufIdx]);
-   }
- }
-
- /* ******************************* */
-
- int getAllPortByName(char* portName) {
-   int rsp;
-
-   rsp = getPortByName(tcpSvc, portName); /* Try TCP first... */
-   if(rsp == -1)
-     rsp = getPortByName(udpSvc, portName);  /* ...then UDP */
-
-   return(rsp);
- }
-
-
- /* ******************************* */
-
- void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
-   int idx = port % SERVICE_HASH_SIZE;
-   ServiceEntry *scan;
-
-   for(;;) {
-     scan = theSvc[idx];
-
-     if(scan == NULL) {
-       theSvc[idx] = (ServiceEntry*)malloc(sizeof(ServiceEntry));
-       theSvc[idx]->port = (u_short)port;
-       theSvc[idx]->name = strdup(name);
-       break;
-     } else
-       idx = (idx+1) % SERVICE_HASH_SIZE;
-   }
  }
 
  /* ******************************* */
@@ -216,7 +110,7 @@ static const u_char *p_save;
      traceEvent(TRACE_INFO, "Searching for %s@%s",
      intoa(*hostIpAddress),
      etheraddr_string(ether_addr));
-     
+
      if(hostIpAddress->s_addr == 0)
      printf("Hello\n");
    */
@@ -545,14 +439,14 @@ static const u_char *p_save;
  {
    /* This is a known port hence we're interested in */
    IpGlobalSession *scanner=NULL, *prevScanner;
-   HostTraffic* theHost;
+   HostTraffic *theHost, *theRemHost;
    int i, found;
 
    if((theHostIdx == broadcastEntryIdx)
       || (remotePeerIdx == broadcastEntryIdx)
       || (remotePeerIdx == NO_PEER)
       || (theHostIdx == NO_PEER)
-      || (device[actualDeviceId].hash_hostTraffic[checkSessionIdx(remotePeerIdx)] == NULL)
+      || ((theRemHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(remotePeerIdx)]) == NULL)
       )
      return;
 
@@ -672,6 +566,31 @@ static const u_char *p_save;
 
  /* ************************************ */
 
+static void incrementUsageCounter(UsageCounter *counter, u_int peerIdx) {
+   u_int i, found=0;
+
+   counter->value++;
+
+   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+     if(counter->peersIndexes[i] == NO_PEER) {
+       counter->peersIndexes[i] = peerIdx, found = 1;
+       break;
+     } else if(counter->peersIndexes[i] == peerIdx) {
+       found = 1;
+       break;
+     }
+   }
+
+   if(!found) {
+     for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
+       counter->peersIndexes[i] = counter->peersIndexes[i+1];
+
+     counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = peerIdx;
+   }
+ }
+
+ /* ************************************ */
+
 void scanTimedoutTCPSessions(void) {
   u_int idx, i;
 
@@ -708,7 +627,6 @@ void scanTimedoutTCPSessions(void) {
 	    device[i].numTcpSessions--;
 
 	    /* Session to purge */
-
 	    if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
 	      if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
 		updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
@@ -729,12 +647,32 @@ void scanTimedoutTCPSessions(void) {
 	      }
 	    }
 
+	    if((sessionToPurge->bytesProtoSent == 0) || (sessionToPurge->bytesProtoRcvd == 0)) {
+	      HostTraffic *theHost, *theRemHost;
+	      char *fmt = "WARNING: detected TCP connection with no data exchanged "
+		"[%s:%d] -> [%s:%d] (network mapping attempt?)";
+	      
+	      theHost = device[i].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
+	      theRemHost = device[i].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
+	      
+	      if((theHost != NULL) && (theRemHost != NULL)) {
+		incrementUsageCounter(&theHost->securityHostPkts.closedEmptyTCPConnSent, 
+				      sessionToPurge->remotePeerIdx);
+		incrementUsageCounter(&theRemHost->securityHostPkts.closedEmptyTCPConnRcvd, 
+				      sessionToPurge->initiatorIdx);
+		traceEvent(TRACE_WARNING, fmt,
+			   theHost->hostSymIpAddress, sessionToPurge->sport,
+			   theRemHost->hostSymIpAddress, sessionToPurge->dport);
+	      }
+	    }
+
+
 	    /*
 	     * Having updated the session information, 'theSession'
 	     * can now be purged.
 	     */
 	    sessionToPurge->magic = 0;
-	    
+
 	    notifyTCPSession(sessionToPurge);
 #ifdef HAVE_MYSQL
 	    mySQLnotifyTCPSession(sessionToPurge);
@@ -802,32 +740,6 @@ void scanTimedoutTCPSessions(void) {
        dstHost->portsUsage[dport]->serverUses++;
        dstHost->portsUsage[dport]->serverUsesLastPeer = srcHostIdx;
      }
-   }
- }
-
- /* ************************************ */
-
- static void incrementUsageCounter(UsageCounter *counter,
-				   u_int peerIdx) {
-   u_int i, found=0;
-
-   counter->value++;
-
-   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-     if(counter->peersIndexes[i] == NO_PEER) {
-       counter->peersIndexes[i] = peerIdx, found = 1;
-       break;
-     } else if(counter->peersIndexes[i] == peerIdx) {
-       found = 1;
-       break;
-     }
-   }
-
-   if(!found) {
-     for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
-       counter->peersIndexes[i] = counter->peersIndexes[i+1];
-
-     counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = peerIdx;
    }
  }
 
@@ -1385,7 +1297,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     srcHost->hostSymIpAddress, sport,
 	     dstHost->hostSymIpAddress, dport, idx);
 #endif
-  
+
  RESCAN_LIST:
   if(sessionType == IPPROTO_TCP) {
     for(i=0, found=0; i<device[actualDeviceId].numTotSessions; i++) {
@@ -1433,7 +1345,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     }
 
     /*
-      traceEvent(TRACE_INFO, "Search for session: %d (%d <-> %d)", 
+      traceEvent(TRACE_INFO, "Search for session: %d (%d <-> %d)",
                               found, sport, dport);
     */
 
@@ -1444,7 +1356,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  printf(" NEW ");
 #endif
 	  /* MULTIPLY_FACTORY courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-	  if(device[actualDeviceId].numTcpSessions > 
+	  if(device[actualDeviceId].numTcpSessions >
 	     (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
 	    /* If possible this table will be enlarged */
 
@@ -1453,10 +1365,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    /* A goto il necessary as when the hash is extended all the pointers changed hence
 	       some references (eg. sessions[]) are no longer valid) */
 
-	    goto RESCAN_LIST;	    
+	    goto RESCAN_LIST;
 	  }
 
-	  if(device[actualDeviceId].numTcpSessions > 
+	  if(device[actualDeviceId].numTcpSessions >
 	     (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
 	    /* The hash table is getting large: let's replace the oldest session
 	       with this one we're allocating */
@@ -1549,7 +1461,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		   && (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-
 							 strlen(NAPSTER_DOMAIN)],
 			      NAPSTER_DOMAIN) == 0)) && (dport == 8888))) {
-		
+
 		theSession->napsterSession = 1;
 
 		traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
@@ -1666,7 +1578,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    srcHost->httpStats->numNegativeReplSent++;
 	    FD_SET(HOST_SVC_HTTP, &srcHost->flags);
 	    dstHost->httpStats->numNegativeReplRcvd++;
-	  } 
+	  }
 
 	  if(microSecTimeDiff > 0) {
 	    if(subnetLocalHost(dstHost)) {
@@ -1814,7 +1726,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  free(rcStr);
 	}
-      } else if((sport == 8875 /* Napster Redirector */) 
+      } else if((sport == 8875 /* Napster Redirector */)
 		&& (packetDataLength > 5)) {
 	char address[64] = { 0 };
 	int i;
@@ -1946,31 +1858,31 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  sscanf(&rcStr[27], "%d,%d,%d,%d,%d,%d",
 		 &a, &b, &c, &d, &e, &f);
 	  sprintf(rcStr, "%d.%d.%d.%d", a, b, c, d);
-	  
+
 #ifdef DEBUG
-	  traceEvent(TRACE_INFO, "FTP: (%d) [%d.%d.%d.%d:%d]", 
+	  traceEvent(TRACE_INFO, "FTP: (%d) [%d.%d.%d.%d:%d]",
 	                           inet_addr(rcStr), a, b, c, d, (e*256+f));
 #endif
 	  addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
-	} 
+	}
       } else if((sport == 139) || (dport == 139)) {
 	memset(rcStr, 0, sizeof(rcStr));
 	memcpy(rcStr, packetData, len);
-	
+
 	if((rcStr[0] == 0x0) /* Message type: Session message */
 	     && (rcStr[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
 	    int i;
 
-#ifdef DEBUG	  
+#ifdef DEBUG
 	    for(i=0; i<len; i++)
 	      printf("0x%X (%d)\n", rcStr[i], i);
 #endif
 
-	    if(sport == 139) {  
+	    if(sport == 139) {
 	      /* Response */
 #ifdef DEBUG
 	      printf("OS: %s\n", &rcStr[45]);
-#endif  
+#endif
 	      if(srcHost->osName == NULL)
 		srcHost->osName = strdup(&rcStr[45]);
 	    } else /* dport == 139 */ {
@@ -2164,7 +2076,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     if(tp->th_flags & TH_FIN) {
       u_int32_t fin = ntohl(tp->th_seq)+packetDataLength;
 
-	  theSession->sessionState = STATE_TIMEOUT;
+      theSession->sessionState = STATE_TIMEOUT;
 
       if(sport < dport) /* Server->Client */
 	check = (fin != theSession->lastSCFin);
@@ -2481,8 +2393,54 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     }
   }
 
+  if((sport == 7)  || (dport == 7)  /* echo */
+     || (sport == 9)  || (dport == 9)  /* discard */
+     || (sport == 13) || (dport == 13) /* daytime */
+     || (sport == 19) || (dport == 19) /* chargen */
+     ) {
+    char *fmt = "WARNING: detected traffic [%s:%d] -> [%s:%d] on a diagnostic port (network mapping attempt?)";
+
+    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+
+    traceEvent(TRACE_WARNING, fmt,
+	       srcHost->hostSymIpAddress, sport,
+	       dstHost->hostSymIpAddress, dport);
+
+    if((dport == 7)
+       || (dport == 9) 
+       || (dport == 13)
+       || (dport == 19)) {
+      if(sessionType == IPPROTO_UDP) {
+	incrementUsageCounter(&srcHost->securityHostPkts.udpToDiagnosticPortSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.udpToDiagnosticPortRcvd, srcHostIdx);
+      } else {
+	incrementUsageCounter(&srcHost->securityHostPkts.tcpToDiagnosticPortSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.tcpToDiagnosticPortRcvd, srcHostIdx);
+      }
+    } else /* sport == 7 */ {
+      if(sessionType == IPPROTO_UDP) {
+	incrementUsageCounter(&srcHost->securityHostPkts.udpToDiagnosticPortSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.udpToDiagnosticPortRcvd, srcHostIdx);
+      } else {
+	incrementUsageCounter(&srcHost->securityHostPkts.tcpToDiagnosticPortSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.tcpToDiagnosticPortRcvd, srcHostIdx);
+      }
+    }
+  }
+
+  if(fragmentedData && (packetDataLength <= 128)) {
+    char *fmt = "WARNING: detected tiny fragment (%d bytes) [%s:%d] -> [%s:%d] (network mapping attempt?)";
+
+    incrementUsageCounter(&srcHost->securityHostPkts.tinyFragmentSent, dstHostIdx);
+    incrementUsageCounter(&dstHost->securityHostPkts.tinyFragmentRcvd, srcHostIdx);
+    traceEvent(TRACE_WARNING, fmt, packetDataLength,
+	       srcHost->hostSymIpAddress, sport,
+	       dstHost->hostSymIpAddress, dport);
+  }
+
   return(theSession);
 }
+
 /* ************************************ */
 
 static void addLsofContactedPeers(ProcessInfo *process,
@@ -2560,7 +2518,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 				   u_int tcpDataLength,
 				   u_char* packetData) {
   IPSession* theSession = NULL;
-  
+
   if(
 #ifdef SESSION_PATCH
      1
@@ -2600,7 +2558,7 @@ static IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 					srcHostIdx, sport,
 					dstHostIdx, dport, length,
 					NULL, length, packetData);
-  
+
   if(isLsofPresent)
     handleLsof(srcHostIdx, sport, dstHostIdx, dport, length);
 
@@ -2812,7 +2770,9 @@ void deleteFragment(IpFragment *fragment) {
 /* ************************************ */
 
 static u_int handleFragment(HostTraffic *srcHost,
+			    u_int srcHostIdx,
                             HostTraffic *dstHost,
+			    u_int dstHostIdx,
                             u_short *sport,
                             u_short *dport,
                             u_int fragmentId,
@@ -2865,6 +2825,9 @@ static u_int handleFragment(HostTraffic *srcHost,
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	logMessage(buf, NTOP_WARNING_MSG);
+
+	incrementUsageCounter(&srcHost->securityHostPkts.overlappingFragmentSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.overlappingFragmentRcvd, srcHostIdx);
       }
       break;
     case DECREASING_FRAGMENT_ORDER:
@@ -2878,6 +2841,8 @@ static u_int handleFragment(HostTraffic *srcHost,
 		 fragment->lastOffset);
 
 	logMessage(buf, NTOP_WARNING_MSG);
+	incrementUsageCounter(&srcHost->securityHostPkts.overlappingFragmentSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.overlappingFragmentRcvd, srcHostIdx);
       }
       break;
     }
@@ -3347,7 +3312,7 @@ static void processIpPkt(const u_char *bp,
     if(tcpChain) {
       u_int displ;
 
-      if (off & 0x3fff)
+      if(off & 0x3fff)
 	displ = 0; /* Fragment */
       else
 	displ = tp.th_off * 4;
@@ -3365,7 +3330,9 @@ static void processIpPkt(const u_char *bp,
     }
 
     if(off & 0x3fff)  /* Handle fragmented packets */
-      length = handleFragment(srcHost, dstHost, &sport, &dport,
+      length = handleFragment(srcHost, srcHostIdx, 
+			      dstHost, dstHostIdx, 
+			      &sport, &dport,
 			      ntohs(ip.ip_id), off, length,
 			      ntohs(ip.ip_len) - hlen);
 
@@ -3621,26 +3588,6 @@ static void processIpPkt(const u_char *bp,
 	}
 
 	free(data);
-      } else if((sport == 7) || (dport == 7) /* echo */) {
-	char *fmt = "WARNING: host [%s] sent a UDP packet to host [%s:echo] (network mapping attempt?)";
-
-	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
-
-	if(dport == 7) {
-	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortSent, dstHostIdx);
-	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortRcvd, srcHostIdx);
-
-	  traceEvent(TRACE_INFO, fmt,
-		     srcHost->hostSymIpAddress,
-		     dstHost->hostSymIpAddress);
-	} else /* sport == 7 */ {
-	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
-	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
-
-	  traceEvent(TRACE_INFO, fmt,
-		     dstHost->hostSymIpAddress,
-		     srcHost->hostSymIpAddress);
-	}
       }
     }
 
@@ -3665,7 +3612,8 @@ static void processIpPkt(const u_char *bp,
     }
 
     if (off & 0x3fff)  /* Handle fragmented packets */
-      length = handleFragment(srcHost, dstHost, &sport, &dport,
+      length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx, 
+			      &sport, &dport,
 			      ntohs(ip.ip_id), off, length,
 			      ntohs(ip.ip_len) - hlen);
 
@@ -3714,6 +3662,15 @@ static void processIpPkt(const u_char *bp,
     srcHost->icmpSent += length;
     dstHost->icmpReceived += length;
 
+    if(off & 0x3fff) {
+      char *fmt = "WARNING: detected ICMP fragment [%s -> %s] (network attack attempt?)";
+
+      incrementUsageCounter(&srcHost->securityHostPkts.icmpFragmentSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.icmpFragmentRcvd, srcHostIdx);
+      traceEvent(TRACE_WARNING, fmt,
+		 srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+    }
+
     /* ************************************************************* */
 
     if(icmpPkt.icmp_type <= ICMP_MAXTYPE) {
@@ -3730,7 +3687,7 @@ static void processIpPkt(const u_char *bp,
       }
 
       dstHost->icmpInfo->icmpMsgRcvd[icmpPkt.icmp_type]++;
-      
+
       switch (icmpPkt.icmp_type) {
       case ICMP_ECHOREPLY:
       case ICMP_ECHO:
@@ -3782,40 +3739,61 @@ static void processIpPkt(const u_char *bp,
     if((icmpPkt.icmp_type == ICMP_ECHO)
        && (broadcastHost(dstHost) || multicastHost(dstHost)))
       smurfAlert(srcHostIdx, dstHostIdx);
-    else if((icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */)
-	    && (icmpPkt.icmp_code == ICMP_UNREACH_PORT /* Port Unreachable */)) {
+    else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
       u_int16_t dport;
       struct ip *oip = &icmpPkt.icmp_ip;
+	
+      switch(icmpPkt.icmp_code) {
+      case ICMP_UNREACH_PORT: /* Port Unreachable */	
+	memcpy(&dport, ((u_char *)bp+hlen+30), sizeof(dport));
+	dport = ntohs(dport);
+	switch (oip->ip_p) {
+	case IPPROTO_TCP:
+	  traceEvent(TRACE_WARNING,
+		     "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
+		     dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	  /* Simulation of rejected TCP connection */
+	  incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnSent, dstHostIdx);
+	  incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnRcvd, srcHostIdx);
+	  if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	  break;
 
-      memcpy(&dport, ((u_char *)bp+hlen+30), sizeof(dport));
-      dport = ntohs(dport);
-      switch (oip->ip_p) {
-      case IPPROTO_TCP:
-	traceEvent(TRACE_WARNING,
-		   "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
-		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
-	/* Simulation of rejected TCP connection */
-	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnRcvd, srcHostIdx);
-	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	case IPPROTO_UDP:
+	  traceEvent(TRACE_WARNING,
+		     "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
+		     dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
+	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
+	  if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	  break;
+	}
+
+	incrementUsageCounter(&srcHost->securityHostPkts.icmpPortUnreachSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.icmpPortUnreachRcvd, srcHostIdx);
 	break;
-
-      case IPPROTO_UDP:
-	traceEvent(TRACE_WARNING,
-		   "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
-		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
-	incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
-	incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
-	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	
+      case ICMP_UNREACH_NET:
+      case ICMP_UNREACH_HOST:
+	incrementUsageCounter(&srcHost->securityHostPkts.icmpHostNetUnreachSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.icmpHostNetUnreachRcvd, srcHostIdx);
+	break;
+ 
+      case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
+	incrementUsageCounter(&srcHost->securityHostPkts.icmpProtocolUnreachSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.icmpProtocolUnreachRcvd, srcHostIdx);
+	break;
+      case ICMP_UNREACH_NET_PROHIB:    /* Net Administratively Prohibited */
+      case ICMP_UNREACH_HOST_PROHIB:   /* Host Administratively Prohibited */
+      case ICMP_UNREACH_FILTER_PROHIB: /* Access Administratively Prohibited */
+	traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
+		   "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
+		   " (Firewalking scan attempt?)",
+		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
+	incrementUsageCounter(&srcHost->securityHostPkts.icmpAdminProhibitedSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.icmpAdminProhibitedRcvd, srcHostIdx);
 	break;
       }
-    } else if((icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */)
-	      && (icmpPkt.icmp_code == ICMP_UNREACH_FILTER_PROHIB /* Administratively Prohibited */))
-      traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
-		 "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
-		 " (Firewalking scan attempt?)",
-		 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
-    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+    }
     break;
 
   case IPPROTO_OSPF:
