@@ -5,7 +5,7 @@
 .TP 1.2
 .B "\\$1 "
 ..
-.TH NTOP 8 "August 2000"
+.TH NTOP 8 "July 2001"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
@@ -39,6 +39,10 @@ ntop \- display top network users
 .IR "local subnet" ]
 .RB [ -a
 .IR "access log file path" ]
+.RB [ -b
+.IR "client:port DB client" ]
+.RB [ -g
+.IR "client:port NetFlow Collector" ]
 .RB [ -t
 .IR "trace level" ]
 .RB [ -u
@@ -173,14 +177,24 @@ logs HTTP accesses in the file ntop.access.log in the current directory. Use thi
 is that .B ntop
 added a new column has been added. Such column contains the time (in milliseconds) that ntop needed in order to serve the request. 
 
-t -u
+.It -b client:port
+Exports
+.B ntop
+traffic information into a SQL database. The flag specifies (in http-like host format) the address (IP:port) of a SQL client. The database/ directory part of ntop contains a few clients. Please use one of those.
+
+.It -g client:port
+Exports
+.B ntop
+traffic information in Cisco NetFlow V5 (http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm) format. The flag specifies (in http-like host format) the address (IP:port) of a NetFlow client such as ftp://ftp.net.ohio-state.edu/users/maf/cisco/.
+
+.It -u
 Specifies the user
 .B ntop
 should run as after it initializes. The value specified may be either a
 username or a numeric user id. The group id used will be the primary group of
 the user specified.
 
-t -l
+.It -l
 Dumps the network traffic captured by ntop in a file in pcap format (useful for debug).
 
 .It -t
