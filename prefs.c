@@ -79,11 +79,11 @@ static struct option const long_options[] = {
   { "help",                             no_argument,       NULL, 'h' },
   { "interface",                        required_argument, NULL, 'i' },
   { "create-other-packets",             no_argument,       NULL, 'j' },
+  { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
   { "pcap-log",                         required_argument, NULL, 'l' },
   { "local-subnets",                    required_argument, NULL, 'm' },
   { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
   { "no-mac",                           no_argument,       NULL, 'o' },
-  { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
 
 
   { "protocols",                        required_argument, NULL, 'p' },
@@ -265,8 +265,10 @@ int parseOptions(int argc, char* argv[]) {
 
   /* * * * * * * * * * */
 
+#ifdef PARAM_DEBUG
   for(opt_index=0; opt_index<argc; opt_index++)
     traceEvent(CONST_TRACE_NOISY, "PARAM_DEBUG: argv[%d]: %s", opt_index, argv[opt_index]);
+#endif
 
   /*
    * Parse command line options to the application via standard system calls
