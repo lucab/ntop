@@ -57,10 +57,10 @@ extern short capturePackets, endNtop, borderSnifferMode;
  
 /* Multithreading */
 #ifdef MULTITHREADED
-extern unsigned short numThreads;
+extern unsigned short numThreads, numDequeueThreads;
 extern PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
 extern PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
-extern pthread_t dequeueThreadId, handleWebConnectionsThreadId;
+extern pthread_t dequeueThreadId[MAX_NUM_DEQUEUE_THREADS], handleWebConnectionsThreadId;
 extern pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
 extern pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 extern pthread_t purgeAddressThreadId;

@@ -429,7 +429,9 @@ int initGlobalValues(void) {
 
   if(borderSnifferMode) {
     enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 0;
-  }
+    numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
+  } else
+    numDequeueThreads = 1;
 
   return(0);
 }
@@ -530,7 +532,7 @@ void initGdbm(void) {
 /* ******************************* */
 
 void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
-
+int i;
 #ifdef HAVE_GDBM_H
 #ifdef MULTITHREADED
   numThreads = 0;
@@ -566,9 +568,11 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   /*
    * (1) - NPA - Network Packet Analyzer (main thread)
    */
-  createThread(&dequeueThreadId, dequeuePacket, NULL);
-  traceEvent(TRACE_INFO, "Started thread (%ld) for network packet analyser.\n",
-	     dequeueThreadId);
+   for(i=0; i<numDequeueThreads; i++) {
+      createThread(&dequeueThreadId[i], dequeuePacket, NULL);
+      traceEvent(TRACE_INFO, "Started thread (%ld) for network packet analyser.\n",
+	         dequeueThreadId[i]);
+   }
 
   /*
    * (2) - HTS - Host Traffic Statistics

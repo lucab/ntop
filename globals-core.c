@@ -65,10 +65,10 @@ short capturePackets, endNtop, borderSnifferMode;
 
 /* Multithreading */
 #ifdef MULTITHREADED
-unsigned short numThreads;
+unsigned short numThreads, numDequeueThreads;
 PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
 PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
-pthread_t dequeueThreadId, handleWebConnectionsThreadId;
+pthread_t dequeueThreadId[MAX_NUM_DEQUEUE_THREADS], handleWebConnectionsThreadId;
 pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
 pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 pthread_t purgeAddressThreadId;

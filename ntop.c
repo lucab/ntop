@@ -841,7 +841,10 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifndef WIN32
 #ifdef MULTITHREADED
-  killThread(&dequeueThreadId);
+
+  for(i=0; i<numDequeueThreads; i++)
+    killThread(&dequeueThreadId[i]);
+
   killThread(&thptUpdateThreadId);
   killThread(&hostTrafficStatsThreadId);
 

@@ -739,17 +739,19 @@ void printNtopConfigInfo(void) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># TCP Sessions</TH>"
-	      "<TD "TD_BG"  align=right>%u</TD></TR>\n", 
-	      device[actualReportDeviceId].numTcpSessions) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
-
-  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Terminated TCP Sessions</TH>"
-	      "<TD "TD_BG"  align=right>%u</TD></TR>\n", 
-	      (unsigned int)numTerminatedSessions) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
+  if(enableSessionHandling) {
+    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># TCP Sessions</TH>"
+		"<TD "TD_BG"  align=right>%u</TD></TR>\n", 
+		device[actualReportDeviceId].numTcpSessions) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+    
+    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Terminated TCP Sessions</TH>"
+		"<TD "TD_BG"  align=right>%u</TD></TR>\n", 
+		(unsigned int)numTerminatedSessions) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  }
 
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(numericFlag == 0) {
@@ -812,7 +814,7 @@ void printNtopConfigInfo(void) {
 
   /* **************************** */
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(DEBUG)
   sendString("<P>"TABLE_ON"<TABLE BORDER=1>\n");
   sendString("<TR><TH>Mutex Name</TH><TH>State</TH><TH>Last Lock</TH><TH>Last UnLock</TH>"
 	     "<TH COLSPAN=2># Locks/Releases</TH><TH>Max Lock</TH></TR>");
@@ -824,7 +826,7 @@ void printNtopConfigInfo(void) {
   printMutexStatus(&hostsHashMutex, "hostsHashMutex");
   printMutexStatus(&graphMutex, "graphMutex");
   sendString("</TABLE>"TABLE_OFF"\n");
-#endif /* MULTITHREADED */
+#endif /* MULTITHREADED && DEBUG */
 
   sendString("</CENTER>\n");
 }
