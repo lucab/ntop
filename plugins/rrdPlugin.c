@@ -1211,7 +1211,7 @@ static void handleRRDHTTPrequest(char* url) {
   printHTMLheader("RRD Preferences", NULL, 0);
 
   sendString("<CENTER><FORM ACTION=/plugins/rrdPlugin METHOD=GET>\n");
-  sendString("<TABLE BORDER>\n");
+  sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
   
   sendString("<TR><TH COLSPAN=2 ALIGN=CENTER "DARK_BG">RRD Preferences</TH></TR>");

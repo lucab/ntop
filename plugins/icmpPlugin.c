@@ -305,7 +305,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     for(i=1; i<=14; i++)
       if(abs(icmpColumnSort) == i) arrow[i] = arrowGif; else arrow[i] = "";  
 
-  sendString("<CENTER>\n<TABLE BORDER>\n");
+  sendString("<CENTER>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON" "DARK_BG"><TH "TH_BG">%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd] %s</TH>"
 	      "<TH "TH_BG">%s?%s2>Bytes Sent %s</A></TH>"
 	      "<TH "TH_BG">%s?%s3>Bytes Rcvd %s</A></TH>"

@@ -211,7 +211,7 @@ void showPluginsList(char* pluginName) {
       if(!doPrintHeader) {
 	printHTMLheader("Available Plugins", NULL, 0);
  	sendString("<CENTER>\n"
-		   ""TABLE_ON"<TABLE BORDER=1>\n"
+		   ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
 		   "<TR "DARK_BG"><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH>\n"
                    "<TH "TH_BG">Description</TH>\n"
 		   "<TH "TH_BG">Version</TH><TH "TH_BG">Author</TH>\n"

@@ -200,7 +200,7 @@ static void handleLsHTTPrequest(char* url) {
     sendString("<P><CENTER>NOTE:&nbsp;Table size at/exceeds limit, some data may not be displayed.</CENTER></P>\n");
   }
 
-  sendString("<CENTER><TABLE BORDER>\n");
+  sendString("<CENTER><TABLE BORDER=1 "TABLE_DEFAULTS">\n");
   sendString("<TR "TR_ON"><TH "TH_BG">Host</TH><TH "TH_BG">Address</TH><TH "TH_BG">LastSeen</TH><TH "TH_BG">Comments</TH><TH "TH_BG">Options</TH></TR>\n");
   while ( entry >= 0 ) {
     HostAddr addr;
