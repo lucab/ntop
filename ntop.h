@@ -274,6 +274,8 @@ ntop.h
 /* 
    Additions below courtesy of 
    Abdelkader Lahmadi <Abdelkader.Lahmadi@loria.fr> 
+   And thanks to Julien TOUCHE [julien.touche@lycos.com] for pointing out the
+   sys/socket.h <-> net/route.h dependency under OpenBSD.
 */
 #ifdef HAVE_NET_IF_DL_H
 #include <net/if_dl.h>

@@ -1340,7 +1340,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.98.006-2003-12-25"
+SCRIPTVER="v2.2.98.007-2003-12-26"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,

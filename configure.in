@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.98])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.98.006-2003-12-25"
+SCRIPTVER="v2.2.98.007-2003-12-26"
 
 dnl>
 dnl> generate the config header
@@ -1978,6 +1978,7 @@ AC_CHECK_HEADERS([net/ethernet.h])
 
 dnl> The failed recheck stuff below is courtesy of Chris Turbeville [turbo@verio.net]
 dnl> Chris developed this for Solaris 9, confirming work I had done earlier for FreeBSD
+dnl> And thank to Julien TOUCHE [julien.touche@lycos.com] for the OpenBSD dependencies
 AC_CHECK_HEADERS([net/if.h], [], [], [
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
