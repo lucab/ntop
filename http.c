@@ -809,6 +809,9 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
     case HTTP_TYPE_TEXT:
       sendString("Content-Type: text/plain\n");
       break;
+    case HTTP_TYPE_ICO:
+      sendString("Content-Type: application/octet-stream\n");
+      break;
     case HTTP_TYPE_NONE:
       break;
 #ifdef DEBUG
@@ -1109,6 +1112,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
         mimeType = HTTP_TYPE_PNG;
       else if(strcmp(&pageName[len-4], ".css") == 0)
         mimeType = HTTP_TYPE_CSS;
+      else if(strcmp(&pageName[len-4], ".ico") == 0)
+        mimeType = HTTP_TYPE_ICO;
     }
 
     sendHTTPHeader(mimeType, HTTP_FLAG_IS_CACHEABLE | HTTP_FLAG_MORE_FIELDS);
