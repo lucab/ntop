@@ -286,13 +286,14 @@ void drawArea(short width,
 	      FILE* filepointer,            /* open file pointer, can be stdout */
 	      int   num_points,
 	      char  *labels[],              /* slice labels */
-	      float data[]) { 
+	      float data[]) {
   gdImagePtr im;
   int black, white, colors[64], numColors, i, maxval=0;
   int center_x, center_y, base;
   float total, yscale, txtsz, txtht;
   float vmargin, hmargin, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
   float padding, ymax, ymin, xmax, xmin, gray;
+  char str[16];
 
   im = gdImageCreate(width, height);
 
@@ -314,13 +315,13 @@ void drawArea(short width,
 
   /* ************************* */
 
-  vmargin = 20; // top (bottom) vertical margin for title (x-labels)
+  vmargin = 40; // top (bottom) vertical margin for title (x-labels)
   hmargin = 38; // left horizontal margin for y-labels
   
   base = (int)((width - hmargin) / num_points); // distance between columns
   
   xsize = num_points * base; // x-size of plot
-  ysize = height - 2 * vmargin; // y-size of plot
+  ysize = height - (1.5 * vmargin); // y-size of plot
 
   /* printf("x-size=%.1f/y-size=%.1f\n", xsize, ysize); */
   // y labels and grid lines
@@ -337,7 +338,7 @@ void drawArea(short width,
     snprintf(str, sizeof(str), "%.1f", ydat);
 
     // height of grid line in pixels
-    ypos = vmargin + ysize - (int)(i*dypix); 
+    ypos = vmargin/2 + ysize - (int)(i*dypix); 
 
     txtsz = gdFontSmall->w*strlen(str); // pixel-width of label
     txtht = gdFontSmall->h; // pixel-height of label
@@ -360,7 +361,7 @@ void drawArea(short width,
     for (i = 0; i<num_points; i++) {
       gdPoint points[5];
       // vertical columns
-      ymax = vmargin + ysize; 
+      ymax = vmargin/2 + ysize; 
       ymin = ymax - (int)(data[i]*yscale); 
       xmax = hmargin + (i+1)*base - padding; 
       xmin = hmargin + i*base + padding; 
@@ -380,10 +381,11 @@ void drawArea(short width,
       points[4].x = points[0].x; points[4].y = points[0].y;
 
       gdImageFilledPolygon(im, points, 5, colors[0]); 
-
       gdImageFilledRectangle(im, points[0].x-1, points[0].y-1, points[0].x+1, points[0].y+1, black); 
       gdImageFilledRectangle(im, points[3].x-1, points[3].y-1, points[3].x+1, points[3].y+1, black); 
       gdImageLine(im, points[0].x, points[0].y, points[3].x, points[3].y, black); 
+      snprintf(str, sizeof(str), "%5s",labels[i]);
+      gdImageStringUp(im, gdFontSmall, points[0].x-gdFontSmall->w, height-2, str, black);
 
       // x labels
       txtsz = gdFontSmall->w * strlen(labels[i]); 
@@ -395,7 +397,7 @@ void drawArea(short width,
   } 
 
   // plot frame
-  gdImageRectangle(im, hmargin, vmargin, hmargin + xsize, vmargin + ysize, black); 
+  gdImageRectangle(im, hmargin, vmargin/2, hmargin + xsize, vmargin/2 + ysize, black); 
 
   /* ************************* */
 
@@ -639,7 +641,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     if(num == 1) p[0] = 100; /* just to be safe */
 
-    drawPie(400, 250,
+    drawPie(300, 250,
 	    fd,			/* open file pointer */
 	    num,			/* number of slices */
 	    lbl,			/* slice labels (unlike out_png(), can be NULL */
@@ -884,7 +886,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   if(num == 1) p[0] = 100;
 
   if(num == 1) p[0] = 100; /* just to be safe */
-  drawPie(400, 250,
+  drawPie(300, 250,
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
 	  lbl,			/* slice labels (unlike out_png(), can be NULL */
@@ -1617,7 +1619,7 @@ int drawHostsDistanceGraph(int checkOnly) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  drawArea(300, 250,    /* width, height           */
+  drawArea(400, 250,    /* width, height           */
 	   fd,          /* open FILE pointer       */
 	   30,          /* num points per data set */
 	   lbls,        /* X labels array of char* */

@@ -728,7 +728,7 @@ typedef struct ntopInterface {
   struct hostTraffic **hash_hostTraffic;
   u_int16_t  insertIdx;
   HashList** hashList;
-
+  u_short hashListMaxLookups;
   ElementHash **asHash;   /* Autonomous System */
   ElementHash **vlanHash; /* VLAN - Virtual LAN */
 

@@ -662,6 +662,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
   u_char setSpoofingFlag = 0;
+  u_short numRuns=0;
   u_int hostFound = 0;
   HashList *list = NULL;
 
@@ -756,7 +757,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	}
 
 	list = list->next;
+	numRuns++;
       }
+
+      if(numRuns > myGlobals.device[actualDeviceId].hashListMaxLookups) 
+	myGlobals.device[actualDeviceId].hashListMaxLookups = numRuns ;
     }
 
     if(!hostFound) {
