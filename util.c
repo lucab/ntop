@@ -267,9 +267,9 @@ unsigned short isBroadcastAddress(struct in_addr *addr) {
       if(device[i].netmask.s_addr == 0xFFFFFFFF) /* PPP */
 	return 0;
       else if(((addr->s_addr | device[i].netmask.s_addr) == 0xFFFFFFFF)
-	 || ((addr->s_addr & 0x000000FF) == 0x000000FF)
-	 || ((addr->s_addr & 0x000000FF) == 0x00000000) /* Network address */
-	 )
+	      || ((addr->s_addr & 0x000000FF) == 0x000000FF)
+	      || ((addr->s_addr & 0x000000FF) == 0x00000000) /* Network address */
+	      )
 	return 1;
 
     return(isPseudoBroadcastAddress(addr));
@@ -281,11 +281,11 @@ unsigned short isBroadcastAddress(struct in_addr *addr) {
 unsigned short isMulticastAddress(struct in_addr *addr) {
   if((addr->s_addr & MULTICAST_MASK) == MULTICAST_MASK) {
 #ifdef DEBUG
-   traceEvent(TRACE_INFO, "%s is multicast [%X/%X]\n",
-	   intoa(*addr),
-	   ((unsigned long)(addr->s_addr) & MULTICAST_MASK),
-	   MULTICAST_MASK
-	   );
+    traceEvent(TRACE_INFO, "%s is multicast [%X/%X]\n",
+	       intoa(*addr),
+	       ((unsigned long)(addr->s_addr) & MULTICAST_MASK),
+	       MULTICAST_MASK
+	       );
 #endif
     return 1;
   } else
@@ -297,20 +297,20 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 unsigned short isLocalAddress(struct in_addr *addr) {
   int i;
 
- for(i=0; i<numDevices; i++)
-   if((addr->s_addr & device[i].netmask.s_addr) == device[i].network.s_addr) {
+  for(i=0; i<numDevices; i++)
+    if((addr->s_addr & device[i].netmask.s_addr) == device[i].network.s_addr) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s is local\n", intoa(*addr));
+      traceEvent(TRACE_INFO, "%s is local\n", intoa(*addr));
 #endif
-     return 1;
-   }
+      return 1;
+    }
 
 #ifdef DEBUG
-traceEvent(TRACE_INFO, "%s is %s\n", intoa(*addr),
-	isPseudoLocalAddress (addr) ? "pseudolocal" : "remote");
+  traceEvent(TRACE_INFO, "%s is %s\n", intoa(*addr),
+	     isPseudoLocalAddress (addr) ? "pseudolocal" : "remote");
 #endif
- /* Broadcast is considered a local address */
- return (isBroadcastAddress(addr));
+  /* Broadcast is considered a local address */
+  return (isBroadcastAddress(addr));
 }
 
 /* **********************************************
@@ -449,7 +449,7 @@ void handleLocalAddresses(char* addresses) {
     char *mask = strchr(address, '/');
 
     if(mask == NULL)
-     traceEvent(TRACE_INFO, "Unknown network '%s' (empty mask!). It has been ignored.\n", address);
+      traceEvent(TRACE_INFO, "Unknown network '%s' (empty mask!). It has been ignored.\n", address);
     else {
       u_int32_t network, networkMask, broadcast;
       int bits, a, b, c, d;
@@ -459,17 +459,17 @@ void handleLocalAddresses(char* addresses) {
       bits = dotted2bits (mask);
 
       if(sscanf(address, "%d.%d.%d.%d", &a, &b, &c, &d) != 4) {
-	  traceEvent(TRACE_ERROR, "Unknown network '%s' .. skipping. Check network numbers.\n",
-		     address);
-	  address = strtok_r(NULL, ",", &strtokState);
-	  continue;
+	traceEvent(TRACE_ERROR, "Unknown network '%s' .. skipping. Check network numbers.\n",
+		   address);
+	address = strtok_r(NULL, ",", &strtokState);
+	continue;
       }
 
       if(bits == INVALIDNETMASK)
 	{
 	  /* malformed netmask specification */
           traceEvent(TRACE_ERROR, "The specified netmask %s is not valid. Skipping it..\n",
-		  mask);
+		     mask);
 	  address = strtok_r(NULL, ",", &strtokState);
 	  continue;
 	}
@@ -487,7 +487,7 @@ void handleLocalAddresses(char* addresses) {
 	 && ((network & networkMask) != network))  {
 	/* malformed network specification */
 	traceEvent(TRACE_ERROR, "WARNING: %d.%d.%d.%d/%d is not a valid network number\n",
-		a, b, c, d, bits);
+		   a, b, c, d, bits);
 
 	/* correcting network numbers as specified in the netmask */
 	network &= networkMask;
@@ -498,10 +498,10 @@ void handleLocalAddresses(char* addresses) {
 	d = (int) ((network >>  0) & 0xff);
 
 	traceEvent(TRACE_ERROR, "Assuming %d.%d.%d.%d/%d [0x%08x/0x%08x]\n\n",
-		a, b, c, d, bits, network, networkMask);
+		   a, b, c, d, bits, network, networkMask);
       }
 #ifdef DEBUG
-     traceEvent(TRACE_INFO, "%d.%d.%d.%d/%d [0x%08x/0x%08x]\n", a, b, c, d, bits, network, networkMask);
+      traceEvent(TRACE_INFO, "%d.%d.%d.%d/%d [0x%08x/0x%08x]\n", a, b, c, d, bits, network, networkMask);
 #endif
 
       broadcast = network | (~networkMask);
@@ -512,34 +512,34 @@ void handleLocalAddresses(char* addresses) {
       c = (int) ((broadcast >>  8) & 0xff);
       d = (int) ((broadcast >>  0) & 0xff);
 
-     traceEvent(TRACE_INFO, "Broadcast: [net=0x%08x] [broadcast=%d.%d.%d.%d]\n",
-	     network, a, b, c, d);
+      traceEvent(TRACE_INFO, "Broadcast: [net=0x%08x] [broadcast=%d.%d.%d.%d]\n",
+		 network, a, b, c, d);
 #endif
 
       if(numLocalNets < MAX_NUM_NETWORKS) {
-		int found = 0;
+	int found = 0;
 
-		for(i=0; i<numDevices; i++)
-		  if((network == device[i].network.s_addr)
-		     && (device[i].netmask.s_addr == networkMask)) {
-			a = (int) ((network >> 24) & 0xff);
-			b = (int) ((network >> 16) & 0xff);
-			c = (int) ((network >>  8) & 0xff);
-			d = (int) ((network >>  0) & 0xff);
+	for(i=0; i<numDevices; i++)
+	  if((network == device[i].network.s_addr)
+	     && (device[i].netmask.s_addr == networkMask)) {
+	    a = (int) ((network >> 24) & 0xff);
+	    b = (int) ((network >> 16) & 0xff);
+	    c = (int) ((network >>  8) & 0xff);
+	    d = (int) ((network >>  0) & 0xff);
 
-			traceEvent(TRACE_WARNING, "WARNING: Discarded network %d.%d.%d.%d/%d: "
-			   "this is the local network.\n",
-			   a, b, c, d, bits);
-			found = 1;
-		  }
+	    traceEvent(TRACE_WARNING, "WARNING: Discarded network %d.%d.%d.%d/%d: "
+		       "this is the local network.\n",
+		       a, b, c, d, bits);
+	    found = 1;
+	  }
 
 
-		  if(found == 0) {
-			networks[numLocalNets][NETWORK]   = network;
-			networks[numLocalNets][NETMASK]   = networkMask;
-			networks[numLocalNets][BROADCAST] = broadcast;
-			numLocalNets++;
-		  }
+	if(found == 0) {
+	  networks[numLocalNets][NETWORK]   = network;
+	  networks[numLocalNets][NETMASK]   = networkMask;
+	  networks[numLocalNets][BROADCAST] = broadcast;
+	  numLocalNets++;
+	}
       } else
 	traceEvent(TRACE_WARNING, "Unable to handle network (too many entries!).\n");
     }
@@ -558,11 +558,11 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   for(i=0; i<numDevices; i++) {
     if((addr->s_addr & device[i].netmask.s_addr) == device[i].network.s_addr) {
 #ifdef DEBUG
-     traceEvent(TRACE_INFO, "%s comparing [0x%08x/0x%08x][0x%08x/0x%08x]\n",
-	     intoa(*addr),
-	     addr->s_addr, device[i].network.s_addr,
-	     (addr->s_addr & device[i].netmask.s_addr),
-	     device[i].network.s_addr);
+      traceEvent(TRACE_INFO, "%s comparing [0x%08x/0x%08x][0x%08x/0x%08x]\n",
+		 intoa(*addr),
+		 addr->s_addr, device[i].network.s_addr,
+		 (addr->s_addr & device[i].netmask.s_addr),
+		 device[i].network.s_addr);
 #endif
       return 1;
     }
@@ -570,10 +570,10 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
 
   for(i=0; i<numLocalNets; i++) {
 #ifdef DEBUG
-   traceEvent(TRACE_INFO, "%s comparing [0x%08x/0x%08x]\n",
-	   intoa(*addr),
-	   (addr->s_addr & networks[i][NETMASK]),
-	   networks[i][NETWORK]);
+    traceEvent(TRACE_INFO, "%s comparing [0x%08x/0x%08x]\n",
+	       intoa(*addr),
+	       (addr->s_addr & networks[i][NETMASK]),
+	       networks[i][NETWORK]);
 #endif
     if((addr->s_addr & networks[i][NETMASK]) == networks[i][NETWORK]) {
 #ifdef DEBUG
@@ -677,7 +677,7 @@ void handleFlowsSpecs(char* flows) {
     int len, i;
 
     if(stat(flows, &buf) != 0) {
-     traceEvent(TRACE_INFO, "Error while stat() of %s\n", flows);
+      traceEvent(TRACE_INFO, "Error while stat() of %s\n", flows);
       return;
     }
 
@@ -702,7 +702,7 @@ void handleFlowsSpecs(char* flows) {
     char *flowSpec = strchr(flow, '=');
 
     if(flowSpec == NULL)
-     traceEvent(TRACE_INFO, "Missing flow spec '%s'. It has been ignored.\n", flow);
+      traceEvent(TRACE_INFO, "Missing flow spec '%s'. It has been ignored.\n", flow);
     else {
       struct bpf_program fcode;
       int rc, len;
@@ -717,7 +717,7 @@ void handleFlowsSpecs(char* flows) {
 	 || (flowSpec[0] != '\'')
 	 || (flowSpec[len-1] != '\''))
 	traceEvent(TRACE_WARNING, "Wrong flow specification \"%s\" (missing \'). "
-	       "It has been ignored.\n", flowSpec);
+		   "It has been ignored.\n", flowSpec);
       else {
 	flowSpec[len-1] = '\0';
         flowSpec++;
@@ -745,7 +745,7 @@ void handleFlowsSpecs(char* flows) {
               
               if(rc < 0) {
                 traceEvent(TRACE_WARNING, "Wrong flow specification \"%s\" (syntax error). "
-                       "It has been ignored.\n", flowSpec);
+			   "It has been ignored.\n", flowSpec);
                 free(newFlow);
                 return;
               }
@@ -786,7 +786,7 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device)
 
   fd = socket(AF_INET, SOCK_DGRAM, 0);
   if(fd < 0) {
-   traceEvent(TRACE_INFO, "socket error: %d", errno);
+    traceEvent(TRACE_INFO, "socket error: %d", errno);
     return(-1);
   }
   memset(&ifr, 0, sizeof(ifr));
@@ -798,7 +798,7 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device)
   strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
   if(ioctl(fd, SIOCGIFADDR, (char*)&ifr) < 0) {
 #ifdef DEBUG
-   traceEvent(TRACE_INFO, "SIOCGIFADDR error: %s/errno=%d", device, errno);
+    traceEvent(TRACE_INFO, "SIOCGIFADDR error: %s/errno=%d", device, errno);
 #endif
     rc = -1;
   } else {
@@ -809,7 +809,7 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device)
   }
 
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "Local address is: %s\n", intoa(*hostAddress));
+  traceEvent(TRACE_INFO, "Local address is: %s\n", intoa(*hostAddress));
 #endif
 
   close(fd);
@@ -881,9 +881,9 @@ void deleteMutex(pthread_mutex_t *mutexId) {
 int _accessMutex(pthread_mutex_t *mutexId, char* where,
 		 char* fileName, int fileLine) {
 #ifdef DEBUG
-   traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
-	   mutexId, where, fileName, fileLine);
-    fflush(stdout);
+  traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
+	     mutexId, where, fileName, fileLine);
+  fflush(stdout);
 #endif
   return(pthread_mutex_lock(mutexId));
 }
@@ -891,7 +891,7 @@ int _accessMutex(pthread_mutex_t *mutexId, char* where,
 /* ************************************ */
 
 int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
-		 char* fileName, int fileLine) {
+		  char* fileName, int fileLine) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
 	     mutexId, where, fileName, fileLine);
@@ -913,9 +913,9 @@ int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
 int _releaseMutex(pthread_mutex_t *mutexId,
 		  char* fileName, int fileLine) {
 #ifdef DEBUG
-   traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
-	   mutexId, fileName, fileLine);
-    fflush(stdout);
+  traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
+	     mutexId, fileName, fileLine);
+  fflush(stdout);
 #endif
   return(pthread_mutex_unlock(mutexId));
 }
@@ -1043,7 +1043,7 @@ int checkCommand(char* commandName) {
 
 void readLsofInfo(void) {
 #ifdef WIN32
-;
+  ;
 #else
   char line[384];
   FILE *fd;
@@ -1110,7 +1110,7 @@ void readLsofInfo(void) {
     if(portNr[0] == '*')
       portNr = &portNr[2];
     else
-     portNr = (char*)strtok_r(NULL, "-", &strtokState);
+      portNr = (char*)strtok_r(NULL, "-", &strtokState);
 
     if((portNr == NULL) || (portNr[0] == '*'))
       continue;
@@ -1138,7 +1138,7 @@ void readLsofInfo(void) {
     }
 
 #ifdef DEBUG
-   traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n", command, user, thePort, portNr, portNumber);
+    traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n", command, user, thePort, portNr, portNumber);
 #endif
 
     if(portNumber == -1)
@@ -1148,7 +1148,7 @@ void readLsofInfo(void) {
       int floater;
 
 #ifdef DEBUG
-     traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", numProcesses, command, user, portNr, portNumber);
+      traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", numProcesses, command, user, portNr, portNumber);
 #endif
       processes[numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
       processes[numProcesses]->command             = strdup(command);
@@ -1206,7 +1206,7 @@ void readLsofInfo(void) {
 
 void readNepedInfo(void) {
 #ifdef WIN32
-   ;
+  ;
 #else
   char line[384];
   FILE *fd;
@@ -1216,7 +1216,7 @@ void readNepedInfo(void) {
     return;
 
   if(!daemonMode)
-   traceEvent(TRACE_INFO, "Wait please. Reading neped info....\n");
+    traceEvent(TRACE_INFO, "Wait please. Reading neped info....\n");
 
   snprintf(line, sizeof(line), "neped %s", (char*)device);
   fd = sec_popen(line, "r");
@@ -1262,7 +1262,7 @@ void readNepedInfo(void) {
 
       if((idx<0) || (idx>255)) {
 	if(!daemonMode)
-	 traceEvent(TRACE_INFO, "Neped error: '%d'\n", idx);
+	  traceEvent(TRACE_INFO, "Neped error: '%d'\n", idx);
       } else {
 	FD_SET(idx, &ipTrafficMatrixPromiscHosts);
       }
@@ -1291,19 +1291,19 @@ void readNepedInfo(void) {
 RETSIGTYPE (*setsignal (int sig, RETSIGTYPE (*func)(int)))(int)
 {
 #ifdef HAVE_SIGACTION
-        struct sigaction old, new;
+  struct sigaction old, new;
 
-        memset(&new, 0, sizeof(new));
-        new.sa_handler = func;
+  memset(&new, 0, sizeof(new));
+  new.sa_handler = func;
 #ifdef SA_RESTART
-        new.sa_flags |= SA_RESTART;
+  new.sa_flags |= SA_RESTART;
 #endif
-        if(sigaction(sig, &new, &old) < 0)
-                return (SIG_ERR);
-        return (old.sa_handler);
+  if(sigaction(sig, &new, &old) < 0)
+    return (SIG_ERR);
+  return (old.sa_handler);
 
 #else
-        return(signal(sig, func));
+  return(signal(sig, func));
 #endif
 }
 #endif /* WIN32 */
@@ -1326,17 +1326,17 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
   }
 
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "getHostOS(%s:%d)\n", ipAddr, port);
- traceEvent(TRACE_INFO, "Guessing OS of %s...\n", ipAddr);
+  traceEvent(TRACE_INFO, "getHostOS(%s:%d)\n", ipAddr, port);
+  traceEvent(TRACE_INFO, "Guessing OS of %s...\n", ipAddr);
 #endif
 
   /* 548 is the AFP (Apple Filing Protocol) */
- snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr);
+  snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr);
 
   fd = sec_popen(line, "r");
-
+  
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "%s\n", line);
+  traceEvent(TRACE_INFO, "%s\n", line);
 #endif
 #define OS_GUESS   "Remote operating system guess: "
 #define OS_GUESS_1 "Remote OS guesses: "
@@ -1407,7 +1407,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 
   if(found) {
 #ifdef DEBUG
-   traceEvent(TRACE_INFO, "OS is: '%s'\n", operatingSystem);
+    traceEvent(TRACE_INFO, "OS is: '%s'\n", operatingSystem);
 #endif
     len = strlen(operatingSystem);
     strncpy(staticOsName, operatingSystem, len-1);
@@ -1421,7 +1421,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 
 void closeNwSocket(int *sockId) {
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "Closing socket %d...\n", *sockId);
+  traceEvent(TRACE_INFO, "Closing socket %d...\n", *sockId);
 #endif
 
   if(*sockId == DUMMY_SOCKET_VALUE)
@@ -1563,7 +1563,7 @@ void storeHostTrafficInstance(HostTraffic *el) {
     key = el->ethAddressString;
 
 #ifdef STORAGE_DEBUG
- traceEvent(TRACE_INFO, "storeHostTrafficInstance(%s)\n", key);
+  traceEvent(TRACE_INFO, "storeHostTrafficInstance(%s)\n", key);
 #endif
 
   key_data.dptr = key;
@@ -1572,18 +1572,18 @@ void storeHostTrafficInstance(HostTraffic *el) {
   data_data.dsize = sizeof(HostTraffic);
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "storeHostTrafficInstance");
+  accessMutex(&gdbmMutex, "storeHostTrafficInstance");
 #endif
 
-    if(gdbm_store(hostsInfoFile, key_data, data_data, GDBM_REPLACE) == 0) {
+  if(gdbm_store(hostsInfoFile, key_data, data_data, GDBM_REPLACE) == 0) {
 #ifdef STORAGE_DEBUG
-   traceEvent(TRACE_INFO, "Stored instance: '%s'\n", key);
+    traceEvent(TRACE_INFO, "Stored instance: '%s'\n", key);
 #endif
     fprintf(stdout, "+"); fflush(stdout);
   }
 
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+  releaseMutex(&gdbmMutex);
 #endif
 
 #else
@@ -1611,11 +1611,11 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
 
     if(data_data.dsize != sizeof(HostTraffic)) {
 #ifdef STORAGE_DEBUG
-     traceEvent(TRACE_INFO, "Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
-	     key, data_data.dsize, sizeof(HostTraffic));
+      traceEvent(TRACE_INFO, "Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
+		 key, data_data.dsize, sizeof(HostTraffic));
 #endif
-     gdbm_delete(hostsInfoFile, key_data);
-     free(data_data.dptr);
+      gdbm_delete(hostsInfoFile, key_data);
+      free(data_data.dptr);
 #ifdef MULTITHREADED
       releaseMutex(&gdbmMutex);
 #endif
@@ -1653,17 +1653,17 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     el->icmpInfo = NULL;
 
 #ifdef STORAGE_DEBUG
-   traceEvent(TRACE_INFO, "Resurrected instance: '%s/%s'\n",
-	   el->ethAddressString, el->hostNumIpAddress);
+    traceEvent(TRACE_INFO, "Resurrected instance: '%s/%s'\n",
+	       el->ethAddressString, el->hostNumIpAddress);
 #endif
     fprintf(stdout, "*"); fflush(stdout);
     return(el);
   } else {
 #ifdef STORAGE_DEBUG
-   traceEvent(TRACE_INFO, "Unable to find '%s'\n", key);
+    traceEvent(TRACE_INFO, "Unable to find '%s'\n", key);
 #endif
 #ifdef MULTITHREADED
-      releaseMutex(&gdbmMutex);
+    releaseMutex(&gdbmMutex);
 #endif
     return(NULL);
   }
@@ -1714,7 +1714,7 @@ void addTimeMapping(u_int16_t transactionId,
   int i=0;
 
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "addTimeMapping(0x%X)\n", transactionId);
+  traceEvent(TRACE_INFO, "addTimeMapping(0x%X)\n", transactionId);
 #endif
   for(i=0; i<NUM_TRANSACTION_ENTRIES; i++) {
     if(transTimeHash[idx].transactionId == 0) {
@@ -1764,10 +1764,10 @@ time_t getTimeMapping(u_int16_t transactionId,
   int i=0;
 
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "getTimeMapping(0x%X)\n", transactionId);
+  traceEvent(TRACE_INFO, "getTimeMapping(0x%X)\n", transactionId);
 #endif
 
- /* ****************************************
+  /* ****************************************
   
     As  Andreas Pfaller <a.pfaller@pop.gun.de>
     pointed out, the hash code needs to be optimised.

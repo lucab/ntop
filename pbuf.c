@@ -259,7 +259,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  break;
       }
     } else {
-
       /* ************************
 
 	 This code needs to be optimised. In fact everytime a 
@@ -409,7 +408,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 #endif
 
 	el->lastSeen = actTime;
-
 	checkSpoofing(idx);
       }
     } else {
@@ -442,10 +440,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	freeHostInfo(actualDeviceId, candidate);
 	idx = candidate; /* this is a hint for (**) */
       }
-    }
 
-    run++;
-    goto HASH_SLOT_FOUND;
+      run++;
+      goto HASH_SLOT_FOUND;    
+    }
   }
 
   el->lastSeen = actTime;

@@ -53,7 +53,7 @@
 
 extern int maxNumLines, idleFlag, percentMode, localAddrFlag, refreshRate;
 extern int webPort, actualReportDeviceId;
-extern int sortSendMode;
+extern int sortSendMode, sortSendMode;
 extern short sortFilter;
 
 extern int sock, newSock;

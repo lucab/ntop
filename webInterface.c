@@ -35,7 +35,7 @@ void handleSingleWebConnection(fd_set *fdmask);
 /* **************************************** */
 
 void initializeWeb(void) {
-  columnSort = 0;
+  columnSort = 0, sortSendMode = 0;
   addDefaultAdminUser();
   initAccessLog();
 }
@@ -886,9 +886,9 @@ void printNtopConfigInfo(void) {
 			   "No (Either disabled or missing)");
 
   if(isNepedPresent) 
-    printFeatureConfigInfo("<A HREF=http://apostols.org/projectz/neped/>Neped</A> Support", "Yes");
+    printFeatureConfigInfo("<A HREF=http://apostols.org/projectz/neped/>neped</A> Support", "Yes");
   else
-    printFeatureConfigInfo("<A HREF=http://apostols.org/projectz/neped/>Neped</A> Support", 
+    printFeatureConfigInfo("<A HREF=http://apostols.org/projectz/neped/>neped</A> Support", 
 			   "No (Either disabled or missing)");
 
   if(isNmapPresent) 
