@@ -216,6 +216,8 @@ BEGIN {
         type_macroname_conversion[functionname]    = "newxml_" functionname
     }
 
+    system("rm -f /tmp/xmldump[12]")
+
     indent = "    "
     inlineline = 0
 }
