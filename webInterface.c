@@ -2934,10 +2934,6 @@ void printNtopConfigInfo(int textPrintFlag) {
                            "No");
 #endif
 
-  printParameterConfigInfo(textPrintFlag, "--dynamic-purge-limits",
-                           myGlobals.dynamicPurgeLimits == 1 ? "Yes" : "No",
-                           "No");
-
   printParameterConfigInfo(textPrintFlag, "--p3p-cp",
                            ((myGlobals.P3Pcp == NULL) ||
                             (myGlobals.P3Pcp[0] == '\0')) ? "none" :
@@ -3327,15 +3323,6 @@ void printNtopConfigInfo(int textPrintFlag) {
     if(snprintf(buf, sizeof(buf), "%d", DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE", buf);
-
-    if(myGlobals.dynamicPurgeLimits == 1) {
-      if(snprintf(buf, sizeof(buf), "%f", CONST_IDLE_PURGE_MINIMUM_TARGET_TIME) < 0)
-	BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MINIMUM_TARGET_TIME", buf);
-      if(snprintf(buf, sizeof(buf), "%f", CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME) < 0)
-	BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME", buf);
-    }
   }
 
   if(myGlobals.enableSessionHandling) {

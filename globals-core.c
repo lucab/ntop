@@ -199,8 +199,6 @@ void initNtopGlobals(int argc, char * argv[]) {
    myGlobals.useSSLwatchdog = 0;
 #endif
 
-  myGlobals.dynamicPurgeLimits = 0;
-
   /* Other flags (to be set via command line options one day) */
   myGlobals.enableFragmentHandling = 1;
 

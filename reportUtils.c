@@ -2632,9 +2632,87 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 
 /* ************************************ */
 
+static HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
+  HostTraffic *theEntry = NULL;
+  int found = 0;
+  u_int idx;
+  char theBytes[8];
+
+  if(theSerial == myGlobals.broadcastEntry->hostSerial) {
+    memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
+    return(0);
+  } else if(theSerial == myGlobals.otherHostEntry->hostSerial) {
+    memcpy(el, myGlobals.otherHostEntry, sizeof(HostTraffic));
+    return(0);
+  }
+    
+  /*
+    Unused
+    |
+    |        IP
+    V     -------
+    X X X X X X X X 
+    ^   -----------
+    |        MAC
+    | 
+    1 = MAC
+    0 = IP
+
+  */
+
+  memcpy(theBytes, &theSerial, 8);
+
+#ifdef CFG_LITTLE_ENDIAN
+  {
+    unsigned char buf1[8];
+    int i;
+
+    for(i=0; i<8; i++)
+      buf1[i] = theBytes[7-i];
+
+    memcpy(theBytes, buf1, 8);
+  }
+#endif
+
+  memset(el, 0, sizeof(HostTraffic));
+  el->hostSerial = theSerial;
+
+  if(theBytes[0] == 0) {
+    /* IP */
+    char sniffedName[MAXDNAME];
+    char buf[LEN_GENERAL_WORK_BUFFER];
+
+    memcpy(&el->hostIpAddress.s_addr, &theBytes[4], 4);
+
+    strncpy(el->hostNumIpAddress,
+	    _intoa(el->hostIpAddress, buf, sizeof(buf)),
+	    sizeof(el->hostNumIpAddress));
+    fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
+    
+    if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
+      if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))
+	strcpy(el->hostSymIpAddress, sniffedName);
+    }
+  } else {
+    /* MAC */
+    char *ethAddr;
+    char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
+    memcpy(el->ethAddress, &theBytes[2], LEN_ETHERNET_ADDRESS);
+    ethAddr = etheraddr_string(el->ethAddress, etherbuf);
+    strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
+    el->hostIpAddress.s_addr = 0x1234; /* dummy */
+  }
+
+  return(el);
+}
+
+/* ************************************ */
+
 void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
   u_int i, titleSent = 0;
   char buf[LEN_GENERAL_WORK_BUFFER];
+  HostTraffic tmpEl;
 
   if((el->pktSent.value != 0) || (el->pktRcvd.value != 0)) {
     int ok =0;
@@ -2656,8 +2734,8 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	  if((el->contactedSentPeers.peersSerials[i] != FLAG_NO_PEER)
 	     && (el->contactedSentPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial)) {
 
-	    if((el2 = findHostBySerial(el->contactedSentPeers.peersSerials[i], 
-					myGlobals.actualReportDeviceId)) != NULL) {
+	    if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], 
+				    myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	      if(numEntries == 0) {
 		printSectionTitle("Last Contacted Peers");
 		titleSent = 1;
@@ -2697,8 +2775,8 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	if((el->contactedRcvdPeers.peersSerials[i] != FLAG_NO_PEER)
 	   && (el->contactedRcvdPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial)) {
 
-	    if((el2 = findHostBySerial(el->contactedSentPeers.peersSerials[i], 
-					myGlobals.actualReportDeviceId)) != NULL) {
+	    if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], 
+					myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	      if(numEntries == 0) {
 		if(!titleSent) printSectionTitle("Last Contacted Peers");
 		sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>"
@@ -2899,7 +2977,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   int printedHeader, i;
   char *dynIp, *multihomed;
   u_short as;
-  HostTraffic *theHost;
+  HostTraffic *theHost, tmpEl;
 
   accessAddrResMutex("printAllSessionsHTML");
 
@@ -3479,7 +3557,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       HostSerial routerIdx = el->contactedRouters.peersSerials[i];
 
       if(routerIdx != FLAG_NO_PEER) {
-	HostTraffic *router = findHostBySerial(routerIdx, myGlobals.actualReportDeviceId);
+	HostTraffic *router = quickHostLink(routerIdx, myGlobals.actualReportDeviceId, &tmpEl);
 
 	if(router != NULL) {
 	  if(!printedHeader) {

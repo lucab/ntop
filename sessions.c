@@ -343,6 +343,13 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     return;
   }
 
+  if((sessionToPurge->initiator == NULL) || (sessionToPurge->remotePeer == NULL)) {
+    traceEvent(CONST_TRACE_ERROR, "Either initiator or remote peer is NULL");
+    return;
+  } else {
+    sessionToPurge->initiator->numHostSessions--, sessionToPurge->remotePeer->numHostSessions--;
+  }
+
   if(((sessionToPurge->bytesProtoSent.value == 0)
       || (sessionToPurge->bytesProtoRcvd.value == 0))
      && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
@@ -423,17 +430,24 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   too long.
 */
 
-void scanTimedoutTCPSessions(int actualDeviceId) {
-  u_int idx, freeSessionCount =0;
+/* #define DEBUG */
 
+void scanTimedoutTCPSessions(int actualDeviceId) {
+  u_int _idx, freeSessionCount =0;
+  static u_int idx = 0;
+    
   if(!myGlobals.enableSessionHandling) return;
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Called scanTimedoutTCPSessions (device=%d, sessions=%d)\n",
 	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
-  for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
+  for(_idx=0; _idx<MAX_TOT_NUM_SESSIONS; _idx++) {
     IPSession *nextSession, *prevSession, *theSession;
+    
+    idx = (idx + 1) % MAX_TOT_NUM_SESSIONS;
+
+    if(freeSessionCount > MAX_NUM_PURGED_SESSIONS) break;
 
     prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
@@ -497,6 +511,8 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   traceEvent(CONST_TRACE_INFO, "DEBUG: scanTimedoutTCPSessions: freed %u sessions\n", freeSessionCount);
 #endif
 }
+
+/* #undef DEBUG */
 
 /* ************************************ */
 
@@ -690,8 +706,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
       myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
 
-      theSession->initiator  = srcHost;
-      theSession->remotePeer = dstHost;
+      theSession->initiator  = srcHost, theSession->remotePeer = dstHost;
+      theSession->initiator->numHostSessions++, theSession->remotePeer->numHostSessions++;
       theSession->sport = sport;
       theSession->dport = dport;
       theSession->passiveFtpSession = isPassiveSession(dstHost->hostIpAddress.s_addr, dport);

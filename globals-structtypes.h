@@ -471,6 +471,8 @@ typedef struct hostTraffic {
                    actualTPktThpt, averageTPktThpt, peakTPktThpt;
   unsigned short   actBandwidthUsage;
   TrafficDistribution *trafficDistribution;
+  u_int32_t        numHostSessions;
+
 
   /* Routing */
   RoutingCounter   *routedTraffic;
@@ -1518,9 +1520,6 @@ XML*/
   int useSSLwatchdog;                /* '133' */
                                      /*XML b useSSLwatchdog       Options    "--ssl-watchdog" */
 #endif
-
-  int dynamicPurgeLimits;            /* '134' */
-                                     /*XML n dynamicPurgeLimits   Options    "--dynamic-purge-limits" */
 
   char *P3Pcp;                       /* '137' */
                                      /*XML s P3Pcp                Options    "--p3p-cp" */

@@ -125,6 +125,8 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
       return;
 
+    if(host->numHostSessions == 0) return;
+
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
 #endif
@@ -133,6 +135,8 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 
     while(theSession != NULL) {
       nextSession = theSession->next;
+
+      if(host->numHostSessions == 0) break;
 
       if((theSession->initiator == host) || (theSession->remotePeer == host)) {
 	if(myGlobals.device[theDevice].tcpSession[i] == theSession) {
@@ -161,6 +165,11 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 #endif
 #endif
   } /* for */
+
+  if(host->numHostSessions > 0) {
+    traceEvent(CONST_TRACE_ERROR, "====> Host %/%s has %d sessions still to be purged",
+	       host->hostNumIpAddress, host->hostSymIpAddress, host->numHostSessions);
+  }
 }
 
 /* **************************************** */
@@ -565,6 +574,10 @@ void purgeIdleHosts(int actDevice) {
 
   free(theFlaggedHosts);
 
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.purgeMutex);
+#endif
+
   if(myGlobals.enableSessionHandling)
     scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
 
@@ -581,66 +594,6 @@ void purgeIdleHosts(int actDevice) {
   else
       traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d: no hosts deleted", actDevice);
 
-  if ((myGlobals.dynamicPurgeLimits == 1) && (numFreedBuckets > 0)) {
-      /*
-       * Dynamically adjust the maximum # of hosts we'll purge per cycle
-       * so that it takes no more than a parameter (in seconds).
-       */
-
-#ifdef IDLE_PURGE_DEBUG
-      traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Time targets MIN %.2f ... actual %.6f ... MAX %.2f\n",
-                             CONST_IDLE_PURGE_MINIMUM_TARGET_TIME,
-                             hiresDeltaTime,
-                             CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME);
-#endif
-
-      if (hiresDeltaTime > CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME) {
-          if (myGlobals.maximumHostsToPurgePerCycle > 64) {
-              /*
-               * Shrink it based on time (i.e. 1s target / 2s actual = 50%)
-               *   But keep it at least 64 and shrink by at least 8 each time...
-               */
-              newHostsToPurgePerCycle =
-                    max( 64,
-                         min( myGlobals.maximumHostsToPurgePerCycle - 8,
-                              numFreedBuckets /
-                              (int) (hiresDeltaTime / CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME)));
-              traceEvent(CONST_TRACE_INFO, "IDLE_PURGE: Adjusting maximumHostsToPurgePerCycle from %d to %d...\n",
-                                     myGlobals.maximumHostsToPurgePerCycle,
-                                     newHostsToPurgePerCycle);
-              myGlobals.maximumHostsToPurgePerCycle = newHostsToPurgePerCycle;
-#ifdef IDLE_PURGE_DEBUG
-           } else {
-               traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Unable to adjust below 64 host minimum...\n");
-#endif
-           }
-      } else if (numFreedBuckets < myGlobals.maximumHostsToPurgePerCycle - 8) {
-#ifdef IDLE_PURGE_DEBUG
-          traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Purged too few to adjust...\n");
-#endif
-      } else if (hiresDeltaTime < CONST_IDLE_PURGE_MINIMUM_TARGET_TIME) {
-          /*
-           * Grow it by ADJ+1/ADJ (e.g. 10%), at least 8...
-           */
-          newHostsToPurgePerCycle =
-                max( myGlobals.maximumHostsToPurgePerCycle + 8,
-                     (CONST_IDLE_PURGE_ADJUST_FACTOR + 1) *
-                     myGlobals.maximumHostsToPurgePerCycle /
-                     CONST_IDLE_PURGE_ADJUST_FACTOR);
-          traceEvent(CONST_TRACE_INFO, "IDLE_PURGE: Adjusting maximumHostsToPurgePerCycle from %d to %d...\n",
-                     myGlobals.maximumHostsToPurgePerCycle,
-                     newHostsToPurgePerCycle);
-          myGlobals.maximumHostsToPurgePerCycle = newHostsToPurgePerCycle;
-#ifdef IDLE_PURGE_DEBUG
-      } else {
-          traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: No adjustment necessary...\n");
-#endif
-      }
-  }
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.purgeMutex);
-#endif
 }
 
 /* **************************************************** */

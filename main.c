@@ -631,10 +631,6 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-    case 134:
-      myGlobals.dynamicPurgeLimits = 1;
-      break;
-
     case 135:
       /* Dennis Schoen (dennis@cns.dnsalias.org) allow --set-admin-password=<password> */
       if (optarg) {

@@ -664,7 +664,8 @@
 #define MAX_PER_DEVICE_HASH_LIST           ((u_int16_t)-1) /* Static hash size */
 #endif
 
-#define MAX_TOT_NUM_SESSIONS MAX_PER_DEVICE_HASH_LIST
+#define MAX_NUM_PURGED_SESSIONS            512
+#define MAX_TOT_NUM_SESSIONS               MAX_PER_DEVICE_HASH_LIST
 
 /*
  * This is the theoretical upper limit on "NIC"s.  This must be large enough to include
