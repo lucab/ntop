@@ -912,7 +912,7 @@ static int checkURLsecurity(char *url) {
   int rc = 0, countOKextension, len, i;
   int countSections, countOKnumeric;
   char *token;
-  char *workURL = NULL;
+  char *workURL;
 
   /*
     Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>
@@ -950,7 +950,6 @@ static int checkURLsecurity(char *url) {
     return(2);
   }
 
- HANDLE_URL:
    workURL = strdup(url);
  
    /* Strip off parameters */
@@ -969,6 +968,7 @@ static int checkURLsecurity(char *url) {
       traceEvent(CONST_TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request (url=%s)\n", workURL);
       /* Explicitly, we're updating the real URL, not the copy, so it's not used anywhere in ntop */
       url[0] = '\0'; 
+      free(workURL);
       return(1);
   }
 
@@ -986,30 +986,34 @@ static int checkURLsecurity(char *url) {
 
     url[begin] = '\0';
     free(workURL);
-    goto HANDLE_URL;
+    return(checkURLsecurity(url));
   }
 
   /* a double slash? */
   if(strstr(workURL, "//") > 0) {
     traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request\n");
+    free(workURL);
     return(2);
   }
 
   /* a double &? */
   if(strstr(workURL, "&&") > 0) {
     traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found && in URL...rejecting request\n");
+    free(workURL);
     return(2);
   }
 
   /* a double ?? */
   if(strstr(workURL, "??") > 0) {
     traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found ?? in URL...rejecting request\n");
+    free(workURL);
     return(2);
   }
 
   /* a double dot? */
   if(strstr(workURL, "..") > 0) {
     traceEvent(CONST_TRACE_ERROR, "URL security(3): ERROR: Found .. in URL...rejecting request\n");
+    free(workURL);
     return(3);
   }
 
@@ -1017,6 +1021,7 @@ static int checkURLsecurity(char *url) {
   if((len = strcspn(workURL, CONST_URL_PROHIBITED_CHARACTERS)) < strlen(workURL)) {
     traceEvent(CONST_TRACE_ERROR, "URL security(4): ERROR: Prohibited character(s) [%c]"
 	       " in URL... rejecting request\n", workURL[len]);
+    free(workURL);
     return(4);
   }
 
@@ -1024,11 +1029,14 @@ static int checkURLsecurity(char *url) {
  *   NOTE that we don't allow general .p3p and .xml requests
  *        Those are bounced below...
  */
-  if (strncmp(url, STR_W3C_P3P_XML, strlen(STR_W3C_P3P_XML)) == 0) {
-      return(0);
+  if(strncmp(url, STR_W3C_P3P_XML, strlen(STR_W3C_P3P_XML)) == 0) {
+    free(workURL);
+    return(0);
   }
-  if (strncmp(url, STR_NTOP_P3P, strlen(STR_NTOP_P3P)) == 0) {
-      return(0);
+  
+  if(strncmp(url, STR_NTOP_P3P, strlen(STR_NTOP_P3P)) == 0) {
+    free(workURL);
+    return(0);
   }
 
   /*
@@ -1072,13 +1080,12 @@ static int checkURLsecurity(char *url) {
     rc = 5;
   }
 
-  if(workURL != NULL) free(workURL);
-
   if(rc != 0)
     traceEvent(CONST_TRACE_ERROR,
 	       "ERROR: bad char found on '%s' (rc=%d) rejecting request",
 	       url, rc);
 
+  free(workURL);
   return(rc);
 }
 
@@ -2102,44 +2109,53 @@ static int returnHTTPPage(char* pageName,
 
 /* ************************* */
 
+#define MAX_NUM_USERS 32
+
 static int checkHTTPpassword(char *theRequestedURL,
 			     int theRequestedURLLen _UNUSED_,
 			     char* thePw, int thePwLen) {
   char outBuffer[65], *user = NULL, users[LEN_GENERAL_WORK_BUFFER];
   int i, rc;
-  datum key_data, return_data;
+  datum key, nextkey;
+  static int usersLoaded = 0;
+  static char *theUsers[32];
 
   theUser[0] = '\0';
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Checking '%s'\n", theRequestedURL);
 #endif
 
-  return_data = gdbm_firstkey(myGlobals.pwFile);
+  if(usersLoaded == 0) {
+    key = gdbm_firstkey(myGlobals.pwFile);
+    
+    while(key.dptr != NULL) {
+      theUsers[usersLoaded++] = key.dptr;
+      nextkey = gdbm_nextkey(myGlobals.pwFile, key);
+      key = nextkey;
+
+      if(usersLoaded == MAX_NUM_USERS) break;
+    }
+  }
+
   outBuffer[0] = '\0';
 
-  while (return_data.dptr != NULL) {
-    key_data = return_data;
-
-    if(key_data.dptr[0] == '2') /* 2 = URL */ {
-      if(strncmp(&theRequestedURL[1], &key_data.dptr[1],
-		 strlen(key_data.dptr)-1) == 0) {
-	strncpy(outBuffer, key_data.dptr, sizeof(outBuffer)-1)[sizeof(outBuffer)-1] = '\0';
-	free(key_data.dptr);
+  for(i=0; i<usersLoaded; i++) {
+    if(theUsers[i][0] == '2') /* 2 = URL */ {
+      if(strncmp(&theRequestedURL[1], &theUsers[i][1],
+		 strlen(theUsers[i])-1) == 0) {
+	strncpy(outBuffer, theUsers[i], sizeof(outBuffer)-1)[sizeof(outBuffer)-1] = '\0';
 	break;
       }
     }
-
-    return_data = gdbm_nextkey(myGlobals.pwFile, key_data);
-    free(key_data.dptr);
   }
 
   if(outBuffer[0] == '\0') {
     return 1; /* This is a non protected URL */
   }
 
-  key_data.dptr = outBuffer;
-  key_data.dsize = strlen(outBuffer)+1;
-  return_data = gdbm_fetch(myGlobals.pwFile, key_data);
+  key.dptr = outBuffer;
+  key.dsize = strlen(outBuffer)+1;
+  nextkey = gdbm_fetch(myGlobals.pwFile, key);
 
   i = decodeString(thePw, (unsigned char*)outBuffer, sizeof(outBuffer));
 
@@ -2169,28 +2185,28 @@ static int checkHTTPpassword(char *theRequestedURL,
   if(snprintf(users, LEN_GENERAL_WORK_BUFFER, "1%s", user) < 0)
     BufferTooShort();
 
-  if(return_data.dptr != NULL) {
-    if(strstr(return_data.dptr, users) == NULL) {
-      if(return_data.dptr != NULL) free(return_data.dptr);
+  if(nextkey.dptr != NULL) {
+    if(strstr(nextkey.dptr, users) == NULL) {
+      if(nextkey.dptr != NULL) free(nextkey.dptr);
       return 0; /* The specified user is not among those who are
 		   allowed to access the URL */
     }
     
-    free(return_data.dptr);
+    free(nextkey.dptr);
   }
 
-  key_data.dptr = users;
-  key_data.dsize = strlen(users)+1;
-  return_data = gdbm_fetch(myGlobals.pwFile, key_data);
+  key.dptr = users;
+  key.dsize = strlen(users)+1;
+  nextkey = gdbm_fetch(myGlobals.pwFile, key);
 
-  if(return_data.dptr != NULL) {
+  if(nextkey.dptr != NULL) {
 #ifdef WIN32
-    rc = !strcmp(return_data.dptr, thePw);
+    rc = !strcmp(nextkey.dptr, thePw);
 #else
-    rc = !strcmp(return_data.dptr,
+    rc = !strcmp(nextkey.dptr,
 		 (char*)crypt((const char*)thePw, (const char*)CONST_CRYPT_SALT));
 #endif
-    free (return_data.dptr);
+    free (nextkey.dptr);
   } else
     rc = 0;
 
@@ -2246,7 +2262,6 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 void handleHTTPrequest(struct in_addr from) {
   int skipLeading, postLen, usedFork = 0;
   char requestedURL[MAX_LEN_URL], pw[64], agent[256];
-
   int rc, i;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
