@@ -87,14 +87,15 @@ ac_disable_readline=no
 ac_disable_curses=no
 
 dnl>
+dnl> By default the configuration script will try to link against GDChart library, if available.
+dnl> The choice to disable this feature is left to the user.
+ac_disable_gdchart=no
+
+dnl>
 dnl> By default the configuration script will not try to link against the TCP wrapper library, if available.
 dnl> The choice to enable this feature is left to the user.
 ac_enable_tcpwrap=no
 
-dnl>
-dnl> By default the configuration script will try to link against GDChart library, if available.
-dnl> The choice to disable this feature is left to the user.
-ac_disable_gdchart=no
 
 dnl>
 dnl> By default the configuration script will try to compile all the plugins in its own directory.
@@ -277,7 +278,7 @@ AC_ARG_ENABLE(ssl, [  --disable-ssl           disable HTPPS support also if Open
 dnl>
 dnl> Give the user an option to compile without the GNU readline support.
 dnl>
-AC_ARG_ENABLE(readline, [  --disable-readline        disable GNU readline support also if available [default=no]], ac_disable_readline="yes", ac_disable_readline="no")
+AC_ARG_ENABLE(readline, [  --disable-readline      disable GNU readline support also if available [default=no]], ac_disable_readline="yes", ac_disable_readline="no")
 
 dnl>
 dnl> Give the user an option to compile without the curses support.
@@ -293,6 +294,8 @@ dnl>
 dnl> Give the user an option to compile with the TCP Wrapper support.
 dnl>
 AC_ARG_ENABLE(tcpwrap, [  --enable-tcpwrap        enable TCP Wrap support if available [default=no]], ac_enable_tcpwrap="yes")
+
+AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
 dnl>
 dnl> Give the user an option to avoid to compile all the plugins.
@@ -316,6 +319,11 @@ dnl> OPTIONAL Look a C++ Compiler.
 dnl>
 if test ".$ac_disable_ri" = ".no"; then
   AC_PROG_CXX
+  case "$CC" in
+      gcc )
+      CXXFLAGS="$CXXFLAGS -fhandle-exceptions"
+        ;;
+  esac
 else
   REMOTEINTERFACE=
 fi
@@ -592,25 +600,45 @@ fi
 dnl>
 dnl> GNU ReadLine Library (optional)
 dnl> check for `readline' in -lreadline
+dnl>  AC_MSG_CHECKING([for GNU readline Library (optional package)])
 dnl>
-LIBREADLINE=''
-LIBTERMCAP=''
+LIBREADLINE=
+LIBTERMCAP=
 if test ".$ac_disable_readline" = ".no"; then
-  AC_MSG_CHECKING([for GNU readline Library (optional package)])
+
+dnl>
+dnl> Make sure we link termcap with readline if we aren't already
+dnl> linking curses or termcap
+dnl>
+  READLIBS=$LIBCURSES
+  case "$LIBS" in
+    *termcap*|*curses*)
+        ;;
+    *)
+      AC_CHECK_LIB(termcap, tgetent, LIBTERMCAP="-ltermcap")
+        ;;
+  esac
+
   AC_CHECK_HEADERS(readline/readline.h)
-  AC_CHECK_LIB(readline, readline, LIBREADLINE="-lreadline"; AC_DEFINE(HAVE_READLINE))
+  AC_CHECK_LIB(readline, readline, LIBREADLINE="-lreadline", ,$READLIBS)
+  if test "$LIBREADLINE" != "" ; then
+    AC_DEFINE(HAVE_READLINE)
+    LIBREADLINE="$LIBREADLINE $READLIBS"
+  fi
+
 
 dnl> Make sure we link termcap with readline if we aren't already
 dnl> linking curses or termcap
 
-  AC_CHECK_LIB(termcap, tgetent, LIBTERMCAP="-ltermcap")
-  case "$LIBS" in
-    *termcap*|*curses*)
-       ;;
-  *)
-     LIBREADLINE="$LIBREADLINE $LIBTERMCAP"
-       ;;
-  esac
+dnl>  AC_CHECK_LIB(termcap, tgetent, LIBTERMCAP="-ltermcap")
+dnl>   case "$LIBS" in
+dnl>     *termcap*|*curses*)
+dnl>        ;;
+dnl>   *)
+dnl>      LIBREADLINE="$LIBREADLINE $LIBTERMCAP"
+dnl>        ;;
+dnl>  esac
+
 fi
 
 
@@ -1047,21 +1075,20 @@ esac])
 
 dnl>
 dnl> versioning
-dnl> echo "char * buildDate = \"08/11/00 07:04:32 PM";" >> version.c
-dnl> date +"%D %r" | sed -e 's/.*/char * buildDate = "&";/' >> version.c
+dnl>
 echo "creating version.c"
 /bin/rm -f version.c
 echo $VERSION  | sed -e 's/.*/char * version   = "&";/' > version.c
 ./config.guess | sed -e 's/.*/char * osName    = "&";/' >> version.c
 echo "char * author    = \"Luca Deri <deri@ntop.org>\";" >> version.c
-date -R | sed -e 's/.*/char * buildDate = "&";/' >> version.c
+date +"%D %r" | sed -e 's/.*/char * buildDate = "&";/' >> version.c
 
 echo "
 
 This is your $PACKAGE $VERSION configuration:
 
 Host System Type  : ${host}
-Compiler [cflags] : ${CC} [${CFLAGS} ${DEFS}]
+Compiler (cflags) : ${CC} ${CFLAGS} ${DEFS}
 Include path      : ${INCS}
 System Libs       : ${LDFLAGS} ${LIBS}
 Core Libs         : ${CORELIBS}
