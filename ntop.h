@@ -1291,7 +1291,6 @@ typedef struct {
 
 
 #define MAX_NUM_SESSION_PEERS 5
-#define MAX_NUM_HOST_ROUTERS  5
 
 #define CLIENT_TO_SERVER       1
 #define CLIENT_FROM_SERVER     2
@@ -1373,12 +1372,7 @@ typedef struct pluginStatus {
 } PluginStatus;
 
 #define PLUGIN_EXTENSION                  ".so"
-
-#ifdef DARWIN
 #define PLUGIN_ENTRY_FCTN_NAME "PluginEntryFctn"
-#else
-#define PLUGIN_ENTRY_FCTN_NAME "PluginEntryFctn"
-#endif
 
 /* Flow Filter List */
 typedef struct flowFilterList {
@@ -1705,11 +1699,9 @@ typedef struct hostTraffic {
   TrafficCounter  otherSent, otherReceived;
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/received by this host */
   IpGlobalSession *tcpSessionList, *udpSessionList; /* list of sessions initiated/received by this host */
-  u_int contactedSentPeersIndexes[MAX_NUM_CONTACTED_PEERS]; /* peers that talked with this host */
-  u_int contactedSentPeersIdx;
-  u_int contactedRcvdPeersIndexes[MAX_NUM_CONTACTED_PEERS]; /* peers that talked with this host */
-  u_int contactedRcvdPeersIdx;
-  u_int contactedRouters[MAX_NUM_HOST_ROUTERS]; /* routers contacted by this host */
+  UsageCounter    contactedSentPeers; /* peers that talked with this host */
+  UsageCounter    contactedRcvdPeers; /* peers that talked with this host */
+  UsageCounter    contactedRouters; /* routers contacted by this host */
   ServiceStats *dnsStats, *httpStats;
 #ifdef ENABLE_NAPSTER
   NapsterStats *napsterStats;

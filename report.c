@@ -800,7 +800,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		    getRowColor(), 
 		    formatThroughput(device[actualReportDeviceId].ethernetBytes/(actTime-initialSniffTime)), 
 		    /* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
-		    ((float)device[actualReportDeviceId].ethernetPkts/(float)(actTime-initialSniffTime))) < 0) 
+		    formatThroughput(device[actualReportDeviceId].ethernetPkts/(actTime-initialSniffTime))) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
       }
@@ -1392,21 +1392,19 @@ void printLocalRoutersList(void) {
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && subnetLocalHost(el)) {
 
-      for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
-	if(el->contactedRouters[j] != NO_PEER) {
+      for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
+	if(el->contactedRouters.peersIndexes[j] != NO_PEER) {
 	  short found = 0;
 
 	  for(i=0; i<numEntries; i++) {
-	    if(el->contactedRouters[j] == routerList[i]) {
+	    if(el->contactedRouters.peersIndexes[j] == routerList[i]) {
 	      found = 1;
 	      break;
 	    }
 	  }
 
 	  if((found == 0) && (numEntries < MAX_NUM_ROUTERS)) {
-	    /* traceEvent(TRACE_INFO, "Adding '%d' in slot '%d'\n",
-	       el->contactedRouters[j], numEntries); */
-	    routerList[numEntries++] = el->contactedRouters[j];
+	    routerList[numEntries++] = el->contactedRouters.peersIndexes[j];
 	  }
 	}
     }
@@ -1431,8 +1429,8 @@ void printLocalRoutersList(void) {
 	for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++)
 	  if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
 	     && subnetLocalHost(el)) {
-	    for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
-	      if(el->contactedRouters[j] == routerList[i]) {
+	    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
+	      if(el->contactedRouters.peersIndexes[j] == routerList[i]) {
 		if(snprintf(buf, sizeof(buf), "<LI>%s</LI>\n",
 			    makeHostLink(el, SHORT_FORMAT, 0, 0)) < 0) 
 		  traceEvent(TRACE_ERROR, "Buffer overflow!");

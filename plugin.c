@@ -37,12 +37,7 @@ extern PluginInfo* rmonPluginEntryFctn(void);
 #endif
 
 #ifndef RTLD_NOW 
-#ifdef RTLD_LAZY
 #define RTLD_NOW RTLD_LAZY 
-#else
-/* MacOS X Patch */
-#define RTLD_NOW 1
-#endif
 #endif
 
 /* ******************* */
@@ -143,7 +138,7 @@ void notifyPluginsHashResize(int oldSize, int newSize, int* mappings) {
 
 #ifndef MICRO_NTOP
 
-#if (defined(HAVE_DIRENT_H) || defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX)
+#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32)
 static void loadPlugin(char* dirName, char* pluginName) {
   char pluginPath[256];
   char tmpBuf[BUF_SIZE];
@@ -199,7 +194,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
   }
 
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-  if(shl_findsym(&pluginPtr, PLUGIN_ENTRY_FCTN_NAME,
+  if(shl_findsym(&pluginPtr ,PLUGIN_ENTRY_FCTN_NAME,
 		 TYPE_PROCEDURE, &pluginEntryFctnPtr) == -1)
     pluginEntryFctnPtr = NULL;
 #else
@@ -212,14 +207,14 @@ static void loadPlugin(char* dirName, char* pluginName) {
 
   if(pluginEntryFctnPtr == NULL) {
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-    traceEvent(TRACE_WARNING, "\nWARNING: unable to load plugin's '%s' entry function [%s] \n",
+    traceEvent(TRACE_WARNING, "\nWARNING: unable to local plugin '%s' entry function [%s] \n",
 	       pluginPath, strerror(errno));
 #else
 #ifdef WIN32
-    traceEvent(TRACE_WARNING, "WARNING: unable to load plugin's '%s' entry function [%li]\n", 
+    traceEvent(TRACE_WARNING, "WARNING: unable to local plugin '%s' entry function [%li]\n", 
 	       pluginPath, GetLastError());
 #else
-    traceEvent(TRACE_WARNING, "WARNING: unable to load plugin's '%s' entry function [%s]\n",
+    traceEvent(TRACE_WARNING, "WARNING: unable to local plugin '%s' entry function [%s]\n",
 	       pluginPath, dlerror());
 #endif /* WIN32 */
 #endif /* HPUX */
@@ -397,7 +392,7 @@ void unloadPlugins(void) {
   }
 }
 
-#endif /* defined(HAVE_DIRENT_H) || defined(HAVE_DLFCN_H) */
+#endif /* defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H) */
 
 /* ******************************* */
 
