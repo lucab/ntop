@@ -22,8 +22,11 @@
 /ETHERTYPE_/ { next }
 /ICMP_/ { next }
 /LLCSAP_/ { next }
+/CONST_LLC_/ { next }
 /FLAG_/ { next }
-/[CT]_/ { next }
+/TCPOPT_/ { next }
+/ [CT]_/ { next }
+/ __/ { next }
 /argument/ { next }
 /FALSE/ { next }
 /TRUE/ { next }
@@ -32,27 +35,62 @@
 /WNOHANG/ { next }
 /0xffffffff/ { next }
 /IPPROTO_/ { next }
-/_DEBUG/ { next }
-/LOG_/ { next }
-/_URL/ { next }
+/LOG_AUTHPRIV/ { next }
+/CONST_URL_PROHIBITED_CHARACTERS/ { next }
+/HTML_OPENSSL_URL/ { next }
+/DEFAULT_NTOP_MAPPER_URL/ { next }
 /SLL_HDR_LEN/ { next }
 /SAP_/ { next }
+/PROTOTYPES/ { next }
+/CONST_TR_/ { next } 
+/CONST_FDDIFC_/ { next }
+/CONST_[^_]*_TRACE_/ { next }
+/ DLT_/ { next }
 
 $2 == "PACKAGE" { next }
 
-$1 == "#define" {
-    print $2 " " (NF == 2 ? "*" : ($3 == "*/" ? "*" : ($3 == "1" ? "*" : (substr($3,1,1) == "\"" ? $2 : "#"$2))))
-}
+/^$/ { next}
 
-$2 == "#define" {
-    print $3 " " (NF == 3 ? "*" : ($4 == "*/" ? "*" : ($4 == "1" ? "*" : (substr($4,1,1) == "\"" ? $3 : "#"$3))))
-}
+{
+  i=1
+  if ($1 == "/*") {
+    i=2
+    if ( ($i != "#undef") && ($i != "#define") ) { next }
+    shift
+  }
 
-$1 == "#undef" {
-    print $2 " " (NF == 2 ? "*" : ($3 == "*/" ? "*" : ($3 == "1" ? "*" : (substr($3,1,1) == "\"" ? $2 : "#"$2))))
-}
+  if (substr($i, 1, 1) != "#") { next }
+  if (substr($i, 1, 3) == "#if") { next }
 
-$2 == "#undef" {
-    print $3 " " (NF == 3 ? "*" : ($4 == "*/" ? "*" : ($4 == "1" ? "*" : (substr($4,1,1) == "\"" ? $3 : "#"$3))))
+  i++
+
+  if (tolower($i) == $i) { next } 
+
+  field=$i
+
+  if (index(field, "_DEBUG") > 0) {
+     sortname="z" field
+  } else {
+     sortname=field
+  }
+
+  i++
+
+print "i. " i ", " $i
+
+  if ($i == "") {
+      tag = "*"
+  } else if ($i == "*/") {
+      tag = "*"
+  } else if ($i == "1") {
+      tag = "*"
+  } else if ($i == "NULL") {
+      tag = "NULL"
+  } else if (substr($i,1,1) == "\"") {
+      tag = field
+  } else {
+      tag = "#" field
+  }
+  print sortname " " tag
 }
 

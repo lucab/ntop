@@ -22,6 +22,9 @@ BEGIN {
 
 {
     if ($1 in stopentry) { next } 
+
+    if (substr($1, 1, 1) == "z") { $1 = substr($1, 2) }
+
     if ($2 == "*") {
         print "  printFeatureConfigInfo(textPrintFlag, \"" $1 "\","
         print "#ifdef " $1
@@ -41,6 +44,12 @@ BEGIN {
         print "  printFeatureConfigNum(textPrintFlag, \"" $1 "\", " substr($2, 2) ");"
         print "#else"
         print "  printFeatureConfigInfo(textPrintFlag, \"" $1 "\", \"undefined\");"
+        print "#endif"
+    } else if ($2 == "NULL") {
+        print "#if " $1 " == NULL"
+        print "  printFeatureConfigInfo(textPrintFlag, \"" $1 "\", \"(null)\");"
+        print "#else"
+        print "  printFeatureConfigInfo(textPrintFlag, \"" $1 "\", $2);"
         print "#endif"
     } else {
         print "#ifdef " $1

@@ -16,12 +16,12 @@ if test -r configlist; then
     rm -f configlist
 fi
 
-awk -f utils/config_h1.awk config.h | \
+awk -f utils/config_h1.awk config.h.in | \
   sort | \
   uniq > configlist
 
 cat configlist | \
-awk -f utils/config_h2.awk config.h >new-config
+awk -f utils/config_h2.awk config.h.in >new-config
 
 mv configlist stoplist
 
