@@ -27,6 +27,8 @@
 #include <pwd.h>
 #endif
 
+static short alternateColor=0;
+
 /* Forward */
 void handleSingleWebConnection(fd_set *fdmask);
 
