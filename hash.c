@@ -221,12 +221,12 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
     courtesy of Wies-Software <wies@wiessoft.de>
   */
   if(device[deviceToExtend].actualHashSize < newSize) {
-    traceEvent(TRACE_INFO, "Extending hash: [old=%d, new=%d]\n",
-	       device[deviceToExtend].actualHashSize, newSize);
+    traceEvent(TRACE_INFO, "Extending hash: [old=%d, new=%d][deviceId=%d]\n",
+	       device[deviceToExtend].actualHashSize, newSize, deviceToExtend);
     mappingsSize = newSize;
   } else {
-    traceEvent(TRACE_INFO, "Shrinking hash: [old=%d, new=%d]\n",
-	       device[deviceToExtend].actualHashSize, newSize);
+    traceEvent(TRACE_INFO, "Shrinking hash: [old=%d, new=%d][deviceId=%d]\n",
+	       device[deviceToExtend].actualHashSize, newSize, deviceToExtend);
     mappingsSize = device[deviceToExtend].actualHashSize;
   }
 
@@ -1113,8 +1113,8 @@ int extendTcpSessionsHash(int actualDeviceId) {
     device[actualDeviceId].numTotSessions *= extensionFactor;
 
     displayError = 1;
-    traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d]",
-	       device[actualDeviceId].numTotSessions);
+    traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d][deviceId=%d]",
+	       device[actualDeviceId].numTotSessions, actualDeviceId);
     return(0);
   } else {
     if(displayError) {
