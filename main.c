@@ -83,6 +83,8 @@ int main(int argc, char *argv[]) {
   char flowSpecs[2048], rulesFile[128], ifStr[196], *theOpts;
   time_t lastTime;
 
+  sethostent(1);
+
 #ifndef WIN32
   if (freopen("/dev/null", "w", stderr) == NULL) {
     traceEvent(TRACE_WARNING, 

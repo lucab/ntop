@@ -1394,7 +1394,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress);
 	} else if((packetData[1] == 0x0) && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
-	  char tmpBuf[64], *remoteHost, *remotePort;
+	  char tmpBuf[64], *remoteHost, *remotePort, *strtokState;
 	  int i, j;
 
 	  struct in_addr shost;
@@ -1408,9 +1408,9 @@ static void handleSession(const struct pcap_pkthdr *h,
 	*/
 
 	  memcpy(tmpBuf, &packetData[4], (packetDataLength<64) ? packetDataLength : 63);
-	  strtok(tmpBuf, " "); /* remote user */
-	  if((remoteHost = strtok(NULL, " ")) != NULL) {
-	    if((remotePort = strtok(NULL, " ")) != NULL) {
+	  strtok_r(tmpBuf, " ", &strtokState); /* remote user */
+	  if((remoteHost = strtok_r(NULL, " ", &strtokState)) != NULL) {
+	    if((remotePort = strtok_r(NULL, " ", &strtokState)) != NULL) {
 
 	      napsterSvr[napsterSvrInsertIdx].serverPort = atoi(remotePort);
 	      if(napsterSvr[napsterSvrInsertIdx].serverPort != 0) {

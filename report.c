@@ -74,8 +74,13 @@ int reportValues(time_t *lastTime) {
   else if(refreshRate < MIN_REFRESH_TIME)
     refreshRate = MIN_REFRESH_TIME;
 
+  /* Patch below courtesy of Nicolai Petri <nicolai@petri.cc> */
 #ifndef WIN32
+#ifdef __FreeBSD__
+  (void)setsignal(SIGPIPE, SIG_IGN);
+#else //__FreeBSD__
   (void)setsignal(SIGPIPE, ignoreSignal);
+#endif // __FreeBSD__
 #endif
 
   return(0);
@@ -2844,7 +2849,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 #ifdef HAVE_GDCHART
    sendString("<A HREF=\"thptStatsMatrix.html?1\" BORDER=0>"
-	      "<IMG SRC=\"thptGraph?1\"></A><BR>\n");
+	      "<IMG SRC=\"thptGraph.png?1\"></A><BR>\n");
    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	   formatTimeStamp(0, 0, 0),
 	   formatTimeStamp(0, 0, 60)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2861,7 +2866,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
   if(device[actualReportDeviceId].numThptSamples > 60) {
 #ifdef HAVE_GDCHART
     sendString("<P><A HREF=\"thptStatsMatrix.html?2\" BORDER=0>"
-	       "<IMG SRC=\"thptGraph?2\"></A><BR>\n");
+	       "<IMG SRC=\"thptGraph.png?2\"></A><BR>\n");
     if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	    formatTimeStamp(0, 0, 0),
 	    formatTimeStamp(0, 24, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2876,7 +2881,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 #ifdef HAVE_GDCHART
     if(device[actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
-      sendString("<P><IMG SRC=\"thptGraph?3\"><BR>\n");
+      sendString("<P><IMG SRC=\"thptGraph.png?3\"><BR>\n");
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	      formatTimeStamp(0, 0, 0),
 	      formatTimeStamp(30, 0, 0)) < 0) 

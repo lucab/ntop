@@ -355,7 +355,7 @@ void printHTTPtrailer(void) {
     }
 
   sendString("]\n<br>\n<address>&copy; 1998-2000 by <A HREF=mailto:deri@ntop.org>L. Deri</A>"
-	     "</H5></font></BODY></HTML>\n");
+	     "</address></H5></font></BODY></HTML>\n");
 }
 
 /* ******************************* */
