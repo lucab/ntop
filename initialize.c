@@ -46,12 +46,8 @@ static void setDomainName(void) {
       if((gethostname(myGlobals.domainName, MAXHOSTNAMELEN) == 0)
 	 && ((p = memchr(myGlobals.domainName, '.', MAXHOSTNAMELEN)) != NULL)) {
 	myGlobals.domainName[MAXHOSTNAMELEN - 1] = '\0';
-	/*
-	 * Replaced memmove with memcpy
-	 * Igor Schein <igor@txc.com>
-	 */
 	++p;
-	memcpy(myGlobals.domainName, p, (MAXHOSTNAMELEN+myGlobals.domainName-p));
+	memmove(myGlobals.domainName, p, (MAXHOSTNAMELEN+myGlobals.domainName-p));
       } else
 	myGlobals.domainName[0] = '\0';
     }
