@@ -27,47 +27,6 @@ static HostTraffic *freeHostList[FREE_LIST_LEN];
 static int nextIdxToFree=0, freeListLen=0;
 static u_char printedHashWarning = 0;
 
-/* ************************************ */
-
-static void purgeIdleHostSessions(u_char *flaggedHosts, u_int flaggedHostsLen,
-                                  IpGlobalSession **sessionScanner) {
-  u_int i, peerFound;
-  IpGlobalSession *theScanner = *sessionScanner,
-    *prevScanner = *sessionScanner;
-
-  while(theScanner != NULL) {
-    for(i=0, peerFound=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-      if(theScanner->peers.peersIndexes[i] != NO_PEER) {
-	if(theScanner->peers.peersIndexes[i] > flaggedHostsLen) {
-	  traceEvent(TRACE_INFO, "WARNING: Index %u out of range [0..%d]", 
-		     theScanner->peers.peersIndexes[i], flaggedHostsLen);
-	} else {
-	  if(flaggedHosts[theScanner->peers.peersIndexes[i]])
-	    theScanner->peers.peersIndexes[i] = NO_PEER;
-	  if(theScanner->peers.peersIndexes[i] != NO_PEER)
-	    peerFound++;
-	}
-      }
-    }
-
-    if(peerFound == 0) {
-      /* This entry should be removed */
-      if(theScanner == prevScanner) {
-	*sessionScanner = (*sessionScanner)->next;
-	prevScanner = *sessionScanner;
-      } else {
-	prevScanner->next = theScanner->next;
-      }
-
-      free(theScanner);
-      theScanner = prevScanner;
-    } else {
-      prevScanner = theScanner;
-      theScanner = theScanner->next;
-    }
-  }
-}
-
 /* ******************************* */
 
 u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
@@ -152,19 +111,47 @@ static int _mapIdx(u_int* mappings, u_int lastHashSize, u_int idx,
 
 /* ******************************* */
 
-static void _mapUsageCounter(u_int *myMappings, int myLastHashSize,
-			     UsageCounter *counter, char *file, int line) {
-  int i;
+static int _mapUsageCounter(u_int *myMappings, int myLastHashSize,
+			    UsageCounter *counter, char *file, int line) {
+  int i, numFull=0;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(counter->peersIndexes[i] != NO_PEER)
+    if(counter->peersIndexes[i] != NO_PEER) {
       counter->peersIndexes[i] = _mapIdx(myMappings, myLastHashSize, 
 					 counter->peersIndexes[i], file, line);
+      if(counter->peersIndexes[i] != NO_PEER)
+	numFull++;
+    }
   }
+
+  return(numFull);
 }
 
 #define mapUsageCounter(a)  _mapUsageCounter(mappings, lastHashSize, a, __FILE__, __LINE__)
 #define mapIdx(a)           _mapIdx(mappings, lastHashSize, a, __FILE__, __LINE__)
+
+/* ************************************ */
+
+static IpGlobalSession* purgeIdleHostSessions(u_int *mappings, u_int lastHashSize,
+					      IpGlobalSession *sessionScanner) {
+  if(sessionScanner != NULL) {
+    IpGlobalSession *returnValue;
+    
+    if(sessionScanner->next != NULL) {
+      sessionScanner->next = purgeIdleHostSessions(mappings, lastHashSize, 
+						   sessionScanner->next);
+    }
+
+    if(mapUsageCounter(&sessionScanner->peers) == 0) {
+      /* There are no peers hence we can delete this entry */
+      returnValue = sessionScanner->next;
+      free(sessionScanner);
+    } else
+      returnValue = sessionScanner;
+
+    return(returnValue);
+  }
+}
 
 /* ******************************* */
 
@@ -491,7 +478,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
 /* **************************************** */
 
-static int _checkIndex(u_char *flaggedHosts, u_int flaggedHostsLen, u_int idx,
+static int _checkIndex(u_int *flaggedHosts, u_int flaggedHostsLen, u_int idx,
 		      char *fileName, int fileLine) {
   if(idx == NO_PEER) {
     return(0);
@@ -507,7 +494,7 @@ static int _checkIndex(u_char *flaggedHosts, u_int flaggedHostsLen, u_int idx,
 
 /* **************************************** */
 
-static void _checkUsageCounter(u_char *flaggedHosts, u_int flaggedHostsLen, 
+static void _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen, 
 			      UsageCounter *counter,
 			      char *fileName, int fileLine) {
   int i;
@@ -524,7 +511,7 @@ static void _checkUsageCounter(u_char *flaggedHosts, u_int flaggedHostsLen,
 /* **************************************** */
 
 static void removeGlobalHostPeers(HostTraffic *el,
-				  u_char *flaggedHosts, 
+				  u_int *flaggedHosts, 
 				  u_int flaggedHostsLen) {
   int j;
 
@@ -704,11 +691,11 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   */
 
   if(refreshHash) {
-    u_char *myflaggedHosts;
+    u_int *myflaggedHosts;
     int len, idx;
     
-    len = sizeof(u_char)*device[theDevice].actualHashSize;
-    myflaggedHosts = (u_char*)malloc(len);
+    len = sizeof(u_int)*device[theDevice].actualHashSize;
+    myflaggedHosts = (u_int*)malloc(len);
     memset(myflaggedHosts, 0, len);
     myflaggedHosts[hostIdx] = 1; /* Set the entry to free */
 
@@ -844,7 +831,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   time_t startTime = time(NULL);
   static time_t lastPurgeTime = 0;
   u_char goOn = 1;
-  u_char *theFlaggedHosts;
+  u_int *theFlaggedHosts;
 
   if(startTime < (lastPurgeTime+(SESSION_SCAN_DELAY/2)))
     return; /* Too short */
@@ -862,8 +849,8 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   releaseMutex(&hostsHashMutex);
 #endif
 
-  len = sizeof(u_char)*device[actDevice].actualHashSize;
-  theFlaggedHosts = (char*)malloc(len);
+  len = sizeof(u_int)*device[actDevice].actualHashSize;
+  theFlaggedHosts = (u_int*)malloc(len);
   memset(theFlaggedHosts, 0, len);
 
 #ifdef MULTITHREADED
