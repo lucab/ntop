@@ -193,12 +193,26 @@ FILE *sec_popen(char *cmd, const char *type) {
 
 /* ************************************ */
 
+u_int findHostIdxByNumIP(struct in_addr hostIpAddress) {
+  u_int idx;
+
+  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
+    if((device[actualDeviceId].hash_hostTraffic[idx] != NULL)
+       && (device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress != NULL)
+       && (device[actualDeviceId].hash_hostTraffic[idx]->hostIpAddress.s_addr == hostIpAddress.s_addr))
+      return(idx);
+
+  return(NO_PEER);
+}
+
+/* ************************************ */
+
 HostTraffic* findHostByNumIP(char* numIPaddr) {
   u_int idx;
 
   for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
-    if(device[actualDeviceId].hash_hostTraffic[idx]
-       && device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress
+    if((device[actualDeviceId].hash_hostTraffic[idx] != NULL)
+       && (device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress != NULL)
        && (!strcmp(device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress, numIPaddr)))
       return(device[actualDeviceId].hash_hostTraffic[idx]);
 
@@ -1668,10 +1682,11 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     el->tcpSessionList = NULL;
     el->udpSessionList = NULL;
     el->nextDBupdate = 0;
-    el->dnsStats = NULL;
-    el->napsterStats = NULL;
-    el->httpStats = NULL;
     el->icmpInfo = NULL;
+    el->dnsStats = NULL;    
+    el->httpStats = NULL;
+    el->napsterStats = NULL;
+    el->dhcpStats = NULL;
 
 #ifdef STORAGE_DEBUG
     traceEvent(TRACE_INFO, "Resurrected instance: '%s/%s'\n",

@@ -292,8 +292,11 @@ void execCGI(char* cgiName) {
 }
 
 /* ******************************* */
-
-void initWeb(int webPort, char* webAddr) {
+/* 
+   SSL fix courtesy of 
+   Curtis Doty <Curtis@GreenKey.net>
+*/
+void initWeb(int webPort, char* webAddr, char* sslAddr) {
   int sockopt = 1;
   struct sockaddr_in sin;
 
@@ -307,6 +310,12 @@ void initWeb(int webPort, char* webAddr) {
     sin.sin_family      = AF_INET;
     sin.sin_port        = (int)htons((unsigned short int)webPort);
     sin.sin_addr.s_addr = INADDR_ANY;
+
+    if(sslAddr) {
+      if(!inet_aton(sslAddr,&sin.sin_addr))
+	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
+		   "Not binding SSL to a particular interface!\n",  sslAddr);
+    }
 
 #ifndef WIN32
     if (webAddr) {      /* Code added to be able to bind to a particular interface */
@@ -404,7 +413,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag) {
   static char buf[5][384];
   char symIp[256], *tmpStr, linkName[256], flag[128];
-  char *blinkOn, *blinkOff;
+  char *blinkOn, *blinkOff, *dynIp;
   short specialMacAddress = 0;
   static short bufIdx=0;
   short usedEthAddress=0;
@@ -524,13 +533,18 @@ char* makeHostLink(HostTraffic *el, short mode,
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
+  if(isDHCPClient(el))
+    dynIp = "&nbsp;(dyn)";
+  else
+    dynIp = "";
+
   if(mode == LONG_FORMAT) {
-    if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT>%s<A HREF=\"/%s.html\">%s</A>%s</TH>%s",
-	    blinkOn, linkName, symIp, blinkOff, flag) < 0) 
+    if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT>%s<A HREF=\"/%s.html\">%s%s</A>%s</TH>%s",
+	    blinkOn, linkName, symIp, dynIp, blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\">%s</A>%s%s",
-	    blinkOn, linkName, symIp, blinkOff, flag) < 0) 
+    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\">%s%s</A>%s%s",
+	    blinkOn, linkName, symIp, dynIp, blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
@@ -633,16 +647,22 @@ char* getCountryIconURL(char* domainName) {
     char path[256];
     struct stat buf;
 
-    if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
-		DATAFILE_DIR, domainName) < 0) 
+    if(snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif", 
+		domainName) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-    if(stat(path, &buf) != 0)
-      return("&nbsp;");
+    if(stat(path, &buf) != 0) {
+      if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
+		  DATAFILE_DIR, domainName) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      
+      if(stat(path, &buf) != 0)
+	return("&nbsp;");
+    }
 
     if(snprintf(flagBuf, sizeof(flagBuf), 
-	     "<IMG ALIGN=MIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
-	     domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		"<IMG ALIGN=MIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
+		domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     return(flagBuf);
   }

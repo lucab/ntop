@@ -209,6 +209,14 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 			      ether_addr, &useIPAddressForSearching);
   idx = (u_int)((idx*3) % device[actualDeviceId].actualHashSize);
 
+  /*
+  traceEvent(TRACE_INFO, "Searching for %s@%s",
+	     intoa(*hostIpAddress), 
+	     etheraddr_string(ether_addr));
+
+  if(hostIpAddress->s_addr == 0)
+    printf("Hello\n");
+  */
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Searching from slot %d [size=%d]\n",
 	     idx, device[actualDeviceId].actualHashSize);
@@ -252,7 +260,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		 The line below isn't necessary because (**) has
 		 already set the pointer */
 	      if(isBroadcastAddress(&el->hostIpAddress))
-			FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+		FD_SET(BROADCAST_HOST_FLAG, &el->flags);
 	    }
 	  }
 	  break;
@@ -336,7 +344,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       if(ether_addr != NULL) {
 
 	if((hostIpAddress == NULL)
-	   || ((hostIpAddress != NULL) && isLocalAddress(hostIpAddress))) {
+	   || ((hostIpAddress != NULL) 
+	       && isLocalAddress(hostIpAddress)
+	       && (!isBroadcastAddress(hostIpAddress)))) {
 	  /* This is a local address and then the
 	     ethernet address does make sense */
 	  ethAddr = etheraddr_string(ether_addr);
@@ -350,10 +360,13 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  /* This is packet that's being routed */
 	  memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
 	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
-	  if(isPseudoLocalAddress(hostIpAddress))
-	    FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-	  else
-	    FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+
+	  if(!isBroadcastAddress(hostIpAddress)) {	  
+	    if(isPseudoLocalAddress(hostIpAddress))
+	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	    else
+	      FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	  }
 	} else {
 	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
 	  FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
@@ -668,7 +681,7 @@ void scanTimedoutTCPSessions(void) {
 
 	  /* Session to purge */
 
-	  if(sessionToPurge->sport < sessionToPurge->dport) { /* Server -> Client */
+	  if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
 	    if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
 	      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
 				     sessionToPurge->remotePeerIdx, sessionToPurge,
@@ -677,7 +690,7 @@ void scanTimedoutTCPSessions(void) {
 				     sessionToPurge->initiatorIdx, sessionToPurge,
 				     IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE);
 	    }
-	  } else { /* Client -> Server */
+	  } else { /* Client->Server */
 	    if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
 	      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
 				     sessionToPurge->initiatorIdx, sessionToPurge,
@@ -801,14 +814,15 @@ static void handleBootp(HostTraffic *srcHost,
   switch(sport) {
   case 67: /* BOOTP/DHCP server */
     FD_SET(HOST_SVC_DHCP_SERVER, &srcHost->flags);
-    if(!isBroadcastAddress(&dstHost->hostIpAddress))
-      FD_SET(HOST_SVC_DHCP_CLIENT, &dstHost->flags);
 
-    traceEvent(TRACE_INFO, "%s:%d -> %s:%d",
+    traceEvent(TRACE_INFO, "%s:%d->%s:%d",
 	       srcHost->hostNumIpAddress, sport,
 	       dstHost->hostNumIpAddress, dport);
 	
     if(packetData != NULL) {
+      char buf[32];
+      HostTraffic* hostTraffic;
+
       /*
 	This is a server BOOTP/DHCP respose 
 	that could be decoded. Let's try.
@@ -831,12 +845,10 @@ static void handleBootp(HostTraffic *srcHost,
 	   && (dummyMac != 0) /* MAC address <> 00:00:00:..:00 */
 	   ) {
 	  NTOHL(bootProto.bp_yiaddr.s_addr);
-#ifdef DEBUG
 	  traceEvent(TRACE_INFO, "%s@%s",
-		     intoa(bootProto.bp_yiaddr),
-		     etheraddr_string(bootProto.bp_chaddr));
-#endif
-	  /* Let's check whether this is a DHCP packet */
+		     intoa(bootProto.bp_yiaddr), etheraddr_string(bootProto.bp_chaddr));
+
+	  /* Let's check whether this is a DHCP packet [DHCP magic cookie] */
 	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
 	     && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
 	    /*
@@ -846,84 +858,184 @@ static void handleBootp(HostTraffic *srcHost,
 	      in BOOTP packets.
 	    */
 	    int idx = 4;
+	    u_int hostIdx;
 	    struct in_addr hostIpAddress;
+	    HostTraffic *trafficHost, *realDstHost;
 
-	    while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
-	      u_char optionId = bootProto.bp_vend[idx++];
-		
-	      if(optionId == 255) break; /* End of options */
-	      switch(optionId) { /* RFC 2132 */
-	      case 1: /* Netmask */
-		len = bootProto.bp_vend[idx++];
-		memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		NTOHL(hostIpAddress.s_addr);
-		traceEvent(TRACE_INFO, "Netmask: %s", 
-			   intoa(hostIpAddress));
-		idx += len;
-		break;
-	      case 3: /* Gateway */
-		len = bootProto.bp_vend[idx++];
-		memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		NTOHL(hostIpAddress.s_addr);
-		traceEvent(TRACE_INFO, "Gateway: %s", 
-			   intoa(hostIpAddress));
-		idx += len;
-		break;
-	      case 12: /* Host name */
-		len = bootProto.bp_vend[idx++];
-		traceEvent(TRACE_INFO, "Host name: %s", 
-			   &bootProto.bp_vend[idx]);
-		idx += len;
-		break;
-	      case 15: /* Domain name */
-		len = bootProto.bp_vend[idx++];
-		traceEvent(TRACE_INFO, "Domain name: %s", 
-			   &bootProto.bp_vend[idx]);
-		idx += len;
-		break;
-	      case 19: /* IP Forwarding */
-		len = bootProto.bp_vend[idx++];
-		traceEvent(TRACE_INFO, "IP Forwarding: %s", bootProto.bp_vend[idx]);
-		idx += len;
-		break;
-	      case 28: /* Broadcast Address */
-		len = bootProto.bp_vend[idx++];
-		memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		NTOHL(hostIpAddress.s_addr);
-		traceEvent(TRACE_INFO, "Broadcast Address: %s", 
-			   intoa(hostIpAddress));
-		idx += len;
-		break;
-	      case 44: /* WINS server */
-		len = bootProto.bp_vend[idx++];
-		memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		NTOHL(hostIpAddress.s_addr);
-		traceEvent(TRACE_INFO, "WINS server: %s", 
-			   intoa(hostIpAddress));
-		idx += len;
-		break;
-	      case 64: /* NIS+ Domain */
-		len = bootProto.bp_vend[idx++];
-		memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		NTOHL(hostIpAddress.s_addr);
-		traceEvent(TRACE_INFO, "NIS+ domain: %s", 
-			   intoa(hostIpAddress));
-		idx += len;
-		break;
-	      default:
-#ifdef DEBUG
-		traceEvent(TRACE_INFO, "Unknown DHCP option '%d'", (int)optionId);
-#endif
-		len = bootProto.bp_vend[idx++];
-		idx += len;
-		break;
-	      }
+	    /*
+	      This is the real address of the recipient because
+	      dstHost is a broadcast address 
+	    */
+	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
+	    if(realDstHost == NULL) {
+	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr);
+	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
+	      realDstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];	      
+	    } else {
+	      traceEvent(TRACE_INFO, "<<=>> %s (%d)", 
+			 realDstHost->hostSymIpAddress,
+			 broadcastHost(realDstHost));
 	    }
+
+	    if(realDstHost != NULL) {
+	      if(realDstHost->dhcpStats == NULL) {
+		realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
+		memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
+	      }
+
+	      FD_SET(HOST_SVC_DHCP_CLIENT, &realDstHost->flags);
+	      realDstHost->dhcpStats->assignTime = actTime;
+	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
+	      realDstHost->dhcpStats->renewalTime = actTime;
+	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
+
+	      if(realDstHost->hostIpAddress.s_addr != bootProto.bp_yiaddr.s_addr) {
+		/* The host address has changed */
+		traceEvent(TRACE_INFO, "DHCP host address changed: %s->%s", 
+			   intoa(realDstHost->hostIpAddress), 
+			   _intoa(bootProto.bp_yiaddr, buf, sizeof(buf)));
+		realDstHost->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIpAddress.s_addr;
+		realDstHost->hostIpAddress.s_addr = bootProto.bp_yiaddr.s_addr;
+		strncpy(realDstHost->hostNumIpAddress,
+			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
+			sizeof(realDstHost->hostNumIpAddress));
+		ipaddr2str(realDstHost->hostIpAddress, realDstHost->hostSymIpAddress, 
+			   MAX_HOST_SYM_NAME_LEN);
+		realDstHost->fullDomainName = realDstHost->dotDomainName = "";
+	      }
+	    
+	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
+		u_char optionId = bootProto.bp_vend[idx++];
+		int j;
+		u_long tmpUlong;
+		
+		if(optionId == 255) break; /* End of options */
+		switch(optionId) { /* RFC 2132 */
+		case 1: /* Netmask */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "Netmask: %s", intoa(hostIpAddress));
+		  idx += len;
+		  break;
+		case 3: /* Gateway */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "Gateway: %s", _intoa(hostIpAddress, buf, sizeof(buf)));
+
+		  /* *************** */
+
+		  hostIdx = findHostIdxByNumIP(hostIpAddress);
+		
+		  for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
+		    if(realDstHost->contactedRouters[j] == hostIdx)
+		      return;
+		    else if(realDstHost->contactedRouters[j] == NO_PEER) {
+		      realDstHost->contactedRouters[j] = hostIdx;
+		      break;
+		    }
+		  }
+
+		  trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+		  if(trafficHost != NULL)
+		    FD_SET(GATEWAY_HOST_FLAG, &trafficHost->flags);
+
+		  /* *************** */
+		  idx += len;
+		  break;
+		case 12: /* Host name */
+		  len = bootProto.bp_vend[idx++];
+		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
+		  idx += len;
+		  break;
+		case 15: /* Domain name */
+		  len = bootProto.bp_vend[idx++];
+		  traceEvent(TRACE_INFO, "Domain name: %s", &bootProto.bp_vend[idx]);
+		  idx += len;
+		  break;
+		case 19: /* IP Forwarding */
+		  len = bootProto.bp_vend[idx++];
+		  traceEvent(TRACE_INFO, "IP Forwarding: %s", bootProto.bp_vend[idx]);
+		  idx += len;
+		  break;
+		case 28: /* Broadcast Address */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "Broadcast Address: %s", 
+			     intoa(hostIpAddress));
+		  idx += len;
+		  break;
+		case 44: /* WINS server */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "WINS server: %s", 
+			     intoa(hostIpAddress));
+		  idx += len;
+		  /* *************** */
+
+		  hostIdx = findHostIdxByNumIP(hostIpAddress);
+		  trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+		  if(trafficHost != NULL)
+		    FD_SET(HOST_SVC_WINS, &trafficHost->flags);
+
+		  /* *************** */
+		  break;
+
+		case 51: /* Lease time */
+		  len = bootProto.bp_vend[idx++];
+		  if(len == 4) {
+		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
+		    NTOHL(tmpUlong);
+		    traceEvent(TRACE_INFO, "Lease time: %u", tmpUlong);
+		    realDstHost->dhcpStats->leaseTime = tmpUlong;
+		  }
+		  idx += len;
+		  break;
+		case 58: /* Renewal time */
+		  len = bootProto.bp_vend[idx++];
+		  if(len == 4) {
+		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
+		    NTOHL(tmpUlong);
+		    traceEvent(TRACE_INFO, "Renewal time: %u", tmpUlong);
+		    realDstHost->dhcpStats->renewalTime = tmpUlong;
+		  }
+		  idx += len;
+		  break;
+		case 59: /* Rebinding time */
+		  len = bootProto.bp_vend[idx++];
+		  if(len == 4) {
+		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
+		    NTOHL(tmpUlong);
+		    traceEvent(TRACE_INFO, "Rebinding time: %u", tmpUlong);
+		  }
+		  idx += len;
+		  break;
+		case 64: /* NIS+ Domain */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "NIS+ domain: %s", intoa(hostIpAddress));
+		  idx += len;
+		  break;
+		default:
+#ifdef DEBUG
+		  traceEvent(TRACE_INFO, "Unknown DHCP option '%d'", (int)optionId);
+#endif
+		  len = bootProto.bp_vend[idx++];
+		  idx += len;
+		  break;
+		}
+	      }
+	    } /* realDstHost != NULL */
 	  }
 	}
       }
     }
     break;
+#if 0 /* DHCP is handled by sport 67 */
   case 68: /* BOOTP/DHCP client */
     if(srcHost->hostIpAddress.s_addr != 0) { 
       /* IP address <> 0.0.0.0 */
@@ -934,6 +1046,7 @@ static void handleBootp(HostTraffic *srcHost,
 	FD_SET(HOST_SVC_DHCP_SERVER, &dstHost->flags);
     }
     break;
+#endif
   }
 }
 
@@ -1081,7 +1194,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
 		FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
 
-		traceEvent(TRACE_INFO, "NAPSTER new download session: %s -> %s\n",
+		traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
 			   srcHost->hostSymIpAddress,
 			   dstHost->hostSymIpAddress);
 
@@ -1107,35 +1220,34 @@ static void handleSession(const struct pcap_pkthdr *h,
 	       after the session started, or that ntop has
 	       lost a few packets. Let's do a final check...
 	    */
-	    #define NAPSTER_DOMAIN "napster.com"
+#define NAPSTER_DOMAIN "napster.com"
 
 	    if(
 	       ((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
 		&& (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-strlen(NAPSTER_DOMAIN)],
-			   NAPSTER_DOMAIN) == 0))
+			   NAPSTER_DOMAIN) == 0) && (sport == 8888))
 	       ||
 	       ((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
 		&& (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-strlen(NAPSTER_DOMAIN)],
-			   NAPSTER_DOMAIN) == 0))) {
+			   NAPSTER_DOMAIN) == 0)) && (dport == 8888)) {
 	      
 	      theSession->napsterSession = 1;
 
-		traceEvent(TRACE_INFO, "NAPSTER new download session: %s -> %s\n",
-			   srcHost->hostSymIpAddress,
-			   dstHost->hostSymIpAddress);
+	      traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
+			 srcHost->hostSymIpAddress,
+			 dstHost->hostSymIpAddress);
 
-		if(srcHost->napsterStats == NULL) {
-		  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-		  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
-		}
+	      if(srcHost->napsterStats == NULL) {
+		srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+		memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
+	      }
 
-		if(dstHost->napsterStats == NULL) {
-		  dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-		  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
-		}
+	      if(dstHost->napsterStats == NULL) {
+		dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+		memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
+	      }
 
-	      if(strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-strlen(NAPSTER_DOMAIN)],
-			NAPSTER_DOMAIN) == 0) {
+	      if(sport == 8888) {
 		FD_SET(HOST_SVC_NAPSTER_SERVER, &srcHost->flags);
 		FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
 		srcHost->napsterStats->numConnectionsServed++,
@@ -1149,7 +1261,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	    }
 	  }
 	}
-
+	
 	while(sessions[initialIdx] != NULL)
 	  initialIdx = ((initialIdx+1) % HASHNAMESIZE);
 
@@ -1171,7 +1283,7 @@ static void handleSession(const struct pcap_pkthdr *h,
       idx = ((idx+1) % HASHNAMESIZE);
     }
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "-> %d\n", idx);
+    traceEvent(TRACE_INFO, "->%d\n", idx);
 #endif
     theSession->lastSeen = actTime;
 
@@ -1212,7 +1324,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  microSecTimeDiff = getTimeMapping(transactionId, tvstrct);
 
 #ifdef HTTP_DEBUG
-	  traceEvent(TRACE_INFO, "%s -> %s [%s]\n",
+	  traceEvent(TRACE_INFO, "%s->%s [%s]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
 		     rcStr);
@@ -1278,7 +1390,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	rcStr[16] = '\0';
 
 #ifdef HTTP_DEBUG
-	printf("%s -> %s [%s]\n",
+	printf("%s->%s [%s]\n",
 	       srcHost->hostSymIpAddress,
 	       dstHost->hostSymIpAddress,
 	       rcStr);
@@ -1322,7 +1434,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	    dstHost->httpStats->numRemoteReqRcvd++;
 	} else {
 #ifdef DEBUG
-	  traceEvent(TRACE_INFO, "Unknown HTTP request %s -> %s [%s]\n",
+	  traceEvent(TRACE_INFO, "Unknown HTTP request %s->%s [%s]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
 		     rcStr);
@@ -1338,7 +1450,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 	strncpy(address, packetData, packetDataLength);
 	address[packetDataLength-2] = 0;
-	traceEvent(TRACE_INFO, "NAPSTER: %s -> %s [%s][len=%d]\n",
+	traceEvent(TRACE_INFO, "NAPSTER: %s->%s [%s][len=%d]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
 		     address, packetDataLength);
@@ -1365,8 +1477,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 	srcHost->napsterStats->numConnectionsServed++,
 	  dstHost->napsterStats->numConnectionsRequested++;
-	srcHost->napsterStats->bytesSent += packetDataLength,
-	dstHost->napsterStats->bytesRcvd += packetDataLength;
       }
     }
 
@@ -1397,7 +1507,7 @@ static void handleSession(const struct pcap_pkthdr *h,
       }
 
       /*
-	traceEvent(TRACE_INFO, "Session check: %s:%d -> %s:%d [%x]\n",
+	traceEvent(TRACE_INFO, "Session check: %s:%d->%s:%d [%x]\n",
 		 srcHost->hostSymIpAddress, sport,
 		 dstHost->hostSymIpAddress, dport, packetData[0]);
       */
@@ -1431,7 +1541,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
 	FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
 
-	traceEvent(TRACE_INFO, "NAPSTER new download session: %s -> %s\n",
+	traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
 		   dstHost->hostSymIpAddress,
 		   srcHost->hostSymIpAddress);
 	dstHost->napsterStats->numDownloadsRequested++,
@@ -1440,7 +1550,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	if((packetData[1] == 0x0) && (packetData[2] == 0xC8) && (packetData[3] == 0x00)) {
 	  srcHost->napsterStats->numSearchSent++, dstHost->napsterStats->numSearchRcvd++;
 
-	  traceEvent(TRACE_INFO, "NAPSTER search: %s -> %s\n",
+	  traceEvent(TRACE_INFO, "NAPSTER search: %s->%s\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress);
 	} else if((packetData[1] == 0x0) && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
@@ -1486,9 +1596,9 @@ static void handleSession(const struct pcap_pkthdr *h,
     if(tp->th_flags & TH_FIN) {
       u_int32_t fin = ntohl(tp->th_seq)+packetDataLength;
 
-      if(sport < dport) /* Server -> Client */
+      if(sport < dport) /* Server->Client */
 	check = (fin != theSession->lastSCFin);
-      else /* Client -> Server */
+      else /* Client->Server */
 	check = (fin != theSession->lastCSFin);
 
       if(check) {
@@ -1496,9 +1606,9 @@ static void handleSession(const struct pcap_pkthdr *h,
 	theSession->finId[theSession->numFin] = fin;
 	theSession->numFin = (theSession->numFin+1) % MAX_NUM_FIN;;
 
-	if(sport < dport) /* Server -> Client */
+	if(sport < dport) /* Server->Client */
 	  theSession->lastSCFin = fin;
-	else /* Client -> Server */
+	else /* Client->Server */
 	  theSession->lastCSFin = fin;
 	switch(theSession->sessionState) {
 	case STATE_BEGIN:
@@ -1548,7 +1658,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	}
 
 #ifdef DEBUG
-	printf("%s:%d -> ",
+	printf("%s:%d->",
 	       device[actualDeviceId].hash_hostTraffic[theSession->initiatorIdx]->hostSymIpAddress,
 	       theSession->sport);
    	printf("%s:%d\n",
@@ -1565,17 +1675,17 @@ static void handleSession(const struct pcap_pkthdr *h,
       if(theSession->numFin > 0) {
 	int i;
 
-	if(sport < dport) /* Server -> Client */
+	if(sport < dport) /* Server->Client */
 	  check = (ack != theSession->lastSCAck);
-	else /* Client -> Server */
+	else /* Client->Server */
 	  check = (ack != theSession->lastCSAck);
 
 	if(check) {
 	  /* This is not a duplicated ACK */
 
-	  if(sport < dport) /* Server -> Client */
+	  if(sport < dport) /* Server->Client */
 	    theSession->lastSCAck = ack;
-	  else /* Client -> Server */
+	  else /* Client->Server */
 	    theSession->lastCSAck = ack;
 
 	  for(i=0; i<theSession->numFin; i++) {
@@ -1953,7 +2063,7 @@ static void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
 #ifdef FRAGMENT_DEBUG
 static void dumpFragmentData(IpFragment *fragment) {
   printf("IPFragment (%p)\n", fragment);
-  printf("  %s:%d -> %s:%d\n",
+  printf("  %s:%d->%s:%d\n",
          fragment->src->hostSymIpAddress, fragment->sport,
          fragment->dest->hostSymIpAddress, fragment->dport);
   printf("  FragmentId=%d\n", fragment->fragmentId);
@@ -2074,7 +2184,7 @@ static u_int handleFragment(HostTraffic *srcHost,
     /* first fragment contains port numbers */
     fragment->sport = *sport;
     fragment->dport = *dport;
-  } else if (!(off & IP_MF)) /* last fragment -> we know the total data size */
+  } else if (!(off & IP_MF)) /* last fragment->we know the total data size */
     fragment->expectedDataLength = fragmentOffset+dataLength;
 
 #ifdef FRAGMENT_DEBUG
@@ -2183,7 +2293,7 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
       if(hostPtr.addrList[i] != 0){
 	hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
 #ifdef DNS_SNIFF_DEBUG
-	printf("%s <-> %s\n",
+	printf("%s <->%s\n",
 	       hostPtr.name, intoa(hostIpAddress));
 #endif
 #ifdef HAVE_GDBM_H
@@ -2326,7 +2436,7 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
     device[actualDeviceId].broadcastPkts++;
   } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s -> %s\n",
+    traceEvent(TRACE_INFO, "%s->%s\n",
               srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
 #endif
     srcHost->pktMulticastSent++;
@@ -2454,7 +2564,7 @@ static void processIpPkt(const u_char *bp,
   if(rFileName != NULL) {
     static int numPkt=1;
 
-    traceEvent(TRACE_INFO, "%d) %s -> %s",
+    traceEvent(TRACE_INFO, "%d) %s->%s",
 	       numPkt++,
 	       srcHost->hostNumIpAddress,
 	       srcHost->hostNumIpAddress);
@@ -2504,8 +2614,8 @@ static void processIpPkt(const u_char *bp,
 	       timestamp (& lastPktTime, ABS_FMT)),
       fprintf (fd, "IP:     Total size  = %d : header = %d : data = %d\n",
 	       ip_size, ip_hlen, ip_size - ip_hlen),
-      fprintf (fd, "IP:     Source      = %s\n", inet_ntoa (ip -> ip_src)),
-      fprintf (fd, "IP:     Destination = %s\n", inet_ntoa (ip -> ip_dst)),
+      fprintf (fd, "IP:     Source      = %s\n", inet_ntoa (ip->ip_src)),
+      fprintf (fd, "IP:     Destination = %s\n", inet_ntoa (ip->ip_dst)),
       fflush (fd);
 #endif
 
@@ -2627,7 +2737,7 @@ static void processIpPkt(const u_char *bp,
         u_int16_t transactionId;
 
 #ifdef DNS_SNIFF_DEBUG
-	traceEvent(TRACE_INFO, "%s -> %s [request: %d][positive reply: %d]\n",
+	traceEvent(TRACE_INFO, "%s->%s [request: %d][positive reply: %d]\n",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress,
 		   isRequest, positiveReply);
@@ -2638,7 +2748,7 @@ static void processIpPkt(const u_char *bp,
 	transactionId = processDNSPacket(bp, udpDataLength, hlen, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
-	traceEvent(TRACE_INFO, "%s -> %s [request: %d][positive reply: %d]\n",
+	traceEvent(TRACE_INFO, "%s->%s [request: %d][positive reply: %d]\n",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress,
 		   isRequest, positiveReply);
@@ -3101,8 +3211,8 @@ static time_t delta_time_in_milliseconds (struct timeval * now,
   /*
    * compute delta in second, 1/10's and 1/1000's second units
    */
-  time_t delta_seconds = now -> tv_sec - before -> tv_sec;
-  time_t delta_milliseconds = (now -> tv_usec - before -> tv_usec) / 1000;
+  time_t delta_seconds = now->tv_sec - before->tv_sec;
+  time_t delta_milliseconds = (now->tv_usec - before->tv_usec) / 1000;
 
   if (delta_milliseconds < 0)
     { /* manually carry a one from the seconds field */
@@ -3362,7 +3472,7 @@ void processPacket(u_char *_deviceId,
       fprintf (fd, "ETHER:  ----- Ether Header -----\n"),
 	fprintf (fd, "ETHER:\n"),
 	fprintf (fd, "ETHER:  Packet %ld arrived at %s\n",
-		 device [actualDeviceId].ethernetPkts, timestamp (& h -> ts, ABS_FMT)),
+		 device [actualDeviceId].ethernetPkts, timestamp (& h->ts, ABS_FMT)),
 	fprintf (fd, "ETHER:  Total size  = %d : header = %d : data = %d\n",
 		 length, hlen, length - hlen),
 	fprintf (fd, "ETHER:  Source      = %s\n", etheraddr_string (ether_src)),

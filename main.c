@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
   int enableThUpdate=1;
   int enableIdleHosts=1;
 
-  char *cp, *localAddresses=NULL, *webAddr=NULL, *devices;
+  char *cp, *localAddresses=NULL, *webAddr=NULL, *devices, *sslAddr=NULL;
   char flowSpecs[2048], rulesFile[128], ifStr[196], *theOpts;
   time_t lastTime;
 
@@ -305,7 +305,18 @@ int main(int argc, char *argv[]) {
 	  exit(-1);
 	}
 
-	sslPort = atoi(optarg);
+	/* 
+	   lets swipe the same address binding code from -w above 
+	   Curtis Doty <Curtis@GreenKey.net>
+	*/
+	if((sslAddr = strchr(optarg,':'))) {
+	  *sslAddr = '\0';
+	  sslPort = atoi(sslAddr+1);
+	  sslAddr = optarg;
+	} else {
+	  sslPort = atoi(optarg);
+       }
+ 
 	break;
 #endif
 
@@ -465,7 +476,7 @@ int main(int argc, char *argv[]) {
 
   initThreads(enableThUpdate, enableIdleHosts, enableDBsupport);
   startPlugins();
-  initWeb(webPort, webAddr);
+  initWeb(webPort, webAddr, sslAddr);
 
   traceEvent(TRACE_INFO, "Sniffying...\n");
  

@@ -711,6 +711,7 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
   if(host->dnsStats     != NULL) free(host->dnsStats);
   if(host->httpStats    != NULL) free(host->httpStats);
   if(host->napsterStats != NULL) free(host->napsterStats);
+  if(host->dhcpStats    != NULL) free(host->dhcpStats);
 
   /* ********** */
 

@@ -562,12 +562,12 @@ typedef struct simpleProtoTrafficInfo {
 #define INTERFACE_ENABLED   2   /* packet capturing currently active */
 
 typedef struct {
-  char * name;                   /* unique interface name */
+  char *name;                    /* unique interface name */
   int flags;                     /* the status of the interface as viewed by ntop */
 
   u_int32_t addr;                /* Internet address (four bytes notation) */
-  char * ipdot;                  /* IP address (dot notation) */
-  char * fqdn;                   /* FQDN (resolved for humans) */
+  char *ipdot;                   /* IP address (dot notation) */
+  char *fqdn;                    /* FQDN (resolved for humans) */
 
   struct in_addr network;        /* network number associated to this interface */
   struct in_addr netmask;        /* netmask associated to this interface */
@@ -579,16 +579,16 @@ typedef struct {
   time_t firstpkt;               /* time first packet was captured */
   time_t lastpkt;                /* time last packet was captured */
 
-  pcap_t * pcapPtr;              /* LBNL pcap handler */
+  pcap_t *pcapPtr;               /* LBNL pcap handler */
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */
   int datalink;                  /* data-link encapsulation type (see DLT_* in net/bph.h) */
 
-  char * filter;                 /* user defined filter expression (if any) */
+  char *filter;                  /* user defined filter expression (if any) */
 
   int fd;                        /* unique identifier (Unix file descriptor) */
 
-  FILE * fdv;                    /* verbosity file descriptor */
+  FILE *fdv;                     /* verbosity file descriptor */
   int hashing;                   /* hashing while sniffing */
   int ethv;                      /* print ethernet header */
   int ipv;                       /* print IP header */
@@ -662,7 +662,7 @@ typedef struct {
   pthread_t pcapDispatchThreadId;
 #endif
 
-  u_int  hostsno; /* # of valid entries in the following table */
+  u_int  hostsno;        /* # of valid entries in the following table */
   u_int  actualHashSize, hashThreshold, topHashThreshold;
   struct hostTraffic **hash_hostTraffic;
 } ntopInterface_t;
@@ -693,7 +693,6 @@ typedef struct processInfoList {
 
 #define TOP_IP_PORT           65534 /* IP ports range from 0 to 65535 */
 #define TOP_ASSIGNED_IP_PORTS  1024
-
 
 #define ETHERNET_ADDRESS_LEN 6
 
@@ -1290,6 +1289,16 @@ typedef struct napsterStats {
 
 /* *********************** */
 
+typedef struct dhcpStats { 
+  struct in_addr dhcpServerIpAddress;  /* DHCP server that assigned the address */
+  struct in_addr previousIpAddress;    /* Previous IP address is any */
+  time_t assignTime;                   /* when the address was assigned */
+  time_t renewalTime;                  /* when the address has to be renewed */
+  time_t leaseTime;                    /* when the address lease will expire */
+} DHCPStats;
+
+/* *********************** */
+
 typedef struct icmpHostInfo {
   unsigned long icmpMsgSent[ICMP_MAXTYPE+1];
   unsigned long icmpMsgRcvd[ICMP_MAXTYPE+1];
@@ -1394,6 +1403,7 @@ typedef struct hostTraffic
   u_int contactedRouters[MAX_NUM_HOST_ROUTERS]; /* routers contacted by this host */
   ServiceStats *dnsStats, *httpStats;
   NapsterStats *napsterStats;
+  DHCPStats    *dhcpStats;
 
   /* *************** IMPORTANT ***************
 
@@ -1457,9 +1467,6 @@ struct pbuf {
   struct pcap_pkthdr h;
   u_char b[sizeof(unsigned int)];	/* actual size depend on snaplen */
 };
-
-/* **************************** */
-
 
 /* **************************** */
 

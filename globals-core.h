@@ -304,6 +304,7 @@ extern char *getPortByNum(int port, int type);
 extern char *getAllPortByNum(int port);
 extern int getAllPortByName(char* portName);
 extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
+extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress);
 extern u_int findHostInfo(struct in_addr *hostIpAddress);
 extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr);
 extern char *getNamedPort(int port);

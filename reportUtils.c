@@ -1380,10 +1380,10 @@ void getProtocolDataReceived(TrafficCounter *c,
 static char* getBgPctgColor(float pctg) {
   if(pctg == 0)
     return("");
-  else if(pctg <= 25)          /* < 25%       */
-    return("BGCOLOR=#C6EEF7"); /* 25% <=> 75% */
+  else if(pctg <= 25)           /* < 25%       */
+    return("BGCOLOR=#C6EEF7");  /* 25% <=> 75% */
   else if(pctg <= 75)
-    return("BGCOLOR=#C6EFC8"); /* > 75%       */
+    return("BGCOLOR=#C6EFC8");  /* > 75%       */
   else
     return("BGCOLOR=#FF3118");
 }
@@ -2146,12 +2146,19 @@ void printHostDetailedInfo(HostTraffic *el) {
     else hostType = "unicast";
 
     if(el->hostIpAddresses[1].s_addr == 0x0) {
+      char *dynIp;
+      
+      if(isDHCPClient(el))
+	dynIp = "/dynamic";
+      else
+	dynIp = "";
+
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s]",
+		  "<TD "TD_BG"  ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s]",
 	      getRowColor(),
 	      "IP&nbsp;Address",
 	      el->hostNumIpAddress,
-	      countryIcon, hostType) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      countryIcon, hostType, dynIp) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     } else {
       int i;
@@ -2441,6 +2448,8 @@ void printHostDetailedInfo(HostTraffic *el) {
     if(isFTPhost(el))          sendString("FTP Server<br>");
     if(isHTTPhost(el))         sendString("HTTP Server<br>");
     if(isWINShost(el))         sendString("WINS Server<br>");
+    if(isNapsterServer(el))    sendString("Napster Server<br>");
+    if(isNapsterRedirector(el))    sendString("Napster Redirector<br>");
 
     sendString("</TD></TR>");
   }
@@ -2451,7 +2460,7 @@ void printHostDetailedInfo(HostTraffic *el) {
      || isWorkstation(el)
      || isPrinter(el)
      || isBridgeHost(el)
-     || isNapsterRedirector(el) || isNapsterServer(el)
+     || isNapsterRedirector(el) || isNapsterServer(el) || isNapsterClient(el)
      || isDHCPClient(el)        || isDHCPServer(el)
      ) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>",

@@ -108,7 +108,6 @@ extern void printTableEntry(char *buf, int bufLen,
 			    float total, float percentage);
 extern char* buildHTMLBrowserWindowsLabel(int i, int j);
 extern int cmpEventsFctn(const void *_a, const void *_b);
-extern char* getBgPctgColor(float pctg);
 extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 					TrafficCounter tcSent, 
 					TrafficCounter tcRcvd);
@@ -148,7 +147,7 @@ extern void listNetFlows(void);
 extern void printHostEvents(HostTraffic *theHost, int column, int revertOrder);
 extern void fillDomainName(HostTraffic *el);
 extern void printNtopConfigInfo(void);
-extern void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate);
+extern void updateHostThpt(HostTraffic *el, int hourId);
 
 /* webInterface.c */
 extern void initializeWeb(void);
@@ -156,7 +155,7 @@ extern void *handleWebConnections(void* notUsed);
 extern void execCGI(char* cgiName);
 extern void showPluginsList(char* pluginName);
 /* CHECK ME: loadPlugins() and unloadPlugins() should not be in webInterface.c */
-extern void initWeb(int webPort, char* webAddr);
+extern void initWeb(int webPort, char* webAddr, char* sslAddr);
 extern char *makeHostLink(HostTraffic *el, short mode,
                           short cutName, short addCountryFlag);
 extern char *getHostName(HostTraffic *el, short cutName);
