@@ -888,6 +888,10 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
   if(host == NULL)
     return;
 
+#ifndef DEBUG
+  traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)", host->hostNumIpAddress, hostIdx);
+#endif
+
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
   /* FIXME (DL): checkSessionIdx() acts on actualDeviceId instead of theDevice */
 
@@ -1051,6 +1055,10 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
     freeHostList[freeListLen++] = host;
 
   numPurgedHosts++;
+
+#ifndef DEBUG
+  traceEvent(TRACE_INFO, "Leaving freeHostInfo()");
+#endif
 }
 
 /* ************************************ */
