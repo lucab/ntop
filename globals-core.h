@@ -424,7 +424,7 @@ extern int deleteSem(sem_t *semId);
 #endif /* MULTITHREADED */
 extern void setNBnodeNameType(HostTraffic *theHost, char nodeType, char* nbName);
 extern void trimString(char*);
-
+extern FILE* getNewRandomFile(char* fileName, int len);
 extern void stringSanityCheck(char* string);
 extern int checkCommand(char* commandName);
 extern void readLsofInfo(void);

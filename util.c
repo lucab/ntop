@@ -1101,7 +1101,57 @@ void readLsofInfo(void) {
   ProcessInfo *tmpProcesses[MAX_NUM_PROCESSES];
   fd_set mask;
   struct timeval wait_time;
+  char fileName[NAME_MAX] = "/tmp/lsof-XXXXXX";
+  FILE *fd1;
+
+  fd1 = getNewRandomFile(fileName, NAME_MAX);
+
+  if(fd1 == NULL) {
+    /* The warning message is returned by getNewRandomFile() */
+    return;
+  }
+
+  fd = sec_popen("lsof -i -n -w", "r");
+
+  if(fd == NULL) {
+    fclose(fd);
+    isLsofPresent = 0;
+    return;
+  }
+
+  fdFileno = fileno(fd);
+  wait_time.tv_sec = 30, wait_time.tv_usec = 0; 
+  while(1) {
+    FD_ZERO(&mask);
+    FD_SET(fdFileno, &mask);    
+
+    if(select(fdFileno+1, &mask, 0, 0, &wait_time) == 1) {  
+      if(fgets(line, 383, fd) != NULL) {
+	fprintf(fd1, "%s", line);
+      } else
+	break;
+    } else {
+      traceEvent(TRACE_WARNING, "WARNING: lsof() timeout");
+      pclose(fd);
+      fclose(fd1);
+      unlink(fileName);
+      return;
+    }
+  } /* while */
   
+  pclose(fd);
+  fclose(fd1);
+
+  fd = fopen(fileName, "r");
+  if(fd == NULL) {
+    traceEvent(TRACE_WARNING, "WARNING: unable to read lsof dump file");
+    unlink(fileName);
+    return;
+  }
+
+
+  /* ****************************************** */
+
 #ifdef MULTITHREADED
   accessMutex(&lsofMutex, "readLsofInfo");
 #endif
@@ -1119,140 +1169,104 @@ void readLsofInfo(void) {
 
   memset(localPorts, 0, sizeof(localPorts)); /* Just to be sure... */
 
-#ifdef USE_LSOF_DUMP
-  fd = sec_fopen("lsof.dump", "r");
-#else
-  fd = sec_popen("lsof -i -n -w", "r");
-#endif
+  fgets(line, 383, fd); /* Ignore 1st line */
 
-  if(fd == NULL) {
-    isLsofPresent = 0;
-#ifdef MULTITHREADED
-    releaseMutex(&lsofMutex);
-#endif
-    return;
-  }
+  while(fgets(line, 383, fd) != NULL) {
+    int pid, i;
+    char command[32], user[32], *portNr;
+    char *trailer, *thePort, *strtokState;
 
-  fdFileno = fileno(fd);
-  FD_ZERO(&mask);
-  FD_SET(fdFileno, &mask);    
-  wait_time.tv_sec = 30, wait_time.tv_usec = 0; 
-  if(select(fdFileno+1, &mask, 0, 0, &wait_time) == 1) {
-    fgets(line, 383, fd); /* Ignore 1st line */
-  } else {
-    traceEvent(TRACE_WARNING, "WARNING: lsof() timeout (1)");
-    pclose(fd);
-#ifdef MULTITHREADED
-    releaseMutex(&lsofMutex);
-#endif
-    return;
-  }
+    /*traceEvent(TRACE_INFO, "%s\n", line); */
 
-  while(1) {
-    FD_ZERO(&mask);
-    FD_SET(fdFileno, &mask);    
+    /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+    if(3 != sscanf(line, "%31[^ \t] %d %31[^ \t]", command, &pid, user))
+      continue;
 
-    if(select(fdFileno+1, &mask, 0, 0, &wait_time) == 1) {  
-      if(fgets(line, 383, fd) != NULL) {
-	int pid, i;
-	char command[32], user[32], *portNr;
-	char *trailer, *thePort, *strtokState;
+    if(strcmp(command, "lsof") == 0)
+      continue;
 
-	/*traceEvent(TRACE_INFO, "%s\n", line); */
-
-	/* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-	if(3 != sscanf(line, "%31[^ \t] %d %31[^ \t]", command, &pid, user))
-	  continue;
-
-	if(strcmp(command, "lsof") == 0)
-	  continue;
-
-	/* Either UDP or TCP */
-	for(i=10; (line[i] != '\0'); i++)
-	  if((line[i] == 'P') && (line[i+1] == ' '))
-	    break;
-
-	if(line[i] == '\0')
-	  continue;
-	else
-	  trailer = &line[i+2];
-
-	portNr = (char*)strtok_r(trailer, ":", &strtokState);
-
-	if(portNr[0] == '*')
-	  portNr = &portNr[2];
-	else
-	  portNr = (char*)strtok_r(NULL, "-", &strtokState);
-
-	if((portNr == NULL) || (portNr[0] == '*'))
-	  continue;
-
-	for(i=0, found = 0; i<numProcesses; i++) {
-	  if(processes[i]->pid == pid) {
-	    found = 1;
-	    processes[i]->marker = 1;
-	    break;
-	  }
-	}
-
-	thePort = strtok_r(portNr, " ", &strtokState);
-
-	for(j=0; portNr[j] != '\0'; j++)
-	  if(!isalnum(portNr[j]) && portNr[j]!='-') {
-	    portNr[j] = '\0';
-	    break;
-	  }
-
-	if(isdigit(portNr[0])) {
-	  portNumber = atoi(thePort);
-	} else {
-	  portNumber = getAllPortByName(thePort);
-	}
-
-#ifdef DEBUG
-	traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n", command, user, thePort, portNr, portNumber);
-#endif
-
-	if(portNumber == -1)
-	  continue;
-
-	if(!found) {
-	  int floater;
-#ifdef DEBUG
-	  traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", numProcesses, command, user, portNr, portNumber);
-#endif
-	  processes[numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
-	  processes[numProcesses]->command             = strdup(command);
-	  processes[numProcesses]->user                = strdup(user);
-	  processes[numProcesses]->pid                 = pid;
-	  processes[numProcesses]->firstSeen           = actTime;
-	  processes[numProcesses]->lastSeen            = actTime;
-	  processes[numProcesses]->marker              = 1;
-	  processes[numProcesses]->bytesSent           = 0;
-	  processes[numProcesses]->bytesReceived       = 0;
-	  processes[numProcesses]->contactedIpPeersIdx = 0;
-
-	  for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
-	    processes[i]->contactedIpPeersIndexes[floater] = NO_PEER;
-
-	  idx = numProcesses;
-	  numProcesses++;
-	} else
-	  idx = i;
-
-	listElement = (ProcessInfoList*)malloc(sizeof(ProcessInfoList));
-	listElement->element = processes[idx];
-	listElement->next = localPorts[portNumber];
-	localPorts[portNumber] = listElement;
-      } else 
+    /* Either UDP or TCP */
+    for(i=10; (line[i] != '\0'); i++)
+      if((line[i] == 'P') && (line[i+1] == ' '))
 	break;
-    } else {
-      traceEvent(TRACE_WARNING, "WARNING: lsof() timeout (2)");
-      break;
+
+    if(line[i] == '\0')
+      continue;
+    else
+      trailer = &line[i+2];
+
+    portNr = (char*)strtok_r(trailer, ":", &strtokState);
+
+    if(portNr[0] == '*')
+      portNr = &portNr[2];
+    else
+      portNr = (char*)strtok_r(NULL, "-", &strtokState);
+
+    if((portNr == NULL) || (portNr[0] == '*'))
+      continue;
+
+    for(i=0, found = 0; i<numProcesses; i++) {
+      if(processes[i]->pid == pid) {
+	found = 1;
+	processes[i]->marker = 1;
+	break;
+      }
     }
+
+    thePort = strtok_r(portNr, " ", &strtokState);
+
+    for(j=0; portNr[j] != '\0'; j++)
+      if(!isalnum(portNr[j]) && portNr[j]!='-') {
+	portNr[j] = '\0';
+	break;
+      }
+
+    if(isdigit(portNr[0])) {
+      portNumber = atoi(thePort);
+    } else {
+      portNumber = getAllPortByName(thePort);
+    }
+
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n", command, user, thePort, portNr, portNumber);
+#endif
+
+    if(portNumber == -1)
+      continue;
+
+    if(!found) {
+      int floater;
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", numProcesses, command, user, portNr, portNumber);
+#endif
+      processes[numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
+      processes[numProcesses]->command             = strdup(command);
+      processes[numProcesses]->user                = strdup(user);
+      processes[numProcesses]->pid                 = pid;
+      processes[numProcesses]->firstSeen           = actTime;
+      processes[numProcesses]->lastSeen            = actTime;
+      processes[numProcesses]->marker              = 1;
+      processes[numProcesses]->bytesSent           = 0;
+      processes[numProcesses]->bytesReceived       = 0;
+      processes[numProcesses]->contactedIpPeersIdx = 0;
+
+      for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
+	processes[i]->contactedIpPeersIndexes[floater] = NO_PEER;
+
+      idx = numProcesses;
+      numProcesses++;
+    } else
+      idx = i;
+
+    listElement = (ProcessInfoList*)malloc(sizeof(ProcessInfoList));
+    listElement->element = processes[idx];
+    listElement->next = localPorts[portNumber];
+    localPorts[portNumber] = listElement;
   }
 
-  pclose(fd);
+  fclose(fd);
+  printf("=============> %s\n", fileName);
+  unlink(fileName);
 
   memcpy(tmpProcesses, processes, sizeof(processes));
   memset(processes, 0, sizeof(processes));

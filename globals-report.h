@@ -259,5 +259,4 @@ extern char *getRowColor(void);
 extern char *makeHostLink(HostTraffic *el, short mode,
                           short cutName, short addCountryFlag);
 
-extern FILE* getNewRandomFile(char* fileName, int len);
 extern char *getHostName(HostTraffic *el, short cutName);
