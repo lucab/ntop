@@ -48,7 +48,7 @@ dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.1.58pre])
 AC_PREREQ([2.50])
-SCRIPTVER="v1.102-2003-02-10"
+SCRIPTVER="v1.103-2003-02-11"
 
 dnl>
 dnl> generate the config header
@@ -829,15 +829,15 @@ echo "*    successes you have or problems you encounter..."
 if test ".${VERIFIED1}" != "."; then
     echo "*   Support for this platform was most recently verified for"
     echo "*"
-    echo $VERIFIED1 | awk -f utils/verified.awk
+    echo $VERIFIED1 | ${ac_cv_prog_AWK} -f utils/verified.awk
     if test ".${VERIFIED2}" != "."; then
-        echo $VERIFIED2 | awk -f utils/verified.awk
+        echo $VERIFIED2 | ${ac_cv_prog_AWK} -f utils/verified.awk
     fi
     if test ".${VERIFIED3}" != "."; then
-        echo $VERIFIED3 | awk -f utils/verified.awk
+        echo $VERIFIED3 | ${ac_cv_prog_AWK} -f utils/verified.awk
     fi
     if test ".${VERIFIED4}" != "."; then
-        echo $VERIFIED4 | awk -f utils/verified.awk
+        echo $VERIFIED4 | ${ac_cv_prog_AWK} -f utils/verified.awk
     fi
     if test ".${VNOTES}" != "."; then
         echo "*    ${VNOTES}"
@@ -1936,17 +1936,17 @@ dnl> last test line and the various actions if true...
 
         OSSL_ROOT=`(cd ${OSSL_ROOT} && pwd)`
         oLIBS=${LIBS}
-        LIBS="${oLIBS} -L ${OSSL_ROOT}"
+        LIBS="${oLIBS} -L${OSSL_ROOT}"
         AC_CHECK_LIB([ssl], [SSL_accept])
         AC_CHECK_LIB([crypto], [SSLeay_version])
         if test ".${ac_cv_lib_crypto_SSLeay_version}" != ".yes" ||
            test ".${ac_cv_lib_ssl_SSL_accept}"        != ".yes"; then
-            LIBS="${oLIBS} -L ${OSSL_ROOT}/lib"
+            LIBS="${oLIBS} -L${OSSL_ROOT}/lib"
             AC_CHECK_LIB([ssl], [SSL_accept])
             AC_CHECK_LIB([crypto], [SSLeay_version])
             if test ".${ac_cv_lib_crypto_SSLeay_version}" != ".yes" ||
                test ".${ac_cv_lib_ssl_SSL_accept}"        != ".yes"; then
-                LIBS="${oLIBS} -L ${OSSL_ROOT}/lib/openssl"
+                LIBS="${oLIBS} -L${OSSL_ROOT}/lib/openssl"
                 AC_CHECK_LIB([ssl], [SSL_accept])
                 AC_CHECK_LIB([crypto], [SSLeay_version])
                 if test ".${ac_cv_lib_crypto_SSLeay_version}" != ".yes" ||
