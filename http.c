@@ -24,7 +24,11 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-/* #define URL_DEBUG */
+
+/*
+  #define URL_DEBUG 
+  #define HTTP_DEBUG 
+*/
 
 /* Private structure definitions */
 
@@ -197,11 +201,11 @@ static int readHTTPheader(char* theRequestedURL,
   SSL* ssl = getSSLsocket(-myGlobals.newSock);
 #endif
   char aChar[8] /* just in case */, lastChar;
-  char preLastChar, lineStr[768];
+  char preLastChar, *lineStr;
   int rc, idxChar=0, contentLen=-1, numLine=0, topSock;
   fd_set mask;
   struct timeval wait_time;
-  int errorCode=0;
+  int errorCode=0, lineStrLen;
   char *tmpStr;
 
   *isPostMethod = FALSE;        /* Assume GET Method by default */
@@ -210,6 +214,13 @@ static int readHTTPheader(char* theRequestedURL,
   lastChar = '\n';
   theRequestedURL[0] = '\0';
   memset(httpRequestedURL, 0, sizeof(httpRequestedURL));
+
+  lineStrLen = 768;
+  lineStr = (char*)calloc(lineStrLen, sizeof(char));
+  if(lineStr == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "Not enough memory");
+    return(FLAG_HTTP_INVALID_REQUEST);
+  }
 
 #ifdef HAVE_OPENSSL
   topSock = abs(myGlobals.newSock);
@@ -268,6 +279,9 @@ static int readHTTPheader(char* theRequestedURL,
       traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Rcvd non expected char '%c' [%d/0x%x]", aChar[0], aChar[0], aChar[0]);
 #endif
     } else {
+#ifdef URL_DEBUG
+      traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Rcvd char '%c' [%d/0x%x]", aChar[0], aChar[0], aChar[0]);
+#endif
       if(aChar[0] == '\r') {
 	/* <CR> is ignored as recommended in section 19.3 of RFC 2068 */
 	continue;
@@ -297,7 +311,15 @@ static int readHTTPheader(char* theRequestedURL,
 	  } else if(strncmp(&lineStr[idxChar-9], " HTTP/", 6) != 0) {
 	    errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef URL_DEBUG
-	    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Malformed request line.");
+	    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Malformed request line. [%s][idxChar=%d]",
+		       &lineStr[idxChar-9], idxChar);
+
+	    {
+	      int y;
+
+	      for(y=0; y<idxChar; y++) 
+		traceEvent(CONST_TRACE_INFO, "URL_DEBUG: lineStr[%d]='%c'", y, lineStr[y]);
+	    }
 #endif
 
 	  } else if((strncmp(&lineStr[idxChar-3], "1.0", 3) != 0) &&
@@ -381,7 +403,7 @@ static int readHTTPheader(char* theRequestedURL,
 	  strncpy(theReferer, &lineStr[9], theRefererLen-1)[theRefererLen-1] = '\0';
 	}
 	idxChar=0;
-      } else if(idxChar > sizeof(lineStr)-2) {
+      } else if(idxChar > lineStrLen-2) {
 	if(errorCode == 0) {
 	  errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef URL_DEBUG
@@ -396,6 +418,7 @@ static int readHTTPheader(char* theRequestedURL,
     lastChar = aChar[0];
   }
 
+  free(lineStr);
   return((errorCode) ? errorCode : contentLen);
 }
 
