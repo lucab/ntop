@@ -3375,7 +3375,7 @@ void listNetFlows(void) {
 void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
   datum key_data, data_data, return_data;
   char tmpBuf[96], *arrow[6], *theAnchor[6];
-  EventMsg *theMsgTable[MAX_NUM_EVENTS];
+  EventMsg *theMsgTable[MAX_NUM_EVENTS] = { 0 };
   EventMsg theMsgs[MAX_NUM_EVENTS];
   unsigned long shost, dhost, evtTime;
   u_short numEntries = 0, i;
@@ -3383,8 +3383,6 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
   char htmlAnchor[64], htmlAnchor1[64];
 
   if(theHost == NULL) printHTTPheader();
-
-  memset(theMsgs, 0, sizeof(theMsgs));
 
   if(eventFile == NULL) {
     if(theHost == NULL) printNoDataYet();
