@@ -153,6 +153,9 @@
 /* Define to 1 if you have the <icmp6.h> header file. */
 #undef HAVE_ICMP6_H
 
+/* Define to 1 if you have the <ieeefp.h> header file. */
+#undef HAVE_IEEEFP_H
+
 /* use sysctl support for fetch interface informations */
 #undef HAVE_IFLIST_SYSCTL
 
