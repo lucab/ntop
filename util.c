@@ -3879,7 +3879,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
     return; /* Reporting fork()ed child, don't update! */
   }
 
-  accessAddrResMutex("makeHostLink");
+  accessAddrResMutex("setHostFingerprint");
 
   if(snprintf(fingerprint, sizeof(fingerprint)-1, "%s", srcHost->fingerprint) < 0)
     BufferTooShort();

@@ -354,6 +354,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   memset(&osBuf, 0, sizeof(osBuf));
   memset(&titleBuf, 0, sizeof(titleBuf));
   memset(&noteBuf, 0, sizeof(noteBuf));
+  memset(&noteBufAppend, 0, sizeof(noteBufAppend));
 
   /* Critical - for sorting order - that this routine respect hostResolvedName
    *
@@ -643,6 +644,7 @@ char* makeHostLink(HostTraffic *el, short mode,
         BufferTooShort();
     usedEthAddress = 1;
   }
+
 
   /* Make the hostlink */
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
