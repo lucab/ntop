@@ -139,21 +139,19 @@ sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
 sntop_LDADD        = $(ntop_LDADD)
 sntop_LDFLAGS      = $(ntop_LDFLAGS) -static
 
-noinst_HEADERS     = globals-core.h globals-report.h ntop.h regex.h
+noinst_HEADERS     =  getopt.h globals-core.h globals-report.h ntop.h regex.h
 
 # all the Archives
 lib_LTLIBRARIES    = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
-libntop_la_SOURCES = address.c       dataFormat.c  \
-                     getopt.c        getopt1.c     getopt.h  argv.c   \
-                     globals-core.c  hash.c        initialize.c       \
-                     leaks.c         netflow.c  \
-                     ntop.c 	     pbuf.c        protocols.c        \
-		     plugin.c        qsort.c       regex.c	      \
-                     sessions.c         \
-                     term.c        traffic.c          \
-                     util.c          vendor.c      version.c          \
+libntop_la_SOURCES = address.c    argv.c        dataFormat.c   \
+                     getopt.c     getopt1.c     globals-core.c \
+                     hash.c       initialize.c  leaks.c        \
+                     netflow.c    ntop.c        pbuf.c         \
+                     plugin.c     protocols.c   qsort.c        \
+                     sessions.c   term.c        util.c         \
+                     traffic.c    vendor.c      version.c      \
                      ntop_darwin.c
 
 libntop_la_DEPENDENCIES = config.h
@@ -161,15 +159,10 @@ libntop_la_LIBADD       =
 libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
 # Archive for http representation, or the 'viewer'
-libntopreport_la_SOURCES = emitter.c \
-                           globals-report.c \
-                           graph.c \
-                           http.c  \
-                           report.c \
-                           reportUtils.c \
-                           ssl.c \
-                           webInterface.c \
-                           xmldump.c
+libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
+                           http.c          netflow.c         regex.c \
+                           report.c        reportUtils.c     ssl.c   \
+                           webInterface.c  xmldump.c
 
 
 libntopreport_la_DEPENDENCIES = config.h
