@@ -251,7 +251,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 			  &error_num);
 #ifdef DNS_DEBUG
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called getipnodebyaddr(): RC=%d 0x%X [%s]", 
-               error_num,
+	       error_num,
 	       hp, hp != NULL ? (char*)hp->h_name : "");
 #endif
 
@@ -348,10 +348,16 @@ static void resolveAddress(struct in_addr *hostAddr,
              * Known to happen under Linux, other OSes uncertain...
              */
             if (reportedFreaky == FALSE) {
+	      static u_char msgSent = 0;
+	      
                 reportedFreaky = TRUE;
-                traceEvent(CONST_TRACE_INFO, "gethost... call returned NULL/NETDB_SUCCESS - "
-                                             "this is odd, but apparently normal");
-            }
+		
+		if(!msgSent) {
+		  msgSent = 1; /* Avoid to send the same message several times */
+		  traceEvent(CONST_TRACE_INFO, "gethost... call returned NULL/NETDB_SUCCESS - "
+			     "this is odd, but apparently normal");
+		}
+	    }
             myGlobals.numDNSErrorHostNotFound++;
             break;
         case HOST_NOT_FOUND:
