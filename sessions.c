@@ -679,7 +679,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	strncpy(tmpStr, packetData, 16);
 	tmpStr[16] = '\0';
 
-	if(strncmp(rcStr, "HTTP/1", 6) == 0) {
+	if(strncmp(tmpStr, "HTTP/1", 6) == 0) {
 	  int rc;
 	  time_t microSecTimeDiff;
 
