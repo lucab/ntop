@@ -196,7 +196,7 @@ extern void printMulticastStats(int sortedColumn /* ignored so far */,
                                 int revertOrder, int pageNum);
 extern void printVSANList(unsigned int deviceId);
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vlanId);
-extern void make_dot();
+extern void makeDot();
 extern void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vsanId);
 extern void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
                                   int revertOrder, int pageNum, char *url,
@@ -241,7 +241,7 @@ extern void printIpTrafficMatrix(void);
 extern void printFcTrafficMatrix (u_short vsanId, u_char sent);
 extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
-extern void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int pageNum);
+extern void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int revertOrder, int pageNum);
 extern void printNoDataYet(void);
 extern void printNotAvailable(char* flagName);
 extern void listNetFlows(void);

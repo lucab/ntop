@@ -657,6 +657,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   sendString("				[null,'Traffic','/sortDataIP.html',null,null],\n");
   sendString("				[null,'Multicast','/multicastStats.html',null,null],\n");
   sendString("				[null,'Internet Domain','/domainStats.html',null,null],\n");
+  sendString("				[null,'Host Clusters','/"CONST_CLUSTER_STATS_HTML"',null,null],\n");
   sendString("				[null,'Distribution','/ipProtoDistrib.html',null,null],\n");
   sendString("		],\n");
   sendString("		[null,'Traffic Directions',null,null,null,\n");
@@ -2479,6 +2480,10 @@ static int returnHTTPPage(char* pageName,
     printTrailer=0;
     printMutexStatusReport(0);
 #endif
+  } else if(strncasecmp(pageName, CONST_EDIT_PREFS, strlen(CONST_EDIT_PREFS)) == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    edit_prefs(db_key, db_val);
+    printTrailer=1;
   } else if(strncasecmp(pageName, CONST_PRIVACYCLEAR_HTML, strlen(CONST_PRIVACYCLEAR_HTML)) == 0) {
     storePrefsValue("globals.displayPrivacyNotice", "0");
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PRIVACY: Flag cleared, notice will display next run");
@@ -2727,7 +2732,10 @@ static int returnHTTPPage(char* pageName,
 	printMulticastStats(sortedColumn, revertOrder, pageNum);
       } else if(strncasecmp(pageName, CONST_DOMAIN_STATS_HTML, strlen(CONST_DOMAIN_STATS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printDomainStats(domainNameParm, abs(sortedColumn), revertOrder, pageNum);
+	printDomainStats(domainNameParm, 0, abs(sortedColumn), revertOrder, pageNum);
+      } else if(strncasecmp(pageName, CONST_CLUSTER_STATS_HTML, strlen(CONST_CLUSTER_STATS_HTML)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	printDomainStats(domainNameParm, 1, abs(sortedColumn), revertOrder, pageNum);
       } else if(strncasecmp(pageName, CONST_SHOW_PORT_TRAFFIC_HTML,
 			    strlen(CONST_SHOW_PORT_TRAFFIC_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2868,11 +2876,7 @@ static int returnHTTPPage(char* pageName,
 	printTrailer=0;
       } else if(strncasecmp(pageName,CONST_NETWORK_MAP, strlen(CONST_NETWORK_MAP)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	make_dot();
-	printTrailer=1;
-      } else if(strncasecmp(pageName, CONST_EDIT_PREFS, strlen(CONST_EDIT_PREFS)) == 0) {
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	edit_prefs(db_key, db_val);
+	makeDot();
 	printTrailer=1;
       } else if(strncasecmp(pageName, CONST_BAR_IPPROTO_DIST,
 			    strlen(CONST_BAR_IPPROTO_DIST)) == 0) {

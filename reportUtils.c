@@ -955,7 +955,7 @@ int sortHostFctn(const void *_a, const void *_b) {
       return(0);
     break;
   case FLAG_DOMAIN_DUMMY_IDX:
-    rc=cmpFctnLocationName(a, b);
+    rc = cmpFctnLocationName(a, b);
     return(rc);
     break;
   case 4:
@@ -1098,7 +1098,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	   );
 #endif
 
-    rc=cmpFctnLocationName(a, b);
+    rc = cmpFctnLocationName(a, b);
     return(rc);
   }
 

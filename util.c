@@ -944,7 +944,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
              "Processing %s parameter '%s'",
              flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 	     flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-	     flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
+	     flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
+	     flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
              addresses);
 
   memset(localAddresses, 0, localAddressesLen);
@@ -969,7 +970,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
         traceEvent(CONST_TRACE_WARNING, "%s: Bad format '%s' - ignoring entry",
 		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
 		   address);
 	address = strtok_r(NULL, ",", &strtokState);
 	continue;
@@ -980,7 +982,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
         traceEvent(CONST_TRACE_WARNING, "%s: Net mask '%s' not valid - ignoring entry",
 		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
 		   mask);
 	address = strtok_r(NULL, ",", &strtokState);
 	continue;
@@ -1009,7 +1012,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 	traceEvent(CONST_TRACE_WARNING, "%s: %d.%d.%d.%d/%d is not a valid network - correcting mask",
                    flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
                    a, b, c, d, bits);
 
 	/* correcting network numbers as specified in the netmask */
@@ -1096,7 +1100,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
         traceEvent(CONST_TRACE_ERROR, "%s: %d.%d.%d.%d/%d - Too many networks (limit %d) - discarded",
                    flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
                    a, b, c, d, bits,
                    MAX_NUM_NETWORKS);
       }
@@ -2402,7 +2407,7 @@ void resetHostsVariables(HostTraffic* el) {
   el->portsUsage = NULL;
   if (el->protoIPTrafficInfos != NULL) {
     int i;
-    
+
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
       if(el->protoIPTrafficInfos[i]) free(el->protoIPTrafficInfos[i]);
 
@@ -2997,7 +3002,7 @@ int snprintf(char *string, size_t maxlen, const char *format, ...) {
 }
 #endif
 
-/* Development of the following routine was partly sponsored by an anonymous 
+/* Development of the following routine was partly sponsored by an anonymous
  * multi-national corporation
  */
 
@@ -3009,7 +3014,7 @@ int snprintf(char *string, size_t maxlen, const char *format, ...) {
 //                  outputDirectory,
 //                  timestamp);
 
-int safe_snprintf(char* file, int line, 
+int safe_snprintf(char* file, int line,
 		  char* buf, size_t sizeofbuf,
 		  char* format, ...) {
   va_list va_ap;
@@ -3036,7 +3041,7 @@ int safe_snprintf(char* file, int line,
 //  int strncat(char *dest, const char *src, size_t n);
 //  Where it returns the final string length (-n if it won't fit) and
 //  n is the size of the dest
-int _safe_strncat(char* file, int line, 
+int _safe_strncat(char* file, int line,
 		  char* dest, size_t sizeofdest,
 		  char* src) {
   int rc = strlen(dest) + strlen(src) + 1;
@@ -5304,10 +5309,12 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   /* Not the 1st time?  Send uptime too */
   if((myGlobals.checkVersionStatusAgain > 0) &&
      (myGlobals.runningPref.rFileName == NULL)) {
-    char buf[LEN_SMALL_WORK_BUFFER];
+    char small_buf[LEN_SMALL_WORK_BUFFER];
 
-    memset(&buf, 0, sizeof(buf));
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_SMALL_WORK_BUFFER, " uptime(%d)", time(NULL)-myGlobals.initialSniffTime);
+    memset(&small_buf, 0, sizeof(small_buf));
+    safe_snprintf(__FILE__, __LINE__, small_buf,
+		  LEN_SMALL_WORK_BUFFER, " uptime(%d)", 
+		  time(NULL)-myGlobals.initialSniffTime);
 
     strncat(userAgent, buf, (LEN_SMALL_WORK_BUFFER - strlen(userAgent) - 1));
   }
@@ -6304,7 +6311,7 @@ float timeval_subtract (struct timeval x, struct timeval y) {
 
 void freePortsUsage(PortUsage *ports) {
   PortUsage *act, *next;
-  
+
   if(ports == NULL) return;
 
     act = ports;
@@ -6313,7 +6320,7 @@ void freePortsUsage(PortUsage *ports) {
       free(act);
       act = next;
     }
-  
+
     free(ports);
 }
 

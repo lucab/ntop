@@ -1083,6 +1083,7 @@
 #define CONST_DO_ADD_USER                   "doAddUser"
 #define CONST_DO_CHANGE_FILTER              "doChangeFilter"
 #define CONST_DOMAIN_STATS_HTML             "domainStats.html"
+#define CONST_CLUSTER_STATS_HTML            "hostClusters.html"
 #define CONST_DUMP_DATA_HTML                "dumpData.html"
 #define CONST_DUMP_HOSTS_INDEXES_HTML       "dumpDataIndexes.html"
 #define CONST_DUMP_NTOP_FLOWS_HTML          "dumpFlows.html"
@@ -1273,6 +1274,7 @@
 #define CONST_HANDLEADDRESSLISTS_MAIN       0
 #define CONST_HANDLEADDRESSLISTS_RRD        1
 #define CONST_HANDLEADDRESSLISTS_NETFLOW    2
+#define CONST_HANDLEADDRESSLISTS_CLUSTERS   3
 
 /*
  * Protocol types
