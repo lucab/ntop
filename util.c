@@ -31,6 +31,11 @@
 #include "leaks.h"
 #endif
 
+#ifdef MULTITHREADED
+static char stateChangeMutexInitialized = 0;
+static pthread_mutex_t stateChangeMutex;
+#endif
+
 /* Local */
 #define NETWORK                0
 #define NETMASK                1
@@ -339,14 +344,14 @@ int dotted2bits(char *mask) {
 
 /* Example: "131.114.0.0/16,193.43.104.0/255.255.255.0" */
 
-void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3], u_short *numNetworks, 
+void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3], u_short *numNetworks,
 			char *localAddresses, int localAddressesLen) {
   char *strtokState, *address;
   int  laBufferPosition = 0, laBufferUsed = 0, i;
 
   if(addresses == NULL)
     return;
-  
+
   memset(localAddresses, 0, localAddressesLen);
 
   address = strtok_r(addresses, ",", &strtokState);
@@ -458,7 +463,7 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
           b = (int) ((network >> 16) & 0xff);
           c = (int) ((network >>  8) & 0xff);
           d = (int) ((network >>  0) & 0xff);
-	  
+
           if ((laBufferUsed = snprintf(&localAddresses[laBufferPosition],
 				       localAddressesLen,
 				       "%s%d.%d.%d.%d/%d",
@@ -468,7 +473,7 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 	    BufferTooShort();
           laBufferPosition  += laBufferUsed;
           localAddressesLen -= laBufferUsed;
-	  
+
 	  (*numNetworks)++;
 	}
       } else
@@ -486,7 +491,7 @@ void handleLocalAddresses(char* addresses) {
 
   localAddresses[0] = '\0';
 
-  handleAddressLists(addresses, networks, &numLocalNets, 
+  handleAddressLists(addresses, networks, &numLocalNets,
 		     localAddresses, sizeof(localAddresses));
 
   /* Not used anymore */
@@ -500,7 +505,7 @@ unsigned short __pseudoLocalAddress(struct in_addr *addr,
 				    u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
 				    u_short numNetworks) {
   int i;
-    
+
   for(i=0; i<numNetworks; i++) {
 #ifdef ADDRESS_DEBUG
     char buf[32], buf1[32], buf2[32];
@@ -851,6 +856,11 @@ void killThread(pthread_t *threadId) {
 int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
+  if(!stateChangeMutexInitialized) {
+    pthread_mutex_init(&stateChangeMutex, NULL);
+    stateChangeMutexInitialized = 1;
+  }
+
   memset(mutexId, 0, sizeof(PthreadMutex));
 
   rc = pthread_mutex_init(&(mutexId->mutex), NULL);
@@ -912,20 +922,10 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
     return(-1);
   }
 
-  if(mutexId->isLocked) {
-    if ( (strcmp(fileName, mutexId->lockFile) == 0) && (fileLine == mutexId->lockLine) ) {
-        traceEvent(TRACE_WARNING,
-	           "WARNING: accessMutex() call with a self-LOCKED mutex [from %s:%d %s, locked by %s]\n",
-	           fileName, fileLine, where, mutexId->where);
-    }
-  }
-
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
 	     &(mutexId->mutex), where, fileName, fileLine);
 #endif
-  strcpy(mutexId->lockAttemptFile, fileName);
-  mutexId->lockAttemptLine=fileLine;
 
   rc = pthread_mutex_lock(&(mutexId->mutex));
 
@@ -937,8 +937,21 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 	       (void*)&(mutexId->mutex), fileName, fileLine, rc);
   else {
     /* traceEvent(TRACE_ERROR, "LOCKED 0x%X", &(mutexId->mutex)); */
+
+    if(mutexId->isLocked) {
+      if ( (strcmp(fileName, mutexId->lockFile) == 0) && (fileLine == mutexId->lockLine) ) {
+        traceEvent(TRACE_WARNING,
+	           "WARNING: accessMutex() call with a self-LOCKED mutex [from %s:%d %s, locked by %s]\n",
+	           fileName, fileLine, where, mutexId->where);
+      }
+    }
+
+    strcpy(mutexId->lockAttemptFile, fileName);
+    mutexId->lockAttemptLine=fileLine;
     mutexId->numLocks++;
+    pthread_mutex_lock(&stateChangeMutex);
     mutexId->isLocked = 1;
+    pthread_mutex_unlock(&stateChangeMutex);
     mutexId->lockTime = time(NULL);
     if(fileName != NULL) {
       strcpy(mutexId->lockFile, fileName);
@@ -1001,7 +1014,9 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   else {
     /* traceEvent(TRACE_ERROR, "LOCKED 0x%X", &(mutexId->mutex)); */
     mutexId->numLocks++;
+    pthread_mutex_lock(&stateChangeMutex);
     mutexId->isLocked = 1;
+    pthread_mutex_unlock(&stateChangeMutex);
     mutexId->lockTime = time(NULL);
     if(fileName != NULL) {
       strcpy(mutexId->lockFile, fileName);
@@ -1075,6 +1090,8 @@ int _releaseMutex(PthreadMutex *mutexId,
     return(-1);
   }
 
+  pthread_mutex_lock(&stateChangeMutex);
+
   if(!mutexId->isLocked) {
     traceEvent(TRACE_WARNING,
 	       "WARNING: releaseMutex() call with an UN-LOCKED mutex [%s:%d]\n",
@@ -1082,10 +1099,10 @@ int _releaseMutex(PthreadMutex *mutexId,
   }
 
 #ifdef SEMAPHORE_DEBUG
-  traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
-	     &(mutexId->mutex), fileName, fileLine);
+  traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n", &(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->mutex));
+  pthread_mutex_unlock(&stateChangeMutex);
 
   if(rc != 0)
     traceEvent(TRACE_ERROR, "ERROR: unlock failed 0x%X [%s:%d]\n",
@@ -1112,7 +1129,9 @@ int _releaseMutex(PthreadMutex *mutexId,
    }
 
     /* traceEvent(TRACE_ERROR, "UNLOCKED 0x%X", &(mutexId->mutex));  */
+    pthread_mutex_lock(&stateChangeMutex);
     mutexId->isLocked = 0;
+    pthread_mutex_unlock(&stateChangeMutex);
     mutexId->numReleases++;
     if(fileName != NULL) {
       strcpy(mutexId->unlockFile, fileName);
@@ -1263,7 +1282,7 @@ int checkCommand(char* commandName) {
   FILE* fd = popen(commandName, "r");
 
   if(fd == NULL) {
-    traceEvent(TRACE_ERROR, 
+    traceEvent(TRACE_ERROR,
                "External tool test failed(code=%d1%d). Disabling %s function (popen failed).\n",
                rc,
                errno,
@@ -1275,7 +1294,7 @@ int checkCommand(char* commandName) {
   pclose(fd);
 
   if(rc == EOF) {
-    traceEvent(TRACE_ERROR, 
+    traceEvent(TRACE_ERROR,
                "External tool test failed(code=%d20). Disabling %s function (tool won't run).\n",
                rc,
                commandName);
@@ -1284,7 +1303,7 @@ int checkCommand(char* commandName) {
 
   /* ok, it can be run ... is it suid? */
   if (snprintf(buf,
-               sizeof(buf), 
+               sizeof(buf),
                "which %s 2>/dev/null",
                commandName) < 0) {
       BufferTooShort();
@@ -1302,7 +1321,7 @@ int checkCommand(char* commandName) {
           if (rc == 0) {
               if ((statBuf.st_mode & (S_IROTH | S_IXOTH) ) == (S_IROTH | S_IXOTH) ) {
                   if ((statBuf.st_mode & (S_ISUID | S_ISGID) ) != 0) {
-                      traceEvent(TRACE_ERROR, 
+                      traceEvent(TRACE_ERROR,
                                  "External tool %s is suid root. FYI: This is good for ntop, but could be dangerous for the system!\n",
                                  commandName);
                       return(1);
@@ -1323,7 +1342,7 @@ int checkCommand(char* commandName) {
       ecode=3;
   }
   /* test failed ... */
-  traceEvent(TRACE_ERROR, 
+  traceEvent(TRACE_ERROR,
              "External tool test failed(code=%d%d%d). Disabling %s function%s.\n",
              rc,
              ecode,
@@ -2987,7 +3006,7 @@ int _incrementUsageCounter(UsageCounter *counter,
     return;
   }
 
-  if((peerIdx == myGlobals.broadcastEntryIdx) 
+  if((peerIdx == myGlobals.broadcastEntryIdx)
      || (peerIdx == myGlobals.otherHostEntryIdx)) {
     return;
   }
@@ -3231,7 +3250,7 @@ static void updateElementHashItem(ElementHash **theHash,
   while(1) {
     if((theHash[idx] == NULL) || (theHash[idx]->id == srcId))
       break;
-    
+
     idx = (idx+1) % ELEMENT_HASH_LEN;
     if(++myIdx == ELEMENT_HASH_LEN) {
       traceEvent(TRACE_WARNING, "updateElementHash(): hash full!");
@@ -3250,7 +3269,7 @@ static void updateElementHashItem(ElementHash **theHash,
 
   while(hash != NULL) {
     /* Keep the list sorted */
-    if(hash->id >= dstId) {      
+    if(hash->id >= dstId) {
       break;
     } else {
       prev = hash;
@@ -3269,22 +3288,22 @@ static void updateElementHashItem(ElementHash **theHash,
     }
 
     prev->next = bucket;
-    hash = bucket; 
+    hash = bucket;
   }
 
   if(dataSent) {
     incrementTrafficCounter(&theHash[idx]->bytesSent, numBytes);
     incrementTrafficCounter(&theHash[idx]->pktsSent,  numPkts);
     incrementTrafficCounter(&hash->bytesSent, numBytes);
-    incrementTrafficCounter(&hash->pktsSent,  numPkts); 
-  } 
+    incrementTrafficCounter(&hash->pktsSent,  numPkts);
+  }
 
-  if((!dataSent) 
+  if((!dataSent)
      || (dataSent && (srcId == dstId) /* sender and receiver are the same */)) {
     incrementTrafficCounter(&theHash[idx]->bytesRcvd, numBytes);
     incrementTrafficCounter(&theHash[idx]->pktsRcvd,  numPkts);
     incrementTrafficCounter(&hash->bytesRcvd, numBytes);
-    incrementTrafficCounter(&hash->pktsRcvd,  numPkts); 
+    incrementTrafficCounter(&hash->pktsRcvd,  numPkts);
   }
 }
 
@@ -3294,7 +3313,7 @@ void updateElementHash(ElementHash **theHash,
 		       u_short srcId, u_short dstId,
 		       u_int32_t numPkts, u_int32_t numBytes) {
 
-  if(srcId <= dstId) 
+  if(srcId <= dstId)
     updateElementHashItem(theHash, srcId, dstId, numPkts, numBytes, 1);
   else
     updateElementHashItem(theHash, dstId, srcId, numPkts, numBytes, 0);
@@ -3303,17 +3322,17 @@ void updateElementHash(ElementHash **theHash,
 /* ********************************** */
 
 void allocateElementHash(int deviceId, u_short hashType) {
-  int memLen = sizeof(ElementHash*)*ELEMENT_HASH_LEN;    
+  int memLen = sizeof(ElementHash*)*ELEMENT_HASH_LEN;
 
   switch(hashType) {
   case 0: /* AS */
-    if(myGlobals.device[deviceId].asHash == NULL) {      
+    if(myGlobals.device[deviceId].asHash == NULL) {
       myGlobals.device[deviceId].asHash = (ElementHash**)malloc(memLen);
       memset(myGlobals.device[deviceId].asHash, 0, memLen);
     }
     break;
   case 1: /* VLAN */
-    if(myGlobals.device[deviceId].vlanHash == NULL) {      
+    if(myGlobals.device[deviceId].vlanHash == NULL) {
       myGlobals.device[deviceId].vlanHash = (ElementHash**)malloc(memLen);
       memset(myGlobals.device[deviceId].vlanHash, 0, memLen);
     }
@@ -3329,7 +3348,7 @@ u_int numActiveSenders(int deviceId) {
 
   for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
     HostTraffic *el;
-	  
+
     if((i == myGlobals.otherHostEntryIdx) || (i == myGlobals.broadcastEntryIdx)
        || ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]) == NULL)
        || broadcastHost(el)
@@ -3353,7 +3372,7 @@ u_int numActiveSenders(int deviceId) {
  *
  *       http://gcc.gnu.org/onlinedocs/
  *
- *  With libiberty's manual at 
+ *  With libiberty's manual at
  *
  *  The copyright notice for libiberty is reproduced below.
  */
@@ -3364,12 +3383,12 @@ u_int numActiveSenders(int deviceId) {
          modify it under the terms of the GNU Library General Public
          License as published by the Free Software Foundation; either
          version 2 of the License, or (at your option) any later version.
-         
+
          Libiberty is distributed in the hope that it will be useful,
          but WITHOUT ANY WARRANTY; without even the implied warranty of
          MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
          Library General Public License for more details.
-         
+
          You should have received a copy of the GNU Library General Public
          License along with libiberty; see the file COPYING.LIB.  If
          not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
@@ -3377,7 +3396,7 @@ u_int numActiveSenders(int deviceId) {
  */
 
 /*
- *  Specifically, 
+ *  Specifically,
  *
  *     The getopt_long routine is from libiberty's getopt.c and getopt1.c
  *
@@ -3434,13 +3453,13 @@ static void exchange (char **argv) {
   int bottom = first_nonopt;
   int middle = last_nonopt;
   int top = optind;
-  char *tem;     
+  char *tem;
 
   /* Exchange the shorter segment with the far end of the longer segment.
      That puts the shorter segment into the right place.
      It leaves the longer segment in the right place overall,
      but it consists of two parts that need to be swapped next.  */
-      
+
   while (top > middle && middle > bottom)
     {
       if (top - middle > middle - bottom)
@@ -3485,18 +3504,18 @@ static void exchange (char **argv) {
   last_nonopt = optind;
 }
 
-/* Initialize the internal data when the first call is made.  */     
-   
+/* Initialize the internal data when the first call is made.  */
+
 static const char *_getopt_initialize (int argv, char *const *argc, const char *optstring) {
   /* Start processing options with ARGV-element 1 (since ARGV-element 0
      is the program name); the sequence of previously skipped
      non-option ARGV-elements is empty.  */
 
   first_nonopt = last_nonopt = optind;
-     
-  nextchar = NULL;     
 
-  posixly_correct = getenv ("POSIXLY_CORRECT");      
+  nextchar = NULL;
+
+  posixly_correct = getenv ("POSIXLY_CORRECT");
 
   /* Determine how to handle the ordering of options and nonoptions.  */
 
@@ -3967,8 +3986,8 @@ getopt_long (int argc,
              char *const *argv,
              const char *options,
              const struct option *long_options,
-             int *opt_index)    
-{     
+             int *opt_index)
+{
   return _getopt_internal (argc, argv, options, long_options, opt_index, 0);
 }
 
@@ -4021,8 +4040,8 @@ returned result of buildargv, as it's argument.
 
 Returns a pointer to the argument vector if successful.  Returns
 NULL if sp is NULL or if there is insufficient memory to complete
- building the argument vector. If the input is a null string (as 
-opposed to a NULL pointer), then buildarg returns an argument 
+ building the argument vector. If the input is a null string (as
+opposed to a NULL pointer), then buildarg returns an argument
 vector that has one arg, a null string.
 
 The memory for the argv array is dynamically expanded as necessary.
@@ -4169,7 +4188,7 @@ char **buildargv (const char *input) {
 
 #endif /* HAVE_BUILDARGV */
 
-#endif /* WIN32*/ 
+#endif /* WIN32*/
 
 #ifdef SHOW_NTOP_HEARTBEAT
 void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...) {

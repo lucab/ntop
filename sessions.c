@@ -631,7 +631,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  theSession  = theSession->next;
 	}
       }
-    }
+    } /* while */
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "DEBUG: Search for session: %d (%d <-> %d)", found, sport, dport);
@@ -739,8 +739,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #ifdef HTTP_DEBUG
 	  traceEvent(TRACE_INFO, "HTTP_DEBUG: %s->%s [%s]\n",
 		     srcHost->hostSymIpAddress,
-		     dstHost->hostSymIpAddress,
-		     tmpStr);
+		     dstHost->hostSymIpAddress, tmpStr);
 #endif
 
 	  if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
@@ -1891,10 +1890,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	myGlobals.device[actualDeviceId].tcpSession[idx] = theSession->next;
       } else
 	prevSession->next = theSession->next;
-
+      
       freeSession(theSession, actualDeviceId, 1);
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.tcpSessionsMutex);
+      releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
       return(NULL);
     }

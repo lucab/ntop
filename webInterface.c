@@ -2955,13 +2955,13 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 #ifndef WIN32
 	if(myGlobals.isLsofPresent)
-	  printMutexStatus(textPrintFlag, &myGlobals.lsofMutex, "lsofMutex");
+	  printMutexStatus(textPrintFlag, &myGlobals.lsofMutex,      "lsofMutex");
 #endif
-	printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex, "hostsHashMutex");
-	printMutexStatus(textPrintFlag, &myGlobals.graphMutex, "graphMutex");
+	printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
+	printMutexStatus(textPrintFlag, &myGlobals.graphMutex,       "graphMutex");
 	printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
 #ifdef MEMORY_DEBUG
-	printMutexStatus(textPrintFlag, &myGlobals.leaksMutex, "leaksMutex");
+	printMutexStatus(textPrintFlag, &myGlobals.leaksMutex,       "leaksMutex");
 #endif
 	sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
       }

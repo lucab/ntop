@@ -1026,7 +1026,7 @@ RETSIGTYPE cleanup(int signo) {
   free(myGlobals.device);
 
 #ifdef MULTITHREADED
-    deleteMutex(&myGlobals.tcpSessionsMutex);
+  deleteMutex(&myGlobals.tcpSessionsMutex);
 #endif
 
 #ifdef WIN32
