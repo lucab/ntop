@@ -1,0 +1,134 @@
+<!DOCTYPE html public "-//W3C//DTD HTML 4.01 Transitional//EN"><!-- ntop v3.0 release, Burton Strauss, Feb2004 -->
+<HTML>
+<HEAD>
+<!-- Validates as HTML 4.01 Transitional with the addition of the following tag -->
+<!--
+<META http-equiv="Content-Type" content="text/html; charset=utf-8">-->
+<META http-equiv="Expires" content="0">
+<META http-equiv="Pragma" content="no-cache">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META http-equiv="Window-target" content="_top">
+<META name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<META name="description" content="ntop (http://www.ntop.org) status for a network.">
+<META name="author" content="ntop">
+<META name="generator" content="ntop v3.0"><LINK rel="stylesheet" type="text/css" href="style.css">
+<TITLE>About sorting of 'hosts'</TITLE>
+</HEAD>
+<BODY background="white_bg.gif" bgcolor="#FFFFFF" link="blue" vlink="blue">
+<P>&nbsp;</P>
+<CENTER>
+<H2><FONT face="Helvetica, Arial, Sans Serif">About sorting of 'hosts'</FONT></H2>
+</CENTER>
+<CENTER>
+	<TABLE border="1" cellspacing="0" cellpadding="2">
+		<TR bgcolor="#E7E9F2">
+			<TH>Host&nbsp;
+                         <IMG src="/arrow_down.gif" border="0" alt="Descending order">&nbsp;&nbsp;
+                         <SUP>about sorting this column</SUP>
+			</TH>
+			<TH>	Domain
+			</TH>
+			<TH>	IP&nbsp;Address
+			</TH>
+			<TH>	MAC&nbsp;Address
+			</TH>
+			<TH>etc.
+			</TH>
+		</TR>
+		<TR>
+			<TH align="LEFT" nowrap width="250">	paintedlady.burtonstrauss.us
+			</TH>
+			<TD align="RIGHT" nowrap>	&nbsp;
+			</TD>
+			<TD align="RIGHT">	192.168.xxx.xxx
+			</TD>
+			<TD align="RIGHT">	00:01:03:xx:xx:xx
+			</TD>
+			<TD rowspan="5">&nbsp;</TD>
+		</TR>
+		<TR>
+			<TH align="LEFT" nowrap width="250">	pooh
+			</TH>
+			<TD align="RIGHT" nowrap>	&nbsp;
+			</TD>
+			<TD align="RIGHT">	192.168.yyy.yyy
+			</TD>
+			<TD align="RIGHT">	00:60:97:yy:yy:yy
+			</TD>
+		</TR>
+		<TR>
+			<TH align="LEFT" nowrap width="250">www.burtonstrauss.com
+                         <IMG alt="OS: Linux" align="middle" src="/statsicons/os/linux.gif">&nbsp;
+                         <IMG src="/web.gif" border="0" alt="HTTP Server">
+			</TH>
+			<TD align="RIGHT" nowrap>	&nbsp;
+			</TD>
+			<TD align="RIGHT">	217.160.zzz.zzz
+			</TD>
+			<TD align="RIGHT">	&nbsp;
+			</TD>
+		</TR>
+		<TR>
+			<TH align="LEFT" nowrap width="250">3COM CORPORATION:aa:aa:aa
+                         <IMG src="/card.gif" border="0" alt="Network Card">
+			</TH>
+			<TD align="RIGHT" nowrap>	&nbsp;
+			</TD>
+			<TD align="RIGHT">	&nbsp;
+			</TD>
+			<TD align="RIGHT">	00:10:4B:aa:aa:aa
+			</TD>
+		</TR>
+		<TR>
+			<TH align="LEFT" nowrap width="250">00:60:97:bb:bb:bb
+                         <IMG src="/card.gif" border="0" alt="Network Card">
+			</TH>
+			<TD align="RIGHT" nowrap>	&nbsp;
+			</TD>
+			<TD align="RIGHT">	&nbsp;
+			</TD>
+			<TD align="RIGHT">	00:60:97:bb:bb:bb
+			</TD>
+		</TR>
+	</TABLE>
+<P></CENTER>
+<p>&nbsp;</p>
+<p>The 'hosts' column is actually a composite of many items of information tracked and 
+discovered by <b>ntop</b> for display.  This field contains the best information we have 
+as to the <i>name</i> of a host, be that a DNS resolved name, an IP address, a 
+MAC address or something else.</p>
+<p>Because it is a composite, a simple alphanumerical sort (0, 1, 2, 3 ... a, b, c ...) 
+is not used. It is perfectly normal, and correct, to see - as in the example above - a 
+host 'name' beginning with "w", such as www.burtonstrauss.com followed by one beginning 
+'3COM', which is normally earlier in an alphanumeric sort. The first level of sorting is 
+by the type of the item and the second is alphanumerical (or numerical or whatever
+makes sense) within types.</p>
+<p>This means - for example within an ascending sort - that all DNS names will be in 
+alphabetical order. Following the DNS names comes IP addresses (sorted in numerical 
+order so that 10.0.0.0 follows 9.255.255.255).
+After IP addresses come other types of items in sequences appropriate to their types.</p>
+<p>&nbsp;</p>
+<p>The actual value displayed in the hosts column may be further processed as part of 
+creating the actual html link. These affect the displayed value, but NOT the sort sequence.</p>
+<p>The most visible of these changes is that all MAC addresses are NOT sorted as their native
+48-bit quantities.  There are cases where <B>ntop</B> recognizes a special MAC code (such 
+as Spanning Tree Bridge) or recognizes the vendor code from the 
+<a href="http://standards.ieee.org/regauth/oui/index.shtml" 
+  title="Off-site link to IEEE OUI download/query page">IEEE OUI</a>
+(Organizational Unique Identifier) list and adjusts the displayed information.
+These adjusted names will appear followed by the last 24 (unique) bits, e.g. as 3COM 
+CORPORATION:ff:ff:ff, and are sorted without regard to upper and lower case, so that all 
+of a vendors assigned ranges of network cards should be sorted together.  In reality, the
+IEEE list often has multiple forms of the vendors name, and so there will not be a perfect
+sort.
+Unrecognized prefixes will be sorted after recognized ranges according to a numeric compare
+of their 48-bit values.
+Note that if the actual 48-bit value not displayed, it is visible as a tooltip (title)
+by hovering the mouse over the link.</p>
+<p>&nbsp;</p>
+<p>Finally, it is possible for items to be listed (and thus sorted, before <B>ntop</B> has come
+to a final decision about the 'name'. These items are sorted last, based on the underlying 
+fields <B>ntop</B> maintains about each host. This can look 'odd' - wait a minute or so and 
+resort - things should clear up.</p>
+</BODY>
+</HTML>
