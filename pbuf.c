@@ -1525,10 +1525,11 @@ static void processIpPkt(const u_char *bp,
       while(protoList != NULL) {
 	if((protoList->protocolId == ip.ip_p) 
 	   || ((protoList->protocolIdAlias != 0) && (protoList->protocolIdAlias == ip.ip_p))) {
-	  incrementTrafficCounter(&srcHost->ipProtosList[idx].sent, length),
-	    incrementTrafficCounter(&dstHost->ipProtosList[idx].rcvd, length),
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtosList[idx], length),
-	    found = 1;
+	  if(srcHost->ipProtosList) incrementTrafficCounter(&srcHost->ipProtosList[idx].sent, length);
+	  if(dstHost->ipProtosList) incrementTrafficCounter(&dstHost->ipProtosList[idx].rcvd, length);
+	  if(myGlobals.device[actualDeviceId].ipProtosList) 
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtosList[idx], length);
+	  found = 1;
 	  break;
 	}
 	
