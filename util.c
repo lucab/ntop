@@ -902,6 +902,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 	       &(mutexId->mutex), fileName, fileLine, rc);
   else {
     /* traceEvent(TRACE_ERROR, "LOCKED 0x%X", &(mutexId->mutex)); */
+    mutexId->numLocks++;
     mutexId->isLocked = 1;
     mutexId->lockTime = time(NULL);
     if(fileName != NULL) {
@@ -1012,6 +1013,7 @@ int _releaseMutex(PthreadMutex *mutexId,
 
     /* traceEvent(TRACE_ERROR, "UNLOCKED 0x%X", &(mutexId->mutex));  */
     mutexId->isLocked = 0;
+    mutexId->numReleases++;
   }
 
 #ifdef SEMAPHORE_DEBUG
@@ -1179,13 +1181,13 @@ void readLsofInfo(void) {
     FD_ZERO(&mask);
     FD_SET(fdFileno, &mask);    
 
-    if(select(fdFileno+1, &mask, 0, 0, &wait_time) == 1) {  
+    if((i = select(fdFileno+1, &mask, 0, 0, &wait_time)) == 1) {  
       if(fgets(line, 383, fd) != NULL) {
 	fprintf(fd1, "%s", line);
       } else
 	break;
     } else {
-      traceEvent(TRACE_WARNING, "WARNING: lsof() timeout");
+      traceEvent(TRACE_WARNING, "WARNING: lsof() timeout (select=%d)", i);
       pclose(fd);
       fclose(fd1);
       unlink(fileName);

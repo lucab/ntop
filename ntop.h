@@ -607,9 +607,10 @@ typedef struct conditionalVariable {
 
 typedef struct pthreadMutex {
   pthread_mutex_t mutex;
-  char isLocked;
-  char lockFile[64];
-  int  lockLine;
+  char   isLocked;
+  char   lockFile[64];
+  int    lockLine;
+  u_int  numLocks, numReleases;
 
   time_t lockTime;
   char   maxLockedDurationUnlockFile[64];

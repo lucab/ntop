@@ -25,6 +25,9 @@
 #ifndef WIN32
 #include <pwd.h>
 #endif
+#ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
+#include <ucd-snmp/version.h>
+#endif
 
 static short alternateColor=0;
 
@@ -575,12 +578,37 @@ void shutdownNtop(void) {
 static void printFeatureConfigInfo(char* feature, char* status) {
   sendString("<TR><TH "TH_BG" ALIGN=left>");
   sendString(feature);
-  sendString("</TH><TD "TD_BG"  ALIGN=right>");
+  sendString("</TH><TD "TD_BG" ALIGN=right>");
   sendString(status);
-  sendString("</td></tr>\n");
+  sendString("</TD></TR>\n");
 }
 
 /* ******************************** */
+
+#ifdef MULTITHREADED
+static void printMutexStatus(PthreadMutex *mutexId, char *mutexName) {  
+   char buf[BUF_SIZE];
+
+   if(mutexId->lockLine == 0) /* Mutex never used */
+     return;
+
+   if(snprintf(buf, sizeof(buf), 
+	       "<TR><TH "TH_BG" ALIGN=left>%s</TH><TD ALIGN=CENTER>%s</TD>"
+	       "<TD ALIGN=RIGHT>%s:%d</TD>"
+	       "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=LEFT>%u</TD>"
+	       "<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>", 
+	       mutexName,
+	       mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
+	       mutexId->lockFile, mutexId->lockLine,
+	       mutexId->numLocks, mutexId->numReleases,
+	       mutexId->maxLockedDuration,
+	       mutexId->maxLockedDurationUnlockFile,
+	       mutexId->maxLockedDurationUnlockLine) < 0)
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   
+   sendString(buf);
+}
+#endif
 
 void printNtopConfigInfo(void) {
   char buf[BUF_SIZE];
@@ -598,9 +626,16 @@ void printNtopConfigInfo(void) {
 #ifdef HAVE_PCAP_VERSION
   printFeatureConfigInfo("Libpcap version", pcap_version);
 #endif /* HAVE_PCAP_VERSION */
+  printFeatureConfigInfo("GDBM version", gdbm_version);
 
 #ifdef HAVE_OPENSSL
-  printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", "Present");
+  printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", 
+			 (char*)SSLeay_version(0));
+  if(sslPort != 0) {
+    sprintf(buf, "%d", sslPort); 
+    printFeatureConfigInfo("SSL Port", buf);
+  } else
+    printFeatureConfigInfo("SSL Port", "Not Active");
 #else
   printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", "Absent");
 #endif
@@ -619,9 +654,11 @@ void printNtopConfigInfo(void) {
 #endif
 
 #ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
-  printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP</A>", "Present");
+  printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP</A>", 
+			 (char*)VersionInfo);
 #else
-  printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP </A>", "Absent");
+  printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP </A>", 
+			 "Absent");
 #endif
 
 #ifdef HAVE_LIBWRAP
@@ -718,7 +755,7 @@ void printNtopConfigInfo(void) {
    sendString(buf);
 #endif
 
- #ifdef MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Allocated Memory</TH>"
 	       "<TD "TD_BG"  align=right>%s</TD></TR>\n",
 	      formatBytes(allocatedMemory, 0)) < 0) 
@@ -726,6 +763,24 @@ void printNtopConfigInfo(void) {
   sendString(buf);
 #endif
 
+  sendString("</TABLE>"TABLE_OFF"\n");
+
+  /* **************************** */
+
+  sendString("<P>"TABLE_ON"<TABLE BORDER=1>\n");
+  sendString("<TR><TH>Mutex Name</TH><TH>State</TH><TH>Last Lock</TH>"
+	     "<TH COLSPAN=2># Locks/Releases</TH><TH>Max Lock</TH></TR>");
+  printMutexStatus(&gdbmMutex, "gdbmMutex");
+  printMutexStatus(&packetQueueMutex, "packetQueueMutex");
+  printMutexStatus(&addressResolutionMutex, "addressResolutionMutex");
+  printMutexStatus(&hashResizeMutex, "hashResizeMutex");  
+  if(isLsofPresent) printMutexStatus(&lsofMutex, "lsofMutex");
+  printMutexStatus(&hostsHashMutex, "hostsHashMutex");
+  printMutexStatus(&graphMutex, "graphMutex");
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  if(numericFlag == 0) printMutexStatus(&addressQueueMutex, "addressQueueMutex");
+#endif
+   
   sendString("</TABLE>"TABLE_OFF"\n");
   sendString("</CENTER>\n");
 }
