@@ -25,6 +25,16 @@ extern NtopGlobals myGlobals;
 #ifdef MAKE_WITH_SYSLOG
 extern MYCODE myFacilityNames[];
 #endif
+
+/* Fix courtesy of Tim Gardner <timg@tpi.com> */
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#define accessAddrResMutex(a) if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex,a)
+#define releaseAddrResMutex() if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex)
+#else
+#define accessAddrResMutex(a) 
+#define releaseAddrResMutex() 
+#endif
+
 #ifdef HAVE_LIBWRAP
 extern int allow_severity, deny_severity;
 #endif

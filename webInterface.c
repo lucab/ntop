@@ -290,10 +290,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   bufIdx = (bufIdx+1)%5;
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0) 
-    accessMutex(&myGlobals.addressResolutionMutex, "makeHostLink");
-#endif
+  accessAddrResMutex("makeHostLink");
 
   if((el == myGlobals.otherHostEntry)
      || (el->hostSerial == myGlobals.otherHostEntryIdx)) {
@@ -307,10 +304,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(snprintf(buf[bufIdx], LEN_GENERAL_WORK_BUFFER, fmt, el->hostSymIpAddress) < 0)
       BufferTooShort();
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-    if(myGlobals.numericFlag == 0) 
-      releaseMutex(&myGlobals.addressResolutionMutex);
-#endif
+    releaseAddrResMutex();
     return(buf[bufIdx]);
   }
 
@@ -344,10 +338,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     usedEthAddress = 1;
   }
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0) 
-    releaseMutex(&myGlobals.addressResolutionMutex);
-#endif
+  releaseAddrResMutex();
 
   if(specialMacAddress) {
     tmpStr = el->ethAddressString;
@@ -473,11 +464,7 @@ char* getHostName(HostTraffic *el, short cutName) {
 
   bufIdx = (bufIdx+1)%5;
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0) 
-    accessMutex(&myGlobals.addressResolutionMutex, "getHostName");
-#endif
-
+  accessAddrResMutex("getHostName");
   tmpStr = el->hostSymIpAddress;
 
   if(tmpStr == NULL) {
@@ -503,11 +490,7 @@ char* getHostName(HostTraffic *el, short cutName) {
   } else
     strncpy(buf[bufIdx], el->ethAddressString, 80);
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0) 
-    releaseMutex(&myGlobals.addressResolutionMutex);
-#endif
-
+  releaseAddrResMutex();
   return(buf[bufIdx]);
 }
 

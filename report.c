@@ -3776,13 +3776,9 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
       */
       return(strcasecmp(a->domainHost->fullDomainName, b->domainHost->fullDomainName));
     } else {
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-      if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
-#endif
+      accessAddrResMutex("fillDomainName");
       rc = strcasecmp(a->domainHost->hostSymIpAddress, b->domainHost->hostSymIpAddress);
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-      if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
-#endif
+      releaseAddrResMutex();
     }
 
     return(rc);
@@ -4111,18 +4107,14 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       char tmpBuf[64], *hostLink;
       int blankId;
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-      if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "getHostIcon");
-#endif
+      accessAddrResMutex("getHostIcon");
 
       blankId = strlen(statsEntry->domainHost->hostSymIpAddress)-
 	strlen(statsEntry->domainHost->fullDomainName)-1;
 
       strncpy(tmpBuf, statsEntry->domainHost->hostSymIpAddress, sizeof(tmpBuf));
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-      if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
-#endif
+      releaseAddrResMutex();
 
       if((blankId > 0)
 	 && (strcmp(&tmpBuf[blankId+1], domainName) == 0))

@@ -694,9 +694,9 @@ int main(int argc, char *argv[]) {
   mtrace();
 #endif
 
-  bufLen=1;
+  bufLen = 0;
   for (i=0; i<argc; i++) {
-     bufLen += 1 + strlen(argv[i]);
+     bufLen += (2 + strlen(argv[i]));
   }
   
   startedAs = (char*)malloc(bufLen);

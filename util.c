@@ -2442,10 +2442,7 @@ void fillDomainName(HostTraffic *el) {
      || (el->hostSymIpAddress[0] == '\0'))
     return;
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0)
-    accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
-#endif
+  accessAddrResMutex("fillDomainName");
 
   if((el->hostSymIpAddress[0] == '*')
      || (el->hostNumIpAddress[0] == '\0')
@@ -2453,10 +2450,7 @@ void fillDomainName(HostTraffic *el) {
 	 isdigit(el->hostSymIpAddress[0]))) {
     /* NOTE: theDomainHasBeenComputed(el) = 0 */
     el->fullDomainName = el->dotDomainName = "";
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-    if(myGlobals.numericFlag == 0)
-      releaseMutex(&myGlobals.addressResolutionMutex);
-#endif
+    releaseAddrResMutex();
     return;
   }
 
@@ -2499,10 +2493,7 @@ void fillDomainName(HostTraffic *el) {
       el->fullDomainName = el->dotDomainName = "";
     }
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-    if(myGlobals.numericFlag == 0)
-      releaseMutex(&myGlobals.addressResolutionMutex);
-#endif
+    releaseAddrResMutex();
     return;
   }
 
@@ -2522,10 +2513,7 @@ void fillDomainName(HostTraffic *el) {
 
   /* traceEvent(CONST_TRACE_INFO, "'%s'\n", el->domainName); */
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0)
-    releaseMutex(&myGlobals.addressResolutionMutex);
-#endif
+  releaseAddrResMutex();
 }
 
 /* ********************************* */

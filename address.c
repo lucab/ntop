@@ -51,10 +51,7 @@ void updateHostNameInfo(unsigned long numeric,
 
   /* Search the instance and update its name */
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0) 
-    accessMutex(&myGlobals.addressResolutionMutex, "updateHostNameInfo");
-#endif
+  accessAddrResMutex("updateHostNameInfo");
     
   idx = findHostIdxByNumIP(addr, actualDeviceId);
 
@@ -66,11 +63,7 @@ void updateHostNameInfo(unsigned long numeric,
       strcpy(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostSymIpAddress, symbolic);
     }
   }
-
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0) 
-    releaseMutex(&myGlobals.addressResolutionMutex);
-#endif
+  releaseAddrResMutex();
 }
 
 /* ************************************ */
