@@ -642,6 +642,8 @@ static int parseOptions(int argc, char* argv []) {
 
           stringSanityCheck(optarg);
 
+/* TEMP: Comment this out until we can figure out what the Solaris equivalent is */
+/*  BMS - 21May2002 */
 #if 0
           for (i=0; facilitynames[i].c_name != NULL; i++) {
 	    if (strcmp(optarg, facilitynames[i].c_name) == 0) {
@@ -652,7 +654,11 @@ static int parseOptions(int argc, char* argv []) {
           if (facilitynames[i].c_name == NULL) {
 	    printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
 		   optarg);
+#endif
+/* TEMP: Just set the default value */
+            printf("NOTE: --use-syslog currently does not support facility option, using default value\n");
 	    myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
+#if 0
           } else {
 	    myGlobals.useSyslog = facilitynames[i].c_val;
           }
