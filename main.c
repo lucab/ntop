@@ -106,8 +106,7 @@ int main(int argc, char *argv[]) {
   enableNetFlowSupport = 0;
 
   /* Initialization of local variables */
-  isLsofPresent  = checkCommand("lsof");
-  isNmapPresent  = checkCommand("nmap");
+  isLsofPresent  = isNmapPresent  = 0;
 
   rulesFile[0] = '\0';
   flowSpecs[0] = '\0';
@@ -136,9 +135,7 @@ int main(int argc, char *argv[]) {
     daemonMode++;
   }
 
-  initIPServices();
-
-  printf("Parsing command line options...\n");
+  /* printf("Parsing command line options...\n"); */
 
 #ifdef WIN32
   theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:q";
@@ -242,6 +239,11 @@ int main(int argc, char *argv[]) {
 	maxNumLines = atoi(optarg);
 	break;
 #endif
+
+      case 'E':
+	isLsofPresent  = checkCommand("lsof");
+	isNmapPresent  = checkCommand("nmap");
+	break;
 
       case 's':
 	maxHashSize = atoi(optarg);
@@ -379,6 +381,8 @@ int main(int argc, char *argv[]) {
 	/* NOTREACHED */
       }
   }
+
+  initIPServices();
 
   snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s",
 	   dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
