@@ -36,12 +36,6 @@
 #define EOPNOTSUPP              WSAEOPNOTSUPP
 #endif
 
-/*
-  Under Win32 we still use qsort.c as the builting sort
-  function seems to have some bugs
-*/
-#define qsort(a, b, c, d) quicksort(a, b, c, d)
-
 /* Courtesy of Wies-Software <wies@wiessoft.de> */
 extern char* getadminpass(const char *prompt);
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);

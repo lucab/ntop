@@ -1058,7 +1058,9 @@ static void printParameterConfigInfo(int textPrintFlag, char* feature, char* sta
 /* ******************************** */
 
 void printNtopConfigHInfo(int textPrintFlag) {
+#ifndef WIN32
   char buf[LEN_GENERAL_WORK_BUFFER];
+#endif
 
   sendString(texthtml("\n\nCompile Time: Debug settings in globals-defines.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Debug settings in globals-defines.h</tr>\n"));
