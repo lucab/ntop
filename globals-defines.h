@@ -359,6 +359,16 @@
  */
 /* #define MAKE_WITH_RRDSIGTRAP */
 
+/*
+ * This flag turns on a signal trap in http.c for the child.  If you're seeing
+ * pages simply and silently die, this might catch the signal and log
+ * it for analysis.
+ */
+/* #define MAKE_WITH_HTTPSIGTRAP */
+
+/* EXPERIMENTAL */
+/* Define MAKE_WITH_LOG_XXXXXX if you want log messages to use more than just
+ * LOG_ERR for ntop's messages.
 /* EXPERIMENTAL */
 /* Define MAKE_WITH_LOG_XXXXXX if you want log messages to use more than just
  * LOG_ERR for ntop's messages.

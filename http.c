@@ -1109,6 +1109,66 @@ static RETSIGTYPE quitNow(int signo _UNUSED_) {
   exit(0);
 }
 
+/* ************************* */
+
+#ifdef MAKE_WITH_HTTPSIGTRAP
+
+RETSIGTYPE httpcleanup(int signo) {
+  static int msgSent = 0;
+  int i;
+  void *array[20];
+  size_t size;
+  char **strings;
+
+  if(msgSent<10) {
+    traceEvent(CONST_TRACE_FATALERROR, "http: caught signal %d %s", signo,
+               signo == SIGHUP ? "SIGHUP" :
+                 signo == SIGINT ? "SIGINT" :
+                 signo == SIGQUIT ? "SIGQUIT" :
+                 signo == SIGILL ? "SIGILL" :
+                 signo == SIGABRT ? "SIGABRT" :
+                 signo == SIGFPE ? "SIGFPE" :
+                 signo == SIGKILL ? "SIGKILL" :
+                 signo == SIGSEGV ? "SIGSEGV" :
+                 signo == SIGPIPE ? "SIGPIPE" :
+                 signo == SIGALRM ? "SIGALRM" :
+                 signo == SIGTERM ? "SIGTERM" :
+                 signo == SIGUSR1 ? "SIGUSR1" :
+                 signo == SIGUSR2 ? "SIGUSR2" :
+                 signo == SIGCHLD ? "SIGCHLD" :
+ #ifdef SIGCONT
+                 signo == SIGCONT ? "SIGCONT" :
+ #endif
+ #ifdef SIGSTOP
+                 signo == SIGSTOP ? "SIGSTOP" :
+ #endif
+ #ifdef SIGBUS
+                 signo == SIGBUS ? "SIGBUS" :
+ #endif
+ #ifdef SIGSYS
+                 signo == SIGSYS ? "SIGSYS"
+ #endif
+               : "other");
+    msgSent++;
+  }
+
+ #ifdef HAVE_BACKTRACE
+  size = backtrace(array, 20);
+  strings = (char**)backtrace_symbols(array, size);
+
+  traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:     backtrace is:\n");
+  if (size < 2)
+      traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:         **unavailable!\n");
+  else 
+      /* Ignore the 0th entry, that's our cleanup() */
+      for (i=1; i<size; i++)
+          traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:          %2d. %s\n", i, strings[i]);
+
+  exit(0);
+ #endif
+}
+#endif /* MAKE_WITH_HTTPSIGTRAP */
+
 /* **************************************** */
 
 #ifdef MAKE_WITH_I18N
@@ -1507,6 +1567,36 @@ static int returnHTTPPage(char* pageName,
 #endif
 	  return(0);
 	} else {
+
+#ifdef MAKE_WITH_HTTPSIGTRAP
+          signal(SIGSEGV, httpcleanup);
+          signal(SIGHUP,  httpcleanup);
+          signal(SIGINT,  httpcleanup);
+          signal(SIGQUIT, httpcleanup);
+          signal(SIGILL,  httpcleanup);
+          signal(SIGABRT, httpcleanup);
+          signal(SIGFPE,  httpcleanup);
+          signal(SIGKILL, httpcleanup);
+          signal(SIGPIPE, httpcleanup);
+          signal(SIGALRM, httpcleanup);
+          signal(SIGTERM, httpcleanup);
+          signal(SIGUSR1, httpcleanup);
+          signal(SIGUSR2, httpcleanup);
+          /* signal(SIGCHLD, httpcleanup); */
+ #ifdef SIGCONT
+          signal(SIGCONT, httpcleanup);
+ #endif
+ #ifdef SIGSTOP
+          signal(SIGSTOP, httpcleanup);
+ #endif
+ #ifdef SIGBUS
+          signal(SIGBUS,  httpcleanup);
+ #endif
+ #ifdef SIGSYS
+          signal(SIGSYS,  httpcleanup);
+ #endif
+#endif /* MAKE_WITH_HTTPSIGTRAP */
+
 	  detachFromTerminal(0);
 
 	  /* Close inherited sockets */
