@@ -594,34 +594,6 @@ void initNtop(char *devices) {
   }
 #endif
 
-#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
-  {
-    struct mallinfo memStats;
-
-    memStats = mallinfo();
-    myGlobals.baseMemoryUsage = memStats.arena + memStats.hblkhd;
-
-    traceEvent(CONST_TRACE_NOISY, "MEMORY: Base memory load is %.2fMB (%d+%d)",
-	       xvertDOT00MB(myGlobals.baseMemoryUsage),
-	       memStats.arena,
-	       memStats.hblkhd);
-  }
-#endif
-  traceEvent(CONST_TRACE_NOISY, "MEMORY: Base interface structure (no hashes loaded) is %.2fMB each",
-	     xvertDOT00MB(sizeof(NtopInterface)));
-  traceEvent(CONST_TRACE_NOISY, "MEMORY:     or %.2fMB for %d interfaces",
-	     xvertDOT00MB(myGlobals.numDevices*sizeof(NtopInterface)),
-	     myGlobals.numDevices);
-  traceEvent(CONST_TRACE_NOISY, "MEMORY: ipTraffixMatrix structure (no TrafficEntry loaded) is %.2fMB",
-	     xvertDOT00MB(myGlobals.ipTrafficMatrixMemoryUsage));
-
-#ifdef NOT_YET  
-  traceEvent(CONST_TRACE_NOISY, "MEMORY: fcTrafficMatrix structure (no TrafficEntry loaded) is %.2fMB",
-	     xvertDOT00MB(myGlobals.fcTrafficMatrixMemoryUsage));
-#endif  
-
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Sniffying...");
-
 #ifdef MEMORY_DEBUG
   resetLeaks();
 #endif
