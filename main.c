@@ -285,7 +285,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-i <interface index>]\n");
 #endif
 
-  fprintf(fp, "    [-o (do nOt trust MAC addresses but just IPs)]\n");
+  fprintf(fp, "    [-o (do not trust MAC addresses but just IPs)]\n");
   fprintf(fp, "    [-k <show kernel filter expression in extra frame>]\n");
   fprintf(fp, "    [-l <path> (dump packets captured on a file: debug only!)]\n");
   fprintf(fp, "    [-m <local addresses (see man page)>]\n");

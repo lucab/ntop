@@ -1193,7 +1193,10 @@ int createSem(sem_t *semId, int initialValue) {
 /* ************************************ */
 
 void waitSem(sem_t *semId) {
-  sem_wait(semId);
+  int rc = sem_wait(semId);
+
+  if(rc != 0) 
+    traceEvent(TRACE_INFO, "waitSem failed [errno=%d]", errno);
 }
 
 /* ************************************ */
@@ -1891,6 +1894,7 @@ void resetHostsVariables(HostTraffic* el) {
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
 
+  el->hostAS = 0;
   el->fullDomainName = NULL;
   el->dotDomainName = NULL;
   el->hostSymIpAddress[0] = '\0';
@@ -1907,7 +1911,6 @@ void resetHostsVariables(HostTraffic* el) {
   el->protoIPTrafficInfos = NULL;
   el->tcpSessionList = NULL;
   el->udpSessionList = NULL;
-  el->nextDBupdate = 0;
   el->icmpInfo = NULL;
   el->dnsStats = NULL;
   el->httpStats = NULL;

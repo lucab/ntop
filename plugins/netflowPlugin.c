@@ -28,6 +28,8 @@ static pthread_t netFlowThread;
 static int threadActive;
 #endif
 
+/* #define DEBUG_FLOWS */
+
 static ProbeInfo probeList[MAX_NUM_PROBES];
 
 /* ****************************** */
@@ -97,6 +99,153 @@ void setNetFlowOutSocket() {
 
 /* ****************************** */
 
+static void dissectFlow(NetFlow5Record *theRecord) {
+
+  if(theRecord->flowHeader.version == htons(5)) {
+    int i, numFlows = ntohs(theRecord->flowHeader.count);
+
+    if(numFlows > V5FLOWS_PER_PAK) numFlows = V5FLOWS_PER_PAK;
+
+#ifdef DEBUG_FLOWS
+  traceEvent(TRACE_INFO, "dissectFlow(%d flows)", numFlows);
+#endif
+
+    for(i=0; i<numFlows; i++) {
+      int actualDeviceId, len;
+      char buf[256], buf1[256], theFlags[256];
+      struct in_addr a, b;
+      u_int srcHostIdx, dstHostIdx, numPkts;
+      HostTraffic *srcHost=NULL, *dstHost=NULL;
+      u_short sport, dport;
+
+      myGlobals.numNetFlowsRcvd++;
+      
+      numPkts  = ntohl(theRecord->flowRecord[i].dPkts);
+      len = ntohl(theRecord->flowRecord[i].dOctets);
+
+      if((numPkts == 0) || (len == 0)) continue; /* Bad flow (zero lenght) */
+
+      a.s_addr = ntohl(theRecord->flowRecord[i].srcaddr);
+      b.s_addr = ntohl(theRecord->flowRecord[i].dstaddr);
+      sport = ntohs(theRecord->flowRecord[i].srcport);
+      dport = ntohs(theRecord->flowRecord[i].dstport);
+
+      if(myGlobals.netFlowDebug) {
+	theFlags[0] = '\0';
+
+	if(theRecord->flowRecord[i].tcp_flags & TH_SYN)  strcat(theFlags, "SYN ");
+	if(theRecord->flowRecord[i].tcp_flags & TH_FIN)  strcat(theFlags, "FIN ");
+	if(theRecord->flowRecord[i].tcp_flags & TH_RST)  strcat(theFlags, "RST ");
+	if(theRecord->flowRecord[i].tcp_flags & TH_ACK)  strcat(theFlags, "ACK ");
+	if(theRecord->flowRecord[i].tcp_flags & TH_PUSH) strcat(theFlags, "PUSH");
+
+	traceEvent(TRACE_INFO, "%2d) %s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d flags=[%s] (proto=%d)",
+		   i+1, 
+		   _intoa(a, buf, sizeof(buf)), sport, 
+		   _intoa(b, buf1, sizeof(buf1)), dport,
+		   ntohl(theRecord->flowRecord[i].dPkts), len, 
+		   ntohs(theRecord->flowRecord[i].src_as),	
+		   ntohs(theRecord->flowRecord[i].dst_as),
+		   theFlags, theRecord->flowRecord[i].prot);
+      }
+
+      /* traceEvent(TRACE_INFO, "a=%u", theRecord->flowRecord[i].srcaddr); */
+
+      actualDeviceId = myGlobals.netFlowDeviceId;
+
+      if(actualDeviceId >= myGlobals.numDevices) {
+	traceEvent(TRACE_ERROR, "NetFlow deviceId (%d) is out range", actualDeviceId);
+	break;
+      }
+
+      myGlobals.device[actualDeviceId].ethernetPkts.value += numPkts;
+      myGlobals.device[actualDeviceId].ipPkts.value       += numPkts;
+      updateDevicePacketStats(len, actualDeviceId);
+
+      myGlobals.device[actualDeviceId].ethernetBytes.value += len;
+      myGlobals.device[actualDeviceId].ipBytes.value       += len;
+
+#ifdef MULTITHREADED
+      /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
+#endif
+      dstHostIdx = getHostInfo(&b, NULL, 0, 1, myGlobals.netFlowDeviceId);
+      dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+      /* traceEvent(TRACE_INFO, "dstHostIdx: %d", dstHostIdx); */
+      srcHostIdx = getHostInfo(&a, NULL, 0, 1, myGlobals.netFlowDeviceId);
+      srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+      /* traceEvent(TRACE_INFO, "srcHostIdx: %d", srcHostIdx); */
+
+      if((srcHost == NULL) || (dstHost == NULL)) continue;
+
+      srcHost->lastSeen = dstHost->lastSeen = myGlobals.actTime;
+      srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value += numPkts;
+      srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;
+      srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
+      
+      srcHost->hostAS = ntohs(theRecord->flowRecord[i].src_as),	dstHost->hostAS = ntohs(theRecord->flowRecord[i].dst_as);
+
+      if((sport != 0) && (dport != 0)) {
+	if(dport < sport) {
+	  if(handleIP(dport, srcHost, dstHost, len, 0, actualDeviceId) == -1)
+	    handleIP(sport, srcHost, dstHost, len, 0, actualDeviceId);
+	} else {
+	  if(handleIP(sport, srcHost, dstHost, len, 0, actualDeviceId) == -1)
+	    handleIP(dport, srcHost, dstHost, len, 0, actualDeviceId);
+	}
+      }
+
+      switch(theRecord->flowRecord[i].prot) {
+      case 1: /* ICMP */
+	myGlobals.device[actualDeviceId].icmpBytes.value += len;
+	srcHost->icmpSent.value += len, dstHost->icmpRcvd.value += len;
+	break;
+      case 6: /* TCP */
+	myGlobals.device[actualDeviceId].tcpBytes.value += len;
+	if(subnetPseudoLocalHost(dstHost))
+	  srcHost->tcpSentLoc.value += len;
+	else
+	  srcHost->tcpSentRem.value += len;
+
+	if(subnetPseudoLocalHost(srcHost))
+	  dstHost->tcpRcvdLoc.value += len;
+	else
+	  dstHost->tcpRcvdFromRem.value += len;
+	      
+	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	/*
+	  incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent.value, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->terminatedTCPConnSent.value, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
+	*/
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
+	updateUsedPorts(srcHost, dstHost, sport, dport, len);
+      
+	break;
+      case 17: /* UDP */
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
+	if(subnetPseudoLocalHost(dstHost))
+	  incrementTrafficCounter(&srcHost->udpSentLoc, len);
+	else
+	  incrementTrafficCounter(&srcHost->udpSentRem, len);
+
+	if(subnetPseudoLocalHost(srcHost))
+	  incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
+	else
+	  incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
+	break;
+      }
+
+#ifdef MULTITHREADED
+      /* releaseMutex(&myGlobals.hostsHashMutex); */
+#endif
+    }
+  } else
+    myGlobals.numBadFlowsVersionsRcvd++;
+}
+
+/* ****************************** */
+
 static void* netflowMainLoop(void* notUsed _UNUSED_) {
   fd_set netflowMask;
   int rc, len;
@@ -128,7 +277,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 
       if(rc > 0) {
 	NetFlow5Record theRecord;
-	int i, numFlows;
+	int i;
 
 	myGlobals.numNetFlowsPktsRcvd++;
 
@@ -145,128 +294,8 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	  }
 	}
 	
-	memcpy(&theRecord, buffer, rc > sizeof(theRecord) ? sizeof(theRecord): rc);
-
-	if(theRecord.flowHeader.version == htons(5)) {
-	  numFlows = ntohs(theRecord.flowHeader.count);
-
-	  if(numFlows > V5FLOWS_PER_PAK) numFlows = V5FLOWS_PER_PAK;
-
-	  for(i=0; i<numFlows; i++) {
-	    int actualDeviceId;
-	    char buf[256], buf1[256];
-	    struct in_addr a, b;
-	    u_int srcHostIdx, dstHostIdx, numPkts;
-	    HostTraffic *srcHost=NULL, *dstHost=NULL;
-	    u_short sport, dport;
-
-	    myGlobals.numNetFlowsRcvd++;
-
-	    len = ntohl(theRecord.flowRecord[i].dOctets);
-	    numPkts = ntohl(myGlobals.theRecord.flowRecord[i].dPkts);
-	    a.s_addr = ntohl(theRecord.flowRecord[i].srcaddr);
-	    b.s_addr = ntohl(theRecord.flowRecord[i].dstaddr);
-	    sport = ntohs(theRecord.flowRecord[i].srcport);
-	    dport = ntohs(theRecord.flowRecord[i].dstport);
-
-	    if(myGlobals.netFlowDebug)
-	      traceEvent(TRACE_INFO, "%2d) %s:%d <-> %s:%d %u/%u (proto=%d)",
-			 i+1, _intoa(a, buf, sizeof(buf)),
-			 sport, _intoa(b, buf1, sizeof(buf1)),
-			 dport, ntohl(theRecord.flowRecord[i].dPkts),
-			 len, theRecord.flowRecord[i].prot);
-
-	    /* traceEvent(TRACE_INFO, "a=%u", theRecord.flowRecord[i].srcaddr); */
-
-	    actualDeviceId = myGlobals.netFlowDeviceId;
-
-	    if(actualDeviceId >= myGlobals.numDevices) {
-	      traceEvent(TRACE_ERROR, "NetFlow deviceId (%d) is out range", actualDeviceId);
-	      break;
-	    }
-
-	    myGlobals.device[actualDeviceId].ethernetPkts.value += numPkts;
-	    myGlobals.device[actualDeviceId].ipPkts.value       += numPkts;
-	    updateDevicePacketStats(len, actualDeviceId);
-
-	    myGlobals.device[actualDeviceId].ethernetBytes.value += len;
-	    myGlobals.device[actualDeviceId].ipBytes.value       += len;
-
-#ifdef MULTITHREADED
-	    /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
-#endif
-	    dstHostIdx = getHostInfo(&b, NULL, 0, 1, myGlobals.netFlowDeviceId);
-	    dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-	    /* traceEvent(TRACE_INFO, "dstHostIdx: %d", dstHostIdx); */
-	    srcHostIdx = getHostInfo(&a, NULL, 0, 1, myGlobals.netFlowDeviceId);
-	    srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-	    /* traceEvent(TRACE_INFO, "srcHostIdx: %d", srcHostIdx); */
-
-	    if((srcHost == NULL) || (dstHost == NULL)) continue;
-
-	    srcHost->lastSeen = dstHost->lastSeen = myGlobals.actTime;
-	    srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value += numPkts;
-	    srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;
-	    srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
-
-	    if((sport != 0) && (dport != 0)) {
-	      if(dport < sport) {
-		if(handleIP(dport, srcHost, dstHost, len, 0, actualDeviceId) == -1)
-		  handleIP(sport, srcHost, dstHost, len, 0, actualDeviceId);
-	      } else {
-		if(handleIP(sport, srcHost, dstHost, len, 0, actualDeviceId) == -1)
-		  handleIP(dport, srcHost, dstHost, len, 0, actualDeviceId);
-	      }
-	    }
-
-	    switch(theRecord.flowRecord[i].prot) {
-	    case 1: /* ICMP */
-	      myGlobals.device[actualDeviceId].icmpBytes.value += len;
-	      srcHost->icmpSent.value += len, dstHost->icmpRcvd.value += len;
-	      break;
-	    case 6: /* TCP */
-	      myGlobals.device[actualDeviceId].tcpBytes.value += len;
-	      if(subnetPseudoLocalHost(dstHost))
-		srcHost->tcpSentLoc.value += len;
-	      else
-		srcHost->tcpSentRem.value += len;
-
-	      if(subnetPseudoLocalHost(srcHost))
-		dstHost->tcpRcvdLoc.value += len;
-	      else
-		dstHost->tcpRcvdFromRem.value += len;
-	      
-	      allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	      /*
-		incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent.value, dstHostIdx, actualDeviceId);
-		incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
-		incrementUsageCounter(&srcHost->secHostPkts->terminatedTCPConnSent.value, dstHostIdx, actualDeviceId);
-		incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
-	      */
-	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
-	      updateUsedPorts(srcHost, dstHost, sport, dport, len);
-      
-	      break;
-	    case 17: /* UDP */
-	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
-	      if(subnetPseudoLocalHost(dstHost))
-		incrementTrafficCounter(&srcHost->udpSentLoc, len);
-	      else
-		incrementTrafficCounter(&srcHost->udpSentRem, len);
-
-	      if(subnetPseudoLocalHost(srcHost))
-		incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
-	      else
-		incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
-	      break;
-	    }
-
-#ifdef MULTITHREADED
-	    /* releaseMutex(&myGlobals.hostsHashMutex); */
-#endif
-	  }
-	} else
-	  myGlobals.numBadFlowsVersionsRcvd++;
+	memcpy(&theRecord, buffer, rc > sizeof(theRecord) ? sizeof(theRecord): rc);	
+	dissectFlow(&theRecord);
       }
     } else {
       traceEvent(TRACE_INFO, "NetFlow thread is terminating...");
@@ -546,6 +575,57 @@ static void termNetflowFunct(void) {
   fflush(stdout);
 }
 
+/* **************************************** */
+
+#ifdef DEBUG_FLOWS
+
+static void handleNetFlowPacket(u_char *_deviceId,
+			      const struct pcap_pkthdr *h,
+				const u_char *p) {
+  int sampledPacketSize;
+  int deviceId, rc;
+
+  if(myGlobals.rFileName != NULL) {
+    /* ntop is reading packets from a file */
+    struct ether_header ehdr;
+    u_int caplen = h->caplen;
+    u_int length = h->len;
+    unsigned short eth_type;
+    u_int8_t flags = 0;
+    struct ip ip;
+
+    if(caplen >= sizeof(struct ether_header)) {
+      memcpy(&ehdr, p, sizeof(struct ether_header));
+      eth_type = ntohs(ehdr.ether_type);
+
+      if(eth_type == ETHERTYPE_IP) {
+	u_int plen, hlen;
+	u_short sport, dport;
+
+	memcpy(&ip, p+sizeof(struct ether_header), sizeof(struct ip));
+	hlen = (u_int)ip.ip_hl * 4;
+	NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
+
+	plen = length-sizeof(struct ether_header);
+
+	if(ip.ip_p == IPPROTO_UDP) {
+	  if(plen > (hlen+sizeof(struct udphdr))) {
+	    NetFlow5Record theRecord;
+	    char* rawSample    = (void*)(p+sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
+	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
+
+	    memcpy(&theRecord, rawSample, rawSampleLen > sizeof(theRecord) ? sizeof(theRecord) : rawSampleLen);	
+	    traceEvent(TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src));
+	    dissectFlow(&theRecord);
+	  }
+	}
+      }
+    }
+  }
+}
+
+#endif
+
 /* ****************************** */
 
 static PluginInfo netflowPluginInfo[] = {
@@ -557,9 +637,17 @@ static PluginInfo netflowPluginInfo[] = {
     0,    /* Active */
     initNetFlowFunct, /* InitFunc   */
     termNetflowFunct, /* TermFunc   */
+#ifdef DEBUG_FLOWS
+    handleNetFlowPacket,
+#else
     NULL, /* PluginFunc */
+#endif
     handleNetflowHTTPrequest,
+#ifdef DEBUG_FLOWS
+    "udp port 2100"
+#else
     NULL  /* no capture */
+#endif
   }
 };
 

@@ -365,7 +365,7 @@ int getdomainname(char *name, size_t len);
 #include <sys/sched.h>
 #endif
 
-#if defined(HAVE_SEMAPHORE_H)
+#if defined(HAVE_SEMAPHORE_H) && !defined(DARWIN) 
 #include <semaphore.h>
 /* Courtesy of Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr> */
 #define USE_SEMAPHORES   1
@@ -1981,10 +1981,9 @@ typedef struct hostTraffic {
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;
+  u_int16_t        hostAS;           /* AS to which the host belongs to */
   time_t           firstSeen;
   time_t           lastSeen;     /* time when this host has sent/rcvd some data  */
-  time_t           nextDBupdate; /* next time when the DB entry
-				  for this host will be updated */
   u_char           ethAddress[ETHERNET_ADDRESS_LEN];
   u_char           lastEthAddress[ETHERNET_ADDRESS_LEN]; /* used for remote addresses */
   char             ethAddressString[18];

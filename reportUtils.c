@@ -2833,6 +2833,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     BufferTooShort();
   sendString(buf);
 
+  if(el->hostAS != 0) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		"%d</TD></TR>\n",
+		getRowColor(), "Host Authonomous System", el->hostAS) < 0) BufferTooShort();
+    sendString(buf);
+  }
+
   if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s</TD></TR>\n",
