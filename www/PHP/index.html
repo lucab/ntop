@@ -43,11 +43,34 @@
 
 <hr>
 
+<! -------------------------------- !>
+
 <H1>Show Interface Stats</H1><P>
 
 <FORM NAME=search ACTION=ifStats.php METHOD=GET>
 <TABLE BORDER=1>
 <tr><TH>Ntop Host:Port</TH><td><INPUT TYPE=TEXT NAME=host VALUE=localhost>:<INPUT TYPE=TEXT NAME=port VALUE=3000 SIZE=6></td></tr>
+
+<tr><th COLSPAN=2><INPUT TYPE=submit value=Search> <INPUT TYPE=reset></TH></TR>
+</TABLE>
+</FORM>
+
+
+<hr>
+
+<! -------------------------------- !>
+
+<H1>Show Sessions</H1><P>
+
+<FORM NAME=search ACTION=sessions.php METHOD=GET>
+<TABLE BORDER=1>
+<tr><TH>Ntop Host:Port</TH><td><INPUT TYPE=TEXT NAME=host VALUE=localhost>:<INPUT TYPE=TEXT NAME=port VALUE=3000 SIZE=6></td></tr>
+<tr><th>Protocol</th><td>
+<SELECT NAME=proto>
+<OPTION VALUE=tcp>TCP</OPTION>
+<OPTION VALUE=udp>UDP</OPTION>
+</SELECT>
+</td></tr>
 
 <tr><th COLSPAN=2><INPUT TYPE=submit value=Search> <INPUT TYPE=reset></TH></TR>
 </TABLE>
