@@ -386,6 +386,10 @@ ntop.h
 #endif
 #endif
 
+#ifdef HAVE_SHADOW_H
+#include <shadow.h>
+#endif
+
 #include "rrd.h"
 
 #ifdef HAVE_GETOPT_H
