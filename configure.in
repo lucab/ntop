@@ -118,9 +118,12 @@ if test "x${ac_cv_prog_AUTOHEADER}" = "x"; then
  mv plugins/Makefile.in plugins/Makefile.in.tmp
  cat plugins/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
  rm -f plugins/Makefile.in.tmp
- mv intop/Makefile.in intop/Makefile.in.tmp
- cat intop/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > intop/Makefile.in
- rm -f intop/Makefile.in.tmp
+ mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+ cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+ rm -f plugins/pep/Makefile.in.tmp
+ mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
+ cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
+ rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for aclocal ..."
@@ -133,9 +136,12 @@ if test "x${ac_cv_prog_ACLOCAL}" = "x"; then
  mv plugins/Makefile.in plugins/Makefile.in.tmp
  cat plugins/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
  rm -f plugins/Makefile.in.tmp
- mv intop/Makefile.in intop/Makefile.in.tmp
- cat intop/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > intop/Makefile.in
- rm -f intop/Makefile.in.tmp
+ mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+ cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+ rm -f plugins/pep/Makefile.in.tmp
+ mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
+ cat ntcsh/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
+ rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for automake ..."
@@ -189,9 +195,12 @@ else
  mv plugins/Makefile.in plugins/Makefile.in.tmp
  cat plugins/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
  rm -f plugins/Makefile.in.tmp
- mv intop/Makefile.in intop/Makefile.in.tmp
- cat intop/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > intop/Makefile.in
- rm -f intop/Makefile.in.tmp
+ mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+ cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+ rm -f plugins/pep/Makefile.in.tmp
+ mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
+ cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
+ rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for autoconf ..."
@@ -239,9 +248,12 @@ else
  mv plugins/Makefile.in plugins/Makefile.in.tmp
  cat plugins/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
  rm -f plugins/Makefile.in.tmp
- mv intop/Makefile.in intop/Makefile.in.tmp
- cat intop/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > intop/Makefile.in
- rm -f intop/Makefile.in.tmp
+ mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+ cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+ rm -f plugins/pep/Makefile.in.tmp
+ mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
+ cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
+ rm -f ntcsh/Makefile.in.tmp
 fi
 
 dnl> Then check for a match with the scripts...
@@ -484,18 +496,18 @@ AC_ARG_ENABLE(micro-ntop,
               ac_micro_ntop="yes",
               ac_micro_ntop="no")
 
-AC_ARG_ENABLE(intop,
-              [  --enable-intop              enable intop (obsolete) command line version [[default=disabled]]],
-              ac_enable_intop="yes",
-              ac_enable_intop="no")
+AC_ARG_ENABLE(ntcsh,
+              [  --enable-ntcsh              enable ntcsh command line version [[default=enabled]]],
+              ac_disable_ntcsh="yes",
+              ac_disable_ntcsh="no")
 
 AC_ARG_WITH(curses,
-              [  --without-curses            disable use of curses [[intop, default=enabled]]],
+              [  --without-curses            disable use of curses [[ntcsh, default=enabled]]],
               ac_disable_curses="yes",
               ac_disable_curses="no")
 
 AC_ARG_WITH(readline,
-              [  --without-readline          disable use of GNU readline [[intop, default=enabled]]],
+              [  --without-readline          disable use of GNU readline [[ntcsh, default=enabled]]],
               ac_disable_readline="yes",
               ac_disable_readline="no")
 
@@ -740,7 +752,7 @@ DLLTOOL=
 DYN_FLAGS=
 EXEEXT=
 INCS=
-INTOP=
+NTCSH=
 LIBCURSES=
 LIBREADLINE=1
 LIBTERMCAP=
@@ -1348,15 +1360,15 @@ else
 fi
 
 echo
-echo "intop?"
-if test ".${ac_enable_intop}" != ".yes"; then
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-intop."
+echo "ntcsh?"
+if test ".${ac_enable_ntcsh}" != ".yes"; then
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-ntcsh."
     if test ".${ac_disable_curses}" = ".yes" ||
        test ".${ac_disable_readline}" = ".yes"; then
         echo
         echo "*******************************************************************"
         echo "*"
-        echo "* WARNING:    You did not enable intop but specified intop options"
+        echo "* WARNING:    You did not enable ntcsh but specified ntcsh options"
         if test ".${ac_disable_curses}" = ".yes"; then
             echo "*                --without-curses"
         fi
@@ -1366,7 +1378,7 @@ if test ".${ac_enable_intop}" != ".yes"; then
         echo "*"
         echo "*>>> Ignoring the options"
         echo "*"
-        echo "*???     1. Add the --enable-intop option"
+        echo "*???     1. Add the --enable-ntcsh option"
         echo "*??? or  2. Remove the conflicting --without-xxxxx option(s)"
         echo "*"
         echo "*******************************************************************"
@@ -1376,15 +1388,15 @@ if test ".${ac_enable_intop}" != ".yes"; then
         HAS_WARNING="yes"
     fi
 else
-    echo "    ...Requested via ./configure command line option --enable-intop."
+    echo "    ...Requested via ./configure command line option --enable-ntcsh."
     echo
     echo "*******************************************************************"
     echo "*******************************************************************"
     echo "*******************************************************************"
     echo "*"
-    echo "* WARNING:  intop is UNSUPPORTED."
+    echo "* WARNING:  ntcsh is UNSUPPORTED."
     echo "*"
-    echo "*        We make the bare minimum of source changes so that intop"
+    echo "*        We make the bare minimum of source changes so that ntcsh"
     echo "*        compiles and starts up, and even that is subject to"
     echo "*        change."
     echo "*"
@@ -2789,8 +2801,8 @@ if test ".${ac_enable_tcpwrap}" = ".yes"; then
     fi
 fi
 
-if test ".${ac_enable_intop}" = ".yes"; then
-    AC_MSG_CHECKING(intop libraries)
+if test ".${ac_enable_ntcsh}" = ".yes"; then
+    AC_MSG_CHECKING(ntcsh libraries)
     AC_MSG_RESULT([])
     if test ".${ac_disable_curses}" = ".yes"; then
         AC_CHECK_LIB(ncurses, initscr, 
@@ -2799,7 +2811,7 @@ if test ".${ac_enable_intop}" = ".yes"; then
             LIBCURSES="-lncurses", 
             AC_MSG_CHECKING(for ncurses)
             AC_MSG_WARN([disabled - missing ncurses.h.])
-            ac_enable_intop="no"
+            ac_enable_ntcsh="no"
         )
     else
         AC_CHECK_LIB(ncurses, initscr, 
@@ -2814,15 +2826,15 @@ if test ".${ac_enable_intop}" = ".yes"; then
                                    LIBCURSES="-lcurses",
                                    AC_MSG_CHECKING(for curses)
                                    AC_MSG_WARN([disabled - missing (n)curses.h.])
-                                   ac_enable_intop="no")
+                                   ac_enable_ntcsh="no")
         )
     fi
 
-    if test ".${ac_enable_intop}" = ".yes"; then
+    if test ".${ac_enable_ntcsh}" = ".yes"; then
 
-        AC_MSG_CHECKING([for intop])
+        AC_MSG_CHECKING([for ntcsh])
         AC_MSG_RESULT(ok)
-        INTOP=intop
+        NTCSH=ntcsh
 
         if test ".${ac_disable_readline}" != ".yes"; then
             READLIBS="${LIBCURSES}"
@@ -3045,7 +3057,7 @@ AC_SUBST(DLLTOOL)
 AC_SUBST(DYN_FLAGS)
 AC_SUBST(EXEEXT)
 AC_SUBST(INCS)
-AC_SUBST(INTOP)
+AC_SUBST(NTCSH)
 AC_SUBST(LIBCURSES)
 AC_SUBST(LIBREADLINE)
 AC_SUBST(LIBTERMCAP)
@@ -3062,8 +3074,8 @@ AC_SUBST(SO_VERSION_PATCH)
 
 AC_CONFIG_FILES([Makefile])
 
-if test ".${ac_enable_intop}" = ".yes"; then
-    AC_CONFIG_FILES([intop/Makefile])
+if test ".${ac_enable_ntcsh}" = ".yes"; then
+    AC_CONFIG_FILES([ntcsh/Makefile])
 fi
 
 if test ".${ac_disable_plugins}" != ".yes"; then
