@@ -279,6 +279,8 @@ static const u_char *p_save;
      } else {
        /* ************************
 
+	  -- 1 --
+	  
 	  This code needs to be optimised. In fact everytime a
 	  new host is added to the hash, the whole hash has to
 	  be scan. This shouldn't happen with hashes. Unfortunately
@@ -286,6 +288,8 @@ static const u_char *p_save;
 	  disappear several times from the hash, hence its position
 	  in the hash might change.
 
+  	  See also -- 2 --.
+	  
 	  Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
 
 	************************ */
@@ -1324,7 +1328,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 			  struct tcphdr *tp,
 			  u_int packetDataLength,
 			  u_char* packetData) {
-  u_int idx, initialIdx;
+  u_int idx, initialIdx, i;
   IPSession *theSession = NULL;
   short flowDirection;
   char addedNewEntry = 0;
@@ -1333,6 +1337,7 @@ static void handleSession(const struct pcap_pkthdr *h,
   HostTraffic *srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
   HostTraffic *dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
   struct timeval tvstrct;
+  u_int firstEmptySlot = NO_PEER;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(TRACE_INFO, "Sanity check failed (3) [Low memory?]");
@@ -1377,7 +1382,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 #endif
 
   if(sessionType == IPPROTO_TCP) {
-    for(;;) {
+    for(i=0; i<device[actualDeviceId].numTotSessions; i++) {
       theSession = sessions[idx];
 
       if(theSession != NULL) {
@@ -1394,67 +1399,136 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  flowDirection = SERVER_TO_CLIENT;
 	  break;
 	}
-      } else if(theSession == NULL) {
-	/* New Session */
+      } else { 
+	/* ************************
+
+	   -- 2 --
+	   
+	   This code needs to be optimised. In fact everytime a
+	   new host is added to the hash, the whole hash has to
+	   be scan. This shouldn't happen with hashes. Unfortunately
+	   due to the way ntop works, a entry can appear and
+	   disappear several times from the hash, hence its position
+	   in the hash might change.
+	   
+	   See also -- 1 --.
+	   
+	   Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
+	   
+	************************ */
+
+	if(firstEmptySlot == NO_PEER)
+	  firstEmptySlot = idx;
+      }
+
+      idx = ((idx+1) % device[actualDeviceId].numTotSessions);
+    }
+
+    if(i == device[actualDeviceId].numTotSessions) {
+      if(firstEmptySlot != NO_PEER) {
+	if(theSession == NULL) {
+	  /* New Session */
 #ifdef DEBUG
-	printf(" NEW ");
+	  printf(" NEW ");
 #endif
-	if((*numSessions) > (device[actualDeviceId].numTotSessions*0.75)) {
-	  /* If possible this table will be enlarged */
+	  /* MULTIPLY_FACTORY courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+	  if((*numSessions) > (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
+	    /* If possible this table will be enlarged */
 
-	  extendTcpUdpSessionsHash();
-	}
+	    extendTcpUdpSessionsHash();
+	  }
 
-	if((*numSessions) > (device[actualDeviceId].numTotSessions*0.7)) {
-	  /* The hash table is getting large: let's replace the oldest session
-	     with this one we're allocating */
-	  u_int usedIdx=0;
+	  if((*numSessions) > (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
+	    /* The hash table is getting large: let's replace the oldest session
+	       with this one we're allocating */
+	    u_int usedIdx=0;
 
-	  for(idx=0; idx<device[actualDeviceId].numTotSessions; idx++) {
-	    if(sessions[idx] != NULL) {
-	      if(theSession == NULL) {
-		theSession = sessions[idx];
-		usedIdx = idx;
-	      }
-	      else if(theSession->lastSeen > sessions[idx]->lastSeen) {
-		theSession = sessions[idx];
-		usedIdx = idx;
+	    for(idx=0; idx<device[actualDeviceId].numTotSessions; idx++) {
+	      if(sessions[idx] != NULL) {
+		if(theSession == NULL) {
+		  theSession = sessions[idx];
+		  usedIdx = idx;
+		}
+		else if(theSession->lastSeen > sessions[idx]->lastSeen) {
+		  theSession = sessions[idx];
+		  usedIdx = idx;
+		}
 	      }
 	    }
-	  }
 
-	  sessions[usedIdx] = NULL;
-	} else {
-	  int i;
+	    sessions[usedIdx] = NULL;
+	  } else {
+	    int i;
 
-	  /* There's enough space left in the hashtable */
-	  theSession = (IPSession*)malloc(sizeof(IPSession));
-	  memset(theSession, 0, sizeof(IPSession));
-	  addedNewEntry = 1;
+	    /* There's enough space left in the hashtable */
+	    theSession = (IPSession*)malloc(sizeof(IPSession));
+	    memset(theSession, 0, sizeof(IPSession));
+	    addedNewEntry = 1;
 
-	  if(tp->th_flags == TH_SYN) {
-	    theSession->nwLatency.tv_sec = h->ts.tv_sec;
-	    theSession->nwLatency.tv_usec = h->ts.tv_usec;
-	    theSession->sessionState = STATE_SYN;
-	  }
+	    if(tp->th_flags == TH_SYN) {
+	      theSession->nwLatency.tv_sec = h->ts.tv_sec;
+	      theSession->nwLatency.tv_usec = h->ts.tv_usec;
+	      theSession->sessionState = STATE_SYN;
+	    }
 
-	  theSession->magic = MAGIC_NUMBER;
-	  (*numSessions)++;
+	    theSession->magic = MAGIC_NUMBER;
+	    (*numSessions)++;
 
-	  /* Let's check whether this is a Napster session */
-	  if(numNapsterSvr > 0) {
-	    for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
-	      if((napsterSvr[i].serverPort == sport)
-		 && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr)
-		 || ((napsterSvr[i].serverPort == dport)
-		     && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
+	    /* Let's check whether this is a Napster session */
+	    if(numNapsterSvr > 0) {
+	      for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
+		if((napsterSvr[i].serverPort == sport)
+		   && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr)
+		   || ((napsterSvr[i].serverPort == dport)
+		       && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
+		  theSession->napsterSession = 1;
+		  napsterSvr[i].serverPort = 0; /* Free slot */
+		  numNapsterSvr--;
+		  FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
+		  FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
+
+		  traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
+			     srcHost->hostSymIpAddress,
+			     dstHost->hostSymIpAddress);
+
+		  if(srcHost->napsterStats == NULL) {
+		    srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+		    memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
+		  }
+
+		  if(dstHost->napsterStats == NULL) {
+		    dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+		    memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
+		  }
+
+		  srcHost->napsterStats->numDownloadsRequested++,
+		    dstHost->napsterStats->numDownloadsServed++;
+		}
+	      }
+	    }
+
+	    if(!theSession->napsterSession) {
+	      /* This session has not been recognized as a Napster
+		 session. It might be that ntop has been started
+		 after the session started, or that ntop has
+		 lost a few packets. Let's do a final check...
+	      */
+#define NAPSTER_DOMAIN "napster.com"
+
+	      if(
+		 ((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
+		  && (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-
+						       strlen(NAPSTER_DOMAIN)],
+			     NAPSTER_DOMAIN) == 0) && (sport == 8888))
+		 ||
+		 ((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
+		  && (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-
+						       strlen(NAPSTER_DOMAIN)],
+			     NAPSTER_DOMAIN) == 0)) && (dport == 8888)) {
+
 		theSession->napsterSession = 1;
-		napsterSvr[i].serverPort = 0; /* Free slot */
-		numNapsterSvr--;
-		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-		FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
 
-		traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
+		traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
 			   srcHost->hostSymIpAddress,
 			   dstHost->hostSymIpAddress);
 
@@ -1468,82 +1542,37 @@ static void handleSession(const struct pcap_pkthdr *h,
 		  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
 		}
 
-		srcHost->napsterStats->numDownloadsRequested++,
-		  dstHost->napsterStats->numDownloadsServed++;
+		if(sport == 8888) {
+		  FD_SET(HOST_SVC_NAPSTER_SERVER, &srcHost->flags);
+		  FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
+		  srcHost->napsterStats->numConnectionsServed++,
+		    dstHost->napsterStats->numConnectionsRequested++;
+		} else {
+		  FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
+		  FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
+		  srcHost->napsterStats->numConnectionsRequested++,
+		    dstHost->napsterStats->numConnectionsServed++;
+		}
 	      }
 	    }
 	  }
 
-	  if(!theSession->napsterSession) {
-	    /* This session has not been recognized as a Napster
-	       session. It might be that ntop has been started
-	       after the session started, or that ntop has
-	       lost a few packets. Let's do a final check...
-	    */
-#define NAPSTER_DOMAIN "napster.com"
+	  sessions[firstEmptySlot] = theSession;
 
-	    if(
-	       ((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-		&& (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-
-						     strlen(NAPSTER_DOMAIN)],
-			   NAPSTER_DOMAIN) == 0) && (sport == 8888))
-	       ||
-	       ((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-		&& (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-
-						     strlen(NAPSTER_DOMAIN)],
-			   NAPSTER_DOMAIN) == 0)) && (dport == 8888)) {
-
-	      theSession->napsterSession = 1;
-
-	      traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
-			 srcHost->hostSymIpAddress,
-			 dstHost->hostSymIpAddress);
-
-	      if(srcHost->napsterStats == NULL) {
-		srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-		memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
-	      }
-
-	      if(dstHost->napsterStats == NULL) {
-		dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-		memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
-	      }
-
-	      if(sport == 8888) {
-		FD_SET(HOST_SVC_NAPSTER_SERVER, &srcHost->flags);
-		FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
-		srcHost->napsterStats->numConnectionsServed++,
-		  dstHost->napsterStats->numConnectionsRequested++;
-	      } else {
-		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-		FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
-		srcHost->napsterStats->numConnectionsRequested++,
-		  dstHost->napsterStats->numConnectionsServed++;
-	      }
-	    }
-	  }
-	}
-
-	while(sessions[initialIdx] != NULL)
-	  initialIdx = ((initialIdx+1) % device[actualDeviceId].numTotSessions);
-
-	sessions[initialIdx] = theSession;
-
-	theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
-	theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
-	theSession->sport = sport;
-	theSession->dport = dport;
-	theSession->firstSeen = actTime;
-	flowDirection = CLIENT_TO_SERVER;
+	  theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
+	  theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
+	  theSession->sport = sport;
+	  theSession->dport = dport;
+	  theSession->firstSeen = actTime;
+	  flowDirection = CLIENT_TO_SERVER;
 
 #ifdef DEBUG
-	printSession(theSession, sessionType, 0);
+	  printSession(theSession, sessionType, 0);
 #endif
-	break;
+	}
       }
-
-      idx = ((idx+1) % device[actualDeviceId].numTotSessions);
     }
+
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "->%d\n", idx);
 #endif
@@ -1752,7 +1781,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
-	    dumpSuspiciousPacket();
 	  }
 
 	  free(rcStr);
@@ -1828,43 +1856,37 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  if((dport != 80)
 	     && (dport != 3000  /* ntop  */)
 	     && (dport != 3128  /* squid */)
-	     && isInitialHttpData(rcStr)) {
+	     && isInitialHttpData(rcStr))
 	    traceEvent(TRACE_WARNING, "WARNING: HTTP detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
-	    dumpSuspiciousPacket();
-	  } else if((sport != 21) && (sport != 25)
-		    && isInitialFtpData(rcStr)) {
+	  else if((sport != 21) && (sport != 25)
+		  && isInitialFtpData(rcStr))
 	    traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	    dumpSuspiciousPacket();
-	  } else if(((sport == 21) || (sport == 25) )&& (!isInitialFtpData(rcStr))) {
+	  else if(((sport == 21) || (sport == 25) )&& (!isInitialFtpData(rcStr)))
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
 		       "at port %d %s:%d -> %s:%d [%s]\n", sport,
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	    dumpSuspiciousPacket();
-	  } else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr)) {
+	  else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr))
 	    traceEvent(TRACE_WARNING, "WARNING: SSH detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	    dumpSuspiciousPacket();
-	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr))) {
+	  else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr)))
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no SSH) detected (trojan?) "
 		       "at port 22 %s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	    dumpSuspiciousPacket();
-	  }
 	} else if(theSession->bytesProtoRcvd == 0) {
 	  /* Uncomment when necessary
 	    memset(rcStr, 0, sizeof(rcStr));
@@ -2189,7 +2211,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
       }
       /* Connection terminated */
       incrementUsageCounter(&srcHost->securityHostPkts.rstPktsSent, dstHostIdx);
@@ -2223,7 +2244,6 @@ static void handleSession(const struct pcap_pkthdr *h,
        && (sport == dport) && (tp->th_flags == TH_SYN)) {
       traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
 		 srcHost->hostSymIpAddress, sport);
-      dumpSuspiciousPacket();
     }
 
     if(((theSession->initiatorIdx == srcHostIdx) 
@@ -2246,10 +2266,9 @@ static void handleSession(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx);
 	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
 
-	traceEvent(TRACE_WARNING, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
+	traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRemote2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
 		|| ((theSession->initiatorIdx == dstHostIdx)
@@ -2260,7 +2279,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
 		|| ((theSession->initiatorIdx == dstHostIdx)
@@ -2271,7 +2289,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRemote2InitiatorFlags[0] == 0)
 		 && (theSession->bytesReceived > 0))
@@ -2284,7 +2301,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
       }
     }
 

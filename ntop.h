@@ -439,6 +439,7 @@ extern const char *gdbm_strerror (int);
 #define DEFAULT_COUNT    500
 
 #define DUMMY_SOCKET_VALUE -999
+#define MULTIPLY_FACTORY   0.75
 
 /* ********************************************* */
 
