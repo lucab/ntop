@@ -684,7 +684,6 @@ int32_t gmt2local(time_t t) {
 
 /* ********************************* */
 
-#ifdef MAKE_WITH_LARGERRDPOP
 char *dotToSlash(char *name) {
     /*
      *  Convert a dotted quad ip address name a.b.c.d to a/b/c/d or a\b\c\d
@@ -705,7 +704,6 @@ char *dotToSlash(char *name) {
     localBuffer[i]='\0';
     return localBuffer;
 }
-#endif
 
 /* ********************************* */
 

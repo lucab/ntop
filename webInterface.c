@@ -2341,14 +2341,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_LARGERRDPOP",
-#ifdef MAKE_WITH_LARGERRDPOP
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLV3_SUPPORT",
 #ifdef MAKE_WITH_SSLV3_SUPPORT
                          "yes"
