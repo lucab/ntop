@@ -85,3 +85,9 @@ function setPointer(theRow, thePointerColor, theNormalBgColor)
 
     return true;
 } // end of the 'setPointer()' function
+
+
+function popUp(url) {
+		sealWin=window.open(url,"win",'toolbar=no,width=570,height=200');
+		sealWin.focus();
+}
