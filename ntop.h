@@ -948,6 +948,10 @@ typedef struct pthreadMutex {
   char   maxLockedDurationUnlockFile[64];
   int    maxLockedDurationUnlockLine;
   int    maxLockedDuration;
+
+  char   where[64];
+  char   lockAttemptFile[64];
+  int    lockAttemptLine;
 } PthreadMutex;
 
 typedef struct packetInformation {

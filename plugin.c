@@ -427,10 +427,8 @@ void startPlugins(void) {
 
   while(flows != NULL) {
     if(flows->pluginStatus.pluginPtr != NULL) {
-#ifdef DEBUG
       traceEvent(TRACE_INFO, "Starting plugin '%s'...\n",
 		 flows->pluginStatus.pluginPtr->pluginName);
-#endif
       if((flows->pluginStatus.pluginPtr->startFunc != NULL)
 	 && (flows->pluginStatus.activePlugin))
 	flows->pluginStatus.pluginPtr->startFunc();
