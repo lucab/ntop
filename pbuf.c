@@ -19,26 +19,26 @@
   *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   */
 
- /*
-  * Copyright (c) 1994, 1996
-  *	The Regents of the University of California.  All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-  * modification, are permitted provided that: (1) source code distributions
-  * retain the above copyright notice and this paragraph in its entirety, (2)
-  * distributions including binary code include the above copyright notice and
-  * this paragraph in its entirety in the documentation or other materials
-  * provided with the distribution, and (3) all advertising materials mentioning
-  * features or use of this software display the following acknowledgement:
-  * ``This product includes software developed by the University of California,
-  * Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
-  * the University nor the names of its contributors may be used to endorse
-  * or promote products derived from this software without specific prior
-  * written permission.
-  * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
-  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
-  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-  */
+/*
+ * Copyright (c) 1994, 1996
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that: (1) source code distributions
+ * retain the above copyright notice and this paragraph in its entirety, (2)
+ * distributions including binary code include the above copyright notice and
+ * this paragraph in its entirety in the documentation or other materials
+ * provided with the distribution, and (3) all advertising materials mentioning
+ * features or use of this software display the following acknowledgement:
+ * ``This product includes software developed by the University of California,
+ * Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
+ * the University nor the names of its contributors may be used to endorse
+ * or promote products derived from this software without specific prior
+ * written permission.
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ */
 
 /*
   #define DNS_SNIFF_DEBUG
@@ -683,10 +683,15 @@ void scanTimedoutTCPSessions(void) {
 	      }
 	    }
 
-	    if((sessionToPurge->bytesProtoSent == 0) || (sessionToPurge->bytesProtoRcvd == 0)) {
+	    if(((sessionToPurge->bytesProtoSent == 0) 
+		|| (sessionToPurge->bytesProtoRcvd == 0))
+	       && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
+	      /* "Valid" TCP session used to skip faked sessions (e.g. portscans
+		 with one faked packet + 1 response [RST usually]) */
+	      ) {
 	      HostTraffic *theHost, *theRemHost;
 	      char *fmt = "WARNING: detected TCP connection with no data exchanged "
-		"[%s:%d] -> [%s:%d] (network mapping attempt?)";
+		"[%s:%d] -> [%s:%d] (pktSent=%d/pktRcvd=%d) (network mapping attempt?)";
 
 	      theHost = device[i].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
 	      theRemHost = device[i].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
@@ -700,7 +705,8 @@ void scanTimedoutTCPSessions(void) {
 		if(enableSuspiciousPacketDump)
 		  traceEvent(TRACE_WARNING, fmt,
 			     theHost->hostSymIpAddress, sessionToPurge->sport,
-			     theRemHost->hostSymIpAddress, sessionToPurge->dport);
+			     theRemHost->hostSymIpAddress, sessionToPurge->dport,
+			     sessionToPurge->pktSent, sessionToPurge->pktRcvd);
 	      }
 	    }
 
@@ -2021,7 +2027,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     if(tp->th_flags & TH_RST) printf("RST ");
     if(tp->th_flags & TH_PUSH) printf("PUSH");
     printf(" [%d]\n", tp->th_flags);
-    printf("sessionsState=%d -> ", theSession->sessionState);
+    printf("sessionsState=%d\n", theSession->sessionState);
 #endif
 
     if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == STATE_SYN))  {
@@ -2034,20 +2040,25 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	theSession->nwLatency.tv_sec--;
       } else
 	theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
-
-	  theSession->nwLatency.tv_sec /= 2;
-	  theSession->nwLatency.tv_usec /= 2;
+      
+      theSession->nwLatency.tv_sec /= 2;
+      theSession->nwLatency.tv_usec /= 2;
       theSession->sessionState = STATE_ACTIVE;
-
+      
       incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx);
       incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx);
       device[actualDeviceId].numEstablishedTCPConnections++;
     } else if((addedNewEntry == 0)
 	      && ((theSession->sessionState == STATE_SYN)
 		  || (theSession->sessionState == STATE_SYN_ACK))) {
-      /* We might have lost a packet so we cannot calculate latency */
+      /*
+	We might have lost a packet so:
+	- we cannot calculate latency 
+	- we don't set the state to initialized
+      */
+
       theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
-      theSession->sessionState = STATE_ACTIVE;
+      theSession->sessionState = STATE_ACTIVE; 
 
       /*
 	ntop has no way to know who started the connection

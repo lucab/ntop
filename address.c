@@ -483,7 +483,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
        NOTE: do not free elem->name because it is used
        by ipaddr2str.
     */
-    free(elem);
+   free(elem);
 #endif
   } /* endless loop */
 

@@ -727,6 +727,15 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
 /* **************************************** */
 
+static int checkIndex(u_char *flaggedHosts, int idx) {
+  if(idx == NO_PEER)     
+    return(0);
+  else
+    return(flaggedHosts[idx]);
+}
+
+/* **************************************** */
+
 static void freeGlobalHostPeers(HostTraffic *el, u_char *flaggedHosts) {
   int j;
   
@@ -738,123 +747,123 @@ static void freeGlobalHostPeers(HostTraffic *el, u_char *flaggedHosts) {
     purgeIdleHostSessions(flaggedHosts, &el->tcpSessionList);
   
   for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
-    if(flaggedHosts[el->contactedSentPeersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->contactedSentPeersIndexes[j]))
       el->contactedSentPeersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->contactedRcvdPeersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->contactedRcvdPeersIndexes[j]))
       el->contactedRcvdPeersIndexes[j] = NO_PEER;
   }
   
   for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
-    if(flaggedHosts[el->securityHostPkts.synPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.synPktsSent.peersIndexes[j]))
       el->securityHostPkts.synPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rstAckPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rstAckPktsSent.peersIndexes[j]))
       el->securityHostPkts.rstAckPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rstPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rstPktsSent.peersIndexes[j]))
       el->securityHostPkts.rstPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.synFinPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.synFinPktsSent.peersIndexes[j]))
       el->securityHostPkts.synFinPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j]))
       el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.nullPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.nullPktsSent.peersIndexes[j]))
       el->securityHostPkts.nullPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.synPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.synPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.synPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rstPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rstPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.rstPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.synFinPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.synFinPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.synFinPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.nullPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.nullPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.nullPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.synPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.synPktsSent.peersIndexes[j]))
       el->securityHostPkts.synPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rstPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rstPktsSent.peersIndexes[j]))
       el->securityHostPkts.rstPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rstAckPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rstAckPktsSent.peersIndexes[j]))
       el->securityHostPkts.rstAckPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.synFinPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.synFinPktsSent.peersIndexes[j]))
       el->securityHostPkts.synFinPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j]))
       el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.nullPktsSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.nullPktsSent.peersIndexes[j]))
       el->securityHostPkts.nullPktsSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.ackScanSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.ackScanSent.peersIndexes[j]))
       el->securityHostPkts.ackScanSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.xmasScanSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.xmasScanSent.peersIndexes[j]))
       el->securityHostPkts.xmasScanSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.finScanSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.finScanSent.peersIndexes[j]))
       el->securityHostPkts.finScanSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.nullScanSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.nullScanSent.peersIndexes[j]))
       el->securityHostPkts.nullScanSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rejectedTCPConnSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rejectedTCPConnSent.peersIndexes[j]))
       el->securityHostPkts.rejectedTCPConnSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.establishedTCPConnSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.establishedTCPConnSent.peersIndexes[j]))
       el->securityHostPkts.establishedTCPConnSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.udpToClosedPortSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.udpToClosedPortSent.peersIndexes[j]))
       el->securityHostPkts.udpToClosedPortSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.synPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.synPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.synPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rstPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rstPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.rstPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.synFinPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.synFinPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.synFinPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.nullPktsRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.nullPktsRcvd.peersIndexes[j]))
       el->securityHostPkts.nullPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.ackScanRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.ackScanRcvd.peersIndexes[j]))
       el->securityHostPkts.ackScanRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.xmasScanRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.xmasScanRcvd.peersIndexes[j]))
       el->securityHostPkts.xmasScanRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.finScanRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.finScanRcvd.peersIndexes[j]))
       el->securityHostPkts.finScanRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.nullScanRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.nullScanRcvd.peersIndexes[j]))
       el->securityHostPkts.nullScanRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[j]))
       el->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.establishedTCPConnRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.establishedTCPConnRcvd.peersIndexes[j]))
       el->securityHostPkts.establishedTCPConnRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.udpToClosedPortRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.udpToClosedPortRcvd.peersIndexes[j]))
       el->securityHostPkts.udpToClosedPortRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.udpToDiagnosticPortSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.udpToDiagnosticPortSent.peersIndexes[j]))
       el->securityHostPkts.udpToDiagnosticPortSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.udpToDiagnosticPortRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.udpToDiagnosticPortRcvd.peersIndexes[j]))
       el->securityHostPkts.udpToDiagnosticPortRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.tcpToDiagnosticPortSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.tcpToDiagnosticPortSent.peersIndexes[j]))
       el->securityHostPkts.tcpToDiagnosticPortSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.tcpToDiagnosticPortRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.tcpToDiagnosticPortRcvd.peersIndexes[j]))
       el->securityHostPkts.tcpToDiagnosticPortRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.tinyFragmentSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.tinyFragmentSent.peersIndexes[j]))
       el->securityHostPkts.tinyFragmentSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.tinyFragmentRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.tinyFragmentRcvd.peersIndexes[j]))
       el->securityHostPkts.tinyFragmentRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.icmpFragmentSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.icmpFragmentSent.peersIndexes[j]))
       el->securityHostPkts.icmpFragmentSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.icmpFragmentRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.icmpFragmentRcvd.peersIndexes[j]))
       el->securityHostPkts.icmpFragmentRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.overlappingFragmentSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.overlappingFragmentSent.peersIndexes[j]))
       el->securityHostPkts.overlappingFragmentSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.overlappingFragmentRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.overlappingFragmentRcvd.peersIndexes[j]))
       el->securityHostPkts.overlappingFragmentRcvd.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.closedEmptyTCPConnSent.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.closedEmptyTCPConnSent.peersIndexes[j]))
       el->securityHostPkts.closedEmptyTCPConnSent.peersIndexes[j] = NO_PEER;
-    if(flaggedHosts[el->securityHostPkts.closedEmptyTCPConnRcvd.peersIndexes[j]])
+    if(checkIndex(flaggedHosts, el->securityHostPkts.closedEmptyTCPConnRcvd.peersIndexes[j]))
       el->securityHostPkts.closedEmptyTCPConnRcvd.peersIndexes[j] = NO_PEER;
   }
 
     for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
-      if(flaggedHosts[el->contactedRouters[j]])
+      if(checkIndex(flaggedHosts, el->contactedRouters[j]))
 	el->contactedRouters[j] = NO_PEER;
 
     for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++)
       if(el->portsUsage[j] != NULL) {
-	if((flaggedHosts[el->portsUsage[j]->clientUsesLastPeer])
-	   || (flaggedHosts[el->portsUsage[j]->serverUsesLastPeer])) {
+	if((checkIndex(flaggedHosts, el->portsUsage[j]->clientUsesLastPeer))
+	   || (checkIndex(flaggedHosts, el->portsUsage[j]->serverUsesLastPeer))) {
 	  free(el->portsUsage[j]);
 	  el->portsUsage[j] = NULL;
 	}

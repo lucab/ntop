@@ -2193,7 +2193,7 @@ int getSniffedDNSName(char *hostNumIpAddress,
   int found=0;
   
   name[0]=0;
-#if HAVE_GDBM_H
+#ifdef HAVE_GDBM_H
   if(hostNumIpAddress[0] != '\0' && gdbm_file) {
     datum key;
     datum data;

@@ -528,22 +528,22 @@ extern const char *gdbm_strerror (int);
 #endif /* EMSGSIZE */
 
 typedef struct {
-	unsigned	id :16;		/* query identification number */
-			/* fields in third byte */
-	unsigned	rd :1;		/* recursion desired */
-	unsigned	tc :1;		/* truncated message */
-	unsigned	aa :1;		/* authoritive answer */
-	unsigned	opcode :4;	/* purpose of message */
-	unsigned	qr :1;		/* response flag */
-			/* fields in fourth byte */
-	unsigned	rcode :4;	/* response code */
-	unsigned	unused :3;	/* unused bits (MBZ as of 4.9.3a3) */
-	unsigned	ra :1;		/* recursion available */
-			/* remaining bytes */
-	unsigned	qdcount :16;	/* number of question entries */
-	unsigned	ancount :16;	/* number of answer entries */
-	unsigned	nscount :16;	/* number of authority entries */
-	unsigned	arcount :16;	/* number of resource entries */
+  unsigned	id :16;		/* query identification number */
+  /* fields in third byte */
+  unsigned	rd :1;		/* recursion desired */
+  unsigned	tc :1;		/* truncated message */
+  unsigned	aa :1;		/* authoritive answer */
+  unsigned	opcode :4;	/* purpose of message */
+  unsigned	qr :1;		/* response flag */
+  /* fields in fourth byte */
+  unsigned	rcode :4;	/* response code */
+  unsigned	unused :3;	/* unused bits (MBZ as of 4.9.3a3) */
+  unsigned	ra :1;		/* recursion available */
+  /* remaining bytes */
+  unsigned	qdcount :16;	/* number of question entries */
+  unsigned	ancount :16;	/* number of answer entries */
+  unsigned	nscount :16;	/* number of authority entries */
+  unsigned	arcount :16;	/* number of resource entries */
 } HEADER;
 #endif /* PACKETSZ */
 
@@ -1427,7 +1427,7 @@ typedef struct ipSession {
   u_int32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
   u_char lastInitiator2RemoteFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
   u_char lastRemote2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
-  u_short sessionState;             /* actual session state                     */
+  u_char sessionState;              /* actual session state                     */
 #ifdef ENABLE_NAPSTER
   u_char  napsterSession;           /* checked if this is a Napster session     */
 #endif
