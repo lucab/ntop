@@ -91,55 +91,55 @@ libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 
 .libs/libicmpPlugin.so@SO_VERSION_PATCH@:
-	cc -bundle -flat_namespace -undefined suppress -o .libs/libicmpPlugin.so@SO_VERSION_PATCH@ icmpPlugin.o
+	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libicmpPlugin.so@SO_VERSION_PATCH@ icmpPlugin.o
 
 icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
 
 #.libs/librrdPlugin.so@SO_VERSION_PATCH@:
-#	cc -bundle -flat_namespace -undefined suppress -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
+#	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
 
 #rrdPlugin.so: .libs/librrdPlugin.so@SO_VERSION_PATCH@
 #	@ln -s .libs/librrdPlugin.so rrdPlugin.so
 
 .libs/libpdaPlugin.so@SO_VERSION_PATCH@:
-	cc -bundle -flat_namespace -undefined suppress -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
+	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
 
 pdaPlugin.so: .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libpdaPlugin.so pdaPlugin.so
 
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
-	cc -bundle -flat_namespace -undefined suppress -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
+	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
 
 sflowPlugin.so: .libs/libsflowPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libsflowPlugin.so sflowPlugin.so
 
 .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
-	cc -bundle -flat_namespace -undefined suppress -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
+	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
 
 lastSeenPlugin.so: .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/liblastSeenPlugin.so lastSeenPlugin.so
 
 .libs/libnfsPlugin.so@SO_VERSION_PATCH@:
-	cc -bundle -flat_namespace -undefined suppress -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
+	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
 
 netflowPlugin.so: .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libnetflowPlugin.so netflowPlugin.so
 
 .libs/libnetflowPlugin.so@SO_VERSION_PATCH@:
-	cc -bundle -flat_namespace -undefined suppress -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ netflowPlugin.o
+	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ netflowPlugin.o
 
 nfsPlugin.so: .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
 
 #.libs/librmonPlugin.so@SO_VERSION_PATCH@:
-#	cc -bundle -flat_namespace -undefined suppress -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
+#	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
 
 #rmonPlugin.so: .libs/librmonPlugin.so@SO_VERSION_PATCH@
 #	@ln -s .libs/librmonPlugin.so rmonPlugin.so
 
 #.libs/libwapPlugin.so@SO_VERSION_PATCH@:
-#	cc -bundle -flat_namespace -undefined suppress -o .libs/libwapPlugin.so@SO_VERSION_PATCH@ wapPlugin.o
+#	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libwapPlugin.so@SO_VERSION_PATCH@ wapPlugin.o
 
 #wapPlugin.so: .libs/libwapPlugin.so@SO_VERSION_PATCH@
 #	@ln -s .libs/libwapPlugin.so wapPlugin.so
