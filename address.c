@@ -87,7 +87,7 @@ static void resolveAddress(struct in_addr *hostAddr,
   char tmpBuf[96];
   datum key_data;
   datum data_data;
-  int reportedFreaky = FALSE;
+  static int reportedFreaky = FALSE;
 
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
@@ -343,15 +343,9 @@ static void resolveAddress(struct in_addr *hostAddr,
              * Known to happen under Linux, other OSes uncertain...
              */
             if (reportedFreaky == FALSE) {
-	      static u_char msgSent = 0;
-	      
                 reportedFreaky = TRUE;
-		
-		if(!msgSent) {
-		  msgSent = 1; /* Avoid to send the same message several times */
-		  traceEvent(CONST_TRACE_INFO, "gethost... call returned NULL/NETDB_SUCCESS - "
+		traceEvent(CONST_TRACE_NOISY, "gethost... call returned NULL/NETDB_SUCCESS - "
 			     "this is odd, but apparently normal");
-		}
 	    }
             myGlobals.numDNSErrorHostNotFound++;
             break;
