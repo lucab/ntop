@@ -1773,6 +1773,56 @@ A. ntop has special parameters under Win32
    Remember, ntop /i and ntop /d don't actually run the service - you need to start it.
    (Updated 26Aug2002 - BMS)
 
+Q. How do I figure out what my network interface numbers are for the -i parameter?
+A. (Thanks to jac engel [jacengel@home.nl] for the example)
+
+   If you only have ONE network interface, it doesn't matter as the default is fine.  However,
+   that's the RARE case.  Most people have multiple network interfaces (NICs), with virtual
+   ones for VPNs, Dialup Networking, etc.
+
+   The Windows tools ipconfig, winipcfg and the Device Manager (depending on which version
+   of Windows you have) will probably show you them.  However, it's easier and better to 
+   use ntop to show you how ntop sees the network interfaces.
+
+   If you start  ntop /c (interactive mode, with only the default parameters) it will 
+   display all your network interfaces (NICs), like this:
+
+    Running ntop for Win32.
+    Wait please: ntop is coming up...
+    23/Aug/2002 20:43:55 Initializing IP services...
+    23/Aug/2002 20:43:55 Initializing GDBM...
+    23/Aug/2002 20:43:55 Initializing network devices...
+    23/Aug/2002 20:43:55 Found interface [index=0] '\Device\Packet_{1439C950-2E58-4398-828F-81AD38843F1C}'
+    23/Aug/2002 20:43:55 Found interface [index=1] '\Device\Packet_{86AE91B6-1F55-497C-9AEF-E208305084B4}'
+    23/Aug/2002 20:43:55 Found interface [index=2] '\Device\Packet_NdisWanIp'
+    23/Aug/2002 20:43:57 ntop v.2.1 MT [WinNT/2K/XP] (11/07/2002 build)
+    23/Aug/2002 20:43:57 Listening on [3F1C}\Device\Packet_{1439C950-2E58-4398-828F-81AD38843F1C}
+
+  By default, ntop will use the lowest numbered interface.  Because #s are assigned based on
+  the sequence cards are discovered, and this is altered if cards are removed and added, this
+  is often not what you want.
+
+  After you figure out which NIC you want, start ntop /c -i1 or -i2 or whatever...
+
+  (Added 13Sep2002, Burton)
+
+Q. OK, but how to I translate \Device\Packet_xxxxx to my Froboz ModelT network card and not the
+   Fubar27 that's on the motherboard.
+A1. A Google search on script "CurrentVersion\NetworkCards" finds a couple of scripts/utilities
+   that might work in various environments.
+
+   Otherwise...
+
+   You're going to need to view the registry.  All the usual warnings - back up your pc, etc.
+   If you damage the registry, you may not be able to reboot the computer.  You're not going
+   to CHANGE anything, but an inadvertent keystroke could be disaster ... BE CAREFUL!
+
+   Under WinNT/2K, to find the interface name of your NIC look in the registry at the 
+   keys in HKLM\Software\Microsoft\Windows NT\Currentversion\NetworkCards\
+   The two subkeys, Servicename and the Description tells you which id maps to which NIC.
+
+   (Added 13Sep2002, Burton)
+
 Q. Where does ntop look for html (and gif) files under Win32?
 A. ntop looks in two places. The first is the current directory and the second is 
    configurable through a constant in ntop_win32.h, #define DATAFILE_DIR "."
