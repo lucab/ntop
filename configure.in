@@ -744,7 +744,7 @@ else
        AC_MSG_RESULT([ It looks that you don't have the libpcap distribution installed.])
        AC_MSG_RESULT([ Download, compile and, optionally, install it.])
        AC_MSG_RESULT([ When finished please re-run this program.])
-       AC_MSG_RESULT([ You can download the latest source tarball at ftp://ftp.ee.lbl.gov/libpcap.tar.Z])
+       AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org/])
        AC_MSG_ERROR([ The LBL Packet Capture Library, libpcap, was not found! ])
      else
        INCS="${INCS} -I/usr/include/pcap"

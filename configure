@@ -4865,7 +4865,7 @@ fi
        echo "$ac_t"" It looks that you don't have the libpcap distribution installed." 1>&6
        echo "$ac_t"" Download, compile and, optionally, install it." 1>&6
        echo "$ac_t"" When finished please re-run this program." 1>&6
-       echo "$ac_t"" You can download the latest source tarball at ftp://ftp.ee.lbl.gov/libpcap.tar.Z" 1>&6
+       echo "$ac_t"" You can download the latest source tarball at http://www.tcpdump.org/" 1>&6
        { echo "configure: error:  The LBL Packet Capture Library, libpcap, was not found! " 1>&2; exit 1; }
      else
        INCS="${INCS} -I/usr/include/pcap"
