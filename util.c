@@ -4784,7 +4784,6 @@ void displayPrivacyNotice(void) {
     value[0]='0';
     value[1]='\0';
   }
-traceEvent(CONST_TRACE_INFO, "TEMP: globals.displayPrivacyNotice '%s'", value);
   switch (value[0]) {
   case '0':
     storePrefsValue("globals.displayPrivacyNotice", "1");
