@@ -1501,6 +1501,10 @@ static void ignoreThisSignal(int signalId) {
 
 /* ******************************* */
 
+#ifdef HANDLE_DIED_CHILD
+extern RETSIGTYPE handleDiedChild(int sig _UNUSED_); /*FreeBSD hack: to remove */
+#endif
+
 void initSignals(void) {
   /*
     The handler below has been restored due
