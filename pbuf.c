@@ -2491,7 +2491,7 @@ static int handleIP(u_short port,
 
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(TRACE_INFO, "Sanity check failed (4) [Low memory?]");
-    return;
+    return(-1);
   }
 
   if(idx != -1) {
@@ -3912,7 +3912,7 @@ static char* timestamp(const struct timeval* t, int fmt) {
 
 /* ************************************ */
 
-static void updateDevicePacketStats(TrafficCounter length) {
+static void updateDevicePacketStats(u_int length) {
   if(length < 64) device[actualDeviceId].rcvdPktStats.upTo64++;
   else if(length < 128) device[actualDeviceId].rcvdPktStats.upTo128++;
   else if(length < 256) device[actualDeviceId].rcvdPktStats.upTo256++;

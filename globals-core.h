@@ -318,6 +318,7 @@ extern void *dequeuePacket(void* notUsed);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
 extern void updateOSName(HostTraffic *el);
+extern void updateHostName(HostTraffic *el);
 
 /* plugin.c */
 /* CHECK ME: THIS IS NOT CALLED YET! */
@@ -422,6 +423,7 @@ extern int deleteSem(sem_t *semId);
 #endif /* HAVE_SEMAPHORE_H */
 #endif /* MULTITHREADED */
 extern void setNBnodeNameType(HostTraffic *theHost, char nodeType, char* nbName);
+extern void trimString(char*);
 
 extern void stringSanityCheck(char* string);
 extern int checkCommand(char* commandName);
