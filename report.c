@@ -3063,8 +3063,6 @@ void printThptStatsMatrix(int sortedColumn) {
       printNoDataYet();
       return;
     } else {
-      u_int theIndex;
-
       sendString("<CENTER>\n");
       sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>"
 		 "<TH "TH_BG">Sampling Period</TH>"

@@ -1954,7 +1954,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       }
 
     if(ok) {
-      struct hostTraffic *el1, el2;
+      struct hostTraffic el2;
       int numEntries;
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)

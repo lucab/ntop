@@ -822,12 +822,11 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 /* ************************* */
 
 static int checkURLsecurity(char *url) {
-  int rc = 0, i, tokenCharacter, countOKextension, len;
+  int rc = 0, tokenCharacter, countOKextension, len;
   int countSections, countOKnumeric, xvertValue;
   char *token;
   char *workURL = NULL;
   char *strtokState;
-  char *badCharacter;
 
   /*
     Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>

@@ -569,7 +569,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	if(!hostFound) {
 	  /* New host entry */
-	  int len;
+	  int len, currentIdx;
 
 	  if(myGlobals.usePersistentStorage) {
 	    if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
@@ -602,13 +602,14 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  myGlobals.device[actualDeviceId].hashList[idx] = list;
 
 	  hostFound = 0;
-	  for(i=myGlobals.device[actualDeviceId].insertIdx;
-	      i<myGlobals.device[actualDeviceId].actualHashSize; i++) {
-	    if(myGlobals.device[actualDeviceId].hash_hostTraffic[i] == NULL) {
-	      hostFound = i;
-	      break;
-	    }
-	  }
+	  for(currentIdx=0, i=myGlobals.device[actualDeviceId].insertIdx;
+              currentIdx<myGlobals.device[actualDeviceId].actualHashSize; currentIdx++) {
+            if(myGlobals.device[actualDeviceId].hash_hostTraffic[i] == NULL) {
+              hostFound = i;
+              break;
+            } else
+              i = (i + 1) % myGlobals.device[actualDeviceId].actualHashSize;
+          }
 
 	  if(!hostFound) {
 	    int sz;
