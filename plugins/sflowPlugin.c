@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-04 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -1678,7 +1678,8 @@ static void handlesFlowHTTPrequest(char* url) {
   /* *************************************** */
 
   sendString("<table border=0>\n<tr><td><table border>");
-  sendString("<TR "TR_ON"><TH "TH_BG">Incoming Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
+  sendString("<TR><TH "DARK_BG" COLSPAN=4>sFlow Preferences</TH></TR>\n");
+  sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG" ALIGN=LEFT>Incoming Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	     "Local UDP Port</td> "
 	     "<td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
 
@@ -1690,7 +1691,7 @@ static void handlesFlowHTTPrequest(char* url) {
 	     "</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n<br>");
 
   if(myGlobals.sflowInPort > 0) {
-    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Virtual Sflow Interface</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
+    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Virtual sFlow Interface</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	       "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
 
     if(snprintf(buf, sizeof(buf), "%s/%s",
@@ -1699,12 +1700,12 @@ static void handlesFlowHTTPrequest(char* url) {
       BufferTooShort();
     sendString(buf);
 
-    sendString("\"><br>Format: digit.digit.digit.digit/ digit.digit.digit.digit</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+    sendString("\"><br>Format: digit.digit.digit.digit/digit.digit.digit.digit</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
   }
 
   /* *************************************** */
 
-  sendString("<TR "TR_ON"><TH "TH_BG">Outgoing Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG" ALIGN=LEFT>Outgoing Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	     "Remote Collector IP Address</td> "
 	     "<td "TD_BG"><INPUT NAME=sflowDest SIZE=15 VALUE=");
 
@@ -1714,12 +1715,12 @@ static void handlesFlowHTTPrequest(char* url) {
   sendString(">:6343<br>[default sampling rate is "DEFAULT_SFLOW_SAMPLING_RATE" packets]</td>"
 	     "<td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG">Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
+  sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG" ALIGN=LEFT>Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
 	     "<FORM ACTION=/plugins/sFlow METHOD=GET>");
   if(debug) {
     sendString("<INPUT TYPE=radio NAME=debug VALUE=1 CHECKED>On");
     sendString("<INPUT TYPE=radio NAME=debug VALUE=0>Off");
-    sendString("<br>NOTE: sFlow packets are dumped on the ntop log");
+    sendString("<p>NOTE: sFlow packets are dumped on the ntop log");
   } else {
     sendString("<INPUT TYPE=radio NAME=debug VALUE=1>On");
     sendString("<INPUT TYPE=radio NAME=debug VALUE=0 CHECKED>Off");
@@ -1729,7 +1730,7 @@ static void handlesFlowHTTPrequest(char* url) {
   sendString("</table></tr>\n");
 
   sendString("<tr><td>"
-	     "<b>NOTE</b>:<ol>"
+	     "<p><b>NOTE</b>:<ol>"
 	     "<li>Use 0 as port, and 0.0.0.0 as IP address to disable export/collection."
 	     "<li>sFlow packets are associated with a virtual device and not mixed to captured packets."
 	     "<li>sFlow activation may require ntop restart"
@@ -1742,7 +1743,7 @@ static void handlesFlowHTTPrequest(char* url) {
 
   if((myGlobals.sflowInSocket == 0)
      || (myGlobals.numSamplesReceived == 0)) {
-    
+    sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A></H5>\n");
     sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
     printHTMLtrailer();
     return;
@@ -1755,27 +1756,27 @@ static void handlesFlowHTTPrequest(char* url) {
   if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: [%.2f %%][Error <= %.2f%%]", percentage, err);
 
   sendString("<CENTER>\n<TABLE BORDER>\n");
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
+  sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
 
   if(snprintf(buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Samples</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG"># Samples</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 	      formatPkts((Counter)myGlobals.numSamplesReceived, formatBuf, sizeof(formatBuf))) < 0)
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Data Scale</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Data Scale</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      percentage) < 0)
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Estimated Error</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Estimated Error</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      err) < 0)
     BufferTooShort();
   sendString(buf);
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD "TD_BG" ALIGN=LEFT>");
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Flow Senders</TH><TD "TD_BG" ALIGN=LEFT>");
 
   for(i=0; i<MAX_NUM_PROBES; i++) {
     if(probeList[i].probeAddr.s_addr == 0) break;
@@ -1789,8 +1790,7 @@ static void handlesFlowHTTPrequest(char* url) {
 
   sendString("</TD></TR>\n</TABLE>\n</CENTER>\n");
   sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A></H5>\n");
-
-  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+  sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
 
   printHTMLtrailer();
 }
@@ -2228,7 +2228,7 @@ PluginInfo* sflowPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Welcome to %s. (C) 2002 by Luca Deri",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Welcome to %s. (C) 2002-04 by Luca Deri",
 	     sFlowPluginInfo->pluginName);
 
   return(sFlowPluginInfo);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-04 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -335,7 +335,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   sendString("</p>\n<p>\n<TABLE BORDER>\n");
 
-  sendString("<TR><TH>Graph</TH><TH>Total</TH></TR>\n");
+  sendString("<TR><TH "DARK_BG">Graph</TH><TH "DARK_BG">Total</TH></TR>\n");
 
   while((dp = readdir(directoryPointer)) != NULL) {
     char *rsrcName;
@@ -1202,27 +1202,30 @@ static void handleRRDHTTPrequest(char* url) {
 
   sendString("<CENTER><FORM ACTION=/plugins/rrdPlugin METHOD=GET>\n");
   sendString("<TABLE BORDER>\n");
-  sendString("<TR><TH ALIGN=LEFT>Dump Interval</TH><TD>"
+
+  
+  sendString("<TR><TH COLSPAN=2 ALIGN=CENTER "DARK_BG">RRD Preferences</TH></TR>");
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">Dump Interval</TH><TD>"
 	     "<INPUT NAME=interval SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpInterval) < 0)
     BufferTooShort();
   sendString(buf);
   sendString("> seconds<br>Specifies how often data is stored permanently.</TD></tr>\n");
 
-  sendString("<TR><TH ALIGN=LEFT>Dump Hours</TH><TD>"
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">Dump Hours</TH><TD>"
 	     "<INPUT NAME=hours SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpHours) < 0)
     BufferTooShort();
   sendString(buf);
   sendString("><br>Specifies how many hours of 'interval' data is stored permanently.</TD></tr>\n");
 
-  sendString("<TR><TH ALIGN=LEFT>Dump Days</TH><TD>"
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">Dump Days</TH><TD>"
 	     "<INPUT NAME=days SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpDays) < 0)
     BufferTooShort();
   sendString(buf);
   sendString("><br>Specifies how many days of hourly data is stored permanently.</TD></tr>\n");
-  sendString("<TR><TH ALIGN=LEFT>Dump Months</TH><TD>"
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">Dump Months</TH><TD>"
 	     "<INPUT NAME=months SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpMonths) < 0)
     BufferTooShort();
@@ -1232,7 +1235,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<TR><TD ALIGN=CENTER COLSPAN=2><B>WARNING:</B>&nbsp;"
 	     "Changes to the above values will ONLY affect NEW rrds</TD></TR>");
 
-  sendString("<TR><TH ALIGN=LEFT>Data to Dump</TH><TD>");
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">Data to Dump</TH><TD>");
 
   if(snprintf(buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpFlows VALUE=1 %s> Flows<br>\n",
 	      dumpFlows ? "CHECKED" : "" ) < 0)
@@ -1257,7 +1260,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("</TD></tr>\n");
 
   if(dumpHosts) {
-    sendString("<TR><TH ALIGN=LEFT>Hosts Filter</TH><TD>"
+    sendString("<TR><TH ALIGN=LEFT "DARK_BG">Hosts Filter</TH><TD>"
 	       "<INPUT NAME=hostsFilter VALUE=\"");
 
     sendString(hostsFilter);
@@ -1268,7 +1271,7 @@ static void handleRRDHTTPrequest(char* url) {
 	       "be stored on disk</TD></tr>\n");
   }
 
-  sendString("<TR><TH ALIGN=LEFT>RRD Detail</TH><TD>");
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Detail</TH><TD>");
   if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Low\n",
 	      FLAG_RRD_DETAIL_LOW, (dumpDetail == FLAG_RRD_DETAIL_LOW) ? "CHECKED" : "") < 0)
     BufferTooShort();
@@ -1285,7 +1288,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString(buf);
   sendString("</TD></TR>\n");
 
-  sendString("<TR><TH ALIGN=LEFT>RRD Files Path</TH><TD>"
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Files Path</TH><TD>"
              "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
   sendString(myGlobals.rrdPath);
   sendString("\">");
@@ -1302,24 +1305,24 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("to limit the number of files per subdirectory.");
   sendString("</TD></tr>\n");
 
-  sendString("<TR><TH ALIGN=LEFT>RRD Updates</TH><TD>");
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Updates</TH><TD>");
   if(snprintf(buf, sizeof(buf), "%lu RRD files updated</TD></TR>\n", (unsigned long)numTotalRRDs) < 0)
     BufferTooShort();
   sendString(buf);
 
-  sendString("<TR><TH ALIGN=LEFT>RRD Update Errors</TH><TD>");
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Update Errors</TH><TD>");
   if(snprintf(buf, sizeof(buf), "%lu RRD update errors</TD></TR>\n", (unsigned long)numRRDerrors) < 0)
     BufferTooShort();
   sendString(buf);
 
-  sendString("<TR><TH ALIGN=LEFT>RRD Graphic Requests</TH><TD>");
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Graphic Requests</TH><TD>");
   if(snprintf(buf, sizeof(buf), "%lu RRD graphics requested</TD></TR>\n",
 	      (unsigned long)rrdGraphicRequests) < 0)
     BufferTooShort();
   sendString(buf);
 
 #ifndef WIN32
-  sendString("<TR><TH ALIGN=LEFT>File/Directory Permissions</TH><TD>");
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">File/Directory Permissions</TH><TD>");
   sendString("<ul>\n");
   if(snprintf(buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Private - ",
               CONST_RRD_PERMISSIONS_PRIVATE,
@@ -1355,7 +1358,7 @@ static void handleRRDHTTPrequest(char* url) {
              "</ul>\n</TD></TR>\n");
 #endif
 
-  sendString("<TD COLSPAN=2 ALIGN=center><INPUT TYPE=submit VALUE=Set></td></FORM></tr>\n");
+  sendString("<TD COLSPAN=2 ALIGN=center><INPUT TYPE=submit VALUE=\"Save Preferences\"></td></FORM></tr>\n");
   sendString("</TABLE>\n<p></CENTER>\n");
 
   sendString("<p><H5><A HREF=http://www.rrdtool.org/>RRDtool</A> has been created by "
@@ -1968,7 +1971,7 @@ static PluginInfo rrdPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
     "This plugin also produces the graphs of rrd data, available via a "
     "link from the various 'Info about host xxxxx' reports.",
-    "2.2c", /* version */
+    "2.3", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
     1, /* Active by default */
@@ -1991,7 +1994,7 @@ PluginInfo* rrdPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Welcome to %s. (C) 2002 by Luca Deri.",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Welcome to %s. (C) 2002-04 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);

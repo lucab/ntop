@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/
  *
@@ -720,7 +720,7 @@ char* getpass(const char *prompt) {
 
 Windown NT/2K Service Registration Routines
 
-Copyright© 2001 by Bill Giel/KC Multimedia and Design Group, Inc.
+Copyright 2001 by Bill Giel/KC Multimedia and Design Group, Inc.
 
 ************************************************************* */
 

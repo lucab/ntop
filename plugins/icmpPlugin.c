@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/
  *
@@ -168,7 +168,7 @@ static void formatSentRcvd(Counter sent, Counter rcvd) {
 
 static void handleIcmpWatchHTTPrequest(char* url) {
   char buf[1024], fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX", formatBuf[32];
-  char *sign = "-";
+  char *sign = "-", *arrowGif, *arrow[15];
   char *pluginName = "<A HREF=/plugins/icmpWatch";
   u_int i, revertOrder=0, num, printedEntries, tot = 0;
   int icmpId=-1;
@@ -297,37 +297,44 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     return;
   }
 
-  sendString("<CENTER>\n");
-  sendString("<TABLE BORDER>\n");
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
-	      "<TH "TH_BG">%s?%s2>Bytes Sent</A></TH>"
-	      "<TH "TH_BG">%s?%s3>Bytes Rcvd</A></TH>"
-	      "<TH "TH_BG">%s?%s4>Echo Req.</A></TH>"
-	      "<TH "TH_BG">%s?%s14>Echo Reply</A></TH>"
-	      "<TH "TH_BG">%s?%s5>Unreach</A></TH>"
-	      "<TH "TH_BG">%s?%s6>Redirect</A></TH>"
-	      "<TH "TH_BG">%s?%s7>Router<br>Advert.</A></TH>"
-	      "<TH "TH_BG">%s?%s8>Time<br>Exceeded</A></TH>"
-	      "<TH "TH_BG">%s?%s9>Param.<br>Problem</A></TH>"
-	      "<TH "TH_BG">%s?%s10>Network<br>Mask</A></TH>"
-	      "<TH "TH_BG">%s?%s11>Source<br>Quench</A></TH>"
-	      "<TH "TH_BG">%s?%s12>Timestamp</A></TH>"
-	      "<TH "TH_BG">%s?%s13>Info</A></TH>"
+  if(!revertOrder)
+    arrowGif = "&nbsp;<IMG ALT=\"Ascending order, click to reverse\" SRC=/arrow_up.gif BORDER=0>";
+  else
+    arrowGif = "&nbsp;<IMG ALT=\"Descending order, click to reverse\" SRC=/arrow_down.gif BORDER=0>";
+  
+    for(i=1; i<=14; i++)
+      if(abs(icmpColumnSort) == i) arrow[i] = arrowGif; else arrow[i] = "";  
+
+  sendString("<CENTER>\n<TABLE BORDER>\n");
+  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" "DARK_BG"><TH "TH_BG">%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd] %s</TH>"
+	      "<TH "TH_BG">%s?%s2>Bytes Sent %s</A></TH>"
+	      "<TH "TH_BG">%s?%s3>Bytes Rcvd %s</A></TH>"
+	      "<TH "TH_BG">%s?%s4>Echo Req. %s</A></TH>"
+	      "<TH "TH_BG">%s?%s14>Echo Reply %s</A></TH>"
+	      "<TH "TH_BG">%s?%s5>Unreach %s</A></TH>"
+	      "<TH "TH_BG">%s?%s6>Redirect %s</A></TH>"
+	      "<TH "TH_BG">%s?%s7>Router<br>Advert. %s</A></TH>"
+	      "<TH "TH_BG">%s?%s8>Time<br>Exceeded %s</A></TH>"
+	      "<TH "TH_BG">%s?%s9>Param.<br>Problem %s</A></TH>"
+	      "<TH "TH_BG">%s?%s10>Network<br>Mask %s</A></TH>"
+	      "<TH "TH_BG">%s?%s11>Source<br>Quench %s</A></TH>"
+	      "<TH "TH_BG">%s?%s12>Timestamp %s</A></TH>"
+	      "<TH "TH_BG">%s?%s13>Info %s</A></TH>"
 	      "</TR>\n",
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign,
-	      pluginName, sign) < 0) 
+	      pluginName, sign, arrow[1],
+	      pluginName, sign, arrow[2],
+	      pluginName, sign, arrow[3],
+	      pluginName, sign, arrow[4],
+	      pluginName, sign, arrow[14],
+	      pluginName, sign, arrow[5],
+	      pluginName, sign, arrow[6],
+	      pluginName, sign, arrow[7],
+	      pluginName, sign, arrow[8],
+	      pluginName, sign, arrow[9],
+	      pluginName, sign, arrow[10],
+	      pluginName, sign, arrow[11],
+	      pluginName, sign, arrow[12],
+	      pluginName, sign, arrow[13]) < 0) 
     BufferTooShort();
   sendString(buf);
 
@@ -403,8 +410,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     }
 
   sendString("</TABLE>\n<p></CENTER>\n");
-
-  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+  sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
 
   printHTMLtrailer();
 
@@ -425,8 +431,8 @@ static PluginInfo icmpPluginInfo[] = {
   { VERSION, /* current ntop version */
     "icmpWatchPlugin",
     "This plugin produces a report about the ICMP packets that ntop has seen. "
-    "The report includes each host, byte and per-type counts (send/received).",
-    "2.2", /* version */
+    "The report includes each host, byte and per-type counts (sent/received).",
+    "2.3", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "icmpWatch", /* http://<host>:<port>/plugins/icmpWatch */
     0, /* Active by default */

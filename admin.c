@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
  *
  *			    http://www.ntop.org/
  *
@@ -48,7 +48,7 @@ void showUsers(void) {
       if(numUsers == 0) {
 	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1>\n");
-	sendString("<TR><TH "TH_BG">Users</TH><TH "TH_BG">Actions</TH></TR>\n");
+	sendString("<TR "DARK_BG"><TH "TH_BG">Users</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 
       if(strcmp(key_data.dptr, "1admin") == 0) {
@@ -307,7 +307,7 @@ void showURLs(void) {
       if(numUsers == 0) {
 	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=5>\n");
-	sendString("<TR><TH "TH_BG">URLs</TH><TH "TH_BG">Actions</TH></TR>\n");
+	sendString("<TR "DARK_BG"><TH "TH_BG">URLs</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 
       encodeWebFormURL(key_data.dptr, ebuf, sizeof(ebuf));
@@ -768,16 +768,14 @@ static void sendMenuFooter(int itm1Idx, int itm2Idx) {
   char	buf[128];
 
   sendString("<CENTER>\n");
-  sendString("<H4><FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
+  sendString("<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
   if(snprintf(buf, sizeof(buf),
-	     "[<A HREF=/%s.html>%s</A>]&nbsp;[<A HREF=/%s.html>%s</A>]\n",
+	     "[ <A HREF=/%s.html>%s</A> ]&nbsp;[ <A HREF=/%s.html>%s</A> ]\n",
 	     menuItem[itm1Idx].anchor, menuItem[itm1Idx].text,
 	     menuItem[itm2Idx].anchor, menuItem[itm2Idx].text) < 0)
 	 BufferTooShort();
   sendString(buf);
-  sendString("</FONT></H4>\n");
-  sendString("</CENTER>\n");
-
+  sendString("</FONT>\n</CENTER>\n");
 }
 
 /* *******************************/

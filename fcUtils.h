@@ -3,7 +3,7 @@
  *                          http://www.ntop.org
  *
  * Copyright (C) 2003 Dinesh G. Dutt <ddutt@cisco.com>
- * Copyright (C) 2003 Luca Deri <deri@ntop.org>
+ * Copyright (C) 2003-04 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *

@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -4686,6 +4686,8 @@ FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId
  *
  */
 
+/* ********************************** */
+
 /* First a bunch of helper functions to keep the main checkVersion() routine
  * even slightly understandable...
  */
@@ -4763,6 +4765,8 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
     return n*100000000 + m*1000000 + y*1000 + l*100 + x - 1000*prerc;
 }
 
+/* ********************************** */
+
 void displayPrivacyNotice(void) {
         if(myGlobals.firstVersionCheckDone == FALSE) {
           myGlobals.firstVersionCheckDone = TRUE;
@@ -4831,6 +4835,8 @@ void displayPrivacyNotice(void) {
         }
 }
 
+/* ********************************** */
+
 /* Externally exposed function to turn the code into words... */
 char *reportNtopVersionCheck(void) {
   switch(myGlobals.checkVersionStatus) {
@@ -4855,6 +4861,8 @@ char *reportNtopVersionCheck(void) {
   }
 }
 
+/* ********************************** */
+
 /* pseudo-function to use stringification to find the xml tag */
 #define xmlextract(a) { \
        a = strstr(next, "<" #a ">"); \
@@ -4865,8 +4873,10 @@ char *reportNtopVersionCheck(void) {
        } \
 }
 
-void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen, char *title, char *input) {
+/* ********************************** */
 
+void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen,
+			      char *title, char *input) {
         char *work, *token;
         int i, j, tCount=0;
 
@@ -4920,7 +4930,10 @@ void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen, char *title, ch
         free(work);
 }
 
-void extractAndAppend(char *userAgent, int userAgentLen, char *title, char *input) {
+/* ********************************** */
+
+void extractAndAppend(char *userAgent, int userAgentLen, 
+		      char *title, char *input) {
 char *work;
 int i, j, dFlag=FALSE;
 
@@ -4949,9 +4962,11 @@ int i, j, dFlag=FALSE;
         return;
 }
 
-/* ===== ===== retrieve url ===== ===== */
-int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen) {
+/* ********************************** */
 
+/* ===== ===== retrieve url ===== ===== */
+int retrieveVersionFile(char *versionSite, char *versionFile, 
+			char *buf, int bufLen) {
         struct hostent *hptr;
         char *userAgent, *space;
         int rc, sock;
@@ -5143,6 +5158,8 @@ int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int buf
         return 0;
 }
 
+/* ********************************** */
+
 int processVersionFile(char *buf, int bufLen) {
         /* Process the returned data
          *   We march through the big buffer, 
@@ -5331,8 +5348,9 @@ int processVersionFile(char *buf, int bufLen) {
         return 0;
 }
 
-void checkVersion(void) {
+/* ********************************** */
 
+void checkVersion(void) {
         /* The work buffer is a big boy so we can eat the entire XML file all at once
          * and avoid making this logic any more complex!
          */

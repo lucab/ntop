@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2003 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -213,10 +213,9 @@ void showPluginsList(char* pluginName) {
 	printHTMLheader("Available Plugins", NULL, 0);
  	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1><TR>\n"
-		   "<TR><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH><TH "TH_BG">Description</TH>"
-		   "<TH "TH_BG">Version</TH>"
-		   "<TH "TH_BG">Author</TH>"
-		   "<TH "TH_BG">Active<br><i>(click to change)</i></TH>"
+		   "<TR "DARK_BG"><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH><TH "TH_BG">Description</TH>"
+		   "<TH "TH_BG">Version</TH><TH "TH_BG">Author</TH>"
+		   "<TH "TH_BG">Active<br>[click to toggle]</TH>"
 		   "</TR>\n");
 	doPrintHeader = 1;
       }

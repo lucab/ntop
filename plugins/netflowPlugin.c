@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2002 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2002-04 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -1323,7 +1323,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	  storePrefsValue("netFlow.ifNetMask", value);
 	  freeNetFlowMatrixMemory(); setNetFlowInterfaceMatrix();
 	} else
-	  traceEvent(CONST_TRACE_ERROR, "NETFLOW: HTTP request NetMask Parse Error(%s)", value);
+	  traceEvent(CONST_TRACE_ERROR, "NETFLOW: HTTP request netmask parse error (%s)", value);
       } else if(strcmp(device, "whiteList") == 0) {
 	/* Cleanup the http control char xform */
 	char *fPtr=value, *tPtr=value;
@@ -1409,27 +1409,25 @@ static void handleNetflowHTTPrequest(char* url) {
     }
   }
 
-
   sendString("<center><table border=0>\n<tr><td><table border>");
   sendString("<tr><th colspan=4 "DARK_BG">Incoming Flows</th></tr>");
-  if(myGlobals.netFlowInPort == 0) {
-    sendString("<tr><td colspan=4 align=\"center\">"
-               "<font color=red>WARNING</font>: "
-                 "The 'Local Collector UDP Port' is zero (none). "
-                 "You must enter a port number to receive netFlow data."
-               "</td></tr>\n");
-  }
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Collection</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Flow Collection</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Local Collector UDP Port:</td><td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.netFlowInPort) < 0)
     BufferTooShort();
   sendString(buf);
 
-  sendString(">&nbsp; &nbsp;&nbsp;&nbsp;The normal port used for netFlow is "DEFAULT_NETFLOW_PORT_STR".");
+  sendString("><br>The default port used for netFlow is "DEFAULT_NETFLOW_PORT_STR".");
+
+  if(myGlobals.netFlowInPort == 0)
+    sendString("<p><b><font color=red>WARNING</font>: "
+	       "The 'Local Collector UDP Port' is zero (none). "
+	       "You must enter a port number to receive netFlow data.</b>\n");  
+
   sendString("</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Virtual NetFlow Interface<br>Network Address</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Virtual NetFlow Interface<br>Network Address</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
   
   if(snprintf(buf, sizeof(buf), "%s/%s",
@@ -1441,7 +1439,7 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("\"><br>Format: digit.digit.digit.digit/digit.digit.digit.digit<br>"
 	     "This does not(yet) accept CIDR /xx notation)</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Aggregation<br>Policy</TH><TD "TD_BG" align=left COLSPAN=2>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Flow Aggregation<br>Policy</TH><TD "TD_BG" align=left COLSPAN=2>"
 	     "<FORM ACTION=/plugins/NetFlow METHOD=GET><SELECT NAME=netFlowAggregation>");
 
   sendString("<OPTION VALUE=0 "); if(myGlobals.netFlowAggregation == noAggregation) sendString("SELECTED"); sendString(">None (no aggregation)\n");
@@ -1451,7 +1449,7 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("<OPTION VALUE=4 "); if(myGlobals.netFlowAggregation == asAggregation) sendString("SELECTED"); sendString(">AS\n");
   sendString("</SELECT></td><td><INPUT TYPE=submit VALUE=Set></FORM></TD></TR>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>White list</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">White list</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "IP Address/Mask(s) we store data from:</td><td "TD_BG"><INPUT NAME=whiteList SIZE=60 VALUE=\"");
 
   if(snprintf(buf, sizeof(buf), "%s", myGlobals.netFlowWhiteList == NULL ? " " : myGlobals.netFlowWhiteList) < 0)
@@ -1460,7 +1458,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("\"></td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Black list</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Black list</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "IP Address/Mask(s) we reject data from:</td><td "TD_BG"><INPUT NAME=blackList SIZE=60 VALUE=\"");
 
   if(snprintf(buf, sizeof(buf), "%s", myGlobals.netFlowBlackList == NULL ? " " : myGlobals.netFlowBlackList) < 0)
@@ -1473,9 +1471,9 @@ static void handleNetflowHTTPrequest(char* url) {
 
   /* *************************************** */
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Interfaces</TH><td colspan=3>"
-             "<table border>"
-               "<tr><TH "TH_BG">Name</th><TH "TH_BG">Flow Export Enabled</TH></tr>\n");
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Interfaces</TH><TD COLSPAN=3>"
+             "<TABLE BORDER WIDTH=100%%>"
+	     "<TR "DARK_BG"><TH "TH_BG">Name</th><TH "TH_BG">Flow Export Enabled<BR>[ Click to toggle ]</TH></tr>\n");
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(!myGlobals.device[i].virtualDevice) {
@@ -1492,21 +1490,16 @@ static void handleNetflowHTTPrequest(char* url) {
     }
   }
 
-  sendString("<tr><td colspan=2>"
-             "<center>Click the 'Enabled' or 'Disabled' link to toggle the interface state</center>"
-             "</td></tr>\n");
-
   if(numEnabled == 0)
     sendString("<tr><th colspan=2 align=\"center\">"
-               "<font color=red>WARNING</font>: "
-                 "ALL interfaces are disabled, so no flows will be exported!"
+               "<b><font color=red>WARNING</font>: ALL interfaces are disabled, so no flows will be exported!</b>"
                "</th></tr>\n");
 
   sendString("</table>\n</td></tr>\n");
 
   /* *************************** */
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Outgoing Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Outgoing Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Remote Collector IP Address</td> "
 	     "<td "TD_BG"><INPUT NAME=collectorIP SIZE=15 VALUE=");
 
@@ -1517,7 +1510,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<tr><th colspan=4 "DARK_BG">General Options</th></tr>");
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Assume FTP</TH><TD "TD_BG" align=left>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Assume FTP</TH><TD "TD_BG" align=left>"
 	     "<FORM ACTION=/plugins/NetFlow METHOD=GET>");
   if(myGlobals.netFlowAssumeFTP) {
     sendString("<INPUT TYPE=radio NAME=netFlowAssumeFTP VALUE=1 CHECKED>Yes");
@@ -1541,7 +1534,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<td><INPUT TYPE=submit VALUE=Set></form></td></TR>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
 	     "<FORM ACTION=/plugins/NetFlow METHOD=GET>");
   if(myGlobals.netFlowDebug) {
     sendString("<INPUT TYPE=radio NAME=debug VALUE=1 CHECKED>On");
@@ -1587,8 +1580,8 @@ static void handleNetflowHTTPrequest(char* url) {
 	     "<p>Due to the way ntop works, NetFlow export capabilities are limited. "
 	     "If you need a fast, light, memory savvy,<br>highly configurable NetFlow "
 	     "probe, you better give "
-	     "<b><A HREF=\"http://www.ntop.org/nProbe.html\">nProbe</A></b> a try.</p>"
-	     "<p>If you are looking for a cheap, dedicated hardware NetFlow probe you "
+	     "<b><A HREF=\"http://www.ntop.org/nProbe.html\">nProbe</A></b> a try.\n"
+	     "If you are looking for a cheap, dedicated hardware NetFlow probe you "
 	     "should look into <b><A HREF=\"http://www.ntop.org/nBox86/\">nBox<sup>86</sup></A></b> "
 	     "<IMG SRC=/nboxLogo.gif>"
 	     "</td></tr>\n");
@@ -1602,8 +1595,8 @@ static void handleNetflowHTTPrequest(char* url) {
     sendString("<TABLE BORDER>\n");
 
     if(myGlobals.numNetFlowsPktsRcvd > 0) {
-      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Received Flows</TH></TR>\n");
-      sendString("<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>");
+      sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Received Flows</TH></TR>\n");
+      sendString("<TR "TR_ON"><TH COLSPAN=2 "TH_BG" ALIGN=LEFT "DARK_BG">Flow Senders</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>");
 
       for(i=0; i<MAX_NUM_PROBES; i++) {
 	if(probeList[i].probeAddr.s_addr == 0) break;
@@ -1617,19 +1610,19 @@ static void handleNetflowHTTPrequest(char* url) {
 
       sendString("</TD></TR>\n");
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Pkts Received</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Pkts Received</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsPktsRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Pkts with bad version</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Pkts with bad version</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Pkts processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Pkts processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1637,7 +1630,7 @@ static void handleNetflowHTTPrequest(char* url) {
       totFlows = myGlobals.numNetFlowsV5Rcvd + myGlobals.numNetFlowsV7Rcvd + myGlobals.numNetFlowsV9Rcvd - myGlobals.numBadNetFlowsVersionsRcvd;
       if(totFlows > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Average Num Flows per Packet</TH>"
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Average Num Flows per Packet</TH>"
 		    "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%.1f</TD></TR>\n",
 		    (float)totFlows/(float)myGlobals.numNetFlowsPktsRcvd) < 0)
 	  BufferTooShort();
@@ -1645,26 +1638,26 @@ static void handleNetflowHTTPrequest(char* url) {
       }
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V5 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V5 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsV5Rcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V7 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V7 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsV7Rcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V9 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V9 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsV9Rcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(myGlobals.numNetFlowsV9TemplRcvd) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Total V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Total V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		    formatPkts(myGlobals.numNetFlowsV9TemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	   BufferTooShort();
 	sendString(buf);
@@ -1672,7 +1665,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
       if(myGlobals.numNetFlowsV9BadTemplRcvd) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Bad V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Bad V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		    formatPkts(myGlobals.numNetFlowsV9BadTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1681,7 +1674,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
       if(myGlobals.numNetFlowsV9UnknTemplRcvd) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V9 Flows with Unknown Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V9 Flows with Unknown Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		    formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1689,31 +1682,31 @@ static void handleNetflowHTTPrequest(char* url) {
 
       sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Discarded Flows</TH></TR>\n");
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Zero Packet Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Zero Packet Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowPkts, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Zero Byte Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Zero Byte Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowBytes, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Bad Data</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Bad Data</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowReality, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Unknown Template</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Unknown Template</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Tot Num Flows Processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Tot Num Flows Processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsProcessed, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1962,9 +1955,9 @@ static void handleNetflowHTTPrequest(char* url) {
     }
 
     if(myGlobals.numNetFlowsPktsSent > 0) {
-      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Sent Flows</TH></TR>\n");
+      sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Sent Flows</TH></TR>\n");
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT COLSPAN=3># Exported Flows</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT COLSPAN=3 "DARK_BG"># Exported Flows</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsPktsSent, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1981,7 +1974,6 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("<p></CENTER></CENTER>\n");
   sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");
   sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
-
 
   printHTMLtrailer();
 }
@@ -2128,7 +2120,7 @@ PluginInfo* netflowPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Welcome to %s.(C) 2002-03 by Luca Deri",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Welcome to %s.(C) 2002-04 by Luca Deri",
 	     netflowPluginInfo->pluginName);
 
   return(netflowPluginInfo);

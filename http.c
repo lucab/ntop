@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -632,7 +632,7 @@ void printHTMLtrailer(void) {
     sendString(buf);
   }
   
-  sendString("<BR>\n&copy; 1998-2003 by <A HREF=mailto:deri@ntop.org>Luca Deri</A>\n");
+  sendString("<BR>\n&copy; 1998-2004 by <A HREF=mailto:deri@ntop.org>Luca Deri</A>\n");
   sendString("</B></FONT>\n</BODY>\n</HTML>\n");
 }
 
@@ -1753,7 +1753,7 @@ static int returnHTTPPage(char* pageName,
       sendString("<li><a href=ntop.html target=area ALT=\"Man Page\">Man Page</a></li>\n");
       sendString("<li><a href=Credits.html target=area ALT=\"Credits\">Credits</a></li>\n");
       sendString("</ol>\n<center>\n<b>\n\n");
-      sendString("<pre>\n</pre>&copy; 1998-2003<br>by<br>"
+      sendString("<pre>\n</pre>&copy; 1998-2004<br>by<br>"
 		 "<A HREF=\"http://luca.ntop.org/\" target=\"area\">"
 		 "Luca Deri</A></FONT><pre>\n");
       sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");
@@ -2072,15 +2072,14 @@ static int returnHTTPPage(char* pageName,
       sendString("he had access to, and decided to write a new application able to report network\n");
       sendString("traffic information in a way similar to the popular Unix top command. At that \n");
       sendString("point in time (it was June 1998) <b>ntop</b> was born.<p>The current release is very\n");
-      sendString("different from the initial one for several reasons. In particular it: <ul>\n");
-      sendString("<li>is much more sophisticated <li>has both a command line and a web interface\n");
-      sendString("<li>is capable of handling both IP and non IP protocols </ul> <p> Although it\n");
-      sendString("might not seem so, <b>ntop</b> has definitively more than an author.\n");
-      sendString("<A HREF=\"mailto:stefano@ntop.org\">Stefano Suin</A> has contributed with ");
-      sendString("several ideas and comments, <A HREF=\"mailto:Abdelkader.Lahmadi@loria.fr\">Abdelkader Lahmadi</A>\n");
-      sendString("and <A HREF=\"mailto:Olivier.Festor@loria.fr\">Olivier Festor</A> provided IPv6 support,\n");
-      sendString("and <A HREF=\"mailto:burton@ntopsupport.com\">Burton Strauss</A>\n");
-      sendString(" is the ntop factotum (user support, bug fixing, testing, packaging).\n");
+      sendString("different from the initial one as it includes many features and media support.<p>\n");
+      sendString("<b>ntop</b> has definitively more than an author:<ul>\n");
+      sendString("<li><A HREF=\"mailto:stefano@ntop.org\">Stefano Suin</A> has contributed with ");
+      sendString("several ideas and comments<li><A HREF=\"mailto:Abdelkader.Lahmadi@loria.fr\">Abdelkader Lahmadi</A>\n");
+      sendString("and <A HREF=\"mailto:Olivier.Festor@loria.fr\">Olivier Festor</A> provided IPv6 support\n");
+      sendString("<li><A HREF=\"mailto:ddutt@cisco.com\">Dinesh G. Dutt</A> for iSCSI/FiberChannel support");
+      sendString("<li><A HREF=\"mailto:burton@ntopsupport.com\">Burton Strauss</A>\n");
+      sendString(" the ntop factotum (user support, bug fixing, testing, packaging).</ul><p>\n");
       sendString(" In addition, many other people downloaded this program, tested it,\n");
       sendString("joined the <A HREF=http://lists.ntop.org/mailman/listinfo/ntop>ntop</A>\n");
       sendString("and <A HREF=http://lists.ntop.org/mailman/listinfo/ntop-dev>ntop-dev</A> mailing lists,\n");

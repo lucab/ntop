@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -174,7 +174,7 @@ static void welcome (FILE * fp)
   fprintf (fp, "%s v.%s %s (configured on %s, built on %s)\n",
 	   myGlobals.program_name, version, THREAD_MODE, configureDate, buildDate);
 
-  fprintf (fp, "Copyright 1998-2003 by %s.\n", author);
+  fprintf (fp, "Copyright 1998-2004 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
 }
 
@@ -1159,9 +1159,10 @@ int main(int argc, char *argv[]) {
 
 /* Below here, we use our traceEvent() function to print or log as requested. */
 
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s (configured on %s built on %s)",
-	     version, THREAD_MODE, configureDate, buildDate);
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2003 by %s", author);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s", version, THREAD_MODE);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.",
+	     configureDate, buildDate);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2004 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
 
   checkVersion();

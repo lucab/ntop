@@ -1,7 +1,7 @@
 /*
- *  Copyright (C) 2001-2002  Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2001-04  Luca Deri <deri@ntop.org>
  *
- *  			     http://www.ntop.org/
+ *  			   http://www.ntop.org/
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -113,7 +113,7 @@ static int NSMakePrivateModulePublic(NSModule module)
   if(p == NULL)
     _dyld_func_lookup("__dyld_NSMakePrivateModulePublic", (unsigned long *)&p);
 
-  if(p == NULL){
+  if(p == NULL) {
 #ifdef DEBUG
     printf("_dyld_func_lookup of __dyld_NSMakePrivateModulePublic "
 	   "failed\n");
@@ -147,29 +147,29 @@ struct stat *stat_buf)
 
         pathbuf_end = pathbuf + PATH_MAX - 8;
 
-	for(envvar_index = 0; envvars[envvar_index]; envvar_index++){
-	    if(envvars[envvar_index][0] == '$'){
+	for(envvar_index = 0; envvars[envvar_index]; envvar_index++) {
+	    if(envvars[envvar_index][0] == '$') {
 	        pathspec = getenv(envvars[envvar_index]+1);
 	    }
 	    else {
 	        pathspec = envvars[envvar_index];
 	    }
 
-	    if(pathspec != NULL){
+	    if(pathspec != NULL) {
 	        element = pathspec;
-		while(*element){
+		while(*element) {
 	            /* extract path list element */
 		    p = element;
 		    q = pathbuf;
 		    while(*p && *p != ':' && q < pathbuf_end) *q++ = *p++;
-		    if(q == pathbuf){  /* empty element */
-		        if(*p){
+		    if(q == pathbuf) {  /* empty element */
+		        if(*p) {
 		            element = p+1;
 			    continue;
 			}
 			break;
 		    }
-		    if (*p){
+		    if (*p) {
 		        element = p+1;
 		    }
 		    else{
@@ -177,7 +177,7 @@ struct stat *stat_buf)
 		    }
 
 		    /* add slash if neccessary */
-		    if(*(q-1) != '/' && q < pathbuf_end){
+		    if(*(q-1) != '/' && q < pathbuf_end) {
 		        *q++ = '/';
 		    }
 
@@ -186,12 +186,12 @@ struct stat *stat_buf)
 		    while(*p && q < pathbuf_end) *q++ = *p++;
 		    *q++ = 0;
 
-		    if(q >= pathbuf_end){
+		    if(q >= pathbuf_end) {
 		        /* maybe add an error message here */
 		        break;
 		    }
 
-		    if(stat(pathbuf, stat_buf) == 0){
+		    if(stat(pathbuf, stat_buf) == 0) {
 		        return 0;
 		    }
 		}
@@ -226,23 +226,23 @@ void* dlopen(const char *path, int mode)
 	 * A NULL path is to indicate the caller wants a handle for the
 	 * main program.
  	 */
-	if(path == NULL){
+	if(path == NULL) {
 	    retval = (void *)&main_program_handle;
 	    DEBUG_PRINT1("main / %p\n", retval);
 	    return(retval);
 	}
 
 	/* see if the path exists and if so get the device and inode number */
-	if(stat(path, &stat_buf) == -1){
+	if(stat(path, &stat_buf) == -1) {
 	    dlerror_pointer = strerror(errno);
 
-	    if(path[0] == '/'){
+	    if(path[0] == '/') {
 	        DEBUG_PRINT1("ERROR (stat): %s\n", dlerror_pointer);
 	        return(NULL);
 	    }
 
 	    /* search for the module in various places */
-	    if(_dl_search_paths(path, pathbuf, &stat_buf)){
+	    if(_dl_search_paths(path, pathbuf, &stat_buf)) {
 	        /* dlerror_pointer is unmodified */
 	        DEBUG_PRINT1("ERROR (stat): %s\n", dlerror_pointer);
 	        return(NULL);
@@ -259,10 +259,10 @@ void* dlopen(const char *path, int mode)
 	 * If we don't want an unshared handle see if we already have a handle
 	 * for this path.
 	 */
-	if((mode & RTLD_UNSHARED) != RTLD_UNSHARED){
+	if((mode & RTLD_UNSHARED) != RTLD_UNSHARED) {
 	    p = dlopen_handles;
-	    while(p != NULL){
-		if(p->dev == stat_buf.st_dev && p->ino == stat_buf.st_ino){
+	    while(p != NULL) {
+		if(p->dev == stat_buf.st_dev && p->ino == stat_buf.st_ino) {
 		    /* skip unshared handles */
 		    if((p->dlopen_mode & RTLD_UNSHARED) == RTLD_UNSHARED)
 			continue;
@@ -273,9 +273,9 @@ void* dlopen(const char *path, int mode)
 		     * RTLD_NOLOAD.
 		     */
 		    if((p->dlopen_mode & RTLD_LOCAL) == RTLD_LOCAL &&
-		       (mode & RTLD_GLOBAL) == RTLD_GLOBAL){
+		       (mode & RTLD_GLOBAL) == RTLD_GLOBAL) {
 			/* promote the handle */
-			if(NSMakePrivateModulePublic(p->module) == TRUE){
+			if(NSMakePrivateModulePublic(p->module) == TRUE) {
 			    p->dlopen_mode &= ~RTLD_LOCAL;
 			    p->dlopen_mode |= RTLD_GLOBAL;
 			    p->dlopen_count++;
@@ -301,7 +301,7 @@ void* dlopen(const char *path, int mode)
 	 * We do not have a handle for this path if we were just trying to
 	 * look it up return NULL to indicate we don't have it.
 	 */
-	if((mode & RTLD_NOLOAD) == RTLD_NOLOAD){
+	if((mode & RTLD_NOLOAD) == RTLD_NOLOAD) {
 	    dlerror_pointer = "no existing handle for path RTLD_NOLOAD test";
 	    DEBUG_PRINT1("ERROR: %s\n", dlerror_pointer);
 	    return(NULL);
@@ -310,8 +310,8 @@ void* dlopen(const char *path, int mode)
 	/* try to create an object file image from this path */
 	ofile_result_code = NSCreateObjectFileImageFromFile(module_path,
 							    &objectFileImage);
-	if(ofile_result_code != NSObjectFileImageSuccess){
-	    switch(ofile_result_code){
+	if(ofile_result_code != NSObjectFileImageSuccess) {
+	    switch(ofile_result_code) {
 	    case NSObjectFileImageFailure:
 		dlerror_pointer = "object file setup failure";
 		DEBUG_PRINT1("ERROR: %s\n", dlerror_pointer);
@@ -346,7 +346,7 @@ void* dlopen(const char *path, int mode)
 	    options |= NSLINKMODULE_OPTION_BINDNOW;
 	module = NSLinkModule(objectFileImage, module_path, options);
 	NSDestroyObjectFileImage(objectFileImage) ;
-	if(module == NULL){
+	if(module == NULL) {
 	    dlerror_pointer = "NSLinkModule() failed for dlopen()";
 	    DEBUG_PRINT1("ERROR: %s\n", dlerror_pointer);
 	    return(NULL);
@@ -356,8 +356,8 @@ void* dlopen(const char *path, int mode)
 	 * If the handle is to be global promote the handle.  It is done this
 	 * way to avoid multiply defined symbols.
 	 */
-	if((mode & RTLD_GLOBAL) == RTLD_GLOBAL){
-	    if(NSMakePrivateModulePublic(module) == FALSE){
+	if((mode & RTLD_GLOBAL) == RTLD_GLOBAL) {
+	    if(NSMakePrivateModulePublic(module) == FALSE) {
 		dlerror_pointer = "can't promote handle from RTLD_LOCAL to "
 				  "RTLD_GLOBAL";
 		DEBUG_PRINT1("ERROR: %s\n", dlerror_pointer);
@@ -366,7 +366,7 @@ void* dlopen(const char *path, int mode)
 	}
 
 	p = malloc(sizeof(struct dlopen_handle));
-	if(p == NULL){
+	if(p == NULL) {
 	    dlerror_pointer = "can't allocate memory for the dlopen handle";
 	    DEBUG_PRINT1("ERROR: %s\n", dlerror_pointer);
 	    return(NULL);
@@ -392,7 +392,7 @@ void* dlopen(const char *path, int mode)
 
 	/* call the init function if one exists */
 	NSSymbol = NSLookupSymbolInModule(p->module, "__init");
-	if(NSSymbol != NULL){
+	if(NSSymbol != NULL) {
 	    init = NSAddressOfSymbol(NSSymbol);
 	    init();
 	}
@@ -404,13 +404,9 @@ void* dlopen(const char *path, int mode)
 /*
  * dlsym() the MacOS X version of the FreeBSD dlopen() interface.
  */
-void *
-dlsym(
-void * handle,
-const char *symbol)
-{
+void* dlsym(void * handle, const char *symbol) {
     struct dlopen_handle *dlopen_handle, *p;
-    NSSymbol NSSymbol;
+    NSSymbol nsSymbol;
     void *address;
 
         DEBUG_PRINT2("libdl: dlsym(%p,%s) -> ", handle, symbol);
@@ -420,10 +416,10 @@ const char *symbol)
 	/*
 	 * If this is the handle for the main program do a global lookup.
 	 */
-	if(dlopen_handle == (struct dlopen_handle *)&main_program_handle){
-	    if(NSIsSymbolNameDefined(symbol) == TRUE){
-		NSSymbol = NSLookupAndBindSymbol(symbol);
-		address = NSAddressOfSymbol(NSSymbol);
+	if(dlopen_handle == (struct dlopen_handle *)&main_program_handle) {
+	    if(NSIsSymbolNameDefined(symbol) == TRUE) {
+		nsSymbol = NSLookupAndBindSymbol(symbol);
+		address = NSAddressOfSymbol(nsSymbol);
 		dlerror_pointer = NULL;
 		DEBUG_PRINT1("%p\n", address);
 		return(address);
@@ -439,11 +435,11 @@ const char *symbol)
 	 * Find this handle and do a lookup in just this module.
 	 */
 	p = dlopen_handles;
-	while(p != NULL){
-	    if(dlopen_handle == p){
-		NSSymbol = NSLookupSymbolInModule(p->module, symbol);
-		if(NSSymbol != NULL){
-		    address = NSAddressOfSymbol(NSSymbol);
+	while(p != NULL) {
+	    if(dlopen_handle == p) {
+		nsSymbol = NSLookupSymbolInModule(p->module, symbol);
+		if(nsSymbol != NULL) {
+		    address = NSAddressOfSymbol(nsSymbol);
 		    dlerror_pointer = NULL;
 		    DEBUG_PRINT1("%p\n", address);
 		    return(address);
@@ -485,7 +481,7 @@ void * handle)
 {
     struct dlopen_handle *p, *q;
     unsigned long options;
-    NSSymbol NSSymbol;
+    NSSymbol nsSymbol;
     void (*fini)(void);
 
         DEBUG_PRINT1("libdl: dlclose(%p) -> ", handle);
@@ -493,19 +489,19 @@ void * handle)
 	dlerror_pointer = NULL;
 	q = (struct dlopen_handle *)handle;
 	p = dlopen_handles;
-	while(p != NULL){
-	    if(p == q){
+	while(p != NULL) {
+	    if(p == q) {
 		/* if the dlopen() count is not zero we are done */
 		p->dlopen_count--;
-		if(p->dlopen_count != 0){
+		if(p->dlopen_count != 0) {
 		    DEBUG_PRINT("OK");
 		    return(0);
 		}
 
 		/* call the fini function if one exists */
-		NSSymbol = NSLookupSymbolInModule(p->module, "__fini");
-		if(NSSymbol != NULL){
-		    fini = NSAddressOfSymbol(NSSymbol);
+		nsSymbol = NSLookupSymbolInModule(p->module, "__fini");
+		if(nsSymbol != NULL) {
+		    fini = NSAddressOfSymbol(nsSymbol);
 		    fini();
 		}
 
@@ -515,7 +511,7 @@ void * handle)
 		    options |= NSUNLINKMODULE_OPTION_KEEP_MEMORY_MAPPED;
 		if(p->dlopen_mode & RTLD_LAZY_UNDEF)
 		    options |= NSUNLINKMODULE_OPTION_RESET_LAZY_REFERENCES;
-		if(NSUnLinkModule(p->module, options) == FALSE){
+		if(NSUnLinkModule(p->module, options) == FALSE) {
 		    dlerror_pointer = "NSUnLinkModule() failed for dlclose()";
 		    DEBUG_PRINT1("ERROR: %s\n", dlerror_pointer);
 		    return(-1);
