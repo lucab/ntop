@@ -292,6 +292,11 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 	mapUsageCounter(&theHost->securityHostPkts->icmpFragmentSent);
 	mapUsageCounter(&theHost->securityHostPkts->overlappingFragmentSent);
 	mapUsageCounter(&theHost->securityHostPkts->closedEmptyTCPConnSent);
+	mapUsageCounter(&theHost->securityHostPkts->icmpPortUnreachSent);
+	mapUsageCounter(&theHost->securityHostPkts->icmpHostNetUnreachSent);
+	mapUsageCounter(&theHost->securityHostPkts->icmpProtocolUnreachSent);
+	mapUsageCounter(&theHost->securityHostPkts->icmpAdminProhibitedSent);
+	mapUsageCounter(&theHost->securityHostPkts->malformedPktsSent);
 
 	mapUsageCounter(&theHost->securityHostPkts->synPktsRcvd);
 	mapUsageCounter(&theHost->securityHostPkts->rstPktsRcvd);
@@ -312,6 +317,11 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 	mapUsageCounter(&theHost->securityHostPkts->icmpFragmentRcvd);
 	mapUsageCounter(&theHost->securityHostPkts->overlappingFragmentRcvd);
 	mapUsageCounter(&theHost->securityHostPkts->closedEmptyTCPConnRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->icmpPortUnreachRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->icmpHostNetUnreachRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->icmpProtocolUnreachRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->icmpAdminProhibitedRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->malformedPktsRcvd);
       }
 
       for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
@@ -612,6 +622,12 @@ static void removeGlobalHostPeers(HostTraffic *el,
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpFragmentSent);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->overlappingFragmentSent);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->closedEmptyTCPConnSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpPortUnreachSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpHostNetUnreachSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpProtocolUnreachSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpAdminProhibitedSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->malformedPktsSent);
+
 
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synPktsRcvd);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstPktsRcvd);
@@ -632,6 +648,11 @@ static void removeGlobalHostPeers(HostTraffic *el,
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpFragmentRcvd);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->overlappingFragmentRcvd);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->closedEmptyTCPConnRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpPortUnreachRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpHostNetUnreachRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpProtocolUnreachRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpAdminProhibitedRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->malformedPktsRcvd);
   }
 
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRouters);

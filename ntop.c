@@ -138,7 +138,9 @@ void* pcapDispatch(void *_i) {
 		   "[No more packets to read]", rc);
 	break; /* No more packets to read */
       }
-      /* elsetraceEvent(TRACE_INFO, "1) %d\n", numPkts++); */
+      /* else 
+	 traceEvent(TRACE_INFO, "1) %d\n", numPkts++); 
+      */
     }
   }
 
