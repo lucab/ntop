@@ -1682,10 +1682,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		  }
 		}
 	      }
-	    }
 
-	    if(adjHostName != NULL)
-              free(adjHostName);
+              if(adjHostName != NULL)
+                free(adjHostName);
+	    }
 
 #ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.hostsHashMutex);
