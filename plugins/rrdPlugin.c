@@ -130,7 +130,7 @@ void updateCounter(char *hostPath, char *key, Counter value) {
     argv[argc++] = "rrd_create";
     argv[argc++] = path;
     argv[argc++] = "--start";
-    snprintf(startStr, sizeof(startStr), "%u", myGlobals.actTime);
+    snprintf(startStr, sizeof(startStr), "%u", myGlobals.actTime-1 /* -1 avoids subsequent rrd_update call problems */);
     argv[argc++] = startStr;
     snprintf(counterStr, sizeof(counterStr), "DS:counter:COUNTER:600:0:%d", 100000000 /* 100 Mbps */);
     argv[argc++] = counterStr;
@@ -142,6 +142,11 @@ void updateCounter(char *hostPath, char *key, Counter value) {
     opterr=0; /* no error messages */
     rc = rrd_create(argc, argv);
 
+    if (rrd_test_error()) {
+      traceEvent(TRACE_WARNING, "rrd_create(%s) error: %s\n", path, rrd_get_error());
+      rrd_clear_error();
+    }
+    
 #ifdef DEBUG
     if(rc != 0)
       traceEvent(TRACE_WARNING, "rrd_create(%s, %s, %u)=%d", hostPath, key, value, rc);
@@ -160,6 +165,12 @@ void updateCounter(char *hostPath, char *key, Counter value) {
   rc = rrd_update(argc, argv);
 
   numTotalRRDs++;
+
+  if (rrd_test_error()) {
+    traceEvent(TRACE_WARNING, "rrd_update(%s) error: %s\n", path, rrd_get_error());
+    rrd_clear_error();
+  }
+  
 #ifdef DEBUG
   if(rc != 0)
     traceEvent(TRACE_WARNING, "rrd_update(%s, %s, %u)=%d", hostPath, key, value, rc);
@@ -247,6 +258,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  hostsFilter = strdup(value);
 	  storePrefsValue("rrd.hostsFilter", hostsFilter);
 	} else if(strcmp(key, "dumpFlows") == 0) {
+	  dumpFlows = 1;
+	} else if(strcmp(key, "dumpDetail") == 0) {
 	  dumpFlows = 1;
 	} else if(strcmp(key, "dumpHosts") == 0) {
 	  dumpHosts = 1;
@@ -520,7 +533,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    traceEvent(TRACE_INFO, "Updating host %s", hostKey);
 #endif
 
-	    sprintf(rrdPath, "%s/rrd/data/hosts/%s/IP.", myGlobals.dbPath, hostKey);
+	    sprintf(rrdPath, "%s/rrd/hosts/%s/IP.", myGlobals.dbPath, hostKey);
 
 	    for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 	      char key[128];
