@@ -229,7 +229,7 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */) {
   }
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "%.2f = %s\n", numBytes, outStr[bufIdx]);
+  traceEvent(CONST_TRACE_INFO, "%.2f = %s", numBytes, outStr[bufIdx]);
 #endif
 
   return(outStr[bufIdx]);

@@ -347,6 +347,11 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.packetQueueTail = 0;
 #endif
 
+  /* Log View */
+  myGlobals.logViewNext = 0;
+  myGlobals.logView = calloc(sizeof(char*),
+                             CONST_LOG_VIEW_BUFFER_SIZE);
+
   for (i = 0; i < CONST_NUM_TRANSACTION_ENTRIES; i ++)
     memset(&myGlobals.transTimeHash[i], 0, sizeof(TransactionTime));
 
@@ -524,20 +529,20 @@ void initNtop(char *devices) {
 
 #ifdef MAKE_WITH_XMLDUMP
   if (myGlobals.xmlFileOut) {
-    traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Removing old xml output file, %s\n", myGlobals.xmlFileOut);
+    traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Removing old xml output file, %s", myGlobals.xmlFileOut);
     /* Delete the old one (if present) */
     rc = unlink(myGlobals.xmlFileOut);
     if ( (rc != 0) && (errno != ENOENT) ) {
-      traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml output file, %s, failed, errno=%d\n",
+      traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml output file, %s, failed, errno=%d",
 		 myGlobals.xmlFileOut, errno);
     }
   }
   if (myGlobals.xmlFileSnap) {
-    traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Removing old xml snapshot file, %s\n", myGlobals.xmlFileSnap);
+    traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Removing old xml snapshot file, %s", myGlobals.xmlFileSnap);
     /* Delete the old one (if present) */
     rc = unlink(myGlobals.xmlFileSnap);
     if ( (rc != 0) && (errno != ENOENT) ) {
-      traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml snapshot file, %s, failed, errno=%d\n",
+      traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml snapshot file, %s, failed, errno=%d",
 		 myGlobals.xmlFileSnap, errno);
     }
   }

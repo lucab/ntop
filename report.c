@@ -723,7 +723,7 @@ void printHostsTraffic(int reportType,
       myGlobals.columnSort = sortedColumn;
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, ">reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d<\n",
+    traceEvent(CONST_TRACE_INFO, ">reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d<",
 	       reportType, sortedColumn, myGlobals.columnSort);
 #endif
 
@@ -3841,13 +3841,13 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
   int rc;
 
   if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpStatsFctn() (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpStatsFctn() (1)");
     return(1);
   } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpStatsFctn() (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpStatsFctn() (2)");
     return(-1);
   } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpStatsFctn() (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpStatsFctn() (3)");
     return(0);
   }
 
@@ -3913,7 +3913,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   stats = (DomainStats**)malloc(len);
   memset(stats, 0, len);
 
-  /* traceEvent(CONST_TRACE_INFO, "'%s' '%d' '%d'\n", domainName, sortedColumn, revertOrder); */
+  /* traceEvent(CONST_TRACE_INFO, "'%s' '%d' '%d'", domainName, sortedColumn, revertOrder); */
 
   if(revertOrder) {
     sign = "";
@@ -3962,7 +3962,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 	memset(statsEntry, 0, sizeof(DomainStats));
 	statsEntry->domainHost = el;
 	stats[keyValue] = statsEntry;
-	/* traceEvent(CONST_TRACE_INFO, "[%d] %s/%s\n", numEntries, el->fullDomainName, el->dotDomainName); */
+	/* traceEvent(CONST_TRACE_INFO, "[%d] %s/%s", numEntries, el->fullDomainName, el->dotDomainName); */
       }
     } else {
       statsEntry = &tmpStats[numEntries++];

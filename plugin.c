@@ -277,11 +277,11 @@ static void loadPlugin(char* dirName, char* pluginName) {
 
     newFlow->next = myGlobals.flowsList;
     myGlobals.flowsList = newFlow;
-    /* traceEvent(CONST_TRACE_INFO, "Adding: %s\n", pluginInfo->pluginName); */
+    /* traceEvent(CONST_TRACE_INFO, "Adding: %s", pluginInfo->pluginName); */
   }
 
 #ifdef PLUGIN_DEBUG
-  traceEvent(CONST_TRACE_INFO, "Plugin '%s' loaded succesfully.\n", pluginPath);
+  traceEvent(CONST_TRACE_INFO, "Plugin '%s' loaded succesfully.", pluginPath);
 #endif
 }
 

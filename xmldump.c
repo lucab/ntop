@@ -55,13 +55,13 @@
       GdomeElement *elWork;
 
   #ifdef XMLDUMP_DEBUG
-      traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_xyx\n");
+      traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_xyx");
   #endif
 
       #include "xml_s_xyx.inc"
 
   #ifdef XMLDUMP_DEBUG
-      traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_xyx\n");
+      traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_xyx");
   #endif
 
       return 0;
@@ -134,14 +134,14 @@ GdomeElement * _newxml(char * filename, int linenum,
     va_list ap;
 
 #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: START newxml() at %d(%s)\n", linenum, filename);
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: START newxml() at %d(%s)", linenum, filename);
 #endif
 
     switch (nodetype) {
 	case GDOME_ELEMENT_NODE:
             if (nodename == NULL) {
                 traceEvent(CONST_TRACE_ERROR,
-                           "XMLDUMP_DEBUG:       newxml() at %d(%s) nodename NULL\n",
+                           "XMLDUMP_DEBUG:       newxml() at %d(%s) nodename NULL",
                            linenum, filename);
                 temp_nodename = gdome_str_mkref("null");
             } else {
@@ -150,7 +150,7 @@ GdomeElement * _newxml(char * filename, int linenum,
             temp_el = gdome_doc_createElement (doc, temp_nodename, &exc);
             if (exc) {
                 traceEvent(CONST_TRACE_ERROR, 
-                           "XMLDUMP:      newxml() at %d(%s), createElement failed, Exception #%d\n", 
+                           "XMLDUMP:      newxml() at %d(%s), createElement failed, Exception #%d", 
                            linenum, 
                            filename, 
                            &exc);
@@ -179,7 +179,7 @@ GdomeElement * _newxml(char * filename, int linenum,
                  (strcmp(attrvalue, "__sentinel__") == 0) ) {
 #if (XMLDUMP_DEBUG >= 2)
                 traceEvent(CONST_TRACE_INFO, 
-                           "XMLDUMP_DEBUG:       newxml() at %d(%s) attrname __sentinel__\n", 
+                           "XMLDUMP_DEBUG:       newxml() at %d(%s) attrname __sentinel__", 
                            linenum, filename);
 #endif
                 break;
@@ -189,7 +189,7 @@ GdomeElement * _newxml(char * filename, int linenum,
                  (strcmp(attrvalue, "") == 0) ) {
 #if (XMLDUMP_DEBUG >= 2)
                 traceEvent(CONST_TRACE_INFO, 
-                           "XMLDUMP_DEBUG:       newxml() at %d(%s) skip null description\n", 
+                           "XMLDUMP_DEBUG:       newxml() at %d(%s) skip null description", 
                            linenum, filename);
 #endif
                 break;
@@ -209,7 +209,7 @@ GdomeElement * _newxml(char * filename, int linenum,
 
                     if (exc) {
                         traceEvent(CONST_TRACE_ERROR,
-                                   "XMLDUMP:      newxml() at %d(%s), el_setAttribute failed, Exception #%d\n",
+                                   "XMLDUMP:      newxml() at %d(%s), el_setAttribute failed, Exception #%d",
                                    linenum,
                                    filename,
                                    exc);
@@ -235,7 +235,7 @@ GdomeElement * _newxml(char * filename, int linenum,
                 gdome_el_appendChild (parent, (GdomeNode *)temp_el, &exc);
                 if (exc) {
                     traceEvent(CONST_TRACE_ERROR,
-                               "XMLDUMP:      newxml() at %d(%s), el_appendChild failed, Exception #%d\n",
+                               "XMLDUMP:      newxml() at %d(%s), el_appendChild failed, Exception #%d",
                                linenum,
                                filename,
                                exc);
@@ -248,7 +248,7 @@ GdomeElement * _newxml(char * filename, int linenum,
     }
 
 #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: END   newxml() at %d(%s) rc=%d\n", linenum, filename, rc);
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: END   newxml() at %d(%s) rc=%d", linenum, filename, rc);
 #endif
 
     if (rc != 0) {
@@ -597,14 +597,14 @@ GdomeElement * newxml_dhcpstats(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_dhcpstats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_dhcpstats");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_dhcpstats.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_dhcpstats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_dhcpstats");
 #endif
 
     return elWork;
@@ -619,14 +619,14 @@ GdomeElement * newxml_domainstats(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_domainstats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_domainstats");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_domainstats.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_domainstats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_domainstats");
 #endif
 
     return elWork;
@@ -641,14 +641,14 @@ GdomeElement * newxml_elementhash(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_elementhash\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_elementhash");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_elementhash.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_elementhash\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_elementhash");
 #endif
 
     return elWork;
@@ -663,14 +663,14 @@ GdomeElement * newxml_filelist(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_filelist\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_filelist");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_filelist.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_filelist\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_filelist");
 #endif
 
     return elWork;
@@ -685,14 +685,14 @@ GdomeElement * newxml_hashlist(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_hashlist\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_hashlist");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_hashlist.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_hashlist\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_hashlist");
 #endif
 
     return elWork;
@@ -707,14 +707,14 @@ GdomeElement * newxml_hosttraffic(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_hosttraffic\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_hosttraffic");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_hosttraffic.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_hosttraffic\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_hosttraffic");
 #endif
 
     return elWork;
@@ -729,14 +729,14 @@ GdomeElement * newxml_icmphostinfo(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_icmphostinfo\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_icmphostinfo");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_icmphostinfo.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_icmphostinfo\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_icmphostinfo");
 #endif
 
     return elWork;
@@ -756,14 +756,14 @@ GdomeElement * newxml_ipsession(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_ipsession\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_ipsession");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_ipsession.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_ipsession\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_ipsession");
 #endif
 
     return elWork;
@@ -778,14 +778,14 @@ GdomeElement * newxml_noniptraffic(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_noniptraffic\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_noniptraffic");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_noniptraffic.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_noniptraffic\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_noniptraffic");
 #endif
 
     return elWork;
@@ -800,13 +800,13 @@ GdomeElement * newxml_ntopinterface(GdomeElement * parent,
     GdomeElement *elWork, *elWork2, *elWork3;
 
 #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_ntopinterface\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_ntopinterface");
 #endif
 
     #include "xml_s_ntopinterface.inc"
 
 #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_ntopinterface\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_ntopinterface");
 #endif
 
     return elWork;
@@ -821,14 +821,14 @@ GdomeElement * newxml_packetstats(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_packetstats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_packetstats");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_packetstats.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_packetstats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_packetstats");
 #endif
 
     return elWork;
@@ -843,13 +843,13 @@ GdomeElement * newxml_plugininfo(GdomeElement * parent,
     GdomeElement *elWork;
 
 #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_plugininfo\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_plugininfo");
 #endif
 
     /* #include "xml_s_plugininfo.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_plugininfo\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_plugininfo");
 #endif
 
     return elWork;
@@ -864,14 +864,14 @@ GdomeElement * newxml_portcounter(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_portcounter\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_portcounter");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_portcounter.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_portcounter\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_portcounter");
 #endif
 
     return elWork;
@@ -886,14 +886,14 @@ GdomeElement * newxml_portmapper(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_portmapper\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_portmapper");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_portmapper.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_portmapper\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_portmapper");
 #endif
 
     return elWork;
@@ -908,14 +908,14 @@ GdomeElement * newxml_portusage(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_portusage\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_portusage");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_portusage.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_portusage\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_portusage");
 #endif
 
     return elWork;
@@ -930,14 +930,14 @@ GdomeElement * newxml_protocolinfo(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_protocolinfo\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_protocolinfo");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_protocolinfo.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_protocolinfo\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_protocolinfo");
 #endif
 
     return elWork;
@@ -952,14 +952,14 @@ GdomeElement * newxml_prototrafficinfo(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_prototrafficinfo\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_prototrafficinfo");
 #endif                 
 
     /* Insert the generated block of code */
         /* #include "xml_s_prototrafficinfo.inc" */
                        
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_prototrafficinfo\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_prototrafficinfo");
 #endif
 
     return elWork;
@@ -975,13 +975,13 @@ GdomeElement * newxml_pthreadmutex(GdomeElement * parent,
     GdomeElement *elWork;
 
  #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_pthreadmutex\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_pthreadmutex");
  #endif
 
     /* #include "xml_s_pthreadmutex.inc" */
 
  #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_pthreadmutex\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_pthreadmutex");
  #endif
 
     return elWork;
@@ -997,14 +997,14 @@ GdomeElement * newxml_routingcounter(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_routingcounter\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_routingcounter");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_routingcounter.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_routingcounter\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_routingcounter");
 #endif
 
     return elWork;
@@ -1019,14 +1019,14 @@ GdomeElement * newxml_securityhostprobes(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_securityhostprobes\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_securityhostprobes");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_securityhostprobes.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_securityhostprobes\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_securityhostprobes");
 #endif
 
     return elWork;
@@ -1041,14 +1041,14 @@ GdomeElement * newxml_serviceentry(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_serviceentry\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_serviceentry");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_serviceentry.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_serviceentry\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_serviceentry");
 #endif
 
     return elWork;
@@ -1063,14 +1063,14 @@ GdomeElement * newxml_servicestats(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_servicestats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_servicestats");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_servicestats.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_servicestats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_servicestats");
 #endif
 
     return elWork;
@@ -1085,14 +1085,14 @@ GdomeElement * newxml_simpleprototrafficinfo(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_simpleprototrafficinfo\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_simpleprototrafficinfo");
 #endif
 
     /* Insert the generated block of code */
         #include "xml_s_simpleprototrafficinfo.inc"
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_simpleprototrafficinfo\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_simpleprototrafficinfo");
 #endif
 
     return elWork;
@@ -1107,14 +1107,14 @@ GdomeElement * newxml_ssl_connection(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_ssl_connection\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_ssl_connection");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_ssl_connection.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_ssl_connection\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_ssl_connection");
 #endif
 
     return elWork;
@@ -1129,14 +1129,14 @@ GdomeElement * newxml_trafficentry(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_trafficentry\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_trafficentry");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_trafficentry.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_trafficentry\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_trafficentry");
 #endif
 
     return elWork;
@@ -1151,14 +1151,14 @@ GdomeElement * newxml_thptentry(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_thptentry\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_thptentry");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_thptentry.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_thptentry\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_thptentry");
 #endif
 
     return elWork;
@@ -1173,14 +1173,14 @@ GdomeElement * newxml_trafficdistribution(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_trafficdistribution\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_trafficdistribution");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_trafficdistribution.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_trafficdistribution\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_trafficdistribution");
 #endif
 
     return elWork;
@@ -1195,14 +1195,14 @@ GdomeElement * newxml_ttlstats(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_ttlstats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_ttlstats");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_ttlstats.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_ttlstats\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_ttlstats");
 #endif
 
     return elWork;
@@ -1217,14 +1217,14 @@ GdomeElement * newxml_usagecounter(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_usagecounter\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_usagecounter");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_usagecounter.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_usagecounter\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_usagecounter");
 #endif
 
     return elWork;
@@ -1239,14 +1239,14 @@ GdomeElement * newxml_userlist(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_userlist\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_userlist");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_userlist.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_userlist\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_userlist");
 #endif
 
     return elWork;
@@ -1261,14 +1261,14 @@ GdomeElement * newxml_virtualhostlist(GdomeElement * parent,
     GdomeException exc;
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_virtualhostlist\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_virtualhostlist");
 #endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_virtualhostlist.inc" */
 
 #if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_virtualhostlist\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_virtualhostlist");
 #endif
 
     return elWork;
@@ -1296,7 +1296,7 @@ GdomeElement * dumpXML_createHeader(int dumpToFile, int effectiveDumpToFile) {
 #endif
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_createHeader\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_createHeader");
 #endif
 
     now  = time(NULL);
@@ -1314,7 +1314,7 @@ GdomeElement * dumpXML_createHeader(int dumpToFile, int effectiveDumpToFile) {
                                                 "stable",        stableDump == TRUE ? "Yes" : "No");
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_createHeader\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_createHeader");
 #endif
 
     return elHeader;
@@ -1326,7 +1326,7 @@ GdomeElement * dumpXML_versioncHeader(void) {
     GdomeException exc;
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_versioncHeader\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_versioncHeader");
 #endif
 
     elHeader = newxmlna(GDOME_ELEMENT_NODE, root, "version_c_header");
@@ -1347,7 +1347,7 @@ GdomeElement * dumpXML_versioncHeader(void) {
 #endif
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_versioncHeader\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_versioncHeader");
 #endif
 
     return elHeader;
@@ -1359,13 +1359,13 @@ GdomeElement * dumpXML_invoke(void) {
     GdomeElement *elInvoke, *elExecenv, *elArg, *elPaths, *elOptions, *elProtocols;
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_invoke\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_invoke");
 #endif
 
     #include "xml_g_invoke.inc"
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_invoke\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_invoke");
 #endif
 
     return elInvoke;
@@ -1378,13 +1378,13 @@ GdomeElement * dumpXML_multithread(GdomeElement * parent) {
     GdomeElement *elMultithread, *elMutexes;
 
  #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_multithread\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_multithread");
  #endif
 
     #include "xml_g_multithread.inc"
 
  #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_multithread\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_multithread");
  #endif
 
     return elMultithread;
@@ -1396,13 +1396,13 @@ GdomeElement * dumpXML_interfaces(void) {
     GdomeElement *elInterfaces, *elWork;
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_interfaces\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_interfaces");
 #endif
 
     #include "xml_g_intf.inc"
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_interfaces\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_interfaces");
 #endif
 
     return elInterfaces;
@@ -1426,7 +1426,7 @@ int dumpXML_writeout(int dumpToFile, int effectiveDumpToFile) {
     char * doctypeHeader;
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_writeout (%d/%d)\n",
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_writeout (%d/%d)",
                dumpToFile,
                effectiveDumpToFile);
 #endif
@@ -1452,17 +1452,17 @@ int dumpXML_writeout(int dumpToFile, int effectiveDumpToFile) {
      */
     if (dumpToFile == 1) {
         if (myGlobals.xmlFileOut == NULL) {
-            traceEvent(CONST_TRACE_WARNING, "XMLDUMP: xml write to unspecified 'out' file skipped...\n");
+            traceEvent(CONST_TRACE_WARNING, "XMLDUMP: xml write to unspecified 'out' file skipped...");
             return 0;
         }
 #ifdef XMLDUMP_DEBUG
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Opening output file (out), '%s'\n", 
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Opening output file (out), '%s'", 
                                myGlobals.xmlFileOut);
 #endif
         fdOut = fopen(myGlobals.xmlFileOut, "wb");
     } else if (effectiveDumpToFile == 1) {
         if (myGlobals.xmlFileSnap == NULL) {
-            traceEvent(CONST_TRACE_WARNING, "XMLDUMP: xml write to unspecified 'snap' file skipped...\n");
+            traceEvent(CONST_TRACE_WARNING, "XMLDUMP: xml write to unspecified 'snap' file skipped...");
             sendString("<?xml version=\"1.0\" ?>\n"
                        "<ntop_dump>\n"
                        "<ntop_dump_tofile status=\"failed\" \n"
@@ -1472,14 +1472,14 @@ int dumpXML_writeout(int dumpToFile, int effectiveDumpToFile) {
             return 0;
         }
 #ifdef XMLDUMP_DEBUG
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Opening output file (snap), '%s'\n", myGlobals.xmlFileSnap);
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Opening output file (snap), '%s'", myGlobals.xmlFileSnap);
 #endif
         fdOut = fopen(myGlobals.xmlFileSnap, "wb");
     }
 
     if (effectiveDumpToFile == 1) {
         if (fdOut == NULL) {
-            traceEvent(CONST_TRACE_ERROR, "XMLDUMP: fopen(xmlout/snap, 'wb'): failed, errno %d\n", errno);
+            traceEvent(CONST_TRACE_ERROR, "XMLDUMP: fopen(xmlout/snap, 'wb'): failed, errno %d", errno);
             return 1;
         }
     }
@@ -1488,16 +1488,16 @@ int dumpXML_writeout(int dumpToFile, int effectiveDumpToFile) {
 
     sprintf(tmpFileName, "%s-%lu", CONST_XML_TMP_NAME, myGlobals.numHandledHTTPrequests);
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Dumping dom to temp file, '%s'\n", tmpFileName);
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Dumping dom to temp file, '%s'", tmpFileName);
 #endif
 
     gdome_di_saveDocToFile(domimpl, doc, tmpFileName, GDOME_SAVE_LIBXML_INDENT, &exc);
     if (exc) {
-        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: saveDocToFile(): failed, Exception #%d\n", exc);
+        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: saveDocToFile(): failed, Exception #%d", exc);
         return 1;
 #ifdef XMLDUMP_DEBUG
     } else {
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Dumping dom, exc=0\n");
+        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Dumping dom, exc=0");
 #endif
     }       
 
@@ -1505,7 +1505,7 @@ int dumpXML_writeout(int dumpToFile, int effectiveDumpToFile) {
     fdTemp = fopen(tmpFileName, "rb");
     if (fdTemp == NULL) {
 #ifdef XMLDUMP_DEBUG
-        traceEvent(CONST_TRACE_ERROR, "XMLDUMP_DEBUG: fopen(, \"rb\"), errno=%d\n", errno);
+        traceEvent(CONST_TRACE_ERROR, "XMLDUMP_DEBUG: fopen(, \"rb\"), errno=%d", errno);
 #endif
     }
 
@@ -1569,7 +1569,7 @@ int dumpXML_writeout(int dumpToFile, int effectiveDumpToFile) {
     }
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_writeout\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_writeout");
 #endif
 
     return 0;
@@ -1604,7 +1604,7 @@ int dumpXML(int dumpToFile, char * options) {
         effectiveDumpToFile;
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML\n");
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML");
 #endif
 
     /* **********************************************************************************
@@ -1628,7 +1628,7 @@ int dumpXML(int dumpToFile, char * options) {
             if (limit > 10) { break; }
 
 #if (XMLDUMP_DEBUG >= 2)
-            traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Processing parameter, %2d. '%s'\n", limit, tmpStr);
+            traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Processing parameter, %2d. '%s'", limit, tmpStr);
 #endif
 
             while ((tmpStr[i] != '\0') && (tmpStr[i] != '='))
@@ -1666,7 +1666,7 @@ int dumpXML(int dumpToFile, char * options) {
     }
 
 #ifdef XMLDUMP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Invoked... tofile(%s/%s) version(%s) invoke(%s) interfaces(%s)\n",
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Invoked... tofile(%s/%s) version(%s) invoke(%s) interfaces(%s)",
                dumpToFile == TRUE ? "Yes" : "No",
                effectiveDumpToFile == TRUE ? "Yes" : "No",
                dumpVersion == TRUE ? "Yes" : "No",
@@ -1701,7 +1701,7 @@ int dumpXML(int dumpToFile, char * options) {
     rc = sigaction(SIGSEGV, &xml_new_act, &xml_old_act);
 #ifdef DEBUG
     snprintf(buf, sizeof(buf), "OTHER(%d)", rc);
-    traceEvent(CONST_TRACE_INFO, "DEBUG: set - sigaction(SIGSEGV,,) rc = %s\n",
+    traceEvent(CONST_TRACE_INFO, "DEBUG: set - sigaction(SIGSEGV,,) rc = %s",
             (rc == 0      ? "OK"     : 
             (rc == EINVAL ? "EINVAL" : 
             (rc == EFAULT ? "EFAULT" : 
@@ -1722,7 +1722,7 @@ int dumpXML(int dumpToFile, char * options) {
     if (namespaceURI != NULL) 
         gdome_str_unref(namespaceURI);
     if (exc) {
-        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: createDocument: failed, Exception #%d\n", exc);
+        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: createDocument: failed, Exception #%d", exc);
         gdome_str_unref(qualifiedName);
         gdome_di_unref (domimpl, &exc);
         return 1;
@@ -1737,21 +1737,21 @@ int dumpXML(int dumpToFile, char * options) {
         gdome_str_unref(systemId);
     gdome_str_unref(qualifiedName);
     if (exc) {
-        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: createDocumentType: failed, Exception #%d\n", exc);
+        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: createDocumentType: failed, Exception #%d", exc);
         gdome_di_unref (domimpl, &exc);
         return 1;
     }
     /* From here on, we have a structure, so we have to continue on to free everything */
     root = gdome_doc_documentElement(doc, &exc);
     if (exc) {
-        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: documentElement(root): failed, Exception #%d\n", exc);
+        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: documentElement(root): failed, Exception #%d", exc);
         rc=exc;
     }
 
 /* IGNORE FOR NOW
     result = gdome_doc_appendChild(doc, (GdomeNode *)dt, &exc);
     if (exc) {
-        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: appendChild[dt]: failed, Exception #%d\n", exc);
+        traceEvent(CONST_TRACE_ERROR, "XMLDUMP: appendChild[dt]: failed, Exception #%d", exc);
         rc=exe;
     }
 */
@@ -1763,7 +1763,7 @@ int dumpXML(int dumpToFile, char * options) {
     if (rc == 0) {
         el = dumpXML_createHeader(dumpToFile, effectiveDumpToFile);
         if (el == NULL) { 
-            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_createHeader() is NULL\n");
+            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_createHeader() is NULL");
             rc = 1;
         } 
     }
@@ -1771,7 +1771,7 @@ int dumpXML(int dumpToFile, char * options) {
     if ( (rc == 0) && (dumpVersion == TRUE) ) {
         el = dumpXML_versioncHeader();
         if (el == NULL) { 
-            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_versioncHeader() is NULL\n");
+            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_versioncHeader() is NULL");
             rc = 1;
         } 
     }
@@ -1779,7 +1779,7 @@ int dumpXML(int dumpToFile, char * options) {
     if ( (rc == 0) && (dumpInvoke == TRUE) ) {
         el = dumpXML_invoke();
         if (el == NULL) { 
-            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_invoke() is NULL\n");
+            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_invoke() is NULL");
             rc = 1;
         }
     }
@@ -1787,7 +1787,7 @@ int dumpXML(int dumpToFile, char * options) {
     if ( (rc == 0) && (dumpInterfaces == TRUE) ) {
         el = dumpXML_interfaces();
         if (el == NULL) {
-            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_interfaces() is NULL\n");
+            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_interfaces() is NULL");
             rc = 1;
         }
     } 
@@ -1798,7 +1798,7 @@ int dumpXML(int dumpToFile, char * options) {
     if (rc == 0) {
         rc = dumpXML_writeout(dumpToFile, effectiveDumpToFile);
         if (rc != 0)
-            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_writeout() is %d\n", rc);
+            traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_writeout() is %d", rc);
     }
 
     sendString("<!-- end of dumpXML -->\n");
@@ -1819,7 +1819,7 @@ int dumpXML(int dumpToFile, char * options) {
     rc = sigaction(SIGSEGV, &xml_old_act, NULL);
 #ifdef DEBUG
     snprintf(buf, sizeof(buf), "OTHER(%d)", rc);
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Restore - sigaction(SIGSEGV,,) rc = %s, SIGSEGV count %d\n",
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Restore - sigaction(SIGSEGV,,) rc = %s, SIGSEGV count %d",
             (rc == 0      ? "OK"     : 
             (rc == EINVAL ? "EINVAL" : 
             (rc == EFAULT ? "EFAULT" : 

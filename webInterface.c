@@ -76,7 +76,7 @@ int execCGI(char* cgiName) {
   struct timeval wait_time;
 
   if(!(newUser = getpwnam(userName))) {
-    traceEvent(CONST_TRACE_WARNING, "Unable to find user %s\n", userName);
+    traceEvent(CONST_TRACE_WARNING, "Unable to find user %s", userName);
     return(-1);
   } else {
     setgid(newUser->pw_gid);
@@ -100,7 +100,7 @@ int execCGI(char* cgiName) {
       BufferTooShort();
     putenv(line); /* PWD */
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "NOTE: CGI %s\n", line);
+    traceEvent(CONST_TRACE_INFO, "NOTE: CGI %s", line);
 #endif
   }
 
@@ -114,7 +114,7 @@ int execCGI(char* cgiName) {
 #endif
 
   if((fd = popen(line, "r")) == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Unable to exec %s\n", cgiName);
+    traceEvent(CONST_TRACE_WARNING, "Unable to exec %s", cgiName);
     return(-1);
   } else {
     fd_set mask;
@@ -385,7 +385,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(specialMacAddress) {
     tmpStr = el->ethAddressString;
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "->'%s/%s'\n", symIp, el->ethAddressString);
+    traceEvent(CONST_TRACE_INFO, "->'%s/%s'", symIp, el->ethAddressString);
 #endif
   } else {
     if(usedEthAddress) {
@@ -729,12 +729,12 @@ void shutdownNtop(void) {
   if(myGlobals.xmlFileOut != NULL) {
     int rc;
 
-    traceEvent(CONST_TRACE_INFO, "Saving ntop data (xml) to %s...\n", myGlobals.xmlFileOut);
+    traceEvent(CONST_TRACE_INFO, "Saving ntop data (xml) to %s...", myGlobals.xmlFileOut);
 
     /* Take the shutdown dump */
     rc = dumpXML(1, NULL);
     if(rc != 0) {
-      traceEvent(CONST_TRACE_ERROR, "xml save, rc %d\n", rc);
+      traceEvent(CONST_TRACE_ERROR, "xml save, rc %d", rc);
     }
   }
 #endif
@@ -3937,6 +3937,41 @@ static void initializeWeb(void) {
 
 /* *************************** */
 
+void printNtopLogReport(void) {
+    int i, j;
+    char buf[LEN_GENERAL_WORK_BUFFER];
+
+    if (myGlobals.logView == NULL) return;
+
+    printHTMLheader("ntop Log", BITFLAG_HTTP_NO_CACHE_CONTROL);
+    sendString("<HR>");
+    if(snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\"><center>"
+              "This is a rolling display of upto the last %d ntop log messages "
+              "of priority INFO or higher.  Click on the \"log\" option, above, to refresh."
+              "</center></font></p>", CONST_LOG_VIEW_BUFFER_SIZE) < 0)
+        BufferTooShort();
+    sendString(buf);
+    sendString("<HR>");
+    sendString("<pre>");
+
+    accessMutex(&myGlobals.logViewMutex, "reporting");
+
+    for (i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++) {
+        j = (myGlobals.logViewNext + i) % CONST_LOG_VIEW_BUFFER_SIZE;
+        
+        if (myGlobals.logView[j] != NULL) {
+            sendString(myGlobals.logView[j]);
+            if (myGlobals.logView[j][strlen(myGlobals.logView[j])-1] != '\n');
+                sendString("\n");
+        }
+    }
+
+    releaseMutex(&myGlobals.logViewMutex);
+    sendString("</pre>");
+}
+
+/* *************************** */
+
 void printNtopProblemReport(void) {
   char buf[LEN_TIMEFORMAT_BUFFER];
 #ifdef PROBLEMREPORTID_DEBUG
@@ -4403,9 +4438,9 @@ void initWeb(void) {
       int rc;
 
 #ifdef SSLWATCHDOG_DEBUG
-      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING\n");
-      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: P Common     Parent         Child\n");
-      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: - ---------- -------------- --------------\n");
+      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING");
+      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: P Common     Parent         Child");
+      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: - ---------- -------------- --------------");
 #endif
 
       if((rc = sslwatchdogGetLock(FLAG_SSLWATCHDOG_BOTH)) != 0) {
@@ -4413,11 +4448,11 @@ void initWeb(void) {
 	sslwatchdogErrorN(">LockErr", FLAG_SSLWATCHDOG_BOTH, rc);
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
 	/* --use-sslwatchdog?  Let's cheat - turn it off */
-	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****Turning off sslWatchdog and continuing...\n");
+	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****Turning off sslWatchdog and continuing...");
 	myGlobals.useSSLwatchdog = 0;
 #else
 	/* ./configure parm? very bad... */
-	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****SSL Watchdog set via ./configure, aborting...\n");
+	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****SSL Watchdog set via ./configure, aborting...");
 	cleanup(0);
 #endif
       }
@@ -4440,7 +4475,7 @@ void initWeb(void) {
 
 void closeNwSocket(int *sockId) {
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Closing socket %d...\n", *sockId);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Closing socket %d...", *sockId);
 #endif
 
   if(*sockId == FLAG_DUMMY_SOCKET)
@@ -4738,13 +4773,13 @@ RETSIGTYPE webservercleanup(int signo) {
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
-  traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:     backtrace is:\n");
+  traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:     backtrace is:");
   if (size < 2)
-      traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:         **unavailable!\n");
+      traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:         **unavailable!");
   else
       /* Ignore the 0th entry, that's our cleanup() */
       for (i=1; i<size; i++)
-          traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:          %2d. %s\n", i, strings[i]);
+          traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:          %2d. %s", i, strings[i]);
  #endif
 
   exit(0);
@@ -4856,24 +4891,24 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	sigemptyset(nset);
 	rc = sigemptyset(nset);
 	if(rc != 0) 
-	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p\n", rc, nset);
+	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p", rc, nset);
 
 	rc = sigaddset(nset, SIGPIPE);
 	if(rc != 0)
-	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
+	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p", rc, nset);
 
 #ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #endif
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", 
+	traceEvent(CONST_TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d", 
 		   oset, rc);
 #endif
 
 #ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
 	if(rc != 0)
-	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", 
+	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d", 
 		       nset, oset, rc);
 #endif
 
@@ -4881,14 +4916,14 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #endif
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", 
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d", 
 		   oset, rc);
 #endif
 
 	if(rc == 0) {
 	    signal(SIGPIPE, PIPEhandler); 
 #ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Note: SIGPIPE handler set\n");
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Note: SIGPIPE handler set");
 #endif
 	}
     }
@@ -4924,7 +4959,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	memcpy(&mask, &mask_copy, sizeof(fd_set));
 	rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d\n", rc);
+	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d", rc);
 #endif
 	if(rc > 0) {
 	    HEARTBEAT(1, "handleWebConnections()", NULL);
@@ -4955,13 +4990,13 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 
     if(FD_ISSET(myGlobals.sock, fdmask)) {
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...\n");
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...");
 #endif
 	myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from, &from_len);
     } else {
 #if defined(DEBUG) && defined(HAVE_OPENSSL)
 	if(myGlobals.sslInitialized)
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...\n");
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...");
 #endif
 #ifdef HAVE_OPENSSL
 	if(myGlobals.sslInitialized)
@@ -4972,7 +5007,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
     }
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Request accepted (sock=%d) (errno=%d)\n", myGlobals.newSock, errno);
+    traceEvent(CONST_TRACE_INFO, "Request accepted (sock=%d) (errno=%d)", myGlobals.newSock, errno);
 #endif
 
     if(myGlobals.newSock > 0) {
@@ -5010,7 +5045,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 				j++;
 			    }
 			    buf[k+1]='\0';
-			    traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s\n", buf);
+			    traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s", buf);
 			}
 			signal(SIGUSR1, sslwatchdogSighandler);
 			return;
@@ -5028,7 +5063,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 		}
 
 		if(accept_ssl_connection(myGlobals.newSock) == -1) {
-		    traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection\n");
+		    traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection");
 		    closeNwSocket(&myGlobals.newSock);
 		    return;
 		} else {
@@ -5110,7 +5145,7 @@ int handlePluginHTTPRequest(char* url) {
 	    else
 		arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
 
-	    /* traceEvent(CONST_TRACE_INFO, "Found %s [%s]\n",
+	    /* traceEvent(CONST_TRACE_INFO, "Found %s [%s]",
 	       flows->pluginStatus.pluginPtr->pluginURLname, arg); */
 	    flows->pluginStatus.pluginPtr->httpFunct(arg);
 	    return(1);

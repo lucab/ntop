@@ -190,7 +190,7 @@ static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[],
   idx = (u_int)((u_int)ipxsapValue % tableLen);
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: addIPXSAPTableEntry(%06x, %s) gives %ld (mod %d = %d)\n",
+  traceEvent(CONST_TRACE_INFO, "DEBUG: addIPXSAPTableEntry(%06x, %s) gives %ld (mod %d = %d)",
 	 entry->ipxsapId,
 	 entry->ipxsapName,
          ipxsapValue,
@@ -202,7 +202,7 @@ static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[],
   if(theMacHash[idx] != NULL) {
       hashLoadCollisions++;
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: HashLoad Collision - %d %x '%s\n",
+      traceEvent(CONST_TRACE_INFO, "DEBUG: HashLoad Collision - %d %x '%s",
                                    idx, entry->ipxsapId, entry->ipxsapName);
 #endif
   }
@@ -274,7 +274,7 @@ static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
   workBuf = etheraddr_string(ethAddress, etherbuf);
   memcpy(&tmpBuf, workBuf, LEN_ETHERNET_ADDRESS_DISPLAY+1);
 #ifdef VENDOR_DEBUG
-  traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: %slookup '%s'\n",
+  traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: %slookup '%s'",
                                special == 1 ? "special " : "", tmpBuf);
 #endif
 
@@ -286,7 +286,7 @@ static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
       key_data.dsize = strlen(tmpBuf)+1;
 
 #ifdef VENDOR_DEBUG
-      traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Fetching 48bit '%s'\n", tmpBuf);
+      traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Fetching 48bit '%s'", tmpBuf);
 #endif
 
       data_data = gdbm_fetch(myGlobals.macPrefixFile, key_data);
@@ -306,7 +306,7 @@ static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
   key_data.dsize = strlen(tmpBuf)+1;
 
 #ifdef VENDOR_DEBUG
-  traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Fetching 24bit '%s'\n", tmpBuf);
+  traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Fetching 24bit '%s'", tmpBuf);
 #endif
 
   data_data = gdbm_fetch(myGlobals.macPrefixFile, key_data);
@@ -399,7 +399,7 @@ void createVendorTable(struct stat *dbStat) {
   {
     int i, j, best, besti;
 
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: Testing ipxSAP (%s) from 51 -> %d...wait\n",
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: Testing ipxSAP (%s) from 51 -> %d...wait",
 #ifdef PARM_USE_MACHASH_INVERT
 	       "invert",
 #else
@@ -419,11 +419,11 @@ void createVendorTable(struct stat *dbStat) {
       } else if( j < best ) {
 	best = j;
 	besti = i;
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP %3d %3d\n", i, j);
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP %3d %3d", i, j);
       }
       memset(ipxSAPhash, 0, sizeof(ipxSAPhash));
     }
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP BEST is %d collisions, size %d\n", best, besti);
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP BEST is %d collisions, size %d", best, besti);
   }
 #endif
 
@@ -465,7 +465,7 @@ void createVendorTable(struct stat *dbStat) {
    *
    */
 
-  traceEvent(CONST_TRACE_INFO, "VENDOR: Loading MAC address table.\n");
+  traceEvent(CONST_TRACE_INFO, "VENDOR: Loading MAC address table.");
   for(idx=0; macInputFiles[idx] != NULL; idx++) {
     configFileFound = 0;
     for(idx2=0; myGlobals.configFileDirs[idx2] != NULL; idx2++) {
@@ -474,7 +474,7 @@ void createVendorTable(struct stat *dbStat) {
       loadFile = 1;
       compressedFormat = 1;
       snprintf(tmpLine, sizeof(tmpLine), "%s/%s.gz", myGlobals.configFileDirs[idx2], macInputFiles[idx]);
-      traceEvent(CONST_TRACE_INFO, "VENDOR: Checking '%s'\n", tmpLine);
+      traceEvent(CONST_TRACE_INFO, "VENDOR: Checking '%s'", tmpLine);
       fd = gzopen(tmpLine, "r");
 
       if(fd == NULL) {
@@ -488,7 +488,7 @@ void createVendorTable(struct stat *dbStat) {
 	  traceEvent(CONST_TRACE_INFO, "VENDOR: File '%s' does not need to be reloaded", tmpLine);
 	  loadFile = 0;
 	} else
-	  traceEvent(CONST_TRACE_INFO, "VENDOR: Loading file '%s'\n", tmpLine);
+	  traceEvent(CONST_TRACE_INFO, "VENDOR: Loading file '%s'", tmpLine);
       }
 
       if(fd != NULL) {
@@ -552,7 +552,7 @@ void createVendorTable(struct stat *dbStat) {
 		if(macInfoEntry.isSpecial == 's')
 		  myGlobals.numVendorLookupAddedSpecial++;
 #ifdef VENDOR_DEBUG
-		traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}\n",
+		traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}",
 			   tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
 #endif
 	      }
@@ -566,7 +566,7 @@ void createVendorTable(struct stat *dbStat) {
 	  fclose(fd);
 
 	if(loadFile)
-	  traceEvent(CONST_TRACE_INFO, "VENDOR: ...found, %d lines, loaded %d records!\n", numRead, numLoaded);
+	  traceEvent(CONST_TRACE_INFO, "VENDOR: ...found, %d lines, loaded %d records!", numRead, numLoaded);
 	break;
       }
     }

@@ -1094,7 +1094,7 @@ int cmpFctn(const void *_a, const void *_b) {
     fillDomainName(*a); fillDomainName(*b);
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "%s='%s'/'%s' - %s='%s'/'%s'\n",
+    traceEvent(CONST_TRACE_INFO, "%s='%s'/'%s' - %s='%s'/'%s'",
 	   (*a)->hostSymIpAddress,
 	   (*a)->dotDomainName, (*a)->fullDomainName,
 	   (*b)->hostSymIpAddress,

@@ -584,12 +584,12 @@ u_int16_t processDNSPacket(const u_char *packetData,
   if((hostPtr.queryType == T_A)
      && (hostPtr.queryName[0] != '\0')
      && (hostPtr.addrList[0] != '\0')) {
-    traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: DNS %s for %s type %d\n", *isRequest ? "request" : "reply",
+    traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: DNS %s for %s type %d", *isRequest ? "request" : "reply",
 	       hostPtr.queryName, hostPtr.queryType);
 
     for(i=0; i<MAX_ALIASES; i++)
       if(hostPtr.aliases[i][0] != '\0') {
-	traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: %s is alias %d of %s\n", hostPtr.aliases[i], i, hostPtr.name);
+	traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: %s is alias %d of %s", hostPtr.aliases[i], i, hostPtr.name);
       }
   }
 #endif

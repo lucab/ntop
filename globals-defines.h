@@ -639,6 +639,12 @@
 #define CONST_DNSCACHE_LIFETIME             24*3600
 
 /*
+ * The number of entries in the logView ring buffer - how many log messages
+ * we can display in the GUI.
+ */
+#define CONST_LOG_VIEW_BUFFER_SIZE          50
+
+/*
  *  Tunables - changing these should allow ntop to handle more or less of some thing.
  *                  Uncommonly changed ones...
  */

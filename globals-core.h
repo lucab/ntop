@@ -690,7 +690,7 @@ int getdomainname(char *name, size_t len);
 
 #ifdef SSLWATCHDOG_DEBUG
 #define sslwatchdogDebug(text, bpcFlag, note) { \
-          traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %s\n", \
+          traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %s", \
                                  myGlobals.sslwatchdogCondvar.predicate, \
                                  ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
                                  ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
@@ -698,7 +698,7 @@ int getdomainname(char *name, size_t len);
                                  note); \
 }
 #define sslwatchdogDebugN(text, bpcFlag, note) { \
-          traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %d\n", \
+          traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %d", \
                                  myGlobals.sslwatchdogCondvar.predicate, \
                                  ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
                                  ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
@@ -706,7 +706,7 @@ int getdomainname(char *name, size_t len);
                                  note); \
 }
 #define sslwatchdogError(text, bpcFlag, note) { \
-          traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %s\n", \
+          traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %s", \
                                  myGlobals.sslwatchdogCondvar.predicate, \
                                  ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
                                  ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
@@ -714,7 +714,7 @@ int getdomainname(char *name, size_t len);
                                  note); \
 }
 #define sslwatchdogErrorN(text, bpcFlag, note) { \
-          traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %d\n", \
+          traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %d", \
                                  myGlobals.sslwatchdogCondvar.predicate, \
                                  ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
                                  ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \

@@ -216,7 +216,7 @@ static int readHTTPheader(char* theRequestedURL,
       if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 0) {
 	errorCode = FLAG_HTTP_REQUEST_TIMEOUT; /* Timeout */
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Timeout while reading from socket.\n");
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Timeout while reading from socket.");
 #endif
 	break;
       }
@@ -239,7 +239,7 @@ static int readHTTPheader(char* theRequestedURL,
     if(rc != 1) {
       idxChar = 0;
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Socket read returned %d (errno=%d)\n", rc, errno);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Socket read returned %d (errno=%d)", rc, errno);
 #endif
       /* FIXME (DL): is valid to write to the socket after this condition? */
       break; /* Empty line */
@@ -247,7 +247,7 @@ static int readHTTPheader(char* theRequestedURL,
     } else if((errorCode == 0) && !isprint(aChar[0]) && !isspace(aChar[0])) {
       errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Rcvd non expected char '%c' [%d/0x%x]\n", aChar[0], aChar[0], aChar[0]);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Rcvd non expected char '%c' [%d/0x%x]", aChar[0], aChar[0], aChar[0]);
 #endif
     } else {
       if(aChar[0] == '\r') {
@@ -261,7 +261,7 @@ static int readHTTPheader(char* theRequestedURL,
 	numLine++;
 	lineStr[idxChar] = '\0';
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: read HTTP %s line: %s [%d]\n",
+	traceEvent(CONST_TRACE_INFO, "DEBUG: read HTTP %s line: %s [%d]",
 	           (numLine>1) ? "header" : "request", lineStr, idxChar);
 #endif
 	if(errorCode != 0) {
@@ -273,20 +273,20 @@ static int readHTTPheader(char* theRequestedURL,
 	  if(idxChar < 9) {
 	    errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Too short request line.\n");
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Too short request line.");
 #endif
 
 	  } else if(strncmp(&lineStr[idxChar-9], " HTTP/", 6) != 0) {
 	    errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Malformed request line.\n");
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Malformed request line.");
 #endif
 
 	  } else if((strncmp(&lineStr[idxChar-3], "1.0", 3) != 0) &&
 	            (strncmp(&lineStr[idxChar-3], "1.1", 3) != 0)) {
 	    errorCode = FLAG_HTTP_INVALID_VERSION;
 #ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Unsupported HTTP version.\n");
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Unsupported HTTP version.");
 #endif
 
 	  } else {
@@ -305,7 +305,7 @@ static int readHTTPheader(char* theRequestedURL,
 	    } else {
 	      errorCode = FLAG_HTTP_INVALID_METHOD;
 #ifdef DEBUG
-	      traceEvent(CONST_TRACE_INFO, "DEBUG: Unrecognized method in request line.\n");
+	      traceEvent(CONST_TRACE_INFO, "DEBUG: Unrecognized method in request line.");
 #endif
 	    }
 
@@ -330,7 +330,7 @@ static int readHTTPheader(char* theRequestedURL,
 		  && (strncasecmp(lineStr, "Content-Length: ", 16) == 0)) {
 	  contentLen = atoi(&lineStr[16]);
 #ifdef DEBUG
-	  traceEvent(CONST_TRACE_INFO, "DEBUG: len=%d [%s/%s]\n", contentLen, lineStr, &lineStr[16]);
+	  traceEvent(CONST_TRACE_INFO, "DEBUG: len=%d [%s/%s]", contentLen, lineStr, &lineStr[16]);
 #endif
 	} else if((idxChar >= 12)
 		  && (strncasecmp(lineStr, "User-Agent: ", 12) == 0)) {
@@ -478,11 +478,11 @@ void sendStringLen(char *theString, unsigned int len) {
     rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
 #endif
 
-    /* traceEvent(CONST_TRACE_INFO, "rc=%d\n", rc); */
+    /* traceEvent(CONST_TRACE_INFO, "rc=%d", rc); */
 
     if((errno != 0) || (rc < 0)) {
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Socket write returned %d (errno=%d)\n", rc, errno);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Socket write returned %d (errno=%d)", rc, errno);
 #endif
       if((errno == EAGAIN /* Resource temporarily unavailable */) && (retries<3)) {
 	len -= rc;
@@ -802,7 +802,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))){
     statusIdx = 0;
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_WARNING, "DEBUG: INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n",
+    traceEvent(CONST_TRACE_WARNING, "DEBUG: INTERNAL ERROR: invalid HTTP status id (%d) set to zero.",
 	       statusIdx);
 #endif
   }
@@ -959,13 +959,13 @@ static int checkURLsecurity(char *url) {
    }
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: URL security: Testing '%s'...\n", workURL);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: URL security: Testing '%s'...", workURL);
 #endif
 
   /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
 
   if(((token = strstr(workURL, "%")) != NULL) && (strncmp(token, "%3A" /* : */, 3))) {
-      traceEvent(CONST_TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request (url=%s)\n", workURL);
+      traceEvent(CONST_TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request (url=%s)", workURL);
       /* Explicitly, we're updating the real URL, not the copy, so it's not used anywhere in ntop */
       url[0] = '\0'; 
       free(workURL);
@@ -991,28 +991,28 @@ static int checkURLsecurity(char *url) {
 
   /* a double slash? */
   if(strstr(workURL, "//") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request\n");
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request");
     free(workURL);
     return(2);
   }
 
   /* a double &? */
   if(strstr(workURL, "&&") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found && in URL...rejecting request\n");
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found && in URL...rejecting request");
     free(workURL);
     return(2);
   }
 
   /* a double ?? */
   if(strstr(workURL, "??") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found ?? in URL...rejecting request\n");
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found ?? in URL...rejecting request");
     free(workURL);
     return(2);
   }
 
   /* a double dot? */
   if(strstr(workURL, "..") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(3): ERROR: Found .. in URL...rejecting request\n");
+    traceEvent(CONST_TRACE_ERROR, "URL security(3): ERROR: Found .. in URL...rejecting request");
     free(workURL);
     return(3);
   }
@@ -1055,7 +1055,7 @@ static int checkURLsecurity(char *url) {
   countSections = countOKnumeric = countOKextension = 0;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: URL security: NOTE: Tokenizing '%s'...\n", workURL);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: URL security: NOTE: Tokenizing '%s'...", workURL);
 #endif
 
   for(i=strlen(workURL)-1; i >= 0; i--)
@@ -1144,12 +1144,12 @@ RETSIGTYPE httpcleanup(int signo) {
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
-  traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:     backtrace is:\n");
+  traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:     backtrace is:");
   if (size < 2)
-      traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:         **unavailable!\n");
+      traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:         **unavailable!");
   else /* Ignore the 0th entry, that's our cleanup() */
     for(i=1; i<size; i++)
-      traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:          %2d. %s\n", i, strings[i]);
+      traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:          %2d. %s", i, strings[i]);
 
   exit(0);
  #endif
@@ -1206,7 +1206,7 @@ static int returnHTTPPage(char* pageName,
     return(FLAG_HTTP_FORBIDDEN_PAGE);
   }
 
-  /* traceEvent(CONST_TRACE_INFO, "Page: '%s'\n", pageName); */
+  /* traceEvent(CONST_TRACE_INFO, "Page: '%s'", pageName); */
 
   questionMark = strchr(pageName, '?');
 
@@ -1307,7 +1307,7 @@ static int returnHTTPPage(char* pageName,
 #endif
 
 #if defined(HTTP_DEBUG) || defined(I18N_DEBUG)
-      traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: Testing for page %s at %s\n", pageName, tmpStr);
+      traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: Testing for page %s at %s", pageName, tmpStr);
 #endif
 	
       if(stat(tmpStr, &statbuf) == 0) {
@@ -1316,7 +1316,7 @@ static int returnHTTPPage(char* pageName,
 	  break;
 	}
 
-	traceEvent(CONST_TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
+	traceEvent(CONST_TRACE_ERROR, "Cannot open file '%s', ignored...", tmpStr);
       }
 
 #ifdef MAKE_WITH_I18N
@@ -1325,7 +1325,7 @@ static int returnHTTPPage(char* pageName,
   }
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: tmpStr=%s - fd=0x%x\n", tmpStr, fd);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: tmpStr=%s - fd=0x%x", tmpStr, fd);
 #endif
 
   if(fd != NULL) {
@@ -1487,7 +1487,7 @@ static int returnHTTPPage(char* pageName,
        so punt!
     */
 #ifdef LOG_URLS
-    traceEvent(CONST_TRACE_INFO, "Note: favicon.ico request, returned 404.\n");
+    traceEvent(CONST_TRACE_INFO, "Note: favicon.ico request, returned 404.");
 #endif
     returnHTTPpageNotFound();
     printTrailer=0;
@@ -1514,7 +1514,7 @@ static int returnHTTPPage(char* pageName,
 
 	if(!messageSent) {
 	  messageSent = 1;
-	  traceEvent(CONST_TRACE_INFO, "NOTE: -L | --use-syslog=facility not specified, child processes will log to the default (%d).\n", 
+	  traceEvent(CONST_TRACE_INFO, "NOTE: -L | --use-syslog=facility not specified, child processes will log to the default (%d).", 
 		     DEFAULT_SYSLOG_FACILITY);
 	}
       }
@@ -2037,6 +2037,10 @@ static int returnHTTPPage(char* pageName,
       sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
       printNtopProblemReport();
       printTrailer = 0;
+    } else if(strncmp(pageName, STR_VIEW_LOG_HTML, strlen(STR_VIEW_LOG_HTML)) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
+      printNtopLogReport();
+      printTrailer = 0;
     } else
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
@@ -2129,7 +2133,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 
   theUser[0] = '\0';
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Checking '%s'\n", theRequestedURL);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Checking '%s'", theRequestedURL);
 #endif
 
   if(usersLoaded == 0) {
@@ -2186,7 +2190,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   strcpy(theUser, user);
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: User='%s' - Pw='%s'\n", user, thePw);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: User='%s' - Pw='%s'", user, thePw);
 #endif
 
   if(snprintf(users, LEN_GENERAL_WORK_BUFFER, "1%s", user) < 0)
@@ -2229,7 +2233,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
   if(gzflush(compressFileFd, Z_FINISH) != Z_OK) {
     int err;
-    traceEvent(CONST_TRACE_WARNING, "gzflush error %d(%s)\n",
+    traceEvent(CONST_TRACE_WARNING, "gzflush error %d(%s)",
 	       err, gzerror(compressFileFd, &err));
   }
 
@@ -2347,11 +2351,11 @@ void handleHTTPrequest(struct in_addr from) {
 #endif
 
 #if defined(HTTP_DEBUG) || defined(I18N_DEBUG)
- traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: Requested URL = '%s', length = %d\n", requestedURL, postLen);
- traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: User-Agent = '%s'\n", agent);
+ traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: Requested URL = '%s', length = %d", requestedURL, postLen);
+ traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: User-Agent = '%s'", agent);
 
  #ifdef MAKE_WITH_I18N
-  traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Accept-Language = '%s'\n", workLanguage);
+  traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Accept-Language = '%s'", workLanguage);
  #endif
 
 #endif
@@ -2429,7 +2433,7 @@ void handleHTTPrequest(struct in_addr from) {
 #ifdef MAKE_WITH_I18N
  #ifdef I18N_DEBUG
   for (i=0; i<numLang; i++) {
-      traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Requested Language [%d] = '%s'\n",
+      traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Requested Language [%d] = '%s'",
                  i,
                  requestedLanguage[i]);
   }

@@ -1048,6 +1048,10 @@ int main(int argc, char *argv[]) {
 #endif
 
 /* Above here, the -L value wasn't set, so we use printf(). */
+
+/* create the Mutex... must be before the 1st traceEvent() call */
+  createMutex(&myGlobals.logViewMutex);     /* synchronize logView buffer */
+
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s [%s] (%s build)",
 	     version, THREAD_MODE, osName, buildDate);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2003 by %s", author);

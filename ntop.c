@@ -73,7 +73,7 @@ void* pcapDispatch(void *_i) {
   int pcap_fd;
   fd_set readMask;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread started...\n");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread started...");
 
   pcap_fd = pcap_fileno(myGlobals.device[i].pcapPtr);
 
@@ -118,7 +118,7 @@ void* pcapDispatch(void *_i) {
     }
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...\n");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...");
   return(NULL); 
 }
 
@@ -128,7 +128,7 @@ void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread started...\n");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread started...");
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
@@ -139,12 +139,12 @@ void* pcapDispatch(void *_i) {
 		 pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } /* else
-	 traceEvent(CONST_TRACE_INFO, "1) %d\n", numPkts++);
+	 traceEvent(CONST_TRACE_INFO, "1) %d", numPkts++);
       */
     HEARTBEAT(2, "pcapDispatch()", NULL);
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...\n");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...");
   return(NULL); 
 
 }
@@ -163,7 +163,7 @@ RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
     if(status == 0) {
       myGlobals.numChildren--;
       traceEvent(CONST_TRACE_INFO,
-		 "A child has terminated [pid=%d status=%d children=%d]\n",
+		 "A child has terminated [pid=%d status=%d children=%d]",
 		 pidId, status, myGlobals.numChildren);
     }
 #endif
@@ -343,7 +343,7 @@ static int handleProtocolList(char* protoName, char *protocolList) {
   }
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "%s - %s\n", protoName, protocolList);
+  traceEvent(CONST_TRACE_INFO, "%s - %s", protoName, protocolList);
 #endif
 
   /* The trick below is used to avoid to modify static
@@ -373,7 +373,7 @@ static int handleProtocolList(char* protoName, char *protocolList) {
       myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
       myGlobals.numIpProtosToMonitor++;
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "%d) %s - %s\n",
+      traceEvent(CONST_TRACE_INFO, "%d) %s - %s",
 		 myGlobals.numIpProtosToMonitor, protoName, protocolList);
 #endif
   }
@@ -826,13 +826,13 @@ RETSIGTYPE cleanup(int signo) {
 
     traceEvent(CONST_TRACE_ERROR, "BACKTRACE: *****ntop error: Signal(%d)", signo);
 
-    traceEvent(CONST_TRACE_ERROR, "BACKTRACE:     backtrace is:\n");
+    traceEvent(CONST_TRACE_ERROR, "BACKTRACE:     backtrace is:");
     if (size < 2) {
-      traceEvent(CONST_TRACE_ERROR, "BACKTRACE:         **unavailable!\n");
+      traceEvent(CONST_TRACE_ERROR, "BACKTRACE:         **unavailable!");
     } else {
       /* Ignore the 0th entry, that's our cleanup() */
       for (i=1; i<size; i++) {
-	traceEvent(CONST_TRACE_ERROR, "BACKTRACE:          %2d. %s\n", i, strings[i]);
+	traceEvent(CONST_TRACE_ERROR, "BACKTRACE:          %2d. %s", i, strings[i]);
       }
     }
   }
@@ -985,7 +985,7 @@ RETSIGTYPE cleanup(int signo) {
 
     if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
-	traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s\n",
+	traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s",
 		   formatPkts((Counter)pcapStat.ps_recv), myGlobals.device[i].name);
 
 	traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped by kernel", formatPkts((Counter)pcapStat.ps_drop));
@@ -1047,7 +1047,15 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.tcpSessionsMutex);
   deleteMutex(&myGlobals.purgePortsMutex);
+  /* DO NOT DO deleteMutex(&myGlobals.logViewMutex); - need it for the last traceEvent()s */
 #endif
+
+  if (myGlobals.logView != NULL) {
+      for(i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++)
+          if (myGlobals.logView[i] != NULL) 
+              free(myGlobals.logView[i]);
+      free(myGlobals.logView);
+  }
 
 #ifdef WIN32
   termWinsock32();
@@ -1091,18 +1099,18 @@ RETSIGTYPE cleanup(int signo) {
   myGlobals.endNtop = 1;
 
 #ifdef MEMORY_DEBUG
-  traceEvent(CONST_TRACE_INFO, "===================================\n");
+  traceEvent(CONST_TRACE_INFO, "===================================");
   termLeaks();
-  traceEvent(CONST_TRACE_INFO, "===================================\n");
+  traceEvent(CONST_TRACE_INFO, "===================================");
 #endif
 
 #ifdef MTRACE
   muntrace();
 #endif
 
-  traceEvent(CONST_TRACE_INFO, "===================================\n");
-  traceEvent(CONST_TRACE_INFO, "        ntop is shutdown...        \n");
-  traceEvent(CONST_TRACE_INFO, "===================================\n");
+  traceEvent(CONST_TRACE_INFO, "===================================");
+  traceEvent(CONST_TRACE_INFO, "        ntop is shutdown...        ");
+  traceEvent(CONST_TRACE_INFO, "===================================");
 
   exit(0);
 }

@@ -43,7 +43,7 @@ static void updateThptStats(int deviceToUpdate,
     return;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "updateThptStats(%d, %d, %d, %d, %d, %d)\n",
+  traceEvent(CONST_TRACE_INFO, "updateThptStats(%d, %d, %d, %d, %d, %d)",
 	 topSentSerial, secondSentSerial, thirdSentSerial,
 	 topHourSentSerial, secondHourSentSerial,
 	 thirdHourSentSerial);
@@ -190,7 +190,7 @@ static void updateThptStats(int deviceToUpdate,
   myGlobals.device[deviceToUpdate].numThptSamples++;
   
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "updateThptStats() completed.\n");
+  traceEvent(CONST_TRACE_INFO, "updateThptStats() completed.");
 #endif
 }
 

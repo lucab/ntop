@@ -39,7 +39,7 @@ void ntop_ssl_error_report(char * whyMe) {
     es=CRYPTO_thread_id();
     while ((l=ERR_get_error_line_data(&file,&line,&data,&flags)) != 0) {
         ERR_error_string_n(l, buf, sizeof buf);
-        traceEvent(CONST_TRACE_ERROR, "SSL(%s)ERROR [Thread %lu]: %s at %s(%d) %s\n",
+        traceEvent(CONST_TRACE_ERROR, "SSL(%s)ERROR [Thread %lu]: %s at %s(%d) %s",
                                 whyMe,
                                 es,
                                 buf,
@@ -62,7 +62,7 @@ int init_ssl(void) {
   myGlobals.sslInitialized = 0;
 
   if(myGlobals.sslPort == 0) {
-    traceEvent(CONST_TRACE_INFO, "SSL is present but https is disabled: use -W <https port> for enabling it\n");
+    traceEvent(CONST_TRACE_INFO, "SSL is present but https is disabled: use -W <https port> for enabling it");
     return(0); /* The user decided NOT to use SSL */
   }
 
@@ -88,8 +88,8 @@ int init_ssl(void) {
      * aren't if ntop is started during boot. OTOP, if the user won't run egd, then
      * well, there's only so much we're going to do...
      */
-    traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Initializing.\n");
-    traceEvent(CONST_TRACE_NOISY, "SSL_PRNG: see http://www.openssl.org/support/faq.cgi#USER1.\n");
+    traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Initializing.");
+    traceEvent(CONST_TRACE_NOISY, "SSL_PRNG: see http://www.openssl.org/support/faq.cgi#USER1.");
 
     RAND_add(version, strlen(version), (double)4.0);
     RAND_add(buildDate, strlen(buildDate), (double)4.0);
@@ -108,7 +108,7 @@ int init_ssl(void) {
 
     directoryPointer = opendir(myGlobals.dbPath);
     if (directoryPointer == NULL) {
-        traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unable to find directory '%s' for additional randomness\n", myGlobals.dbPath);
+        traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unable to find directory '%s' for additional randomness", myGlobals.dbPath);
     } else {
         while((dp = readdir(directoryPointer)) != NULL) {
             if (dp->d_name[0] != '.') {
@@ -123,12 +123,12 @@ int init_ssl(void) {
     }
 
     if (RAND_status() == 0) {
-        traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unsuccessfully initialized - https:// may not work.\n");
+        traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unsuccessfully initialized - https:// may not work.");
     } else {
-        traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Successfully initialized.\n");
+        traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Successfully initialized.");
     }
   } else {
-      traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Automatically initialized!\n");
+      traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Automatically initialized!");
   }
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
@@ -148,7 +148,7 @@ int init_ssl(void) {
 
   if(fd == NULL) {
     traceEvent(CONST_TRACE_WARNING,
-	       "SSL: Unable to find certificate '%s'. SSL support has been disabled\n",
+	       "SSL: Unable to find certificate '%s'. SSL support has been disabled",
 	       CONST_SSL_CERTF_FILENAME);
     return(-1);
   } else
@@ -216,7 +216,7 @@ static int init_ssl_connection(SSL *con) {
 
   if ((i=SSL_accept(con)) <= 0) {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "SSL_accept: %d\n", i);
+    traceEvent(CONST_TRACE_INFO, "SSL_accept: %d", i);
 #endif
 
     if (BIO_sock_should_retry(i))
@@ -224,7 +224,7 @@ static int init_ssl_connection(SSL *con) {
 
     verify_error=SSL_get_verify_result(con);
     if (verify_error != X509_V_OK) {
-      traceEvent(CONST_TRACE_WARNING, "verify error:%s\n", X509_verify_cert_error_string(verify_error));
+      traceEvent(CONST_TRACE_WARNING, "verify error:%s", X509_verify_cert_error_string(verify_error));
     }
     else
       ntop_ssl_error_report("ssl_init_connection");
@@ -240,22 +240,22 @@ static int init_ssl_connection(SSL *con) {
     peer=SSL_get_peer_certificate(con);
 
     if(peer != NULL) {
-      traceEvent(CONST_TRACE_INFO, "Client certificate\n");
+      traceEvent(CONST_TRACE_INFO, "Client certificate");
       X509_NAME_oneline(X509_get_subject_name(peer),buf,BUFSIZ);
-      traceEvent(CONST_TRACE_INFO, "subject=%s\n",buf);
+      traceEvent(CONST_TRACE_INFO, "subject=%s",buf);
       X509_NAME_oneline(X509_get_issuer_name(peer),buf,BUFSIZ);
-      traceEvent(CONST_TRACE_INFO, "issuer=%s\n",buf);
+      traceEvent(CONST_TRACE_INFO, "issuer=%s",buf);
       X509_free(peer);
     }
 
     if (SSL_get_shared_ciphers(con,buf,BUFSIZ) != NULL)
-      traceEvent(CONST_TRACE_INFO, "Shared ciphers:%s\n",buf);
+      traceEvent(CONST_TRACE_INFO, "Shared ciphers:%s",buf);
     str=SSL_CIPHER_get_name(SSL_get_current_cipher(con));
-    traceEvent(CONST_TRACE_INFO, "CIPHER is %s\n",(str != NULL)?str:"(NONE)");
-    if (con->hit) traceEvent(CONST_TRACE_INFO, "Reused session-id\n");
+    traceEvent(CONST_TRACE_INFO, "CIPHER is %s",(str != NULL)?str:"(NONE)");
+    if (con->hit) traceEvent(CONST_TRACE_INFO, "Reused session-id");
     if (SSL_ctrl(con,SSL_CTRL_GET_FLAGS,0,NULL) &
 	TLS1_FLAGS_TLS_PADDING_BUG)
-      traceEvent(CONST_TRACE_WARNING, "Peer has incorrect TLSv1 block padding\n");
+      traceEvent(CONST_TRACE_WARNING, "Peer has incorrect TLSv1 block padding");
   }
 #endif
 

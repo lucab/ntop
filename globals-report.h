@@ -251,6 +251,7 @@ extern void* sslwatchdogChildThread(void* notUsed _UNUSED_);
 #define CHANGE_FILTER_HTML              "changeFilter.html"
 #define FILTER_INFO_HTML                "filterInfo.html"
 #define STR_PROBLEMRPT_HTML             "ntopProblemReport.html"
+#define STR_VIEW_LOG_HTML               "viewLog.html"
 
 /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
 #define RESET_STATS_HTML              "resetStats.html"

@@ -168,7 +168,7 @@ void initIPServices(void) {
 
 	  /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 	  if(3 == sscanf(tmpLine, "%63[^ \t] %d/%15s", name, &numPort, proto)) {
-	    /* traceEvent(CONST_TRACE_INFO, "'%s' - '%s' - '%d'\n", name, proto, numPort); */
+	    /* traceEvent(CONST_TRACE_INFO, "'%s' - '%s' - '%d'", name, proto, numPort); */
 
 	    if(strcmp(proto, "tcp") == 0)
 	      addPortHashEntry(myGlobals.tcpSvc, numPort, name);
@@ -505,41 +505,41 @@ void initCounters(void) {
   /*
    * Check if the ettercap passive file exists - warn if not.
    */
-  traceEvent(CONST_TRACE_NOISY, "OSFP: Looking for OS fingerprint file, %s\n", CONST_OSFINGERPRINT_FILE);
+  traceEvent(CONST_TRACE_NOISY, "OSFP: Looking for OS fingerprint file, %s", CONST_OSFINGERPRINT_FILE);
 
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
 
     snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_OSFINGERPRINT_FILE);
 
-    traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'\n", buf);
+    traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'", buf);
     fd = gzopen(buf, "r");
 
     if(fd) {
-      traceEvent(CONST_TRACE_NOISY, "OSFP: ...found!\n");
+      traceEvent(CONST_TRACE_NOISY, "OSFP: ...found!");
       configFileFound = 1;
       gzclose(fd);
       break;
     }
   }
   if(configFileFound == 0) {
-    traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.\n", CONST_OSFINGERPRINT_FILE);
-    traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without OS fingerprinting.\n");
-    traceEvent(CONST_TRACE_NOISY, "OSFP: If the file 'magically' appears, OS fingerprinting will automatically be enabled.\n");
+    traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.", CONST_OSFINGERPRINT_FILE);
+    traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without OS fingerprinting.");
+    traceEvent(CONST_TRACE_NOISY, "OSFP: If the file 'magically' appears, OS fingerprinting will automatically be enabled.");
   }
 
   /*
    * Check if AS file exists - warn if not.
    */
-  traceEvent(CONST_TRACE_NOISY, "OSFP: Looking for AS list file, %s\n", CONST_ASLIST_FILE);
+  traceEvent(CONST_TRACE_NOISY, "OSFP: Looking for AS list file, %s", CONST_ASLIST_FILE);
 
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
     snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_ASLIST_FILE);
 
-    traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'\n", buf);
+    traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'", buf);
     fd = gzopen(buf, "r");
 
     if(fd) {
-      traceEvent(CONST_TRACE_NOISY, "OSFP: ...found!\n");
+      traceEvent(CONST_TRACE_NOISY, "OSFP: ...found!");
       readASs(fd);
       gzclose(fd);
       break;
@@ -547,8 +547,8 @@ void initCounters(void) {
   }
 
   if(configFileFound == 0) {
-    traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.\n", CONST_ASLIST_FILE);
-    traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without AS information.\n");
+    traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.", CONST_ASLIST_FILE);
+    traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without AS information.");
   }
 
   /* i18n */
@@ -597,10 +597,10 @@ void initCounters(void) {
 	       errno);
     traceEvent(CONST_TRACE_NOISY, "continues without multiple language support");
   } else {
-    traceEvent(CONST_TRACE_NOISY, "I18N: scandir(%s,...) returned %d\n", locale_dir, nLang);
+    traceEvent(CONST_TRACE_NOISY, "I18N: scandir(%s,...) returned %d", locale_dir, nLang);
     for (iLang=0; (iLang<nLang) && (myGlobals.maxSupportedLanguages < MAX_LANGUAGES_SUPPORTED); iLang++) {
 #ifdef I18N_DEBUG
-      traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: %2d. '%s'\n", iLang, dirList[iLang]->d_name);
+      traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: %2d. '%s'", iLang, dirList[iLang]->d_name);
 #endif
       if(dirList[iLang]->d_name[0] == '.') {
 	/* skip parent/self directory entries */
@@ -695,7 +695,7 @@ void initCounters(void) {
 
 #ifdef I18N_DEBUG
       } else {
-	traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: Skipping file '%s' (type %d)\n",
+	traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: Skipping file '%s' (type %d)",
 		   dirList[iLang]->d_name,
 		   dirList[iLang]->d_type);
 #endif
@@ -831,7 +831,7 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 	   );
        
        if(directory == NULL) {
-	   traceEvent(CONST_TRACE_FATALERROR, "Possible solution: please use '-P <directory>'\n");
+	   traceEvent(CONST_TRACE_FATALERROR, "Possible solution: please use '-P <directory>'");
        }
 
     exit(-1);
@@ -855,6 +855,7 @@ void reinitMutexes (void) {
  * they are not!  The code is wrong, but a real fix will have to be in 2.3...
  * (BMS 06-2003, ntop 2.2c)
  */
+  createMutex(&myGlobals.logViewMutex);
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
   createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
@@ -984,7 +985,7 @@ void initApps(void) {
 #else
     readLsofInfo();
     if(myGlobals.numProcesses == 0) {
-      traceEvent(CONST_TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?\n");
+      traceEvent(CONST_TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?");
     }
 #endif
   }
@@ -1263,7 +1264,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	    continue; /* No virtual Interfaces */
 	  myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(deviceDescr);
 	  myGlobals.device[myGlobals.numDevices++].name = strdup(deviceName);
-	  traceEvent(CONST_TRACE_INFO, "Added: %s\n", deviceName);
+	  traceEvent(CONST_TRACE_INFO, "Added: %s", deviceName);
 	} else
 	  break; /* No virtual interface */
       }

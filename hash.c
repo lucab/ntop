@@ -98,14 +98,14 @@ u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
   if(hostIpAddress != NULL) {
     char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
-    traceEvent(CONST_TRACE_INFO, "hashHost(%s/%s/%d) = %u\n",
+    traceEvent(CONST_TRACE_INFO, "hashHost(%s/%s/%d) = %u",
 	       intoa(*hostIpAddress),
 	       etheraddr_string(ether_addr, buf),
 	       (*useIPAddressForSearching), idx);
   } else {
     char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
-    traceEvent(CONST_TRACE_INFO, "hashHost(%s/%d) = %u\n",
+    traceEvent(CONST_TRACE_INFO, "hashHost(%s/%d) = %u",
 	       etheraddr_string(ether_addr, buf),
 	       (*useIPAddressForSearching), idx);
   }
@@ -228,7 +228,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     myGlobals.device[actualDeviceId].hostsno--;
 
 #if 1
-    traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleted a hash_hostTraffic entry [%s/%s/%s]\n",
+    traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleted a hash_hostTraffic entry [%s/%s/%s]",
 	       host->ethAddressString, host->hostNumIpAddress, host->hostSymIpAddress);
 #endif
 
@@ -542,7 +542,7 @@ void purgeIdleHosts(int actDevice) {
 		    }
 
 		    if(maxBucket >= (len-1)) {
-			traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: selected to limit...\n");
+			traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: selected to limit...");
 			hashFull = 1;
 			break;
 		    }
@@ -911,7 +911,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 
 #ifdef HASH_DEBUG
 	if(0) {
-	    traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]\n",
+	    traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]",
 		       el->ethAddressString, el->hostNumIpAddress, idx, actualDeviceId,
 		       myGlobals.device[actualDeviceId].actualHashSize, myGlobals.device[actualDeviceId].hostsno);
 	}
@@ -929,7 +929,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 #ifdef DEBUG
 	{
 	    char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
-	    traceEvent(CONST_TRACE_INFO, "lookupHost(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
+	    traceEvent(CONST_TRACE_INFO, "lookupHost(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]",
 		       idx, actualDeviceId,
 		       etheraddr_string(ether_addr, etherbuf), el->hostSymIpAddress,
 		       el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,

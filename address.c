@@ -126,7 +126,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 
     retrievedAddress = (StoredAddress*)data_data.dptr;
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Fetched data from cache: '%s' [%s]\n",
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Fetched data from cache: '%s' [%s]",
 	       retrievedAddress->symAddress, keyBuf);
 #endif
 
@@ -152,14 +152,14 @@ static void resolveAddress(struct in_addr *hostAddr,
     if(data_data.dptr != NULL) {
 #ifdef GDBM_DEBUG
       if (data_data.dsize == (sizeof(StoredAddress)+1))
-        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Dropped data for %s [wrong data size]\n", keyBuf);
+        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Dropped data for %s [wrong data size]", keyBuf);
       else
-        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Ignored old record for %s\n", keyBuf);
+        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Ignored old record for %s", keyBuf);
 #endif
       free(data_data.dptr);
 #ifdef GDBM_DEBUG
     } else {
-      traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Unable to retrieve %s\n", keyBuf);
+      traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Unable to retrieve %s", keyBuf);
 #endif
     }
 
@@ -443,7 +443,7 @@ static void resolveAddress(struct in_addr *hostAddr,
         myGlobals.dnsCacheStoredLookup++;
 
 #ifdef GDBM_DEBUG
-        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Added data: '%s' [%s]\n", symAddr, keyBuf);
+        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Added data: '%s' [%s]", symAddr, keyBuf);
 #endif
       }
 
@@ -487,7 +487,7 @@ static void queueAddress(struct in_addr elem) {
 	myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
 
 #ifdef DNS_DEBUG
-   traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Queued address '%s' [addr queue=%d/max=%d]\n",
+   traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Queued address '%s' [addr queue=%d/max=%d]",
 	      tmpBuf, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
 #endif
   } else {
@@ -526,11 +526,11 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
   struct in_addr addr;
   datum key_data, data_data;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution thread started...\n");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution thread started...");
 
   while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...\n");
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...");
 #endif
 
 #ifdef MAKE_WITH_SEMAPHORES
@@ -540,7 +540,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #endif
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Address resolution started...\n");
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Address resolution started...");
 #endif
 
     data_data = gdbm_firstkey(myGlobals.addressQueueFile);
@@ -553,7 +553,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
       HEARTBEAT(2, "dequeueAddress()", NULL);
 
 #ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Dequeued address... [%u][key=%s] (#addr=%d)\n",
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Dequeued address... [%u][key=%s] (#addr=%d)",
 		 addr.s_addr, key_data.dptr == NULL ? "<>" : key_data.dptr,
 		 myGlobals.addressQueuedCurrent);
 #endif
@@ -561,7 +561,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
       resolveAddress(&addr, 0, 0 /* use default device */);
 
 #ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved address %u\n", addr.s_addr);
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved address %u", addr.s_addr);
 #endif
 
       myGlobals.addressQueuedCurrent--;
@@ -572,7 +572,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     }
   } /* endless loop */
 
-  traceEvent(CONST_TRACE_WARNING, "THREADMGMT: Address resolution thread terminated...\n");
+  traceEvent(CONST_TRACE_WARNING, "THREADMGMT: Address resolution thread terminated...");
   return(NULL); /* NOTREACHED */
 }
 
@@ -658,7 +658,7 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
     retrievedAddress = (StoredAddress*)data_data.dptr;
 
 #ifdef GDBM_DEBUG
-    traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: gdbm_fetch(..., {%s, %d}) = %s, age %d\n",
+    traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: gdbm_fetch(..., {%s, %d}) = %s, age %d",
                key_data.dptr, key_data.dsize, 
                retrievedAddress->symAddress,
                myGlobals.actTime - retrievedAddress->recordCreationTime);
@@ -757,7 +757,7 @@ char* llcsap_string(u_char sap) {
   *cp++ = hex[sap & 0xf];
   *cp++ = '\0';
 
-  /* traceEvent(CONST_TRACE_INFO, "%s\n", buf); */
+  /* traceEvent(CONST_TRACE_INFO, "%s", buf); */
   return(buf);
 }
 
@@ -1190,7 +1190,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   memset(addr_list, 0, sizeof(addr_list));
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "id=0x%X - flags=0x%X\n", transactionId, flags);
+  traceEvent(CONST_TRACE_INFO, "id=0x%X - flags=0x%X", transactionId, flags);
 #endif
 
   if(length > sizeof(answer))

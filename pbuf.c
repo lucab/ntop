@@ -494,7 +494,7 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].broadcastPkts, numPkts);
   } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "%s->%s\n",
+    traceEvent(CONST_TRACE_INFO, "%s->%s",
 	       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
 #endif
     incrementTrafficCounter(&srcHost->pktMulticastSent, numPkts);
@@ -1152,7 +1152,7 @@ static void processIpPkt(const u_char *bp,
 					     udpDataLength, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
-	    traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: %s:%d->%s:%d [request: %d][positive reply: %d]\n",
+	    traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: %s:%d->%s:%d [request: %d][positive reply: %d]",
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       isRequest, positiveReply);
@@ -1196,7 +1196,7 @@ static void processIpPkt(const u_char *bp,
 
 	      if(microSecTimeDiff > 0) {
 #ifdef DEBUG
-		traceEvent(CONST_TRACE_INFO, "TransactionId=0x%X [%.1f ms]\n",
+		traceEvent(CONST_TRACE_INFO, "TransactionId=0x%X [%.1f ms]",
 			   transactionId, ((float)microSecTimeDiff)/1000);
 #endif
 
@@ -1550,7 +1550,7 @@ static void processIpPkt(const u_char *bp,
   }
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "IP=%d TCP=%d UDP=%d ICMP=%d (len=%d)\n",
+  traceEvent(CONST_TRACE_INFO, "IP=%d TCP=%d UDP=%d ICMP=%d (len=%d)",
 	     (int)myGlobals.device[actualDeviceId].ipBytes.value,
 	     (int)myGlobals.device[actualDeviceId].tcpBytes.value,
 	     (int)myGlobals.device[actualDeviceId].udpBytes.value,
@@ -1584,13 +1584,13 @@ void queuePacket(u_char * _deviceId,
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Got packet from %s (%d)\n", myGlobals.device[*_deviceId].name, *_deviceId);
+  traceEvent(CONST_TRACE_INFO, "Got packet from %s (%d)", myGlobals.device[*_deviceId].name, *_deviceId);
 #endif
 
   if(myGlobals.packetQueueLen >= CONST_PACKET_QUEUE_LENGTH) {
     int deviceId;
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]\n",
+    traceEvent(CONST_TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]",
 	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
@@ -1610,7 +1610,7 @@ void queuePacket(u_char * _deviceId,
     HEARTBEAT(0, "queuePacket() drop, sleep(1)...woke", NULL);
   } else {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "About to queue packet... \n");
+    traceEvent(CONST_TRACE_INFO, "About to queue packet... ");
 #endif
     accessMutex(&myGlobals.packetQueueMutex, "queuePacket");
     memcpy(&myGlobals.packetQueue[myGlobals.packetQueueHead].h, h, sizeof(struct pcap_pkthdr));
@@ -1627,12 +1627,12 @@ void queuePacket(u_char * _deviceId,
       myGlobals.maxPacketQueueLen = myGlobals.packetQueueLen;
     releaseMutex(&myGlobals.packetQueueMutex);
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Queued packet... [packet queue=%d/max=%d]\n",
+    traceEvent(CONST_TRACE_INFO, "Queued packet... [packet queue=%d/max=%d]",
 	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
 #ifdef DEBUG_THREADS
-    traceEvent(CONST_TRACE_INFO, "+ [packet queue=%d/max=%d]\n", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+    traceEvent(CONST_TRACE_INFO, "+ [packet queue=%d/max=%d]", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
   }
 
@@ -1662,11 +1662,11 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
   struct pcap_pkthdr h;
   u_char p[MAX_PACKET_LEN];
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet processor thread (%ld) started...\n", myGlobals.dequeueThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet processor thread (%ld) started...", myGlobals.dequeueThreadId);
 
   while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Waiting for packet...\n");
+    traceEvent(CONST_TRACE_INFO, "Waiting for packet...");
 #endif
 
     while((myGlobals.packetQueueLen == 0)
@@ -1681,7 +1681,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Got packet...\n");
+    traceEvent(CONST_TRACE_INFO, "Got packet...");
 #endif
     accessMutex(&myGlobals.packetQueueMutex, "dequeuePacket");
     memcpy(&h, &myGlobals.packetQueue[myGlobals.packetQueueTail].h,
@@ -1705,11 +1705,11 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     myGlobals.packetQueueLen--;
     releaseMutex(&myGlobals.packetQueueMutex);
 #ifdef DEBUG_THREADS
-    traceEvent(CONST_TRACE_INFO, "- [packet queue=%d/max=%d]\n", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+    traceEvent(CONST_TRACE_INFO, "- [packet queue=%d/max=%d]", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Processing packet... [packet queue=%d/max=%d]\n",
+    traceEvent(CONST_TRACE_INFO, "Processing packet... [packet queue=%d/max=%d]",
 	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
@@ -1718,7 +1718,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     processPacket((u_char*)((long)deviceId), &h, p);
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet Processor thread (%ld) terminated...\n", myGlobals.dequeueThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet Processor thread (%ld) terminated...", myGlobals.dequeueThreadId);
   return(NULL);
 }
 
@@ -1750,7 +1750,7 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
       }
     } else {
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "No match on %s for '%s'\n", myGlobals.device[deviceId].name,
+      traceEvent(CONST_TRACE_INFO, "No match on %s for '%s'", myGlobals.device[deviceId].name,
 		 list->flowName);
 #endif
     }
@@ -1856,7 +1856,7 @@ void processPacket(u_char *_deviceId,
   {
     static long numPkt=0;
 
-    /* traceEvent(CONST_TRACE_INFO, "%ld (%ld)\n", numPkt, length); */
+    /* traceEvent(CONST_TRACE_INFO, "%ld (%ld)", numPkt, length); */
 
     if(numPkt ==  /* 10000 */ 1000000) {
       cleanup(2);
@@ -1893,7 +1893,7 @@ void processPacket(u_char *_deviceId,
   actualDeviceId = getActualInterface(deviceId);
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "deviceId=%d - actualDeviceId=%ld\n", deviceId, actualDeviceId);
+  traceEvent(CONST_TRACE_INFO, "deviceId=%d - actualDeviceId=%ld", deviceId, actualDeviceId);
 #endif
 
   updateDevicePacketStats(length, actualDeviceId);
@@ -1908,7 +1908,7 @@ void processPacket(u_char *_deviceId,
      && (length > myGlobals.mtuSize[myGlobals.device[deviceId].datalink]) ) {
     /* Sanity check */
     if(myGlobals.enableSuspiciousPacketDump) {
-      traceEvent(CONST_TRACE_WARNING, "Packet # %u too long (len = %u)!\n",
+      traceEvent(CONST_TRACE_WARNING, "Packet # %u too long (len = %u)!",
 		 (unsigned int)myGlobals.device[deviceId].ethernetPkts.value,
 		 (unsigned int)length);
       dumpSuspiciousPacket(actualDeviceId);
@@ -1924,7 +1924,7 @@ void processPacket(u_char *_deviceId,
 #endif
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "actualDeviceId = %d\n", actualDeviceId);
+  traceEvent(CONST_TRACE_INFO, "actualDeviceId = %d", actualDeviceId);
 #endif
 
   hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
@@ -2326,7 +2326,7 @@ void processPacket(u_char *_deviceId,
 		  updateHostName(srcHost);
 		}
 #ifdef DEBUG
-		traceEvent(CONST_TRACE_INFO, "%s [%s][%x]\n", serverName,
+		traceEvent(CONST_TRACE_INFO, "%s [%s][%x]", serverName,
 			   getSAPInfo(serverType, 0), serverType);
 #endif
 	      }
@@ -2456,7 +2456,7 @@ void processPacket(u_char *_deviceId,
 	    } else {
 	      /* Unknown Protocol */
 #ifdef UNKNOWN_PACKET_DEBUG
-	      traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: [%u] [%x] %s %s > %s\n",
+	      traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: [%u] [%x] %s %s > %s",
 			 (u_short)sap_type,(u_short)sap_type,
 			 etheraddr_string(ether_src, etherbuf),
 			 llcsap_string(llcHeader.ssap & ~CONST_LLC_GSAP),
@@ -2567,7 +2567,7 @@ void processPacket(u_char *_deviceId,
 	  break;
 	default:
 #ifdef UNKNOWN_PACKET_DEBUG
-	  traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: %s/%s->%s/%s [eth type %d (0x%x)]\n",
+	  traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: %s/%s->%s/%s [eth type %d (0x%x)]",
 		     srcHost->hostNumIpAddress, srcHost->ethAddressString,
 		     dstHost->hostNumIpAddress, dstHost->ethAddressString,
 		     eth_type, eth_type);

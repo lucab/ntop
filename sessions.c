@@ -29,7 +29,7 @@
 
 u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
   if(idx > myGlobals.device[actualDeviceId].actualHashSize) {
-    traceEvent(CONST_TRACE_ERROR, "Index error idx=%u/deviceId=%d:0-%d @ [%s:%d]\n",
+    traceEvent(CONST_TRACE_ERROR, "Index error idx=%u/deviceId=%d:0-%d @ [%s:%d]",
 	       idx, actualDeviceId,
 	       myGlobals.device[actualDeviceId].actualHashSize-1,
 	       file, line);
@@ -255,7 +255,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 		     u_int length) {
   u_short clientPort, serverPort;
 
-  /* traceEvent(CONST_TRACE_INFO, "%d\n", length); */
+  /* traceEvent(CONST_TRACE_INFO, "%d", length); */
 
   /* Now let's update the list of ports recently used by the hosts */
   if(sport > dport) {
@@ -445,7 +445,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
      return;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Called scanTimedoutTCPSessions (device=%d, sessions=%d)\n",
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Called scanTimedoutTCPSessions (device=%d, sessions=%d)",
 	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
@@ -515,7 +515,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   } /* end for */
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: scanTimedoutTCPSessions: freed %u sessions\n", freeSessionCount);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: scanTimedoutTCPSessions: freed %u sessions", freeSessionCount);
 #endif
 }
 
@@ -663,7 +663,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: TCP hash [act size: %d]\n",
+      traceEvent(CONST_TRACE_INFO, "DEBUG: TCP hash [act size: %d]",
 		 myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
@@ -723,7 +723,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     }
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: ->%d\n", idx);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: ->%d", idx);
 #endif
     theSession->lastSeen = myGlobals.actTime;
 
@@ -758,7 +758,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  microSecTimeDiff = getTimeMapping(transactionId, tvstrct);
 
 #ifdef HTTP_DEBUG
-	  traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: %s->%s [%s]\n",
+	  traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: %s->%s [%s]",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress, tmpStr);
 #endif
@@ -984,7 +984,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		    unescape(tmpStr, sizeof(tmpStr), &file[begin]);
 
 #ifdef P2P_DEBUG
-		    traceEvent(CONST_TRACE_INFO, "Kazaa: %s->%s [%s]\n",
+		    traceEvent(CONST_TRACE_INFO, "Kazaa: %s->%s [%s]",
 			       srcHost->hostNumIpAddress,
 			       dstHost->hostNumIpAddress,
 			       tmpStr);
@@ -1003,7 +1003,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		if(strlen(user) > 48)
 		  user[48] = '\0';
 
-		/* traceEvent(CONST_TRACE_INFO, "DEBUG: USER='%s'\n", user); */
+		/* traceEvent(CONST_TRACE_INFO, "DEBUG: USER='%s'", user); */
 
 		updateHostUsers(user, BITFLAG_P2P_USER, srcHost);
 		theSession->isP2P = FLAG_P2P_KAZAA;
@@ -1074,7 +1074,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    unescape(tmpStr, sizeof(tmpStr), &file[begin]);
 
 #ifdef P2P_DEBUG
-	      traceEvent(CONST_TRACE_INFO, "Gnutella: %s->%s [%s]\n",
+	      traceEvent(CONST_TRACE_INFO, "Gnutella: %s->%s [%s]",
 			 srcHost->hostNumIpAddress,
 			 dstHost->hostNumIpAddress,
 			 tmpStr);
@@ -1112,7 +1112,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	      if(strlen(file) > 64) file[strlen(file)-64] = '\0';
 
 #ifdef P2P_DEBUG
-	      traceEvent(CONST_TRACE_INFO, "WinMX: %s->%s [%s][%s]\n",
+	      traceEvent(CONST_TRACE_INFO, "WinMX: %s->%s [%s][%s]",
 			 srcHost->hostNumIpAddress,
 			 dstHost->hostNumIpAddress,
 			 user, file);
@@ -1662,7 +1662,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    break;
 #ifdef DEBUG
 	  default:
-	    traceEvent(CONST_TRACE_ERROR, "DEBUG: ERROR: unable to handle received FIN (%u) !\n", fin);
+	    traceEvent(CONST_TRACE_ERROR, "DEBUG: ERROR: unable to handle received FIN (%u) !", fin);
 #endif
 	  }
 	}

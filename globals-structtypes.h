@@ -1922,6 +1922,11 @@ XML*/
   IPNode *asHead;
   int    asMem, asCount;
 
+  /* LogView */
+  char ** logView;         /* vector of log messages */
+  int logViewNext;
+  PthreadMutex logViewMutex;
+
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
 #endif

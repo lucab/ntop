@@ -117,12 +117,14 @@ void initWinsock32() {
 
 
 #ifdef WIN32_DEMO
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "\n-----------------------------------------------------------");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "-----------------------------------------------------------");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WARNING: this application is a limited ntop version able to");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "capture up to %d packets. If you are interested", MAX_NUM_PACKETS);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "in the full version please have a look at the ntop");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "home page http://www.ntop.org/.");
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "-----------------------------------------------------------\n");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "-----------------------------------------------------------");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "");
 #endif
 }
 

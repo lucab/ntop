@@ -41,7 +41,7 @@ void showUsers(void) {
   return_data = gdbm_firstkey(myGlobals.pwFile);
 
   while (return_data.dptr != NULL) {
-    /* traceEvent(CONST_TRACE_INFO, "1) -> %s\n", return_data.dptr); */
+    /* traceEvent(CONST_TRACE_INFO, "1) -> %s", return_data.dptr); */
     key_data = return_data;
 
     if(key_data.dptr[0] == '1') /* 1 = user */{
@@ -235,7 +235,7 @@ void doAddUser(int len) {
 #endif
       data_data.dsize = strlen(data_data.dptr)+1;
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "User='%s' - Pw='%s [%s]'\n", user, pw, data_data.dptr);
+      traceEvent(CONST_TRACE_INFO, "User='%s' - Pw='%s [%s]'", user, pw, data_data.dptr);
 #endif
 
       if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
@@ -269,7 +269,7 @@ void showURLs(void) {
   return_data = gdbm_firstkey(myGlobals.pwFile);
 
   while (return_data.dptr != NULL) {
-    /* traceEvent(CONST_TRACE_INFO, "1) -> %s\n", return_data.dptr); */
+    /* traceEvent(CONST_TRACE_INFO, "1) -> %s", return_data.dptr); */
     key_data = return_data;
 
     if(key_data.dptr[0] == '2') { /* 2 = URL */
@@ -357,7 +357,7 @@ void addURL(char* url) {
 	  item = strtok_r(NULL, "&", &strtokState);
 	}
 	if(item != NULL) {
-	  traceEvent(CONST_TRACE_ERROR, "Too many users for URL='%s'\n", url);
+	  traceEvent(CONST_TRACE_ERROR, "Too many users for URL='%s'", url);
 	}
 	authorisedUser[i] = NULL;
       }
@@ -844,7 +844,7 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 #endif
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Data: '%s' (%d)\n", buf, idx);
+  traceEvent(CONST_TRACE_INFO, "Data: '%s' (%d)", buf, idx);
 #endif
 
   return (idx);
@@ -929,7 +929,7 @@ static void addKeyIfMissing(char* key, char* value,
       data_data.dptr = value;
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "'%s' <-> '%s'\n", key, data_data.dptr);
+    traceEvent(CONST_TRACE_INFO, "'%s' <-> '%s'", key, data_data.dptr);
 #endif
 
     data_data.dsize = strlen(data_data.dptr)+1;

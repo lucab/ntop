@@ -69,7 +69,7 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
 #if defined(CFG_MULTITHREADED)
     if(lockMutex) releaseMutex(&leaksMutex);
 #endif
-    traceEvent(CONST_TRACE_FATALERROR, "malloc (not enough memory): %s, %d\n",  theFile, theLine);
+    traceEvent(CONST_TRACE_FATALERROR, "malloc (not enough memory): %s, %d",  theFile, theLine);
     exit(-1);
   }
   
@@ -131,7 +131,7 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
   }
 
   if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d\n", 
+    traceEvent(CONST_TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d", 
 	       thePtr, theFile, theLine);
 #if defined(CFG_MULTITHREADED)
     releaseMutex(&leaksMutex);
@@ -179,7 +179,7 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
   }
 
   if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Free error (Ptr %p NOT allocated): %s, %d\n", 
+    traceEvent(CONST_TRACE_WARNING, "Free error (Ptr %p NOT allocated): %s, %d", 
 	       *thePtr, theFile, theLine);
 #if defined(CFG_MULTITHREADED)
     releaseMutex(&leaksMutex);
@@ -248,7 +248,7 @@ unsigned int PrintMemoryBlocks(void) {
     MemoryBlock* tmp;
 
     if(!theScan->alreadyTraced) {
-      traceEvent(CONST_TRACE_INFO,"Block %5d (addr %p, size %4d): %s\n", i++, 
+      traceEvent(CONST_TRACE_INFO,"Block %5d (addr %p, size %4d): %s", i++, 
 		 theScan->memoryLocation, theScan->blockSize, theScan->programLocation);
       totMem += theScan->blockSize;
     }
@@ -276,7 +276,7 @@ size_t GimmePointerSize(void* thePtr) {
     theScan = theScan->nextBlock;
 
   if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "GimmePointerSize error: Ptr %p NOT allocated\n", thePtr);
+    traceEvent(CONST_TRACE_WARNING, "GimmePointerSize error: Ptr %p NOT allocated", thePtr);
     return(-1);
   } else
     return(theScan->blockSize);
@@ -293,10 +293,10 @@ int GimmePointerInfo(void* thePtr) {
     theScan = theScan->nextBlock;
 
   if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "GimmePointerInfo error: Ptr %p NOT allocated\n", thePtr);
+    traceEvent(CONST_TRACE_WARNING, "GimmePointerInfo error: Ptr %p NOT allocated", thePtr);
     return -1;
   } else {      
-    traceEvent(CONST_TRACE_WARNING, "Block (addr %p, size %d): %s\n", theScan->memoryLocation, 
+    traceEvent(CONST_TRACE_WARNING, "Block (addr %p, size %d): %s", theScan->memoryLocation, 
 	       theScan->blockSize, theScan->programLocation);
     return 0;
   }
@@ -313,7 +313,7 @@ void myAddLeak(void* thePtr, int theLine, char* theFile) {
   tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
 
   if(tmpBlock == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n", 
+    traceEvent(CONST_TRACE_WARNING, "Malloc error (not enough memory): %s, %d", 
 	       theFile, theLine);
     return;
   }
@@ -340,7 +340,7 @@ void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
   }
 
   if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Free  block error (Ptr %p NOT allocated): %s, %d\n", 
+    traceEvent(CONST_TRACE_WARNING, "Free  block error (Ptr %p NOT allocated): %s, %d", 
 	       thePtr, theFile, theLine);
     return;
   } else {   
