@@ -27,55 +27,6 @@
 
 /* ************************************ */
 
-int retrieveHost(HostSerial theSerial, HostTraffic *el) {
-  if((theSerial != NO_PEER) && (theSerial != 0 /* Safety check: broadcast */)) {
-    datum key_data;
-    datum data_data;
-    char buf[128];
-
-    sprintf(buf, "%u", theSerial);
-    key_data.dptr  = buf;
-    key_data.dsize = strlen(buf)+1;
-
-#ifdef MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "retrieveHost");
-#endif
-    data_data = gdbm_fetch(myGlobals.serialCache, key_data);
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
-      
-    if(data_data.dptr != NULL) {
-      memset(el, 0, sizeof(el));
-      if(strlen(data_data.dptr) == 17) /* MAC Address */ {
-	strcpy(el->ethAddressString, data_data.dptr);
-	el->hostIpAddress.s_addr = 0x1234; /* dummy */
-      } else {
-	strcpy(el->hostNumIpAddress, data_data.dptr);
-	el->hostIpAddress.s_addr = htonl(inet_addr(el->hostNumIpAddress));
-	/* traceEvent(TRACE_INFO, "---------------"); */
-	fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
-	/* traceEvent(TRACE_INFO, "==============="); */
-	if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
-	  char sniffedName[MAXDNAME];
-
-	  if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))
-	    strcpy(el->hostSymIpAddress, sniffedName);
-	}
-      }
-
-      free(data_data.dptr);
-      return(0);
-    } else {
-      traceEvent(TRACE_INFO, "Unable to find serial %s", buf);
-      return(-1);
-    }
-  } else
-    return(-1);
-}
-
-/* ************************************ */
-
 void formatUsageCounter(UsageCounter usageCtr,
 			TrafficCounter topValue,
 			/* If this value != 0 then a percentage is printed */
@@ -104,16 +55,17 @@ void formatUsageCounter(UsageCounter usageCtr,
   }
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(retrieveHost(usageCtr.peersIndexes[i], &el) == 0) {
-      if(!sendHeader) {
-	sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
-	sendHeader = 1;
-      }
-      
-      sendString("\n<li>");     
-      sendString(makeHostLink(&el, 0, 0, 0));
-    } else {
-      traceEvent(TRACE_INFO, "Unable to find serial %u", usageCtr.peersIndexes[i]);
+    if(usageCtr.peersIndexes[i] != NO_PEER) {
+      if(retrieveHost(usageCtr.peersIndexes[i], &el) == 0) {
+	if(!sendHeader) {
+	  sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
+	  sendHeader = 1;
+	}
+	
+	sendString("\n<li>");     
+	sendString(makeHostLink(&el, 0, 0, 0));
+      } else
+	traceEvent(TRACE_INFO, "Unable to find serial %u", usageCtr.peersIndexes[i]);
     }
   }
   

@@ -66,7 +66,6 @@ typedef struct ntopGlobals {
   u_char stickyHosts;                /* 'c' */
   int daemonMode;                    /* 'd' */
   char *rFileName;                   /* 'f' */
-  u_int enableNetFlowSupport;        /* 'g' */
   char *devices;                     /* 'i' */
   short borderSnifferMode;           /* 'j' */
   int filterExpressionInExtraFrame;  /* 'k' */
@@ -311,10 +310,21 @@ typedef struct ntopGlobals {
   int numChildren;
 
   /* NetFlow */
-  int netflowSocket;
-  struct sockaddr_in dest;
-  u_int32_t destAddr, globalFlowSequence, globalFlowPktCount;
+  /* Flow emission */
+  int netFlowOutSocket;
+  u_int32_t globalFlowSequence, globalFlowPktCount;
   NetFlow5Record theRecord;
+  struct sockaddr_in netFlowDest;
+  /* Flow reception */
+  int netFlowInSocket, netFlowDeviceId;
+  u_short netFlowInPort;
+  
+  /* sFlow */
+  int sflowOutSocket, sflowInSocket, sflowDeviceId;
+  u_short sflowInPort; 
+  u_long numSamplesReceived, initialPool, lastSample;
+  u_int32_t flowSampleSeqNo, numSamplesToGo;
+  struct sockaddr_in sflowDest;
 
   /* http.c */
   FILE *accessLogFd;

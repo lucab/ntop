@@ -603,8 +603,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)realloc(myGlobals.device[actualDeviceId].hash_hostTraffic, sz);
 	    memset(&myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx],
 		   0, sizeof(struct hostTraffic*)*list->idx);
-	    traceEvent(TRACE_INFO, "Extending hash size [newSize=%d]",
-		       myGlobals.device[actualDeviceId].actualHashSize);
+	    traceEvent(TRACE_INFO, "Extending hash size [newSize=%d][deviceId=%d]",
+		       myGlobals.device[actualDeviceId].actualHashSize,
+		       actualDeviceId);
 	  } else
 	    list->idx = hostFound;
 
@@ -678,8 +679,21 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 			   _intoa(el->hostIpAddress, buf, sizeof(buf)),
 			   el->ethAddressString);
 	      }
+	    }
 
-	    } else if(hostIpAddress != NULL) {
+#ifdef DEBUG
+	    /*if((strcmp(etheraddr_string(ether_addr), "08:00:20:89:79:D7") == 0)
+	      || (strcmp(el->hostSymIpAddress, "more") == 0))*/
+	    printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
+		   etheraddr_string(ether_addr), el->hostSymIpAddress,
+		   el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno);
+#endif
+
+	    el->lastSeen = myGlobals.actTime;
+	    checkSpoofing(list->idx, actualDeviceId);
+	  }
+
+	  if(hostIpAddress != NULL) {
 	      el->hostIpAddress.s_addr = hostIpAddress->s_addr;
 	      strncpy(el->hostNumIpAddress,
 		      _intoa(*hostIpAddress, buf, sizeof(buf)),
@@ -707,18 +721,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		strncpy(el->hostSymIpAddress,
 			el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
 	    }
-
-#ifdef DEBUG
-	    /*if((strcmp(etheraddr_string(ether_addr), "08:00:20:89:79:D7") == 0)
-	      || (strcmp(el->hostSymIpAddress, "more") == 0))*/
-	    printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
-		   etheraddr_string(ether_addr), el->hostSymIpAddress,
-		   el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno);
-#endif
-
-	    el->lastSeen = myGlobals.actTime;
-	    checkSpoofing(list->idx, actualDeviceId);
-	  }
 
 #ifdef HASH_DEBUG
 	  traceEvent(TRACE_INFO, "Adding %s/%s [idx=%d][device=%d][actualHashSize=%d]\n",
@@ -751,7 +753,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
     if(el == NULL)
 	traceEvent(TRACE_INFO, "getHostInfo(idx=%d)(ptr=%x)",
 		   list->idx, myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx]);
-
 
     return(list->idx);
 }
@@ -800,3 +801,55 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
     traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed",
 	       actualDeviceId, hostIdx);
 }
+
+/* ************************************ */
+
+int retrieveHost(HostSerial theSerial, HostTraffic *el) {
+  if((theSerial != NO_PEER) 
+     && (theSerial != 0 /* Safety check: broadcast */)) {
+    datum key_data;
+    datum data_data;
+    char buf[128];
+
+    sprintf(buf, "%u", theSerial);
+    key_data.dptr  = buf;
+    key_data.dsize = strlen(buf)+1;
+
+#ifdef MULTITHREADED
+    accessMutex(&myGlobals.gdbmMutex, "retrieveHost");
+#endif
+    data_data = gdbm_fetch(myGlobals.serialCache, key_data);
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.gdbmMutex);
+#endif
+      
+    if(data_data.dptr != NULL) {
+      memset(el, 0, sizeof(el));
+      if(strlen(data_data.dptr) == 17) /* MAC Address */ {
+	strcpy(el->ethAddressString, data_data.dptr);
+	el->hostIpAddress.s_addr = 0x1234; /* dummy */
+      } else {
+	strcpy(el->hostNumIpAddress, data_data.dptr);
+	el->hostIpAddress.s_addr = htonl(inet_addr(el->hostNumIpAddress));
+	/* traceEvent(TRACE_INFO, "---------------"); */
+	fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
+	/* traceEvent(TRACE_INFO, "==============="); */
+	if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
+	  char sniffedName[MAXDNAME];
+
+	  if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))
+	    strcpy(el->hostSymIpAddress, sniffedName);
+	}
+      }
+
+      free(data_data.dptr);
+      return(0);
+    } else {
+      traceEvent(TRACE_INFO, "Unable to find serial %s", buf);
+      return(-1);
+    }
+  } else
+    return(-1);
+}
+
+

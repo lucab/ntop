@@ -218,7 +218,7 @@ void initIPServices(void) {
    Function below courtesy of
    Eric Dumazet <dada1@cosmosbay.com>
 */
-static void resetDevice(int devIdx) {
+void resetDevice(int devIdx) {
   int len;
   void *ptr;
 
@@ -419,7 +419,7 @@ int initGlobalValues(void) {
     myGlobals.numDequeueThreads = 1;
 #endif
   }
-  myGlobals.enableSessionHandling = 0;
+
   return(0);
 }
 
@@ -1216,7 +1216,8 @@ void startSniffer(void) {
 
 #ifdef MULTITHREADED
   for(i=0; i<myGlobals.numDevices; i++)
-    if(!myGlobals.device[i].virtualDevice) {
+    if((!myGlobals.device[i].virtualDevice)
+       && (myGlobals.device[i].pcapPtr != NULL)) {
       /*
        * (8) - NPS - Network Packet Sniffer (main thread)
        */
@@ -1225,4 +1226,40 @@ void startSniffer(void) {
 		 myGlobals.device[i].pcapDispatchThreadId, myGlobals.device[i].name);
     }
 #endif
+}
+
+/* ***************************** */
+
+u_int createDummyInterface(char *ifName) {
+  u_int i, j, mallocLen, deviceId;
+  NtopInterface *tmpDevice;
+  char *tmpDev;
+
+  deviceId = myGlobals.numDevices;    
+  mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
+  tmpDevice = (NtopInterface*)malloc(mallocLen);
+  memset(tmpDevice, 0, mallocLen);    
+  if(myGlobals.numDevices > 0) {
+    memcpy(tmpDevice, myGlobals.device, 
+	   sizeof(NtopInterface)*myGlobals.numDevices);
+    free(myGlobals.device);
+  }
+    
+  myGlobals.device = tmpDevice;    
+  myGlobals.numDevices++;
+  memset(&myGlobals.device[deviceId], 0, sizeof(NtopInterface));
+
+  resetDevice(deviceId);
+  myGlobals.device[deviceId].network.s_addr = 0xFFFFFFFF;
+  myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFFFF;
+  myGlobals.device[deviceId].name = strdup(ifName);
+  myGlobals.device[deviceId].virtualDevice = 0;
+  myGlobals.device[deviceId].datalink = DLT_EN10MB;
+  myGlobals.device[deviceId].hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.broadcastEntry;
+  myGlobals.device[deviceId].dummyDevice = 1; /* This is basically a fake device */
+
+  if(myGlobals.otherHostEntry != NULL)
+    myGlobals.device[deviceId].hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntry;    
+
+  return(deviceId);
 }

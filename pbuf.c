@@ -116,12 +116,12 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 /* ************************************ */
 
-static int handleIP(u_short port,
-		    u_int srcHostIdx,
-		    u_int dstHostIdx,
-		    u_int length,
-		    u_short isPassiveSession,
-		    int actualDeviceId) {
+int handleIP(u_short port,
+	     u_int srcHostIdx,
+	     u_int dstHostIdx,
+	     u_int length,
+	     u_short isPassiveSession,
+	     int actualDeviceId) {
   int idx;
   HostTraffic *srcHost, *dstHost;
 
@@ -211,14 +211,21 @@ static void addContactedPeers(HostTraffic *sender,   u_int senderIdx,
     if(sender != NULL) {
       for(found=0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	if(sender->contactedSentPeers.peersIndexes[i] != NO_PEER) {
+	  HostTraffic el;
+
 	  if((sender->contactedSentPeers.peersIndexes[i] == receiverIdx)
 	     || (((receiverIdx == myGlobals.broadcastEntryIdx) 
 		  || (receiverIdx == myGlobals.otherHostEntryIdx)
-		  || broadcastHost(receiver))
-		 && broadcastHost(myGlobals.device[actualDeviceId].hash_hostTraffic
-				  [checkSessionIdx(sender->contactedSentPeers.peersIndexes[i])]))) {
-	    found = 1;
-	    break;
+		  || broadcastHost(receiver)))) {
+	    HostTraffic el;
+	    
+	    if(retrieveHost(sender->contactedSentPeers.peersIndexes[i], &el) == 0) {
+	      HostTraffic *el1 = &el;
+	      if(broadcastHost(el1)) {
+		found = 1;
+		break;
+	      }
+	    }
 	  }
 	}
 
@@ -236,11 +243,16 @@ static void addContactedPeers(HostTraffic *sender,   u_int senderIdx,
 	  if((receiver->contactedRcvdPeers.peersIndexes[i] == senderIdx)
 	     || (((senderIdx == myGlobals.broadcastEntryIdx) 
 		  || (senderIdx == myGlobals.otherHostEntryIdx)
-		  || broadcastHost(sender))
-		 && broadcastHost(myGlobals.device[actualDeviceId].
-				  hash_hostTraffic[checkSessionIdx(receiver->contactedRcvdPeers.peersIndexes[i])]))) {
-	    found = 1;
-	    break;
+		  || broadcastHost(sender)))) {
+	    HostTraffic el;
+	    
+	    if(retrieveHost(receiver->contactedSentPeers.peersIndexes[i], &el) == 0) {
+	      HostTraffic *el1 = &el;
+	      if(broadcastHost(el1)) {
+		found = 1;
+		break;
+	      }
+	    }
 	  }
 	}
 
@@ -483,6 +495,7 @@ void purgeOldFragmentEntries(int actualDeviceId) {
 static void checkNetworkRouter(HostTraffic *srcHost,
 			       HostTraffic *dstHost,
 			       u_char *ether_dst, int actualDeviceId) {
+
   if((subnetLocalHost(srcHost) && (!subnetLocalHost(dstHost)) 
       && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
      || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost)) 
@@ -651,7 +664,7 @@ static void processIpPkt(const u_char *bp,
   memcpy(&ip, bp, sizeof(struct ip));
   hlen = (u_int)ip.ip_hl * 4;
 
-  if(in_cksum((const u_short *)bp, hlen, 0) != 0) {
+  if((bp != NULL) && (in_cksum((const u_short *)bp, hlen, 0) != 0)) {
     myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum++;
   }
 
@@ -764,9 +777,11 @@ static void processIpPkt(const u_char *bp,
     if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
   }
 
-  if(!myGlobals.borderSnifferMode) checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
+  if((!myGlobals.borderSnifferMode) && (!myGlobals.device[actualDeviceId].dummyDevice))
+    checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
   updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)h->len, actualDeviceId);
-  updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
+  if(!myGlobals.device[actualDeviceId].dummyDevice)
+    updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
 
   srcHost->ipBytesSent += length, dstHost->ipBytesRcvd += length;
 
@@ -1149,8 +1164,7 @@ static void processIpPkt(const u_char *bp,
 			   dport, udpDataLength,
 			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
 	
-	if(myGlobals.enableNetFlowSupport) 
-	  sendUDPflow(srcHost, dstHost, sport, dport, length, actualDeviceId);	
+	sendUDPflow(srcHost, dstHost, sport, dport, length, actualDeviceId);	
       }
     }
     break;
@@ -1335,8 +1349,8 @@ static void processIpPkt(const u_char *bp,
 	}
 	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
       }
-      if(myGlobals.enableNetFlowSupport) 
-	sendICMPflow(srcHost, dstHost, length, actualDeviceId);
+      
+      sendICMPflow(srcHost, dstHost, length, actualDeviceId);
     }
     break;
 
@@ -1345,8 +1359,7 @@ static void processIpPkt(const u_char *bp,
     myGlobals.device[actualDeviceId].ospfBytes += length;
     srcHost->ospfSent += length;
     dstHost->ospfRcvd += length;
-    if(myGlobals.enableNetFlowSupport) 
-      sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
+    sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
     break;
 
   case IPPROTO_IGMP:
@@ -1354,8 +1367,7 @@ static void processIpPkt(const u_char *bp,
     myGlobals.device[actualDeviceId].igmpBytes += length;
     srcHost->igmpSent += length;
     dstHost->igmpRcvd += length;
-    if(myGlobals.enableNetFlowSupport) 
-      sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
+    sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
     break;
 
   default:
@@ -1364,8 +1376,7 @@ static void processIpPkt(const u_char *bp,
     sport = dport = 0;
     srcHost->otherSent += length;
     dstHost->otherRcvd += length;
-    if(myGlobals.enableNetFlowSupport) 
-      sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
+    sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
     break;
   }
 
@@ -1643,7 +1654,7 @@ static char* timestamp(const struct timeval* t, int fmt) {
 
 /* ************************************ */
 
-static void updateDevicePacketStats(u_int length, int actualDeviceId) {
+void updateDevicePacketStats(u_int length, int actualDeviceId) {
   if(length < 64) myGlobals.device[actualDeviceId].rcvdPktStats.upTo64++;
   else if(length < 128) myGlobals.device[actualDeviceId].rcvdPktStats.upTo128++;
   else if(length < 256) myGlobals.device[actualDeviceId].rcvdPktStats.upTo256++;

@@ -97,15 +97,17 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-static short initialized = 0;
-static int sflowSocket = 0, debug = 0;
-static u_long numSamplesReceived = 0, initialPool = 0, lastSample = 0;
+static int debug = 0;
 
 #ifdef MULTITHREADED
-pthread_t sflowThread;
+pthread_t sFlowThread;
 #endif
 
-#define SFLOW_PORT 6343 
+/* #define DEBUG */
+
+#define SFLOW_COLLECTOR_PORT       "6343"  /* default */
+
+static void initSflowInSocket(); /* forward */
 
 /* ****************************** */
 
@@ -173,9 +175,9 @@ struct in6_addr
 #ifdef WIN32
 struct in6_addr {
 	union {
-		uint8_t		_S6_u8[16];	/* IPv6 address */
-		uint32_t	_S6_u32[4];	/* IPv6 address */
-		uint32_t	__S6_align;	/* Align on 32 bit boundary */
+		uint8_t	 _S6_u8[16];	/* IPv6 address */
+		uint32_t _S6_u32[4];	/* IPv6 address */
+		uint32_t __S6_align;	/* Align on 32 bit boundary */
 	} _S6_un;
 };
 
@@ -201,7 +203,7 @@ typedef struct _INMAddress {
 #define INM_MAX_HEADER_SIZE         256   /* The maximum sampled header size. */
 #define INM_DEFAULT_HEADER_SIZE     128
 #define INM_DEFAULT_COLLECTOR_PORT 6343
-#define INM_DEFAULT_SAMPLING_RATE   400
+#define INM_DEFAULT_SAMPLING_RATE  "400"
 
 /* The header protocol describes the format of the sampled header */
 enum INMHeader_protocol {
@@ -916,26 +918,24 @@ static void writePcapHeader() {
 static void writePcapPacket(SFSample *sample) {
   struct pcap_pkthdr hdr;
 
-  hdr.ts.tv_sec = time(NULL);
+  hdr.ts.tv_sec  = time(NULL);
   hdr.ts.tv_usec = 0;
-  hdr.caplen = sample->headerLen;
-  hdr.len = sample->sampledPacketSize;
+  hdr.caplen     = sample->headerLen;
+  hdr.len        = sample->sampledPacketSize;
 
-  if(!initialized) {
-    initialPool = sample->samplePool;
-    initialized = 1;
-  }
+  if(myGlobals.sflowInSocket == 0)
+    myGlobals.initialPool = sample->samplePool;
 
-  numSamplesReceived++;
-  lastSample = sample->samplePool;
+  myGlobals.numSamplesReceived++;
+  myGlobals.lastSample = sample->samplePool;
 
-  /* 
-     Fix below courtesy of 
+  /*
+     Fix below courtesy of
      Neil McKee <neil_mckee@inmon.com>
   */
-  if(sample->headerProtocol == 1) /* Ethernet */
-    queuePacket(NULL, &hdr, sample->header); /* Pass the packet to ntop */
-
+  if(sample->headerProtocol == INMHEADER_ETHERNET_ISO8023)
+    queuePacket((u_char*)myGlobals.sflowDeviceId,
+		&hdr, sample->header); /* Pass the packet to ntop */
 }
 
 /*_________________---------------------------__________________
@@ -1064,9 +1064,9 @@ static u_long *readExtendedUser(SFSample *sample, u_long *datap, u_char *endPtr)
   return datap;
 }
 
+/* ************************* */
 
-
-static void receiveSFlowSample(SFSample *sample)
+static void receiveSflowSample(SFSample *sample)
 {
   u_int numFlowSamples = 0;
   u_int32_t datagramVersion;
@@ -1514,33 +1514,86 @@ static void receiveSFlowSample(SFSample *sample)
 
 /* ****************************** */
 
-static void handlesflowHTTPrequest(char* url) {
+static void handlesFlowHTTPrequest(char* url) {
   char buf[1024];
   float percentage, err;
+  struct in_addr theDest;
 
   sendHTTPHeader(HTTP_TYPE_HTML, 0);
-  printHTMLheader("sFlow Statistics", 0);
+  printHTMLheader("<A HREF=http://www.sflow.org/>sFlow</A> Statistics", 0);
 
   sendString("<CENTER>\n<HR>\n");
 
-  if((!initialized)|| (numSamplesReceived == 0)) {
-    printNoDataYet();
+  if(url != NULL) {
+    char *key, *value;
+
+    key = strtok(url, "=");
+    if(key != NULL) value = strtok(NULL, "=");
+
+    if(value && key) {
+      if(strcmp(key, "port") == 0) {
+	if(myGlobals.sflowInPort != atoi(value)) {
+	  myGlobals.sflowInPort = atoi(value);
+	  storePrefsValue("sflow.sflowInPort", value);
+	  initSflowInSocket();
+	}
+      } else if(strcmp(key, "collectorIP") == 0)
+	myGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);      
+    }
+  }
+
+  /* *************************************** */
+
+  sendString("<TABLE BORDER>");
+  sendString("<TR><TH>Flow Direction</TH><TH COLSPAN=2>Description</TH></TR>\n");
+  sendString("<TR><TH>Incoming</TH><TD><FORM ACTION=/plugins/sFlow METHOD=GET>"
+	     "Local UDP Port</td> "
+	     "<td><INPUT NAME=port SIZE=5 VALUE=");
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.sflowInPort) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  sendString("> <INPUT TYPE=submit VALUE=Set><br>"
+	     "[default port is "SFLOW_COLLECTOR_PORT"]</FORM></td></tr>\n<br>");
+
+  /* *************************************** */
+
+  sendString("<TR><TH>Outgoing</TH><TD><FORM ACTION=/plugins/sFlow METHOD=GET>"
+	     "Remote Collector IP Address</td> "
+	     "<td><INPUT NAME=collectorIP SIZE=15 VALUE=");
+
+  theDest.s_addr = ntohl(myGlobals.sflowDest.sin_addr.s_addr);
+  sendString(_intoa(theDest, buf, sizeof(buf)));
+
+  sendString(">:6343 <INPUT TYPE=submit VALUE=Set><br>"
+	     "[default sampling rate is "INM_DEFAULT_SAMPLING_RATE" packets]</td></tr>\n");
+  sendString("<TR><TH>&nbsp;</TH><TD align=center COLSPAN=2>"
+	     "NOTE: Use 0 to disable export/collection</TD></TR>\n");
+  sendString("</table></CENTER><p>\n");
+
+  /* *************************************** */
+
+  if((myGlobals.sflowInSocket == 0)
+     || (myGlobals.numSamplesReceived == 0)) {
     printHTMLtrailer();
     return;
   }
 
-  percentage = (lastSample-initialPool)/numSamplesReceived;
-  err = 196 * sqrt((float)(1/(float)numSamplesReceived));
+  sendString("\n<HR>\n");
+
+  percentage = (myGlobals.lastSample-myGlobals.initialPool)/myGlobals.numSamplesReceived;
+  err = 196 * sqrt((float)(1/(float)myGlobals.numSamplesReceived));
 
   if(debug) {
     traceEvent(TRACE_INFO, "[%.2f %%][Error <= %.2f%%]", percentage, err);
   }
 
-  sendString("<TABLE BORDER>\n");
+  sendString("<CENTER>\n<TABLE BORDER>\n");
 
   if(snprintf(buf, sizeof(buf),
-	      "<TR><TH ALIGN=LEFT># Samples</TH><TD ALIGN=RIGHT>%u</TD></TR>\n",
-	      numSamplesReceived) < 0)
+	      "<TR><TH ALIGN=LEFT>Samples Num.</TH><TD ALIGN=RIGHT>%s</TD></TR>\n",
+	      formatPkts(myGlobals.numSamplesReceived)) < 0)
     BufferOverflow();
   sendString(buf);
 
@@ -1564,37 +1617,36 @@ static void handlesflowHTTPrequest(char* url) {
 
 /* ****************************** */
 
-static void* sflowMainLoop(void* notUsed _UNUSED_) {
-  fd_set sflowMask;
+static void* sFlowMainLoop(void* notUsed _UNUSED_) {
+  fd_set sFlowMask;
   int rc, len;
   u_char buffer[2048];
   SFSample sample;
   struct sockaddr_in fromHost;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "sflowMainLoop()");
+  traceEvent(TRACE_INFO, "sFlowMainLoop()");
 #endif
 
   for(;myGlobals.capturePackets == 1;) {
-    FD_ZERO(&sflowMask);
-    FD_SET(sflowSocket, &sflowMask);
+    FD_ZERO(&sFlowMask);
+    FD_SET(myGlobals.sflowInSocket, &sFlowMask);
 
-    if(select(sflowSocket+1, &sflowMask, NULL, NULL, NULL) > 0) {
+    if(select(myGlobals.sflowInSocket+1, &sFlowMask, NULL, NULL, NULL) > 0) {
       len = sizeof(fromHost);
-      rc = recvfrom(sflowSocket, &buffer, sizeof(buffer),
+      rc = recvfrom(myGlobals.sflowInSocket, (char*)&buffer, sizeof(buffer),
 		    0, (struct sockaddr*)&fromHost, &len);
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "select() = %d". rc);
+      traceEvent(TRACE_INFO, "select() = %d", rc);
 #endif
-
       if(rc > 0) {
 	memset(&sample, 0, sizeof(sample));
 	sample.rawSample    = buffer;
 	sample.rawSampleLen = rc;
 	sample.sourceIP     = fromHost.sin_addr;
 
-	receiveSFlowSample(&sample);
+	receiveSflowSample(&sample);
 
 	if(debug) traceEvent(TRACE_INFO, "rawSampleLen: %d", sample.rawSampleLen);
       } else {
@@ -1608,51 +1660,239 @@ static void* sflowMainLoop(void* notUsed _UNUSED_) {
 
 /* ****************************** */
 
-static void initSflowFunct(void) {
+static void initSflowInSocket() {
   struct sockaddr_in sin;
   int sockopt = 1;
 
-  initialized = 0;
-  sflowSocket = 0, debug = 0;
-  numSamplesReceived = 0, initialPool = 0, lastSample = 0;
-
-  sflowSocket = socket(AF_INET, SOCK_DGRAM, 0);
-
-  if(sflowSocket <= 0) {
-    traceEvent(TRACE_INFO, "Unable to open sFlow socket");
+  if(myGlobals.sflowInSocket != 0) {
+    traceEvent(TRACE_INFO, "sFlow collector terminated");
+    closeNwSocket(&myGlobals.sflowInSocket);
   }
 
-  setsockopt(sflowSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+  if(myGlobals.sflowInPort != 0) {
+    myGlobals.sflowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    setsockopt(myGlobals.sflowInSocket, SOL_SOCKET, SO_REUSEADDR,
+	       (char *)&sockopt, sizeof(sockopt));
 
-  sin.sin_family      = AF_INET;
-  sin.sin_port        = (int)htons(SFLOW_PORT);
-  sin.sin_addr.s_addr = INADDR_ANY;
+    sin.sin_family            = AF_INET;
+    sin.sin_port              = (int)htons(myGlobals.sflowInPort);
+    sin.sin_addr.s_addr       = INADDR_ANY;
 
-  if(bind(sflowSocket, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    traceEvent(TRACE_WARNING, "sFlow bind: port %d already in use.", SFLOW_PORT);
-    closeNwSocket(&sflowSocket);
-    return;
+    if(bind(myGlobals.sflowInSocket, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+      traceEvent(TRACE_WARNING, "sFlow collector: port %d already in use.",
+		 myGlobals.sflowInPort);
+      closeNwSocket(&myGlobals.sflowInSocket);
+      myGlobals.sflowInSocket = 0;
+      return;
+    }
+
+    traceEvent(TRACE_WARNING, "sFlow collector listening on port %d.",
+	       myGlobals.sflowInPort);
   }
+
+  if((myGlobals.sflowInSocket != 0) && (myGlobals.sflowDeviceId == 0))
+    myGlobals.sflowDeviceId = createDummyInterface("sFlow-device");
+
+  myGlobals.mergeInterfaces = 0; /* Use different devices */
+
+  if(myGlobals.sflowOutSocket == 0) {
+    char value[32];
+    struct hostent *hostAddr;
+    struct sockaddr_in dest;
+
+    myGlobals.sflowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    setsockopt(myGlobals.sflowOutSocket, SOL_SOCKET, SO_REUSEADDR,
+	       (char *)&sockopt, sizeof(sockopt));
+
+    myGlobals.sflowDest.sin_addr.s_addr = 0; 
+    myGlobals.sflowDest.sin_family      = AF_INET;
+    myGlobals.sflowDest.sin_port        = (int)htons(INM_DEFAULT_COLLECTOR_PORT);
+
+    if(fetchPrefsValue("sflow.sflowDest", value, sizeof(value)) == -1)
+      storePrefsValue("sflow.sflowDest", "");
+    else if(value[0] != '\0')
+      myGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
+
+    myGlobals.numSamplesToGo = atoi(INM_DEFAULT_SAMPLING_RATE);
+  }
+}
+
+/* ****************************** */
+
+static void setSflowOutSocket() {
+  struct sockaddr_in sin;
+  int sockopt = 1;
+
+  if(myGlobals.sflowOutSocket != 0) {
+    traceEvent(TRACE_INFO, "sFlow collector terminated");
+    closeNwSocket(&myGlobals.sflowOutSocket);
+  }
+
+  if(myGlobals.sflowInPort != 0) {
+    myGlobals.sflowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    setsockopt(myGlobals.sflowOutSocket, SOL_SOCKET, SO_REUSEADDR,
+	       (char *)&sockopt, sizeof(sockopt));
+
+    sin.sin_family            = AF_INET;
+    sin.sin_port              = (int)htons(myGlobals.sflowInPort);
+    sin.sin_addr.s_addr       = INADDR_ANY;
+
+    if(bind(myGlobals.sflowOutSocket, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+      traceEvent(TRACE_WARNING, "sFlow collector: port %d already in use.",
+		 myGlobals.sflowInPort);
+      closeNwSocket(&myGlobals.sflowOutSocket);
+      myGlobals.sflowOutSocket = 0;
+      return;
+    }
+
+    traceEvent(TRACE_WARNING, "sFlow collector listening on port %d.",
+	       myGlobals.sflowInPort);
+  }
+
+  if((myGlobals.sflowOutSocket != 0) && (myGlobals.sflowDeviceId == 0))
+    myGlobals.sflowDeviceId = createDummyInterface("sFlow-device");
+
+  myGlobals.mergeInterfaces = 0; /* Use different devices */
+}
+
+/* ****************************** */
+
+typedef struct sflowSample {
+  u_int32_t datagramVersion;
+  u_int32_t addressType;
+  u_int32_t agentAddress;
+  u_int32_t sequenceNo;
+  u_int32_t sysUpTime;
+  u_int32_t samplesInPacket;
+  u_int32_t sampleType;
+  u_int32_t sampleSequenceNo;
+  u_int32_t samplerId;
+  u_int32_t meanSkipCount;
+  u_int32_t samplePool;
+  u_int32_t dropEvents;
+  u_int32_t inputPort;
+  u_int32_t outputPort;
+  u_int32_t packet_data_tag;
+  u_int32_t headerProtocol;
+  u_int32_t sampledPacketSize;
+  u_int32_t headerLen;
+  u_char    packetData[DEFAULT_SNAPLEN];
+  u_int32_t extended_data_tag;
+} SflowSample;
+
+/* **************************************** */
+
+static void handleSflowPacket(u_char *_deviceId,
+			      const struct pcap_pkthdr *h,
+			      const u_char *p) {
+  SflowSample mySample;
+  int sampledPacketSize;
+  SFSample sample;
+  int deviceId, rc;
+
+  if(myGlobals.numSamplesToGo-- > 0) return;
+
+#ifdef WIN32
+  deviceId = 0;
+#else
+  deviceId = *_deviceId;
+#endif
+
+  sampledPacketSize = h->caplen < DEFAULT_SNAPLEN ? h->caplen : DEFAULT_SNAPLEN;
+
+  memset(&mySample, 0, sizeof(SflowSample));
+  mySample.datagramVersion   = htonl(INMDATAGRAM_VERSION2);
+  mySample.addressType       = htonl(INMADDRESSTYPE_IP_V4);
+  mySample.agentAddress      = htonl(myGlobals.device[deviceId].ifAddr.s_addr);
+  mySample.sequenceNo        = htonl(myGlobals.flowSampleSeqNo);
+  mySample.sysUpTime         = htonl(myGlobals.actTime);
+  mySample.samplesInPacket   = htonl(1);
+  mySample.sampleType        = htonl(FLOWSAMPLE);
+  mySample.sampleSequenceNo  = htonl(myGlobals.flowSampleSeqNo);
+  mySample.samplerId         = htonl(0); /*
+					    sFlowDataSource encoded as follows:
+					    The most significant byte of the
+					    source_id is used to indicate the
+					    type of sFlowDataSource
+					    (0 = ifIndex, 1 = smonVlanDataSource,
+					    2 = entPhysicalEntry) and the
+					    lower three bytes contain the
+					    relevant index value.
+					 */
+  mySample.meanSkipCount     = htonl(atoi(INM_DEFAULT_SAMPLING_RATE));
+  mySample.samplePool        = htonl(myGlobals.device[deviceId].ethernetPkts);
+  mySample.dropEvents        = htonl(0);
+  mySample.inputPort         = htonl(0);
+  mySample.outputPort        = htonl(0);
+  mySample.packet_data_tag   = htonl(INMPACKETTYPE_HEADER);
+  mySample.headerProtocol    = htonl(1);
+  mySample.sampledPacketSize = htonl(sampledPacketSize);
+  mySample.headerLen         = htonl(sampledPacketSize);
+  memcpy(mySample.packetData, p, sampledPacketSize);
+  mySample.extended_data_tag = htonl(0); /* No extended data */
+
+  myGlobals.flowSampleSeqNo++;
+
+#if 1
+  if(myGlobals.sflowDest.sin_addr.s_addr != 0) {
+    rc = sendto(myGlobals.sflowOutSocket, &mySample, sizeof(mySample)+sampledPacketSize, 0, 
+		(struct sockaddr *)&myGlobals.sflowDest, sizeof(myGlobals.sflowDest));
+    
+    if(rc == 0)
+      traceEvent(TRACE_INFO, "sendto returned %d [errno=%d][sflowOutSocket=%d]", 
+		 rc, errno, myGlobals.sflowOutSocket);
+  }
+#else
+  if(myGlobals.sflowDest.sin_addr.s_addr != 0) {
+    debug = 1;
+    memset(&sample, 0, sizeof(sample));
+    sample.rawSample           = &mySample;
+    sample.rawSampleLen        = sizeof(mySample)+sampledPacketSize;
+    sample.sourceIP.s_addr     = 0;
+    receiveSflowSample(&sample);
+  }
+#endif
+
+  myGlobals.numSamplesToGo = atoi(INM_DEFAULT_SAMPLING_RATE); /* reset value */
+}
+
+/* ****************************** */
+
+static void initsFlowFunct(void) {
+  char value[32];
+
+  myGlobals.sflowInSocket = 0, debug = 0;
+  myGlobals.numSamplesReceived = 0,
+    myGlobals.initialPool = 0,
+    myGlobals.lastSample = 0;
+
+  if(fetchPrefsValue("sflow.sflowInPort", value, sizeof(value)) == -1)
+    storePrefsValue("sflow.sflowInPort", "0");
+  else
+    myGlobals.sflowInPort = atoi(value);
+
+  initSflowInSocket();
 
 #ifdef MULTITHREADED
   /* This plugin works only with threads */
-  createThread(&sflowThread, sflowMainLoop, NULL);
+  createThread(&sFlowThread, sFlowMainLoop, NULL);
 #endif
 
   /* http://www.inmon.com/ */
-    traceEvent(TRACE_INFO, "Welcome to sFlow: listening on UDP port 6343...");
+    traceEvent(TRACE_INFO, "Welcome to sFlow: listening on UDP port %d...",
+	       myGlobals.sflowInPort);
     fflush(stdout);
 }
 
 /* ****************************** */
 
-static void termSflowFunct(void) {
+static void termsFlowFunct(void) {
 #ifdef MULTITHREADED
-  killThread(&sflowThread);
+  killThread(&sFlowThread);
 #endif
 
-  if(sflowSocket > 0)
-    closeNwSocket(&sflowSocket);
+  if(myGlobals.sflowInSocket > 0)  closeNwSocket(&myGlobals.sflowInSocket);
+  if(myGlobals.sflowOutSocket > 0) closeNwSocket(&myGlobals.sflowOutSocket);
 
   traceEvent(TRACE_INFO, "Thanks for using sFlow");
   traceEvent(TRACE_INFO, "Done.\n");
@@ -1661,18 +1901,18 @@ static void termSflowFunct(void) {
 
 /* ****************************** */
 
-static PluginInfo sflowPluginInfo[] = {
-  { "sflowPlugin",
-    "This plugin handles SFLOW packets",
-    "1.0", /* version */
+static PluginInfo sFlowPluginInfo[] = {
+  { "sFlowPlugin",
+    "This plugin is used to tune ntop's sFlow support",
+    "1.1", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
-    "sFlow", /* http://<host>:<port>/plugins/sflowWatch */
+    "sFlow", /* http://<host>:<port>/plugins/sFlowWatch */
     1, /* Active */
-    initSflowFunct, /* TermFunc   */
-    termSflowFunct, /* TermFunc   */
-    NULL, /* PluginFunc */
-    handlesflowHTTPrequest,
-    NULL /* no capture */
+    initsFlowFunct,    /* InitFunc   */
+    termsFlowFunct,    /* TermFunc   */
+    handleSflowPacket, /* PluginFunc */
+    handlesFlowHTTPrequest,
+    "ip" /* no capture */
   }
 };
 
@@ -1680,12 +1920,13 @@ static PluginInfo sflowPluginInfo[] = {
 
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
-PluginInfo* sflowPluginEntryFctn(void) {
+PluginInfo* sFlowPluginEntryFctn(void)
 #else
-  PluginInfo* PluginEntryFctn(void) {
+     PluginInfo* PluginEntryFctn(void)
 #endif
-    traceEvent(TRACE_INFO, "Welcome to %s. (C) 2002 by Luca Deri.\n",
-	       sflowPluginInfo->pluginName);
+{
+  traceEvent(TRACE_INFO, "Welcome to %s. (C) 2002 by Luca Deri.\n",
+	     sFlowPluginInfo->pluginName);
 
-    return(sflowPluginInfo);
-  }
+  return(sFlowPluginInfo);
+}

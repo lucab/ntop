@@ -548,10 +548,10 @@ void switchNwInterface(int _interface) {
 
   printHTMLheader("Network Interface Switch", HTML_FLAG_NO_REFRESH);
   sendString("<HR>\n<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
-
+  
   if(myGlobals.mergeInterfaces) {
-    if(snprintf(buf, sizeof(buf), "You can't switch among different inferfaces if the -M "
-		"command line switch is not used. Sorry.\n") < 0)
+    if(snprintf(buf, sizeof(buf), "You can't switch among different inferfaces unless the -M "
+		"command line switch is used. Sorry.\n") < 0)
       BufferOverflow();
     sendString(buf);
   } else if((mwInterface != -1) &&

@@ -30,7 +30,10 @@
 
 u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
   if(idx > myGlobals.device[actualDeviceId].actualHashSize) {
-    traceEvent(TRACE_ERROR, "Index error idx=%u @ [%s:%d]\n", idx, file, line);
+    traceEvent(TRACE_ERROR, "Index error idx=%u/deviceId=%d:0-%d @ [%s:%d]\n", 
+	       idx, actualDeviceId, 
+	       myGlobals.device[actualDeviceId].actualHashSize,
+	       file, line);
     return(0); /* Last resort */
   } else 
     return(idx);
@@ -53,14 +56,14 @@ static PortUsage* allocatePortUsage(void) {
 
 /* ************************************ */
 
-static void updateUsedPorts(HostTraffic *srcHost,
-			    u_int srcHostIdx,
-			    HostTraffic *dstHost,
-			    u_int dstHostIdx,
-			    u_short sport,
-			    u_short dport,
-			    u_int length) {
-
+void updateUsedPorts(HostTraffic *srcHost,
+		u_int srcHostIdx,
+		HostTraffic *dstHost,
+		u_int dstHostIdx,
+		u_short sport,
+		u_short dport,
+		u_int length) {
+  
   /* traceEvent(TRACE_INFO, "%d\n", length); */
 
   if((srcHost->portsUsage == NULL) || (dstHost->portsUsage == NULL))
@@ -1866,8 +1869,7 @@ void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceI
   }
 #endif
 
- /* To remove ASAP */
-  if(myGlobals.enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
+  sendTCPSessionFlow(sessionToPurge, actualDeviceId);
   notifyTCPSession(sessionToPurge, actualDeviceId);
 }
 

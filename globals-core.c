@@ -270,6 +270,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.enableThUpdate  = 1;
   myGlobals.enableIdleHosts = 1;
 
-  myGlobals.netflowSocket = -1;  
+  myGlobals.netFlowInSocket = -1;  
+  myGlobals.netFlowOutSocket = -1;  
   myGlobals.globalFlowSequence = myGlobals.globalFlowPktCount = 0;
 }

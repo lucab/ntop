@@ -31,11 +31,11 @@
 
 /*    This list is derived from RFC1945 in sec 3.2 Uniform Resource Identifiers
       which defines the permitted characters in a URI/URL.  Specifically, the
-      definitions of 
-      
+      definitions of
+
       reserved       = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+"
       unsafe         = CTL | SP | <"> | "#" | "%" | "<" | ">"
-      
+
       DO NOT put % here - it's special cased - it's too dangerous to handle the same...
 
       Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>
@@ -44,7 +44,7 @@
                                   "\010\011\012\013\014\015\016" \
                                   "\020\021\022\023\024\025\026" \
                                   "\030\031\032\033\034\035\036" \
-                                  " \"#+:;<>@\177"
+                                  " \"#+;<>@\177"
 
 struct _HTTPstatus {
     int statusCode;
@@ -133,7 +133,8 @@ static int readHTTPheader(char* theRequestedURL, int theRequestedURLLen, char *t
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
 static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
 static void returnHTTPspecialStatusCode(int statusIdx);
-static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpRequestedAt, int *usedFork);
+static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
+			  struct timeval *httpRequestedAt, int *usedFork);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 
 #ifdef HAVE_ZLIB
@@ -334,7 +335,7 @@ static int decodeString(char *bufcoded,
   register char *bufin = bufcoded;
   register unsigned char *bufout = bufplain;
   register int nprbytes;
-  
+
   /* If this is the first call, initialize the mapping table.
    * This code should work even on non-ASCII machines.
    */
@@ -488,7 +489,7 @@ void printHTMLheader(char *title, int  headerFlags) {
   */
 
   if((headerFlags & HTML_FLAG_NO_REFRESH) == 0) {
-    if(snprintf(buf, BUF_SIZE, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", 
+    if(snprintf(buf, BUF_SIZE, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n",
 		myGlobals.refreshRate) < 0)
       BufferOverflow();
     sendString(buf);
@@ -614,8 +615,6 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
      if(snprintf(myUser, sizeof(myUser), " %s ", theUser) < 0)
       BufferOverflow();
    }
-
-   NTOHL(requestFrom->s_addr);
 
 #ifdef HAVE_ZLIB
    if(gzipBytesSent > 0)
@@ -829,7 +828,7 @@ static int checkURLsecurity(char *url) {
   char *workURL = NULL;
   char *strtokState;
   char *badCharacter;
-  
+
   /*
     Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>
 
@@ -879,25 +878,25 @@ static int checkURLsecurity(char *url) {
     traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found %% in URL...rejecting request\n");
     return(2);
   }
- 
+
   /* a double slash? */
   if(strstr(url, "//") > 0) {
     traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request\n");
     return(2);
   }
- 
+
   /* a double &? */
   if(strstr(url, "&&") > 0) {
     traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found && in URL...rejecting request\n");
     return(2);
   }
- 
+
   /* a double ?? */
   if(strstr(url, "??") > 0) {
     traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found ?? in URL...rejecting request\n");
     return(2);
   }
- 
+
   /* a double dot? */
   if(strstr(url, "..") > 0) {
     traceEvent(TRACE_ERROR, "URL security(3): ERROR: Found .. in URL...rejecting request\n");
@@ -910,23 +909,23 @@ static int checkURLsecurity(char *url) {
 	       " in URL... rejecting request\n", url[len]);
     return(4);
   }
-  
+
   /*
     We can't simply find the "." and test the extension, as
     we have to allow urls of the following special forms:
-    
+
     [0..255].[0..255].[0..255].[0..255].html
     xxxxxx    (no extension - just an internal name)
     XXXXX-[0..255].[0..255].[0..255].[0..255].html
-    
+
     Instead, we'll tokenize the URL on the "." and check each one
     if we get 4 valid #s plus an .htm(l)
     Or an otherwise valid extension, we're ok
   */
 
-  countSections = countOKnumeric = countOKextension = 0;  
+  countSections = countOKnumeric = countOKextension = 0;
   workURL = strdup(url);
-  
+
   /* Strip off parameters */
   token = strchr(workURL, '?');
   if(token != NULL) {
@@ -958,6 +957,7 @@ static int checkURLsecurity(char *url) {
 	 (strcmp(token , "jpg") == 0)  ||
 	 (strcmp(token , "png") == 0)  ||
 	 (strcmp(token , "gif") == 0)  ||
+	 (strcmp(token , "ico") == 0)  ||
 	 (strcmp(token , "css") == 0) ) {
 	countOKextension++;
       } else {
@@ -1011,7 +1011,7 @@ static int checkURLsecurity(char *url) {
 
   if(rc != 0)
     traceEvent(TRACE_ERROR, "ERROR: bad char found on '%s' (rc=%d) rejecting request", url, rc);
-  
+
   return(rc);
 }
 
@@ -1023,7 +1023,8 @@ static RETSIGTYPE quitNow(int signo _UNUSED_) {
 
 /* **************************************** */
 
-static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpRequestedAt, int *usedFork) {
+static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
+			  struct timeval *httpRequestedAt, int *usedFork) {
   char *questionMark = strchr(pageName, '?');
   int sortedColumn = 0, printTrailer=1, idx;
   int errorCode=0, pageNum = 0, found=0;
@@ -1047,12 +1048,13 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
      similar chars that can be used for reading system files
   */
 #ifdef  USE_CGI
-  if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER))) 
+  if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)))
 #endif
   {
     /* This is not a CGI */
     if((rc = checkURLsecurity(pageName)) != 0) {
-      traceEvent(TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)", pageName, rc);
+      traceEvent(TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)(client=%s)",
+		 pageName, rc, _intoa(*from, tmpStr, sizeof(tmpStr)));
       returnHTTPaccessForbidden();
       return(HTTP_FORBIDDEN_PAGE);
     }
@@ -1099,11 +1101,13 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 
       for(j=0; j<=myGlobals.borderSnifferMode; j++) {
 	  if(myGlobals.borderSnifferMode && (j == 0)) {
-	      if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s.j", myGlobals.dataFileDirs[idx], pageName) < 0)
-		  BufferOverflow();
+	      if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/j_%s",
+			  myGlobals.dataFileDirs[idx], pageName) < 0)
+		BufferOverflow();
 	  } else {
-	      if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s", myGlobals.dataFileDirs[idx], pageName) < 0)
-		  BufferOverflow();
+	    if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
+			myGlobals.dataFileDirs[idx], pageName) < 0)
+	      BufferOverflow();
 	  }
 #ifdef WIN32
 	  i=0;
@@ -1118,7 +1122,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 		  found = 1;
 		  break;
 	      }
-	
+
 	      traceEvent(TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
 	  }
       }
@@ -1216,6 +1220,14 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printHTMLheader("All statistics are now reset", HTML_FLAG_NO_REFRESH);
     resetStats();
+  } else if(strncmp(pageName, SWITCH_NIC_HTML, strlen(SWITCH_NIC_HTML)) == 0) {
+    char *equal = strchr(pageName, '=');
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    
+    if(equal == NULL)
+      switchNwInterface(0);
+    else
+      switchNwInterface(atoi(&equal[1]));
   } else if(strcmp(pageName, "doAddUser") == 0) {
     printTrailer=0;
     doAddUser(postLen /* \r\n */);
@@ -1324,7 +1336,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     }
 #endif /* USE_CGI */
 #endif
-    
+
     if(strcmp(pageName, STR_INDEX_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_BODY);
@@ -1421,14 +1433,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 		 "Luca Deri</A></FONT><pre>\n");
       sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");
       printTrailer=0;
-    } else if(strncmp(pageName, SWITCH_NIC_HTML, strlen(SWITCH_NIC_HTML)) == 0) {
-      char *equal = strchr(pageName, '=');
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-
-      if(equal == NULL)
-	switchNwInterface(0);
-      else
-	switchNwInterface(atoi(&equal[1]));
     } else if(strcmp(pageName, "home_.html") == 0) {
       if(myGlobals.filterExpressionInExtraFrame){
 	sendHTTPHeader(HTTP_TYPE_HTML, 0);
@@ -1773,7 +1777,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 #ifndef MICRO_NTOP
   }
 #endif /* !MICRO_NTOP */
-  
+
   if(domainNameParm != NULL)
     free(domainNameParm);
 
@@ -1965,6 +1969,7 @@ void handleHTTPrequest(struct in_addr from) {
   gettimeofday(&httpRequestedAt, NULL);
 
   requestFrom = &from;
+  NTOHL(requestFrom->s_addr);
 
   memset(requestedURL, 0, sizeof(requestedURL));
   memset(pw, 0, sizeof(pw));
@@ -2021,7 +2026,8 @@ void handleHTTPrequest(struct in_addr from) {
     skipLeading++;
   }
 
-  if((rc = returnHTTPPage(&requestedURL[1], postLen, &httpRequestedAt, &usedFork) == 0)) {
+  if((rc = returnHTTPPage(&requestedURL[1], postLen,
+			  &from, &httpRequestedAt, &usedFork) == 0)) {
 #if defined(HAVE_ZLIB)
     if(compressFile)
       compressAndSendData(&gzipBytesSent);

@@ -82,6 +82,7 @@ extern void drawGlobalProtoDistribution(void);
 extern void drawGlobalIpProtoDistribution(void);
 
 /* hash.c */
+extern int retrieveHost(HostSerial theSerial, HostTraffic *el);
 extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
                                    u_char *ether_addr,
                                    short* useIPAddressForSearching, int actualDeviceId);
@@ -106,6 +107,7 @@ extern void printHTMLheader(char *title, int  headerFlags);
 
 /* initialize.c */
 extern void initIPServices(void);
+extern void resetDevice(int devIdx);
 extern void initCounters(int _mergeInterfaces);
 extern void resetStats(void);
 extern int initGlobalValues(void);
@@ -120,6 +122,7 @@ extern void parseTrafficFilter();
 extern void initSignals(void);
 extern void startSniffer(void);
 extern void deviceSanityCheck(char* string);
+extern u_int createDummyInterface(char *ifName);
 
 /* leaks.c */
 extern void initLeaks(void);
@@ -191,7 +194,11 @@ extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,
                         const u_char *p);
 extern void cleanupPacketQueue(void);
 extern void allocateSecurityHostPkts(HostTraffic *srcHost);
+extern int handleIP(u_short port, u_int srcHostIdx,
+		    u_int dstHostIdx, u_int length,
+		    u_short isPassiveSession, int actualDeviceId);
 extern void *dequeuePacket(void* notUsed);
+extern void updateDevicePacketStats(u_int length, int actualDeviceId);
 extern void dumpSuspiciousPacket(int actualDeviceId);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
@@ -418,6 +425,9 @@ extern void freeSession(IPSession *sessionToPurge, int actualDeviceId);
 #ifndef MULTITHREADED
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 #endif
+extern void updateUsedPorts(HostTraffic *srcHost, u_int srcHostIdx,
+			    HostTraffic *dstHost, u_int dstHostIdx,
+			    u_short sport, u_short dport, u_int length);
 
 extern IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 				   u_short fragmentedData, u_int tcpWin,

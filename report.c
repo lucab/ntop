@@ -162,7 +162,6 @@ void printTrafficStatistics() {
     }
   } else {
     /* myGlobals.mergeInterfaces == 0 */
-    if(myGlobals.rFileName == NULL) {
       if(!myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
 	if(snprintf(buf, sizeof(buf), "%s [%s]",
 		    getNwInterfaceType(myGlobals.actualReportDeviceId),
@@ -177,13 +176,6 @@ void printTrafficStatistics() {
 	BufferOverflow();
       sendString(buf);
 #endif /* TRAFFIC_HISTORY */
-    } else {
-      if(snprintf(buf, sizeof(buf), "%s [%s]",
-		  getNwInterfaceType(myGlobals.actualReportDeviceId),
-		  PCAP_NW_INTERFACE) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    }
   }
 
   sendString("</TD></TR>\n");
@@ -230,6 +222,13 @@ void printTrafficStatistics() {
     }
 #endif
 
+    unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts
+      - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts
+      - myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts;
+    
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts <= 0)
+      myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts = 1;
+
     if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
       TrafficCounter droppedByKernel;
       int i;
@@ -237,18 +236,12 @@ void printTrafficStatistics() {
       droppedByKernel=0;
 
       for(i=0; i<myGlobals.numDevices; i++)
-	if(!myGlobals.device[i].virtualDevice) {
+	if(myGlobals.device[i].pcapPtr
+	   && (!myGlobals.device[i].virtualDevice)) {
 	  if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0) {
 	    droppedByKernel += pcapStats.ps_drop;
 	  }
 	}
-
-      unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts
-	- myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts
-	- myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts;
-      /* if(unicastPkts < 0) unicastPkts = 0; */ /* It shouldn't happen */
-      if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts <= 0)
-	myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts = 1;
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR %s><TH "TH_BG" align=left>Total</th>"
@@ -465,72 +458,74 @@ void printTrafficStatistics() {
 		   +240*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)/
 	myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
 
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Average&nbsp;TTL</th>"
-		  "<TD "TD_BG" align=right COLSPAN=2>%d</td></TR>\n",
-		  getRowColor(), avgPktTTL) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>TTL &lt; 32</th>"
-		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)/
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>32 &lt; TTL &lt; 64</th>"
-		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64)/
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>64 &lt; TTL &lt; 96</th>"
-		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96)/
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>96 &lt; TTL &lt; 128</th>"
-		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128)/
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>128 &lt; TTL &lt; 160</th>"
-		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160)/
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>160 &lt; TTL &lt; 192</th>"
-		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192)/
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>192 &lt; TTL &lt; 224</th>"
-		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224)/
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>224 &lt; TTL &lt; 256</th>"
-		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)/
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
+      if(avgPktTTL > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Average&nbsp;TTL</th>"
+		    "<TD "TD_BG" align=right COLSPAN=2>%d</td></TR>\n",
+		    getRowColor(), avgPktTTL) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>TTL &lt; 32</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>32 &lt; TTL &lt; 64</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>64 &lt; TTL &lt; 96</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>96 &lt; TTL &lt; 128</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>128 &lt; TTL &lt; 160</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>160 &lt; TTL &lt; 192</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>192 &lt; TTL &lt; 224</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>224 &lt; TTL &lt; 256</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH BGCOLOR=white COLSPAN=3>"
-		 "<IMG SRC=pktTTLDistribPie"CHART_FORMAT"></TH></TR>\n");
+	sendString("<TR><TH BGCOLOR=white COLSPAN=3>"
+		   "<IMG SRC=pktTTLDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
+      }
     }
 
     /* ********************* */
