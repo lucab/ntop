@@ -1118,6 +1118,24 @@ Q. But what about SQL and mySQL
 A. Removed in 2.1.50+ versions - use rrd
 
 
+Q. But I really, really, need the data in an sql database.
+A. If you are only interested in saving your netflow data in MySQL, use the script
+   ntop/NetFlow/netFlowClient.pl (netflow v5).  With few additional lines you could
+   save your data in flat files, forward the netflow data or whatever.
+
+   What this script does it set itself up as a netflow collector and sql inserter.
+   The mail loop just accepts a netflow packet and inserts the flow(s) into sql.
+
+   To use this with a single instance of ntop, just set ntop up as a netflow
+   sender, directed at the script (e.g. 127.0.0.1 on any port you like).  Configure
+   the script with the port # and run it.
+
+   The same idea would work with sFlow, you would just have to change the packet
+   decoding part of the script.
+
+   (Added, 28Nov2002, from a suggestion by Lubo Kovac, Luboslav.Kovac@dbv-winterthur.de)
+
+
 Q. What does the message "URL security(1): ERROR: Found percent in URL...DANGER...
    rejecting request" mean?						 
 A. It means that ntop received a request with a percent sign (%) in it, often used 
@@ -1567,6 +1585,9 @@ A. Yes you can. Please see the www directory under the ntop sourcetree.
 Q. How do I save data between runs?
 A. Use rrd.
 
+Q. Where do I get rrd?
+A. http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
+
 Q. What was the -S option?
 A. The -S option was the --store-mode option, or the "Persistent storage mode"
    Ntop's internal structures are basically an array of devices (network interfaces), 
@@ -1668,6 +1689,11 @@ Q. Where is info about netflow?
 A. Dale Reed pointed out a good tech doc (no flak, just the formats) for netflow V1/5/7: 
 
     http://www.cisco.com/univercd/cc/td/doc/product/rtrmgmt/nfc/nfc_2_0/nfc_ug/nfcform.htm  
+
+
+Q. The netFlow record input and output values are zero.
+A. ntop doesn't have SNMP routines, so we can't determine the SNMP index of the interfaces.
+   (Added 26Nov2002, Burton)
 
 
 Q. How do I access netFlow or sFlow data from ntop?
