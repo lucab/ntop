@@ -161,6 +161,7 @@ void* pcapDispatch(void *_i) {
 /* **************************************** */
 
 #ifndef WIN32
+#ifdef HANDLE_DIED_CHILD
 RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
   int status;
   pid_t pidId;
@@ -176,8 +177,11 @@ RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
 #endif
   }
 
-  /* signal(SIGCHLD, handleDiedChild); */
+#ifdef HANDLE_DIED_CHILD
+  signal(SIGCHLD, handleDiedChild);
+#endif
 }
+#endif
 #endif
 
 
@@ -192,8 +196,11 @@ void daemonize(void) {
 
   signal(SIGHUP, SIG_IGN);
 #ifndef WIN32
-  /* signal(SIGCHLD, handleDiedChild); */
-     signal(SIGCHLD, SIG_IGN);
+#ifdef HANDLE_DIED_CHILD
+  signal(SIGCHLD, handleDiedChild);
+#else
+  signal(SIGCHLD, SIG_IGN);
+#endif
 #endif
   signal(SIGQUIT, SIG_IGN);
 

@@ -199,7 +199,9 @@ extern void createPortHash();
 extern void handleProtocols();
 extern void handleSigHup(int signalId);
 extern void *pcapDispatch(void *_i);
+#ifdef HANDLE_DIED_CHILD
 extern RETSIGTYPE handleDiedChild(int);
+#endif
 extern RETSIGTYPE dontFreeze(int signo);
 extern void daemonize(void);
 extern void detachFromTerminal(int);

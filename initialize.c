@@ -1425,8 +1425,11 @@ void initSignals(void) {
     Courtesy of Martin Lucina <mato@kotelna.sk>
   */
 #ifndef WIN32
-  /* signal(SIGCHLD, handleDiedChild); */
+#ifdef HANDLE_DIED_CHILD
+  signal(SIGCHLD, handleDiedChild);
+#else
   signal(SIGCHLD, SIG_IGN);
+#endif
 #endif
 
 #ifndef WIN32

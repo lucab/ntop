@@ -1530,12 +1530,14 @@ static int returnHTTPPage(char* pageName,
 				      is not what we want
 				    */       
        ) {
+#ifdef HANDLE_DIED_CHILD
       handleDiedChild(0); /*
 			    Workaround because on this OpenBSD and
 			    other platforms signal handling is broken as the system
 			    creates zombies although we decided to ignore SIGCHLD
 			  */
-      
+#endif
+
 #if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
       /* Child processes must log to syslog.
        * If no facility was set through -L | --use-syslog=facility

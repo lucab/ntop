@@ -44,7 +44,6 @@ extern __attribute__((dllimport)) char *optarg;
 extern char *optarg;
 #endif
 
-
 static char __free__ []   =
 "  This program is free software; you can redistribute it and/or modify\n\
   it under the terms of the GNU General Public License as published by\n\
@@ -869,120 +868,121 @@ int main(int argc, char *argv[]) {
    *   This causes --filter-expression "host" and a bogus "a.b.c.d"
    */
   for (i=1; i<argc; i++) {
-      if (argv[i][0] != '@') {
+    if (argv[i][0] != '@') {
 #ifdef PARAM_DEBUG
-          printf("PARAM_DEBUG: Parameter %3d is '%s'\n", i, argv[i]);
+      printf("PARAM_DEBUG: Parameter %3d is '%s'\n", i, argv[i]);
 #endif
-          readBufferWork = strchr(argv[i], '=');
-          if (readBufferWork != NULL) {
-              if (strlen(cmdLineBuffer) + strlen(argv[i]) + 5 >= LEN_CMDLINE_BUFFER) {
-                  BufferTooShort();
-              } else {
-                  readBufferWork[0] = '\0';
-                  strcat(cmdLineBuffer, argv[i]);
-                  strcat(cmdLineBuffer, "=\"");
-                  strcat(cmdLineBuffer, &readBufferWork[1]);
-                  strcat(cmdLineBuffer, "\" ");
-              }
-          } else {
-              readBufferWork = strchr(argv[i], ' ');
-              if (readBufferWork != NULL) {
-                  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 4 < LEN_CMDLINE_BUFFER) {
-                      strcat(cmdLineBuffer, "\"");
-                      strcat(cmdLineBuffer, argv[i]);
-                      strcat(cmdLineBuffer, "\" ");
-                  } else {
-                      BufferTooShort();
-                  }
-              } else {
-                  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LEN_CMDLINE_BUFFER) {
-                      strcat(cmdLineBuffer, argv[i]);
-                      strcat(cmdLineBuffer, " ");
-                  } else {
-                      BufferTooShort();
-                  }
-              }
-          }
+      readBufferWork = strchr(argv[i], '=');
+      if (readBufferWork != NULL) {
+	if (strlen(cmdLineBuffer) + strlen(argv[i]) + 5 >= LEN_CMDLINE_BUFFER) {
+	  BufferTooShort();
+	} else {
+	  readBufferWork[0] = '\0';
+	  strcat(cmdLineBuffer, argv[i]);
+	  strcat(cmdLineBuffer, "=\"");
+	  strcat(cmdLineBuffer, &readBufferWork[1]);
+	  strcat(cmdLineBuffer, "\" ");
+	}
       } else {
-
-#ifdef PARAM_DEBUG
-          printf("PARAM_DEBUG: Requested parameter file, '%s'\n", &argv[i][1]);
-#endif
-
-          rc = stat(&argv[i][1], &fileStat);
-          if (rc != 0) {
-	    if (errno == ENOENT) {
-	      printf("ERROR: Parameter file %s not found/unable to access\n", &argv[i][1]);
-	    } else {
-	      printf("ERROR: %d in stat(%s, ...)\n", errno, &argv[i][1]);
-	    }
-	    return(-1);
-          }
-
-#ifdef PARAM_DEBUG
-          printf("PARAM_DEBUG: File size %d\n", fileStat.st_size);
-#endif
-
-          fd = fopen(&argv[i][1], "rb");
-          if (fd == NULL) {
-              printf("ERROR: Unable to open parameter file '%s' (%d)...\n", &argv[i][1], errno);
-              return(-1);
-          }
-
-          printf("   Processing file %s for parameters...\n", &argv[i][1]);
-
-          for (;;) {
-              readBufferWork = fgets(readBuffer, min(LEN_FGETS_BUFFER, fileStat.st_size), fd);
-              /* On EOF, we're finished */
-              if (readBufferWork == NULL) {
-                  break;
-              }
-#ifdef PARAM_DEBUG
-              printf("PARAM_DEBUG: fgets() '%s'\n", readBufferWork);
-#endif
-      
-              /* Strip out any comments */
-              readBufferWork = strchr(readBuffer, '#');
-              if (readBufferWork != NULL) {
-                  readBufferWork[0] = ' ';
-                  readBufferWork[1] = '\0';
-              }
-            
-              /* Replace the \n by a space, so at the end the buffer will 
-               * look indistinguishable...
-               */
-              readBufferWork = strchr(readBuffer, '\n');
-              if(readBufferWork != NULL) {
-                  readBufferWork[0] = ' ';
-                  readBufferWork[1] = '\0';
-              }
-      
-              readBufferWork = strchr(readBuffer, '@');
-              if(readBufferWork != NULL) {
-                  printf("FATAL ERROR: @command in file ... nesting is not permitted!\n\n");
-                  exit(-1);
-              }
-      
-#ifdef PARAM_DEBUG
-              printf("PARAM_DEBUG:      -> '%s'\n", readBuffer);
-#endif
-              if (strlen(cmdLineBuffer) + strlen(readBuffer) + 2 < LEN_CMDLINE_BUFFER) {
-                  strcat(cmdLineBuffer, " ");
-                  strcat(cmdLineBuffer, readBuffer);
-              } else {
-                  BufferTooShort();
-              }
-          }
-      
-          fclose(fd);
-      
+	readBufferWork = strchr(argv[i], ' ');
+	if (readBufferWork != NULL) {
+	  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 4 < LEN_CMDLINE_BUFFER) {
+	    strcat(cmdLineBuffer, "\"");
+	    strcat(cmdLineBuffer, argv[i]);
+	    strcat(cmdLineBuffer, "\" ");
+	  } else {
+	    BufferTooShort();
+	  }
+	} else {
+	  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LEN_CMDLINE_BUFFER) {
+	    strcat(cmdLineBuffer, argv[i]);
+	    strcat(cmdLineBuffer, " ");
+	  } else {
+	    BufferTooShort();
+	  }
+	}
       }
+    } else {
+
+#ifdef PARAM_DEBUG
+      printf("PARAM_DEBUG: Requested parameter file, '%s'\n", &argv[i][1]);
+#endif
+
+      rc = stat(&argv[i][1], &fileStat);
+      if (rc != 0) {
+	if (errno == ENOENT) {
+	  printf("ERROR: Parameter file %s not found/unable to access\n", &argv[i][1]);
+	} else {
+	  printf("ERROR: %d in stat(%s, ...)\n", errno, &argv[i][1]);
+	}
+	return(-1);
+      }
+
+#ifdef PARAM_DEBUG
+      printf("PARAM_DEBUG: File size %d\n", fileStat.st_size);
+#endif
+	  
+      fd = fopen(&argv[i][1], "rb");
+      if (fd == NULL) {
+	printf("ERROR: Unable to open parameter file '%s' (%d)...\n", &argv[i][1], errno);
+	return(-1);
+      }
+
+      printf("   Processing file %s for parameters...\n", &argv[i][1]);
+
+      for (;;) {
+	readBufferWork = fgets(readBuffer, min(LEN_FGETS_BUFFER, fileStat.st_size), fd);
+	/* On EOF, we're finished */
+	if (readBufferWork == NULL) {
+	  break;
+	}
+#ifdef PARAM_DEBUG
+	printf("PARAM_DEBUG: fgets() '%s'\n", readBufferWork);
+#endif
+      
+	/* Strip out any comments */
+	readBufferWork = strchr(readBuffer, '#');
+	if (readBufferWork != NULL) {
+	  readBufferWork[0] = ' ';
+	  readBufferWork[1] = '\0';
+	}
+            
+	/* Replace the \n by a space, so at the end the buffer will 
+	 * look indistinguishable...
+	 */
+	readBufferWork = strchr(readBuffer, '\n');
+	if(readBufferWork != NULL) {
+	  readBufferWork[0] = ' ';
+	  readBufferWork[1] = '\0';
+	}
+      
+	readBufferWork = strchr(readBuffer, '@');
+	if(readBufferWork != NULL) {
+	  printf("FATAL ERROR: @command in file ... nesting is not permitted!\n\n");
+	  exit(-1);
+	}
+      
+#ifdef PARAM_DEBUG
+	printf("PARAM_DEBUG:      -> '%s'\n", readBuffer);
+#endif
+	if (strlen(cmdLineBuffer) + strlen(readBuffer) + 2 < LEN_CMDLINE_BUFFER) {
+	  strcat(cmdLineBuffer, " ");
+	  strcat(cmdLineBuffer, readBuffer);
+	} else {
+	  BufferTooShort();
+	}
+      }
+      
+      fclose(fd);
+      
+    }
   }
 
 #ifdef PARAM_DEBUG
   printf("PARAM_DEBUG: effective cmd line: '%s'\n", cmdLineBuffer);
 #endif
 
+  if(cmdLineBuffer[strlen(cmdLineBuffer)-1] == ' ') cmdLineBuffer[strlen(cmdLineBuffer)-1] = '\0';
 #ifndef WIN32
   effective_argv=buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
 
