@@ -1536,6 +1536,9 @@ void parseTrafficFilter(void) {
 	} else
 	  traceEvent(CONST_TRACE_INFO, "Set filter \"%s\" on device %s.",
 		     myGlobals.currentFilterExpression, myGlobals.device[i].name);
+#ifdef HAVE_PCAP_FREECODE
+          pcap_freecode(&fcode);
+#endif
       }
     }
   } else

@@ -1343,6 +1343,8 @@ AC_CHECK_FUNCS([strtok_r])
 dnl> Following used by regex.c only
 AC_CHECK_FUNCS([bzero])
 
+AC_CHECK_FUNCS([pcap_freecode])
+
 dnl> Check if malloc.h has mallinfo...
 AC_MSG_CHECKING([for mallinfo in malloc.h])
 AC_LANG_CONFTEST(

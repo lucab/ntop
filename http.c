@@ -2380,6 +2380,10 @@ void handleHTTPrequest(struct in_addr from) {
                       agent,
                       requestedLanguage,
                       numLang);
+  for (i=numLang-1; i>=0; i--) {
+      free(requestedLanguage[i]);
+  }
+
 #else
   rc = returnHTTPPage(&requestedURL[1], postLen,
 		      &from, &httpRequestedAt, &usedFork,

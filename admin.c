@@ -644,6 +644,9 @@ int doChangeFilter(int len) {
 		    myGlobals.currentFilterExpression, pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 	  err="The syntax of the defined filter is wrong.";
 	} else{
+#ifdef HAVE_PCAP_FREECODE
+         pcap_freecode(&fcode);
+#endif
 	 if(*myGlobals.currentFilterExpression!='\0'){
 	   traceEvent(CONST_TRACE_INFO, "Set filter \"%s\" on myGlobals.device %s.",
 		      myGlobals.currentFilterExpression, myGlobals.device[i].name);
@@ -710,11 +713,15 @@ int doChangeFilter(int len) {
     for(i=0; i<myGlobals.numDevices; i++) {      /* restore old filter expression */
       if((!myGlobals.device[i].virtualDevice)&&(err==NULL)) {
 	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
-			myGlobals.device[i].netmask.s_addr) < 0)
-	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
-	  traceEvent(CONST_TRACE_ERROR,
-		    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
+			myGlobals.device[i].netmask.s_addr) < 0)) {
+	  if((pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
+	    traceEvent(CONST_TRACE_ERROR,
+	  	    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
 		    myGlobals.currentFilterExpression, pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
+	  }
+#ifdef HAVE_PCAP_FREECODE
+          pcap_freecode(&fcode);
+#endif
 	}
       }
     }

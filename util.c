@@ -705,6 +705,9 @@ void handleFlowsSpecs() {
         else {
           FlowFilterList *newFlow;
 
+#ifdef HAVE_PCAP_FREECODE
+          pcap_freecode(&fcode);
+#endif
           newFlow = (FlowFilterList*)calloc(1, sizeof(FlowFilterList));
 
           if(newFlow == NULL) {
