@@ -545,7 +545,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 #ifdef HAVE_GDCHART
       if(numDevices > 1) {
 	sendString("<TR><TD "TD_BG"  ALIGN=CENTER COLSPAN=3>"
-		   "<IMG SRC=interfaceTrafficPie.gif></TD></TR>\n");
+		   "<IMG SRC=interfaceTrafficPie.png></TD></TR>\n");
       }
 #endif
     }
@@ -2125,7 +2125,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
 #ifdef HAVE_GDCHART
       sendString("<TR><TD "TD_BG"  COLSPAN=3 ALIGN=CENTER>"
-		 "<IMG SRC=drawGlobalIpProtoDistribution.gif></TD></TR>\n");
+		 "<IMG SRC=drawGlobalIpProtoDistribution.png></TD></TR>\n");
 #endif
       sendString("</TABLE>"TABLE_OFF"<P>\n");
     }
@@ -2207,7 +2207,7 @@ void printProtoTraffic(void) {
 
 #ifdef HAVE_GDCHART
   sendString("<TR><TD "TD_BG"  COLSPAN=3 ALIGN=CENTER>"
-	     "<IMG SRC=drawGlobalProtoDistribution.gif></TD></TR>\n");
+	     "<IMG SRC=drawGlobalProtoDistribution.png></TD></TR>\n");
 #endif
 
   sendString("</TABLE>"TABLE_OFF"<P></CENTER>\n");

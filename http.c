@@ -560,7 +560,9 @@ static void returnHTTPPage(char* pageName, int postLen) {
 
     if((len > 4)
        && ((strcmp(&pageName[len-4], ".gif") == 0)
-	   || (strcmp(&pageName[len-4], ".jpg") == 0))) {
+	   || (strcmp(&pageName[len-4], ".jpg") == 0)
+	   || (strcmp(&pageName[len-4], ".png") == 0))
+       ) {
       char theDate[48];
       time_t theTime;
       struct tm t;
@@ -585,6 +587,8 @@ static void returnHTTPPage(char* pageName, int postLen) {
 
       if(strcmp(&pageName[len-4], ".gif") == 0)
 	sendString("Content-type: image/gif\n");
+      else if(strcmp(&pageName[len-4], ".png") == 0)
+	sendString("Content-type: image/png\n");
       else
 	sendString("Content-type: image/jpeg\n");
 

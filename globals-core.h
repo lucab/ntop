@@ -53,6 +53,7 @@ extern short capturePackets, endNtop;
  
 /* Multithreading */
 #ifdef MULTITHREADED
+extern unsigned short numThreads;
 extern pthread_mutex_t packetQueueMutex, hostsHashMutex, graphMutex;
 extern pthread_mutex_t lsofMutex, addressResolutionMutex, hashResizeMutex;
 extern pthread_t dequeueThreadId, handleWebConnectionsThreadId;

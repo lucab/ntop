@@ -832,7 +832,7 @@ int createThread(pthread_t *threadId,
   int rc;
 
   rc = pthread_create(threadId, NULL, __start_routine, userParm);
-
+  numThreads++;
   return(rc);
 }
 
@@ -840,6 +840,7 @@ int createThread(pthread_t *threadId,
 
 void killThread(pthread_t *threadId) {
   pthread_detach(*threadId);
+  numThreads--;
 }
 
 /* ************************************ */

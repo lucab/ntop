@@ -911,18 +911,45 @@ void printNtopConfigInfo(void) {
     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", 
 			   "No (Either disabled or missing)");
 
-  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>actualHashSize</TH>"
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Actual Hash Size</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
 	      (int)device[actualReportDeviceId].actualHashSize) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Hash hosts</TH>"
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Stored Hash Hosts</TH>"
 	      "<TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
 	      (int)device[actualReportDeviceId].hostsno,
 	      (((int)device[actualReportDeviceId].hostsno*100)/
 	       (int)device[actualReportDeviceId].actualHashSize)) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
+
+
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. TCP Sessions</TH>"
+	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numTcpSessions) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. UDP Sessions</TH>"
+	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numUdpSessions) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+   accessMutex(&addressQueueMutex, "NumQueuedAddresses");
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Queued Addresses</TH>"
+	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", addressQueueLen) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+   releaseMutex(&addressQueueMutex);
+#endif
+
+#if defined(MULTITHREADED)
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Active Threads</TH>"
+	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numThreads) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+#endif
 
  #ifdef MEMORY_DEBUG
    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Allocated Memory</TH>"

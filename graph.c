@@ -20,7 +20,7 @@
  */
 
  /*
-  * Do not use local defs for gifgraph
+  * Do not use local defs for pnggraph
   * (included by ntop.h)
   */
 
@@ -93,12 +93,12 @@ void pktSizeDistribPie(void) {
   accessMutex(&graphMutex, "pktSizeDistrib");
 #endif
 
-  pie_gif(250,			/* width */
+  pie_png(250,			/* width */
 	  250,			/* height */
 	  fd,			/* open file pointer */
 	  GDC_3DPIE,		/* or GDC_2DPIE */
 	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_gif(), can be NULL */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL */
 	  p);			/* data array */
 
   fclose(fd);
@@ -163,12 +163,12 @@ void ipProtoDistribPie(void) {
   GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
-  pie_gif(250,			/* width */
+  pie_png(250,			/* width */
 	  250,			/* height */
 	  fd,			/* open file pointer */
 	  GDC_3DPIE,		/* or GDC_2DPIE */
 	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_gif(), can be NULL */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL */
 	  p);			/* data array */
 
   fclose(fd);
@@ -234,12 +234,12 @@ void interfaceTrafficPie(void) {
   GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_RIGHT;
 
-  pie_gif(250,		/* width */
+  pie_png(250,		/* width */
 	  250,		/* height */
 	  fd,		/* open file pointer */
 	  GDC_3DPIE,	/* or GDC_2DPIE */
 	  myDevices,	/* number of slices */
-	  lbl,		/* slice labels (unlike out_gif(), can be NULL */
+	  lbl,		/* slice labels (unlike out_png(), can be NULL */
 	  p);		/* data array */
 
   fclose(fd);
@@ -310,12 +310,12 @@ void pktCastDistribPie(void) {
   GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
-  pie_gif(250,			/* width */
+  pie_png(250,			/* width */
 	  250,			/* height */
 	  fd,			/* open file pointer */
 	  GDC_3DPIE,		/* or GDC_2DPIE */
 	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_gif(), can be NULL */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL */
 	  p);			/* data array */
 
   fclose(fd);
@@ -368,12 +368,12 @@ void drawTrafficPie(void) {
   GDCPIE_explode   = expl;    /* default: NULL - no explosion */
   GDCPIE_Color     = clr;
 
-  pie_gif(250,			/* width */
+  pie_png(250,			/* width */
 	  250,			/* height */
 	  fd,			/* open file pointer */
 	  GDC_3DPIE,		/* or GDC_2DPIE */
 	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_gif(), can be NULL */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL */
 	  p);			/* data array */
 
   fclose(fd);
@@ -611,7 +611,7 @@ void drawGlobalProtoDistribution(void) {
 	    fd,	        /* open file pointer */
 	    GDC_3DBAR,	/* or GDC_2DBAR */
 	    idx,	/* number of slices */
-	    lbl,	/* slice labels (unlike out_gif(), can be NULL */
+	    lbl,	/* slice labels (unlike out_png(), can be NULL */
 	    1,
 	    p);	        /* data array */
 
@@ -673,7 +673,7 @@ void drawGlobalIpProtoDistribution(void) {
 	    fd,			/* open file pointer */
 	    GDC_3DBAR,		/* or GDC_2DBAR */
 	    idx,		/* number of slices */
-	    lbl,		/* slice labels (unlike out_gif(), can be NULL */
+	    lbl,		/* slice labels (unlike out_png(), can be NULL */
 	    1,
 	    p);			/* data array */
 

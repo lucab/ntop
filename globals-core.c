@@ -60,6 +60,7 @@ short endNtop;
 
 /* Multithreading */
 #ifdef MULTITHREADED
+unsigned short numThreads;
 pthread_mutex_t packetQueueMutex, hostsHashMutex, graphMutex;
 pthread_mutex_t lsofMutex, addressResolutionMutex, hashResizeMutex;
 

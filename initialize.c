@@ -465,6 +465,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
 
 #ifdef HAVE_GDBM_H
 #ifdef MULTITHREADED
+  numThreads = 0;
   createMutex(&gdbmMutex);
 #endif
 #endif

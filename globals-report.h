@@ -196,9 +196,9 @@ extern void printHostHourlyTraffic(HostTraffic *el);
 extern char GDC_yaxis;
 extern char* GDC_ylabel_fmt;
 
-extern int out_graph(short gifwidth,
-		     short gifheight,
-		     FILE  *gif_fptr,
+extern int out_graph(short pngwidth,
+		     short pngheight,
+		     FILE  *png_fptr,
 		     GDC_CHART_T type,
 		     int  num_points,
 		     char *xlbl[],
