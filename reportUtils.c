@@ -36,7 +36,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 
   if(topValue == 0) {
     /* No percentage is printed */
-    if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 		formatPkts(usageCtr.value)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -47,7 +47,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 
     if(pctg > 100) pctg = 100; /* This should not happen ! */
 
-    if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s [%.0f %%]</TD>",
+    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s [%.0f %%]</TD>",
 		formatPkts(usageCtr.value), pctg) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -64,7 +64,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 
       if(el1 != NULL) {
        if(!sendHeader) {
-         sendString("<TD "TD_BG"  ALIGN=LEFT><ul>");
+         sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
          sendHeader = 1;
        }
        sendString("\n<li>");
@@ -101,7 +101,7 @@ void printTableDoubleEntry(char *buf, int bufLen,
   switch(int_perc) {
   case 0:
     if(snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
-           "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+           "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
            "<TD WIDTH=100 "TD_BG">&nbsp;</TD>\n",
            getRowColor(), label, formatKBytes(totalS)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -115,7 +115,7 @@ void printTableDoubleEntry(char *buf, int bufLen,
     break;
   default:
     if(snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
-	     "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+	     "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 	     "<TD WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
 	     "<TR><TD><IMG  ALT=\"%d%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12></TD>"
 	     "<TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\">"
@@ -144,21 +144,21 @@ void printTableDoubleEntry(char *buf, int bufLen,
 
   switch(int_perc) {
   case 0:
-    if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+    if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100 "TD_BG">&nbsp;</TD></TR>\n",
 		formatKBytes(totalR)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   case 100:
-    if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+    if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100><IMG ALIGN=MIDDLE ALT=\"100\" SRC=/gauge.jpg WIDTH=\"100\" HEIGHT=12></TD></TR>\n",
 		formatKBytes(totalR)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   default:
-    if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+    if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD  WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
 		"<TR><TD><IMG ALT=\"%d%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
-		"</TD><TD "TD_BG"  ALIGN=CENTER WIDTH=\"%d\">"
+		"</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\">"
 		"<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
 		formatKBytes(totalR),
 		int_perc, (100*int_perc)/100, (100*(100-int_perc))/100) < 0)
@@ -190,7 +190,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		  getRowColor(), label, COLOR_2, label_2) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
     } else {
-      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
 		  getRowColor(), label, formatKBytes(total), COLOR_2, label_2) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -203,7 +203,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		  getRowColor(), label, COLOR_1, label_1) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
     } else {
-      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
 		  getRowColor(), label, formatKBytes(total), COLOR_1, label_1) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -221,7 +221,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
              label_1, percentage, (100-int_perc), COLOR_2,
              label_2, (100-percentage)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     } else {
-      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
              "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
              "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
              "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
@@ -2242,7 +2242,7 @@ void printHostContactedPeers(HostTraffic *el) {
 		  }
 
 		  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-			      "<TD "TD_BG"  ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
+			      "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
 			      getRowColor(),
 			      makeHostLink(el1, 0, 0, 0),
 			      el1->hostNumIpAddress) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2271,7 +2271,7 @@ void printHostContactedPeers(HostTraffic *el) {
 	    }
 
 	    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		     "<TD "TD_BG"  ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
+		     "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
 		    getRowColor(),
 		    makeHostLink(el1, 0, 0, 0),
 		    el1->hostNumIpAddress) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2385,10 +2385,10 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       }
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=RIGHT>%s</TH>"
-		  "<TD "TD_BG"  ALIGN=CENTER>%d</TD>"
-		  "<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%d"
-		  "</TD><TD "TD_BG"  ALIGN=CENTER>%s</TD>"
-		  "<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG">"
+		  "<TD "TD_BG" ALIGN=CENTER>%d</TD>"
+		  "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%d"
+		  "</TD><TD "TD_BG" ALIGN=CENTER>%s</TD>"
+		  "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG">"
 		  "%s</TD><TD "TD_BG">%s</TD>\n",
 		  getRowColor(), svc, scanner->port, whoswho,
 		  (int)scanner->sessionCounter,
@@ -2563,15 +2563,15 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 	    moreSessionInfo = "";
 
 	  if(snprintf(buf, sizeof(buf), "<TR %s>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s%s</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s:%s</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
 #ifdef PRINT_RETRANSMISSION_DATA
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s [%d%%]</TD>"
 #endif
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
 #ifdef PRINT_RETRANSMISSION_DATA
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s [%d%%]</TD>"
 #endif
 		      , getRowColor(),
 		      sport, moreSessionInfo,
@@ -2591,13 +2591,13 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 	  sendString(buf);
 
 	  if(snprintf(buf, sizeof(buf),
-		      "<TD "TD_BG"  ALIGN=CENTER NOWRAP>%d:%d</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=CENTER NOWRAP>%d:%d</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
-		      "<TD "TD_BG"  ALIGN=CENTER>%s</TD>"
+		      "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
 #endif
 		      "</TR>\n",
 		      device[actualReportDeviceId].tcpSession[idx]->minWindow,
@@ -2699,7 +2699,7 @@ void checkHostProvidedServices(HostTraffic *el) {
      || isDHCPClient(el)        || isDHCPServer(el)
      ) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD "TD_BG"  ALIGN=RIGHT>", getRowColor(),
+		"<TD "TD_BG" ALIGN=RIGHT>", getRowColor(),
 		"Host Type") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
@@ -2753,12 +2753,12 @@ void printHostDetailedInfo(HostTraffic *el) {
 
   if(el->hostSymIpAddress[0] == '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host %s",
-	    el->ethAddressString) < 0)
+		el->ethAddressString) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
     if(el->hostNumIpAddress[0] == '\0') {
-    if(snprintf(buf, sizeof(buf), "Info about host %s", el->hostSymIpAddress) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");    
+      if(snprintf(buf, sizeof(buf), "Info about host %s", el->hostSymIpAddress) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");    
     } else {
       if(snprintf(buf, sizeof(buf), "Info about host"
 		  " <A HREF=http://%s/>%s %s</A>\n",
@@ -2810,7 +2810,7 @@ void printHostDetailedInfo(HostTraffic *el) {
       multihomed = "";
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD "TD_BG"  ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s]",
+		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s]",
 		getRowColor(),
 		"IP&nbsp;Address",
 		el->hostNumIpAddress,
@@ -2975,21 +2975,21 @@ void printHostDetailedInfo(HostTraffic *el) {
   }
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>"
-	  "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
-	   getRowColor(),
-	   "First/Last&nbsp;Seen",
-           formatTime(&(el->firstSeen), 1),
-           formatTime(&(el->lastSeen), 1),
-	   formatSeconds(el->lastSeen - el->firstSeen)) < 0)
+	      "<TD "TD_BG" ALIGN=RIGHT>"
+	      "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
+	      getRowColor(),
+	      "First/Last&nbsp;Seen",
+	      formatTime(&(el->firstSeen), 1),
+	      formatTime(&(el->lastSeen), 1),
+	      formatSeconds(el->lastSeen - el->firstSeen)) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	    "%s</TD></TR>\n",
-	    getRowColor(),
-	    "Domain", el->fullDomainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		"%s</TD></TR>\n",
+		getRowColor(),
+		"Domain", el->fullDomainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
 
@@ -3017,22 +3017,22 @@ void printHostDetailedInfo(HostTraffic *el) {
       sendString(buf);
 
     } else {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "MAC&nbsp;Address <IMG ALT=\"Network Interface Card (NIC)\" SRC=/card.gif BORDER=0>",
 		  el->ethAddressString,
 		  separator /* it avoids empty cells not to be rendered */) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
 
     vendorName = getVendorInfo(el->ethAddress, 1);
     if(vendorName[0] != '\0') {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	      "%s%s</TD></TR>\n",
-	      getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
-	      vendorName,
-	      separator /* it avoids empty cells not to be rendered */) < 0)
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s%s</TD></TR>\n",
+		  getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
+		  vendorName,
+		  separator /* it avoids empty cells not to be rendered */) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
@@ -3046,7 +3046,7 @@ void printHostDetailedInfo(HostTraffic *el) {
       || (el->lastEthAddress[5] != 0) /* The address isn't empty */)
      && (memcmp(el->lastEthAddress, el->ethAddress, ETHERNET_ADDRESS_LEN) != 0)) {
     /* Different MAC addresses */
-    char *symMacAddr, symLink[32];
+    char *symMacAddr, symLink[32], shortBuf[64];
     int i;
 
     symMacAddr = etheraddr_string(el->lastEthAddress);
@@ -3055,10 +3055,19 @@ void printHostDetailedInfo(HostTraffic *el) {
       if(symLink[i] == ':')
 	symLink[i] = '_';
 
+    if(!borderSnifferMode) {
+      if(snprintf(shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+    } else {
+      strcpy(shortBuf, symMacAddr);
+    }
+
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"<A HREF=%s.html>%s</A>%s</TD></TR>\n",
-		getRowColor(), "Last MAC Address/Router <IMG ALT=\"Network Interface Card (NIC)/Router\" SRC=/card.gif BORDER=0>",
-		symLink, symMacAddr,
+		"%s"
+		"%s</TD></TR>\n",
+		getRowColor(), 
+		"Last MAC Address/Router <IMG ALT=\"Network Interface Card (NIC)/Router\" SRC=/card.gif BORDER=0>",
+		shortBuf,
 		separator /* it avoids empty cells not to be rendered */) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -3068,7 +3077,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     updateOSName(el);
 
     if((el->osName != NULL) && (el->osName[0] != '\0')) {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "OS&nbsp;Name",
 		  getOSFlag(el->osName, 1),
@@ -3081,45 +3090,45 @@ void printHostDetailedInfo(HostTraffic *el) {
   if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {
     if(el->nbAccountName) {
       if(el->nbDomainName != NULL) {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-		  "%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
-		  getRowColor(), "NetBios&nbsp;Name",
-		  el->nbAccountName, el->nbHostName, el->nbDomainName,
-		  getNbNodeType(el->nbNodeType),
-		  el->nbDescr ? el->nbDescr : "") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		    "%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
+		    getRowColor(), "NetBios&nbsp;Name",
+		    el->nbAccountName, el->nbHostName, el->nbDomainName,
+		    getNbNodeType(el->nbNodeType),
+		    el->nbDescr ? el->nbDescr : "") < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       } else {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-		  "%s@%s (%s) %s</TD></TR>\n",
-		  getRowColor(), "NetBios&nbsp;Name",
-		  el->nbAccountName, el->nbHostName,
-		  getNbNodeType(el->nbNodeType),
-		  el->nbDescr ? el->nbDescr : "") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		    "%s@%s (%s) %s</TD></TR>\n",
+		    getRowColor(), "NetBios&nbsp;Name",
+		    el->nbAccountName, el->nbHostName,
+		    getNbNodeType(el->nbNodeType),
+		    el->nbDescr ? el->nbDescr : "") < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
     } else {
       if(el->nbDomainName != NULL) {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-		  "%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
-		  getRowColor(), "NetBios&nbsp;Name",
-		  el->nbHostName, el->nbDomainName,
-		  getNbNodeType(el->nbNodeType),
-		  el->nbDescr ? el->nbDescr : "") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		    "%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
+		    getRowColor(), "NetBios&nbsp;Name",
+		    el->nbHostName, el->nbDomainName,
+		    getNbNodeType(el->nbNodeType),
+		    el->nbDescr ? el->nbDescr : "") < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       } else {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-		  "%s (%s) %s</TD></TR>\n",
-		  getRowColor(), "NetBios&nbsp;Name",
-		  el->nbHostName,
-		  getNbNodeType(el->nbNodeType),
-		  el->nbDescr ? el->nbDescr : "") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		    "%s (%s) %s</TD></TR>\n",
+		    getRowColor(), "NetBios&nbsp;Name",
+		    el->nbHostName,
+		    getNbNodeType(el->nbNodeType),
+		    el->nbDescr ? el->nbDescr : "") < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
     }
 
     sendString(buf);
   } else if(el->nbHostName != NULL) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s&nbsp;(%s) %s</TD></TR>\n",
 		getRowColor(), "NetBios&nbsp;Name",
 		el->nbHostName, getNbNodeType(el->nbNodeType),
@@ -3133,10 +3142,10 @@ void printHostDetailedInfo(HostTraffic *el) {
 
     if(nodeName == NULL) nodeName = "";
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	    "%s&nbsp;\n",
-	    getRowColor(), "AppleTalk&nbsp;Name",
-	    nodeName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		"%s&nbsp;\n",
+		getRowColor(), "AppleTalk&nbsp;Name",
+		nodeName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     if(el->atNodeType[0] != NULL) {
@@ -3155,7 +3164,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     }
 
     if(snprintf(buf, sizeof(buf), "[%d.%d]</TD></TR>\n",
-	     el->atNetwork, el->atNode) < 0)
+		el->atNetwork, el->atNode) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
@@ -3164,9 +3173,9 @@ void printHostDetailedInfo(HostTraffic *el) {
     int i;
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD "TD_BG"  ALIGN=RIGHT>"
-	     "%s&nbsp;[", getRowColor(), "IPX&nbsp;Name",
-	     el->ipxHostName) < 0)
+		"<TD "TD_BG" ALIGN=RIGHT>"
+		"%s&nbsp;[", getRowColor(), "IPX&nbsp;Name",
+		el->ipxHostName) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
@@ -3180,13 +3189,13 @@ void printHostDetailedInfo(HostTraffic *el) {
 
   if((!borderSnifferMode) && (!multicastHost(el))) {
     if(subnetPseudoLocalHost(el)) {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
 		  "Local (inside specified/local subnet)") < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
     } else {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
 		  "Remote (outside specified/local subnet)") < 0) 
@@ -3196,14 +3205,14 @@ void printHostDetailedInfo(HostTraffic *el) {
   }
 
   if((!borderSnifferMode) && (el->minTTL > 0)) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d:%d&nbsp;hops</TD></TR>\n",
 		getRowColor(), "IP&nbsp;TTL&nbsp;(Time to Live)",
 		el->minTTL, el->maxTTL) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
 
-  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Sent",
 	      formatBytes(el->bytesSent, 1), formatPkts(el->pktSent),
@@ -3212,32 +3221,34 @@ void printHostDetailedInfo(HostTraffic *el) {
 	      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	  "%s Pkts</TD></TR>\n",
-	  getRowColor(), "Broadcast&nbsp;Pkts&nbsp;Sent",
-	  formatPkts(el->pktBroadcastSent)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	      "%s Pkts</TD></TR>\n",
+	      getRowColor(), "Broadcast&nbsp;Pkts&nbsp;Sent",
+	      formatPkts(el->pktBroadcastSent)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  if(el->routedTraffic != NULL) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-		"%s/%s Pkts</TD></TR>\n",
-		getRowColor(), "Routed Traffic",
-		formatBytes(el->routedTraffic->routedBytes, 1),
-		formatPkts(el->routedTraffic->routedPkts)) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);    
+  if(!borderSnifferMode) {
+    if(el->routedTraffic != NULL) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s/%s Pkts</TD></TR>\n",
+		  getRowColor(), "Routed Traffic",
+		  formatBytes(el->routedTraffic->routedBytes, 1),
+		  formatPkts(el->routedTraffic->routedPkts)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);    
+    }
   }
 
   if((el->pktMulticastSent > 0) || (el->pktMulticastRcvd > 0)) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	    "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;-"
-	    "&nbsp;Rcvd&nbsp;%s/%s&nbsp;Pkts</TD></TR>\n",
-	    getRowColor(), "Multicast&nbsp;Traffic",
-	    formatBytes(el->bytesMulticastSent, 1),
-	    formatPkts(el->pktMulticastSent),
-	    formatBytes(el->bytesMulticastRcvd, 1),
-	    formatPkts(el->pktMulticastRcvd)
-	    ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		"Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;-"
+		"&nbsp;Rcvd&nbsp;%s/%s&nbsp;Pkts</TD></TR>\n",
+		getRowColor(), "Multicast&nbsp;Traffic",
+		formatBytes(el->bytesMulticastSent, 1),
+		formatPkts(el->pktMulticastSent),
+		formatBytes(el->bytesMulticastRcvd, 1),
+		formatPkts(el->pktMulticastRcvd)
+		) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
 
@@ -3246,34 +3257,38 @@ void printHostDetailedInfo(HostTraffic *el) {
   else
     percentage = 100 - (((float)el->bytesSentRemotely*100)/el->bytesSent);
 
-  if(el->hostNumIpAddress[0] != '\0') {
-    printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Sent&nbsp;Stats",
-			      "Local", "Remote", -1, percentage);
+  if(!borderSnifferMode) {
+    if(el->hostNumIpAddress[0] != '\0') {
+      printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Sent&nbsp;Stats",
+				"Local", "Remote", -1, percentage);
+    }
+
+    if(el->bytesSent > 0) {
+      percentage = (((float)el->ipBytesSent*100)/el->bytesSent);    
+      printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Sent",
+				"IP", "Non-IP", -1, percentage);
+    }
   }
 
-  if(el->bytesSent > 0) {
-    percentage = (((float)el->ipBytesSent*100)/el->bytesSent);    
-    printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Sent",
-			      "IP", "Non-IP", -1, percentage);
-  }
-
-  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	  "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
-	  getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
-	  formatBytes(el->bytesReceived, 1), formatPkts(el->pktReceived),
-	  formatPkts(el->pktDuplicatedAckRcvd),
-	  (int)((float)(el->pktDuplicatedAckRcvd*100)/(float)(el->pktReceived+1))) < 0)
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
+	      getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
+	      formatBytes(el->bytesReceived, 1), formatPkts(el->pktReceived),
+	      formatPkts(el->pktDuplicatedAckRcvd),
+	      (int)((float)(el->pktDuplicatedAckRcvd*100)/(float)(el->pktReceived+1))) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  if(el->bytesReceived == 0)
-    percentage = 0;
-  else
-    percentage = 100 - (((float)el->bytesReceivedFromRemote*100)/el->bytesReceived);
+  if(!borderSnifferMode) {
+    if(el->bytesReceived == 0)
+      percentage = 0;
+    else
+      percentage = 100 - (((float)el->bytesReceivedFromRemote*100)/el->bytesReceived);
 
-  if(el->hostNumIpAddress[0] != '\0')
-    printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Received&nbsp;Stats",
-			      "Local", "Remote", -1, percentage);
+    if(el->hostNumIpAddress[0] != '\0')
+      printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Received&nbsp;Stats",
+				"Local", "Remote", -1, percentage);
+  }
   
   if(el->bytesReceived > 0) {
     percentage = (((float)el->ipBytesReceived*100)/el->bytesReceived);    
@@ -3306,7 +3321,7 @@ void printHostDetailedInfo(HostTraffic *el) {
       if(router != NULL) {
 	if(!printedHeader) {
 	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
-		      "Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG"  ALIGN=RIGHT>\n", 
+		      "Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n", 
 		      getRowColor()) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
@@ -3337,7 +3352,7 @@ void printHostDetailedInfo(HostTraffic *el) {
      && (!multicastHost(el))
      && (!privateIPAddress(el))
      && (mapperURL[0] > 0)) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"<IMG SRC=\"%s?host=%s\" WIDTH=320 HEIGHT=200></TD></TR>\n",
 		getRowColor(),
 		"Host Physical Location",
@@ -3381,11 +3396,11 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 
       if((tot > 0) || (tot1 > 0)) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG">%s</TH>"
-	        "<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s - %s</TD><TD "TD_BG"  ALIGN=CENTER>%s - %s</TD>"
+	        "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=CENTER>%s - %s</TD><TD "TD_BG" ALIGN=CENTER>%s - %s</TD>"
 		"</TR>\n",
 		getRowColor(), svcName,
 		formatPkts(ss->numLocalReqSent), f1,
@@ -3419,11 +3434,11 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 
       if((tot > 0) || (tot1 > 0)) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG">%s</TH>"
-                "<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s - %s</TD><TD "TD_BG"  ALIGN=CENTER>%s - %s</TD>"
+                "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=CENTER>%s - %s</TD><TD "TD_BG" ALIGN=CENTER>%s - %s</TD>"
 		"</TR>\n",
 		getRowColor(), svcName,
 		formatPkts(ss->numLocalReqRcvd), f1,
@@ -3573,14 +3588,14 @@ void printTableEntry(char *buf, int bufLen,
   switch(int_perc) {
   case 0:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
-		"<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
 		"<TD "TD_BG" WIDTH=250>&nbsp;</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
-		"<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
 		"<TD ALIGN=CENTER WIDTH=250><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
 		"</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)
@@ -3692,7 +3707,7 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
   float pctg;
   char buf[BUF_SIZE];
 
-  if(snprintf(buf, BUF_SIZE, "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+  if(snprintf(buf, BUF_SIZE, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 	   formatBytes(el->last24HoursBytesSent[i], 0)) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
@@ -3704,7 +3719,7 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 	   getBgPctgColor(pctg), pctg) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-  if(snprintf(buf, BUF_SIZE, "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+  if(snprintf(buf, BUF_SIZE, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 	   formatBytes(el->last24HoursBytesRcvd[i], 0)) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);

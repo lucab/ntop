@@ -148,6 +148,7 @@ extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
 extern void printDomainStats(char* domainName, int sortedColumn, int revertOrder);
 extern void printNoDataYet(void);
+extern void printNotAvailable(void);
 extern void listNetFlows(void);
 extern void printHostEvents(HostTraffic *theHost, int column, int revertOrder);
 extern void fillDomainName(HostTraffic *el);

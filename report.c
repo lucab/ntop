@@ -79,7 +79,7 @@ void addPageIndicator(char *url, u_int pageNum,
 	      "%s%d", revertOrder == 1 ? "-" : "", numCol) < 0)
      traceEvent(TRACE_ERROR, "Buffer overflow!");  
       
-  if(pageNum > 1) {
+  if(pageNum >= 1) {
     if(snprintf(prevBuf, sizeof(prevBuf), 
 		"<A HREF=\"%s?page=0&col=%s\">&lt;&lt;</A> "
 		"<A HREF=\"%s?page=%d&col=%s\">&lt;</A>",
@@ -1425,6 +1425,11 @@ void printLocalRoutersList(void) {
 
   printHTMLheader("Local Subnet Routers", 0);
 
+  if(borderSnifferMode) {
+    printNotAvailable();
+    return;
+  }
+
   for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++) {
     if((idx != otherHostEntryIdx) &&
        ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
@@ -1840,6 +1845,11 @@ void printActiveTCPSessions(void) {
 
   printHTMLheader("Active TCP Sessions", 0);
 
+  if(borderSnifferMode) {
+    printNotAvailable();
+    return;
+  }
+
   for(idx=1, numSessions=0; idx<device[actualReportDeviceId].numTotSessions; idx++)
     if((idx != otherHostEntryIdx) && (device[actualReportDeviceId].tcpSession[idx] != NULL)
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
@@ -2124,6 +2134,11 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
  if(mode == SHORT_FORMAT) {
    printSectionTitle("IP Protocol Distribution");
+
+  if(borderSnifferMode) {
+    printNotAvailable();
+    return;
+  }
 
 #ifdef HAVE_GDCHART
    sendString("<CENTER><IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p>\n</CENTER>\n");
@@ -2711,6 +2726,11 @@ void printIpTrafficMatrix(void) {
   TrafficCounter avgTrafficLow, avgTrafficHigh, tmpCounter;
 
   printHTMLheader("IP Subnet Traffic Matrix", 0);
+
+  if(borderSnifferMode) {
+    printNotAvailable();
+    return;
+  }
 
   activeHosts = (short*)malloc(sizeof(short)*device[actualReportDeviceId].numHosts);
 
@@ -3643,6 +3663,13 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
 
 void printNoDataYet(void) {
   printFlagedWarning("<I>No Data To Display (yet)</I>");
+}
+
+/* ************************* */
+
+void printNotAvailable(void) {
+  printFlagedWarning("<I>Requested data is not available as due to"
+		     "<br>the way you started ntop (command line flags)</I>");
 }
 
 /* ************************* */

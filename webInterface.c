@@ -207,6 +207,20 @@ char* makeHostLink(HostTraffic *el, short mode,
   accessMutex(&addressResolutionMutex, "makeHostLink");
 #endif
 
+  if(el == otherHostEntry) {
+    char *fmt;
+    
+    if(mode == LONG_FORMAT)
+      fmt = "<TH "TH_BG" ALIGN=LEFT>%s</TH>";
+    else
+      fmt = "%s";
+    
+    if(snprintf(buf[bufIdx], BUF_SIZE, fmt, el->hostSymIpAddress) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+    return(buf[bufIdx]);
+  }
+
   tmpStr = el->hostSymIpAddress;
   
   if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
