@@ -27,7 +27,7 @@
 static void* netflowMainLoop(void* _deviceId);
 #endif
 
-#define DEBUG_FLOWS 
+/* #define DEBUG_FLOWS  */ 
 
 /* ********************************* */
 
@@ -1203,7 +1203,7 @@ static void* netflowMainLoop(void* _deviceId) {
 	dissectFlow(buffer, rc, deviceId);
       }
     } else {
-      if((rc < 0) && (!myGlobals.endNtop)) {
+      if((rc < 0) && (!myGlobals.endNtop) && (errno != EINTR /* Interrupted system call */)) {
 	traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: select() failed(%d, %s), terminating netFlow",
 		   errno, strerror(errno));
 	break;
