@@ -133,6 +133,11 @@
  */
 /* #define PACKET_DEBUG */
 
+/* PARAM_DEBUG enabled debug messages during command line parameter
+ * processing.
+ */
+/* #define PARAM_DEBUG */
+
 /* RRD_DEBUG controls debug messages in rrdPlugin.c.  Define it for some messages
  * or set it to 1 for more, 2 for lots of detail or 3 for huge (every rrd call)
  */
@@ -989,6 +994,9 @@ typedef struct hash_list {
 #endif
 
 #define PACKET_QUEUE_LENGTH     2048
+
+#define LINE_BUFFERS_LENGTH     4096
+#define READ_BUFFERS_LENGTH      512
 
 #ifdef WIN32
 typedef float Counter;

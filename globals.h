@@ -186,6 +186,7 @@ typedef struct ntopGlobals {
   char *program_name;           /* The name the program was run with, stripped of any leading path */
   int ntop_argc;                /* # of command line arguments */
   char **ntop_argv;             /* vector of command line arguments */
+  char *startedAs;              /* ACTUAL starting line, not the resolved one */
 
   /* command line options */
 

@@ -407,6 +407,12 @@ extern void createVendorTable(void);
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
 #endif
+#ifndef HAVE_BUILDARGV
+extern char **buildargv(const char *argv);
+#endif
+#ifndef HAVE_FREEARGV
+extern void freeargv(char **argv);
+#endif
 
 /* netflow.c */
 extern void termNetFlowExporter();

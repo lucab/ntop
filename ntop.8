@@ -14,6 +14,7 @@
 ntop \- display top network users
 .SH SYNOPSIS
 .B ntop
+.RB [ @filename ]
 .RB [ -a | --access-log-path
 .IR <path> ]
 .RB [ -b | --disable-decoders ]
@@ -112,6 +113,23 @@ can be started either in a terminal window.
 
 .PP
 .SH "COMMAND\-LINE OPTIONS"
+
+.It @filename
+The text of 
+.B filename
+is copied - ignoring line breaks and comment lines (anything following a #) - into the
+command line.
+.B ntop
+behaves as if all of the text had simply been typed directly on the command line.
+For example, if the command line is "-t 3 @d -u ntop" and file d contains 
+just the line '-d', then the effective command line is -t 3 -d -u ntop.  
+Multiple @s are permitted.
+
+Remember, most ntop options are "sticky", that is they just set an internal flag. Invoking 
+them multiple times doesn't change 
+.B ntop's 
+behavior. However, options that set a value, such as --trace-level, will use the LAST value
+given: --trace-level 2 --trace-level 3 will run as --trace-level 3.
 
 .It2 -a --access-log-path
 By default 

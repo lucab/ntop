@@ -2003,6 +2003,11 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   sendString(texthtml("Started as....",
                       "<TR><TH "TH_BG" ALIGN=left>Started as</TH><TD "TD_BG" ALIGN=right>"));
+  sendString(myGlobals.startedAs);
+  sendString(texthtml("\n\n", "</TD></TR>\n"));
+  
+  sendString(texthtml("Resolved to....",
+                      "<TR><TH "TH_BG" ALIGN=left>Resolved to</TH><TD "TD_BG" ALIGN=right>"));
   for(i=0; i<myGlobals.ntop_argc; i++) {
     sendString(myGlobals.ntop_argv[i]);
     sendString(texthtml("\n            ", " "));

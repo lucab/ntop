@@ -267,7 +267,7 @@ void usage (FILE * fp) {
  * Parse the command line options
  */
 static int parseOptions(int argc, char* argv []) {
-  int userSpecified = 0, setAdminPw = 0;
+  int userSpecified = 0, setAdminPw = 0, i;
 #ifdef WIN32
   int optind=0;
 #endif
@@ -283,6 +283,8 @@ static int parseOptions(int argc, char* argv []) {
   char* theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKMNO:P:S:U:VW:";
 #endif
   int opt;
+
+/* * * * * * * * * * */
 
   /*
    * Parse command line options to the application via standard system calls
@@ -549,7 +551,6 @@ static int parseOptions(int argc, char* argv []) {
        *     --use-syslog requires a facility parameter (see /usr/include/sys/syslog.h)
        */
       if (optarg) {
-	int i;
 	
 	stringSanityCheck(optarg);
 	
@@ -567,7 +568,7 @@ static int parseOptions(int argc, char* argv []) {
 	  myGlobals.useSyslog = myFacilityNames[i].c_val;
 	}
       } else {
-	printf("NOTE: --use-syslog with no facility, using default value\n");
+	printf("NOTE: --use-syslog, no facility specified, using default value.  Did you forget the =?\n");
 	myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
       }
       break;
@@ -600,6 +601,7 @@ static int parseOptions(int argc, char* argv []) {
         setAdminPassword(optarg);
         exit(0);
       } else {
+	printf("NOTE: --set-admin-password requested, no password.  Did you forget the =?\n");
         setAdminPw = 1;
       }
       break;
@@ -628,6 +630,19 @@ static int parseOptions(int argc, char* argv []) {
     exit(0);
   }
 
+  /* Handle any unrecognized options, such as a nested @filename */
+  if (optind < argc) {
+      printf("FATAL ERROR: Unrecognized/unprocessed ntop options...\n     ");
+      for(i=optind; i<argc; i++) {
+          printf(" %s", argv[i]);
+      }
+      printf("\n\nrun %s --help for usage information\n\n", argv[0]);
+      printf("    Common problems:\n");
+      printf("        -B \"filter expressions\" (quotes are required)\n");
+      printf("        --use-syslog=facilty (the = is required)\n\n");
+      exit(-1);
+  }
+
   return(userSpecified);
 }
 
@@ -639,25 +654,162 @@ int ntop_main(int argc, char *argv[]) {
 #else
 int main(int argc, char *argv[]) {
 #endif
-  int i = 0, userSpecified;
+  int i, j, rc, userSpecified;
+  int effective_argc;
+  char **effective_argv;
   char ifStr[196] = {0};
   time_t lastTime;
+  char *startedAs, *cmdLineBuffer, *readBuffer, *readBufferWork;
+  FILE *fd;
+  struct stat fileStat;
+
+  /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
+
+#ifndef MICRO_NTOP
+  printf("Wait please: ntop is coming up...\n");
+#else
+  printf("Wait please: ntop (micro) is coming up...\n");
+#endif
 
 #ifdef MTRACE
   mtrace();
 #endif
 
-  /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
+  startedAs = (char*)malloc(LINE_BUFFERS_LENGTH) /* big just to be safe */;
+  startedAs[0]='\0';
+  for (i=0; i<argc; i++) {
+     if (argv[i] != NULL) {
+         strcat(startedAs, argv[i]);
+         strcat(startedAs, " ");
+     }
+  }
+
+  cmdLineBuffer = (char*)malloc(LINE_BUFFERS_LENGTH) /* big just to be safe */;
+  memset(cmdLineBuffer, 0, sizeof(cmdLineBuffer)); 
+
+  readBuffer = (char*)malloc(READ_BUFFERS_LENGTH) /* big just to be safe */;
+  memset(readBuffer, 0, sizeof(readBuffer)); 
+
+  if (snprintf(cmdLineBuffer, LINE_BUFFERS_LENGTH, "%s ", argv[0]) < 0)
+      BufferTooShort();
+
+  /* Now we process the parameter list, looking for a @filename */
+  for (i=1; i<argc; i++) {
+      if (argv[i][0] != '@') {
+          if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LINE_BUFFERS_LENGTH) {
+              strcat(cmdLineBuffer, argv[i]);
+              strcat(cmdLineBuffer, " ");
+          } else {
+              BufferTooShort();
+          }
+      } else {
+
+#ifdef PARAM_DEBUG
+          printf("PARAM_DEBUG: Requested parameter file, '%s'\n", &argv[i][1]);
+#endif
+
+          rc = stat(&argv[i][1], &fileStat);
+          if (rc != 0) {
+              if (errno = ENOENT) {
+                  printf("ERROR: File not found\n");
+              } else {
+                  printf("ERROR: %d in stat(%s, ...)\n", errno, &argv[i][1]);
+              }
+              return;
+          }
+
+#ifdef PARAM_DEBUG
+          printf("PARAM_DEBUG: File size %d\n", fileStat.st_size);
+#endif
+
+          fd = fopen(&argv[i][1], "rb");
+          if (fd == NULL) {
+              printf("ERROR: Unable to open parameter file '%s' (%d)...\n", &argv[i][1], errno);
+              return;
+          }
+
+          printf("   Processing file %s for parameters...\n", &argv[i][1]);
+
+          for (;;) {
+              readBufferWork = fgets(readBuffer, min(READ_BUFFERS_LENGTH, fileStat.st_size), fd);
+              /* On EOF, we're finished */
+              if (readBufferWork == NULL) {
+                  break;
+              }
+#ifdef PARAM_DEBUG
+              printf("PARAM_DEBUG: fgets() '%s'\n", readBufferWork);
+#endif
+      
+              /* Strip out any comments */
+              readBufferWork = strchr(readBuffer, '#');
+              if (readBufferWork != NULL) {
+                  readBufferWork[0] = ' ';
+                  readBufferWork[1] = '\0';
+              }
+            
+              /* Replace the \n by a space, so at the end the buffer will 
+               * look indistinguishable...
+               */
+              readBufferWork = strchr(readBuffer, '\n');
+              if(readBufferWork != NULL) {
+                  readBufferWork[0] = ' ';
+                  readBufferWork[1] = '\0';
+              }
+      
+              readBufferWork = strchr(readBuffer, '@');
+              if(readBufferWork != NULL) {
+                  printf("FATAL ERROR: @command in file ... nesting is not permitted!\n\n");
+                  exit(-1);
+              }
+      
+#ifdef PARAM_DEBUG
+              printf("PARAM_DEBUG:      -> '%s'\n", readBuffer);
+#endif
+              if (strlen(cmdLineBuffer) + strlen(readBuffer) + 2 < LINE_BUFFERS_LENGTH) {
+                  strcat(cmdLineBuffer, " ");
+                  strcat(cmdLineBuffer, readBuffer);
+              } else {
+                  BufferTooShort();
+              }
+          }
+      
+          fclose(fd);
+      
+      }
+  }
+
+#ifdef PARAM_DEBUG
+  printf("PARAM_DEBUG: effective cmd line: '%s'\n", cmdLineBuffer);
+#endif
+
+  effective_argv=buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
+
+ /* count effective_argv[] */
+  effective_argc=0;
+  while (effective_argv[effective_argc] != NULL) {
+      effective_argc++;
+  }
+#ifdef PARAM_DEBUG
+  for(i=0; i<effective_argc; i++) {
+      printf("PARAM_DEBUG:    %3d. '%s'\n", i, effective_argv[i]);
+  }
+#endif
 
   /*
    * Initialize all global run-time parameters to reasonable values
    */
-  initNtopGlobals(argc, argv);
+  initNtopGlobals(effective_argc, effective_argv);
+
+  myGlobals.startedAs = strdup(startedAs);
+
+  free(startedAs);
+  free(cmdLineBuffer);
+  free(readBuffer);
 
   /*
    * Parse command line options to the application via standard system calls
    */
-  userSpecified = parseOptions(argc, argv);
+  userSpecified = parseOptions(effective_argc, effective_argv);
 
   /*
    * check for valid parameters
@@ -686,12 +838,6 @@ int main(int argc, char *argv[]) {
 	    myGlobals.program_name);
     exit (-1);
   }
-#endif
-
-#ifndef MICRO_NTOP
-  printf("Wait please: ntop is coming up...\n");
-#else
-  printf("Wait please: ntop (micro) is coming up...\n");
 #endif
 
   /*
