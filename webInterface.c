@@ -700,7 +700,7 @@ void shutdownNtop(void) {
 /* ******************************** */
 
 static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* status) {
-  char *tmpStr;
+  char *tmpStr, tmpBuf[384];
   char *strtokState;
 
   sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
@@ -709,8 +709,8 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
   if (status == NULL) {
     sendString("(nil)");
   } else {
-
-    tmpStr = strtok_r(status, "\n", &strtokState);
+    snprintf(tmpBuf, sizeof(tmpBuf), "%s", status);
+    tmpStr = strtok_r(tmpBuf, "\n", &strtokState);
     while(tmpStr != NULL) {
         sendString(tmpStr);
         tmpStr = strtok_r(NULL, "\n", &strtokState);
