@@ -14,11 +14,94 @@
   =========
 
 
-  This is the list of all {significant | noteworth | major} changes to the 
-  ntop source tree.
+  This is the list of all {significant | noteworthy | major | et al } changes
+  to the ntop source tree.
 
   The file NEWS contains a chronology of releases and major milestone versions.
 
+3.1
+=-=
+
+Biggies --
+    New look & feel - cascading menus, different colors and logos.
+
+    Platforms - ntop has been developed and tested on the following platforms:
+      - Linux
+      - MacOS
+      - Win32 (Visual C++ 6.0, MinGW should again work)
+      - Solaris 9 (i86 and sparc)
+ 
+      - FreeBSD (4.9+ and 5.3)
+ 
+      - NetBSD (Single Threaded only) - not tested.
+ 
+      - OpenBSD, HP-UX and AIX have some left-over coding/configure
+        support, but do not work or have not been tested.
+ 
+Nothing much to ./configure
+
+Added options:
+    * Added Packet sampling option.
+
+Startup:
+    * Parts of ntop configuration now stored in prefs database and can be changed
+      via the web server (effective on the next run).
+
+Protocols:
+    * Added SCTP support.
+
+    * P2P: BitTorrent.
+
+Internals:
+
+    * Lots of minor bug fixes for stability, proper/better function, more error
+      checking, etc.
+
+    * Lots of code reorg - into/out of utils, modules split up, RRD constants 
+      moved into rrdPlugin.h from globals-defines.h, etc.  
+
+    * Internal split into L3 vs. L4 stuff, common tcp security checks, etc.
+
+    * Lots of Win32 and VLAN changes.
+ 
+    * The BufferTooShort() logic did not detect problems due to a change
+      in the way newer glibc reports overflow.  This was corrected and a
+      number of problems were detected/fixed.
+
+    * Single-threaded ntop should again compile and work.
+
+    * Reduced some memory requrements.
+
+    * Better handling if same host is seen in multiple vlans.
+
+    * Running ntop from a file should report the time as that of the last packet.
+
+    * FibreChanel NS and OS fingerprints are now cached.
+
+    * Host information pages offer packet or byte sort options.
+
+    * Removed the FILEDESCRIPTORBUG work-around.  This makes ntop again sensitive to 
+      the FreeBSD bug bin/51535.  ntop will probably NOT work with FreeBSD versions 
+      4.8 and below nor 5.1.
+
+
+External tools and data files:
+
+    * Ettercap - OS fingerprints updated to Ettercap NG.
+
+    * Frozen version of rrd is now 1.0.49.
+
+Plugins:
+
+    * Re-writes of netFlow and sFlow plugins.
+
+    * Removed nfs plugin.
+
+    * New SNMP plugin.
+
+
+
+ 
  3.0 (was going to be 2.3)      
  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
