@@ -772,14 +772,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 #endif
   }
 
-  if(headerFlags & HTTP_FLAG_IS_CACHEABLE) {
-    theTime += 3600;
-    strftime(theDate, sizeof(theDate)-1, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
-    theDate[sizeof(theDate)-1] = '\0';
-    if(snprintf(tmpStr, sizeof(tmpStr), "Expires: %s\n", theDate) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(tmpStr);
-  } else if((headerFlags & HTTP_FLAG_NO_CACHE_CONTROL) == 0) {
+  if((headerFlags & HTTP_FLAG_NO_CACHE_CONTROL) == 0) {
     sendString("Expires: 0\n");
   }
 
