@@ -166,7 +166,7 @@ char* formatMicroSeconds(unsigned long microsec) {
 
 /* ******************************* */
 
-char* formatThroughput(float numBytes) {
+char* formatThroughput(float numBytes /* <=== Bytes/second */) {
   static char outStr[5][32];
   static short bufIdx=0;
   float numBits;

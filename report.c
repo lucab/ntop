@@ -834,26 +834,27 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString("</TABLE></TR><TR><TH "TH_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(device[actualReportDeviceId].actualThpt/8),
-		  device[actualReportDeviceId].actualPktsThpt) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  getRowColor(), formatThroughput(device[actualReportDeviceId].actualThpt),
+		  device[actualReportDeviceId].actualPktsThpt) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Last Minute</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(device[actualReportDeviceId].lastMinThpt/8), 
+		  getRowColor(), formatThroughput(device[actualReportDeviceId].lastMinThpt), 
 		  device[actualReportDeviceId].lastMinPktsThpt) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Last 5 Minutes</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(device[actualReportDeviceId].lastFiveMinsThpt/8), 
+		  getRowColor(), formatThroughput(device[actualReportDeviceId].lastFiveMinsThpt), 
 		  device[actualReportDeviceId].lastFiveMinsPktsThpt) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Peak</th><TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(device[actualReportDeviceId].peakThroughput/8), 
+		  getRowColor(), formatThroughput(device[actualReportDeviceId].peakThroughput), 
 		  device[actualReportDeviceId].peakPacketThroughput) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
@@ -2727,7 +2728,7 @@ void printIpTrafficMatrix(void) {
 /* ************************ */
 
 void printThptStatsMatrix(int sortedColumn) {
-  int i, ratio=8;
+  int i;
   char label[32], label1[32], buf[BUF_SIZE];
   time_t tmpTime;
   struct tm t;
@@ -2757,7 +2758,7 @@ void printThptStatsMatrix(int sortedColumn) {
 		  "<TABLE BORDER=1 WIDTH=100%%>",
 		  getRowColor(), label1, label,
 		  formatThroughput(device[actualReportDeviceId].
-				   last60MinutesThpt[i].trafficValue/ratio)) < 0) 
+				   last60MinutesThpt[i].trafficValue)) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
 	 sendString(buf);
 
@@ -2770,7 +2771,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						 last60MinutesThpt[i].topHostSentIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last60MinutesThpt[i].topSentTraffic/ratio)) < 0)
+				     last60MinutesThpt[i].topSentTraffic)) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 	
@@ -2782,7 +2783,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						   last60MinutesThpt[i].secondHostSentIdx],
 				   LONG_FORMAT, 0, 0),
 		      formatThroughput(device[actualReportDeviceId].
-				       last60MinutesThpt[i].secondSentTraffic/ratio)) < 0) 
+				       last60MinutesThpt[i].secondSentTraffic)) < 0) 
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	}
@@ -2796,7 +2797,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						   last60MinutesThpt[i].thirdHostSentIdx],
 				   LONG_FORMAT, 0, 0),
 		      formatThroughput(device[actualReportDeviceId].
-				       last60MinutesThpt[i].thirdSentTraffic/ratio)) < 0)
+				       last60MinutesThpt[i].thirdSentTraffic)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	}
@@ -2815,7 +2816,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						 last60MinutesThpt[i].topHostRcvdIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last60MinutesThpt[i].topRcvdTraffic/ratio)) < 0) 
+				     last60MinutesThpt[i].topRcvdTraffic)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	   sendString(buf);
 
@@ -2828,7 +2829,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						   last60MinutesThpt[i].secondHostRcvdIdx],
 				   LONG_FORMAT, 0, 0),
 		      formatThroughput(device[actualReportDeviceId].
-				       last60MinutesThpt[i].secondRcvdTraffic/ratio)) < 0) 
+				       last60MinutesThpt[i].secondRcvdTraffic)) < 0) 
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	     sendString(buf);
 	}
@@ -2841,7 +2842,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						   last60MinutesThpt[i].thirdHostRcvdIdx],
 				   LONG_FORMAT, 0, 0),
 		      formatThroughput(device[actualReportDeviceId].
-				       last60MinutesThpt[i].thirdRcvdTraffic/ratio)) < 0)
+				       last60MinutesThpt[i].thirdRcvdTraffic)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	}
@@ -2876,7 +2877,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG" ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>",
 		    getRowColor(), label, label1,
-		    formatThroughput(device[actualReportDeviceId].last24HoursThpt[i].trafficValue/ratio)) < 0) 
+		    formatThroughput(device[actualReportDeviceId].last24HoursThpt[i].trafficValue)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	   sendString(buf);
 
@@ -2889,7 +2890,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						   last24HoursThpt[i].topHostSentIdx],
 				   LONG_FORMAT, 0, 0),
 		      formatThroughput(device[actualReportDeviceId].
-				       last24HoursThpt[i].topSentTraffic/ratio)) < 0) 
+				       last24HoursThpt[i].topSentTraffic)) < 0) 
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
@@ -2901,7 +2902,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						 last24HoursThpt[i].secondHostSentIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].secondSentTraffic/ratio)) < 0) 
+				     last24HoursThpt[i].secondSentTraffic)) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
@@ -2914,7 +2915,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						 last24HoursThpt[i].thirdHostSentIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].thirdSentTraffic/ratio)) < 0) 
+				     last24HoursThpt[i].thirdSentTraffic)) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
@@ -2932,7 +2933,7 @@ void printThptStatsMatrix(int sortedColumn) {
 					       last24HoursThpt[i].topHostRcvdIdx],
 			       LONG_FORMAT, 0, 0),
 		  formatThroughput(device[actualReportDeviceId].
-				   last24HoursThpt[i].topRcvdTraffic/ratio)) < 0) 
+				   last24HoursThpt[i].topRcvdTraffic)) < 0) 
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
@@ -2945,7 +2946,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						 last24HoursThpt[i].secondHostRcvdIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].secondRcvdTraffic/ratio)) < 0) 
+				     last24HoursThpt[i].secondRcvdTraffic)) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
@@ -2958,7 +2959,7 @@ void printThptStatsMatrix(int sortedColumn) {
 						 last24HoursThpt[i].thirdHostRcvdIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].thirdRcvdTraffic/ratio)) < 0) 
+				     last24HoursThpt[i].thirdRcvdTraffic)) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }

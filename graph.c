@@ -414,8 +414,8 @@ void drawThptGraph(int sortedColumn) {
   char  *lbls[60];
   FILE *fd;
   time_t tmpTime;
-  unsigned long  sc[2]    = { 0xFF0000, 0x8080FF };
-  float graphData[60], maxData;
+  unsigned long  sc[2] = { 0xFF0000, 0x8080FF };
+  float graphData[60], maxBytesPerSecond;
   struct tm t;
 
 #ifdef MULTITHREADED
@@ -447,16 +447,16 @@ void drawThptGraph(int sortedColumn) {
       strftime(labels[i], 32, "%H:%M", localtime_r(&tmpTime, &t));
     }
 
-    for(maxData=0, i=0; i<len; i++) {
-      graphData[59-i] = device[actualReportDeviceId].last60MinutesThpt[i].trafficValue;
-      if(graphData[59-i] > maxData) maxData = graphData[59-i];
+    for(maxBytesPerSecond=0, i=0; i<len; i++) {
+      graphData[59-i] = device[actualReportDeviceId].last60MinutesThpt[i].trafficValue*8 /* I want bits here */;
+      if(graphData[59-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[59-i];
     }
 
-    if(maxData > 1048576 /* 1024*1024 */) {
+    if(maxBytesPerSecond > 1048576 /* 1024*1024 */) {
       for(i=0; i<len; i++)
 	graphData[59-i] /= 1048576;
       GDC_ylabel_fmt = "%.1f Mbps";
-    } else if(maxData > 1024) {
+    } else if(maxBytesPerSecond > 1024) {
       for(i=0; i<len; i++)
 	graphData[59-i] /= 1024;
       GDC_ylabel_fmt = "%.1f Kbps";
@@ -484,16 +484,16 @@ void drawThptGraph(int sortedColumn) {
       strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
     }
 
-    for(maxData=0, i=0; i<len; i++) {
-      graphData[23-i] = device[actualReportDeviceId].last24HoursThpt[i].trafficValue;
-      if(graphData[23-i] > maxData) maxData = graphData[23-i];
+    for(maxBytesPerSecond=0, i=0; i<len; i++) {
+      graphData[23-i] = device[actualReportDeviceId].last24HoursThpt[i].trafficValue*8 /* I want bits here */;
+      if(graphData[23-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[23-i];
     }
 
-    if(maxData > 1048576 /* 1024*1024 */) {
+    if(maxBytesPerSecond > 1048576 /* 1024*1024 */) {
       for(i=0; i<len; i++)
 	graphData[23-i] /= 1048576;
       GDC_ylabel_fmt = "%.1f Mbps";
-    } else if(maxData > 1024) {
+    } else if(maxBytesPerSecond > 1024) {
       for(i=0; i<len; i++)
 	graphData[23-i] /= 1024;
       GDC_ylabel_fmt = "%.1f Kbps";
@@ -521,18 +521,18 @@ void drawThptGraph(int sortedColumn) {
       strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
     }
 
-    for(maxData=0, i=0; i<len; i++) {
-      graphData[29-i] = device[actualReportDeviceId].last30daysThpt[i];
-      if(graphData[29-i] > maxData) maxData = graphData[29-i];
+    for(maxBytesPerSecond=0, i=0; i<len; i++) {
+      graphData[29-i] = device[actualReportDeviceId].last30daysThpt[i]*8 /* I want bits here */;
+      if(graphData[29-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[29-i];
     }
 
     GDC_title = "Last 30 Days Average Throughput";
 
-    if(maxData > 1048576 /* 1024*1024 */) {
+    if(maxBytesPerSecond > 1048576 /* 1024*1024 */) {
       for(i=0; i<len; i++)
 	graphData[29-i] /= 1048576;
       GDC_ylabel_fmt = "%.1f Mbps";
-    } else if(maxData > 1024) {
+    } else if(maxBytesPerSecond > 1024) {
       for(i=0; i<len; i++)
 	graphData[29-i] /= 1024;
       GDC_ylabel_fmt = "%.1f Kb";

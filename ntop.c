@@ -696,11 +696,6 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
       justRefreshed=0;
 
     handleWebConnections(NULL);
-
-    if((logTimeout != 0) && (actTime > nextLogTime)) {
-      LogStatsToFile();
-      nextLogTime = actTime + logTimeout;
-    }
   } /* for(;;) */
 }
 #endif

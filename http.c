@@ -509,7 +509,7 @@ void printHTMLtrailer(void) {
 
   sendString(buf);
 
-  sendString("<BR>\n<ADDRESS>&copy; 1998-2001 by <A HREF=mailto:deri@ntop.org>L. Deri</A></ADDRESS>\n");
+  sendString("<BR>\n&copy; 1998-2001 by <A HREF=mailto:deri@ntop.org>L. Deri</A>\n");
   sendString("</B></FONT>\n</BODY>\n</HTML>\n");
 }
 
