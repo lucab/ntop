@@ -97,7 +97,11 @@ static void _GDC_out_pie(short width,
   wait_result = waitpid(fork_result, &status, 0);
 
   if (wait_result == (pid_t) -1) {
-      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(002) - wait failed/interrupted");
+      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(002) - wait failed/interrupted (%d - %s)",
+                 errno,
+                 (errno == ECHILD ? "ECHILD" :
+                  errno == EINVAL ? "EINVAL" :
+                  errno == EINTR  ? "EINTR"  : "unrecognized code"));
   } else if (wait_result != fork_result) {
       traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(003) - unexpected child termination");
   } else if (status) {
