@@ -1575,9 +1575,9 @@ dnl> last test line and the various actions if true...
             echo
             ac_disable_openssl="yes"
         fi
-        if test ".${ac_disable_openssl}" != ".yes"; then
-            ac_disable_openssl="yes"
+        if test ".${ac_disable_openssl}" = ".yes"; then
             dnl> nop to skip the 2nd part tests...
+            nop="yes"
         else
             AC_MSG_CHECKING([for openSSL libraries])
             if test -d /usr &&
@@ -1613,11 +1613,11 @@ dnl> last test line and the various actions if true...
                 echo "*                /usr/lib"
                 echo "*                /usr/local/lib"
                 echo "*"
-                echo "*>>> Continuing without zlib."
-                echo "*       (http requests will not be compressed for transmission)."
+                echo "*>>> Continuing without openSSL."
+                echo "*       (https requests will not be supported)."
                 echo "*"
-                echo "*???     1. Rerun ./configure with a corrected --with-zlib-root"
-                echo "*???  or 2. Install zlib and rerun ./configure"
+                echo "*???     1. Rerun ./configure with a corrected --with-ossl-root"
+                echo "*???  or 2. Install openSSL and rerun ./configure"
                 echo "*"
                 echo "*******************************************************************"
                 echo
@@ -2471,6 +2471,7 @@ if test ".${ac_cv_lib_z_zlibVersion}" = ".yes" &&
     fi
     ZLIB_ROOT=
 elif test ".${ZLIB_ROOT}" = "."; then
+    ac_disable_zlib="no"
     AC_MSG_RESULT([not found in standard location, no --with-zlib-root, testing further...])
 
     if test -d /usr &&
@@ -2518,8 +2519,9 @@ elif test ".${ZLIB_ROOT}" = "."; then
         echo "*******************************************************************"
         echo
         ZLIB_ROOT=
+        ac_disable_zlib="yes"
     fi
-    if test ".${ZLIB_ROOT}" = "."; then
+    if test ".${ac_disable_zlib}" = ".yes"; then
         dnl> nop to skip the 2nd part tests...
         nop="yes"
     else

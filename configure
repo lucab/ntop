@@ -24458,9 +24458,9 @@ echo "${ECHO_T}error" >&6
             echo
             ac_disable_openssl="yes"
         fi
-        if test ".${ac_disable_openssl}" != ".yes"; then
-            ac_disable_openssl="yes"
-                    else
+        if test ".${ac_disable_openssl}" = ".yes"; then
+                        nop="yes"
+        else
             echo "$as_me:$LINENO: checking for openSSL libraries" >&5
 echo $ECHO_N "checking for openSSL libraries... $ECHO_C" >&6
             if test -d /usr &&
@@ -24506,11 +24506,11 @@ echo "${ECHO_T}error" >&6
                 echo "*                /usr/lib"
                 echo "*                /usr/local/lib"
                 echo "*"
-                echo "*>>> Continuing without zlib."
-                echo "*       (http requests will not be compressed for transmission)."
+                echo "*>>> Continuing without openSSL."
+                echo "*       (https requests will not be supported)."
                 echo "*"
-                echo "*???     1. Rerun ./configure with a corrected --with-zlib-root"
-                echo "*???  or 2. Install zlib and rerun ./configure"
+                echo "*???     1. Rerun ./configure with a corrected --with-ossl-root"
+                echo "*???  or 2. Install openSSL and rerun ./configure"
                 echo "*"
                 echo "*******************************************************************"
                 echo
@@ -26279,6 +26279,7 @@ echo "${ECHO_T}ok (standard location)" >&6
     fi
     ZLIB_ROOT=
 elif test ".${ZLIB_ROOT}" = "."; then
+    ac_disable_zlib="no"
     echo "$as_me:$LINENO: result: not found in standard location, no --with-zlib-root, testing further..." >&5
 echo "${ECHO_T}not found in standard location, no --with-zlib-root, testing further..." >&6
 
@@ -26343,8 +26344,9 @@ echo "${ECHO_T}error" >&6
         echo "*******************************************************************"
         echo
         ZLIB_ROOT=
+        ac_disable_zlib="yes"
     fi
-    if test ".${ZLIB_ROOT}" = "."; then
+    if test ".${ac_disable_zlib}" = ".yes"; then
                 nop="yes"
     else
         echo "$as_me:$LINENO: checking for zlib library" >&5
