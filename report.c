@@ -2967,7 +2967,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	sendString("</CENTER>\n");
       }
     }
- bh }
+  }
 }
 
 /* ************************ */
