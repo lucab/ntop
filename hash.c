@@ -22,7 +22,7 @@
 
 static float timeval_subtract (struct timeval x, struct timeval y); /* forward */
 
-#define HASH_DEBUG
+/* #define HASH_DEBUG */
 
 #ifdef HASH_DEBUG
 static void hashSanityCheck();
