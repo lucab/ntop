@@ -67,7 +67,7 @@ void handleSigHup(int signalId _UNUSED_) {
 /* *************************** */
 
 #ifdef MULTITHREADED
-#ifndef WIN32
+#if !defined(WIN32) && !defined(DARWIN)
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
