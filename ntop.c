@@ -512,7 +512,7 @@ void handleProtocols() {
 
 void addDefaultProtocols(void) {
   handleProtocolList("FTP",      "ftp|ftp-data|");
-  handleProtocolList("HTTP",     "http|www|https|");
+  handleProtocolList("HTTP",     "http|www|https|3128|"); /* 3128 is HTTP cache */
   handleProtocolList("DNS",      "name|domain|");
   handleProtocolList("Telnet",   "telnet|login|");
   handleProtocolList("NBios-IP", "netbios-ns|netbios-dgm|netbios-ssn|");
