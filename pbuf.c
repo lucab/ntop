@@ -2303,6 +2303,7 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
 
 /* ************************************ */
 
+
 static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
 			 u_int length,
@@ -2450,14 +2451,13 @@ static void processIpPkt(const u_char *bp,
 #endif
 
   off = ntohs(ip.ip_off);
-  tcpDataLength = ntohs(ip.ip_len) - hlen - (tp.th_off * 4);
 
   switch(ip.ip_p) {
   case IPPROTO_TCP:
     proto = "TCP";
     device[actualDeviceId].tcpBytes += length;
     memcpy(&tp, bp+hlen, sizeof(struct tcphdr));    
-
+    tcpDataLength = ntohs(ip.ip_len) - hlen - (tp.th_off * 4);
     sport = ntohs(tp.th_sport);
     dport = ntohs(tp.th_dport);
 
