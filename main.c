@@ -439,8 +439,9 @@ static int parseOptions(int argc, char* argv []) {
     case 't':
       /* Trace Level Initialization */
       myGlobals.traceLevel = min(max(1, atoi(optarg)), CONST_DETAIL_TRACE_LEVEL);
-      /* DETAILED is NOISY + FileLine stamp */
-      if (myGlobals.traceLevel >= CONST_DETAIL_TRACE_LEVEL)
+      /* DETAILED is NOISY + FileLine stamp, unless already set */
+      if((myGlobals.traceLevel >= CONST_DETAIL_TRACE_LEVEL) && 
+         (myGlobals.logExtra == 0))
           myGlobals.logExtra = CONST_EXTRA_TRACE_FILELINE;
       break;
 
