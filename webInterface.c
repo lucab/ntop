@@ -175,8 +175,17 @@ void showPluginsList(char* pluginName) {
        && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)) {
 
       if(thePlugin
-	 && (strcmp(flows->pluginStatus.pluginPtr->pluginURLname, thePlugin) == 0)) {
+	 && (strcmp(flows->pluginStatus.pluginPtr->pluginURLname, thePlugin) == 0)
+	 && (flows->pluginStatus.activePlugin != newPluginStatus)) {
 	char key[64];
+
+	if(newPluginStatus == 0 /* disabled */) {
+	  if(flows->pluginStatus.pluginPtr->termFunc != NULL)
+	    flows->pluginStatus.pluginPtr->termFunc();
+	} else {
+	  if(flows->pluginStatus.pluginPtr->startFunc != NULL)
+	    flows->pluginStatus.pluginPtr->startFunc();
+	}
 
 	flows->pluginStatus.activePlugin = newPluginStatus;
 

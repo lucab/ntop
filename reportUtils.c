@@ -560,12 +560,14 @@ int sortHostFctn(const void *_a, const void *_b) {
   switch(myGlobals.columnSort) {
   case 1:
 #ifdef MULTITHREADED
-    accessMutex(&myGlobals.addressResolutionMutex, "sortHostFctn");
+    if(myGlobals.numericFlag == 0) 
+      accessMutex(&myGlobals.addressResolutionMutex, "sortHostFctn");
 #endif
     rc = strcasecmp((*a)->hostSymIpAddress[0] != '\0' ? (*a)->hostSymIpAddress : (*a)->ethAddressString,
 		    (*b)->hostSymIpAddress[0] != '\0' ? (*b)->hostSymIpAddress : (*b)->ethAddressString);
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.addressResolutionMutex);
+    if(myGlobals.numericFlag == 0) 
+      releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
     break;
@@ -732,7 +734,8 @@ int cmpFctn(const void *_a, const void *_b) {
 
     /* Host name */
 #ifdef MULTITHREADED
-    accessMutex(&myGlobals.addressResolutionMutex, "cmpFctn");
+    if(myGlobals.numericFlag == 0) 
+      accessMutex(&myGlobals.addressResolutionMutex, "cmpFctn");
 #endif
 
     if((*a)->hostSymIpAddress[0] != '\0') {
@@ -746,7 +749,8 @@ int cmpFctn(const void *_a, const void *_b) {
       rc = strcasecmp((*a)->ethAddressString, (*b)->ethAddressString);
 
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.addressResolutionMutex);
+    if(myGlobals.numericFlag == 0) 
+      releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
   } else if(myGlobals.columnSort == DOMAIN_DUMMY_IDX_VALUE) {
@@ -1077,13 +1081,15 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
 
   default:
 #ifdef MULTITHREADED
-    accessMutex(&myGlobals.addressResolutionMutex, "cmpMulticastFctn");
+    if(myGlobals.numericFlag == 0) 
+      accessMutex(&myGlobals.addressResolutionMutex, "cmpMulticastFctn");
 #endif
 
     rc = strcmp((*a)->hostSymIpAddress, /* Host name */
 		(*b)->hostSymIpAddress);
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.addressResolutionMutex);
+    if(myGlobals.numericFlag == 0) 
+      releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
   }

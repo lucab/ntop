@@ -47,7 +47,9 @@ void handleSigHup(int signalId _UNUSED_) {
   traceEvent(TRACE_INFO, "========================================");
    printMutexInfo(&myGlobals.gdbmMutex, "myGlobals.gdbmMutex");
    printMutexInfo(&myGlobals.packetQueueMutex, "myGlobals.packetQueueMutex");
-   printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
+
+   if(myGlobals.numericFlag == 0)
+     printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
    printMutexInfo(&myGlobals.hashResizeMutex, "myGlobals.hashResizeMutex");
 
   if(myGlobals.isLsofPresent)

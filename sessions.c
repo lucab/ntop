@@ -851,11 +851,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     */
     if(1 /* myGlobals.enablePacketDecoding */) {
       if(len > 0) {
-	if(sport == 21) {
+	if((sport == 21) || (dport == 21)) {
 	  FD_SET(HOST_SVC_FTP, &srcHost->flags);
 	  memset(rcStr, 0, sizeof(rcStr));
 
 	  strncpy(rcStr, packetData, len);
+
+	  traceEvent(TRACE_INFO, "FTP: %s", rcStr);
+
 	  /*
 	    227 Entering Passive Mode (131,114,21,11,156,95)
 	    131.114.21.11:40012 (40012 = 156 * 256 + 95)

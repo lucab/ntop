@@ -378,7 +378,8 @@ void unloadPlugins(void) {
       traceEvent(TRACE_INFO, "Unloading plugin '%s'...\n",
 		 flows->pluginStatus.pluginPtr->pluginName);
 #endif
-      if(flows->pluginStatus.pluginPtr->termFunc != NULL)
+      if((flows->pluginStatus.pluginPtr->termFunc != NULL)
+	 && (flows->pluginStatus.activePlugin))
 	flows->pluginStatus.pluginPtr->termFunc();
 
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
@@ -417,7 +418,8 @@ void startPlugins(void) {
       traceEvent(TRACE_INFO, "Starting plugin '%s'...\n",
 		 flows->pluginStatus.pluginPtr->pluginName);
 #endif
-      if(flows->pluginStatus.pluginPtr->startFunc != NULL)
+      if((flows->pluginStatus.pluginPtr->startFunc != NULL)
+	 && (flows->pluginStatus.activePlugin))
 	flows->pluginStatus.pluginPtr->startFunc();
     }
     flows = flows->next;
