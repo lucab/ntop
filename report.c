@@ -1045,12 +1045,12 @@ void printHostsTraffic(int reportType,
   case SORT_DATA_RECEIVED_PROTOS:
   case SORT_DATA_SENT_PROTOS:
   case SORT_DATA_PROTOS:
-    snprintf(buf, sizeof(buf), "Network Traffic (All protocols): ");
+    snprintf(buf, sizeof(buf), "Network Traffic (All Protocols): ");
     break;
   case SORT_DATA_RECEIVED_IP:
   case SORT_DATA_SENT_IP:
   case SORT_DATA_IP:
-    snprintf(buf, sizeof(buf), "Network Traffic (tcp/ip): ");
+    snprintf(buf, sizeof(buf), "Network Traffic (TCP/IP): ");
     break;
   case SORT_DATA_RECEIVED_THPT:
   case SORT_DATA_SENT_THPT:
