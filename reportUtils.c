@@ -3836,7 +3836,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     struct stat statbuf;
     char *key;
 
-    if(subnetPseudoLocalHost(el))
+    if((!myGlobals.dontTrustMACaddr) && subnetPseudoLocalHost(el))
       key = el->ethAddressString;
     else
       key = el->hostNumIpAddress;
