@@ -1322,8 +1322,6 @@ void scanTimedoutTCPSessions(void) {
 /* ************************************ */
 
 static IPSession* handleSession(const struct pcap_pkthdr *h,
-				IPSession *sessions[],
-				u_short *numSessions,
 				u_short fragmentedData,
 				u_int tcpWin,
 				u_int srcHostIdx,
@@ -1388,10 +1386,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     srcHost->hostSymIpAddress, sport,
 	     dstHost->hostSymIpAddress, dport, idx);
 #endif
-
+  
+ RESCAN_LIST:
   if(sessionType == IPPROTO_TCP) {
     for(i=0, found=0; i<device[actualDeviceId].numTotSessions; i++) {
-      theSession = sessions[idx];
+      theSession = device[actualDeviceId].tcpSession[idx];
 
       if(theSession != NULL) {
 	if((theSession->initiatorIdx == srcHostIdx)
@@ -1446,31 +1445,38 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  printf(" NEW ");
 #endif
 	  /* MULTIPLY_FACTORY courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-	  if((*numSessions) > (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
+	  if(device[actualDeviceId].numTcpSessions > 
+	     (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
 	    /* If possible this table will be enlarged */
 
-	    extendTcpUdpSessionsHash();
+	    extendTcpSessionsHash();
+
+	    /* A goto il necessary as when the hash is extended all the pointers changed hence
+	       some references (eg. sessions[]) are no longer valid) */
+
+	    goto RESCAN_LIST;	    
 	  }
 
-	  if((*numSessions) > (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
+	  if(device[actualDeviceId].numTcpSessions > 
+	     (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
 	    /* The hash table is getting large: let's replace the oldest session
 	       with this one we're allocating */
 	    u_int usedIdx=0;
 
 	    for(idx=0; idx<device[actualDeviceId].numTotSessions; idx++) {
-	      if(sessions[idx] != NULL) {
+	      if(device[actualDeviceId].tcpSession[idx] != NULL) {
 		if(theSession == NULL) {
-		  theSession = sessions[idx];
+		  theSession = device[actualDeviceId].tcpSession[idx];
 		  usedIdx = idx;
 		}
-		else if(theSession->lastSeen > sessions[idx]->lastSeen) {
-		  theSession = sessions[idx];
+		else if(theSession->lastSeen > device[actualDeviceId].tcpSession[idx]->lastSeen) {
+		  theSession = device[actualDeviceId].tcpSession[idx];
 		  usedIdx = idx;
 		}
 	      }
 	    }
 
-	    sessions[usedIdx] = NULL;
+	    device[actualDeviceId].tcpSession[usedIdx] = NULL;
 	  } else {
 	    int i;
 
@@ -1486,7 +1492,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    }
 
 	    theSession->magic = MAGIC_NUMBER;
-	    (*numSessions)++;
+	    device[actualDeviceId].numTcpSessions++;
 
 	    traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
 		       dstHost->hostSymIpAddress, dport,
@@ -1576,7 +1582,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    }
 	  }
 
-	  sessions[firstEmptySlot] = theSession;
+	  device[actualDeviceId].tcpSession[firstEmptySlot] = theSession;
 	  theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
 	  theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
 	  theSession->sport = sport;
@@ -1939,10 +1945,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     }
 
     /* ***************************************** */
-
-    if(theSession->passiveFtpSession) {
-    
-    }
 
     if((theSession->minWindow > tcpWin) || (theSession->minWindow == 0))
       theSession->minWindow = tcpWin;
@@ -2517,9 +2519,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
        open. That's why we don't count this as a session in this
        case.
     */
-    theSession = handleSession(h, device[actualDeviceId].tcpSession,
-			       &device[actualDeviceId].numTcpSessions, 
-			       fragmentedData, tcpWin,
+    theSession = handleSession(h, fragmentedData, tcpWin,
 			       srcHostIdx, sport,
 			       dstHostIdx, dport,
 			       length, tp,
@@ -2542,8 +2542,7 @@ static IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 				   u_short dport,
 				   u_int length,
 				   u_char* packetData) {
-  IPSession* theSession = handleSession(h, NULL,
-					NULL, fragmentedData, 0,
+  IPSession* theSession = handleSession(h, fragmentedData, 0,
 					srcHostIdx, sport,
 					dstHostIdx, dport, length,
 					NULL, length, packetData);

@@ -1013,18 +1013,21 @@ void purgeIdleHosts(int ignoreIdleTime) {
 
 /* ******************************************** */
 
-void extendTcpUdpSessionsHash() {
-  if((device[actualDeviceId].numTotSessions*2) < MAX_HASH_SIZE) {
+void extendTcpSessionsHash() {
+  const short extensionFactor = 2;
+
+  if((device[actualDeviceId].numTotSessions*extensionFactor) < MAX_HASH_SIZE) {
     /* Fine we can enlarge the table now */
     IPSession** tmpSession;
     int len, i, newLen, idx;
 
-    newLen = device[actualDeviceId].numTotSessions*2;
-    len = sizeof(IPSession*)*device[actualDeviceId].numTotSessions;
+    newLen = extensionFactor*sizeof(IPSession*)*device[actualDeviceId].numTotSessions;
 
     tmpSession = device[actualDeviceId].tcpSession;
-    device[actualDeviceId].tcpSession = (IPSession**)malloc(2*len);
-    memset(device[actualDeviceId].tcpSession, 0, 2*len);
+    device[actualDeviceId].tcpSession = (IPSession**)malloc(newLen);
+    memset(device[actualDeviceId].tcpSession, 0, newLen);
+
+    newLen = device[actualDeviceId].numTotSessions*extensionFactor;
     for(i=0; i<device[actualDeviceId].numTotSessions; i++) {
       if(tmpSession[i] != NULL) {
 	idx = (u_int)((tmpSession[i]->initiatorRealIp.s_addr+
@@ -1040,7 +1043,7 @@ void extendTcpUdpSessionsHash() {
     }
     free(tmpSession);
 
-    device[actualDeviceId].numTotSessions *= 2;
+    device[actualDeviceId].numTotSessions *= extensionFactor;
 
     traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d]", 
 	       device[actualDeviceId].numTotSessions);

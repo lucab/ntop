@@ -229,7 +229,7 @@ extern void resizeHostHash(int deviceToExtend, float multiplier);
 extern void freeHostInfo(int theDevice, u_int hostIdx);
 extern void freeHostInstances(void);
 extern void purgeIdleHosts(int ignoreIdleTime);
-extern void extendTcpUdpSessionsHash();
+extern void extendTcpSessionsHash();
 
 /* http.c */
 extern void sendStringLen(char *theString, unsigned int len);
