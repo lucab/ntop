@@ -337,8 +337,15 @@ static int parseOptions(int argc, char* argv []) {
   /*
    * Parse command line options to the application via standard system calls
    */
+#ifdef HAVE_GETOPT_LONG
   while((opt = getopt_long(argc, argv, theOpts, long_options, &opt_index)) != EOF) {
-    /* traceEvent(CONST_TRACE_INFO, "getopt(%d/%c/%s)", opt, opt, optarg); */
+#else
+  while((opt = getopt(argc, argv, theOpts)) != EOF) {
+#endif
+#ifdef PARAM_DEBUG
+    traceEvent(CONST_TRACE_INFO, "getopt(%d/%c/%s)", opt, opt, optarg);
+#endif
+
     switch (opt) {
     case 'a': /* ntop access log path */
       stringSanityCheck(optarg);
