@@ -282,10 +282,152 @@ AC_ARG_ENABLE(iknowbetter,
               ac_willfailoverride="yes",
               ac_willfailoverride="no")
 
+AC_ARG_ENABLE(automake171,
+              [  --enable-automake171        Override automake 1.7.1 abort],
+              ac_automake171="yes",
+              ac_automake171="no")
+
 AC_ARG_ENABLE(void,
               [  +----------------------------------------------------------------------------+])
 AC_ARG_WITH(void,
               [  +----------------------------------------------------------------------------+])
+
+dnl> Automake version problem test...
+automake --version | grep ^automake >/tmp/automake.$$
+AC_MSG_CHECKING([automake version for 1.7.1/1.6.3 conflict...])
+grep '1\.5$' /tmp/automake.$$ > /dev/null
+rc=$?
+if test ".${rc}" = ".0"; then
+    AC_MSG_RESULT(no)
+else
+    grep '1\.6\.[[123]]$' /tmp/automake.$$ > /dev/null
+    rc=$?
+    if test ".${rc}" = ".0"; then
+        AC_MSG_RESULT(no)
+    else
+        grep '1\.7$' /tmp/automake.$$ > /dev/null
+        rc=$?
+        if test ".${rc}" = ".0"; then
+            AC_MSG_RESULT(no)
+        else
+            grep '1\.7\.[[0-9]]$' /tmp/automake.$$ > /dev/null
+            rc=$?
+            if test ".${rc}" = ".0"; then
+                AC_MSG_RESULT(yes)
+                echo
+                echo "*******************************************************************"
+                echo "*"
+                echo "* WARNING: Attempting to configure with automake 1.7.x"
+                echo "*"
+                cat /tmp/automake.$$
+                echo "*"
+                echo "*>>> There is a known problem - and probably an error message above."
+                echo "*"
+                if test ".${ac_automake171}" = ".yes"; then
+                    echo "*    The --enable-automake171 flag is set, so we continue."
+                else
+                    echo "*>>> We are going to:"
+                    echo "*>>>     1. delete the existing generated files"
+                    echo "*>>>     2. use the auto* tools to recreate them"
+                    echo "*                (if you do not have automake, autoconf and libtool"
+                    echo "*                 intalled, this will fail)"
+                    echo "*>>>     3. tell you to rerun ./configure with the --enable-automake171 flag"
+                fi
+                echo "*"
+                echo "*    Please, tell the ntop-dev mailing list if there are problems..."
+                echo "*"
+                echo "*******************************************************************"
+                echo
+                if test ".${ac_automake171}" != ".yes"; then
+                    echo "1. delete the existing generated files:"
+                    for i in acinclude.m4 \
+                             aclocal.m4 \
+                             Makefile.in \
+                             config.h.in \
+                             configure \
+                             Makefile; do
+                        if test -f $i; then
+                             echo "     .... $i"
+                             rm -f $i
+                        fi
+                    done
+                    echo "    done!"
+                    echo
+                    echo "2. use the auto* tools to recreate them:"
+                    echo "    .... cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
+                    cat acinclude.m4.ntop libtool.m4.in > acinclude.m4
+                    rc=$?
+                    if test ".${rc}" != ".0"; then
+                        echo
+                        echo "*******************************************************************"
+                        echo "*"
+                        echo "* ERROR: Unable to run cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
+                        echo "*"
+                        echo "*    We are going to give up."
+                        echo "*"
+                        echo "*>>> Please correct the problem and rerun"
+                        echo "*"
+                        echo "*******************************************************************"
+                        echo
+                        exit 1
+                    fi
+                    for i in aclocal \
+                             autoheader \
+                             "automake --gnu --copy --add-missing" \
+                             autoconf; do
+                        echo "    .... $i"
+                        $i
+                        rc=$?
+                        if test ".${rc}" != ".0"; then
+                            echo
+                            echo "*******************************************************************"
+                            echo "*"
+                            echo "* ERROR: Unable to run $i"
+                            echo "*"
+                            echo "*    We are going to give up."
+                            echo "*"
+                            echo "*>>> Please correct the problem with the auto* tools and rerun"
+                            echo "*"
+                            echo "*******************************************************************"
+                            echo
+                            exit 1
+                        fi
+                    done
+                    echo
+                    echo
+                    echo "Now, rerun ./configure with whatever parameters you normally use plus --enable-automake171"
+                    echo
+                    exit 1
+                fi
+            else
+                AC_MSG_RESULT(maybe)
+                echo
+                echo "*******************************************************************"
+                echo "*"
+                echo "* WARNING: Attempting to configure with automake > 1.7.1"
+                echo "*"
+                cat /tmp/automake.$$
+                echo "*"
+                echo "*>>> This has never been tested."
+                echo "*>>> It will probably fail."
+                echo "*"
+                if test ".${ac_automake171}" = ".yes"; then
+                     echo "*    You claim to know better, so good luck..."
+                     echo "*"
+                fi
+                echo "*    You are welcome to try - but please, keep the ntop-dev"
+                echo "*    mailing list updated with your successes or failures..."
+                echo "*"
+                echo "*******************************************************************"
+                echo
+                if test ".${ac_automake171}" != ".yes"; then
+                     exit 1
+                fi
+            fi
+        fi
+    fi
+fi
+rm -f /tmp/automake.$$
 
 # Set constants and defaults
 AS=
