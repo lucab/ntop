@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -59,36 +59,36 @@ static void updateThptStats(int deviceToUpdate,
     thirdRcvdIdx = 0;
 
   for(i=58; i>=0; i--)
-    memcpy(&device[deviceToUpdate].last60MinutesThpt[i+1],
-	   &device[deviceToUpdate].last60MinutesThpt[i], sizeof(ThptEntry));
+    memcpy(&myGlobals.device[deviceToUpdate].last60MinutesThpt[i+1],
+	   &myGlobals.device[deviceToUpdate].last60MinutesThpt[i], sizeof(ThptEntry));
 
-  device[deviceToUpdate].last60MinutesThpt[0].trafficValue = device[deviceToUpdate].lastMinThpt;
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].trafficValue = myGlobals.device[deviceToUpdate].lastMinThpt;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "LastMinThpt: %s", formatThroughput(device[deviceToUpdate].lastMinThpt));
+  traceEvent(TRACE_INFO, "LastMinThpt: %s", formatThroughput(myGlobals.device[deviceToUpdate].lastMinThpt));
 #endif
 
-  device[deviceToUpdate].last60MinutesThpt[0].topHostSentIdx = topSentIdx,
-    device[deviceToUpdate].last60MinutesThpt[0].topSentTraffic = 
-    device[deviceToUpdate].hash_hostTraffic[topSentIdx]->actualSentThpt;
-  device[deviceToUpdate].last60MinutesThpt[0].secondHostSentIdx = secondSentIdx,
-    device[deviceToUpdate].last60MinutesThpt[0].secondSentTraffic = 
-    device[deviceToUpdate].hash_hostTraffic[secondSentIdx]->actualSentThpt;
-  device[deviceToUpdate].last60MinutesThpt[0].thirdHostSentIdx = thirdSentIdx,
-    device[deviceToUpdate].last60MinutesThpt[0].thirdSentTraffic = 
-    device[deviceToUpdate].hash_hostTraffic[thirdSentIdx]->actualSentThpt;
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topHostSentIdx = topSentIdx,
+    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topSentTraffic = 
+    myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx]->actualSentThpt;
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondHostSentIdx = secondSentIdx,
+    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondSentTraffic = 
+    myGlobals.device[deviceToUpdate].hash_hostTraffic[secondSentIdx]->actualSentThpt;
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdHostSentIdx = thirdSentIdx,
+    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdSentTraffic = 
+    myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdSentIdx]->actualSentThpt;
 
-  device[deviceToUpdate].last60MinutesThpt[0].topHostRcvdIdx = topRcvdIdx,
-    device[deviceToUpdate].last60MinutesThpt[0].topRcvdTraffic = 
-    device[deviceToUpdate].hash_hostTraffic[topRcvdIdx]->actualRcvdThpt;
-  device[deviceToUpdate].last60MinutesThpt[0].secondHostRcvdIdx = secondRcvdIdx,
-    device[deviceToUpdate].last60MinutesThpt[0].secondRcvdTraffic = 
-    device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt;
-  device[deviceToUpdate].last60MinutesThpt[0].thirdHostRcvdIdx = thirdRcvdIdx,
-    device[deviceToUpdate].last60MinutesThpt[0].thirdRcvdTraffic = 
-    device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt;
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topHostRcvdIdx = topRcvdIdx,
+    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topRcvdTraffic = 
+    myGlobals.device[deviceToUpdate].hash_hostTraffic[topRcvdIdx]->actualRcvdThpt;
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondHostRcvdIdx = secondRcvdIdx,
+    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondRcvdTraffic = 
+    myGlobals.device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt;
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdHostRcvdIdx = thirdRcvdIdx,
+    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdRcvdTraffic = 
+    myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt;
 
-  device[deviceToUpdate].last60MinutesThptIdx = (device[deviceToUpdate].last60MinutesThptIdx+1) % 60;
+  myGlobals.device[deviceToUpdate].last60MinutesThptIdx = (myGlobals.device[deviceToUpdate].last60MinutesThptIdx+1) % 60;
 
   if(topHourSentIdx != NO_PEER) { /* It wrapped -> 1 hour is over */
     float average=0;
@@ -102,61 +102,61 @@ static void updateThptStats(int deviceToUpdate,
     if(thirdHourRcvdIdx == NO_PEER)  thirdHourRcvdIdx = 0;
 
     for(i=0; i<60; i++) {
-      average += device[deviceToUpdate].last60MinutesThpt[i].trafficValue;
+      average += myGlobals.device[deviceToUpdate].last60MinutesThpt[i].trafficValue;
     }
 
     average /= 60;
 
     for(i=22; i>=0; i--)
-      memcpy(&device[deviceToUpdate].last24HoursThpt[i+1], 
-	     &device[deviceToUpdate].last24HoursThpt[i], sizeof(ThptEntry));
+      memcpy(&myGlobals.device[deviceToUpdate].last24HoursThpt[i+1], 
+	     &myGlobals.device[deviceToUpdate].last24HoursThpt[i], sizeof(ThptEntry));
 
-    device[deviceToUpdate].last24HoursThpt[0].trafficValue = average;
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].trafficValue = average;
 
-    device[deviceToUpdate].last24HoursThpt[0].topHostSentIdx = topHourSentIdx,
-      device[deviceToUpdate].last24HoursThpt[0].topSentTraffic = 
-      device[deviceToUpdate].hash_hostTraffic[topHourSentIdx]->lastHourSentThpt;
-    device[deviceToUpdate].last24HoursThpt[0].secondHostSentIdx = secondHourSentIdx,
-      device[deviceToUpdate].last24HoursThpt[0].secondSentTraffic = 
-      device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt;
-    device[deviceToUpdate].last24HoursThpt[0].thirdHostSentIdx = thirdHourSentIdx,
-      device[deviceToUpdate].last24HoursThpt[0].thirdSentTraffic = 
-      device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt;
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].topHostSentIdx = topHourSentIdx,
+      myGlobals.device[deviceToUpdate].last24HoursThpt[0].topSentTraffic = 
+      myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourSentIdx]->lastHourSentThpt;
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondHostSentIdx = secondHourSentIdx,
+      myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondSentTraffic = 
+      myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt;
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdHostSentIdx = thirdHourSentIdx,
+      myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdSentTraffic = 
+      myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt;
 
-    device[deviceToUpdate].last24HoursThpt[0].topHostRcvdIdx = topHourRcvdIdx,
-      device[deviceToUpdate].last24HoursThpt[0].topRcvdTraffic = 
-      device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt;
-    device[deviceToUpdate].last24HoursThpt[0].secondHostRcvdIdx = secondHourRcvdIdx,
-      device[deviceToUpdate].last24HoursThpt[0].secondRcvdTraffic = 
-      device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt;
-    device[deviceToUpdate].last24HoursThpt[0].thirdHostRcvdIdx = thirdHourRcvdIdx,
-      device[deviceToUpdate].last24HoursThpt[0].thirdRcvdTraffic = 
-      device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt;
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].topHostRcvdIdx = topHourRcvdIdx,
+      myGlobals.device[deviceToUpdate].last24HoursThpt[0].topRcvdTraffic = 
+      myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt;
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondHostRcvdIdx = secondHourRcvdIdx,
+      myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondRcvdTraffic = 
+      myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt;
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdHostRcvdIdx = thirdHourRcvdIdx,
+      myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdRcvdTraffic = 
+      myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt;
 
-    device[deviceToUpdate].last24HoursThptIdx = 
-      (device[deviceToUpdate].last24HoursThptIdx + 1) % 24;
+    myGlobals.device[deviceToUpdate].last24HoursThptIdx = 
+      (myGlobals.device[deviceToUpdate].last24HoursThptIdx + 1) % 24;
 
-    if(device[deviceToUpdate].last24HoursThptIdx == 0) {
+    if(myGlobals.device[deviceToUpdate].last24HoursThptIdx == 0) {
       average=0;
 
       for(i=0; i<24; i++) {
-	average += device[deviceToUpdate].last24HoursThpt[i].trafficValue;
+	average += myGlobals.device[deviceToUpdate].last24HoursThpt[i].trafficValue;
       }
 
       average /= 24;
 
       for(i=28; i>=0; i--) {
-	device[deviceToUpdate].last30daysThpt[i+1] = 
-	  device[deviceToUpdate].last30daysThpt[i];
+	myGlobals.device[deviceToUpdate].last30daysThpt[i+1] = 
+	  myGlobals.device[deviceToUpdate].last30daysThpt[i];
       }
 
-      device[deviceToUpdate].last30daysThpt[0] = average;
-      device[deviceToUpdate].last30daysThptIdx = 
-	(device[deviceToUpdate].last30daysThptIdx + 1) % 30;
+      myGlobals.device[deviceToUpdate].last30daysThpt[0] = average;
+      myGlobals.device[deviceToUpdate].last30daysThptIdx = 
+	(myGlobals.device[deviceToUpdate].last30daysThptIdx + 1) % 30;
     }
   }
 
-  device[deviceToUpdate].numThptSamples++;
+  myGlobals.device[deviceToUpdate].numThptSamples++;
   
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "updateThptStats() completed.\n");
@@ -170,7 +170,7 @@ static void updateDeviceThpt(int deviceToUpdate) {
     u_int idx;
     HostTraffic *el;
 
-    timeDiff = actTime-device[deviceToUpdate].lastThptUpdate;
+    timeDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastThptUpdate;
 
     if(timeDiff > 10 /* secs */) {
 	u_int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;
@@ -179,22 +179,22 @@ static void updateDeviceThpt(int deviceToUpdate) {
 	u_int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
 	short updateMinThpt, updateHourThpt;
     
-	totalTime = actTime-initialSniffTime;
+	totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
 
 	updateHourThpt = 0;
 	updateMinThpt = 0;
 
-	if((timeMinDiff = actTime-device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
+	if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
 	    updateMinThpt = 1;
-	    device[deviceToUpdate].lastMinThptUpdate = actTime;
-	    if((timeHourDiff = actTime-device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
+	    myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
+	    if((timeHourDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
 		updateHourThpt = 1;
-		device[deviceToUpdate].lastHourThptUpdate = actTime;
+		myGlobals.device[deviceToUpdate].lastHourThptUpdate = myGlobals.actTime;
 	    }
 	}
 
-	for(idx=1; idx<device[deviceToUpdate].actualHashSize; idx++) {
-	    if((el = device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
+	for(idx=1; idx<myGlobals.device[deviceToUpdate].actualHashSize; idx++) {
+	    if((el = myGlobals.device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
 		if(broadcastHost(el))
 		    continue;
 
@@ -223,26 +223,26 @@ static void updateDeviceThpt(int deviceToUpdate) {
 		    el->averageSentPktThpt = ((float)el->pktSent)/totalTime;
 
 		    if((topSentIdx == NO_PEER) 
-		       || (device[deviceToUpdate].hash_hostTraffic[topSentIdx] == NULL)) {
+		       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx] == NULL)) {
 			topSentIdx = idx;
 		    } else {
-			if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[topSentIdx]->actualSentThpt) {
+			if(el->actualSentThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx]->actualSentThpt) {
 			    secondSentIdx = topSentIdx;
 			    topSentIdx = idx;
 			} else {
 			    if((secondSentIdx == NO_PEER)
-			       || (device[deviceToUpdate].hash_hostTraffic[secondSentIdx] == NULL)) {
+			       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondSentIdx] == NULL)) {
 				secondSentIdx = idx;
 			    } else {
-				if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[secondSentIdx]->actualSentThpt) {
+				if(el->actualSentThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[secondSentIdx]->actualSentThpt) {
 				    thirdSentIdx = secondSentIdx;
 				    secondSentIdx = idx;
 				} else {
 				    if((thirdSentIdx == NO_PEER)
-				       || (device[deviceToUpdate].hash_hostTraffic[thirdSentIdx] == NULL)) {
+				       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdSentIdx] == NULL)) {
 					thirdSentIdx = idx;
 				    } else {
-					if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[thirdSentIdx]->actualSentThpt) {
+					if(el->actualSentThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdSentIdx]->actualSentThpt) {
 					    thirdSentIdx = idx;
 					}
 				    }
@@ -252,26 +252,26 @@ static void updateDeviceThpt(int deviceToUpdate) {
 		    }
 
 		    if((topRcvdIdx == NO_PEER) 
-		       || (device[deviceToUpdate].hash_hostTraffic[topRcvdIdx] == NULL)) {
+		       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topRcvdIdx] == NULL)) {
 			topRcvdIdx = idx;
 		    } else {
-			if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[topRcvdIdx]->actualRcvdThpt) {
+			if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[topRcvdIdx]->actualRcvdThpt) {
 			    secondRcvdIdx = topRcvdIdx;
 			    topRcvdIdx = idx;
 			} else {
 			    if((secondRcvdIdx == NO_PEER)
-			       || (device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx] == NULL)) {
+			       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx] == NULL)) {
 				secondRcvdIdx = idx;
 			    } else {
-				if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt) {
+				if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt) {
 				    thirdRcvdIdx = secondRcvdIdx;
 				    secondRcvdIdx = idx;
 				} else {
 				    if((thirdRcvdIdx == NO_PEER)
-				       || (device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx] == NULL)) {
+				       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx] == NULL)) {
 					thirdRcvdIdx = idx;
 				    } else {
-					if(el->actualRcvdThpt > device[deviceToUpdate].
+					if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].
 					   hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt) {
 					    thirdRcvdIdx = idx;
 					}
@@ -288,28 +288,28 @@ static void updateDeviceThpt(int deviceToUpdate) {
 			el->lastHourBytesSent = el->bytesSent;
 
 			if((topHourSentIdx == NO_PEER) 
-			   || (device[deviceToUpdate].hash_hostTraffic[topHourSentIdx] == NULL)) {
+			   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourSentIdx] == NULL)) {
 			    topHourSentIdx = idx;
 			} else {
-			    if(el->lastHourSentThpt > device[deviceToUpdate].
+			    if(el->lastHourSentThpt > myGlobals.device[deviceToUpdate].
 			       hash_hostTraffic[topHourSentIdx]->lastHourSentThpt) {
 				secondHourSentIdx = topHourSentIdx;
 				topHourSentIdx = idx;
 			    } else {
 				if((secondHourSentIdx == NO_PEER)
-				   || (device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx] == NULL)) {
+				   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx] == NULL)) {
 				    secondHourSentIdx = idx;
 				} else {
-				    if(el->lastHourSentThpt > device[deviceToUpdate].
+				    if(el->lastHourSentThpt > myGlobals.device[deviceToUpdate].
 				       hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt) {
 					thirdHourSentIdx = secondHourSentIdx;
 					secondHourSentIdx = idx;
 				    } else {
 					if((thirdHourSentIdx == NO_PEER)
-					   || (device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx] == NULL)) {
+					   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx] == NULL)) {
 					    thirdHourSentIdx = idx;
 					} else {
-					    if(el->lastHourSentThpt > device[deviceToUpdate].
+					    if(el->lastHourSentThpt > myGlobals.device[deviceToUpdate].
 					       hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt) {
 						thirdHourSentIdx = idx;
 					    }
@@ -320,28 +320,28 @@ static void updateDeviceThpt(int deviceToUpdate) {
 			}
 
 			if((topHourRcvdIdx == NO_PEER) 
-			   || (device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx] == NULL)) {
+			   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx] == NULL)) {
 			    topHourRcvdIdx = idx;
 			} else {
-			    if(el->lastHourRcvdThpt > device[deviceToUpdate].
+			    if(el->lastHourRcvdThpt > myGlobals.device[deviceToUpdate].
 			       hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt) {
 				secondHourRcvdIdx = topHourRcvdIdx;
 				topHourRcvdIdx = idx;
 			    } else {
 				if((secondHourRcvdIdx == NO_PEER)
-				   || (device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx] == NULL)) {
+				   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx] == NULL)) {
 				    secondHourRcvdIdx = idx;
 				} else {
-				    if(el->lastHourRcvdThpt > device[deviceToUpdate].
+				    if(el->lastHourRcvdThpt > myGlobals.device[deviceToUpdate].
 				       hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt) {
 					thirdHourRcvdIdx = secondHourRcvdIdx;
 					secondHourRcvdIdx = idx;
 				    } else {
 					if((thirdHourRcvdIdx == NO_PEER)
-					   || (device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx] == NULL)) {
+					   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx] == NULL)) {
 					    thirdHourRcvdIdx = idx;
 					} else {
-					    if(el->lastHourRcvdThpt > device[deviceToUpdate].
+					    if(el->lastHourRcvdThpt > myGlobals.device[deviceToUpdate].
 					       hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt) {
 						thirdHourRcvdIdx = idx;
 					    }
@@ -357,55 +357,55 @@ static void updateDeviceThpt(int deviceToUpdate) {
 
 	/* ******************************** */
 
-	device[deviceToUpdate].throughput =
-	    device[deviceToUpdate].ethernetBytes-device[deviceToUpdate].throughput;
-	device[deviceToUpdate].packetThroughput = device[deviceToUpdate].ethernetPkts-
-	    device[deviceToUpdate].lastNumEthernetPkts;
-	device[deviceToUpdate].lastNumEthernetPkts = device[deviceToUpdate].ethernetPkts;
+	myGlobals.device[deviceToUpdate].throughput =
+	    myGlobals.device[deviceToUpdate].ethernetBytes-myGlobals.device[deviceToUpdate].throughput;
+	myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts-
+	    myGlobals.device[deviceToUpdate].lastNumEthernetPkts;
+	myGlobals.device[deviceToUpdate].lastNumEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
 
 	/* timeDiff++; */
-	device[deviceToUpdate].actualThpt = (float)device[deviceToUpdate].throughput/(float)timeDiff;
-	device[deviceToUpdate].actualPktsThpt = 
-	    (float)device[deviceToUpdate].packetThroughput/(float)timeDiff;
+	myGlobals.device[deviceToUpdate].actualThpt = (float)myGlobals.device[deviceToUpdate].throughput/(float)timeDiff;
+	myGlobals.device[deviceToUpdate].actualPktsThpt = 
+	    (float)myGlobals.device[deviceToUpdate].packetThroughput/(float)timeDiff;
 
-	if(device[deviceToUpdate].actualThpt > device[deviceToUpdate].peakThroughput)
-	    device[deviceToUpdate].peakThroughput = device[deviceToUpdate].actualThpt;
+	if(myGlobals.device[deviceToUpdate].actualThpt > myGlobals.device[deviceToUpdate].peakThroughput)
+	    myGlobals.device[deviceToUpdate].peakThroughput = myGlobals.device[deviceToUpdate].actualThpt;
 
-	if(device[deviceToUpdate].actualPktsThpt > device[deviceToUpdate].peakPacketThroughput)
-	    device[deviceToUpdate].peakPacketThroughput = device[deviceToUpdate].actualPktsThpt;
+	if(myGlobals.device[deviceToUpdate].actualPktsThpt > myGlobals.device[deviceToUpdate].peakPacketThroughput)
+	    myGlobals.device[deviceToUpdate].peakPacketThroughput = myGlobals.device[deviceToUpdate].actualPktsThpt;
 
-	device[deviceToUpdate].throughput = device[deviceToUpdate].ethernetBytes;
-	device[deviceToUpdate].packetThroughput = device[deviceToUpdate].ethernetPkts;
+	myGlobals.device[deviceToUpdate].throughput = myGlobals.device[deviceToUpdate].ethernetBytes;
+	myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts;
 
 	if(updateMinThpt) {
-	    device[deviceToUpdate].lastMinEthernetBytes = device[deviceToUpdate].ethernetBytes-
-		device[deviceToUpdate].lastMinEthernetBytes;
-	    device[deviceToUpdate].lastMinThpt = 
-		(float)(device[deviceToUpdate].lastMinEthernetBytes)/(float)timeMinDiff;
-	    device[deviceToUpdate].lastMinEthernetBytes = device[deviceToUpdate].ethernetBytes;
+	    myGlobals.device[deviceToUpdate].lastMinEthernetBytes = myGlobals.device[deviceToUpdate].ethernetBytes-
+		myGlobals.device[deviceToUpdate].lastMinEthernetBytes;
+	    myGlobals.device[deviceToUpdate].lastMinThpt = 
+		(float)(myGlobals.device[deviceToUpdate].lastMinEthernetBytes)/(float)timeMinDiff;
+	    myGlobals.device[deviceToUpdate].lastMinEthernetBytes = myGlobals.device[deviceToUpdate].ethernetBytes;
 	    /* ******************* */
-	    device[deviceToUpdate].lastMinEthernetPkts = device[deviceToUpdate].ethernetPkts-
-		device[deviceToUpdate].lastMinEthernetPkts;
-	    device[deviceToUpdate].lastMinPktsThpt = 
-		(float)device[deviceToUpdate].lastMinEthernetPkts/(float)timeMinDiff;
-	    device[deviceToUpdate].lastMinEthernetPkts = device[deviceToUpdate].ethernetPkts;
-	    device[deviceToUpdate].lastMinThptUpdate = actTime;
+	    myGlobals.device[deviceToUpdate].lastMinEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts-
+		myGlobals.device[deviceToUpdate].lastMinEthernetPkts;
+	    myGlobals.device[deviceToUpdate].lastMinPktsThpt = 
+		(float)myGlobals.device[deviceToUpdate].lastMinEthernetPkts/(float)timeMinDiff;
+	    myGlobals.device[deviceToUpdate].lastMinEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
+	    myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
 	}
 
-	if((timeMinDiff = actTime-device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
-	    device[deviceToUpdate].lastFiveMinsEthernetBytes = 
-		device[deviceToUpdate].ethernetBytes - device[deviceToUpdate].lastFiveMinsEthernetBytes;
-	    device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;
-	    device[deviceToUpdate].lastFiveMinsThpt = 
-		(float)device[deviceToUpdate].lastFiveMinsEthernetBytes/(float)device[deviceToUpdate].lastFiveMinsThptUpdate;
-	    device[deviceToUpdate].lastFiveMinsEthernetBytes = device[deviceToUpdate].ethernetBytes;
+	if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
+	    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes = 
+		myGlobals.device[deviceToUpdate].ethernetBytes - myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes;
+	    myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;
+	    myGlobals.device[deviceToUpdate].lastFiveMinsThpt = 
+		(float)myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes/(float)myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate;
+	    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes = myGlobals.device[deviceToUpdate].ethernetBytes;
 	    /* ******************* */
-	    device[deviceToUpdate].lastFiveMinsEthernetPkts = 
-		device[deviceToUpdate].ethernetPkts - device[deviceToUpdate].lastFiveMinsEthernetPkts;
-	    device[deviceToUpdate].lastFiveMinsPktsThpt = 
-		(float)device[deviceToUpdate].lastFiveMinsEthernetPkts/(float)device[deviceToUpdate].lastFiveMinsThptUpdate;
-	    device[deviceToUpdate].lastFiveMinsEthernetPkts = device[deviceToUpdate].ethernetPkts;
-	    device[deviceToUpdate].lastFiveMinsThptUpdate = actTime;
+	    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts = 
+		myGlobals.device[deviceToUpdate].ethernetPkts - myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts;
+	    myGlobals.device[deviceToUpdate].lastFiveMinsPktsThpt = 
+		(float)myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts/(float)myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate;
+	    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
+	    myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = myGlobals.actTime;
 	}
 
 	if((updateMinThpt || updateHourThpt) 
@@ -419,7 +419,7 @@ static void updateDeviceThpt(int deviceToUpdate) {
 			    topRcvdIdx, secondRcvdIdx, thirdRcvdIdx,
 			    topHourRcvdIdx, secondHourRcvdIdx, thirdHourRcvdIdx);
 
-	device[deviceToUpdate].lastThptUpdate = actTime;
+	myGlobals.device[deviceToUpdate].lastThptUpdate = myGlobals.actTime;
     }
 }
 
@@ -428,10 +428,10 @@ static void updateDeviceThpt(int deviceToUpdate) {
 void updateThpt(void) {
   int i;
 
-  if(mergeInterfaces)
+  if(myGlobals.mergeInterfaces)
     updateDeviceThpt(0);
   else {
-    for(i=0; i<numDevices; i++)
+    for(i=0; i<myGlobals.numDevices; i++)
       updateDeviceThpt(i);  
   }
 }
@@ -458,8 +458,8 @@ static void updateHostsDeviceThpt(int deviceToUpdate, int hourId) {
   u_int idx;
   HostTraffic *el;
   
-  for(idx=1; idx<device[deviceToUpdate].actualHashSize; idx++) {
-    if((el = device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
+  for(idx=1; idx<myGlobals.device[deviceToUpdate].actualHashSize; idx++) {
+    if((el = myGlobals.device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
       updateHostThpt(el, hourId);
     }
   }
@@ -470,10 +470,10 @@ static void updateHostsDeviceThpt(int deviceToUpdate, int hourId) {
 void updateHostTrafficStatsThpt(int hourId) {
   int i;
 
-  if(mergeInterfaces)
+  if(myGlobals.mergeInterfaces)
     updateHostsDeviceThpt(0, hourId);
   else {
-    for(i=0; i<numDevices; i++)
+    for(i=0; i<myGlobals.numDevices; i++)
       updateHostsDeviceThpt(i, hourId);  
   }
 }
@@ -487,21 +487,21 @@ void updateTrafficMatrix(HostTraffic *srcHost,
   if(subnetLocalHost(srcHost) && subnetLocalHost(dstHost)) {
     unsigned long a, b, id;    
 
-    a = (unsigned long)(srcHost->hostIpAddress.s_addr) % device[actualDeviceId].numHosts;
-    b = (unsigned long)(dstHost->hostIpAddress.s_addr) % device[actualDeviceId].numHosts;
+    a = (unsigned long)(srcHost->hostIpAddress.s_addr) % myGlobals.device[actualDeviceId].numHosts;
+    b = (unsigned long)(dstHost->hostIpAddress.s_addr) % myGlobals.device[actualDeviceId].numHosts;
 
-    device[actualDeviceId].ipTrafficMatrixHosts[a] = srcHost, 
-      device[actualDeviceId].ipTrafficMatrixHosts[b] = dstHost;
+    myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[a] = srcHost, 
+      myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[b] = dstHost;
 
-    id = a*device[actualDeviceId].numHosts+b;
-    if(device[actualDeviceId].ipTrafficMatrix[id] == NULL)
-      device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
-    device[actualDeviceId].ipTrafficMatrix[id]->bytesSent += length;
+    id = a*myGlobals.device[actualDeviceId].numHosts+b;
+    if(myGlobals.device[actualDeviceId].ipTrafficMatrix[id] == NULL)
+      myGlobals.device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
+    myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->bytesSent += length;
 
-    id = b*device[actualDeviceId].numHosts+a;
-    if(device[actualDeviceId].ipTrafficMatrix[id] == NULL)
-      device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
-    device[actualDeviceId].ipTrafficMatrix[id]->bytesRcvd += length;
+    id = b*myGlobals.device[actualDeviceId].numHosts+a;
+    if(myGlobals.device[actualDeviceId].ipTrafficMatrix[id] == NULL)
+      myGlobals.device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
+    myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->bytesRcvd += length;
   }
 }
 
@@ -512,15 +512,15 @@ void updateDbHostsTraffic(int deviceToUpdate) {
   HostTraffic *el;
 
 #ifndef DEBUG
-  traceEvent(TRACE_INFO, "updateDbHostsTraffic(device=%d)", deviceToUpdate);
+  traceEvent(TRACE_INFO, "updateDbHostsTraffic(myGlobals.device=%d)", deviceToUpdate);
 #endif
 
-  for(i=0; i<device[deviceToUpdate].actualHashSize; i++) {
-    el = device[deviceToUpdate].hash_hostTraffic[i]; /* (**) */
+  for(i=0; i<myGlobals.device[deviceToUpdate].actualHashSize; i++) {
+    el = myGlobals.device[deviceToUpdate].hash_hostTraffic[i]; /* (**) */
 
     if((el != NULL)
        && (!broadcastHost(el))
-       && (el->nextDBupdate < actTime)) {
+       && (el->nextDBupdate < myGlobals.actTime)) {
 
       el->instanceInUse++;
 
@@ -531,14 +531,13 @@ void updateDbHostsTraffic(int deviceToUpdate) {
 	mySQLnotifyHostCreation(el);
 #endif
 	/* traceEvent(TRACE_INFO, "2"); */
-      } else if(el->nextDBupdate < actTime) {
+      } else if(el->nextDBupdate < myGlobals.actTime) {
 	/* traceEvent(TRACE_INFO, "3"); */
 	updateHostTraffic(el);
 	/* traceEvent(TRACE_INFO, "4"); */
 #ifdef HAVE_MYSQL
 	mySQLupdateHostTraffic(el);
-#endif
-	/* traceEvent(TRACE_INFO, "5"); */
+#endif /* traceEvent(TRACE_INFO, "5"); */
 	if(el->osName == NULL) {
 	  /* traceEvent(TRACE_INFO, "6"); */
 	  updateOSName(el);
@@ -546,7 +545,7 @@ void updateDbHostsTraffic(int deviceToUpdate) {
 	}
       }
 
-      el->nextDBupdate = actTime + DB_TIMEOUT_REFRESH_TIME;
+      el->nextDBupdate = myGlobals.actTime + DB_TIMEOUT_REFRESH_TIME;
       el->instanceInUse--;
     }
   }

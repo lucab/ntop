@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -31,22 +31,22 @@ char* formatKBytes(float numKBytes) {
   bufIdx = (bufIdx+1)%BUFFER_SIZE;
 
   if(numKBytes < 1024) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sKB", numKBytes, separator) < 0) 
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sKB", numKBytes, myGlobals.separator) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
     float tmpKBytes = numKBytes/1024;
 
     if(tmpKBytes < 1024) {
-      if(snprintf(outStr[bufIdx], 32, "%.1f%sMB",  tmpKBytes, separator) < 0) 
+      if(snprintf(outStr[bufIdx], 32, "%.1f%sMB",  tmpKBytes, myGlobals.separator) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
     } else {
       float tmpGBytes = tmpKBytes/1024;
 
       if(tmpGBytes < 1024) {
-	if(snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpGBytes, separator)  < 0) 
+	if(snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpGBytes, myGlobals.separator)  < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       } else {
-	if(snprintf(outStr[bufIdx], 32, "%.1f%sTB", ((float)(tmpGBytes)/1024), separator) < 0) 
+	if(snprintf(outStr[bufIdx], 32, "%.1f%sTB", ((float)(tmpGBytes)/1024), myGlobals.separator) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
     }
@@ -64,7 +64,7 @@ char* formatBytes(TrafficCounter numBytes, short encodeString) {
   char* locSeparator;
 
   if(encodeString)
-    locSeparator = separator;
+    locSeparator = myGlobals.separator;
   else
     locSeparator = " ";
 
@@ -180,13 +180,13 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */) {
     numBits = 0; /* Avoid very small decimal values */
   
   if (numBits < divider) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sbps", numBits, separator) < 0) 
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sbps", numBits, myGlobals.separator) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else if (numBits < (divider*divider)) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/divider), separator) < 0) 
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/divider), myGlobals.separator) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sMbps", ((float)(numBits)/1048576), separator) < 0) 
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sMbps", ((float)(numBits)/1048576), myGlobals.separator) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
@@ -239,7 +239,7 @@ char* formatTimeStamp(unsigned int ndays,
     static short bufIdx=0;
 
     bufIdx = (bufIdx+1)%TIME_STAMP_BUFFER_SIZE;
-    theTime = actTime-(ndays*86500)-(nhours*3600)-(nminutes*60);
+    theTime = myGlobals.actTime-(ndays*86500)-(nhours*3600)-(nminutes*60);
     strncpy(timeBuffer[bufIdx], ctime(&theTime), 32);
     timeBuffer[bufIdx][strlen(timeBuffer[bufIdx])-1] = '\0'; /* Remove trailer '\n' */
     return(timeBuffer[bufIdx]);

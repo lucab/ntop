@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,16 +29,16 @@
 
 extern char* intoa(struct in_addr addr);
 
-extern char domainName[];
-char *buildDate;
+extern char myGlobals.domainName[];
+char *myGlobals.buildDate;
 
 /*
-extern char* device;
+extern char* myGlobals.device;
 extern int datalink;
 extern unsigned int localnet, netmask;
 */
 
-char* getNwBoardMacAddress(char *deviceName); /* forward */
+char* getNwBoardMacAddress(char *myGlobals.deviceName); /* forward */
 
 ULONG GetHostIPAddr(); /* forward declaration */
 
@@ -57,7 +57,7 @@ typedef PVOID NDIS_HANDLE, *PNDIS_HANDLE;
 
 #if 0
 void initSniffer() {
-  /* device = "eth"; */
+  /* myGlobals.device = "eth"; */
   datalink = DLT_EN10MB;
 
 	/* ****************** */
@@ -134,20 +134,20 @@ void initWinsock32() {
     exit(-1);
   }
 
-  version = "2.0";
-  author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "27/12/2001";
+  myGlobals.version = "2.0";
+  myGlobals.author  = "Luca Deri <deri@ntop.org>";
+  myGlobals.buildDate = "27/12/2001";
 
   if(isWinNT())
-    osName = "WinNT/2K/XP";
+    myGlobals.osName = "WinNT/2K/XP";
   else
-    osName = "Win95/98/ME";
+    myGlobals.osName = "Win95/98/ME";
 
 #ifdef WIN32_DEMO
   traceEvent(TRACE_INFO, "\n-----------------------------------------------------------");
-  traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop version able to");
+  traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop myGlobals.version able to");
   traceEvent(TRACE_INFO, "capture up to %d packets. If you are interested", MAX_NUM_PACKETS);
-  traceEvent(TRACE_INFO, "in the full version please have a look at the ntop");
+  traceEvent(TRACE_INFO, "in the full myGlobals.version please have a look at the ntop");
   traceEvent(TRACE_INFO, "home page http://www.ntop.org/.");
   traceEvent(TRACE_INFO, "-----------------------------------------------------------\n");
 #endif
@@ -193,7 +193,7 @@ ULONG GetHostIPAddr () {
 	for(i=0; (dotp[i] != '\0') && (dotp[i] != '.'); i++)
 	  ;
 
-	if(dotp[i] == '.') strncpy(domainName, &dotp[i+1], sizeof(domainName));
+	if(dotp[i] == '.') strncpy(myGlobals.domainName, &dotp[i+1], sizeof(myGlobals.domainName));
       }
     }
   }
@@ -535,7 +535,7 @@ inet_network(const char *cp)
    */
   val = 0; base = 10;
   /*
-   * The 4.4BSD version of this file also accepts 'x__' as a hexa
+   * The 4.4BSD myGlobals.version of this file also accepts 'x__' as a hexa
    * number.  I don't think this is correct.  -- Uli
    */
   if(*cp == '0') {
@@ -685,7 +685,7 @@ int gettimeofday(struct timeval *tv, void *notUsed) {
   unsigned long waitForNextEvent(unsigned long ulDelay /* ms */) {
     unsigned long ulSlice = 1000L; // 1 Second
 
-    while (capturePackets && (ulDelay > 0L)) {
+    while (myGlobals.capturePackets && (ulDelay > 0L)) {
       if (ulDelay < ulSlice)
 	ulSlice = ulDelay;
       Sleep(ulSlice);

@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -42,7 +42,7 @@
 #include "ntop.h"
 
 #ifdef ENABLE_NAPSTER
-static int numNapsterSvr = 0, napsterSvrInsertIdx = 0;
+static int numNapsterSvr = 0, myGlobals.napsterSvrInsertIdx = 0;
 #endif
 
 /* #define DNS_SNIFF_DEBUG */
@@ -59,9 +59,9 @@ void handleBootp(HostTraffic *srcHost,
   BootProtocol bootProto = { 0 };
   int len;
 
-  if((!enablePacketDecoding)
+  if((!myGlobals.enablePacketDecoding)
      || (packetData == NULL) /* packet too short ? */
-     || (borderSnifferMode))
+     || (myGlobals.borderSnifferMode))
     return;
 
   switch(sport) {
@@ -128,7 +128,7 @@ void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
 #endif
-	      realDstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+	      realDstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
 	    } else {
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "<<=>> %s (%d)",
@@ -149,7 +149,7 @@ void handleBootp(HostTraffic *srcHost,
 	      }
 
 	      FD_SET(HOST_SVC_DHCP_CLIENT, &realDstHost->flags);
-	      realDstHost->dhcpStats->assignTime = actTime;
+	      realDstHost->dhcpStats->assignTime = myGlobals.actTime;
 	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
 	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
 
@@ -201,7 +201,7 @@ void handleBootp(HostTraffic *srcHost,
 		  if(hostIdx != NO_PEER) {
 		    incrementUsageCounter(&realDstHost->contactedRouters, hostIdx, actualDeviceId);
 
-		    trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+		    trafficHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
 		    if(trafficHost != NULL) {
 		      FD_SET(GATEWAY_HOST_FLAG, &trafficHost->flags);
 		    }
@@ -294,7 +294,7 @@ void handleBootp(HostTraffic *srcHost,
 
 		  hostIdx = findHostIdxByNumIP(hostIpAddress, actualDeviceId);
 		  if(hostIdx != NO_PEER){
-		    trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+		    trafficHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
 		    if(trafficHost != NULL)
 		      FD_SET(HOST_SVC_WINS, &trafficHost->flags);
 		  }
@@ -310,7 +310,7 @@ void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 		    traceEvent(TRACE_INFO, "Lease time: %u", tmpUlong);
 #endif
-		    realDstHost->dhcpStats->leaseTime = actTime+tmpUlong;
+		    realDstHost->dhcpStats->leaseTime = myGlobals.actTime+tmpUlong;
 		  }
 		  idx += len;
 		  break;
@@ -368,7 +368,7 @@ void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 		    traceEvent(TRACE_INFO, "Renewal time: %u", tmpUlong);
 #endif
-		    realDstHost->dhcpStats->renewalTime = actTime+tmpUlong;
+		    realDstHost->dhcpStats->renewalTime = myGlobals.actTime+tmpUlong;
 		  }
 		  idx += len;
 		  break;
@@ -460,7 +460,7 @@ void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
 #endif
-	      realClientHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+	      realClientHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
 	    } else {
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "<<=>> %s (%d)",
@@ -562,7 +562,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
   u_int16_t transactionId = 0;
   int i, queryNameLength;
 
-  if((!enablePacketDecoding)
+  if((!myGlobals.enablePacketDecoding)
      ||(packetData == NULL) /* packet too short ? */)
     return(transactionId);
 
@@ -587,7 +587,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
 
   if((*isRequest) || (!*positiveReply))
     return(transactionId);
-  if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
+  if(myGlobals.gdbm_file == NULL) return(-1); /* ntop is quitting... */
 
   queryNameLength = strlen(hostPtr.queryName);
   strtolower(hostPtr.queryName);
@@ -610,13 +610,13 @@ u_int16_t processDNSPacket(const u_char *packetData,
       traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
 #endif
 
-      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
+      if(myGlobals.gdbm_file == NULL) return(-1); /* ntop is quitting... */
 #ifdef MULTITHREADED
-      accessMutex(&gdbmMutex, "processDNSPacket");
+      accessMutex(&myGlobals.gdbmMutex, "processDNSPacket");
 #endif
-      gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
+      gdbm_store(myGlobals.gdbm_file, key_data, data_data, GDBM_REPLACE);
 #ifdef MULTITHREADED
-      releaseMutex(&gdbmMutex);
+      releaseMutex(&myGlobals.gdbmMutex);
 #endif
     }
   }
@@ -639,19 +639,19 @@ void handleNapster(HostTraffic *srcHost,
   u_short napsterDownload = 0;
 #endif
 
-  if((!enablePacketDecoding)
+  if((!myGlobals.enablePacketDecoding)
      || (packetData == NULL) /* packet too short ? */)
     return(NULL);
 
   /* Let's check whether this is a Napster session */
   if(numNapsterSvr > 0) {
     for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
-      if(((napsterSvr[i].serverPort == sport)
-	  && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr))
-	 || ((napsterSvr[i].serverPort == dport)
-	     && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
+      if(((myGlobals.napsterSvr[i].serverPort == sport)
+	  && (myGlobals.napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr))
+	 || ((myGlobals.napsterSvr[i].serverPort == dport)
+	     && (myGlobals.napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
 	theSession->napsterSession = 1;
-	napsterSvr[i].serverPort = 0; /* Free slot */
+	myGlobals.napsterSvr[i].serverPort = 0; /* Free slot */
 	numNapsterSvr--;
 	FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
 	FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
@@ -757,9 +757,9 @@ void handleNapster(HostTraffic *srcHost,
 	break;
       }
 
-    napsterSvr[napsterSvrInsertIdx].serverAddress.s_addr = ntohl(inet_addr(address));
-    napsterSvr[napsterSvrInsertIdx].serverPort = atoi(&address[i+1]);
-    napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
+    myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverAddress.s_addr = ntohl(inet_addr(address));
+    myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort = atoi(&address[i+1]);
+    myGlobals.napsterSvrInsertIdx = (myGlobals.napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
     numNapsterSvr++;
 
     if(srcHost->napsterStats == NULL) {
@@ -853,10 +853,10 @@ void handleNapster(HostTraffic *srcHost,
 	if((remoteHost = strtok_r(NULL, " ", &strtokState)) != NULL) {
 	  if((remotePort = strtok_r(NULL, " ", &strtokState)) != NULL) {
 
-	    napsterSvr[napsterSvrInsertIdx].serverPort = atoi(remotePort);
-	    if(napsterSvr[napsterSvrInsertIdx].serverPort != 0) {
-	      napsterSvr[napsterSvrInsertIdx].serverAddress.s_addr = inet_addr(remoteHost);
-	      napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
+	    myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort = atoi(remotePort);
+	    if(myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort != 0) {
+	      myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverAddress.s_addr = inet_addr(remoteHost);
+	      myGlobals.napsterSvrInsertIdx = (myGlobals.napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
 	      numNapsterSvr++;
 	      shost.s_addr = inet_addr(remoteHost);
 #ifdef TRACE_TRAFFIC_INFO
@@ -889,7 +889,7 @@ void handleNetbios(HostTraffic *srcHost,
   u_char *p;
   int offset=0, displ, notEnoughData = 0;
 
-  if((!enablePacketDecoding)
+  if((!myGlobals.enablePacketDecoding)
      || (!((srcHost->nbHostName == NULL) || (srcHost->nbDomainName == NULL))))
     return; /* Already set */
 

@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -66,15 +66,15 @@ static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 void handleSigHup(int signalId _UNUSED_) {
 #ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "========================================");
-   printMutexInfo(&gdbmMutex, "gdbmMutex");
-   printMutexInfo(&packetQueueMutex, "packetQueueMutex");
-   printMutexInfo(&addressResolutionMutex, "addressResolutionMutex");
-   printMutexInfo(&hashResizeMutex, "hashResizeMutex");
+   printMutexInfo(&myGlobals.gdbmMutex, "myGlobals.gdbmMutex");
+   printMutexInfo(&myGlobals.packetQueueMutex, "myGlobals.packetQueueMutex");
+   printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
+   printMutexInfo(&myGlobals.hashResizeMutex, "myGlobals.hashResizeMutex");
 
-  if(isLsofPresent)
-     printMutexInfo(&lsofMutex, "lsofMutex");
-   printMutexInfo(&hostsHashMutex, "hostsHashMutex");
-   printMutexInfo(&graphMutex, "graphMutex");
+  if(myGlobals.isLsofPresent)
+     printMutexInfo(&myGlobals.lsofMutex, "myGlobals.lsofMutex");
+   printMutexInfo(&myGlobals.hostsHashMutex, "myGlobals.hostsHashMutex");
+   printMutexInfo(&myGlobals.graphMutex, "myGlobals.graphMutex");
   traceEvent(TRACE_INFO, "========================================");
 #endif /* MULTITHREADED */
 
@@ -94,9 +94,9 @@ void* pcapDispatch(void *_i) {
   fd_set readMask;
   struct timeval timeout;
   
-  pcap_fd = pcap_fileno(device[i].pcapPtr);
+  pcap_fd = pcap_fileno(myGlobals.device[i].pcapPtr);
 
-  if((pcap_fd == -1) && (rFileName != NULL)) {
+  if((pcap_fd == -1) && (myGlobals.rFileName != NULL)) {
     /*
       This is a patch to overcome a bug of libpcap
       while reading from a traffic file instead
@@ -111,10 +111,10 @@ void* pcapDispatch(void *_i) {
       */
     };
 
-    pcap_fd = fileno(((struct mypcap *)(device[i].pcapPtr))->rfile);
+    pcap_fd = fileno(((struct mypcap *)(myGlobals.device[i].pcapPtr))->rfile);
   }
 
-  for(;capturePackets == 1;) {
+  for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&readMask);
     FD_SET(pcap_fd, &readMask);
 
@@ -122,15 +122,15 @@ void* pcapDispatch(void *_i) {
     timeout.tv_usec = 0;
 
     if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
-      /* printf("dispatch device %s\n", device[i].name);*/
-      if(!capturePackets) return(NULL);
-      rc = pcap_dispatch(device[i].pcapPtr, 1, processPacket, (u_char*)_i);
+      /* printf("dispatch myGlobals.device %s\n", myGlobals.device[i].name);*/
+      if(!myGlobals.capturePackets) return(NULL);
+      rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, processPacket, (u_char*)_i);
 
       if(rc == -1) {
 	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
-		   pcap_geterr(device[i].pcapPtr));
+		   pcap_geterr(myGlobals.device[i].pcapPtr));
 	break;
-      } else if((rc == 0) && (rFileName != NULL)) {
+      } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
 	traceEvent(TRACE_INFO, "pcap_dispatch returned %d "
 		   "[No more packets to read]", rc);
 	break; /* No more packets to read */
@@ -148,11 +148,11 @@ void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
 
-  for(;capturePackets == 1;) {
-    rc = pcap_dispatch(device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
+  for(;myGlobals.capturePackets == 1;) {
+    rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
     if(rc == -1) {
       traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
-		 pcap_geterr(device[i].pcapPtr));
+		 pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } /* elsetraceEvent(TRACE_INFO, "1) %d\n", numPkts++); */
   }
@@ -219,7 +219,7 @@ void detachFromTerminal(void) {
 #endif
 
 #ifndef WIN32
-  useSyslog = 1; /* Log in the syslog */
+  myGlobals.useSyslog = 1; /* Log in the syslog */
 #endif
   
   chdir("/");
@@ -285,12 +285,12 @@ static short handleProtocol(char* protoName, char *protocol) {
 
     for(idx=lowProtoPort; idx<= highProtoPort; idx++) {
       if(servicesMapper[idx] == -1) {
-	numIpPortsToHandle++;
+	myGlobals.numIpPortsToHandle++;
 
 #ifdef DEBUG
-	printf("[%d] '%s' [port=%d]\n", numIpProtosToMonitor, protoName, idx);
+	printf("[%d] '%s' [port=%d]\n", myGlobals.numIpProtosToMonitor, protoName, idx);
 #endif
-	servicesMapper[idx] = numIpProtosToMonitor;
+	servicesMapper[idx] = myGlobals.numIpProtosToMonitor;
       } else if(printWarnings)
 	printf("WARNING: IP port %d (%s) has been discarded (multiple instances).\n",
 	       idx, protoName);
@@ -299,22 +299,22 @@ static short handleProtocol(char* protoName, char *protocol) {
     return(1);
   }
 
-  for(i=1; i<numActServices; i++) {
+  for(i=1; i<myGlobals.numActServices; i++) {
     idx = -1;
 
-    if((udpSvc[i] != NULL) && (strcmp(udpSvc[i]->name, protocol) == 0))
-      idx = udpSvc[i]->port;
-    else if((tcpSvc[i] != NULL) && (strcmp(tcpSvc[i]->name, protocol) == 0))
-      idx = tcpSvc[i]->port;
+    if((myGlobals.udpSvc[i] != NULL) && (strcmp(myGlobals.udpSvc[i]->name, protocol) == 0))
+      idx = myGlobals.udpSvc[i]->port;
+    else if((myGlobals.tcpSvc[i] != NULL) && (strcmp(myGlobals.tcpSvc[i]->name, protocol) == 0))
+      idx = myGlobals.tcpSvc[i]->port;
 
     if(idx != -1) {
       if(servicesMapper[idx] == -1) {
-	numIpPortsToHandle++;
+	myGlobals.numIpPortsToHandle++;
 
 #ifdef DEBUG
-	printf("[%d] '%s' [%s:%d]\n", numIpProtosToMonitor, protoName, protocol, idx);
+	printf("[%d] '%s' [%s:%d]\n", myGlobals.numIpProtosToMonitor, protoName, protocol, idx);
 #endif
-	servicesMapper[idx] = numIpProtosToMonitor;
+	servicesMapper[idx] = myGlobals.numIpProtosToMonitor;
       } else if(printWarnings)
 	printf("WARNING: protocol '%s' has been discarded (multiple instances).\n",
 	       protocol);
@@ -363,16 +363,16 @@ static void handleProtocolList(char* protoName,
   }
 
   if(increment == 1) {
-    if(numIpProtosToMonitor == 0)
-      protoIPTrafficInfos = (char**)malloc(sizeof(char*));
+    if(myGlobals.numIpProtosToMonitor == 0)
+      myGlobals.protoIPTrafficInfos = (char**)malloc(sizeof(char*));
     else
-      protoIPTrafficInfos = (char**)realloc(protoIPTrafficInfos, sizeof(char*)*(numIpProtosToMonitor+1));
+      myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos, sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
 
-    protoIPTrafficInfos[numIpProtosToMonitor] = strdup(protoName);
-    numIpProtosToMonitor++;
+    myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
+    myGlobals.numIpProtosToMonitor++;
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "%d) %s - %s\n",
-	       numIpProtosToMonitor, protoName, protocolList);
+	       myGlobals.numIpProtosToMonitor, protoName, protocolList);
 #endif
   }
 }
@@ -387,26 +387,26 @@ void createPortHash() {
      the port data hence we can transform it from
      an array to a hash table.     
   */
-  numIpPortMapperSlots = 2*numIpPortsToHandle;
-  theSize = sizeof(PortMapper)*2*numIpPortMapperSlots;
-  ipPortMapper = (PortMapper*)malloc(theSize);
-  for(i=0; i<numIpPortMapperSlots; i++) ipPortMapper[i].port = -1;
+  myGlobals.numIpPortMapperSlots = 2*myGlobals.numIpPortsToHandle;
+  theSize = sizeof(PortMapper)*2*myGlobals.numIpPortMapperSlots;
+  myGlobals.ipPortMapper = (PortMapper*)malloc(theSize);
+  for(i=0; i<myGlobals.numIpPortMapperSlots; i++) myGlobals.ipPortMapper[i].port = -1;
 
 #ifdef DEBUG  
-  traceEvent(TRACE_INFO, "Allocating %d slots", numIpPortMapperSlots);
+  traceEvent(TRACE_INFO, "Allocating %d slots", myGlobals.numIpPortMapperSlots);
 #endif
 
   for(i=0; i<TOP_IP_PORT; i++) {
     if(servicesMapper[i] != -1) {
-      int slotId = (3*i) % numIpPortMapperSlots;
+      int slotId = (3*i) % myGlobals.numIpPortMapperSlots;
 
-      while(ipPortMapper[slotId].port != -1)	
-	slotId = (slotId+1) % numIpPortMapperSlots;
+      while(myGlobals.ipPortMapper[slotId].port != -1)	
+	slotId = (slotId+1) % myGlobals.numIpPortMapperSlots;
 
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Mapping port %d to slotId %d", i, slotId);
 #endif
-      ipPortMapper[slotId].port = i, ipPortMapper[slotId].mappedPort = servicesMapper[i];
+      myGlobals.ipPortMapper[slotId].port = i, myGlobals.ipPortMapper[slotId].mappedPort = servicesMapper[i];
     }
   }
 
@@ -550,21 +550,21 @@ int mapGlobalToLocalIdx(int port) {
   if((port < 0) || (port >= TOP_IP_PORT))
    return(-1);
   else {
-    int j, found, slotId = (3*port) % numIpPortMapperSlots;
+    int j, found, slotId = (3*port) % myGlobals.numIpPortMapperSlots;
     
-    for(j=0, found=0; j<numIpPortMapperSlots; j++) {
-      if(ipPortMapper[slotId].port == -1)
+    for(j=0, found=0; j<myGlobals.numIpPortMapperSlots; j++) {
+      if(myGlobals.ipPortMapper[slotId].port == -1)
 	break;
-      else if(ipPortMapper[slotId].port == port) {
+      else if(myGlobals.ipPortMapper[slotId].port == port) {
 	found = 1;
 	break;
       }
       
-      slotId = (slotId+1) % numIpPortMapperSlots;
+      slotId = (slotId+1) % myGlobals.numIpPortMapperSlots;
     }
     
     if(found)
-      return(ipPortMapper[slotId].mappedPort);
+      return(myGlobals.ipPortMapper[slotId].mappedPort);
     else
       return(-1);
   }
@@ -582,21 +582,21 @@ void* updateThptLoop(void* notUsed _UNUSED_) {
 
     sleep(THROUGHPUT_REFRESH_TIME);
 
-    if(!capturePackets) break;
+    if(!myGlobals.capturePackets) break;
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Trying to update throughput\n");
 #endif
 
     /* Don't update Thpt if the traffic is high */
-    /* if(packetQueueLen < (PACKET_QUEUE_LENGTH/3)) */ {
-      actTime = time(NULL);
-      accessMutex(&hostsHashMutex, "updateThptLoop");
+    /* if(myGlobals.packetQueueLen < (PACKET_QUEUE_LENGTH/3)) */ {
+      myGlobals.actTime = time(NULL);
+      accessMutex(&myGlobals.hostsHashMutex, "updateThptLoop");
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Updating throughput\n");
 #endif
       updateThpt(); /* Update Throughput */
-      releaseMutex(&hostsHashMutex);
+      releaseMutex(&myGlobals.hostsHashMutex);
     }
   }
 
@@ -608,7 +608,7 @@ void* updateThptLoop(void* notUsed _UNUSED_) {
 
 #ifdef MULTITHREADED
 void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
-  time_t nextUpdate = actTime+3600;
+  time_t nextUpdate = myGlobals.actTime+3600;
   int hourId, minuteId, lastUpdatedHour=-1;
   char theDate[8];
   struct tm t;
@@ -618,30 +618,30 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
     traceEvent(TRACE_INFO, "Sleeping for 60 seconds\n");
 #endif
 
-    if(!capturePackets) break; /* Before */
+    if(!myGlobals.capturePackets) break; /* Before */
 
     sleep(60);
 
-    if(!capturePackets) break; /* After */
+    if(!myGlobals.capturePackets) break; /* After */
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Trying to update host traffic stats");
 #endif
 
-    actTime = time(NULL);
-    strftime(theDate, 8, "%M", localtime_r(&actTime, &t));
+    myGlobals.actTime = time(NULL);
+    strftime(theDate, 8, "%M", localtime_r(&myGlobals.actTime, &t));
     minuteId = atoi(theDate);
-    strftime(theDate, 8, "%H", localtime_r(&actTime, &t));
+    strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
     hourId = atoi(theDate);
     if((minuteId <= 1) && (hourId != lastUpdatedHour)) {
       lastUpdatedHour = hourId;
-      accessMutex(&hostsHashMutex, "updateHostTrafficStatsThptLoop");
+      accessMutex(&myGlobals.hostsHashMutex, "updateHostTrafficStatsThptLoop");
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Updating host traffic stats\n");
 #endif
       updateHostTrafficStatsThpt(hourId); /* Update Throughput */
-      releaseMutex(&hostsHashMutex);
-      nextUpdate = actTime+3600;
+      releaseMutex(&myGlobals.hostsHashMutex);
+      nextUpdate = myGlobals.actTime+3600;
     }
   }
 
@@ -664,16 +664,16 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
 
     sleep(updateTime);
 
-    if(!capturePackets) break;
+    if(!myGlobals.capturePackets) break;
 
-    for(i=0; i<numDevices; i++)
-      if(!device[i].virtualDevice) {
+    for(i=0; i<myGlobals.numDevices; i++)
+      if(!myGlobals.device[i].virtualDevice) {
 #ifdef MULTITHREADED
-	accessMutex(&hostsHashMutex, "updateDbHostsTraffic");
+	accessMutex(&myGlobals.hostsHashMutex, "updateDbHostsTraffic");
 #endif /* MULTITHREADED */
 	updateDbHostsTraffic(i);
 #ifdef MULTITHREADED
-	releaseMutex(&hostsHashMutex);
+	releaseMutex(&myGlobals.hostsHashMutex);
 #endif /* MULTITHREADED */
       }
   }
@@ -690,11 +690,11 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
     sleep(SESSION_SCAN_DELAY);
 
-    if(!capturePackets) break;
-    actTime = time(NULL);
+    if(!myGlobals.capturePackets) break;
+    myGlobals.actTime = time(NULL);
     
-    for(i=0; i<numDevices; i++)
-      if(!device[i].virtualDevice) {
+    for(i=0; i<myGlobals.numDevices; i++)
+      if(!myGlobals.device[i].virtualDevice) {
 	purgeIdleHosts(0 /* Delete only idle hosts */, i);
 #ifdef HAVE_SCHED_H
 	sched_yield(); /* Allow other threads to run */
@@ -716,8 +716,8 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
   for(;;) {
     sleep(PURGE_ADDRESS_TIMEOUT);
-    if(!capturePackets) break;
-    actTime = time(NULL);    
+    if(!myGlobals.capturePackets) break;
+    myGlobals.actTime = time(NULL);    
     cleanupHostEntries();
   }
   
@@ -733,16 +733,16 @@ void* scanIdleSessionsLoop(void* notUsed _UNUSED_) {
     
     sleep(SESSION_SCAN_DELAY);
 
-    if(!capturePackets) break;
-    actTime = time(NULL);
+    if(!myGlobals.capturePackets) break;
+    myGlobals.actTime = time(NULL);
 
-    for(i=0; i<numDevices; i++) {
+    for(i=0; i<myGlobals.numDevices; i++) {
 #ifdef MULTITHREADED
-      accessMutex(&hostsHashMutex, "scanIdleSessionsLoop-1");
+      accessMutex(&myGlobals.hostsHashMutex, "scanIdleSessionsLoop-1");
 #endif
       scanTimedoutTCPSessions(i);
 #ifdef MULTITHREADED
-      releaseMutex(&hostsHashMutex);
+      releaseMutex(&myGlobals.hostsHashMutex);
 #endif
     }
 
@@ -752,18 +752,18 @@ void* scanIdleSessionsLoop(void* notUsed _UNUSED_) {
     sleep(1); /* leave some time to others */
 #endif
 
-    for(i=0; i<numDevices; i++) {
+    for(i=0; i<myGlobals.numDevices; i++) {
 #ifdef MULTITHREADED
-      accessMutex(&hostsHashMutex, "scanIdleSessionsLoop-2");
+      accessMutex(&myGlobals.hostsHashMutex, "scanIdleSessionsLoop-2");
 #endif
       purgeOldFragmentEntries(i);
 #ifdef MULTITHREADED
-      releaseMutex(&hostsHashMutex);
+      releaseMutex(&myGlobals.hostsHashMutex);
 #endif
     }
     
-    if(handleRules){
-      for(i=0; i<numDevices; i++)
+    if(myGlobals.handleRules){
+      for(i=0; i<myGlobals.numDevices; i++)
 	scanAllTcpExpiredRules(i);
     }
   }
@@ -781,13 +781,13 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
       if needed
     */
 
-    if(!capturePackets) break;
+    if(!myGlobals.capturePackets) break;
 
-    if(updateLsof) {
+    if(myGlobals.updateLsof) {
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Wait please: reading lsof information...\n");
 #endif
-      if(isLsofPresent) readLsofInfo();
+      if(myGlobals.isLsofPresent) readLsofInfo();
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Done with lsof.\n");
 #endif
@@ -803,11 +803,11 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
 
 #ifndef MULTITHREADED
 void packetCaptureLoop(time_t *lastTime, int refreshRate) {
-  int numPkts=0, pcap_fd = pcap_fileno(device[0].pcapPtr);
+  int numPkts=0, pcap_fd = pcap_fileno(myGlobals.device[0].pcapPtr);
   fd_set readMask;
   struct timeval timeout;
 
-  if((pcap_fd == -1) && (rFileName != NULL)) {
+  if((pcap_fd == -1) && (myGlobals.rFileName != NULL)) {
     /*
       This is a patch to overcome a bug of libpcap
       while reading from a traffic file instead
@@ -822,14 +822,14 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
       */
     };
 
-    pcap_fd = fileno(((struct mypcap *)(device[0].pcapPtr))->rfile);
+    pcap_fd = fileno(((struct mypcap *)(myGlobals.device[0].pcapPtr))->rfile);
   }
 
   for(;;) {
     short justRefreshed;
     int rc;
 
-    if(!capturePackets) break;
+    if(!myGlobals.capturePackets) break;
 
     FD_ZERO(&readMask);
     if(pcap_fd != -1) FD_SET(pcap_fd, &readMask);
@@ -838,32 +838,32 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
     timeout.tv_usec = 0;
 
     if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
-      rc = pcap_dispatch(device[0].pcapPtr, 1, processPacket, NULL);
+      rc = pcap_dispatch(myGlobals.device[0].pcapPtr, 1, processPacket, NULL);
 
       if(rc == -1) {
 	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
-		   pcap_geterr(device[0].pcapPtr));
+		   pcap_geterr(myGlobals.device[0].pcapPtr));
 	continue;
-      } else if((rc == 0) && (rFileName != NULL)) {
+      } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
 	traceEvent(TRACE_INFO, "pcap_dispatch returned %d "
 		   "[No more packets to read]", rc);
 	pcap_fd = -1;
       }
     }
 
-    actTime = time(NULL);
+    myGlobals.actTime = time(NULL);
 
-    if(actTime > (*lastTime)) {
-      if(nextSessionTimeoutScan < actTime) {
+    if(myGlobals.actTime > (*lastTime)) {
+      if(myGlobals.nextSessionTimeoutScan < myGlobals.actTime) {
 	/* It's time to check for timeout sessions */
 	scanTimedoutTCPSessions();
-	nextSessionTimeoutScan = actTime+SESSION_SCAN_DELAY;
+	myGlobals.nextSessionTimeoutScan = myGlobals.actTime+SESSION_SCAN_DELAY;
       }
 
-      if(handleRules)
+      if(myGlobals.handleRules)
 	scanAllTcpExpiredRules();
       updateThpt(); /* Update Throughput */
-      (*lastTime) = actTime + THROUGHPUT_REFRESH_TIME;
+      (*lastTime) = myGlobals.actTime + THROUGHPUT_REFRESH_TIME;
       justRefreshed=1;
     } else
       justRefreshed=0;
@@ -888,36 +888,36 @@ RETSIGTYPE cleanup(int signo) {
 
   traceEvent(TRACE_INFO, "Cleaning up...");
   
-  capturePackets = 0;
+  myGlobals.capturePackets = 0;
 
 #ifndef WIN32
 #ifdef MULTITHREADED
 
-  killThread(&dequeueThreadId);
+  killThread(&myGlobals.dequeueThreadId);
 
-  killThread(&thptUpdateThreadId);
-  killThread(&hostTrafficStatsThreadId);
+  killThread(&myGlobals.thptUpdateThreadId);
+  killThread(&myGlobals.hostTrafficStatsThreadId);
 
-  if(rFileName == NULL) {
-      if(!borderSnifferMode)    killThread(&scanIdleThreadId);
-      if(enableSessionHandling) killThread(&scanIdleSessionsThreadId);
+  if(myGlobals.rFileName == NULL) {
+      if(!myGlobals.borderSnifferMode)    killThread(&myGlobals.scanIdleThreadId);
+      if(myGlobals.enableSessionHandling) killThread(&myGlobals.scanIdleSessionsThreadId);
   }
 
   if(enableDBsupport)
-    killThread(&dbUpdateThreadId);
+    killThread(&myGlobals.dbUpdateThreadId);
   
-  if(isLsofPresent)
-    killThread(&lsofThreadId);
+  if(myGlobals.isLsofPresent)
+    killThread(&myGlobals.lsofThreadId);
   
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  if(numericFlag == 0) {
-      for(i=0; i<numDequeueThreads; i++)
-	  killThread(&dequeueAddressThreadId[i]);
-    killThread(&purgeAddressThreadId);
+  if(myGlobals.numericFlag == 0) {
+      for(i=0; i<myGlobals.numDequeueThreads; i++)
+	  killThread(&myGlobals.dequeueAddressThreadId[i]);
+    killThread(&myGlobals.purgeAddressThreadId);
   }
 #endif
   
-  killThread(&handleWebConnectionsThreadId);
+  killThread(&myGlobals.handleWebConnectionsThreadId);
   
 #ifdef FULL_MEMORY_FREE
   cleanupAddressQueue();
@@ -936,14 +936,14 @@ RETSIGTYPE cleanup(int signo) {
   */
 #ifdef MULTITHREADED
 #ifdef USE_SEMAPHORES
-  incrementSem(&queueSem);
+  incrementSem(&myGlobals.queueSem);
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  incrementSem(&queueAddressSem);
+  incrementSem(&myGlobals.queueAddressSem);
 #endif
 #else
-  signalCondvar(&queueCondvar);
+  signalCondvar(&myGlobals.queueCondvar);
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  signalCondvar(&queueAddressCondvar);
+  signalCondvar(&myGlobals.queueAddressCondvar);
 #endif
 #endif
 #endif /* MULTITREADED */
@@ -955,7 +955,7 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 /* #ifdef FULL_MEMORY_FREE */
-  for(i=0; i<numDevices; i++)
+  for(i=0; i<myGlobals.numDevices; i++)
     freeHostInstances(i);
 /* #endif */
 
@@ -975,111 +975,111 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 #ifdef MULTITHREADED
-  deleteMutex(&packetQueueMutex);
-  deleteMutex(&addressResolutionMutex);
-  deleteMutex(&hashResizeMutex);
-  deleteMutex(&hostsHashMutex);
-  deleteMutex(&graphMutex);
-  if(isLsofPresent)
-    deleteMutex(&lsofMutex);
+  deleteMutex(&myGlobals.packetQueueMutex);
+  deleteMutex(&myGlobals.addressResolutionMutex);
+  deleteMutex(&myGlobals.hashResizeMutex);
+  deleteMutex(&myGlobals.hostsHashMutex);
+  deleteMutex(&myGlobals.graphMutex);
+  if(myGlobals.isLsofPresent)
+    deleteMutex(&myGlobals.lsofMutex);
 #ifdef USE_SEMAPHORES
-  deleteSem(&queueSem);
+  deleteSem(&myGlobals.queueSem);
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  deleteSem(&queueAddressSem);
+  deleteSem(&myGlobals.queueAddressSem);
 #endif
 #else
-  deleteCondvar(&queueCondvar);
+  deleteCondvar(&myGlobals.queueCondvar);
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  deleteCondvar(&queueAddressCondvar);
+  deleteCondvar(&myGlobals.queueAddressCondvar);
 #endif
 #endif
 #endif
 
 #ifdef HAVE_GDBM_H
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "cleanup");
+  accessMutex(&myGlobals.gdbmMutex, "cleanup");
 #endif 
-  gdbm_close(gdbm_file);    gdbm_file = NULL;
-  gdbm_close(addressCache); addressCache = NULL;
-  gdbm_close(pwFile);       pwFile = NULL;
+  gdbm_close(myGlobals.gdbm_file);    myGlobals.gdbm_file = NULL;
+  gdbm_close(myGlobals.addressCache); myGlobals.addressCache = NULL;
+  gdbm_close(myGlobals.pwFile);       myGlobals.pwFile = NULL;
   /* Courtesy of Wies-Software <wies@wiessoft.de> */
-  gdbm_close(hostsInfoFile); hostsInfoFile = NULL; 
-  if(eventFile != NULL) {
-    gdbm_close(eventFile);
-    eventFile = NULL;
+  gdbm_close(myGlobals.hostsInfoFile); myGlobals.hostsInfoFile = NULL; 
+  if(myGlobals.eventFile != NULL) {
+    gdbm_close(myGlobals.eventFile);
+    myGlobals.eventFile = NULL;
   }
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
 #ifdef MULTITHREADED
-  deleteMutex(&gdbmMutex);
+  deleteMutex(&myGlobals.gdbmMutex);
 #endif
 #endif
   
-  for(i=0; i<numDevices; i++) {
+  for(i=0; i<myGlobals.numDevices; i++) {
     int j;
       
-    traceEvent(TRACE_INFO, "Freeing device %s (idx=%d)...", device[i].name, i);
+    traceEvent(TRACE_INFO, "Freeing myGlobals.device %s (idx=%d)...", myGlobals.device[i].name, i);
 
-    if(!device[i].virtualDevice) {
-      if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
+    if(!myGlobals.device[i].virtualDevice) {
+      if (pcap_stats(myGlobals.device[i].pcapPtr, &stat) >= 0) {
 	traceEvent(TRACE_INFO, "%s packets received by filter on %s\n",
-		   formatPkts((TrafficCounter)stat.ps_recv), device[i].name);
+		   formatPkts((TrafficCounter)stat.ps_recv), myGlobals.device[i].name);
 	traceEvent(TRACE_INFO, "%s packets dropped by kernel\n",
 		   formatPkts((TrafficCounter)(stat.ps_drop)));
 #ifdef MULTITHREADED
 	traceEvent(TRACE_INFO, "%s packets dropped by ntop\n",
-		   formatPkts(device[i].droppedPkts));
+		   formatPkts(myGlobals.device[i].droppedPkts));
 #endif
       }
     }
 
-    if(device[i].ipTrafficMatrix != NULL) {
+    if(myGlobals.device[i].ipTrafficMatrix != NULL) {
 
       /* Courtesy of Wies-Software <wies@wiessoft.de> */
-      for(j=0; j<(device[i].numHosts*device[i].numHosts); j++)
-        if(device[i].ipTrafficMatrix[j] != NULL) 
-	  free(device[i].ipTrafficMatrix[j]);
+      for(j=0; j<(myGlobals.device[i].numHosts*myGlobals.device[i].numHosts); j++)
+        if(myGlobals.device[i].ipTrafficMatrix[j] != NULL) 
+	  free(myGlobals.device[i].ipTrafficMatrix[j]);
       
-      free(device[i].ipTrafficMatrix);
+      free(myGlobals.device[i].ipTrafficMatrix);
     }
       
-    if(device[i].ipTrafficMatrix != NULL) 
-      free(device[i].ipTrafficMatrix);
+    if(myGlobals.device[i].ipTrafficMatrix != NULL) 
+      free(myGlobals.device[i].ipTrafficMatrix);
 
-    if(device[i].ipTrafficMatrixHosts != NULL) 
-      free(device[i].ipTrafficMatrixHosts);
+    if(myGlobals.device[i].ipTrafficMatrixHosts != NULL) 
+      free(myGlobals.device[i].ipTrafficMatrixHosts);
 
-    if(device[i].ipProtoStats != NULL)
-      free(device[i].ipProtoStats);
+    if(myGlobals.device[i].ipProtoStats != NULL)
+      free(myGlobals.device[i].ipProtoStats);
       
-    if(device[i].hash_hostTraffic != NULL)
-      free(device[i].hash_hostTraffic);
+    if(myGlobals.device[i].hash_hostTraffic != NULL)
+      free(myGlobals.device[i].hash_hostTraffic);
       
-    if(device[i].tcpSession != NULL)
-      free(device[i].tcpSession);
+    if(myGlobals.device[i].tcpSession != NULL)
+      free(myGlobals.device[i].tcpSession);
 
-    free(device[i].name);
+    free(myGlobals.device[i].name);
 
-    if(device[i].pcapDumper != NULL)
-      pcap_dump_close(device[i].pcapDumper);
+    if(myGlobals.device[i].pcapDumper != NULL)
+      pcap_dump_close(myGlobals.device[i].pcapDumper);
       
-    if(device[i].pcapErrDumper != NULL)
-      pcap_dump_close(device[i].pcapErrDumper);
+    if(myGlobals.device[i].pcapErrDumper != NULL)
+      pcap_dump_close(myGlobals.device[i].pcapErrDumper);
       
     /* 
        Wies-Software <wies@wiessoft.de> on 06/11/2001 says:
-       device[i].pcapPtr seems to be already freed. further tests needed! 
+       myGlobals.device[i].pcapPtr seems to be already freed. further tests needed! 
     */
-    if(device[i].pcapPtr != NULL)
-      free(device[i].pcapPtr);
+    if(myGlobals.device[i].pcapPtr != NULL)
+      free(myGlobals.device[i].pcapPtr);
   }
 
-  free(device);
+  free(myGlobals.device);
 
-  if(numProcesses > 0)
-    free(processes);
+  if(myGlobals.numProcesses > 0)
+    free(myGlobals.processes);
   
   if(enableDBsupport) {
     closeSQLsocket(); /* *** SQL Engine *** */
@@ -1092,7 +1092,7 @@ RETSIGTYPE cleanup(int signo) {
   termWinsock32();
 #endif
 
-  endNtop = 1;
+  myGlobals.endNtop = 1;
 
 #ifdef MEMORY_DEBUG
   traceEvent(TRACE_INFO, "===================================\n");

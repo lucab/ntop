@@ -18,138 +18,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+extern NtopGlobals myGlobals;
+extern char *version, *osName, *author, *buildDate; /* version.c */
 
-
-/* General */
-extern char *version, *osName, *author, *buildDate;
-extern char *program_name;
-extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
-extern HostTraffic *broadcastEntry, *otherHostEntry;
-extern int ntop_argc;
-extern char **ntop_argv;
-
-/* command line options */
-extern u_short traceLevel, debugMode, useSyslog, accuracyLevel;
-extern u_char enableSessionHandling, enablePacketDecoding, enableFragmentHandling;
-extern u_char stickyHosts, enableSuspiciousPacketDump, trackOnlyLocalHosts;
-extern char dbPath[200];
-extern char accessLogPath[200]; /* Apache-like access log */
-extern char mapperURL[256];     /* URL of the mapper CGI */
-extern u_int maxHashSize, topHashSize;
-extern u_int enableNetFlowSupport;
-extern short usePersistentStorage, grabSessionInformation;
-extern char *rFileName, *pcapLog;
-extern int numericFlag, logTimeout, daemonMode, mergeInterfaces;
- 
-/* Search Paths */
-extern char *dataFileDirs[], *pluginDirs[], *configFileDirs[];
-
-/* Debug */
-extern size_t allocatedMemory;
-
-/* Logging */
-extern time_t nextLogTime;
-
-/* Flags */
-extern int isLsofPresent, isNepedPresent, isNmapPresent, filterExpressionInExtraFrame;
-extern short capturePackets, endNtop, borderSnifferMode;
- 
- 
-/* Multithreading */
-#ifdef MULTITHREADED
-extern unsigned short numThreads, numDequeueThreads;
-extern PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
-extern PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
-extern pthread_t dequeueThreadId, handleWebConnectionsThreadId;
-extern pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
-extern pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
-extern pthread_t purgeAddressThreadId;
-#ifdef HAVE_GDBM_H
-extern PthreadMutex gdbmMutex;
-#endif
-
-#ifdef USE_SEMAPHORES
-extern sem_t queueSem;
-#ifdef ASYNC_ADDRESS_RESOLUTION
-extern sem_t queueAddressSem;
-#endif
-#else
-extern ConditionalVariable queueCondvar;
-#ifdef ASYNC_ADDRESS_RESOLUTION
-extern ConditionalVariable queueAddressCondvar;
-#endif
-#endif
-#ifdef ASYNC_ADDRESS_RESOLUTION
-extern pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_THREADS];
-extern TrafficCounter droppedAddresses;
-extern PthreadMutex addressQueueMutex;
-#endif
-#endif
-extern u_long numResolvedWithDNSAddresses, numKeptNumericAddresses, 
-  numResolvedOnCacheAddresses;
-
-/* Database */
-#ifdef HAVE_GDBM_H
-extern GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache;
-#endif
-
-/* lsof support */
-extern u_short updateLsof;
-extern ProcessInfo **processes;
-extern u_short numProcesses;
-extern ProcessInfoList *localPorts[TOP_IP_PORT];
-
-/* TCP Wrappers */
-#ifdef HAVE_LIBWRAP
-extern int allow_severity, deny_severity;
-#endif /* HAVE_LIBWRAP */
-
-/* Filter Chains */
-extern u_short handleRules;
-extern FlowFilterList *flowsList;
-extern FilterRuleChain *tcpChain, *udpChain, *icmpChain;
-extern u_short ruleSerialIdentifier;
-extern FilterRule* filterRulesList[MAX_NUM_RULES];
-
-/* Address Resolution */
-#if defined(ASYNC_ADDRESS_RESOLUTION)
-extern u_int addressQueueLen, maxAddressQueueLen;
-extern struct in_addr addressQueue[ADDRESS_QUEUE_LENGTH+1];
-#endif
-
-/* Misc */
-extern char *separator;
-extern int32_t thisZone; /* seconds offset from gmt to local time */
-extern u_long numPurgedHosts, numTerminatedSessions;
-
-/* Time */
-extern time_t actTime, initialSniffTime, lastRefreshTime;
-extern time_t nextSessionTimeoutScan;
-extern struct timeval lastPktTime;
-
-/* NICs */
-extern int numDevices;
-extern NtopInterface *device;
-
-/* Monitored Protocols */
-extern char **protoIPTrafficInfos;
-extern u_short numIpProtosToMonitor, numIpPortsToHandle;
-extern PortMapper *ipPortMapper;
-extern int numActServices, numIpPortMapperSlots;
-extern unsigned long numHandledHTTPrequests;
-extern ServiceEntry **udpSvc, **tcpSvc;
-
-/* Packet Capture */
-#if defined(MULTITHREADED)
-extern PacketInformation packetQueue[PACKET_QUEUE_LENGTH+1];
-extern unsigned int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
-#endif
-
-extern TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
-extern u_int broadcastEntryIdx, otherHostEntryIdx;
-extern u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
-extern u_short mtuSize[], headerSize[];
-extern char *currentFilterExpression;
 
 /* function declaration ***************************************************** */
 
@@ -261,7 +132,7 @@ extern void initApps(void);
 extern void initDevices(char* devices);
 extern void initLibpcap(char* rulesFile, int numDevices);
 extern void initDeviceDatalink(void);
-extern void parseTrafficFilter(char *argv[], int optind);
+extern void parseTrafficFilter();
 extern void initSignals(void);
 extern void startSniffer(void);
 extern void deviceSanityCheck(char* string);
@@ -399,7 +270,6 @@ extern void updateDBOSname(HostTraffic *el);
 
 /* ssl.c */
 #ifdef HAVE_OPENSSL
-extern int sslInitialized, sslPort;
 extern int init_ssl(void);
 extern int accept_ssl_connection(int fd);
 extern SSL *getSSLsocket(int fd);
@@ -558,3 +428,6 @@ extern void sendICMPflow(HostTraffic *srcHost, HostTraffic *dstHost, u_int lengt
 extern void sendUDPflow(HostTraffic *srcHost, HostTraffic *dstHost, 
 			u_int sport, u_int dport, u_int length);
 extern void sendTCPSessionFlow(IPSession *theSession, int actualDeviceId);
+
+/* globals-core.c */
+extern void initNtopGlobals();

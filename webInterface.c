@@ -89,7 +89,7 @@ void execCGI(char* cgiName) {
  
 #if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX) || defined(DARWIN)
 void showPluginsList(char* pluginName) {
-  FlowFilterList *flows = flowsList;
+  FlowFilterList *flows = myGlobals.flowsList;
   short printHeader = 0;
   char tmpBuf[BUF_SIZE], *thePlugin;
   int newPluginStatus = 0;
@@ -204,10 +204,10 @@ char* makeHostLink(HostTraffic *el, short mode,
   bufIdx = (bufIdx+1)%5;
 
 #ifdef MULTITHREADED
-  accessMutex(&addressResolutionMutex, "makeHostLink");
+  accessMutex(&myGlobals.addressResolutionMutex, "makeHostLink");
 #endif
 
-  if(el == otherHostEntry) {
+  if(el == myGlobals.otherHostEntry) {
     char *fmt;
     
     if(mode == LONG_FORMAT)
@@ -254,7 +254,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
 #ifdef MULTITHREADED
-  releaseMutex(&addressResolutionMutex);
+  releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
   if(specialMacAddress) {
@@ -370,7 +370,7 @@ char* getHostName(HostTraffic *el, short cutName) {
   bufIdx = (bufIdx+1)%5;
 
 #ifdef MULTITHREADED
-  accessMutex(&addressResolutionMutex, "getHostName");
+  accessMutex(&myGlobals.addressResolutionMutex, "getHostName");
 #endif
 
   tmpStr = el->hostSymIpAddress;
@@ -399,7 +399,7 @@ char* getHostName(HostTraffic *el, short cutName) {
     strncpy(buf[bufIdx], el->ethAddressString, 80);
   
 #ifdef MULTITHREADED
-  releaseMutex(&addressResolutionMutex);
+  releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
   return(buf[bufIdx]);
@@ -518,41 +518,41 @@ void switchNwInterface(int _interface) {
   printHTMLheader("Network Interface Switch", HTML_FLAG_NO_REFRESH); 
   sendString("<HR>\n<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
 
-  if(mergeInterfaces) {
+  if(myGlobals.mergeInterfaces) {
     if(snprintf(buf, sizeof(buf), "You can't switch among different inferfaces if the -M "
 		"command line switch is not used. Sorry.\n") < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else if((mwInterface != -1) &&
-	    ((mwInterface >= numDevices) || device[mwInterface].virtualDevice)) {
+	    ((mwInterface >= myGlobals.numDevices) || myGlobals.device[mwInterface].virtualDevice)) {
     if(snprintf(buf, sizeof(buf), "Invalid interface selected. Sorry.\n") < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
-  } else if(numDevices == 1) {
+  } else if(myGlobals.numDevices == 1) {
     if(snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
 		"interface [%s]. The interface switch feature is active only when "
 		"you active ntop with multiple interfaces (-i command line switch). "
-		"Sorry.\n", device[actualReportDeviceId].name) < 0) 
+		"Sorry.\n", myGlobals.device[actualReportDeviceId].name) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else if(mwInterface >= 0) {
-    actualReportDeviceId = (mwInterface)%numDevices;
+    actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
     if(snprintf(buf, sizeof(buf), "The current interface is now [%s].\n", 
-		device[actualReportDeviceId].name) < 0) 
+		myGlobals.device[actualReportDeviceId].name) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else {
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION="SWITCH_NIC_HTML">\n");
 
-    for(i=0; i<numDevices; i++) 
-      if(!device[i].virtualDevice) {
+    for(i=0; i<myGlobals.numDevices; i++) 
+      if(!myGlobals.device[i].virtualDevice) {
 	if(actualReportDeviceId == i)
 	  selected="CHECKED";
 	else
 	  selected = "";
 
 	if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
-		    i+1, selected, device[i].name) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		    i+1, selected, myGlobals.device[i].name) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	sendString(buf);
       }
@@ -631,8 +631,8 @@ void printNtopConfigInfo(void) {
   /* *************************** */
 
   sendString("<TR><TH "TH_BG" ALIGN=left>Started as</TH><TD "TD_BG" ALIGN=right>");
-  for(i=0; i<ntop_argc; i++) {
-    sendString(ntop_argv[i]);
+  for(i=0; i<myGlobals.ntop_argc; i++) {
+    sendString(myGlobals.ntop_argv[i]);
     sendString(" ");
   } 
   sendString("</TD></TR>\n");
@@ -651,8 +651,8 @@ void printNtopConfigInfo(void) {
 #ifdef HAVE_OPENSSL
   printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", 
 			 (char*)SSLeay_version(0));
-  if(sslPort != 0) {
-    sprintf(buf, "%d", sslPort); 
+  if(myGlobals.sslPort != 0) {
+    sprintf(buf, "%d", myGlobals.sslPort); 
     printFeatureConfigInfo("SSL Port", buf);
   } else
     printFeatureConfigInfo("SSL Port", "Not Active");
@@ -700,90 +700,90 @@ void printNtopConfigInfo(void) {
   printFeatureConfigInfo("Async. Addr. Resolution", "No");
 #endif
 
-  if(isLsofPresent) 
+  if(myGlobals.isLsofPresent) 
     printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support", "Yes");
   else
     printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support",
 			   "No (Either disabled [Use -E option] or missing)");
 
-  printFeatureConfigInfo("TCP Session Handling", enableSessionHandling == 1 ? "Enabled" : "Disabled");
-  printFeatureConfigInfo("Protocol Decoders",    enablePacketDecoding == 1 ? "Enabled" : "Disabled");
+  printFeatureConfigInfo("TCP Session Handling", myGlobals.enableSessionHandling == 1 ? "Enabled" : "Disabled");
+  printFeatureConfigInfo("Protocol Decoders",    myGlobals.enablePacketDecoding == 1 ? "Enabled" : "Disabled");
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># IP Protocols Being Monitored</TH>"
-	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", numIpProtosToMonitor) < 0) 
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.numIpProtosToMonitor) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  printFeatureConfigInfo("Fragment Handling",    enableFragmentHandling == 1 ? "Enabled" : "Disabled");
+  printFeatureConfigInfo("Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
 
-  if(isNmapPresent) 
+  if(myGlobals.isNmapPresent) 
     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", "Yes");
   else
     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", 
 			   "No (Either disabled [Use -E option] or missing)");
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Handled HTTP Requests</TH>"
-	      "<TD "TD_BG"  align=right>%lu</TD></TR>\n", numHandledHTTPrequests) < 0) 
+	      "<TD "TD_BG"  align=right>%lu</TD></TR>\n", myGlobals.numHandledHTTPrequests) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Actual Hash Size</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
-	      (int)device[actualReportDeviceId].actualHashSize) < 0) 
+	      (int)myGlobals.device[actualReportDeviceId].actualHashSize) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Top Hash Size</TH>"
-	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", topHashSize) < 0) 
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.topHashSize) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
 #ifdef MULTITHREADED
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Pkts to Process</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
-	      packetQueueLen) < 0) 
+	      myGlobals.packetQueueLen) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Max Queued Pkts</TH>"
 	      "<TD "TD_BG"  align=right>%u</TD></TR>\n",
-	      maxPacketQueueLen) < 0) 
+	      myGlobals.maxPacketQueueLen) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 #endif
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Stored Hash Hosts</TH>"
 	      "<TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
-	      (int)device[actualReportDeviceId].hostsno,
-	      (((int)device[actualReportDeviceId].hostsno*100)/
-	       (int)device[actualReportDeviceId].actualHashSize)) < 0) 
+	      (int)myGlobals.device[actualReportDeviceId].hostsno,
+	      (((int)myGlobals.device[actualReportDeviceId].hostsno*100)/
+	       (int)myGlobals.device[actualReportDeviceId].actualHashSize)) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Purged Hash Hosts</TH>"
 	      "<TD "TD_BG"  align=right>%u</TD></TR>\n",
-	      (unsigned int)numPurgedHosts) < 0) 
+	      (unsigned int)myGlobals.numPurgedHosts) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  if(enableSessionHandling) {
+  if(myGlobals.enableSessionHandling) {
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># TCP Sessions</TH>"
 		"<TD "TD_BG"  align=right>%u</TD></TR>\n", 
-		device[actualReportDeviceId].numTcpSessions) < 0) 
+		myGlobals.device[actualReportDeviceId].numTcpSessions) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Terminated TCP Sessions</TH>"
 		"<TD "TD_BG"  align=right>%u</TD></TR>\n", 
-		(unsigned int)numTerminatedSessions) < 0) 
+		(unsigned int)myGlobals.numTerminatedSessions) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
 
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-  if(numericFlag == 0) {
+  if(myGlobals.numericFlag == 0) {
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Addresses</TH>"
-		"<TD "TD_BG"  align=right>%d</TD></TR>\n", addressQueueLen) < 0) 
+		"<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.addressQueueLen) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
@@ -792,24 +792,24 @@ void printNtopConfigInfo(void) {
   /* **** */
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Resolved with DNS</TH>"
-	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedWithDNSAddresses) < 0) 
+	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", myGlobals.numResolvedWithDNSAddresses) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Kept Numeric</TH>"
-	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numKeptNumericAddresses) < 0) 
+	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", myGlobals.numKeptNumericAddresses) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Found in Cache</TH>"
-	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedOnCacheAddresses) < 0) 
+	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", myGlobals.numResolvedOnCacheAddresses) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
 #if defined(MULTITHREADED)
-  if(numericFlag == 0) {
+  if(myGlobals.numericFlag == 0) {
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Dropped Addresses</TH>"
-		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", (long int)droppedAddresses) < 0) 
+		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", (long int)myGlobals.droppedAddresses) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
@@ -817,7 +817,7 @@ void printNtopConfigInfo(void) {
 
 #if defined(MULTITHREADED)
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Active Threads</TH>"
-	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", numThreads) < 0) 
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.numThreads) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 #endif
@@ -830,9 +830,9 @@ void printNtopConfigInfo(void) {
   sendString(buf);
 #endif
 
-  if(isLsofPresent) {
+  if(myGlobals.isLsofPresent) {
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Monitored Processes</TH>"
-		"<TD "TD_BG"  align=right>%d</TD></TR>\n", numProcesses) < 0)
+		"<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.numProcesses) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
@@ -915,7 +915,7 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
     sock = 0;
 
 #ifdef HAVE_OPENSSL
-  if(sslInitialized) {
+  if(myGlobals.sslInitialized) {
     sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
     if(sock_ssl < 0) {
       traceEvent(TRACE_ERROR, "unable to create a new socket");
@@ -935,9 +935,9 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
   }
 
 #ifdef HAVE_OPENSSL
-  if(sslInitialized) {
+  if(myGlobals.sslInitialized) {
     sin.sin_family      = AF_INET;
-    sin.sin_port        = (int)htons(sslPort);
+    sin.sin_port        = (int)htons(myGlobals.sslPort);
     sin.sin_addr.s_addr = INADDR_ANY;
 
     if(bind(sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
@@ -957,7 +957,7 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
   }
 
 #ifdef HAVE_OPENSSL
-  if(sslInitialized) 
+  if(myGlobals.sslInitialized) 
     if(listen(sock_ssl, 5) < 0) {
       traceEvent(TRACE_WARNING, "listen error.\n");
       closeNwSocket(&sock_ssl);
@@ -976,13 +976,13 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
   }
 
 #ifdef HAVE_OPENSSL
-  if(sslInitialized) 
+  if(myGlobals.sslInitialized) 
     traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
-	       sslPort);
+	       myGlobals.sslPort);
 #endif
 
 #ifdef MULTITHREADED
-  createThread(&handleWebConnectionsThreadId, handleWebConnections, NULL);
+  createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
 #endif
 }
 
@@ -992,7 +992,7 @@ void usage(void) {
   char buf[80];
 
   if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
-	      program_name, version, THREAD_MODE, osName, buildDate) < 0) 
+	      myGlobals.program_name, version, THREAD_MODE, osName, buildDate) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   traceEvent(TRACE_INFO, "%s\n", buf);
 
@@ -1003,7 +1003,7 @@ void usage(void) {
 
   traceEvent(TRACE_INFO, "%s\n", buf);
 
-  if(snprintf(buf, sizeof(buf), "Usage: %s", program_name) < 0) 
+  if(snprintf(buf, sizeof(buf), "Usage: %s", myGlobals.program_name) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   traceEvent(TRACE_INFO, "%s\n", buf);
@@ -1060,7 +1060,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-K <enable application debug (no fork() is used)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-L <use syslog instead of stdout>]");
 #endif
-  traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
+  traceEvent(TRACE_INFO, "    %s\n\n", "[-B <filter expression (like tcpdump)>]");
 }
 
 /* ******************************************* */
@@ -1080,7 +1080,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     FD_SET((unsigned int)sock, &mask);
 
 #ifdef HAVE_OPENSSL
-  if(sslInitialized) {
+  if(myGlobals.sslInitialized) {
     FD_SET(sock_ssl, &mask);
     if(sock_ssl > topSock)
       topSock = sock_ssl;
@@ -1095,7 +1095,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
   if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
     handleSingleWebConnection(&mask);
 #else /* MULTITHREADED */
-  while(capturePackets) {
+  while(myGlobals.capturePackets) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Select(ing) %d....", topSock);
 #endif
@@ -1130,12 +1130,12 @@ static void handleSingleWebConnection(fd_set *fdmask) {
   } else {
 #ifdef DEBUG
 #ifdef HAVE_OPENSSL
-    if(sslInitialized)
+    if(myGlobals.sslInitialized)
       traceEvent(TRACE_INFO, "Accepting HTTPS request...\n");
 #endif
 #endif
 #ifdef HAVE_OPENSSL
-    if(sslInitialized)
+    if(myGlobals.sslInitialized)
       newSock = accept(sock_ssl, (struct sockaddr*)&from, &from_len); 
 #else
     ;
@@ -1148,7 +1148,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 
   if(newSock > 0) {
 #ifdef HAVE_OPENSSL
-    if(sslInitialized) 
+    if(myGlobals.sslInitialized) 
       if(FD_ISSET(sock_ssl, fdmask)) {
 	if(accept_ssl_connection(newSock) == -1) {
 	  traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
@@ -1186,7 +1186,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 /* ******************* */
 
 int handlePluginHTTPRequest(char* url) {
-  FlowFilterList *flows = flowsList;
+  FlowFilterList *flows = myGlobals.flowsList;
 
   while(flows != NULL)
     if((flows->pluginStatus.pluginPtr != NULL)

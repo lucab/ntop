@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -63,12 +63,12 @@ void emitEvent(FilterRule *rule,
   EventMsg theMsg;
   struct tm t;
 
-  if(eventFile == NULL) return;
+  if(myGlobals.eventFile == NULL) return;
 
-  strftime(ruleTime, 32, "%Y-%m-%d %H:%M:%S", localtime_r(&actTime, &t));
+  strftime(ruleTime, 32, "%Y-%m-%d %H:%M:%S", localtime_r(&myGlobals.actTime, &t));
 
 #ifdef MULTITHREADED
-  accessMutex(&addressResolutionMutex, "emitEvent");
+  accessMutex(&myGlobals.addressResolutionMutex, "emitEvent");
 #endif
 
   if(icmpType == -1) {
@@ -87,20 +87,20 @@ void emitEvent(FilterRule *rule,
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 #ifdef MULTITHREADED
-  releaseMutex(&addressResolutionMutex);
+  releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
   if(snprintf(tmpStr, sizeof(tmpStr), "%lu %lu %lu",
 	  (unsigned long)srcHost->hostIpAddress.s_addr,
 	  (unsigned long)dstHost->hostIpAddress.s_addr,
-	  (unsigned long)actTime) < 0) 
+	  (unsigned long)myGlobals.actTime) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   traceEvent(TRACE_INFO, "Event: %s\n", msg);
 
   key_data.dptr = tmpStr; key_data.dsize = strlen(tmpStr)+1;
   memset(&theMsg, 0, sizeof(theMsg));
-  theMsg.eventTime = actTime;
+  theMsg.eventTime = myGlobals.actTime;
   theMsg.sourceHost.s_addr = srcHost->hostIpAddress.s_addr;
   theMsg.destHost.s_addr   = dstHost->hostIpAddress.s_addr;
   theMsg.ruleId = rule->ruleId;
@@ -109,11 +109,11 @@ void emitEvent(FilterRule *rule,
   data_data.dptr = (char*)&theMsg; data_data.dsize = sizeof(theMsg);
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "emitEvent-2");
+  accessMutex(&myGlobals.gdbmMutex, "emitEvent-2");
 #endif
-  gdbm_store(eventFile, key_data, data_data, GDBM_REPLACE);
+  gdbm_store(myGlobals.eventFile, key_data, data_data, GDBM_REPLACE);
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif
 }
 
@@ -121,16 +121,16 @@ void emitEvent(FilterRule *rule,
 
 static void scanExpiredRules(FilterRule *rule, int actualDeviceId) {
   if((rule->numMatchedRules > 0) 
-     && (rule->lastRuleCheck+MIN_SCAN_TIMEOUT < actTime)) {
+     && (rule->lastRuleCheck+MIN_SCAN_TIMEOUT < myGlobals.actTime)) {
     /* Let's check whether there are some expired rules */
     int i, rulesFound;
 
     for(i=0, rulesFound=0; (i<MAX_NUM_RULES) 
 	  && (rulesFound < rule->numMatchedRules); i++)
       if(rule->queuedPacketRules[i] != NULL) {
-	if(((rule->queuedPacketRules[i]->firstMatchTime+rule->expireTime)   < actTime)
-	   && ((rule->queuedPacketRules[i]->firstMatchTime+rule->unitValue) < actTime)
-	   && ((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime)  < actTime)
+	if(((rule->queuedPacketRules[i]->firstMatchTime+rule->expireTime)   < myGlobals.actTime)
+	   && ((rule->queuedPacketRules[i]->firstMatchTime+rule->unitValue) < myGlobals.actTime)
+	   && ((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime)  < myGlobals.actTime)
 	   ) {
 	  /* This rule is expired */
 	  u_short doEmitEvent = 0;
@@ -158,9 +158,9 @@ static void scanExpiredRules(FilterRule *rule, int actualDeviceId) {
 
 	  if(doEmitEvent)
 	    emitEvent(rule,
-		      device[actualDeviceId].hash_hostTraffic[checkSessionIdx(rule->queuedPacketRules[i]->srcHostIdx)],
+		      myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(rule->queuedPacketRules[i]->srcHostIdx)],
 		      rule->queuedPacketRules[i]->srcHostIdx,
-		      device[actualDeviceId].hash_hostTraffic[checkSessionIdx(rule->queuedPacketRules[i]->dstHostIdx)],
+		      myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(rule->queuedPacketRules[i]->dstHostIdx)],
 		      rule->queuedPacketRules[i]->dstHostIdx, -1,
 		      rule->queuedPacketRules[i]->sport,
 		      rule->queuedPacketRules[i]->dport);
@@ -175,7 +175,7 @@ static void scanExpiredRules(FilterRule *rule, int actualDeviceId) {
 	  rulesFound++;
       }
 
-    rule->lastRuleCheck = actTime;
+    rule->lastRuleCheck = myGlobals.actTime;
   }
 }
 
@@ -188,9 +188,9 @@ void scanAllTcpExpiredRules(int actualDeviceId) {
  traceEvent(TRACE_INFO, "scanAllTcpExpiredRules() called....\n");
 #endif
 
-  for(i=0; i<ruleSerialIdentifier; i++)
-    if(filterRulesList[i] != NULL)
-      scanExpiredRules(filterRulesList[i], actualDeviceId);
+  for(i=0; i<myGlobals.ruleSerialIdentifier; i++)
+    if(myGlobals.filterRulesList[i] != NULL)
+      scanExpiredRules(myGlobals.filterRulesList[i], actualDeviceId);
 }
 
 /* ****************************************** */
@@ -216,7 +216,7 @@ void fireEvent(FilterRule *rule,
     /* This is not a rule 'per se' but it is used to clear
        other events if marked before */
   if(rule->ruleIdCleared) {
-    FilterRule *ruleToClear = filterRulesList[rule->ruleIdCleared];
+    FilterRule *ruleToClear = myGlobals.filterRulesList[rule->ruleIdCleared];
     MatchedRule **queuedPacketRules = ruleToClear->queuedPacketRules;
 
     for(i=0, rulesFound=0; (i<MAX_NUM_RULES) && (rulesFound<ruleToClear->numMatchedRules); i++) {
@@ -240,7 +240,7 @@ void fireEvent(FilterRule *rule,
 	/* Rules match */
 #ifdef DEBUG
 #ifdef MULTITHREADED
-	accessMutex(&addressResolutionMutex, "fireEvent");
+	accessMutex(&myGlobals.addressResolutionMutex, "fireEvent");
 #endif
 	traceEvent(TRACE_INFO, "Rules matched %s %s/%s->%s/%s (len %d)\n",
 	       ruleToClear->ruleLabel,
@@ -248,7 +248,7 @@ void fireEvent(FilterRule *rule,
 	       dstHost->hostSymIpAddress, getAllPortByNum(dport),
 	       length);
 #ifdef MULTITHREADED
-	releaseMutex(&addressResolutionMutex);
+	releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 	printf("Packet rule [%s] free (2)\n", rule->ruleLabel);
 #endif
@@ -291,11 +291,11 @@ void fireEvent(FilterRule *rule,
 	/* Rules match */
 	u_short purgeRule=0;
 
-	if((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime) > actTime) {
+	if((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime) > myGlobals.actTime) {
 #ifdef DEBUG
 	 traceEvent(TRACE_INFO, "Rule %s is disabled (%d more seconds)\n",
 		    rule->ruleLabel,
-		    ((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime) - actTime));
+		    ((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime) - myGlobals.actTime));
 #endif
 	  /* This rule is disabled and not yet rearmed */
 	  return;
@@ -304,7 +304,7 @@ void fireEvent(FilterRule *rule,
 	rule->queuedPacketRules[i]->numMatches++;
 
 	if((rule->unitValue == 0) || (rule->pktComparisonType != PACKET_FRAGMENT_COUNT)) {
-	  if((rule->queuedPacketRules[i]->firstMatchTime+rule->expireTime) < actTime)
+	  if((rule->queuedPacketRules[i]->firstMatchTime+rule->expireTime) < myGlobals.actTime)
 	    purgeRule = 1;
 	} else {
 	  /* If the rule clause has been satisfied then the rule is
@@ -326,7 +326,7 @@ void fireEvent(FilterRule *rule,
 	}
 
 	if(purgeRule) {
-	  rule->queuedPacketRules[i]->lastMatchTime = actTime;
+	  rule->queuedPacketRules[i]->lastMatchTime = myGlobals.actTime;
 	  emitEvent(rule, srcHost,
 		    rule->queuedPacketRules[i]->srcHostIdx,
 		    dstHost,
@@ -405,7 +405,7 @@ void fireEvent(FilterRule *rule,
 	  }
 
 	  if(purgeRule) {
-	    rule->queuedPacketRules[i]->lastMatchTime = actTime;
+	    rule->queuedPacketRules[i]->lastMatchTime = myGlobals.actTime;
 	    emitEvent(rule, srcHost,
 		      rule->queuedPacketRules[i]->srcHostIdx,
 		      dstHost,
@@ -440,7 +440,7 @@ void fireEvent(FilterRule *rule,
 	      rule->queuedPacketRules[i]->sport = sport,
 	      rule->queuedPacketRules[i]->dstHostIdx = dstHostIdx,
 	      rule->queuedPacketRules[i]->dport = dport,
-	      rule->queuedPacketRules[i]->firstMatchTime = actTime,
+	      rule->queuedPacketRules[i]->firstMatchTime = myGlobals.actTime,
 	      rule->queuedPacketRules[i]->lastMatchTime = 0,
 	      rule->queuedPacketRules[i]->numMatches = 1;
 	    rule->numMatchedRules++;
@@ -465,14 +465,14 @@ void smurfAlert(u_int srcHostIdx, u_int dstHostIdx, int actualDeviceId) {
   smurfing.ruleLabel = "smurfing";
   smurfing.actionType = ACTION_ALARM;
 
-  emitEvent(&smurfing,  device[actualDeviceId].hash_hostTraffic[srcHostIdx], srcHostIdx,
-	    device[actualDeviceId].hash_hostTraffic[dstHostIdx],
+  emitEvent(&smurfing,  myGlobals.device[actualDeviceId].hash_hostTraffic[srcHostIdx], srcHostIdx,
+	    myGlobals.device[actualDeviceId].hash_hostTraffic[dstHostIdx],
 	    dstHostIdx, ICMP_ECHO, 0, 0);
 
-  if(enableSuspiciousPacketDump) {
+  if(myGlobals.enableSuspiciousPacketDump) {
     traceEvent(TRACE_INFO, "WARNING: smurfing detected (%s->%s)\n",
-	       device[actualDeviceId].hash_hostTraffic[srcHostIdx]->hostSymIpAddress,
-	       device[actualDeviceId].hash_hostTraffic[dstHostIdx]->hostSymIpAddress);
+	       myGlobals.device[actualDeviceId].hash_hostTraffic[srcHostIdx]->hostSymIpAddress,
+	       myGlobals.device[actualDeviceId].hash_hostTraffic[dstHostIdx]->hostSymIpAddress);
     dumpSuspiciousPacket(actualDeviceId);
   }
 }

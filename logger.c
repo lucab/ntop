@@ -5,8 +5,8 @@
  *  					
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,7 +27,7 @@ static GDBM_FILE logDB;
 
 void initLogger(void) {
   char tmpBuff[200];
-  if(snprintf(tmpBuff, sizeof(tmpBuff), "%s/logger.db",dbPath) < 0) 
+  if(snprintf(tmpBuff, sizeof(tmpBuff), "%s/logger.db",myGlobals.dbPath) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   logDB = gdbm_open (tmpBuff, 0, GDBM_NEWDB, 00664, NULL);
 }
@@ -37,11 +37,11 @@ void initLogger(void) {
 void termLogger(void) {
   if(logDB != NULL) {
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "termLogger");
+    accessMutex(&myGlobals.gdbmMutex, "termLogger");
 #endif 
     gdbm_close(logDB);
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif
     logDB = NULL;
   }
@@ -71,10 +71,10 @@ void logMessage(char* message, u_short severity) {
   data_data.dptr = (char*)&msg; data_data.dsize = sizeof(LogMessage)+1;
   
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "logMessage");
+  accessMutex(&myGlobals.gdbmMutex, "logMessage");
 #endif 
   gdbm_store(logDB, key_data, data_data, GDBM_REPLACE);	
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 }

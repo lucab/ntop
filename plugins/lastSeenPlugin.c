@@ -76,7 +76,7 @@ static void handleLsPacket(u_char *_deviceId _UNUSED_,
 #endif
 
   HostI.HostIpAddress = ip.ip_src;
-  HostI.LastUpdated = actTime;
+  HostI.LastUpdated = myGlobals.actTime;
 
   if(snprintf(tmpStr, sizeof(tmpStr), "%u", (unsigned) ip.ip_src.s_addr) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -85,11 +85,11 @@ static void handleLsPacket(u_char *_deviceId _UNUSED_,
   data_data.dsize = sizeof(HostI)+1;
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex,"handleLSPackage");
+  accessMutex(&myGlobals.gdbmMutex, "handleLSPackage");
 #endif 
   gdbm_store(LsDB, key_data, data_data, GDBM_REPLACE);	
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 }
 
@@ -169,20 +169,20 @@ static void handleLsHTTPrequest(char* url) {
   /* Finding hosts... */
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "handleLSHTTPrequest");
+  accessMutex(&myGlobals.gdbmMutex, "handleLSHTTPrequest");
 #endif 
   ret_data = gdbm_firstkey(LsDB);
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
   while ( ret_data.dptr !=NULL ) {
     key_data = ret_data;
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "handleLSHTTPrequest");
+    accessMutex(&myGlobals.gdbmMutex, "handleLSHTTPrequest");
 #endif 
     content = gdbm_fetch(LsDB,key_data);
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif 
     if ( key_data.dptr[1]!='_') {
       memcpy(&tablehost[entry],(struct LsHostInfo *)content.dptr,sizeof(struct LsHostInfo)); 	
@@ -190,11 +190,11 @@ static void handleLsHTTPrequest(char* url) {
     }
     free(content.dptr);
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "handleLSHTTPrequest");
+    accessMutex(&myGlobals.gdbmMutex, "handleLSHTTPrequest");
 #endif 
     ret_data = gdbm_nextkey(LsDB,key_data);
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif 
     free(key_data.dptr); 
   }
@@ -219,11 +219,11 @@ static void handleLsHTTPrequest(char* url) {
     key_data.dsize = strlen(key_data.dptr)+1;
 		
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "quicksort");
+    accessMutex(&myGlobals.gdbmMutex, "quicksort");
 #endif 
     content = gdbm_fetch(LsDB,key_data);
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif 
     strncpy(HostN.note, no_note, sizeof(HostN.note));	
     if ( content.dptr ) {
@@ -288,14 +288,14 @@ static void addNotes(char *addr, char *PostNotes) {
   data_data.dsize = sizeof(HostN)+1;
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "addNotes");
+  accessMutex(&myGlobals.gdbmMutex, "addNotes");
 #endif 
   if ( strlen(PostNotes)>2 )
     gdbm_store(LsDB, key_data, data_data, GDBM_REPLACE);	
   else
     gdbm_delete(LsDB,key_data);
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 }
 
@@ -311,11 +311,11 @@ static void NotesURL(char *addr, char *ip_addr) {
   key_data.dsize = strlen(key_data.dptr)+1;
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "NotesURL");
+  accessMutex(&myGlobals.gdbmMutex, "NotesURL");
 #endif 
   content = gdbm_fetch(LsDB,key_data);
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 
   snprintf(tmp, sizeof(tmp), "Notes for %s", ip_addr);
@@ -354,7 +354,7 @@ static void deletelastSeenURL( char *addr ) {
   key_data.dsize = strlen(key_data.dptr)+1;
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex,"deletelastSeenURL");
+  accessMutex(&myGlobals.gdbmMutex,"deletelastSeenURL");
 #endif 
 
   gdbm_delete(LsDB,key_data);  /* Record */
@@ -363,7 +363,7 @@ static void deletelastSeenURL( char *addr ) {
   gdbm_delete(LsDB,key_data);  /* Notes */
 
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 
 }
@@ -373,11 +373,11 @@ static void termLsFunct(void) {
     
   if(LsDB != NULL) {
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "termLsFunct");
+    accessMutex(&myGlobals.gdbmMutex, "termLsFunct");
 #endif 
     gdbm_close(LsDB);
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif 
     LsDB = NULL;
   }
@@ -414,9 +414,9 @@ PluginInfo* PluginEntryFctn(void) {
 
   traceEvent(TRACE_INFO, "Welcome to %s. (C) 1999 by Andrea Marangoni.\n", 
 	     LsPluginInfo->pluginName);
-
+  
   /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/LsWatch.db",dbPath) < 0) 
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/LsWatch.db", myGlobals.dbPath) < 0) 
 traceEvent(TRACE_ERROR, "Buffer overflow!");
   LsDB = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 

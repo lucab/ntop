@@ -2034,6 +2034,7 @@ typedef struct pppTunnelHeader {
 #define AIX
 #endif
 
+#include "globals.h"
 #include "globals-core.h"
 
 #ifndef SEC_POPEN

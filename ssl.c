@@ -5,8 +5,8 @@
  *  					
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -48,15 +48,15 @@ int init_ssl(void) {
   SSL_METHOD *meth;
   int s_server_session_id_context = 1; /* anything will do */
   
-  sslInitialized = 0;
+  myGlobals.sslInitialized = 0;
 
-  if(sslPort == 0) 
+  if(myGlobals.sslPort == 0) 
     return(0); /* The user decided NOT to use SSL */
 
   memset(ssl, 0, sizeof(ssl));
 
-  for(idx=0; configFileDirs[idx] != NULL; idx++) {    
-    if(snprintf(buf, sizeof(buf), "%s/%s", configFileDirs[idx], CERTF) < 0) 
+  for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {    
+    if(snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CERTF) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 #ifdef WIN32
@@ -117,7 +117,7 @@ int init_ssl(void) {
     return(5);
   }
 
-  sslInitialized=1;
+  myGlobals.sslInitialized=1;
   traceEvent(TRACE_INFO, "SSL initialized successfully");
   return(0);
 }
@@ -129,7 +129,7 @@ static int init_ssl_connection(SSL *con)
   int i;
   long verify_error;
 
-  if(!sslInitialized) return(0);
+  if(!myGlobals.sslInitialized) return(0);
 
   if ((i=SSL_accept(con)) <= 0) {
 #ifdef DEBUG
@@ -184,7 +184,7 @@ static int init_ssl_connection(SSL *con)
 int accept_ssl_connection(int fd) {
   int i;
   
-  if(!sslInitialized) return(-1);
+  if(!myGlobals.sslInitialized) return(-1);
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
     if(ssl[i].ctx == NULL) {
@@ -211,7 +211,7 @@ int accept_ssl_connection(int fd) {
 SSL* getSSLsocket(int fd) {
   int i;
 
-  if(!sslInitialized) return(NULL);
+  if(!myGlobals.sslInitialized) return(NULL);
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
     if((ssl[i].ctx != NULL) 
@@ -228,7 +228,7 @@ SSL* getSSLsocket(int fd) {
 void term_ssl_connection(int fd) {
   int i;
 
-  if(!sslInitialized) return;
+  if(!myGlobals.sslInitialized) return;
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
     if((ssl[i].ctx != NULL) 
@@ -245,7 +245,7 @@ void term_ssl_connection(int fd) {
 void term_ssl(void) {
   int i;
 
-  if(!sslInitialized) return;
+  if(!myGlobals.sslInitialized) return;
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
     if(ssl[i].ctx != NULL) {

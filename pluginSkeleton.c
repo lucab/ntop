@@ -5,8 +5,8 @@
  *  					
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -51,8 +51,8 @@ static void handlePluginHTTPrequest(char* url) {
 static PluginInfo pluginInfo[] = {
   { "put here the plugin name as it will appere",
     "describe what this plugin does",
-    "1.0", /* plugin version */
-    "Put here the author name", 
+    "1.0", /* plugin myGlobals.version */
+    "Put here the myGlobals.author name", 
     "shortPluginName", /* http://<host>:<port>/plugins/shortPluginName */
     1,            /* Active Plugin */
     termFunction, /* TermFunc   */

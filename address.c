@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -50,7 +50,7 @@ static int _ns_name_unpack(const u_char *msg,
   and uses all the available memory. Hence this
   patch is needed.
 
-  On some Linux versions gethostbyaddr() is bugged and
+  On some Linux myGlobals.versions gethostbyaddr() is bugged and
   it tends to exaust all available file descriptors. If
   you want to check this try "lsof -i |grep ntop". If this
   is the case please do  '#define USE_HOST' (see below)
@@ -77,7 +77,7 @@ static void resolveAddress(struct in_addr *hostAddr,
   datum key_data;
   datum data_data;
 
-  if(!capturePackets) return;
+  if(!myGlobals.capturePackets) return;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering resolveAddress()");
@@ -90,19 +90,19 @@ static void resolveAddress(struct in_addr *hostAddr,
   key_data.dsize = strlen(keyBuf)+1;
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "resolveAddress");
+  accessMutex(&myGlobals.gdbmMutex, "resolveAddress");
 #endif
 
-  if(gdbm_file == NULL) {
+  if(myGlobals.gdbm_file == NULL) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving resolveAddress()");
 #endif
     return; /* ntop is quitting... */
   }
-  data_data = gdbm_fetch(gdbm_file, key_data);
+  data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
 
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
   /* First check whether the address we search for is cached... */
@@ -127,7 +127,7 @@ static void resolveAddress(struct in_addr *hostAddr,
       strncpy(symAddr, retrievedAddress->symAddress, MAX_HOST_SYM_NAME_LEN);
 
     updateHostNameInfo(addr, retrievedAddress->symAddress, actualDeviceId);
-    numResolvedOnCacheAddresses++;
+    myGlobals.numResolvedOnCacheAddresses++;
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving resolveAddress()");
 #endif
@@ -145,7 +145,7 @@ static void resolveAddress(struct in_addr *hostAddr,
     if(data_data.dptr != NULL) free(data_data.dptr);
   }
 
-  if((!keepAddressNumeric) && capturePackets) {
+  if((!keepAddressNumeric) && myGlobals.capturePackets) {
     struct in_addr theAddr;
 #ifdef HAVE_GETIPNODEBYADDR
     int error_num;
@@ -204,10 +204,10 @@ static void resolveAddress(struct in_addr *hostAddr,
 
       if((len > 0) && (i > 0) && (tmpBuf[i] == ' ')) {
 	res = &tmpBuf[i+1];
-	numResolvedWithDNSAddresses++;
+	myGlobals.numResolvedWithDNSAddresses++;
       } else {
 	res = _intoa(*hostAddr, tmpBuf, sizeof(tmpBuf));
-	numKeptNumericAddresses++;
+	myGlobals.numKeptNumericAddresses++;
       }
 
 #ifdef DNS_DEBUG
@@ -238,10 +238,10 @@ static void resolveAddress(struct in_addr *hostAddr,
 #endif
       strncpy(tmpBuf, dotp, sizeof(tmpBuf));
 
-      if(domainName[0] != '\0') {
-	int len = strlen(tmpBuf)-strlen(domainName);
+      if(myGlobals.domainName[0] != '\0') {
+	int len = strlen(tmpBuf)-strlen(myGlobals.domainName);
 
-	if((len > 0) && (!strcmp(&tmpBuf[len], domainName))) {
+	if((len > 0) && (!strcmp(&tmpBuf[len], myGlobals.domainName))) {
 	  int i=0, foundDot=0;
 
 	  for(i=0; i<len-1; i++)
@@ -255,9 +255,9 @@ static void resolveAddress(struct in_addr *hostAddr,
 	}
       }
       res = tmpBuf;
-      numResolvedWithDNSAddresses++;
+      myGlobals.numResolvedWithDNSAddresses++;
     } else {
-      numKeptNumericAddresses++;
+      myGlobals.numKeptNumericAddresses++;
       res = _intoa(*hostAddr, tmpBuf , sizeof(tmpBuf));
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Unable to resolve %s", res);
@@ -265,7 +265,7 @@ static void resolveAddress(struct in_addr *hostAddr,
     }
 #endif /* USE_HOST */
   } else {
-    numKeptNumericAddresses++;
+    myGlobals.numKeptNumericAddresses++;
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Unable to resolve %s", res);
 #endif
@@ -291,7 +291,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 
   memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
   strcpy(storedAddress.symAddress, symAddr);
-  storedAddress.recordCreationTime = actTime;
+  storedAddress.recordCreationTime = myGlobals.actTime;
 
   /* key_data has been set already */
   data_data.dptr = (void*)&storedAddress;
@@ -300,19 +300,19 @@ static void resolveAddress(struct in_addr *hostAddr,
   updateHostNameInfo(addr, symAddr, actualDeviceId);
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "resolveAddress-4");
+  accessMutex(&myGlobals.gdbmMutex, "resolveAddress-4");
 #endif
 
-  if(gdbm_file == NULL) {
+  if(myGlobals.gdbm_file == NULL) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving resolveAddress()");
 #endif
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
     return; /* ntop is quitting... */
   }
-  if(gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
+  if(gdbm_store(myGlobals.gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
     traceEvent(TRACE_ERROR, "Error while adding '%s'\n.\n", symAddr);
   else {
 #ifdef GDBM_DEBUG
@@ -321,7 +321,7 @@ static void resolveAddress(struct in_addr *hostAddr,
   }
 
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
 #ifdef DEBUG
@@ -339,45 +339,45 @@ static void queueAddress(struct in_addr elem) {
 #endif
   char tmpBuf[32];
 
-  if(trackOnlyLocalHosts && (!_pseudoLocalAddress(&elem)))
-      return;
+  if(myGlobals.trackOnlyLocalHosts && (!_pseudoLocalAddress(&elem)))
+    return;
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "queueAddress");
+  accessMutex(&myGlobals.gdbmMutex, "queueAddress");
 #endif
 
   sprintf(tmpBuf, "%u", elem.s_addr);
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(tmpBuf)+1;
 
-  data_data = gdbm_fetch(gdbm_file, key_data);
+  data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
 
   if(data_data.dptr == NULL) {
     data_data.dptr = tmpBuf;
     data_data.dsize = strlen(tmpBuf)+1;
 
-  if(gdbm_store(addressCache, key_data, data_data, GDBM_REPLACE) != 0)
+    if(gdbm_store(myGlobals.addressCache, key_data, data_data, GDBM_REPLACE) != 0)
     printf("Error while adding address '%s'\n", tmpBuf);
 
-  addressQueueLen++;
-  if(addressQueueLen > maxAddressQueueLen) maxAddressQueueLen = addressQueueLen;
+    myGlobals.addressQueueLen++;
+    if(myGlobals.addressQueueLen > myGlobals.maxAddressQueueLen) myGlobals.maxAddressQueueLen = myGlobals.addressQueueLen;
 
 #ifdef DNS_DEBUG
    traceEvent(TRACE_INFO, "Queued address '%s' [addr queue=%d/max=%d]\n",
-	      tmpBuf, addressQueueLen, maxAddressQueueLen);
+	      tmpBuf, myGlobals.addressQueueLen, myGlobals.maxAddressQueueLen);
 #endif
   } else {
       if(data_data.dptr != NULL)  /* Address already in queue */ 
 	  free(data_data.dptr);
   }
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
 #ifdef USE_SEMAPHORES
-    incrementSem(&queueAddressSem);
+  incrementSem(&myGlobals.queueAddressSem);
 #else
-    signalCondvar(&queueAddressCondvar);
+    signalCondvar(&myGlobals.queueAddressCondvar);
 #endif
 }
 
@@ -400,27 +400,27 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 
   key_data.dptr = NULL;
 
-  while(capturePackets) {
+  while(myGlobals.capturePackets) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Waiting for address...\n");
 #endif
 
-    while((addressQueueLen == 0)
-	  && (capturePackets) /* Courtesy of Wies-Software <wies@wiessoft.de> */
+    while((myGlobals.addressQueueLen == 0)
+	  && (myGlobals.capturePackets) /* Courtesy of Wies-Software <wies@wiessoft.de> */
 	  ) {
 #ifdef USE_SEMAPHORES
-      waitSem(&queueAddressSem);
+      waitSem(&myGlobals.queueAddressSem);
 #else
-      waitCondvar(&queueAddressCondvar);
+      waitCondvar(&myGlobals.queueAddressCondvar);
 #endif
       key_data.dptr = data_data.dptr = NULL;
       firstRun = 1;
     }
 
-    if(!capturePackets) break;
+    if(!myGlobals.capturePackets) break;
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "queueAddress");
+    accessMutex(&myGlobals.gdbmMutex, "queueAddress");
 #endif
 
     key_data = data_data;
@@ -428,15 +428,15 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     if(firstRun
        || (key_data.dptr == NULL) 
 	) {
-	data_data = gdbm_firstkey(addressCache);
+      data_data = gdbm_firstkey(myGlobals.addressCache);
 	firstRun = 0;
     } else {
-	data_data = gdbm_nextkey(addressCache, key_data);
+	data_data = gdbm_nextkey(myGlobals.addressCache, key_data);
 	if(key_data.dptr != NULL) free(key_data.dptr);
     }
 
   if(data_data.dptr != NULL) {
-      addressQueueLen--;
+      myGlobals.addressQueueLen--;
 
       addr.s_addr = (unsigned long)atoll(data_data.dptr);
 
@@ -444,21 +444,21 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
       traceEvent(TRACE_INFO, "Dequeued address... [%u][key=%s] (#addr=%d)\n",
 		 addr.s_addr, 
 		 key_data.dptr == NULL ? "<>" : key_data.dptr,
-		 addressQueueLen);
+		 myGlobals.addressQueueLen);
 #endif
 
-      gdbm_delete(addressCache, data_data);
+      gdbm_delete(myGlobals.addressCache, data_data);
     } else
 	addr.s_addr = 0x0;
 
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
     if(addr.s_addr != 0x0) {
       int i;
 
-      for(i=0; i<numDevices; i++)
+      for(i=0; i<myGlobals.numDevices; i++)
 	resolveAddress(&addr, 0, i);
 
 #ifdef DNS_DEBUG
@@ -539,14 +539,14 @@ void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
   key_data.dsize = strlen(key_data.dptr)+1;
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "ipaddr2str");
+  accessMutex(&myGlobals.gdbmMutex, "ipaddr2str");
 #endif
 
-  if(gdbm_file == NULL) return; /* ntop is quitting... */
-  data_data = gdbm_fetch(gdbm_file, key_data);
+  if(myGlobals.gdbm_file == NULL) return; /* ntop is quitting... */
+  data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
 
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
   if((data_data.dptr != NULL)
@@ -989,7 +989,7 @@ static char* _res_skip(char *msg,
   if (--numFieldsToSkip <= 0) return(cp);
 
   /*
-   * skip authoritative answer records
+   * skip myGlobals.authoritative answer records
    */
   n = (int)ntohs((unsigned short int)hp->ancount);
   if (n > 0) {
@@ -1321,20 +1321,20 @@ void checkSpoofing(u_int idxToCheck, int actualDeviceId) {
   u_int i;
   HostTraffic *el;
 
-  for(i=1; i<device[actualDeviceId].actualHashSize; i++) {
+  for(i=1; i<myGlobals.device[actualDeviceId].actualHashSize; i++) {
     if((i != idxToCheck) 
-       && (i != otherHostEntryIdx)
-       && ((el = device[actualDeviceId].hash_hostTraffic[i]) != NULL)) {
+       && (i != myGlobals.otherHostEntryIdx)
+       && ((el = myGlobals.device[actualDeviceId].hash_hostTraffic[i]) != NULL)) {
       if((el->hostIpAddress.s_addr != 0x0)
-	 && (device[actualDeviceId].hash_hostTraffic[idxToCheck] != NULL)
+	 && (myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck] != NULL)
 	 && (el->hostIpAddress.s_addr ==
-	     device[actualDeviceId].hash_hostTraffic[idxToCheck]->hostIpAddress.s_addr)) {
+	     myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->hostIpAddress.s_addr)) {
 	/* Spoofing detected */
 	FilterRule spoofing;
 	    
 	if((!hasDuplicatedMac(el))
-	   && (!hasDuplicatedMac(device[actualDeviceId].hash_hostTraffic[idxToCheck]))) {
-	  FD_SET(HOST_DUPLICATED_MAC, &device[actualDeviceId].hash_hostTraffic[idxToCheck]->flags);
+	   && (!hasDuplicatedMac(myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]))) {
+	  FD_SET(HOST_DUPLICATED_MAC, &myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->flags);
 	  FD_SET(HOST_DUPLICATED_MAC, &el->flags);
 
 	  memset(&spoofing, 0, sizeof(FilterRule));
@@ -1343,14 +1343,14 @@ void checkSpoofing(u_int idxToCheck, int actualDeviceId) {
 	  spoofing.actionType = ACTION_ALARM;
 
 	  emitEvent(&spoofing, el, i,
-		    device[actualDeviceId].hash_hostTraffic[idxToCheck],
+		    myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck],
 		    idxToCheck, -1, 0, 0);
 
-	  if(enableSuspiciousPacketDump) {
+	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(TRACE_WARNING,
 		       "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)",
 		       el->hostNumIpAddress,
-		       device[actualDeviceId].hash_hostTraffic[idxToCheck]->ethAddressString,
+		       myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->ethAddressString,
 		       el->ethAddressString);
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
@@ -1378,26 +1378,26 @@ void cleanupHostEntries() {
 #endif
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "cleanupHostEntries");
+  accessMutex(&myGlobals.gdbmMutex, "cleanupHostEntries");
 #endif
-  return_data = gdbm_firstkey(gdbm_file);
+  return_data = gdbm_firstkey(myGlobals.gdbm_file);
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
   while(return_data.dptr != NULL) {
     numDbEntries++;
     key_data = return_data;
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "cleanupHostEntries");
+    accessMutex(&myGlobals.gdbmMutex, "cleanupHostEntries");
 #endif
-    return_data = gdbm_nextkey(gdbm_file, key_data);
-    data_data = gdbm_fetch(gdbm_file, key_data);
+    return_data = gdbm_nextkey(myGlobals.gdbm_file, key_data);
+    data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
 
     if(data_data.dptr != NULL) {
       if((data_data.dsize == (sizeof(StoredAddress)+1))
-	 && ((((StoredAddress*)data_data.dptr)->recordCreationTime+ADDRESS_PURGE_TIMEOUT) < actTime)) {
-	gdbm_delete(gdbm_file, key_data);
+	 && ((((StoredAddress*)data_data.dptr)->recordCreationTime+ADDRESS_PURGE_TIMEOUT) < myGlobals.actTime)) {
+	gdbm_delete(myGlobals.gdbm_file, key_data);
 #ifdef DEBUG
 	traceEvent(TRACE_INFO, "Deleted '%s' entry.\n", data_data.dptr);
 #endif
@@ -1405,7 +1405,7 @@ void cleanupHostEntries() {
       }
     }
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads to run */
 #endif

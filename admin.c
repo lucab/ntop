@@ -5,8 +5,8 @@
  *  					
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -41,9 +41,9 @@ void showUsers(void) {
   sendString("<P><HR><P>\n");
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "showUsers");
+    accessMutex(&myGlobals.gdbmMutex, "showUsers");
 #endif 
-  return_data = gdbm_firstkey(pwFile);
+  return_data = gdbm_firstkey(myGlobals.pwFile);
 
   while (return_data.dptr != NULL) {
     /* traceEvent(TRACE_INFO, "1) -> %s\n", return_data.dptr); */
@@ -75,12 +75,12 @@ void showUsers(void) {
       numUsers++;
     }
 
-    return_data = gdbm_nextkey(pwFile, key_data);
+    return_data = gdbm_nextkey(myGlobals.pwFile, key_data);
     free(key_data.dptr);
   }
     
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 
   if(numUsers > 0) {
@@ -153,11 +153,11 @@ void deleteUser(char* user) {
     key_data.dsize = strlen(user)+1;
       
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "deleteUser");
+    accessMutex(&myGlobals.gdbmMutex, "deleteUser");
 #endif 
-    rc = gdbm_delete(pwFile, key_data);
+    rc = gdbm_delete(myGlobals.pwFile, key_data);
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 
     if(rc != 0) {
@@ -246,13 +246,13 @@ void doAddUser(int len) {
 #endif
 
 #ifdef MULTITHREADED
-      accessMutex(&gdbmMutex, "doAddUser");
+      accessMutex(&myGlobals.gdbmMutex, "doAddUser");
 #endif 
-      if(gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE) != 0)
+      if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
 	err = "FATAL ERROR: unable to add the new user.";
 
 #ifdef MULTITHREADED
-      releaseMutex(&gdbmMutex);
+      releaseMutex(&myGlobals.gdbmMutex);
 #endif 
     }
   }
@@ -281,10 +281,10 @@ void showURLs(void) {
   sendString("<P><HR><P>\n");
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "showURLs");
+  accessMutex(&myGlobals.gdbmMutex, "showURLs");
 #endif 
 
-  return_data = gdbm_firstkey(pwFile);
+  return_data = gdbm_firstkey(myGlobals.pwFile);
 
   while (return_data.dptr != NULL) {
     /* traceEvent(TRACE_INFO, "1) -> %s\n", return_data.dptr); */
@@ -308,12 +308,12 @@ void showURLs(void) {
       numUsers++;      
     }
 
-    return_data = gdbm_nextkey(pwFile, key_data);
+    return_data = gdbm_nextkey(myGlobals.pwFile, key_data);
     free(key_data.dptr);
   }
 
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
     
   if(numUsers > 0) {
@@ -364,14 +364,14 @@ void addURL(char* url) {
 	       "<TD ALIGN=left><SELECT NAME=users MULTIPLE>\n");
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "addURL");
+    accessMutex(&myGlobals.gdbmMutex, "addURL");
 #endif 
   
     authorisedUser[0] = NULL;
     if(url != NULL) {
       key_data.dptr = url;
       key_data.dsize = strlen(url)+1;
-      return_data = gdbm_fetch(pwFile, key_data);
+      return_data = gdbm_fetch(myGlobals.pwFile, key_data);
 
       if(return_data.dptr != NULL) {
 	char *strtokState, *item;
@@ -389,7 +389,7 @@ void addURL(char* url) {
       }
     }
 
-    return_data = gdbm_firstkey(pwFile);
+    return_data = gdbm_firstkey(myGlobals.pwFile);
 
     while (return_data.dptr != NULL) {
       key_data = return_data;
@@ -408,7 +408,7 @@ void addURL(char* url) {
         sendString(tmpStr);
       }
 
-      return_data = gdbm_nextkey(pwFile, key_data);
+      return_data = gdbm_nextkey(myGlobals.pwFile, key_data);
       free(key_data.dptr);
     }
 
@@ -416,7 +416,7 @@ void addURL(char* url) {
       free(aubuf); /* (**) */
 
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 
     sendString("</SELECT>\n</TD></TR>\n");
@@ -463,11 +463,11 @@ void deleteURL(char* url) {
     key_data.dsize = strlen(url)+1;
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "deleteURL");
+    accessMutex(&myGlobals.gdbmMutex, "deleteURL");
 #endif 
-    rc = gdbm_delete(pwFile, key_data);
+    rc = gdbm_delete(myGlobals.pwFile, key_data);
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 
     if(rc != 0) {
@@ -555,16 +555,16 @@ void doAddURL(int len) {
     data_data.dsize = strlen(authorizedUsers)+1;
     
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "doAddURL");
+    accessMutex(&myGlobals.gdbmMutex, "doAddURL");
 #endif 
-    if(gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE) != 0)
+    if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
       err = "FATAL ERROR: unable to add the new URL.";
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif 
   }
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 
   if(err != NULL) {
@@ -589,7 +589,7 @@ int doChangeFilter(int len) {
   char *currentFilterExpressionSav;
   char buf[BUF_SIZE],postData[256],*key,*err=NULL;
 
-  currentFilterExpressionSav=strdup(currentFilterExpression);  /* Backup */
+  currentFilterExpressionSav = strdup(myGlobals.currentFilterExpression);  /* Backup */
 
   if((idx = readHTTPpostData(len, postData, sizeof(postData))) < 0)
     return 1;
@@ -601,17 +601,17 @@ int doChangeFilter(int len) {
     } else if((key != NULL) && (postData[i] == '=')) {
       postData[i] = '\0';
       if(strcmp(key, "filter") == 0) {
-       currentFilterExpression = strdup(&postData[i+1]);
+	myGlobals.currentFilterExpression = strdup(&postData[i+1]);
       }
       key = NULL;
     }
   }
   if(key == NULL) {
-    decodeWebFormURL(currentFilterExpression);
-    for(i=0; i<strlen(currentFilterExpression); i++) {
-      if(!(isalpha(currentFilterExpression[i]) || 
-	   isdigit(currentFilterExpression[i]) || 
-	  (strchr("/-+*_.!&|><=\\\":[]() ", currentFilterExpression[i]) != NULL))) {
+    decodeWebFormURL(myGlobals.currentFilterExpression);
+    for(i=0; i<strlen(myGlobals.currentFilterExpression); i++) {
+      if(!(isalpha(myGlobals.currentFilterExpression[i]) || 
+	   isdigit(myGlobals.currentFilterExpression[i]) || 
+	  (strchr("/-+*_.!&|><=\\\":[]() ", myGlobals.currentFilterExpression[i]) != NULL))) {
        badChar = 1;	       /* Perhaps we don't have to use this check? */
        break;
       }
@@ -623,37 +623,37 @@ int doChangeFilter(int len) {
     traceEvent(TRACE_INFO, "Changing the kernel (libpcap) filter...");
     
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "changeFilter");
+    accessMutex(&myGlobals.gdbmMutex, "changeFilter");
 #endif
 
-    for(i=0; i<numDevices; i++) {
-      if((!device[i].virtualDevice)&&(err==NULL)) {
-	if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
-			device[i].netmask.s_addr) < 0)
-	   || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if((!myGlobals.device[i].virtualDevice)&&(err==NULL)) {
+	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
+			myGlobals.device[i].netmask.s_addr) < 0)
+	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
 	  traceEvent(TRACE_ERROR,
 		    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
-		    currentFilterExpression, pcap_geterr(device[i].pcapPtr), device[i].name);
+		    myGlobals.currentFilterExpression, pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 	  err="The syntax of the defined filter is wrong.";
 	} else{
-	 if(*currentFilterExpression!='\0'){
-	   traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", 
-		      currentFilterExpression, device[i].name);
+	 if(*myGlobals.currentFilterExpression!='\0'){
+	   traceEvent(TRACE_INFO, "Set filter \"%s\" on myGlobals.device %s.", 
+		      myGlobals.currentFilterExpression, myGlobals.device[i].name);
 	 }else{
-	   traceEvent(TRACE_INFO, "Set no kernel (libpcap) filtering on device %s.",
-		      device[i].name);
+	   traceEvent(TRACE_INFO, "Set no kernel (libpcap) filtering on myGlobals.device %s.",
+		      myGlobals.device[i].name);
 	 }
 	}
       }
     }
 
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
   }
   sendHTTPHeader(HTTP_TYPE_HTML, 0);
 
-  if(filterExpressionInExtraFrame) {
+  if(myGlobals.filterExpressionInExtraFrame) {
     sendString("<HTML>\n<HEAD>\n");
     sendString("<LINK REL=stylesheet HREF=/style.css type=\"text/css\">\n");
     sendString("<SCRIPT TYPE=\"text/javascript\">\n");
@@ -673,15 +673,15 @@ int doChangeFilter(int len) {
   sendString("<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
 
   if(err == NULL) {
-    if(*currentFilterExpression != '\0'){
+    if(*myGlobals.currentFilterExpression != '\0'){
       if(snprintf(buf, sizeof(buf), 
 		  "<B>Filter changed to <I>%s</I>.</B></FONT>\n", 
-		 currentFilterExpression) < 0)
+		 myGlobals.currentFilterExpression) < 0)
        traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     } else sendString("<B>Kernel (libpcap) filtering disabled.</B></FONT>\n");
 
-    if(filterExpressionInExtraFrame) {
+    if(myGlobals.filterExpressionInExtraFrame) {
       sendString("<NOSCRIPT>\n<P>You've got JavaScript disabled. Therefore ");
       sendString("your extra frame with the filter expression isn't updated ");
       sendString("automatically. No problem, you can update it here ");
@@ -694,25 +694,25 @@ int doChangeFilter(int len) {
       printHTMLtrailer();
     }
 
-    if(currentFilterExpressionSav!=NULL) free(currentFilterExpressionSav);
+    if(currentFilterExpressionSav != NULL) free(currentFilterExpressionSav);
     return 0; /* -> Statistics are reset (if uncommented) */
   } else {
-    if(currentFilterExpression!=NULL) free(currentFilterExpression);
-    currentFilterExpression=currentFilterExpressionSav;
-    for(i=0; i<numDevices; i++) {      /* restore old filter expression */
-      if((!device[i].virtualDevice)&&(err==NULL)) {
-	if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
-			device[i].netmask.s_addr) < 0)
-	   || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
+    if(myGlobals.currentFilterExpression!=NULL) free(myGlobals.currentFilterExpression);
+    myGlobals.currentFilterExpression = currentFilterExpressionSav;
+    for(i=0; i<myGlobals.numDevices; i++) {      /* restore old filter expression */
+      if((!myGlobals.device[i].virtualDevice)&&(err==NULL)) {
+	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
+			myGlobals.device[i].netmask.s_addr) < 0)
+	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
 	  traceEvent(TRACE_ERROR,
 		    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
-		    currentFilterExpression, pcap_geterr(device[i].pcapPtr), device[i].name);
+		    myGlobals.currentFilterExpression, pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 	}
       }
     }
 
     printFlagedWarning(err);
-    if(filterExpressionInExtraFrame) sendString("</BODY>\n</HTML>\n");
+    if(myGlobals.filterExpressionInExtraFrame) sendString("</BODY>\n</HTML>\n");
     else printHTMLtrailer();
     return 2;
   }
@@ -730,10 +730,10 @@ void changeFilter(void) {
   sendString("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=5>\n<TR>\n");
   sendString("<TH "TH_BG" ALIGN=center>Old Filter Expression:&nbsp;</TH><TD ALIGN=left>");
   if(snprintf(buf, sizeof(buf), "<B>%s",
-	     currentFilterExpression) < 0)
+	     myGlobals.currentFilterExpression) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-  if(*currentFilterExpression=='\0') sendString("&lt;No filter defined&gt;");
+  if(*myGlobals.currentFilterExpression == '\0') sendString("&lt;No filter defined&gt;");
   sendString("</B><BR>\n</TD>\n</TR>\n");
   
   sendString("<FORM METHOD=POST ACTION=/doChangeFilter>\n");
@@ -910,11 +910,11 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue) {
   key_data.dsize = strlen(key_data.dptr)+1;
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "addKeyIfMissing");
+  accessMutex(&myGlobals.gdbmMutex, "addKeyIfMissing");
 #endif 
-  return_data = gdbm_fetch(pwFile, key_data);
+  return_data = gdbm_fetch(myGlobals.pwFile, key_data);
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
   if(return_data.dptr == NULL) {
@@ -936,11 +936,11 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue) {
     
     data_data.dsize = strlen(data_data.dptr)+1;
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "showUsers");
+    accessMutex(&myGlobals.gdbmMutex, "showUsers");
 #endif 
-    gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE);
+    gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE);
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
   } else
     free(return_data.dptr);

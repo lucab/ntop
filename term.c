@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,20 +27,20 @@
 void termIPServices(void) {
   int i;
 
-  for(i=0; i<numActServices; i++) {
-    if(udpSvc[i] != NULL) {
-      free(udpSvc[i]->name);
-      free(udpSvc[i]);
+  for(i=0; i<myGlobals.numActServices; i++) {
+    if(myGlobals.udpSvc[i] != NULL) {
+      free(myGlobals.udpSvc[i]->name);
+      free(myGlobals.udpSvc[i]);
     }
 
-    if(tcpSvc[i] != NULL) {
-      free(tcpSvc[i]->name);
-      free(tcpSvc[i]);
+    if(myGlobals.tcpSvc[i] != NULL) {
+      free(myGlobals.tcpSvc[i]->name);
+      free(myGlobals.tcpSvc[i]);
     }
   }
 
-  free(udpSvc);
-  free(tcpSvc);
+  free(myGlobals.udpSvc);
+  free(myGlobals.tcpSvc);
 }
 
 
@@ -49,14 +49,14 @@ void termIPServices(void) {
 void termIPSessions(void) {
   int i, j;
 
-  for(j=0; j<numDevices; j++) {
-    for(i=0; i<device[j].numTotSessions; i++)
-      if(device[j].tcpSession[i] != NULL) 
-	free(device[j].tcpSession[i]);    
+  for(j=0; j<myGlobals.numDevices; j++) {
+    for(i=0; i<myGlobals.device[j].numTotSessions; i++)
+      if(myGlobals.device[j].tcpSession[i] != NULL) 
+	free(myGlobals.device[j].tcpSession[i]);    
     
-    device[j].numTcpSessions = 0;
+    myGlobals.device[j].numTcpSessions = 0;
     
-    while (device[j].fragmentList != NULL)
-      deleteFragment(device[j].fragmentList, j);
+    while (myGlobals.device[j].fragmentList != NULL)
+      deleteFragment(myGlobals.device[j].fragmentList, j);
   }
 }

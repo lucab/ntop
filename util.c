@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -206,10 +206,10 @@ FILE *sec_popen(char *cmd, const char *type) {
 u_int findHostIdxByNumIP(struct in_addr hostIpAddress, int actualDeviceId) {
   u_int idx;
 
-  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
-    if((device[actualDeviceId].hash_hostTraffic[idx] != NULL)
-       && (device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress != NULL)
-       && (device[actualDeviceId].hash_hostTraffic[idx]->hostIpAddress.s_addr == hostIpAddress.s_addr))
+  for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++)
+    if((myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL)
+       && (myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress != NULL)
+       && (myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostIpAddress.s_addr == hostIpAddress.s_addr))
       return(idx);
 
   return(NO_PEER);
@@ -220,11 +220,11 @@ u_int findHostIdxByNumIP(struct in_addr hostIpAddress, int actualDeviceId) {
 HostTraffic* findHostByNumIP(char* numIPaddr, int actualDeviceId) {
   u_int idx;
 
-  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
-    if((device[actualDeviceId].hash_hostTraffic[idx] != NULL)
-       && (device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress != NULL)
-       && (!strcmp(device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress, numIPaddr)))
-      return(device[actualDeviceId].hash_hostTraffic[idx]);
+  for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++)
+    if((myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL)
+       && (myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress != NULL)
+       && (!strcmp(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress, numIPaddr)))
+      return(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
 
   return(NULL);
 }
@@ -234,11 +234,11 @@ HostTraffic* findHostByNumIP(char* numIPaddr, int actualDeviceId) {
 HostTraffic* findHostByMAC(char* macAddr, int actualDeviceId) {
   u_int idx;
 
-  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
-    if(device[actualDeviceId].hash_hostTraffic[idx]
-       && device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress
-       && (!strcmp(device[actualDeviceId].hash_hostTraffic[idx]->ethAddressString, macAddr)))
-      return(device[actualDeviceId].hash_hostTraffic[idx]);
+  for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++)
+    if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]
+       && myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress
+       && (!strcmp(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->ethAddressString, macAddr)))
+      return(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
 
   return(NULL);
 }
@@ -287,12 +287,12 @@ unsigned short isBroadcastAddress(struct in_addr *addr) {
   if(addr == NULL)
     return 1;
   else if(addr->s_addr == 0x0)
-    return 0; /* IP-less device (is it trying to boot via DHCP/BOOTP ?) */
+    return 0; /* IP-less myGlobals.device (is it trying to boot via DHCP/BOOTP ?) */
   else {
-    for(i=0; i<numDevices; i++)
-      if(device[i].netmask.s_addr == 0xFFFFFFFF) /* PPP */
+    for(i=0; i<myGlobals.numDevices; i++)
+      if(myGlobals.device[i].netmask.s_addr == 0xFFFFFFFF) /* PPP */
 	return 0;
-      else if(((addr->s_addr | device[i].netmask.s_addr) ==  addr->s_addr)
+      else if(((addr->s_addr | myGlobals.device[i].netmask.s_addr) ==  addr->s_addr)
 	      || ((addr->s_addr & 0x000000FF) == 0x000000FF)
 	      || ((addr->s_addr & 0x000000FF) == 0x00000000) /* Network address */
 	      ) {
@@ -327,11 +327,11 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 unsigned short isLocalAddress(struct in_addr *addr) {
   int i;
 
-  if(trackOnlyLocalHosts) 
+  if(myGlobals.trackOnlyLocalHosts) 
       return(0);
   
-  for(i=0; i<numDevices; i++)
-    if((addr->s_addr & device[i].netmask.s_addr) == device[i].network.s_addr) {
+  for(i=0; i<myGlobals.numDevices; i++)
+    if((addr->s_addr & myGlobals.device[i].netmask.s_addr) == myGlobals.device[i].network.s_addr) {
 #ifdef ADDRESS_DEBUG
       traceEvent(TRACE_INFO, "%s is local\n", intoa(*addr));
 #endif
@@ -369,7 +369,7 @@ unsigned short isPrivateAddress(struct in_addr *addr) {
  *  It converts an integer in the range
  *  from  0 to 255 in number of bits
  *  useful for netmask  calculation.
- *  The conversion is  valid if there
+ *  The conmyGlobals.version is  valid if there
  *  is an uninterrupted sequence of
  *  bits set to 1 at the most signi-
  *  ficant positions. Example:
@@ -577,9 +577,9 @@ void handleLocalAddresses(char* addresses) {
       if(numLocalNets < MAX_NUM_NETWORKS) {
 	int found = 0;
 
-	for(i=0; i<numDevices; i++)
-	  if((network == device[i].network.s_addr)
-	     && (device[i].netmask.s_addr == networkMask)) {
+	for(i=0; i<myGlobals.numDevices; i++)
+	  if((network == myGlobals.device[i].network.s_addr)
+	     && (myGlobals.device[i].netmask.s_addr == networkMask)) {
 	    a = (int) ((network >> 24) & 0xff);
 	    b = (int) ((network >> 16) & 0xff);
 	    c = (int) ((network >>  8) & 0xff);
@@ -645,7 +645,7 @@ unsigned short _pseudoLocalAddress(struct in_addr *addr) {
 unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   int i;
   
-  if(trackOnlyLocalHosts) 
+  if(myGlobals.trackOnlyLocalHosts) 
       return(0);
 
   i = isLocalAddress(addr);
@@ -792,7 +792,7 @@ void handleFlowsSpecs(char* flows) {
 	flowSpec[len-1] = '\0';
         flowSpec++;
 
-        rc = pcap_compile(device[0].pcapPtr, &fcode, flowSpec, 1, device[0].netmask.s_addr);
+        rc = pcap_compile(myGlobals.device[0].pcapPtr, &fcode, flowSpec, 1, myGlobals.device[0].netmask.s_addr);
 
         if(rc < 0)
           traceEvent(TRACE_INFO, "Wrong flow specification \"%s\" (syntax error). "
@@ -809,11 +809,11 @@ void handleFlowsSpecs(char* flows) {
           } else {
             int i;
 
-	    newFlow->fcode = (struct bpf_program*)calloc(numDevices, sizeof(struct bpf_program));
+	    newFlow->fcode = (struct bpf_program*)calloc(myGlobals.numDevices, sizeof(struct bpf_program));
 
-            for(i=0; i<numDevices; i++) {
-              rc = pcap_compile(device[i].pcapPtr, &newFlow->fcode[i],
-                                flowSpec, 1, device[i].netmask.s_addr);
+            for(i=0; i<myGlobals.numDevices; i++) {
+              rc = pcap_compile(myGlobals.device[i].pcapPtr, &newFlow->fcode[i],
+                                flowSpec, 1, myGlobals.device[i].netmask.s_addr);
 
               if(rc < 0) {
                 traceEvent(TRACE_WARNING, "Wrong flow specification \"%s\" (syntax error). "
@@ -826,8 +826,8 @@ void handleFlowsSpecs(char* flows) {
             newFlow->flowName = strdup(flowName);
             newFlow->pluginStatus.activePlugin = 1;
             newFlow->pluginStatus.pluginPtr = NULL; /* Added by Jacques Le Rest <jlerest@ifremer.fr> */
-            newFlow->next = flowsList;
-            flowsList = newFlow;
+            newFlow->next = myGlobals.flowsList;
+            myGlobals.flowsList = newFlow;
           }
         }
       }
@@ -921,7 +921,7 @@ int createThread(pthread_t *threadId,
   int rc;
 
   rc = pthread_create(threadId, NULL, __start_routine, userParm);
-  numThreads++;
+  myGlobals.numThreads++;
   return(rc);
 }
 
@@ -929,7 +929,7 @@ int createThread(pthread_t *threadId,
 
 void killThread(pthread_t *threadId) {
   pthread_detach(*threadId);
-  numThreads--;
+  myGlobals.numThreads--;
 }
 
 /* ************************************ */
@@ -945,17 +945,17 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   /* *************************************************
      There seems to be some problem with mutexes and some
-     glibc versions. See
+     glibc myGlobals.versions. See
 
      http://sdb.suse.de/sdb/de/html/aj_pthread7.0.html
 
-     (in German but an english version is probably available on their
+     (in German but an english myGlobals.version is probably available on their
      international web site). Suggested workaround is either to use
 
      pthread_mutexattr_settype (&mutattr, PTHREAD_MUTEX_ERRORCHECK_NP);
 
      as checked mutexes dont have the error or use a corrected
-     glibc (Suse offers a patched version for their system).
+     glibc (Suse offers a patched myGlobals.version for their system).
 
      Andreas Pfaeller <a.pfaller@pop.gun.de>
 
@@ -1311,7 +1311,7 @@ void readLsofInfo(void) {
 
   if(fd == NULL) {
     fclose(fd);
-    isLsofPresent = 0;
+    myGlobals.isLsofPresent = 0;
     return;
   }
 
@@ -1352,7 +1352,7 @@ void readLsofInfo(void) {
   numLines--;
 
   if(numLines <= 0)
-    return; /* No processes */
+    return; /* No myGlobals.processes */
 
   fd = fopen(fileName, "r");
   if(fd == NULL) {
@@ -1364,21 +1364,21 @@ void readLsofInfo(void) {
   /* ****************************************** */
 
 #ifdef MULTITHREADED
-  accessMutex(&lsofMutex, "readLsofInfo");
+  accessMutex(&myGlobals.lsofMutex, "readLsofInfo");
 #endif
 
-  for(i=0; i<numProcesses; i++)
-    processes[i]->marker = 0;
+  for(i=0; i<myGlobals.numProcesses; i++)
+    myGlobals.processes[i]->marker = 0;
 
   for(idx=0; idx<TOP_IP_PORT; idx++) {
-    while(localPorts[idx] != NULL) {
-      listElement = localPorts[idx]->next;
-      free(localPorts[idx]);
-      localPorts[idx] = listElement;
+    while(myGlobals.localPorts[idx] != NULL) {
+      listElement = myGlobals.localPorts[idx]->next;
+      free(myGlobals.localPorts[idx]);
+      myGlobals.localPorts[idx] = listElement;
     }
   }
 
-  memset(localPorts, 0, sizeof(localPorts)); /* Just to be sure... */
+  memset(myGlobals.localPorts, 0, sizeof(myGlobals.localPorts)); /* Just to be sure... */
 
   fgets(line, 383, fd); /* Ignore 1st line */
 
@@ -1416,10 +1416,10 @@ void readLsofInfo(void) {
     if((portNr == NULL) || (portNr[0] == '*'))
       continue;
 
-    for(i=0, found = 0; i<numProcesses; i++) {
-      if(processes[i]->pid == pid) {
+    for(i=0, found = 0; i<myGlobals.numProcesses; i++) {
+      if(myGlobals.processes[i]->pid == pid) {
 	found = 1;
-	processes[i]->marker = 1;
+	myGlobals.processes[i]->marker = 1;
 	break;
       }
     }
@@ -1449,71 +1449,70 @@ void readLsofInfo(void) {
     if(!found) {
       int floater;
 
-      if(numProcesses < MAX_NUM_PROCESSES) {
+      if(myGlobals.numProcesses < MAX_NUM_PROCESSES) {
 	ProcessInfo **swapProcesses;
 
-	swapProcesses = (ProcessInfo**)malloc((numProcesses+1)*sizeof(ProcessInfo*));
-	if(numProcesses > 0)
-	  memcpy(swapProcesses, processes, numProcesses*sizeof(ProcessInfo*));
-	if(processes != NULL) free(processes);
-	processes = swapProcesses;
+	swapProcesses = (ProcessInfo**)malloc((myGlobals.numProcesses+1)*sizeof(ProcessInfo*));
+	if(myGlobals.numProcesses > 0)
+	  memcpy(swapProcesses, myGlobals.processes, myGlobals.numProcesses*sizeof(ProcessInfo*));
+	if(myGlobals.processes != NULL) free(myGlobals.processes);
+	myGlobals.processes = swapProcesses;
 
 #ifdef DEBUG
 	traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", 
-		   numProcesses, command, user, portNr, portNumber);
+		   myGlobals.numProcesses, command, user, portNr, portNumber);
 #endif
-	processes[numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
-	processes[numProcesses]->command             = strdup(command);
-	processes[numProcesses]->user                = strdup(user);
-	processes[numProcesses]->pid                 = pid;
-	processes[numProcesses]->firstSeen           = actTime;
-	processes[numProcesses]->lastSeen            = actTime;
-	processes[numProcesses]->marker              = 1;
-	processes[numProcesses]->bytesSent           = 0;
-	processes[numProcesses]->bytesRcvd           = 0;
-	processes[numProcesses]->contactedIpPeersIdx = 0;
+	myGlobals.processes[myGlobals.numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
+	myGlobals.processes[myGlobals.numProcesses]->command             = strdup(command);
+	myGlobals.processes[myGlobals.numProcesses]->user                = strdup(user);
+	myGlobals.processes[myGlobals.numProcesses]->pid                 = pid;
+	myGlobals.processes[myGlobals.numProcesses]->firstSeen           = myGlobals.actTime;
+	myGlobals.processes[myGlobals.numProcesses]->lastSeen            = myGlobals.actTime;
+	myGlobals.processes[myGlobals.numProcesses]->marker              = 1;
+	myGlobals.processes[myGlobals.numProcesses]->bytesSent           = 0;
+	myGlobals.processes[myGlobals.numProcesses]->bytesRcvd           = 0;
+	myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersIdx = 0;
 	
 	for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
-	  processes[numProcesses]->contactedIpPeersIndexes[floater] = NO_PEER;
+	  myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersIndexes[floater] = NO_PEER;
       }
       
-      idx = numProcesses;
-      numProcesses++;
+      idx = myGlobals.numProcesses;
+      myGlobals.numProcesses++;
     } else
       idx = i;
 
     listElement = (ProcessInfoList*)malloc(sizeof(ProcessInfoList));
-    listElement->element = processes[idx];
-    listElement->next = localPorts[portNumber];
-    localPorts[portNumber] = listElement;
+    listElement->element = myGlobals.processes[idx];
+    listElement->next = myGlobals.localPorts[portNumber];
+    myGlobals.localPorts[portNumber] = listElement;
   }
 
   fclose(fd);
   unlink(fileName);
 
-  processSize = sizeof(ProcessInfo*)*numProcesses;
+  processSize = sizeof(ProcessInfo*)*myGlobals.numProcesses;
   tmpProcesses = (ProcessInfo**)malloc(processSize);
 
-  memcpy(tmpProcesses, processes, processSize);
-  memset(processes, 0, processSize);
+  memcpy(tmpProcesses, myGlobals.processes, processSize);
+  memset(myGlobals.processes, 0, processSize);
 
-  for(i=0, processesIdx=0; i<numProcesses; i++) {
+  for(i=0, processesIdx=0; i<myGlobals.numProcesses; i++) {
     if(tmpProcesses[i]->marker == 0) {
       /* Free the process */
       free(tmpProcesses[i]->command);
       free(tmpProcesses[i]->user);
       free(tmpProcesses[i]);
     } else {
-      processes[processesIdx++] = tmpProcesses[i];
+      myGlobals.processes[processesIdx++] = tmpProcesses[i];
     }
   }
 
-  numProcesses = processesIdx;
-
-  updateLsof = 0;
+  myGlobals.numProcesses = processesIdx;
+  myGlobals.updateLsof = 0;
 
 #ifdef MULTITHREADED
-  releaseMutex(&lsofMutex);
+  releaseMutex(&myGlobals.lsofMutex);
 #endif
 
   free(tmpProcesses);
@@ -1597,7 +1596,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
   fd_set mask;
   struct timeval wait_time;
 
-  if((!isNmapPresent) || (ipAddr[0] == '\0')) {
+  if((!myGlobals.isNmapPresent) || (ipAddr[0] == '\0')) {
     return(NULL);
   }
 
@@ -1617,7 +1616,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 #define OS_GUESS_2 "OS: "
 
   if(fd == NULL) {
-    isNmapPresent = 0;
+    myGlobals.isNmapPresent = 0;
     return(NULL);
   } else
     sockFd = fileno(fd);
@@ -1816,7 +1815,7 @@ int name_interpret(char *in, char *out, int numBytes) {
 /* ******************************* */
 
 char* getNwInterfaceType(int i) {
-  switch(device[i].datalink) {
+  switch(myGlobals.device[i].datalink) {
   case DLT_NULL:	return("No&nbsp;link-layer&nbsp;encapsulation");
   case DLT_EN10MB:	return("Ethernet");
   case DLT_EN3MB:	return("Experimental&nbsp;Ethernet&nbsp;(3Mb)");
@@ -1862,7 +1861,7 @@ char* formatTime(time_t *theTime, short encodeString) {
 /* ************************************ */
 
 int getActualInterface(int deviceId) {
-  if(mergeInterfaces)
+  if(myGlobals.mergeInterfaces)
     return(0);
   else
     return(deviceId);
@@ -1899,10 +1898,10 @@ void storeHostTrafficInstance(HostTraffic *el) {
   data_data.dsize = sizeof(HostTraffic);
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "storeHostTrafficInstance");
+  accessMutex(&myGlobals.gdbmMutex, "storeHostTrafficInstance");
 #endif
 
-  if(gdbm_store(hostsInfoFile, key_data, data_data, GDBM_REPLACE) == 0) {
+  if(gdbm_store(myGlobals.hostsInfoFile, key_data, data_data, GDBM_REPLACE) == 0) {
 #ifdef STORAGE_DEBUG
     traceEvent(TRACE_INFO, "Stored instance: '%s'\n", key);
 #endif
@@ -1910,7 +1909,7 @@ void storeHostTrafficInstance(HostTraffic *el) {
   }
 
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif
 }
 
@@ -1965,9 +1964,9 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
   key_data.dsize = strlen(key_data.dptr);
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "resurrectHostTrafficInstance");
+  accessMutex(&myGlobals.gdbmMutex, "resurrectHostTrafficInstance");
 #endif
-  data_data = gdbm_fetch(hostsInfoFile, key_data);
+  data_data = gdbm_fetch(myGlobals.hostsInfoFile, key_data);
 
   if(data_data.dptr != NULL) {
     HostTraffic *el;
@@ -1978,16 +1977,16 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
 		 "Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
 		 key, data_data.dsize, sizeof(HostTraffic));
 #endif
-      gdbm_delete(hostsInfoFile, key_data);
+      gdbm_delete(myGlobals.hostsInfoFile, key_data);
       free(data_data.dptr);
 #ifdef MULTITHREADED
-      releaseMutex(&gdbmMutex);
+      releaseMutex(&myGlobals.gdbmMutex);
 #endif
       return(NULL);
     }
 
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
 #ifdef REALLOC_MEM
@@ -2019,7 +2018,7 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     traceEvent(TRACE_INFO, "Unable to find '%s'\n", key);
 #endif
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
     return(NULL);
   }
@@ -2070,12 +2069,12 @@ void addTimeMapping(u_int16_t transactionId,
   traceEvent(TRACE_INFO, "addTimeMapping(0x%X)\n", transactionId);
 #endif
   for(i=0; i<NUM_TRANSACTION_ENTRIES; i++) {
-    if(transTimeHash[idx].transactionId == 0) {
-      transTimeHash[idx].transactionId = transactionId;
-      transTimeHash[idx].theTime = theTime;
+    if(myGlobals.transTimeHash[idx].transactionId == 0) {
+      myGlobals.transTimeHash[idx].transactionId = transactionId;
+      myGlobals.transTimeHash[idx].theTime = theTime;
       return;
-    } else if(transTimeHash[idx].transactionId == transactionId) {
-      transTimeHash[idx].theTime = theTime;
+    } else if(myGlobals.transTimeHash[idx].transactionId == transactionId) {
+      myGlobals.transTimeHash[idx].theTime = theTime;
       return;
     }
 
@@ -2131,9 +2130,9 @@ time_t getTimeMapping(u_int16_t transactionId,
   **************************************** */
 
   for(i=0; i<NUM_TRANSACTION_ENTRIES; i++) {
-    if(transTimeHash[idx].transactionId == transactionId) {
-      time_t msDiff = (time_t)delta_time(&theTime, &transTimeHash[idx].theTime);
-      transTimeHash[idx].transactionId = 0; /* Free bucket */
+    if(myGlobals.transTimeHash[idx].transactionId == transactionId) {
+      time_t msDiff = (time_t)delta_time(&theTime, &myGlobals.transTimeHash[idx].theTime);
+      myGlobals.transTimeHash[idx].transactionId = 0; /* Free bucket */
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "getTimeMapping(0x%X) [diff=%d]\n",
 		 transactionId, (unsigned long)msDiff);
@@ -2157,22 +2156,22 @@ void traceEvent(int eventTraceLevel, char* file,
   va_list va_ap;
   va_start (va_ap, format);
 
-  if(eventTraceLevel <= traceLevel) {
+  if(eventTraceLevel <= myGlobals.traceLevel) {
     char theDate[32];
     char buf[BUF_SIZE];  
     time_t theTime = time(NULL);
     struct tm t;
 
-    if(traceLevel >= DEFAULT_TRACE_LEVEL) {
+    if(myGlobals.traceLevel >= DEFAULT_TRACE_LEVEL) {
 #ifndef WIN32  
-      if(useSyslog)
+      if(myGlobals.useSyslog)
 	openlog("ntop", LOG_PID, LOG_DAEMON);
 #endif
 
-      if(!useSyslog) {
+      if(!myGlobals.useSyslog) {
 	strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
 
-	if(traceLevel == DETAIL_TRACE_LEVEL) {
+	if(myGlobals.traceLevel == DETAIL_TRACE_LEVEL) {
 	  printf("%s [%s:%d] ", theDate, file, line);
 	} else {
 	  printf("%s ", theDate);
@@ -2187,7 +2186,7 @@ void traceEvent(int eventTraceLevel, char* file,
       vsnprintf(buf, BUF_SIZE-1, format, va_ap);
 #endif
 
-      if(!useSyslog) {
+      if(!myGlobals.useSyslog) {
 	printf(buf);
 	if(format[strlen(format)-1] != '\n')
 	  printf("\n");
@@ -2195,7 +2194,7 @@ void traceEvent(int eventTraceLevel, char* file,
 #ifndef WIN32
       else {
 #if 0 
-	switch(traceLevel) {
+	switch(myGlobals.traceLevel) {
 	case 0:
 	  syslog(LOG_ERR, buf);
 	  break;
@@ -2221,7 +2220,7 @@ void traceEvent(int eventTraceLevel, char* file,
   }
 
 #ifndef WIN32
-  if(useSyslog)
+  if(myGlobals.useSyslog)
     closelog();
 #endif
 }
@@ -2243,7 +2242,7 @@ char* _strncpy(char *dest, const char *src, size_t n) {
 
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
 #ifndef HAVE_STRTOK_R
-/* Reentrant string tokenizer.  Generic version.
+/* Reentrant string tokenizer.  Generic myGlobals.version.
 
    Slightly modified from: glibc 2.1.3
 
@@ -2252,8 +2251,8 @@ char* _strncpy(char *dest, const char *src, size_t n) {
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Library General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
+   published by the Free Software Foundation; either myGlobals.version 2 of the
+   License, or (at your option) any later myGlobals.version.
 
    The GNU C Library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -2303,7 +2302,7 @@ int getSniffedDNSName(char *hostNumIpAddress,
   name[0] = 0;
 
 #ifdef HAVE_GDBM_H
-  if((hostNumIpAddress[0] != '\0') && gdbm_file) {
+  if((hostNumIpAddress[0] != '\0') && myGlobals.gdbm_file) {
     datum key;
     datum data;
 
@@ -2311,11 +2310,11 @@ int getSniffedDNSName(char *hostNumIpAddress,
     key.dsize = strlen(key.dptr)+1;
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "getSniffedDNSName");
+    accessMutex(&myGlobals.gdbmMutex, "getSniffedDNSName");
 #endif
-    data = gdbm_fetch(gdbm_file, key);
+    data = gdbm_fetch(myGlobals.gdbm_file, key);
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
     if(data.dptr) {
@@ -2389,7 +2388,7 @@ FILE* getNewRandomFile(char* fileName, int len) {
   char tmpFileName[NAME_MAX];
 
   strcpy(tmpFileName, fileName);
-  sprintf(fileName, "%s-%lu", tmpFileName, numHandledHTTPrequests);
+  sprintf(fileName, "%s-%lu", tmpFileName, myGlobals.numHandledHTTPrequests);
   fd = fopen(fileName, "wb");
 #endif /* 0 */
 #else
@@ -2441,7 +2440,7 @@ void stringSanityCheck(char* string) {
 
 /*
   Function added in order to catch invalid (too long)
-  device names specified on the command line.
+  myGlobals.device names specified on the command line.
 
   Thanks to Bailleux Christophe <cb@grolier.fr> for
   pointing out the finger at the problem.
@@ -2493,7 +2492,7 @@ void fillDomainName(HostTraffic *el) {
     return;
 
 #ifdef MULTITHREADED
-  accessMutex(&addressResolutionMutex, "fillDomainName");
+  accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
 #endif
 
   if((el->hostSymIpAddress[0] == '*')
@@ -2503,7 +2502,7 @@ void fillDomainName(HostTraffic *el) {
     /* NOTE: theDomainHasBeenComputed(el) = 0 */
     el->fullDomainName = el->dotDomainName = "";
 #ifdef MULTITHREADED
-    releaseMutex(&addressResolutionMutex);
+    releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return;
   }
@@ -2527,28 +2526,28 @@ void fillDomainName(HostTraffic *el) {
     /* Let's use the local domain name */
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "'%s' [%s/%s]\n",
-	   el->hostSymIpAddress, domainName, shortDomainName);
+	   el->hostSymIpAddress, myGlobals.domainName, myGlobals.shortDomainName);
 #endif
-    if((domainName[0] != '\0')
+    if((myGlobals.domainName[0] != '\0')
        && (strcmp(el->hostSymIpAddress, el->hostNumIpAddress))) {
       int len  = strlen(el->hostSymIpAddress);
-      int len1 = strlen(domainName);
+      int len1 = strlen(myGlobals.domainName);
 
       /* traceEvent(TRACE_INFO, "%s [%s]\n",
 	 el->hostSymIpAddress, &el->hostSymIpAddress[len-len1]); */
 
       if((len > len1)
-	 && (strcmp(&el->hostSymIpAddress[len-len1-1], domainName) == 0))
+	 && (strcmp(&el->hostSymIpAddress[len-len1-1], myGlobals.domainName) == 0))
 	el->hostSymIpAddress[len-len1-1] = '\0';
 
-      el->fullDomainName = domainName;
-      el->dotDomainName = shortDomainName;
+      el->fullDomainName = myGlobals.domainName;
+      el->dotDomainName = myGlobals.shortDomainName;
     } else {
       el->fullDomainName = el->dotDomainName = "";
     }
 
 #ifdef MULTITHREADED
-    releaseMutex(&addressResolutionMutex);
+    releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return;
   }
@@ -2570,7 +2569,7 @@ void fillDomainName(HostTraffic *el) {
   /* traceEvent(TRACE_INFO, "'%s'\n", el->domainName); */
 
 #ifdef MULTITHREADED
-    releaseMutex(&addressResolutionMutex);
+    releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 }
 
@@ -2667,7 +2666,7 @@ void setNBnodeNameType(HostTraffic *theHost,
 
 void addPassiveSessionInfo(u_long theHost, u_short thePort) {
   int i;
-  time_t timeoutTime = actTime - PASSIVE_SESSION_PURGE_TIMEOUT;
+  time_t timeoutTime = myGlobals.actTime - PASSIVE_SESSION_PURGE_TIMEOUT;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Adding %ld:%d", theHost, thePort);
@@ -2678,7 +2677,7 @@ void addPassiveSessionInfo(u_long theHost, u_short thePort) {
        || (passiveSessions[i].creationTime < timeoutTime)) {
       passiveSessions[i].sessionHost.s_addr = theHost,
 	passiveSessions[i].sessionPort = thePort,
-	passiveSessions[i].creationTime = actTime;
+	passiveSessions[i].creationTime = myGlobals.actTime;
       break;
     }
   }
@@ -2745,7 +2744,7 @@ void termPassiveSessions() {
 int getPortByName(ServiceEntry **theSvc, char* portName) {
   int idx;
 
-  for(idx=0; idx<numActServices; idx++) {
+  for(idx=0; idx<myGlobals.numActServices; idx++) {
 
 #ifdef DEBUG
     if(theSvc[idx] != NULL)
@@ -2765,7 +2764,7 @@ int getPortByName(ServiceEntry **theSvc, char* portName) {
 /* ******************************* */
 
 char* getPortByNumber(ServiceEntry **theSvc, int port) {
-  int idx = port % numActServices;
+  int idx = port % myGlobals.numActServices;
   ServiceEntry *scan;
 
   for(;;) {
@@ -2776,7 +2775,7 @@ char* getPortByNumber(ServiceEntry **theSvc, int port) {
     else if(scan == NULL)
       return(NULL);
     else
-      idx = (idx+1) % numActServices;
+      idx = (idx+1) % myGlobals.numActServices;
   }
 }
 
@@ -2786,9 +2785,9 @@ char* getPortByNum(int port, int type) {
   char* rsp;
 
   if(type == IPPROTO_TCP) {
-    rsp = getPortByNumber(tcpSvc, port);
+    rsp = getPortByNumber(myGlobals.tcpSvc, port);
   } else {
-    rsp = getPortByNumber(udpSvc, port);
+    rsp = getPortByNumber(myGlobals.udpSvc, port);
   }
 
   return(rsp);
@@ -2801,9 +2800,9 @@ char* getAllPortByNum(int port) {
   static char staticBuffer[2][16];
   static short portBufIdx=0;
 
-  rsp = getPortByNumber(tcpSvc, port); /* Try TCP first... */
+  rsp = getPortByNumber(myGlobals.tcpSvc, port); /* Try TCP first... */
   if(rsp == NULL)
-    rsp = getPortByNumber(udpSvc, port);  /* ...then UDP */
+    rsp = getPortByNumber(myGlobals.udpSvc, port);  /* ...then UDP */
 
   if(rsp != NULL)
     return(rsp);
@@ -2820,9 +2819,9 @@ char* getAllPortByNum(int port) {
 int getAllPortByName(char* portName) {
   int rsp;
 
-  rsp = getPortByName(tcpSvc, portName); /* Try TCP first... */
+  rsp = getPortByName(myGlobals.tcpSvc, portName); /* Try TCP first... */
   if(rsp == -1)
-    rsp = getPortByName(udpSvc, portName);  /* ...then UDP */
+    rsp = getPortByName(myGlobals.udpSvc, portName);  /* ...then UDP */
 
   return(rsp);
 }
@@ -2831,7 +2830,7 @@ int getAllPortByName(char* portName) {
 /* ******************************* */
 
 void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
-  int idx = port % numActServices;
+  int idx = port % myGlobals.numActServices;
   ServiceEntry *scan;
 
   for(;;) {
@@ -2843,7 +2842,7 @@ void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
       theSvc[idx]->name = strdup(name);
       break;
     } else
-      idx = (idx+1) % numActServices;
+      idx = (idx+1) % myGlobals.numActServices;
   }
 }
 

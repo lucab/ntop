@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -88,7 +88,7 @@
  * The structure of a dlopen() handle.
  */
 struct dlopen_handle {
-    dev_t dev;		/* the path's device and inode number from stat(2) */
+    dev_t dev;		/* the path's myGlobals.device and inode number from stat(2) */
     ino_t ino; 
     int dlopen_mode;	/* current dlopen mode for this handle */
     int dlopen_count;	/* number of times dlopen() called on this handle */
@@ -206,7 +206,7 @@ struct stat *stat_buf)
 }
 
 /*
- * dlopen() the MacOS X version of the FreeBSD dlopen() interface.
+ * dlopen() the MacOS X myGlobals.version of the FreeBSD dlopen() interface.
  */
 void *
 dlopen(
@@ -238,7 +238,7 @@ int mode)
 	    return(retval);
 	}
 
-	/* see if the path exists and if so get the device and inode number */
+	/* see if the path exists and if so get the myGlobals.device and inode number */
 	if(stat(path, &stat_buf) == -1){
 	    dlerror_pointer = strerror(errno);
 
@@ -408,7 +408,7 @@ int mode)
 }
 
 /*
- * dlsym() the MacOS X version of the FreeBSD dlopen() interface.
+ * dlsym() the MacOS X myGlobals.version of the FreeBSD dlopen() interface.
  */
 void *
 dlsym(
@@ -469,7 +469,7 @@ const char *symbol)
 }
 
 /*
- * dlerror() the MacOS X version of the FreeBSD dlopen() interface.
+ * dlerror() the MacOS X myGlobals.version of the FreeBSD dlopen() interface.
  */
 const char *
 dlerror(
@@ -483,7 +483,7 @@ void)
 }
 
 /*
- * dlclose() the MacOS X version of the FreeBSD dlopen() interface.
+ * dlclose() the MacOS X myGlobals.version of the FreeBSD dlopen() interface.
  */
 int
 dlclose(

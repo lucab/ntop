@@ -1,5 +1,5 @@
 /* Extended regular expression matching and search library,
-   version 0.12.
+   myGlobals.version 0.12.
    (Implements POSIX draft P10003.2/D11.2, except for
    internationalization features.)
 
@@ -7,8 +7,8 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation; either myGlobals.version 2, or (at your option)
+   any later myGlobals.version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -4748,7 +4748,7 @@ re_exec (s)
      Also, regexec will try a match beginning after every newline.
 
      If REG_ICASE is set, then we considers upper- and lowercase
-     versions of letters to be equivalent when matching.
+     myGlobals.versions of letters to be equivalent when matching.
 
      If REG_NOSUB is set, then when PREG is passed to regexec, that
      routine will report only success or failure, and nothing about the
@@ -4967,8 +4967,8 @@ regfree (preg)
 /*
 Local variables:
 make-backup-files: t
-version-control: t
-trim-versions-without-asking: nil
+myGlobals.version-control: t
+trim-myGlobals.versions-without-asking: nil
 End:
 */
 

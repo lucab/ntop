@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -126,7 +126,7 @@ static char* dlerror() {
 /* ******************* */
 
 void notifyPluginsHashResize(int oldSize, int newSize, int* mappings) {
-  FlowFilterList *flows = flowsList;
+  FlowFilterList *flows = myGlobals.flowsList;
 
   while(flows != NULL)
     if((flows->pluginStatus.pluginPtr != NULL)
@@ -255,7 +255,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
     traceEvent(TRACE_ERROR, "Fatal error: not enough memory. Bye!\n");
     exit(-1);
   } else {
-    newFlow->fcode = (struct bpf_program*)calloc(numDevices, sizeof(struct bpf_program));
+    newFlow->fcode = (struct bpf_program*)calloc(myGlobals.numDevices, sizeof(struct bpf_program));
     newFlow->flowName = strdup(pluginInfo->pluginName);
 
     if((pluginInfo->bpfFilter == NULL)
@@ -264,21 +264,21 @@ static void loadPlugin(char* dirName, char* pluginName) {
 	traceEvent(TRACE_WARNING, "WARNING: plugin '%s' has an empty BPF filter.\n",
 	pluginPath);
       */
-      for(i=0; i<numDevices; i++)
+      for(i=0; i<myGlobals.numDevices; i++)
 	newFlow->fcode[i].bf_insns = NULL;
     } else {
       strncpy(tmpBuf, pluginInfo->bpfFilter, sizeof(tmpBuf));
       tmpBuf[sizeof(tmpBuf)-1] = '\0'; /* just in case bpfFilter is too long... */
 
-      for(i=0; i<numDevices; i++) 
-	if(!device[i].virtualDevice) {
+      for(i=0; i<myGlobals.numDevices; i++) 
+	if(!myGlobals.device[i].virtualDevice) {
 #ifdef DEBUG
-	  traceEvent(TRACE_INFO, "Compiling filter '%s' on device %s\n", 
-		     tmpBuf, device[i].name);
+	  traceEvent(TRACE_INFO, "Compiling filter '%s' on myGlobals.device %s\n", 
+		     tmpBuf, myGlobals.device[i].name);
 #endif
-	  rc = pcap_compile(device[i].pcapPtr, 
+	  rc = pcap_compile(myGlobals.device[i].pcapPtr, 
 			    &newFlow->fcode[i], tmpBuf, 1, 
-			    device[i].netmask.s_addr);
+			    myGlobals.device[i].netmask.s_addr);
       
 	  if(rc < 0) {
 	    traceEvent(TRACE_INFO, 
@@ -287,8 +287,8 @@ static void loadPlugin(char* dirName, char* pluginName) {
 		       "         This plugin has been discarded.\n",
 		       pluginPath, 
 		       pluginInfo->bpfFilter, 
-		       device[i].name,
-		       pcap_geterr((device[i].pcapPtr)));
+		       myGlobals.device[i].name,
+		       pcap_geterr((myGlobals.device[i].pcapPtr)));
 	    free(newFlow);
 	    return;
 	  }
@@ -297,8 +297,8 @@ static void loadPlugin(char* dirName, char* pluginName) {
 
     newFlow->pluginStatus.pluginPtr  = pluginInfo;
     newFlow->pluginStatus.activePlugin = pluginInfo->activeByDefault;
-    newFlow->next = flowsList;
-    flowsList = newFlow;
+    newFlow->next = myGlobals.flowsList;
+    myGlobals.flowsList = newFlow;
     /* traceEvent(TRACE_INFO, "Adding: %s\n", pluginInfo->pluginName); */
   }
 
@@ -320,8 +320,8 @@ void loadPlugins(void) {
   traceEvent(TRACE_INFO, "Loading plugins (if any)...\n");
   
 #ifndef STATIC_PLUGIN
-  for(idx=0; pluginDirs[idx] != NULL; idx++) {
-    if(snprintf(dirPath, sizeof(dirPath), "%s", pluginDirs[idx]) < 0) 
+  for(idx=0; myGlobals.pluginDirs[idx] != NULL; idx++) {
+    if(snprintf(dirPath, sizeof(dirPath), "%s", myGlobals.pluginDirs[idx]) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     directoryPointer = opendir(dirPath);
@@ -363,7 +363,7 @@ void loadPlugins(void) {
 /* ******************* */
 
 void unloadPlugins(void) {
-  FlowFilterList *flows = flowsList;
+  FlowFilterList *flows = myGlobals.flowsList;
 
   traceEvent(TRACE_INFO, "Unloading plugins (if any)...\n");
 
@@ -402,7 +402,7 @@ void unloadPlugins(void) {
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
 
 void startPlugins(void) {
-  FlowFilterList *flows = flowsList;
+  FlowFilterList *flows = myGlobals.flowsList;
 
   traceEvent(TRACE_INFO, "Initializing plugins (if any)...\n");
 

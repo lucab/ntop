@@ -5,8 +5,8 @@
  *  					
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -111,9 +111,9 @@ static FilterRule* parseFilterRule(u_short ruleType,
     else if(!strcmp(&token[i+1], "!usedport")) rule->sport = NOT_USED_PORT;
     else {
       if(ruleType == TCP_RULE)
-	rule->sport = getPortByName(tcpSvc, &token[i+1]);
+	rule->sport = getPortByName(myGlobals.tcpSvc, &token[i+1]);
       else
-	rule->sport = getPortByName(udpSvc, &token[i+1]);
+	rule->sport = getPortByName(myGlobals.udpSvc, &token[i+1]);
 
       if(rule->sport > TOP_IP_PORT) {
 	traceEvent(TRACE_INFO, "Skipping line %d (unknown sport)\n", lineNum);
@@ -163,9 +163,9 @@ static FilterRule* parseFilterRule(u_short ruleType,
     else if(!strcmp(&token[i+1], "!usedport")) rule->dport = NOT_USED_PORT;
     else {
       if(ruleType == TCP_RULE)
-	rule->dport = getPortByName(tcpSvc, &token[i+1]);
+	rule->dport = getPortByName(myGlobals.tcpSvc, &token[i+1]);
       else
-	rule->dport = getPortByName(udpSvc, &token[i+1]);
+	rule->dport = getPortByName(myGlobals.udpSvc, &token[i+1]);
 
       if(rule->dport > TOP_IP_PORT) {
 	traceEvent(TRACE_INFO, "Skipping line %d (unknown dport)\n", lineNum);
@@ -223,9 +223,9 @@ static FilterRule* parseFilterRule(u_short ruleType,
 	rule->ruleIdCleared =0;
 	
 	if(ruleType == TCP_RULE)
-	  chainScan = tcpChain;
+	  chainScan = myGlobals.tcpChain;
 	else
-	  chainScan = udpChain;
+	  chainScan = myGlobals.udpChain;
 
 	while(chainScan != NULL) {
 	  if(!strcmp(chainScan->rule->ruleLabel, token)) {
@@ -399,10 +399,10 @@ static FilterRule* parseFilterRule(u_short ruleType,
     return(NULL);
   }
 
-  if(ruleSerialIdentifier < (MAX_NUM_RULES-1)) {
-    filterRulesList[ruleSerialIdentifier] = (void*)rule;
+  if(myGlobals.ruleSerialIdentifier < (MAX_NUM_RULES-1)) {
+    myGlobals.filterRulesList[myGlobals.ruleSerialIdentifier] = (void*)rule;
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Adding %d\n", ruleSerialIdentifier);
+    traceEvent(TRACE_INFO, "Adding %d\n", myGlobals.ruleSerialIdentifier);
 #endif
   } else  {
     traceEvent(TRACE_INFO, "Skipping rule at line %d (too many rules defined)\n", lineNum);
@@ -411,7 +411,7 @@ static FilterRule* parseFilterRule(u_short ruleType,
   }
 
   /* The rule looks good */
-  rule->ruleId = ruleSerialIdentifier++;
+  rule->ruleId = myGlobals.ruleSerialIdentifier++;
 
   return(rule);
 }
@@ -528,7 +528,7 @@ static FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
 	FilterRuleChain *chainScan;
 
 	rule->ruleIdCleared =0;	
-	chainScan = icmpChain;
+	chainScan = myGlobals.icmpChain;
 
 	while(chainScan != NULL) {
 	  if(!strcmp(chainScan->rule->ruleLabel, token)) {
@@ -700,14 +700,14 @@ static FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
     return(NULL);
   }
 
-  if(ruleSerialIdentifier >= (MAX_NUM_RULES-1)) {
+  if(myGlobals.ruleSerialIdentifier >= (MAX_NUM_RULES-1)) {
     traceEvent(TRACE_INFO, "Skipping rule at line %d (too many rules defined)\n", lineNum);
     freeFilterRule(rule);
     return(NULL);
   }
 
   /* The rule looks good */
-  rule->ruleId = ruleSerialIdentifier++;
+  rule->ruleId = myGlobals.ruleSerialIdentifier++;
 
   return(rule);
 }
@@ -726,8 +726,8 @@ void parseRules(char* path) {
   u_short lineNum=1;
   FilterRule *filterRule;
 
-  ruleSerialIdentifier=1; /* 0 will break the logic */
-  memset(filterRulesList, 0, sizeof(filterRulesList));
+  myGlobals.ruleSerialIdentifier=1; /* 0 will break the logic */
+  memset(myGlobals.filterRulesList, 0, sizeof(myGlobals.filterRulesList));
 
   if(fd == NULL) {
     traceEvent(TRACE_INFO, "Unable to locate the specified rule file '%s'.\n"
@@ -746,9 +746,9 @@ void parseRules(char* path) {
 
 	if(filterRule != NULL) {
 	  newEntry = (FilterRuleChain*)malloc(sizeof(FilterRuleChain));
-	  newEntry->nextRule = tcpChain;
+	  newEntry->nextRule = myGlobals.tcpChain;
 	  newEntry->rule = filterRule;
-	  tcpChain = newEntry;
+	  myGlobals.tcpChain = newEntry;
 	}
       } else if(strncmp(line, "udp", 3) == 0) {
 	FilterRuleChain *newEntry;
@@ -757,9 +757,9 @@ void parseRules(char* path) {
 
 	if(filterRule != NULL) {
 	  newEntry = (FilterRuleChain*)malloc(sizeof(FilterRuleChain));
-	  newEntry->nextRule = udpChain;
+	  newEntry->nextRule = myGlobals.udpChain;
 	  newEntry->rule = filterRule;
-	  udpChain = newEntry;
+	  myGlobals.udpChain = newEntry;
 	}
       } else if(strncmp(line, "icmp", 4) == 0) {
 	FilterRuleChain *newEntry;
@@ -768,9 +768,9 @@ void parseRules(char* path) {
 
 	if(filterRule != NULL) {
 	  newEntry = (FilterRuleChain*)malloc(sizeof(FilterRuleChain));
-	  newEntry->nextRule = icmpChain;
+	  newEntry->nextRule = myGlobals.icmpChain;
 	  newEntry->rule = filterRule;
-	  icmpChain = newEntry;
+	  myGlobals.icmpChain = newEntry;
 	}
       } else if(strncmp(line, "dns", 3) == 0)
 	parseDnsRule(line, lineNum);

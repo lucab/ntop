@@ -5,8 +5,8 @@
  *  					
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -303,13 +303,13 @@ char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
 #endif
 
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "getSpecialMacInfo");
+  accessMutex(&myGlobals.gdbmMutex, "getSpecialMacInfo");
 #endif 
 
-  data_data = gdbm_fetch(gdbm_file, key_data);
+  data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
 
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+  releaseMutex(&myGlobals.gdbmMutex);
 #endif 
 
   if(data_data.dptr != NULL) {    

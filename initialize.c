@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  the Free Software Foundation; either myGlobals.version 2 of the License, or
+ *  (at your option) any later myGlobals.version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -51,7 +51,7 @@ void initIPServices(void) {
 
   traceEvent(TRACE_INFO, "Initializing IP services...");
 
-  protoIPTrafficInfos = NULL;
+  myGlobals.protoIPTrafficInfos = NULL;
 
 #ifdef WIN32
   initWinsock32();
@@ -59,10 +59,10 @@ void initIPServices(void) {
 
   /* Let's count the entries first */
   numSlots = 0;
-  for(idx=0; configFileDirs[idx] != NULL; idx++) {
+  for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     char tmpStr[64];
 
-    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", configFileDirs[idx]) < 0)
+    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     fd = fopen(tmpStr, "r");
 
@@ -79,24 +79,24 @@ void initIPServices(void) {
   }
 
   if(numSlots == 0) numSlots = HASH_INITIAL_SIZE;
-  numActServices = 2*numSlots; /* Double the hash */
+  myGlobals.numActServices = 2*numSlots; /* Double the hash */
 
   /* ************************************* */
 
 #ifdef ENABLE_NAPSTER
-  memset(napsterSvr, 0, sizeof(napsterSvr));
+  memset(myGlobals.napsterSvr, 0, sizeof(myGlobals.napsterSvr));
 #endif
 
-  len = sizeof(ServiceEntry*)*numActServices;
-  udpSvc = (ServiceEntry**)malloc(len);
-  memset(udpSvc, 0, len);
-  tcpSvc = (ServiceEntry**)malloc(len);
-  memset(tcpSvc, 0, len);
+  len = sizeof(ServiceEntry*)*myGlobals.numActServices;
+  myGlobals.udpSvc = (ServiceEntry**)malloc(len);
+  memset(myGlobals.udpSvc, 0, len);
+  myGlobals.tcpSvc = (ServiceEntry**)malloc(len);
+  memset(myGlobals.tcpSvc, 0, len);
 
-  for(idx=0; configFileDirs[idx] != NULL; idx++) {
+  for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     char tmpStr[64];
 
-    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", configFileDirs[idx]) < 0)
+    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     fd = fopen(tmpStr, "r");
 
@@ -114,9 +114,9 @@ void initIPServices(void) {
 	    /* traceEvent(TRACE_INFO, "'%s' - '%s' - '%d'\n", name, proto, numPort); */
 
 	    if(strcmp(proto, "tcp") == 0)
-	      addPortHashEntry(tcpSvc, numPort, name);
+	      addPortHashEntry(myGlobals.tcpSvc, numPort, name);
 	    else
-	      addPortHashEntry(udpSvc, numPort, name);
+	      addPortHashEntry(myGlobals.udpSvc, numPort, name);
 	  }
 	}
       fclose(fd);
@@ -126,28 +126,28 @@ void initIPServices(void) {
 
   /* Add some basic services, just in case they
      are not included in /etc/services */
-  addPortHashEntry(tcpSvc, 21,  "ftp");
-  addPortHashEntry(tcpSvc, 20,  "ftp-data");
-  addPortHashEntry(tcpSvc, 80,  "http");
-  addPortHashEntry(tcpSvc, 443, "https");
-  addPortHashEntry(tcpSvc, 42,  "name");
-  addPortHashEntry(tcpSvc, 23,  "telnet");
-  addPortHashEntry(udpSvc, 137, "netbios-ns");
-  addPortHashEntry(tcpSvc, 137, "netbios-ns");
-  addPortHashEntry(udpSvc, 138, "netbios-dgm");
-  addPortHashEntry(tcpSvc, 138, "netbios-dgm");
-  addPortHashEntry(udpSvc, 139, "netbios-ssn");
-  addPortHashEntry(tcpSvc, 139, "netbios-ssn");
-  addPortHashEntry(tcpSvc, 109, "pop-2");
-  addPortHashEntry(tcpSvc, 110, "pop-3");
-  addPortHashEntry(tcpSvc, 1109,"kpop");
-  addPortHashEntry(udpSvc, 161, "snmp");
-  addPortHashEntry(udpSvc, 162, "snmp-trap");
-  addPortHashEntry(udpSvc, 635, "mount");
-  addPortHashEntry(udpSvc, 640, "pcnfs");
-  addPortHashEntry(udpSvc, 650, "bwnfs");
-  addPortHashEntry(udpSvc, 2049,"nfsd");
-  addPortHashEntry(udpSvc, 1110,"nfsd-status");
+  addPortHashEntry(myGlobals.tcpSvc, 21,  "ftp");
+  addPortHashEntry(myGlobals.tcpSvc, 20,  "ftp-data");
+  addPortHashEntry(myGlobals.tcpSvc, 80,  "http");
+  addPortHashEntry(myGlobals.tcpSvc, 443, "https");
+  addPortHashEntry(myGlobals.tcpSvc, 42,  "name");
+  addPortHashEntry(myGlobals.tcpSvc, 23,  "telnet");
+  addPortHashEntry(myGlobals.udpSvc, 137, "netbios-ns");
+  addPortHashEntry(myGlobals.tcpSvc, 137, "netbios-ns");
+  addPortHashEntry(myGlobals.udpSvc, 138, "netbios-dgm");
+  addPortHashEntry(myGlobals.tcpSvc, 138, "netbios-dgm");
+  addPortHashEntry(myGlobals.udpSvc, 139, "netbios-ssn");
+  addPortHashEntry(myGlobals.tcpSvc, 139, "netbios-ssn");
+  addPortHashEntry(myGlobals.tcpSvc, 109, "pop-2");
+  addPortHashEntry(myGlobals.tcpSvc, 110, "pop-3");
+  addPortHashEntry(myGlobals.tcpSvc, 1109,"kpop");
+  addPortHashEntry(myGlobals.udpSvc, 161, "snmp");
+  addPortHashEntry(myGlobals.udpSvc, 162, "snmp-trap");
+  addPortHashEntry(myGlobals.udpSvc, 635, "mount");
+  addPortHashEntry(myGlobals.udpSvc, 640, "pcnfs");
+  addPortHashEntry(myGlobals.udpSvc, 650, "bwnfs");
+  addPortHashEntry(myGlobals.udpSvc, 2049,"nfsd");
+  addPortHashEntry(myGlobals.udpSvc, 1110,"nfsd-status");
 
   initPassiveSessions();
 }
@@ -162,44 +162,44 @@ static void resetDevice(int devIdx) {
   int len;
   void *ptr;
   
-  device[devIdx].actualHashSize = topHashSize = HASH_INITIAL_SIZE;  
-  device[devIdx].hashThreshold = (unsigned int)(device[devIdx].actualHashSize*0.5);
-  device[devIdx].topHashThreshold = (unsigned int)(device[devIdx].actualHashSize*0.75);
+  myGlobals.device[devIdx].actualHashSize = myGlobals.topHashSize = HASH_INITIAL_SIZE;  
+  myGlobals.device[devIdx].hashThreshold = (unsigned int)(myGlobals.device[devIdx].actualHashSize*0.5);
+  myGlobals.device[devIdx].topHashThreshold = (unsigned int)(myGlobals.device[devIdx].actualHashSize*0.75);
 
   ptr = calloc(HASH_INITIAL_SIZE, sizeof(HostTraffic*));
-  device[devIdx].hash_hostTraffic = ptr;
+  myGlobals.device[devIdx].hash_hostTraffic = ptr;
   
-  device[devIdx].lastTotalPkts = device[devIdx].lastBroadcastPkts = 0;
-  device[devIdx].lastMulticastPkts = 0;
-  device[devIdx].lastEthernetBytes = device[devIdx].lastIpBytes = 0;
-  device[devIdx].lastNonIpBytes = 0;
+  myGlobals.device[devIdx].lastTotalPkts = myGlobals.device[devIdx].lastBroadcastPkts = 0;
+  myGlobals.device[devIdx].lastMulticastPkts = 0;
+  myGlobals.device[devIdx].lastEthernetBytes = myGlobals.device[devIdx].lastIpBytes = 0;
+  myGlobals.device[devIdx].lastNonIpBytes = 0;
 
-  device[devIdx].tcpBytes = device[devIdx].udpBytes = 0;
-  device[devIdx].icmpBytes = device[devIdx].dlcBytes = 0;
-  device[devIdx].ipxBytes = device[devIdx].netbiosBytes = 0;
-  device[devIdx].decnetBytes = device[devIdx].arpRarpBytes = 0;
-  device[devIdx].atalkBytes = device[devIdx].otherBytes = 0;
-  device[devIdx].otherIpBytes = 0;
+  myGlobals.device[devIdx].tcpBytes = myGlobals.device[devIdx].udpBytes = 0;
+  myGlobals.device[devIdx].icmpBytes = myGlobals.device[devIdx].dlcBytes = 0;
+  myGlobals.device[devIdx].ipxBytes = myGlobals.device[devIdx].netbiosBytes = 0;
+  myGlobals.device[devIdx].decnetBytes = myGlobals.device[devIdx].arpRarpBytes = 0;
+  myGlobals.device[devIdx].atalkBytes = myGlobals.device[devIdx].otherBytes = 0;
+  myGlobals.device[devIdx].otherIpBytes = 0;
 
-  device[devIdx].lastThptUpdate = device[devIdx].lastMinThptUpdate =
-    device[devIdx].lastHourThptUpdate = device[devIdx].lastFiveMinsThptUpdate = time(NULL);
-  device[devIdx].lastMinEthernetBytes = device[devIdx].lastFiveMinsEthernetBytes = 0;
-  memset(&device[devIdx].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-  memset(&device[devIdx].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-  memset(&device[devIdx].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-  memset(device[devIdx].last60MinutesThpt, 0, sizeof(device[devIdx].last60MinutesThpt));
-  memset(device[devIdx].last24HoursThpt, 0, sizeof(device[devIdx].last24HoursThpt));
-  memset(device[devIdx].last30daysThpt, 0, sizeof(device[devIdx].last30daysThpt));
-  device[devIdx].last60MinutesThptIdx=0, device[devIdx].last24HoursThptIdx=0,
-    device[devIdx].last30daysThptIdx=0;
-  device[devIdx].hostsno = 1; /* Broadcast entry */
+  myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
+    myGlobals.device[devIdx].lastHourThptUpdate = myGlobals.device[devIdx].lastFiveMinsThptUpdate = time(NULL);
+  myGlobals.device[devIdx].lastMinEthernetBytes = myGlobals.device[devIdx].lastFiveMinsEthernetBytes = 0;
+  memset(&myGlobals.device[devIdx].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+  memset(&myGlobals.device[devIdx].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+  memset(&myGlobals.device[devIdx].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+  memset(myGlobals.device[devIdx].last60MinutesThpt, 0, sizeof(myGlobals.device[devIdx].last60MinutesThpt));
+  memset(myGlobals.device[devIdx].last24HoursThpt, 0, sizeof(myGlobals.device[devIdx].last24HoursThpt));
+  memset(myGlobals.device[devIdx].last30daysThpt, 0, sizeof(myGlobals.device[devIdx].last30daysThpt));
+  myGlobals.device[devIdx].last60MinutesThptIdx=0, myGlobals.device[devIdx].last24HoursThptIdx=0,
+    myGlobals.device[devIdx].last30daysThptIdx=0;
+  myGlobals.device[devIdx].hostsno = 1; /* Broadcast entry */
 
-  len = (size_t)numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
+  len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
 
-  if(device[devIdx].ipProtoStats == NULL)
-    device[devIdx].ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
+  if(myGlobals.device[devIdx].ipProtoStats == NULL)
+    myGlobals.device[devIdx].ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
 
-  memset(device[devIdx].ipProtoStats, 0, len);
+  memset(myGlobals.device[devIdx].ipProtoStats, 0, len);
 }
 
 /* ******************************* */
@@ -210,9 +210,9 @@ void initCounters(int _mergeInterfaces) {
 #endif
   int len, i;
 
-  numPurgedHosts = numTerminatedSessions = 0;
+  myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
 
-  mergeInterfaces = _mergeInterfaces;
+  myGlobals.mergeInterfaces = _mergeInterfaces;
 
 #ifndef WIN32
   /*
@@ -220,25 +220,25 @@ void initCounters(int _mergeInterfaces) {
    * Kimmo Suominen <kim@tac.nyc.ny.us>
    */
 
-  if(domainName[0] == '\0') {
-    if((getdomainname(domainName, MAXHOSTNAMELEN) != 0)
-       || (domainName[0] == '\0')
-       || (strcmp(domainName, "(none)") == 0)) {
-      if((gethostname(domainName, MAXHOSTNAMELEN) == 0)
-	 && ((p = memchr(domainName, '.', MAXHOSTNAMELEN)) != NULL)) {
-	domainName[MAXHOSTNAMELEN - 1] = '\0';
+  if(myGlobals.domainName[0] == '\0') {
+    if((getdomainname(myGlobals.domainName, MAXHOSTNAMELEN) != 0)
+       || (myGlobals.domainName[0] == '\0')
+       || (strcmp(myGlobals.domainName, "(none)") == 0)) {
+      if((gethostname(myGlobals.domainName, MAXHOSTNAMELEN) == 0)
+	 && ((p = memchr(myGlobals.domainName, '.', MAXHOSTNAMELEN)) != NULL)) {
+	myGlobals.domainName[MAXHOSTNAMELEN - 1] = '\0';
 	/*
 	 * Replaced memmove with memcpy
 	 * Igor Schein <igor@txc.com>
 	 */
 	++p;
-	memcpy(domainName, p, (MAXHOSTNAMELEN+domainName-p));
+	memcpy(myGlobals.domainName, p, (MAXHOSTNAMELEN+myGlobals.domainName-p));
 
       } else
-	domainName[0] = '\0';
+	myGlobals.domainName[0] = '\0';
     }
 
-    if(domainName[0] == '\0') {
+    if(myGlobals.domainName[0] == '\0') {
       char szLclHost[64];
       struct hostent *lpstHostent;
       struct in_addr stLclAddr;
@@ -260,94 +260,94 @@ void initCounters(int _mergeInterfaces) {
 	    ;
 
 	  if(dotp[i] == '.')
-	    strncpy(domainName, &dotp[i+1], MAXHOSTNAMELEN);
+	    strncpy(myGlobals.domainName, &dotp[i+1], MAXHOSTNAMELEN);
 	}
       }
     }
 
-    if(domainName[0] == '\0') {
+    if(myGlobals.domainName[0] == '\0') {
       /* Last chance.... */
-      /* strncpy(domainName, "please_set_your_local_domain.org", MAXHOSTNAMELEN); */
+      /* strncpy(myGlobals.domainName, "please_set_your_local_domain.org", MAXHOSTNAMELEN); */
       ;
     }
   }
 #endif
 
-  len = strlen(domainName)-1;
+  len = strlen(myGlobals.domainName)-1;
 
-  while((len > 0) && (domainName[len] != '.'))
+  while((len > 0) && (myGlobals.domainName[len] != '.'))
     len--;
 
   if(len == 0)
-    shortDomainName = domainName;
+    myGlobals.shortDomainName = myGlobals.domainName;
   else
-    shortDomainName = &domainName[len+1];
+    myGlobals.shortDomainName = &myGlobals.domainName[len+1];
 
-  separator = "&nbsp;";
+  myGlobals.separator = "&nbsp;";
 
-  memset(transTimeHash, 0, sizeof(transTimeHash));
-  memset(dummyEthAddress, 0, ETHERNET_ADDRESS_LEN);
+  memset(myGlobals.transTimeHash, 0, sizeof(myGlobals.transTimeHash));
+  memset(myGlobals.dummyEthAddress, 0, ETHERNET_ADDRESS_LEN);
   for(len=0; len<ETHERNET_ADDRESS_LEN; len++)
-    dummyEthAddress[len] = len;
+    myGlobals.dummyEthAddress[len] = len;
 
-  for(i=0; i<numDevices; i++) {
-    device[i].numTotSessions = HASH_INITIAL_SIZE; /* Initial value */
-    len = sizeof(IPSession*)*device[i].numTotSessions;
-    device[i].tcpSession = (IPSession**)malloc(len);
-    memset(device[i].tcpSession, 0, len);
-    device[i].fragmentList = NULL;
+  for(i=0; i<myGlobals.numDevices; i++) {
+    myGlobals.device[i].numTotSessions = HASH_INITIAL_SIZE; /* Initial value */
+    len = sizeof(IPSession*)*myGlobals.device[i].numTotSessions;
+    myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
+    memset(myGlobals.device[i].tcpSession, 0, len);
+    myGlobals.device[i].fragmentList = NULL;
   }
 
-  broadcastEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
-  memset(broadcastEntry, 0, sizeof(HostTraffic));
-  resetHostsVariables(broadcastEntry);
+  myGlobals.broadcastEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
+  memset(myGlobals.broadcastEntry, 0, sizeof(HostTraffic));
+  resetHostsVariables(myGlobals.broadcastEntry);
 
   /* Set address to FF:FF:FF:FF:FF:FF */
   for(i=0; i<ETHERNET_ADDRESS_LEN; i++)
-    broadcastEntry->ethAddress[i] = 0xFF;
+    myGlobals.broadcastEntry->ethAddress[i] = 0xFF;
 
-  broadcastEntry->hostIpAddress.s_addr = 0xFFFFFFFF;
-  strncpy(broadcastEntry->hostNumIpAddress, "broadcast",
-	  sizeof(broadcastEntry->hostNumIpAddress));
-  strncpy(broadcastEntry->hostSymIpAddress, broadcastEntry->hostNumIpAddress,
-	  sizeof(broadcastEntry->hostSymIpAddress));
-  strcpy(broadcastEntry->ethAddressString, "FF:FF:FF:FF:FF:FF");
-  FD_SET(SUBNET_LOCALHOST_FLAG, &broadcastEntry->flags);
-  FD_SET(BROADCAST_HOST_FLAG, &broadcastEntry->flags);
-  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &broadcastEntry->flags);
+  myGlobals.broadcastEntry->hostIpAddress.s_addr = 0xFFFFFFFF;
+  strncpy(myGlobals.broadcastEntry->hostNumIpAddress, "broadcast",
+	  sizeof(myGlobals.broadcastEntry->hostNumIpAddress));
+  strncpy(myGlobals.broadcastEntry->hostSymIpAddress, myGlobals.broadcastEntry->hostNumIpAddress,
+	  sizeof(myGlobals.broadcastEntry->hostSymIpAddress));
+  strcpy(myGlobals.broadcastEntry->ethAddressString, "FF:FF:FF:FF:FF:FF");
+  FD_SET(SUBNET_LOCALHOST_FLAG, &myGlobals.broadcastEntry->flags);
+  FD_SET(BROADCAST_HOST_FLAG, &myGlobals.broadcastEntry->flags);
+  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &myGlobals.broadcastEntry->flags);
 
-  broadcastEntryIdx = 0;
+  myGlobals.broadcastEntryIdx = 0;
 
-  if(trackOnlyLocalHosts) {
-    otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
-    memset(otherHostEntry, 0, sizeof(HostTraffic));
+  if(myGlobals.trackOnlyLocalHosts) {
+    myGlobals.otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
+    memset(myGlobals.otherHostEntry, 0, sizeof(HostTraffic));
 
-    otherHostEntry->hostIpAddress.s_addr = 0x00112233;
-    strncpy(otherHostEntry->hostNumIpAddress, "&nbsp;",
-	    sizeof(otherHostEntry->hostNumIpAddress));
-    strncpy(otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
-	    sizeof(otherHostEntry->hostSymIpAddress));
-    strcpy(otherHostEntry->ethAddressString, "00:00:00:00:00:00");   
-    otherHostEntryIdx = broadcastEntryIdx+1;
+    myGlobals.otherHostEntry->hostIpAddress.s_addr = 0x00112233;
+    strncpy(myGlobals.otherHostEntry->hostNumIpAddress, "&nbsp;",
+	    sizeof(myGlobals.otherHostEntry->hostNumIpAddress));
+    strncpy(myGlobals.otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
+	    sizeof(myGlobals.otherHostEntry->hostSymIpAddress));
+    strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");   
+    myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
   } else {
-    /* We let ntop think that otherHostEntryIdx does not exist */
-    otherHostEntry = NULL;
-    otherHostEntryIdx = broadcastEntryIdx;
+    /* We let ntop think that myGlobals.otherHostEntryIdx does not exist */
+    myGlobals.otherHostEntry = NULL;
+    myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx;
   }
 
-  nextSessionTimeoutScan = time(NULL)+SESSION_SCAN_DELAY;
-  thisZone = gmt2local(0);
+  myGlobals.nextSessionTimeoutScan = time(NULL)+SESSION_SCAN_DELAY;
+  myGlobals.thisZone = gmt2local(0);
 
-  numProcesses = 0;
+  myGlobals.numProcesses = 0;
   
   resetStats();
 
   createVendorTable();
-  initialSniffTime = lastRefreshTime = time(NULL);
-  capturePackets = 1;
-  endNtop = 0;
+  myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
+  myGlobals.capturePackets = 1;
+  myGlobals.endNtop = 0;
 
-  numHandledHTTPrequests = 0;  
+  myGlobals.numHandledHTTPrequests = 0;  
 }
 
 /* ******************************* */
@@ -359,42 +359,42 @@ void resetStats(void) {
 
 #ifdef MULTITHREADED
   if(threadsInitialized)
-    accessMutex(&hostsHashMutex, "resetStats");
+    accessMutex(&myGlobals.hostsHashMutex, "resetStats");
 #endif
 
-  if(mergeInterfaces)
+  if(myGlobals.mergeInterfaces)
     interfacesToCreate = 1;
   else
-    interfacesToCreate = numDevices;
+    interfacesToCreate = myGlobals.numDevices;
 
-  /* Do not reset the first entry (broadcastEntry) */
+  /* Do not reset the first entry (myGlobals.broadcastEntry) */
   for(i=0; i<interfacesToCreate; i++) {
     u_int j;
 
-    for(j=1; j<device[i].actualHashSize; j++)
-      if(device[i].hash_hostTraffic[j] != NULL) {
+    for(j=1; j<myGlobals.device[i].actualHashSize; j++)
+      if(myGlobals.device[i].hash_hostTraffic[j] != NULL) {
 	freeHostInfo(i, j, 1, i);
-	device[i].hash_hostTraffic[j] = NULL;
+	myGlobals.device[i].hash_hostTraffic[j] = NULL;
       }
 
     resetDevice(i);
 
-    for(j=0; j<device[i].numTotSessions; j++)
-      if(device[i].tcpSession[j] != NULL) {
-	free(device[i].tcpSession[j]);
-	device[i].tcpSession[j] = NULL;
+    for(j=0; j<myGlobals.device[i].numTotSessions; j++)
+      if(myGlobals.device[i].tcpSession[j] != NULL) {
+	free(myGlobals.device[i].tcpSession[j]);
+	myGlobals.device[i].tcpSession[j] = NULL;
       }
 
-    device[i].numTcpSessions = 0;
+    myGlobals.device[i].numTcpSessions = 0;
 
-    device[i].hash_hostTraffic[broadcastEntryIdx] = broadcastEntry;
-    if(otherHostEntry != NULL)
-      device[i].hash_hostTraffic[otherHostEntryIdx] = otherHostEntry;      
+    myGlobals.device[i].hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.broadcastEntry;
+    if(myGlobals.otherHostEntry != NULL)
+      myGlobals.device[i].hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntry;      
   }
 
 #ifdef MULTITHREADED
   if(threadsInitialized)
-    releaseMutex(&hostsHashMutex);
+    releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 }
 
@@ -402,7 +402,7 @@ void resetStats(void) {
 
 int initGlobalValues(void) {
 #ifndef WIN32
-  if((rFileName == NULL) && (geteuid() != 0)) {
+  if((myGlobals.rFileName == NULL) && (geteuid() != 0)) {
     traceEvent(TRACE_INFO, "Sorry, you must be superuser in order to run ntop.\n");
     exit(-1);
   }
@@ -413,28 +413,28 @@ int initGlobalValues(void) {
   init_ssl();
 #endif
 
-  switch(accuracyLevel) {
+  switch(myGlobals.accuracyLevel) {
   case HIGH_ACCURACY_LEVEL:
-    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 1, trackOnlyLocalHosts = 0;
+    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 1, myGlobals.trackOnlyLocalHosts = 0;
     break;
   case MEDIUM_ACCURACY_LEVEL:
-    enableSessionHandling = 1, enablePacketDecoding = 0, enableFragmentHandling = trackOnlyLocalHosts = 1;
+    myGlobals.enableSessionHandling = 1, myGlobals.enablePacketDecoding = 0, myGlobals.enableFragmentHandling = myGlobals.trackOnlyLocalHosts = 1;
     break;
   case LOW_ACCURACY_LEVEL:
-    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 0, trackOnlyLocalHosts = 1;
+    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0, myGlobals.trackOnlyLocalHosts = 1;
     break;    
   }
 
-  if(borderSnifferMode) {
+  if(myGlobals.borderSnifferMode) {
     /* Override everything that has been set before */
-    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 0;
+    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0;
 #ifdef MULTITHREADED
-    numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
+    myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
 #endif
-    trackOnlyLocalHosts = 1;
+    myGlobals.trackOnlyLocalHosts = 1;
   } else {
 #ifdef MULTITHREADED
-    numDequeueThreads = 1;
+    myGlobals.numDequeueThreads = 1;
 #endif
   }
 
@@ -446,13 +446,13 @@ int initGlobalValues(void) {
 void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
 
 #ifndef WIN32
-  if(daemonMode)
+  if(myGlobals.daemonMode)
     daemonize();
 #endif
 
 #ifndef MULTITHREADED
-  if(logTimeout != 0)
-    nextLogTime = time(NULL) + logTimeout;
+  if(myGlobals.logTimeout != 0)
+    myGlobals.nextLogTime = time(NULL) + myGlobals.logTimeout;
 #endif
 }
 
@@ -467,13 +467,13 @@ void initGdbm(void) {
   traceEvent(TRACE_INFO, "Initializing GDBM...");
 
   /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/myGlobals.addressCache.db", myGlobals.dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   unlink(tmpBuf); /* Delete the old one (if present) */ 
-  addressCache = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+  myGlobals.addressCache = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
-  if(addressCache == NULL) {
+  if(myGlobals.addressCache == NULL) {
     traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
 #if defined(WIN32) && defined(__GNUC__)
 	       tmpBuf, "unknown gdbm errno");
@@ -486,15 +486,15 @@ void initGdbm(void) {
  }
 
   /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", myGlobals.dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-  gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+  myGlobals.gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
 #ifdef FALLBACK
  RETRY_INIT_GDBM:
 #endif
-  if(gdbm_file == NULL) {
+  if(myGlobals.gdbm_file == NULL) {
     traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
 #if defined(WIN32) && defined(__GNUC__)
 	       tmpBuf, "unknown gdbm errno");
@@ -505,20 +505,20 @@ void initGdbm(void) {
     traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
     exit(-1);
 } else {
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", myGlobals.dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
-    pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+    myGlobals.pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
-    if(pwFile == NULL) {
+    if(myGlobals.pwFile == NULL) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
       exit(-1);
     }
 
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", dbPath) < 0)
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", myGlobals.dbPath) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    hostsInfoFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+    myGlobals.hostsInfoFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
-    if(hostsInfoFile == NULL) {
+    if(myGlobals.hostsInfoFile == NULL) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
       exit(-1);
     }
@@ -534,71 +534,71 @@ void initGdbm(void) {
 void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
 int i;
 #ifdef MULTITHREADED
-  numThreads = 0;
-  createMutex(&gdbmMutex);
+  myGlobals.numThreads = 0;
+  createMutex(&myGlobals.gdbmMutex);
 #endif
 
 #ifdef MULTITHREADED
-  packetQueueLen = maxPacketQueueLen = packetQueueHead = packetQueueTail = 0;
+  myGlobals.packetQueueLen = myGlobals.maxPacketQueueLen = myGlobals.packetQueueHead = myGlobals.packetQueueTail = 0;
 
 #ifdef USE_SEMAPHORES
-  createSem(&queueSem, 0);
+  createSem(&myGlobals.queueSem, 0);
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  createSem(&queueAddressSem, 0);
+  createSem(&myGlobals.queueAddressSem, 0);
 #endif
 #else
-  createCondvar(&queueCondvar);
+  createCondvar(&myGlobals.queueCondvar);
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  createCondvar(&queueAddressCondvar);
+  createCondvar(&myGlobals.queueAddressCondvar);
 #endif
 #endif
 
-  createMutex(&packetQueueMutex);
-  createMutex(&addressResolutionMutex);
-  createMutex(&hashResizeMutex);
+  createMutex(&myGlobals.packetQueueMutex);
+  createMutex(&myGlobals.addressResolutionMutex);
+  createMutex(&myGlobals.hashResizeMutex);
 
-  if (isLsofPresent)
-    createMutex(&lsofMutex);
+  if (myGlobals.isLsofPresent)
+    createMutex(&myGlobals.lsofMutex);
 
-  createMutex(&hostsHashMutex);
-  createMutex(&graphMutex);
+  createMutex(&myGlobals.hostsHashMutex);
+  createMutex(&myGlobals.graphMutex);
 
   /*
    * (1) - NPA - Network Packet Analyzer (main thread)
    */
-      createThread(&dequeueThreadId, dequeuePacket, NULL);
+      createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
       traceEvent(TRACE_INFO, "Started thread (%ld) for network packet analyser.\n",
-	         dequeueThreadId);
+	         myGlobals.dequeueThreadId);
 
   /*
    * (2) - HTS - Host Traffic Statistics
    */
-  createThread(&hostTrafficStatsThreadId, updateHostTrafficStatsThptLoop, NULL);
+  createThread(&myGlobals.hostTrafficStatsThreadId, updateHostTrafficStatsThptLoop, NULL);
   traceEvent (TRACE_INFO, "Started thread (%ld) for host traffic statistics.\n",
-	      hostTrafficStatsThreadId);
+	      myGlobals.hostTrafficStatsThreadId);
 
   /*
    * (3) - TU - Throughput Update - optional
    */
   if (enableThUpdate) {
-    createThread(&thptUpdateThreadId, updateThptLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%ld) for throughput update.", thptUpdateThreadId);
+    createThread(&myGlobals.thptUpdateThreadId, updateThptLoop, NULL);
+    traceEvent (TRACE_INFO, "Started thread (%ld) for throughput update.", myGlobals.thptUpdateThreadId);
   }
 
   /*
    * (4) - SIH - Scan Idle Hosts - optional
    */
-  if (enableIdleHosts && (rFileName == NULL)) {
-/* if(!borderSnifferMode) */ {
-    createThread(&scanIdleThreadId, scanIdleLoop, NULL);
+  if (enableIdleHosts && (myGlobals.rFileName == NULL)) {
+/* if(!myGlobals.borderSnifferMode) */ {
+    createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
     traceEvent (TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
-		scanIdleThreadId);
+		myGlobals.scanIdleThreadId);
      }
 
-if(enableSessionHandling) {
-    createThread(&scanIdleSessionsThreadId, scanIdleSessionsLoop, NULL);
+if(myGlobals.enableSessionHandling) {
+    createThread(&myGlobals.scanIdleSessionsThreadId, scanIdleSessionsLoop, NULL);
     traceEvent (TRACE_INFO, "Started thread (%ld) for idle TCP sessions detection.\n",
-		scanIdleSessionsThreadId);
+		myGlobals.scanIdleSessionsThreadId);
 }
   }
 
@@ -607,28 +607,28 @@ if(enableSessionHandling) {
    * (5) - DBU - DB Update - optional
    */
   if (enableDBsupport) {
-    createThread(&dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%ld) for DB update.\n", dbUpdateThreadId);
+    createThread(&myGlobals.dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
+    traceEvent (TRACE_INFO, "Started thread (%ld) for DB update.\n", myGlobals.dbUpdateThreadId);
   }
 #endif /* MICRO_NTOP */
 
-  numResolvedWithDNSAddresses = numKeptNumericAddresses = numResolvedOnCacheAddresses = 0;
+  myGlobals.numResolvedWithDNSAddresses = myGlobals.numKeptNumericAddresses = myGlobals.numResolvedOnCacheAddresses = 0;
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  if(numericFlag == 0) {
+  if(myGlobals.numericFlag == 0) {
     /*
      * (6) - DNSAR - DNS Address Resolution - optional
      */
-for(i=0; i<numDequeueThreads; i++) {
-createThread(&dequeueAddressThreadId[i], dequeueAddress, NULL);
+for(i=0; i<myGlobals.numDequeueThreads; i++) {
+createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, NULL);
 traceEvent (TRACE_INFO, "Started thread (%ld) for DNS address resolution.\n",
-		dequeueAddressThreadId[i]);
+		myGlobals.dequeueAddressThreadId[i]);
 }
 
     /*
      * (7) - Purge old host addresses
      */
-     createThread(&purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
-     traceEvent (TRACE_INFO, "Started thread (%ld) for address purge.", purgeAddressThreadId);
+     createThread(&myGlobals.purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
+     traceEvent (TRACE_INFO, "Started thread (%ld) for address purge.", myGlobals.purgeAddressThreadId);
    }
 #endif
 #endif
@@ -639,19 +639,19 @@ traceEvent (TRACE_INFO, "Started thread (%ld) for DNS address resolution.\n",
 /* ******************************* */
 
 void initApps(void) {
-  if(isLsofPresent) {
+  if(myGlobals.isLsofPresent) {
 #ifdef MULTITHREADED
 #ifndef WIN32
-    updateLsof = 1;
-    memset(localPorts, 0, sizeof(localPorts)); /* localPorts is used by lsof */
+    myGlobals.updateLsof = 1;
+    memset(myGlobals.localPorts, 0, sizeof(myGlobals.localPorts)); /* myGlobals.localPorts is used by lsof */
     /*
      * (7) - LSOF - optional
      */
-    createThread(&lsofThreadId, periodicLsofLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%ld) for lsof support.\n", lsofThreadId);
+    createThread(&myGlobals.lsofThreadId, periodicLsofLoop, NULL);
+    traceEvent (TRACE_INFO, "Started thread (%ld) for lsof support.\n", myGlobals.lsofThreadId);
 #endif /* WIN32 */
 #else
-    if(isLsofPresent) readLsofInfo();
+    if(myGlobals.isLsofPresent) readLsofInfo();
 #endif
   }
 }
@@ -664,17 +664,17 @@ void initDevices(char* devices) {
   NtopInterface *tmpDevice;
   char *tmpDev;
 #ifdef WIN32
-  char *ifName, intNames[32][256];
+char *ifName, intNames[32][256];
   int ifIdx = 0;
   int defaultIdx = -1;
 #endif
 
   traceEvent(TRACE_INFO, "Initializing network devices...");
 
-  myDevices = devices;
-  device = NULL;
+myDevices = devices;
+  myGlobals.device = NULL;
 
-  /* Determine the device name if not specified */
+  /* Determine the myGlobals.device name if not specified */
   ebuf[0] = '\0';
 
 #ifdef WIN32
@@ -737,7 +737,7 @@ void initDevices(char* devices) {
 #endif
 
   if (myDevices == NULL) {
-    /* No default device selected */
+    /* No default myGlobals.device selected */
 #ifndef WIN32
     tmpDev = pcap_lookupdev(ebuf);
      
@@ -747,12 +747,12 @@ void initDevices(char* devices) {
     }
 #endif
 
-    device = (NtopInterface*)calloc(1, sizeof(NtopInterface));
-    device[0].name = strdup(tmpDev);
-    numDevices=1;
+    myGlobals.device = (NtopInterface*)calloc(1, sizeof(NtopInterface));
+    myGlobals.device[0].name = strdup(tmpDev);
+    myGlobals.numDevices=1;
   } else {
 #ifdef WIN32
-    u_int selectedDevice = atoi(devices);
+    u_int selectedDevice = atoi(myGlobals.devices);
 
     if(selectedDevice < ifIdx) {
       tmpDev = intNames[selectedDevice];
@@ -765,13 +765,13 @@ void initDevices(char* devices) {
 
     tmpDev = strtok_r(myDevices, ",", &strtokState);
 #endif
-    numDevices = 0;
+    myGlobals.numDevices = 0;
  
     while(tmpDev != NULL) {
 #ifndef WIN32
       char *nwInterface;
 
-      deviceSanityCheck(tmpDev); /* These checks do not apply to Win32 */
+deviceSanityCheck(tmpDev); /* These checks do not apply to Win32 */
 
       if((nwInterface = strchr(tmpDev, ':')) != NULL) {
  	/* This is a virtual nwInterface */
@@ -779,8 +779,8 @@ void initDevices(char* devices) {
  
  	nwInterface[0] = 0;
  
- 	for(i=0; i<numDevices; i++)
- 	  if(device[i].name && (strcmp(device[i].name, tmpDev) == 0)) {
+ 	for(i=0; i<myGlobals.numDevices; i++)
+ 	  if(myGlobals.device[i].name && (strcmp(myGlobals.device[i].name, tmpDev) == 0)) {
  	    found = 1;
  	    break;
  	  }
@@ -792,19 +792,19 @@ void initDevices(char* devices) {
       }
 #endif
  
-      mallocLen = sizeof(NtopInterface)*(numDevices+1);
+      mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
       tmpDevice = (NtopInterface*)malloc(mallocLen);
       memset(tmpDevice, 0, mallocLen);
       
 	/* Fix courtesy of Marius <marius@tbs.co.za> */
-      if(numDevices > 0) {
-	memcpy(tmpDevice, device, sizeof(NtopInterface)*numDevices);
-	free(device);
+      if(myGlobals.numDevices > 0) {
+	memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*myGlobals.numDevices);
+	free(myGlobals.device);
       }
 
-      device = tmpDevice;
+      myGlobals.device = tmpDevice;
  
-      device[numDevices++].name = strdup(tmpDev);
+      myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDev);
  
 #ifndef WIN32
       tmpDev = strtok_r(NULL, ",", &strtokState);
@@ -816,14 +816,14 @@ void initDevices(char* devices) {
       if(tmpDev != NULL) {
 	traceEvent(TRACE_WARNING, "WARNING: ntop can handle multiple interfaces only\n"
 		   "         if thread support is enabled. Only interface\n"
-		   "         '%s' will be used.\n", device[0].name);
+		   "         '%s' will be used.\n", myGlobals.device[0].name);
 	break;
       }
 #endif
  
-      if(numDevices >= MAX_NUM_DEVICES) {
+      if(myGlobals.numDevices >= MAX_NUM_DEVICES) {
 	traceEvent(TRACE_INFO, "WARNING: ntop can handle up to %d interfaces.",
-		   numDevices);
+		   myGlobals.numDevices);
 	break;
       }
     }
@@ -832,36 +832,36 @@ void initDevices(char* devices) {
 
   /* ******************************************* */
 
-  if(rFileName == NULL) {
+  if(myGlobals.rFileName == NULL) {
     /* When sniffing from a multihomed interface
        it is necessary to add all the virtual interfaces
        because ntop has to know all the local addresses */
-    for(i=0, j=numDevices; i<j; i++) {
-      getLocalHostAddress(&device[i].ifAddr, device[i].name);
+    for(i=0, j=myGlobals.numDevices; i<j; i++) {
+      getLocalHostAddress(&myGlobals.device[i].ifAddr, myGlobals.device[i].name);
 
-      if(strncmp(device[i].name, "lo", 2)) { /* Do not care of virtual loopback interfaces */
+      if(strncmp(myGlobals.device[i].name, "lo", 2)) { /* Do not care of virtual loopback interfaces */
 	int k;
 	char tmpDeviceName[16];
 	struct in_addr myLocalHostAddress;
 
-	if(numDevices < MAX_NUM_DEVICES) {
+	if(myGlobals.numDevices < MAX_NUM_DEVICES) {
 	  for(k=0; k<8; k++) {
-	    if(snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", device[i].name, k) < 0)
+	    if(snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[i].name, k) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    if(getLocalHostAddress(&myLocalHostAddress, tmpDeviceName) == 0) {
 	      /* The virtual interface exists */
 
-	      mallocLen = sizeof(NtopInterface)*(numDevices+1);
+	      mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
 	      tmpDevice = (NtopInterface*)malloc(mallocLen);
 	      memset(tmpDevice, 0, mallocLen);
-	      memcpy(tmpDevice, device, sizeof(NtopInterface)*numDevices);
-	      free(device);
-	      device = tmpDevice;
+	      memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*myGlobals.numDevices);
+	      free(myGlobals.device);
+	      myGlobals.device = tmpDevice;
 
-	      device[numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
-	      if(myLocalHostAddress.s_addr == device[i].ifAddr.s_addr)
+	      myGlobals.device[myGlobals.numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
+	      if(myLocalHostAddress.s_addr == myGlobals.device[i].ifAddr.s_addr)
 		continue; /* No virtual Interfaces */
-	      device[numDevices++].name = strdup(tmpDeviceName);
+	      myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDeviceName);
 #ifdef DEBUG
 	      traceEvent(TRACE_INFO, "Added: %s\n", tmpDeviceName);
 #endif
@@ -873,8 +873,8 @@ void initDevices(char* devices) {
     }
   }
 
-  for(i=0; i<numDevices; i++)
-    getLocalHostAddress(&device[i].network, device[i].name);
+  for(i=0; i<myGlobals.numDevices; i++)
+    getLocalHostAddress(&myGlobals.device[i].network, myGlobals.device[i].name);
 }
 
 /* ******************************* */
@@ -885,19 +885,19 @@ static void initRules(char *rulesFile) {
 
     traceEvent(TRACE_INFO, "Parsing ntop rules...");
 
-    handleRules = 1;
+    myGlobals.handleRules = 1;
     parseRules(rulesFile);
 
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/event.db", dbPath) < 0)
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/event.db", myGlobals.dbPath) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    eventFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+    myGlobals.eventFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
-    if(eventFile == NULL) {
+    if(myGlobals.eventFile == NULL) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
       exit(-1);
     }
   } else
-    eventFile = NULL;
+    myGlobals.eventFile = NULL;
 }
 
 /* ******************************* */
@@ -905,17 +905,17 @@ static void initRules(char *rulesFile) {
 void initLibpcap(char* rulesFile, int numDevices) {
   char ebuf[PCAP_ERRBUF_SIZE];
 
-  if(rFileName == NULL) {
+  if(myGlobals.rFileName == NULL) {
     int i;
 
     initRules(rulesFile);
 
-    for(i=0; i<numDevices; i++) {
-      /* Fire up libpcap for each specified device */
+    for(i=0; i<myGlobals.numDevices; i++) {
+      /* Fire up libpcap for each specified myGlobals.device */
       char myName[80];
 
-      /* Support for virtual devices */
-      char *column = strchr(device[i].name, ':');
+      /* Support for virtual myGlobals.devices */
+      char *column = strchr(myGlobals.device[i].name, ':');
 
       /*
 	The timeout below for packet capture
@@ -924,60 +924,60 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	Courtesy of: Nicolai Petri <Nicolai@atomic.dk>
       */
       if(column == NULL) {
-	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1, 100 /* ms */, ebuf);
+	myGlobals.device[i].pcapPtr = pcap_open_live(myGlobals.device[i].name, DEFAULT_SNAPLEN, 1, 100 /* ms */, ebuf);
 
-	if(device[i].pcapPtr == NULL) {
+	if(myGlobals.device[i].pcapPtr == NULL) {
 	  traceEvent(TRACE_INFO, ebuf);
 	  traceEvent(TRACE_INFO, "Please select another interface using the -i flag.");
 	  exit(-1);
 	}
 
-	if(pcapLog != NULL) {
-	  if(strlen(pcapLog) > 64)
-	    pcapLog[64] = '\0';
+	if(myGlobals.pcapLog != NULL) {
+	  if(strlen(myGlobals.pcapLog) > 64)
+	    myGlobals.pcapLog[64] = '\0';
 
-	  sprintf(myName, "%s.%s.pcap", pcapLog, device[i].name);
-	  device[i].pcapDumper = pcap_dump_open(device[i].pcapPtr, myName);
+	  sprintf(myName, "%s.%s.pcap", myGlobals.pcapLog, myGlobals.device[i].name);
+	  myGlobals.device[i].pcapDumper = pcap_dump_open(myGlobals.device[i].pcapPtr, myName);
 
-	  if(device[i].pcapDumper == NULL) {
+	  if(myGlobals.device[i].pcapDumper == NULL) {
 	    traceEvent(TRACE_INFO, ebuf);
 	    exit(-1);
 	  }
 	}
 
-	if(enableSuspiciousPacketDump) {
-	  sprintf(myName, "ntop-suspicious-pkts.%s.pcap", device[i].name);
-	  device[i].pcapErrDumper = pcap_dump_open(device[i].pcapPtr, myName);
+	if(myGlobals.enableSuspiciousPacketDump) {
+	  sprintf(myName, "ntop-suspicious-pkts.%s.pcap", myGlobals.device[i].name);
+	  myGlobals.device[i].pcapErrDumper = pcap_dump_open(myGlobals.device[i].pcapPtr, myName);
 
-	  if(device[i].pcapErrDumper == NULL)
+	  if(myGlobals.device[i].pcapErrDumper == NULL)
 	    traceEvent(TRACE_INFO, ebuf);
 	}
       } else {
 	column[0] = 0;
-	device[i].virtualDevice = 1;
+	myGlobals.device[i].virtualDevice = 1;
 	column[0] = ':';
       }
     }
 
-    for(i=0; i<numDevices; i++) {
-      if(pcap_lookupnet(device[i].name, &device[i].network.s_addr,
-			&device[i].netmask.s_addr, ebuf) < 0) {
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if(pcap_lookupnet(myGlobals.device[i].name, &myGlobals.device[i].network.s_addr,
+			&myGlobals.device[i].netmask.s_addr, ebuf) < 0) {
 	/* Fix for IP-less interfaces (e.g. bridge)
 	   Courtesy of Diana Eichert <deicher@sandia.gov>
 	*/
-	device[i].network.s_addr = htonl(0);
-	device[i].netmask.s_addr = htonl(0xFFFFFFFF);
+	myGlobals.device[i].network.s_addr = htonl(0);
+	myGlobals.device[i].netmask.s_addr = htonl(0xFFFFFFFF);
       } else {
-	device[i].network.s_addr = htonl(device[i].network.s_addr);
-	device[i].netmask.s_addr = htonl(device[i].netmask.s_addr);
+	myGlobals.device[i].network.s_addr = htonl(myGlobals.device[i].network.s_addr);
+	myGlobals.device[i].netmask.s_addr = htonl(myGlobals.device[i].netmask.s_addr);
       }
     }
   } else {
-    device[0].pcapPtr = pcap_open_offline(rFileName, ebuf);
-    strcpy(device[0].name, "pcap-file");
-    numDevices = 1;
+    myGlobals.device[0].pcapPtr = pcap_open_offline(myGlobals.rFileName, ebuf);
+    strcpy(myGlobals.device[0].name, "pcap-file");
+    myGlobals.numDevices = 1;
 
-    if(device[0].pcapPtr == NULL) {
+    if(myGlobals.device[0].pcapPtr == NULL) {
       traceEvent(TRACE_INFO, ebuf);
       exit(-1);
     }
@@ -992,74 +992,74 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
     gethostname(szBuff, 79);
     h=gethostbyname(szBuff);
-    device[0].netmask.s_addr = 0xFFFFFF00; /* 255.255.255.0 */
-    device[0].network.s_addr = device[0].ifAddr.s_addr & device[0].netmask.s_addr;
+    myGlobals.device[0].netmask.s_addr = 0xFFFFFF00; /* 255.255.255.0 */
+    myGlobals.device[0].network.s_addr = myGlobals.device[0].ifAddr.s_addr & myGlobals.device[0].netmask.s_addr;
   }
 
   /* Sanity check... */
   /*
-    if((localHostAddress[0].s_addr & device[0].netmask) != device[0].localnet) {
+    if((localHostAddress[0].s_addr & myGlobals.device[0].netmask) != myGlobals.device[0].localnet) {
     struct in_addr addr1;
 
     traceEvent(TRACE_WARNING, "WARNING: your IP address (%s), ", intoa(localHostAddress[0]));
     addr1.s_addr = netmask[0];
     traceEvent(TRACE_WARNING, "netmask %s", intoa(addr1));
-    addr1.s_addr = device[0].localnet;
+    addr1.s_addr = myGlobals.device[0].localnet;
     traceEvent(TRACE_WARNING, ", network %s\ndo not match.\n", intoa(addr1));
-    device[0].network = localHostAddress[0].s_addr & device[0].netmask;
+    myGlobals.device[0].network = localHostAddress[0].s_addr & myGlobals.device[0].netmask;
     traceEvent(TRACE_WARNING, "ntop will use: IP address (%s), ",
     intoa(localHostAddress[0]));
     addr1.s_addr = netmask[0];
     traceEvent(TRACE_WARNING, "netmask %s", intoa(addr1));
-    addr1.s_addr = device[0].localnet;
+    addr1.s_addr = myGlobals.device[0].localnet;
     traceEvent(TRACE_WARNING, ", network %s.\n", intoa(addr1));
-    device[0].localnet = localHostAddress[0].s_addr & device[0].netmask;
+    myGlobals.device[0].localnet = localHostAddress[0].s_addr & myGlobals.device[0].netmask;
     } */
 #endif
 
   {
     int i;
     
-    for(i=0; i<numDevices; i++) {
+    for(i=0; i<myGlobals.numDevices; i++) {
       int memlen;
 
 #define MAX_SUBNET_HOSTS 1024
 
-      if(device[i].netmask.s_addr == 0) {
+      if(myGlobals.device[i].netmask.s_addr == 0) {
 	/* In this case we are using a dump file */
-	device[i].netmask.s_addr = 0xFFFFFF00; /* dummy */	
+	myGlobals.device[i].netmask.s_addr = 0xFFFFFF00; /* dummy */	
       }
 
-      device[i].numHosts = 0xFFFFFFFF - device[i].netmask.s_addr + 1;
-      if(device[i].numHosts > MAX_SUBNET_HOSTS) {
-	device[i].numHosts = MAX_SUBNET_HOSTS;	
+      myGlobals.device[i].numHosts = 0xFFFFFFFF - myGlobals.device[i].netmask.s_addr + 1;
+      if(myGlobals.device[i].numHosts > MAX_SUBNET_HOSTS) {
+	myGlobals.device[i].numHosts = MAX_SUBNET_HOSTS;	
 	traceEvent(TRACE_WARNING, "Truncated network size to %d hosts (real netmask %s)", 
-		   device[i].numHosts, intoa(device[i].netmask));  
+		   myGlobals.device[i].numHosts, intoa(myGlobals.device[i].netmask));  
       }
 
-      memlen = sizeof(TrafficEntry*)*device[i].numHosts*device[i].numHosts;
-      device[i].ipTrafficMatrix = (TrafficEntry**)calloc(device[i].numHosts*device[i].numHosts, 
+      memlen = sizeof(TrafficEntry*)*myGlobals.device[i].numHosts*myGlobals.device[i].numHosts;
+      myGlobals.device[i].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[i].numHosts*myGlobals.device[i].numHosts, 
 							 sizeof(TrafficEntry*));
 #ifdef DEBUG
       traceEvent(TRACE_WARNING, "ipTrafficMatrix memlen=%.1f Mbytes", 
 		 (float)memlen/(float)(1024*1024));
 #endif
       
-      if(device[i].ipTrafficMatrix == NULL) {
+      if(myGlobals.device[i].ipTrafficMatrix == NULL) {
 	traceEvent(TRACE_ERROR, "FATAL error: malloc() failed (size %d bytes)", memlen);
 	exit(-1);
       }
       
-      memlen = sizeof(struct hostTraffic*)*device[i].numHosts;
-      device[i].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*), 
-								    device[i].numHosts);
+      memlen = sizeof(struct hostTraffic*)*myGlobals.device[i].numHosts;
+      myGlobals.device[i].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*), 
+								    myGlobals.device[i].numHosts);
 
 #ifdef DEBUG
       traceEvent(TRACE_WARNING, "ipTrafficMatrixHosts memlen=%.1f Mbytes", 
 		 (float)memlen/(float)(1024*1024));
 #endif
 
-      if(device[i].ipTrafficMatrixHosts == NULL) {
+      if(myGlobals.device[i].ipTrafficMatrixHosts == NULL) {
 	traceEvent(TRACE_ERROR, "FATAL error: malloc() failed (size %d bytes)", memlen);
 	exit(-1);
       }
@@ -1075,38 +1075,38 @@ void initDeviceDatalink(void) {
   /* get datalink type */
 #ifdef AIX
   /* This is a bug of libpcap on AIX */
-  for(i=0; i<numDevices; i++) {
-    if(!device[i].virtualDevice) {
-      switch(device[i].name[0]) {
+  for(i=0; i<myGlobals.numDevices; i++) {
+    if(!myGlobals.device[i].virtualDevice) {
+      switch(myGlobals.device[i].name[0]) {
       case 't': /* TokenRing */
-	device[i].datalink = DLT_IEEE802;
+	myGlobals.device[i].datalink = DLT_IEEE802;
 	break;
       case 'l': /* Loopback */
-	device[i].datalink = DLT_NULL;
+	myGlobals.device[i].datalink = DLT_NULL;
 	break;
       default:
-	device[i].datalink = DLT_EN10MB; /* Ethernet */
+	myGlobals.device[i].datalink = DLT_EN10MB; /* Ethernet */
       }
     }
   }
 #else
 
 #if defined(__FreeBSD__)
-  for(i=0; i<numDevices; i++)
-    if(!device[i].virtualDevice) {
-      if(strncmp(device[i].name, "tun", 3) == 0)
-	device[i].datalink = DLT_PPP;
+  for(i=0; i<myGlobals.numDevices; i++)
+    if(!myGlobals.device[i].virtualDevice) {
+      if(strncmp(myGlobals.device[i].name, "tun", 3) == 0)
+	myGlobals.device[i].datalink = DLT_PPP;
       else
-	device[i].datalink = pcap_datalink(device[i].pcapPtr);
+	myGlobals.device[i].datalink = pcap_datalink(myGlobals.device[i].pcapPtr);
     }
 
 #else
-  for(i=0; i<numDevices; i++)
-    if(!device[i].virtualDevice) {
-      device[i].datalink = pcap_datalink(device[i].pcapPtr);
-      if((device[i].name[0] == 'l') /* loopback check */
-	 && (device[i].name[1] == 'o'))
-	device[i].datalink = DLT_NULL;
+  for(i=0; i<myGlobals.numDevices; i++)
+    if(!myGlobals.device[i].virtualDevice) {
+      myGlobals.device[i].datalink = pcap_datalink(myGlobals.device[i].pcapPtr);
+      if((myGlobals.device[i].name[0] == 'l') /* loopback check */
+	 && (myGlobals.device[i].name[1] == 'o'))
+	myGlobals.device[i].datalink = DLT_NULL;
     }
 #endif
 #endif
@@ -1114,34 +1114,30 @@ void initDeviceDatalink(void) {
 
 /* ******************************* */
 
-void parseTrafficFilter(char *argv[], int optind) {
+void parseTrafficFilter() {
   /* Construct, compile and set filter */
-  if(optind > 0) {
-    currentFilterExpression = copy_argv(argv + optind);
-    if(currentFilterExpression != NULL) {
+  if(myGlobals.currentFilterExpression != NULL) {
       int i;
       struct bpf_program fcode;
 
-      for(i=0; i<numDevices; i++) {
-	if(!device[i].virtualDevice) {
-	  if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
-			   device[i].netmask.s_addr) < 0)
-	     || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
+      for(i=0; i<myGlobals.numDevices; i++) {
+	if(!myGlobals.device[i].virtualDevice) {
+	  if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
+			   myGlobals.device[i].netmask.s_addr) < 0)
+	     || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
 	    traceEvent(TRACE_ERROR,
 		   "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
-		   currentFilterExpression,
-		   pcap_geterr(device[i].pcapPtr), 
-	       device[i].name[0] == '0' ? "<pcap file>" : device[i].name);
+		   myGlobals.currentFilterExpression,
+		   pcap_geterr(myGlobals.device[i].pcapPtr), 
+	       myGlobals.device[i].name[0] == '0' ? "<pcap file>" : myGlobals.device[i].name);
 	    exit(-1);
 	  } else
-	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", 
-	      currentFilterExpression, device[i].name);
+	    traceEvent(TRACE_INFO, "Set filter \"%s\" on myGlobals.device %s.", 
+	      myGlobals.currentFilterExpression, myGlobals.device[i].name);
 	}
       }
-    } else
-    currentFilterExpression = strdup("");	/* so that it isn't NULL! */
-  }  else
-  currentFilterExpression = strdup("");	/* so that it isn't NULL! */  
+} else
+    myGlobals.currentFilterExpression = strdup("");	/* so that it isn't NULL! */
 }
 
 /* *************************** */
@@ -1182,14 +1178,14 @@ void startSniffer(void) {
   int i;
 
 #ifdef MULTITHREADED
-  for(i=0; i<numDevices; i++)
-    if(!device[i].virtualDevice) {
+  for(i=0; i<myGlobals.numDevices; i++)
+    if(!myGlobals.device[i].virtualDevice) {
       /*
        * (8) - NPS - Network Packet Sniffer (main thread)
        */
-      createThread(&device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
+      createThread(&myGlobals.device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
       traceEvent (TRACE_INFO, "Started thread (%ld) for network packet sniffing on %s.\n",
-		  device[i].pcapDispatchThreadId, device[i].name);
+		  myGlobals.device[i].pcapDispatchThreadId, myGlobals.device[i].name);
     }
 #endif
 }

@@ -53,7 +53,7 @@ void* myMalloc(size_t theSize, int theLine, char* theFile) {
   memset(tmpBlock->memoryLocation, 0xee, theSize); /* Fill it with garbage */
   tmpBlock->alreadyTraced = 0;
 
-  allocatedMemory += theSize;
+  myGlobals.allocatedMemory += theSize;
 
   if(tmpBlock->memoryLocation == NULL) {
     traceEvent(TRACE_WARNING, "Malloc error (not enough memory): %s, %d (size = %d)\n", 
@@ -162,7 +162,7 @@ void myFree(void **thePtr, int theLine, char* theFile) {
 #endif
     return;
   } else {
-    allocatedMemory -= theScan->blockSize;
+    myGlobals.allocatedMemory -= theScan->blockSize;
 
     free(theScan->memoryLocation);
     free(theScan->programLocation);
@@ -206,7 +206,7 @@ void resetLeaks(void) {
     theScan = theScan->nextBlock;
   }
 
-  allocatedMemory = 0; /* Reset counter */
+  myGlobals.allocatedMemory = 0; /* Reset counter */
 }
 
 /* *************************************** */
@@ -352,7 +352,7 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 
 #ifdef DEBUG
   traceEvent(TRACE_WARNING, "malloc(%d) [%s] @ %s:%d", 
-	     sz, formatBytes(allocatedMemory, 0), file, line);
+	     sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
 
   return(myMalloc(sz, line, file));
@@ -363,7 +363,7 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 #ifdef DEBUG
   traceEvent(TRACE_WARNING, "calloc(%d,%d) [%s] @ %s:%d",
-	     c, sz, formatBytes(allocatedMemory, 0), file, line);
+	     c, sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
   return(myCalloc(c, sz, line, file));
 }
@@ -373,7 +373,7 @@ void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {  
 #ifdef DEBUG
   traceEvent(TRACE_WARNING, "realloc(%p,%d) [%s] @ %s:%d",
-	     ptr, sz, formatBytes(allocatedMemory, 0), file, line);
+	     ptr, sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif  
   return(myRealloc(ptr, sz, line, file));
 }
@@ -383,7 +383,7 @@ void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {
 char* ntop_strdup(char *str, char* file, int line) {
 #ifdef DEBUG
   traceEvent(TRACE_WARNING, "strdup(%s) [%s] @ %s:%d", str, 
-	     formatBytes(allocatedMemory, 0), file, line);
+	     formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
   return(myStrdup(str, line, file));
 }
@@ -393,7 +393,7 @@ char* ntop_strdup(char *str, char* file, int line) {
 void ntop_free(void **ptr, char* file, int line) {
 #ifdef DEBUG
   traceEvent(TRACE_WARNING, "free(%x) [%s] @ %s:%d", ptr, 
-	     formatBytes(allocatedMemory, 0), file, line);
+	     formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
   myFree(ptr, line, file);
 }
