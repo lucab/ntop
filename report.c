@@ -1802,8 +1802,9 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
   /* *************************************************** */
 
-  if(el->fileList != NULL) {
-    FileList *list = el->fileList;
+  if((el->protocolInfo != NULL)
+     && (el->protocolInfo->fileList != NULL)) {
+    FileList *list = el->protocolInfo->fileList;
 
     printSectionTitle("P2P Recently Exchanged Files\n");
 
@@ -4096,6 +4097,8 @@ void printHostHourlyTraffic(HostTraffic *el) {
   char theDate[8];
   struct tm t;
 
+  if(el->trafficDistribution == NULL) return;
+
   strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
 
@@ -4109,8 +4112,8 @@ void printHostHourlyTraffic(HostTraffic *el) {
   sendString("<TH "TH_BG">% Traffic Rcvd</TH></TR>");
 
   for(i=0, tcSent=0, tcRcvd=0; i<24; i++) {
-    tcSent += el->last24HoursBytesSent[i].value;
-    tcRcvd += el->last24HoursBytesRcvd[i].value;
+    tcSent += el->trafficDistribution ->last24HoursBytesSent[i].value;
+    tcRcvd += el->trafficDistribution ->last24HoursBytesRcvd[i].value;
   }
 
   sendString("<TR><TH "TH_BG" ALIGN=LEFT>Midnight - 1AM</TH>\n");

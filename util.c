@@ -1800,52 +1800,6 @@ int getActualInterface(int deviceId) {
 
 /* ************************************ */
 
-void storeHostTrafficInstance(HostTraffic *el) {
-  datum key_data;
-  datum data_data;
-  char *key;
-
-  if(broadcastHost(el))
-    return;
-
-  if(el->ethAddressString[0] == '\0')
-    key = el->hostNumIpAddress;
-  else
-    key = el->ethAddressString;
-
-#ifdef STORAGE_DEBUG
-  traceEvent(TRACE_INFO, "STORAGE_DEBUG: storeHostTrafficInstance(%s)\n", key);
-#endif
-
-  /*
-    Before to store the instance all the pointers need
-    to be deleted (i.e. set to NULL)
-  */
-  resetHostsVariables(el);
-
-  key_data.dptr = key;
-  key_data.dsize = strlen(key_data.dptr);
-  data_data.dptr = (void*)el;
-  data_data.dsize = sizeof(HostTraffic);
-
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "storeHostTrafficInstance");
-#endif
-
-  if(gdbm_store(myGlobals.hostsInfoFile, key_data, data_data, GDBM_REPLACE) == 0) {
-#ifdef STORAGE_DEBUG
-    traceEvent(TRACE_INFO, "STORAGE_DEBUG: Stored instance: '%s'\n", key);
-#endif
-    fprintf(stdout, "+"); fflush(stdout);
-  }
-
-#ifdef MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
-}
-
-/* ************************************ */
-
 void resetHostsVariables(HostTraffic* el) {
 
   FD_ZERO(&(el->flags));
@@ -1867,82 +1821,13 @@ void resetHostsVariables(HostTraffic* el) {
   el->tcpSessionList = NULL;
   el->udpSessionList = NULL;
   el->icmpInfo = NULL;
-  el->dnsStats = NULL;
-  el->httpStats = NULL;
-  el->dhcpStats = NULL;
-  el->userList = NULL;
-  el->fileList = NULL;
-  el->httpVirtualHosts = NULL;
+  el->protocolInfo = NULL;
 
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
 
   el->secHostPkts = NULL;
-}
-
-/* ************************************ */
-
-HostTraffic* resurrectHostTrafficInstance(char *key) {
-  datum key_data;
-  datum data_data;
-
-  key_data.dptr = key;
-  key_data.dsize = strlen(key_data.dptr);
-
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "resurrectHostTrafficInstance");
-#endif
-  data_data = gdbm_fetch(myGlobals.hostsInfoFile, key_data);
-
-  if(data_data.dptr != NULL) {
-    HostTraffic *el;
-
-    if(data_data.dsize != sizeof(HostTraffic)) {
-#ifdef STORAGE_DEBUG
-      traceEvent(TRACE_INFO,
-		 "STORAGE_DEBUG: Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
-		 key, data_data.dsize, sizeof(HostTraffic));
-#endif
-      gdbm_delete(myGlobals.hostsInfoFile, key_data);
-      free(data_data.dptr);
-#ifdef MULTITHREADED
-      releaseMutex(&myGlobals.gdbmMutex);
-#endif
-      return(NULL);
-    }
-
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
-
-    el = (HostTraffic*)data_data.dptr;
-
-    if(broadcastHost(el)) {
-      /*
-	Broadcast entries should
-	NOT be stored on disk
-      */
-      free(el);
-      return(NULL);
-    } else
-      resetHostsVariables(el);
-
-#ifdef STORAGE_DEBUG
-    traceEvent(TRACE_INFO, "STORAGE_DEBUG: Resurrected instance: '%s/%s'\n",
-	       el->ethAddressString, el->hostNumIpAddress);
-#endif
-    fprintf(stdout, "*"); fflush(stdout);
-    return(el);
-  } else {
-#ifdef STORAGE_DEBUG
-    traceEvent(TRACE_INFO, "STORAGE_DEBUG: Unable to find '%s'\n", key);
-#endif
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
-    return(NULL);
-  }
 }
 
 /* ************************************

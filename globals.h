@@ -209,8 +209,8 @@ typedef struct ntopGlobals {
   int webPort;
   u_char enableSessionHandling;      /* 'z' */
 
-
   char *currentFilterExpression;     /* 'B' */
+  u_char largeNetwork;               /* 'C' */
   char domainName[MAXHOSTNAMELEN];   /* 'D' */
   int isLsofPresent;                 /* 'E' */
   u_char enableExternalTools;        /* 'E' */
@@ -224,8 +224,7 @@ typedef struct ntopGlobals {
   int mergeInterfaces;               /* 'M' */
   int isNmapPresent;                 /* 'N' */
   char *pcapLogBasePath;             /* 'O' */ /* Added by Ola Lundqvist <opal@debian.org>. */
-  char *dbPath;                      /* 'P' */
-  short usePersistentStorage;        /* 'S' */
+  char *dbPath;                      /* 'P' */  
   char *mapperURL;                   /* 'U' */
 
 #ifdef HAVE_OPENSSL
@@ -249,6 +248,8 @@ typedef struct ntopGlobals {
 
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
+
+  u_int hashListSize;
 
   /* Search paths */
   char **dataFileDirs;

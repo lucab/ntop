@@ -471,8 +471,13 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(nameServerHost(el))   dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=/dns.gif BORDER=0>"; else dnsStr = "";
   if(isPrinter(el))        printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>"; else printStr = "";
   if(isSMTPhost(el))       smtpStr = "&nbsp;<IMG ALT=\"Mail (SMTP)\" SRC=/mail.gif BORDER=0>"; else smtpStr = "";
-  if(el->userList != NULL) userStr = "&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0>"; else userStr = "";
-  if(el->fileList != NULL) p2p = "&nbsp;<IMG ALT=P2P SRC=/p2p.gif BORDER=0>"; else p2p = "";
+  if(el->protocolInfo != NULL) {
+    if(el->protocolInfo->userList != NULL) userStr = "&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0>"; else userStr = "";
+    if(el->protocolInfo->fileList != NULL) p2p = "&nbsp;<IMG ALT=P2P SRC=/p2p.gif BORDER=0>"; else p2p = "";
+  } else {
+    userStr = "";
+    p2p = "";
+  }
 
   switch(isHostHealthy(el)) {
   case 0: /* OK */
@@ -2177,13 +2182,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   printParameterConfigInfo(textPrintFlag, "-P | --db-file-path",
                            myGlobals.dbPath,
                            DBFILE_DIR);
-
-  if (snprintf(buf, sizeof(buf), "%s%d (%s)",
-	       myGlobals.usePersistentStorage == NTOP_DEFAULT_PERSISTENT_STORAGE ? REPORT_ITS_DEFAULT : "",
-	       myGlobals.usePersistentStorage,
-	       myGlobals.usePersistentStorage == 0 ? "none" : (myGlobals.usePersistentStorage == 1 ? "all" : "local only")) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "-S | --store-mode", buf);
 
   printParameterConfigInfo(textPrintFlag, "-U | --mapper",
                            myGlobals.mapperURL,

@@ -1967,6 +1967,22 @@ typedef struct storedAddress {
   time_t recordCreationTime;
 } StoredAddress;
 
+typedef struct protocolInfo {
+  /* HTTP */
+  VirtualHostList *httpVirtualHosts;
+  /* POP3/SMTP... */
+  UserList *userList;
+  /* P2P */
+  FileList *fileList;
+  ServiceStats     *dnsStats, *httpStats;
+  DHCPStats        *dhcpStats;
+} ProtocolInfo;
+
+typedef struct trafficDistribution {
+  TrafficCounter lastCounterBytesSent, last24HoursBytesSent[25], lastDayBytesSent;
+  TrafficCounter lastCounterBytesRcvd, last24HoursBytesRcvd[25], lastDayBytesRcvd;
+} TrafficDistribution; 
+
 typedef struct nonIPTraffic {
   /* NetBIOS */
   char             nbNodeType, *nbHostName, *nbAccountName, *nbDomainName, *nbDescr;
@@ -2020,8 +2036,8 @@ typedef struct hostTraffic {
                    actualSentPktThpt, averageSentPktThpt, peakSentPktThpt,
                    actualTPktThpt, averageTPktThpt, peakTPktThpt;
   unsigned short   actBandwidthUsage;
-  TrafficCounter   lastCounterBytesSent, last24HoursBytesSent[25], lastDayBytesSent,
-                   lastCounterBytesRcvd, last24HoursBytesRcvd[25], lastDayBytesRcvd;
+  TrafficDistribution *trafficDistribution;
+
   /* Routing */
   RoutingCounter   *routedTraffic;
 
@@ -2038,14 +2054,8 @@ typedef struct hostTraffic {
                    udpFragmentsSent,  udpFragmentsRcvd,
                    icmpFragmentsSent, icmpFragmentsRcvd;
 
-  /* HTTP */
-  VirtualHostList *httpVirtualHosts;
-
-  /* POP3/SMTP... */
-  UserList *userList;
-
-  /* P2P */
-  FileList *fileList;
+  /* Protocol decoders */
+  ProtocolInfo     *protocolInfo;
 
   /* Interesting Packets */
   SecurityHostProbes *secHostPkts;
@@ -2069,8 +2079,6 @@ typedef struct hostTraffic {
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */
   UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */
   UsageCounter     contactedRouters;     /* routers contacted by this host */
-  ServiceStats     *dnsStats, *httpStats;
-  DHCPStats        *dhcpStats;
 
   /* *************** IMPORTANT ***************
 

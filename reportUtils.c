@@ -1456,41 +1456,43 @@ void printHostThtpShort(HostTraffic *el, int reportType) {
   Counter tc;
   char buf[64];
 
+  if(el->trafficDistribution == NULL) return;
+
   for(i=0, tc=0; i<24; i++) {
     switch(reportType) {
         case SORT_DATA_RCVD_HOST_TRAFFIC:
-            tc += el->last24HoursBytesRcvd[i].value;
-            break;
-        case SORT_DATA_SENT_HOST_TRAFFIC:
-            tc += el->last24HoursBytesSent[i].value;
-            break;
-        case SORT_DATA_HOST_TRAFFIC:
-        case TRAFFIC_STATS:
-            tc += el->last24HoursBytesRcvd[i].value +
-                  el->last24HoursBytesSent[i].value;
-            break;
+	  tc += el->trafficDistribution->last24HoursBytesRcvd[i].value;
+	  break;
+    case SORT_DATA_SENT_HOST_TRAFFIC:
+      tc += el->trafficDistribution->last24HoursBytesSent[i].value;
+      break;
+    case SORT_DATA_HOST_TRAFFIC:
+    case TRAFFIC_STATS:
+      tc += el->trafficDistribution->last24HoursBytesRcvd[i].value +
+	el->trafficDistribution->last24HoursBytesSent[i].value;
+      break;
     }
   }
-
+  
   for(i=0; i<24; i++) {
     float pctg;
-
+    
     if(tc > 0) {
-        switch(reportType) {
-            case SORT_DATA_RCVD_HOST_TRAFFIC:
-	        pctg = (float)(el->last24HoursBytesRcvd[i].value*100)/(float)tc;
-                break;
-            case SORT_DATA_SENT_HOST_TRAFFIC:
-	        pctg = (float)(el->last24HoursBytesSent[i].value*100)/(float)tc;
-                break;
-            case SORT_DATA_HOST_TRAFFIC:
-            case TRAFFIC_STATS:
-	        pctg = ( (float)(el->last24HoursBytesRcvd[i].value*100) +
-	                 (float)(el->last24HoursBytesSent[i].value*100) ) / (float)tc;
-                break;
-        }
+      switch(reportType) {
+      case SORT_DATA_RCVD_HOST_TRAFFIC:
+	pctg = (float)(el->trafficDistribution->last24HoursBytesRcvd[i].value*100)/(float)tc;
+	break;
+      case SORT_DATA_SENT_HOST_TRAFFIC:
+	pctg = (float)(el->trafficDistribution->last24HoursBytesSent[i].value*100)/(float)tc;
+	break;
+      case SORT_DATA_HOST_TRAFFIC:
+      case TRAFFIC_STATS:
+	pctg = ( (float)(el->trafficDistribution->last24HoursBytesRcvd[i].value*100) +
+		 (float)(el->trafficDistribution->last24HoursBytesSent[i].value*100) ) / (float)tc;
+	break;
+      }
     }
-
+    
     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT %s>&nbsp;</TD>",
 		getBgPctgColor(pctg)) < 0) BufferTooShort();
     sendString(buf);
@@ -2383,8 +2385,8 @@ void printHostIcmpStats(HostTraffic *el) {
 void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
   char buf[BUF_SIZE];
 
-  if(el->httpVirtualHosts != NULL) {
-    VirtualHostList *list = el->httpVirtualHosts;
+  if((el->protocolInfo != NULL) && (el->protocolInfo->httpVirtualHosts != NULL)) {
+    VirtualHostList *list = el->protocolInfo->httpVirtualHosts;
 
     printSectionTitle("HTTP Virtual Hosts Traffic");
     sendString("<CENTER>\n<TABLE BORDER=0><TR><TD "TD_BG" VALIGN=TOP>\n");
@@ -3054,7 +3056,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString("</TD></TR>");
     }
 
-    if(el->dhcpStats != NULL) {
+    if((el->protocolInfo != NULL) && (el->protocolInfo->dhcpStats != NULL)) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>",
 		  getRowColor(), "DHCP Information") < 0)
 	BufferTooShort();
@@ -3064,34 +3066,34 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "DHCP Server",
-		  _intoa(el->dhcpStats->dhcpServerIpAddress, buf1, sizeof(buf1))) < 0)
+		  _intoa(el->protocolInfo->dhcpStats->dhcpServerIpAddress, buf1, sizeof(buf1))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "Previous IP Address",
-		  _intoa(el->dhcpStats->previousIpAddress, buf1, sizeof(buf1))) < 0)
+		  _intoa(el->protocolInfo->dhcpStats->previousIpAddress, buf1, sizeof(buf1))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "Address Assigned on",
-		  formatTime(&(el->dhcpStats->assignTime), 1)) < 0)
+		  formatTime(&(el->protocolInfo->dhcpStats->assignTime), 1)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "To be Renewed Before",
-		  formatTime(&(el->dhcpStats->renewalTime), 1)) < 0)
+		  formatTime(&(el->protocolInfo->dhcpStats->renewalTime), 1)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "Lease Ends on",
-		  formatTime(&(el->dhcpStats->leaseTime), 1)) < 0)
+		  formatTime(&(el->protocolInfo->dhcpStats->leaseTime), 1)) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -3105,56 +3107,56 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Discover",
-		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG].value),
-		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG].value)) < 0)
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG].value),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG].value)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Offer",
-		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG].value),
-		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_OFFER_MSG].value)) < 0)
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG].value),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_OFFER_MSG].value)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Request",
-		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG].value),
-		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_REQUEST_MSG].value)) < 0)
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG].value),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_REQUEST_MSG].value)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Decline",
-		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG].value),
-		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_DECLINE_MSG].value)) < 0)
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG].value),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_DECLINE_MSG].value)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Ack",
-		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG].value),
-		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_ACK_MSG].value)) < 0)
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG].value),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_ACK_MSG].value)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Nack",
-		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG].value),
-		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_NACK_MSG].value)) < 0)
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG].value),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_NACK_MSG].value)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Release",
-		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG].value),
-		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_RELEASE_MSG].value)) < 0)
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG].value),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_RELEASE_MSG].value)) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -3162,8 +3164,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Inform",
-		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG].value),
-		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_INFORM_MSG].value)) < 0)
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG].value),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_INFORM_MSG].value)) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -3171,8 +3173,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Unknown Msg",
-		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG].value),
-		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_UNKNOWN_MSG].value)) < 0)
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG].value),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_UNKNOWN_MSG].value)) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -3575,8 +3577,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   /* **************************** */
 
-  if(el->userList != NULL) {
-    UserList *list = el->userList;
+  if((el->protocolInfo) && (el->protocolInfo->userList != NULL)) {
+    UserList *list = el->protocolInfo->userList;
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
 		"Known&nbsp;Users&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0></TH><TD "TD_BG" ALIGN=RIGHT>\n",
@@ -3751,16 +3753,17 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
   Counter tot;
 
-  if((el->dnsStats == NULL) && (el->httpStats == NULL))
+  if((el->protocolInfo == NULL)
+     || (el->protocolInfo->dnsStats == NULL) && (el->protocolInfo->httpStats == NULL))
     return;
 
   tot = 0;
 
-  if(el->dnsStats)
-    tot += el->dnsStats->numLocalReqSent.value+el->dnsStats->numRemReqSent.value;
+  if(el->protocolInfo->dnsStats)
+    tot += el->protocolInfo->dnsStats->numLocalReqSent.value + el->protocolInfo->dnsStats->numRemReqSent.value;
 
-  if(el->httpStats)
-    tot += el->httpStats->numLocalReqSent.value+el->httpStats->numRemReqSent.value;
+  if(el->protocolInfo->httpStats)
+    tot += el->protocolInfo->httpStats->numLocalReqSent.value + el->protocolInfo->httpStats->numRemReqSent.value;
 
   if(tot > 0) {
     printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role");
@@ -3775,8 +3778,8 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
 	       "<TH "TH_BG">Rem&nbsp;RndTrip</TH>"
 	       "</TR>\n");
 
-    if(el->dnsStats) printServiceStats("DNS", el->dnsStats, 1);
-    if(el->httpStats) printServiceStats("HTTP", el->httpStats, 1);
+    if(el->protocolInfo->dnsStats)  printServiceStats("DNS", el->protocolInfo->dnsStats, 1);
+    if(el->protocolInfo->httpStats) printServiceStats("HTTP", el->protocolInfo->httpStats, 1);
 
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
@@ -3786,11 +3789,11 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
 
   tot = 0;
 
-  if(el->dnsStats)
-    tot += el->dnsStats->numLocalReqRcvd.value+el->dnsStats->numRemReqRcvd.value;
+  if(el->protocolInfo->dnsStats)
+    tot += el->protocolInfo->dnsStats->numLocalReqRcvd.value+el->protocolInfo->dnsStats->numRemReqRcvd.value;
 
-  if(el->httpStats)
-    tot += el->httpStats->numLocalReqRcvd.value+el->httpStats->numRemReqRcvd.value;
+  if(el->protocolInfo->httpStats)
+    tot += el->protocolInfo->httpStats->numLocalReqRcvd.value+el->protocolInfo->httpStats->numRemReqRcvd.value;
 
   if(tot > 0) {
     printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role");
@@ -3805,8 +3808,8 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
 	       "<TH "TH_BG">Rem&nbsp;RndTrip</TH>"
 	       "</TR>\n");
 
-    if(el->dnsStats) printServiceStats("DNS", el->dnsStats, 0);
-    if(el->httpStats) printServiceStats("HTTP", el->httpStats, 0);
+    if(el->protocolInfo->dnsStats) printServiceStats("DNS", el->protocolInfo->dnsStats, 0);
+    if(el->protocolInfo->httpStats) printServiceStats("HTTP", el->protocolInfo->httpStats, 0);
 
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
@@ -3923,13 +3926,15 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
   float pctg;
   char buf[BUF_SIZE];
 
+  if(el->trafficDistribution == NULL) return;
+
   if(snprintf(buf, BUF_SIZE, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-	   formatBytes(el->last24HoursBytesSent[i].value, 0)) < 0)
+	      formatBytes(el->trafficDistribution->last24HoursBytesSent[i].value, 0)) < 0)
     BufferTooShort();
   sendString(buf);
-
+  
   if(tcSent > 0)
-    pctg = (float)(el->last24HoursBytesSent[i].value*100)/(float)tcSent;
+    pctg = (float)(el->trafficDistribution->last24HoursBytesSent[i].value*100)/(float)tcSent;
   else
     pctg = 0;
 
@@ -3939,12 +3944,12 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
   sendString(buf);
 
   if(snprintf(buf, BUF_SIZE, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-	   formatBytes(el->last24HoursBytesRcvd[i].value, 0)) < 0)
+	   formatBytes(el->trafficDistribution->last24HoursBytesRcvd[i].value, 0)) < 0)
     BufferTooShort();
   sendString(buf);
 
  if(tcRcvd > 0)
-    pctg = (float)(el->last24HoursBytesRcvd[i].value*100)/(float)tcRcvd;
+    pctg = (float)(el->trafficDistribution->last24HoursBytesRcvd[i].value*100)/(float)tcRcvd;
   else
     pctg = 0;
 

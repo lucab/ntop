@@ -428,8 +428,11 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   incrementTrafficCounter(&srcHost->pktSent, 1);
   incrementTrafficCounter(&srcHost->pktSentSession, 1);
 
-  incrementTrafficCounter(&srcHost->last24HoursBytesSent[hourId], length.value);
-  incrementTrafficCounter(&dstHost->last24HoursBytesRcvd[hourId], length.value);
+  if(srcHost->trafficDistribution == NULL) srcHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
+  if(dstHost->trafficDistribution == NULL) dstHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
+
+  incrementTrafficCounter(&srcHost->trafficDistribution->last24HoursBytesSent[hourId], length.value);
+  incrementTrafficCounter(&dstHost->trafficDistribution->last24HoursBytesRcvd[hourId], length.value);
 
   if(broadcastHost(dstHost)) {
     incrementTrafficCounter(&srcHost->pktBroadcastSent, 1);
@@ -571,7 +574,7 @@ static void processIpPkt(const u_char *bp,
       }
       break;
     case ETHERTYPE_IP:
-      memcpy(&ip, bp+hlen+4, sizeof(struct ip));
+      memcpy(&ip, bp+hlen+4 /* 4 is the size of the GRE header */, sizeof(struct ip));
       hlen = (u_int)ip.ip_hl * 4;
       ether_src = NULL, ether_dst = NULL;      
       break;
@@ -888,14 +891,17 @@ static void processIpPkt(const u_char *bp,
 		       isRequest, positiveReply);
 #endif
 
-	    if(srcHost->dnsStats == NULL) {
-	      srcHost->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	      memset(srcHost->dnsStats, 0, sizeof(ServiceStats));
+	    if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+	    if(dstHost->protocolInfo == NULL) dstHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+
+	    if(srcHost->protocolInfo->dnsStats == NULL) {
+	      srcHost->protocolInfo->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	      memset(srcHost->protocolInfo->dnsStats, 0, sizeof(ServiceStats));
 	    }
 
-	    if(dstHost->dnsStats == NULL) {
-	      dstHost->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	      memset(dstHost->dnsStats, 0, sizeof(ServiceStats));
+	    if(dstHost->protocolInfo->dnsStats == NULL) {
+	      dstHost->protocolInfo->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	      memset(dstHost->protocolInfo->dnsStats, 0, sizeof(ServiceStats));
 	    }
 
 	    if(isRequest) {
@@ -905,14 +911,14 @@ static void processIpPkt(const u_char *bp,
 	      addTimeMapping(transactionId, tvstrct);
 
 	      if(subnetLocalHost(dstHost))
-		incrementTrafficCounter(&srcHost->dnsStats->numLocalReqSent, 1);
+		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numLocalReqSent, 1);
 	      else
-		incrementTrafficCounter(&srcHost->dnsStats->numRemReqSent, 1);
+		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numRemReqSent, 1);
 
 	      if(subnetLocalHost(srcHost))
-		incrementTrafficCounter(&dstHost->dnsStats->numLocalReqRcvd, 1);
+		incrementTrafficCounter(&dstHost->protocolInfo->dnsStats->numLocalReqRcvd, 1);
 	      else
-		incrementTrafficCounter(&dstHost->dnsStats->numRemReqRcvd, 1);
+		incrementTrafficCounter(&dstHost->protocolInfo->dnsStats->numRemReqRcvd, 1);
 	    } else {
 	      time_t microSecTimeDiff;
 
@@ -929,31 +935,31 @@ static void processIpPkt(const u_char *bp,
 
 		if(microSecTimeDiff > 0) {
 		  if(subnetLocalHost(dstHost)) {
-		    if((srcHost->dnsStats->fastestMicrosecLocalReqServed == 0)
-		       || (microSecTimeDiff < srcHost->dnsStats->fastestMicrosecLocalReqServed))
-		      srcHost->dnsStats->fastestMicrosecLocalReqServed = microSecTimeDiff;
-		    if(microSecTimeDiff > srcHost->dnsStats->slowestMicrosecLocalReqServed)
-		      srcHost->dnsStats->slowestMicrosecLocalReqServed = microSecTimeDiff;
+		    if((srcHost->protocolInfo->dnsStats->fastestMicrosecLocalReqServed == 0)
+		       || (microSecTimeDiff < srcHost->protocolInfo->dnsStats->fastestMicrosecLocalReqServed))
+		      srcHost->protocolInfo->dnsStats->fastestMicrosecLocalReqServed = microSecTimeDiff;
+		    if(microSecTimeDiff > srcHost->protocolInfo->dnsStats->slowestMicrosecLocalReqServed)
+		      srcHost->protocolInfo->dnsStats->slowestMicrosecLocalReqServed = microSecTimeDiff;
 		  } else {
-		    if((srcHost->dnsStats->fastestMicrosecRemReqServed == 0)
-		       || (microSecTimeDiff < srcHost->dnsStats->fastestMicrosecRemReqServed))
-		      srcHost->dnsStats->fastestMicrosecRemReqServed = microSecTimeDiff;
-		    if(microSecTimeDiff > srcHost->dnsStats->slowestMicrosecRemReqServed)
-		      srcHost->dnsStats->slowestMicrosecRemReqServed = microSecTimeDiff;
+		    if((srcHost->protocolInfo->dnsStats->fastestMicrosecRemReqServed == 0)
+		       || (microSecTimeDiff < srcHost->protocolInfo->dnsStats->fastestMicrosecRemReqServed))
+		      srcHost->protocolInfo->dnsStats->fastestMicrosecRemReqServed = microSecTimeDiff;
+		    if(microSecTimeDiff > srcHost->protocolInfo->dnsStats->slowestMicrosecRemReqServed)
+		      srcHost->protocolInfo->dnsStats->slowestMicrosecRemReqServed = microSecTimeDiff;
 		  }
 
 		  if(subnetLocalHost(srcHost)) {
-		    if((dstHost->dnsStats->fastestMicrosecLocalReqMade == 0)
-		       || (microSecTimeDiff < dstHost->dnsStats->fastestMicrosecLocalReqMade))
-		      dstHost->dnsStats->fastestMicrosecLocalReqMade = microSecTimeDiff;
-		    if(microSecTimeDiff > dstHost->dnsStats->slowestMicrosecLocalReqMade)
-		      dstHost->dnsStats->slowestMicrosecLocalReqMade = microSecTimeDiff;
+		    if((dstHost->protocolInfo->dnsStats->fastestMicrosecLocalReqMade == 0)
+		       || (microSecTimeDiff < dstHost->protocolInfo->dnsStats->fastestMicrosecLocalReqMade))
+		      dstHost->protocolInfo->dnsStats->fastestMicrosecLocalReqMade = microSecTimeDiff;
+		    if(microSecTimeDiff > dstHost->protocolInfo->dnsStats->slowestMicrosecLocalReqMade)
+		      dstHost->protocolInfo->dnsStats->slowestMicrosecLocalReqMade = microSecTimeDiff;
 		  } else {
-		    if((dstHost->dnsStats->fastestMicrosecRemReqMade == 0)
-		       || (microSecTimeDiff < dstHost->dnsStats->fastestMicrosecRemReqMade))
-		      dstHost->dnsStats->fastestMicrosecRemReqMade = microSecTimeDiff;
-		    if(microSecTimeDiff > dstHost->dnsStats->slowestMicrosecRemReqMade)
-		      dstHost->dnsStats->slowestMicrosecRemReqMade = microSecTimeDiff;
+		    if((dstHost->protocolInfo->dnsStats->fastestMicrosecRemReqMade == 0)
+		       || (microSecTimeDiff < dstHost->protocolInfo->dnsStats->fastestMicrosecRemReqMade))
+		      dstHost->protocolInfo->dnsStats->fastestMicrosecRemReqMade = microSecTimeDiff;
+		    if(microSecTimeDiff > dstHost->protocolInfo->dnsStats->slowestMicrosecRemReqMade)
+		      dstHost->protocolInfo->dnsStats->slowestMicrosecRemReqMade = microSecTimeDiff;
 		  }
 		} else {
 #ifdef DEBUG
@@ -967,11 +973,11 @@ static void processIpPkt(const u_char *bp,
 	      FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
 
 	      if(positiveReply) {
-		incrementTrafficCounter(&srcHost->dnsStats->numPositiveReplSent, 1);
-		incrementTrafficCounter(&dstHost->dnsStats->numPositiveReplRcvd, 1);
+		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numPositiveReplSent, 1);
+		incrementTrafficCounter(&dstHost->protocolInfo->dnsStats->numPositiveReplRcvd, 1);
 	      } else {
-		incrementTrafficCounter(&srcHost->dnsStats->numNegativeReplSent, 1);
-		incrementTrafficCounter(&dstHost->dnsStats->numNegativeReplRcvd, 1);
+		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numNegativeReplSent, 1);
+		incrementTrafficCounter(&dstHost->protocolInfo->dnsStats->numNegativeReplRcvd, 1);
 	      }
 	    }
 	  } else {

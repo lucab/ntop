@@ -120,8 +120,7 @@ void initNtopGlobals(int argc, char * argv[]) {
 #endif
 
   myGlobals.mergeInterfaces = NTOP_DEFAULT_MERGE_INTERFACES;
-     /* note that by default ntop will merge network interfaces */
-  myGlobals.usePersistentStorage = NTOP_DEFAULT_PERSISTENT_STORAGE;
+  /* note that by default ntop will merge network interfaces */
   myGlobals.mapperURL = NTOP_DEFAULT_MAPPER_URL;
 
 #ifdef HAVE_GDCHART

@@ -135,20 +135,23 @@ void handleBootp(HostTraffic *srcHost,
 	    }
 
 	    if(realDstHost != NULL) {
-	      if(realDstHost->dhcpStats == NULL) {
-		realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
+	      if(realDstHost->protocolInfo == NULL) realDstHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+
+	      if(realDstHost->protocolInfo->dhcpStats == NULL) {
+		realDstHost->protocolInfo->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
+		memset(realDstHost->protocolInfo->dhcpStats, 0, sizeof(DHCPStats));
 	      }
 
-	      if(srcHost->dhcpStats == NULL) {
-		srcHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(srcHost->dhcpStats, 0, sizeof(DHCPStats));
+	      if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+	      if(srcHost->protocolInfo->dhcpStats == NULL) {
+		srcHost->protocolInfo->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
+		memset(srcHost->protocolInfo->dhcpStats, 0, sizeof(DHCPStats));
 	      }
 
 	      FD_SET(HOST_SVC_DHCP_CLIENT, &realDstHost->flags);
-	      realDstHost->dhcpStats->assignTime = myGlobals.actTime;
-	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
-	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
+	      realDstHost->protocolInfo->dhcpStats->assignTime = myGlobals.actTime;
+	      realDstHost->protocolInfo->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
+	      realDstHost->protocolInfo->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
 
 	      if(realDstHost->hostIpAddress.s_addr != bootProto.bp_yiaddr.s_addr) {
 		/* The host address has changed */
@@ -157,7 +160,7 @@ void handleBootp(HostTraffic *srcHost,
 			   intoa(realDstHost->hostIpAddress),
 			   _intoa(bootProto.bp_yiaddr, buf, sizeof(buf)));
 #endif
-		realDstHost->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIpAddress.s_addr;
+		realDstHost->protocolInfo->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIpAddress.s_addr;
 		realDstHost->hostIpAddress.s_addr = bootProto.bp_yiaddr.s_addr;
 		strncpy(realDstHost->hostNumIpAddress,
 			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
@@ -317,7 +320,7 @@ void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 		    traceEvent(TRACE_INFO, "Lease time: %u", tmpUlong);
 #endif
-		    realDstHost->dhcpStats->leaseTime = myGlobals.actTime+tmpUlong;
+		    realDstHost->protocolInfo->dhcpStats->leaseTime = myGlobals.actTime+tmpUlong;
 		  }
 		  idx += len;
 		  break;
@@ -328,41 +331,41 @@ void handleBootp(HostTraffic *srcHost,
 #endif
 		  switch((int)bootProto.bp_vend[idx]) {
 		  case DHCP_DISCOVER_MSG:
-		    incrementTrafficCounter(&realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG], 1);
-		    incrementTrafficCounter(&srcHost->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG], 1);
+		    incrementTrafficCounter(&realDstHost->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG], 1);
+		    incrementTrafficCounter(&srcHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG], 1);
 		    break;
 		  case DHCP_OFFER_MSG:
-		    incrementTrafficCounter(&realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_OFFER_MSG], 1);
-		    incrementTrafficCounter(&srcHost->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG], 1);
+		    incrementTrafficCounter(&realDstHost->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_OFFER_MSG], 1);
+		    incrementTrafficCounter(&srcHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG], 1);
 		    break;
 		  case DHCP_REQUEST_MSG:
-		    incrementTrafficCounter(&realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_REQUEST_MSG], 1);
-		    incrementTrafficCounter(&srcHost->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG], 1);
+		    incrementTrafficCounter(&realDstHost->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_REQUEST_MSG], 1);
+		    incrementTrafficCounter(&srcHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG], 1);
 		    break;
 		  case DHCP_DECLINE_MSG:
-		    incrementTrafficCounter(&realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_DECLINE_MSG], 1);
-		    incrementTrafficCounter(&srcHost->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG], 1);
+		    incrementTrafficCounter(&realDstHost->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_DECLINE_MSG], 1);
+		    incrementTrafficCounter(&srcHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG], 1);
 		    break;
 		  case DHCP_ACK_MSG:
-		    incrementTrafficCounter(&realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_ACK_MSG], 1);
-		    incrementTrafficCounter(&srcHost->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG], 1);
+		    incrementTrafficCounter(&realDstHost->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_ACK_MSG], 1);
+		    incrementTrafficCounter(&srcHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG], 1);
 		    break;
 		  case DHCP_NACK_MSG:
-		    incrementTrafficCounter(&realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_NACK_MSG], 1);
-		    incrementTrafficCounter(&srcHost->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG], 1);
+		    incrementTrafficCounter(&realDstHost->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_NACK_MSG], 1);
+		    incrementTrafficCounter(&srcHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG], 1);
 		    break;
 		  case DHCP_RELEASE_MSG:
-		    incrementTrafficCounter(&realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_RELEASE_MSG], 1);
-		    incrementTrafficCounter(&srcHost->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG], 1);
+		    incrementTrafficCounter(&realDstHost->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_RELEASE_MSG], 1);
+		    incrementTrafficCounter(&srcHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG], 1);
 		    break;
 		  case DHCP_INFORM_MSG:
-		    incrementTrafficCounter(&realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_INFORM_MSG], 1);
-		    incrementTrafficCounter(&srcHost->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG], 1);
+		    incrementTrafficCounter(&realDstHost->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_INFORM_MSG], 1);
+		    incrementTrafficCounter(&srcHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG], 1);
 		    break;
 		  case DHCP_UNKNOWN_MSG:
 		  default:
-		    incrementTrafficCounter(&realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_UNKNOWN_MSG], 1);
-		    incrementTrafficCounter(&srcHost->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG], 1);
+		    incrementTrafficCounter(&realDstHost->protocolInfo->dhcpStats->dhcpMsgRcvd[DHCP_UNKNOWN_MSG], 1);
+		    incrementTrafficCounter(&srcHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG], 1);
 		    break;
 		  }
 		  idx += len;
@@ -375,7 +378,7 @@ void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 		    traceEvent(TRACE_INFO, "Renewal time: %u", tmpUlong);
 #endif
-		    realDstHost->dhcpStats->renewalTime = myGlobals.actTime+tmpUlong;
+		    realDstHost->protocolInfo->dhcpStats->renewalTime = myGlobals.actTime+tmpUlong;
 		  }
 		  idx += len;
 		  break;
@@ -477,9 +480,11 @@ void handleBootp(HostTraffic *srcHost,
 	    }
 
 	    if(realClientHost != NULL) {
-	      if(realClientHost->dhcpStats == NULL) {
-		realClientHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(realClientHost->dhcpStats, 0, sizeof(DHCPStats));
+	      if(realClientHost->protocolInfo == NULL) realClientHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+
+	      if(realClientHost->protocolInfo->dhcpStats == NULL) {
+		realClientHost->protocolInfo->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
+		memset(realClientHost->protocolInfo->dhcpStats, 0, sizeof(DHCPStats));
 	      }
 
 	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
@@ -513,32 +518,32 @@ void handleBootp(HostTraffic *srcHost,
 #endif
 		  switch((int)bootProto.bp_vend[idx]) {
 		  case DHCP_DISCOVER_MSG:
-		    incrementTrafficCounter(&realClientHost->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG], 1);
+		    incrementTrafficCounter(&realClientHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG], 1);
 		    break;
 		  case DHCP_OFFER_MSG:
-		    incrementTrafficCounter(&realClientHost->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG], 1);
+		    incrementTrafficCounter(&realClientHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG], 1);
 		    break;
 		  case DHCP_REQUEST_MSG:
-		    incrementTrafficCounter(&realClientHost->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG], 1);
+		    incrementTrafficCounter(&realClientHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG], 1);
 		    break;
 		  case DHCP_DECLINE_MSG:
-		    incrementTrafficCounter(&realClientHost->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG], 1);
+		    incrementTrafficCounter(&realClientHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG], 1);
 		    break;
 		  case DHCP_ACK_MSG:
-		    incrementTrafficCounter(&realClientHost->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG], 1);
+		    incrementTrafficCounter(&realClientHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG], 1);
 		    break;
 		  case DHCP_NACK_MSG:
-		    incrementTrafficCounter(&realClientHost->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG], 1);
+		    incrementTrafficCounter(&realClientHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG], 1);
 		    break;
 		  case DHCP_RELEASE_MSG:
-		    incrementTrafficCounter(&realClientHost->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG], 1);
+		    incrementTrafficCounter(&realClientHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG], 1);
 		    break;
 		  case DHCP_INFORM_MSG:
-		    incrementTrafficCounter(&realClientHost->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG], 1);
+		    incrementTrafficCounter(&realClientHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG], 1);
 		    break;
 		  case DHCP_UNKNOWN_MSG:
 		  default:
-		    incrementTrafficCounter(&realClientHost->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG], 1);
+		    incrementTrafficCounter(&realClientHost->protocolInfo->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG], 1);
 		    break;
 		  }
 		  idx += len;

@@ -103,8 +103,9 @@ static struct option const long_options[] = {
 
   { "http-server",                      required_argument, NULL, 'w' },
   { "disable-sessions",                 no_argument,       NULL, 'z' },
-  { "set-admin-password",               optional_argument, NULL, 135 },
+  { "set-admin-password",               optional_argument, NULL, 'A' },
   { "filter-expression",                required_argument, NULL, 'B' },
+  { "large-network",                    no_argument,       NULL, 'C' },
   { "domain",                           required_argument, NULL, 'D' },
 
 #ifndef WIN32
@@ -124,7 +125,6 @@ static struct option const long_options[] = {
 #endif
   { "output-packet-path",               required_argument, NULL, 'O' },
   { "db-file-path",                     required_argument, NULL, 'P' },
-  { "store-mode",                       required_argument, NULL, 'S' },
   { "mapper",                           required_argument, NULL, 'U' },
   { "version",                          no_argument,       0,    'V' },
 
@@ -222,9 +222,10 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
   fprintf(fp, "    [-z             | --disable-sessions]                 Disable TCP session tracking\n");
-  fprintf(fp, "    [-A                                                   Ask admin user password and exit\n");
-  fprintf(fp, "    [                 --set-admin-password=<pass>]        Set password for the admin user to <pass>\n");
+  fprintf(fp, "    [-A               --set-admin-password=<pass>]        Ask admin user password and exit\n");
+  fprintf(fp, "                                                          Set password for the admin user to <pass>\n");
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 Packet filter expression, like tcpdump\n");
+  fprintf(fp, "    [-C             | --large-network                     Ntop will be used to analyze a large network (hint)\n");
   fprintf(fp, "    [-D <name>      | --domain <name>]                    Internet domain name\n");
 
 #ifndef WIN32
@@ -245,7 +246,6 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-N             | --no-nmap]                          Don't use nmap even if installed\n");
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            Path for log files in pcap format\n");
   fprintf(fp, "    [-P <path>      | --db-file-path <path>]              Path for ntop internal database files\n");
-  fprintf(fp, "    [-S <number>    | --store-mode <number>]              Persistent storage mode [0-none, 1-all, 2-local only]\n");
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     URL (mapper.pl) for displaying host location\n");
   fprintf(fp, "    [-V             | --version]                          Output version information and exit\n");
 
@@ -351,11 +351,11 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char* theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:D:F:MO:P:S:U:VW:";
+  char* theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:S:U:VW:";
 #elif defined(USE_SYSLOG)
-  char* theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKLMNO:P:S:U:VW:";
+  char* theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKLMNO:P:S:U:VW:";
 #else
-  char* theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKMNO:P:S:U:VW:";
+  char* theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKMNO:P:S:U:VW:";
 #endif
   int opt;
 
@@ -514,6 +514,10 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.currentFilterExpression = strdup(optarg);
       break;
 
+    case 'C':
+      myGlobals.largeNetwork = 1;
+      break;
+
     case 'D':                                        /* domain */
       stringSanityCheck(optarg);
       strncpy(myGlobals.domainName, optarg, MAXHOSTNAMELEN);
@@ -562,23 +566,6 @@ static int parseOptions(int argc, char* argv []) {
       stringSanityCheck(optarg);
       if(myGlobals.dbPath != NULL) free(myGlobals.dbPath);
       myGlobals.dbPath = strdup(optarg);
-      break;
-
-    case 'S':
-      /*
-       * Persitent storage only for 'local' machines
-       * Courtesy of Joel Crisp <jcrisp@dyn21-126.trilogy.com>
-       *
-       * 0 = no storage
-       * 1 = store all hosts
-       * 2 = store only local hosts
-       */
-      myGlobals.usePersistentStorage = atoi(optarg);
-      if((myGlobals.usePersistentStorage > 2)
-	 || (myGlobals.usePersistentStorage < 0)) {
-	printf("FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
-	exit(-1);
-      }
       break;
 
     case 'U': /* host:port - a good mapper is at http://jake.ntop.org/cgi-bin/mapper.pl */
@@ -734,6 +721,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
+
   /*
    * Initialize all global run-time parameters to reasonable values
    */

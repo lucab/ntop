@@ -225,7 +225,12 @@ void resetDevice(int devIdx) {
   ptr = calloc(HASH_INITIAL_SIZE, sizeof(HostTraffic*));
   myGlobals.device[devIdx].hash_hostTraffic = ptr;
 
-  len = sizeof(struct HashList*)*HASH_LIST_SIZE;
+  if(myGlobals.largeNetwork)
+    myGlobals.hashListSize = HASH_LIST_SIZE;
+  else
+    myGlobals.hashListSize = 2*HASH_LIST_SIZE;
+
+  len = sizeof(struct HashList*)*myGlobals.hashListSize;
   myGlobals.device[devIdx].hashList = (HashList**)malloc(len);
   memset(myGlobals.device[devIdx].hashList, 0, len);
   myGlobals.device[devIdx].insertIdx = 0;
@@ -356,10 +361,16 @@ void initCounters(void) {
     myGlobals.dummyEthAddress[len] = len;
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    myGlobals.device[i].numTotSessions = HASH_LIST_SIZE;
-    len = sizeof(IPSession*)*myGlobals.device[i].numTotSessions;
-    myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
-    memset(myGlobals.device[i].tcpSession, 0, len);
+    if(myGlobals.enableSessionHandling) {
+      myGlobals.device[i].numTotSessions = myGlobals.hashListSize;
+      len = sizeof(IPSession*)*myGlobals.device[i].numTotSessions;
+      myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
+      memset(myGlobals.device[i].tcpSession, 0, len);
+    } else {
+      myGlobals.device[i].numTotSessions = 0;
+      myGlobals.device[i].tcpSession     = NULL;
+    }
+
     myGlobals.device[i].fragmentList = NULL;
   }
 

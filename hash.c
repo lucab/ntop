@@ -278,9 +278,9 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     freeHostSessions(host->hostTrafficBucket, actualDeviceId);
   }
 
-  if(myGlobals.enablePacketDecoding) {
-    if(host->httpVirtualHosts != NULL) {
-      VirtualHostList *list = host->httpVirtualHosts;
+  if(myGlobals.enablePacketDecoding && (host->protocolInfo != NULL)) {
+    if(host->protocolInfo->httpVirtualHosts != NULL) {
+      VirtualHostList *list = host->protocolInfo->httpVirtualHosts;
     
       while(list != NULL) {
 	VirtualHostList *next = list->next;
@@ -291,8 +291,8 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
       }
     }
  
-    if(host->userList != NULL) {
-      UserList *list = host->userList;
+    if(host->protocolInfo->userList != NULL) {
+      UserList *list = host->protocolInfo->userList;
     
       while(list != NULL) {
 	UserList *next = list->next;
@@ -301,16 +301,21 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
 	list = next;
       }
     }
-  }
-  if(host->fileList != NULL) {
-    FileList *list = host->fileList;
-    
-    while(list != NULL) {
-      FileList *next = list->next;
-      free(list->fileName);
-      free(list);
-      list = next;
+
+    if(host->protocolInfo->fileList != NULL) {
+      FileList *list = host->protocolInfo->fileList;
+      
+      while(list != NULL) {
+	FileList *next = list->next;
+	free(list->fileName);
+	free(list);
+	list = next;
+      }
     }
+
+    if(host->protocolInfo->dnsStats  != NULL) free(host->protocolInfo->dnsStats);
+    if(host->protocolInfo->httpStats != NULL) free(host->protocolInfo->httpStats);
+    if(host->protocolInfo->dhcpStats != NULL) free(host->protocolInfo->dhcpStats);    
   }
 
   /* ************************************* */
@@ -341,23 +346,8 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   }
 
   if(host->icmpInfo     != NULL) free(host->icmpInfo);
-  if(host->dnsStats     != NULL) free(host->dnsStats);
-  if(host->httpStats    != NULL) free(host->httpStats);
-  if(host->dhcpStats    != NULL) free(host->dhcpStats);
 
   /* ********** */
-
-  if(myGlobals.usePersistentStorage != 0) {
-    if((!broadcastHost(host))
-       && ((myGlobals.usePersistentStorage == 1)
-	   || subnetPseudoLocalHost(host)
-	   /*
-	     Courtesy of
-	     Joel Crisp <jcrisp@dyn21-126.trilogy.com>
-	   */
-	   ))
-      storeHostTrafficInstance(host);
-  }
 
   purgeHostIdx(theDevice, host);
 
@@ -671,7 +661,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   idx = computeInitialHashIdx(hostIpAddress, ether_addr,
 			      &useIPAddressForSearching, actualDeviceId);
 
-  idx = idx % HASH_LIST_SIZE;
+  idx = idx % myGlobals.hashListSize;
 
   if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
     hostFound = 0;  /* This is the same type as the one of HashList */
@@ -758,35 +748,25 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       /* New host entry */
       int len, currentIdx;
 
-      if(myGlobals.usePersistentStorage) {
-	if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
-	  el = resurrectHostTrafficInstance(etheraddr_string(ether_addr));
-	else
-	  el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
-      } else
-	el = NULL;
-
-      if(el == NULL) {
-	if(myGlobals.hostsCacheLen > 0) {
-	  el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
-	  /*
+      if(myGlobals.hostsCacheLen > 0) {
+	el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
+	/*
 	    traceEvent(TRACE_INFO, "Fetched host from pointers cache (len=%d)",
 	    (int)myGlobals.hostsCacheLen);
-	  */
-	} else {
-	  el = (HostTraffic*)malloc(sizeof(HostTraffic));
-	}
-
-	memset(el, 0, sizeof(HostTraffic));
-	el->firstSeen = myGlobals.actTime;
-      }
-
+	*/
+      } else
+	el = (HostTraffic*)malloc(sizeof(HostTraffic));
+      
+      memset(el, 0, sizeof(HostTraffic));
+      el->firstSeen = myGlobals.actTime;
+            
       resetHostsVariables(el);
 
       if(isMultihomed)
 	FD_SET(HOST_MULTIHOMED, &el->flags);
 
-      el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
+      if(!myGlobals.largeNetwork)
+	el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
 
       len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
       el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);

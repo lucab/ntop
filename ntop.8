@@ -39,8 +39,11 @@ ntop \- display top network users
 .RB [ -w | --http-server
 .IR <port> ]
 .RB [ -z | --disable-sessions ]
+.RB [ -A | --set-admin-password
+.IR "password" ]
 .RB [ -B | --filter-expression
 .IR "expression" ]
+.RB [ -C | --large-network ]
 .RB [ -D | --domain 
 .IR <name> ]
 .RB [ -F | --flow-spec
@@ -52,7 +55,6 @@ ntop \- display top network users
 .IR <path> ]
 .RB [ -R | --filter-rule
 .IR <file> ]
-.RB [ -S | --store-mode
 .IR <number> ]
 .RB [ -U | --mapper 
 .IR <URL> ]
@@ -258,6 +260,9 @@ or dst host jake.unipi.it'. See the
 .B tcpdump
 man page for further information about this topic.
 
+.It2 -C --large-network
+This flag is a hint for ntop: as the network to analyze will be large, ntop will build a more efficient hash and save memory for some features (e.g traffic distribution during the day) that take up quite some memory.
+
 .It2 -D --domain
 This identifies the local domain suffix, e.g. ntop.org, if
 .B ntop
@@ -296,9 +301,6 @@ path is a directory you have to append a / to the string for this to work fine.
 
 .It2 -P --db-file-path
 This allows to specify where db-files are searched or created (default "."). In addition DBPATH/html is added to the searchlist for the WEB-files
-
-.It2 -S --store-mode
-Use this flag for telling ntop to save information about host traffic on shutdown. Valid values are: 0 = don't store hosts, 1 = store all hosts, 2 = store only local hosts. This flag allows ntop not to loose traffic stats across multiple ntop sessions. Please note that information about TCP session is (obviously) lost.
 
 .It2 -U --mapper
 It specifies the UTR of the mapper.pl utility (it's part of the ntop distribution [see www/Perl/mapper.pl]) for displaying host location. If you don't want to install a mapper use http://jake.ntop.org/cgi-bin/mapper.pl

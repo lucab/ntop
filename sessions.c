@@ -99,8 +99,12 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
 				   TrafficCounter bytesSent, TrafficCounter bytesRcvd) {
 
   if(virtualHostName != NULL) {
-    VirtualHostList *list = theRemHost->httpVirtualHosts;
+    VirtualHostList *list;
     int numEntries = 0;
+
+    if(theRemHost->protocolInfo == NULL) theRemHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+
+    list = theRemHost->protocolInfo->httpVirtualHosts;
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "updateHTTPVirtualHosts: %s for host %s [s=%u,r=%u]",
@@ -122,8 +126,8 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
       list = (VirtualHostList*)malloc(sizeof(VirtualHostList));
       list->virtualHostName = strdup(virtualHostName);
       list->bytesSent = bytesSent, list->bytesRcvd = bytesRcvd;
-      list->next = theRemHost->httpVirtualHosts;
-      theRemHost->httpVirtualHosts = list;
+      list->next = theRemHost->protocolInfo->httpVirtualHosts;
+      theRemHost->protocolInfo->httpVirtualHosts = list;
     }
   }
 }
@@ -133,8 +137,11 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
 static void updateFileList(char *fileName, u_char upDownloadMode, HostTraffic *theRemHost) {
 
   if(fileName != NULL) {
-    FileList *list = theRemHost->fileList, *lastPtr = NULL;
+    FileList *list, *lastPtr = NULL;
     int numEntries = 0;
+
+    if(theRemHost->protocolInfo == NULL) theRemHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+    list = theRemHost->protocolInfo->fileList;
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "updateFileList: %s for host %s",
@@ -160,17 +167,17 @@ static void updateFileList(char *fileName, u_char upDownloadMode, HostTraffic *t
       list->next = NULL;
       
       if(numEntries >= MAX_NUM_LIST_ENTRIES) {
-	FileList *ptr = theRemHost->fileList->next;
+	FileList *ptr = theRemHost->protocolInfo->fileList->next;
 
 	lastPtr->next = list; /* Append */
 	/* Free the first entry */
-	free(theRemHost->fileList->fileName);
-	free(theRemHost->fileList);
+	free(theRemHost->protocolInfo->fileList->fileName);
+	free(theRemHost->protocolInfo->fileList);
 	/* The first ptr points to the second element */
-	theRemHost->fileList = ptr;
+	theRemHost->protocolInfo->fileList = ptr;
       } else {
-	list->next = theRemHost->fileList;
-	theRemHost->fileList = list;
+	list->next = theRemHost->protocolInfo->fileList;
+	theRemHost->protocolInfo->fileList = list;
       }
     }
   }
@@ -186,8 +193,9 @@ static void updateHostUsers(char *userName, int userType, HostTraffic *theHost) 
       not really meaningful
     */
 
-    if(theHost->userList != NULL) {
-      UserList *list = theHost->userList;
+    if((theHost->protocolInfo != NULL) 
+       && (theHost->protocolInfo->userList != NULL)) {
+      UserList *list = theHost->protocolInfo->userList;
 
       /*
 	It might be that ntop added users before it
@@ -203,15 +211,18 @@ static void updateHostUsers(char *userName, int userType, HostTraffic *theHost) 
 	list = next;
       }
 
-      theHost->userList = NULL;
+      theHost->protocolInfo->userList = NULL;
     }
 
     return; /* That's all for now */
   }
 
   if(userName != NULL) {
-    UserList *list = theHost->userList;
+    UserList *list;
     int numEntries = 0;
+
+    if(theHost->protocolInfo == NULL) theHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+    list = theHost->protocolInfo->userList;
 
     while(list != NULL) {
       if(strcmp(list->userName, userName) == 0) {
@@ -226,10 +237,10 @@ static void updateHostUsers(char *userName, int userType, HostTraffic *theHost) 
     if((list == NULL) && (numEntries < MAX_NUM_LIST_ENTRIES)) {
       list = (UserList*)malloc(sizeof(UserList));
       list->userName = strdup(userName);
-      list->next = theHost->userList;
+      list->next = theHost->protocolInfo->userList;
       FD_ZERO(&list->userFlags);
       FD_SET(userType, &list->userFlags);
-      theHost->userList = list;
+      theHost->protocolInfo->userList = list;
     }
   }
 }
@@ -731,53 +742,57 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		     dstHost->hostSymIpAddress,
 		     tmpStr);
 #endif
-	  if(srcHost->httpStats == NULL) {
-	    srcHost->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	    memset(srcHost->httpStats, 0, sizeof(ServiceStats));
+
+	  if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+	  if(dstHost->protocolInfo == NULL) dstHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+
+	  if(srcHost->protocolInfo->httpStats == NULL) {
+	    srcHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	    memset(srcHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
 	  }
 
-	  if(dstHost->httpStats == NULL) {
-	    dstHost->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	    memset(dstHost->httpStats, 0, sizeof(ServiceStats));
+	  if(dstHost->protocolInfo->httpStats == NULL) {
+	    dstHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	    memset(dstHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
 	  }
 
 	  rc = atoi(&tmpStr[9]);
 
 	  if(rc == 200) /* HTTP/1.1 200 OK */ {
-	    incrementTrafficCounter(&srcHost->httpStats->numPositiveReplSent, 1);
-	    incrementTrafficCounter(&dstHost->httpStats->numPositiveReplRcvd, 1);
+	    incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numPositiveReplSent, 1);
+	    incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numPositiveReplRcvd, 1);
 	  } else {
-	    incrementTrafficCounter(&srcHost->httpStats->numNegativeReplSent, 1);
-	    incrementTrafficCounter(&dstHost->httpStats->numNegativeReplRcvd, 1);
+	    incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numNegativeReplSent, 1);
+	    incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numNegativeReplRcvd, 1);
 	  }
 	    
 	  if(microSecTimeDiff > 0) {
 	    if(subnetLocalHost(dstHost)) {
-	      if((srcHost->httpStats->fastestMicrosecLocalReqMade == 0)
-		 || (microSecTimeDiff < srcHost->httpStats->fastestMicrosecLocalReqServed))
-		srcHost->httpStats->fastestMicrosecLocalReqServed = microSecTimeDiff;
-	      if(microSecTimeDiff > srcHost->httpStats->slowestMicrosecLocalReqServed)
-		srcHost->httpStats->slowestMicrosecLocalReqServed = microSecTimeDiff;
+	      if((srcHost->protocolInfo->httpStats->fastestMicrosecLocalReqMade == 0)
+		 || (microSecTimeDiff < srcHost->protocolInfo->httpStats->fastestMicrosecLocalReqServed))
+		srcHost->protocolInfo->httpStats->fastestMicrosecLocalReqServed = microSecTimeDiff;
+	      if(microSecTimeDiff > srcHost->protocolInfo->httpStats->slowestMicrosecLocalReqServed)
+		srcHost->protocolInfo->httpStats->slowestMicrosecLocalReqServed = microSecTimeDiff;
 	    } else {
-	      if((srcHost->httpStats->fastestMicrosecRemReqMade == 0)
-		 || (microSecTimeDiff < srcHost->httpStats->fastestMicrosecRemReqServed))
-		srcHost->httpStats->fastestMicrosecRemReqServed = microSecTimeDiff;
-	      if(microSecTimeDiff > srcHost->httpStats->slowestMicrosecRemReqServed)
-		srcHost->httpStats->slowestMicrosecRemReqServed = microSecTimeDiff;
+	      if((srcHost->protocolInfo->httpStats->fastestMicrosecRemReqMade == 0)
+		 || (microSecTimeDiff < srcHost->protocolInfo->httpStats->fastestMicrosecRemReqServed))
+		srcHost->protocolInfo->httpStats->fastestMicrosecRemReqServed = microSecTimeDiff;
+	      if(microSecTimeDiff > srcHost->protocolInfo->httpStats->slowestMicrosecRemReqServed)
+		srcHost->protocolInfo->httpStats->slowestMicrosecRemReqServed = microSecTimeDiff;
 	    }
 
 	    if(subnetLocalHost(srcHost)) {
-	      if((dstHost->httpStats->fastestMicrosecLocalReqMade == 0)
-		 || (microSecTimeDiff < dstHost->httpStats->fastestMicrosecLocalReqMade))
-		dstHost->httpStats->fastestMicrosecLocalReqMade = microSecTimeDiff;
-	      if(microSecTimeDiff > dstHost->httpStats->slowestMicrosecLocalReqMade)
-		dstHost->httpStats->slowestMicrosecLocalReqMade = microSecTimeDiff;
+	      if((dstHost->protocolInfo->httpStats->fastestMicrosecLocalReqMade == 0)
+		 || (microSecTimeDiff < dstHost->protocolInfo->httpStats->fastestMicrosecLocalReqMade))
+		dstHost->protocolInfo->httpStats->fastestMicrosecLocalReqMade = microSecTimeDiff;
+	      if(microSecTimeDiff > dstHost->protocolInfo->httpStats->slowestMicrosecLocalReqMade)
+		dstHost->protocolInfo->httpStats->slowestMicrosecLocalReqMade = microSecTimeDiff;
 	    } else {
-	      if((dstHost->httpStats->fastestMicrosecRemReqMade == 0)
-		 || (microSecTimeDiff < dstHost->httpStats->fastestMicrosecRemReqMade))
-		dstHost->httpStats->fastestMicrosecRemReqMade = microSecTimeDiff;
-	      if(microSecTimeDiff > dstHost->httpStats->slowestMicrosecRemReqMade)
-		dstHost->httpStats->slowestMicrosecRemReqMade = microSecTimeDiff;
+	      if((dstHost->protocolInfo->httpStats->fastestMicrosecRemReqMade == 0)
+		 || (microSecTimeDiff < dstHost->protocolInfo->httpStats->fastestMicrosecRemReqMade))
+		dstHost->protocolInfo->httpStats->fastestMicrosecRemReqMade = microSecTimeDiff;
+	      if(microSecTimeDiff > dstHost->protocolInfo->httpStats->slowestMicrosecRemReqMade)
+		dstHost->protocolInfo->httpStats->slowestMicrosecRemReqMade = microSecTimeDiff;
 	    }
 	  } else {
 #ifdef DEBUG
@@ -809,24 +824,27 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    tvstrct.tv_usec = h->ts.tv_usec;
 	    addTimeMapping(transactionId, tvstrct);
 
-	    if(srcHost->httpStats == NULL) {
-	      srcHost->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	      memset(srcHost->httpStats, 0, sizeof(ServiceStats));
+	    if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+	    if(dstHost->protocolInfo == NULL) dstHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+
+	    if(srcHost->protocolInfo->httpStats == NULL) {
+	      srcHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	      memset(srcHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
 	    }
-	    if(dstHost->httpStats == NULL) {
-	      dstHost->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	      memset(dstHost->httpStats, 0, sizeof(ServiceStats));
+	    if(dstHost->protocolInfo->httpStats == NULL) {
+	      dstHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	      memset(dstHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
 	    }
 
 	    if(subnetLocalHost(dstHost))
-	      incrementTrafficCounter(&srcHost->httpStats->numLocalReqSent, 1);
+	      incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numLocalReqSent, 1);
 	    else
-	      incrementTrafficCounter(&srcHost->httpStats->numRemReqSent, 1);
+	      incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numRemReqSent, 1);
 
 	    if(subnetLocalHost(srcHost))
-	      incrementTrafficCounter(&dstHost->httpStats->numLocalReqRcvd, 1);
+	      incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numLocalReqRcvd, 1);
 	    else
-	      incrementTrafficCounter(&dstHost->httpStats->numRemReqRcvd, 1);
+	      incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numRemReqRcvd, 1);
 
 	    row = strtok_r(rcStr, "\n", &strtokState);
 
