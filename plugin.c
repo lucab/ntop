@@ -22,7 +22,6 @@
 
 #ifdef MAKE_STATIC_PLUGIN
 extern PluginInfo* icmpPluginEntryFctn(void);
-extern PluginInfo* nfsPluginEntryFctn(void);
 extern PluginInfo* sflowPluginEntryFctn(void);
 #ifndef EMBEDDED
 extern PluginInfo* rrdPluginEntryFctn(void);
@@ -198,8 +197,6 @@ static void loadPlugin(char* dirName, char* pluginName) {
 
   if(strcmp(pluginName, "icmpPlugin") == 0)
     pluginInfo = icmpPluginEntryFctn();
-  else if(strcmp(pluginName, "nfsPlugin") == 0)
-    pluginInfo = nfsPluginEntryFctn();
   else if(strcmp(pluginName, "sflowPlugin") == 0)
     pluginInfo = sflowPluginEntryFctn();
   else if(strcmp(pluginName, "netflowPlugin") == 0)
@@ -341,7 +338,6 @@ void loadPlugins(void) {
   closedir(directoryPointer);
 #else /* MAKE_STATIC_PLUGIN */
   loadPlugin(NULL, "icmpPlugin");
-  loadPlugin(NULL, "nfsPlugin");
   loadPlugin(NULL, "sflowPlugin");
   loadPlugin(NULL, "netflowPlugin");
 #ifndef EMBEDDED

@@ -149,26 +149,24 @@ noinst_PROGRAMS = \
                   icmpPlugin.so \
                   lastSeenPlugin.so \
                   netflowPlugin.so \
-                  nfsPlugin.so  \
                   pdaPlugin.so \
                   rrdPlugin.so \
+                  rrdAlarmPlugin.so \
                   sflowPlugin.so \
                   xmldumpPlugin.so
 
 
-#                 rmonPlugin.so
 lib_LTLIBRARIES = \
                   libicmpPlugin.la \
                   liblastSeenPlugin.la \
                   libnetflowPlugin.la \
-                  libnfsPlugin.la \
                   libpdaPlugin.la \
                   librrdPlugin.la \
+                  librrdAlarmPlugin.la \
                   libsflowPlugin.la \
                   libxmldumpPlugin.la
 
 
-#                 librmonPlugin.la
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
@@ -178,15 +176,16 @@ liblastSeenPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 libnetflowPlugin_la_SOURCES = netflowPlugin.c
 libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
-libnfsPlugin_la_SOURCES = nfsPlugin.c
-libnfsPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-
 libpdaPlugin_la_SOURCES = pdaPlugin.c
 libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 librrdPlugin_la_LIBADD = -L../myrrd -lmyrrd
+
+librrdAlarmPlugin_la_SOURCES = rrdAlarmPlugin.c
+librrdAlarmPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+librrdAlarmPlugin_la_LIBADD = -L../myrrd -lmyrrd
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -208,12 +207,12 @@ liblastSeenPlugin_la_OBJECTS = $(am_liblastSeenPlugin_la_OBJECTS)
 libnetflowPlugin_la_LIBADD =
 am_libnetflowPlugin_la_OBJECTS = netflowPlugin.lo
 libnetflowPlugin_la_OBJECTS = $(am_libnetflowPlugin_la_OBJECTS)
-libnfsPlugin_la_LIBADD =
-am_libnfsPlugin_la_OBJECTS = nfsPlugin.lo
-libnfsPlugin_la_OBJECTS = $(am_libnfsPlugin_la_OBJECTS)
 libpdaPlugin_la_LIBADD =
 am_libpdaPlugin_la_OBJECTS = pdaPlugin.lo
 libpdaPlugin_la_OBJECTS = $(am_libpdaPlugin_la_OBJECTS)
+librrdAlarmPlugin_la_DEPENDENCIES =
+am_librrdAlarmPlugin_la_OBJECTS = rrdAlarmPlugin.lo
+librrdAlarmPlugin_la_OBJECTS = $(am_librrdAlarmPlugin_la_OBJECTS)
 librrdPlugin_la_DEPENDENCIES =
 am_librrdPlugin_la_OBJECTS = rrdPlugin.lo
 librrdPlugin_la_OBJECTS = $(am_librrdPlugin_la_OBJECTS)
@@ -224,8 +223,8 @@ libxmldumpPlugin_la_LIBADD =
 am_libxmldumpPlugin_la_OBJECTS = xmldumpPlugin.lo
 libxmldumpPlugin_la_OBJECTS = $(am_libxmldumpPlugin_la_OBJECTS)
 noinst_PROGRAMS = icmpPlugin.so$(EXEEXT) lastSeenPlugin.so$(EXEEXT) \
-	netflowPlugin.so$(EXEEXT) nfsPlugin.so$(EXEEXT) \
-	pdaPlugin.so$(EXEEXT) rrdPlugin.so$(EXEEXT) \
+	netflowPlugin.so$(EXEEXT) pdaPlugin.so$(EXEEXT) \
+	rrdPlugin.so$(EXEEXT) rrdAlarmPlugin.so$(EXEEXT) \
 	sflowPlugin.so$(EXEEXT) xmldumpPlugin.so$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 
@@ -244,16 +243,16 @@ netflowPlugin_so_OBJECTS = netflowPlugin.so.$(OBJEXT)
 netflowPlugin_so_LDADD = $(LDADD)
 netflowPlugin_so_DEPENDENCIES =
 netflowPlugin_so_LDFLAGS =
-nfsPlugin_so_SOURCES = nfsPlugin.so.c
-nfsPlugin_so_OBJECTS = nfsPlugin.so.$(OBJEXT)
-nfsPlugin_so_LDADD = $(LDADD)
-nfsPlugin_so_DEPENDENCIES =
-nfsPlugin_so_LDFLAGS =
 pdaPlugin_so_SOURCES = pdaPlugin.so.c
 pdaPlugin_so_OBJECTS = pdaPlugin.so.$(OBJEXT)
 pdaPlugin_so_LDADD = $(LDADD)
 pdaPlugin_so_DEPENDENCIES =
 pdaPlugin_so_LDFLAGS =
+rrdAlarmPlugin_so_SOURCES = rrdAlarmPlugin.so.c
+rrdAlarmPlugin_so_OBJECTS = rrdAlarmPlugin.so.$(OBJEXT)
+rrdAlarmPlugin_so_LDADD = $(LDADD)
+rrdAlarmPlugin_so_DEPENDENCIES =
+rrdAlarmPlugin_so_LDFLAGS =
 rrdPlugin_so_SOURCES = rrdPlugin.so.c
 rrdPlugin_so_OBJECTS = rrdPlugin.so.$(OBJEXT)
 rrdPlugin_so_LDADD = $(LDADD)
@@ -281,10 +280,10 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/lastSeenPlugin.so.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/netflowPlugin.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/netflowPlugin.so.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/nfsPlugin.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/nfsPlugin.so.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/pdaPlugin.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/pdaPlugin.so.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/rrdAlarmPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/rrdAlarmPlugin.so.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/rrdPlugin.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/rrdPlugin.so.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/sflowPlugin.Plo \
@@ -300,11 +299,11 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(libicmpPlugin_la_SOURCES) \
 	$(liblastSeenPlugin_la_SOURCES) $(libnetflowPlugin_la_SOURCES) \
-	$(libnfsPlugin_la_SOURCES) $(libpdaPlugin_la_SOURCES) \
+	$(libpdaPlugin_la_SOURCES) $(librrdAlarmPlugin_la_SOURCES) \
 	$(librrdPlugin_la_SOURCES) $(libsflowPlugin_la_SOURCES) \
 	$(libxmldumpPlugin_la_SOURCES) icmpPlugin.so.c \
-	lastSeenPlugin.so.c netflowPlugin.so.c nfsPlugin.so.c \
-	pdaPlugin.so.c rrdPlugin.so.c sflowPlugin.so.c \
+	lastSeenPlugin.so.c netflowPlugin.so.c pdaPlugin.so.c \
+	rrdAlarmPlugin.so.c rrdPlugin.so.c sflowPlugin.so.c \
 	xmldumpPlugin.so.c
 
 RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
@@ -313,7 +312,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
 DIST_COMMON = Makefile.am Makefile.in
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnetflowPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) $(libpdaPlugin_la_SOURCES) $(librrdPlugin_la_SOURCES) $(libsflowPlugin_la_SOURCES) $(libxmldumpPlugin_la_SOURCES) icmpPlugin.so.c lastSeenPlugin.so.c netflowPlugin.so.c nfsPlugin.so.c pdaPlugin.so.c rrdPlugin.so.c sflowPlugin.so.c xmldumpPlugin.so.c
+SOURCES = $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnetflowPlugin_la_SOURCES) $(libpdaPlugin_la_SOURCES) $(librrdAlarmPlugin_la_SOURCES) $(librrdPlugin_la_SOURCES) $(libsflowPlugin_la_SOURCES) $(libxmldumpPlugin_la_SOURCES) icmpPlugin.so.c lastSeenPlugin.so.c netflowPlugin.so.c pdaPlugin.so.c rrdAlarmPlugin.so.c rrdPlugin.so.c sflowPlugin.so.c xmldumpPlugin.so.c
 
 all: all-recursive
 
@@ -321,7 +320,7 @@ all: all-recursive
 .SUFFIXES: .so .c .lo .o .obj
 $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  plugins/Makefile
+	  $(ACLOCAL); $(AUTOMAKE) --gnu  plugins/Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
 libLTLIBRARIES_INSTALL = $(INSTALL)
@@ -358,10 +357,10 @@ liblastSeenPlugin.la: $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_DEP
 	$(LINK) -rpath $(libdir) $(liblastSeenPlugin_la_LDFLAGS) $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_LIBADD) $(LIBS)
 libnetflowPlugin.la: $(libnetflowPlugin_la_OBJECTS) $(libnetflowPlugin_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libnetflowPlugin_la_LDFLAGS) $(libnetflowPlugin_la_OBJECTS) $(libnetflowPlugin_la_LIBADD) $(LIBS)
-libnfsPlugin.la: $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_DEPENDENCIES) 
-	$(LINK) -rpath $(libdir) $(libnfsPlugin_la_LDFLAGS) $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_LIBADD) $(LIBS)
 libpdaPlugin.la: $(libpdaPlugin_la_OBJECTS) $(libpdaPlugin_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libpdaPlugin_la_LDFLAGS) $(libpdaPlugin_la_OBJECTS) $(libpdaPlugin_la_LIBADD) $(LIBS)
+librrdAlarmPlugin.la: $(librrdAlarmPlugin_la_OBJECTS) $(librrdAlarmPlugin_la_DEPENDENCIES) 
+	$(LINK) -rpath $(libdir) $(librrdAlarmPlugin_la_LDFLAGS) $(librrdAlarmPlugin_la_OBJECTS) $(librrdAlarmPlugin_la_LIBADD) $(LIBS)
 librrdPlugin.la: $(librrdPlugin_la_OBJECTS) $(librrdPlugin_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(librrdPlugin_la_LDFLAGS) $(librrdPlugin_la_OBJECTS) $(librrdPlugin_la_LIBADD) $(LIBS)
 libsflowPlugin.la: $(libsflowPlugin_la_OBJECTS) $(libsflowPlugin_la_DEPENDENCIES) 
@@ -388,10 +387,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lastSeenPlugin.so.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netflowPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netflowPlugin.so.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nfsPlugin.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nfsPlugin.so.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdaPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdaPlugin.so.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdAlarmPlugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdAlarmPlugin.so.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdPlugin.so.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sflowPlugin.Plo@am__quote@
@@ -658,9 +657,6 @@ uninstall-info: uninstall-info-recursive
 	uninstall-recursive
 
 
-#librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
-#librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-
 #
 # Dependencies to allow ntop loading plugins on-place
 # by default ntop looks for plugins in the plugins/ subdirectory
@@ -684,12 +680,6 @@ lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libnetflowPlugin.so netflowPlugin.so
 
-.libs/libnfsPlugin.so@SO_VERSION_PATCH@:
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
-
-nfsPlugin.so$(EXEEXT): .libs/libnfsPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libnfsPlugin.so nfsPlugin.so
-
 .libs/libpdaPlugin.so@SO_VERSION_PATCH@:
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
 
@@ -702,6 +692,12 @@ pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
 
+.libs/librrdAlarmPlugin.so@SO_VERSION_PATCH@:
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librrdAlarmPlugin.so@SO_VERSION_PATCH@ rrdAlarmPlugin.o
+
+rrdAlarmPlugin.so$(EXEEXT): .libs/librrdAlarmPlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/librrdAlarmPlugin.so rrdAlarmPlugin.so
+
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
 
@@ -713,12 +709,6 @@ sflowPlugin.so$(EXEEXT): .libs/libsflowPlugin.so@SO_VERSION_PATCH@
 
 xmldumpPlugin.so$(EXEEXT): .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libxmldumpPlugin.so xmldumpPlugin.so
-
-#.libs/librmonPlugin.so@SO_VERSION_PATCH@:
-#	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
-
-#rmonPlugin.so$(EXEEXT): .libs/librmonPlugin.so@SO_VERSION_PATCH@
-#	@$(LN_S) .libs/librmonPlugin.so rmonPlugin.so
 
 install-data-local:
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)$(plugindir);

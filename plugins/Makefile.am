@@ -46,23 +46,21 @@ noinst_PROGRAMS = \
                   icmpPlugin.so \
                   lastSeenPlugin.so \
                   netflowPlugin.so \
-                  nfsPlugin.so  \
                   pdaPlugin.so \
                   rrdPlugin.so \
+                  rrdAlarmPlugin.so \
                   sflowPlugin.so \
                   xmldumpPlugin.so
-#                 rmonPlugin.so
 
 lib_LTLIBRARIES = \
                   libicmpPlugin.la \
                   liblastSeenPlugin.la \
                   libnetflowPlugin.la \
-                  libnfsPlugin.la \
                   libpdaPlugin.la \
                   librrdPlugin.la \
+                  librrdAlarmPlugin.la \
                   libsflowPlugin.la \
                   libxmldumpPlugin.la
-#                 librmonPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -73,9 +71,6 @@ liblastSeenPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 libnetflowPlugin_la_SOURCES = netflowPlugin.c
 libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
-libnfsPlugin_la_SOURCES = nfsPlugin.c
-libnfsPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-
 libpdaPlugin_la_SOURCES = pdaPlugin.c
 libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
@@ -83,15 +78,15 @@ librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 librrdPlugin_la_LIBADD = -L../myrrd -lmyrrd
 
+librrdAlarmPlugin_la_SOURCES = rrdAlarmPlugin.c
+librrdAlarmPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+librrdAlarmPlugin_la_LIBADD = -L../myrrd -lmyrrd
+
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 libxmldumpPlugin_la_SOURCES = xmldumpPlugin.c
 libxmldumpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-
-#librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
-#librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-
 
 #
 # Dependencies to allow ntop loading plugins on-place
@@ -117,12 +112,6 @@ lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libnetflowPlugin.so netflowPlugin.so
 
-.libs/libnfsPlugin.so@SO_VERSION_PATCH@:
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
-
-nfsPlugin.so$(EXEEXT): .libs/libnfsPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libnfsPlugin.so nfsPlugin.so
-
 .libs/libpdaPlugin.so@SO_VERSION_PATCH@:
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
 
@@ -135,6 +124,12 @@ pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
 
+.libs/librrdAlarmPlugin.so@SO_VERSION_PATCH@:
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librrdAlarmPlugin.so@SO_VERSION_PATCH@ rrdAlarmPlugin.o
+
+rrdAlarmPlugin.so$(EXEEXT): .libs/librrdAlarmPlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/librrdAlarmPlugin.so rrdAlarmPlugin.so
+
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
 
@@ -146,12 +141,6 @@ sflowPlugin.so$(EXEEXT): .libs/libsflowPlugin.so@SO_VERSION_PATCH@
 
 xmldumpPlugin.so$(EXEEXT): .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libxmldumpPlugin.so xmldumpPlugin.so
-
-#.libs/librmonPlugin.so@SO_VERSION_PATCH@:
-#	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
-
-#rmonPlugin.so$(EXEEXT): .libs/librmonPlugin.so@SO_VERSION_PATCH@
-#	@$(LN_S) .libs/librmonPlugin.so rmonPlugin.so
 
 install-data-local:
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)$(plugindir);
