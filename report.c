@@ -593,7 +593,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>"
 		    "Dropped&nbsp;by&nbsp;ntop</th>"
 		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		    getRowColor(), formatPkts(device[actualReportDeviceId].droppedPackets)) < 0) 
+		    getRowColor(), formatPkts(device[actualReportDeviceId].droppedPkts)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
 #endif

@@ -245,10 +245,10 @@ void dumpNtopHashes(char* options) {
       if(tmpStr[i] == '=') {
 	tmpStr[i] = 0;
 
-	if(strcmp(tmpStr, "language") == 0) {
+	if(strcasecmp(tmpStr, "language") == 0) {
 	  lang=DEFAULT_LANGUAGE;
 	  for (j=1;j <= NB_LANGUAGES;j++) {
-	    if(strcmp(&tmpStr[i+1], languages[j]) == 0)
+	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0)
 	      lang = j;
 	  }
 	} else if(strcmp(tmpStr, "key") == 0) {
@@ -724,8 +724,8 @@ void dumpNtopTrafficInfo(char* options) {
     wrtIntItm    (lang, "\t", "virtualDevice",(int)device[i].virtualDevice,',');
     wrtIntItm    (lang, "\t", "snaplen",  device[i].snaplen,',');
     wrtIntItm    (lang, "\t", "datalink", device[i].datalink,',');
-    wrtStrItm (lang, "\t", "filter",   device[i].filter ? device[i].filter : "",',');
-    wrtLlongItm  (lang, "\t", "droppedPackets",device[i].droppedPackets,',');
+    wrtStrItm    (lang, "\t", "filter",   device[i].filter ? device[i].filter : "",',');
+    wrtLlongItm  (lang, "\t", "droppedPkts",device[i].droppedPkts,',');
     wrtLlongItm  (lang, "\t", "ethernetPkts",device[i].ethernetPkts,',');
     wrtLlongItm  (lang, "\t", "broadcastPkts",device[i].broadcastPkts,',');
     wrtLlongItm  (lang, "\t", "multicastPkts",device[i].multicastPkts,',');
@@ -746,7 +746,7 @@ void dumpNtopTrafficInfo(char* options) {
     wrtLlongItm  (lang, "\t", "egpBytes",device[i].egpBytes,',');
     wrtLlongItm  (lang, "\t", "igmpBytes",device[i].igmpBytes,',');
     wrtLlongItm  (lang, "\t", "osiBytes",device[i].osiBytes,',');
-    wrtLlongItm  (lang, "\t", "qnxByte",device[i].qnxBytes,',');
+    wrtLlongItm  (lang, "\t", "qnxBytes",device[i].qnxBytes,',');
     wrtLlongItm  (lang, "\t", "otherBytes",device[i].otherBytes,',');
     wrtLlongItm  (lang, "\t", "lastMinEthernetBytes", 
 		  device[i].lastMinEthernetBytes,',');

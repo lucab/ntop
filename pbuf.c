@@ -4123,7 +4123,7 @@ void queuePacket(u_char * _deviceId,
     traceEvent(TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]\n",
 	       packetQueueLen, maxPacketQueueLen);
 #endif
-    device[actualDeviceId].droppedPackets++;
+    device[actualDeviceId].droppedPkts++;
 
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads (dequeue) to run */

@@ -934,7 +934,7 @@ RETSIGTYPE cleanup(int signo) {
 		   formatPkts((TrafficCounter)(stat.ps_drop)));
 #ifdef MULTITHREADED
 	traceEvent(TRACE_INFO, "%s packets dropped by ntop\n",
-		   formatPkts(device[i].droppedPackets));
+		   formatPkts(device[i].droppedPkts));
 #endif
       }
     }

@@ -844,7 +844,7 @@ typedef struct {
   /*
    * The packets section
    */
-  TrafficCounter droppedPackets; /* # of pkts dropped by the application */
+  TrafficCounter droppedPkts;    /* # of pkts dropped by the application */
   TrafficCounter ethernetPkts;   /* # of Ethernet pkts captured by the application */
   TrafficCounter broadcastPkts;  /* # of broadcast pkts captured by the application */
   TrafficCounter multicastPkts;  /* # of multicast pkts captured by the application */
