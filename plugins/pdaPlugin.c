@@ -48,13 +48,13 @@ static int cmpPdaFctn(const void *_a, const void *_b) {
   TrafficCounter a_, b_;
 
   if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctn() (1)");
     return(1);
   } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctn() (2)");
     return(-1);
   } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctn() (3)");
     return(0);
   }
 
@@ -82,8 +82,6 @@ static void printHtmlIndex(void) {
   int i;
   char linkName[256];
   Counter diff;
-  /*  int deviceId, actualDeviceId; */
-  int actualDeviceId;
     
   u_int idx, numEntries=0;
   HostTraffic *el;
@@ -101,8 +99,8 @@ static void printHtmlIndex(void) {
   
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, BITFLAG_HTTP_NO_CACHE_CONTROL | BITFLAG_HTTP_MORE_FIELDS);
 
-  for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++)
-    if(((el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx]) != NULL) 
+  for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++)
+    if(((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL) 
        && (!broadcastHost(el))
        && (numEntries < MAX_PDA_HOST_TABLE))
       tmpTable[numEntries++]=el;
@@ -209,42 +207,42 @@ static void printHtmlIndex(void) {
 
   /** **/
   
-  diff = myGlobals.device[actualDeviceId].ethernetPkts.value - myGlobals.device[actualDeviceId].broadcastPkts.value -
-    myGlobals.device[actualDeviceId].multicastPkts.value;
+  diff = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value -
+    myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value;
 
   if(diff > 0)
     unicastPkts = 0; /* It shouldn't happen */
   else 
     unicastPkts = diff; 
 
-  if(myGlobals.device[actualDeviceId].ethernetPkts.value <= 0) 
-    myGlobals.device[actualDeviceId].ethernetPkts.value = 1;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value <= 0) 
+    myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value = 1;
     
   if(snprintf(buf, sizeof(buf),"<tr><td>Total</td><td>%s</td></tr>\n",
-	      formatPkts(myGlobals.device[actualDeviceId].ethernetPkts.value)) < 0) 
+	      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value)) < 0) 
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),"<tr><td>Unicast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
 	      formatPkts(unicastPkts),
-	      (float)(100*unicastPkts)/(float)myGlobals.device[actualDeviceId].ethernetPkts.value) < 0) 
+	      (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0) 
     BufferTooShort();
   sendString(buf);
   if(snprintf(buf, sizeof(buf),"<tr><td>Broadcast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
-	      formatPkts(myGlobals.device[actualDeviceId].broadcastPkts.value),
-	      (float)(100*myGlobals.device[actualDeviceId].broadcastPkts.value)
-	      /(float)myGlobals.device[actualDeviceId].ethernetPkts.value) < 0) 
+	      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value),
+	      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)
+	      /(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0) 
     BufferTooShort();
   sendString(buf);
 
-  if(myGlobals.device[actualDeviceId].multicastPkts.value > 0) {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value > 0) {
     if(snprintf(buf, sizeof(buf),"<tr><td>Multicast</td>"
 		"<td>%s [%.1f%%]</td></tr>\n", 
-		formatPkts(myGlobals.device[actualDeviceId].multicastPkts.value),
-		(float)(100*myGlobals.device[actualDeviceId].multicastPkts.value)
-		/(float)myGlobals.device[actualDeviceId].ethernetPkts.value) < 0) 
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value),
+		(float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)
+		/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0) 
       BufferTooShort();
     sendString(buf);
   }
@@ -286,8 +284,8 @@ static void handlePDArequest(char* url) {
 /* ****************************** */
 
 static void termPdaFunct(void) {
-  traceEvent(CONST_TRACE_INFO, "Thanks for using PDAWatch...\n");
-  traceEvent(CONST_TRACE_INFO, "Done.\n");
+  traceEvent(CONST_TRACE_INFO, "PDA: Thanks for using PDAWatch");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PDA: Done");
 }
 
 /* ****************************** */
@@ -295,7 +293,7 @@ static void termPdaFunct(void) {
 static PluginInfo PDAPluginInfo[] = {
   { "PDAPlugin",
     "This plugin produces a minimal ntop report, suitable for display on a pda.",
-    "2.0",            /* version */
+    "2.2",            /* version */
     "<A HREF=mailto:walterbrock@netscape.net>W. Brock</A>", 
     "PDAPlugin",      /* http://<host>:<port>/plugins/PDAPlugin */
     0,                /* Active by default */
@@ -304,18 +302,19 @@ static PluginInfo PDAPluginInfo[] = {
     termPdaFunct,     /* TermFunc   */
     NULL,             /* PluginFunc */
     handlePDArequest, /* http request handler */
-    NULL              /* BPF Filter */
+    NULL,             /* BPF Filter */
+    NULL              /* no status */
   }
 };
 
 /* Plugin entry fctn */
-#ifdef STATIC_PLUGIN
+#ifdef MAKE_STATIC_PLUGIN
 PluginInfo* wapPluginEntryFctn(void)
 #else
   PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_INFO, "Welcome to %s. (C) 2001-2002 by L.Deri and W.Brock",  
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PDA: Welcome to %s. (C) 2001-2002 by L.Deri and W.Brock",  
 	     PDAPluginInfo->pluginName);
   
   return(PDAPluginInfo);

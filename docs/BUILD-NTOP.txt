@@ -58,6 +58,19 @@ Quick Instructions
    - make
    - make install
 
+3.1 Build a static ntop
+
+    Sometimes you want to build ntop statically so that both shared libraries
+    and plugins are included in the main program. In order to do that you need
+    to:
+
+    - cd ntop
+    - ./configure --enable-static-plugins
+    - make sntop
+
+    The final binary is called sntop (static ntop).
+
+
 4. Run ntop (See 1STRUN.txt)
 
    - /usr/local/bin/ntop -A -u userid -P directory

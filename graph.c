@@ -64,7 +64,7 @@ static void _GDC_out_pie(short width,
   fork_result = fork();
 
   if (fork_result == (pid_t) -1) {
-    traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(001) - fork failed!");
+    traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(001) - fork failed!");
     return;
   }
   if (fork_result == (pid_t) 0) {
@@ -97,15 +97,15 @@ static void _GDC_out_pie(short width,
   wait_result = waitpid(fork_result, &status, 0);
 
   if (wait_result == (pid_t) -1) {
-      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(002) - wait failed/interrupted (%d - %s)",
+      traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(002) - wait failed/interrupted (%d - %s)",
                  errno,
                  (errno == ECHILD ? "ECHILD" :
                   errno == EINVAL ? "EINVAL" :
                   errno == EINTR  ? "EINTR"  : "unrecognized code"));
   } else if (wait_result != fork_result) {
-      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(003) - unexpected child termination");
+      traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(003) - unexpected child termination");
   } else if (status) {
-      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(004) - child abnormal termination");
+      traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(004) - child abnormal termination");
   } else {
 #ifdef GDC_WATCHDOG_DEBUG
       traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: in parent, ran OK\n");
@@ -156,7 +156,7 @@ static void _GDC_out_pie(short width,
 #endif
       fclose(fd);
   } else {
-      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(005) - unable to find %s\n", 
+      traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(005) - unable to find %s\n", 
                               HTML_GDC_OUT_PIE_ERROR_FILE);
   }
   return;
@@ -212,7 +212,7 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
 
     fclose(fd);
   } else 
-    traceEvent(CONST_TRACE_WARNING, "WARNING: unable to open file %s", fileName);
+    traceEvent(CONST_TRACE_WARNING, "Unable to open file %s - graphic not sent", fileName);
 
   if (doNotUnlink == 0) {
       unlink(fileName);
@@ -406,7 +406,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 0) {
-      traceEvent(CONST_TRACE_WARNING, "WARNING: Graph failure (1)");
+      traceEvent(CONST_TRACE_WARNING, "Graph failure (1)");
       return; /* TODO: this has to be handled better */
     }
 
@@ -510,7 +510,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 0) {
-      traceEvent(CONST_TRACE_WARNING, "WARNING: Graph failure (2)");
+      traceEvent(CONST_TRACE_WARNING, "Graph failure (2)");
       return; /* TODO: this has to be handled better */
     }
 
@@ -592,7 +592,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     if(p[num] > 0) { lbl[num++] = "Non Frag"; }
 
     if(num == 0) {
-      traceEvent(CONST_TRACE_WARNING, "WARNING: Graph failure (3)");
+      traceEvent(CONST_TRACE_WARNING, "Graph failure (3)");
       return; /* TODO: this has to be handled better */
     }
 
@@ -656,7 +656,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   int useFdOpen = 0;
 
   if(theHost->protoIPTrafficInfos == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: Graph failure (5)");
+    traceEvent(CONST_TRACE_WARNING, "Graph failure (5)");
     return;
   }
 

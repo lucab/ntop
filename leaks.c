@@ -63,7 +63,7 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
 #if defined(CFG_MULTITHREADED)
     if(lockMutex) releaseMutex(&myGlobals.leaksMutex);
 #endif
-    traceEvent(CONST_TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n",  theFile, theLine);
+    traceEvent(CONST_TRACE_FATALERROR, "malloc (not enough memory): %s, %d\n",  theFile, theLine);
     exit(-1);
   }
   
@@ -373,7 +373,7 @@ void termLeaks(void) {
 void* ntop_malloc(unsigned int sz, char* file, int line) {
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_WARNING, "malloc(%d) [%s] @ %s:%d", 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%d) [%s] @ %s:%d", 
 	     sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
 
@@ -384,7 +384,7 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 
 void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_WARNING, "calloc(%d,%d) [%s] @ %s:%d",
+  traceEvent(CONST_TRACE_INFO, "DEBUG: calloc(%d,%d) [%s] @ %s:%d",
 	     c, sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
   return(myCalloc(c, sz, line, file));
@@ -394,7 +394,7 @@ void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 
 void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {  
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_WARNING, "realloc(%p,%d) [%s] @ %s:%d",
+  traceEvent(CONST_TRACE_INFO, "DEBUG: realloc(%p,%d) [%s] @ %s:%d",
 	     ptr, sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif  
   return(myRealloc(ptr, sz, line, file));
@@ -404,7 +404,7 @@ void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {
 
 char* ntop_strdup(char *str, char* file, int line) {
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_WARNING, "strdup(%s) [%s] @ %s:%d", str, 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: strdup(%s) [%s] @ %s:%d", str, 
 	     formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
   return(myStrdup(str, line, file));
@@ -414,7 +414,7 @@ char* ntop_strdup(char *str, char* file, int line) {
 
 void ntop_free(void **ptr, char* file, int line) {
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_WARNING, "free(%x) [%s] @ %s:%d", ptr, 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: free(%x) [%s] @ %s:%d", ptr, 
 	     formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
   myFree(ptr, line, file);
@@ -473,7 +473,7 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   
 #ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: called malloc(%u) @ %s:%d", sz, file, line);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: called malloc(%u) @ %s:%d", sz, file, line);
     if(sz == 0) sz = 8; /*
 			  8 bytes is the minimal size ntop can allocate
 			  for doing things that make sense
@@ -484,13 +484,13 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   thePtr = malloc(sz);
 
   if(thePtr == NULL) {
-    traceEvent(CONST_TRACE_ERROR, "ERROR: malloc(%d) @ %s:%d returned NULL [no more memory?]",
+    traceEvent(CONST_TRACE_FATALERROR, "malloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
          (myGlobals.disableStopcap != TRUE) ) {
-      traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
-      traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
-      traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
+      traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
+      traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
+      traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");
       myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
     } /* else - just keep on trucking ... ouch */
   } else
@@ -508,7 +508,7 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
   
 #ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: called calloc(%u,%u) @ %s:%d",
+    traceEvent(CONST_TRACE_INFO, "DEBUG: called calloc(%u,%u) @ %s:%d",
 	       c, sz, file, line);
   }
 #endif
@@ -516,14 +516,14 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
   thePtr = calloc(c, sz);
 
   if(thePtr == NULL) {
-    traceEvent(CONST_TRACE_ERROR, 
-	       "ERROR: calloc(%d) @ %s:%d returned NULL [no more memory?]",
+    traceEvent(CONST_TRACE_FATALERROR, 
+	       "calloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
          (myGlobals.disableStopcap != TRUE) ) {
-      traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
-      traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
-      traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
+      traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
+      traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
+      traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");
       myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
     } /* else - just keep on trucking ... ouch */
   }
@@ -540,7 +540,7 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
   
 #ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: called realloc(%p,%u) @ %s:%d",
+    traceEvent(CONST_TRACE_INFO, "DEBUG: called realloc(%p,%u) @ %s:%d",
 	       ptr, sz, file, line);
   }
 #endif
@@ -548,14 +548,14 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
   thePtr = realloc(ptr, sz);
 
   if(thePtr == NULL) {
-    traceEvent(CONST_TRACE_ERROR, 
-	       "ERROR: realloc(%d) @ %s:%d returned NULL [no more memory?]",
+    traceEvent(CONST_TRACE_FATALERROR, 
+	       "realloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
          (myGlobals.disableStopcap != TRUE) ) {
-      traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
-      traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
-      traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
+      traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
+      traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
+      traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");
       myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
     } /* else - just keep on trucking ... ouch */
   }
@@ -569,7 +569,7 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
 void ntop_safefree(void **ptr, char* file, int line) {
 
   if((ptr == NULL) || (*ptr == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: free of NULL pointer @ %s:%d", 
+    traceEvent(CONST_TRACE_WARNING, "free of NULL pointer @ %s:%d", 
 	       file, line);
   } else {
     free(*ptr);
@@ -582,7 +582,7 @@ void ntop_safefree(void **ptr, char* file, int line) {
 #undef strdup /* just to be safe */
 char* ntop_safestrdup(char *ptr, char* file, int line) {  
   if(ptr == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: strdup of NULL pointer @ %s:%d", file, line);
+    traceEvent(CONST_TRACE_WARNING, "strdup of NULL pointer @ %s:%d", file, line);
     return(strdup(""));
   } else {
     char* theOut;

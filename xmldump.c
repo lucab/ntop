@@ -55,13 +55,13 @@
       GdomeElement *elWork;
 
   #ifdef XMLDUMP_DEBUG
-      traceEvent(TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_xyx\n");
+      traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_xyx\n");
   #endif
 
       #include "xml_s_xyx.inc"
 
   #ifdef XMLDUMP_DEBUG
-      traceEvent(TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_xyx\n");
+      traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_xyx\n");
   #endif
 
       return 0;
@@ -134,7 +134,7 @@ GdomeElement * _newxml(char * filename, int linenum,
     va_list ap;
 
 #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(TRACE_INFO, "XMLDUMP_DEBUG: START newxml() at %d(%s)\n", linenum, filename);
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: START newxml() at %d(%s)\n", linenum, filename);
 #endif
 
     switch (nodetype) {
@@ -178,7 +178,7 @@ GdomeElement * _newxml(char * filename, int linenum,
             if ( (attrvalue != NULL) && 
                  (strcmp(attrvalue, "__sentinel__") == 0) ) {
 #if (XMLDUMP_DEBUG >= 2)
-                traceEvent(CONST_TRACE_ERROR, 
+                traceEvent(CONST_TRACE_INFO, 
                            "XMLDUMP_DEBUG:       newxml() at %d(%s) attrname __sentinel__\n", 
                            linenum, filename);
 #endif
@@ -188,7 +188,7 @@ GdomeElement * _newxml(char * filename, int linenum,
                  (strcmp(attrname, "description") == 0) && 
                  (strcmp(attrvalue, "") == 0) ) {
 #if (XMLDUMP_DEBUG >= 2)
-                traceEvent(CONST_TRACE_ERROR, 
+                traceEvent(CONST_TRACE_INFO, 
                            "XMLDUMP_DEBUG:       newxml() at %d(%s) skip null description\n", 
                            linenum, filename);
 #endif
@@ -248,7 +248,7 @@ GdomeElement * _newxml(char * filename, int linenum,
     }
 
 #if (XMLDUMP_DEBUG >= 3)
-    traceEvent(TRACE_INFO, "XMLDUMP_DEBUG: END   newxml() at %d(%s) rc=%d\n", linenum, filename, rc);
+    traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: END   newxml() at %d(%s) rc=%d\n", linenum, filename, rc);
 #endif
 
     if (rc != 0) {
@@ -433,10 +433,12 @@ GdomeElement * newxml_prototrafficinfo(GdomeElement * parent,
                        ProtoTrafficInfo * input,
                        char * description);
 
+#ifdef CFG_MULTITHREADED
 GdomeElement * newxml_pthreadmutex(GdomeElement * parent,
                        char * nodename,
                        PthreadMutex * input,
                        char * description);
+#endif
 
 GdomeElement * newxml_routingcounter(GdomeElement * parent,
                        char * nodename,
@@ -990,6 +992,7 @@ GdomeElement * newxml_prototrafficinfo(GdomeElement * parent,
     return elWork;
 }
 
+#ifdef CFG_MULTITHREADED
 GdomeElement * newxml_pthreadmutex(GdomeElement * parent,
                        char * nodename,
                        PthreadMutex * input,
@@ -998,18 +1001,19 @@ GdomeElement * newxml_pthreadmutex(GdomeElement * parent,
     GdomeException exc;
     GdomeElement *elWork;
 
-#if (XMLDUMP_DEBUG >= 3)
+ #if (XMLDUMP_DEBUG >= 3)
     traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_pthreadmutex\n");
-#endif
+ #endif
 
     /* #include "xml_s_pthreadmutex.inc" */
 
-#if (XMLDUMP_DEBUG >= 3)
+ #if (XMLDUMP_DEBUG >= 3)
     traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_pthreadmutex\n");
-#endif
+ #endif
 
     return elWork;
 }
+#endif
 
 GdomeElement * newxml_routingcounter(GdomeElement * parent,
                        char * nodename,
@@ -1394,23 +1398,25 @@ GdomeElement * dumpXML_invoke(void) {
     return elInvoke;
 }
 
+#ifdef CFG_MULTITHREADED
 GdomeElement * dumpXML_multithread(GdomeElement * parent) {
     int rc=0;
     GdomeException exc;
     GdomeElement *elMultithread, *elMutexes;
 
-#ifdef XMLDUMP_DEBUG
+ #ifdef XMLDUMP_DEBUG
     traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_multithread\n");
-#endif
+ #endif
 
     #include "xml_g_multithread.inc"
 
-#ifdef XMLDUMP_DEBUG
+ #ifdef XMLDUMP_DEBUG
     traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending dumpXML_multithread\n");
-#endif
+ #endif
 
     return elMultithread;
 }
+#endif
 
 GdomeElement * dumpXML_interfaces(void) {
     GdomeException exc;

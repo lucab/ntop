@@ -1,0 +1,70 @@
+This is a mini oui.txt, containing the common values.
+At least those common on MY networks (grin)...
+
+But rather than distribute a 1M file that's out of date
+before I get it committed...
+
+Run 'make dnvt' to grab the real one from IEEE.
+ 
+00007D     (base 16)		SUN MICROSYSTEMS, INC.
+000102     (base 16)		3COM CORPORATION
+000103     (base 16)		3COM CORPORATION
+00022D     (base 16)		Agere Systems
+00028A     (base 16)		Ambit Microsystems Corporation
+00029C     (base 16)		3COM
+000347     (base 16)		Intel Corporation
+0003BA     (base 16)		Sun Microsystems
+00040B     (base 16)		3com Europe Ltd.
+00045A     (base 16)		The Linksys Group, Inc.
+000475     (base 16)		3 Com Corporation
+000476     (base 16)		3 Com Corporation
+0004BD     (base 16)		Motorola BCS
+00051A     (base 16)		3Com Europe Ltd.
+00055D     (base 16)		D-Link Systems, Inc.
+000586     (base 16)		Lucent Technologies
+000625     (base 16)		The Linksys Group, Inc.
+00068C     (base 16)		3Com Corporation
+00095B     (base 16)		Netgear, Inc.
+000A04     (base 16)		3Com Europe Ltd
+000A5E     (base 16)		3COM Corporation
+000BAC     (base 16)		3Com Europe Ltd.
+000C41     (base 16)		The Linksys Group, Inc.
+00104B     (base 16)		3COM CORPORATION
+00105A     (base 16)		3COM CORPORATION
+002040     (base 16)		Motorola Broadband Communications Sector
+0020AF     (base 16)		3COM CORPORATION
+0020F2     (base 16)		SUN MICROSYSTEMS, INC.
+00301E     (base 16)		3COM Europe Ltd.
+00306D     (base 16)		LUCENT TECHNOLOGIES
+0030BD     (base 16)		BELKIN COMPONENTS
+004005     (base 16)		ANI COMMUNICATIONS INC.
+004050     (base 16)		IRONICS, INCORPORATED
+00408C     (base 16)		AXIS COMMUNICATIONS AB
+0040D0     (base 16)		MITAC INTERNATIONAL CORP.
+0040FA     (base 16)		MICROBOARDS, INC.
+005004     (base 16)		3COM CORPORATION
+005099     (base 16)		3COM EUROPE, LTD.
+0050BA     (base 16)		D-LINK
+0050DA     (base 16)		3COM CORPORATION
+006008     (base 16)		3COM CORPORATION
+00601D     (base 16)		LUCENT TECHNOLOGIES
+00608C     (base 16)		3COM CORPORATION
+006097     (base 16)		3COM CORPORATION
+0060D2     (base 16)		LUCENT TECHNOLOGIES TAIWAN TELECOMMUNICATIONS CO., LTD.
+0080C7     (base 16)		XIRCOM
+0080C8     (base 16)		D-LINK SYSTEMS, INC.
+009004     (base 16)		3COM EUROPE LTD.
+00A024     (base 16)		3COM CORPORATION
+00A0CC     (base 16)		LITE-ON COMMUNICATIONS, INC.
+00B064     (base 16)		Cisco Systems, Inc.
+00D077     (base 16)		LUCENT TECHNOLOGIES
+00D096     (base 16)		3COM EUROPE LTD.
+00D09E     (base 16)		2WIRE, INC.
+00D0D8     (base 16)		3Com Corporation
+00E018     (base 16)		ASUSTEK COMPUTER INC.
+00E029     (base 16)		STANDARD MICROSYSTEMS CORP.
+00E098     (base 16)		AboCom Systems, Inc.
+02608C     (base 16)		3COM CORPORATION
+02C08C     (base 16)		3COM CORPORATION
+080020     (base 16)		SUN MICROSYSTEMS INC.
+08004E     (base 16)		3COM EUROPE LTD.

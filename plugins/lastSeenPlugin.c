@@ -25,8 +25,7 @@
 static void NotesURL(char *addr, char *ip_addr);
 static void addNotes(char *addr, char *PostNotes);
 static void deletelastSeenURL( char *addr );
-
-#define MY_NETWORK 16
+static void setPluginStatus(char * status);
 
 /* ****************************** */
 
@@ -42,7 +41,7 @@ typedef struct LsHostNote {
   char note[50];
 } LsHostNote;
 
-static void handleLsPacket(u_char *_deviceId _UNUSED_, 
+static void handleLsPacket(u_char *_deviceId, 
 			   const struct pcap_pkthdr *h _UNUSED_,
 			   const u_char *p) {
   struct ip ip;
@@ -51,8 +50,15 @@ static void handleLsPacket(u_char *_deviceId _UNUSED_,
   char tmpStr[32];
   LsHostInfo HostI;
   unsigned short rc;
+  u_int deviceId;
 
   if ( disabled ) return;
+
+#ifdef WIN32
+    deviceId = 0;
+#else
+    deviceId = (u_int)(*_deviceId);
+#endif
 
   ep = (struct ether_header *)p;
   memcpy(&ip, (p+sizeof(struct ether_header)), sizeof(struct ip));
@@ -64,7 +70,7 @@ static void handleLsPacket(u_char *_deviceId _UNUSED_,
   traceEvent(CONST_TRACE_INFO, "->%s [%x]\n", intoa(ip.ip_dst), ip.ip_dst.s_addr);
 #endif
 
-  rc = isPseudoLocalAddress(&ip.ip_src);
+  rc = isPseudoLocalAddress(&ip.ip_src, deviceId);
 
   if(rc == 0) 
     return;
@@ -82,19 +88,11 @@ static void handleLsPacket(u_char *_deviceId _UNUSED_,
   data_data.dptr = (char *)&HostI;
   data_data.dsize = sizeof(HostI)+1;
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "handleLSPackage");
-#endif 
-
   /* Test for disabled inside the protection of the mutex, also, so that if
    * we disabled the plugin since the test above, we don't seg fault
    */
   if (!disabled )
       gdbm_store(LsDB, key_data, data_data, GDBM_REPLACE);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif 
 }
 
  /* Record sort */
@@ -104,13 +102,13 @@ static int SortLS(const void *_a, const void *_b) {
   LsHostInfo *b = (LsHostInfo *)_b;
   unsigned long n1, n2;
   if(((a) == NULL) && ((b) != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "SortLS() (1)");
     return(1);
   } else if(((a) != NULL) && ((b) == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "SortLS() (2)");
     return(-1);
   } else if(((a) == NULL) && ((b) == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "SortLS() (3)");
     return(0);
   }
   n1 = (*a).HostIpAddress.s_addr;
@@ -130,7 +128,7 @@ static void handleLsHTTPrequest(char* url) {
   char tmpTime[25], postData[128];
   char *no_info = "<TH "TH_BG">-NO INFO-</TH>",*tmp, *no_note ="-";
   datum ret_data,key_data, content;
-  LsHostInfo tablehost[MY_NETWORK*256];
+  LsHostInfo tablehost[MAX_LASTSEEN_TABLE_SIZE];
   LsHostNote HostN;
   HostTraffic *HostT;
   struct tm loctime;
@@ -174,34 +172,17 @@ static void handleLsHTTPrequest(char* url) {
 			
   /* Finding hosts... */
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "handleLSHTTPrequest");
-#endif 
   ret_data = gdbm_firstkey(LsDB);
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif 
+
   while ( ret_data.dptr !=NULL ) {
     key_data = ret_data;
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "handleLSHTTPrequest");
-#endif 
     content = gdbm_fetch(LsDB,key_data);
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif 
-    if ( key_data.dptr[1]!='_') {
+    if ( (key_data.dptr[1]!='_') && (entry < MAX_LASTSEEN_TABLE_SIZE) ) {
       memcpy(&tablehost[entry],(struct LsHostInfo *)content.dptr,sizeof(struct LsHostInfo)); 	
       entry++;
     }
     free(content.dptr);
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "handleLSHTTPrequest");
-#endif 
     ret_data = gdbm_nextkey(LsDB,key_data);
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif 
     free(key_data.dptr); 
   }
 
@@ -211,6 +192,11 @@ static void handleLsHTTPrequest(char* url) {
   num_hosts=entry;
   entry--;
   printSectionTitle("Last Seen Statistics");
+
+  if (entry >= MAX_LASTSEEN_TABLE_SIZE - 1) {
+      sendString("<P><CENTER>NOTE:&nbsp;Table size at/exceeds limit, some data may not be displayed.</CENTER></P>\n");
+  }
+
   sendString("<CENTER><TABLE BORDER>\n");
   sendString("<TR "TR_ON"><TH "TH_BG">Host</TH><TH "TH_BG">Address</TH><TH "TH_BG">LastSeen</TH><TH "TH_BG">Comments</TH><TH "TH_BG">Options</TH></TR>\n");
   while ( entry >= 0 ) {
@@ -224,13 +210,7 @@ static void handleLsHTTPrequest(char* url) {
     key_data.dptr = tmpStr;
     key_data.dsize = strlen(key_data.dptr)+1;
 		
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "quicksort");
-#endif 
     content = gdbm_fetch(LsDB,key_data);
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif 
     strncpy(HostN.note, no_note, sizeof(HostN.note));	
     if ( content.dptr ) {
       memcpy(&HostN,(struct LsHostNote *)content.dptr,sizeof(struct LsHostNote)); 	
@@ -293,16 +273,10 @@ static void addNotes(char *addr, char *PostNotes) {
   data_data.dptr = (char *)&HostN;
   data_data.dsize = sizeof(HostN)+1;
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "addNotes");
-#endif 
-  if ( strlen(PostNotes)>2 )
+  if (strlen(PostNotes) > 2)
     gdbm_store(LsDB, key_data, data_data, GDBM_REPLACE);	
   else
     gdbm_delete(LsDB,key_data);
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif 
 }
 
 /* Prepearing the page */
@@ -316,13 +290,7 @@ static void NotesURL(char *addr, char *ip_addr) {
   key_data.dptr = tmpStr;
   key_data.dsize = strlen(key_data.dptr)+1;
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "NotesURL");
-#endif 
   content = gdbm_fetch(LsDB,key_data);
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif 
 
   snprintf(tmp, sizeof(tmp), "Notes for %s", ip_addr);
   printHTMLheader(tmp, 0);
@@ -359,37 +327,22 @@ static void deletelastSeenURL( char *addr ) {
   key_data.dptr = addr;
   key_data.dsize = strlen(key_data.dptr)+1;
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex,"deletelastSeenURL");
-#endif 
-
   gdbm_delete(LsDB,key_data);  /* Record */
   key_data.dptr = tmpStr;
   key_data.dsize = strlen(key_data.dptr)+1;
   gdbm_delete(LsDB,key_data);  /* Notes */
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif 
-
 }
 
 static void termLsFunct(void) {
-  traceEvent(CONST_TRACE_INFO, "Thanks for using LsWatch..."); fflush(stdout);
+  traceEvent(CONST_TRACE_INFO, "LASTSEEN: Thanks for using LsWatch"); fflush(stdout);
     
   if(LsDB != NULL) {
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "termLsFunct");
-#endif 
     gdbm_close(LsDB);
     disabled = 1;
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif 
     LsDB = NULL;
   }
 
-  traceEvent(CONST_TRACE_INFO, "Done.\n"); fflush(stdout);
+  traceEvent(CONST_TRACE_INFO, "LASTSEEN: Done"); fflush(stdout);
 }
 
 
@@ -400,7 +353,7 @@ static PluginInfo LsPluginInfo[] = {
     "This plugin produces a report about the last time packets were seen from "
       "each specific host.  A note card database is available for recording "
       "additional information.",
-    "2.0", /* version */
+    "2.2", /* version */
     "<A HREF=mailto:marangoni@unimc.it>A.Marangoni</A>", 
     "LastSeen", /* http://<host>:<port>/plugins/Ls */
     0, /* Active by default */
@@ -409,19 +362,20 @@ static PluginInfo LsPluginInfo[] = {
     termLsFunct, /* TermFunc   */
     handleLsPacket, /* PluginFunc */
     handleLsHTTPrequest,
-    "ip" /* BPF filter: filter all the ICMP packets */
+    "ip", /* BPF filter: filter all the ICMP packets */
+    NULL /* no status */
   }
 };
   
 /* Plugin entry fctn */
-#ifdef STATIC_PLUGIN
+#ifdef MAKE_STATIC_PLUGIN
 PluginInfo* lsPluginEntryFctn(void) {
 #else
-PluginInfo* PluginEntryFctn(void) {
+  PluginInfo* PluginEntryFctn(void) {
 #endif
   char tmpBuf[200];
 
-  traceEvent(CONST_TRACE_INFO, "Welcome to %s. (C) 1999 by Andrea Marangoni.\n", 
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "LASTSEEN: Welcome to %s. (C) 1999 by Andrea Marangoni", 
 	     LsPluginInfo->pluginName);
   
   /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
@@ -431,8 +385,22 @@ PluginInfo* PluginEntryFctn(void) {
 
   if(LsDB == NULL) {
     traceEvent(CONST_TRACE_ERROR, 
-	       "Unable to open LsWatch database. This plugin will be disabled.\n");
+               "LASTSEEN: Unable to open LsWatch database - the plugin will be disabled");
+    setPluginStatus("Disabled - unable to open LsWatch database.");
     disabled = 1;
+  } else {
+    setPluginStatus(NULL);
   }
   return(LsPluginInfo);
 }
+
+static void setPluginStatus(char * status)
+   {
+       if (LsPluginInfo->pluginStatusMessage != NULL)
+           free(LsPluginInfo->pluginStatusMessage);
+       if (status == NULL) {
+           LsPluginInfo->pluginStatusMessage = NULL;
+       } else {
+           LsPluginInfo->pluginStatusMessage = strdup(status);
+       }
+   }

@@ -22,9 +22,17 @@
 #include <winsock2.h> /* winsock.h is included automatically */
 #include <direct.h>
 
-#if defined(WIN32) && defined(__GNUC__)
+#if defined(WIN32)
+#if defined(__GNUC__)
 /* on mingw, the definitions we need are in pcap.h - Scott Renfro <scott@renfro.org> */
 #include "pcap.h"
+#endif
+#include "dirent.h"
+
+#define EADDRINUSE              WSAEADDRINUSE
+#define ENOTSOCK                WSAENOTSOCK
+#define EOPNOTSUPP              WSAEOPNOTSUPP
+
 #endif
 
 #define HAVE_RRD

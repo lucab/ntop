@@ -40,9 +40,6 @@ void showUsers(void) {
   printHTMLheader("Registered ntop Users", BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "showUsers");
-#endif
   return_data = gdbm_firstkey(myGlobals.pwFile);
 
   while (return_data.dptr != NULL) {
@@ -80,10 +77,6 @@ void showUsers(void) {
     return_data = gdbm_nextkey(myGlobals.pwFile, key_data);
     free(key_data.dptr);
   }
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
   if(numUsers > 0) {
     sendString("</TABLE>"TABLE_OFF"\n<P>\n");
@@ -160,13 +153,7 @@ void deleteUser(char* user) {
     key_data.dptr = user;
     key_data.dsize = strlen(user)+1;
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "deleteUser");
-#endif
     rc = gdbm_delete(myGlobals.pwFile, key_data);
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
     if(rc != 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
@@ -253,15 +240,8 @@ void doAddUser(int len) {
       traceEvent(CONST_TRACE_INFO, "User='%s' - Pw='%s [%s]'\n", user, pw, data_data.dptr);
 #endif
 
-#ifdef CFG_MULTITHREADED
-      accessMutex(&myGlobals.gdbmMutex, "doAddUser");
-#endif
       if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
 	err = "FATAL ERROR: unable to add the new user.";
-
-#ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.gdbmMutex);
-#endif
     }
   }
 
@@ -287,10 +267,6 @@ void showURLs(void) {
 
   printHTMLheader("Restricted ntop URLs", BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
-
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "showURLs");
-#endif
 
   return_data = gdbm_firstkey(myGlobals.pwFile);
 
@@ -319,10 +295,6 @@ void showURLs(void) {
     return_data = gdbm_nextkey(myGlobals.pwFile, key_data);
     free(key_data.dptr);
   }
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
   if(numUsers > 0) {
     sendString("</TABLE>"TABLE_OFF"\n<P>\n");
@@ -370,10 +342,6 @@ void addURL(char* url) {
     sendString("</TD>\n</TR>\n");
     sendString("<TR>\n<TH ALIGN=right VALIGN=top>Authorised Users:&nbsp;</TH>"
 	       "<TD ALIGN=left><SELECT NAME=users MULTIPLE>\n");
-
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "addURL");
-#endif
 
     authorisedUser[0] = NULL;
     if(url != NULL) {
@@ -423,10 +391,6 @@ void addURL(char* url) {
     if(aubuf != NULL)
       free(aubuf); /* (**) */
 
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
-
     sendString("</SELECT>\n</TD></TR>\n");
     sendString("</TABLE>"TABLE_OFF"\n");
 
@@ -470,13 +434,7 @@ void deleteURL(char* url) {
     key_data.dptr = url;
     key_data.dsize = strlen(url)+1;
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "deleteURL");
-#endif
     rc = gdbm_delete(myGlobals.pwFile, key_data);
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
     if(rc != 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
@@ -562,18 +520,9 @@ void doAddURL(int len) {
     data_data.dptr = authorizedUsers;
     data_data.dsize = strlen(authorizedUsers)+1;
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "doAddURL");
-#endif
     if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
       err = "FATAL ERROR: unable to add the new URL.";
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
   }
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
   if(err != NULL) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
@@ -640,7 +589,7 @@ int doChangeFilter(int len) {
 			myGlobals.device[i].netmask.s_addr) < 0)
 	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
 	  traceEvent(CONST_TRACE_ERROR,
-		    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
+		    "Wrong filter '%s' (%s) on interface %s - using old filter",
 		    myGlobals.currentFilterExpression, pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 	  err="The syntax of the defined filter is wrong.";
 	} else{
@@ -648,10 +597,10 @@ int doChangeFilter(int len) {
          pcap_freecode(&fcode);
 #endif
 	 if(*myGlobals.currentFilterExpression!='\0'){
-	   traceEvent(CONST_TRACE_INFO, "Set filter \"%s\" on myGlobals.device %s.",
+	   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Set filter \"%s\" on interface %s",
 		      myGlobals.currentFilterExpression, myGlobals.device[i].name);
 	 }else{
-	   traceEvent(CONST_TRACE_INFO, "Set no kernel (libpcap) filtering on myGlobals.device %s.",
+	   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Set no kernel (libpcap) filtering on interface %s",
 		      myGlobals.device[i].name);
 	 }
 	}
@@ -716,7 +665,7 @@ int doChangeFilter(int len) {
 			myGlobals.device[i].netmask.s_addr) < 0)) {
 	  if((pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
 	    traceEvent(CONST_TRACE_ERROR,
-	  	    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
+	  	    "Wrong filter '%s' (%s) on interface %s - using old filter",
 		    myGlobals.currentFilterExpression, pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 	  }
 #ifdef HAVE_PCAP_FREECODE
@@ -851,7 +800,7 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
   memset(buf, 0, buflen);
 
   if(len > (buflen-8)) {
-    traceEvent(CONST_TRACE_ERROR, "Too much HTTP POST data");
+    BufferTooShort();
     return (-1);
   }
 
@@ -931,13 +880,7 @@ static void addKeyIfMissing(char* key, char* value,
   key_data.dptr = key;
   key_data.dsize = strlen(key_data.dptr)+1;
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "addKey");
-#endif
   return_data = gdbm_fetch(myGlobals.pwFile, key_data);
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
   if((return_data.dptr == NULL) || (existingOK != 0)) {
     char *thePw, pw1[16], pw2[16];
@@ -952,7 +895,7 @@ static void addKeyIfMissing(char* key, char* value,
 	 * Courtesy of Ambrose Li <a.c.li@ieee.org>
 	 *
 	 */
-	traceEvent(CONST_TRACE_ERROR, "No password for admin user. Please re-run ntop in non-daemon mode first.\n");
+	traceEvent(CONST_TRACE_FATALERROR, "No password for admin user - please re-run ntop in non-daemon mode first");
 	exit(1);
       }
 
@@ -1002,17 +945,11 @@ static void addKeyIfMissing(char* key, char* value,
 #endif
 
     data_data.dsize = strlen(data_data.dptr)+1;
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "showUsers");
-#endif
     gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE);
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
     /* print notice to the user */
     if(memcmp(key,"1admin",6) == 0)
-      traceEvent(CONST_TRACE_INFO, "Admin user password has been set.\n");
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Admin user password has been set");
 
   } else
     free(return_data.dptr);

@@ -145,7 +145,7 @@
 /* Define PARM_SHOW_NTOP_HEARTBEAT to see minimal status messages every cycle
  * from various timed processes
  */
-/* #define PARM_SHOW_NTOP_HEARTBEAT */
+/* #define PARM_SHOW_NTOP_HEARTBEAT 1 */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  *  Timeouts and intervals - in seconds (x*60 = x minutes)
@@ -205,7 +205,6 @@
 
 /* Win32 - Force various things to make up for lack of ./configure process */
 #ifdef WIN32
-#define MAKE_STATIC_PLUGIN /* This needs to be fixed */
 
  #ifndef HAVE_GDBM_H
   #define HAVE_GDBM_H
@@ -227,8 +226,7 @@
   /* #define HAVE_LIBRRD ****/
  #endif
 
-
- #define STATIC_PLUGIN
+ #define MAKE_STATIC_PLUGIN
 
  #define CFG_LITTLE_ENDIAN                  1
  #undef  CFG_BIG_ENDIAN
@@ -298,6 +296,15 @@
 #endif
 
 /*
+ * MAKE_WITH_SCHED_YIELD is shorthand
+ */
+#if ( defined(HAVE_SCHED_H) || defined(HAVE_SYS_SCHED_H) ) && defined(HAVE_SCHED_YIELD)
+ #define MAKE_WITH_SCHED_YIELD
+#else
+ #undef MAKE_WITH_SCHED_YIELD
+#endif
+
+/*
  * Do we have the stuff we need for gdchart?
  *    ./configure sets MAKE_WITH_GDCHART - that's the reliable one.
  *    But it's possible we have some of the others set (say we found libpng).
@@ -345,6 +352,27 @@
  #undef MAKE_WITH_FORK_COPYONWRITE
 #endif
 
+/*
+ * This flag turns on a signal trap in rrdPlugin.c.  If you're seeing
+ * rrd simply and silently die, this might catch the signal and log
+ * it for analysis.
+ */
+/* #define MAKE_WITH_RRDSIGTRAP */
+
+/* EXPERIMENTAL */
+/* Define MAKE_WITH_LOG_XXXXXX if you want log messages to use more than just
+ * LOG_ERR for ntop's messages.
+ *
+ * See util.c for the mappings from CONST_TRACE_xxxx_LEVEL to LOG_xxxxxx settings.
+ *
+ * If you do this, it's STRONGLY suggested - to prevent a large # of console
+ * messages - that you:
+ *     use --use-syslog=local3 or such
+ *     add local3.none to a couple of places in /etc/syslog.conf
+ * so ntop's LOG_ERROR messages don't flood the real console.
+ */
+/* #undef MAKE_WITH_LOG_XXXXXX */
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* D E B U G  items                                                                */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -387,19 +415,6 @@
  */
 /* #define FRAGMENT_DEBUG */
 
-/* DNS_DEBUG logs the activites in address.c related to Name resolution.
- */
-/* #define DNS_DEBUG */
-
-/* DNS_SNIFF_DEBUG logs the activites in pbuf.c and sessions.c related to
- * DNS requests and replies sniffed out of the ntop monitored traffic.
- */
-/* #define DNS_SNIFF_DEBUG */
-
-/* FRAGMENT_DEBUG logs information about packet fragments nto receives.
- */
-/* #define FRAGMENT_DEBUG */
-
 /* FTP_DEBUG logs ftp control session information.
  */
 /* #define FTP_DEBUG */
@@ -421,14 +436,14 @@
  */
 /* #define HOST_FREE_DEBUG */
 
-/* IDLE_PURGE_DEBUG logs the purging of idle hosts
- */
-/* #define IDLE_PURGE_DEBUG */
-
 /* HTTP_DEBUG logs the http sessions.  It logs HTTP/1... from source port 80
  * and anything to destination port 80.  Also http headers, etc.
  */
 /* #define HTTP_DEBUG */
+
+/* IDLE_PURGE_DEBUG logs the purging of idle hosts
+ */
+/* #define IDLE_PURGE_DEBUG */
 
 /* I18N_DEBUG logs the activities in and around internationalization (i18n).
  */
@@ -508,6 +523,10 @@
  * either from an unknown protocol or of an unknown ethernet type
  */
 /* #define UNKNOWN_PACKET_DEBUG */
+
+/* VENDOR_DEBUG debugs the vendor table stuff in vendor.c
+ */
+/* #define VENDOR_DEBUG */
 
 /* XMLDUMP_DEBUG causes xmldump.c to output debug information.
      define it as 0 for the minimal - enter/exit routine
@@ -645,6 +664,12 @@
 #define CONST_PCTG_HIGH_COLOR               "BGCOLOR=#FF3118"
 
 /*
+ * How long should we use an entry in the dnsCache database.
+ *  Default (in seconds) is 24 hours
+ */
+#define CONST_DNSCACHE_LIFETIME             24*3600
+
+/*
  *  Tunables - changing these should allow ntop to handle more or less of some thing.
  *                  Uncommonly changed ones...
  */
@@ -731,40 +756,14 @@
 #define MAX_NUM_FIN                         4
 
 /*
- * This MUST be a little bigger than the number of entries in vendortable.h.
- * Ideally, it would be prime and big enough to minimize the collisions
- *  (check Vendor Hash Collisions in the configuration report).
- *
- * Based on the data as of 01-2003:
- *      normal: size 24177   982 collisions
- *                   16609  1326 collisions
- *                   14265  1496 collisions
- *      invert: size 24943    77 collisions 
- *                   12783   365 collisions
- *                   10257   585 collisions
- */
-#ifdef PARM_USE_MACHASH_INVERT
- #define MAX_VENDOR_NAME_HASH               10257
-#else
- #define MAX_VENDOR_NAME_HASH               14265
-#endif
-
-/*
- * This MUST be a little bigger than the number of entries in the array in vendor.c
- * Ideally, it would be prime and big enough to minimize the collisions
- *  (check special Hash Collisions in the configuration report).
- *
- * Based on the data as of 01-2003:
- *      normal: size  93   5 collisions
- *      invert: size 167   0 collisions
- *                    93   2 collisions
- */
-#define MAX_SPECIALMAC_NAME_HASH            93
-
-/*
  * This MUST be a little bigger than the number of entries in the array in vendor.c
  * Ideally, it would be prime and big enough to minimize the collisions
  *  (check IPX/SAP Hash Collisions in the configuration report).
+ *
+ * NOTE: The hashs can be optimized - look at the note in vendor.c
+ *
+ *   Don't kill yourself on this - it's not a LOT of storage - unused entries cost 
+ *   only 8 bytes...  These values are pretty good for the table as of 01-2003.
  *
  * Based on the data as of 01-2003:
  *      normal: size 181   2 collisions
@@ -779,14 +778,6 @@
 #endif
 
 /*
- * NOTE: All the hashs can be optimized - look at the note in vendor.c
- *
- *   Unless you have memory issues, don't kill yourself on this - it's not a LOT 
- *   of storage - unused entries cost only 8 bytes...  The values above are pretty
- *   good ones as of 01-2003.
- */
-
-/*
  * Size of the nfs entries hash in plugins/nfsPlugin.c.
  */
 #define MAX_NFS_NAME_HASH                   12288
@@ -795,6 +786,11 @@
  * Limit of the table used to display hosts in the pda Plugin.
  */
 #define MAX_PDA_HOST_TABLE                  4096
+
+/*
+ * Limit of the table used to display hosts in the lastSeen plugin.
+ */
+#define MAX_LASTSEEN_TABLE_SIZE             4096
 
 /*
  * Maximum number of entries in the User Lists.
@@ -1007,6 +1003,9 @@
  *    dummyEthAddress[].
  */
 #define LEN_ETHERNET_ADDRESS                6
+#define LEN_ETHERNET_ADDRESS_DISPLAY        sizeof("00:00:00:00:00:00")
+#define LEN_ETHERNET_VENDOR                 3
+#define LEN_ETHERNET_VENDOR_DISPLAY         sizeof("00:00:00")
 
 /*
  * Maximum number of addresses in a dns packet - see handleDNSpacket()
@@ -1029,6 +1028,11 @@
  */
 #define MAX_LEN_SYM_HOST_NAME               64
 #define MAX_LEN_SYM_HOST_NAME_HTML          256
+
+/*
+ * Maximum length of a name in the IEEE OUI file.
+ */
+#define MAX_LEN_VENDOR_NAME                 64
 
 /*
  * i18n - maximum number of languages we'll support... and permit per request...
@@ -1056,6 +1060,13 @@
  *    Last sync: Sep2002, BStrauss
  */
 #define MAX_DLT_ARRAY                       123
+
+/*
+ * handleAddressLists() constants
+ */
+#define CONST_HANDLEADDRESSLISTS_MAIN       0
+#define CONST_HANDLEADDRESSLISTS_RRD        1
+#define CONST_HANDLEADDRESSLISTS_NETFLOW    2
 
 /*
  * Protocol types
@@ -1158,16 +1169,26 @@
 /*
  * Used in traceEvent()
  */
-#define CONST_TRACE_ERROR                   0, __FILE__, __LINE__
-#define CONST_TRACE_WARNING                 1, __FILE__, __LINE__
-#define CONST_TRACE_NORMAL                  2, __FILE__, __LINE__
-#define CONST_TRACE_INFO                    3, __FILE__, __LINE__
-
-/*
- * Used as both the limiting value (http.c) and (util.c) to define which
- * traceEvent level gets the file/line info reported in addition to the date/time.
- */
+#define CONST_ALWAYSDISPLAY_TRACE_LEVEL     -1
+#define CONST_FATALERROR_TRACE_LEVEL        0
+#define CONST_ERROR_TRACE_LEVEL             1
+#define CONST_WARNING_TRACE_LEVEL           2
+#define CONST_INFO_TRACE_LEVEL              3
+#define CONST_NOISY_TRACE_LEVEL             4
+    /*
+     * Used as both the limiting value (http.c) and (util.c) to define which
+     * traceEvent level gets the file/line info reported in addition to the date/time.
+     */
 #define CONST_DETAIL_TRACE_LEVEL            5
+
+#define CONST_TRACE_ALWAYSDISPLAY           CONST_ALWAYSDISPLAY_TRACE_LEVEL, __FILE__, __LINE__
+#define CONST_TRACE_FATALERROR              CONST_FATALERROR_TRACE_LEVEL, __FILE__, __LINE__
+#define CONST_TRACE_ERROR                   CONST_ERROR_TRACE_LEVEL, __FILE__, __LINE__
+#define CONST_TRACE_WARNING                 CONST_WARNING_TRACE_LEVEL, __FILE__, __LINE__
+#define CONST_TRACE_INFO                    CONST_INFO_TRACE_LEVEL, __FILE__, __LINE__
+#define CONST_TRACE_NOISY                   CONST_NOISY_TRACE_LEVEL, __FILE__, __LINE__
+#define CONST_TRACE_DETAIL                  CONST_DETAIL_TRACE_LEVEL, __FILE__, __LINE__
+
 
 /*
  * Used in sessions to make sure we don't step on the data area.  It doesn't mean
@@ -1307,6 +1328,16 @@
  * When myGlobals.useSyslog is set to this, turns off the logging
  */
 #define FLAG_SYSLOG_NONE                    -1
+
+
+
+
+/*
+ * Define for address resolution missing on Win32
+ */
+#ifndef NETDB_SUCCESS
+#define NETDB_SUCCESS                       0
+#endif
 
 /*
  * Flags related to html and http types
@@ -1495,6 +1526,7 @@
 #define FLAG_REMOTE_TO_LOCAL_ACCOUNTING     1
 #define FLAG_LOCAL_TO_REMOTE_ACCOUNTING     2
 #define FLAG_LOCAL_TO_LOCAL_ACCOUNTING      3
+#define FLAG_REMOTE_TO_REMOTE_ACCOUNTING    4
 
 /*
  * Flags for rrd plugin settings...
@@ -1637,7 +1669,10 @@
 /*
  * How often should we update rrd statistics?  Overridden in rrd plugin
  */
-#define DEFAULT_RRD_INTERVAL                300      /* rrd counter (default) interval */
+#define DEFAULT_RRD_INTERVAL                300  /* seconds - rrd counter (default) interval */
+#define DEFAULT_RRD_HOURS                   72   /* hours of interval by interval data (default) */
+#define DEFAULT_RRD_DAYS                    90   /* days of hour by hour data (default) */
+#define DEFAULT_RRD_MONTHS                  36   /* months of day by day data (default) */
 
 /*
  * What should we set tracing to unless we have a parameter?
@@ -2189,6 +2224,15 @@
  */
 #ifdef LINUX
  /* #define PARM_USE_HOST */
+#endif
+
+/*
+ * Somehow, gcc under HPUX decides to build a c++ version of malloc.h
+ *   Disable the malloc.h stuff.
+ */
+#ifdef HPUX
+ #undef HAVE_MALLINFO_MALLOC_H
+ #undef HAVE_MALLOC_H
 #endif
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

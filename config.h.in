@@ -619,6 +619,9 @@
 /* Define for IGNORE of SIGPIPE */
 #undef MAKE_WITH_IGNORE_SIGPIPE
 
+/* Support LARGE # of RRDs */
+#undef MAKE_WITH_LARGERRDPOP
+
 /* Support SSLv3 if available */
 #undef MAKE_WITH_SSLV3_SUPPORT
 

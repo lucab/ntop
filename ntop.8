@@ -62,6 +62,9 @@ ntop \- display top network users
 .RB [ --throughput-bar-chart ]
 .RB [ --dynamic-purge-limits ]
 .RB [ --reuse-rrd-graphics ]
+.RB [ --p3p-cp ]
+.RB [ --p3p-uri ]
+.RB [ --disable-stopcap ]
 
 Not available on micro-ntop:
 
@@ -377,6 +380,16 @@ time constants.
 
 .It --reuse-rrd-graphics
 Enable the reuse of rrd graphics if appropriate (no rrd updates in the interim).  The default, the flag not set, is that the graphics are recreated for each request.
+
+.It --p3p-cp
+Tells ntop what to return in the p3p header, cp="xxxx".
+
+.It --p3p-uri
+Tells ntop what to return in the p3p header, policyref="xxxx".
+
+.It --disable-stopcap
+Return ntop to old behavior on memory error.  Default of stopcap enabled makes available
+the web interface with static content until ntop is shutdown.
 
 .It --ignore-sigpipe                                    
 Enable a handler for SIGPIPE errors. This usually happens only under debug (gdb).

@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* This plugin works only with threads */
+
 /*
 
        Plugin History
@@ -29,6 +31,11 @@
        2.0     Rolled major version due to new interface parameter.
        2.1     Added tests/creates for rrd and subdirectories, fixed timer,
                --reuse-rrd-graphics etc.
+       2.1.1   Fixed hosts / interface bug (Luca)
+       2.1.2   Added status message
+       2.2     Version roll (preparatory) for ntop 2.2
+       2.2a    Multiple RRAs
+       2.2b    Large rrd population option
 
    Remember, there are TWO paths into this - one is through the main loop,
    if the plugin is active, the other is through the http function if the 
@@ -46,13 +53,14 @@ static const char *rrd_subdirs[] =
 
 #ifdef HAVE_RRD
 
-#include <dirent.h>
-
+static void setPluginStatus(char * status);
+ 
 #ifdef WIN32
 int optind, opterr;
 #endif
 
 static unsigned short initialized = 0, active = 0, dumpInterval, dumpDetail;
+static unsigned short dumpDays, dumpHours, dumpMonths;
 static char *hostsFilter;
 static Counter numTotalRRDs = 0;
 static unsigned long numRuns = 0, numRRDerrors = 0;
@@ -62,7 +70,7 @@ static time_t start_tm, end_tm, rrdTime;
 pthread_t rrdThread;
 #endif
 
-static u_short dumpFlows, dumpHosts, dumpInterfaces, dumpMatrix;
+static u_short dumpFlows, dumpHosts, dumpInterfaces, dumpMatrix, shownCreate=0;
 
 static Counter rrdGraphicRequests=0, rrdGraphicReuse=0;
 
@@ -169,26 +177,42 @@ void doubleSlash(char *str) {
 #endif
 
 void mkdir_p(char *path) {
-  int i;
+  int i, rc;
+
+  if (path == NULL) {
+      traceEvent(CONST_TRACE_NOISY, "RRD: mkdir(null) skipped");
+      return;
+  }
 
 #ifdef WIN32
   revertSlash(path, 0);
 #endif
 
-  for(i=0; path[i] != '\0'; i++)
+  /* Start at 1 to skip the root */
+  for(i=1; path[i] != '\0'; i++)
     if(path[i] == CONST_PATH_SEP) {
       path[i] = '\0';
-      _mkdir(path);
 #if RRD_DEBUG >= 3
-      /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path); */
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
 #endif
+      rc = _mkdir(path);
+      if ((rc != 0) && (errno != EEXIST) ) 
+          traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
+                     path,
+                     errno,
+                     strerror(errno));
       path[i] = CONST_PATH_SEP;
     }
 
-  _mkdir(path);
 #if RRD_DEBUG >= 2
-  /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path); */
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
 #endif
+  _mkdir(path);
+  if ((rc != 0) && (errno != EEXIST) )
+      traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
+                 path,
+                 errno,
+                 strerror(errno));
 }
 
 /* ******************************************* */
@@ -427,14 +451,14 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
     if (rc != 0) {
       if (errno != ENOENT)
-	traceEvent(CONST_TRACE_INFO, "RRD: stat('%s') failed, %d...\n", fname, errno);
+	traceEvent(CONST_TRACE_ERROR, "RRD: lookup of file '%s' failed, %d", fname, errno);
       reusebuf.st_mtime = 0;
     }
 
     if ( (reusebuf.st_mtime <= start_tm) || (reusebuf.st_mtime >= end_tm) ) {
       /* Recreate - delete existing and make a new one */
       if ( (unlink(fname) != 0) && (errno != ENOENT) ) {
-	traceEvent(CONST_TRACE_ERROR, "RRD: ERROR: unlink('%s') failed, %d...\n", fname, errno);
+	traceEvent(CONST_TRACE_ERROR, "RRD: unlink('%s') failed, %d...\n", fname, errno);
       }
       argv[argc++] = "rrd_graph";
       argv[argc++] = fname;
@@ -521,8 +545,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 #endif
 
   if(stat(path, &statbuf) != 0) {
-    char startStr[32], counterStr[64];
+    char startStr[32], stepStr[32], counterStr[64], intervalStr[32], minStr[32], maxStr[32], daysStr[32], monthsStr[32];
     int step = dumpInterval;
+    int value1, value2;
     unsigned long topValue;
 
     topValue = 100000000 /* 100 Mbps */;
@@ -540,17 +565,62 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 	     rrdTime-1 /* -1 avoids subsequent rrd_update call problems */);
     argv[argc++] = startStr;
 
+    argv[argc++] = "--step";
+    snprintf(stepStr, sizeof(stepStr), "%u", dumpInterval);
+    argv[argc++] = stepStr;
+
     if(isCounter) {
       snprintf(counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue);
     } else {
       /* Unlimited */
       snprintf(counterStr, sizeof(counterStr), "DS:counter:GAUGE:%d:0:U", step);
     }
-
     argv[argc++] = counterStr;
-    argv[argc++] = "RRA:AVERAGE:0.5:1:1200";
-    argv[argc++] = "RRA:MIN:0.5:12:2400";
-    argv[argc++] = "RRA:MAX:0.5:12:2400";
+
+    /* dumpInterval is in seconds.  There are 60m*60s = 3600s in an hour.
+     * value1 is the # of dumpIntervals per hour
+     */
+    value1 = (60*60 + dumpInterval - 1) / dumpInterval;
+    /* value2 is the # of value1 (hours) for dumpHours hours */
+    value2 = value1 * dumpHours;
+    snprintf(intervalStr, sizeof(intervalStr), "RRA:AVERAGE:0.5:1:%d", value2);
+    argv[argc++] = intervalStr;
+
+    /* Store the MIN/MAX 5m value for a # of hours */
+    snprintf(minStr, sizeof(minStr), "RRA:MIN:0.5:1:%d", dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+    argv[argc++] = minStr;
+    snprintf(maxStr, sizeof(maxStr), "RRA:MAX:0.5:1:%d", dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+    argv[argc++] = maxStr;
+
+    if (dumpDays > 0) {
+        snprintf(daysStr, sizeof(daysStr), "RRA:AVERAGE:0.5:%d:%d", value1, dumpDays * 24);
+        argv[argc++] = daysStr;
+    }
+
+    /* Compute the rollup - how many dumpInterval seconds interval are in a day */
+    value1 = (24*60*60 + dumpInterval - 1) / dumpInterval;
+    if (dumpMonths > 0) {
+        snprintf(monthsStr, sizeof(monthsStr), "RRA:AVERAGE:0.5:%d:%d", value1, dumpMonths * 30);
+        argv[argc++] = monthsStr;
+    }
+
+    if (shownCreate == 0) {
+        char buf[LEN_GENERAL_WORK_BUFFER];
+        int i;
+
+        shownCreate=1;
+
+        memset(buf, 0, sizeof(buf));
+
+        snprintf(buf, sizeof(buf), "%s", argv[4]);
+
+        for (i=5; i<argc; i++) {
+            strcat(buf, " ");
+            strcat(buf, argv[i]);
+        }
+
+        traceEvent(CONST_TRACE_INFO, "RRD: rrdtool create --start now-1 file %s", buf);
+    }
 
     optind=0; /* reset gnu getopt */
     opterr=0; /* no error messages */
@@ -558,7 +628,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     rc = rrd_create(argc, argv);
 
     if (rrd_test_error()) {
-      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s\n", 
+      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s", 
 		 path, rrd_get_error());
       rrd_clear_error();
       numRRDerrors++;
@@ -627,19 +697,41 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
   if (rrd_test_error()) {
     int x;
+    char *rrdError;
+    struct tm workT;
 
     numRRDerrors++;
-    traceEvent(CONST_TRACE_WARNING, "RRD: rrd_update(%s) error: %s\n", path, rrd_get_error());
-    rrd_clear_error();
+    rrdError = rrd_get_error();
+    if (rrdError != NULL) {
+        traceEvent(CONST_TRACE_WARNING, "RRD: rrd_update(%s) error: %s", path, rrdError);
+        traceEvent(CONST_TRACE_NOISY, "RRD: call stack (counter created: %d):", createdCounter);
+        for (x = 0; x < argc; x++)
+            traceEvent(CONST_TRACE_NOISY, "RRD:   argv[%d]: %s", x, argv[x]);
+    
+        if (!strcmp(rrdError, "error: illegal attempt to update using time")) {
+            char errTimeBuf1[32], errTimeBuf2[32], errTimeBuf3[32];
+            time_t rrdLast;
+            strftime(errTimeBuf1, sizeof(errTimeBuf1), "%Y-%m-%d %H:%M:%S", localtime_r(&myGlobals.actTime, &workT));
+            strftime(errTimeBuf2, sizeof(errTimeBuf2), "%H:%M:%S", localtime_r(&rrdTime, &workT));
+            argc = 0;
+            argv[argc++] = "rrd_last";
+            argv[argc++] = path;
+            rrdLast = rrd_last(argc, argv);
+            strftime(errTimeBuf3, sizeof(errTimeBuf3), "%H:%M:%S", localtime_r(&rrdLast, &workT));
+            traceEvent(CONST_TRACE_WARNING,
+                       "RRD: actTime = %d(%s), rrdTime %d(%s), lastUpd %d(%s)",
+                       myGlobals.actTime,
+                       errTimeBuf1,
+                       rrdTime,
+                       errTimeBuf2,
+                       rrdLast,
+                       rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
+        }
 
-    traceEvent(CONST_TRACE_INFO, "RRD call stack (counter created: %d):", createdCounter);
-    for	(x = 0; x < argc; x++)
-      traceEvent(CONST_TRACE_INFO, "argv[%d]: %s", x, argv[x]);
+        free(rrdError);
+        rrd_clear_error();
+    }
   }
-
-#if RRD_DEBUG > 0
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrd_update(%s, %u, %u)=%d", path, (unsigned long)value, rc);
-#endif
 
 }
 
@@ -694,6 +786,8 @@ void unescape_url(char *url) {
 static void commonRRDinit(void) {
   char value[64];
 
+  shownCreate=0;
+
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
     sprintf(value, "%d", DEFAULT_RRD_INTERVAL);
     storePrefsValue("rrd.dataDumpInterval", value);
@@ -702,6 +796,29 @@ static void commonRRDinit(void) {
     dumpInterval = atoi(value);
   }
 
+  if(fetchPrefsValue("rrd.dataDumpHours", value, sizeof(value)) == -1) {
+    sprintf(value, "%d", DEFAULT_RRD_HOURS);
+    storePrefsValue("rrd.dataDumpHours", value);
+    dumpHours = DEFAULT_RRD_HOURS;
+  } else {
+    dumpHours = atoi(value);
+  }
+
+  if(fetchPrefsValue("rrd.dataDumpDays", value, sizeof(value)) == -1) {
+    sprintf(value, "%d", DEFAULT_RRD_DAYS);
+    storePrefsValue("rrd.dataDumpDays", value);
+    dumpDays = DEFAULT_RRD_DAYS;
+  } else {
+    dumpDays = atoi(value);
+  }
+
+  if(fetchPrefsValue("rrd.dataDumpMonths", value, sizeof(value)) == -1) {
+    sprintf(value, "%d", DEFAULT_RRD_MONTHS);
+    storePrefsValue("rrd.dataDumpMonths", value);
+    dumpMonths = DEFAULT_RRD_MONTHS;
+  } else {
+    dumpMonths = atoi(value);
+  }
 
   if(fetchPrefsValue("rrd.dumpFlows", value, sizeof(value)) == -1) {
     storePrefsValue("rrd.dumpFlows", "0");
@@ -754,12 +871,18 @@ static void commonRRDinit(void) {
 	snprintf(myGlobals.rrdPath, len, "%s%s", myGlobals.dbPath, thePath);
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
   } else {
-    myGlobals.rrdPath  = strdup(value);
+    int vlen = strlen(value)+1;
+
+    myGlobals.rrdPath  = (char*)malloc(vlen);
+    unescape(myGlobals.rrdPath, vlen, value);
   }
 
 #ifdef RRD_DEBUG
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Parameters:\n");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterval %d seconds\n", dumpInterval);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHours %d hours by %d seconds\n", dumpHours, dumpInterval);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDays %d days by hour\n", dumpDays);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMonths %d months by day\n", dumpMonths);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHosts %s\n", dumpHosts == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s\n", dumpInterfaces == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMatrix %s\n", dumpMatrix == 0 ? "no" : "yes");
@@ -779,7 +902,7 @@ static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[64], startTime[32], endTime[32], rrdPrefix[32];
   u_char action = FLAG_RRD_ACTION_NONE;
-  int _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpMatrix, _dumpDetail, _dumpInterval;
+  int _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths;
   char * _hostsFilter;
 
   if (initialized == 0)
@@ -791,7 +914,10 @@ static void handleRRDHTTPrequest(char* url) {
   _dumpInterfaces=0;
   _dumpMatrix=0;
   _dumpDetail=CONST_RRD_DETIL_DEFAULT;
-  _dumpInterval=300;
+  _dumpInterval=DEFAULT_RRD_INTERVAL;
+  _dumpHours=DEFAULT_RRD_HOURS;
+  _dumpDays=DEFAULT_RRD_DAYS;
+  _dumpMonths=DEFAULT_RRD_MONTHS;
   _hostsFilter = NULL;
 
   if((url != NULL) && (url[0] != '\0')) {
@@ -864,11 +990,23 @@ static void handleRRDHTTPrequest(char* url) {
 	} else if(strcmp(key, "interval") == 0) {
 	  _dumpInterval = atoi(value);
           if (_dumpInterval < 1) _dumpInterval = 1 /* Min 1 second */;
+	} else if(strcmp(key, "days") == 0) {
+	  _dumpDays = atoi(value);
+          if (_dumpDays < 0) _dumpDays = 0 /* Min none */;
+	} else if(strcmp(key, "hours") == 0) {
+	  _dumpHours = atoi(value);
+          if (_dumpHours < 0) _dumpHours = 0 /* Min none */;
+	} else if(strcmp(key, "months") == 0) {
+	  _dumpMonths = atoi(value);
+          if (_dumpMonths < 0) _dumpMonths = 0 /* Min none */;
 	} else if(strcmp(key, "hostsFilter") == 0) {
 	  _hostsFilter = strdup(value);
 	} else if(strcmp(key, "rrdPath") == 0) {
+	  int vlen = strlen(value)+1;
+	  
 	  if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
-	  myGlobals.rrdPath = strdup(value);
+	  myGlobals.rrdPath  = (char*)malloc(vlen);
+	  unescape(myGlobals.rrdPath, vlen, value);
 	  storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
 	} else if(strcmp(key, "dumpFlows") == 0) {
 	  _dumpFlows = 1;
@@ -890,6 +1028,9 @@ static void handleRRDHTTPrequest(char* url) {
 
     if(action == FLAG_RRD_ACTION_NONE) {
       dumpInterval = _dumpInterval;
+      dumpHours = _dumpHours;
+      dumpDays = _dumpDays;
+      dumpMonths = _dumpMonths;
       /* traceEvent(CONST_TRACE_INFO, "RRD: dumpFlows=%d", dumpFlows); */
       dumpFlows=_dumpFlows;
       dumpHosts=_dumpHosts;
@@ -897,6 +1038,9 @@ static void handleRRDHTTPrequest(char* url) {
       dumpMatrix=_dumpMatrix;
       dumpDetail = _dumpDetail;
       sprintf(buf, "%d", dumpInterval);   storePrefsValue("rrd.dumpInterval", buf);
+      sprintf(buf, "%d", dumpHours);   storePrefsValue("rrd.dumpHours", buf);
+      sprintf(buf, "%d", dumpDays);   storePrefsValue("rrd.dumpDays", buf);
+      sprintf(buf, "%d", dumpMonths);   storePrefsValue("rrd.dumpMonths", buf);
       sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dumpFlows", buf);
       sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dumpHosts", buf);
       sprintf(buf, "%d", dumpInterfaces); storePrefsValue("rrd.dumpInterfaces", buf);
@@ -910,6 +1054,7 @@ static void handleRRDHTTPrequest(char* url) {
           _hostsFilter = NULL;
       }
       storePrefsValue("rrd.hostsFilter", hostsFilter);
+      shownCreate=0;
     }
   }
 
@@ -932,12 +1077,32 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<TABLE BORDER>\n");
   sendString("<TR><TH ALIGN=LEFT>Dump Interval</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
 	     "<INPUT NAME=interval SIZE=5 VALUE=");
-
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpInterval) < 0)
     BufferTooShort();
   sendString(buf);
+  sendString("> seconds<br>Specifies how often data is stored permanently.</TD></tr>\n");
 
-  sendString("> seconds<br>It specifies how often data is stored permanently.</TD></tr>\n");
+  sendString("<TR><TH ALIGN=LEFT>Dump Hours</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+	     "<INPUT NAME=hours SIZE=5 VALUE=");
+  if(snprintf(buf, sizeof(buf), "%d", (int)dumpHours) < 0)
+    BufferTooShort();
+  sendString(buf);
+  sendString("><br>Specifies how many hours of 'interval' data is stored permanently.</TD></tr>\n");
+
+  sendString("<TR><TH ALIGN=LEFT>Dump Days</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+	     "<INPUT NAME=days SIZE=5 VALUE=");
+  if(snprintf(buf, sizeof(buf), "%d", (int)dumpDays) < 0)
+    BufferTooShort();
+  sendString(buf);
+  sendString("><br>Specifies how many days of hourly data is stored permanently.</TD></tr>\n");
+  sendString("<TR><TH ALIGN=LEFT>Dump Months</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+	     "<INPUT NAME=months SIZE=5 VALUE=");
+  if(snprintf(buf, sizeof(buf), "%d", (int)dumpMonths) < 0)
+    BufferTooShort();
+  sendString(buf);
+  sendString("><br>Specifies how many months of daily data is stored permanently.</TD></tr>\n");
+
+  sendString("<TR><TD ALIGN=CENTER COLSPAN=2><B>WARNING:</B>&nbsp;Changes to the above values will ONLY affect NEW rrds</TD></TR>");
 
   sendString("<TR><TH ALIGN=LEFT>Data to Dump</TH><TD>");
 
@@ -995,7 +1160,31 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<TR><TH ALIGN=LEFT>RRD Files Path</TH><TD>"
              "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
   sendString(myGlobals.rrdPath);
-  sendString("\"></TD></tr>\n");
+  sendString("\">");
+#ifdef MAKE_WITH_LARGERRDPOP
+  sendString("<br>NOTE: The 'large rrd population' option is in effect.\n");
+  sendString("This means that the rrd files will be in a subdirectory structure, e.g.\n");
+  if (snprintf(buf, sizeof(buf), 
+ #ifdef WIN32
+                    "%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
+ #else
+                    "%s/interfaces/interface-name/12/239/98/199/xxxxx.rrd ",
+ #endif
+               myGlobals.rrdPath) < 0)
+    BufferTooShort();
+  sendString(buf);
+  sendString("instead of a single level structure, ");
+  if (snprintf(buf, sizeof(buf), 
+ #ifdef WIN32
+                    "%s\\interfaces\\interface-name\\12.239.98.199\\xxxxx.rrd\n",
+ #else
+                    "%s/interfaces/interface-name/12.239.98.199/xxxxx.rrd\n",
+ #endif
+               myGlobals.rrdPath) < 0)
+    BufferTooShort();
+  sendString(buf);
+#endif
+  sendString("</TD></tr>\n");
 
   sendString("<TR><TH ALIGN=LEFT>RRD Updates</TH><TD>");
   if(snprintf(buf, sizeof(buf), "%lu RRD files updated</TD></TR>\n", (unsigned long)numTotalRRDs) < 0)
@@ -1036,6 +1225,70 @@ static void handleRRDHTTPrequest(char* url) {
 }
 
 /* ****************************** */
+#ifdef MAKE_WITH_RRDSIGTRAP
+RETSIGTYPE rrdcleanup(int signo) {
+  static int msgSent = 0;
+  int i;
+  void *array[20];
+  size_t size;
+  char **strings;
+
+  if(msgSent<10) {
+    traceEvent(CONST_TRACE_FATALERROR, "RRD: caught signal %d %s", signo,
+               signo == SIGHUP ? "SIGHUP" :
+                 signo == SIGINT ? "SIGINT" :
+                 signo == SIGQUIT ? "SIGQUIT" : 
+                 signo == SIGILL ? "SIGILL" :
+                 signo == SIGABRT ? "SIGABRT" :
+                 signo == SIGFPE ? "SIGFPE" :
+                 signo == SIGKILL ? "SIGKILL" :
+                 signo == SIGSEGV ? "SIGSEGV" :
+                 signo == SIGPIPE ? "SIGPIPE" :
+                 signo == SIGALRM ? "SIGALRM" :
+                 signo == SIGTERM ? "SIGTERM" :
+                 signo == SIGUSR1 ? "SIGUSR1" :
+                 signo == SIGUSR2 ? "SIGUSR2" :
+                 signo == SIGCHLD ? "SIGCHLD" :
+ #ifdef SIGCONT
+                 signo == SIGCONT ? "SIGCONT" :
+ #endif
+ #ifdef SIGSTOP
+                 signo == SIGSTOP ? "SIGSTOP" :
+ #endif
+ #ifdef SIGBUS
+                 signo == SIGBUS ? "SIGBUS" :
+ #endif
+ #ifdef SIGSYS
+                 signo == SIGSYS ? "SIGSYS"
+ #endif
+               : "other");
+    msgSent++;
+  }
+
+ #ifdef HAVE_BACKTRACE
+  /* Don't double fault... */
+  /* signal(signo, SIG_DFL); */
+
+  /* Grab the backtrace before we do much else... */
+  size = backtrace(array, 20);
+  strings = (char**)backtrace_symbols(array, size);
+
+  traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:     backtrace is:\n");
+  if (size < 2) {
+      traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:         **unavailable!\n");
+  } else {
+      /* Ignore the 0th entry, that's our cleanup() */
+      for (i=1; i<size; i++) {
+          traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:          %2d. %s\n", i, strings[i]);
+      }
+    }
+ #endif /* HAVE_BACKTRACE */
+
+  exit(0);
+}
+#endif /* MAKE_WITH_RRDSIGTRAP */
+
+/* ****************************** */
 
 static void* rrdMainLoop(void* notUsed _UNUSED_) {
   char value[512 /* leave it big for hosts filter */];
@@ -1046,15 +1299,47 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   struct stat statbuf;
   int purgeCountFiles, purgeCountUnlink, purgeCountErrors;
   int cycleCount=0;
+#ifdef MAKE_WITH_LARGERRDPOP
+  char *adjHostName;
+#endif
 
 #ifdef CFG_MULTITHREADED
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) started...\n", rrdThread);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) started", rrdThread);
 #else
  #ifdef RRD_DEBUG
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop()");
  #endif
 #endif
 
+#ifdef MAKE_WITH_RRDSIGTRAP
+  signal(SIGSEGV, rrdcleanup);
+  signal(SIGHUP,  rrdcleanup);
+  signal(SIGINT,  rrdcleanup);
+  signal(SIGQUIT, rrdcleanup);
+  signal(SIGILL,  rrdcleanup);
+  signal(SIGABRT, rrdcleanup);
+  signal(SIGFPE,  rrdcleanup);
+  signal(SIGKILL, rrdcleanup);
+  signal(SIGPIPE, rrdcleanup);
+  signal(SIGALRM, rrdcleanup);
+  signal(SIGTERM, rrdcleanup);
+  signal(SIGUSR1, rrdcleanup);
+  signal(SIGUSR2, rrdcleanup);
+  /* signal(SIGCHLD, rrdcleanup); */
+ #ifdef SIGCONT
+  signal(SIGCONT, rrdcleanup);
+ #endif
+ #ifdef SIGSTOP
+  signal(SIGSTOP, rrdcleanup);
+ #endif
+ #ifdef SIGBUS 
+  signal(SIGBUS,  rrdcleanup);
+ #endif
+ #ifdef SIGSYS
+  signal(SIGSYS,  rrdcleanup); 
+ #endif
+#endif /* MAKE_WITH_RRDSIGTRAP */
+ 
   if (initialized == 0)
     commonRRDinit();
 
@@ -1092,8 +1377,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...", sleep_tm);
     sleep(sleep_tm);
-    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
     HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...woke", sleep_tm);
+    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
 
     numRuns++;
     rrdTime =  time(NULL);
@@ -1102,7 +1387,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     numLocalNets = 0;
     strcpy(rrdPath, hostsFilter); /* It avoids strtok to blanks into hostsFilter */
-    handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value));
+    handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value), CONST_HANDLEADDRESSLISTS_RRD);
 
     /* ****************************************************** */
 
@@ -1140,9 +1425,18 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      continue;
 	    }
 
+#ifdef MAKE_WITH_LARGERRDPOP
+            adjHostName = dotToSlash(hostKey);
+#endif
+
 	    sprintf(rrdPath, "%s/interfaces/%s/hosts/%s/",
 		    myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName, 
-		    hostKey);
+#ifdef MAKE_WITH_LARGERRDPOP
+                    adjHostName
+#else
+                    hostKey
+#endif
+                   );
 	    mkdir_p(rrdPath);
 
 	    updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
@@ -1221,8 +1515,15 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
 #endif
 
-		sprintf(rrdPath, "%s/interfaces/%s/hosts/%s/IP_", myGlobals.rrdPath,  
-			myGlobals.device[devIdx].humanFriendlyName, hostKey);
+		sprintf(rrdPath, "%s/interfaces/%s/hosts/%s/IP_",
+                        myGlobals.rrdPath,  
+			myGlobals.device[devIdx].humanFriendlyName,
+#ifdef MAKE_WITH_LARGERRDPOP
+                        adjHostName
+#else
+                        hostKey
+#endif
+                       );
 
 		for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 		  char key[128];
@@ -1238,12 +1539,17 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    }
 	  }	
 
-	  if(((i+1) & CONST_MUTEX_FHS_MASK) == 0) {
+#ifdef MAKE_WITH_LARGERRDPOP
+          if (adjHostName != NULL)
+              free(adjHostName);
+#endif
+
+	  if(mutexLocked && (((i+1) & CONST_MUTEX_FHS_MASK) == 0)) {
 #ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.hostsHashMutex);
 #endif    
 	    mutexLocked = 0;
-#ifdef HAVE_SCHED_H
+#ifdef MAKE_WITH_SCHED_YIELD
 	    sched_yield(); /* Allow other threads to run */
 #endif
 	  }
@@ -1348,6 +1654,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     /* ************************** */
 
+#ifndef MAKE_WITH_LARGERRDPOP
     if(dumpMatrix) {
       int k;
 
@@ -1381,6 +1688,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    }
 	  }
     }
+#endif
 
 #ifdef RRD_DEBUG
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)\n",
@@ -1393,7 +1701,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
      * we kill the thread...
      */
     if (myGlobals.capturePackets == FLAG_NTOPSTATE_STOPCAP) {
-        traceEvent(CONST_TRACE_INFO, "RRD: STOPCAP, ending rrd thread.\n");
+        traceEvent(CONST_TRACE_WARNING, "RRD: STOPCAP, ending rrd thread");
         break;
     }
 
@@ -1429,7 +1737,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 #endif
 	      if ((unlink(fname) != 0) && (errno != ENOENT)) {
 		purgeCountErrors++;
-		traceEvent(CONST_TRACE_ERROR, "RRD: ERROR: unlink('%s') failed, %d...\n", fname, errno);
+		traceEvent(CONST_TRACE_ERROR, "RRD: unlink('%s') failed, %d...\n", fname, errno);
 	      } else {
 		purgeCountUnlink++;
 	      }
@@ -1444,12 +1752,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		 purgeCountErrors);
 #endif
     } else {
-      traceEvent(CONST_TRACE_ERROR, "RRD: Unable to opendir(%s), errno=%d\n", rrdPath, errno);
+      traceEvent(CONST_TRACE_ERROR, "RRD: Unable to opendir(%s), errno=%d", rrdPath, errno);
     }
   }
 
 #ifdef CFG_MULTITHREADED
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) terminated...\n", rrdThread);
+  traceEvent(CONST_TRACE_WARNING, "THREADMGMT: rrd thread (%ld) terminated", rrdThread);
 #else
  #ifdef RRD_DEBUG
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop() terminated.");
@@ -1461,21 +1769,29 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 /* ****************************** */
 
-static void initRRDfunct(void) {
+static int initRRDfunct(void) {
   char dname[256];
   int i;
 
-  traceEvent(CONST_TRACE_INFO, "Welcome to the RRD plugin...");
+  traceEvent(CONST_TRACE_INFO, "RRD: Welcome to the RRD plugin");
+  setPluginStatus(NULL);
 
   if(myGlobals.rrdPath == NULL)
     commonRRDinit();
 
+#ifndef CFG_MULTITHREADED
+  /* This plugin works only with threads */
+  setPluginStatus("Disabled - requires POSIX thread support."); 
+  return(-1);
+#endif
+
   sprintf(dname, "%s", myGlobals.rrdPath);
   if (_mkdir(dname) == -1) { 
     if (errno != EEXIST) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: ERROR: Disabled - unable to create base directory (err %d, %s)\n", errno, dname);
+      traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)\n", errno, dname);
+      setPluginStatus("Disabled - unable to create rrd base directory."); 
       /* Return w/o creating the rrd thread ... disabled */
-      return;
+      return(-1);
     }
   } else {
     traceEvent(CONST_TRACE_INFO, "RRD: Created base directory (%s)\n", dname);
@@ -1487,22 +1803,23 @@ static void initRRDfunct(void) {
     if (_mkdir(dname) == -1) {
       if (errno != EEXIST) {
 	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)\n", errno, dname);
+        setPluginStatus("Disabled - unable to create rrd subdirectory."); 
 	/* Return w/o creating the rrd thread ... disabled */
-	return;
+	return(-1);
       }
     } else {
-      traceEvent(CONST_TRACE_INFO, "RRD: Note: Created directory (%s)\n", dname);
+      traceEvent(CONST_TRACE_INFO, "RRD: Created directory (%s)\n", dname);
     }
   } 
 
 #ifdef CFG_MULTITHREADED
-  /* This plugin works only with threads */
   createThread(&rrdThread, rrdMainLoop, NULL);
   traceEvent(CONST_TRACE_INFO, "RRD: Started thread (%ld) for data collection.", rrdThread);
 #endif
 
   fflush(stdout);
   numTotalRRDs = 0;
+  return(0);
 }
 
 /* ****************************** */
@@ -1513,7 +1830,7 @@ static void termRRDfunct(void) {
 #endif
 
   traceEvent(CONST_TRACE_INFO, "RRD: Thanks for using the rrdPlugin");
-  traceEvent(CONST_TRACE_INFO, "RRD: Done.\n");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Done");
   fflush(stdout);
 }
 
@@ -1537,7 +1854,7 @@ static PluginInfo rrdPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
     "This plugin also produces the graphs of rrd data, available via a "
     "link from the various 'Info about host xxxxx' reports.",
-    "2.1.1", /* version */
+    "2.2b", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
     1, /* Active by default */ 
@@ -1546,23 +1863,34 @@ static PluginInfo rrdPluginInfo[] = {
     termRRDfunct, /* TermFunc   */
     NULL, /* PluginFunc */
     handleRRDHTTPrequest,
-    NULL /* no capture */
+    NULL, /* no capture */
+    NULL /* no status */
   }
 };
 
 /* ****************************** */
 
 /* Plugin entry fctn */
-#ifdef STATIC_PLUGIN
+#ifdef MAKE_STATIC_PLUGIN
  PluginInfo* rrdPluginEntryFctn(void)
 #else
    PluginInfo* PluginEntryFctn(void)
 #endif
    {
-     traceEvent(CONST_TRACE_INFO, "RRD: Welcome to %s. (C) 2002 by Luca Deri.\n",
+     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Welcome to %s. (C) 2002 by Luca Deri.\n",
 		rrdPluginInfo->pluginName);
      
      return(rrdPluginInfo);
    }
  
- 
+/* This must be here so it can access the struct PluginInfo, above */
+static void setPluginStatus(char * status)
+   {
+       if (rrdPluginInfo->pluginStatusMessage != NULL)
+           free(rrdPluginInfo->pluginStatusMessage);
+       if (status == NULL) {
+           rrdPluginInfo->pluginStatusMessage = NULL;
+       } else {
+           rrdPluginInfo->pluginStatusMessage = strdup(status);
+       }
+   } 

@@ -23,6 +23,32 @@
 
 #include "ntop.h"
 
+/* PPPoE - Courtesy of Andreas Pfaller Feb2003 */
+#ifdef LINUX
+ #include <linux/if_pppox.h>
+#else
+ /* Extracted and modified from the Linux header for other systems - BMS Mar2003 */
+ struct pppoe_tag {
+         u_int16_t tag_type;
+         u_int16_t tag_len;
+         char tag_data;
+ };
+
+ struct pppoe_hdr {
+ #ifdef CFG_LITTLE_ENDIAN
+         u_int8_t ver : 4;
+         u_int8_t type : 4;
+ #else
+         u_int8_t type : 4;
+         u_int8_t ver : 4;
+ #endif
+         u_int8_t code;
+         u_int16_t sid;
+         u_int16_t length;
+         struct pppoe_tag tag;
+ };
+#endif
+
 static const struct pcap_pkthdr *h_save;
 static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
@@ -66,7 +92,7 @@ int handleIP(u_short port,
   Counter length = (Counter)_length;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
-    traceEvent(CONST_TRACE_INFO, "Sanity check failed (4) [Low memory?]");
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (4) [Low memory?]");
     return(-1);
   }
 
@@ -717,7 +743,7 @@ static void processIpPkt(const u_char *bp,
 
   if(srcHost == NULL) {
     /* Sanity check */
-    traceEvent(CONST_TRACE_INFO, "Sanity check failed (1) [Low memory?] (idx=%d)", srcHostIdx);
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (1) [Low memory?] (idx=%d)", srcHostIdx);
     return; /* It might be that there's not enough memory that that
 	       dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst) caused
 	       srcHost to be freed */
@@ -725,7 +751,7 @@ static void processIpPkt(const u_char *bp,
 
   if(dstHost == NULL) {
     /* Sanity check */
-    traceEvent(CONST_TRACE_INFO, "Sanity check failed (2) [Low memory?]");
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
     return;
   }
 
@@ -835,7 +861,7 @@ static void processIpPkt(const u_char *bp,
 
     if(tcpUdpLen < sizeof(struct tcphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
-	traceEvent(CONST_TRACE_WARNING, "WARNING: Malformed TCP pkt %s->%s detected (packet too short)",
+	traceEvent(CONST_TRACE_WARNING, "Malformed TCP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket(actualDeviceId);
@@ -1042,7 +1068,7 @@ static void processIpPkt(const u_char *bp,
 
     if(tcpUdpLen < sizeof(struct udphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
-	traceEvent(CONST_TRACE_WARNING, "WARNING: Malformed UDP pkt %s->%s detected (packet too short)",
+	traceEvent(CONST_TRACE_WARNING, "Malformed UDP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket(actualDeviceId);
@@ -1253,7 +1279,7 @@ static void processIpPkt(const u_char *bp,
 
     if(tcpUdpLen < sizeof(struct icmp)) {
       if(myGlobals.enableSuspiciousPacketDump) {
-	traceEvent(CONST_TRACE_WARNING, "WARNING: Malformed ICMP pkt %s->%s detected (packet too short)",
+	traceEvent(CONST_TRACE_WARNING, "Malformed ICMP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket(actualDeviceId);
@@ -1270,7 +1296,7 @@ static void processIpPkt(const u_char *bp,
       incrementTrafficCounter(&dstHost->icmpRcvd, length);
 
       if(off & 0x3fff) {
-	char *fmt = "WARNING: detected ICMP fragment [%s -> %s] (network attack attempt?)";
+	char *fmt = "Detected ICMP fragment [%s -> %s] (network attack attempt?)";
 
 	incrementTrafficCounter(&srcHost->icmpFragmentsSent, length), 
 	  incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
@@ -1511,12 +1537,12 @@ void queuePacket(u_char * _deviceId,
 
     incrementTrafficCounter(&myGlobals.device[getActualInterface(deviceId)].droppedPkts, 1);
 
-#ifdef HAVE_SCHED_H
+#ifdef MAKE_WITH_SCHED_YIELD
     sched_yield(); /* Allow other threads (dequeue) to run */
 #endif
-    HEARTBEAT(0, "queuePacket(), sleep(1)...", NULL);
+    HEARTBEAT(0, "queuePacket() drop, sleep(1)...", NULL);
     sleep(1);
-    HEARTBEAT(0, "queuePacket(), sleep(1)...woke", NULL);
+    HEARTBEAT(0, "queuePacket() drop, sleep(1)...woke", NULL);
   } else {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "About to queue packet... \n");
@@ -1550,7 +1576,7 @@ void queuePacket(u_char * _deviceId,
 #else
   signalCondvar(&myGlobals.queueCondvar);
 #endif
-#ifdef HAVE_SCHED_H
+#ifdef MAKE_WITH_SCHED_YIELD
   sched_yield(); /* Allow other threads (dequeue) to run */
 #endif
 }
@@ -1563,8 +1589,14 @@ void cleanupPacketQueue(void) {
 
 /* ************************************ */
 
+#define MAX_PACKET_LEN          8232 /* _mtuSize[DLT_NULL] */
+
+
 void* dequeuePacket(void* notUsed _UNUSED_) {
   PacketInformation pktInfo;
+  unsigned short deviceId;
+  struct pcap_pkthdr h;
+  u_char p[MAX_PACKET_LEN];
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet processor thread (%ld) started...\n", myGlobals.dequeueThreadId);
 
@@ -1588,10 +1620,23 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     traceEvent(CONST_TRACE_INFO, "Got packet...\n");
 #endif
     accessMutex(&myGlobals.packetQueueMutex, "dequeuePacket");
-    memcpy(&pktInfo.h, &myGlobals.packetQueue[myGlobals.packetQueueTail].h,
+    memcpy(&h, &myGlobals.packetQueue[myGlobals.packetQueueTail].h,
 	   sizeof(struct pcap_pkthdr));
-    memcpy(pktInfo.p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
-    pktInfo.deviceId = myGlobals.packetQueue[myGlobals.packetQueueTail].deviceId;
+    
+    /* This code should be changed ASAP. It is a bad trick that avoids ntop to
+       go beyond packet boundaries (L.Deri 17/03/2003)
+       
+       1. h->len is truncated
+       2. MAX_PACKET_LEN should probably be removed
+       3. all the functions must check that they are not going beyond packet boundaries
+    */
+    memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
+    if(h.len > MAX_PACKET_LEN) {
+      traceEvent(CONST_TRACE_WARNING, "WARNING: packet truncated (%d->%d)", h.len, MAX_PACKET_LEN);
+      h.len = MAX_PACKET_LEN;
+    }
+    
+    deviceId = myGlobals.packetQueue[myGlobals.packetQueueTail].deviceId;
     myGlobals.packetQueueTail = (myGlobals.packetQueueTail+1) % CONST_PACKET_QUEUE_LENGTH;
     myGlobals.packetQueueLen--;
     releaseMutex(&myGlobals.packetQueueMutex);
@@ -1606,7 +1651,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 
     HEARTBEAT(9, "dequeuePacket()...processing...", NULL);
     myGlobals.actTime = time(NULL);
-    processPacket((u_char*)((long)pktInfo.deviceId), &pktInfo.h, pktInfo.p);
+    processPacket((u_char*)((long)deviceId), &h, p);
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet Processor thread (%ld) terminated...\n", myGlobals.dequeueThreadId);
@@ -1848,7 +1893,7 @@ void processPacket(u_char *_deviceId,
        (length > myGlobals.mtuSize[myGlobals.device[deviceId].datalink]) ) {
     /* Sanity check */
     if(myGlobals.enableSuspiciousPacketDump) {
-      traceEvent(CONST_TRACE_INFO, "Packet # %u too long (len = %u)!\n",
+      traceEvent(CONST_TRACE_WARNING, "Packet # %u too long (len = %u)!\n",
 		 (unsigned int)myGlobals.device[deviceId].ethernetPkts.value,
 		 (unsigned int)length);
       dumpSuspiciousPacket(actualDeviceId);
@@ -2054,7 +2099,7 @@ void processPacket(u_char *_deviceId,
 	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (5) [Low memory?]");
+	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (5) [Low memory?]");
 	  return;
 	}
 
@@ -2062,7 +2107,7 @@ void processPacket(u_char *_deviceId,
 	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (6) [Low memory?]");
+	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (6) [Low memory?]");
 	  return;
 	}
 
@@ -2094,7 +2139,7 @@ void processPacket(u_char *_deviceId,
 	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (7) [Low memory?]");
+	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (7) [Low memory?]");
 	  return;
 	}
 
@@ -2102,7 +2147,7 @@ void processPacket(u_char *_deviceId,
 	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (8) [Low memory?]");
+	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (8) [Low memory?]");
 	  return;
 	}
 
@@ -2130,7 +2175,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	  if(srcHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(CONST_TRACE_INFO, "Sanity check failed (9) [Low memory?]");
+	    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (9) [Low memory?]");
 	    return;
 	  }
 
@@ -2138,7 +2183,7 @@ void processPacket(u_char *_deviceId,
 	  dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	  if(dstHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(CONST_TRACE_INFO, "Sanity check failed (10) [Low memory?]");
+	    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (10) [Low memory?]");
 	    return;
 	  }
 
@@ -2157,7 +2202,7 @@ void processPacket(u_char *_deviceId,
 	    dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
 	    if((srcHost == NULL) || (dstHost == NULL)) {
-	      traceEvent(CONST_TRACE_INFO, "Sanity check failed (13) [Low memory?]");
+	      traceEvent(CONST_TRACE_ERROR, "Sanity check failed (13) [Low memory?]");
 	      return;
 	    }
 
@@ -2424,6 +2469,18 @@ void processPacket(u_char *_deviceId,
 	  processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	else
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
+      } else if (eth_type == 0x8864) /* PPPOE */ {
+        /* PPPoE - Courtesy of Andreas Pfaller Feb2003
+         *   This strips the PPPoE encapsulation for traffic transiting the network.
+         */
+        struct pppoe_hdr *pppoe_hdr=(struct pppoe_hdr *) (p+hlen);
+        int protocol=ntohs(*((int *) (p+hlen+6)));
+
+        if (pppoe_hdr->ver==1 && pppoe_hdr->type==1 && pppoe_hdr->code==0 &&
+            protocol==0x0021) {
+          hlen+=8; /* length of pppoe header */
+	  processIpPkt(p+hlen, h, length, NULL, NULL, actualDeviceId, vlanId);
+        }
       } else  /* Non IP */ if(!myGlobals.dontTrustMACaddr) {
 	/* MAC addresses are meaningful here */
 	struct ether_arp arpHdr;
@@ -2439,7 +2496,7 @@ void processPacket(u_char *_deviceId,
 	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (11) [Low memory?]");
+	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (11) [Low memory?]");
 	  return;
 	}
 
@@ -2447,7 +2504,7 @@ void processPacket(u_char *_deviceId,
 	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (12) [Low memory?]");
+	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
 	  return;
 	}
 

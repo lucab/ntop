@@ -111,7 +111,9 @@ void* pcapDispatch(void *_i) {
       rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, processPacket, (u_char*)_i);
 
       if(rc == -1) {
-	traceEvent(CONST_TRACE_ERROR, "Error while reading packets: %s.\n",
+	traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
+                   i,
+                   myGlobals.device[i].name,
 		   pcap_geterr(myGlobals.device[i].pcapPtr));
 	break;
       } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
@@ -139,7 +141,9 @@ void* pcapDispatch(void *_i) {
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
     if(rc == -1) {
-      traceEvent(CONST_TRACE_ERROR, "Error while reading packets: %s.\n",
+      traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
+                 i,
+                 myGlobals.device[i].humanFriendlyName,
 		 pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } /* else
@@ -195,10 +199,10 @@ void daemonize(void) {
   signal(SIGQUIT, SIG_IGN);
 
   if((childpid=fork()) < 0)
-    traceEvent(CONST_TRACE_ERROR, "An error occurred while daemonizing ntop (errno=%d)...\n", errno);
+    traceEvent(CONST_TRACE_ERROR, "INIT: ERROR: Occurred while daemonizing (errno=%d)", errno);
   else {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Note: after fork() in %s (%d)\n", 
+    traceEvent(CONST_TRACE_INFO, "DEBUG: after fork() in %s (%d)", 
                            childpid ? "parent" : "child",
                            childpid);
 #endif
@@ -209,17 +213,17 @@ void daemonize(void) {
       fd = fopen(pidFileName, "wb");
 
       if(fd == NULL) {
-          traceEvent(CONST_TRACE_WARNING, "Unable to create pid file (%s). ", pidFileName);
+          traceEvent(CONST_TRACE_WARNING, "INIT: WARNING: Unable to create pid file (%s)", pidFileName);
       } else {
           fprintf(fd, "%d\n", myGlobals.basentoppid);
           fclose(fd);
-          traceEvent(CONST_TRACE_INFO, "Created pid file (%s). ", pidFileName);
+          traceEvent(CONST_TRACE_INFO, "INIT: Created pid file (%s)", pidFileName);
       }
 
-      traceEvent(CONST_TRACE_INFO, "Bye bye: I'm becoming a daemon...\n");
+      traceEvent(CONST_TRACE_INFO, "INIT: Bye bye: I'm becoming a daemon...");
       detachFromTerminal(1);
     } else { /* father */
-      traceEvent(CONST_TRACE_INFO, "Note: Parent process is exiting (this is normal)\n");
+      traceEvent(CONST_TRACE_INFO, "INIT: Parent process is exiting (this is normal)");
       exit(0);
     }
   }
@@ -313,14 +317,14 @@ static short handleProtocol(char* protoName, char *protocol) {
 #endif
 	servicesMapper[idx] = myGlobals.numIpProtosToMonitor;
       } else if(printWarnings)
-	printf("WARNING: protocol '%s' has been discarded (multiple instances).\n",
+	traceEvent(CONST_TRACE_WARNING, "INIT: WARNING: protocol '%s' has been discarded (multiple instances)",
 	       protocol);
       return(idx);
     }
   }
 
   if(printWarnings)
-    traceEvent(CONST_TRACE_WARNING, "WARNING: unknown protocol '%s'. It has been ignored.\n",
+    traceEvent(CONST_TRACE_WARNING, "INIT: WARNING: unknown protocol '%s' - it has been ignored",
 	       protocol);
 
   return(-1);
@@ -438,20 +442,20 @@ void handleProtocols() {
   fd = fopen(myGlobals.protoSpecs, "rb");
 
   if(fd == NULL) {
-    traceEvent(CONST_TRACE_INFO, "Processing protocol list: '%s'", myGlobals.protoSpecs);
+    traceEvent(CONST_TRACE_INFO, "PROTO_INIT: Processing protocol list: '%s'", myGlobals.protoSpecs);
     proto = strtok_r(myGlobals.protoSpecs, ",", &strtokState);
   } else {
     struct stat buf;
 
     if(stat(myGlobals.protoSpecs, &buf) != 0) {
       fclose(fd);
-      traceEvent(CONST_TRACE_ERROR, "Error while stat() of %s\n", myGlobals.protoSpecs);
+      traceEvent(CONST_TRACE_ERROR, "PROTO_INIT: ERROR: unable to get information about file '%s'", myGlobals.protoSpecs);
       return;
     }
 
     bufferCurrent = buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
-    traceEvent(CONST_TRACE_INFO, "Processing protocol file: '%s', size: %ld",
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PROTO_INIT: Processing protocol file: '%s', size: %ld",
 	       myGlobals.protoSpecs, buf.st_size+8);
 
     for (;;) {
@@ -501,7 +505,7 @@ void handleProtocols() {
 
     if(protoName == NULL)
       traceEvent(CONST_TRACE_INFO,
-		 "Unknown protocol '%s'. It has been ignored.\n",
+		 "PROTO_INIT: Unknown protocol '%s'. It has been ignored",
 		 proto);
     else {
       char tmpStr[255];
@@ -627,11 +631,7 @@ static void purgeIpPorts(int theDevice) {
   /* 
      I know that this semaphore has been designed for other tasks
      however it allows me to save memory/time... 
-  */
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "purgeIpPorts");
-#endif
-  
+  */  
   for(i=1; i<MAX_IP_PORT; i++) {
     if((marker[i] == 0) && (myGlobals.device[theDevice].ipPorts[i] != NULL)) {
       free(myGlobals.device[theDevice].ipPorts[i]);
@@ -642,10 +642,6 @@ static void purgeIpPorts(int theDevice) {
     }
   }
   
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
-
   free(marker);
 }
 
@@ -655,7 +651,7 @@ static void purgeIpPorts(int theDevice) {
 
 void* scanIdleLoop(void* notUsed _UNUSED_) {
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) started...\n", myGlobals.scanIdleThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) started", myGlobals.scanIdleThreadId);
 
   for(;;) {
     int i;
@@ -673,13 +669,13 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #if !defined(__FreeBSD__)
 	purgeIpPorts(i);
 #endif
-#ifdef HAVE_SCHED_H
+#ifdef MAKE_WITH_SCHED_YIELD
 	sched_yield(); /* Allow other threads to run */
 #endif
       }
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated...\n", myGlobals.scanIdleThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated", myGlobals.scanIdleThreadId);
   return(NULL); 
 }
 #endif
@@ -690,7 +686,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 void* periodicLsofLoop(void* notUsed _UNUSED_) {
   long loopCount=0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread (%ld) started...\n", myGlobals.lsofThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread (%ld) started", myGlobals.lsofThreadId);
 
   for(;;) {
     /*
@@ -703,14 +699,14 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
     if(myGlobals.updateLsof) {
     HEARTBEAT(0, "periodicLsofLoop()", NULL);
 #ifdef LSOF_DEBUG
-      traceEvent(CONST_TRACE_INFO, "LSOF_DEBUG: Wait please: reading lsof information...\n");
+      traceEvent(CONST_TRACE_INFO, "LSOF_DEBUG: Wait please: reading lsof information");
 #endif
       if(myGlobals.isLsofPresent) readLsofInfo();
       if ( (++loopCount == 1) && (myGlobals.numProcesses == 0) ) {
-          traceEvent(CONST_TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?\n");
+          traceEvent(CONST_TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?");
       }
 #ifdef LSOF_DEBUG
-      traceEvent(CONST_TRACE_INFO, "LSOF_DEBUG: Done with lsof.\n");
+      traceEvent(CONST_TRACE_INFO, "LSOF_DEBUG: Done with lsof");
 #endif
     }
     HEARTBEAT(0, "periodicLsofLoop(), sleep(60)...", NULL);
@@ -718,7 +714,7 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
     HEARTBEAT(0, "periodicLsofLoop(), sleep(60)...woke", NULL);
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread (%ld) terminated...\n", myGlobals.lsofThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread (%ld) terminated", myGlobals.lsofThreadId);
   return(NULL); 
 
 }
@@ -767,7 +763,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
       rc = pcap_dispatch(myGlobals.device[0].pcapPtr, 1, processPacket, NULL);
 
       if(rc == -1) {
-	traceEvent(CONST_TRACE_ERROR, "Error while reading packets: %s.\n",
+	traceEvent(CONST_TRACE_ERROR, "Reading packets: '%s'",
 		   pcap_geterr(myGlobals.device[0].pcapPtr));
 	continue;
       } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
@@ -808,7 +804,7 @@ RETSIGTYPE cleanup(int signo) {
   int i;
 
   if(!msgSent) {
-    traceEvent(CONST_TRACE_INFO, "ntop caught signal %d", signo);
+    traceEvent(CONST_TRACE_INFO, "CLEANUP: ntop caught signal %d", signo);
     msgSent = 1;
   }
 
@@ -825,15 +821,15 @@ RETSIGTYPE cleanup(int signo) {
     size = backtrace(array, 20);
     strings = (char**)backtrace_symbols(array, size);
 
-    traceEvent(CONST_TRACE_ERROR, "\n\n\n*****ntop error: Signal(%d)\n", signo);
+    traceEvent(CONST_TRACE_ERROR, "BACKTRACE: *****ntop error: Signal(%d)", signo);
 
-    traceEvent(CONST_TRACE_ERROR, "\n     backtrace is:\n");
+    traceEvent(CONST_TRACE_ERROR, "BACKTRACE:     backtrace is:\n");
     if (size < 2) {
-      traceEvent(CONST_TRACE_ERROR, "         **unavailable!\n");
+      traceEvent(CONST_TRACE_ERROR, "BACKTRACE:         **unavailable!\n");
     } else {
       /* Ignore the 0th entry, that's our cleanup() */
       for (i=1; i<size; i++) {
-	traceEvent(CONST_TRACE_ERROR, "          %2d. %s\n", i, strings[i]);
+	traceEvent(CONST_TRACE_ERROR, "BACKTRACE:          %2d. %s\n", i, strings[i]);
       }
     }
   }
@@ -844,7 +840,7 @@ RETSIGTYPE cleanup(int signo) {
   else
     unloaded = 1;
 
-  traceEvent(CONST_TRACE_INFO, "Cleaning up...");
+  traceEvent(CONST_TRACE_INFO, "CLEANUP: Cleaning up, set FLAG_NTOPSTATE_TERM");
 
   myGlobals.capturePackets = FLAG_NTOPSTATE_TERM;
 
@@ -904,7 +900,7 @@ RETSIGTYPE cleanup(int signo) {
 #endif /* #ifndef WIN32 */
 
 #ifdef CFG_MULTITHREADED
-  traceEvent(CONST_TRACE_INFO, "Waiting until threads terminate...\n");
+  traceEvent(CONST_TRACE_INFO, "CLEANUP: Waiting until threads terminate");
   sleep(3); /* Just to wait until threads complete */
 #endif
 
@@ -967,13 +963,10 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 #ifdef HAVE_GDBM_H
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "cleanup");
-#endif
-  gdbm_close(myGlobals.gdbm_file);    myGlobals.gdbm_file = NULL;
-  gdbm_close(myGlobals.addressCache); myGlobals.addressCache = NULL;
-  gdbm_close(myGlobals.pwFile);       myGlobals.pwFile = NULL;
-  gdbm_close(myGlobals.prefsFile);    myGlobals.prefsFile = NULL;
+  gdbm_close(myGlobals.dnsCacheFile);     myGlobals.dnsCacheFile = NULL;
+  gdbm_close(myGlobals.addressQueueFile); myGlobals.addressQueueFile = NULL;
+  gdbm_close(myGlobals.pwFile);           myGlobals.pwFile = NULL;
+  gdbm_close(myGlobals.prefsFile);        myGlobals.prefsFile = NULL;
 
   /* Courtesy of Wies-Software <wies@wiessoft.de> */
   gdbm_close(myGlobals.hostsInfoFile); myGlobals.hostsInfoFile = NULL;
@@ -982,10 +975,6 @@ RETSIGTYPE cleanup(int signo) {
     myGlobals.eventFile = NULL;
   }
 #ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
-
-#ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.gdbmMutex);
 #endif
 #endif
@@ -993,16 +982,16 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numDevices; i++) {
     int j;
 
-    traceEvent(CONST_TRACE_INFO, "Freeing device %s (idx=%d)...", myGlobals.device[i].name, i);
+    traceEvent(CONST_TRACE_INFO, "CLEANUP: Freeing device %s (idx=%d)", myGlobals.device[i].name, i);
 
     if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
-	traceEvent(CONST_TRACE_INFO, "%s packets received by filter on %s\n",
+	traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s\n",
 		   formatPkts((Counter)pcapStat.ps_recv), myGlobals.device[i].name);
 
-	traceEvent(CONST_TRACE_INFO, "%s packets dropped by kernel\n", formatPkts((Counter)pcapStat.ps_drop));
+	traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped by kernel", formatPkts((Counter)pcapStat.ps_drop));
 #ifdef CFG_MULTITHREADED
-	traceEvent(CONST_TRACE_INFO, "%s packets dropped by ntop\n",
+	traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped by ntop",
 		   formatPkts(myGlobals.device[i].droppedPkts.value));
 #endif
       }

@@ -1,0 +1,139 @@
+#!/bin/sh
+echo ""
+echo "Making p2c table..."
+echo ""
+
+work="/tmp/p2c"
+dest=`pwd`
+year=`date +%Y`
+month=`date +%m`
+apnic="ftp://ftp.apnic.net/pub/stats/apnic/apnic-${year}-${month}-01"
+arin="ftp://ftp.arin.net/pub/stats/arin/arin.${year}${month}01"
+lacnic="ftp://ftp.lacnic.net/pub/stats/lacnic/lacnic.${year}${month}01"
+ripe="ftp://ftp.ripe.net/ripe/stats/ripencc.${year}${month}01"
+
+ripealt="ftp://ftp.ripe.net/ripe/dbase/split/ripe.db.inetnum.gz"
+apnicalt="ftp://ftp.apnic.net/pub/apnic/whois-data/APNIC/split/apnic.db.inetnum.gz"
+
+cwdata="ftp://ftp.cw.net/pub/rr/split/cw.db.in.gz"
+
+echo ""
+echo "  Destination: ${dest}, work directory: ${work}"
+echo ""
+echo "  Clean up work directory..."
+echo ""
+if test -d $work; then
+  rm -rf $work
+fi
+
+echo ""
+echo "  Preparing work directory..."
+echo ""
+mkdir $work
+cp utils/prefixtablegen.c $work
+cp utils/inetnum2countryalloc.c $work
+
+echo ""
+echo "  Checking for a manual override file (manual.something)..."
+echo ""
+manual=`ls -1 -t *manual.* 2>/dev/null | head -n1`
+
+if test "x${manual}" != "x"; then
+    if test -r ${manual}; then
+        echo ""
+        echo "    Copying manual additions to p2c data from ${manual}"
+        echo ""
+        cp ${manual} ${work}/0_p2cmanual.data
+    else
+        echo "    Not found ... continuing ..."
+    fi
+else
+    echo "    Not found ... continuing ..."
+fi
+
+cd $work
+
+echo ""
+echo "  Downloading data..."
+echo ""
+echo "         This will take a while, especially on a slow link"
+echo "                  (the ripe file is over 40MB)."
+echo ""
+echo "                   Time for a cup of coffee..."
+echo ""
+gcc -lm  -o prefixtablegen prefixtablegen.c
+gcc -o inetnum2countryalloc inetnum2countryalloc.c
+
+wget -O apnic.data $apnic
+wget -O arin.data $arin
+wget -O lacnic.data $lacnic
+wget -O ripe.data $ripe
+
+echo ""
+echo "  Downloading alternate RIPE data..."
+echo ""
+wget -O ripealt.data.gz $ripealt
+
+echo ""
+echo "  Processing alternate RIPE data..."
+echo ""
+zcat ripealt.data.gz | ./inetnum2countryalloc > 1_ripealt.data
+
+echo ""
+echo "  Downloading alternate APNIC data..."
+echo ""
+wget -O apnicalt.data.gz $apnicalt
+
+echo ""
+echo "  Processing alternate APNIC data..."
+echo ""
+zcat apnicalt.data.gz | ./inetnum2countryalloc > 1_apnicalt.data
+
+echo ""
+echo "  Downloading Cable and Wireless data..."
+echo ""
+wget -O cwdata.data.gz $cwdata
+
+echo ""
+echo "  Processing Cable and Wireless data..."
+echo ""
+zcat cwdata.data.gz | ./inetnum2countryalloc > 2_cwdata.data
+
+echo ""
+echo "  Checking data..."
+echo ""
+err="N"
+for i in `ls *.data`; do
+    if test ! -s ${i} ; then
+        echo "ERROR: $i is empty..."
+        err="Y"
+    fi
+done
+if test "${err}" = "Y"; then
+    echo ""
+    echo "ABORTING - files remain in $work"
+    exit 1
+fi
+
+echo ""
+echo "  Processing downloaded data..."
+echo ""
+cat *.data | ./prefixtablegen
+
+echo ""
+echo "  Copying file(s) to ntop directory..."
+echo ""
+for i in `ls p2c.*.table`; do
+    echo "Copying ${i}..."
+    cp $i $dest
+done
+
+echo ""
+echo "  Cleanup work directory..."
+echo ""
+cd $pwd
+##TEMP## rm -rf $work
+
+echo ""
+echo "Done!"
+echo ""

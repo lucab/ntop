@@ -163,7 +163,7 @@ static void updateFileList(char *fileName, u_char upDownloadMode, HostTraffic *t
       FD_ZERO(&list->fileFlags);
       FD_SET(upDownloadMode, &list->fileFlags);
       list->next = NULL;
-      
+
       if(numEntries >= MAX_NUM_LIST_ENTRIES) {
 	FileList *ptr = theRemHost->protocolInfo->fileList->next;
 
@@ -191,7 +191,7 @@ static void updateHostUsers(char *userName, int userType, HostTraffic *theHost) 
       not really meaningful
     */
 
-    if((theHost->protocolInfo != NULL) 
+    if((theHost->protocolInfo != NULL)
        && (theHost->protocolInfo->userList != NULL)) {
       UserList *list = theHost->protocolInfo->userList;
 
@@ -254,9 +254,9 @@ void updateUsedPorts(HostTraffic *srcHost,
 
   /* traceEvent(CONST_TRACE_INFO, "%d\n", length); */
 
-  if((srcHost == dstHost) 
-     || broadcastHost(srcHost) 
-     || broadcastHost(dstHost)) 
+  if((srcHost == dstHost)
+     || broadcastHost(srcHost)
+     || broadcastHost(dstHost))
     return;
 
   /* Now let's update the list of ports recently used by the hosts */
@@ -348,7 +348,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
      */
      ) {
     HostTraffic *theHost, *theRemHost;
-    char *fmt = "WARNING: detected TCP connection with no data exchanged "
+    char *fmt = "Detected TCP connection with no data exchanged "
       "[%s:%d] -> [%s:%d] (pktSent=%d/pktRcvd=%d) (network mapping attempt?)";
 
     theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
@@ -472,7 +472,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	    thought that the session was already started) since 120 seconds */
 	 || ((theSession->sessionState >= FLAG_STATE_ACTIVE)
 	     && ((theSession->bytesSent.value == 0) || (theSession->bytesRcvd.value == 0))
-	     && ((theSession->lastSeen+120) < myGlobals.actTime))		 
+	     && ((theSession->lastSeen+120) < myGlobals.actTime))
 	 ) {
 
 	if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
@@ -480,7 +480,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	  prevSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 	} else
 	  prevSession->next = nextSession;
-	
+
 	freeSessionCount++;
 	freeSession(theSession, actualDeviceId, 1);
 	theSession = prevSession;
@@ -531,7 +531,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
   if((srcHost == NULL) || (dstHost == NULL)) {
-    traceEvent(CONST_TRACE_INFO, "Sanity check failed (3) [Low memory?]");
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (3) [Low memory?]");
     return(NULL);
   }
 
@@ -665,7 +665,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	*/
       } else
 #endif
-	if ( (theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return;
+	if ( (theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return(NULL);
 
       memset(theSession, 0, sizeof(IPSession));
       addedNewEntry = 1;
@@ -768,7 +768,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numNegativeReplSent, 1);
 	    incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numNegativeReplRcvd, 1);
 	  }
-	    
+
 	  if(microSecTimeDiff > 0) {
 	    if(subnetLocalHost(dstHost)) {
 	      if((srcHost->protocolInfo->httpStats->fastestMicrosecLocalReqMade == 0)
@@ -805,7 +805,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	}
       } else if((dport == 80 /* HTTP */) && (packetDataLength > 0)) {
 	if(theSession->bytesProtoSent.value == 0) {
-	  if ( (rcStr = (char*)malloc(packetDataLength+1)) == NULL) return;
+	  if ( (rcStr = (char*)malloc(packetDataLength+1)) == NULL) return(NULL);
 	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
 
@@ -894,14 +894,18 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  printf("DEBUG: OS='%s'\n", os);
 #endif
 
+#ifdef CFG_MULTITHREADED
 		  accessAddrResMutex("makeHostLink");
+#endif
 		  if(srcHost->fingerprint == NULL) {
 		    char buffer[64];
-		    
+
 		    snprintf(buffer, sizeof(buffer), ":%s", os);
 		    srcHost->fingerprint = strdup(buffer);
 		  }
-		  releaseAddrResMutex();	  
+#ifdef CFG_MULTITHREADED
+		  releaseAddrResMutex();
+#endif
 		}
 		break;
 	      }	else if(strncmp(row, "Host:", 5) == 0) {
@@ -998,7 +1002,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    /* printf("==>\n\n%s\n\n", rcStr); */
 	  }
 	  free(rcStr);
-	} else if((theSession->bytesProtoSent.value > 0) 
+	} else if((theSession->bytesProtoSent.value > 0)
 		  || (theSession->bytesProtoSent.value < 32)) {
 	  char *strtokState, *row;
 
@@ -1102,7 +1106,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
 	      if(theSession->bytesProtoSent.value == 3) {
-		/* GET */ 
+		/* GET */
 		updateFileList(file,  BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 		updateFileList(file,  BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 		updateHostUsers(user, BITFLAG_P2P_USER, srcHost);
@@ -1120,11 +1124,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       } else if(((sport == 1863) ||(dport == 1863)) /* MS Messenger */
 		&& (packetDataLength > 0)) {
 	  char *strtokState, *row;
-	  
+
 	  rcStr = (char*)malloc(packetDataLength+1);
 	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
-	  
+
 	  if((dport == 1863) && (strncmp(rcStr, "USR 6 TWN I ", 12) == 0)) {
 	    row = strtok(&rcStr[12], "\n\r");
 	    if(strstr(row, "@")) {
@@ -1233,7 +1237,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	else
 	  FD_SET(FLAG_HOST_TYPE_SVC_POP, &dstHost->flags);
 
-	if(((theSession->bytesProtoRcvd.value < 64) 
+	if(((theSession->bytesProtoRcvd.value < 64)
 	    || (theSession->bytesProtoSent.value < 64)) /* The user name is sent at the beginning of the communication */
 	   && (packetDataLength > 4)) {
 	  rcStr = (char*)malloc(packetDataLength+1);
@@ -1303,9 +1307,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	   && ((theSession->bytesProtoSent.value > 0) || (theSession->bytesProtoSent.value < 32))
 	   ) {
 
-	  rcStr = (char*)malloc(packetDataLength+1);
-	  memcpy(rcStr, packetData, packetDataLength);
-	  rcStr[packetDataLength-1] = '\0';
+	  rcStr = (char*)malloc(len+1);
+	  memcpy(rcStr, packetData, len);
+	  rcStr[len-1] = '\0';
 
 	  /* traceEvent(CONST_TRACE_INFO, "rcStr '%s'", rcStr); */
 	  if((!strncmp(rcStr, "$Get", 4))
@@ -1316,12 +1320,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     || (!strncmp(rcStr, "$Quit", 5))) {
 	    /* See dcplusplus.sourceforge.net */
 
-	    theSession->isP2P = FLAG_P2P_DIRECTCONNECT;	      
+	    theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
 	    if(!strncmp(rcStr, "$MyNick", 7)) {
 	      updateHostUsers(strtok(&rcStr[8], "|"), BITFLAG_P2P_USER, srcHost);
 	    } else if(!strncmp(rcStr, "$Get", 4)) {
 	      char *file = strtok(&rcStr[5], "$");
-		
+
 	      updateFileList(file, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	      updateFileList(file, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	    }
@@ -1607,7 +1611,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
      *
      */
     if(tp->th_flags & TH_FIN) {
-      u_int32_t fin = ntohl(tp->th_seq)+packetDataLength;
+      u_int32_t fin = ntohl(tp->th_seq);
 
       if(sport < dport) /* Server->Client */
 	check = (fin != theSession->lastSCFin);
@@ -1617,7 +1621,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if(check) {
 	/* This is not a duplicated (retransmitted) FIN */
 	theSession->finId[theSession->numFin] = fin;
-	theSession->numFin = (theSession->numFin+1) % MAX_NUM_FIN;;
+	theSession->numFin = (theSession->numFin+1) % MAX_NUM_FIN;
 
 	if(sport < dport) /* Server->Client */
 	  theSession->lastSCFin = fin;
@@ -1747,7 +1751,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  a rejected session.
 	*/
 	if(myGlobals.enableSuspiciousPacketDump) {
-	  traceEvent(CONST_TRACE_WARNING, "WARNING: TCP session [%s:%d]<->[%s:%d] reset by %s "
+	  traceEvent(CONST_TRACE_WARNING, "TCP session [%s:%d]<->[%s:%d] reset by %s "
 		     "without completing 3-way handshake",
 		     srcHost->hostSymIpAddress, sport,
 		     dstHost->hostSymIpAddress, dport,
@@ -1788,7 +1792,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&srcHost->secHostPkts->ackScanRcvd, dstHostIdx, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->ackScanSent, srcHostIdx, actualDeviceId);
 	if(myGlobals.enableSuspiciousPacketDump) {
-	  traceEvent(CONST_TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
+	  traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed ACK scan of host [%s:%d]",
 		     dstHost->hostSymIpAddress, dport,
 		     srcHost->hostSymIpAddress, sport);
 	  dumpSuspiciousPacket(actualDeviceId);
@@ -1826,7 +1830,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if((srcHostIdx == dstHostIdx)
 	 /* && (sport == dport)  */ /* Caveat: what about Win NT 3.51 ? */
 	 && (tp->th_flags == TH_SYN)) {
-	traceEvent(CONST_TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
+	traceEvent(CONST_TRACE_WARNING, "Detected Land Attack against host %s:%d",
 		   srcHost->hostSymIpAddress, sport);
 	dumpSuspiciousPacket(actualDeviceId);
       }
@@ -1857,7 +1861,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  incrementUsageCounter(&srcHost->secHostPkts->xmasScanRcvd, dstHostIdx, actualDeviceId);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
-	    traceEvent(CONST_TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
+	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed XMAS scan of host [%s:%d]",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
@@ -1871,7 +1875,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  incrementUsageCounter(&srcHost->secHostPkts->finScanRcvd, dstHostIdx, actualDeviceId);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
-	    traceEvent(CONST_TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
+	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed FIN scan of host [%s:%d]",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
@@ -1887,7 +1891,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  incrementUsageCounter(&dstHost->secHostPkts->nullScanSent, srcHostIdx, actualDeviceId);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
-	    traceEvent(CONST_TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
+	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed NULL scan of host [%s:%d]",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
@@ -1935,7 +1939,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	myGlobals.device[actualDeviceId].tcpSession[idx] = theSession->next;
       } else
 	prevSession->next = theSession->next;
-      
+
       freeSession(theSession, actualDeviceId, 1);
 #ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.tcpSessionsMutex);
@@ -1976,7 +1980,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
      || (sport == 13) || (dport == 13) /* daytime */
      || (sport == 19) || (dport == 19) /* chargen */
      ) {
-    char *fmt = "WARNING: detected traffic [%s:%d] -> [%s:%d] on "
+    char *fmt = "Detected traffic [%s:%d] -> [%s:%d] on "
       "a diagnostic port (network mapping attempt?)";
 
     if(myGlobals.enableSuspiciousPacketDump) {
@@ -2011,7 +2015,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   }
 
   if(fragmentedData && (packetDataLength <= 128)) {
-    char *fmt = "WARNING: detected tiny fragment (%d bytes) "
+    char *fmt = "Detected tiny fragment (%d bytes) "
       "[%s:%d] -> [%s:%d] (network mapping attempt?)";
     allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
     incrementUsageCounter(&srcHost->secHostPkts->tinyFragmentSent, dstHostIdx, actualDeviceId);

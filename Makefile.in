@@ -61,8 +61,8 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = .
 
 ACLOCAL = @ACLOCAL@
-AUTOCONF = @AUTOCONF@
-AUTOMAKE = @AUTOMAKE@
+AUTOCONF = /bin/sh /home/deri/network/ntop/missing --run echo
+AUTOMAKE = /bin/sh /home/deri/network/ntop/missing --run echo
 AUTOHEADER = @AUTOHEADER@
 
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
@@ -104,16 +104,17 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
-ECHO = @ECHO@
 INCS = @INCS@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTOP = @INTOP@
+LD = @LD@
 LIBCURSES = @LIBCURSES@
 LIBREADLINE = @LIBREADLINE@
 LIBTERMCAP = @LIBTERMCAP@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
+NM = @NM@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
@@ -162,12 +163,16 @@ DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               faq.html \
               ntop-cert.pem \
               p2c.opt.table \
-              $(ETTER_PASSIVE)
+              $(ETTER_PASSIVE) \
+              oui.txt \
+              specialMAC.txt
 
 
 NTOPDATA = ntop-cert.pem \
            p2c.opt.table \
-           $(ETTER_PASSIVE)
+           $(ETTER_PASSIVE) \
+           oui.txt \
+           specialMAC.txt
 
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
@@ -207,18 +212,31 @@ THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) \
 # The Games
 #
 bin_PROGRAMS = ntop
-EXTRA_PROGRAMS = ntops
+EXTRA_PROGRAMS = ntops sntop
 bin_SCRIPTS = 
 
 ntop_SOURCES = main.c admin.c
 ntop_DEPENDENCIES = libntopreport.la libntop.la
 ntop_LDADD = libntopreport.la libntop.la
 ntop_LDFLAGS = $(AM_LDFLAGS)
+ntop_CFLAGS = 
 
 ntops_SOURCES = $(ntop_SOURCES)
 ntops_DEPENDENCIES = $(ntop_DEPENDENCIES)
-ntops_LDADD = $(ntop_LDADD)
+ntops_LDADD = $(ntop_LDADD) -lrrd
 ntops_LDFLAGS = $(ntop_LDFLAGS) -static
+
+#
+# Static ntop: everything is linked in
+#
+sntop_SOURCES = $(ntop_SOURCES) plugins/icmpPlugin.c plugins/lastSeenPlugin.c \
+		     plugins/netflowPlugin.c plugins/nfsPlugin.c plugins/pdaPlugin.c  \
+		     plugins/sflowPlugin.c plugins/rrdPlugin.c
+
+
+sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
+sntop_LDADD = $(ntop_LDADD) -lrrd
+sntop_LDFLAGS = $(ntop_LDFLAGS) -static
 
 noinst_HEADERS = globals-core.h globals-report.h ntop.h regex.h
 
@@ -234,7 +252,7 @@ libntop_la_SOURCES = address.c       dataFormat.c  \
                      sessions.c         \
                      ssl.c           term.c        traffic.c          \
                      util.c          vendor.c      version.c          \
-                     vendortable.h   ntop_darwin.c
+                     ntop_darwin.c
 
 
 libntop_la_DEPENDENCIES = config.h
@@ -272,15 +290,20 @@ libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
 	http.lo report.lo reportUtils.lo webInterface.lo xmldump.lo
 libntopreport_la_OBJECTS = $(am_libntopreport_la_OBJECTS)
-EXTRA_PROGRAMS = ntops$(EXEEXT)
+EXTRA_PROGRAMS = ntops$(EXEEXT) sntop$(EXEEXT)
 bin_PROGRAMS = ntop$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
-am_ntop_OBJECTS = main.$(OBJEXT) admin.$(OBJEXT)
+am_ntop_OBJECTS = ntop-main.$(OBJEXT) ntop-admin.$(OBJEXT)
 ntop_OBJECTS = $(am_ntop_OBJECTS)
 am__objects_1 = main.$(OBJEXT) admin.$(OBJEXT)
 am_ntops_OBJECTS = $(am__objects_1)
 ntops_OBJECTS = $(am_ntops_OBJECTS)
+am_sntop_OBJECTS = $(am__objects_1) icmpPlugin.$(OBJEXT) \
+	lastSeenPlugin.$(OBJEXT) netflowPlugin.$(OBJEXT) \
+	nfsPlugin.$(OBJEXT) pdaPlugin.$(OBJEXT) sflowPlugin.$(OBJEXT) \
+	rrdPlugin.$(OBJEXT)
+sntop_OBJECTS = $(am_sntop_OBJECTS)
 SCRIPTS = $(bin_SCRIPTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I.
@@ -293,14 +316,20 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/globals-core.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/globals-report.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/graph.Plo ./$(DEPDIR)/hash.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/http.Plo ./$(DEPDIR)/initialize.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/leaks.Plo ./$(DEPDIR)/main.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/netflow.Plo ./$(DEPDIR)/ntop.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/http.Plo ./$(DEPDIR)/icmpPlugin.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/initialize.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/lastSeenPlugin.Po ./$(DEPDIR)/leaks.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/main.Po ./$(DEPDIR)/netflow.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/netflowPlugin.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/nfsPlugin.Po ./$(DEPDIR)/ntop-admin.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ntop-main.Po ./$(DEPDIR)/ntop.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/ntop_darwin.Plo ./$(DEPDIR)/pbuf.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/plugin.Plo ./$(DEPDIR)/protocols.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/qsort.Plo ./$(DEPDIR)/regex.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/report.Plo ./$(DEPDIR)/reportUtils.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/sessions.Plo ./$(DEPDIR)/ssl.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/pdaPlugin.Po ./$(DEPDIR)/plugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/protocols.Plo ./$(DEPDIR)/qsort.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/regex.Plo ./$(DEPDIR)/report.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/reportUtils.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/rrdPlugin.Po ./$(DEPDIR)/sessions.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/sflowPlugin.Po ./$(DEPDIR)/ssl.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/term.Plo ./$(DEPDIR)/traffic.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/util.Plo ./$(DEPDIR)/vendor.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/version.Plo \
@@ -314,7 +343,7 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) \
-	$(ntop_SOURCES) $(ntops_SOURCES)
+	$(ntop_SOURCES) $(ntops_SOURCES) $(sntop_SOURCES)
 
 NROFF = nroff
 MANS = $(man_MANS)
@@ -325,15 +354,15 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	uninstall-info-recursive all-recursive install-data-recursive \
 	install-exec-recursive installdirs-recursive install-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
-DIST_COMMON = README $(ETTER_PASSIVE)\ $(noinst_HEADERS) AUTHORS \
+DIST_COMMON = README $(ETTER_PASSIVE) $(noinst_HEADERS) AUTHORS \
 	CONTENTS COPYING ChangeLog INSTALL MANIFESTO Makefile.am \
 	Makefile.in NEWS PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 \
-	aclocal.m4 config.guess config.h.in config.sub configure \
-	configure.in depcomp faq.html install-sh ltconfig ltmain.sh \
-	missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html ntop.txt \
-	p2c.opt.table
+	aclocal.m4 compile config.guess config.h.in config.sub \
+	configure configure.in depcomp faq.html install-sh ltconfig \
+	ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html \
+	ntop.txt oui.txt p2c.opt.table specialMAC.txt\
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES)
+SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES) $(sntop_SOURCES)
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -434,12 +463,24 @@ clean-binPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
+ntop-main.$(OBJEXT): main.c
+ntop-admin.$(OBJEXT): admin.c
 ntop$(EXEEXT): $(ntop_OBJECTS) $(ntop_DEPENDENCIES) 
 	@rm -f ntop$(EXEEXT)
 	$(LINK) $(ntop_LDFLAGS) $(ntop_OBJECTS) $(ntop_LDADD) $(LIBS)
 ntops$(EXEEXT): $(ntops_OBJECTS) $(ntops_DEPENDENCIES) 
 	@rm -f ntops$(EXEEXT)
 	$(LINK) $(ntops_LDFLAGS) $(ntops_OBJECTS) $(ntops_LDADD) $(LIBS)
+icmpPlugin.$(OBJEXT): plugins/icmpPlugin.c
+lastSeenPlugin.$(OBJEXT): plugins/lastSeenPlugin.c
+netflowPlugin.$(OBJEXT): plugins/netflowPlugin.c
+nfsPlugin.$(OBJEXT): plugins/nfsPlugin.c
+pdaPlugin.$(OBJEXT): plugins/pdaPlugin.c
+sflowPlugin.$(OBJEXT): plugins/sflowPlugin.c
+rrdPlugin.$(OBJEXT): plugins/rrdPlugin.c
+sntop$(EXEEXT): $(sntop_OBJECTS) $(sntop_DEPENDENCIES) 
+	@rm -f sntop$(EXEEXT)
+	$(LINK) $(sntop_LDFLAGS) $(sntop_OBJECTS) $(sntop_LDADD) $(LIBS)
 binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
@@ -476,20 +517,29 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/graph.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/http.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/icmpPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/initialize.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lastSeenPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netflow.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netflowPlugin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nfsPlugin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntop-admin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntop-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntop.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntop_darwin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbuf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdaPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocols.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qsort.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/regex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/report.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reportUtils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sessions.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sflowPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ssl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/term.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/traffic.Plo@am__quote@
@@ -519,6 +569,168 @@ distclean-depend:
 @AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 	$(LTCOMPILE) -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<
+
+ntop-main.o: main.c
+@AMDEP_TRUE@	source='main.c' object='ntop-main.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/ntop-main.Po' tmpdepfile='$(DEPDIR)/ntop-main.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ntop_CFLAGS) $(CFLAGS) -c -o ntop-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+
+ntop-main.obj: main.c
+@AMDEP_TRUE@	source='main.c' object='ntop-main.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/ntop-main.Po' tmpdepfile='$(DEPDIR)/ntop-main.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ntop_CFLAGS) $(CFLAGS) -c -o ntop-main.obj `cygpath -w main.c`
+
+ntop-main.lo: main.c
+@AMDEP_TRUE@	source='main.c' object='ntop-main.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/ntop-main.Plo' tmpdepfile='$(DEPDIR)/ntop-main.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ntop_CFLAGS) $(CFLAGS) -c -o ntop-main.lo `test -f 'main.c' || echo '$(srcdir)/'`main.c
+
+ntop-admin.o: admin.c
+@AMDEP_TRUE@	source='admin.c' object='ntop-admin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/ntop-admin.Po' tmpdepfile='$(DEPDIR)/ntop-admin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ntop_CFLAGS) $(CFLAGS) -c -o ntop-admin.o `test -f 'admin.c' || echo '$(srcdir)/'`admin.c
+
+ntop-admin.obj: admin.c
+@AMDEP_TRUE@	source='admin.c' object='ntop-admin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/ntop-admin.Po' tmpdepfile='$(DEPDIR)/ntop-admin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ntop_CFLAGS) $(CFLAGS) -c -o ntop-admin.obj `cygpath -w admin.c`
+
+ntop-admin.lo: admin.c
+@AMDEP_TRUE@	source='admin.c' object='ntop-admin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/ntop-admin.Plo' tmpdepfile='$(DEPDIR)/ntop-admin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ntop_CFLAGS) $(CFLAGS) -c -o ntop-admin.lo `test -f 'admin.c' || echo '$(srcdir)/'`admin.c
+
+icmpPlugin.o: plugins/icmpPlugin.c
+@AMDEP_TRUE@	source='plugins/icmpPlugin.c' object='icmpPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/icmpPlugin.Po' tmpdepfile='$(DEPDIR)/icmpPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o icmpPlugin.o `test -f 'plugins/icmpPlugin.c' || echo '$(srcdir)/'`plugins/icmpPlugin.c
+
+icmpPlugin.obj: plugins/icmpPlugin.c
+@AMDEP_TRUE@	source='plugins/icmpPlugin.c' object='icmpPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/icmpPlugin.Po' tmpdepfile='$(DEPDIR)/icmpPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o icmpPlugin.obj `cygpath -w plugins/icmpPlugin.c`
+
+icmpPlugin.lo: plugins/icmpPlugin.c
+@AMDEP_TRUE@	source='plugins/icmpPlugin.c' object='icmpPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/icmpPlugin.Plo' tmpdepfile='$(DEPDIR)/icmpPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o icmpPlugin.lo `test -f 'plugins/icmpPlugin.c' || echo '$(srcdir)/'`plugins/icmpPlugin.c
+
+lastSeenPlugin.o: plugins/lastSeenPlugin.c
+@AMDEP_TRUE@	source='plugins/lastSeenPlugin.c' object='lastSeenPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/lastSeenPlugin.Po' tmpdepfile='$(DEPDIR)/lastSeenPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o lastSeenPlugin.o `test -f 'plugins/lastSeenPlugin.c' || echo '$(srcdir)/'`plugins/lastSeenPlugin.c
+
+lastSeenPlugin.obj: plugins/lastSeenPlugin.c
+@AMDEP_TRUE@	source='plugins/lastSeenPlugin.c' object='lastSeenPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/lastSeenPlugin.Po' tmpdepfile='$(DEPDIR)/lastSeenPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o lastSeenPlugin.obj `cygpath -w plugins/lastSeenPlugin.c`
+
+lastSeenPlugin.lo: plugins/lastSeenPlugin.c
+@AMDEP_TRUE@	source='plugins/lastSeenPlugin.c' object='lastSeenPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/lastSeenPlugin.Plo' tmpdepfile='$(DEPDIR)/lastSeenPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o lastSeenPlugin.lo `test -f 'plugins/lastSeenPlugin.c' || echo '$(srcdir)/'`plugins/lastSeenPlugin.c
+
+netflowPlugin.o: plugins/netflowPlugin.c
+@AMDEP_TRUE@	source='plugins/netflowPlugin.c' object='netflowPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/netflowPlugin.Po' tmpdepfile='$(DEPDIR)/netflowPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o netflowPlugin.o `test -f 'plugins/netflowPlugin.c' || echo '$(srcdir)/'`plugins/netflowPlugin.c
+
+netflowPlugin.obj: plugins/netflowPlugin.c
+@AMDEP_TRUE@	source='plugins/netflowPlugin.c' object='netflowPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/netflowPlugin.Po' tmpdepfile='$(DEPDIR)/netflowPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o netflowPlugin.obj `cygpath -w plugins/netflowPlugin.c`
+
+netflowPlugin.lo: plugins/netflowPlugin.c
+@AMDEP_TRUE@	source='plugins/netflowPlugin.c' object='netflowPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/netflowPlugin.Plo' tmpdepfile='$(DEPDIR)/netflowPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o netflowPlugin.lo `test -f 'plugins/netflowPlugin.c' || echo '$(srcdir)/'`plugins/netflowPlugin.c
+
+nfsPlugin.o: plugins/nfsPlugin.c
+@AMDEP_TRUE@	source='plugins/nfsPlugin.c' object='nfsPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/nfsPlugin.Po' tmpdepfile='$(DEPDIR)/nfsPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nfsPlugin.o `test -f 'plugins/nfsPlugin.c' || echo '$(srcdir)/'`plugins/nfsPlugin.c
+
+nfsPlugin.obj: plugins/nfsPlugin.c
+@AMDEP_TRUE@	source='plugins/nfsPlugin.c' object='nfsPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/nfsPlugin.Po' tmpdepfile='$(DEPDIR)/nfsPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nfsPlugin.obj `cygpath -w plugins/nfsPlugin.c`
+
+nfsPlugin.lo: plugins/nfsPlugin.c
+@AMDEP_TRUE@	source='plugins/nfsPlugin.c' object='nfsPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/nfsPlugin.Plo' tmpdepfile='$(DEPDIR)/nfsPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nfsPlugin.lo `test -f 'plugins/nfsPlugin.c' || echo '$(srcdir)/'`plugins/nfsPlugin.c
+
+pdaPlugin.o: plugins/pdaPlugin.c
+@AMDEP_TRUE@	source='plugins/pdaPlugin.c' object='pdaPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/pdaPlugin.Po' tmpdepfile='$(DEPDIR)/pdaPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pdaPlugin.o `test -f 'plugins/pdaPlugin.c' || echo '$(srcdir)/'`plugins/pdaPlugin.c
+
+pdaPlugin.obj: plugins/pdaPlugin.c
+@AMDEP_TRUE@	source='plugins/pdaPlugin.c' object='pdaPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/pdaPlugin.Po' tmpdepfile='$(DEPDIR)/pdaPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pdaPlugin.obj `cygpath -w plugins/pdaPlugin.c`
+
+pdaPlugin.lo: plugins/pdaPlugin.c
+@AMDEP_TRUE@	source='plugins/pdaPlugin.c' object='pdaPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/pdaPlugin.Plo' tmpdepfile='$(DEPDIR)/pdaPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pdaPlugin.lo `test -f 'plugins/pdaPlugin.c' || echo '$(srcdir)/'`plugins/pdaPlugin.c
+
+sflowPlugin.o: plugins/sflowPlugin.c
+@AMDEP_TRUE@	source='plugins/sflowPlugin.c' object='sflowPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/sflowPlugin.Po' tmpdepfile='$(DEPDIR)/sflowPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sflowPlugin.o `test -f 'plugins/sflowPlugin.c' || echo '$(srcdir)/'`plugins/sflowPlugin.c
+
+sflowPlugin.obj: plugins/sflowPlugin.c
+@AMDEP_TRUE@	source='plugins/sflowPlugin.c' object='sflowPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/sflowPlugin.Po' tmpdepfile='$(DEPDIR)/sflowPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sflowPlugin.obj `cygpath -w plugins/sflowPlugin.c`
+
+sflowPlugin.lo: plugins/sflowPlugin.c
+@AMDEP_TRUE@	source='plugins/sflowPlugin.c' object='sflowPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/sflowPlugin.Plo' tmpdepfile='$(DEPDIR)/sflowPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sflowPlugin.lo `test -f 'plugins/sflowPlugin.c' || echo '$(srcdir)/'`plugins/sflowPlugin.c
+
+rrdPlugin.o: plugins/rrdPlugin.c
+@AMDEP_TRUE@	source='plugins/rrdPlugin.c' object='rrdPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/rrdPlugin.Po' tmpdepfile='$(DEPDIR)/rrdPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rrdPlugin.o `test -f 'plugins/rrdPlugin.c' || echo '$(srcdir)/'`plugins/rrdPlugin.c
+
+rrdPlugin.obj: plugins/rrdPlugin.c
+@AMDEP_TRUE@	source='plugins/rrdPlugin.c' object='rrdPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/rrdPlugin.Po' tmpdepfile='$(DEPDIR)/rrdPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rrdPlugin.obj `cygpath -w plugins/rrdPlugin.c`
+
+rrdPlugin.lo: plugins/rrdPlugin.c
+@AMDEP_TRUE@	source='plugins/rrdPlugin.c' object='rrdPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/rrdPlugin.Plo' tmpdepfile='$(DEPDIR)/rrdPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rrdPlugin.lo `test -f 'plugins/rrdPlugin.c' || echo '$(srcdir)/'`plugins/rrdPlugin.c
 CCDEPMODE = @CCDEPMODE@
 
 mostlyclean-libtool:
@@ -963,17 +1175,13 @@ install-data-local:
           fi; \
         done
 
-# built the vendor table
-vt: vendortable.h
-	@fgrep -e "(hex)" Internet/oui.txt | cut -c1-8,9,19- | sed -f vt.sed > vendortable.h
-
-# built the IPX SAP table
+# build the IPX SAP table
 sapt: saptable.h
 	@cat Internet/novell-sap-numbers | cut -c1-3 | sed -f sapt.sed > saptable.h
 
 # download the vendor information table
 dnvt:
-	@(cd Internet; wget -c http://standards.ieee.org/regauth/oui/oui.txt)
+	@wget -c http://standards.ieee.org/regauth/oui/oui.txt
 
 # download the Novell SAP Protocol information table
 dnsapt:
@@ -986,6 +1194,10 @@ dnetter:
 	fi;
 	mv $(ETTER_PASSIVE) $(ETTER_PASSIVE).old
 	wget -O $(ETTER_PASSIVE) http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/~checkout~/ettercap/ettercap/etter.passive.os.fp?rev=HEAD\&content-type=text/plain
+
+# download the data for and make the p2c.opt.table
+p2ctable:
+	@utils/p2c
 
 # run ./configure with --showoses
 showoses:

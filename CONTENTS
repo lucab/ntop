@@ -6,12 +6,13 @@ What's in the ntop distribution ?
 This is the classic ntop application that runs only in web mode.
 
 2) intop                [intop/ directory]
-This is the interactive ntop application. it allows you to play with ntop from a text mode terminal.
-Unsupported. While the minimal changes have been made so that it compiles (2.0.99) and starts up...
-intop really needs somebody to take over and give it the TLC it needs.  Otherwise, IMHO (Burton) it should be in /obsolete 
+This is the interactive ntop application. It allows you to play with ntop from
+a text mode terminal instead of a web browser.  While the minimal changes have
+again been made so that it compiles and starts up... as of ntop v2.2 this remains
+unsupported.  Rocco has indicated he may be able to devote time to this going forward.
 
 3) www
-How to extract data out of ntop using Perl/PHP
+How to extract data out of ntop using Perl/PHP/Python
 
 4) docs
 All the documentation that's fit to print! Please help us out and write more!
@@ -20,22 +21,34 @@ All the documentation that's fit to print! Please help us out and write more!
 ntop add ons, such as sflow, pda, etc.
 
 6) utils
-Little pieces of code that might be useful.
+Little pieces of code that might be useful or are used in the preparation
+of data files and such.
 
 7) obsolete
-Unsupported, saved here for reference, or if somebody wanted
-to resurect them.
+Unsupported, saved here for reference, or if somebody wanted to resurect them.
 
 8) packages
 Files used to build executable packages for MacOSX, RedHat and Suse environments.
 More a starting point than a finished output, due to tool differences, file layouts,
 etc.
 
-9) database
-Definition files for mySQL and postgres databases.
+   NOTE: The 'RedHat' files are older and NOT the ones used to create the
+         .rpm files posted at SourceForge.
+
+9)  html
+html files used by ntop, includes images
+
+10) installer
+Files used to build executable packages for MacOSX.
+
+11) NetFlow
+(Old) A simple NetFlow collector that stores in a MySQL DB all the traffic information 
+sent by a NetFlow probe such as ntop.
+
+
 
 
 Have fun!
 
 -----------------------------------
-Luca Deri <deri@ntop.org>, March 2001 / updated June 2002
+Luca Deri <deri@ntop.org>, March 2001 / updated June 2002 / updated March 2003

@@ -184,10 +184,10 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.device = NULL;
 
   /* Databases */
-  myGlobals.gdbm_file = NULL;
+  myGlobals.dnsCacheFile = NULL;
   myGlobals.pwFile = NULL;
   myGlobals.hostsInfoFile = NULL;
-  myGlobals.addressCache = NULL;
+  myGlobals.addressQueueFile = NULL;
 
   /* the table of broadcast entries */
   myGlobals.broadcastEntryIdx = 0;
@@ -237,15 +237,42 @@ void initNtopGlobals(int argc, char * argv[]) {
   for (i = 0; i < MAX_IP_PORT; i ++)
     myGlobals.localPorts[i] = NULL;       /* myGlobals.localPorts is used by lsof */
 
+  myGlobals.dnsSniffCount = 0;
+  myGlobals.dnsSniffRequestCount = 0;
+  myGlobals.dnsSniffFailedCount = 0;
+  myGlobals.dnsSniffARPACount = 0;
+  myGlobals.dnsSniffStoredInCache = 0;
+
 #if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  myGlobals.addressQueueLen = 0;
-  myGlobals.maxAddressQueueLen = 0;
+  myGlobals.addressQueuedCount = 0;
+  myGlobals.addressQueuedDup = 0;
+  myGlobals.addressQueuedCurrent = 0;
+  myGlobals.addressQueuedMax = 0;
 #endif
 
   /* Address Resolution counters */
+  myGlobals.numipaddr2strCalls = 0;
+  myGlobals.numResolveAddressCalls = 0;
+  myGlobals.numResolveNoCacheDB = 0;
+  myGlobals.numResolveCacheDBLookups = 0;
+  myGlobals.numResolvedFromCache = 0;
+#ifdef PARM_USE_HOST
+  myGlobals.numResolvedFromHostAddresses = 0;
+#endif
+  myGlobals.numAttemptingResolutionWithDNS = 0;
   myGlobals.numResolvedWithDNSAddresses = 0;
+  myGlobals.numDNSErrorHostNotFound = 0;
+  myGlobals.numDNSErrorNoData = 0;
+  myGlobals.numDNSErrorNoRecovery = 0;
+  myGlobals.numDNSErrorTryAgain = 0;
+  myGlobals.numDNSErrorOther = 0;
   myGlobals.numKeptNumericAddresses = 0;
-  myGlobals.numResolvedOnCacheAddresses = 0;
+  myGlobals.dnsCacheStoredLookup = 0;
+
+  myGlobals.numFetchAddressFromCacheCalls = 0;
+  myGlobals.numFetchAddressFromCacheCallsOK = 0;
+  myGlobals.numFetchAddressFromCacheCallsFAIL = 0;
+  myGlobals.numFetchAddressFromCacheCallsSTALE = 0;
 
   /* Misc */
   myGlobals.separator = "&nbsp;";

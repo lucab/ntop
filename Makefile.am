@@ -63,11 +63,15 @@ DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
               faq.html \
               ntop-cert.pem \
               p2c.opt.table \
-              $(ETTER_PASSIVE)
+              $(ETTER_PASSIVE) \
+              oui.txt \
+              specialMAC.txt
 
 NTOPDATA = ntop-cert.pem \
            p2c.opt.table \
-           $(ETTER_PASSIVE)
+           $(ETTER_PASSIVE) \
+           oui.txt \
+           specialMAC.txt
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
            html/*.css html/*.dtd \
@@ -103,18 +107,30 @@ THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) \
 # The Games
 #
 bin_PROGRAMS   = ntop
-EXTRA_PROGRAMS = ntops
+EXTRA_PROGRAMS = ntops sntop
 bin_SCRIPTS    = 
 
 ntop_SOURCES       = main.c admin.c
 ntop_DEPENDENCIES  = libntopreport.la libntop.la
 ntop_LDADD         = libntopreport.la libntop.la
 ntop_LDFLAGS       = $(AM_LDFLAGS)
+ntop_CFLAGS        = 
 
 ntops_SOURCES      = $(ntop_SOURCES)
 ntops_DEPENDENCIES = $(ntop_DEPENDENCIES)
 ntops_LDADD        = $(ntop_LDADD)
 ntops_LDFLAGS      = $(ntop_LDFLAGS) -static
+
+#
+# Static ntop: everything is linked in
+#
+sntop_SOURCES      = $(ntop_SOURCES) plugins/icmpPlugin.c plugins/lastSeenPlugin.c \
+		     plugins/netflowPlugin.c plugins/nfsPlugin.c plugins/pdaPlugin.c  \
+		     plugins/sflowPlugin.c plugins/rrdPlugin.c
+
+sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
+sntop_LDADD        = $(ntop_LDADD) -lrrd
+sntop_LDFLAGS      = $(ntop_LDFLAGS) -static
 
 noinst_HEADERS     = globals-core.h globals-report.h ntop.h regex.h
 
@@ -130,7 +146,7 @@ libntop_la_SOURCES = address.c       dataFormat.c  \
                      sessions.c         \
                      ssl.c           term.c        traffic.c          \
                      util.c          vendor.c      version.c          \
-                     vendortable.h   ntop_darwin.c
+                     ntop_darwin.c
 
 libntop_la_DEPENDENCIES = config.h
 libntop_la_LIBADD       = 
@@ -242,18 +258,14 @@ install-data-local:
         done
 
 
-# built the vendor table
-vt: vendortable.h
-	@fgrep -e "(hex)" Internet/oui.txt | cut -c1-8,9,19- | sed -f vt.sed > vendortable.h
-
-# built the IPX SAP table
+# build the IPX SAP table
 sapt: saptable.h
 	@cat Internet/novell-sap-numbers | cut -c1-3 | sed -f sapt.sed > saptable.h
 
 
 # download the vendor information table
 dnvt:
-	@(cd Internet; wget -c http://standards.ieee.org/regauth/oui/oui.txt)
+	@wget -c http://standards.ieee.org/regauth/oui/oui.txt
 
 # download the Novell SAP Protocol information table
 dnsapt:
@@ -266,6 +278,10 @@ dnetter:
 	fi;
 	mv $(ETTER_PASSIVE) $(ETTER_PASSIVE).old
 	wget -O $(ETTER_PASSIVE) http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/~checkout~/ettercap/ettercap/etter.passive.os.fp?rev=HEAD\&content-type=text/plain
+
+# download the data for and make the p2c.opt.table
+p2ctable:
+	@utils/p2c
 
 # run ./configure with --showoses
 showoses:

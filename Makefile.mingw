@@ -108,7 +108,8 @@ CSRC =	ntop.c ntop_win32.c main.c \
 	util.c vendor.c webInterface.c \
 	plugins\icmpPlugin.c plugins\lastSeenPlugin.c \
 	plugins\netflowPlugin.c plugins\nfsPlugin.c \
-	plugins\pdaPlugin.c plugins\sflowPlugin.c
+	plugins\pdaPlugin.c plugins\sflowPlugin.c \
+        plugins\rrdPlugin.c
 
 GENSRC = version.c
 

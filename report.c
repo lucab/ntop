@@ -1684,7 +1684,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	if(printedEntries > myGlobals.maxNumLines)
 	  break;
       } else {
-	traceEvent(CONST_TRACE_WARNING, "WARNING: quicksort() problem!");
+	traceEvent(CONST_TRACE_WARNING, "quicksort() problem!");
       }
     }
 
@@ -2032,6 +2032,15 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 	  }
 	}
 	break;
+      case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
+	if(!subnetPseudoLocalHost(el)) {
+	  if((el->bytesSentRem.value > 0) || (el->bytesRcvdFromRem.value > 0)) {
+	    tmpTable[numEntries++]=el;
+	    totalBytesSent += el->bytesSentRem.value;
+	    totalBytesRcvd += el->bytesRcvdFromRem.value;
+	  }
+	}
+	break;
       case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
 	if(subnetPseudoLocalHost(el)) {
 	  if((el->bytesSentRem.value > 0) || (el->bytesRcvdFromRem.value > 0)) {
@@ -2057,6 +2066,10 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
     str = IP_R_2_L_HTML;
     title = "Remote to Local IP Traffic";
+    break;
+  case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
+    str = IP_R_2_R_HTML;
+    title = "Remote to Remote IP Traffic";
     break;
   case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
     str = IP_L_2_R_HTML;
@@ -2141,6 +2154,10 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 	case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
 	  a = el->bytesSentLoc.value;
 	  b = el->bytesRcvdLoc.value;
+	  break;
+	case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
+	  a = el->bytesSentRem.value;
+	  b = el->bytesRcvdFromRem.value;
 	  break;
 	case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
 	  a = el->bytesSentRem.value;
@@ -3780,13 +3797,13 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
   int rc;
 
   if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpStatsFctn() (1)\n");
     return(1);
   } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpStatsFctn() (2)\n");
     return(-1);
   } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpStatsFctn() (3)\n");
     return(0);
   }
 

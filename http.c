@@ -1760,6 +1760,10 @@ static int returnHTTPPage(char* pageName,
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printIpAccounting(FLAG_REMOTE_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
+    } else if(strncmp(pageName, IP_R_2_R_HTML, strlen(IP_R_2_R_HTML)) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = 1; }
+      printIpAccounting(FLAG_REMOTE_TO_REMOTE_ACCOUNTING, sortedColumn, revertOrder, pageNum);
     } else if(strncmp(pageName, IP_L_2_R_HTML, strlen(IP_L_2_R_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
@@ -2082,9 +2086,6 @@ static int checkHTTPpassword(char *theRequestedURL,
   traceEvent(CONST_TRACE_INFO, "DEBUG: Checking '%s'\n", theRequestedURL);
 #endif
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "checkHTTPpasswd");
-#endif
   return_data = gdbm_firstkey(myGlobals.pwFile);
   outBuffer[0] = '\0';
 
@@ -2105,9 +2106,6 @@ static int checkHTTPpassword(char *theRequestedURL,
   }
 
   if(outBuffer[0] == '\0') {
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
     return 1; /* This is a non protected URL */
   }
 
@@ -2145,9 +2143,6 @@ static int checkHTTPpassword(char *theRequestedURL,
 
   if(return_data.dptr != NULL) {
     if(strstr(return_data.dptr, users) == NULL) {
-#ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.gdbmMutex);
-#endif
       if(return_data.dptr != NULL) free(return_data.dptr);
       return 0; /* The specified user is not among those who are
 		   allowed to access the URL */
@@ -2171,9 +2166,6 @@ static int checkHTTPpassword(char *theRequestedURL,
   } else
     rc = 0;
 
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
   return(rc);
 }
 

@@ -36,40 +36,54 @@
  *   Vendor
  *       The official list is updated daily at http://standards.ieee.org/regauth/oui/oui.txt  
  *       The vendor table data does change, frequently, albeit irrelevantly to most of us.
- *       The ntop distribution file, vendortable.h, is updated infrequently.
+ *       The ntop version of oui.txt is updated infrequently.
  *
- *       To update (if say, you're seeing a lot of unknown values):
+ *       To update (if say, you're seeing a lot of unknown values), download the list:
  *
- *           1) Download the list.
- *           2) Run the vt.sed script on the downloaded file to create vendortable.h
- *
- *       Both of these steps are in Makefile:
- *
- *           mkdir Internet
- *           make dnvt vt
+ *           $ make dnvt
  *
  *       Warning: the mac address list frequently discussed on the 'net at 
  *       http://www.cavebear.com/CaveBear/Ethernet/vendor.html hasn't been 
  *       updated since 1999.
+ *
+ *       If you want to save (disk) space, an oui.txt customized with only the ones
+ *       you really need is certainly possible.
  *
  *   Special MAC
  *       The special mac table is referenced - getHostInfo() in hash.c calls 
  *       getSpecialMacInfo() in util.c - each time a new (pseudo) local host
  *       is found.
  *
- *       So, optimizing the table size after the table is updated is reasonable,
- *       especially for a large network with many hosts coming and going.
- *
  *       I (Burton) am unaware of any official or even pseudo-offical list.
+ *
+ *       A 'special' MAC is one that's assigned (often in an RFC, IEEE standard,
+ *       by consensus or in some other unusual way).  It doesn't represent a PHYSICAL
+ *       device or manufacturer.
+ *
+ *       It's a mess...
+ *
+ *       For example, 0x0180C2-000000 through -00000f, are reserved in 
+ *       "ANSI/IEEE Standard 802.1D (1998 edition)".  See page 70 in 
+ *       http://standards.ieee.org/getieee802/download/802.1D-1998.pdf
+ *
+ *       For example, the 2nd bit of a MAC address denotes an LAA, a Locally Assigned 
+ *       Address value.  See IEEE 802.3-2002 (or earlier versions).
+ *       Because bits are xmitted low to high , this stream, 0100000000000000...
+ *       is MAC address 0x02000000.  (See RFC 1638)
+ *
+ *       These don't represent a manufacturer, but are values arbitrarily
+ *       set by some network admin...
+ *
+ *       Also, see http://www.iana.org/assignments/ppp-numbers for CF0000xxxxxx
  */
 
 /*
- * NOTE: About optimzing hash sizes...
+ * NOTE: About optimzing hash size...
  *
  *   See the #define TEST_HASHSIZE_xxxxxx's below.
  *
- *   Enabling it (esp. for vendor table) will run A LONG TIME, as it tests each possible
- *   odd value from some low number up to whatever the MAX_ value is in globals-defines.h.
+ *   Enabling it may run for a bit, as it tests each possible odd value from
+ *   some low number up to whatever the MAX_ value is in globals-defines.h.
  *   (Testing will stop if a zero collision value is found).
  *
  *   Testing will produce a running list, showing the best so far.
@@ -85,63 +99,24 @@
  *       TEST_HASHSIZE: specialMacHash 141   1
  *       TEST_HASHSIZE: specialMacHash BEST is 0 collisions, size 167
  *
- *   The ipxsap and vendor tables are referenced only for reporting - so a few collisions
+ *   The ipxsap table is referenced only for reporting - so a few collisions
  *   isn't a huge deal.
  */
 
 typedef struct {
-  unsigned long vendorId;
-  char* vendorName;
-} VendorInfo;
-
+  unsigned long ipxsapId;
+  char* ipxsapName;
+} IPXSAPInfo;
 
 #include "ntop.h"
-#include "vendortable.h"
 
-
-static VendorInfo specialMacInfo[] = {
-  { 0x01000C, "Cisco CDPD/VTP" },
-  { 0x010010, "Hughes Lan" },
-  { 0x01001D, "Cabletron" },
-  { 0x01003C, "Auspex Systems" },
-  { 0x01005E, "DoD Internet Multicast" },
-  { 0x010081, "Synoptics" },
-  { 0x012025, "Control Tech. Inc." },
-  { 0x018024, "Kalpana Etherswitch" },
-  { 0x0180C2, "Bridge Sp. Tree/OSI Route" },
-  { 0x01DD00, "UngermannBass" },
-  { 0x01DD01, "UngermannBass" },
-  { 0x030000, "NetBios" },
-  { 0x030040, "NetBios" },
-  { 0x090002, "Vitalink" },
-  { 0x090007, "AppleTalk" },
-  { 0x090009, "HP Probe" },
-  { 0x09000D, "ICL" },
-  { 0x09001E, "Apollo" },
-  { 0x090026, "Vitalink" },
-  { 0x09002B, "DEC" },
-  { 0x090039, "Spider Systems" },
-  { 0x09004C, "BICC" },
-  { 0x09004E, "Novell IPX" },
-  { 0x090056, "Stanford" },
-  { 0x09006A, "TOP NetBIOS" },
-  { 0x090077, "Retix" },
-  { 0x09007C, "Vitalink" },
-  { 0x090087, "Xyplex" },
-  { 0x0D1E15, "HP" },
-  { 0x333300, "IPv6" },
-  { 0xAB0000, "DEC MOP/DECNET" },
-  { 0xAB0003, "DEC LAT" },
-  { 0xAB0004, "DEC VAX" },
-  { 0xCF0000, "Ethernet CTP" },
-  { 0xFFFF00, "Lantastic" },
-  { 0xFFFF01, "Lantastic" },
-  { 0xFFFFFF, "Ethernet Broadcast" },
-  { 0x0, NULL }
+static char* macInputFiles[] = {
+  "specialMAC.txt",
+  "oui.txt",
+  NULL
 };
 
-/* http://www.iana.org/assignments/novell-sap-numbers */
-static VendorInfo ipxSAP[] = {
+static IPXSAPInfo ipxSAP[] = {
   { 0x0000,	"Unknown" },
   { 0x0001,	"User" },
   { 0x0002,	"User Group" },
@@ -192,37 +167,33 @@ static VendorInfo ipxSAP[] = {
   { 0x0000,	NULL }
 };
 
-
-
-VendorInfo* vendorHash[MAX_VENDOR_NAME_HASH];
-VendorInfo* specialMacHash[MAX_SPECIALMAC_NAME_HASH];
-VendorInfo* ipxSAPhash[MAX_IPXSAP_NAME_HASH];
+IPXSAPInfo* ipxSAPhash[MAX_IPXSAP_NAME_HASH];
 
 
 
 /* *********************************** */
 
-static int addMacTableEntry(VendorInfo* theMacHash[], 
-			     VendorInfo* entry, 
-			     u_int tableLen) {
+static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[], 
+                               IPXSAPInfo* entry, 
+                               u_int tableLen) {
   u_int idx;
-  unsigned long vendorValue;
+  unsigned long ipxsapValue;
   int hashLoadCollisions=0;
 
 #ifdef PARM_USE_MACHASH_INVERT
-  vendorValue = 256*256*(unsigned long)(entry->vendorId & 0xff)
-    + 256*(unsigned long)((entry->vendorId >> 8) & 0xff)
-    + (unsigned long)((entry->vendorId >> 16) & 0xff);
+  ipxsapValue = 256*256*(unsigned long)(entry->ipxsapId & 0xff)
+    + 256*(unsigned long)((entry->ipxsapId >> 8) & 0xff)
+    + (unsigned long)((entry->ipxsapId >> 16) & 0xff);
 #else
-  idx = (u_int)(entry->vendorId % tableLen);
+  idx = (u_int)(entry->ipxsapId % tableLen);
 #endif
-  idx = (u_int)((u_int)vendorValue % tableLen);
+  idx = (u_int)((u_int)ipxsapValue % tableLen);
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: addMacTableEntry(%06x, %s) gives %ld (mod %d = %d)\n", 
-	 entry->vendorId,
-	 entry->vendorName,
-         vendorValue,
+  traceEvent(CONST_TRACE_INFO, "DEBUG: addIPXSAPTableEntry(%06x, %s) gives %ld (mod %d = %d)\n", 
+	 entry->ipxsapId,
+	 entry->ipxsapName,
+         ipxsapValue,
          tableLen,
          idx);
 #endif
@@ -232,7 +203,7 @@ static int addMacTableEntry(VendorInfo* theMacHash[],
       hashLoadCollisions++;
 #ifdef DEBUG
       traceEvent(CONST_TRACE_INFO, "DEBUG: HashLoad Collision - %d %x '%s\n", 
-                                   idx, entry->vendorId, entry->vendorName);
+                                   idx, entry->ipxsapId, entry->ipxsapName);
 #endif
   }
 
@@ -249,100 +220,10 @@ static int addMacTableEntry(VendorInfo* theMacHash[],
 
 /* *********************************** */
 
-static char* getMacInfo(VendorInfo* vendorTable[], 
-			u_char* ethAddress,
-			u_int tableLen, short encodeString) {
-  u_int idx;
-  unsigned long vendorValue;
-#ifdef PARM_USE_MACHASH_INVERT
-  unsigned long vendorValueInvert;
-#endif
-  VendorInfo* cursor;
-  int hasCollision=0;
-
-  vendorValue = 256*256*(unsigned long)ethAddress[0] 
-    + 256*(unsigned long)ethAddress[1] 
-    + (unsigned long)ethAddress[2];
-#ifdef PARM_USE_MACHASH_INVERT
-  vendorValueInvert = 256*256*(unsigned long)ethAddress[2] 
-    + 256*(unsigned long)ethAddress[1] 
-    + (unsigned long)ethAddress[0];
-  idx = (u_int)((u_int)vendorValueInvert % tableLen);
-#else
-  idx = (u_int)((u_int)vendorValue % tableLen);
-#endif
-
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: getMacInfo(0x%02x%02x%02x) gives %ld (mod %d = %d)\n", 
-                               ethAddress[0],
-                               ethAddress[1],
-                               ethAddress[2],
-#ifdef PARM_USE_MACHASH_INVERT
-                               vendorValueInvert,
-#else
-                               vendorValue,
-#endif
-                               tableLen,
-                               idx);
-#endif
-
-  for(;;) {
-    cursor = vendorTable[idx];
-    
-    if(vendorTable[idx] == NULL) {
-      /* Unknown vendor */
-      return("");
-    } else if(vendorTable[idx] != NULL) {
-      if(vendorTable[idx]->vendorId == vendorValue) {
-	if(encodeString) {
-	  static char vendorName[256];
-	  int a, b;
-
-	  for(a=0, b=0; vendorTable[idx]->vendorName[a] != '\0'; a++)
-	    if(vendorTable[idx]->vendorName[a] == ' ') {
-	      vendorName[b++] = '&';
-	      vendorName[b++] = 'n';
-	      vendorName[b++] = 'b';
-	      vendorName[b++] = 's';
-	      vendorName[b++] = 'p';
-	      vendorName[b++] = ';';
-	    } else
-	      vendorName[b++] = vendorTable[idx]->vendorName[a];
-
-	  vendorName[b] = '\0';	    
-	  return(vendorName);
-	} else
-	  return(vendorTable[idx]->vendorName);
-
-      }
-    }
-
-    idx = (idx+1)%tableLen;
-
-    /* Count collisions during lookup - only ONCE per mac address */
-    if (hasCollision == 0) {
-        myGlobals.hashCollisionsLookup++;
-        hasCollision=1;
-#ifdef DEBUG
-        traceEvent(CONST_TRACE_INFO, "DEBUG: Hash Collision - %d %x vs. %x\n", 
-                                     idx, vendorValue, vendorTable[idx]->vendorId);
-#endif
-    }
-  }
-}
-
-/* *********************************** */
-
-char* getVendorInfo(u_char* ethAddress, short encodeString) {
-  return(getMacInfo(vendorHash, ethAddress, MAX_VENDOR_NAME_HASH, encodeString));
-}
-
-/* *********************************** */
-
 char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
   u_int idx;
-  unsigned long vendorValue = (unsigned long)sapInfo;
-  VendorInfo* cursor;
+  unsigned long ipxsapValue = (unsigned long)sapInfo;
+  IPXSAPInfo* cursor;
 
   idx = (u_int)((u_int)sapInfo % MAX_IPXSAP_NAME_HASH);
 
@@ -353,26 +234,26 @@ char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
       /* Unknown vendor */
       return("");
     } else if(ipxSAPhash[idx] != NULL) {
-      if(ipxSAPhash[idx]->vendorId == vendorValue) {
+      if(ipxSAPhash[idx]->ipxsapId == ipxsapValue) {
 	if(encodeString) {
-	  static char vendorName[256];
+	  static char ipxsapName[256];
 	  int a, b;
 
-	  for(a=0, b=0; ipxSAPhash[idx]->vendorName[a] != '\0'; a++)
-	    if(ipxSAPhash[idx]->vendorName[a] == ' ') {
-	      vendorName[b++] = '&';
-	      vendorName[b++] = 'n';
-	      vendorName[b++] = 'b';
-	      vendorName[b++] = 's';
-	      vendorName[b++] = 'p';
-	      vendorName[b++] = ';';
+	  for(a=0, b=0; ipxSAPhash[idx]->ipxsapName[a] != '\0'; a++)
+	    if(ipxSAPhash[idx]->ipxsapName[a] == ' ') {
+	      ipxsapName[b++] = '&';
+	      ipxsapName[b++] = 'n';
+	      ipxsapName[b++] = 'b';
+	      ipxsapName[b++] = 's';
+	      ipxsapName[b++] = 'p';
+	      ipxsapName[b++] = ';';
 	    } else
-	      vendorName[b++] = ipxSAPhash[idx]->vendorName[a];
+	      ipxsapName[b++] = ipxSAPhash[idx]->ipxsapName[a];
 
-	  vendorName[b] = '\0';	    
-	  return(vendorName);
+	  ipxsapName[b] = '\0';	    
+	  return(ipxsapName);
 	} else
-	  return(ipxSAPhash[idx]->vendorName);
+	  return(ipxSAPhash[idx]->ipxsapName);
 
       }
     }
@@ -385,84 +266,119 @@ char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
 
 /* *********************************** */
 
-char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
+
+char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
   datum key_data, data_data;
   static char tmpBuf[96];
-  char* ret = getMacInfo(specialMacHash, el->ethAddress, 
-			 MAX_SPECIALMAC_NAME_HASH, encodeString);
+  char *workBuf;
 
-  if((ret != NULL) && (ret[0] != '\0'))
-    return(ret); 
+  workBuf = etheraddr_string(ethAddress);
+  memcpy(&tmpBuf, workBuf, LEN_ETHERNET_ADDRESS_DISPLAY+1);
+#ifdef VENDOR_DEBUG
+  traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: %slookup '%s'\n", 
+                               special == 1 ? "special " : "",
+                               tmpBuf);
+#endif
 
-  /* Search the specified MAC address into 'ntop.db' */
-  strncpy(tmpBuf, el->ethAddressString, sizeof(tmpBuf));
+  if (special == TRUE) {
+
+      /* Search the database for the specified MAC address - full 48 bit */
+
+      key_data.dptr = tmpBuf;
+      key_data.dsize = strlen(tmpBuf)+1;
+
+#ifdef VENDOR_DEBUG
+      traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Fetching 48bit '%s'\n", tmpBuf);
+#endif
+
+      data_data = gdbm_fetch(myGlobals.macPrefixFile, key_data);
+
+      if ( (data_data.dptr != NULL) && ( ((MACInfo*)data_data.dptr)->isSpecial = 's') ) {
+          strncpy(tmpBuf, ((MACInfo*)data_data.dptr)->vendorName, sizeof(tmpBuf));
+          free(data_data.dptr);
+          myGlobals.numVendorLookupFound48bit++;
+          return(tmpBuf);
+      }
+  }
+
+  /* Try the 24 bit */
+
+  tmpBuf[LEN_ETHERNET_VENDOR_DISPLAY-1] = '\0';   /* Mask off left 24 bits */
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(tmpBuf)+1;
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Fetching '%s'\n", tmpBuf);
+#ifdef VENDOR_DEBUG
+  traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Fetching 24bit '%s'\n", tmpBuf);
 #endif
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "getSpecialMacInfo");
-#endif 
+  data_data = gdbm_fetch(myGlobals.macPrefixFile, key_data);
+  
+  if(data_data.dptr != NULL) {
+    if(((special == TRUE)  && (((MACInfo*)data_data.dptr)->isSpecial = 's')) ||
+       ((special == FALSE) && (((MACInfo*)data_data.dptr)->isSpecial != 's'))) {
+      strncpy(tmpBuf, ((MACInfo*)data_data.dptr)->vendorName, sizeof(tmpBuf));
+      free(data_data.dptr);
+      myGlobals.numVendorLookupFound24bit++;
+      return(tmpBuf);
+    }
+  }
 
-  data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
+  /* Hand coded for LAA/Multicast */
+  if (ethAddress[0] && 0x01 != 0) {
+    myGlobals.numVendorLookupFoundMulticast++;
+    return("Multicast");
+  }
 
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif 
+  if (ethAddress[0] && 0x02 != 0) {
+    myGlobals.numVendorLookupFoundLAA++;
+    return("LAA (Locally assigned address)");
+  }
 
-  if(data_data.dptr != NULL) {    
-    strncpy(tmpBuf, data_data.dptr, sizeof(tmpBuf));
-    free(data_data.dptr);
-    return(tmpBuf);
-  } else
+  traceEvent(CONST_TRACE_NOISY, "MAC prefix '%s' not found in vendor database", tmpBuf);
+
+  return("");
+}
+
+/* *********************************** */
+
+char* getVendorInfo(u_char* ethAddress, short encodeString) {
+  char* ret = getMACInfo(0, ethAddress, encodeString);
+  myGlobals.numVendorLookupCalls++;
+
+  if((ret != NULL) && (ret[0] != '\0'))
+    return(ret);
+  else
+    return("");
+}
+
+/* *********************************** */
+
+char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
+  char* ret = getMACInfo(1, (u_char*)&(el->ethAddress), encodeString);
+  myGlobals.numVendorLookupSpecialCalls++;
+
+  if((ret != NULL) && (ret[0] != '\0'))
+    return(ret);
+  else
     return("");
 }
 
 /* *********************************** */
 
 void createVendorTable(void) {
-  int idx;
-
-#ifdef TEST_HASHSIZE_SPECIAL
-{
-  int i, j, best, besti;
-
-  traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: Testing specialMacHash (%s) from 51 -> %d...wait\n", 
-#ifdef PARM_USE_MACHASH_INVERT
-                               "invert",
-#else
-                               "normal",
-#endif
-                               MAX_SPECIALMAC_NAME_HASH);
-  best=99999;
-  besti=0;
-  for (i=51; i<=MAX_SPECIALMAC_NAME_HASH; i += 2) {
-      j=0;
-      for(idx=0; specialMacInfo[idx].vendorName != NULL; idx++)
-          j += addMacTableEntry(specialMacHash, &specialMacInfo[idx], i);
-      if (j == 0) {
-          best=0;
-          besti=i;
-          break;
-      } else if ( j < best ) {
-          best = j;
-          besti = i;
-          traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: specialMacHash %3d %3d\n", i, j);
-      }
-      memset(specialMacHash, 0, sizeof(specialMacHash));
-  }
-  traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: specialMacHash BEST is %d collisions, size %d\n", best, besti);
-}
-#endif
+  int idx, idx2, configFileFound, numRead, numLoaded;
+  FILE *fd = NULL;
+  char tmpLine[LEN_GENERAL_WORK_BUFFER];
+  char tmpMACkey[LEN_ETHERNET_ADDRESS_DISPLAY+1];
+  char *tmpMAC, *tmpTag1, *tmpTag2, *tmpVendor, *strtokState;
+  struct macInfo macInfoEntry;
+  datum data_data, key_data;
 
 #ifdef TEST_HASHSIZE_IPXSAP
 {
   int i, j, best, besti;
 
-  traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: Testing ipxSAP (%s) from 51 -> %d...wait\n",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: Testing ipxSAP (%s) from 51 -> %d...wait\n",
 #ifdef PARM_USE_MACHASH_INVERT
                                "invert",
 #else
@@ -473,8 +389,8 @@ void createVendorTable(void) {
   besti=0;
   for (i=51; i<=MAX_IPXSAP_NAME_HASH; i += 2) {
       j=0;
-      for(idx=0; ipxSAP[idx].vendorName != NULL; idx++)
-          j += addMacTableEntry(ipxSAPhash, &ipxSAP[idx], i);
+      for(idx=0; ipxSAP[idx].ipxsapName != NULL; idx++)
+          j += addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], i);
       if (j == 0) {
           best=0;
           besti=i;
@@ -482,75 +398,140 @@ void createVendorTable(void) {
       } else if ( j < best ) {
           best = j;
           besti = i;
-          traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: ipxSAP %3d %3d\n", i, j);
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP %3d %3d\n", i, j);
       }
       memset(ipxSAPhash, 0, sizeof(ipxSAPhash));
   }
-  traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: ipxSAP BEST is %d collisions, size %d\n", best, besti);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP BEST is %d collisions, size %d\n", best, besti);
 }
 #endif
-
-#ifdef TEST_HASHSIZE_VENDOR
-{
-  int i, j, best, besti, minv;
-
-  best=99999;
-  besti=0;
-  minv=0;
-  for(idx=0; vendorInfo[idx].vendorName != NULL; idx++)
-      minv++;
-  minv = ((minv + 250) / 2) * 2 + 1;
-  traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: Testing vendors (%s) from %d -> %d...wait\n",
-#ifdef PARM_USE_MACHASH_INVERT
-                               "invert",
-#else
-                               "normal",
-#endif
-                               minv, MAX_VENDOR_NAME_HASH);
-
-  for (i=minv; i<=MAX_VENDOR_NAME_HASH; i += 2) {
-      if ( (i-1) % 2500 == 0 ) traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: testing %5d\n", i);
-      j=0;
-      for(idx=0; vendorInfo[idx].vendorName != NULL; idx++)
-          j += addMacTableEntry(vendorHash, &vendorInfo[idx], i);
-      if (j == 0) {
-          best=0;
-          besti=i;
-          break;
-      } else if ( j < best ) {
-          if ((j + 50 < best) || (j < 25) ) {
-              traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: vendor %5d %5d\n", i, j);
-          }
-          best = j;
-          besti = i;
-      }
-      memset(vendorHash, 0, sizeof(vendorHash));
-  }
-  traceEvent(CONST_TRACE_INFO, "TEST_HASHSIZE: vendors BEST is %d collisions, size %d\n", best, besti);
-}
-#endif
-
-  myGlobals.vendortable_h_Size = 0;
-  myGlobals.vendorHashLoadSize = sizeof(vendorHash);
-  for(idx=0; vendorInfo[idx].vendorName != NULL; idx++) {
-    myGlobals.vendortable_h_Size++;
-    myGlobals.vendorHashLoadSize += sizeof(VendorInfo) + strlen(vendorInfo[idx].vendorName);
-    myGlobals.vendorHashLoadCollisions += 
-        addMacTableEntry(vendorHash, &vendorInfo[idx], MAX_VENDOR_NAME_HASH);
-  }
-
-  myGlobals.specialHashLoadSize = sizeof(specialMacHash);
-  for(idx=0; specialMacInfo[idx].vendorName != NULL; idx++) {
-    myGlobals.specialHashLoadSize += sizeof(VendorInfo) + strlen(specialMacInfo[idx].vendorName);
-    myGlobals.specialHashLoadCollisions += 
-        addMacTableEntry(specialMacHash, &specialMacInfo[idx], MAX_SPECIALMAC_NAME_HASH);
-  }
 
   myGlobals.ipxsapHashLoadSize = sizeof(ipxSAPhash);
-  for(idx=0; ipxSAP[idx].vendorName != NULL; idx++) {
-    myGlobals.ipxsapHashLoadSize += sizeof(VendorInfo) + strlen(ipxSAP[idx].vendorName);
+  for(idx=0; ipxSAP[idx].ipxsapName != NULL; idx++) {
+    myGlobals.ipxsapHashLoadSize += sizeof(IPXSAPInfo) + strlen(ipxSAP[idx].ipxsapName);
     myGlobals.ipxsapHashLoadCollisions += 
-        addMacTableEntry(ipxSAPhash, &ipxSAP[idx], MAX_IPXSAP_NAME_HASH);
+        addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], MAX_IPXSAP_NAME_HASH);
   }
+
+  /*
+   * Ok, so we've loaded the static table.
+   * Now load the gdbm database for the real stuff
+   *   (database was created and opened in initGdbm() in initialize.c)
+   *
+   *  Here's a sample entry from oui.txt:
+
+OUI                             Organization
+company_id                      Organization
+                                Address
+
+
+00-00-00   (hex)                XEROX CORPORATION
+000000     (base 16)            XEROX CORPORATION
+                                M/S 105-50C
+                                800 PHILLIPS ROAD
+                                WEBSTER NY 14580
+
+   *  and from (our, specially created) special.txt:
+
+018024        (special 24)      Kalpana Etherswitch
+0180C2000000  (special 48)      Bridge Sp. Tree/OSI Route
+
+   *  We use the (base 16) as our key and add similar values for special
+   *  mac entries so we could co-mingled them.
+   *
+   *  Note that any line without the 2nd word of '(base' or '(special' is 
+   *  simply ignored - allows comments if you're careful.
+   *
+   */
+
+   traceEvent(CONST_TRACE_INFO, "VENDOR: Loading MAC address table.\n");
+   for(idx=0; macInputFiles[idx] != NULL; idx++) {
+       configFileFound = 0;
+       for(idx2=0; myGlobals.configFileDirs[idx2] != NULL; idx2++) {
+
+           snprintf(tmpLine, sizeof(tmpLine), "%s/%s", myGlobals.configFileDirs[idx2], macInputFiles[idx]);
+           traceEvent(CONST_TRACE_INFO, "VENDOR: Checking '%s'\n", tmpLine);
+           fd = fopen(tmpLine, "r");
+
+           if(fd != NULL) {
+               configFileFound = 1;
+               numRead=0;
+               numLoaded=0;
+
+               while (fgets(tmpLine, sizeof(tmpLine), fd)) {
+                   numRead++;
+                   myGlobals.numVendorLookupRead++;
+                   if ( (strstr(tmpLine, "(base") == NULL) &&
+                        (strstr(tmpLine, "(special") == NULL) ) {
+                       continue;
+                   }
+                   tmpMAC = strtok_r(tmpLine, " \t", &strtokState);
+                   if (tmpMAC == NULL) continue;
+                   tmpTag1 = strtok_r(NULL, " \t", &strtokState);
+                   if (tmpTag1 == NULL) continue;
+                   if ( (strcmp(tmpTag1, "(base") == 0) || 
+                        (strcmp(tmpTag1, "(special") == 0) ) { 
+                       tmpTag2 = strtok_r(NULL, " \t", &strtokState);
+                       if (tmpTag2 == NULL) continue;
+                       tmpVendor = strtok_r(NULL, "\n", &strtokState);
+                       if (tmpVendor == NULL) continue;
+                       /* Skip leading blanks and tabs*/
+                       while ( (tmpVendor[0] == ' ') || (tmpVendor[0] == '\t') ) tmpVendor++;
+                       memset(&macInfoEntry, 0, sizeof(macInfoEntry));
+                       if (strcmp(tmpTag1, "(special") == 0) {
+                           macInfoEntry.isSpecial = 's';
+                       } else {
+                           macInfoEntry.isSpecial = 'r';
+                       }
+                       memcpy(&(macInfoEntry.vendorName[0]),
+                              tmpVendor,
+                              min(strlen(tmpVendor)+1, sizeof(macInfoEntry.vendorName)-1));
+                       data_data.dptr = (void*)(&macInfoEntry);
+                       data_data.dsize = sizeof(macInfoEntry);
+                       tmpMACkey[0]='\0';
+                       strncat(tmpMACkey, tmpMAC, 2);
+                       strcat(tmpMACkey, ":");
+                       strncat(tmpMACkey, tmpMAC+2, 2);
+                       strcat(tmpMACkey, ":");
+                       strncat(tmpMACkey, tmpMAC+4, 2);
+                       if (strcmp(tmpTag2, "48)") == 0) {
+                           /* special 48 - full tag */
+                           strcat(tmpMACkey, ":");
+                           strncat(tmpMACkey, tmpMAC+6, 2);
+                           strcat(tmpMACkey, ":");
+                           strncat(tmpMACkey, tmpMAC+8, 2);
+                           strcat(tmpMACkey, ":");
+                           strncat(tmpMACkey, tmpMAC+10, 2);
+                       }
+                       key_data.dptr = tmpMACkey;
+                       key_data.dsize = strlen(tmpMACkey)+1;
+                       if(gdbm_store(myGlobals.macPrefixFile, key_data, data_data, GDBM_REPLACE) != 0) {
+                           traceEvent(CONST_TRACE_WARNING, "VENDOR: unable to add record '%s': {%d, %s} - skipped",
+                                      tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
+                       } else {
+                           numLoaded++;
+                           myGlobals.numVendorLookupAdded++;
+                           if (macInfoEntry.isSpecial == 's')
+                               myGlobals.numVendorLookupAddedSpecial++;
+#ifdef VENDOR_DEBUG
+                           traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}\n",
+                                      tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
+#endif
+                       }
+
+                   }
+               }
+               fclose(fd);
+               traceEvent(CONST_TRACE_INFO, "VENDOR: ...found, %d lines, loaded %d records!\n",
+                                            numRead, numLoaded);
+               break;
+           }
+       }
+       if (configFileFound == 0) {
+           traceEvent(CONST_TRACE_WARNING, "VENDOR: Unable to open file '%s'", macInputFiles[idx]);
+           traceEvent(CONST_TRACE_INFO, "VENDOR: ntop continues ok, but without or with partial MAC->Vendor mapping");
+       }
+   }
+       
 }
 

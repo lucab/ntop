@@ -76,13 +76,13 @@ void initWinsock32() {
   if( err != 0 ) {
     /* Tell the user that we could not find a usable */
     /* WinSock DLL.                                  */
-    traceEvent(CONST_TRACE_ERROR, "FATAL ERROR: unable to initialise Winsock 2.x.");
+    traceEvent(CONST_TRACE_FATALERROR, "Unable to initialise Winsock 2.x.");
     exit(-1);
   }
 
-  version = "2.1.58pre";
+  version = "2.1.90";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "2003-02-xx";
+  buildDate = "2003-03-17";
 
   if(!isWinNT()) {
     osName = "Win95/98/ME";
@@ -107,13 +107,19 @@ void initWinsock32() {
   }
 
     
+#ifdef WIN32
+  if(myGlobals.pcapLogBasePath) free(myGlobals.pcapLogBasePath); myGlobals.pcapLogBasePath = strdup(_wdir);
+  if(myGlobals.dbPath) free(myGlobals.dbPath); myGlobals.dbPath          = strdup(_wdir);
+#endif
+
+
 #ifdef WIN32_DEMO
-  traceEvent(CONST_TRACE_INFO, "\n-----------------------------------------------------------");
-  traceEvent(CONST_TRACE_INFO, "WARNING: this application is a limited ntop myGlobals.version able to");
-  traceEvent(CONST_TRACE_INFO, "capture up to %d packets. If you are interested", MAX_NUM_PACKETS);
-  traceEvent(CONST_TRACE_INFO, "in the full myGlobals.version please have a look at the ntop");
-  traceEvent(CONST_TRACE_INFO, "home page http://www.ntop.org/.");
-  traceEvent(CONST_TRACE_INFO, "-----------------------------------------------------------\n");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "\n-----------------------------------------------------------");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WARNING: this application is a limited ntop version able to");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "capture up to %d packets. If you are interested", MAX_NUM_PACKETS);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "in the full version please have a look at the ntop");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "home page http://www.ntop.org/.");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "-----------------------------------------------------------\n");
 #endif
 }
 
@@ -231,7 +237,7 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 #ifdef DEBUG
   if (fileName)
     traceEvent(CONST_TRACE_INFO,
-	       "INFO: createMutex() call with %x mutex [%s:%d]", mutexId,
+	       "DEBUG: createMutex() call with %x mutex [%s:%d]", mutexId,
 	       fileName, fileLine);
 #endif
 
@@ -245,14 +251,14 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 #ifdef DEBUG
   if (fileName)
     traceEvent(CONST_TRACE_INFO,
-	       "INFO: deleteMutex() call with %x(%c,%x) mutex [%s:%d]",
+	       "DEBUG: deleteMutex() call with %x(%c,%x) mutex [%s:%d]",
 	       mutexId, (mutexId && mutexId->isInitialized) ? 'i' : '-',
 	       mutexId ? mutexId->mutex : 0, fileName, fileLine);
 #endif
 
   if(!mutexId->isInitialized) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "ERROR: deleteMutex() call with a NULL mutex [%s:%d]",
+    traceEvent(CONST_TRACE_WARNING,
+	       "deleteMutex() call with a NULL mutex [%s:%d]",
 	       fileName, fileLine);
     return;
   }
@@ -327,7 +333,7 @@ int _releaseMutex(PthreadMutex *mutexId,
   rc = ReleaseMutex(mutexId->mutex);
 
   if((rc == 0) && (fileName)) {
-    traceEvent(CONST_TRACE_ERROR, "ERROR while unlocking 0x%X [%s:%d] (LastError=%d)",
+    traceEvent(CONST_TRACE_WARNING, "Unlock failed for 0x%X [%s:%d] (LastError=%d)",
 	       mutexId->mutex, fileName, fileLine, GetLastError());
   }
 
@@ -343,7 +349,7 @@ int _releaseMutex(PthreadMutex *mutexId,
     }
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs",
+    traceEvent(CONST_TRACE_INFO, "DEBUG: semaphore 0x%X [%s:%d] locked for %d secs",
 	       &(mutexId->mutex), fileName, fileLine,
 	       mutexId->maxLockedDuration);
 #endif
@@ -413,7 +419,7 @@ void printAvailableInterfaces() {
   char *tmpDev = pcap_lookupdev(ebuf);
   
   if(tmpDev == NULL) {
-    traceEvent(CONST_TRACE_INFO, "Unable to locate default interface (%s)", ebuf);
+    traceEvent(CONST_TRACE_FATALERROR, "Unable to locate default interface (%s)", ebuf);
     exit(-1);
   }
 
@@ -495,7 +501,7 @@ void printAvailableInterfaces() {
   } /* while */
 
   if(numInterfaces == 0) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: no interfaces available! This application cannot work");
+    traceEvent(CONST_TRACE_WARNING, "No interfaces available! This application cannot work");
     traceEvent(CONST_TRACE_WARNING, "         Make sure that winpcap is installed properly");
     traceEvent(CONST_TRACE_WARNING, "         and that you have network interfaces installed.");
   }

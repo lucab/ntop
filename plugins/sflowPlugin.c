@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* This plugin works only with threads */
+
 /* ******************************************************************
 
   -----------------------------------------------------------------------
@@ -106,6 +108,7 @@ static int threadActive;
 #endif
 
 static void initSflowInSocket(); /* forward */
+static void setPluginStatus(char * status); /* forward */
 
 /* ****************************** */
 
@@ -646,10 +649,12 @@ static u_long *readExtendedSwitch(SFSample *sample, u_long *datap, u_char *endPt
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_SWITCH;
 
-  if(debug) traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
-  if(debug) traceEvent(CONST_TRACE_INFO, "in_priority %lu\n", sample->in_priority);
-  if(debug) traceEvent(CONST_TRACE_INFO, "out_vlan %lu\n", sample->out_vlan);
-  if(debug) traceEvent(CONST_TRACE_INFO, "out_priority %lu\n", sample->out_priority);
+  if(debug) {
+            traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
+            traceEvent(CONST_TRACE_INFO, "in_priority %lu\n", sample->in_priority);
+            traceEvent(CONST_TRACE_INFO, "out_vlan %lu\n", sample->out_vlan);
+            traceEvent(CONST_TRACE_INFO, "out_priority %lu\n", sample->out_priority);
+  }
 
   return datap;
 }
@@ -720,10 +725,10 @@ static void decodeLinkLayer(SFSample *sample)
 
   if(sample->headerLen < NFT_ETHHDR_SIZ) return; /* not enough for an Ethernet header */
 
-  if(debug) traceEvent(CONST_TRACE_INFO, "dstMAC %02x%02x%02x%02x%02x%02x\n",
+  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstMAC %02x%02x%02x%02x%02x%02x\n",
 	     ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
-  if(debug) traceEvent(CONST_TRACE_INFO, "srcMAC %02x%02x%02x%02x%02x%02x\n",
+  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcMAC %02x%02x%02x%02x%02x%02x\n",
 	     ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
   type_len = (ptr[0] << 8) + ptr[1];
@@ -738,8 +743,10 @@ static void decodeLinkLayer(SFSample *sample)
     /* |   pri  | c |         vlan-id        | */
     /*  ------------------------------------- */
     /* [priority = 3bits] [Canonical Format Flag = 1bit] [vlan-id = 12 bits] */
-    if(debug) traceEvent(CONST_TRACE_INFO, "decodedVLAN %lu\n", vlan);
-    if(debug) traceEvent(CONST_TRACE_INFO, "decodedPriority %lu\n", priority);
+    if(debug) {
+              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: decodedVLAN %lu", vlan);
+              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: decodedPriority %lu", priority);
+    }
     /* now get the type_len again (next two bytes) */
     type_len = (ptr[0] << 8) + ptr[1];
   }
@@ -822,11 +829,13 @@ static void decodeIPV4(SFSample *sample)
     sample->dcd_ipTos = ip.tos;
     sample->dcd_ipTTL = ip.ttl;
     /* Log out the decoded IP fields */
-    if(debug) traceEvent(CONST_TRACE_INFO, "srcIP %s\n", IP_to_a(sample->dcd_srcIP.s_addr, buf));
-    if(debug) traceEvent(CONST_TRACE_INFO, "dstIP %s\n", IP_to_a(sample->dcd_dstIP.s_addr, buf));
-    if(debug) traceEvent(CONST_TRACE_INFO, "IPProtocol %u\n", sample->dcd_ipProtocol);
-    if(debug) traceEvent(CONST_TRACE_INFO, "IPTOS %u\n", sample->dcd_ipTos);
-    if(debug) traceEvent(CONST_TRACE_INFO, "IPTTL %u\n", sample->dcd_ipTTL);
+    if(debug) {
+              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcIP %s", IP_to_a(sample->dcd_srcIP.s_addr, buf));
+              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstIP %s", IP_to_a(sample->dcd_dstIP.s_addr, buf));
+              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPProtocol %u", sample->dcd_ipProtocol);
+              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPTOS %u", sample->dcd_ipTos);
+              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPTTL %u", sample->dcd_ipTTL);
+    }
     /* advance the pointer to the next protocol layer */
     ptr += sizeof(struct myiphdr);
 
@@ -835,8 +844,10 @@ static void decodeIPV4(SFSample *sample)
       {
 	struct myicmphdr icmp;
 	memcpy(&icmp, ptr, sizeof(icmp));
-	if(debug) traceEvent(CONST_TRACE_INFO, "ICMPType %u\n", icmp.type);
-	if(debug) traceEvent(CONST_TRACE_INFO, "ICMPCode %u\n", icmp.code);
+	if(debug) {
+	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ICMPType %u", icmp.type);
+	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ICMPCode %u", icmp.code);
+        }
       }
       break;
     case 6: /* TCP */
@@ -846,9 +857,11 @@ static void decodeIPV4(SFSample *sample)
 	sample->dcd_sport = ntohs(tcp.th_sport);
 	sample->dcd_dport = ntohs(tcp.th_dport);
 	sample->dcd_tcpFlags = tcp.th_flags;
-	if(debug) traceEvent(CONST_TRACE_INFO, "TCPSrcPort %u\n", sample->dcd_sport);
-	if(debug) traceEvent(CONST_TRACE_INFO, "TCPDstPort %u\n",sample->dcd_dport);
-	if(debug) traceEvent(CONST_TRACE_INFO, "TCPFlags %u\n", sample->dcd_tcpFlags);
+	if(debug) {
+	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPSrcPort %u", sample->dcd_sport);
+	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPDstPort %u",sample->dcd_dport);
+	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPFlags %u", sample->dcd_tcpFlags);
+        }
       }
       break;
     case 17: /* UDP */
@@ -857,8 +870,10 @@ static void decodeIPV4(SFSample *sample)
 	memcpy(&udp, ptr, sizeof(udp));
 	sample->dcd_sport = ntohs(udp.uh_sport);
 	sample->dcd_dport = ntohs(udp.uh_dport);
-	if(debug) traceEvent(CONST_TRACE_INFO, "UDPSrcPort %u\n", sample->dcd_sport);
-	if(debug) traceEvent(CONST_TRACE_INFO, "UDPDstPort %u\n", sample->dcd_dport);
+	if(debug) {
+	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: UDPSrcPort %u", sample->dcd_sport);
+	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: UDPDstPort %u", sample->dcd_dport);
+        }
       }
       break;
     default: /* some other protcol */
@@ -922,6 +937,12 @@ static void writePcapPacket(SFSample *sample) {
     }
   }
 
+#ifdef CFG_MULTITHREADED
+  /* Obviously, sflow won't work without multiple threads.
+   * We said so up front!
+   * this ifdef is just here so that we don't die when loading
+   * the plugin so we can warn you...
+   */
   /*
     Fix below courtesy of
     Neil McKee <neil_mckee@inmon.com>
@@ -929,6 +950,8 @@ static void writePcapPacket(SFSample *sample) {
   if(sample->headerProtocol == INMHEADER_ETHERNET_ISO8023)
     queuePacket((u_char*)myGlobals.sflowDeviceId,
 		&hdr, sample->header); /* Pass the packet to ntop */
+#endif
+
 }
 
 /*_________________---------------------------__________________
@@ -951,7 +974,7 @@ static void receiveError(SFSample *sample, char *errm, int hexdump, u_char *curr
     hex = scratch;
   }
 
-  traceEvent(CONST_TRACE_WARNING, "%s (source IP = %s) %s\n", msg, IP_to_a(sample->sourceIP.s_addr, ipbuf), hex);
+  traceEvent(CONST_TRACE_WARNING, "SFLOW: %s (source IP = %s) %s", msg, IP_to_a(sample->sourceIP.s_addr, ipbuf), hex);
 }
 
 /*_________________---------------------------__________________
@@ -975,9 +998,11 @@ static u_long *readExtendedRouter(SFSample *sample, u_long *datap, u_char *endPt
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_ROUTER;
 
-  if(debug) traceEvent(CONST_TRACE_INFO, "nextHop %s\n", IP_to_a(sample->nextHop.s_addr, buf));
-  if(debug) traceEvent(CONST_TRACE_INFO, "srcSubnetMask %lu\n", sample->srcMask);
-  if(debug) traceEvent(CONST_TRACE_INFO, "dstSubnetMask %lu\n", sample->dstMask);
+  if(debug) {
+            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: nextHop %s", IP_to_a(sample->nextHop.s_addr, buf));
+            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcSubnetMask %lu", sample->srcMask);
+            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstSubnetMask %lu", sample->dstMask);
+  }
 
   return datap;
 }
@@ -1004,14 +1029,16 @@ static u_long *readExtendedGateway(SFSample *sample, u_long *datap, u_char *endP
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_GATEWAY;
 
-  if(debug) traceEvent(CONST_TRACE_INFO, "my_as %lu\n", sample->my_as);
-  if(debug) traceEvent(CONST_TRACE_INFO, "src_as %lu\n", sample->src_as);
-  if(debug) traceEvent(CONST_TRACE_INFO, "src_peer_as %lu\n", sample->src_peer_as);
-  if(debug) traceEvent(CONST_TRACE_INFO, "dst_as_path_len %lu\n", sample->dst_as_path_len);
+  if(debug) {
+            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: my_as %lu", sample->my_as);
+            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: src_as %lu", sample->src_as);
+            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: src_peer_as %lu", sample->src_peer_as);
+            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dst_as_path_len %lu", sample->dst_as_path_len);
+  }
   if(sample->dst_as_path_len > 0) {
     u_int i = 0;
     for(; i < sample->dst_as_path_len; i++) {
-      if(i == 0) if(debug) traceEvent(CONST_TRACE_INFO, "dst_as_path ");
+      if(i == 0) if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dst_as_path ");
       else if(debug) traceEvent(CONST_TRACE_INFO, "-");
       if(debug) traceEvent(CONST_TRACE_INFO, "%lu", ntohl(sample->dst_as_path[i]));
     }
@@ -1053,8 +1080,10 @@ static u_long *readExtendedUser(SFSample *sample, u_long *datap, u_char *endPtr)
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_USER;
 
-  if(debug) traceEvent(CONST_TRACE_INFO, "src_user %s\n", sample->src_user);
-  if(debug) traceEvent(CONST_TRACE_INFO, "dst_user %s\n", sample->dst_user);
+  if(debug) {
+            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: src_user %s", sample->src_user);
+            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dst_user %s", sample->dst_user);
+  }
 
   return datap;
 }
@@ -1073,18 +1102,17 @@ static void receiveSflowSample(SFSample *sample)
 
   now.tv_sec = time(NULL);
   now.tv_usec = 0;
-  if(debug) traceEvent(CONST_TRACE_INFO, "startDatagram =================================\n");
-  {
+  if(debug) {
     char buf[51];
-    if(debug) traceEvent(CONST_TRACE_INFO, "datagramSourceIP %s\n", IP_to_a(sample->sourceIP.s_addr, buf));
+    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: startDatagram =================================");
+    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: datagramSourceIP %s", IP_to_a(sample->sourceIP.s_addr, buf));
+    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: datagramSize %lu", sample->rawSampleLen);
+    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: unixSecondsUTC %lu", now.tv_sec);
   }
-
-  if(debug) traceEvent(CONST_TRACE_INFO, "datagramSize %lu\n", sample->rawSampleLen);
-  if(debug) traceEvent(CONST_TRACE_INFO, "unixSecondsUTC %lu\n", now.tv_sec);
 
   /* check the version */
   GETDATA32(datagramVersion, datap);
-  if(debug) traceEvent(CONST_TRACE_INFO, "datagramVersion %d\n", datagramVersion);
+  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: datagramVersion %d", datagramVersion);
   if(datagramVersion != 2) {
     receiveError(sample,  "unexpected datagram version number: %d\n", TRUE, (u_char *)datap);
     return;
@@ -1103,13 +1131,13 @@ static void receiveSflowSample(SFSample *sample)
   GETDATA32(sample->sysUpTime, datap);
   GETDATA32(samplesInPacket, datap);
 
-  {
+  if(debug) {
     char buf[51];
-    if(debug) traceEvent(CONST_TRACE_INFO, "agent %s\n", IP_to_a(agentIP.s_addr, buf));
+    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: agent %s", IP_to_a(agentIP.s_addr, buf));
+    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sysUpTime %lu", sample->sysUpTime);
+    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: packetSequenceNo %lu", sample->sequenceNo);
+    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: samplesInPacket %lu", samplesInPacket);
   }
-  if(debug) traceEvent(CONST_TRACE_INFO, "sysUpTime %lu\n", sample->sysUpTime);
-  if(debug) traceEvent(CONST_TRACE_INFO, "packetSequenceNo %lu\n", sample->sequenceNo);
-  if(debug) traceEvent(CONST_TRACE_INFO, "samplesInPacket %lu\n", samplesInPacket);
 
   { /* now iterate and pull out the flows and counters samples */
     u_int32_t samp = 0;
@@ -1126,40 +1154,44 @@ static void receiveSflowSample(SFSample *sample)
       GETDATA32(sample->sampleType, datap);
       GETDATA32(sample->samplesGenerated, datap);
       GETDATA32(sample->samplerId, datap);
-      if(debug) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
-      {
+      if(debug) {
 	u_int32_t ds_class = sample->samplerId >> 24;
 	u_int32_t ds_index = sample->samplerId & 0x00ffffff;
-	if(debug) traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", ds_class, ds_index);
+        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampleSequenceNo %lu", sample->samplesGenerated);
+	traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sourceId %lu:%lu", ds_class, ds_index);
       }
 
       switch(sample->sampleType) {
       case FLOWSAMPLE:
 	{
-	  if(debug) traceEvent(CONST_TRACE_INFO, "sampleType FLOWSAMPLE\n");
+	  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampleType FLOWSAMPLE");
 	  GETDATA32(sample->meanSkipCount, datap);
 	  GETDATA32(sample->samplePool, datap);
 	  GETDATA32(sample->dropEvents, datap);
 	  GETDATA32(sample->inputPort, datap);
 	  GETDATA32(sample->outputPort, datap);
-	  if(debug) traceEvent(CONST_TRACE_INFO, "meanSkipCount %lu\n", sample->meanSkipCount);
-	  if(debug) traceEvent(CONST_TRACE_INFO, "samplePool %lu\n", sample->samplePool);
-	  if(debug) traceEvent(CONST_TRACE_INFO, "dropEvents %lu\n", sample->dropEvents);
-	  if(debug) traceEvent(CONST_TRACE_INFO, "inputPort %lu\n", sample->inputPort);
-	  if(debug) traceEvent(CONST_TRACE_INFO, "outputPort %lu\n", sample->outputPort);
+	  if(debug) {
+	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: meanSkipCount %lu", sample->meanSkipCount);
+	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: samplePool %lu", sample->samplePool);
+	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dropEvents %lu", sample->dropEvents);
+	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: inputPort %lu", sample->inputPort);
+	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: outputPort %lu", sample->outputPort);
+          }
 
 	  GETDATA32(sample->packet_data_tag, datap);
 
 	  switch(sample->packet_data_tag) {
 
 	  case INMPACKETTYPE_HEADER:
-	    if(debug) traceEvent(CONST_TRACE_INFO, "packetDataTag INMPACKETTYPE_HEADER\n");
+	    if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: packetDataTag INMPACKETTYPE_HEADER");
 	    GETDATA32(sample->headerProtocol, datap);
 	    GETDATA32(sample->sampledPacketSize, datap);
 	    GETDATA32(sample->headerLen, datap);
-	    if(debug) traceEvent(CONST_TRACE_INFO, "headerProtocol %lu\n", sample->headerProtocol);
-	    if(debug) traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
-	    if(debug) traceEvent(CONST_TRACE_INFO, "headerLen %lu\n", sample->headerLen);
+	    if(debug) {
+	              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: headerProtocol %lu", sample->headerProtocol);
+	              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampledPacketSize %lu", sample->sampledPacketSize);
+	              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: headerLen %lu", sample->headerLen);
+            }
 
 	    sample->header = (u_char *)datap; /* just point at the header */
 	    datap += ((sample->headerLen + 3) / 4); /* quad-alignment is required by XDR */
@@ -1170,19 +1202,19 @@ static void receiveSflowSample(SFSample *sample)
 	    {
 	      char scratch[2000];
 	      printHex(sample->header, sample->headerLen, scratch, 2000, 0, 2000);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "headerBytes %s\n", scratch);
+	      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: headerBytes %s", scratch);
 	    }
 	    decodeLinkLayer(sample);
 	    if(sample->offsetToIPV4 > 0) {
 	      // report the size of the original IPPdu (including the IP header)
-	      if(debug) traceEvent(CONST_TRACE_INFO, "IPSize %d\n",  sample->sampledPacketSize - sample->offsetToIPV4);
+	      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPSize %d",  sample->sampledPacketSize - sample->offsetToIPV4);
 	      decodeIPV4(sample);
 	    }
 
 	    break;
 
 	  case INMPACKETTYPE_IPV4:
-	    if(debug) traceEvent(CONST_TRACE_INFO, "packetDataTag INMPACKETTYPE_IPV4\n");
+	    if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: packetDataTag INMPACKETTYPE_IPV4");
 	    sample->headerLen = sizeof(INMSampled_ipv4);
 	    sample->header = (u_char *)datap; /* just point at the header */
 	    datap += (sample->headerLen + 3) / 4; /* quad-alignment is required by XDR */
@@ -1191,33 +1223,41 @@ static void receiveSflowSample(SFSample *sample)
 	      INMSampled_ipv4 nfKey;
 	      memcpy(&nfKey, sample->header, sizeof(nfKey));
 	      sample->sampledPacketSize = ntohl(nfKey.length);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "IPSize %d\n",  sample->sampledPacketSize);
+	      if(debug) {
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampledPacketSize %lu", sample->sampledPacketSize);
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPSize %d",  sample->sampledPacketSize);
+              }
 	      sample->dcd_srcIP = nfKey.src_ip;
 	      sample->dcd_dstIP = nfKey.dst_ip;
 	      sample->dcd_ipProtocol = ntohl(nfKey.protocol);
 	      sample->dcd_ipTos = ntohl(nfKey.tos);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "srcIP %s\n", IP_to_a(sample->dcd_srcIP.s_addr, buf));
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dstIP %s\n", IP_to_a(sample->dcd_dstIP.s_addr, buf));
-	      if(debug) traceEvent(CONST_TRACE_INFO, "IPProtocol %u\n", sample->dcd_ipProtocol);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "IPTOS %u\n", sample->dcd_ipTos);
+	      if(debug) {
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcIP %s", IP_to_a(sample->dcd_srcIP.s_addr, buf));
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstIP %s", IP_to_a(sample->dcd_dstIP.s_addr, buf));
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPProtocol %u", sample->dcd_ipProtocol);
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPTOS %u", sample->dcd_ipTos);
+              }
 	      sample->dcd_sport = ntohl(nfKey.src_port);
 	      sample->dcd_dport = ntohl(nfKey.dst_port);
 	      switch(sample->dcd_ipProtocol) {
 	      case 1: /* ICMP */
-		if(debug) traceEvent(CONST_TRACE_INFO, "ICMPType %u\n", sample->dcd_sport);
+		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ICMPType %u", sample->dcd_sport);
 		/* not sure about the dest port being icmp code
 		   - might just be a repeat of the type */
 		break;
 	      case 6: /* TCP */
-		if(debug) traceEvent(CONST_TRACE_INFO, "TCPSrcPort %u\n", sample->dcd_sport);
-		if(debug) traceEvent(CONST_TRACE_INFO, "TCPDstPort %u\n", sample->dcd_dport);
+		if(debug) {
+		          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPSrcPort %u", sample->dcd_sport);
+		          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPDstPort %u", sample->dcd_dport);
+                }
 		sample->dcd_tcpFlags = ntohl(nfKey.tcp_flags);
-		if(debug) traceEvent(CONST_TRACE_INFO, "TCPFlags %u\n", sample->dcd_tcpFlags);
+		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPFlags %u", sample->dcd_tcpFlags);
 		break;
 	      case 17: /* UDP */
-		if(debug) traceEvent(CONST_TRACE_INFO, "UDPSrcPort %u\n", sample->dcd_sport);
-		if(debug) traceEvent(CONST_TRACE_INFO, "UDPDstPort %u\n", sample->dcd_dport);
+		if(debug) {
+		          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: UDPSrcPort %u", sample->dcd_sport);
+		          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: UDPDstPort %u", sample->dcd_dport);
+                }
 		break;
 	      default: /* some other protcol */
 		break;
@@ -1225,7 +1265,7 @@ static void receiveSflowSample(SFSample *sample)
 	    }
 	    break;
 	  case INMPACKETTYPE_IPV6:
-	    if(debug) traceEvent(CONST_TRACE_INFO, "packetDataTag INMPACKETTYPE_IPV6\n");
+	    if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: packetDataTag INMPACKETTYPE_IPV6");
 
 	    sample->header = (u_char *)datap; /* just point at the header */
 	    datap += (sample->headerLen + 3) / 4; /* quad-alignment is required by XDR */
@@ -1233,7 +1273,7 @@ static void receiveSflowSample(SFSample *sample)
 	      INMSampled_ipv6 nfKey6;
 	      memcpy(&nfKey6, sample->header, sizeof(nfKey6));
 	      sample->sampledPacketSize = ntohl(nfKey6.length);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
+	      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampledPacketSize %lu", sample->sampledPacketSize);
 	    }
 	    /* bug: more decode to do here */
 	    break;
@@ -1254,19 +1294,19 @@ static void receiveSflowSample(SFSample *sample)
 	      GETDATA32(extended_tag, datap);
 	      switch(extended_tag) {
 	      case INMEXTENDED_SWITCH:
-		if(debug) traceEvent(CONST_TRACE_INFO, "extendedType SWITCH\n");
+		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: extendedType SWITCH");
 		if((datap = readExtendedSwitch(sample, datap, endPtr)) == NULL) return;
 		break;
 	      case INMEXTENDED_ROUTER:
-		if(debug) traceEvent(CONST_TRACE_INFO, "extendedType ROUTER\n");
+		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: extendedType ROUTER");
 		if((datap = readExtendedRouter(sample, datap, endPtr)) == NULL) return;
 		break;
 	      case INMEXTENDED_GATEWAY:
-		if(debug) traceEvent(CONST_TRACE_INFO, "extendedType GATEWAY\n");
+		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: extendedType GATEWAY");
 		if((datap = readExtendedGateway(sample, datap, endPtr)) == NULL) return;
 		break;
 	      case INMEXTENDED_USER:
-		if(debug) traceEvent(CONST_TRACE_INFO, "extendedType USER\n");
+		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: extendedType USER");
 		if((datap = readExtendedUser(sample, datap, endPtr)) == NULL) return;
 		break;
 	      default:
@@ -1282,12 +1322,12 @@ static void receiveSflowSample(SFSample *sample)
 
       case COUNTERSSAMPLE:
 	{
-	  if(debug) traceEvent(CONST_TRACE_INFO, "sampleType COUNTERSSAMPLE\n");
+	  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampleType COUNTERSSAMPLE");
 	  GETDATA32(sample->statsSamplingInterval, datap);
-	  if(debug) traceEvent(CONST_TRACE_INFO, "statsSamplingInterval %lu\n", sample->statsSamplingInterval);
+	  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: statsSamplingInterval %lu", sample->statsSamplingInterval);
 	  /* now find out what sort of counter blocks we have here... */
 	  GETDATA32(sample->counterBlockVersion, datap);
-	  if(debug) traceEvent(CONST_TRACE_INFO, "counterBlockVersion %lu\n", sample->counterBlockVersion);
+	  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: counterBlockVersion %lu", sample->counterBlockVersion);
 
 	  /* first see if we should read the generic stats */
 	  switch(sample->counterBlockVersion) {
@@ -1298,7 +1338,6 @@ static void receiveSflowSample(SFSample *sample)
 	  case INMCOUNTERSVERSION_VG:
 	  case INMCOUNTERSVERSION_WAN:
 	    {
-	      u_int64_t cntr64;
 	      /* the first part of the generic counters block is really just
 		 more info about the interface. */
 	      GETDATA32(sample->ifIndex, datap);
@@ -1306,41 +1345,46 @@ static void receiveSflowSample(SFSample *sample)
 	      GETDATA64(sample->ifSpeed, datap);
 	      GETDATA32(sample->ifDirection, datap);
 	      GETDATA32(sample->ifStatus, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifIndex %lu\n", sample->ifIndex);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "networkType %lu\n", sample->networkType);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifSpeed %lu\n", sample->ifSpeed);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifDirection %lu\n", sample->ifDirection);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifStatus %lu\n", sample->ifStatus);
+	      if(debug) {
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifIndex %lu", sample->ifIndex);
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: networkType %lu", sample->networkType);
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifSpeed %lu", sample->ifSpeed);
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifDirection %lu", sample->ifDirection);
+	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifStatus %lu", sample->ifStatus);
+              }
 
 	      /* the generic counters always come first */
-	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifInOctets %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifInUcastPkts %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifInMulticastPkts %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifInBroadcastPkts %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifInDiscards %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifInErrors %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifInUnknownProtos %Lu\n", cntr64);
-	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifOutOctets %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifOutUcastPkts %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifOutMulticastPkts %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifOutBroadcastPkts %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifOutDiscards %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifOutErrors %Lu\n", cntr64);
-	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ifPromiscuousMode %Lu\n", cntr64);
+              if(debug) {
+	        u_int64_t cntr64;
+	        GETDATA64(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInOctets %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInUcastPkts %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInMulticastPkts %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInBroadcastPkts %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInDiscards %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInErrors %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInUnknownProtos %Lu", cntr64);
+	        GETDATA64(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutOctets %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutUcastPkts %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutMulticastPkts %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutBroadcastPkts %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutDiscards %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutErrors %Lu", cntr64);
+	        GETDATA32(cntr64, datap);
+	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifPromiscuousMode %Lu", cntr64);
+              }
 	    }
 	    break;
 
@@ -1359,131 +1403,131 @@ static void receiveSflowSample(SFSample *sample)
 	    /* nothing more */
 	    break;
 	  case INMCOUNTERSVERSION_ETHERNET:
-	    {
+	    if(debug) {
 	      u_int32_t cntr32;
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsAlignmentErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsAlignmentErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsFCSErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsFCSErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsSingleCollisionFrames %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsSingleCollisionFrames %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsMultipleCollisionFrames %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsMultipleCollisionFrames %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsSQETestErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsSQETestErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsDeferredTransmissions %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsDeferredTransmissions %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsLateCollisions %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsLateCollisions %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsExcessiveCollisions %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsExcessiveCollisions %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsInternalMacTransmitErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsInternalMacTransmitErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsCarrierSenseErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsCarrierSenseErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsFrameTooLongs %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsFrameTooLongs %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsInternalMacReceiveErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsInternalMacReceiveErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot3StatsSymbolErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsSymbolErrors %lu", cntr32);
 	    }
 	    break;
 	  case INMCOUNTERSVERSION_TOKENRING:
-	    {
+	              {
 	      u_int32_t cntr32;
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsLineErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsLineErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsBurstErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsBurstErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsACErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsACErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsAbortTransErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsAbortTransErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsInternalErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsInternalErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsLostFrameErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsLostFrameErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsReceiveCongestions %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsReceiveCongestions %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsFrameCopiedErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsFrameCopiedErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsTokenErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsTokenErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsSoftErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsSoftErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsHardErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsHardErrors %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsSignalLoss %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsSignalLoss %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsTransmitBeacons %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsTransmitBeacons %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsRecoverys %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsRecoverys %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsLobeWires %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsLobeWires %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsRemoves %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsRemoves %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsSingles %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsSingles %lu", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot5StatsFreqErrors %lu\n", cntr32);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsFreqErrors %lu", cntr32);
 	    }
 	    break;
 	  case INMCOUNTERSVERSION_FDDI:
 	    /* nothing more (for the moment) $$$ */
 	    break;
 	  case INMCOUNTERSVERSION_VG:
-	    {
+	    if(debug) {
 	      u_int64_t cntr64;
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12InHighPriorityFrames %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InHighPriorityFrames %Lu", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12InHighPriorityOctets %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InHighPriorityOctets %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12InNormPriorityFrames %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InNormPriorityFrames %Lu", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12InNormPriorityOctets %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InNormPriorityOctets %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12InIPMErrors %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InIPMErrors %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12InOversizeFrameErrors %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InOversizeFrameErrors %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12InDataErrors %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InDataErrors %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12InNullAddressedFrames %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InNullAddressedFrames %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12OutHighPriorityFrames %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12OutHighPriorityFrames %Lu", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12OutHighPriorityOctets %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12OutHighPriorityOctets %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12TransitionIntoTrainings %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12TransitionIntoTrainings %Lu", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12HCInHighPriorityOctets %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12HCInHighPriorityOctets %Lu", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12HCInNormPriorityOctets %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12HCInNormPriorityOctets %Lu", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "dot12HCOutHighPriorityOctets %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12HCOutHighPriorityOctets %Lu", cntr64);
 	    }
 	    break;
 	  case INMCOUNTERSVERSION_WAN:
 	    /* nothing more for the moment $$$ */
 	    break;
 	  case INMCOUNTERSVERSION_VLAN:
-	    {
+	    if(debug) {
 	      u_int64_t cntr64;
 	      GETDATA32(sample->in_vlan, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: in_vlan %lu", sample->in_vlan);
 	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "octets %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: octets %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "ucastPkts %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ucastPkts %Lu", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "multicastPkts %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: multicastPkts %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "broadcastPkts %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: broadcastPkts %Lu", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "discards %Lu\n", cntr64);
+	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: discards %Lu", cntr64);
 	    }
 	    break;
 	  default:
@@ -1500,7 +1544,7 @@ static void receiveSflowSample(SFSample *sample)
 	report the size in bytes that this flowSample or
 	counterSample took up in the datagram
       */
-      if(debug) traceEvent(CONST_TRACE_INFO, "%s %d\n",
+      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: %s %d",
 		 (sample->sampleType == FLOWSAMPLE ?
 		  "flowSampleSize" : "countersSampleSize"),
 		 (u_char *)datap - startOfSample);
@@ -1556,7 +1600,7 @@ static void setSflowInterfaceMatrix() {
   myGlobals.device[myGlobals.sflowDeviceId].netmask.s_addr = myGlobals.sflowIfMask.s_addr;
   if(myGlobals.device[myGlobals.sflowDeviceId].numHosts > MAX_SUBNET_HOSTS) {
     myGlobals.device[myGlobals.sflowDeviceId].numHosts = MAX_SUBNET_HOSTS;
-    traceEvent(CONST_TRACE_WARNING, "Truncated network size (device %s) to %d hosts (real netmask %s)",
+    traceEvent(CONST_TRACE_WARNING, "SFLOW: Truncated network size (device %s) to %d hosts (real netmask %s)",
 	       myGlobals.device[myGlobals.sflowDeviceId].name, myGlobals.device[myGlobals.sflowDeviceId].numHosts,
 	       intoa(myGlobals.device[myGlobals.sflowDeviceId].netmask));
   }
@@ -1575,7 +1619,7 @@ static void setSflowInSocket() {
   int sockopt = 1;
 
   if(myGlobals.sflowInSocket > 0) {
-    traceEvent(CONST_TRACE_INFO, "Sflow collector terminated");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Collector terminated");
     closeNwSocket(&myGlobals.sflowInSocket);
   }
 
@@ -1589,14 +1633,14 @@ static void setSflowInSocket() {
     sockIn.sin_addr.s_addr       = INADDR_ANY;
 
     if(bind(myGlobals.sflowInSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      traceEvent(CONST_TRACE_WARNING, "Sflow collector: port %d already in use.",
+      traceEvent(CONST_TRACE_ERROR, "SFLOW: Collector, port %d already in use - import disabled",
 		 myGlobals.sflowInPort);
       closeNwSocket(&myGlobals.sflowInSocket);
       myGlobals.sflowInSocket = 0;
       return;
     }
 
-    traceEvent(CONST_TRACE_WARNING, "Sflow collector listening on port %d.",
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Collector listening on port %d",
 	       myGlobals.sflowInPort);
   }
 
@@ -1645,7 +1689,7 @@ static void handlesFlowHTTPrequest(char* url) {
 	  storePrefsValue("sflow.ifNetMask", value);
 	  freeSflowMatrixMemory(); setSflowInterfaceMatrix();
 	} else
-	  traceEvent(CONST_TRACE_INFO, "Parse Error (%s)", value);
+	  traceEvent(CONST_TRACE_WARNING, "SFLOW: Parse Error (%s)", value);
      } else if(strcmp(key, "sflowDest") == 0) {
 	myGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
 	storePrefsValue("sflow.sflowDest", value);
@@ -1732,8 +1776,7 @@ static void handlesFlowHTTPrequest(char* url) {
   percentage = (myGlobals.lastSample-myGlobals.initialPool)/myGlobals.numSamplesReceived;
   err = 196 * sqrt((float)(1/(float)myGlobals.numSamplesReceived));
 
-  if(debug)
-    if(debug) traceEvent(CONST_TRACE_INFO, "[%.2f %%][Error <= %.2f%%]", percentage, err);
+  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: [%.2f %%][Error <= %.2f%%]", percentage, err);
 
   sendString("<CENTER>\n<TABLE BORDER>\n");
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
@@ -1792,7 +1835,7 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 #endif
 
 #ifdef DEBUG
-  if(debug) traceEvent(CONST_TRACE_INFO, "sFlowMainLoop()");
+  traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sFlowMainLoop()");
 #endif
 
 #ifdef CFG_MULTITHREADED
@@ -1803,13 +1846,13 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
     FD_ZERO(&sFlowMask);
     FD_SET(myGlobals.sflowInSocket, &sFlowMask);
 
-    if(select(myGlobals.sflowInSocket+1, &sFlowMask, NULL, NULL, NULL) > 0) {
+    if((rc = select(myGlobals.sflowInSocket+1, &sFlowMask, NULL, NULL, NULL)) > 0) {
       len = sizeof(fromHost);
       rc = recvfrom(myGlobals.sflowInSocket, (char*)&buffer, sizeof(buffer),
 		    0, (struct sockaddr*)&fromHost, &len);
 
 #ifdef DEBUG
-      if(debug) traceEvent(CONST_TRACE_INFO, "select() = %d", rc);
+      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: select() = %d", rc);
 #endif
       if(rc > 0) {
 	memset(&sample, 0, sizeof(sample));
@@ -1819,12 +1862,17 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 
 	receiveSflowSample(&sample);
 
-	if(debug) if(debug) traceEvent(CONST_TRACE_INFO, "rawSampleLen: %d", sample.rawSampleLen);
+	if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: rawSampleLen: %d", sample.rawSampleLen);
       } else {
-	if(debug) if(debug) traceEvent(CONST_TRACE_INFO, "rawSampleLen: rc=%d", rc);
+	if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: rawSampleLen: rc=%d", rc);
       }
     } else {
-      if(debug) traceEvent(CONST_TRACE_INFO, "sFlow thread is terminating...");
+      traceEvent(CONST_TRACE_INFO, "SFLOW: select() failed (%d, %s), terminating",
+                 errno,
+                 (errno == EBADF ? "EBADF" :
+                    errno == EINTR ? "EINTR" :
+                    errno == EINVAL ? "EINVAL" :
+                    errno == ENOMEM ? "ENOMEM" : "other"));
       break;
     }
   }
@@ -1843,7 +1891,7 @@ static void initSflowInSocket() {
   int sockopt = 1;
 
   if(myGlobals.sflowInSocket != 0) {
-    if(debug) traceEvent(CONST_TRACE_INFO, "sFlow collector terminated");
+    if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sFlow collector terminated");
     closeNwSocket(&myGlobals.sflowInSocket);
   }
 
@@ -1857,14 +1905,14 @@ static void initSflowInSocket() {
     sockIn.sin_addr.s_addr       = INADDR_ANY;
 
     if(bind(myGlobals.sflowInSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      traceEvent(CONST_TRACE_WARNING, "sFlow collector: port %d already in use.",
+      traceEvent(CONST_TRACE_ERROR, "SFLOW: Collector: port %d already in use - collector disabled",
 		 myGlobals.sflowInPort);
       closeNwSocket(&myGlobals.sflowInSocket);
       myGlobals.sflowInSocket = 0;
       return;
     }
 
-    traceEvent(CONST_TRACE_WARNING, "sFlow collector listening on port %d.",
+    traceEvent(CONST_TRACE_INFO, "SFLOW: Collector listening on port %d",
 	       myGlobals.sflowInPort);
   }
 
@@ -1896,7 +1944,6 @@ static void initSflowInSocket() {
   }
 
 #ifdef CFG_MULTITHREADED
-  /* This plugin works only with threads */
   if((!threadActive) && (myGlobals.sflowInSocket > 0))
     createThread(&sFlowThread, sFlowMainLoop, NULL);
 #endif
@@ -1909,7 +1956,7 @@ static void setSflowOutSocket() {
   int sockopt = 1;
 
   if(myGlobals.sflowOutSocket != 0) {
-    if(debug) traceEvent(CONST_TRACE_INFO, "sFlow collector terminated");
+    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sFlow collector terminated");
     closeNwSocket(&myGlobals.sflowOutSocket);
   }
 
@@ -1923,14 +1970,14 @@ static void setSflowOutSocket() {
     sockIn.sin_addr.s_addr       = INADDR_ANY;
 
     if(bind(myGlobals.sflowOutSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      traceEvent(CONST_TRACE_WARNING, "sFlow collector: port %d already in use.",
+      traceEvent(CONST_TRACE_WARNING, "SFLOW: Collector: port %d already in use",
 		 myGlobals.sflowInPort);
       closeNwSocket(&myGlobals.sflowOutSocket);
       myGlobals.sflowOutSocket = 0;
       return;
     }
 
-    traceEvent(CONST_TRACE_WARNING, "sFlow collector listening on port %d.",
+    traceEvent(CONST_TRACE_INFO, "SFLOW: Collector listening on port %d",
 	       myGlobals.sflowInPort);
   }
 
@@ -2073,7 +2120,7 @@ static void handleSflowPacket(u_char *_deviceId,
 		(struct sockaddr *)&myGlobals.sflowDest, sizeof(myGlobals.sflowDest));
 
     if(rc == 0)
-      if(debug) traceEvent(CONST_TRACE_INFO, "sendto returned %d [errno=%d][sflowOutSocket=%d]",
+      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sendto returned %d [errno=%d][sflowOutSocket=%d]",
 		 rc, errno, myGlobals.sflowOutSocket);
   }
 #else
@@ -2092,13 +2139,19 @@ static void handleSflowPacket(u_char *_deviceId,
 
 /* ****************************** */
 
-static void initsFlowFunct(void) {
+static int initsFlowFunct(void) {
   char value[32];
   int a, b, c, d, a1, b1, c1, d1;
 
+  setPluginStatus(NULL);
+
 #ifdef CFG_MULTITHREADED
   threadActive = 0;
+#else
+  setPluginStatus("Disabled - requires POSIX thread support.");
+  return(-1);
 #endif
+
   myGlobals.sflowInSocket = 0, debug = 0;
   myGlobals.numSamplesReceived = 0,
     myGlobals.initialPool = 0,
@@ -2137,19 +2190,23 @@ static void initsFlowFunct(void) {
   /* http://www.inmon.com/ */
 
     if(myGlobals.sflowInPort > 0)
-      traceEvent(CONST_TRACE_INFO, "Welcome to sFlow: listening on UDP port %d...",
+      traceEvent(CONST_TRACE_INFO, "SFLOW: Welcome to sFlow: listening on UDP port %d",
 		 myGlobals.sflowInPort);
 
 
   if(myGlobals.sflowDeviceId != -1)
     myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 1;
 
-    fflush(stdout);
+  fflush(stdout);
+  return(0);
 }
 
 /* ****************************** */
 
 static void termsFlowFunct(void) {
+
+  traceEvent(CONST_TRACE_INFO, "SFLOW: Thanks for using sFlow");
+
 #ifdef CFG_MULTITHREADED
   killThread(&sFlowThread);
 #endif
@@ -2160,7 +2217,7 @@ static void termsFlowFunct(void) {
   if(myGlobals.sflowDeviceId != -1)
     myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 0;
 
-  traceEvent(CONST_TRACE_INFO, "Thanks for using sFlow. Done.\n");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Done");
   fflush(stdout);
 }
 
@@ -2171,7 +2228,7 @@ static PluginInfo sFlowPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate ntop's sFlow support.<br>"
       "ntop can both collect and receive sFlow data. Received sFlow data is "
       "reported as a separate 'NIC' in the regular ntop reports.",
-    "2.0", /* version */
+    "2.2", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "sFlow", /* http://<host>:<port>/plugins/sFlowWatch */
     0, /* Active by default */
@@ -2180,21 +2237,34 @@ static PluginInfo sFlowPluginInfo[] = {
     termsFlowFunct,    /* TermFunc   */
     handleSflowPacket, /* PluginFunc */
     handlesFlowHTTPrequest,
-    "ip" /* no capture */
+    "ip", /* no capture */
+    NULL /* no status */
   }
 };
 
 /* ***************************************** */
 
 /* Plugin entry fctn */
-#ifdef STATIC_PLUGIN
+#ifdef MAKE_STATIC_PLUGIN
 PluginInfo* sflowPluginEntryFctn(void)
 #else
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_INFO, "Welcome to %s. (C) 2002 by Luca Deri.\n",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Welcome to %s. (C) 2002 by Luca Deri",
 	     sFlowPluginInfo->pluginName);
 
   return(sFlowPluginInfo);
 }
+
+/* This must be here so it can access the struct PluginInfo, above */
+static void setPluginStatus(char * status)
+   {
+       if (sFlowPluginInfo->pluginStatusMessage != NULL)
+           free(sFlowPluginInfo->pluginStatusMessage);
+       if (status == NULL) {
+           sFlowPluginInfo->pluginStatusMessage = NULL;
+       } else {
+           sFlowPluginInfo->pluginStatusMessage = strdup(status);
+       }
+   }

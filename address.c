@@ -34,11 +34,12 @@ static int _ns_name_uncompress(const u_char *msg,
 static int _ns_name_unpack(const u_char *msg,
 			  const u_char *eom, const u_char *src,
 			  u_char *dst, size_t dstsiz);
+static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int actualDeviceId);
+static void updateHostNameInfo(unsigned long numeric, char* symbolic);
 
 /* **************************************** */
 
-void updateHostNameInfo(unsigned long numeric, 
-			char* symbolic, int actualDeviceId) {
+static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int actualDeviceId) {
   char *hostName;
   struct in_addr addr;
   char buf[32];
@@ -66,17 +67,27 @@ void updateHostNameInfo(unsigned long numeric,
   releaseAddrResMutex();
 }
 
+/* **************************************** */
+
+static void updateHostNameInfo(unsigned long numeric, char* symbolic) {
+  int i;
+  
+  for(i=0; i<myGlobals.numDevices; i++)
+    updateDeviceHostNameInfo(numeric, symbolic, i);
+}
+
+
 /* ************************************ */
 
 static void resolveAddress(struct in_addr *hostAddr,
 			   short keepAddressNumeric, int actualDeviceId) {
   char symAddr[MAX_LEN_SYM_HOST_NAME];
   StoredAddress storedAddress;
-  int addr, i;
+  int addr, i, addToCacheFlag;
   struct hostent *hp = NULL;
+  int h_errnop;
 #ifdef HAVE_GETHOSTBYADDR_R
   struct hostent _hp, *__hp;
-  int h_errnop;
   char buffer[512];
 #endif
   char* res;
@@ -84,6 +95,7 @@ static void resolveAddress(struct in_addr *hostAddr,
   char tmpBuf[96];
   datum key_data;
   datum data_data;
+  int reportedFreaky = FALSE;
 
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
@@ -100,26 +112,21 @@ static void resolveAddress(struct in_addr *hostAddr,
   key_data.dptr = keyBuf;
   key_data.dsize = strlen(keyBuf)+1;
 
-  if(myGlobals.gdbm_file == NULL) {
+  if(myGlobals.dnsCacheFile == NULL) {
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress(), gdbm_file NULL");
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress(), dnsCacheFile NULL");
 #endif
     myGlobals.numResolveNoCacheDB++;
     return; /* ntop is quitting... */
   }
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "resolveAddress");
-#endif
+  data_data = gdbm_fetch(myGlobals.dnsCacheFile, key_data);
 
-  data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
-
+  myGlobals.numResolveCacheDBLookups++;
   /* First check whether the address we search for is cached... */
-  if((data_data.dptr != NULL) && (data_data.dsize == (sizeof(StoredAddress)+1))) {
+  if((data_data.dptr != NULL) &&
+     (data_data.dsize == (sizeof(StoredAddress)+1)) &&
+     (myGlobals.actTime - ((StoredAddress*)data_data.dptr)->recordCreationTime < CONST_DNSCACHE_LIFETIME) ) {
     StoredAddress *retrievedAddress;
 
     retrievedAddress = (StoredAddress*)data_data.dptr;
@@ -138,23 +145,29 @@ static void resolveAddress(struct in_addr *hostAddr,
     } else
       strncpy(symAddr, retrievedAddress->symAddress, MAX_LEN_SYM_HOST_NAME-1);
 
-    updateHostNameInfo(addr, retrievedAddress->symAddress, actualDeviceId);
-    myGlobals.numResolvedOnCacheAddresses++;
+    myGlobals.numResolvedFromCache++;
+    updateHostNameInfo(addr, retrievedAddress->symAddress);
+
     free(data_data.dptr);
 #ifdef DNS_DEBUG
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress() - resolved from cache");
 #endif
     return;
   } else {
+    if(data_data.dptr != NULL) {
 #ifdef GDBM_DEBUG
-    if(data_data.dptr != NULL)
-      traceEvent(CONST_TRACE_ERROR, "GDBM_DEBUG: Dropped data for %s [wrong data size]", keyBuf);
-    else
-      traceEvent(CONST_TRACE_ERROR, "GDBM_DEBUG: Unable to retrieve %s", keyBuf);
+      if (data_data.dsize == (sizeof(StoredAddress)+1))
+        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Dropped data for %s [wrong data size]\n", keyBuf);
+      else
+        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Ignored old record for %s\n", keyBuf);
 #endif
+      free(data_data.dptr);
+#ifdef GDBM_DEBUG
+    } else {
+      traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Unable to retrieve %s\n", keyBuf);
+#endif
+    }
 
-    /* It might be that the size of the retieved data is wrong */
-    if(data_data.dptr != NULL) free(data_data.dptr);
   }
 
   if((!keepAddressNumeric) && (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN)) {
@@ -230,6 +243,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #else /* PARM_USE_HOST */
 
     myGlobals.numAttemptingResolutionWithDNS++;
+    addToCacheFlag = 0 /* Assume we'll get something, so we do want to add it later on */;
 
 #ifdef HAVE_GETIPNODEBYADDR
     hp  = getipnodebyaddr((const void*)&theAddr,
@@ -275,7 +289,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #ifdef DNS_DEBUG
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr(): RC=%d 0x%X [%s]", 
                h_errno,
-	       hp, hp != NULL ? (char*)hp->h_name : "");
+	       hp, hp != NULL ? (char*)hp->h_name : "not meaningful, hp is null");
 #endif
 
 #endif
@@ -312,6 +326,9 @@ static void resolveAddress(struct in_addr *hostAddr,
       res = tmpBuf;
       myGlobals.numResolvedWithDNSAddresses++;
     } else {
+#ifdef WIN32
+	  h_errnop = h_errno;
+#endif
       myGlobals.numKeptNumericAddresses++;
       /* Failed, but why? */
       switch (
@@ -323,6 +340,20 @@ static void resolveAddress(struct in_addr *hostAddr,
               h_errnop
 #endif
              ) {
+        case NETDB_SUCCESS:
+            /* This is the freaky one - it returned NULL (nothing) which tells you to look
+             * at the error code, but the error code says SUCCESS.
+             *
+             * Treat as NOT FOUND, but use reportedFreaky to put out one message per run.
+             * Known to happen under Linux, other OSes uncertain...
+             */
+            if (reportedFreaky == FALSE) {
+                reportedFreaky = TRUE;
+                traceEvent(CONST_TRACE_INFO, "gethost... call returned NULL/NETDB_SUCCESS - "
+                                             "this is odd, but apparently normal");
+            }
+            myGlobals.numDNSErrorHostNotFound++;
+            break;
         case HOST_NOT_FOUND:
             myGlobals.numDNSErrorHostNotFound++;
             break;
@@ -334,10 +365,12 @@ static void resolveAddress(struct in_addr *hostAddr,
             break;
         case TRY_AGAIN:
             myGlobals.numDNSErrorTryAgain++;
+            addToCacheFlag = 1 /* Don't add this */;
             break;
         default:
             myGlobals.numDNSErrorOther++;
-            traceEvent(CONST_TRACE_ERROR, "DNS: gethost... call, returned unknown error code, %d\n",
+            addToCacheFlag = 1 /* Don't add this */;
+            traceEvent(CONST_TRACE_ERROR, "gethost... call, returned unknown error code %d",
 #ifdef HAVE_NETDB_H
                   h_errno
 #elif HAVE_GETIPNODEBYADDR
@@ -366,54 +399,56 @@ static void resolveAddress(struct in_addr *hostAddr,
     freehostent(hp);
 #endif
 
-  if(strlen(res) > MAX_LEN_SYM_HOST_NAME) {
-    strncpy(symAddr, res, MAX_LEN_SYM_HOST_NAME-4);
-    symAddr[MAX_LEN_SYM_HOST_NAME-1] = '\0';
-    symAddr[MAX_LEN_SYM_HOST_NAME-2] = '.';
-    symAddr[MAX_LEN_SYM_HOST_NAME-3] = '.';
-    symAddr[MAX_LEN_SYM_HOST_NAME-4] = '.';
-  } else
-    strncpy(symAddr, res, MAX_LEN_SYM_HOST_NAME-1);
+  if (addToCacheFlag == 0) {
+      if(strlen(res) > MAX_LEN_SYM_HOST_NAME) {
+        strncpy(symAddr, res, MAX_LEN_SYM_HOST_NAME-4);
+        symAddr[MAX_LEN_SYM_HOST_NAME-1] = '\0';
+        symAddr[MAX_LEN_SYM_HOST_NAME-2] = '.';
+        symAddr[MAX_LEN_SYM_HOST_NAME-3] = '.';
+        symAddr[MAX_LEN_SYM_HOST_NAME-4] = '.';
+      } else
+        strncpy(symAddr, res, MAX_LEN_SYM_HOST_NAME-1);
 
-  for(i=0; symAddr[i] != '\0'; i++)
-    symAddr[i] = (char)tolower(symAddr[i]);
+      for(i=0; symAddr[i] != '\0'; i++)
+        symAddr[i] = (char)tolower(symAddr[i]);
 
-  memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
-  strcpy(storedAddress.symAddress, symAddr);
-  storedAddress.recordCreationTime = myGlobals.actTime;
+      memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
+      strcpy(storedAddress.symAddress, symAddr);
+      storedAddress.recordCreationTime = myGlobals.actTime;
 
-  /* key_data has been set already */
-  data_data.dptr = (void*)&storedAddress;
-  data_data.dsize = sizeof(storedAddress)+1;
+      /* key_data has been set already */
+      data_data.dptr = (void*)&storedAddress;
+      data_data.dsize = sizeof(storedAddress)+1;
 
-  updateHostNameInfo(addr, symAddr, actualDeviceId);
+      updateHostNameInfo(addr, symAddr);
 
-  if(myGlobals.gdbm_file == NULL) {
+      if(myGlobals.dnsCacheFile == NULL) {
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress()");
+        traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress()");
 #endif
-    return; /* ntop is quitting... */
-  }
+        return; /* ntop is quitting... */
+      }
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "resolveAddress-4");
+      if(gdbm_store(myGlobals.dnsCacheFile, key_data, data_data, GDBM_REPLACE) != 0)
+        traceEvent(CONST_TRACE_ERROR, "dnsCache error adding '%s', %s", symAddr,
+#if defined(WIN32) && defined(__GNUC__)
+                       "no additional information available"
+#else
+                        gdbm_strerror(gdbm_errno)
 #endif
+                  );
+      else {
+        myGlobals.dnsCacheStoredLookup++;
 
-  if(gdbm_store(myGlobals.gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
-    traceEvent(CONST_TRACE_ERROR, "Error while adding '%s'\n.\n", symAddr);
-  else {
 #ifdef GDBM_DEBUG
-    traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Added data: '%s' [%s]\n", symAddr, keyBuf);
+        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Added data: '%s' [%s]\n", symAddr, keyBuf);
 #endif
-  }
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
+      }
 
 #ifdef DNS_DEBUG
-  traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving Resolveaddress()");
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving Resolveaddress()");
 #endif
+  }
 }
 
 /* *************************** */
@@ -430,10 +465,6 @@ static void queueAddress(struct in_addr elem) {
   if(myGlobals.trackOnlyLocalHosts && (!_pseudoLocalAddress(&elem)))
     return;
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "queueAddress");
-#endif
-
   /* Fix - Burton Strauss (BStrauss@acm.org) 2002-04-04
            Make sure tmpBuf has a value and
            Prevent increment of queue length on failure (i.e. add of existing value)
@@ -447,33 +478,32 @@ static void queueAddress(struct in_addr elem) {
   data_data.dptr = tmpBuf;
   data_data.dsize = strlen(tmpBuf)+1;
 
-  rc = gdbm_store(myGlobals.addressCache, key_data, data_data, GDBM_INSERT);
+  rc = gdbm_store(myGlobals.addressQueueFile, key_data, data_data, GDBM_INSERT);
 
   if (rc == 0) {
-      myGlobals.addressQueueLen++;
-      myGlobals.addressQueueCount++;
-      if (myGlobals.addressQueueLen > myGlobals.maxAddressQueueLen)
-	myGlobals.maxAddressQueueLen = myGlobals.addressQueueLen;
+      myGlobals.addressQueuedCurrent++;
+      myGlobals.addressQueuedCount++;
+      if (myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
+	myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
 
 #ifdef DNS_DEBUG
-   traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Queued address '%s' [addr queue=%d/max=%d]\n",
-	      tmpBuf, myGlobals.addressQueueLen, myGlobals.maxAddressQueueLen);
+   traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Queued address '%s' [addr queue=%d/max=%d]\n",
+	      tmpBuf, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
 #endif
   } else {
     /* rc = 1 is duplicate key, which is fine.  Other codes are problems... */
     if (rc != 1) {
-      traceEvent(CONST_TRACE_WARNING, "Failed(%d): Queue address '%s' [addr queue=%d/max=%d] (processing continues)\n",
-		 rc, tmpBuf, myGlobals.addressQueueLen, myGlobals.maxAddressQueueLen);
-    }
+      traceEvent(CONST_TRACE_ERROR, "Queue of address '%s' failed, code %d [addr queue=%d/max=%d]",
+		 tmpBuf, rc, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
+      traceEvent(CONST_TRACE_INFO, "ntop processing continues, address will not be resolved");
+    } else {
+      myGlobals.addressQueuedDup++;
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Queuing of address '%s' - duplicate in queue (ntop continues ok)\n",
+        traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Duplicate queue of address '%s' ignored",
                            tmpBuf);
 #endif
+    }
   }
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
 #ifdef MAKE_WITH_SEMAPHORES
   incrementSem(&myGlobals.queueAddressSem);
@@ -502,7 +532,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 
   while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Waiting for address to resolve...\n");
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...\n");
 #endif
 
 #ifdef MAKE_WITH_SEMAPHORES
@@ -512,51 +542,39 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #endif
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Address resolution started...\n");
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Address resolution started...\n");
 #endif
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "queueAddress");
-#endif
-    data_data = gdbm_firstkey(myGlobals.addressCache);
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
+    data_data = gdbm_firstkey(myGlobals.addressQueueFile);
 
     while(data_data.dptr != NULL) {
       if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
 
       memcpy(&addr.s_addr, data_data.dptr, 4);
 
-      HEARTBEAT(1, "dequeueAddress()", NULL);
+      HEARTBEAT(2, "dequeueAddress()", NULL);
 
 #ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Dequeued address... [%u][key=%s] (#addr=%d)\n",
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Dequeued address... [%u][key=%s] (#addr=%d)\n",
 		 addr.s_addr, key_data.dptr == NULL ? "<>" : key_data.dptr,
-		 myGlobals.addressQueueLen);
+		 myGlobals.addressQueuedCurrent);
 #endif
 
       resolveAddress(&addr, 0, 0 /* use default device */);
 
 #ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Resolved address %u\n", addr.s_addr);
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved address %u\n", addr.s_addr);
 #endif
 
-#ifdef CFG_MULTITHREADED
-      accessMutex(&myGlobals.gdbmMutex, "queueAddress");
-#endif
-      myGlobals.addressQueueLen--;
-      gdbm_delete(myGlobals.addressCache, data_data);
+      myGlobals.addressQueuedCurrent--;
+      gdbm_delete(myGlobals.addressQueueFile, data_data);
       key_data = data_data;
-      data_data = gdbm_nextkey(myGlobals.addressCache, key_data);
-#ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.gdbmMutex);
-#endif
+      data_data = gdbm_nextkey(myGlobals.addressQueueFile, key_data);
       free(key_data.dptr); /* Free the 'formed' data_data */
     }
   } /* endless loop */
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution thread terminated...\n");
+  traceEvent(CONST_TRACE_WARNING, "THREADMGMT: Address resolution thread terminated...\n");
   return(NULL); /* NOTREACHED */
 }
 
@@ -616,6 +634,8 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
 
   if(buffer == NULL) return;
 
+  myGlobals.numFetchAddressFromCacheCalls++;
+
   buf[0] = '\0';
 
   if((addr == INADDR_BROADCAST) || (addr == 0x0)) {
@@ -629,38 +649,40 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(key_data.dptr)+1;
 
-  if(myGlobals.gdbm_file == NULL) return; /* ntop is quitting... */
+  if(myGlobals.dnsCacheFile == NULL) return; /* ntop is quitting... */
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "ipaddr2str");
-#endif
+  data_data = gdbm_fetch(myGlobals.dnsCacheFile, key_data);
 
-  data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
-
-  if((data_data.dptr != NULL)
-     && (data_data.dsize == (sizeof(StoredAddress)+1))) {
+  if((data_data.dptr != NULL) &&
+     (data_data.dsize == (sizeof(StoredAddress)+1)) ) {
     StoredAddress *retrievedAddress;
 
     retrievedAddress = (StoredAddress*)data_data.dptr;
 
 #ifdef GDBM_DEBUG
-    traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Fetched data (1): %s [%s]", retrievedAddress->symAddress, tmpBuf);
+    traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: gdbm_fetch(..., {%s, %d}) = %s, age %d\n",
+               key_data.dptr, key_data.dsize, 
+               retrievedAddress->symAddress,
+               myGlobals.actTime - retrievedAddress->recordCreationTime);
 #endif
 
-    if(snprintf(buffer, MAX_LEN_SYM_HOST_NAME, "%s", retrievedAddress->symAddress) < 0)
-      BufferTooShort();
+    if (myGlobals.actTime - retrievedAddress->recordCreationTime < CONST_DNSCACHE_LIFETIME) {
+        myGlobals.numFetchAddressFromCacheCallsOK++;
+        if(snprintf(buffer, MAX_LEN_SYM_HOST_NAME, "%s", retrievedAddress->symAddress) < 0)
+          BufferTooShort();
+    } else {
+        myGlobals.numFetchAddressFromCacheCallsSTALE++;
+        buffer[0] = '\0';
+    }
 
     free(data_data.dptr);
   } else {
+    myGlobals.numFetchAddressFromCacheCallsFAIL++;
 #ifdef GDBM_DEBUG
     if(data_data.dptr != NULL)
-      traceEvent(CONST_TRACE_ERROR, "GDBM_DEBUG: Dropped data for %s [wrong data size]", tmpBuf);
+      traceEvent(CONST_TRACE_WARNING, "GDBM_DEBUG: Dropped data for %s [wrong data size]", tmpBuf);
     else
-      traceEvent(CONST_TRACE_ERROR, "GDBM_DEBUG: Unable to retrieve %s", tmpBuf);
+      traceEvent(CONST_TRACE_WARNING, "GDBM_DEBUG: Unable to retrieve %s", tmpBuf);
 #endif
 
     buffer[0] = '\0';
@@ -669,7 +691,7 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   }
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_ERROR, "fetchAddressFromCache(%s) returned '%s'",
+  traceEvent(CONST_TRACE_INFO, "fetchAddressFromCache(%s) returned '%s'",
 	     _intoa(hostIpAddress, buf, sizeof(buf)), buffer);
 #endif
 }
@@ -681,10 +703,12 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
 void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
   char buf[MAX_LEN_SYM_HOST_NAME+1];
 
+  myGlobals.numipaddr2strCalls++;
+
   fetchAddressFromCache(hostIpAddress, buf);
 
   if(buf[0] != '\0') {
-    updateHostNameInfo(hostIpAddress.s_addr, buf, actualDeviceId);
+    updateHostNameInfo(hostIpAddress.s_addr, buf);
   } else {
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
     queueAddress(hostIpAddress);
@@ -696,8 +720,12 @@ void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
 
 /* ************************************ */
 
+/* WARNING: This is not re-entrant nor multi-thread safe.
+            it returns the address of it's own static buffer.
+            Don't use it for long...
+ */
 char* etheraddr_string(const u_char *ep) {
-  static char buf[sizeof("00:00:00:00:00:00")];
+  static char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
   u_int i, j;
   char *cp;
 

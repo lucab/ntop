@@ -67,7 +67,6 @@ extern int optopt;
 void initNtopGlobals(int argc, char * argv[]);
 
 /* address.c */
-extern void updateHostNameInfo(unsigned long numeric, char* symbolic, int actualDeviceId);
 extern int printable(int ch);
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
@@ -192,6 +191,20 @@ extern datum          ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* file, int li
 extern datum          ntop_gdbm_fetch(GDBM_FILE g, datum d, char* file, int line);
 
 #else
+extern int   ntop_gdbm_delete(GDBM_FILE g, datum d);
+extern datum ntop_gdbm_firstkey(GDBM_FILE g);
+extern datum ntop_gdbm_nextkey(GDBM_FILE g, datum d);
+extern datum ntop_gdbm_fetch(GDBM_FILE g, datum d);
+extern int   ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r);
+extern void  ntop_gdbm_close(GDBM_FILE g);
+
+#define gdbm_firstkey(a)             ntop_gdbm_firstkey(a)
+#define gdbm_nextkey(a, b)           ntop_gdbm_nextkey(a, b)
+#define gdbm_fetch(a, b)             ntop_gdbm_fetch(a, b)
+#define gdbm_delete(a, b)            ntop_gdbm_delete(a, b)
+#define gdbm_store(a, b, c, d)       ntop_gdbm_store(a, b, c, d)
+#define gdbm_close(a)                ntop_gdbm_close(a)
+
 /* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
 #define free(a)       ntop_safefree((void**)&(a), __FILE__, __LINE__)
 extern void           ntop_safefree(void **ptr, char* file, int line);
@@ -230,7 +243,6 @@ extern void* cleanupExpiredHostEntriesLoop(void*);
 /* pbuf.c */
 extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 			      TrafficCounter length, int actualDeviceId);
-extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress, int actualDeviceId);
 extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
 			 u_char checkForMultihoming,
 			 u_char forceUsingIPaddress, int actualDeviceId);
@@ -298,32 +310,37 @@ extern int isInitialFtpData(char* packetData);
 extern void updateDeviceThpt(int deviceToUpdate);
 
 /* util.c */
+extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId);
 extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
 				u_short *numNetworks, char *localAddresses, 
-				int localAddressesLen);
+				int localAddressesLen, int flagWhat);
 extern void handleFlowsSpecs();
 extern void initPassiveSessions();
 extern void termPassiveSessions();
 extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
 extern void resetTrafficCounter(TrafficCounter *ctr);
-extern HostTraffic* findHostByNumIP(char* numIPaddr, int actualDeviceId);
-extern HostTraffic* findHostByMAC(char* macAddr, int actualDeviceId);
+extern HostTraffic* findHostByNumIP(char* numIPaddr, u_int actualDeviceId);
+extern HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId);
 extern char* copy_argv(register char **argv);
 extern unsigned short isPrivateAddress(struct in_addr *addr);
 extern unsigned short isBroadcastAddress(struct in_addr *addr);
 extern unsigned short isMulticastAddress(struct in_addr *addr);
-extern unsigned short isLocalAddress(struct in_addr *addr);
+extern unsigned short isLocalAddress(struct in_addr *addr, u_int actualDeviceId);
 extern int dotted2bits(char *mask);
+extern void handleFlowsSpecs();
 extern void handleLocalAddresses(char* addresses);
-extern unsigned short isPseudoLocalAddress(struct in_addr *addr);
+extern unsigned short isPseudoLocalAddress(struct in_addr *addr, u_int actualDeviceId);
 extern unsigned short _pseudoLocalAddress(struct in_addr *addr);
 extern unsigned short __pseudoLocalAddress(struct in_addr *addr,
 					   u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
 					   u_short numNetworks);
-extern unsigned short deviceLocalAddress(struct in_addr *addr, int deviceId);
+extern unsigned short deviceLocalAddress(struct in_addr *addr, u_int deviceId);
 extern unsigned short isPseudoBroadcastAddress(struct in_addr *addr);
 extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
+#ifdef MAKE_WITH_LARGERRDPOP
+extern char *dotToSlash(char *name);
+#endif
 extern void handleFlowsSpecs();
 extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
 extern void fillDomainName(HostTraffic *el);
@@ -376,7 +393,7 @@ extern int name_interpret(char *in, char *out, int in_len);
 
 extern char *getNwInterfaceType(int i);
 extern char *formatTime(time_t *theTime, short encodeString);
-extern int getActualInterface(int);
+extern int getActualInterface(u_int);
 extern void storeHostTrafficInstance(HostTraffic *el);
 extern void resetHostsVariables(HostTraffic* el);
 extern HostTraffic *resurrectHostTrafficInstance(char *key);
@@ -423,7 +440,7 @@ extern void unescape(char *dest, int destLen, char *url);
 extern void updateElementHash(ElementHash **list, u_short srcId, u_short dstId, 
 			      u_int32_t numPkts, u_int32_t numBytes);
 extern void allocateElementHash(int deviceId, u_short hashType);
-extern u_int numActiveSenders(int deviceId);
+extern u_int numActiveSenders(u_int deviceId);
 extern u_int32_t xaton(char *s);
 extern void addNodeInternal(u_int32_t ip, int prefix, char *country);
 extern char *ip2CountryCode(u_int32_t ip);
@@ -480,7 +497,18 @@ extern char **buildargv(const char *argv);
 #ifndef HAVE_FREEARGV
 extern void freeargv(char **argv);
 #endif
+void handleWhiteBlackListAddresses(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
+                                   u_short *numNets, char* outAddresses,
+                                   int outAddressesLen);
+unsigned short isOKtoSave(u_int32_t addr, 
+			  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], 
+			  u_int32_t blackNetworks[MAX_NUM_NETWORKS][3],
+			  u_short numWhiteNets, u_short numBlackNets);
 
+
+/* Formatting for %.2f ... */
+#define xvertDOT00MB(v) (((float)(v)/(float)(1024.0*1024.0))+0.005)
+#define xvertDOT00KB(v) (((float)(v)/(float)(1024.0))+0.005)
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

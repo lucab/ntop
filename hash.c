@@ -37,7 +37,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
      || ((ether_addr == NULL)
 	 && (hostIpAddress != NULL))) {
     if(myGlobals.trackOnlyLocalHosts
-       && (!isLocalAddress(hostIpAddress))
+       && (!isLocalAddress(hostIpAddress, actualDeviceId))
        && (!_pseudoLocalAddress(hostIpAddress)))
       idx = myGlobals.otherHostEntryIdx;
     else
@@ -63,18 +63,18 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   } else if(isBroadcastAddress(hostIpAddress)) {
     idx = myGlobals.broadcastEntryIdx;
     (*useIPAddressForSearching) = 1;
-  } else if(isPseudoLocalAddress(hostIpAddress)) {
+  } else if(isPseudoLocalAddress(hostIpAddress, actualDeviceId)) {
     memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
   } else {
     if(hostIpAddress != NULL) {
-      if(myGlobals.trackOnlyLocalHosts && (!isPseudoLocalAddress(hostIpAddress)))
+      if(myGlobals.trackOnlyLocalHosts && (!isPseudoLocalAddress(hostIpAddress, actualDeviceId)))
 	idx = myGlobals.otherHostEntryIdx;
       else
 	memcpy(&idx, &hostIpAddress->s_addr, 4);
     } else {
       idx = FLAG_NO_PEER;
-      traceEvent(CONST_TRACE_WARNING, "WARNING: Index calculation problem");
+      traceEvent(CONST_TRACE_WARNING, "Index calculation problem");
     }
 
     (*useIPAddressForSearching) = 1;
@@ -150,7 +150,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 	  releaseMutex(&myGlobals.tcpSessionsMutex);
 	  mutexLocked = 0;
 	}
-#ifdef HAVE_SCHED_H
+#ifdef MAKE_WITH_SCHED_YIELD
 	sched_yield(); /* Allow other threads to run */
 #endif
       }
@@ -170,7 +170,7 @@ static void purgeHostIdx(int actualDeviceId, HostTraffic *el) {
   u_short allRight = 0;
 
   if(el == NULL) {
-    traceEvent(CONST_TRACE_ERROR, "ERROR: purgeHostIdx() failed [NULL pointer]");
+    traceEvent(CONST_TRACE_ERROR, "purgeHostIdx() failed [NULL pointer]");
     return;
   }
 
@@ -202,12 +202,12 @@ static void purgeHostIdx(int actualDeviceId, HostTraffic *el) {
       }
     }
   } else {
-    traceEvent(CONST_TRACE_ERROR, "ERROR: %d is out of range [0..%d]",  el->hostTrafficBucket,
+    traceEvent(CONST_TRACE_ERROR, "%d is out of range [0..%d]",  el->hostTrafficBucket,
 	       myGlobals.device[actualDeviceId].actualHashSize-1);
   }
 
   if((!allRight) && (el->hostTrafficBucket != myGlobals.broadcastEntryIdx))
-    traceEvent(CONST_TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed [host not found]",
+    traceEvent(CONST_TRACE_ERROR, "purgeHostIdx(%d,%d) failed [host not found]",
 	       actualDeviceId, el->hostTrafficBucket);
 }
 
@@ -387,7 +387,7 @@ void freeHostInstances(int actualDeviceId) {
   else
     max = myGlobals.numDevices;
 
-  traceEvent(CONST_TRACE_INFO, "Freeing hash host instances... (%d device(s) to save)\n", max);
+  traceEvent(CONST_TRACE_INFO, "FREE_HOST: Start, %d device(s)", max);
 
   for(i=0; i<max; i++) {
     actualDeviceId = i;
@@ -408,14 +408,14 @@ void freeHostInstances(int actualDeviceId) {
 		  myGlobals.tcpSessionsMutex.lockLine);
 #endif
 	myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;
-#ifdef HAVE_SCHED_H
+#ifdef MAKE_WITH_SCHED_YIELD
 	sched_yield(); /* Allow other threads to run */
 #endif
       }
     }
   }
 
-  traceEvent(CONST_TRACE_INFO, "%d instances freed\n", num);
+  traceEvent(CONST_TRACE_INFO, "FREE_HOST: End, freed %d", num);
 }
 
 /* ************************************ */
@@ -447,7 +447,7 @@ void purgeIdleHosts(int actDevice) {
   if(myGlobals.rFileName != NULL) return;
 
   if(firstRun) {
-    traceEvent(CONST_TRACE_INFO, "IDLE_PURGE: purgeIdleHosts firstRun (mutex every %d times through the loop)\n",
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "IDLE_PURGE: purgeIdleHosts firstRun (mutex every %d times through the loop)\n",
                            CONST_MUTEX_FHS_MASK+1);
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
@@ -473,10 +473,6 @@ void purgeIdleHosts(int actDevice) {
   theFlaggedHosts = (HostTraffic**)malloc(sizeof(HostTraffic*)*len);
   purgeTime = startTime-PARM_HOST_PURGE_INTERVAL; /* Time used to decide whether a host need to be purged */
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Purging Idle Hosts... [actDevice=%d]", actDevice);
-#endif
-
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
 #endif
@@ -490,13 +486,8 @@ void purgeIdleHosts(int actDevice) {
   theIdx = (myGlobals.actTime % hashLen) /* random start */;
   hashFull=0;
 
-#ifdef IDLE_PURGE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: BEGINING selection: upto %d hosts, "
-                         "starting ('random') at %d, actual size is %d...\n", 
-                         len,
-                         theIdx,
-                         hashLen);
-#endif
+  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d(%s), up to %d of %d hosts", 
+             actDevice, myGlobals.device[actDevice].name, len, hashLen);
 
   for (idx=1; idx<hashLen; idx++) {
     HostTraffic *el;
@@ -520,16 +511,14 @@ void purgeIdleHosts(int actDevice) {
 	  theFlaggedHosts[maxBucket++] = el;
 
 	  if(el->hostTrafficBucket != theIdx) {
-	    traceEvent(CONST_TRACE_ERROR, "ERROR: Index mismatch (hostTrafficBucket=%d/theIdx=%d)",
+	    traceEvent(CONST_TRACE_ERROR, "Index mismatch (hostTrafficBucket=%d/theIdx=%d)",
 		       el->hostTrafficBucket, theIdx);
 	    el->hostTrafficBucket = theIdx; /* Error recovery */
 	  }
 
 	  myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
 	  if(maxBucket >= (len-1)) {
-#ifdef IDLE_PURGE_DEBUG
-            traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: selected to limit...\n");
-#endif
+            traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: selected to limit...\n");
 	    hashFull = 1;	
 #ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.hostsHashMutex);
@@ -547,10 +536,7 @@ void purgeIdleHosts(int actDevice) {
     theIdx = (theIdx+1) % hashLen;
   }
 
-#ifdef IDLE_PURGE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: FINISHED selection, %d hosts selected...\n",
-                         maxBucket);
-#endif
+  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d hosts selected", maxBucket);
 
   /* Now free the entries */
   for(idx=0; idx<maxBucket; idx++) {
@@ -560,20 +546,20 @@ void purgeIdleHosts(int actDevice) {
 #endif
 
 #ifdef CFG_MULTITHREADED
-    HEARTBEAT(1, "purgeIdleHosts() calling freeHostInfo(), mutex: [%s %s:%d]",   
+    HEARTBEAT(3, "purgeIdleHosts() calling freeHostInfo(), mutex: [%s %s:%d]",   
                  myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
                  myGlobals.tcpSessionsMutex.lockFile,
                  myGlobals.tcpSessionsMutex.lockLine);
 #endif
     freeHostInfo(actDevice, theFlaggedHosts[idx], actDevice);
 #ifdef CFG_MULTITHREADED
-    HEARTBEAT(1, "purgeIdleHosts() returning freeHostInfo(), mutex: [%s %s:%d]",   
+    HEARTBEAT(3, "purgeIdleHosts() returning freeHostInfo(), mutex: [%s %s:%d]",   
                  myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
                  myGlobals.tcpSessionsMutex.lockFile,
                  myGlobals.tcpSessionsMutex.lockLine);
 #endif
     numFreedBuckets++;
-#ifdef HAVE_SCHED_H
+#ifdef MAKE_WITH_SCHED_YIELD
     sched_yield(); /* Allow other threads to run */
 #endif
   }
@@ -586,25 +572,15 @@ void purgeIdleHosts(int actDevice) {
   gettimeofday(&hiresTimeEnd, NULL);
   hiresDeltaTime=timeval_subtract(hiresTimeEnd, hiresTimeStart);
 
-  if(numFreedBuckets > 0) {
-      if(snprintf(purgeStats, 
-                  sizeof(purgeStats), 
-                  "Device %d: %d hosts deleted, elapsed time is %.6f seconds (%.6f per host).", 
+  if(numFreedBuckets > 0)
+      traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d(%s): %d hosts deleted, elapsed time is %.6f seconds (%.6f per host)", 
                   actDevice,
+                  myGlobals.device[actDevice].name,
                   numFreedBuckets,
                   hiresDeltaTime,
-                  hiresDeltaTime / numFreedBuckets) < 0)
-          BufferTooShort();
-  } else {
-      if(snprintf(purgeStats, 
-                  sizeof(purgeStats), 
-                  "Device %d: no hosts deleted.",
-                  actDevice) < 0)
-          BufferTooShort();
-  }
-#ifdef IDLE_PURGE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: %s\n", purgeStats);
-#endif
+                  hiresDeltaTime / numFreedBuckets);
+  else
+      traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d: no hosts deleted", actDevice);
 
   if ((myGlobals.dynamicPurgeLimits == 1) && (numFreedBuckets > 0)) {
       /* 
@@ -687,7 +663,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
+    traceEvent(CONST_TRACE_WARNING, "Both Ethernet and IP addresses are NULL");
     return(FLAG_NO_PEER);
   }
 
@@ -862,7 +838,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       if(ether_addr != NULL) {
 	if((hostIpAddress == NULL)
 	   || ((hostIpAddress != NULL)
-	       && isPseudoLocalAddress(hostIpAddress)
+	       && isPseudoLocalAddress(hostIpAddress, actualDeviceId)
 	       /* && (!isBroadcastAddress(hostIpAddress))*/
 	       )) {
 	  /* This is a local address and then the
@@ -885,7 +861,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  if(isPrivateAddress(hostIpAddress)) FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
 
 	  if(!isBroadcastAddress(hostIpAddress)) {
-	    if(isPseudoLocalAddress(hostIpAddress))
+	    if(isPseudoLocalAddress(hostIpAddress, actualDeviceId))
 	      FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 	    else
 	      FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
@@ -919,7 +895,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	      - it has not used the FF:FF:FF:FF:FF:FF MAC address
 	    */
 
-	    traceEvent(CONST_TRACE_WARNING, "WARNING: Wrong netmask detected [%s/%s]",
+	    traceEvent(CONST_TRACE_WARNING, "Wrong netmask detected [%s/%s]",
 		       _intoa(el->hostIpAddress, buf, sizeof(buf)),
 		       el->ethAddressString);
 	  }
@@ -948,7 +924,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(FLAG_BROADCAST_HOST, &el->flags);
 	if(isMulticastAddress(&el->hostIpAddress)) FD_SET(FLAG_MULTICAST_HOST, &el->flags);
 	if(isPrivateAddress(hostIpAddress))        FD_SET(FLAG_PRIVATE_IP_ADDRESS,  &el->flags);
-	if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress)))
+	if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress, actualDeviceId)))
 	  FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 
 	/* Trick to fill up the address cache */

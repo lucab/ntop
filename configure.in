@@ -1,16 +1,12 @@
 dnl> TODOs
 
 dnl>   should use STDC_HEADERS instead of __STDC__
-dnl>   delete SNMP from webInterface.c
-dnl>   Cleanup HAVE_SYS_SYSLOG_H to match pattern in test program!
-dnl>   Cleanup CFG_NEED_GETDOMAINNAME from webInterface.c
-dnl>   Cleanup HAVE_REGEX to use the value set by AC_CHECK_LIB
 dnl>   Cleanup Autoconf2 (obsolete Autoconf1 macros still in use)
 dnl>   Solaris 8 -- libgcc_s -- need test
 
 dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
-dnl> Copyright (c) 1998 - 2002 Luca Deri <deri@ntop.org>
+dnl> Copyright (c) 1998 - 2003 Luca Deri <deri@ntop.org>
 dnl> Written Oct2002 by Burton M. Strauss III <burton@ntopsupport.com>
 dnl>     (Loosely based on the earlier ntop version)
 dnl>
@@ -46,9 +42,9 @@ dnl>   Edit the version # in the AC_INIT line to roll the version.
 dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm version"
 dnl>       into the stamp.
 dnl>
-AC_INIT([ntop],[2.1.58pre])
+AC_INIT([ntop],[2.1.90])
 AC_PREREQ([2.50])
-SCRIPTVER="v1.103-2003-02-11"
+SCRIPTVER="v1.108-2003-03-30"
 
 dnl>
 dnl> generate the config header
@@ -71,7 +67,7 @@ GDCHART_DIRECTORY=`(cd ../${GDCHART_DIRECTORY} && pwd)`
 
 echo
 echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
-echo "  copyright (c) 1998-2002 Luca Deri <deri@ntop.org>"
+echo "  copyright (c) 1998-2003 Luca Deri <deri@ntop.org>"
 echo
 echo          "Configuration script version $SCRIPTVER"
 echo
@@ -81,6 +77,9 @@ echo
 echo "Configuring ${PACKAGE_NAME} according to your request(s):"
 echo "   ./configure ${CONFIGURE_PARAMETERS}"
 echo
+
+dnl> This has to be here due to some odd dependency...
+AC_CANONICAL_TARGET
 
 echo "*******************************************************************"
 echo "*                                                                 *"
@@ -102,12 +101,47 @@ echo
 dnl> early since we need it for --enable-showoses and autotool version check.
 AC_PROG_AWK
 
+echo "  Checking for autoheader ..."
+AC_PATH_PROG(AUTOHEADER, autoheader)
+
+if test "x${ac_cv_prog_AUTOHEADER}" = "x"; then
+ mv Makefile.in Makefile.in.tmp
+ cat Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
+ rm -f Makefile.in.tmp
+ mv plugins/Makefile.in plugins/Makefile.in.tmp
+ cat plugins/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
+ rm -f plugins/Makefile.in.tmp
+ mv intop/Makefile.in intop/Makefile.in.tmp
+ cat intop/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > intop/Makefile.in
+ rm -f intop/Makefile.in.tmp
+fi
+
+echo "  Checking for aclocal ..."
+AC_PATH_PROG(ACLOCAL, aclocal)
+
+if test "x${ac_cv_prog_ACLOCAL}" = "x"; then
+ mv Makefile.in Makefile.in.tmp
+ cat Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
+ rm -f Makefile.in.tmp
+ mv plugins/Makefile.in plugins/Makefile.in.tmp
+ cat plugins/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
+ rm -f plugins/Makefile.in.tmp
+ mv intop/Makefile.in intop/Makefile.in.tmp
+ cat intop/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > intop/Makefile.in
+ rm -f intop/Makefile.in.tmp
+fi
+
+echo "  Checking for automake ..."
+AC_PATH_PROG(AUTOMAKE, automake)
+
+if test "x${ac_cv_prog_AUTOMAKE}" != "x"; then
+
 dnl>
 dnl> Check versions of autotools
 
 dnl> First check minimum versions...
 echo "  Checking automake version..."
-automakeversion=`automake --version | grep ^automake | awk '{ print $4 }'`
+automakeversion=`automake --version | grep ^automake | ${ac_cv_prog_AWK} '{ print $4 }'`
 case "${automakeversion}" in
     *1\.[[0-5]]*)
         echo "*******************************************************************"
@@ -141,6 +175,22 @@ case "${automakeversion}" in
         exit 1
         ;;
 esac
+else
+ mv Makefile.in Makefile.in.tmp
+ cat Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
+ rm -f Makefile.in.tmp
+ mv plugins/Makefile.in plugins/Makefile.in.tmp
+ cat plugins/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
+ rm -f plugins/Makefile.in.tmp
+ mv intop/Makefile.in intop/Makefile.in.tmp
+ cat intop/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > intop/Makefile.in
+ rm -f intop/Makefile.in.tmp
+fi
+
+echo "  Checking for autoconf ..."
+AC_PATH_PROG(AUTOCONF, autoconf)
+
+if test "x${ac_cv_prog_AUTOCONF}" != "x"; then
 echo "  Checking autoconf version..."
 case "${autoconfversion}" in
     *2\.[[0-4]]*)
@@ -175,6 +225,17 @@ case "${autoconfversion}" in
         exit 1
         ;;
 esac
+else
+ mv Makefile.in Makefile.in.tmp
+ cat Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
+ rm -f Makefile.in.tmp
+ mv plugins/Makefile.in plugins/Makefile.in.tmp
+ cat plugins/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
+ rm -f plugins/Makefile.in.tmp
+ mv intop/Makefile.in intop/Makefile.in.tmp
+ cat intop/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > intop/Makefile.in
+ rm -f intop/Makefile.in.tmp
+fi
 
 dnl> Then check for a match with the scripts...
 dnl>
@@ -186,13 +247,29 @@ dnl>
 if test -f /tmp/autotoolversions; then
      rm -f /tmp/autotoolversions
 fi
-automake --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }'  >/tmp/autotoolversions
-autoconf --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
-libtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+if test "x${ac_cv_prog_AUTOMAKE}" != "x"; then
+  automake --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }'  >/tmp/autotoolversions
+fi
+if test "x${ac_cv_prog_AUTOCONF}" != "x"; then
+  autoconf --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+fi
+
+case "${target}:${CC}" in
+    *-*-darwin*:* )
+    glibtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+    ;;
+    * )
+    libtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+    ;;
+esac
 
 touch autotoolversions
-diff -q autotoolversions /tmp/autotoolversions 2>/dev/null
+diff autotoolversions /tmp/autotoolversions >/dev/null 2>/dev/null 
 rc=$?
+
+if test "x${ac_cv_prog_AUTOMAKE}" = "x" -o "x${ac_cv_prog_AUTOCONF}" = "x"; then
+ rc=0
+fi
 
 if test ".${rc}" = ".1"; then
     echo
@@ -212,8 +289,10 @@ if test ".${rc}" = ".1"; then
     echo "*>>> We are going to:"
     echo "*>>>     1. delete the existing generated files"
     echo "*>>>     2. use the auto* tools to recreate them"
-    echo "*                (if you do not have automake, autoconf and libtool"
-    echo "*                 intalled, this will fail)"
+    echo "*                (if you do not have automake and autoconf installed,"
+    echo "*                 this will fail)"
+    echo "*                (if you do not have libtool installed, it will"
+    echo "*                 not give an error message, but will fail later)"
     echo "*>>>     3. tell you to rerun ./configure"
     echo "*"
     echo "*    Please, tell the ntop-dev mailing list if there are problems..."
@@ -250,6 +329,9 @@ if test ".${rc}" = ".1"; then
         echo "*"
         echo "*******************************************************************"
         echo
+        if test -f /tmp/autotoolversions; then
+            rm -f /tmp/autotoolversions
+        fi
         exit 1
     fi
     for i in aclocal \
@@ -271,6 +353,9 @@ if test ".${rc}" = ".1"; then
             echo "*"
             echo "*******************************************************************"
             echo
+            if test -f /tmp/autotoolversions; then
+                rm -f /tmp/autotoolversions
+            fi
             exit 1
         fi
     done
@@ -290,6 +375,9 @@ if test ".${rc}" = ".1"; then
     echo
     exit 1
 else
+    if test -f /tmp/autotoolversions; then
+        rm -f /tmp/autotoolversions
+    fi
     echo "auto* tools are OK, continuing with ./configure"
 fi
 
@@ -311,9 +399,6 @@ AC_CONFIG_SRCDIR([ntop.c])
 
 dnl> force configure to use current directory
 AC_CONFIG_AUX_DIR(.)
-
-dnl> This has to be here due to some odd dependency...
-AC_CANONICAL_TARGET
 
 AM_INIT_AUTOMAKE()
 AC_MSG_CHECKING([for aclocal.m4])
@@ -417,6 +502,11 @@ AC_ARG_ENABLE(xmldump,
               ac_enable_xmldump="yes",
               ac_enable_xmldump="no")
 
+AC_ARG_ENABLE(largerrdpop,
+              [  --enable-largerrdpop        Enable large rrd population [[default=disabled]]],
+              ac_enable_largerrdpop="yes",
+              ac_enable_largerrdpop="no")
+
 dnl>
 dnl> Define the "WITH"s for package root directories ... deal with these later...
 dnl>
@@ -488,6 +578,11 @@ AC_ARG_WITH(  gdome-root,
               GDOME_ROOT="$withval",
               GDOME_ROOT=)
 
+AC_ARG_ENABLE(  static-plugins,
+              [  --enable-static-plugins            Statically link plugins into sntop (make sntop)],
+              ac_enable_static_plugins="yes",
+	      ac_enable_static_plugins="no")
+
 AC_ARG_ENABLE(showoses,
               [  --enable-showoses           display OS Support information.],
               [echo
@@ -531,12 +626,16 @@ EXEEXT=
 INCS=
 INTOP=
 LIBCURSES=
-LIBREADLINE=
+LIBREADLINE=1
 LIBTERMCAP=
 OBJDUMP=
 OBJEXT=o
 RRDLIB=
 SO_VERSION_PATCH=
+
+if test "${ac_enable_static_plugins}" = "yes"; then	
+   AC_DEFINE_UNQUOTED(MAKE_STATIC_PLUGIN, 1, [Statically build plugins into sntop])
+fi
 
 dnl>
 dnl> Yes, we want to minimize the amount of work before we tell
@@ -610,7 +709,7 @@ case "${target}:${CC}" in
       ;;
 
     *-*-linux*:*gcc* )
-        VERIFIED1="2.1.51:2002-11-24:Burton Strauss <burton@ntopsupport.com>:RedHat 7.2, 7.3 and 8.0"
+        VERIFIED1="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com>:RedHat AS2.1, 7.3 and 8.0"
         VERIFIED2="2.1.51:2002-10-24:Peter Sinoros-Szabo Peter <sini@cs.bme.hu>:Suse i686, 2.4.18-4GB-SMP"
         DEFINEOS="LINUX";     STATUS="SUPPORTED"
       ;;
@@ -621,8 +720,9 @@ case "${target}:${CC}" in
       ;;
 
     *-*-solaris2.8*:* )
-        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com:Solaris 8 i86"
+        VERIFIED1="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com:Solaris 8 i86"
         NOTE1="Requires various gnu tools from SunFreeware.com"
+        NOTE2="--enable-i18n is disabled"
         DEFINEOS="SOLARIS";   STATUS="SUPPORTED"
       ;;
 
@@ -637,7 +737,7 @@ case "${target}:${CC}" in
 
     *-*-darwin*:* )
         VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:MAC OS X 10.1 (Darwin)"
-        VERIFIED2="2.1.51:2002-10-22:Luca Deri:MAC OS X 10.2 (Jaguar)"
+        VERIFIED2="2.1.90:2003-03-28:Luca Deri:MAC OS X 10.2 (Jaguar)"
         NOTE1="'Darwin 5.5' is the kernel of the os known as MAC OS X 10.1"
         NOTE2="'Darwin 6.1' is the kernel of the os known as MAC OS X 10.2 (Jaguar)"
         DEFINEOS="DARWIN";    STATUS="SUPPORTED"
@@ -646,9 +746,9 @@ case "${target}:${CC}" in
       ;;
 
     *-*-freebsd[[45]]*:*gcc* )
-        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.2-RELEASE"
-        VERIFIED2="2.1.51:2002-10-25:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE"
-        VERIFIED3="2.1.55:2003-01-19:Burton Strauss <burton@ntopsupport.com>:5.0-RELEASE"
+        VERIFIED1="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.2-RELEASE"
+        VERIFIED2="2.1.90:2003-03-18:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE-p7"
+        VERIFIED3="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com>:5.0-RELEASE"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
         if test ".${LOCALEDIR}" = "."; then
             LOCALEDIR="/usr/share/locale"
@@ -664,11 +764,14 @@ case "${target}:${CC}" in
       ;;
 
     *-*-netbsd*1.5*:gcc* )
-        VERIFIED1="2.1.51:2002-10-23:Burton Strauss <burton@ntopsupport.com:1.5.3 w/ updated auto* tools"
+        VERIFIED1="2.1.90:2003-03-29:Burton Strauss <burton@ntopsupport.com:1.6"
+        VERIFIED2="2.1.51:2002-10-23:Burton Strauss <burton@ntopsupport.com:1.5.3 w/ updated auto* tools"
         NOTE1="Single Threaded only."
         DEFINEOS="NETBSD"
         if test ".${ac_disable_multithread}" = ".yes"; then
             STATUS="SUPPORTED"
+            NOTE2="NetBSD 1.6 requires the UPDATED libpcap in the packages"
+            NOTE3="  If you see a missing pcap_open_dead, you forgot to update!"
         else
             STATUS="WILLFAIL"
             NOTE2="With ANY of the threads packages, you are on your own!"
@@ -680,7 +783,7 @@ case "${target}:${CC}" in
       ;;
 
     *-*-hpux11*:gcc* )
-        DEFINEOS="HPUX";      STATUS="SUPPORTED"
+        DEFINEOS="HPUX";      STATUS="WILLFAIL"
         CFLAGS="${CFLAGS}"
       ;;
 
@@ -753,6 +856,9 @@ case "${STATUS}" in
         if test ".${NOTE2}" != "."; then
             echo "*    ${NOTE2}"
         fi
+        if test ".${NOTE3}" != "."; then
+            echo "*    ${NOTE3}"
+        fi
         ;;
 
     UNTESTED)
@@ -820,7 +926,10 @@ esac
 echo "*"
 echo "*    Please keep the ntop-dev mailing list updated with any"
 echo "*    successes you have or problems you encounter..."
- echo "*"
+echo "*"
+
+dnl> Leave this: it causes showoses to stop
+dnl> showoses END
 
 if test ".${VERIFIED1}" != "."; then
     echo "*   Support for this platform was most recently verified for"
@@ -844,9 +953,6 @@ fi
 echo "*"
 echo "*******************************************************************"
 echo
-
-dnl> Leave this: it causes showoses to stop
-dnl> showoses END
 
 case "${STATUS}" in
     WILLFAIL)
@@ -994,6 +1100,15 @@ else
 fi
 
 echo
+echo "Large RRD population?"
+if test ".${ac_enable_largerrdpop}" = ".yes"; then
+    echo "    ...Requested."
+    AC_DEFINE_UNQUOTED(MAKE_WITH_LARGERRDPOP, 1, [Support LARGE # of RRDs])
+else
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-largerrdpop."
+fi
+
+echo
 echo "TCP Wrappers?"
 if test ".${ac_enable_tcpwrap}" = ".yes"; then
     echo "    ...Requested via ./configure command line option --enable-tcpwrap"
@@ -1085,7 +1200,27 @@ echo
 echo "Internationalization (i18n)?"
 if test ".$ac_enable_i18n" = ".yes"; then
     echo "    ...Requested via ./configure command line option --enable-i18n."
-    AC_DEFINE_UNQUOTED(MAKE_WITH_I18N, 1, [Define for internationalization])
+    case "${target}" in
+
+        *-*-solaris* )
+          echo
+          echo "*******************************************************************"
+          echo "*"
+          echo "* WARNING: Unable to make i18n code under Solaris"
+          echo "*          due to library differences."
+          echo "*"
+          echo "*"
+          echo "*>>> Continuing without i18n."
+          echo "*"
+          echo "*******************************************************************"
+          echo
+          ;;
+
+        * )
+          AC_DEFINE_UNQUOTED(MAKE_WITH_I18N, 1, [Define for internationalization])
+          ;;
+
+    esac
 else
     echo "    ...(Default) Disabled. Request via ./configure command line option --enable-i18n"
 fi
@@ -1317,6 +1452,7 @@ AC_CHECK_FUNCS([localtime_r])
 AC_CHECK_FUNCS([memchr memset])
 AC_CHECK_FUNCS([putenv])
 AC_CHECK_FUNCS([re_comp regcomp])
+AC_CHECK_FUNCS([sched_yield])
 AC_CHECK_FUNCS([select socket])
 AC_CHECK_FUNCS([snprintf])
 AC_CHECK_FUNCS([sqrt])
@@ -1555,7 +1691,7 @@ elif test ".${ac_cv_lib_dl_dlopen}"    != ".yes" &&
     echo
     echo "*******************************************************************"
     echo "*"
-    echo "* ERROR: Basic c library routines are missing."
+    echo "* ERROR: Critical c library routine is missing."
     echo "*"
     case "$target" in
       *-hpux* )
@@ -2169,7 +2305,7 @@ if test ".${ac_disable_gdchart}" != ".yes"; then
           test ".${ac_cv_lib_gd_gdImageDestroy}"          = ".yes" &&
           test ".${ac_cv_lib_png_png_read_info}"          = ".yes"; then
            mass_gdchart_test_result="yes"
-           dnl> Add this because it is not done in the non-existant AC_CHECK_LIB
+           dnl> Add this because it is not done in the non-existent AC_CHECK_LIB
            LIBS="${LIBS} -lgdchart -lgd -lpng"
            AC_DEFINE_UNQUOTED([HAVE_GDCHART], 1, [Enable GDChart])
            if test ".${GDCHART_ROOT}" != "."; then

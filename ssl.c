@@ -55,6 +55,9 @@ int init_ssl(void) {
   char     buf [384];
   SSL_METHOD *meth;
   int s_server_session_id_context = 1; /* anything will do */
+  DIR* directoryPointer=NULL;
+  struct dirent *dp;
+  struct stat fStat;
 
   myGlobals.sslInitialized = 0;
 
@@ -65,7 +68,68 @@ int init_ssl(void) {
 
   memset(myGlobals.ssl, 0, sizeof(myGlobals.ssl));
 
-  traceEvent(CONST_TRACE_INFO, "Initializing SSL...");
+  traceEvent(CONST_TRACE_INFO, "SSL: Initializing...");
+
+  /*
+   * If necessary, initialize the prng for ssl...
+   */
+  if (RAND_status() == 0) {
+     struct timeval TOD;
+    /*
+     * If we get here, we need to add some entropy, because it's not there by default
+     * and because we don't have egd running.
+     *
+     * Remember, this is ntop during startup, so we can't just use ntop counters...
+     *
+     * We need some stuff that's random from ntop user/instance to ntop user/instance
+     * and some stuff the user just can't affect.
+     *
+     * We have to be careful, as some things that might seem random, such as pid# 
+     * aren't if ntop is started during boot. OTOP, if the user won't run egd, then
+     * well, there's only so much we're going to do...
+     */
+    traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Initializing.\n");
+    traceEvent(CONST_TRACE_NOISY, "SSL_PRNG: see http://www.openssl.org/support/faq.cgi#USER1.\n");
+
+    RAND_add(version, strlen(version), (double)4.0);
+    RAND_add(buildDate, strlen(buildDate), (double)4.0);
+    RAND_add(configure_parameters, strlen(configure_parameters), (double)4.0);
+
+    gettimeofday(&TOD, NULL);
+    if(snprintf(buf, sizeof(buf), "%d%u%u%x%x%x", 
+                    getpid(),
+                    TOD.tv_sec,
+                    TOD.tv_usec,
+                    myGlobals.startedAs,
+                    myGlobals.udpSvc,
+                    myGlobals.tcpSvc ) < 0)
+      BufferTooShort();
+    RAND_add(buf, strlen(buf), (double)24.0);
+
+    directoryPointer = opendir(myGlobals.dbPath);
+    if (directoryPointer == NULL) {
+        traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unable to find directory '%s' for additional randomness\n", myGlobals.dbPath);
+    } else {
+        while((dp = readdir(directoryPointer)) != NULL) {
+            if (dp->d_name[0] != '.') {
+                if (snprintf(buf, sizeof(buf), "%s/%s", myGlobals.dbPath, dp->d_name) < 0)
+                    BufferTooShort();
+                if (stat(buf, &fStat) == 0) {
+                    RAND_add(&fStat, sizeof(fStat), (double)16.0);
+                }
+            }
+        }
+        closedir(directoryPointer);
+    }
+
+    if (RAND_status() == 0) {
+        traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unsuccessfully initialized - https:// may not work.\n");
+    } else {
+        traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Successfully initialized.\n");
+    }
+  } else {
+      traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Automatically initialized!\n");
+  }
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     if(snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CONST_SSL_CERTF_FILENAME) < 0)
@@ -83,8 +147,8 @@ int init_ssl(void) {
   }
 
   if(fd == NULL) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "Unable to find SSL certificate '%s'. SSL support has been disabled\n",
+    traceEvent(CONST_TRACE_WARNING,
+	       "SSL: Unable to find certificate '%s'. SSL support has been disabled\n",
 	       CONST_SSL_CERTF_FILENAME);
     return(-1);
   } else

@@ -362,6 +362,11 @@ typedef struct storedAddress {
   time_t recordCreationTime;
 } StoredAddress;
 
+typedef struct macInfo {
+  u_char isSpecial;
+  char   vendorName[MAX_LEN_VENDOR_NAME];
+} MACInfo;
+
 typedef struct serviceStats {
   TrafficCounter numLocalReqSent, numRemReqSent;
   TrafficCounter numPositiveReplSent, numNegativeReplSent;
@@ -436,7 +441,7 @@ typedef struct hostTraffic {
   time_t           lastSeen;     /* time when this host has sent/rcvd some data  */
   u_char           ethAddress[LEN_ETHERNET_ADDRESS];
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
-  char             ethAddressString[18];
+  char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
   char             hostNumIpAddress[17], *fullDomainName;
   char             *dotDomainName, hostSymIpAddress[MAX_LEN_SYM_HOST_NAME], *fingerprint;
   u_short          dotDomainNameIsFallback;
@@ -1020,6 +1025,7 @@ struct enamemem {
 /* **************** Plugin **************** */
 
 typedef void(*VoidFunc)(void);
+typedef int(*IntFunc)(void);
 typedef void(*PluginFunc)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
 typedef void(*PluginHTTPFunc)(char* url);
 #ifdef SESSION_PLUGIN
@@ -1035,7 +1041,8 @@ typedef struct pluginInfo {
   char *pluginURLname;      /* Set it to NULL if the plugin doesn't speak HTTP */
   char activeByDefault;     /* Set it to 1 if this plugin is active by default */
   char inactiveSetup;       /* Set it to 1 if this plugin can be called inactive for setup */
-  VoidFunc startFunc, termFunc;
+  IntFunc startFunc;
+  VoidFunc termFunc;
   PluginFunc pluginFunc;    /* Initialize here all the plugin structs... */
   PluginHTTPFunc httpFunct; /* Set it to NULL if the plugin doesn't speak HTTP */
 #ifdef SESSION_PLUGIN
@@ -1043,6 +1050,7 @@ typedef struct pluginInfo {
 #endif
   char* bpfFilter;          /* BPF filter for selecting packets that
        		               will be routed to the plugin  */
+  char *pluginStatusMessage;
 } PluginInfo;
 
 typedef struct pluginStatus {
@@ -1559,7 +1567,7 @@ XML*/
 /*XMLSECTIONEND */
 
   /* Database */
-  GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache, prefsFile;
+  GDBM_FILE dnsCacheFile, pwFile, eventFile, hostsInfoFile, addressQueueFile, prefsFile, macPrefixFile;
 
   /* the table of broadcast entries */
   u_int broadcastEntryIdx;
@@ -1694,17 +1702,49 @@ XML*/
   FlowFilterList *flowsList;
 
   /* Address Resolution */
-  u_long dnsSniffedCount;
+  u_long dnsSniffCount,
+         dnsSniffRequestCount,
+         dnsSniffFailedCount,
+         dnsSniffARPACount,
+         dnsSniffStoredInCache;
+
 #if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  u_long addressQueueCount;
-  u_int addressQueueLen, maxAddressQueueLen;
+  u_long addressQueuedCount;
+  u_int addressQueuedDup, addressQueuedCurrent, addressQueuedMax;
 #endif
 
-  u_long numResolveAddressCalls,
+  /*
+   *  We count calls to ipaddr2str()
+   *       {numipaddr2strCalls}
+   *    These are/are not resolved from cache.
+   *       {numFetchAddressFromCacheCalls}
+   *       {numFetchAddressFromCacheCallsOK}
+   *       {numFetchAddressFromCacheCallsFAIL}
+   *       {numFetchAddressFromCacheCallsSTALE}
+   *    Unfetched end up in resolveAddress() directly or via the queue if we have ASYNC
+   *       {numResolveAddressCalls}
+   *    In resolveAddress(), we have
+   *       {numResolveNoCacheDB} - i.e. ntop is shutting down
+   *    Otherwise we look it up (again) in the database
+   *       {numResolveCacheDBLookups}
+   *       {numResolvedFromCache} - these were basically sniffed while in queue!
+   *
+   *    Gives calls to the dns resolver:
+   *       {numResolvedFromHostAddresses} - /etc/hosts file (if we use it)
+   */
+  u_long numipaddr2strCalls,
+         numFetchAddressFromCacheCalls,
+         numFetchAddressFromCacheCallsOK,
+         numFetchAddressFromCacheCallsFAIL,
+         numFetchAddressFromCacheCallsSTALE,
+         numResolveAddressCalls,
          numResolveNoCacheDB,
+         numResolveCacheDBLookups,
+         numResolvedFromCache,
 #ifdef PARM_USE_HOST
          numResolvedFromHostAddresses,
 #endif
+         dnsCacheStoredLookup,
          numAttemptingResolutionWithDNS,
          numResolvedWithDNSAddresses, 
          numDNSErrorHostNotFound,
@@ -1712,8 +1752,8 @@ XML*/
          numDNSErrorNoRecovery,
          numDNSErrorTryAgain,
          numDNSErrorOther,
-         numKeptNumericAddresses,
-         numResolvedOnCacheAddresses;
+         numKeptNumericAddresses;
+
 
   /* Misc */
   char *separator;         /* html separator */
@@ -1749,12 +1789,20 @@ XML*/
   TransactionTime transTimeHash[CONST_NUM_TRANSACTION_ENTRIES];
 
   u_char dummyEthAddress[LEN_ETHERNET_ADDRESS];
-  u_short *mtuSize;
-  u_short *headerSize;
+  u_short *mtuSize, *headerSize;
+
+  /* (Pseudo) Local Networks */
+  u_int32_t localNetworks[MAX_NUM_NETWORKS][3]; /* [0]=network, [1]=mask, [2]=broadcast */
+  u_short numLocalNetworks;
 
 #ifdef MEMORY_DEBUG
   size_t allocatedMemory;
 #endif
+
+#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+  u_int baseMemoryUsage;
+#endif
+  u_int ipTrafficMatrixMemoryUsage;
 
   /*
    * local variables
@@ -1781,12 +1829,18 @@ XML*/
   int netFlowOutSocket;
   u_int32_t globalFlowSequence, globalFlowPktCount;
   struct in_addr netFlowIfAddress, netFlowIfMask;
+  char *netFlowWhiteList, *netFlowBlackList;
   NetFlow5Record theRecord;
   struct sockaddr_in netFlowDest;
   /* Flow reception */
   int netFlowInSocket, netFlowDeviceId;
   u_short netFlowInPort;
-  u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsRcvd, numBadFlowsVersionsRcvd;
+  u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsRcvd, numNetFlowsProcessed;
+  u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
+  u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,
+         numSrcNetFlowsEntryAccepted,
+         numDstNetFlowsEntryFailedBlackList, numDstNetFlowsEntryFailedWhiteList,
+         numDstNetFlowsEntryAccepted;
 
   /* sFlow */
   int sflowOutSocket, sflowInSocket, sflowDeviceId;
@@ -1822,15 +1876,22 @@ XML*/
   u_short GnutellaIdx, KazaaIdx, WinMXIdx, DirectConnectIdx, FTPIdx;
 
   /* Hash table collisions - counted during load */
-  int hashCollisionsLookup, 
-      vendorHashLoadCollisions,
-      specialHashLoadCollisions,
-      ipxsapHashLoadCollisions;
+  int ipxsapHashLoadCollisions;
   /* Hash table sizes - counted during load */
-  int vendorHashLoadSize,
-      vendortable_h_Size,
-      specialHashLoadSize,
-      ipxsapHashLoadSize;
+  int ipxsapHashLoadSize;
+  /* Hash table collisions - counted during use */
+  int hashCollisionsLookup;
+
+  /* Vendor lookup file */
+  int numVendorLookupRead,
+      numVendorLookupAdded,
+      numVendorLookupAddedSpecial,
+      numVendorLookupCalls,
+      numVendorLookupSpecialCalls,
+      numVendorLookupFound48bit,
+      numVendorLookupFound24bit,
+      numVendorLookupFoundMulticast,
+      numVendorLookupFoundLAA;
 
   /* i18n */
 #ifdef MAKE_WITH_I18N

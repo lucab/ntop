@@ -573,16 +573,18 @@ u_int16_t processDNSPacket(const u_char *packetData,
 			   short *isRequest,
 			   short *positiveReply) {
   DNSHostInfo hostPtr;
-  struct in_addr hostIpAddress;
   datum key_data, data_data;
   char tmpBuf[96];
   u_int16_t transactionId = 0;
   int i, queryNameLength;
 
+  if(myGlobals.dnsCacheFile == NULL) return(-1); /* ntop is quitting... */
+
   if((!myGlobals.enablePacketDecoding)
      ||(packetData == NULL) /* packet too short ? */)
     return(transactionId);
 
+  myGlobals.dnsSniffCount++;
   memset(&hostPtr, 0, sizeof(DNSHostInfo));
 
   transactionId = handleDNSpacket(packetData, &hostPtr, length,
@@ -597,45 +599,57 @@ u_int16_t processDNSPacket(const u_char *packetData,
 
     for(i=0; i<MAX_ALIASES; i++)
       if(hostPtr.aliases[i][0] != '\0') {
-	traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: %s is alias of %s\n", hostPtr.aliases[i], hostPtr.name);
+	traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: %s is alias %d of %s\n", hostPtr.aliases[i], i, hostPtr.name);
       }
   }
 #endif
 
-  if((*isRequest) || (!*positiveReply))
+  if(*isRequest) {
+    myGlobals.dnsSniffRequestCount++;
     return(transactionId);
-  if(myGlobals.gdbm_file == NULL) return(-1); /* ntop is quitting... */
+  }
+  if(!*positiveReply) {
+    myGlobals.dnsSniffFailedCount++;
+    return(transactionId);
+  }
 
   queryNameLength = strlen(hostPtr.queryName);
   strtolower(hostPtr.queryName);
 
   if((queryNameLength > 5)
-     && (strncmp(&hostPtr.queryName[queryNameLength-5], ".arpa", 5) == 0))
+     && (strncmp(&hostPtr.queryName[queryNameLength-5], ".arpa", 5) == 0)) {
+    myGlobals.dnsSniffARPACount++;
     return(transactionId);
+  }
 
   for(i=0; i<MAX_ADDRESSES; i++) {
   	/* Symbolic => Numeric */
 
     if(hostPtr.addrList[i] != 0) {
-      hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
-      key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
+      StoredAddress storedAddress;
+
+      memset(&storedAddress, 0, sizeof(storedAddress));
+      storedAddress.recordCreationTime = myGlobals.actTime;
+      memcpy(&storedAddress.symAddress, 
+             hostPtr.queryName,
+             min(MAX_LEN_SYM_HOST_NAME-1, strlen(hostPtr.queryName)));
+
+      snprintf(tmpBuf, sizeof(tmpBuf), "%u", ntohl(hostPtr.addrList[i]));
+      key_data.dptr = (void*)&tmpBuf;
       key_data.dsize = strlen(key_data.dptr)+1;
-      data_data.dptr = hostPtr.queryName;
-      data_data.dsize = queryNameLength+1;
+      data_data.dptr = (void*)&storedAddress;
+      data_data.dsize = sizeof(storedAddress)+1;
 
 #ifdef DNS_SNIFF_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
+      traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: Sniffed DNS response: %s(%d) = %s(t=%d)", 
+                 key_data.dptr, key_data.dsize,
+                 ((StoredAddress *)data_data.dptr)->symAddress,
+                 ((StoredAddress *)data_data.dptr)->recordCreationTime);
 #endif
 
-      if(myGlobals.gdbm_file == NULL) return(-1); /* ntop is quitting... */
-#ifdef CFG_MULTITHREADED
-      accessMutex(&myGlobals.gdbmMutex, "processDNSPacket");
-#endif
-      gdbm_store(myGlobals.gdbm_file, key_data, data_data, GDBM_REPLACE);
-      myGlobals.dnsSniffedCount++;
-#ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.gdbmMutex);
-#endif
+      if(myGlobals.dnsCacheFile == NULL) return(-1); /* ntop is quitting... */
+      gdbm_store(myGlobals.dnsCacheFile, key_data, data_data, GDBM_REPLACE);
+      myGlobals.dnsSniffStoredInCache++; 
     }
   }
 

@@ -57,13 +57,13 @@ static int sortICMPhosts(const void *_a, const void *_b) {
   int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "sortICMPhosts() (1)");
     return(1);
   } else if(((*a) != NULL) && ((*b) == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "sortICMPhosts() (2)");
     return(-1);
   } else if(((*a) == NULL) && ((*b) == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "sortICMPhosts() (3)");
     return(0);
   }
 
@@ -434,8 +434,8 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 /* ****************************** */
 
 static void termIcmpFunct(void) {
-  traceEvent(CONST_TRACE_INFO, "Thanks for using icmpWatch..."); fflush(stdout);
-  traceEvent(CONST_TRACE_INFO, "Done.\n"); fflush(stdout);
+  traceEvent(CONST_TRACE_INFO, "ICMP: Thanks for using icmpWatch"); fflush(stdout);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ICMP: Done"); fflush(stdout);
 }
 
 /* ****************************** */
@@ -444,7 +444,7 @@ static PluginInfo icmpPluginInfo[] = {
   { "icmpWatchPlugin",
     "This plugin produces a report about the ICMP packets that ntop has seen. "
        "The report includes each host, byte and per-type counts (send/received).",
-    "2.0", /* version */
+    "2.2", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "icmpWatch", /* http://<host>:<port>/plugins/icmpWatch */
     0, /* Active by default */
@@ -453,19 +453,20 @@ static PluginInfo icmpPluginInfo[] = {
     termIcmpFunct, /* TermFunc   */
     NULL, /* PluginFunc */
     handleIcmpWatchHTTPrequest,
-    NULL /* no capture */
+    NULL /* no capture */,
+    NULL /* no status */
   }
 };
 
 /* ***************************************** */
 
 /* Plugin entry fctn */
-#ifdef STATIC_PLUGIN
+#ifdef MAKE_STATIC_PLUGIN
 PluginInfo* icmpPluginEntryFctn(void) {
 #else
   PluginInfo* PluginEntryFctn(void) {
 #endif
-    traceEvent(CONST_TRACE_INFO, "Welcome to %s. (C) 1999 by Luca Deri.\n",
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ICMP: Welcome to %s. (C) 1999 by Luca Deri",
 	       icmpPluginInfo->pluginName);
     
     return(icmpPluginInfo);

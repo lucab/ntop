@@ -108,6 +108,9 @@ extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceI
 extern void checkHostProvidedServices(HostTraffic *el);
 extern void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraffic);
 extern void printLocalHostsStats();
+#ifdef CFG_MULTITHREADED
+extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName);
+#endif
 
 /* report.c */
 extern void initReports(void);
@@ -239,6 +242,7 @@ extern int out_graph(short gifwidth,
 #define IP_R_2_L_HTML                   "IpR2L.html"
 #define IP_L_2_R_HTML                   "IpL2R.html"
 #define IP_L_2_L_HTML                   "IpL2L.html"
+#define IP_R_2_R_HTML                   "IpR2R.html"
 #define DOMAIN_INFO_HTML                "domainInfo"
 #define CGI_HEADER                      "ntop-bin/"
 #define STR_SHOW_PLUGINS                "showPlugins.html"

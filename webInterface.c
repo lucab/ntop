@@ -195,6 +195,8 @@ void showPluginsList(char* pluginName) {
 	} else {
 	  if(flows->pluginStatus.pluginPtr->startFunc != NULL)
 	    flows->pluginStatus.pluginPtr->startFunc();
+	  if (flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL)
+	    newPluginStatus = 0 /* Disabled */;
 	}
 
 	flows->pluginStatus.activePlugin = newPluginStatus;
@@ -222,15 +224,27 @@ void showPluginsList(char* pluginName) {
 		  flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname) < 0)
 	BufferTooShort();
 
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT %s>%s</TH>\n",
+		  getRowColor(),
+                  flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ? "rowspan=\"2\"" : "",
+		  (flows->pluginStatus.activePlugin || 
+	           flows->pluginStatus.pluginPtr->inactiveSetup) ? tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname) < 0)
+	BufferTooShort();
+      sendString(tmpBuf);
+
+      if(flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL) {
+          if(snprintf(tmpBuf, sizeof(tmpBuf), "<TD colspan=\"4\"><font COLOR=\"#FF0000\">%s</font></TD></TR>\n<TR "TR_ON" %s>\n",
+                      flows->pluginStatus.pluginPtr->pluginStatusMessage,
+	              getRowColor()) < 0)
+	      BufferTooShort();
+          sendString(tmpBuf);
+      }
+
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
 		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
 		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
 		  "<TD "TD_BG" ALIGN=CENTER><A HREF="STR_SHOW_PLUGINS"?%s=%d>%s</A></TD>"
 		  "</TR>\n",
-		  getRowColor(),
-		  (flows->pluginStatus.activePlugin || 
-	           flows->pluginStatus.pluginPtr->inactiveSetup) ? tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname,
 		  flows->pluginStatus.pluginPtr->pluginDescr,
 		  flows->pluginStatus.pluginPtr->pluginVersion,
 		  flows->pluginStatus.pluginPtr->pluginAuthor,
@@ -770,93 +784,6 @@ static void printParameterConfigInfo(int textPrintFlag, char* feature, char* sta
 
 /* ******************************** */
 
-#ifdef CFG_MULTITHREADED
-static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
-
-  if(mutexId->lockLine == 0) /* Mutex never used */
-    return;
-  if(textPrintFlag == TRUE) {
-    if(mutexId->lockAttemptLine > 0) {
-        if(snprintf(buf, sizeof(buf),
-                    "Mutex %s, is %s.\n"
-                    "     locked: %u times, last was %s:%d(%d)\n"
-                    "     Blocked: at %s:%d%(d)\n",
-                    "     unlocked: %u times, last was %s:%d(%d)\n"
-                    "     longest: %d sec from %s:%d\n",
-                    mutexName,
-                    mutexId->isLocked ? "locked" : "unlocked",
-                    mutexId->numLocks,
-                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
-                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
-                    mutexId->numReleases,
-                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-                    mutexId->maxLockedDuration,
-                    mutexId->maxLockedDurationUnlockFile,
-                    mutexId->maxLockedDurationUnlockLine) < 0)
-          BufferTooShort();
-    } else {
-        if(snprintf(buf, sizeof(buf),
-                    "Mutex %s, is %s.\n"
-                    "     locked: %u times, last was %s:%d(%d)\n"
-                    "     unlocked: %u times, last was %s:%d(%d)\n"
-                    "     longest: %d sec from %s:%d\n",
-                    mutexName,
-                    mutexId->isLocked ? "locked" : "unlocked",
-                    mutexId->numLocks,
-                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
-                    mutexId->numReleases,
-                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-                    mutexId->maxLockedDuration,
-                    mutexId->maxLockedDurationUnlockFile,
-                    mutexId->maxLockedDurationUnlockLine) < 0)
-          BufferTooShort();
-    }
-  } else {
-    if (mutexId->lockAttemptLine > 0) {
-        if(snprintf(buf, sizeof(buf),
-                    "<TR><TH "TH_BG" ALIGN=left>%s</TH><TD ALIGN=CENTER>%s</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=LEFT>%u</TD>"
-                    "<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>",
-                    mutexName,
-                    mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
-                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
-                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
-                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-                    mutexId->numLocks, mutexId->numReleases,
-                    mutexId->maxLockedDuration,
-        	    mutexId->maxLockedDurationUnlockFile,
-                    mutexId->maxLockedDurationUnlockLine) < 0)
-          BufferTooShort();
-    } else {
-        if(snprintf(buf, sizeof(buf),
-                    "<TR><TH "TH_BG" ALIGN=left>%s</TH><TD ALIGN=CENTER>%s</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>&nbsp;</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=LEFT>%u</TD>"
-                    "<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>",
-                    mutexName,
-                    mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
-                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
-                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-                    mutexId->numLocks, mutexId->numReleases,
-                    mutexId->maxLockedDuration,
-        	    mutexId->maxLockedDurationUnlockFile,
-                    mutexId->maxLockedDurationUnlockLine) < 0)
-          BufferTooShort();
-    }
-  }
-
-  sendString(buf);
-}
-#endif
-
-/* ******************************** */
-
 void printNtopConfigHInfo(int textPrintFlag) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
@@ -1184,6 +1111,1658 @@ void printNtopConfigHInfo(int textPrintFlag) {
   sendString(texthtml("\n\nCompile Time: config.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: config.h</tr>\n"));
 
+/*
+ * Drop the autogenerated lines (utils/config_h2.awk) in HERE 
+ */
+
+/*                                                       B E G I N
+ *
+ * Autogenerated from config.h and inserted into webInterface.c 
+ *      Tue Mar 11 10:11:51 CST 2003
+ *
+ */
+
+  printFeatureConfigInfo(textPrintFlag, "C_ALLOCA",
+#ifdef C_ALLOCA
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "CFG_ETHER_HEADER_HAS_EA",
+#ifdef CFG_ETHER_HEADER_HAS_EA
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "CFG_MULTITHREADED",
+#ifdef CFG_MULTITHREADED
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "CFG_NEED_INET_ATON",
+#ifdef CFG_NEED_INET_ATON
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ALARM",
+#ifdef HAVE_ALARM
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ALLOCA",
+#ifdef HAVE_ALLOCA
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ALLOCA_H",
+#ifdef HAVE_ALLOCA_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ARPA_INET_H",
+#ifdef HAVE_ARPA_INET_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ARPA_NAMESER_H",
+#ifdef HAVE_ARPA_NAMESER_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_BACKTRACE",
+#ifdef HAVE_BACKTRACE
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_BZERO",
+#ifdef HAVE_BZERO
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_CRYPT_H",
+#ifdef HAVE_CRYPT_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_CRYPTO_H",
+#ifdef HAVE_CRYPTO_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_CTIME_R",
+#ifdef HAVE_CTIME_R
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_CURSES_H",
+#ifdef HAVE_CURSES_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_DIRENT_H",
+#ifdef HAVE_DIRENT_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_DLFCN_H",
+#ifdef HAVE_DLFCN_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_DL_H",
+#ifdef HAVE_DL_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_DOPRNT",
+#ifdef HAVE_DOPRNT
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ENDPWENT",
+#ifdef HAVE_ENDPWENT
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ERR_H",
+#ifdef HAVE_ERR_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ERRNO_H",
+#ifdef HAVE_ERRNO_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ETHERTYPE_H",
+#ifdef HAVE_ETHERTYPE_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_FACILITYNAMES",
+#ifdef HAVE_FACILITYNAMES
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_FCNTL_H",
+#ifdef HAVE_FCNTL_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_FORK",
+#ifdef HAVE_FORK
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GD",
+#ifdef HAVE_GD
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GDBM",
+#ifdef HAVE_GDBM
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GDBM_H",
+#ifdef HAVE_GDBM_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GDC_H",
+#ifdef HAVE_GDC_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GDCHART",
+#ifdef HAVE_GDCHART
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GDCHART_H",
+#ifdef HAVE_GDCHART_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GD_H",
+#ifdef HAVE_GD_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GDOME_H",
+#ifdef HAVE_GDOME_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETHOSTBYADDR",
+#ifdef HAVE_GETHOSTBYADDR
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETHOSTBYADDR_R",
+#ifdef HAVE_GETHOSTBYADDR_R
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETHOSTBYNAME",
+#ifdef HAVE_GETHOSTBYNAME
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETHOSTNAME",
+#ifdef HAVE_GETHOSTNAME
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETIPNODEBYADDR",
+#ifdef HAVE_GETIPNODEBYADDR
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETOPT_H",
+#ifdef HAVE_GETOPT_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETOPT_LONG",
+#ifdef HAVE_GETOPT_LONG
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETPASS",
+#ifdef HAVE_GETPASS
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETTIMEOFDAY",
+#ifdef HAVE_GETTIMEOFDAY
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GLIBCONFIG_H",
+#ifdef HAVE_GLIBCONFIG_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GLIB_H",
+#ifdef HAVE_GLIB_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_IF_H",
+#ifdef HAVE_IF_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_IN6_ADDR",
+#ifdef HAVE_IN6_ADDR
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_INET_NTOA",
+#ifdef HAVE_INET_NTOA
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_INT16_T",
+#ifdef HAVE_INT16_T
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_INT32_T",
+#ifdef HAVE_INT32_T
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_INT64_T",
+#ifdef HAVE_INT64_T
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_INT8_T",
+#ifdef HAVE_INT8_T
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_INTTYPES_H",
+#ifdef HAVE_INTTYPES_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LANGINFO_H",
+#ifdef HAVE_LANGINFO_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBC",
+#ifdef HAVE_LIBC
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBC_R",
+#ifdef HAVE_LIBC_R
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBCRYPT",
+#ifdef HAVE_LIBCRYPT
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBCRYPTO",
+#ifdef HAVE_LIBCRYPTO
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBDL",
+#ifdef HAVE_LIBDL
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBDLD",
+#ifdef HAVE_LIBDLD
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBGD",
+#ifdef HAVE_LIBGD
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBGDBM",
+#ifdef HAVE_LIBGDBM
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBGDOME",
+#ifdef HAVE_LIBGDOME
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBGLIB",
+#ifdef HAVE_LIBGLIB
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBM",
+#ifdef HAVE_LIBM
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBNSL",
+#ifdef HAVE_LIBNSL
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPCAP",
+#ifdef HAVE_LIBPCAP
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPNG",
+#ifdef HAVE_LIBPNG
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPOSIX4",
+#ifdef HAVE_LIBPOSIX4
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPTHREAD",
+#ifdef HAVE_LIBPTHREAD
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPTHREADS",
+#ifdef HAVE_LIBPTHREADS
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBRESOLV",
+#ifdef HAVE_LIBRESOLV
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBRT",
+#ifdef HAVE_LIBRT
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBSOCKET",
+#ifdef HAVE_LIBSOCKET
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBSSL",
+#ifdef HAVE_LIBSSL
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBWRAP",
+#ifdef HAVE_LIBWRAP
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBXML2",
+#ifdef HAVE_LIBXML2
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBZ",
+#ifdef HAVE_LIBZ
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LIMITS_H",
+#ifdef HAVE_LIMITS_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LOCALE_H",
+#ifdef HAVE_LOCALE_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LOCALTIME_R",
+#ifdef HAVE_LOCALTIME_R
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_LONG_DOUBLE",
+#ifdef HAVE_LONG_DOUBLE
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_MALLINFO_MALLOC_H",
+#ifdef HAVE_MALLINFO_MALLOC_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_MALLOC_H",
+#ifdef HAVE_MALLOC_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_MEMCHR",
+#ifdef HAVE_MEMCHR
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_MEMORY_H",
+#ifdef HAVE_MEMORY_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_MEMSET",
+#ifdef HAVE_MEMSET
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NCURSES_H",
+#ifdef HAVE_NCURSES_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NDIR_H",
+#ifdef HAVE_NDIR_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NET_BPF_H",
+#ifdef HAVE_NET_BPF_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETDB_H",
+#ifdef HAVE_NETDB_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NET_ETHERNET_H",
+#ifdef HAVE_NET_ETHERNET_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NET_IF_H",
+#ifdef HAVE_NET_IF_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IF_ETHER_H",
+#ifdef HAVE_NETINET_IF_ETHER_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IN_H",
+#ifdef HAVE_NETINET_IN_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IN_SYSTM_H",
+#ifdef HAVE_NETINET_IN_SYSTM_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IP_H",
+#ifdef HAVE_NETINET_IP_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IP_ICMP_H",
+#ifdef HAVE_NETINET_IP_ICMP_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_TCP_H",
+#ifdef HAVE_NETINET_TCP_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_UDP_H",
+#ifdef HAVE_NETINET_UDP_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_OPENSSL",
+#ifdef HAVE_OPENSSL
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_OPENSSL_CRYPTO_H",
+#ifdef HAVE_OPENSSL_CRYPTO_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_OPENSSL_ERR_H",
+#ifdef HAVE_OPENSSL_ERR_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_OPENSSL_PEM_H",
+#ifdef HAVE_OPENSSL_PEM_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_OPENSSL_RSA_H",
+#ifdef HAVE_OPENSSL_RSA_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_OPENSSL_SSL_H",
+#ifdef HAVE_OPENSSL_SSL_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_OPENSSL_X509_H",
+#ifdef HAVE_OPENSSL_X509_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP",
+#ifdef HAVE_PCAP
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_FREECODE",
+#ifdef HAVE_PCAP_FREECODE
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_H",
+#ifdef HAVE_PCAP_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PEM_H",
+#ifdef HAVE_PEM_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PNG",
+#ifdef HAVE_PNG
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PNG_H",
+#ifdef HAVE_PNG_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PTHREAD_H",
+#ifdef HAVE_PTHREAD_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PUTENV",
+#ifdef HAVE_PUTENV
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PWD_H",
+#ifdef HAVE_PWD_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_READLINE",
+#ifdef HAVE_READLINE
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_READLINE_READLINE_H",
+#ifdef HAVE_READLINE_READLINE_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_RE_COMP",
+#ifdef HAVE_RE_COMP
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_REGCOMP",
+#ifdef HAVE_REGCOMP
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_REGEX",
+#ifdef HAVE_REGEX
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_RRD",
+#ifdef HAVE_RRD
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_RRD_H",
+#ifdef HAVE_RRD_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_RSA_H",
+#ifdef HAVE_RSA_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SCHED_H",
+#ifdef HAVE_SCHED_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SCHED_YIELD",
+#ifdef HAVE_SCHED_YIELD
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SECURITY_PAM_APPL_H",
+#ifdef HAVE_SECURITY_PAM_APPL_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SELECT",
+#ifdef HAVE_SELECT
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SEMAPHORE_H",
+#ifdef HAVE_SEMAPHORE_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SHADOW_H",
+#ifdef HAVE_SHADOW_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SNPRINTF",
+#ifdef HAVE_SNPRINTF
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SOCKET",
+#ifdef HAVE_SOCKET
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SQRT",
+#ifdef HAVE_SQRT
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SSL_H",
+#ifdef HAVE_SSL_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STAT_EMPTY_STRING_BUG",
+#ifdef HAVE_STAT_EMPTY_STRING_BUG
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STDINT_H",
+#ifdef HAVE_STDINT_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STDIO_H",
+#ifdef HAVE_STDIO_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STDLIB_H",
+#ifdef HAVE_STDLIB_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRCASECMP",
+#ifdef HAVE_STRCASECMP
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRCHR",
+#ifdef HAVE_STRCHR
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRCSPN",
+#ifdef HAVE_STRCSPN
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRDUP",
+#ifdef HAVE_STRDUP
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRERROR",
+#ifdef HAVE_STRERROR
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRFTIME",
+#ifdef HAVE_STRFTIME
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRING_H",
+#ifdef HAVE_STRING_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRINGS_H",
+#ifdef HAVE_STRINGS_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRNCASECMP",
+#ifdef HAVE_STRNCASECMP
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRPBRK",
+#ifdef HAVE_STRPBRK
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRRCHR",
+#ifdef HAVE_STRRCHR
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRSPN",
+#ifdef HAVE_STRSPN
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRSTR",
+#ifdef HAVE_STRSTR
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRTOK_R",
+#ifdef HAVE_STRTOK_R
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRTOUL",
+#ifdef HAVE_STRTOUL
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_STRUCT_TM_TM_ZONE",
+#ifdef HAVE_STRUCT_TM_TM_ZONE
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_DIR_H",
+#ifdef HAVE_SYS_DIR_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_IOCTL_H",
+#ifdef HAVE_SYS_IOCTL_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_LDR_H",
+#ifdef HAVE_SYS_LDR_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYSLOG_H",
+#ifdef HAVE_SYSLOG_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_NDIR_H",
+#ifdef HAVE_SYS_NDIR_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_RESOURCE_H",
+#ifdef HAVE_SYS_RESOURCE_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_SCHED_H",
+#ifdef HAVE_SYS_SCHED_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_SELECT_H",
+#ifdef HAVE_SYS_SELECT_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_SOCKET_H",
+#ifdef HAVE_SYS_SOCKET_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_SOCKIO_H",
+#ifdef HAVE_SYS_SOCKIO_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_STAT_H",
+#ifdef HAVE_SYS_STAT_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_SYSLOG_H",
+#ifdef HAVE_SYS_SYSLOG_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_TIME_H",
+#ifdef HAVE_SYS_TIME_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_TYPES_H",
+#ifdef HAVE_SYS_TYPES_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_UN_H",
+#ifdef HAVE_SYS_UN_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_WAIT_H",
+#ifdef HAVE_SYS_WAIT_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_TCPD_H",
+#ifdef HAVE_TCPD_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_TM_ZONE",
+#ifdef HAVE_TM_ZONE
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_TZNAME",
+#ifdef HAVE_TZNAME
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_U_INT16_T",
+#ifdef HAVE_U_INT16_T
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_U_INT32_T",
+#ifdef HAVE_U_INT32_T
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_U_INT64_T",
+#ifdef HAVE_U_INT64_T
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_UINT64_T",
+#ifdef HAVE_UINT64_T
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_U_INT8_T",
+#ifdef HAVE_U_INT8_T
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_UNAME",
+#ifdef HAVE_UNAME
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_UNISTD_H",
+#ifdef HAVE_UNISTD_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_VFORK",
+#ifdef HAVE_VFORK
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_VFORK_H",
+#ifdef HAVE_VFORK_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_VPRINTF",
+#ifdef HAVE_VPRINTF
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_WORKING_FORK",
+#ifdef HAVE_WORKING_FORK
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_WORKING_VFORK",
+#ifdef HAVE_WORKING_VFORK
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_X509_H",
+#ifdef HAVE_X509_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ZLIB",
+#ifdef HAVE_ZLIB
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_ZLIB_H",
+#ifdef HAVE_ZLIB_H
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "LSTAT_FOLLOWS_SLASHED_SYMLINK",
+#ifdef LSTAT_FOLLOWS_SLASHED_SYMLINK
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_MICRO_NTOP",
+#ifdef MAKE_MICRO_NTOP
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_GDCHART",
+#ifdef MAKE_WITH_GDCHART
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_I18N",
+#ifdef MAKE_WITH_I18N
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_IGNORE_SIGPIPE",
+#ifdef MAKE_WITH_IGNORE_SIGPIPE
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_LARGERRDPOP",
+#ifdef MAKE_WITH_LARGERRDPOP
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SCHED_YIELD",
+#ifdef MAKE_WITH_SCHED_YIELD
+			 "yes"
+#else
+			 "no"
+#endif
+			 );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLV3_SUPPORT",
+#ifdef MAKE_WITH_SSLV3_SUPPORT
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG_COMPILETIME",
+#ifdef MAKE_WITH_SSLWATCHDOG_COMPILETIME
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_XMLDUMP",
+#ifdef MAKE_WITH_XMLDUMP
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_ZLIB",
+#ifdef MAKE_WITH_ZLIB
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "SETVBUF_REVERSED",
+#ifdef SETVBUF_REVERSED
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "STACK_DIRECTION",
+#if STACK_DIRECTION > 0
+                         "grows toward higher addresses"
+#elif STACK_DIRECTION < 0
+                         "grows toward lower addresses"
+#else
+                         "direction of growth unknown"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "STDC_HEADERS",
+#ifdef STDC_HEADERS
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "TIME_WITH_SYS_TIME",
+#ifdef TIME_WITH_SYS_TIME
+                         "may include both"
+#else
+                         "do not include both"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "TM_IN_SYS_TIME",
+#ifdef TM_IN_SYS_TIME
+                         "present"
+#else
+                         "absent"
+#endif
+                         );
+
+/*                                                       E N D
+ *
+ * Autogenerated from config.h and inserted into webInterface.c 
+ *
+ */
+
+
   printFeatureConfigInfo(textPrintFlag, "CFG_CONFIGFILE_DIR - config file directory", CFG_CONFIGFILE_DIR);
 
   printFeatureConfigInfo(textPrintFlag, "CFG_DATAFILE_DIR - data file directory", CFG_DATAFILE_DIR);
@@ -1198,110 +2777,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ALLOCA_H",
-#ifdef HAVE_ALLOCA_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ARPA_INET_H",
-#ifdef HAVE_ARPA_INET_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ARPA_NAMESER_H",
-#ifdef HAVE_ARPA_NAMESER_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_BACKTRACE",
-#ifdef HAVE_BACKTRACE
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_CRYPT_H",
-#ifdef HAVE_CRYPT_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_CTIME_R",
-#ifdef HAVE_CTIME_R
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_DIRENT_H",
-#ifdef HAVE_DIRENT_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_DLFCN_H",
-#ifdef HAVE_DLFCN_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_DL_H",
-#ifdef HAVE_DL_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ERRNO_H",
-#ifdef HAVE_ERRNO_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ETHERTYPE_H",
-#ifdef HAVE_ETHERTYPE_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_FCNTL_H",
-#ifdef HAVE_FCNTL_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GDBM_H",
-#ifdef HAVE_GDBM_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
   printFeatureConfigInfo(textPrintFlag, 
                          texthtml("MAKE_WITH_GDCHART",
                                   "<A HREF=\"" HTML_GDCHART_URL "\" title=\"" CONST_HTML_GDCHART_URL_ALT "\">MAKE_WITH_GDCHART</A>"),
@@ -1309,306 +2784,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 			 "yes"
 #else
 			 "no"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GETIPNODEBYADDR",
-#ifdef HAVE_GETIPNODEBYADDR
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GETOPT_H",
-#ifdef HAVE_GETOPT_H
-			 "present"
-#else
-			 "absent - provided in util.c"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GETOPT_LONG",
-#ifdef HAVE_GETOPT_LONG
-			 "present"
-#else
-			 "absent - provided in util.c"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_IF_H",
-#ifdef HAVE_IF_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  if(snprintf(buf, sizeof(buf), 
-              "64 %s, 32 %s, 16 %s,8 %s",
-#ifdef HAVE_INT64_T
-	      "present",
-#else
-	      "no",
-#endif
-#ifdef HAVE_INT32_T
-	      "present",
-#else
-	      "no",
-#endif
-#ifdef HAVE_INT16_T
-	      "present",
-#else
-	      "no",
-#endif
-#ifdef HAVE_INT8_T
-	      "present"
-#else
-	      "no"
-#endif
-	      ) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, 
-                         texthtml("HAVE_INTxx_T Signed ints",
-                                  "HAVE_INTxx_T<br>&nbsp;&nbsp;&nbsp;Signed ints"),
-                         buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "64 %s, 32 %s, 16 %s,8 %s",
-#ifdef HAVE_U_INT64_T
-	      "present",
-#else
-	      "no",
-#endif
-#ifdef HAVE_U_INT32_T
-	      "present",
-#else
-	      "no",
-#endif
-#ifdef HAVE_U_INT16_T
-	      "present",
-#else
-	      "no",
-#endif
-#ifdef HAVE_U_INT8_T
-	      "present"
-#else
-	      "no"
-#endif
-	      ) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, 
-                         texthtml("HAVE_U_INTxx_T Unsigned ints",
-                                  "HAVE_U_INTxx_T<br>&nbsp;&nbsp;&nbsp;Unsigned ints"),
-                         buf);
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBC",
-#ifdef HAVE_LIBC
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBC_R",
-#ifdef HAVE_LIBC_R
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBDL",
-#ifdef HAVE_LIBDL
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBGDBM",
-#ifdef HAVE_LIBGDBM
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBKSTAT",
-#ifdef HAVE_LIBKSTAT
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBNSL",
-#ifdef HAVE_LIBNSL
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPCAP",
-#ifdef HAVE_LIBPCAP
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPOSIX4",
-#ifdef HAVE_LIBPOSIX4
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPTHREAD",
-#ifdef HAVE_LIBPTHREAD
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPTHREADS",
-#ifdef HAVE_LIBPTHREADS
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBRESOLV",
-#ifdef HAVE_LIBRESOLV
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBSOCKET",
-#ifdef HAVE_LIBSOCKET
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, 
-                         texthtml("HAVE_LIBWRAP (TCP Wrappers)",
-                                  "HAVE_LIBWRAP<br>&nbsp;&nbsp;&nbsp;TCP Wrappers"),
-#ifdef HAVE_LIBWRAP
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LOCALTIME_R",
-#ifdef HAVE_LOCALTIME_R
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NCURSES_H",
-#ifdef HAVE_NCURSES_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NETDB_H",
-#ifdef HAVE_NETDB_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IF_ETHER_H",
-#ifdef HAVE_NETINET_IF_ETHER_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IN_H",
-#ifdef HAVE_NETINET_IN_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IN_SYSTM_H",
-#ifdef HAVE_NETINET_IN_SYSTM_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IP_H",
-#ifdef HAVE_NETINET_IP_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IP_ICMP_H",
-#ifdef HAVE_NETINET_IP_ICMP_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_TCP_H",
-#ifdef HAVE_NETINET_TCP_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_UDP_H",
-#ifdef HAVE_NETINET_UDP_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NET_BPF_H",
-#ifdef HAVE_NET_BPF_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NET_ETHERNET_H",
-#ifdef HAVE_NET_ETHERNET_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NET_IF_H",
-#ifdef HAVE_NET_IF_H
-			 "present"
-#else
-			 "absent"
 #endif
 			 );
 
@@ -1622,282 +2797,10 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PTHREAD_H",
-#ifdef HAVE_PTHREAD_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PWD_H",
-#ifdef HAVE_PWD_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_READLINE",
-#ifdef HAVE_READLINE
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_READLINE_READLINE_H",
-#ifdef HAVE_READLINE_READLINE_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_REGEX",
-#ifdef HAVE_REGEX
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SCHED_H",
-#ifdef HAVE_SCHED_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SECURITY_PAM_APPL_H",
-#ifdef HAVE_SECURITY_PAM_APPL_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SEMAPHORE_H",
-#ifdef HAVE_SEMAPHORE_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SHADOW_H",
-#ifdef HAVE_SHADOW_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SIGNAL_H",
-#ifdef HAVE_SIGNAL_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SNPRINTF",
-#ifdef HAVE_SNPRINTF
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_STDIO_H",
-#ifdef HAVE_STDIO_H
-			 "present"
-#else
-			 "no"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_STDLIB_H",
-#ifdef HAVE_STDLIB_H
-			 "present"
-#else
-			 "no"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_STRING_H",
-#ifdef HAVE_STRING_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_STRSEP",
-#ifdef HAVE_STRSEP
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_STRTOK_R",
-#ifdef HAVE_STRTOK_R
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYSLOG_H / HAVE_SYS_SYSLOG_H",
-#ifdef HAVE_SYSLOG_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 " / "
-#ifdef HAVE_SYS_SYSLOG_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_IOCTL",
-#ifdef HAVE_SYS_IOCTL
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_LDR_H",
-#ifdef HAVE_SYS_LDR_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_SCHED_H",
-#ifdef HAVE_SYS_SCHED_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_SELECT_H",
-#ifdef HAVE_SYS_SELECT_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_SOCKET_H",
-#ifdef HAVE_SYS_SOCKET_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_SOCKIO_H",
-#ifdef HAVE_SYS_SOCKIO_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_STAT_H",
-#ifdef HAVE_SYS_STAT_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_TIME_H",
-#ifdef HAVE_SYS_TIME_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_TYPES_H",
-#ifdef HAVE_SYS_TYPES_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_UN_H",
-#ifdef HAVE_SYS_UN_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SYS_WAIT_H",
-#ifdef HAVE_SYS_WAIT_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_TCPD_H",
-#ifdef HAVE_TCPD_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_UNISTD_H",
-#ifdef HAVE_UNISTD_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
   printFeatureConfigInfo(textPrintFlag, 
                          texthtml("MAKE_WITH_ZLIB (HTTP gzip compression)",
                                   "MAKE_WITH_ZLIB<br>&nbsp;&nbsp;&nbsp;HTTP gzip compression"),
 #ifdef MAKE_WITH_ZLIB
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, 
-                         texthtml("HAVE_ZLIB",
-                                  "HAVE_ZLIB"),
-#ifdef HAVE_ZLIB
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ZLIB_H",
-#ifdef HAVE_ZLIB_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "CFG_MULTITHREADED",
-#ifdef CFG_MULTITHREADED
 			 "yes"
 #else
 			 "no"
@@ -1923,13 +2826,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "CFG_NEED_INET_ATON",
-#ifdef CFG_NEED_INET_ATON
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
   printFeatureConfigInfo(textPrintFlag, 
                          texthtml("NTOP_xxxxxx_ENDIAN (Hardware Endian)",
                                   "NTOP_xxxxxx_ENDIAN<br>&nbsp;&nbsp;&nbsp;Hardware Endian"),
@@ -1975,8 +2871,28 @@ void printNtopConfigInfo(int textPrintFlag) {
   extern char pcap_version[];
 #endif /* HAVE_PCAP_VERSION */
 
+#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+    struct mallinfo memStats;
+    int totalHostsMonitored = 0;
+
+ #ifdef HAVE_SYS_RESOURCE_H
+    struct rlimit rlim;
+ #endif
+#endif
+
   if (textPrintFlag != TRUE) {
     printHTMLheader("Current ntop Configuration", 0);
+    sendString("<CENTER><TABLE BORDER=\"0\">"
+                "<TR>"
+                 "<TD COLSPAN=5 align=\"center\">The color of the host link on many pages indicates how recently the host was FIRST seen</TD>"
+                "</TR>"
+                "<TR>"
+                  "<TD>&nbsp;&nbsp;<A href=# class=\"age0min\">0 to 5 minutes</A>&nbsp;&nbsp;</TD>"
+                  "<TD>&nbsp;&nbsp;<A href=# class=\"age5min\">5 to 15 minutes</A>&nbsp;&nbsp;</TD>"
+                  "<TD>&nbsp;&nbsp;<A href=# class=\"age15min\">15 to 30 minutes</A>&nbsp;&nbsp;</TD>"
+                  "<TD>&nbsp;&nbsp;<A href=# class=\"age30min\">30 to 60 minutes</A>&nbsp;&nbsp;</TD>"
+                  "<TD>&nbsp;&nbsp;<A href=# class=\"age60min\">60+ minutes</A>&nbsp;&nbsp;</TD>"
+                "</TR></TABLE></CENTER>\n");
   }
   sendString(texthtml("\n", 
                       "<CENTER>\n<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n"
@@ -2446,16 +3362,42 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Total Hash Collisions (Vendor/Special) (lookup)", buf);
 
+  /* ******************** */
+  buf[0] = '\0';
+  for(i=0; i<myGlobals.numLocalNetworks; i++) {
+    struct in_addr addr1, addr2;
+    char buf1[64];
+    
+    addr1.s_addr = myGlobals.localNetworks[i][CONST_NETWORK_ENTRY];
+    addr2.s_addr = myGlobals.localNetworks[i][CONST_NETMASK_ENTRY];
+    
+    if(snprintf(buf1, sizeof(buf1), "%s/%s [all devices]\n", 
+		_intoa(addr1, buf1, sizeof(buf1)),
+		_intoa(addr2, buf2, sizeof(buf2))) < 0) BufferTooShort();
+    
+    strcat(buf, buf1);
+  }
+  
+  for(i=0; i<myGlobals.numDevices; i++) {
+    if(myGlobals.device[i].activeDevice) {
+      char buf1[128], buf3[64];
+      if(snprintf(buf1, sizeof(buf1), "%s/%s [device %s]\n",
+		  _intoa(myGlobals.device[i].network, buf2, sizeof(buf2)),
+		  _intoa(myGlobals.device[i].netmask, buf3, sizeof(buf3)),
+		  myGlobals.device[i].humanFriendlyName) < 0)
+	BufferTooShort();   
+      strcat(buf, buf1);
+    }
+  }
+  
+  printFeatureConfigInfo(textPrintFlag, "Local Networks", buf);
+
+
+
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
-  {
-    struct mallinfo memStats;
- #ifdef HAVE_SYS_RESOURCE_H
-    struct rlimit rlim;
- #endif
+    sendString(texthtml("\n\nMemory allocation - data segment\n\n", "<tr><th colspan=\"2\">Memory allocation - data segment</th></tr>\n"));
 
     memStats = mallinfo();
-
-    sendString(texthtml("\n\nMemory allocation - data segment\n\n", "<tr><th colspan=\"2\">Memory allocation - data segment</th></tr>\n"));
 
  #ifdef HAVE_SYS_RESOURCE_H
     getrlimit(RLIMIT_DATA, &rlim);
@@ -2493,25 +3435,14 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Allocated bytes (hblkhd)", buf);
 
-  }
 #endif
 
   if (textPrintFlag == TRUE) {
     sendString(texthtml("\n\nMemory Usage\n\n", "<tr><th colspan=\"2\">Memory Usage</th></tr>\n"));
 
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.specialHashLoadSize) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Size (bytes)", buf);
-  
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadSize) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (bytes)", buf);
-  
-    if(snprintf(buf, sizeof(buf), "%d (%.1f MB)",
-               myGlobals.vendorHashLoadSize,
-               (float) myGlobals.vendorHashLoadSize /(1024.0*1024.0)) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Size (bytes)", buf);
   
     if(snprintf(buf, sizeof(buf), "%d (%.1f MB)", myGlobals.ipCountryMem, (float)myGlobals.ipCountryMem/(1024.0*1024.0)) < 0)
         BufferTooShort();
@@ -2522,6 +3453,36 @@ void printNtopConfigInfo(int textPrintFlag) {
             BufferTooShort();
         printFeatureConfigInfo(textPrintFlag, "Bytes per entry", buf);
     }
+
+#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+
+    if(snprintf(buf, sizeof(buf), "%d", memStats.arena + memStats.hblkhd) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Current memory usage", buf);
+
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.baseMemoryUsage) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Base memory usage", buf);
+
+    for (i=0; i<myGlobals.numDevices; i++)
+      totalHostsMonitored += myGlobals.device[i].hostsno;
+
+    if (totalHostsMonitored > 0) {
+        if(snprintf(buf, sizeof(buf), "%d = (%d + %d)", 
+            totalHostsMonitored + myGlobals.hostsCacheLen,
+            totalHostsMonitored,
+            myGlobals.hostsCacheLen) < 0)
+          BufferTooShort();
+        printFeatureConfigInfo(textPrintFlag, "Hosts stored (active+cache)", buf);
+
+        if(snprintf(buf, sizeof(buf), "%.1fKB", 
+                    ((float)(memStats.arena + memStats.hblkhd - myGlobals.baseMemoryUsage) /
+                     (float)(totalHostsMonitored + myGlobals.hostsCacheLen) /
+                     1024.0 + 0.05)) < 0)
+          BufferTooShort();
+        printFeatureConfigInfo(textPrintFlag, "(very) Approximate memory per host", buf);
+    }
+#endif
   }
 
   sendString(texthtml("\n\nHost Memory Cache\n\n", "<tr><th colspan=\"2\">Host Memory Cache</th></tr>\n"));
@@ -2567,14 +3528,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   if (textPrintFlag == TRUE) {
     sendString(texthtml("\n\nMAC/IPX Hash tables\n\n", "<tr><th colspan=\"2\">MAC/IPX Hash Tables</th></tr>\n"));
 
-    if(snprintf(buf, sizeof(buf), "%d", MAX_SPECIALMAC_NAME_HASH) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Size (entries)", buf);
-
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.specialHashLoadCollisions) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Collisions (load)", buf);
-
     if(snprintf(buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (entries)", buf);
@@ -2583,17 +3536,9 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Collisions (load)", buf);
 
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.vendortable_h_Size) < 0)
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup) < 0)
       BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Vendor MAC vendortable.h Size (entries)", buf);
-
-    if(snprintf(buf, sizeof(buf), "%d", MAX_VENDOR_NAME_HASH) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Size (entries)", buf);
-
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.vendorHashLoadCollisions) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Collisions (load)", buf);
+    printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Collisions (use)", buf);
   }
 
   /* **** */
@@ -2681,111 +3626,241 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   sendString(texthtml("\n\nAddress Resolution\n\n", "<tr><th colspan=\"2\">Address Resolution</th></tr>\n"));
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffedCount) < 0)
+  sendString(texthtml("DNS sniffed:\n\n", "<tr><td align=\"center\">DNS sniffed</td>\n<td><table>\n"));
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffCount) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "DNS responses sniffed", buf);
+  printFeatureConfigInfo(textPrintFlag, "DNS Packets sniffed", buf);
+
+  if(textPrintFlag == TRUE) {
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffRequestCount) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "  less 'requests'", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffFailedCount) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "  less 'failed'", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffARPACount) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "  less 'reverse dns' (in-addr.arpa)", buf);
+  }
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffCount
+                                      - myGlobals.dnsSniffRequestCount
+                                      - myGlobals.dnsSniffFailedCount
+                                      - myGlobals.dnsSniffARPACount) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "DNS Packets processed", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffStoredInCache) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Stored in cache (includes aliases)", buf);
+
+  if (textPrintFlag != TRUE) {
+    sendString("</table></td></tr>\n");
+  }
+
+  if(textPrintFlag == TRUE) {
+      sendString("\n\nIP to name - ipaddr2str():\n\n");
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numipaddr2strCalls) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Total calls", buf);
+
+      if (myGlobals.numipaddr2strCalls != myGlobals.numFetchAddressFromCacheCalls) {
+          if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCalls) < 0)
+            BufferTooShort();
+          printFeatureConfigInfo(textPrintFlag, "ERROR: cache fetch attempts != ipaddr2str() calls", buf);
+      }
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCallsOK) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "....OK", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numipaddr2strCalls
+                                          - myGlobals.numFetchAddressFromCacheCallsOK) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "....Total not found", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCallsFAIL) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "........Not found in cache", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCallsSTALE) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "........Too old in cache", buf);
+  }
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
 
-  if (textPrintFlag != TRUE) {
-    sendString("<tr><td align=\"center\">Queued</td>\n<td><table>\n");
-  }
-
   if(myGlobals.numericFlag == 0) {
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueCount) < 0)
+    sendString(texthtml("\n\nQueued - dequeueAddress():\n\n", "<tr><td align=\"center\">Queued</td>\n<td><table>\n"));
+
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueuedCount) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Total Queued", buf);
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueLen) < 0)
+
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueuedDup) < 0)
       BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.maxAddressQueueLen) < 0)
+    printFeatureConfigInfo(textPrintFlag, "Not queued (duplicate)", buf);
+
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueuedMax) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Maximum Queued", buf);
-  }
-  if (textPrintFlag != TRUE) {
-    sendString("</table></td></tr>\n");
-  }
 
-#endif
-
-  if (textPrintFlag != TRUE) {
-    sendString("<tr><td align=\"center\">resolveAddress()</td>\n<td><table>\n");
-  }
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveAddressCalls) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Total calls", buf);
-
-#ifdef PARM_USE_HOST
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedFromHostAddresses) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "  less 'Resolved from hosts file'", buf);
-#endif
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedOnCacheAddresses) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "  less 'Found in ntop cache'", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveNoCacheDB) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "  less 'Error: No cache database'", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", (myGlobals.numResolveAddressCalls
-#ifdef PARM_USE_HOST
-                                       - myGlobals.numResolvedFromHostAddresses
-#endif
-                                       - myGlobals.numResolvedOnCacheAddresses
-                                       - myGlobals.numResolveNoCacheDB)) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Gives: # gethost (DNS lookup) calls", buf);
-
-  if ((myGlobals.numResolveAddressCalls
-#ifdef PARM_USE_HOST
-        - myGlobals.numResolvedFromHostAddresses
-#endif
-        - myGlobals.numResolvedOnCacheAddresses
-        - myGlobals.numResolveNoCacheDB) != myGlobals.numAttemptingResolutionWithDNS) {
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numAttemptingResolutionWithDNS) < 0)
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueuedCurrent) < 0)
       BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "    ERROR: actual count does not match!", buf);
+    printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
+
+    if (textPrintFlag != TRUE) {
+      sendString("</table></td></tr>\n");
+    }
   }
 
-  if (textPrintFlag != TRUE) {
-    sendString("</table></td></tr>\n");
-    sendString("<tr><td align=\"center\">DNS lookup calls</td>\n<td><table>\n");
+#endif
+
+  if (textPrintFlag == TRUE) {
+      sendString("\n\nResolved - resolveAddress():\n\n");
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveAddressCalls) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Addresses to resolve", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveNoCacheDB) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "....less 'Error: No cache database'", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedFromCache) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "....less 'Found in ntop cache'", buf);
+
+#ifdef PARM_USE_HOST
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedFromHostAddresses) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "....less 'Resolved from /usr/bin/host'", buf);
+#endif
+
+      if(snprintf(buf, sizeof(buf), "%d", (myGlobals.numResolveAddressCalls
+#ifdef PARM_USE_HOST
+                                           - myGlobals.numResolvedFromHostAddresses
+#endif
+                                           - myGlobals.numResolveNoCacheDB
+                                           - myGlobals.numResolvedFromCache)) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Gives: # gethost (DNS lookup) calls", buf);
+
+      if ((myGlobals.numResolveAddressCalls
+#ifdef PARM_USE_HOST
+            - myGlobals.numResolvedFromHostAddresses
+#endif
+            - myGlobals.numResolveNoCacheDB
+            - myGlobals.numResolvedFromCache) != myGlobals.numAttemptingResolutionWithDNS) {
+        if(snprintf(buf, sizeof(buf), "%d", myGlobals.numAttemptingResolutionWithDNS) < 0)
+          BufferTooShort();
+        printFeatureConfigInfo(textPrintFlag, "    ERROR: actual count does not match!", buf);
+      }
   }
- 
+
+  sendString(texthtml("\n\nDNS lookup calls:\n\n", "<tr><td align=\"center\">DNS lookup calls</td>\n<td><table>\n"));
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numAttemptingResolutionWithDNS) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "DNS resolution attempts", buf);
+
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedWithDNSAddresses) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Success: Resolved", buf);
+  printFeatureConfigInfo(textPrintFlag, "....Success: Resolved", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorHostNotFound) < 0)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorHostNotFound
+                                      + myGlobals.numDNSErrorNoData
+                                      + myGlobals.numDNSErrorNoRecovery
+                                      + myGlobals.numDNSErrorTryAgain
+                                      + myGlobals.numDNSErrorOther) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Error: HOST_NOT_FOUND", buf);
+  printFeatureConfigInfo(textPrintFlag, "....Failed", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoData) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Error: NO_DATA", buf);
+  if (textPrintFlag == TRUE) {
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorHostNotFound) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "........HOST_NOT_FOUND", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoRecovery) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Error: NO_RECOVERY", buf);
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoData) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "........NO_DATA", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorTryAgain) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Error: TRY_AGAIN", buf);
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoRecovery) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "........NO_RECOVERY", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorOther) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Error: Other error", buf);
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorTryAgain) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "........TRY_AGAIN (don't store)", buf);
 
-  if (textPrintFlag != TRUE) {
-    sendString("</table></td></tr>\n");
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorOther) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "........Other error (don't store)", buf);
   }
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsCacheStoredLookup) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "DNS lookups stored in cache", buf);
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numKeptNumericAddresses) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Host addresses kept numeric", buf);
+
+
+  if (textPrintFlag != TRUE) {
+    sendString("</table><br>\n");
+    sendString("<table><tr><td><b>REMEMBER</b>:&nbsp;\n"
+                                      "'DNS lookups stored in cache' includes HOST_NOT_FOUND "
+                                      "replies, so that it may be larger than the number of "
+                                      "'Success: Resolved' queries.</td></tr></table>\n");
+  }
+
+  /* **** */
+
+  if(textPrintFlag == TRUE) {
+      sendString("\n\nVendor Lookup Table\n\n");
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupRead) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Input lines read", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupAdded) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Records added total", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupAddedSpecial) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, ".....includes special records", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupCalls) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "getVendorInfo() calls", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupSpecialCalls) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "getSpecialVendorInfo() calls", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound48bit) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Found 48bit (xx:xx:xx:xx:xx:xx) match", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound24bit) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Found 24bit (xx:xx:xx) match", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundMulticast) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Found multicast bit set", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundLAA) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Found LAA (Locally assigned address) bit set", buf);
+
+  }
 
   /* **** */
 
@@ -3309,9 +4384,11 @@ void printNtopProblemReport(void) {
     SSL fix courtesy of Curtis Doty <curtis@greenkey.net>
   */
 void initWeb() {
-    int sockopt = 1;
+    int i, sockopt = 1;
     struct sockaddr_in sockIn;
     char value[8];
+
+    traceEvent(CONST_TRACE_INFO, "WEB: Initializing");
 
     initReports();
     initializeWeb();
@@ -3325,8 +4402,8 @@ void initWeb() {
     } else {
       myGlobals.actualReportDeviceId = atoi(value);
       if(myGlobals.actualReportDeviceId >= myGlobals.numDevices) {
-        traceEvent(CONST_TRACE_INFO, "Note: stored actualReportDeviceId(%d) > numDevices(%d). "
-                               "Probably leftover, reset.\n",
+        traceEvent(CONST_TRACE_INFO, "Note: stored actualReportDeviceId(%d) > numDevices(%d) - "
+                               "probably leftover, reset",
                    myGlobals.actualReportDeviceId,
                    myGlobals.numDevices);
         storePrefsValue("actualReportDeviceId", "0");
@@ -3334,18 +4411,47 @@ void initWeb() {
       }
     }
     
+    if (myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
+      /* Bad idea, set to 1st non-virtual device */
+      for(i=0; i<myGlobals.numDevices; i++) {
+#ifdef DEBUG
+        traceEvent(CONST_TRACE_INFO, "DEBUG: Device %d[%s] is v%d d%d a%d",
+                   i, myGlobals.device[i].name,
+                   myGlobals.device[i].virtualDevice,
+                   myGlobals.device[i].dummyDevice,
+                   myGlobals.device[i].activeDevice);
+#endif
+        if(!myGlobals.device[i].virtualDevice) {
+            myGlobals.actualReportDeviceId = i;
+#ifdef DEBUG
+            traceEvent(CONST_TRACE_INFO, "DEBUG: actualReportDeviceId invalid, changed to %d[%s]",
+                                         myGlobals.actualReportDeviceId,
+                                         myGlobals.device[myGlobals.actualReportDeviceId].name);
+#endif
+            break;
+        }
+      }
+    }
+    traceEvent(CONST_TRACE_INFO,
+               "Note: Reporting device set to %d[%s]",
+               myGlobals.actualReportDeviceId,
+               myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName != NULL ?
+                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName :
+                   myGlobals.device[myGlobals.actualReportDeviceId].name
+              );
+
     if(myGlobals.webPort > 0) {
       sockIn.sin_family = AF_INET;
       sockIn.sin_port   = (int)htons((unsigned short int)myGlobals.webPort);
 #ifndef WIN32
       if(myGlobals.webAddr) {
 	if(!inet_aton(myGlobals.webAddr, &sockIn.sin_addr)) {
-	  traceEvent(CONST_TRACE_ERROR, "Unable to convert address '%s'... "
-		     "Not binding to a particular interface!\n", myGlobals.webAddr);
+	  traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: Unable to convert address '%s' - "
+		     "not binding to a particular interface", myGlobals.webAddr);
 	  sockIn.sin_addr.s_addr = INADDR_ANY;
 	} else {
-	  traceEvent(CONST_TRACE_INFO, "Converted address '%s'... "
-		     "binding to the specific interface!\n", myGlobals.webAddr);
+	  traceEvent(CONST_TRACE_INFO, "WEB: Converted address '%s' - "
+		     "binding to the specific interface", myGlobals.webAddr);
 	}
       } else {
         sockIn.sin_addr.s_addr = INADDR_ANY;
@@ -3356,7 +4462,7 @@ void initWeb() {
 
       myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
       if(myGlobals.sock < 0) {
-	traceEvent(CONST_TRACE_ERROR, "Unable to create a new socket");
+	traceEvent(CONST_TRACE_ERROR, "WEB: FATAL_ERROR: Unable to create a new socket");
 	exit(-1);
       }
 
@@ -3369,7 +4475,7 @@ void initWeb() {
     if(myGlobals.sslInitialized) {
       myGlobals.sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
       if(myGlobals.sock_ssl < 0) {
-	traceEvent(CONST_TRACE_ERROR, "unable to create a new socket");
+	traceEvent(CONST_TRACE_ERROR, "WEB: FATAL_ERROR: Unable to create a new socket");
 	exit(-1);
       }
 
@@ -3380,7 +4486,7 @@ void initWeb() {
 
     if(myGlobals.webPort > 0) {
       if(bind(myGlobals.sock, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-	traceEvent(CONST_TRACE_WARNING, "bind: port %d already in use.", myGlobals.webPort);
+	traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR Port %d already in use (is another instance of ntop running?)", myGlobals.webPort);
 	closeNwSocket(&myGlobals.sock);
 	exit(-1);
       }
@@ -3393,12 +4499,12 @@ void initWeb() {
 #ifndef WIN32
       if(myGlobals.sslAddr) {
 	if(!inet_aton(myGlobals.sslAddr, &sockIn.sin_addr)) {
-	  traceEvent(CONST_TRACE_ERROR, "Unable to convert address '%s'... "
-		     "Not binding SSL to a particular interface!\n", myGlobals.sslAddr);
+	  traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: Unable to convert address '%s' - "
+		     "not binding SSL to a particular interface", myGlobals.sslAddr);
 	  sockIn.sin_addr.s_addr = INADDR_ANY;
 	} else {
-	  traceEvent(CONST_TRACE_INFO, "Converted address '%s'... "
-		     "binding SSL to the specific interface!\n", myGlobals.sslAddr);
+	  traceEvent(CONST_TRACE_INFO, "WEB: ERROR: Converted address '%s' - "
+		     "binding SSL to the specific interface", myGlobals.sslAddr);
 	}
       } else {
         sockIn.sin_addr.s_addr = INADDR_ANY;
@@ -3409,7 +4515,7 @@ void initWeb() {
 
       if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
 	/* Fix below courtesy of Matthias Kattanek <mattes@mykmk.com> */
-	traceEvent(CONST_TRACE_ERROR, "bind: port %d already in use.", myGlobals.sslPort);
+	traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: ssl port %d already in use (is another instance of ntop running?)", myGlobals.sslPort);
 	closeNwSocket(&myGlobals.sock_ssl);
 	exit(-1);
       }
@@ -3418,7 +4524,12 @@ void initWeb() {
 
     if(myGlobals.webPort > 0) {
       if(listen(myGlobals.sock, 2) < 0) {
-	traceEvent(CONST_TRACE_WARNING, "listen error.\n");
+	traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR: listen(%d, 2) error %d %s",
+                                        myGlobals.sock,
+                                        errno == EADDRINUSE ? "EADDRINUSE" :
+                                            errno == EBADF ? "EBADF" :
+                                            errno == ENOTSOCK ? "ENOTSOCK" :
+                                            errno == EOPNOTSUPP ? "EOPNOTSUPP" : "unknown code");
 	closeNwSocket(&myGlobals.sock);
 	exit(-1);
       }
@@ -3427,7 +4538,12 @@ void initWeb() {
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized)
       if(listen(myGlobals.sock_ssl, 2) < 0) {
-	traceEvent(CONST_TRACE_WARNING, "listen error.\n");
+	traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR: listen(%d, 2) error %d %s",
+                                        myGlobals.sock_ssl,
+                                        errno == EADDRINUSE ? "EADDRINUSE" :
+                                            errno == EBADF ? "EBADF" :
+                                            errno == ENOTSOCK ? "ENOTSOCK" :
+                                            errno == EOPNOTSUPP ? "EOPNOTSUPP" : "unknown code");
 	closeNwSocket(&myGlobals.sock_ssl);
 	exit(-1);
       }
@@ -3436,27 +4552,27 @@ void initWeb() {
     if(myGlobals.webPort > 0) {
       /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
       if(myGlobals.webAddr)
-	traceEvent(CONST_TRACE_INFO, "Waiting for HTTP connections on %s port %d...\n",
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on %s port %d",
 		   myGlobals.webAddr, myGlobals.webPort);
       else
-	traceEvent(CONST_TRACE_INFO, "Waiting for HTTP connections on port %d...\n",
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on port %d",
 		   myGlobals.webPort);
     }
 
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized) {
       if(myGlobals.sslAddr)
-	traceEvent(CONST_TRACE_INFO, "Waiting for HTTPS (SSL) connections on %s port %d...\n",
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on %s port %d",
 		   myGlobals.sslAddr, myGlobals.sslPort);
       else
-	traceEvent(CONST_TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on port %d",
 		   myGlobals.sslPort);
     }
 #endif
 
 #ifdef CFG_MULTITHREADED
     createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
-    traceEvent(CONST_TRACE_INFO, "Started thread (%ld) for web server.\n",
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for web server",
 	       myGlobals.handleWebConnectionsThreadId);
 #endif
 
@@ -3889,7 +5005,7 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
 	sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
       }
 
-      traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) terminated...\n", myGlobals.handleWebConnectionsThreadId);
+      traceEvent(CONST_TRACE_WARNING, "THREADMGMT: web connections thread (%ld) terminated...\n", myGlobals.handleWebConnectionsThreadId);
 
 #endif /* CFG_MULTITHREADED */
 

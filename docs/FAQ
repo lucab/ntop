@@ -1212,16 +1212,15 @@ A: ntop uses lsof to show open files on the ntop host (the IP Traffic | Local us
 (Added 03Feb2003, Burton)
 
 Q: How does ntop use nmap?
-A: ntop uses nmap to do OS fingerprinting.  What it's doing is this:
+A: ntop versions 2.1.57+ do not use nmap.  Older versions used nmap to do OS 
+   fingerprinting.  What it did was this:
 
        nmap -p 23,21,80,138,139,548 -O <address>
 
-   Note that running nmap requires root privledges, but ntop has shed root before
-   we ever get to nmap.  Accordingly you must set nmap suid root.
-
-   BEFORE YOU DO THAT: You had better understand the security implications!
-       Search the web and check with the nmap people.
+   Note that running nmap required root privledges, but ntop has shed root before
+   we ever get to nmap.  Accordingly you had to have nmap suid root.
 (Added nmap 03Feb2003, Burton)
+(Updated 10Mar2003, Burton)
 
 
 Q. What does the message "URL security(1): ERROR: Found percent in URL...DANGER...
@@ -1565,6 +1564,32 @@ A. If you go to the "Info about host xxxx" page, there will be data
    in P2P_UPLOAD_MODE and/or P2P_DOWNLOAD_MODE.
    (Added 27Sep2002, Burton)
 
+Q. Why are some of the host names in different colors?
+A. Colors are used on several of the ntop pages to convey extra
+   information to the user.  (in particular the ACTIVE TCP SESSIONS
+   and the LOCAL HOST STATS pages). There are five colors used to
+   depict how long ago the host was first seen by ntop.
+
+   The pages which display these colors use a html stylesheet called
+   style.css located in the normal html subdirectory (where ntop is 
+   installed). This happens by setting the 'class=' parameter of
+   the html 'A' (Anchor or hyper-link) tag.  The stylesheet defines
+   the following:
+
+      Age of host  'class' name  Color code         Color description
+      (minutes)
+      -------------------------------------------------------------------
+      0-5          A.age0min    { color:#FF0000 }   Red
+      5-15         A.age5min    { color:#FF00FF }   Fuchsia/Magenta
+      15-30        A.age15min   { color:#FF7F00 }   Coral (lt orange)
+      30-60        A.age30min   { color:#007FFF }   Slate blue
+      60+          A.age60min   { color:#0000FF }   Blue
+
+   The color legend is displayed on the About | Configuration page
+   (info.html).
+(Added 30Mar2003 by Burton, based on work by Tim_Cahoon@fmo.com)
+
+
 Q. What about protocol XYZZY?
 A. The analysis of protocols is very limited and unsophisticated.  But,
    theoretically, if it's there in plain text, we could report on it.
@@ -1686,7 +1711,30 @@ A. http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
 
 Q. Are there rpm's?
 A. http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub 
+   However, see the note below about the patch - you're probably going
+   to have to compile from source.
 (Thanks to Marco Lusini for the pointer)
+
+Q. Anything else I need to know about rrd.
+A. Yes.  There's a bug in all of the developent versions (at least through
+   1.0.41), which will sometimes cause ntop's rrd handler to crash.  This is the
+   patch:
+--- rrd_update.c.orig   2003-03-29 13:57:28.000000000 -0600
++++ rrd_update.c        2003-03-29 13:58:13.000000000 -0600
+@@ -118,7 +118,7 @@
+ 
+        case '?':
+            rrd_set_error("unknown option '%s'",argv[optind-1]);
+-            rrd_free(&rrd);
++            /* rrd_free(&rrd); 2003-03-29 Burton@ntopsupport.com */
+            return(-1);
+        }
+     }
+
+Q. What about the multi-threaded development version?
+A. Stay away.  I only experimented with it a little bit, but it was not
+   stable.  Use 1.0.41 + the patch.
+(Updated 2003-03-29, Burton)
 
 
 Q. What was the -S option?
@@ -1806,6 +1854,48 @@ A. You need to configure ntop as a listener (it can also be a collector, but tha
    the sFlow/netFlow pseudo-device (NetFlow-device or sFlow-device).
    (Added 29Jul2002 by Burton)
 
+
+Q. How Do I Enable NetFlow Data Export on a Cisco Device?
+A. To enable netFlow Data Export (NDE) from a Cisco device to an ntop netFlow receiver
+   on port 2055 (default) at address 10.1.1.1: 
+
+     ip flow-export destination 10.1.1.1 2055 
+     ip flow-export version 5 
+
+   You may want to designate the source interface, eg: 
+
+     ip flow-export source Ethernet0 
+
+   Enable netFlow on each interface to be monitored. netFlow normally only captures data
+   from each incoming packet, so to see traffic in both directions netFlow must be enabled
+   on both the incoming and outgoing interfaces. As an example, for an Internet access
+   router this would mean enabling netFlow on both the internal (eg ethernet) and the
+   external (eg ISDN / Frame Relay etc) interfaces: 
+
+     interface Ethernet0 
+     ip route-cache flow 
+
+     interface Dialer1 
+     ip route-cache flow 
+
+
+   By default netFlow will only export flow statistics shortly after the flow terminates
+   or when 30 minutes have elapsed. In many environments, you want ntop to be a bit more
+   up to date. To change the timeout to five minutes: 
+
+     ip flow-cache timeout active 5 
+
+   The following 'show' commands are useful for examining netFlow statistics directly on
+   the Cisco box and may assist when setting up ntop: 
+
+     show ip flow export 
+     show ip cache flow 
+     show ip cache verbose flow 
+
+   Obviously, there is a lot more to it than this, for more information, see the Cisco
+   web site: http://www.cisco.com/go/netflow 
+(Created by sholmes at snapshot, 02Feb2003)
+ 
 
 Q. Is there any parameter to set to tell ntop which interface/ip address 
    to use when exporting the (netflow/sflow) flows?

@@ -33,11 +33,23 @@ static void handlePacket(const struct pcap_pkthdr *h,
 
 /* ****************************** */
 
+static void initFunct() {
+  /*
+     Put here all the code that should be called when
+     this plugin is started up
+  */
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "XXXXXXXX: Welcome to ntop xxxxxxxx");
+}
+
+/* ****************************** */
+
 static void termFunct() {
   /* 
      Put here all the code that should be called when 
      this plugin is terminated 
   */
+  traceEvent(CONST_TRACE_INFO, "XXXXXXXX: Thanks for using ntop xxxxxxxx");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "XXXXXXXX: Done");
 }
 
 /* ****************************** */
@@ -54,11 +66,14 @@ static PluginInfo pluginInfo[] = {
     "1.0", /* plugin version */
     "Put here the author name", 
     "shortPluginName", /* http://<host>:<port>/plugins/shortPluginName */
-    1,            /* Active Plugin */
+    0, /* Active by default */
+    1, /* Inactive setup */
+    initFunction, /* InitFunc   */
     termFunction, /* TermFunc   */
     handlePacket, /* PluginFunc */
     handlePluginHTTPrequest,
-    "<BPF filter>" /* BPF filter */
+    "<BPF filter>", /* BPF filter */
+    NULL  /* no status */
   }
 };
 

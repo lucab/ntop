@@ -17,6 +17,192 @@
   This is the list of all changes to this ntop source tree.
   The file NEWS contains a chronology of releases and major milestone versions.
 
+          ____    ____ 
+         |___ \  |___ \
+           __) |   __) |
+          / __/_  / __/
+ =-=-=-  |____(_)|_____| =-=-=-=-=-=-=-=-=-=-=-=-=
+
+ (Apply Usual-caveats)
+
+    Platforms - ntop has been developed and tested on the following platforms
+      - Linux
+      - MacOS
+      - Win32 (MS VC++ 6.0, with some support for MinGW)
+      - FreeBSD (4.6, 4.7 and 5.0)
+      - Solaris 8
+
+      With other platforms, we've been unable to test (anyone want to pony up
+      remote root access to systems)?  Or, with the assistance of various users
+      tried and failed.  See ./configure --enable-showoses
+
+
+    gdchart et al
+
+      - buildAll.sh script has tests for being run in the correct directory.
+      - buildAll.sh script tests if there is a version of libpng already
+        installed on the system and deletes the in-tree copy of to prevent
+        the 1.0.x vs. 1.2.x version conflict.
+      - Updated in-tree copy of libpng from 1.2.1 to 1.2.4
+
+    ntop
+
+      - SQL support removed.
+      - rrd support added (see rrd Plugin below).
+
+      - Added ability to configure plugins while inactive.
+      - Added @<filename> for configuration options.
+      - Table driven conversion of ip address -> country code replaces
+        - where available - old gTLD/ccTLG version.
+      - memory failure trap, allows access to reports after ntop stops
+        and run time parameter, --disable-stopcap to return to old
+        behavior.
+      - Replaced active use of nmap with passive use of ettercap 
+        for OS fingerprinting.
+      - Automatic creation of problem report skeleton.
+      - Plugins menu shows plugins disabled due to problems.
+
+      - Internal reorg:
+          * Almost all structures and typedefs moved into new file,
+            globals-structtypes.h
+          * Almost all #define values moved into new file,
+            globals-defines.h
+                     ****AND DOCUMENTED****
+
+      - Menu changes:
+          * "HELP" page added to About menu.
+          * Plugins moved to Admin menu.
+          * Data Dump added to Admin menu.
+          * Totals tab/menu added.
+          * NetFlow moved from Data Sent/Received menu to Totals menu.
+          * AS and VLAN options added to IP Protocol menu.
+          * (Access via About -> Configuration) textinfo.html page with 
+            lots of additional information about ntop's configuration.
+
+      - ./configure
+          * TOTAL REWRITE!!!!
+          * Many more cases of reconfiguration handled automatically.
+          * New structure.
+          * Clearly indicated failure messages.
+          * Support level for various platforms documented.
+               * ./configure --enable-showoses to view this.
+          * Requires automake 1.6+ and autoconf 2.5x+.
+          * Explicit test for matching auto* tools versions. If those
+            versions do not match - EXACTLY - then the first time you
+            run ./configure, ntop will delete and recreate ALL of the
+            generated files and update autotoolversions.  You then
+            need to run ./configure a SECOND time to do the actual
+            configuration!
+          * Added tests for lib64 (ia64) in the library searches
+
+      - Parameter changes
+          * REMOVED:  -b | --sql-host
+          * REMOVED:  -j | --border-sniffer-mode   (see -b, -g, -o and -z)
+          * REMOVED:  -v | --mysql-host
+          * REMOVED:  -S | --store-mode
+
+          * ADDED:    -b | --disable-decoders
+          * ADDED:    -g | --track-local-hosts
+          * ADDED:    -o | --no-mac
+          * ADDED:    -z | --disable-sessions
+          * ADDED:    -C | --large-network
+          * ADDED:    --dynamic-purge-limits    (Host purge time limit)
+          * ADDED:    --reuse-rrd-graphics
+          * ADDED:    --p3p-cp
+          * ADDED:    --p3p-uri
+          * ADDED:    --xmlfileout
+          * ADDED:    --xmlfilesnap
+          * ADDED:    --xmlfilein
+          * ADDED:    --disable-stopcap
+          - Unrecognized options are printed with a warning message/hint.
+
+     - Misc. enhancements
+        - traceEvent() message cleanup - many now clearly indicate their cause.
+          - Added ALWAYS and NOISY class so -t 0 and -t 4 are meaningful and
+            still show what they have to.
+        - DEBUG cleanup - multiple options, indicated as xxx_DEBUG in log.
+        - ntop heartbeat - periodic log messages to show it's still running.
+        - long options work on all platforms.
+        - Traps and errors if no password when running in daemon mode.
+        - Minimum password now 5 characters.
+        - Python format data dump.
+        - gdchart watchdog - catches libpng conflicts and other problems and
+          returns.
+          an error graphic to the user.
+        - Hooks for P3P support (and tolerates AT&T PrivacyBird)
+        - P2P knowledgeable about Gnutella, Kazaa, WinMX and DirectConnect.
+        - Knowledgeable about ftp and smtp/pop/imap
+        - host names are color coded indicating how long ago they were first seen.
+        - Pie charts made 2D (from 3D) for readability and tiny slices suppressed.
+        - showPortTraffic report added.
+        - Human friendly interface names under Windows.
+        - Additional information during ntop startup (interface type,
+          daemoninzing, etc.).
+        - ntop will not allow itself to run as root, except if EXPLICITLY
+          requested via -u root option.
+        - Added Local Hosts Statistics to Stats menu tab.
+        - --use-syslog and --set-admin-password warn if they do not have a
+          provided value (which is often a sign of a missing =).
+        - Tests for lsof to make sure they're executable and suid root.
+        - Added Ip protos R->R list
+        - Memory usage reduction and optimization (e.g. don't allocate space
+          for obscure counters until you need them, etc.)
+        - ssl random seed initialization if OS doesn't do it.
+        - PPPoE encapsulated traffic is now understood.
+        - Static plugins via ./configure --enable-static-plugins and then 
+          make sntop
+        - Vendor lookup table moved from static .h to file, with mini
+          file provided and ability to download full file from IEEE.
+        - p3p... added parameters to set p3p header values cp= and policyref=
+          Also added ability to return default p3p file upon request from
+          browser. 
+               NOTE:  there is no sample file provided.  This is not an 
+                      oversight.  After careful consideration, we are not
+                      providing one.  The reason is that a .p3p file is 
+                      intended to be a legal contract between your site
+                      and your users.
+
+        - Limited - VERY LIMITED - i18n support
+        - Bare bones for a new xml dump facility to dump all internal data.
+
+
+     - Notable performance and bug fixes
+        - Lots of crash cleanups, buffer overflows, etc.
+        - Memory leaks repaired
+        - Fixed deadlock and 'un-locked' mutex problems! Yea Luca!!
+
+
+    netFlow (Plugin)
+      - netFlow now updates the traffic matrix.
+      - netFlow has white/black list to control what hosts are updated.
+      - Accepts v7 flows (converts to v5 for internal processing)
+      - Added specification of the local network for netFlow devices.
+
+
+    sFlow (Plugin)
+      - Added specification of the local network for sFlow devices.
+
+
+    rrd (Plugin)
+      - replaces sql for long-term persistent storage.
+      - ntop now creates multiple RRA (round robin archives), which
+        allow for a (user configurable) number of years of daily data
+        to be recorded.
+      - ./configure --enable-largerrdpop so .rrd files are created in
+        a a/b/c/d directory structure vs a.b.c.d (one level) - gets 
+        past the Liunx 32K files/directory limit.
+      - Fixed rrd bug when same host seen on multiple interfaces - made
+        the files per interface.
+
+
+    intop
+      - Should work - no promises.
+
+    doc
+      - FAQ has been revised, updated and more than doubled in size.
+      - ntop-autotools.vsd and .pdf added - shows the flow of auto* tools,
+        including ./configure and make
+
           ____    __
          |___ \  / |
            __) | | |
@@ -35,7 +221,7 @@
       -----Burton)
 
       Major items
-      
+
        1. zlib updated to v1.1.4
 
        2. libpng update to v1.2.1
@@ -95,7 +281,7 @@
           Includes things like eliminating notifyPluginsHashResize().
 
       20. URLsecurity updated to handle the RFC1945 set of invalid characters.
-      
+
       21. -j (also --border-sniffer-mode) ****
                -j is used when you are starting ntop on a mirrored 
                interface where you cannot trust MAC addresses. 
@@ -107,10 +293,10 @@
                   wrong/ip-less/private IP address.
 
                2. -j disables some features as TCP session tracking etc.
-          
+
              In future versions -j will disappear and it will be replaced
              with more granlar flags for better controlling all these options.
-      
+
       22. -A (accuracy level) switch removed.  Code remains in initialize.c 
           in initGlobalValues() if somebody needs to manually enable this.
 
@@ -140,11 +326,11 @@
 
       31. Fixed http:// and https:// handlers so that -w ip:port and -W ip:port bind 
           only to the selected address.
-      
-      
-      
+
+
+
       Minor items
-      
+
        1. gdchart0.94c - buildAll.sh updated to build the subordinate products for Sun 
           and Mac OS X.
 
@@ -219,18 +405,18 @@
       27. favicon.ico added.
 
       28. hostsDistanceChart added to Global Traffic Statistics (based on ttl).
-      
+
       29. hostTrafficDistrib, hostFragmentDistrib, hostTotalFragmentDistrib and 
           hostIPTrafficDistrib charts added.
-      
+
       30. dumpFlows.html added.
-      
+
       31. Ring buffer (size MAX_NUM_BAD_IP_ADDRESSES) added of addresses which 
           have sent us bad requests (URLsecurity).
 
           Any request from that IP is ignored for five minutes or until the ring
           buffer wraps around.
-  
+
           Note that this is NOT a security issue, we're just choosing to stop
           wasting processing cycles for bad guys early in the process instead
           of after finding another bad URL.  That is a string of bad ones won't
@@ -301,9 +487,9 @@
 
       49. Whois link to http://www.radb.net/cgi-bin/radb/whois.cgi added to "Info about 
           host" report.
-      
+
       50. Host Traffic History added.
-      
+
       51. If SSL is compiled in, but there is no -W command line parameter, an 
           informational message is printed during startup.
 

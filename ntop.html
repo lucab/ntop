@@ -10,30 +10,35 @@
 <a href="#NAME">NAME</a><br>
 <a href="#SYNOPSIS">SYNOPSIS</a><br>
 <a href="#DESCRIPTION">DESCRIPTION</a><br>
-<a href="#COMMAND-LINE OPTIONS">COMMAND-LINE OPTIONS</a><br>
+<a href="#COMMAND&minus;LINE OPTIONS">COMMAND&minus;LINE OPTIONS</a><br>
 <a href="#WEB VIEWS">WEB VIEWS</a><br>
 <a href="#NOTES">NOTES</a><br>
 <a href="#SEE ALSO">SEE ALSO</a><br>
 <a href="#AUTHOR">AUTHOR</a><br>
 
 <hr>
-<!-- Creator     : groff version 1.17.2 -->
-<!-- CreationDate: Wed Nov 20 10:55:55 2002 -->
+<!-- Creator     : groff version 1.18 -->
+<!-- CreationDate: Fri Mar 28 10:36:12 2003 -->
 <a name="NAME"></a>
 <h2>NAME</h2>
-<table width="100%" border=0 rules="none" frame="void"
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-ntop - display top network users</td></table>
+<td width="10%"></td>
+<td width="89%">
+<p>ntop &minus; display top network users</p>
+</td>
+</table></p>
 <a name="SYNOPSIS"></a>
 <h2>SYNOPSIS</h2>
-
-<table width="100%" border=0 rules="none" frame="void"
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>ntop</b> [<b>@filename</b>]
+<td width="10%"></td>
+<td width="89%">
+<p><b>ntop</b> [<b>@filename</b>]
 [<b>-a</b>|<b>--access-log-path</b> <i>&lt;path&gt;</i>]
 [<b>-b</b>|<b>--disable-decoders</b>]
 [<b>-c</b>|<b>--sticky-hosts]</b>
@@ -57,7 +62,6 @@ ntop - display top network users</td></table>
 [<b>-D</b>|<b>--domain</b> <i>&lt;name&gt;</i>]
 [<b>-F</b>|<b>--flow-spec</b> <i>&lt;specs&gt;</i>]
 [<b>-M</b>|<b>--no-interface-merge</b>]
-[<b>-N</b>|<b>--no-nmap</b>]
 [<b>-O</b>|<b>----output-packet-path</b>]
 [<b>-P</b>|<b>--db-file-path</b> <i>&lt;path&gt;</i>]
 [<b>-R</b>|<b>--filter-rule</b> <i>&lt;file&gt;</i>]
@@ -65,364 +69,396 @@ ntop - display top network users</td></table>
 <i>&lt;URL&gt;</i>] [<b>-V</b>|<b>--version]</b>
 [<b>--throughput-bar-chart</b>]
 [<b>--dynamic-purge-limits</b>]
-[<b>--reuse-rrd-graphics</b>]</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-Not available on micro-ntop:</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-[<b>-e</b>|<b>--max-table-rows</b>
-<i>&lt;number&gt;</i>]</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-Unix options:</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-[<b>-d</b>|<b>--daemon</b>] [<b>-i</b>|<b>--interface</b>
+[<b>--reuse-rrd-graphics</b>] [<b>--p3p-cp</b>]
+[<b>--p3p-uri</b>] [<b>--disable-stopcap</b>]</p>
+<!-- INDENTATION -->
+<p>Not available on micro-ntop:</p>
+<!-- INDENTATION -->
+<p>[<b>-e</b>|<b>--max-table-rows</b>
+<i>&lt;number&gt;</i>]</p>
+<!-- INDENTATION -->
+<p>Unix options:</p>
+<!-- INDENTATION -->
+<p>[<b>-d</b>|<b>--daemon</b>] [<b>-i</b>|<b>--interface</b>
 <i>&lt;name&gt;</i>] [<b>-o</b>|<b>--no-mac</b>]
 [<b>-u</b>|<b>--user</b> <i>&lt;user&gt;</i>]
 [<b>-E</b>|<b>--enable-external-tools</b>]
 [<b>-K</b>|<b>--enable-debug</b>] [<b>-L</b>]
 [<b>-use-syslog</b> <i>&lt;facility&gt;</i>]
-[<b>--ignore-sigpipe</b>]</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-Win32 option:</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-[<b>-i</b>|<b>--interface</b>
-<i>&lt;number&gt;</i>]</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-OpenSSL options:</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-[<b>-W</b>|<b>--https-server</b> <i>&lt;port&gt;</i>]
-[<b>--use-sslwatchdog</b>]</td></table>
+[<b>--ignore-sigpipe</b>]</p>
+<!-- INDENTATION -->
+<p>Win32 option:</p>
+<!-- INDENTATION -->
+<p>[<b>-i</b>|<b>--interface</b> <i>&lt;number&gt;</i>]</p>
+<!-- INDENTATION -->
+<p>OpenSSL options:</p>
+<!-- INDENTATION -->
+<p>[<b>-W</b>|<b>--https-server</b> <i>&lt;port&gt;</i>]
+[<b>--use-sslwatchdog</b>]</p>
+</td>
+</table></p>
 <a name="DESCRIPTION"></a>
 <h2>DESCRIPTION</h2>
-
-<table width="100%" border=0 rules="none" frame="void"
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>ntop</b> shows the current network usage. It displays a
-list of hosts that are currently using the network and
+<td width="10%"></td>
+<td width="89%">
+<p><b>ntop</b> shows the current network usage. It displays
+a list of hosts that are currently using the network and
 reports information concerning the (IP and non-IP) traffic
 generated by each host. <b>ntop</b> may operate as a
 front-end collector (sFlow and/or netFlow plugins) or as a
 stand-alone collector/display program. A web browser is
 needed to access the information captured by the <b>ntop</b>
-program.</td></table>
-
+program.</p>
+<!-- INDENTATION -->
+<p>An older, and unsupported version, <b>intop</b> can be
+started either in a terminal window.</p>
+</td>
+</table></p>
+<a name="COMMAND&minus;LINE OPTIONS"></a>
+<h2>COMMAND&minus;LINE OPTIONS</h2>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>@filename</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-An older, and unsupported version, <b>intop</b> can be
-started either in a terminal window.</td></table>
-<a name="COMMAND-LINE OPTIONS"></a>
-<h2>COMMAND-LINE OPTIONS</h2>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>@filename</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-The text of <b>filename</b> is copied - ignoring line breaks
-and comment lines (anything following a #) - into the
+<td width="13%"></td>
+<td width="86%">
+<p>The text of <b>filename</b> is copied - ignoring line
+breaks and comment lines (anything following a #) - into the
 command line. <b>ntop</b> behaves as if all of the text had
 simply been typed directly on the command line. For example,
 if the command line is &quot;-t 3 @d -u ntop&quot; and file
-d contains just the line '-d', then the effective command
-line is -t 3 -d -u ntop. Multiple @s are
-permitted.</td></table>
-
+d contains just the line &rsquo;-d&rsquo;, then the
+effective command line is -t 3 -d -u ntop. Multiple @s are
+permitted.</p>
+<!-- INDENTATION -->
+<p>Remember, most ntop options are &quot;sticky&quot;, that
+is they just set an internal flag. Invoking them multiple
+times doesn&rsquo;t change <b>ntop&rsquo;s</b> behavior.
+However, options that set a value, such as --trace-level,
+will use the LAST value given: --trace-level 2 --trace-level
+3 will run as --trace-level 3.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-a | --access-log-path</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Remember, most ntop options are &quot;sticky&quot;, that is
-they just set an internal flag. Invoking them multiple times
-doesn't change <b>ntop's</b> behavior. However, options that
-set a value, such as --trace-level, will use the LAST value
-given: --trace-level 2 --trace-level 3 will run as
---trace-level 3.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-a | --access-log-path</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-By default <b>ntop</b> logs HTTP accesses in the file
+<td width="13%"></td>
+<td width="86%">
+<p>By default <b>ntop</b> logs HTTP accesses in the file
 ntop.access.log in the current directory. Use this flag to
 specify the path of the file where HTTP accesses will be
 logged. Each log entry is in Apache-like style. The only
 difference between Apache and <b>ntop</b> is that
 <b>ntop</b> added a new column has been added. Such column
 contains the time (in milliseconds) that ntop needed in
-order to serve the request.</td></table>
-
+order to serve the request.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-b | --disable-decoders</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-b | --disable-decoders</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-This flag disables protocol decoders (e.g. DNS, NetBIOS).
+<td width="13%"></td>
+<td width="86%">
+<p>This flag disables protocol decoders (e.g. DNS, NetBIOS).
 Use it for better performance or if you feel <b>ntop</b> has
-problem handling some protocols.</td></table>
-
+problem handling some protocols.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-c | --sticky-hosts</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-c | --sticky-hosts</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>By default idle hosts are periodically purged from
+memory. Use this flag to prevent idle hosts from being
+purged from memory. NOTE: if idle hosts are kept in memory
+you can experience severe memory usage.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-d | --daemon</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-By default idle hosts are periodically purged from memory.
-Use this flag to prevent idle hosts from being purged from
-memory. NOTE: if idle hosts are kept in memory you can
-experience severe memory usage.</td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>This flag causes ntop to become a daemon, i.e. it is
+started in background and detached from the terminal.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-e | --max-table-rows</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-d | --daemon</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Is the maximum number of HTML table rows that <b>ntop</b>
+will display.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-f | --traffic-dump-file</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-This flag causes ntop to become a daemon, i.e. it is started
-in background and detached from the terminal.</td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Specifies the file containing tcpdump captured traffic
+that has to be used by ntop. Note: if you specify -f ntop
+will not capture any traffic after the file has been read.
+This option is mostly used for debug purposes.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-g | --track-local-hosts</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-e | --max-table-rows</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Is the maximum number of HTML table rows that <b>ntop</b>
-will display.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-f | --traffic-dump-file</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Specifies the file containing tcpdump captured traffic that
-has to be used by ntop. Note: if you specify -f ntop will
-not capture any traffic after the file has been read. This
-option is mostly used for debug purposes.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-g | --track-local-hosts</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Use this flag to tell <b>ntop</b> that you do care only
+<td width="13%"></td>
+<td width="86%">
+<p>Use this flag to tell <b>ntop</b> that you do care only
 about local hosts (use -m to specify local nets). This flag
 is useful when <b>ntop</b> sees many hosts (e.g. border
-gateway) but only the local ones need to be
-tracked.</td></table>
-
+gateway) but only the local ones need to be tracked.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-h | --help</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-h | --help</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Print help information for <b>ntop</b> , including
+usage.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-i | --interface</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Print help information for <b>ntop</b> , including
-usage.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-i | --interface</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Specifies the network interface used by <b>ntop</b> If
+<td width="13%"></td>
+<td width="86%">
+<p>Specifies the network interface used by <b>ntop</b> If
 multiple interfaces are used (this feature is available only
 if ntop is compiled with thread support) they have to be
 separated with a comma. For instance -i &quot;eth0,lo&quot;.
 Traffic information obtained by all the interfaces is merged
 together as if the traffic would have been produced by one
-interface. Use the -M flag for not merging
-traffic.</td></table>
-
+interface. Use the -M flag for not merging traffic.</p>
+<!-- INDENTATION -->
+<p>Win32 note: This is the number of the interface, not
+it&rsquo;s name. Use ??? to see a list of interfaces.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-k | --filter-expression-in-extra-frame</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Win32 note: This is the number of the interface, not it's
-name. Use ??? to see a list of interfaces.</td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>When this flag is used, the current filter expression is
+printed in an extra frame and thus always visible.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-l | --pcap-log</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-k | --filter-expression-in-extra-frame</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Dumps the network traffic captured by ntop in a file in
+pcap format (useful for debug).</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-m | --local-subnets</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-When this flag is used, the current filter expression is
-printed in an extra frame and thus always
-visible.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-l | --pcap-log</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Dumps the network traffic captured by ntop in a file in pcap
-format (useful for debug).</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-m | --local-subnets</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-This flag allows users to specify the subnets whose traffic
-is considered local. The format is &lt;network
+<td width="13%"></td>
+<td width="86%">
+<p>This flag allows users to specify the subnets whose
+traffic is considered local. The format is &lt;network
 address&gt;/&lt;# subnet mask bits&gt;[,&lt;network
 address&gt;/&lt;# subnet mask bits&gt;]. For instance
-&quot;131.114.21.0/24,10.0.0.0/255.0.0.0&quot;.</td></table>
-
+&quot;131.114.21.0/24,10.0.0.0/255.0.0.0&quot;.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-n | --numeric-ip-addresses</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-n | --numeric-ip-addresses</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>This causes <b>ntop</b> to show numeric IP addresses
+instead of the symbolic names. This option can useful when
+the DNS is not present or quite slow. Under intop, you can
+toggle the address format (numeric vs. symbolic) by pressing
+the <b>n</b> key while <b>intop</b> is running.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-o | --no-mac</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-This causes <b>ntop</b> to show numeric IP addresses instead
-of the symbolic names. This option can useful when the DNS
-is not present or quite slow. Under intop, you can toggle
-the address format (numeric vs. symbolic) by pressing the
-<b>n</b> key while <b>intop</b> is running.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-o | --no-mac</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Specifies the user <b>ntop</b> should not trust MAC
+<td width="13%"></td>
+<td width="86%">
+<p>Specifies the user <b>ntop</b> should not trust MAC
 addresses but just IP addresses. This option is useful
 whenever ntop is started on an interface where MAC addresses
-cannot be really trusted (e.g. port/VLAN
-mirror).</td></table>
-
+cannot be really trusted (e.g. port/VLAN mirror).</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-p | --protocols</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-p | --protocols</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-It is used to specify the TCP/UDP protocols that <b>ntop</b>
-will monitor. The format is &lt;label&gt;=&lt;protocol
-list&gt; [, &lt;label&gt;=&lt;protocol list&gt;], where
-label is used to symbolically identify the &lt;protocol
-list&gt;. The format of &lt;protocol list&gt; is
+<td width="13%"></td>
+<td width="86%">
+<p>It is used to specify the TCP/UDP protocols that
+<b>ntop</b> will monitor. The format is
+&lt;label&gt;=&lt;protocol list&gt; [,
+&lt;label&gt;=&lt;protocol list&gt;], where label is used to
+symbolically identify the &lt;protocol list&gt;. The format
+of &lt;protocol list&gt; is
 &lt;protocol&gt;[|&lt;protocol&gt;], where &lt;protocol&gt;
 is either a valid protocol specified inside the
 /etc/services file or a numeric port range (e.g. 80, or
 6000-6500). If the -p flag is omitted the following default
-value is used:</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-FTP=ftp|ftp-data HTTP=http|www|https|3128 DNS=name|domain
+value is used:</p>
+<!-- INDENTATION -->
+<p>FTP=ftp|ftp-data HTTP=http|www|https|3128 DNS=name|domain
 Telnet=telnet|login
 NBios-IP=netbios-ns|netbios-dgm|netbios-ssn
 Mail=pop-2|pop-3|pop3|kpop|smtp|imap|imap2 DHCP-BOOTP=67-68
@@ -430,480 +466,652 @@ SNMP=snmp|snmp-trap NNTP=nntp
 NFS=mount|pcnfs|bwnfs|nfsd|nfsd-status X11=6000-6010 SSH=22
 Gnutella=6346|6347|6348 Morpheus=1214
 Messenger=1863|5000|5001|5190-5193 WinMX=6699|7730
-Audiogalaxy=41000-41900</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-If the &lt;protocol list&gt; is very long you may store it
-in a file (for instance protocol.list). To do so, specify
+Audiogalaxy=41000-41900</p>
+<!-- INDENTATION -->
+<p>If the &lt;protocol list&gt; is very long you may store
+it in a file (for instance protocol.list). To do so, specify
 the file name instead of the &lt;protocol list&gt; on the
 command line. e.g. ntop -p protocol.list instead of ntop -p
-FTP=ftp|ftp-data,HTTP=http|www|https|3128 ...</td></table>
-
+FTP=ftp|ftp-data,HTTP=http|www|https|3128 ...</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-q | --create-suspicious-packets</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-q | --create-suspicious-packets</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Forces ntop to create a file
+ntop-suspicious-pkts.XXX.pcap (XXX is the interface name)
+file. One file is created for each network interface where
+suspicious packets are found. The file is in pcap format
+(tcpdump).</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-r | --refresh-time</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Forces ntop to create a file ntop-suspicious-pkts.XXX.pcap
-(XXX is the interface name) file. One file is created for
-each network interface where suspicious packets are found.
-The file is in pcap format (tcpdump).</td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Specifies the delay (in seconds) between screen updates
+(the default is 3 seconds). If the -l flag is used, it
+specifies how often entries are logged in the log file.
+Please note that if the delay is very short (1 second for
+instance), ntop might not be able to process all the network
+traffic.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-s | --no-promiscuous</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-r | --refresh-time</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Use this flag for disabling interface promiscuous mode
+(i.e. the ability to capture ethernet frames regardless
+whether they are directed to the local ethernet card or to
+the ethernet broadcast address). Note that even if you use
+this flag, the interface could well be in promiscuous mode
+as other applications can have enabled this
+functionality.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-t | --trace-level</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Specifies the delay (in seconds) between screen updates (the
-default is 3 seconds). If the -l flag is used, it specifies
-how often entries are logged in the log file. Please note
-that if the delay is very short (1 second for instance),
-ntop might not be able to process all the network
-traffic.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-s | --no-promiscuous</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Use this flag for disabling interface promiscuous mode (i.e.
-the ability to capture ethernet frames regardless whether
-they are directed to the local ethernet card or to the
-ethernet broadcast address). Note that even if you use this
-flag, the interface could well be in promiscuous mode as
-other applications can have enabled this
-functionality.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-t | --trace-level</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-This flag specifies the level of <b>ntop</b> tracings on
+<td width="13%"></td>
+<td width="86%">
+<p>This flag specifies the level of <b>ntop</b> tracings on
 stdout. The trace level ranges between 0 (no trace) and 5
 (full debug tracings). The default trace value is 3. The
 higher is the trace level the more information are printed.
 Trace level 1 is used to print errors only, level 2 for both
-warnings and errors, and so on.</td></table>
-
+warnings and errors, and so on.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-u | --user</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-u | --user</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Specifies the user <b>ntop</b> should run as after it
+<td width="13%"></td>
+<td width="86%">
+<p>Specifies the user <b>ntop</b> should run as after it
 initializes. The value specified may be either a username or
 a numeric user id. The group id used will be the primary
-group of the user specified.</td></table>
-
+group of the user specified.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-w | --http-server</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-w | --http-server</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p><b>ntop</b> sports an embedded web server so that users
+can attach their web browsers to the specified port and
+browse traffic information remotely. Supposing to start
+<b>ntop</b> at the port <b>3000</b> (default port), the URL
+to access is http://hostname:3000/. Users and URLs to
+protect with passwords are stored in a database file. By
+default user/URL administration are accessible uniquely by
+the user <b>admin</b> with password <b>admin</b> Passwords
+are stored in an encrypted form into the database for
+further security. Please note that an HTTP server is NOT
+needed but it&rsquo;s embedded into the application. If -w
+is set to 0 the HTTP port will not be enabled (&rsquo;-w
+0&rsquo; is accepted only if <b>ntop</b> has been compiled
+with HTTPS support and <b>ntop</b> has not been started with
+&rsquo;-W 0&rsquo; [see below]). You can also use the
+IP:Port notation to bind ntop to the specified IP-Address,
+e.g. <b>-w 127.0.0.1:3000</b></p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-z | --disable-sessions</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-<b>ntop</b> sports an embedded web server so that users can
-attach their web browsers to the specified port and browse
-traffic information remotely. Supposing to start <b>ntop</b>
-at the port <b>3000</b> (default port), the URL to access is
-http://hostname:3000/. Users and URLs to protect with
-passwords are stored in a database file. By default user/URL
-administration are accessible uniquely by the user
-<b>admin</b> with password <b>admin</b> Passwords are stored
-in an encrypted form into the database for further security.
-Please note that an HTTP server is NOT needed but it's
-embedded into the application. If -w is set to 0 the HTTP
-port will not be enabled ('-w 0' is accepted only if
-<b>ntop</b> has been compiled with HTTPS support and
-<b>ntop</b> has not been started with '-W 0' [see below]).
-You can also use the IP:Port notation to bind ntop to the
-specified IP-Address, e.g. <b>-w
-127.0.0.1:3000</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>This flag disables TCP session tracking. Use it for
+better performance or when you don&rsquo;t really care of
+tracking sessions.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-A | --set-admin-password</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-z | --disable-sessions</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-This flag disables TCP session tracking. Use it for better
-performance or when you don't really care of tracking
-sessions.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-A | --set-admin-password</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
--A and --set-admin-password (without a value) will prompt
+<td width="13%"></td>
+<td width="86%">
+<p>-A and --set-admin-password (without a value) will prompt
 the user. You may set a specific value using
---set-admin-password=value. The = is REQUIRED!</td></table>
-
+--set-admin-password=value. The = is REQUIRED!</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-B | --filter-expression</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-B | --filter-expression</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-<b>ntop</b> , similar to what tcpdump does, allows users to
-specify an expression that restricts the type of traffic
+<td width="13%"></td>
+<td width="86%">
+<p><b>ntop</b> , similar to what tcpdump does, allows users
+to specify an expression that restricts the type of traffic
 handled by <b>ntop</b> hence to select only the traffic of
 interest. For instance, suppose to be interested only in the
 traffic generated/received by the host jake.unipi.it.
 <b>ntop</b> can then be started with the following filter:
-'ntop src host jake.unipi.it or dst host jake.unipi.it'. See
-the <b>tcpdump</b> man page for further information about
-this topic.</td></table>
-
+&rsquo;ntop src host jake.unipi.it or dst host
+jake.unipi.it&rsquo;. See the <b>tcpdump</b> man page for
+further information about this topic.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-C | --large-network</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-C | --large-network</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>This flag is a hint for ntop: as the network to analyze
+will be large, ntop will build a more efficient hash and
+save memory for some features (e.g traffic distribution
+during the day) that take up quite some memory.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-D | --domain</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-This flag is a hint for ntop: as the network to analyze will
-be large, ntop will build a more efficient hash and save
-memory for some features (e.g traffic distribution during
-the day) that take up quite some memory.</td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>This identifies the local domain suffix, e.g. ntop.org,
+if <b>ntop</b> is having difficulty determining it from the
+interface.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-E | --enable-external-tools</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-D | --domain</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-This identifies the local domain suffix, e.g. ntop.org, if
-<b>ntop</b> is having difficulty determining it from the
-interface.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-E | --enable-external-tools</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-By default ntop does not take advance of lsof/nmap even if
+<td width="13%"></td>
+<td width="86%">
+<p>By default ntop does not take advance of lsof even if
 present. Use this flag if you want make ntop aware of such
-tools (if present).</td></table>
-
+tools (if present).</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-F | --flow-spec</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-F | --flow-spec</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-It is used to specify network flows similar to more powerful
-applications such as NeTraMet. A flow is a stream of
-captured packets that match a specified rule. The format is
-&lt;flow-label&gt;='&lt;matching
-expression&gt;'[,&lt;flow-label&gt;='&lt;matching
-expression&gt;'], where the label is used to symbolically
-identify the flow specified by the expression. The
-expression format is specified in the appendix. If an
+<td width="13%"></td>
+<td width="86%">
+<p>It is used to specify network flows similar to more
+powerful applications such as NeTraMet. A flow is a stream
+of captured packets that match a specified rule. The format
+is &lt;flow-label&gt;=&rsquo;&lt;matching
+expression&gt;&rsquo;[,&lt;flow-label&gt;=&rsquo;&lt;matching
+expression&gt;&rsquo;], where the label is used to
+symbolically identify the flow specified by the expression.
+The expression format is specified in the appendix. If an
 expression is specified, then the information concerning
-flows can be accessed following the HTML link named 'List
-NetFlows'. For instance suppose to define two flows with the
-following expression &quot;LucaHosts='host jake.unipi.it or
-host pisanino.unipi.it',GatewayRoutedPkts='gateway
-gateway.unipi.it'&quot;. All the traffic sent/received by
-hosts jake.unipi.it or pisanino.unipi.it is collected by
+flows can be accessed following the HTML link named
+&rsquo;List NetFlows&rsquo;. For instance suppose to define
+two flows with the following expression
+&quot;LucaHosts=&rsquo;host jake.unipi.it or host
+pisanino.unipi.it&rsquo;,GatewayRoutedPkts=&rsquo;gateway
+gateway.unipi.it&rsquo;&quot;. All the traffic sent/received
+by hosts jake.unipi.it or pisanino.unipi.it is collected by
 <b>ntop</b> and added to the LucaHosts flow, whereas all the
 packet routed by the gateway gateway.unipi.it are added to
 the GatewayRoutedPkts flow. If the flows list is very long
 you may store in a file (for instance flows.list) the list
 of flows and specify the file name instead of the flows list
-(in above example you will invoke 'ntop -F
-flows.list').</td></table>
-
+(in above example you will invoke &rsquo;ntop -F
+flows.list&rsquo;).</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-K | --enable-debug</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-K | --enable-debug</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Use this flag to simplify application debug. It does
+three things: 1. Does not fork() on the &quot;read
+only&quot; html pages. 2. Displays mutex values on the
+configuration (info.html) page. 3. (If available -
+glibc/gcc) Activates an automated backtrace on application
+errors.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-L | --use-syslog=facility</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Use this flag to simplify application debug. It does three
-things: 1. Does not fork() on the &quot;read only&quot; html
-pages. 2. Displays mutex values on the configuration
-(info.html) page. 3. (If available - glibc/gcc) Activates an
-automated backtrace on application errors.</td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Use this flag for using the syslog instead of stdout.
+Please note that if ntop (ever) forks a child, in any case
+the syslog will be used for this child. The (optional)
+parameter value indicates the facility (e.g. daemon,
+security) to be used for logging, using
+--use-syslog=facility. The = is REQUIRED!</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-M | --no-interface-merge</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-L | --use-syslog=facility</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Forces ntop not to merge network interfaces together.
+This means that ntop will collect statistics for each
+interface and will not merge data together.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-O | --output-packet-path</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Use this flag for using the syslog instead of stdout. Please
-note that if ntop (ever) forks a child, in any case the
-syslog will be used for this child. The (optional) parameter
-value indicates the facility (e.g. daemon, security) to be
-used for logging, using --use-syslog=facility. The = is
-REQUIRED!</td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Base path for the ntop-suspicious-pkts.XXX.pcap and
+normal packet log file (tcpdump). If the base path is a
+directory you have to append a / to the string for this to
+work fine.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-P | --db-file-path</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-M | --no-interface-merge</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Forces ntop not to merge network interfaces together. This
-means that ntop will collect statistics for each interface
-and will not merge data together.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-N | --no-nmap</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Forces ntop not to use nmap (if it is
-installed).</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-O | --output-packet-path</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Base path for the ntop-suspicious-pkts.XXX.pcap and normal
-packet log file (tcpdump). If the base path is a directory
-you have to append a / to the string for this to work
-fine.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-P | --db-file-path</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-This allows to specify where db-files are searched or
+<td width="13%"></td>
+<td width="86%">
+<p>This allows to specify where db-files are searched or
 created (default &quot;.&quot;). In addition DBPATH/html is
-added to the searchlist for the WEB-files</td></table>
-
+added to the searchlist for the WEB-files</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-U | --mapper</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-U | --mapper</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>It specifies the UTR of the mapper.pl utility (it&rsquo;s
+part of the ntop distribution [see www/Perl/mapper.pl]) for
+displaying host location. If you don&rsquo;t want to install
+a mapper use http://jake.ntop.org/cgi-bin/mapper.pl</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-V | --version</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-It specifies the UTR of the mapper.pl utility (it's part of
-the ntop distribution [see www/Perl/mapper.pl]) for
-displaying host location. If you don't want to install a
-mapper use
-http://jake.ntop.org/cgi-bin/mapper.pl</td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Prints <b>ntop</b> version information and then
+exits.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-W | --https-server</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-V | --version</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Prints <b>ntop</b> version information and then
-exits.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>-W | --https-server</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-If <b>ntop</b> has been compiled with HTTPS support (via
+<td width="13%"></td>
+<td width="86%">
+<p>If <b>ntop</b> has been compiled with HTTPS support (via
 OpenSSL), this flag can be used to set the HTTPS port
-(default <b>3001</b> ). If the user specifies '-W 0', HTTPS
-support is disabled. Some examples: 1. <b>ntop -w 80 -W
-443</b> (both HTTP and HTTPS have been enabled at their
-default ports) 2. <b>ntop -w 0 -W 443</b> (HTTP disabled,
-HTTPS enabled at the default port). You can also use the
-IP:Port notation to bind ntop to the specified IP-Address,
-e.g. <b>-w 127.0.0.1:3001</b></td></table>
-
+(default <b>3001</b> ). If the user specifies &rsquo;-W
+0&rsquo;, HTTPS support is disabled. Some examples: 1.
+<b>ntop -w 80 -W 443</b> (both HTTP and HTTPS have been
+enabled at their default ports) 2. <b>ntop -w 0 -W 443</b>
+(HTTP disabled, HTTPS enabled at the default port). You can
+also use the IP:Port notation to bind ntop to the specified
+IP-Address, e.g. <b>-w 127.0.0.1:3001</b></p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--throughput-bar-chart</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>--throughput-bar-chart</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Format the throughput charts with bars instead of as an
+area chart.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--dynamic-purge-limits</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Format the throughput charts with bars instead of as an area
-chart.</td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Enable a dynamic adjustment of the idle host purge
+limits. Normally the purge is limited to 1/3 of the hash
+size or 512 hosts (whichever is smaller) per cycle. This
+switch allows ntop to dynamically adjust the limit so that
+the purge takes between 0.5 and 5.0 seconds (but the minimum
+dynamic limit is 64 per cycle). These values may be adjusted
+via compile time constants.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--reuse-rrd-graphics</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>--dynamic-purge-limits</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Enable a dynamic adjustment of the idle host purge limits.
-Normally the purge is limited to 1/3 of the hash size or 512
-hosts (whichever is smaller) per cycle. This switch allows
-ntop to dynamically adjust the limit so that the purge takes
-between 0.5 and 5.0 seconds (but the minimum dynamic limit
-is 64 per cycle). These values may be adjusted via compile
-time constants.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>--reuse-rrd-graphics</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Enable the reuse of rrd graphics if appropriate (no rrd
+<td width="13%"></td>
+<td width="86%">
+<p>Enable the reuse of rrd graphics if appropriate (no rrd
 updates in the interim). The default, the flag not set, is
-that the graphics are recreated for each
-request.</td></table>
-
+that the graphics are recreated for each request.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--p3p-cp</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>--ignore-sigpipe</b></td></table>
-
+<td width="13%"></td>
+<td width="86%">
+<p>Tells ntop what to return in the p3p header,
+cp=&quot;xxxx&quot;.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--p3p-uri</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Enable a handler for SIGPIPE errors. This usually happens
+<td width="13%"></td>
+<td width="86%">
+<p>Tells ntop what to return in the p3p header,
+policyref=&quot;xxxx&quot;.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--disable-stopcap</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p>Return ntop to old behavior on memory error. Default of
+stopcap enabled makes available the web interface with
+static content until ntop is shutdown.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--ignore-sigpipe</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p>Enable a handler for SIGPIPE errors. This usually happens
 only under debug (gdb). (also available as a ./configure
-option, --enable-ignoresigpipe)</td></table>
-
+option, --enable-ignoresigpipe)</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--use-sslwatchdog</b></p></td>
+</table></p>
+<!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>--use-sslwatchdog</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="12%"></td><td width="88%">
-Enable a watchdog for ntop webserver hangs. These usually
+<td width="13%"></td>
+<td width="86%">
+<p>Enable a watchdog for ntop webserver hangs. These usually
 happen when connecting with Netscape 6.2.2 and other
 browsers - only via https:// urls. The user gets nothing
-back and other users can't connect. Internally, the web
-server hangs in SSL_accept(). While packet processing
+back and other users can&rsquo;t connect. Internally, the
+web server hangs in SSL_accept(). While packet processing
 continues, there is no way to access the data through the
 web server or shutdown ntop cleanly. With the watchdog, a
 timeout occurs after 3 seconds, and processing continues
 with a log message. Unfortunately, the user sees nothing -
 it just looks like a failed connection. (also available as a
-./configure option, --enable-sslwatchdog)</td></table>
+./configure option, --enable-sslwatchdog)</p>
+</td>
+</table>
 <a name="WEB VIEWS"></a>
 <h2>WEB VIEWS</h2>
-
-<table width="100%" border=0 rules="none" frame="void"
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-While <b>ntop</b> is running, multiple users can access the
-traffic information using conventional web browsers. The
+<td width="10%"></td>
+<td width="89%">
+<p>While <b>ntop</b> is running, multiple users can access
+the traffic information using conventional web browsers. The
 main HTML page, is divided is two frames. The left frame
 allows users to select the traffic view that will be
 displayed in the right frame. Available sections are: sort
@@ -913,149 +1121,94 @@ the subnet defined for the network board from which the
 program is currently sniffing) IP traffic, local to remote
 IP traffic, local to local IP traffic, list of active TCP
 sessions, IP protocol distribution statistics, IP protocol
-usage, IP traffic matrix.</td></table>
+usage, IP traffic matrix.</p>
+</td>
+</table></p>
 <a name="NOTES"></a>
 <h2>NOTES</h2>
-
-<table width="100%" border=0 rules="none" frame="void"
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>ntop</b> requires a number of external tools. Other tools
-are optional, but add to the program's
-capabilities.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-Operating system header files and the Gnu gcc compiler and
-glibc libraries (http://www.gnu.org), including the glibc
-development libraries.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-Other required libraries include:</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>libpcap</b> from http://www.tcpdump.org/ (The Win32
+<td width="10%"></td>
+<td width="89%">
+<p><b>ntop</b> requires a number of external tools. Other
+tools are optional, but add to the program&rsquo;s
+capabilities.</p>
+<!-- INDENTATION -->
+<p>Other required libraries include:</p>
+<!-- INDENTATION -->
+<p><b>libpcap</b> from http://www.tcpdump.org/ (The Win32
 version makes use of <b>libpcap for Win32</b> which may be
 downloaded from
-http://www.netgroup.polito.it/WinPcap/install/).</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>gdbm</b> from
-http://www.gnu.org/software/gdbm/gdbm.html</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>ntop</b> requires a POSIX threads library. Although a
+http://winpcap.polito.it/install/default.htm).</p>
+<!-- INDENTATION -->
+<p><b>gdbm</b> from
+http://www.gnu.org/software/gdbm/gdbm.html</p>
+<!-- INDENTATION -->
+<p><b>ntop</b> requires a POSIX threads library. Although a
 single-threaded version of <b>ntop</b> will be built, it is
-not recommended for more than trivial usage.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-Optional libraries include:</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-The <b>gdchart</b> library, available at
-http://www.fred.net/brv/chart/.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-The <b>gd</b> library, for the creation of gif files,
+not recommended for more than trivial usage.</p>
+<!-- INDENTATION -->
+<p>Optional libraries include:</p>
+<!-- INDENTATION -->
+<p>The <b>gdchart</b> library, available at
+http://www.fred.net/brv/chart/.</p>
+<!-- INDENTATION -->
+<p>The <b>gd</b> library, for the creation of gif files,
 available at http://www.boutell.com/gd/ (included with
-gdchart).</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-The <b>libpng</b> library, for the creation of png files,
-available at http://www.libpng.org</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-(if an https:// server is desired) <b>openSSL</b> from the
-OpenSSL project available at
-http://www.openssl.org.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-The <b>sflow</b> Plugin is courtesy of and supported by
-InMon Corporation,
-http://www.inmon.com/sflowTools.htm.</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-(see the output of ./configure for a fuller listing) Posix
-threads, ncrypt, readline and:</td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-Options tools - which <b>ntop</b> will utilize if available
-- include <b>nmap (http://www.insecure.org)</b> and <b>lsof
-(ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/README).</b></td></table>
-
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-Note that both nmap and lsof must be configured suid root
-for <b>ntop</b> to use them. The user is cautioned to fully
+gdchart).</p>
+<!-- INDENTATION -->
+<p>The <b>libpng</b> library, for the creation of png files,
+available at http://www.libpng.org</p>
+<!-- INDENTATION -->
+<p>(if an https:// server is desired) <b>openSSL</b> from
+the OpenSSL project available at http://www.openssl.org.</p>
+<!-- INDENTATION -->
+<p>The <b>sflow</b> Plugin is courtesy of and supported by
+InMon Corporation, http://www.inmon.com/sflowTools.htm.</p>
+<!-- INDENTATION -->
+<p>(see the output of ./configure for a fuller listing)
+Posix threads, ncrypt, readline and:</p>
+<!-- INDENTATION -->
+<p>Options tools - which <b>ntop</b> will utilize if
+available - include <b>lsof
+(ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/README).</b></p>
+<!-- INDENTATION -->
+<p>Note that lsof must be configured suid root for
+<b>ntop</b> to use them. The user is cautioned to fully
 understand the security implications of that setting before
-setting the suid bit. nmap is used to OS-fingerprint the
-remote hosts and lsof is used to obtain the &quot;Local
-Usage&quot; information presented on the &quot;IP
-Protos&quot; tab. <b>ntop</b> will function properly without
-either of these tools.</td></table>
+setting the suid bit. <b>ntop</b> will function properly
+without either of these tools.</p>
+</td>
+</table></p>
 <a name="SEE ALSO"></a>
 <h2>SEE ALSO</h2>
-
-<table width="100%" border=0 rules="none" frame="void"
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-<b>intop</b>(1), <b>top</b>(1),
-<b>tcpdump</b>(8).</td></table>
+<td width="10%"></td>
+<td width="89%">
+<p><b>intop</b>(1), <b>top</b>(1), <b>tcpdump</b>(8).</p>
+</td>
+</table></p>
 <a name="AUTHOR"></a>
 <h2>AUTHOR</h2>
-
-<table width="100%" border=0 rules="none" frame="void"
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
        cols="2" cellspacing="0" cellpadding="0">
 <tr valign="top" align="left">
-<td width="10%"></td><td width="90%">
-Please send bug reports to the ntop mailing list
+<td width="10%"></td>
+<td width="89%">
+<p>Please send bug reports to the ntop mailing list
 &lt;ntop@ntop.org&gt;. Please code patched to
-&lt;patch@ntop.org&gt;. ntop's author is Luca Deri and can
-be reached at deri@ntop.org. Tool locations are current as
-of February 2002 - please send email to report new locations
-or dead links.</td></table>
+&lt;patch@ntop.org&gt;. ntop&rsquo;s author is Luca Deri and
+can be reached at deri@ntop.org. Tool locations are current
+as of February 2002 - please send email to report new
+locations or dead links.</p>
+</td>
+</table></p>
 <hr>
 </body>
 </html>

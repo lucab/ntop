@@ -89,7 +89,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 	sendString("\n<li>");
 	sendString(makeHostLink(&el, 0, 0, 0));
       } else
-	traceEvent(CONST_TRACE_INFO, "Unable to find serial %u",
+	traceEvent(CONST_TRACE_WARNING, "Unable to find serial %u - host skipped",
 		   (unsigned int)usageCtr.peersIndexes[i]);
     }
   }
@@ -809,13 +809,13 @@ int sortHostFctn(const void *_a, const void *_b) {
   char *nameA, *nameB, nameA_str[32], nameB_str[32];
 
   if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "sortHostFctn() error (1)");
     return(1);
   } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "sortHostFctn() error (2)");
     return(-1);
   } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "sortHostFctn() error (3)");
     return(0);
   }
 
@@ -1007,13 +1007,13 @@ int cmpFctn(const void *_a, const void *_b) {
   short floatCompare=0, columnProtoId;
 
   if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (1)");
     return(1);
   } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (2)");
     return(-1);
   } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (3)");
     return(0);
   }
 
@@ -1455,13 +1455,13 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
   int rc;
 
   if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpMulticastFctn() error (1)");
     return(1);
   } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpMulticastFctn() error (2)");
     return(-1);
   } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "cmpMulticastFctn() error (3)");
     return(0);
   }
 
@@ -1632,7 +1632,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
     name_a = (*a)->hostSymIpAddress;
 
     if(name_a == NULL)
-      traceEvent(CONST_TRACE_WARNING, "Warning\n");
+      traceEvent(CONST_TRACE_WARNING, "cmpHostsFctn() error (1)");
     if((name_a == NULL) || (strcmp(name_a, "0.0.0.0") == 0)) {
       name_a = (*a)->hostNumIpAddress;
       if((name_a == NULL) || (name_a[0] == '\0'))
@@ -1642,7 +1642,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
     name_b = (*b)->hostSymIpAddress;
 
     if(name_b == NULL)
-      traceEvent(CONST_TRACE_WARNING, "Warning\n");
+      traceEvent(CONST_TRACE_WARNING, "cmpHostsFctn() error (2)");
     if((name_b == NULL) || (strcmp(name_b, "0.0.0.0") == 0)) {
       name_b = (*b)->hostNumIpAddress;
       if((name_b == NULL) || (name_b[0] == '\0'))
@@ -3400,14 +3400,24 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
     snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s", myGlobals.rrdPath, 
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-	     el->hostNumIpAddress);
+#ifdef MAKE_WITH_LARGERRDPOP
+             dotToSlash(el->hostNumIpAddress)
+#else
+             el->hostNumIpAddress
+#endif
+            );
 
     if(stat(buf, &statbuf) == 0) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                   "[ <A HREF=\"/plugins/rrdPlugin?action=list&key=interfaces/%s/hosts/%s&title=host %s\">"
                    "<IMG BORDER=0 SRC=/graph.gif TITLE=\"link to rrd graphs\"></A> ]</TD></TR>\n",
 		  getRowColor(), "RRD Stats", 
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, el->hostNumIpAddress,
+                  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+#ifdef MAKE_WITH_LARGERRDPOP
+                  dotToSlash(el->hostNumIpAddress),
+#else
+                  el->hostNumIpAddress,
+#endif
 		  el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -3936,12 +3946,9 @@ void printLocalHostsStats() {
   HostTraffic *el, **tmpTable;
   OsNumInfo theOSs[256];
   int numOSs = 0, i, j;
-  char buf[LEN_GENERAL_WORK_BUFFER], *str=NULL, *sign, *title=NULL;
-  Counter totalBytesSent, totalBytesRcvd, totalBytes, a=0, b=0;
-  float sentpct, rcvdpct;
+  char buf[LEN_GENERAL_WORK_BUFFER], *str=NULL, *title=NULL;
+  Counter a=0, b=0;
   time_t timeDiff = time(NULL)-myGlobals.initialSniffTime;
-  char *arrowGif, *arrow[48], *theAnchor[48];
-  char htmlAnchor[64], htmlAnchor1[64];
 
   memset(theOSs, 0, sizeof(theOSs));
 
@@ -4061,3 +4068,89 @@ void printLocalHostsStats() {
   free(tmpTable);
 }
 
+/* ******************************************************** */
+
+#ifdef CFG_MULTITHREADED
+void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName) {
+  char buf[LEN_GENERAL_WORK_BUFFER];
+
+  if(mutexId->lockLine == 0) /* Mutex never used */
+    return;
+  if(textPrintFlag == TRUE) {
+    if(mutexId->lockAttemptLine > 0) {
+        if(snprintf(buf, sizeof(buf),
+                    "Mutex %s, is %s.\n"
+                    "     locked: %u times, last was %s:%d(%d)\n"
+                    "     Blocked: at %s:%d%(d)\n",
+                    "     unlocked: %u times, last was %s:%d(%d)\n"
+                    "     longest: %d sec from %s:%d\n",
+                    mutexName,
+                    mutexId->isLocked ? "locked" : "unlocked",
+                    mutexId->numLocks,
+                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
+                    mutexId->numReleases,
+                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
+                    mutexId->maxLockedDuration,
+                    mutexId->maxLockedDurationUnlockFile,
+                    mutexId->maxLockedDurationUnlockLine) < 0)
+          BufferTooShort();
+    } else {
+        if(snprintf(buf, sizeof(buf),
+                    "Mutex %s, is %s.\n"
+                    "     locked: %u times, last was %s:%d(%d)\n"
+                    "     unlocked: %u times, last was %s:%d(%d)\n"
+                    "     longest: %d sec from %s:%d\n",
+                    mutexName,
+                    mutexId->isLocked ? "locked" : "unlocked",
+                    mutexId->numLocks,
+                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    mutexId->numReleases,
+                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
+                    mutexId->maxLockedDuration,
+                    mutexId->maxLockedDurationUnlockFile,
+                    mutexId->maxLockedDurationUnlockLine) < 0)
+          BufferTooShort();
+    }
+  } else {
+    if (mutexId->lockAttemptLine > 0) {
+        if(snprintf(buf, sizeof(buf),
+                    "<TR><TH ALIGN=\"LEFT\">%s</TH><TD ALIGN=\"CENTER\">%s</TD>"
+                    "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
+                    "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
+                    "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
+                    "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"LEFT\">%u</TD>"
+                    "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>",
+                    mutexName,
+                    mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
+                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
+                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
+                    mutexId->numLocks, mutexId->numReleases,
+                    mutexId->maxLockedDuration,
+                    mutexId->maxLockedDurationUnlockFile,
+                    mutexId->maxLockedDurationUnlockLine) < 0)
+          BufferTooShort();
+    } else {
+        if(snprintf(buf, sizeof(buf),
+                    "<TR><TH ALIGN=\"LEFT\">%s</TH><TD ALIGN=\"CENTER\">%s</TD>"
+                    "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
+                    "<TD ALIGN=\"RIGHT\">&nbsp;</TD>"
+                    "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
+                    "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"LEFT\">%u</TD>"
+                    "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>",
+                    mutexName,
+                    mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
+                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
+                    mutexId->numLocks, mutexId->numReleases,
+                    mutexId->maxLockedDuration,
+                    mutexId->maxLockedDurationUnlockFile,
+                    mutexId->maxLockedDurationUnlockLine) < 0)
+          BufferTooShort();
+    }
+  }
+
+  sendString(buf);
+}
+#endif
