@@ -1,87 +1,323 @@
-###############################################################################
-#                                                                             #
-#  This file, ntop.conf.sample is a sample of an ntop configuration file.     #
-#                                                                             #
-#  You should copy this file to it's normal location, /etc/ntop.conf          #
-#  and edit it to fit your needs.                                             #
-#                                                                             #
-#       ntop is easily launched with options by referencing this file from    #
-#       a command line like this:                                             #
-#                                                                             #
-#       ntop @/etc/ntop.conf                                                  #
-#                                                                             #
-#  Remember, options may also be listed directly on the command line, both    #
-#  before and  after the @/etc/ntop.conf.                                     #
-#                                                                             #
-#  For switches that provide values, e.g. -i, the last one matters.           #
-#  For switches just say 'do things', e..g -M, if it's ANYWHERE in the        #
-#  commands, it will be set.  There's no unset option.                        #
-#                                                                             #
-#  You can use this to your advantage, for example:                           #
-#       ntop @/etc/ntop.conf -i none                                          #
-#  Overrides the -i in the file.                                              #
-#                                                                             #
-###############################################################################
-#                                                                             #
-#  Initial version by Burton M. Strauss III (Burton@ntopsupport.com)          #
-#                                                                             #
-#  Updates and documentation courtesy of                                      #
-#      Joseph Ezerski (jezerski@broadcom.com) (04-2003)                       #
-#                                                                             #
-###############################################################################
+################################################################################
+##                                                                             #
+##  This file, ntop.conf.sample is a sample of an ntop configuration file.     #
+##                                                                             #
+##  You should copy this file to it's normal location, /etc/ntop.conf          #
+##  and edit it to fit your needs.                                             #
+##                                                                             #
+##       ntop is easily launched with options by referencing this file from    #
+##       a command line like this:                                             #
+##                                                                             #
+##       ntop @/etc/ntop.conf                                                  #
+##                                                                             #
+##  Remember, options may also be listed directly on the command line, both    #
+##  before and  after the @/etc/ntop.conf.                                     #
+##                                                                             #
+##  For switches that provide values, e.g. -i, the last one matters.           #
+##  For switches just say 'do things', e..g -M, if it's ANYWHERE in the        #
+##  commands, it will be set.  There's no unset option.                        #
+##                                                                             #
+##  You can use this to your advantage, for example:                           #
+##       ntop @/etc/ntop.conf -i none                                          #
+##  Overrides the -i in the file.                                              #
+##                                                                             #
+##  Nested @'s - that is @/etc/ntop.common inside /etc/ntop.conf are not       #
+##  permitted.                                                                 # 
+##                                                                             #
+##  Note that this is not an exhaustive list of ntop's commands - refer        #
+##  to the man page and other documentation for that.  This is just the        #
+##  most commonly used command and various examples of them                    #
+##                                                                             #
+##                                                                             #
+##  Lines beginning ## are pure comments.                                      # 
+##                                                                             #
+##  Lines beginning with a dash in this sample file are 'live' and will        #
+##  be used if you just copy this file to /etc/ntop.conf.                      #
+##                                                                             #
+##  Lines you might wish to uncomment and use as is begin with #- or #--       #
+##                                                                             #
+##  Parameter lines beginning with #? are models that you will need to         #
+##  review and or customize to your environment before using them.             #
+##                                                                             #
+################################################################################
+##                                                                             #
+##  Initial version by Burton M. Strauss III (Burton@ntopsupport.com)          #
+##                                                                             #
+##  Updates and documentation courtesy of                                      #
+##      Joseph Ezerski (jezerski@broadcom.com) (04-2003)                       #
+##      Tim Malnati (tgm@cshore.com) (09-2003)                                 #
+##                                                                             #
+################################################################################
 
-# Sets the user that ntop runs as.  
-#  NOTE: This should not be root unless you really understand the security risks.
+############################## RUNNING ENVIRONMENT #############################
+
+## -u | --user -- tells ntop the user id to run as. 
+
+##  NOTE: This should not be root unless you really understand
+##        the security risks.
 
 --user ntop
 
-# Sets the directory that ntop runs from.
+##-----------------------------------------------------------------------------#
+
+## -d | --daemon -- sets ntop to run as a daemon (in the background, not
+##        connected to a specific terminal).
+
+##  NOTE: For more than casual use, you probably want this.
+
+--daemon
+
+##-----------------------------------------------------------------------------#
+
+## -P | --db-file-path -- sets the directory that ntop runs from. 
+
+##  NOTE: Use an absolute path (not a relative one like ../ntop) because
+##        the working directory (pwd) will be different when ntop is run
+##        from the command line, from cron and from initialization.
 
 --db-file-path /usr/share/ntop
+#? -P /var/ntop
 
-# interface(s) that ntop will capture on
-#  DEFAULT: The 1st ethernet device, e.g. eth0 
+##-----------------------------------------------------------------------------#
 
-#--interface eth0
+## -D | --domain -- Sets the domain.  ntop should be able to determine
+## this automatically, but occasionally has problems. If so, this makes the
+## output cleaner.
 
-# Configures ntop not to trust MAC addrs.  This is used when port mirroring or SPAN
-#--no-mac
+#? --domain mydomain.com
 
-# Logging messages to syslog (instead of the console):
-#  NOTE: To log to a specific facility, use --use-syslog=local3
-#  NOTE: The = is REQUIRED and no spaces are permitted.
 
-#--use-syslog
+################################ WHAT TO MONITOR ###############################
 
-# Tells ntop to track only local hosts as specified by the --local-subnets option
+## -i | --interfaces tells ntop which network interfaces (NICs) to monitor.
+##  DEFAULT: The 1st ethernet device, e.g. eth0, i.e. this line:
+--interfaces eth0
 
-#--track-local-hosts
+## To monitor both eth0 and eth2 but not eth1:
+#? --interfaces eth0,eth2
 
-# Sets the port that the HTTP webserver listens on
-#  NOTE: --http-server 3000 is the default
+## To monitor NO ethernet interfaces (for example a system collecting data
+## only from netFlow probes):
 
-#--http-server 3000
+#? --interfaces none
 
-# Sets the port that the optional HTTPS webserver listens on
+##-----------------------------------------------------------------------------#
+
+## -M | --no-interface-merge -- tells ntop not to merge data from all of the
+## network interfaces it is monitoring.  See the man page and docs/FAQ for
+## discussions of -M.
+
+#? --no-interface-merge
+
+##-----------------------------------------------------------------------------#
+
+## -m | --local-subnets -- Tells ntop of additional networks that should
+##        be considered local.  This is for the local/remote breakdowns
+##        and because additional data is kept and display for local hosts.
+
+##       The addresses of the network interface(s) (NICs) are always local
+##       and don't need to be specified. If you use unnumbered interfaces
+##       you MUST give ntop this information.
+
+## NOTE: You can mix CIDR and network/netmask notation.
+
+## SEE ALSO: --track-local-hosts
+
+## EXAMPLES:
+
+## Traffic I see (broadcasts only, of course) on my cable modem includes
+## other subnets than my own 12.239.98.0/24.  I see 12.239.99.0/24 and
+## 12.239.100.0/24 - to tell this to ntop:
+#? -m 12.239.99.0/24,12.239.100.0/24
+
+## I actually run this way, telling ntop about the whole range of 
+## addresses used as well as the private network used internally by the 
+## cable modems themselves.
+#? -m 192.168.42.0/24,12.239.96.0/22,12.239.100.0/24,10.113.0.0/16 
+
+## All of these are equivalent to the one above:
+
+## -m 192.168.42.0/255.255.255.0,12.239.96.0/22,12.239.100.0/24,10.113.0.0/16 
+## -m 192.168.42.0/255.255.255.0,12.239.96.0/255.255.252.0,12.239.100.0/255.255.255.0,10.113.0.0/255.255.0.0 
+
+##-----------------------------------------------------------------------------#
+
+## -p | --protocols -- ntop comes with an extensive list of common tcp/ip 
+## protocols to monitor already built in.  (See docs/FAQ for the current list).
+## If you want to increase, decrease or change this list, this is the parameter.
+
+## It can be either a file or a list.  To point ntop to a file specify it's name:
+
+#? -p /usr/share/ntop/protocol.list 
+
+## Or to give an explicit list:
+
+#? --protocols="HTTP=http|www|https|3128,FTP=ftp|ftp-data"
+
+##-----------------------------------------------------------------------------#
+
+## -c | --sticky-hosts -- tells ntop NOT to purge idle hosts from memory.
+
+## DO NOT USE THIS unless you are on a small, very static network, or you
+## have LOTS of memory.
+
+## It is strongly recommended that you use a filtering expression to limit
+## the hosts which are stored if you use --sticky-hosts.
+
+#? --sticky-hosts
+
+##-----------------------------------------------------------------------------#
+
+## --disable-instantsessionpurge -- by default, ntop internally changes the
+## status of completed sessions so that they get purged immediately.  This
+## doesn't present a true picture of the network, but does conserve memory.
+## Enable this switch to see those finished sessions before their purge
+## interval (5 minutes) expires, IF YOU HAVE ENOUGH MEMORY.
+
+#? --disable-instantsessionpurge
+
+################################## LOG MESSAGES ################################
+
+## -t | --trace-level -- controls the amount and severity of messages that
+## ntop will put out.  Choices are:
+
+#--trace-level 0 # FATALERROR only
+#--trace-level 1 # ERROR and above only 
+#--trace-level 2 # WARNING and above only
+#--trace-level 3 # INFO, WARNING and ERRORs - the default
+#--trace-level 4 # NOISY - everything
+#--trace-level 5 # NOISY + --log-extra 1
+
+--trace-level 3 # Which is the default
+
+##-----------------------------------------------------------------------------#
+
+## --log-extra -- controls the addition of extra information to the log
+## messages.  Choices are:
+
+#--log-extra 1 # add [file:line] to the beginning of each message -
+##               useful for debugging.
+#--log-extra 2 # add a [MSGIDnnnnnnn] to the end of each message -
+##               useful for automated log monitoring packages.  The
+##               MSGID values should be stable across ntop releases.
+
+#? --log-extra 2
+
+##-----------------------------------------------------------------------------#
+
+##
+## -L | --use-syslog | --use-syslog=xxxx -- By default, ntop writes it's 
+## messages to stdout (the terminal).
+
+## WARNING: If you are running ntop as a daemon (--daemon parameter), the
+## stdout (terminal) does not exist and so messages will be dropped.
+## You probably don't want to do this.  Instead, use this -L | --use-syslog
+## parameter to save them into the system log (/var/log/messages).
+##
+## Thus a typical startup for ntop running as a daemon is:
+#--daemon --use-syslog
+
+
+## You can also direct the messages to another file.  You'll want to
+## look at man syslog.conf to setup the configuration file.  For example
+## to use 'local3' to keep ntop messages separate, I have this in my
+## /etc/syslog.conf:
+
+##   # Save ntop
+##   local3.*                                           /var/log/ntop.log
+
+## Then I run ntop with this:
+#? --use-syslog=local3
+
+##  NOTE: The = is REQUIRED and no spaces are permitted.
+
+
+################################## WEB SERVER ##################################
+
+## ntop offers both an http:// and https:// web server.  These parameters
+## tell ntop which ports (and interfaces) to offer this web server on.
+
+## -w | --http-server -- is the http:// web server.
+
+##  NOTE: --http-server 3000 is the default
+--http-server 3000
+
+## -W | --https-server -- is the https:// web server.
 
 #--https-server 3001
 
-# Sets the networks that ntop should consider as local.  
-#  NOTE: Uses dotted decimal and CIDR notation. Example: 192.168.0.0/24
-#        The addresses of the interfaces are always local and don't need to be specified.
+## The default is -w 3000 -W 0 (disabled).  You can also...
 
-#--local-subnets xx.xx.xx.xx/yy
+## https:// only:
+#? -w 0 -W 3001
 
-# Sets the domain.  ntop should be able to determine this automatically.
+## http:// and https://
+#? --http-server 3000 --https-server 3001
 
-#--domain mydomain.com
+## Neither - say ntop is running only as a netFlow probe:
+#? --w 0 -W 0
 
-# Allows rrd to reuse graphics (reduces cpu usage) if the data has not changed.
 
-# --reuse-rrd-graphics
+########################### PERFORMANCE AND PROBLEMS ###########################
 
-#Sets program to run as a daemon
-#  NOTE: For more than casual use, you probably want this.
+## -B | filter-expression -- gives ntop a bpf (Berkeley Packet Filter) expression
+## to use.  (the easiest place to find bpf documented is on the tcpdump man page).
 
-#--daemon
+## NOTE: The filter expression MUST be in quotes.
+
+## To restrict ntop to only a few machines on a large network, say 192.168.1.88 
+## through 91:
+
+#? -B "net 192.168.1.88/30"
+
+## That is equivalent to specifying the specific hosts:
+
+#? -B "host (192.168.1.88 or 192.168.1.89 or 192.168.1.90 or 192.168.1.91)"
+
+## You can limit traffic to that from (src) or to (dst) a specific host:
+
+#? -B "src host www.mycompany.com"
+#? -B "dst host www.mycompany.com"
+
+## You can limit it to a specific protocol, including src/dst:
+
+#? -B "port ssh"
+#? -B "src port ssh"
+#? -B "dst port ssh"
+
+##-----------------------------------------------------------------------------#
+
+## -o | --no-mac -- Configures ntop not to trust MAC addrs.
+## This is used if you observe ntop being confused by 'changing' addresses - 
+## i.e. ntop belives that the corporate web server is actually Joe's desktop
+## computer.
+
+#--no-mac
+
+##-----------------------------------------------------------------------------#
+
+## -g | --track-local-hosts -- Tells ntop to track only local hosts.  These
+## are hosts defined as local according to the network interfaces or specified
+## by the --local-subnets option.
+
+## Use this if you are seeing too many hosts and all you care about is the
+## local (LAN) traffic.
+
+#--track-local-hosts
+
+##-----------------------------------------------------------------------------#
+
+## -z | --disable-sessions -- Tells ntop not to track tcp session information.
+## Speeds up processing, requires less memory, but conveys less information.
+
+#--disable-sessions
+
+##-----------------------------------------------------------------------------#
+
+## --disable-schedyield -- Under certain circumstances, the sched_yield()
+## function causes the ntop web server to lock up.  It shouldn't happen, but
+## it does.  This option causes ntop to skip those calls, at a tiny performance
+## penalty.
+
+--disable-schedyield
 
