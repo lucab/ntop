@@ -645,11 +645,13 @@ typedef struct ntopInterface {
 
   int fd;                        /* unique identifier (Unix file descriptor) */
 
+#if (0)
   FILE *fdv;                     /* verbosity file descriptor */
   int hashing;                   /* hashing while sniffing */
   int ethv;                      /* print ethernet header */
   int ipv;                       /* print IP header */
   int tcpv;                      /* print TCP header */
+#endif
 
   /*
    * The packets section
