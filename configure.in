@@ -192,7 +192,7 @@ echo
 echo "Step 1. Looking for required development tools...."
 echo
 
-AM_DISABLE_SHARED
+dnl> AM_DISABLE_SHARED
 AM_PROG_LIBTOOL
 echo
 
