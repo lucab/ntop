@@ -250,9 +250,6 @@ void updateUsedPorts(HostTraffic *srcHost,
      broadcastHost(srcHost) || broadcastHost(dstHost))
     return;
 
-  if((srcHost->portsUsage == NULL) || (dstHost->portsUsage == NULL))
-    return;
-  
   if(sport < MAX_ASSIGNED_IP_PORTS) {
     ports = getPortsUsage(srcHost, sport, 1);
 

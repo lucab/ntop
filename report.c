@@ -3547,6 +3547,7 @@ void printIpProtocolUsage(void) {
   u_short clientPorts[MAX_ASSIGNED_IP_PORTS], serverPorts[MAX_ASSIGNED_IP_PORTS];
   u_int j, idx1, hostsNum=0, numPorts=0, maxHosts;
   char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  PortUsage *ports;
 
   printHTMLheader("TCP/UDP: Local Protocol Usage", NULL, 0);
 
@@ -3567,10 +3568,14 @@ void printIpProtocolUsage(void) {
       hosts[hostsNum++] = el;
 
       if(el->portsUsage != NULL) {
-	PortUsage *ports = el->portsUsage;
+	ports = el->portsUsage;
 	while(ports) {
-	  clientPorts[j] += ports->clientUses, serverPorts[j] += ports->serverUses;
-	  numPorts++, ports = ports->next;
+          j = ports->port;
+	  if((clientPorts[j] == 0) && (serverPorts[j] == 0)) 
+	    numPorts++;
+	  clientPorts[j] += ports->clientUses;
+          serverPorts[j] += ports->serverUses;
+          ports = ports->next;
 	}
       }
     }
@@ -3583,6 +3588,11 @@ void printIpProtocolUsage(void) {
     free(hosts);
     return;
   }
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                "<center><p>Reporting on actual traffic for %d host(s) on %d service port(s)</p></center>\n",
+                hostsNum, numPorts);
+  sendString(buf);
 
   /* Hosts are now in a contiguous structure (hosts[])... */
 
@@ -3599,16 +3609,16 @@ void printIpProtocolUsage(void) {
       sendString(buf);
 
       if(clientPorts[j] > 0) {
-	PortUsage *ports = getPortsUsage(hosts[idx1], j, 0);
-
 	sendString("<UL>");
-	for(idx1=0; idx1<hostsNum; idx1++)
+	for(idx1=0; idx1<hostsNum; idx1++) {
+	  ports = getPortsUsage(hosts[idx1], j, 0);
 	  if((hosts[idx1]->portsUsage != NULL)
 	     && ports && (ports->clientUses > 0)) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
 			makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
 	    sendString(buf);
 	  }
+        }
 	sendString("</UL>");
       } else
 	sendString("&nbsp;");
@@ -3616,16 +3626,16 @@ void printIpProtocolUsage(void) {
       sendString("</TD><TD "TD_BG">");
 
       if(serverPorts[j] > 0) {
-	PortUsage *ports = getPortsUsage(hosts[idx1], j, 0);
-
 	sendString("<UL>");
-	for(idx1=0; idx1<hostsNum; idx1++)
+	for(idx1=0; idx1<hostsNum; idx1++) {
+	  ports = getPortsUsage(hosts[idx1], j, 0);
 	  if((hosts[idx1]->portsUsage != NULL)
 	     && ports && (ports->serverUses > 0)) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
 			makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
 	    sendString(buf);
 	  }
+        }
 	sendString("</UL>");
       } else
 	sendString("&nbsp;");
