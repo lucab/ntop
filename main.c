@@ -350,9 +350,9 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char* theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:AB:D:F:MP:S:U:VW:";
+  char* theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:AB:D:F:MO:P:S:U:VW:";
 #else
-  char* theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:AB:D:EF:IKLMNP:S:U:VW:";
+  char* theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:AB:D:EF:IKLMNO:P:S:U:VW:";
 #endif
   int opt;
 
