@@ -300,7 +300,7 @@ void printTrafficStatistics(void) {
                 myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferTooShort();
     printHTMLheader(buf, 0);
-    sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n");
+    sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
 
     sendString("<TR><TH "TH_BG" align=left>Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
 
@@ -336,7 +336,6 @@ void printTrafficStatistics(void) {
         sendString(buf);
       }
 
-
       if((pcapStat.ps_recv-pcapStat.ps_drop) != 
          myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value) {
         if(snprintf(buf, sizeof(buf),
@@ -361,7 +360,7 @@ void printTrafficStatistics(void) {
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Less:&nbsp;Dropped&nbsp;by&nbsp;ntop</th>"
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;ntop</th>"
                     "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 
 		    getRowColor(),
@@ -370,6 +369,8 @@ void printTrafficStatistics(void) {
                     formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value)) < 0)
       BufferTooShort();
     sendString(buf);
+
+    /*
     if(snprintf(buf, sizeof(buf),
                   "<TR "TR_ON" %s><TH "TH_BG" align=left>Gives:&nbsp;processed&nbsp;by&nbsp;ntop</th>"
                   "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
@@ -378,9 +379,10 @@ void printTrafficStatistics(void) {
                            - myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value)) < 0)
       BufferTooShort();
     sendString(buf);
+    */
 
     if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON" %s><TH "TH_BG" align=left><i>(should equal)</i>&nbsp;Total&nbsp;packets</th>"
+		  "<TR "TR_ON" %s><TH "TH_BG" align=left>Total packets processed</th>"
 		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
 		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value)) < 0)
       BufferTooShort();

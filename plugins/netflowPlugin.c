@@ -32,11 +32,11 @@ static PthreadMutex whiteblackListMutex;
 #ifdef HAVE_FILEDESCRIPTORBUG
 static int tempNFFilesCreated=0;
 static int  tempNFF[CONST_FILEDESCRIPTORBUG_COUNT],
-            tempNFFpid;
+  tempNFFpid;
 static char tempNFFname[CONST_FILEDESCRIPTORBUG_COUNT][LEN_MEDIUM_WORK_BUFFER];
 #endif
 
-/* #define DEBUG_FLOWS  */
+/* #define DEBUG_FLOWS */
 
 static ProbeInfo probeList[MAX_NUM_PROBES];
 
@@ -65,13 +65,13 @@ static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport
 
 #ifdef HAVE_FILEDESCRIPTORBUG
 
-  /* Burton - Aug2003
-   *   Work-around for file descriptor bug (FreeBSD PR51535 et al)
-   *   - burn some file descriptors so the socket() call doesn't get a dirty one.
-   *   - it's not pretty, but it works...
-   */
+/* Burton - Aug2003
+ *   Work-around for file descriptor bug (FreeBSD PR51535 et al)
+ *   - burn some file descriptors so the socket() call doesn't get a dirty one.
+ *   - it's not pretty, but it works...
+ */
 
-void wasteFileDescriptors(void) {
+static void wasteFileDescriptors(void) {
   int i;
 
   if(tempNFFilesCreated == 0) {
@@ -100,14 +100,15 @@ void wasteFileDescriptors(void) {
   }
 }
 
-void unwasteFileDescriptors(void) {
+static void unwasteFileDescriptors(void) {
   int i;
 
   /* Close and delete the temporary - junk - files */
   traceEvent(CONST_TRACE_INFO, "NETFLOW: FILEDESCRIPTORBUG: Bug work-around cleanup");
   for(i=CONST_FILEDESCRIPTORBUG_COUNT-1; i>=0; i--) {
     if(tempNFF[i] >= 0) {
-      traceEvent(CONST_TRACE_NOISY, "NETFLOW: FILEDESCRIPTORBUG: Removing %d, '%s'(%d)", i, tempNFFname[i], tempNFF[i]);
+      traceEvent(CONST_TRACE_NOISY, "NETFLOW: FILEDESCRIPTORBUG: Removing %d, '%s'(%d)",
+		 i, tempNFFname[i], tempNFF[i]);
       if(close(tempNFF[i])) {
         traceEvent(CONST_TRACE_ERROR,
                    "NETFLOW: FILEDESCRIPTORBUG: Unable to close file %d - '%s'(%d)",
@@ -144,8 +145,8 @@ static void freeNetFlowMatrixMemory() {
 
     /* Courtesy of Wies-Software <wies@wiessoft.de> */
     for(j=0; j<(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*myGlobals.device[myGlobals.netFlowDeviceId].numHosts); j++)
-        if(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j] != NULL)
-	  free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j]);
+      if(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j] != NULL)
+	free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j]);
 
     free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix);
   }
@@ -170,10 +171,10 @@ static void setNetFlowInterfaceMatrix() {
   }
 
   myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix =(TrafficEntry**)calloc(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*
-										       myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
-										       sizeof(TrafficEntry*));
+										      myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
+										      sizeof(TrafficEntry*));
   myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrixHosts =(struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-												  myGlobals.device[myGlobals.netFlowDeviceId].numHosts);
+												 myGlobals.device[myGlobals.netFlowDeviceId].numHosts);
 }
 
 /* ************************************** */
@@ -193,7 +194,7 @@ static int setNetFlowInSocket() {
 
     if((myGlobals.netFlowInSocket <= 0) || (errno != 0) ) {
       traceEvent(CONST_TRACE_INFO, "NETFLOW: Unable to create a socket - returned %d, error is '%s'(%d)",
-                myGlobals.netFlowInSocket, strerror(errno), errno);
+		 myGlobals.netFlowInSocket, strerror(errno), errno);
       setPluginStatus("Disabled - Unable to create listening socket.");
       return(-1);
     }
@@ -259,14 +260,14 @@ static int setNetFlowOutSocket() {
 
     if((myGlobals.netFlowOutSocket <= 0) || (errno != 0) ) {
       traceEvent(CONST_TRACE_INFO, "NETFLOW: Unable to create a socket - returned %d, error is '%s'(%d)",
-                myGlobals.netFlowOutSocket, strerror(errno), errno);
+		 myGlobals.netFlowOutSocket, strerror(errno), errno);
       setPluginStatus("Disabled - Unable to create sending socket.");
       return(-1);
     }
     traceEvent(CONST_TRACE_INFO, "NETFLOW: Created a socket (%d)", myGlobals.netFlowOutSocket);
 
     setsockopt(myGlobals.netFlowOutSocket, SOL_SOCKET, SO_REUSEADDR,
-	      (char *)&sockopt, sizeof(sockopt));
+	       (char *)&sockopt, sizeof(sockopt));
 
     myGlobals.netFlowDest.sin_addr.s_addr = 0;
     myGlobals.netFlowDest.sin_family      = AF_INET;
@@ -277,7 +278,8 @@ static int setNetFlowOutSocket() {
     else if(value[0] != '\0') {
       myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
       if(myGlobals.netFlowDest.sin_addr.s_addr > 0)
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Exporting NetFlow's towards %s:%s", value, DEFAULT_NETFLOW_PORT_STR);
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Exporting NetFlow's towards %s:%s",
+		   value, DEFAULT_NETFLOW_PORT_STR);
       else
 	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Export disabled at user request");
     }
@@ -311,10 +313,369 @@ static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport
 
 /* ****************************** */
 
+static int handleV5Flow(struct flow_ver5_rec *record)  {
+  int actualDeviceId;
+  Counter len;
+  char theFlags[256];
+  u_int16_t srcAS, dstAS;
+  struct in_addr a, b;
+  u_int numPkts;
+  HostTraffic *srcHost=NULL, *dstHost=NULL;
+  u_short sport, dport, proto;
+  TrafficCounter ctr;
+  int skipSRC=0, skipDST=0;
+
+  myGlobals.numNetFlowsRcvd++;
+
+  numPkts  = ntohl(record->dPkts);
+  len      =(Counter)ntohl(record->dOctets);
+
+  /* Bad flow(zero packets) */
+  if(numPkts == 0) {
+    myGlobals.numBadFlowPkts++;
+    return(0);
+  }
+  /* Bad flow(zero length) */
+  if(len == 0) {
+    myGlobals.numBadFlowBytes++;
+    return(0);
+  }
+  /* Bad flow(more packets than bytes) */
+  if(numPkts > len) {
+    myGlobals.numBadFlowReality++;
+    return(0);
+  }
+
+  myGlobals.numNetFlowsProcessed++;
+
+  a.s_addr = ntohl(record->srcaddr);
+  b.s_addr = ntohl(record->dstaddr);
+  sport    = ntohs(record->srcport);
+  dport    = ntohs(record->dstport);
+  proto    = record->prot;
+  srcAS    = ntohs(record->src_as);
+  dstAS    = ntohs(record->dst_as);
+
+#ifdef DEBUG
+ {
+   char buf1[256], buf[256];
+
+   traceEvent(CONST_TRACE_INFO, "%s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d (proto=%d)",
+	      _intoa(a, buf, sizeof(buf)), sport,
+	      _intoa(b, buf1, sizeof(buf1)), dport, numPkts, len,
+	      srcAS, dstAS, proto);
+ }
+#endif
+
+  switch(myGlobals.netFlowAggregation) {
+  case noAggregation:
+    /* Nothing to do */
+    break;
+  case portAggregation:
+    a.s_addr = b.s_addr = 0; /* 0.0.0.0 */
+    break;
+  case hostAggregation:
+    sport = dport = 0;
+    break;
+  case protocolAggregation:
+    skipDST = skipSRC = 1;
+    a.s_addr = b.s_addr = 0; /* 0.0.0.0 */
+    sport = dport = 0;
+    srcAS = dstAS = 0;
+    break;
+  case asAggregation:
+    skipDST = skipSRC = 1;
+    a.s_addr = b.s_addr = 0; /* 0.0.0.0 */
+    sport = dport = 0;
+    proto = 17; /* UDP */
+    break;
+  }
+
+  if(myGlobals.netFlowDebug) {
+    theFlags[0] = '\0';
+
+    if(record->tcp_flags & TH_SYN)  strcat(theFlags, "SYN ");
+    if(record->tcp_flags & TH_FIN)  strcat(theFlags, "FIN ");
+    if(record->tcp_flags & TH_RST)  strcat(theFlags, "RST ");
+    if(record->tcp_flags & TH_ACK)  strcat(theFlags, "ACK ");
+    if(record->tcp_flags & TH_PUSH) strcat(theFlags, "PUSH");
+
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "%2d) %s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d flags=[%s](proto=%d)",
+	       i+1,
+	       _intoa(a, buf, sizeof(buf)), sport,
+	       _intoa(b, buf1, sizeof(buf1)), dport,
+	       ntohl(record->dPkts), len,
+	       srcAS, dstAS, theFlags, proto);
+#endif
+  }
+
+  /* traceEvent(CONST_TRACE_INFO, "NETFLOW_DEBUG: a=%u", record->srcaddr); */
+
+  actualDeviceId = myGlobals.netFlowDeviceId;
+
+  if((actualDeviceId == -1) ||(actualDeviceId >= myGlobals.numDevices)) {
+    traceEvent(CONST_TRACE_ERROR, "NETFLOW: deviceId(%d) is out of range - ignored", actualDeviceId);
+    return(-1);
+  }
+
+  myGlobals.device[actualDeviceId].receivedPkts.value += numPkts;
+  myGlobals.device[actualDeviceId].ethernetPkts.value += numPkts;
+  myGlobals.device[actualDeviceId].ipPkts.value       += numPkts;
+  updateDevicePacketStats((u_int)len, actualDeviceId);
+
+  myGlobals.device[actualDeviceId].ethernetBytes.value += len;
+  myGlobals.device[actualDeviceId].ipBytes.value       += len;
+
+#ifdef CFG_MULTITHREADED
+  /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
+#endif
+
+
+  if(!skipSRC) {
+    switch((skipSRC = isOKtoSave(ntohl(record->srcaddr),
+				 whiteNetworks, blackNetworks,
+				 numWhiteNets, numBlackNets)) ) {
+    case 1:
+      myGlobals.numSrcNetFlowsEntryFailedWhiteList++;
+      break;
+    case 2:
+      myGlobals.numSrcNetFlowsEntryFailedBlackList++;
+      break;
+    default:
+      myGlobals.numSrcNetFlowsEntryAccepted++;
+    }
+  }
+
+  if(!skipDST) {
+    switch((skipDST = isOKtoSave(ntohl(record->dstaddr),
+				 whiteNetworks, blackNetworks,
+				 numWhiteNets, numBlackNets)) ) {
+    case 1:
+      myGlobals.numDstNetFlowsEntryFailedWhiteList++;
+      break;
+    case 2:
+      myGlobals.numDstNetFlowsEntryFailedBlackList++;
+      break;
+    default:
+      myGlobals.numDstNetFlowsEntryAccepted++;
+    }
+  }
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - src - returned %s",
+	     ntohl(record->srcaddr),
+	     skipSRC == 0 ? "OK" : skipSRC == 1 ? "failed White list" : "failed Black list");
+  traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - dst - returned %s",
+	     ntohl(record->dstaddr),
+	     skipDST == 0 ? "OK" : skipDST == 1 ? "failed White list" : "failed Black list");
+#endif
+
+  if(!skipDST)
+    dstHost = lookupHost(&b, NULL, 0, 1, myGlobals.netFlowDeviceId);
+  else
+    dstHost = dummyHost;
+
+  if(!skipSRC)
+    srcHost = lookupHost(&a, NULL, 0, 1, myGlobals.netFlowDeviceId);
+  else
+    srcHost = dummyHost;
+
+  if((srcHost == NULL) ||(dstHost == NULL)) return(0);
+
+  srcHost->lastSeen = dstHost->lastSeen = myGlobals.actTime;
+  /* Commented out ... already done in updatePacketCount()                         */
+  /* srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value     += numPkts; */
+  /* srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;     */
+  srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
+
+  if(srcAS != 0) srcHost->hostAS = srcAS;
+  if(dstAS != 0) dstHost->hostAS = dstAS;
+
+#ifdef DEBUG_FLOWS
+  /* traceEvent(CONST_TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
+#endif
+
+  if((sport != 0) && (dport != 0)) {
+    if(dport < sport) {
+      if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
+	if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
+	  if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort)) {
+	    flowIgnoredNETFLOW++;
+	  } else if(min(sport, dport) <= 1023) {
+	    flowIgnoredLowPort++;
+	    flowIgnoredLowPortBytes += len;
+	    ignoreFlow(&nextFlowIgnored,
+		       ntohl(record->srcaddr), sport,
+		       ntohl(record->dstaddr), dport,
+		       len);
+	  } else if(myGlobals.netFlowAssumeFTP) {
+	    /* If the user wants (via a run-time parm), as a last resort
+	     * we assume it's ftp-data traffic
+	     */
+	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+	    flowAssumedFtpData++;
+	    flowAssumedFtpDataBytes += len;
+	  } else {
+	    flowIgnoredHighPort++;
+	    flowIgnoredHighPortBytes += len;
+	    ignoreFlow(&nextFlowIgnored,
+		       ntohl(record->srcaddr), sport,
+		       ntohl(record->dstaddr), dport,
+		       len);
+	  }
+	} else {
+	  flowProcessed++;
+	  flowProcessedBytes += len;
+	}
+      } else {
+	flowProcessed++;
+	flowProcessedBytes += len;
+      }
+    } else {
+      if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
+	if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
+	  if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort)) {
+	    flowIgnoredNETFLOW++;
+	  } else if(min(sport, dport) <= 1023) {
+	    flowIgnoredLowPort++;
+	    flowIgnoredLowPortBytes += len;
+	    ignoreFlow(&nextFlowIgnored,
+		       ntohl(record->srcaddr), sport,
+		       ntohl(record->dstaddr), dport,
+		       len);
+	  } else if(myGlobals.netFlowAssumeFTP) {
+	    /* If the user wants (via a run-time parm), as a last resort
+	     * we assume it's ftp-data traffic
+	     */
+	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+	    flowAssumedFtpData++;
+	    flowAssumedFtpDataBytes += len;
+	  } else {
+	    flowIgnoredHighPort++;
+	    flowIgnoredHighPortBytes += len;
+	    ignoreFlow(&nextFlowIgnored,
+		       ntohl(record->srcaddr), sport,
+		       ntohl(record->dstaddr), dport,
+		       len);
+	  }
+	} else {
+	  flowProcessed++;
+	  flowProcessedBytes += len;
+	}
+      } else {
+	flowProcessed++;
+	flowProcessedBytes += len;
+      }
+    }
+  } else {
+    flowIgnoredZeroPort++;
+    flowIgnoredZeroPortBytes += len;
+    ignoreFlow(&nextFlowIgnored,
+	       ntohl(record->srcaddr), sport,
+	       ntohl(record->dstaddr), dport,
+	       len);
+  }
+
+  ctr.value = len;
+  updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
+  updatePacketCount(srcHost, dstHost, ctr, numPkts, actualDeviceId);
+
+  if(subnetPseudoLocalHost(srcHost)) {
+    if(subnetPseudoLocalHost(dstHost)) {
+      incrementTrafficCounter(&srcHost->bytesSentLoc, len);
+      incrementTrafficCounter(&dstHost->bytesRcvdLoc, len);
+    } else {
+      incrementTrafficCounter(&srcHost->bytesSentRem, len);
+      incrementTrafficCounter(&dstHost->bytesRcvdLoc, len);
+    }
+  } else {
+    /* srcHost is remote */
+    if(subnetPseudoLocalHost(dstHost)) {
+      incrementTrafficCounter(&srcHost->bytesSentLoc, len);
+      incrementTrafficCounter(&dstHost->bytesRcvdFromRem, len);
+    } else {
+      incrementTrafficCounter(&srcHost->bytesSentRem, len);
+      incrementTrafficCounter(&dstHost->bytesRcvdFromRem, len);
+    }
+  }
+
+  switch(proto) {
+  case 1: /* ICMP */
+    myGlobals.device[actualDeviceId].icmpBytes.value += len;
+    srcHost->icmpSent.value += len, dstHost->icmpRcvd.value += len;
+    break;
+  case 6: /* TCP */
+    myGlobals.device[actualDeviceId].tcpBytes.value += len;
+    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
+    updateInterfacePorts(actualDeviceId, sport, dport, len);
+    updateUsedPorts(srcHost, dstHost, sport, dport, len);
+
+    if(subnetPseudoLocalHost(srcHost)) {
+      if(subnetPseudoLocalHost(dstHost)) {
+	incrementTrafficCounter(&srcHost->tcpSentLoc, len);
+	incrementTrafficCounter(&dstHost->tcpRcvdLoc, len);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local, len);
+      } else {
+	incrementTrafficCounter(&srcHost->tcpSentRem, len);
+	incrementTrafficCounter(&dstHost->tcpRcvdLoc, len);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local2remote, len);
+      }
+    } else {
+      /* srcHost is remote */
+      if(subnetPseudoLocalHost(dstHost)) {
+	incrementTrafficCounter(&srcHost->tcpSentLoc, len);
+	incrementTrafficCounter(&dstHost->tcpRcvdFromRem, len);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote2local, len);
+      } else {
+	incrementTrafficCounter(&srcHost->tcpSentRem, len);
+	incrementTrafficCounter(&dstHost->tcpRcvdFromRem, len);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote, len);
+      }
+    }
+    break;
+
+  case 17: /* UDP */
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
+    updateInterfacePorts(actualDeviceId, sport, dport, len);
+    updateUsedPorts(srcHost, dstHost, sport, dport, len);
+
+    if(subnetPseudoLocalHost(srcHost)) {
+      if(subnetPseudoLocalHost(dstHost)) {
+	incrementTrafficCounter(&srcHost->udpSentLoc, len);
+	incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local, len);
+      } else {
+	incrementTrafficCounter(&srcHost->udpSentRem, len);
+	incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local2remote, len);
+      }
+    } else {
+      /* srcHost is remote */
+      if(subnetPseudoLocalHost(dstHost)) {
+	incrementTrafficCounter(&srcHost->udpSentLoc, len);
+	incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote2local, len);
+      } else {
+	incrementTrafficCounter(&srcHost->udpSentRem, len);
+	incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote, len);
+      }
+    }
+    break;
+  }
+
+#ifdef CFG_MULTITHREADED
+  /* releaseMutex(&myGlobals.hostsHashMutex); */
+#endif
+}
+
+/* *************************** */
+
 static void dissectFlow(char *buffer, int bufferLen) {
   NetFlow5Record the5Record;
   NetFlow7Record the7Record;
-  int skipSRC=0, skipDST=0;
 
 #ifdef DEBUG
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
@@ -351,7 +712,100 @@ static void dissectFlow(char *buffer, int bufferLen) {
     }
   }
 
-  if(the5Record.flowHeader.version != htons(5)) {
+  if(the5Record.flowHeader.version == htons(9)) {
+    /* NetFlowV9 Record */
+    u_char foundRecord = 0, done = 0;
+    u_short numEntries = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader);
+    V9Template template;
+    int i;
+
+    for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
+      /* 1st byte */
+      switch(buffer[displ]) {
+      case 0:
+#ifdef DEBUG
+	printf("Found FlowTemplate\n");
+#endif
+
+	if(bufferLen > (displ+sizeof(V9Template))) {
+	  memcpy(&template, &buffer[displ], sizeof(V9Template));
+	  /* Skip template definition */
+	  displ += sizeof(template.flowsetLen);
+	} else
+	  done = 1;
+	break;
+      case 1:
+#ifdef DEBUG
+	printf("Found FlowRecord\n");
+#endif
+	foundRecord = 1;
+	break;
+      default:
+	myGlobals.numBadNetFlowsVersionsRcvd++;
+	break;
+      }
+
+      if(foundRecord) {
+	V9FlowSet fs;
+
+	if(bufferLen > (displ+sizeof(V9FlowSet))) {
+	  memcpy(&fs, &buffer[sizeof(V9FlowHeader)], sizeof(V9FlowSet));
+
+	  fs.flowsetLen = ntohs(fs.flowsetLen);
+	  fs.templateId = ntohs(fs.templateId);
+
+	  switch(fs.templateId) {
+	    /* case 256: */
+	  case 257: /* Default Cisco Template */
+	    if(1 || (((fs.flowsetLen-sizeof(V9FlowSet)) % sizeof(struct flow_ver9_flowset257)) == 0)) {
+	      struct flow_ver9_flowset257 flow;
+	      struct flow_ver5_rec record;
+
+	      displ += sizeof(V9FlowSet);
+
+	      while(displ < bufferLen) {
+		/* traceEvent(CONST_TRACE_INFO, "Displ: %d", displ); */
+
+		memcpy(&flow, &buffer[displ], sizeof(flow));
+
+		/* Flow format conversion */
+		record.Last = flow.Last;
+		record.First = flow.First;
+		record.dOctets = flow.dOctets;
+		record.dPkts = flow.dPkts;
+		record.input = flow.input;
+		record.output = flow.output;
+		record.srcaddr = flow.srcaddr;
+		record.dstaddr = flow.dstaddr;
+		record.prot = flow.prot;
+		record.tos = flow.tos;
+		record.srcport = flow.srcport;
+		record.dstport = flow.dstport;
+		record.nexthop = flow.nexthop;
+		record.dst_mask = flow.dst_mask;
+		record.src_mask = flow.src_mask;
+		record.tcp_flags = flow.tcp_flags;
+		record.dst_as = flow.dst_as;
+		record.src_as = flow.src_as;
+
+		handleV5Flow(&record);
+		displ += 45; /* Note: 45 != sizeof(flow) due to roundings */
+	      }
+	    } else {
+	      /* Bad template length */
+	      traceEvent(CONST_TRACE_WARNING, "Bad flowset length len=%d", fs.flowsetLen);
+	    }
+	    break;
+	  default:
+	    /* Unknown template */
+	    traceEvent(CONST_TRACE_WARNING, "Unknown template id %d", fs.templateId);
+	    displ += fs.flowsetLen;
+	    break;
+	  }
+	}
+      }
+    } /* for */
+  } else if(the5Record.flowHeader.version != htons(5)) {
     myGlobals.numBadNetFlowsVersionsRcvd++;
   } else {
     int i, numFlows = ntohs(the5Record.flowHeader.count);
@@ -367,356 +821,11 @@ static void dissectFlow(char *buffer, int bufferLen) {
     accessMutex(&whiteblackListMutex, "flowPacket");
 #endif
 
-    for(i=0; i<numFlows; i++) {
-      int actualDeviceId;
-      Counter len;
-      char theFlags[256];
-      u_int16_t srcAS, dstAS;
-      struct in_addr a, b;
-      u_int numPkts;
-      HostTraffic *srcHost=NULL, *dstHost=NULL;
-      u_short sport, dport, proto;
-      TrafficCounter ctr;
-
-      myGlobals.numNetFlowsRcvd++;
-
-      numPkts  = ntohl(the5Record.flowRecord[i].dPkts);
-      len      =(Counter)ntohl(the5Record.flowRecord[i].dOctets);
-
-      /* Bad flow(zero packets) */
-      if(numPkts == 0) {
-         myGlobals.numBadFlowPkts++;
-	 continue;
-      }
-      /* Bad flow(zero length) */
-      if(len == 0) {
-         myGlobals.numBadFlowBytes++;
-	 continue;
-      }
-      /* Bad flow(more packets than bytes) */
-      if(numPkts > len) {
-         myGlobals.numBadFlowReality++;
-	 continue;
-      }
-
-      myGlobals.numNetFlowsProcessed++;
-
-      a.s_addr = ntohl(the5Record.flowRecord[i].srcaddr);
-      b.s_addr = ntohl(the5Record.flowRecord[i].dstaddr);
-      sport    = ntohs(the5Record.flowRecord[i].srcport);
-      dport    = ntohs(the5Record.flowRecord[i].dstport);
-      proto    = the5Record.flowRecord[i].prot;
-      srcAS    = ntohs(the5Record.flowRecord[i].src_as);
-      dstAS    = ntohs(the5Record.flowRecord[i].dst_as);
-
-      switch(myGlobals.netFlowAggregation) {
-      case noAggregation:
-	/* Nothing to do */
-	break;
-      case portAggregation:
-	a.s_addr = b.s_addr = 0; /* 0.0.0.0 */
-	break;
-      case hostAggregation:
-	sport = dport = 0;
-	break;
-      case protocolAggregation:
-	skipDST = skipSRC = 1;
-	a.s_addr = b.s_addr = 0; /* 0.0.0.0 */
-	sport = dport = 0;
-	srcAS = dstAS = 0;
-	break;
-      case asAggregation:
-	skipDST = skipSRC = 1;
-	a.s_addr = b.s_addr = 0; /* 0.0.0.0 */
-	sport = dport = 0;
-	proto = 17; /* UDP */
-	break;
-      }
-
-      if(myGlobals.netFlowDebug) {
-	theFlags[0] = '\0';
-
-	if(the5Record.flowRecord[i].tcp_flags & TH_SYN)  strcat(theFlags, "SYN ");
-	if(the5Record.flowRecord[i].tcp_flags & TH_FIN)  strcat(theFlags, "FIN ");
-	if(the5Record.flowRecord[i].tcp_flags & TH_RST)  strcat(theFlags, "RST ");
-	if(the5Record.flowRecord[i].tcp_flags & TH_ACK)  strcat(theFlags, "ACK ");
-	if(the5Record.flowRecord[i].tcp_flags & TH_PUSH) strcat(theFlags, "PUSH");
-
-#ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "%2d) %s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d flags=[%s](proto=%d)",
-		   i+1,
-		   _intoa(a, buf, sizeof(buf)), sport,
-		   _intoa(b, buf1, sizeof(buf1)), dport,
-		   ntohl(the5Record.flowRecord[i].dPkts), len,
-		   srcAS, dstAS, theFlags, proto);
-#endif
-      }
-
-      /* traceEvent(CONST_TRACE_INFO, "NETFLOW_DEBUG: a=%u", the5Record.flowRecord[i].srcaddr); */
-
-      actualDeviceId = myGlobals.netFlowDeviceId;
-
-      if((actualDeviceId == -1) ||(actualDeviceId >= myGlobals.numDevices)) {
-	traceEvent(CONST_TRACE_ERROR, "NETFLOW: deviceId(%d) is out of range - ignored", actualDeviceId);
-	break;
-      }
-
-      myGlobals.device[actualDeviceId].receivedPkts.value += numPkts;
-      myGlobals.device[actualDeviceId].ethernetPkts.value += numPkts;
-      myGlobals.device[actualDeviceId].ipPkts.value       += numPkts;
-      updateDevicePacketStats((u_int)len, actualDeviceId);
-
-      myGlobals.device[actualDeviceId].ethernetBytes.value += len;
-      myGlobals.device[actualDeviceId].ipBytes.value       += len;
-
-#ifdef CFG_MULTITHREADED
-      /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
-#endif
-
-
-      if(!skipSRC) {
-	switch((skipSRC = isOKtoSave(ntohl(the5Record.flowRecord[i].srcaddr),
-				     whiteNetworks, blackNetworks,
-				     numWhiteNets, numBlackNets)) ) {
-	case 1:
-	  myGlobals.numSrcNetFlowsEntryFailedWhiteList++;
-	  break;
-	case 2:
-	  myGlobals.numSrcNetFlowsEntryFailedBlackList++;
-	  break;
-	default:
-	  myGlobals.numSrcNetFlowsEntryAccepted++;
-	}
-      }
-
-      if(!skipDST) {
-	switch((skipDST = isOKtoSave(ntohl(the5Record.flowRecord[i].dstaddr),
-				      whiteNetworks, blackNetworks,
-				      numWhiteNets, numBlackNets)) ) {
-	case 1:
-	  myGlobals.numDstNetFlowsEntryFailedWhiteList++;
-	  break;
-	case 2:
-	  myGlobals.numDstNetFlowsEntryFailedBlackList++;
-	  break;
-	default:
-	  myGlobals.numDstNetFlowsEntryAccepted++;
-	}
-      }
-
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - src - returned %s",
-                 ntohl(the5Record.flowRecord[i].srcaddr),
-                 skipSRC == 0 ? "OK" : skipSRC == 1 ? "failed White list" : "failed Black list");
-      traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - dst - returned %s",
-                 ntohl(the5Record.flowRecord[i].dstaddr),
-                 skipDST == 0 ? "OK" : skipDST == 1 ? "failed White list" : "failed Black list");
-#endif
-
-      if(!skipDST)
-	dstHost = lookupHost(&b, NULL, 0, 1, myGlobals.netFlowDeviceId);
-      else
-	dstHost = dummyHost;
-
-      if(!skipSRC)
-	srcHost = lookupHost(&a, NULL, 0, 1, myGlobals.netFlowDeviceId);
-      else
-	srcHost = dummyHost;
-
-      if((srcHost == NULL) ||(dstHost == NULL)) continue;
-
-      srcHost->lastSeen = dstHost->lastSeen = myGlobals.actTime;
-      /* Commented out ... already done in updatePacketCount()                         */
-      /* srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value     += numPkts; */
-      /* srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;     */
-      srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
-
-      if(srcAS != 0) srcHost->hostAS = srcAS;
-      if(dstAS != 0) dstHost->hostAS = dstAS;
-
-#ifdef DEBUG_FLOWS
-      /* traceEvent(CONST_TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
-#endif
-
-      if((sport != 0) && (dport != 0)) {
-	if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-	    if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-              if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort)) {
-                  flowIgnoredNETFLOW++;
-              } else if(min(sport, dport) <= 1023) {
-                  flowIgnoredLowPort++;
-                  flowIgnoredLowPortBytes += len;
-                  ignoreFlow(&nextFlowIgnored,
-                         ntohl(the5Record.flowRecord[i].srcaddr), sport,
-                         ntohl(the5Record.flowRecord[i].dstaddr), dport,
-                         len);
-              } else if(myGlobals.netFlowAssumeFTP) {
-                  /* If the user wants (via a run-time parm), as a last resort
-                   * we assume it's ftp-data traffic
-                   */
-		handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
-		flowAssumedFtpData++;
-		flowAssumedFtpDataBytes += len; 
-              } else {
-                  flowIgnoredHighPort++;
-                  flowIgnoredHighPortBytes += len;
-                  ignoreFlow(&nextFlowIgnored,
-                         ntohl(the5Record.flowRecord[i].srcaddr), sport,
-                         ntohl(the5Record.flowRecord[i].dstaddr), dport,
-                         len);
-              }
-            } else { 
-              flowProcessed++;
-              flowProcessedBytes += len;
-            }
-          } else { 
-            flowProcessed++;
-            flowProcessedBytes += len;
-          }
-	} else {
-	  if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-	    if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-              if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort)) {
-                  flowIgnoredNETFLOW++;
-              } else if(min(sport, dport) <= 1023) {
-                  flowIgnoredLowPort++;
-                  flowIgnoredLowPortBytes += len;
-                  ignoreFlow(&nextFlowIgnored,
-                         ntohl(the5Record.flowRecord[i].srcaddr), sport,
-                         ntohl(the5Record.flowRecord[i].dstaddr), dport,
-                         len);
-              } else if(myGlobals.netFlowAssumeFTP) {
-                  /* If the user wants (via a run-time parm), as a last resort
-                   * we assume it's ftp-data traffic
-                   */
-		handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
-		flowAssumedFtpData++;
-		flowAssumedFtpDataBytes += len;    
-              } else {
-                  flowIgnoredHighPort++;
-                  flowIgnoredHighPortBytes += len;
-                  ignoreFlow(&nextFlowIgnored,
-                         ntohl(the5Record.flowRecord[i].srcaddr), sport,
-                         ntohl(the5Record.flowRecord[i].dstaddr), dport,
-                         len);
-              }
-            } else { 
-              flowProcessed++;
-              flowProcessedBytes += len;
-            }
-          } else { 
-            flowProcessed++;
-            flowProcessedBytes += len;
-          }
-	}
-      } else {
-        flowIgnoredZeroPort++;
-        flowIgnoredZeroPortBytes += len;
-        ignoreFlow(&nextFlowIgnored,
-                   ntohl(the5Record.flowRecord[i].srcaddr), sport,
-                   ntohl(the5Record.flowRecord[i].dstaddr), dport,
-                   len);
-      }
-
-      ctr.value = len;
-      updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
-      updatePacketCount(srcHost, dstHost, ctr, numPkts, actualDeviceId);
-
-      if(subnetPseudoLocalHost(srcHost)) {
-	if(subnetPseudoLocalHost(dstHost)) {
-	  incrementTrafficCounter(&srcHost->bytesSentLoc, len);
-	  incrementTrafficCounter(&dstHost->bytesRcvdLoc, len);
-	} else {
-	  incrementTrafficCounter(&srcHost->bytesSentRem, len);
-	  incrementTrafficCounter(&dstHost->bytesRcvdLoc, len);
-	}
-      } else {
-	/* srcHost is remote */
-	if(subnetPseudoLocalHost(dstHost)) {
-	  incrementTrafficCounter(&srcHost->bytesSentLoc, len);
-	  incrementTrafficCounter(&dstHost->bytesRcvdFromRem, len);
-	} else {
-	  incrementTrafficCounter(&srcHost->bytesSentRem, len);
-	  incrementTrafficCounter(&dstHost->bytesRcvdFromRem, len);
-	}
-      }
-
-      switch(proto) {
-      case 1: /* ICMP */
-	myGlobals.device[actualDeviceId].icmpBytes.value += len;
-	srcHost->icmpSent.value += len, dstHost->icmpRcvd.value += len;
-	break;
-      case 6: /* TCP */
-	myGlobals.device[actualDeviceId].tcpBytes.value += len;
-	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
-	updateInterfacePorts(actualDeviceId, sport, dport, len);
-	updateUsedPorts(srcHost, dstHost, sport, dport, len);
-
-	if(subnetPseudoLocalHost(srcHost)) {
-	  if(subnetPseudoLocalHost(dstHost)) {
-	    incrementTrafficCounter(&srcHost->tcpSentLoc, len);
-	    incrementTrafficCounter(&dstHost->tcpRcvdLoc, len);
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local, len);
-	  } else {
-	    incrementTrafficCounter(&srcHost->tcpSentRem, len);
-	    incrementTrafficCounter(&dstHost->tcpRcvdLoc, len);
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local2remote, len);
-	  }
-	} else {
-	  /* srcHost is remote */
-	  if(subnetPseudoLocalHost(dstHost)) {
-	    incrementTrafficCounter(&srcHost->tcpSentLoc, len);
-	    incrementTrafficCounter(&dstHost->tcpRcvdFromRem, len);
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote2local, len);
-	  } else {
-	    incrementTrafficCounter(&srcHost->tcpSentRem, len);
-	    incrementTrafficCounter(&dstHost->tcpRcvdFromRem, len);
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote, len);
-	  }
-	}
-	break;
-
-      case 17: /* UDP */
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
-	updateInterfacePorts(actualDeviceId, sport, dport, len);
-	updateUsedPorts(srcHost, dstHost, sport, dport, len);
-
-	if(subnetPseudoLocalHost(srcHost)) {
-	  if(subnetPseudoLocalHost(dstHost)) {
-	    incrementTrafficCounter(&srcHost->udpSentLoc, len);
-	    incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local, len);
-	  } else {
-	    incrementTrafficCounter(&srcHost->udpSentRem, len);
-	    incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local2remote, len);
-	  }
-	} else {
-	  /* srcHost is remote */
-	  if(subnetPseudoLocalHost(dstHost)) {
-	    incrementTrafficCounter(&srcHost->udpSentLoc, len);
-	    incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote2local, len);
-	  } else {
-	    incrementTrafficCounter(&srcHost->udpSentRem, len);
-	    incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote, len);
-	  }
-	}
-	break;
-      }
-
-#ifdef CFG_MULTITHREADED
-      /* releaseMutex(&myGlobals.hostsHashMutex); */
-#endif
-    }
+    for(i=0; i<numFlows; i++) handleV5Flow(&the5Record.flowRecord[i]);
 
 #ifdef CFG_MULTITHREADED
     releaseMutex(&whiteblackListMutex);
 #endif
-
   }
 }
 
@@ -724,7 +833,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
 #ifdef CFG_MULTITHREADED
 
- #ifdef MAKE_WITH_NETFLOWSIGTRAP
+#ifdef MAKE_WITH_NETFLOWSIGTRAP
 RETSIGTYPE netflowcleanup(int signo) {
   static int msgSent = 0;
   int i;
@@ -748,23 +857,23 @@ RETSIGTYPE netflowcleanup(int signo) {
                signo == SIGUSR1 ? "SIGUSR1" :
                signo == SIGUSR2 ? "SIGUSR2" :
                signo == SIGCHLD ? "SIGCHLD" :
-  #ifdef SIGCONT
+#ifdef SIGCONT
                signo == SIGCONT ? "SIGCONT" :
-  #endif
-  #ifdef SIGSTOP
+#endif
+#ifdef SIGSTOP
                signo == SIGSTOP ? "SIGSTOP" :
-  #endif
-  #ifdef SIGBUS
+#endif
+#ifdef SIGBUS
                signo == SIGBUS ? "SIGBUS" :
-  #endif
-  #ifdef SIGSYS
+#endif
+#ifdef SIGSYS
                signo == SIGSYS ? "SIGSYS"
-  #endif
+#endif
                : "other");
     msgSent++;
   }
 
-  #ifdef HAVE_BACKTRACE
+#ifdef HAVE_BACKTRACE
   /* Don't double fault... */
   /* signal(signo, SIG_DFL); */
 
@@ -781,11 +890,11 @@ RETSIGTYPE netflowcleanup(int signo) {
       traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: BACKTRACE:          %2d. %s", i, strings[i]);
     }
   }
-  #endif /* HAVE_BACKTRACE */
+#endif /* HAVE_BACKTRACE */
 
   exit(0);
 }
- #endif /* MAKE_WITH_NETFLOWSIGTRAP */
+#endif /* MAKE_WITH_NETFLOWSIGTRAP */
 
 /* ****************************** */
 
@@ -867,12 +976,12 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	dissectFlow(buffer, rc);
       }
     } else {
-		if(rc < 0) {
-      traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: select() failed(%d, %s), terminating netFlow",
-                 errno, strerror(errno));
-      break;
-		}
-	}
+      if(rc < 0) {
+	traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: select() failed(%d, %s), terminating netFlow",
+		   errno, strerror(errno));
+	break;
+      }
+    }
   }
 
   threadActive = 0;
@@ -951,7 +1060,7 @@ static int initNetFlowFunct(void) {
   handleWhiteBlackListAddresses((char*)&value,
                                 whiteNetworks,
                                 &numWhiteNets,
-                               (char*)&workList,
+				(char*)&workList,
                                 sizeof(workList));
   if(myGlobals.netFlowWhiteList != NULL) free(myGlobals.netFlowWhiteList);
   myGlobals.netFlowWhiteList = strdup(workList);
@@ -982,7 +1091,7 @@ static int initNetFlowFunct(void) {
 #ifdef HAVE_FILEDESCRIPTORBUG
   wasteFileDescriptors();
 #endif
- 
+
   if(setNetFlowInSocket() != 0)  return(-1);
   if(setNetFlowOutSocket() != 0) return(-1);
 
@@ -1012,18 +1121,18 @@ static int initNetFlowFunct(void) {
       }
     }
 
-    /* Allocate a pure dummy for white/black list use */
-    dummyHost = (HostTraffic*)malloc(sizeof(HostTraffic));
-    memset(dummyHost, 0, sizeof(HostTraffic));
+  /* Allocate a pure dummy for white/black list use */
+  dummyHost = (HostTraffic*)malloc(sizeof(HostTraffic));
+  memset(dummyHost, 0, sizeof(HostTraffic));
 
-    dummyHost->hostIpAddress.s_addr = 0x00112233;
-    strncpy(dummyHost->hostNumIpAddress, "&nbsp;",
-            sizeof(dummyHost->hostNumIpAddress));
-    strncpy(dummyHost->hostSymIpAddress, "white/black list dummy",
-            sizeof(dummyHost->hostSymIpAddress));
-    strcpy(dummyHost->ethAddressString, "00:00:00:00:00:00");
-    setEmptySerial(&dummyHost->hostSerial);
-    dummyHost->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
+  dummyHost->hostIpAddress.s_addr = 0x00112233;
+  strncpy(dummyHost->hostNumIpAddress, "&nbsp;",
+	  sizeof(dummyHost->hostNumIpAddress));
+  strncpy(dummyHost->hostSymIpAddress, "white/black list dummy",
+	  sizeof(dummyHost->hostSymIpAddress));
+  strcpy(dummyHost->ethAddressString, "00:00:00:00:00:00");
+  setEmptySerial(&dummyHost->hostSerial);
+  dummyHost->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
 
 #ifdef CFG_MULTITHREADED
   if((myGlobals.netFlowInPort != 0) &&(!threadActive)) {
@@ -1079,59 +1188,59 @@ static void handleNetflowHTTPrequest(char* url) {
 	} else
 	  traceEvent(CONST_TRACE_ERROR, "NETFLOW: HTTP request NetMask Parse Error(%s)", value);
       } else if(strcmp(device, "whiteList") == 0) {
-          /* Cleanup the http control char xform */
-          char *fPtr=value, *tPtr=value;
-          while(fPtr[0] != '\0') {
-              if((fPtr[0] == '%') &&(fPtr[1] == '2')) {
-                  *tPtr++ =(fPtr[2] == 'C') ? ',' : '/';
-                  fPtr += 3;
-              } else {
-                  *tPtr++ = *fPtr++;
-              }
-          }
-          tPtr[0]='\0';
+	/* Cleanup the http control char xform */
+	char *fPtr=value, *tPtr=value;
+	while(fPtr[0] != '\0') {
+	  if((fPtr[0] == '%') &&(fPtr[1] == '2')) {
+	    *tPtr++ =(fPtr[2] == 'C') ? ',' : '/';
+	    fPtr += 3;
+	  } else {
+	    *tPtr++ = *fPtr++;
+	  }
+	}
+	tPtr[0]='\0';
 
 #ifdef CFG_MULTITHREADED
-          accessMutex(&whiteblackListMutex, "handleNetflowHTTPrequest()w");
+	accessMutex(&whiteblackListMutex, "handleNetflowHTTPrequest()w");
 #endif
-          handleWhiteBlackListAddresses(value,
-                                        whiteNetworks,
-                                        &numWhiteNets,
-                                       (char*)&workList,
-                                        sizeof(workList));
-          if(myGlobals.netFlowWhiteList != NULL) free(myGlobals.netFlowWhiteList);
-          myGlobals.netFlowWhiteList=strdup(workList);
+	handleWhiteBlackListAddresses(value,
+				      whiteNetworks,
+				      &numWhiteNets,
+				      (char*)&workList,
+				      sizeof(workList));
+	if(myGlobals.netFlowWhiteList != NULL) free(myGlobals.netFlowWhiteList);
+	myGlobals.netFlowWhiteList=strdup(workList);
 #ifdef CFG_MULTITHREADED
-          releaseMutex(&whiteblackListMutex);
+	releaseMutex(&whiteblackListMutex);
 #endif
-          storePrefsValue("netFlow.whiteList", myGlobals.netFlowWhiteList);
+	storePrefsValue("netFlow.whiteList", myGlobals.netFlowWhiteList);
       } else if(strcmp(device, "blackList") == 0) {
-          /* Cleanup the http control char xform */
-          char *fPtr=value, *tPtr=value;
-          while(fPtr[0] != '\0') {
-              if((fPtr[0] == '%') &&(fPtr[1] == '2')) {
-                  *tPtr++ =(fPtr[2] == 'C') ? ',' : '/';
-                  fPtr += 3;
-              } else {
-                  *tPtr++ = *fPtr++;
-              }
-          }
-          tPtr[0]='\0';
+	/* Cleanup the http control char xform */
+	char *fPtr=value, *tPtr=value;
+	while(fPtr[0] != '\0') {
+	  if((fPtr[0] == '%') &&(fPtr[1] == '2')) {
+	    *tPtr++ =(fPtr[2] == 'C') ? ',' : '/';
+	    fPtr += 3;
+	  } else {
+	    *tPtr++ = *fPtr++;
+	  }
+	}
+	tPtr[0]='\0';
 
 #ifdef CFG_MULTITHREADED
-          accessMutex(&whiteblackListMutex, "handleNetflowHTTPrequest()b");
+	accessMutex(&whiteblackListMutex, "handleNetflowHTTPrequest()b");
 #endif
-          handleWhiteBlackListAddresses(value,
-                                        blackNetworks,
-                                        &numBlackNets,
-                                       (char*)&workList,
-                                        sizeof(workList));
-          if(myGlobals.netFlowBlackList != NULL) free(myGlobals.netFlowBlackList);
-          myGlobals.netFlowBlackList=strdup(workList);
+	handleWhiteBlackListAddresses(value,
+				      blackNetworks,
+				      &numBlackNets,
+				      (char*)&workList,
+				      sizeof(workList));
+	if(myGlobals.netFlowBlackList != NULL) free(myGlobals.netFlowBlackList);
+	myGlobals.netFlowBlackList=strdup(workList);
 #ifdef CFG_MULTITHREADED
-          releaseMutex(&whiteblackListMutex);
+	releaseMutex(&whiteblackListMutex);
 #endif
-          storePrefsValue("netFlow.blackList", myGlobals.netFlowBlackList);
+	storePrefsValue("netFlow.blackList", myGlobals.netFlowBlackList);
       } else if(strcmp(device, "collectorIP") == 0) {
 	storePrefsValue("netFlow.netFlowDest", value);
 	myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
@@ -1178,11 +1287,11 @@ static void handleNetflowHTTPrequest(char* url) {
 	     "<INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Virtual NetFlow Interface<br>Network Address</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
-	       "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
+	     "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
 
   if(snprintf(buf, sizeof(buf), "%s/%s",
-		_intoa(myGlobals.netFlowIfAddress, buf1, sizeof(buf1)),
-		_intoa(myGlobals.netFlowIfMask, buf2, sizeof(buf2))) < 0)
+	      _intoa(myGlobals.netFlowIfAddress, buf1, sizeof(buf1)),
+	      _intoa(myGlobals.netFlowIfMask, buf2, sizeof(buf2))) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -1200,7 +1309,7 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("</SELECT></td><td><INPUT TYPE=submit VALUE=Set></FORM></TD></TR>\n");
 
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>White list</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
-               "IP Address/Mask(s) we store data from:</td><td "TD_BG"><INPUT NAME=whiteList SIZE=60 VALUE=\"");
+	     "IP Address/Mask(s) we store data from:</td><td "TD_BG"><INPUT NAME=whiteList SIZE=60 VALUE=\"");
 
   if(snprintf(buf, sizeof(buf), "%s", myGlobals.netFlowWhiteList == NULL ? " " : myGlobals.netFlowWhiteList) < 0)
     BufferTooShort();
@@ -1209,7 +1318,7 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("\"></td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Black list</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
-               "IP Address/Mask(s) we reject data from:</td><td "TD_BG"><INPUT NAME=blackList SIZE=60 VALUE=\"");
+	     "IP Address/Mask(s) we reject data from:</td><td "TD_BG"><INPUT NAME=blackList SIZE=60 VALUE=\"");
 
   if(snprintf(buf, sizeof(buf), "%s", myGlobals.netFlowBlackList == NULL ? " " : myGlobals.netFlowBlackList) < 0)
     BufferTooShort();
@@ -1302,43 +1411,43 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("<tr><td><pre>\n\n</pre>"
 	     "<b>NOTE</b>:<ol>"
 	     "<li>Use 0 as port, and 0.0.0.0 as IP address to disable export/collection. "
-                 "Use a space to disable the white / black lists."
+	     "Use a space to disable the white / black lists."
 	     "<li>The virtual NIC, '" NETFLOW_DEVICE_NAME "' is activated only when incoming flow "
-                 "capture is enabled."
+	     "capture is enabled."
 	     "<li>NetFlow packets are associated with this separate, virtual device and are "
-                 "not mixed with captured packets."
+	     "not mixed with captured packets."
              "<li>Once the virtual NIC is activated, it will remain available for the "
-                 "duration of the ntop run, even if you disable incoming flows."
+	     "duration of the ntop run, even if you disable incoming flows."
              "<li>Activating incoming flows will override the command line -M | "
-                 "--no-interface-merge parameter for the duration of the ntop run."
+	     "--no-interface-merge parameter for the duration of the ntop run."
              "<li>Use a.b.c.d/32 for a single host in the white / black lists."
              "<li>If a white list is present, then data for ONLY those host(s) and network(s) "
-                 "will be stored.  Data for other hosts/networks is simply thrown away. "
-                 "Both source and destination are checked and processed separately.<br>"
-                 "If there is no white list, that all data will be stored(unless dropped "
-                 "because of a black list)."
+	     "will be stored.  Data for other hosts/networks is simply thrown away. "
+	     "Both source and destination are checked and processed separately.<br>"
+	     "If there is no white list, that all data will be stored(unless dropped "
+	     "because of a black list)."
              "<li>If a black list is present, then data for those host(s) and network(s) "
-                 "will be thrown away. Again, both source and destination are checked and "
-                 "processed separately.<br>"
-                 "If there is no black list, then no data will be excluded(unless dropped "
-                 "because of a white list)."
+	     "will be thrown away. Again, both source and destination are checked and "
+	     "processed separately.<br>"
+	     "If there is no black list, then no data will be excluded(unless dropped "
+	     "because of a white list)."
 	     "<li>NetFlow activation may require ntop restart.<br>"
-                 "<I>Changes to white / black lists take affect immediately, "
-                    "but are NOT retro-active.</I>"
+	     "<I>Changes to white / black lists take affect immediately, "
+	     "but are NOT retro-active.</I>"
 	     "<li>You can switch devices using this <A HREF=\"/switch.html\">link</A>."
 	     "</ol></td></tr>\n");
   sendString("<tr><td>"
 	     "<p>Due to the way ntop works, NetFlow export capabilities are limited. "
-                "If you need a fast, light, memory savvy,<br>highly configurable NetFlow "
-                "probe, you better give "
-                "<b><A HREF=\"http://www.ntop.org/nProbe.html\">nProbe</A></b> a try.</p>"
+	     "If you need a fast, light, memory savvy,<br>highly configurable NetFlow "
+	     "probe, you better give "
+	     "<b><A HREF=\"http://www.ntop.org/nProbe.html\">nProbe</A></b> a try.</p>"
 	     "<p>If you are looking for a cheap, dedicated hardware NetFlow probe you "
-                "should look into <b><A HREF=\"http://www.ntop.org/nBox.html\">nBox</A></b> "
-                "<IMG SRC=/nboxLogo.gif>"
+	     "should look into <b><A HREF=\"http://www.ntop.org/nBox.html\">nBox</A></b> "
+	     "<IMG SRC=/nboxLogo.gif>"
 	     "</td></tr>\n");
   sendString("</table><p>\n");
 
-/* ************************************* */
+  /* ************************************* */
 
   if((myGlobals.numNetFlowsPktsRcvd > 0) ||(myGlobals.numNetFlowsPktsSent > 0)) {
     sendString("<hr>\n");
@@ -1379,14 +1488,14 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString(buf);
 
       if(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd > 0) {
-          if(snprintf(buf, sizeof(buf),
-                      "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT># Flows per packet(avg)</TH>"
-                      "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%.1f</TD></TR>\n",
-    		     (float) myGlobals.numNetFlowsRcvd /
-                       (float)(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd)
-            ) < 0)
-              BufferTooShort();
-          sendString(buf);
+	if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT># Flows per packet(avg)</TH>"
+		    "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%.1f</TD></TR>\n",
+		    (float) myGlobals.numNetFlowsRcvd /
+		    (float)(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd)
+		    ) < 0)
+	  BufferTooShort();
+	sendString(buf);
       }
 
       if(snprintf(buf, sizeof(buf),
@@ -1395,7 +1504,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	BufferTooShort();
       sendString(buf);
 
-    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Discarded Flows</TH></TR>\n");
+      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Discarded Flows</TH></TR>\n");
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Flows with zero packet count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowPkts)) < 0)
@@ -1419,136 +1528,136 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString(buf);
 
       if(myGlobals.numSrcNetFlowsEntryFailedWhiteList +
-          myGlobals.numSrcNetFlowsEntryFailedBlackList +
-          myGlobals.numDstNetFlowsEntryFailedWhiteList +
-          myGlobals.numDstNetFlowsEntryFailedBlackList > 0) {
+	 myGlobals.numSrcNetFlowsEntryFailedBlackList +
+	 myGlobals.numDstNetFlowsEntryFailedWhiteList +
+	 myGlobals.numDstNetFlowsEntryFailedBlackList > 0) {
 
-          sendString("<TR><TH COLSPAN=4 "DARK_BG">Accepted/Rejected Flows</TH></TR>");
-          sendString("<TR><TD COLSPAN=4 ALIGN=\"CENTER\"><TABLE BORDER=\"1\" width=100%>");
+	sendString("<TR><TH COLSPAN=4 "DARK_BG">Accepted/Rejected Flows</TH></TR>");
+	sendString("<TR><TD COLSPAN=4 ALIGN=\"CENTER\"><TABLE BORDER=\"1\" width=100%>");
 
-          sendString("<TR><TD>&nbsp;</TD><TH>Source</TH><TH>Destination</TH></TR>\n");
+	sendString("<TR><TD>&nbsp;</TD><TH>Source</TH><TH>Destination</TH></TR>\n");
 
-          sendString("<TR><TH ALIGN=\"LEFT\">Rejected - Black list</TH>");
-          if(snprintf(buf, sizeof(buf),
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-                      formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList)) < 0)
-            BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf),
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-                      formatPkts(myGlobals.numDstNetFlowsEntryFailedBlackList)) < 0)
-            BufferTooShort();
-          sendString(buf);
-          sendString("</TR>\n");
+	sendString("<TR><TH ALIGN=\"LEFT\">Rejected - Black list</TH>");
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		    formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		    formatPkts(myGlobals.numDstNetFlowsEntryFailedBlackList)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	sendString("</TR>\n");
 
-          sendString("<TR><TH ALIGN=\"LEFT\">Rejected - White list</TH>");
-          if(snprintf(buf, sizeof(buf),
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-                      formatPkts(myGlobals.numSrcNetFlowsEntryFailedWhiteList)) < 0)
-            BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf),
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-                      formatPkts(myGlobals.numDstNetFlowsEntryFailedWhiteList)) < 0)
-            BufferTooShort();
-          sendString(buf);
-          sendString("</TR>\n");
+	sendString("<TR><TH ALIGN=\"LEFT\">Rejected - White list</TH>");
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		    formatPkts(myGlobals.numSrcNetFlowsEntryFailedWhiteList)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		    formatPkts(myGlobals.numDstNetFlowsEntryFailedWhiteList)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	sendString("</TR>\n");
 
-          sendString("<TR><TH ALIGN=\"LEFT\">Accepted</TH>");
-          if(snprintf(buf, sizeof(buf),
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-                      formatPkts(myGlobals.numSrcNetFlowsEntryAccepted)) < 0)
-            BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf),
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-                      formatPkts(myGlobals.numDstNetFlowsEntryAccepted)) < 0)
-            BufferTooShort();
-          sendString(buf);
-          sendString("</TR>\n");
+	sendString("<TR><TH ALIGN=\"LEFT\">Accepted</TH>");
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		    formatPkts(myGlobals.numSrcNetFlowsEntryAccepted)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		    formatPkts(myGlobals.numDstNetFlowsEntryAccepted)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	sendString("</TR>\n");
 
-          sendString("<TR><TH ALIGN=\"RIGHT\">Total</TH>");
-          if(snprintf(buf, sizeof(buf),
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-                      formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList +
-                                 myGlobals.numSrcNetFlowsEntryFailedWhiteList +
-                                 myGlobals.numSrcNetFlowsEntryAccepted)) < 0)
-            BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf),
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-                      formatPkts(myGlobals.numDstNetFlowsEntryFailedBlackList +
-                                 myGlobals.numDstNetFlowsEntryFailedWhiteList +
-                                 myGlobals.numDstNetFlowsEntryAccepted)) < 0)
-            BufferTooShort();
-          sendString(buf);
-          sendString("</TR>\n");
+	sendString("<TR><TH ALIGN=\"RIGHT\">Total</TH>");
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		    formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList +
+			       myGlobals.numSrcNetFlowsEntryFailedWhiteList +
+			       myGlobals.numSrcNetFlowsEntryAccepted)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		    formatPkts(myGlobals.numDstNetFlowsEntryFailedBlackList +
+			       myGlobals.numDstNetFlowsEntryFailedWhiteList +
+			       myGlobals.numDstNetFlowsEntryAccepted)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	sendString("</TR>\n");
 
-          sendString("</TABLE></TD></TR>\n");
+	sendString("</TABLE></TD></TR>\n");
       }
 
 #ifdef DEBUG
       sendString("<TR><TD>White net list</TD><TD>");
       if(numWhiteNets == 0) {
-          sendString("none");
+	sendString("none");
       } else {
-          sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hostmask<br>\n");
-          for(i=0; i<numWhiteNets; i++) {
-              if(snprintf(buf, sizeof(buf),
+	sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hostmask<br>\n");
+	for(i=0; i<numWhiteNets; i++) {
+	  if(snprintf(buf, sizeof(buf),
                       "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
                       i,
                       whiteNetworks[i][0],
-                         ((whiteNetworks[i][0] >> 24) & 0xff),
-                         ((whiteNetworks[i][0] >> 16) & 0xff),
-                         ((whiteNetworks[i][0] >>  8) & 0xff),
-                         ((whiteNetworks[i][0]      ) & 0xff),
+		      ((whiteNetworks[i][0] >> 24) & 0xff),
+		      ((whiteNetworks[i][0] >> 16) & 0xff),
+		      ((whiteNetworks[i][0] >>  8) & 0xff),
+		      ((whiteNetworks[i][0]      ) & 0xff),
                       whiteNetworks[i][1],
-                         ((whiteNetworks[i][1] >> 24) & 0xff),
-                         ((whiteNetworks[i][1] >> 16) & 0xff),
-                         ((whiteNetworks[i][1] >>  8) & 0xff),
-                         ((whiteNetworks[i][1]      ) & 0xff),
+		      ((whiteNetworks[i][1] >> 24) & 0xff),
+		      ((whiteNetworks[i][1] >> 16) & 0xff),
+		      ((whiteNetworks[i][1] >>  8) & 0xff),
+		      ((whiteNetworks[i][1]      ) & 0xff),
                       whiteNetworks[i][2],
-                         ((whiteNetworks[i][2] >> 24) & 0xff),
-                         ((whiteNetworks[i][2] >> 16) & 0xff),
-                         ((whiteNetworks[i][2] >>  8) & 0xff),
-                         ((whiteNetworks[i][2]      ) & 0xff)
-                ) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(i<numWhiteNets) sendString("<br>\n");
-          }
+		      ((whiteNetworks[i][2] >> 24) & 0xff),
+		      ((whiteNetworks[i][2] >> 16) & 0xff),
+		      ((whiteNetworks[i][2] >>  8) & 0xff),
+		      ((whiteNetworks[i][2]      ) & 0xff)
+		      ) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+	  if(i<numWhiteNets) sendString("<br>\n");
+	}
       }
       sendString("</TD></TR>\n");
 
       sendString("<TR><TD>Black net list</TD><TD>");
       if(numBlackNets == 0) {
-          sendString("none");
+	sendString("none");
       } else {
-          sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hostmask<br>\n");
-          for(i=0; i<numBlackNets; i++) {
-              if(snprintf(buf, sizeof(buf),
+	sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hostmask<br>\n");
+	for(i=0; i<numBlackNets; i++) {
+	  if(snprintf(buf, sizeof(buf),
                       "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
                       i,
                       blackNetworks[i][0],
-                         ((blackNetworks[i][0] >> 24) & 0xff),
-                         ((blackNetworks[i][0] >> 16) & 0xff),
-                         ((blackNetworks[i][0] >>  8) & 0xff),
-                         ((blackNetworks[i][0]      ) & 0xff),
+		      ((blackNetworks[i][0] >> 24) & 0xff),
+		      ((blackNetworks[i][0] >> 16) & 0xff),
+		      ((blackNetworks[i][0] >>  8) & 0xff),
+		      ((blackNetworks[i][0]      ) & 0xff),
                       blackNetworks[i][1],
-                         ((blackNetworks[i][1] >> 24) & 0xff),
-                         ((blackNetworks[i][1] >> 16) & 0xff),
-                         ((blackNetworks[i][1] >>  8) & 0xff),
-                         ((blackNetworks[i][1]      ) & 0xff),
+		      ((blackNetworks[i][1] >> 24) & 0xff),
+		      ((blackNetworks[i][1] >> 16) & 0xff),
+		      ((blackNetworks[i][1] >>  8) & 0xff),
+		      ((blackNetworks[i][1]      ) & 0xff),
                       blackNetworks[i][2],
-                         ((blackNetworks[i][2] >> 24) & 0xff),
-                         ((blackNetworks[i][2] >> 16) & 0xff),
-                         ((blackNetworks[i][2] >>  8) & 0xff),
-                         ((blackNetworks[i][2]      ) & 0xff)
-                ) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(i<numBlackNets) sendString("<br>\n");
-          }
+		      ((blackNetworks[i][2] >> 24) & 0xff),
+		      ((blackNetworks[i][2] >> 16) & 0xff),
+		      ((blackNetworks[i][2] >>  8) & 0xff),
+		      ((blackNetworks[i][2]      ) & 0xff)
+		      ) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+	  if(i<numBlackNets) sendString("<br>\n");
+	}
       }
       sendString("</TD></TR>\n");
 #endif
@@ -1557,105 +1666,105 @@ static void handleNetflowHTTPrequest(char* url) {
 
       if(snprintf(buf, sizeof(buf),
                   "<TR><TH colspan=2 ALIGN=\"LEFT\">Port(s) zero (not tcp/ip)</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
-                      flowIgnoredZeroPort,
-                      formatBytes(flowIgnoredZeroPortBytes, 1)
-        ) < 0)
-          BufferTooShort();
+		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+		  flowIgnoredZeroPort,
+		  formatBytes(flowIgnoredZeroPortBytes, 1)
+		  ) < 0)
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
                   "<TR><TH colspan=2 ALIGN=\"LEFT\">Are netFlow</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD><TD>&nbsp;</TD></TR>\n",
+		  "<TD ALIGN=\"RIGHT\">%u</TD><TD>&nbsp;</TD></TR>\n",
                   flowIgnoredNETFLOW
-        ) < 0)
-          BufferTooShort();
+		  ) < 0)
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
                   "<TR><TH colspan=2 ALIGN=\"LEFT\">unrecognized port <= 1023</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
-                      flowIgnoredLowPort,
-                      formatBytes(flowIgnoredLowPortBytes, 1)
-        ) < 0)
-          BufferTooShort();
+		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+		  flowIgnoredLowPort,
+		  formatBytes(flowIgnoredLowPortBytes, 1)
+		  ) < 0)
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
                   "<TR><TH colspan=2 ALIGN=\"LEFT\">unrecognized port > 1023</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
-                      flowIgnoredHighPort,
-                      formatBytes(flowIgnoredHighPortBytes, 1)
-        ) < 0)
-          BufferTooShort();
+		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+		  flowIgnoredHighPort,
+		  formatBytes(flowIgnoredHighPortBytes, 1)
+		  ) < 0)
+	BufferTooShort();
       sendString(buf);
 
       sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Gives: Counted Flows</TH></TR>\n");
 
       if(snprintf(buf, sizeof(buf),
                   "<TR><TH colspan=2 ALIGN=\"LEFT\">Counted</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
-                      flowProcessed,
-                      formatBytes(flowProcessedBytes, 1)
-        ) < 0)
-          BufferTooShort();
+		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+		  flowProcessed,
+		  formatBytes(flowProcessedBytes, 1)
+		  ) < 0)
+	BufferTooShort();
       sendString(buf);
 
       if((flowAssumedFtpData>0) || (myGlobals.netFlowAssumeFTP)) {
         if(snprintf(buf, sizeof(buf),
                     "<TR><TH colspan=2 ALIGN=\"LEFT\">Assumed ftpdata</TH>\n"
-                        "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
-                        flowAssumedFtpData,
-                        formatBytes(flowAssumedFtpDataBytes, 1)
-          ) < 0)
-            BufferTooShort();
+		    "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+		    flowAssumedFtpData,
+		    formatBytes(flowAssumedFtpDataBytes, 1)
+		    ) < 0)
+	  BufferTooShort();
         sendString(buf);
       }
       sendString("<TR><TH COLSPAN=4 ALIGN=\"CENTER\" "DARK_BG">Most Recent Ignored Flows</th></tr>\n");
       sendString("<TR><TH COLSPAN=2>Flow</TH><TH>Bytes</TH><TH># Consecutive<br>Counts</TH></TR>\n");
       for (i=nextFlowIgnored; i<nextFlowIgnored+MAX_NUM_IGNOREDFLOWS; i++) {
-          if ((flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
-              (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
-             if(flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
-                 snprintf(buf1, sizeof(buf1), "(%d) ", flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
-             } else {
-	       snprintf(buf1, sizeof(buf1), "&nbsp;");
-             }
-             if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) {
-                 snprintf(buf2, sizeof(buf2), "%.1fGB",
-                          (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
-             } else if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) {
-                 snprintf(buf2, sizeof(buf2), "%.1fMB",
-                          (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
-             } else {
-                 snprintf(buf2, sizeof(buf2), "%u",
-                          flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
-             }
-             if(snprintf(buf, sizeof(buf),
-                         "<TR><TD align=right>%d.%d.%d.%d:%d</TD><TD align=left>-> %d.%d.%d.%d:%d</TD>"
-			 "<TD align=right>%s</TD></TD><TD align=right>%s</TD></TR>\n",
-                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 24) & 0xff,
-                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 16) & 0xff,
-                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >>  8) & 0xff,
-                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0]      ) & 0xff,
-                         flowIgnored[i%MAX_NUM_IGNOREDFLOWS][1],
-                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 24) & 0xff,
-                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 16) & 0xff,
-                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >>  8) & 0xff,
-                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2]      ) & 0xff,
-                         flowIgnored[i%MAX_NUM_IGNOREDFLOWS][3],
-                         buf2, buf1
-               ) < 0)
-                 BufferTooShort();
-             sendString(buf);
-          }
+	if ((flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
+	    (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
+	  if(flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
+	    snprintf(buf1, sizeof(buf1), "(%d) ", flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
+	  } else {
+	    snprintf(buf1, sizeof(buf1), "&nbsp;");
+	  }
+	  if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) {
+	    snprintf(buf2, sizeof(buf2), "%.1fGB",
+		     (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
+	  } else if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) {
+	    snprintf(buf2, sizeof(buf2), "%.1fMB",
+		     (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
+	  } else {
+	    snprintf(buf2, sizeof(buf2), "%u",
+		     flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
+	  }
+	  if(snprintf(buf, sizeof(buf),
+		      "<TR><TD align=right>%d.%d.%d.%d:%d</TD><TD align=left>-> %d.%d.%d.%d:%d</TD>"
+		      "<TD align=right>%s</TD></TD><TD align=right>%s</TD></TR>\n",
+		      (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 24) & 0xff,
+		      (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 16) & 0xff,
+		      (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >>  8) & 0xff,
+		      (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0]      ) & 0xff,
+		      flowIgnored[i%MAX_NUM_IGNOREDFLOWS][1],
+		      (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 24) & 0xff,
+		      (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 16) & 0xff,
+		      (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >>  8) & 0xff,
+		      (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2]      ) & 0xff,
+		      flowIgnored[i%MAX_NUM_IGNOREDFLOWS][3],
+		      buf2, buf1
+		      ) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+	}
       }
 
 #ifdef CFG_MULTITHREADED
       if(whiteblackListMutex.isLocked) {
-          sendString("<TR><TH>List Mutex</TH>\n");
-          printMutexStatus(FALSE, &whiteblackListMutex, "White/Black list mutex");
-          sendString("&nbsp;</TD></TR>\n");
+	sendString("<TR><TH>List Mutex</TH>\n");
+	printMutexStatus(FALSE, &whiteblackListMutex, "White/Black list mutex");
+	sendString("&nbsp;</TD></TR>\n");
       }
 #endif
 
@@ -1676,7 +1785,7 @@ static void handleNetflowHTTPrequest(char* url) {
   }
 
 
-/* ************************************* */
+  /* ************************************* */
 
   sendString("<p></CENTER></CENTER>\n");
   sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");
@@ -1695,7 +1804,7 @@ static void termNetflowFunct(void) {
     threadActive = 0;
   }
   deleteMutex(&whiteblackListMutex);
- #endif
+#endif
 
   if(myGlobals.netFlowInSocket > 0) {
     closeNwSocket(&myGlobals.netFlowInSocket);
@@ -1705,7 +1814,7 @@ static void termNetflowFunct(void) {
 #ifdef HAVE_FILEDESCRIPTORBUG
   unwasteFileDescriptors();
 #endif
- 
+
   traceEvent(CONST_TRACE_INFO, "NETFLOW: Thanks for using ntop NetFlow");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Done");
   fflush(stdout);
@@ -1716,7 +1825,7 @@ static void termNetflowFunct(void) {
 #ifdef DEBUG_FLOWS
 
 static void handleNetFlowPacket(u_char *_deviceId,
-			      const struct pcap_pkthdr *h,
+				const struct pcap_pkthdr *h,
 				const u_char *p) {
   int sampledPacketSize;
   int deviceId, rc;
@@ -1767,8 +1876,8 @@ static void handleNetFlowPacket(u_char *_deviceId,
 static PluginInfo netflowPluginInfo[] = {
   { "NetFlow",
     "This plugin is used to setup, activate and deactivate ntop's NetFlow support.<br>"
-      "ntop can both collect and receive NetFlow data. Received NetFlow data is "
-      "reported as a separate 'NIC' in the regular ntop reports.",
+    "ntop can both collect and receive NetFlow data. Received NetFlow data is "
+    "reported as a separate 'NIC' in the regular ntop reports.",
     "2.3.1", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
@@ -1783,7 +1892,7 @@ static PluginInfo netflowPluginInfo[] = {
 #endif
     handleNetflowHTTPrequest,
 #ifdef DEBUG_FLOWS
-    "udp and port 2055",
+    "udp and port 9995",
 #else
     NULL, /* no capture */
 #endif
@@ -1800,7 +1909,7 @@ PluginInfo* netflowPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Welcome to %s.(C) 2002 by Luca Deri",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Welcome to %s.(C) 2002-03 by Luca Deri",
 	     netflowPluginInfo->pluginName);
 
   return(netflowPluginInfo);
@@ -1808,12 +1917,12 @@ PluginInfo* netflowPluginEntryFctn(void)
 
 /* This must be here so it can access the struct PluginInfo, above */
 static void setPluginStatus(char * status)
-   {
-       if(netflowPluginInfo->pluginStatusMessage != NULL)
-           free(netflowPluginInfo->pluginStatusMessage);
-       if(status == NULL) {
-           netflowPluginInfo->pluginStatusMessage = NULL;
-       } else {
-           netflowPluginInfo->pluginStatusMessage = strdup(status);
-       }
-   }
+{
+  if(netflowPluginInfo->pluginStatusMessage != NULL)
+    free(netflowPluginInfo->pluginStatusMessage);
+  if(status == NULL) {
+    netflowPluginInfo->pluginStatusMessage = NULL;
+  } else {
+    netflowPluginInfo->pluginStatusMessage = strdup(status);
+  }
+}

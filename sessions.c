@@ -75,7 +75,10 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
     VirtualHostList *list;
     int numEntries = 0;
 
-    if(theRemHost->protocolInfo == NULL) theRemHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+    if(theRemHost->protocolInfo == NULL) {
+      theRemHost->protocolInfo = (ProtocolInfo*)malloc(sizeof(ProtocolInfo));
+      memset(theRemHost->protocolInfo, 0, sizeof(ProtocolInfo));
+    }
 
     list = theRemHost->protocolInfo->httpVirtualHosts;
 

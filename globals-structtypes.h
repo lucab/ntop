@@ -1283,6 +1283,64 @@ typedef struct single_flow_ver7_rec {
   struct flow_ver7_rec flowRecord[CONST_V7FLOWS_PER_PAK+1 /* safe against buffer overflows */];
 } NetFlow7Record;
 
+/* ************************************ */
+
+/* NetFlow v9/IPFIX */
+
+typedef struct flow_ver9_hdr {
+  u_int16_t version;         /* Current version=9*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int32_t sourceId;        /* Source id */
+} V9FlowHeader; 
+
+typedef struct flow_ver9_template_field {
+  u_int16_t fieldType;
+  u_int16_t fieldLen;
+} V9TemplateField;
+
+typedef struct flow_ver9_template {
+  u_int16_t templateFlowset; /* = 0 */
+  u_int16_t flowsetLen;
+  u_int16_t templateId;
+  u_int16_t fieldCount;
+} V9Template;
+
+typedef struct flow_ver9_flow_set {
+  u_int16_t templateId;
+  u_int16_t flowsetLen;
+} V9FlowSet;
+
+typedef struct flow_ver9_templateids {
+  u_int16_t templateId;
+  u_int16_t templateLen;
+  char      *templateDescr;
+} V9TemplateId;
+
+
+struct flow_ver9_flowset257 {
+  u_int32_t Last;       /* and of last packet of the flow */
+  u_int32_t First;      /* SysUptime at start of flow */
+  u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st & last packet in  this flow)*/
+  u_int32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st & last packet in this flow)*/
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t tos;         /* IP Type-of-Service */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int8_t dst_mask;    /* destination route's mask bits */
+  u_int8_t src_mask;    /* source route's mask bits */
+  u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int16_t src_as;     /* source peer/origin Autonomous System */
+};
+
 /* ******** Token Ring ************ */
 
 #if defined(WIN32) && !defined (__GNUC__)
