@@ -583,24 +583,24 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     value1 = (60*60 + dumpInterval - 1) / dumpInterval;
     /* value2 is the # of value1 (hours) for dumpHours hours */
     value2 = value1 * dumpHours;
-    snprintf(intervalStr, sizeof(intervalStr), "RRA:AVERAGE:0.5:1:%d", value2);
+    snprintf(intervalStr, sizeof(intervalStr), "RRA:AVERAGE:%.1f:1:%d", 0.5, value2);
     argv[argc++] = intervalStr;
 
     /* Store the MIN/MAX 5m value for a # of hours */
-    snprintf(minStr, sizeof(minStr), "RRA:MIN:0.5:1:%d", dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+    snprintf(minStr, sizeof(minStr), "RRA:MIN:%.1f:1:%d", 0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
     argv[argc++] = minStr;
-    snprintf(maxStr, sizeof(maxStr), "RRA:MAX:0.5:1:%d", dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+    snprintf(maxStr, sizeof(maxStr), "RRA:MAX:%.1f:1:%d", 0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
     argv[argc++] = maxStr;
 
     if (dumpDays > 0) {
-        snprintf(daysStr, sizeof(daysStr), "RRA:AVERAGE:0.5:%d:%d", value1, dumpDays * 24);
+        snprintf(daysStr, sizeof(daysStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpDays * 24);
         argv[argc++] = daysStr;
     }
 
     /* Compute the rollup - how many dumpInterval seconds interval are in a day */
     value1 = (24*60*60 + dumpInterval - 1) / dumpInterval;
     if (dumpMonths > 0) {
-        snprintf(monthsStr, sizeof(monthsStr), "RRA:AVERAGE:0.5:%d:%d", value1, dumpMonths * 30);
+        snprintf(monthsStr, sizeof(monthsStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpMonths * 30);
         argv[argc++] = monthsStr;
     }
 
