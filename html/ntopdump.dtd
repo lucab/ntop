@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT ntop_dump (ntop_dump_header)>
+<!ELEMENT ntop_dump_header (version_c_header, version_c_configure, version_c_install)>
+<!ATTLIST ntop_dump_header
+	date CDATA #REQUIRED
+	hostName CDATA #REQUIRED
+	xml_version CDATA #REQUIRED
+	file_version CDATA #REQUIRED
+>
+<!ELEMENT version_c_configure EMPTY>
+<!ATTLIST version_c_configure
+	configure_parameters CDATA #IMPLIED
+	host_system_type CDATA #IMPLIED
+	target_system_type CDATA #IMPLIED
+	compiler_cflags CDATA #IMPLIED
+	include_path CDATA #IMPLIED
+	system_libs CDATA #IMPLIED
+	core_libs CDATA #IMPLIED
+	additional_libs CDATA #IMPLIED
+>
+<!ELEMENT version_c_header EMPTY>
+<!ATTLIST version_c_header
+	ntop_version CDATA #REQUIRED
+	osName CDATA #REQUIRED
+	author CDATA #IMPLIED
+	buildDate CDATA #IMPLIED
+>
+<!ELEMENT version_c_install EMPTY>
+<!ATTLIST version_c_install
+	install_path CDATA #IMPLIED
+>
+<!ELEMENT ActualCommandLine ( parameter+ ) >
+<!ATTLIST ActualCommandLine count NMTOKEN #REQUIRED >
+
+<!ELEMENT CommandLine ( program_name, ActualCommandLine, EffectiveCommandLine ) >
+
+<!ELEMENT EffectiveCommandLine ( accessLogPath, enablePacketDecoding, stickyHosts, daemonMode, maxNumLines, rFileName, trackOnlyLocalHosts, devices, filterExpressionInExtraFrame, pcapLog, localAddresses, numericFlag, dontTrustMACaddr, protoSpecs, enableSuspiciousPacketDump, refreshRate, disablePromiscuousMode, traceLevel, effectiveUserName, webAddr, webPort, enableSessionHandling, currentFilterExpression, domainName, enableExternalTools, isLsofPresent, flowSpecs, debugMode, useSyslog, mergeInterfaces, isNmapPresent, pcapLogBasePath, dbPath, usePersistentStorage, mapperURL, sslAddr, sslPort, throughput_chart_type, ignoreSIGPIPE, useSSLwatchdog, xmlFileOut, xmlFileSnap, xmlFileIn ) >
+
+<!ELEMENT accessLogPath EMPTY >
+<!ATTLIST accessLogPath description CDATA #REQUIRED >
+<!ATTLIST accessLogPath value CDATA #REQUIRED >
+
+<!ELEMENT currentFilterExpression EMPTY >
+<!ATTLIST currentFilterExpression description CDATA #REQUIRED >
+<!ATTLIST currentFilterExpression value CDATA #REQUIRED >
+
+<!ELEMENT daemonMode EMPTY >
+<!ATTLIST daemonMode description CDATA #REQUIRED >
+<!ATTLIST daemonMode value NMTOKEN #REQUIRED >
+
+<!ELEMENT dbPath EMPTY >
+<!ATTLIST dbPath description CDATA #REQUIRED >
+<!ATTLIST dbPath value CDATA #REQUIRED >
+
+<!ELEMENT debugMode EMPTY >
+<!ATTLIST debugMode description CDATA #REQUIRED >
+<!ATTLIST debugMode value NMTOKEN #REQUIRED >
+
+<!ELEMENT devices EMPTY >
+<!ATTLIST devices description CDATA #REQUIRED >
+<!ATTLIST devices value NMTOKEN #REQUIRED >
+
+<!ELEMENT disablePromiscuousMode EMPTY >
+<!ATTLIST disablePromiscuousMode description CDATA #REQUIRED >
+<!ATTLIST disablePromiscuousMode value NMTOKEN #REQUIRED >
+
+<!ELEMENT domainName EMPTY >
+<!ATTLIST domainName description CDATA #REQUIRED >
+<!ATTLIST domainName value NMTOKEN #REQUIRED >
+
+<!ELEMENT dontTrustMACaddr EMPTY >
+<!ATTLIST dontTrustMACaddr description CDATA #REQUIRED >
+<!ATTLIST dontTrustMACaddr value NMTOKEN #REQUIRED >
+
+<!ELEMENT effectiveUserName EMPTY >
+<!ATTLIST effectiveUserName EffectiveId CDATA #REQUIRED >
+<!ATTLIST effectiveUserName description CDATA #REQUIRED >
+<!ATTLIST effectiveUserName value NMTOKEN #REQUIRED >
+
+<!ELEMENT enableExternalTools EMPTY >
+<!ATTLIST enableExternalTools description CDATA #REQUIRED >
+<!ATTLIST enableExternalTools value NMTOKEN #REQUIRED >
+
+<!ELEMENT enablePacketDecoding EMPTY >
+<!ATTLIST enablePacketDecoding description CDATA #REQUIRED >
+<!ATTLIST enablePacketDecoding value NMTOKEN #REQUIRED >
+
+<!ELEMENT enableSessionHandling EMPTY >
+<!ATTLIST enableSessionHandling description CDATA #REQUIRED >
+<!ATTLIST enableSessionHandling value NMTOKEN #REQUIRED >
+
+<!ELEMENT enableSuspiciousPacketDump EMPTY >
+<!ATTLIST enableSuspiciousPacketDump description CDATA #REQUIRED >
+<!ATTLIST enableSuspiciousPacketDump value NMTOKEN #REQUIRED >
+
+<!ELEMENT filterExpressionInExtraFrame EMPTY >
+<!ATTLIST filterExpressionInExtraFrame description CDATA #REQUIRED >
+<!ATTLIST filterExpressionInExtraFrame value CDATA #REQUIRED >
+
+<!ELEMENT flowSpecs EMPTY >
+<!ATTLIST flowSpecs description CDATA #REQUIRED >
+<!ATTLIST flowSpecs value NMTOKEN #REQUIRED >
+
+<!ELEMENT ignoreSIGPIPE EMPTY >
+<!ATTLIST ignoreSIGPIPE description NMTOKEN #REQUIRED >
+<!ATTLIST ignoreSIGPIPE value NMTOKEN #REQUIRED >
+
+<!ELEMENT isLsofPresent EMPTY >
+<!ATTLIST isLsofPresent description CDATA #REQUIRED >
+<!ATTLIST isLsofPresent value NMTOKEN #REQUIRED >
+
+<!ELEMENT isNmapPresent EMPTY >
+<!ATTLIST isNmapPresent description CDATA #REQUIRED >
+<!ATTLIST isNmapPresent value NMTOKEN #REQUIRED >
+
+<!ELEMENT localAddresses EMPTY >
+<!ATTLIST localAddresses description CDATA #REQUIRED >
+<!ATTLIST localAddresses value CDATA #REQUIRED >
+
+<!ELEMENT mapperURL EMPTY >
+<!ATTLIST mapperURL description CDATA #REQUIRED >
+<!ATTLIST mapperURL value CDATA #REQUIRED >
+
+<!ELEMENT maxNumLines EMPTY >
+<!ATTLIST maxNumLines description CDATA #REQUIRED >
+<!ATTLIST maxNumLines value NMTOKEN #REQUIRED >
+
+<!ELEMENT mergeInterfaces EMPTY >
+<!ATTLIST mergeInterfaces description CDATA #REQUIRED >
+<!ATTLIST mergeInterfaces value NMTOKEN #REQUIRED >
+
+<!ELEMENT numericFlag EMPTY >
+<!ATTLIST numericFlag description CDATA #REQUIRED >
+<!ATTLIST numericFlag value NMTOKEN #REQUIRED >
+
+<!ELEMENT parameter EMPTY >
+<!ATTLIST parameter index NMTOKEN #REQUIRED >
+<!ATTLIST parameter value CDATA #REQUIRED >
+
+<!ELEMENT pcapLog EMPTY >
+<!ATTLIST pcapLog description CDATA #REQUIRED >
+<!ATTLIST pcapLog value CDATA #REQUIRED >
+
+<!ELEMENT pcapLogBasePath EMPTY >
+<!ATTLIST pcapLogBasePath description CDATA #REQUIRED >
+<!ATTLIST pcapLogBasePath value CDATA #REQUIRED >
+
+<!ELEMENT program_name EMPTY >
+<!ATTLIST program_name description CDATA #REQUIRED >
+<!ATTLIST program_name value NMTOKEN #REQUIRED >
+
+<!ELEMENT protoSpecs EMPTY >
+<!ATTLIST protoSpecs description CDATA #REQUIRED >
+<!ATTLIST protoSpecs value CDATA #REQUIRED >
+
+<!ELEMENT rFileName EMPTY >
+<!ATTLIST rFileName description CDATA #REQUIRED >
+<!ATTLIST rFileName value CDATA #REQUIRED >
+
+<!ELEMENT refreshRate EMPTY >
+<!ATTLIST refreshRate description CDATA #REQUIRED >
+<!ATTLIST refreshRate value NMTOKEN #REQUIRED >
+
+<!ELEMENT sslAddr EMPTY >
+<!ATTLIST sslAddr description CDATA #REQUIRED >
+<!ATTLIST sslAddr value NMTOKEN #REQUIRED >
+
+<!ELEMENT sslPort EMPTY >
+<!ATTLIST sslPort description CDATA #REQUIRED >
+<!ATTLIST sslPort value NMTOKEN #REQUIRED >
+
+<!ELEMENT stickyHosts EMPTY >
+<!ATTLIST stickyHosts description CDATA #REQUIRED >
+<!ATTLIST stickyHosts value NMTOKEN #REQUIRED >
+
+<!ELEMENT throughput_chart_type EMPTY >
+<!ATTLIST throughput_chart_type description NMTOKEN #REQUIRED >
+<!ATTLIST throughput_chart_type value NMTOKEN #REQUIRED >
+
+<!ELEMENT traceLevel EMPTY >
+<!ATTLIST traceLevel description CDATA #REQUIRED >
+<!ATTLIST traceLevel value NMTOKEN #REQUIRED >
+
+<!ELEMENT trackOnlyLocalHosts EMPTY >
+<!ATTLIST trackOnlyLocalHosts description CDATA #REQUIRED >
+<!ATTLIST trackOnlyLocalHosts value CDATA #REQUIRED >
+
+<!ELEMENT usePersistentStorage EMPTY >
+<!ATTLIST usePersistentStorage description CDATA #REQUIRED >
+<!ATTLIST usePersistentStorage value NMTOKEN #REQUIRED >
+
+<!ELEMENT useSSLwatchdog EMPTY >
+<!ATTLIST useSSLwatchdog description NMTOKEN #REQUIRED >
+<!ATTLIST useSSLwatchdog value NMTOKEN #REQUIRED >
+
+<!ELEMENT useSyslog EMPTY >
+<!ATTLIST useSyslog description CDATA #REQUIRED >
+<!ATTLIST useSyslog value NMTOKEN #REQUIRED >
+
+<!ELEMENT webAddr EMPTY >
+<!ATTLIST webAddr description CDATA #REQUIRED >
+<!ATTLIST webAddr value NMTOKEN #REQUIRED >
+
+<!ELEMENT webPort EMPTY >
+<!ATTLIST webPort description CDATA #REQUIRED >
+<!ATTLIST webPort value NMTOKEN #REQUIRED >
+
+<!ELEMENT xmlFileIn EMPTY >
+<!ATTLIST xmlFileIn description NMTOKEN #REQUIRED >
+<!ATTLIST xmlFileIn value CDATA #REQUIRED >
+
+<!ELEMENT xmlFileOut EMPTY >
+<!ATTLIST xmlFileOut description NMTOKEN #REQUIRED >
+<!ATTLIST xmlFileOut value CDATA #REQUIRED >
+
+<!ELEMENT xmlFileSnap EMPTY >
+<!ATTLIST xmlFileSnap description NMTOKEN #REQUIRED >
+<!ATTLIST xmlFileSnap value CDATA #REQUIRED >
+
+

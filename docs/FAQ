@@ -2160,6 +2160,29 @@ Q. When I type 'make' it complains about a makefile error.
 A. Always remember to use gmake on *BSD systems! (and possibly other systems as well.)
 
 
+Q. I can't compile ntop under FreeBSD 5.0.
+A. In some situations, we produce gcc link lines which expose a conflict 'tween 
+   FreeBSD 5.0 and libtool.
+
+   You will see the following error messages:
+
+       expr: illegal option -- l
+       usage: expr [-e] expression
+       etc.
+
+   See the release notes for FreeBSD 5.0 and the expr(1) man page:
+
+       http://www.freebsd.org/releases/5.0R/DP2/relnotes-i386.html
+       http://www.freebsd.org/cgi/man.cgi?query=expr&sektion=1&manpath=FreeBSD+5.0-current
+
+   Solve this by setting the compatibility flag before running make.
+
+       $ export EXPR_COMPAT=Y
+
+   configure.in and configure have been updated to do warn you to do this.
+(Added 27Jan2003, Burton)
+
+
 Linux
 =-=-=
 

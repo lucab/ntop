@@ -1,0 +1,106 @@
+<HTML>
+<HEAD>
+<TITLE>Welcome to ntop xmldump!</TITLE>
+<META HTTP-EQUIV=Pragma CONTENT=no-cache>
+<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>
+<LINK REL=stylesheet HREF=/style.css type="text/css">
+<SCRIPT SRC=/functions.js TYPE="text/javascript" LANGUAGE="javascript"></SCRIPT>
+</HEAD>
+<BODY BACKGROUND=/white_bg.gif BGCOLOR="#FFFFFF" LINK=blue VLINK=blue>
+<CENTER>
+<H1><FONT FACE="Helvetica, Arial, Sans Serif">Welcome to ntop!</FONT></H1>
+<P><HR>
+</CENTER>
+<p><FONT face="Helvetica" point-size="10pt">This page allows you to request a dump of ntop data in xml format.</FONT></p>
+<p>
+<table border="0">
+  <tr>
+    <th valign="top"><FONT face="Helvetica" point-size="10pt">WARNINGS:</FONT></th>
+    <td valign="top"><FONT face="Helvetica" point-size="10pt">1.</FONT></td>
+    <td><FONT face="Helvetica" point-size="10pt"><I>If ntop was not configured with 
+        the</I> --enable-xmldump <I>option, this page will fail.  Further, your 
+	    request will be detected as a hostile request and your IP address will 
+	    be blacklisted for a period of time.</I></FONT>
+	</td>
+  </tr>
+  <tr>
+    <th>&nbsp;</th>
+    <td valign="top"><FONT face="Helvetica" point-size="10pt">2.</FONT></td>
+    <td><FONT face="Helvetica" point-size="10pt"><I>Returning a lot of data may 
+	    take a LONG time, enough to exceed the timeouts on many browsers.  You 
+		may want to use a non-interactive request, such as wget or lynx.</I></FONT>
+	</td>
+  <tr>
+    <th>&nbsp;</th>
+    <td valign="top"><FONT face="Helvetica" point-size="10pt">3.</FONT></td>
+    <td><FONT face="Helvetica" point-size="10pt"><I>If ntop was not invoked with the</I>
+	    --xmlfilesnap=<I> option, setting ToFile to 'yes' will fail!</I></FONT>
+	</td>
+  </tr>	
+  </tr>
+  
+</table>
+
+
+<FONT FACE=Helvetica>
+<center>
+<form method="GET" action="/dump.xml?ver=no&inv=no">
+<table border>
+<tr>
+  <th align=center>Option</th>
+  <th align=center>Description</th>
+  <th align=center>Select</th>
+</tr>
+
+<tr>
+  <th align="left">Version</th>
+  <td align="left">Information about ntop's configuration from version.c</td>
+  <td align="center">
+    <select name="version">
+      <option value="yes" SELECTED>yes
+      <option value="no">no
+    </select>
+  </td>
+</tr>
+
+<tr>
+  <th align="left">Invoke</th>
+  <td align="left">Information about ntop's invokation - command line, parameter settings, etc.</td>
+  <td align="center">
+    <select name="invoke">
+      <option value="yes" SELECTED>yes
+      <option value="no">no
+	</select>
+  </td>
+</tr>
+
+<tr>
+  <th align="left">Interfaces</th>
+  <td align="left">Information about each interface (NIC).</td>
+  <td align="center">
+    <select name="interface">
+      <option value="yes">yes
+      <option value="no" SELECTED>no
+    </select>  
+  </td>
+</tr>
+
+<tr>
+  <th align="left">To File?</th>
+  <td align="left">Dump to a host file, not the requestor?</td>
+  <td align="center">
+    <select name="tofile">
+      <option value="yes">yes
+      <option value="no" SELECTED>no
+    </select>  
+  </td>
+</tr>
+
+</table>
+<p></p>
+<input type="submit" value="Request">
+</form>
+</center>
+</FONT>
+</BODY>
+</HTML>
