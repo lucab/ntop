@@ -82,13 +82,11 @@ void printTableDoubleEntry(char *buf, int bufLen,
   int int_perc;
 
   if((totalS == 0) && (totalR == 0)) return;
-  int_perc = (int)percentageS;
 
-  /* This shouldn't happen */
-  if(int_perc < 0) {
+  if(percentageS < 0.5) {
     int_perc = 0;
     percentageS = 0;
-  } else if(int_perc > 100) {
+  } else if(percentageS > 99.5) {
     int_perc = 100;
     percentageS = 100;
   }
@@ -126,15 +124,12 @@ void printTableDoubleEntry(char *buf, int bufLen,
 
   if(totalR == 0) percentageR = 0;
 
-  int_perc = (int)percentageR;
-
-  /* This shouldn't happen */
-  if(int_perc < 0) {
+  if(percentageR < 0.5) {
     int_perc = 0;
     percentageR = 0;
-  } else if(int_perc > 100) {
+  } else if(percentageR > 99.5) {
     int_perc = 100;
-    percentageS = 100;
+    percentageR = 100;
   }
 
   switch(int_perc) {
@@ -171,60 +166,111 @@ void printTableEntryPercentage(char *buf, int bufLen,
 			       float percentage) {
   int int_perc = (int)percentage;
 
-  /* This shouldn't happen */
-  if(int_perc < 0)
+  if(percentage < 0.5)
     int_perc = 0;
-  else if(int_perc > 100)
+  else if(percentage > 99.5)
     int_perc = 100;
 
   switch(int_perc) {
   case 0:
     if(total == -1) {
-      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-		  getRowColor(), label, COLOR_2, label_2) < 0)
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=\"LEFT\">%s</TH>"
+             "<TD "TD_BG"><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
+             "<TR>"
+             "<TD ALIGN=\"LEFT\" WIDTH=\"50\">%s 0&nbsp;%%</TD>"
+             "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\"><TR><TD>"
+             "<TD ALIGN=\"CENTER\" WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+             "</TD></TR></TABLE></TD>"
+             "<TD ALIGN=\"RIGHT\" WIDTH=\"50\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label,
+             label_1,
+             COLOR_2,
+             label_2) < 0)
 	BufferTooShort();
     } else {
-      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-		  getRowColor(), label, formatKBytes(total), COLOR_2, label_2) < 0)
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=\"LEFT\">%s</TH>"
+             "<TD "TD_BG" ALIGN=\"RIGHT\">%s</TD>"
+             "<TD "TD_BG"><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
+             "<TR>"
+             "<TD ALIGN=\"LEFT\" WIDTH=\"50\">%s 0&nbsp;%%</TD>"
+             "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\"><TR><TD>"
+             "<TD ALIGN=\"CENTER\" WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+             "</TD></TR></TABLE></TD>"
+             "<TD ALIGN=\"RIGHT\" WIDTH=\"50\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label,
+             formatKBytes(total),
+             label_1, 
+             COLOR_2,
+             label_2) < 0)
 	BufferTooShort();
     }
     break;
   case 100:
     if(total == -1) {
-      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-		  getRowColor(), label, COLOR_1, label_1) < 0)
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=\"LEFT\">%s</TH>"
+             "<TD "TD_BG"><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
+             "<TR>"
+             "<TD ALIGN=\"LEFT\" WIDTH=\"50\">%s 100&nbsp;%%</TD>"
+             "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\"><TR><TD>"
+             "<TD ALIGN=\"CENTER\" WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+             "</TD></TR></TABLE></TD>"
+             "<TD ALIGN=\"RIGHT\" WIDTH=\"50\">%s 0&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label,
+             label_1,
+             COLOR_1,
+             label_2) < 0)
 	BufferTooShort();
     } else {
-      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-		  getRowColor(), label, formatKBytes(total), COLOR_1, label_1) < 0)
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=\"LEFT\">%s</TH><TD "TD_BG" ALIGN=\"RIGHT\">%s</TD>"
+             "<TD "TD_BG" ALIGN=\"RIGHT\">%s</TD>"
+             "<TD "TD_BG"><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
+             "<TR>"
+             "<TD ALIGN=\"LEFT\" WIDTH=\"50\">%s 100&nbsp;%%</TD>"
+             "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\"><TR><TD>"
+             "<TD ALIGN=\"CENTER\" WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+             "</TD></TR></TABLE></TD>"
+             "<TD ALIGN=\"RIGHT\" WIDTH=\"50\">%s 0&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label,
+             formatKBytes(total),
+             label_1,
+             COLOR_1,
+             label_2) < 0)
 	BufferTooShort();
     }
     break;
   default:
     if(total == -1) {
-      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=\"LEFT\">%s</TH>"
              "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
-             "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
+             "<TR>"
+             "<TD ALIGN=\"LEFT\" WIDTH=\"50\">%s %.1f&nbsp;%%</TD>"
+             "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\"><TR><TD>"
+             "<TD ALIGN=\"CENTER\" WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+             "<TD ALIGN=\"CENTER\" WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+             "</TD></TR></TABLE></TD>"
+             "<TD ALIGN=\"RIGHT\" WIDTH=\"50\">%s %.1f&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
              getRowColor(), label,
+             label_1, percentage, 
              int_perc, COLOR_1,
-             label_1, percentage, (100-int_perc), COLOR_2,
-             label_2, (100-percentage)) < 0) BufferTooShort();
+             (100-int_perc), COLOR_2,
+             label_2, (100-percentage)) < 0)
+         BufferTooShort();
     } else {
-      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=\"LEFT\">%s</TH><TD "TD_BG" ALIGN=\"RIGHT\">%s</TD>"
              "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
-             "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
+             "<TR>"
+             "<TD ALIGN=\"LEFT\" WIDTH=\"50\">%s %.1f&nbsp;%%</TD>"
+             "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\"><TR><TD>"
+             "<TD ALIGN=\"CENTER\" WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+             "<TD ALIGN=\"CENTER\" WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+             "</TD></TR></TABLE></TD>"
+             "<TD ALIGN=\"RIGHT\" WIDTH=\"50\">%s %.1f&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
              getRowColor(), label, formatKBytes(total),
+             label_1, percentage, 
              int_perc, COLOR_1,
-             label_1, percentage, (100-int_perc), COLOR_2,
-		  label_2, (100-percentage)) < 0) BufferTooShort();
+             (100-int_perc), COLOR_2,
+	     label_2, (100-percentage)) < 0)
+         BufferTooShort();
     }
   }
 
