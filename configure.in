@@ -61,7 +61,7 @@ VERSION=$NTOP_VERSION
 
 echo
 echo "Welcome to $PACKAGE, Version $VERSION"
-echo "[Copyright (c) 1998-2000 Luca Deri <deri@ntop.org>]"
+echo "[Copyright (c) 1998-2001 Luca Deri <deri@ntop.org>]"
 echo
 
 dnl>
@@ -108,14 +108,6 @@ dnl> By default the configuration script will try to compile the interactive 'in
 dnl> The choice to disable this feature is left to the user.
 INTOP=intop
 ac_disable_intop=no
-
-dnl>
-dnl> By default the configuration script will try to compile the remoteInterface module, which
-dnl> needs a C++ compiler.
-dnl> The choice to disable this feature is left to the user.
-REMOTEINTERFACE=remoteInterfaceAPI
-ac_disable_ri=no
-
 
 dnl>
 dnl> *** ToBeRocked ***
@@ -309,23 +301,6 @@ dnl>
 dnl> Give the user an option to avoid to compile the interactive version.
 dnl>
 AC_ARG_ENABLE(intop, [  --disable-intop         disable compilation of intop [default=no]], ac_disable_intop="yes")
-
-dnl>
-dnl> Give the user an option to compile without the C++ support.
-dnl>
-AC_ARG_ENABLE(ri, [  --disable-ri            disable support for Remote Interface also if a C++ compiler is available [default=no]], ac_disable_ri="yes")
-
-dnl>
-dnl> OPTIONAL Look for a C++ Compiler.
-dnl>
-if test ".$ac_disable_ri" = ".no"; then
-  AC_PROG_CXX
-if test ".$GXX" = ".yes"; then
-    CXXFLAGS="$CXXFLAGS -fhandle-exceptions"
-  fi
-else
-  REMOTEINTERFACE=
-fi
 
 
 dnl>
@@ -1058,7 +1033,6 @@ AC_SUBST(SNMPLIBS)
 
 AC_SUBST(PLUGINS)
 AC_SUBST(INTOP)
-AC_SUBST(REMOTEINTERFACE)
 
 dnl>
 dnl> ntops directories
@@ -1105,9 +1079,6 @@ Makefile
 intop/Makefile
 plugins/Makefile
 plugins/pep/Makefile
-remoteInterfaceAPI/Makefile
-remoteInterfaceAPI/CPP/Makefile
-remoteInterfaceAPI/utils/Makefile
 ntop-config
 ], [
 case "$CONFIG_FILES" in
