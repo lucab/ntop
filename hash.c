@@ -20,8 +20,6 @@
 
 #include "ntop.h"
 
-#define MIN_NUM_USES            1
-
 /* ******************************* */
 
 u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
@@ -393,7 +391,7 @@ void purgeIdleHosts(int actDevice) {
   else
     lastPurgeTime[actDevice] = startTime;
 
-  len = myGlobals.device[actDevice].actualHashSize/3;
+  len = myGlobals.device[actDevice].hostsno/3;
   theFlaggedHosts = (HostTraffic**)malloc(sizeof(HostTraffic*)*len);
   purgeTime = startTime-PURGE_HOSTS_DELAY; /* Time used to decide whether a host need to be purged */
 
