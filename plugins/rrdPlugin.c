@@ -1445,7 +1445,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		hostKey = el->hostNumIpAddress;
 
 		if((numLocalNets > 0)
-		   && (!__pseudoLocalAddress(&el->hostIpAddress, networks, numLocalNets))) continue;
+		   && (!__pseudoLocalAddress(&el->hostIpAddress, networks, numLocalNets))) {
+#ifdef CFG_MULTITHREADED
+                  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+                  continue;
+                }
 
 	      } else {
 		/* hostKey = el->ethAddressString; */
