@@ -96,16 +96,17 @@ static void resolveAddress(struct in_addr *hostAddr,
   key_data.dptr = keyBuf;
   key_data.dsize = strlen(keyBuf)+1;
 
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "resolveAddress");
-#endif
-
   if(myGlobals.gdbm_file == NULL) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving resolveAddress()");
 #endif
     return; /* ntop is quitting... */
   }
+
+#ifdef MULTITHREADED
+  accessMutex(&myGlobals.gdbmMutex, "resolveAddress");
+#endif
+
   data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
 
 #ifdef MULTITHREADED
@@ -309,19 +310,17 @@ static void resolveAddress(struct in_addr *hostAddr,
 
   updateHostNameInfo(addr, symAddr, actualDeviceId);
 
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "resolveAddress-4");
-#endif
-
   if(myGlobals.gdbm_file == NULL) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving resolveAddress()");
 #endif
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
     return; /* ntop is quitting... */
   }
+
+#ifdef MULTITHREADED
+  accessMutex(&myGlobals.gdbmMutex, "resolveAddress-4");
+#endif
+
   if(gdbm_store(myGlobals.gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
     traceEvent(TRACE_ERROR, "Error while adding '%s'\n.\n", symAddr);
   else {
@@ -445,7 +444,6 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     while(data_data.dptr != NULL) {
       if(!myGlobals.capturePackets) return(NULL);
 
-      key_data = data_data;
       memcpy(&addr.s_addr, data_data.dptr, 4);
 
 #ifdef DNS_DEBUG
@@ -465,11 +463,12 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #endif
       myGlobals.addressQueueLen--;
       gdbm_delete(myGlobals.addressCache, data_data);
+      key_data = data_data;
       data_data = gdbm_nextkey(myGlobals.addressCache, key_data);
 #ifdef MULTITHREADED
       releaseMutex(&myGlobals.gdbmMutex);
 #endif
-      free(key_data.dptr);
+      free(key_data.dptr); /* Free the 'formed' data_data */
     }
   } /* endless loop */
 
@@ -546,11 +545,12 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(key_data.dptr)+1;
 
+  if(myGlobals.gdbm_file == NULL) return; /* ntop is quitting... */
+
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.gdbmMutex, "ipaddr2str");
 #endif
 
-  if(myGlobals.gdbm_file == NULL) return; /* ntop is quitting... */
   data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
 
 #ifdef MULTITHREADED
