@@ -53,10 +53,32 @@
 # Modify this to always add something at the end of the parm list that
 # you don't want in /etc/ntop.conf.
 
-# Why? Well, -d is a good idea since it allows you to use the same /etc/ntop.conf 
+# This default tells ntop to run as a daemon (good thing, since this is
+# the daemon startup script.
+extra=" -d"
+
+# Why not force it below? This allows you to use the same /etc/ntop.conf 
 # file both from /etc/init.d/ntop and if you want to run ntop from the 
 # command line...
-extra=" -d --use-syslog=local3"
+
+# Want to log ntop stuff somewhere other than /var/log/messages?
+# Use this line:
+# extra=" -d --use-syslog=local3"
+
+# And add this to /etc/syslog.conf:
+#  # Save ntop
+#  local3.*		/var/log/ntop.log
+
+# Add this to /etc/logrotate.conf:
+# /var/log/ntop.log {
+#     weekly
+#     rotate 4
+#     notifempty
+#     # ntop doesn't handle SIGHUP properly
+#     copytruncate
+# }
+
+# For both of the additions, above, remember to remove the leading #!
 
 ####END NORMALLY MODIFIED PARAMETERS#####
 
@@ -81,11 +103,10 @@ invoked=$0
 # Source networking configuration.
 . /etc/sysconfig/network
 
-echo ""
-echo ""
 
 # Basic sanity checks...
 if ! [ -x $prog ]; then
+  echo ""
   echo "ERROR -"
   echo "        $prog not found!"
   echo ""
@@ -95,6 +116,7 @@ if ! [ -x $prog ]; then
 fi
 
 if [ ${NETWORKING} = "no" ]; then
+  echo ""
   echo "ERROR -"
   echo "        Networking is not up!"
   echo ""
@@ -104,6 +126,7 @@ if [ ${NETWORKING} = "no" ]; then
 fi
 
 if ! [ -f ${conf} ]; then
+  echo ""
   echo "ERROR -"
   echo "        Configuration file ${conf} does not exist!"
   echo ""
@@ -296,12 +319,11 @@ start () {
 
   shift
 
-  echo ""
-  echo ""
 
   # check password database exists
   if ! [ -f "${ntopdbfilepath}/ntop_pw.db" ]; then
-    logger -p ${ntopusesyslog} -t ${name} -- "INITD - FATALERROR - no password database"
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - FATALERROR - no password database"
+      echo ""
       echo "ERROR -"
       echo "        No password database!"
       echo ""
@@ -315,6 +337,7 @@ start () {
   # verify database path parameter
   if [ ".${ntopdbfilepath}" = "." ]; then
     logger -p ${ntopusesyslog} -t ${name} -- "INITD - FATALERROR: Database path parameter is not set"
+    echo ""
     echo "ERROR -"
     echo "        Database path parameter is not set."
     echo ""
@@ -331,6 +354,7 @@ start () {
 
   if ! [ -d "${ntopdbfilepath}" ]; then
     logger -p ${ntopusesyslog} -t ${name} -- "INITD - FATALERROR: Database path parameter ${ntopdbfilepath} invalid"
+    echo ""
     echo "ERROR -"
     echo "        Database path parameter ${ntopdbfilepath} invalid!"
     echo ""
@@ -345,6 +369,7 @@ start () {
   if [ ".${ntopspoolfilepath}" != "." ]; then
     if ! [ -d "${ntopspoolfilepath}" ]; then
       logger -p ${ntopusesyslog} -t ${name} -- "INITD - FATALERROR: Spool database path parameter ${ntopspoolfilepath} invalid"
+      echo ""
       echo "ERROR -"
       echo "        Spool database path parameter ${ntopspoolfilepath} invalid!"
       echo ""
@@ -361,6 +386,7 @@ start () {
     alp=`dirname ${ntopaccesslogpath}`
     if ! [ -d "${alp}" ]; then
       logger -p ${ntopusesyslog} -t ${name} -- "INITD - FATALERROR: Access log parameter ${ntopaccesslogpath} directory missing"
+      echo ""
       echo "ERROR -"
       echo "        Access log parameter ${ntopaccesslogpath} - directory missing!"
       echo ""
@@ -376,6 +402,7 @@ start () {
   if [ ".${ntopoutputpacketpath}" != "." ]; then
     if ! [ -d "${ntopoutputpacketpath}" ]; then
       logger -p ${ntopusesyslog} -t ${name} -- "INITD - FATALERROR: Output packet path ${ntopoutputpacketpath} directory missing"
+      echo ""
       echo "ERROR -"
       echo "        Access log parameter ${ntopoutputpacketpath} directory missing!"
       echo ""
@@ -499,6 +526,7 @@ init() {
   if [ -d "${ntopdbfilepath}" ] && 
      [ -f "${ntopdbfilepath}/ntop_pw.db" ]; then
     logger -p ${ntopusesyslog} -t ${name} -- "INITD - ERROR - password database exists"
+    echo ""
     echo "ERROR -"
     echo "        password database exists!"
     echo ""
@@ -510,6 +538,7 @@ init() {
   fi
 
   if [ ".${ntopuser}" = "." ]; then
+    echo ""
     echo "WARNING -"
     echo "        Execution user not set, can't do permissions"
     echo ""
