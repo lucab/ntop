@@ -4977,7 +4977,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
       closeNwSocket(&myGlobals.newSock);
     } else {
-      traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d)", errno);
+      traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d: %s)", errno, strerror(errno));
     }
   }
 

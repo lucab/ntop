@@ -1338,6 +1338,15 @@ void          rewinddir(DIR *);
  #endif
 #endif /* WIN32 */
 
+/* Flow aggregation */
+typedef enum {
+  noAggregation = 0,
+  portAggregation,
+  hostAggregation,
+  protocolAggregation,
+  asAggregation
+} AggregationType;
+
 /* *************************************************************** */
 
 typedef struct ntopGlobals {
@@ -1738,7 +1747,6 @@ XML*/
          numDNSErrorOther,
          numKeptNumericAddresses;
 
-
   /* Misc */
   char *separator;         /* html separator */
   volatile unsigned long numHandledSIGPIPEerrors;
@@ -1809,6 +1817,7 @@ XML*/
   NetFlow5Record theRecord;
   struct sockaddr_in netFlowDest;
   /* Flow reception */
+  AggregationType netFlowAggregation;
   int netFlowInSocket, netFlowDeviceId;
   u_short netFlowInPort;
   u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsRcvd, numNetFlowsProcessed;

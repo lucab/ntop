@@ -3767,7 +3767,7 @@ pcap_t *pcap_open_dead(int linktype, int snaplen)
 
 int setSpecifiedUser() {
   int rc;
-
+  
   /*
    * set user to be as inoffensive as possible
    */
@@ -3777,8 +3777,26 @@ int setSpecifiedUser() {
     exit(-1);
   }
 
-  if((myGlobals.userId != 0) || (myGlobals.groupId != 0))
-    return(1);
-  else
+  if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
+#ifdef DARWIN
+  unsigned long p;
+  
+  /*
+    This is dead code but it's necessary under OSX. In fact the linker
+    notices that the RRD stuff is not used in the main code so it is
+    ignored. At runtime when the RRD plugin comes up, the dynamic linker
+    failes because the rrd_* are not found.
+    */
+  
+  p = (unsigned long) rrd_fetch;  
+  p += (unsigned long) rrd_graph;  
+  p += (unsigned long) rrd_create; 
+  p += (unsigned long) rrd_last;  
+  p += (unsigned long) rrd_update; 
+  return(p);
+#else
+  return(1);
+#endif
+  } else
     return(0);
 }

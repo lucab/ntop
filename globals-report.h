@@ -32,6 +32,8 @@
 #define TR_ON     ""
 #endif
 
+#define DARK_BG     "BGCOLOR=#DDDDDD"
+
 #define CHART_FORMAT ".png"
 #define MIME_TYPE_CHART_FORMAT FLAG_HTTP_TYPE_PNG
 
