@@ -4276,7 +4276,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
   case 11:a_  = a->icmp6Rcvd.value , b_ = b->icmp6Rcvd.value;  break;
   default:
   case 0: /* Host */
-    rc = cmpFctnResolvedName(a->domainHost, b->domainHost);
+    rc = cmpFctnResolvedName(&(a->domainHost), &(b->domainHost));
     return(rc);
   }
 
