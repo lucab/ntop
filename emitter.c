@@ -35,7 +35,7 @@
    Many thanks Philippe!
 */
 char *languages[] = {"", "perl", "php", "no" };
-char buf[256];
+
 
 /* *************************** */
 
@@ -69,6 +69,8 @@ void endWriteArray(int lang) {
 /* *************************** */
 
 void initWriteKey(int lang, char *indent, char *keyName) {
+  char buf[256];
+
   switch(lang) {
   case PERL_LANGUAGE :
     if(snprintf(buf, sizeof(buf), "%s'%s' => {\n",indent, keyName) < 0)
@@ -89,6 +91,8 @@ void initWriteKey(int lang, char *indent, char *keyName) {
 /* *************************** */
 
 void endWriteKey(int lang, char *indent, char last) {
+  char buf[256];
+
   /* If there is no indentation, this was the first level of key,
      hence the end of the list. Don't add a ',' at end.
   */
@@ -112,6 +116,8 @@ void endWriteKey(int lang, char *indent, char last) {
 /* *************************** */
 
 void wrtStrItm(int lang, char *indent, char *name, char *value, char last) {
+  char buf[256];
+
   switch(lang) {
   case PERL_LANGUAGE :
   case PHP_LANGUAGE :

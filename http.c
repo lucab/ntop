@@ -24,6 +24,8 @@
 
 #define FORK_CHILD_PROCESS
 
+#define URL_LEN        512
+
 struct _HTTPstatus {
     int statusCode;
     char *reasonPhrase;
@@ -927,7 +929,12 @@ static int returnHTTPPage(char* pageName, int postLen) {
 
   if((questionMark != NULL) 
      && (questionMark[0] == '?')) {
-    char *tkn = strtok(&questionMark[1], "&");
+    char requestedURL[URL_LEN];
+    char *tkn;
+
+    strcpy(requestedURL, &questionMark[1]);
+
+    tkn = strtok(requestedURL, "&");
     
     while(tkn != NULL) {
       if(strncmp(tkn, "col=", 4) == 0) {
@@ -1782,7 +1789,7 @@ static void returnHTTPnotImplemented(void) {
 
 void handleHTTPrequest(struct in_addr from) {
   int postLen;
-  char requestedURL[512], pw[64];
+  char requestedURL[URL_LEN], pw[64];
   int rc;
 
   numHandledHTTPrequests++;
