@@ -159,7 +159,7 @@ DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
               SUPPORT_NTOP.txt THANKS \
               ntop.8 ntop.txt ntop.html \
-              faq.html \
+              html/faq.html \
               ntop-cert.pem \
               p2c.opt.table.gz \
               $(ETTER_PASSIVE) \
@@ -353,9 +353,10 @@ DIST_COMMON = README $(ETTER_PASSIVE) $(noinst_HEADERS) AUTHORS \
 	CONTENTS COPYING ChangeLog INSTALL MANIFESTO Makefile.am \
 	Makefile.in NEWS PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 \
 	aclocal.m4 compile config.guess config.h.in config.sub \
-	configure configure.in depcomp faq.html install-sh ltconfig \
-	ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html \
-	ntop.txt oui.txt.gz p2c.opt.table.gz specialMAC.txt.gz\
+	configure configure.in depcomp html/faq.html install-sh \
+	ltconfig ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 \
+	ntop.html ntop.txt oui.txt.gz p2c.opt.table.gz \
+	specialMAC.txt.gz\
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES) $(sntop_SOURCES)
 
@@ -881,7 +882,7 @@ distcleancheck_listfiles = find . -type f -print
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/myrrd
+	$(mkinstalldirs) $(distdir)/html $(distdir)/myrrd
 	@for file in $(DISTFILES); do \
 	  if test -f $$file || test -d $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
@@ -1189,7 +1190,7 @@ install: install-recursive
 	  echo ""; \
 	fi
 
-install-data-local:
+install-data-local: ntop.txt ntop.html faq.html
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@if ! test -d $(DESTDIR)/$(datadir)/ntop; then \
 	  $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop; \

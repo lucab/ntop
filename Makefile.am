@@ -69,7 +69,7 @@ DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
               SUPPORT_NTOP.txt THANKS \
               ntop.8 ntop.txt ntop.html \
-              faq.html \
+              html/faq.html \
               ntop-cert.pem \
               p2c.opt.table.gz \
               $(ETTER_PASSIVE) \
@@ -292,7 +292,7 @@ install: install-recursive
 	  echo ""; \
 	fi
 
-install-data-local:
+install-data-local: ntop.txt ntop.html faq.html
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@if ! test -d $(DESTDIR)/$(datadir)/ntop; then \
 	  $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop; \
