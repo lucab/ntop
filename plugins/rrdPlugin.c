@@ -1566,10 +1566,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
                   continue;
                 } 
 
-		if(subnetPseudoLocalHost(el))
+		if((!myGlobals.dontTrustMACaddr) && subnetPseudoLocalHost(el))
 		  hostKey = el->ethAddressString;
 	      } else {
-		/* hostKey = el->ethAddressString; */
 		/* For the time being do not save IP-less hosts */
 		el = el->next;
 
