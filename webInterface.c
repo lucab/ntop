@@ -2962,9 +2962,9 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* *************************** */
 
-void printNtopBugReport(void) {
+void printNtopProblemReport(void) {
   char buf[LEN_TIMEFORMAT_BUFFER];
-#ifdef BUGREPORTID_DEBUG
+#ifdef PROBLEMREPORTID_DEBUG
   char buf2[256];
 #endif
   static char xvert[] = "JB6XF3PRQHNA7W5ECM8S9GLVY4TDKUZ2"; /* Scrambled just 'cause */
@@ -3103,7 +3103,7 @@ void printNtopBugReport(void) {
 
   sendString("Note: The generated id below should be unique. It's essentially a random 6 or 7\n");
   sendString("      character tracking tag for each problem report.  Since it's generated on\n");
-  sendString("      your machine, we can't just use an ever increasing number global number.\n\n");
+  sendString("      your machine, we can't just use an ever increasing global number.\n\n");
   sendString("      While it should be unique, it is not traceable back to a specific user or\n");
   sendString("      machine.  If it makes you uncomfortable just delete it.\n\n");
 
@@ -3130,27 +3130,27 @@ void printNtopBugReport(void) {
    *  significant to most significant because it's just easier to generate that way.
    *
    *  If you enable the flag in globals-defines.h:
-   *   #define BUGREPORTID_DEBUG
+   *   #define PROBLEMREPORTID_DEBUG
    *  The data being used will be printed out for you.
    *                                        
    */
   v = 0;
 
-#ifdef BUGREPORTID_DEBUG
+#ifdef PROBLEMREPORTID_DEBUG
   snprintf(buf2, sizeof(buf2), "%-12s %48s %8s %8s\n", "Item", "Raw value", "Hex", "v value");
   sendString(buf2);
 #endif
 
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
   v += myGlobals.heartbeatCounter /* If we have it */ ;
- #ifdef BUGREPORTID_DEBUG
+ #ifdef PROBLEMREPORTID_DEBUG
   snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat", myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v);
   sendString(buf2);
  #endif
 #endif
 
   v += (unsigned int) t;
-#ifdef BUGREPORTID_DEBUG
+#ifdef PROBLEMREPORTID_DEBUG
   strftime(buf, sizeof(buf)-1, "%Y-%m-%d %H:%M:%S GMT", gmtime(&t));
   buf[sizeof(buf)-1] = '\0';
   snprintf(buf2, sizeof(buf2), "%-12s %48s %08x %08x\n", "Date/Time", buf, t, v);
@@ -3158,7 +3158,7 @@ void printNtopBugReport(void) {
 #endif
 
   v += myGlobals.actTime - myGlobals.initialSniffTime;
-#ifdef BUGREPORTID_DEBUG
+#ifdef PROBLEMREPORTID_DEBUG
   snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Elapsed", (myGlobals.actTime - myGlobals.initialSniffTime), (myGlobals.actTime - myGlobals.initialSniffTime), v);
   sendString(buf2);
 #endif
@@ -3167,7 +3167,7 @@ void printNtopBugReport(void) {
   for (i=0; i<= myGlobals.numDevices; i++)
       raw += (unsigned int) (myGlobals.device[i].ethernetBytes.value);
 
-#ifdef BUGREPORTID_DEBUG
+#ifdef PROBLEMREPORTID_DEBUG
   snprintf(buf2, sizeof(buf2), "%-12s %48u %08x\n", "Bytes", raw, raw);
   sendString(buf2);
 #endif
@@ -3181,7 +3181,7 @@ void printNtopBugReport(void) {
              (raw & 0x000000f0) << 16 |
              (raw & 0x0000000f) << 24;
   v ^= scramble;
-#ifdef BUGREPORTID_DEBUG
+#ifdef PROBLEMREPORTID_DEBUG
   snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)", scramble, scramble, v);
   sendString(buf2);
 #endif
@@ -3192,19 +3192,19 @@ void printNtopBugReport(void) {
       j = v % (sizeof(xvert) - 1);
       v = v / (sizeof(xvert) - 1);
       buf[i] = xvert[j];   
-#ifdef BUGREPORTID_DEBUG
+#ifdef PROBLEMREPORTID_DEBUG
       snprintf(buf2, sizeof(buf2), "(%2d", j);
       sendString(buf2);
 #endif
       i++;
   }
-#ifdef BUGREPORTID_DEBUG
+#ifdef PROBLEMREPORTID_DEBUG
   sendString("\n\n");
 #endif
 
-  sendString("'Unique' BugReportId: '");
+  sendString("Problem Report Id: PR_");
   sendString(buf);
-  sendString("'\n\n");
+  sendString("\n\n");
   sendString("-------------------------------------------------------------------------------\n");
 }
   /* **************************************** */

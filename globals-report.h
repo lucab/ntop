@@ -164,7 +164,7 @@ extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printNtopConfigHInfo(int textPrintFlag);
 extern void printNtopConfigInfo(int textPrintFlag);
-extern void printNtopBugReport(void);
+extern void printNtopProblemReport(void);
 #ifdef MAKE_WITH_SSLWATCHDOG
 extern int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag);
 extern int sslwatchdogClearLock(int parentchildFlag);
@@ -250,7 +250,7 @@ extern int out_graph(short gifwidth,
 #define SWITCH_NIC_HTML                 "switch.html"
 #define CHANGE_FILTER_HTML              "changeFilter.html"
 #define FILTER_INFO_HTML                "filterInfo.html"
-#define STR_BUGRPT_HTML                 "ntopBugReport.html"
+#define STR_PROBLEMRPT_HTML             "ntopProblemReport.html"
 
 /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
 #define RESET_STATS_HTML              "resetStats.html"

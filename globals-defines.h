@@ -387,13 +387,6 @@
  */
 /* #define FRAGMENT_DEBUG */
 
-/* FTP_DEBUG logs ftp control session information.
- */
-/* ADDRESS_DEBUG logs the activities in address.c related to testing for
- * local, pseudolocal and remote status for ip addresses.
- */
-/* #define ADDRESS_DEBUG */
-
 /* DNS_DEBUG logs the activites in address.c related to Name resolution.
  */
 /* #define DNS_DEBUG */
@@ -471,6 +464,11 @@
 /* PLUGIN_DEBUG enables debug messages during plugin start/stop.
  */
 /* #define PLUGIN_DEBUG */
+
+/* PROBLEMREPORTID_DEBUG enables debug messages showing the values used to create
+ * the unique ProblemReport Id
+ */
+/* #define PROBLEMREPORTID_DEBUG */
 
 /* P2P_DEBUG enables debug messages during p2p protocol processing.
  */

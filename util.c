@@ -1273,12 +1273,8 @@ int incrementSem(sem_t *semId) {
 }
 
 /* ************************************ */
-/* NOTE: As of 2.0.99RC2, this was determined to be dead code.
- *        It has been retained in the source for future use.
- *
- *        WARNING: The other semaphore routines - e.g. increment,
- *                 wait and delete ARE referenced?!
- *             Enabling semaphors will probably cause bugs!
+/*
+ * WARNING: Enabling semaphors will probably cause bugs!
  */
 
 int decrementSem(sem_t *semId) {
