@@ -114,8 +114,6 @@ static struct option const long_options[] = {
   { "https-server",                     required_argument, NULL, 'W' },
 #endif
 
-  { "no-idle-host-purge",               no_argument,       NULL, '2' },
-
   /*
    * long ONLY options - put these here with numeric arguments,
    *  over 127 (i.e. > ascii max char)
