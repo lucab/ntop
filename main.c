@@ -396,11 +396,13 @@ int main(int argc, char *argv[]) {
     for(i=0; i<numDevices; i++) {
       char tmpBuf[48];
       
-      if(i>0) 
-	snprintf(tmpBuf, sizeof(tmpBuf), ",%s", device[i].name);
-      else
-	snprintf(tmpBuf, sizeof(tmpBuf), "%s", device[i].name);
-
+      if(i>0) {
+	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", device[i].name)  < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      } else {
+	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", device[i].name) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      }
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-strlen(ifStr)-1] = '\0';
     }
 

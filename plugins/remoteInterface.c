@@ -61,14 +61,15 @@ void returnHostEntry(HostTraffic* theHost, char* udpBuf, int bufLen) {
   char buf1[384], buf2[384], buf3[384], buf4[384];
 
   if(theHost == NULL) {
-    snprintf(udpBuf, sizeof(bufLen), "%s\n", EMPTY_SLOT_RC);
+    if(snprintf(udpBuf, sizeof(bufLen), "%s\n", EMPTY_SLOT_RC) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     return;    
   }
 
   strncpy(theTime, ctime(&theHost->lastSeen), sizeof(theTime));
   theTime[strlen(theTime)-1] = '\0';
 
-  snprintf(buf1, sizeof(buf1), "%s\t" /* Return code */
+  if(snprintf(buf1, sizeof(buf1), "%s\t" /* Return code */
 	  "%s\t%s\t"
 	  "%s\t%s\t"
 	  "%s\t"
@@ -89,9 +90,10 @@ void returnHostEntry(HostTraffic* theHost, char* udpBuf, int bufLen) {
 
 	  (int)theHost->ipxNodeType,
 	  ((theHost->ipxHostName != NULL)? theHost->ipxHostName : "")
-	  );
+	  ) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-  snprintf(buf2, sizeof(buf2), 
+  if(snprintf(buf2, sizeof(buf2), 
 	  "%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t"
 	  "%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t",
 	  (unsigned long)theHost->pktSent,
@@ -107,9 +109,10 @@ void returnHostEntry(HostTraffic* theHost, char* udpBuf, int bufLen) {
 	  (unsigned long)theHost->bytesSentRemotely,
 	  (unsigned long)theHost->bytesReceived, 
 	  (unsigned long)theHost->bytesReceivedLocally,
-	  (unsigned long)theHost->bytesReceivedFromRemote);
+	  (unsigned long)theHost->bytesReceivedFromRemote) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-  snprintf(buf3, sizeof(buf3), "%f\t%f\t%f\t%f\t%f\t%f\t%f\t"
+  if(snprintf(buf3, sizeof(buf3), "%f\t%f\t%f\t%f\t%f\t%f\t%f\t"
 	  "%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t",
 	  (float)theHost->actualRcvdThpt,
 	  (float)theHost->lastHourRcvdThpt, 
@@ -125,9 +128,10 @@ void returnHostEntry(HostTraffic* theHost, char* udpBuf, int bufLen) {
 	  (float)theHost->actualSentPktThpt,
 	  (float)theHost->averageSentPktThpt, 
 	  (float)theHost->peakSentPktThpt,
-	  (float)theHost->actBandwidthUsage);
+	  (float)theHost->actBandwidthUsage) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-  snprintf(buf4, sizeof(buf4),  
+  if(snprintf(buf4, sizeof(buf4),  
 	  "%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t"
 	  "%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t%ld\t%ld\n",
 	  (unsigned long)theHost->ipxSent, 
@@ -147,17 +151,20 @@ void returnHostEntry(HostTraffic* theHost, char* udpBuf, int bufLen) {
 	  (unsigned long)theHost->qnxSent, 
 	  (unsigned long)theHost->qnxReceived,
 	  (unsigned long)theHost->otherSent, 
-	  (unsigned long)theHost->otherReceived);
+	  (unsigned long)theHost->otherReceived) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 
-  snprintf(udpBuf, bufLen, "%s%s%s%s", buf1, buf2, buf3, buf4);
+  if(snprintf(udpBuf, bufLen, "%s%s%s%s", buf1, buf2, buf3, buf4) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 }
 
 /* ****************************** */
 
 void returnHostEntryIdx(u_int idx, char* udpBuf, int bufLen) {
   if(idx > device[actualReportDeviceId].actualHashSize) {
-    snprintf(udpBuf, bufLen, "%s\n", OUT_OF_RANGE_RC);
+    if(snprintf(udpBuf, bufLen, "%s\n", OUT_OF_RANGE_RC) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     return;
   }
 
@@ -262,7 +269,8 @@ void* remIntLoop(void* notUsed _UNUSED_) {
       }
 
       if(strncasecmp(udpBuf, HELLO_CMD, strlen(HELLO_CMD)) == 0) {
-	snprintf(udpBuf, sizeof(udpBuf), "%s\n%s",  OK_RC, HELLO_CMD);
+	if(snprintf(udpBuf, sizeof(udpBuf), "%s\n%s",  OK_RC, HELLO_CMD) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
 		    (struct sockaddr*)&source, sizeof(source));
       } else if(strncasecmp(udpBuf, GETHOST_CMD, strlen(GETHOST_CMD)) == 0) {
@@ -270,7 +278,8 @@ void* remIntLoop(void* notUsed _UNUSED_) {
 	u_int idx;
 	
 	if(strIdx == NULL) {
-	  snprintf(udpBuf, sizeof(udpBuf), "%s\n", WRONG_COMMAND_SYNTAX_RC);
+	  if(snprintf(udpBuf, sizeof(udpBuf), "%s\n", WRONG_COMMAND_SYNTAX_RC) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
 		      (struct sockaddr*)&source, sizeof(source));
 	  continue;
@@ -286,7 +295,8 @@ void* remIntLoop(void* notUsed _UNUSED_) {
 	char *ipAddress = strtok_r(&udpBuf[strlen(FIND_HOST_BY_IP_CMD)+1],
 				   " ", &strtokState);
 	if(ipAddress == NULL) {
-	  snprintf(udpBuf, sizeof(udpBuf), "%s\n", WRONG_COMMAND_SYNTAX_RC);
+	  if(snprintf(udpBuf, sizeof(udpBuf), "%s\n", WRONG_COMMAND_SYNTAX_RC) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
 		      (struct sockaddr*)&source, sizeof(source));
 	  continue;
@@ -297,7 +307,8 @@ void* remIntLoop(void* notUsed _UNUSED_) {
 				    " ", &strtokState);
 	
 	if(macAddress == NULL) {
-	  snprintf(udpBuf, sizeof(udpBuf), "%s\n", WRONG_COMMAND_SYNTAX_RC);
+	  if(snprintf(udpBuf, sizeof(udpBuf), "%s\n", WRONG_COMMAND_SYNTAX_RC) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
 		      (struct sockaddr*)&source, sizeof(source));
 	  continue;

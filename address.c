@@ -61,7 +61,7 @@ static void resolveAddress(char* symAddr,
   addr = hostAddr->s_addr;
 
 #ifdef HAVE_GDBM_H
-  snprintf(keyBuf, sizeof(keyBuf), "%u", addr);
+  if(snprintf(keyBuf, sizeof(keyBuf), "%u", addr) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
   key_data.dptr = keyBuf;
   key_data.dsize = strlen(keyBuf)+1;
 
@@ -69,6 +69,7 @@ static void resolveAddress(char* symAddr,
   accessMutex(&gdbmMutex, "resolveAddress");
 #endif
 
+  if(gdbm_file == NULL) return; /* ntop is quitting... */
   data_data = gdbm_fetch(gdbm_file, key_data);
 
 #ifdef MULTITHREADED
@@ -78,7 +79,7 @@ static void resolveAddress(char* symAddr,
   /* First check whether the address we search for is cached... */
   if(data_data.dptr != NULL) {
 #ifdef GDBM_DEBUG
-   traceEvent(TRACE_INFO, "Fetched data (2): '%s' [%s]\n", data_data.dptr, tmpBuf);
+    traceEvent(TRACE_INFO, "Fetched data (2): '%s' [%s]\n", data_data.dptr, tmpBuf);
 #endif
 
 #ifdef MULTITHREADED
@@ -108,7 +109,7 @@ static void resolveAddress(char* symAddr,
   }
 #endif
 
-  if(!keepAddressNumeric) {
+  if(!keepAddressNumeric && capturePackets) {
     struct in_addr theAddr;
 
 #ifdef DNS_DEBUG
@@ -192,6 +193,7 @@ static void resolveAddress(char* symAddr,
   accessMutex(&gdbmMutex, "resolveAddress-4");
 #endif
 
+  if(gdbm_file == NULL) return; /* ntop is quitting... */
   if(gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
    traceEvent(TRACE_ERROR, "Error while adding '%s'\n.\n", symAddr);
   else {
@@ -415,7 +417,8 @@ void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen) {
   }
 
   for(;;) {
-    snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr);
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     key_data.dptr = tmpBuf;
     key_data.dsize = strlen(key_data.dptr)+1;
 
@@ -423,6 +426,7 @@ void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen) {
     accessMutex(&gdbmMutex, "ipaddr2str");
 #endif
 
+    if(gdbm_file == NULL) return; /* ntop is quitting... */
     data_data = gdbm_fetch(gdbm_file, key_data);
 
 #ifdef MULTITHREADED
@@ -468,14 +472,16 @@ void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen) {
       if(isLocalAddress(&hostIpAddress))
 	resolveAddress(p->name, &hostIpAddress, 0);
       else {
-	snprintf(p->name, outBufLen, "*%s*",
-		 _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf)));
+	if(snprintf(p->name, outBufLen, "*%s*",
+		 _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	queueAddress(p, outBufLen);
         return;
       }
 #else
-      snprintf(p->name, outBufLen, "*%s*",
-	      _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf)));
+      if(snprintf(p->name, outBufLen, "*%s*",
+	      _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       queueAddress(p, outBufLen);
       return;
 #endif /* WIN32 */

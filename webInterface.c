@@ -110,7 +110,8 @@ void execCGI(char* cgiName) {
   for(num=0, i=0; cgiName[i] != '\0'; i++)
     if(cgiName[i] == '?') {
       cgiName[i] = '\0';
-      snprintf(buf, sizeof(buf), "QUERY_STRING=%s", &cgiName[i+1]);
+      if(snprintf(buf, sizeof(buf), "QUERY_STRING=%s", &cgiName[i+1]) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       putenv(buf);
       num = 1;
       break;
@@ -118,7 +119,8 @@ void execCGI(char* cgiName) {
 
   if(num == 0) putenv("QUERY_STRING=");
 
-  snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName);
+  if(snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   if((fd = sec_popen(line, "r")) == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: unable to exec %s\n", cgiName);
@@ -178,7 +180,7 @@ void execCGI(char* cgiName) {
 	printHeader = 1;
       }
 
-      snprintf(tmpBuf, sizeof(tmpBuf), "<TR %s><TH "TH_BG" ALIGN=LEFT><A HREF=/plugins/%s>%s</TH>"
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR %s><TH "TH_BG" ALIGN=LEFT><A HREF=/plugins/%s>%s</TH>"
 	      "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
 	      "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
 	      "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
@@ -193,7 +195,8 @@ void execCGI(char* cgiName) {
 	      flows->pluginStatus.pluginPtr->pluginURLname,
 	      flows->pluginStatus.activePlugin ? 0: 1,
 	      flows->pluginStatus.activePlugin ? 
-	      "Yes" : "<FONT COLOR=#FF0000>No</FONT>");
+	      "Yes" : "<FONT COLOR=#FF0000>No</FONT>")  < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(tmpBuf);
     }
 
@@ -516,16 +519,20 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(addCountryFlag == 0)
     flag[0] = '\0';
   else {
-    snprintf(flag, sizeof(flag), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-	    getHostCountryIconURL(el));
+    if(snprintf(flag, sizeof(flag), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
+	    getHostCountryIconURL(el)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
-  if(mode == LONG_FORMAT)
-    snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT>%s<A HREF=\"/%s.html\">%s</A>%s</TH>%s",
-	    blinkOn, linkName, symIp, blinkOff, flag);
-  else
-    snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\">%s</A>%s%s",
-	    blinkOn, linkName, symIp, blinkOff, flag);
+  if(mode == LONG_FORMAT) {
+    if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT>%s<A HREF=\"/%s.html\">%s</A>%s</TH>%s",
+	    blinkOn, linkName, symIp, blinkOff, flag) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else {
+    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\">%s</A>%s%s",
+	    blinkOn, linkName, symIp, blinkOff, flag) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  }
 
   return(buf[bufIdx]);
 }
@@ -626,15 +633,16 @@ char* getCountryIconURL(char* domainName) {
     char path[256];
     struct stat buf;
 
-    snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
-	     DATAFILE_DIR, domainName);
+    if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
+		DATAFILE_DIR, domainName) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     if(stat(path, &buf) != 0)
       return("&nbsp;");
 
-    snprintf(flagBuf, sizeof(flagBuf), 
+    if(snprintf(flagBuf, sizeof(flagBuf), 
 	     "<IMG ALIGN=ABSMIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
-	     domainName);
+	     domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     return(flagBuf);
   }
@@ -648,8 +656,9 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
   fillDomainName(el);
 
-  snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
-	   DATAFILE_DIR, el->fullDomainName);
+  if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
+	   DATAFILE_DIR, el->fullDomainName) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   if(stat(path, &buf) == 0)
     ret = getCountryIconURL(el->fullDomainName);
@@ -707,19 +716,22 @@ void switchNwInterface(int _interface) {
 	     "</H1></center><hr><p><b>");
 
   if(mergeInterfaces) {
-    snprintf(buf, sizeof(buf), "You can switch among different inferfaces if the -M "
-	     "command line switch is not used. Sorry.\n");
+    if(snprintf(buf, sizeof(buf), "You can switch among different inferfaces if the -M "
+	     "command line switch is not used. Sorry.\n") < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else if(numDevices == 1) {
-    snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
+    if(snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
 	     "interface [%s]. The interface switch feature is active only when "
 	     "you active ntop with multiple interfaces (-i command line switch). "
-	     "Sorry.\n", device[actualReportDeviceId].name);
+	     "Sorry.\n", device[actualReportDeviceId].name) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else if(mwInterface >= 0) {
     actualReportDeviceId = (mwInterface)%numDevices;
-    snprintf(buf, sizeof(buf), "The current interface is now [%s].\n", 
-	     device[actualReportDeviceId].name);
+    if(snprintf(buf, sizeof(buf), "The current interface is now [%s].\n", 
+	     device[actualReportDeviceId].name) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else {
       sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=switch.html>\n");
@@ -731,8 +743,8 @@ void switchNwInterface(int _interface) {
 	else
 	  selected = "";
 
-	snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
-		i, selected, device[i].name);
+	if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
+		i, selected, device[i].name) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	sendString(buf);
       }
@@ -749,17 +761,20 @@ void switchNwInterface(int _interface) {
 void usage(void) {
   char buf[80];
 
-  snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
-	  program_name, version, THREAD_MODE, osName, buildDate);
+  if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
+	  program_name, version, THREAD_MODE, osName, buildDate) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   traceEvent(TRACE_INFO, "%s\n", buf);
 
   traceEvent(TRACE_INFO, "Copyright 1998-2000 by %s\n", author);
   traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
-  snprintf(buf, sizeof(buf), "Written by %s.", author);
+  if(snprintf(buf, sizeof(buf), "Written by %s.", author) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   traceEvent(TRACE_INFO, "%s\n", buf);
 
-  snprintf(buf, sizeof(buf), "Usage: %s", program_name);
+  if(snprintf(buf, sizeof(buf), "Usage: %s", program_name) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   traceEvent(TRACE_INFO, "%s\n", buf);
 
@@ -896,18 +911,24 @@ void printNtopConfigInfo(void) {
     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", 
 			   "No (Either disabled or missing)");
 
-  snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>actualHashSize</TH><TD "TD_BG"  align=right>%d</TD></TR>\n",
-	  (int)device[actualReportDeviceId].actualHashSize);
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>actualHashSize</TH>"
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
+	      (int)device[actualReportDeviceId].actualHashSize) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-  snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Hash hosts</TH><TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
-	  (int)device[actualReportDeviceId].hostsno,
-	  (((int)device[actualReportDeviceId].hostsno*100)/
-	   (int)device[actualReportDeviceId].actualHashSize));
-  sendString(buf);
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Hash hosts</TH>"
+	      "<TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
+	      (int)device[actualReportDeviceId].hostsno,
+	      (((int)device[actualReportDeviceId].hostsno*100)/
+	       (int)device[actualReportDeviceId].actualHashSize)) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
 
-#ifdef MEMORY_DEBUG
-  snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Allocated Memory</TH><TD "TD_BG"  align=right>%s</TD></TR>\n",
-	  formatBytes(allocatedMemory, 0));
+ #ifdef MEMORY_DEBUG
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Allocated Memory</TH>"
+	       "<TD "TD_BG"  align=right>%s</TD></TR>\n",
+	      formatBytes(allocatedMemory, 0)) < 0) 
+   traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 #endif
 

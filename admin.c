@@ -51,18 +51,21 @@ void showUsers(void) {
 	sendString("<TR><TH "TH_BG">Users</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 	
-      if(strcmp(key_data.dptr, "1admin") == 0)
-	snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+      if(strcmp(key_data.dptr, "1admin") == 0) {
+	if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 		"&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
 		"<IMG SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
-		"&nbsp;</TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr);
-      else      
-	snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+		"&nbsp;</TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      } else {
+	if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 		"&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
 		"<IMG SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 		"&nbsp;<A HREF=/deleteUser?%s><IMG SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
 		"</A></TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr, 
-		key_data.dptr);
+		key_data.dptr) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      }
       sendString(buf);
       numUsers++;
     }
@@ -94,8 +97,9 @@ void addUser(char* user) {
   if(user != NULL) {
     char tmpStr[128];
     
-    snprintf(tmpStr, sizeof(tmpStr), "User: <INPUT TYPE=HIDDEN NAME=user SIZE=20 VALUE=\"%s\">"
-	     "&nbsp;<b>%s</b>&nbsp;\n", &user[1], &user[1]);
+    if(snprintf(tmpStr, sizeof(tmpStr), "User: <INPUT TYPE=HIDDEN NAME=user SIZE=20 VALUE=\"%s\">"
+	     "&nbsp;<b>%s</b>&nbsp;\n", &user[1], &user[1]) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(tmpStr);
   } else
     sendString("User: <INPUT TYPE=text NAME=user SIZE=20>&nbsp;\n");
@@ -234,7 +238,8 @@ void doAddUser(int _len) {
     if((user[0] == '\0') || (pw[0] == '\0'))
       err = "ERROR: both user and password must be non empty fields.";
     else {
-      snprintf(tmpBuf, sizeof(tmpBuf), "1%s", user);
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "1%s", user)  < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       key_data.dptr = tmpBuf;
       key_data.dsize = strlen(tmpBuf)+1;
 #ifdef WIN32
@@ -301,12 +306,13 @@ void showURLs(void) {
 	sendString("<TR><TH "TH_BG">URLs</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 	
-      snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+      if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 	      "&nbsp;'%s*'</TH><TD "TD_BG"><A HREF=/modifyURL?%s>"
 	      "<IMG SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 	      "&nbsp;<A HREF=/deleteURL?%s><IMG SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
 	      "</A></TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr, 
-	      key_data.dptr);
+	      key_data.dptr) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       numUsers++;      
     }
@@ -341,9 +347,10 @@ void addURL(char* url) {
   if(url != NULL) {
     char tmpStr[128];
     
-    snprintf(tmpStr, sizeof(tmpStr), "URL: http://&lt;ntop host&gt;:&lt;ntop port&gt;/"
+    if(snprintf(tmpStr, sizeof(tmpStr), "URL: http://&lt;ntop host&gt;:&lt;ntop port&gt;/"
 	    "<INPUT TYPE=HIDDEN NAME=url SIZE=20 VALUE=\"%s\">"
-	    "&nbsp;<b>%s</b>&nbsp;<b>*</b> [Initial URL string]\n", &url[1], &url[1]);
+	    "&nbsp;<b>%s</b>&nbsp;<b>*</b> [Initial URL string]\n", &url[1], &url[1]) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(tmpStr);
 
     key_data.dptr = url;
@@ -375,15 +382,17 @@ void addURL(char* url) {
     if(key_data.dptr[0] == '1') { /* 1 = user */
       char tmpStr[128], *selected;
 
-      snprintf(tmpStr, sizeof(tmpStr), "users=%s", key_data.dptr);
+      if(snprintf(tmpStr, sizeof(tmpStr), "users=%s", key_data.dptr) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
 
       if(strstr(authorisedUsers, tmpStr) != NULL)
 	selected = "SELECTED";
       else
 	selected = "";
 
-      snprintf(tmpStr, sizeof(tmpStr), "<OPTION VALUE=%s %s>%s", 
-	      key_data.dptr, selected, &key_data.dptr[1]);
+      if(snprintf(tmpStr, sizeof(tmpStr), "<OPTION VALUE=%s %s>%s", 
+	      key_data.dptr, selected, &key_data.dptr[1]) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(tmpStr);
     }
 
@@ -510,7 +519,8 @@ void doAddURL(int _len) {
     if(/* (url[0] == '\0') || */ (users[0] == '\0'))
       err = "ERROR: both url and users must be non empty fields.";
     else {
-      snprintf(tmpBuf, sizeof(tmpBuf), "2%s", url);
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "2%s", url) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       key_data.dptr = tmpBuf;
       key_data.dsize = strlen(tmpBuf)+1;
       data_data.dptr = users;

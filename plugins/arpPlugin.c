@@ -109,7 +109,8 @@ static void handleArpPacket(const struct pcap_pkthdr *h _UNUSED_,
 
       /* ******** */
 #ifdef HAVE_GDBM_H
-      snprintf(tmpStr, sizeof(tmpStr), "s%s", ipAddr);
+      if(snprintf(tmpStr, sizeof(tmpStr), "s%s", ipAddr) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       key_data.dptr = tmpStr; key_data.dsize = strlen(key_data.dptr)+1;
       data_data = gdbm_fetch(arpDB, key_data);
       if(data_data.dptr != NULL) {
@@ -118,7 +119,8 @@ static void handleArpPacket(const struct pcap_pkthdr *h _UNUSED_,
       } else
 	numPkts = 1;
 
-      snprintf(tmpStr1, sizeof(tmpStr1), "%lu", (unsigned long)numPkts);
+      if(snprintf(tmpStr1, sizeof(tmpStr1), "%lu", (unsigned long)numPkts) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       data_data.dptr = tmpStr1; data_data.dsize = strlen(data_data.dptr)+1;
       gdbm_store(arpDB, key_data, data_data, GDBM_REPLACE);	
 #endif
@@ -139,7 +141,8 @@ static void handleArpPacket(const struct pcap_pkthdr *h _UNUSED_,
       gdbm_store(arpDB, key_data, data_data, GDBM_REPLACE);
 
       /* ******** */
-      snprintf(tmpStr, sizeof(tmpStr), "r%s", ipAddr);
+      if(snprintf(tmpStr, sizeof(tmpStr), "r%s", ipAddr) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       key_data.dptr = tmpStr; key_data.dsize = strlen(key_data.dptr)+1;
       data_data = gdbm_fetch(arpDB, key_data);
       if(data_data.dptr != NULL) {
@@ -148,7 +151,8 @@ static void handleArpPacket(const struct pcap_pkthdr *h _UNUSED_,
       } else
 	numPkts = 1;
 
-      snprintf(tmpStr1, sizeof(tmpStr1), "%lu", (unsigned long)numPkts);
+      if(snprintf(tmpStr1, sizeof(tmpStr1), "%lu", (unsigned long)numPkts) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       data_data.dptr = tmpStr1; data_data.dsize = strlen(data_data.dptr)+1;
       gdbm_store(arpDB, key_data, data_data, GDBM_REPLACE);
 #endif
@@ -248,7 +252,7 @@ static void handleArpWatchHTTPrequest(char* url) {
 	     "<CENTER><H1>Welcome to arpWatch</H1>\n<p>"
 	     "<TABLE BORDER><TR>");
 
-  snprintf(tmpStr, sizeof(tmpStr), "<TH>%s?%s1>Host</A></TH>"
+  if(snprintf(tmpStr, sizeof(tmpStr), "<TH>%s?%s1>Host</A></TH>"
 	 "<TH>%s?%s2>IP&nbsp;Address</A></TH>"
 	 "<TH>%s?%s3>MAC</A></TH>"
 	 "<TH>%s?%s4>#&nbsp;ARP&nbsp;Req.&nbsp;Sent</A></TH>"
@@ -257,7 +261,8 @@ static void handleArpWatchHTTPrequest(char* url) {
 	 pluginName, sign,
 	 pluginName, sign,
 	 pluginName, sign,
-	 pluginName, sign);
+	 pluginName, sign) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   sendString(tmpStr);
  
@@ -280,7 +285,8 @@ static void handleArpWatchHTTPrequest(char* url) {
       } else
 	strncpy(macAddr, "???", sizeof(macAddr));
 
-      snprintf(tmpStr, sizeof(tmpStr), "s%s", key_data.dptr);
+      if(snprintf(tmpStr, sizeof(tmpStr), "s%s", key_data.dptr) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       fkey_data.dptr = tmpStr; fkey_data.dsize = strlen(fkey_data.dptr)+1;
       data_data = gdbm_fetch(arpDB, fkey_data);
       if(data_data.dptr != NULL) {
@@ -289,7 +295,8 @@ static void handleArpWatchHTTPrequest(char* url) {
       } else
 	sentPkts = 0;
 
-      snprintf(tmpStr, sizeof(tmpStr), "r%s", key_data.dptr);
+      if(snprintf(tmpStr, sizeof(tmpStr), "r%s", key_data.dptr) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       fkey_data.dptr = tmpStr; fkey_data.dsize = strlen(fkey_data.dptr)+1;
       data_data = gdbm_fetch(arpDB, fkey_data);
       if(data_data.dptr != NULL) {
@@ -329,7 +336,7 @@ static void handleArpWatchHTTPrequest(char* url) {
     else
       theEntry = &theArpEntries[i];
 
-    snprintf(tmpStr, sizeof(tmpStr), "<TR %s>%s"
+    if(snprintf(tmpStr, sizeof(tmpStr), "<TR %s>%s"
 	    "<TD ALIGN=RIGHT>%s</TD>"
 	    "<TD ALIGN=RIGHT>%s</TD>"
 	    "<TD ALIGN=CENTER>%lu</TD>"
@@ -339,7 +346,8 @@ static void handleArpWatchHTTPrequest(char* url) {
 	    theEntry->host->hostNumIpAddress,
 	    theEntry->host->ethAddressString,
 	    theEntry->sentPkts,
-	    theEntry->rcvdPkts);
+		theEntry->rcvdPkts) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     sendString(tmpStr);
   }
@@ -392,7 +400,8 @@ PluginInfo* PluginEntryFctn(void) {
 	     arpPluginInfo->pluginName);
 
   /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
-  snprintf(tmpBuff, sizeof(tmpBuff), "%s/arpWatch.db", dbPath);
+  if(snprintf(tmpBuff, sizeof(tmpBuff), "%s/arpWatch.db", dbPath) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   arpDB = gdbm_open (tmpBuff, 0, GDBM_NEWDB, 00664, NULL);
 
   if(arpDB == NULL) 

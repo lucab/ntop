@@ -66,7 +66,8 @@ void initIPServices(void) {
   for(idx=0; configFileDirs[idx] != NULL; idx++) {
     char tmpStr[64];
 
-    snprintf(tmpStr, sizeof(tmpStr), "%s/services", configFileDirs[idx]);
+    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", configFileDirs[idx]) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {
@@ -391,7 +392,8 @@ void initGdbm(void) {
 
 #ifdef HAVE_GDBM_H
   /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
-  snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath);
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
  RETRY_INIT_GDBM:
@@ -403,7 +405,8 @@ void initGdbm(void) {
     if(firstTime) {
       firstTime = 0;
       strcpy(dbPath, "/tmp");
-      snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath);
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
       traceEvent(TRACE_ERROR, "Fallback solution: reverting to /tmp for the database directory\n");
       goto RETRY_INIT_GDBM;
@@ -436,7 +439,8 @@ void initGdbm(void) {
       free(key_data.dptr);
     }
 
-    snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", dbPath);
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", dbPath) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
     if(pwFile == NULL) {
@@ -444,7 +448,8 @@ void initGdbm(void) {
       exit(-1);
     }
     
-    snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", dbPath);
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", dbPath) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     hostsInfoFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
     
     if(hostsInfoFile == NULL) {
@@ -668,7 +673,8 @@ void initDevices(char* devices) {
 
       if(numDevices < MAX_NUM_DEVICES) {
 	for(k=0; k<8; k++) {
-	  snprintf(tmpDevice, sizeof(tmpDevice), "%s:%d", device[i].name, k);
+	  if(snprintf(tmpDevice, sizeof(tmpDevice), "%s:%d", device[i].name, k) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  if(getLocalHostAddress(&myLocalHostAddress, tmpDevice) == 0) {
 	    /* The virtual interface exists */
 	    device[numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
@@ -702,7 +708,8 @@ static void initRules(char *rulesFile) {
     handleRules = 1;
     parseRules(rulesFile);
 
-    snprintf(tmpBuf, sizeof(tmpBuf), "%s/event.db", dbPath);
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/event.db", dbPath) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     eventFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
     
     if(eventFile == NULL) {

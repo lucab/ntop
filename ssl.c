@@ -57,7 +57,8 @@ int init_ssl(void) {
   memset(ssl, 0, sizeof(ssl));
 
   for(idx=0; configFileDirs[idx] != NULL; idx++) {    
-    snprintf(buf, sizeof(buf), "%s/%s", configFileDirs[idx], CERTF);    
+    if(snprintf(buf, sizeof(buf), "%s/%s", configFileDirs[idx], CERTF) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 #ifdef WIN32
     i=0;

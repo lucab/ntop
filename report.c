@@ -247,7 +247,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
 	  if(sortSendMode) {
 	    if(reportType == 0) /* Protos */ {
-	      snprintf(buf, sizeof(buf), "<TR %s>%s"
+	      if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD>"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
@@ -262,11 +262,11 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		      formatBytes(el->decnetSent, 1),
 		      formatBytes(el->arp_rarpSent, 1),
 		      formatBytes(el->appletalkSent, 1)
-		      );
+		      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	      sendString(buf);
 
-	      snprintf(buf, sizeof(buf), 
+	      if(snprintf(buf, sizeof(buf), 
 		       "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		       "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		       "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
@@ -276,24 +276,26 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		       formatBytes(el->osiSent, 1),
 		       formatBytes(el->qnxSent, 1),
 		       formatBytes(el->otherSent, 1)
-		       );
+		       ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      
 	      sendString(buf);
 	    } else if(reportType == 1) /* IP Protos */ {
 	      TrafficCounter totalIPTraffic=0;
 
-	      snprintf(buf, sizeof(buf), "<TR %s>%s"
+	      if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD>",
 		      getRowColor(), webHostName,
-		      formatBytes(el->bytesSent, 1), sentPercent, separator);
+		      formatBytes(el->bytesSent, 1), sentPercent, separator) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 
 	      for(i=0; i<numIpProtosToMonitor; i++) {
 		totalIPTraffic += el->protoIPTrafficInfos[i].sentLocally+
 		  el->protoIPTrafficInfos[i].sentRemotely;
-		snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+		if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
 			formatBytes(el->protoIPTrafficInfos[i].sentLocally+
-				    el->protoIPTrafficInfos[i].sentRemotely, 1));
+				    el->protoIPTrafficInfos[i].sentRemotely, 1)) < 0) 
+		  traceEvent(TRACE_ERROR, "Buffer overflow!");
 		sendString(buf);
 	      }
 
@@ -309,11 +311,12 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		  -totalIPTraffic;
 	      else
 		totalIPTraffic = 0;
-	      snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
-		       formatBytes(totalIPTraffic, 1));
+	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+		       formatBytes(totalIPTraffic, 1)) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	    } else if(reportType == 2) /* Throughtput */ {
-	      snprintf(buf, sizeof(buf), "<TR %s>%s"
+	      if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
@@ -326,10 +329,12 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		      formatThroughput(el->peakSentThpt),
 		      el->actualSentPktThpt,
 		      el->averageSentPktThpt,
-		      el->peakSentPktThpt);
+		      el->peakSentPktThpt) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	    } else if(reportType == 3) /* Host Traffic Stats */ {
-	      snprintf(buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName);
+	      if(snprintf(buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	      updateHostThpt(el, hourId, 0);
 	      printHostThtpShort(el, 1);
@@ -338,7 +343,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	    sendString("</TR>\n");
 	  } else {
 	    if(reportType == 0) /* Protos */ {
-	      snprintf(buf, sizeof(buf), "<TR %s>%s"
+	      if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD>"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
@@ -353,38 +358,42 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		      formatBytes(el->decnetReceived, 1),
 		      formatBytes(el->arp_rarpReceived, 1),
 		      formatBytes(el->appletalkReceived, 1)
-		      );
+		      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	      sendString(buf);
-	      snprintf(buf, sizeof(buf), 
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
-		      formatBytes(el->ospfReceived, 1),
-		      formatBytes(el->netbiosReceived, 1),
-		      formatBytes(el->igmpReceived, 1),
-		      formatBytes(el->osiReceived, 1),
-		      formatBytes(el->qnxReceived, 1),
-		      formatBytes(el->otherReceived, 1)
-		      );
-
+	      if(snprintf(buf, sizeof(buf), 
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+			  formatBytes(el->ospfReceived, 1),
+			  formatBytes(el->netbiosReceived, 1),
+			  formatBytes(el->igmpReceived, 1),
+			  formatBytes(el->osiReceived, 1),
+			  formatBytes(el->qnxReceived, 1),
+			  formatBytes(el->otherReceived, 1)
+			  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      
 	      sendString(buf);
 	    } else if(reportType == 1) /* IP Protos */ {
 	      TrafficCounter totalIPTraffic=0;
 
-	      snprintf(buf, sizeof(buf), "<TR %s>%s"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD>",
-		      getRowColor(), webHostName,
-		      formatBytes(el->bytesReceived, 1), rcvdPercent, separator);
+	      if(snprintf(buf, sizeof(buf), "<TR %s>%s"
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD>",
+			  getRowColor(), webHostName,
+			  formatBytes(el->bytesReceived, 1), 
+			  rcvdPercent, separator) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 
 	      for(i=0; i<numIpProtosToMonitor; i++) {
 		totalIPTraffic += el->protoIPTrafficInfos[i].receivedLocally+
 		  el->protoIPTrafficInfos[i].receivedFromRemote;
-		snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
-			formatBytes(el->protoIPTrafficInfos[i].receivedLocally+
-				    el->protoIPTrafficInfos[i].receivedFromRemote, 1));
-		sendString(buf);
+		if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+			    formatBytes(el->protoIPTrafficInfos[i].receivedLocally+
+					el->protoIPTrafficInfos[i].receivedFromRemote, 1)) < 0) 
+		  traceEvent(TRACE_ERROR, "Buffer overflow!");
+		   sendString(buf);
 	      }
 
 	      /* Rounding may cause troubles */
@@ -398,10 +407,12 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 				  +el->igmpReceived)-totalIPTraffic;
 	      else
 		totalIPTraffic = 0;
-	      snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>", formatBytes(totalIPTraffic, 1));
+	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>", 
+			  formatBytes(totalIPTraffic, 1)) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	    } else if(reportType == 2) /* Throughtput */ {
-	      snprintf(buf, sizeof(buf), "<TR %s>%s"
+	      if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
@@ -414,10 +425,13 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		      formatThroughput(el->peakRcvdThpt),
 		      el->actualRcvdPktThpt,
 		      el->averageRcvdPktThpt,
-		      el->peakRcvdPktThpt);
+		      el->peakRcvdPktThpt) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	    } else if(reportType == 3) /* Host Traffic Stats */ {
-	      snprintf(buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName);
+	      if(snprintf(buf, sizeof(buf), "<TR %s>%s",
+			  getRowColor(), webHostName) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	      updateHostThpt(el, hourId, 0);
 	      printHostThtpShort(el, 0);
@@ -458,41 +472,50 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	for(i=0; i<numDevices; i++) {
 	  if(i > 0) sendString("<br>");
 
-	  if(rFileName == NULL)
-	    snprintf(buf2, sizeof(buf2), "%s [%s]",
+	  if(rFileName == NULL) {
+	    if(snprintf(buf2, sizeof(buf2), "%s [%s]",
+			getNwInterfaceType(i),
+			device[i].name) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  } else {
+	    if(snprintf(buf2, sizeof(buf2), "%s [%s]",
 		    getNwInterfaceType(i),
-		    device[i].name);
-	  else
-	    snprintf(buf2, sizeof(buf2), "%s [%s]",
-		    getNwInterfaceType(i),
-		    PCAP_NW_INTERFACE);
+			PCAP_NW_INTERFACE) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  }
 	  sendString(buf2);
 	}
       } else {
-	if(rFileName == NULL)
-	  snprintf(buf2, sizeof(buf2), "%s [%s]",
-		  getNwInterfaceType(actualReportDeviceId),
-		  device[actualReportDeviceId].name);
-	else
-	  snprintf(buf2, sizeof(buf2), "%s [%s]",
-		  getNwInterfaceType(actualReportDeviceId),
-		  PCAP_NW_INTERFACE);
+	if(rFileName == NULL) {
+	  if(snprintf(buf2, sizeof(buf2), "%s [%s]",
+		      getNwInterfaceType(actualReportDeviceId),
+		      device[actualReportDeviceId].name) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	} else {
+	  if(snprintf(buf2, sizeof(buf2), "%s [%s]",
+		      getNwInterfaceType(actualReportDeviceId),
+		      PCAP_NW_INTERFACE) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	}
+
 	sendString(buf2);
       }
 
       sendString("</TD></TR>\n");
 
       if(domainName[0] != '\0') {
-	snprintf(buf2, sizeof(buf2), "<TR><TH "TH_BG">Local&nbsp;Domain&nbsp;Name</TH>"
-		"<TD "TD_BG"  ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
-		domainName);
+	if(snprintf(buf2, sizeof(buf2), "<TR><TH "TH_BG">Local&nbsp;Domain&nbsp;Name</TH>"
+		    "<TD "TD_BG"  ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
+		    domainName) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
       }
 
-      snprintf(buf2, sizeof(buf2), "<TR><TH "TH_BG">Sampling&nbsp;Since</TH>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s [%s]</TD></TR>\n",
-	      ctime(&initialSniffTime),
-	      formatSeconds(actTime-initialSniffTime));
+      if(snprintf(buf2, sizeof(buf2), "<TR><TH "TH_BG">Sampling&nbsp;Since</TH>"
+		  "<TD "TD_BG"  ALIGN=RIGHT>%s [%s]</TD></TR>\n",
+		  ctime(&initialSniffTime),
+		  formatSeconds(actTime-initialSniffTime)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
 
@@ -526,42 +549,50 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	/* if(unicastPkts < 0) unicastPkts = 0; */ /* It shouldn't happen */
 	if(device[actualReportDeviceId].ethernetPkts <= 0) device[actualReportDeviceId].ethernetPkts = 1;
 
-	snprintf(buf2, sizeof(buf2),
-		"<tr %s><TH "TH_BG" align=left>Total</th><TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		getRowColor(), formatPkts(device[actualReportDeviceId].ethernetPkts));
+	if(snprintf(buf2, sizeof(buf2),
+		    "<tr %s><TH "TH_BG" align=left>Total</th>"
+		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		    getRowColor(), formatPkts(device[actualReportDeviceId].ethernetPkts)) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
-	snprintf(buf2, sizeof(buf2),
+	if(snprintf(buf2, sizeof(buf2),
 		"<tr %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
 		"<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		getRowColor(), formatPkts(droppedByKernel));
+		getRowColor(), formatPkts(droppedByKernel)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
 #ifdef MULTITHREADED
-	snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;ntop</th>"
+	if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;ntop</th>"
 		"<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		getRowColor(), formatPkts(device[actualReportDeviceId].droppedPackets));
+		getRowColor(), formatPkts(device[actualReportDeviceId].droppedPackets)) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
 #endif
       }
     }
 
     if(reportType == 0) {
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Unicast</th>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Unicast</th>"
 	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 	      getRowColor(), (float)(100*unicastPkts)/(float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(unicastPkts));
+	      formatPkts(unicastPkts)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Broadcast</th>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Broadcast</th>"
 	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-	      getRowColor(), (float)(100*device[actualReportDeviceId].broadcastPkts)/(float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].broadcastPkts));
+	      getRowColor(), (float)(100*device[actualReportDeviceId].broadcastPkts)/
+		  (float)device[actualReportDeviceId].ethernetPkts,
+	      formatPkts(device[actualReportDeviceId].broadcastPkts)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
       if(device[actualReportDeviceId].multicastPkts > 0) {
-	snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Multicast</th>"
-		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*device[actualReportDeviceId].multicastPkts)/(float)device[actualReportDeviceId].ethernetPkts,
-		formatPkts(device[actualReportDeviceId].multicastPkts));
-	sendString(buf2);
+	if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Multicast</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*device[actualReportDeviceId].multicastPkts)/
+		    (float)device[actualReportDeviceId].ethernetPkts,
+		    formatPkts(device[actualReportDeviceId].multicastPkts)) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	   sendString(buf2);
       }
 
 #ifdef HAVE_GDCHART
@@ -572,9 +603,11 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	Very rudimental formula. Note that as specified in RMON, packets smaller
 	than 64 or larger than 1518 octets are not counted.
       */
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Shortest</th>"
-	      "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-	      getRowColor(), formatPkts((TrafficCounter)device[actualReportDeviceId].rcvdPktStats.shortest));
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Shortest</th>"
+		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
+		  getRowColor(), 
+		  formatPkts((TrafficCounter)device[actualReportDeviceId].rcvdPktStats.shortest)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
       avgPktLen = (96*device[actualReportDeviceId].rcvdPktStats.upTo128
 		   +192*device[actualReportDeviceId].rcvdPktStats.upTo256
@@ -584,87 +617,105 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	(device[actualReportDeviceId].rcvdPktStats.upTo128+device[actualReportDeviceId].rcvdPktStats.upTo256
 	 +device[actualReportDeviceId].rcvdPktStats.upTo512+device[actualReportDeviceId].rcvdPktStats.upTo1024
 	 +device[actualReportDeviceId].rcvdPktStats.upTo1518+1);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Average&nbsp;Size</th>"
-	      "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-	      getRowColor(), formatPkts(avgPktLen));
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Average&nbsp;Size</th>"
+		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
+		  getRowColor(), formatPkts(avgPktLen)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Longest</th>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Longest</th>"
 	      "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-	      getRowColor(), formatPkts(device[actualReportDeviceId].rcvdPktStats.longest));
+	      getRowColor(), formatPkts(device[actualReportDeviceId].rcvdPktStats.longest)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;64&nbsp;bytes</th>"
-	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-	      getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo64)/
-	      (float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo64));
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;64&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo64)/
+		  (float)device[actualReportDeviceId].ethernetPkts,
+		  formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo64)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;128&nbsp;bytes</th>"
-	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-	      getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo128)/
-	      (float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo128));
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;128&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo128)/
+		  (float)device[actualReportDeviceId].ethernetPkts,
+		  formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo128)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;256&nbsp;bytes</th>"
-	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-	      getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo256)/
-	      (float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo256));
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;256&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo256)/
+		  (float)device[actualReportDeviceId].ethernetPkts,
+		  formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo256)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;512&nbsp;bytes</th>"
-	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-	      getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo512)/
-	      (float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo512));
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;512&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo512)/
+		  (float)device[actualReportDeviceId].ethernetPkts,
+		   formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo512)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;1024&nbsp;bytes</th>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;1024&nbsp;bytes</th>"
 	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 	      getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo1024)/
 	      (float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo1024));
+	      formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo1024)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;1518&nbsp;bytes</th>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&lt;&nbsp;1518&nbsp;bytes</th>"
 	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 	      getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo1518)/
 	      (float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo1518));
+	     formatPkts(device[actualReportDeviceId].rcvdPktStats.upTo1518)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&gt;&nbsp;1518&nbsp;bytes</th>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>&gt;&nbsp;1518&nbsp;bytes</th>"
 	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 	      getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.above1518)/
 	      (float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].rcvdPktStats.above1518));
+	      formatPkts(device[actualReportDeviceId].rcvdPktStats.above1518)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
 #ifdef HAVE_GDCHART
       sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktSizeDistribPie></TH></TR>\n");
 #endif
 
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long</th>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long</th>"
 	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 	      getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.tooLong)/
 	      (float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].rcvdPktStats.tooLong));
+	      formatPkts(device[actualReportDeviceId].rcvdPktStats.tooLong)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Bad&nbsp;Packets&nbsp;(Checksum)</th>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Bad&nbsp;Packets&nbsp;(Checksum)</th>"
 	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 	      getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.badChecksum)/
 	      (float)device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(device[actualReportDeviceId].rcvdPktStats.badChecksum));
+	      formatPkts(device[actualReportDeviceId].rcvdPktStats.badChecksum)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
       sendString("</TABLE></TR><TR><TH "TH_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Total</th><TD "TD_BG" align=right>%s</td></TR>\n",
-	      getRowColor(), formatBytes(device[actualReportDeviceId].ethernetBytes, 1));
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Total</th>"
+		  "<TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), formatBytes(device[actualReportDeviceId].ethernetBytes, 1)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>IP Traffic</th><TD "TD_BG" align=right>%s</td></TR>\n",
-	      getRowColor(), formatBytes(device[actualReportDeviceId].ipBytes, 1));
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>IP Traffic</th>"
+		  "<TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), formatBytes(device[actualReportDeviceId].ipBytes, 1)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Non IP Traffic</th><TD "TD_BG" align=right>%s</td></TR>\n",
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Non IP Traffic</th>"
+		  "<TD "TD_BG" align=right>%s</td></TR>\n",
 	      getRowColor(),
-	      formatBytes(device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes, 1));
+	      formatBytes(device[actualReportDeviceId].ethernetBytes-
+			  device[actualReportDeviceId].ipBytes, 1)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
 #ifdef HAVE_GDCHART
@@ -674,22 +725,30 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       updateThpt();
 
       sendString("</TABLE></TR><TR><TH "TH_BG">Throughput</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 	      "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 	      getRowColor(), formatThroughput(device[actualReportDeviceId].actualThpt),
-	      device[actualReportDeviceId].actualPktsThpt/8);
+	      device[actualReportDeviceId].actualPktsThpt/8) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Last Minute</th><TD "TD_BG" align=right>%s</td>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Last Minute</th>"
+		  "<TD "TD_BG" align=right>%s</td>"
 	      "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-	      getRowColor(), formatThroughput(device[actualReportDeviceId].lastMinThpt/8), device[actualReportDeviceId].lastMinPktsThpt);
+	      getRowColor(), formatThroughput(device[actualReportDeviceId].lastMinThpt/8), 
+		  device[actualReportDeviceId].lastMinPktsThpt) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Last 5 Minutes</th><TD "TD_BG" align=right>%s</td>"
-	      "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-	      getRowColor(), formatThroughput(device[actualReportDeviceId].lastFiveMinsThpt/8), device[actualReportDeviceId].lastFiveMinsPktsThpt);
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Last 5 Minutes</th>"
+		  "<TD "TD_BG" align=right>%s</td>"
+		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
+		  getRowColor(), formatThroughput(device[actualReportDeviceId].lastFiveMinsThpt/8), 
+		  device[actualReportDeviceId].lastFiveMinsPktsThpt) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Peak</th><TD "TD_BG" align=right>%s</td>"
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Peak</th><TD "TD_BG" align=right>%s</td>"
 	      "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-	      getRowColor(), formatThroughput(device[actualReportDeviceId].peakThroughput/8), device[actualReportDeviceId].peakPacketThroughput);
+	      getRowColor(), formatThroughput(device[actualReportDeviceId].peakThroughput/8), 
+		  device[actualReportDeviceId].peakPacketThroughput) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
       sendString("</TABLE></TR></TABLE></CENTER>\n");
@@ -747,8 +806,10 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   if(numEntries > 0) {
     columnSort = sortedColumn; /* Host name */
 
-    snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_MULTICAST_STATS, sign);
-    snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_MULTICAST_STATS);
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_MULTICAST_STATS, sign) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_MULTICAST_STATS) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     if(abs(columnSort) == 0) {
       arrow[0] = arrowGif;
@@ -798,7 +859,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       theAnchor[5] = htmlAnchor1;
     }
 
-    snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s0>Host%s</A></TH>\n"
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s0>Host%s</A></TH>\n"
 	    "<TH "TH_BG">%s1>Domain%s</A></TH>"
 	    "<TH "TH_BG">%s2>Pkts Sent%s</A></TH>"
 	    "<TH "TH_BG">%s3>Data Sent%s</A></TH>"
@@ -811,7 +872,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 	    theAnchor[3], arrow[3],
 	    theAnchor[4], arrow[4],
 	    theAnchor[5], arrow[5]
-	    );
+	    ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpMulticastFctn);
@@ -823,7 +884,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 	el = tmpTable[idx];
 
       if(el != NULL) {
-	snprintf(buf, sizeof(buf), "<TR %s>%s"
+	if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 		"<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		"<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		"</TR>\n",
@@ -832,7 +893,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 		formatBytes(el->bytesMulticastSent, 1),
 		formatPkts(el->pktMulticastRcvd),
 		formatBytes(el->bytesMulticastRcvd, 1)
-		);
+		) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	sendString(buf);
 
@@ -892,8 +953,10 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
   if(numEntries > 0) {
     quicksort(tmpTable, numEntries, sizeof(struct hostTraffic*), sortHostFctn);
 
-    snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", HOSTS_INFO_HTML, sign);
-    snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", HOSTS_INFO_HTML);
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", HOSTS_INFO_HTML, sign) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", HOSTS_INFO_HTML) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     if(abs(columnSort) == 1) {
       arrow[1] = arrowGif;
@@ -951,22 +1014,23 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
       theAnchor[0] = htmlAnchor1;
     }
 
-    snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1>\n<TR>"
-	     "<TH "TH_BG">%s1>Host%s</A></TH>"
-	     "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
-	     "</TH><TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
-	     "<TH "TH_BG">%s3>MAC&nbsp;Address%s</A></TH>"
-	     "<TH "TH_BG">%s6>Other&nbsp;Name(s)%s</A></TH>"
-	     "<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
-	     "<TH "TH_BG">%s5>Nw&nbsp;Board&nbsp;Vendor%s</A></TH>"
-	     "</TR>\n",
-	     theAnchor[1], arrow[1],
-	     theAnchor[0], arrow[0],
-	     theAnchor[2], arrow[2],
-	     theAnchor[3], arrow[3],
-	     theAnchor[6], arrow[6],
-	     theAnchor[4], arrow[4],
-	     theAnchor[5], arrow[5]);
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1>\n<TR>"
+		"<TH "TH_BG">%s1>Host%s</A></TH>"
+		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
+		"</TH><TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
+		"<TH "TH_BG">%s3>MAC&nbsp;Address%s</A></TH>"
+		"<TH "TH_BG">%s6>Other&nbsp;Name(s)%s</A></TH>"
+		"<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
+		"<TH "TH_BG">%s5>Nw&nbsp;Board&nbsp;Vendor%s</A></TH>"
+		"</TR>\n",
+		theAnchor[1], arrow[1],
+		theAnchor[0], arrow[0],
+		theAnchor[2], arrow[2],
+		theAnchor[3], arrow[3],
+		theAnchor[6], arrow[6],
+		theAnchor[4], arrow[4],
+		theAnchor[5], arrow[5]) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     for(idx=0; idx<numEntries; idx++) {
@@ -992,12 +1056,13 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	     || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
 	    tmpName3 = separator;
 
-	  snprintf(buf, sizeof(buf), "<TR %s>"
+	  if(snprintf(buf, sizeof(buf), "<TR %s>"
 		   "%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		   "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
 		   getRowColor(),
 		   makeHostLink(el, LONG_FORMAT, 0, 1),
-		   tmpName1, tmpName3);
+		   tmpName1, tmpName3) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
 	  sendString("<TD "TD_BG"  ALIGN=RIGHT>");
@@ -1005,13 +1070,14 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	    short numAddresses = 0;
 
 	    if(el->nbHostName && el->nbDomainName) {
-	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
-		       el->nbHostName, el->nbDomainName);
+	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
+			  el->nbHostName, el->nbDomainName) < 0)
+		 traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	      numAddresses++;
 	    } else if(el->nbHostName) {
-	      snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag("Windows", 0),
-		       el->nbHostName);
+	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag("Windows", 0),
+			  el->nbHostName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	      numAddresses++;
 	    }
@@ -1022,8 +1088,9 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	      if(numAddresses > 0) sendString("/");
 	      if(nodeName == NULL) nodeName = "";
 	      
-	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;", 
-		       getOSFlag("Mac", 0), nodeName);
+	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;", 
+			  getOSFlag("Mac", 0), nodeName) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 
 	      if(el->atNodeType[0] != NULL) {
@@ -1041,8 +1108,9 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 		sendString(")&nbsp;");
 	      }
 	      
-	      snprintf(buf, sizeof(buf), "[%d.%d]", 
-		       el->atNetwork, el->atNode);
+	      if(snprintf(buf, sizeof(buf), "[%d.%d]", 
+			  el->atNetwork, el->atNode) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	      numAddresses++;
 	    }
@@ -1051,9 +1119,10 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	      int i;
 	      
 	      if(numAddresses > 0) sendString("/");
-	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[", 
-		       getOSFlag("Novell", 0),
-		       el->ipxHostName);
+	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[", 
+			  getOSFlag("Novell", 0),
+			  el->ipxHostName) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 
 	      for(i=0; i<el->numIpxNodeTypes; i++) {
@@ -1068,7 +1137,8 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 
 	  sendString("&nbsp;</TD>");
 	  printBar(buf, sizeof(buf), el->actBandwidthUsage, maxBandwidthUsage, 3);
-	  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>", tmpName2); 
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>", tmpName2) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	  sendString("</TR>\n");
 	}
@@ -1103,8 +1173,9 @@ void printAllSessionsHTML(char* host) {
   }
 
   if(el == NULL) {
-    snprintf(buf, sizeof(buf), "<CENTER><P><H1>Unable to generate "
-	    "requested page [%s]</H1></CENTER>\n", host);
+    if(snprintf(buf, sizeof(buf), "<CENTER><P><H1>Unable to generate "
+	    "requested page [%s]</H1></CENTER>\n", host) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     return;
   }
@@ -1140,12 +1211,15 @@ void printAllSessionsHTML(char* host) {
 	i++;
       }
 
-      if(svc != NULL)
-	snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD "TD_BG"  ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx);
-      else
-	snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%d</TH>"
-		"<TD "TD_BG"  ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx);
+      if(svc != NULL) {
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		"<TD "TD_BG"  ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      } else {
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%d</TH>"
+		 "<TD "TD_BG"  ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      }
 
       sendString(buf);
 
@@ -1161,11 +1235,11 @@ void printAllSessionsHTML(char* host) {
 	} else
 	  strncpy(webHostName, makeHostLink(peerHost, SHORT_FORMAT, 0, 0), sizeof(webHostName));
 
-	snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=CENTER>%d/%s</TD>"
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=CENTER>%d/%s</TD>"
 		"<TD "TD_BG"  ALIGN=CENTER>%s</TD>",
 		el->portsUsage[idx]->clientUses,
 		formatBytes(el->portsUsage[idx]->clientTraffic, 1),
-		webHostName);
+		webHostName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       } else
 	sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
@@ -1180,11 +1254,11 @@ void printAllSessionsHTML(char* host) {
 	} else
 	  strncpy(webHostName, makeHostLink(peerHost, SHORT_FORMAT, 0, 0), sizeof(webHostName));
 
-	snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=CENTER>%d/%s</TD>"
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=CENTER>%d/%s</TD>"
 		"<TD "TD_BG"  ALIGN=CENTER>%s</TD></TR>",
 		el->portsUsage[idx]->serverUses,
 		formatBytes(el->portsUsage[idx]->serverTraffic, 1),
-		webHostName);
+		webHostName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       } else
 	sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD></TR>");
@@ -1241,9 +1315,9 @@ void printLocalRoutersList(void) {
     for(i=0; i<numEntries; i++) {
       router = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerList[i])];
       if(router != NULL) {
-	snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=left>%s</TH><TD "TD_BG"  ALIGN=LEFT><UL>\n",
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=left>%s</TH><TD "TD_BG"  ALIGN=LEFT><UL>\n",
 		getRowColor(),
-		makeHostLink(router, SHORT_FORMAT, 0, 0));
+		makeHostLink(router, SHORT_FORMAT, 0, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
 	for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
@@ -1251,8 +1325,9 @@ void printLocalRoutersList(void) {
 	     && subnetLocalHost(el)) {
 	    for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
 	      if(el->contactedRouters[j] == routerList[i]) {
-		snprintf(buf, sizeof(buf), "<LI>%s</LI>\n",
-			makeHostLink(el, SHORT_FORMAT, 0, 0));
+		if(snprintf(buf, sizeof(buf), "<LI>%s</LI>\n",
+			    makeHostLink(el, SHORT_FORMAT, 0, 0)) < 0) 
+		  traceEvent(TRACE_ERROR, "Buffer overflow!");
 		sendString(buf);
 		break;
 	      }
@@ -1280,13 +1355,13 @@ void printSession(IPSession *theSession, u_short sessionType,
 
   if(_sport == NULL) {
     static char __sport[8];
-    snprintf(__sport, 8, "%d", (int)theSession->sport);
+    if(snprintf(__sport, 8, "%d", (int)theSession->sport) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     _sport = __sport;
   }
 
   if(_dport == NULL) {
     static char __dport[8];
-    snprintf(__dport, 8, "%d", (int)theSession->dport);
+    if(snprintf(__dport, 8, "%d", (int)theSession->dport) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     _dport = __dport;
   }
 
@@ -1336,13 +1411,13 @@ static void printSessions(IPSession *sessions[], u_short type) {
 
 	if(_sport == NULL) {
 	  static char __sport[8];
-	  snprintf(__sport, 8, "%d", sessions[idx]->sport);
+	  if(snprintf(__sport, 8, "%d", sessions[idx]->sport) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  _sport = __sport;
 	}
 
 	if(_dport == NULL) {
 	  static char __dport[8];
-	  snprintf(__dport, 8, "%d", sessions[idx]->dport);
+	  if(snprintf(__dport, 8, "%d", sessions[idx]->dport) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  _dport = __dport;
 	}
 
@@ -1453,8 +1528,10 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
       break;
     }
 
-    snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", str, sign);
-    snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", str);
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", str, sign) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", str) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     if(abs(columnSort) == 1) {
       arrow[1] = arrowGif;
@@ -1488,14 +1565,15 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
       theAnchor[4] = htmlAnchor1;
     }
 
-    snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR><TH "TH_BG">"
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR><TH "TH_BG">"
 	    "%s1>Host%s</A></TH>"
 	    "<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
 	    "<TH "TH_BG" COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
 	    "<TH "TH_BG" COLSPAN=2>%s4>Data&nbsp;Received%s</A></TH></TR>\n",
 	    theAnchor[1], arrow[1],
 	    theAnchor[2], arrow[2], theAnchor[3], arrow[3],
-	    theAnchor[4], arrow[4]);
+	    theAnchor[4], arrow[4]) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     sendString(buf);
 
@@ -1536,7 +1614,7 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 	else
 	  rcvdpct = (100*(float)b)/totalBytesReceived;
 
-	snprintf(buf, sizeof(buf), "<TR %s>"
+	if(snprintf(buf, sizeof(buf), "<TR %s>"
 		"%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		"</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD>"
 		"<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD></TR>\n",
@@ -1546,7 +1624,8 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 		formatBytes(a, 1),
 		sentpct, separator,
 		formatBytes(b, 1),
-		rcvdpct, separator);
+		rcvdpct, separator) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
@@ -1562,7 +1641,7 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 
     totalBytes = totalBytesSent+totalBytesReceived;
 
-    snprintf(buf, sizeof(buf), "<TR>"
+    if(snprintf(buf, sizeof(buf), "<TR>"
 	    "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 	    "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 	    "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
@@ -1570,7 +1649,8 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 	    formatBytes(totalBytes, 1),
 	    formatBytes(totalBytesSent, 1),
 	    formatBytes(totalBytesReceived, 1),
-	    formatThroughput((float)(totalBytes/timeDiff)));
+	    formatThroughput((float)(totalBytes/timeDiff))) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     sendString(buf);
     sendString("</TABLE>"TABLE_OFF"\n");
@@ -1617,13 +1697,15 @@ void printActiveTCPSessions(void) {
 
       if(sport == NULL) {
 	static char _sport[8];
-	snprintf(_sport, 8, "%d", tcpSession[idx]->sport);
+	if(snprintf(_sport, 8, "%d", tcpSession[idx]->sport) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sport = _sport;
       }
 
       if(dport == NULL) {
 	static char _dport[8];
-	snprintf(_dport, 8, "%d", tcpSession[idx]->dport);
+	if(snprintf(_dport, 8, "%d", tcpSession[idx]->dport) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	dport = _dport;
       }
 
@@ -1632,7 +1714,7 @@ void printActiveTCPSessions(void) {
 	 || (tcpSession[idx]->firstSeen == 0))
 	tcpSession[idx]->firstSeen = actTime;
 
-      snprintf(buf, sizeof(buf), "<TR %s>"
+      if(snprintf(buf, sizeof(buf), "<TR %s>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s:%s</TD>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s:%s</TD>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
@@ -1661,7 +1743,7 @@ void printActiveTCPSessions(void) {
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 	      , getSessionState(tcpSession[idx])
 #endif
-	      );
+	      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
       sendString(buf);
       numSessions++;
@@ -1712,8 +1794,8 @@ void printIpProtocolUsage(void) {
 
   for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++)
     if((clientPorts[j] > 0) || (serverPorts[j] > 0)) {
-      snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=CENTER>%d</TD>"
-	      "<TD "TD_BG">\n", getRowColor(), getAllPortByNum(j), j);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=CENTER>%d</TD>"
+	      "<TD "TD_BG">\n", getRowColor(), getAllPortByNum(j), j) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       if(clientPorts[j] > 0) {
@@ -1722,7 +1804,7 @@ void printIpProtocolUsage(void) {
 	  if((hosts[idx1]->portsUsage[j] != NULL)
 	     && (hosts[idx1]->portsUsage[j] != NULL) /* added 04.03.00 Ralf Amandi */
 	     && (hosts[idx1]->portsUsage[j]->clientUses > 0)) {
-	    snprintf(buf, sizeof(buf), "<li>%s\n", makeHostLink(hosts[idx1], SHORT_FORMAT, 1, 0));
+	    if(snprintf(buf, sizeof(buf), "<li>%s\n", makeHostLink(hosts[idx1], SHORT_FORMAT, 1, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 	sendString("</UL>");
@@ -1737,7 +1819,8 @@ void printIpProtocolUsage(void) {
 	  if((hosts[idx1]->portsUsage != NULL)
 	     && (hosts[idx1]->portsUsage[j] != NULL) /* added 04.03.00 Ralf Amandi */
 	     && (hosts[idx1]->portsUsage[j]->serverUses > 0)) {
-	    snprintf(buf, sizeof(buf), "<li>%s\n", makeHostLink(hosts[idx1], SHORT_FORMAT, 1, 0));
+	    if(snprintf(buf, sizeof(buf), "<li>%s\n", makeHostLink(hosts[idx1], SHORT_FORMAT, 1, 0)) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 	sendString("</UL>");
@@ -1770,12 +1853,13 @@ void printBar(char *buf, int bufLen,
 
   switch(int_perc) {
   case 0:
-    snprintf(buf, bufLen, "<TD "TD_BG"  %s>&nbsp;</TD>\n", getActualRowColor());
+    if(snprintf(buf, bufLen, "<TD "TD_BG"  %s>&nbsp;</TD>\n", getActualRowColor()) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   default:
-    snprintf(buf, bufLen, "<TD "TD_BG"  ALIGN=LEFT><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg"
-	    " WIDTH=%d HEIGHT=12>&nbsp;</TD>\n",
-	    ratio*int_perc);
+    if(snprintf(buf, bufLen, "<TD "TD_BG"  ALIGN=LEFT><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg"
+		" WIDTH=%d HEIGHT=12>&nbsp;</TD>\n",
+		ratio*int_perc) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   }
 
@@ -1806,19 +1890,19 @@ static void printShortTableEntry(char *buf, int bufLen,
 
   switch(int_perc) {
   case 0:
-    snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-	    "</TR>\n",
-	    getRowColor(), label, formatKBytes(total));
+    if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		"</TR>\n",
+		getRowColor(), label, formatKBytes(total)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   case 100:
-    snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-	    "</TR>\n",
-	    getRowColor(), label, formatKBytes(total));
+    if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		"</TR>\n",
+		getRowColor(), label, formatKBytes(total)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   default:
-    snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-	    "</TR>\n",
-	    getRowColor(), label, formatKBytes(total));
+    if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		"</TR>\n",
+		getRowColor(), label, formatKBytes(total)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
   sendString(buf);
@@ -2044,10 +2128,11 @@ void printProtoTraffic(void) {
   sendString("<CENTER><P><H1>Global Protocol Distribution</H1><P>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
-  snprintf(buf, sizeof(buf), "<TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH><TD "TD_BG"  WIDTH=100 ALIGN=RIGHT>%s"
+  if(snprintf(buf, sizeof(buf), "<TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH><TD "TD_BG"  WIDTH=100 ALIGN=RIGHT>%s"
 	  "&nbsp;(%.1f%%)</TD><TD "TD_BG"  WIDTH=250>"
 	  "<TABLE BORDER=1 WIDTH=\"100%%\">", formatBytes(device[actualReportDeviceId].ipBytes, 1),
-	  100*((float)device[actualReportDeviceId].ipBytes/device[actualReportDeviceId].ethernetBytes));
+	  100*((float)device[actualReportDeviceId].ipBytes/device[actualReportDeviceId].ethernetBytes)) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   printTableEntry(buf, sizeof(buf), "TCP", COLOR_1,
@@ -2125,8 +2210,9 @@ void printProcessInfo(int processPid) {
   printHTTPheader();
 
   if(processes[i]->pid != processPid) {
-    snprintf(buf, sizeof(buf), "<H1><CENTER>Unable to find process PID %d"
-	    "<CENTER></H1><P>\n", processPid);
+    if(snprintf(buf, sizeof(buf), "<H1><CENTER>Unable to find process PID %d"
+		"<CENTER></H1><P>\n", processPid) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 #ifdef MULTITHREADED
     releaseMutex(&lsofMutex);
@@ -2134,48 +2220,60 @@ void printProcessInfo(int processPid) {
     return;
   }
 
-  snprintf(buf, sizeof(buf), "<H1><CENTER>Info about process %s"
-	  "<CENTER></H1><P>\n", processes[i]->command);
+  if(snprintf(buf, sizeof(buf), "<H1><CENTER>Info about process %s"
+	      "<CENTER></H1><P>\n", processes[i]->command) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   sendString(""TABLE_ON"<TABLE BORDER=1>");
 
-  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>User&nbsp;Name</TH>", getRowColor());
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>User&nbsp;Name</TH>", getRowColor()) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n", processes[i]->user);
-  sendString(buf);
-
-  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Process&nbsp;PID</TH>", getRowColor());
-  sendString(buf);
-  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%d</TD></TR>\n", processes[i]->pid);
+  if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n", processes[i]->user) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>First&nbsp;Seen</TH>", getRowColor());
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Process&nbsp;PID</TH>", getRowColor()) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
-	  formatTime(&processes[i]->firstSeen, 1));
-  sendString(buf);
-
-  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Last&nbsp;Seen</TH>", getRowColor());
-  sendString(buf);
-  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
-	  formatTime(&processes[i]->lastSeen, 1));
+  if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%d</TD></TR>\n", processes[i]->pid) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Data&nbsp;Sent</TH>", getRowColor());
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>First&nbsp;Seen</TH>", getRowColor()) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
-	  formatBytes(processes[i]->bytesSent, 1));
-  sendString(buf);
-
-  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Data&nbsp;Rcvd</TH>", getRowColor());
-  sendString(buf);
-  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</T></TR>\n",
-	  formatBytes(processes[i]->bytesReceived, 1));
+  if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
+	      formatTime(&processes[i]->firstSeen, 1)) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Open&nbsp;TCP&nbsp;Ports"
-	  "</TH><TD "TD_BG"  ALIGN=RIGHT>", getRowColor());
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Last&nbsp;Seen</TH>", getRowColor()) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+  if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
+	      formatTime(&processes[i]->lastSeen, 1)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Data&nbsp;Sent</TH>", 
+	      getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+  if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
+	      formatBytes(processes[i]->bytesSent, 1)) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Data&nbsp;Rcvd</TH>", getRowColor()) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+  if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</T></TR>\n",
+	      formatBytes(processes[i]->bytesReceived, 1)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Open&nbsp;TCP&nbsp;Ports"
+	      "</TH><TD "TD_BG"  ALIGN=RIGHT>", getRowColor()) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   for(j=0; j<TOP_IP_PORT; j++)
@@ -2184,7 +2282,8 @@ void printProcessInfo(int processPid) {
 
       while(elem != NULL) {
 	if(elem->element == processes[i]) {
-	  snprintf(buf, sizeof(buf), "%d<BR>\n", j);
+	  if(snprintf(buf, sizeof(buf), "%d<BR>\n", j) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	  break;
 	}
@@ -2198,15 +2297,16 @@ void printProcessInfo(int processPid) {
     if(processes[i]->contactedIpPeersIndexes[j] != NO_PEER) {
 
       if(numEntries == 0) {
-	snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Contacted&nbsp;Peers"
-		"</TH><TD "TD_BG"  ALIGN=RIGHT>", getRowColor());
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Contacted&nbsp;Peers"
+		    "</TH><TD "TD_BG"  ALIGN=RIGHT>", getRowColor()) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      snprintf(buf, sizeof(buf), "%s<BR>\n",
-	      makeHostLink(device[actualReportDeviceId].
-			   hash_hostTraffic[checkSessionIdx(processes[i]->contactedIpPeersIndexes[j])],
-			   0, 0, 0));
+      if(snprintf(buf, sizeof(buf), "%s<BR>\n",
+		  makeHostLink(device[actualReportDeviceId].
+			       hash_hostTraffic[checkSessionIdx(processes[i]->contactedIpPeersIndexes[j])],
+			       0, 0, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       numEntries++;
     }
@@ -2234,14 +2334,15 @@ void printLsofData(int mode) {
   sendString("<H1><CENTER>Local Network Usage by Process"
 	     "</H1><P>\n");
 
-  snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1><TR>"
-	  "<TH "TH_BG"><A HREF=\"%s?1\">Process</A></TH>"
-	  "<TH "TH_BG"><A HREF=\"%s?2\">PID</A></TH>"
-	  "<TH "TH_BG"><A HREF=\"%s?3\">User</A></TH>"
-	  "<TH "TH_BG"><A HREF=\"%s?4\">Sent</A></TH>"
-	  "<TH "TH_BG"><A HREF=\"%s?5\">Rcvd</A></TH></TR>\n",
-	  STR_LSOF_DATA, STR_LSOF_DATA, STR_LSOF_DATA,
-	  STR_LSOF_DATA, STR_LSOF_DATA);
+  if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1><TR>"
+	      "<TH "TH_BG"><A HREF=\"%s?1\">Process</A></TH>"
+	      "<TH "TH_BG"><A HREF=\"%s?2\">PID</A></TH>"
+	      "<TH "TH_BG"><A HREF=\"%s?3\">User</A></TH>"
+	      "<TH "TH_BG"><A HREF=\"%s?4\">Sent</A></TH>"
+	      "<TH "TH_BG"><A HREF=\"%s?5\">Rcvd</A></TH></TR>\n",
+	      STR_LSOF_DATA, STR_LSOF_DATA, STR_LSOF_DATA,
+	      STR_LSOF_DATA, STR_LSOF_DATA) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
 #ifdef MULTITHREADED
@@ -2257,7 +2358,7 @@ void printLsofData(int mode) {
     numProcesses = maxNumLines;
 
   for(i=0, numUsers=0; i<numProcesses; i++) {
-    snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"><A HREF=\""PROCESS_INFO_HTML"?%d\">%s</A></TD>"
+    if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"><A HREF=\""PROCESS_INFO_HTML"?%d\">%s</A></TD>"
 	    "<TD "TD_BG"  ALIGN=CENTER>%d</TD>"
 	    "<TD "TD_BG"  ALIGN=CENTER>%s</TD>"
 	    "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
@@ -2268,7 +2369,8 @@ void printLsofData(int mode) {
 	    processesList[i]->pid,
 	    processesList[i]->user,
 	    formatBytes((TrafficCounter)processesList[i]->bytesSent, 1),
-	    formatBytes((TrafficCounter)processesList[i]->bytesReceived, 1));
+	    formatBytes((TrafficCounter)processesList[i]->bytesReceived, 1)) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     if((processesList[i]->bytesSent > 0) || (processesList[i]->bytesReceived > 0)) {
@@ -2302,14 +2404,16 @@ void printLsofData(int mode) {
     if(localPorts[i] != NULL) {
       ProcessInfoList *scanner;
 
-      snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"  ALIGN=CENTER>%d</TD><TD "TD_BG">", getRowColor(), i);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"  ALIGN=CENTER>%d</TD><TD "TD_BG">", 
+		  getRowColor(), i) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       scanner = localPorts[i];
 
       while(scanner != NULL) {
-	snprintf(buf, sizeof(buf), "<li><A HREF=\""PROCESS_INFO_HTML"?%d\">%s</A><BR>\n",
-		scanner->element->pid, scanner->element->command);
+	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""PROCESS_INFO_HTML"?%d\">%s</A><BR>\n",
+		    scanner->element->pid, scanner->element->command) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 	scanner = scanner->next;
       }
@@ -2335,12 +2439,13 @@ void printLsofData(int mode) {
 	       "<TH "TH_BG">Traffic&nbsp;in/out</TH></TR>\n");
 
     for(i=0; i<numUsers; i++) {
-      snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG">%s</TD>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
-	      getRowColor(),
-	      usersTrafficList[i]->userName,
-	      formatBytes((TrafficCounter)(usersTrafficList[i]->bytesSent+
-			  usersTrafficList[i]->bytesReceived), 1));
+      if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG">%s</TD>"
+		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(),
+		  usersTrafficList[i]->userName,
+		  formatBytes((TrafficCounter)(usersTrafficList[i]->bytesSent+
+					       usersTrafficList[i]->bytesReceived), 1)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
 
@@ -2377,8 +2482,9 @@ void printIpTrafficMatrix(void) {
 	sendString(""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" ALIGN=LEFT><SMALL>&nbsp;F&nbsp;"
 		   "&nbsp;&nbsp;To<br>&nbsp;r<br>&nbsp;o<br>&nbsp;m</SMALL></TH>\n");
 
-      snprintf(buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER><SMALL>%s</SMALL></TH>",
-	      getHostName(ipTrafficMatrixHosts[i], 1));
+      if(snprintf(buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER><SMALL>%s</SMALL></TH>",
+		  getHostName(ipTrafficMatrixHosts[i], 1)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
   }
@@ -2412,8 +2518,9 @@ void printIpTrafficMatrix(void) {
     if(activeHosts[i] == 1) {
       numConsecutiveEmptyCells=0;
 
-      snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
-	      getRowColor(), makeHostLink(ipTrafficMatrixHosts[i], SHORT_FORMAT, 1, 0));
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
+		  getRowColor(), makeHostLink(ipTrafficMatrixHosts[i], SHORT_FORMAT, 1, 0)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       for(j=1; j<255; j++) {
@@ -2424,26 +2531,29 @@ void printIpTrafficMatrix(void) {
 	    numConsecutiveEmptyCells++;
 	  else {
 	    if(numConsecutiveEmptyCells > 0) {
-	      snprintf(buf, sizeof(buf), "<TD "TD_BG"  COLSPAN=%d>&nbsp;</TD>\n", numConsecutiveEmptyCells);
+	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  COLSPAN=%d>&nbsp;</TD>\n", 
+			  numConsecutiveEmptyCells) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	      numConsecutiveEmptyCells = 0;
 	    }
 
 	    tmpCounter = ipTrafficMatrix[i][j].bytesSent+ipTrafficMatrix[i][j].bytesReceived;
 	    /* Fix below courtesy of Danijel Doriae <danijel.doric@industrogradnja.tel.hr> */
-	    snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=CENTER %s><A HREF=# onMouseOver=\"window.status='"
-		    "%s';return true\" onMouseOut="
-		    "\"window.status='';return true\"><SMALL>%s</SMALL></A></TH>\n",
-		    calculateCellColor(tmpCounter, avgTrafficLow, avgTrafficHigh),
-		    buildHTMLBrowserWindowsLabel(i, j),
-		    formatBytes(tmpCounter, 1));
+	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=CENTER %s><A HREF=# onMouseOver=\"window.status='"
+			"%s';return true\" onMouseOut="
+			"\"window.status='';return true\"><SMALL>%s</SMALL></A></TH>\n",
+			calculateCellColor(tmpCounter, avgTrafficLow, avgTrafficHigh),
+			buildHTMLBrowserWindowsLabel(i, j),
+			formatBytes(tmpCounter, 1)) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 	}
       }
 
       if(numConsecutiveEmptyCells > 0) {
-	snprintf(buf, sizeof(buf), "<TD "TD_BG"  COLSPAN=%d>&nbsp;</TD>\n", numConsecutiveEmptyCells);
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  COLSPAN=%d>&nbsp;</TD>\n", 
+		    numConsecutiveEmptyCells) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 	numConsecutiveEmptyCells = 0;
       }
@@ -2481,45 +2591,49 @@ void printThptStatsMatrix(int sortedColumn) {
       strftime(label, 32, "%H:%M", localtime_r(&tmpTime, &t));
       tmpTime = actTime-((i+1)*60);
       strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
-      snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"  ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>",
-	      getRowColor(), label1, label,
-	      formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].trafficValue/ratio));
-      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"  ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
+		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>",
+		  getRowColor(), label1, label,
+		  formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].trafficValue/ratio)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	 sendString(buf);
 
       if(device[actualReportDeviceId].
 	 hash_hostTraffic[device[actualReportDeviceId].
 			 last60MinutesThpt[i].topHostSentIdx] != NULL) {
-	snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+	if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
 		makeHostLink(device[actualReportDeviceId].
 			     hash_hostTraffic[device[actualReportDeviceId].
 					     last60MinutesThpt[i].topHostSentIdx],
 			     LONG_FORMAT, 0, 0),
-		formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].topSentTraffic/ratio));
+		    formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].topSentTraffic/ratio)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
 	if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
 							last60MinutesThpt[i].secondHostSentIdx] != NULL) {
-	  snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
-		  makeHostLink(device[actualReportDeviceId].
-			       hash_hostTraffic[device[actualReportDeviceId].
-					       last60MinutesThpt[i].secondHostSentIdx],
-			       LONG_FORMAT, 0, 0),
-		  formatThroughput(device[actualReportDeviceId].
-				   last60MinutesThpt[i].secondSentTraffic/ratio));
+	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+		      makeHostLink(device[actualReportDeviceId].
+				   hash_hostTraffic[device[actualReportDeviceId].
+						   last60MinutesThpt[i].secondHostSentIdx],
+				   LONG_FORMAT, 0, 0),
+		      formatThroughput(device[actualReportDeviceId].
+				       last60MinutesThpt[i].secondSentTraffic/ratio)) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	}
 
 	if(device[actualReportDeviceId].
 	   hash_hostTraffic[device[actualReportDeviceId].last60MinutesThpt[i].
 			   thirdHostSentIdx] != NULL) {
-	  snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
-		  makeHostLink(device[actualReportDeviceId].
-			       hash_hostTraffic[device[actualReportDeviceId].
-					       last60MinutesThpt[i].thirdHostSentIdx],
+	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+		      makeHostLink(device[actualReportDeviceId].
+				   hash_hostTraffic[device[actualReportDeviceId].
+						   last60MinutesThpt[i].thirdHostSentIdx],
 			       LONG_FORMAT, 0, 0),
-		  formatThroughput(device[actualReportDeviceId].
-				   last60MinutesThpt[i].thirdSentTraffic/ratio));
+		      formatThroughput(device[actualReportDeviceId].
+				       last60MinutesThpt[i].thirdSentTraffic/ratio)) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	}
       } else
@@ -2531,37 +2645,40 @@ void printThptStatsMatrix(int sortedColumn) {
 
       if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
 						      last60MinutesThpt[i].topHostRcvdIdx] != NULL) {
-	snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
-		 makeHostLink(device[actualReportDeviceId].
-			      hash_hostTraffic[device[actualReportDeviceId].
-					     last60MinutesThpt[i].topHostRcvdIdx],
-			      LONG_FORMAT, 0, 0),
-		formatThroughput(device[actualReportDeviceId].
-				 last60MinutesThpt[i].topRcvdTraffic/ratio));
-	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+		    makeHostLink(device[actualReportDeviceId].
+				 hash_hostTraffic[device[actualReportDeviceId].
+						 last60MinutesThpt[i].topHostRcvdIdx],
+				 LONG_FORMAT, 0, 0),
+		    formatThroughput(device[actualReportDeviceId].
+				     last60MinutesThpt[i].topRcvdTraffic/ratio)) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	   sendString(buf);
 
 	if(device[actualReportDeviceId].
 	   hash_hostTraffic[device[actualReportDeviceId].
 			   last60MinutesThpt[i].secondHostRcvdIdx] != NULL) {
-	  snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
-		  makeHostLink(device[actualReportDeviceId].
-			       hash_hostTraffic[device[actualReportDeviceId].
-					       last60MinutesThpt[i].secondHostRcvdIdx],
-			       LONG_FORMAT, 0, 0),
-		  formatThroughput(device[actualReportDeviceId].
-				   last60MinutesThpt[i].secondRcvdTraffic/ratio));
-	  sendString(buf);
+	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+		      makeHostLink(device[actualReportDeviceId].
+				   hash_hostTraffic[device[actualReportDeviceId].
+						   last60MinutesThpt[i].secondHostRcvdIdx],
+				   LONG_FORMAT, 0, 0),
+		      formatThroughput(device[actualReportDeviceId].
+				       last60MinutesThpt[i].secondRcvdTraffic/ratio)) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	     sendString(buf);
 	}
 
 	if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
 							last60MinutesThpt[i].thirdHostRcvdIdx] != NULL) {
-	  snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
-		  makeHostLink(device[actualReportDeviceId].
-			       hash_hostTraffic[device[actualReportDeviceId].
-					       last60MinutesThpt[i].thirdHostRcvdIdx],
-			       LONG_FORMAT, 0, 0),
-		    formatThroughput(device[actualReportDeviceId].
-				     last60MinutesThpt[i].thirdRcvdTraffic/ratio));
+	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+		      makeHostLink(device[actualReportDeviceId].
+				   hash_hostTraffic[device[actualReportDeviceId].
+						   last60MinutesThpt[i].thirdHostRcvdIdx],
+				   LONG_FORMAT, 0, 0),
+		      formatThroughput(device[actualReportDeviceId].
+				       last60MinutesThpt[i].thirdRcvdTraffic/ratio)) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	}
       } else
@@ -2591,45 +2708,49 @@ void printThptStatsMatrix(int sortedColumn) {
 	strftime(label, 32, "%H:%M", localtime_r(&tmpTime, &t));
 	tmpTime = actTime-((i+1)*60*60);
 	strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
-	snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"  ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
-		"<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>",
-		getRowColor(), label, label1,
-		formatThroughput(device[actualReportDeviceId].last24HoursThpt[i].trafficValue/ratio));
-	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"  ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
+		    "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>",
+		    getRowColor(), label, label1,
+		    formatThroughput(device[actualReportDeviceId].last24HoursThpt[i].trafficValue/ratio)) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	   sendString(buf);
 
 	if(device[actualReportDeviceId].
 	   hash_hostTraffic[device[actualReportDeviceId].
 			   last24HoursThpt[i].topHostSentIdx] != NULL) {
-	  snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
-		  makeHostLink(device[actualReportDeviceId].
-			       hash_hostTraffic[device[actualReportDeviceId].
-					       last24HoursThpt[i].topHostSentIdx],
-			       LONG_FORMAT, 0, 0),
-		  formatThroughput(device[actualReportDeviceId].
-				   last24HoursThpt[i].topSentTraffic/ratio));
+	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+		      makeHostLink(device[actualReportDeviceId].
+				   hash_hostTraffic[device[actualReportDeviceId].
+						   last24HoursThpt[i].topHostSentIdx],
+				   LONG_FORMAT, 0, 0),
+		      formatThroughput(device[actualReportDeviceId].
+				       last24HoursThpt[i].topSentTraffic/ratio)) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
 	  if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
 							  last24HoursThpt[i].secondHostSentIdx] != NULL) {
-	    snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
 						 last24HoursThpt[i].secondHostSentIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].secondSentTraffic/ratio));
+				     last24HoursThpt[i].secondSentTraffic/ratio)) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 
 	  if(device[actualReportDeviceId].
 	     hash_hostTraffic[device[actualReportDeviceId].last24HoursThpt[i].thirdHostSentIdx] != NULL) {
-	    snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
 						 last24HoursThpt[i].thirdHostSentIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].thirdSentTraffic/ratio));
+				     last24HoursThpt[i].thirdSentTraffic/ratio)) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 	}
@@ -2640,37 +2761,40 @@ void printThptStatsMatrix(int sortedColumn) {
 
 	if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
 							last24HoursThpt[i].topHostRcvdIdx] != NULL) {
-	  snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
 		  makeHostLink(device[actualReportDeviceId].
 			       hash_hostTraffic[device[actualReportDeviceId].
 					       last24HoursThpt[i].topHostRcvdIdx],
 			       LONG_FORMAT, 0, 0),
 		  formatThroughput(device[actualReportDeviceId].
-				   last24HoursThpt[i].topRcvdTraffic/ratio));
+				   last24HoursThpt[i].topRcvdTraffic/ratio)) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
 	  if(device[actualReportDeviceId].
 	     hash_hostTraffic[device[actualReportDeviceId].
 			     last24HoursThpt[i].secondHostRcvdIdx] != NULL) {
-	    snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
 						 last24HoursThpt[i].secondHostRcvdIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].secondRcvdTraffic/ratio));
+				     last24HoursThpt[i].secondRcvdTraffic/ratio)) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 
 	  if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
 							  last24HoursThpt[i].thirdHostRcvdIdx] != NULL) {
-	    snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
+	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
 						 last24HoursThpt[i].thirdHostRcvdIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].thirdRcvdTraffic/ratio));
+				     last24HoursThpt[i].thirdRcvdTraffic/ratio)) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 
@@ -2700,14 +2824,14 @@ void printThptStats(int sortedColumn _UNUSED_) {
 #ifdef HAVE_GDCHART
    sendString("<A HREF=\"thptStatsMatrix.html?1\" BORDER=0>"
 	      "<IMG SRC=\"thptGraph?1\"></A><BR>\n");
-   snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
+   if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	   formatTimeStamp(0, 0, 0),
-	   formatTimeStamp(0, 0, 60));
+	   formatTimeStamp(0, 0, 60)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 #else
    sendString("<A HREF=\"thptStatsMatrix.html?1\" BORDER=0>");
-   snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4></A><BR>",
+   if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4></A><BR>",
 	   formatTimeStamp(0, 0, 0),
-	   formatTimeStamp(0, 0, 60));
+	   formatTimeStamp(0, 0, 60)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 #endif
 
@@ -2717,14 +2841,14 @@ void printThptStats(int sortedColumn _UNUSED_) {
 #ifdef HAVE_GDCHART
     sendString("<P><A HREF=\"thptStatsMatrix.html?2\" BORDER=0>"
 	       "<IMG SRC=\"thptGraph?2\"></A><BR>\n");
-    snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	    formatTimeStamp(0, 0, 0),
-	    formatTimeStamp(0, 24, 0));
+	    formatTimeStamp(0, 24, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 #else
     sendString("<P><A HREF=\"thptStatsMatrix.html?2\" BORDER=0>");
-    snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4></A><BR>",
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4></A><BR>",
 	    formatTimeStamp(0, 0, 0),
-	    formatTimeStamp(0, 24, 0));
+	    formatTimeStamp(0, 24, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 #endif
 
     sendString(tmpBuf);
@@ -2732,9 +2856,10 @@ void printThptStats(int sortedColumn _UNUSED_) {
 #ifdef HAVE_GDCHART
     if(device[actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
       sendString("<P><IMG SRC=\"thptGraph?3\"><BR>\n");
-      snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	      formatTimeStamp(0, 0, 0),
-	      formatTimeStamp(30, 0, 0));
+	      formatTimeStamp(30, 0, 0)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(tmpBuf);
     }
 #endif
@@ -2910,14 +3035,20 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
 
   if(domainName == NULL) {
     sendString("<CENTER><P><H1>Internet Domain Stats</H1><P>\n");
-    snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_DOMAIN_STATS, sign);
-    snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_DOMAIN_STATS);
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_DOMAIN_STATS, sign) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_DOMAIN_STATS) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
  } else {
-    snprintf(buf, sizeof(buf), "<CENTER><P><H1>Stats for "
-	    "Domain %s</H1><P>\n", domainName);
+   if(snprintf(buf, sizeof(buf), "<CENTER><P><H1>Stats for "
+	    "Domain %s</H1><P>\n", domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
-    snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html?%s", DOMAIN_INFO_HTML, domainName, sign);
-    snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s_%s.html?", DOMAIN_INFO_HTML, domainName);
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html?%s", 
+		DOMAIN_INFO_HTML, domainName, sign) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s_%s.html?", 
+		DOMAIN_INFO_HTML, domainName) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
   if(abs(columnSort) == 0) {
@@ -3041,7 +3172,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   }
 
   /* Split below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-  snprintf(buf, sizeof(buf),
+  if(snprintf(buf, sizeof(buf),
           ""TABLE_ON"<TABLE BORDER=1><TR>"
           "<TH "TH_BG">%s0>Name%s</A></TH>"
           "<TH "TH_BG">%s1>Domain%s</A></TH>"
@@ -3052,10 +3183,11 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
           theAnchor[1], arrow[1],
           theAnchor[2], arrow[2],
           theAnchor[3], arrow[3],
-          theAnchor[4], arrow[4]);
+          theAnchor[4], arrow[4]) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  snprintf(buf, sizeof(buf),
+  if(snprintf(buf, sizeof(buf),
           "<TH "TH_BG">%s5>TCP&nbsp;Rcvd%s</A></TH>"
           "<TH "TH_BG">%s6>UDP&nbsp;Sent%s</A></TH>"
           "<TH "TH_BG">%s7>UDP&nbsp;Rcvd%s</A></TH>"
@@ -3065,10 +3197,11 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
           theAnchor[6], arrow[6],
           theAnchor[7], arrow[7],
           theAnchor[8], arrow[8],
-          theAnchor[9], arrow[9]);
+          theAnchor[9], arrow[9]) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  snprintf(buf, sizeof(buf),
+  if(snprintf(buf, sizeof(buf),
           "<TH "TH_BG">%s10>OSPF&nbsp;Sent%s</A></TH>"
           "<TH "TH_BG">%s11>OSP&nbsp;Rcvd%s</A></TH>"
           "<TH "TH_BG">%s12>IGMP&nbsp;Sent%s</A></TH>"
@@ -3077,7 +3210,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
           theAnchor[10], arrow[10],
           theAnchor[11], arrow[11],
           theAnchor[12], arrow[12],
-          theAnchor[13], arrow[13]);
+          theAnchor[13], arrow[13]) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   sendString(buf);
 
@@ -3087,11 +3221,12 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
     else
       statsEntry = &tmpStats[idx];
 
-    if(domainName == NULL)
-      snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html>%s</A>",
+    if(domainName == NULL) {
+      if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html>%s</A>",
 	      DOMAIN_INFO_HTML, statsEntry->domainHost->fullDomainName,
-	      statsEntry->domainHost->fullDomainName);
-    else {
+	      statsEntry->domainHost->fullDomainName) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+    } else {
       char tmpBuf[64];
       int blankId;
 
@@ -3112,11 +3247,12 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
 	 && (strcmp(&tmpBuf[blankId+1], domainName) == 0))
 	tmpBuf[blankId] = '\0';
 
-      snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html>%s</A>",
-	      statsEntry->domainHost->hostNumIpAddress, tmpBuf);
+      if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html>%s</A>",
+		  statsEntry->domainHost->hostNumIpAddress, tmpBuf) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
     }
 
-    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=CENTER>%s</TD>"
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=CENTER>%s</TD>"
 	    "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%%</TD>"
 	    "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%%</TD>"
 	    "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
@@ -3139,7 +3275,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
 	    formatBytes(statsEntry->ospfRcvd, 1),
 	    formatBytes(statsEntry->igmpSent, 1),
 	    formatBytes(statsEntry->igmpRcvd, 1)
-	    );
+	    ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
 
@@ -3191,11 +3327,11 @@ void listNetFlows(void) {
 		     "<TH "TH_BG">Packets</TH><TH "TH_BG">Traffic</TH></TR>");
 	}
 
-	snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s"
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s"
 		"</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
 		getRowColor(), list->flowName,
 		formatPkts(list->packets),
-		formatBytes(list->bytes, 1));
+		formatBytes(list->bytes, 1)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
 	numEntries++;
@@ -3309,8 +3445,10 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
       arrowGif = "&nbsp;<IMG SRC=arrow_down.gif BORDER=0>";
     }
 
-    snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", NW_EVENTS_HTML, sign);
-    snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", NW_EVENTS_HTML);
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", NW_EVENTS_HTML, sign)  < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", NW_EVENTS_HTML) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
   if(abs(column) == 0) {
@@ -3337,10 +3475,10 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
 
   sendString("<P><H1>Network Events</H1>\n");
   sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>\n");
-  snprintf(buf, sizeof(buf), "<TH "TH_BG">%s0>Time%s</A></TH><TH "TH_BG">%s1>Severity%s</A></TH>"
+  if(snprintf(buf, sizeof(buf), "<TH "TH_BG">%s0>Time%s</A></TH><TH "TH_BG">%s1>Severity%s</A></TH>"
 	  "<TH "TH_BG">%s2>Matched Rule%s</A></TH><TH "TH_BG">Message</TH></TR>\n",
 	  theAnchor[0], arrow[0], theAnchor[1], arrow[1],
-	  theAnchor[2], arrow[2]);
+	  theAnchor[2], arrow[2]) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   for(i=0; i<numEntries; i++) {
@@ -3354,7 +3492,8 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
     else
       elem = strtok_r(theMsgTable[i]->message, " ", &strtokState);
 
-    snprintf(tmpBuf, sizeof(tmpBuf), "<TR %s><TD "TD_BG">", getRowColor());
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR %s><TD "TD_BG">", getRowColor()) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(tmpBuf);
     sendString(elem); /* 2000-03-07 */
     sendString(" ");

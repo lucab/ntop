@@ -118,7 +118,7 @@ static char *tok2str(register const struct tok *lp,
   if (fmt == NULL)
     fmt = "#%d";
 
-  (void)snprintf(buf, sizeof(buf), fmt, v);
+ if(snprintf(buf, sizeof(buf), fmt, v) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
   return (buf);
 }
 
@@ -226,9 +226,9 @@ static void handleIcmpPacket(const struct pcap_pkthdr *h,
     case ICMP_TIMESTAMP:
     case ICMP_TIMESTAMPREPLY:
     case ICMP_SOURCE_QUENCH:
-      snprintf(tmpStr, sizeof(tmpStr), "%lu/%lu",
+      if(snprintf(tmpStr, sizeof(tmpStr), "%lu/%lu",
 	      (unsigned long)h->ts.tv_sec,
-	      (unsigned long)h->ts.tv_usec);
+	      (unsigned long)h->ts.tv_usec) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       key_data.dptr = tmpStr; key_data.dsize = strlen(key_data.dptr)+1;
       pktInfo.pktTime = h->ts.tv_sec;
       pktInfo.sourceHost.s_addr = ip.ip_src.s_addr;
@@ -421,9 +421,10 @@ static void printIcmpPkt(IcmpPktInfo *icmpPktInfo) {
 
     case ICMP_UNREACH_PROTOCOL:
        NTOHL(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst.s_addr);
-       snprintf(icmpBuf, sizeof(icmpBuf), "%s protocol 0x%X unreachable",
+       if(snprintf(icmpBuf, sizeof(icmpBuf), "%s protocol 0x%X unreachable",
 		    intoa(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst),
-		    icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_p);
+		    icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_p) < 0) 
+	 traceEvent(TRACE_ERROR, "Buffer overflow!");
       break;
 
     case ICMP_UNREACH_PORT:
@@ -439,24 +440,24 @@ static void printIcmpPkt(IcmpPktInfo *icmpPktInfo) {
       switch (oip->ip_p) {
 
       case IPPROTO_TCP:
-	snprintf(icmpBuf, sizeof(icmpBuf),
+	if(snprintf(icmpBuf, sizeof(icmpBuf),
 		      "%s tcp port %d unreachable",
 		      intoa(oip->ip_dst),
-		      dport);
+		      dport) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	break;
 
       case IPPROTO_UDP:
-	snprintf(icmpBuf, sizeof(icmpBuf),
+	if(snprintf(icmpBuf, sizeof(icmpBuf),
 		      "%s udp port %d unreachable",
 		      intoa(oip->ip_dst),
-		      dport);
+		      dport) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	break;
 
       default:
-	snprintf(icmpBuf, sizeof(icmpBuf),
+	if(snprintf(icmpBuf, sizeof(icmpBuf),
 		      "%s protocol 0x%X port %d unreachable",
 		      intoa(oip->ip_dst),
-		      oip->ip_p, dport);
+		      oip->ip_p, dport) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	break;
       }
       break;
@@ -468,14 +469,17 @@ static void printIcmpPkt(IcmpPktInfo *icmpPktInfo) {
 	mp = (struct mtu_discovery *)&icmpPktInfo->icmpData.icmpPkt.icmp_void;
 	mtu = EXTRACT_16BITS(&mp->nexthopmtu);
 	NTOHL(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst.s_addr);
-	if (mtu)
-	  snprintf(icmpBuf, sizeof(icmpBuf),
+	if (mtu) {
+	  if(snprintf(icmpBuf, sizeof(icmpBuf),
 			"%s unreachable - need to frag (mtu %d)",
-			intoa(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst), mtu);
-	else
-	  snprintf(icmpBuf, sizeof(icmpBuf),
+			intoa(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst), mtu) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	} else {
+	  if(snprintf(icmpBuf, sizeof(icmpBuf),
 			"%s unreachable - need to frag",
-			intoa(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst));
+			intoa(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst)) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	}
       }
       break;
 
@@ -483,8 +487,9 @@ static void printIcmpPkt(IcmpPktInfo *icmpPktInfo) {
       NTOHL(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst.s_addr);
       fmt = tok2str(unreach2str, "#%d %%s unreachable",
 		    icmpPktInfo->icmpData.icmpPkt.icmp_code);
-      (void)snprintf(icmpBuf, sizeof(icmpBuf), fmt,
-		    intoa(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst));
+      if(snprintf(icmpBuf, sizeof(icmpBuf), fmt,
+		  intoa(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       break;
     }
     break;
@@ -494,9 +499,10 @@ static void printIcmpPkt(IcmpPktInfo *icmpPktInfo) {
     NTOHL(icmpPktInfo->icmpData.icmpPkt.icmp_gwaddr.s_addr);
     fmt = tok2str(type2str, "redirect-#%d %%s to net %%s",
 		  icmpPktInfo->icmpData.icmpPkt.icmp_code);
-    (void)snprintf(icmpBuf, sizeof(icmpBuf), fmt,
-		  intoa(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst),
-		  intoa(icmpPktInfo->icmpData.icmpPkt.icmp_gwaddr));
+    if(snprintf(icmpBuf, sizeof(icmpBuf), fmt,
+		intoa(icmpPktInfo->icmpData.icmpPkt.icmp_ip.ip_dst),
+		intoa(icmpPktInfo->icmpData.icmpPkt.icmp_gwaddr)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
 
   case ICMP_ROUTERADVERT:
@@ -512,25 +518,31 @@ static void printIcmpPkt(IcmpPktInfo *icmpPktInfo) {
       (void)strncpy(cp, " lifetime ", sizeof(icmpBuf));
       cp = icmpBuf + strlen(icmpBuf);
       lifetime = EXTRACT_16BITS(&ihp->ird_lifetime);
-      if (lifetime < 60)
-	(void)snprintf(cp, sizeof(icmpBuf), "%u", lifetime);
-      else if (lifetime < 60 * 60)
-	(void)snprintf(cp, sizeof(icmpBuf), "%u:%02u",
-		      lifetime / 60, lifetime % 60);
-      else
-	(void)snprintf(cp, sizeof(icmpBuf), "%u:%02u:%02u",
-		      lifetime / 3600,
-		      (lifetime % 3600) / 60,
-		      lifetime % 60);
+      if (lifetime < 60) {
+	if(snprintf(cp, sizeof(icmpBuf), "%u", lifetime) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      } else if (lifetime < 60 * 60) {
+	if(snprintf(cp, sizeof(icmpBuf), "%u:%02u",
+		    lifetime / 60, lifetime % 60) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+     } else {
+	if(snprintf(cp, sizeof(icmpBuf), "%u:%02u:%02u",
+		    lifetime / 3600,
+		    (lifetime % 3600) / 60,
+		    lifetime % 60) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      }
       cp = icmpBuf + strlen(icmpBuf);
 
       num = ihp->ird_addrnum;
-      (void)snprintf(cp, sizeof(icmpBuf), " %d:", num);
+      if(snprintf(cp, sizeof(icmpBuf), " %d:", num) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       cp = icmpBuf + strlen(icmpBuf);
 
       size = ihp->ird_addrsiz;
       if (size != 2) {
-	(void)snprintf(cp, sizeof(icmpBuf), " [size %d]", size);
+	if(snprintf(cp, sizeof(icmpBuf), " [size %d]", size) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	break;
       }
       idp = (struct id_rdiscovery *)icmpPktInfo->icmpData.icmpPkt.icmp_data;
@@ -539,9 +551,10 @@ static void printIcmpPkt(IcmpPktInfo *icmpPktInfo) {
 
 	theAddr.s_addr = idp->ird_addr;
 	NTOHL(theAddr.s_addr);
-	(void)snprintf(cp, sizeof(icmpBuf), " {%s %u}",
-		      intoa(theAddr),
-		      EXTRACT_32BITS(&idp->ird_pref));
+	if(snprintf(cp, sizeof(icmpBuf), " {%s %u}",
+		    intoa(theAddr),
+		    EXTRACT_32BITS(&idp->ird_pref)) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	cp = icmpBuf + strlen(icmpBuf);
       }
     }
@@ -559,19 +572,22 @@ static void printIcmpPkt(IcmpPktInfo *icmpPktInfo) {
       break;
 
     default:
-      (void)snprintf(icmpBuf, sizeof(icmpBuf), "time exceeded-#%d",
-		    icmpPktInfo->icmpData.icmpPkt.icmp_code);
+      if(snprintf(icmpBuf, sizeof(icmpBuf), "time exceeded-#%d",
+		  icmpPktInfo->icmpData.icmpPkt.icmp_code) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       break;
     }
     break;
 
   case ICMP_PARAMPROB:
     if (icmpPktInfo->icmpData.icmpPkt.icmp_code)
-      (void)snprintf(icmpBuf, sizeof(icmpBuf), "parameter problem - code %d",
-		    icmpPktInfo->icmpData.icmpPkt.icmp_code);
+      if(snprintf(icmpBuf, sizeof(icmpBuf), "parameter problem - code %d",
+		  icmpPktInfo->icmpData.icmpPkt.icmp_code) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
     else {
-      (void)snprintf(icmpBuf, sizeof(icmpBuf), "parameter problem - octet %d",
-		    icmpPktInfo->icmpData.icmpPkt.icmp_pptr);
+      if(snprintf(icmpBuf, sizeof(icmpBuf), "parameter problem - octet %d",
+		  icmpPktInfo->icmpData.icmpPkt.icmp_pptr) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
     }
     break;
 
@@ -580,13 +596,15 @@ static void printIcmpPkt(IcmpPktInfo *icmpPktInfo) {
     break;
 
   case ICMP_MASKREPLY:
-    (void)snprintf(icmpBuf, sizeof(icmpBuf), "address mask is 0x%08x",
-		  (u_int32_t)ntohl(icmpPktInfo->icmpData.icmpPkt.icmp_mask));
+    if(snprintf(icmpBuf, sizeof(icmpBuf), "address mask is 0x%08x",
+		(u_int32_t)ntohl(icmpPktInfo->icmpData.icmpPkt.icmp_mask)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
 
   default:
-    (void)snprintf(icmpBuf, sizeof(icmpBuf), "type-#%d",
-		  icmpPktInfo->icmpData.icmpPkt.icmp_type);
+    if(snprintf(icmpBuf, sizeof(icmpBuf), "type-#%d",
+		icmpPktInfo->icmpData.icmpPkt.icmp_type) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   }
 
@@ -923,7 +941,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   }
 
   sendString("<TABLE BORDER>\n");
-  snprintf(buf, sizeof(buf), "<TR><TH>%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
+  if(snprintf(buf, sizeof(buf), "<TR><TH>%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
 	 "<TH>%s?%s2>Echo Req.</A></TH>"
 	 "<TH>%s?%s12>Echo Reply</A></TH>"
 	 "<TH>%s?%s3>Unreach</A></TH>"
@@ -947,7 +965,8 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	  pluginName, sign,
 	  pluginName, sign,
 	  pluginName, sign,
-	  pluginName, sign);
+	  pluginName, sign) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   quicksort(hosts, num,
@@ -964,122 +983,126 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       else
 	idx = i;
 
-      snprintf(buf, sizeof(buf), "<TR %s> %s",
+      if(snprintf(buf, sizeof(buf), "<TR %s> %s",
 	      getRowColor(),
-	      makeHostLink(hosts[idx], LONG_FORMAT, 0, 0));
+	      makeHostLink(hosts[idx], LONG_FORMAT, 0, 0)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
 	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO])),
-	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO])));
+	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO]))) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
 	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY])),
-	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY])));
+	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY]))) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_UNREACH]+
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_UNREACH];
       if(tot > 0) {
-	snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
+	if(snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
 		pluginName,
 		(unsigned long)hosts[idx]->hostIpAddress.s_addr,
-		(int)ICMP_UNREACH);
+		(int)ICMP_UNREACH) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	postAnchor = "</A>";
       } else {
 	anchor[0] = '\0';
 	postAnchor = "";
       }
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>",
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>",
 	      anchor,
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgSent[ICMP_UNREACH]),
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgRcvd[ICMP_UNREACH]),
-	      postAnchor);
+	      postAnchor) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_REDIRECT]+
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT];
       if(tot > 0) {
-	snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
+	if(snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
 		pluginName,
 		(unsigned long)hosts[idx]->hostIpAddress.s_addr,
-		(int)ICMP_REDIRECT);
+		(int)ICMP_REDIRECT) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	postAnchor = "</A>";
       } else {
 	anchor[0] = '\0';
 	postAnchor = "";
       }
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgSent[ICMP_REDIRECT]),
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgRcvd[ICMP_REDIRECT]),
-	      postAnchor);
+	      postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]+
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT];
       if(tot > 0) {
-	snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
+	if(snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
 		pluginName,
 		(unsigned long)hosts[idx]->hostIpAddress.s_addr,
-		(int)ICMP_ROUTERADVERT);
+		(int)ICMP_ROUTERADVERT) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	postAnchor = "</A>";
       } else {
 	anchor[0] = '\0';
 	postAnchor = "";
       }
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgSent[ICMP_ROUTERADVERT]),
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgRcvd[ICMP_ROUTERADVERT]),
-	      postAnchor);
+	      postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]+
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED];
       if(tot > 0) {
-	snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
+	if(snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
 		pluginName,
 		(unsigned long)hosts[idx]->hostIpAddress.s_addr,
-		(int)ICMP_TIMXCEED);
+		(int)ICMP_TIMXCEED) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	postAnchor = "</A>";
       } else {
 	anchor[0] = '\0';
 	postAnchor = "";
       }
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgSent[ICMP_TIMXCEED]),
 	     formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			icmpMsgRcvd[ICMP_TIMXCEED]),
-	      postAnchor);
+	      postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]+
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB];
       if(tot > 0) {
-	snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
+	if(snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
 		pluginName,
 		(unsigned long)hosts[idx]->hostIpAddress.s_addr,
-		(int)ICMP_PARAMPROB);
+		(int)ICMP_PARAMPROB) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	postAnchor = "</A>";
       } else {
 	anchor[0] = '\0';
 	postAnchor = "";
       }
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgSent[ICMP_PARAMPROB]),
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgRcvd[ICMP_PARAMPROB]),
-	      postAnchor);
+	      postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_MASKREQ]+
@@ -1087,43 +1110,43 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ]+
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY];
       if(tot > 0) {
-	snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
+	if(snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
 		pluginName,
 		(unsigned long)hosts[idx]->hostIpAddress.s_addr,
-		(int)ICMP_MASKREQ);
+		(int)ICMP_MASKREQ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	postAnchor = "</A>";
       } else {
 	anchor[0] = '\0';
 	postAnchor = "";
       }
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
 	      formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
 					  icmpMsgSent[ICMP_MASKREQ]+
 			 hosts[idx]->icmpInfo->icmpMsgSent[ICMP_MASKREPLY])),
 	      formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
 					  icmpMsgRcvd[ICMP_MASKREQ]+
 			 hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY])),
-	      postAnchor);
+	      postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]+
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH];
       if(tot > 0) {
-	snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
+	if(snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
 		pluginName,
 		(unsigned long)hosts[idx]->hostIpAddress.s_addr,
-		(int)ICMP_SOURCE_QUENCH);
+		(int)ICMP_SOURCE_QUENCH) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	postAnchor = "</A>";
       } else {
 	anchor[0] = '\0';
 	postAnchor = "";
       }
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgSent[ICMP_SOURCE_QUENCH]),
 	      formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			 icmpMsgRcvd[ICMP_SOURCE_QUENCH]),
-	      postAnchor);
+	      postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP]+
@@ -1131,23 +1154,23 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP]+
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY];
       if(tot > 0) {
-	snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
+	if(snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
 		pluginName,
 		(unsigned long)hosts[idx]->hostIpAddress.s_addr,
-		(int)ICMP_TIMESTAMP);
+		(int)ICMP_TIMESTAMP) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	postAnchor = "</A>";
       } else {
 	anchor[0] = '\0';
 	postAnchor = "";
       }
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
 	      formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
 					  icmpMsgSent[ICMP_TIMESTAMP]+
 			 hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY])),
 	      formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
 					  icmpMsgRcvd[ICMP_TIMESTAMP]+
 			 hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY])),
-	      postAnchor);
+	      postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]+
@@ -1155,23 +1178,23 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST]+
 	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY];
       if(tot > 0) {
-	snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
+	if(snprintf(anchor, sizeof(anchor), "%s?host=%lu&icmp=%d>",
 		pluginName,
 		(unsigned long)hosts[idx]->hostIpAddress.s_addr,
-		(int)ICMP_INFO_REQUEST);
+		(int)ICMP_INFO_REQUEST) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	postAnchor = "</A>";
       } else {
 	anchor[0] = '\0';
 	postAnchor = "";
       }
-      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
 	      formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
 					  icmpMsgSent[ICMP_INFO_REQUEST]+
 			 hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY])),
 	      formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
 					  icmpMsgRcvd[ICMP_INFO_REQUEST]+
 			 hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY])),
-	      postAnchor);
+	      postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       sendString("</TR>\n");
@@ -1232,7 +1255,8 @@ PluginInfo* PluginEntryFctn(void) {
 	 icmpPluginInfo->pluginName);
 
   /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
-  snprintf(tmpBuf, sizeof(tmpBuf), "%s/icmpWatch.db",dbPath);
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/icmpWatch.db",dbPath) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   icmpDB = gdbm_open (tmpBuf, 0, GDBM_NEWDB, 00664, NULL);
 
   if(icmpDB == NULL)

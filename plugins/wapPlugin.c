@@ -29,7 +29,8 @@ void printWMLheader(void)  {
   char tmpStr[64];
 
   sendString("HTTP/1.0 200 OK\n");
-  snprintf(tmpStr, 64, "Server: ntop/%s (%s)\n", version, osName);
+  if(snprintf(tmpStr, 64, "Server: ntop/%s (%s)\n", version, osName) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(tmpStr);
   sendString("Content-Type: text/vnd.wap.wml;charset=UTF-8\n\n"); 
 }
@@ -132,11 +133,12 @@ static void printWmlIndex(void) {
     if((strcmp(tmpName, "0.0.0.0") == 0) || (tmpName[0] == '\0'))
       tmpName = el->ethAddressString;
 	    
-    snprintf(buf, sizeof(buf),
+    if(snprintf(buf, sizeof(buf),
 	    "<tr><td><a href=\"/ntop/host.wml?%s\">%s</a></td>"
 	    "<td>%s</td></tr>\n",
 	    tmpName, tmpName, 	    
-	    formatBytes(el->bytesSent, 1));	
+	    formatBytes(el->bytesSent, 1)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
 
@@ -162,11 +164,12 @@ static void printWmlIndex(void) {
     if((strcmp(tmpName, "0.0.0.0") == 0) || (tmpName[0] == '\0'))
       tmpName = el->ethAddressString;
 	    
-    snprintf(buf, sizeof(buf), 
+    if(snprintf(buf, sizeof(buf), 
 	    "<tr><td><a href=\"/ntop/host.wml?%s\">%s</a></td>"
 	    "<td>%s</td></tr>\n",
 	    tmpName, tmpName, 	    
-	    formatBytes(el->bytesReceived, 1));	
+	    formatBytes(el->bytesReceived, 1)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
 
@@ -182,9 +185,10 @@ static void printWmlIndex(void) {
 
   /** **/
 
-  snprintf(buf, sizeof(buf),"<tr><td>Sampling&nbsp;Time</td>"
+  if(snprintf(buf, sizeof(buf),"<tr><td>Sampling&nbsp;Time</td>"
 	  "<td>%s</td></tr>\n",
-	  formatSeconds(actTime-initialSniffTime));
+	  formatSeconds(actTime-initialSniffTime)) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   /** **/
@@ -199,28 +203,32 @@ static void printWmlIndex(void) {
 
   if(device[actualDeviceId].ethernetPkts <= 0) device[actualDeviceId].ethernetPkts = 1;
 	
-  snprintf(buf, sizeof(buf),"<tr><td>Total</td><td>%s</td></tr>\n",
-	  formatPkts(device[actualDeviceId].ethernetPkts)); 
+  if(snprintf(buf, sizeof(buf),"<tr><td>Total</td><td>%s</td></tr>\n",
+	  formatPkts(device[actualDeviceId].ethernetPkts)) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  snprintf(buf, sizeof(buf),"<tr><td>Unicast</td>"
+  if(snprintf(buf, sizeof(buf),"<tr><td>Unicast</td>"
 	  "<td>%s [%.1f%%]</td></tr>\n", 
 	  formatPkts(unicastPkts),
-	  (float)(100*unicastPkts)/(float)device[actualDeviceId].ethernetPkts);
+	  (float)(100*unicastPkts)/(float)device[actualDeviceId].ethernetPkts) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-  snprintf(buf, sizeof(buf),"<tr><td>Broadcast</td>"
+  if(snprintf(buf, sizeof(buf),"<tr><td>Broadcast</td>"
 	  "<td>%s [%.1f%%]</td></tr>\n", 
 	  formatPkts(device[actualDeviceId].broadcastPkts),
 	  (float)(100*device[actualDeviceId].broadcastPkts)
-	   /(float)device[actualDeviceId].ethernetPkts); 
+	   /(float)device[actualDeviceId].ethernetPkts) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   if(device[actualDeviceId].multicastPkts > 0) {
-    snprintf(buf, sizeof(buf),"<tr><td>Multicast</td>"
+    if(snprintf(buf, sizeof(buf),"<tr><td>Multicast</td>"
 	    "<td>%s [%.1f%%]</td></tr>\n", 
 	    formatPkts(device[actualDeviceId].multicastPkts),
 	    (float)(100*device[actualDeviceId].multicastPkts)
-	     /(float)device[actualDeviceId].ethernetPkts); 
+	     /(float)device[actualDeviceId].ethernetPkts) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
 

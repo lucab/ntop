@@ -31,7 +31,8 @@ static GDBM_FILE logDB;
 void initLogger(void) {
 #ifdef HAVE_GDBM_H
   char tmpBuff[200];
-  snprintf(tmpBuff, sizeof(tmpBuff), "%s/logger.db",dbPath);
+  if(snprintf(tmpBuff, sizeof(tmpBuff), "%s/logger.db",dbPath) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   logDB = gdbm_open (tmpBuff, 0, GDBM_NEWDB, 00664, NULL);
 #endif
 }
@@ -66,7 +67,8 @@ void logMessage(char* message, u_short severity) {
   strncpy(msg.message, message, len);
   msg.message[len]= '\0';
 
-  snprintf(tmpStr, sizeof(tmpStr), "%lu", time(NULL));
+  if(snprintf(tmpStr, sizeof(tmpStr), "%lu", time(NULL)) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   key_data.dptr = tmpStr; key_data.dsize = strlen(key_data.dptr)+1;
   data_data.dptr = (char*)&msg; data_data.dsize = sizeof(LogMessage)+1;
   

@@ -72,27 +72,30 @@ void emitEvent(FilterRule *rule,
   accessMutex(&addressResolutionMutex, "emitEvent");
 #endif
 
-  if(icmpType == -1)
-    snprintf(msg, MAX_EVENT_MSG_SIZE, "%s %s %s %s:%s->%s:%s",
+  if(icmpType == -1) {
+    if(snprintf(msg, MAX_EVENT_MSG_SIZE, "%s %s %s %s:%s->%s:%s",
 	    ruleTime, actions[rule->actionType],
 	    rule->ruleLabel,
 	    srcHost->hostSymIpAddress, getAllPortByNum(sport),
-	    dstHost->hostSymIpAddress, getAllPortByNum(dport));
-  else
-    snprintf(msg, MAX_EVENT_MSG_SIZE, "%s %s %s %s->%s [%s]",
+	    dstHost->hostSymIpAddress, getAllPortByNum(dport)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else {
+    if(snprintf(msg, MAX_EVENT_MSG_SIZE, "%s %s %s %s->%s [%s]",
 	    ruleTime, actions[rule->actionType],
 	    rule->ruleLabel,
 	    srcHost->hostSymIpAddress,
-	    dstHost->hostSymIpAddress, icmpType2Str(icmpType));
-
+	    dstHost->hostSymIpAddress, icmpType2Str(icmpType)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  }
 #ifdef MULTITHREADED
   releaseMutex(&addressResolutionMutex);
 #endif
 
-  snprintf(tmpStr, sizeof(tmpStr), "%lu %lu %lu",
+  if(snprintf(tmpStr, sizeof(tmpStr), "%lu %lu %lu",
 	  (unsigned long)srcHost->hostIpAddress.s_addr,
 	  (unsigned long)dstHost->hostIpAddress.s_addr,
-	  (unsigned long)actTime);
+	  (unsigned long)actTime) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   /*traceEvent(TRACE_INFO, "%s) %s\n", tmpStr, msg); */
 

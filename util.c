@@ -1219,7 +1219,7 @@ void readNepedInfo(void) {
   if(!daemonMode)
     traceEvent(TRACE_INFO, "Wait please. Reading neped info....\n");
 
-  snprintf(line, sizeof(line), "neped %s", (char*)device);
+  if(snprintf(line, sizeof(line), "neped %s", (char*)device) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
   fd = sec_popen(line, "r");
 
   if(fd == NULL) {
@@ -1332,7 +1332,8 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 #endif
 
   /* 548 is the AFP (Apple Filing Protocol) */
-  snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr);
+ if(snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr) < 0) 
+   traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   fd = sec_popen(line, "r");
   

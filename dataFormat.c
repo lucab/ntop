@@ -31,21 +31,25 @@ char* formatKBytes(float numKBytes) {
 
   bufIdx = (bufIdx+1)%BUFFER_SIZE;
 
-  if(numKBytes < 1024)
-    snprintf(outStr[bufIdx], 32, "%.1f%sKB", numKBytes, separator);
-  else {
+  if(numKBytes < 1024) {
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sKB", numKBytes, separator) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else {
     float tmpKBytes = numKBytes/1024;
 
-    if(tmpKBytes < 1024)
-      snprintf(outStr[bufIdx], 32, "%.1f%sMB",  tmpKBytes, separator);
-    else {
+    if(tmpKBytes < 1024) {
+      if(snprintf(outStr[bufIdx], 32, "%.1f%sMB",  tmpKBytes, separator) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+    } else {
       float tmpGBytes = tmpKBytes/1024;
 
-      if(tmpGBytes < 1024)
-	snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpGBytes, separator);
-      else
-	snprintf(outStr[bufIdx], 32, "%.1f%sTB", ((float)(tmpGBytes)/1024), separator);
-
+      if(tmpGBytes < 1024) {
+	if(snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpGBytes, separator)  < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      } else {
+	if(snprintf(outStr[bufIdx], 32, "%.1f%sTB", ((float)(tmpGBytes)/1024), separator) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      }
     }
   }
 
@@ -68,25 +72,31 @@ char* formatBytes(TrafficCounter numBytes, short encodeString) {
 
   bufIdx = (bufIdx+1)%BUFFER_SIZE;
 
-  if(numBytes < 1024)
-    snprintf(outStr[bufIdx], 32, "%lu", (unsigned long)numBytes);
-  else if (numBytes < 1048576)
-    snprintf(outStr[bufIdx], 32, "%.1f%sKb",
-	    ((float)(numBytes)/1024), locSeparator);
-  else {
+  if(numBytes < 1024) {
+    if(snprintf(outStr[bufIdx], 32, "%lu", (unsigned long)numBytes) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else if (numBytes < 1048576) {
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sKb",
+		((float)(numBytes)/1024), locSeparator) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else {
     float tmpMBytes = ((float)numBytes)/1048576;
 
-    if(tmpMBytes < 1024)
-      snprintf(outStr[bufIdx], 32, "%.1f%sMB",
-	      tmpMBytes, locSeparator);
-    else {
+    if(tmpMBytes < 1024) {
+      if(snprintf(outStr[bufIdx], 32, "%.1f%sMB",
+	      tmpMBytes, locSeparator) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+    } else {
       tmpMBytes /= 1024;
 
-      if(tmpMBytes < 1024)
-	snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpMBytes, locSeparator);
-      else
-	snprintf(outStr[bufIdx], 32, "%.1f%sTB",
-		((float)(tmpMBytes)/1024), locSeparator);
+      if(tmpMBytes < 1024) {
+	if(snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpMBytes, locSeparator) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      } else {
+	if(snprintf(outStr[bufIdx], 32, "%.1f%sTB",
+		((float)(tmpMBytes)/1024), locSeparator) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+      }
     }
   }
 
@@ -119,14 +129,19 @@ char* formatSeconds(unsigned long sec) {
   min = (sec / 60);
   if(min > 0) sec -= min*60;
 
-  if(days > 0)
-    snprintf(outStr[bufIdx], 32, "%u day(s) %u:%02u:%02lu", days, hour, min, sec);
-  else if(hour > 0)
-    snprintf(outStr[bufIdx], 32, "%u:%02u:%02lu", hour, min, sec);
-  else if(min > 0)
-    snprintf(outStr[bufIdx], 32, "%u:%02lu", min, sec);
-  else
-    snprintf(outStr[bufIdx], 32, "%lu sec", sec);
+  if(days > 0) {
+    if(snprintf(outStr[bufIdx], 32, "%u day(s) %u:%02u:%02lu", days, hour, min, sec) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else if(hour > 0) {
+    if(snprintf(outStr[bufIdx], 32, "%u:%02u:%02lu", hour, min, sec)  < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else if(min > 0) {
+    if(snprintf(outStr[bufIdx], 32, "%u:%02lu", min, sec) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else {
+    if(snprintf(outStr[bufIdx], 32, "%lu sec", sec) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  }
 
   return(outStr[bufIdx]);
 }
@@ -140,11 +155,13 @@ char* formatMicroSeconds(unsigned long microsec) {
 
   bufIdx = (bufIdx+1)%5;
 
-  if(f < 1000)
-    snprintf(outStr[bufIdx], 32, "%.1f ms", f);
-  else
-    snprintf(outStr[bufIdx], 32, "%.1f sec", (f/1000));
-
+  if(f < 1000) {
+    if(snprintf(outStr[bufIdx], 32, "%.1f ms", f) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else {
+    if(snprintf(outStr[bufIdx], 32, "%.1f sec", (f/1000))  < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } 
   return(outStr[bufIdx]);
 }
 
@@ -164,11 +181,14 @@ char* formatThroughput(float numBytes) {
     numBits = 0; /* Avoid very small decimal values */
 
   if (numBits < 1024) {
-    snprintf(outStr[bufIdx], 32, "%.1f%sbps", numBits, separator);
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sbps", numBits, separator) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else if (numBits < 1048576) {
-    snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/1024), separator);
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/1024), separator) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    snprintf(outStr[bufIdx], 32, "%.1f%sMbps", ((float)(numBits)/1048576), separator);
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sMbps", ((float)(numBits)/1048576), separator) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
 #ifdef DEBUG
@@ -213,18 +233,21 @@ char* formatPkts(TrafficCounter pktNr) {
 
   bufIdx = (bufIdx+1)%8;
 
-  if(pktNr < 1000)
-    snprintf(staticBuffer[bufIdx], 32, "%lu", (unsigned long)pktNr);
-  else if(pktNr < 1000000)
-    snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu",
+  if(pktNr < 1000) {
+    if(snprintf(staticBuffer[bufIdx], 32, "%lu", (unsigned long)pktNr) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else if(pktNr < 1000000) {
+    if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu",
 	    (unsigned long)(pktNr/1000),
-	    ((unsigned long)pktNr)%1000);
-  else {
+	    ((unsigned long)pktNr)%1000) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else {
     unsigned long a, b, c;
     a = (unsigned long)(pktNr/1000000);
     b = (unsigned long)((pktNr-a*1000000)/1000);
     c = ((unsigned long)pktNr)%1000;
-    snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu,%03lu", a, b, c);
+    if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu,%03lu", a, b, c) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
   return(staticBuffer[bufIdx]);

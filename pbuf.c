@@ -138,7 +138,8 @@ char* getAllPortByNum(int port) {
     return(rsp);
   else {
     portBufIdx = (short)((portBufIdx+1)%2);
-    snprintf(staticBuffer[portBufIdx], 16, "%d", port);
+    if(snprintf(staticBuffer[portBufIdx], 16, "%d", port) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     return(staticBuffer[portBufIdx]);
   }
 }
@@ -391,7 +392,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  if(symEthName[0] != '\0') {
 	    char buf[255];
 
-	    snprintf(buf, sizeof(buf), "%s [MAC]", symEthName);
+	    if(snprintf(buf, sizeof(buf), "%s [MAC]", symEthName) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
 	  } else
 	    strncpy(el->hostSymIpAddress, 
@@ -471,10 +473,12 @@ char* getNamedPort(int port) {
   if(svcName == NULL)
     svcName = getPortByNum(port, IPPROTO_UDP);
 
-  if(svcName == NULL)
-    snprintf(outStr[portBufIdx], 8, "%d", port);
-  else
+  if(svcName == NULL) {
+    if(snprintf(outStr[portBufIdx], 8, "%d", port) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else {
     strncpy(outStr[portBufIdx], svcName, 8);
+  }
 
   return(outStr[portBufIdx]);
 }
@@ -1642,12 +1646,13 @@ static u_int handleFragment(HostTraffic *srcHost,
     case INCREASING_FRAGMENT_ORDER:
       if((fragment->lastOffset+fragment->totalDataLength) > fragmentOffset) {
 	char buf[BUF_SIZE];
-	snprintf(buf, BUF_SIZE, "Detected overlapping packet fragment [%s->%s]: "
+	if(snprintf(buf, BUF_SIZE, "Detected overlapping packet fragment [%s->%s]: "
 		 "fragment id=%d, actual offset=%d, previous offset=%d\n",
 		 srcHost->hostSymIpAddress,
 		 dstHost->hostSymIpAddress,
 		 fragmentId, fragmentOffset,
-		 fragment->lastOffset);
+		 fragment->lastOffset)  < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	logMessage(buf, NTOP_WARNING_MSG);
       }
@@ -1769,6 +1774,7 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
 	key_data.dsize = strlen(key_data.dptr)+1;
 	data_data.dptr = hostPtr.aliases[0]; /* Let's take the first one */
 	data_data.dsize = strlen(data_data.dptr)+1;
+	if(gdbm_file == NULL) return; /* ntop is quitting... */
 	gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
 #endif
       } else
@@ -1789,6 +1795,7 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
 #ifdef HAVE_GDBM_H
 	key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
 	key_data.dsize = strlen(key_data.dptr)+1;
+	if(gdbm_file == NULL) return; /* ntop is quitting... */
 	gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
 #endif
       }
@@ -2714,13 +2721,15 @@ static char* timestamp(const struct timeval* t, int fmt) {
        * calculate the difference in milliseconds since		
        * the previous packet was displayed
        */
-      snprintf(buf, 16, "%10ld ms", 
-	       delta_time_in_milliseconds(&current_pkt, &last_pkt));
+      if(snprintf(buf, 16, "%10ld ms", 
+	       delta_time_in_milliseconds(&current_pkt, &last_pkt)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       break;
 
     case ABS_FMT:
-      snprintf(buf, 16, "%02d:%02d:%02d.%06d",
-	       tm.tm_hour, tm.tm_min, tm.tm_sec, (int)t->tv_usec);
+      if(snprintf(buf, 16, "%02d:%02d:%02d.%06d",
+	       tm.tm_hour, tm.tm_min, tm.tm_sec, (int)t->tv_usec) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       break;
 
     case RELATIVE_FMT:
@@ -2728,8 +2737,9 @@ static char* timestamp(const struct timeval* t, int fmt) {
        * calculate the difference in milliseconds 
        * since the previous packet was displayed
        */
-      snprintf(buf, 16, "%10ld ms", 
-	       delta_time_in_milliseconds(&current_pkt, &first_pkt));
+      if(snprintf(buf, 16, "%10ld ms", 
+	       delta_time_in_milliseconds(&current_pkt, &first_pkt)) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       break;
     }
 
@@ -3298,7 +3308,8 @@ void updateOSName(HostTraffic *el) {
 #endif
 
 #ifdef HAVE_GDBM_H
-    snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress);
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     key_data.dptr = tmpBuf;
     key_data.dsize = strlen(tmpBuf)+1;
 
@@ -3306,6 +3317,7 @@ void updateOSName(HostTraffic *el) {
     accessMutex(&gdbmMutex, "updateOSName");
 #endif
 
+    if(gdbm_file == NULL) return; /* ntop is quitting... */
     data_data = gdbm_fetch(gdbm_file, key_data);
 
 #ifdef MULTITHREADED
@@ -3331,12 +3343,14 @@ void updateOSName(HostTraffic *el) {
       updateDBOSname(el);
 
 #ifdef HAVE_GDBM_H
-      snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress);
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       key_data.dptr = tmpBuf;
       key_data.dsize = strlen(tmpBuf)+1;
       data_data.dptr = el->osName;
       data_data.dsize = strlen(el->osName)+1;
 
+      if(gdbm_file == NULL) return; /* ntop is quitting... */
       if(gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
 	printf("Error while adding osName for '%s'\n.\n", el->hostNumIpAddress);
       else {
