@@ -69,9 +69,12 @@ void handleSigHup(int signalId _UNUSED_) {
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
+  struct pcap_stat pcapStats;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread running...");
 
+  /* Reset stats before to start */
+  pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     HEARTBEAT(2, "pcapDispatch()", NULL);
