@@ -461,6 +461,7 @@ extern struct tm *localtime_r(const time_t *t, struct tm *tp);
 #ifndef HAVE_STRTOK_R
 extern char *strtok_r(char *s, const char *delim, char **save_ptr);
 #endif
+extern int getSniffedDNSName(char *hostNumIpAddress, char *name, int maxNameLen);
 extern int strOnlyDigits(const char *s);
 extern void addPassiveSessionInfo(u_long theHost, u_short thePort);
 extern int isPassiveSession(u_long theHost, u_short thePort);

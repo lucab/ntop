@@ -1131,7 +1131,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
               displaySniffedName=1;
 
 
-	  if(el->nbHostName || el->atNetwork || el->ipxHostName) {
+	  if(el->nbHostName || el->atNetwork || el->ipxHostName || displaySniffedName) {
 	    short numAddresses = 0;
 
 	    if(el->nbHostName && el->nbDomainName) {	      

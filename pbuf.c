@@ -184,8 +184,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	   if(!hasDuplicatedMac(el)) {
 	     FD_SET(HOST_DUPLICATED_MAC, &el->flags);
 
-	     if(enableSuspiciousPacketDump) {
-	       
+	     if(enableSuspiciousPacketDump) {	       
 	       traceEvent(TRACE_WARNING, 
 			  "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)", 
 			  el->hostNumIpAddress,
@@ -1899,7 +1898,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    }
 	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr))) {
 	    if(enableSuspiciousPacketDump) {
-	      traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no SSH) detected (trojan?) "
+	      traceEvent(TRACE_WARNING, "WARNING: unknown protocol (no SSH) detected (trojan?) "
 			 "at port 22 %s:%d -> %s:%d [%s]",
 			 dstHost->hostSymIpAddress, dport,
 			 srcHost->hostSymIpAddress, sport,
@@ -3062,9 +3061,11 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
      && hostPtr.addrList[0]) {
     int i;
 
+#ifdef DNS_SNIFF_DEBUG
     traceEvent(TRACE_INFO, "DNS %s for %s type %d\n", *isRequest ? "request" : "reply", 
 	       hostPtr.queryName, hostPtr.queryType);
-    
+#endif
+
     for(i=0; i<MAXALIASES; i++)
       if(hostPtr.aliases[i][0] != '\0') {
 #ifdef DNS_SNIFF_DEBUG

@@ -2179,7 +2179,6 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
 
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
 
-
 int getSniffedDNSName(char *hostNumIpAddress, 
 		      char *name, int maxNameLen) {
   int found=0;
@@ -2194,7 +2193,7 @@ int getSniffedDNSName(char *hostNumIpAddress,
     key.dsize=strlen(key.dptr)+1;
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "printHostDetailedInfo");
+    accessMutex(&gdbmMutex, "getSniffedDNSName");
 #endif
     data=gdbm_fetch(gdbm_file, key);
 #ifdef MULTITHREADED

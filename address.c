@@ -1170,7 +1170,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
       return(transactionId);
   }
   
-  /* Skip over question section. */
+  /* Skip over rest of question section. */
   while (qdcount-- > 0) {
     n = (short)_dn_skipname(cp, eom);
     if (n < 0)

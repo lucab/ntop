@@ -2611,7 +2611,6 @@ void printHostDetailedInfo(HostTraffic *el) {
 #endif
 
   printHTMLheader(buf, 0);
-
   sendString("<CENTER>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n");
 
