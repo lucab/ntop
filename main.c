@@ -134,13 +134,7 @@ static struct option const long_options[] = {
   { "ssl-watchdog",                     no_argument,       NULL, 133 },
 #endif
 
-  { "dynamic-purge-limits",             no_argument,       NULL, 134 },
   { "set-admin-password",               optional_argument, NULL, 135 },
-
-  { "reuse-rrd-graphics",               no_argument,       NULL, 136 },
-
-  { "p3p-cp",                           required_argument, NULL, 137 },
-  { "p3p-uri",                          required_argument, NULL, 138 },
 
 #ifdef MAKE_WITH_XMLDUMP
   { "xmlfileout",                       required_argument, NULL, 139 },
