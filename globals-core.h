@@ -202,6 +202,7 @@ extern char* formatPkts(TrafficCounter pktNr);
 /* emitter.c */
 extern void dumpNtopHashes(char* options);
 extern void dumpNtopTrafficInfo(char* options);
+extern void dumpNtopSessions(char* options);
 
 /* event.c */
 extern void emitEvent(FilterRule *rule, HostTraffic *srcHost,
