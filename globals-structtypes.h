@@ -1874,7 +1874,7 @@ typedef struct ntopGlobals {
 
   /* Termination/Reset/Heartbeat flags */
   short capturePackets;      /* tells to ntop if data are to be collected */
-  short endNtop;             /* graceful shutdown ntop */
+  short endNtop;             /* graceful shutdown ntop 0=run, 1=shutting down, 2=stopped */
   u_char resetHashNow;       /* used for hash reset */
 
 #ifdef PARM_SHOW_NTOP_HEARTBEAT

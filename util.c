@@ -1619,16 +1619,18 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
   if(mutexId == NULL) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "deleteMutex() called with a NULL mutex [%s:%d]",
-	       fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "deleteMutex() called with a NULL mutex [%s:%d]",
+                 fileName, fileLine);
     return;
   }
 
   if(!mutexId->isInitialized) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "deleteMutex() called with an UN-INITIALIZED mutex [0x%X@%s:%d]",
-	       (void*)&(mutexId->mutex), fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "deleteMutex() called with an UN-INITIALIZED mutex [0x%X@%s:%d]",
+                 (void*)&(mutexId->mutex), fileName, fileLine);
     return;
   }
 
@@ -1654,16 +1656,18 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   pid_t myPid;
 
   if(mutexId == NULL) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "accessMutex() called with a NULL mutex [%s:%d]",
-	       fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "accessMutex() called with a NULL mutex [%s:%d]",
+                 fileName, fileLine);
     return(-1);
   }
 
   if(!mutexId->isInitialized) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "accessMutex() called '%s' with an UN-INITIALIZED mutex [0x%X@%s:%d]",
-	       where, (void*)&(mutexId->mutex), fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "accessMutex() called '%s' with an UN-INITIALIZED mutex [0x%X@%s:%d]",
+                 where, (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
@@ -1741,16 +1745,18 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   pid_t myPid;
 
   if(mutexId == NULL) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "tryLockMutex() called '%s' with a NULL mutex [%s:%d]",
-	       where, fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "tryLockMutex() called '%s' with a NULL mutex [%s:%d]",
+                 where, fileName, fileLine);
     return(-1);
   }
 
   if(!mutexId->isInitialized) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "tryLockMutex() called '%s' with an UN-INITIALIZED mutex [0x%X@%s:%d]",
-	       where, (void*)&(mutexId->mutex), fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "tryLockMutex() called '%s' with an UN-INITIALIZED mutex [0x%X@%s:%d]",
+                 where, (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
@@ -1834,16 +1840,18 @@ int _isMutexLocked(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
   if(mutexId == NULL) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "isMutexLocked() called with a NULL mutex [%s:%d]",
-	       fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "isMutexLocked() called with a NULL mutex [%s:%d]",
+                 fileName, fileLine);
     return(-1);
   }
 
   if(!mutexId->isInitialized) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "isMutexLocked() called with an UN-INITIALIZED mutex [0x%X@%s:%d]",
-	       (void*)&(mutexId->mutex), fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "isMutexLocked() called with an UN-INITIALIZED mutex [0x%X@%s:%d]",
+                 (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
@@ -1875,16 +1883,18 @@ int _releaseMutex(PthreadMutex *mutexId,
   int rc;
 
   if(mutexId == NULL) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "releaseMutex() called with a NULL mutex [%s:%d]",
-	       fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "releaseMutex() called with a NULL mutex [%s:%d]",
+                 fileName, fileLine);
     return(-1);
   }
 
   if(!mutexId->isInitialized) {
-    traceEvent(CONST_TRACE_ERROR,
-	       "releaseMutex() called with an UN-INITIALIZED mutex [0x%X@%s:%d]",
-	       (void*)&(mutexId->mutex), fileName, fileLine);
+    if(myGlobals.endNtop == 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "releaseMutex() called with an UN-INITIALIZED mutex [0x%X@%s:%d]",
+                 (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 

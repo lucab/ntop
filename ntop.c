@@ -720,9 +720,9 @@ RETSIGTYPE cleanup(int signo) {
   int i;
   char buf[32];
 
-  if(!msgSent) {
+  if(myGlobals.endNtop == 0) {
     traceEvent(CONST_TRACE_INFO, "CLEANUP: ntop caught signal %d", signo);
-    msgSent = 1;
+    myGlobals.endNtop = 1;
   }
 
 #ifdef HAVE_BACKTRACE
@@ -1054,7 +1054,7 @@ RETSIGTYPE cleanup(int signo) {
   if (myGlobals.rrdPath != NULL)
       free(myGlobals.rrdPath);
 
-  myGlobals.endNtop = 1;
+  myGlobals.endNtop = 2;
 
 #ifdef MEMORY_DEBUG
   traceEvent(CONST_TRACE_INFO, "===================================");
