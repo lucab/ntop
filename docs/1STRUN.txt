@@ -16,6 +16,7 @@ only minimal privledges, but it needs to be able to read/write in the
 directory where the ntop databases are stored.  ntop is customary, but it
 can be anything - it's shown as "<ntopuserid>" below.
 
+***Win32*** Skip -u, it's not valid for Win32 anyway...
 
 The (recommended) minimal command line is:
 
@@ -54,5 +55,6 @@ Please enter the password again:
 You should now be able to run ntop as usual.
 
 ------------------------------------------------------
-Burton M. Strauss III <BStrauss@acm.org>      May 2002
+Burton M. Strauss III <BStrauss@acm.org>      Sep 2002
 (Revised to reflect the -A parameter)
+(Revised w/ the Win32 skip -u note)
