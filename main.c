@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   int userId=0, groupId=0;
 #endif
   int op, mergeInterfaces=1;
-  int enableDBsupport=0;
+  int enableDBsupport=0;  
   int enableThUpdate=1;
   int enableIdleHosts=1;
   char *cp, *localAddresses=NULL, *webAddr=NULL, *devices, *sslAddr=NULL;
@@ -104,6 +104,7 @@ int main(int argc, char *argv[]) {
   enableSuspiciousPacketDump = 0;
   usePersistentStorage = 0;
   stickyHosts = 0;
+  enableNetFlowSupport = 0; 
 
   /* Initialization of local variables */
   isLsofPresent  = checkCommand("lsof");
@@ -119,7 +120,7 @@ int main(int argc, char *argv[]) {
 
   daemonMode = 0, pflag = 0, numericFlag=0;
   refreshRate = 0;
-  rFileName = NULL, grabSessionInformation = 0;
+  rFileName = NULL;
   maxHashSize = MAX_HASH_SIZE;
   traceLevel = DEFAULT_TRACE_LEVEL;
   domainName[0] = '\0';
@@ -141,9 +142,9 @@ int main(int argc, char *argv[]) {
   traceEvent(TRACE_INFO, "Parsing command line options...");
 
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12l:q";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:q";
 #else
-  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:gt:a:u:W:12l:q";
+  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:q";
 #endif
   
   while((op = getopt(argc, argv, theOpts)) != EOF)
@@ -204,6 +205,11 @@ int main(int argc, char *argv[]) {
       case 'b': /* host:port */
 	stringSanityCheck(optarg);
 	handleDbSupport(optarg, &enableDBsupport);
+	break;
+
+      case 'g': /* host:port */
+	stringSanityCheck(optarg);
+	handleNetFlowSupport(optarg);
 	break;
 
 #ifdef HAVE_MYSQL
@@ -344,10 +350,6 @@ int main(int argc, char *argv[]) {
 		     "FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
 	  exit(-1);
 	}
-	break;
-
-      case 'g':
-	grabSessionInformation = 1;
 	break;
 
       case 't':

@@ -672,6 +672,7 @@ void scanTimedoutTCPSessions(void) {
 	     */
 	    sessionToPurge->magic = 0;
 
+	    if(enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge);
 	    notifyTCPSession(sessionToPurge);
 #ifdef HAVE_MYSQL
 	    mySQLnotifyTCPSession(sessionToPurge);
@@ -2335,10 +2336,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     if(flowDirection == CLIENT_TO_SERVER) {
       theSession->bytesProtoSent += packetDataLength;
       theSession->bytesSent      += length;
+      theSession->pktSent++;
       if(fragmentedData) theSession->bytesFragmentedSent += packetDataLength;
     } else {
       theSession->bytesProtoRcvd += packetDataLength;
       theSession->bytesReceived  += length;
+      theSession->pktRcvd++;
       if(fragmentedData) theSession->bytesFragmentedReceived += packetDataLength;
     }
   } else if(sessionType == IPPROTO_UDP) {
@@ -3033,33 +3036,6 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 
 /* ************************************ */
 
-static void grabSession(HostTraffic *srcHost, u_short sport,
-			HostTraffic *dstHost, u_short dport,
-			char* data, int len) {
-  if((dport == 21 /* ftp */) || (sport == 21 /* ftp */)
-#ifdef AA
-     || (dport == 23 /* telnet */) || (sport == 23 /* telnet */)
-#endif
-     ) {
-    if(len > 0) {
-      char string[2048];
-
-      memcpy(string, data, len);
-
-      if(string[len-1] == '\n')
-	string[len-1] = 0;
-      else
-	string[len] = 0;
-
-      traceEvent(TRACE_INFO, "[%s:%d->%s:%d] (%s)\n",
-		 srcHost->hostSymIpAddress, (int)sport,
-		 dstHost->hostSymIpAddress, (int)dport, string);
-    }
-  }
-}
-
-/* ************************************ */
-
 static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
                               TrafficCounter length) {
 
@@ -3395,11 +3371,6 @@ static void processIpPkt(const u_char *bp,
 	if(handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession) == -1)
 	  handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession);
       }
-
-      if(grabSessionInformation) {
-	grabSession(srcHost, sport, dstHost, dport,
-		    (char*)(bp+hlen+(tp.th_off * 4)), tcpDataLength);
-      }
     }
     break;
 
@@ -3652,6 +3623,7 @@ static void processIpPkt(const u_char *bp,
 		       srcHostIdx, sport, dstHostIdx,
 		       dport, udpDataLength,
 		       (u_char*)(bp+hlen+sizeof(struct udphdr)));
+      sendUDPflow(srcHost, dstHost, sport, dport, length);
     }
     break;
 
@@ -3799,6 +3771,7 @@ static void processIpPkt(const u_char *bp,
       }
       if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
     }
+    sendICMPflow(srcHost, dstHost, length);
     break;
 
   case IPPROTO_OSPF:

@@ -920,7 +920,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-q <create file ntop-suspicious-pkts.XXX.pcap>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-g (grab session data on screen)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-g <client:port (Cisco NetFlow client)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
   traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");

@@ -181,7 +181,7 @@ int getdomainname(char *name, size_t len);
 #endif
 
 /* MySQL support */
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL)
 #include <mysql/mysql.h>
 #endif
 
@@ -1383,6 +1383,7 @@ typedef struct ipSession {
   u_short dport;                    /* remote peer address (port)               */
   time_t firstSeen;                 /* time when the session has been initiated */
   time_t lastSeen;                  /* time when the session has been closed    */
+  u_long pktSent, pktRcvd;
   TrafficCounter bytesSent;         /* # bytes sent (initiator -> peer) [IP]    */
   TrafficCounter bytesReceived;     /* # bytes received (peer -> initiator)[IP] */
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */

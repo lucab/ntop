@@ -34,7 +34,8 @@ u_short traceLevel;
 u_char stickyHosts, enableSuspiciousPacketDump;
 char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
 u_int maxHashSize;
-short usePersistentStorage, grabSessionInformation;
+u_int enableNetFlowSupport;
+short usePersistentStorage;
 int numericFlag, logTimeout, daemonMode, mergeInterfaces;
 
 

@@ -32,6 +32,7 @@ extern u_char stickyHosts, enableSuspiciousPacketDump;
 extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */
 extern u_int maxHashSize;
+extern u_int enableNetFlowSupport;
 extern short usePersistentStorage, grabSessionInformation;
 extern char *rFileName, *pcapLog;
 extern int numericFlag, logTimeout, daemonMode, mergeInterfaces;
@@ -488,3 +489,10 @@ extern void mySQLupdateDBOSname(HostTraffic *el);
 #endif /* HAVE_MYSQL */
 
 extern NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
+
+/* netflow.c */
+extern int handleNetFlowSupport(char* addr /* host:port */);
+extern void termNetFlowExporter();
+extern void sendICMPflow(HostTraffic *srcHost, HostTraffic *dstHost, u_int length);
+extern void sendUDPflow(HostTraffic *srcHost, HostTraffic *dstHost, 
+			u_int sport, u_int dport, u_int length);

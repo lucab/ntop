@@ -1277,7 +1277,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
   FILE *fd;
   char line[384], *operatingSystem=NULL;
   static char staticOsName[96];
-  int len, found=0, grabData=0, sockFd;
+  int len, found=0, sockFd;
   fd_set mask;
   struct timeval wait_time;
 
@@ -1352,19 +1352,12 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
     }
 
     if(additionalInfo != NULL) {
-      if(grabData == 0) {
-	if(strncmp(operatingSystem, "Port", strlen("Port")) == 0) {
-	  grabData = 1;
-	}
-      } else {
-	if(isdigit(operatingSystem[0])) {
-	  strcat(additionalInfo, operatingSystem);
-	  strcat(additionalInfo, "<BR>\n");
-	} else
-	  grabData = 0;
-
-	/*traceEvent(TRACE_INFO, "> %s\n", operatingSystem); */
+      if(isdigit(operatingSystem[0])) {
+	strcat(additionalInfo, operatingSystem);
+	strcat(additionalInfo, "<BR>\n");
       }
+      
+      /*traceEvent(TRACE_INFO, "> %s\n", operatingSystem); */
     }
   }
 
@@ -1991,6 +1984,11 @@ FILE* getNewRandomFile(char* fileName, int len) {
 
 void stringSanityCheck(char* string) {
   int i, j;
+
+  if(string == NULL)  {
+    traceEvent(TRACE_ERROR, "FATAL ERROR: Invalid string specified.");
+    exit(-1);
+  }
 
   for(i=0, j=1; i<strlen(string); i++) {
     switch(string[i]) {
