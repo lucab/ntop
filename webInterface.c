@@ -693,6 +693,18 @@ void printNtopConfigInfo(void) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Pkts to Process</TH>"
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
+	      packetQueueLen) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Max Queued Pkts</TH>"
+	      "<TD "TD_BG"  align=right>%u</TD></TR>\n",
+	      maxPacketQueueLen) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Stored Hash Hosts</TH>"
 	      "<TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
 	      (int)device[actualReportDeviceId].hostsno,
@@ -706,7 +718,6 @@ void printNtopConfigInfo(void) {
 	      numPurgedHosts) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
-
 
    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># TCP Sessions</TH>"
 	       "<TD "TD_BG"  align=right>%u</TD></TR>\n", 
