@@ -21,7 +21,7 @@
 
 <hr>
 <!-- Creator     : groff version 1.18 -->
-<!-- CreationDate: Tue Aug 12 16:40:44 2003 -->
+<!-- CreationDate: Sat Aug 16 18:31:59 2003 -->
 <a name="NAME"></a>
 <h2>NAME</h2>
 <!-- INDENTATION -->
@@ -72,16 +72,15 @@
 <i>&lt;number&gt;</i>] [<b>-U</b>|<b>--mapper</b>
 <i>&lt;URL&gt;</i>] [<b>-V</b>|<b>--version]</b>
 [<b>--disable-stopcap</b>] [<b>--log-extra</b>
-<i>&lt;number&gt;</i>]</p>
+<i>&lt;number&gt;</i>]
+[<b>--disable-instantsessionpurge</b>]</p>
 <!-- INDENTATION -->
 <p>Unix options:</p>
 <!-- INDENTATION -->
 <p>[<b>-d</b>|<b>--daemon</b>] [<b>-i</b>|<b>--interface</b>
 <i>&lt;name&gt;</i>] [<b>-u</b>|<b>--user</b>
-<i>&lt;user&gt;</i>]
-[<b>-E</b>|<b>--enable-external-tools</b>]
-[<b>-K</b>|<b>--enable-debug</b>] [<b>-L</b>]
-[<b>-use-syslog</b> <i>&lt;facility&gt;</i>]
+<i>&lt;user&gt;</i>] [<b>-K</b>|<b>--enable-debug</b>]
+[<b>-L</b>] [<b>-use-syslog</b> <i>&lt;facility&gt;</i>]
 [<b>--ignore-sigpipe</b>]</p>
 <!-- INDENTATION -->
 <p>Win32 option:</p>
@@ -767,25 +766,6 @@ determining it from the interface.</p>
 <tr valign="top" align="left">
 <td width="10%"></td>
 <td width="89%">
-<p><b>-E | --enable-external-tools</b></p></td>
-</table></p>
-<!-- INDENTATION -->
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="13%"></td>
-<td width="86%">
-<p>By default <b>ntop</b> does not take advance of lsof even
-if present. Use this flag if you want make <b>ntop</b>
-enable it&rsquo;s use of lsof if lsof is present.</p>
-</td>
-</table>
-<!-- INDENTATION -->
-<p><table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td>
-<td width="89%">
 <p><b>-F | --flow-spec</b></p></td>
 </table></p>
 <!-- INDENTATION -->
@@ -1060,6 +1040,30 @@ of every log message. The nnnnnnn value should be unique
 number for every message and should be stable across
 <b>ntop</b> releases. Both are useful for debugging and for
 using log watching and filtering packages.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--disable-instantsessionpurge</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p><b>ntop</b> sets completed sessions and &rsquo;timed
+out&rsquo; and then purges them almost instantly, which is
+not the behavior you might expect from the discussions about
+purge timeouts. This switch makes ntop respect the timeouts
+for completed sessions. It is NOT the default because a busy
+web server may have 100s or 1000s of completed sessions and
+this would significantly increase the amount of memory
+<b>ntop</b> uses.</p>
 </td>
 </table>
 <a name="WEB VIEWS"></a>
