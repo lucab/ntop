@@ -514,6 +514,7 @@ AC_CHECK_FUNC(crypt, , AC_CHECK_LIB(c, crypt, ,
     AC_MSG_ERROR(you need the crypt library to build ntop), $MORELIBS)]))
 
 AC_CHECK_LIB(kstat, kstat_lookup)
+AC_CHECK_LIB(c, getopt_long, AC_DEFINE(HAVE_GETOPT_LONG))
 
 dnl>
 dnl> GDChart uses functions from math library,

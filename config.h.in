@@ -57,6 +57,9 @@
 /* Define if you need a private implementation of inet_aton (solaris 2.5.1 doesn't have it). */
 #undef NEED_INET_ATON
 
+/* Define if you have getopt_long.  */
+#undef HAVE_GETOPT_LONG
+
 /* Define if you have the regex lib defined inside libc */
 #undef HAVE_REGEX
 
