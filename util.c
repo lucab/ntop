@@ -135,7 +135,7 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
   {
     char buf[48];
     
-    traceEvent(CONST_TRACE_INFO, "==>>> Unable to locate host %s", 
+    traceEvent(CONST_TRACE_NOISY, "==>>> Unable to locate host %s", 
 	       _intoa(hostIpAddress, buf, sizeof(buf)));
   }
 
