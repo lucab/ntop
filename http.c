@@ -1022,17 +1022,11 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
      We need to check whether the URL is invalid, i.e. it contains '..' or
      similar chars that can be used for reading system files
   */
-#ifdef  USE_CGI
-  if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)))
-#endif
-  {
-    /* This is not a CGI */
-    if((rc = checkURLsecurity(pageName)) != 0) {
-      traceEvent(TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)(client=%s)",
-		 pageName, rc, _intoa(*from, tmpStr, sizeof(tmpStr)));
-      returnHTTPaccessForbidden();
-      return(HTTP_FORBIDDEN_PAGE);
-    }
+  if((rc = checkURLsecurity(pageName)) != 0) {
+    traceEvent(TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)(client=%s)",
+	       pageName, rc, _intoa(*from, tmpStr, sizeof(tmpStr)));
+    returnHTTPaccessForbidden();
+    return(HTTP_FORBIDDEN_PAGE);
   }
 
   /* traceEvent(TRACE_INFO, "Page: '%s'\n", pageName); */
