@@ -150,8 +150,8 @@ extern HostTraffic broadcastEntry;
 extern u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 extern u_short mtuSize[], headerSize[];
 extern IpFragment *fragmentList;
-extern IPSession **tcpSession, **udpSession; /* TCP/UDP sessions */;
-extern u_short numTotSessions, numTcpSessions, numUdpSessions;
+extern IPSession **tcpSession;
+extern u_short numTotSessions, numTcpSessions;
 extern ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
 extern TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
 extern HostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */

@@ -89,7 +89,6 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   char buf[BUF_SIZE], buf2[BUF_SIZE];
   float sentPercent, rcvdPercent;
   struct pcap_stat stat;
-  int i;
 
   /*
     printf("%d - %d - %d - %d\n", 
@@ -1496,7 +1495,6 @@ static void printSessions(IPSession *sessions[], u_short type) {
 }
 
 void printTCPSessions(void) { printSessions(tcpSession, IPPROTO_TCP); }
-void printUDPSessions(void) { printSessions(udpSession, IPPROTO_UDP); }
 
 #endif /* DEBUG */
 

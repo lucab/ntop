@@ -661,11 +661,6 @@ void printNtopConfigInfo(void) {
      traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
 
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. UDP Sessions</TH>"
-	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numUdpSessions) < 0) 
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
-   sendString(buf);
-
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
    accessMutex(&addressQueueMutex, "NumQueuedAddresses");
    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Queued Addresses</TH>"

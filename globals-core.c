@@ -150,8 +150,8 @@ u_int broadcastEntryIdx;
 HostTraffic broadcastEntry;
 u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 IpFragment *fragmentList;
-IPSession **tcpSession /* TCP sessions */, **udpSession /* UDP sessions */;
-u_short numTotSessions, numTcpSessions, numUdpSessions;
+IPSession **tcpSession /* TCP sessions */;
+u_short numTotSessions, numTcpSessions;
 ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
 TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
 HostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */

@@ -2402,8 +2402,8 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
 			     u_short dport,
 			     u_int length,
 			     u_char* packetData) {
-  handleSession(h, udpSession,
-		&numUdpSessions, fragmentedData, 0,
+  handleSession(h, NULL,
+		NULL, fragmentedData, 0,
 		srcHostIdx, sport,
 		dstHostIdx, dport, length,
 		NULL, length, packetData);
@@ -3566,7 +3566,8 @@ static void processIpPkt(const u_char *bp,
 
       handleUDPSession(h, (off & 0x3fff),
 		       srcHostIdx, sport, dstHostIdx,
-		       dport, udpDataLength, (u_char*)(bp+hlen+sizeof(struct udphdr)));
+		       dport, udpDataLength, 
+		       (u_char*)(bp+hlen+sizeof(struct udphdr)));
     }
     break;
 

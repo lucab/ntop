@@ -51,10 +51,7 @@ void termIPSessions(void) {
     if(tcpSession[i] != NULL) 
       free(tcpSession[i]);    
 
-    if(udpSession[i] != NULL) 
-      free(udpSession[i]);
-
-    numTcpSessions = numUdpSessions = 0;
+    numTcpSessions = 0;
 
     while (fragmentList != NULL)
       deleteFragment(fragmentList);

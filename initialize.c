@@ -269,8 +269,6 @@ void initCounters(int _mergeInterfaces) {
   len = sizeof(IPSession*)*numTotSessions;
   tcpSession = (IPSession**)malloc(len);
   memset(tcpSession, 0, len);
-  udpSession = (IPSession**)malloc(len);
-  memset(udpSession, 0, len);
 
   nextSessionTimeoutScan = time(NULL)+SESSION_SCAN_DELAY;
   thisZone = gmt2local(0);
@@ -330,19 +328,13 @@ void resetStats(void) {
 
   FD_ZERO(&ipTrafficMatrixPromiscHosts);
 
-  for(i=0; i<numTotSessions; i++) {
+  for(i=0; i<numTotSessions; i++)
     if(tcpSession[i] != NULL) {
       free(tcpSession[i]);
       tcpSession[i] = NULL;
     }
 
-    if(udpSession[i] != NULL) {
-      free(udpSession[i]);
-      udpSession[i] = NULL;
-    }
-  }
-
-  numTcpSessions = numUdpSessions = 0;
+  numTcpSessions = 0;
 
  #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);

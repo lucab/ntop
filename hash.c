@@ -155,6 +155,7 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
   u_int i, j, newSize, k, lastHashSize;
   struct hostTraffic **hash_hostTraffic;
   short numCmp;
+  struct ipGlobalSession *scanner=NULL;
 
   newSize = (int)(device[deviceToExtend].actualHashSize*multiplier);
   newSize = newSize - (newSize % 2); /* I want an even hash size */
@@ -464,27 +465,16 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 		 hash_hostTraffic[j]->portsUsage[i]->serverUsesLastPeer);
       }
 
-      /* ********************************* */
-
-      for(k=0; k<2; k++) {
-	struct ipGlobalSession *scanner=NULL;
-
-	if(k == 0)
-	  scanner = device[deviceToExtend].hash_hostTraffic[j]->tcpSessionList;
-	else
-	  scanner = device[deviceToExtend].hash_hostTraffic[j]->udpSessionList;
-
-	while(scanner != NULL) {
-	  for(i=0; i<MAX_NUM_SESSION_PEERS; i++)
-	    if(scanner->peersIdx[i] != NO_PEER) {
-	      scanner->peersIdx[i] = mapIdx(scanner->peersIdx[i]);
-	    }
-
-	  scanner = (IpGlobalSession*)(scanner->next);
-	}
-      }
-
-      /* ********************************* */
+      scanner = device[deviceToExtend].hash_hostTraffic[j]->tcpSessionList;
+      
+      while(scanner != NULL) {
+	for(i=0; i<MAX_NUM_SESSION_PEERS; i++)
+	  if(scanner->peersIdx[i] != NO_PEER) {
+	    scanner->peersIdx[i] = mapIdx(scanner->peersIdx[i]);
+	  }
+	
+	scanner = (IpGlobalSession*)(scanner->next);
+      }      
     }
 
   for(i=0; i<ruleSerialIdentifier; i++)
@@ -587,19 +577,6 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 	tcpSession[j] = NULL;
       }
     }
-
-    if(udpSession[j] != NULL) {
-      udpSession[j]->initiatorIdx  = mapIdx(udpSession[j]->initiatorIdx);
-      udpSession[j]->remotePeerIdx = mapIdx(udpSession[j]->remotePeerIdx);
-
-      if((udpSession[j]->initiatorIdx == NO_PEER)
-	 || (udpSession[j]->remotePeerIdx == NO_PEER)) {
-	/* Session to purge */
-	free(udpSession[j]); /* No inner pointers to free */
-	numUdpSessions--;
-	udpSession[j] = NULL;
-      }
-    }
   }
 
   free(mappings);
@@ -648,14 +625,6 @@ static void freeHostSessions(u_int hostIdx) {
       tcpSession[i] = NULL;
       numTcpSessions--;
     }
-
-    if((udpSession[i] != NULL)
-       && ((udpSession[i]->initiatorIdx == hostIdx) 
-	   || (udpSession[i]->remotePeerIdx == hostIdx))) {      
-      free(udpSession[i]);
-      udpSession[i] = NULL;
-      numUdpSessions--;
-    }
   }
 }
 
@@ -665,6 +634,7 @@ static void freeHostSessions(u_int hostIdx) {
 void freeHostInfo(int theDevice, u_int hostIdx) {
   u_int idx, j, i;
   HostTraffic *host = device[theDevice].hash_hostTraffic[checkSessionIdx(hostIdx)];
+  IpGlobalSession *nextElement, *element;
 
   if(host == NULL)
     return;
@@ -760,9 +730,6 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 	if(el->tcpSessionList != NULL)
 	  purgeIdleHostSessions(hostIdx, &el->tcpSessionList);
 
-	if(el->udpSessionList != NULL)
-	  purgeIdleHostSessions(hostIdx, &el->udpSessionList);
-
 	for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
 	  if(el->contactedSentPeersIndexes[j] == hostIdx)
 	    el->contactedSentPeersIndexes[j] = NO_PEER;
@@ -815,13 +782,7 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
     if(host->portsUsage[i] != NULL)
       free(host->portsUsage[i]);
 
-  for(i=0; i<2; i++) {
-    IpGlobalSession *nextElement, *element;
-
-    if(i == 0)
       element = host->tcpSessionList;
-    else
-      element = host->udpSessionList;
 
     while(element != NULL) {
       nextElement = element->next;
@@ -831,7 +792,6 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
       */
       free(element);
       element = nextElement;
-    }
   }
 
   freeHostSessions(hostIdx);
@@ -983,26 +943,8 @@ void extendTcpUdpSessionsHash() {
     }
     free(tmpSession);
 
-    tmpSession = udpSession;
-    udpSession = (IPSession**)malloc(2*len);
-    memset(udpSession, 0, 2*len);
-    for(i=0; i<numTotSessions; i++) {
-      if(tmpSession[i] != NULL) {
-	idx = (u_int)((tmpSession[i]->initiatorRealIp.s_addr+
-		       tmpSession[i]->remotePeerRealIp.s_addr+
-		       tmpSession[i]->sport+
-		       tmpSession[i]->dport) % newLen);
-		
-	while(udpSession[idx] != NULL)
-	  idx = (idx+1) % newLen;
-
-	udpSession[idx] = tmpSession[i];
-      }
-    }
-    free(tmpSession);
-
     numTotSessions *= 2;
 
-    traceEvent(TRACE_INFO, "Extending TCP/UDP hash [new size: %d]", numTotSessions);
+    traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d]", numTotSessions);
   }
 }
