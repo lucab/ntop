@@ -3029,7 +3029,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   char htmlAnchor[128], htmlAnchor1[128], *sign, *arrowGif, *arrow[48], *theAnchor[48];
   TrafficCounter totBytesSent=0, totBytesRcvd=0;
 
-  tmpStats = (DomainStats*)malloc(sizeof(DomainStats)*HASHNAMESIZE);
+  tmpStats = (DomainStats*)malloc(sizeof(DomainStats)*
+				  device[actualDeviceId].actualHashSize);
 
   /* traceEvent(TRACE_INFO, "'%s' '%d' '%d'\n", domainName, sortedColumn, revertOrder); */
 
