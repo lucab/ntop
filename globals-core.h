@@ -62,14 +62,16 @@ extern int optopt;
 #endif /* HAVE_GETOPT_H */
 extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
-int copySerial(HostSerial *a, HostSerial *b);
-void setEmptySerial(HostSerial *a);
+extern int copySerial(HostSerial *a, HostSerial *b);
+extern void setEmptySerial(HostSerial *a);
+extern void saveNtopPid();
+extern void removeNtopPid();
 
 /****** function declarations ***** */
 
 /* globals-core.c */
-void initNtopGlobals(int argc, char * argv[]);
-void initNtop(char *devices);
+extern void initNtopGlobals(int argc, char * argv[]);
+extern void initNtop(char *devices);
 
 /* address.c */
 extern int printable(int ch);

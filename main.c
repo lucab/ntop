@@ -265,8 +265,6 @@ void usage (FILE * fp) {
 
 /* **************************************************** */
 
-/* ************************************* */
-
 static void checkUserIdentity(int userSpecified) {
   /*
     Code fragment below courtesy of
@@ -838,6 +836,7 @@ static int parseOptions(int argc, char* argv []) {
 }
 
 /* ************************************ */
+
 #define MAX_NUM_OPTIONS 64
 
 /* That's the meat */

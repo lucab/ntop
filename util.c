@@ -3840,3 +3840,38 @@ int copySerial(HostSerial *a, HostSerial *b) {
 void setEmptySerial(HostSerial *a) {
     memset(a, 0, sizeof(HostSerial));
 }
+
+/* ********************************* */
+
+/* ************************************ */
+
+#ifndef WIN32
+
+void saveNtopPid() {
+  char pidFileName[NAME_MAX];
+  FILE *fd;
+
+  myGlobals.basentoppid = getpid();
+  sprintf(pidFileName, "%s/%s", DEFAULT_NTOP_PID_DIRECTORY, DEFAULT_NTOP_PIDFILE);
+  fd = fopen(pidFileName, "wb");
+  
+  if(fd == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "INIT: WARNING: Unable to create pid file (%s)", pidFileName);
+  } else {
+    fprintf(fd, "%d\n", myGlobals.basentoppid);
+    fclose(fd);
+    traceEvent(CONST_TRACE_INFO, "INIT: Created pid file (%s)", pidFileName);
+  }
+}
+
+/* ********************************** */
+
+void removeNtopPid() {
+  char pidFileName[NAME_MAX];
+
+  sprintf(pidFileName, "%s/%s", DEFAULT_NTOP_PID_DIRECTORY, DEFAULT_NTOP_PIDFILE);
+  unlink(pidFileName);
+}
+
+#endif
+

@@ -502,7 +502,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 /* ********************************* */
 
 void initNtop(char *devices) {
-
   initIPServices();
   handleProtocols();
   if(myGlobals.numIpProtosToMonitor == 0)
@@ -599,6 +598,10 @@ void initNtop(char *devices) {
 
 #ifdef MEMORY_DEBUG
   resetLeaks();
+#endif
+
+#ifndef WIN32
+  saveNtopPid();
 #endif
 }
 

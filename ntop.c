@@ -176,15 +176,12 @@ RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
 #endif
 #endif
 
-
 /* **************************************** */
 
 #ifndef WIN32
 
 void daemonize(void) {
   int childpid;
-  FILE *fd;
-  char pidFileName[NAME_MAX];
 
   signal(SIGHUP, SIG_IGN);
 #ifndef WIN32
@@ -201,23 +198,9 @@ void daemonize(void) {
   else {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: after fork() in %s (%d)", 
-                           childpid ? "parent" : "child",
-                           childpid);
+                           childpid ? "parent" : "child", childpid);
 #endif
     if(!childpid) { /* child */
-
-      myGlobals.basentoppid = getpid();
-      sprintf(pidFileName, "%s/%s", DEFAULT_NTOP_PID_DIRECTORY, DEFAULT_NTOP_PIDFILE);
-      fd = fopen(pidFileName, "wb");
-
-      if(fd == NULL) {
-          traceEvent(CONST_TRACE_WARNING, "INIT: WARNING: Unable to create pid file (%s)", pidFileName);
-      } else {
-          fprintf(fd, "%d\n", myGlobals.basentoppid);
-          fclose(fd);
-          traceEvent(CONST_TRACE_INFO, "INIT: Created pid file (%s)", pidFileName);
-      }
-
       traceEvent(CONST_TRACE_INFO, "INIT: Bye bye: I'm becoming a daemon...");
       detachFromTerminal(1);
     } else { /* father */
@@ -1106,6 +1089,10 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifdef MTRACE
   muntrace();
+#endif
+
+#ifndef WIN32
+  removeNtopPid();
 #endif
 
   traceEvent(CONST_TRACE_INFO, "===================================");
