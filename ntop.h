@@ -677,7 +677,7 @@ extern const char *gdbm_strerror (int);
 #define MAX_NUM_DEVICES 32       /* NIC devices */
 #endif
 #define MAX_NUM_ROUTERS 512
-
+#define MAX_NUM_NETWORKS            32
 #define MAX_HOSTS_CACHE_LEN        512
 
 #ifdef USE_SESSIONS_CACHE
