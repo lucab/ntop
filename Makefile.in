@@ -952,12 +952,12 @@ install-data-local:
              cp -p $$file $(DESTDIR)/$(datadir)/ntop/$$file; \
           fi; \
         done
-	@$(top_srcdir)/mkinstalldirs $(CFG_CONFIGFILE_DIR);
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR);
 	@for file in $(NTOPDATA); do \
           if test -d $$file; then \
-             $(top_srcdir)/mkinstalldirs $(CFG_CONFIGFILE_DIR)/$$file; \
+             $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
            else \
-             cp -p $$file $(CFG_CONFIGFILE_DIR)/$$file; \
+             cp -p $$file $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
           fi; \
         done
 
