@@ -1788,6 +1788,8 @@ static void termRRDfunct(void) {
   traceEvent(CONST_TRACE_INFO, "RRD: Thanks for using the rrdPlugin");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Done");
   fflush(stdout);
+
+  initialized = 0; /* Reinit on restart */
 }
 
 /* ************************************* */
