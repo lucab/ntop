@@ -250,7 +250,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     if(strncmp(url, "chart", strlen("chart")) == 0) {
       char tmpStr[256];
       u_int len, tot=0;
-      unsigned long  sc[2] = { 0xFF0000, 0x8080FF };
+      unsigned long  sc[2] = { 0xf08080L, 0x4682b4L }; /* see clr[] in graph.c */
 
       GDC_BGColor   = 0xFFFFFFL;                  /* backgound color (white) */
       GDC_LineColor = 0x000000L;                  /* line color      (black) */

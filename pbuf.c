@@ -193,8 +193,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	       dumpSuspiciousPacket();
 	     }
 	   }
-
-	   break;
 	 }
        } else {
 	 if (el->hostIpAddress.s_addr == hostIpAddress->s_addr)
