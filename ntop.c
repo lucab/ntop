@@ -836,7 +836,9 @@ RETSIGTYPE cleanup(int signo) {
   termLeaks();
   traceEvent(TRACE_INFO, "===================================\n");
 #endif
+#ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "Waiting until threads terminate...\n");
   sleep(3); /* Just to wait until threads complete */
+#endif
   exit(0);
 }

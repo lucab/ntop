@@ -4100,7 +4100,7 @@ void processPacket(u_char *_deviceId,
       */
 
       length -= NULL_HDRLEN; /* don't count nullhdr */
-
+      
       /* All this crap is due to the old little/big endian story... */
       if((p[0] == 0) && (p[1] == 0) && (p[2] == 8) && (p[3] == 0))
 	eth_type = ETHERTYPE_IP;
