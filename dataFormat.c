@@ -184,9 +184,6 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */, u_char htmlFormat
   if(numBytes < 0) numBytes = 0; /* Sanity check */
   numBits = numBytes*8;
 
-  if (numBits < 100)
-    numBits = 0; /* Avoid very small decimal values */
-  
   if (numBits < divider) {
     safe_snprintf(outStr, outStrLen, "%.1f%sbps", numBits, separator); 
   } else if (numBits < (divider*divider)) {
@@ -233,14 +230,26 @@ char* formatTimeStamp(unsigned int ndays,
 
   if((ndays == 0)
      && (nhours == 0)
-     && (nminutes == 0))
-    return("now");
-  else {
-    theTime = myGlobals.actTime-(ndays*86400)-(nhours*3600)-(nminutes*60);
-    strncpy(outStr, ctime(&theTime), outStrLen);
-    outStr[outStrLen-1] = '\0'; /* Remove trailer '\n' */
-    return(outStr);
+     && (nminutes == 0)) {
+      if (myGlobals.rFileName != NULL) {
+          theTime = myGlobals.lastPktTime.tv_sec;
+      }
+      else {
+          return("now");
+      }
   }
+  else {
+      if (myGlobals.rFileName != NULL) {
+          theTime = myGlobals.lastPktTime.tv_sec-(ndays*86400)-(nhours*3600)-(nminutes*60);
+      }
+      else {
+          theTime = myGlobals.actTime-(ndays*86400)-(nhours*3600)-(nminutes*60);
+      }
+  }
+
+  strncpy(outStr, ctime(&theTime), outStrLen);
+  outStr[outStrLen-1] = '\0'; /* Remove trailer '\n' */
+  return(outStr);
 }
 
 /* ************************ */
