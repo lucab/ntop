@@ -2034,8 +2034,8 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 		      adjHostName
 		      );
 
-	if(el->protoIPTrafficInfos[j]) {
-	  for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
+        for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
+          if(el->protoIPTrafficInfos[j]) {
 	    char key[128];
 
 	    if(el->protoIPTrafficInfos[j] != NULL) {
