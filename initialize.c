@@ -695,6 +695,19 @@ void initDevices(char* devices) {
 
   traceEvent(TRACE_INFO, "Initializing network devices...");
 
+  if(strcmp(devices, "none") == 0) {
+    /* Creating dummy device */
+    mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
+    tmpDevice = (NtopInterface*)malloc(mallocLen);
+    memset(tmpDevice, 0, mallocLen);
+    tmpDevice->virtualDevice = 1;
+    tmpDevice->datalink = DLT_EN10MB;
+    tmpDevice->name = strdup("none (dummy device)");
+    myGlobals.device = tmpDevice;
+    myGlobals.numDevices = 1;
+    return;
+  }
+
   myDevices = devices;
 
   /* Determine the device name if not specified */
@@ -951,7 +964,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
 	Courtesy of: Nicolai Petri <Nicolai@atomic.dk>
       */
-      if(column == NULL) {
+      if((!myGlobals.device[i].virtualDevice) && (column == NULL)) {
 	myGlobals.device[i].pcapPtr =
 	  pcap_open_live(myGlobals.device[i].name,
 			 myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN, 1, 100 /* ms */, ebuf);
@@ -983,15 +996,15 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	    traceEvent(TRACE_INFO, ebuf);
 	}
       } else {
-	column[0] = 0;
 	myGlobals.device[i].virtualDevice = 1;
-	column[0] = ':';
+	if(column != NULL) column[0] = ':';
       }
     }
 
     for(i=0; i<myGlobals.numDevices; i++) {
-      if(pcap_lookupnet(myGlobals.device[i].name, &myGlobals.device[i].network.s_addr,
-			&myGlobals.device[i].netmask.s_addr, ebuf) < 0) {
+      if((!myGlobals.device[i].virtualDevice)
+	 && (pcap_lookupnet(myGlobals.device[i].name, &myGlobals.device[i].network.s_addr,
+			    &myGlobals.device[i].netmask.s_addr, ebuf) < 0)) {
 	/* Fix for IP-less interfaces (e.g. bridge)
 	   Courtesy of Diana Eichert <deicher@sandia.gov>
 	*/

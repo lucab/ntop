@@ -196,89 +196,88 @@ void printTrafficStatistics() {
     sendString(buf);
   }
 
-  sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
-
-#ifdef HAVE_GDCHART
-  if(myGlobals.mergeInterfaces && (myGlobals.numDevices > 1)) {
-    int i, numRealDevices=0;
-
-    for(i=0; i<myGlobals.numDevices; i++)
-      if(!myGlobals.device[i].virtualDevice)
-	numRealDevices++;
-
-    if(numRealDevices > 1)
-      sendString("<TR><TD "TD_BG" ALIGN=CENTER COLSPAN=3>"
-		 "<IMG SRC=interfaceTrafficPie"CHART_FORMAT"></TD></TR>\n");
-  }
-#endif
-
-  if(myGlobals.device[actualReportDeviceId].pcapPtr != NULL) {
-    TrafficCounter droppedByKernel;
-    int i;
-
-    droppedByKernel=0;
-
-    for(i=0; i<myGlobals.numDevices; i++)
-      if(!myGlobals.device[i].virtualDevice) {
-	if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0) {
-	  droppedByKernel += pcapStats.ps_drop;
-	}
-      }
-
-    unicastPkts = myGlobals.device[actualReportDeviceId].ethernetPkts
-      - myGlobals.device[actualReportDeviceId].broadcastPkts
-      - myGlobals.device[actualReportDeviceId].multicastPkts;
-    /* if(unicastPkts < 0) unicastPkts = 0; */ /* It shouldn't happen */
-    if(myGlobals.device[actualReportDeviceId].ethernetPkts <= 0)
-      myGlobals.device[actualReportDeviceId].ethernetPkts = 1;
-
-    if(snprintf(buf, sizeof(buf),
-		"<TR %s><TH "TH_BG" align=left>Total</th>"
-		"<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		getRowColor(), formatPkts(myGlobals.device[actualReportDeviceId].ethernetPkts)) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-    if(snprintf(buf, sizeof(buf),
-		"<TR %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
-		"<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		getRowColor(), formatPkts(droppedByKernel)) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-#ifdef MULTITHREADED
-    if(snprintf(buf, sizeof(buf), "<tr %s><TH "TH_BG" align=left>"
-		"Dropped&nbsp;by&nbsp;ntop</th>"
-		"<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		getRowColor(), formatPkts(myGlobals.device[actualReportDeviceId].droppedPkts)) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-#endif   
-  }
-
-  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Unicast</th>"
-	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-	      getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(unicastPkts)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
-  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Broadcast</th>"
-	      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-	      getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].broadcastPkts)/
-	      (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-	      formatPkts(myGlobals.device[actualReportDeviceId].broadcastPkts)) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
-
-  if(myGlobals.device[actualReportDeviceId].multicastPkts > 0) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Multicast</th>"
-		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].multicastPkts)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].multicastPkts)) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-  }
-
   if(myGlobals.device[actualReportDeviceId].ethernetPkts > 0) {
     TrafficCounter dummyCounter;
+    sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
+
+#ifdef HAVE_GDCHART
+    if(myGlobals.mergeInterfaces && (myGlobals.numDevices > 1)) {
+      int i, numRealDevices=0;
+
+      for(i=0; i<myGlobals.numDevices; i++)
+	if(!myGlobals.device[i].virtualDevice)
+	  numRealDevices++;
+
+      if(numRealDevices > 1)
+	sendString("<TR><TD "TD_BG" ALIGN=CENTER COLSPAN=3>"
+		   "<IMG SRC=interfaceTrafficPie"CHART_FORMAT"></TD></TR>\n");
+    }
+#endif
+
+    if(myGlobals.device[actualReportDeviceId].pcapPtr != NULL) {
+      TrafficCounter droppedByKernel;
+      int i;
+
+      droppedByKernel=0;
+
+      for(i=0; i<myGlobals.numDevices; i++)
+	if(!myGlobals.device[i].virtualDevice) {
+	  if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0) {
+	    droppedByKernel += pcapStats.ps_drop;
+	  }
+	}
+
+      unicastPkts = myGlobals.device[actualReportDeviceId].ethernetPkts
+	- myGlobals.device[actualReportDeviceId].broadcastPkts
+	- myGlobals.device[actualReportDeviceId].multicastPkts;
+      /* if(unicastPkts < 0) unicastPkts = 0; */ /* It shouldn't happen */
+      if(myGlobals.device[actualReportDeviceId].ethernetPkts <= 0)
+	myGlobals.device[actualReportDeviceId].ethernetPkts = 1;
+
+      if(snprintf(buf, sizeof(buf),
+		  "<TR %s><TH "TH_BG" align=left>Total</th>"
+		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		  getRowColor(), formatPkts(myGlobals.device[actualReportDeviceId].ethernetPkts)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf),
+		  "<TR %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
+		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		  getRowColor(), formatPkts(droppedByKernel)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+#ifdef MULTITHREADED
+      if(snprintf(buf, sizeof(buf), "<tr %s><TH "TH_BG" align=left>"
+		  "Dropped&nbsp;by&nbsp;ntop</th>"
+		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		  getRowColor(), formatPkts(myGlobals.device[actualReportDeviceId].droppedPkts)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+#endif   
+    }
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Unicast</th>"
+		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
+		formatPkts(unicastPkts)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Broadcast</th>"
+		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].broadcastPkts)/
+		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[actualReportDeviceId].broadcastPkts)) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    if(myGlobals.device[actualReportDeviceId].multicastPkts > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Multicast</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].multicastPkts)/
+		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[actualReportDeviceId].multicastPkts)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+    }
 
 #ifdef HAVE_GDCHART
     if(myGlobals.device[actualReportDeviceId].ipBytes > 0)

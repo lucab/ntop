@@ -670,7 +670,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
   for(;;) {
     int i;
 
-    sleep(SESSION_SCAN_DELAY);
+    sleep(300 /* 5 minutes */);
 
     if(!myGlobals.capturePackets) break;
     myGlobals.actTime = time(NULL);
@@ -684,10 +684,6 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 	sleep(1); /* leave some time to others */
 #endif
       }
-
-
-    /* Remove !!!!!!!*/
-    cleanupHostEntries();
   }
 
   return(NULL);
