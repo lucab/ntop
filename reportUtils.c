@@ -253,7 +253,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		    formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf,
 		    CONST_COLOR_1, label_1,
 		    CONST_COLOR_2,
-		    CONST_COLOR_1, label_2);
+		    CONST_COLOR_2, label_2);
     }
     break;
   case 100:
@@ -282,7 +282,8 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 0&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
 		    getRowColor(), label,
 		    formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf,
-		    CONST_COLOR_1, label_1, CONST_COLOR_1,
+		    CONST_COLOR_1, label_1,
+		    CONST_COLOR_1,
 		    CONST_COLOR_2, label_2);
     }
     break;
