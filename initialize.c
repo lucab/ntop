@@ -898,7 +898,6 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.packetQueueMutex);
   createMutex(&myGlobals.hostsHashMutex);
-  createMutex(&myGlobals.watchedThreadMutex);
 
   if(myGlobals.isLsofPresent) {
       createMutex(&myGlobals.lsofMutex);
