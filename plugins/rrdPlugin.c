@@ -242,12 +242,11 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   argv[argc++] = "--end";
   argv[argc++] = endTime;
 
-  optind=0; /* reset gnu getopt */
-  opterr=0; /* no error messages */
-
 #ifdef CFG_MULTITHREADED
   accessMutex(&rrdMutex, "rrd_fetch");
 #endif
+  optind=0; /* reset gnu getopt */
+  opterr=0; /* no error messages */
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
 
@@ -482,12 +481,11 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     argv[argc++] = "LINE2:lower#ff0000:Lower";
 #endif
 
-    optind=0; /* reset gnu getopt */
-    opterr=0; /* no error messages */
-
 #ifdef CFG_MULTITHREADED
     accessMutex(&rrdMutex, "rrd_graph");
 #endif
+    optind=0; /* reset gnu getopt */
+    opterr=0; /* no error messages */
 
     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
     rrd_clear_error();
@@ -628,12 +626,11 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     }
 #endif
 
-    optind=0; /* reset gnu getopt */
-    opterr=0; /* no error messages */
-
 #ifdef CFG_MULTITHREADED
     accessMutex(&rrdMutex, "rrd_create");
 #endif
+    optind=0; /* reset gnu getopt */
+    opterr=0; /* no error messages */
 
     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
     rrd_clear_error();
@@ -671,6 +668,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 #ifdef CFG_MULTITHREADED
   accessMutex(&rrdMutex, "rrd_last");
 #endif
+  optind=0; /* reset gnu getopt */
+  opterr=0; /* no error messages */
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
@@ -721,12 +720,11 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
   argv[argc++] = cmd;
 
-  optind=0; /* reset gnu getopt */
-  opterr=0; /* no error messages */
-
 #ifdef CFG_MULTITHREADED
   accessMutex(&rrdMutex, "rrd_update");
 #endif
+  optind=0; /* reset gnu getopt */
+  opterr=0; /* no error messages */
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
