@@ -92,6 +92,10 @@
  */
 /* #define HOST_FREE_DEBUG */
 
+/* IDLE_PURGE_DEBUG logs the purging of idle hosts
+ */
+/* #define IDLE_PURGE_DEBUG */
+
 /* HTTP_DEBUG logs the http sessions.  It logs HTTP/1... from source port 80
  * and anything to destination port 80.
  */

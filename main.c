@@ -153,6 +153,8 @@ static struct option const long_options[] = {
   { "ssl-watchdog",                     no_argument,       NULL, 133 },
 #endif /* PARM_SSLWATCHDOG */
 
+  { "dynamic-purge-limits",             no_argument,       NULL, 134 },
+
   {NULL, 0, NULL, 0}
 };
 
@@ -676,6 +678,10 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.useSSLwatchdog = 1;
       break;
 #endif /* PARM_SSLWATCHDOG */
+
+    case 134:
+      myGlobals.dynamicPurgeLimits = 1;
+      break;
 
     case 135:
       /* Dennis Schoen (dennis@cns.dnsalias.org) allow --set-admin-password=<password> */

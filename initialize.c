@@ -345,6 +345,7 @@ void initCounters(void) {
   int len, i;
 
   myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
+  myGlobals.maximumHostsToPurgePerCycle = NTOP_DEFAULT_MAXIMUM_IDLE_PURGE;
 
   setDomainName();
 

@@ -410,6 +410,14 @@ void freeHostInstances(int actualDeviceId) {
 }
 
 /* ************************************ */
+/* Subtract the `struct timeval' values X and Y */
+
+float timeval_subtract (struct timeval x, struct timeval y) {
+  return ((long int) x.tv_sec * 1000000 + 
+          (long int) x.tv_usec - 
+          (long int) y.tv_sec * 1000000 - 
+          (long int) y.tv_usec) / 1000000.0;
+}
 
 void purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, maxBucket = 0, theIdx, hashFull = 0, hashLen;
@@ -418,13 +426,22 @@ void purgeIdleHosts(int actDevice) {
   static char firstRun = 1;
   HostTraffic **theFlaggedHosts = NULL;
   u_int len;
+  int newHostsToPurgePerCycle;
+
+  float hiresDeltaTime;
+  struct timeval hiresTimeStart, hiresTimeEnd;
 
   if(myGlobals.rFileName != NULL) return;
 
   if(firstRun) {
+#ifdef IDLE_PURGE_DEBUG
+    traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: purgeIdleHosts - firstRun!\n");
+#endif
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
   }
+
+  gettimeofday(&hiresTimeStart, NULL);
 
   updateDeviceThpt(actDevice);
 
@@ -433,8 +450,14 @@ void purgeIdleHosts(int actDevice) {
   else
     lastPurgeTime[actDevice] = startTime;
 
-  len = myGlobals.device[actDevice].hostsno/3;
-  if(len == 0) len = 8; /* minimal size */
+  /* How many do we allow to be purged?  Well, it's 1/3 of the hash size, at least 8.
+   *
+   *  The upper limit is myGlobals.maximumHostsToPurgePerCycle, which is initialized
+   *  to a constant (512) and may -- if the --dynamic-purge-limits was specified, 
+   *  be adjusted up or down below...
+   */
+  len = max(min(myGlobals.maximumHostsToPurgePerCycle, myGlobals.device[actDevice].hostsno/3), 8);
+
   theFlaggedHosts = (HostTraffic**)malloc(sizeof(HostTraffic*)*len);
   purgeTime = startTime-PURGE_HOSTS_DELAY; /* Time used to decide whether a host need to be purged */
 
@@ -452,8 +475,18 @@ void purgeIdleHosts(int actDevice) {
 
   /* Calculates entries to free */
   hashLen = myGlobals.device[actDevice].actualHashSize;
-  for(theIdx = (myGlobals.actTime % hashLen) /* random start */,
-	hashFull = 0, idx=1; idx<hashLen; idx++) {
+  theIdx = (myGlobals.actTime % hashLen) /* random start */;
+  hashFull=0;
+
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: BEGINING selection: upto %d hosts, "
+                         "starting ('random') at %d, actual size is %d...\n", 
+                         len,
+                         theIdx,
+                         hashLen);
+#endif
+
+  for (idx=1; idx<hashLen; idx++) {
     HostTraffic *el;
 
     if((theIdx == myGlobals.broadcastEntryIdx) || (theIdx == myGlobals.otherHostEntryIdx)) {
@@ -482,6 +515,9 @@ void purgeIdleHosts(int actDevice) {
 
 	  myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
 	  if(maxBucket >= (len-1)) {
+#ifdef IDLE_PURGE_DEBUG
+            traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: selected to limit...\n");
+#endif
 	    hashFull = 1;	
 #ifdef MULTITHREADED
 	    releaseMutex(&myGlobals.hostsHashMutex);
@@ -499,11 +535,16 @@ void purgeIdleHosts(int actDevice) {
     theIdx = (theIdx+1) % hashLen;
   }
 
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: FINISHED selection, %d hosts selected...\n",
+                         maxBucket);
+#endif
+
   /* Now free the entries */
   for(idx=0; idx<maxBucket; idx++) {
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Purging host (idx=%d/%s) (%d hosts purged)",
-	       idx, theFlaggedHosts[idx]->hostSymIpAddress, numFreedBuckets);
+#ifdef IDLE_PURGE_DEBUG
+    traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Purging host %d... %s",
+	                   idx, theFlaggedHosts[idx]->hostSymIpAddress);
 #endif
 
     freeHostInfo(actDevice, theFlaggedHosts[idx], actDevice);
@@ -517,14 +558,73 @@ void purgeIdleHosts(int actDevice) {
 
   scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
 
-#ifdef DEBUG
+  gettimeofday(&hiresTimeEnd, NULL);
+  hiresDeltaTime=timeval_subtract(hiresTimeEnd, hiresTimeStart);
+
   if(numFreedBuckets > 0) {
-    traceEvent(TRACE_INFO, "Purging completed in %d sec [%d hosts deleted]",
-	       (int)(time(NULL)-startTime), numFreedBuckets);
+    traceEvent(TRACE_INFO, "IDLE_PURGE: Elapsed Time is %.2f seconds, %d hosts deleted, %.3f per.\n", 
+                           hiresDeltaTime,
+	                   numFreedBuckets,
+                           hiresDeltaTime / numFreedBuckets);
   }
+
+  if ( (myGlobals.dynamicPurgeLimits == 1) && (numFreedBuckets > 0) ) {
+      /* 
+       * Dynamically adjust the maximum # of hosts we'll purge per cycle
+       * so that it takes no more than a parameter (in seconds).
+       */
+
+#ifdef IDLE_PURGE_DEBUG
+      traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Time targets MIN %.2f ... actual %.2f ... MAX %.2f\n",
+                             NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME,
+                             hiresDeltaTime,
+                             NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME);
 #endif
+
+      if (hiresDeltaTime > NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME) {
+          if (myGlobals.maximumHostsToPurgePerCycle > 64) {
+              /*
+               * Shrink it based on time (i.e. 1s target / 2s actual = 50%)
+               *   But keep it at least 64 and shrink by at least 8 each time... 
+               */
+              newHostsToPurgePerCycle =
+                    max( 64, 
+                         min( myGlobals.maximumHostsToPurgePerCycle - 8,
+                              numFreedBuckets / 
+                              (int) (hiresDeltaTime / NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME)));
+              traceEvent(TRACE_INFO, "IDLE_PURGE: Adjusting maximumHostsToPurgePerCycle from %d to %d...\n", 
+                                     myGlobals.maximumHostsToPurgePerCycle,
+                                     newHostsToPurgePerCycle);
+              myGlobals.maximumHostsToPurgePerCycle = newHostsToPurgePerCycle;
+#ifdef IDLE_PURGE_DEBUG
+           } else {
+               traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Unable to adjust below 64 host minimum...\n");
+#endif
+           }
+      } else if (numFreedBuckets < myGlobals.maximumHostsToPurgePerCycle - 8) {
+#ifdef IDLE_PURGE_DEBUG
+          traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Purged too few to adjust...\n");
+#endif
+      } else if (hiresDeltaTime < NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME) {
+          /*
+           * Grow it by ADJ+1/ADJ (e.g. 10%), at least 8...
+           */
+          newHostsToPurgePerCycle =
+                max( myGlobals.maximumHostsToPurgePerCycle + 8,
+                     (NTOP_IDLE_PURGE_ADJUST_FACTOR + 1) *
+                     myGlobals.maximumHostsToPurgePerCycle / 
+                     NTOP_IDLE_PURGE_ADJUST_FACTOR);
+          traceEvent(TRACE_INFO, "IDLE_PURGE: Adjusting maximumHostsToPurgePerCycle from %d to %d...\n", 
+                     myGlobals.maximumHostsToPurgePerCycle,
+                     newHostsToPurgePerCycle);
+          myGlobals.maximumHostsToPurgePerCycle = newHostsToPurgePerCycle;
+#ifdef IDLE_PURGE_DEBUG
+      } else {
+          traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: No adjustment necessary...\n");
+#endif
+      }
+  }
 }
-#undef DEBUG
 
 /* **************************************************** */
 

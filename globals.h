@@ -105,6 +105,13 @@
 
 #define MAX_DEVICE_NAME_LEN               64 /* used in util.c */
 
+/*
+ * Values for dynamic adjustment of idle purge time...
+ */
+#define NTOP_IDLE_PURGE_ADJUST_FACTOR       10
+#define NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME 5.0
+#define NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME 0.5
+#define NTOP_DEFAULT_MAXIMUM_IDLE_PURGE     512
 
 /*
  * TCP Wrappers
@@ -237,6 +244,8 @@ typedef struct ntopGlobals {
 #ifdef PARM_SSLWATCHDOG
   int useSSLwatchdog;                /* '133' */
 #endif
+
+  int dynamicPurgeLimits;            /* '134' */
 
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
@@ -376,6 +385,7 @@ typedef struct ntopGlobals {
 
   int32_t thisZone; /* seconds offset from gmt to local time */
   u_long numPurgedHosts, numTerminatedSessions;
+  int    maximumHostsToPurgePerCycle;
 
   /* Time */
   time_t actTime, initialSniffTime, lastRefreshTime;

@@ -905,6 +905,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
+  printFeatureConfigInfo(textPrintFlag, "IDLE_PURGE_DEBUG",
+#ifdef IDLE_PURGE_DEBUG
+			 "yes"
+#else
+			 "no"
+#endif
+			 );
+
   printFeatureConfigInfo(textPrintFlag, "MEMORY_DEBUG",
 #ifdef MEMORY_DEBUG
 			 "yes"
@@ -2217,6 +2225,10 @@ void printNtopConfigInfo(int textPrintFlag) {
                            "No");
 #endif
 
+  printParameterConfigInfo(textPrintFlag, "--dynamic-purge-limits",
+                           myGlobals.dynamicPurgeLimits == 1 ? "Yes" : "No",
+                           "No");
+
   sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
   sendString("Note: " REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");
@@ -2419,6 +2431,25 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Purged hosts", buf);
 
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.maximumHostsToPurgePerCycle) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum hosts to purge per cycle", buf);
+
+  if (textPrintFlag == TRUE) {
+      if(snprintf(buf, sizeof(buf), "%d", NTOP_DEFAULT_MAXIMUM_IDLE_PURGE) < 0)
+          BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "NTOP_DEFAULT_MAXIMUM_IDLE_PURGE", buf);
+
+      if (myGlobals.dynamicPurgeLimits == 1) {
+          if(snprintf(buf, sizeof(buf), "%f", NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME) < 0)
+              BufferTooShort();
+          printFeatureConfigInfo(textPrintFlag, "NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME", buf);
+          if(snprintf(buf, sizeof(buf), "%f", NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME) < 0)
+              BufferTooShort();
+          printFeatureConfigInfo(textPrintFlag, "NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME", buf);
+      }
+  }
+
   /* **** */
 
   if(myGlobals.enableSessionHandling) {
@@ -2594,6 +2625,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     defined(FTP_DEBUG)                 || \
     defined(GDBM_DEBUG)                || \
     defined(HASH_DEBUG)                || \
+    defined(IDLE_PURGE_DEBUG)          || \
     defined(HOST_FREE_DEBUG)           || \
     defined(HTTP_DEBUG)                || \
     defined(LSOF_DEBUG)                || \
