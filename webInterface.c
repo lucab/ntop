@@ -3324,7 +3324,7 @@ void initWeb() {
       myGlobals.actualReportDeviceId = 0;
     } else {
       myGlobals.actualReportDeviceId = atoi(value);
-      if(myGlobals.actualReportDeviceId > myGlobals.numDevices) {
+      if(myGlobals.actualReportDeviceId >= myGlobals.numDevices) {
         traceEvent(CONST_TRACE_INFO, "Note: stored actualReportDeviceId(%d) > numDevices(%d). "
                                "Probably leftover, reset.\n",
                    myGlobals.actualReportDeviceId,
