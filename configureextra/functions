@@ -10,7 +10,7 @@
 
 # Invoke: test_library(-lname, functionname)
 
-function test_library()
+test_library()
 {
 
     ce_status=0
