@@ -1269,9 +1269,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 		     rcStr);
 #endif
 	}
-      } else if((sport == 8875 /* Napster Redirector */)
-		&& (packetDataLength > 0)) {
-	char address[64];
+      } else if((sport == 8875 /* Napster Redirector */) && (packetDataLength > 5)) {
+	char address[64] = { 0 };
 	struct in_addr svrAddr;
 	int i;
 
