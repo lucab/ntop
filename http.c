@@ -844,6 +844,7 @@ static void returnHTTPPage(char* pageName, int postLen) {
     sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
     sendString("<CENTER><p><H1><FONT FACE=Helvetica>ntop is shutting down...</FONT></H1><p>\n");
     sendString("</CENTER>\n");
+	closeNwSocket(&newSock);
     shutdownNtop();
   } else if(strncmp(pageName, RESET_STATS_HTML, strlen(RESET_STATS_HTML)) == 0) {
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */

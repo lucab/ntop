@@ -287,7 +287,6 @@ void execCGI(char* cgiName) {
 #endif /* HAVE_LIBWRAP */
 
     closeNwSocket(&newSock);
-
   }
 }
 

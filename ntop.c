@@ -63,6 +63,7 @@ void handleSigHup(int signalId _UNUSED_) {
 /* *************************** */
 
 #ifdef MULTITHREADED
+#ifndef WIN32
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
@@ -113,6 +114,23 @@ void* pcapDispatch(void *_i) {
 
   return(NULL);
 }
+#else
+void* pcapDispatch(void *_i) {
+  int rc;
+  int i = (int)_i;
+
+  for(;capturePackets == 1;) {
+    rc = pcap_dispatch(device[i].pcapPtr, -1, queuePacket, (u_char*) &_i);
+    if(rc == -1) {
+      traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
+		 pcap_geterr(device[i].pcapPtr));
+      break;
+    } /* elsetraceEvent(TRACE_INFO, "1) %d\n", numPkts++); */
+  }
+
+  return(NULL);
+}
+#endif
 #endif
 
 /* **************************************** */
@@ -685,16 +703,17 @@ RETSIGTYPE cleanup(int signo) {
 
   capturePackets = 0;
 
+#ifndef WIN32
+
   /* traceEvent(TRACE_INFO, "==> capturePackets: %d\n", capturePackets); */
 
 #ifdef MULTITHREADED
   /* Courtesy of Felipe Tonioli <tonioli@mtec.com.br> */
   if(signo != -1) { /* the user pressed the 'q' key */
-	/* Send signals to threads first */
-	  
-	  
-	/* Then kill threads */  
-	killThread(&dequeueThreadId);
+    /* Send signals to threads first */
+	  	  
+    /* Then kill threads */  
+    killThread(&dequeueThreadId);
     killThread(&thptUpdateThreadId);
     killThread(&hostTrafficStatsThreadId);
     killThread(&scanIdleThreadId);
@@ -737,6 +756,8 @@ RETSIGTYPE cleanup(int signo) {
   cleanupPacketQueue();
 #endif
 #endif
+
+#endif /* #ifndef WIN32 */
 
 #ifdef FULL_MEMORY_FREE
   freeHostInstances();

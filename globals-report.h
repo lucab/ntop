@@ -40,6 +40,12 @@
 #define TD_BG     ""
 #endif
 
+#ifdef WIN32
+#define CHART_FORMAT ".gif"
+#else
+#define CHART_FORMAT ".png"
+#endif
+
 /*
   Courtesy of
   Peter Marquardt <wwwutz@mpimg-berlin-dahlem.mpg.de>

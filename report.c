@@ -548,7 +548,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 #ifdef HAVE_GDCHART
       if(numDevices > 1) {
 	sendString("<TR><TD "TD_BG"  ALIGN=CENTER COLSPAN=3>"
-		   "<IMG SRC=interfaceTrafficPie.png></TD></TR>\n");
+		   "<IMG SRC=interfaceTrafficPie"CHART_FORMAT"></TD></TR>\n");
       }
 #endif
     }
@@ -620,7 +620,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       }
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktCastDistribPie.png></TH></TR>\n");
+      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
       /*
@@ -703,7 +703,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString(buf2);
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktSizeDistribPie.png></TH></TR>\n");
+      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long</th>"
@@ -743,7 +743,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString(buf2);
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=2><IMG SRC=ipTrafficPie.png></TH></TR>\n");
+      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=2><IMG SRC=ipTrafficPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
       updateThpt();
@@ -1951,7 +1951,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	       "</H1><br>\n");
 
 #ifdef HAVE_GDCHART
-    sendString("<IMG SRC=ipProtoDistribPie.png><p></CENTER>\n");
+    sendString("<IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p></CENTER>\n");
 #endif
 
     sendString("<CENTER><P><H1>Local Traffic</H1><P>\n");
@@ -2128,7 +2128,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
 #ifdef HAVE_GDCHART
       sendString("<TR><TD "TD_BG"  COLSPAN=3 ALIGN=CENTER>"
-		 "<IMG SRC=drawGlobalIpProtoDistribution.png></TD></TR>\n");
+		 "<IMG SRC=drawGlobalIpProtoDistribution"CHART_FORMAT"></TD></TR>\n");
 #endif
       sendString("</TABLE>"TABLE_OFF"<P>\n");
     }
@@ -2210,7 +2210,7 @@ void printProtoTraffic(void) {
 
 #ifdef HAVE_GDCHART
   sendString("<TR><TD "TD_BG"  COLSPAN=3 ALIGN=CENTER>"
-	     "<IMG SRC=drawGlobalProtoDistribution.png></TD></TR>\n");
+	     "<IMG SRC=drawGlobalProtoDistribution"CHART_FORMAT"></TD></TR>\n");
 #endif
 
   sendString("</TABLE>"TABLE_OFF"<P></CENTER>\n");
@@ -2847,7 +2847,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 #ifdef HAVE_GDCHART
    sendString("<A HREF=\"thptStatsMatrix.html?1\" BORDER=0>"
-	      "<IMG SRC=\"thptGraph.png?1\"></A><BR>\n");
+	      "<IMG SRC=\"thptGraph"CHART_FORMAT"?1\"></A><BR>\n");
    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	   formatTimeStamp(0, 0, 0),
 	   formatTimeStamp(0, 0, 60)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2864,7 +2864,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
   if(device[actualReportDeviceId].numThptSamples > 60) {
 #ifdef HAVE_GDCHART
     sendString("<P><A HREF=\"thptStatsMatrix.html?2\" BORDER=0>"
-	       "<IMG SRC=\"thptGraph.png?2\"></A><BR>\n");
+	       "<IMG SRC=\"thptGraph"CHART_FORMAT"?2\"></A><BR>\n");
     if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	    formatTimeStamp(0, 0, 0),
 	    formatTimeStamp(0, 24, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2879,7 +2879,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 #ifdef HAVE_GDCHART
     if(device[actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
-      sendString("<P><IMG SRC=\"thptGraph.png?3\"><BR>\n");
+      sendString("<P><IMG SRC=\"thptGraph"CHART_FORMAT"?3\"><BR>\n");
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	      formatTimeStamp(0, 0, 0),
 	      formatTimeStamp(30, 0, 0)) < 0) 

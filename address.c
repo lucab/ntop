@@ -444,6 +444,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #endif
   } /* endless loop */
 
+  traceEvent(TRACE_INFO, "Address resultion terminated...");
   return(NULL); /* NOTREACHED */
 }
 

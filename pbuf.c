@@ -878,8 +878,8 @@ static void handleBootp(HostTraffic *srcHost,
 
 	    if(realDstHost != NULL) {
 	      if(realDstHost->dhcpStats == NULL) {
-		realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
+			realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
+			memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
 	      }
 
 	      FD_SET(HOST_SVC_DHCP_CLIENT, &realDstHost->flags);
@@ -926,19 +926,20 @@ static void handleBootp(HostTraffic *srcHost,
 		  /* *************** */
 
 		  hostIdx = findHostIdxByNumIP(hostIpAddress);
-		
-		  for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
-		    if(realDstHost->contactedRouters[j] == hostIdx)
-		      return;
-		    else if(realDstHost->contactedRouters[j] == NO_PEER) {
-		      realDstHost->contactedRouters[j] = hostIdx;
-		      break;
-		    }
-		  }
+  	      if(hostIdx != NO_PEER) {
+			  for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
+				if(realDstHost->contactedRouters[j] == hostIdx)
+				  return;
+				else if(realDstHost->contactedRouters[j] == NO_PEER) {
+				  realDstHost->contactedRouters[j] = hostIdx;
+				  break;
+				}
+			  }
 
 		  trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
 		  if(trafficHost != NULL)
 		    FD_SET(GATEWAY_HOST_FLAG, &trafficHost->flags);
+		  }
 
 		  /* *************** */
 		  idx += len;
@@ -976,9 +977,11 @@ static void handleBootp(HostTraffic *srcHost,
 		  /* *************** */
 
 		  hostIdx = findHostIdxByNumIP(hostIpAddress);
-		  trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-		  if(trafficHost != NULL)
-		    FD_SET(HOST_SVC_WINS, &trafficHost->flags);
+		  if(hostIdx != NO_PEER){
+			  trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+			  if(trafficHost != NULL)
+				FD_SET(HOST_SVC_WINS, &trafficHost->flags);
+		  }
 
 		  /* *************** */
 		  break;

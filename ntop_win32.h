@@ -31,9 +31,9 @@
 
 #define sleep(a /* sec */) Sleep(1000*a /* ms */)
 
-#define DATAFILE_DIR	NULL
-#define PLUGIN_DIR		NULL
-#define CONFIGFILE_DIR	NULL
+#define DATAFILE_DIR	"."
+#define PLUGIN_DIR		"."
+#define CONFIGFILE_DIR	"."
 #define DBFILE_DIR      "."
 
 /* ndis.h */
