@@ -939,6 +939,11 @@ RETSIGTYPE cleanup(int signo) {
   sleep(3); /* Just to wait until threads complete */
 #endif
 
+#ifdef CFG_MULTITHREADED
+  /* Prevents the web interface from running */
+  accessMutex(&myGlobals.purgeMutex, "cleanup");
+#endif
+
   for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
 
