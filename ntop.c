@@ -66,8 +66,6 @@ void handleSigHup(int signalId _UNUSED_) {
 
 /* *************************** */
 
-#ifdef CFG_MULTITHREADED
-#if !defined(WIN32)
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
@@ -103,7 +101,7 @@ void* pcapDispatch(void *_i) {
     if(select(pcap_fd+1, &readMask, NULL, NULL, NULL) > 0) {
       if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
       HEARTBEAT(2, "pcapDispatch()", NULL);
-      rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, processPacket, (u_char*)_i);
+      rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
 
       if(rc == -1) {
 	traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
@@ -115,18 +113,16 @@ void* pcapDispatch(void *_i) {
 	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
 	break; /* No more packets to read */
       } else {
-#if 0
-	traceEvent(CONST_TRACE_INFO, "1) %d\n", numPkts++);
-#endif
       }
     }
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...\n");
   return(NULL); 
-
 }
-#else /* WIN32 */
+
+
+#if 0 /* WIN32 */
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
@@ -151,7 +147,6 @@ void* pcapDispatch(void *_i) {
   return(NULL); 
 
 }
-#endif
 #endif
 
 /* **************************************** */

@@ -56,12 +56,12 @@ static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
   for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
     HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
-    if(el != NULL) {     
+    if(el != NULL) {
       if(el->magic != CONST_MAGIC_NUMBER) {
 	traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
 		   CONST_MAGIC_NUMBER, el->magic);
       }
-      
+
       return(el);
     }
   }
@@ -77,13 +77,15 @@ HostTraffic* getFirstHost(u_int actualDeviceId) {
 
 /* ************************************ */
 
-HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {  
+HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
+  if(host == NULL) return(NULL);
+
   if(host->next != NULL) {
     if(host->next->magic != CONST_MAGIC_NUMBER) {
       traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
 		 CONST_MAGIC_NUMBER, host->next->magic);
     }
-    
+
     return(host->next);
   } else {
     u_int nextIdx = host->hostTrafficBucket+1;
@@ -101,12 +103,12 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
   HostTraffic *el;
   int idx;
 
-  for(el=getFirstHost(actualDeviceId); 
+  for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
-    if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))	
+    if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))
       return(el);
   }
-  
+
   return(NULL);
 }
 
@@ -116,13 +118,13 @@ HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId) {
   HostTraffic *el;
   int idx;
 
-  for(el=getFirstHost(actualDeviceId); 
+  for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
-    
+
     if(el->hostSerial == serial)
       return(el);
   }
-  
+
   return(NULL);
 }
 
@@ -132,13 +134,13 @@ HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId) {
   HostTraffic *el;
   int idx;
 
-  for(el=getFirstHost(actualDeviceId); 
+  for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
-    if((el->hostNumIpAddress != NULL) 
+    if((el->hostNumIpAddress != NULL)
        && (!strcmp(el->ethAddressString, macAddr)))
       return(el);
   }
-  
+
   return(NULL);
 }
 
@@ -226,7 +228,7 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 unsigned short isLocalAddress(struct in_addr *addr, u_int deviceId) {
   if(deviceId >= myGlobals.numDevices) {
     traceEvent(CONST_TRACE_WARNING, "Index %u out of range [0..%u] - address treated as remote",
-	       deviceId, myGlobals.numDevices); 
+	       deviceId, myGlobals.numDevices);
     return(0);
   }
 
@@ -413,14 +415,14 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 
   if((addresses == NULL) || (addresses[0] == '\0'))
     return;
-  
+
   traceEvent(CONST_TRACE_NOISY,
              "Processing %s parameter '%s'",
              flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 	     flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 	     flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
              addresses);
-  
+
   memset(localAddresses, 0, localAddressesLen);
 
   address = strtok_r(addresses, ",", &strtokState);
@@ -557,9 +559,9 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 
           laBufferPosition  += laBufferUsed;
           localAddressesLen -= laBufferUsed;
-	  
+
           (*numNetworks)++;
-	
+
         }
       } else {
         a = (int) ((network >> 24) & 0xff);
@@ -711,7 +713,7 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
     }
 #ifdef ADDRESS_DEBUG
     else
-      traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %8X/%8X is NOT pseudo broadcast\n", 
+      traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %8X/%8X is NOT pseudo broadcast\n",
 		 addr->s_addr, networks[i][CONST_BROADCAST_ENTRY]);
 #endif
   }
@@ -760,9 +762,9 @@ char *dotToSlash(char *name) {
    */
   char* localBuffer;
   int i;
-    
+
   localBuffer = strdup(name);
-    
+
   for (i=0; i<strlen(localBuffer); i++) {
     if (localBuffer[i] == '.')
 #ifdef WIN32
@@ -1014,7 +1016,7 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
     traceEvent(CONST_TRACE_ERROR,
                "ERROR: createMutex() call returned %d(%d) [%s:%d]\n",
                rc, errno, fileName, fileLine);
-  } else {    
+  } else {
     mutexId->isInitialized = 1;
   }
 
@@ -1072,7 +1074,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 #endif
   myPid=getpid();
   if(mutexId->isLocked) {
-    if((fileLine == mutexId->lockLine)       
+    if((fileLine == mutexId->lockLine)
        && (strcmp(fileName, mutexId->lockFile) == 0)
        && (myPid == mutexId->lockPid)) {
       traceEvent(CONST_TRACE_WARNING,
@@ -1147,7 +1149,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
   myPid=getpid();
   if(mutexId->isLocked) {
-    if ( (strcmp(fileName, mutexId->lockFile) == 0) && 
+    if ( (strcmp(fileName, mutexId->lockFile) == 0) &&
 	 (fileLine == mutexId->lockLine) &&
 	 (myPid == mutexId->lockPid) ) {
       traceEvent(CONST_TRACE_WARNING,
@@ -1942,7 +1944,7 @@ void resetHostsVariables(HostTraffic* el) {
   el->nonIPTraffic = NULL;
   el->routedTraffic = NULL;
   el->portsUsage = NULL;
-  el->protoIPTrafficInfos = NULL;  
+  el->protoIPTrafficInfos = NULL;
   el->icmpInfo = NULL;
   el->protocolInfo = NULL;
 
@@ -2110,7 +2112,7 @@ void traceEvent(int eventTraceLevel, char* file,
         mFile = strdup(file);
         for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
             if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
-#if defined(WIN32) 
+#if defined(WIN32)
             if(mFile[beginFileIdx-1] == '\\') break;  /* Start after \ (Win32)  */
 #else
             if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
@@ -2118,7 +2120,7 @@ void traceEvent(int eventTraceLevel, char* file,
         }
     }
 
-#if defined(WIN32) 
+#if defined(WIN32)
     /* Windows lacks vsnprintf */
     strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
     printf("%s ", theDate);
@@ -2174,7 +2176,7 @@ void traceEvent(int eventTraceLevel, char* file,
 
         if (myGlobals.traceLevel == CONST_DETAIL_TRACE_LEVEL) {
             snprintf(dbuf, LEN_MEDIUM_WORK_BUFFER, "[MSGID%05d-%s] ", line, &mFile[beginFileIdx]);
-            if (strlen(dbuf) >= LEN_MEDIUM_WORK_BUFFER) 
+            if (strlen(dbuf) >= LEN_MEDIUM_WORK_BUFFER)
                 dbuf[LEN_MEDIUM_WORK_BUFFER] = '\0';
         }
 
@@ -2214,7 +2216,7 @@ void traceEvent(int eventTraceLevel, char* file,
  #endif
 #endif /* WIN32 || !MAKE_WITH_SYSLOG */
 
-    if (mFile != NULL) 
+    if (mFile != NULL)
         free(mFile);
 
   }
@@ -3279,8 +3281,8 @@ u_int numActiveSenders(u_int deviceId) {
   u_int numSenders = 0;
   int i;
   HostTraffic *el;
-  
-  for(el=getFirstHost(deviceId); 
+
+  for(el=getFirstHost(deviceId);
       el != NULL; el = getNextHost(deviceId, el)) {
     if(broadcastHost(el) || (el->pktSent.value == 0))
       continue;
@@ -3304,7 +3306,7 @@ u_int32_t xaton(char *s) {
 }
 
 /* ******************************************************************* */
-  
+
 void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
   IPNode *p1 = NULL, *p2 = NULL;
   int i, b;
@@ -3313,7 +3315,7 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
     p1 = myGlobals.countryFlagHead;
   else
     p1 = myGlobals.asHead;
-    
+
   for(i=0; i<prefix; i++) {
     b=(ip>>(31-i)) & 0x1;
     if(!p1->b[b]) {
@@ -3329,7 +3331,7 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
     }
     else
       p2=p1->b[b];
-    
+
     p1=p2;
   }
 
@@ -3392,7 +3394,7 @@ char *i18n_xvert_locale2common(const char *input) {
    *
    *  Fix it up to our common format(ll_XX), stripped of char and modifier.
    *
-   *    NB: We picked this common format because it's usable in a directory 
+   *    NB: We picked this common format because it's usable in a directory
    *       (html_ll_XX) where the Accept-Language version(ll-XX) wouldn't always be.
    *
    */
@@ -3417,7 +3419,7 @@ char *i18n_xvert_acceptlanguage2common(const char *input) {
    *
    *  Fix it up to our common format(ll_XX), with the - swapped for a _
    *
-   *    NB: We picked this common format because it's usable in a directory 
+   *    NB: We picked this common format because it's usable in a directory
    *       (html_ll_XX) where the Accept-Language version(ll-XX) wouldn't always be.
    *
    */
@@ -3454,7 +3456,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
   int S, N, D, T, done = 0, idx;
   char fingerprint[32];
   char *strtokState;
-  
+
   if((srcHost->fingerprint == NULL)       /* No fingerprint yet    */
      || (srcHost->fingerprint[0] == ':')  /* OS already calculated */
      || (strlen(srcHost->fingerprint) < 28))
@@ -3523,7 +3525,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 	   strlen(srcHost->fingerprint) is 29 as the fingerprint length is so
 	   Example: 0212:_MSS:80:WS:0:1:0:0:A:LT
 	*/
-	
+
 	free(srcHost->fingerprint);
 	srcHost->fingerprint = strdup(&line[28]);
 	/* traceEvent(CONST_TRACE_INFO, "[%s] -> [%s]\n",
@@ -3565,7 +3567,7 @@ int ntop_gdbm_delete(GDBM_FILE g, datum d) {
 #endif
 
   rc = gdbm_delete(g, d);
-  
+
 #ifdef CFG_MULTITHREADED
    if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
      releaseMutex(&myGlobals.gdbmMutex);
@@ -3585,7 +3587,7 @@ datum ntop_gdbm_firstkey(GDBM_FILE g) {
 #endif
 
   theData = gdbm_firstkey(g);
-  
+
 #ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
@@ -3603,7 +3605,7 @@ void ntop_gdbm_close(GDBM_FILE g) {
 #endif
 
   gdbm_close(g);
-  
+
 #ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
@@ -3621,7 +3623,7 @@ datum ntop_gdbm_nextkey(GDBM_FILE g, datum d) {
 #endif
 
   theData = gdbm_nextkey(g, d);
-  
+
 #ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
@@ -3641,7 +3643,7 @@ datum ntop_gdbm_fetch(GDBM_FILE g, datum d) {
 #endif
 
   theData = gdbm_fetch(g, d);
-  
+
 #ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
@@ -3659,14 +3661,14 @@ int ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r) {
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_store");
 #endif
-  
+
   rc = gdbm_store(g, d, v, r);
-  
+
 #ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
-  
+
   return(rc);
 }
 
@@ -3685,7 +3687,7 @@ void handleWhiteBlackListAddresses(char* addresses,
       return;
   }
 
-          
+
   handleAddressLists(addresses,
                      theNetworks,
                      numNets,
@@ -3705,12 +3707,12 @@ void handleWhiteBlackListAddresses(char* addresses,
  *                          2 means matched black list)
  *             0      - SAVE
  *
- * We use the routines from util.c ... 
+ * We use the routines from util.c ...
  *  For them, 1=PseudoLocal, which means it's in the set
  *  So we have to flip the whitelist code
  */
-unsigned short isOKtoSave(u_int32_t addr, 
-			  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], 
+unsigned short isOKtoSave(u_int32_t addr,
+			  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3],
 			  u_int32_t blackNetworks[MAX_NUM_NETWORKS][3],
 			  u_short numWhiteNets, u_short numBlackNets) {
   int rc;
@@ -3787,7 +3789,7 @@ struct pcap {
 	 */
 	u_char *pkt;
 
-	
+
 	/*
 	 * Placeholder for filter code if bpf not in kernel.
 	 */
@@ -3799,7 +3801,7 @@ struct pcap {
 pcap_t *pcap_open_dead(int linktype, int snaplen)
 {
   pcap_t *p;
-  
+
   p = malloc(sizeof(*p));
   if (p == NULL)
     return NULL;
@@ -3827,19 +3829,19 @@ int setSpecifiedUser() {
   if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
 #ifdef DARWIN
     unsigned long p;
-  
+
     /*
       This is dead code but it's necessary under OSX. In fact the linker
       notices that the RRD stuff is not used in the main code so it is
       ignored. At runtime when the RRD plugin comes up, the dynamic linker
       failes because the rrd_* are not found.
     */
-  
-    p =  (unsigned long)rrd_fetch;  
-    p += (unsigned long)rrd_graph;  
-    p += (unsigned long)rrd_create; 
-    p += (unsigned long)rrd_last;  
-    p += (unsigned long)rrd_update; 
+
+    p =  (unsigned long)rrd_fetch;
+    p += (unsigned long)rrd_graph;
+    p += (unsigned long)rrd_create;
+    p += (unsigned long)rrd_last;
+    p += (unsigned long)rrd_update;
     return(p);
 #else
     return(1);
@@ -3857,7 +3859,7 @@ u_short ip2AS(u_int32_t ip) {
   IPNode *p;
   int i, b;
   u_short as=0;
-    
+
   p = myGlobals.asHead;
 
   i=0;
