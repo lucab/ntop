@@ -867,7 +867,7 @@ Optional Features:
   --disable-plugins           disable compilation of plugins [default=enabled]
   --enable-static-plugins     Enable static linked plugins sntop, default=dynamic]
   --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]
-  --disable-snmp              Disable SNMP support [default=enabled]
+  --disable-snmp              Disable SNMP support [default=disable]
   --enable-i18n               Enable (limited) internationalization [default=disabled]
   --disable-ipv6              use IPv6 [default=enabled]
   --enable-showoses           display OS Support information and exit.
@@ -5972,9 +5972,9 @@ fi;
 # Check whether --enable-snmp or --disable-snmp was given.
 if test "${enable_snmp+set}" = set; then
   enableval="$enable_snmp"
-  ac_disable_snmp="yes"
-else
   ac_disable_snmp="no"
+else
+  ac_disable_snmp="yes"
 fi;
 
 # Check whether --enable-i18n or --disable-i18n was given.

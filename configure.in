@@ -671,9 +671,9 @@ AC_ARG_ENABLE(ignoresigpipe,
               ac_enable_ignoresigpipe="no")
 
 AC_ARG_ENABLE(snmp,
-              [  --disable-snmp              Disable SNMP support [[default=enabled]]],
-              ac_disable_snmp="yes",
-              ac_disable_snmp="no")
+              [  --disable-snmp              Disable SNMP support [[default=disable]]],
+              ac_disable_snmp="no",
+              ac_disable_snmp="yes")
 
 AC_ARG_ENABLE(i18n,
               [  --enable-i18n               Enable (limited) internationalization [[default=disabled]]],
