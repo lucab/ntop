@@ -91,14 +91,18 @@ THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) \
 # The Games
 #
 bin_PROGRAMS   = ntop
-EXTRA_PROGRAMS = 
+EXTRA_PROGRAMS = ntops
 bin_SCRIPTS    = 
 
-ntop_SOURCES   = main.c admin.c
+ntop_SOURCES       = main.c admin.c
+ntop_DEPENDENCIES  = libntopreport.la libntop.la
+ntop_LDADD         = libntopreport.la libntop.la
+ntop_LDFLAGS       = $(AM_LDFLAGS)
 
-ntop_DEPENDENCIES = libntopreport.la libntop.la
-ntop_LDADD        = libntopreport.la libntop.la
-ntop_LDFLAGS      = $(AM_LDFLAGS)
+ntops_SOURCES      = $(ntop_SOURCES)
+ntops_DEPENDENCIES = $(ntop_DEPENDENCIES)
+ntops_LDADD        = $(ntop_LDADD)
+ntops_LDFLAGS      = $(ntop_LDFLAGS) -static
 
 noinst_HEADERS     = globals-core.h globals-report.h ntop.h regex.h
 

@@ -102,16 +102,17 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
-ECHO = @ECHO@
 INCS = @INCS@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTOP = @INTOP@
+LD = @LD@
 LIBCURSES = @LIBCURSES@
 LIBREADLINE = @LIBREADLINE@
 LIBTERMCAP = @LIBTERMCAP@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
+NM = @NM@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
@@ -193,14 +194,18 @@ THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) \
 # The Games
 #
 bin_PROGRAMS = ntop
-EXTRA_PROGRAMS = 
+EXTRA_PROGRAMS = ntops
 bin_SCRIPTS = 
 
 ntop_SOURCES = main.c admin.c
-
 ntop_DEPENDENCIES = libntopreport.la libntop.la
 ntop_LDADD = libntopreport.la libntop.la
 ntop_LDFLAGS = $(AM_LDFLAGS)
+
+ntops_SOURCES = $(ntop_SOURCES)
+ntops_DEPENDENCIES = $(ntop_DEPENDENCIES)
+ntops_LDADD = $(ntop_LDADD)
+ntops_LDFLAGS = $(ntop_LDFLAGS) -static
 
 noinst_HEADERS = globals-core.h globals-report.h ntop.h regex.h
 
@@ -253,12 +258,15 @@ libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
 	http.lo report.lo reportUtils.lo webInterface.lo
 libntopreport_la_OBJECTS = $(am_libntopreport_la_OBJECTS)
-EXTRA_PROGRAMS =
+EXTRA_PROGRAMS = ntops$(EXEEXT)
 bin_PROGRAMS = ntop$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
 am_ntop_OBJECTS = main.$(OBJEXT) admin.$(OBJEXT)
 ntop_OBJECTS = $(am_ntop_OBJECTS)
+am__objects_1 = main.$(OBJEXT) admin.$(OBJEXT)
+am_ntops_OBJECTS = $(am__objects_1)
+ntops_OBJECTS = $(am_ntops_OBJECTS)
 SCRIPTS = $(bin_SCRIPTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I.
@@ -291,7 +299,7 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) \
-	$(ntop_SOURCES)
+	$(ntop_SOURCES) $(ntops_SOURCES)
 
 NROFF = nroff
 MANS = $(man_MANS)
@@ -309,7 +317,7 @@ DIST_COMMON = README $(noinst_HEADERS) AUTHORS CONTENTS COPYING \
 	depcomp install-sh ltconfig ltmain.sh missing mkinstalldirs \
 	ntop-cert.pem\ ntop.8 ntop.html ntop.txt
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES)
+SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES)
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -413,6 +421,9 @@ clean-binPROGRAMS:
 ntop$(EXEEXT): $(ntop_OBJECTS) $(ntop_DEPENDENCIES) 
 	@rm -f ntop$(EXEEXT)
 	$(LINK) $(ntop_LDFLAGS) $(ntop_OBJECTS) $(ntop_LDADD) $(LIBS)
+ntops$(EXEEXT): $(ntops_OBJECTS) $(ntops_DEPENDENCIES) 
+	@rm -f ntops$(EXEEXT)
+	$(LINK) $(ntops_LDFLAGS) $(ntops_OBJECTS) $(ntops_LDADD) $(LIBS)
 binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
