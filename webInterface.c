@@ -1960,6 +1960,15 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
   printFeatureConfigInfo(textPrintFlag, "OS", osName);
 
+#ifndef WIN32
+ {
+   char pid[16];
+
+   sprintf(pid, "%d", getpid());
+   printFeatureConfigInfo(textPrintFlag, "Process Id", pid);
+ }
+#endif
+
   /* *************************** */
 
   sendString(texthtml("\n\nCommand line\n\n", 
