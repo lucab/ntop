@@ -193,7 +193,11 @@ void printTrafficStatistics(void) {
 
   sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR "TR_ON"><TH "TH_BG">Name</TH>"
 	     "<TH "TH_BG">Device</TH><TH "TH_BG">Type</TH><TH "TH_BG">Speed</TH><TH "TH_BG">MTU</TH>"
-	     "<TH "TH_BG">Header</TH><TH "TH_BG">Address</TH><TH "TH_BG">IPv6 Addresses</TH></TR>\n");
+	     "<TH "TH_BG">Header</TH><TH "TH_BG">Address</TH>");
+
+#ifdef INET6
+  sendString("<TH "TH_BG">IPv6 Addresses</TH></TR>\n");
+#endif
 
   if(myGlobals.rFileName == NULL) {
     for(i=0; i<myGlobals.numDevices; i++) {
@@ -223,11 +227,13 @@ void printTrafficStatistics(void) {
 	  sendString("&nbsp;");
 	sendString("</TD>");
 
-	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.mtuSize[myGlobals.device[i].datalink]) < 0)
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", 
+		    myGlobals.mtuSize[myGlobals.device[i].datalink]) < 0)
 	  BufferTooShort();
 	sendString(buf);
 
-	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.headerSize[myGlobals.device[i].datalink]) < 0)
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", 
+		    myGlobals.headerSize[myGlobals.device[i].datalink]) < 0)
 	  BufferTooShort();
 	sendString(buf);
 
@@ -244,7 +250,7 @@ void printTrafficStatistics(void) {
 	    BufferTooShort();
 	  sendString(buf);
 	}
-	sendString("</TD>");
+	sendString("&nbsp;</TD>");
 #endif
 	sendString("</TR>\n");
       }

@@ -27,23 +27,6 @@
 
 #ifdef INET6
 
-#include <sys/param.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/sysctl.h>
-#include <net/if.h>
-#ifdef FREEBSD
-#include <net/if_dl.h>
-#endif
-#include <net/route.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-
-#include "config.h"
-
 #define ROUNDUP(a) \
         ((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
 
@@ -93,7 +76,10 @@ static int prefixlen(void *val, int size) {
   return (plen);
 }
 
-#ifdef HAVE_IFLIST_SYSCTL
+/* ************************************************* */
+
+#if defined(HAVE_IFLIST_SYSCTL) && defined(HAVE_SYSCTL)
+
 struct iface_handler *iface_new(void) {
   int		 mib[6] = { CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST, 0 };
   char		*buf = NULL;
@@ -289,12 +275,13 @@ struct iface_handler *iface_new(void) {
   free(buf);
   return NULL;
 }
+
 #else
 
 /* TODO: Using ioctl for getting interface addresses */
 #ifdef LINUX
 #define PATH_PROC_NET_IF_INET6 "/proc/net/if_inet6"
-static int iface_getflags(struct iface_if *ii){
+static int iface_getflags(struct iface_if *ii) {
   int sock;
   struct ifreq lifreq;
 
@@ -319,6 +306,9 @@ static int iface_getflags(struct iface_if *ii){
     ii->info |= IFACE_INFO_PROMISC;
   return 1;
 }
+
+/* **************************************************** */
+
 struct iface_handler *iface_new(void) {
   char buf[1024];
   char straddr[33];
@@ -395,9 +385,16 @@ struct iface_handler *iface_new(void) {
   return NULL;
 
 }
+#else
+
+/* != LINUX */
+struct iface_handler *iface_new(void) {
+  return NULL;
+}
 #endif
 #endif
 
+/* ******************************************************* */
 
 void iface_destroy(struct iface_handler *hdlr) {
   if (hdlr) {
@@ -548,13 +545,17 @@ void *iface_addr_getinfo(struct iface_addr *ia, void *infobuf) {
   }
 }
 
+/* *************************************************** */
 
 int iface6(int *idx, int size) {
-  struct iface_if		*ii;
-  struct iface_handler	*ih	= iface_new();
-  int				 count	= 0;
+  struct iface_if	*ii;
+  struct iface_handler	*ih;
+  int			count	= 0;
 
-  if (ih == NULL)
+
+  ih = iface_new();
+
+  if(ih == NULL)
     return -1;
 
   for (ii = iface_getif_first(ih) ; ii ; ii = iface_getif_next(ii))

@@ -49,6 +49,8 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
   /* Search the instance and update its name */
     
+  if(myGlobals.device[actualDeviceId].virtualDevice) return;
+
   el = findHostByNumIP(addr, actualDeviceId);
 
   accessAddrResMutex("updateHostNameInfo");

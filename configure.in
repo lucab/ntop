@@ -2086,6 +2086,7 @@ case "$ac_disable_ipv6" in
         no)
 		AC_DEFINE_UNQUOTED(INET6,  1, [Enable/disable ipv6 support])
 		AC_CHECK_HEADERS([ip6.h icmp6.h])
+		AC_CHECK_FUNCS([sysctl])
                 ;;
 esac
 

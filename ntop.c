@@ -81,10 +81,12 @@ void* pcapDispatch(void *_i) {
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
     
     if(rc == -1) {
-      traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
-		 i,
-		 myGlobals.device[i].name,
-		 pcap_geterr(myGlobals.device[i].pcapPtr));
+
+      if(myGlobals.device[i].name != NULL) /* This is not a shutdown */
+	traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
+		   i,
+		   myGlobals.device[i].name,
+		   pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
       traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
