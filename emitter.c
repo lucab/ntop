@@ -673,22 +673,25 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  wrtUshortItm(fDescr, lang, "\t", "minTTL",     el->minTTL, ' ', numEntries);
 	if(checkFilter(filter, &filterPattern, "maxTTL"))
 	  wrtUshortItm(fDescr, lang, "\t", "maxTTL",     el->maxTTL, ' ', numEntries);
-	if(checkFilter(filter, &filterPattern, "nbHostName"))
-	  wrtStrItm(fDescr, lang, "\t", "nbHostName",   el->nbHostName, ',', numEntries);
-	if(checkFilter(filter, &filterPattern, "nbDomainName"))
-	  wrtStrItm(fDescr, lang, "\t", "nbDomainName", el->nbDomainName, ',', numEntries);
-	if(checkFilter(filter, &filterPattern, "nbDescr"))
-	  wrtStrItm(fDescr, lang, "\t", "nbDescr",      el->nbDescr, ',', numEntries);
-	if(checkFilter(filter, &filterPattern, "nodeType"))
-	  wrtUcharItm (fDescr, lang, "\t", "nodeType",  el->nbNodeType, ' ', numEntries);
-	if(checkFilter(filter, &filterPattern, "atNodeName"))
-	  wrtStrItm(fDescr, lang, "\t", "atNodeName",   el->atNodeName, ',', numEntries);
-	if(checkFilter(filter, &filterPattern, "atNetwork"))
-	  wrtUshortItm(fDescr, lang, "\t", "atNetwork",  el->atNetwork, ' ', numEntries);
-	if(checkFilter(filter, &filterPattern, "atNode"))
-	  wrtUcharItm (fDescr, lang, "\t", "atNode",    el->atNode, ' ', numEntries);
-	if(checkFilter(filter, &filterPattern, "ipxHostName"))
-	  wrtStrItm(fDescr, lang, "\t", "ipxHostName",  el->ipxHostName, ',', numEntries);
+
+	if(el->nonIPTraffic != NULL) {
+	  if(checkFilter(filter, &filterPattern, "nbHostName"))
+	    wrtStrItm(fDescr, lang, "\t", "nbHostName",   el->nonIPTraffic->nbHostName, ',', numEntries);
+	  if(checkFilter(filter, &filterPattern, "nbDomainName"))
+	    wrtStrItm(fDescr, lang, "\t", "nbDomainName", el->nonIPTraffic->nbDomainName, ',', numEntries);
+	  if(checkFilter(filter, &filterPattern, "nbDescr"))
+	    wrtStrItm(fDescr, lang, "\t", "nbDescr",      el->nonIPTraffic->nbDescr, ',', numEntries);
+	  if(checkFilter(filter, &filterPattern, "nodeType"))
+	    wrtUcharItm (fDescr, lang, "\t", "nodeType",  el->nonIPTraffic->nbNodeType, ' ', numEntries);
+	  if(checkFilter(filter, &filterPattern, "atNodeName"))
+	    wrtStrItm(fDescr, lang, "\t", "atNodeName",   el->nonIPTraffic->atNodeName, ',', numEntries);
+	  if(checkFilter(filter, &filterPattern, "atNetwork"))
+	    wrtUshortItm(fDescr, lang, "\t", "atNetwork",  el->nonIPTraffic->atNetwork, ' ', numEntries);
+	  if(checkFilter(filter, &filterPattern, "atNode"))
+	    wrtUcharItm (fDescr, lang, "\t", "atNode",    el->nonIPTraffic->atNode, ' ', numEntries);
+	  if(checkFilter(filter, &filterPattern, "ipxHostName"))
+	    wrtStrItm(fDescr, lang, "\t", "ipxHostName",  el->nonIPTraffic->ipxHostName, ',', numEntries);
+	}
       }
 
       if(checkFilter(filter, &filterPattern, "pktSent"))

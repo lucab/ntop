@@ -1860,14 +1860,8 @@ void resetHostsVariables(HostTraffic* el) {
   el->dotDomainName = NULL;
   el->hostSymIpAddress[0] = '\0';
   el->osName = NULL;
-  el->nbHostName = NULL;
-  el->nbDomainName = NULL;
-  el->nbDescr = NULL; /* Fix courtesy of Francis Pintos <francis@arhl.com.hk> */
-  el->atNodeName = NULL;
-  memset(el->atNodeType, 0, sizeof(el->atNodeType));
+  el->nonIPTraffic = NULL;
   el->routedTraffic = NULL;
-  el->ipxHostName = NULL;
-  el->numIpxNodeTypes = 0;
   el->portsUsage = NULL;
   el->protoIPTrafficInfos = NULL;
   el->tcpSessionList = NULL;
@@ -2565,16 +2559,18 @@ void setNBnodeNameType(HostTraffic *theHost,
   if(strlen(nbName) >= (MAX_HOST_SYM_NAME_LEN-1)) /* (**) */
     nbName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
 
-  theHost->nbNodeType = (char)nodeType;
+  if(theHost->nonIPTraffic == NULL) theHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+
+  theHost->nonIPTraffic->nbNodeType = (char)nodeType;
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
 
-  theHost->nbNodeType = (char)nodeType;
+  theHost->nonIPTraffic->nbNodeType = (char)nodeType;
 
   switch(nodeType) {
   case 0x0:  /* Workstation */
   case 0x20: /* Server */
-    if(theHost->nbHostName == NULL) {
-      theHost->nbHostName = strdup(nbName);
+    if(theHost->nonIPTraffic->nbHostName == NULL) {
+      theHost->nonIPTraffic->nbHostName = strdup(nbName);
       updateHostName(theHost);
 
       if(theHost->hostSymIpAddress[0] == '\0')
@@ -2588,9 +2584,9 @@ void setNBnodeNameType(HostTraffic *theHost,
   case 0x1C: /* Domain Controller */
   case 0x1E: /* Domain */
   case 0x1D: /* Workgroup (I think) */
-    if(theHost->nbDomainName == NULL) {
+    if(theHost->nonIPTraffic->nbDomainName == NULL) {
       if(strcmp(nbName, "__MSBROWSE__") && strncmp(&nbName[2], "__", 2)) {
-	theHost->nbDomainName = strdup(nbName);
+	theHost->nonIPTraffic->nbDomainName = strdup(nbName);
       }
       break;
     }

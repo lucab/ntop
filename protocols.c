@@ -654,7 +654,8 @@ void handleNetbios(HostTraffic *srcHost,
   int offset=0, displ, notEnoughData = 0;
 
   if((!myGlobals.enablePacketDecoding)
-     || (!((srcHost->nbHostName == NULL) || (srcHost->nbDomainName == NULL))))
+     || (srcHost->nonIPTraffic == NULL)
+     || (!((srcHost->nonIPTraffic->nbHostName == NULL) || (srcHost->nonIPTraffic->nbDomainName == NULL))))
     return; /* Already set */
 
   if(packetData == NULL) /* packet too short ? */
@@ -787,13 +788,14 @@ void handleNetbios(HostTraffic *srcHost,
 			|| (tmpBuffer[17] == 0x01 /* Host Announcement*/))
 		       && (tmpBuffer[49] != '\0')) {
 
-		      if(srcHost->nbDescr != NULL)
-			free(srcHost->nbDescr);
+		      if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+		      if(srcHost->nonIPTraffic->nbDescr != NULL)
+			free(srcHost->nonIPTraffic->nbDescr);
 
 		      if(tmpBuffer[17] == 0x0F)
 			FD_SET(HOST_TYPE_MASTER_BROWSER, &srcHost->flags);
 
-		      srcHost->nbDescr = strdup(&tmpBuffer[49]);
+		      srcHost->nonIPTraffic->nbDescr = strdup(&tmpBuffer[49]);
 #ifdef DEBUG
 		      traceEvent(TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
 #endif
@@ -822,14 +824,17 @@ void handleNetbios(HostTraffic *srcHost,
 	pos = 5;
 	decodeNBstring(&data[5], decodedStr);
 
-	if((decodedStr[0] != '\0') && (dstHost->nbHostName == NULL))
-	  dstHost->nbHostName = strdup(decodedStr); /* dst before src */
+	if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+	if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+
+	if((decodedStr[0] != '\0') && (dstHost->nonIPTraffic->nbHostName == NULL))
+	  dstHost->nonIPTraffic->nbHostName = strdup(decodedStr); /* dst before src */
 
 	pos = 5+(2*strlen(decodedStr))+2;
 	decodeNBstring(&data[pos], decodedStr);
 
-	if((decodedStr[0] != '\0') && (srcHost->nbHostName == NULL))
-	  srcHost->nbHostName = strdup(decodedStr);
+	if((decodedStr[0] != '\0') && (srcHost->nonIPTraffic->nbHostName == NULL))
+	  srcHost->nonIPTraffic->nbHostName = strdup(decodedStr);
       } else if((data[0] == 0x0) /* Message type: Session message */
 		&& (data[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
 #ifdef DEBUG
@@ -852,7 +857,8 @@ void handleNetbios(HostTraffic *srcHost,
 
 	  i = 65+len;
 
-	  if(srcHost->nbAccountName == NULL) srcHost->nbAccountName = strdup(&data[i]);
+	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+	  if(srcHost->nonIPTraffic->nbAccountName == NULL) srcHost->nonIPTraffic->nbAccountName = strdup(&data[i]);
 #ifdef DEBUG
 	  printf("Account Name: %s\n", &data[i]);
 #endif
@@ -861,14 +867,13 @@ void handleNetbios(HostTraffic *srcHost,
 #ifdef DEBUG
 	  printf("Domain: %s\n", &data[i]);
 #endif
-	  if(srcHost->nbDomainName == NULL) srcHost->nbDomainName = strdup(&data[i]);
+	  if(srcHost->nonIPTraffic->nbDomainName == NULL) srcHost->nonIPTraffic->nbDomainName = strdup(&data[i]);
 	  while((data[i] != 0) && (i < sizeof(data))) i++;
 	  i++;
 #ifdef DEBUG
 	  printf("OS: %s\n", &data[i]);
 #endif
-	  if(srcHost->osName == NULL)
-	    srcHost->osName = strdup(&data[i]);
+	  if(srcHost->osName == NULL) srcHost->osName = strdup(&data[i]);
 	}
       }
 

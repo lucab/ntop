@@ -781,31 +781,41 @@ int sortHostFctn(const void *_a, const void *_b) {
 		      getVendorInfo((*b)->ethAddress, 0)));
     break;
   case 6:
-    if((*a)->nbHostName != NULL)
-      nameA = (*a)->nbHostName;
-    else if((*a)->atNodeName != NULL)
-      nameA = (*a)->atNodeName;
-    else if((*a)->atNetwork != 0) {
-      if(snprintf(nameA_str, sizeof(nameA_str), "%d.%d", (*a)->atNetwork, (*a)->atNode) < 0)
+    if((*a)->nonIPTraffic == NULL) {
+      nameA = "";
+    } else {
+    if((*a)->nonIPTraffic->nbHostName != NULL)
+      nameA = (*a)->nonIPTraffic->nbHostName;
+    else if((*a)->nonIPTraffic->atNodeName != NULL)
+      nameA = (*a)->nonIPTraffic->atNodeName;
+    else if((*a)->nonIPTraffic->atNetwork != 0) {
+      if(snprintf(nameA_str, sizeof(nameA_str), "%d.%d", 
+		  (*a)->nonIPTraffic->atNetwork, (*a)->nonIPTraffic->atNode) < 0)
 	BufferTooShort();
       nameA = nameA_str;
-    } else if((*a)->ipxHostName != NULL)
-      nameA = (*a)->ipxHostName;
+    } else if((*a)->nonIPTraffic->ipxHostName != NULL)
+      nameA = (*a)->nonIPTraffic->ipxHostName;
     else
       nameA = "";
+    }
 
-    if((*b)->nbHostName != NULL)
-      nameB = (*b)->nbHostName;
-    else if((*b)->atNodeName != NULL)
-      nameB = (*b)->atNodeName;
-    else if((*a)->atNetwork != 0) {
-      if(snprintf(nameB_str, sizeof(nameB_str), "%d.%d", (*b)->atNetwork, (*b)->atNode) < 0)
+    if((*b)->nonIPTraffic == NULL) {
+      nameB = "";
+    } else {
+    if((*b)->nonIPTraffic->nbHostName != NULL)
+      nameB = (*b)->nonIPTraffic->nbHostName;
+    else if((*b)->nonIPTraffic->atNodeName != NULL)
+      nameB = (*b)->nonIPTraffic->atNodeName;
+    else if((*a)->nonIPTraffic->atNetwork != 0) {
+      if(snprintf(nameB_str, sizeof(nameB_str), "%d.%d", 
+		  (*b)->nonIPTraffic->atNetwork, (*b)->nonIPTraffic->atNode) < 0)
 	BufferTooShort();
       nameB = nameB_str;
-    } else if((*b)->ipxHostName != NULL)
-      nameB = (*b)->ipxHostName;
+    } else if((*b)->nonIPTraffic->ipxHostName != NULL)
+      nameB = (*b)->nonIPTraffic->ipxHostName;
     else
       nameB = "";
+    }
 
     return(strcasecmp(nameA, nameB));
     break;
@@ -3296,100 +3306,102 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString(buf);    
   }
 
-  if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {
-    if(el->nbAccountName) {
-      if(el->nbDomainName != NULL) {
-	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		    "%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
-		    getRowColor(), "NetBios&nbsp;Name",
-		    el->nbAccountName, el->nbHostName, el->nbDomainName,
-		    getNbNodeType(el->nbNodeType),
-		    el->nbDescr ? el->nbDescr : "") < 0)
-	  BufferTooShort();
-      } else {
-	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		    "%s@%s (%s) %s</TD></TR>\n",
-		    getRowColor(), "NetBios&nbsp;Name",
-		    el->nbAccountName, el->nbHostName,
-		    getNbNodeType(el->nbNodeType),
-		    el->nbDescr ? el->nbDescr : "") < 0)
-	  BufferTooShort();
-      }
-    } else {
-      if(el->nbDomainName != NULL) {
-	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		    "%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
-		    getRowColor(), "NetBios&nbsp;Name",
-		    el->nbHostName, el->nbDomainName,
-		    getNbNodeType(el->nbNodeType),
-		    el->nbDescr ? el->nbDescr : "") < 0)
-	  BufferTooShort();
-      } else {
-	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		    "%s (%s) %s</TD></TR>\n",
-		    getRowColor(), "NetBios&nbsp;Name",
-		    el->nbHostName,
-		    getNbNodeType(el->nbNodeType),
-		    el->nbDescr ? el->nbDescr : "") < 0)
-	  BufferTooShort();
-      }
-    }
-
-    sendString(buf);
-  } else if(el->nbHostName != NULL) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"%s&nbsp;(%s) %s</TD></TR>\n",
-		getRowColor(), "NetBios&nbsp;Name",
-		el->nbHostName, getNbNodeType(el->nbNodeType),
-		el->nbDescr ? el->nbDescr : "") < 0)
-      BufferTooShort();
-    sendString(buf);
-  }
-
-  if(el->atNetwork != 0) {
-    char *nodeName = el->atNodeName;
-
-    if(nodeName == NULL) nodeName = "";
-
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"%s&nbsp;\n",
-		getRowColor(), "AppleTalk&nbsp;Name",
-		nodeName) < 0) BufferTooShort();
-    sendString(buf);
-
-    if(el->atNodeType[0] != NULL) {
-      sendString("(");
-      for(i=0; i<MAX_NODE_TYPES; i++)
-	if(el->atNodeType[i] == NULL)
-	  break;
-	else {
-	  if(i > 0) sendString("/");
-	  sendString(el->atNodeType[i]);
+  if(el->nonIPTraffic) {
+    if((el->nonIPTraffic->nbHostName != NULL) && (el->nonIPTraffic->nbDomainName != NULL)) {
+      if(el->nonIPTraffic->nbAccountName) {
+	if(el->nonIPTraffic->nbDomainName != NULL) {
+	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		      "%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
+		      getRowColor(), "NetBios&nbsp;Name",
+		      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName,
+		      getNbNodeType(el->nonIPTraffic->nbNodeType),
+		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "") < 0)
+	    BufferTooShort();
+	} else {
+	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		      "%s@%s (%s) %s</TD></TR>\n",
+		      getRowColor(), "NetBios&nbsp;Name",
+		      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName,
+		      getNbNodeType(el->nonIPTraffic->nbNodeType),
+		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "") < 0)
+	    BufferTooShort();
 	}
+      } else {
+	if(el->nonIPTraffic->nbDomainName != NULL) {
+	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		      "%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
+		      getRowColor(), "NetBios&nbsp;Name",
+		      el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName,
+		      getNbNodeType(el->nonIPTraffic->nbNodeType),
+		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "") < 0)
+	    BufferTooShort();
+	} else {
+	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		      "%s (%s) %s</TD></TR>\n",
+		      getRowColor(), "NetBios&nbsp;Name",
+		      el->nonIPTraffic->nbHostName,
+		      getNbNodeType(el->nonIPTraffic->nbNodeType),
+		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "") < 0)
+	    BufferTooShort();
+	}
+      }
 
-      sendString(")&nbsp;");
+      sendString(buf);
+    } else if(el->nonIPTraffic->nbHostName != NULL) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s&nbsp;(%s) %s</TD></TR>\n",
+		  getRowColor(), "NetBios&nbsp;Name",
+		  el->nonIPTraffic->nbHostName, getNbNodeType(el->nonIPTraffic->nbNodeType),
+		  el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "") < 0)
+	BufferTooShort();
+      sendString(buf);
     }
 
-    if(snprintf(buf, sizeof(buf), "[%d.%d]</TD></TR>\n",
-		el->atNetwork, el->atNode) < 0)
-      BufferTooShort();
-    sendString(buf);
-  }
+    if(el->nonIPTraffic->atNetwork != 0) {
+      char *nodeName = el->nonIPTraffic->atNodeName;
 
-  if(el->ipxHostName != NULL) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>"
-		"%s&nbsp;[", getRowColor(), "IPX&nbsp;Name",
-		el->ipxHostName) < 0)
-      BufferTooShort();
-    sendString(buf);
+      if(nodeName == NULL) nodeName = "";
 
-    for(i=0; i<el->numIpxNodeTypes; i++) {
-      if(i>0) sendString("/");
-      sendString(getSAPInfo(el->ipxNodeType[i], 1));
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s&nbsp;\n",
+		  getRowColor(), "AppleTalk&nbsp;Name",
+		  nodeName) < 0) BufferTooShort();
+      sendString(buf);
+
+      if(el->nonIPTraffic->atNodeType[0] != NULL) {
+	sendString("(");
+	for(i=0; i<MAX_NODE_TYPES; i++)
+	  if(el->nonIPTraffic->atNodeType[i] == NULL)
+	    break;
+	  else {
+	    if(i > 0) sendString("/");
+	    sendString(el->nonIPTraffic->atNodeType[i]);
+	  }
+
+	sendString(")&nbsp;");
+      }
+
+      if(snprintf(buf, sizeof(buf), "[%d.%d]</TD></TR>\n",
+		  el->nonIPTraffic->atNetwork, el->nonIPTraffic->atNode) < 0)
+	BufferTooShort();
+      sendString(buf);
     }
 
-    sendString("]</TD></TR>\n");
+    if(el->nonIPTraffic->ipxHostName != NULL) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD "TD_BG" ALIGN=RIGHT>"
+		  "%s&nbsp;[", getRowColor(), "IPX&nbsp;Name",
+		  el->nonIPTraffic->ipxHostName) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      for(i=0; i<el->nonIPTraffic->numIpxNodeTypes; i++) {
+	if(i>0) sendString("/");
+	sendString(getSAPInfo(el->nonIPTraffic->ipxNodeType[i], 1));
+      }
+
+      sendString("]</TD></TR>\n");
+    }
   }
 
   if(!multicastHost(el)) {

@@ -413,10 +413,12 @@ char* makeHostLink(HostTraffic *el, short mode,
 #endif
   } else {
     if(usedEthAddress) {
-      if(el->nbHostName != NULL) {
-	strncpy(symIp, el->nbHostName, sizeof(symIp));
-      } else if(el->ipxHostName != NULL) {
-	strncpy(symIp, el->ipxHostName, sizeof(symIp));
+      if(el->nonIPTraffic) {
+	if(el->nonIPTraffic->nbHostName != NULL) {
+	  strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(symIp));
+	} else if(el->nonIPTraffic->ipxHostName != NULL) {
+	  strncpy(symIp, el->nonIPTraffic->ipxHostName, sizeof(symIp));
+	}
       }
     }
 
@@ -433,14 +435,16 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(usedEthAddress) {
     char *vendorInfo;
 
-    if(el->nbHostName != NULL) {
-      strncpy(symIp, el->nbHostName, sizeof(linkName));
-    } else if(el->ipxHostName != NULL) {
-      strncpy(symIp, el->ipxHostName, sizeof(linkName));
-    } else {
-      vendorInfo = getVendorInfo(el->ethAddress, 0);
-      if(vendorInfo[0] != '\0') {
-	sprintf(symIp, "%s%s", vendorInfo, &linkName[8]);
+    if(el->nonIPTraffic) {    
+      if(el->nonIPTraffic->nbHostName != NULL) {
+	strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(linkName));
+      } else if(el->nonIPTraffic->ipxHostName != NULL) {
+	strncpy(symIp, el->nonIPTraffic->ipxHostName, sizeof(linkName));
+      } else {
+	vendorInfo = getVendorInfo(el->ethAddress, 0);
+	if(vendorInfo[0] != '\0') {
+	  sprintf(symIp, "%s%s", vendorInfo, &linkName[8]);
+	}
       }
     }
   }

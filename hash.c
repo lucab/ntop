@@ -208,14 +208,17 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
 #endif
 
   if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
-  if(host->nbHostName != NULL)          free(host->nbHostName);
-  if(host->nbAccountName != NULL)       free(host->nbAccountName);
-  if(host->nbDomainName != NULL)        free(host->nbDomainName);
-  if(host->nbDescr != NULL)             free(host->nbDescr);
-  if(host->atNodeName != NULL)          free(host->atNodeName);
-  for(i=0; i<MAX_NODE_TYPES; i++)       if(host->atNodeType[i] != NULL) free(host->atNodeType[i]);
-  if(host->atNodeName != NULL)          free(host->atNodeName);
-  if(host->ipxHostName != NULL)         free(host->ipxHostName);
+  if(host->nonIPTraffic) {
+    if(host->nonIPTraffic->nbHostName != NULL)          free(host->nonIPTraffic->nbHostName);
+    if(host->nonIPTraffic->nbAccountName != NULL)       free(host->nonIPTraffic->nbAccountName);
+    if(host->nonIPTraffic->nbDomainName != NULL)        free(host->nonIPTraffic->nbDomainName);
+    if(host->nonIPTraffic->nbDescr != NULL)             free(host->nonIPTraffic->nbDescr);
+    if(host->nonIPTraffic->atNodeName != NULL)          free(host->nonIPTraffic->atNodeName);
+    for(i=0; i<MAX_NODE_TYPES; i++)       if(host->nonIPTraffic->atNodeType[i] != NULL) free(host->nonIPTraffic->atNodeType[i]);
+    if(host->nonIPTraffic->atNodeName != NULL)          free(host->nonIPTraffic->atNodeName);
+    if(host->nonIPTraffic->ipxHostName != NULL)         free(host->nonIPTraffic->ipxHostName);
+    free(host->nonIPTraffic);
+  }
 
   if(host->secHostPkts != NULL) {
     free(host->secHostPkts);

@@ -469,17 +469,19 @@ void updateHostName(HostTraffic *el) {
      || strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
     int i;
 
-    if(el->nbHostName != NULL) {
+    if(el->nonIPTraffic == NULL) el->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+
+    if(el->nonIPTraffic->nbHostName != NULL) {
       /*
 	Use NetBIOS name (when available) if the
 	IP address has not been resolved.
       */
       memset(el->hostSymIpAddress, 0, sizeof(el->hostSymIpAddress));
-      strcpy(el->hostSymIpAddress, el->nbHostName);
-    } else if(el->ipxHostName != NULL)
-      strcpy(el->hostSymIpAddress, el->ipxHostName);
-    else if(el->atNodeName != NULL)
-      strcpy(el->hostSymIpAddress, el->atNodeName);
+      strcpy(el->hostSymIpAddress, el->nonIPTraffic->nbHostName);
+    } else if(el->nonIPTraffic->ipxHostName != NULL)
+      strcpy(el->hostSymIpAddress, el->nonIPTraffic->ipxHostName);
+    else if(el->nonIPTraffic->atNodeName != NULL)
+      strcpy(el->hostSymIpAddress, el->nonIPTraffic->atNodeName);
 
     if(el->hostSymIpAddress[0] != '\0')
       for(i=0; el->hostSymIpAddress[i] != '\0'; i++)
@@ -2010,15 +2012,16 @@ void processPacket(u_char *_deviceId,
 		    break;
 		  }
 
-		for(i=0, found=0; i<srcHost->numIpxNodeTypes; i++)
-		  if(srcHost->ipxNodeType[i] == serverType) {
+		if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+		for(i=0, found=0; i<srcHost->nonIPTraffic->numIpxNodeTypes; i++)
+		  if(srcHost->nonIPTraffic->ipxNodeType[i] == serverType) {
 		    found = 1;
 		    break;
 		  }
 
-		if((!found) && (srcHost->numIpxNodeTypes < MAX_NODE_TYPES)) {
-		  srcHost->ipxNodeType[srcHost->numIpxNodeTypes] = serverType;
-		  srcHost->numIpxNodeTypes++;
+		if((!found) && (srcHost->nonIPTraffic->numIpxNodeTypes < MAX_NODE_TYPES)) {
+		  srcHost->nonIPTraffic->ipxNodeType[srcHost->nonIPTraffic->numIpxNodeTypes] = serverType;
+		  srcHost->nonIPTraffic->numIpxNodeTypes++;
 
 		  switch(serverType) {
 		  case 0x0007: /* Print server */
@@ -2069,7 +2072,7 @@ void processPacket(u_char *_deviceId,
 		  }
 		}
 
-		if(srcHost->ipxHostName == NULL) {
+		if(srcHost->nonIPTraffic->ipxHostName == NULL) {
 		  for(i=1; i<strlen(serverName); i++)
 		    if((serverName[i] == '_') && (serverName[i-1] == '_')) {
 		      serverName[i-1] = '\0'; /* Avoid weird names */
@@ -2078,9 +2081,9 @@ void processPacket(u_char *_deviceId,
 
 		  if(strlen(serverName) >= (MAX_HOST_SYM_NAME_LEN-1))
 		    serverName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
-		  srcHost->ipxHostName = strdup(serverName);
-		  for(i=0; srcHost->ipxHostName[i] != '\0'; i++)
-		    srcHost->ipxHostName[i] = tolower(srcHost->ipxHostName[i]);
+		  srcHost->nonIPTraffic->ipxHostName = strdup(serverName);
+		  for(i=0; srcHost->nonIPTraffic->ipxHostName[i] != '\0'; i++)
+		    srcHost->nonIPTraffic->ipxHostName[i] = tolower(srcHost->nonIPTraffic->ipxHostName[i]);
 
 		  updateHostName(srcHost);
 		}
@@ -2095,6 +2098,8 @@ void processPacket(u_char *_deviceId,
 	    } else if((llcHeader.ssap == LLCSAP_NETBIOS)
 		      && (llcHeader.dsap == LLCSAP_NETBIOS)) {
 	      /* Netbios */
+	      if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+	      if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	      incrementTrafficCounter(&srcHost->netbiosSent, length);
 	      incrementTrafficCounter(&dstHost->netbiosRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].netbiosBytes, length);
@@ -2126,9 +2131,12 @@ void processPacket(u_char *_deviceId,
 		AtDDPheader ddpHeader;
 
 		memcpy(&ddpHeader, (char*)p1, sizeof(AtDDPheader));
+		
+		if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+		if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 
-		srcHost->atNetwork = ntohs(ddpHeader.srcNet), srcHost->atNode = ddpHeader.srcNode;
-		dstHost->atNetwork = ntohs(ddpHeader.dstNet), dstHost->atNode = ddpHeader.dstNode;
+		srcHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.srcNet), srcHost->nonIPTraffic->atNode = ddpHeader.srcNode;
+		dstHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.dstNet), dstHost->nonIPTraffic->atNode = ddpHeader.dstNode;
 
 		if(ddpHeader.ddpType == 2) {
 		  /* Appletalk NBP (Name Binding Protocol) */
@@ -2155,19 +2163,21 @@ void processPacket(u_char *_deviceId,
 
 		    if(strlen(nodeName) >= (MAX_HOST_SYM_NAME_LEN-1))
 		      nodeName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
-		    srcHost->atNodeName = strdup(nodeName);
+
+		    if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+		    srcHost->nonIPTraffic->atNodeName = strdup(nodeName);
 		    updateHostName(srcHost);
 
 		    memcpy(nodeName, &p1[7+p1[5+displ]+displ], p1[6+p1[5+displ]+displ]);
 		    nodeName[p1[6+p1[5+displ]]] = '\0';
 
 		    for(i=0; i<MAX_NODE_TYPES; i++)
-		      if((srcHost->atNodeType[i] == NULL)
-			 || (strcmp(srcHost->atNodeType[i], nodeName) == 0))
+		      if((srcHost->nonIPTraffic->atNodeType[i] == NULL)
+			 || (strcmp(srcHost->nonIPTraffic->atNodeType[i], nodeName) == 0))
 			break;
 
-		    if(srcHost->atNodeType[i] == NULL)
-		      srcHost->atNodeType[i] = strdup(nodeName);
+		    if(srcHost->nonIPTraffic->atNodeType[i] == NULL)
+		      srcHost->nonIPTraffic->atNodeType[i] = strdup(nodeName);
 		  }
 		}
 

@@ -1970,6 +1970,20 @@ typedef struct storedAddress {
   time_t recordCreationTime;
 } StoredAddress;
 
+typedef struct nonIPTraffic {
+  /* NetBIOS */
+  char             nbNodeType, *nbHostName, *nbAccountName, *nbDomainName, *nbDescr;
+
+  /* AppleTalk*/
+  u_short          atNetwork;
+  u_char           atNode;
+  char             *atNodeName, *atNodeType[MAX_NODE_TYPES];
+
+  /* IPX */
+  char             *ipxHostName;
+  u_short          numIpxNodeTypes, ipxNodeType[MAX_NODE_TYPES];
+} NonIPTraffic;
+
 /* Host Traffic */
 typedef struct hostTraffic {
   u_short          hostTrafficBucket /* Index in the **hash_hostTraffic list */;
@@ -1989,17 +2003,7 @@ typedef struct hostTraffic {
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
 
-  /* NetBIOS */
-  char             nbNodeType, *nbHostName, *nbAccountName, *nbDomainName, *nbDescr;
-
-  /* AppleTalk*/
-  u_short          atNetwork;
-  u_char           atNode;
-  char             *atNodeName, *atNodeType[MAX_NODE_TYPES];
-
-  /* IPX */
-  char             *ipxHostName;
-  u_short          numIpxNodeTypes, ipxNodeType[MAX_NODE_TYPES];
+  NonIPTraffic     *nonIPTraffic;
 
   fd_set           flags;
   TrafficCounter   pktSent, pktRcvd, pktSentSession, pktRcvdSession,

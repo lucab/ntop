@@ -1459,42 +1459,43 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
 	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
 
-	  if(el->nbHostName || el->atNetwork || el->ipxHostName || displaySniffedName) {
+	  
+	  if(el->nonIPTraffic || displaySniffedName) {
 	    short numAddresses = 0;
 
-	    if(el->nbHostName && el->nbDomainName) {
-	      if((el->nbAccountName != NULL) && ((el->nbAccountName[0] != '0'))) {
-		if((el->nbDomainName != NULL) && (el->nbDomainName[0] != '0')) {
+	    if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {
+	      if((el->nonIPTraffic->nbAccountName != NULL) && ((el->nonIPTraffic->nbAccountName[0] != '0'))) {
+		if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
 		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag("Windows", 0),
-			      el->nbAccountName, el->nbHostName, el->nbDomainName) < 0)
+			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName) < 0)
 		 BufferTooShort();
 		} else {
 		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag("Windows", 0),
-			      el->nbAccountName, el->nbHostName) < 0)
+			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName) < 0)
 		    BufferTooShort();
 		}
 	      } else {
-		if((el->nbDomainName != NULL) && (el->nbDomainName[0] != '0')) {
+		if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
 		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
-			      el->nbHostName, el->nbDomainName) < 0)
+			      el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName) < 0)
 		    BufferTooShort();
 		} else {
 		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag("Windows", 0),
-			      el->nbHostName) < 0)
+			      el->nonIPTraffic->nbHostName) < 0)
 		    BufferTooShort();
 		}
 	      }
 	      sendString(buf);
 	      numAddresses++;
-	    } else if(el->nbHostName) {
+	    } else if(el->nonIPTraffic->nbHostName) {
 	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag("Windows", 0),
-			  el->nbHostName) < 0) BufferTooShort();
+			  el->nonIPTraffic->nbHostName) < 0) BufferTooShort();
 	      sendString(buf);
 	      numAddresses++;
 	    }
 
-	    if(el->nbDescr) {
-	      if(snprintf(buf, sizeof(buf), ":&nbsp;%s", el->nbDescr) < 0)
+	    if(el->nonIPTraffic->nbDescr) {
+	      if(snprintf(buf, sizeof(buf), ":&nbsp;%s", el->nonIPTraffic->nbDescr) < 0)
 		BufferTooShort();
 	      sendString(buf);
 	    }
@@ -1506,8 +1507,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	      numAddresses++;
             }
 
-	    if(el->atNetwork) {
-	      char *nodeName = el->atNodeName;
+	    if(el->nonIPTraffic->atNetwork) {
+	      char *nodeName = el->nonIPTraffic->atNodeName;
 
 	      if(numAddresses > 0) sendString("/");
 	      if(nodeName == NULL) nodeName = "";
@@ -1517,38 +1518,38 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		BufferTooShort();
 	      sendString(buf);
 
-	      if(el->atNodeType[0] != NULL) {
+	      if(el->nonIPTraffic->atNodeType[0] != NULL) {
 		sendString("(");
 		for(i=0; i<MAX_NODE_TYPES; i++)
-		  if(el->atNodeType[i] == NULL)
+		  if(el->nonIPTraffic->atNodeType[i] == NULL)
 		    break;
 		  else {
 		    if(i > 0) sendString("/");
-		    sendString(el->atNodeType[i]);
+		    sendString(el->nonIPTraffic->atNodeType[i]);
 		  }
 
 		sendString(")&nbsp;");
 	      }
 
 	      if(snprintf(buf, sizeof(buf), "[%d.%d]",
-			  el->atNetwork, el->atNode) < 0)
+			  el->nonIPTraffic->atNetwork, el->nonIPTraffic->atNode) < 0)
 		BufferTooShort();
 	      sendString(buf);
 	      numAddresses++;
 	    }
 
-	    if(el->ipxHostName) {
+	    if(el->nonIPTraffic->ipxHostName) {
 	      int numSap=0;
 
 	      if(numAddresses > 0) sendString("/");
 	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
 			  getOSFlag("Novell", 0),
-			  el->ipxHostName) < 0)
+			  el->nonIPTraffic->ipxHostName) < 0)
 		BufferTooShort();
 	      sendString(buf);
 
-	      for(i=0; i<el->numIpxNodeTypes; i++) {
-		char *str = getSAPInfo(el->ipxNodeType[i], 1);
+	      for(i=0; i<el->nonIPTraffic->numIpxNodeTypes; i++) {
+		char *str = getSAPInfo(el->nonIPTraffic->ipxNodeType[i], 1);
 		
 		if(str[0] != '\0') {
 		  if(numSap == 0)
