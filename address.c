@@ -82,6 +82,23 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
 /* ************************************ */
 
+static int validDNSName(char *name) {
+  int i, len;
+
+  if(name == NULL) 
+    return(0); 
+  else 
+    len = strlen(name);
+  
+  for(i=0; i<len; i++)
+    if(!(isalnum(name[i]) || (name[i] == '-') || (name[i] == '_')))
+      return(0);
+  
+  return(1);
+}
+
+/* ************************************ */
+
 static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
   char symAddr[MAX_LEN_SYM_HOST_NAME];
   short symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NONE;
@@ -307,6 +324,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 #endif
 	(hp != NULL) && 
         (hp->h_name != NULL) &&
+	validDNSName(hp->h_name) &&
         (strcmp(hp->h_name, addrtostr(hostAddr)) != 0)) {
       char *dotp = (char*)hp->h_name;
 
