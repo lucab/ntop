@@ -1042,8 +1042,11 @@ int main(int argc, char *argv[]) {
 
 /* Above here, the -L value wasn't set, so we use printf(). */
 
-/* create the Mutex... must be before the 1st traceEvent() call */
+/* create the logView stuff Mutex first... must be before the 1st traceEvent() call */
   createMutex(&myGlobals.logViewMutex);     /* synchronize logView buffer */
+  myGlobals.logViewNext = 0;
+  myGlobals.logView = calloc(sizeof(char*),
+                             CONST_LOG_VIEW_BUFFER_SIZE);
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s [%s] (%s build)",
 	     version, THREAD_MODE, osName, buildDate);

@@ -347,10 +347,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.packetQueueTail = 0;
 #endif
 
-  /* Log View */
-  myGlobals.logViewNext = 0;
-  myGlobals.logView = calloc(sizeof(char*),
-                             CONST_LOG_VIEW_BUFFER_SIZE);
+  /* NB: Log View is allocated in main.c so it's available for the very 1st traceEvent() */
 
   for (i = 0; i < CONST_NUM_TRANSACTION_ENTRIES; i ++)
     memset(&myGlobals.transTimeHash[i], 0, sizeof(TransactionTime));
