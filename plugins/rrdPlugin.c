@@ -513,16 +513,16 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
       printFlagedWarning(path);
       rrd_clear_error();
     }
+
+#ifdef CFG_MULTITHREADED
+    releaseMutex(&rrdMutex);
+#endif    
   } else {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     printHTMLheader("RRD Graph", 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD file)</I>");
   }
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&rrdMutex);
-#endif
 }
 
 /* ******************************* */
