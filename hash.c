@@ -464,7 +464,7 @@ void purgeIdleHosts(int actDevice) {
   if(myGlobals.rFileName != NULL) return;
 
   if(firstRun) {
-    traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: purgeIdleHosts - firstRun (mutex every %d times through the loop)\n",
+    traceEvent(TRACE_INFO, "IDLE_PURGE: purgeIdleHosts firstRun (mutex every %d times through the loop)\n",
                            MUTEX_FHS_MASK+1);
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
