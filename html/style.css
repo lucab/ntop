@@ -13,10 +13,12 @@ font-family: Helvetica, Arial, sans-serif;
 font-size: 12px;
 font-weight: bold;
 white-space: nowrap;
-background-color: #F3F3F3;
+/* background-color: #F3F3F3; */
 }
 
-table { border: 1px;}
+table { 
+
+}
 
 span.leftmenuitem
 {
@@ -26,7 +28,8 @@ font-weight: bold;
 }
 
 td
-{font-family: Helvetica, Arial, sans-serif;
+{
+font-family: Helvetica, Arial, sans-serif;
 font-size: 12px;
 }
 

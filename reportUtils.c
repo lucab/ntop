@@ -4916,36 +4916,36 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
     if(myGlobals.runningPref.disableMutexExtraInfo) {
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
-                    "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=RIGHT>%u</TD></TR>\n",
+                    "<TD ALIGN=RIGHT colspan=3>%u</TD><TD ALIGN=RIGHT>%u</TD></TR>\n",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
                     mutexId->numLocks, mutexId->numReleases);
     } else if (mutexId->lockAttemptLine > 0) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                    "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
-                    "<TD ALIGN=RIGHT>at %s %s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=RIGHT>%u</TD>"
-                    "<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>\n",
-                    mutexName,
-                    mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
-                    buf2,
-                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
-                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
-                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-                    mutexId->numLocks, mutexId->numReleases,
-                    mutexId->maxLockedDuration,
-                    mutexId->maxLockedDurationUnlockFile,
-                    mutexId->maxLockedDurationUnlockLine);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
+		      "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD>"
+		      "<TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD>"
+		      "<TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD>"
+		      "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=RIGHT>%u</TD>"
+		      "<TD ALIGN=RIGHT>%d sec</TD><TD ALIGN=RIGHT>%s:%d</TD></TR>\n",
+		      mutexName,
+		      mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
+		      buf2,
+		      mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+		      mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
+		      mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
+		      mutexId->numLocks, mutexId->numReleases,
+		      mutexId->maxLockedDuration,
+		      mutexId->maxLockedDurationUnlockFile,
+		      mutexId->maxLockedDurationUnlockLine);
     } else {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                    "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
-                    "<TD ALIGN=RIGHT>at %s %s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>&nbsp;</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
-                    "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=RIGHT>%u</TD>"
-                    "<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
+		    "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD></TD>"
+		    "<TD ALIGN=RIGHT>&nbsp;</TD>"
+		    "<TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD></TD>"
+		    "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=RIGHT>%u</TD>"
+		    "<TD ALIGN=RIGHT>%d sec</TD><TD ALIGN=RIGHT>%s:%d</TD></TR>\n",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
                     buf2,
@@ -4957,7 +4957,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                     mutexId->maxLockedDurationUnlockLine);
     }
   }
-
+  
   sendString(buf);
 }
 #endif

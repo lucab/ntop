@@ -920,15 +920,15 @@ void shutdownNtop(void) {
  */
 
 static void printInfoSectionTitle(int textPrintFlag, char* section) {
-  sendString(texthtml("\n\n", "<tr><th colspan=\"3\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\" " TH_BG ">"));
+  sendString(texthtml("\n\n", "<tr><th "DARK_BG" "TH_BG" colspan=\"3\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">"));
   sendString(section);
   sendString(texthtml("\n\n", "</th></tr>\n"));
 }
 
 static void printInfoSectionNote(int textPrintFlag, char* note) {
   if(textPrintFlag != TRUE) {
-    sendString("<tr><td colspan=\"3\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"
-               "<table "TABLE_DEFAULTS" border=\"0\" width=\"85%\" align=\"right\"><tr><td valign=\"top\">NOTE:</td>\n"
+    sendString("<tr><td "TD_BG" colspan=\"3\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"
+               "<table "TABLE_DEFAULTS" border=\"0\" width=\"85%\" align=\"right\"><tr><td "TD_BG" valign=\"top\">NOTE:</td>\n"
                "<td class=\"wrap\"><i>");
     sendString(note);
     sendString("</i></td></tr>\n</table>\n</td></tr>\n");
@@ -938,7 +938,7 @@ static void printInfoSectionNote(int textPrintFlag, char* note) {
 static void printFeatureConfigNum(int textPrintFlag, char* feature, int value) {
   char tmpBuf[32];
 
-  sendString(texthtml("", "<tr><th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
+  sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
   sendString(feature);
   sendString(texthtml(".....", "</th>\n<td "TD_BG" align=\"right\" colspan=\"2\" width=\"" xstr(CONST_INFOHTML_COL23_WIDTH) "\">"));
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%d", value);
@@ -950,7 +950,7 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
   char *tmpStr, tmpBuf[LEN_GENERAL_WORK_BUFFER];
   char *strtokState;
 
-  sendString(texthtml("", "<tr><th "TH_BG" ALIGN=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
+  sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" ALIGN=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
   sendString(feature);
   sendString(texthtml(".....", "</th>\n<td class=\"wrap\" "TD_BG" ALIGN=\"right\" colspan=\"2\" width=\"" xstr(CONST_INFOHTML_COL23_WIDTH) "\">"));
   if((status == NULL) || (status[0] == '\0')) {
@@ -975,11 +975,11 @@ static void printFeatureConfigTitle3Col(int textPrintFlag,
   if(textPrintFlag == TRUE) {
     sendString(textTitle);
   } else {
-    sendString("<tr><th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">");
+    sendString("<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">");
     sendString(c1);
-    sendString("</th>\n<th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL2_WIDTH) "\">");
+    sendString("</th>\n<th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL2_WIDTH) "\">");
     sendString(c2);
-    sendString("</th>\n<th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL3_WIDTH) "\">");
+    sendString("</th>\n<th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL3_WIDTH) "\">");
     sendString(c3);
     sendString("</th>\n</tr>\n");
   }
@@ -994,7 +994,7 @@ static void printFeatureConfigInfo3ColInt(int textPrintFlag,
 
   if((mustShow == FALSE) && (count1+count2 == 0)) { return; }
 
-  sendString(texthtml("", "<tr><th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
+  sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
   sendString(feature);
   sendString(texthtml(".....", "</th>\n<td "TD_BG" align=\"right\" width=\"" xstr(CONST_INFOHTML_COL2_WIDTH) "\">"));
   if (flag1) {
@@ -1016,7 +1016,7 @@ static void printFeatureConfigInfo3ColInt(int textPrintFlag,
 /* ******************************** */
 
 static void printParameterConfigInfo(int textPrintFlag, char* feature, char* status, char* defaultValue) {
-  sendString(texthtml("", "<tr><th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
+  sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
   sendString(feature);
   sendString(texthtml(".....", "</th>\n<td "TD_BG" align=\"right\" colspan=\"2\" width=\"" xstr(CONST_INFOHTML_COL23_WIDTH) "\">"));
   if(status == NULL) {
@@ -6338,19 +6338,19 @@ void printMutexStatusReport(int textPrintFlag) {
   if(myGlobals.runningPref.disableMutexExtraInfo) {
     sendString(texthtml("\nMutexes:\n\n",
 			  "<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
-			  "<TR><TH>Mutex Name</TH>"
-			  "<TH>State</TH>"
-			  "<TH COLSPAN=2># Locks/Releases</TH>"));
+			  "<TR><TH "TH_BG" "DARK_BG">Mutex Name</TH>"
+			  "<TH "TH_BG" "DARK_BG">State</TH>"
+			  "<TH COLSPAN=3 "TH_BG" "DARK_BG"># Locks/Releases</TH>"));
   } else {
     sendString(texthtml("\nMutexes:\n\n",
 			  "<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
-			  "<TR><TH>Mutex Name</TH>"
-			  "<TH>State</TH>"
-			  "<TH>Last Lock</TH>"
-			  "<TH>Blocked</TH>"
-			  "<TH>Last UnLock</TH>"
-			  "<TH COLSPAN=2># Locks/Releases</TH>"
-			  "<TH>Max Lock</TH></TR>"));
+			  "<TR><TH "TH_BG" "DARK_BG">Mutex Name</TH>"
+			  "<TH "TH_BG" "DARK_BG">State</TH>"
+			  "<TH COLSPAN=3 "TH_BG" "DARK_BG">Last Lock</TH>"
+			  "<TH "TH_BG" "DARK_BG">Blocked</TH>"
+			  "<TH COLSPAN=2 "TH_BG" "DARK_BG">Last UnLock</TH>"
+			  "<TH COLSPAN=2 "TH_BG" "DARK_BG"># Locks/Releases</TH>"
+			  "<TH COLSPAN=2 "TH_BG" "DARK_BG">Max Lock</TH></TR>"));
   }
 
   printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
@@ -6367,8 +6367,8 @@ void printMutexStatusReport(int textPrintFlag) {
   printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex,  "securityItemsMutex");
-  sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
 
+  sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
 }
 
 #endif
@@ -6401,8 +6401,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                       "<CENTER>\n<p>&nbsp;</p>\n"
                       "<TABLE border=\"1\" "TABLE_DEFAULTS" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"));
 
-  printInfoSectionTitle(textPrintFlag, "Basic information");
-  printFeatureConfigInfo(textPrintFlag, "ntop version", version);
+  printInfoSectionTitle(textPrintFlag, "Basic Information");
+  printFeatureConfigInfo(textPrintFlag, "ntop Version", version);
   printFeatureConfigInfo(textPrintFlag, "Configured on", configureDate);
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
   printFeatureConfigInfo(textPrintFlag, "OS", osName);
@@ -7659,8 +7659,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* *************************** */
 
-  sendString(texthtml("\n\n",
-                      "</TABLE>\n<hr>\n"));
+  sendString(texthtml("\n\n", "</TABLE>\n"));
 
   /* **************************** */
 
@@ -7672,9 +7671,9 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #endif /* CFG_MULTITHREADED */
 
   if(textPrintFlag != TRUE) {
-    sendString("<p>Click <a href=\"" CONST_TEXT_INFO_NTOP_HTML "\" title=\"Text version of this page\">"
+    sendString("<p>[ Click <a href=\"" CONST_TEXT_INFO_NTOP_HTML "\" title=\"Text version of this page\">"
 	       "here</a> for a more extensive, text version of this page, suitable for "
-	       "inclusion into a bug report!</p>\n");
+	       "inclusion into a bug report ]</p>\n");
   }
 
   sendString(texthtml("</pre>", "</CENTER>\n"));
