@@ -389,7 +389,7 @@ dnl> OPTIONAL security headers
 AC_CHECK_HEADERS(security/pam_appl.h shadow.h crypt.h)
 
 dnl> OPTIONAL MySQL
-if test ".$ac_mysql" = ".yes"; then
+if test ".$ac_disable_mysql" = ".no"; then
 AC_CHECK_HEADERS(mysql/mysql.h, MORELIBS="$MORELIBS -L/usr/lib/mysql -lmysqlclient" && AC_DEFINE(HAVE_MYSQL))
 fi
 

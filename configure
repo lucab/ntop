@@ -2816,7 +2816,7 @@ fi
 done
 
 
-if test ".$ac_mysql" = ".yes"; then
+if test ".$ac_disable_mysql" = ".no"; then
 for ac_hdr in mysql/mysql.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
