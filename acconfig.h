@@ -42,6 +42,10 @@
 /* Define if you OS lacks the getdomainname(2) function. */
 #undef NEED_GETDOMAINNAME
 
+/* Endianess checks */
+#undef NTOP_BIG_ENDIAN
+#undef NTOP_LITTLE_ENDIAN
+
 /* Define to have essential fallback. */
 #undef HAVE_UINT64_T
 #undef HAVE_U_INT64_T
