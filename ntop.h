@@ -1429,6 +1429,11 @@ typedef struct dhcpStats {
 
 /* *********************** */
 
+#ifndef ICMP_MAXTYPE
+#define ICMP_MAXTYPE            18
+#endif
+
+
 typedef struct icmpHostInfo {
   unsigned long icmpMsgSent[ICMP_MAXTYPE+1];
   unsigned long icmpMsgRcvd[ICMP_MAXTYPE+1];
