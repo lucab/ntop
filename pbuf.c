@@ -2365,7 +2365,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       http://www.synnergy.net/Archives/Papers/dethy/host-detection.txt
     */
     if((srcHostIdx == dstHostIdx)
-       && (sport == dport) && (tp->th_flags == TH_SYN)) {
+       /* && (sport == dport)  */ /* Caveat: what about Win NT 3.51 ? */
+       && (tp->th_flags == TH_SYN)) {
       if(enableSuspiciousPacketDump) {
 	traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
 		   srcHost->hostSymIpAddress, sport);
@@ -2383,7 +2384,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
 
 	if(enableSuspiciousPacketDump) {
-	  traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
+	  traceEvent(TRACE_INFO, "Host %s rejected TCP session from %s [%s:%d]<->[%s:%d] (port closed?)",
+		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress, dport,
 		     srcHost->hostSymIpAddress, sport);
 	  dumpSuspiciousPacket();
@@ -3829,8 +3831,16 @@ static void processIpPkt(const u_char *bp,
       case ICMP_TIMESTAMP:
       case ICMP_TIMESTAMPREPLY:
       case ICMP_SOURCE_QUENCH:
-	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) {
+	  dumpSuspiciousPacket();
+	}
 	break;
+      }
+
+      if(enableSuspiciousPacketDump) {
+	traceEvent(TRACE_INFO, "Detected ICMP msg (type=%d/code=%d) from %s -> %s",
+		   icmpPkt.icmp_type, icmpPkt.icmp_code,
+		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
       }
     }
 
