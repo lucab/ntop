@@ -40,6 +40,7 @@ char _wdir[256];
   extern unsigned int localnet, netmask;
 */
 
+
 char* getNwBoardMacAddress(char *deviceName); /* forward */
 
 ULONG GetHostIPAddr(); /* forward declaration */
@@ -1204,7 +1205,7 @@ void installService(int argc, char **argv)
   SC_HANDLE   schService;
   SC_HANDLE   schSCManager;
 
-  TCHAR szPath[512];
+  TCHAR szPath[512], szDescr[256];
 
   TCHAR szAppParameters[8192];
 
@@ -1243,6 +1244,21 @@ void installService(int argc, char **argv)
 
       // Close the handle to this service object
       CloseServiceHandle(schService);
+
+	/* ****************************************** */
+	  // Set the service name. Courtesy of Yuri Francalacci <yuri@ntop.org>
+      sprintf(szParamKey2, "SYSTEM\\CurrentControlSet\\Services\\%s",SZSERVICENAME);
+	snprintf(szDescr, sizeof(szDescr), "Ntop v.%s %s - Web-based network traffic monitor. http://www.ntop.org/",
+	   version, THREAD_MODE);
+
+      // Set the file value (where the message resources are located.... in this case, our runfile.)
+      if(0 != setStringValue((const unsigned char *)szDescr,
+				    strlen(szDescr) + 1,HKEY_LOCAL_MACHINE, szParamKey2,TEXT("Description")))
+	{
+	  _tprintf(TEXT("The Message File value could\nnot be assigned.\n"));
+	}
+	/* ********************************************** */
+
 
       //Make a registry key to support logging messages using the service name.
       sprintf(szParamKey2, "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\%s",SZSERVICENAME);
