@@ -221,7 +221,14 @@ rm -f config.cache
 rm -f config.log
 
 #
-# 0. prepare the package to use libtool
+# 0.
+# run 'aclocal' to create aclocal.m4 from configure.in (optionally acinclude.m4)
+#
+aclocal $ACLOCAL_FLAGS
+echo "0. aclocal.m4 ...... done"
+
+#
+# 1. prepare the package to use libtool
 #
 
 if [ -f /usr/bin/glibtoolize ]; then
@@ -236,23 +243,17 @@ if [ ! -f libtool.m4.in ]; then
   else
     cp /usr/local/share/aclocal/libtool.m4 libtool.m4.in
   fi
-  echo "0. libtool.m4.in ... done"
+  echo "1. libtool.m4.in ... done"
 fi
 
 
 #
-# 1. create local definitions for automake
+# 2. create local definitions for automake
 #
 cat acinclude.m4.in libtool.m4.in > acinclude.m4
-echo "1. acinclude.m4 .... done"
+echo "2. acinclude.m4 .... done"
 
 
-#
-# 2.
-# run 'aclocal' to create aclocal.m4 from configure.in (optionally acinclude.m4)
-#
-aclocal $ACLOCAL_FLAGS
-echo "2. aclocal.m4 ...... done"
 
 #
 # 3.
