@@ -34,6 +34,16 @@ $ gcc -lm -o prefixtablegen prefixtablegen.c
 #include <ctype.h>
 #include <math.h>
 
+/* Make this code run in more places - thanks to Chris Turbeville [turbo@verio.net] */
+/* Yeah - you will have to have run ./configure first. S'be'it ----- Burton */
+#include "../config.h"
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_NET_PPP_DEFS_H
+#include <net/ppp_defs.h>
+#endif
+
 #define QUAD2IP(a,b,c,d) ((a)<<24 | (b)<<16 | (c<<8) | (d))
 #define PREFIX2MASK(n) (~0UL<<(32-(n)))
 
