@@ -1,0 +1,8 @@
+#!/bin/sh
+
+echo "        Setting OpenBSD specific flag values"
+SO_VERSION_PATCH=.0.0
+
+# This is probably not right, but we can't seem to settle on what IS right...
+MAKE_SHARED_LIBRARY_PARM="-shared"
+
