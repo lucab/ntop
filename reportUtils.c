@@ -113,7 +113,7 @@ void formatUsageCounter(UsageCounter usageCtr,
       sendString("\n<li>");     
       sendString(makeHostLink(&el, 0, 0, 0));
     } else {
-      traceEvent(TRACE_INFO, "Unable to find serial %s", buf);
+      traceEvent(TRACE_INFO, "Unable to find serial %u", usageCtr.peersIndexes[i]);
     }
   }
   

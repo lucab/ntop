@@ -520,6 +520,7 @@ void addDefaultProtocols(void) {
   handleProtocolList("Gnutella", "6346|6347|6348|");
   handleProtocolList("Morpheus", "1214|");
   handleProtocolList("WinMX",    "6699|7730|");
+  handleProtocolList("Audiogalaxy",    "41000-41900|");
   /* handleProtocolList("Napster",  "8888|8875|"); */
 }
 

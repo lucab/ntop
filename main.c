@@ -347,10 +347,10 @@ static void usage (FILE * fp)
 /*
  * Parse the command line options
  */
-static void parseOptions(int argc, char * argv []) {
-
+static int parseOptions(int argc, char* argv []) {
+  int userSpecified = 0;
 #ifdef WIN32
-  int optind=0;
+  int optind=0;  
 #endif
 
   /*
@@ -372,8 +372,7 @@ static void parseOptions(int argc, char * argv []) {
   while((opt = getopt(argc, argv, theOpts)) != EOF) {
 #endif
     switch (opt) {
-
-    case 'a':                                     /* ntop access log path */
+    case 'a': /* ntop access log path */
       stringSanityCheck(optarg);
       myGlobals.accessLogPath = strdup(optarg);
       break;
@@ -384,7 +383,7 @@ static void parseOptions(int argc, char * argv []) {
       break;
 
       /* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
-    case 'c':                                     /* Sticky hosts = hosts that are not purged when idle */
+    case 'c': /* Sticky hosts = hosts that are not purged when idle */
       myGlobals.stickyHosts = 1;
       break;
 
@@ -487,6 +486,7 @@ static void parseOptions(int argc, char * argv []) {
 	myGlobals.groupId = pw->pw_gid;
 	endpwent();
       }
+      userSpecified = 1;
       break;
 #endif /* WIN32 */
 
@@ -639,33 +639,17 @@ static void parseOptions(int argc, char * argv []) {
 #endif
       usage(stdout);
       exit(-1);
-    }
+    }    
   }
 
-#if(0)
-
-  all other arguments could be used to specify a filter expression
-
-    ROCCO TODO: ask luca if this can be an alternative to -B option
-
-  if(argc > optind + 1)
-    {
-      fprintf (stdout, "\nWrong option(s): \" ");
-      while (optind < argc)
-	fprintf (stdout, "%s ", argv [optind ++]);
-      fprintf (stdout, "\"\n");
-      usage (stdout);
-      exit (0);
-    }
-#endif
+  return(userSpecified);
 }
 
 
 
 /* That's the meat */
 int main(int argc, char *argv[]) {
-
-  int i;
+  int i, userSpecified;
   char ifStr[196] = {0};
   time_t lastTime;
 
@@ -677,7 +661,7 @@ int main(int argc, char *argv[]) {
   /*
    * Parse command line options to the application via standard system calls
    */
-  parseOptions (argc, argv);
+  userSpecified = parseOptions(argc, argv);
 
   /*
    * check for valid parameters
@@ -812,7 +796,7 @@ int main(int argc, char *argv[]) {
       exit(-1);
     }
   } else {
-    if((geteuid() == 0) || (getegid() == 0)) {
+    if((!userSpecified) && ((geteuid() == 0) || (getegid() == 0))) {
       traceEvent(TRACE_INFO, "ERROR: For security reasons you cannot run ntop as root");
       traceEvent(TRACE_INFO, "ERROR: unless you know what you're doing.");
       traceEvent(TRACE_INFO, "ERROR: Please specify the user name using the -u option!");
