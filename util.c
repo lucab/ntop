@@ -3046,6 +3046,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
       BufferOverflow();
     if(data_data.dsize < valueLen) value[data_data.dsize] = '\0';
     free(data_data.dptr);
+    /* traceEvent(TRACE_INFO, "Read %s=%s.", key, value); */
     return(0);
   } else 
     return(-1);
@@ -3085,7 +3086,9 @@ void storePrefsValue(char *key, char *value) {
 
   if(gdbm_store(myGlobals.prefsFile, key_data, data_data, GDBM_REPLACE) != 0)
     traceEvent(TRACE_ERROR, "Error while adding %s=%s.", key, value);
-  
+  else {
+    /* traceEvent(TRACE_INFO, "Storing %s=%s.", key, value); */
+  }
 #ifdef MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);

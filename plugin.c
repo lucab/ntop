@@ -291,13 +291,14 @@ static void loadPlugin(char* dirName, char* pluginName) {
     if(snprintf(key, sizeof(key), "pluginStatus.%s", pluginInfo->pluginName) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-    if(fetchPrefsValue(key, value, sizeof(value)) == -1)
+    if(fetchPrefsValue(key, value, sizeof(value)) == -1) {
       storePrefsValue(key, pluginInfo->activeByDefault ? "1" : "0");
-    else {
-      if(strcmp(value, "1")) 
+      newFlow->pluginStatus.activePlugin = pluginInfo->activeByDefault;
+    } else {
+      if(strcmp(value, "1") == 0) 
 	newFlow->pluginStatus.activePlugin = 1;
       else
-	newFlow->pluginStatus.activePlugin = 1;
+	newFlow->pluginStatus.activePlugin = 0;
     }
 
     newFlow->next = myGlobals.flowsList;
