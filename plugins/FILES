@@ -5,8 +5,6 @@ plugins/arpPlugin.c
 plugins/icmpPlugin.c
 plugins/lastSeenPlugin.c
 plugins/nfsPlugin.c
-plugins/remoteInterface.c
-plugins/remoteInterface.h
 plugins/wapPlugin.c
 plugins/rmonPlugin.c
 plugins/rmon.h
