@@ -10,3 +10,4 @@ plugins/remoteInterface.h
 plugins/wapPlugin.c
 plugins/rmonPlugin.c
 plugins/rmon.h
+README.RMON
