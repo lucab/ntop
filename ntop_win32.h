@@ -28,6 +28,7 @@
 #endif
 
 #define HAVE_RRD
+#define HAVE_ZLIB_H
 
 /* Courtesy of Wies-Software <wies@wiessoft.de> */
 extern char* getadminpass(const char *prompt);

@@ -90,13 +90,6 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
 void initNtopGlobals(int argc, char * argv[]) {
   int i;
 
-  memset(&myGlobals, 0, sizeof(myGlobals));
-
-#ifdef MEMORY_DEBUG
-  myGlobals.allocatedMemory = 0;
-  initLeaks(); /* Don't move this below nor above */
-#endif 
-
   /*
    * Notice the program name
    */

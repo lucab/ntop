@@ -448,15 +448,20 @@ void sendStringLen(char *theString, unsigned int len) {
   else {
 #ifdef HAVE_ZLIB
     if(compressFile) {
-      int i;
-
       if(compressFileFd == NULL) {
-	sprintf(compressedFilePath, "/tmp/gzip-%d.ntop", getpid());
-	compressFileFd = gzopen(compressedFilePath, "w+");
+#ifdef WIN32
+		  strcpy(compressedFilePath, "gzip-ntop.tmp");
+#else
+		  sprintf(compressedFilePath, "/tmp/gzip-%d.ntop", getpid());
+#endif
+	compressFileFd = gzopen(compressedFilePath, "wb");
       }
 
-      for(i=0; i<len; i++)
-	gzputc(compressFileFd, theString[i]);
+      if(gzwrite(compressFileFd, theString, len) == 0) {
+	int err;
+	traceEvent(CONST_TRACE_WARNING, "WARNING: gzwrite error (%s)\n",
+		   gzerror(compressFileFd, &err));
+      }
       return;
     }
 #endif /* HAVE_ZLIB */
@@ -2173,7 +2178,12 @@ static void compressAndSendData(u_int *gzipBytesSent) {
   int len;
   char tmpStr[256];
 
-  gzseek(compressFileFd, 1L, SEEK_CUR); /* add one zero byte */
+  if(gzflush(compressFileFd, Z_FINISH) != Z_OK) {
+    int err;
+    traceEvent(CONST_TRACE_WARNING, "WARNING: gzflush error (%s)\n",
+	       gzerror(compressFileFd, &err));
+  }
+
   gzclose(compressFileFd);
 
   compressFile = 0; /* Stop compression */

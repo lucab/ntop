@@ -1329,30 +1329,6 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   free(tmpTable);
 }
 
-
-/* ******************************* */
-
-static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
-  int age;
-
-  /* return(""); */
-
-  if(myGlobals.actTime - el->firstSeen > 60*60)
-    age = 60;
-  else if (myGlobals.actTime - el->firstSeen > 30*60)
-    age = 30;
-  else if (myGlobals.actTime - el->firstSeen > 15*60)
-    age = 15;
-  else if (myGlobals.actTime - el->firstSeen > 5*60)
-    age = 5;
-  else
-    age = 0;
-  
-  snprintf(buf, bufSize, "class=\"age%dmin\"", age);
-  
-  return(buf);
-}
-
 /* ******************************* */
 
 void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {

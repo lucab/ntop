@@ -726,6 +726,8 @@ int main(int argc, char *argv[]) {
   FILE *fd;
   struct stat fileStat;
 
+  memset(&myGlobals, 0, sizeof(myGlobals));
+
   /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
 
 #ifndef MAKE_MICRO_NTOP
@@ -734,8 +736,12 @@ int main(int argc, char *argv[]) {
   printf("Wait please: ntop (micro) is coming up...\n");
 #endif
 
-#ifdef MTRACE
+#ifdef MTRACE  
   mtrace();
+#endif
+
+#ifdef MEMORY_DEBUG
+  initLeaks(); /* Don't move this below nor above */
 #endif
 
   bufLen = 0;

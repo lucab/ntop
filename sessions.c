@@ -806,7 +806,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       } else if((dport == 80 /* HTTP */) && (packetDataLength > 0)) {
 	if(theSession->bytesProtoSent.value == 0) {
 	  if ( (rcStr = (char*)malloc(packetDataLength+1)) == NULL) return;
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
 
 #ifdef HTTP_DEBUG
@@ -944,7 +944,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  char *strtokState, *row;
 
 	  rcStr = (char*)malloc(packetDataLength+1);
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
 
 	  if(strncmp(rcStr, "GET ", 4) == 0) {

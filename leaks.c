@@ -35,35 +35,35 @@
 #undef gdbm_fetch
 
 typedef struct memoryBlock {
-  void*               memoryLocation;   /* Malloc address              */
-  size_t              blockSize;        /* Block size                  */
-  char*               programLocation;  /* Program address: file, line */
-  struct memoryBlock* nextBlock;        /* Next memory block           */
+  void*               memoryLocation;       /* Malloc address              */
+  size_t              blockSize;            /* Block size                  */
+  char                programLocation[48];  /* Program address: file, line */
+  struct memoryBlock* nextBlock;            /* Next memory block           */
   short alreadyTraced;
 } MemoryBlock;
 
 static MemoryBlock *theRoot = NULL;
 static char tmpStr[255];
+static int traceAllocs = 0;
 
 unsigned int PrintMemoryBlocks(); /* Forward declaration */
 
 /* *************************************** */
 
-static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile) {
+static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lockMutex) {
   MemoryBlock *tmpBlock;
 
 #if defined(CFG_MULTITHREADED)
-  accessMutex(&myGlobals.leaksMutex, "myMalloc");
+  if(lockMutex) accessMutex(&myGlobals.leaksMutex, "myMalloc");
 #endif
 
   tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
 
   if(tmpBlock == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n",  theFile, theLine);
-
 #if defined(CFG_MULTITHREADED)
-    releaseMutex(&myGlobals.leaksMutex);
+    if(lockMutex) releaseMutex(&myGlobals.leaksMutex);
 #endif
+    traceEvent(CONST_TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n",  theFile, theLine);
     exit(-1);
   }
   
@@ -75,25 +75,24 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile) {
   if(snprintf(tmpStr, sizeof(tmpStr), "%s:%d.", theFile, theLine) < 0)
     BufferTooShort();
 
-  traceEvent(CONST_TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
+  if(traceAllocs) traceEvent(CONST_TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
 
-  tmpBlock->programLocation = strdup(tmpStr);
+  snprintf(tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
-
 #if defined(CFG_MULTITHREADED)
-  releaseMutex(&myGlobals.leaksMutex);
+  if(lockMutex) releaseMutex(&myGlobals.leaksMutex);
 #endif
 }
 
 /* ********************************* */
 
-static void* myMalloc(size_t theSize, int theLine, char* theFile) {
+static void* myMalloc(size_t theSize, int theLine, char* theFile, int lockMutex) {
   void *theMem;
 
   theMem = malloc(theSize);
   memset(theMem, 0xee, theSize); /* Fill it with garbage */
-  storePtr(theMem, theSize, theLine, theFile);
+  storePtr(theMem, theSize, theLine, theFile, lockMutex);
   return(theMem);
 }
 
@@ -101,7 +100,7 @@ static void* myMalloc(size_t theSize, int theLine, char* theFile) {
 
 static void* myCalloc(size_t numObj, size_t theSize, int theLine, char* theFile) {
   int numElems = numObj*theSize;
-  void* thePtr = myMalloc(numElems, theLine, theFile);
+  void* thePtr = myMalloc(numElems, theLine, theFile, 1);
 
   if(thePtr != NULL)
     memset(thePtr, '\0', numElems);
@@ -125,16 +124,15 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
     theScan = theScan->nextBlock;
   }
 
+  if(theScan == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d\n", 
+	       thePtr, theFile, theLine);
 #if defined(CFG_MULTITHREADED)
     releaseMutex(&myGlobals.leaksMutex);
 #endif
-
-  if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d\n", 
-	    thePtr, theFile, theLine);
     return(NULL);
   } else {    
-    theNewPtr = myMalloc(theSize, theLine, theFile);
+    theNewPtr = myMalloc(theSize, theLine, theFile, 0);
       
     if(theSize > theScan->blockSize)
       memcpy(theNewPtr, thePtr, theScan->blockSize);
@@ -142,7 +140,6 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
       memcpy(theNewPtr, thePtr, theSize);
 	
     free(theScan->memoryLocation);
-    free(theScan->programLocation);
       
     if(theScan == theRoot)
       theRoot = theRoot->nextBlock;
@@ -185,11 +182,10 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
   } else {
     myGlobals.allocatedMemory -= theScan->blockSize;
 
-    traceEvent(CONST_TRACE_INFO, "free(%d):%s  [tot=%u]",
-	       theScan->blockSize, theScan->programLocation, myGlobals.allocatedMemory);
+    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "free(%d):%s  [tot=%u]",
+			       theScan->blockSize, theScan->programLocation, myGlobals.allocatedMemory);
 
     free(theScan->memoryLocation);
-    free(theScan->programLocation);
 
     if(theScan == theRoot)
       theRoot = theRoot->nextBlock;
@@ -211,7 +207,7 @@ static char* myStrdup(char* theStr, int theLine, char* theFile) {
   char* theOut;
   int len = strlen(theStr);
   
-  theOut = (char*)myMalloc((len+1), theLine, theFile);
+  theOut = (char*)myMalloc((len+1), theLine, theFile, 1);
   strncpy(theOut, theStr, len);
   theOut[len] = '\0';
 
@@ -247,7 +243,7 @@ unsigned int PrintMemoryBlocks(void) {
 
     if(!theScan->alreadyTraced) {
       traceEvent(CONST_TRACE_INFO,"Block %5d (addr %p, size %4d): %s\n", i++, 
-	      theScan->memoryLocation, theScan->blockSize, theScan->programLocation);
+		 theScan->memoryLocation, theScan->blockSize, theScan->programLocation);
       totMem += theScan->blockSize;
     }
 
@@ -295,7 +291,7 @@ int GimmePointerInfo(void* thePtr) {
     return -1;
   } else {      
     traceEvent(CONST_TRACE_WARNING, "Block (addr %p, size %d): %s\n", theScan->memoryLocation, 
-	    theScan->blockSize, theScan->programLocation);
+	       theScan->blockSize, theScan->programLocation);
     return 0;
   }
 }
@@ -312,7 +308,7 @@ void myAddLeak(void* thePtr, int theLine, char* theFile) {
 
   if(tmpBlock == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n", 
-	    theFile, theLine);
+	       theFile, theLine);
     return;
   }
   
@@ -320,7 +316,7 @@ void myAddLeak(void* thePtr, int theLine, char* theFile) {
   tmpBlock->memoryLocation = thePtr;
   if(snprintf(tmpStr, sizeof(tmpStr), "file %s, line %d.", theFile, theLine) < 0)
     BufferTooShort();
-  tmpBlock->programLocation = strdup(tmpStr);
+  snprintf(tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
 }
@@ -341,9 +337,7 @@ void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
     traceEvent(CONST_TRACE_WARNING, "Free  block error (Ptr %p NOT allocated): %s, %d\n", 
 	       thePtr, theFile, theLine);
     return;
-  } else {
-    free(theScan->programLocation);
-    
+  } else {   
     if(theScan == theRoot)
       theRoot = theRoot->nextBlock;
     else
@@ -356,6 +350,10 @@ void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
 /* *************************************** */
 
 void initLeaks(void) {
+  myGlobals.useSyslog       = FLAG_SYSLOG_NONE;
+  myGlobals.traceLevel      = 999;
+  myGlobals.allocatedMemory = 0;  
+
 #ifdef CFG_MULTITHREADED
   createMutex(&myGlobals.leaksMutex);
 #endif
@@ -379,7 +377,7 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 	     sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
 
-  return(myMalloc(sz, line, file));
+  return(myMalloc(sz, line, file, 1));
 }
 
 /* ************************************ */
@@ -428,8 +426,8 @@ datum ntop_gdbm_firstkey(GDBM_FILE g, char* theFile, int theLine) {
   datum theData = gdbm_firstkey(g);
 
   if(theData.dptr != NULL) {
-    storePtr(theData.dptr, theData.dsize, theLine, theFile);
-    traceEvent(CONST_TRACE_INFO, "gdbm_firstkey(%s)", theData.dptr);
+    storePtr(theData.dptr, theData.dsize, theLine, theFile, 1);
+    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "gdbm_firstkey(%s:%d)", theFile, theLine);
   }
 
   return(theData);
@@ -441,8 +439,8 @@ datum ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* theFile, int theLine) {
   datum theData = gdbm_nextkey(g, d);
 
   if(theData.dptr != NULL) {
-    storePtr(theData.dptr, theData.dsize, theLine, theFile);
-    traceEvent(CONST_TRACE_INFO, "gdbm_nextkey(%s)", theData.dptr);
+    storePtr(theData.dptr, theData.dsize, theLine, theFile, 1);
+    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "gdbm_nextkey(%s)", theData.dptr);
   }
 
   return(theData);
@@ -454,8 +452,8 @@ datum ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine) {
   datum theData = gdbm_fetch(g, d);
 
   if(theData.dptr != NULL) {
-    storePtr(theData.dptr, theData.dsize, theLine, theFile);
-    traceEvent(CONST_TRACE_INFO, "gdbm_fetch(%s) %x", theData.dptr, theData.dptr);
+    storePtr(theData.dptr, theData.dsize, theLine, theFile, 1);
+    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "gdbm_fetch(%s) %x", theData.dptr, theData.dptr);
   }
 
   return(theData);
@@ -490,10 +488,10 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
          (myGlobals.disableStopcap != TRUE) ) {
-        traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
-        traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
-        traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
-        myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
+      traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
+      traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
+      traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
+      myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
     } /* else - just keep on trucking ... ouch */
   } else
     memset(thePtr, 0xee, sz); /* Fill it with garbage */
@@ -523,10 +521,10 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
          (myGlobals.disableStopcap != TRUE) ) {
-        traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
-        traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
-        traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
-        myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
+      traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
+      traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
+      traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
+      myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
     } /* else - just keep on trucking ... ouch */
   }
   
@@ -555,10 +553,10 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
          (myGlobals.disableStopcap != TRUE) ) {
-        traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
-        traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
-        traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
-        myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
+      traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
+      traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
+      traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
+      myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
     } /* else - just keep on trucking ... ouch */
   }
 
@@ -585,7 +583,7 @@ void ntop_safefree(void **ptr, char* file, int line) {
 char* ntop_safestrdup(char *ptr, char* file, int line) {  
   if(ptr == NULL) {
     traceEvent(CONST_TRACE_WARNING, "WARNING: strdup of NULL pointer @ %s:%d", file, line);
-	return(strdup(""));
+    return(strdup(""));
   } else {
     char* theOut;
     int len = strlen(ptr);

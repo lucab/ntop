@@ -1260,7 +1260,8 @@ void initDevices(char* devices) {
         strcat(workDevices, myGlobals.device[i].name);
     }
   }
-  free(myGlobals.devices);
+  
+  if(myGlobals.devices != NULL) free(myGlobals.devices);
   myGlobals.devices = workDevices;
 }
 
