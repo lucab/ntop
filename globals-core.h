@@ -76,7 +76,11 @@ extern void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen, char *ti
 extern void extractAndAppend(char *userAgent, int userAgentLen, char *title, char *input);
 extern int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen);
 extern int processVersionFile(char *buf, int bufLen);
-
+extern void setEmptySerial(HostSerial *a);
+extern FILE* checkForInputFile(char* logTag, char* descr, char* fileName, struct stat *dbStat,
+                               u_char* compressedFormat);
+extern int readInputFile(FILE* fd, char* logTag, u_char forceClose, u_char compressedFormat,
+                         int countPer, char* buf, int bufLen, int* recordsRead);
 
 /****** function declarations ***** */
 
@@ -516,7 +520,6 @@ extern pcap_t *pcap_open_dead(int linktype, int snaplen);
 extern int setSpecifiedUser(void);
 extern u_short ip2AS(HostAddr ip);
 extern u_int16_t getHostAS(HostTraffic *el);
-extern void readASs(FILE *fd);
 extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
 extern int copySerial(HostSerial *a, HostSerial *b);
@@ -836,6 +839,18 @@ int getdomainname(char *name, size_t len);
 #define CONST_LLC_S_CMD(is)   (((is) >> 10) & 0x03)
 #define CONST_LLC_IS_NR(is)   (((is) >> 1) & 0x7f)
 #define CONST_LLC_I_NS(is)    (((is) >> 9) & 0x7f)
+
+
+#ifndef IN6_IS_ADDR_MULTICAST
+#define IN6_IS_ADDR_MULTICAST(a) (((uint8_t *) (a))[0] == 0xff)
+#endif
+
+#ifndef IN6_IS_ADDR_LINKLOCAL
+#define IN6_IS_ADDR_LINKLOCAL(a) \
+        ((((uint32_t *) (a))[0] & htonl (0xffc00000))                 \
+         == htonl (0xfe800000))
+#endif
+
 
 /* ********************************************************** 
    Used in all the prints flowing from printNtopConfigInfo...

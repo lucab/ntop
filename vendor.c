@@ -389,15 +389,14 @@ char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
 /* *********************************** */
 
 void createVendorTable(struct stat *dbStat) {
-  int idx, idx2, configFileFound, numRead, numLoaded;
+  int idx, configFileFound, numRead, numLoaded;
   FILE *fd = NULL;
-  char loadFile;
   char tmpLine[LEN_GENERAL_WORK_BUFFER];
   char tmpMACkey[LEN_ETHERNET_ADDRESS_DISPLAY+1];
   char *tmpMAC, *tmpTag1, *tmpTag2, *tmpVendor, *strtokState;
   struct macInfo macInfoEntry;
   datum data_data, key_data;
-  struct stat vendorStat;
+  u_char compressedFormat;
 
 #ifdef TEST_HASHSIZE_IPXSAP
   {
@@ -471,38 +470,21 @@ void createVendorTable(struct stat *dbStat) {
 
   traceEvent(CONST_TRACE_INFO, "VENDOR: Loading MAC address table.");
   for(idx=0; macInputFiles[idx] != NULL; idx++) {
-    configFileFound = 0;
-    for(idx2=0; myGlobals.configFileDirs[idx2] != NULL; idx2++) {
-      u_char compressedFormat;
+    fd=checkForInputFile("VENDOR",
+                         "MAC address table",
+                         macInputFiles[idx], 
+                         dbStat,
+                         &compressedFormat);
+    if(fd != NULL) {
+      numLoaded=0;
+      while(readInputFile(fd,
+                          "VENDOR", 
+                          FALSE,
+                          compressedFormat,
+                          5000,
+                          tmpLine, sizeof(tmpLine),
+                          &numRead) == 0) {
 
-      loadFile = 1;
-      compressedFormat = 1;
-      snprintf(tmpLine, sizeof(tmpLine), "%s/%s.gz", myGlobals.configFileDirs[idx2], macInputFiles[idx]);
-      traceEvent(CONST_TRACE_INFO, "VENDOR: Checking '%s'", tmpLine);
-      fd = gzopen(tmpLine, "r");
-
-      if(fd == NULL) {
-	compressedFormat = 0;
-	snprintf(tmpLine, sizeof(tmpLine), "%s/%s", myGlobals.configFileDirs[idx2], macInputFiles[idx]);
-	fd = fopen(tmpLine, "r");
-      }
-
-      if(dbStat && (!stat(tmpLine, &vendorStat))) {
-	if(dbStat->st_mtime >= vendorStat.st_mtime) {
-	  traceEvent(CONST_TRACE_INFO, "VENDOR: File '%s' does not need to be reloaded", tmpLine);
-	  loadFile = 0;
-	} else
-	  traceEvent(CONST_TRACE_INFO, "VENDOR: Loading file '%s'", tmpLine);
-      }
-
-      if(fd != NULL) {
-	configFileFound = 1;
-	numRead=0;
-	numLoaded=0;
-
-	if(loadFile) {
-	  while (compressedFormat ? gzgets(fd, tmpLine, sizeof(tmpLine)) : fgets(tmpLine, sizeof(tmpLine), fd)) {
-	    numRead++;
 	    myGlobals.numVendorLookupRead++;
 	    if( (strstr(tmpLine, "(base") == NULL) &&
 		(strstr(tmpLine, "(special") == NULL) ) {
@@ -548,7 +530,8 @@ void createVendorTable(struct stat *dbStat) {
 	      key_data.dptr = tmpMACkey;
 	      key_data.dsize = strlen(tmpMACkey)+1;
 	      if(gdbm_store(myGlobals.macPrefixFile, key_data, data_data, GDBM_REPLACE) != 0) {
-		traceEvent(CONST_TRACE_WARNING, "VENDOR: unable to add record '%s': {%d, %s} - skipped",
+		traceEvent(CONST_TRACE_WARNING,
+                           "VENDOR: unable to add record '%s': {%d, %s} - skipped",
 			   tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
 	      } else {
 		numLoaded++;
@@ -560,25 +543,17 @@ void createVendorTable(struct stat *dbStat) {
 			   tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
 #endif
 	      }
-	    }
-	  }
-	}
+            }
+      } /* while ! eof */
 
-	if(compressedFormat)
-	  gzclose(fd);
-	else
-	  fclose(fd);
+      traceEvent(CONST_TRACE_INFO, "VENDOR: ...loaded %d records", numLoaded);
 
-	if(loadFile)
-	  traceEvent(CONST_TRACE_INFO, "VENDOR: ...found, %d lines, loaded %d records!", numRead, numLoaded);
-	break;
-      }
+    } else {
+      traceEvent(CONST_TRACE_INFO, 
+                 "VENDOR: ntop continues ok");
     }
 
-    if(configFileFound == 0) {
-      traceEvent(CONST_TRACE_WARNING, "VENDOR: Unable to open file '%s'", macInputFiles[idx]);
-      traceEvent(CONST_TRACE_INFO, "VENDOR: ntop continues ok, but without or with partial MAC->Vendor mapping");
-    }
-  }
+  } /* for macInputFiles */
+
 }
 

@@ -149,7 +149,9 @@ static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUS
 static char compressedFilePath[256];
 static short compressFile = 0, acceptGzEncoding;
 static FILE *compressFileFd=NULL;
+#ifdef MAKE_WITH_ZLIB
 static void compressAndSendData(u_int*);
+#endif
 
 /* ************************* */
 
@@ -347,10 +349,12 @@ static int readHTTPheader(char* theRequestedURL,
 	} else if((idxChar >= 21)
 		  && (strncasecmp(lineStr, "Authorization: Basic ", 21) == 0)) {
 	  strncpy(thePw, &lineStr[21], thePwLen-1)[thePwLen-1] = '\0';
+#ifdef MAKE_WITH_ZLIB
 	} else if((idxChar >= 17)
 		  && (strncasecmp(lineStr, "Accept-Encoding: ", 17) == 0)) {
 	  if(strstr(&lineStr[17], "gzip"))
 	    acceptGzEncoding = 1;
+#endif
 #ifdef MAKE_WITH_I18N
 	} else if((idxChar >= 17)
 		  && (strncasecmp(lineStr, "Accept-Language: ", 17) == 0)) {
@@ -474,6 +478,7 @@ void sendStringLen(char *theString, unsigned int len) {
   /* traceEvent(CONST_TRACE_INFO, "%s", theString);  */
   if(len == 0)
     return; /* Nothing to send */
+#ifdef MAKE_WITH_ZLIB
   else {
     if(compressFile) {
       if(compressFileFd == NULL) {
@@ -488,12 +493,21 @@ void sendStringLen(char *theString, unsigned int len) {
 
       if(gzwrite(compressFileFd, theString, len) == 0) {
 	int err;
-	traceEvent(CONST_TRACE_WARNING, "gzwrite error (%s)",
-		   gzerror(compressFileFd, &err));
+        char* gzErrorMsg;
+
+        gzErrorMsg = gzerror(compressFileFd, &err);
+        if(err == Z_ERRNO)
+          traceEvent(CONST_TRACE_WARNING, "gzwrite file error %s(%d)", errno, strerror(errno));
+        else 
+	  traceEvent(CONST_TRACE_WARNING, "gzwrite error %s(%d)", gzErrorMsg, err);
+
+        gzclose(compressFileFd);
+        unlink(compressedFilePath);
       }
       return;
     }
   }
+#endif /* MAKE_WITH_ZLIB */
 
   bytesSent = 0;
 
@@ -2546,8 +2560,10 @@ static int returnHTTPPage(char* pageName,
   if(*usedFork) {
     u_int gzipBytesSent = 0;
 
+#ifdef MAKE_WITH_ZLIB
     if(compressFile)
       compressAndSendData(&gzipBytesSent);
+#endif
     closeNwSocket(&myGlobals.newSock);
     logHTTPaccess(200, httpRequestedAt, gzipBytesSent);
     exit(0);
@@ -2726,6 +2742,8 @@ static int checkHTTPpassword(char *theRequestedURL,
 
 /* ************************* */
 
+#ifdef MAKE_WITH_ZLIB
+
 static void compressAndSendData(u_int *gzipBytesSent) {
   FILE *fd;
   int len;
@@ -2767,6 +2785,8 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
   unlink(compressedFilePath);
 }
+
+#endif /* MAKE_WITH_ZLIB */
 
 /* ************************* */
 
@@ -3020,9 +3040,11 @@ void handleHTTPrequest(HostAddr from) {
   if(rc == 0) {
     myGlobals.numSuccessfulRequests[myGlobals.newSock > 0]++;
 
+#ifdef MAKE_WITH_ZLIB
     if(compressFile)
       compressAndSendData(&gzipBytesSent);
     else
+#endif
       gzipBytesSent = 0;
 
     if(!usedFork)

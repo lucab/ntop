@@ -922,12 +922,22 @@
 /*
  * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
  */
-#define CONST_OSFINGERPRINT_FILE            "etter.passive.os.fp.gz"
+#define CONST_OSFINGERPRINT_FILE            "etter.passive.os.fp"
 
 /*
  * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
  */
-#define CONST_ASLIST_FILE            "AS-list.txt.gz"
+#define CONST_ASLIST_FILE                   "AS-list.txt"
+
+/*
+ * IP to CountryCode file
+ */
+#define CONST_P2C_FILE                      "p2c.opt.table"
+
+/*
+ * libgd file name
+ */
+#define CONST_LIBGD_SO                      "libgd.so"
 
 /*
  * openSSL (https://) stuff
@@ -2502,17 +2512,6 @@
 #ifdef WIN32
 #define in6_addr in_addr6
 #endif
-
-#ifndef IN6_IS_ADDR_MULTICAST
-#define IN6_IS_ADDR_MULTICAST(a) (((uint8_t *) (a))[0] == 0xff)
-#endif
-
-#ifndef IN6_IS_ADDR_LINKLOCAL
-#define IN6_IS_ADDR_LINKLOCAL(a) \
-        ((((uint32_t *) (a))[0] & htonl (0xffc00000))                 \
-         == htonl (0xfe800000))
-#endif
-
 
 #ifdef WIN32
 struct ip6_hdr

@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.99])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.99.012-2004-01-25"
+SCRIPTVER="v2.2.99.013-2004-01-28"
 
 dnl>
 dnl> generate the config header
@@ -1787,7 +1787,7 @@ if test ".${ac_disable_openssl}" != ".yes"; then
     fi
 fi
 
-if test ".${ac_disable_zlib}" != ".yes"; then
+if test ".${ac_disable_zlib}" = ".yes"; then
     echo
     echo "*******************************************************************"
     echo "*"
@@ -2471,7 +2471,7 @@ fi
 dnl> zlib:
 dnl> Test the various things we need for zlib...
 AC_MSG_CHECKING([for zlib])
-if test ".${ac_disable_zlib}" != ".yes"; then
+if test ".${ac_disable_zlib}" = ".yes"; then
     AC_MSG_WARN(Skipping at your request)
 elif test ".${ac_cv_header_zlib_h}" = ".yes"         &&
    test ".${ac_cv_lib_z_zlibVersion}" = ".yes"; then

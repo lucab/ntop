@@ -3822,6 +3822,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
   int S, N, D, T, done = 0, idx;
   char fingerprint[32];
   char *strtokState;
+  u_char compressedFormat;
 
   if((srcHost->fingerprint == NULL)       /* No fingerprint yet    */
      || (srcHost->fingerprint[0] == ':')  /* OS already calculated */
@@ -3845,17 +3846,15 @@ void setHostFingerprint(HostTraffic *srcHost) {
   T = atoi(strtok_r(NULL, ":", &strtokState)); if(!T)      goto unknownFingerprint;
   flags = strtok_r(NULL, ":", &strtokState);   if(!flags)  goto unknownFingerprint;
 
-  for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
-    char tmpStr[256];
+  fd=checkForInputFile(NULL, NULL, CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
 
-    snprintf(tmpStr, sizeof(tmpStr), "%s/%s", myGlobals.configFileDirs[idx], CONST_OSFINGERPRINT_FILE);
-    fd = gzopen(tmpStr, "r");
-
-    if(fd) {
+  if(fd != NULL) {
       char line[384];
       char *b, *d, *ptr;
+      int numLoaded=0;
+      while(readInputFile(fd, NULL, FALSE, compressedFormat, 0, 
+            line, sizeof(line), &numLoaded) == 0) {
 
-      while((!done) && gzgets(fd, line, sizeof(line)-1)) {
 	if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
 	line[strlen(line)-1] = '\0';
 
@@ -3897,15 +3896,14 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
 	if(srcHost->fingerprint) free(srcHost->fingerprint);
 	srcHost->fingerprint = strdup(&line[28]);
-	/* traceEvent(CONST_TRACE_INFO, "[%s] -> [%s]",
-	   srcHost->hostNumIpAddress, srcHost->fingerprint);*/
+
 	done = 1;
-      }
 
-      gzclose(fd);
-    }
+        readInputFile(fd, NULL, TRUE, compressedFormat, 0, NULL, 0, &numLoaded);
 
-    if(done) break;
+        break;
+
+      } /* while ! eof */
   }
 
   if(!done) {
@@ -4266,34 +4264,6 @@ u_int16_t getHostAS(HostTraffic *el) {
 }
 
 /* ************************************ */
-
-void readASs(FILE *fd) {
-  myGlobals.asHead = malloc(sizeof(IPNode));
-  memset(myGlobals.asHead, 0, sizeof(IPNode));
-  myGlobals.asHead->node.as = 0;
-  myGlobals.asMem += sizeof(IPNode);
-
-  traceEvent(CONST_TRACE_INFO, "Reading AS info...");
-
-  while(1) {
-    char buff[256];
-    char *strtokState, *as, *ip, *prefix;
-
-    if(gzeof(fd)) break;
-    if(gzgets(fd, buff, sizeof(buff)) == NULL) continue;
-
-    if((as = strtok_r(buff, ":", &strtokState)) == NULL)  continue;
-    if((ip = strtok_r(NULL, "/", &strtokState)) == NULL)  continue;
-    if((prefix = strtok_r(NULL, "\n", &strtokState)) == NULL)  continue;
-
-    addNodeInternal(xaton(ip), atoi(prefix), NULL, atoi(as));
-    myGlobals.asCount++;
-  }
-
-  traceEvent(CONST_TRACE_INFO, "Read %d ASs [Used %d KB of memory]", myGlobals.asCount, myGlobals.asMem/1024);
-}
-
-/* ********************************** */
 
 int emptySerial(HostSerial *a) {
   return(a->serialType == 0);
@@ -5121,6 +5091,12 @@ int retrieveVersionFile(char *versionSite, char *versionFile,
   extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "gdbm", gdbm_version);
 #endif
 
+  /*
+   * If we've guessed at the gd version, report it
+   */
+  if(myGlobals.gdVersionGuess != NULL)
+    extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "gd", myGlobals.gdVersionGuess);
+
 #ifdef HAVE_OPENSSL
   extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "openssl", (char*)SSLeay_version(0));
 #endif
@@ -5456,3 +5432,154 @@ void* checkVersion(void* notUsed _UNUSED_) {
 
   return(NULL);
 }
+
+/* ********************************** */
+
+int readInputFile(FILE* fd,
+                    char* logTag,
+                    u_char forceClose,
+                    u_char compressedFormat,
+                    int countPer,
+                    char* buf,
+                    int bufLen,
+                    int* recordsRead) {
+
+  /*
+   * This is a common routine to return the records from a data file, compressed or 
+   * not, which was checked for via checkForInputFile.
+   *
+   *    It returns -1 if an eof occured or zero otherwise.
+   *    The record is returned in buf.
+   *
+   * Call with forceClose TRUE to force the file to be closed...
+   */
+
+  char* getValue;
+
+  if((fd != NULL) && (forceClose == FALSE) && (buf != NULL) && (bufLen > 0)) {
+#ifdef MAKE_WITH_ZLIB
+      if(compressedFormat)
+        getValue = gzgets(fd, buf, bufLen);
+      else
+#endif
+        getValue = fgets(buf, bufLen, fd);
+
+      if(getValue != NULL) {
+        (*recordsRead)++;
+        if((countPer > 0) && ((*recordsRead) % countPer == 0))
+          traceEvent(CONST_TRACE_NOISY, "%s: ....%6d records read", logTag, (*recordsRead));
+        return(0);
+      }
+  }
+
+  /* Either EOF or forceClose */
+  traceEvent(CONST_TRACE_NOISY, "%s: Closing file", logTag);
+
+  if(fd != NULL) 
+#ifdef MAKE_WITH_ZLIB
+    if(compressedFormat)
+      gzclose(fd);
+    else
+#endif
+      fclose(fd);
+
+  if(*recordsRead > 0) 
+    traceEvent(CONST_TRACE_INFO, "%s: ...found %d lines", logTag, *recordsRead);
+
+  return(-1);
+}
+
+/* ********************************** */
+
+FILE* checkForInputFile(char* logTag,
+                      char* descr,
+                      char* fileName,
+                      struct stat *dbStat,
+                      u_char* compressedFormat) {
+
+  int configFileFound=FALSE, idx;
+  char tmpFile[LEN_GENERAL_WORK_BUFFER];
+  FILE* fd;
+
+  /*
+   * This is a common routine to look for a data file, compressed or not,
+   * in the various locations ntop looks for them.
+   *
+   *    It returns fd if a file was found.  Returned value compressedFormat tells the tale
+   *
+   *    It returns NULL if the file was not found.
+   *
+   * If you only want to reload the file if it is newer, then pass
+   * a populated stat structure in as dbStat, and it will be checked.
+   *
+   *    External to this you will not be able to tell the difference
+   *    between a NULL for not found and NULL for not newer - let this routine's
+   *    messages be enough for the user.
+   */
+  if(logTag != NULL) traceEvent(CONST_TRACE_INFO, "%s: Checking for %s file", logTag, descr);
+  for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
+
+#ifdef MAKE_WITH_ZLIB
+      compressedFormat = 1;
+      snprintf(tmpFile, sizeof(tmpFile), "%s/%s.gz", myGlobals.configFileDirs[idx], fileName);
+      if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
+      fd = gzopen(tmpFile, "r");
+      /* Note, if this code is inactive, fd is NULL from above, avoids fancy ifdefs */
+#endif
+
+      if(fd == NULL) {
+	compressedFormat = 0;
+	snprintf(tmpFile, sizeof(tmpFile), "%s/%s", myGlobals.configFileDirs[idx], fileName);
+        if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
+	fd = fopen(tmpFile, "r");
+      }
+
+      if(fd != NULL) {
+	configFileFound = TRUE;
+        if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: ...Found", logTag);
+        break;
+      }
+  } /* for */
+
+  if (configFileFound != TRUE) {
+      if(logTag != NULL)
+        traceEvent(CONST_TRACE_WARNING, "%s: Unable to open file '%s'", logTag, fileName);
+      return(NULL);
+  }
+
+  if(dbStat) {
+      struct stat checkStat;
+
+      /* Check time stamps... */
+      if(!stat(tmpFile, &checkStat)) {
+        if(dbStat->st_mtime >= checkStat.st_mtime) {
+          if(logTag != NULL)
+            traceEvent(CONST_TRACE_INFO,
+                       "%s: File '%s' does not need to be reloaded",
+                       logTag, tmpFile);
+#ifdef MAKE_WITH_ZLIB
+          if(compressedFormat)
+            gzclose(fd);
+          else
+#endif
+            fclose(fd);
+          return(NULL);
+        } else {
+          if(logTag != NULL)
+            traceEvent(CONST_TRACE_INFO, "%s: Loading newer file '%s'", logTag, tmpFile);
+        }
+      } else {
+        if(logTag != NULL) {
+          traceEvent(CONST_TRACE_WARNING,
+                     "%s: Unable to check file age %s(%d)",
+                     logTag, strerror(errno), errno);
+          traceEvent(CONST_TRACE_INFO, "%s: File '%s' loading", logTag, tmpFile);
+        }
+      }
+  } else {
+    if(logTag != NULL)
+      traceEvent(CONST_TRACE_INFO, "%s: Loading file '%s'", logTag, tmpFile);
+  }
+  return(fd);
+}
+ 

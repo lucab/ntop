@@ -1330,7 +1330,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.99.012-2004-01-25"
+SCRIPTVER="v2.2.99.013-2004-01-28"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -9958,7 +9958,7 @@ if test ".${ac_disable_openssl}" != ".yes"; then
     fi
 fi
 
-if test ".${ac_disable_zlib}" != ".yes"; then
+if test ".${ac_disable_zlib}" = ".yes"; then
     echo
     echo "*******************************************************************"
     echo "*"
@@ -24596,7 +24596,7 @@ fi
 
 echo "$as_me:$LINENO: checking for zlib" >&5
 echo $ECHO_N "checking for zlib... $ECHO_C" >&6
-if test ".${ac_disable_zlib}" != ".yes"; then
+if test ".${ac_disable_zlib}" = ".yes"; then
     { echo "$as_me:$LINENO: WARNING: Skipping at your request" >&5
 echo "$as_me: WARNING: Skipping at your request" >&2;}
 elif test ".${ac_cv_header_zlib_h}" = ".yes"         &&

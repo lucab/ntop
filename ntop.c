@@ -1054,6 +1054,9 @@ RETSIGTYPE cleanup(int signo) {
   if (myGlobals.rrdPath != NULL)
       free(myGlobals.rrdPath);
 
+  if (myGlobals.gdVersionGuess != NULL)
+      free(myGlobals.gdVersionGuess);
+
   myGlobals.endNtop = 2;
 
 #ifdef MEMORY_DEBUG

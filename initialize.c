@@ -102,6 +102,53 @@ static void setDomainName(void) {
 }
 
 
+/**********************************************************/
+/* Guess at the version of gd from various breadcrumbs in */
+/* the library (only things checkable at run-time, since  */
+/* just because it was compiled against a version doesn't */
+/* mean that's what it's running on...)                   */
+/**********************************************************/
+
+static char* gdVersionGuess(void) {
+
+#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
+
+#ifndef WIN32
+  void *gdPtr = NULL;
+#endif
+
+  gdPtr = (void*)dlopen(CONST_LIBGD_SO, RTLD_NOW); /* Load the library */
+
+  if(gdPtr == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "GDVERCHK: Unable to load gd, message is '%s'", dlerror());
+    return(NULL);
+  }
+
+#define test_gd_function(a, b)   if((void*)dlsym(gdPtr, a) != NULL) return(b);
+
+  test_gd_function("gdImageCreateFromPngPtr", "2.0.21+");
+  test_gd_function("gdFontCacheSetup", "2.0.16-2.0.20");
+  test_gd_function("gdImageSetClip", "2.0.12-2.0.15");
+  test_gd_function("gdImageCopyRotated", "2.0.8-2.0.11");
+  test_gd_function("gdImageStringFTEx", "2.0.5-2.0.7");
+  test_gd_function("gdFreeFontCache", "2.0.4");
+  test_gd_function("gdImageCreateTrueColor", "2.0.0-2.0.3");
+  test_gd_function("gdImageCreateFromJpeg", "1.8.4");
+
+#undef test_gd_function
+
+  return("1.8.3 or below");
+
+#else
+
+  return(NULL);
+
+#endif
+
+}
+
+/* ------------------------------------------------------------ */
+
 /*
  * Initialize memory/data for the protocols being monitored
  * looking at local or system wide "services" files
@@ -212,6 +259,8 @@ static void initIPCountryTable(void) {
   int idx, rc;
   u_char compressedFormat;
   struct stat statBuf;
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  FILE* fd;
 
   traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <-> Country code mapping file");
 
@@ -227,75 +276,38 @@ static void initIPCountryTable(void) {
   myGlobals.countryFlagHead->b[0]=NULL;
   myGlobals.countryFlagHead->b[1]=NULL;
 
-  for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
-    char tmpStr[256];
-    FILE *fd;
+  fd=checkForInputFile("IP2CC",
+                       "IP address <-> Country Code mapping",
+                       CONST_P2C_FILE,
+                       NULL,
+                       &compressedFormat);
+  if(fd != NULL) {
+      char *strtokState, *cc, *ip, *prefix;
+      int numRead=0;
 
-    compressedFormat = 1;
-    snprintf(tmpStr, sizeof(tmpStr), "%s/p2c.opt.table.gz", myGlobals.configFileDirs[idx]);
-    traceEvent(CONST_TRACE_NOISY, "IP2CC: ...looking for file %s", tmpStr);
-    rc = stat(tmpStr, &statBuf);
-    if(rc != 0) {
-      compressedFormat = 0;
-      snprintf(tmpStr, sizeof(tmpStr), "%s/p2c.opt.table", myGlobals.configFileDirs[idx]);
-      traceEvent(CONST_TRACE_NOISY, "IP2CC: ...looking for file %s", tmpStr);
-      rc = stat(tmpStr, &statBuf);
-    }
-
-    if(rc == 0) {
-      if(compressedFormat)
-	fd = gzopen(tmpStr, "r");
-      else
-	fd = fopen(tmpStr, "r");
-
-      if(fd!=NULL) {
-	char buff[256];
-	char *strtokState, *cc, *ip, *prefix;
-	int recordsRead=0;
-
-	traceEvent(CONST_TRACE_INFO, "IP2CC: reading file '%s'", tmpStr);
-
-	while ((compressedFormat ? gzgets(fd, buff, sizeof(buff)) : fgets(buff, sizeof(buff), fd)) != NULL) {
-
-	  if((cc=strtok_r(buff, ":", &strtokState))==NULL)
-	    continue;
-	  if((ip=strtok_r(NULL, "/", &strtokState))==NULL)
-	    continue;
-	  if((prefix=strtok_r(NULL, "\n", &strtokState))==NULL)
-	    continue;
+      while(readInputFile(fd,
+                          "IP2CC",
+                          FALSE,
+                          compressedFormat,
+                          10000,
+                          buf, sizeof(buf),
+                          &numRead) == 0) {
+	  if((cc=strtok_r(buf, ":", &strtokState))==NULL)       continue;
+	  if((ip=strtok_r(NULL, "/", &strtokState))==NULL)      continue;
+	  if((prefix=strtok_r(NULL, "\n", &strtokState))==NULL) continue;
 
 	  strtolower(cc);
 
 	  addNodeInternal(xaton(ip), atoi(prefix), cc, 0);
-	  recordsRead++;
-	}
+      }
+      myGlobals.ipCountryCount += numRead;
 
-	myGlobals.ipCountryCount += recordsRead;
-
-	if(!(compressedFormat ? gzeof(fd) : feof(fd))) {
-	  traceEvent(CONST_TRACE_ERROR, "IP2CC: problem is %s(%d)", strerror(errno), errno);
-	  traceEvent(CONST_TRACE_INFO,
-		     "IP2CC: ntop continues OK, but with %s data from file",
-		     recordsRead == 0 ? "no" : "partial");
-	}
-
-	if(compressedFormat)
-	  gzclose(fd);
-	else
-	  fclose(fd);
-	traceEvent(CONST_TRACE_NOISY, "IP2CC: ......%d records read", recordsRead);
-      } else
-	traceEvent(CONST_TRACE_WARNING, "IP2CC: unable to open file at %s", tmpStr);
-    } else
-      traceEvent(CONST_TRACE_NOISY, "IP2CC: ...does not exist");
-  }
-  if(myGlobals.ipCountryCount == 0) {
+  } else {
     traceEvent(CONST_TRACE_WARNING,
-	       "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data).\n");
+               "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data)");
     traceEvent(CONST_TRACE_INFO,
-	       "IP2CC: ntop will perform correctly but without this minor feature.\n");
-  } else
-    traceEvent(CONST_TRACE_INFO, "IP2CC: %d records read", myGlobals.ipCountryCount);
+               "IP2CC: ntop will perform correctly but without this minor feature");
+  }
 }
 
 /* ******************************* */
@@ -443,10 +455,11 @@ void resetDevice(int devIdx) {
 /* ******************************************* */
 
 void initCounters(void) {
-  int len, i;
-  FILE *fd = NULL;
-  int configFileFound = 0;
-  char buf[256];
+  int len, i, rc;
+  FILE* fd;
+  int numRead = 0;
+  u_char compressedFormat;
+  char buf[LEN_GENERAL_WORK_BUFFER];
 #ifdef MAKE_WITH_I18N
   char *workLanguage;
 #ifdef HAVE_DIRENT_H
@@ -552,54 +565,66 @@ void initCounters(void) {
 
   /*
    * Check if the ettercap passive file exists - warn if not.
+   *   Note we're only checking here, so we forceClose...
    */
-  configFileFound = 0;
-  traceEvent(CONST_TRACE_NOISY, "OSFP: Looking for OS fingerprint file, %s", CONST_OSFINGERPRINT_FILE);
+traceEvent(CONST_TRACE_NOISY, "TEMP: checkForInputFile()");
+  fd=checkForInputFile("OSFP",
+                       "OS fingerprint table",
+                       CONST_OSFINGERPRINT_FILE,
+                       NULL,
+                       &compressedFormat);
+  if(fd != NULL) {
+      readInputFile(fd,
+                    "OSFP",  
+                    TRUE,
+                    compressedFormat,
+                    0,
+                    NULL, 0,
+                    &numRead);
 
-  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
-
-    snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_OSFINGERPRINT_FILE);
-
-    traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'", buf);
-    fd = gzopen(buf, "r");
-    
-    if(fd) {
-      traceEvent(CONST_TRACE_NOISY, "OSFP: ...found!");
-      configFileFound = 1;
-      gzclose(fd);
-      break;
-    }
-  }
-  if(configFileFound == 0) {
-    traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.", CONST_OSFINGERPRINT_FILE);
-    traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without OS fingerprinting.");
-    traceEvent(CONST_TRACE_NOISY, "OSFP: If the file 'magically' appears, OS fingerprinting will automatically be enabled.");
+  } else {
+      traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without OS fingerprinting.");
+      traceEvent(CONST_TRACE_NOISY, "OSFP: If the file 'magically' appears, OS fingerprinting will automatically be enabled.");
   }
 
   /*
-   * Check if AS file exists - warn if not.
+   * Process ASN file
    */
-  configFileFound = 0;
-  traceEvent(CONST_TRACE_NOISY, "AS: Looking for ASN file, %s", CONST_ASLIST_FILE);
+  numRead=0;
+  fd=checkForInputFile("ASN",
+                       "Autonomous System Number table",
+                       CONST_ASLIST_FILE,
+                       NULL,
+                       &compressedFormat);
+  if(fd != NULL) {
+      char *strtokState, *as, *ip, *prefix;
 
-  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
-    snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_ASLIST_FILE);
+      memset(&buf, 0, sizeof(buf));
 
-    traceEvent(CONST_TRACE_NOISY, "AS: Checking '%s'", buf);
-    fd = gzopen(buf, "r");
+      myGlobals.asHead = malloc(sizeof(IPNode));
+      memset(myGlobals.asHead, 0, sizeof(IPNode));
+      myGlobals.asHead->node.as = 0;
+      myGlobals.asMem += sizeof(IPNode);
+    
+      while(readInputFile(fd,
+                          "ASN",
+                          FALSE,
+                          compressedFormat,
+                          25000,
+                          buf, sizeof(buf),
+                          &numRead) == 0) {
 
-    if(fd) {
-      traceEvent(CONST_TRACE_NOISY, "AS: ...found!");
-      configFileFound = 1;
-      readASs(fd);
-      gzclose(fd);
-      break;
-    }
-  }
+        if((as = strtok_r(buf, ":", &strtokState)) == NULL)  continue;
+        if((ip = strtok_r(NULL, "/", &strtokState)) == NULL)  continue;
+        if((prefix = strtok_r(NULL, "\n", &strtokState)) == NULL)  continue;
 
-  if(configFileFound == 0) {
-    traceEvent(CONST_TRACE_WARNING, "AS: Unable to open file '%s'.", CONST_ASLIST_FILE);
-    traceEvent(CONST_TRACE_NOISY, "AS: ntop continues ok, but without ASN information.");
+        addNodeInternal(xaton(ip), atoi(prefix), NULL, atoi(as));
+        myGlobals.asCount++;
+      }
+      traceEvent(CONST_TRACE_INFO, "ASN: ....Used %d KB of memory (%d per entry)",
+                 ((myGlobals.asMem+512)/1024), sizeof(IPNode));
+  } else {
+    traceEvent(CONST_TRACE_NOISY, "ASN: ntop continues ok, but without ASN information.");
   }
 
   /* i18n */
@@ -772,6 +797,17 @@ void initCounters(void) {
 #endif /* MAKE_WITH_I18N */
 
   initIPCountryTable();
+
+  /*
+   * Guess at the version of gd.  Since there's no gdVersion() function, we do
+   * this in an ugly way - we load the .so library and look for the entry point
+   * of functions that have been added along the way.
+   */
+  traceEvent(CONST_TRACE_INFO, "GDVERCHK: Guessing at libgd version");
+  myGlobals.gdVersionGuess = strdup(gdVersionGuess());
+  if(myGlobals.gdVersionGuess != NULL)
+    traceEvent(CONST_TRACE_INFO, "GDVERCHK: ... as %s", myGlobals.gdVersionGuess);
+
 }
 
 
