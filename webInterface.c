@@ -736,26 +736,27 @@ void switchNwInterface(int _interface) {
   
   if(myGlobals.mergeInterfaces) {
     if(snprintf(buf, sizeof(buf), "Sorry, but you cannot switch among different interfaces "
-                "unless the -M command line switch is used.\n") < 0)
+                "unless the -M command line switch is specified at run time.") < 0)
       BufferTooShort();
     sendString(buf);
   } else if((mwInterface != -1) &&
 	    ((mwInterface >= myGlobals.numDevices) || myGlobals.device[mwInterface].virtualDevice)) {
-    if(snprintf(buf, sizeof(buf), "Invalid interface selected. Sorry.\n") < 0)
+    if(snprintf(buf, sizeof(buf), "Sorry, invalid interface selected.") < 0)
       BufferTooShort();
     sendString(buf);
   } else if(myGlobals.numDevices == 1) {
-    if(snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
-		"interface [%s]. The interface switch feature is active only when "
-		"you active ntop with multiple interfaces (-i command line switch). "
-		"Sorry.\n", myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
+    if(snprintf(buf, sizeof(buf), "Sorry, you are currently capturing traffic from a single "
+		"interface [%s]. This interface switch feature is meaningful only when "
+		"your ntop instance captures traffic from multiple interfaces. "
+                "Specify additional interfaces via the -i command line switch at run time.",
+		myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferTooShort();
     sendString(buf);
   } else if(mwInterface >= 0) {
     char value[8];
     
     myGlobals.actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
-    if(snprintf(buf, sizeof(buf), "The current interface is now [%s].\n",
+    if(snprintf(buf, sizeof(buf), "The current interface is now [%s].",
 		myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferTooShort();
     sendString(buf);

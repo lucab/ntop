@@ -978,8 +978,8 @@ static int checkURLsecurity(char *url) {
   char *workURL;
 
 #ifdef URL_DEBUG
-    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: RAW url is '%s'", url);
 #endif
+    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: RAW url is '%s'", url);
 
   /*
     Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>
@@ -2115,26 +2115,26 @@ static int returnHTTPPage(char* pageName,
       if(sortedColumn == 0) { sortedColumn = 1; }
       printFCSessions(myGlobals.actualReportDeviceId, sortedColumn, revertOrder,
                       pageNum, pageName, NULL);
-    } else if (strncasecmp(pageName, CONST_SCSI_NET_STAT_BYTES_HTML,
-                       strlen(CONST_SCSI_NET_STAT_BYTES_HTML)) == 0) {
+    } else if (strncasecmp(pageName, CONST_SCSI_BYTES_HTML,
+                       strlen(CONST_SCSI_BYTES_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printScsiSessionBytes(myGlobals.actualReportDeviceId, sortedColumn,
                             revertOrder, pageNum, pageName, NULL);
-    } else if(strncasecmp(pageName, CONST_SCSI_NET_STAT_TIMES_HTML,
-                      strlen(CONST_SCSI_NET_STAT_TIMES_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_SCSI_TIMES_HTML,
+                      strlen(CONST_SCSI_TIMES_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printScsiSessionTimes (myGlobals.actualReportDeviceId, sortedColumn,
                              revertOrder, pageNum, pageName, NULL);
-    } else if(strncasecmp(pageName, CONST_SCSI_NET_STAT_STATUS_HTML,
-                      strlen(CONST_SCSI_NET_STAT_STATUS_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_SCSI_STATUS_HTML,
+                      strlen(CONST_SCSI_STATUS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printScsiSessionStatusInfo (myGlobals.actualReportDeviceId, sortedColumn,
                                   revertOrder, pageNum, pageName, NULL);
-    } else if(strncasecmp(pageName, CONST_SCSI_NET_STAT_TM_HTML,
-                      strlen(CONST_SCSI_NET_STAT_TM_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_SCSI_TM_HTML,
+                      strlen(CONST_SCSI_TM_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printScsiSessionTmInfo (myGlobals.actualReportDeviceId, sortedColumn, revertOrder,

@@ -5667,7 +5667,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
         qsort (tmpTable, numSessions, sizeof (ScsiSessionSortEntry), cmpScsiSessionsFctn);
 
         if (el == NULL) {
-            if (strcmp (url, CONST_SCSI_NET_STAT_BYTES_HTML) == 0) {
+            if (strcmp (url, CONST_SCSI_BYTES_HTML) == 0) {
                 if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
                     BufferTooShort();
                 if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url) < 0)
@@ -6038,7 +6038,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
         qsort (tmpTable, numSessions, sizeof (ScsiSessionSortEntry), cmpScsiSessionsFctn);
 
         if (el == NULL) {
-            if (strcmp (url, CONST_SCSI_NET_STAT_TIMES_HTML) == 0) {
+            if (strcmp (url, CONST_SCSI_TIMES_HTML) == 0) {
                 if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
                     BufferTooShort();
                 if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url) < 0)
@@ -6337,7 +6337,7 @@ int printScsiSessionStatusInfo (int actualDeviceId, int sortedColumn,
         qsort (tmpTable, numSessions, sizeof (ScsiSessionSortEntry), cmpScsiSessionsFctn);
 
         if (el == NULL) {
-            if (strcmp (url, CONST_SCSI_NET_STAT_STATUS_HTML) == 0) {
+            if (strcmp (url, CONST_SCSI_STATUS_HTML) == 0) {
                 if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
                     BufferTooShort();
                 if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url) < 0)
@@ -6594,7 +6594,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
         qsort (tmpTable, numSessions, sizeof (ScsiSessionSortEntry), cmpScsiSessionsFctn);
 
         if (el == NULL) {
-            if (strcmp (url, CONST_SCSI_NET_STAT_TM_HTML) == 0) {
+            if (strcmp (url, CONST_SCSI_TM_HTML) == 0) {
                 if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
                     BufferTooShort();
                 if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url) < 0)
