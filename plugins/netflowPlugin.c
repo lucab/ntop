@@ -519,7 +519,11 @@ static int setNetFlowInSocket() {
 	       myGlobals.netFlowInPort);
   }
 
-  if((myGlobals.netFlowInPort > 0) &&(myGlobals.netFlowDeviceId == -1)) {
+  if(((myGlobals.netFlowInPort > 0) && (myGlobals.netFlowDeviceId == -1))
+#ifdef DEBUG_FLOWS
+     || 1
+#endif
+     ) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if(!strcmp(myGlobals.device[i].name, NETFLOW_DEVICE_NAME)) {
         myGlobals.netFlowDeviceId = i;
@@ -543,6 +547,10 @@ static int setNetFlowInSocket() {
     setNetFlowInterfaceMatrix();
   }
 
+  /*
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: virtual deviceId %d", 
+	     myGlobals.netFlowDeviceId);
+  */
   myGlobals.mergeInterfaces = 0; /* Use different devices */
 
   return(0);
@@ -973,7 +981,6 @@ static void dissectFlow(char *buffer, int bufferLen) {
   memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);
   flowVersion = ntohs(the5Record.flowHeader.version);
 
-
 #ifdef DEBUG_FLOWS
   traceEvent(CONST_TRACE_INFO, "NETFLOW: +++++++ version=%d",  flowVersion);
 #endif
@@ -1024,12 +1031,34 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	the5Record.flowRecord[i].tcp_flags = the7Record.flowRecord[i].tcp_flags;
 	/* rest of flowRecord will not be used */
       } else {
+	/* 
+	   Some NetFlow v1 implementations (e.g. Extreme Networks) are 
+	   limited and most of the NetFlow fields are empty. In particular
+	   the following fields are empty:
+	   - input
+	   - output
+	   - dOctets
+	   - first
+	   - last
+	   - tos
+	   - tcp_flags
+
+	   
+	   In this case we add a patch for filling some of the fields
+	   in order to let ntop digest this flow.
+	*/
+
 	the5Record.flowRecord[i].srcaddr   = the1Record.flowRecord[i].srcaddr;
 	the5Record.flowRecord[i].dstaddr   = the1Record.flowRecord[i].dstaddr;
 	the5Record.flowRecord[i].srcport   = the1Record.flowRecord[i].srcport;
 	the5Record.flowRecord[i].dstport   = the1Record.flowRecord[i].dstport;
 	the5Record.flowRecord[i].dPkts     = the1Record.flowRecord[i].dPkts;
-	the5Record.flowRecord[i].dOctets   = the1Record.flowRecord[i].dOctets;
+	if(ntohl(the1Record.flowRecord[i].dOctets) == 0) {
+	  /* We assume that all packets are 512 bytes long */
+	  the5Record.flowRecord[i].dOctets   = htonl(ntohl(the1Record.flowRecord[i].dPkts)*512);
+	} else
+	  the5Record.flowRecord[i].dOctets   = the1Record.flowRecord[i].dOctets;
+	
 	the5Record.flowRecord[i].prot      = the1Record.flowRecord[i].prot;
 	the5Record.flowRecord[i].tos       = the1Record.flowRecord[i].tos;
 	the5Record.flowRecord[i].First     = the1Record.flowRecord[i].First;
