@@ -2496,11 +2496,15 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(el->hostSymIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host"
-		" <A HREF=http://%s/>%s %s</A>\n", el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
+		" <A HREF=http://%s/ TARGET=\"_blank\" "
+                "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n", 
+                el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
       BufferTooShort();
   } else if(el->hostNumIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host"
-		" <A HREF=http://%s/>%s %s</A>\n", el->hostNumIpAddress, el->hostNumIpAddress, buf1) < 0)
+		" <A HREF=http://%s/ TARGET=\"_blank\" "
+                "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n", 
+                el->hostNumIpAddress, el->hostNumIpAddress, buf1) < 0)
       BufferTooShort();
   } else {
     if(snprintf(buf, sizeof(buf), "Info about host %s",	el->ethAddressString) < 0)
