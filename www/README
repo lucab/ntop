@@ -9,10 +9,10 @@ PHP and Perl are supported) your application can access
 two URLs
 
 (1) dumpData.html
-http://<ntop host>:<ntop port>/dumpData.html?language=<perl|php>
+http://<ntop host>:<ntop port>/dumpData.html?language=<perl|php|xml>
 
 (2) dumpTrafficData.html
-http://<ntop host>:<ntop port>/dumpTrafficData.html?language=<perl|php>
+http://<ntop host>:<ntop port>/dumpTrafficData.html?language=<perl|php|xml>
 
 URL (1) will define the %hash array that contains information about 
 the active hosts.
