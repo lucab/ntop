@@ -725,20 +725,25 @@ void purgeIdleHosts(int actDevice) {
 /* **************************************************** */
 
 void setHostSerial(HostTraffic *el) {
-    if (isFcHost (el)) {
-        if (el->hostNumFcAddress[0] != '\0') {
-            el->hostSerial.serialType = SERIAL_FC;
-            el->hostSerial.value.fcSerial.fcAddress.domain = el->hostFcAddress.domain;
-            el->hostSerial.value.fcSerial.fcAddress.area = el->hostFcAddress.area;
-            el->hostSerial.value.fcSerial.fcAddress.port = el->hostFcAddress.port;
-            el->hostSerial.value.fcSerial.vsanId = el->vsanId;
-        }
-        else {
-            traceEvent (CONST_TRACE_ERROR, "setHostSerial: Received NULL FC"
-                        "Address entry\n");
-        }
+
+  /* Nothing to do */
+  if(el->hostSerial.serialType != SERIAL_NONE)
+    return;
+
+  if(isFcHost(el)) {
+    if (el->hostNumFcAddress[0] != '\0') {
+      el->hostSerial.serialType = SERIAL_FC;
+      el->hostSerial.value.fcSerial.fcAddress.domain = el->hostFcAddress.domain;
+      el->hostSerial.value.fcSerial.fcAddress.area = el->hostFcAddress.area;
+      el->hostSerial.value.fcSerial.fcAddress.port = el->hostFcAddress.port;
+      el->hostSerial.value.fcSerial.vsanId = el->vsanId;
     }
-    else if (el->hostNumIpAddress[0] == '\0') {
+    else {
+      traceEvent (CONST_TRACE_ERROR, "setHostSerial: Received NULL FC"
+		  "Address entry\n");
+    }
+  }
+  else if (el->hostNumIpAddress[0] == '\0') {
     el->hostSerial.serialType = SERIAL_MAC;
     memcpy(&el->hostSerial.value.ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS);
   } else {
@@ -747,7 +752,7 @@ void setHostSerial(HostTraffic *el) {
     }else if(el->hostIpAddress.hostFamily == AF_INET6){
       el->hostSerial.serialType = SERIAL_IPV6;
     }
-    addrcpy(&el->hostSerial.value.ipAddress,&el->hostIpAddress);
+    addrcpy(&el->hostSerial.value.ipAddress, &el->hostIpAddress);
   }
 }
 

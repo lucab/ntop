@@ -237,58 +237,28 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
 			      HostTraffic *receiver, HostAddr *dstAddr,
 			      int actualDeviceId) {
   if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
-      if ((sender != NULL) && (sender->l2Family == HOST_TRAFFIC_AF_FC) &&
-          (strncasecmp (sender->hostNumFcAddress, FC_FAB_CTLR_ADDR,
-                        strlen (FC_FAB_CTLR_ADDR)) == 0)) {
-          /* This is normal. Return without warning */
-          return;
-      }
-      traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (0x%X, 0x%X)",
-                 sender, receiver);
+    if ((sender != NULL) && (sender->l2Family == HOST_TRAFFIC_AF_FC) &&
+	(strncasecmp (sender->hostNumFcAddress, FC_FAB_CTLR_ADDR,
+		      strlen (FC_FAB_CTLR_ADDR)) == 0)) {
+      /* This is normal. Return without warning */
+      return;
+    }
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (0x%X, 0x%X)",
+	       sender, receiver);
     return;
   }
+
   if ((sender->hostNumFcAddress[0] != '\0') && (receiver->hostNumFcAddress[0] != '\0')) {
-      sender->totContactedSentPeers += incrementUsageCounter(&sender->contactedSentPeers,
-                                                             receiver, actualDeviceId);
-      receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers,
-                                                               sender, actualDeviceId);
-  }
-      
-  else if(sender != myGlobals.otherHostEntry) {
-    HostTraffic *elPtr, el;
+    sender->totContactedSentPeers += incrementUsageCounter(&sender->contactedSentPeers,
+							   receiver, actualDeviceId);
+    receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers,
+							     sender, actualDeviceId);
+  } else if((sender != myGlobals.otherHostEntry) && (receiver != myGlobals.otherHostEntry)) {
+    /* The statements below have no effect if the serial has been already computed */
+    setHostSerial(sender); setHostSerial(receiver);
 
-    if(receiver != myGlobals.otherHostEntry)
-      elPtr = receiver;
-    else {
-      elPtr = &el;
-      memset(elPtr, 0, sizeof(HostTraffic));
-      addrcpy(&elPtr->hostIpAddress, dstAddr);
-      
-      if(myGlobals.numericFlag == 0)
-	ipaddr2str(elPtr->hostIpAddress, 0);
-      elPtr->hostNumIpAddress[0] = '1'; /* Trick */
-      setHostSerial(elPtr);
-    }
-
-    sender->totContactedSentPeers += incrementUsageCounter(&sender->contactedSentPeers, elPtr, actualDeviceId);
-  }
-
-  if(receiver != myGlobals.otherHostEntry) {
-    HostTraffic *elPtr, el;
-
-    if(sender != myGlobals.otherHostEntry)
-      elPtr = sender;
-    else {
-      elPtr = &el;
-      memset(elPtr, 0, sizeof(HostTraffic));
-      addrcpy(&elPtr->hostIpAddress, srcAddr);
-      if(myGlobals.numericFlag == 0)
-	ipaddr2str(elPtr->hostIpAddress, 0);
-      elPtr->hostNumIpAddress[0] = '1'; /* Trick */
-      setHostSerial(elPtr);
-    }
-
-    receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers, elPtr, actualDeviceId);
+    sender->totContactedSentPeers   += incrementUsageCounter(&sender->contactedSentPeers, receiver, actualDeviceId);
+    receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers, sender, actualDeviceId);
   }
 }
 

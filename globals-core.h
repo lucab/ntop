@@ -331,6 +331,7 @@ extern int isInitialFtpData(char* packetData);
 extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
 
 /* util.c */
+extern void setEmptySerial(HostSerial *a);
 extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
 			       u_short *numNetworks, char *localAddresses, 
 			       int localAddressesLen, int flagWhat);
