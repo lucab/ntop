@@ -1930,9 +1930,9 @@ static PluginInfo sFlowPluginInfo[] = {
 
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
-PluginInfo* sFlowPluginEntryFctn(void)
+PluginInfo* sflowPluginEntryFctn(void)
 #else
-     PluginInfo* PluginEntryFctn(void)
+PluginInfo* PluginEntryFctn(void)
 #endif
 {
   traceEvent(TRACE_INFO, "Welcome to %s. (C) 2002 by Luca Deri.\n",
