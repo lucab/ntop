@@ -670,6 +670,11 @@ AC_ARG_ENABLE(ignoresigpipe,
               ac_enable_ignoresigpipe="yes",
               ac_enable_ignoresigpipe="no")
 
+AC_ARG_ENABLE(snmp,
+              [  --disable-snmp              Disable SNMP support [[default=enabled]]],
+              ac_disable_snmp="yes",
+              ac_disable_snmp="no")
+
 AC_ARG_ENABLE(i18n,
               [  --enable-i18n               Enable (limited) internationalization [[default=disabled]]],
               ac_enable_i18n="yes",
@@ -2557,6 +2562,22 @@ else
 fi
 
 dnl>
+dnl> SNMP Support
+dnl>
+if test ".${ac_disable_snmp}" != ".yes"; then
+ AC_CHECK_HEADERS(net-snmp/net-snmp-config.h)
+ AC_MSG_CHECKING([SNMP])
+ if test "x$ac_cv_header_net_snmp_net_snmp_config_h" = "xyes"; then
+   AC_DEFINE_UNQUOTED(HAVE_SNMP, 1, [SNMP is supported])
+   SNMP_LIBS=`net-snmp-config --agent-libs`
+   AC_MSG_RESULT(yes)
+   AC_DEFINE_UNQUOTED(MAKE_WITH_SNMP, 1, [SNMP is available])
+ else
+   AC_MSG_RESULT(no)
+ fi
+fi
+
+dnl>
 dnl> SCTP - RFC 3286
 dnl>
 AC_MSG_CHECKING([sctp])
@@ -2977,6 +2998,7 @@ AC_SUBST(DLLTOOL)
 AC_SUBST(DYN_FLAGS)
 AC_SUBST(EXEEXT)
 AC_SUBST(INCS)
+AC_SUBST(SNMP_LIBS)
 AC_SUBST(LIBTOOL_DEPS)
 AC_SUBST(MAKE_SHARED_LIBRARY_PARM)
 AC_SUBST(NTOP_VERSION_EXTRA)

@@ -343,6 +343,16 @@
 /* Define to 1 if you have the <net/route.h> header file. */
 #undef HAVE_NET_ROUTE_H
 
+/* Define to 1 if you have the <net-snmp/agent/net-snmp-agent-includes.h>
+   header file. */
+#undef HAVE_NET_SNMP_AGENT_NET_SNMP_AGENT_INCLUDES_H
+
+/* Define to 1 if you have the <net-snmp/net-snmp-config.h> header file. */
+#undef HAVE_NET_SNMP_NET_SNMP_CONFIG_H
+
+/* Define to 1 if you have the <net-snmp/net-snmp-includes.h> header file. */
+#undef HAVE_NET_SNMP_NET_SNMP_INCLUDES_H
+
 /* OPENSSL is available */
 #undef HAVE_OPENSSL
 
@@ -429,6 +439,9 @@
 
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
+
+/* SNMP is supported */
+#undef HAVE_SNMP
 
 /* Define to 1 if you have the `snprintf' function. */
 #undef HAVE_SNPRINTF

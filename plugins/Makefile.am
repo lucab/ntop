@@ -48,6 +48,7 @@ noinst_PROGRAMS = \
                   netflowPlugin.so \
                   pdaPlugin.so \
                   rrdPlugin.so \
+                  snmpPlugin.so \
                   sflowPlugin.so \
                   xmldumpPlugin.so
 
@@ -57,6 +58,7 @@ lib_LTLIBRARIES = \
                   libnetflowPlugin.la \
                   libpdaPlugin.la \
                   librrdPlugin.la \
+                  libsnmpPlugin.la \
                   libsflowPlugin.la \
                   libxmldumpPlugin.la
 
@@ -75,6 +77,10 @@ libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 librrdPlugin_la_LIBADD = -L../myrrd -lmyrrd
+
+libsnmpPlugin_la_SOURCES = snmpPlugin.c
+libsnmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libsnmpPlugin_la_LIBADD = @SNMP_LIBS@
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -117,6 +123,12 @@ pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 
 rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
+
+.libs/libsnmpPlugin.so@SO_VERSION_PATCH@:
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsnmpPlugin.so@SO_VERSION_PATCH@ snmpPlugin.o
+
+snmpPlugin.so$(EXEEXT): .libs/libsnmpPlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/libsnmpPlugin.so snmpPlugin.so
 
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
