@@ -351,15 +351,17 @@ dnl>
         LIBS="-L. -lgcc ${LIBS}"
 
 dnl>    To link against the getmsg system call you must import the /lib/pse.exp
-        CFLAGS=
         CCLD="cc -bI:/lib/pse.exp"
+
         ;;
 
     *-ibm-aix4.*:cc* )
 
+        echo "Oh no!  *cough* AIX *cough* without GCC!  Me poor!"
+
         # To link against the getmsg system call you must import the /lib/pse.exp
-        CFLAGS=-g
-        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
+dnl>        CFLAGS=
+dnl>        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
 
         ;;
 
@@ -1038,10 +1040,6 @@ AC_SUBST(PLUGINS)
 AC_SUBST(INTOP)
 AC_SUBST(REMOTEINTERFACE)
 
-AC_SUBST(AS)
-AC_SUBST(DLLTOOL)
-AC_SUBST(OBJDUMP)
-
 dnl>
 dnl> ntops directories
 dnl>
@@ -1085,6 +1083,7 @@ AC_OUTPUT([
 Makefile
 intop/Makefile
 plugins/Makefile
+plugins/pep/Makefile
 remoteInterfaceAPI/Makefile
 remoteInterfaceAPI/CPP/Makefile
 remoteInterfaceAPI/utils/Makefile
