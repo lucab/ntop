@@ -24,24 +24,24 @@
 
 /*
 
-       Plugin History
+Plugin History
 
-       1.0     Initial release
-       1.0.1   Added Flows
-       1.0.2   Added Matrix
-       1.0.3
-       2.0     Rolled major version due to new interface parameter.
-       2.1     Added tests/creates for rrd and subdirectories, fixed timer,
-               --reuse-rrd-graphics etc.
-       2.1.1   Fixed hosts / interface bug (Luca)
-       2.1.2   Added status message
-       2.2     Version roll (preparatory) for ntop 2.2
-       2.2a    Multiple RRAs
-       2.2b    Large rrd population option
+1.0     Initial release
+1.0.1   Added Flows
+1.0.2   Added Matrix
+1.0.3
+2.0     Rolled major version due to new interface parameter.
+2.1     Added tests/creates for rrd and subdirectories, fixed timer,
+--reuse-rrd-graphics etc.
+2.1.1   Fixed hosts / interface bug (Luca)
+2.1.2   Added status message
+2.2     Version roll (preparatory) for ntop 2.2
+2.2a    Multiple RRAs
+2.2b    Large rrd population option
 
-   Remember, there are TWO paths into this - one is through the main loop,
-   if the plugin is active, the other is through the http function if the 
-   plugin is NOT active.  So initialize stuff in BOTH places!
+Remember, there are TWO paths into this - one is through the main loop,
+if the plugin is active, the other is through the http function if the 
+plugin is NOT active.  So initialize stuff in BOTH places!
 */
 
 static const char *rrd_subdirs[] =
@@ -54,6 +54,9 @@ static const char *rrd_subdirs[] =
 #include "globals-report.h"
 
 static void setPluginStatus(char * status);
+#ifdef CFG_MULTITHREADED
+static PthreadMutex rrdMutex;
+#endif
  
 #ifdef WIN32
 int optind, opterr;
@@ -163,8 +166,8 @@ void mkdir_p(char *path) {
   int i, rc;
 
   if (path == NULL) {
-      traceEvent(CONST_TRACE_NOISY, "RRD: mkdir(null) skipped");
-      return;
+    traceEvent(CONST_TRACE_NOISY, "RRD: mkdir(null) skipped");
+    return;
   }
 
 #ifdef WIN32
@@ -180,10 +183,10 @@ void mkdir_p(char *path) {
 #endif
       rc = _mkdir(path);
       if ((rc != 0) && (errno != EEXIST) ) 
-          traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
-                     path,
-                     errno,
-                     strerror(errno));
+	traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
+		   path,
+		   errno,
+		   strerror(errno));
       path[i] = CONST_PATH_SEP;
     }
 
@@ -192,10 +195,10 @@ void mkdir_p(char *path) {
 #endif
   _mkdir(path);
   if ((rc != 0) && (errno != EEXIST) )
-      traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
-                 path,
-                 errno,
-                 strerror(errno));
+    traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
+	       path,
+	       errno,
+	       strerror(errno));
 }
 
 /* ******************************************* */
@@ -236,11 +239,18 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   optind=0; /* reset gnu getopt */
   opterr=0; /* no error messages */
 
+#ifdef CFG_MULTITHREADED
+  accessMutex(&rrdMutex, "rrd_fetch");
+#endif
+
   rc = rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data);
 
-  if(rc == -1) {
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&rrdMutex);
+#endif
+
+  if(rc == -1)
     return(-1);
-  }
 
   datai  = data, _total = 0;
 
@@ -416,45 +426,49 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
   rrdGraphicRequests++;
 
   if(stat(path, &statbuf) == 0) {
-      argv[argc++] = "rrd_graph";
-      argv[argc++] = fname;
-      argv[argc++] = "--lazy";
-      argv[argc++] = "--imgformat";
-      argv[argc++] = "PNG";
-      argv[argc++] = "--vertical-label";
-      argv[argc++] = label;
-      argv[argc++] = "--start";
-      argv[argc++] = startTime;
-      argv[argc++] = "--end";
-      argv[argc++] = endTime;	
+    argv[argc++] = "rrd_graph";
+    argv[argc++] = fname;
+    argv[argc++] = "--lazy";
+    argv[argc++] = "--imgformat";
+    argv[argc++] = "PNG";
+    argv[argc++] = "--vertical-label";
+    argv[argc++] = label;
+    argv[argc++] = "--start";
+    argv[argc++] = startTime;
+    argv[argc++] = "--end";
+    argv[argc++] = endTime;	
 #ifdef WIN32
-      revertDoubleColumn(path);
+    revertDoubleColumn(path);
 #endif	
-      snprintf(buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
-      argv[argc++] = buf;
-      snprintf(buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle);
-      argv[argc++] = buf1;
-      argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s";
-      argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
-      argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
-      argv[argc++] = "GPRINT:ctr:LAST:Current\\: %3.1lf%s";
+    snprintf(buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
+    argv[argc++] = buf;
+    snprintf(buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle);
+    argv[argc++] = buf1;
+    argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s";
+    argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
+    argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
+    argv[argc++] = "GPRINT:ctr:LAST:Current\\: %3.1lf%s";
 
 #if RRD_DEBUG >= 3
-      for (x = 0; x < argc; x++)
-	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+    for (x = 0; x < argc; x++)
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
 #endif
 
-      optind=0; /* reset gnu getopt */
-      opterr=0; /* no error messages */
+    optind=0; /* reset gnu getopt */
+    opterr=0; /* no error messages */
 
-	  rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+#ifdef CFG_MULTITHREADED
+    accessMutex(&rrdMutex, "rrd_graph");
+#endif
 
-      calfree();
+    rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+
+    calfree();
 
     if(rc == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0);
       sendGraphFile(fname, 0);
-	  unlink(fname);
+      unlink(fname);
     } else {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("RRD Graph", 0);
@@ -469,6 +483,10 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD file)</I>");
   }
+
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&rrdMutex);
+#endif
 }
 
 /* ******************************* */
@@ -487,7 +505,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 #endif
 
   if(stat(path, &statbuf) != 0) {
-    char startStr[32], stepStr[32], counterStr[64], intervalStr[32], minStr[32], maxStr[32], daysStr[32], monthsStr[32];
+    char startStr[32], stepStr[32], counterStr[64], intervalStr[32];
+    char minStr[32], maxStr[32], daysStr[32], monthsStr[32];
     int step = dumpInterval;
     int value1, value2;
     unsigned long topValue;
@@ -535,39 +554,43 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     argv[argc++] = maxStr;
 
     if (dumpDays > 0) {
-        snprintf(daysStr, sizeof(daysStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpDays * 24);
-        argv[argc++] = daysStr;
+      snprintf(daysStr, sizeof(daysStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpDays * 24);
+      argv[argc++] = daysStr;
     }
 
     /* Compute the rollup - how many dumpInterval seconds interval are in a day */
     value1 = (24*60*60 + dumpInterval - 1) / dumpInterval;
     if (dumpMonths > 0) {
-        snprintf(monthsStr, sizeof(monthsStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpMonths * 30);
-        argv[argc++] = monthsStr;
+      snprintf(monthsStr, sizeof(monthsStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpMonths * 30);
+      argv[argc++] = monthsStr;
     }
 
     if (shownCreate == 0) {
-        char buf[LEN_GENERAL_WORK_BUFFER];
-        int i;
+      char buf[LEN_GENERAL_WORK_BUFFER];
+      int i;
 
-        shownCreate=1;
+      shownCreate=1;
 
-        memset(buf, 0, sizeof(buf));
+      memset(buf, 0, sizeof(buf));
 
-        snprintf(buf, sizeof(buf), "%s", argv[4]);
+      snprintf(buf, sizeof(buf), "%s", argv[4]);
 
-        for (i=5; i<argc; i++) {
-            strcat(buf, " ");
-            strcat(buf, argv[i]);
-        }
+      for (i=5; i<argc; i++) {
+	strcat(buf, " ");
+	strcat(buf, argv[i]);
+      }
 
-        traceEvent(CONST_TRACE_INFO, "RRD: rrdtool create --start now-1 file %s", buf);
+      traceEvent(CONST_TRACE_INFO, "RRD: rrdtool create --start now-1 file %s", buf);
     }
 
     optind=0; /* reset gnu getopt */
     opterr=0; /* no error messages */
 
-	rc = rrd_create(argc, argv);
+#ifdef CFG_MULTITHREADED
+    accessMutex(&rrdMutex, "rrd_create");
+#endif
+
+    rc = rrd_create(argc, argv);
 
     if (rrd_test_error()) {
       traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s", 
@@ -575,6 +598,10 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
       rrd_clear_error();
       numRRDerrors++;
     }
+
+#ifdef CFG_MULTITHREADED
+    releaseMutex(&rrdMutex);
+#endif
 
 #if RRD_DEBUG > 0
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrd_create(%s, %s, %u)=%d", 
@@ -588,9 +615,17 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   argv[argc++] = "rrd_last";
   argv[argc++] = path;
 
+#ifdef CFG_MULTITHREADED
+  accessMutex(&rrdMutex, "rrd_last");
+#endif
+
   if(rrd_last(argc, argv) >= rrdTime) {
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: WARNING rrd_update not performed (RRD already updated)");
   }
+
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&rrdMutex);
+#endif
 #endif
 
   argc = 0;
@@ -634,6 +669,10 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   optind=0; /* reset gnu getopt */
   opterr=0; /* no error messages */
 
+#ifdef CFG_MULTITHREADED
+  accessMutex(&rrdMutex, "rrd_update");
+#endif
+
   rc = rrd_update(argc, argv);
   
   numTotalRRDs++;
@@ -645,39 +684,43 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     numRRDerrors++;
     rrdError = rrd_get_error();
     if (rrdError != NULL) {
-        traceEvent(CONST_TRACE_WARNING, "RRD: rrd_update(%s) error: %s", path, rrdError);
-        traceEvent(CONST_TRACE_NOISY, "RRD: call stack (counter created: %d):", createdCounter);
-        for (x = 0; x < argc; x++)
-            traceEvent(CONST_TRACE_NOISY, "RRD:   argv[%d]: %s", x, argv[x]);
+      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_update(%s) error: %s", path, rrdError);
+      traceEvent(CONST_TRACE_NOISY, "RRD: call stack (counter created: %d):", createdCounter);
+      for (x = 0; x < argc; x++)
+	traceEvent(CONST_TRACE_NOISY, "RRD:   argv[%d]: %s", x, argv[x]);
     
-        if (!strcmp(rrdError, "error: illegal attempt to update using time")) {
-            char errTimeBuf1[32], errTimeBuf2[32], errTimeBuf3[32];
-            time_t rrdLast;
-	    struct tm workT;
+      if (!strcmp(rrdError, "error: illegal attempt to update using time")) {
+	char errTimeBuf1[32], errTimeBuf2[32], errTimeBuf3[32];
+	time_t rrdLast;
+	struct tm workT;
 
-            strftime(errTimeBuf1, sizeof(errTimeBuf1), "%Y-%m-%d %H:%M:%S", localtime_r(&myGlobals.actTime, &workT));
-            strftime(errTimeBuf2, sizeof(errTimeBuf2), "%H:%M:%S", localtime_r(&rrdTime, &workT));
-            argc = 0;
-            argv[argc++] = "rrd_last";
-            argv[argc++] = path;
-            rrdLast = rrd_last(argc, argv);
-            strftime(errTimeBuf3, sizeof(errTimeBuf3), "%H:%M:%S", localtime_r(&rrdLast, &workT));
-            traceEvent(CONST_TRACE_WARNING,
-                       "RRD: actTime = %d(%s), rrdTime %d(%s), lastUpd %d(%s)",
-                       myGlobals.actTime,
-                       errTimeBuf1,
-                       rrdTime,
-                       errTimeBuf2,
-                       rrdLast,
-                       rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
-        } else if (strstr(rrdError, "is not an RRD file")) {
-			unlink(path);
-		}
+	strftime(errTimeBuf1, sizeof(errTimeBuf1), "%Y-%m-%d %H:%M:%S", localtime_r(&myGlobals.actTime, &workT));
+	strftime(errTimeBuf2, sizeof(errTimeBuf2), "%H:%M:%S", localtime_r(&rrdTime, &workT));
+	argc = 0;
+	argv[argc++] = "rrd_last";
+	argv[argc++] = path;
 
-        rrd_clear_error();
+	rrdLast = rrd_last(argc, argv);
+	strftime(errTimeBuf3, sizeof(errTimeBuf3), "%H:%M:%S", localtime_r(&rrdLast, &workT));
+	traceEvent(CONST_TRACE_WARNING,
+		   "RRD: actTime = %d(%s), rrdTime %d(%s), lastUpd %d(%s)",
+		   myGlobals.actTime,
+		   errTimeBuf1,
+		   rrdTime,
+		   errTimeBuf2,
+		   rrdLast,
+		   rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
+      } else if (strstr(rrdError, "is not an RRD file")) {
+	unlink(path);
+      }
+
+      rrd_clear_error();
     }
   }
 
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&rrdMutex);
+#endif
 }
 
 /* ******************************* */
@@ -730,6 +773,10 @@ void unescape_url(char *url) {
 
 static void commonRRDinit(void) {
   char value[64];
+
+#ifdef CFG_MULTITHREADED
+  createMutex(&rrdMutex);
+#endif
 
   shownCreate=0;
 
@@ -994,10 +1041,10 @@ static void handleRRDHTTPrequest(char* url) {
       snprintf(buf, sizeof(buf), "%d", dumpDetail);     storePrefsValue("rrd.dataDumpDetail", buf);
       if(hostsFilter != NULL) free(hostsFilter);
       if (_hostsFilter == NULL) {
-          hostsFilter  = strdup("");
+	hostsFilter  = strdup("");
       } else {
-          hostsFilter = _hostsFilter;
-          _hostsFilter = NULL;
+	hostsFilter = _hostsFilter;
+	_hostsFilter = NULL;
       }
       storePrefsValue("rrd.hostsFilter", hostsFilter);
       shownCreate=0;
@@ -1111,21 +1158,21 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<br>NOTE: The 'large rrd population' option is in effect.\n");
   sendString("This means that the rrd files will be in a subdirectory structure, e.g.\n");
   if (snprintf(buf, sizeof(buf), 
- #ifdef WIN32
-                    "%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
- #else
-                    "%s/interfaces/interface-name/12/239/98/199/xxxxx.rrd ",
- #endif
+#ifdef WIN32
+	       "%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
+#else
+	       "%s/interfaces/interface-name/12/239/98/199/xxxxx.rrd ",
+#endif
                myGlobals.rrdPath) < 0)
     BufferTooShort();
   sendString(buf);
   sendString("instead of a single level structure, ");
   if (snprintf(buf, sizeof(buf), 
- #ifdef WIN32
-                    "%s\\interfaces\\interface-name\\12.239.98.199\\xxxxx.rrd\n",
- #else
-                    "%s/interfaces/interface-name/12.239.98.199/xxxxx.rrd\n",
- #endif
+#ifdef WIN32
+	       "%s\\interfaces\\interface-name\\12.239.98.199\\xxxxx.rrd\n",
+#else
+	       "%s/interfaces/interface-name/12.239.98.199/xxxxx.rrd\n",
+#endif
                myGlobals.rrdPath) < 0)
     BufferTooShort();
   sendString(buf);
@@ -1175,36 +1222,36 @@ RETSIGTYPE rrdcleanup(int signo) {
   if(msgSent<10) {
     traceEvent(CONST_TRACE_FATALERROR, "RRD: caught signal %d %s", signo,
                signo == SIGHUP ? "SIGHUP" :
-                 signo == SIGINT ? "SIGINT" :
-                 signo == SIGQUIT ? "SIGQUIT" : 
-                 signo == SIGILL ? "SIGILL" :
-                 signo == SIGABRT ? "SIGABRT" :
-                 signo == SIGFPE ? "SIGFPE" :
-                 signo == SIGKILL ? "SIGKILL" :
-                 signo == SIGSEGV ? "SIGSEGV" :
-                 signo == SIGPIPE ? "SIGPIPE" :
-                 signo == SIGALRM ? "SIGALRM" :
-                 signo == SIGTERM ? "SIGTERM" :
-                 signo == SIGUSR1 ? "SIGUSR1" :
-                 signo == SIGUSR2 ? "SIGUSR2" :
-                 signo == SIGCHLD ? "SIGCHLD" :
- #ifdef SIGCONT
-                 signo == SIGCONT ? "SIGCONT" :
- #endif
- #ifdef SIGSTOP
-                 signo == SIGSTOP ? "SIGSTOP" :
- #endif
- #ifdef SIGBUS
-                 signo == SIGBUS ? "SIGBUS" :
- #endif
- #ifdef SIGSYS
-                 signo == SIGSYS ? "SIGSYS"
- #endif
+	       signo == SIGINT ? "SIGINT" :
+	       signo == SIGQUIT ? "SIGQUIT" : 
+	       signo == SIGILL ? "SIGILL" :
+	       signo == SIGABRT ? "SIGABRT" :
+	       signo == SIGFPE ? "SIGFPE" :
+	       signo == SIGKILL ? "SIGKILL" :
+	       signo == SIGSEGV ? "SIGSEGV" :
+	       signo == SIGPIPE ? "SIGPIPE" :
+	       signo == SIGALRM ? "SIGALRM" :
+	       signo == SIGTERM ? "SIGTERM" :
+	       signo == SIGUSR1 ? "SIGUSR1" :
+	       signo == SIGUSR2 ? "SIGUSR2" :
+	       signo == SIGCHLD ? "SIGCHLD" :
+#ifdef SIGCONT
+	       signo == SIGCONT ? "SIGCONT" :
+#endif
+#ifdef SIGSTOP
+	       signo == SIGSTOP ? "SIGSTOP" :
+#endif
+#ifdef SIGBUS
+	       signo == SIGBUS ? "SIGBUS" :
+#endif
+#ifdef SIGSYS
+	       signo == SIGSYS ? "SIGSYS"
+#endif
                : "other");
     msgSent++;
   }
 
- #ifdef HAVE_BACKTRACE
+#ifdef HAVE_BACKTRACE
   /* Don't double fault... */
   /* signal(signo, SIG_DFL); */
 
@@ -1214,14 +1261,14 @@ RETSIGTYPE rrdcleanup(int signo) {
 
   traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:     backtrace is:\n");
   if (size < 2) {
-      traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:         **unavailable!\n");
+    traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:         **unavailable!\n");
   } else {
-      /* Ignore the 0th entry, that's our cleanup() */
-      for (i=1; i<size; i++) {
-          traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:          %2d. %s\n", i, strings[i]);
-      }
+    /* Ignore the 0th entry, that's our cleanup() */
+    for (i=1; i<size; i++) {
+      traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:          %2d. %s\n", i, strings[i]);
     }
- #endif /* HAVE_BACKTRACE */
+  }
+#endif /* HAVE_BACKTRACE */
 
   exit(0);
 }
@@ -1241,9 +1288,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) started", rrdThread);
 #else
- #ifdef RRD_DEBUG
+#ifdef RRD_DEBUG
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop()");
- #endif
+#endif
 #endif
 
 #ifdef MAKE_WITH_RRDSIGTRAP
@@ -1261,18 +1308,18 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   signal(SIGUSR1, rrdcleanup);
   signal(SIGUSR2, rrdcleanup);
   /* signal(SIGCHLD, rrdcleanup); */
- #ifdef SIGCONT
+#ifdef SIGCONT
   signal(SIGCONT, rrdcleanup);
- #endif
- #ifdef SIGSTOP
+#endif
+#ifdef SIGSTOP
   signal(SIGSTOP, rrdcleanup);
- #endif
- #ifdef SIGBUS 
+#endif
+#ifdef SIGBUS 
   signal(SIGBUS,  rrdcleanup);
- #endif
- #ifdef SIGSYS
+#endif
+#ifdef SIGSYS
   signal(SIGSYS,  rrdcleanup); 
- #endif
+#endif
 #endif /* MAKE_WITH_RRDSIGTRAP */
  
   if (initialized == 0)
@@ -1302,14 +1349,14 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     } while (sleep_tm < 0);
 
 #if RRD_DEBUG >= 1
-	{
-		 struct tm workT; 
-    strftime(endTime, sizeof(endTime), "%Y-%m-%d %H:%M:%S", localtime_r(&end_tm, &workT));
-    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds (interval %d, end at %s)\n", 
-	       sleep_tm, 
-	       dumpInterval,
-	       endTime);
-	}
+    {
+      struct tm workT; 
+      strftime(endTime, sizeof(endTime), "%Y-%m-%d %H:%M:%S", localtime_r(&end_tm, &workT));
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds (interval %d, end at %s)\n", 
+		 sleep_tm, 
+		 dumpInterval,
+		 endTime);
+    }
 #endif
 
     HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...", sleep_tm);
@@ -1342,147 +1389,147 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      continue;
 	    }
 
-	  if (!mutexLocked) {
+	    if (!mutexLocked) {
 #ifdef CFG_MULTITHREADED
-	    accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
+	      accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
 #endif
-	    mutexLocked = 1;
-	  }
-
-	  if(el->bytesSent.value > 0) {
-	    if(el->hostNumIpAddress[0] != '\0') {
-	      hostKey = el->hostNumIpAddress;
-
-	      if((numLocalNets > 0)
-		 && (!__pseudoLocalAddress(&el->hostIpAddress, networks, numLocalNets))) continue;
-
-	    } else {
-	      /* hostKey = el->ethAddressString; */
-	      /* For the time being do not save IP-less hosts */
-	      el = el->next;
-	      continue;
+	      mutexLocked = 1;
 	    }
 
-            adjHostName = dotToSlash(hostKey);
+	    if(el->bytesSent.value > 0) {
+	      if(el->hostNumIpAddress[0] != '\0') {
+		hostKey = el->hostNumIpAddress;
 
-	    snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
-		    myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName, 
-                    adjHostName
-                   );
-	    mkdir_p(rrdPath);
+		if((numLocalNets > 0)
+		   && (!__pseudoLocalAddress(&el->hostIpAddress, networks, numLocalNets))) continue;
 
-	    updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
-	    updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
-	    updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
-	    updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd);
+	      } else {
+		/* hostKey = el->ethAddressString; */
+		/* For the time being do not save IP-less hosts */
+		el = el->next;
+		continue;
+	      }
+
+	      adjHostName = dotToSlash(hostKey);
+
+	      snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
+		       myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName, 
+		       adjHostName
+		       );
+	      mkdir_p(rrdPath);
+
+	      updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
+	      updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
+	      updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
+	      updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd);
 
 
-	    if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-	      updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent);
-	      updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd);
-	      updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent);
-	      updateTrafficCounter(rrdPath, "bytesBroadcastSent", &el->bytesBroadcastSent);
-	      updateTrafficCounter(rrdPath, "pktMulticastSent", &el->pktMulticastSent);
-	      updateTrafficCounter(rrdPath, "bytesMulticastSent", &el->bytesMulticastSent);
-	      updateTrafficCounter(rrdPath, "pktMulticastRcvd", &el->pktMulticastRcvd);
-	      updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd);
+	      if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
+		updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent);
+		updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd);
+		updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent);
+		updateTrafficCounter(rrdPath, "bytesBroadcastSent", &el->bytesBroadcastSent);
+		updateTrafficCounter(rrdPath, "pktMulticastSent", &el->pktMulticastSent);
+		updateTrafficCounter(rrdPath, "bytesMulticastSent", &el->bytesMulticastSent);
+		updateTrafficCounter(rrdPath, "pktMulticastRcvd", &el->pktMulticastRcvd);
+		updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd);
 
-	      updateTrafficCounter(rrdPath, "bytesSentLoc", &el->bytesSentLoc);
-	      updateTrafficCounter(rrdPath, "bytesSentRem", &el->bytesSentRem);
-	      updateTrafficCounter(rrdPath, "bytesRcvdLoc", &el->bytesRcvdLoc);
-	      updateTrafficCounter(rrdPath, "bytesRcvdFromRem", &el->bytesRcvdFromRem);
-	      updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent);
-	      updateTrafficCounter(rrdPath, "ipBytesRcvd", &el->ipBytesRcvd);
-	      updateTrafficCounter(rrdPath, "tcpSentLoc", &el->tcpSentLoc);
-	      updateTrafficCounter(rrdPath, "tcpSentRem", &el->tcpSentRem);
-	      updateTrafficCounter(rrdPath, "udpSentLoc", &el->udpSentLoc);
-	      updateTrafficCounter(rrdPath, "udpSentRem", &el->udpSentRem);
-	      updateTrafficCounter(rrdPath, "icmpSent", &el->icmpSent);
-	      updateTrafficCounter(rrdPath, "ospfSent", &el->ospfSent);
-	      updateTrafficCounter(rrdPath, "igmpSent", &el->igmpSent);
-	      updateTrafficCounter(rrdPath, "tcpRcvdLoc", &el->tcpRcvdLoc);
-	      updateTrafficCounter(rrdPath, "tcpRcvdFromRem", &el->tcpRcvdFromRem);
-	      updateTrafficCounter(rrdPath, "udpRcvdLoc", &el->udpRcvdLoc);
-	      updateTrafficCounter(rrdPath, "udpRcvdFromRem", &el->udpRcvdFromRem);
-	      updateTrafficCounter(rrdPath, "icmpRcvd", &el->icmpRcvd);
-	      updateTrafficCounter(rrdPath, "ospfRcvd", &el->ospfRcvd);
-	      updateTrafficCounter(rrdPath, "igmpRcvd", &el->igmpRcvd);
-	      updateTrafficCounter(rrdPath, "tcpFragmentsSent", &el->tcpFragmentsSent);
-	      updateTrafficCounter(rrdPath, "tcpFragmentsRcvd", &el->tcpFragmentsRcvd);
-	      updateTrafficCounter(rrdPath, "udpFragmentsSent", &el->udpFragmentsSent);
-	      updateTrafficCounter(rrdPath, "udpFragmentsRcvd", &el->udpFragmentsRcvd);
-	      updateTrafficCounter(rrdPath, "icmpFragmentsSent", &el->icmpFragmentsSent);
-	      updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd);
-	      updateTrafficCounter(rrdPath, "stpSent", &el->stpSent);
-	      updateTrafficCounter(rrdPath, "stpRcvd", &el->stpRcvd);
-	      updateTrafficCounter(rrdPath, "ipxSent", &el->ipxSent);
-	      updateTrafficCounter(rrdPath, "ipxRcvd", &el->ipxRcvd);
-	      updateTrafficCounter(rrdPath, "osiSent", &el->osiSent);
-	      updateTrafficCounter(rrdPath, "osiRcvd", &el->osiRcvd);
-	      updateTrafficCounter(rrdPath, "dlcSent", &el->dlcSent);
-	      updateTrafficCounter(rrdPath, "dlcRcvd", &el->dlcRcvd);
-	      updateTrafficCounter(rrdPath, "arp_rarpSent", &el->arp_rarpSent);
-	      updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->arp_rarpRcvd);
-	      updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->arpReqPktsSent);
-	      updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->arpReplyPktsSent);
-	      updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->arpReplyPktsRcvd);
-	      updateTrafficCounter(rrdPath, "decnetSent", &el->decnetSent);
-	      updateTrafficCounter(rrdPath, "decnetRcvd", &el->decnetRcvd);
-	      updateTrafficCounter(rrdPath, "appletalkSent", &el->appletalkSent);
-	      updateTrafficCounter(rrdPath, "appletalkRcvd", &el->appletalkRcvd);
-	      updateTrafficCounter(rrdPath, "netbiosSent", &el->netbiosSent);
-	      updateTrafficCounter(rrdPath, "netbiosRcvd", &el->netbiosRcvd);
-	      updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent);
-	      updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd);
-	      updateTrafficCounter(rrdPath, "otherSent", &el->otherSent);
-	      updateTrafficCounter(rrdPath, "otherRcvd", &el->otherRcvd);
-	    }
+		updateTrafficCounter(rrdPath, "bytesSentLoc", &el->bytesSentLoc);
+		updateTrafficCounter(rrdPath, "bytesSentRem", &el->bytesSentRem);
+		updateTrafficCounter(rrdPath, "bytesRcvdLoc", &el->bytesRcvdLoc);
+		updateTrafficCounter(rrdPath, "bytesRcvdFromRem", &el->bytesRcvdFromRem);
+		updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent);
+		updateTrafficCounter(rrdPath, "ipBytesRcvd", &el->ipBytesRcvd);
+		updateTrafficCounter(rrdPath, "tcpSentLoc", &el->tcpSentLoc);
+		updateTrafficCounter(rrdPath, "tcpSentRem", &el->tcpSentRem);
+		updateTrafficCounter(rrdPath, "udpSentLoc", &el->udpSentLoc);
+		updateTrafficCounter(rrdPath, "udpSentRem", &el->udpSentRem);
+		updateTrafficCounter(rrdPath, "icmpSent", &el->icmpSent);
+		updateTrafficCounter(rrdPath, "ospfSent", &el->ospfSent);
+		updateTrafficCounter(rrdPath, "igmpSent", &el->igmpSent);
+		updateTrafficCounter(rrdPath, "tcpRcvdLoc", &el->tcpRcvdLoc);
+		updateTrafficCounter(rrdPath, "tcpRcvdFromRem", &el->tcpRcvdFromRem);
+		updateTrafficCounter(rrdPath, "udpRcvdLoc", &el->udpRcvdLoc);
+		updateTrafficCounter(rrdPath, "udpRcvdFromRem", &el->udpRcvdFromRem);
+		updateTrafficCounter(rrdPath, "icmpRcvd", &el->icmpRcvd);
+		updateTrafficCounter(rrdPath, "ospfRcvd", &el->ospfRcvd);
+		updateTrafficCounter(rrdPath, "igmpRcvd", &el->igmpRcvd);
+		updateTrafficCounter(rrdPath, "tcpFragmentsSent", &el->tcpFragmentsSent);
+		updateTrafficCounter(rrdPath, "tcpFragmentsRcvd", &el->tcpFragmentsRcvd);
+		updateTrafficCounter(rrdPath, "udpFragmentsSent", &el->udpFragmentsSent);
+		updateTrafficCounter(rrdPath, "udpFragmentsRcvd", &el->udpFragmentsRcvd);
+		updateTrafficCounter(rrdPath, "icmpFragmentsSent", &el->icmpFragmentsSent);
+		updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd);
+		updateTrafficCounter(rrdPath, "stpSent", &el->stpSent);
+		updateTrafficCounter(rrdPath, "stpRcvd", &el->stpRcvd);
+		updateTrafficCounter(rrdPath, "ipxSent", &el->ipxSent);
+		updateTrafficCounter(rrdPath, "ipxRcvd", &el->ipxRcvd);
+		updateTrafficCounter(rrdPath, "osiSent", &el->osiSent);
+		updateTrafficCounter(rrdPath, "osiRcvd", &el->osiRcvd);
+		updateTrafficCounter(rrdPath, "dlcSent", &el->dlcSent);
+		updateTrafficCounter(rrdPath, "dlcRcvd", &el->dlcRcvd);
+		updateTrafficCounter(rrdPath, "arp_rarpSent", &el->arp_rarpSent);
+		updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->arp_rarpRcvd);
+		updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->arpReqPktsSent);
+		updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->arpReplyPktsSent);
+		updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->arpReplyPktsRcvd);
+		updateTrafficCounter(rrdPath, "decnetSent", &el->decnetSent);
+		updateTrafficCounter(rrdPath, "decnetRcvd", &el->decnetRcvd);
+		updateTrafficCounter(rrdPath, "appletalkSent", &el->appletalkSent);
+		updateTrafficCounter(rrdPath, "appletalkRcvd", &el->appletalkRcvd);
+		updateTrafficCounter(rrdPath, "netbiosSent", &el->netbiosSent);
+		updateTrafficCounter(rrdPath, "netbiosRcvd", &el->netbiosRcvd);
+		updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent);
+		updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd);
+		updateTrafficCounter(rrdPath, "otherSent", &el->otherSent);
+		updateTrafficCounter(rrdPath, "otherRcvd", &el->otherRcvd);
+	      }
 
-	    if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
-	      updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers);
-	      updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers);
+	      if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
+		updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers);
+		updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers);
 	    
-	      if((hostKey == el->hostNumIpAddress) && el->protoIPTrafficInfos) {
+		if((hostKey == el->hostNumIpAddress) && el->protoIPTrafficInfos) {
 #ifdef RRD_DEBUG
-		traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
+		  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
 #endif
 
-		snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/IP_",
-                        myGlobals.rrdPath,  
-			myGlobals.device[devIdx].humanFriendlyName,
-                        adjHostName
-                       );
+		  snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/IP_",
+			   myGlobals.rrdPath,  
+			   myGlobals.device[devIdx].humanFriendlyName,
+			   adjHostName
+			   );
 
-		for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
-		  char key[128];
-		  snprintf(key, sizeof(key), "%sSentBytes", myGlobals.protoIPTrafficInfos[j]);
-		  updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].sentLoc.value+
-				el->protoIPTrafficInfos[j].sentRem.value);
+		  for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
+		    char key[128];
+		    snprintf(key, sizeof(key), "%sSentBytes", myGlobals.protoIPTrafficInfos[j]);
+		    updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].sentLoc.value+
+				  el->protoIPTrafficInfos[j].sentRem.value);
 
-		  snprintf(key, sizeof(key), "%sRcvdBytes", myGlobals.protoIPTrafficInfos[j]);
-		  updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].rcvdLoc.value+
-				el->protoIPTrafficInfos[j].rcvdFromRem.value);
+		    snprintf(key, sizeof(key), "%sRcvdBytes", myGlobals.protoIPTrafficInfos[j]);
+		    updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].rcvdLoc.value+
+				  el->protoIPTrafficInfos[j].rcvdFromRem.value);
+		  }
 		}
 	      }
-	    }
-	  }	
+	    }	
 
-          if (adjHostName != NULL)
+	    if (adjHostName != NULL)
               free(adjHostName);
 
-	  if(mutexLocked && (((i+1) & CONST_MUTEX_FHS_MASK) == 0)) {
+	    if(mutexLocked && (((i+1) & CONST_MUTEX_FHS_MASK) == 0)) {
 #ifdef CFG_MULTITHREADED
-	    releaseMutex(&myGlobals.hostsHashMutex);
+	      releaseMutex(&myGlobals.hostsHashMutex);
 #endif    
-	    mutexLocked = 0;
+	      mutexLocked = 0;
 #ifdef MAKE_WITH_SCHED_YIELD
-	    sched_yield(); /* Allow other threads to run */
+	      sched_yield(); /* Allow other threads to run */
 #endif
-	  }
+	    }
 
-	  el = el->next;
+	    el = el->next;
+	  }
 	}
-      }
 
 	if(mutexLocked) {
 #ifdef CFG_MULTITHREADED
@@ -1589,29 +1636,29 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
       for(k=0; k<myGlobals.numDevices; k++)
 	for(i=1; i<myGlobals.device[k].numHosts; i++)
-	    for(j=1; j<myGlobals.device[k].numHosts; j++) {
-	      if(i != j) {
-		int idx = i*myGlobals.device[k].numHosts+j;
+	  for(j=1; j<myGlobals.device[k].numHosts; j++) {
+	    if(i != j) {
+	      int idx = i*myGlobals.device[k].numHosts+j;
 
-		if(myGlobals.device[k].ipTrafficMatrix[idx] == NULL)
-		  continue;
+	      if(myGlobals.device[k].ipTrafficMatrix[idx] == NULL)
+		continue;
 
-		if(myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value > 0) {
+	      if(myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value > 0) {
 
-		  snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/matrix/%s/%s/", myGlobals.rrdPath,
-			  myGlobals.device[k].humanFriendlyName,
-			  myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
-			  myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
-		  mkdir_p(rrdPath);
+		snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/matrix/%s/%s/", myGlobals.rrdPath,
+			 myGlobals.device[k].humanFriendlyName,
+			 myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
+			 myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
+		mkdir_p(rrdPath);
 
-		  updateCounter(rrdPath, "pkts",
-				myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value);
+		updateCounter(rrdPath, "pkts",
+			      myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value);
 
-		  updateCounter(rrdPath, "bytes",
-				myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value);
-		}
+		updateCounter(rrdPath, "bytes",
+			      myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value);
 	      }
 	    }
+	  }
     }
 
 #ifdef RRD_DEBUG
@@ -1625,17 +1672,17 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
      * we kill the thread...
      */
     if (myGlobals.capturePackets == FLAG_NTOPSTATE_STOPCAP) {
-        traceEvent(CONST_TRACE_WARNING, "RRD: STOPCAP, ending rrd thread");
-        break;
+      traceEvent(CONST_TRACE_WARNING, "RRD: STOPCAP, ending rrd thread");
+      break;
     }
   }
 
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_WARNING, "THREADMGMT: rrd thread (%ld) terminated", rrdThread);
 #else
- #ifdef RRD_DEBUG
+#ifdef RRD_DEBUG
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop() terminated.");
- #endif
+#endif
 #endif
 
   return(0);
@@ -1703,6 +1750,10 @@ static void termRRDfunct(void) {
   if(active) killThread(&rrdThread);
 #endif
 
+#ifdef CFG_MULTITHREADED
+  deleteMutex(&rrdMutex);
+#endif
+
   traceEvent(CONST_TRACE_INFO, "RRD: Thanks for using the rrdPlugin");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Done");
   fflush(stdout);
@@ -1733,25 +1784,25 @@ static PluginInfo rrdPluginInfo[] = {
 
 /* Plugin entry fctn */
 #ifdef MAKE_STATIC_PLUGIN
- PluginInfo* rrdPluginEntryFctn(void)
+PluginInfo* rrdPluginEntryFctn(void)
 #else
-   PluginInfo* PluginEntryFctn(void)
+     PluginInfo* PluginEntryFctn(void)
 #endif
 {
-     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Welcome to %s. (C) 2002 by Luca Deri.\n",
-		rrdPluginInfo->pluginName);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Welcome to %s. (C) 2002 by Luca Deri.\n",
+	     rrdPluginInfo->pluginName);
      
-     return(rrdPluginInfo);
-   }
+  return(rrdPluginInfo);
+}
  
 /* This must be here so it can access the struct PluginInfo, above */
 static void setPluginStatus(char * status)
-   {
-       if (rrdPluginInfo->pluginStatusMessage != NULL)
-           free(rrdPluginInfo->pluginStatusMessage);
-       if (status == NULL) {
-           rrdPluginInfo->pluginStatusMessage = NULL;
-       } else {
-           rrdPluginInfo->pluginStatusMessage = strdup(status);
-       }
-   } 
+{
+  if (rrdPluginInfo->pluginStatusMessage != NULL)
+    free(rrdPluginInfo->pluginStatusMessage);
+  if (status == NULL) {
+    rrdPluginInfo->pluginStatusMessage = NULL;
+  } else {
+    rrdPluginInfo->pluginStatusMessage = strdup(status);
+  }
+} 
