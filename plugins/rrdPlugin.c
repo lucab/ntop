@@ -1710,23 +1710,23 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    fillDomainName(el);
 
 	    // if we didn't get a domain name, bail out
-	    if ((el->fullDomainName == NULL)
-	       || (el->fullDomainName[0] == '\0')
-	       || (el->dotDomainName == NULL)
+	    if ((el->dnsDomainValue == NULL)
+	       || (el->dnsDomainValue[0] == '\0')
+	       || (el->ip2ccValue == NULL)
 	       || (el->hostResolvedName[0] == '\0')
 	       || broadcastHost(el)
 	       ) {
 	      continue;
 	    }
 
-	    for(keyValue=0, idx=0; el->fullDomainName[idx] != '\0'; idx++)
-	      keyValue += (idx+1)*(u_short)el->fullDomainName[idx];
+	    for(keyValue=0, idx=0; el->dnsDomainValue[idx] != '\0'; idx++)
+	      keyValue += (idx+1)*(u_short)el->dnsDomainValue[idx];
 
 	    keyValue %= maxHosts;
 
 	    while((stats[keyValue] != NULL)
-	      && (strcasecmp(stats[keyValue]->domainHost->fullDomainName,
-	      el->fullDomainName) != 0))
+	      && (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue,
+	      el->dnsDomainValue) != 0))
 		keyValue = (keyValue+1) % maxHosts;
 
 	    // if we just start counting for this domain...
@@ -1738,7 +1738,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      statsEntry->domainHost = el;
 	      stats[keyValue] = statsEntry;
 #if RRD_DEBUG >= 2
-	      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG [%d] %s/%s", numEntries, el->fullDomainName, el->dotDomainName);
+	      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG [%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue);
 #endif
 	    }
 
@@ -1771,7 +1771,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	    if(snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
 		myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
-		statsEntry->domainHost->fullDomainName) < 0)
+		statsEntry->domainHost->dnsDomainValue) < 0)
               BufferTooShort();
 	    mkdir_p(rrdPath);
 
