@@ -58,10 +58,6 @@
 
 #include "ntop.h"
 
-#ifdef ENABLE_NAPSTER
-static int numNapsterSvr = 0, napsterSvrInsertIdx = 0;
-#endif
-
 static const struct pcap_pkthdr *h_save;
 static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
@@ -548,44 +544,6 @@ static void updateHostSessionsList(u_int theHostIdx,
 
 /* ************************************ */
 
-#define incrementUsageCounter(a, b, c) _incrementUsageCounter(a, b, c, __FILE__, __LINE__)
-
-static void _incrementUsageCounter(UsageCounter *counter,
-				   u_int peerIdx, int deviceId, char* file, int line) {
-  u_int i, found=0;
-
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "INFO: incrementUsageCounter(%u) @ %s:%d", peerIdx, file, line);
-#endif
-
-  if((peerIdx >= device[deviceId].actualHashSize) && (peerIdx != NO_PEER)) {
-    traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
-	       peerIdx, device[deviceId].actualHashSize, file, line);
-    return;
-  }
-
-  counter->value++;
-
-  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(counter->peersIndexes[i] == NO_PEER) {
-      counter->peersIndexes[i] = peerIdx, found = 1;
-      break;
-    } else if(counter->peersIndexes[i] == peerIdx) {
-      found = 1;
-      break;
-    }
-  }
-
-  if(!found) {
-    for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
-      counter->peersIndexes[i] = counter->peersIndexes[i+1];
-
-    counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = peerIdx;
-  }
-}
-
-/* ************************************ */
-
 void allocateSecurityHostPkts(HostTraffic *srcHost) {
   if(srcHost->securityHostPkts == NULL) {
     srcHost->securityHostPkts = (SecurityHostProbes*)malloc(sizeof(SecurityHostProbes));
@@ -802,499 +760,6 @@ static void updateRoutedTraffic(HostTraffic *router) {
   }
 }
 
-/* ************************************ */
-
-static void handleBootp(HostTraffic *srcHost,
-			HostTraffic *dstHost,
-			u_short sport,
-			u_short dport,
-			u_int packetDataLength,
-			u_char* packetData) {
-  BootProtocol bootProto = { 0 };
-  int len;
-
-  switch(sport) {
-  case 67: /* BOOTP/DHCP server */
-    FD_SET(HOST_SVC_DHCP_SERVER, &srcHost->flags);
-
-#ifdef DHCP_DEBUG
-    traceEvent(TRACE_INFO, "%s:%d->%s:%d",
-	       srcHost->hostNumIpAddress, sport,
-	       dstHost->hostNumIpAddress, dport);
-#endif
-
-    if(packetData != NULL) {
-      char buf[32];
-
-      /*
-	This is a server BOOTP/DHCP respose
-	that could be decoded. Let's try.
-
-	For more info see http://www.dhcp.org/
-      */
-      if(packetDataLength >= sizeof(BootProtocol))
-	len = sizeof(BootProtocol);
-      else
-	len = packetDataLength;
-
-      memcpy(&bootProto, packetData, len);
-
-      if(bootProto.bp_op == 2) {
-	/* BOOTREPLY */
-	u_long dummyMac;
-
-	memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
-	if((bootProto.bp_yiaddr.s_addr != 0)
-	   && (dummyMac != 0) /* MAC address <> 00:00:00:..:00 */
-	   ) {
-	  NTOHL(bootProto.bp_yiaddr.s_addr);
-#ifdef DHCP_DEBUG
-	  traceEvent(TRACE_INFO, "%s@%s",
-		     intoa(bootProto.bp_yiaddr), etheraddr_string(bootProto.bp_chaddr));
-#endif
-	  /* Let's check whether this is a DHCP packet [DHCP magic cookie] */
-	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
-	     && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
-	    /*
-	      RFC 1048 specifies a magic cookie
-	      { 0x63 0x82 0x53 0x63 }
-	      for recognising DHCP packets encapsulated
-	      in BOOTP packets.
-	    */
-	    int idx = 4;
-	    u_int hostIdx;
-	    struct in_addr hostIpAddress;
-	    HostTraffic *trafficHost, *realDstHost;
-
-	    /*
-	      This is the real address of the recipient because
-	      dstHost is a broadcast address
-	    */
-	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
-	    if(realDstHost == NULL) {
-	      u_int hostIdx = getHostInfo(/* &bootProto.bp_yiaddr */ NULL, bootProto.bp_chaddr, 0, 0);
-#ifdef DHCP_DEBUG
-	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
-#endif
-	      realDstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-	    } else {
-#ifdef DHCP_DEBUG
-	      traceEvent(TRACE_INFO, "<<=>> %s (%d)",
-			 realDstHost->hostSymIpAddress,
-			 broadcastHost(realDstHost));
-#endif
-	    }
-
-	    if(realDstHost != NULL) {
-	      if(realDstHost->dhcpStats == NULL) {
-		realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
-	      }
-
-	      if(srcHost->dhcpStats == NULL) {
-		srcHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(srcHost->dhcpStats, 0, sizeof(DHCPStats));
-	      }
-
-	      FD_SET(HOST_SVC_DHCP_CLIENT, &realDstHost->flags);
-	      realDstHost->dhcpStats->assignTime = actTime;
-	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
-	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
-
-	      if(realDstHost->hostIpAddress.s_addr != bootProto.bp_yiaddr.s_addr) {
-		/* The host address has changed */
-#ifdef DHCP_DEBUG
-		traceEvent(TRACE_INFO, "DHCP host address changed: %s->%s",
-			   intoa(realDstHost->hostIpAddress),
-			   _intoa(bootProto.bp_yiaddr, buf, sizeof(buf)));
-#endif
-		realDstHost->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIpAddress.s_addr;
-		realDstHost->hostIpAddress.s_addr = bootProto.bp_yiaddr.s_addr;
-		strncpy(realDstHost->hostNumIpAddress,
-			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
-			sizeof(realDstHost->hostNumIpAddress));
-		ipaddr2str(realDstHost->hostIpAddress);
-		realDstHost->fullDomainName = realDstHost->dotDomainName = "";
-		if(isBroadcastAddress(&realDstHost->hostIpAddress))
-		  FD_SET(BROADCAST_HOST_FLAG, &realDstHost->flags);
-		else
-		  FD_CLR(BROADCAST_HOST_FLAG, &realDstHost->flags);
-	      }
-
-	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
-		u_char optionId = bootProto.bp_vend[idx++];
-		u_long tmpUlong;
-
-		if(optionId == 255) break; /* End of options */
-		switch(optionId) { /* RFC 2132 */
-		case 1: /* Netmask */
-		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		  NTOHL(hostIpAddress.s_addr);
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Netmask: %s", intoa(hostIpAddress));
-#endif
-		  idx += len;
-		  break;
-		case 3: /* Gateway */
-		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		  NTOHL(hostIpAddress.s_addr);
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Gateway: %s", _intoa(hostIpAddress, buf, sizeof(buf)));
-#endif
-		  /* *************** */
-
-		  hostIdx = findHostIdxByNumIP(hostIpAddress);
-		  if(hostIdx != NO_PEER) {
-		    incrementUsageCounter(&realDstHost->contactedRouters, hostIdx, actualDeviceId);
-
-		    trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-		    if(trafficHost != NULL) {
-		      FD_SET(GATEWAY_HOST_FLAG, &trafficHost->flags);
-		    }
-		  }
-
-		  /* *************** */
-		  idx += len;
-		  break;
-		case 12: /* Host name */
-		  len = bootProto.bp_vend[idx++];
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
-#endif
-		  idx += len;
-		  break;
-		case 15: /* Domain name */
-		  len = bootProto.bp_vend[idx++];
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Domain name: %s", &bootProto.bp_vend[idx]);
-#endif
-		  if(strcmp(realDstHost->hostSymIpAddress, realDstHost->hostNumIpAddress)) {
-		    char tmpName[2*MAX_HOST_SYM_NAME_LEN],
-		      tmpHostName[MAX_HOST_SYM_NAME_LEN],
-		      tmpDomainName[MAX_HOST_SYM_NAME_LEN];
-		    int hostLen, i;
-
-		    memset(tmpHostName, 0, sizeof(tmpHostName));
-		    strncpy(tmpHostName, realDstHost->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
-		    for(i=0; i<strlen(tmpHostName); i++)
-		      if(tmpHostName[i] == '.')
-			break;
-
-		    tmpHostName[i] = '\0';
-
-		    strcpy(tmpDomainName, &bootProto.bp_vend[idx]);
-
-		    if(strcmp(tmpHostName, tmpDomainName) != 0) {
-		      if(snprintf(tmpName, sizeof(tmpName), "%s.%s",
-				  tmpHostName, tmpDomainName) < 0)
-			traceEvent(TRACE_ERROR, "Buffer overflow!");
-		      else {
-			hostLen = len;
-			len = strlen(tmpName);
-
-			if(len >= (MAX_HOST_SYM_NAME_LEN-1)) {
-			  tmpName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
-			  len--;
-			}
-
-			strncpy(realDstHost->hostSymIpAddress, tmpName,
-				len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
-				/*
-				  realDstHost->fullDomainName = realDstHost->dotDomainName =
-				  &realDstHost->hostSymIpAddress[hostLen];
-				*/
-			fillDomainName(realDstHost);
-		      }
-		    }
-		  }
-
-		  idx += len;
-		  break;
-		case 19: /* IP Forwarding */
-		  len = bootProto.bp_vend[idx++];
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "IP Forwarding: %s", bootProto.bp_vend[idx]);
-#endif
-		  idx += len;
-		  break;
-		case 28: /* Broadcast Address */
-		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		  NTOHL(hostIpAddress.s_addr);
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Broadcast Address: %s",
-			     intoa(hostIpAddress));
-#endif
-		  idx += len;
-		  break;
-		case 44: /* WINS server */
-		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		  NTOHL(hostIpAddress.s_addr);
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "WINS server: %s",
-			     intoa(hostIpAddress));
-#endif
-		  idx += len;
-		  /* *************** */
-
-		  hostIdx = findHostIdxByNumIP(hostIpAddress);
-		  if(hostIdx != NO_PEER){
-		    trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-		    if(trafficHost != NULL)
-		      FD_SET(HOST_SVC_WINS, &trafficHost->flags);
-		  }
-
-		  /* *************** */
-		  break;
-
-		case 51: /* Lease time */
-		  len = bootProto.bp_vend[idx++];
-		  if(len == 4) {
-		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
-		    NTOHL(tmpUlong);
-#ifdef DHCP_DEBUG
-		    traceEvent(TRACE_INFO, "Lease time: %u", tmpUlong);
-#endif
-		    realDstHost->dhcpStats->leaseTime = actTime+tmpUlong;
-		  }
-		  idx += len;
-		  break;
-		case 53: /* DHCP Message Type */
-		  len = bootProto.bp_vend[idx++];
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "DHCP Message Type: %d", bootProto.bp_vend[idx]);
-#endif
-		  switch((int)bootProto.bp_vend[idx]) {
-		  case DHCP_DISCOVER_MSG:
-		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG]++;
-		    srcHost->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG]++;
-		    break;
-		  case DHCP_OFFER_MSG:
-		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_OFFER_MSG]++;
-		    srcHost->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG]++;
-		    break;
-		  case DHCP_REQUEST_MSG:
-		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_REQUEST_MSG]++;
-		    srcHost->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG]++;
-		    break;
-		  case DHCP_DECLINE_MSG:
-		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_DECLINE_MSG]++;
-		    srcHost->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG]++;
-		    break;
-		  case DHCP_ACK_MSG:
-		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_ACK_MSG]++;
-		    srcHost->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG]++;
-		    break;
-		  case DHCP_NACK_MSG:
-		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_NACK_MSG]++;
-		    srcHost->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG]++;
-		    break;
-		  case DHCP_RELEASE_MSG:
-		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_RELEASE_MSG]++;
-		    srcHost->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG]++;
-		    break;
-		  case DHCP_INFORM_MSG:
-		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_INFORM_MSG]++;
-		    srcHost->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG]++;
-		    break;
-		  case DHCP_UNKNOWN_MSG:
-		  default:
-		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_UNKNOWN_MSG]++;
-		    srcHost->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG]++;
-		    break;
-		  }
-		  idx += len;
-		  break;
-		case 58: /* Renewal time */
-		  len = bootProto.bp_vend[idx++];
-		  if(len == 4) {
-		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
-		    NTOHL(tmpUlong);
-#ifdef DHCP_DEBUG
-		    traceEvent(TRACE_INFO, "Renewal time: %u", tmpUlong);
-#endif
-		    realDstHost->dhcpStats->renewalTime = actTime+tmpUlong;
-		  }
-		  idx += len;
-		  break;
-		case 59: /* Rebinding time */
-		  len = bootProto.bp_vend[idx++];
-		  if(len == 4) {
-		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
-		    NTOHL(tmpUlong);
-#ifdef DHCP_DEBUG
-		    traceEvent(TRACE_INFO, "Rebinding time: %u", tmpUlong);
-#endif
-		  }
-		  idx += len;
-		  break;
-		case 64: /* NIS+ Domain */
-		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		  NTOHL(hostIpAddress.s_addr);
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "NIS+ domain: %s", intoa(hostIpAddress));
-#endif
-		  idx += len;
-		  break;
-		default:
-#ifdef DEBUG
-		  traceEvent(TRACE_INFO, "Unknown DHCP option '%d'", (int)optionId);
-#endif
-		  len = bootProto.bp_vend[idx++];
-		  idx += len;
-		  break;
-		}
-	      }
-	    } /* realDstHost != NULL */
-	  }
-	}
-      }
-    }
-    break;
-    /* DHCP is handled by sport 67 */
-  case 68: /* BOOTP/DHCP client */
-    if(packetData != NULL) {
-      /*
-	This is a server BOOTP/DHCP respose
-	that could be decoded. Let's try.
-
-	For more info see http://www.dhcp.org/
-      */
-
-      FD_SET(HOST_SVC_DHCP_CLIENT, &srcHost->flags);
-      FD_SET(HOST_SVC_DHCP_SERVER, &dstHost->flags);
-
-      if(packetDataLength >= sizeof(BootProtocol))
-	len = sizeof(BootProtocol);
-      else
-	len = packetDataLength;
-
-      memcpy(&bootProto, packetData, len);
-
-      if(bootProto.bp_op == 1) {
-	/* BOOTREQUEST */
-	u_long dummyMac;
-
-	memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
-	if((dummyMac != 0) /* MAC address <> 00:00:00:..:00 */) {
-	  NTOHL(bootProto.bp_yiaddr.s_addr);
-#ifdef DHCP_DEBUG
-	  traceEvent(TRACE_INFO, "%s", etheraddr_string(bootProto.bp_chaddr));
-#endif
-	  /* Let's check whether this is a DHCP packet [DHCP magic cookie] */
-	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
-	     && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
-	    /*
-	      RFC 1048 specifies a magic cookie
-	      { 0x63 0x82 0x53 0x63 }
-	      for recognising DHCP packets encapsulated
-	      in BOOTP packets.
-	    */
-	    int idx = 4;
-	    HostTraffic *realClientHost;
-
-	    /*
-	      This is the real address of the recipient because
-	      dstHost is a broadcast address
-	    */
-	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
-	    if(realClientHost == NULL) {
-	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr, 0, 0);
-#ifdef DHCP_DEBUG
-	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
-#endif
-	      realClientHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-	    } else {
-#ifdef DHCP_DEBUG
-	      traceEvent(TRACE_INFO, "<<=>> %s (%d)",
-			 realClientHost->hostSymIpAddress,
-			 broadcastHost(realClientHost));
-#endif
-	    }
-
-	    if(realClientHost != NULL) {
-	      if(realClientHost->dhcpStats == NULL) {
-		realClientHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(realClientHost->dhcpStats, 0, sizeof(DHCPStats));
-	      }
-
-	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
-		u_char optionId = bootProto.bp_vend[idx++];
-
-		if(optionId == 255) break; /* End of options */
-		switch(optionId) { /* RFC 2132 */
-		case 12: /* Host name */
-		  len = bootProto.bp_vend[idx++];
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
-#endif
-		  if(len >= (MAX_HOST_SYM_NAME_LEN-1)) {
-		    bootProto.bp_vend[idx+MAX_HOST_SYM_NAME_LEN-2] = '\0';
-		    len--;
-		  }
-
-		  strncpy(realClientHost->hostSymIpAddress, &bootProto.bp_vend[idx],
-			  len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
-		  idx += len;
-		  break;
-		case 53: /* DHCP Message Type */
-		  len = bootProto.bp_vend[idx++];
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "DHCP Message Type: %d", bootProto.bp_vend[idx]);
-#endif
-		  switch((int)bootProto.bp_vend[idx]) {
-		  case DHCP_DISCOVER_MSG:
-		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG]++;
-		    break;
-		  case DHCP_OFFER_MSG:
-		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG]++;
-		    break;
-		  case DHCP_REQUEST_MSG:
-		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG]++;
-		    break;
-		  case DHCP_DECLINE_MSG:
-		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG]++;
-		    break;
-		  case DHCP_ACK_MSG:
-		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG]++;
-		    break;
-		  case DHCP_NACK_MSG:
-		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG]++;
-		    break;
-		  case DHCP_RELEASE_MSG:
-		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG]++;
-		    break;
-		  case DHCP_INFORM_MSG:
-		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG]++;
-		    break;
-		  case DHCP_UNKNOWN_MSG:
-		  default:
-		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG]++;
-		    break;
-		  }
-		  idx += len;
-		  break;
-		default:
-#ifdef DEBUG
-		  traceEvent(TRACE_INFO, "Unknown DHCP option '%d'", (int)optionId);
-#endif
-		  len = bootProto.bp_vend[idx++];
-		  idx += len;
-		  break;
-		}
-	      }
-	    }
-	  }
-	}
-      }
-    }
-    break;
-  }
-}
 
 /* ************************************ */
 
@@ -1327,8 +792,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(TRACE_INFO, "Sanity check failed (3) [Low memory?]");
-    return(theSession);
+    return(NULL);
   }
+
+  if(packetData == NULL) /* packet too short ? */
+    return(NULL);
 
   /*
     Note: do not move the {...} down this function
@@ -1575,27 +1043,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     /* ***************************************** */
 
-    if((packetData != NULL) && (packetDataLength > 0)) {
-#ifdef DEBUG
-      if((sport == 80) || (dport == 80)) {
-	int i;
-
-	for(i=0; i<packetDataLength; i++) {
-	  if((!isprint(packetData[i]))
-	     && (!isspace(packetData[i])))
-	    break;
-	  printf("%c", packetData[i]);
-	}
-
-	printf("\n");
-      }
-#endif
-
       if(packetDataLength >= sizeof(rcStr))
 	len = sizeof(rcStr);
       else
 	len = packetDataLength;
-
+     
       if((sport == 80 /* HTTP */) && (theSession->bytesProtoRcvd == 0)) {
 	strncpy(rcStr, packetData, 16);
 	rcStr[16] = '\0';
@@ -1960,69 +1412,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 	    addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
 	  }
-	} else if((sport == 139) || (dport == 139)) {
-	  memset(rcStr, 0, sizeof(rcStr));
-	  memcpy(rcStr, packetData, len);
-
-	  if(rcStr[0] == 0x81) /* Session request */ {
-	    char decodedStr[64];
-	    int pos;
-
-	    pos = 5;
-	    decodeNBstring(&rcStr[5], decodedStr);
-
-	    if((decodedStr[0] != '\0') && (dstHost->nbHostName == NULL))
-	      dstHost->nbHostName = strdup(decodedStr); /* dst before src */
-
-	    pos = 5+(2*strlen(decodedStr))+2;
-	    decodeNBstring(&rcStr[pos], decodedStr);
-
-	    if((decodedStr[0] != '\0') && (srcHost->nbHostName == NULL))
-	      srcHost->nbHostName = strdup(decodedStr);
-	  } else if((rcStr[0] == 0x0) /* Message type: Session message */
-		    && (rcStr[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
-	    int i;
-
-#ifdef DEBUG
-	    for(i=0; i<len; i++)
-	      printf("0x%X (%d)\n", rcStr[i], i);
-#endif
-
-	    if(sport == 139) {
-	      /* Response */
-#ifdef DEBUG
-	      printf("OS: %s\n", &rcStr[45]);
-#endif
-	      if(srcHost->osName == NULL)
-		srcHost->osName = strdup(&rcStr[45]);
-	    } else /* dport == 139 */ {
-	      /* Request */
-	      char len;
-
-	      len = rcStr[51]+rcStr[53]; /* ANSI and UNICODE pw length */
-
-	      i = 65+len;
-
-	      if(srcHost->nbAccountName == NULL) srcHost->nbAccountName = strdup(&rcStr[i]);
-#ifdef DEBUG
-	      printf("Account Name: %s\n", &rcStr[i]);
-#endif
-	      while((rcStr[i] != 0) && (i < sizeof(rcStr))) i++;
-	      i++;
-#ifdef DEBUG
-	      printf("Domain: %s\n", &rcStr[i]);
-#endif
-	      if(srcHost->nbDomainName == NULL) srcHost->nbDomainName = strdup(&rcStr[i]);
-	      while((rcStr[i] != 0) && (i < sizeof(rcStr))) i++;
-	      i++;
-#ifdef DEBUG
-	      printf("OS: %s\n", &rcStr[i]);
-#endif
-	      if(srcHost->osName == NULL)
-		srcHost->osName = strdup(&rcStr[i]);
-	    }
-	  }
-	}
       } /* len > 0 */
     }
 
@@ -2835,6 +2224,7 @@ static void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
   receiver = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(receiverIdx)];
 
   /* ******************************* */
+
   if(senderIdx != broadcastEntryIdx) {
     if(sender != NULL) {
       for(found=0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
@@ -3092,104 +2482,6 @@ void purgeOldFragmentEntries(void) {
     fflush(stdout);
   }
 #endif
-}
-
-/* ************************************ */
-
-static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
-				  short *isRequest, short *positiveReply) {
-  DNSHostInfo hostPtr;
-  struct in_addr hostIpAddress;
-#ifdef HAVE_GDBM_H
-  datum key_data, data_data;
-  char tmpBuf[96];
-#endif
-  u_int16_t transactionId;
-  int i;
-
-  memset(&hostPtr, 0, sizeof(DNSHostInfo));
-
-  transactionId = handleDNSpacket(bp, (u_short)(hlen+sizeof(struct udphdr)),
-				  &hostPtr, (short)(length-(hlen+sizeof(struct udphdr))),
-				  isRequest, positiveReply);
-
-  if((hostPtr.queryType == T_A)
-     && (hostPtr.queryName[0] != '\0')
-     && (hostPtr.addrList[0] != '\0')) {
-#ifdef DNS_SNIFF_DEBUG
-    traceEvent(TRACE_INFO, "DNS %s for %s type %d\n", *isRequest ? "request" : "reply",
-	       hostPtr.queryName, hostPtr.queryType);
-#endif
-
-    for(i=0; i<MAXALIASES; i++)
-      if(hostPtr.aliases[i][0] != '\0') {
-#ifdef DNS_SNIFF_DEBUG
-	traceEvent(TRACE_INFO, "%s is alias of %s\n", hostPtr.aliases[i], hostPtr.name);
-#endif
-      }
-  }
-
-  i = strlen(hostPtr.queryName);
-  if((i > 5)
-     && (strncmp(&hostPtr.queryName[i-5], ".arpa", 5) == 0))
-    return(transactionId);
-  
-#ifdef HAVE_GDBM_H
-  data_data.dptr = hostPtr.queryName;
-  data_data.dsize = strlen(data_data.dptr)+1;
-  for(i=0; i<strlen(hostPtr.queryName); i++)
-    hostPtr.queryName[i] = tolower(hostPtr.queryName[i]);
-#endif
-
-#ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "processDNSPacket");
-#endif
-
-  for(i=0; i<MAXADDRS; i++) {
-    if(hostPtr.addrList[i] != 0) {
-      hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
-#ifdef HAVE_GDBM_H
-      key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
-      key_data.dsize = strlen(key_data.dptr)+1;
-      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
-
-      data_data = gdbm_fetch(gdbm_file, key_data);
-      if(data_data.dptr == NULL) {
-#ifdef DNS_SNIFF_DEBUG
-	traceEvent(TRACE_INFO, "%s <-> %s",
-		   hostPtr.queryName, intoa(hostIpAddress));
-#endif
-	gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
-
-	/* Update host */
-	for(i=1; i<device[deviceId].actualHashSize; i++) {
-	  if(device[deviceId].hash_hostTraffic[i] != NULL) {
-	    if(device[deviceId].hash_hostTraffic[i]->hostIpAddress.s_addr == hostIpAddress.s_addr) {
-	      if(device[deviceId].hash_hostTraffic[i]->hostSymIpAddress[0] == '\0') {
-		/* Not yet set */
-		if(strlen(hostPtr.queryName) >= (MAX_HOST_SYM_NAME_LEN-1))
-		  hostPtr.queryName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
-		strcpy(device[deviceId].hash_hostTraffic[i]->hostSymIpAddress, hostPtr.queryName);
-#ifdef DNS_SNIFF_DEBUG
-		traceEvent(TRACE_INFO, "Setting %s = %s",
-			   device[deviceId].hash_hostTraffic[i]->hostNumIpAddress, hostPtr.queryName);
-#endif
-	      }
-	      break;
-	    }
-	  }
-	}
-      } else
-	free(data_data.dptr);
-#endif
-    }
-  }
-
-#ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
-#endif
-
-  return(transactionId);
 }
 
 /* ************************************ */
@@ -3719,7 +3011,7 @@ static void processIpPkt(const u_char *bp,
 	  } else {
 	    time_t microSecTimeDiff;
 
-	    /* to be 64bit-proof we have to copy the elements */
+	    /* to be 64bit-safe we have to copy the elements */
 	    tvstrct.tv_sec = h->ts.tv_sec;
 	    tvstrct.tv_usec = h->ts.tv_usec;
 	    microSecTimeDiff = getTimeMapping(transactionId, tvstrct);
@@ -3777,164 +3069,12 @@ static void processIpPkt(const u_char *bp,
 	      dstHost->dnsStats->numNegativeReplRcvd++;
 	    }
 	  }
-	} else if((dport == 138 /*  NETBIOS */)
-		  && ((srcHost->nbHostName == NULL)
-		      || (srcHost->nbDomainName == NULL))) {
-	  char *name, nbName[64], domain[64], *data;
-	  int nodeType, i, udpDataLen;
-	  char *tmpdata = (char*)bp + (hlen + sizeof(struct udphdr));
-	  u_char *p;
-	  int offset=0, displ, notEnoughData = 0;
-
-	  udpDataLen = length - (hlen + sizeof(struct udphdr));
-
-	  if(udpDataLen > 32) {
-	    /* 32 bytes or less is not enough */
-	    data = (char*)malloc(udpDataLen);
-	    memcpy(data, tmpdata, udpDataLen);
-
-	    name = data + 14;
-	    p = (u_char*)name;
-	    if ((*p & 0xC0) == 0xC0) {
-	      displ = p[1] + 255 * (p[0] & ~0xC0);
-	      if((displ + 14) >= udpDataLen)
-		notEnoughData = 1;
-	      else {
-		name = data + displ;
-		displ += 14;
-		offset = 2;
-	      }
-	    } else {
-	      displ = 14;
-
-	      while ((displ < udpDataLen) && (*p)) {
-		p += (*p)+1;
-		displ++;
-	      }
-
-	      if(displ < udpDataLen)
-		offset = ((char*)p - (char*)data) + 1;
-	      else
-		notEnoughData = 1;
-	    }
-
-	    if(!notEnoughData) {
-	      nodeType = name_interpret(name, nbName, udpDataLen-displ);
-
-	      if(nodeType != -1) {
-		setNBnodeNameType(srcHost, (char)nodeType, nbName);
-
-		displ += offset; /* see ** */
-
-		if(displ < udpDataLen) {
-		  name = data + offset; /* ** */
-		  p = (u_char*)name;
-		  if ((*p & 0xC0) == 0xC0) {
-		    displ = hlen + 8 + (p[1] + 255 * (p[0] & ~0xC0));
-
-		    if(displ < length)
-		      name = ((char*)bp+displ);
-		    else
-		      notEnoughData = 1;
-		  }
-
-		  if(!notEnoughData) {
-		    nodeType = name_interpret(name, domain, length-displ);
-
-		    if(nodeType != -1) {
-		      for(i=0; domain[i] != '\0'; i++)
-			if(domain[i] == ' ') { domain[i] = '\0'; break; }
-
-		      setNBnodeNameType(dstHost, (char)nodeType, domain);
-
-		      if(udpDataLen > 200) {
-			char *tmpBuffer = &data[151];
-
-			/*
-			  We'll check if this this is
-			  a browser announcments so we can
-			  know more about this host
-			*/
-
-			if(strcmp(tmpBuffer, "\\MAILSLOT\\BROWSE") == 0) {
-			  /* Good: this looks like a browser announcement */
-			  if(((tmpBuffer[17] == 0x0F /* Local Master Announcement*/)
-			      || (tmpBuffer[17] == 0x01 /* Host Announcement*/))
-			     && (tmpBuffer[49] != '\0')) {
-
-			    if(srcHost->nbDescr != NULL)
-			      free(srcHost->nbDescr);
-
-			    if(tmpBuffer[17] == 0x0F)
-			      FD_SET(HOST_TYPE_MASTER_BROWSER, &srcHost->flags);
-
-			    srcHost->nbDescr = strdup(&tmpBuffer[49]);
-#ifdef DEBUG
-			    traceEvent(TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
-#endif
-			  }
-			}
-		      }
-		    }
-		  }
-		}
-	      }
-	    }
-
-	    free(data);
-	  }
-	} else if((dport == 137 /*  NETBIOS */)
-		  && ((srcHost->nbHostName == NULL)
-		      || (srcHost->nbDomainName == NULL))) {
-	  char *name, nbName[64], domain[64], *data;
-	  int nodeType, i, udpDataLen;
-	  char *tmpdata = (char*)bp + (hlen + sizeof(struct udphdr));
-	  u_char *p;
-	  int offset=0, displ, notEnoughData = 0;
-
-	  udpDataLen = length - (hlen + sizeof(struct udphdr));
-
-	  if(udpDataLen > 32) {
-	    /* 32 bytes or less is not enough */
-	    data = (char*)malloc(udpDataLen);
-	    memcpy(data, tmpdata, udpDataLen);
-
-	    name = data + 12;
-	    p = (u_char*)name;
-	    if ((*p & 0xC0) == 0xC0) {
-	      displ = p[1] + 255 * (p[0] & ~0xC0);
-	      if((displ + 14) >= udpDataLen)
-		notEnoughData = 1;
-	      else {
-		name = data + displ;
-		displ += 14;
-		offset = 2;
-	      }
-	    } else {
-	      displ = 14;
-
-	      while ((displ < udpDataLen) && (*p)) {
-		p += (*p)+1;
-		displ++;
-	      }
-
-	      if(displ < udpDataLen)
-		offset = ((char*)p - (char*)data) + 1;
-	      else
-		notEnoughData = 1;
-	    }
-
-	    if(!notEnoughData) {
-	      nodeType = name_interpret(name, nbName, udpDataLen-displ);
-
-	      traceEvent(TRACE_INFO, "Found: %s", nbName);
-	      setNBnodeNameType(srcHost, (char)nodeType, nbName);
-	    }
-
-	    free(data);
-	  }
+	  
+	} else {
+	  handleNetbios(srcHost, dstHost, sport, dport,
+			udpDataLength, bp,
+			length, hlen);
 	}
-
       }
 
       if(udpChain) {
@@ -5349,4 +4489,44 @@ void updateOSName(HostTraffic *el) {
   }
 }
 
+/* ************************************ */
 
+/* Do not delete this line! */
+#undef incrementUsageCounter
+
+void _incrementUsageCounter(UsageCounter *counter,
+			    u_int peerIdx, int deviceId, 
+			    char* file, int line) {
+  u_int i, found=0;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "INFO: incrementUsageCounter(%u) @ %s:%d", peerIdx, file, line);
+#endif
+
+  if((peerIdx >= device[deviceId].actualHashSize) && (peerIdx != NO_PEER)) {
+    traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
+	       peerIdx, device[deviceId].actualHashSize, file, line);
+    return;
+  }
+
+  counter->value++;
+
+  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+    if(counter->peersIndexes[i] == NO_PEER) {
+      counter->peersIndexes[i] = peerIdx, found = 1;
+      break;
+    } else if(counter->peersIndexes[i] == peerIdx) {
+      found = 1;
+      break;
+    }
+  }
+
+  if(!found) {
+    for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
+      counter->peersIndexes[i] = counter->peersIndexes[i+1];
+
+    counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = peerIdx;
+  }
+}
+
+/* ************************************ */

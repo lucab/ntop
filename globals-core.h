@@ -343,6 +343,26 @@ extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
 extern void updateOSName(HostTraffic *el);
 extern void updateHostName(HostTraffic *el);
+extern void _incrementUsageCounter(UsageCounter *counter,
+				   u_int peerIdx, int deviceId,
+				   char* file, int line);
+
+/* protocols.c */
+extern void handleBootp(HostTraffic *srcHost, HostTraffic *dstHost,
+			u_short sport, u_short dport,
+			u_int packetDataLength, u_char* packetData);
+extern u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
+				  short *isRequest, short *positiveReply);
+#ifdef ENABLE_NAPSTER
+extern void handleNapster(HostTraffic *srcHost, HostTraffic *dstHost,
+			  u_short sport, u_short dport,
+			  u_int packetDataLength, u_char* packetData,
+			  IPSession *theSession);
+#endif
+extern void handleNetbios(HostTraffic *srcHost, HostTraffic *dstHost,
+			  u_short sport, u_short dport,
+			  u_int packetDataLength, const u_char* bp,
+			  u_int length, u_int hlen);
 
 /* plugin.c */
 /* CHECK ME: THIS IS NOT CALLED YET! */

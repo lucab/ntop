@@ -273,7 +273,6 @@ int getdomainname(char *name, size_t len);
 #  define EDST(ep) ((ep)->ether_dhost)
 # endif
 
-
 #if defined(HAVE_ARPA_NAMESER_H)
 #include <arpa/nameser.h>
 #endif
@@ -676,6 +675,7 @@ typedef unsigned long long TrafficCounter;
 #define RCVD_PEERS                2
 #define NO_PEER                   UINT_MAX
 
+#define incrementUsageCounter(a, b, c) _incrementUsageCounter(a, b, c, __FILE__, __LINE__)
 
 /* ************* Types Definition ********************* */
 
