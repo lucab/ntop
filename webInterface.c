@@ -739,7 +739,8 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
   if((el->ip2ccValue != NULL) && (strcasecmp(el->ip2ccValue, "loc") == 0)) {
     safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
-		  "<img align=\"middle\" src=\"/statsicons/flags/local.gif\" border=\"0\">");
+		  "<img alt=\"Local Host\" title=\"Local Host\" "
+		  "align=\"middle\" src=\"/statsicons/flags/local.gif\" border=\"0\">");
   } else {
     /* Try all the possible combos of name and path */
     rc = -1; /* Start bad */
@@ -784,16 +785,16 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
     if(rc != 0) {
       /* Nothing worked... */
-      safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf), "&nbsp;<!-- No flag for %s or %s -->",
+      safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf), 
+		    "&nbsp;<!-- No flag for %s or %s -->",
 		    el->ip2ccValue != NULL  ? el->ip2ccValue  : "null",
 		    el->dnsTLDValue != NULL ? el->dnsTLDValue : "null");
     } else {
       safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
-		    "<img alt=\"Flag for %s code %s %s\" align=\"middle\" "
+		    "<img alt=\"Flag for %s code %s %s\" title=\"Flag for %s code %s %s\" align=\"middle\" "
 		    "src=\"/statsicons/flags/%s.gif\" border=\"0\">",
-		    strlen(img) == 2 ? "ISO 3166" : "gTLD",
-		    img,
-		    source,
+		    strlen(img) == 2 ? "ISO 3166" : "gTLD", img, source,
+		    strlen(img) == 2 ? "ISO 3166" : "gTLD", img, source,
 		    img);
     }
   }
