@@ -2182,3 +2182,38 @@ void fillDomainName(HostTraffic *el) {
 #endif
 }
 
+/* ********************************* *
+
+/* similar to Java.String.trim() */
+void trimString(char* str) {
+  int len = strlen(str), i, idx;
+  char *out = (char *) malloc(sizeof(char) * (len+1));
+  
+  if(out == NULL) {
+    str = NULL;
+    return;
+  }
+
+  for(i=0, idx=0; i<len; i++)
+    {
+      switch(str[i])
+	{
+	case ' ':
+	case '\t':
+	  if((idx > 0)
+	     && (out[idx-1] != ' ')
+	     && (out[idx-1] != '\t'))
+	    out[idx++] = str[i];
+	  break;
+	default:
+	  out[idx++] = str[i];
+	  break;
+	}
+    }
+
+  out[idx] = '\0';
+  strncpy(str, out, len);
+  free(out);
+}
+
+

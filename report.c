@@ -1163,18 +1163,23 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	      int i;
 	      
 	      if(numAddresses > 0) sendString("/");
-	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[", 
+	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;", 
 			  getOSFlag("Novell", 0),
 			  el->ipxHostName) < 0) 
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 
 	      for(i=0; i<el->numIpxNodeTypes; i++) {
-		if(i>0) sendString("/");
+		if(i>0) 
+		  sendString("[");
+		else
+		  sendString("/");
 		sendString(getSAPInfo(el->ipxNodeType[i], 1));
 	      }
 
-	      sendString("]");
+	      if(i>0) 
+		sendString("]");
+	      
 	      numAddresses++;
 	    }
 	  }

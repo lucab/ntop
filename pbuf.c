@@ -1,1033 +1,1034 @@
-/*
- *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
- *                          Portions by Stefano Suin <stefano@ntop.org>
- *
- *  			    http://www.ntop.org/
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- */
-
-/*
- * Copyright (c) 1994, 1996
- *	The Regents of the University of California.  All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that: (1) source code distributions
- * retain the above copyright notice and this paragraph in its entirety, (2)
- * distributions including binary code include the above copyright notice and
- * this paragraph in its entirety in the documentation or other materials
- * provided with the distribution, and (3) all advertising materials mentioning
- * features or use of this software display the following acknowledgement:
- * ``This product includes software developed by the University of California,
- * Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
- * the University nor the names of its contributors may be used to endorse
- * or promote products derived from this software without specific prior
- * written permission.
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- */
-
-/*
-#define DNS_SNIFF_DEBUG
-#define DNS_DEBUG
-#define GDBM_DEBUG
-#define FREE_HOST_INFO
-#define PURGE_DEBUG
-#define PACKET_DEBUG
-#define FARGMENT_DEBUG
-*/
-
-#define SESSION_PATCH /* Experimental (L.Deri) */
-
-/* #define PRINT_UNKNOWN_PACKETS */
-/* #define MAPPING_DEBUG */
-
-
-#include "ntop.h"
-
-static int numNapsterSvr = 0,napsterSvrInsertIdx = 0;
-
-
-/* ************************************ */
-
-u_int _checkSessionIdx(u_int idx, char* file, int line) {
-
-  if(idx > device[actualDeviceId].actualHashSize)
-    traceEvent(TRACE_ERROR,
-	       "Index error idx=%u @ [%s:%d]\n",
-	       idx, file, line);
-  return(idx);
-}
-
-/* ******************************* */
-
-int getPortByName(ServiceEntry **theSvc, char* portName) {
-  int idx;
-
-  for(idx=0; idx<SERVICE_HASH_SIZE; idx++) {
-
-#ifdef DEBUG
-    if(theSvc[idx] != NULL)
-      traceEvent(TRACE_INFO, "%d/%s [%s]\n",
-		 theSvc[idx]->port,
-		 theSvc[idx]->name, portName);
-#endif
-
-    if((theSvc[idx] != NULL)
-       && (strcmp(theSvc[idx]->name, portName) == 0))
-      return(theSvc[idx]->port);
-  }
-
-  return(-1);
-}
-
-/* ******************************* */
-
-char* getPortByNumber(ServiceEntry **theSvc, int port) {
-  int idx = port % SERVICE_HASH_SIZE;
-  ServiceEntry *scan;
-
-  for(;;) {
-    scan = theSvc[idx];
-
-    if((scan != NULL) && (scan->port == port))
-      return(scan->name);
-    else if(scan == NULL)
-      return(NULL);
-    else
-      idx = (idx+1) % SERVICE_HASH_SIZE;
-  }
-}
-
-/* ******************************* */
-
-char* getPortByNum(int port, int type) {
-  char* rsp;
-
-  if(type == IPPROTO_TCP) {
-    rsp = getPortByNumber(tcpSvc, port);
-  } else {
-    rsp = getPortByNumber(udpSvc, port);
-  }
-
-  return(rsp);
-}
-
-/* ******************************* */
-
-char* getAllPortByNum(int port) {
-  char* rsp;
-  static char staticBuffer[2][16];
-  static short portBufIdx=0;
-
-  rsp = getPortByNumber(tcpSvc, port); /* Try TCP first... */
-  if(rsp == NULL)
-    rsp = getPortByNumber(udpSvc, port);  /* ...then UDP */
-
-  if(rsp != NULL)
-    return(rsp);
-  else {
-    portBufIdx = (short)((portBufIdx+1)%2);
-    if(snprintf(staticBuffer[portBufIdx], 16, "%d", port) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    return(staticBuffer[portBufIdx]);
-  }
-}
-
-/* ******************************* */
-
-int getAllPortByName(char* portName) {
-  int rsp;
-
-  rsp = getPortByName(tcpSvc, portName); /* Try TCP first... */
-  if(rsp == -1)
-    rsp = getPortByName(udpSvc, portName);  /* ...then UDP */
-
-  return(rsp);
-}
-
-
-/* ******************************* */
-
-void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
-  int idx = port % SERVICE_HASH_SIZE;
-  ServiceEntry *scan;
-
-  for(;;) {
-    scan = theSvc[idx];
-
-    if(scan == NULL) {
-      theSvc[idx] = (ServiceEntry*)malloc(sizeof(ServiceEntry));
-      theSvc[idx]->port = (u_short)port;
-      theSvc[idx]->name = strdup(name);
-      break;
-    } else
-      idx = (idx+1) % SERVICE_HASH_SIZE;
-  }
-}
-
-/* ******************************* */
-
-u_int findHostInfo(struct in_addr *hostIpAddress) {
-  u_int i;
-
-  for(i=0; i<device[actualDeviceId].actualHashSize; i++)
-    if(device[actualDeviceId].hash_hostTraffic[i] != NULL)
-      if(device[actualDeviceId].hash_hostTraffic[i]->hostIpAddress.s_addr
-	 == hostIpAddress->s_addr)
-	return i;
-
-  return(NO_PEER);
-}
-
-/* ******************************* */
-
-u_int getHostInfo(struct in_addr *hostIpAddress,
-		  u_char *ether_addr)
-{
-  u_int idx, i, run=0;
-  HostTraffic *el=NULL;
-  u_int firstEmptySlot = NO_PEER;
-  char buf[32];
-  short useIPAddressForSearching;
-  char* symEthName = NULL, *ethAddr;
-
-  idx = computeInitialHashIdx(hostIpAddress,
-			      ether_addr, &useIPAddressForSearching);
-  idx = (u_int)((idx*3) % device[actualDeviceId].actualHashSize);
-
-  /*
-  traceEvent(TRACE_INFO, "Searching for %s@%s",
-	     intoa(*hostIpAddress),
-	     etheraddr_string(ether_addr));
-
-  if(hostIpAddress->s_addr == 0)
-    printf("Hello\n");
+ /*
+  *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
+  *                          Portions by Stefano Suin <stefano@ntop.org>
+  *
+  *  			    http://www.ntop.org/
+  *
+  *  This program is free software; you can redistribute it and/or modify
+  *  it under the terms of the GNU General Public License as published by
+  *  the Free Software Foundation; either version 2 of the License, or
+  *  (at your option) any later version.
+  *
+  *  This program is distributed in the hope that it will be useful,
+  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  *  GNU General Public License for more details.
+  *
+  *  You should have received a copy of the GNU General Public License
+  *  along with this program; if not, write to the Free Software
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   */
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Searching from slot %d [size=%d]\n",
-	     idx, device[actualDeviceId].actualHashSize);
-#endif
-
-  for(i=0; i<device[actualDeviceId].actualHashSize; i++) {
-  HASH_SLOT_FOUND:
-    el = device[actualDeviceId].hash_hostTraffic[idx]; /* (**) */
-
-    if(el != NULL) {
-      if(useIPAddressForSearching == 0) {
-	/* compare with the ethernet-address */
-	if (memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
-	  if(hostIpAddress != NULL) {
-	    int i;
-
-	    for(i=0; i<MAX_MULTIHOMING_ADDRESSES; i++) {
-	      if(el->hostIpAddresses[i].s_addr == 0x0) {
-		el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
-		break;
-	      } else if(el->hostIpAddresses[i].s_addr == hostIpAddress->s_addr)
-		break;
-	      /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	      /*
-		else {
-
-		el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
-		break;
-		}
-	      */
-	    }
-
-	    if(el->hostNumIpAddress[0] == '\0') {
-	      /* This entry didn't have IP fields set: let's set them now */
-	      el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-	      strncpy(el->hostNumIpAddress,
-		      _intoa(*hostIpAddress, buf, sizeof(buf)),
-		      sizeof(el->hostNumIpAddress));
-
-	      if(numericFlag == 0)
-		ipaddr2str(el, el->hostIpAddress, el->hostSymIpAddress,
-			   MAX_HOST_SYM_NAME_LEN);
-
-	      /* else el->hostSymIpAddress = el->hostNumIpAddress;
-		 The line below isn't necessary because (**) has
-		 already set the pointer */
-	      if(isBroadcastAddress(&el->hostIpAddress))
-		FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	    }
-	  }
-	  break;
-	}
-      } else {
-	if (el->hostIpAddress.s_addr == hostIpAddress->s_addr)
-	  break;
-      }
-    } else {
-      /* ************************
-
-	 This code needs to be optimised. In fact everytime a
-	 new host is added to the hash, the whole hash has to
-	 be scan. This shouldn't happen with hashes. Unfortunately
-	 due to the way ntop works, a entry can appear and
-	 disappear several times from the hash, hence its position
-	 in the hash might change.
-
-	 Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
-
-       ************************ */
-
-      if(firstEmptySlot == NO_PEER)
-	firstEmptySlot = idx;
-    }
-
-    idx = (idx+1) % device[actualDeviceId].actualHashSize;
-  }
-
-  if(i == device[actualDeviceId].actualHashSize) {
-    if(firstEmptySlot != NO_PEER) {
-      /* New table entry */
-      int len;
-
-      if(usePersistentStorage) {
-	if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
-	  el = resurrectHostTrafficInstance(etheraddr_string(ether_addr));
-	else
-	  el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
-      } else
-	el = NULL;
-
-      if(el == NULL) {
-	el = (HostTraffic*)malloc(sizeof(HostTraffic));
-	memset(el, 0, sizeof(HostTraffic));
-	el->firstSeen=actTime;
-      }
-
-      len = (size_t)numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
-
-      FD_ZERO(&(el->flags));
-      for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-	el->contactedSentPeersIndexes[i] = NO_PEER;
-	el->contactedRcvdPeersIndexes[i] = NO_PEER;
-	el->securityHostPkts.synPktsSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.rstPktsSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.rstAckPktsSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.synFinPktsSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.finPushUrgPktsSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.nullPktsSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.ackScanSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.xmasScanSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.finScanSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.nullScanSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.rejectedTCPConnSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.establishedTCPConnSent.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.udpToClosedPortSent.peersIndexes[i] = NO_PEER;
-	/* ************* */
-	el->securityHostPkts.synPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.rstAckPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.rstPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.synFinPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.nullPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.ackScanRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.xmasScanRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.finScanRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.nullScanRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.establishedTCPConnRcvd.peersIndexes[i] = NO_PEER;
-	el->securityHostPkts.udpToClosedPortRcvd.peersIndexes[i] = NO_PEER;
-      }
-      for(i=0; i<MAX_NUM_HOST_ROUTERS; i++) el->contactedRouters[i] = NO_PEER;
-
-      /* NOTE: el->nextDBupdate = 0 */
-      el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
-      memset(el->protoIPTrafficInfos, 0, len);
-      device[actualDeviceId].hash_hostTraffic[firstEmptySlot] = el; /* Insert a new entry */
-      idx = firstEmptySlot;
-      device[actualDeviceId].hostsno++;
-
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "Adding idx=%d on device=%d\n",
-		 firstEmptySlot, actualDeviceId);
-#endif
-
-      if(ether_addr != NULL) {
-
-	if((hostIpAddress == NULL)
-	   || ((hostIpAddress != NULL)
-	       && isLocalAddress(hostIpAddress)
-	       && (!isBroadcastAddress(hostIpAddress)))) {
-	  /* This is a local address and then the
-	     ethernet address does make sense */
-	  ethAddr = etheraddr_string(ether_addr);
-
-	  memcpy(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN);
-	  strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
-	  symEthName = getSpecialMacInfo(el, (short)(!separator[0]));
-	  FD_SET(SUBNET_LOCALHOST_FLAG, &el->flags);
-	  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-	} else if(hostIpAddress != NULL) {
-	  /* This is packet that's being routed */
-	  memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
-	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
-
-	  if(!isBroadcastAddress(hostIpAddress)) {
-	    if(isPseudoLocalAddress(hostIpAddress))
-	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-	    else
-	      FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-	  }
-	} else {
-	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
-	  FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-	}
-
-	if(strncmp(el->ethAddressString, "FF:", 3) == 0) {
-	  /*
-	    The trick below allows me not to duplicate the
-	    "<broadcast>" string in the code
-	  */
-	  el->hostIpAddress.s_addr = INADDR_BROADCAST;
-	  FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	  if(isMulticastAddress(&el->hostIpAddress))
-	    FD_SET(MULTICAST_HOST_FLAG, &el->flags);
-	  strncpy(el->hostNumIpAddress,
-		  _intoa(el->hostIpAddress, buf, sizeof(buf)),
-		  strlen(el->hostNumIpAddress));
-	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
-		  MAX_HOST_SYM_NAME_LEN);
-	} else if(hostIpAddress != NULL) {
-	  el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-	  strncpy(el->hostNumIpAddress,
-		  _intoa(*hostIpAddress, buf, sizeof(buf)),
-		  sizeof(el->hostNumIpAddress));
-	  if(isBroadcastAddress(&el->hostIpAddress))
-	    FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	  if(isMulticastAddress(&el->hostIpAddress))
-	    FD_SET(MULTICAST_HOST_FLAG, &el->flags);
-
-	  /* Trick to fill up the address cache */
-	  if(numericFlag == 0)
-	    ipaddr2str(el, el->hostIpAddress,
-		       el->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
-	  else
-	    strncpy(el->hostSymIpAddress,
-		    el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
-	} else {
-	  /* el->hostNumIpAddress == "" */
-	  if(symEthName[0] != '\0') {
-	    char buf[MAX_HOST_SYM_NAME_LEN];
-
-	    if(snprintf(buf, sizeof(buf), "%s [MAC]", symEthName) < 0)
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
-	    strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
-	  } else
-	    strncpy(el->hostSymIpAddress,
-		    el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
-	}
-
-#ifdef DEBUG
-	/*if((strcmp(etheraddr_string(ether_addr), "08:00:20:89:79:D7") == 0)
-	  || (strcmp(el->hostSymIpAddress, "more") == 0))*/
-	printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
-	       etheraddr_string(ether_addr), el->hostSymIpAddress,
-	       el->hostNumIpAddress, device[actualDeviceId].hostsno);
-#endif
-
-	el->lastSeen = actTime;
-	checkSpoofing(idx);
-      }
-    } else {
-      /* The hashtable is full */
-      if(run == 0) {
-	purgeIdleHosts(1);
-      } else {
-	/* No space yet: let's delete the oldest table entry */
-	int candidate = 0;
-	time_t lastSeenCandidate=0;
-	HostTraffic* hostToFree;
-
-	for(i=1; i<device[actualDeviceId].actualHashSize; i++)
-	  if(device[actualDeviceId].hash_hostTraffic[i] != NULL) {
-	    if((candidate == 0)
-	       || (device[actualDeviceId].hash_hostTraffic[i]->lastSeen
-		   < lastSeenCandidate)) {
-	      candidate = i;
-	      if((device[actualDeviceId].hash_hostTraffic[i]->lastSeen
-		  +IDLE_HOST_PURGE_TIMEOUT)
-		 > actTime)
-		break;
-	      else
-		lastSeenCandidate = device[actualDeviceId].
-		  hash_hostTraffic[i]->lastSeen;
-	    }
-	  }
-
-	hostToFree = device[actualDeviceId].hash_hostTraffic[candidate];
-	freeHostInfo(actualDeviceId, candidate);
-	idx = candidate; /* this is a hint for (**) */
-      }
-
-      run++;
-      goto HASH_SLOT_FOUND;
-    }
-  }
-
-  if(el != NULL) {
-    el->lastSeen = actTime;
-
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
-	     idx, actualDeviceId,
-	     etheraddr_string(ether_addr), el->hostSymIpAddress,
-	     el->hostNumIpAddress, device[actualDeviceId].hostsno,
-	     useIPAddressForSearching);
-#endif
-  }
-
-  return(idx);
-}
-
-/* ************************************ */
-
-char* getNamedPort(int port) {
-  static char outStr[2][8];
-  static short portBufIdx=0;
-  char* svcName;
-
-  portBufIdx = (portBufIdx+1)%2;
-
-  svcName = getPortByNum(port, IPPROTO_TCP);
-  if(svcName == NULL)
-    svcName = getPortByNum(port, IPPROTO_UDP);
-
-  if(svcName == NULL) {
-    if(snprintf(outStr[portBufIdx], 8, "%d", port) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-  } else {
-    strncpy(outStr[portBufIdx], svcName, 8);
-  }
-
-  return(outStr[portBufIdx]);
-}
-
-/* ************************************ */
-
-static void updateHostSessionsList(u_int theHostIdx,
-				   u_short port,
-				   u_int remotePeerIdx,
-				   IPSession *theSession,
-				   u_short sessionType,
-				   u_char initiator,
-				   int role)
-{
-  /* This is a known port hence we're interested in */
-  IpGlobalSession *scanner=NULL, *prevScanner;
-  HostTraffic* theHost;
-  u_int i;
-
-  if((theHostIdx == broadcastEntryIdx)
-     || (remotePeerIdx == broadcastEntryIdx)
-     || (remotePeerIdx == NO_PEER)
-     || (theHostIdx == NO_PEER)
-     || (device[actualDeviceId].hash_hostTraffic[checkSessionIdx(remotePeerIdx)] == NULL)
-     )
-    return;
-
-  theHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(theHostIdx)];
-
-  if((theHost == NULL) /* Probably the host has been deleted */
-     || broadcastHost(theHost)) /* We could't care less of junk traffic */
-    return;
-
-  switch(sessionType) {
-  case IPPROTO_TCP: /* 6 */
-    scanner = device[actualDeviceId].hash_hostTraffic[theHostIdx]->tcpSessionList;
-    break;
-  case IPPROTO_UDP: /* 17 */
-    scanner = device[actualDeviceId].hash_hostTraffic[theHostIdx]->udpSessionList;
-    break;
-  }
-
-  prevScanner = scanner;
-
-  while(scanner != NULL) {
-    if(scanner->magic != MAGIC_NUMBER) {
-      traceEvent(TRACE_ERROR, "===> Magic assertion failed (2)");
-      scanner = NULL;
-      if(prevScanner != NULL) {
-	prevScanner->next = NULL;
-      }
-      break;
-    }
-
-    if((scanner->port == port) && (scanner->initiator == role))
-      break;
-
-    prevScanner = scanner;
-    scanner = (IpGlobalSession*)(scanner->next);
-  }
-
-  if(scanner == NULL) {
-    scanner = (IpGlobalSession*)malloc(sizeof(IpGlobalSession));
-    memset(scanner, 0, sizeof(IpGlobalSession));
-    scanner->magic = MAGIC_NUMBER;
-    scanner->port = port;
-    scanner->initiator = role;
-    scanner->firstSeen = actTime;
-
-    for(i=0; i<MAX_NUM_SESSION_PEERS; i++) scanner->peersIdx[i] = NO_PEER;
-
-    /* Add the session to the session list */
-    switch(sessionType) {
-    case IPPROTO_TCP:
-      scanner->next = (IpGlobalSession*)(device[actualDeviceId].hash_hostTraffic[theHostIdx]->tcpSessionList);
-      device[actualDeviceId].hash_hostTraffic[theHostIdx]->tcpSessionList = scanner; /* list head */
-      break;
-    case IPPROTO_UDP:
-      scanner->next = (IpGlobalSession*)(device[actualDeviceId].hash_hostTraffic[theHostIdx]->udpSessionList);
-      device[actualDeviceId].hash_hostTraffic[theHostIdx]->udpSessionList = scanner; /* list head */
-      break;
-    }
-  }
-
-  scanner->lastSeen = actTime;
-  scanner->sessionCounter++;
-
-#ifdef DEBUG
-  printSession(theSession, sessionType, scanner->sessionCounter);
-#endif
-
-  for(i=0; i<MAX_NUM_SESSION_PEERS; i++)
-    if((scanner->peersIdx[i] == NO_PEER)
-       || (scanner->peersIdx[i] == remotePeerIdx))
-      break;
-
-  /* Patch below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-  if(i>=MAX_NUM_SESSION_PEERS)
-    i = scanner->lastPeer; /* (*) */
-
-  if((i<MAX_NUM_SESSION_PEERS)
-     && (((scanner->peersIdx[i] != NO_PEER)
-	  && (scanner->peersIdx[i] != remotePeerIdx)
-	  && (strcmp(device[actualDeviceId].
-		     hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])]->hostNumIpAddress,
-		     device[actualDeviceId].
-		     hash_hostTraffic[checkSessionIdx(remotePeerIdx)]->hostNumIpAddress)))
-	 || (scanner->peersIdx[i] == NO_PEER))) {
-    scanner->peersIdx[scanner->lastPeer] = remotePeerIdx; /* Note i == scanner->lastPeer (*) */
-    scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
-  }
-
-  switch(sessionType) {
-  case IPPROTO_TCP:
-    /*
-      The "IP Session History" table in the individual host
-      statistic page showed swapped values for the "Bytes sent"
-      and "Bytes rcvd" columns if the client opened the
-      connection. For Server initiated connections like
-      standard (not passive) ftp-data it was OK.
-
-      Andreas Pfaller <a.pfaller@pop.gun.de>
-    */
-
-    if((initiator == SERVER_TO_CLIENT)
-       || (initiator == CLIENT_TO_SERVER)) {
-      scanner->bytesSent += theSession->bytesSent;
-      scanner->bytesReceived += theSession->bytesReceived;
-      scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
-      scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived;
-    } else {
-      scanner->bytesSent += theSession->bytesReceived;
-      scanner->bytesReceived += theSession->bytesSent;
-      scanner->bytesFragmentedSent += theSession->bytesFragmentedReceived;
-      scanner->bytesFragmentedReceived += theSession->bytesFragmentedSent;
-    }
-    break;
-  case IPPROTO_UDP:
-    scanner->bytesSent           += theSession->bytesSent;
-    scanner->bytesReceived       += theSession->bytesReceived;
-    scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
-    scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived;
-   break;
-  }
-}
-
-/* ************************************ */
-
-void scanTimedoutTCPSessions(void) {
-  u_int idx;
-
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions\n");
-#endif
-
-  for(idx=0; idx<numTotSessions; idx++) {
-    if(tcpSession[idx] != NULL) {
-
-      if(tcpSession[idx]->magic != MAGIC_NUMBER) {
-	tcpSession[idx] = NULL;
-	numTcpSessions--;
-	traceEvent(TRACE_ERROR, "===> Magic assertion failed!");
-	continue;
-      }
-
-      if(((tcpSession[idx]->sessionState == STATE_TIMEOUT)
-	  && ((tcpSession[idx]->lastSeen+TWO_MSL_TIMEOUT) < actTime))
-	 || /* The branch below allows to flush sessions which have not been
-	       terminated properly (we've received just one FIN (not two). It might be
-	       that we've lost some packets (hopefully not). */
-	 ((tcpSession[idx]->sessionState >= STATE_FIN1_ACK0)
-	  && ((tcpSession[idx]->lastSeen+DOUBLE_TWO_MSL_TIMEOUT) < actTime))
-	 /* The line below allows to avoid keeping very old sessions that
-	    might be still open, but that are probably closed and we've
-	    lost some packets */
-	 || ((tcpSession[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < actTime)
-	 || ((tcpSession[idx]->lastSeen+IDLE_SESSION_TIMEOUT) < actTime)
-	 )
-	{
-	  IPSession *sessionToPurge = tcpSession[idx];
-
- 	  tcpSession[idx] = NULL;
-	  numTcpSessions--;
-
-	  /* Session to purge */
-
-	  if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
-	    if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
-	      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
-				     sessionToPurge->remotePeerIdx, sessionToPurge,
-				     IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE);
-	      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
-				     sessionToPurge->initiatorIdx, sessionToPurge,
-				     IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE);
-	    }
-	  } else { /* Client->Server */
-	    if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
-	      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
-				     sessionToPurge->initiatorIdx, sessionToPurge,
-				     IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE);
-	      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
-				     sessionToPurge->remotePeerIdx, sessionToPurge,
-				     IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE);
-	    }
-	  }
-
-	  /*
-	   * Having updated the session information, 'theSession'
-	   * can now be purged.
+
+ /*
+  * Copyright (c) 1994, 1996
+  *	The Regents of the University of California.  All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that: (1) source code distributions
+  * retain the above copyright notice and this paragraph in its entirety, (2)
+  * distributions including binary code include the above copyright notice and
+  * this paragraph in its entirety in the documentation or other materials
+  * provided with the distribution, and (3) all advertising materials mentioning
+  * features or use of this software display the following acknowledgement:
+  * ``This product includes software developed by the University of California,
+  * Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
+  * the University nor the names of its contributors may be used to endorse
+  * or promote products derived from this software without specific prior
+  * written permission.
+  * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
+  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+  */
+
+ /*
+ #define DNS_SNIFF_DEBUG
+ #define DNS_DEBUG
+ #define GDBM_DEBUG
+ #define FREE_HOST_INFO
+ #define PURGE_DEBUG
+ #define PACKET_DEBUG
+ #define FARGMENT_DEBUG
+ */
+
+ #define SESSION_PATCH /* Experimental (L.Deri) */
+
+ /* #define PRINT_UNKNOWN_PACKETS */
+ /* #define MAPPING_DEBUG */
+
+
+ #include "ntop.h"
+
+ static int numNapsterSvr = 0,napsterSvrInsertIdx = 0;
+
+
+ /* ************************************ */
+
+ u_int _checkSessionIdx(u_int idx, char* file, int line) {
+
+   if(idx > device[actualDeviceId].actualHashSize)
+     traceEvent(TRACE_ERROR,
+		"Index error idx=%u @ [%s:%d]\n",
+		idx, file, line);
+   return(idx);
+ }
+
+ /* ******************************* */
+
+ int getPortByName(ServiceEntry **theSvc, char* portName) {
+   int idx;
+
+   for(idx=0; idx<SERVICE_HASH_SIZE; idx++) {
+
+ #ifdef DEBUG
+     if(theSvc[idx] != NULL)
+       traceEvent(TRACE_INFO, "%d/%s [%s]\n",
+		  theSvc[idx]->port,
+		  theSvc[idx]->name, portName);
+ #endif
+
+     if((theSvc[idx] != NULL)
+	&& (strcmp(theSvc[idx]->name, portName) == 0))
+       return(theSvc[idx]->port);
+   }
+
+   return(-1);
+ }
+
+ /* ******************************* */
+
+ char* getPortByNumber(ServiceEntry **theSvc, int port) {
+   int idx = port % SERVICE_HASH_SIZE;
+   ServiceEntry *scan;
+
+   for(;;) {
+     scan = theSvc[idx];
+
+     if((scan != NULL) && (scan->port == port))
+       return(scan->name);
+     else if(scan == NULL)
+       return(NULL);
+     else
+       idx = (idx+1) % SERVICE_HASH_SIZE;
+   }
+ }
+
+ /* ******************************* */
+
+ char* getPortByNum(int port, int type) {
+   char* rsp;
+
+   if(type == IPPROTO_TCP) {
+     rsp = getPortByNumber(tcpSvc, port);
+   } else {
+     rsp = getPortByNumber(udpSvc, port);
+   }
+
+   return(rsp);
+ }
+
+ /* ******************************* */
+
+ char* getAllPortByNum(int port) {
+   char* rsp;
+   static char staticBuffer[2][16];
+   static short portBufIdx=0;
+
+   rsp = getPortByNumber(tcpSvc, port); /* Try TCP first... */
+   if(rsp == NULL)
+     rsp = getPortByNumber(udpSvc, port);  /* ...then UDP */
+
+   if(rsp != NULL)
+     return(rsp);
+   else {
+     portBufIdx = (short)((portBufIdx+1)%2);
+     if(snprintf(staticBuffer[portBufIdx], 16, "%d", port) < 0)
+       traceEvent(TRACE_ERROR, "Buffer overflow!");
+     return(staticBuffer[portBufIdx]);
+   }
+ }
+
+ /* ******************************* */
+
+ int getAllPortByName(char* portName) {
+   int rsp;
+
+   rsp = getPortByName(tcpSvc, portName); /* Try TCP first... */
+   if(rsp == -1)
+     rsp = getPortByName(udpSvc, portName);  /* ...then UDP */
+
+   return(rsp);
+ }
+
+
+ /* ******************************* */
+
+ void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
+   int idx = port % SERVICE_HASH_SIZE;
+   ServiceEntry *scan;
+
+   for(;;) {
+     scan = theSvc[idx];
+
+     if(scan == NULL) {
+       theSvc[idx] = (ServiceEntry*)malloc(sizeof(ServiceEntry));
+       theSvc[idx]->port = (u_short)port;
+       theSvc[idx]->name = strdup(name);
+       break;
+     } else
+       idx = (idx+1) % SERVICE_HASH_SIZE;
+   }
+ }
+
+ /* ******************************* */
+
+ u_int findHostInfo(struct in_addr *hostIpAddress) {
+   u_int i;
+
+   for(i=0; i<device[actualDeviceId].actualHashSize; i++)
+     if(device[actualDeviceId].hash_hostTraffic[i] != NULL)
+       if(device[actualDeviceId].hash_hostTraffic[i]->hostIpAddress.s_addr
+	  == hostIpAddress->s_addr)
+	 return i;
+
+   return(NO_PEER);
+ }
+
+ /* ******************************* */
+
+ u_int getHostInfo(struct in_addr *hostIpAddress,
+		   u_char *ether_addr)
+ {
+   u_int idx, i, run=0;
+   HostTraffic *el=NULL;
+   u_int firstEmptySlot = NO_PEER;
+   char buf[32];
+   short useIPAddressForSearching;
+   char* symEthName = NULL, *ethAddr;
+
+   idx = computeInitialHashIdx(hostIpAddress,
+			       ether_addr, &useIPAddressForSearching);
+   idx = (u_int)((idx*3) % device[actualDeviceId].actualHashSize);
+
+   /*
+   traceEvent(TRACE_INFO, "Searching for %s@%s",
+	      intoa(*hostIpAddress),
+	      etheraddr_string(ether_addr));
+
+   if(hostIpAddress->s_addr == 0)
+     printf("Hello\n");
+   */
+ #ifdef DEBUG
+   traceEvent(TRACE_INFO, "Searching from slot %d [size=%d]\n",
+	      idx, device[actualDeviceId].actualHashSize);
+ #endif
+
+   for(i=0; i<device[actualDeviceId].actualHashSize; i++) {
+   HASH_SLOT_FOUND:
+     el = device[actualDeviceId].hash_hostTraffic[idx]; /* (**) */
+
+     if(el != NULL) {
+       if(useIPAddressForSearching == 0) {
+	 /* compare with the ethernet-address */
+	 if (memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
+	   if(hostIpAddress != NULL) {
+	     int i;
+
+	     for(i=0; i<MAX_MULTIHOMING_ADDRESSES; i++) {
+	       if(el->hostIpAddresses[i].s_addr == 0x0) {
+		 el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
+		 break;
+	       } else if(el->hostIpAddresses[i].s_addr == hostIpAddress->s_addr)
+		 break;
+	       /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+	       /*
+		 else {
+
+		 el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
+		 break;
+		 }
+	       */
+	     }
+
+	     if(el->hostNumIpAddress[0] == '\0') {
+	       /* This entry didn't have IP fields set: let's set them now */
+	       el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+	       strncpy(el->hostNumIpAddress,
+		       _intoa(*hostIpAddress, buf, sizeof(buf)),
+		       sizeof(el->hostNumIpAddress));
+
+	       if(numericFlag == 0)
+		 ipaddr2str(el, el->hostIpAddress, el->hostSymIpAddress,
+			    MAX_HOST_SYM_NAME_LEN);
+
+	       /* else el->hostSymIpAddress = el->hostNumIpAddress;
+		  The line below isn't necessary because (**) has
+		  already set the pointer */
+	       if(isBroadcastAddress(&el->hostIpAddress))
+		 FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	     }
+	   }
+	   break;
+	 }
+       } else {
+	 if (el->hostIpAddress.s_addr == hostIpAddress->s_addr)
+	   break;
+       }
+     } else {
+       /* ************************
+
+	  This code needs to be optimised. In fact everytime a
+	  new host is added to the hash, the whole hash has to
+	  be scan. This shouldn't happen with hashes. Unfortunately
+	  due to the way ntop works, a entry can appear and
+	  disappear several times from the hash, hence its position
+	  in the hash might change.
+
+	  Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
+
+	************************ */
+
+       if(firstEmptySlot == NO_PEER)
+	 firstEmptySlot = idx;
+     }
+
+     idx = (idx+1) % device[actualDeviceId].actualHashSize;
+   }
+
+   if(i == device[actualDeviceId].actualHashSize) {
+     if(firstEmptySlot != NO_PEER) {
+       /* New table entry */
+       int len;
+
+       if(usePersistentStorage) {
+	 if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
+	   el = resurrectHostTrafficInstance(etheraddr_string(ether_addr));
+	 else
+	   el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
+       } else
+	 el = NULL;
+
+       if(el == NULL) {
+	 el = (HostTraffic*)malloc(sizeof(HostTraffic));
+	 memset(el, 0, sizeof(HostTraffic));
+	 el->firstSeen=actTime;
+       }
+
+       len = (size_t)numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
+
+       FD_ZERO(&(el->flags));
+       for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+	 el->contactedSentPeersIndexes[i] = NO_PEER;
+	 el->contactedRcvdPeersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.synPktsSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.rstPktsSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.rstAckPktsSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.synFinPktsSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.finPushUrgPktsSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.nullPktsSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.ackScanSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.xmasScanSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.finScanSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.nullScanSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.rejectedTCPConnSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.establishedTCPConnSent.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.udpToClosedPortSent.peersIndexes[i] = NO_PEER;
+	 /* ************* */
+	 el->securityHostPkts.synPktsRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.rstAckPktsRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.rstPktsRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.synFinPktsRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.nullPktsRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.ackScanRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.xmasScanRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.finScanRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.nullScanRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.establishedTCPConnRcvd.peersIndexes[i] = NO_PEER;
+	 el->securityHostPkts.udpToClosedPortRcvd.peersIndexes[i] = NO_PEER;
+       }
+       for(i=0; i<MAX_NUM_HOST_ROUTERS; i++) el->contactedRouters[i] = NO_PEER;
+
+       /* NOTE: el->nextDBupdate = 0 */
+       el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
+       memset(el->protoIPTrafficInfos, 0, len);
+       device[actualDeviceId].hash_hostTraffic[firstEmptySlot] = el; /* Insert a new entry */
+       idx = firstEmptySlot;
+       device[actualDeviceId].hostsno++;
+
+ #ifdef DEBUG
+       traceEvent(TRACE_INFO, "Adding idx=%d on device=%d\n",
+		  firstEmptySlot, actualDeviceId);
+ #endif
+
+       if(ether_addr != NULL) {
+
+	 if((hostIpAddress == NULL)
+	    || ((hostIpAddress != NULL)
+		&& isLocalAddress(hostIpAddress)
+		&& (!isBroadcastAddress(hostIpAddress)))) {
+	   /* This is a local address and then the
+	      ethernet address does make sense */
+	   ethAddr = etheraddr_string(ether_addr);
+
+	   memcpy(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+	   strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
+	   symEthName = getSpecialMacInfo(el, (short)(!separator[0]));
+	   FD_SET(SUBNET_LOCALHOST_FLAG, &el->flags);
+	   FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	 } else if(hostIpAddress != NULL) {
+	   /* This is packet that's being routed */
+	   memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
+	   FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
+
+	   if(!isBroadcastAddress(hostIpAddress)) {
+	     if(isPseudoLocalAddress(hostIpAddress))
+	       FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	     else
+	       FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	   }
+	 } else {
+	   FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
+	   FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	 }
+
+	 if(strncmp(el->ethAddressString, "FF:", 3) == 0) {
+	   /*
+	     The trick below allows me not to duplicate the
+	     "<broadcast>" string in the code
 	   */
-	  sessionToPurge->magic = 0;
+	   el->hostIpAddress.s_addr = INADDR_BROADCAST;
+	   FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	   if(isMulticastAddress(&el->hostIpAddress))
+	     FD_SET(MULTICAST_HOST_FLAG, &el->flags);
+	   strncpy(el->hostNumIpAddress,
+		   _intoa(el->hostIpAddress, buf, sizeof(buf)),
+		   strlen(el->hostNumIpAddress));
+	   strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
+		   MAX_HOST_SYM_NAME_LEN);
+	 } else if(hostIpAddress != NULL) {
+	   el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+	   strncpy(el->hostNumIpAddress,
+		   _intoa(*hostIpAddress, buf, sizeof(buf)),
+		   sizeof(el->hostNumIpAddress));
+	   if(isBroadcastAddress(&el->hostIpAddress))
+	     FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	   if(isMulticastAddress(&el->hostIpAddress))
+	     FD_SET(MULTICAST_HOST_FLAG, &el->flags);
 
-	  notifyTCPSession(sessionToPurge);
-	  free(sessionToPurge); /* No inner pointers to free */
-	}
-    }
-  } /* end for */
+	   /* Trick to fill up the address cache */
+	   if(numericFlag == 0)
+	     ipaddr2str(el, el->hostIpAddress,
+			el->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
+	   else
+	     strncpy(el->hostSymIpAddress,
+		     el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
+	 } else {
+	   /* el->hostNumIpAddress == "" */
+	   if(symEthName[0] != '\0') {
+	     char buf[MAX_HOST_SYM_NAME_LEN];
 
-}
+	     if(snprintf(buf, sizeof(buf), "%s [MAC]", symEthName) < 0)
+	       traceEvent(TRACE_ERROR, "Buffer overflow!");
+	     else
+	       strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
+	   } else
+	     strncpy(el->hostSymIpAddress,
+		     el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
+	 }
 
-/* ************************************ */
+ #ifdef DEBUG
+	 /*if((strcmp(etheraddr_string(ether_addr), "08:00:20:89:79:D7") == 0)
+	   || (strcmp(el->hostSymIpAddress, "more") == 0))*/
+	 printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
+		etheraddr_string(ether_addr), el->hostSymIpAddress,
+		el->hostNumIpAddress, device[actualDeviceId].hostsno);
+ #endif
 
-static void updateUsedPorts(HostTraffic *srcHost,
-			    u_int srcHostIdx,
-			    HostTraffic *dstHost,
-			    u_int dstHostIdx,
-			    u_short sport,
-			    u_short dport,
-			    u_int length) {
+	 el->lastSeen = actTime;
+	 checkSpoofing(idx);
+       }
+     } else {
+       /* The hashtable is full */
+       if(run == 0) {
+	 purgeIdleHosts(1);
+       } else {
+	 /* No space yet: let's delete the oldest table entry */
+	 int candidate = 0;
+	 time_t lastSeenCandidate=0;
+	 HostTraffic* hostToFree;
 
-  /* traceEvent(TRACE_INFO, "%d\n", length); */
+	 for(i=1; i<device[actualDeviceId].actualHashSize; i++)
+	   if(device[actualDeviceId].hash_hostTraffic[i] != NULL) {
+	     if((candidate == 0)
+		|| (device[actualDeviceId].hash_hostTraffic[i]->lastSeen
+		    < lastSeenCandidate)) {
+	       candidate = i;
+	       if((device[actualDeviceId].hash_hostTraffic[i]->lastSeen
+		   +IDLE_HOST_PURGE_TIMEOUT)
+		  > actTime)
+		 break;
+	       else
+		 lastSeenCandidate = device[actualDeviceId].
+		   hash_hostTraffic[i]->lastSeen;
+	     }
+	   }
 
-  if(srcHostIdx != broadcastEntryIdx) {
-    if(sport < TOP_ASSIGNED_IP_PORTS) {
-      if(srcHost->portsUsage[sport] == NULL) {
-	srcHost->portsUsage[sport] = (PortUsage*)malloc(sizeof(PortUsage));
-	memset(srcHost->portsUsage[sport], 0, sizeof(PortUsage));
-      }
-      if(dstHost->portsUsage[sport] == NULL) {
-	dstHost->portsUsage[sport] = (PortUsage*)malloc(sizeof(PortUsage));
-	memset(dstHost->portsUsage[sport], 0, sizeof(PortUsage));
-      }
+	 hostToFree = device[actualDeviceId].hash_hostTraffic[candidate];
+	 freeHostInfo(actualDeviceId, candidate);
+	 idx = candidate; /* this is a hint for (**) */
+       }
 
-      srcHost->portsUsage[sport]->serverTraffic += length;
-      srcHost->portsUsage[sport]->serverUses++;
-      srcHost->portsUsage[sport]->serverUsesLastPeer = dstHostIdx;
+       run++;
+       goto HASH_SLOT_FOUND;
+     }
+   }
 
-      if(dstHostIdx != broadcastEntryIdx) {
-	dstHost->portsUsage[sport]->clientTraffic += length;
-	dstHost->portsUsage[sport]->clientUses++;
-	dstHost->portsUsage[sport]->clientUsesLastPeer = srcHostIdx;
-      }
-    }
-  }
+   if(el != NULL) {
+     el->lastSeen = actTime;
 
-  if(dstHostIdx != broadcastEntryIdx) {
-    if(dport < TOP_ASSIGNED_IP_PORTS) {
-      if(srcHost->portsUsage[dport] == NULL) {
-	srcHost->portsUsage[dport] = (PortUsage*)malloc(sizeof(PortUsage));
-	memset(srcHost->portsUsage[dport], 0, sizeof(PortUsage));
-      }
-      if(dstHost->portsUsage[dport] == NULL) {
-	dstHost->portsUsage[dport] = (PortUsage*)malloc(sizeof(PortUsage));
-	memset(dstHost->portsUsage[dport], 0, sizeof(PortUsage));
-      }
+ #ifdef DEBUG
+   traceEvent(TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
+	      idx, actualDeviceId,
+	      etheraddr_string(ether_addr), el->hostSymIpAddress,
+	      el->hostNumIpAddress, device[actualDeviceId].hostsno,
+	      useIPAddressForSearching);
+ #endif
+   }
 
-      if(srcHostIdx != broadcastEntryIdx) {
-	srcHost->portsUsage[dport]->clientTraffic += length;
-	srcHost->portsUsage[dport]->clientUses++;
-	srcHost->portsUsage[dport]->clientUsesLastPeer = dstHostIdx;
-      }
+   return(idx);
+ }
 
-      dstHost->portsUsage[dport]->serverTraffic += length;
-      dstHost->portsUsage[dport]->serverUses++;
-      dstHost->portsUsage[dport]->serverUsesLastPeer = srcHostIdx;
-    }
-  }
-}
+ /* ************************************ */
 
-/* ************************************ */
+ char* getNamedPort(int port) {
+   static char outStr[2][8];
+   static short portBufIdx=0;
+   char* svcName;
 
-static void incrementUsageCounter(UsageCounter *counter,
-				  u_int peerIdx) {
-  u_int i, found=0;
+   portBufIdx = (portBufIdx+1)%2;
 
-  counter->value++;
+   svcName = getPortByNum(port, IPPROTO_TCP);
+   if(svcName == NULL)
+     svcName = getPortByNum(port, IPPROTO_UDP);
 
-  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(counter->peersIndexes[i] == NO_PEER) {
-      counter->peersIndexes[i] = peerIdx, found = 1;
-      break;
-    } else if(counter->peersIndexes[i] == peerIdx) {
-      found = 1;
-      break;
-    }
-  }
+   if(svcName == NULL) {
+     if(snprintf(outStr[portBufIdx], 8, "%d", port) < 0)
+       traceEvent(TRACE_ERROR, "Buffer overflow!");
+   } else {
+     strncpy(outStr[portBufIdx], svcName, 8);
+   }
 
-  if(!found) {
-    for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
-      counter->peersIndexes[i] = counter->peersIndexes[i+1];
+   return(outStr[portBufIdx]);
+ }
 
-    counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = peerIdx;
-  }
-}
+ /* ************************************ */
 
-/* ************************************ */
+ static void updateHostSessionsList(u_int theHostIdx,
+				    u_short port,
+				    u_int remotePeerIdx,
+				    IPSession *theSession,
+				    u_short sessionType,
+				    u_char initiator,
+				    int role)
+ {
+   /* This is a known port hence we're interested in */
+   IpGlobalSession *scanner=NULL, *prevScanner;
+   HostTraffic* theHost;
+   u_int i;
 
-static void handleBootp(HostTraffic *srcHost,
-			HostTraffic *dstHost,
-			u_short sport,
-			u_short dport,
-			u_int packetDataLength,
-			u_char* packetData) {
-  BootProtocol bootProto = { 0 };
-  int len;
+   if((theHostIdx == broadcastEntryIdx)
+      || (remotePeerIdx == broadcastEntryIdx)
+      || (remotePeerIdx == NO_PEER)
+      || (theHostIdx == NO_PEER)
+      || (device[actualDeviceId].hash_hostTraffic[checkSessionIdx(remotePeerIdx)] == NULL)
+      )
+     return;
 
-  switch(sport) {
-  case 67: /* BOOTP/DHCP server */
-    FD_SET(HOST_SVC_DHCP_SERVER, &srcHost->flags);
+   theHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(theHostIdx)];
 
-#ifdef DHCP_DEBUG
-    traceEvent(TRACE_INFO, "%s:%d->%s:%d",
-	       srcHost->hostNumIpAddress, sport,
-	       dstHost->hostNumIpAddress, dport);
-#endif
+   if((theHost == NULL) /* Probably the host has been deleted */
+      || broadcastHost(theHost)) /* We could't care less of junk traffic */
+     return;
 
-    if(packetData != NULL) {
-      char buf[32];
+   switch(sessionType) {
+   case IPPROTO_TCP: /* 6 */
+     scanner = device[actualDeviceId].hash_hostTraffic[theHostIdx]->tcpSessionList;
+     break;
+   case IPPROTO_UDP: /* 17 */
+     scanner = device[actualDeviceId].hash_hostTraffic[theHostIdx]->udpSessionList;
+     break;
+   }
 
-      /*
-	This is a server BOOTP/DHCP respose
-	that could be decoded. Let's try.
+   prevScanner = scanner;
 
-	For more info see http://www.dhcp.org/
-      */
-      if(packetDataLength >= sizeof(BootProtocol))
-	len = sizeof(BootProtocol);
-      else
-	len = packetDataLength;
+   while(scanner != NULL) {
+     if(scanner->magic != MAGIC_NUMBER) {
+       traceEvent(TRACE_ERROR, "===> Magic assertion failed (2)");
+       scanner = NULL;
+       if(prevScanner != NULL) {
+	 prevScanner->next = NULL;
+       }
+       break;
+     }
 
-      memcpy(&bootProto, packetData, len);
+     if((scanner->port == port) && (scanner->initiator == role))
+       break;
 
-      if(bootProto.bp_op == 2) {
-	/* BOOTREPLY */
-	u_long dummyMac;
+     prevScanner = scanner;
+     scanner = (IpGlobalSession*)(scanner->next);
+   }
 
-	memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
-	if((bootProto.bp_yiaddr.s_addr != 0)
-	   && (dummyMac != 0) /* MAC address <> 00:00:00:..:00 */
-	   ) {
-	  NTOHL(bootProto.bp_yiaddr.s_addr);
-#ifdef DHCP_DEBUG
-	  traceEvent(TRACE_INFO, "%s@%s",
-		     intoa(bootProto.bp_yiaddr), etheraddr_string(bootProto.bp_chaddr));
-#endif
-	  /* Let's check whether this is a DHCP packet [DHCP magic cookie] */
-	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
-	     && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
-	    /*
-	      RFC 1048 specifies a magic cookie
-	      { 0x63 0x82 0x53 0x63 }
-	      for recognising DHCP packets encapsulated
-	      in BOOTP packets.
+   if(scanner == NULL) {
+     scanner = (IpGlobalSession*)malloc(sizeof(IpGlobalSession));
+     memset(scanner, 0, sizeof(IpGlobalSession));
+     scanner->magic = MAGIC_NUMBER;
+     scanner->port = port;
+     scanner->initiator = role;
+     scanner->firstSeen = actTime;
+
+     for(i=0; i<MAX_NUM_SESSION_PEERS; i++) scanner->peersIdx[i] = NO_PEER;
+
+     /* Add the session to the session list */
+     switch(sessionType) {
+     case IPPROTO_TCP:
+       scanner->next = (IpGlobalSession*)(device[actualDeviceId].hash_hostTraffic[theHostIdx]->tcpSessionList);
+       device[actualDeviceId].hash_hostTraffic[theHostIdx]->tcpSessionList = scanner; /* list head */
+       break;
+     case IPPROTO_UDP:
+       scanner->next = (IpGlobalSession*)(device[actualDeviceId].hash_hostTraffic[theHostIdx]->udpSessionList);
+       device[actualDeviceId].hash_hostTraffic[theHostIdx]->udpSessionList = scanner; /* list head */
+       break;
+     }
+   }
+
+   scanner->lastSeen = actTime;
+   scanner->sessionCounter++;
+
+ #ifdef DEBUG
+   printSession(theSession, sessionType, scanner->sessionCounter);
+ #endif
+
+   for(i=0; i<MAX_NUM_SESSION_PEERS; i++)
+     if((scanner->peersIdx[i] == NO_PEER)
+	|| (scanner->peersIdx[i] == remotePeerIdx))
+       break;
+
+   /* Patch below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+   if(i>=MAX_NUM_SESSION_PEERS)
+     i = scanner->lastPeer; /* (*) */
+
+   if((i<MAX_NUM_SESSION_PEERS)
+      && (((scanner->peersIdx[i] != NO_PEER)
+	   && (scanner->peersIdx[i] != remotePeerIdx)
+	   && (strcmp(device[actualDeviceId].
+		      hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])]->hostNumIpAddress,
+		      device[actualDeviceId].
+		      hash_hostTraffic[checkSessionIdx(remotePeerIdx)]->hostNumIpAddress)))
+	  || (scanner->peersIdx[i] == NO_PEER))) {
+     scanner->peersIdx[scanner->lastPeer] = remotePeerIdx; /* Note i == scanner->lastPeer (*) */
+     scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
+   }
+
+   switch(sessionType) {
+   case IPPROTO_TCP:
+     /*
+       The "IP Session History" table in the individual host
+       statistic page showed swapped values for the "Bytes sent"
+       and "Bytes rcvd" columns if the client opened the
+       connection. For Server initiated connections like
+       standard (not passive) ftp-data it was OK.
+
+       Andreas Pfaller <a.pfaller@pop.gun.de>
+     */
+
+     if((initiator == SERVER_TO_CLIENT)
+	|| (initiator == CLIENT_TO_SERVER)) {
+       scanner->bytesSent += theSession->bytesSent;
+       scanner->bytesReceived += theSession->bytesReceived;
+       scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
+       scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived;
+     } else {
+       scanner->bytesSent += theSession->bytesReceived;
+       scanner->bytesReceived += theSession->bytesSent;
+       scanner->bytesFragmentedSent += theSession->bytesFragmentedReceived;
+       scanner->bytesFragmentedReceived += theSession->bytesFragmentedSent;
+     }
+     break;
+   case IPPROTO_UDP:
+     scanner->bytesSent           += theSession->bytesSent;
+     scanner->bytesReceived       += theSession->bytesReceived;
+     scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
+     scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived;
+    break;
+   }
+ }
+
+ /* ************************************ */
+
+ void scanTimedoutTCPSessions(void) {
+   u_int idx;
+
+ #ifdef DEBUG
+   traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions\n");
+ #endif
+
+   for(idx=0; idx<numTotSessions; idx++) {
+     if(tcpSession[idx] != NULL) {
+
+       if(tcpSession[idx]->magic != MAGIC_NUMBER) {
+	 tcpSession[idx] = NULL;
+	 numTcpSessions--;
+	 traceEvent(TRACE_ERROR, "===> Magic assertion failed!");
+	 continue;
+       }
+
+       if(((tcpSession[idx]->sessionState == STATE_TIMEOUT)
+	   && ((tcpSession[idx]->lastSeen+TWO_MSL_TIMEOUT) < actTime))
+	  || /* The branch below allows to flush sessions which have not been
+		terminated properly (we've received just one FIN (not two). It might be
+		that we've lost some packets (hopefully not). */
+	  ((tcpSession[idx]->sessionState >= STATE_FIN1_ACK0)
+	   && ((tcpSession[idx]->lastSeen+DOUBLE_TWO_MSL_TIMEOUT) < actTime))
+	  /* The line below allows to avoid keeping very old sessions that
+	     might be still open, but that are probably closed and we've
+	     lost some packets */
+	  || ((tcpSession[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < actTime)
+	  || ((tcpSession[idx]->lastSeen+IDLE_SESSION_TIMEOUT) < actTime)
+	  )
+	 {
+	   IPSession *sessionToPurge = tcpSession[idx];
+
+	   tcpSession[idx] = NULL;
+	   numTcpSessions--;
+
+	   /* Session to purge */
+
+	   if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
+	     if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
+	       updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
+				      sessionToPurge->remotePeerIdx, sessionToPurge,
+				      IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE);
+	       updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
+				      sessionToPurge->initiatorIdx, sessionToPurge,
+				      IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE);
+	     }
+	   } else { /* Client->Server */
+	     if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
+	       updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
+				      sessionToPurge->initiatorIdx, sessionToPurge,
+				      IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE);
+	       updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
+				      sessionToPurge->remotePeerIdx, sessionToPurge,
+				      IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE);
+	     }
+	   }
+
+	   /*
+	    * Having updated the session information, 'theSession'
+	    * can now be purged.
 	    */
-	    int idx = 4;
-	    u_int hostIdx;
-	    struct in_addr hostIpAddress;
-	    HostTraffic *trafficHost, *realDstHost;
+	   sessionToPurge->magic = 0;
 
-	    /*
-	      This is the real address of the recipient because
-	      dstHost is a broadcast address
-	    */
-	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
-	    if(realDstHost == NULL) {
-	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr);
-#ifdef DHCP_DEBUG
-	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
-#endif
-	      realDstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-	    } else {
-#ifdef DHCP_DEBUG
-	      traceEvent(TRACE_INFO, "<<=>> %s (%d)",
-			 realDstHost->hostSymIpAddress,
-			 broadcastHost(realDstHost));
-#endif
-	    }
+	   notifyTCPSession(sessionToPurge);
+	   free(sessionToPurge); /* No inner pointers to free */
+	 }
+     }
+   } /* end for */
 
-	    if(realDstHost != NULL) {
-	      if(realDstHost->dhcpStats == NULL) {
-		realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
-	      }
+ }
 
-	      if(srcHost->dhcpStats == NULL) {
-		srcHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(srcHost->dhcpStats, 0, sizeof(DHCPStats));
-	      }
+ /* ************************************ */
 
-	      FD_SET(HOST_SVC_DHCP_CLIENT, &realDstHost->flags);
-	      realDstHost->dhcpStats->assignTime = actTime;
-	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
-	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
+ static void updateUsedPorts(HostTraffic *srcHost,
+			     u_int srcHostIdx,
+			     HostTraffic *dstHost,
+			     u_int dstHostIdx,
+			     u_short sport,
+			     u_short dport,
+			     u_int length) {
 
-	      if(realDstHost->hostIpAddress.s_addr != bootProto.bp_yiaddr.s_addr) {
-		/* The host address has changed */
-#ifdef DHCP_DEBUG
-		traceEvent(TRACE_INFO, "DHCP host address changed: %s->%s",
-			   intoa(realDstHost->hostIpAddress),
-			   _intoa(bootProto.bp_yiaddr, buf, sizeof(buf)));
-#endif
-		realDstHost->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIpAddress.s_addr;
-		realDstHost->hostIpAddress.s_addr = bootProto.bp_yiaddr.s_addr;
-		strncpy(realDstHost->hostNumIpAddress,
-			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
-			sizeof(realDstHost->hostNumIpAddress));
-		ipaddr2str(realDstHost, realDstHost->hostIpAddress, realDstHost->hostSymIpAddress,
-			   MAX_HOST_SYM_NAME_LEN);
-		realDstHost->fullDomainName = realDstHost->dotDomainName = "";
-		if(isBroadcastAddress(&realDstHost->hostIpAddress))
-		  FD_SET(BROADCAST_HOST_FLAG, &realDstHost->flags);
-		else
-		  FD_CLR(BROADCAST_HOST_FLAG, &realDstHost->flags);
-	      }
+   /* traceEvent(TRACE_INFO, "%d\n", length); */
 
-	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
-		u_char optionId = bootProto.bp_vend[idx++];
-		int j;
-		u_long tmpUlong;
+   if(srcHostIdx != broadcastEntryIdx) {
+     if(sport < TOP_ASSIGNED_IP_PORTS) {
+       if(srcHost->portsUsage[sport] == NULL) {
+	 srcHost->portsUsage[sport] = (PortUsage*)malloc(sizeof(PortUsage));
+	 memset(srcHost->portsUsage[sport], 0, sizeof(PortUsage));
+       }
+       if(dstHost->portsUsage[sport] == NULL) {
+	 dstHost->portsUsage[sport] = (PortUsage*)malloc(sizeof(PortUsage));
+	 memset(dstHost->portsUsage[sport], 0, sizeof(PortUsage));
+       }
 
-		if(optionId == 255) break; /* End of options */
-		switch(optionId) { /* RFC 2132 */
-		case 1: /* Netmask */
-		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		  NTOHL(hostIpAddress.s_addr);
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Netmask: %s", intoa(hostIpAddress));
-#endif
-		  idx += len;
-		  break;
-		case 3: /* Gateway */
-		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
-		  NTOHL(hostIpAddress.s_addr);
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Gateway: %s", _intoa(hostIpAddress, buf, sizeof(buf)));
-#endif
-		  /* *************** */
+       srcHost->portsUsage[sport]->serverTraffic += length;
+       srcHost->portsUsage[sport]->serverUses++;
+       srcHost->portsUsage[sport]->serverUsesLastPeer = dstHostIdx;
 
-		  hostIdx = findHostIdxByNumIP(hostIpAddress);
-		  if(hostIdx != NO_PEER) {
-		    for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
-		      if(realDstHost->contactedRouters[j] == hostIdx)
-			return;
-		      else if(realDstHost->contactedRouters[j] == NO_PEER) {
-			realDstHost->contactedRouters[j] = hostIdx;
-			break;
-		      }
-		    }
+       if(dstHostIdx != broadcastEntryIdx) {
+	 dstHost->portsUsage[sport]->clientTraffic += length;
+	 dstHost->portsUsage[sport]->clientUses++;
+	 dstHost->portsUsage[sport]->clientUsesLastPeer = srcHostIdx;
+       }
+     }
+   }
 
-		    trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-		    if(trafficHost != NULL)
-		      FD_SET(GATEWAY_HOST_FLAG, &trafficHost->flags);
-		  }
+   if(dstHostIdx != broadcastEntryIdx) {
+     if(dport < TOP_ASSIGNED_IP_PORTS) {
+       if(srcHost->portsUsage[dport] == NULL) {
+	 srcHost->portsUsage[dport] = (PortUsage*)malloc(sizeof(PortUsage));
+	 memset(srcHost->portsUsage[dport], 0, sizeof(PortUsage));
+       }
+       if(dstHost->portsUsage[dport] == NULL) {
+	 dstHost->portsUsage[dport] = (PortUsage*)malloc(sizeof(PortUsage));
+	 memset(dstHost->portsUsage[dport], 0, sizeof(PortUsage));
+       }
 
-		  /* *************** */
-		  idx += len;
-		  break;
-		case 12: /* Host name */
-		  len = bootProto.bp_vend[idx++];
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
-#endif
-		  idx += len;
-		  break;
-		case 15: /* Domain name */
-		  len = bootProto.bp_vend[idx++];
-#ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Domain name: %s", &bootProto.bp_vend[idx]);
-#endif
-		  if(strcmp(realDstHost->hostSymIpAddress, realDstHost->hostNumIpAddress)) {
-		    char tmpName[2*MAX_HOST_SYM_NAME_LEN],
-				 tmpHostName[MAX_HOST_SYM_NAME_LEN],
-				 tmpDomainName[MAX_HOST_SYM_NAME_LEN];
-		    int hostLen, i;
+       if(srcHostIdx != broadcastEntryIdx) {
+	 srcHost->portsUsage[dport]->clientTraffic += length;
+	 srcHost->portsUsage[dport]->clientUses++;
+	 srcHost->portsUsage[dport]->clientUsesLastPeer = dstHostIdx;
+       }
 
-			memset(tmpHostName, 0, sizeof(tmpHostName));
-		    strncpy(tmpHostName, realDstHost->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
-		    for(i=0; i<strlen(tmpHostName); i++)
-		      if(tmpHostName[i] == '.')
-			break;
+       dstHost->portsUsage[dport]->serverTraffic += length;
+       dstHost->portsUsage[dport]->serverUses++;
+       dstHost->portsUsage[dport]->serverUsesLastPeer = srcHostIdx;
+     }
+   }
+ }
 
-		    tmpHostName[i] = '\0';
+ /* ************************************ */
 
-		    strcpy(tmpDomainName, &bootProto.bp_vend[idx]);
+ static void incrementUsageCounter(UsageCounter *counter,
+				   u_int peerIdx) {
+   u_int i, found=0;
 
-		    if(strcmp(tmpHostName, tmpDomainName) != 0) {
-		      if(snprintf(tmpName, sizeof(tmpName), "%s.%s",
-				  tmpHostName, tmpDomainName) < 0)
-			traceEvent(TRACE_ERROR, "Buffer overflow!");
-		      else {
-			hostLen = len;
-			len = strlen(tmpName);
-			strncpy(realDstHost->hostSymIpAddress, tmpName,
-				len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
+   counter->value++;
+
+   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+     if(counter->peersIndexes[i] == NO_PEER) {
+       counter->peersIndexes[i] = peerIdx, found = 1;
+       break;
+     } else if(counter->peersIndexes[i] == peerIdx) {
+       found = 1;
+       break;
+     }
+   }
+
+   if(!found) {
+     for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
+       counter->peersIndexes[i] = counter->peersIndexes[i+1];
+
+     counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = peerIdx;
+   }
+ }
+
+ /* ************************************ */
+
+ static void handleBootp(HostTraffic *srcHost,
+			 HostTraffic *dstHost,
+			 u_short sport,
+			 u_short dport,
+			 u_int packetDataLength,
+			 u_char* packetData) {
+   BootProtocol bootProto = { 0 };
+   int len;
+
+   switch(sport) {
+   case 67: /* BOOTP/DHCP server */
+     FD_SET(HOST_SVC_DHCP_SERVER, &srcHost->flags);
+
+ #ifdef DHCP_DEBUG
+     traceEvent(TRACE_INFO, "%s:%d->%s:%d",
+		srcHost->hostNumIpAddress, sport,
+		dstHost->hostNumIpAddress, dport);
+ #endif
+
+     if(packetData != NULL) {
+       char buf[32];
+
+       /*
+	 This is a server BOOTP/DHCP respose
+	 that could be decoded. Let's try.
+
+	 For more info see http://www.dhcp.org/
+       */
+       if(packetDataLength >= sizeof(BootProtocol))
+	 len = sizeof(BootProtocol);
+       else
+	 len = packetDataLength;
+
+       memcpy(&bootProto, packetData, len);
+
+       if(bootProto.bp_op == 2) {
+	 /* BOOTREPLY */
+	 u_long dummyMac;
+
+	 memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
+	 if((bootProto.bp_yiaddr.s_addr != 0)
+	    && (dummyMac != 0) /* MAC address <> 00:00:00:..:00 */
+	    ) {
+	   NTOHL(bootProto.bp_yiaddr.s_addr);
+ #ifdef DHCP_DEBUG
+	   traceEvent(TRACE_INFO, "%s@%s",
+		      intoa(bootProto.bp_yiaddr), etheraddr_string(bootProto.bp_chaddr));
+ #endif
+	   /* Let's check whether this is a DHCP packet [DHCP magic cookie] */
+	   if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
+	      && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
+	     /*
+	       RFC 1048 specifies a magic cookie
+	       { 0x63 0x82 0x53 0x63 }
+	       for recognising DHCP packets encapsulated
+	       in BOOTP packets.
+	     */
+	     int idx = 4;
+	     u_int hostIdx;
+	     struct in_addr hostIpAddress;
+	     HostTraffic *trafficHost, *realDstHost;
+
+	     /*
+	       This is the real address of the recipient because
+	       dstHost is a broadcast address
+	     */
+	     realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
+	     if(realDstHost == NULL) {
+	       u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr);
+ #ifdef DHCP_DEBUG
+	       traceEvent(TRACE_INFO, "=>> %d", hostIdx);
+ #endif
+	       realDstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+	     } else {
+ #ifdef DHCP_DEBUG
+	       traceEvent(TRACE_INFO, "<<=>> %s (%d)",
+			  realDstHost->hostSymIpAddress,
+			  broadcastHost(realDstHost));
+ #endif
+	     }
+
+	     if(realDstHost != NULL) {
+	       if(realDstHost->dhcpStats == NULL) {
+		 realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
+		 memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
+	       }
+
+	       if(srcHost->dhcpStats == NULL) {
+		 srcHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
+		 memset(srcHost->dhcpStats, 0, sizeof(DHCPStats));
+	       }
+
+	       FD_SET(HOST_SVC_DHCP_CLIENT, &realDstHost->flags);
+	       realDstHost->dhcpStats->assignTime = actTime;
+	       realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
+	       realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
+
+	       if(realDstHost->hostIpAddress.s_addr != bootProto.bp_yiaddr.s_addr) {
+		 /* The host address has changed */
+ #ifdef DHCP_DEBUG
+		 traceEvent(TRACE_INFO, "DHCP host address changed: %s->%s",
+			    intoa(realDstHost->hostIpAddress),
+			    _intoa(bootProto.bp_yiaddr, buf, sizeof(buf)));
+ #endif
+		 realDstHost->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIpAddress.s_addr;
+		 realDstHost->hostIpAddress.s_addr = bootProto.bp_yiaddr.s_addr;
+		 strncpy(realDstHost->hostNumIpAddress,
+			 _intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
+			 sizeof(realDstHost->hostNumIpAddress));
+		 ipaddr2str(realDstHost, realDstHost->hostIpAddress, realDstHost->hostSymIpAddress,
+			    MAX_HOST_SYM_NAME_LEN);
+		 realDstHost->fullDomainName = realDstHost->dotDomainName = "";
+		 if(isBroadcastAddress(&realDstHost->hostIpAddress))
+		   FD_SET(BROADCAST_HOST_FLAG, &realDstHost->flags);
+		 else
+		   FD_CLR(BROADCAST_HOST_FLAG, &realDstHost->flags);
+	       }
+
+	       while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
+		 u_char optionId = bootProto.bp_vend[idx++];
+		 int j;
+		 u_long tmpUlong;
+
+		 if(optionId == 255) break; /* End of options */
+		 switch(optionId) { /* RFC 2132 */
+		 case 1: /* Netmask */
+		   len = bootProto.bp_vend[idx++];
+		   memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		   NTOHL(hostIpAddress.s_addr);
+ #ifdef DHCP_DEBUG
+		   traceEvent(TRACE_INFO, "Netmask: %s", intoa(hostIpAddress));
+ #endif
+		   idx += len;
+		   break;
+		 case 3: /* Gateway */
+		   len = bootProto.bp_vend[idx++];
+		   memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		   NTOHL(hostIpAddress.s_addr);
+ #ifdef DHCP_DEBUG
+		   traceEvent(TRACE_INFO, "Gateway: %s", _intoa(hostIpAddress, buf, sizeof(buf)));
+ #endif
+		   /* *************** */
+
+		   hostIdx = findHostIdxByNumIP(hostIpAddress);
+		   if(hostIdx != NO_PEER) {
+		     for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
+		       if(realDstHost->contactedRouters[j] == hostIdx)
+			 return;
+		       else if(realDstHost->contactedRouters[j] == NO_PEER) {
+			 realDstHost->contactedRouters[j] = hostIdx;
+			 break;
+		       }
+		     }
+
+		     trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+		     if(trafficHost != NULL)
+		       FD_SET(GATEWAY_HOST_FLAG, &trafficHost->flags);
+		   }
+
+		   /* *************** */
+		   idx += len;
+		   break;
+		 case 12: /* Host name */
+		   len = bootProto.bp_vend[idx++];
+ #ifdef DHCP_DEBUG
+		   traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
+ #endif
+		   idx += len;
+		   break;
+		 case 15: /* Domain name */
+		   len = bootProto.bp_vend[idx++];
+ #ifdef DHCP_DEBUG
+		   traceEvent(TRACE_INFO, "Domain name: %s", &bootProto.bp_vend[idx]);
+ #endif
+		   if(strcmp(realDstHost->hostSymIpAddress, realDstHost->hostNumIpAddress)) {
+		     char tmpName[2*MAX_HOST_SYM_NAME_LEN],
+				  tmpHostName[MAX_HOST_SYM_NAME_LEN],
+				  tmpDomainName[MAX_HOST_SYM_NAME_LEN];
+		     int hostLen, i;
+
+			 memset(tmpHostName, 0, sizeof(tmpHostName));
+		     strncpy(tmpHostName, realDstHost->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
+		     for(i=0; i<strlen(tmpHostName); i++)
+		       if(tmpHostName[i] == '.')
+			 break;
+
+		     tmpHostName[i] = '\0';
+
+		     strcpy(tmpDomainName, &bootProto.bp_vend[idx]);
+
+		     if(strcmp(tmpHostName, tmpDomainName) != 0) {
+		       if(snprintf(tmpName, sizeof(tmpName), "%s.%s",
+				   tmpHostName, tmpDomainName) < 0)
+			 traceEvent(TRACE_ERROR, "Buffer overflow!");
+		       else {
+			 hostLen = len;
+			 len = strlen(tmpName);
+			 strncpy(realDstHost->hostSymIpAddress, tmpName,
+				 len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
 				/*
 				  realDstHost->fullDomainName = realDstHost->dotDomainName =
 				  &realDstHost->hostSymIpAddress[hostLen];
 				*/
-			fillDomainName(realDstHost);
+			 fillDomainName(realDstHost);
 		      }
 		    }
 		  }
@@ -1647,52 +1648,116 @@ static void handleSession(const struct pcap_pkthdr *h,
 #endif
 	  }
 	}
-      } else if((dport == 80 /* HTTP */) && (theSession->bytesProtoSent == 0)) {
-	char rcStr[18];
+      } else if(dport == 80 /* HTTP */) {
+	if(theSession->bytesProtoSent == 0) {
+	  char *rcStr;
 
-	strncpy(rcStr, packetData, 16);
-	rcStr[16] = '\0';
+	  rcStr = (char*)malloc(packetDataLength+1);	  
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength] = '\0';
 
 #ifdef HTTP_DEBUG
-	printf("%s->%s [%s]\n",
-	       srcHost->hostSymIpAddress,
-	       dstHost->hostSymIpAddress,
-	       rcStr);
+	  printf("%s->%s [%s]\n",
+		 srcHost->hostSymIpAddress,
+		 dstHost->hostSymIpAddress,
+		 rcStr);
 #endif
 
-	if(isInitialHttpData(rcStr)) {
-	  u_int16_t transactionId = (u_int16_t)(srcHost->hostIpAddress.s_addr+
-						3*dstHost->hostIpAddress.s_addr
-						+5*sport+7*dport);
-	  /* to be 64bit-proof we have to copy the elements */
-	  tvstrct.tv_sec = h->ts.tv_sec;
-	  tvstrct.tv_usec = h->ts.tv_usec;
-	  addTimeMapping(transactionId, tvstrct);
+	  if(isInitialHttpData(rcStr)) {
+	    char *strtokState, *row;
+	    
+	    u_int16_t transactionId = (u_int16_t)(srcHost->hostIpAddress.s_addr+
+						  3*dstHost->hostIpAddress.s_addr
+						  +5*sport+7*dport);
+	    /* to be 64bit-proof we have to copy the elements */
+	    tvstrct.tv_sec = h->ts.tv_sec;
+	    tvstrct.tv_usec = h->ts.tv_usec;
+	    addTimeMapping(transactionId, tvstrct);
 
-	  if(srcHost->httpStats == NULL) {
-	    srcHost->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	    memset(srcHost->httpStats, 0, sizeof(ServiceStats));
+	    if(srcHost->httpStats == NULL) {
+	      srcHost->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	      memset(srcHost->httpStats, 0, sizeof(ServiceStats));
+	    }
+	    if(dstHost->httpStats == NULL) {
+	      dstHost->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	      memset(dstHost->httpStats, 0, sizeof(ServiceStats));
+	    }
+
+	    if(subnetLocalHost(dstHost))
+	      srcHost->httpStats->numLocalReqSent++;
+	    else
+	      srcHost->httpStats->numRemoteReqSent++;
+
+	    if(subnetLocalHost(srcHost))
+	      dstHost->httpStats->numLocalReqRcvd++;
+	    else
+	      dstHost->httpStats->numRemoteReqRcvd++;
+
+	    row = strtok_r(rcStr, "\n", &strtokState);
+	    
+	    while(row != NULL) {
+	      if(strncmp(row, "User-Agent:", 11) == 0) {
+		char *token, *tokState, *browser = NULL, *os = NULL;
+		
+		row[strlen(row)-1] = '\0';
+
+		/*
+		  Mozilla/4.0 (compatible; MSIE 5.01; Windows 98)
+		  Mozilla/4.7 [en] (X11; I; SunOS 5.8 i86pc)
+		  Mozilla/4.76 [en] (Win98; U)
+		*/
+#ifdef DEBUG
+		printf("=> '%s' (len=%d)\n", &row[12], packetDataLength);
+#endif
+		browser = token = strtok_r(&row[12], "(", &tokState);
+		if(token == NULL) break; else token = strtok_r(NULL, ";", &tokState);
+		if(token == NULL) break; 
+
+		if(strcmp(token, "compatible") == 0) {
+		  browser = token = strtok_r(NULL, ";", &tokState);
+		  os = token = strtok_r(NULL, ")", &tokState);
+		} else {
+		  char *tok1, *tok2;
+
+		  tok1 = strtok_r(NULL, ";", &tokState);
+		  tok2 = strtok_r(NULL, ")", &tokState);
+		  
+		  if(tok2 == NULL) os = token; else  os = tok2;
+		}	
+
+#ifdef DEBUG
+		if(browser != NULL) {
+		  trimString(browser);
+		  printf("Browser='%s'\n", browser);
+		}
+#endif
+		
+		if(os != NULL) {
+		  trimString(os);
+#ifdef DEBUG
+		  printf("OS='%s'\n", os);
+#endif
+		  if(srcHost->osName == NULL) {
+		    srcHost->osName = strdup(os);
+		  }
+		}
+		break;
+	      }
+
+	      row = strtok_r(NULL, "\n", &strtokState);
+	    }
+
+	    /* printf("==>\n\n%s\n\n", rcStr); */
+
+	  } else {
+	    traceEvent(TRACE_WARNING, "WARNING: unknown protocol (no HTTP) detected (trojan?) "
+		       "at port 80 %s:%d->%s:%d [%s]\n",
+		       srcHost->hostSymIpAddress, sport,
+		       dstHost->hostSymIpAddress, dport,
+		       rcStr);
 	  }
-	  if(dstHost->httpStats == NULL) {
-	    dstHost->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	    memset(dstHost->httpStats, 0, sizeof(ServiceStats));
-	  }
 
-	  if(subnetLocalHost(dstHost))
-	    srcHost->httpStats->numLocalReqSent++;
-	  else
-	    srcHost->httpStats->numRemoteReqSent++;
-
-	  if(subnetLocalHost(srcHost))
-	    dstHost->httpStats->numLocalReqRcvd++;
-	  else
-	    dstHost->httpStats->numRemoteReqRcvd++;
-	} else {
-	  traceEvent(TRACE_WARNING, "WARNING: unknown protocol (no HTTP) detected (trojan?) "
-		     "at port 80 %s:%d->%s:%d [%s]\n",
-		     srcHost->hostSymIpAddress, sport,
-		     dstHost->hostSymIpAddress, dport,
-		     rcStr);
+	  free(rcStr);
 	}
       } else if((sport == 8875 /* Napster Redirector */) && (packetDataLength > 5)) {
 	char address[64] = { 0 };

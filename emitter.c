@@ -36,9 +36,9 @@ void dumpNtopHashes(char* options) {
 
   if(options != NULL) {
     /* language=[perl|php] */
-    char *tmpStr;
+    char *tmpStr, *strtokState;
     
-    tmpStr = strtok(options, "&");
+    tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
       int i=0;
@@ -59,7 +59,7 @@ void dumpNtopHashes(char* options) {
 	}
       }
 
-      tmpStr = strtok(NULL, "&");
+      tmpStr = strtok_r(NULL, "&", &strtokState);
     }
   }
     
@@ -1080,7 +1080,7 @@ void dumpNtopHashes(char* options) {
       sendString(buf);
    
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"nullPktsRcvd", el->securityHostPkts.nullPktsRcvd) < 0)
+		"nullPkts", el->securityHostPkts.nullPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
@@ -1219,9 +1219,9 @@ void dumpNtopTrafficInfo(char* options) {
 
   if(options != NULL) {
     /* language=[perl|php] */
-    char *tmpStr;
+    char *tmpStr, *strtokState;
     
-    tmpStr = strtok(options, "&");
+    tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
       int i=0;
@@ -1242,7 +1242,7 @@ void dumpNtopTrafficInfo(char* options) {
 	}
       }
 
-      tmpStr = strtok(NULL, "&");
+      tmpStr = strtok_r(NULL, "&", &strtokState);
     }
   }
     
