@@ -734,6 +734,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
     sendString("Cache-Control: max-age=3600, must-revalidate, public\n");
   } else if((headerFlags & HTTP_FLAG_NO_CACHE_CONTROL) == 0) {
     sendString("Cache-Control: no-cache\n");
+    sendString("Expires: 0\n");
   }
 
   if((headerFlags & HTTP_FLAG_KEEP_OPEN) == 0) {
@@ -771,12 +772,9 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
       break;
 #ifdef DEBUG
     default:
-      traceEvent(TRACE_INFO, "INTERNAL ERROR: invalid MIME type code requested (%d)\n", mimeType);
+      traceEvent(TRACE_INFO, 
+		 "INTERNAL ERROR: invalid MIME type code requested (%d)\n", mimeType);
 #endif
-  }
-
-  if((headerFlags & HTTP_FLAG_NO_CACHE_CONTROL) == 0) {
-    sendString("Expires: 0\n");
   }
 
   if((headerFlags & HTTP_FLAG_MORE_FIELDS) == 0) {
