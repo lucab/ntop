@@ -1721,6 +1721,13 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	else
 	  dumpNtopHashIndexes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
+      } else if(strncmp(pageName, DUMP_NTOP_FLOWS_HTML, strlen(DUMP_NTOP_FLOWS_HTML)) == 0) {
+	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+	if((questionMark == NULL) || (questionMark[0] == '\0'))
+	  dumpNtopFlows(NULL, NULL, myGlobals.actualReportDeviceId);
+	else
+	  dumpNtopFlows(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
+	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_TRAFFIC_DATA_HTML, strlen(DUMP_TRAFFIC_DATA_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))

@@ -107,7 +107,7 @@ void initWriteKey(FILE *fDescr, int lang, char *indent,
 		  char *keyName, int numEntriesSent) {
   char buf[256];
 
-  if((indent == NULL) ||  (keyName == NULL)) return;
+  if((indent == NULL) || (keyName == NULL)) return;
 
   validateString(keyName);
 
@@ -165,7 +165,7 @@ void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, char last)
     sendEmitterString(fDescr, buf);
     break ;
   case NO_LANGUAGE:
-    if(indent == "") sendEmitterString(fDescr, "\n");
+    if(strcmp(indent, "") == 0) sendEmitterString(fDescr, "\n");
     break ;
   }
 }
@@ -320,6 +320,97 @@ static int checkFilter(char* theFilter,
 
 /* ********************************** */
 
+void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
+  char key[64], filter[128];
+  unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE;
+  HostTraffic *el;
+  struct re_pattern_buffer filterPattern;
+  unsigned char shortView = 0;
+  FlowFilterList *list = myGlobals.flowsList;
+
+  memset(key, 0, sizeof(key));
+  memset(filter, 0, sizeof(filter));
+
+  if(options != NULL) {
+    /* language now defined into "languages[]" */
+    char *tmpStr, *strtokState;
+
+    tmpStr = strtok_r(options, "&", &strtokState);
+
+    while(tmpStr != NULL) {
+      int i=0, j;
+
+      while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
+	i++;
+
+      /* If argument contains "language=something", then
+	 look in the table "languages" of known language for
+	 the choosen language.
+      */
+
+      if(tmpStr[i] == '=') {
+	tmpStr[i] = 0;
+
+	if(strcasecmp(tmpStr, "language") == 0) {
+	  lang = DEFAULT_LANGUAGE;
+	  for(j=1;j <= NB_LANGUAGES;j++) {
+	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0)
+	      lang = j;
+	  }
+	}
+      }
+
+      tmpStr = strtok_r(NULL, "&", &strtokState);
+    }
+  }
+
+  if(filter[0] != '\0') {
+    const char *re_err;
+
+    memset(&filterPattern, 0, sizeof(struct re_pattern_buffer));
+
+    re_err = (const char *)re_compile_pattern(filter, strlen(filter), &filterPattern);
+    if(re_err) {
+      /* Invalid pattern */
+      filter[0] = '\0';
+    } else {
+      filterPattern.fastmap =(char*)malloc(256);
+
+      if(re_compile_fastmap(&filterPattern)) {
+	/* Invalid pattern */
+	free(filterPattern.fastmap);
+	filter[0] = '\0';
+      }
+    }
+  }
+ 
+  if(list != NULL) {
+    while(list != NULL) {
+      if(list->pluginStatus.activePlugin) {
+	if(numEntries == 0) 
+	  initWriteArray(fDescr, lang);
+      REPEAT_FLOWS:
+	initWriteKey(fDescr, lang,  "", list->flowName, numEntries);	
+	wrtLlongItm(fDescr, lang, "\t", "packets", list->packets,  ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "bytes",   list->bytes,    ',', numEntries);
+	endWriteKey(fDescr, lang,   "", list->flowName, ','); 
+	numEntries++;
+
+	if((lang == NO_LANGUAGE) && (numEntries == 1)) goto REPEAT_FLOWS;
+      }
+
+      list = list->next;
+    }
+  }
+
+  if(numEntries > 0) endWriteArray(fDescr, lang);
+
+  if((filter[0] != '\0') && filterPattern.fastmap)
+    free(filterPattern.fastmap);
+}
+
+/* ********************************** */
+
 void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64], filter[128], *hostKey;
   unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE, j, localView=0;
@@ -337,7 +428,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
     tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
-      int i=0; int j;
+      int i=0, j;
 
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;
@@ -418,7 +509,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       if(numEntries > 0)
 	endWriteKey(fDescr, lang,"",  (lang == XML_LANGUAGE) ? "host-information" : hostKey, ','); 
       
-      initWriteKey(fDescr, lang, "", (lang == XML_LANGUAGE) ? "host-information" : hostKey, numEntries);
+	initWriteKey(fDescr, lang, "", (lang == XML_LANGUAGE) ? "host-information" : hostKey, numEntries);
 
       /* ************************ */
 
@@ -833,7 +924,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
     tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
-      int i=0; int j;
+      int i=0, j;
 
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;
@@ -894,7 +985,7 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
     tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
-      int i=0; int j;
+      int i=0, j;
 
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;

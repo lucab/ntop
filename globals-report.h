@@ -98,6 +98,7 @@ extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 					TrafficCounter tcSent, 
 					TrafficCounter tcRcvd);
 extern char* getNbNodeType(char nodeType);
+extern void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId);
 extern void dumpNtopHashes(FILE*, char*, int actualDeviceId);
 extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
 extern void dumpNtopTrafficInfo(FILE*, char* options);
@@ -234,6 +235,7 @@ extern void sendHTTPHeader(int mimeType, int headerFlags);
 #define DUMP_DATA_HTML                  "dumpData.html"
 #define DUMP_TRAFFIC_DATA_HTML          "dumpTrafficData.html"
 #define DUMP_HOSTS_INDEXES_HTML         "dumpDataIndexes.html"
+#define DUMP_NTOP_FLOWS_HTML            "dumpFlows.html"
 
 /* webInterface.c */
 extern void *handleWebConnections(void* notUsed);
