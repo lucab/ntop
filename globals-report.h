@@ -149,7 +149,7 @@ extern void printPluginTrailer(char *left, char *middle);
 extern void printHTMLtrailer(void);
 extern void returnHTTPredirect(char* destination);
 extern int generateInternalPages(char* pageName);
-void returnHTTPpageNotFound(void);
+void returnHTTPpageNotFound(char* additionalText);
 
 extern void sendStringLen(char *theString, unsigned int len);
 extern void sendString(char *theString);

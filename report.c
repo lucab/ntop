@@ -2305,7 +2305,19 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
    * send 404 if we cannot generate the requested page
    */
   if((el == NULL) || (!found)) {
-    returnHTTPpageNotFound();
+    char errorAdditionalText[512];
+    if(snprintf(errorAdditionalText, sizeof(errorAdditionalText),
+                "<p align=\"center\"><img alt=\"Warning\" src=\"/warning.gif\"></p>\n"
+                "<p align=\"center\"><font color=\"#FF0000\" size=\"+1\">"
+                "<b>ntop</b> does not currently have any information about host %s.</font></p>"
+                "<p>&nbsp;</p>"
+                "<p>This is most likely because the host information has been "
+                "purged as inactive.  You may wish to consider the -c | --sticky-hosts "
+                "option, although that option may substantially increase memory "
+                "requirements.</p>\n",
+                host) < 0)
+      BufferTooShort();
+    returnHTTPpageNotFound(&errorAdditionalText);
     return;
   } else
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);

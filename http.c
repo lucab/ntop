@@ -144,7 +144,7 @@ static int returnHTTPPage(char* pageName,
 
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
 static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
-static void returnHTTPspecialStatusCode(int statusIdx);
+static void returnHTTPspecialStatusCode(int statusIdx, char *additionalText);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 static char compressedFilePath[256];
 static short compressFile = 0, acceptGzEncoding;
@@ -794,42 +794,42 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipByt
 
 static void returnHTTPbadRequest(void) {
   myGlobals.numUnsuccessfulInvalidrequests[myGlobals.newSock > 0]++;
-  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_400);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_400, NULL);
 }
 
 static void returnHTTPaccessDenied(void) {
   myGlobals.numUnsuccessfulDenied[myGlobals.newSock > 0]++;
-  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_401 | BITFLAG_HTTP_NEED_AUTHENTICATION);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_401 | BITFLAG_HTTP_NEED_AUTHENTICATION, NULL);
 }
 
 static void returnHTTPaccessForbidden(void) {
   myGlobals.numUnsuccessfulForbidden[myGlobals.newSock > 0]++;
-  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_403);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_403, NULL);
 }
 
-void returnHTTPpageNotFound(void) {
+void returnHTTPpageNotFound(char* additionalText) {
   myGlobals.numUnsuccessfulNotfound[myGlobals.newSock > 0]++;
-  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_404);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_404, additionalText);
 }
 
 static void returnHTTPrequestTimedOut(void) {
   myGlobals.numUnsuccessfulTimeout[myGlobals.newSock > 0]++;
-  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_408);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_408, NULL);
 }
 
 static void returnHTTPnotImplemented(void) {
   myGlobals.numUnsuccessfulInvalidmethod[myGlobals.newSock > 0]++;
-  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_501);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_501, NULL);
 }
 
 static void returnHTTPversionNotSupported(void) {
   myGlobals.numUnsuccessfulInvalidversion[myGlobals.newSock > 0]++;
-  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_505);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_505, NULL);
 }
 
 /* ************************* */
 
-static void returnHTTPspecialStatusCode(int statusFlag) {
+static void returnHTTPspecialStatusCode(int statusFlag, char *additionalText) {
   int statusIdx;
   char buf[LEN_GENERAL_WORK_BUFFER];
 
@@ -852,14 +852,18 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
 	   "<H1>Error %d</H1>\n%s\n",
 	   HTTPstatus[statusIdx].statusCode, HTTPstatus[statusIdx].longDescription) < 0)
       BufferTooShort();
-
   sendString(buf);
+
   if(strlen(httpRequestedURL) > 0) {
     if(snprintf(buf, sizeof(buf),
 	     "<P>Received request:<BR><BLOCKQUOTE><TT>&quot;%s&quot;</TT></BLOCKQUOTE>",
 	     httpRequestedURL) < 0)
       BufferTooShort();
     sendString(buf);
+  }
+
+  if(additionalText != NULL) {
+    sendString(additionalText);
   }
 
   logHTTPaccess(HTTPstatus[statusIdx].statusCode, NULL, 0);
@@ -1866,7 +1870,7 @@ static int returnHTTPPage(char* pageName,
 #ifdef LOG_URLS
     traceEvent(CONST_TRACE_INFO, "Note: favicon.ico request, returned 404.");
 #endif
-    returnHTTPpageNotFound();
+    returnHTTPpageNotFound(NULL);
     printTrailer=0;
 #ifdef CFG_MULTITHREADED
   } else if(strncasecmp(pageName, CONST_SHOW_MUTEX_HTML, strlen(CONST_SHOW_MUTEX_HTML)) == 0) {
@@ -1978,7 +1982,7 @@ static int returnHTTPPage(char* pageName,
     rc = execCGI(&pageName[strlen(CONST_CGI_HEADER)]);
 
     if(rc != 0) {
-      returnHTTPpageNotFound();
+      returnHTTPpageNotFound(NULL);
     }
   } else
 #endif
@@ -2271,7 +2275,7 @@ static int returnHTTPPage(char* pageName,
         }
 
         if(el == NULL) {
-            returnHTTPpageNotFound();
+            returnHTTPpageNotFound(NULL);
             printTrailer=0;
         } else {
             sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
@@ -2315,7 +2319,7 @@ static int returnHTTPPage(char* pageName,
         }
 
         if(el == NULL) {
-            returnHTTPpageNotFound();
+            returnHTTPpageNotFound(NULL);
             printTrailer=0;
         } else {
             sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
@@ -2395,7 +2399,7 @@ static int returnHTTPPage(char* pageName,
       }
 
       if(el == NULL) {
-	returnHTTPpageNotFound();
+	returnHTTPpageNotFound(NULL);
 	printTrailer=0;
       } else {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
@@ -2986,7 +2990,7 @@ void handleHTTPrequest(HostAddr from) {
     Michael Wescott <wescott@crosstor.com>
   */
   if((requestedURL[0] != '\0') && (requestedURL[0] != '/')) {
-    returnHTTPpageNotFound();
+    returnHTTPpageNotFound(NULL);
     return;
   }
 
@@ -3028,7 +3032,7 @@ void handleHTTPrequest(HostAddr from) {
   }
 
   if(requestedURL[0] == '\0') {
-    returnHTTPpageNotFound();
+    returnHTTPpageNotFound(NULL);
   }
 
 #ifdef CFG_MULTITHREADED
@@ -3092,6 +3096,6 @@ void handleHTTPrequest(HostAddr from) {
       logHTTPaccess(200, &httpRequestedAt, gzipBytesSent);
 
   } else if(rc == FLAG_HTTP_INVALID_PAGE) {
-    returnHTTPpageNotFound();
+    returnHTTPpageNotFound(NULL);
   }
 }
