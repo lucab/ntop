@@ -646,8 +646,10 @@ int doChangeFilter(int len) {
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 
   if(myGlobals.filterExpressionInExtraFrame) {
+    sendString((myGlobals.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE "\n" : "");
     sendString("<HTML>\n<HEAD>\n");
-    sendString("<LINK REL=stylesheet HREF=/style.css type=\"text/css\">\n");
+    sendString((myGlobals.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "");
+    sendString("<LINK REL=stylesheet HREF=\"/style.css\" type=\"text/css\">\n");
     sendString("<SCRIPT TYPE=\"text/javascript\">\n");
     sendString("<!--\nfunction UpdateFrame(URI,F) {\n");
     sendString("  Frame=eval(\"parent.\"+F);\n");

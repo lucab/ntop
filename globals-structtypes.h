@@ -1636,6 +1636,14 @@ typedef enum {
 /* *************************************************************** */
 
 typedef enum {
+  showSentReceived = 0,
+  showOnlySent,
+  showOnlyReceived
+} LocalityDisplayPolicy;
+
+/* *************************************************************** */
+
+typedef enum {
   showHostMainPage = 0,
   showHostLunStats,
   showHostLunGraphs,
@@ -1737,6 +1745,8 @@ typedef struct ntopGlobals {
   short disableSchedYield;           /* '134' */
 #endif
 
+  short w3c;                         /* '136' */
+
   char *P3Pcp;                       /* '137' */
   char *P3Puri;                      /* '138' */
 
@@ -1756,6 +1766,7 @@ typedef struct ntopGlobals {
   u_char enableFragmentHandling;
 
   HostsDisplayPolicy hostsDisplayPolicy;
+  LocalityDisplayPolicy localityDisplayPolicy;
   int securityItemsLoaded;
   char *securityItems[MAX_NUM_PWFILE_ENTRIES];
 

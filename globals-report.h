@@ -19,10 +19,10 @@
  */
 
 #ifdef  PARM_ENABLE_EXPERIMENTAL
-#define TABLE_ON  "<TABLE BGCOLOR=#999999 CELLSPACING=1 CELLPADDING=1 BORDER=0><TR><TD>"
+#define TABLE_ON  "<TABLE BGCOLOR=\"#999999\" CELLSPACING=\"1\" CELLPADDING=\"1\" BORDER=\"0\"><TR><TD>"
 #define TABLE_OFF "</TD></TR></TABLE>"
-#define TH_BG     "BGCOLOR=#DDDDDD"
-#define TD_BG     "BGCOLOR=#DDDDDD"
+#define TH_BG     "BGCOLOR=\"#DDDDDD\""
+#define TD_BG     "BGCOLOR=\"#DDDDDD\""
 #define TR_ON     "onmouseover=\"setPointer(this, '#CCFFCC', '#DDDDDD')\" onmouseout=\"setPointer(this, '#DDDDDD', '#DDDDDD')\""
 #else
 #define TABLE_ON  ""
@@ -32,7 +32,7 @@
 #define TR_ON     ""
 #endif
 
-#define DARK_BG     "BGCOLOR=#DDDDDD"
+#define DARK_BG     "BGCOLOR=\"#DDDDDD\""
 
 /* Used for HTML tables */
 #define BASE_PROTOS_IDX  30
@@ -52,6 +52,7 @@
                     (a.tv_usec < b.tv_usec) ? -1 : 0)
 
 /* reportUtils.c */
+extern void *mallocAndInitWithReportWarn(int sz, char *from);
 extern void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId);
 extern void formatUsageCounter(UsageCounter usageCtr, Counter maxValue, int actualDeviceId);
 extern void printTableDoubleEntry(char *buf, int bufLen,
@@ -64,8 +65,10 @@ extern void printTableEntryPercentage(char *buf, int bufLen,
 				      float percentage);
 extern void printSectionTitle(char *text);
 extern void printFlagedWarning(char *text);
-extern void printHeader(int reportType, int revertOrder, u_int column, HostsDisplayPolicy showHostsMode);
-extern void printFcHeader(int reportType, int revertOrder, u_int column, u_int hour);
+extern void printHeader(int reportType, int revertOrder, u_int column, 
+                        HostsDisplayPolicy showHostsMode,
+                        LocalityDisplayPolicy showLocalityMode);
+extern void printFcHeader(int reportType, int revertOrder, u_int column, u_int hour, char *url);
 extern void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                                int column, int hostInfoPage);
 extern void printFcDisplayOptions (void);
@@ -165,10 +168,12 @@ extern void printTrafficStatistics(int revertOrder);
 extern void printHostsTraffic(int reportType,
 			      int sortedColumn, int revertOrder,
 			      int pageNum, char* url, 
-			      HostsDisplayPolicy showHostsMode);
+                              HostsDisplayPolicy showHostsMode,
+                              LocalityDisplayPolicy showLocalityMode);
 extern void printFcHostsTraffic(int reportType,
 			      int sortedColumn, int revertOrder,
-			      int pageNum, char* url);
+			      int pageNum, char* url,
+                              LocalityDisplayPolicy showLocalityMode);
 extern void printMulticastStats(int sortedColumn /* ignored so far */,
                                 int revertOrder, int pageNum);
 extern void printVSANList(unsigned int deviceId);
@@ -274,9 +279,9 @@ extern int printNtopLogReport(int printAsText);
 #define SORT_DATA_IP                    10
 #define SORT_DATA_THPT                  11
 #define SORT_DATA_HOST_TRAFFIC          12
-#define SORT_DATA_FC                    13
-#define SORT_DATA_RECEIVED_FC           14
-#define SORT_DATA_SENT_FC               15
+#define SORT_FC_DATA                    13
+#define SORT_FC_THPT                    14
+#define SORT_FC_ACTIVITY                15
 
 #define DISPLAY_FC_FCID                 0
 #define DISPLAY_FC_WWN                  1

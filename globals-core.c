@@ -641,6 +641,18 @@ void initNtop(char *devices) {
       myGlobals.hostsDisplayPolicy = showAllHosts;
   }
 
+  if(fetchPrefsValue("globals.localityPolicy", value, sizeof(value)) == -1) {
+    myGlobals.localityDisplayPolicy = showSentReceived /* 0 */;
+    storePrefsValue("globals.localityPolicy", "0");
+  } else {
+    myGlobals.localityDisplayPolicy = atoi(value);
+    
+    /* Out of range check */
+    if((myGlobals.localityDisplayPolicy < showSentReceived) 
+       || (myGlobals.localityDisplayPolicy > showOnlyReceived))
+      myGlobals.localityDisplayPolicy = showSentReceived;
+  }
+
 #ifdef CFG_MULTITHREADED
   {
     pthread_t myThreadId;

@@ -72,6 +72,7 @@ ntop \- display top network users
 .RB [ --disable-schedyield ]
 .RB [ --disable-mutexextrainfo ]
 .RB [ --skip-version-check ]
+.RB [ --w3c ]
 
 Unix options:
 
@@ -943,6 +944,20 @@ enhancements were present/absent from the code.
 
 NOTE: At present, the recheck does not work under Windows.
  
+.It --w3c
+By default,
+.B ntop
+generates displayable but not great html.  There are a number of tags we do not 
+generate because they cause problems with older browsers which are still commonly
+used or are important to look good on real-world browsers.
+This flag tells
+.B ntop
+to generate 'BETTER' (but not perfect) w3c compliant html 4.01 output. This in no 
+way addresses all of the compatibility and markup issues.  Over time, we would like
+to make 
+.B ntop
+more compatible, but it will never be 100%.  If you find any issues, please report
+them to ntop-dev.
 
 .SH "WEB VIEWS"
 While

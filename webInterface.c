@@ -57,8 +57,7 @@ static void handleSingleWebConnection(fd_set *fdmask);
  * Minimal implementation of inet_aton.
  * Cannot distinguish between failure and a local broadcast address.
  */
-static int inet_aton(const char *cp, struct in_addr *addr)
-{
+static int inet_aton(const char *cp, struct in_addr *addr) {
   addr->s_addr = inet_addr(cp);
   return (addr->s_addr == INADDR_NONE) ? 0 : 1;
 }
@@ -212,15 +211,16 @@ void showPluginsList(char* pluginName) {
       if(!doPrintHeader) {
 	printHTMLheader("Available Plugins", NULL, 0);
  	sendString("<CENTER>\n"
-		   ""TABLE_ON"<TABLE BORDER=1><TR>\n"
-		   "<TR "DARK_BG"><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH><TH "TH_BG">Description</TH>"
-		   "<TH "TH_BG">Version</TH><TH "TH_BG">Author</TH>"
+		   ""TABLE_ON"<TABLE BORDER=1>\n"
+		   "<TR "DARK_BG"><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH>\n"
+                   "<TH "TH_BG">Description</TH>\n"
+		   "<TH "TH_BG">Version</TH><TH "TH_BG">Author</TH>\n"
 		   "<TH "TH_BG">Active<br>[click to toggle]</TH>"
 		   "</TR>\n");
 	doPrintHeader = 1;
       }
 
-      if(snprintf(tmpBuf1, sizeof(tmpBuf1), "<A HREF=/plugins/%s>%s</A>",
+      if(snprintf(tmpBuf1, sizeof(tmpBuf1), "<A HREF=\"/plugins/%s\" title=\"Invoke plugin\">%s</A>",
 		  flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname) < 0)
 	BufferTooShort();
 
@@ -265,10 +265,10 @@ void showPluginsList(char* pluginName) {
 	sendString(tmpBuf);
       }
 
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
-		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
-		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
-		  "<TD "TD_BG" ALIGN=CENTER><A HREF=" CONST_SHOW_PLUGINS_HTML "?%s=%d>%s</A></TD>"
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TD "TD_BG" ALIGN=LEFT>%s</TD>\n"
+		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>\n"
+		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>\n"
+		  "<TD "TD_BG" ALIGN=CENTER><A HREF=\"" CONST_SHOW_PLUGINS_HTML "?%s=%d\">%s</A></TD>"
 		  "</TR>\n",
 		  flows->pluginStatus.pluginPtr->pluginDescr,
 		  flows->pluginStatus.pluginPtr->pluginVersion,
@@ -276,7 +276,7 @@ void showPluginsList(char* pluginName) {
 		  flows->pluginStatus.pluginPtr->pluginURLname,
 		  flows->pluginStatus.activePlugin ? 0: 1,
 		  flows->pluginStatus.activePlugin ?
-		  "Yes" : "<FONT COLOR=#FF0000>No</FONT>")  < 0)
+		  "Yes" : "<FONT COLOR=\"#FF0000\">No</FONT>")  < 0)
 	BufferTooShort();
       sendString(tmpBuf);
     }
@@ -467,25 +467,25 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isDHCPClient(el))
-    dynIp = "&nbsp;<IMG ALT=\"DHCP Client\" SRC=\"/bulb.gif\" BORDER=0>&nbsp;";
+    dynIp = "&nbsp;" CONST_IMG_DHCP_CLIENT "&nbsp;";
   else {
     if(isDHCPServer(el))
-      dynIp = "&nbsp;<IMG ALT=\"DHCP Server\" SRC=\"/antenna.gif\" BORDER=0>&nbsp;";
+      dynIp = "&nbsp;" CONST_IMG_DHCP_SERVER "&nbsp;";
     else
       dynIp = "";
   }
 
-  if(isMultihomed(el))     multihomed = "&nbsp;<IMG ALT=Multihomed SRC=\"/multihomed.gif\"\" BORDER=0>"; else multihomed = "";
-  if(isBridgeHost(el))     brStr = "&nbsp;<IMG ALT=Bridge SRC=\"/bridge.gif\" BORDER=0>"; else brStr = "";
-  if(gatewayHost(el))      gwStr = "&nbsp;<IMG ALT=Router SRC=\"/router.gif\" BORDER=0>"; else gwStr = "";
-  if(nameServerHost(el))   dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=\"/dns.gif\" BORDER=0>"; else dnsStr = "";
-  if(isPrinter(el))        printStr = "&nbsp;<IMG ALT=Printer SRC=\"/printer.gif\" BORDER=0>"; else printStr = "";
-  if(isSMTPhost(el))       smtpStr = "&nbsp;<IMG ALT=\"Mail (SMTP)\" SRC=\"/mail.gif\" BORDER=0>"; else smtpStr = "";
-  if(isHTTPhost(el))       httpStr = "&nbsp;<IMG ALT=\"HTTP Server&nbsp;<IMG ALT=\"HTTP Server\" SRC=\"/web.gif\" BORDER=0>"; else httpStr = "";
-  if(isNtpServer(el))      ntpStr = "&nbsp;<IMG ALT=\"NTP Server&nbsp;<IMG ALT=\"NTP Server\" SRC=\"/clock.gif\" BORDER=0>"; else ntpStr = "";
+  if(isMultihomed(el))     multihomed = "&nbsp;" CONST_IMG_MULTIHOMED ; else multihomed = "";
+  if(isBridgeHost(el))     brStr = "&nbsp;" CONST_IMG_BRIDGE ; else brStr = "";
+  if(gatewayHost(el))      gwStr = "&nbsp;" CONST_IMG_ROUTER ; else gwStr = "";
+  if(nameServerHost(el))   dnsStr = "&nbsp;" CONST_IMG_DNS_SERVER ; else dnsStr = "";
+  if(isPrinter(el))        printStr = "&nbsp;" CONST_IMG_PRINTER ; else printStr = "";
+  if(isSMTPhost(el))       smtpStr = "&nbsp;" CONST_IMG_SMTP_SERVER ; else smtpStr = "";
+  if(isHTTPhost(el))       httpStr = "&nbsp;" CONST_IMG_HTTP_SERVER ; else httpStr = "";
+  if(isNtpServer(el))      ntpStr = "&nbsp;" CONST_IMG_NTP_SERVER ; else ntpStr = "";
   if(el->protocolInfo != NULL) {
-    if(el->protocolInfo->userList != NULL) userStr = "&nbsp;<IMG ALT=Users SRC=\"/users.gif\" BORDER=0>"; else userStr = "";
-    if(isP2P(el)) p2p = "&nbsp;<IMG ALT=P2P SRC=\"/p2p.gif\" BORDER=0>"; else p2p = "";
+    if(el->protocolInfo->userList != NULL) userStr = "&nbsp;" CONST_IMG_HAS_USERS ; else userStr = "";
+    if(isP2P(el)) p2p = "&nbsp;" CONST_IMG_HAS_P2P ; else p2p = "";
   } else {
     userStr = "";
     p2p = "";
@@ -493,13 +493,16 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   switch(isHostHealthy(el)) {
   case 0: /* OK */
-    healthStr = "";
+    healthStr = "<!-- 495 -->";
     break;
-  case 1: /* Warning */
-    healthStr = " <IMG ALT=\"Medium Risk\" SRC=\"/Risk_medium.gif\" BORDER=0>";
+  case 1: /* Minor */
+    healthStr = "<!-- 498 --> " CONST_IMG_LOW_RISK;
     break;
-  case 2: /* Error */
-    healthStr = " <IMG ALT=\"High Risk\" SRC=\"/Risk_high.gif\" BORDER=0>";
+  case 2: /* Warning */
+    healthStr = "<!-- 501 --> " CONST_IMG_MEDIUM_RISK;
+    break;
+  case 3: /* Error */
+    healthStr = "<!--504 --> " CONST_IMG_HIGH_RISK;
     break;
   }
 
@@ -516,7 +519,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s%s%s%s%s</TH>%s",
 		linkName, "", symIp, 
 		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)), dynIp, multihomed, 
-		usedEthAddress ? "<IMG SRC=/card.gif BORDER=0>" : "", 
+		usedEthAddress ? CONST_IMG_NIC_CARD : "", 
 		gwStr, brStr, dnsStr, printStr, smtpStr, httpStr,
 		ntpStr, healthStr, userStr, p2p, flag) < 0)
       BufferTooShort();
@@ -525,7 +528,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		"%s%s%s%s%s%s%s%s%s%s%s%s%s",
 		linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), symIp, 
 		multihomed, 
-		usedEthAddress ? "<IMG SRC=/card.gif BORDER=0>" : "", gwStr, dnsStr,
+		usedEthAddress ? CONST_IMG_NIC_CARD : "", gwStr, dnsStr,
 		printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2p,
 		dynIp, flag) < 0)
       BufferTooShort();    
@@ -921,6 +924,22 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
+  printFeatureConfigInfo(textPrintFlag, "FC_DEBUG",
+#ifdef FC_DEBUG
+			 "yes"
+#else
+			 "no"
+#endif
+			 );
+
+  printFeatureConfigInfo(textPrintFlag, "FINGERPRINT_DEBUG",
+#ifdef FINGERPRINT_DEBUG
+			 "yes"
+#else
+			 "no"
+#endif
+			 );
+
   printFeatureConfigInfo(textPrintFlag, "FTP_DEBUG",
 #ifdef FTP_DEBUG
 			 "yes"
@@ -1029,6 +1048,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "UNKNOWN_PACKET_DEBUG",
 #ifdef UNKNOWN_PACKET_DEBUG
+			 "yes"
+#else
+			 "no"
+#endif
+			 );
+
+  printFeatureConfigInfo(textPrintFlag, "URL_DEBUG",
+#ifdef URL_DEBUG
 			 "yes"
 #else
 			 "no"
@@ -3401,6 +3428,20 @@ void printNtopConfigInfo(int textPrintFlag) {
                            "No");
 #endif
 
+  printParameterConfigInfo(textPrintFlag, "--w3c",
+                           myGlobals.w3c == TRUE ? "Yes" : "No",
+                           "No");
+
+  if(textPrintFlag == FALSE) {
+    sendString("<tr><td colspan=\"2\">"
+               "<p><i><b>NOTE</b>: The --w3c flag makes the generated html MORE compatible with "
+               "the w3c recommendations, but it in no way addresses all of the compatibility "
+               "and markup issues.  We would like to make <b>ntop</b> more compatible, but "
+               "some basic issues of looking decent on real-world browsers mean it will "
+               "never be 100%.  If you find any issues, please report them to ntop-dev."
+               "</i></p></td></tr>\n");
+  }
+
   printParameterConfigInfo(textPrintFlag, "--p3p-cp",
                            ((myGlobals.P3Pcp == NULL) ||
                             (myGlobals.P3Pcp[0] == '\0')) ? "none" :
@@ -4503,6 +4544,8 @@ void printNtopConfigInfo(int textPrintFlag) {
     defined(DNS_DEBUG)                 || \
     defined(DNS_SNIFF_DEBUG)           || \
     defined(FRAGMENT_DEBUG)            || \
+    defined(FC_DEBUG)                  || \
+    defined(FINGERPRINT_DEBUG)         || \
     defined(FTP_DEBUG)                 || \
     defined(GDBM_DEBUG)                || \
     defined(HASH_DEBUG)                || \
@@ -4518,7 +4561,8 @@ void printNtopConfigInfo(int textPrintFlag) {
     defined(SESSION_TRACE_DEBUG)       || \
     defined(SSLWATCHDOG_DEBUG)         || \
     defined(STORAGE_DEBUG)             || \
-    defined(UNKNOWN_PACKET_DEBUG)
+    defined(UNKNOWN_PACKET_DEBUG)      || \
+    defined(URL_DEBUG)
 #else
   if(textPrintFlag == TRUE)
 #endif
@@ -5374,8 +5418,7 @@ int sslwatchdogSetState(int stateNewValue, int parentchildFlag,
 
 /* **************************************** */
 
-void sslwatchdogSighandler(int signum)
-{
+void sslwatchdogSighandler(int signum) {
   /* If this goes off, the ssl_accept() below didn't respond */
   signal(SIGUSR1, SIG_DFL);
   sslwatchdogDebug("->SIGUSR1", FLAG_SSLWATCHDOG_PARENT, "");
@@ -5913,12 +5956,10 @@ int handlePluginHTTPRequest(char* url) {
 }
 
 char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
-                      short compactWWN, char *buf, int buflen)
-{
+                      short compactWWN, char *buf, int buflen) {
     char *tmpStr, tmpbuf[64], colorSpec[64], *linkStr;
     char noLink = FALSE;        /* don't create link for certain spl addr */
     char *devTypeStr, *vendorStr, *vendorName;
-    char *switchStr = "&nbsp;<IMG SRC=/switch.gif BORDER=0>";
 
     if(el == NULL) {
         traceEvent (CONST_TRACE_ERROR, "makeFcHostLink: Received NULL el\n");
@@ -6012,10 +6053,10 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
 
     if (el->hostFcAddress.domain && (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN)) {
         if (el->devType == SCSI_DEV_INITIATOR) {
-            devTypeStr = "&nbsp;<IMG SRC=/initiator.gif BORDER=0>";
+            devTypeStr = "&nbsp;" CONST_IMG_SCSI_INITIATOR;
         }
         else if (el->devType == SCSI_DEV_BLOCK) {
-            devTypeStr = "&nbsp;<IMG SRC=/disk.gif BORDER=0>";
+            devTypeStr = "&nbsp;" CONST_IMG_SCSI_DISK;
         }
         else {
             devTypeStr = "";
@@ -6025,19 +6066,19 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
         if (vendorName[0] != '\0') {
             if (!strncasecmp (vendorName, "EMULEX CORPORATION",
                               strlen ("EMULEX CORPORATION"))) {
-                vendorStr = "&nbsp;<IMG SRC=/emulex.gif BORDER=0>";
+                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_EMULEX;
             }
             else if (!strcasecmp (vendorName, "JNI Corporation")) {
-                vendorStr = "&nbsp;<IMG SRC=/jni.gif BORDER=0>";
+                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_JNI;
             }
             else if (!strcasecmp (vendorName, "BROCADE COMMUNICATIONS SYSTEMS, Inc.")) {
-                vendorStr = "&nbsp;<IMG SRC=/brocade.gif BORDER=0>";
+                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_BROCADE;
             }
             else if (!strncmp (vendorName, "EMC", strlen ("EMC"))) {
-                vendorStr = "&nbsp;<IMG SRC=/emc.gif BORDER=0>";
+                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_EMC;
             }
             else if (!strcasecmp (vendorName, "SEAGATE TECHNOLOGY")) {
-                vendorStr = "&nbsp;<IMG SRC=/seagate.gif BORDER=0>";
+                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_SEAGATE;
             }
             else {
                 vendorStr = "";
@@ -6054,8 +6095,9 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
 
     if (mode == FLAG_HOSTLINK_HTML_FORMAT) {
         if (noLink) {
-            if (snprintf (buf, buflen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
-                          "%s%s</TH>", tmpStr, switchStr) < 0)
+            if(snprintf(buf, buflen,
+                        "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s&nbsp;" CONST_IMG_FIBRECHANNEL_SWITCH "</TH>",
+                        tmpStr) < 0)
                 BufferTooShort();
         }
         else {
@@ -6074,8 +6116,8 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
         }
         else {
             if (snprintf(buf, buflen, 
-                         "<A HREF=\"/%s-%d.html\" %s NOWRAP"
-                         "onMouseOver=\"window.status='%s';return true\""
+                         "<A HREF=\"/%s-%d.html\" %s NOWRAP "
+                         "onMouseOver=\"window.status='%s';return true\" "
                          "onMouseOut=\"window.status='';return true\">%s</A>",
                          linkStr, el->vsanId,
                          makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
@@ -6094,28 +6136,22 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
 
 /* ******************************* */
 
-char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen)
-{
-    char vsanStr[8];
-
+char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen) {
     accessAddrResMutex("makeHostLink");
 
     if (vsanId) {
-        snprintf (vsanStr, sizeof (vsanStr), "%d", vsanId);
-    }
-    else {
-        snprintf (vsanStr, sizeof (vsanStr), "-");
-    }
-    
-    if (mode == FLAG_HOSTLINK_HTML_FORMAT) {
-        if (snprintf (buf, buflen, "<TH "TH_BG" ALIGN=RIGHT NOWRAP>"
-                      "<A HREF=\"/VSAN%d.html\">%s</A></TH>", vsanId, vsanStr) < 0)
-            BufferTooShort ();
-    }
-    else {
-        if (snprintf (buf, buflen,
-                      "<A HREF=\"/VSAN%d.html\">%s</A></TH>", vsanId, vsanStr) < 0)
-            BufferTooShort ();
+      if (snprintf (buf, buflen, 
+               "%s<a href=\"" CONST_VSAN_DETAIL_HTML "?vsan=%d\">%d</a>%s",
+               (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "<th " TH_BG " align=\"right\" NOWRAP>" : "",
+               vsanId, vsanId, 
+               (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "</th>" : "") < 0)
+      BufferTooShort ();
+    } else {
+      if (snprintf (buf, buflen, 
+               "%s<a href=\"" CONST_VSAN_DETAIL_HTML "\">-</a>%s",
+               (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "<th " TH_BG " align=\"right\" NOWRAP>" : "",
+               (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "</th>" : "") < 0)
+      BufferTooShort ();
     }
 
     releaseAddrResMutex ();

@@ -217,8 +217,8 @@ static int readHTTPheader(char* theRequestedURL,
       wait_time.tv_sec = 10; wait_time.tv_usec = 0;
       if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 0) {
 	errorCode = FLAG_HTTP_REQUEST_TIMEOUT; /* Timeout */
-#ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Timeout while reading from socket.");
+#ifdef URL_DEBUG
+	traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Timeout while reading from socket.");
 #endif
 	break;
       }
@@ -240,16 +240,16 @@ static int readHTTPheader(char* theRequestedURL,
 
     if(rc != 1) {
       idxChar = 0;
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Socket read returned %d (errno=%d)", rc, errno);
+#ifdef URL_DEBUG
+      traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Socket read returned %d (errno=%d)", rc, errno);
 #endif
       /* FIXME (DL): is valid to write to the socket after this condition? */
       break; /* Empty line */
 
     } else if((errorCode == 0) && !isprint(aChar[0]) && !isspace(aChar[0])) {
       errorCode = FLAG_HTTP_INVALID_REQUEST;
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Rcvd non expected char '%c' [%d/0x%x]", aChar[0], aChar[0], aChar[0]);
+#ifdef URL_DEBUG
+      traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Rcvd non expected char '%c' [%d/0x%x]", aChar[0], aChar[0], aChar[0]);
 #endif
     } else {
       if(aChar[0] == '\r') {
@@ -262,8 +262,8 @@ static int readHTTPheader(char* theRequestedURL,
 	}
 	numLine++;
 	lineStr[idxChar] = '\0';
-#ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: read HTTP %s line: %s [%d]",
+#ifdef URL_DEBUG
+	traceEvent(CONST_TRACE_INFO, "URL_DEBUG: read HTTP %s line: %s [%d]",
 	           (numLine>1) ? "header" : "request", lineStr, idxChar);
 #endif
 	if(errorCode != 0) {
@@ -274,21 +274,21 @@ static int readHTTPheader(char* theRequestedURL,
 
 	  if(idxChar < 9) {
 	    errorCode = FLAG_HTTP_INVALID_REQUEST;
-#ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Too short request line.");
+#ifdef URL_DEBUG
+	    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Too short request line.");
 #endif
 
 	  } else if(strncmp(&lineStr[idxChar-9], " HTTP/", 6) != 0) {
 	    errorCode = FLAG_HTTP_INVALID_REQUEST;
-#ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Malformed request line.");
+#ifdef URL_DEBUG
+	    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Malformed request line.");
 #endif
 
 	  } else if((strncmp(&lineStr[idxChar-3], "1.0", 3) != 0) &&
 	            (strncmp(&lineStr[idxChar-3], "1.1", 3) != 0)) {
 	    errorCode = FLAG_HTTP_INVALID_VERSION;
-#ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Unsupported HTTP version.");
+#ifdef URL_DEBUG
+	    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Unsupported HTTP version.");
 #endif
 
 	  } else {
@@ -306,8 +306,8 @@ static int readHTTPheader(char* theRequestedURL,
 	      */
 	    } else {
 	      errorCode = FLAG_HTTP_INVALID_METHOD;
-#ifdef DEBUG
-	      traceEvent(CONST_TRACE_INFO, "DEBUG: Unrecognized method in request line.");
+#ifdef URL_DEBUG
+	      traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Unrecognized method in request line.");
 #endif
 	    }
 
@@ -319,9 +319,9 @@ static int readHTTPheader(char* theRequestedURL,
 		it has been sent through a proxy 
 	      */
 	      
-	      if(strncmp(tmpStr, "http://", 7) == 0)
+	      if(strncasecmp(tmpStr, "http://", 7) == 0)
 		beginIdx = 7;
-	      else if(strncmp(tmpStr, "https://", 8) == 0)
+	      else if(strncasecmp(tmpStr, "https://", 8) == 0)
 		beginIdx = 8;
 	      else 
 		beginIdx = 0;
@@ -351,8 +351,8 @@ static int readHTTPheader(char* theRequestedURL,
 	} else if((idxChar >= 16)
 		  && (strncasecmp(lineStr, "Content-Length: ", 16) == 0)) {
 	  contentLen = atoi(&lineStr[16]);
-#ifdef DEBUG
-	  traceEvent(CONST_TRACE_INFO, "DEBUG: len=%d [%s/%s]", contentLen, lineStr, &lineStr[16]);
+#ifdef URL_DEBUG
+	  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: len=%d [%s/%s]", contentLen, lineStr, &lineStr[16]);
 #endif
 	} else if((idxChar >= 12)
 		  && (strncasecmp(lineStr, "User-Agent: ", 12) == 0)) {
@@ -362,8 +362,8 @@ static int readHTTPheader(char* theRequestedURL,
       } else if(idxChar > sizeof(lineStr)-2) {
 	if(errorCode == 0) {
 	  errorCode = FLAG_HTTP_INVALID_REQUEST;
-#ifdef DEBUG
-	  traceEvent(CONST_TRACE_INFO, "DEBUG: Line too long (hackers ?)");
+#ifdef URL_DEBUG
+	  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Line too long (hackers ?)");
 #endif
 	}
       } else {
@@ -542,13 +542,16 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   if(htmlTitle != NULL) theTitle = htmlTitle; else theTitle = title;
 
+  sendString((myGlobals.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE "\n" : "");
   sendString("<HTML>\n<HEAD>\n");
+  sendString((myGlobals.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "");
 
   if(title != NULL) {
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TITLE>%s</TITLE>\n", title) < 0)
     BufferTooShort();
     sendString(buf);
-  }
+  } else if(myGlobals.w3c == TRUE)
+    sendString("<!-- w3c requires --><title>ntop page</title>\n");
 
   if((headerFlags & BITFLAG_HTML_NO_REFRESH) == 0) {
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", myGlobals.refreshRate) < 0)
@@ -559,14 +562,14 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   sendString("<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n");
   sendString("<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
   if((headerFlags & BITFLAG_HTML_NO_STYLESHEET) == 0) {
-    sendString("<LINK REL=stylesheet HREF=/style.css type=\"text/css\">\n");
+    sendString("<LINK REL=stylesheet HREF=\"/style.css\" type=\"text/css\">\n");
   }
   
-  sendString("<SCRIPT SRC=/functions.js TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
+  sendString("<SCRIPT SRC=\"/functions.js\" TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
 
   sendString("</HEAD>\n");
   if((headerFlags & BITFLAG_HTML_NO_BODY) == 0) {
-    sendString("<BODY BACKGROUND=/white_bg.gif BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
+    sendString("<BODY BACKGROUND=\"/white_bg.gif\" BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
     if((theTitle != NULL) && ((headerFlags & BITFLAG_HTML_NO_HEADING) == 0))
       printSectionTitle(theTitle);
   }
@@ -599,9 +602,19 @@ void printHTMLtrailer(void) {
 
   sendString("\n<HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><B>\n");
 
-  if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s [ntop uptime: %s]<br>\n",
-	      ctime(&myGlobals.actTime), formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0)
+  if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s ",
+	      ctime(&myGlobals.actTime)) < 0)
     BufferTooShort();
+  sendString(buf);
+
+  if(myGlobals.rFileName == NULL) {
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "[ntop uptime: %s]<br>\n",
+	      formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+  } else {
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "[from file %s]<br>\n", myGlobals.rFileName) < 0)
+      BufferTooShort();
+  }
   sendString(buf);
 
   if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Generated by <A HREF=\"http://www.ntop.org/\">ntop</A> v.%s %s \n[%s]<br>Build: %s.\n",
@@ -678,7 +691,7 @@ void printHTMLtrailer(void) {
     sendString(buf);
   }
   
-  sendString("<BR>\n&copy; 1998-2004 by <A HREF=mailto:deri@ntop.org>Luca Deri</A>\n");
+  sendString("<BR>\n&copy; 1998-2004 by <A HREF=\"mailto:deri@ntop.org\">Luca Deri</A>\n");
   sendString("</B></FONT>\n</BODY>\n</HTML>\n");
 }
 
@@ -799,9 +812,9 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))) {
     statusIdx = 0;
     statusFlag = 0;
-#ifdef DEBUG
+#ifdef URL_DEBUG
     traceEvent(CONST_TRACE_ERROR,
-	       "DEBUG: INTERNAL: invalid HTTP status id (%d) set to zero.\n", statusIdx);
+	       "URL_DEBUG: INTERNAL: invalid HTTP status id (%d) set to zero.\n", statusIdx);
 #endif
   }
 
@@ -852,8 +865,8 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   statusIdx = (headerFlags >> 8) & 0xff;
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))){
     statusIdx = 0;
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_ERROR, "DEBUG: INTERNAL: invalid HTTP status id (%d) set to zero.",
+#ifdef URL_DEBUG
+    traceEvent(CONST_TRACE_ERROR, "URL_DEBUG: INTERNAL: invalid HTTP status id (%d) set to zero.",
 	       statusIdx);
 #endif
   }
@@ -938,10 +951,10 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
       break;
     case FLAG_HTTP_TYPE_NONE:
       break;
-#ifdef DEBUG
+#ifdef URL_DEBUG
     default:
       traceEvent(CONST_TRACE_ERROR,
-		 "DEBUG: INTERNAL: invalid MIME type code requested (%d)\n", mimeType);
+		 "URL_DEBUG: INTERNAL: invalid MIME type code requested (%d)\n", mimeType);
 #endif
   }
 
@@ -964,8 +977,8 @@ static int checkURLsecurity(char *url) {
   char *token;
   char *workURL;
 
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: RAW url is '%s'", url);
+#ifdef URL_DEBUG
+    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: RAW url is '%s'", url);
 #endif
 
   /*
@@ -1058,8 +1071,8 @@ static int checkURLsecurity(char *url) {
 
     url[begin] = '\0';
  
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Decoded url is '%s', %% at %08x", url, strstr(url, "%"));
+#ifdef URL_DEBUG
+    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Decoded url is '%s', %% at %08x", url, strstr(url, "%"));
 #endif
   }       
 
@@ -1110,8 +1123,8 @@ static int checkURLsecurity(char *url) {
        token[0] = '\0';
    }
 
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: uri is '%s'", workURL);
+#ifdef URL_DEBUG
+    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: uri is '%s'", workURL);
 #endif
 
   /* Prohibited characters? */
@@ -1129,22 +1142,22 @@ static int checkURLsecurity(char *url) {
  *   NOTE that we don't allow general .p3p and .xml requests
  *        Those are bounced below...
  */
-  if(strncmp(workURL, CONST_W3C_P3P_XML, strlen(CONST_W3C_P3P_XML)) == 0) {
+  if(strncasecmp(workURL, CONST_W3C_P3P_XML, strlen(CONST_W3C_P3P_XML)) == 0) {
     free(workURL);
     return(0);
   }
   
-  if(strncmp(workURL, CONST_NTOP_P3P, strlen(CONST_NTOP_P3P)) == 0) {
+  if(strncasecmp(workURL, CONST_NTOP_P3P, strlen(CONST_NTOP_P3P)) == 0) {
     free(workURL);
     return(0);
   }
 
 #ifdef MAKE_WITH_XMLDUMP
   /* Special cases for plugins/xmldump/xxxx.xml... */
-  if((strncmp(workURL, 
+  if((strncasecmp(workURL, 
              "/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME, 
              strlen("/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME)) == 0) ||
-    (strncmp(workURL, "/" CONST_XML_DTD_NAME, strlen("/" CONST_XML_DTD_NAME)) == 0)) {
+    (strncasecmp(workURL, "/" CONST_XML_DTD_NAME, strlen("/" CONST_XML_DTD_NAME)) == 0)) {
     free(workURL);
     return(0);
   }
@@ -1158,16 +1171,16 @@ static int checkURLsecurity(char *url) {
   i++;
 
   if((i > 0)
-     && (!((strcmp(&workURL[i], "htm")  == 0) ||
-	   (strcmp(&workURL[i], "html") == 0) ||
-	   (strcmp(&workURL[i], "txt")  == 0) ||
-	   (strcmp(&workURL[i], "jpg")  == 0) ||
-	   (strcmp(&workURL[i], "png")  == 0) ||
-	   (strcmp(&workURL[i], "gif")  == 0) ||
-	   (strcmp(&workURL[i], "ico")  == 0) ||
-	   (strcmp(&workURL[i], "js")   == 0) || /* Javascript */
-	   (strcmp(&workURL[i], "pl")   == 0) || /* used for Perl CGI's */
-	   (strcmp(&workURL[i], "css")  == 0)))) {
+     && (!((strcasecmp(&workURL[i], "htm")  == 0) ||
+	   (strcasecmp(&workURL[i], "html") == 0) ||
+	   (strcasecmp(&workURL[i], "txt")  == 0) ||
+	   (strcasecmp(&workURL[i], "jpg")  == 0) ||
+	   (strcasecmp(&workURL[i], "png")  == 0) ||
+	   (strcasecmp(&workURL[i], "gif")  == 0) ||
+	   (strcasecmp(&workURL[i], "ico")  == 0) ||
+	   (strcasecmp(&workURL[i], "js")   == 0) || /* Javascript */
+	   (strcasecmp(&workURL[i], "pl")   == 0) || /* used for Perl CGI's */
+	   (strcasecmp(&workURL[i], "css")  == 0)))) {
     traceEvent(CONST_TRACE_NOISY,
 	       "URL security(5): Found bad file extension (.%s) in URL...\n",
 	       &workURL[i]);
@@ -1266,9 +1279,9 @@ static int returnHTTPPage(char* pageName,
                           char *agent) {
 #endif
 
-  char *questionMark;
+  char *questionMark, *pageURI, *token;
   int sortedColumn = 0, printTrailer=1, idx;
-  int errorCode=0, pageNum = 0, found=0, portNr=0;
+  int errorCode=0, pageNum = 0, found=0, portNr=0, vsanNr=0;
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512];
@@ -1276,6 +1289,7 @@ static int returnHTTPPage(char* pageName,
   int revertOrder=0;
   struct tm t;
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
+  LocalityDisplayPolicy showLocalityMode = myGlobals.localityDisplayPolicy;
   int showFcHostsPage = showHostMainPage;
   u_short vsanId;
 #if !defined(WIN32) && defined(PARM_USE_CGI)
@@ -1289,7 +1303,9 @@ static int returnHTTPPage(char* pageName,
 
   *usedFork = 0;
 
-  /* traceEvent(CONST_TRACE_INFO, "Page: '%s'", pageName); */
+#ifdef URL_DEBUG
+  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Page: '%s'", pageName);
+#endif
 
   questionMark = strchr(pageName, '?');
 
@@ -1312,9 +1328,15 @@ static int returnHTTPPage(char* pageName,
 	 domainNameParm = strdup(&tkn[4]);
        } else if(strncmp(tkn, "port=", 5) == 0) {
 	 portNr = atoi(&tkn[5]);
+       } else if(strncmp(tkn, "vsan=", 5) == 0) {
+	 vsanNr = atoi(&tkn[5]);
        } else if(strncmp(tkn, "showH=", 6) == 0) {
 	 showHostsMode = atoi(&tkn[6]);
 	 if((showHostsMode < showAllHosts) || (showHostsMode > showOnlyRemoteHosts))
+	   showHostsMode = showAllHosts;
+       } else if(strncmp(tkn, "showL=", 6) == 0) {
+	 showLocalityMode = atoi(&tkn[6]);
+	 if((showLocalityMode < showSentReceived) || (showLocalityMode > showOnlyReceived))
 	   showHostsMode = showAllHosts;
        } else if(strncmp(tkn, "showF=", 6) == 0) {
            /* This is the FC Show Hosts Mode */
@@ -1333,6 +1355,7 @@ static int returnHTTPPage(char* pageName,
     }
   }
 
+  /* Keep the myGlobals, local and prefsDB copies in sync */
   if(myGlobals.hostsDisplayPolicy != showHostsMode) {
     char tmp[8];
 
@@ -1343,6 +1366,19 @@ static int returnHTTPPage(char* pageName,
       myGlobals.hostsDisplayPolicy = showAllHosts;
 
     snprintf(tmp, sizeof(tmp), "%d", myGlobals.hostsDisplayPolicy);
+    storePrefsValue("globals.displayPolicy", tmp);
+  }
+
+  if(myGlobals.localityDisplayPolicy != showLocalityMode) {
+    char tmp[8];
+
+    myGlobals.localityDisplayPolicy = showLocalityMode;
+
+    if((myGlobals.localityDisplayPolicy < showSentReceived)
+       || (myGlobals.localityDisplayPolicy > showOnlyReceived))
+      myGlobals.localityDisplayPolicy = showSentReceived;
+
+    snprintf(tmp, sizeof(tmp), "%d", myGlobals.localityDisplayPolicy);
     storePrefsValue("globals.displayPolicy", tmp);
   }
 
@@ -1363,8 +1399,13 @@ static int returnHTTPPage(char* pageName,
    *
    *   For each directory in the list.
    *
+   *   Note that pageURI is a duplicate of pageName, but drops any parameters...
    */
 
+  pageURI=strdup(pageName);
+  token = strchr(pageURI, '?');
+  if(token != NULL) token[0] = '\0';
+  
 #ifdef MAKE_WITH_I18N
   for(lang=0; (!found) && lang < numLang + 2; lang++) {
 #endif
@@ -1378,14 +1419,14 @@ static int returnHTTPPage(char* pageName,
                       "%s/html_%s/%s",
                       myGlobals.dataFileDirs[idx],
                       myGlobals.defaultLanguage,
-                      pageName) < 0)
+                      pageURI) < 0)
             BufferTooShort();
       } else if (lang == numLang+1) {
 #endif
         if(snprintf(tmpStr, sizeof(tmpStr), 
                    "%s/html/%s",
                     myGlobals.dataFileDirs[idx],
-                    pageName) < 0)
+                    pageURI) < 0)
           BufferTooShort();
 #ifdef MAKE_WITH_I18N
       } else {
@@ -1396,7 +1437,7 @@ static int returnHTTPPage(char* pageName,
                       "%s/html_%s/%s",
                       myGlobals.dataFileDirs[idx],
                       requestedLanguage[lang],
-                      pageName) < 0)
+                      pageURI) < 0)
             BufferTooShort();
       }
 #endif
@@ -1409,8 +1450,8 @@ static int returnHTTPPage(char* pageName,
       }
 #endif
 
-#if defined(HTTP_DEBUG) || defined(I18N_DEBUG)
-      traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: Testing for page %s at %s", pageName, tmpStr);
+#if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
+      traceEvent(CONST_TRACE_INFO, "HTTP/I18N/URL_DEBUG: Testing for page %s at %s", pageURI, tmpStr);
 #endif
 	
       if(stat(tmpStr, &statbuf) == 0) {
@@ -1427,29 +1468,29 @@ static int returnHTTPPage(char* pageName,
 #endif
   }
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: tmpStr=%s - fd=0x%x", tmpStr, fd);
+#ifdef URL_DEBUG
+  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: tmpStr=%s - fd=0x%x", tmpStr, fd);
 #endif
 
   if(fd != NULL) {
     char theDate[48];
     time_t theTime;
-    int len = strlen(pageName), mimeType = FLAG_HTTP_TYPE_HTML;
+    int len = strlen(pageURI), mimeType = FLAG_HTTP_TYPE_HTML;
 
     if(len > 4) {
-      if(strcmp(&pageName[len-4], ".gif") == 0)
+      if(strcasecmp(&pageURI[len-4], ".gif") == 0)
         mimeType = FLAG_HTTP_TYPE_GIF;
-      else if(strcmp(&pageName[len-4], ".jpg") == 0)
+      else if(strcasecmp(&pageURI[len-4], ".jpg") == 0)
         mimeType = FLAG_HTTP_TYPE_JPEG;
-      else if(strcmp(&pageName[len-4], ".png") == 0)
+      else if(strcasecmp(&pageURI[len-4], ".png") == 0)
         mimeType = FLAG_HTTP_TYPE_PNG;
-      else if(strcmp(&pageName[len-4], ".css") == 0)
+      else if(strcasecmp(&pageURI[len-4], ".css") == 0)
         mimeType = FLAG_HTTP_TYPE_CSS;
-      else if(strcmp(&pageName[len-4], ".ico") == 0)
+      else if(strcasecmp(&pageURI[len-4], ".ico") == 0)
         mimeType = FLAG_HTTP_TYPE_ICO;
-      else if(strcmp(&pageName[len-4], ".js") == 0)
+      else if(strcasecmp(&pageURI[len-4], ".js") == 0)
         mimeType = FLAG_HTTP_TYPE_JS;
-      else if(strcmp(&pageName[len-4], ".xml") == 0)
+      else if(strcasecmp(&pageURI[len-4], ".xml") == 0)
         /* w3c/p3p.xml */
         mimeType = FLAG_HTTP_TYPE_XML;
     }
@@ -1486,12 +1527,17 @@ static int returnHTTPPage(char* pageName,
 
     fclose(fd);
     /* closeNwSocket(&myGlobals.newSock); */
+    free(pageURI);
     return(0);
   }
 
   /* **************** */
-  
-  if(strncmp(pageName, CONST_PLUGINS_HEADER, strlen(CONST_PLUGINS_HEADER)) == 0) {
+
+  /* Revert to the full requested pageName, as these strncasecmp strcasecmp
+   * check the fronts only */
+  free(pageURI);
+ 
+  if(strncasecmp(pageName, CONST_PLUGINS_HEADER, strlen(CONST_PLUGINS_HEADER)) == 0) {
     if(handlePluginHTTPRequest(&pageName[strlen(CONST_PLUGINS_HEADER)])) {
       return(0);
     } else {
@@ -1504,7 +1550,7 @@ static int returnHTTPPage(char* pageName,
     helps because at least a partial respose
     has been send back to the user in the meantime
   */
-  if(strncmp(pageName, CONST_SHUTDOWN_NTOP_HTML, strlen(CONST_SHUTDOWN_NTOP_HTML)) == 0) {
+  if(strncasecmp(pageName, CONST_SHUTDOWN_NTOP_HTML, strlen(CONST_SHUTDOWN_NTOP_HTML)) == 0) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Shutdown request has been received");
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     sendString("<P>Your shutdown request is being processed</P>\n");
@@ -1515,17 +1561,17 @@ static int returnHTTPPage(char* pageName,
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Shutdown request FAILED");
     sendString("<P>ERROR: Your shutdown seems to have failed...</P>\n");
     printTrailer=0;
-  } else if(strncmp(pageName, CONST_CHANGE_FILTER_HTML, strlen(CONST_CHANGE_FILTER_HTML)) == 0) {
+  } else if(strncasecmp(pageName, CONST_CHANGE_FILTER_HTML, strlen(CONST_CHANGE_FILTER_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     changeFilter();
-  } else if(strncmp(pageName, "doChangeFilter", strlen("doChangeFilter")) == 0) {
+  } else if(strncasecmp(pageName, "doChangeFilter", strlen("doChangeFilter")) == 0) {
     printTrailer=0;
     if(doChangeFilter(postLen)==0) /*resetStats()*/;
-  } else if(strncmp(pageName, CONST_FILTER_INFO_HTML, strlen(CONST_FILTER_INFO_HTML)) == 0) {
+  } else if(strncasecmp(pageName, CONST_FILTER_INFO_HTML, strlen(CONST_FILTER_INFO_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
     /* printHTMLtrailer is called afterwards and inserts the relevant info */
-  } else if(strncmp(pageName, CONST_RESET_STATS_HTML, strlen(CONST_RESET_STATS_HTML)) == 0) {
+  } else if(strncasecmp(pageName, CONST_RESET_STATS_HTML, strlen(CONST_RESET_STATS_HTML)) == 0) {
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     printHTMLheader("Statistics reset requested...", NULL, BITFLAG_HTML_NO_REFRESH);
@@ -1535,7 +1581,7 @@ static int returnHTTPPage(char* pageName,
                   "may have already occured.<br>\n"
                   "<i>Reset takes a few seconds - please do not immediately request "
                   "the next page from the ntop web server or it will appear to hang.</i></P>\n");
-  } else if(strncmp(pageName, CONST_SWITCH_NIC_HTML, strlen(CONST_SWITCH_NIC_HTML)) == 0) {
+  } else if(strncasecmp(pageName, CONST_SWITCH_NIC_HTML, strlen(CONST_SWITCH_NIC_HTML)) == 0) {
     char *equal = strchr(pageName, '=');
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 
@@ -1543,52 +1589,52 @@ static int returnHTTPPage(char* pageName,
       switchNwInterface(0);
     else
       switchNwInterface(atoi(&equal[1]));
-  } else if(strcmp(pageName, CONST_DO_ADD_USER) == 0) {
+  } else if(strcasecmp(pageName, CONST_DO_ADD_USER) == 0) {
     printTrailer=0;
     doAddUser(postLen /* \r\n */);
-  } else if(strncmp(pageName, CONST_DELETE_USER, strlen(CONST_DELETE_USER)) == 0) {
+  } else if(strncasecmp(pageName, CONST_DELETE_USER, strlen(CONST_DELETE_USER)) == 0) {
     printTrailer=0;
     if((questionMark == NULL) || (questionMark[0] == '\0'))
       deleteUser(NULL);
     else
       deleteUser(&questionMark[1]);
-  } else if(strncmp(pageName, CONST_MODIFY_URL, strlen(CONST_MODIFY_URL)) == 0) {
+  } else if(strncasecmp(pageName, CONST_MODIFY_URL, strlen(CONST_MODIFY_URL)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     if((questionMark == NULL) || (questionMark[0] == '\0')) {
       addURL(NULL);
     } else
       addURL(&questionMark[1]);
-  } else if(strncmp(pageName, CONST_DELETE_URL, strlen(CONST_DELETE_URL)) == 0) {
+  } else if(strncasecmp(pageName, CONST_DELETE_URL, strlen(CONST_DELETE_URL)) == 0) {
     printTrailer=0;
     if((questionMark == NULL) || (questionMark[0] == '\0'))
       deleteURL(NULL);
     else
       deleteURL(&questionMark[1]);
-  } else if(strcmp(pageName, CONST_DO_ADD_URL) == 0) {
+  } else if(strcasecmp(pageName, CONST_DO_ADD_URL) == 0) {
     printTrailer=0;
     doAddURL(postLen /* \r\n */);
-  } else if(strncmp(pageName, CONST_SHOW_PLUGINS_HTML, strlen(CONST_SHOW_PLUGINS_HTML)) == 0) {
+  } else if(strncasecmp(pageName, CONST_SHOW_PLUGINS_HTML, strlen(CONST_SHOW_PLUGINS_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     if(questionMark == NULL)
       showPluginsList("");
     else
       showPluginsList(&pageName[strlen(CONST_SHOW_PLUGINS_HTML)+1]);
-  } else if(strcmp(pageName, CONST_SHOW_USERS_HTML) == 0) {
+  } else if(strcasecmp(pageName, CONST_SHOW_USERS_HTML) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     showUsers();
-  } else if(strcmp(pageName, CONST_ADD_USERS_HTML) == 0) {
+  } else if(strcasecmp(pageName, CONST_ADD_USERS_HTML) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     addUser(NULL);
-  } else if(strncmp(pageName, CONST_MODIFY_USERS, strlen(CONST_MODIFY_USERS)) == 0) {
+  } else if(strncasecmp(pageName, CONST_MODIFY_USERS, strlen(CONST_MODIFY_USERS)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     if((questionMark == NULL) || (questionMark[0] == '\0'))
       addUser(NULL);
     else
       addUser(&questionMark[1]);
-  } else if(strcmp(pageName, CONST_SHOW_URLS_HTML) == 0) {
+  } else if(strcasecmp(pageName, CONST_SHOW_URLS_HTML) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     showURLs();
-  } else if(strcmp(pageName, CONST_ADD_URLS_HTML) == 0) {
+  } else if(strcasecmp(pageName, CONST_ADD_URLS_HTML) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     addURL(NULL);
     /* Temporary here - begin
@@ -1598,7 +1644,7 @@ static int returnHTTPPage(char* pageName,
 
        This NEEDS to be fixed.
     */
-  } else if(strcmp(pageName, CONST_FAVICON_ICO) == 0) {
+  } else if(strcasecmp(pageName, CONST_FAVICON_ICO) == 0) {
     /* Burton Strauss (BStrauss@acm.org) - April 2002
        favicon.ico and we don't have the file (or it would have been handled above)
        so punt!
@@ -1609,16 +1655,16 @@ static int returnHTTPPage(char* pageName,
     returnHTTPpageNotFound();
     printTrailer=0;
 #ifdef CFG_MULTITHREADED
-  } else if(strncmp(pageName, CONST_SHOW_MUTEX_HTML, strlen(CONST_SHOW_MUTEX_HTML)) == 0) {
+  } else if(strncasecmp(pageName, CONST_SHOW_MUTEX_HTML, strlen(CONST_SHOW_MUTEX_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     printTrailer=0;
     printMutexStatusReport(0);
 #endif
-  } else if(strncmp(pageName, CONST_PRIVACYCLEAR_HTML, strlen(CONST_PRIVACYCLEAR_HTML)) == 0) {
+  } else if(strncasecmp(pageName, CONST_PRIVACYCLEAR_HTML, strlen(CONST_PRIVACYCLEAR_HTML)) == 0) {
     storePrefsValue("globals.displayPrivacyNotice", "0");
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PRIVACY: Flag cleared, notice will display next run");
     returnHTTPredirect(CONST_PRIVACYNOTICE_HTML);
-  } else if(strncmp(pageName, CONST_PRIVACYFORCE_HTML, strlen(CONST_PRIVACYFORCE_HTML)) == 0) {
+  } else if(strncasecmp(pageName, CONST_PRIVACYFORCE_HTML, strlen(CONST_PRIVACYFORCE_HTML)) == 0) {
     storePrefsValue("globals.displayPrivacyNotice", "2");
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PRIVACY: Flag forced, notice will display each run");
     returnHTTPredirect(CONST_PRIVACYNOTICE_HTML);
@@ -1713,7 +1759,7 @@ static int returnHTTPPage(char* pageName,
 #endif
 
 #if !defined(WIN32) && defined(PARM_USE_CGI)
-  if(strncmp(pageName, CONST_CGI_HEADER, strlen(CONST_CGI_HEADER)) == 0) {
+  if(strncasecmp(pageName, CONST_CGI_HEADER, strlen(CONST_CGI_HEADER)) == 0) {
     sendString("HTTP/1.0 200 OK\r\n");
     rc = execCGI(&pageName[strlen(CONST_CGI_HEADER)]);
 
@@ -1723,7 +1769,7 @@ static int returnHTTPPage(char* pageName,
   } else
 #endif
 
-  if(strcmp(pageName, CONST_INDEX_HTML) == 0) {
+  if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
       sendString("<!-- Internally generated page -->\n");
@@ -1739,8 +1785,8 @@ static int returnHTTPPage(char* pageName,
       sendString("</frameset>\n");
       sendString("</html>\n");
       printTrailer=0;
-    } else if((strcmp(pageName, CONST_LEFTMENU_HTML) == 0)
-	      || (strcmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
+    } else if((strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0)
+	      || (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<!-- Internally generated page -->\n");
@@ -1811,8 +1857,6 @@ static int returnHTTPPage(char* pageName,
                  "ALT=\"IP Protocol Subnet Usage\">IP Protocol Usage</a></li>\n");
       sendString("<li><a href=" CONST_IP_TRAFFIC_MATRIX_HTML " target=area "
                  "ALT=\"IP Traffic Matrix\">IP Traffic Matrix</a></li>\n");
-      sendString("<li><a href=" CONST_NW_EVENTS_HTML " target=area "
-                 "ALT=\"Network Events\">Network Events</a></li>\n");
 
       if(myGlobals.flowsList != NULL)
 	sendString("<li><a href=" CONST_NET_FLOWS_HTML " target=area "
@@ -1841,7 +1885,7 @@ static int returnHTTPPage(char* pageName,
 		 "Luca Deri</A></FONT><pre>\n");
       sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");
       printTrailer=0;
-    } else if(strcmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
       if(myGlobals.filterExpressionInExtraFrame){
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
         sendString("<!-- Internally generated page -->\n");
@@ -1865,7 +1909,7 @@ static int returnHTTPPage(char* pageName,
         sendString("  </frameset>\n</html>\n");
         printTrailer=0;
       }
-    } else if(strcmp(pageName, CONST_HOME_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_HOME_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       sendString("<!-- Internally generated page -->\n");
       printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
@@ -1879,286 +1923,249 @@ static int returnHTTPPage(char* pageName,
 		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
       sendString("NFS<li>X11</ul>\n<p>\n");
       sendString("<li>Fibre Channel<ul><li>Control Traffic - SW2,GS3,ELS<li>SCSI</ul></ul><p>\n");
-      sendString("<b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
+      sendString("<p><b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
       sendString("open source software</A> and encourages everyone to modify, improve\n ");
       sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
-      sendString("to the enclosed licence (see COPYING).<p>Problems, bugs, questions, ");
+      sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
       sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
-      sendString("<A HREF=mailto:ntop@ntop.org> mailing list</A>.\n");
-      sendString("<br>For information on <b>ntop</b> and information privacy, see ");
-      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.\n</font>");
-    } else if(strncmp(pageName, CONST_SORT_DATA_RECEIVED_PROTOS_HTML,
+      sendString("<A HREF=mailto:ntop@ntop.org> mailing list</A>.</p>\n");
+      sendString("<p>For information on <b>ntop</b> and information privacy, see ");
+      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_RECEIVED_PROTOS_HTML,
 		      strlen(CONST_SORT_DATA_RECEIVED_PROTOS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_RECEIVED_PROTOS, sortedColumn, revertOrder, 
                         pageNum, CONST_SORT_DATA_RECEIVED_PROTOS_HTML,
-                        showHostsMode);
-    } else if(strncmp(pageName, CONST_SORT_DATA_RECEIVED_IP_HTML, 
+                        showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_RECEIVED_IP_HTML, 
                       strlen(CONST_SORT_DATA_RECEIVED_IP_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_RECEIVED_IP, sortedColumn, revertOrder,
-			pageNum, CONST_SORT_DATA_RECEIVED_IP_HTML, showHostsMode);
-    } else if(strncmp(pageName, CONST_SORT_DATA_RECEIVED_FC_HTML, 
-                      strlen(CONST_SORT_DATA_RECEIVED_FC_HTML)) == 0) {
+			pageNum, CONST_SORT_DATA_RECEIVED_IP_HTML,
+                        showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_FC_DATA_HTML, 
+                      strlen(CONST_FC_DATA_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printFcHostsTraffic (SORT_DATA_RECEIVED_PROTOS, sortedColumn, revertOrder,
-                           pageNum, CONST_SORT_DATA_RECEIVED_FC_HTML);
-    } else if(strncmp(pageName, CONST_SORT_DATA_THPT_STATS_HTML,
+      printFcHostsTraffic(SORT_FC_DATA, sortedColumn, revertOrder,
+                           pageNum, CONST_FC_DATA_HTML, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_THPT_STATS_HTML,
                       strlen(CONST_SORT_DATA_THPT_STATS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printThptStats(sortedColumn);
-    } else if(strncmp(pageName, CONST_THPT_STATS_MATRIX_HTML,
+    } else if(strncasecmp(pageName, CONST_THPT_STATS_MATRIX_HTML,
                       strlen(CONST_THPT_STATS_MATRIX_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printThptStatsMatrix(sortedColumn);
-    } else if(strncmp(pageName, CONST_SORT_DATA_RECEIVED_THPT_HTML,
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_RECEIVED_THPT_HTML,
                       strlen(CONST_SORT_DATA_RECEIVED_THPT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_RECEIVED_THPT, sortedColumn, 
                         revertOrder, pageNum, CONST_SORT_DATA_RECEIVED_THPT_HTML,
-                        showHostsMode);
-    } else if(strncmp(pageName, CONST_SORT_DATA_RECEIVED_FC_THPT_HTML,
-                      strlen(CONST_SORT_DATA_RECEIVED_FC_THPT_HTML)) == 0) {
-        sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-        if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-        printFcHostsTraffic(SORT_DATA_RECEIVED_THPT, sortedColumn, revertOrder,
-                            pageNum, CONST_SORT_DATA_RECEIVED_THPT_HTML);
-    } else if(strncmp(pageName, CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML,
+                        showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML,
                       strlen(CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_RCVD_HOST_TRAFFIC, sortedColumn, revertOrder, 
                         pageNum, CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML,
-                        showHostsMode);
-    } else if (strncmp(pageName, CONST_SORT_DATA_RCVD_HOST_FC_TRAFFIC_HTML,
-                       strlen(CONST_SORT_DATA_RCVD_HOST_FC_TRAFFIC_HTML)) == 0) {
-        sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-        if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-        printFcHostsTraffic(SORT_DATA_RCVD_HOST_TRAFFIC, sortedColumn, revertOrder,
-                            pageNum, CONST_SORT_DATA_RCVD_HOST_FC_TRAFFIC_HTML);
-    } else if(strncmp(pageName, CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML,
+                        showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML,
                       strlen(CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_SENT_HOST_TRAFFIC, sortedColumn, revertOrder,
-                        pageNum, CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML, showHostsMode);
-    } else if (strncmp(pageName, CONST_SORT_DATA_SENT_HOST_FC_TRAFFIC_HTML,
-                      strlen(CONST_SORT_DATA_SENT_HOST_FC_TRAFFIC_HTML)) == 0) {
-        sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-        if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-        printFcHostsTraffic(SORT_DATA_SENT_HOST_TRAFFIC, sortedColumn, revertOrder,
-                            pageNum, CONST_SORT_DATA_SENT_HOST_FC_TRAFFIC_HTML);
-    } else if(strncmp(pageName, CONST_SORT_DATA_SENT_PROTOS_HTML,
+                        pageNum, CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML,
+                        showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_SENT_PROTOS_HTML,
                       strlen(CONST_SORT_DATA_SENT_PROTOS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_SENT_PROTOS, sortedColumn, revertOrder,
                         pageNum, CONST_SORT_DATA_SENT_PROTOS_HTML,
-                        showHostsMode);
-    } else if(strncmp(pageName, CONST_SORT_DATA_SENT_IP_HTML,
+                        showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_SENT_IP_HTML,
                       strlen(CONST_SORT_DATA_SENT_IP_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_SENT_IP, sortedColumn, revertOrder,
-			pageNum, CONST_SORT_DATA_SENT_IP_HTML, showHostsMode);
-    } else if(strncmp(pageName, CONST_SORT_DATA_SENT_FC_HTML,
-                      strlen(CONST_SORT_DATA_SENT_FC_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printFcHostsTraffic(SORT_DATA_SENT_PROTOS, sortedColumn, revertOrder,
-                          pageNum, CONST_SORT_DATA_SENT_FC_HTML);
-    } else if(strncmp(pageName, CONST_SORT_DATA_SENT_THPT_HTML,
+			pageNum, CONST_SORT_DATA_SENT_IP_HTML,
+                        showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_SENT_THPT_HTML,
                       strlen(CONST_SORT_DATA_SENT_THPT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_SENT_THPT, sortedColumn, revertOrder, 
                         pageNum, CONST_SORT_DATA_SENT_THPT_HTML,
-                        showHostsMode);
-    } else if (strncmp(pageName, CONST_SORT_DATA_SENT_FC_THPT_HTML,
-                       strlen(CONST_SORT_DATA_SENT_FC_THPT_HTML)) == 0) {
-        sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-        if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-        printFcHostsTraffic(SORT_DATA_SENT_THPT, sortedColumn, revertOrder,
-                            pageNum, CONST_SORT_DATA_SENT_THPT_HTML);
-    } else if(strncmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
+                        showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsInfo(sortedColumn, revertOrder, pageNum);
-    } else if(strncmp(pageName, CONST_HOSTS_FC_INFO_HTML,
-                      strlen(CONST_HOSTS_FC_INFO_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_FC_HOSTS_INFO_HTML,
+                      strlen(CONST_FC_HOSTS_INFO_HTML)) == 0) {
         printFcHostsInfo(sortedColumn, revertOrder, pageNum);
-    } else if(strncmp(pageName, CONST_HOSTS_LOCAL_INFO_HTML, strlen(CONST_HOSTS_LOCAL_INFO_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_INFO_HTML, strlen(CONST_HOSTS_LOCAL_INFO_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printLocalHostsStats();
-    } else if(strncmp(pageName, CONST_SORT_DATA_PROTOS_HTML, strlen(CONST_SORT_DATA_PROTOS_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_PROTOS_HTML, strlen(CONST_SORT_DATA_PROTOS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder, 
                         pageNum, CONST_SORT_DATA_PROTOS_HTML,
-                        showHostsMode);
-    } else if(strncmp(pageName, CONST_SORT_DATA_IP_HTML, strlen(CONST_SORT_DATA_IP_HTML)) == 0) {
+                        showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_IP_HTML, strlen(CONST_SORT_DATA_IP_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_IP, sortedColumn, revertOrder, 
-			pageNum, CONST_SORT_DATA_IP_HTML, showHostsMode);
-    } else if(strncmp(pageName, CONST_SORT_DATA_FC_HTML, strlen(CONST_SORT_DATA_IP_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printFcHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder,
-                          pageNum, CONST_SORT_DATA_PROTOS_HTML);
-    } else if(strncmp(pageName, CONST_SORT_DATA_THPT_HTML, strlen(CONST_SORT_DATA_THPT_HTML)) == 0) {
+			pageNum, CONST_SORT_DATA_IP_HTML, showHostsMode, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_THPT_HTML, strlen(CONST_SORT_DATA_THPT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_THPT, sortedColumn, revertOrder, 
                         pageNum, CONST_SORT_DATA_THPT_HTML,
-                        showHostsMode);
-    } else if (strncmp(pageName, CONST_SORT_DATA_FC_THPT_HTML,
-                       strlen(CONST_SORT_DATA_FC_THPT_HTML)) == 0) {
+                        showHostsMode, showLocalityMode);
+    } else if (strncasecmp(pageName, CONST_FC_THPT_HTML,
+                       strlen(CONST_FC_THPT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-        printFcHostsTraffic(SORT_DATA_THPT, sortedColumn, revertOrder,
-                            pageNum, CONST_SORT_DATA_THPT_HTML);
-    } else if(strncmp(pageName, CONST_SORT_DATA_HOST_TRAFFIC_HTML,
+      printFcHostsTraffic(SORT_FC_THPT, sortedColumn, revertOrder,
+                          pageNum, CONST_FC_THPT_HTML, showLocalityMode);
+    } else if(strncasecmp(pageName, CONST_SORT_DATA_HOST_TRAFFIC_HTML,
                       strlen(CONST_SORT_DATA_HOST_TRAFFIC_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder, 
                         pageNum, CONST_SORT_DATA_HOST_TRAFFIC_HTML,
-                        showHostsMode);
-    } else if (strncmp(pageName, CONST_SORT_DATA_HOST_FC_TRAFFIC_HTML,
-                       strlen(CONST_SORT_DATA_HOST_FC_TRAFFIC_HTML)) == 0) {
+                        showHostsMode, showLocalityMode);
+    } else if (strncasecmp(pageName, CONST_FC_ACTIVITY_HTML,
+                       strlen(CONST_FC_ACTIVITY_HTML)) == 0) {
         sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
         if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-        printFcHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder,
-                            pageNum, CONST_SORT_DATA_HOST_FC_TRAFFIC_HTML);
-    } else if(strcmp(pageName, CONST_NET_FLOWS_HTML) == 0) {
+        printFcHostsTraffic(SORT_FC_ACTIVITY, sortedColumn, revertOrder,
+                            pageNum, CONST_FC_ACTIVITY_HTML, showLocalityMode);
+    } else if(strcasecmp(pageName, CONST_NET_FLOWS_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       listNetFlows();
-    } else if(strncmp(pageName, CONST_IP_R_2_L_HTML, strlen(CONST_IP_R_2_L_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_IP_R_2_L_HTML, strlen(CONST_IP_R_2_L_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printIpAccounting(FLAG_REMOTE_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
-    } else if(strncmp(pageName, CONST_IP_R_2_R_HTML, strlen(CONST_IP_R_2_R_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_IP_R_2_R_HTML, strlen(CONST_IP_R_2_R_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printIpAccounting(FLAG_REMOTE_TO_REMOTE_ACCOUNTING, sortedColumn, revertOrder, pageNum);
-    } else if(strncmp(pageName, CONST_IP_L_2_R_HTML, strlen(CONST_IP_L_2_R_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_IP_L_2_R_HTML, strlen(CONST_IP_L_2_R_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printIpAccounting(FLAG_LOCAL_TO_REMOTE_ACCOUNTING, sortedColumn, revertOrder, pageNum);
-    } else if(strncmp(pageName, CONST_IP_L_2_L_HTML, strlen(CONST_IP_L_2_L_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_IP_L_2_L_HTML, strlen(CONST_IP_L_2_L_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printIpAccounting(FLAG_LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
-    } else if(strncmp(pageName, CONST_ACTIVE_TCP_SESSIONS_HTML,
+    } else if(strncasecmp(pageName, CONST_ACTIVE_TCP_SESSIONS_HTML,
                       strlen(CONST_ACTIVE_TCP_SESSIONS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printActiveTCPSessions(myGlobals.actualReportDeviceId, pageNum, NULL);
-    } else if(strncmp(pageName, CONST_MULTICAST_STATS_HTML, strlen(CONST_MULTICAST_STATS_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_MULTICAST_STATS_HTML, strlen(CONST_MULTICAST_STATS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printMulticastStats(sortedColumn, revertOrder, pageNum);
-    } else if(strncmp(pageName, CONST_DOMAIN_STATS_HTML, strlen(CONST_DOMAIN_STATS_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printDomainStats(NULL, abs(sortedColumn), revertOrder, pageNum);
-    } else if(strncmp(pageName, CONST_DOMAIN_INFO_HTML, strlen(CONST_DOMAIN_INFO_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_DOMAIN_STATS_HTML, strlen(CONST_DOMAIN_STATS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printDomainStats(domainNameParm, abs(sortedColumn), revertOrder, pageNum);
-    } else if(strncmp(pageName, CONST_SHOW_PORT_TRAFFIC_HTML,
+    } else if(strncasecmp(pageName, CONST_SHOW_PORT_TRAFFIC_HTML,
                       strlen(CONST_SHOW_PORT_TRAFFIC_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       showPortTraffic(portNr);
-    } else if(strncmp(pageName, CONST_TRAFFIC_STATS_HTML,
+    } else if(strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
                       strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printTrafficStatistics(revertOrder);
-    } else if(strcmp(pageName, CONST_IP_PROTO_DISTRIB_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_IP_PROTO_DISTRIB_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader(NULL, NULL, 0);
       printIpProtocolDistribution(FLAG_HOSTLINK_TEXT_FORMAT, revertOrder);
-    } else if(strcmp(pageName, CONST_IP_TRAFFIC_MATRIX_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_IP_TRAFFIC_MATRIX_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printIpTrafficMatrix();
-    } else if(strcmp(pageName, CONST_LOCAL_ROUTERS_LIST_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_LOCAL_ROUTERS_LIST_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printLocalRoutersList(myGlobals.actualReportDeviceId);
-    } else if(strcmp(pageName, CONST_AS_LIST_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_AS_LIST_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printASList(myGlobals.actualReportDeviceId);
-    } else if(strcmp(pageName, CONST_VLAN_LIST_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_VLAN_LIST_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printVLANList(myGlobals.actualReportDeviceId);
-    } else if(strcmp(pageName, CONST_IP_PROTO_USAGE_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_IP_PROTO_USAGE_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
-    } else if (strncmp (pageName, CONST_FC_TRAFFIC_HTML,
+    } else if (strncasecmp (pageName, CONST_FC_TRAFFIC_HTML,
                         strlen (CONST_FC_TRAFFIC_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if (sortedColumn == 0) { sortedColumn = 1; }
       printFcAccounting(FLAG_REMOTE_TO_REMOTE_ACCOUNTING, sortedColumn, revertOrder, pageNum);
-    } else if(strcmp(pageName, CONST_VSAN_LIST_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_VSAN_LIST_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printVSANList(myGlobals.actualReportDeviceId);
-    } else if(strcmp(pageName, CONST_VSAN_DISTRIB_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_VSAN_DISTRIB_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       drawVsanStatsGraph(myGlobals.actualReportDeviceId);
-    } else if (strncmp (pageName, "VSAN", strlen ("VSAN")) == 0) {
-
-      pageName[strlen(pageName) - 5] = '\0';
-      vsanId = atoi(&pageName[4]);
-
+    } else if (strncasecmp (pageName, CONST_VSAN_DETAIL_HTML, strlen (CONST_VSAN_DETAIL_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printVsanDetailedInfo (vsanId, myGlobals.actualReportDeviceId);
-    } else if(strncmp(pageName, CONST_FC_NET_STAT_HTML,
-                      strlen(CONST_FC_NET_STAT_HTML)) == 0) {
+      printVsanDetailedInfo (vsanNr, myGlobals.actualReportDeviceId);
+    } else if(strncasecmp(pageName, CONST_FC_SESSIONS_HTML,
+                      strlen(CONST_FC_SESSIONS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printFCSessions(myGlobals.actualReportDeviceId, sortedColumn, revertOrder,
                       pageNum, pageName, NULL);
-    } else if (strncmp(pageName, CONST_SCSI_NET_STAT_BYTES_HTML,
+    } else if (strncasecmp(pageName, CONST_SCSI_NET_STAT_BYTES_HTML,
                        strlen(CONST_SCSI_NET_STAT_BYTES_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printScsiSessionBytes(myGlobals.actualReportDeviceId, sortedColumn,
                             revertOrder, pageNum, pageName, NULL);
-    } else if(strncmp(pageName, CONST_SCSI_NET_STAT_TIMES_HTML,
+    } else if(strncasecmp(pageName, CONST_SCSI_NET_STAT_TIMES_HTML,
                       strlen(CONST_SCSI_NET_STAT_TIMES_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printScsiSessionTimes (myGlobals.actualReportDeviceId, sortedColumn,
                              revertOrder, pageNum, pageName, NULL);
-    } else if(strncmp(pageName, CONST_SCSI_NET_STAT_STATUS_HTML,
+    } else if(strncasecmp(pageName, CONST_SCSI_NET_STAT_STATUS_HTML,
                       strlen(CONST_SCSI_NET_STAT_STATUS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printScsiSessionStatusInfo (myGlobals.actualReportDeviceId, sortedColumn,
                                   revertOrder, pageNum, pageName, NULL);
-    } else if(strncmp(pageName, CONST_SCSI_NET_STAT_TM_HTML,
+    } else if(strncasecmp(pageName, CONST_SCSI_NET_STAT_TM_HTML,
                       strlen(CONST_SCSI_NET_STAT_TM_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printScsiSessionTmInfo (myGlobals.actualReportDeviceId, sortedColumn, revertOrder,
                               pageNum, pageName, NULL);
-    } else if (strncmp(pageName, "VsanControlTrafficDistrib", strlen("VsanControlTrafficDistrib")) == 0) {
+    } else if (strncasecmp(pageName, "VsanControlTrafficDistrib", strlen("VsanControlTrafficDistrib")) == 0) {
         sscanf (pageName, "VsanControlTrafficDistrib-%d", &vsanId);
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
         drawVsanSwilsProtoDistribution(vsanId);
-    } else if (strncmp(pageName, "VsanDomainTrafficDistribSent", strlen("VsanDomainTrafficDistribSent")) == 0) {
+    } else if (strncasecmp(pageName, "VsanDomainTrafficDistribSent", strlen("VsanDomainTrafficDistribSent")) == 0) {
         sscanf (pageName, "VsanDomainTrafficDistribSent-%d", &vsanId);
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
         drawVsanDomainTrafficDistribution(vsanId, TRUE);
-    } else if (strncmp(pageName, "VsanDomainTrafficDistribRcvd", strlen("VsanDomainTrafficDistribRcvd")) == 0) {
+    } else if (strncasecmp(pageName, "VsanDomainTrafficDistribRcvd", strlen("VsanDomainTrafficDistribRcvd")) == 0) {
         sscanf (pageName, "VsanDomainTrafficDistribRcvd-%d", &vsanId);
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
         drawVsanDomainTrafficDistribution(vsanId, FALSE);
 #ifndef EMBEDDED
 #ifdef CFG_USE_GRAPHICS
-    } else if(strncmp(pageName, CONST_THROUGHPUT_GRAPH, strlen(CONST_THROUGHPUT_GRAPH)) == 0) {
+    } else if(strncasecmp(pageName, CONST_THROUGHPUT_GRAPH, strlen(CONST_THROUGHPUT_GRAPH)) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawThptGraph(sortedColumn);
       printTrailer=0;
-    } else if(strncmp(pageName, "ipTrafficPie", strlen("ipTrafficPie")) == 0) {
+    } else if(strncasecmp(pageName, "ipTrafficPie", strlen("ipTrafficPie")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawTrafficPie();
       printTrailer=0;
-    } else if(strncmp(pageName, "pktCastDistribPie", strlen("pktCastDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, "pktCastDistribPie", strlen("pktCastDistribPie")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       pktCastDistribPie();
       printTrailer=0;
-    } else if(strncmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	pktSizeDistribPie();
@@ -2166,7 +2173,7 @@ static int returnHTTPPage(char* pageName,
       } else {
 	printNoDataYet();
       }
-    } else if(strncmp(pageName, "fcPktSizeDistribPie", strlen("fcPktSizeDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, "fcPktSizeDistribPie", strlen("fcPktSizeDistribPie")) == 0) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	fcPktSizeDistribPie();
@@ -2174,7 +2181,7 @@ static int returnHTTPPage(char* pageName,
       } else {
 	printNoDataYet();
       }
-    } else if(strncmp(pageName, "pktTTLDistribPie", strlen("pktTTLDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, "pktTTLDistribPie", strlen("pktTTLDistribPie")) == 0) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	pktTTLDistribPie();
@@ -2182,34 +2189,34 @@ static int returnHTTPPage(char* pageName,
       } else {
 	printNoDataYet();
       }
-    } else if(strncmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       ipProtoDistribPie();
       printTrailer=0;
-    } else if(strncmp(pageName, "interfaceTrafficPie", strlen("interfaceTrafficPie")) == 0) {
+    } else if(strncasecmp(pageName, "interfaceTrafficPie", strlen("interfaceTrafficPie")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       interfaceTrafficPie();
       printTrailer=0;
-    } else if(strncmp(pageName, "drawGlobalProtoDistribution",
+    } else if(strncasecmp(pageName, "drawGlobalProtoDistribution",
 		      strlen("drawGlobalProtoDistribution")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawGlobalProtoDistribution();
       printTrailer=0;
-    } else if(strncmp(pageName, "drawGlobalIpProtoDistribution",
+    } else if(strncasecmp(pageName, "drawGlobalIpProtoDistribution",
 		      strlen("drawGlobalIpProtoDistribution")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawGlobalIpProtoDistribution();
       printTrailer=0;
-    } else if(strncmp(pageName, "hostsDistanceChart", strlen("hostsDistanceChart")) == 0) {
+    } else if(strncasecmp(pageName, "hostsDistanceChart", strlen("hostsDistanceChart")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawHostsDistanceGraph(0);
       printTrailer=0;
-    } else if(strncmp(pageName, "drawGlobalFcProtoDistribution",
+    } else if(strncasecmp(pageName, "drawGlobalFcProtoDistribution",
 		      strlen("drawGlobalFcProtoDistribution")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawGlobalFcProtoDistribution();
       printTrailer=0;
-    } else if(strncmp(pageName, "drawLunStatsBytesDistribution",
+    } else if(strncasecmp(pageName, "drawLunStatsBytesDistribution",
 		      strlen("drawLunStatsBytesDistribution")) == 0) {
         HostTraffic *el=NULL;
         char hostName[32], *theHost;
@@ -2260,7 +2267,7 @@ static int returnHTTPPage(char* pageName,
             drawLunStatsBytesDistribution (el);
             printTrailer=0;
         }
-    } else if(strncmp(pageName, "drawLunStatsPktsDistribution",
+    } else if(strncasecmp(pageName, "drawLunStatsPktsDistribution",
 		      strlen("drawLunStatsPktsDistribution")) == 0) {
         HostTraffic *el=NULL;
         char hostName[32], *theHost;
@@ -2309,38 +2316,38 @@ static int returnHTTPPage(char* pageName,
             drawLunStatsPktsDistribution (el);
             printTrailer=0;
         }
-    } else if(strncmp(pageName, "drawVsanStatsBytesDistribution",
+    } else if(strncasecmp(pageName, "drawVsanStatsBytesDistribution",
 		      strlen("drawVsanStatsBytesDistribution")) == 0) {
         sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
         drawVsanStatsBytesDistribution (myGlobals.actualReportDeviceId);
         printTrailer=0;
-    } else if(strncmp(pageName, "drawVsanStatsPktsDistribution",
+    } else if(strncasecmp(pageName, "drawVsanStatsPktsDistribution",
 		      strlen("drawVsanStatsPktsDistribution")) == 0) {
         sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
         drawVsanStatsPktsDistribution (myGlobals.actualReportDeviceId);
         printTrailer=0;
-    } else if((strncmp(pageName,    "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
-	      || (strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
-	      || (strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
-	      || (strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)
-	      || (strncmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0)
-              || (strncmp(pageName, "hostFcTrafficDistrib", strlen("hostFcTrafficDistrib")) == 0)
+    } else if((strncasecmp(pageName,    "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
+	      || (strncasecmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
+	      || (strncasecmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
+	      || (strncasecmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)
+	      || (strncasecmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0)
+              || (strncasecmp(pageName, "hostFcTrafficDistrib", strlen("hostFcTrafficDistrib")) == 0)
 	      ) {
       char hostName[47], *theHost;
 
-    if(strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
+    if(strncasecmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
       idx = 0;
       theHost = &pageName[strlen("hostTrafficDistrib")+1];
-    } else if(strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0) {
+    } else if(strncasecmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0) {
       idx = 1;
       theHost = &pageName[strlen("hostFragmentDistrib")+1];
-    } else if(strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0) {
+    } else if(strncasecmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0) {
       idx = 2;
       theHost = &pageName[strlen("hostTotalFragmentDistrib")+1];
-    } else if(strncmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0) {
+    } else if(strncasecmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0) {
       idx = 3;
       theHost = &pageName[strlen("hostTimeTrafficDistribution")+1];
-    } else if (strncmp(pageName, "hostFcTrafficDistrib", strlen("hostFcTrafficDistrib")) == 0) {
+    } else if (strncasecmp(pageName, "hostFcTrafficDistrib", strlen("hostFcTrafficDistrib")) == 0) {
         idx = 5;
         theHost = &pageName[strlen("hostFcTrafficDistrib")+1];
     } else {
@@ -2418,7 +2425,7 @@ static int returnHTTPPage(char* pageName,
     }
 #endif /* CFG_USE_GRAPHICS */
 #endif /* EMBEDDED */
-    } else if(strcmp(pageName, CONST_CREDITS_HTML) == 0) {
+    } else if(strcasecmp(pageName, CONST_CREDITS_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("Credits", NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<FONT FACE=Helvetica>\n");
@@ -2446,30 +2453,30 @@ static int returnHTTPPage(char* pageName,
       sendString("The author would like to thank all these people who contributed to <b>ntop</b> and\n");
       sendString("turned it into a first class network monitoring tool. Many thanks guys!<p>\n");
       sendString("</FONT><p>\n");
-    } else if(strncmp(pageName, CONST_INFO_NTOP_HTML, strlen(CONST_INFO_NTOP_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_INFO_NTOP_HTML, strlen(CONST_INFO_NTOP_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printNtopConfigInfo(FALSE);
-    } else if(strncmp(pageName, CONST_TEXT_INFO_NTOP_HTML, strlen(CONST_TEXT_INFO_NTOP_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_TEXT_INFO_NTOP_HTML, strlen(CONST_TEXT_INFO_NTOP_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
       printNtopConfigInfo(TRUE);
       printTrailer = 0;
-    } else if(strncmp(pageName, CONST_PROBLEMRPT_HTML, strlen(CONST_PROBLEMRPT_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_PROBLEMRPT_HTML, strlen(CONST_PROBLEMRPT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
       printNtopProblemReport();
       printTrailer = 0;
-    } else if(strncmp(pageName, CONST_VIEW_LOG_HTML, strlen(CONST_VIEW_LOG_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_VIEW_LOG_HTML, strlen(CONST_VIEW_LOG_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printNtopLogReport(FALSE);
       printTrailer = 0;
     } else
-      if(strncmp(pageName, CONST_DUMP_DATA_HTML, strlen(CONST_DUMP_DATA_HTML)) == 0) {
+      if(strncasecmp(pageName, CONST_DUMP_DATA_HTML, strlen(CONST_DUMP_DATA_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
 	  dumpNtopHashes(NULL, NULL, myGlobals.actualReportDeviceId);
 	else
 	  dumpNtopHashes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
-      } else if(strncmp(pageName, CONST_DUMP_HOSTS_INDEXES_HTML,
+      } else if(strncasecmp(pageName, CONST_DUMP_HOSTS_INDEXES_HTML,
                         strlen(CONST_DUMP_HOSTS_INDEXES_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
@@ -2477,7 +2484,7 @@ static int returnHTTPPage(char* pageName,
 	else
 	  dumpNtopHashIndexes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
-      } else if(strncmp(pageName, CONST_DUMP_NTOP_FLOWS_HTML,
+      } else if(strncasecmp(pageName, CONST_DUMP_NTOP_FLOWS_HTML,
                         strlen(CONST_DUMP_NTOP_FLOWS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
@@ -2485,7 +2492,7 @@ static int returnHTTPPage(char* pageName,
 	else
 	  dumpNtopFlows(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
-      } else if(strncmp(pageName, CONST_DUMP_NTOP_HOSTS_MATRIX_HTML,
+      } else if(strncasecmp(pageName, CONST_DUMP_NTOP_HOSTS_MATRIX_HTML,
                         strlen(CONST_DUMP_NTOP_HOSTS_MATRIX_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
@@ -2493,7 +2500,7 @@ static int returnHTTPPage(char* pageName,
 	else
 	  dumpNtopTrafficMatrix(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
-      } else if(strncmp(pageName, CONST_DUMP_TRAFFIC_DATA_HTML,
+      } else if(strncasecmp(pageName, CONST_DUMP_TRAFFIC_DATA_HTML,
                         strlen(CONST_DUMP_TRAFFIC_DATA_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
@@ -2564,8 +2571,8 @@ static int checkHTTPpassword(char *theRequestedURL,
 
   theUser[0] = '\0';
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Checking '%s'", theRequestedURL);
+#ifdef URL_DEBUG
+  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Checking password-protect for '%s'", theRequestedURL);
 #endif
 
   if(myGlobals.securityItemsLoaded == 0) {
@@ -2597,7 +2604,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 
   for(i=0; i<myGlobals.securityItemsLoaded; i++) {
     if(myGlobals.securityItems[i][0] == '2') /* 2 = URL */ {
-      if(strncmp(&theRequestedURL[1], &myGlobals.securityItems[i][1],
+      if(strncasecmp(&theRequestedURL[1], &myGlobals.securityItems[i][1],
                strlen(myGlobals.securityItems[i])-1) == 0) {
         strncpy(outBuffer,
                 myGlobals.securityItems[i],
@@ -2612,8 +2619,8 @@ static int checkHTTPpassword(char *theRequestedURL,
     return 1; /* This is a non protected URL */
   }
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Retrieving '%s'", outBuffer);
+#ifdef URL_DEBUG
+  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Retrieving '%s'", outBuffer);
 #endif
 
   key.dptr = outBuffer;
@@ -2630,6 +2637,7 @@ static int checkHTTPpassword(char *theRequestedURL,
                  allowed to access the URL */
   }
 
+/* Following is not URL_DEBUG so we don't accidentally log the crypt()ed password value */
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: gdbm_fetch(..., '%s')='%s'", key.dptr, nextkey.dptr);
 #endif
@@ -2655,6 +2663,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   if(strlen(user) >= sizeof(theUser)) user[sizeof(theUser)-1] = '\0';
   strcpy(theUser, user);
 
+/* Following is not URL_DEBUG so we don't accidentally log the crypt()ed password value */
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: User='%s' - Pw='%s'", user, thePw);
 #endif
@@ -2684,6 +2693,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   key.dsize = strlen(users)+1;
   nextkey = gdbm_fetch(myGlobals.pwFile, key);
 
+/* Following is not URL_DEBUG so we don't accidentally log the crypt()ed password value */
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Record='%s' = '%s'", users, nextkey.dptr);
 #endif
@@ -2846,9 +2856,9 @@ void handleHTTPrequest(HostAddr from) {
                           sizeof(agent));
 #endif
 
-#if defined(HTTP_DEBUG) || defined(I18N_DEBUG)
- traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: Requested URL = '%s', length = %d", requestedURL, postLen);
- traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: User-Agent = '%s'", agent);
+#if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
+ traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Requested URL = '%s', length = %d", requestedURL, postLen);
+ traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: User-Agent = '%s'", agent);
 
  #ifdef MAKE_WITH_I18N
   traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Accept-Language = '%s'", workLanguage);

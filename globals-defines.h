@@ -396,6 +396,14 @@
  */
 /* #define DNS_SNIFF_DEBUG */
 
+/* FC_DEBUG logs information about FibreChannel processing.
+ */
+/* #define FC_DEBUG */
+
+/* FINGERPRINT_DEBUG logs information about OS Fingerprinting.
+ */
+/* #define FINGERPRINT_DEBUG */
+
 /* FRAGMENT_DEBUG logs information about packet fragments nto receives.
  */
 /* #define FRAGMENT_DEBUG */
@@ -498,6 +506,11 @@
  * i.e. the -S command line parameter.
  */
 /* #define STORAGE_DEBUG */
+
+/* URL_DEBUG causes http.c to log information regarding processing of URLs
+ * received by the ntop web server
+ */
+/* #define URL_DEBUG */
 
 /* UNKNOWN_PACKET_DEBUG causes pbuf.c to log packets that are
  * either from an unknown protocol or of an unknown ethernet type
@@ -1015,19 +1028,11 @@
 #define CONST_SORT_DATA_HOST_TRAFFIC_HTML   "dataHostTraffic.html"
 #define CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML "dataRcvdHostTraffic.html"
 #define CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML "dataSentHostTraffic.html"
-#define CONST_SORT_DATA_HOST_FC_TRAFFIC_HTML   "dataFcHostTraffic.html"
-#define CONST_SORT_DATA_RCVD_HOST_FC_TRAFFIC_HTML "dataFcRcvdHostTraffic.html"
-#define CONST_SORT_DATA_SENT_HOST_FC_TRAFFIC_HTML "dataFcSentHostTraffic.html"
 #define CONST_DELETE_URL                    "deleteURL"
 #define CONST_DELETE_USER                   "deleteUser"
-#define CONST_DISPLAY_FC_BY_ALIAS_HTML      "DisplayAlias.html"
-#define CONST_DISPLAY_FC_BY_FCID_HTML       "DisplayFcid.html"
-#define CONST_DISPLAY_OPTS_HTML             "DisplayOptions.html"
-#define CONST_DISPLAY_FC_BY_WWN_HTML        "DisplayWWN.html"
 #define CONST_DO_ADD_URL                    "doAddURL"
 #define CONST_DO_ADD_USER                   "doAddUser"
-#define CONST_DOMAIN_INFO_HTML              "domainInfo.html"
-#define CONST_DOMAIN_STATS_HTML             "domainTrafficStats.html"
+#define CONST_DOMAIN_STATS_HTML             "domainStats.html"
 #define CONST_DUMP_DATA_HTML                "dumpData.html"
 #define CONST_DUMP_HOSTS_INDEXES_HTML       "dumpDataIndexes.html"
 #define CONST_DUMP_NTOP_FLOWS_HTML          "dumpFlows.html"
@@ -1035,11 +1040,12 @@
 #define CONST_DUMP_TRAFFIC_DATA_HTML        "dumpTrafficData.html"
 #define CONST_DUMP_NTOP_XML                 "dump.xml"
 #define CONST_FAVICON_ICO                   "favicon.ico"
-#define CONST_HOSTS_FC_INFO_HTML            "fcHostsInfo.html"
-#define CONST_FC_NET_STAT_HTML              "FcNetstat.html"
-#define CONST_FC_PORTS_INFO_HTML            "fcPortsInfo.html"
-#define CONST_FC_PROTOS_HTML                "fcProtos.html"
-#define CONST_FC_TRAFFIC_HTML               "fcShowStats.html"
+#define CONST_FC_ACTIVITY_HTML              "FcActivity.html"
+#define CONST_FC_DATA_HTML                  "FcData.html"
+#define CONST_FC_HOSTS_INFO_HTML            "FcHostsInfo.html"
+#define CONST_FC_SESSIONS_HTML              "FcSessions.html"
+#define CONST_FC_THPT_HTML                  "FcThpt.html"
+#define CONST_FC_TRAFFIC_HTML               "FcShowStats.html"
 #define CONST_FILTER_INFO_HTML              "filterInfo.html"
 #define CONST_NTOP_HELP_HTML                "help.html"
 #define CONST_HOME_HTML                     "home.html"
@@ -1064,7 +1070,6 @@
 #define CONST_MULTICAST_STATS_HTML          "multicastStats.html"
 #define CONST_NET_FLOWS_HTML                "NetFlows.html"
 #define CONST_ACTIVE_TCP_SESSIONS_HTML      "NetNetstat.html"
-#define CONST_NW_EVENTS_HTML                "networkEvents.html"
 #define CONST_CGI_HEADER                    "ntop-bin/"
 #define CONST_MAN_NTOP_HTML                 "ntop.html"
 #define CONST_NTOP_P3P                      "ntop.p3p"
@@ -1084,21 +1089,15 @@
 #define CONST_SHOW_URLS_HTML                "showURLs.html"
 #define CONST_SHOW_USERS_HTML               "showUsers.html"
 #define CONST_SHUTDOWN_NTOP_HTML            "shutdown.html"
-#define CONST_SORT_DATA_FC_HTML             "sortDataFC.html"
 #define CONST_SORT_DATA_IP_HTML             "sortDataIP.html"
 #define CONST_SORT_DATA_PROTOS_HTML         "sortDataProtos.html"
-#define CONST_SORT_DATA_RECEIVED_FC_HTML    "sortDataReceivedFC.html"
 #define CONST_SORT_DATA_RECEIVED_IP_HTML    "sortDataReceivedIP.html"
 #define CONST_SORT_DATA_RECEIVED_PROTOS_HTML "sortDataReceivedProtos.html"
 #define CONST_SORT_DATA_RECEIVED_THPT_HTML  "sortDataReceivedThpt.html"
-#define CONST_SORT_DATA_RECEIVED_FC_THPT_HTML  "sortFcDataReceivedThpt.html"
-#define CONST_SORT_DATA_SENT_FC_HTML        "sortDataSentFC.html"
 #define CONST_SORT_DATA_SENT_IP_HTML        "sortDataSentIP.html"
 #define CONST_SORT_DATA_SENT_PROTOS_HTML    "sortDataSentProtos.html"
 #define CONST_SORT_DATA_SENT_THPT_HTML      "sortDataSentThpt.html"
-#define CONST_SORT_DATA_SENT_FC_THPT_HTML   "sortFcDataSentThpt.html"
 #define CONST_SORT_DATA_THPT_HTML           "sortDataThpt.html"
-#define CONST_SORT_DATA_FC_THPT_HTML        "sortFcDataThpt.html"
 #define CONST_SWITCH_NIC_HTML               "switch.html"
 #define CONST_TEXT_INFO_NTOP_HTML           "textinfo.html"
 #define CONST_THROUGHPUT_GRAPH              "thptGraph"
@@ -1107,6 +1106,7 @@
 #define CONST_TRAFFIC_STATS_HTML            "trafficStats.html"
 #define CONST_VIEW_LOG_HTML                 "viewLog.html"
 #define CONST_VLAN_LIST_HTML                "vlanList.html"
+#define CONST_VSAN_DETAIL_HTML              "vsanDetail.html"
 #define CONST_VSAN_DISTRIB_HTML             "vsanDistrib.html"
 #define CONST_VSAN_LIST_HTML                "vsanList.html"
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
@@ -1281,6 +1281,18 @@
  * of a device name.  Remember, WIN32 names are long, but not that long!
  */
 #define MAX_DEVICE_NAME_LEN                 64
+
+/*
+ * w3c conformance stuff
+ *   If the --w3c flag is given, we use these constants to
+ *   make the generated html more compliant.  This is NOT the
+ *   default as some older browsers have problems with stuff
+ *   like the UTF-8 and meta tags...
+ */
+#define CONST_W3C_DOCTYPE_LINE              "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">"
+#define CONST_W3C_CHARTYPE_LINE             "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=ISO-8859-1\">"
+// Alternate version:
+//#define CONST_W3C_CHARTYPE_LINE           "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">"
 
 /*
  * dumpXML.c constants...
@@ -1480,6 +1492,60 @@
  * used in html, xml, etc.
  */
 #define CONST_ISO8601_TIMESPEC              "%Y-%m-%dT%H:%M:%S"
+
+/*
+ * html img tags for various devices
+ */
+#define CONST_IMG_FIBRECHANNEL_SWITCH  "<img src=\"/switch.gif\" border=\"0\" alt=\"FibreChannel Switch\">"
+#define CONST_IMG_DHCP_CLIENT          "<img src=\"/bulb.gif\" border=\"0\" alt=\"DHCP Client\">"
+#define CONST_IMG_DHCP_SERVER          "<img src=\"/antenna.gif\" border=\"0\" alt=\"DHCP Server\">"
+#define CONST_IMG_MULTIHOMED           "<img src=\"/multihomed.gif\"\" border=\"0\" alt=\"Multihomed\">"
+#define CONST_IMG_BRIDGE               "<img src=\"/bridge.gif\" border=\"0\" alt=\"Bridge\">"
+#define CONST_IMG_ROUTER               "<img src=\"/router.gif\" border=\"0\" alt=\"Router\">"
+#define CONST_IMG_DNS_SERVER           "<img src=\"/dns.gif\" border=\"0\" alt=\"DNS\">"
+#define CONST_IMG_PRINTER              "<img src=\"/printer.gif\" border=\"0\" alt=\"Printer\">"
+#define CONST_IMG_SMTP_SERVER          "<img src=\"/mail.gif\" border=\"0\" alt=\"Mail (SMTP)\">"
+#define CONST_IMG_POP_SERVER           "" /* No icon, yet */
+#define CONST_IMG_IMAP_SERVER          "" /* No icon, yet */
+#define CONST_IMG_DIRECTORY_SERVER     "" /* No icon, yet */
+#define CONST_IMG_FTP_SERVER           "" /* No icon, yet */
+#define CONST_IMG_HTTP_SERVER          "<img src=\"/web.gif\" border=\"0\" alt=\"HTTP Server\">"
+#define CONST_IMG_NTP_SERVER           "<img src=\"/clock.gif\" border=\"0\" alt=\"NTP Server\">"
+#define CONST_IMG_HAS_P2P              "<img src=\"/p2p.gif\" border=\"0\" alt=\"P2P Server\">"
+#define CONST_IMG_HAS_USERS            "<img src=\"/users.gif\" border=\"0\" alt=\"Users\">"
+
+#define CONST_IMG_HIGH_RISK            "<img src=\"/Risk_high.gif\" border=\"0\" alt=\"High Risk\">"
+#define CONST_IMG_MEDIUM_RISK          "<img src=\"/Risk_medium.gif\" border=\"0\" alt=\"Medium Risk\">"
+#define CONST_IMG_LOW_RISK             "<img src=\"/Risk_low.gif\" border=\"0\" alt=\"Low Risk\">"
+
+#define CONST_IMG_NIC_CARD             "<img src=\"/card.gif\" border=\"0\" alt=\"Network Card\">"
+
+#define CONST_IMG_SCSI_INITIATOR       "<img src=\"/initiator.gif\" border=\"0\" alt=\"SCSI Initiator\">"
+#define CONST_IMG_SCSI_DISK            "<img src=\"/disk.gif\" border=\"0\" alt=\"SCSI Block Device (disk)\">"
+
+#define CONST_IMG_FC_VEN_BROCADE       "<img src=\"/brocade.gif\" border=\"0\" alt=\"Brocade Communications Systems, Inc.\">"
+#define CONST_IMG_FC_VEN_EMC           "<img src=\"/emc.gif\" border=\"0\" alt=\"EMC Corporation\">"
+#define CONST_IMG_FC_VEN_EMULEX        "<img src=\"/emulex.gif\" border=\"0\" alt=\"Emulex Corporation\">"
+#define CONST_IMG_FC_VEN_JNI           "<img src=\"/jni.gif\" border=\"0\" alt=\"JNI Corporation\">"
+#define CONST_IMG_FC_VEN_SEAGATE       "<img src=\"/seagate.gif\" border=\"0\" alt=\"Seagate Technology\">"
+
+#define CONST_IMG_ARROW_UP             "<img src=\"/arrow_up.gif\" border=\"0\" alt=\"Ascending order, click to reverse\">"
+#define CONST_IMG_ARROW_DOWN           "<img src=\"/arrow_down.gif\" border=\"0\" alt=\"Descending order, click to reverse\">"
+
+#define CONST_IMG_OS_WINDOWS           "<img alt=\"OS: Windows\" align=\"middle\" src=\"/statsicons/os/windows.gif\">"
+#define CONST_IMG_OS_IRIX              "<img alt=\"OS: Irix\" align=\"middle\" src=\"/statsicons/os/irix.gif\">"
+#define CONST_IMG_OS_LINUX             "<img alt=\"OS: Linux\" align=\"middle\" src=\"/statsicons/os/linux.gif\">"
+#define CONST_IMG_OS_SUNOS             "<img alt=\"OS: SunOS\" align=\"middle\" src=\"/statsicons/os/sun.gif\">"
+#define CONST_IMG_OS_SOLARIS           "<img alt=\"OS: Solaris\" align=\"middle\" src=\"/statsicons/os/sun.gif\">"
+#define CONST_IMG_OS_HP_JETDIRET       "<img alt=\"OS: HP/JetDirect\" align=\"middle\" src=\"/statsicons/os/hp.gif\">"
+#define CONST_IMG_OS_MAC               "<img alt=\"OS: Apple Mac\" align=\"middle\" src=\"/statsicons/os/mac.gif\">"
+#define CONST_IMG_OS_NOVELL            "<img alt=\"OS: Novell\" align=\"middle\" src=\"/statsicons/os/novell.gif\">"
+#define CONST_IMG_OS_BSD               "<img alt=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
+#define CONST_IMG_OS_UNIX              "<img alt=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
+#define CONST_IMG_OS_BERKELEY          "<img alt=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
+#define CONST_IMG_OS_HP_UX             "<img alt=\"OS: HP-UX\" align=\"middle\" src=\"/statsicons/os/hp.gif\">"
+#define CONST_IMG_OS_AIX               "<img alt=\"OS: AIX\" align=\"middle\" src=\"/statsicons/os/aix.gif\">"
+#define CONST_IMG_OS_CISCO             "<img alt=\"OS: Cisco\" align=\"middle\" src=\"/statsicons/os/cisco.gif\">"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* F L A G  and  B I T F L A G  items                                              */

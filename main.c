@@ -139,6 +139,8 @@ static struct option const long_options[] = {
 
   { "set-admin-password",               optional_argument, NULL, 135 },
 
+  { "w3c",                              no_argument,       NULL, 136 },
+
   { "p3p-cp",                           required_argument, NULL, 137 },
   { "p3p-uri",                          required_argument, NULL, 138 },
 
@@ -230,6 +232,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-z             | --disable-sessions]                 %sDisable TCP session tracking\n", newLine);
   fprintf(fp, "    [-A]                                                  %sAsk admin user password and exit\n", newLine);
   fprintf(fp, "    [               | --set-admin-password=<pass>]        %sSet password for the admin user to <pass>\n", newLine);
+  fprintf(fp, "    [               | --w3c]                              %sAdd extra headers to make better html\n", newLine);
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 %sPacket filter expression, like tcpdump\n", newLine);
   fprintf(fp, "    [-D <name>      | --domain <name>]                    %sInternet domain name\n", newLine);
 
@@ -688,6 +691,10 @@ static int parseOptions(int argc, char* argv []) {
       }
       
       setAdminPw = 1;      
+      break;
+
+    case 136:
+      myGlobals.w3c = TRUE;
       break;
 
     case 137:
