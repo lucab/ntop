@@ -676,7 +676,7 @@ void initCounters(void) {
 #ifdef WIN32
 	    j=0;
 	    while (buf[j] != '\0') {
-	      if(buf[j] == '/') buf[j] = '\\';
+	      if(buf[j] == '/') buf[j] = CONST_PATH_SEP;
 	      j++;
 	    }
 #endif
@@ -1220,15 +1220,16 @@ void addDevice(char* deviceName, char* deviceDescr) {
       if(myGlobals.pcapLog != NULL) {
 	if(strlen(myGlobals.pcapLog) > 64)
 	  myGlobals.pcapLog[64] = '\0';
+	sprintf(myName, "%s%c%s.%s.pcap",
+		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+		CONST_PATH_SEP, myGlobals.pcapLog, 		
 #ifdef WIN32
-	sprintf(myName, "%s\%s.pcap",
-		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-		deviceId);
+		myGlobals.device[deviceId].humanFriendlyName
 #else
-	sprintf(myName, "%s/%s.%s.pcap",
-		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-		myGlobals.pcapLog, myGlobals.device[deviceId].name);
+		myGlobals.device[deviceId].name
 #endif
+		);
+
 	myGlobals.device[deviceId].pcapDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
 	if(myGlobals.device[deviceId].pcapDumper == NULL) {
@@ -1239,15 +1240,15 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
 
     if(myGlobals.enableSuspiciousPacketDump) {
-#ifdef WIN32        
-	sprintf(myName, "%s\ntop-suspicious-pkts.dev%d.pcap",
+	sprintf(myName, "%s%cntop-suspicious-pkts.dev%d.pcap",
 		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-		deviceId);
+		CONST_PATH_SEP,
+#ifdef WIN32
+		myGlobals.device[deviceId].humanFriendlyName
 #else
-	sprintf(myName, "%s/ntop-suspicious-pkts.%s.pcap",
-		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-		myGlobals.device[deviceId].name);
-#endif        
+		myGlobals.device[deviceId].name
+#endif
+		);
 	myGlobals.device[deviceId].pcapErrDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
 	if(myGlobals.device[deviceId].pcapErrDumper == NULL) {
@@ -1258,15 +1259,16 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
 
       if(myGlobals.enableOtherPacketDump) {
-#ifdef WIN32        
-	sprintf(myName, "%s\ntop-other-pkts.%s.pcap",
+	sprintf(myName, "%s%cntop-other-pkts.%s.pcap",
 		myGlobals.pcapLogBasePath,
-		deviceId);
+		CONST_PATH_SEP,
+#ifdef WIN32
+		myGlobals.device[deviceId].humanFriendlyName
 #else
-	sprintf(myName, "%s/ntop-other-pkts.%s.pcap",
-		myGlobals.pcapLogBasePath,
-		myGlobals.device[deviceId].name);
+		myGlobals.device[deviceId].name
 #endif
+		);
+
 	myGlobals.device[deviceId].pcapOtherDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
 	if(myGlobals.device[deviceId].pcapOtherDumper == NULL) {
@@ -1478,7 +1480,7 @@ void initDevices(char* devices) {
     createDummyInterface("none");
     myGlobals.device[0].dummyDevice = 0;
     myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.rFileName, ebuf);
-
+    
     if(myGlobals.device[0].pcapPtr == NULL) {
       traceEvent(CONST_TRACE_FATALERROR, "pcap_open_offline(): '%s'", ebuf);
       exit(-1);
@@ -1488,8 +1490,9 @@ void initDevices(char* devices) {
     initDeviceDatalink(0);
 
     if(myGlobals.enableSuspiciousPacketDump) {
-      sprintf(myName, "%s/ntop-suspicious-pkts.%s.pcap",
+      sprintf(myName, "%s%cntop-suspicious-pkts.%s.pcap",
 	      myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+	      CONST_PATH_SEP,
 #ifdef WIN32
 	      myGlobals.device[0].humanFriendlyName
 #else
