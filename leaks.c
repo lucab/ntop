@@ -591,7 +591,7 @@ void ntop_safefree(void **ptr, char* file, int line) {
     traceEvent(CONST_TRACE_WARNING, "free of NULL pointer @ %s:%d", 
 	       file, line);
   } else {
-#ifndef USE_GC
+#if (0)
    /* **********DIAGNOSTIC**********
       * Enable this code to look   *
       * for potential glibc 2.3.x  *
@@ -606,8 +606,8 @@ void ntop_safefree(void **ptr, char* file, int line) {
           }
       }
       **********DIAGNOSTIC********** */
-      free(*ptr);
 #endif
+    free(*ptr);
     *ptr = NULL;
   }
 }
