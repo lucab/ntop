@@ -74,6 +74,12 @@ if test -f version.c; then
     cat version.c                     >>$censusfile
 fi
 
+echo ""                               >>$censusfile
+echo ""                               >>$censusfile
+echo "linuxrelease"                   >>$censusfile
+echo "------------"                   >>$censusfile
+utils/linuxrelease --debug            >>$censusfile
+
 echo ""
 echo ""
 
