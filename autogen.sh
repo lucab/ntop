@@ -77,22 +77,36 @@ EOF
   esac
 done
 
+if test "$GNU_OR_DIE" -eq 0; then
+  exit 1
+fi
 
+if [ -f /usr/bin/glibtool ]; then
+(glibtool --version) < /dev/null > /dev/null 2>&1 ||
+{
+  echo
+  echo "You must have glibtool installed to compile $PACKAGE."
+  echo "Download the appropriate package for your distribution, or get the"
+  echo "source tarball at ftp://ftp.gnu.org/gnu/libtool/"
+  GNU_OR_DIE=0
+}
+else
 (libtool --version) < /dev/null > /dev/null 2>&1 ||
 {
   echo
   echo "You must have libtool installed to compile $PACKAGE."
   echo "Download the appropriate package for your distribution, or get the"
-  echo "source tarball at ftp://ftp.gnu.org/gnu/libtool/libtool-1.3.4.tar.gz"
+  echo "source tarball at ftp://ftp.gnu.org/gnu/libtool/"
   GNU_OR_DIE=0
 }
+fi
 
 (automake --version) < /dev/null > /dev/null 2>&1 ||
 {
   echo
   echo "You must have automake installed to compile $PACKAGE."
   echo "Download the appropriate package for your distribution, or get the"
-  echo "source tarball at ftp://ftp.gnu.org/gnu/automake/automake-1.4.tar.gz"
+  echo "source tarball at ftp://ftp.gnu.org/gnu/automake/"
   GNU_OR_DIE=0
 }
 
@@ -101,7 +115,7 @@ done
   echo
   echo "You must have GNU m4 installed to compile $PACKAGE."
   echo "Download the appropriate package for your distribution, or get the"
-  echo "source tarball at ftp://ftp.gnu.org/gnu/m4/m4-1.4.tar.gz"
+  echo "source tarball at ftp://ftp.gnu.org/gnu/m4/"
   GNU_OR_DIE=0
 }
 
@@ -110,7 +124,7 @@ done
   echo
   echo "You must have autoconf installed to compile $PACKAGE."
   echo "Download the appropriate package for your distribution, or get the"
-  echo "source tarball at ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.13.tar.gz"
+  echo "source tarball at ftp://ftp.gnu.org/gnu/autoconf/"
   GNU_OR_DIE=0
 }
 
@@ -209,7 +223,12 @@ rm -f config.log
 #
 # 0. prepare the package to use libtool
 #
+
+if [ -f /usr/bin/glibtoolize ]; then
+glibtoolize --copy --force
+else
 libtoolize --copy --force
+fi
 
 if [ ! -f libtool.m4.in ]; then
   if [ -f /usr/share/aclocal/libtool.m4 ]; then
