@@ -3648,67 +3648,105 @@ static void processIpPkt(const u_char *bp,
         int nodeType, i, udpDataLen;
 	char *tmpdata = (char*)bp + (hlen + sizeof(struct udphdr));
 	u_char *p;
-	int offset;
+	int offset, displ, notEnoughData = 0;
 
 	udpDataLen = length - (hlen + sizeof(struct udphdr));
 
-	data = (char*)malloc(udpDataLen);
-	memcpy(data, tmpdata, udpDataLen);
+	if(udpDataLen > 32) {
+	  /* 32 bytes or less is not enough */
+	  data = (char*)malloc(udpDataLen);
+	  memcpy(data, tmpdata, udpDataLen);
 
-        name = data + 14;
- 	p = (u_char*)name;
-	if ((*p & 0xC0) == 0xC0) {
-	  name = data + (p[1] + 255 * (p[0] & ~0xC0));
- 	  offset = 2;
- 	} else {
- 	  while (*p) p += (*p)+1;
- 	  offset = ((char*)p - (char*)data) + 1;
- 	}
+	  name = data + 14;
+	  p = (u_char*)name;
+	  if ((*p & 0xC0) == 0xC0) {
+	    displ = p[1] + 255 * (p[0] & ~0xC0);
+	    if((displ + 14) >= udpDataLen)
+	      notEnoughData = 1;
+	    else {
+	      name = data + displ;
+	      displ += 14;
+	      offset = 2;
+	    }
+	  } else {
+	    displ = 14;
 
-	nodeType = name_interpret(name, nbName);
-	setNBnodeNameType(srcHost, (char)nodeType, nbName);
+	    while ((displ < udpDataLen) && (*p)) {
+	      p += (*p)+1;
+	      displ++;
+	    }
+	  
+	    if(displ < udpDataLen)
+	      notEnoughData = 1;
+	    else 
+	      offset = ((char*)p - (char*)data) + 1;
+	  }
 
- 	name = data + offset;
- 	p = (u_char*)name;
-	if ((*p & 0xC0) == 0xC0)
-	  name = ((char*)bp+hlen+8 + (p[1] + 255 * (p[0] & ~0xC0)));
-	nodeType = name_interpret(name, domain);
+	  if(!notEnoughData) {
+	    nodeType = name_interpret(name, nbName, udpDataLen-displ);
 
-        for(i=0; domain[i] != '\0'; i++)
-	  if(domain[i] == ' ') { domain[i] = '\0'; break; }
+	    if(nodeType != 0) {
+	      setNBnodeNameType(srcHost, (char)nodeType, nbName);
 
-	setNBnodeNameType(dstHost, (char)nodeType, domain);
+	      displ += offset; /* see ** */
 
-	if(udpDataLen > 200) {
-	  char *tmpBuffer = &data[151];
+	      if(displ < udpDataLen) {
+		name = data + offset; /* ** */
+		p = (u_char*)name;
+		if ((*p & 0xC0) == 0xC0) {
+		  displ = hlen + 8 + (p[1] + 255 * (p[0] & ~0xC0));
 
-	  /*
-	    We'll check if this this is
-	    a browser announcments so we can
-	    know more about this host
-	  */
+		  if(displ < length)
+		    name = ((char*)bp+displ);
+		  else
+		    notEnoughData = 1;
+		}
 
-	  if(strcmp(tmpBuffer, "\\MAILSLOT\\BROWSE") == 0) {
-	    /* Good: this looks like a browser announcement */
-	    if(((tmpBuffer[17] == 0x0F /* Local Master Announcement*/)
-		|| (tmpBuffer[17] == 0x01 /* Host Announcement*/))
-	       && (tmpBuffer[49] != '\0')) {
+		if(!notEnoughData) {
+		  nodeType = name_interpret(name, domain, length-displ);
 
-	      if(srcHost->nbDescr != NULL)
-		free(srcHost->nbDescr);
+		  if(nodeType != 0) {
+		    for(i=0; domain[i] != '\0'; i++)
+		      if(domain[i] == ' ') { domain[i] = '\0'; break; }
 
-	      if(tmpBuffer[17] == 0x0F)
-		FD_SET(HOST_TYPE_MASTER_BROWSER, &srcHost->flags);
+		    setNBnodeNameType(dstHost, (char)nodeType, domain);
 
-	      srcHost->nbDescr = strdup(&tmpBuffer[49]);
+		    if(udpDataLen > 200) {
+		      char *tmpBuffer = &data[151];
+
+		      /*
+			We'll check if this this is
+			a browser announcments so we can
+			know more about this host
+		      */
+
+		      if(strcmp(tmpBuffer, "\\MAILSLOT\\BROWSE") == 0) {
+			/* Good: this looks like a browser announcement */
+			if(((tmpBuffer[17] == 0x0F /* Local Master Announcement*/)
+			    || (tmpBuffer[17] == 0x01 /* Host Announcement*/))
+			   && (tmpBuffer[49] != '\0')) {
+
+			  if(srcHost->nbDescr != NULL)
+			    free(srcHost->nbDescr);
+
+			  if(tmpBuffer[17] == 0x0F)
+			    FD_SET(HOST_TYPE_MASTER_BROWSER, &srcHost->flags);
+
+			  srcHost->nbDescr = strdup(&tmpBuffer[49]);
 #ifdef DEBUG
-	      traceEvent(TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
+			  traceEvent(TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
 #endif
+			}
+		      }
+		    }
+		  }
+		}
+	      }
 	    }
 	  }
-	}
 
-	free(data);
+	  free(data);
+	}
       }
     }
 

@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
 #ifdef WIN32
   theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:q";
 #else
-  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:q";
+  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:q";
 #endif
 
   while((op = getopt(argc, argv, theOpts)) != EOF) {

@@ -725,9 +725,9 @@ void initDevices(char* devices) {
     while(tmpDev != NULL) {
 #ifndef WIN32
       char *nwInterface;
-#endif
-      deviceSanityCheck(tmpDev);
-#ifndef WIN32
+
+      deviceSanityCheck(tmpDev); /* These checks do not apply to Win32 */
+
       if((nwInterface = strchr(tmpDev, ':')) != NULL) {
  	/* This is a virtual nwInterface */
  	int i, found=0;

@@ -52,7 +52,7 @@
 
 /* #define MEMORY_DEBUG  */
 
-#define MAX_DEVICE_NAME_LEN   32
+#define MAX_DEVICE_NAME_LEN   64
 
 #ifdef MEMORY_DEBUG
 #include "leaks.h"
@@ -1711,14 +1711,23 @@ char* savestr(const char *str)
 /* The function below has been inherited by tcpdump */
 
 
-int name_interpret(char *in, char *out) {
-  int ret, len = (*in++) / 2;
-  char *b=out;
+int name_interpret(char *in, char *out, int numBytes) {
+  int ret, len;
+  char *b;
 
+  if(numBytes <= 0) {
+    traceEvent(TRACE_WARNING, "WARNING: name_interpret error (numBytes=%d)", numBytes);
+    return(0);
+  }
+  
+  len = (*in++)/2;
+  b  = out;
   *out=0;
 
-  if(len > 30 || len < 1)
+  if(len > 30 || len < 1) {
+    traceEvent(TRACE_WARNING, "WARNING: name_interpret error (numBytes=%d)", numBytes);
     return(0);
+  }
 
   while (len--) {
     if(in[0] < 'A' || in[0] > 'P' || in[1] < 'A' || in[1] > 'P') {

@@ -1001,7 +1001,9 @@ void usage(void) {
 	     ALARM_TIME, REFRESH_TIME);
 #endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
+#ifndef WIN32
   traceEvent(TRACE_INFO, "    %s\n",   "[-E <enable lsof/nmap integration (if present)>]");
+#endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
 #ifdef WIN32

@@ -438,7 +438,7 @@ extern char *getHostOS(char* ipAddr, int port, char* additionalInfo);
 extern char* decodeNBstring(char* theString, char *theBuffer);
 extern void closeNwSocket(int *sockId);
 extern char *savestr(const char *str);
-extern int name_interpret(char *in, char *out);
+extern int name_interpret(char *in, char *out, int in_len);
 
 extern char *getNwInterfaceType(int i);
 extern char *formatTime(time_t *theTime, short encodeString);
