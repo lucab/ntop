@@ -64,29 +64,37 @@ lib_LTLIBRARIES = \
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libicmpPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
 liblastSeenPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+liblastSeenPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 libnetflowPlugin_la_SOURCES = netflowPlugin.c
 libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libnetflowPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 libpdaPlugin_la_SOURCES = pdaPlugin.c
 libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libpdaPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 librrdPlugin_la_LIBADD = -L../myrrd/ -lmyrrd
+librrdPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 libsnmpPlugin_la_SOURCES = snmpPlugin.c
 libsnmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 libsnmpPlugin_la_LIBADD = @SNMP_LIBS@
+libsnmpPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libsflowPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 libxmldumpPlugin_la_SOURCES = xmldumpPlugin.c
 libxmldumpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libxmldumpPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 #
 # Dependencies to allow ntop loading plugins on-place

@@ -82,28 +82,29 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libicmpPlugin_la_LIBADD =
-am_libicmpPlugin_la_OBJECTS = icmpPlugin.lo
+am_libicmpPlugin_la_OBJECTS = libicmpPlugin_la-icmpPlugin.lo
 libicmpPlugin_la_OBJECTS = $(am_libicmpPlugin_la_OBJECTS)
 liblastSeenPlugin_la_LIBADD =
-am_liblastSeenPlugin_la_OBJECTS = lastSeenPlugin.lo
+am_liblastSeenPlugin_la_OBJECTS =  \
+	liblastSeenPlugin_la-lastSeenPlugin.lo
 liblastSeenPlugin_la_OBJECTS = $(am_liblastSeenPlugin_la_OBJECTS)
 libnetflowPlugin_la_LIBADD =
-am_libnetflowPlugin_la_OBJECTS = netflowPlugin.lo
+am_libnetflowPlugin_la_OBJECTS = libnetflowPlugin_la-netflowPlugin.lo
 libnetflowPlugin_la_OBJECTS = $(am_libnetflowPlugin_la_OBJECTS)
 libpdaPlugin_la_LIBADD =
-am_libpdaPlugin_la_OBJECTS = pdaPlugin.lo
+am_libpdaPlugin_la_OBJECTS = libpdaPlugin_la-pdaPlugin.lo
 libpdaPlugin_la_OBJECTS = $(am_libpdaPlugin_la_OBJECTS)
 librrdPlugin_la_DEPENDENCIES =
-am_librrdPlugin_la_OBJECTS = rrdPlugin.lo
+am_librrdPlugin_la_OBJECTS = librrdPlugin_la-rrdPlugin.lo
 librrdPlugin_la_OBJECTS = $(am_librrdPlugin_la_OBJECTS)
 libsflowPlugin_la_LIBADD =
-am_libsflowPlugin_la_OBJECTS = sflowPlugin.lo
+am_libsflowPlugin_la_OBJECTS = libsflowPlugin_la-sflowPlugin.lo
 libsflowPlugin_la_OBJECTS = $(am_libsflowPlugin_la_OBJECTS)
 libsnmpPlugin_la_DEPENDENCIES =
-am_libsnmpPlugin_la_OBJECTS = snmpPlugin.lo
+am_libsnmpPlugin_la_OBJECTS = libsnmpPlugin_la-snmpPlugin.lo
 libsnmpPlugin_la_OBJECTS = $(am_libsnmpPlugin_la_OBJECTS)
 libxmldumpPlugin_la_LIBADD =
-am_libxmldumpPlugin_la_OBJECTS = xmldumpPlugin.lo
+am_libxmldumpPlugin_la_OBJECTS = libxmldumpPlugin_la-xmldumpPlugin.lo
 libxmldumpPlugin_la_OBJECTS = $(am_libxmldumpPlugin_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 icmpPlugin_so_SOURCES = icmpPlugin.c
@@ -133,19 +134,20 @@ xmldumpPlugin_so_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/icmpPlugin.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/icmpPlugin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/lastSeenPlugin.Plo \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/icmpPlugin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/lastSeenPlugin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/netflowPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/librrdPlugin_la-rrdPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/netflowPlugin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/pdaPlugin.Plo ./$(DEPDIR)/pdaPlugin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/rrdPlugin.Plo ./$(DEPDIR)/rrdPlugin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/sflowPlugin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/pdaPlugin.Po ./$(DEPDIR)/rrdPlugin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/sflowPlugin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/snmpPlugin.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/snmpPlugin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/xmldumpPlugin.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/xmldumpPlugin.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -311,22 +313,30 @@ lib_LTLIBRARIES = \
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libicmpPlugin_la_CFLAGS = $(AM_CFLAGS)
 liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
 liblastSeenPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+liblastSeenPlugin_la_CFLAGS = $(AM_CFLAGS)
 libnetflowPlugin_la_SOURCES = netflowPlugin.c
 libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libnetflowPlugin_la_CFLAGS = $(AM_CFLAGS)
 libpdaPlugin_la_SOURCES = pdaPlugin.c
 libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libpdaPlugin_la_CFLAGS = $(AM_CFLAGS)
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 librrdPlugin_la_LIBADD = -L../myrrd/ -lmyrrd
+librrdPlugin_la_CFLAGS = $(AM_CFLAGS)
 libsnmpPlugin_la_SOURCES = snmpPlugin.c
 libsnmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 libsnmpPlugin_la_LIBADD = @SNMP_LIBS@
+libsnmpPlugin_la_CFLAGS = $(AM_CFLAGS)
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libsflowPlugin_la_CFLAGS = $(AM_CFLAGS)
 libxmldumpPlugin_la_SOURCES = xmldumpPlugin.c
 libxmldumpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libxmldumpPlugin_la_CFLAGS = $(AM_CFLAGS)
 all: all-recursive
 
 .SUFFIXES:
@@ -417,21 +427,21 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/icmpPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/icmpPlugin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lastSeenPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lastSeenPlugin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netflowPlugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librrdPlugin_la-rrdPlugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netflowPlugin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdaPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdaPlugin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdPlugin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sflowPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sflowPlugin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/snmpPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/snmpPlugin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmldumpPlugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmldumpPlugin.Po@am__quote@
 
 .c.o:
@@ -457,6 +467,198 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+libicmpPlugin_la-icmpPlugin.o: icmpPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libicmpPlugin_la_CFLAGS) $(CFLAGS) -MT libicmpPlugin_la-icmpPlugin.o -MD -MP -MF "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Tpo" -c -o libicmpPlugin_la-icmpPlugin.o `test -f 'icmpPlugin.c' || echo '$(srcdir)/'`icmpPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Tpo" "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Po"; else rm -f "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='icmpPlugin.c' object='libicmpPlugin_la-icmpPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Po' tmpdepfile='$(DEPDIR)/libicmpPlugin_la-icmpPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libicmpPlugin_la_CFLAGS) $(CFLAGS) -c -o libicmpPlugin_la-icmpPlugin.o `test -f 'icmpPlugin.c' || echo '$(srcdir)/'`icmpPlugin.c
+
+libicmpPlugin_la-icmpPlugin.obj: icmpPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libicmpPlugin_la_CFLAGS) $(CFLAGS) -MT libicmpPlugin_la-icmpPlugin.obj -MD -MP -MF "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Tpo" -c -o libicmpPlugin_la-icmpPlugin.obj `if test -f 'icmpPlugin.c'; then $(CYGPATH_W) 'icmpPlugin.c'; else $(CYGPATH_W) '$(srcdir)/icmpPlugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Tpo" "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Po"; else rm -f "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='icmpPlugin.c' object='libicmpPlugin_la-icmpPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Po' tmpdepfile='$(DEPDIR)/libicmpPlugin_la-icmpPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libicmpPlugin_la_CFLAGS) $(CFLAGS) -c -o libicmpPlugin_la-icmpPlugin.obj `if test -f 'icmpPlugin.c'; then $(CYGPATH_W) 'icmpPlugin.c'; else $(CYGPATH_W) '$(srcdir)/icmpPlugin.c'; fi`
+
+libicmpPlugin_la-icmpPlugin.lo: icmpPlugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libicmpPlugin_la_CFLAGS) $(CFLAGS) -MT libicmpPlugin_la-icmpPlugin.lo -MD -MP -MF "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Tpo" -c -o libicmpPlugin_la-icmpPlugin.lo `test -f 'icmpPlugin.c' || echo '$(srcdir)/'`icmpPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Tpo" "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Plo"; else rm -f "$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='icmpPlugin.c' object='libicmpPlugin_la-icmpPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libicmpPlugin_la-icmpPlugin.Plo' tmpdepfile='$(DEPDIR)/libicmpPlugin_la-icmpPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libicmpPlugin_la_CFLAGS) $(CFLAGS) -c -o libicmpPlugin_la-icmpPlugin.lo `test -f 'icmpPlugin.c' || echo '$(srcdir)/'`icmpPlugin.c
+
+liblastSeenPlugin_la-lastSeenPlugin.o: lastSeenPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblastSeenPlugin_la_CFLAGS) $(CFLAGS) -MT liblastSeenPlugin_la-lastSeenPlugin.o -MD -MP -MF "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Tpo" -c -o liblastSeenPlugin_la-lastSeenPlugin.o `test -f 'lastSeenPlugin.c' || echo '$(srcdir)/'`lastSeenPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Tpo" "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Po"; else rm -f "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lastSeenPlugin.c' object='liblastSeenPlugin_la-lastSeenPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Po' tmpdepfile='$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblastSeenPlugin_la_CFLAGS) $(CFLAGS) -c -o liblastSeenPlugin_la-lastSeenPlugin.o `test -f 'lastSeenPlugin.c' || echo '$(srcdir)/'`lastSeenPlugin.c
+
+liblastSeenPlugin_la-lastSeenPlugin.obj: lastSeenPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblastSeenPlugin_la_CFLAGS) $(CFLAGS) -MT liblastSeenPlugin_la-lastSeenPlugin.obj -MD -MP -MF "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Tpo" -c -o liblastSeenPlugin_la-lastSeenPlugin.obj `if test -f 'lastSeenPlugin.c'; then $(CYGPATH_W) 'lastSeenPlugin.c'; else $(CYGPATH_W) '$(srcdir)/lastSeenPlugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Tpo" "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Po"; else rm -f "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lastSeenPlugin.c' object='liblastSeenPlugin_la-lastSeenPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Po' tmpdepfile='$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblastSeenPlugin_la_CFLAGS) $(CFLAGS) -c -o liblastSeenPlugin_la-lastSeenPlugin.obj `if test -f 'lastSeenPlugin.c'; then $(CYGPATH_W) 'lastSeenPlugin.c'; else $(CYGPATH_W) '$(srcdir)/lastSeenPlugin.c'; fi`
+
+liblastSeenPlugin_la-lastSeenPlugin.lo: lastSeenPlugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblastSeenPlugin_la_CFLAGS) $(CFLAGS) -MT liblastSeenPlugin_la-lastSeenPlugin.lo -MD -MP -MF "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Tpo" -c -o liblastSeenPlugin_la-lastSeenPlugin.lo `test -f 'lastSeenPlugin.c' || echo '$(srcdir)/'`lastSeenPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Tpo" "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Plo"; else rm -f "$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lastSeenPlugin.c' object='liblastSeenPlugin_la-lastSeenPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.Plo' tmpdepfile='$(DEPDIR)/liblastSeenPlugin_la-lastSeenPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblastSeenPlugin_la_CFLAGS) $(CFLAGS) -c -o liblastSeenPlugin_la-lastSeenPlugin.lo `test -f 'lastSeenPlugin.c' || echo '$(srcdir)/'`lastSeenPlugin.c
+
+libnetflowPlugin_la-netflowPlugin.o: netflowPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnetflowPlugin_la_CFLAGS) $(CFLAGS) -MT libnetflowPlugin_la-netflowPlugin.o -MD -MP -MF "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Tpo" -c -o libnetflowPlugin_la-netflowPlugin.o `test -f 'netflowPlugin.c' || echo '$(srcdir)/'`netflowPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Tpo" "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Po"; else rm -f "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='netflowPlugin.c' object='libnetflowPlugin_la-netflowPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Po' tmpdepfile='$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnetflowPlugin_la_CFLAGS) $(CFLAGS) -c -o libnetflowPlugin_la-netflowPlugin.o `test -f 'netflowPlugin.c' || echo '$(srcdir)/'`netflowPlugin.c
+
+libnetflowPlugin_la-netflowPlugin.obj: netflowPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnetflowPlugin_la_CFLAGS) $(CFLAGS) -MT libnetflowPlugin_la-netflowPlugin.obj -MD -MP -MF "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Tpo" -c -o libnetflowPlugin_la-netflowPlugin.obj `if test -f 'netflowPlugin.c'; then $(CYGPATH_W) 'netflowPlugin.c'; else $(CYGPATH_W) '$(srcdir)/netflowPlugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Tpo" "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Po"; else rm -f "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='netflowPlugin.c' object='libnetflowPlugin_la-netflowPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Po' tmpdepfile='$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnetflowPlugin_la_CFLAGS) $(CFLAGS) -c -o libnetflowPlugin_la-netflowPlugin.obj `if test -f 'netflowPlugin.c'; then $(CYGPATH_W) 'netflowPlugin.c'; else $(CYGPATH_W) '$(srcdir)/netflowPlugin.c'; fi`
+
+libnetflowPlugin_la-netflowPlugin.lo: netflowPlugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnetflowPlugin_la_CFLAGS) $(CFLAGS) -MT libnetflowPlugin_la-netflowPlugin.lo -MD -MP -MF "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Tpo" -c -o libnetflowPlugin_la-netflowPlugin.lo `test -f 'netflowPlugin.c' || echo '$(srcdir)/'`netflowPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Tpo" "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Plo"; else rm -f "$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='netflowPlugin.c' object='libnetflowPlugin_la-netflowPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.Plo' tmpdepfile='$(DEPDIR)/libnetflowPlugin_la-netflowPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnetflowPlugin_la_CFLAGS) $(CFLAGS) -c -o libnetflowPlugin_la-netflowPlugin.lo `test -f 'netflowPlugin.c' || echo '$(srcdir)/'`netflowPlugin.c
+
+libpdaPlugin_la-pdaPlugin.o: pdaPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpdaPlugin_la_CFLAGS) $(CFLAGS) -MT libpdaPlugin_la-pdaPlugin.o -MD -MP -MF "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Tpo" -c -o libpdaPlugin_la-pdaPlugin.o `test -f 'pdaPlugin.c' || echo '$(srcdir)/'`pdaPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Tpo" "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Po"; else rm -f "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pdaPlugin.c' object='libpdaPlugin_la-pdaPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Po' tmpdepfile='$(DEPDIR)/libpdaPlugin_la-pdaPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpdaPlugin_la_CFLAGS) $(CFLAGS) -c -o libpdaPlugin_la-pdaPlugin.o `test -f 'pdaPlugin.c' || echo '$(srcdir)/'`pdaPlugin.c
+
+libpdaPlugin_la-pdaPlugin.obj: pdaPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpdaPlugin_la_CFLAGS) $(CFLAGS) -MT libpdaPlugin_la-pdaPlugin.obj -MD -MP -MF "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Tpo" -c -o libpdaPlugin_la-pdaPlugin.obj `if test -f 'pdaPlugin.c'; then $(CYGPATH_W) 'pdaPlugin.c'; else $(CYGPATH_W) '$(srcdir)/pdaPlugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Tpo" "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Po"; else rm -f "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pdaPlugin.c' object='libpdaPlugin_la-pdaPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Po' tmpdepfile='$(DEPDIR)/libpdaPlugin_la-pdaPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpdaPlugin_la_CFLAGS) $(CFLAGS) -c -o libpdaPlugin_la-pdaPlugin.obj `if test -f 'pdaPlugin.c'; then $(CYGPATH_W) 'pdaPlugin.c'; else $(CYGPATH_W) '$(srcdir)/pdaPlugin.c'; fi`
+
+libpdaPlugin_la-pdaPlugin.lo: pdaPlugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpdaPlugin_la_CFLAGS) $(CFLAGS) -MT libpdaPlugin_la-pdaPlugin.lo -MD -MP -MF "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Tpo" -c -o libpdaPlugin_la-pdaPlugin.lo `test -f 'pdaPlugin.c' || echo '$(srcdir)/'`pdaPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Tpo" "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Plo"; else rm -f "$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pdaPlugin.c' object='libpdaPlugin_la-pdaPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libpdaPlugin_la-pdaPlugin.Plo' tmpdepfile='$(DEPDIR)/libpdaPlugin_la-pdaPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpdaPlugin_la_CFLAGS) $(CFLAGS) -c -o libpdaPlugin_la-pdaPlugin.lo `test -f 'pdaPlugin.c' || echo '$(srcdir)/'`pdaPlugin.c
+
+librrdPlugin_la-rrdPlugin.o: rrdPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librrdPlugin_la_CFLAGS) $(CFLAGS) -MT librrdPlugin_la-rrdPlugin.o -MD -MP -MF "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Tpo" -c -o librrdPlugin_la-rrdPlugin.o `test -f 'rrdPlugin.c' || echo '$(srcdir)/'`rrdPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Tpo" "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Po"; else rm -f "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rrdPlugin.c' object='librrdPlugin_la-rrdPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/librrdPlugin_la-rrdPlugin.Po' tmpdepfile='$(DEPDIR)/librrdPlugin_la-rrdPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librrdPlugin_la_CFLAGS) $(CFLAGS) -c -o librrdPlugin_la-rrdPlugin.o `test -f 'rrdPlugin.c' || echo '$(srcdir)/'`rrdPlugin.c
+
+librrdPlugin_la-rrdPlugin.obj: rrdPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librrdPlugin_la_CFLAGS) $(CFLAGS) -MT librrdPlugin_la-rrdPlugin.obj -MD -MP -MF "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Tpo" -c -o librrdPlugin_la-rrdPlugin.obj `if test -f 'rrdPlugin.c'; then $(CYGPATH_W) 'rrdPlugin.c'; else $(CYGPATH_W) '$(srcdir)/rrdPlugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Tpo" "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Po"; else rm -f "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rrdPlugin.c' object='librrdPlugin_la-rrdPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/librrdPlugin_la-rrdPlugin.Po' tmpdepfile='$(DEPDIR)/librrdPlugin_la-rrdPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librrdPlugin_la_CFLAGS) $(CFLAGS) -c -o librrdPlugin_la-rrdPlugin.obj `if test -f 'rrdPlugin.c'; then $(CYGPATH_W) 'rrdPlugin.c'; else $(CYGPATH_W) '$(srcdir)/rrdPlugin.c'; fi`
+
+librrdPlugin_la-rrdPlugin.lo: rrdPlugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librrdPlugin_la_CFLAGS) $(CFLAGS) -MT librrdPlugin_la-rrdPlugin.lo -MD -MP -MF "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Tpo" -c -o librrdPlugin_la-rrdPlugin.lo `test -f 'rrdPlugin.c' || echo '$(srcdir)/'`rrdPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Tpo" "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Plo"; else rm -f "$(DEPDIR)/librrdPlugin_la-rrdPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rrdPlugin.c' object='librrdPlugin_la-rrdPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/librrdPlugin_la-rrdPlugin.Plo' tmpdepfile='$(DEPDIR)/librrdPlugin_la-rrdPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librrdPlugin_la_CFLAGS) $(CFLAGS) -c -o librrdPlugin_la-rrdPlugin.lo `test -f 'rrdPlugin.c' || echo '$(srcdir)/'`rrdPlugin.c
+
+libsflowPlugin_la-sflowPlugin.o: sflowPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsflowPlugin_la_CFLAGS) $(CFLAGS) -MT libsflowPlugin_la-sflowPlugin.o -MD -MP -MF "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Tpo" -c -o libsflowPlugin_la-sflowPlugin.o `test -f 'sflowPlugin.c' || echo '$(srcdir)/'`sflowPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Tpo" "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Po"; else rm -f "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sflowPlugin.c' object='libsflowPlugin_la-sflowPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Po' tmpdepfile='$(DEPDIR)/libsflowPlugin_la-sflowPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsflowPlugin_la_CFLAGS) $(CFLAGS) -c -o libsflowPlugin_la-sflowPlugin.o `test -f 'sflowPlugin.c' || echo '$(srcdir)/'`sflowPlugin.c
+
+libsflowPlugin_la-sflowPlugin.obj: sflowPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsflowPlugin_la_CFLAGS) $(CFLAGS) -MT libsflowPlugin_la-sflowPlugin.obj -MD -MP -MF "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Tpo" -c -o libsflowPlugin_la-sflowPlugin.obj `if test -f 'sflowPlugin.c'; then $(CYGPATH_W) 'sflowPlugin.c'; else $(CYGPATH_W) '$(srcdir)/sflowPlugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Tpo" "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Po"; else rm -f "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sflowPlugin.c' object='libsflowPlugin_la-sflowPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Po' tmpdepfile='$(DEPDIR)/libsflowPlugin_la-sflowPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsflowPlugin_la_CFLAGS) $(CFLAGS) -c -o libsflowPlugin_la-sflowPlugin.obj `if test -f 'sflowPlugin.c'; then $(CYGPATH_W) 'sflowPlugin.c'; else $(CYGPATH_W) '$(srcdir)/sflowPlugin.c'; fi`
+
+libsflowPlugin_la-sflowPlugin.lo: sflowPlugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsflowPlugin_la_CFLAGS) $(CFLAGS) -MT libsflowPlugin_la-sflowPlugin.lo -MD -MP -MF "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Tpo" -c -o libsflowPlugin_la-sflowPlugin.lo `test -f 'sflowPlugin.c' || echo '$(srcdir)/'`sflowPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Tpo" "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Plo"; else rm -f "$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sflowPlugin.c' object='libsflowPlugin_la-sflowPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsflowPlugin_la-sflowPlugin.Plo' tmpdepfile='$(DEPDIR)/libsflowPlugin_la-sflowPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsflowPlugin_la_CFLAGS) $(CFLAGS) -c -o libsflowPlugin_la-sflowPlugin.lo `test -f 'sflowPlugin.c' || echo '$(srcdir)/'`sflowPlugin.c
+
+libsnmpPlugin_la-snmpPlugin.o: snmpPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnmpPlugin_la_CFLAGS) $(CFLAGS) -MT libsnmpPlugin_la-snmpPlugin.o -MD -MP -MF "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Tpo" -c -o libsnmpPlugin_la-snmpPlugin.o `test -f 'snmpPlugin.c' || echo '$(srcdir)/'`snmpPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Tpo" "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Po"; else rm -f "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='snmpPlugin.c' object='libsnmpPlugin_la-snmpPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Po' tmpdepfile='$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnmpPlugin_la_CFLAGS) $(CFLAGS) -c -o libsnmpPlugin_la-snmpPlugin.o `test -f 'snmpPlugin.c' || echo '$(srcdir)/'`snmpPlugin.c
+
+libsnmpPlugin_la-snmpPlugin.obj: snmpPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnmpPlugin_la_CFLAGS) $(CFLAGS) -MT libsnmpPlugin_la-snmpPlugin.obj -MD -MP -MF "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Tpo" -c -o libsnmpPlugin_la-snmpPlugin.obj `if test -f 'snmpPlugin.c'; then $(CYGPATH_W) 'snmpPlugin.c'; else $(CYGPATH_W) '$(srcdir)/snmpPlugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Tpo" "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Po"; else rm -f "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='snmpPlugin.c' object='libsnmpPlugin_la-snmpPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Po' tmpdepfile='$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnmpPlugin_la_CFLAGS) $(CFLAGS) -c -o libsnmpPlugin_la-snmpPlugin.obj `if test -f 'snmpPlugin.c'; then $(CYGPATH_W) 'snmpPlugin.c'; else $(CYGPATH_W) '$(srcdir)/snmpPlugin.c'; fi`
+
+libsnmpPlugin_la-snmpPlugin.lo: snmpPlugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnmpPlugin_la_CFLAGS) $(CFLAGS) -MT libsnmpPlugin_la-snmpPlugin.lo -MD -MP -MF "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Tpo" -c -o libsnmpPlugin_la-snmpPlugin.lo `test -f 'snmpPlugin.c' || echo '$(srcdir)/'`snmpPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Tpo" "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Plo"; else rm -f "$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='snmpPlugin.c' object='libsnmpPlugin_la-snmpPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.Plo' tmpdepfile='$(DEPDIR)/libsnmpPlugin_la-snmpPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsnmpPlugin_la_CFLAGS) $(CFLAGS) -c -o libsnmpPlugin_la-snmpPlugin.lo `test -f 'snmpPlugin.c' || echo '$(srcdir)/'`snmpPlugin.c
+
+libxmldumpPlugin_la-xmldumpPlugin.o: xmldumpPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxmldumpPlugin_la_CFLAGS) $(CFLAGS) -MT libxmldumpPlugin_la-xmldumpPlugin.o -MD -MP -MF "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Tpo" -c -o libxmldumpPlugin_la-xmldumpPlugin.o `test -f 'xmldumpPlugin.c' || echo '$(srcdir)/'`xmldumpPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Tpo" "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Po"; else rm -f "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmldumpPlugin.c' object='libxmldumpPlugin_la-xmldumpPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Po' tmpdepfile='$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxmldumpPlugin_la_CFLAGS) $(CFLAGS) -c -o libxmldumpPlugin_la-xmldumpPlugin.o `test -f 'xmldumpPlugin.c' || echo '$(srcdir)/'`xmldumpPlugin.c
+
+libxmldumpPlugin_la-xmldumpPlugin.obj: xmldumpPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxmldumpPlugin_la_CFLAGS) $(CFLAGS) -MT libxmldumpPlugin_la-xmldumpPlugin.obj -MD -MP -MF "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Tpo" -c -o libxmldumpPlugin_la-xmldumpPlugin.obj `if test -f 'xmldumpPlugin.c'; then $(CYGPATH_W) 'xmldumpPlugin.c'; else $(CYGPATH_W) '$(srcdir)/xmldumpPlugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Tpo" "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Po"; else rm -f "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmldumpPlugin.c' object='libxmldumpPlugin_la-xmldumpPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Po' tmpdepfile='$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxmldumpPlugin_la_CFLAGS) $(CFLAGS) -c -o libxmldumpPlugin_la-xmldumpPlugin.obj `if test -f 'xmldumpPlugin.c'; then $(CYGPATH_W) 'xmldumpPlugin.c'; else $(CYGPATH_W) '$(srcdir)/xmldumpPlugin.c'; fi`
+
+libxmldumpPlugin_la-xmldumpPlugin.lo: xmldumpPlugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxmldumpPlugin_la_CFLAGS) $(CFLAGS) -MT libxmldumpPlugin_la-xmldumpPlugin.lo -MD -MP -MF "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Tpo" -c -o libxmldumpPlugin_la-xmldumpPlugin.lo `test -f 'xmldumpPlugin.c' || echo '$(srcdir)/'`xmldumpPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Tpo" "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Plo"; else rm -f "$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmldumpPlugin.c' object='libxmldumpPlugin_la-xmldumpPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.Plo' tmpdepfile='$(DEPDIR)/libxmldumpPlugin_la-xmldumpPlugin.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxmldumpPlugin_la_CFLAGS) $(CFLAGS) -c -o libxmldumpPlugin_la-xmldumpPlugin.lo `test -f 'xmldumpPlugin.c' || echo '$(srcdir)/'`xmldumpPlugin.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
