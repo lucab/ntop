@@ -561,6 +561,57 @@ int mapGlobalToLocalIdx(int port) {
 
 /* **************************************** */
 
+static void purgeIpPorts(int theDevice) {
+  char marker[TOP_IP_PORT];
+  HostTraffic *el;
+  int i;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Calling purgeIpPorts(%d)", theDevice);
+#endif
+
+  memset(marker, 0, sizeof(marker));
+  
+  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {
+    int k;
+
+    if(i == myGlobals.otherHostEntryIdx)
+      continue;
+
+    if((el = myGlobals.device[theDevice].hash_hostTraffic[i]) == NULL) continue;   
+    
+    for(k=0; i<MAX_NUM_RECENT_PORTS; i++) {
+      marker[el->recentlyUsedServerPorts[k]] = 1;
+      marker[el->recentlyUsedClientPorts[k]] = 1;
+    }
+  }
+
+  /* 
+     I know that this semaphore has been designed for other tasks
+     however it allows me to save memory/time... 
+  */
+#ifdef MULTITHREADED
+  accessMutex(&myGlobals.gdbmMutex, "purgeIpPorts");
+#endif
+  
+  for(i=1; i<TOP_IP_PORT; i++) {
+    if((marker[i] == 0) && (myGlobals.device[theDevice].ipPorts[i] != NULL)) {
+      free(myGlobals.device[theDevice].ipPorts[i]);
+      myGlobals.device[theDevice].ipPorts[i] = NULL;
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "Purging ipPorts(%d)", i);
+#endif
+    }
+  }
+  
+#ifdef MULTITHREADED
+  releaseMutex(&myGlobals.gdbmMutex);
+#endif
+
+}
+
+/* **************************************** */
+
 void* scanIdleLoop(void* notUsed _UNUSED_) {
   for(;;) {
     int i;
@@ -573,6 +624,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
         purgeIdleHosts(i);
+	purgeIpPorts(i);
 #ifdef HAVE_SCHED_H
 	sched_yield(); /* Allow other threads to run */
 #endif
@@ -924,6 +976,9 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
+
+    if(myGlobals.device[i].ipPorts != NULL)
+      free(myGlobals.device[i].ipPorts);
 
     free(myGlobals.device[i].name);
 

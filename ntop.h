@@ -1197,6 +1197,7 @@ typedef struct portCounter {
 
 typedef struct ntopInterface {
   char *name;                    /* unique interface name */
+  char *humanFriendlyName;       /* Human friendly name of the interface (needed under WinNT and above) */
   int flags;                     /* the status of the interface as viewed by ntop */
 
   u_int32_t addr;                /* Internet address (four bytes notation) */

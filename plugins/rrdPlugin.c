@@ -1157,7 +1157,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(myGlobals.device[i].virtualDevice) continue;
 
-	sprintf(rrdPath, "%s/interfaces/%s/", myGlobals.rrdPath,  myGlobals.device[i].name);
+	sprintf(rrdPath, "%s/interfaces/%s/", myGlobals.rrdPath,  myGlobals.device[i].humanFriendlyName);
 	mkdir_p(rrdPath);
 
 	updateCounter(rrdPath, "ethernetPkts",  myGlobals.device[i].ethernetPkts.value);
@@ -1200,7 +1200,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(dumpDetail == DETAIL_HIGH) {
 	  if(myGlobals.device[i].ipProtoStats != NULL) {
-	    snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_", myGlobals.rrdPath,  myGlobals.device[i].name);
+	    snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_", myGlobals.rrdPath,  myGlobals.device[i].humanFriendlyName);
 
 	    for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 	      TrafficCounter ctr;

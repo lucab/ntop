@@ -143,7 +143,7 @@ void printTrafficStatistics() {
 	char buf1[128], buf2[64];
 
 	if(snprintf(buf, sizeof(buf), "%s (%s%s) [%s/%s]",
-		    myGlobals.device[i].name, getNwInterfaceType(i),
+		    myGlobals.device[i].humanFriendlyName, getNwInterfaceType(i),
 		    myGlobals.device[i].virtualDevice ? " virtual" : "",
 		    _intoa(myGlobals.device[i].network, buf1, sizeof(buf1)),
 		    _intoa(myGlobals.device[i].netmask, buf2, sizeof(buf2))
@@ -2828,12 +2828,20 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 		   "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
 
 	ipPorts = (PortCounter**)calloc(TOP_IP_PORT, sizeof(PortCounter*));
+
+#ifdef MULTITHREADED
+	accessMutex(&myGlobals.gdbmMutex, "purgeIpPorts");
+#endif
 	for(i=0; i<TOP_IP_PORT; i++) {
 	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i] != NULL) {
 	    ipPorts[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i];
 	    idx++;
 	  }
 	}
+#ifdef MULTITHREADED
+	releaseMutex(&myGlobals.gdbmMutex);
+#endif
+
 	quicksort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
 
 	if(idx > 32) idx = 32; /* Limit to 32 entries max */
@@ -4398,7 +4406,7 @@ static int recentlyUsedPort(HostTraffic *el, u_short portNr, int serverPort) {
 
 void showPortTraffic(u_short portNr) {
   char buf[BUF_SIZE], *str;
-  int i;
+  int i, numRecords = 0;
 
   str = getAllPortByNum(portNr);
 
@@ -4425,6 +4433,7 @@ void showPortTraffic(u_short portNr) {
       if(el && recentlyUsedPort(el, portNr, 0)) {
 	 sendString("\n<LI> ");
 	 sendString(makeHostLink(el, SHORT_FORMAT, 0, 0));
+	 numRecords++;
       }
     }
 
@@ -4440,6 +4449,7 @@ void showPortTraffic(u_short portNr) {
       if(el && recentlyUsedPort(el, portNr, 1)) {
 	 sendString("\n<LI> ");
 	 sendString(makeHostLink(el, SHORT_FORMAT, 0, 0));
+	 numRecords++;
       }
     }
 

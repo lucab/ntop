@@ -572,7 +572,7 @@ void initGdbm(char *directory) {
  * a) sniff packets from NICs and push them in internal data structures
  * b) pop and decode packets
  * c) collect data
- * d) display/emitt information
+ * d) display/emit information
  */
 void initThreads(void) {
   int i;
@@ -806,6 +806,9 @@ void initDevices(char* devices) {
 #endif
 
     myGlobals.device = (NtopInterface*)calloc(1, sizeof(NtopInterface));
+#ifndef WIN32
+    myGlobals.device[0].humanFriendlyName = strdup(tmpDev);
+#endif
     myGlobals.device[0].name = strdup(tmpDev);
     myGlobals.numDevices = 1;
   } else {
@@ -867,6 +870,9 @@ void initDevices(char* devices) {
       }
 
       myGlobals.device = tmpDevice;
+#ifndef WIN32
+      myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(tmpDev);
+#endif
       myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDev);
       tmpDev = strtok_r(NULL, ",", &strtokState);
 
@@ -920,6 +926,9 @@ void initDevices(char* devices) {
 	      myGlobals.device[myGlobals.numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
 	      if(myLocalHostAddress.s_addr == myGlobals.device[i].ifAddr.s_addr)
 		continue; /* No virtual Interfaces */
+#ifndef WIN32
+	      myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(tmpDeviceName);
+#endif
 	      myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDeviceName);
 #ifdef DEBUG
 	      traceEvent(TRACE_INFO, "Added: %s\n", tmpDeviceName);

@@ -513,6 +513,10 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
   if((sport >= TOP_IP_PORT) || (dport >= TOP_IP_PORT)) 
     return;
 
+#ifdef MULTITHREADED
+  accessMutex(&myGlobals.gdbmMutex, "updateInterfacePorts");
+#endif
+
   if(myGlobals.device[actualDeviceId].ipPorts[sport] == NULL) {
     myGlobals.device[actualDeviceId].ipPorts[sport] = (PortCounter*)malloc(sizeof(PortCounter));
     myGlobals.device[actualDeviceId].ipPorts[sport]->port = sport;
@@ -529,6 +533,10 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
 
   myGlobals.device[actualDeviceId].ipPorts[sport]->sent += length;
   myGlobals.device[actualDeviceId].ipPorts[dport]->rcvd += length;
+
+#ifdef MULTITHREADED
+  releaseMutex(&myGlobals.gdbmMutex);
+#endif
 }
 
 /* ************************************ */
