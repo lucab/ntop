@@ -279,11 +279,11 @@ CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = myrrd/Makefile
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
-am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo getopt.lo \
-	getopt1.lo globals-core.lo hash.lo iface.lo initialize.lo \
-	leaks.lo netflow.lo ntop.lo pbuf.lo plugin.lo protocols.lo \
-	sessions.lo term.lo util.lo traffic.lo vendor.lo version.lo \
-	ntop_darwin.lo
+am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo fcUtils.lo \
+	getopt.lo getopt1.lo globals-core.lo hash.lo iface.lo \
+	initialize.lo leaks.lo netflow.lo ntop.lo pbuf.lo plugin.lo \
+	protocols.lo sessions.lo term.lo util.lo traffic.lo vendor.lo \
+	version.lo ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
 	http.lo netflow.lo report.lo reportUtils.lo ssl.lo \
@@ -312,8 +312,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/address.Plo ./$(DEPDIR)/admin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/argv.Plo ./$(DEPDIR)/dataFormat.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/emitter.Plo ./$(DEPDIR)/getopt.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/getopt1.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/emitter.Plo ./$(DEPDIR)/fcUtils.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/getopt.Plo ./$(DEPDIR)/getopt1.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/globals-core.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/globals-report.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/graph.Plo ./$(DEPDIR)/hash.Plo \
@@ -357,11 +357,10 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 DIST_COMMON = README $(ETTER_PASSIVE) $(noinst_HEADERS) AUTHORS \
 	CONTENTS COPYING ChangeLog INSTALL MANIFESTO Makefile.am \
 	Makefile.in NEWS PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 \
-	aclocal.m4 compile config.guess config.h.in config.sub \
-	configure configure.in depcomp html/faq.html install-sh \
-	ltconfig ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 \
-	ntop.html ntop.txt oui.txt.gz p2c.opt.table.gz \
-	specialMAC.txt.gz\
+	aclocal.m4 config.guess config.h.in config.sub configure \
+	configure.in depcomp html/faq.html install-sh ltconfig \
+	ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html \
+	ntop.txt oui.txt.gz p2c.opt.table.gz specialMAC.txt.gz\
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES) $(sntop_SOURCES)
 
@@ -516,6 +515,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/argv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dataFormat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emitter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fcUtils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getopt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getopt1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/globals-core.Plo@am__quote@
