@@ -1504,7 +1504,12 @@ A. Multiple possible choices...
     3. Another instance of ntop may already be running, so it has the file open
        and locked.
 
-
+Q. What's inside the .db files and what's their format?
+A. The files are stored in GDBM format. You can dump their content using tools like
+   this: http://tboudet.free.fr/dumpgdbm/. In principle you should not be
+   interested in the file content as they are temporary caches and contain the
+   configuration as well as the MD5 hash of the web passwords.
+  
 Q. ntop starts up with this:
    WARNING: Discarded network 172.20.0.0/16: this is the local network.
 A. No worries.  The message means exactly what it says - it's a warning that
