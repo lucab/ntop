@@ -737,76 +737,6 @@ A. The process of creating portable cross-platform scripts for building
       $ automake --version
       $ libtool --version
 
-Q. I don't understand libtool.
-A. Me either - so I did some research.  It's (almost) fascinating...
-
-   For the record, here's how the libtool stuff works...
-
-   In configure.in is this macro:
-
-      AC_PROG_LIBTOOL
-
-   Which becomes (in configure) a whole mess'o'code.  The key part is this:
-
-      CC="$CC" CFLAGS="$CFLAGS" CPPFLAGS="$CPPFLAGS" \
-      LD="$LD" LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
-      LN_S="$LN_S" NM="$NM" RANLIB="$RANLIB" \
-      DLLTOOL="$DLLTOOL" AS="$AS" OBJDUMP="$OBJDUMP" \
-      ${CONFIG_SHELL-/bin/sh} $ac_aux_dir/ltconfig --no-reexec \
-      $libtool_flags --no-verify $ac_aux_dir/ltmain.sh $host \
-      || { { echo "$as_me:$LINENO: error: libtool configure failed" >&5
-      echo "$as_me: error: libtool configure failed" >&2;}
-         { (exit 1); exit 1; }; }
-
-   Which sets the various constants and invokes the ltmain.sh script in the 
-   ntop directory.  This script uses the ltconfig script to rebuild the 
-   libtool in the ntop directory.
-
-   So, while we distribute a 1.3.5 libtool, built under Solaris, it becomes
-   one built under (and thus with all the constants, etc.) your system.
-
-   It also becomes a 1.4.2 libtool.  How?
-
-   Well, almost exactly a year ago (2002/08/22), I checked an updated 
-   ltmain.sh as part of the -version-info and -release fix.  That file came 
-   from my RedHat Linux box with the following:
-
-      PROGRAM=ltmain.sh
-      PACKAGE=libtool
-      VERSION=1.4.2
-      TIMESTAMP=" (1.922.2.54 2001/09/11 03:33:37)"
-
-   So what happens in ntop is this:
-
-   1. We add the ntop directory to the path, so that - as a last resort -
-      the ntop version of libtool is available for us.
-
-   2. We create a 1.4.2 libtool in the ntop directory, properly configured
-      for the host environment.
-
-   3. We then test for (and set LIBTOOL) to find the installed version of 
-      libtool, usually /usr/bin/libtool or /usr/bin/glibtool (Darwin).
-
-   4. We then check the libtool version number...
-
-         In the Darwin environment, we then ignore things and run 
-         /usr/bin/glibtool.  If libtool isn't installed, we'll fail.
-
-         In other environments we run libtool.  This runs the system 
-         version or as a last resort the one in the ntop directory.
-
-         (We should be using $LIBTOOL, but we can't as that is in auto* 
-          a/k/a m4 macro format, '$(SHELL) $(top_builddir)/libtool' not in
-         shell script format which would be '${SHELL} ${top_builddir}/libtool'
-
-   5. At the end of ./configure, in the Darwin environment only, we lay 
-      the Mac 1.3.5 versions of ltmain.sh and ltconfig back into the ntop
-      directory. Since we've already done ltmain.sh, AFAIK, this does nothing.
-
-   Anyway, we should lay a 1.4.2 libtool into the ntop directory, but it won't
-   change anything.
-
-
 Q. But how does it all hang together?
 A. There's a vsd (Visio)/pdf in the docs directory - ntop-autotools.pdf.
 
@@ -1497,13 +1427,14 @@ A. The text of 'filename', is copied - ignoring line breaks and
       -u ntop
       --trace-level 3
       -m 12.239.0.0/16,10.113.0.0/16
+      -E
       -K
 
    becomes:
 
    Resolved to /usr/bin/ntop -i eth0,eth1 -p /usr/share/ntop/protocol.list
                -P /usr/share/ntop -w 192.168.42.38 -u ntop --trace-level 3
-               -m 12.239.0.0/16,10.113.0.0/16 -K -d -L
+               -m 12.239.0.0/16,10.113.0.0/16 -E -K -d -L
 
    Remember, most ntop options are "sticky", that is they just set an
    internal flag. Invoking them multiple times doesn't change ntop's
@@ -2856,7 +2787,7 @@ A. Oh yes it does... for http: connections
 
 
 Q. My filter doesn't work!  I'm running ntop like this:
-      /usr/local/bin/ntop -u nobody -L -d -w 3000 -S 2 \
+      /usr/local/bin/ntop -u nobody -L -d -E -w 3000 -S 2 \
                       -m 192.168.10.0/24,xxx.xxx.xxx.xxx/32 \
                       -M -i eth0,eth1 \
                       (src net 192.168.10.0/24 or src host xxx.xxx.xxx.xxx ) \
@@ -5110,6 +5041,75 @@ A. You have a version problem with libpng.
       have different libpng.so versions.  Even if you think you are using the
       static linked version (buildAll.sh), be careful - see the entry (above) on
       "make install" for libpng.
+
+Q. When I run ./configure, it finds png.h but not libpng:
+      *******************************************************************
+      *
+      * ERROR: libpng header or library routines are missing
+      *           (yes means it was found, no means it was not found)
+      *
+      *              png.h...yes
+      *              png_read_info() in -lpng...
+      *
+      *>>> No way to proceed.
+      *
+      *???        Install libpng (and/or libpng-devel), check www.libpng.org
+      *???    and Rerun ./configure
+      *
+      *******************************************************************
+A. You're missing libpng.so.  Look for it (locate libpng) and tell ntop
+   where it is via the --with-png-lib= parameter.
+
+
+Q. I seem to be missing libpng.so - when I do locate libpng, it finds:
+      /usr/lib/libpng.so.3
+      /usr/lib/libpng.so.3.1.2.2
+      /usr/lib/libpng12.so.0
+      /usr/lib/libpng12.so.0.1.2.2
+      /usr/lib/libpng.so.2.1.0.13
+   but no libpng.so...
+
+A. Yeah.  Send RedHat a nasty gram.
+
+Q. I don't understand...
+A. In a normal libpng install, say from the source, you would have - in 
+   addition to the .so.n.n.n.n files - a symlink named libpng.so, like this:
+
+      lrwxrwxrwx 1 root  root   19 Apr 23 15:46 libpng.so -> libpng12.so.0.1.2.2
+
+   But, that link seems to be missing.  Without it, -lpng doesn't properly
+   resolve and you get the ./configure error.
+
+Q. Why?
+A. RedHat ships Linux with both versions of libpng, a 1.0.x and a 1.2.x version.
+
+   Do this:
+
+      $ rpm -qa | grep libpng
+
+   And you'll see the libpng 1.0.x run time:
+
+      libpng-1.2.2-8
+      libpng-devel-1.2.2-8
+      libpng10-1.0.13-6
+
+   Dig into the files installed by them and you'll not find libpng.so.
+
+   Since they're incompatible RedHat doesn't create the libpng.so link.
+   Instead they patch the makefiles to point the various packages at one or the
+   other .so file they install.  This allows them to ship packages that require
+   one or the other.
+
+   It works fine unless you try and install something other than via an rpm.
+   Then you're missing the libpng.so file that normal packages look for...
+
+   Best bet is to create a symbolic link from the libpng.so.xxxx installed 
+   by the package which matches the -devel (because that's where png.h is 
+   found), e.g.:
+
+   ln -s /usr/lib/libpng.so.3.1.2.2 /usr/lib/libpng.so
+
+   And remember this in case you update the libpng rpm's in the future.
 
 
 --------------------------------------------------------------------------------
