@@ -414,13 +414,8 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
   sprintf(path, "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
   /* startTime[4] skips the 'now-' */
-  sprintf(fname, "%s/%s/%s-%s%s.%s", myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
-#ifdef WIN32
-	  "gif"
-#else
-	  "png"
-#endif
-	  );
+  sprintf(fname, "%s/%s/%s-%s%s%s", myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
+	  CHART_FORMAT);
 
 #ifdef WIN32
   revertSlash(path, 0);
@@ -470,11 +465,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
 
     if(rc == 0) {
-#ifdef WIN32
-      sendHTTPHeader(FLAG_HTTP_TYPE_GIF, 0);
-#else
       sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0);
-#endif
       sendGraphFile(fname, 0);
     } else {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
