@@ -1,8 +1,11 @@
 /* Luca Deri September 1st, 2000 */
 
 body
-{font-family: Helvetica, Arial, sans-serif;
-font-size: 12px}
+{
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 12px;
+	background: #fff url("/white_bg.gif") repeat-x;
+}
 
 th
 {
@@ -10,10 +13,10 @@ font-family: Helvetica, Arial, sans-serif;
 font-size: 12px;
 font-weight: bold;
 white-space: nowrap;
-background-color: #E7E9F2;
+background-color: #F3F3F3;
 }
 
-table { border: thin; }
+table { border: 1px;}
 
 span.leftmenuitem
 {
@@ -24,7 +27,7 @@ font-weight: bold;
 
 td
 {font-family: Helvetica, Arial, sans-serif;
-font-size: 12px;
+font-size: 12px;white-space: nowrap;
 }
 
 address
