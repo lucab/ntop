@@ -629,7 +629,7 @@ void printHTMLtrailer(void) {
           ;;
   }
 
-  sendString("\n<HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><B>\n");
+  sendString("\n<HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><H5><B>\n");
 
   if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s ",
 	      ctime(&myGlobals.actTime)) < 0)

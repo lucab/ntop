@@ -155,10 +155,6 @@ static struct option const long_options[] = {
  */
 static void welcome (FILE * fp)
 {
-#ifdef WIN32
-	initWinsock32(); /* Necessary for initializing globals */
-#endif
-
   fprintf (fp, "%s v.%s %s (configured on %s, built on %s)\n",
 	   myGlobals.program_name, version, THREAD_MODE, configureDate, buildDate);
 
@@ -934,6 +930,10 @@ int main(int argc, char *argv[]) {
 
 #ifdef MEMORY_DEBUG
   initLeaks(); /* Don't move this below nor above */
+#endif
+
+#ifdef WIN32
+	initWinsock32(); /* Necessary for initializing globals */
 #endif
 
   /* *********************** */

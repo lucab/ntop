@@ -655,7 +655,7 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
 
   /* startTime[4] skips the 'now-' */
   if(snprintf(fname, sizeof(fname), "%s/%s/%s-%s%d%s",
-	      myGlobals.rrdPath, rrd_subdirs[0], 
+	  myGlobals.rrdPath, rrd_subdirs[0], 
 	      startTime, rrdPrefix, graphId,
 	      CHART_FORMAT) < 0)
     BufferTooShort();
@@ -1195,12 +1195,25 @@ static void commonRRDinit(void) {
 
   if(fetchPrefsValue("rrd.rrdPath", value, sizeof(value)) == -1) {
     char *thePath = "/rrd";
-    int len = strlen(myGlobals.dbPath)+strlen(thePath)+1;
+    int len = strlen(myGlobals.dbPath)+strlen(thePath)+1, idx = 0;
 
     if(myGlobals.rrdPath) free(myGlobals.rrdPath);
     myGlobals.rrdPath = (char*)malloc(len);
-    if(snprintf(myGlobals.rrdPath, len, "%s%s", myGlobals.dbPath, thePath) < 0)
+
+
+#ifdef WIN32
+	  /*
+		RRD does not accept ':' in path names as this
+		char is used as separator.
+	  */
+
+	  if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
+#endif
+
+
+    if(snprintf(myGlobals.rrdPath, len, "%s%s", &myGlobals.dbPath[idx], thePath) < 0)
       BufferTooShort();
+
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
   } else {
     int vlen = strlen(value)+1;
@@ -1368,11 +1381,21 @@ static void handleRRDHTTPrequest(char* url) {
 	} else if(strcmp(key, "hostsFilter") == 0) {
 	  _hostsFilter = strdup(value);
 	} else if(strcmp(key, "rrdPath") == 0) {
-	  int vlen = strlen(value)+1;
+	  int vlen = strlen(value)+1, idx = 0;
+	  
+#ifdef WIN32
+	  /*
+		RRD does not accept ':' in path names as this
+		char is used as separator.
+	  */
 
+	  if(value[1] == ':') idx = 2; /* e.g. c:/... */
+#endif
+
+	  vlen -= idx;
 	  if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
 	  myGlobals.rrdPath  = (char*)malloc(vlen);
-	  unescape(myGlobals.rrdPath, vlen, value);
+	  unescape(myGlobals.rrdPath, vlen, &value[idx]);
 	  storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
 	} else if(strcmp(key, "dumpDomains") == 0) {
 	  _dumpDomains = 1;
@@ -1602,7 +1625,7 @@ static void handleRRDHTTPrequest(char* url) {
              "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
   sendString(myGlobals.rrdPath);
   sendString("\">");
-  sendString("<br>NOTE: The rrd files will be in a subdirectory structure, e.g.\n");
+  sendString("<br>NOTE:<ul><li>The rrd files will be in a subdirectory structure, e.g.\n");
   if(snprintf(buf, sizeof(buf),
 #ifdef WIN32
 	       "%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
@@ -1613,7 +1636,7 @@ static void handleRRDHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
   sendString("to limit the number of files per subdirectory.");
-  sendString("</TD></tr>\n");
+  sendString("<li>Do not use the ':' character in the path as it is forbidded by rrd</ul></TD></tr>\n");
 
   sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Updates</TH><TD>");
   if(snprintf(buf, sizeof(buf), "%lu RRD files updated</TD></TR>\n", (unsigned long)numTotalRRDs) < 0)

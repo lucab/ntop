@@ -1006,6 +1006,8 @@ void printTrafficStatistics(int revertOrder) {
 	      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
     BufferTooShort();
   
+  for(i=0; i<strlen(buf); i++) if(buf[i] == ' ') buf[i] = '_';
+
   if((i = stat(buf, &statbuf)) == 0) {
     if(snprintf(buf, sizeof(buf),
                 "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
@@ -4584,6 +4586,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domainName) < 0)
       BufferTooShort();
   
+	for(i=0; i<strlen(buf); i++) if(buf[i] == ' ') buf[i] = '_';
+
     if((i = stat(buf, &statbufDomain)) == 0) {
       if(snprintf(buf, sizeof(buf), 
                   "<p>&nbsp;</p>\n"

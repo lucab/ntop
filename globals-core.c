@@ -140,7 +140,7 @@ static void allocateOtherHosts() {
  */
 void initNtopGlobals(int argc, char * argv[]) {
   int i, bufLen;
-  char *startedAs;
+  char *startedAs, *defaultPath;
 
   memset(&myGlobals, 0, sizeof(myGlobals));
 
@@ -211,12 +211,18 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* Other flags (to be set via command line options one day) */
   myGlobals.enableFragmentHandling = 1;
 
+#ifdef WIN32
+  defaultPath = _wdir;
+#else
+  defaultPath = CFG_DBFILE_DIR;
+#endif
+
   /* Search paths */
   myGlobals.dataFileDirs    = _dataFileDirs;
   myGlobals.pluginDirs      = _pluginDirs;
   myGlobals.configFileDirs  = _configFileDirs;
-  myGlobals.pcapLogBasePath = strdup(CFG_DBFILE_DIR);   /* a NULL pointer will break the logic */
-  myGlobals.dbPath          = strdup(CFG_DBFILE_DIR);   /* a NULL pointer will break the logic */
+  myGlobals.pcapLogBasePath = strdup(defaultPath);     /* a NULL pointer will break the logic */
+  myGlobals.dbPath          = strdup(defaultPath);     /* a NULL pointer will break the logic */
   myGlobals.spoolPath       = strdup("");              /* a NULL pointer will break the logic */
 
   /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
@@ -555,10 +561,6 @@ void initNtop(char *devices) {
     daemonize();
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as a daemon");
   }
-#endif
-
-#ifdef WIN32
-  initWinsock32();
 #endif
 
   /* Handle local addresses (if any) */
