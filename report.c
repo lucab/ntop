@@ -76,25 +76,6 @@ int reportValues(time_t *lastTime) {
 
 /* ******************************* */
 
-/* Function courtesy of Olivier Nicole <on@cs.ait.ac.th> */
-
-#ifndef HAVE_STRSEP
-static char* strsep(char **str, const char * delim) {
-  char * ret;
-  ret=*str;
-  while (*str[0]!='\0' && *str[0]!=delim[0]) {
-    *str=*str+1;
-  }
-  if (*str[0]==delim[0]) {
-    *str[0]='\0';
-    *str=*str+1;
-  }
-  return(ret);
-}
-#endif
-
-/* ******************************* */
-
 RETSIGTYPE printHostsTraffic(int signumber_ignored,
 			     int reportType,
 			     int sortedColumn,
@@ -225,73 +206,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	       reportType, sortedColumn, columnSort, screenNumber);
 #endif
 
-    /* Patch courtesy of Olivier Nicole <on@cs.ait.ac.th> */
-    /** Expand IP addresses for numerical sort **/
-    for (i=0; i<numEntries; i++) {
-      short ii, on_t;
-      char on_aa[4][4], *on_c, *on_b, on_bb[17];
-
-      on_b=strdup(tmpTable[i]->hostSymIpAddress);
-      if (strlen(on_b)== strspn(on_b, "0123456789.*")) {
-	on_t=0;
-	if (on_b[0]=='*') { 
-	  /* remember the star */
-	  on_b++;
-	  on_t=1;
-	  on_b[strlen(on_b)-1]='\0';
-	}
-	for (ii=0; ii<=3; ii++) {
-	  on_c = strsep(&on_b, ".");
-	  strcpy(on_aa[ii], on_c);
-	}
-	sprintf(on_bb, "%03s.%03s.%03s.%03s", on_aa[0], on_aa[1], 
-		on_aa[2], on_aa[3]);
-	strcpy(tmpTable[i]->hostSymIpAddress, on_bb);
-	if (on_t) {
-	  strcat(tmpTable[i]->hostSymIpAddress, "*");
-	}
-      }
-    }
-
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
-
-    /* Patch courtesy of Olivier Nicole <on@cs.ait.ac.th> */
-    /** Expand IP addresses for numerical sort **/
-    for (i=0; i<numEntries; i++) {
-      short ii, on_t;
-      char on_aa[4][4], *on_c, *on_b, on_bb[17];
-
-      on_b=strdup(tmpTable[i]->hostSymIpAddress);
-      if (strlen(on_b)== strspn(on_b, "0123456789.*")) {
-	on_t=0;
-	if (on_b[strlen(on_b)-1]=='*') { /* remember the star */
-	  on_b[strlen(on_b)-1]='\0';
-	  on_t=1;
-	}
-        for (ii=0; ii<=3; ii++) {
-          on_c = strsep(&on_b, ".");
-	  while (on_c && on_c[0]=='0') { /* remove leading 0 */
-	    on_c++;
-	  }
-	  if (strlen(on_c)==0) { /* well need at LEAST one 0 */
-	    on_c=strdup("0");
-	  }
-	  strcpy(on_aa[ii], on_c);
-        }
-	/* rebuild the string */
-        sprintf(on_bb, "%s.%s.%s.%s", on_aa[0], on_aa[1],
-                on_aa[2], on_aa[3]);
-	if (on_t) {
-	  strcpy(tmpTable[i]->hostSymIpAddress, "*");
-	}
-	else {
-	  strcpy(tmpTable[i]->hostSymIpAddress, "");
-	}
-	strcat(tmpTable[i]->hostSymIpAddress, on_bb);
-        if (on_t) {
-        }
-      }
-    }
 
     for(idx=0; idx<numEntries; idx++) {
       int i;

@@ -65,7 +65,9 @@ static void updateThptStats(int deviceToUpdate,
 
   device[deviceToUpdate].last60MinutesThpt[0].trafficValue = device[deviceToUpdate].lastMinThpt;
 
-  traceEvent(TRACE_INFO, "LastMinThpt: ", formatThroughput(device[deviceToUpdate].lastMinThpt));
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "LastMinThpt: %s", formatThroughput(device[deviceToUpdate].lastMinThpt));
+#endif
 
   device[deviceToUpdate].last60MinutesThpt[0].topHostSentIdx = topSentIdx,
     device[deviceToUpdate].last60MinutesThpt[0].topSentTraffic = 

@@ -781,9 +781,16 @@ int cmpFctn(const void *_a, const void *_b) {
 #ifdef MULTITHREADED
     accessMutex(&addressResolutionMutex, "cmpFctn");
 #endif
-    if((*a)->hostSymIpAddress[0] != '\0')
-      rc = strcasecmp((*a)->hostSymIpAddress, (*b)->hostSymIpAddress);
-    else
+    if((*a)->hostSymIpAddress[0] != '\0') {
+      char *name1, *name2;
+
+      name1 = (*a)->hostSymIpAddress;
+      name2 = (*b)->hostSymIpAddress;
+      
+      if(name1[0] == '*') name1++;
+      if(name2[0] == '*') name2++;
+      rc = strcasecmp(name1, name2);
+    } else
       rc = strcasecmp((*a)->ethAddressString, (*b)->ethAddressString);
 
 #ifdef MULTITHREADED
