@@ -47,7 +47,7 @@ dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.2.2])
 AC_PREREQ([2.50])
-SCRIPTVER="v2.2.2.105-2003-06-09"
+SCRIPTVER="v2.2.2.106-2003-06-23"
 
 dnl>
 dnl> generate the config header
@@ -95,6 +95,41 @@ echo
 
 dnl> early since we need it for --enable-showoses and autotool version check.
 AC_PROG_AWK
+if test "x${AWK}" = "x"; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* WARNING:    The test for AWK indicates you do not have any"
+    echo "*             version of Awk installed."
+    echo "*"
+    echo "*             ntop requires gawk or at least mawk."
+    echo "*"
+    echo "*>>> Aborting"
+    echo "*"
+    echo "*???     1. Install gawk"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 0
+elif test "x${AWK}" = "xawk" ||
+   test "x${AWK}" = "xnawk"; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* WARNING:    The test for AWK indicates you have the original awk"
+    echo "*             or nawk installed."
+    echo "*"
+    echo "*             ntop requires gawk or at least mawk."
+    echo "*"
+    echo "*>>> Continuing, but some options (e.g. --enable-showoses) "
+    echo "*                may not work."
+    echo "*"
+    echo "*???     1. Install gawk"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    HAS_WARNING="yes"
+fi
 
 echo "  Checking for autoheader ..."
 AC_PATH_PROG(AUTOHEADER, autoheader)
@@ -1167,7 +1202,7 @@ echo "Initializing..."
 echo
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_AWK
+dnl> AC_PROG_AWK  performed above...
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
