@@ -436,7 +436,6 @@ static int decodeString(char *bufcoded,
 
 void sendStringLen(char *theString, unsigned int len) {
   int bytesSent, rc, retries = 0;
-  static char buffer[2*LEN_GENERAL_WORK_BUFFER];
 
   if(myGlobals.newSock == FLAG_DUMMY_SOCKET)
     return;
@@ -459,11 +458,7 @@ void sendStringLen(char *theString, unsigned int len) {
       for(i=0; i<len; i++)
 	gzputc(compressFileFd, theString[i]);
       return;
-    } else {
-      memcpy(buffer, theString, (size_t) ((len > sizeof(buffer)) ? sizeof(buffer) : len));
     }
-#else
-    memcpy(buffer, theString, (size_t) ((len > sizeof(buffer)) ? sizeof(buffer) : len));
 #endif /* HAVE_ZLIB */
   }
 
@@ -478,11 +473,11 @@ void sendStringLen(char *theString, unsigned int len) {
 
 #ifdef HAVE_OPENSSL
     if(myGlobals.newSock < 0) {
-      rc = SSL_write(getSSLsocket(-myGlobals.newSock), &buffer[bytesSent], len);
+      rc = SSL_write(getSSLsocket(-myGlobals.newSock), &theString[bytesSent], len);
     } else
-      rc = send(myGlobals.newSock, &buffer[bytesSent], (size_t)len, 0);
+      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
 #else
-    rc = send(myGlobals.newSock, &buffer[bytesSent], (size_t)len, 0);
+    rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
 #endif
 
     /* traceEvent(CONST_TRACE_INFO, "rc=%d\n", rc); */
