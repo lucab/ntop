@@ -253,7 +253,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     if(host->nonIPTraffic->ipxHostName != NULL)         free(host->nonIPTraffic->ipxHostName);
     free(host->nonIPTraffic);
   }
-  
+
   if(host->nonIpProtoTrafficInfos != NULL) {
     NonIpProtoTrafficInfo *list = host->nonIpProtoTrafficInfos;
 
@@ -474,45 +474,52 @@ void purgeIdleHosts(int actDevice) {
   hashSanityCheck();
 #endif
 
-  for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {        
-    if(el = myGlobals.device[actDevice].hash_hostTraffic[idx]) {
+  for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
-    
-    prev = NULL;
-    
-    while(el) {
-      if((el->refCount == 0) && (el->lastSeen < purgeTime) && (!broadcastHost(el))) {
-	theFlaggedHosts[numHosts++] = el;
 
-	next = el->next;
+    if((el = myGlobals.device[actDevice].hash_hostTraffic[idx]) != NULL) {
+      prev = NULL;
 
-	if(prev != NULL)
-	  prev->next = next;      
-	else
-	  myGlobals.device[actDevice].hash_hostTraffic[idx] = next;
+      while(el) {
+	if((el->refCount == 0) 
+	   && (el->lastSeen < purgeTime) 
+	   && (!broadcastHost(el))
+	   && ((!myGlobals.stickyHosts)
+	       || (el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
+	       || (!subnetPseudoLocalHost(el)))      /* Purge remote hosts only */
+	   ) {
+	  /* Host selected for deletion */
+	  theFlaggedHosts[numHosts++] = el;
+	  next = el->next;
 
-	el = next;
-      } else {
-	prev = el;
-	el = el->next;
-      }
-      
-      scannedHosts++;
+	  if(prev != NULL)
+	    prev->next = next;
+	  else
+	    myGlobals.device[actDevice].hash_hostTraffic[idx] = next;
+
+	  el = next;
+	} else {
+	  /* Move to next host */
+	  prev = el;
+	  el = el->next;
+	}
+
+	scannedHosts++;
+	if(numHosts >= maxHosts) break;
+      } /* while */
     }
-
 #ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.hostsHashMutex);
 #endif
-    }
   }
 
 #ifdef HASH_DEBUG
   hashSanityCheck();
 #endif
 
-  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d [out of %d] hosts selected", 
+  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d [out of %d] hosts selected",
 	     numHosts, scannedHosts);
 
   /* Now free the entries */
