@@ -202,7 +202,6 @@ extern char* formatPkts(TrafficCounter pktNr);
 /* emitter.c */
 extern void dumpNtopHashes(char* options);
 extern void dumpNtopTrafficInfo(char* options);
-extern void dumpNtopSessions(char* options);
 
 /* event.c */
 extern void emitEvent(FilterRule *rule, HostTraffic *srcHost,
@@ -380,6 +379,9 @@ extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
                                 TrafficCounter length);
 extern void updateDbHostsTraffic(int deviceToUpdate);
 extern void updateHostTrafficStatsThpt(int hourId);
+extern int isInitialHttpData(char* packetData);
+extern int isInitialSshData(char* packetData);
+extern int isInitialFtpData(char* packetData);
 
 /* util.c */
 extern FILE *sec_popen(char *cmd, const char *type);
@@ -398,8 +400,6 @@ extern int32_t gmt2local(time_t t);
 extern void handleFlowsSpecs(char* flows);
 extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
 extern void fillDomainName(HostTraffic *el);
-extern void writePidFile(char *path);
-
 #ifdef MULTITHREADED
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
                         char* userParm);

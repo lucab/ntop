@@ -1330,13 +1330,6 @@ static int returnHTTPPage(char* pageName, int postLen) {
     else
       dumpNtopTrafficInfo(&questionMark[1]);
     printTrailer = 0;
-  } else if(strncmp(pageName, DUMP_SESSIONS_DATA_HTML, strlen(DUMP_SESSIONS_DATA_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_TEXT, 0);
-    if((questionMark == NULL) || (questionMark[0] == '\0'))
-      dumpNtopSessions(NULL);
-    else
-      dumpNtopSessions(&questionMark[1]);
-    printTrailer = 0;
  } 
 #ifndef MICRO_NTOP
     else if(strlen(pageName) > 5) {

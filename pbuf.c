@@ -1459,14 +1459,18 @@ static void handleSession(const struct pcap_pkthdr *h,
                }
 	    */
 	    if(sport > dport) {
-	      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx);
-	      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx);
+	      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent,
+				    dstHostIdx);
+	      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, 
+				    srcHostIdx);
 	      /* This simulates a connection establishment */
 	      incrementUsageCounter(&srcHost->securityHostPkts.synPktsSent, dstHostIdx);
 	      incrementUsageCounter(&dstHost->securityHostPkts.synPktsRcvd, srcHostIdx);
 	    } else {
-	      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnRcvd, dstHostIdx);
-	      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnSent, srcHostIdx);
+	      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnRcvd,
+				    dstHostIdx);
+	      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnSent, 
+				    srcHostIdx);
 	      /* This simulates a connection establishment */
 	      incrementUsageCounter(&dstHost->securityHostPkts.synPktsSent, srcHostIdx);
 	      incrementUsageCounter(&srcHost->securityHostPkts.synPktsRcvd, dstHostIdx);
@@ -1697,15 +1701,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	       rcStr);
 #endif
 
-	if((strncmp(rcStr,    "GET ",     4) == 0) /* HTTP/1.0 */
-	   || (strncmp(rcStr, "HEAD ",    5) == 0)
-	   || (strncmp(rcStr, "POST ",    5) == 0)
-	   || (strncmp(rcStr, "OPTIONS ", 8) == 0) /* HTTP/1.1 */
-	   || (strncmp(rcStr, "PUT ",     4) == 0)
-	   || (strncmp(rcStr, "DELETE ",  7) == 0)
-	   || (strncmp(rcStr, "TRACE ",   6) == 0)
-	   || (strncmp(rcStr, "PROPFIND", 8) == 0) /* RFC 2518 */
-	   ) {
+	if(isInitialHttpData(rcStr)) {
 	  u_int16_t transactionId = (u_int16_t)(srcHost->hostIpAddress.s_addr+
 						3*dstHost->hostIpAddress.s_addr
 						+5*sport+7*dport);
@@ -1733,12 +1729,11 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  else
 	    dstHost->httpStats->numRemoteReqRcvd++;
 	} else {
-#ifdef DEBUG
-	  traceEvent(TRACE_INFO, "Unknown HTTP request %s->%s [%s]\n",
-		     srcHost->hostSymIpAddress,
-		     dstHost->hostSymIpAddress,
+	  traceEvent(TRACE_WARNING, "WARNING: unknown protocol (no HTTP) detected (trojan?) "
+		     "at port 80 %s:%d->%s:%d [%s]\n",
+		     srcHost->hostSymIpAddress, sport,
+		     dstHost->hostSymIpAddress, dport,
 		     rcStr);
-#endif
 	}
       } else if((sport == 8875 /* Napster Redirector */) && (packetDataLength > 5)) {
 	char address[64] = { 0 };
@@ -1776,6 +1771,64 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 	srcHost->napsterStats->numConnectionsServed++,
 	  dstHost->napsterStats->numConnectionsRequested++;
+      } else if((theSession->nwLatency.tv_sec != 0) 						       
+		|| (theSession->nwLatency.tv_usec != 0)
+		/* This session started *after* ntop started (i.e. ntop
+		   didn't miss the beginning of the session). If the session
+		   started *before* ntop started up then nothing can be said
+		   about the protocol.
+		*/
+		) {
+	char rcStr[64];
+	
+	/*
+	  This is a brand new session: let's check whether this is
+	  not a faked session (i.e. a known protocol is running at 
+	  an unknown port)
+	*/
+	if(theSession->bytesProtoSent == 0) { 
+	  memset(rcStr, 0, sizeof(rcStr));
+	  strncpy(rcStr, packetData, packetDataLength > 63 ? 63 : packetDataLength);
+	
+	  if((dport != 80) 
+	     && (dport != 3000  /* ntop  */) 
+	     && (dport != 3128  /* squid */) 
+	     && isInitialHttpData(rcStr))
+	    traceEvent(TRACE_WARNING, "WARNING: HTTP detected at wrong port (trojan?) "
+		       "%s:%d -> %s:%d [%s]\n",
+		       srcHost->hostSymIpAddress, sport,
+		       dstHost->hostSymIpAddress, dport,
+		       rcStr);  
+	  else if((sport != 21) && isInitialFtpData(rcStr))
+	    traceEvent(TRACE_WARNING, "WARNING: FTP detected at wrong port (trojan?) "
+		       "%s:%d -> %s:%d [%s]\n",
+		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostSymIpAddress, sport,
+		       rcStr);  
+	  else if((sport == 21) && (!isInitialFtpData(rcStr)))
+	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP) detected (trojan?) "
+		       "at port 21 %s:%d -> %s:%d [%s]\n",
+		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostSymIpAddress, sport,
+		       rcStr);  
+	  else if((sport != 22) && isInitialSshData(rcStr))
+	    traceEvent(TRACE_WARNING, "WARNING: SSH detected at wrong port (trojan?) "
+		       "%s:%d -> %s:%d [%s]\n",
+		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostSymIpAddress, sport,
+		       rcStr);  
+	  else if((sport == 22) && (!isInitialSshData(rcStr)))
+	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no SSH) detected (trojan?) "
+		       "at port 22 %s:%d -> %s:%d [%s]\n",
+		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostSymIpAddress, sport,
+		       rcStr);  
+	} else if(theSession->bytesProtoRcvd == 0) {
+	  /* Uncomment when necessary
+	    memset(rcStr, 0, sizeof(rcStr));
+	    strncpy(rcStr, packetData, packetDataLength > 63 ? 63 : packetDataLength);
+	  */
+	}
       }
     }
 
@@ -1793,11 +1846,11 @@ static void handleSession(const struct pcap_pkthdr *h,
     if(tp->th_flags & TH_FIN) printf("FIN ");
     if(tp->th_flags & TH_RST) printf("RST ");
     if(tp->th_flags & TH_PUSH) printf("PUSH");
-    printf("\n");
+    printf(" [%d]\n", tp->th_flags);
 #endif
 
     if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == STATE_SYN))  {
-      theSession->sessionState = STATE_SYN_ACK ;
+      theSession->sessionState = STATE_SYN_ACK;
     } else if((tp->th_flags == TH_ACK) && (theSession->sessionState == STATE_SYN_ACK)) {
       theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
@@ -2137,53 +2190,51 @@ static void handleSession(const struct pcap_pkthdr *h,
 		 srcHost->hostSymIpAddress, sport);
     }
     
-    if((((theSession->initiatorIdx == srcHostIdx) && (theSession->lastRemote2InitiatorFlags[0] == TH_SYN))
-	|| ((theSession->initiatorIdx == dstHostIdx) && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN)))
-       && (tp->th_flags == (TH_RST|TH_ACK))) {
-      incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx);
-      incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
+    if(tp->th_flags == (TH_RST|TH_ACK)) {
+      if((((theSession->initiatorIdx == srcHostIdx) 
+	   && (theSession->lastRemote2InitiatorFlags[0] == TH_SYN))
+	  || ((theSession->initiatorIdx == dstHostIdx)
+	      && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN)))
+	 ) {
+	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
       
-      traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
-		 dstHost->hostSymIpAddress, dport,
-		 srcHost->hostSymIpAddress, sport);
-    }
-    
-    if(((theSession->initiatorIdx == srcHostIdx) 
-	&& (theSession->lastRemote2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
-       || ((theSession->initiatorIdx == dstHostIdx) 
-	   && (theSession->lastInitiator2RemoteFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
-       && (tp->th_flags == (TH_RST|TH_ACK))) {
-      incrementUsageCounter(&dstHost->securityHostPkts.xmasScanSent, srcHostIdx);
-      incrementUsageCounter(&srcHost->securityHostPkts.xmasScanRcvd, dstHostIdx);
+	traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
+		   dstHost->hostSymIpAddress, dport,
+		   srcHost->hostSymIpAddress, sport);
+      } else if(((theSession->initiatorIdx == srcHostIdx) 
+		 && (theSession->lastRemote2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
+		|| ((theSession->initiatorIdx == dstHostIdx) 
+		    && (theSession->lastInitiator2RemoteFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))) {
+	incrementUsageCounter(&dstHost->securityHostPkts.xmasScanSent, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.xmasScanRcvd, dstHostIdx);
 
-      traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
-		 dstHost->hostSymIpAddress, dport,
-		 srcHost->hostSymIpAddress, sport);
-    } else if((((theSession->initiatorIdx == srcHostIdx)
-		&& ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
-	       || ((theSession->initiatorIdx == dstHostIdx)
-		   && ((theSession->lastInitiator2RemoteFlags[0] & TH_FIN) == TH_FIN)))
-	      && (tp->th_flags == (TH_RST|TH_ACK))) {
+	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
+		   dstHost->hostSymIpAddress, dport,
+		   srcHost->hostSymIpAddress, sport);
+      } else if(((theSession->initiatorIdx == srcHostIdx)
+		 && ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
+		|| ((theSession->initiatorIdx == dstHostIdx)
+		    && ((theSession->lastInitiator2RemoteFlags[0] & TH_FIN) == TH_FIN))) {
+	incrementUsageCounter(&dstHost->securityHostPkts.finScanSent, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.finScanRcvd, dstHostIdx);
 
-      incrementUsageCounter(&dstHost->securityHostPkts.finScanSent, srcHostIdx);
-      incrementUsageCounter(&srcHost->securityHostPkts.finScanRcvd, dstHostIdx);
+	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
+		   dstHost->hostSymIpAddress, dport,
+		   srcHost->hostSymIpAddress, sport);
+      } else if(((theSession->initiatorIdx == srcHostIdx)
+		 && (theSession->lastRemote2InitiatorFlags[0] == 0) 
+		 && (theSession->bytesReceived > 0))
+		|| ((theSession->initiatorIdx == dstHostIdx) 
+		    && ((theSession->lastInitiator2RemoteFlags[0] == 0)) 
+		    && (theSession->bytesSent > 0))) {
+	incrementUsageCounter(&srcHost->securityHostPkts.nullScanRcvd, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.nullScanSent, srcHostIdx);
 
-      traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
-		 dstHost->hostSymIpAddress, dport,
-		 srcHost->hostSymIpAddress, sport);
-    } else if((((theSession->initiatorIdx == srcHostIdx)
-		&& (theSession->lastRemote2InitiatorFlags[0] == 0)
-		    && (theSession->bytesReceived > 0)))
-		  || ((theSession->initiatorIdx == dstHostIdx)
-		      && ((theSession->lastInitiator2RemoteFlags[0] == 0))
-		      && (theSession->bytesSent > 0))
-		  && (tp->th_flags == (TH_RST|TH_ACK))) {
-      incrementUsageCounter(&srcHost->securityHostPkts.nullScanRcvd, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.nullScanSent, srcHostIdx);
-
-      traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
-		 dstHost->hostSymIpAddress, dport,
-		 srcHost->hostSymIpAddress, sport);
+	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
+		   dstHost->hostSymIpAddress, dport,
+		   srcHost->hostSymIpAddress, sport);
+      }
     }
 
    /* **************************** */
@@ -2682,6 +2733,7 @@ static u_int handleFragment(HostTraffic *srcHost,
 
   return length;
 }
+
 
 /* ************************************ */
 
@@ -4628,4 +4680,5 @@ void updateOSName(HostTraffic *el) {
     }
   }
 }
+
 

@@ -249,7 +249,6 @@ extern void sendHTTPHeader(int mimeType, int headerFlags);
 #define PLUGINS_HEADER                  "plugins/"
 #define DUMP_DATA_HTML                  "dumpData.html"
 #define DUMP_TRAFFIC_DATA_HTML          "dumpTrafficData.html"
-#define DUMP_SESSIONS_DATA_HTML         "dumpSessionsData.html"
 
 /* webInterface.c */
 extern void *handleWebConnections(void* notUsed);

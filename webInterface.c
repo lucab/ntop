@@ -898,7 +898,11 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
 #endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows>");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows"
+#ifndef WIN32
+	     " (use only with -w)>"
+#endif
+	     );
 #ifndef WIN32
   traceEvent(TRACE_INFO, "    %s\n",   "[-d (daemon mode (use only with -w))]");
 #endif

@@ -3045,14 +3045,12 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   u_short keyValue=0;
   HostTraffic *el;
   char buf[BUF_SIZE];
-  DomainStats **stats, *tmpStats, *statsEntry;
+  DomainStats *stats[HASHNAMESIZE], *tmpStats, *statsEntry;
   char htmlAnchor[128], htmlAnchor1[128], *sign, *arrowGif, *arrow[48], *theAnchor[48];
   TrafficCounter totBytesSent=0, totBytesRcvd=0;
 
-  idx = sizeof(DomainStats)*device[actualDeviceId].actualHashSize;
-  tmpStats = (DomainStats*)malloc(idx);  memset(tmpStats, 0, idx);
-  idx = sizeof(DomainStats*)*device[actualDeviceId].actualHashSize;
-  stats = (DomainStats**)malloc(idx);  memset(stats, 0, idx);
+  tmpStats = (DomainStats*)malloc(sizeof(DomainStats)*
+				  device[actualDeviceId].actualHashSize);
 
   /* traceEvent(TRACE_INFO, "'%s' '%d' '%d'\n", domainName, sortedColumn, revertOrder); */
 
@@ -3063,6 +3061,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
     sign = "-";
     arrowGif = "&nbsp;<IMG SRC=arrow_down.gif BORDER=0>";
   }
+
+  memset(stats, 0, sizeof(stats));
 
   if(domainName == NULL)
     domainSort = 1;
@@ -3101,8 +3101,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
 	memset(statsEntry, 0, sizeof(DomainStats));
 	statsEntry->domainHost = el;
 	stats[keyValue] = statsEntry;
-	traceEvent(TRACE_INFO, "[%d] %s/%s\n",
-		   numEntries, el->fullDomainName, el->dotDomainName); 
+	/* traceEvent(TRACE_INFO, "[%d] %s/%s\n", numEntries, el->fullDomainName, el->dotDomainName); */
       }
     } else {
       statsEntry = &tmpStats[numEntries++];
@@ -3135,9 +3134,9 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   printHTMLheader(buf, 0);
 
   if(numEntries == 0) {
+    sendString("<CENTER><P><H1>Internet Domain Stats</H1><P>\n");
     printNoDataYet();
     free(tmpStats);
-    free(stats);
     return;
   }
 
@@ -3152,11 +3151,9 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
     totBytesRcvd = 1;
 
   if(domainName == NULL) {
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), 
-		"<A HREF=/%s?%s", STR_DOMAIN_STATS, sign) < 0) 
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_DOMAIN_STATS, sign) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), 
-		"<A HREF=/%s?", STR_DOMAIN_STATS) < 0) 
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_DOMAIN_STATS) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
  } else {
    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html?%s", 
@@ -3399,7 +3396,6 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   sendString("</TABLE>"TABLE_OFF"</HTML>\n");
   sendString("</CENTER>\n");
   free(tmpStats);
-  free(stats);
 }
 
 /* ************************* */

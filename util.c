@@ -2121,11 +2121,6 @@ void fillDomainName(HostTraffic *el) {
 
   i = strlen(el->hostSymIpAddress)-1;
 
-  if(el->hostSymIpAddress[i] == '\n') {
-    el->hostSymIpAddress[i] = '\0';
-    i--;
-  }
-
   while(i > 0)
     if(el->hostSymIpAddress[i] == '.')
       break;
@@ -2185,27 +2180,5 @@ void fillDomainName(HostTraffic *el) {
 #ifdef MULTITHREADED
     releaseMutex(&addressResolutionMutex);
 #endif
-}
-
-/* ************************ */
-
-void writePidFile(char *path) {
-  FILE *fd;
-  char tmpPath[256];
-
-  sprintf(tmpPath, "%s/ntop.pid", path);
-
-  if((fd = fopen(tmpPath, "w+")) != NULL) {
-    fprintf(fd, "%d\n", (int)getpid());
-    fclose(fd);
-    traceEvent(TRACE_INFO, "ntop pid stored in '%s'", tmpPath); 
-  } else {
-    if(strcmp(path , "/tmp"))
-      writePidFile("/tmp");
-    else {
-      traceEvent(TRACE_ERROR, 
-		 "Unable to write ntop pid file (%s)\n", tmpPath); 
-    }
-  }
 }
 
