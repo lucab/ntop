@@ -3099,7 +3099,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
       fromhost(&req);
       if(!hosts_access(&req)) {
 	closelog(); /* just in case */
-	openlog(DAEMONNAME,LOG_PID,myGlobals.useSyslog);
+	openlog(DAEMONNAME, LOG_PID, deny_severity);
 	syslog(deny_severity, "refused connect from %s", eval_client(&req));
       }
       else

@@ -529,8 +529,8 @@ if test $ac_cv_ether_header_has_ea = yes ; then
         AC_DEFINE(ETHER_HEADER_HAS_EA)
 fi
 
-dnl> OPTIONAL tcp wrapper headers
-AC_CHECK_HEADERS(tcpd.h syslog.h sys/syslog.h)
+dnl> OPTIONAL syslog headers
+AC_CHECK_HEADERS(syslog.h sys/syslog.h)
 
 dnl> OPTIONAL UCD-SNMP
 dnl> AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h)
@@ -637,13 +637,57 @@ esac
 
 dnl>
 dnl> TCP Wrappers library
-dnl> check for `request_init' in -lwrap
+dnl> check for tcpd.h header and `hosts_access' in -lwrap
 dnl>
-if test ".$ac_enable_tcpwrap" = ".yes"; then
-  AC_MSG_WARN([TCP Wrap support enabled, if available, via command line option!])
-  AC_CHECK_LIB(wrap, request_init, MORELIBS="$MORELIBS -lwrap" && AC_DEFINE(HAVE_LIBWRAP))
-fi
+dnl>  Replacement code shamelessly ripped off from openLDAP (BMS, 6-2002)
+dnl>
 
+
+ dnl ----------------------------------------------------------------
+if test ".$ac_enable_tcpwrap" = ".yes"; then
+	have_wrappers=no
+	AC_CHECK_HEADERS(tcpd.h, [
+                AC_MSG_CHECKING([TCP Wrapper support requested, via command line option, checking for library])
+		_libs=${LIBS}
+		LIBS="${LIBS} -lwrap"
+		AC_TRY_LINK([#include <tcpd.h>
+ int allow_severity = 0;
+ int deny_severity  = 0;
+
+struct request_info *req;], [
+		hosts_access(req)], [
+		AC_MSG_RESULT(yes)
+		have_wrappers=yes
+		LIBS=${_libs}], [
+
+		# try with -lnsl
+		LIBS="${LIBS} -lnsl"
+		AC_TRY_LINK([#include <tcpd.h>
+int allow_severity = 0;
+int deny_severity  = 0;
+
+struct request_info *req;], [
+		hosts_access(req)], [
+
+		AC_MSG_RESULT(yes)
+		have_wrappers=yes
+		LIBS="${_libs} -lnsl"], [
+
+		AC_MSG_RESULT(no)
+		have_wrappers=no
+		LIBS=${_libs}])],
+
+		have_wrappers=no)])
+ 
+	if test ".$have_wrappers" = ".yes"; then
+		AC_DEFINE(HAVE_TCPD_H)
+                AC_DEFINE(HAVE_LIBWRAP)
+                MORELIBS="$MORELIBS -lwrap"
+ 	else
+		AC_MSG_ERROR([could not find -lwrap. rerun without --enable-tcpwrap])
+ 	fi
+fi
+ 
 
 dnl>
 dnl> (n)curses Library (optional)

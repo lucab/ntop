@@ -148,6 +148,10 @@ void initNtopGlobals(int argc, char * argv[]) {
 #ifndef WIN32
   myGlobals.debugMode = NTOP_DEFAULT_DEBUG_MODE;
   myGlobals.useSyslog = NTOP_DEFAULT_SYSLOG;
+#ifdef HAVE_LIBWRAP
+  allow_severity = NTOP_DEFAULT_TCPWRAP_ALLOW;
+  deny_severity = NTOP_DEFAULT_TCPWRAP_DENY;
+#endif
 #endif
 
   myGlobals.mergeInterfaces = NTOP_DEFAULT_MERGE_INTERFACES;

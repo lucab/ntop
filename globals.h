@@ -104,6 +104,25 @@
 
 
 /*
+ * TCP Wrappers
+ */
+#ifdef HAVE_LIBWRAP
+
+#ifdef USE_SYSLOG
+
+#define NTOP_DEFAULT_TCPWRAP_ALLOW   LOG_AUTHPRIV|LOG_INFO
+#define NTOP_DEFAULT_TCPWRAP_DENY    LOG_AUTHPRIV|LOG_WARNING
+
+#else /* USE_SYSLOG */
+
+#define NTOP_DEFAULT_TCPWRAP_ALLOW   0
+#define NTOP_DEFAULT_TCPWRAP_DENY    0
+
+#endif /* USE_SYSLOG */
+
+#endif /* HAVE_LIBWRAP */
+
+/*
  * External URLs...
  */
 #define LSOF_URL        "http://freshmeat.net/projects/lsof/"
@@ -402,11 +421,6 @@ typedef struct ntopGlobals {
 #ifndef MICRO_NTOP
   int sortSendMode;
   
-  /* TCP Wrappers */
-#ifdef HAVE_LIBWRAP
-  int allow_severity, deny_severity;
-#endif /* HAVE_LIBWRAP */
-  
 #endif /* MICRO_NTOP */  
 
   int actualReportDeviceId;
@@ -447,5 +461,17 @@ typedef struct ntopGlobals {
 
 
 } NtopGlobals;
+
+
+  /*
+   *  ** TCP Wrappers
+   *
+   *      Because of limits in the way libwrap.a does things, these MUST
+   *      be open global values.
+   *
+   */
+#ifdef HAVE_LIBWRAP
+  int allow_severity, deny_severity;
+#endif /* HAVE_LIBWRAP */
 
 #endif /* GLOBALS_H */

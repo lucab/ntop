@@ -19,6 +19,9 @@
  */
 
 extern NtopGlobals myGlobals;
+#ifdef HAVE_LIBWRAP
+extern int allow_severity, deny_severity;
+#endif
 
 /* version.c */
 extern char *version, *osName, *author, *buildDate,

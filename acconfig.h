@@ -92,8 +92,9 @@
 #undef HAVE_NCURSES_H
 #undef HAVE_CURSES_H
 
-/* Define if you have the TCP Wrap library (-lwrap). */
+/* Define if you have the TCP Wrap library (-lwrap) and headers. */
 #undef HAVE_LIBWRAP
+#undef HAVE_TCPD_H 
 
 /* Define if you have the GNU readline library (-lreadline). */
 #undef HAVE_READLINE
