@@ -732,6 +732,7 @@ typedef struct {
   TrafficCounter icmpBytes;
   TrafficCounter dlcBytes;
   TrafficCounter ipxBytes;
+  TrafficCounter stpBytes; /* Spanning Tree */
   TrafficCounter decnetBytes;
   TrafficCounter netbiosBytes;
   TrafficCounter arpRarpBytes;
@@ -842,7 +843,6 @@ typedef union {
 #define NS_MAXCDNAME     255
 #endif
 
-
 typedef struct {
   char      name[MAXDNAME];                /* official name of host */
   char      aliases[MAXALIASES][MAXDNAME]; /* alias list */
@@ -850,7 +850,6 @@ typedef struct {
   int       addrType;   /* host address type */
   int       addrLen;    /* length of address */
 } DNSHostInfo;
-
 
 /* ******************************
 
@@ -1074,6 +1073,15 @@ struct llc {
 #if !defined(max)
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #endif
+
+typedef struct {
+  u_int16_t checksum, length;
+  u_int8_t  hops, packetType;
+  u_char    destNw[4], destNode[6];
+  u_int16_t dstSocket;
+  u_char    srcNw[4], srcNode[6];
+  u_int16_t srcSocket;
+} IPXpacket;
 
 
 
@@ -1520,6 +1528,7 @@ typedef struct hostTraffic
 
   /* non IP */
   IcmpHostInfo    *icmpInfo;
+  TrafficCounter  stpSent, stpRcvd; /* Spanning Tree */
   TrafficCounter  ipxSent, ipxReceived;
   TrafficCounter  osiSent, osiReceived;
   TrafficCounter  dlcSent, dlcReceived;

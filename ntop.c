@@ -634,6 +634,24 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
   fd_set readMask;
   struct timeval timeout;
   
+  if((pcap_fd == -1) && (rFileName != NULL)) { 
+    /*
+      This is a patch to overcome a bug of libpcap 
+      while reading from a traffic file instead 
+      of sniffying live from a NIC.
+    */
+    struct mypcap {
+      int fd, snapshot, linktype, tzoff, offset;      
+      FILE *rfile;
+      
+      /* Other fields have been skipped. Please refer
+	 to pcap-int.h for the full datatype.
+      */
+    };
+    
+    pcap_fd = fileno(((struct mypcap *)(device[0].pcapPtr))->rfile);
+  }
+
   for(;;) {
     short justRefreshed;
     int rc;
@@ -641,7 +659,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
     if(!capturePackets) break;
 
     FD_ZERO(&readMask);
-    FD_SET(pcap_fd, &readMask);
+    if(pcap_fd != -1) FD_SET(pcap_fd, &readMask);
 
     timeout.tv_sec  = 5 /* seconds */;
     timeout.tv_usec = 0;
@@ -656,7 +674,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
       } else if((rc == 0) && (rFileName != NULL)) {
 	traceEvent(TRACE_INFO, "pcap_dispatch returned %d "
 		   "[No more packets to read]", rc);
-	break; /* No more packets to read */
+	pcap_fd = -1;
       }
     }
 

@@ -197,7 +197,10 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       case 13: /* QNX */
 	screenNumber = 0, columnSort = 4;
 	break;
-      case 14: /* Other */
+      case 14: /* STP */
+	screenNumber = 1, columnSort = 5;
+	break;
+      case 15: /* Other */
 	screenNumber = 0, columnSort = 5;
 	break;
       }
@@ -284,14 +287,18 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
 	      if(snprintf(buf, sizeof(buf), 
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			  formatBytes(el->ospfSent, 1),
 			  formatBytes(el->netbiosSent, 1),
 			  formatBytes(el->igmpSent, 1),
 			  formatBytes(el->osiSent, 1),
 			  formatBytes(el->qnxSent, 1),
+			  formatBytes(el->stpSent, 1),
 			  formatBytes(el->otherSent, 1)
 			  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      
@@ -388,14 +395,18 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	      sendString(buf);
 	      if(snprintf(buf, sizeof(buf), 
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			  formatBytes(el->ospfReceived, 1),
 			  formatBytes(el->netbiosReceived, 1),
 			  formatBytes(el->igmpReceived, 1),
 			  formatBytes(el->osiReceived, 1),
 			  formatBytes(el->qnxReceived, 1),
+			  formatBytes(el->stpRcvd, 1),
 			  formatBytes(el->otherReceived, 1)
 			  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      
@@ -598,7 +609,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
 #ifdef MULTITHREADED
-	if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;ntop</th>"
+	if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>"
+		    "Dropped&nbsp;by&nbsp;ntop</th>"
 		"<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
 		getRowColor(), formatPkts(device[actualReportDeviceId].droppedPackets)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2257,6 +2269,9 @@ void printProtoTraffic(void) {
   printTableEntry(buf, sizeof(buf), "QNX", COLOR_1,
 		  (float)device[actualReportDeviceId].qnxBytes/1024,
 		  100*((float)device[actualReportDeviceId].qnxBytes/device[actualReportDeviceId].ethernetBytes));
+  printTableEntry(buf, sizeof(buf), "STP", COLOR_1,
+		  (float)device[actualReportDeviceId].stpBytes/1024,
+		  100*((float)device[actualReportDeviceId].stpBytes/device[actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "Other", COLOR_1,
 		  (float)device[actualReportDeviceId].otherBytes/1024,
 		  100*((float)device[actualReportDeviceId].otherBytes/device[actualReportDeviceId].ethernetBytes));

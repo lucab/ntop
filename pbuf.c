@@ -211,7 +211,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
   /*
   traceEvent(TRACE_INFO, "Searching for %s@%s",
-	     intoa(*hostIpAddress), 
+	     intoa(*hostIpAddress),
 	     etheraddr_string(ether_addr));
 
   if(hostIpAddress->s_addr == 0)
@@ -349,7 +349,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       if(ether_addr != NULL) {
 
 	if((hostIpAddress == NULL)
-	   || ((hostIpAddress != NULL) 
+	   || ((hostIpAddress != NULL)
 	       && isLocalAddress(hostIpAddress)
 	       && (!isBroadcastAddress(hostIpAddress)))) {
 	  /* This is a local address and then the
@@ -366,7 +366,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
 	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
 
-	  if(!isBroadcastAddress(hostIpAddress)) {	  
+	  if(!isBroadcastAddress(hostIpAddress)) {
 	    if(isPseudoLocalAddress(hostIpAddress))
 	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
 	    else
@@ -812,7 +812,7 @@ static void handleBootp(HostTraffic *srcHost,
 			u_short sport,
 			u_short dport,
 			u_int packetDataLength,
-			u_char* packetData) {  
+			u_char* packetData) {
   BootProtocol bootProto = { 0 };
   int len;
 
@@ -830,7 +830,7 @@ static void handleBootp(HostTraffic *srcHost,
       char buf[32];
 
       /*
-	This is a server BOOTP/DHCP respose 
+	This is a server BOOTP/DHCP respose
 	that could be decoded. Let's try.
 
 	For more info see http://www.dhcp.org/
@@ -839,15 +839,15 @@ static void handleBootp(HostTraffic *srcHost,
 	len = sizeof(BootProtocol);
       else
 	len = packetDataLength;
-	
+
       memcpy(&bootProto, packetData, len);
-	       
-      if(bootProto.bp_op == 2) { 
+
+      if(bootProto.bp_op == 2) {
 	/* BOOTREPLY */
 	u_long dummyMac;
-	  
+
 	memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
-	if((bootProto.bp_yiaddr.s_addr != 0) 
+	if((bootProto.bp_yiaddr.s_addr != 0)
 	   && (dummyMac != 0) /* MAC address <> 00:00:00:..:00 */
 	   ) {
 	  NTOHL(bootProto.bp_yiaddr.s_addr);
@@ -859,7 +859,7 @@ static void handleBootp(HostTraffic *srcHost,
 	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
 	     && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
 	    /*
-	      RFC 1048 specifies a magic cookie 
+	      RFC 1048 specifies a magic cookie
 	      { 0x63 0x82 0x53 0x63 }
 	      for recognising DHCP packets encapsulated
 	      in BOOTP packets.
@@ -871,7 +871,7 @@ static void handleBootp(HostTraffic *srcHost,
 
 	    /*
 	      This is the real address of the recipient because
-	      dstHost is a broadcast address 
+	      dstHost is a broadcast address
 	    */
 	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
 	    if(realDstHost == NULL) {
@@ -879,10 +879,10 @@ static void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
 #endif
-	      realDstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];	      
+	      realDstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
 	    } else {
 #ifdef DHCP_DEBUG
-	      traceEvent(TRACE_INFO, "<<=>> %s (%d)", 
+	      traceEvent(TRACE_INFO, "<<=>> %s (%d)",
 			 realDstHost->hostSymIpAddress,
 			 broadcastHost(realDstHost));
 #endif
@@ -893,12 +893,12 @@ static void handleBootp(HostTraffic *srcHost,
 		realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
 		memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
 	      }
-	      
+
 	      if(srcHost->dhcpStats == NULL) {
 		srcHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
 		memset(srcHost->dhcpStats, 0, sizeof(DHCPStats));
 	      }
-	      
+
 	      FD_SET(HOST_SVC_DHCP_CLIENT, &realDstHost->flags);
 	      realDstHost->dhcpStats->assignTime = actTime;
 	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
@@ -907,8 +907,8 @@ static void handleBootp(HostTraffic *srcHost,
 	      if(realDstHost->hostIpAddress.s_addr != bootProto.bp_yiaddr.s_addr) {
 		/* The host address has changed */
 #ifdef DHCP_DEBUG
-		traceEvent(TRACE_INFO, "DHCP host address changed: %s->%s", 
-			   intoa(realDstHost->hostIpAddress), 
+		traceEvent(TRACE_INFO, "DHCP host address changed: %s->%s",
+			   intoa(realDstHost->hostIpAddress),
 			   _intoa(bootProto.bp_yiaddr, buf, sizeof(buf)));
 #endif
 		realDstHost->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIpAddress.s_addr;
@@ -916,7 +916,7 @@ static void handleBootp(HostTraffic *srcHost,
 		strncpy(realDstHost->hostNumIpAddress,
 			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
-		ipaddr2str(realDstHost->hostIpAddress, realDstHost->hostSymIpAddress, 
+		ipaddr2str(realDstHost->hostIpAddress, realDstHost->hostSymIpAddress,
 			   MAX_HOST_SYM_NAME_LEN);
 		realDstHost->fullDomainName = realDstHost->dotDomainName = "";
 		if(isBroadcastAddress(&realDstHost->hostIpAddress))
@@ -924,12 +924,12 @@ static void handleBootp(HostTraffic *srcHost,
 		else
 		  FD_CLR(BROADCAST_HOST_FLAG, &realDstHost->flags);
 	      }
-	    
+
 	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
 		u_char optionId = bootProto.bp_vend[idx++];
 		int j;
 		u_long tmpUlong;
-		
+
 		if(optionId == 255) break; /* End of options */
 		switch(optionId) { /* RFC 2132 */
 		case 1: /* Netmask */
@@ -947,9 +947,9 @@ static void handleBootp(HostTraffic *srcHost,
 		  NTOHL(hostIpAddress.s_addr);
 #ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Gateway: %s", _intoa(hostIpAddress, buf, sizeof(buf)));
-#endif 
+#endif
 		  /* *************** */
-		  
+
 		  hostIdx = findHostIdxByNumIP(hostIpAddress);
 		  if(hostIdx != NO_PEER) {
 		    for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
@@ -987,17 +987,17 @@ static void handleBootp(HostTraffic *srcHost,
 		      char tmpName[2*MAX_HOST_SYM_NAME_LEN];
 		      int hostLen;
 
-		      if(snprintf(tmpName, 2*MAX_HOST_SYM_NAME_LEN, "%s.%s", 
+		      if(snprintf(tmpName, 2*MAX_HOST_SYM_NAME_LEN, "%s.%s",
 				  realDstHost->hostSymIpAddress,
 				  &bootProto.bp_vend[idx]) < 0)
 			traceEvent(TRACE_ERROR, "Buffer overflow!");
 		      else {
 			hostLen = len;
 			len = strlen(tmpName);
-			strncpy(realDstHost->hostSymIpAddress, tmpName, 
+			strncpy(realDstHost->hostSymIpAddress, tmpName,
 				len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
 			/*
-			realDstHost->fullDomainName = realDstHost->dotDomainName = 
+			  realDstHost->fullDomainName = realDstHost->dotDomainName =
 			  &realDstHost->hostSymIpAddress[hostLen];
 			*/
 			fillDomainName(realDstHost);
@@ -1019,7 +1019,7 @@ static void handleBootp(HostTraffic *srcHost,
 		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
 		  NTOHL(hostIpAddress.s_addr);
 #ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Broadcast Address: %s", 
+		  traceEvent(TRACE_INFO, "Broadcast Address: %s",
 			     intoa(hostIpAddress));
 #endif
 		  idx += len;
@@ -1029,12 +1029,12 @@ static void handleBootp(HostTraffic *srcHost,
 		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
 		  NTOHL(hostIpAddress.s_addr);
 #ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "WINS server: %s", 
+		  traceEvent(TRACE_INFO, "WINS server: %s",
 			     intoa(hostIpAddress));
 #endif
 		  idx += len;
 		  /* *************** */
-		  
+
 		  hostIdx = findHostIdxByNumIP(hostIpAddress);
 		  if(hostIdx != NO_PEER){
 		    trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
@@ -1061,7 +1061,7 @@ static void handleBootp(HostTraffic *srcHost,
 		  len = bootProto.bp_vend[idx++];
 #ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "DHCP Message Type: %d", bootProto.bp_vend[idx]);
-#endif  
+#endif
 		  switch((int)bootProto.bp_vend[idx]) {
 		  case DHCP_DISCOVER_MSG:
 		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG]++;
@@ -1156,7 +1156,7 @@ static void handleBootp(HostTraffic *srcHost,
       char buf[32];
 
       /*
-	This is a server BOOTP/DHCP respose 
+	This is a server BOOTP/DHCP respose
 	that could be decoded. Let's try.
 
 	For more info see http://www.dhcp.org/
@@ -1165,13 +1165,13 @@ static void handleBootp(HostTraffic *srcHost,
 	len = sizeof(BootProtocol);
       else
 	len = packetDataLength;
-	
+
       memcpy(&bootProto, packetData, len);
-	       
-      if(bootProto.bp_op == 1) { 
+
+      if(bootProto.bp_op == 1) {
 	/* BOOTREQUEST */
 	u_long dummyMac;
-	  
+
 	memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
 	if((dummyMac != 0) /* MAC address <> 00:00:00:..:00 */) {
 	  NTOHL(bootProto.bp_yiaddr.s_addr);
@@ -1182,7 +1182,7 @@ static void handleBootp(HostTraffic *srcHost,
 	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
 	     && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
 	    /*
-	      RFC 1048 specifies a magic cookie 
+	      RFC 1048 specifies a magic cookie
 	      { 0x63 0x82 0x53 0x63 }
 	      for recognising DHCP packets encapsulated
 	      in BOOTP packets.
@@ -1194,7 +1194,7 @@ static void handleBootp(HostTraffic *srcHost,
 
 	    /*
 	      This is the real address of the recipient because
-	      dstHost is a broadcast address 
+	      dstHost is a broadcast address
 	    */
 	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
 	    if(realClientHost == NULL) {
@@ -1202,15 +1202,15 @@ static void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
 #endif
-	      realClientHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];    
+	      realClientHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
 	    } else {
 #ifdef DHCP_DEBUG
-	      traceEvent(TRACE_INFO, "<<=>> %s (%d)", 
+	      traceEvent(TRACE_INFO, "<<=>> %s (%d)",
 			 realClientHost->hostSymIpAddress,
 			 broadcastHost(realClientHost));
 #endif
 	    }
-	      
+
 	    if(realClientHost != NULL) {
 	      if(realClientHost->dhcpStats == NULL) {
 		realClientHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
@@ -1221,7 +1221,7 @@ static void handleBootp(HostTraffic *srcHost,
 		u_char optionId = bootProto.bp_vend[idx++];
 		int j;
 		u_long tmpUlong;
-		
+
 		if(optionId == 255) break; /* End of options */
 		switch(optionId) { /* RFC 2132 */
 		case 12: /* Host name */
@@ -1229,7 +1229,7 @@ static void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
 #endif
-		  strncpy(realClientHost->hostSymIpAddress, &bootProto.bp_vend[idx], 
+		  strncpy(realClientHost->hostSymIpAddress, &bootProto.bp_vend[idx],
 			  len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
 		  idx += len;
 		  break;
@@ -1315,9 +1315,9 @@ static void handleSession(const struct pcap_pkthdr *h,
   /*
     Note: do not move the {...} down this function
     because BOOTP uses broadcast addresses hence
-    it would be filtered out by the (**) check 
+    it would be filtered out by the (**) check
   */
-  if(tp == NULL /* UDP session */) 
+  if(tp == NULL /* UDP session */)
     handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData);
 
   if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
@@ -1460,7 +1460,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	       ((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
 		&& (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-strlen(NAPSTER_DOMAIN)],
 			   NAPSTER_DOMAIN) == 0)) && (dport == 8888)) {
-	      
+
 	      theSession->napsterSession = 1;
 
 	      traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
@@ -1484,14 +1484,14 @@ static void handleSession(const struct pcap_pkthdr *h,
 		  dstHost->napsterStats->numConnectionsRequested++;
 	      } else {
 		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-		FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);	
+		FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
 		srcHost->napsterStats->numConnectionsRequested++,
 		  dstHost->napsterStats->numConnectionsServed++;
 	      }
 	    }
 	  }
 	}
-	
+
 	while(sessions[initialIdx] != NULL)
 	  initialIdx = ((initialIdx+1) % HASHNAMESIZE);
 
@@ -1729,7 +1729,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	If this is a Napster Download then it should
 	look like "0x31 GET username song ...."
       */
-      
+
       if(packetData[0] == 0x31) {
 	theSession->napsterSession = 1;
 	napsterDownload = 1;
@@ -2557,12 +2557,12 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 
     router = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
 
-    if(broadcastHost(router) 
-       || multicastHost(router) 
+    if(broadcastHost(router)
+       || multicastHost(router)
        || (!subnetLocalHost(router))
-       || (router->hostNumIpAddress[0] == '\0') /* 
+       || (router->hostNumIpAddress[0] == '\0') /*
 						   No IP: is this a special
-						   Multicast address ? 
+						   Multicast address ?
 						*/
        )
       return;
@@ -2610,7 +2610,8 @@ static void grabSession(HostTraffic *srcHost, u_short sport,
       else
 	string[len] = 0;
 
-      traceEvent(TRACE_INFO, "[%s:%d->%s:%d] (%s)\n", srcHost->hostSymIpAddress, (int)sport,
+      traceEvent(TRACE_INFO, "[%s:%d->%s:%d] (%s)\n",
+		 srcHost->hostSymIpAddress, (int)sport,
 		 dstHost->hostSymIpAddress, (int)dport, string);
     }
   }
@@ -2632,9 +2633,9 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
      || (dstHostIdx == NO_PEER))
     return; /* It looks there's something wrong here */
 
-  strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
+  strftime(theDate, 8, "%H", localtime_r(&actTime, &t));
   hourId = atoi(theDate);
-  
+
   if(length > mtuSize[device[deviceId].datalink]) {
     /* Sanity check */
 #ifdef DEBUG
@@ -2655,7 +2656,7 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
 
   srcHost->pktSent++;
 
-  srcHost->last24HoursBytesSent[hourId] += length, 
+  srcHost->last24HoursBytesSent[hourId] += length,
     dstHost->last24HoursBytesRcvd[hourId] += length;
 
   if((dstHostIdx == broadcastEntryIdx) || broadcastHost(dstHost)) {
@@ -2700,28 +2701,28 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
 
 /* ************************************ */
 
-static void updateHostName(HostTraffic *el) {  
+static void updateHostName(HostTraffic *el) {
   if((el->hostNumIpAddress[0] == '\0')
      || (el->hostSymIpAddress == NULL)
-     || strcmp(el->hostSymIpAddress, 
-	       el->hostNumIpAddress) == 0) {	
+     || strcmp(el->hostSymIpAddress,
+	       el->hostNumIpAddress) == 0) {
     int i;
 
     if(el->nbHostName != NULL) {
       /*
-	Use NetBIOS name (when available) if the 
+	Use NetBIOS name (when available) if the
 	IP address has not been resolved.
       */
       strcpy(el->hostSymIpAddress, el->nbHostName);
-    } else if(el->ipxHostName != NULL) 
+    } else if(el->ipxHostName != NULL)
       strcpy(el->hostSymIpAddress, el->ipxHostName);
-    else if(el->atNodeName != NULL) 
+    else if(el->atNodeName != NULL)
       strcpy(el->hostSymIpAddress, el->atNodeName);
-    
-    if(el->hostSymIpAddress != NULL) 
+
+    if(el->hostSymIpAddress != NULL)
       for(i=0; el->hostSymIpAddress[i] != '\0'; i++)
 	el->hostSymIpAddress[i] = (char)tolower(el->hostSymIpAddress[i]);
-  }  
+  }
 }
 
 /* ************************************ */
@@ -2880,7 +2881,7 @@ static void processIpPkt(const u_char *bp,
   case IPPROTO_TCP:
     proto = "TCP";
     device[actualDeviceId].tcpBytes += length;
-    memcpy(&tp, bp+hlen, sizeof(struct tcphdr));    
+    memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
     tcpDataLength = ntohs(ip.ip_len) - hlen - (tp.th_off * 4);
     sport = ntohs(tp.th_sport);
     dport = ntohs(tp.th_dport);
@@ -3130,7 +3131,7 @@ static void processIpPkt(const u_char *bp,
 	    FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
  	  }
   	}
-  
+
  	name = data + offset;
  	p = (u_char*)name;
          if ((*p & 0xC0) == 0xC0)
@@ -3290,12 +3291,12 @@ static void processIpPkt(const u_char *bp,
   }
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "IP=%d TCP=%d UDP=%d ICMP=%d (len=%d)\n",
-	     (int)device[actualDeviceId].ipBytes, 
-	     (int)device[actualDeviceId].tcpBytes, 
+	     (int)device[actualDeviceId].ipBytes,
+	     (int)device[actualDeviceId].tcpBytes,
 	     (int)device[actualDeviceId].udpBytes,
 	     (int)device[actualDeviceId].icmpBytes, length);
 #endif
-  
+
   /* Unlock the instance */
   srcHost->instanceInUse--, dstHost->instanceInUse--;
 }
@@ -3569,12 +3570,13 @@ void processPacket(u_char *_deviceId,
   struct fddi_header *fddip;
   u_int hlen, caplen = h->caplen;
   u_int headerDisplacement = 0, length = h->len;
-  const u_char *orig_p = p;
+  const u_char *orig_p = p, *p1;
   u_char *ether_src=NULL, *ether_dst=NULL;
   unsigned short eth_type=0;
   /* Token-Ring Strings */
   struct tokenRing_llc *trllc;
   FILE * fd;
+  unsigned char ipxBuffer[128];
 
 #ifdef DEBUG
   static long numPkt=0; traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
@@ -3586,12 +3588,12 @@ void processPacket(u_char *_deviceId,
     traceEvent(TRACE_INFO, ".");
     fflush(stdout);
   }
-  
+
   /* This allows me to fetch the time from
-     the captured packet instead of calling 
+     the captured packet instead of calling
      time(NULL).
   */
-  actTime = h->ts.tv_sec; 
+  actTime = h->ts.tv_sec;
 
 #ifdef WIN32
   deviceId = 0;
@@ -3656,6 +3658,12 @@ void processPacket(u_char *_deviceId,
       if ((fddip->fc & FDDIFC_CLFF) == FDDIFC_LLC_ASYNC) {
 	struct llc llc;
 
+	/*
+	  Info on SNAP/LLC: 
+	  http://www.erg.abdn.ac.uk/users/gorry/course/lan-pages/llc.html
+	  http://www.ece.wpi.edu/courses/ee535/hwk96/hwk3cd96/li/li.html
+	  http://www.ece.wpi.edu/courses/ee535/hwk96/hwk3cd96/li/li.html
+	*/
 	memcpy((char *)&llc, (char *)p, min(caplen, sizeof(llc)));
 	if (llc.ssap == LLCSAP_SNAP && llc.dsap == LLCSAP_SNAP
 	    && llc.llcui == LLC_UI) {
@@ -3762,7 +3770,45 @@ void processPacket(u_char *_deviceId,
 #endif
 
     if((device[deviceId].datalink != DLT_PPP) && (device[deviceId].datalink != DLT_RAW)) {
-      if((device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
+      if(eth_type == 0x8137) {
+	/* IPX */
+	IPXpacket ipxPkt;
+
+	srcHostIdx = getHostInfo(NULL, ether_src);
+	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	if(srcHost == NULL) {
+	  /* Sanity check */
+	  traceEvent(TRACE_INFO, "Sanity check failed (3)\n");
+	} else {
+	  /* Lock the instance so that the next call
+	     to getHostInfo won't purge it */
+	  srcHost->instanceInUse++;
+	}
+
+	dstHostIdx = getHostInfo(NULL, ether_dst);
+	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	if(dstHost == NULL) {
+	  /* Sanity check */
+	  traceEvent(TRACE_INFO, "Sanity check failed (4)\n");
+	} else {
+	  /* Lock the instance so that the next call
+	     to getHostInfo won't purge it */
+	  dstHost->instanceInUse++;
+	}
+	memcpy((char *)&ipxPkt, (char *)p+sizeof(struct ether_header), sizeof(IPXpacket));
+
+	if(ntohs(ipxPkt.dstSocket) == 0x0452) {
+	  /* SAP */
+	  int displ = sizeof(struct ether_header);
+	  p1 = p+displ;
+	  length -= displ;
+	  goto handleIPX;
+	} else {
+	  srcHost->ipxSent += length, dstHost->ipxReceived += length;
+	  device[actualDeviceId].ipxBytes += length;
+	  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
+	}
+      } else if((device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
 	trp = (struct tokenRing_header*)orig_p;
 	ether_src = (u_char*)trp->trn_shost, ether_dst = (u_char*)trp->trn_dhost;
 	srcHostIdx = getHostInfo(NULL, ether_src);
@@ -3793,197 +3839,265 @@ void processPacket(u_char *_deviceId,
       } else if((device[deviceId].datalink != DLT_IEEE802)
 		&& (eth_type <= ETHERMTU) && (length > 3)) {
 	/* The code below has been taken from tcpdump */
-	u_char *p1, sap_type;
+	u_char sap_type;
 	struct llc llcHeader;
 
-	srcHostIdx = getHostInfo(NULL, ether_src);
-	dstHostIdx = getHostInfo(NULL, ether_dst);
-	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-
-	p1 = (u_char*)(p+hlen);
-
-	/* Watch out for possible alignment problems */
-	memcpy(&llcHeader, (char*)p1, min(length, sizeof(llcHeader)));
-
-	sap_type = llcHeader.ssap & ~LLC_GSAP;
-	llcsap_string(sap_type);
-
-	if ((llcHeader.ssap == LLCSAP_GLOBAL && llcHeader.dsap == LLCSAP_GLOBAL)
-	    || (sap_type == 0xE0)
-	    || (sap_type == 0x42)) {
+	if((strcmp(etheraddr_string(ether_dst), "FF:FF:FF:FF:FF:FF") == 0)
+	   && (p[sizeof(struct ether_header)] == 0xff)
+	   && (p[sizeof(struct ether_header)+1] == 0xff)
+	   && (p[sizeof(struct ether_header)+4] == 0x0)) {
 	  /* IPX */
-	  unsigned char ipxBuffer[128];
 
-	  /* IPX packet beginning */
-	  if(length > 128)
-	    memcpy(ipxBuffer, p1, 128);
-	  else
-	    memcpy(ipxBuffer, p1, length);
-
-	  if((ipxBuffer[16] == 0x04)    /* SAP (Service Advertising Protocol) (byte 0) */
-	     && (ipxBuffer[17] == 0x52) /* SAP (Service Advertising Protocol) (byte 1) */
-	     && (ipxBuffer[30] == 0x0)  /* SAP Response (byte 0) */
-	     && (ipxBuffer[31] == 0x02) /* SAP Response (byte 1) */) {
-	    u_int16_t serverType;
-	    char serverName[56];
-	    int i, found;
-
-	    memcpy(&serverType, &ipxBuffer[32], 2);
-
-	    serverType = ntohs(serverType);
-
-	    memcpy(serverName, &ipxBuffer[34], 56); serverName[56] = '\0';
-	    for(i=0; i<56; i++)
-	      if(serverName[i] == '!') {
-		serverName[i] = '\0';
-		break;
-	      }
-
-	    for(i=0, found=0; i<srcHost->numIpxNodeTypes; i++)
-	      if(srcHost->ipxNodeType[i] == serverType) {
-		found = 1;
-		break;
-	      }
-
-	    if((!found) && (srcHost->numIpxNodeTypes < MAX_NODE_TYPES)) {
-	      srcHost->ipxNodeType[srcHost->numIpxNodeTypes] = serverType;
-	      srcHost->numIpxNodeTypes++;
-
-	      switch(serverType) {
-	      case 0x0007: /* Print server */
-	      case 0x0003: /* Print Queue */
-	      case 0x8002: /* Intel NetPort Print Server */
-	      case 0x030c: /* HP LaserJet / Quick Silver */
-		FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
-		break;
-
-	      case 0x0027: /* TCP/IP gateway */
-	      case 0x0021: /* NAS SNA gateway */
-	      case 0x055d: /* Attachmate SNA gateway */
-		FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
-		break;
-
-	      case 0x0004: /* File server */
-	      case 0x0005: /* Job server */
-	      case 0x0008: /* Archive server */
-	      case 0x0009: /* Archive server */
-	      case 0x002e: /* Archive Server Dynamic SAP */
-	      case 0x0098: /* NetWare access server */
-	      case 0x009a: /* Named Pipes server */
-	      case 0x0111: /* Test server */
-	      case 0x03e1: /* UnixWare Application Server */
-	      case 0x0810: /* ELAN License Server Demo */
-		FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
-		break;
-
-	      case 0x0278: /* NetWare Directory server */
-		FD_SET(HOST_SVC_DIRECTORY, &srcHost->flags);
-		break;
-
-	      case 0x0024: /* Remote bridge */
-	      case 0x0026: /* Bridge server */
-		FD_SET(HOST_SVC_BRIDGE, &srcHost->flags);
-		break;
-
-	      case 0x0640: /* NT Server-RPC/GW for NW/Win95 User Level Sec */
-	      case 0x064e: /* NT Server-IIS */
-		FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
-		break;
-
-	      case 0x0133: /* NetWare Name Service */
-		FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
-		break;
-	      }
-	    }
-
-	    if(srcHost->ipxHostName == NULL) {
-	      srcHost->ipxHostName = strdup(serverName);
-	      updateHostName(srcHost);
-	    }
-#ifdef DEBUG
-	    traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName,
-		       getSAPInfo(serverType, 0), serverType);
-#endif
+	  srcHostIdx = getHostInfo(NULL, ether_src);
+	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	  if(srcHost == NULL) {
+	    /* Sanity check */
+	    traceEvent(TRACE_INFO, "Sanity check failed (3)\n");
+	  } else {
+	    /* Lock the instance so that the next call
+	       to getHostInfo won't purge it */
+	    srcHost->instanceInUse++;
 	  }
 
-	  srcHost->ipxSent += length;
-	  dstHost->ipxReceived += length;
+	  dstHostIdx = getHostInfo(NULL, ether_dst);
+	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	  if(dstHost == NULL) {
+	    /* Sanity check */
+	    traceEvent(TRACE_INFO, "Sanity check failed (4)\n");
+	  } else {
+	    /* Lock the instance so that the next call
+	       to getHostInfo won't purge it */
+	    dstHost->instanceInUse++;
+	  }
+
+	  srcHost->ipxSent += length, dstHost->ipxReceived += length;
 	  device[actualDeviceId].ipxBytes += length;
-	} else if (llcHeader.ssap == LLCSAP_NETBIOS
-		   && llcHeader.dsap == LLCSAP_NETBIOS) {
-	  /* Netbios */
-	  srcHost->netbiosSent += length;
-	  dstHost->netbiosReceived += length;
-	  device[actualDeviceId].netbiosBytes += length;
-	} else if ((sap_type == 0xF0) || (sap_type == 0xB4)
-		   || (sap_type == 0xC4) || (sap_type == 0xF8)) {
-	  /* DLC (protocol used for printers) */
-	  srcHost->dlcSent += length;
-	  dstHost->dlcReceived += length;
-	  device[actualDeviceId].dlcBytes += length;
-	} else if (sap_type == 0xAA) {  /* Appletalk */
-	  AtDDPheader ddpHeader;
-
-	  p1 = (u_char*)(p1+sizeof(llcHeader));
-	  memcpy(&ddpHeader, (char*)p1, sizeof(AtDDPheader));
-
-	  srcHost->atNetwork = ntohs(ddpHeader.srcNet), srcHost->atNode = ddpHeader.srcNode;
-	  dstHost->atNetwork = ntohs(ddpHeader.dstNet), dstHost->atNode = ddpHeader.dstNode;
-
-	  if(ddpHeader.ddpType == 2) {
-	    /* Appletalk NBP (name Binding Protocol) */
-	    AtNBPheader nbpHeader;
-	    int numTuples, i;
-
-	    p1 = (u_char*)(p1+13);
-	    memcpy(&nbpHeader, (char*)p1, sizeof(AtNBPheader));
-	    numTuples = nbpHeader.function & 0x0F;
-
-	    if((nbpHeader.function == 0x21) && (numTuples == 1)) {
-	      char nodeName[256];
-
-	      p1 = (u_char*)(p1+2);
-
-	      memcpy(nodeName, &p1[6], p1[5]);
-	      nodeName[p1[5]] = '\0';
-
-	      srcHost->atNodeName = strdup(nodeName);
-	      updateHostName(srcHost);
-
-	      memcpy(nodeName, &p1[7+p1[5]], p1[6+p1[5]]);
-	      nodeName[p1[6+p1[5]]] = '\0';
-
-	      for(i=0; i<MAX_NODE_TYPES; i++)
-		if((srcHost->atNodeType[i] == NULL)
-		   || (strcmp(srcHost->atNodeType[i], nodeName) == 0))
-		  break;
-
-	      if(srcHost->atNodeType[i] == NULL)
-		srcHost->atNodeType[i] = strdup(nodeName);
-	    }
-	  }
-
-	  srcHost->appletalkSent += length;
-	  dstHost->appletalkReceived += length;
-	  device[actualDeviceId].atalkBytes += length;
-	} else if ((sap_type == 0x06)
-		   || (sap_type == 0xFE)
-		   || (sap_type == 0xFC)) {  /* OSI */
-	  srcHost->osiSent += length;
-	  dstHost->osiReceived += length;
-	  device[actualDeviceId].osiBytes += length;
 	} else {
-	  /* Unknown Protocol */
-#ifdef PRINT_UNKNOWN_PACKETS
-	  traceEvent(TRACE_INFO, "[%u] [%x] %s %s > %s\n", (u_short)sap_type,(u_short)sap_type,
-		     etheraddr_string(ether_src),
-		     llcsap_string(llcHeader.ssap & ~LLC_GSAP),
-		     etheraddr_string(ether_dst));
+	  srcHostIdx = getHostInfo(NULL, ether_src);
+	  dstHostIdx = getHostInfo(NULL, ether_dst);
+	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+
+	  p1 = (u_char*)(p+hlen);
+
+	  /* Watch out for possible alignment problems */
+	  memcpy(&llcHeader, (char*)p1, min(length, sizeof(llcHeader)));
+
+	  sap_type = llcHeader.ssap & ~LLC_GSAP;
+	  llcsap_string(sap_type);
+
+	  if(sap_type == 0x42) {
+	    /* Spanning Tree */
+	    srcHost->stpSent += length, dstHost->stpRcvd += length;
+	    device[actualDeviceId].stpBytes += length;
+	  } else if(sap_type == 0xE0) {
+	      /* NetWare */
+	    if(!(llcHeader.ssap == LLCSAP_GLOBAL && llcHeader.dsap == LLCSAP_GLOBAL)) {
+	      p1 += 3; /* LLC Header (short version) */
+	    }
+
+	    handleIPX:
+	      /* IPX packet beginning */
+	      if(length > 128)
+		memcpy(ipxBuffer, p1, 128);
+	      else
+		memcpy(ipxBuffer, p1, length);
+	      if((ipxBuffer[16] == 0x04)    /* SAP (Service Advertising Protocol) (byte 0) */
+		 && (ipxBuffer[17] == 0x52) /* SAP (Service Advertising Protocol) (byte 1) */
+		 && (ipxBuffer[30] == 0x0)  /* SAP Response (byte 0) */
+		 && (ipxBuffer[31] == 0x02) /* SAP Response (byte 1) */) {
+		u_int16_t serverType;
+		char serverName[56];
+		int i, found;
+
+		memcpy(&serverType, &ipxBuffer[32], 2);
+
+		serverType = ntohs(serverType);
+
+		memcpy(serverName, &ipxBuffer[34], 56); serverName[56] = '\0';
+		for(i=0; i<56; i++)
+		  if(serverName[i] == '!') {
+		    serverName[i] = '\0';
+		    break;
+		  }
+
+		for(i=0, found=0; i<srcHost->numIpxNodeTypes; i++)
+		  if(srcHost->ipxNodeType[i] == serverType) {
+		    found = 1;
+		    break;
+		  }
+
+		if((!found) && (srcHost->numIpxNodeTypes < MAX_NODE_TYPES)) {
+		  srcHost->ipxNodeType[srcHost->numIpxNodeTypes] = serverType;
+		  srcHost->numIpxNodeTypes++;
+
+		  switch(serverType) {
+		  case 0x0007: /* Print server */
+		  case 0x0003: /* Print Queue */
+		  case 0x8002: /* Intel NetPort Print Server */
+		  case 0x030c: /* HP LaserJet / Quick Silver */
+		    FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
+		    break;
+
+		  case 0x0027: /* TCP/IP gateway */
+		  case 0x0021: /* NAS SNA gateway */
+		  case 0x055d: /* Attachmate SNA gateway */
+		    FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
+		    break;
+
+		  case 0x0004: /* File server */
+		  case 0x0005: /* Job server */
+		  case 0x0008: /* Archive server */
+		  case 0x0009: /* Archive server */
+		  case 0x002e: /* Archive Server Dynamic SAP */
+		  case 0x0098: /* NetWare access server */
+		  case 0x009a: /* Named Pipes server */
+		  case 0x0111: /* Test server */
+		  case 0x03e1: /* UnixWare Application Server */
+		  case 0x0810: /* ELAN License Server Demo */
+		    FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+		    break;
+
+		  case 0x0278: /* NetWare Directory server */
+		    FD_SET(HOST_SVC_DIRECTORY, &srcHost->flags);
+		    break;
+
+		  case 0x0024: /* Remote bridge */
+		  case 0x0026: /* Bridge server */
+		    FD_SET(HOST_SVC_BRIDGE, &srcHost->flags);
+		    break;
+
+		  case 0x0640: /* NT Server-RPC/GW for NW/Win95 User Level Sec */
+		  case 0x064e: /* NT Server-IIS */
+		    FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+		    break;
+
+		  case 0x0133: /* NetWare Name Service */
+		    FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
+		    break;
+		  }
+		}
+
+		if(srcHost->ipxHostName == NULL) {
+		  int i;
+
+		  for(i=1; i<strlen(serverName); i++)
+		    if((serverName[i] == '_') && (serverName[i-1] == '_')) {
+		      serverName[i-1] = '\0'; /* Avoid weird names */
+		      break;
+		    }
+
+		  srcHost->ipxHostName = strdup(serverName);
+		  updateHostName(srcHost);
+		}
+#ifdef DEBUG
+		traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName,
+			   getSAPInfo(serverType, 0), serverType);
 #endif
-	  srcHost->otherSent += length;
-	  dstHost->otherReceived += length;
-	  device[actualDeviceId].otherBytes += length;
+	      }
+
+	      srcHost->ipxSent += length, dstHost->ipxReceived += length;
+	      device[actualDeviceId].ipxBytes += length;
+	  } else if (llcHeader.ssap == LLCSAP_NETBIOS
+		     && llcHeader.dsap == LLCSAP_NETBIOS) {
+	    /* Netbios */
+	    srcHost->netbiosSent += length;
+	    dstHost->netbiosReceived += length;
+	    device[actualDeviceId].netbiosBytes += length;
+	  } else if ((sap_type == 0xF0) || (sap_type == 0xB4)
+		     || (sap_type == 0xC4) || (sap_type == 0xF8)) {
+	    /* DLC (protocol used for printers) */
+	    srcHost->dlcSent += length;
+	    dstHost->dlcReceived += length;
+	    device[actualDeviceId].dlcBytes += length;
+	  } else if (sap_type == 0xAA) {  
+	    u_int16_t snapType;
+	    
+	    p1 = (u_char*)(p1+sizeof(llcHeader));
+	    memcpy(&snapType, p1, sizeof(snapType));
+
+	    snapType = ntohs(snapType);
+	    /*
+	      See section 
+	      "ETHERNET NUMBERS OF INTEREST" in RFC 1060
+	      
+	      http://www.faqs.org/rfcs/rfc1060.html
+	     */
+	    if((snapType == 0x809B) || (snapType == 0x80F3)) {
+	      /* Appletalk */
+	      AtDDPheader ddpHeader;
+
+
+	      memcpy(&ddpHeader, (char*)p1, sizeof(AtDDPheader));
+
+	      srcHost->atNetwork = ntohs(ddpHeader.srcNet), srcHost->atNode = ddpHeader.srcNode;
+	      dstHost->atNetwork = ntohs(ddpHeader.dstNet), dstHost->atNode = ddpHeader.dstNode;
+
+	      if(ddpHeader.ddpType == 2) {
+		/* Appletalk NBP (Name Binding Protocol) */
+		AtNBPheader nbpHeader;
+		int numTuples, i;
+
+		p1 = (u_char*)(p1+13);
+		memcpy(&nbpHeader, (char*)p1, sizeof(AtNBPheader));
+		numTuples = nbpHeader.function & 0x0F;
+
+		if((nbpHeader.function == 0x21) && (numTuples == 1)) {
+		  char nodeName[256];
+		  int displ;
+
+		  p1 = (u_char*)(p1+2);
+
+		  if(p1[6] == '=')
+		    displ = 2;
+		  else
+		    displ = 0;
+
+		  memcpy(nodeName, &p1[6+displ], p1[5+displ]);
+		  nodeName[p1[5+displ]] = '\0';
+
+		  srcHost->atNodeName = strdup(nodeName);
+		  updateHostName(srcHost);
+
+		  memcpy(nodeName, &p1[7+p1[5+displ]+displ], p1[6+p1[5+displ]+displ]);
+		  nodeName[p1[6+p1[5+displ]]] = '\0';
+
+		  for(i=0; i<MAX_NODE_TYPES; i++)
+		    if((srcHost->atNodeType[i] == NULL)
+		       || (strcmp(srcHost->atNodeType[i], nodeName) == 0))
+		      break;
+
+		  if(srcHost->atNodeType[i] == NULL)
+		    srcHost->atNodeType[i] = strdup(nodeName);
+		}
+	      }
+
+	      srcHost->appletalkSent += length;
+	      dstHost->appletalkReceived += length;
+	      device[actualDeviceId].atalkBytes += length;
+	    } else {
+	      srcHost->otherSent += length;
+	      dstHost->otherReceived += length;
+	      device[actualDeviceId].otherBytes += length;
+	    }	    
+	  } else if ((sap_type == 0x06)
+		     || (sap_type == 0xFE)
+		     || (sap_type == 0xFC)) {  /* OSI */
+	    srcHost->osiSent += length;
+	    dstHost->osiReceived += length;
+	    device[actualDeviceId].osiBytes += length;
+	  } else {
+	    /* Unknown Protocol */
+#ifdef PRINT_UNKNOWN_PACKETS
+	    traceEvent(TRACE_INFO, "[%u] [%x] %s %s > %s\n", (u_short)sap_type,(u_short)sap_type,
+		       etheraddr_string(ether_src),
+		       llcsap_string(llcHeader.ssap & ~LLC_GSAP),
+		       etheraddr_string(ether_dst));
+#endif
+	    srcHost->otherSent += length;
+	    dstHost->otherReceived += length;
+	    device[actualDeviceId].otherBytes += length;
+	  }
 	}
 
 	updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
@@ -4098,7 +4212,6 @@ void processPacket(u_char *_deviceId,
 #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);
 #endif
-
 }
 
 /* ************************************ */

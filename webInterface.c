@@ -442,7 +442,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   case 0: /* symbolic */
     tmpStr = el->hostSymIpAddress;
 
-    if(tmpStr == NULL) {
+    if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
       /* The DNS is still getting the entry name */
       if(el->hostNumIpAddress[0] != '\0')
 	strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
@@ -452,14 +452,14 @@ char* makeHostLink(HostTraffic *el, short mode,
       }
     } else if(tmpStr[0] != '\0') {
       strncpy(symIp, tmpStr, sizeof(symIp));
-      if(tmpStr[strlen(tmpStr)-1] == ']') /* No "... [MAC]" */ {
+      if(tmpStr[strlen(tmpStr)-1] == ']') /* "... [MAC]" */ {
 	usedEthAddress = 1;
 	specialMacAddress = 1;
       } else {
-	if(cutName && (symIp[0] != '*')
+	if(cutName && (symIp[0] != '*') 
 	   && strcmp(symIp, el->hostNumIpAddress)) {
 	  int i;
-
+	  
 	  for(i=0; symIp[i] != '\0'; i++)
 	    if(symIp[i] == '.') {
 	      symIp[i] = '\0';
@@ -505,15 +505,24 @@ char* makeHostLink(HostTraffic *el, short mode,
   } else {
     if(el->hostNumIpAddress[0] != '\0')
       tmpStr = el->hostNumIpAddress;
-    else
-      tmpStr = symIp;
+    else {
+      tmpStr = el->ethAddressString;
+      /* tmpStr = symIp; */
+    }
   }
 
   strncpy(linkName, tmpStr, sizeof(linkName));
 
   if(usedEthAddress) {
     /* Patch for ethernet addresses and MS Explorer */
-    int i;
+    int i;    
+    char tmpStr[256], *vendorInfo;
+
+    vendorInfo = getVendorInfo(el->ethAddress, 0);
+    if(vendorInfo[0] != '\0') {
+      sprintf(tmpStr, "%s%s", vendorInfo, &linkName[8]);    
+      strcpy(symIp, tmpStr); 
+    }
 
     for(i=0; linkName[i] != '\0'; i++)
       if(linkName[i] == ':')
@@ -524,7 +533,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     flag[0] = '\0';
   else {
     if(snprintf(flag, sizeof(flag), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-	    getHostCountryIconURL(el)) < 0) 
+		getHostCountryIconURL(el)) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
@@ -534,15 +543,16 @@ char* makeHostLink(HostTraffic *el, short mode,
     dynIp = "";
 
   if(mode == LONG_FORMAT) {
-    if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT>%s<A HREF=\"/%s.html\">%s%s</A>%s</TH>%s",
-	    blinkOn, linkName, symIp, dynIp, blinkOff, flag) < 0) 
+    if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT>%s"
+		"<A HREF=\"/%s.html\">%s%s</A>%s</TH>%s",
+		blinkOn, linkName, symIp, dynIp, blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
     if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\">%s%s</A>%s%s",
-	    blinkOn, linkName, symIp, dynIp, blinkOff, flag) < 0) 
+		blinkOn, linkName, symIp, dynIp, blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
-
+  
   return(buf[bufIdx]);
 }
 

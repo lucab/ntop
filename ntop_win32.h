@@ -92,9 +92,9 @@ struct ether_addr {
  * Structure of a 10Mb/s Ethernet header.
  */
 struct	ether_header {
-	u_char	ether_dhost[6];
-	u_char	ether_shost[6];
-	u_short	ether_type;
+  u_char	ether_dhost[6];
+  u_char	ether_shost[6];
+  u_short	ether_type;
 };
 
 #define	ETHERTYPE_PUP		0x0200	/* PUP protocol */

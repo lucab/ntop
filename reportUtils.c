@@ -417,6 +417,9 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     if(abs(column) == 14)
       { arrow[13] = arrowGif; theAnchor[13] = htmlAnchor;  }
     else { arrow[13] = "";  theAnchor[13] = htmlAnchor1;  }
+    if(abs(column) == 15)
+      { arrow[14] = arrowGif; theAnchor[14] = htmlAnchor;  }
+    else { arrow[14] = "";  theAnchor[14] = htmlAnchor1;  }
 
     if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s1>TCP%s</A></TH>"
 	     "<TH "TH_BG">%s2>UDP%s</A></TH><TH "TH_BG">%s3>ICMP%s</A></TH>"
@@ -430,13 +433,20 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     if(snprintf(buf, BUF_SIZE,
-	    "<TH "TH_BG">%s9>OSPF%s</A></TH><TH "TH_BG">%s10>NetBios%s</A>"
-	     "</TH><TH "TH_BG">%s11>IGMP%s</A></TH>"
-	    "<TH "TH_BG">%s12>OSI%s</A></TH><TH "TH_BG">%s13>QNX%s</A>"
-	     "</TH><TH "TH_BG">%s14>Other%s</A></TH>",
-	     theAnchor[8], arrow[8], theAnchor[9], arrow[9],
-	     theAnchor[10], arrow[10], theAnchor[11], arrow[11],
-	     theAnchor[12], arrow[12], theAnchor[13], arrow[13]) < 0)
+		"<TH "TH_BG">%s9>OSPF%s</A></TH>"
+		"<TH "TH_BG">%s10>NetBios%s</A></TH>"
+		"<TH "TH_BG">%s11>IGMP%s</A></TH>"
+		"<TH "TH_BG">%s12>OSI%s</A></TH>"
+		"<TH "TH_BG">%s13>QNX%s</A></TH>"
+		"<TH "TH_BG">%s14>STP%s</A></TH>"
+		"<TH "TH_BG">%s15>Other%s</A></TH>",
+		theAnchor[8], arrow[8], 
+		theAnchor[9], arrow[9],
+		theAnchor[10], arrow[10], 
+		theAnchor[11], arrow[11],
+		theAnchor[12], arrow[12], 
+		theAnchor[13], arrow[13],
+		theAnchor[14], arrow[14]) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else if(reportType == 1) {
@@ -742,6 +752,10 @@ int cmpFctn(const void *_a, const void *_b) {
     traceEvent(TRACE_WARNING, "WARNING (3)\n");
     return(0);
   }
+
+#ifdef DEBUG
+  printf("screenNumber=%d, columnSort=%d\n", screenNumber, columnSort);
+#endif
 
   if(columnSort == HOST_DUMMY_IDX_VALUE) {
     int rc;
@@ -1163,15 +1177,29 @@ int cmpFctn(const void *_a, const void *_b) {
       }
     break;
   case 5:
-    if(sortSendMode)
+    if(sortSendMode) {
       switch(screenNumber) {
       case 0:
 	a_ = (*a)->otherSent, b_ = (*b)->otherSent;
+	break;
+      case 1:
+	a_ = (*a)->stpSent, b_ = (*b)->stpSent;
 	break;
       case MAX_NUM_PROTOS_SCREENS:
 	fa_ = (*a)->averageSentPktThpt, fb_ = (*b)->averageSentPktThpt, floatCompare = 1;
 	break;
       }
+    } else {
+      switch(screenNumber) {
+      case 0:
+	a_ = (*a)->otherReceived, b_ = (*b)->otherReceived;
+	break;
+      case 1:
+	a_ = (*a)->stpRcvd, b_ = (*b)->stpRcvd;
+	break;
+      }
+    }
+    
     break;
   case 6:
     if(sortSendMode)
@@ -1593,14 +1621,14 @@ void printHostTrafficStats(HostTraffic *el) {
   totalSent = el->tcpSentLocally+el->tcpSentRemotely+el->udpSentLocally+el->udpSentRemotely;
   totalSent += el->icmpSent+el->ospfSent+el->igmpSent+el->ipxSent+el->dlcSent+el->arp_rarpSent;
   totalSent +=  el->decnetSent+el->appletalkSent+el->netbiosSent+
-    el->osiSent+el->qnxSent+el->otherSent;
+    el->osiSent+el->qnxSent+el->stpSent+el->otherSent;
 
   totalReceived = el->tcpReceivedLocally+el->tcpReceivedFromRemote;
   totalReceived += el->udpReceivedLocally+el->udpReceivedFromRemote;
   totalReceived += el->icmpReceived+el->ospfReceived+el->igmpReceived;
   totalReceived += el->ipxReceived+el->dlcReceived+el->arp_rarpReceived;
   totalReceived += el->decnetReceived+el->appletalkReceived;
-  totalReceived +=  el->osiReceived+el->netbiosReceived+el->qnxReceived+el->otherReceived;
+  totalReceived +=  el->osiReceived+el->netbiosReceived+el->qnxReceived+el->stpRcvd+el->otherReceived;
 
   actTotalSent = el->tcpSentLocally+el->tcpSentRemotely;
   actTotalReceived = el->tcpReceivedLocally+el->tcpReceivedFromRemote;
@@ -1689,6 +1717,11 @@ void printHostTrafficStats(HostTraffic *el) {
 			100*((float)SD(el->qnxSent, totalSent)),
 			(float)el->qnxReceived/1024,
 			100*((float)SD(el->qnxReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "STP", COLOR_1, (float)el->stpSent/1024,
+			100*((float)SD(el->stpSent, totalSent)),
+			(float)el->stpRcvd/1024,
+			100*((float)SD(el->stpRcvd, totalReceived)));
 
   printTableDoubleEntry(buf, sizeof(buf), "Other", COLOR_1, (float)el->otherSent/1024,
 			100*((float)SD(el->otherSent, totalSent)),
