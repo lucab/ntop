@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.97])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.97.1-2003-12-01"
+SCRIPTVER="v2.2.97.002-2003-12-02"
 
 dnl>
 dnl> generate the config header
@@ -2787,6 +2787,9 @@ if test ".${CCLD}" = "."; then
     CCLD=${CC}
 fi
 
+dnl> Append RRD finally
+NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
+
 echo
 echo "-------------------------------------------------------------------"
 echo
@@ -2894,9 +2897,6 @@ CFG_DBFILE_DIR=`(
 )`
 AC_DEFINE_UNQUOTED(CFG_DBFILE_DIR,"$CFG_DBFILE_DIR", [Database file directory])
 echo "    Database files are in $CFG_DBFILE_DIR"
-
-dnl> Append RRD finally
-NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
 
 echo
 echo "-------------------------------------------------------------------"

@@ -1340,7 +1340,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.97.1-2003-12-01"
+SCRIPTVER="v2.2.97.002-2003-12-02"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -24356,6 +24356,39 @@ if test ".${CCLD}" = "."; then
     CCLD=${CC}
 fi
 
+# Expansion of NTOP_APPENDS(${MYRRD}, ${MYRRD}, myrrd)
+    if test ".${MYRRD}" != "."; then
+        rc=`(echo $CPPFLAGS | grep '${MYRRD} ' > /dev/null 2> /dev/null; echo $?)`
+        if [ $rc -eq 1 ]; then
+           CPPFLAGS="$CPPFLAGS -I${MYRRD}"
+        fi
+        rc=`(echo $INCS | grep '${MYRRD}' > /dev/null 2> /dev/null; echo $?)`
+        if [ $rc -eq 1 ]; then
+            INCS="$INCS -I${MYRRD}"
+        fi
+    fi
+    if test ".${MYRRD}" != "."; then
+        rc=`(echo $LDFLAGS | grep '${MYRRD} ' > /dev/null 2> /dev/null; echo $?)`
+        if [ $rc -eq 1 ]; then
+            case "${DEFINEOS}" in
+              DARWIN )
+                LDFLAGS="$LDFLAGS -L${MYRRD} -L${MYRRD}/lib"
+                ;;
+              * )
+                LDFLAGS="$LDFLAGS -L${MYRRD}"
+                ;;
+            esac
+        fi
+    fi
+    if test ".myrrd" != "."; then
+        rc=`(echo $LIBS | grep '\-lmyrrd ' > /dev/null 2> /dev/null; echo $?)`
+        if [ $rc -eq 1 ]; then
+            LIBS="$LIBS -lmyrrd"
+        fi
+    fi
+# Finished expansion of NTOP_APPENDS()
+
+
 echo
 echo "-------------------------------------------------------------------"
 echo
@@ -24625,39 +24658,6 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 echo "    Database files are in $CFG_DBFILE_DIR"
-
-# Expansion of NTOP_APPENDS(${MYRRD}, ${MYRRD}, myrrd)
-    if test ".${MYRRD}" != "."; then
-        rc=`(echo $CPPFLAGS | grep '${MYRRD} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-           CPPFLAGS="$CPPFLAGS -I${MYRRD}"
-        fi
-        rc=`(echo $INCS | grep '${MYRRD}' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            INCS="$INCS -I${MYRRD}"
-        fi
-    fi
-    if test ".${MYRRD}" != "."; then
-        rc=`(echo $LDFLAGS | grep '${MYRRD} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            case "${DEFINEOS}" in
-              DARWIN )
-                LDFLAGS="$LDFLAGS -L${MYRRD} -L${MYRRD}/lib"
-                ;;
-              * )
-                LDFLAGS="$LDFLAGS -L${MYRRD}"
-                ;;
-            esac
-        fi
-    fi
-    if test ".myrrd" != "."; then
-        rc=`(echo $LIBS | grep '\-lmyrrd ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            LIBS="$LIBS -lmyrrd"
-        fi
-    fi
-# Finished expansion of NTOP_APPENDS()
-
 
 echo
 echo "-------------------------------------------------------------------"
