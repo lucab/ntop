@@ -34,12 +34,12 @@
 
   Many thanks Philippe!
 */
-char *languages[] = {"", "perl", "php", "no" };
+char *languages[] = { "", "perl", "php", "no" };
 
 
 /* *************************** */
 
-void initWriteArray( int lang ) {
+void initWriteArray(int lang) {
   switch(lang) {
   case PERL_LANGUAGE :
   sendString("%ntopHash =(\n");
@@ -149,7 +149,7 @@ void wrtStrItm(int lang, char *indent, char *name, char *value, char last) {
 void wrtIntItm(int lang, char *indent, char *name, int value, char last) {
   char buf[80];
   sprintf(buf,"%d",value);
-  wrtStrItm(lang, indent, name,  buf, last);
+  wrtStrItm(lang, indent, name, buf, last);
 }
 
 /* *************************** */
@@ -157,7 +157,7 @@ void wrtIntItm(int lang, char *indent, char *name, int value, char last) {
 void wrtIntStrItm(int lang, char *indent,int name, char *value, char useless) {
   char buf[80];
   sprintf(buf,"%d",name);
-  wrtStrItm(lang, indent, buf,  value, ',');
+  wrtStrItm(lang, indent, buf, value, ',');
 }
 
 /* *************************** */
@@ -165,7 +165,7 @@ void wrtIntStrItm(int lang, char *indent,int name, char *value, char useless) {
 void wrtUintItm(int lang, char *indent, char *name, unsigned int value, char useless) {
   char buf[80];
   sprintf(buf,"%d",value);
-  wrtStrItm(lang, indent, name,  buf, ',');
+  wrtStrItm(lang, indent, name, buf, ',');
 }
 
 /* *************************** */
@@ -173,7 +173,7 @@ void wrtUintItm(int lang, char *indent, char *name, unsigned int value, char use
 void wrtUcharItm(int lang, char *indent, char *name, u_char value, char useless) {
   char buf[80];
   sprintf(buf,"%d",value);
-  wrtStrItm(lang, indent, name,  buf, ',');
+  wrtStrItm(lang, indent, name, buf, ',');
 }
 
 /* *************************** */
@@ -197,7 +197,7 @@ void wrtIntFloatItm(int lang, char *indent, int name, float value, char last) {
 void wrtUlongItm(int lang, char *indent, char *name, unsigned long value, char useless) {
   char buf[80];
   sprintf(buf,"%lu",value);
-  wrtStrItm(lang, indent, name,  buf, ',');
+  wrtStrItm(lang, indent, name, buf, ',');
 }
 
 /* *************************** */
@@ -221,7 +221,7 @@ void wrtTime_tItm(int lang, char *indent, char *name, time_t value, char useless
 void wrtUshortItm(int lang, char *indent, char *name, u_short value, char useless) {
   char buf[80];
   sprintf(buf,"%d",value);
-  wrtStrItm(lang, indent, name,  buf, ',');
+  wrtStrItm(lang, indent, name, buf, ',');
 }
 
 /* ********************************** */
@@ -339,57 +339,59 @@ void dumpNtopHashes(char* options, int actualDeviceId) {
       /* ************************ */
 
       if(!shortView) {
-      if(checkFilter(filter, &filterPattern, "index")) wrtUintItm(lang, "\t","index", idx,' ');
+	if(checkFilter(filter, &filterPattern, "index")) wrtUintItm(lang, "\t","index", idx,' ');
 
-      if(checkFilter(filter, &filterPattern, "hostNumIpAddress")) wrtStrItm(lang, "\t", "hostNumIpAddress", el->hostNumIpAddress,',');
+	if(checkFilter(filter, &filterPattern, "hostNumIpAddress"))
+	  wrtStrItm(lang, "\t", "hostNumIpAddress", el->hostNumIpAddress,',');
       }
 
-      if(checkFilter(filter, &filterPattern, "hostSymIpAddress")) wrtStrItm(lang, "\t", "hostSymIpAddress", el->hostSymIpAddress,',');
+      if(checkFilter(filter, &filterPattern, "hostSymIpAddress"))
+	wrtStrItm(lang, "\t", "hostSymIpAddress", el->hostSymIpAddress,',');
 
       if(!shortView) {
-	if(checkFilter(filter, &filterPattern, "firstSeen")) wrtTime_tItm(lang, "\t", "firstSeen",   el->firstSeen,' ');
-	if(checkFilter(filter, &filterPattern, "lastSeen")) wrtTime_tItm(lang, "\t", "lastSeen",    el->lastSeen,' ');
-	if(checkFilter(filter, &filterPattern, "minTTL")) wrtUshortItm(lang, "\t", "minTTL",       el->minTTL,' ');
-	if(checkFilter(filter, &filterPattern, "maxTTL")) wrtUshortItm(lang, "\t", "maxTTL",       el->maxTTL,' ');
-	if(checkFilter(filter, &filterPattern, "nbHostName")) wrtStrItm(lang, "\t", "nbHostName",     el->nbHostName,',');
-	if(checkFilter(filter, &filterPattern, "nbDomainName")) wrtStrItm(lang, "\t", "nbDomainName",   el->nbDomainName,',');
-	if(checkFilter(filter, &filterPattern, "nbDescr")) wrtStrItm(lang, "\t", "nbDescr",        el->nbDescr,',');
-	if(checkFilter(filter, &filterPattern, "nodeType")) wrtUcharItm (lang, "\t", "nodeType",    el->nbNodeType,' ');
-	if(checkFilter(filter, &filterPattern, "atNodeName")) wrtStrItm(lang, "\t", "atNodeName",     el->atNodeName,',');
-	if(checkFilter(filter, &filterPattern, "atNetwork")) wrtUshortItm(lang, "\t", "atNetwork",    el->atNetwork,' ');
-	if(checkFilter(filter, &filterPattern, "atNode")) wrtUcharItm (lang, "\t", "atNode",      el->atNode,' ');
-	if(checkFilter(filter, &filterPattern, "ipxHostName")) wrtStrItm(lang, "\t", "ipxHostName",    el->ipxHostName,',');
-	if(checkFilter(filter, &filterPattern, "pktSent")) wrtLlongItm(lang, "\t", "pktSent",     el->pktSent,',');
+	if(checkFilter(filter, &filterPattern, "firstSeen")) wrtTime_tItm(lang, "\t", "firstSeen", el->firstSeen,' ');
+	if(checkFilter(filter, &filterPattern, "lastSeen")) wrtTime_tItm(lang, "\t", "lastSeen",  el->lastSeen,' ');
+	if(checkFilter(filter, &filterPattern, "minTTL")) wrtUshortItm(lang, "\t", "minTTL",     el->minTTL,' ');
+	if(checkFilter(filter, &filterPattern, "maxTTL")) wrtUshortItm(lang, "\t", "maxTTL",     el->maxTTL,' ');
+	if(checkFilter(filter, &filterPattern, "nbHostName")) wrtStrItm(lang, "\t", "nbHostName",   el->nbHostName,',');
+	if(checkFilter(filter, &filterPattern, "nbDomainName")) wrtStrItm(lang, "\t", "nbDomainName", el->nbDomainName,',');
+	if(checkFilter(filter, &filterPattern, "nbDescr")) wrtStrItm(lang, "\t", "nbDescr",      el->nbDescr,',');
+	if(checkFilter(filter, &filterPattern, "nodeType")) wrtUcharItm (lang, "\t", "nodeType",  el->nbNodeType,' ');
+	if(checkFilter(filter, &filterPattern, "atNodeName")) wrtStrItm(lang, "\t", "atNodeName",   el->atNodeName,',');
+	if(checkFilter(filter, &filterPattern, "atNetwork")) wrtUshortItm(lang, "\t", "atNetwork",  el->atNetwork,' ');
+	if(checkFilter(filter, &filterPattern, "atNode")) wrtUcharItm (lang, "\t", "atNode",    el->atNode,' ');
+	if(checkFilter(filter, &filterPattern, "ipxHostName")) wrtStrItm(lang, "\t", "ipxHostName",  el->ipxHostName,',');
+	if(checkFilter(filter, &filterPattern, "pktSent")) wrtLlongItm(lang, "\t", "pktSent",   el->pktSent,',');
 	if(checkFilter(filter, &filterPattern, "pktRcvd")) wrtLlongItm(lang, "\t", "pktRcvd", el->pktRcvd,',');
 	if(checkFilter(filter, &filterPattern, "pktDuplicatedAckSent")) wrtLlongItm(lang, "\t", "pktDuplicatedAckSent",el->pktDuplicatedAckSent,',');
 	if(checkFilter(filter, &filterPattern, "pktDuplicatedAckRcvd")) wrtLlongItm(lang, "\t", "pktDuplicatedAckRcvd",el->pktDuplicatedAckRcvd,',');
-	if(checkFilter(filter, &filterPattern, "pktBroadcastSent")) wrtLlongItm(lang, "\t", "pktBroadcastSent",    el->pktBroadcastSent,',');
-	if(checkFilter(filter, &filterPattern, "bytesMulticastSent")) wrtLlongItm(lang, "\t", "bytesMulticastSent",  el->bytesMulticastSent,',');
-	if(checkFilter(filter, &filterPattern, "pktMulticastSent")) wrtLlongItm(lang, "\t", "pktMulticastSent",    el->pktMulticastSent,',');
-	if(checkFilter(filter, &filterPattern, "bytesMulticastSent")) wrtLlongItm(lang, "\t", "bytesMulticastSent",  el->bytesMulticastSent,',');
-	if(checkFilter(filter, &filterPattern, "pktMulticastRcvd")) wrtLlongItm(lang, "\t", "pktMulticastRcvd",    el->pktMulticastRcvd,',');
+	if(checkFilter(filter, &filterPattern, "pktBroadcastSent")) wrtLlongItm(lang, "\t", "pktBroadcastSent",  el->pktBroadcastSent,',');
+	if(checkFilter(filter, &filterPattern, "bytesMulticastSent")) wrtLlongItm(lang, "\t", "bytesMulticastSent", el->bytesMulticastSent,',');
+	if(checkFilter(filter, &filterPattern, "pktMulticastSent")) wrtLlongItm(lang, "\t", "pktMulticastSent",  el->pktMulticastSent,',');
+	if(checkFilter(filter, &filterPattern, "bytesMulticastSent")) wrtLlongItm(lang, "\t", "bytesMulticastSent", el->bytesMulticastSent,',');
+	if(checkFilter(filter, &filterPattern, "pktMulticastRcvd")) wrtLlongItm(lang, "\t", "pktMulticastRcvd",  el->pktMulticastRcvd,',');
       }
-      if(checkFilter(filter, &filterPattern, "bytesSent")) wrtLlongItm(lang, "\t", "bytesSent",           el->bytesSent,',');
+      if(checkFilter(filter, &filterPattern, "bytesSent")) wrtLlongItm(lang, "\t", "bytesSent",         el->bytesSent,',');
       if(!shortView) {
-	if(checkFilter(filter, &filterPattern, "bytesSentLoc")) wrtLlongItm(lang, "\t", "bytesSentLoc",    el->bytesSentLoc,',');
-	if(checkFilter(filter, &filterPattern, "bytesSentRem")) wrtLlongItm(lang, "\t", "bytesSentRem",   el->bytesSentRem,',');
+	if(checkFilter(filter, &filterPattern, "bytesSentLoc")) wrtLlongItm(lang, "\t", "bytesSentLoc",  el->bytesSentLoc,',');
+	if(checkFilter(filter, &filterPattern, "bytesSentRem")) wrtLlongItm(lang, "\t", "bytesSentRem", el->bytesSentRem,',');
       }
-      if(checkFilter(filter, &filterPattern, "bytesRcvd")) wrtLlongItm(lang, "\t", "bytesRcvd",       el->bytesRcvd,',');
+      if(checkFilter(filter, &filterPattern, "bytesRcvd")) wrtLlongItm(lang, "\t", "bytesRcvd",     el->bytesRcvd,',');
       if(!shortView) {
 	if(checkFilter(filter, &filterPattern, "bytesRcvdLoc")) wrtLlongItm(lang, "\t", "bytesRcvdLoc", el->bytesRcvdLoc,',');
 	if(checkFilter(filter, &filterPattern, "bytesRcvdFromRem")) wrtLlongItm(lang, "\t", "bytesRcvdFromRem",
 										el->bytesRcvdFromRem,',');
-	if(checkFilter(filter, &filterPattern, "actualRcvdThpt")) wrtFloatItm(lang, "\t", "actualRcvdThpt",    el->actualRcvdThpt,',');
-	if(checkFilter(filter, &filterPattern, "lastHourRcvdThpt")) wrtFloatItm(lang, "\t", "lastHourRcvdThpt",  el->lastHourRcvdThpt,',');
-	if(checkFilter(filter, &filterPattern, "averageRcvdThpt")) wrtFloatItm(lang, "\t", "averageRcvdThpt",   el->averageRcvdThpt,',');
-	if(checkFilter(filter, &filterPattern, "peakRcvdThpt")) wrtFloatItm(lang, "\t", "peakRcvdThpt",      el->peakRcvdThpt,',');
-	if(checkFilter(filter, &filterPattern, "actualSentThpt")) wrtFloatItm(lang, "\t", "actualSentThpt",    el->actualSentThpt,',');
-	if(checkFilter(filter, &filterPattern, "lastHourSentThpt")) wrtFloatItm(lang, "\t", "lastHourSentThpt",  el->lastHourSentThpt,',');
-	if(checkFilter(filter, &filterPattern, "averageSentThpt")) wrtFloatItm(lang, "\t", "averageSentThpt",   el->averageSentThpt,',');
-	if(checkFilter(filter, &filterPattern, "peakSentThpt")) wrtFloatItm(lang, "\t", "peakSentThpt",      el->peakSentThpt,',');
+	if(checkFilter(filter, &filterPattern, "actualRcvdThpt")) wrtFloatItm(lang, "\t", "actualRcvdThpt",  el->actualRcvdThpt,',');
+	if(checkFilter(filter, &filterPattern, "lastHourRcvdThpt")) wrtFloatItm(lang, "\t", "lastHourRcvdThpt", el->lastHourRcvdThpt,',');
+	if(checkFilter(filter, &filterPattern, "averageRcvdThpt")) wrtFloatItm(lang, "\t", "averageRcvdThpt", el->averageRcvdThpt,',');
+	if(checkFilter(filter, &filterPattern, "peakRcvdThpt")) wrtFloatItm(lang, "\t", "peakRcvdThpt",    el->peakRcvdThpt,',');
+	if(checkFilter(filter, &filterPattern, "actualSentThpt")) wrtFloatItm(lang, "\t", "actualSentThpt",  el->actualSentThpt,',');
+	if(checkFilter(filter, &filterPattern, "lastHourSentThpt")) wrtFloatItm(lang, "\t", "lastHourSentThpt", el->lastHourSentThpt,',');
+	if(checkFilter(filter, &filterPattern, "averageSentThpt")) wrtFloatItm(lang, "\t", "averageSentThpt", el->averageSentThpt,',');
+	if(checkFilter(filter, &filterPattern, "peakSentThpt")) wrtFloatItm(lang, "\t", "peakSentThpt",    el->peakSentThpt,',');
 	if(checkFilter(filter, &filterPattern, "actualRcvdPktThpt")) wrtFloatItm(lang, "\t", "actualRcvdPktThpt", el->actualRcvdPktThpt,',');
 	if(checkFilter(filter, &filterPattern, "averageRcvdPktThpt")) wrtFloatItm(lang, "\t", "averageRcvdPktThpt",el->averageRcvdPktThpt,',');
-	if(checkFilter(filter, &filterPattern, "peakRcvdPktThpt")) wrtFloatItm(lang, "\t", "peakRcvdPktThpt",   el->peakRcvdPktThpt,',');
+	if(checkFilter(filter, &filterPattern, "peakRcvdPktThpt")) wrtFloatItm(lang, "\t", "peakRcvdPktThpt", el->peakRcvdPktThpt,',');
 	if(checkFilter(filter, &filterPattern, "actualSentPktThpt")) wrtFloatItm(lang, "\t", "actualSentPktThpt", el->actualSentPktThpt,',');
 	if(checkFilter(filter, &filterPattern, "averageSentPktThpt")) wrtFloatItm(lang, "\t", "averageSentPktThpt", el->averageSentPktThpt,',');
       }
@@ -402,16 +404,16 @@ void dumpNtopHashes(char* options, int actualDeviceId) {
 	if(checkFilter(filter, &filterPattern, "udpSentLoc")) wrtLlongItm(lang, "\t", "udpSentLoc", el->udpSentLoc,',');
 	if(checkFilter(filter, &filterPattern, "udpSentRem")) wrtLlongItm(lang, "\t", "udpSentRem", el->udpSentRem,',');
 
-      if(checkFilter(filter, &filterPattern, "icmpSent")) wrtLlongItm(lang, "\t", "icmpSent",          el->icmpSent,',');      
-	if(checkFilter(filter, &filterPattern, "ospfSent")) wrtLlongItm(lang, "\t", "ospfSent",          el->ospfSent,',');
-	if(checkFilter(filter, &filterPattern, "igmpSent")) wrtLlongItm(lang, "\t", "igmpSent",          el->igmpSent,',');
+      if(checkFilter(filter, &filterPattern, "icmpSent")) wrtLlongItm(lang, "\t", "icmpSent",        el->icmpSent,',');
+	if(checkFilter(filter, &filterPattern, "ospfSent")) wrtLlongItm(lang, "\t", "ospfSent",        el->ospfSent,',');
+	if(checkFilter(filter, &filterPattern, "igmpSent")) wrtLlongItm(lang, "\t", "igmpSent",        el->igmpSent,',');
 	if(checkFilter(filter, &filterPattern, "tcpRcvdLoc")) wrtLlongItm(lang, "\t", "tcpRcvdLoc",el->tcpRcvdLoc,',');
 	if(checkFilter(filter, &filterPattern, "tcpRcvdFromRem")) wrtLlongItm(lang, "\t", "tcpRcvdFromRem",el->tcpRcvdFromRem,',');
 	if(checkFilter(filter, &filterPattern, "udpRcvdLoc")) wrtLlongItm(lang, "\t", "udpRcvdLoc",el->udpRcvdLoc,',');
 	if(checkFilter(filter, &filterPattern, "udpRcvdFromRem")) wrtLlongItm(lang, "\t", "udpRcvdFromRem",el->udpRcvdFromRem,',');
-	if(checkFilter(filter, &filterPattern, "icmpRcvd")) wrtLlongItm(lang, "\t", "icmpRcvd",      el->icmpRcvd,',');
-	if(checkFilter(filter, &filterPattern, "ospfRcvd")) wrtLlongItm(lang, "\t", "ospfRcvd",      el->ospfRcvd,',');
-	if(checkFilter(filter, &filterPattern, "igmpRcvd")) wrtLlongItm(lang, "\t", "igmpRcvd",      el->igmpRcvd,',');
+	if(checkFilter(filter, &filterPattern, "icmpRcvd")) wrtLlongItm(lang, "\t", "icmpRcvd",    el->icmpRcvd,',');
+	if(checkFilter(filter, &filterPattern, "ospfRcvd")) wrtLlongItm(lang, "\t", "ospfRcvd",    el->ospfRcvd,',');
+	if(checkFilter(filter, &filterPattern, "igmpRcvd")) wrtLlongItm(lang, "\t", "igmpRcvd",    el->igmpRcvd,',');
 
       /* ***************************** */
 
@@ -424,30 +426,30 @@ void dumpNtopHashes(char* options, int actualDeviceId) {
 
 	/* ***************************** */
 
-	if(checkFilter(filter, &filterPattern, "stpSent")) wrtLlongItm(lang, "\t", "stpSent",          el->stpSent,',');
-	if(checkFilter(filter, &filterPattern, "stpRcvd")) wrtLlongItm(lang, "\t", "stpRcvd",      el->stpRcvd,',');
-	if(checkFilter(filter, &filterPattern, "ipxSent")) wrtLlongItm(lang, "\t", "ipxSent",          el->ipxSent,',');
-	if(checkFilter(filter, &filterPattern, "ipxRcvd")) wrtLlongItm(lang, "\t", "ipxRcvd",      el->ipxRcvd,',');
-	if(checkFilter(filter, &filterPattern, "osiSent")) wrtLlongItm(lang, "\t", "osiSent",          el->osiSent,',');
-	if(checkFilter(filter, &filterPattern, "osiRcvd")) wrtLlongItm(lang, "\t", "osiRcvd",      el->osiRcvd,',');
-	if(checkFilter(filter, &filterPattern, "dlcSent")) wrtLlongItm(lang, "\t", "dlcSent",          el->dlcSent,',');
-	if(checkFilter(filter, &filterPattern, "dlcRcvd")) wrtLlongItm(lang, "\t", "dlcRcvd",      el->dlcRcvd,',');
+	if(checkFilter(filter, &filterPattern, "stpSent")) wrtLlongItm(lang, "\t", "stpSent",        el->stpSent,',');
+	if(checkFilter(filter, &filterPattern, "stpRcvd")) wrtLlongItm(lang, "\t", "stpRcvd",    el->stpRcvd,',');
+	if(checkFilter(filter, &filterPattern, "ipxSent")) wrtLlongItm(lang, "\t", "ipxSent",        el->ipxSent,',');
+	if(checkFilter(filter, &filterPattern, "ipxRcvd")) wrtLlongItm(lang, "\t", "ipxRcvd",    el->ipxRcvd,',');
+	if(checkFilter(filter, &filterPattern, "osiSent")) wrtLlongItm(lang, "\t", "osiSent",        el->osiSent,',');
+	if(checkFilter(filter, &filterPattern, "osiRcvd")) wrtLlongItm(lang, "\t", "osiRcvd",    el->osiRcvd,',');
+	if(checkFilter(filter, &filterPattern, "dlcSent")) wrtLlongItm(lang, "\t", "dlcSent",        el->dlcSent,',');
+	if(checkFilter(filter, &filterPattern, "dlcRcvd")) wrtLlongItm(lang, "\t", "dlcRcvd",    el->dlcRcvd,',');
 
-	if(checkFilter(filter, &filterPattern, "arp_rarpSent")) wrtLlongItm(lang, "\t", "arp_rarpSent",     el->arp_rarpSent,',');
+	if(checkFilter(filter, &filterPattern, "arp_rarpSent")) wrtLlongItm(lang, "\t", "arp_rarpSent",   el->arp_rarpSent,',');
 	if(checkFilter(filter, &filterPattern, "arp_rarpRcvd")) wrtLlongItm(lang, "\t", "arp_rarpRcvd", el->arp_rarpRcvd,',');
-	if(checkFilter(filter, &filterPattern, "arpReqPktsSent")) wrtLlongItm(lang, "\t", "arpReqPktsSent",   el->arpReqPktsSent,',');
+	if(checkFilter(filter, &filterPattern, "arpReqPktsSent")) wrtLlongItm(lang, "\t", "arpReqPktsSent", el->arpReqPktsSent,',');
 	if(checkFilter(filter, &filterPattern, "arpReplyPktsSent")) wrtLlongItm(lang, "\t", "arpReplyPktsSent", el->arpReplyPktsSent,',');
 	if(checkFilter(filter, &filterPattern, "arpReplyPktsRcvd")) wrtLlongItm(lang, "\t", "arpReplyPktsRcvd", el->arpReplyPktsRcvd,',');
-	if(checkFilter(filter, &filterPattern, "decnetSent")) wrtLlongItm(lang, "\t", "decnetSent",       el->decnetSent,',');
-	if(checkFilter(filter, &filterPattern, "decnetRcvd")) wrtLlongItm(lang, "\t", "decnetRcvd",   el->decnetRcvd,',');
-	if(checkFilter(filter, &filterPattern, "appletalkSent")) wrtLlongItm(lang, "\t", "appletalkSent",    el->appletalkSent,',');
+	if(checkFilter(filter, &filterPattern, "decnetSent")) wrtLlongItm(lang, "\t", "decnetSent",     el->decnetSent,',');
+	if(checkFilter(filter, &filterPattern, "decnetRcvd")) wrtLlongItm(lang, "\t", "decnetRcvd", el->decnetRcvd,',');
+	if(checkFilter(filter, &filterPattern, "appletalkSent")) wrtLlongItm(lang, "\t", "appletalkSent",  el->appletalkSent,',');
 	if(checkFilter(filter, &filterPattern, "appletalkRcvd")) wrtLlongItm(lang, "\t", "appletalkRcvd",el->appletalkRcvd,',');
-	if(checkFilter(filter, &filterPattern, "netbiosSent")) wrtLlongItm(lang, "\t", "netbiosSent",      el->netbiosSent,',');
-	if(checkFilter(filter, &filterPattern, "netbiosRcvd")) wrtLlongItm(lang, "\t", "netbiosRcvd",  el->netbiosRcvd,',');
-	if(checkFilter(filter, &filterPattern, "qnxSent")) wrtLlongItm(lang, "\t", "qnxSent",          el->qnxSent,',');
-	if(checkFilter(filter, &filterPattern, "qnxRcvd")) wrtLlongItm(lang, "\t", "qnxRcvd",      el->qnxRcvd,',');
-	if(checkFilter(filter, &filterPattern, "otherSent")) wrtLlongItm(lang, "\t", "otherSent",        el->otherSent,',');
-	if(checkFilter(filter, &filterPattern, "otherRcvd")) wrtLlongItm(lang, "\t", "otherRcvd",    el->otherRcvd,',');
+	if(checkFilter(filter, &filterPattern, "netbiosSent")) wrtLlongItm(lang, "\t", "netbiosSent",    el->netbiosSent,',');
+	if(checkFilter(filter, &filterPattern, "netbiosRcvd")) wrtLlongItm(lang, "\t", "netbiosRcvd", el->netbiosRcvd,',');
+	if(checkFilter(filter, &filterPattern, "qnxSent")) wrtLlongItm(lang, "\t", "qnxSent",        el->qnxSent,',');
+	if(checkFilter(filter, &filterPattern, "qnxRcvd")) wrtLlongItm(lang, "\t", "qnxRcvd",    el->qnxRcvd,',');
+	if(checkFilter(filter, &filterPattern, "otherSent")) wrtLlongItm(lang, "\t", "otherSent",      el->otherSent,',');
+	if(checkFilter(filter, &filterPattern, "otherRcvd")) wrtLlongItm(lang, "\t", "otherRcvd",  el->otherRcvd,',');
 
       /* ********************************* */
 
@@ -676,7 +678,7 @@ void dumpNtopHashes(char* options, int actualDeviceId) {
 	}
 
       /* ***************************** */
-	
+
 	if(checkFilter(filter, &filterPattern, "ethAddressString"))
 	  wrtStrItm(lang, "\t", "ethAddressString",el->ethAddressString,' ');
       } /* shortView */
@@ -834,21 +836,21 @@ void dumpNtopTrafficInfo(char* options) {
 
       snprintf(localbuf, sizeof(localbuf), "%s",
 	       _intoa(myGlobals.device[i].network, intoabuf, sizeof(intoabuf)));
-      if(checkFilter(filter, &filterPattern, "network")) wrtStrItm(lang, "\t", "network",  localbuf,',');
+      if(checkFilter(filter, &filterPattern, "network")) wrtStrItm(lang, "\t", "network", localbuf,',');
       snprintf(localbuf, sizeof(localbuf), "%s",
 	       _intoa(myGlobals.device[i].netmask, intoabuf, sizeof(intoabuf)));
       if(checkFilter(filter, &filterPattern, "netmask")) wrtStrItm(lang, "\t", "netmask", localbuf,',');
       snprintf(localbuf, sizeof(localbuf), "%s",
 	       _intoa(myGlobals.device[i].ifAddr, intoabuf, sizeof(intoabuf)));
-      if(checkFilter(filter, &filterPattern, "ifAddr")) wrtStrItm(lang, "\t", "ifAddr",  localbuf,',');
+      if(checkFilter(filter, &filterPattern, "ifAddr")) wrtStrItm(lang, "\t", "ifAddr", localbuf,',');
 
-      if(checkFilter(filter, &filterPattern, "started")) wrtTime_tItm(lang, "\t", "started",  myGlobals.device[i].started,' ');
+      if(checkFilter(filter, &filterPattern, "started")) wrtTime_tItm(lang, "\t", "started", myGlobals.device[i].started,' ');
       if(checkFilter(filter, &filterPattern, "firstpkt")) wrtTime_tItm(lang, "\t", "firstpkt", myGlobals.device[i].firstpkt,' ');
-      if(checkFilter(filter, &filterPattern, "lastpkt")) wrtTime_tItm(lang, "\t", "lastpkt",  myGlobals.device[i].lastpkt,' ');
+      if(checkFilter(filter, &filterPattern, "lastpkt")) wrtTime_tItm(lang, "\t", "lastpkt", myGlobals.device[i].lastpkt,' ');
       if(checkFilter(filter, &filterPattern, "virtualDevice")) wrtIntItm(lang, "\t", "virtualDevice",(int)myGlobals.device[i].virtualDevice,',');
-      if(checkFilter(filter, &filterPattern, "snaplen")) wrtIntItm(lang, "\t", "snaplen",  myGlobals.device[i].snaplen,',');
+      if(checkFilter(filter, &filterPattern, "snaplen")) wrtIntItm(lang, "\t", "snaplen", myGlobals.device[i].snaplen,',');
       if(checkFilter(filter, &filterPattern, "datalink")) wrtIntItm(lang, "\t", "datalink", myGlobals.device[i].datalink,',');
-      if(checkFilter(filter, &filterPattern, "filter")) wrtStrItm(lang, "\t", "filter",   myGlobals.device[i].filter ? myGlobals.device[i].filter : "",',');
+      if(checkFilter(filter, &filterPattern, "filter")) wrtStrItm(lang, "\t", "filter", myGlobals.device[i].filter ? myGlobals.device[i].filter : "",',');
       if(checkFilter(filter, &filterPattern, "droppedPkts")) wrtLlongItm(lang, "\t", "droppedPkts",myGlobals.device[i].droppedPkts,',');
     }
 

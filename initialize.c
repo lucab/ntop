@@ -466,7 +466,6 @@ void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
   if(myGlobals.daemonMode)
     daemonize();
 #endif
-
 }
 
 /* ******************************* */
@@ -572,7 +571,7 @@ void initGdbm(void) {
  * c) collect data
  * d) display/emitt information
  */
-void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
+void initThreads() {
   int i;
 
 #ifdef MULTITHREADED
@@ -617,7 +616,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   /*
    * Create the thread (3) - TU - Throughput Update - optional
    */
-  if (enableThUpdate) {
+  if (myGlobals.enableThUpdate) {
     createThread(&myGlobals.thptUpdateThreadId, updateThptLoop, NULL);
     traceEvent(TRACE_INFO, "Started thread (%ld) for throughput update.", myGlobals.thptUpdateThreadId);
   }
@@ -625,7 +624,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   /*
    * Create the thread (4) - SIH - Scan Idle Hosts - optional
    */
-  if (enableIdleHosts && (myGlobals.rFileName == NULL)) {
+  if (myGlobals.enableIdleHosts && (myGlobals.rFileName == NULL)) {
     createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
     traceEvent(TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
 	       myGlobals.scanIdleThreadId);
@@ -635,7 +634,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   /*
    * Create the thread (5) - DBU - DB Update - optional
    */
-  if (enableDBsupport) {
+  if (myGlobals.enableDBsupport) {
     createThread(&myGlobals.dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
     traceEvent(TRACE_INFO, "Started thread (%ld) for DB update.\n", myGlobals.dbUpdateThreadId);
   }
