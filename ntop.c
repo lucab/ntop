@@ -562,15 +562,25 @@ int mapGlobalToLocalIdx(int port) {
 /* **************************************** */
 
 static void purgeIpPorts(int theDevice) {
-  char marker[TOP_IP_PORT];
+  char *marker;
   HostTraffic *el;
   int i;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Calling purgeIpPorts(%d)", theDevice);
 #endif
+  
+  /* **********************************
 
-  memset(marker, 0, sizeof(marker));
+  marker used to be defined ad char marker[TOP_IP_PORT];
+  Unfortunately under FreeBSD this caused a core dump.
+  Probably because the amount of memory allocated on the
+  heap was too much. With dynamic memory allocation
+  the problem is gone.
+
+  ********************************** */
+
+  marker = (char*)calloc(1, TOP_IP_PORT);
   
   for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {
     int k;
@@ -608,6 +618,7 @@ static void purgeIpPorts(int theDevice) {
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
+  free(marker);
 }
 
 /* **************************************** */
