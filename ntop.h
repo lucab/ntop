@@ -605,6 +605,17 @@ typedef struct conditionalVariable {
 } ConditionalVariable;
 # endif /* WIN32 */
 
+typedef struct pthreadMutex {
+  pthread_mutex_t mutex;
+  char isLocked;
+  char lockFile[64];
+  int  lockLine;
+
+  time_t lockTime;
+  char   maxLockedDurationUnlockFile[64];
+  int    maxLockedDurationUnlockLine;
+  int    maxLockedDuration;
+} PthreadMutex;
 
 typedef struct packetInformation {
   unsigned short deviceId;
@@ -1759,10 +1770,10 @@ struct pbuf {
 /* **************************** */
 
 /* Timedout sessions are scanned each SESSION_SCAN_DELAY seconds */
-#define SESSION_SCAN_DELAY        60     /* 60 secs */
+#define SESSION_SCAN_DELAY        60        /* 60 secs */
 
 /* This is the 2MSL timeout as defined in the TCP standard (RFC 761) */
-#define TWO_MSL_TIMEOUT          120     /* 2 minutes */
+#define TWO_MSL_TIMEOUT          120        /* 2 minutes */
 #define DOUBLE_TWO_MSL_TIMEOUT   (2*TWO_MSL_TIMEOUT)
 
 #define IDLE_HOST_PURGE_TIMEOUT  1*60*60    /*  1 hours   */

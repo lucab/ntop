@@ -54,13 +54,13 @@ extern short capturePackets, endNtop;
 /* Multithreading */
 #ifdef MULTITHREADED
 extern unsigned short numThreads;
-extern pthread_mutex_t packetQueueMutex, hostsHashMutex, graphMutex;
-extern pthread_mutex_t lsofMutex, addressResolutionMutex, hashResizeMutex;
+extern PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
+extern PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
 extern pthread_t dequeueThreadId, handleWebConnectionsThreadId;
 extern pthread_t thptUpdateThreadId, scanIdleThreadId;
 extern pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 #ifdef HAVE_GDBM_H
-extern pthread_mutex_t gdbmMutex;
+extern PthreadMutex gdbmMutex;
 #endif
 
 #ifdef USE_SEMAPHORES
@@ -77,7 +77,7 @@ extern ConditionalVariable queueAddressCondvar;
 #ifdef ASYNC_ADDRESS_RESOLUTION
 extern pthread_t dequeueAddressThreadId;
 extern TrafficCounter droppedAddresses;
-extern pthread_mutex_t addressQueueMutex;
+extern PthreadMutex addressQueueMutex;
 #endif
 #endif
 extern u_long numResolvedWithDNSAddresses, numKeptNumericAddresses, 
@@ -396,15 +396,15 @@ extern void fillDomainName(HostTraffic *el);
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
                         char* userParm);
 extern void killThread(pthread_t *threadId);
-extern int createMutex(pthread_mutex_t *mutexId);
-extern void deleteMutex(pthread_mutex_t *mutexId);
-extern int _accessMutex(pthread_mutex_t *mutexId, char* where,
+extern int createMutex(PthreadMutex *mutexId);
+extern void deleteMutex(PthreadMutex *mutexId);
+extern int _accessMutex(PthreadMutex *mutexId, char* where,
                         char* fileName, int fileLine);
-extern int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
+extern int _tryLockMutex(PthreadMutex *mutexId, char* where,
                          char* fileName, int fileLine);
-extern int _isMutexLocked(pthread_mutex_t *mutexId,
+extern int _isMutexLocked(PthreadMutex *mutexId,
                          char* fileName, int fileLine);
-extern int _releaseMutex(pthread_mutex_t *mutexId,
+extern int _releaseMutex(PthreadMutex *mutexId,
                          char* fileName, int fileLine);
 extern int createCondvar(ConditionalVariable *condvarId);
 extern void deleteCondvar(ConditionalVariable *condvarId);

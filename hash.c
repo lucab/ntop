@@ -1093,8 +1093,15 @@ void freeHostInstances(void) {
 void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   u_int idx, numFreedBuckets=0, freeEntry=0;
   time_t startTime = time(NULL);
+  static time_t lastPurgeTime = 0;
 
-  traceEvent(TRACE_INFO, "Purging Idle Hosts...");
+  if(startTime < (lastPurgeTime+(SESSION_SCAN_DELAY/2)))
+     return; /* Too short */
+  else
+    lastPurgeTime = startTime;
+
+  traceEvent(TRACE_INFO, "Purging Idle Hosts... (ignoreIdleTime=%d, actDevice=%d)",
+	     ignoreIdleTime, actDevice);
 
 #ifdef MULTITHREADED
   accessMutex(&hostsHashMutex, "scanIdleLoop");

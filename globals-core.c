@@ -64,14 +64,14 @@ short endNtop;
 /* Multithreading */
 #ifdef MULTITHREADED
 unsigned short numThreads;
-pthread_mutex_t packetQueueMutex, hostsHashMutex, graphMutex;
-pthread_mutex_t lsofMutex, addressResolutionMutex, hashResizeMutex;
+PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
+PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
 
 pthread_t dequeueThreadId, handleWebConnectionsThreadId;
 pthread_t thptUpdateThreadId, scanIdleThreadId;
 pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 #ifdef HAVE_GDBM_H
-pthread_mutex_t gdbmMutex;
+PthreadMutex gdbmMutex;
 #endif /* HAVE_GDBM_H */
 #ifdef USE_SEMAPHORES
 sem_t queueSem;
@@ -87,7 +87,7 @@ ConditionalVariable queueAddressCondvar;
 #ifdef ASYNC_ADDRESS_RESOLUTION
 pthread_t dequeueAddressThreadId;
 TrafficCounter droppedAddresses;
-pthread_mutex_t addressQueueMutex;
+PthreadMutex addressQueueMutex;
 #endif
 #endif
 

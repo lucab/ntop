@@ -259,21 +259,21 @@ void killThread(pthread_t *threadId) {
 
 /* ************************************ */
 
-int createMutex(pthread_mutex_t *mutexId) {
+int createMutex(PthreadMutex *mutexId) {
   (*mutexId) = CreateMutex(NULL, FALSE, NULL);
   return(1);
 }
 
 /* ************************************ */
 
-void deleteMutex(pthread_mutex_t *mutexId) {
+void deleteMutex(PthreadMutex *mutexId) {
   ReleaseMutex(*mutexId);
   CloseHandle(*mutexId);
 }
 
 /* ************************************ */
 
-int _accessMutex(pthread_mutex_t *mutexId, char* where, 
+int _accessMutex(PthreadMutex *mutexId, char* where, 
 		 char* fileName, int fileLine) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n", 
@@ -286,7 +286,7 @@ int _accessMutex(pthread_mutex_t *mutexId, char* where,
 
 /* ************************************ */
 
-int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
+int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
@@ -302,7 +302,7 @@ int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
 
 /* ************************************ */
 
-int _releaseMutex(pthread_mutex_t *mutexId, 
+int _releaseMutex(PthreadMutex *mutexId, 
 		  char* fileName, int fileLine) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n", 

@@ -849,8 +849,12 @@ void killThread(pthread_t *threadId) {
 
 /* ************************************ */
 
-int createMutex(pthread_mutex_t *mutexId) {
-  int rc = pthread_mutex_init(mutexId, NULL);
+int createMutex(PthreadMutex *mutexId) {  
+  int rc;
+
+  memset(mutexId, 0, sizeof(PthreadMutex));
+
+  rc = pthread_mutex_init(&(mutexId->mutex), NULL);
 
 #ifdef PTHREAD_MUTEX_ERRORCHECK_NP
   /* *************************************************
@@ -870,43 +874,52 @@ int createMutex(pthread_mutex_t *mutexId) {
      Andreas Pfaeller <a.pfaller@pop.gun.de>
 
      ************************************************* */
-  pthread_mutexattr_settype (mutexId, PTHREAD_MUTEX_ERRORCHECK_NP);
+  pthread_mutexattr_settype (&(mutexId->mutex), PTHREAD_MUTEX_ERRORCHECK_NP);
 #endif /* PTHREAD_MUTEX_ERRORCHECK_NP */
   return(rc);
 }
 
 /* ************************************ */
 
-void deleteMutex(pthread_mutex_t *mutexId) {
-  pthread_mutex_unlock(mutexId);
-  pthread_mutex_destroy(mutexId);
+void deleteMutex(PthreadMutex *mutexId) {
+  pthread_mutex_unlock(&(mutexId->mutex));
+  pthread_mutex_destroy(&(mutexId->mutex));
 }
 
 /* ************************************ */
 
-int _accessMutex(pthread_mutex_t *mutexId, char* where,
+int _accessMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
   int rc;
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
-	     mutexId, where, fileName, fileLine);
+	     &(mutexId->mutex), where, fileName, fileLine);
 #endif
-  rc = pthread_mutex_lock(mutexId);
+  rc = pthread_mutex_lock(&(mutexId->mutex));
 
   if(rc != 0)
     traceEvent(TRACE_ERROR, "ERROR: lock failed 0x%X [%s:%d] (rc=%d)\n",
-	       mutexId, fileName, fileLine, rc);
-  
+	       &(mutexId->mutex), fileName, fileLine, rc);
+  else {
+    /* traceEvent(TRACE_ERROR, "LOCKED 0x%X", &(mutexId->mutex)); */
+    mutexId->isLocked = 1;
+    mutexId->lockTime = time(NULL);
+    if(fileName != NULL) {
+      strcpy(mutexId->lockFile, fileName);
+      mutexId->lockLine = fileLine;
+    }
+  }
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Locked 0x%X @ %s [%s:%d]\n",
-	     mutexId, where, fileName, fileLine);
+	     &(mutexId->mutex), where, fileName, fileLine);
 #endif
   return(rc);
 }
 
 /* ************************************ */
 
-int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
+int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		  char* fileName, int fileLine) {
   int rc;
   
@@ -921,26 +934,35 @@ int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
      0:    lock succesful
      EBUSY (mutex already locked)
   */  
-  rc = pthread_mutex_trylock(mutexId);
+  rc = pthread_mutex_trylock(&(mutexId->mutex));
 
   if(rc != 0)
     traceEvent(TRACE_ERROR, "ERROR: tryLockMutex failed 0x%X [%s:%d] (rc=%d)\n",
-	       mutexId, fileName, fileLine, rc);
-     
-   return(rc);
+	       &(mutexId->mutex), fileName, fileLine, rc);
+  else {
+    /* traceEvent(TRACE_ERROR, "LOCKED 0x%X", &(mutexId->mutex)); */
+    mutexId->isLocked = 1;
+    mutexId->lockTime = time(NULL);
+    if(fileName != NULL) {
+      strcpy(mutexId->lockFile, fileName);
+      mutexId->lockLine = fileLine;
+    }
+  }
+
+  return(rc);
 }
 
 /* ************************************ */
 
-int _isMutexLocked(pthread_mutex_t *mutexId, char* fileName, int fileLine) {
+int _isMutexLocked(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
   
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Checking whether 0x%X is locked [%s:%d]\n",
-	     mutexId, fileName, fileLine);
+	     &(mutexId->mutex), fileName, fileLine);
 #endif
 
-  rc = pthread_mutex_trylock(mutexId);
+  rc = pthread_mutex_trylock(&(mutexId->mutex));
 
   /*
      Return code:
@@ -950,7 +972,7 @@ int _isMutexLocked(pthread_mutex_t *mutexId, char* fileName, int fileLine) {
   */
 
   if(rc == 0) {
-    pthread_mutex_unlock(mutexId);
+    pthread_mutex_unlock(&(mutexId->mutex));
     return(0);
   } else
     return(1);
@@ -958,23 +980,43 @@ int _isMutexLocked(pthread_mutex_t *mutexId, char* fileName, int fileLine) {
 
 /* ************************************ */
 
-int _releaseMutex(pthread_mutex_t *mutexId,
+int _releaseMutex(PthreadMutex *mutexId,
 		  char* fileName, int fileLine) {
   int rc;
   
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
-	     mutexId, fileName, fileLine);
+	     &(mutexId->mutex), fileName, fileLine);
 #endif
-  rc = pthread_mutex_unlock(mutexId);
+  rc = pthread_mutex_unlock(&(mutexId->mutex));
 
   if(rc != 0)
     traceEvent(TRACE_ERROR, "ERROR: unlock failed 0x%X [%s:%d] (rc=%d)\n",
-	       mutexId, fileName, fileLine, rc);
-  
+	       &(mutexId->mutex), fileName, fileLine, rc);
+  else {
+    time_t lockDuration = time(NULL) - mutexId->lockTime;
+
+    if((mutexId->maxLockedDuration < lockDuration) 
+       || (mutexId->maxLockedDurationUnlockLine == 0 /* Never set */)) {
+      mutexId->maxLockedDuration = lockDuration;
+      
+      if(fileName != NULL) {
+	strcpy(mutexId->maxLockedDurationUnlockFile, fileName);
+	mutexId->maxLockedDurationUnlockLine = fileLine;
+      }      
+      
+      traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
+		 &(mutexId->mutex), fileName, fileLine, 
+		 mutexId->maxLockedDuration);
+   }
+
+    /* traceEvent(TRACE_ERROR, "UNLOCKED 0x%X", &(mutexId->mutex));  */
+    mutexId->isLocked = 0;
+  }
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Unlocked 0x%X [%s:%d]\n",
-	     mutexId, fileName, fileLine);
+	     &(mutexId->mutex), fileName, fileLine);
 #endif
   return(rc);
 }

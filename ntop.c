@@ -51,21 +51,35 @@ static int enableDBsupport=0;
 
 /* *************************** */
 
+#ifdef MULTITHREADED
+static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {  
+
+  traceEvent(TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%d sec)]", 
+	     mutexName,
+	     mutexId->isLocked ? "*locked*" : "unlocked",
+	     mutexId->lockFile, mutexId->lockLine,
+	     mutexId->maxLockedDurationUnlockFile,
+	     mutexId->maxLockedDurationUnlockLine,
+	     mutexId->maxLockedDuration);  
+}
+#endif
+
 #ifndef WIN32
 void handleSigHup(int signalId _UNUSED_) {
 #ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "========================================");
-  traceEvent(TRACE_INFO, "gdbmMutex is %s", isMutexLocked(&gdbmMutex) ? "*locked*" : "unlocked");
-  traceEvent(TRACE_INFO, "packetQueueMutex is %s", isMutexLocked(&packetQueueMutex) ? "*locked*" : "unlocked");
-  traceEvent(TRACE_INFO, "addressResolutionMutex is %s", isMutexLocked(&addressResolutionMutex) ? "*locked*" : "unlocked");
-  traceEvent(TRACE_INFO, "hashResizeMutex is %s", isMutexLocked(&hashResizeMutex) ? "*locked*" : "unlocked");
+   printMutexInfo(&gdbmMutex, "gdbmMutex");
+   printMutexInfo(&packetQueueMutex, "packetQueueMutex");
+   printMutexInfo(&addressResolutionMutex, "addressResolutionMutex");
+   printMutexInfo(&hashResizeMutex, "hashResizeMutex");
+
   if(isLsofPresent)
-    traceEvent(TRACE_INFO, "lsofMutex is %s", isMutexLocked(&lsofMutex) ? "*locked*" : "unlocked");
-  traceEvent(TRACE_INFO, "hostsHashMutex is %s", isMutexLocked(&hostsHashMutex) ? "*locked*" : "unlocked");
-  traceEvent(TRACE_INFO, "graphMutex is %s", isMutexLocked(&graphMutex) ? "*locked*" : "unlocked");
+     printMutexInfo(&lsofMutex, "lsofMutex");
+   printMutexInfo(&hostsHashMutex, "hostsHashMutex");
+   printMutexInfo(&graphMutex, "graphMutex");
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(numericFlag == 0)
-    traceEvent(TRACE_INFO, "addressQueueMutex is %s", isMutexLocked(&addressQueueMutex) ? "*locked*" : "unlocked");
+     printMutexInfo(&addressQueueMutex, "addressQueueMutex");
 #endif
   traceEvent(TRACE_INFO, "========================================");
 #endif /* MULTITHREADED */
