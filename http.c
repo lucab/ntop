@@ -1295,7 +1295,13 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
 
-    if(!myGlobals.debugMode) {
+    if((!myGlobals.debugMode) 
+       && (!myGlobals.largeNetwork) /*
+				      On a large network we probably use a lot of memory
+				      so a fork() will require even more memory and this
+				      is not what we want
+				    */       
+       ) {
       handleDiedChild(0); /*
 			     Workaround because on this OpenBSD and
 			     other platforms signal handling is broken as the system
