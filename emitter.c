@@ -645,10 +645,10 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
     if(checkFilter(filter, "pktRcvd"))
       wrtLlongItm(fDescr, lang, "\t", "pktRcvd", el->pktRcvd, ',', numEntries);
 
-    if(checkFilter(filter, "bytesSent"))
-      wrtLlongItm(fDescr, lang, "\t", "bytesSent", el->ipBytesSent, ',', numEntries);
-    if(checkFilter(filter, "bytesRcvd"))
-      wrtLlongItm(fDescr, lang, "\t", "bytesRcvd", el->ipBytesRcvd, ',', numEntries);
+    if(checkFilter(filter, "ipBytesSent"))
+      wrtLlongItm(fDescr, lang, "\t", "ipBytesSent", el->ipBytesSent, ',', numEntries);
+    if(checkFilter(filter, "ipBytesRcvd"))
+      wrtLlongItm(fDescr, lang, "\t", "ipBytesRcvd", el->ipBytesRcvd, ',', numEntries);
 
     /* *************************************** */
 
