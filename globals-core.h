@@ -59,7 +59,8 @@ extern char *version, *osName, *author, *buildDate, *configureDate,
 #endif
             *distro,
             *release,
-            *install_path;
+            *install_path,
+            *force_runtime;
 
 /* util.c */
 #ifndef HAVE_GETOPT_H

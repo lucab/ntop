@@ -952,6 +952,17 @@ int main(int argc, char *argv[]) {
   if(snprintf(cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]) < 0)
       BufferTooShort();
 
+  /*
+   * Prepend FORCE_RUNTIME_PARM from configureextra 
+   */
+  if((force_runtime != NULL) &&
+     (force_runtime[0] != '\0')) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Run time parameter %s forced via configureextra",
+               force_runtime);
+    strncat(cmdLineBuffer, force_runtime, (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+    strncat(cmdLineBuffer, " ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+  }
+
   /* Now we process the parameter list, looking for a @filename
    *   We have to special case a few things --- since the OS processing removes "s
    *     --filter-expression "host a.b.c.d" becomes

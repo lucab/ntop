@@ -50,7 +50,7 @@ AC_INIT([ntop],[3.0pre2])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.0pre2-001-2004-03-03"
+SCRIPTVER="v3.0pre2-002-2004-03-08"
 
 dnl>
 dnl> generate the config header
@@ -3003,6 +3003,7 @@ echo "/*i18n*/" >>version.c
 echo ${LOCALEDIR} | sed -e 's/.*/char * locale_dir   = "&";/' >> version.c
 echo ${DISTRO} | sed -e 's/.*/char * distro   = "&";/' >> version.c
 echo ${RELEASE} | sed -e 's/.*/char * release   = "&";/' >> version.c
+echo ${FORCE_RUNTIME_PARM} | sed -e 's/.*/char * force_runtime   = "&";/' >> version.c
 
 case "${host}" in
     *darwin* )

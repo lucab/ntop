@@ -1330,7 +1330,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v3.0pre2-001-2004-03-03"
+SCRIPTVER="v3.0pre2-002-2004-03-08"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -27009,6 +27009,7 @@ echo "/*i18n*/" >>version.c
 echo ${LOCALEDIR} | sed -e 's/.*/char * locale_dir   = "&";/' >> version.c
 echo ${DISTRO} | sed -e 's/.*/char * distro   = "&";/' >> version.c
 echo ${RELEASE} | sed -e 's/.*/char * release   = "&";/' >> version.c
+echo ${FORCE_RUNTIME_PARM} | sed -e 's/.*/char * force_runtime   = "&";/' >> version.c
 
 case "${host}" in
     *darwin* )

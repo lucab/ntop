@@ -46,7 +46,8 @@ char *version, *osName, *author, *buildDate, *configureDate,
 #ifdef MAKE_WITH_I18N
             *locale_dir,
 #endif
-            *install_path;
+            *install_path,
+            *force_runtime;
 #endif
 
 static u_short _mtuSize[MAX_DLT_ARRAY];
@@ -498,12 +499,12 @@ void initNtopGlobals(int argc, char * argv[]) {
   memset(startedAs, 0, (size_t) bufLen);
   for (i=0; i<argc; i++) {
     if (argv[i] != NULL) {
-      strncat(startedAs, argv[i], (sizeof(startedAs) - strlen(startedAs) - 1));
-      strncat(startedAs, " ", (sizeof(startedAs) - strlen(startedAs) - 1));
+      strncat(startedAs, argv[i], (bufLen - strlen(startedAs) - 1));
+      strncat(startedAs, " ", (bufLen - strlen(startedAs) - 1));
     }
   }
 
-  myGlobals.startedAs = startedAs;
+  myGlobals.startedAs = strdup(startedAs);
 
   /* FC & SCSI-specific stuff */
   myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;
