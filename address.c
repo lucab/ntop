@@ -129,8 +129,11 @@ static void resolveAddress(char* symAddr,
 #ifdef MULTITHREADED
     releaseMutex(&addressResolutionMutex);
 #endif
-
     updateHostNameInfo(addr, data_data.dptr);
+#ifdef HAVE_MYSQL
+    traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostNameInfo");
+    mySQLupdateHostNameInfo(addr, data_data.dptr);
+#endif
     free(data_data.dptr);
     numResolvedOnCacheAddresses++;
 #ifdef DEBUG
@@ -302,6 +305,10 @@ static void resolveAddress(char* symAddr,
   data_data.dsize = strlen(symAddr)+1;
 
   updateHostNameInfo(addr, symAddr);
+#ifdef HAVE_MYSQL
+  traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostNameInfo");
+  mySQLupdateHostNameInfo(hostIpAddress.s_addr, data_data.dptr);
+#endif
 
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "resolveAddress-4");

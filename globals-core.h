@@ -473,3 +473,14 @@ extern void createVendorTable(void);
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
 #endif
  
+
+/* mysql.c */
+#ifdef HAVE_MYSQL
+extern void handlemySQLSupport(char* addr /* host:port */, int* enableDBsupport);
+extern void closemySQLSQLsocket(void);
+extern void mySQLupdateHostNameInfo(unsigned long numeric, char* symbolic);
+extern void mySQLupdateHostTraffic(HostTraffic *el);
+extern void mySQLnotifyHostCreation(HostTraffic *el);
+extern void mySQLnotifyTCPSession(IPSession *session);
+extern void mySQLupdateDBOSname(HostTraffic *el);
+#endif /* HAVE_MYSQL */

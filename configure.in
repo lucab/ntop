@@ -378,6 +378,9 @@ AC_CHECK_HEADERS(sys/select.h sys/ldr.h sys/sockio.h dl.h dirent.h dlfcn.h)
 dnl> OPTIONAL security headers
 AC_CHECK_HEADERS(security/pam_appl.h shadow.h crypt.h)
 
+dnl> OPTIONAL MySQL
+AC_CHECK_HEADERS(mysql/mysql.h, MORELIBS="$MORELIBS -lmysqlclient" && AC_DEFINE(HAVE_MYSQL))
+
 dnl> OPTIONAL curses headers
 if test ".$ac_disable_curses" = ".no"; then
 
@@ -528,7 +531,6 @@ case "$host" in
         AC_DEFINE(NEED_GETDOMAINNAME)
         ;;
 esac
-
 
 dnl>
 dnl> TCP Wrappers library

@@ -114,6 +114,9 @@
 /* Define if you have the <if.h> header file.  */
 #undef HAVE_IF_H
 
+/* Define if you have the <mysql/mysql.h> header file.  */
+#undef HAVE_MYSQL_MYSQL_H
+
 /* Define if you have the <net/bpf.h> header file.  */
 #undef HAVE_NET_BPF_H
 

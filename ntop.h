@@ -180,6 +180,10 @@ int getdomainname(char *name, size_t len);
 #include <gdbm.h>
 #endif
 
+/* MySQL support */
+#ifdef HAVE_MYSQL
+#include <mysql/mysql.h>
+#endif
 
 /*
  * thread management

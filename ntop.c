@@ -823,8 +823,12 @@ RETSIGTYPE cleanup(int signo) {
 	}
       }
 
-  if(enableDBsupport)
+  if(enableDBsupport) {
     closeSQLsocket(); /* *** SQL Engine *** */
+#ifdef HAVE_MYSQL
+    closemySQLsocket();
+#endif
+  }
 
 #ifdef WIN32
   termWinsock32();

@@ -900,6 +900,9 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-F <flow specs (see man page)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-b <client:port (ntop DB client)>]");
+#ifdef HAVE_MYSQL
+  traceEvent(TRACE_INFO, "    %s\n",   "[-v <username:password:dbName (ntop mySQL client)>]");
+#endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-R <matching rules file>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-N <don't use nmap if installed>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");

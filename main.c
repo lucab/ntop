@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 #ifdef WIN32
   theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12l:";
 #else
-  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:D:s:P:R:MS:gt:a:u:W:12l:";
+  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:gt:a:u:W:12l:";
 #endif
   
   while((op = getopt(argc, argv, theOpts)) != EOF)
@@ -200,6 +200,13 @@ int main(int argc, char *argv[]) {
 	handleDbSupport(optarg, &enableDBsupport);
 	break;
 
+#ifdef HAVE_MYSQL
+      case 'v': /* username:password:dbname */
+	stringSanityCheck(optarg);
+	handlemySQLSupport(optarg, &enableDBsupport);
+        break;
+#endif
+	
       case 'D': /* domain */
 	stringSanityCheck(optarg);
 	strncpy(domainName, optarg,

@@ -151,7 +151,7 @@ static int _mapIdx(u_int* mappings, u_int idx,
 
 void resizeHostHash(int deviceToExtend, float multiplier) {
   u_int idx, *mappings;
-  u_int i, j, newSize, k, lastHashSize;
+  u_int i, j, newSize, lastHashSize;
   struct hostTraffic **hash_hostTraffic;
   short numCmp;
   struct ipGlobalSession *scanner=NULL;
@@ -573,6 +573,10 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 	 || (device[deviceToExtend].tcpSession[j]->remotePeerIdx == NO_PEER)) {
 	/* Session to purge */
 	notifyTCPSession(device[deviceToExtend].tcpSession[j]);
+#ifdef HAVE_MYSQL
+	traceEvent(TRACE_INFO, "DEBUG: mySQLnotifyTCPSession");
+	mySQLnotifyTCPSession(device[deviceToExtend].tcpSession[j]);
+#endif
 	free(device[deviceToExtend].tcpSession[j]); /* No inner pointers to free */
 	device[deviceToExtend].numTcpSessions--;
 	device[deviceToExtend].tcpSession[j] = NULL;
@@ -636,7 +640,7 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
   u_int idx, j, i;
   HostTraffic *host = device[theDevice].hash_hostTraffic[checkSessionIdx(hostIdx)];
   IpGlobalSession *nextElement, *element;
-
+  
   if(host == NULL)
     return;
 
@@ -644,6 +648,10 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
   /* FIXME (DL): checkSessionIdx() acts on actualDeviceId instead of theDevice */
 
   updateHostTraffic(host);
+#ifdef HAVE_MYSQL
+  traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostTraffic");
+  mySQLupdateHostTraffic(host);
+#endif
 
   device[theDevice].hash_hostTraffic[hostIdx] = NULL;
   device[theDevice].hostsno--;

@@ -1222,7 +1222,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
     if(strlen(theHost) <= strlen(CHART_FORMAT)) {
       printNoDataYet();
     } else {
-      u_int idx, elIdx, i;
+      u_int elIdx, i;
       HostTraffic *el=NULL;
       
       if(strlen(theHost) >= 31) theHost[31] = 0;
@@ -1278,7 +1278,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
     if(strlen(theHost) <= strlen(CHART_FORMAT)) {
       printNoDataYet();
     } else {
-      u_int idx, elIdx, i;
+      u_int elIdx, i;
       HostTraffic *el=NULL;
       
       if(strlen(theHost) >= 31) theHost[31] = 0;

@@ -195,7 +195,7 @@ noinst_HEADERS = globals-core.h globals-report.h ntop.h regex.h rules.h
 lib_LTLIBRARIES = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
-libntop_la_SOURCES = address.c       dataFormat.c  event.c                           globals-core.c  hash.c        initialize.c                      leaks.c         logger.c      ntop.c                            pbuf.c          plugin.c      qsort.c                           regex.c         rules.c       sql.c                             ssl.c           term.c        traffic.c                         util.c          vendor.c      version.c                         vendortable.h
+libntop_la_SOURCES = address.c       dataFormat.c  event.c                                globals-core.c  hash.c        initialize.c                           leaks.c         logger.c      mysql.c ntop.c                         pbuf.c          plugin.c      qsort.c                                regex.c         rules.c       sql.c                                  ssl.c           term.c        traffic.c                              util.c          vendor.c      version.c                              vendortable.h
 
 
 libntop_la_DEPENDENCIES = config.h
@@ -219,9 +219,9 @@ LTLIBRARIES =  $(lib_LTLIBRARIES)
 
 CPPFLAGS = @CPPFLAGS@
 libntop_la_OBJECTS =  address.lo dataFormat.lo event.lo globals-core.lo \
-hash.lo initialize.lo leaks.lo logger.lo ntop.lo pbuf.lo plugin.lo \
-qsort.lo regex.lo rules.lo sql.lo ssl.lo term.lo traffic.lo util.lo \
-vendor.lo version.lo
+hash.lo initialize.lo leaks.lo logger.lo mysql.lo ntop.lo pbuf.lo \
+plugin.lo qsort.lo regex.lo rules.lo sql.lo ssl.lo term.lo traffic.lo \
+util.lo vendor.lo version.lo
 libntopreport_la_OBJECTS =  admin.lo emitter.lo globals-report.lo \
 graph.lo http.lo report.lo reportUtils.lo webInterface.lo
 PROGRAMS =  $(bin_PROGRAMS)
@@ -253,10 +253,10 @@ DEP_FILES =  .deps/address.P .deps/admin.P .deps/dataFormat.P \
 .deps/emitter.P .deps/event.P .deps/globals-core.P \
 .deps/globals-report.P .deps/graph.P .deps/hash.P .deps/http.P \
 .deps/initialize.P .deps/leaks.P .deps/logger.P .deps/main.P \
-.deps/ntop.P .deps/pbuf.P .deps/plugin.P .deps/qsort.P .deps/regex.P \
-.deps/report.P .deps/reportUtils.P .deps/rules.P .deps/sql.P \
-.deps/ssl.P .deps/term.P .deps/traffic.P .deps/util.P .deps/vendor.P \
-.deps/version.P .deps/webInterface.P
+.deps/mysql.P .deps/ntop.P .deps/pbuf.P .deps/plugin.P .deps/qsort.P \
+.deps/regex.P .deps/report.P .deps/reportUtils.P .deps/rules.P \
+.deps/sql.P .deps/ssl.P .deps/term.P .deps/traffic.P .deps/util.P \
+.deps/vendor.P .deps/version.P .deps/webInterface.P
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntops_SOURCES) $(ntopd_SOURCES) $(ntop_SOURCES)
 OBJECTS = $(libntop_la_OBJECTS) $(libntopreport_la_OBJECTS) $(ntops_OBJECTS) $(ntopd_OBJECTS) $(ntop_OBJECTS)
 

@@ -503,10 +503,18 @@ void updateDbHostsTraffic(int deviceToUpdate) {
 
       el->instanceInUse++;
 
-      if(el->nextDBupdate == 0)
+      if(el->nextDBupdate == 0) {
 	notifyHostCreation(el);
-      else if(el->nextDBupdate < actTime) {
+#ifdef HAVE_MYSQL
+	traceEvent(TRACE_INFO, "DEBUG: mySQLnotifyHostCreation");
+	mySQLnotifyHostCreation(el);
+#endif
+      } else if(el->nextDBupdate < actTime) {
 	updateHostTraffic(el);
+#ifdef HAVE_MYSQL
+	traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostTraffic");
+	mySQLupdateHostTraffic(el);
+#endif
 	if(el->osName == NULL) {
 	  updateOSName(el);
 	}

@@ -500,8 +500,9 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	  }
 	}
       } else {
+	/* mergeInterfaces == 0 */
 	if(rFileName == NULL) {
-	  if(!device[i].virtualDevice) {
+	  if(!device[actualReportDeviceId].virtualDevice) {
 	    if(snprintf(buf2, sizeof(buf2), "%s [%s]",
 			getNwInterfaceType(actualReportDeviceId),
 			device[actualReportDeviceId].name) < 0) 

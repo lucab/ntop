@@ -736,6 +736,10 @@ void scanTimedoutTCPSessions(void) {
 	    sessionToPurge->magic = 0;
 
 	    notifyTCPSession(sessionToPurge);
+#ifdef HAVE_MYSQL
+	    traceEvent(TRACE_INFO, "DEBUG: mySQLnotifyTCPSession");
+	    mySQLnotifyTCPSession(sessionToPurge);
+#endif
 	    free(sessionToPurge); /* No inner pointers to free */
 	  }
       }
@@ -1919,7 +1923,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  131.114.21.11:40012 (40012 = 156 * 256 + 95)
 	*/
 	if(strncmp(rcStr, "227", 3) == 0) {
-	  struct in_addr inAddr;
 	  int a, b, c, d, e, f;
 
 	  sscanf(&rcStr[27], "%d,%d,%d,%d,%d,%d",
@@ -4792,6 +4795,11 @@ void updateOSName(HostTraffic *el) {
       el->osName = strdup(theName);
 
       updateDBOSname(el);
+
+#ifdef HAVE_MYSQL
+      traceEvent(TRACE_INFO, "DEBUG: mySQLupdateDBOSname");
+      mySQLupdateDBOSname(el);
+#endif
 
 #ifdef HAVE_GDBM_H
       if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
