@@ -255,8 +255,11 @@
 #? --http-server 3000 --https-server 3001
 
 ## Neither - say ntop is running only as a netFlow probe:
-#? --w 0 -W 0
+#? -w 0 -W 0
 
+## You can also limit ntop to listening on a specific interface. For example:
+
+#? -w 127.0.0.1:3000  # Listens only on the loopback interface at port 3000
 
 ########################### PERFORMANCE AND PROBLEMS ###########################
 
