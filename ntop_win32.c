@@ -80,9 +80,9 @@ void initWinsock32() {
     exit(-1);
   }
 
-  version = "2.1.91";
+  version = "2.1.92";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "2003-04-02";
+  buildDate = "2003-04-10";
 
   if(!isWinNT()) {
     osName = "Win95/98/ME";
