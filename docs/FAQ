@@ -228,7 +228,12 @@ Q. Which packages/libraries do I need to compile ntop:
 	 (Note some packages will have additional packages as pre-requisites)
 	 
      Building libpcap requires: bison/flex  
+
+     Building gdchart uses ar and ranlib from binutils (available precompiled or from
+         http://www.gnu.org/directory/binutils.html)
+
 (Updated for the new scripts, 30Oct2002)
+(Updated for binutils, 13Dec2002)
 
 Q. Compile dies because it's missing depcomp
 A. automake/autoconf issue.  Just copy the missing file (or make a symbolic link) into

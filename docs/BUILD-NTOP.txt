@@ -17,6 +17,10 @@ Quick Instructions
          - gdbm, gdbm-devel
          - libpcap (http://www.tcpdump.org)
 
+      To build gdchart requires:
+
+         - binutils (ar and ranlib)
+
       Also, one additional package, which used only for intop:
 
          - ncurses
