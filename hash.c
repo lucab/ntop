@@ -20,6 +20,8 @@
 
 #include "ntop.h"
 
+#define MIN_NUM_USES   5
+
 /* ******************************* */
 
 u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
@@ -536,7 +538,7 @@ void freeHostInstances(int actualDeviceId) {
 /* #define DEBUG */
 
 void purgeIdleHosts(int actDevice) {
-  u_int idx, numFreedBuckets=0, len;
+  u_int idx, numFreedBuckets=0, len, hashLen;
   time_t startTime = time(NULL);
   static time_t lastPurgeTime = 0;
   HostTraffic **theFlaggedHosts;
@@ -549,7 +551,7 @@ void purgeIdleHosts(int actDevice) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Purging Idle Hosts... (actDevice=%d)", actDevice);
 #endif
-
+#define DEBUG
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
@@ -557,8 +559,12 @@ void purgeIdleHosts(int actDevice) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
-
-  len = sizeof(HostTraffic*)*myGlobals.device[actDevice].actualHashSize;
+  /*
+    hashLen is necessary as the hash size can change while purging
+    hosts outside of the mutex's
+  */
+  hashLen = myGlobals.device[actDevice].actualHashSize;
+  len = sizeof(HostTraffic*)*hashLen;
   theFlaggedHosts = (HostTraffic**)malloc(len);
   memset(theFlaggedHosts, 0, len);
 
@@ -566,10 +572,10 @@ void purgeIdleHosts(int actDevice) {
   accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
   /* Calculates entries to free */
-  for(idx=1; idx<myGlobals.device[actDevice].actualHashSize; idx++)
+  for(idx=1; idx<hashLen; idx++)
     if(myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL) {
       if((idx != myGlobals.otherHostEntryIdx)
-	 && (myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses == 0)
+	 && (myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses < MIN_NUM_USES)
 	 && (!subnetPseudoLocalHost(myGlobals.device[actDevice].hash_hostTraffic[idx]))) {
 	
 	if(!myGlobals.stickyHosts) {
@@ -578,14 +584,15 @@ void purgeIdleHosts(int actDevice) {
 	}
       }
 
-      myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses = 0;
+      if(myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL)
+	  myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses = 0;
     }
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
   /* Now free the entries */
-  for(idx=1; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
+  for(idx=1; idx<hashLen; idx++) {
     if((idx != myGlobals.otherHostEntryIdx) && (theFlaggedHosts[idx] != NULL)) {
       freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
 #ifdef DEBUG
@@ -599,8 +606,7 @@ void purgeIdleHosts(int actDevice) {
 	 all the references to the freed instances
       */
       removeGlobalHostPeers(myGlobals.device[actDevice].hash_hostTraffic[idx],
-			    theFlaggedHosts, 
-			    myGlobals.device[actDevice].actualHashSize); /* Finally refresh the hash */
+			    theFlaggedHosts, hashLen); /* Finally refresh the hash */
     }
   }
 
@@ -613,7 +619,7 @@ void purgeIdleHosts(int actDevice) {
   }
 #endif
 }
-/* #undef DEBUG */
+#undef DEBUG 
 
 /* **************************************************** */
 
