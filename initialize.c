@@ -1307,6 +1307,9 @@ void initLibpcap(void) {
 
 	if(myGlobals.device[i].pcapPtr == NULL) {
 	  traceEvent(CONST_TRACE_FATALERROR, "pcap_open_live(): '%s'", ebuf);
+          if (myGlobals.disablePromiscuousMode == 1)
+              traceEvent(CONST_TRACE_INFO, 
+                         "Sorry, but on this system, even with -s, it appears that ntop must be started as root");
           traceEvent(CONST_TRACE_INFO, "Please correct the problem or select a different interface using the -i flag");
 	  exit(-1);
 	}

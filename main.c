@@ -963,13 +963,18 @@ int main(int argc, char *argv[]) {
    * in promiscuous mode is a privileged operation.
    * Verify we're running as root, unless we are reading data from a file
    */
-  if(! myGlobals.rFileName && ((getuid () && geteuid ()) || setuid (0))) {
+  if(! myGlobals.rFileName &&
+     myGlobals.disablePromiscuousMode != 1 &&
+     ((getuid () && geteuid ()) || setuid (0))) {
     printf ("Sorry, %s uses network interface(s) in promiscuous mode, "
 	    "so it needs root permission to run.\n",
 	    myGlobals.program_name);
-    traceEvent(CONST_TRACE_FATALERROR, "Not started as root, required for promiscuous mode");
+    traceEvent(CONST_TRACE_FATALERROR, "Not started as root, required for pcap_open_live()");
     exit (-1);
-  }
+  } else if (myGlobals.disablePromiscuousMode == 1)
+    traceEvent(CONST_TRACE_WARNING, 
+               "-s set so will ATTEMPT to open interface w/o promisc mode "
+               "(this will probably fail below)");
 #endif
 
 /* Below here, we use our traceEvent() function to print or log as requested. */
