@@ -1505,7 +1505,7 @@ A. There are a couple of options that appear only if they're not compiled in,
    and a few that depend on various external libraries, e.g. openSSL.
 
    The best way to see what is actually available is to run ntop with the -h or
-   --help options and see.
+   --help options and see.   Also read man ntop.
 
    Here is the FULL set of real, working options as of August 2003
 
@@ -2112,6 +2112,34 @@ A. ntop is designed as a hybrid packet analyzer, not a pure Ethernet analyzer
    that AT&T has assigned to this area (I don't see the traffic, but you get
    the picture) in an overlay structure (two or more networks on the
    same wire, but with separate address spaces).
+
+
+Q. What about multicast traffic?
+A. Multicast traffic uses the 224.0.0.0/4 address range (that is all addresses
+   between 224.0.0.0 and 239.255.255.255 - see RFC 1112).  By default then,
+   all multicast traffic is treated as 'Remote' by ntop.  
+
+   Your actual network topology may be such that multicast traffic could
+   all be local, all be remote or a mixture.  You can use the -m | 
+   --local-subnets parameter to force some (or all) multicast groups
+   to be counted as 'Local' traffic.
+
+Q. What about VLANs?
+A. VLAN traffic is also a special case.  ntop treats all traffic within your 
+   machine's netmask definition as 'Local'.  For instance, you may have a /16
+   network (netmask of 255.255.0.0), and you are using VLANs to distribute
+   the traffic.  In this case ntop will see the a.b.c.d/16 address and classify
+   all traffic within this /16 network as 'Local'.
+
+   Don't design your network that way.
+
+Q. But they did!
+A. This MIGHT work:
+
+   Use an un-numbered interface, so that ntop doesn't assign any implicit
+   'Local' addresses.  Then use the -m | --local-subnets parameter to 
+   define what is truly 'Local'.  As long as there aren't too many
+   'Local' networks, this should work.  AFAIK, it has never been tried.
 
 
 Q. What are the default protocols ntop monitors?
