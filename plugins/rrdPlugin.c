@@ -20,7 +20,7 @@
 
 /* This plugin works only with threads */
 
-/* #define RRD_DEBUG  8 */
+#define RRD_DEBUG  8
 
 /*
 
@@ -629,6 +629,15 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     accessMutex(&rrdMutex, "rrd_create");
 #endif
 
+#if RRD_DEBUG >= 3
+  {
+    int x;
+
+    for (x = 0; x < argc; x++)
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+  }
+#endif
+
     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
     rc = rrd_create(argc, argv);
 
@@ -712,6 +721,15 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
 #ifdef CFG_MULTITHREADED
   accessMutex(&rrdMutex, "rrd_update");
+#endif
+
+#if RRD_DEBUG >= 3
+  {
+    int x;
+
+    for (x = 0; x < argc; x++)
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+  }
 #endif
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
@@ -1108,29 +1126,29 @@ static void handleRRDHTTPrequest(char* url) {
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
   printHTMLheader("RRD Preferences", 0);
 
-  sendString("<CENTER>\n");
+  sendString("<CENTER><FORM ACTION=/plugins/rrdPlugin METHOD=GET>\n");
   sendString("<TABLE BORDER>\n");
-  sendString("<TR><TH ALIGN=LEFT>Dump Interval</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+  sendString("<TR><TH ALIGN=LEFT>Dump Interval</TH><TD>"
 	     "<INPUT NAME=interval SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpInterval) < 0)
     BufferTooShort();
   sendString(buf);
   sendString("> seconds<br>Specifies how often data is stored permanently.</TD></tr>\n");
 
-  sendString("<TR><TH ALIGN=LEFT>Dump Hours</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+  sendString("<TR><TH ALIGN=LEFT>Dump Hours</TH><TD>"
 	     "<INPUT NAME=hours SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpHours) < 0)
     BufferTooShort();
   sendString(buf);
   sendString("><br>Specifies how many hours of 'interval' data is stored permanently.</TD></tr>\n");
 
-  sendString("<TR><TH ALIGN=LEFT>Dump Days</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+  sendString("<TR><TH ALIGN=LEFT>Dump Days</TH><TD>"
 	     "<INPUT NAME=days SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpDays) < 0)
     BufferTooShort();
   sendString(buf);
   sendString("><br>Specifies how many days of hourly data is stored permanently.</TD></tr>\n");
-  sendString("<TR><TH ALIGN=LEFT>Dump Months</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+  sendString("<TR><TH ALIGN=LEFT>Dump Months</TH><TD>"
 	     "<INPUT NAME=months SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpMonths) < 0)
     BufferTooShort();
@@ -1232,13 +1250,12 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<p><H5><A HREF=http://www.rrdtool.org/>RRDtool</A> has been created by "
 	     "<A HREF=http://ee-staff.ethz.ch/~oetiker/>Tobi Oetiker</A>.</H5>\n");
 
-  if (active == 1) {
-    sendString("<p><center>You must restart the rrd plugin - for changes here to take affect.</center></p>\n");
-  } else {
-    sendString("<p><center>Changes here will take effect when the plugin is started.</center></p>\n");
-  }
-
-  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+  if (active == 1)
+    sendString("<p>You must restart the rrd plugin for changes here to take affect.</p>\n");
+  else 
+    sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
+  
+  sendString("<p align=right>&nbsp; [ <a href=\"../" STR_SHOW_PLUGINS "\">Back</a> to plugins ] </p>\n");
   printHTMLtrailer();
 }
 
