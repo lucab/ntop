@@ -163,7 +163,7 @@ void initIPServices(void) {
 static void resetDevice(int deviceId) {
   int len;
 
-  device[deviceId].actualHashSize = HASH_INITIAL_SIZE;
+  device[deviceId].actualHashSize = topHashSize = HASH_INITIAL_SIZE;  
   device[deviceId].hashThreshold = (unsigned int)(device[deviceId].actualHashSize*0.5);
   device[deviceId].topHashThreshold = (unsigned int)(device[deviceId].actualHashSize*0.75);
 
@@ -330,6 +330,8 @@ void initCounters(int _mergeInterfaces) {
   initialSniffTime = lastRefreshTime = time(NULL);
   capturePackets = 1;
   endNtop = 0;
+
+  topHashSize = 0, numHandledHTTPrequests = 0;  
 }
 
 /* ******************************* */

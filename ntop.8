@@ -56,6 +56,7 @@ ntop \- display top network users
 .IR "flow filter expression" ]
 .RB [ -k ]
 .RB [ -K ]
+.RB [ -L ]
 .RB [ "filter expression" ]
 .SH DESCRIPTION
 .B ntop
@@ -230,6 +231,9 @@ When this flag is used, the current filter expression is printed in an extra fra
 
 .It -K
 Use this flag for easying application debug (eg. fork() is not used etc.)
+
+.It -L
+Use this flag for using the syslog instead of stdout. Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
 
 .It "filter expression"
 .B ntop

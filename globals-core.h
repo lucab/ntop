@@ -27,12 +27,12 @@ extern char *program_name;
 extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
 /* command line options */
-extern u_short traceLevel, debugMode;
+extern u_short traceLevel, debugMode, useSyslog;
 extern u_char stickyHosts, enableSuspiciousPacketDump;
 extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */
 extern char mapperURL[256];     /* URL of the mapper CGI */
-extern u_int maxHashSize;
+extern u_int maxHashSize, topHashSize;
 extern u_int enableNetFlowSupport;
 extern short usePersistentStorage, grabSessionInformation;
 extern char *rFileName, *pcapLog;
@@ -138,6 +138,7 @@ extern char **protoIPTrafficInfos;
 extern u_short numIpProtosToMonitor, numIpPortsToHandle;
 extern PortMapper *ipPortMapper;
 extern int numActServices, numIpPortMapperSlots;
+extern unsigned long numHandledHTTPrequests;
 extern ServiceEntry **udpSvc, **tcpSvc;
 
 /* Packet Capture */

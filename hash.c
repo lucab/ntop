@@ -202,11 +202,13 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   accessMutex(&hashResizeMutex, "resizeHostHash");
 #endif
 
+  if(newSize > topHashSize) 
+    topHashSize = newSize;
+
   /*
     Hash shrinking problem detection
     courtesy of Wies-Software <wies@wiessoft.de>
   */
-
   if(device[deviceToExtend].actualHashSize < newSize) {
     traceEvent(TRACE_INFO, "Extending hash: [old=%d, new=%d]\n",
 	       device[deviceToExtend].actualHashSize, newSize);

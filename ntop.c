@@ -220,6 +220,10 @@ void detachFromTerminal(void) {
 #ifndef MULTITHREADED
   alarm(120); /* Don't freeze */
 #endif
+
+#ifndef WIN32
+  useSyslog = 1; /* Log in the syslog */
+#endif
   
   chdir("/");
   setsid();  /* detach from the terminal */

@@ -449,10 +449,11 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	  }
 
 	  sendString("</TR>\n");
+	  printedEntries++;
 	}
 
 	/* Avoid huge tables */
-	if(printedEntries++ > maxNumLines)
+	if(printedEntries > maxNumLines)
 	  break;	
       }
     }
@@ -1263,10 +1264,11 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	  sendString("</TR>\n");
+	  printedEntries++;
 	}
 
 	/* Avoid huge tables */
-	if(printedEntries++ > maxNumLines)
+	if(printedEntries > maxNumLines)
 	  break;	
       } else {
 	traceEvent(TRACE_WARNING, "WARNING: quicksort() problem!");

@@ -245,6 +245,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 0) {
+      traceEvent(TRACE_WARNING, "WARNING: Graph failure (1)");
       return; /* TODO: this has to be handled better */
     }
 
@@ -330,6 +331,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 0) {
+      traceEvent(TRACE_WARNING, "WARNING: Graph failure (2)");
       return; /* TODO: this has to be handled better */
     }
 
@@ -393,8 +395,10 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     p[num] = 100-((float)(100*totFragmentedTraffic)/totTraffic);
     if(p[num] > 0) { lbl[num++] = "Non Frag"; }
 
-    if(num == 0)
+    if(num == 0) {
+      traceEvent(TRACE_WARNING, "WARNING: Graph failure (3)");
       return; /* TODO: this has to be handled better */     
+    }
 
 #ifdef MULTITHREADED
     accessMutex(&graphMutex, "pktHostFragmentDistrib");
@@ -438,8 +442,10 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   FILE *fd;
   TrafficCounter traffic, totalIPTraffic;
 
-  if(theHost->protoIPTrafficInfos == NULL)
+  if(theHost->protoIPTrafficInfos == NULL) {
+    traceEvent(TRACE_WARNING, "WARNING: Graph failure (5)");
     return; 
+  }
 
 #ifdef ENABLE_NAPSTER
   if(theHost->napsterStats == NULL)
@@ -507,6 +513,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   } 
 
   if(num == 0) {
+    traceEvent(TRACE_WARNING, "WARNING: Graph failure (4)");
     return; /* TODO: this has to be handled better */
   }
 

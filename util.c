@@ -50,6 +50,10 @@
 #include "ntop.h"
 #include <stdarg.h>
 
+#ifndef WIN32
+#include <syslog.h>
+#endif
+
 /* #define MEMORY_DEBUG  */
 
 #define MAX_DEVICE_NAME_LEN   64
@@ -2131,31 +2135,73 @@ void traceEvent(int eventTraceLevel, char* file,
 
   if(eventTraceLevel <= traceLevel) {
     char theDate[32];
+    char buf[BUF_SIZE];  
     time_t theTime = time(NULL);
     struct tm t;
 
     if(traceLevel >= DEFAULT_TRACE_LEVEL) {
-      strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
+#ifndef WIN32  
+      if(useSyslog)
+	openlog("ntop", LOG_PID, LOG_DAEMON);
+#endif
 
-      if(traceLevel == DETAIL_TRACE_LEVEL)
-	printf("%s [%s:%d] ", theDate, file, line);
-      else
-	printf("%s ", theDate);
+      if(!useSyslog) {
+	strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
+
+	if(traceLevel == DETAIL_TRACE_LEVEL) {
+	  if(!useSyslog)
+	    printf("%s [%s:%d] ", theDate, file, line);
+	} else {
+	  if(!useSyslog) 
+	    printf("%s ", theDate);
+	}
+      }
+
+      memset(buf, 0, BUF_SIZE);
+      vsnprintf(buf, BUF_SIZE-1, format, va_ap);
+
+      if(!useSyslog) {
+	printf(buf);
+	if(format[strlen(format)-1] != '\n')
+	  printf("\n");
+      } 
+#ifndef WIN32
+      else {
+#if 0 
+	switch(traceLevel) {
+	case 0:
+	  syslog(LOG_ERR, buf);
+	  break;
+	case 1:
+	  syslog(LOG_WARNING, buf);
+	  break;
+	case 2:
+	  syslog(LOG_NOTICE, buf);
+	  break;
+	default:
+	  syslog(LOG_INFO, buf);
+	  break;
+	}
+#else
+	syslog(LOG_ERR, buf);
+#endif
+      }
+#endif
+
+      va_end (va_ap);
+      fflush(stdout);
     }
-
-    vprintf(format, va_ap);
-
-    if(format[strlen(format)-1] != '\n')
-      printf("\n");
-
-    va_end (va_ap);
-    fflush(stdout);
   }
+
+#ifndef WIN32
+  if(useSyslog)
+    closelog();
+#endif
 }
 
 /* ******************************************** */
 
-char*_strncpy(char *dest, const char *src, size_t n) {
+char* _strncpy(char *dest, const char *src, size_t n) {
   size_t len = strlen(src);
 
   if(len > (n-1))
@@ -2286,15 +2332,22 @@ int strOnlyDigits(const char *s) {
 
 FILE* getNewRandomFile(char* fileName, int len) {
   FILE* fd;
+  char tmpFileName[NAME_MAX];
 
 #ifndef WIN32
   int tmpfd;
 
+#if 0
   /* Patch courtesy of Thomas Biege <thomas@suse.de> */
   if(((tmpfd = mkstemp(fileName)) < 0)
      || (fchmod(tmpfd, 0600) < 0)
      || ((fd = fdopen(tmpfd, "wb")) == NULL))
     fd = NULL;
+#else
+  strcpy(tmpFileName, fileName);
+  sprintf(fileName, "%s-%lu", tmpFileName, numHandledHTTPrequests);
+  fd = fopen(fileName, "wb");
+#endif /* 0 */
 #else
   tmpnam(fileName);
   fd = fopen(fileName, "wb");

@@ -1022,6 +1022,107 @@ static int returnHTTPPage(char* pageName, int postLen) {
   } else if(strcmp(pageName, "addURL.html") == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     addURL(NULL);
+    /* Temporary here - begin
+
+       Due to some strange problems, graph generation has some problems
+       when several charts are generated concurrently.
+
+       This NEEDS to be fixed.
+    */
+  } else if((strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
+	    || (strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
+	    || (strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
+	    || (strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)) {
+    char hostName[32], *theHost;
+    int idx;
+
+    if(strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
+      idx = 0;
+      theHost = &pageName[strlen("hostTrafficDistrib")+1];
+    } else if(strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0) {
+      idx = 1;
+      theHost = &pageName[strlen("hostFragmentDistrib")+1];
+    } else if(strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0) {
+      idx = 2;
+      theHost = &pageName[strlen("hostTotalFragmentDistrib")+1];
+    } else {
+      idx = 3;
+      theHost = &pageName[strlen("hostIPTrafficDistrib")+1];
+    }
+      
+    if(strlen(theHost) <= strlen(CHART_FORMAT)) {
+      printNoDataYet();
+    } else {
+      u_int elIdx, i;
+      HostTraffic *el=NULL;
+
+      if(strlen(theHost) >= 31) theHost[31] = 0;
+      for(i=strlen(theHost); i>0; i--)
+	if(theHost[i] == '?') {
+	  theHost[i] = '\0';
+	  break;
+	}
+
+      memset(hostName, 0, sizeof(hostName));
+      strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
+
+      /* Patch for ethernet addresses and MS Explorer */
+      for(i=0; hostName[i] != '\0'; i++)
+	if(hostName[i] == '_')
+	  hostName[i] = ':';
+
+      /* printf("HostName: '%s'\n", hostName); */
+
+#ifdef MULTITHREADED
+      /* It is necessary to release the mutex for avoiding
+	 a race condition with resizeHostHash() */
+      releaseMutex(&hashResizeMutex);
+      mutexReleased = 1;
+#endif
+
+#ifdef MULTITHREADED
+      accessMutex(&hostsHashMutex, "hostTrafficDistrib-call");
+#endif
+      for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
+	el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
+
+	if((elIdx != broadcastEntryIdx)
+	   && (el != NULL)
+	   && (el->hostNumIpAddress != NULL)
+	   && ((strcmp(el->hostNumIpAddress, hostName) == 0)
+	       || (strcmp(el->ethAddressString, hostName) == 0)))
+	  break;
+      }
+
+      if(el == NULL) {
+	returnHTTPpageNotFound();
+	printTrailer=0;
+      } else {
+	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+
+	switch(idx) {
+	case 0:
+	  hostTrafficDistrib(el, sortedColumn);
+	  break;
+	case 1:
+	  hostFragmentDistrib(el, sortedColumn);
+	  break;
+	case 2:
+	  hostTotalFragmentDistrib(el, sortedColumn);
+	  break;
+	case 3:
+	  hostIPTrafficDistrib(el, sortedColumn);
+	  break;
+	}
+	  
+	printTrailer=0;
+      }
+
+#ifdef MULTITHREADED
+      releaseMutex(&hostsHashMutex);
+#endif
+    }
+    /* Temporary here - end */
   } else {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
@@ -1333,251 +1434,6 @@ static int returnHTTPPage(char* pageName, int postLen) {
       } else {
 	printNoDataYet();
       }
-    } else if(strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
-      char hostName[32], *theHost;
-
-      theHost = &pageName[strlen("hostTrafficDistrib")+1];
-
-      if(strlen(theHost) <= strlen(CHART_FORMAT)) {
-	printNoDataYet();
-      } else {
-	u_int elIdx, i;
-	HostTraffic *el=NULL;
-
-	if(strlen(theHost) >= 31) theHost[31] = 0;
-	for(i=strlen(theHost); i>0; i--)
-	  if(theHost[i] == '?') {
-	    theHost[i] = '\0';
-	    break;
-	  }
-
-	memset(hostName, 0, sizeof(hostName));
-	strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
-
-	/* Patch for ethernet addresses and MS Explorer */
-	for(i=0; hostName[i] != '\0'; i++)
-	  if(hostName[i] == '_')
-	    hostName[i] = ':';
-
-      /* printf("HostName: '%s'\n", hostName); */
-
-#ifdef MULTITHREADED
-	/* It is necessary to release the mutex for avoiding
-	 a race condition with resizeHostHash() */
-	releaseMutex(&hashResizeMutex);
-	mutexReleased = 1;
-#endif
-
-#ifdef MULTITHREADED
-	accessMutex(&hostsHashMutex, "hostTrafficDistrib-call");
-#endif
-	for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
-	  el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
-
-	  if((elIdx != broadcastEntryIdx)
-	     && (el != NULL)
-	     && (el->hostNumIpAddress != NULL)
-	     && ((strcmp(el->hostNumIpAddress, hostName) == 0)
-		 || (strcmp(el->ethAddressString, hostName) == 0)))
-	    break;
-	}
-
-	if(el == NULL) {
-	  returnHTTPpageNotFound();
-	  printTrailer=0;
-	} else {
-	  sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-
-	  hostTrafficDistrib(el, sortedColumn);
-	  printTrailer=0;
-	}
-
-#ifdef MULTITHREADED
-	releaseMutex(&hostsHashMutex);
-#endif
-      }
-    } else if(strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0) {
-      char hostName[32], *theHost;
-
-      theHost = &pageName[strlen("hostFragmentDistrib")+1];
-
-      if(strlen(theHost) <= strlen(CHART_FORMAT)) {
-	printNoDataYet();
-      } else {
-	u_int elIdx, i;
-	HostTraffic *el=NULL;
-
-	if(strlen(theHost) >= 31) theHost[31] = 0;
-	for(i=strlen(theHost); i>0; i--)
-	  if(theHost[i] == '?') {
-	    theHost[i] = '\0';
-	    break;
-	  }
-
-	memset(hostName, 0, sizeof(hostName));
-	strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
-
-	/* Patch for ethernet addresses and MS Explorer */
-	for(i=0; hostName[i] != '\0'; i++)
-	  if(hostName[i] == '_')
-	    hostName[i] = ':';
-
-      /* printf("HostName: '%s'\n", hostName); */
-
-#ifdef MULTITHREADED
-	/* It is necessary to release the mutex for avoiding
-	 a race condition with resizeHostHash() */
-	releaseMutex(&hashResizeMutex);
-	mutexReleased = 1;
-#endif
-
-#ifdef MULTITHREADED
-	accessMutex(&hostsHashMutex, "hostTrafficDistrib-call");
-#endif
-	for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
-	  el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
-
-	  if((elIdx != broadcastEntryIdx)
-	     && (el != NULL)
-	     && (el->hostNumIpAddress != NULL)
-	     && ((strcmp(el->hostNumIpAddress, hostName) == 0)
-		 || (strcmp(el->ethAddressString, hostName) == 0)))
-	    break;
-	}
-
-	if(el == NULL) {
-	  returnHTTPpageNotFound();
-	  printTrailer=0;
-	} else {
-	  sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-
-	  hostFragmentDistrib(el, sortedColumn);
-	  printTrailer=0;
-	}
-
-#ifdef MULTITHREADED
-	releaseMutex(&hostsHashMutex);
-#endif
-      }
-    } else if(strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0) {
-      char hostName[32], *theHost;
-
-      theHost = &pageName[strlen("hostTotalFragmentDistrib")+1];
-
-      if(strlen(theHost) <= strlen(CHART_FORMAT)) {
-	printNoDataYet();
-      } else {
-	u_int elIdx, i;
-	HostTraffic *el=NULL;
-
-	if(strlen(theHost) >= 31) theHost[31] = 0;
-	for(i=strlen(theHost); i>0; i--)
-	  if(theHost[i] == '?') {
-	    theHost[i] = '\0';
-	    break;
-	  }
-
-	memset(hostName, 0, sizeof(hostName));
-	strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
-
-	/* Patch for ethernet addresses and MS Explorer */
-	for(i=0; hostName[i] != '\0'; i++)
-	  if(hostName[i] == '_')
-	    hostName[i] = ':';
-
-      /* printf("HostName: '%s'\n", hostName); */
-
-#ifdef MULTITHREADED
-	/* It is necessary to release the mutex for avoiding
-	 a race condition with resizeHostHash() */
-	releaseMutex(&hashResizeMutex);
-	mutexReleased = 1;
-#endif
-
-#ifdef MULTITHREADED
-	accessMutex(&hostsHashMutex, "hostTrafficDistrib-call");
-#endif
-	for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
-	  el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
-
-	  if((elIdx != broadcastEntryIdx)
-	     && (el != NULL)
-	     && (el->hostNumIpAddress != NULL)
-	     && ((strcmp(el->hostNumIpAddress, hostName) == 0)
-		 || (strcmp(el->ethAddressString, hostName) == 0)))
-	    break;
-	}
-
-	if(el == NULL) {
-	  returnHTTPpageNotFound();
-	  printTrailer=0;
-	} else {
-	  sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-
-	  hostTotalFragmentDistrib(el, sortedColumn);
-	  printTrailer=0;
-	}
-
-#ifdef MULTITHREADED
-	releaseMutex(&hostsHashMutex);
-#endif
-      }
-    } else if(strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0) {
-      char hostName[32], *theHost;
-
-      theHost = &pageName[strlen("hostIPTrafficDistrib")+1];
-
-      if(strlen(theHost) <= strlen(CHART_FORMAT)) {
-	printNoDataYet();
-      } else {
-	u_int elIdx, i;
-	HostTraffic *el=NULL;
-
-	if(strlen(theHost) >= 31) theHost[31] = 0;
-	for(i=strlen(theHost); i>0; i--)
-	  if(theHost[i] == '?') {
-	    theHost[i] = '\0';
-	    break;
-	  }
-
-	memset(hostName, 0, sizeof(hostName));
-	strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
-
-	/* Patch for ethernet addresses and MS Explorer */
-	for(i=0; hostName[i] != '\0'; i++)
-	  if(hostName[i] == '_')
-	    hostName[i] = ':';
-
-      /* printf("HostName: '%s'\n", hostName); */
-
-#ifdef MULTITHREADED
-	accessMutex(&hostsHashMutex, "hostIPTrafficDistrib-call");
-#endif
-	for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
-	  el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
-
-	  if((elIdx != broadcastEntryIdx)
-	     && (el != NULL)
-	     && (el->hostNumIpAddress != NULL)
-	     && ((strcmp(el->hostNumIpAddress, hostName) == 0)
-		 || (strcmp(el->ethAddressString, hostName) == 0)))
-	    break;
-	}
-
-	if(el == NULL) {
-	  returnHTTPpageNotFound();
-	  printTrailer=0;
-	} else {
-	  sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-
-	  hostIPTrafficDistrib(el, sortedColumn);
-	  printTrailer=0;
-	}
-
-#ifdef MULTITHREADED
-	releaseMutex(&hostsHashMutex);
-#endif
-      }
     } else if(strncmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       ipProtoDistribPie();
@@ -1833,6 +1689,8 @@ void handleHTTPrequest(struct in_addr from) {
   int postLen;
   char requestedURL[512], pw[64];
   int rc;
+
+  numHandledHTTPrequests++;
 
   gettimeofday(&httpRequestedAt, NULL);
 

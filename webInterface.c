@@ -342,13 +342,13 @@ char* makeHostLink(HostTraffic *el, short mode,
  
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
-		"<A HREF=\"/%s.html\">%s%s %s%s%s%s%s%s</A>%s</TH>%s",
+		"<A HREF=\"/%s.html\">%s%s</A>%s%s%s%s%s%s%s</TH>%s",
 		blinkOn, linkName, symIp, dynIp, 
 		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s %s%s%s%s%s%s</A>%s%s",
+    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s</A>%s%s%s%s%s%s%s%s",
 		blinkOn, linkName, symIp, 
 		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0) 
@@ -715,9 +715,19 @@ void printNtopConfigInfo(void) {
     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", 
 			   "No (Either disabled [Use -E option] or missing)");
 
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Handled HTTP Requests</TH>"
+	      "<TD "TD_BG"  align=right>%lu</TD></TR>\n", numHandledHTTPrequests) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Actual Hash Size</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
 	      (int)device[actualReportDeviceId].actualHashSize) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Top Hash Size</TH>"
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", topHashSize) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
@@ -1046,7 +1056,10 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-U <mapper.pl URL> | \"\" for not displaying host location ]");  
   traceEvent(TRACE_INFO, "    %s\n",   "[-k <show kernel filter expression in extra frame>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-K <enable application debug>]");
+#ifndef WIN32
+  traceEvent(TRACE_INFO, "    %s\n",   "[-K <enable application debug (no fork() is used)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-L <use syslog instead of stdout>]");
+#endif
   traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
 }
 

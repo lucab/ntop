@@ -30,11 +30,11 @@ char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
 
 /* command line options */
-u_short traceLevel, debugMode;
+u_short traceLevel, debugMode, useSyslog;
 u_char stickyHosts, enableSuspiciousPacketDump;
 char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
 char mapperURL[256];     /* URL of the mapper CGI */
-u_int maxHashSize;
+u_int maxHashSize, topHashSize;
 u_int enableNetFlowSupport;
 short usePersistentStorage;
 int numericFlag, logTimeout, daemonMode, mergeInterfaces;
@@ -140,6 +140,7 @@ char **protoIPTrafficInfos;
 u_short numIpProtosToMonitor, numIpPortsToHandle;
 PortMapper *ipPortMapper;
 int numActServices, numIpPortMapperSlots;
+unsigned long numHandledHTTPrequests;
 ServiceEntry **udpSvc, **tcpSvc;
 
 /* Packet Capture */

@@ -125,8 +125,12 @@ int main(int argc, char *argv[]) {
   logTimeout = 0;
   tcpChain = NULL, udpChain = NULL, icmpChain = NULL;
   devices = NULL;
-
   daemonMode = pflag = numericFlag = debugMode = 0;
+
+#ifndef WIN32
+  useSyslog = 0;
+#endif
+
   refreshRate = 0;
   rFileName = NULL;
   maxHashSize = MAX_HASH_SIZE;
@@ -146,14 +150,10 @@ int main(int argc, char *argv[]) {
     daemonMode++;
   }
 
-  /* printf("Parsing command line options...\n"); */
-
-  initIPServices();
-
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:kK";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:k";
 #else
-  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kK";
+  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kKL";
 #endif
 
   while((op = getopt(argc, argv, theOpts)) != EOF) {
@@ -396,10 +396,16 @@ int main(int argc, char *argv[]) {
       /* update info of used kernel filter expression in extra frame */
       filterExpressionInExtraFrame=1;
       break;
-	
+
+#ifndef WIN32	
     case 'K':
       debugMode = 1;
       break;
+
+    case 'L':
+      useSyslog = 1;
+      break;
+#endif
 
     default:
       usage();
@@ -407,6 +413,8 @@ int main(int argc, char *argv[]) {
       /* NOTREACHED */
     }
   }  
+
+  initIPServices();
 
   snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s",
 	   dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
