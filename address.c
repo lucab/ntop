@@ -423,11 +423,12 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 
     if(key_data.dptr == NULL) {
 	data_data = gdbm_firstkey(addressCache);
-	key_data = data_data;
     } else {
 	data_data = gdbm_nextkey(addressCache, key_data);
 	free(key_data.dptr);
     }
+
+    key_data = data_data;
 
   if(data_data.dptr != NULL) {
       addressQueueLen--;
