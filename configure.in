@@ -122,7 +122,20 @@ AC_CONFIG_AUX_DIR(.)
 dnl> This has to be here due to some odd dependency...
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE([${PACKAGE_NAME}], [${PACKAGE_VERSION}])
+AM_INIT_AUTOMAKE()
+AC_MSG_CHECKING([for aclocal.m4])
+AC_CHECK_FILE(aclocal.m4, ,
+    echo ""
+    echo "Invoking aclocal to create aclocal.m4..."
+    aclocal
+    echo ""
+)
+AC_CHECK_FILE(depcomp, ,
+    echo ""
+    echo "Invoking automake to copy depcomp..."
+    automake --gnu --copy --add-missing
+    echo ""
+)
 
 dnl> early since we need it for --enable-showoses
 AC_PROG_AWK

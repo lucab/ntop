@@ -1824,8 +1824,8 @@ echo "$as_me: error: source directory already configured; run \"make distclean\"
 fi
 
 # Define the identity of the package.
- PACKAGE=${PACKAGE_NAME}
- VERSION=${PACKAGE_VERSION}
+ PACKAGE=ntop
+ VERSION=2.1.51
 
 
 cat >>confdefs.h <<_ACEOF
@@ -1950,6 +1950,62 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 # some platforms.
 
 
+
+echo "$as_me:$LINENO: checking for aclocal.m4" >&5
+echo $ECHO_N "checking for aclocal.m4... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for aclocal.m4" >&5
+echo $ECHO_N "checking for aclocal.m4... $ECHO_C" >&6
+if test "${ac_cv_file_aclocal_m4+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "aclocal.m4"; then
+  ac_cv_file_aclocal_m4=yes
+else
+  ac_cv_file_aclocal_m4=no
+fi
+fi
+echo "$as_me:$LINENO: result: $ac_cv_file_aclocal_m4" >&5
+echo "${ECHO_T}$ac_cv_file_aclocal_m4" >&6
+if test $ac_cv_file_aclocal_m4 = yes; then
+  :
+else
+  echo ""
+    echo "Invoking aclocal to create aclocal.m4..."
+    aclocal
+    echo ""
+
+fi
+
+echo "$as_me:$LINENO: checking for depcomp" >&5
+echo $ECHO_N "checking for depcomp... $ECHO_C" >&6
+if test "${ac_cv_file_depcomp+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "depcomp"; then
+  ac_cv_file_depcomp=yes
+else
+  ac_cv_file_depcomp=no
+fi
+fi
+echo "$as_me:$LINENO: result: $ac_cv_file_depcomp" >&5
+echo "${ECHO_T}$ac_cv_file_depcomp" >&6
+if test $ac_cv_file_depcomp = yes; then
+  :
+else
+  echo ""
+    echo "Invoking automake to copy depcomp..."
+    automake --gnu --copy --add-missing
+    echo ""
+
+fi
 
 
 for ac_prog in gawk mawk nawk awk
@@ -6256,7 +6312,7 @@ test "x$enable_libtool_lock" != xno && enable_libtool_lock=yes
 case $host in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6259 "configure"' > conftest.$ac_ext
+  echo '#line 6315 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6792,7 +6848,7 @@ chmod -w .
 save_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -o out/conftest2.$ac_objext"
 compiler_c_o=no
-if { (eval echo configure:6795: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
+if { (eval echo configure:6851: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
   # The compiler can only warn and ignore the option if not recognized
   # So say no if there are warnings
   if test -s out/conftest.err; then
@@ -8585,7 +8641,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8588 "configure"
+#line 8644 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8683,7 +8739,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8686 "configure"
+#line 8742 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
