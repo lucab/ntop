@@ -133,7 +133,7 @@ extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
 extern void dumpNtopTrafficInfo(FILE*, char* options);
 extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
 extern void checkHostProvidedServices(HostTraffic *el);
-extern void printLocalHostsStats(void);
+extern void printHostsStats(int fingerprintRemote);
 
 extern FcFabricElementHash *getFcFabricElementHash (u_short vsanId, int actualDeviceId);
 extern void dumpFcFabricElementHash (FcFabricElementHash **theHash, char* label,

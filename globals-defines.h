@@ -943,7 +943,7 @@
 /*
  * Interval to run the (background) fingerprint lookup scan
  */
-#define CONST_FINGERPRINT_LOOP_INTERVAL     300 /* 5m */
+#define CONST_FINGERPRINT_LOOP_INTERVAL     150 /* 2.5m */
 
 /*
  * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
@@ -1094,6 +1094,7 @@
 
 #define CONST_ADD_URLS_HTML                 "addURLs.html"
 #define CONST_ADD_USERS_HTML                "addUsers.html"
+#define CONST_HOSTS_ALL_INFO_HTML           "allHostsInfo.html"
 #define CONST_BAR_ALLPROTO_DIST             "allProtoDistribution"
 #define CONST_AS_LIST_HTML                  "asList.html"
 #define CONST_CHANGE_FILTER_HTML            "changeFilter.html"

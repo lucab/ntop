@@ -2006,7 +2006,10 @@ static int returnHTTPPage(char* pageName,
         printFcHostsInfo(sortedColumn, revertOrder, pageNum);
     } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_INFO_HTML, strlen(CONST_HOSTS_LOCAL_INFO_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printLocalHostsStats();
+      printHostsStats(FALSE);
+    } else if(strncasecmp(pageName, CONST_HOSTS_ALL_INFO_HTML, strlen(CONST_HOSTS_ALL_INFO_HTML)) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      printHostsStats(TRUE);
     } else if(strncasecmp(pageName, CONST_SORT_DATA_PROTOS_HTML, strlen(CONST_SORT_DATA_PROTOS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder, 
