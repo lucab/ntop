@@ -1607,7 +1607,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 
   /* 548 is the AFP (Apple Filing Protocol) */
  if(snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr) < 0)
-   traceEvent(TRACE_ERROR, "Buffer overflow!");
+   BufferOverflow();
 
   fd = sec_popen(line, "r");
 
@@ -2809,7 +2809,7 @@ char* getAllPortByNum(int port) {
   else {
     portBufIdx = (short)((portBufIdx+1)%2);
     if(snprintf(staticBuffer[portBufIdx], 16, "%d", port) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     return(staticBuffer[portBufIdx]);
   }
 }
@@ -2975,7 +2975,7 @@ void updateOSName(HostTraffic *el) {
 #endif
 
     if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     key_data.dptr = tmpBuf;
     key_data.dsize = strlen(tmpBuf)+1;
 
@@ -3018,7 +3018,7 @@ void updateOSName(HostTraffic *el) {
 #endif
 
       if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferOverflow();
       key_data.dptr = tmpBuf;
       key_data.dsize = strlen(tmpBuf)+1;
       data_data.dptr = el->osName;

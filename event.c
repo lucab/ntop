@@ -77,14 +77,14 @@ void emitEvent(FilterRule *rule,
 	    rule->ruleLabel,
 	    srcHost->hostSymIpAddress, getAllPortByNum(sport),
 	    dstHost->hostSymIpAddress, getAllPortByNum(dport)) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
   } else {
     if(snprintf(msg, MAX_EVENT_MSG_SIZE, "%s %s %s %s->%s [%s]",
 	    ruleTime, actions[rule->actionType],
 	    rule->ruleLabel,
 	    srcHost->hostSymIpAddress,
 	    dstHost->hostSymIpAddress, icmpType2Str(icmpType)) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
   }
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.addressResolutionMutex);
@@ -94,7 +94,7 @@ void emitEvent(FilterRule *rule,
 	  (unsigned long)srcHost->hostIpAddress.s_addr,
 	  (unsigned long)dstHost->hostIpAddress.s_addr,
 	  (unsigned long)myGlobals.actTime) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
 
   traceEvent(TRACE_INFO, "Event: %s\n", msg);
 

@@ -85,7 +85,7 @@ static void resolveAddress(struct in_addr *hostAddr,
   addr = hostAddr->s_addr;
 
   if(snprintf(keyBuf, sizeof(keyBuf), "%u", addr) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
   key_data.dptr = keyBuf;
   key_data.dsize = strlen(keyBuf)+1;
 
@@ -171,7 +171,7 @@ static void resolveAddress(struct in_addr *hostAddr,
       if(snprintf(buffer, sizeof(buffer),
 		  "/usr/bin/host %s",
 		  intoa(myAddr)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferOverflow();
 
       fd = sec_popen(buffer, "r");
 
@@ -533,7 +533,7 @@ void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
   }
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
 
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(key_data.dptr)+1;

@@ -65,7 +65,7 @@ void* myMalloc(size_t theSize, int theLine, char* theFile) {
   }
 
   if(snprintf(tmpStr, sizeof(tmpStr), "file %s, line %d.", theFile, theLine) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
   tmpBlock->programLocation = strdup(tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
@@ -295,7 +295,7 @@ void myAddLeak(void* thePtr, int theLine, char* theFile) {
   tmpBlock->blockSize = 0;
   tmpBlock->memoryLocation = thePtr;
   if(snprintf(tmpStr, sizeof(tmpStr), "file %s, line %d.", theFile, theLine) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
   tmpBlock->programLocation = strdup(tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;

@@ -781,10 +781,10 @@ int main(int argc, char *argv[]) {
 
       if (i>0) {
 	if (snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  BufferOverflow();
       } else {
 	if (snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  BufferOverflow();
       }
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
     }

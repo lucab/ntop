@@ -63,7 +63,7 @@ void initIPServices(void) {
     char tmpStr[64];
 
     if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {
@@ -97,7 +97,7 @@ void initIPServices(void) {
     char tmpStr[64];
 
     if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {
@@ -477,7 +477,7 @@ void initGdbm(void) {
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", myGlobals.dbPath) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
 
   unlink(tmpBuf); /* Delete the old one (if present) */ 
   myGlobals.addressCache = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
@@ -496,7 +496,7 @@ void initGdbm(void) {
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", myGlobals.dbPath) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
 
   myGlobals.gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
@@ -515,7 +515,7 @@ void initGdbm(void) {
     exit(-1);
 } else {
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", myGlobals.dbPath) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
     myGlobals.pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
     if(myGlobals.pwFile == NULL) {
@@ -524,7 +524,7 @@ void initGdbm(void) {
     }
 
     if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", myGlobals.dbPath) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     myGlobals.hostsInfoFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
     if(myGlobals.hostsInfoFile == NULL) {
@@ -850,7 +850,7 @@ deviceSanityCheck(tmpDev); /* These checks do not apply to Win32 */
 	if(myGlobals.numDevices < MAX_NUM_DEVICES) {
 	  for(k=0; k<8; k++) {
 	    if(snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[i].name, k) < 0)
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      BufferOverflow();
 	    if(getLocalHostAddress(&myLocalHostAddress, tmpDeviceName) == 0) {
 	      /* The virtual interface exists */
 
@@ -892,7 +892,7 @@ static void initRules(char *rulesFile) {
     parseRules(rulesFile);
 
     if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/event.db", myGlobals.dbPath) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     myGlobals.eventFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
     if(myGlobals.eventFile == NULL) {

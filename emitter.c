@@ -74,17 +74,17 @@ void initWriteKey(int lang, char *indent, char *keyName) {
   switch(lang) {
   case PERL_LANGUAGE :
     if(snprintf(buf, sizeof(buf), "%s'%s' => {\n",indent, keyName) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     sendString(buf);
     break ;
   case PHP_LANGUAGE :
     if(snprintf(buf, sizeof(buf), "%s'%s' => array(\n",indent, keyName) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     sendString(buf);
     break ;
   case NO_LANGUAGE :
     if(snprintf(buf, sizeof(buf), "%s|", keyName) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     sendString(buf);
     break ;
   }
@@ -101,12 +101,12 @@ void endWriteKey(int lang, char *indent, char last) {
   switch(lang) {
   case PERL_LANGUAGE :
     if(snprintf(buf, sizeof(buf),"%s}%c\n",indent,last) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     sendString(buf);
     break ;
   case PHP_LANGUAGE :
     if(snprintf(buf, sizeof(buf),"%s)%c\n",indent,last) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
     sendString(buf);
     break ;
   case NO_LANGUAGE :
@@ -129,16 +129,16 @@ void wrtStrItm(int lang, char *indent, char *name, char *value, char last) {
     */
     if(( value != NULL ) &&( value[0] != '\0'))  {
       if(snprintf(buf, sizeof(buf), "%s'%s' => '%s'%c\n", indent,name,value,last) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
+	BufferOverflow();  sendString(buf);
     }
     break ;
   case NO_LANGUAGE :
     if( value != NULL ) {
       if(snprintf(buf, sizeof(buf), "%s|",value) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
+	BufferOverflow();  sendString(buf);
     } else {
       if(snprintf(buf, sizeof(buf), "%s|","") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
+	BufferOverflow();  sendString(buf);
     }
     break ;
   }

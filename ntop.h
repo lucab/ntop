@@ -2061,4 +2061,9 @@ typedef struct pppTunnelHeader {
 #define sec_popen(a,b) popen(a,b)
 #endif
 
+#ifndef BufferOverflow
+#define BufferOverflow()  traceEvent(TRACE_ERROR, "Buffer overflow! at %s(%d)", __FILE__, __LINE__)
+#endif
+
+
 #endif /* NTOP_H */

@@ -80,7 +80,7 @@ void addPageIndicator(char *url, u_int pageNum,
   else {
     if(snprintf(shortBuf, sizeof(shortBuf), 
 		"%s%d", revertOrder == 1 ? "-" : "", numCol) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");  
+      BufferOverflow();
   }
 
   if(pageNum >= 1) {
@@ -88,7 +88,7 @@ void addPageIndicator(char *url, u_int pageNum,
 		"<A HREF=\"%s?page=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 ALIGN=vmiddle></A> "
 		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/back.gif BORDER=0 ALIGN=vmiddle></A>",
 		url, shortBuf, url, pageNum-1, shortBuf) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");    
+      BufferOverflow();  
   } else
     prevBuf[0] = '\0';
   
@@ -98,7 +98,7 @@ void addPageIndicator(char *url, u_int pageNum,
 		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle></A>", 
 		url, pageNum+1, shortBuf, 
 		url, numPages-1, shortBuf) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");    
+      BufferOverflow();  
   }  else
     nextBuf[0] = '\0'; 
 

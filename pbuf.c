@@ -373,7 +373,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    char buf[MAX_HOST_SYM_NAME_LEN];
 
 	    if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      BufferOverflow();
 	    else
 	      strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
 	  } else
@@ -488,7 +488,7 @@ char* getNamedPort(int port) {
 
   if(svcName == NULL) {
     if(snprintf(outStr[portBufIdx], 8, "%d", port) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferOverflow();
   } else {
     strncpy(outStr[portBufIdx], svcName, 8);
   }
@@ -2081,13 +2081,13 @@ static char* timestamp(const struct timeval* t, int fmt) {
        */
       if(snprintf(buf, 16, "%10ld ms",
 		  delta_time_in_milliseconds(&current_pkt, &last_pkt)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferOverflow();
       break;
 
     case ABS_FMT:
       if(snprintf(buf, 16, "%02d:%02d:%02d.%06d",
 		  tm->tm_hour, tm->tm_min, tm->tm_sec, (int)t->tv_usec) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferOverflow();
       break;
 
     case RELATIVE_FMT:
@@ -2097,7 +2097,7 @@ static char* timestamp(const struct timeval* t, int fmt) {
        */
       if(snprintf(buf, 16, "%10ld ms",
 		  delta_time_in_milliseconds(&current_pkt, &first_pkt)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferOverflow();
       break;
     }
 
