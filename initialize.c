@@ -392,6 +392,39 @@ void resetStats(void) {
 
 /* ******************************* */
 
+int initGlobalValues(void) {
+    switch(myGlobals.accuracyLevel) {
+	case HIGH_ACCURACY_LEVEL:
+	    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 1, myGlobals.trackOnlyLocalHosts = 0;
+	    break;
+	case MEDIUM_ACCURACY_LEVEL:
+	    myGlobals.enableSessionHandling = 1, myGlobals.enablePacketDecoding = 0, myGlobals.enableFragmentHandling = myGlobals.trackOnlyLocalHosts = 1;
+	    break;
+	case LOW_ACCURACY_LEVEL:
+	    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0, myGlobals.trackOnlyLocalHosts = 1;
+	    break;
+    }
+
+    if(myGlobals.borderSnifferMode) {
+	/* Override everything that has been set before */
+	myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0;
+#ifdef MULTITHREADED
+	myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
+#endif
+	myGlobals.trackOnlyLocalHosts = 1;
+
+	myGlobals.enableSessionHandling = 1; /* ==> Luca's test <== */
+    } else {
+#ifdef MULTITHREADED
+	myGlobals.numDequeueThreads = 1;
+#endif
+    }
+    myGlobals.enableSessionHandling = 0;
+    return(0);
+}
+
+/* ******************************* */
+
 void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
 
 #ifndef WIN32
