@@ -654,7 +654,7 @@ int getdomainname(char *name, size_t len);
 #define theDomainHasBeenComputed(a) FD_ISSET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &(a->flags))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(FLAG_SUBNET_LOCALHOST, &(a->flags)))
 #define privateIPAddress(a)         ((a != NULL) && FD_ISSET(FLAG_PRIVATE_IP_ADDRESS, &(a->flags)))
-#define broadcastHost(a)            ((a != NULL) && (cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))))
+#define broadcastHost(a)            ((a != NULL) && (cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))) || ((a->hostIpAddress.s_addr == 0) && (a->ethAddressString[0] == '\0')))
 #define multicastHost(a)            ((a != NULL) && FD_ISSET(FLAG_MULTICAST_HOST, &(a->flags)))
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(FLAG_GATEWAY_HOST, &(a->flags)))
 #define nameServerHost(a)           ((a != NULL) && FD_ISSET(FLAG_NAME_SERVER_HOST, &(a->flags)))

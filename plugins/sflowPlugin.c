@@ -2180,7 +2180,6 @@ static int initsFlowFunct(void) {
       traceEvent(CONST_TRACE_INFO, "SFLOW: Welcome to sFlow: listening on UDP port %d",
 		 myGlobals.sflowInPort);
 
-
   if(myGlobals.sflowDeviceId != -1)
     myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 1;
 

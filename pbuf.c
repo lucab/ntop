@@ -2271,7 +2271,7 @@ void processPacket(u_char *_deviceId,
 	    sap_type = llcHeader.ssap & ~CONST_LLC_GSAP;
 	    llcsap_string(sap_type);
 
-	    if(sap_type != 0x42 /* STP */) {
+	    if(sap_type != 0x42 /* !STP */) {
 	      addNonIpTrafficInfo(srcHost, sap_type, length, 0 /* sent */);
 	      addNonIpTrafficInfo(dstHost, sap_type, length, 1 /* rcvd */);
 	    }
@@ -2279,6 +2279,7 @@ void processPacket(u_char *_deviceId,
 	    if(sap_type == 0x42 /* STP */) {
 	      /* Spanning Tree */
 	      incrementTrafficCounter(&srcHost->stpSent, length), incrementTrafficCounter(&dstHost->stpRcvd, length);
+	      FD_SET(FLAG_HOST_TYPE_SVC_BRIDGE, &srcHost->flags);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].stpBytes, length);
 	    } else if(myGlobals.enablePacketDecoding && (sap_type == 0xE0)) {
 	      /* NetWare */

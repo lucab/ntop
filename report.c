@@ -1450,6 +1450,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     unsigned short actUsage;
 
+    if(broadcastHost(el)) continue;
+
     actUsage = (unsigned short)(100*((float)el->bytesSent.value/
 				     (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
 
@@ -1555,231 +1557,230 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	char *tmpName1, *tmpName2, *tmpName3, sniffedName[MAXDNAME];
 	int displaySniffedName=0;
 
-	if(broadcastHost(el) == 0) {
-	  tmpName1 = el->hostNumIpAddress;
-	  if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
-	    tmpName1 = myGlobals.separator;
+	tmpName1 = el->hostNumIpAddress;
+	if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
+	  tmpName1 = myGlobals.separator;
 
-	  if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
-	    tmpName2 = getVendorInfo(el->ethAddress, 1);
-	    if(tmpName2[0] == '\0')
-	      tmpName2 = myGlobals.separator;
-
-	    tmpName3 = el->ethAddressString;
-	    if((tmpName3[0] == '\0')
-	       || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
-	      tmpName3 = myGlobals.separator;
-	  } else {
+	if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
+	  tmpName2 = getVendorInfo(el->ethAddress, 1);
+	  if(tmpName2[0] == '\0')
 	    tmpName2 = myGlobals.separator;
-	    tmpName3 = myGlobals.separator;
-	  }
 
-	  if((el->hostIpAddress.s_addr != 0)
-	     && (getSniffedDNSName(el->hostNumIpAddress,
-				   sniffedName, sizeof(sniffedName)))) {
+	  tmpName3 = el->ethAddressString;
+	  if((tmpName3[0] == '\0')
+	     || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
+	    tmpName3 = myGlobals.separator;
+	} else {
+	  tmpName2 = myGlobals.separator;
+	  tmpName3 = myGlobals.separator;
+	}
+
+	if((el->hostIpAddress.s_addr != 0)
+	   && (getSniffedDNSName(el->hostNumIpAddress,
+				 sniffedName, sizeof(sniffedName)))) {
 #ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "%s <=> %s [%s/%s]",
-		       el->hostNumIpAddress, sniffedName,
-		       el->hostSymIpAddress, el->hostNumIpAddress);
+	  traceEvent(CONST_TRACE_INFO, "%s <=> %s [%s/%s]",
+		     el->hostNumIpAddress, sniffedName,
+		     el->hostSymIpAddress, el->hostNumIpAddress);
 #endif
 
-            if((el->hostSymIpAddress[0] == '\0') || strcmp(sniffedName, el->hostSymIpAddress)) {
-	      if((el->hostSymIpAddress[0] == '\0')
-		 || (strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0)) {
-		if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
-		  sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
+	  if((el->hostSymIpAddress[0] == '\0') || strcmp(sniffedName, el->hostSymIpAddress)) {
+	    if((el->hostSymIpAddress[0] == '\0')
+	       || (strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0)) {
+	      if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
+		sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
 
-		for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
-		strcpy(el->hostSymIpAddress, sniffedName);
-	      } else
-		displaySniffedName=1;
-	    }
-	  }
-
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor()) < 0)
-	    BufferTooShort();
-	  sendString(buf);
-
-	  sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1));
-
-	  if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
-	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			tmpName1, tmpName3) < 0)
-	      BufferTooShort();
-	  } else {
-	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			tmpName1) < 0)
-	      BufferTooShort();
-	  }
-	  sendString(buf);
-
-	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
-
-	  if(el->nonIPTraffic && displaySniffedName) {
-	    short numAddresses = 0;
-
-	    if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {
-	      if((el->nonIPTraffic->nbAccountName != NULL) && ((el->nonIPTraffic->nbAccountName[0] != '0'))) {
-		if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
-		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName,
-			      el->nonIPTraffic->nbDomainName) < 0)
-		    BufferTooShort();
-		} else {
-		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName) < 0)
-		    BufferTooShort();
-		}
-	      } else {
-		if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
-		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			      el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName) < 0)
-		    BufferTooShort();
-		} else {
-		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			      el->nonIPTraffic->nbHostName) < 0)
-		    BufferTooShort();
-		}
-	      }
-	      sendString(buf);
-	      numAddresses++;
-	    } else if(el->nonIPTraffic->nbHostName) {
-	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			  el->nonIPTraffic->nbHostName) < 0) BufferTooShort();
-	      sendString(buf);
-	      numAddresses++;
-	    }
-
-	    if(el->nonIPTraffic->nbDescr) {
-	      if(snprintf(buf, sizeof(buf), ":&nbsp;%s", el->nonIPTraffic->nbDescr) < 0)
-		BufferTooShort();
-	      sendString(buf);
-	    }
-
-	    if (displaySniffedName) {
-	      if(numAddresses > 0) sendString("/");
-              snprintf(buf, sizeof(buf), "%s", sniffedName);
-	      sendString(buf);
-	      numAddresses++;
-            }
-
-	    if(el->nonIPTraffic->atNetwork) {
-	      char *nodeName = el->nonIPTraffic->atNodeName;
-
-	      if(numAddresses > 0) sendString("/");
-	      if(nodeName == NULL) nodeName = "";
-
-	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
-			  getOSFlag(el, "Mac", 0, osBuf, sizeof(osBuf)), nodeName) < 0)
-		BufferTooShort();
-	      sendString(buf);
-
-	      if(el->nonIPTraffic->atNodeType[0] != NULL) {
-		sendString("(");
-		for(i=0; i<MAX_NODE_TYPES; i++)
-		  if(el->nonIPTraffic->atNodeType[i] == NULL)
-		    break;
-		  else {
-		    if(i > 0) sendString("/");
-		    sendString(el->nonIPTraffic->atNodeType[i]);
-		  }
-
-		sendString(")&nbsp;");
-	      }
-
-	      if(snprintf(buf, sizeof(buf), "[%d.%d]",
-			  el->nonIPTraffic->atNetwork, el->nonIPTraffic->atNode) < 0)
-		BufferTooShort();
-	      sendString(buf);
-	      numAddresses++;
-	    }
-
-	    if(el->nonIPTraffic->ipxHostName) {
-	      int numSap=0;
-
-	      if(numAddresses > 0) sendString("/");
-	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
-			  getOSFlag(el, "Novell", 0, osBuf, sizeof(osBuf)),
-			  el->nonIPTraffic->ipxHostName) < 0)
-		BufferTooShort();
-	      sendString(buf);
-
-	      for(i=0; i<el->nonIPTraffic->numIpxNodeTypes; i++) {
-		char *str = getSAPInfo(el->nonIPTraffic->ipxNodeType[i], 1);
-
-		if(str[0] != '\0') {
-		  if(numSap == 0)
-		    sendString("[");
-		  else
-		    sendString("/");
-
-		  sendString(str);
-		  numSap++;
-		}
-	      }
-
-	      if(numSap > 0) sendString("]");
-
-	      numAddresses++;
-	    }
-	  }
-
-	  sendString("&nbsp;</TD>");
-	  printBar(buf, sizeof(buf), el->actBandwidthUsage, maxBandwidthUsage, 3);
-
-	  if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
-	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2) < 0)
-	      BufferTooShort();
-	    sendString(buf);
-	  }
-
-	  {
-	    char shortBuf[8];
-
-	    if(!subnetPseudoLocalHost(el)) {
-	      i = guessHops(el);
+	      for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
+	      strcpy(el->hostSymIpAddress, sniffedName);
 	    } else
-	      i = 0;
+	      displaySniffedName=1;
+	  }
+	}
 
-	    sprintf(shortBuf, "%d", i % 256);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor()) < 0)
+	  BufferTooShort();
+	sendString(buf);
 
-	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>",
-			(i == 0) ? "" : shortBuf) < 0)
+	sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1));
+
+	if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+		      tmpName1, tmpName3) < 0)
+	    BufferTooShort();
+	} else {
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+		      tmpName1) < 0)
+	    BufferTooShort();
+	}
+	sendString(buf);
+
+	sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
+
+	if(el->nonIPTraffic && displaySniffedName) {
+	  short numAddresses = 0;
+
+	  if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {
+	    if((el->nonIPTraffic->nbAccountName != NULL) && ((el->nonIPTraffic->nbAccountName[0] != '0'))) {
+	      if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
+		if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			    el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName,
+			    el->nonIPTraffic->nbDomainName) < 0)
+		  BufferTooShort();
+	      } else {
+		if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			    el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName) < 0)
+		  BufferTooShort();
+	      }
+	    } else {
+	      if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
+		if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			    el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName) < 0)
+		  BufferTooShort();
+	      } else {
+		if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			    el->nonIPTraffic->nbHostName) < 0)
+		  BufferTooShort();
+	      }
+	    }
+	    sendString(buf);
+	    numAddresses++;
+	  } else if(el->nonIPTraffic->nbHostName) {
+	    if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			el->nonIPTraffic->nbHostName) < 0) BufferTooShort();
+	    sendString(buf);
+	    numAddresses++;
+	  }
+
+	  if(el->nonIPTraffic->nbDescr) {
+	    if(snprintf(buf, sizeof(buf), ":&nbsp;%s", el->nonIPTraffic->nbDescr) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
 
-	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%lu</TD>",
-		      (unsigned long)(el->totContactedSentPeers+el->totContactedRcvdPeers)) < 0)
+	  if (displaySniffedName) {
+	    if(numAddresses > 0) sendString("/");
+	    snprintf(buf, sizeof(buf), "%s", sniffedName);
+	    sendString(buf);
+	    numAddresses++;
+	  }
+
+	  if(el->nonIPTraffic->atNetwork) {
+	    char *nodeName = el->nonIPTraffic->atNodeName;
+
+	    if(numAddresses > 0) sendString("/");
+	    if(nodeName == NULL) nodeName = "";
+
+	    if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
+			getOSFlag(el, "Mac", 0, osBuf, sizeof(osBuf)), nodeName) < 0)
+	      BufferTooShort();
+	    sendString(buf);
+
+	    if(el->nonIPTraffic->atNodeType[0] != NULL) {
+	      sendString("(");
+	      for(i=0; i<MAX_NODE_TYPES; i++)
+		if(el->nonIPTraffic->atNodeType[i] == NULL)
+		  break;
+		else {
+		  if(i > 0) sendString("/");
+		  sendString(el->nonIPTraffic->atNodeType[i]);
+		}
+
+	      sendString(")&nbsp;");
+	    }
+
+	    if(snprintf(buf, sizeof(buf), "[%d.%d]",
+			el->nonIPTraffic->atNetwork, el->nonIPTraffic->atNode) < 0)
+	      BufferTooShort();
+	    sendString(buf);
+	    numAddresses++;
+	  }
+
+	  if(el->nonIPTraffic->ipxHostName) {
+	    int numSap=0;
+
+	    if(numAddresses > 0) sendString("/");
+	    if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
+			getOSFlag(el, "Novell", 0, osBuf, sizeof(osBuf)),
+			el->nonIPTraffic->ipxHostName) < 0)
+	      BufferTooShort();
+	    sendString(buf);
+
+	    for(i=0; i<el->nonIPTraffic->numIpxNodeTypes; i++) {
+	      char *str = getSAPInfo(el->nonIPTraffic->ipxNodeType[i], 1);
+
+	      if(str[0] != '\0') {
+		if(numSap == 0)
+		  sendString("[");
+		else
+		  sendString("/");
+
+		sendString(str);
+		numSap++;
+	      }
+	    }
+
+	    if(numSap > 0) sendString("]");
+
+	    numAddresses++;
+	  }
+	}
+
+	sendString("&nbsp;</TD>");
+	printBar(buf, sizeof(buf), el->actBandwidthUsage, maxBandwidthUsage, 3);
+
+	if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2) < 0)
 	    BufferTooShort();
 	  sendString(buf);
+	}
+
+	{
+	  char shortBuf[8];
+
+	  if(!subnetPseudoLocalHost(el)) {
+	    i = guessHops(el);
+	  } else
+	    i = 0;
+
+	  sprintf(shortBuf, "%d", i % 256);
+
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>",
+		      (i == 0) ? "" : shortBuf) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+	}
+
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%lu</TD>",
+		    (unsigned long)(el->totContactedSentPeers+el->totContactedRcvdPeers)) < 0)
+	  BufferTooShort();
+	sendString(buf);
 
 #if 0
-	  /* Time distance */
-	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s-",
-		      formatLatency(el->minLatency, FLAG_STATE_ACTIVE)) < 0)
-	    BufferTooShort();
-	  sendString(buf);
+	/* Time distance */
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s-",
+		    formatLatency(el->minLatency, FLAG_STATE_ACTIVE)) < 0)
+	  BufferTooShort();
+	sendString(buf);
 
-	  if(snprintf(buf, sizeof(buf), "%s</TD>",
-		      formatLatency(el->maxLatency, FLAG_STATE_ACTIVE)) < 0)
-	    BufferTooShort();
-	  sendString(buf);
+	if(snprintf(buf, sizeof(buf), "%s</TD>",
+		    formatLatency(el->maxLatency, FLAG_STATE_ACTIVE)) < 0)
+	  BufferTooShort();
+	sendString(buf);
 #endif
 
-	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</A></TD>",
-		      formatSeconds(el->lastSeen - el->firstSeen)) < 0)
-	    BufferTooShort();
-	  sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</A></TD>",
+		    formatSeconds(el->lastSeen - el->firstSeen)) < 0)
+	  BufferTooShort();
+	sendString(buf);
 
-	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%d</A></TD>", el->hostAS) < 0)
-	    BufferTooShort();
-	  sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%d</A></TD>", el->hostAS) < 0)
+	  BufferTooShort();
+	sendString(buf);
 
-	  sendString("</TR>\n");
-	  printedEntries++;
-	}
+	sendString("</TR>\n");
+	printedEntries++;
+	
 
 	/* Avoid huge tables */
 	if(printedEntries > myGlobals.maxNumLines)

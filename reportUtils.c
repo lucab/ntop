@@ -3028,7 +3028,7 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(isWorkstation(el))      sendString("Workstation<BR>\n");
     if(isMasterBrowser(el))    sendString("Master Browser<BR>\n");
     if(isPrinter(el))          sendString("Printer&nbsp;<IMG ALT=Printer SRC=printer.gif BORDER=0><BR>\n");
-    if(isBridgeHost(el))       sendString("Bridge<BR>\n");
+    if(isBridgeHost(el))       sendString("Layer-2 Switch/Bridge <IMG ALT=Bridge SRC=/bridge.gif BORDER=0><BR>\n");
 
     if(nameServerHost(el))     sendString("&nbsp;<IMG ALT=\"DNS Server\" SRC=/dns.gif BORDER=0>&nbsp;Name Server<BR>\n");
     if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>&nbsp;<BR>\n");

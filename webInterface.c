@@ -339,7 +339,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   static char buf[5][2*LEN_GENERAL_WORK_BUFFER];
   char symIp[256], *tmpStr, linkName[256], flag[256], colorSpec[64];
   char *dynIp, *p2p, osBuf[128];
-  char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
+  char *multihomed, *gwStr, *brStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
   short specialMacAddress = 0;
   static short bufIdx=0;
   short usedEthAddress=0;
@@ -348,9 +348,9 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(el == NULL)
     return("&nbsp;");
 
-  if((broadcastHost(el) && (el->hostIpAddress.s_addr == 0))
-     || (cmpSerial(&el->hostSerial, &myGlobals.broadcastEntry->hostSerial))
+  if(broadcastHost(el)
      || ((el->hostIpAddress.s_addr == 0) && (el->ethAddressString[0] == '\0'))) {
+    FD_SET(FLAG_BROADCAST_HOST, &el->flags); /* Just to be safe */
     if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
       return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
     else
@@ -472,6 +472,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isMultihomed(el))     multihomed = "&nbsp;<IMG ALT=Multihomed SRC=/multihomed.gif BORDER=0>"; else multihomed = "";
+  if(isBridgeHost(el))     brStr = "&nbsp;<IMG ALT=Bridge SRC=/bridge.gif BORDER=0>"; else brStr = "";
   if(gatewayHost(el))      gwStr = "&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>"; else gwStr = "";
   if(nameServerHost(el))   dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=/dns.gif BORDER=0>"; else dnsStr = "";
   if(isPrinter(el))        printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>"; else printStr = "";
@@ -506,11 +507,11 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
-		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s%s</TH>%s",
+		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s%s%s</TH>%s",
 		linkName, "", symIp, 
 		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)), dynIp, multihomed, 
 		usedEthAddress ? "<IMG SRC=/card.gif BORDER=0>" : "", 
-		gwStr, dnsStr, printStr, smtpStr, healthStr, userStr, p2p, flag) < 0)
+		gwStr, brStr, dnsStr, printStr, smtpStr, healthStr, userStr, p2p, flag) < 0)
       BufferTooShort();
   } else {
     if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<A HREF=\"/%s.html\" %s NOWRAP>%s</A>"
