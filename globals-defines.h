@@ -2238,14 +2238,55 @@
  /* #define PARM_USE_HOST */
 #endif
 
-
-#ifndef IN6ADDR_LINKLOCAL_ALLNODES_INIT
-#define IN6ADDR_LINKLOCAL_ALLNODES_INIT \
-        {{{ 0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}}
-extern const struct in6_addr in6addr_linklocal_allnodes;
+#ifdef WIN32
+#define INET6
 #endif
 
+#ifdef WIN32
+#define in6_addr in_addr6
+#endif
+
+#ifndef IN6ADDR_LINKLOCAL_ALLNODES_INIT
+struct in6_addr _in6addr_linklocal_allnodes;
+#endif /*  IN6ADDR_LINKLOCAL_ALLNODES_INIT */
+
+#ifndef IN6_IS_ADDR_MULTICAST
+#define IN6_IS_ADDR_MULTICAST(a) (((uint8_t *) (a))[0] == 0xff)
+#endif
+
+#ifndef IN6_IS_ADDR_LINKLOCAL
+#define IN6_IS_ADDR_LINKLOCAL(a) \
+        ((((uint32_t *) (a))[0] & htonl (0xffc00000))                 \
+         == htonl (0xfe800000))
+#endif
+
+
+#ifdef WIN32
+struct ip6_hdr
+  {
+    union
+      {
+	struct ip6_hdrctl
+	  {
+	    u_int32_t ip6_un1_flow;   /* 4 bits version, 8 bits TC,
+					20 bits flow-ID */
+	    u_int16_t ip6_un1_plen;   /* payload length */
+	    u_int8_t  ip6_un1_nxt;    /* next header */
+	    u_int8_t  ip6_un1_hlim;   /* hop limit */
+	  } ip6_un1;
+		u_int8_t ip6_un2_vfc;       /* 4 bits version, top 4 bits tclass */
+      } ip6_ctlun;
+    struct in_addr6 ip6_src;      /* source address */
+    struct in_addr6 ip6_dst;      /* destination address */
+  };
+
+#define ip6_vfc   ip6_ctlun.ip6_un2_vfc
+#define ip6_flow  ip6_ctlun.ip6_un1.ip6_un1_flow
+#define ip6_plen  ip6_ctlun.ip6_un1.ip6_un1_plen
+#define ip6_nxt   ip6_ctlun.ip6_un1.ip6_un1_nxt
+#define ip6_hlim  ip6_ctlun.ip6_un1.ip6_un1_hlim
+#define ip6_hops  ip6_ctlun.ip6_un1.ip6_un1_hlim
+#endif
 
 /*
  * Somehow, gcc under HPUX decides to build a c++ version of malloc.h

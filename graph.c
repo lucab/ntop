@@ -441,7 +441,7 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
   FILE *fd;
   int len;
   char tmpStr[256];
-  int bufSize=sizeof(tmpStr)-1;
+  int bufSize=sizeof(tmpStr)-1, totLen = 0;
 
 
   if((fd = fopen(fileName, "rb")) != NULL) {
@@ -449,8 +449,9 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
     for(;;) {
       len = fread(tmpStr, sizeof(char), bufSize, fd);
       if(len > 0) {
-	sendStringLen(tmpStr, len);
-      }
+		sendStringLen(tmpStr, len);
+		totLen += len;
+	  }
       if(len <= 0) break;
     }
     fclose(fd);

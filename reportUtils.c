@@ -2431,7 +2431,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2>"
-		    "<IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1 "
+		    "<IMG SRC=\"hostTrafficDistrib-%s"CHART_FORMAT"?1\" "
 		    "ALT=\"Sent Traffic Distribution for %s\"></TD>",
                     linkName,
                     el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
@@ -2464,7 +2464,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
 	if((el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value) > 0) {
 	  if(snprintf(buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent IP Traffic Distribution for %s\"></TD>",
+		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=\"hostIPTrafficDistrib-%s"CHART_FORMAT"?1\" ALT=\"Sent IP Traffic Distribution for %s\"></TD>",
 		      linkName, el->hostNumIpAddress) < 0)
 	    BufferTooShort();
 	  sendString(buf);

@@ -30,6 +30,21 @@
 
 /* ******************************** */
 
+#ifdef WIN32
+struct icmp6_hdr
+  {
+    u_int8_t     icmp6_type;   /* type field */
+    u_int8_t     icmp6_code;   /* code field */
+    u_int16_t    icmp6_cksum;  /* checksum field */
+    union
+      {
+        u_int32_t  icmp6_un_data32[1]; /* type-specific field */
+        u_int16_t  icmp6_un_data16[2]; /* type-specific field */
+        u_int8_t   icmp6_un_data8[4];  /* type-specific field */
+      } icmp6_dataun;
+  };
+#endif
+
 #ifndef ICMP6_NI_REPLY 
 #define ICMP6_NI_REPLY 140
 #endif
@@ -82,6 +97,26 @@
 #define ICMP6_DST_UNREACH_ADMIN 1
 #endif
 
+#ifndef ND_ROUTER_SOLICIT
+#define ND_ROUTER_SOLICIT 133
+#endif
+
+#ifndef ND_ROUTER_ADVERT
+#define ND_ROUTER_ADVERT 134
+#endif
+
+#ifndef ND_NEIGHBOR_SOLICIT
+#define ND_NEIGHBOR_SOLICIT 135
+#endif
+
+#ifndef ND_NEIGHBOR_ADVERT
+#define ND_NEIGHBOR_ADVERT 136
+#endif
+
+#ifndef ND_REDIRECT
+#define ND_REDIRECT 137
+#endif
+
 /* ******************************** */
 
 #define IFACE_TYPE_ALL		0x00
@@ -124,8 +159,22 @@
 
 /* ******************************** */
 
+#ifdef WIN32
+/* Fragment header */
+struct ip6_frag
+  {
+    u_int8_t   ip6f_nxt;       /* next header */
+    u_int8_t   ip6f_reserved;  /* reserved field */
+    u_int16_t  ip6f_offlg;     /* offset, reserved, and flag */
+    u_int32_t  ip6f_ident;     /* identification */
+  };
+#endif
+
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN  46
+#endif
+
 #if defined _IFACE_ADDR_INET
-#include <netinet/in.h>
 struct iface_addr_inet {
   struct in_addr	addr;
   struct in_addr	bcast;
@@ -134,7 +183,6 @@ struct iface_addr_inet {
 #endif
 
 #if defined _IFACE_ADDR_INET6
-#include <netinet/in.h>
 struct iface_addr_inet6 {
   struct in6_addr	addr;
   int			prefixlen;
@@ -147,14 +195,17 @@ struct iface_addr_inet6 {
 
 struct iface_addr {
   int			 family;
-  struct iface_if	*ifi;		/* */
-  struct iface_addr	*next;		/* */
+  struct iface_if	*ifi;
+  struct iface_addr	*next;
   union {
     struct iface_addr_inet	inet;
     struct iface_addr_inet6	inet6;
   } af;
 };
 
+#ifndef IFNAMSIZ
+#define IFNAMSIZ 16
+#endif
 
 struct iface_if {
   int			 index;

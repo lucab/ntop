@@ -85,7 +85,7 @@ static void resolveAddress(HostAddr *hostAddr,
 			   short keepAddressNumeric, int actualDeviceId) {
   char symAddr[MAX_LEN_SYM_HOST_NAME];
   StoredAddress storedAddress;
-  int addr, len, i, addToCacheFlag=0, updateRecord=0;
+  int i, addToCacheFlag=0, updateRecord=0;
   struct hostent *hp = NULL;
   char* res;
   char keyBuf[47];
@@ -626,7 +626,7 @@ char* _intop(struct in6_addr *addr,char *buf, u_short buflen) {
 char* intop(struct in6_addr *addr) {
   static char  ntop_buf[INET6_ADDRSTRLEN+1];
   
-  bzero(ntop_buf,INET6_ADDRSTRLEN);
+  memset(ntop_buf, 0, INET6_ADDRSTRLEN);
   return (char *)_intop(addr, ntop_buf,sizeof(ntop_buf)); 
 }
 
@@ -686,6 +686,7 @@ char* addrtostr(HostAddr *addr){
   case AF_INET6:
     return(char *)(intop(&addr->Ip6Address));
 #endif
+  default: return("???");
   }
 }
 
@@ -701,13 +702,13 @@ char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen){
   case AF_INET6:
     return (_intop(&addr->Ip6Address,buf,bufLen));
 #endif
+  default: return("???");
   }
 }
 
 /* ******************************* */
 
 int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer) {
-  HostAddr addr = hostIpAddress;
   char buf[47];
   char tmpBuf[47];
   datum key_data;

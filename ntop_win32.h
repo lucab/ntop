@@ -46,6 +46,7 @@
 extern char* getadminpass(const char *prompt);
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 extern u_char isNtopAservice;
+extern const char *inet_ntop(int af, const void *src, char *dst, size_t size);
 
 extern char _wdir[];
 
@@ -77,6 +78,11 @@ extern int getopt_long (int argc, char *const *argv, const char *options,
 extern void printAvailableInterfaces();
 extern char* getpass(const char *prompt);
 extern ULONG GetHostIPAddr();
+
+#ifdef WIN32
+#define INET6
+#define in6_addr in_addr6
+#endif
 
 /* *************************************************************** */
 

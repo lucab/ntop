@@ -431,6 +431,7 @@ static int decodeString(char *bufcoded,
 
 void sendStringLen(char *theString, unsigned int len) {
   int bytesSent, rc, retries = 0;
+  static unsigned int fileSerial = 0;
 
   if(myGlobals.newSock == FLAG_DUMMY_SOCKET)
     return;
@@ -444,11 +445,12 @@ void sendStringLen(char *theString, unsigned int len) {
     if(compressFile) {
       if(compressFileFd == NULL) {
 #ifdef WIN32
-		  strcpy(compressedFilePath, "gzip-ntop.tmp");
+		  sprintf(compressedFilePath, "gzip-%d.ntop", fileSerial++);
 #else
 		  sprintf(compressedFilePath, "/tmp/gzip-%d.ntop", getpid());
 #endif
-	compressFileFd = gzopen(compressedFilePath, "wb");
+
+		compressFileFd = gzopen(compressedFilePath, "wb");
       }
 
       if(gzwrite(compressFileFd, theString, len) == 0) {
@@ -477,8 +479,6 @@ void sendStringLen(char *theString, unsigned int len) {
 #else
     rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
 #endif
-
-    /* traceEvent(CONST_TRACE_INFO, "rc=%d", rc); */
 
     if((errno != 0) || (rc < 0)) {
 #ifdef DEBUG
@@ -2391,13 +2391,11 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 /* ************************* */
 
 void handleHTTPrequest(HostAddr from) {
-
   int skipLeading, postLen, usedFork = 0;
   char requestedURL[MAX_LEN_URL], pw[64], agent[256];
   int rc, i;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
-
 #ifdef MAKE_WITH_I18N
   char workLanguage[256];
   int numLang = 0;

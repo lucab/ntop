@@ -527,7 +527,6 @@ typedef struct nonIpProtoTrafficInfo {
   struct nonIpProtoTrafficInfo *next;
 } NonIpProtoTrafficInfo;
 
-/* **************************** */
 /********************************************************/
 
 #define hostIp4Address hostIpAddress.Ip4Address
@@ -577,7 +576,6 @@ typedef struct hostTraffic {
   unsigned short   actBandwidthUsage;
   TrafficDistribution *trafficDistribution;
   u_int32_t        numHostSessions;
-
 
   /* Routing */
   RoutingCounter   *routedTraffic;
@@ -711,16 +709,17 @@ typedef struct ipSession {
 } IPSession;
 
 /* ************************************* */
+
 typedef struct ntopIfaceAddrInet {
   struct in_addr ifAddr;
   struct in_addr network;
   struct in_addr netmask;
-}NtopIfaceAddrInet;
+} NtopIfaceAddrInet;
 
 typedef struct ntopIfaceAddrInet6 {
   struct in6_addr ifAddr;
-  int            prefixlen;
-}NtopIfaceAddrInet6;
+  int             prefixlen;
+} NtopIfaceAddrInet6;
 
 typedef struct ntopIfaceaddr{
   int family;
@@ -729,7 +728,7 @@ typedef struct ntopIfaceaddr{
     NtopIfaceAddrInet  inet;
     NtopIfaceAddrInet6 inet6;
   }af;
-}NtopIfaceAddr;
+} NtopIfaceAddr;
 
 
 typedef struct ntopInterface {
@@ -1992,9 +1991,7 @@ typedef struct ntopGlobals {
 #ifdef MAKE_WITH_SSLWATCHDOG
   unsigned long numHTTPSrequestTimeouts;
 #endif
-#ifndef WIN32
   u_short webServerRequestQueueLength;
-#endif
 
   /* webInterface.c */
 #ifdef HAVE_FILEDESCRIPTORBUG

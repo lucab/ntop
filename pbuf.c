@@ -1907,6 +1907,7 @@ static void processIpPkt(const u_char *bp,
 
 #ifdef INET6
  end:
+ ; /* Needed by some compilers */
 #endif
 
 #ifdef DEBUG
@@ -1917,6 +1918,7 @@ static void processIpPkt(const u_char *bp,
 	     (int)myGlobals.device[actualDeviceId].icmpBytes.value,
 	     length);
 #endif
+
 }
 
 /* ************************************ */

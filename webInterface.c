@@ -4705,7 +4705,7 @@ void printNtopProblemReport(void) {
 
 void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   int sockopt = 1, rc;
-#ifdef INET6
+#if defined(INET6) && !defined(WIN32)
   struct addrinfo hints, *ai, *aitop;
   char strport[32];
   char ntop[1024];
@@ -4726,7 +4726,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 
   traceEvent(CONST_TRACE_NOISY, "Initializing%s socket, port %d, address %s",
              sslOrNot, *port, addr == NULL ? "(any)" : addr);
-#ifdef INET6
+#if defined(INET6) && !defined(WIN32)
   memset(&hints,0,sizeof(hints));
   hints.ai_family = ipv4or6;
   hints.ai_flags = AI_PASSIVE;
@@ -4809,14 +4809,14 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #endif /* FILEDESCRIPTORBUG */
 
     errno = 0;
-#ifdef INET6
+#if defined(INET6) && !defined(WIN32)
     *sock = socket(ai->ai_family, SOCK_STREAM, 0);
 #else
     *sock = socket(AF_INET, SOCK_STREAM, 0);
 #endif
     if((*sock <= 0) || (errno != 0) ) {
       {
-#ifdef INET6
+#if defined(INET6) && !defined(WIN32)
 	errno = 0;
 	/* It might be that IPv6 is not supported by the running system */
 	*sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -4848,7 +4848,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #endif
 
   errno = 0;
-#ifdef INET6
+#if defined(INET6) && !defined(WIN32)
   rc = bind(*sock, ai->ai_addr, ai->ai_addrlen);
 #else
   rc = bind(*sock, (struct sockaddr *)&sockIn, sizeof(sockIn));
@@ -5486,7 +5486,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 /* ************************************* */
 
 static void handleSingleWebConnection(fd_set *fdmask) {
-#ifdef INET6
+#if defined(INET6) && !defined(WIN32)
   struct sockaddr from;
 #else
   struct sockaddr_in from;
@@ -5514,7 +5514,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
   }
 
   if(myGlobals.newSock > 0) {
-#ifdef INET6
+#if defined(INET6) && !defined(WIN32)
     if(from.sa_family == AF_INET)
       addrput(AF_INET, &remote_ipaddr, &(((struct sockaddr_in *)&from)->sin_addr));
     else if(from.sa_family == AF_INET6)

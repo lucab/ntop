@@ -471,7 +471,7 @@ static float timeval_subtract (struct timeval x, struct timeval y) {
 /* ************************************ */
 
 void purgeIdleHosts(int actDevice) {
-  u_int idx, numFreedBuckets=0, numHosts = 0, theIdx;
+  u_int idx, numFreedBuckets=0, numHosts = 0;
   time_t startTime = time(NULL), purgeTime;
   static time_t lastPurgeTime[MAX_NUM_DEVICES];
   static char firstRun = 1;
@@ -866,7 +866,8 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	  el->hostIp4Address.s_addr = INADDR_BROADCAST;
 #ifdef INET6
 	else if (hostIpAddress->hostFamily == AF_INET6)
-	  el->hostIp6Address = in6addr_linklocal_allnodes;
+	  el->hostIp6Address = _in6addr_linklocal_allnodes;
+
 #endif
 	FD_SET(FLAG_BROADCAST_HOST, &el->flags);
 	if(isMulticastAddress(&el->hostIpAddress))

@@ -299,7 +299,7 @@ static int setNetFlowOutSocket() {
       else
 	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Export disabled at user request");
     }
-  }
+  } else return(0);
 }
 
 /* ****************************** */
@@ -685,6 +685,8 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
 #ifdef CFG_MULTITHREADED
   /* releaseMutex(&myGlobals.hostsHashMutex); */
 #endif
+
+  return(0);
 }
 
 /* *************************** */

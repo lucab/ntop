@@ -170,17 +170,6 @@ struct in6_addr
 };
 #endif /* HAVE_IN6_ADDR */
 
-#ifdef WIN32
-struct in6_addr {
-  union {
-    uint8_t	 _S6_u8[16];	/* IPv6 address */
-    uint32_t _S6_u32[4];	/* IPv6 address */
-    uint32_t __S6_align;	/* Align on 32 bit boundary */
-  } _S6_un;
-};
-
-#endif
-
 enum INMAddress_type {
   INMADDRESSTYPE_IP_V4 = 1,
   INMADDRESSTYPE_IP_V6 = 2

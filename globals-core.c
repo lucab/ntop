@@ -73,10 +73,6 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
 #endif
 				   NULL };
 
-#if !defined(FREEBSD) && !defined(DARWIN)
-const struct in6_addr in6addr_linklocal_allnodes = IN6ADDR_LINKLOCAL_ALLNODES_INIT;
-#endif
-
 /*
  *  ** TCP Wrappers
  *

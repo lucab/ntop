@@ -460,6 +460,25 @@ void initCounters(void) {
   }
 #endif
 
+#ifdef INET6
+  _in6addr_linklocal_allnodes.s6_addr[0] = 0xff;
+  _in6addr_linklocal_allnodes.s6_addr[1] = 0x02;
+  _in6addr_linklocal_allnodes.s6_addr[2] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[3] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[4] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[5] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[6] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[7] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[8] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[9] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[10] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[11] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[12] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[13] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[14] = 0x00;
+  _in6addr_linklocal_allnodes.s6_addr[15] = 0x01;
+#endif
+
   memset(myGlobals.transTimeHash, 0, sizeof(myGlobals.transTimeHash));
   memset(myGlobals.dummyEthAddress, 0, LEN_ETHERNET_ADDRESS);
 
@@ -496,9 +515,7 @@ void initCounters(void) {
 
   myGlobals.numHandledSIGPIPEerrors = 0;
   myGlobals.numHandledHTTPrequests = 0;
-#ifndef WIN32
   myGlobals.webServerRequestQueueLength = DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN;
-#endif
 
   myGlobals.hostsCacheLen = 0;
   myGlobals.hostsCacheLenMax = 0;
@@ -1352,6 +1369,7 @@ void initDevices(char* devices) {
   int ifIdx = 0;
   int defaultIdx = -1;
 #endif
+  int found=0, intfc;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
   ebuf[0] = '\0';
@@ -1458,7 +1476,6 @@ void initDevices(char* devices) {
     while(tmpDev != NULL) {
 #ifndef WIN32
       char *nwInterface;
-      int intfc, found=0;
       deviceSanityCheck(tmpDev); /* These checks do not apply to Win32 */
 
       traceEvent(CONST_TRACE_NOISY, "Checking requested device '%s'", tmpDev);
@@ -1500,7 +1517,6 @@ void initDevices(char* devices) {
         free(requestedDev);
       }
 #else /* WIN32 */
-
 	  if(isdigit(tmpDev[0])) {
       if(atoi(tmpDev) < ifIdx) {
 	tmpDescr = intDescr[atoi(tmpDev)];
