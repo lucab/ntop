@@ -118,13 +118,54 @@ static void calfree (void) {
 /* ******************************************* */
 
 #ifdef WIN32
-void revertSlash(char *str) {
+void revertSlash(char *str, int mode) {
 	int i;
 
 	for(i=0; str[i] != '\0'; i++)
-		if(str[i] == '/')
-			str[i] = '\\';
+		switch(mode) {
+		case 0:
+			if(str[i] == '/') str[i] = '\\';
+			break;
+		case 1:
+			if(str[i] == '\\') str[i] = '/';
+			break;
+	}
 }
+
+void revertDoubleColumn(char *str) {
+	int i, j;
+	char str1[384];
+
+	for(i=0, j=0; str[i] != '\0'; i++) {
+		if(str[i] == ':') {
+			str1[j++] = '\\';
+			str1[j++] = str[i];
+		} else {
+			str1[j++] = str[i];
+		}
+	}
+
+	str1[j] = '\0';
+	strcpy(str, str1);
+}
+
+void doubleSlash(char *str) {
+	int i, j;
+	char str1[384];
+
+	for(i=0, j=0; str[i] != '\0'; i++) {
+		if(str[i] == '\\') {
+			str1[j++] = str[i];
+			str1[j++] = str[i];
+		} else {
+			str1[j++] = str[i];
+		}
+	}
+
+	str1[j] = '\0';
+	strcpy(str, str1);
+}
+
 #endif
 
 /* ******************************************* */
@@ -141,7 +182,7 @@ void mkdir_p(char *path) {
   int i;
 
 #ifdef WIN32
-  revertSlash(path);
+  revertSlash(path, 0);
 #endif
 
   for(i=0; path[i] != '\0'; i++)
@@ -164,7 +205,7 @@ void mkdir_p(char *path) {
 
 int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average) {
-  char *argv[16], path[256];
+  char *argv[32], path[256];
   int argc = 0;
   time_t        start,end;
   unsigned long step, ds_cnt,i;
@@ -174,7 +215,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   sprintf(path, "%s/%s/%s", myGlobals.rrdPath, rrdPath, rrdFilePath);
 
 #ifdef WIN32
-  revertSlash(path);
+  revertSlash(path, 0);
 #endif
 
   argv[argc++] = "rrd_fecth";
@@ -233,7 +274,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   sprintf(path, "%s/%s", myGlobals.rrdPath, rrdPath);
 
 #ifdef WIN32
-  revertSlash(path);
+  revertSlash(path, 0);
 #endif
 
   directoryPointer = opendir(path);
@@ -351,7 +392,7 @@ int endsWith(char* label, char* pattern) {
 
 void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 		  char *startTime, char* endTime, char *rrdPrefix) {
-  char path[512], *argv[16], buf[96], buf1[96], fname[256], *label;
+  char path[512], *argv[32], buf[384], buf1[384], fname[384], *label;
   struct stat statbuf;
   struct stat reusebuf;
   int argc = 0, rc, x, y;
@@ -367,18 +408,17 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
          );
 
 #ifdef WIN32
-  revertSlash(path);
-  revertSlash(fname);
+  revertSlash(path, 0);
+  revertSlash(fname, 0);
 #endif
 
   if(endsWith(rrdName, "Bytes")) label = "Bytes/sec";
   else if(endsWith(rrdName, "Pkts")) label = "Packets/sec";
-  else label = "";
+  else label = rrdName;
 
   rrdGraphicRequests++;
 
   if(stat(path, &statbuf) == 0) {
-
     rc = stat(fname, &reusebuf);
 
 #if RRD_DEBUG >= 2
@@ -418,7 +458,8 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
         argv[argc++] = "--start";
         argv[argc++] = startTime;
         argv[argc++] = "--end";
-        argv[argc++] = endTime;
+        argv[argc++] = endTime;	
+	revertDoubleColumn(path);
         snprintf(buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
         argv[argc++] = buf;
         snprintf(buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle);
@@ -473,7 +514,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 /* ******************************* */
 
 void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
-  char path[512], *argv[16], cmd[64];
+  char path[512], *argv[32], cmd[64];
   struct stat statbuf;
   int argc = 0, rc, createdCounter = 0;
 
@@ -482,7 +523,7 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   sprintf(path, "%s%s.rrd", hostPath, key);
 
 #ifdef WIN32
-  revertSlash(path);
+  revertSlash(path, 0);
 #endif
 
   if(stat(path, &statbuf) != 0) {
@@ -525,7 +566,7 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
       rrd_clear_error();
     }
 
-#ifdef RRD_DEBUG > 0
+#if RRD_DEBUG > 0
     traceEvent(TRACE_INFO, "RRD_DEBUG: rrd_create(%s, %s, %u)=%d", hostPath, key, (unsigned long)value, rc);
 #endif
     createdCounter = 1;
