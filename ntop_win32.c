@@ -119,9 +119,9 @@ void initWinsock32() {
     exit(-1);
   }
 
-  version = "2.0.99rc1";
+  version = "2.0.99rc2";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "17/05/2002";
+  buildDate = "11/06/2002";
 
   if(!isWinNT())
     strcpy(_wdir, ".");
@@ -1346,9 +1346,10 @@ LPTSTR *_lpszArgv;
 HANDLE  hServerStopEvent = NULL;
 
 
-void invokeNtop() {
+void* invokeNtop() {
   // SetConsoleCtrlHandler(logoffHandler, TRUE);
   ntop_main(_dwArgc, _lpszArgv);
+  return(NULL);
 }
 
 // This method is called from ServiceMain() when NT starts the service
@@ -1403,7 +1404,7 @@ VOID ServiceStart (DWORD dwArgc, LPTSTR *lpszArgv)
       }
   }
 
-  traceEvent(TRACE_ERROR, "Wdir=%s", _wdir);
+  /* traceEvent(TRACE_ERROR, "Wdir=%s", _wdir); */
 
   createThread(&ntopThread, invokeNtop, NULL);
 
@@ -1429,7 +1430,7 @@ VOID ServiceStop() {
 
 void runService(int argc, char ** argv)
 {
-  DWORD dwArgc;
+  DWORD dwArgc, argvIterator;
   LPTSTR *lpszArgv;
 
 #ifdef UNICODE
@@ -1441,12 +1442,17 @@ void runService(int argc, char ** argv)
 
   _tprintf(TEXT("Running %s.\n"), TEXT(SZSERVICEDISPLAYNAME));
 
+  /* Fix below courtesy of J.R. Duarte <jrduarte@partyvibe.com> */
+   for(argvIterator=0; argvIterator < argc ;argvIterator++)	{
+ 	  if (argvIterator == 0)
+ 		lpszArgv[0] = argv[0];
+ 	  else if (argvIterator > 1)
+ 		lpszArgv[argvIterator - 1] = argv[argvIterator];
+   }
+ 
+  dwArgc--;
 
-  // Do it! But since this is a console start, skip the first two
-  // arguments in the arg list being passed, and reduce its size by
-  // two also. (The first two command line args should be ignored
-  // in a console run.)
-  ServiceStart( dwArgc/*-2*/, lpszArgv/*+2*/);
+  ServiceStart( dwArgc, lpszArgv);
 }
 
 /* ************************************ */
