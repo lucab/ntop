@@ -806,7 +806,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 /* ************************* */
 
 static int checkURLsecurity(char *url) {
-  int rc = 0, i, len=strlen(url);
+  int rc = 0, len=strlen(url);
 
   /*
      Courtesy of "Burton M. Strauss III" <bstrauss3@attbi.com> 12-2001

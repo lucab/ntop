@@ -707,7 +707,7 @@ void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
 }
 
 /* **************************************** */
-
+#ifndef WIN32
 #ifdef MULTITHREADED
 void* periodicLsofLoop(void* notUsed _UNUSED_) {
   for(;;) {
@@ -733,6 +733,7 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
 
 }
 #endif
+#endif /* WIN32 */
 
 /* **************************************** */
 

@@ -29,8 +29,8 @@
 
 extern char* intoa(struct in_addr addr);
 
-extern char myGlobals.domainName[];
-char *myGlobals.buildDate;
+extern char domainName[];
+char *buildDate;
 
 /*
 extern char* myGlobals.device;
@@ -38,7 +38,7 @@ extern int datalink;
 extern unsigned int localnet, netmask;
 */
 
-char* getNwBoardMacAddress(char *myGlobals.deviceName); /* forward */
+char* getNwBoardMacAddress(char *deviceName); /* forward */
 
 ULONG GetHostIPAddr(); /* forward declaration */
 
@@ -134,14 +134,14 @@ void initWinsock32() {
     exit(-1);
   }
 
-  myGlobals.version = "2.0";
-  myGlobals.author  = "Luca Deri <deri@ntop.org>";
-  myGlobals.buildDate = "27/12/2001";
+  version = "2.0.1";
+  author  = "Luca Deri <deri@ntop.org>";
+  buildDate = "14/02/2002";
 
   if(isWinNT())
-    myGlobals.osName = "WinNT/2K/XP";
+    osName = "WinNT/2K/XP";
   else
-    myGlobals.osName = "Win95/98/ME";
+    osName = "Win95/98/ME";
 
 #ifdef WIN32_DEMO
   traceEvent(TRACE_INFO, "\n-----------------------------------------------------------");
@@ -694,3 +694,4 @@ int gettimeofday(struct timeval *tv, void *notUsed) {
 
     return ulDelay;
   }
+

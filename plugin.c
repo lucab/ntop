@@ -29,7 +29,8 @@
 #ifdef STATIC_PLUGIN
 extern PluginInfo* icmpPluginEntryFctn(void);
 extern PluginInfo* nfsPluginEntryFctn(void);
-extern PluginInfo* wapPluginEntryFctn(void);
+/* extern PluginInfo* wapPluginEntryFctn(void); */
+extern PluginInfo* sflowPluginEntryFctn(void);
 #ifdef RMON_SUPPORT
 extern PluginInfo* rmonPluginEntryFctn(void);
 #endif
@@ -218,8 +219,12 @@ static void loadPlugin(char* dirName, char* pluginName) {
     pluginInfo = icmpPluginEntryFctn();
   else if(strcmp(pluginName, "nfsPlugin") == 0)
     pluginInfo = nfsPluginEntryFctn();
+/*
   else if(strcmp(pluginName, "wapPlugin") == 0)
     pluginInfo = wapPluginEntryFctn();
+*/
+  else if(strcmp(pluginName, "sflowPlugin") == 0)
+    pluginInfo = sflowPluginEntryFctn();
 #ifdef RMON_SUPPORT
   else if(strcmp(pluginName, "ntopRmon") == 0)
     pluginInfo = rmonPluginEntryFctn();
@@ -340,6 +345,7 @@ void loadPlugins(void) {
   loadPlugin(NULL, "icmpPlugin");
   loadPlugin(NULL, "nfsPlugin");
   /* loadPlugin(NULL, "wapPlugin"); */
+  loadPlugin(NULL, "sflowPlugin");
 #ifdef RMON_SUPPORT
   loadPlugin(NULL, "rmonPlugin");
 #endif

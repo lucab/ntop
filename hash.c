@@ -867,7 +867,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    }
 
 	    if(!hostFound) {
-		struct hostTraffic **theHash;
 		int sz;
 		
 		list->idx = myGlobals.device[actualDeviceId].actualHashSize;

@@ -187,6 +187,7 @@ extern void *updateThptLoop(void *notUsed);
 extern void* updateHostTrafficStatsThptLoop(void* notUsed);
 extern void *updateDBHostsTrafficLoop(void* notUsed);
 extern void *scanIdleLoop(void *notUsed);
+extern void createPortHash();
 #ifndef WIN32
 extern void *periodicLsofLoop(void *notUsed);
 #endif
@@ -206,6 +207,7 @@ extern void purgeOldFragmentEntries(int actualDeviceId);
 extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,
                         const u_char *p);
 extern void cleanupPacketQueue(void);
+extern void allocateSecurityHostPkts(HostTraffic *srcHost);
 extern void *dequeuePacket(void* notUsed);
 extern void dumpSuspiciousPacket(int actualDeviceId);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,

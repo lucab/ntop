@@ -438,7 +438,11 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
   if(data_data.dptr != NULL) {
       myGlobals.addressQueueLen--;
 
+#ifndef WIN32
       addr.s_addr = (unsigned long)atoll(data_data.dptr);
+#else
+	  addr.s_addr = (unsigned long)atol(data_data.dptr);
+#endif
 
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Dequeued address... [%u][key=%s] (#addr=%d)\n",

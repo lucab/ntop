@@ -578,7 +578,7 @@ void printHostsTraffic(int reportType,
   struct tm t;
   HostTraffic *el;
   HostTraffic** tmpTable;
-  char buf[BUF_SIZE], buf2[BUF_SIZE];
+  char buf[BUF_SIZE];
   float sentPercent, rcvdPercent;
 
   strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
@@ -683,50 +683,137 @@ void printHostsTraffic(int reportType,
 	 
 	switch(reportType) {
 	case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
-	case 5: /* STR_SORT_DATA_SENT_PROTOS */
-	  {
-	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			getRowColor(), webHostName,
-			formatBytes(el->bytesSent, 1), sentPercent, myGlobals.separator,
-			formatBytes(el->tcpSentLoc+el->tcpSentRem, 1),
-			formatBytes(el->udpSentLoc+el->udpSentRem, 1),
-			formatBytes(el->icmpSent, 1),
-			formatBytes(el->dlcSent, 1),
-			formatBytes(el->ipxSent, 1),
-			formatBytes(el->decnetSent, 1),
-			formatBytes(el->arp_rarpSent, 1),
-			formatBytes(el->appletalkSent, 1)
-			) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  if(snprintf(buf, sizeof(buf), "<TR %s>%s"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+		      getRowColor(), webHostName,
+		      formatBytes(el->bytesRcvd, 1), rcvdPercent, myGlobals.separator,
+		      formatBytes(el->tcpRcvdLoc+el->tcpRcvdFromRem, 1),
+		      formatBytes(el->udpRcvdLoc+el->udpRcvdFromRem, 1),
+		      formatBytes(el->icmpRcvd, 1),
+		      formatBytes(el->dlcRcvd, 1),
+		      formatBytes(el->ipxRcvd, 1),
+		      formatBytes(el->decnetRcvd, 1),
+		      formatBytes(el->arp_rarpRcvd, 1),
+		      formatBytes(el->appletalkRcvd, 1)
+		      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
+	  sendString(buf);
+
+	  if(snprintf(buf, sizeof(buf),
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+		      formatBytes(el->ospfRcvd, 1),
+		      formatBytes(el->netbiosRcvd, 1),
+		      formatBytes(el->igmpRcvd, 1),
+		      formatBytes(el->osiRcvd, 1),
+		      formatBytes(el->qnxRcvd, 1),
+		      formatBytes(el->stpRcvd, 1),
+		      formatBytes(el->otherRcvd, 1)
+		      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+	  sendString(buf);
+	  break;
+	case 5: /* STR_SORT_DATA_SENT_PROTOS */
+	  if(snprintf(buf, sizeof(buf), "<TR %s>%s"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+		      getRowColor(), webHostName,
+		      formatBytes(el->bytesSent, 1), sentPercent, myGlobals.separator,
+		      formatBytes(el->tcpSentLoc+el->tcpSentRem, 1),
+		      formatBytes(el->udpSentLoc+el->udpSentRem, 1),
+		      formatBytes(el->icmpSent, 1),
+		      formatBytes(el->dlcSent, 1),
+		      formatBytes(el->ipxSent, 1),
+		      formatBytes(el->decnetSent, 1),
+		      formatBytes(el->arp_rarpSent, 1),
+		      formatBytes(el->appletalkSent, 1)
+		      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+	  sendString(buf);
+
+	  if(snprintf(buf, sizeof(buf),
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+		      formatBytes(el->ospfSent, 1),
+		      formatBytes(el->netbiosSent, 1),
+		      formatBytes(el->igmpSent, 1),
+		      formatBytes(el->osiSent, 1),
+		      formatBytes(el->qnxSent, 1),
+		      formatBytes(el->stpSent, 1),
+		      formatBytes(el->otherSent, 1)
+		      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+	  sendString(buf);
+	  break;
+	case 1: /* STR_SORT_DATA_RECEIVED_IP */
+	  {
+	    TrafficCounter totalIPTraffic=0;
+
+	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
+			getRowColor(), webHostName,
+			formatBytes(el->bytesRcvd, 1), rcvdPercent, myGlobals.separator) < 0)
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 
-	    if(snprintf(buf, sizeof(buf),
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(el->ospfSent, 1),
-			formatBytes(el->netbiosSent, 1),
-			formatBytes(el->igmpSent, 1),
-			formatBytes(el->osiSent, 1),
-			formatBytes(el->qnxSent, 1),
-			formatBytes(el->stpSent, 1),
-			formatBytes(el->otherSent, 1)
-			) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+#ifdef ENABLE_NAPSTER
+	    if(el->napsterStats != NULL) {
+	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  formatBytes(el->napsterStats->bytesRcvd, 1)) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      sendString(buf);
+	    } else {
+	      sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
+	    }
+#endif
 
+	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	      totalIPTraffic += el->protoIPTrafficInfos[i].rcvdLoc+
+		el->protoIPTrafficInfos[i].rcvdFromRem;
+	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  formatBytes(el->protoIPTrafficInfos[i].rcvdLoc+
+				      el->protoIPTrafficInfos[i].rcvdFromRem, 1)) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      sendString(buf);
+	    }
+
+	    /* Rounding may cause troubles */
+	    if(el->bytesRcvd > totalIPTraffic)
+	      totalIPTraffic = (el->tcpRcvdLoc
+				+el->tcpRcvdFromRem
+				+el->udpRcvdLoc
+				+el->udpRcvdFromRem
+				+el->icmpRcvd
+				+el->ospfRcvd
+				+el->igmpRcvd)
+		-totalIPTraffic;
+	    else
+	      totalIPTraffic = 0;
+	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(totalIPTraffic, 1)) < 0)
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 	  break;
-	case 1: /* STR_SORT_DATA_RECEIVED_IP */
 	case 6: /* STR_SORT_DATA_SENT_IP */
 	  {
 	    TrafficCounter totalIPTraffic=0;
@@ -778,6 +865,25 @@ void printHostsTraffic(int reportType,
 	  }
 	  break;
 	case 2: /* STR_SORT_DATA_RECEIVED_THPT */
+	  {
+	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
+			getRowColor(), webHostName,
+			formatThroughput(el->actualRcvdThpt),
+			formatThroughput(el->averageRcvdThpt),
+			formatThroughput(el->peakRcvdThpt),
+			el->actualRcvdPktThpt,
+			el->averageRcvdPktThpt,
+			el->peakRcvdPktThpt) < 0)
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    sendString(buf);
+	  }
+	  break;
 	case 7: /* STR_SORT_DATA_SENT_THPT */
 	  {
 	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"

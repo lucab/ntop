@@ -2152,8 +2152,12 @@ void traceEvent(int eventTraceLevel, char* file,
 	openlog("ntop", LOG_PID, LOG_DAEMON);
 #endif
 
-      if(!myGlobals.useSyslog) {
-	strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
+#ifdef WIN32
+	  if(1) {
+#else
+	  if(!myGlobals.useSyslog) {
+#endif
+		  strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
 
 	if(myGlobals.traceLevel == DETAIL_TRACE_LEVEL) {
 	  printf("%s [%s:%d] ", theDate, file, line);
@@ -2170,7 +2174,11 @@ void traceEvent(int eventTraceLevel, char* file,
       vsnprintf(buf, BUF_SIZE-1, format, va_ap);
 #endif
 
+#ifdef WIN32
+	  if(1) {
+#else
       if(!myGlobals.useSyslog) {
+#endif
 	printf(buf);
 	if(format[strlen(format)-1] != '\n')
 	  printf("\n");
