@@ -8691,6 +8691,58 @@ _ACEOF
 fi
 
 
+if test $ac_dummyvariable = yes ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define DEBUG 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_INT16_T 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_INT32_T 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_INT64_T 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_INT8_T 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_UINT64_T 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_U_INT16_T 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_U_INT32_T 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_U_INT64_T 0
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_U_INT8_T 0
+_ACEOF
+
+fi
 
 
 
