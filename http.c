@@ -126,12 +126,12 @@ static struct in_addr *requestFrom;
 /* ************************* */
 
 /* Forward */
-static int readHTTPheader(char* theRequestedURL, int theRequestedURLLen, char *thePw, int thePwLen);
+static int readHTTPheader(char* theRequestedURL, int theRequestedURLLen, char *thePw, int thePwLen, char *theAgent, int theAgentLen);
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
 static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
 static void returnHTTPspecialStatusCode(int statusIdx);
 static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
-			  struct timeval *httpRequestedAt, int *usedFork);
+			  struct timeval *httpRequestedAt, int *usedFork, char *agent);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 
 #ifdef HAVE_ZLIB
@@ -163,7 +163,8 @@ char* printSSLError(int errorId) {
 
 static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
-                          char *thePw, int thePwLen) {
+                          char *thePw, int thePwLen,
+                          char *theAgent, int theAgentLen) {
 #ifdef HAVE_OPENSSL
   SSL* ssl = getSSLsocket(-myGlobals.newSock);
 #endif
@@ -198,7 +199,7 @@ static int readHTTPheader(char* theRequestedURL,
     if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 0) {
       errorCode = HTTP_REQUEST_TIMEOUT; /* Timeout */
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Timeout while reading from socket.\n");
+      traceEvent(TRACE_INFO, "DEBUG: Timeout while reading from socket.\n");
 #endif
       break;
     }
@@ -220,7 +221,7 @@ static int readHTTPheader(char* theRequestedURL,
     if(rc != 1) {
       idxChar = 0;
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Socket read returned %d (errno=%d)\n", rc, errno);
+      traceEvent(TRACE_INFO, "DEBUG: Socket read returned %d (errno=%d)\n", rc, errno);
 #endif
       /* FIXME (DL): is valid to write to the socket after this condition? */
       break; /* Empty line */
@@ -228,7 +229,7 @@ static int readHTTPheader(char* theRequestedURL,
     } else if((errorCode == 0) && !isprint(aChar[0]) && !isspace(aChar[0])) {
       errorCode = HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Rcvd non expected char '%c' [%d/0x%x]\n", aChar[0], aChar[0], aChar[0]);
+      traceEvent(TRACE_INFO, "DEBUG: Rcvd non expected char '%c' [%d/0x%x]\n", aChar[0], aChar[0], aChar[0]);
 #endif
     } else {
       if(aChar[0] == '\r') {
@@ -242,7 +243,7 @@ static int readHTTPheader(char* theRequestedURL,
 	numLine++;
 	lineStr[idxChar] = '\0';
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "read HTTP %s line: %s [%d]\n",
+	traceEvent(TRACE_INFO, "DEBUG: read HTTP %s line: %s [%d]\n",
 	           (numLine>1) ? "header" : "request", lineStr, idxChar);
 #endif
 	if(errorCode != 0) {
@@ -254,20 +255,20 @@ static int readHTTPheader(char* theRequestedURL,
 	  if(idxChar < 9) {
 	    errorCode = HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "Too short request line.\n");
+	    traceEvent(TRACE_INFO, "DEBUG: Too short request line.\n");
 #endif
 
 	  } else if(strncmp(&lineStr[idxChar-9], " HTTP/", 6) != 0) {
 	    errorCode = HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "Malformed request line.\n");
+	    traceEvent(TRACE_INFO, "DEBUG: Malformed request line.\n");
 #endif
 
 	  } else if((strncmp(&lineStr[idxChar-3], "1.0", 3) != 0) &&
 	            (strncmp(&lineStr[idxChar-3], "1.1", 3) != 0)) {
 	    errorCode = HTTP_INVALID_VERSION;
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "Unsupported HTTP version.\n");
+	    traceEvent(TRACE_INFO, "DEBUG: Unsupported HTTP version.\n");
 #endif
 
 	  } else {
@@ -286,7 +287,7 @@ static int readHTTPheader(char* theRequestedURL,
 	    } else {
 	      errorCode = HTTP_INVALID_METHOD;
 #ifdef DEBUG
-	      traceEvent(TRACE_INFO, "Unrecognized method in request line.\n");
+	      traceEvent(TRACE_INFO, "DEBUG: Unrecognized method in request line.\n");
 #endif
 	    }
 
@@ -308,15 +309,18 @@ static int readHTTPheader(char* theRequestedURL,
 		  && (strncasecmp(lineStr, "Content-Length: ", 16) == 0)) {
 	  contentLen = atoi(&lineStr[16]);
 #ifdef DEBUG
-	  traceEvent(TRACE_INFO, "len=%d [%s/%s]\n", contentLen, lineStr, &lineStr[16]);
+	  traceEvent(TRACE_INFO, "DEBUG: len=%d [%s/%s]\n", contentLen, lineStr, &lineStr[16]);
 #endif
+	} else if((idxChar >= 12)
+		  && (strncasecmp(lineStr, "User-Agent: ", 12) == 0)) {
+	  strncpy(theAgent, &lineStr[12], theAgentLen-1)[theAgentLen-1] = '\0';
 	}
 	idxChar=0;
       } else if(idxChar > sizeof(lineStr)-2) {
 	if(errorCode == 0) {
 	  errorCode = HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-	  traceEvent(TRACE_INFO, "Line too long (hackers ?)");
+	  traceEvent(TRACE_INFO, "DEBUG: Line too long (hackers ?)");
 #endif
 	}
       } else {
@@ -459,7 +463,7 @@ void sendStringLen(char *theString, unsigned int len) {
 
     if((errno != 0) || (rc < 0)) {
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Socket write returned %d (errno=%d)\n", rc, errno);
+      traceEvent(TRACE_INFO, "DEBUG: Socket write returned %d (errno=%d)\n", rc, errno);
 #endif
       if((errno == EAGAIN /* Resource temporarily unavailable */) && (retries<3)) {
 	len -= rc;
@@ -703,7 +707,7 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
     statusFlag = 0;
 #ifdef DEBUG
     traceEvent(TRACE_WARNING,
-	       "INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n", statusIdx);
+	       "DEBUG: INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n", statusIdx);
 #endif
   }
 
@@ -759,7 +763,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))){
     statusIdx = 0;
 #ifdef DEBUG
-    traceEvent(TRACE_WARNING, "INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n",
+    traceEvent(TRACE_WARNING, "DEBUG: INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n",
 	       statusIdx);
 #endif
   }
@@ -823,7 +827,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 #ifdef DEBUG
     default:
       traceEvent(TRACE_INFO,
-		 "INTERNAL ERROR: invalid MIME type code requested (%d)\n", mimeType);
+		 "DEBUG: INTERNAL ERROR: invalid MIME type code requested (%d)\n", mimeType);
 #endif
   }
 
@@ -895,7 +899,7 @@ static int checkURLsecurity(char *url) {
    }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "URL security: Testing '%s'...\n", workURL);
+  traceEvent(TRACE_INFO, "DEBUG: URL security: Testing '%s'...\n", workURL);
 #endif
 
   /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
@@ -971,7 +975,7 @@ static int checkURLsecurity(char *url) {
   countSections = countOKnumeric = countOKextension = 0;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "URL security: NOTE: Tokenizing '%s'...\n", workURL);
+  traceEvent(TRACE_INFO, "DEBUG: URL security: NOTE: Tokenizing '%s'...\n", workURL);
 #endif
 
   for(i=strlen(workURL)-1; i >= 0; i--)
@@ -1015,7 +1019,7 @@ static RETSIGTYPE quitNow(int signo _UNUSED_) {
 /* **************************************** */
 
 static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
-			  struct timeval *httpRequestedAt, int *usedFork) {
+			  struct timeval *httpRequestedAt, int *usedFork, char *agent) {
   char *questionMark;
   int sortedColumn = 0, printTrailer=1, idx;
   int errorCode=0, pageNum = 0, found=0;
@@ -1120,7 +1124,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "tmpStr=%s - fd=0x%x\n", tmpStr, fd);
+  traceEvent(TRACE_INFO, "DEBUG: tmpStr=%s - fd=0x%x\n", tmpStr, fd);
 #endif
 
   if(fd != NULL) {
@@ -1855,7 +1859,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 
   theUser[0] = '\0';
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Checking '%s'\n", theRequestedURL);
+  traceEvent(TRACE_INFO, "DEBUG: Checking '%s'\n", theRequestedURL);
 #endif
 
 #ifdef MULTITHREADED
@@ -1913,7 +1917,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   strcpy(theUser, user);
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "User='%s' - Pw='%s'\n", user, thePw);
+  traceEvent(TRACE_INFO, "DEBUG: User='%s' - Pw='%s'\n", user, thePw);
 #endif
 
   if(snprintf(users, BUF_SIZE, "1%s", user) < 0)
@@ -1998,7 +2002,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
 void handleHTTPrequest(struct in_addr from) {
   int skipLeading, postLen, usedFork = 0;
-  char requestedURL[URL_MAX_LEN], pw[64];
+  char requestedURL[URL_MAX_LEN], pw[64], agent[256];
   int rc, i;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
@@ -2035,6 +2039,7 @@ void handleHTTPrequest(struct in_addr from) {
 
   memset(requestedURL, 0, sizeof(requestedURL));
   memset(pw, 0, sizeof(pw));
+  memset(agent, 0, sizeof(agent));
 
   httpBytesSent = 0;
 
@@ -2044,10 +2049,11 @@ void handleHTTPrequest(struct in_addr from) {
   acceptGzEncoding = 0;
 #endif
 
- postLen = readHTTPheader(requestedURL, sizeof(requestedURL), pw, sizeof(pw));
+ postLen = readHTTPheader(requestedURL, sizeof(requestedURL), pw, sizeof(pw), agent, sizeof(agent));
 
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "Requested URL = '%s', length = %d\n", requestedURL, postLen);
+ traceEvent(TRACE_INFO, "DEBUG: Requested URL = '%s', length = %d\n", requestedURL, postLen);
+ traceEvent(TRACE_INFO, "DEBUG: User-Agent = '%s'\n", agent);
 #endif
 
   if(postLen >= -1) {
@@ -2092,7 +2098,8 @@ void handleHTTPrequest(struct in_addr from) {
     returnHTTPpageNotFound(0);
 
   rc = returnHTTPPage(&requestedURL[1], postLen,
-		      &from, &httpRequestedAt, &usedFork) ;
+		      &from, &httpRequestedAt, &usedFork,
+                      agent) ;
   
   if(rc == 0) {
 #if defined(HAVE_ZLIB)

@@ -98,6 +98,7 @@
 #include "globals-report.h"
 
 static int debug = 0;
+static ProbeInfo probeList[MAX_NUM_PROBES];
 
 #ifdef MULTITHREADED
 pthread_t sFlowThread;
@@ -175,11 +176,11 @@ struct in6_addr
 
 #ifdef WIN32
 struct in6_addr {
-	union {
-		uint8_t	 _S6_u8[16];	/* IPv6 address */
-		uint32_t _S6_u32[4];	/* IPv6 address */
-		uint32_t __S6_align;	/* Align on 32 bit boundary */
-	} _S6_un;
+  union {
+    uint8_t	 _S6_u8[16];	/* IPv6 address */
+    uint32_t _S6_u32[4];	/* IPv6 address */
+    uint32_t __S6_align;	/* Align on 32 bit boundary */
+  } _S6_un;
 };
 
 #endif
@@ -664,10 +665,10 @@ static u_long *readExtendedSwitch(SFSample *sample, u_long *datap, u_char *endPt
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_SWITCH;
 
-  if(debug) printf("in_vlan %lu\n", sample->in_vlan);
-  if(debug) printf("in_priority %lu\n", sample->in_priority);
-  if(debug) printf("out_vlan %lu\n", sample->out_vlan);
-  if(debug) printf("out_priority %lu\n", sample->out_priority);
+  if(debug) traceEvent(TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
+  if(debug) traceEvent(TRACE_INFO, "in_priority %lu\n", sample->in_priority);
+  if(debug) traceEvent(TRACE_INFO, "out_vlan %lu\n", sample->out_vlan);
+  if(debug) traceEvent(TRACE_INFO, "out_priority %lu\n", sample->out_priority);
 
   return datap;
 }
@@ -690,6 +691,7 @@ int printHex(const u_char *a, int len, u_char *buf,
 	     int bufLen, int marker, int bytesPerOutputLine)
 {
   int b = 0, i = 0;
+
   for(; i < len; i++) {
     u_char byte;
     if(b > (bufLen - 10)) break;
@@ -737,11 +739,11 @@ static void decodeLinkLayer(SFSample *sample)
 
   if(sample->headerLen < NFT_ETHHDR_SIZ) return; /* not enough for an Ethernet header */
 
-  if(debug) printf("dstMAC %02x%02x%02x%02x%02x%02x\n",
-		   ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
+  if(debug) traceEvent(TRACE_INFO, "dstMAC %02x%02x%02x%02x%02x%02x\n",
+	     ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
-  if(debug) printf("srcMAC %02x%02x%02x%02x%02x%02x\n",
-		   ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
+  if(debug) traceEvent(TRACE_INFO, "srcMAC %02x%02x%02x%02x%02x%02x\n",
+	     ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
   type_len = (ptr[0] << 8) + ptr[1];
   ptr += 2;
@@ -755,8 +757,8 @@ static void decodeLinkLayer(SFSample *sample)
     /* |   pri  | c |         vlan-id        | */
     /*  ------------------------------------- */
     /* [priority = 3bits] [Canonical Format Flag = 1bit] [vlan-id = 12 bits] */
-    if(debug) printf("decodedVLAN %lu\n", vlan);
-    if(debug) printf("decodedPriority %lu\n", priority);
+    if(debug) traceEvent(TRACE_INFO, "decodedVLAN %lu\n", vlan);
+    if(debug) traceEvent(TRACE_INFO, "decodedPriority %lu\n", priority);
     /* now get the type_len again (next two bytes) */
     type_len = (ptr[0] << 8) + ptr[1];
   }
@@ -839,11 +841,11 @@ static void decodeIPV4(SFSample *sample)
     sample->dcd_ipTos = ip.tos;
     sample->dcd_ipTTL = ip.ttl;
     /* Log out the decoded IP fields */
-    if(debug) printf("srcIP %s\n", IP_to_a(sample->dcd_srcIP.s_addr, buf));
-    if(debug) printf("dstIP %s\n", IP_to_a(sample->dcd_dstIP.s_addr, buf));
-    if(debug) printf("IPProtocol %u\n", sample->dcd_ipProtocol);
-    if(debug) printf("IPTOS %u\n", sample->dcd_ipTos);
-    if(debug) printf("IPTTL %u\n", sample->dcd_ipTTL);
+    if(debug) traceEvent(TRACE_INFO, "srcIP %s\n", IP_to_a(sample->dcd_srcIP.s_addr, buf));
+    if(debug) traceEvent(TRACE_INFO, "dstIP %s\n", IP_to_a(sample->dcd_dstIP.s_addr, buf));
+    if(debug) traceEvent(TRACE_INFO, "IPProtocol %u\n", sample->dcd_ipProtocol);
+    if(debug) traceEvent(TRACE_INFO, "IPTOS %u\n", sample->dcd_ipTos);
+    if(debug) traceEvent(TRACE_INFO, "IPTTL %u\n", sample->dcd_ipTTL);
     /* advance the pointer to the next protocol layer */
     ptr += sizeof(struct myiphdr);
 
@@ -852,8 +854,8 @@ static void decodeIPV4(SFSample *sample)
       {
 	struct myicmphdr icmp;
 	memcpy(&icmp, ptr, sizeof(icmp));
-	if(debug) printf("ICMPType %u\n", icmp.type);
-	if(debug) printf("ICMPCode %u\n", icmp.code);
+	if(debug) traceEvent(TRACE_INFO, "ICMPType %u\n", icmp.type);
+	if(debug) traceEvent(TRACE_INFO, "ICMPCode %u\n", icmp.code);
       }
       break;
     case 6: /* TCP */
@@ -863,9 +865,9 @@ static void decodeIPV4(SFSample *sample)
 	sample->dcd_sport = ntohs(tcp.th_sport);
 	sample->dcd_dport = ntohs(tcp.th_dport);
 	sample->dcd_tcpFlags = tcp.th_flags;
-	if(debug) printf("TCPSrcPort %u\n", sample->dcd_sport);
-	if(debug) printf("TCPDstPort %u\n",sample->dcd_dport);
-	if(debug) printf("TCPFlags %u\n", sample->dcd_tcpFlags);
+	if(debug) traceEvent(TRACE_INFO, "TCPSrcPort %u\n", sample->dcd_sport);
+	if(debug) traceEvent(TRACE_INFO, "TCPDstPort %u\n",sample->dcd_dport);
+	if(debug) traceEvent(TRACE_INFO, "TCPFlags %u\n", sample->dcd_tcpFlags);
       }
       break;
     case 17: /* UDP */
@@ -874,8 +876,8 @@ static void decodeIPV4(SFSample *sample)
 	memcpy(&udp, ptr, sizeof(udp));
 	sample->dcd_sport = ntohs(udp.uh_sport);
 	sample->dcd_dport = ntohs(udp.uh_dport);
-	if(debug) printf("UDPSrcPort %u\n", sample->dcd_sport);
-	if(debug) printf("UDPDstPort %u\n", sample->dcd_dport);
+	if(debug) traceEvent(TRACE_INFO, "UDPSrcPort %u\n", sample->dcd_sport);
+	if(debug) traceEvent(TRACE_INFO, "UDPDstPort %u\n", sample->dcd_dport);
       }
       break;
     default: /* some other protcol */
@@ -918,6 +920,7 @@ static void writePcapHeader() {
 
 static void writePcapPacket(SFSample *sample) {
   struct pcap_pkthdr hdr;
+  int i;
 
   hdr.ts.tv_sec  = time(NULL);
   hdr.ts.tv_usec = 0;
@@ -930,9 +933,22 @@ static void writePcapPacket(SFSample *sample) {
   myGlobals.numSamplesReceived++;
   myGlobals.lastSample = sample->samplePool;
 
+  NTOHL(sample->sourceIP.s_addr);
+
+  for(i=0; i<MAX_NUM_PROBES; i++) {
+    if(probeList[i].probeAddr.s_addr == 0) {
+      probeList[i].probeAddr.s_addr = sample->sourceIP.s_addr;
+      probeList[i].pkts = 1;
+      break;
+    } else if(probeList[i].probeAddr.s_addr == sample->sourceIP.s_addr) {
+      probeList[i].pkts++;
+      break;
+    }
+  }
+  
   /*
-     Fix below courtesy of
-     Neil McKee <neil_mckee@inmon.com>
+    Fix below courtesy of
+    Neil McKee <neil_mckee@inmon.com>
   */
   if(sample->headerProtocol == INMHEADER_ETHERNET_ISO8023)
     queuePacket((u_char*)myGlobals.sflowDeviceId,
@@ -953,11 +969,13 @@ static void receiveError(SFSample *sample, char *errm, int hexdump, u_char *curr
   u_long markOffset = 0;
   if(currentMark != NULL) markOffset = currentMark - sample->rawSample;
   if(errm) msg = errm;
+
   if(hexdump) {
     printHex(sample->rawSample, sample->rawSampleLen, scratch, 6000, markOffset, 16);
     hex = scratch;
   }
-  printf("%s (source IP = %s) %s\n", msg, IP_to_a(sample->sourceIP.s_addr, ipbuf), hex);
+
+  traceEvent(TRACE_WARNING, "%s (source IP = %s) %s\n", msg, IP_to_a(sample->sourceIP.s_addr, ipbuf), hex);
 }
 
 /*_________________---------------------------__________________
@@ -981,9 +999,9 @@ static u_long *readExtendedRouter(SFSample *sample, u_long *datap, u_char *endPt
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_ROUTER;
 
-  if(debug) printf("nextHop %s\n", IP_to_a(sample->nextHop.s_addr, buf));
-  if(debug) printf("srcSubnetMask %lu\n", sample->srcMask);
-  if(debug) printf("dstSubnetMask %lu\n", sample->dstMask);
+  if(debug) traceEvent(TRACE_INFO, "nextHop %s\n", IP_to_a(sample->nextHop.s_addr, buf));
+  if(debug) traceEvent(TRACE_INFO, "srcSubnetMask %lu\n", sample->srcMask);
+  if(debug) traceEvent(TRACE_INFO, "dstSubnetMask %lu\n", sample->dstMask);
 
   return datap;
 }
@@ -1010,18 +1028,18 @@ static u_long *readExtendedGateway(SFSample *sample, u_long *datap, u_char *endP
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_GATEWAY;
 
-  if(debug) printf("my_as %lu\n", sample->my_as);
-  if(debug) printf("src_as %lu\n", sample->src_as);
-  if(debug) printf("src_peer_as %lu\n", sample->src_peer_as);
-  if(debug) printf("dst_as_path_len %lu\n", sample->dst_as_path_len);
+  if(debug) traceEvent(TRACE_INFO, "my_as %lu\n", sample->my_as);
+  if(debug) traceEvent(TRACE_INFO, "src_as %lu\n", sample->src_as);
+  if(debug) traceEvent(TRACE_INFO, "src_peer_as %lu\n", sample->src_peer_as);
+  if(debug) traceEvent(TRACE_INFO, "dst_as_path_len %lu\n", sample->dst_as_path_len);
   if(sample->dst_as_path_len > 0) {
     u_int i = 0;
     for(; i < sample->dst_as_path_len; i++) {
-      if(i == 0) if(debug) printf("dst_as_path ");
-      else if(debug) printf("-");
-      if(debug) printf("%lu", ntohl(sample->dst_as_path[i]));
+      if(i == 0) if(debug) traceEvent(TRACE_INFO, "dst_as_path ");
+      else if(debug) traceEvent(TRACE_INFO, "-");
+      if(debug) traceEvent(TRACE_INFO, "%lu", ntohl(sample->dst_as_path[i]));
     }
-    if(debug) printf("\n");
+    if(debug) traceEvent(TRACE_INFO, "\n");
   }
   return datap;
 }
@@ -1059,8 +1077,8 @@ static u_long *readExtendedUser(SFSample *sample, u_long *datap, u_char *endPtr)
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_USER;
 
-  if(debug) printf("src_user %s\n", sample->src_user);
-  if(debug) printf("dst_user %s\n", sample->dst_user);
+  if(debug) traceEvent(TRACE_INFO, "src_user %s\n", sample->src_user);
+  if(debug) traceEvent(TRACE_INFO, "dst_user %s\n", sample->dst_user);
 
   return datap;
 }
@@ -1076,20 +1094,22 @@ static void receiveSflowSample(SFSample *sample)
   u_int32_t samplesInPacket;
   struct timeval now;
   u_long *datap = (u_long *)sample->rawSample;
+  int i;
 
   now.tv_sec = time(NULL);
   now.tv_usec = 0;
-  if(debug) printf("startDatagram =================================\n");
+  if(debug) traceEvent(TRACE_INFO, "startDatagram =================================\n");
   {
     char buf[51];
-    if(debug) printf("datagramSourceIP %s\n", IP_to_a(sample->sourceIP.s_addr, buf));
+    if(debug) traceEvent(TRACE_INFO, "datagramSourceIP %s\n", IP_to_a(sample->sourceIP.s_addr, buf));
   }
-  if(debug) printf("datagramSize %lu\n", sample->rawSampleLen);
-  if(debug) printf("unixSecondsUTC %lu\n", now.tv_sec);
+
+  if(debug) traceEvent(TRACE_INFO, "datagramSize %lu\n", sample->rawSampleLen);
+  if(debug) traceEvent(TRACE_INFO, "unixSecondsUTC %lu\n", now.tv_sec);
 
   /* check the version */
   GETDATA32(datagramVersion, datap);
-  if(debug) printf("datagramVersion %d\n", datagramVersion);
+  if(debug) traceEvent(TRACE_INFO, "datagramVersion %d\n", datagramVersion);
   if(datagramVersion != 2) {
     receiveError(sample,  "unexpected datagram version number: %d\n", YES, (u_char *)datap);
     return;
@@ -1110,11 +1130,11 @@ static void receiveSflowSample(SFSample *sample)
 
   {
     char buf[51];
-    if(debug) printf("agent %s\n", IP_to_a(agentIP.s_addr, buf));
+    if(debug) traceEvent(TRACE_INFO, "agent %s\n", IP_to_a(agentIP.s_addr, buf));
   }
-  if(debug) printf("sysUpTime %lu\n", sample->sysUpTime);
-  if(debug) printf("packetSequenceNo %lu\n", sample->sequenceNo);
-  if(debug) printf("samplesInPacket %lu\n", samplesInPacket);
+  if(debug) traceEvent(TRACE_INFO, "sysUpTime %lu\n", sample->sysUpTime);
+  if(debug) traceEvent(TRACE_INFO, "packetSequenceNo %lu\n", sample->sequenceNo);
+  if(debug) traceEvent(TRACE_INFO, "samplesInPacket %lu\n", samplesInPacket);
 
   { /* now iterate and pull out the flows and counters samples */
     u_int32_t samp = 0;
@@ -1131,40 +1151,40 @@ static void receiveSflowSample(SFSample *sample)
       GETDATA32(sample->sampleType, datap);
       GETDATA32(sample->samplesGenerated, datap);
       GETDATA32(sample->samplerId, datap);
-      if(debug) printf("sampleSequenceNo %lu\n", sample->samplesGenerated);
+      if(debug) traceEvent(TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
       {
 	u_int32_t ds_class = sample->samplerId >> 24;
 	u_int32_t ds_index = sample->samplerId & 0x00ffffff;
-	if(debug) printf("sourceId %lu:%lu\n", ds_class, ds_index);
+	if(debug) traceEvent(TRACE_INFO, "sourceId %lu:%lu\n", ds_class, ds_index);
       }
 
       switch(sample->sampleType) {
       case FLOWSAMPLE:
 	{
-	  if(debug) printf("sampleType FLOWSAMPLE\n");
+	  if(debug) traceEvent(TRACE_INFO, "sampleType FLOWSAMPLE\n");
 	  GETDATA32(sample->meanSkipCount, datap);
 	  GETDATA32(sample->samplePool, datap);
 	  GETDATA32(sample->dropEvents, datap);
 	  GETDATA32(sample->inputPort, datap);
 	  GETDATA32(sample->outputPort, datap);
-	  if(debug) printf("meanSkipCount %lu\n", sample->meanSkipCount);
-	  if(debug) printf("samplePool %lu\n", sample->samplePool);
-	  if(debug) printf("dropEvents %lu\n", sample->dropEvents);
-	  if(debug) printf("inputPort %lu\n", sample->inputPort);
-	  if(debug) printf("outputPort %lu\n", sample->outputPort);
+	  if(debug) traceEvent(TRACE_INFO, "meanSkipCount %lu\n", sample->meanSkipCount);
+	  if(debug) traceEvent(TRACE_INFO, "samplePool %lu\n", sample->samplePool);
+	  if(debug) traceEvent(TRACE_INFO, "dropEvents %lu\n", sample->dropEvents);
+	  if(debug) traceEvent(TRACE_INFO, "inputPort %lu\n", sample->inputPort);
+	  if(debug) traceEvent(TRACE_INFO, "outputPort %lu\n", sample->outputPort);
 
 	  GETDATA32(sample->packet_data_tag, datap);
 
 	  switch(sample->packet_data_tag) {
 
 	  case INMPACKETTYPE_HEADER:
-	    if(debug) printf("packetDataTag INMPACKETTYPE_HEADER\n");
+	    if(debug) traceEvent(TRACE_INFO, "packetDataTag INMPACKETTYPE_HEADER\n");
 	    GETDATA32(sample->headerProtocol, datap);
 	    GETDATA32(sample->sampledPacketSize, datap);
 	    GETDATA32(sample->headerLen, datap);
-	    if(debug) printf("headerProtocol %lu\n", sample->headerProtocol);
-	    if(debug) printf("sampledPacketSize %lu\n", sample->sampledPacketSize);
-	    if(debug) printf("headerLen %lu\n", sample->headerLen);
+	    if(debug) traceEvent(TRACE_INFO, "headerProtocol %lu\n", sample->headerProtocol);
+	    if(debug) traceEvent(TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
+	    if(debug) traceEvent(TRACE_INFO, "headerLen %lu\n", sample->headerLen);
 
 	    sample->header = (u_char *)datap; /* just point at the header */
 	    datap += ((sample->headerLen + 3) / 4); /* quad-alignment is required by XDR */
@@ -1175,19 +1195,19 @@ static void receiveSflowSample(SFSample *sample)
 	    {
 	      char scratch[2000];
 	      printHex(sample->header, sample->headerLen, scratch, 2000, 0, 2000);
-	      if(debug) printf("headerBytes %s\n", scratch);
+	      if(debug) traceEvent(TRACE_INFO, "headerBytes %s\n", scratch);
 	    }
 	    decodeLinkLayer(sample);
 	    if(sample->offsetToIPV4 > 0) {
 	      // report the size of the original IPPdu (including the IP header)
-	      if(debug) printf("IPSize %d\n",  sample->sampledPacketSize - sample->offsetToIPV4);
+	      if(debug) traceEvent(TRACE_INFO, "IPSize %d\n",  sample->sampledPacketSize - sample->offsetToIPV4);
 	      decodeIPV4(sample);
 	    }
 
 	    break;
 
 	  case INMPACKETTYPE_IPV4:
-	    if(debug) printf("packetDataTag INMPACKETTYPE_IPV4\n");
+	    if(debug) traceEvent(TRACE_INFO, "packetDataTag INMPACKETTYPE_IPV4\n");
 	    sample->headerLen = sizeof(INMSampled_ipv4);
 	    sample->header = (u_char *)datap; /* just point at the header */
 	    datap += (sample->headerLen + 3) / 4; /* quad-alignment is required by XDR */
@@ -1196,33 +1216,33 @@ static void receiveSflowSample(SFSample *sample)
 	      INMSampled_ipv4 nfKey;
 	      memcpy(&nfKey, sample->header, sizeof(nfKey));
 	      sample->sampledPacketSize = ntohl(nfKey.length);
-	      if(debug) printf("sampledPacketSize %lu\n", sample->sampledPacketSize);
-	      if(debug) printf("IPSize %d\n",  sample->sampledPacketSize);
+	      if(debug) traceEvent(TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
+	      if(debug) traceEvent(TRACE_INFO, "IPSize %d\n",  sample->sampledPacketSize);
 	      sample->dcd_srcIP = nfKey.src_ip;
 	      sample->dcd_dstIP = nfKey.dst_ip;
 	      sample->dcd_ipProtocol = ntohl(nfKey.protocol);
 	      sample->dcd_ipTos = ntohl(nfKey.tos);
-	      if(debug) printf("srcIP %s\n", IP_to_a(sample->dcd_srcIP.s_addr, buf));
-	      if(debug) printf("dstIP %s\n", IP_to_a(sample->dcd_dstIP.s_addr, buf));
-	      if(debug) printf("IPProtocol %u\n", sample->dcd_ipProtocol);
-	      if(debug) printf("IPTOS %u\n", sample->dcd_ipTos);
+	      if(debug) traceEvent(TRACE_INFO, "srcIP %s\n", IP_to_a(sample->dcd_srcIP.s_addr, buf));
+	      if(debug) traceEvent(TRACE_INFO, "dstIP %s\n", IP_to_a(sample->dcd_dstIP.s_addr, buf));
+	      if(debug) traceEvent(TRACE_INFO, "IPProtocol %u\n", sample->dcd_ipProtocol);
+	      if(debug) traceEvent(TRACE_INFO, "IPTOS %u\n", sample->dcd_ipTos);
 	      sample->dcd_sport = ntohl(nfKey.src_port);
 	      sample->dcd_dport = ntohl(nfKey.dst_port);
 	      switch(sample->dcd_ipProtocol) {
 	      case 1: /* ICMP */
-		if(debug) printf("ICMPType %u\n", sample->dcd_sport);
+		if(debug) traceEvent(TRACE_INFO, "ICMPType %u\n", sample->dcd_sport);
 		/* not sure about the dest port being icmp code
 		   - might just be a repeat of the type */
 		break;
 	      case 6: /* TCP */
-		if(debug) printf("TCPSrcPort %u\n", sample->dcd_sport);
-		if(debug) printf("TCPDstPort %u\n", sample->dcd_dport);
+		if(debug) traceEvent(TRACE_INFO, "TCPSrcPort %u\n", sample->dcd_sport);
+		if(debug) traceEvent(TRACE_INFO, "TCPDstPort %u\n", sample->dcd_dport);
 		sample->dcd_tcpFlags = ntohl(nfKey.tcp_flags);
-		if(debug) printf("TCPFlags %u\n", sample->dcd_tcpFlags);
+		if(debug) traceEvent(TRACE_INFO, "TCPFlags %u\n", sample->dcd_tcpFlags);
 		break;
 	      case 17: /* UDP */
-		if(debug) printf("UDPSrcPort %u\n", sample->dcd_sport);
-		if(debug) printf("UDPDstPort %u\n", sample->dcd_dport);
+		if(debug) traceEvent(TRACE_INFO, "UDPSrcPort %u\n", sample->dcd_sport);
+		if(debug) traceEvent(TRACE_INFO, "UDPDstPort %u\n", sample->dcd_dport);
 		break;
 	      default: /* some other protcol */
 		break;
@@ -1230,7 +1250,7 @@ static void receiveSflowSample(SFSample *sample)
 	    }
 	    break;
 	  case INMPACKETTYPE_IPV6:
-	    if(debug) printf("packetDataTag INMPACKETTYPE_IPV6\n");
+	    if(debug) traceEvent(TRACE_INFO, "packetDataTag INMPACKETTYPE_IPV6\n");
 
 	    sample->header = (u_char *)datap; /* just point at the header */
 	    datap += (sample->headerLen + 3) / 4; /* quad-alignment is required by XDR */
@@ -1238,7 +1258,7 @@ static void receiveSflowSample(SFSample *sample)
 	      INMSampled_ipv6 nfKey6;
 	      memcpy(&nfKey6, sample->header, sizeof(nfKey6));
 	      sample->sampledPacketSize = ntohl(nfKey6.length);
-	      if(debug) printf("sampledPacketSize %lu\n", sample->sampledPacketSize);
+	      if(debug) traceEvent(TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
 	    }
 	    /* bug: more decode to do here */
 	    break;
@@ -1259,19 +1279,19 @@ static void receiveSflowSample(SFSample *sample)
 	      GETDATA32(extended_tag, datap);
 	      switch(extended_tag) {
 	      case INMEXTENDED_SWITCH:
-		if(debug) printf("extendedType SWITCH\n");
+		if(debug) traceEvent(TRACE_INFO, "extendedType SWITCH\n");
 		if((datap = readExtendedSwitch(sample, datap, endPtr)) == NULL) return;
 		break;
 	      case INMEXTENDED_ROUTER:
-		if(debug) printf("extendedType ROUTER\n");
+		if(debug) traceEvent(TRACE_INFO, "extendedType ROUTER\n");
 		if((datap = readExtendedRouter(sample, datap, endPtr)) == NULL) return;
 		break;
 	      case INMEXTENDED_GATEWAY:
-		if(debug) printf("extendedType GATEWAY\n");
+		if(debug) traceEvent(TRACE_INFO, "extendedType GATEWAY\n");
 		if((datap = readExtendedGateway(sample, datap, endPtr)) == NULL) return;
 		break;
 	      case INMEXTENDED_USER:
-		if(debug) printf("extendedType USER\n");
+		if(debug) traceEvent(TRACE_INFO, "extendedType USER\n");
 		if((datap = readExtendedUser(sample, datap, endPtr)) == NULL) return;
 		break;
 	      default:
@@ -1287,12 +1307,12 @@ static void receiveSflowSample(SFSample *sample)
 
       case COUNTERSSAMPLE:
 	{
-	  if(debug) printf("sampleType COUNTERSSAMPLE\n");
+	  if(debug) traceEvent(TRACE_INFO, "sampleType COUNTERSSAMPLE\n");
 	  GETDATA32(sample->statsSamplingInterval, datap);
-	  if(debug) printf("statsSamplingInterval %lu\n", sample->statsSamplingInterval);
+	  if(debug) traceEvent(TRACE_INFO, "statsSamplingInterval %lu\n", sample->statsSamplingInterval);
 	  /* now find out what sort of counter blocks we have here... */
 	  GETDATA32(sample->counterBlockVersion, datap);
-	  if(debug) printf("counterBlockVersion %lu\n", sample->counterBlockVersion);
+	  if(debug) traceEvent(TRACE_INFO, "counterBlockVersion %lu\n", sample->counterBlockVersion);
 
 	  /* first see if we should read the generic stats */
 	  switch(sample->counterBlockVersion) {
@@ -1311,41 +1331,41 @@ static void receiveSflowSample(SFSample *sample)
 	      GETDATA64(sample->ifSpeed, datap);
 	      GETDATA32(sample->ifDirection, datap);
 	      GETDATA32(sample->ifStatus, datap);
-	      if(debug) printf("ifIndex %lu\n", sample->ifIndex);
-	      if(debug) printf("networkType %lu\n", sample->networkType);
-	      if(debug) printf("ifSpeed %lu\n", sample->ifSpeed);
-	      if(debug) printf("ifDirection %lu\n", sample->ifDirection);
-	      if(debug) printf("ifStatus %lu\n", sample->ifStatus);
+	      if(debug) traceEvent(TRACE_INFO, "ifIndex %lu\n", sample->ifIndex);
+	      if(debug) traceEvent(TRACE_INFO, "networkType %lu\n", sample->networkType);
+	      if(debug) traceEvent(TRACE_INFO, "ifSpeed %lu\n", sample->ifSpeed);
+	      if(debug) traceEvent(TRACE_INFO, "ifDirection %lu\n", sample->ifDirection);
+	      if(debug) traceEvent(TRACE_INFO, "ifStatus %lu\n", sample->ifStatus);
 
 	      /* the generic counters always come first */
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("ifInOctets %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifInOctets %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifInUcastPkts %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifInUcastPkts %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifInMulticastPkts %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifInMulticastPkts %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifInBroadcastPkts %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifInBroadcastPkts %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifInDiscards %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifInDiscards %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifInErrors %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifInErrors %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifInUnknownProtos %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifInUnknownProtos %Lu\n", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("ifOutOctets %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifOutOctets %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifOutUcastPkts %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifOutUcastPkts %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifOutMulticastPkts %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifOutMulticastPkts %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifOutBroadcastPkts %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifOutBroadcastPkts %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifOutDiscards %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifOutDiscards %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifOutErrors %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifOutErrors %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ifPromiscuousMode %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ifPromiscuousMode %Lu\n", cntr64);
 	    }
 	    break;
 
@@ -1367,72 +1387,72 @@ static void receiveSflowSample(SFSample *sample)
 	    {
 	      u_int32_t cntr32;
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsAlignmentErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsAlignmentErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsFCSErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsFCSErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsSingleCollisionFrames %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsSingleCollisionFrames %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsMultipleCollisionFrames %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsMultipleCollisionFrames %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsSQETestErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsSQETestErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsDeferredTransmissions %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsDeferredTransmissions %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsLateCollisions %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsLateCollisions %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsExcessiveCollisions %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsExcessiveCollisions %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsInternalMacTransmitErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsInternalMacTransmitErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsCarrierSenseErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsCarrierSenseErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsFrameTooLongs %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsFrameTooLongs %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsInternalMacReceiveErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsInternalMacReceiveErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot3StatsSymbolErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot3StatsSymbolErrors %lu\n", cntr32);
 	    }
 	    break;
 	  case INMCOUNTERSVERSION_TOKENRING:
 	    {
 	      u_int32_t cntr32;
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsLineErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsLineErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsBurstErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsBurstErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsACErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsACErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsAbortTransErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsAbortTransErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsInternalErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsInternalErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsLostFrameErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsLostFrameErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsReceiveCongestions %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsReceiveCongestions %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsFrameCopiedErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsFrameCopiedErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsTokenErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsTokenErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsSoftErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsSoftErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsHardErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsHardErrors %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsSignalLoss %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsSignalLoss %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsTransmitBeacons %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsTransmitBeacons %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsRecoverys %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsRecoverys %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsLobeWires %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsLobeWires %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsRemoves %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsRemoves %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsSingles %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsSingles %lu\n", cntr32);
 	      GETDATA32(cntr32, datap);
-	      if(debug) printf("dot5StatsFreqErrors %lu\n", cntr32);
+	      if(debug) traceEvent(TRACE_INFO, "dot5StatsFreqErrors %lu\n", cntr32);
 	    }
 	    break;
 	  case INMCOUNTERSVERSION_FDDI:
@@ -1442,33 +1462,33 @@ static void receiveSflowSample(SFSample *sample)
 	    {
 	      u_int64_t cntr64;
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("dot12InHighPriorityFrames %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12InHighPriorityFrames %Lu\n", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("dot12InHighPriorityOctets %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12InHighPriorityOctets %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("dot12InNormPriorityFrames %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12InNormPriorityFrames %Lu\n", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("dot12InNormPriorityOctets %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12InNormPriorityOctets %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("dot12InIPMErrors %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12InIPMErrors %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("dot12InOversizeFrameErrors %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12InOversizeFrameErrors %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("dot12InDataErrors %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12InDataErrors %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("dot12InNullAddressedFrames %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12InNullAddressedFrames %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("dot12OutHighPriorityFrames %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12OutHighPriorityFrames %Lu\n", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("dot12OutHighPriorityOctets %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12OutHighPriorityOctets %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("dot12TransitionIntoTrainings %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12TransitionIntoTrainings %Lu\n", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("dot12HCInHighPriorityOctets %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12HCInHighPriorityOctets %Lu\n", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("dot12HCInNormPriorityOctets %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12HCInNormPriorityOctets %Lu\n", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("dot12HCOutHighPriorityOctets %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "dot12HCOutHighPriorityOctets %Lu\n", cntr64);
 	    }
 	    break;
 	  case INMCOUNTERSVERSION_WAN:
@@ -1478,17 +1498,17 @@ static void receiveSflowSample(SFSample *sample)
 	    {
 	      u_int64_t cntr64;
 	      GETDATA32(sample->in_vlan, datap);
-	      if(debug) printf("in_vlan %lu\n", sample->in_vlan);
+	      if(debug) traceEvent(TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("octets %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "octets %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("ucastPkts %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "ucastPkts %Lu\n", cntr64);
 	      GETDATA64(cntr64, datap);
-	      if(debug) printf("multicastPkts %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "multicastPkts %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("broadcastPkts %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "broadcastPkts %Lu\n", cntr64);
 	      GETDATA32(cntr64, datap);
-	      if(debug) printf("discards %Lu\n", cntr64);
+	      if(debug) traceEvent(TRACE_INFO, "discards %Lu\n", cntr64);
 	    }
 	    break;
 	  default:
@@ -1505,10 +1525,10 @@ static void receiveSflowSample(SFSample *sample)
 	report the size in bytes that this flowSample or
 	counterSample took up in the datagram
       */
-      if(debug) printf("%s %d\n",
-		       (sample->sampleType == FLOWSAMPLE ?
-			"flowSampleSize" : "countersSampleSize"),
-		       (u_char *)datap - startOfSample);
+      if(debug) traceEvent(TRACE_INFO, "%s %d\n",
+		 (sample->sampleType == FLOWSAMPLE ?
+		  "flowSampleSize" : "countersSampleSize"),
+		 (u_char *)datap - startOfSample);
     }
   }
 }
@@ -1519,9 +1539,10 @@ static void handlesFlowHTTPrequest(char* url) {
   char buf[1024];
   float percentage, err;
   struct in_addr theDest;
+  int i;
 
   sendHTTPHeader(HTTP_TYPE_HTML, 0);
-  printHTMLheader("<A HREF=http://www.sflow.org/>sFlow</A> Statistics", 0);
+  printHTMLheader("sFlow Statistics", 0);
 
   sendString("<CENTER>\n<HR>\n");
 
@@ -1538,16 +1559,20 @@ static void handlesFlowHTTPrequest(char* url) {
 	  storePrefsValue("sflow.sflowInPort", value);
 	  initSflowInSocket();
 	}
-      } else if(strcmp(key, "collectorIP") == 0)
-	myGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);      
+      } else if(strcmp(key, "sflowDest") == 0) {
+	myGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
+	storePrefsValue("sflow.sflowDest", value);
+      } else if(strcmp(key, "debug") == 0) {
+	debug = atoi(value);
+	storePrefsValue("sflow.debug", value);
+      }
     }
   }
 
   /* *************************************** */
 
-  sendString("<TABLE BORDER>");
-  sendString("<TR "TR_ON"><TH "TH_BG">Flow Direction</TH><TH "TH_BG" COLSPAN=2>Description</TH></TR>\n");
-  sendString("<TR "TR_ON"><TH "TH_BG">Incoming</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
+  sendString("<table border=0>\n<tr><td><table border>");
+  sendString("<TR "TR_ON"><TH "TH_BG">Incoming Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	     "Local UDP Port</td> "
 	     "<td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
 
@@ -1555,23 +1580,44 @@ static void handlesFlowHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
 
-  sendString("> <INPUT TYPE=submit VALUE=Set><br>"
-	     "[default port is "SFLOW_COLLECTOR_PORT"]</FORM></td></tr>\n<br>");
+  sendString("><br>[default port is "SFLOW_COLLECTOR_PORT"]"
+	     "</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n<br>");
 
   /* *************************************** */
 
-  sendString("<TR "TR_ON"><TH "TH_BG">Outgoing</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG">Outgoing Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	     "Remote Collector IP Address</td> "
-	     "<td "TD_BG"><INPUT NAME=collectorIP SIZE=15 VALUE=");
+	     "<td "TD_BG"><INPUT NAME=sflowDest SIZE=15 VALUE=");
 
   theDest.s_addr = ntohl(myGlobals.sflowDest.sin_addr.s_addr);
   sendString(_intoa(theDest, buf, sizeof(buf)));
 
-  sendString(">:6343 <INPUT TYPE=submit VALUE=Set><br>"
-	     "[default sampling rate is "INM_DEFAULT_SAMPLING_RATE" packets]</td></tr>\n");
-  sendString("<TR "TR_ON"><TH "TH_BG">&nbsp;</TH><TD "TD_BG" align=center COLSPAN=2>"
-	     "NOTE: Use 0 to disable export/collection</TD></TR>\n");
-  sendString("</table></CENTER><p>\n");
+  sendString(">:6343<br>[default sampling rate is "INM_DEFAULT_SAMPLING_RATE" packets]</td>"
+	     "<td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+
+  sendString("<TR "TR_ON"><TH "TH_BG">Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
+	     "<FORM ACTION=/plugins/sFlow METHOD=GET>");
+  if(debug) {
+    sendString("<INPUT TYPE=radio NAME=debug VALUE=1 CHECKED>On");
+    sendString("<INPUT TYPE=radio NAME=debug VALUE=0>Off");
+    sendString("<br>NOTE: sFlow packets are dumped on the ntop log");
+  } else {
+    sendString("<INPUT TYPE=radio NAME=debug VALUE=1>On");
+    sendString("<INPUT TYPE=radio NAME=debug VALUE=0 CHECKED>Off");
+  }
+
+  sendString("</TD><td><INPUT TYPE=submit VALUE=Set></form></td></TR>\n");
+  sendString("</table></tr>\n");
+
+  sendString("<tr><td>"
+	     "<b>NOTE</b>:<ol>"
+	     "<li>Use 0 as port, and 0.0.0.0 as IP address to disable export/collection."
+	     "<li>sFlow packets are associated with a virtual device and not mixed to captured packets."
+	     "<li>sFlow activation may require ntop restart"
+	     "<li>A virtual sFlow device is activated only when incoming flow capture is enabled."
+	     "<li>You can switch devices using this <A HREF=/switch.html>link</A>."
+	     "</ol></td></tr>\n");
+  sendString("</table></center><p>\n");
 
   /* *************************************** */
 
@@ -1581,19 +1627,19 @@ static void handlesFlowHTTPrequest(char* url) {
     return;
   }
 
-  sendString("\n<HR>\n");
+
 
   percentage = (myGlobals.lastSample-myGlobals.initialPool)/myGlobals.numSamplesReceived;
   err = 196 * sqrt((float)(1/(float)myGlobals.numSamplesReceived));
 
-  if(debug) {
-    traceEvent(TRACE_INFO, "[%.2f %%][Error <= %.2f%%]", percentage, err);
-  }
+  if(debug)
+    if(debug) traceEvent(TRACE_INFO, "[%.2f %%][Error <= %.2f%%]", percentage, err);
 
   sendString("<CENTER>\n<TABLE BORDER>\n");
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
 
   if(snprintf(buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Samples Num.</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Samples</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 	      formatPkts(myGlobals.numSamplesReceived)) < 0)
     BufferTooShort();
   sendString(buf);
@@ -1610,8 +1656,24 @@ static void handlesFlowHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
 
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD "TD_BG" ALIGN=LEFT>");
+
+  for(i=0; i<MAX_NUM_PROBES; i++) {
+    if(probeList[i].probeAddr.s_addr == 0) break;
+
+    if(snprintf(buf, sizeof(buf), "%s [%s pkts]\n",
+		_intoa(probeList[i].probeAddr, buf, sizeof(buf)),
+		formatPkts(probeList[i].pkts)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+
+  sendString("</TD></TR>\n");
+
   sendString("</TABLE>\n");
-  sendString("<p></CENTER>\n");
+  sendString("</CENTER>\n");
+
+  sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A>.</H5>\n");
 
   printHTMLtrailer();
 }
@@ -1628,13 +1690,13 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
   if(!(myGlobals.sflowInSocket > 0)) return(NULL);
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "sFlowMainLoop()");
+  if(debug) traceEvent(TRACE_INFO, "sFlowMainLoop()");
 #endif
 
 #ifdef MULTITHREADED
-  traceEvent(TRACE_INFO, "Started thread (%ld) for sFlow.\n", sFlowThread);
+  if(debug) traceEvent(TRACE_INFO, "Started thread (%ld) for sFlow.\n", sFlowThread);
 #endif
-  
+
   for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&sFlowMask);
     FD_SET(myGlobals.sflowInSocket, &sFlowMask);
@@ -1645,7 +1707,7 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 		    0, (struct sockaddr*)&fromHost, &len);
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "select() = %d", rc);
+      if(debug) traceEvent(TRACE_INFO, "select() = %d", rc);
 #endif
       if(rc > 0) {
 	memset(&sample, 0, sizeof(sample));
@@ -1655,12 +1717,12 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 
 	receiveSflowSample(&sample);
 
-	if(debug) traceEvent(TRACE_INFO, "rawSampleLen: %d", sample.rawSampleLen);
+	if(debug) if(debug) traceEvent(TRACE_INFO, "rawSampleLen: %d", sample.rawSampleLen);
       } else {
-	if(debug) traceEvent(TRACE_INFO, "rawSampleLen: rc=%d", rc);
+	if(debug) if(debug) traceEvent(TRACE_INFO, "rawSampleLen: rc=%d", rc);
       }
     } else {
-      traceEvent(TRACE_INFO, "sFlow thread is terminating...");
+      if(debug) traceEvent(TRACE_INFO, "sFlow thread is terminating...");
       break;
     }
   }
@@ -1678,7 +1740,7 @@ static void initSflowInSocket() {
   int sockopt = 1;
 
   if(myGlobals.sflowInSocket != 0) {
-    traceEvent(TRACE_INFO, "sFlow collector terminated");
+    if(debug) traceEvent(TRACE_INFO, "sFlow collector terminated");
     closeNwSocket(&myGlobals.sflowInSocket);
   }
 
@@ -1710,12 +1772,12 @@ static void initSflowInSocket() {
 
   if(myGlobals.sflowOutSocket == 0) {
     char value[32];
-    
+
     myGlobals.sflowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
     setsockopt(myGlobals.sflowOutSocket, SOL_SOCKET, SO_REUSEADDR,
 	       (char *)&sockopt, sizeof(sockopt));
 
-    myGlobals.sflowDest.sin_addr.s_addr = 0; 
+    myGlobals.sflowDest.sin_addr.s_addr = 0;
     myGlobals.sflowDest.sin_family      = AF_INET;
     myGlobals.sflowDest.sin_port        = (int)htons(INM_DEFAULT_COLLECTOR_PORT);
 
@@ -1731,7 +1793,7 @@ static void initSflowInSocket() {
   /* This plugin works only with threads */
   if((!threadActive) && (myGlobals.sflowInSocket > 0))
     createThread(&sFlowThread, sFlowMainLoop, NULL);
-#endif 
+#endif
 }
 
 /* ****************************** */
@@ -1741,7 +1803,7 @@ static void setSflowOutSocket() {
   int sockopt = 1;
 
   if(myGlobals.sflowOutSocket != 0) {
-    traceEvent(TRACE_INFO, "sFlow collector terminated");
+    if(debug) traceEvent(TRACE_INFO, "sFlow collector terminated");
     closeNwSocket(&myGlobals.sflowOutSocket);
   }
 
@@ -1806,6 +1868,54 @@ static void handleSflowPacket(u_char *_deviceId,
   int sampledPacketSize;
   int deviceId, rc;
 
+  if(myGlobals.rFileName != NULL) {
+    /* ntop is reading packets from a file */
+
+    struct ether_header ehdr;
+    u_int caplen = h->caplen;
+    u_int length = h->len;
+    unsigned short eth_type;
+    u_int8_t flags = 0;
+    struct ip ip;
+    struct tcphdr tp;
+    struct udphdr up;
+
+    if(caplen >= sizeof(struct ether_header)) {
+      memcpy(&ehdr, p, sizeof(struct ether_header));
+      eth_type = ntohs(ehdr.ether_type);
+
+      if(eth_type == ETHERTYPE_IP) {
+	u_int plen, hlen;
+	u_short sport, dport;
+
+	memcpy(&ip, p+sizeof(struct ether_header), sizeof(struct ip));
+	hlen = (u_int)ip.ip_hl * 4;
+	NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
+
+	plen = length-sizeof(struct ether_header);
+
+	if(ip.ip_p == IPPROTO_UDP) {
+	  if(plen > (hlen+sizeof(struct udphdr))) {
+	    memcpy(&up, p+sizeof(struct ether_header)+hlen, sizeof(struct udphdr));
+	    sport = ntohs(up.uh_sport), dport = ntohs(up.uh_dport);
+
+	    if(dport == myGlobals.sflowInPort) {
+	      /* This is an sflow packet */
+	      SFSample sample;
+
+	      memset(&sample, 0, sizeof(sample));
+	      sample.rawSample    = (void*)(p+sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
+	      sample.rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
+	      sample.sourceIP     = ip.ip_src;
+
+	      receiveSflowSample(&sample);
+	    }
+	  }
+	}
+      }
+    }
+  }
+
   if(myGlobals.numSamplesToGo-- > 0) return;
 
 #ifdef WIN32
@@ -1826,14 +1936,14 @@ static void handleSflowPacket(u_char *_deviceId,
   mySample.sampleType        = htonl(FLOWSAMPLE);
   mySample.sampleSequenceNo  = htonl(myGlobals.flowSampleSeqNo);
   mySample.samplerId         = htonl(0); /*
-					    sFlowDataSource encoded as follows:
-					    The most significant byte of the
-					    source_id is used to indicate the
-					    type of sFlowDataSource
-					    (0 = ifIndex, 1 = smonVlanDataSource,
-					    2 = entPhysicalEntry) and the
-					    lower three bytes contain the
-					    relevant index value.
+					   sFlowDataSource encoded as follows:
+					   The most significant byte of the
+					   source_id is used to indicate the
+					   type of sFlowDataSource
+					   (0 = ifIndex, 1 = smonVlanDataSource,
+					   2 = entPhysicalEntry) and the
+					   lower three bytes contain the
+					   relevant index value.
 					 */
   mySample.meanSkipCount     = htonl(atoi(INM_DEFAULT_SAMPLING_RATE));
   mySample.samplePool        = htonl(myGlobals.device[deviceId].ethernetPkts);
@@ -1851,11 +1961,11 @@ static void handleSflowPacket(u_char *_deviceId,
 
 #if 1
   if(myGlobals.sflowDest.sin_addr.s_addr != 0) {
-    rc = sendto(myGlobals.sflowOutSocket, &mySample, sizeof(mySample)+sampledPacketSize, 0, 
+    rc = sendto(myGlobals.sflowOutSocket, &mySample, sizeof(mySample)+sampledPacketSize, 0,
 		(struct sockaddr *)&myGlobals.sflowDest, sizeof(myGlobals.sflowDest));
-    
+
     if(rc == 0)
-      traceEvent(TRACE_INFO, "sendto returned %d [errno=%d][sflowOutSocket=%d]", 
+      if(debug) traceEvent(TRACE_INFO, "sendto returned %d [errno=%d][sflowOutSocket=%d]",
 		 rc, errno, myGlobals.sflowOutSocket);
   }
 #else
@@ -1885,16 +1995,29 @@ static void initsFlowFunct(void) {
     myGlobals.initialPool = 0,
     myGlobals.lastSample = 0;
 
+  memset(probeList, 0, sizeof(probeList));
+
   if(fetchPrefsValue("sflow.sflowInPort", value, sizeof(value)) == -1)
     storePrefsValue("sflow.sflowInPort", "0");
   else
     myGlobals.sflowInPort = atoi(value);
 
+  if(fetchPrefsValue("sflow.sflowDest", value, sizeof(value)) == -1) {
+    storePrefsValue("sflow.sflowDest", "0.0.0.0");
+    myGlobals.sflowDest.sin_addr.s_addr = 0;
+  } else
+    myGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
+
+  if(fetchPrefsValue("sflow.debug", value, sizeof(value)) == -1)
+    storePrefsValue("sflow.debug", "0");
+  else
+    debug = atoi(value);
+
   initSflowInSocket();
 
   /* http://www.inmon.com/ */
-    
-    if(myGlobals.sflowInPort > 0) 
+
+    if(myGlobals.sflowInPort > 0)
       traceEvent(TRACE_INFO, "Welcome to sFlow: listening on UDP port %d...",
 		 myGlobals.sflowInPort);
     fflush(stdout);
@@ -1910,8 +2033,7 @@ static void termsFlowFunct(void) {
   if(myGlobals.sflowInSocket > 0)  closeNwSocket(&myGlobals.sflowInSocket);
   if(myGlobals.sflowOutSocket > 0) closeNwSocket(&myGlobals.sflowOutSocket);
 
-  traceEvent(TRACE_INFO, "Thanks for using sFlow");
-  traceEvent(TRACE_INFO, "Done.\n");
+  traceEvent(TRACE_INFO, "Thanks for using sFlow. Done.\n");
   fflush(stdout);
 }
 
@@ -1920,7 +2042,7 @@ static void termsFlowFunct(void) {
 static PluginInfo sFlowPluginInfo[] = {
   { "sFlowPlugin",
     "This plugin is used to tune ntop's sFlow support",
-    "1.1", /* version */
+    "1.2", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "sFlow", /* http://<host>:<port>/plugins/sFlowWatch */
     0, /* Active */
@@ -1938,7 +2060,7 @@ static PluginInfo sFlowPluginInfo[] = {
 #ifdef STATIC_PLUGIN
 PluginInfo* sflowPluginEntryFctn(void)
 #else
-PluginInfo* PluginEntryFctn(void)
+     PluginInfo* PluginEntryFctn(void)
 #endif
 {
   traceEvent(TRACE_INFO, "Welcome to %s. (C) 2002 by Luca Deri.\n",

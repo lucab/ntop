@@ -315,6 +315,31 @@ void resetDevice(int devIdx) {
 
 /* ******************************* */
 
+static void allocateOtherHosts() {
+  if(myGlobals.trackOnlyLocalHosts) {
+    myGlobals.otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
+    memset(myGlobals.otherHostEntry, 0, sizeof(HostTraffic));
+
+    myGlobals.otherHostEntry->hostIpAddress.s_addr = 0x00112233;
+    strncpy(myGlobals.otherHostEntry->hostNumIpAddress, "&nbsp;",
+	    sizeof(myGlobals.otherHostEntry->hostNumIpAddress));
+    strncpy(myGlobals.otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
+	    sizeof(myGlobals.otherHostEntry->hostSymIpAddress));
+    strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
+    myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
+    myGlobals.otherHostEntry->hostSerial = myGlobals.otherHostEntryIdx;
+    myGlobals.otherHostEntry->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), 
+							       TOP_ASSIGNED_IP_PORTS);
+  } else {
+    /* We let ntop think that otherHostEntryIdx does not exist */
+    myGlobals.otherHostEntry = NULL;
+    myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx;
+  }
+
+}
+
+/* ******************************************* */
+
 void initCounters(void) {
   int len, i;
 
@@ -358,26 +383,7 @@ void initCounters(void) {
   myGlobals.broadcastEntryIdx = 0;
   myGlobals.serialCounter     = 2 /* 0 is reserved for broadcast/1 for otherHosts */;
 
-  if(myGlobals.trackOnlyLocalHosts) {
-    myGlobals.otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
-    memset(myGlobals.otherHostEntry, 0, sizeof(HostTraffic));
-
-    myGlobals.otherHostEntry->hostIpAddress.s_addr = 0x00112233;
-    strncpy(myGlobals.otherHostEntry->hostNumIpAddress, "&nbsp;",
-	    sizeof(myGlobals.otherHostEntry->hostNumIpAddress));
-    strncpy(myGlobals.otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
-	    sizeof(myGlobals.otherHostEntry->hostSymIpAddress));
-    strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
-    myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
-    myGlobals.otherHostEntry->hostSerial = myGlobals.otherHostEntryIdx;
-    myGlobals.otherHostEntry->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), 
-							       TOP_ASSIGNED_IP_PORTS);
-  } else {
-    /* We let ntop think that otherHostEntryIdx does not exist */
-    myGlobals.otherHostEntry = NULL;
-    myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx;
-  }
-
+  allocateOtherHosts();
   myGlobals.nextSessionTimeoutScan = time(NULL)+PURGE_HOSTS_DELAY;
 
   myGlobals.numProcesses = 0;
@@ -418,7 +424,7 @@ void resetStats(void) {
 
     for(j=1; j<myGlobals.device[i].actualHashSize; j++)
       if(myGlobals.device[i].hash_hostTraffic[j] != NULL) {
-	freeHostInfo(i, myGlobals.device[i].hash_hostTraffic[j], i);
+	freeHostInfo(i, myGlobals.device[i].hash_hostTraffic[j], i); /* ** */
 	myGlobals.device[i].hash_hostTraffic[j] = NULL;
       }
 
@@ -433,8 +439,10 @@ void resetStats(void) {
     myGlobals.device[i].numTcpSessions = 0;
 
     myGlobals.device[i].hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.broadcastEntry;
-    if(myGlobals.otherHostEntry != NULL)
+    if(myGlobals.otherHostEntryIdx != myGlobals.broadcastEntryIdx) {
+      allocateOtherHosts(); /* Freed by ** */
       myGlobals.device[i].hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntry;
+    }
   }
 
 #ifdef MULTITHREADED
@@ -490,12 +498,10 @@ int initGlobalValues(void) {
     myGlobals.numDequeueThreads      = MAX_NUM_DEQUEUE_THREADS;
 #endif
     myGlobals.trackOnlyLocalHosts    = 1;
-    myGlobals.enableDBsupport        = NTOP_DEFAULT_DB_SUPPORT;
   } else {
 #ifdef MULTITHREADED
     myGlobals.numDequeueThreads = 1;
 #endif
-    myGlobals.dontTrustMACaddr  = 0;
   }
 
   if(myGlobals.enableSessionHandling)
@@ -661,17 +667,6 @@ void initThreads(void) {
 	       myGlobals.scanIdleThreadId);
   }
 
-#ifndef MICRO_NTOP
-  /*
-   * Create the thread (5) - DBU - DB Update - optional
-   */
-  if (myGlobals.enableDBsupport) {
-    createThread(&myGlobals.dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
-    traceEvent(TRACE_INFO, "Started thread (%ld) for DB update.", 
-	       myGlobals.dbUpdateThreadId);
-  }
-#endif /* MICRO_NTOP */
-
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
     createMutex(&myGlobals.addressResolutionMutex);
@@ -709,7 +704,9 @@ void initThreads(void) {
   }
 #endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
 
+#ifdef MULTITHREADED
   myGlobals.hostsHashMutexInitialized = 1;
+#endif /* MULTITHREADED */
 }
 
 

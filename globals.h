@@ -172,8 +172,6 @@ typedef struct ntopGlobals {
   /* command line options */
 
   char *accessLogPath;               /* 'a' */
-  char *sqlHostName;                 /* 'b' */
-  int  sqlPortNumber;
   u_char stickyHosts;                /* 'c' */
   int daemonMode;                    /* 'd' */
 #ifndef MICRO_NTOP
@@ -190,11 +188,6 @@ typedef struct ntopGlobals {
   int refreshRate;                   /* 'r' */
   u_char disablePromiscuousMode;     /* 's' */
   u_short traceLevel;                /* 't' */
-  char *mySQLhostName;               /* 'v' */
-  char *mySQLuser;
-   /* password is NOT stored in globals */
-  char *mySQLdatabase;
-
   char *webAddr;                     /* 'w' */
   int webPort;
 
@@ -302,11 +295,6 @@ typedef struct ntopGlobals {
    * SIH - Scan Idle Hosts - optional
    */
   pthread_t scanIdleThreadId;
-
-  /*
-   * DBU - DB Update - optional
-   */
-  pthread_t dbUpdateThreadId;
 
   /*
    * AR - Address Resolution - optional
@@ -423,7 +411,6 @@ typedef struct ntopGlobals {
   /*
    * local variables
    */
-  int enableDBsupport;   /* Database support disabled by default             */
   int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
   
   char *localAddresses, *protoSpecs;
@@ -458,7 +445,8 @@ typedef struct ntopGlobals {
   /* Flow reception */
   int netFlowInSocket, netFlowDeviceId;
   u_short netFlowInPort;
-  
+  u_long numNetFlowsPktsRcvd, numNetFlowsRcvd, numBadFlowsVersionsRcvd;
+
   /* sFlow */
   int sflowOutSocket, sflowInSocket, sflowDeviceId;
   u_short sflowInPort; 

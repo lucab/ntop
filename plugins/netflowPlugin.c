@@ -28,6 +28,9 @@ static pthread_t netFlowThread;
 static int threadActive;
 #endif
 
+static int debug = 0;
+static ProbeInfo probeList[MAX_NUM_PROBES];
+
 /* ****************************** */
 
 void setNetFlowInSocket() {
@@ -101,7 +104,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   u_char buffer[2048];
   struct sockaddr_in fromHost;
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "netflowMainLoop()");
 #endif
 
@@ -130,10 +133,26 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	NetFlow5Record theRecord;
 	int i, numFlows;
 
+	myGlobals.numNetFlowsPktsRcvd++;
+
+	NTOHL(fromHost.sin_addr.s_addr);
+
+	for(i=0; i<MAX_NUM_PROBES; i++) {
+	  if(probeList[i].probeAddr.s_addr == 0) {
+	    probeList[i].probeAddr.s_addr = fromHost.sin_addr.s_addr;
+	    probeList[i].pkts = 1;
+	    break;
+	  } else if(probeList[i].probeAddr.s_addr == fromHost.sin_addr.s_addr) {
+	    probeList[i].pkts++;
+	    break;
+	  }
+	}
+	
 	memcpy(&theRecord, buffer, rc > sizeof(theRecord) ? sizeof(theRecord): rc);
 
 	if(theRecord.flowHeader.version == htons(5)) {
 	  numFlows = ntohs(theRecord.flowHeader.count);
+
 	  if(numFlows > V5FLOWS_PER_PAK) numFlows = V5FLOWS_PER_PAK;
 
 	  for(i=0; i<numFlows; i++) {
@@ -144,6 +163,8 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	    HostTraffic *srcHost=NULL, *dstHost=NULL;
 	    u_short sport, dport;
 
+	    myGlobals.numNetFlowsRcvd++;
+
 	    len = ntohl(theRecord.flowRecord[i].dOctets);
 	    numPkts = ntohl(myGlobals.theRecord.flowRecord[i].dPkts);
 	    a.s_addr = ntohl(theRecord.flowRecord[i].srcaddr);
@@ -151,7 +172,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	    sport = ntohs(theRecord.flowRecord[i].srcport);
 	    dport = ntohs(theRecord.flowRecord[i].dstport);
 
-	    if(0)
+	    if(debug)
 	      traceEvent(TRACE_INFO, "%2d) %s:%d <-> %s:%d %u/%u (proto=%d)",
 			 i+1, _intoa(a, buf, sizeof(buf)),
 			 sport, _intoa(b, buf1, sizeof(buf1)),
@@ -166,7 +187,6 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	      traceEvent(TRACE_ERROR, "NetFlow deviceId (%d) is out range", actualDeviceId);
 	      break;
 	    }
-
 
 	    myGlobals.device[actualDeviceId].ethernetPkts += numPkts;
 	    myGlobals.device[actualDeviceId].ipPkts += numPkts;
@@ -248,7 +268,8 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	    /* releaseMutex(&myGlobals.hostsHashMutex); */
 #endif
 	  }
-	}
+	} else
+	  myGlobals.numBadFlowsVersionsRcvd++;
       }
     } else {
       traceEvent(TRACE_INFO, "NetFlow thread is terminating...");
@@ -285,6 +306,11 @@ static void initNetFlowFunct(void) {
     myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
 
   setNetFlowOutSocket();
+
+  if(fetchPrefsValue("netFlow.debug", value, sizeof(value)) == -1)
+    storePrefsValue("netFlow.debug", "0");
+  else
+    debug = atoi(value);
 
   for(i=0; i<myGlobals.numDevices; i++)
     if(!myGlobals.device[i].virtualDevice) {
@@ -337,6 +363,9 @@ static void handleNetflowHTTPrequest(char* url) {
 	myGlobals.netFlowInPort = atoi(value);
 	storePrefsValue("netFlow.netFlowInPort", value);
 	setNetFlowInSocket();
+      } else if(strcmp(device, "debug") == 0) {
+	debug = atoi(value);
+	storePrefsValue("netFlow.debug", value);
       } else if(strcmp(device, "collectorIP") == 0) {
 	storePrefsValue("netFlow.netFlowDest", value);
 	myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
@@ -368,32 +397,52 @@ static void handleNetflowHTTPrequest(char* url) {
     }
   }
 
-  sendString("<TABLE BORDER>");
-  sendString("<TR "TR_ON"><TH "TH_BG">Flow Direction</TH><TH "TH_BG" COLSPAN=2>Description</TH></TR>\n");
+  sendString("<table border=0>\n<tr><td><table border>");
 
-  sendString("<TR "TR_ON"><TH "TH_BG">Incoming</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG">Incoming Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Local Collector UDP Port:</td><td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.netFlowInPort) < 0)
     BufferTooShort();
   sendString(buf);
 
-  sendString("> <INPUT TYPE=submit VALUE=Set><br>"
-	     "[default port is "NETFLOW_DEFAULT_PORT"]</FORM></td></tr>\n");
+  sendString("> <br>[default port is "NETFLOW_DEFAULT_PORT"]</td><td>"
+	     "<INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
   /* *************************************** */
 
-  sendString("<TR "TR_ON"><TH "TH_BG">Outgoing</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG">Outgoing Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Remote Collector IP Address</td> "
 	     "<td "TD_BG"><INPUT NAME=collectorIP SIZE=15 VALUE=");
 
   theDest.s_addr = ntohl(myGlobals.netFlowDest.sin_addr.s_addr);
   sendString(_intoa(theDest, buf, sizeof(buf)));
 
-  sendString(">:2055 <INPUT TYPE=submit VALUE=Set></FORM></td></tr>\n");
-  sendString("<TR "TR_ON"><TH "TH_BG">&nbsp;</TH><TD "TD_BG" align=center COLSPAN=2>"
-	     "NOTE: Use 0 to disable export/collection</TD></TR>\n");
-  sendString("</TABLE><p>\n");
+  sendString(">:2055</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+
+  sendString("<TR "TR_ON"><TH "TH_BG">Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
+	     "<FORM ACTION=/plugins/NetFlow METHOD=GET>");
+  if(debug) {
+    sendString("<INPUT TYPE=radio NAME=debug VALUE=1 CHECKED>On");
+    sendString("<INPUT TYPE=radio NAME=debug VALUE=0>Off");
+    sendString("<br>NOTE: NetFlow packets are dumped on the ntop log");
+  } else {
+    sendString("<INPUT TYPE=radio NAME=debug VALUE=1>On");
+    sendString("<INPUT TYPE=radio NAME=debug VALUE=0 CHECKED>Off");
+  }
+
+  sendString("</TD><td><INPUT TYPE=submit VALUE=Set></form></td></TR>\n");
+  sendString("</table></tr>\n");
+
+  sendString("<tr><td>"
+	     "<b>NOTE</b>:<ol>"
+	     "<li>Use 0 as port, and 0.0.0.0 as IP address to disable export/collection"
+	     "<li>NetFlow packets are associated with a virtual device and not mixed to captured packets."
+	     "<li>NetFlow activation may require ntop restart"
+	     "<li>A virtual NetFlow device is activated only when incoming flow capture is enabled."
+	     "<li>You can switch devices using this <A HREF=/switch.html>link</A>."
+	     "</ol></td></tr>\n");
+  sendString("</table><p><hr><p>\n");
 
   /* ************************ */
 
@@ -406,22 +455,64 @@ static void handleNetflowHTTPrequest(char* url) {
 		  "<A HREF=/plugins/NetFlow?%s=%s>%s</A></TD></TR>\n",
 		  myGlobals.device[i].name, myGlobals.device[i].name,
 		  myGlobals.device[i].exportNetFlow == NETFLOW_EXPORT_ENABLED ? "No" : "Yes",
-		  myGlobals.device[i].exportNetFlow == NETFLOW_EXPORT_ENABLED ? "Yes" : "No"
-		  ) < 0)
+		  myGlobals.device[i].exportNetFlow == NETFLOW_EXPORT_ENABLED ? "Yes" : "No") < 0)
 	BufferTooShort();
       sendString(buf);
-
+      
       if(myGlobals.device[i].exportNetFlow == NETFLOW_EXPORT_ENABLED) numEnabled++;
     }
   }
-
+  
   sendString("</TABLE>\n<P>\n");
 
   if(numEnabled == 0) {
     sendString("<font color=red>WARNING</font>: as all the interfaces are disabled, no flows will be exported<p>\n");
   }
 
+/* ************************************* */
+
+if(myGlobals.numNetFlowsPktsRcvd > 0) {
+  sendString("<TABLE BORDER>\n");
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
+
+  if(snprintf(buf, sizeof(buf),
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Pkts Rcvd</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+	      formatPkts(myGlobals.numNetFlowsPktsRcvd)) < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf),
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flows Rcvd</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+	      formatPkts(myGlobals.numNetFlowsRcvd)) < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf),
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flow with Bad Version</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+	      formatPkts(myGlobals.numBadFlowsVersionsRcvd)) < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD "TD_BG" ALIGN=LEFT>");
+
+  for(i=0; i<MAX_NUM_PROBES; i++) {
+    if(probeList[i].probeAddr.s_addr == 0) break;
+
+    if(snprintf(buf, sizeof(buf), "%s [%s pkts]\n",
+		_intoa(probeList[i].probeAddr, buf, sizeof(buf)),
+		formatPkts(probeList[i].pkts)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+
+  sendString("</TD></TR>\n</TABLE>\n");
+}
+
+/* ************************************* */
+
   sendString("<p></CENTER>\n");
+
+  sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");
 
   printHTMLtrailer();
 }
@@ -448,10 +539,10 @@ static void termNetflowFunct(void) {
 static PluginInfo netflowPluginInfo[] = {
   { "NetFlow",
     "This plugin is used to tune ntop's NetFlow support",
-    "1.1", /* version */
+    "1.2", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
-    1,    /* Active */
+    0,    /* Active */
     initNetFlowFunct, /* InitFunc   */
     termNetflowFunct, /* TermFunc   */
     NULL, /* PluginFunc */

@@ -23,7 +23,7 @@
 /* Global */
 static char hex[] = "0123456789ABCDEF";
 
-#if !defined(WIN32) && !defined(AIX)
+#ifdef HAVE_NETDB_H
 extern int h_errno; /* netdb.h */
 #endif
 
@@ -38,6 +38,45 @@ static int _ns_name_uncompress(const u_char *msg,
 static int _ns_name_unpack(const u_char *msg,
 			  const u_char *eom, const u_char *src,
 			  u_char *dst, size_t dstsiz);
+
+/* **************************************** */
+
+void updateHostNameInfo(unsigned long numeric, 
+			char* symbolic, int actualDeviceId) {
+  char *hostName;
+  struct in_addr addr;
+  char buf[32];
+  char sqlBuf[BUF_SIZE];
+  u_int idx;
+
+  if(!myGlobals.capturePackets) return;
+
+  addr.s_addr = numeric;
+  hostName = _intoa(addr, buf, sizeof(buf));
+
+  /* Search the instance and update its name */
+
+#ifdef MULTITHREADED
+  if(myGlobals.numericFlag == 0) 
+    accessMutex(&myGlobals.addressResolutionMutex, "updateHostNameInfo");
+#endif
+    
+  idx = findHostIdxByNumIP(addr, actualDeviceId);
+
+  if(idx != NO_PEER) {
+    if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL) {
+
+      if(strlen(symbolic) >= (MAX_HOST_SYM_NAME_LEN-1)) 
+	symbolic[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+      strcpy(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostSymIpAddress, symbolic);
+    }
+  }
+
+#ifdef MULTITHREADED
+  if(myGlobals.numericFlag == 0) 
+    releaseMutex(&myGlobals.addressResolutionMutex);
+#endif
+}
 
 /* ************************************ */
 
@@ -139,7 +178,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 
     theAddr.s_addr = ntohl(hostAddr->s_addr); /* big/little endian crap */
 
-#if !defined(WIN32) &&  !defined(AIX)
+#ifdef HAVE_NETDB_H
     h_errno = NETDB_SUCCESS;
 #endif
 
@@ -225,7 +264,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #endif
 
     if (
-#if !defined(WIN32) &&  !defined(AIX)
+#ifdef HAVE_NETDB_H
 	(h_errno == NETDB_SUCCESS) &&
 #endif
 	(hp != NULL) && (hp->h_name != NULL)) {

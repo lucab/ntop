@@ -1175,21 +1175,18 @@ void installService(int argc, char **argv)
   }
 
   // Next, get a handle to the service control manager
-  schSCManager = OpenSCManager(
+  schSCManager = OpenSCManager(NULL,
 			       NULL,
-			       NULL,
-			       SC_MANAGER_ALL_ACCESS
-			       );
+			       SC_MANAGER_ALL_ACCESS);
 
-  if ( schSCManager ){
+  if ( schSCManager ) {
 
-    schService = CreateService(
-			       schSCManager,               // SCManager database
+    schService = CreateService(schSCManager,               // SCManager database
 			       TEXT(SZSERVICENAME),        // name of service
 			       TEXT(SZSERVICEDISPLAYNAME), // name to display
 			       SERVICE_ALL_ACCESS,         // desired access
 			       SERVICE_WIN32_OWN_PROCESS,  // service type
-			       SERVICESTARTTYPE    ,       // start type
+			       SERVICESTARTTYPE,           // start type
 			       SERVICE_ERROR_NORMAL,       // error control type
 			       szPath,                     // service's binary
 			       NULL,                       // no load ordering group
@@ -1212,7 +1209,7 @@ void installService(int argc, char **argv)
       }
 
       // Set the file value (where the message resources are located.... in this case, our runfile.)
-      if(	0 != setStringValue((const unsigned char *) szPath,
+      if(0 != setStringValue((const unsigned char *) szPath,
 				    strlen(szPath) + 1,HKEY_LOCAL_MACHINE,
 				    szParamKey2,TEXT("EventMessageFile")))
 	{
@@ -1220,7 +1217,7 @@ void installService(int argc, char **argv)
 	}
 
       // Set the supported types flags.
-      if(	0 != setDwordValue(EVENTLOG_INFORMATION_TYPE,HKEY_LOCAL_MACHINE,	szParamKey2,TEXT("TypesSupported"))){
+      if(0 != setDwordValue(EVENTLOG_INFORMATION_TYPE,HKEY_LOCAL_MACHINE, szParamKey2,TEXT("TypesSupported"))){
 	_tprintf(TEXT("The Types Supported value could\nnot be assigned.\n"));
       }
 
@@ -1228,8 +1225,7 @@ void installService(int argc, char **argv)
       // Java application
       if(0 != makeNewKey(HKEY_LOCAL_MACHINE, szParamKey)){
 	_tprintf(TEXT("Could not create Parameters subkey.\n"));
-      }else{
-
+      } else {
 	//Create an argument string from the argument list
 	// J. R. Duarte: modified it to store the full command line
 	convertArgListToArgString((LPTSTR) szAppParameters,0, argc, argv);
@@ -1272,11 +1268,9 @@ void removeService()
 
 
   // First, get a handle to the service control manager
-  schSCManager = OpenSCManager(
+  schSCManager = OpenSCManager(NULL,
 			       NULL,
-			       NULL,
-			       SC_MANAGER_ALL_ACCESS
-			       );
+			       SC_MANAGER_ALL_ACCESS);
   if (schSCManager){
 
     // Next get the handle to this service...
@@ -1387,8 +1381,7 @@ VOID ServiceStart (DWORD dwArgc, LPTSTR *lpszArgv)
 
   // Let the service control manager know that the service is
   // initializing.
-  if (!ReportStatus(
-		    SERVICE_START_PENDING,
+  if (!ReportStatus(SERVICE_START_PENDING,
 		    NO_ERROR,
 		    3000))
     //goto cleanup;

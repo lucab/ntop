@@ -110,11 +110,11 @@ void printTableDoubleEntry(char *buf, int bufLen,
     break;
   default:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
-	     "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
-	     "<TD WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
-	     "<TR "TR_ON"><TD><IMG  ALT=\"%d%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12></TD>"
-	     "<TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\">"
-	     "<P>&nbsp;</TD></TR></TABLE></TD>\n",
+		"<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
+		"<TD WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
+		"<TR "TR_ON"><TD><IMG  ALT=\"%d%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12></TD>"
+		"<TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\">"
+		"<P>&nbsp;</TD></TR></TABLE>"TABLE_OFF"</TD>\n",
 	     getRowColor(), label, formatKBytes(totalS),
 	     int_perc, (100*int_perc)/100, (100*(100-int_perc))/100) < 0)
       BufferTooShort();
@@ -558,13 +558,13 @@ int sortHostFctn(const void *_a, const void *_b) {
   switch(myGlobals.columnSort) {
   case 1:
 #ifdef MULTITHREADED
-    if(myGlobals.numericFlag == 0) 
+    if(myGlobals.numericFlag == 0)
       accessMutex(&myGlobals.addressResolutionMutex, "sortHostFctn");
 #endif
     rc = strcasecmp((*a)->hostSymIpAddress[0] != '\0' ? (*a)->hostSymIpAddress : (*a)->ethAddressString,
 		    (*b)->hostSymIpAddress[0] != '\0' ? (*b)->hostSymIpAddress : (*b)->ethAddressString);
 #ifdef MULTITHREADED
-    if(myGlobals.numericFlag == 0) 
+    if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
@@ -732,7 +732,7 @@ int cmpFctn(const void *_a, const void *_b) {
 
     /* Host name */
 #ifdef MULTITHREADED
-    if(myGlobals.numericFlag == 0) 
+    if(myGlobals.numericFlag == 0)
       accessMutex(&myGlobals.addressResolutionMutex, "cmpFctn");
 #endif
 
@@ -747,7 +747,7 @@ int cmpFctn(const void *_a, const void *_b) {
       rc = strcasecmp((*a)->ethAddressString, (*b)->ethAddressString);
 
 #ifdef MULTITHREADED
-    if(myGlobals.numericFlag == 0) 
+    if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
@@ -1079,14 +1079,14 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
 
   default:
 #ifdef MULTITHREADED
-    if(myGlobals.numericFlag == 0) 
+    if(myGlobals.numericFlag == 0)
       accessMutex(&myGlobals.addressResolutionMutex, "cmpMulticastFctn");
 #endif
 
     rc = strcmp((*a)->hostSymIpAddress, /* Host name */
 		(*b)->hostSymIpAddress);
 #ifdef MULTITHREADED
-    if(myGlobals.numericFlag == 0) 
+    if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
@@ -1553,7 +1553,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
     sendString("</CENTER>\n");
   }
 
-  if(headerSent) { sendString("</TD></TR></TABLE></center>"); }
+  if(headerSent) { sendString("</TD></TR></TABLE>"TABLE_OFF"</CENTER>"); }
 }
 
 /* ************************************ */
@@ -1615,7 +1615,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Fragment Distribution for %s\"></TD>",
-		    linkName, 
+		    linkName,
                    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1626,7 +1626,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT" ALT=\"Received Fragment Distribution for %s\"></TD>",
-		    linkName, 
+		    linkName,
                    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1647,7 +1647,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent IP Fragment Distribution for %s\"></TD>",
-		    linkName, 
+		    linkName,
                    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1658,7 +1658,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT" ALT=\"Received IP Fragment Distribution for %s\"></TD>",
-		    linkName, 
+		    linkName,
                    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1723,7 +1723,6 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   actTotalSent = el->udpSentLoc+el->udpSentRem;
   actTotalRcvd = el->udpRcvdLoc+el->udpRcvdFromRem;
 
-/*#if 0 */
   printTableDoubleEntry(buf, sizeof(buf), "UDP", COLOR_1, (float)actTotalSent/1024,
 			100*((float)SD(actTotalSent, totalSent)),
 			(float)actTotalRcvd/1024,
@@ -1793,7 +1792,6 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			100*((float)SD(el->otherSent, totalSent)),
 			(float)el->otherRcvd/1024,
 			100*((float)SD(el->otherRcvd, totalRcvd)));
-/*#endif */
 
 #ifdef HAVE_GDCHART
   {
@@ -1829,7 +1827,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Traffic Distribution for %s\"></TD>",
-                    linkName, 
+                    linkName,
                     el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1840,7 +1838,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s\"></TD>",
-		    linkName, 
+		    linkName,
                    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1852,7 +1850,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->tcpSentLoc+el->tcpSentRem+el->udpSentLoc+el->udpSentRem
 	  +el->tcpRcvdLoc+el->tcpRcvdFromRem+el->udpRcvdLoc+el->udpRcvdFromRem) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>", 
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>",
 		    getRowColor()) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1898,98 +1896,157 @@ void printHostIcmpStats(HostTraffic *el) {
 	     "<TH "TH_BG" ALIGN=LEFT>Pkt&nbsp;Sent</TH>"
 	     "<TH "TH_BG" ALIGN=LEFT>Pkt&nbsp;Rcvd</TH></TR>\n");
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Request</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHO]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHO])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_ECHO]+el->icmpInfo->icmpMsgRcvd[ICMP_ECHO] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Request</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHO]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHO])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Reply</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]+el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Reply</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Unreach</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_UNREACH]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_UNREACH]+el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Unreach</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_UNREACH]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Redirect</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_REDIRECT]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_REDIRECT]+el->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Redirect</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_REDIRECT]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]+el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Time Exceeded</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]+el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Time Exceeded</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Parameter Problem</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]+el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Parameter Problem</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Network Mask Request</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ]+el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Network Mask Request</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Network Mask Reply</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]+el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Network Mask Reply</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Source Quench</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]+el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Source Quench</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Timestamp</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP]+el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Timestamp</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Info Request</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]+el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Info Request</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Info Reply</TH>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]),
-	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY])) < 0)
-    BufferTooShort();
-  sendString(buf);
+  if(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]+el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY] > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Info Reply</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]),
+		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY])) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
 
-  sendString("</TABLE></CENTER>\n");
+  sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
+}
+
+/* ************************************ */
+
+void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
+  u_int i, titleSent = 0;
+  char buf[BUF_SIZE];
+
+  if(el->httpVirtualHosts != NULL) {
+    VirtualHostList *list = el->httpVirtualHosts;
+
+    printSectionTitle("HTTP Virtual Hosts Traffic");
+    sendString("<CENTER>\n<TABLE BORDER=0><TR><TD "TD_BG" VALIGN=TOP>\n");
+
+    sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
+	       "<TR "TR_ON"><TH "TH_BG">Virtual Host</TH>"
+	       "<TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>\n");
+
+    while(list != NULL) {
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD>"
+		  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
+		  getRowColor(), list->virtualHostName,
+		  formatBytes(list->bytesSent, 1),
+		  formatBytes(list->bytesRcvd, 1)) < 0)
+	BufferTooShort();
+      sendString(buf);
+      list = list->next;
+    }
+    sendString("</TABLE>"TABLE_OFF"\n");
+    sendString("<H5>NOTE: The above table is not updated in realtime but when connections are terminated.</H5>\n");
+    sendString("</CENTER><P>\n");
+  }
 }
 
 /* ************************************ */
@@ -2003,7 +2060,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
     for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
       if(((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
-	  && (el->contactedSentPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) 	 
+	  && (el->contactedSentPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx))
 	 || ((el->contactedRcvdPeers.peersIndexes[i] != NO_PEER)
 	     && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx))) {
 	  ok = 1;
@@ -2497,24 +2554,24 @@ void checkHostProvidedServices(HostTraffic *el) {
 		"<TD "TD_BG" ALIGN=RIGHT>", getRowColor(), "Host Type") < 0) BufferTooShort();
     sendString(buf);
 
-    if(isServer(el))           sendString("Server<BR>");
-    if(isWorkstation(el))      sendString("Workstation<BR>");
-    if(isMasterBrowser(el))    sendString("Master Browser<BR>");
-    if(isPrinter(el))          sendString("Printer&nbsp;<IMG ALT=Printer SRC=printer.gif BORDER=0><BR>");
-    if(isBridgeHost(el))       sendString("Bridge<BR>");
+    if(isServer(el))           sendString("Server<BR>\n");
+    if(isWorkstation(el))      sendString("Workstation<BR>\n");
+    if(isMasterBrowser(el))    sendString("Master Browser<BR>\n");
+    if(isPrinter(el))          sendString("Printer&nbsp;<IMG ALT=Printer SRC=printer.gif BORDER=0><BR>\n");
+    if(isBridgeHost(el))       sendString("Bridge<BR>\n");
 
-    if(nameServerHost(el))     sendString("&nbsp;<IMG ALT=\"DNS Server\" SRC=/dns.gif BORDER=0>&nbsp;Name Server<BR>");
-    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>&nbsp;<BR>");
-    if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG ALT=\"Mail Server (SMTP)\"  SRC=/mail.gif BORDER=0>&nbsp;<BR>");
-    if(isPOPhost(el))          sendString("POP Server<BR>");
-    if(isIMAPhost(el))         sendString("IMAP Server<BR>");
-    if(isDirectoryHost(el))    sendString("Directory Server<BR>");
-    if(isFTPhost(el))          sendString("FTP Server<BR>");
-    if(isHTTPhost(el))         sendString("HTTP Server<BR>");
-    if(isWINShost(el))         sendString("WINS Server<BR>");
+    if(nameServerHost(el))     sendString("&nbsp;<IMG ALT=\"DNS Server\" SRC=/dns.gif BORDER=0>&nbsp;Name Server<BR>\n");
+    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>&nbsp;<BR>\n");
+    if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG ALT=\"Mail Server (SMTP)\"  SRC=/mail.gif BORDER=0>&nbsp;<BR>\n");
+    if(isPOPhost(el))          sendString("POP Server<BR>\n");
+    if(isIMAPhost(el))         sendString("IMAP Server<BR>\n");
+    if(isDirectoryHost(el))    sendString("Directory Server<BR>\n");
+    if(isFTPhost(el))          sendString("FTP Server<BR>\n");
+    if(isHTTPhost(el))         sendString("HTTP Server&nbsp;<IMG ALT=\"HTTP Server\" SRC=/web.gif BORDER=0><BR>\n");
+    if(isWINShost(el))         sendString("WINS Server<BR>\n");
 
-    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG ALT=\"DHCP Client\" SRC=/bulb.gif BORDER=0><BR>");
-    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=/antenna.gif BORDER=0>&nbsp;<BR>");
+    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG ALT=\"DHCP Client\" SRC=/bulb.gif BORDER=0><BR>\n");
+    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=/antenna.gif BORDER=0>&nbsp;<BR>\n");
     sendString("</TD></TR>");
   }
 }
@@ -2541,13 +2598,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(el->hostSymIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host"
 		" <A HREF=http://%s/ TARGET=\"_blank\" "
-                "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n", 
+                "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
                 el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
       BufferTooShort();
   } else if(el->hostNumIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host"
 		" <A HREF=http://%s/ TARGET=\"_blank\" "
-                "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n", 
+                "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
                 el->hostNumIpAddress, el->hostNumIpAddress, buf1) < 0)
       BufferTooShort();
   } else {
@@ -2758,7 +2815,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	BufferTooShort();
       sendString(buf);
 
-      sendString("</TABLE></TD></TR>\n");
+      sendString("</TABLE>"TABLE_OFF"</TD></TR>\n");
     }
   }
 
@@ -2781,7 +2838,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
   }
 
-  if((el->ethAddressString[0] != '\0')
+  if((!myGlobals.dontTrustMACaddr)
+     && (el->ethAddressString[0] != '\0')
      && strcmp(el->ethAddressString, "00:00:00:00:00:00")
      && strcmp(el->ethAddressString, "00:01:02:03:04:05") /* dummy address */) {
     char *vendorName;
@@ -3031,20 +3089,20 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>",
 		getRowColor(), "Multicast&nbsp;Traffic") < 0) BufferTooShort();
     sendString(buf);
-    
+
     if(el->pktMulticastSent > 0) {
       if(snprintf(buf, sizeof(buf), "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;-",
 		  formatBytes(el->bytesMulticastSent, 1),
 		  formatPkts(el->pktMulticastSent)) < 0) BufferTooShort();
       sendString(buf);
-    } 
+    }
 
     if(el->pktMulticastRcvd > 0) {
       if(snprintf(buf, sizeof(buf), "Rcvd&nbsp;%s/%s&nbsp;Pkts",
 		  formatBytes(el->bytesMulticastRcvd, 1),
 		  formatPkts(el->pktMulticastRcvd)) < 0) BufferTooShort();
       sendString(buf);
-    } 
+    }
 
     sendString("</TD></TR>\n");
   }
@@ -3140,7 +3198,6 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   checkHostProvidedServices(el);
 
-  /* **************************** */
   /*
     Fix courtesy of
     Albert Chin-A-Young <china@thewrittenword.com>
@@ -3148,6 +3205,29 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(printedHeader > 1)
     sendString("</OL></TD></TR>\n");
 
+  /* **************************** */
+
+  if(el->userList != NULL) {
+    UserList *list = el->userList;
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
+		"Known&nbsp;Users&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0></TH><TD "TD_BG" ALIGN=RIGHT>\n",
+		getRowColor()) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    while(list != NULL) {
+      if(snprintf(buf, sizeof(buf), "%s<BR>\n", list->userName) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      list = list->next;
+    }
+
+    sendString("</TD></TR>\n");
+  }
+
+  /* **************************** */
 
   if((el->hostNumIpAddress[0] != '\0')
      && (!subnetPseudoLocalHost(el))
@@ -3384,7 +3464,7 @@ void printTableEntry(char *buf, int bufLen,
 		"<TD "TD_BG" WIDTH=250><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"250\">"
 		"<TR "TR_ON"><TD><IMG ALIGN=MIDDLE ALT=\"%d%%\" SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
 		"</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
-		"<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
+		"<P>&nbsp;</TD></TR></TABLE>"TABLE_OFF"</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total),
 		int_perc, (250*int_perc)/100,
 		(250*(100-int_perc))/100, getActualRowColor()) < 0)
@@ -3401,7 +3481,7 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
   int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts + j;
 
 #ifdef MULTITHREADED
-  if(myGlobals.numericFlag == 0) 
+  if(myGlobals.numericFlag == 0)
     accessMutex(&myGlobals.addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
 #endif
 
@@ -3472,7 +3552,7 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 	   formatBytes(el->last24HoursBytesRcvd[i], 0)) < 0)
     BufferTooShort();
   sendString(buf);
- 
+
  if(tcRcvd > 0)
     pctg = (float)(el->last24HoursBytesRcvd[i]*100)/(float)tcRcvd;
   else

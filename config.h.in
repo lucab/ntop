@@ -9,9 +9,6 @@
 /* Define if you want to build micro ntop. */
 #undef MICRO_NTOP
 
-/* Define if you want to build with MySQL support. */
-#undef HAVE_MYSQL
-
 /* Define if you want a debugging version. */
 #undef DEBUG
 
@@ -158,9 +155,6 @@
 
 /* Define if you have the <if.h> header file.  */
 #undef HAVE_IF_H
-
-/* Define if you have the <mysql/mysql.h> header file.  */
-#undef HAVE_MYSQL_MYSQL_H
 
 /* Define if you have the <net/bpf.h> header file.  */
 #undef HAVE_NET_BPF_H

@@ -156,15 +156,17 @@ COMMAND-LINE OPTIONS
         vices   file  or  a  numeric  port  range  (e.g.  80,  or
         6000-6500). If the  -p  flag  is  omitted  the  following
         default       value      is      used:      "FTP=ftp|ftp-
-        data,HTTP=http|www|https,DNS=name|domain,Telnet=tel-
+        data,HTTP=http|www|https|3128,DNS=name|domain,Telnet=tel-
         net|login,NBios-IP=netbios-ns|netbios-dgm|netbios-
-        ssn,Mail=pop-2|pop-3|kpop|smtp|imap|imap2,SNMP=snmp|snmp-
-        trap,NEWS=nntp,NFS=mount|pcnfs|bwnfs|nfs|nfsd-sta-
-        tus,X11=6000-6010,SSH=ssh". If  the  <protocol  list>  is
-        very  long  you  may store in a file (for instance proto-
-        col.list) the value of the <protocol  list>  and  specify
-        the  file  name  instead of the <protocol list> (in above
-        example you will invoke 'ntop -p protocol.list').
+        ssn,Mail=pop-2|pop-3|pop3|kpop|smtp|imap|imap2,DHCP/BOOTP=67-68,SNMP=snmp|snmp-
+        trap,NNTP=nntp,NFS=mount|pcnfs|bwnfs|nfsd|nfsd-sta-
+        tus,X11=6000-6010,SSH=22,Gnutella=6346|6347|6348,Mor-
+        pheus=1214,WinMX=6699|7730,Audiogalaxy=41000-41900,Nap-
+        ster=8888|8875" If the <protocol list> is very  long  you
+        may  store  in  a  file  (for instance protocol.list) the
+        value of the <protocol list> and specify  the  file  name
+        instead of the <protocol list> (in above example you will
+        invoke 'ntop -p protocol.list').
 
 
        -q | --create-suspicious-packets

@@ -1,0 +1,6 @@
+This directory contains a simple NetFlow collector that stores
+on a MySQL DB all the traffic information sent by a NetFlow probe
+such as ntop
+
+---
+Luca Deri <deri@ntop.org>

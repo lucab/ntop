@@ -28,12 +28,12 @@
 
 u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
   if(idx > myGlobals.device[actualDeviceId].actualHashSize) {
-    traceEvent(TRACE_ERROR, "Index error idx=%u/deviceId=%d:0-%d @ [%s:%d]\n", 
-	       idx, actualDeviceId, 
+    traceEvent(TRACE_ERROR, "Index error idx=%u/deviceId=%d:0-%d @ [%s:%d]\n",
+	       idx, actualDeviceId,
 	       myGlobals.device[actualDeviceId].actualHashSize-1,
 	       file, line);
     return(0); /* Last resort */
-  } else 
+  } else
     return(idx);
 }
 
@@ -54,22 +54,22 @@ static PortUsage* allocatePortUsage(void) {
 
 /* ************************************ */
 
-static void updatePortList(HostTraffic *theHost, 
+static void updatePortList(HostTraffic *theHost,
 			   u_short clientPort, u_short serverPort) {
   u_short i, found;
-  
+
   if(theHost == NULL) return;
-  
+
   if(clientPort > 0) {
     for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
       if(theHost->recentlyUsedClientPorts[i] == clientPort) {
 	found = 1;
 	break;
       }
-    
+
     if(!found) {
       for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
-	theHost->recentlyUsedClientPorts[i] =  theHost->recentlyUsedClientPorts[i+1];    
+	theHost->recentlyUsedClientPorts[i] =  theHost->recentlyUsedClientPorts[i+1];
       theHost->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] = clientPort;
     }
   }
@@ -82,11 +82,102 @@ static void updatePortList(HostTraffic *theHost,
 	found = 1;
 	break;
       }
-    
+
     if(!found) {
       for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
-	theHost->recentlyUsedServerPorts[i] =  theHost->recentlyUsedServerPorts[i+1];    
+	theHost->recentlyUsedServerPorts[i] =  theHost->recentlyUsedServerPorts[i+1];
       theHost->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] = serverPort;
+    }
+  }
+}
+
+/* ************************************ */
+
+static void updateHTTPVirtualHosts(char *virtualHostName,
+				   HostTraffic *theRemHost,
+				   TrafficCounter bytesSent, TrafficCounter bytesRcvd) {
+
+  if(virtualHostName != NULL) {
+    VirtualHostList *list = theRemHost->httpVirtualHosts;
+    int numEntries = 0;
+
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "updateHTTPVirtualHosts: %s for host %s [s=%u,r=%u]",
+	       virtualHostName, theRemHost->hostNumIpAddress,
+	       (unsigned int)bytesSent, (unsigned int)bytesRcvd);
+#endif
+
+    while(list != NULL) {
+      if(strcmp(list->virtualHostName, virtualHostName) == 0) {
+	list->bytesSent += bytesSent, list->bytesRcvd += bytesRcvd;
+	break;
+      } else {
+	list = list->next;
+	numEntries++;
+      }
+    }
+
+    if((list == NULL) && (numEntries < MAX_NUM_LIST_ENTRIES)) {
+      list = (VirtualHostList*)malloc(sizeof(VirtualHostList));
+      list->virtualHostName = strdup(virtualHostName);
+      list->bytesSent = bytesSent, list->bytesRcvd = bytesRcvd;
+      list->next = theRemHost->httpVirtualHosts;
+      theRemHost->httpVirtualHosts = list;
+    }
+  }
+}
+
+/* ************************************ */
+
+static void updateHostUsers(char *userName, HostTraffic *theHost) {
+
+  if(isSMTPhost(theHost)) {
+    /*
+      If this is a SMTP server the local users are
+      not really meaningful
+    */
+
+    if(theHost->userList != NULL) {
+      UserList *list = theHost->userList;
+
+      /*
+	It might be that ntop added users before it
+	realized this host was a SMTP server. They must
+	be removed.
+      */
+
+      while(list != NULL) {
+	UserList *next = list->next;
+
+	free(list->userName);
+	free(list);
+	list = next;
+      }
+
+      theHost->userList = NULL;
+    }
+
+    return; /* That's all for now */
+  }
+
+  if(userName != NULL) {
+    UserList *list = theHost->userList;
+    int numEntries = 0;
+
+    while(list != NULL) {
+      if(strcmp(list->userName, userName) == 0) {
+	return; /* Nothing to do: this user is known */
+      } else {
+	list = list->next;
+	numEntries++;
+      }
+    }
+
+    if((list == NULL) && (numEntries < MAX_NUM_LIST_ENTRIES)) {
+      list = (UserList*)malloc(sizeof(UserList));
+      list->userName = strdup(userName);
+      list->next = theHost->userList;
+      theHost->userList = list;
     }
   }
 }
@@ -107,7 +198,7 @@ void updateUsedPorts(HostTraffic *srcHost,
   /* Now let's update the list of ports recently used by the hosts */
   if(sport > dport) {
     clientPort = sport, serverPort = dport;
-    
+
     if(srcHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
       updatePortList(srcHost, clientPort, 0);
     if(dstHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
@@ -152,14 +243,14 @@ void updateUsedPorts(HostTraffic *srcHost,
   if(dport < TOP_ASSIGNED_IP_PORTS) {
     if(srcHost->portsUsage[dport] == NULL) srcHost->portsUsage[dport] = allocatePortUsage();
 
-#ifdef DEBUG      
+#ifdef DEBUG
     traceEvent(TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
     srcHost->portsUsage[dport]->clientTraffic += length;
     srcHost->portsUsage[dport]->clientUses++;
     srcHost->portsUsage[dport]->clientUsesLastPeer = dstHost->hostTrafficBucket;
-      
+
     if(dstHost->portsUsage[dport] == NULL)
       dstHost->portsUsage[dport] = allocatePortUsage();
 
@@ -175,7 +266,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 
 /* ************************************ */
 
-void freeSession(IPSession *sessionToPurge, int actualDeviceId, 
+void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 		 u_char allocateMemoryIfNeeded) {
   /* Session to purge */
 
@@ -189,7 +280,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
      && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
      /*
        "Valid" TCP session used to skip faked sessions (e.g. portscans
-       with one faked packet + 1 response [RST usually]) 
+       with one faked packet + 1 response [RST usually])
      */
      ) {
     HostTraffic *theHost, *theRemHost;
@@ -211,7 +302,6 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 			    sessionToPurge->initiatorIdx, actualDeviceId);
       incrementUsageCounter(&theRemHost->secHostPkts->terminatedTCPConnClient,
 			    sessionToPurge->initiatorIdx, actualDeviceId);
-	
 
       if(myGlobals.enableSuspiciousPacketDump)
 	traceEvent(TRACE_WARNING, fmt,
@@ -222,7 +312,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   }
 
   handlePluginSessionTermination(sessionToPurge, actualDeviceId);
-  
+
 #ifdef SESSION_TRACE_DEBUG
   {
     char buf[32], buf1[32];
@@ -239,6 +329,10 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
    * can now be purged.
    */
   sessionToPurge->magic = 0;
+
+  if(sessionToPurge->virtualPeerName != NULL)
+    free(sessionToPurge->virtualPeerName);
+
   myGlobals.numTerminatedSessions++;
 
   myGlobals.device[actualDeviceId].numTcpSessions--;
@@ -268,7 +362,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
     thisSession = myGlobals.device[actualDeviceId].tcpSession[idx];
     prevSession = thisSession;
-      
+
 #ifdef MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
 #endif
@@ -280,9 +374,9 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	traceEvent(TRACE_ERROR, "===> Magic assertion failed!");
 	continue;
       }
-	
+
       nextSession = thisSession->next;
-	
+
       if(((thisSession->sessionState == STATE_TIMEOUT)
 	  && ((thisSession->lastSeen+TWO_MSL_TIMEOUT) < myGlobals.actTime))
 	 || /* The branch below allows to flush sessions which have not been
@@ -303,7 +397,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	  prevSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 	}
 
-	freeSessionCount++; 
+	freeSessionCount++;
 	freeSession(thisSession, actualDeviceId, 1);
       }
 
@@ -315,7 +409,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
     } /* while */
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.hostsHashMutex);
-#endif    
+#endif
   } /* end for */
 
 #ifdef DEBUG
@@ -389,7 +483,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   idx = (u_int)((srcHost->hostIpAddress.s_addr+
 		 dstHost->hostIpAddress.s_addr+
 		 sport+dport) % myGlobals.device[actualDeviceId].numTotSessions);
-  
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "DEBUG: %s:%d->%s:%d %d->",
 	     srcHost->hostSymIpAddress, sport,
@@ -405,7 +499,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if(theSession && (theSession->next == theSession)) {
 	traceEvent(TRACE_WARNING, "Internal Error (4) (idx=%d)", idx);
 	theSession->next = NULL;
-      }      
+      }
 
       if((theSession->initiatorIdx == srcHostIdx)
 	 && (theSession->remotePeerIdx == dstHostIdx)
@@ -432,7 +526,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  } else {
 	    prevSession->next = nextSession;
 	  }
-	  
+
 	  freeSession(theSession, actualDeviceId, 1);
 	  theSession = nextSession;
 	} else {
@@ -458,7 +552,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
       /* We don't check for space here as the datastructure allows
-	 ntop to store sessions as needed 
+	 ntop to store sessions as needed
       */
       /* There's enough space left in the hashtable */
       if(myGlobals.sessionsCacheLen > 0) {
@@ -467,10 +561,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  traceEvent(TRACE_INFO, "Fetched session from pointers cache (len=%d)",
 	  (int)myGlobals.sessionsCacheLen);
 	*/
-      } else {	
+      } else {
 	theSession = (IPSession*)malloc(sizeof(IPSession));
       }
-      
+
       memset(theSession, 0, sizeof(IPSession));
       addedNewEntry = 1;
 
@@ -508,7 +602,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->passiveFtpSession = isPassiveSession(dstHost->hostIpAddress.s_addr, dport);
       theSession->firstSeen = myGlobals.actTime;
       flowDirection = CLIENT_TO_SERVER;
-    } 
+    }
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "DEBUG: ->%d\n", idx);
@@ -523,7 +617,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       len = packetDataLength;
 
     if(myGlobals.enablePacketDecoding) {
-      if((sport == 80 /* HTTP */) 
+
+      if(sport == 80) 	FD_SET(HOST_SVC_HTTP, &srcHost->flags);
+      if(dport == 80) 	FD_SET(HOST_SVC_HTTP, &dstHost->flags);
+	    
+      if((sport == 80 /* HTTP */)
 	 && (theSession->bytesProtoRcvd == 0)
 	 && (packetDataLength > 0)) {
 	strncpy(rcStr, packetData, 16);
@@ -566,8 +664,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    srcHost->httpStats->numNegativeReplSent++;
 	    dstHost->httpStats->numNegativeReplRcvd++;
 	  }
-
-	  FD_SET(HOST_SVC_HTTP, &srcHost->flags);
 
 	  if(microSecTimeDiff > 0) {
 	    if(subnetLocalHost(dstHost)) {
@@ -697,10 +793,24 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  }
 		}
 		break;
-	      }
+	      }	else if(strncmp(row, "Host:", 5) == 0) {
+		char *host;
 
-	      row = strtok_r(NULL, "\n", &strtokState);
+		row[strlen(row)-1] = '\0';
+
+		host = &row[6];
+		if(strlen(host) > 48)
+		  host[48] = '\0';
+
+#ifdef DEBUG
+		printf("DEBUG: HOST='%s'\n", host);
+#endif
+		if(theSession->virtualPeerName == NULL)
+		  theSession->virtualPeerName = strdup(host);
 	    }
+
+	    row = strtok_r(NULL, "\n", &strtokState);
+	  }
 
 	    /* printf("==>\n\n%s\n\n", rcStr); */
 
@@ -720,34 +830,165 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	}
       } else if(((sport == 25 /* SMTP */)  || (dport == 25 /* SMTP */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {
-	if(sport == 25) 
-	  FD_SET(HOST_SVC_SMTP, &srcHost->flags); 
-	else 
+	if(sport == 25)
+	  FD_SET(HOST_SVC_SMTP, &srcHost->flags);
+	else
 	  FD_SET(HOST_SVC_SMTP, &dstHost->flags);
-      } else if(((dport == 515 /* printer */) || (sport == 515)) 
+
+	if(((theSession->bytesProtoRcvd <64)
+	    || (theSession->bytesProtoSent <64)) /* The sender name is sent at the beginning of the communication */
+	   && (packetDataLength > 7)) {
+	  char *rcStr;
+	  int beginIdx = 11, i;
+
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength-1] = '\0';
+
+	  if(strncmp(rcStr, "MAIL FROM:", 10) == 0) {
+	    if(iscntrl(rcStr[strlen(rcStr)-1])) rcStr[strlen(rcStr)-1] = '\0';
+	    rcStr[strlen(rcStr)-1] = '\0';
+	    if(rcStr[beginIdx] == '<') beginIdx++;
+
+	    i=beginIdx+1;
+	    while(rcStr[i] != '\0') {
+	      if(rcStr[i] == '>') {
+		rcStr[i] = '\0';
+		break;
+	      }
+
+	      i++;
+	    }
+	    if(sport == 25)
+	      updateHostUsers(&rcStr[beginIdx], dstHost);
+	    else
+	      updateHostUsers(&rcStr[beginIdx], srcHost);
+
+#ifdef SMTP_DEBUG
+	    printf("SMTP_DEBUG: %s:%d->%s:%d [%s]\n",
+		   srcHost->hostNumIpAddress, sport, dstHost->hostNumIpAddress, dport,
+		   &rcStr[beginIdx]);
+#endif
+	  }
+
+	  free(rcStr);
+	}
+      } else if(((sport == 21 /* FTP */)  || (dport == 21 /* FTP */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {
-	if(sport == 515) 
+	if(sport == 21)
+	  FD_SET(HOST_SVC_FTP, &srcHost->flags);
+	else
+	  FD_SET(HOST_SVC_FTP, &dstHost->flags);
+
+	if(((theSession->bytesProtoRcvd <64)
+	    || (theSession->bytesProtoSent <64)) /* The sender name is sent at the beginning of the communication */
+	   && (packetDataLength > 7)) {
+	  char *rcStr;
+
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength-2] = '\0';
+
+	  if((strncmp(rcStr, "USER ", 5) == 0) && strcmp(&rcStr[5], "anonymous")) {
+	    if(sport == 21)
+	      updateHostUsers(&rcStr[5], dstHost);
+	    else
+	      updateHostUsers(&rcStr[5], srcHost);
+
+#ifdef FTP_DEBUG
+	    printf("FTP_DEBUG: %s:%d->%s:%d [%s]\n",
+		   srcHost->hostNumIpAddress, sport, dstHost->hostNumIpAddress, dport,
+		   &rcStr[5]);
+#endif
+	  }
+
+	  free(rcStr);
+	}
+      } else if(((dport == 515 /* printer */) || (sport == 515))
+		&& (theSession->sessionState == STATE_ACTIVE)) {
+	if(sport == 515)
 	  FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
-	else 
+	else
 	  FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
       } else if(((sport == 109 /* pop2 */) || (sport == 110 /* pop3 */)
 		 || (dport == 109 /* pop2 */) || (dport == 110 /* pop3 */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {
 	if((sport == 109) || (sport == 110))
-	  FD_SET(HOST_SVC_POP, &srcHost->flags); 
+	  FD_SET(HOST_SVC_POP, &srcHost->flags);
 	else
 	  FD_SET(HOST_SVC_POP, &dstHost->flags);
 
+	if(((theSession->bytesProtoRcvd <64) || (theSession->bytesProtoSent <64)) /* The user name is sent at the beginning of the communication */
+	   && (packetDataLength > 4)) {
+	  char *rcStr;
+
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength-1] = '\0';
+
+	  if(strncmp(rcStr, "USER ", 5) == 0) {
+	    if(iscntrl(rcStr[strlen(rcStr)-1])) rcStr[strlen(rcStr)-1] = '\0';
+	    if((sport == 109) || (sport == 110))
+	      updateHostUsers(&rcStr[5], dstHost);
+	    else
+	      updateHostUsers(&rcStr[5], srcHost);
+
+#ifdef POP_DEBUG
+	    printf("POP_DEBUG: %s->%s [%s]\n",
+		   srcHost->hostNumIpAddress, dstHost->hostNumIpAddress,
+		   &rcStr[5]);
+#endif
+	  }
+
+	  free(rcStr);
+	}
       } else if(((sport == 143 /* imap */) || (dport == 143 /* imap */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {
-	if(sport == 143) 
-	  FD_SET(HOST_SVC_IMAP, &srcHost->flags); 
+
+	if(sport == 143)
+	  FD_SET(HOST_SVC_IMAP, &srcHost->flags);
 	else
 	  FD_SET(HOST_SVC_IMAP, &dstHost->flags);
+
+	if(((theSession->bytesProtoRcvd <64)
+	    || (theSession->bytesProtoSent <64)) /* The sender name is sent at the beginning of the communication */
+	   && (packetDataLength > 7)) {
+	  char *rcStr;
+
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength-1] = '\0';
+
+	  if(strncmp(rcStr, "2 login ", 8) == 0) {
+	    int beginIdx = 10;
+	      
+	    while(rcStr[beginIdx] != '\0') {
+	      if(rcStr[beginIdx] == '\"') { 
+		rcStr[beginIdx] = '\0';
+		break;
+	      }
+	      beginIdx++;
+	    }
+
+	    if(sport == 143)
+	      updateHostUsers(&rcStr[9], dstHost);
+	    else
+	      updateHostUsers(&rcStr[9], srcHost);
+
+#ifdef IMAP_DEBUG
+	    printf("IMAP_DEBUG: %s:%d->%s:%d [%s]\n",
+		   srcHost->hostNumIpAddress, sport, dstHost->hostNumIpAddress, dport,
+		   &rcStr[9]);
+#endif
+	  }
+
+	  free(rcStr);
+	}
+
       }
     } else {
       /* !myGlobals.enablePacketDecoding */
-      
+
       switch(sport) {
       case 21:
 	FD_SET(HOST_SVC_FTP, &srcHost->flags);
@@ -761,10 +1002,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	break;
       case 109:
       case 110:
-	FD_SET(HOST_SVC_POP, &srcHost->flags); 
+	FD_SET(HOST_SVC_POP, &srcHost->flags);
 	break;
       case 143:
-	FD_SET(HOST_SVC_IMAP, &srcHost->flags); 
+	FD_SET(HOST_SVC_IMAP, &srcHost->flags);
 	break;
       case 515:
 	FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
@@ -853,10 +1094,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       len = sizeof(rcStr)-1;
     else
       len = packetDataLength;
-    
+
     /*
       We leave this is for the moment as we don't expect that
-      this takes up much CPU time 
+      this takes up much CPU time
     */
     if(1 /* myGlobals.enablePacketDecoding */) {
       if(len > 0) {
@@ -926,13 +1167,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  theSession->nwLatency.tv_sec--;
 	} else
 	  theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
-	
+
 	theSession->nwLatency.tv_sec /= 2;
 	theSession->nwLatency.tv_usec /= 2;
-	
+
 	/* Sanity check */
 	if(theSession->nwLatency.tv_sec > 1000) {
-	  /* 
+	  /*
 	     This value seems to be wrong so it's better to ignore it
 	     rather than showing a false/wrong/dummy value
 	  */
@@ -954,11 +1195,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
       if(hostToUpdate != NULL) {
 	u_long a, b, c;
-	
+
 	a = hostToUpdate->minLatency.tv_usec + 1000*hostToUpdate->minLatency.tv_sec;
 	b = hostToUpdate->maxLatency.tv_usec + 1000*hostToUpdate->maxLatency.tv_sec;
 	c = theSession->nwLatency.tv_usec + 1000*theSession->nwLatency.tv_sec;
-	
+
 	if(a > c) {
 	  hostToUpdate->minLatency.tv_usec = theSession->nwLatency.tv_usec;
 	  hostToUpdate->minLatency.tv_sec  = theSession->nwLatency.tv_sec;
@@ -969,7 +1210,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  hostToUpdate->maxLatency.tv_sec  = theSession->nwLatency.tv_sec;
 	}
       }
-      
+
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
       incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHostIdx, actualDeviceId);
       incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
@@ -1014,7 +1255,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       myGlobals.device[actualDeviceId].numEstablishedTCPConnections++;
     }
 
-       
+
     /*
      *
      * In this case the session is over hence the list of
@@ -1038,20 +1279,26 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  theSession->lastSCFin = fin;
 	else /* Client->Server */
 	  theSession->lastCSFin = fin;
-	switch(theSession->sessionState) {
-	case STATE_ACTIVE:
-	  theSession->sessionState = STATE_FIN1_ACK0;
-	  break;
-	case STATE_FIN1_ACK0:
-	  theSession->sessionState = STATE_FIN2_ACK1;
-	  break;
-	case STATE_FIN1_ACK1:
-	  theSession->sessionState = STATE_FIN2_ACK1;
-	  break;
+
+	if(tp->th_flags & TH_ACK) {
+	  /* This is a FIN_ACK */
+	  theSession->sessionState = STATE_FIN2_ACK2;
+	} else {
+	  switch(theSession->sessionState) {
+	  case STATE_ACTIVE:
+	    theSession->sessionState = STATE_FIN1_ACK0;
+	    break;
+	  case STATE_FIN1_ACK0:
+	    theSession->sessionState = STATE_FIN2_ACK1;
+	    break;
+	  case STATE_FIN1_ACK1:
+	    theSession->sessionState = STATE_FIN2_ACK1;
+	    break;
 #ifdef DEBUG
-	default:
-	  traceEvent(TRACE_ERROR, "DEBUG: ERROR: unable to handle received FIN (%u) !\n", fin);
+	  default:
+	    traceEvent(TRACE_ERROR, "DEBUG: ERROR: unable to handle received FIN (%u) !\n", fin);
 #endif
+	  }
 	}
       } else {
 #ifdef DEBUG
@@ -1165,9 +1412,16 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	}
       }
 
-      theSession->sessionState = STATE_TIMEOUT;      
+      theSession->sessionState = STATE_TIMEOUT;
       updateUsedPorts(srcHost, dstHost, sport, dport,
 		      (u_int)(theSession->bytesSent+theSession->bytesRcvd));
+
+      if(sport == 80)
+	updateHTTPVirtualHosts(theSession->virtualPeerName, srcHost,
+			       theSession->bytesSent, theSession->bytesRcvd);
+      else
+	updateHTTPVirtualHosts(theSession->virtualPeerName, dstHost,
+			       theSession->bytesRcvd, theSession->bytesSent);
     }
 
     /* printf("%d\n", theSession->sessionState);  */
@@ -1227,10 +1481,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       */
       if((srcHostIdx == dstHostIdx)
 	 /* && (sport == dport)  */ /* Caveat: what about Win NT 3.51 ? */
-	 && (tp->th_flags == TH_SYN)) {      
+	 && (tp->th_flags == TH_SYN)) {
 	traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket(actualDeviceId);      
+	dumpSuspiciousPacket(actualDeviceId);
       }
 
       if(tp->th_flags == (TH_RST|TH_ACK)) {
@@ -1451,7 +1705,7 @@ static void handleLsof(u_int srcHostIdx,
 		       u_short sport,
 		       u_int dstHostIdx,
 		       u_short dport,
-		       u_int length, 
+		       u_int length,
 		       int actualDeviceId) {
   HostTraffic *srcHost, *dstHost;
 
@@ -1503,7 +1757,7 @@ IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 			    u_int length,
 			    struct tcphdr *tp,
 			    u_int tcpDataLength,
-			    u_char* packetData, 
+			    u_char* packetData,
 			    int actualDeviceId) {
   IPSession* theSession;
 
@@ -1511,7 +1765,7 @@ IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 			     srcHostIdx, sport,
 			     dstHostIdx, dport,
 			     length, tp,
-			     tcpDataLength, packetData, 
+			     tcpDataLength, packetData,
 			     actualDeviceId);
 
 #ifndef WIN32
@@ -1539,8 +1793,8 @@ IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 			     srcHostIdx, sport,
 			     dstHostIdx, dport, length,
 			     NULL, length, packetData, actualDeviceId);
-  
-#ifndef WIN32  
+
+#ifndef WIN32
   if(myGlobals.isLsofPresent)
     handleLsof(srcHostIdx, sport, dstHostIdx, dport, length, actualDeviceId);
 #endif
@@ -1560,12 +1814,11 @@ void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceI
        && (!flows->pluginStatus.activePlugin)) {
       flows->pluginStatus.pluginPtr->sessionFunct(sessionToPurge, actualDeviceId);
     }
-    
+
     flows = flows->next;
   }
 #endif
 
   sendTCPSessionFlow(sessionToPurge, actualDeviceId);
-  notifyTCPSession(sessionToPurge, actualDeviceId);
 }
 

@@ -124,7 +124,7 @@ void addUser(char* user) {
 	       "<TD ALIGN=left><INPUT TYPE=password NAME=pw SIZE=20></TD></TR>\n");
     sendString("<TR>\n<TH ALIGN=right>Verify Password:&nbsp;</TH>"
 	       "<TD ALIGN=left><INPUT TYPE=password NAME=pw1 SIZE=20></TD></TR>\n");
-    sendString("</TABLE>\n");
+    sendString("</TABLE>"TABLE_OFF"\n");
 
     if(snprintf(tmpStr, sizeof(tmpStr),
 		"<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset>\n",
@@ -426,7 +426,7 @@ void addURL(char* url) {
 #endif
 
     sendString("</SELECT>\n</TD></TR>\n");
-    sendString("</TABLE>\n");
+    sendString("</TABLE>"TABLE_OFF"\n");
 
     if(url == NULL)
       sendString("<BLOCKQUOTE>\n<DIV ALIGN=left>\n"
@@ -745,7 +745,7 @@ void changeFilter(void) {
   sendString("<FORM METHOD=POST ACTION=/doChangeFilter>\n");
   sendString("<TR>\n<TH "TH_BG" ALIGN=center>New Filter Expression:&nbsp;</TH>");
   sendString("<TD ALIGN=left><INPUT TYPE=text NAME=filter SIZE=40>\n");
-  sendString("</TD>\n</TR>\n</TABLE>\n<CENTER>");
+  sendString("</TD>\n</TR>\n</TABLE>"TABLE_OFF"\n<CENTER>");
   sendString("<INPUT TYPE=submit VALUE=\"Change Filter\">&nbsp;&nbsp;&nbsp;");
   sendString("<INPUT TYPE=reset></FORM>");
 

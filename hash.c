@@ -188,12 +188,6 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   traceEvent(TRACE_INFO, "Entering freeHostInfo(%u)", host->hostTrafficBucket);
 #endif
 
-  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-  updateHostTraffic(host);
-#ifdef HAVE_MYSQL
-  mySQLupdateHostTraffic(host);
-#endif
-
   myGlobals.device[theDevice].hostsno--;
 
 #ifdef HOST_FREE_DEBUG
@@ -230,11 +224,11 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   if(host->routedTraffic != NULL) free(host->routedTraffic);
 
   if(host->portsUsage != NULL) {
-    for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++)
+    for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
       if(host->portsUsage[i] != NULL) {
 	free(host->portsUsage[i]);
-	host->portsUsage[i] = NULL;
       }
+    }
 
     free(host->portsUsage);
   }
@@ -263,6 +257,28 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   host->tcpSessionList = host->udpSessionList = NULL;
 
   freeHostSessions(host->hostTrafficBucket, actualDeviceId);
+
+  if(host->httpVirtualHosts != NULL) {
+    VirtualHostList *list = host->httpVirtualHosts;
+    
+    while(list != NULL) {
+      VirtualHostList *next = list->next;
+      free(list->virtualHostName);
+      free(list);
+      list = next;
+    }
+  }
+ 
+  if(host->userList != NULL) {
+    UserList *list = host->userList;
+    
+    while(list != NULL) {
+      UserList *next = list->next;
+      free(list->userName);
+      free(list);
+      list = next;
+    }
+  }
 
   /* ************************************* */
 
@@ -444,7 +460,7 @@ void purgeIdleHosts(int actDevice) {
 #ifdef MULTITHREADED
 	  releaseMutex(&myGlobals.hostsHashMutex);
 #endif
-	  if(maxBucket == (len-1)) {
+	  if(maxBucket >= (len-1)) {
 	    hashFull = 1;
 	    continue;
 	  }
@@ -760,6 +776,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       }
 
       if(hostIpAddress != NULL) {
+	if(myGlobals.dontTrustMACaddr) memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
 	el->hostIpAddress.s_addr = hostIpAddress->s_addr;
 	strncpy(el->hostNumIpAddress,
 		_intoa(*hostIpAddress, buf, sizeof(buf)),

@@ -2998,12 +2998,6 @@ void updateOSName(HostTraffic *el) {
     else {
       el->osName = strdup(theName);
 
-      updateDBOSname(el);
-
-#ifdef HAVE_MYSQL
-      mySQLupdateDBOSname(el);
-#endif
-
       if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
 	BufferTooShort();
       key_data.dptr = tmpBuf;

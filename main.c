@@ -70,10 +70,6 @@ static struct option const long_options[] = {
 
   { "access-log-path",                  required_argument, NULL, 'a' },
 
-#ifdef HAVE_MYSQL
-  { "sql-host",                         required_argument, NULL, 'b' },
-#endif
-
   { "sticky-hosts",                     no_argument,       NULL, 'c' },
 
 #ifndef WIN32
@@ -87,6 +83,7 @@ static struct option const long_options[] = {
   { "traffic-dump-file",                required_argument, NULL, 'f' },
   { "help",                             no_argument,       NULL, 'h' },
   { "interface",                        required_argument, NULL, 'i' },
+  { "no-mac",                           no_argument,       NULL, 'o' },
   { "border-sniffer-mode",              no_argument,       NULL, 'j' },
   { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
   { "pcap-log",                         required_argument, NULL, 'l' },
@@ -100,10 +97,6 @@ static struct option const long_options[] = {
 
 #ifndef WIN32
   { "user",                             required_argument, NULL, 'u' },
-#endif
-
-#ifdef HAVE_MYSQL
-  { "mysql-host",                       required_argument, NULL, 'v' },
 #endif
 
   { "http-server",                      required_argument, NULL, 'w' },
@@ -187,10 +180,6 @@ void usage (FILE * fp) {
 #ifdef HAVE_GETOPT_LONG
   fprintf(fp, "    [-a <path>      | --access-log-path <path>]           Path for ntop web server access log\n");
 
-#ifdef HAVE_MYSQL
-  fprintf(fp, "    [-b <host:port> | --sql-host <host:port>]             SQL host for ntop database\n");
-#endif
-
   fprintf(fp, "    [-c             | --sticky-hosts]                     Idle hosts are not purged from hash\n");
 
 #ifndef WIN32
@@ -209,7 +198,7 @@ void usage (FILE * fp) {
 #else
   fprintf(fp, "    [-i <number>    | --interface <number>]               Interface index number to monitor\n");
 #endif
-
+  fprintf(fp, "    [-o             | --no-mac]                           ntop will trust just IP addresses (no MACs)\n");
   fprintf(fp, "    [-j             | --border-sniffer-mode]              Set ntop in border/gateway sniffing mode\n");
   fprintf(fp, "    [-k             | --filter-expression-in-extra-frame] Show kernel filter expression in extra frame\n");
   fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  Dump packets captured to a file (debug only!)\n");
@@ -224,10 +213,6 @@ void usage (FILE * fp) {
 #ifndef WIN32
   fprintf(fp, "    [-u <user>      | --user <user>]                      Userid/name to run ntop under (see man page)\n");
 #endif /* WIN32 */
-
-#ifdef HAVE_MYSQL
-  fprintf(fp, "    [-v <username:password:dbName> | --mysql-host <username:password:dbName>] MySQL host for ntop database\n");
-#endif
 
   fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
   fprintf(fp, "    [-A                                                   Ask admin user password and exit\n");
@@ -274,10 +259,6 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [-a <path> path for ntop web server access log]\n");
 
-#ifdef HAVE_MYSQL
-  fprintf(fp, "    [-b <client:port (ntop DB client)>]\n");
-#endif
-
   fprintf(fp, "    [-c <sticky hosts: idle hosts are not purged from hash>]\n");
 
 #ifndef WIN32
@@ -296,6 +277,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-i <interface index>]\n");
 #endif
 
+  fprintf(fp, "    [-o (do nOt trust MAC addresses but just IPs)]\n");
   fprintf(fp, "    [-j (set ntop in border gateway sniffing mode)]\n");
   fprintf(fp, "    [-k <show kernel filter expression in extra frame>]\n");
   fprintf(fp, "    [-l <path> (dump packets captured on a file: debug only!)]\n");
@@ -315,10 +297,6 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-s Disable promiscuous mode]\n");
 #ifndef WIN32
   fprintf(fp, "    [-u <userid> | <username> (see man page)]\n");
-#endif
-
-#ifdef HAVE_MYSQL
-  fprintf(fp, "    [-v <username:password:dbName (ntop mySQL client)>]\n");
 #endif
 
   fprintf(fp, "    [-w <HTTP port>]\n");
@@ -366,11 +344,11 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char* theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:AB:D:F:MO:P:S:U:VW:";
+  char* theOpts = "a:ce:f:g:hi:jkl:m:nop:qr:st:w:AB:D:F:MO:P:S:U:VW:";
 #elif defined(USE_SYSLOG)
-  char* theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:AB:D:EF:IKLMNO:P:S:U:VW:";
+  char* theOpts = "a:cde:f:g:hi:jkl:m:nop:qr:st:u:w:AB:D:EF:IKLMNO:P:S:U:VW:";
 #else
-  char* theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:AB:D:EF:IKMNO:P:S:U:VW:";
+  char* theOpts = "a:cde:f:g:hi:jkl:m:nop:qr:st:u:w:AB:D:EF:IKMNO:P:S:U:VW:";
 #endif
   int opt;
 
@@ -386,11 +364,6 @@ static int parseOptions(int argc, char* argv []) {
     case 'a': /* ntop access log path */
       stringSanityCheck(optarg);
       myGlobals.accessLogPath = strdup(optarg);
-      break;
-
-    case 'b': /* host:port */
-      stringSanityCheck(optarg);
-      handleDbSupport(optarg, &myGlobals.enableDBsupport);
       break;
 
       /* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
@@ -422,6 +395,10 @@ static int parseOptions(int argc, char* argv []) {
     case 'i':                          /* More than one interface may be specified in a comma separated list */
       stringSanityCheck(optarg);
       myGlobals.devices = strdup(optarg);
+      break;
+
+    case 'o':                          /* Do not trust MAC addresses */
+      myGlobals.dontTrustMACaddr = 1;
       break;
 
     case 'j':
@@ -500,13 +477,6 @@ static int parseOptions(int argc, char* argv []) {
       userSpecified = 1;
       break;
 #endif /* WIN32 */
-
-#ifdef HAVE_MYSQL
-    case 'v': /* username:password:dbname:host */
-      stringSanityCheck(optarg);
-      handlemySQLSupport(optarg, &myGlobals.enableDBsupport);
-      break;
-#endif
 
     case 'w':
       stringSanityCheck(optarg);

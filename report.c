@@ -403,7 +403,7 @@ void printTrafficStatistics() {
 
     /* ****************** */
 
-    sendString("</TABLE></TR><TR><TH "TH_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
+    sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Total</th>"
 		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
 		getRowColor(),
@@ -535,7 +535,7 @@ void printTrafficStatistics() {
       }
     }
 
-    sendString("</TABLE></TR>");
+    sendString("</TABLE>"TABLE_OFF"</TR>");
 
     /* ************************ */
 
@@ -592,7 +592,7 @@ void printTrafficStatistics() {
 
   }
 
-  sendString("</TABLE></TR></TABLE></CENTER>\n");
+  sendString("</TABLE>"TABLE_OFF"</TR></TABLE></CENTER>\n");
 }
 
 /* ******************************* */
@@ -1365,7 +1365,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	    }
 
 	    if(el->ipxHostName) {
-	      int i;
+	      int i, numSap=0;
 
 	      if(numAddresses > 0) sendString("/");
 	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
@@ -1375,14 +1375,20 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	      sendString(buf);
 
 	      for(i=0; i<el->numIpxNodeTypes; i++) {
-		if(i == 0)
-		  sendString("[");
-		else
-		  sendString("/");
-		sendString(getSAPInfo(el->ipxNodeType[i], 1));
+		char *str = getSAPInfo(el->ipxNodeType[i], 1);
+		
+		if(str[0] != '\0') {
+		  if(numSap == 0)
+		    sendString("[");
+		  else
+		    sendString("/");
+
+		  sendString(str);
+		  numSap++;
+		}
 	      }
 
-	      if(i>0) sendString("]");
+	      if(numSap > 0) sendString("]");
 
 	      numAddresses++;
 	    }
@@ -1482,6 +1488,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
   printHostIcmpStats(el);
   printHostFragmentStats(el, actualDeviceId);
   printHostContactedPeers(el, actualDeviceId);
+  printHostHTTPVirtualHosts(el, actualDeviceId);
   printHostUsedServices(el, actualDeviceId);
 
   /* ***************************************************** */
@@ -1614,7 +1621,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
     }
 
     if(numPrinted == 0) sendString("&nbsp;");
-    sendString("</UL></TR></TABLE></CENTER>");
+    sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
   }
 
   printHostSessions(el, elIdx, actualDeviceId);
@@ -2584,7 +2591,7 @@ void printProtoTraffic(void) {
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes/1024,
 		  ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes));
 
-  sendString("</TABLE></TR>");
+  sendString("</TABLE>"TABLE_OFF"</TR>");
 
   printTableEntry(buf, sizeof(buf), "(R)ARP", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes/1024,
@@ -3129,7 +3136,7 @@ void printThptStatsMatrix(int sortedColumn) {
       /* ************************* */
 
       if(!dataSent) sendString("&nbsp;");
-      sendString("</TABLE></TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>\n");
+      sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>\n");
       dataSent = 0;
 
       /* ************************* */
@@ -3738,8 +3745,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 	      statsEntry->domainHost->fullDomainName) < 0)
 	BufferTooShort();
     } else {
-      char tmpBuf[64];
-      int blankId;
+      char tmpBuf[64], *hostLink;
+      int blankId, len;
 
 #ifdef MULTITHREADED
       if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "getHostIcon");
@@ -3758,37 +3765,40 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 	 && (strcmp(&tmpBuf[blankId+1], domainName) == 0))
 	tmpBuf[blankId] = '\0';
 
-      if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html>%s</A>",
-		  statsEntry->domainHost->hostNumIpAddress, tmpBuf) < 0)
-	BufferTooShort();
+      hostLink = makeHostLink(statsEntry->domainHost, SHORT_FORMAT, 1, 0);
+
+      len = strlen(hostLink); if(len >= sizeof(htmlAnchor)) len = sizeof(htmlAnchor)-1;
+      strncpy(htmlAnchor, hostLink, len);
+      htmlAnchor[len] = '\0';
     }
 
-    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=CENTER>%s</TD>"
-	    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
-	    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
-	    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-	    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-	    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-	    "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-	    getRowColor(), htmlAnchor,
-	    getHostCountryIconURL(statsEntry->domainHost),
-	    formatBytes(statsEntry->bytesSent, 1),
-	    (100*((float)statsEntry->bytesSent/(float)totBytesSent)),
-	    formatBytes(statsEntry->bytesRcvd, 1),
-	    (100*((float)statsEntry->bytesRcvd/(float)totBytesRcvd)),
-	    formatBytes(statsEntry->tcpSent, 1),
-	    formatBytes(statsEntry->tcpRcvd, 1),
-	    formatBytes(statsEntry->udpSent, 1),
-	    formatBytes(statsEntry->udpRcvd, 1),
-	    formatBytes(statsEntry->icmpSent, 1),
-	    formatBytes(statsEntry->icmpRcvd, 1),
-	    formatBytes(statsEntry->ospfSent, 1),
-	    formatBytes(statsEntry->ospfRcvd, 1),
-	    formatBytes(statsEntry->igmpSent, 1),
-	    formatBytes(statsEntry->igmpRcvd, 1)
-	    ) < 0) BufferTooShort();
-    sendString(buf);
 
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=CENTER>%s</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		getRowColor(), htmlAnchor,
+		getHostCountryIconURL(statsEntry->domainHost),
+		formatBytes(statsEntry->bytesSent, 1),
+		(100*((float)statsEntry->bytesSent/(float)totBytesSent)),
+		formatBytes(statsEntry->bytesRcvd, 1),
+		(100*((float)statsEntry->bytesRcvd/(float)totBytesRcvd)),
+		formatBytes(statsEntry->tcpSent, 1),
+		formatBytes(statsEntry->tcpRcvd, 1),
+		formatBytes(statsEntry->udpSent, 1),
+		formatBytes(statsEntry->udpRcvd, 1),
+		formatBytes(statsEntry->icmpSent, 1),
+		formatBytes(statsEntry->icmpRcvd, 1),
+		formatBytes(statsEntry->ospfSent, 1),
+		formatBytes(statsEntry->ospfRcvd, 1),
+		formatBytes(statsEntry->igmpSent, 1),
+		formatBytes(statsEntry->igmpRcvd, 1)
+		) < 0) BufferTooShort();
+    sendString(buf);
+    
     /* Avoid huge tables */
     if(printedEntries++ > myGlobals.maxNumLines)
       break;

@@ -278,7 +278,7 @@ will monitor. The format is &lt;label&gt;=&lt;protocol list&gt; [, &lt;label&gt;
 label is used to symbolically identify the &lt;protocol list&gt;. The format of &lt;protocol list&gt;
 is &lt;protocol&gt;[|&lt;protocol&gt;], where &lt;protocol&gt; is either a valid protocol specified inside the
 /etc/services file or a numeric port range (e.g. 80, or 6000-6500). If the -p flag is omitted the following 
-default value is used: &quot;FTP=ftp|ftp-data,HTTP=http|www|https,DNS=name|domain,Telnet=telnet|login,NBios-IP=netbios-ns|netbios-dgm|netbios-ssn,Mail=pop-2|pop-3|kpop|smtp|imap|imap2,SNMP=snmp|snmp-trap,NEWS=nntp,NFS=mount|pcnfs|bwnfs|nfs|nfsd-status,X11=6000-6010,SSH=ssh&quot;. If the &lt;protocol list&gt; is very long you may store in a file (for instance protocol.list) the value of the &lt;protocol list&gt; and specify the file name instead of the &lt;protocol list&gt; (in above example you will invoke 'ntop -p protocol.list').
+default value is used: &quot;FTP=ftp|ftp-data,HTTP=http|www|https|3128,DNS=name|domain,Telnet=telnet|login,NBios-IP=netbios-ns|netbios-dgm|netbios-ssn,Mail=pop-2|pop-3|pop3|kpop|smtp|imap|imap2,DHCP/BOOTP=67-68,SNMP=snmp|snmp-trap,NNTP=nntp,NFS=mount|pcnfs|bwnfs|nfsd|nfsd-status,X11=6000-6010,SSH=22,Gnutella=6346|6347|6348,Morpheus=1214,WinMX=6699|7730,Audiogalaxy=41000-41900,Napster=8888|8875&quot; If the &lt;protocol list&gt; is very long you may store in a file (for instance protocol.list) the value of the &lt;protocol list&gt; and specify the file name instead of the &lt;protocol list&gt; (in above example you will invoke 'ntop -p protocol.list').
 <P>
 
 2 -q --create-suspicious-packets
@@ -579,6 +579,6 @@ Tool locations are current as of February 2002 - please send email to report new
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 02:17:09 GMT, July 04, 2002
+Time: 08:21:13 GMT, July 23, 2002
 </BODY>
 </HTML>

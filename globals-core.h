@@ -210,15 +210,6 @@ extern void unloadPlugins(void);
 extern void quicksort(void *a, size_t n, size_t es,
                       int (*compare_function) (const void *p1, const void *p2));
 
-/* sql.c */
-extern void handleDbSupport(char* addr /* host:port */, int* enableDBsupport);
-extern void closeSQLsocket(void);
-extern void updateHostNameInfo(unsigned long numeric, char* symbolic, int actualDeviceId);
-extern void updateHostTraffic(HostTraffic *el);
-extern void notifyHostCreation(HostTraffic *el);
-extern void notifyTCPSession(IPSession *session, int actualDeviceId);
-extern void updateDBOSname(HostTraffic *el);
-
 /* ssl.c */
 #ifdef HAVE_OPENSSL
 extern void ntop_ssl_error_report(char * whyMe);
@@ -367,18 +358,6 @@ extern void createVendorTable(void);
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
 #endif
- 
-
-/* mysql.c */
-#ifdef HAVE_MYSQL
-extern void handlemySQLSupport(char* addr /* host:port */, int* enableDBsupport);
-extern void closemySQLsocket(void);
-extern void mySQLupdateHostNameInfo(unsigned long numeric, char* symbolic);
-extern void mySQLupdateHostTraffic(HostTraffic *el);
-extern void mySQLnotifyHostCreation(HostTraffic *el);
-extern void mySQLnotifyTCPSession(IPSession *session, int actualDeviceId);
-extern void mySQLupdateDBOSname(HostTraffic *el);
-#endif /* HAVE_MYSQL */
 
 /* netflow.c */
 extern void termNetFlowExporter();

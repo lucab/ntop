@@ -1,0 +1,84 @@
+<HTML>
+<HEAD>
+<TITLE>Welcome to ntop!</TITLE>
+<META HTTP-EQUIV=Pragma CONTENT=no-cache>
+<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>
+<LINK REL=stylesheet HREF=/style.css type="text/css">
+<SCRIPT SRC=/functions.js TYPE="text/javascript" LANGUAGE="javascript"></SCRIPT>
+</HEAD>
+<BODY BACKGROUND=/white_bg.gif BGCOLOR="#FFFFFF" LINK=blue VLINK=blue>
+<CENTER>
+<H1><FONT FACE="Helvetica, Arial, Sans Serif">Welcome to ntop!</FONT></H1><P>
+</CENTER>
+<FONT FACE=Helvetica>
+<HR>
+<p>
+
+
+ntop is able to dump traffic data in various formats (e.g. text, XML) so that external programs can use this data for further processing (e.g. storage on a DB).
+<p>
+This page shows how to dump data via HTTP from ntop.
+<p>
+<center>
+<table border>
+
+<tr><th align=center>Report Type</th><th align=center>Description</th><th align=center>&nbsp;</th></tr>
+
+<tr><th align=left>Hosts</th>
+<td>Dump information about known hosts</td>
+<td align=center><form method=get action=/dumpData.html>
+Format: <select name=language>
+<option value="text">text
+<option value="xml">xml
+<option value="perl">perl
+<option value="php">php
+</select>
+<p><input type=submit>
+</form></td></tr>
+
+
+
+<tr><th align=left>Hosts Matrix</th>
+<td>Dump local hosts traffic matrix</td>
+<td align=center><form method=get action=/dumpHostsMatrix.html>
+Format: <select name=language>
+<option value="text">text
+<option value="xml">xml
+<option value="perl">perl
+<option value="php">php
+</select>
+<p><input type=submit>
+</form></td></tr>
+
+
+<tr><th align=left>Network Interfaces</th>
+<td>Dump traffic information according to the know network interfaces</td>
+<td align=center><form method=get action=/dumpTrafficData.html>
+Format: <select name=language>
+<option value="text">text
+<option value="xml">xml
+<option value="perl">perl
+<option value="php">php
+</select>
+<p><input type=submit>
+</form></td></tr>
+
+
+<tr><th align=left>Network Flows</th>
+<td>Dump traffic information of the configured network flows</td>
+<td align=center><form method=get action=/dumpFlows.html>
+Format: <select name=language>
+<option value="text">text
+<option value="xml">xml
+<option value="perl">perl
+<option value="php">php
+</select>
+<p><input type=submit>
+</form></td></tr>
+
+
+</table>
+
+</B></FONT>
+</BODY>
+</HTML>

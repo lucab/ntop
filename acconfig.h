@@ -33,9 +33,6 @@
 /* Define if you want to build micro ntop. */
 #undef MICRO_NTOP
 
-/* Define if you want to build with MySQL support. */
-#undef HAVE_MYSQL
-
 /* Define if you want a debugging version. */
 #undef DEBUG
 

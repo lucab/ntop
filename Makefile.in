@@ -100,8 +100,9 @@ DATAFILE_DIR = @DATAFILE_DIR@
 DBFILE_DIR = @DBFILE_DIR@
 DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
+ECHO = @ECHO@
+EXEEXT = @EXEEXT@
 INTOP = @INTOP@
-LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBCURSES = @LIBCURSES@
 LIBREADLINE = @LIBREADLINE@
@@ -110,10 +111,10 @@ LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 MOREOBJECTS = @MOREOBJECTS@
 MORESOURCES = @MORESOURCES@
-NM = @NM@
 NTOP_RELEASE = @NTOP_RELEASE@
 NTOP_VERSION_INFO = @NTOP_VERSION_INFO@
 OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PLUGINS = @PLUGINS@
 PLUGIN_DIR = @PLUGIN_DIR@
@@ -121,6 +122,7 @@ RANLIB = @RANLIB@
 RUN_DIR = @RUN_DIR@
 SNMPLIBS = @SNMPLIBS@
 SO_VERSION_PATCH = @SO_VERSION_PATCH@
+STRIP = @STRIP@
 
 PKGNAME = ntop
 VERSION = @VERSION@
@@ -216,10 +218,10 @@ lib_LTLIBRARIES = libntop.la libntopreport.la
 # core Archive, or the 'engine'
 libntop_la_SOURCES = address.c       dataFormat.c  \
                      globals-core.c  hash.c        initialize.c       \
-                     leaks.c         mysql.c       netflow.c  \
+                     leaks.c         netflow.c  \
                      ntop.c 	     pbuf.c        protocols.c        \
 		     plugin.c        qsort.c       regex.c	      \
-                     sql.c           sessions.c         \
+                     sessions.c         \
                      ssl.c           term.c        traffic.c          \
                      util.c          vendor.c      version.c          \
                      vendortable.h   ntop_darwin.c
@@ -252,19 +254,20 @@ LTLIBRARIES =  $(lib_LTLIBRARIES)
 
 CPPFLAGS = @CPPFLAGS@
 libntop_la_OBJECTS =  address.lo dataFormat.lo globals-core.lo hash.lo \
-initialize.lo leaks.lo mysql.lo netflow.lo ntop.lo pbuf.lo protocols.lo \
-plugin.lo qsort.lo regex.lo sql.lo sessions.lo ssl.lo term.lo \
-traffic.lo util.lo vendor.lo version.lo ntop_darwin.lo
+initialize.lo leaks.lo netflow.lo ntop.lo pbuf.lo protocols.lo \
+plugin.lo qsort.lo regex.lo sessions.lo ssl.lo term.lo traffic.lo \
+util.lo vendor.lo version.lo ntop_darwin.lo
 libntopreport_la_OBJECTS =  emitter.lo globals-report.lo graph.lo \
 http.lo report.lo reportUtils.lo webInterface.lo
+bin_PROGRAMS =  ntop$(EXEEXT)
 PROGRAMS =  $(bin_PROGRAMS)
 
-ntops_OBJECTS =  main.o admin.o
-ntopd_OBJECTS =  main.o admin.o
+ntops_OBJECTS =  main.$(OBJEXT) admin.$(OBJEXT)
+ntopd_OBJECTS =  main.$(OBJEXT) admin.$(OBJEXT)
 ntopd_LDADD = $(LDADD)
 ntopd_DEPENDENCIES = 
 ntopd_LDFLAGS = 
-ntop_OBJECTS =  main.o admin.o
+ntop_OBJECTS =  main.$(OBJEXT) admin.$(OBJEXT)
 SCRIPTS =  $(bin_SCRIPTS)
 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -285,17 +288,17 @@ GZIP_ENV = --best
 DEP_FILES =  .deps/address.P .deps/admin.P .deps/dataFormat.P \
 .deps/emitter.P .deps/globals-core.P .deps/globals-report.P \
 .deps/graph.P .deps/hash.P .deps/http.P .deps/initialize.P \
-.deps/leaks.P .deps/main.P .deps/mysql.P .deps/netflow.P .deps/ntop.P \
+.deps/leaks.P .deps/main.P .deps/netflow.P .deps/ntop.P \
 .deps/ntop_darwin.P .deps/pbuf.P .deps/plugin.P .deps/protocols.P \
 .deps/qsort.P .deps/regex.P .deps/report.P .deps/reportUtils.P \
-.deps/sessions.P .deps/sql.P .deps/ssl.P .deps/term.P .deps/traffic.P \
-.deps/util.P .deps/vendor.P .deps/version.P .deps/webInterface.P
+.deps/sessions.P .deps/ssl.P .deps/term.P .deps/traffic.P .deps/util.P \
+.deps/vendor.P .deps/version.P .deps/webInterface.P
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntops_SOURCES) $(ntopd_SOURCES) $(ntop_SOURCES)
 OBJECTS = $(libntop_la_OBJECTS) $(libntopreport_la_OBJECTS) $(ntops_OBJECTS) $(ntopd_OBJECTS) $(ntop_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .lo .o .obj .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile
 
@@ -366,6 +369,11 @@ uninstall-libLTLIBRARIES:
 	  $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
 	done
 
+# FIXME: We should only use cygpath when building on Windows,
+# and only if it is available.
+.c.obj:
+	$(COMPILE) -c `cygpath -w $<`
+
 .s.o:
 	$(COMPILE) -c $<
 
@@ -374,6 +382,7 @@ uninstall-libLTLIBRARIES:
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
+	-rm -f *.$(OBJEXT)
 
 clean-compile:
 
@@ -429,16 +438,16 @@ uninstall-binPROGRAMS:
 	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
 
-ntops: $(ntops_OBJECTS) $(ntops_DEPENDENCIES)
-	@rm -f ntops
+ntops$(EXEEXT): $(ntops_OBJECTS) $(ntops_DEPENDENCIES)
+	@rm -f ntops$(EXEEXT)
 	$(LINK) $(ntops_LDFLAGS) $(ntops_OBJECTS) $(ntops_LDADD) $(LIBS)
 
-ntopd: $(ntopd_OBJECTS) $(ntopd_DEPENDENCIES)
-	@rm -f ntopd
+ntopd$(EXEEXT): $(ntopd_OBJECTS) $(ntopd_DEPENDENCIES)
+	@rm -f ntopd$(EXEEXT)
 	$(LINK) $(ntopd_LDFLAGS) $(ntopd_OBJECTS) $(ntopd_LDADD) $(LIBS)
 
-ntop: $(ntop_OBJECTS) $(ntop_DEPENDENCIES)
-	@rm -f ntop
+ntop$(EXEEXT): $(ntop_OBJECTS) $(ntop_DEPENDENCIES)
+	@rm -f ntop$(EXEEXT)
 	$(LINK) $(ntop_LDFLAGS) $(ntop_OBJECTS) $(ntop_LDADD) $(LIBS)
 
 install-binSCRIPTS: $(bin_SCRIPTS)

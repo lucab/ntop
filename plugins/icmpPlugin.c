@@ -450,7 +450,7 @@ static PluginInfo icmpPluginInfo[] = {
     "1.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "icmpWatch", /* http://<host>:<port>/plugins/icmpWatch */
-    1, /* Active */
+    0, /* Active */
     NULL, /* no special startup after init */
     termIcmpFunct, /* TermFunc   */
     NULL, /* PluginFunc */

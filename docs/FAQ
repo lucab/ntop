@@ -29,6 +29,9 @@ Note that some of this information may be dated or not completely verified for 2
 
 Entries are in no particular sequence.
 
+Post 2.1 release entries will have a author/date stamp, (Updated/Added ddmmmyyyy by x)
+at the end.
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -431,6 +434,24 @@ Q. ntop seems to run but I don't see any traffic.
 A. Make sure you aren't running against the loopback (127.0.0.1) interface.
    lo shouldn't see much traffic, only that originating on the host destined
    for it (e.g. ping 127.0.0.1).
+
+
+Q. ntop is unable to open it's database file.  Specifically:
+   I have following messages while running ntop
+
+     wait please: ntop is coming up...
+     24/Jul/2003 15:15:23 Initializing IP services...
+     <snip />
+     24/Jul/2003 15:15:23 Initializing GDBM...
+     24/Jul/2003 15:15:23 Database '/var/ntop/addressCache.db' open failed: File open error
+     24/Jul/2003 15:15:23 Possible solution: please use '-P <directory>'
+A. Multiple possible choices...
+    1. The directory /var/ntop doesn't exist.  Create it or, as the message says, use the
+       -P parameter to point ntop at another directory.
+    2. You many not have read/write rights in /var/ntop - if you're running in non-promiscuous
+       mode from a user other than root.
+    3. Another instance of ntop may already be running, so it has the file open and locked.
+   (Added 29Jul2002 by Burton)
 
 
 Q. ntop stops capturing packets, except ARP and other broadcasts.  Why?
@@ -1220,6 +1241,16 @@ A. Dale Reed pointed out a good tech doc (no flak, just the formats) for netflow
     http://www.cisco.com/univercd/cc/td/doc/product/rtrmgmt/nfc/nfc_2_0/nfc_ug/nfcform.htm  
 
 
+Q. How do I access netFlow or sFlow data from ntop?
+A. You need to configure ntop as a listener (it can also be a collector, but that data shows
+   up in the receiving interface, not under netFlow/sFlow).
+
+   First, use the appropriate plugin to set the parameters - basically the port you want ntop
+   to listen on.  Then, using the Admin | Set Interface menu item, switch ntop to report on
+   the sFlow/netFlow pseudo-device (NetFlow-device or sFlow-device).
+   (Added 29Jul2002 by Burton)
+
+
 Q. Is there any parameter to set to tell ntop which interface/ip address 
    to use when exporting the (netflow/sflow) flows?
 A. No. All ntop does is send a packet to the network addressed to the
@@ -1453,6 +1484,32 @@ A. ntop has special parameters under Win32
 	 ntop /d deletes the ntop service
 
    Remember, ntop /i and ntop /d don't actually run the service - you need to start it.
+
+Q. Where does ntop look for html (and gif) files under Win32?
+A. ntop looks in two places. The first is the current directory and the second is 
+   configurable through a constant in ntop_win32.h, #define DATAFILE_DIR "."
+
+   Note that the current directory, or ".", may not be what you expect.
+
+   When running ntop as a Win32 service, "." is %SystemRoot%\system32, meaning that ntop 
+   looks in %SystemRoot%\system32\html for the .html and .gif files.
+
+   When running ntop from the command line, 
+
+       ntop /c parameters...
+
+   "." is whatever directory is current.  This means that if you run ntop with a full, 
+   explicit path (c:\ntopnew\ntop /c ...) there may be an unexpected difference between 
+   what ntop finds for "." and what you THINK "." is!  This will lead to missing .html 
+   and .gif files.
+
+   If you wish to have ntop look in a specific place for the files, the best choices are:
+
+     1) Create a .bat file to run ntop which does a cd to the expected directory first.
+     2) Edit ntop_win32.c and then recompile.
+
+   Note that the settings for DATAFILE_DIR (and other constants) are reported on the text 
+   version of the configuration page, textinfo.html. (Added 14Jul2002 Burton)
 
 
 Other Platforms - not very well supported...

@@ -344,11 +344,6 @@ int getdomainname(char *name, size_t len);
 #include <gdbm.h>
 #endif
 
-/* MySQL support */
-#if defined(HAVE_MYSQL)
-#include <mysql/mysql.h>
-#endif
-
 /*
  * thread management
  */
@@ -680,9 +675,9 @@ extern const char *gdbm_strerror (int);
 
 #define MAX_NUM_PROTOS      64   /* Maximum number of protocols for graphs */
 
-#define MAX_SUBNET_HOSTS                1024 /* used in util.c */
+#define MAX_SUBNET_HOSTS                    1024 /* used in util.c */
 
-#define NUM_SESSION_INFO                 128 /* used in util.c */
+#define NUM_SESSION_INFO                     384  /* used in util.c */
 #define MAX_NUM_SESSION_INFO  2*NUM_SESSION_INFO  /* Not yet used */
 
 /* SSLWATCHDOG stuff *************************** */
@@ -697,7 +692,6 @@ extern const char *gdbm_strerror (int);
 #define SSLWATCHDOG_STATE_HTTPREQUEST    2  /* http request received */
 #define SSLWATCHDOG_STATE_HTTPCOMPLETE   3  /* Parent done w/ http */
 #define SSLWATCHDOG_STATE_FINISHED       9
- 
 #endif
 
 #ifdef HAVE_OPENSSL
@@ -1686,27 +1680,28 @@ typedef struct sessionInfo {
 /* IP Session Information */
 typedef struct ipSession {
   u_short magic;
-  u_int initiatorIdx;               /* initiator address   (IP address)         */
+  u_int initiatorIdx;               /* initiator address   (IP address)           */
   struct in_addr initiatorRealIp;   /* Real IP address (if masqueraded and known) */
-  u_short sport;                    /* initiator address   (port)               */
-  u_int remotePeerIdx;              /* remote peer address (IP address)         */
+  u_short sport;                    /* initiator address   (port)                 */
+  u_int remotePeerIdx;              /* remote peer address (IP address)           */
   struct in_addr remotePeerRealIp;  /* Real IP address (if masqueraded and known) */
-  u_short dport;                    /* remote peer address (port)               */
-  time_t firstSeen;                 /* time when the session has been initiated */
-  time_t lastSeen;                  /* time when the session has been closed    */
+  char *virtualPeerName;            /* Name of a virtual host (e.g. HTTP virtual host) */
+  u_short dport;                    /* remote peer address (port)                       */
+  time_t firstSeen;                 /* time when the session has been initiated         */
+  time_t lastSeen;                  /* time when the session has been closed            */
   u_long pktSent, pktRcvd;
-  TrafficCounter bytesSent;         /* # bytes sent (initiator -> peer) [IP]    */
-  TrafficCounter bytesRcvd;         /* # bytes rcvd (peer -> initiator)[IP] */
+  TrafficCounter bytesSent;         /* # bytes sent (initiator -> peer) [IP]            */
+  TrafficCounter bytesRcvd;         /* # bytes rcvd (peer -> initiator)[IP]     */
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
   TrafficCounter bytesFragmentedSent;     /* IP Fragments                       */
-  TrafficCounter bytesFragmentedRcvd; /* IP Fragments                       */
+  TrafficCounter bytesFragmentedRcvd; /* IP Fragments                           */
   u_int minWindow, maxWindow;       /* TCP window size                          */
   struct timeval nwLatency;         /* Network Latency                          */
-  u_short numFin;                   /* # FIN pkts rcvd                      */
-  u_short numFinAcked;              /* # ACK pkts rcvd                      */
-  tcp_seq lastAckIdI2R;             /* ID of the last ACK rcvd              */
-  tcp_seq lastAckIdR2I;             /* ID of the last ACK rcvd              */
+  u_short numFin;                   /* # FIN pkts rcvd                          */
+  u_short numFinAcked;              /* # ACK pkts rcvd                          */
+  tcp_seq lastAckIdI2R;             /* ID of the last ACK rcvd                  */
+  tcp_seq lastAckIdR2I;             /* ID of the last ACK rcvd                  */
   u_short numDuplicatedAckI2R;      /* # duplicated ACKs                        */
   u_short numDuplicatedAckR2I;      /* # duplicated ACKs                        */
   TrafficCounter bytesRetranI2R;    /* # bytes retransmitted (due to duplicated ACKs) */
@@ -1715,8 +1710,8 @@ typedef struct ipSession {
   TrafficCounter lastFlags;         /* flags of the last TCP packet             */
   u_int32_t lastCSAck, lastSCAck;   /* they store the last ACK ids C->S/S->C    */
   u_int32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
-  u_char lastInitiator2RemFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
-  u_char lastRem2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
+  u_char lastInitiator2RemFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags             */
+  u_char lastRem2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags             */
   u_char sessionState;              /* actual session state                     */
   u_char  passiveFtpSession;        /* checked if this is a passive FTP session */
   struct ipSession *next;
@@ -1910,15 +1905,28 @@ typedef struct icmpHostInfo {
    32, 512, 1024, 2048, 4069, 8192, 12288 ...
  */
  
-#define HASH_INITIAL_SIZE         32
-#define HASH_MINIMUM_SIZE         512  /* Minimum after 1st entend */
+#define HASH_INITIAL_SIZE           32
+#define HASH_MINIMUM_SIZE          512  /* Minimum after 1st entend */
 #define HASH_FACTOR_MAXIMUM       4096 /* After it gets this big */
 #define HASH_TERMINAL_INCREASE    4096 /*      grow by */
-#define HASH_INCREASE_FACTOR      2    /* Between MINIMUM and TERMINAL, grow by... */
+#define HASH_INCREASE_FACTOR         2    /* Between MINIMUM and TERMINAL, grow by... */
 
-#define MAX_HOST_SYM_NAME_LEN     64
+#define MAX_HOST_SYM_NAME_LEN       64
 #define MAX_HOST_SYM_NAME_LEN_HTML 256 /* Fully tricked out html version - hash.c */
-#define MAX_NODE_TYPES             8
+#define MAX_NODE_TYPES               8
+
+#define MAX_NUM_LIST_ENTRIES        32
+
+typedef struct virtualHostList {
+  char *virtualHostName;
+  TrafficCounter bytesSent, bytesRcvd; /* ... by the virtual host */
+  struct virtualHostList *next;
+} VirtualHostList;
+
+typedef struct userList {
+  char *userName;
+  struct userList *next;
+} UserList;
 
 typedef struct storedAddress {
   char   symAddress[MAX_HOST_SYM_NAME_LEN];
@@ -1989,6 +1997,12 @@ typedef struct hostTraffic {
   TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
                    udpFragmentsSent,  udpFragmentsRcvd,
                    icmpFragmentsSent, icmpFragmentsRcvd;
+
+  /* HTTP */
+  VirtualHostList *httpVirtualHosts;
+
+  /* POP3/SMTP... */
+  UserList *userList;
 
   /* Interesting Packets */
   SecurityHostProbes *secHostPkts;
@@ -2388,5 +2402,12 @@ typedef struct serialCacheEntry {
   char data[17];
   u_long creationTime;
 } SerialCacheEntry;
+
+#define MAX_NUM_PROBES 16
+
+typedef struct probeInfo {
+  struct in_addr probeAddr;
+  u_int32_t      pkts;
+} ProbeInfo;
 
 #endif /* NTOP_H */

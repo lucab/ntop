@@ -197,9 +197,9 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* administrative */
   myGlobals.shortDomainName = NULL;
 
+#ifdef MULTITHREADED
   myGlobals.hostsHashMutexInitialized = 0;
 
-#ifdef MULTITHREADED
   myGlobals.numThreads = 0;            /* # of running threads */
 
   myGlobals.numDequeueThreads = 1;

@@ -513,48 +513,6 @@ void updateTrafficMatrix(HostTraffic *srcHost,
   }
 }
 
-/* *********************************** */
-
-void updateDbHostsTraffic(int deviceToUpdate) {
-  u_int i;
-  HostTraffic *el;
-
-#ifndef DEBUG
-  traceEvent(TRACE_INFO, "updateDbHostsTraffic(myGlobals.device=%d)", deviceToUpdate);
-#endif
-
-  for(i=0; i<myGlobals.device[deviceToUpdate].actualHashSize; i++) {
-    el = myGlobals.device[deviceToUpdate].hash_hostTraffic[i]; /* (**) */
-
-    if((el != NULL)
-       && (!broadcastHost(el))
-       && (el->nextDBupdate < myGlobals.actTime)) {
-      if(el->nextDBupdate == 0) {
-	/* traceEvent(TRACE_INFO, "1"); */
-	notifyHostCreation(el);
-#ifdef HAVE_MYSQL
-	mySQLnotifyHostCreation(el);
-#endif
-	/* traceEvent(TRACE_INFO, "2"); */
-      } else if(el->nextDBupdate < myGlobals.actTime) {
-	/* traceEvent(TRACE_INFO, "3"); */
-	updateHostTraffic(el);
-	/* traceEvent(TRACE_INFO, "4"); */
-#ifdef HAVE_MYSQL
-	mySQLupdateHostTraffic(el);
-#endif /* traceEvent(TRACE_INFO, "5"); */
-	if(el->osName == NULL) {
-	  /* traceEvent(TRACE_INFO, "6"); */
-	  updateOSName(el);
-	  /* traceEvent(TRACE_INFO, "7"); */
-	}
-      }
-
-      el->nextDBupdate = myGlobals.actTime + DB_TIMEOUT_REFRESH_TIME;
-    }
-  }
-}
-
 /* ************************ */
 
 int isInitialHttpData(char* packetData) {

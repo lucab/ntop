@@ -2003,19 +2003,6 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.accessLogPath,
                            NTOP_DEFAULT_ACCESS_LOG_PATH);
 
-  if (myGlobals.enableDBsupport == 1) {
-    if (snprintf(buf, sizeof(buf), "%sActive - server at %s:%d",
-		 myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "",
-		 myGlobals.sqlHostName,
-		 myGlobals.sqlPortNumber) < 0)
-      BufferTooShort();
-  } else {
-    if (snprintf(buf, sizeof(buf), "%sInactive",
-		 myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "") < 0)
-      BufferTooShort();
-  }
-  printFeatureConfigInfo(textPrintFlag, "-b | --sql-host", buf);
-
   printParameterConfigInfo(textPrintFlag, "-c | --sticky-hosts",
                            myGlobals.stickyHosts == 1 ? "Yes" : "No",
                            NTOP_DEFAULT_STICKY_HOSTS == 1 ? "Yes" : "No");
@@ -3032,9 +3019,11 @@ void printNtopConfigInfo(int textPrintFlag) {
       {
 	int rc;
 
+#ifdef SSLWATCHDOG_DEBUG
 	traceEvent(TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING\n");
 	traceEvent(TRACE_INFO, "SSLWDDEBUG: P Common     Parent         Child\n");
 	traceEvent(TRACE_INFO, "SSLWDDEBUG: - ---------- -------------- --------------\n");
+#endif
 
 	if ((rc = sslwatchdogGetLock(SSLWATCHDOG_BOTH)) != 0) {
           /* Bad thing - can't lock the mutex */
@@ -3306,6 +3295,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     int topSock = myGlobals.sock;
 
 #ifndef WIN32
+#ifdef MULTITHREADED
     /*
      *  The great ntop "mysterious web server death" fix... and other tales of
      *  sorcery.
@@ -3375,16 +3365,18 @@ void printNtopConfigInfo(int textPrintFlag) {
 	if (rc != 0)
 	  traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
 
-#ifdef DEBUG
+#if !defined(DEBUG) && !defined(DARWIN)
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 	traceEvent(TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
 #endif
 
+#ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
 	if (rc != 0)
 	  traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", nset, oset, rc);
+#endif
 
-#ifdef DEBUG
+#if !defined(DEBUG) && !defined(DARWIN)
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 	traceEvent(TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
 #endif
@@ -3396,6 +3388,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 	}
       }
+#endif /* MULTITHREADED */
 #endif /* WIN32 */
 
       FD_ZERO(&mask);
@@ -3457,6 +3450,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     static void handleSingleWebConnection(fd_set *fdmask) {
       struct sockaddr_in from;
       int from_len = sizeof(from);
+      int rc;
 
       errno = 0;
 
@@ -3490,7 +3484,6 @@ void printNtopConfigInfo(int textPrintFlag) {
 	    if (myGlobals.useSSLwatchdog == 1)
 #endif /* PARM_SSLWATCHDOG */
 	      {
-		int rc;
 
 #if defined(PARM_SSLWATCHDOG) || defined(USE_SSLWATCHDOG)
 		/* The watchdog ... */
@@ -3532,25 +3525,29 @@ void printNtopConfigInfo(int textPrintFlag) {
 					 0-SSLWATCHDOG_ENTER_LOCKED,
 					 0-SSLWATCHDOG_RETURN_LOCKED);
 #endif /* PARM_SSLWATCHDOG || USE_SSLWATCHDOG */
+              }
 
-		if(accept_ssl_connection(myGlobals.newSock) == -1) {
-                  traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
-                  closeNwSocket(&myGlobals.newSock);
-                  return;
-		} else {
-                  myGlobals.newSock = -myGlobals.newSock;
+	    if(accept_ssl_connection(myGlobals.newSock) == -1) {
+                traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
+                closeNwSocket(&myGlobals.newSock);
+                return;
+	    } else {
+                myGlobals.newSock = -myGlobals.newSock;
+            }
+
 #if defined(PARM_SSLWATCHDOG) || defined(USE_SSLWATCHDOG)
-                  rc = sslwatchdogSetState(SSLWATCHDOG_STATE_HTTPCOMPLETE,
-                                           SSLWATCHDOG_PARENT,
-                                           0-SSLWATCHDOG_ENTER_LOCKED,
-                                           0-SSLWATCHDOG_RETURN_LOCKED);
-                  /* Wake up child */ 
-                  rc = sslwatchdogSignal(SSLWATCHDOG_PARENT);
-#endif /* PARM_SSLWATCHDOG || USE_SSLWATCHDOG */
-		}
+#ifdef PARM_SSLWATCHDOG
+	    if (myGlobals.useSSLwatchdog == 1)
+#endif /* PARM_SSLWATCHDOG */
+	      {
+                rc = sslwatchdogSetState(SSLWATCHDOG_STATE_HTTPCOMPLETE,
+                                         SSLWATCHDOG_PARENT,
+                                         0-SSLWATCHDOG_ENTER_LOCKED,
+                                         0-SSLWATCHDOG_RETURN_LOCKED);
+                /* Wake up child */ 
+                rc = sslwatchdogSignal(SSLWATCHDOG_PARENT);
 	      }
-	  } else {
-	    sslwatchdogDebug("nonSSLreq", SSLWATCHDOG_PARENT, "");
+#endif /* PARM_SSLWATCHDOG || USE_SSLWATCHDOG */
 	  }
 #endif /* HAVE_OPENSSL */
 
