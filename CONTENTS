@@ -8,15 +8,12 @@ This is the classic ntop application that runs only in web mode.
 2) intop                [intop/ directory]
 This is the interactive ntop application. it allows you to play with ntop from a text mode terminal.
 
-3) remoteInterfaceAPI   [remoteInterfaceAPI/ directory]
-It contains the API (written in C++ and Perl) for accessing ntop from remote. In this way you can write lightweight clients, CGIs etc. that talk to ntop without having to link any ntop library.
-
-4) NtoPerl              [NtoPerl directory]
-A work in progress implementation of ntop in Perl. Not yet ready.
+3) www
+How to extract data out of ntop using Perl/PHP
 
 
 
 Have fun!
 
 -----------------------------------
-Luca Deri <deri@ntop.org>, May 2000
+Luca Deri <deri@ntop.org>, March 2001
