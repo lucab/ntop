@@ -365,7 +365,7 @@ void printFooter(int reportType) {
     case SORT_DATA_RCVD_HOST_TRAFFIC:
     case SORT_DATA_SENT_HOST_TRAFFIC:
     case SORT_DATA_HOST_TRAFFIC:      
-        if (snprintf(buf, sizeof(buf), "<BR><b>Color Code</b><TABLE><TR>"
+        if (snprintf(buf, sizeof(buf), "<BR><b>Color Code</b><TABLE BORDER><TR>"
 		     "<TD ALIGN=CENTER NOWRAP "TD_BG" WIDTH=100> 0%% </TD>"
 		     "<TD ALIGN=CENTER NOWRAP "PCTG_LOW_COLOR" WIDTH=100> 0%% to %d%% </TD>"
 		     "<TD ALIGN=CENTER NOWRAP "PCTG_MID_COLOR" WIDTH=100> %d%% to %d%% </TD>"
