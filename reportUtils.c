@@ -3944,6 +3944,11 @@ void printLocalHostsStats() {
 
   printHTMLheader("Local Hosts Statistics", BITFLAG_HTML_NO_REFRESH);
 
+  if(myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+    printFlagedWarning("<I>Local host statistics (OS fingerprinting) are not available for virtual interfaces</I>");
+    return;
+  }
+
   tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
   memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
