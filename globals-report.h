@@ -208,7 +208,7 @@ extern int out_graph(short gifwidth,
 #define IP_L_2_R_HTML                   "IpL2R.html"
 #define IP_L_2_L_HTML                   "IpL2L.html"
 #define DOMAIN_INFO_HTML                "domainInfo"
-#define CGI_HEADER                      "cgi/"
+#define CGI_HEADER                      "ntop-bin/"
 #define STR_SHOW_PLUGINS                "showPlugins.html"
 #define SHUTDOWN_NTOP_HTML              "shutdown.html"
 #define INFO_NTOP_HTML                  "info.html"

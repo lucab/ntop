@@ -133,23 +133,25 @@ void printTrafficStatistics() {
       if(i > 0) sendString("<br>");
 
       if(myGlobals.rFileName == NULL) {
-	char buf[128], buf1[64];
+	char buf1[128], buf2[64];
 
 	if(snprintf(buf, sizeof(buf), "%s (%s%s) [%s/%s]",
 		    myGlobals.device[i].name, getNwInterfaceType(i),
 		    myGlobals.device[i].virtualDevice ? " virtual" : "",
-		    _intoa(myGlobals.device[i].network, buf, sizeof(buf1)),
-		    _intoa(myGlobals.device[i].netmask, buf1, sizeof(buf1))
+		    _intoa(myGlobals.device[i].network, buf1, sizeof(buf1)),
+		    _intoa(myGlobals.device[i].netmask, buf2, sizeof(buf2))
 		    ) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
 #ifdef TRAFFIC_HISTORY
-      if(snprintf(buf, sizeof(buf), 
-		  "  [ <A HREF=\"http://jabber/ntop-bin/netTraf.pl?interface=%s\">Traffic History</A> ]\n",
-		  myGlobals.device[i].name) < 0)
-	BufferOverflow();
-      sendString(buf);
+	if(!myGlobals.device[i].virtualDevice) {
+	  if(snprintf(buf, sizeof(buf), 
+		      "  [ <A HREF=\"/ntop-bin/netTraf.pl?interface=%s\">History</A> ]\n",
+		      myGlobals.device[i].name) < 0)
+	    BufferOverflow();
+	  sendString(buf);
+	}
 #endif /* TRAFFIC_HISTORY */      
       } else {
 	if(snprintf(buf, sizeof(buf), "%s [%s]",
@@ -170,7 +172,7 @@ void printTrafficStatistics() {
       }
 
 #ifdef TRAFFIC_HISTORY
-      if(snprintf(buf, sizeof(buf), " <A HREF=\"http://jabber/ntop-bin/netTraf.pl?interface=%s\">Traffic History</A>\n",
+      if(snprintf(buf, sizeof(buf), " <A HREF=\"/ntop-bin/netTraf.pl?interface=%s\">History</A>\n",
 		  myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
 	BufferOverflow();
       sendString(buf);

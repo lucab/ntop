@@ -64,7 +64,7 @@ static int inet_aton(const char *cp, struct in_addr *addr)
 #ifndef WIN32
 #ifdef  USE_CGI
 void execCGI(char* cgiName) {
-  char* userName = "nobody", line[384], buf[256];
+  char* userName = "nobody", line[384], buf[512];
   struct passwd * newUser = NULL;
   FILE *fd;
   int num, i;
@@ -87,10 +87,13 @@ void execCGI(char* cgiName) {
       break;
     }
 
+  putenv("REQUEST_METHOD=GET");
   if(num == 0) putenv("QUERY_STRING=");
 
   if(snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName) < 0)
     BufferOverflow();
+
+  traceEvent(TRACE_INFO, "Executing '%s'", line);
 
   if((fd = sec_popen(line, "r")) == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: unable to exec %s\n", cgiName);
@@ -266,7 +269,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 	   && (symIp[0] != '*')
 	   && strcmp(symIp, el->hostNumIpAddress)) {
 	  int i;
-	  
+
 	  for(i=0; symIp[i] != '\0'; i++)
 	    if(symIp[i] == '.') {
 	      symIp[i] = '\0';
@@ -376,7 +379,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   } else {
     if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s</A>%s%s%s%s%s%s%s%s%s",
 		blinkOn, linkName, symIp,
-		multihomed, gwStr, dnsStr, 
+		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0)
       BufferOverflow();
@@ -921,8 +924,8 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
 	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
 		   "Not binding SSL to a particular interface!\n",  sslAddr);
     }
-    
-    if (webAddr) {     
+
+    if (webAddr) {
       /* Code added to be able to bind to a particular interface */
       if (!inet_aton(webAddr,&sin.sin_addr))
 	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
@@ -936,7 +939,7 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
       exit(-1);
     }
 
-    setsockopt(myGlobals.sock, SOL_SOCKET, SO_REUSEADDR, 
+    setsockopt(myGlobals.sock, SOL_SOCKET, SO_REUSEADDR,
 	       (char *)&sockopt, sizeof(sockopt));
   } else
     myGlobals.sock = 0;
@@ -949,7 +952,7 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
       exit(-1);
     }
 
-    setsockopt(myGlobals.sock_ssl, SOL_SOCKET, SO_REUSEADDR, 
+    setsockopt(myGlobals.sock_ssl, SOL_SOCKET, SO_REUSEADDR,
 	       (char *)&sockopt, sizeof(sockopt));
   }
 #endif

@@ -957,6 +957,7 @@ static int checkURLsecurity(char *url) {
 	 (strcmp(token , "txt") == 0) ||
 	 (strcmp(token , "jpg") == 0) ||
 	 (strcmp(token , "png") == 0) ||
+	 (strcmp(token , "cgi") == 0) || (strcmp(token , "pl") == 0) ||
 	 (strcmp(token , "gif") == 0) ||
 	 (strcmp(token , "css") == 0) ) {
 	countOKextension++;
@@ -1046,10 +1047,16 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
      We need to check whether the URL is invalid, i.e. it contains '..' or
      similar chars that can be used for reading system files
   */
-  if((rc = checkURLsecurity(pageName)) != 0) {
-    traceEvent(TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)", pageName, rc);
-    returnHTTPaccessForbidden();
-    return(HTTP_FORBIDDEN_PAGE);
+#ifdef  USE_CGI
+  if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER))) 
+#endif
+  {
+    /* This is not a CGI */
+    if((rc = checkURLsecurity(pageName)) != 0) {
+      traceEvent(TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)", pageName, rc);
+      returnHTTPaccessForbidden();
+      return(HTTP_FORBIDDEN_PAGE);
+    }
   }
 
   /* traceEvent(TRACE_INFO, "Page: '%s'\n", pageName); */
@@ -1171,23 +1178,14 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 
     fclose(fd);
     /* closeNwSocket(&myGlobals.newSock); */
-    return (0);
+    return(0);
   }
-
-#ifndef WIN32
-#ifdef  USE_CGI
-  if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
-    execCGI(&pageName[strlen(CGI_HEADER)]);
-    return (0);
-  }
-#endif /* USE_CGI */
-#endif
 
   if(strncmp(pageName, PLUGINS_HEADER, strlen(PLUGINS_HEADER)) == 0) {
     if(handlePluginHTTPRequest(&pageName[strlen(PLUGINS_HEADER)])) {
-      return (0);
+      return(0);
     } else {
-      return (HTTP_INVALID_PAGE);
+      return(HTTP_INVALID_PAGE);
     }
   }
 
@@ -1318,6 +1316,16 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     }
 #endif
 
+#ifndef WIN32
+#ifdef  USE_CGI
+    if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
+      sendString("HTTP/1.0 200 OK\n");
+      execCGI(&pageName[strlen(CGI_HEADER)]);
+      return(0);
+    }
+#endif /* USE_CGI */
+#endif
+    
     if(strcmp(pageName, STR_INDEX_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_BODY);
