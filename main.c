@@ -320,7 +320,6 @@ static void usage (FILE * fp) {
   fprintf(fp, "    [-M <don't merge network interfaces (see man page)>]\n");
   fprintf(fp, "    [-N <don't use nmap if installed>]\n");
   fprintf(fp, "    [-P <path for db-files>]\n");
-  fprintf(fp, "    [-R <matching rules file>]\n");
   fprintf(fp, "    [-S <store mode> (store persistently host stats)]\n");
   fprintf(fp, "    [-U <mapper.pl URL> | \"\" for not displaying host location]\n");
 
@@ -348,9 +347,9 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:A:B:D:F:MP:R:S:U:VW:12";
+  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:A:B:D:F:MP:S:U:VW:12";
 #else
-  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:A:B:D:EF:IKLMNP:R:S:U:VW:12";
+  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:A:B:D:EF:IKLMNP:S:U:VW:12";
 #endif
   int opt;
 
