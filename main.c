@@ -1144,14 +1144,12 @@ int main(int argc, char *argv[]) {
     for (i=0; i<myGlobals.numDevices; i++) {
       char tmpBuf[64];
 
-      if(i>0) {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
-	  BufferTooShort();
-      } else {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
-	  BufferTooShort();
-      }
-
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "%s%s", 
+                  (i>0) ? "," : "",
+                  (myGlobals.device[i].humanFriendlyName != NULL) ?
+                      myGlobals.device[i].humanFriendlyName :
+                      myGlobals.device[i].name)  < 0)
+        BufferTooShort();
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
     }
   }

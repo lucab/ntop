@@ -1313,9 +1313,9 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	    continue; /* No virtual Interfaces */
 	 myGlobals.device[myGlobals.numDevices].virtualDevice = 1;
 	 myGlobals.device[myGlobals.numDevices].activeDevice = 1;
-	 myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(deviceDescr);
-	  myGlobals.device[myGlobals.numDevices++].name = strdup(deviceName);
-	  traceEvent(CONST_TRACE_INFO, "Added virtual interface: '%s' [%s]", tmpDeviceName, deviceDescr);
+	 myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(tmpDeviceName);
+	  myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDeviceName);
+	  traceEvent(CONST_TRACE_INFO, "Added virtual interface: '%s'", tmpDeviceName);
 	} else
 	  break; /* No virtual interface */
       }
@@ -1444,30 +1444,53 @@ void initDevices(char* devices) {
   } else {
     /* User has specified devices in the parameter list */
     char *workDevices = strdup(devices), *strtokState;
+    int warnedVirtual = 0;
 
     tmpDev = strtok_r(workDevices, ",", &strtokState);
 
     while(tmpDev != NULL) {
 #ifndef WIN32
       char *nwInterface;
+      int intfc, found=0;
       deviceSanityCheck(tmpDev); /* These checks do not apply to Win32 */
+
+      traceEvent(CONST_TRACE_NOISY, "Checking requested device '%s'", tmpDev);
 
       if((nwInterface = strchr(tmpDev, ':')) != NULL) {
  	/* This is a virtual nwInterface */
- 	int intfc, found=0;
+        char *requestedDev;
+
+        /* Copy (unaltered) for traceEvent() messages */
+        requestedDev = strdup(tmpDev);
+
+        if(!warnedVirtual) {
+          warnedVirtual = 1;
+          traceEvent(CONST_TRACE_WARNING, "Virtual device(s), e.g. %s, specified on -i | --interface parameter are ignored", tmpDev);
+        }
 
  	nwInterface[0] = 0;
+        /* tmpDev is now just the base name */
 
- 	for(intfc=0; intfc<myGlobals.numDevices; intfc++)
+ 	for(intfc=0; intfc<myGlobals.numDevices; intfc++) {
  	  if(myGlobals.device[intfc].name && (strcmp(myGlobals.device[intfc].name, tmpDev) == 0)) {
  	    found = 1;
+            traceEvent(CONST_TRACE_INFO, 
+                       "NOTE: Virual device '%s' is already implied from a prior base device",
+                       requestedDev);
  	    break;
  	  }
+ 	}
 
  	if(found) {
  	  tmpDev = strtok_r(NULL, ",", &strtokState);
+          free(requestedDev);
  	  continue;
  	}
+
+        traceEvent(CONST_TRACE_INFO, "Using base device %s in place of requested %s", 
+                   tmpDev, requestedDev);
+
+        free(requestedDev);
       }
 #else /* WIN32 */
 
@@ -1485,7 +1508,19 @@ void initDevices(char* devices) {
 	  }
 #endif
 
-      addDevice(tmpDev, tmpDescr == NULL ? tmpDev : tmpDescr);
+      for(intfc=0; intfc<myGlobals.numDevices; intfc++) {
+        if(myGlobals.device[intfc].name && (strcmp(myGlobals.device[intfc].name, tmpDev) == 0)) {
+          found = 1;
+          break;
+        }
+      }
+
+      if(found)
+        traceEvent(CONST_TRACE_WARNING,
+                   "Device '%s' is already specified/implied - ignoring it", tmpDev);
+      else 
+        addDevice(tmpDev, tmpDescr == NULL ? tmpDev : tmpDescr);
+
       tmpDev = strtok_r(NULL, ",", &strtokState);
     } /* while */
 
