@@ -123,8 +123,9 @@ static void allocateOtherHosts() {
   myGlobals.otherHostEntry->hostIp4Address.s_addr = 0x00112233;
   strncpy(myGlobals.otherHostEntry->hostNumIpAddress, "&nbsp;",
 	  sizeof(myGlobals.otherHostEntry->hostNumIpAddress));
-  strncpy(myGlobals.otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
-	  sizeof(myGlobals.otherHostEntry->hostSymIpAddress));
+  strncpy(myGlobals.otherHostEntry->hostResolvedName, "Remaining Host(s)",
+	  sizeof(myGlobals.otherHostEntry->hostResolvedName));
+  myGlobals.otherHostEntry->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
   strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
   myGlobals.otherHostEntry->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*),
 							     MAX_ASSIGNED_IP_PORTS);
@@ -478,8 +479,9 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.broadcastEntry->hostIp4Address.s_addr = 0xFFFFFFFF;
   strncpy(myGlobals.broadcastEntry->hostNumIpAddress, "broadcast",
 	  sizeof(myGlobals.broadcastEntry->hostNumIpAddress));
-  strncpy(myGlobals.broadcastEntry->hostSymIpAddress, myGlobals.broadcastEntry->hostNumIpAddress,
+  strncpy(myGlobals.broadcastEntry->hostResolvedName, myGlobals.broadcastEntry->hostNumIpAddress,
 	  sizeof(myGlobals.broadcastEntry->hostNumIpAddress));
+  myGlobals.broadcastEntry->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
   strcpy(myGlobals.broadcastEntry->ethAddressString, "FF:FF:FF:FF:FF:FF");
   FD_SET(FLAG_SUBNET_LOCALHOST, &myGlobals.broadcastEntry->flags);
   FD_SET(FLAG_BROADCAST_HOST, &myGlobals.broadcastEntry->flags);

@@ -192,7 +192,7 @@ static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
   switch(lang) {
   case FLAG_PERL_LANGUAGE:
   case FLAG_PHP_LANGUAGE:
-    /* In the case of hostNumIpAddress and hostSymIpAddress,
+    /* In the case of hostNumIpAddress and hostResolvedName,
        the pointer is not null, but the string is empty.
        In that case, don't create the key in the array.
     */
@@ -562,7 +562,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
     releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
-    strncpy(workSymIpAddress, el->hostSymIpAddress, MAX_LEN_SYM_HOST_NAME_HTML);
+    strncpy(workSymIpAddress, el->hostResolvedName, MAX_LEN_SYM_HOST_NAME_HTML);
     if ((angleLocation = strchr(workSymIpAddress, '<')) != NULL) {
       angleLocation[0] = '\0';
     }
@@ -607,8 +607,8 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	wrtStrItm(fDescr, lang, "\t", "hostNumIpAddress", el->hostNumIpAddress, ',', numEntries);
     }
 
-    if(checkFilter(filter, "hostSymIpAddress"))
-      wrtStrItm(fDescr, lang, "\t", "hostSymIpAddress", workSymIpAddress, ',', numEntries);
+    if(checkFilter(filter, "hostResolvedName"))
+      wrtStrItm(fDescr, lang, "\t", "hostResolvedName", workSymIpAddress, ',', numEntries);
 
     if(!shortView) {
       if(checkFilter(filter, "firstSeen"))

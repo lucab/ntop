@@ -305,8 +305,8 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
 static void dumpFragmentData(IpFragment *fragment) {
   printf("FRAGMENT_DEBUG: IPFragment: (%p)\n", fragment);
   printf("                            %s:%d->%s:%d\n",
-         fragment->src->hostSymIpAddress, fragment->sport,
-         fragment->dest->hostSymIpAddress, fragment->dport);
+         fragment->src->hostResolvedName, fragment->sport,
+         fragment->dest->hostResolvedName, fragment->dport);
   printf("                            FragmentId=%d\n", fragment->fragmentId);
   printf("                            lastOffset=%d, totalPacketLength=%d\n",
          fragment->lastOffset, fragment->totalPacketLength);
@@ -370,8 +370,8 @@ static void checkFragmentOverlap(HostTraffic *srcHost,
       char buf[LEN_GENERAL_WORK_BUFFER];
       snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Detected overlapping packet fragment [%s->%s]: "
                "fragment id=%d, actual offset=%d, previous offset=%d\n",
-               fragment->src->hostSymIpAddress,
-               fragment->dest->hostSymIpAddress,
+               fragment->src->hostResolvedName,
+               fragment->dest->hostResolvedName,
                fragment->fragmentId, fragmentOffset,
                fragment->lastOffset);
 
@@ -517,12 +517,12 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",
-	       srcHost->ethAddressString, srcHost->hostNumIpAddress, srcHost->hostSymIpAddress,
-	       dstHost->ethAddressString, dstHost->hostNumIpAddress, dstHost->hostSymIpAddress,
+	       srcHost->ethAddressString, srcHost->hostNumIpAddress, srcHost->hostResolvedName,
+	       dstHost->ethAddressString, dstHost->hostNumIpAddress, dstHost->hostResolvedName,
 	       routerIdx,
 	       router->ethAddressString,
 	       router->hostNumIpAddress,
-	       router->hostSymIpAddress);
+	       router->hostResolvedName);
 
 #endif
     FD_SET(FLAG_GATEWAY_HOST, &router->flags);
@@ -624,7 +624,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "%s->%s",
-	       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+	       srcHost->hostResolvedName, dstHost->hostResolvedName);
 #endif
     if(srcHost != myGlobals.otherHostEntry) {
       incrementTrafficCounter(&srcHost->pktMulticastSent, numPkts);
@@ -647,8 +647,9 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 void updateHostName(HostTraffic *el) {
 
   if((el->hostNumIpAddress[0] == '\0')
-     || (el->hostSymIpAddress == NULL)
-     || strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
+     || (el->hostResolvedName == NULL)
+     || (el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)
+     || strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0) {
     int i;
 
     if(el->nonIPTraffic == NULL) el->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
@@ -658,16 +659,17 @@ void updateHostName(HostTraffic *el) {
 	Use NetBIOS name (when available) if the
 	IP address has not been resolved.
       */
-      memset(el->hostSymIpAddress, 0, sizeof(el->hostSymIpAddress));
-      strcpy(el->hostSymIpAddress, el->nonIPTraffic->nbHostName);
-    } else if(el->nonIPTraffic->ipxHostName != NULL)
-      strcpy(el->hostSymIpAddress, el->nonIPTraffic->ipxHostName);
-    else if(el->nonIPTraffic->atNodeName != NULL)
-      strcpy(el->hostSymIpAddress, el->nonIPTraffic->atNodeName);
+      memset(el->hostResolvedName, 0, sizeof(el->hostResolvedName));
+      setResolvedName(el, el->nonIPTraffic->nbHostName, FLAG_HOST_SYM_ADDR_TYPE_NETBIOS);
+    } else if(el->nonIPTraffic->ipxHostName != NULL) {
+      setResolvedName(el, el->nonIPTraffic->ipxHostName, FLAG_HOST_SYM_ADDR_TYPE_IPX);
+    } else if(el->nonIPTraffic->atNodeName != NULL) {
+      setResolvedName(el, el->nonIPTraffic->atNodeName, FLAG_HOST_SYM_ADDR_TYPE_ATALK);
+    }
 
-    if(el->hostSymIpAddress[0] != '\0')
-      for(i=0; el->hostSymIpAddress[i] != '\0'; i++)
-	el->hostSymIpAddress[i] = (char)tolower(el->hostSymIpAddress[i]);
+    if(el->hostResolvedName[0] != '\0')
+      for(i=0; el->hostResolvedName[i] != '\0'; i++)
+	el->hostResolvedName[i] = (char)tolower(el->hostResolvedName[i]);
   }
 }
 
@@ -1160,8 +1162,8 @@ static void processIpPkt(const u_char *bp,
     if(tcpUdpLen < sizeof(struct tcphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING, "Malformed TCP pkt %s->%s detected (packet too short)",
-		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress);
+		   srcHost->hostResolvedName,
+		   dstHost->hostResolvedName);
 	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
@@ -1405,8 +1407,8 @@ static void processIpPkt(const u_char *bp,
     if(tcpUdpLen < sizeof(struct udphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING, "Malformed UDP pkt %s->%s detected (packet too short)",
-		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress);
+		   srcHost->hostResolvedName,
+		   dstHost->hostResolvedName);
 	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
@@ -1435,8 +1437,8 @@ static void processIpPkt(const u_char *bp,
 
 #ifdef DNS_SNIFF_DEBUG
 	    traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: %s:%d->%s:%d [request: %d][positive reply: %d]",
-		       srcHost->hostSymIpAddress, sport,
-		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostResolvedName, sport,
+		       dstHost->hostResolvedName, dport,
 		       isRequest, positiveReply);
 #endif
 
@@ -1650,8 +1652,8 @@ static void processIpPkt(const u_char *bp,
     if(tcpUdpLen < sizeof(struct icmp)) {
       if(myGlobals.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING, "Malformed ICMP pkt %s->%s detected (packet too short)",
-		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress);
+		   srcHost->hostResolvedName,
+		   dstHost->hostResolvedName);
 	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
@@ -1677,7 +1679,7 @@ static void processIpPkt(const u_char *bp,
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.icmpFragment, 1);
 	if(myGlobals.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, fmt,
-		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+		     srcHost->hostResolvedName, dstHost->hostResolvedName);
 	  dumpSuspiciousPacket(actualDeviceId);
 	}
       }
@@ -1736,7 +1738,7 @@ static void processIpPkt(const u_char *bp,
 
 	    traceEvent(CONST_TRACE_INFO, "Detected ICMP msg [type=%s/code=%d] %s->%s",
 		       mapIcmpType(icmpPkt.icmp_type), icmpPkt.icmp_code,
-		       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+		       srcHost->hostResolvedName, dstHost->hostResolvedName);
 	  }
 	}
       }
@@ -1758,7 +1760,7 @@ static void processIpPkt(const u_char *bp,
 	 && (icmpPkt.icmp_type == ICMP_ECHO)
 	 && (broadcastHost(dstHost) || multicastHost(dstHost))) {
 	traceEvent(CONST_TRACE_WARNING, "Smurf packet detected for host [%s->%s]",
-		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+		   srcHost->hostResolvedName, dstHost->hostResolvedName);
       } else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
 	struct ip *oip = &icmpPkt.icmp_ip;
 
@@ -1771,7 +1773,7 @@ static void processIpPkt(const u_char *bp,
 	    if(myGlobals.enableSuspiciousPacketDump)
 	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
-			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+			 dstHost->hostResolvedName, srcHost->hostResolvedName, dport);
 	    /* Simulation of rejected TCP connection */
 	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	    incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnSent, dstHost, actualDeviceId);
@@ -1783,7 +1785,7 @@ static void processIpPkt(const u_char *bp,
 	    if(myGlobals.enableSuspiciousPacketDump)
 	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
-			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+			 dstHost->hostResolvedName, srcHost->hostResolvedName, dport);
 	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	    incrementUsageCounter(&dstHost->secHostPkts->udpToClosedPortSent, srcHost, actualDeviceId);
 	    incrementUsageCounter(&srcHost->secHostPkts->udpToClosedPortRcvd, dstHost, actualDeviceId);
@@ -1809,8 +1811,8 @@ static void processIpPkt(const u_char *bp,
 	    traceEvent(CONST_TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
 		       "Host [%s] rcvd a ICMP protocol Unreachable from host [%s]"
 		       " (Firewalking scan attempt?)",
-		       dstHost->hostSymIpAddress,
-		       srcHost->hostSymIpAddress);
+		       dstHost->hostResolvedName,
+		       srcHost->hostResolvedName);
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	  incrementUsageCounter(&srcHost->secHostPkts->icmpProtocolUnreachSent, dstHost, actualDeviceId);
 	  incrementUsageCounter(&dstHost->secHostPkts->icmpProtocolUnreachRcvd, srcHost, actualDeviceId);
@@ -1822,7 +1824,7 @@ static void processIpPkt(const u_char *bp,
 	    traceEvent(CONST_TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
 		       "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
 		       " (Firewalking scan attempt?)",
-		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
+		       dstHost->hostResolvedName, srcHost->hostResolvedName);
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	  incrementUsageCounter(&srcHost->secHostPkts->icmpAdminProhibitedSent, dstHost, actualDeviceId);
 	  incrementUsageCounter(&dstHost->secHostPkts->icmpAdminProhibitedRcvd, srcHost, actualDeviceId);
@@ -1840,8 +1842,8 @@ static void processIpPkt(const u_char *bp,
     if(ip6 == NULL) {
       if(myGlobals.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING,"Protocol violation: ICMPv6 protocol in IPv4 packet: %s->%s",
-		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress);
+		   srcHost->hostResolvedName,
+		   dstHost->hostResolvedName);
 	dumpSuspiciousPacket(actualDeviceId);
       }
       goto end;
@@ -1852,8 +1854,8 @@ static void processIpPkt(const u_char *bp,
     if(icmp6len < sizeof(struct icmp6_hdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING, "Malformed ICMPv6 pkt %s->%s detected (packet too short)",
-		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress);
+		   srcHost->hostResolvedName,
+		   dstHost->hostResolvedName);
 	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
@@ -1876,7 +1878,7 @@ static void processIpPkt(const u_char *bp,
 	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHost, actualDeviceId);
 	if(myGlobals.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, fmt,
-		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+		     srcHost->hostResolvedName, dstHost->hostResolvedName);
 	  dumpSuspiciousPacket(actualDeviceId);
 	}
       }
@@ -1947,7 +1949,7 @@ static void processIpPkt(const u_char *bp,
 	    if(myGlobals.enableSuspiciousPacketDump)
 	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
-			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+			 dstHost->hostResolvedName, srcHost->hostResolvedName, dport);
 	    /* Simulation of rejected TCP connection */
 	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	    incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnSent, dstHost, actualDeviceId);
@@ -1958,7 +1960,7 @@ static void processIpPkt(const u_char *bp,
 	    if(myGlobals.enableSuspiciousPacketDump)
 	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
-			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+			 dstHost->hostResolvedName, srcHost->hostResolvedName, dport);
 	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	    incrementUsageCounter(&dstHost->secHostPkts->udpToClosedPortSent, srcHost, actualDeviceId);
 	    incrementUsageCounter(&srcHost->secHostPkts->udpToClosedPortRcvd, dstHost, actualDeviceId);
@@ -1981,7 +1983,7 @@ static void processIpPkt(const u_char *bp,
 	    traceEvent(CONST_TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
 		       "Host [%s] sent ICMPv6 Administratively Prohibited packet to host [%s]"
 		       " (Firewalking scan attempt?)",
-		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
+		       dstHost->hostResolvedName, srcHost->hostResolvedName);
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	  incrementUsageCounter(&srcHost->secHostPkts->icmpAdminProhibitedSent, dstHost, actualDeviceId);
 	  incrementUsageCounter(&dstHost->secHostPkts->icmpAdminProhibitedRcvd, srcHost, actualDeviceId);

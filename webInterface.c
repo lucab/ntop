@@ -336,146 +336,180 @@ static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag,
                    char *buf, int bufLen) {
-  char symIp[256], *tmpStr, linkName[256], flag[256], colorSpec[64];
-  char *dynIp, *p2p, osBuf[128];
-  char *multihomed, *gwStr, *brStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr, *httpStr, *ntpStr;
-  short specialMacAddress = 0;
+  char symIp[256], linkName[256], flag[256], colorSpec[64];
+  char osBuf[128], titleBuf[256], noteBuf[256];
+  char *dhcpBootpStr, *p2pStr, *multihomedStr, *gwStr, *brStr, *dnsStr, *printStr,
+       *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr;
   short usedEthAddress=0;
   int i;
 
   if(el == NULL)
     return("&nbsp;");
 
-  if(broadcastHost(el)
-     || (addrnull(&el->hostIpAddress) && (el->ethAddressString[0] == '\0'))) {
-    FD_SET(FLAG_BROADCAST_HOST, &el->flags); /* Just to be safe */
-    if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
-      return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
-    else
-      return("&lt;broadcast&gt;");
-  }
+  memset(&symIp, 0, sizeof(symIp));
+  memset(&linkName, 0, sizeof(linkName));
+  memset(&flag, 0, sizeof(flag));
+  memset(&colorSpec, 0, sizeof(colorSpec));
+  memset(&osBuf, 0, sizeof(osBuf));
+  memset(&titleBuf, 0, sizeof(titleBuf));
+  memset(&noteBuf, 0, sizeof(noteBuf));
 
-  setHostFingerprint(el);
+  /* Critical - for sorting order - that this routine respect hostResolvedName
+   *
+   * Remember - if this is being referenced in a fork()ed child, i.e as part of
+   *            most reports on most systems, then setting flags in here is a waste.
+   *
+   *            Further, the more of that you do, the more likely that ntop will
+   *            function differently if -K | --debug is set, or in single threaded
+   *            mode or under gdb (debugger)!
+   */
 
-  accessAddrResMutex("makeHostLink");
-
-  if((el == myGlobals.otherHostEntry)
-     || (cmpSerial(&el->hostSerial, &myGlobals.otherHostEntry->hostSerial))) {
+  if(el->hostResolvedNameType < FLAG_HOST_SYM_ADDR_TYPE_NONE) {
+    /* <NONE is FAKE and (maybe) others we probably should NOT really be reporting on */
     char *fmt;
+    char commentBuf[64];
+    memset(&commentBuf, 0, sizeof(commentBuf));
 
     if(mode == FLAG_HOSTLINK_HTML_FORMAT)
-      fmt = "<TH "TH_BG" ALIGN=LEFT>%s</TH>";
+      fmt = "<TH "TH_BG" ALIGN=LEFT>%s%s</TH>";
     else
-      fmt = "%s";
+      fmt = "%s%s";
 
-    if(snprintf(buf, bufLen, fmt, el->hostSymIpAddress) < 0)
-      BufferTooShort();
+    if(broadcastHost(el)) {
+      if(snprintf(buf, bufLen, fmt, "", "broadcast") < 0)
+        BufferTooShort();
+    } else if(el == myGlobals.otherHostEntry) {
+      if(snprintf(buf, bufLen, fmt, "", el->hostResolvedName) < 0)
+        BufferTooShort();
+    } else {
+      if(snprintf(commentBuf, sizeof(commentBuf),
+                  "<!-- unknown %d lt NONE -->", el->hostResolvedNameType) < 0)
+        BufferTooShort();
+      if(snprintf(buf, bufLen, fmt, commentBuf, el->hostResolvedName) < 0)
+        BufferTooShort();
+    }
 
-    releaseAddrResMutex();
     return(buf);
   }
+ 
+  accessAddrResMutex("makeHostLink");
 
-  tmpStr = el->hostSymIpAddress;
+  if(el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE) {
+    /* It's not officially known, so let's do what we can
+     */
+    if(addrnull(&el->hostIpAddress) && (el->ethAddressString[0] == '\0')) {
+      FD_SET(FLAG_BROADCAST_HOST, &el->flags); /* Just to be safe */
+      releaseAddrResMutex();
+      if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
+        return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
+      else
+        return("&lt;broadcast&gt;");
+    }
+    if(cmpSerial(&el->hostSerial, &myGlobals.otherHostEntry->hostSerial)) {
+      releaseAddrResMutex();
+      if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
+        return("<TH "TH_BG" ALIGN=LEFT>&lt;other&gt;<!-- cmpSerial() match --></TH>");
+      else
+        return("&lt;other&gt;<!-- cmpSerial() match -->");
+    }
 
-  if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
-    /* The DNS is still getting the entry name */
-    if(el->hostNumIpAddress[0] != '\0')
+    /* User other names if we have them, but follow (High->Low) the numerical
+     * sequence of FLAG_HOST_SYM_ADDR_TYPE_xxx so it still sorts right
+     */ 
+    if(el->hostNumIpAddress[0] != '\0') {
+      /* We have the IP, so the DNS is probably still getting the entry name */
       strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
-    else {
+    } else if(el->ethAddressString[0] != '\0') {
+      /* Use the MAC address */
       strncpy(symIp, el->ethAddressString, sizeof(symIp));
       usedEthAddress = 1;
-    }
-  } else if(tmpStr[0] != '\0') {
-    snprintf(symIp, sizeof(symIp), "%s", tmpStr);
-    if(tmpStr[strlen(tmpStr)-1] == ']') /* "... [MAC]" */ {
-      usedEthAddress = 1;
-      specialMacAddress = 1;
-    } else {
-      if(cutName && (symIp[0] != '*')
-	 && strcmp(symIp, el->hostNumIpAddress)) {
-	for(i=0; symIp[i] != '\0'; i++)
-	  if(symIp[i] == '.') {
-	    symIp[i] = '\0';
-	    break;
-	  }
-      }
-    }
-  } else {
-    strncpy(symIp, el->ethAddressString, sizeof(symIp));
-    usedEthAddress = 1;
-  }
-
-  releaseAddrResMutex();
-
-  if(specialMacAddress) {
-    tmpStr = el->ethAddressString;
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "->'%s/%s'", symIp, el->ethAddressString);
-#endif
-  } else {
-    if(usedEthAddress) {
-      if(el->nonIPTraffic) {
-	if(el->nonIPTraffic->nbHostName != NULL) {
-	  strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(symIp));
-	} else if(el->nonIPTraffic->ipxHostName != NULL) {
-	  strncpy(symIp, el->nonIPTraffic->ipxHostName, sizeof(symIp));
-	}
-      }
-    }
-
-    if(el->hostNumIpAddress[0] != '\0') {
-      tmpStr = el->hostNumIpAddress;
-    } else {
-      tmpStr = el->ethAddressString;
-      /* tmpStr = symIp; */
-    }
-  }
-
-  strncpy(linkName, tmpStr, sizeof(linkName));
-
-  if(usedEthAddress) {
-    char *vendorInfo;
-
-    if(el->nonIPTraffic) {    
+    } else if(el->hostNumFcAddress[0] != '\0') {
+      strncpy(symIp, el->hostNumFcAddress, sizeof(symIp));
+    } else if(el->nonIPTraffic) {    
       if(el->nonIPTraffic->nbHostName != NULL) {
-	strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(linkName));
+        strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(symIp));
+        snprintf(noteBuf, sizeof(noteBuf), " [NetBIOS]%s", noteBuf);
       } else if(el->nonIPTraffic->ipxHostName != NULL) {
-	strncpy(symIp, el->nonIPTraffic->ipxHostName, sizeof(linkName));
-      } else {
-	vendorInfo = getVendorInfo(el->ethAddress, 0);
-	if(vendorInfo[0] != '\0') {
-	  snprintf(symIp, sizeof(symIp), "%s%s", vendorInfo, &linkName[8]);
-	}
+        strncpy(symIp, el->nonIPTraffic->ipxHostName, sizeof(symIp));
+        snprintf(noteBuf, sizeof(noteBuf), " [IPX]%s", noteBuf);
+      } else if(el->nonIPTraffic->atNodeName != NULL) {
+        strncpy(symIp, el->nonIPTraffic->atNodeName, sizeof(symIp));
+        snprintf(noteBuf, sizeof(noteBuf), " [Appletalk]%s", noteBuf);
       }
-    }    
+    } else {
+      releaseAddrResMutex();
+      if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
+        return("<TH "TH_BG" ALIGN=LEFT>&lt;unknown&gt;</TH>");
+      else
+        return("&lt;unknown&gt;");
+    }
 
-    /* Ethernet address is used */
-    if(symIp[2] == ':') {
-      char *symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));  
-	  if((symEthName != NULL) && (symEthName[0] != '\0'))
-		snprintf(symIp, sizeof(symIp), "%s%s", symEthName, &el->ethAddressString[8]);
-	  else
-		snprintf(symIp, sizeof(symIp), "%s", el->ethAddressString);
+  } else {
+    /* Got it? Use it! */
+    strncpy(symIp, el->hostResolvedName, sizeof(symIp));
+#ifdef DEBUG_CMPFCTN
+    snprintf(noteBuf, sizeof(noteBuf), "%s<!-- NONE:hRN(%d) -->",
+             noteBuf, el->hostResolvedNameType);
+#endif
+
+    if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME) &&
+       (el->ethAddressString[0] != '\0')) {
+      strncpy(linkName, addrtostr(&(el->hostIpAddress)), sizeof(linkName));
+    }
+    if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_MAC) && 
+       (symIp[2] != ':') &&
+       (el->ethAddressString[0] != '\0')) {
+      /* MAC address, one which has already been fixed up with the vendor string -
+         set the alt tag */
+      snprintf(titleBuf, sizeof(titleBuf), "%s Actual MAC address is %s",
+               titleBuf, el->ethAddressString);
+      /* Un 'fix' the linkName so it goes back to the native page */
+      strncpy(linkName, el->ethAddressString, sizeof(linkName));
     }
   }
 
+  /* We know this is wasted effort if this is a fork()ed child,
+   * so that routine will not do the update */
+  setHostFingerprint(el);
+
+  /* From here on, we focus on setting a bunch of flags and add-ons to the
+   * output (graphics, etc.) for the ultimate building of buf.
+   *
+   *  These are:
+   *
+   *     linkName - what do we link to
+   *     usedEthAddress - meaning it's a MAC address, show the NIC icon
+   *     symIp - what do we call it
+   *     dhcpBootpStr, multihomedStr, gwStr, brStr, dnsStr, printStr, 
+   *       smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr -- these are all the addons
+   */
+
+  if(symIp[strlen(symIp)-1] == ']') /* "... [MAC]" */ {
+    usedEthAddress = 1;
+    strncpy(symIp, el->ethAddressString, sizeof(symIp));
+    snprintf(noteBuf, sizeof(noteBuf), "%s<!-- [MAC] -->", noteBuf);
+  }
+
+  /* Do we add a 2nd column for the flag??? */
   if(addCountryFlag == 0)
     flag[0] = '\0';
   else {
-    if(snprintf(flag, sizeof(flag), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", getHostCountryIconURL(el)) < 0)
+    if(snprintf(flag, sizeof(flag), "<td "TD_BG" align=\"center\">%s</td>",
+                getHostCountryIconURL(el)) < 0)
       BufferTooShort();
   }
 
+  /* Set all the addon Str's */
   if(isDHCPClient(el))
-    dynIp = "&nbsp;" CONST_IMG_DHCP_CLIENT "&nbsp;";
+    dhcpBootpStr = "&nbsp;" CONST_IMG_DHCP_CLIENT "&nbsp;";
   else {
     if(isDHCPServer(el))
-      dynIp = "&nbsp;" CONST_IMG_DHCP_SERVER "&nbsp;";
+      dhcpBootpStr = "&nbsp;" CONST_IMG_DHCP_SERVER "&nbsp;";
     else
-      dynIp = "";
+      dhcpBootpStr = "";
   }
 
-  if(isMultihomed(el))     multihomed = "&nbsp;" CONST_IMG_MULTIHOMED ; else multihomed = "";
+  if(isMultihomed(el))     multihomedStr = "&nbsp;" CONST_IMG_MULTIHOMED ; else multihomedStr = "";
   if(isBridgeHost(el))     brStr = "&nbsp;" CONST_IMG_BRIDGE ; else brStr = "";
   if(gatewayHost(el))      gwStr = "&nbsp;" CONST_IMG_ROUTER ; else gwStr = "";
   if(nameServerHost(el))   dnsStr = "&nbsp;" CONST_IMG_DNS_SERVER ; else dnsStr = "";
@@ -485,25 +519,44 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(isNtpServer(el))      ntpStr = "&nbsp;" CONST_IMG_NTP_SERVER ; else ntpStr = "";
   if(el->protocolInfo != NULL) {
     if(el->protocolInfo->userList != NULL) userStr = "&nbsp;" CONST_IMG_HAS_USERS ; else userStr = "";
-    if(isP2P(el)) p2p = "&nbsp;" CONST_IMG_HAS_P2P ; else p2p = "";
+    if(isP2P(el)) p2pStr = "&nbsp;" CONST_IMG_HAS_P2P ; else p2pStr = "";
   } else {
     userStr = "";
-    p2p = "";
+    p2pStr = "";
   }
 
   switch(isHostHealthy(el)) {
-  case 0: /* OK */
-    healthStr = "";
-    break;
-  case 1: /* Minor */
-    healthStr = CONST_IMG_LOW_RISK;
-    break;
-  case 2: /* Warning */
-    healthStr = CONST_IMG_MEDIUM_RISK;
-    break;
-  case 3: /* Error */
-    healthStr = CONST_IMG_HIGH_RISK;
-    break;
+    case 1: /* Minor */
+      healthStr = CONST_IMG_LOW_RISK;
+      break;
+    case 2: /* Warning */
+      healthStr = CONST_IMG_MEDIUM_RISK;
+      break;
+    case 3: /* Error */
+      healthStr = CONST_IMG_HIGH_RISK;
+      break;
+    default: /* OK, bad call */
+      healthStr = "";
+      break;
+  }
+
+  releaseAddrResMutex();
+
+  /* Flag set? Cutoff name at 1st . */
+  if(cutName &&
+     (symIp[0] != '*') &&
+     strcmp(symIp, el->hostNumIpAddress)) {
+    for(i=0; symIp[i] != '\0'; i++)
+      if(symIp[i] == '.') {
+        symIp[i] = '\0';
+        break;
+      }
+  }
+
+  /* If we haven't previously set linkName as part of an un-fixup, save off 
+   * symIP - before the remaining 'fixups' as the linkname */
+  if(linkName[0] == '\0') {
+    strncpy(linkName, symIp, sizeof(linkName));
   }
 
   /* Fixup ethernet addresses for RFC1945 compliance (: is bad, _ is good) */
@@ -511,26 +564,52 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(linkName[i] == ':')
       linkName[i] = '_';
 
-  if(symIp[2] == ':')
-    usedEthAddress = 1;
+  /* Fixup display MAC address for vendor */
+  if(usedEthAddress) {
+    char *vendorInfo;
 
+    vendorInfo = getVendorInfo(el->ethAddress, 0);
+    if(vendorInfo[0] != '\0') {
+      snprintf(symIp, sizeof(symIp), "%s%s", vendorInfo, &el->ethAddressString[8]);
+      snprintf(titleBuf, sizeof(titleBuf), "%s Actual MAC address is %s",
+               titleBuf, el->ethAddressString);
+    }
+  }    
+
+  /* An Ethernet address is used - is it Special? */
+  if(symIp[2] == ':') {
+    char *symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));  
+    if((symEthName != NULL) && (symEthName[0] != '\0'))
+      snprintf(symIp, sizeof(symIp), "%s%s", symEthName, &el->ethAddressString[8]);
+    usedEthAddress = 1;
+  }
+
+  /* Make the hostlink */
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
-    if(snprintf(buf, bufLen, "<TH "TH_BG" ALIGN=LEFT NOWRAP WIDTH=250>"
-		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s%s%s%s%s</TH>%s",
-		linkName, "", symIp, 
-		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)), dynIp, multihomed, 
+    if(snprintf(buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
+		"<a href=\"/%s.html\" %s%s%s>%s%s</a>\n"
+                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>\n",
+                linkName, 
+                titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
+                symIp, 
+		noteBuf,
+		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)),
+                dhcpBootpStr, multihomedStr, 
 		usedEthAddress ? CONST_IMG_NIC_CARD : "", 
-		gwStr, brStr, dnsStr, printStr, smtpStr, httpStr,
-		ntpStr, healthStr, userStr, p2p, flag) < 0)
+		gwStr, brStr, dnsStr, 
+                printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf, bufLen, "<A HREF=\"/%s.html\" %s NOWRAP WIDTH=250>%s</A>"
-		"%s%s%s%s%s%s%s%s%s%s%s%s%s",
-		linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), symIp, 
-		multihomed, 
-		usedEthAddress ? CONST_IMG_NIC_CARD : "", gwStr, dnsStr,
-		printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2p,
-		dynIp, flag) < 0)
+    if(snprintf(buf, bufLen, "<a href=\"/%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
+                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+                linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), 
+                titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
+                symIp, 
+		noteBuf,
+		dhcpBootpStr, multihomedStr, 
+		usedEthAddress ? CONST_IMG_NIC_CARD : "",
+		gwStr, brStr, dnsStr, 
+		printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag) < 0)
       BufferTooShort();    
   }
 
@@ -546,12 +625,12 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
     return("broadcast");
 
   accessAddrResMutex("getHostName");
-  tmpStr = el->hostSymIpAddress;
+  tmpStr = el->hostResolvedName;
 
   if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
       if (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
-          if (el->hostSymFcAddress[0] != '\0') {
-              strncpy (buf, el->hostSymFcAddress, MAX_LEN_SYM_HOST_NAME);
+          if (el->hostResolvedName[0] != '\0') {
+              setResolvedName(el, buf, FLAG_HOST_SYM_ADDR_TYPE_FC);
           }
           else if (el->pWWN.str[0] != 0) {
               snprintf (buf, sizeof(buf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
@@ -576,7 +655,7 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
           strcpy (buf, "broadcast");
       }
       else {
-          tmpStr = el->hostSymIpAddress;
+          tmpStr = el->hostResolvedName;
 
           if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
               /* The DNS is still getting the entry name */
@@ -8233,8 +8312,9 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
         }
         else {
             /* Introduce maybe a picture or string based on HBA's vendor */
-            if (el->hostSymFcAddress[0] != '\0') {
-                tmpStr = el->hostSymFcAddress;
+            if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC) &&
+               (el->hostResolvedName[0] != '\0')) {
+                tmpStr = el->hostResolvedName;
             }
             else if (el->pWWN.str[0] != '\0') {
                 if (!compactWWN) {
@@ -8260,8 +8340,9 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
     }
     else {
         if (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
-            if (el->hostSymFcAddress[0] != '\0') {
-                tmpStr = el->hostSymFcAddress;
+            if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC) &&
+               (el->hostResolvedName[0] != '\0')) {
+                tmpStr = el->hostResolvedName;
             }
             else if (el->pWWN.str[0] != '\0') {
                 if (!compactWWN) {

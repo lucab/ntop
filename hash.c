@@ -221,7 +221,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 
       if(host->numHostSessions > 0) {
           traceEvent(CONST_TRACE_ERROR, "====> Host %/%s has %d sessions still to be purged",
-                     host->hostNumIpAddress, host->hostSymIpAddress, host->numHostSessions);
+                     host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
       }
   }
   else {
@@ -274,7 +274,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 
       if(host->numHostSessions > 0) {
           traceEvent(CONST_TRACE_ERROR, "====> Host %/%s has %d sessions still to be purged",
-                     host->hostNumIpAddress, host->hostSymIpAddress, host->numHostSessions);
+                     host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
       }
   }
 }
@@ -313,7 +313,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
 #if 0
   traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleting a hash_hostTraffic entry [%s/%s/%s][idx=%d]",
-	     host->ethAddressString, host->hostNumIpAddress, host->hostSymIpAddress, host->hostTrafficBucket);
+	     host->ethAddressString, host->hostNumIpAddress, host->hostResolvedName, host->hostTrafficBucket);
 #endif
 
   if(deleteAddressFromCache) {
@@ -337,7 +337,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
       
 #ifdef DNS_DEBUG
       traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleting from GDBM address cache host [%s/%s]",
-		 host->hostNumIpAddress, host->hostSymIpAddress);
+		 host->hostNumIpAddress, host->hostResolvedName);
 #endif
     }
   }
@@ -741,7 +741,7 @@ void purgeIdleHosts(int actDevice) {
   for(idx=0; idx<numHosts; idx++) {
 #ifdef IDLE_PURGE_DEBUG
     traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Purging host %d [last seen=%d]... %s",
-	       idx, theFlaggedHosts[idx]->lastSeen, theFlaggedHosts[idx]->hostSymIpAddress);
+	       idx, theFlaggedHosts[idx]->lastSeen, theFlaggedHosts[idx]->hostResolvedName);
 #endif
     freeHostInfo(theFlaggedHosts[idx], actDevice);
     numFreedBuckets++;
@@ -824,11 +824,18 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
   u_char setSpoofingFlag = 0;
   u_short numRuns=0;
   u_int hostFound = 0;
+  u_int updateIPinfo = 0;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
     traceEvent(CONST_TRACE_WARNING, "Both Ethernet and IP addresses are NULL");
     return(NULL);
   }
+
+#ifdef DEBUG_CMPFCTN
+traceEvent(CONST_TRACE_INFO, "DEBUG_CMPFCTN: lookupHost(%s, %s, m%u, f%u, dev%d)", addrtostr(hostIpAddress),
+        etheraddr_string(ether_addr, buf),
+        checkForMultihoming, forceUsingIPaddress, actualDeviceId);
+#endif
 
 #ifdef HASH_DEBUG
   hashSanityCheck();
@@ -838,6 +845,11 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 		 &useIPAddressForSearching,
 		 &el, actualDeviceId);
 
+  /* Remember the side effect of above routine - if -o | --no-mac is set,\
+   * useIPAddressForSearching is now 1
+   */
+
+  /* If we found it or had an error */
   if(el != NULL)
     return(el); /* Found */
   else if(idx == FLAG_NO_PEER)
@@ -858,7 +870,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
     }
 
     if(useIPAddressForSearching == 0) {
-      /* compare with the ethernet-address */
+      /* compare with the ethernet-address then the IP address */
       if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
 	if((hostIpAddress != NULL) && 
 	   (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
@@ -869,31 +881,20 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	       && (addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
 	      isMultihomed = 1;
 	      FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
-	    }
-
-	    if(el->hostNumIpAddress[0] == '\0') {
-	      /* This entry didn't have IP fields set: let's set them now */
-	      addrcpy(&el->hostIpAddress, hostIpAddress);
-	      strncpy(el->hostNumIpAddress,
-		      _addrtostr(hostIpAddress, buf, sizeof(buf)),
-		      sizeof(el->hostNumIpAddress));
-
-	      if(myGlobals.numericFlag == 0)
-		ipaddr2str(el->hostIpAddress, 1);
-
-	      /* else el->hostSymIpAddress = el->hostNumIpAddress;
-		 The line below isn't necessary because (**) has
-		 already set the pointer */
-	      if(isBroadcastAddress(&el->hostIpAddress))
-		FD_SET(FLAG_BROADCAST_HOST, &el->flags);
-	    }
+	    } else {
+              updateIPinfo = 1;
+            }
 	  }
 	  hostFound = 1;
 	  break;	
-	}else if(hostIpAddress == NULL){  /* Mac Addresses */
+	} else if(hostIpAddress == NULL){  /* Only Mac Addresses */
 	  hostFound = 1;
 	  break;
-	}
+	} else { /* MAC match found and we have the IP - need to update... */
+          updateIPinfo = 1;
+	  hostFound = 1;
+	  break;
+        }
       } else if((hostIpAddress != NULL)
 		&& (addrcmp(&el->hostIpAddress, hostIpAddress) == 0)) {
 	/* Spoofing or duplicated MAC address:
@@ -921,6 +922,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	break;
       }
     } else {
+      /* -o | --no-mac (or netFlow, which doesn't have MACs) - compare with only the IP address */
       if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
 	hostFound = 1;
 	break;
@@ -934,7 +936,25 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
   if(numRuns > myGlobals.device[actualDeviceId].hashListMaxLookups)
     myGlobals.device[actualDeviceId].hashListMaxLookups = numRuns ;
 
-  if(!hostFound) {
+  if(hostFound) {
+    /* Existing host entry */
+    if((updateIPinfo == 1) &&
+       (el->hostNumIpAddress[0] == '\0')) {
+      /* This entry didn't have IP fields set: let's set them now */
+      addrcpy(&el->hostIpAddress, hostIpAddress);
+      strncpy(el->hostNumIpAddress,
+              _addrtostr(hostIpAddress, buf, sizeof(buf)),
+              sizeof(el->hostNumIpAddress));
+      setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
+  
+      if(myGlobals.numericFlag == 0)
+        ipaddr2str(el->hostIpAddress, 1);
+
+      if(isBroadcastAddress(&el->hostIpAddress))
+        FD_SET(FLAG_BROADCAST_HOST, &el->flags);
+    }
+
+  } else {
     /* New host entry */
     int len;
 
@@ -1061,7 +1081,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	strncpy(el->hostNumIpAddress,
 		_addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 		strlen(el->hostNumIpAddress));
-	strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
+        setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
 
 	if((!addrnull(&el->hostIpAddress)) /* 0.0.0.0 */
 	   && (!addrfull(&el->hostIpAddress)) /* 255.255.255.255 */
@@ -1085,10 +1105,10 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 
 	/*
 	  if((strcmp(etheraddr_string(ether_addr, etherbuf), "08:00:20:89:79:D7") == 0)
-	  || (strcmp(el->hostSymIpAddress, "more") == 0))
+	  || (strcmp(el->hostResolvedName, "more") == 0))
 	*/
 	printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d][idx=%d]\n",
-	       etheraddr_string(ether_addr, etherbuf), el->hostSymIpAddress,
+	       etheraddr_string(ether_addr, etherbuf), el->hostResolvedName,
 	       el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno, idx);
       }
 #endif
@@ -1116,25 +1136,28 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
       /* Trick to fill up the address cache */
       if(myGlobals.numericFlag == 0)
 	ipaddr2str(el->hostIpAddress, 1);
-      else
-	strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
+      else {
+        setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
+      }
     } else {
-      /* el->hostNumIpAddress == "" */
+      /* This is a new entry and hostIpAddress was NOT set.  Fill in MAC address, if we have it */
       if(symEthName[0] != '\0') {
+        /* This is a local address so we have the MAC address */
 	if(snprintf(buf, sizeof(buf), "%s%s", symEthName, &el->ethAddressString[8]) < 0)
 	  BufferTooShort();
 
 	buf[MAX_LEN_SYM_HOST_NAME-1] = '\0';
-	strncpy(el->hostSymIpAddress, buf, MAX_LEN_SYM_HOST_NAME-1);
-      } else
-	snprintf(el->hostSymIpAddress, sizeof(el->hostSymIpAddress), "%s", el->hostNumIpAddress);
+        setResolvedName(el, buf, FLAG_HOST_SYM_ADDR_TYPE_MAC);
+      }
     }
 
 #ifdef HASH_DEBUG
     if(0) {
+#endif
       traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]",
 		 el->ethAddressString, el->hostNumIpAddress, idx, actualDeviceId,
 		 myGlobals.device[actualDeviceId].actualHashSize, myGlobals.device[actualDeviceId].hostsno);
+#ifdef HASH_DEBUG
     }
 #endif
     setHostSerial(el);
@@ -1153,7 +1176,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 	traceEvent(CONST_TRACE_INFO, "lookupHost(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]",
 		   idx, actualDeviceId,
-		   etheraddr_string(ether_addr, etherbuf), el->hostSymIpAddress,
+		   etheraddr_string(ether_addr, etherbuf), el->hostResolvedName,
 		   el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,
 		   useIPAddressForSearching);
       }
@@ -1161,8 +1184,10 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 #endif
   }
 
+#ifdef DEBUG
   if(el == NULL)
     traceEvent(CONST_TRACE_INFO, "lookupHost(idx=%d) is NULL", idx);
+#endif
 
 #ifdef HASH_DEBUG
   hashSanityCheck();
@@ -1278,11 +1303,10 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
              hostFcAddress->area, hostFcAddress->port);
     /* TBD: Resolve FC_ID to WWN */
     el->vsanId = vsanId;
-    el->hostSymFcAddress[0] = '\0';
 
     /* If there is a cache entry, use it */
     if((fcnsEntry = findFcHostNSCacheEntry (&el->hostFcAddress, vsanId)) != NULL) {
-        strncpy (el->hostSymFcAddress, fcnsEntry->alias, MAX_LEN_SYM_HOST_NAME);
+        setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC);
         memcpy (el->pWWN.str, fcnsEntry->pWWN.str, LEN_WWN_ADDRESS);
         memcpy (el->nWWN.str, fcnsEntry->nWWN.str, LEN_WWN_ADDRESS);
     }

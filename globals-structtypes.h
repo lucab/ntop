@@ -514,6 +514,7 @@ typedef struct fileList {
 typedef struct storedAddress {
   char   symAddress[MAX_LEN_SYM_HOST_NAME];
   time_t recordCreationTime;
+  short  symAddressType;
 } StoredAddress;
 
 typedef struct macInfo {
@@ -720,7 +721,8 @@ typedef struct hostTraffic {
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
   char             hostNumIpAddress[47], *fullDomainName;
-  char             *dotDomainName, hostSymIpAddress[MAX_LEN_SYM_HOST_NAME], *fingerprint;
+  char             *dotDomainName, hostResolvedName[MAX_LEN_SYM_HOST_NAME], *fingerprint;
+  short            hostResolvedNameType;
   u_short          dotDomainNameIsFallback;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
@@ -728,7 +730,7 @@ typedef struct hostTraffic {
     /* FC-Specific stuff */
   FcAddress        hostFcAddress;
   short            vsanId;           /* VLAN Id (0 if not set) */
-  char             hostNumFcAddress[LEN_FC_ADDRESS_DISPLAY], hostSymFcAddress[MAX_LEN_SYM_HOST_NAME];
+  char             hostNumFcAddress[LEN_FC_ADDRESS_DISPLAY];
 
   NonIPTraffic     *nonIPTraffic;
   NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */

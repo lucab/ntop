@@ -1130,6 +1130,7 @@
 #define CONST_HOST_HTML                     "host.html"
 #define CONST_BAR_HOST_DISTANCE             "hostsDistanceChart"
 #define CONST_HOSTS_INFO_HTML               "hostsInfo.html"
+#define CONST_HOST_SORT_NOTE_HTML           "hostSortNote.html"
 #define CONST_INDEX_HTML                    "index.html"
 #define CONST_INFO_NTOP_HTML                "info.html"
 #define CONST_PIE_INTERFACE_DIST            "interfaceTrafficPie"
@@ -1244,7 +1245,7 @@
 #define MAX_NUM_DHCP_MSG                    8
 
 /*
- * Symbolic host buffer name length (hostSymIpAddress, symAddress, etc.)
+ * Symbolic host buffer name length (hostResolvedName, symAddress, etc.)
  * MAX_LEN_SYM_HOST_NAME_HTML is the fully tricked out html version (emitter.c and hash.c)
  */
 #define MAX_LEN_SYM_HOST_NAME               64
@@ -1789,6 +1790,38 @@
  */
 #define FLAG_HOST_TRAFFIC_AF_ETH            0
 #define FLAG_HOST_TRAFFIC_AF_FC             1
+
+/*
+ * Settings for hostResolvedNameType
+ *
+ *   The relative order is important for makeHostLink()
+ *       Items we know definitively should be negative
+ *       NONE should be zero
+ *       'fake' entries > zero
+ *
+ *   So the Type starts as NONE, and if it's still that, makeHostLink()
+ *   can try other sources in the tables to find the 'name'.
+ *
+ *   If we know, explicitly, the type of an item then hostResolvedNameType
+ *   becomes <0  and makeHostLink() must respect it.
+ *
+ *   Items for which we shouldn't create a host entry are <NONE, i.e. FAKE.
+ */
+#define FLAG_HOST_SYM_ADDR_TYPE_FAKE        -9
+#define FLAG_HOST_SYM_ADDR_TYPE_NONE        0
+#define FLAG_HOST_SYM_ADDR_TYPE_ATALK       1
+#define FLAG_HOST_SYM_ADDR_TYPE_IPX         2
+#define FLAG_HOST_SYM_ADDR_TYPE_NETBIOS     3
+#define FLAG_HOST_SYM_ADDR_TYPE_FC          4
+#define FLAG_HOST_SYM_ADDR_TYPE_MAC         5
+#define FLAG_HOST_SYM_ADDR_TYPE_IP          6
+#define FLAG_HOST_SYM_ADDR_TYPE_NAME        7
+
+/*
+ * The header line
+ */
+#define CONST_ABOUT_SORTING_THIS_COL       "&nbsp;&nbsp;<sup>" \
+      "<a href=\"" CONST_HOST_SORT_NOTE_HTML "\">about sorting this column</a></sup>"
 
 /*
  * SSLWATCHDOG stuff

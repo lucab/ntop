@@ -1933,7 +1933,9 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
+		  "<TH "TH_BG">%s1\">Host%s</A>"
+                  CONST_ABOUT_SORTING_THIS_COL
+                  "</TH>\n"
 		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		  "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		  "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
@@ -1960,7 +1962,9 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	BufferTooShort();
     } else {
       if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG">%s1>Host%s</A></TH>\n"
+		  "<TH "TH_BG">%s1>Host%s</A>"
+                  CONST_ABOUT_SORTING_THIS_COL
+                  "</TH>\n"
 		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		  "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		  "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
@@ -2019,17 +2023,17 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 #ifdef DEBUG
 	  traceEvent(CONST_TRACE_INFO, "%s <=> %s [%s/%s]",
 		     el->hostNumIpAddress, sniffedName,
-		     el->hostSymIpAddress, el->hostNumIpAddress);
+		     el->hostResolvedName, el->hostNumIpAddress);
 #endif
 
-	  if((el->hostSymIpAddress[0] == '\0') || strcmp(sniffedName, el->hostSymIpAddress)) {
-	    if((el->hostSymIpAddress[0] == '\0')
-	       || (strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0)) {
+	  if((el->hostResolvedName[0] == '\0') || strcmp(sniffedName, el->hostResolvedName)) {
+	    if((el->hostResolvedName[0] == '\0')
+	       || (strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0)) {
 	      if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
 		sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
 
 	      for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
-	      strcpy(el->hostSymIpAddress, sniffedName);
+              setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_NAME);
 	    } else
 	      displaySniffedName=1;
 	  }
@@ -2773,7 +2777,9 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     sendString("<CENTER>\n");
     if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n"
 		"<TR "TR_ON" "DARK_BG"><TH "TH_BG">"
-		"%s1>Host%s</A></TH>"
+		"%s1>Host%s</A>"
+                CONST_ABOUT_SORTING_THIS_COL
+                "</TH>"
 		"<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
 		"<TH "TH_BG" COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
 		"<TH "TH_BG" COLSPAN=2>%s4>Data&nbsp;Rcvd%s</A></TH></TR>\n",
@@ -4252,9 +4258,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
       */
       return(strcasecmp(a->domainHost->fullDomainName, b->domainHost->fullDomainName));
     } else {
-      accessAddrResMutex("fillDomainName");
-      rc = strcasecmp(a->domainHost->hostSymIpAddress, b->domainHost->hostSymIpAddress);
-      releaseAddrResMutex();
+      rc = cmpFctnResolvedName(a->domainHost, b->domainHost);
     }
 
     return(rc);
@@ -4325,7 +4329,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     if((el->fullDomainName == NULL)
        || (el->fullDomainName[0] == '\0')
        || (el->dotDomainName == NULL)
-       || (el->hostSymIpAddress[0] == '\0')
+       || (el->hostResolvedName[0] == '\0')
        || (el->dotDomainName == '\0')
        || broadcastHost(el)
        ) {
@@ -4474,10 +4478,10 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 
       accessAddrResMutex("getHostIcon");
 
-      blankId = strlen(statsEntry->domainHost->hostSymIpAddress)-
+      blankId = strlen(statsEntry->domainHost->hostResolvedName)-
 	strlen(statsEntry->domainHost->fullDomainName)-1;
 
-      strncpy(tmpBuf, statsEntry->domainHost->hostSymIpAddress, sizeof(tmpBuf));
+      strncpy(tmpBuf, statsEntry->domainHost->hostResolvedName, sizeof(tmpBuf));
 
       releaseAddrResMutex();
 
@@ -4780,8 +4784,12 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
       AS Data Sent/Rcvd patch courtesy of Marco Sanson <marco.sanson@infvic.it>
     */
 
-    if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s</A></TH><TH "TH_BG">Hosts</TH><TH "TH_BG">Data Sent</TH><TH "TH_BG">Data Rcvd</TH></TR>",
+    if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
+                "<TR "TR_ON" "DARK_BG">"
+		"<TH "TH_BG">%s</A></TH>\n"
+                "<TH "TH_BG">Hosts</TH>\n"
+                "<TH "TH_BG">Data Sent</TH>\n"
+                "<TH "TH_BG">Data Rcvd</TH></TR>\n",
 		criteria == 0 ? "AS" : "VLAN") < 0)
       BufferTooShort();
     sendString(buf);
@@ -4791,51 +4799,71 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
     for(i=0; i<numEntries; i++) {
       el = tmpTable[numEntries-i-1];
 
-      if(((criteria == 0) && (lastId != el->hostAS))
-	 || ((criteria == 1) && (lastId != el->vlanId))) {
-	if(i > 0) {
-	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf))
-		      , formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1))) < 0)
-	    BufferTooShort();
+      if(((criteria == 0) && (lastId == el->hostAS)) ||
+	 ((criteria == 1) && (lastId == el->vlanId))) {
+        /* Same AS or VLAN as last entry... just continue it */
+        sendString("\n<br>");
+      } else {
+        /* New AS or VLAN */
 
+        if(i>0) {
+          /* Finish prior row */
+	  if(snprintf(buf, sizeof(buf),
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n"
+                      "</TR>\n",
+		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
+		      formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1))) < 0)
+	    BufferTooShort();
 	  sendString(buf);
-	  sendString("</TR>");
-	  dataSent = dataRcvd = 0;
-	}
+        }
+
+        /* Start new row */
+	dataSent = dataRcvd = 0;
+
+        sendString("<TR "TR_ON">\n");
 
 	if(criteria == 0 /* AS */) {
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT "DARK_BG">"
+          lastId = el->hostAS;
+	  if(snprintf(buf, sizeof(buf),
+                      "<TH "TH_BG" ALIGN=RIGHT "DARK_BG">"
                       "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" alt=\"Lookup ASN (offsite)\">%d</a>"
-		      "</TH><TH "TH_BG" ALIGN=LEFT>", el->hostAS, el->hostAS) < 0)
+		      "</TH>\n",
+                      el->hostAS, el->hostAS) < 0)
 	    BufferTooShort();
 	} else {
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT>%d</TH><TH "TH_BG" ALIGN=LEFT>",
+          lastId = el->vlanId;
+	  if(snprintf(buf, sizeof(buf),
+                      "<TH "TH_BG" ALIGN=RIGHT>%d</TH>\n",
 		      el->vlanId) < 0)
 	    BufferTooShort();
 	}
+        sendString(buf);
 
-	dataSent += el->bytesSent.value;
-	dataRcvd += el->bytesRcvd.value;
-	
-	sendString(buf);
-	lastId = el->hostAS;
+        sendString("<TH "TH_BG" ALIGN=LEFT>");
+
       }
 
       sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, 
-			      hostLinkBuf, sizeof(hostLinkBuf)));
-      sendString("<br>\n");
+                              hostLinkBuf, sizeof(hostLinkBuf)));
+
+      dataSent += el->bytesSent.value;
+      dataRcvd += el->bytesRcvd.value;
+    }
+	
+    if(i>0) {
+      sendString("</TH>\n");
+
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n"
+                  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+                  formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
+                  formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1))) < 0)
+        BufferTooShort();
+      sendString(buf);
     }
 
-    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
-		formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1))) < 0)
-      BufferTooShort();
-    
-    sendString(buf);
     sendString("</TR>\n</TABLE>\n</CENTER>");
+
   } else {
     printFlagedWarning("<I>No entries to display(yet)</I>");
   }
@@ -5418,7 +5446,9 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     if (snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                  "<TH "TH_BG" "DARK_BG">%s3>VSAN%s</A></TH>"
-                 "<TH "TH_BG" "DARK_BG">%s1>FC_Port%s</A></TH>"
+                 "<TH "TH_BG" "DARK_BG">%s1>FC_Port%s</A>"
+                 CONST_ABOUT_SORTING_THIS_COL
+                 "</TH>"
                  "</TH><TH "TH_BG" "DARK_BG">%s2>FC&nbsp;Address%s</A></TH>\n"
                  "<TH "TH_BG" "DARK_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
                  "<TH "TH_BG" "DARK_BG">Nw&nbsp;Board&nbsp;Vendor</TH>"
@@ -5457,7 +5487,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 #ifdef FC_DEBUG
             traceEvent(CONST_TRACE_INFO, "FC_DEBUG: %s <=> %s [%s/%s]",
                        el->hostNumIpAddress, sniffedName,
-                       el->hostSymIpAddress, el->hostNumIpAddress);
+                       el->hostResolvedName, el->hostNumIpAddress);
 #endif
     
             if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor()) < 0)
@@ -5592,7 +5622,9 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
     sendString("<CENTER>\n");
     if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                 "<TH "TH_BG" "DARK_BG">%s5\">VSAN%s</a></TH>"
-                "<TH "TH_BG" "DARK_BG">%s1\">FC_Port%s</a></TH>"
+                "<TH "TH_BG" "DARK_BG">%s1\">FC_Port%s</a>"
+                CONST_ABOUT_SORTING_THIS_COL
+                "</TH>"
                 "<TH "TH_BG" "DARK_BG">%s2\">FC_ID%s</a></TH>\n"
                 "<TH "TH_BG" COLSPAN=2 "DARK_BG">%s3\">Bytes&nbsp;Sent%s</a></TH>"
                 "<TH "TH_BG" COLSPAN=2 "DARK_BG">%s4\">Bytes&nbsp;Rcvd%s</a></TH></TR>\n",

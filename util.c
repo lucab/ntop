@@ -2321,7 +2321,8 @@ void resetHostsVariables(HostTraffic* el) {
   el->fullDomainName = NULL;
   if (el->dotDomainName != NULL)       free(el->dotDomainName);
   el->dotDomainName = NULL;
-  el->hostSymIpAddress[0] = '\0';
+  el->hostResolvedName[0] = '\0';
+  el->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_NONE;
   if (el->fingerprint != NULL)         free(el->fingerprint);
   el->fingerprint = NULL;
   if (el->nonIPTraffic != NULL)        free(el->nonIPTraffic);
@@ -2338,7 +2339,6 @@ void resetHostsVariables(HostTraffic* el) {
   el->protocolInfo = NULL;
 
   el->vsanId = -1;
-  el->hostSymFcAddress[0] = '\0';
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
@@ -2901,8 +2901,8 @@ void fillDomainName(HostTraffic *el) {
 
   if(theDomainHasBeenComputed(el))
     return;
-  if((el->hostSymIpAddress    == NULL)
-     || (el->hostSymIpAddress[0] == '\0')) {
+  if((el->hostResolvedName    == NULL)
+     || (el->hostResolvedName[0] == '\0')) {
     el->fullDomainName = strdup("");
     return;
   }
@@ -2922,10 +2922,10 @@ void fillDomainName(HostTraffic *el) {
     el->dotDomainName = strdup(ip2cc);
   }
 
-  if((el->hostSymIpAddress[0] == '*')
+  if((el->hostResolvedName[0] == '*')
      || (el->hostNumIpAddress[0] == '\0')
-     || (isdigit(el->hostSymIpAddress[strlen(el->hostSymIpAddress)-1]) &&
-	 isdigit(el->hostSymIpAddress[0]))) {
+     || (isdigit(el->hostResolvedName[strlen(el->hostResolvedName)-1]) &&
+	 isdigit(el->hostResolvedName[0]))) {
     /* NOTE: theDomainHasBeenComputed(el) = 0 */
     el->fullDomainName = strdup("");
     releaseAddrResMutex();
@@ -2935,35 +2935,35 @@ void fillDomainName(HostTraffic *el) {
   FD_SET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &el->flags);
 
 
-  i = strlen(el->hostSymIpAddress)-1;
+  i = strlen(el->hostResolvedName)-1;
 
   while(i > 0)
-    if(el->hostSymIpAddress[i] == '.')
+    if(el->hostResolvedName[i] == '.')
       break;
     else
       i--;
 
   if((i > 0)
-     && strcmp(el->hostSymIpAddress, el->hostNumIpAddress)
-     && (strlen(el->hostSymIpAddress) > (i+1)))
+     && strcmp(el->hostResolvedName, el->hostNumIpAddress)
+     && (strlen(el->hostResolvedName) > (i+1)))
     ;
   else {
     /* Let's use the local domain name */
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: '%s' [%s/%s]",
-	       el->hostSymIpAddress, myGlobals.domainName, myGlobals.shortDomainName);
+	       el->hostResolvedName, myGlobals.domainName, myGlobals.shortDomainName);
 #endif
     if((myGlobals.domainName[0] != '\0')
-       && (strcmp(el->hostSymIpAddress, el->hostNumIpAddress))) {
-      int len  = strlen(el->hostSymIpAddress);
+       && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
+      int len  = strlen(el->hostResolvedName);
       int len1 = strlen(myGlobals.domainName);
 
       /* traceEvent(CONST_TRACE_INFO, "%s [%s]",
-	 el->hostSymIpAddress, &el->hostSymIpAddress[len-len1]); */
+	 el->hostResolvedName, &el->hostResolvedName[len-len1]); */
 
       if((len > len1)
-	 && (strcmp(&el->hostSymIpAddress[len-len1-1], myGlobals.domainName) == 0))
-	el->hostSymIpAddress[len-len1-1] = '\0';
+	 && (strcmp(&el->hostResolvedName[len-len1-1], myGlobals.domainName) == 0))
+	el->hostResolvedName[len-len1-1] = '\0';
 
       el->fullDomainName = strdup(myGlobals.domainName);
     } else {
@@ -2974,19 +2974,19 @@ void fillDomainName(HostTraffic *el) {
     return;
   }
 
-  for(i=0; el->hostSymIpAddress[i] != '\0'; i++)
-    el->hostSymIpAddress[i] = tolower(el->hostSymIpAddress[i]);
+  for(i=0; el->hostResolvedName[i] != '\0'; i++)
+    el->hostResolvedName[i] = tolower(el->hostResolvedName[i]);
 
   i = 0;
-  while(el->hostSymIpAddress[i] != '\0')
-    if(el->hostSymIpAddress[i] == '.')
+  while(el->hostResolvedName[i] != '\0')
+    if(el->hostResolvedName[i] == '.')
       break;
     else
       i++;
 
-  if((el->hostSymIpAddress[i] == '.')
-     && (strlen(el->hostSymIpAddress) > (i+1)))
-    el->fullDomainName = strdup(&el->hostSymIpAddress[i+1]);
+  if((el->hostResolvedName[i] == '.')
+     && (strlen(el->hostResolvedName) > (i+1)))
+    el->fullDomainName = strdup(&el->hostResolvedName[i+1]);
   else
     el->fullDomainName = strdup("");
 
@@ -3056,11 +3056,11 @@ void setNBnodeNameType(HostTraffic *theHost, char nodeType,
 	theHost->nonIPTraffic->nbHostName = strdup(nbName);
 	updateHostName(theHost);
 
-	if(theHost->hostSymIpAddress[0] == '\0') {
+	if(theHost->hostResolvedName[0] == '\0') {
 	  int i;
 
 	  for(i=0; i<strlen(nbName); i++) if(isupper(nbName[i])) tolower(nbName[i]);
-	  strcpy(theHost->hostSymIpAddress, nbName); /* See up (**) */
+          setResolvedName(theHost, nbName, FLAG_HOST_SYM_ADDR_TYPE_NETBIOS);
 	}
 
 #ifdef DEBUG
@@ -5542,6 +5542,8 @@ FILE* checkForInputFile(char* logTag,
   int configFileFound=FALSE, idx;
   char tmpFile[LEN_GENERAL_WORK_BUFFER];
   FILE* fd;
+  struct tm t;
+  char bufTime[LEN_TIMEFORMAT_BUFFER], bufTime2[LEN_TIMEFORMAT_BUFFER];
 
   /*
    * This is a common routine to look for a data file, compressed or not,
@@ -5651,4 +5653,262 @@ void urlFixupToRFC1945Inplace(char* url) {
       url[i] = '_';
 
 }
- 
+
+/* ********************************************* */
+
+void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char* file, int line) {
+
+#ifdef DEBUG_CMPFCTN
+  traceEvent(CONST_TRACE_INFO, "DEBUG_CMPFCTN: setResolvedName(0x%08x) %d %s -> %d %s - %s(%d)", 
+             el,
+             el->hostResolvedNameType,
+             el->hostResolvedName,
+             updateType,
+             updateValue,
+             file, line);
+#endif
+
+  /* Only update if this is a MORE important type */
+  if(updateType > el->hostResolvedNameType) {
+    strncpy(el->hostResolvedName, updateValue, MAX_LEN_SYM_HOST_NAME-1);
+    el->hostResolvedNameType = updateType;
+  }
+}
+
+/* ********************************************* */
+/* ********************************************* */
+/*       hostResolvedName compare function       */
+/* ********************************************* */
+
+int cmpFctnResolvedName(const void *_a, const void *_b) {
+
+/* This function is ugly, but critical, so bare with...
+
+    It takes two HostTraffic entries and performs a standardized compare
+    of the hostResolvedName fields, reaching into OTHER fields as necessary.
+
+    The SOLE goal is to provide a stable comparison.
+
+    Hopefully the results are PREDICTABLE and EXPLAINABLE, but that's totally
+    secondary.
+
+    Why?  Because sorts don't handle non-transitive compares very well.
+
+    If  A>B but B !< A, the sort will probably CHOKE.
+
+    Since the hostResolvedName field contains something like six or nine
+    possible types of 'names' for a host, a simple alphabetic compare
+    won't cut it.  Especially as hostResolvedName may not be valued
+    at the time of the compare...
+
+    We also can't simply just use the next valued field in the
+    sets, because we run the risk of intransitive compares,
+    where
+
+                    primary(a) > primary(b)
+
+            but
+
+                    secondary(a) < secondary(b)
+
+    and if we have say primary for a and c, but not b, risk that
+    just because a<b and b<c a !< c... this completely hoses the
+    sort.
+
+
+    So instead in this routine, we practice a gracefull, explicit fallback:
+
+    1. If the HostTraffic pointers are NULL, we return equality.
+
+       1A. If one of the HostTraffic pointers is NULL, we return THAT entry as <
+
+    2. If both of the hostResolvedName fields are NOT NULL,
+       and both of the hostResolvedNameType fields are NONE, we:
+
+       2A. Check the hostResolvedNameType fields for both A and B.
+
+           2A1. If they are identical, we perform the approprate 
+                apples to apples compare.  
+
+                    For example using hostNumIpAddress for a meaningful
+                    IP address sort (where 9.0.0.0 < 10.0.0.0).
+
+           2A2. If the hostResolvedNameType fields are NOT identical, we 
+                do the sort on the hostResolvedNameType field itself.
+
+
+             2A1+2A2 means that we sort all of the NAMES alphabetically, 
+             followed by all of the IP addresses sorted NUMERICALLY, followed by...
+
+    3A. If precisely ONE of the hostResolvedName fields is NULL or precisely ONE
+        of the hostResolvedNameType fields is NONE, we return the
+        valued field < the unvalued one (so unresolved things fall to the
+        end of the sort).
+
+    3B. If both of the hostResolvedName fields are NULL, we fall back
+       gracefully, seeking - in the order of the _TYPE flags, a field which
+       is valued in BOTH a and b.
+
+    4. Finally if nothing matches, we return a=b.
+
+   */
+
+    HostTraffic **a = (HostTraffic **)_a;
+    HostTraffic **b = (HostTraffic **)_b;
+    int rc;
+    char *name1, *name2;
+
+    /* 1, 1A */
+    if((a == NULL) && (b == NULL)) {
+      return(0);
+    } else if(a == NULL) {
+      return(-1);
+    } else if(b == NULL) {
+      return(1);
+    }
+
+    if((*a == NULL) && (*b == NULL)) {
+      return(0);
+    } else if(*a == NULL) {
+      return(-1);
+    } else if(*b == NULL) {
+      return(1);
+    }
+
+    accessAddrResMutex("cmpFctnResolvedName");
+
+    if(((*a)->hostResolvedName != NULL) &&
+       ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
+       ((*b)->hostResolvedName != NULL) &&
+       ((*b)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
+
+#ifdef DEBUG_CMPFCTN
+      traceEvent(CONST_TRACE_INFO, "DEBUG_CMPFCTN: cmpFctn(0x%08x, 0x%08x): %d %s vs %d %s",
+                 (*a),
+                 (*b),
+                 (*a)->hostResolvedNameType,
+                 (*a)->hostResolvedName,
+                 (*b)->hostResolvedNameType,
+                 (*b)->hostResolvedName);
+#endif
+
+      /* 2 - valid hostResolvedName */
+      if((*a)->hostResolvedNameType == (*b)->hostResolvedNameType) {
+          /* 2A1 */
+
+             /* Remember, order of the cases is important don't change
+              * But also remember, we're comparing only the values of the 
+              * same type stored in hostResolvedName so MOST can be 
+              * a straight string compare.
+              */
+
+          if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME) {
+              name1 = (*a)->hostResolvedName;
+              name2 = (*b)->hostResolvedName;
+              rc = strcasecmp(name1, name2);
+          } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_IP) {
+              rc = addrcmp(&((*a)->hostIpAddress), &((*b)->hostIpAddress));
+          } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_MAC) {
+              /*
+               * Remember - the MAC value in hostResolvedName, is proabably the 
+               * translated MAC, e.g. 3COM CORPORATION:E2:DB:06 and not the
+               * 48bit value.  But, if we don't recognize the vendor, then it's the
+               * 17 character form (xx:xx:xx:xx:xx:xx).  The special case is to
+               * sort xx: form AFTER the recognized ones.
+               * We use strncasecmp so 3Com and 3COM sort together
+               */
+              name1 = (*a)->hostResolvedName;
+              name2 = (*b)->hostResolvedName;
+              if(((name1[2] == ':') && (name2[2] != ':')) ||
+                 ((name1[2] != ':') && (name2[2] == ':'))) {
+                /* One : one recognized */
+                if(name1[2] == ':')
+                  rc=1; /* name1 (unrecognized) > name2 (recognized) */
+                else
+                  rc=-1;  /* name1 (recognized) > name2 (unrecognized) */
+              } else {
+                rc = strcasecmp(name1, name2);
+              }
+          } else if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC) &&
+                    ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FAKE)) {
+            /* For most of the rest of the tests, we just compare the names we 
+             * have - since they're always the same type, a strncasecmp test 
+             * IS meaningful.
+             */
+            name1 = (*a)->hostResolvedName;
+            name2 = (*b)->hostResolvedName;
+            rc = strcasecmp(name1, name2);
+          } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC) {
+            name1 = (*a)->hostResolvedName;
+            name2 = (*b)->hostResolvedName;
+            rc = strcasecmp(name1, name2);
+          } else { /* FAKE */
+            name1 = (*a)->hostResolvedName;
+            name2 = (*b)->hostResolvedName;
+            rc = strcasecmp(name1, name2);
+          }
+      } else {
+          /* 2A2 - unequal types, so just compare the Type field */
+          if((*a)->hostResolvedNameType < (*b)->hostResolvedNameType)
+            rc = -1;
+          else
+            rc = 1;
+      }
+    } else {
+      /* If only one is not NULL/NONE, so let's do 3A */
+      if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
+         ((*b)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
+        /* a not NULL so return a<b */
+        rc = -1;
+      } else if(((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
+                ((*b)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
+        /* b not NULL so return a>b */
+        rc = 1;
+      } else {
+        /* 3B - hostResolvedName not set - graceful fallback using the raw fields! */
+        char nullEthAddress[LEN_ETHERNET_ADDRESS];
+        memset(&nullEthAddress, 0, LEN_ETHERNET_ADDRESS);
+
+        /* Do we have a non 0.0.0.0 IP?  Yes: Compare it */
+        if(!addrnull(&(*a)->hostIpAddress) && 
+           !addrnull(&(*b)->hostIpAddress)) {
+          rc = addrcmp(&((*a)->hostIpAddress), &((*b)->hostIpAddress));
+
+        } else if((memcmp((*a)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0) && 
+                  (memcmp((*b)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0)) {
+          /* We have a non zero MAC - compare it */
+          rc = memcmp(((*a)->ethAddress), ((*b)->ethAddress), LEN_ETHERNET_ADDRESS);
+//TODO FC??
+        } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic != NULL)) {
+          /* Neither a nor b are null, so we can compare the fields in nonIPTraffic... 
+           *  NetBIOS, IPX then Appletalk, if we have 'em */
+          if(((*a)->nonIPTraffic->nbHostName != NULL) &&
+             ((*b)->nonIPTraffic->nbHostName != NULL)) {
+            rc=strcasecmp((*a)->nonIPTraffic->nbHostName, (*b)->nonIPTraffic->nbHostName);
+          } else if(((*a)->nonIPTraffic->ipxHostName != NULL) &&
+             ((*b)->nonIPTraffic->ipxHostName != NULL)) {
+            rc=strcasecmp((*a)->nonIPTraffic->ipxHostName, (*b)->nonIPTraffic->ipxHostName);
+          } else if(((*a)->nonIPTraffic->atNodeName != NULL) &&
+             ((*b)->nonIPTraffic->atNodeName != NULL)) {
+            rc=strcasecmp((*a)->nonIPTraffic->atNodeName, (*b)->nonIPTraffic->atNodeName);
+          } else {
+            rc=0;  /* can't tell 'em apart... trouble */
+          }
+        } else if(((*a)->nonIPTraffic == NULL) && ((*b)->nonIPTraffic != NULL)) {
+          /* a null, b not so return a>b */
+          rc=1;
+        } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic == NULL)) {
+          /* b null, a not so return a>b */
+          rc=1;
+        } else {
+          rc=0; /* nothing we can compare */
+        }
+      }
+    }
+
+    releaseAddrResMutex();
+
+    return(rc); 
+}
+
+/* ************************************ */

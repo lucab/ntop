@@ -197,16 +197,16 @@
              * entries with pWWN and finally entries with FC_ID. Within each            \
              * set, the entries must be correctly sorted.                               \
              */                                                                         \
-            if ((a->hostSymFcAddress[0] != '\0') &&                                     \
-                (b->hostSymFcAddress[0] != '\0')) {                                     \
-                rc = strcmp(a->hostSymFcAddress, b->hostSymFcAddress);                  \
+            if ((a->hostResolvedName[0] != '\0') &&                                       \
+                (b->hostResolvedName[0] != '\0')) {                                       \
+                rc = strcmp(a->hostResolvedName, b->hostResolvedName);                      \
             }                                                                           \
-            else if ((a->hostSymFcAddress[0] == 0) &&                                   \
-                     (b->hostSymFcAddress[0] != '\0')) {                                \
+            else if ((a->hostResolvedName[0] == 0) &&                                     \
+                     (b->hostResolvedName[0] != '\0')) {                                  \
                 rc = 1;        /* Named entries float to top */                         \
             }                                                                           \
-            else if ((a->hostSymFcAddress[0] != 0) &&                                   \
-                     (b->hostSymFcAddress[0] == '\0')) {                                \
+            else if ((a->hostResolvedName[0] != 0) &&                                     \
+                     (b->hostResolvedName[0] == '\0')) {                                  \
                 rc = -1;        /* Named entries float to top */                        \
             }                                                                           \
             else if ((a->pWWN.str[0] != '\0') &&                                        \
@@ -222,7 +222,7 @@
                 rc = -1;                                                                \
             }                                                                           \
             else {                                                                      \
-                rc = memcmp (&a->hostFcAddress, &b->hostFcAddress, LEN_FC_ADDRESS);     \
+                rc = memcmp (&a->hostIpAddress, &b->hostIpAddress, LEN_FC_ADDRESS);     \
             }                                                                           \
         }
 

@@ -84,6 +84,11 @@ extern int readInputFile(FILE* fd, char* logTag, u_char forceClose, u_char compr
 extern void urlFixupFromRFC1945Inplace(char* url);
 extern void urlFixupToRFC1945Inplace(char* url);
 
+#define setResolvedName(a, b, c) _setResolvedName(a, b, c, __FILE__, __LINE__)
+extern void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char* file, int line);
+
+extern int cmpFctnResolvedName(const void *_a, const void *_b);
+
 /****** function declarations ***** */
 
 /* globals-core.c */
@@ -103,7 +108,7 @@ extern char* intoa(struct in_addr addr);
 extern char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen);
 extern char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen);
 extern char * addrtostr(HostAddr *addr);
-extern int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer);
+extern int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type);
 extern void ipaddr2str(HostAddr hostIpAddress, int updateHost);
 extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* llcsap_string(u_char sap);

@@ -554,7 +554,9 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_PROTOS:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
+		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
+                CONST_ABOUT_SORTING_THIS_COL
+                "</TH>\n"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
 		"<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
@@ -622,7 +624,9 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_IP:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
+		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
+                CONST_ABOUT_SORTING_THIS_COL
+                "</TH>\n"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
 		"<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
@@ -668,7 +672,9 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_HOST_TRAFFIC:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
+		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
+                CONST_ABOUT_SORTING_THIS_COL
+                "</TH>"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
       BufferTooShort();
@@ -692,7 +698,9 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_THPT:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
+		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
+                CONST_ABOUT_SORTING_THIS_COL
+                "</TH>"
 		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
       BufferTooShort();
@@ -730,7 +738,9 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case TRAFFIC_STATS:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
+		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
+                CONST_ABOUT_SORTING_THIS_COL
+                "</TH>"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
       BufferTooShort();
@@ -811,24 +821,10 @@ int sortHostFctn(const void *_a, const void *_b) {
 
   switch(myGlobals.columnSort) {
   case 1:
-    accessAddrResMutex( "sortHostFctn");
-    if (isFcHost ((*a)) && isFcHost ((*b))) {
-        CMP_FC_PORT ((*a), (*b));
-    }
-    else {
-        rc = strcasecmp((*a)->hostSymIpAddress[0] != '\0' ? (*a)->hostSymIpAddress : (*a)->ethAddressString,
-                        (*b)->hostSymIpAddress[0] != '\0' ? (*b)->hostSymIpAddress : (*b)->ethAddressString);
-    }
-    releaseAddrResMutex();
+    rc=cmpFctnResolvedName(a, b);
     return(rc);
     break;
   case 2:
-    /*if((*a)->hostIpAddress.s_addr > (*b)->hostIpAddress.s_addr)
-      return(1);
-      else if((*a)->hostIpAddress.s_addr < (*b)->hostIpAddress.s_addr)
-      return(-1);
-      else
-      return(0);*/
       if (isFcHost ((*a)) && isFcHost ((*b))) {
           if((*a)->hostFcAddress.domain > (*b)->hostFcAddress.domain)
               return(1);
@@ -852,8 +848,6 @@ int sortHostFctn(const void *_a, const void *_b) {
       else {
           return addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress);
       }
-
-    /* return(strcasecmp((*a)->hostNumIpAddress, (*b)->hostNumIpAddress)); */
     break;
   case 3:
       if (isFcHost ((*a)) && isFcHost ((*b))) {
@@ -863,7 +857,6 @@ int sortHostFctn(const void *_a, const void *_b) {
       else {
           return(strcasecmp((*a)->ethAddressString, (*b)->ethAddressString));
       }
-      break;
   case 5:
       if (isFcHost ((*a)) && isFcHost ((*b))) {
           return(strcasecmp(getVendorInfo(&((*a)->pWWN.str[2]), 0),
@@ -1091,23 +1084,7 @@ int cmpFctn(const void *_a, const void *_b) {
   }
 
   if(myGlobals.columnSort == FLAG_HOST_DUMMY_IDX) {
-    int rc;
-
-    /* Host name */
-    accessAddrResMutex("cmpFctn");
-
-    if((*a)->hostSymIpAddress[0] != '\0') {
-      char *name1, *name2;
-
-      name1 = (*a)->hostSymIpAddress;
-      name2 = (*b)->hostSymIpAddress;
-
-      rc = strcasecmp(name1, name2);
-    } else
-      rc = strcasecmp((*a)->ethAddressString, (*b)->ethAddressString);
-
-    releaseAddrResMutex();
-    return(rc);
+    return(cmpFctnResolvedName(a, b));
   } else if(myGlobals.columnSort == FLAG_DOMAIN_DUMMY_IDX) {
     int rc;
 
@@ -1115,9 +1092,9 @@ int cmpFctn(const void *_a, const void *_b) {
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "%s='%s'/'%s' - %s='%s'/'%s'",
-	   (*a)->hostSymIpAddress,
+	   (*a)->hostResolvedName,
 	   (*a)->dotDomainName, (*a)->fullDomainName,
-	   (*b)->hostSymIpAddress,
+	   (*b)->hostResolvedName,
 	   (*b)->dotDomainName, (*b)->fullDomainName
 	   );
 #endif
@@ -1514,8 +1491,8 @@ int cmpFctn(const void *_a, const void *_b) {
 
   /*
     traceEvent(CONST_TRACE_INFO, "%s=%u - %s=%u",
-    (*a)->hostSymIpAddress, (unsigned long)a_,
-    (*b)->hostSymIpAddress, (unsigned long)b_);
+    (*a)->hostResolvedName, (unsigned long)a_,
+    (*b)->hostResolvedName, (unsigned long)b_);
   */
 
   if(floatCompare == 0) {
@@ -1590,10 +1567,7 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
     break; /* NOTREACHED */
 
   default:
-    accessAddrResMutex("cmpMulticastFctn");
-    rc = strcmp((*a)->hostSymIpAddress, /* Host name */
-		(*b)->hostSymIpAddress);
-    releaseAddrResMutex();
+    rc=cmpFctnResolvedName(a, b);
     return(rc);
   }
 }
@@ -1677,16 +1651,9 @@ int cmpHostsFctn(const void *_a, const void *_b) {
   struct hostTraffic **b = (struct hostTraffic **)_b;
   char *name_a, *name_b;
   Counter a_=0, b_=0;
-  int rc;
 
   switch(myGlobals.columnSort) {
   case 2: /* IP Address */
-    /*if((*a)->hostIpAddress.s_addr > (*b)->hostIpAddress.s_addr)
-      return(1);
-      else if((*a)->hostIpAddress.s_addr < (*b)->hostIpAddress.s_addr)
-      return(-1);
-      else
-      return(0);*/
       if(isFcHost ((*a)) && isFcHost ((*b))) {
           return (memcmp (((u_int8_t *)&(*a)->hostFcAddress), ((u_int8_t *)&(*b)->hostFcAddress),
                           LEN_FC_ADDRESS));
@@ -1752,36 +1719,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
       break;
 
   default: /* Host Name */
-    accessAddrResMutex("cmpHostsFctn");
-
-    if (isFcHost ((*a)) && isFcHost ((*b))) {
-        CMP_FC_PORT ((*a), (*b))
-            }
-    else {
-        name_a = (*a)->hostSymIpAddress;
-
-        if(name_a == NULL)
-            traceEvent(CONST_TRACE_WARNING, "cmpHostsFctn() error (1)");
-        if((name_a == NULL) || (strcmp(name_a, "0.0.0.0") == 0)) {
-            name_a = (*a)->hostNumIpAddress;
-            if((name_a == NULL) || (name_a[0] == '\0'))
-                name_a = (*a)->ethAddressString;
-        }
-        
-        name_b = (*b)->hostSymIpAddress;
-
-        if(name_b == NULL)
-            traceEvent(CONST_TRACE_WARNING, "cmpHostsFctn() error (2)");
-        if((name_b == NULL) || (strcmp(name_b, "0.0.0.0") == 0)) {
-            name_b = (*b)->hostNumIpAddress;
-            if((name_b == NULL) || (name_b[0] == '\0'))
-                name_b = (*b)->ethAddressString;
-        }
-        rc = strcasecmp(name_a, name_b); /* case insensitive */
-    }
-    
-    releaseAddrResMutex();
-    return(rc);
+    return(cmpFctnResolvedName(a, b));
   }
 }
 
@@ -2878,7 +2816,7 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 
 HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
   HostTraffic *theEntry = NULL;
-  int found = 0;
+  int found = 0, type;
   FcNameServerCacheEntry *fcnsEntry;
 
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
@@ -2902,14 +2840,14 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     strncpy(el->hostNumIpAddress,
 	    _addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 	    sizeof(el->hostNumIpAddress));
-    fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
+    fetchAddressFromCache(el->hostIpAddress, el->hostResolvedName, &type);
 
-    if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
+    if(strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0) {
       if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
 	int i;
 
 	for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
-	strcpy(el->hostSymIpAddress, sniffedName);
+	strcpy(el->hostResolvedName, sniffedName);
       }
     }
   } else if (theSerial.serialType == SERIAL_FC) {
@@ -2918,12 +2856,13 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
             LEN_FC_ADDRESS);
     sprintf (el->hostNumFcAddress, "%02x.%02x.%02x", el->hostFcAddress.domain,
              el->hostFcAddress.area, el->hostFcAddress.port);
-    strcpy(el->hostSymIpAddress, el->hostNumFcAddress);
+    setResolvedName(el, el->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FC);
+//TODO ? FC_NUM????
     el->vsanId = theSerial.value.fcSerial.vsanId;
     
     fcnsEntry = findFcHostNSCacheEntry (&el->hostFcAddress, el->vsanId);
     if (fcnsEntry != NULL) {
-        strncpy (el->hostSymFcAddress, fcnsEntry->alias, MAX_LEN_SYM_HOST_NAME);
+        setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC);
         memcpy ((u_int8_t *)el->pWWN.str, (u_int8_t *)fcnsEntry->pWWN.str,
                 LEN_WWN_ADDRESS);
     }
@@ -3329,19 +3268,19 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   buf1[0]=0;
   if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
-    if(el->hostSymIpAddress[0] == '\0' || strcmp(sniffedName, el->hostSymIpAddress))
+    if(el->hostResolvedName[0] == '\0' || strcmp(sniffedName, el->hostResolvedName))
       snprintf(buf1, sizeof(buf1), " (%s)", sniffedName);
   }
 
-  if((el->hostSymIpAddress[0] != '\0') && (strcmp(el->hostSymIpAddress, el->hostNumIpAddress))) {
+  if((el->hostResolvedName[0] != '\0') && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
     if(snprintf(buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
-                el->hostSymIpAddress,
-		el->hostSymIpAddress, buf1) < 0)
+                el->hostResolvedName,
+		el->hostResolvedName, buf1) < 0)
       BufferTooShort();
 
-    snprintf(buf2, sizeof(buf2), "Info about %s", el->hostSymIpAddress);
+    snprintf(buf2, sizeof(buf2), "Info about %s", el->hostResolvedName);
   } else if(el->hostNumIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
@@ -4003,7 +3942,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(),
                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
                   dotToSlash(key),
-		  el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
+		  el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress) < 0)
 	BufferTooShort();
       sendString(buf);
     }
@@ -4243,27 +4182,27 @@ char* buildHTMLBrowserWindowsLabel(int i, int j, u_short forIpTraffic) {
   else if ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value > 0)
 	   && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value == 0)) {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s/%s Pkts",
-		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostResolvedName,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostResolvedName,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->pktsSent.value, formatBuf1, sizeof(formatBuf1))) < 0)
       BufferTooShort();
   } else if ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value == 0)
 	     && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value > 0)) {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s/%s Pkts",
-		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostResolvedName,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostResolvedName,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->pktsRcvd.value, formatBuf1, sizeof(formatBuf1))) < 0)
       BufferTooShort();
   } else {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s/%s Pkts, (%s->%s)=%s/%s Pkts",
-		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostResolvedName,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostResolvedName,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->pktsSent.value, formatBuf1, sizeof(formatBuf1)),
-		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostResolvedName,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostResolvedName,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->pktsRcvd.value, formatBuf3, sizeof(formatBuf3))) < 0)
       BufferTooShort();
@@ -5610,8 +5549,8 @@ int cmpFcFctn(const void *_a, const void *_b)
 
   /*
     traceEvent(CONST_TRACE_INFO, "%s=%u - %s=%u",
-    (*a)->hostSymIpAddress, (unsigned long)a_,
-    (*b)->hostSymIpAddress, (unsigned long)b_);
+    (*a)->hostResolvedName, (unsigned long)a_,
+    (*b)->hostResolvedName, (unsigned long)b_);
   */
 
   if(floatCompare == 0) {
@@ -7366,4 +7305,6 @@ void printPluginTrailer(char *left, char *middle) {
              "&nbsp;[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]"
              "</td></tr></table>\n<br>\n");
 }
+
+/* ************************************ */
 

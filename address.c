@@ -34,14 +34,14 @@ static int _ns_name_uncompress(const u_char *msg,
 static int _ns_name_unpack(const u_char *msg,
 			  const u_char *eom, const u_char *src,
 			  u_char *dst, size_t dstsiz);
-static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDeviceId);
-static void updateHostNameInfo(HostAddr addr, char* symbolic);
+static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDeviceId, int type);
+static void updateHostNameInfo(HostAddr addr, char* symbolic, int type);
 
 /* #define DNS_DEBUG */
 
 /* **************************************** */
 
-static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDeviceId) {
+static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDeviceId, int type) {
   HostTraffic *el;
 
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
@@ -64,7 +64,7 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
     for(i=0; i<strlen(symbolic); i++)
       if(isupper(symbolic[i])) tolower(symbolic[i]);
 
-    strcpy(el->hostSymIpAddress, symbolic);
+    setResolvedName(el, symbolic, type);
   }
 
   releaseAddrResMutex();
@@ -72,11 +72,11 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
 /* **************************************** */
 
-static void updateHostNameInfo(HostAddr addr, char* symbolic) {
+static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
   int i; 
 
   for(i=0; i<myGlobals.numDevices; i++)
-    updateDeviceHostNameInfo(addr, symbolic, i);
+    updateDeviceHostNameInfo(addr, symbolic, i, type);
 }
 
 /* ************************************ */
@@ -84,6 +84,7 @@ static void updateHostNameInfo(HostAddr addr, char* symbolic) {
 static void resolveAddress(HostAddr *hostAddr,
 			   short keepAddressNumeric) {
   char symAddr[MAX_LEN_SYM_HOST_NAME];
+  short symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NONE;
   StoredAddress storedAddress;
   int i, addToCacheFlag=0, updateRecord=0;
   struct hostent *hp = NULL;
@@ -140,8 +141,10 @@ static void resolveAddress(HostAddr *hostAddr,
     } else
       strncpy(symAddr, retrievedAddress->symAddress, MAX_LEN_SYM_HOST_NAME-1);
 
+    symAddrType = retrievedAddress->symAddressType;
+
     myGlobals.numResolvedFromCache++;
-    updateHostNameInfo(*hostAddr, retrievedAddress->symAddress);
+    updateHostNameInfo(*hostAddr, retrievedAddress->symAddress, retrievedAddress->symAddressType);
 
     free(data_data.dptr);
 #ifdef DNS_DEBUG
@@ -228,9 +231,11 @@ static void resolveAddress(HostAddr *hostAddr,
       if((len > 0) && (i > 0) && (tmpBuf[i] == ' ')) {
 	res = &tmpBuf[i+1];
 	myGlobals.numResolvedFromHostAddresses++;
+        symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
       } else {
 	res = _addrtostr(hostAddr, tmpBuf, sizeof(tmpBuf));
 	myGlobals.numKeptNumericAddresses++;
+        symAddrType=FLAG_HOST_SYM_ADDR_TYPE_IP;
       }
 
 #ifdef DNS_DEBUG
@@ -299,7 +304,9 @@ static void resolveAddress(HostAddr *hostAddr,
 #ifdef HAVE_NETDB_H
 	(h_errno == NETDB_SUCCESS) &&
 #endif
-	(hp != NULL) && (hp->h_name != NULL)) {
+	(hp != NULL) && 
+        (hp->h_name != NULL) &&
+        (strcmp(hp->h_name, addrtostr(hostAddr)) != 0)) {
       char *dotp = (char*)hp->h_name;
 
       updateRecord = 1;
@@ -327,8 +334,10 @@ static void resolveAddress(HostAddr *hostAddr,
       }
       resolvedAddress = tmpBuf;
       myGlobals.numResolvedWithDNSAddresses++;
+      symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
     } else {
       myGlobals.numKeptNumericAddresses++;
+      symAddrType=FLAG_HOST_SYM_ADDR_TYPE_IP;
       /* Failed, but why? */
       switch (
 #ifdef HAVE_NETDB_H
@@ -414,13 +423,14 @@ static void resolveAddress(HostAddr *hostAddr,
       memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
       strcpy(storedAddress.symAddress, symAddr);
       storedAddress.recordCreationTime = myGlobals.actTime;
+      storedAddress.symAddressType = symAddrType;
 
       /* key_data has been set already */
       data_data.dptr = (void*)&storedAddress;
       data_data.dsize = sizeof(storedAddress)+1;
 
       if(updateRecord) {
-	updateHostNameInfo(*hostAddr, symAddr);
+	updateHostNameInfo(*hostAddr, symAddr, symAddrType);
 #ifdef DNS_DEBUG
 	traceEvent(CONST_TRACE_INFO, "Updating %s", symAddr);
 #endif
@@ -740,7 +750,7 @@ char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
 
 /* ******************************* */
 
-int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer) {
+int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
   char buf[47];
   char tmpBuf[47];
   datum key_data;
@@ -754,6 +764,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer) {
 
   if(addrfull(&hostIpAddress) || addrnull(&hostIpAddress)) {
     strcpy(buffer, "0.0.0.0");
+    *type = FLAG_HOST_SYM_ADDR_TYPE_IP;
     return(0);
   }
      
@@ -769,6 +780,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer) {
     StoredAddress *retrievedAddress;
     
     retrievedAddress = (StoredAddress*)data_data.dptr;
+    *type = retrievedAddress->symAddressType;
 
 #ifdef GDBM_DEBUG
     traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: gdbm_fetch(..., {%s, %d}) = %s, age %d",
@@ -797,6 +809,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer) {
 #endif
 
     buffer[0] = '\0';
+    *type = FLAG_HOST_SYM_ADDR_TYPE_IP;
     /* It might be that the size of the retrieved data is wrong */
     if(data_data.dptr != NULL) free(data_data.dptr);
   }
@@ -815,11 +828,12 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer) {
 
 void ipaddr2str(HostAddr hostIpAddress, int updateHost) {
   char buf[MAX_LEN_SYM_HOST_NAME+1];
+  int type;
 
   myGlobals.numipaddr2strCalls++;
 
-  if(fetchAddressFromCache(hostIpAddress, buf)  && (buf[0] != '\0')) {
-    if(updateHost) updateHostNameInfo(hostIpAddress, buf);
+  if(fetchAddressFromCache(hostIpAddress, buf, &type)  && (buf[0] != '\0')) {
+    if(updateHost) updateHostNameInfo(hostIpAddress, buf, type);
   } else {
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
     queueAddress(hostIpAddress, !updateHost);

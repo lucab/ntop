@@ -362,8 +362,8 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 
       if(myGlobals.enableSuspiciousPacketDump)
 	traceEvent(CONST_TRACE_WARNING, fmt,
-		   theHost->hostSymIpAddress, sessionToPurge->sport,
-		   theRemHost->hostSymIpAddress, sessionToPurge->dport,
+		   theHost->hostResolvedName, sessionToPurge->sport,
+		   theRemHost->hostResolvedName, sessionToPurge->dport,
 		   sessionToPurge->pktSent, sessionToPurge->pktRcvd);
     }
   }
@@ -809,8 +809,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 #ifdef HTTP_DEBUG
 	  traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: %s->%s [%s]",
-		     srcHost->hostSymIpAddress,
-		     dstHost->hostSymIpAddress, tmpStr);
+		     srcHost->hostResolvedName,
+		     dstHost->hostResolvedName, tmpStr);
 #endif
 
 	  if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
@@ -878,8 +878,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 #ifdef HTTP_DEBUG
 	  printf("HTTP_DEBUG: %s->%s [%s]\n",
-		 srcHost->hostSymIpAddress,
-		 dstHost->hostSymIpAddress,
+		 srcHost->hostResolvedName,
+		 dstHost->hostResolvedName,
 		 rcStr);
 #endif
 
@@ -1001,8 +1001,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(CONST_TRACE_WARNING, "unknown protocol (no HTTP) detected (trojan?) "
 			 "at port 80 %s:%d->%s:%d [%s]\n",
-			 srcHost->hostSymIpAddress, sport,
-			 dstHost->hostSymIpAddress, dport,
+			 srcHost->hostResolvedName, sport,
+			 dstHost->hostResolvedName, dport,
 			 rcStr);
 
 	      dumpSuspiciousPacket(actualDeviceId);
@@ -1200,19 +1200,19 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  if((dport == 1863) && (strncmp(rcStr, "USR 6 TWN I ", 12) == 0)) {
 	    row = strtok(&rcStr[12], "\n\r");
 	    if(strstr(row, "@")) {
-	      /* traceEvent(CONST_TRACE_INFO, "User='%s'@[%s/%s]", row, srcHost->hostSymIpAddress, srcHost->hostNumIpAddress); */
+	      /* traceEvent(CONST_TRACE_INFO, "User='%s'@[%s/%s]", row, srcHost->hostResolvedName, srcHost->hostNumIpAddress); */
 	      updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
 	    }
 	  } else if((dport == 1863) && (strncmp(rcStr, "ANS 1 ", 6) == 0)) {
 	    row = strtok(&rcStr[6], " \n\r");
 	    if(strstr(row, "@")) {
-	      /* traceEvent(CONST_TRACE_INFO, "User='%s'@[%s/%s]", row, srcHost->hostSymIpAddress, srcHost->hostNumIpAddress); */
+	      /* traceEvent(CONST_TRACE_INFO, "User='%s'@[%s/%s]", row, srcHost->hostResolvedName, srcHost->hostNumIpAddress); */
 	      updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
 	    }
 	  } else if((dport == 1863) && (strncmp(rcStr, "MSG ", 4) == 0)) {
 	    row = strtok(&rcStr[4], " ");
 	    if(strstr(row, "@")) {
-	      /* traceEvent(CONST_TRACE_INFO, "User='%s' [%s]@[%s->%s]", row, rcStr, srcHost->hostSymIpAddress, dstHost->hostSymIpAddress); */
+	      /* traceEvent(CONST_TRACE_INFO, "User='%s' [%s]@[%s->%s]", row, rcStr, srcHost->hostResolvedName, dstHost->hostResolvedName); */
 	      updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
 	    }
 
@@ -1461,8 +1461,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(CONST_TRACE_WARNING, "HTTP detected at wrong port (trojan?) "
 			 "%s:%d -> %s:%d [%s]",
-			 srcHost->hostSymIpAddress, sport,
-			 dstHost->hostSymIpAddress, dport,
+			 srcHost->hostResolvedName, sport,
+			 dstHost->hostResolvedName, dport,
 			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
@@ -1470,8 +1470,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(CONST_TRACE_WARNING, "FTP/SMTP detected at wrong port (trojan?) "
 			 "%s:%d -> %s:%d [%s]",
-			 dstHost->hostSymIpAddress, dport,
-			 srcHost->hostSymIpAddress, sport,
+			 dstHost->hostResolvedName, dport,
+			 srcHost->hostResolvedName, sport,
 			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
@@ -1479,8 +1479,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(CONST_TRACE_WARNING, "Unknown protocol (no FTP/SMTP) detected (trojan?) "
 			 "at port %d %s:%d -> %s:%d [%s]", sport,
-			 dstHost->hostSymIpAddress, dport,
-			 srcHost->hostSymIpAddress, sport,
+			 dstHost->hostResolvedName, dport,
+			 srcHost->hostResolvedName, sport,
 			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
@@ -1488,8 +1488,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(CONST_TRACE_WARNING, "SSH detected at wrong port (trojan?) "
 			 "%s:%d -> %s:%d [%s]  ",
-			 dstHost->hostSymIpAddress, dport,
-			 srcHost->hostSymIpAddress, sport,
+			 dstHost->hostResolvedName, dport,
+			 srcHost->hostResolvedName, sport,
 			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
@@ -1497,8 +1497,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(CONST_TRACE_WARNING, "Unknown protocol (no SSH) detected (trojan?) "
 			 "at port 22 %s:%d -> %s:%d [%s]",
-			 dstHost->hostSymIpAddress, dport,
-			 srcHost->hostSymIpAddress, sport,
+			 dstHost->hostResolvedName, dport,
+			 srcHost->hostResolvedName, sport,
 			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
@@ -1817,9 +1817,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	if(myGlobals.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, "TCP session [%s:%d]<->[%s:%d] reset by %s "
 		     "without completing 3-way handshake",
-		     srcHost->hostSymIpAddress, sport,
-		     dstHost->hostSymIpAddress, dport,
-		     srcHost->hostSymIpAddress);
+		     srcHost->hostResolvedName, sport,
+		     dstHost->hostResolvedName, dport,
+		     srcHost->hostResolvedName);
 	  dumpSuspiciousPacket(actualDeviceId);
 	}
 
@@ -1861,8 +1861,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	if(myGlobals.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed ACK scan of host [%s:%d]",
-		     dstHost->hostSymIpAddress, dport,
-		     srcHost->hostSymIpAddress, sport);
+		     dstHost->hostResolvedName, dport,
+		     srcHost->hostResolvedName, sport);
 	  dumpSuspiciousPacket(actualDeviceId);
 	}
       }
@@ -1904,7 +1904,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	 /* && (sport == dport)  */ /* Caveat: what about Win NT 3.51 ? */
 	 && (tp->th_flags == TH_SYN)) {
 	traceEvent(CONST_TRACE_WARNING, "Detected Land Attack against host %s:%d",
-		   srcHost->hostSymIpAddress, sport);
+		   srcHost->hostResolvedName, sport);
 	dumpSuspiciousPacket(actualDeviceId);
       }
 
@@ -1921,9 +1921,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_INFO, "Host %s rejected TCP session from %s [%s:%d]<->[%s:%d] (port closed?)",
-		       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress,
-		       dstHost->hostSymIpAddress, dport,
-		       srcHost->hostSymIpAddress, sport);
+		       srcHost->hostResolvedName, dstHost->hostResolvedName,
+		       dstHost->hostResolvedName, dport,
+		       srcHost->hostResolvedName, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
 	} else if(((theSession->initiator == srcHost)
@@ -1937,8 +1937,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed XMAS scan of host [%s:%d]",
-		       dstHost->hostSymIpAddress, dport,
-		       srcHost->hostSymIpAddress, sport);
+		       dstHost->hostResolvedName, dport,
+		       srcHost->hostResolvedName, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
 	} else if(((theSession->initiator == srcHost)
@@ -1952,8 +1952,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed FIN scan of host [%s:%d]",
-		       dstHost->hostSymIpAddress, dport,
-		       srcHost->hostSymIpAddress, sport);
+		       dstHost->hostResolvedName, dport,
+		       srcHost->hostResolvedName, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
 	} else if(((theSession->initiator == srcHost)
@@ -1969,8 +1969,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed NULL scan of host [%s:%d]",
-		       dstHost->hostSymIpAddress, dport,
-		       srcHost->hostSymIpAddress, sport);
+		       dstHost->hostResolvedName, dport,
+		       srcHost->hostResolvedName, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
 	}
@@ -2052,8 +2052,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     if(myGlobals.enableSuspiciousPacketDump) {
       traceEvent(CONST_TRACE_WARNING, fmt,
-		 srcHost->hostSymIpAddress, sport,
-		 dstHost->hostSymIpAddress, dport);
+		 srcHost->hostResolvedName, sport,
+		 dstHost->hostResolvedName, dport);
       dumpSuspiciousPacket(actualDeviceId);
     }
 
@@ -2095,8 +2095,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     if(myGlobals.enableSuspiciousPacketDump) {
       traceEvent(CONST_TRACE_WARNING, fmt, packetDataLength,
-		 srcHost->hostSymIpAddress, sport,
-		 dstHost->hostSymIpAddress, dport);
+		 srcHost->hostResolvedName, sport,
+		 dstHost->hostResolvedName, dport);
       dumpSuspiciousPacket(actualDeviceId);
     }
   }

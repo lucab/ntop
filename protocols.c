@@ -130,7 +130,7 @@ void handleBootp(HostTraffic *srcHost,
 	    } else {
 #ifdef DHCP_DEBUG
 	      traceEvent(CONST_TRACE_INFO, "<<=>> %s (%d)",
-			 realDstHost->hostSymIpAddress,
+			 realDstHost->hostResolvedName,
 			 broadcastHost(realDstHost));
 #endif
 	    }
@@ -229,14 +229,14 @@ void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 		  traceEvent(CONST_TRACE_INFO, "Domain name: %s", &bootProto.bp_vend[idx]);
 #endif
-		  if(strcmp(realDstHost->hostSymIpAddress, realDstHost->hostNumIpAddress)) {
+		  if(strcmp(realDstHost->hostResolvedName, realDstHost->hostNumIpAddress)) {
 		    char tmpName[2*MAX_LEN_SYM_HOST_NAME],
 		      tmpHostName[MAX_LEN_SYM_HOST_NAME],
 		      tmpDomainName[MAX_LEN_SYM_HOST_NAME];
 		    int hostLen, i;
 
 		    memset(tmpHostName, 0, sizeof(tmpHostName));
-		    strncpy(tmpHostName, realDstHost->hostSymIpAddress, MAX_LEN_SYM_HOST_NAME-1);
+		    strncpy(tmpHostName, realDstHost->hostResolvedName, MAX_LEN_SYM_HOST_NAME-1);
 		    for(i=0; i<strlen(tmpHostName); i++)
 		      if(tmpHostName[i] == '.')
 			break;
@@ -262,13 +262,9 @@ void handleBootp(HostTraffic *srcHost,
 
 			/* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */
 			if(len >= MAX_LEN_SYM_HOST_NAME) len = MAX_LEN_SYM_HOST_NAME-1;
+			tmpName[len] = '\0';
 			for(i=0; i<strlen(tmpName); i++) if(isupper(tmpName[i])) tolower(tmpName[i]);
-			strncpy(realDstHost->hostSymIpAddress, tmpName, len);
-			realDstHost->hostSymIpAddress[len] = '\0';
-				/*
-				  realDstHost->fullDomainName = realDstHost->dotDomainName =
-				  &realDstHost->hostSymIpAddress[hostLen];
-				*/
+                        setResolvedName(realDstHost, tmpName, FLAG_HOST_SYM_ADDR_TYPE_NAME);
 			fillDomainName(realDstHost);
 		      }
 		    }
@@ -476,7 +472,7 @@ void handleBootp(HostTraffic *srcHost,
 	    } else {
 #ifdef FLAG_DHCP_DEBUG
 	      traceEvent(CONST_TRACE_INFO, "<<=>> %s (%d)",
-			 realClientHost->hostSymIpAddress,
+			 realClientHost->hostResolvedName,
 			 broadcastHost(realClientHost));
 #endif
 	    }
@@ -501,15 +497,14 @@ void handleBootp(HostTraffic *srcHost,
 #ifdef FLAG_DHCP_DEBUG
 		  traceEvent(CONST_TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
 #endif
+		  /* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */
 		  if(len >= (MAX_LEN_SYM_HOST_NAME-1)) {
 		    bootProto.bp_vend[idx+MAX_LEN_SYM_HOST_NAME-2] = '\0';
-		    len--;
+		    len = MAX_LEN_SYM_HOST_NAME-1;
 		  }
 
-		  /* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */
-		  if(len >= MAX_LEN_SYM_HOST_NAME) len = MAX_LEN_SYM_HOST_NAME-1;
-		  strncpy(realClientHost->hostSymIpAddress, &bootProto.bp_vend[idx], len);
-		  realClientHost->hostSymIpAddress[len] = '\0';
+                  setResolvedName(realClientHost, &bootProto.bp_vend[idx], FLAG_HOST_SYM_ADDR_TYPE_NAME);
+		  realClientHost->hostResolvedName[len] = '\0';
 		  bootProto.bp_vend[idx+len] = savechar;
 		  idx += len;
 		  break;
@@ -637,6 +632,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
       memcpy(&storedAddress.symAddress,
              hostPtr.queryName,
              min(MAX_LEN_SYM_HOST_NAME-1, strlen(hostPtr.queryName)));
+      storedAddress.symAddressType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
 
       snprintf(tmpBuf, sizeof(tmpBuf), "%u", ntohl(hostPtr.addrList[i]));
       key_data.dptr = (void*)&tmpBuf;
