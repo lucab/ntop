@@ -260,14 +260,21 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 	hostIpAddress has been added.
       */
 
-      if(device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress.s_addr == 0x0)
-	hostIpAddress = NULL;
+      if((device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress.s_addr == 0x0)
+	 && (device[deviceToExtend].hash_hostTraffic[i]->hostSymIpAddress[0] != '0')) /* 0.0.0.0 */
+	  hostIpAddress = NULL;
       else
-	hostIpAddress = &device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress;
-
+	  hostIpAddress = &device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress;
+      
       idx = computeInitialHashIdx(hostIpAddress,
 				  device[deviceToExtend].hash_hostTraffic[i]->ethAddress,
 				  &numCmp);
+      
+      if(idx == NO_PEER) {
+	  /* Discard the host and continue */
+	  freeHostInfo(deviceToExtend, i, 0);
+	  continue;
+      }
 
       idx = (u_int)(idx % newSize);
 
