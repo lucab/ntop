@@ -21,9 +21,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#define NETFLOW_DEFAULT_PORT  "2055"
-
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 static pthread_t netFlowThread;
 static int threadActive;
 #endif
@@ -43,7 +41,7 @@ static void setNetFlowInSocket() {
   int sockopt = 1;
 
   if(myGlobals.netFlowInSocket > 0) {
-    traceEvent(TRACE_INFO, "NetFlow collector terminated");
+    traceEvent(CONST_TRACE_INFO, "NetFlow collector terminated");
     closeNwSocket(&myGlobals.netFlowInSocket);
   }
 
@@ -57,14 +55,14 @@ static void setNetFlowInSocket() {
     sockIn.sin_addr.s_addr       = INADDR_ANY;
 
     if(bind(myGlobals.netFlowInSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      traceEvent(TRACE_WARNING, "NetFlow collector: port %d already in use.",
+      traceEvent(CONST_TRACE_WARNING, "NetFlow collector: port %d already in use.",
 		 myGlobals.netFlowInPort);
       closeNwSocket(&myGlobals.netFlowInSocket);
       myGlobals.netFlowInSocket = 0;
       return;
     }
 
-    traceEvent(TRACE_WARNING, "NetFlow collector listening on port %d.",
+    traceEvent(CONST_TRACE_WARNING, "NetFlow collector listening on port %d.",
 	       myGlobals.netFlowInPort);
   }
 
@@ -87,16 +85,16 @@ static void setNetFlowOutSocket() {
 
     myGlobals.netFlowDest.sin_addr.s_addr = 0;
     myGlobals.netFlowDest.sin_family      = AF_INET;
-    myGlobals.netFlowDest.sin_port        = (int)htons(atoi(NETFLOW_DEFAULT_PORT));
+    myGlobals.netFlowDest.sin_port        = (int)htons(atoi(DEFAULT_NETFLOW_PORT_STR));
 
     if(fetchPrefsValue("netFlow.netFlowDest", value, sizeof(value)) == -1)
       storePrefsValue("netFlow.netFlowDest", "");
     else if(value[0] != '\0') {
       myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
       if(myGlobals.netFlowDest.sin_addr.s_addr > 0)
-	traceEvent(TRACE_INFO, "Exporting NetFlow's towards %s:%s", value, NETFLOW_DEFAULT_PORT);
+	traceEvent(CONST_TRACE_INFO, "Exporting NetFlow's towards %s:%s", value, DEFAULT_NETFLOW_PORT_STR);
       else
-	traceEvent(TRACE_INFO, "NetFlow export disabled");
+	traceEvent(CONST_TRACE_INFO, "NetFlow export disabled");
     }
   }
 }
@@ -120,7 +118,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
     int numFlows = ntohs(the7Record.flowHeader.count);
     int i, j;
     
-    if(numFlows > V7FLOWS_PER_PAK) numFlows = V7FLOWS_PER_PAK;
+    if(numFlows > CONST_V7FLOWS_PER_PAK) numFlows = CONST_V7FLOWS_PER_PAK;
     
     the5Record.flowHeader.version = htons(5);
     the5Record.flowHeader.count = htons(numFlows);
@@ -141,10 +139,10 @@ static void dissectFlow(char *buffer, int bufferLen) {
   if(the5Record.flowHeader.version == htons(5)) {
     int i, numFlows = ntohs(the5Record.flowHeader.count);
 
-    if(numFlows > V5FLOWS_PER_PAK) numFlows = V5FLOWS_PER_PAK;
+    if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
 
 #ifdef DEBUG_FLOWS
-    /* traceEvent(TRACE_INFO, "dissectFlow(%d flows)", numFlows); */
+    /* traceEvent(CONST_TRACE_INFO, "dissectFlow(%d flows)", numFlows); */
 #endif
 
     for(i=0; i<numFlows; i++) {
@@ -181,7 +179,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	if(the5Record.flowRecord[i].tcp_flags & TH_PUSH) strcat(theFlags, "PUSH");
 
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "%2d) %s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d flags=[%s] (proto=%d)",
+	traceEvent(CONST_TRACE_INFO, "%2d) %s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d flags=[%s] (proto=%d)",
 		   i+1,
 		   _intoa(a, buf, sizeof(buf)), sport,
 		   _intoa(b, buf1, sizeof(buf1)), dport,
@@ -192,12 +190,12 @@ static void dissectFlow(char *buffer, int bufferLen) {
 #endif
       }
 
-      /* traceEvent(TRACE_INFO, "a=%u", the5Record.flowRecord[i].srcaddr); */
+      /* traceEvent(CONST_TRACE_INFO, "a=%u", the5Record.flowRecord[i].srcaddr); */
 
       actualDeviceId = myGlobals.netFlowDeviceId;
 
       if(actualDeviceId >= myGlobals.numDevices) {
-	traceEvent(TRACE_ERROR, "NetFlow deviceId (%d) is out range", actualDeviceId);
+	traceEvent(CONST_TRACE_ERROR, "NetFlow deviceId (%d) is out range", actualDeviceId);
 	break;
       }
 
@@ -208,15 +206,15 @@ static void dissectFlow(char *buffer, int bufferLen) {
       myGlobals.device[actualDeviceId].ethernetBytes.value += len;
       myGlobals.device[actualDeviceId].ipBytes.value       += len;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
 #endif
       dstHostIdx = getHostInfo(&b, NULL, 0, 1, myGlobals.netFlowDeviceId);
       dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-      /* traceEvent(TRACE_INFO, "dstHostIdx: %d", dstHostIdx); */
+      /* traceEvent(CONST_TRACE_INFO, "dstHostIdx: %d", dstHostIdx); */
       srcHostIdx = getHostInfo(&a, NULL, 0, 1, myGlobals.netFlowDeviceId);
       srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-      /* traceEvent(TRACE_INFO, "srcHostIdx: %d", srcHostIdx); */
+      /* traceEvent(CONST_TRACE_INFO, "srcHostIdx: %d", srcHostIdx); */
 
       if((srcHost == NULL) || (dstHost == NULL)) continue;
 
@@ -235,7 +233,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
       }
 
 #ifdef DEBUG_FLOWS
-      /* traceEvent(TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
+      /* traceEvent(CONST_TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
 #endif
 
       if((sport != 0) && (dport != 0)) {
@@ -362,7 +360,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	break;
       }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       /* releaseMutex(&myGlobals.hostsHashMutex); */
 #endif
     }
@@ -379,9 +377,9 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   struct sockaddr_in fromHost;
 
   if(!(myGlobals.netFlowInSocket > 0)) return(NULL);
-  traceEvent(TRACE_INFO, "Welcome to NetFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
-#ifdef MULTITHREADED
- traceEvent(TRACE_INFO, "Started thread (%ld) for NetFlow.\n", netFlowThread);
+  traceEvent(CONST_TRACE_INFO, "Welcome to NetFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
+#ifdef CFG_MULTITHREADED
+ traceEvent(CONST_TRACE_INFO, "Started thread (%ld) for NetFlow.\n", netFlowThread);
 #endif
 
   for(;myGlobals.capturePackets == 1;) {
@@ -394,7 +392,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 		    0, (struct sockaddr*)&fromHost, &len);
 
 #ifdef DEBUG_FLOWS
-      traceEvent(TRACE_INFO, "Received NetFlow packet (len=%d) (deviceId=%d)",
+      traceEvent(CONST_TRACE_INFO, "Received NetFlow packet (len=%d) (deviceId=%d)",
 		 rc,  myGlobals.netFlowDeviceId);
 #endif
 
@@ -419,12 +417,12 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	dissectFlow(buffer, rc);
       }
     } else {
-      traceEvent(TRACE_INFO, "NetFlow thread is terminating...");
+      traceEvent(CONST_TRACE_INFO, "NetFlow thread is terminating...");
       break;
     }
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   threadActive = 0;
 #endif
   return(0);
@@ -436,7 +434,7 @@ static void initNetFlowFunct(void) {
   int i;
   char key[256], value[256];
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   threadActive = 0;
 #endif
 
@@ -471,16 +469,16 @@ static void initNetFlowFunct(void) {
       if(fetchPrefsValue(key, value, sizeof(value)) == -1) {
 	storePrefsValue(key, "No");
       } else {
-	/* traceEvent(TRACE_INFO, "%s=%s", key, value); */
+	/* traceEvent(CONST_TRACE_INFO, "%s=%s", key, value); */
 
 	if(strcmp(value, "Yes") == 0)
-	  myGlobals.device[i].exportNetFlow = NETFLOW_EXPORT_ENABLED;
+	  myGlobals.device[i].exportNetFlow = FLAG_NETFLOW_EXPORT_ENABLED;
 	else
-	  myGlobals.device[i].exportNetFlow = NETFLOW_EXPORT_DISABLED;
+	  myGlobals.device[i].exportNetFlow = FLAG_NETFLOW_EXPORT_DISABLED;
       }
     }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   if((myGlobals.netFlowInPort != 0)
      && (!threadActive)) {
     /* This plugin works only with threads */
@@ -496,7 +494,7 @@ static void handleNetflowHTTPrequest(char* url) {
   int i, numEnabled = 0;
   struct in_addr theDest;
 
-  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
   printHTMLheader("NetFlow Statistics", 0);
 
   sendString("<CENTER>\n<HR>\n");
@@ -520,9 +518,9 @@ static void handleNetflowHTTPrequest(char* url) {
 	myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
 
 	if(myGlobals.netFlowDest.sin_addr.s_addr > 0)
-	  traceEvent(TRACE_INFO, "Exporting NetFlow's towards %s:%s", value, NETFLOW_DEFAULT_PORT);
+	  traceEvent(CONST_TRACE_INFO, "Exporting NetFlow's towards %s:%s", value, DEFAULT_NETFLOW_PORT_STR);
 	else
-	  traceEvent(TRACE_INFO, "NetFlow export disabled");
+	  traceEvent(CONST_TRACE_INFO, "NetFlow export disabled");
       } else {
 	for(i=0; i<myGlobals.numDevices; i++)
 	  if(!myGlobals.device[i].virtualDevice) {
@@ -532,13 +530,13 @@ static void handleNetflowHTTPrequest(char* url) {
 			  myGlobals.device[i].name) < 0)
 		BufferTooShort();
 
-	      /* traceEvent(TRACE_INFO, "%s=%s", buf, value); */
+	      /* traceEvent(CONST_TRACE_INFO, "%s=%s", buf, value); */
 	      storePrefsValue(buf, value);
 
 	      if(!strcmp(value, "No")) {
-		myGlobals.device[i].exportNetFlow = NETFLOW_EXPORT_DISABLED;
+		myGlobals.device[i].exportNetFlow = FLAG_NETFLOW_EXPORT_DISABLED;
 	      } else {
-		myGlobals.device[i].exportNetFlow = NETFLOW_EXPORT_ENABLED;
+		myGlobals.device[i].exportNetFlow = FLAG_NETFLOW_EXPORT_ENABLED;
 	      }
 	    }
 	  }
@@ -555,7 +553,7 @@ static void handleNetflowHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
 
-  sendString("> <br>[default port is "NETFLOW_DEFAULT_PORT"]</td><td>"
+  sendString("> <br>[default port is "DEFAULT_NETFLOW_PORT_STR"]</td><td>"
 	     "<INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
   /* *************************************** */
@@ -605,12 +603,12 @@ static void handleNetflowHTTPrequest(char* url) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "<A HREF=/plugins/NetFlow?%s=%s>%s</A></TD></TR>\n",
 		  myGlobals.device[i].name, myGlobals.device[i].name,
-		  myGlobals.device[i].exportNetFlow == NETFLOW_EXPORT_ENABLED ? "No" : "Yes",
-		  myGlobals.device[i].exportNetFlow == NETFLOW_EXPORT_ENABLED ? "Yes" : "No") < 0)
+		  myGlobals.device[i].exportNetFlow == FLAG_NETFLOW_EXPORT_ENABLED ? "No" : "Yes",
+		  myGlobals.device[i].exportNetFlow == FLAG_NETFLOW_EXPORT_ENABLED ? "Yes" : "No") < 0)
 	BufferTooShort();
       sendString(buf);
 
-      if(myGlobals.device[i].exportNetFlow == NETFLOW_EXPORT_ENABLED) numEnabled++;
+      if(myGlobals.device[i].exportNetFlow == FLAG_NETFLOW_EXPORT_ENABLED) numEnabled++;
     }
   }
 
@@ -684,7 +682,7 @@ static void handleNetflowHTTPrequest(char* url) {
 /* ****************************** */
 
 static void termNetflowFunct(void) {
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   if(threadActive) {
     killThread(&netFlowThread);
     threadActive = 0;
@@ -693,8 +691,8 @@ static void termNetflowFunct(void) {
 
   if(myGlobals.netFlowInSocket > 0) closeNwSocket(&myGlobals.netFlowInSocket);
 
-  traceEvent(TRACE_INFO, "Thanks for using ntop NetFlow");
-  traceEvent(TRACE_INFO, "Done.\n");
+  traceEvent(CONST_TRACE_INFO, "Thanks for using ntop NetFlow");
+  traceEvent(CONST_TRACE_INFO, "Done.\n");
   fflush(stdout);
 }
 
@@ -737,7 +735,7 @@ static void handleNetFlowPacket(u_char *_deviceId,
 	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 
 #ifdef DEBUG_FLOWS
-	    /* traceEvent(TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src)); */
+	    /* traceEvent(CONST_TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src)); */
 #endif
 	    dissectFlow(rawSample, rawSampleLen);
 	  }
@@ -786,7 +784,7 @@ PluginInfo* netflowPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(TRACE_INFO, "Welcome to %s. (C) 2002 by Luca Deri.\n",
+  traceEvent(CONST_TRACE_INFO, "Welcome to %s. (C) 2002 by Luca Deri.\n",
 	     netflowPluginInfo->pluginName);
 
   return(netflowPluginInfo);

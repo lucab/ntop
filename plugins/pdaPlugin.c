@@ -23,7 +23,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
 static int pdaColumnSort = 0;
  
 
@@ -48,13 +48,13 @@ static int cmpPdaFctn(const void *_a, const void *_b) {
   TrafficCounter a_, b_;
 
   if((a == NULL) && (b != NULL)) {
-    traceEvent(TRACE_WARNING, "WARNING (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "WARNING (1)\n");
     return(1);
   } else if((a != NULL) && (b == NULL)) {
-    traceEvent(TRACE_WARNING, "WARNING (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "WARNING (2)\n");
     return(-1);
   } else if((a == NULL) && (b == NULL)) {
-    traceEvent(TRACE_WARNING, "WARNING (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "WARNING (3)\n");
     return(0);
   }
 
@@ -87,8 +87,8 @@ static void printHtmlIndex(void) {
     
   u_int idx, numEntries=0;
   HostTraffic *el;
-  HostTraffic* tmpTable[HASHNAMESIZE];
-  char *tmpName, buf[BUF_SIZE];
+  HostTraffic* tmpTable[MAX_PDA_HOST_TABLE];
+  char *tmpName, buf[LEN_GENERAL_WORK_BUFFER];
   Counter unicastPkts=0;
 
   /* #ifdef WIN32
@@ -99,11 +99,12 @@ static void printHtmlIndex(void) {
 
      actualDeviceId = getActualInterface(deviceId); */
   
-  sendHTTPHeader(HTTP_TYPE_HTML, HTTP_FLAG_NO_CACHE_CONTROL | HTTP_FLAG_MORE_FIELDS);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, BITFLAG_HTTP_NO_CACHE_CONTROL | BITFLAG_HTTP_MORE_FIELDS);
 
   for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++)
     if(((el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx]) != NULL) 
-       && (!broadcastHost(el)))
+       && (!broadcastHost(el))
+       && (numEntries < MAX_PDA_HOST_TABLE))
       tmpTable[numEntries++]=el;
   
   if(numEntries == 0) {
@@ -265,7 +266,7 @@ static void printHtmlHostInfo(char *host _UNUSED_) {
 
 }
 
-#endif /* MICRO_NTOP */
+#endif /* MAKE_MICRO_NTOP */
 
 /* ********************** */
 
@@ -285,8 +286,8 @@ static void handlePDArequest(char* url) {
 /* ****************************** */
 
 static void termPdaFunct(void) {
-  traceEvent(TRACE_INFO, "Thanks for using PDAWatch...\n");
-  traceEvent(TRACE_INFO, "Done.\n");
+  traceEvent(CONST_TRACE_INFO, "Thanks for using PDAWatch...\n");
+  traceEvent(CONST_TRACE_INFO, "Done.\n");
 }
 
 /* ****************************** */
@@ -314,7 +315,7 @@ PluginInfo* wapPluginEntryFctn(void)
   PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(TRACE_INFO, "Welcome to %s. (C) 2001-2002 by L.Deri and W.Brock",  
+  traceEvent(CONST_TRACE_INFO, "Welcome to %s. (C) 2001-2002 by L.Deri and W.Brock",  
 	     PDAPluginInfo->pluginName);
   
   return(PDAPluginInfo);

@@ -57,13 +57,13 @@ static int sortICMPhosts(const void *_a, const void *_b) {
   int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
-    traceEvent(TRACE_WARNING, "WARNING (1)\n");
+    traceEvent(CONST_TRACE_WARNING, "WARNING (1)\n");
     return(1);
   } else if(((*a) != NULL) && ((*b) == NULL)) {
-    traceEvent(TRACE_WARNING, "WARNING (2)\n");
+    traceEvent(CONST_TRACE_WARNING, "WARNING (2)\n");
     return(-1);
   } else if(((*a) == NULL) && ((*b) == NULL)) {
-    traceEvent(TRACE_WARNING, "WARNING (3)\n");
+    traceEvent(CONST_TRACE_WARNING, "WARNING (3)\n");
     return(0);
   }
 
@@ -138,20 +138,20 @@ static int sortICMPhosts(const void *_a, const void *_b) {
     break;
 
   default:
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.addressResolutionMutex, "addressResolution");
 #endif
 
     rc = strcasecmp((*a)->hostSymIpAddress, (*b)->hostSymIpAddress);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
     break;
   }
 
-  /* traceEvent(TRACE_INFO, "%d <-> %d", n1, n2); */
+  /* traceEvent(CONST_TRACE_INFO, "%d <-> %d", n1, n2); */
  
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
@@ -226,7 +226,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       GDC_SetColor  = &(sc[0]);                   /* assign set colors */
       GDC_ytitle = "Packets";
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
       /* Avoid to draw too many entries */
       if(num > myGlobals.maxNumLines) num = myGlobals.maxNumLines;
 #endif
@@ -241,7 +241,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
 	  for(j=0; j<ICMP_MAXTYPE; j++) {
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "idx=%d/type=%d: %d/%d\n", i, j, 
+	    traceEvent(CONST_TRACE_INFO, "idx=%d/type=%d: %d/%d\n", i, j, 
 		       hosts[i]->icmpInfo->icmpMsgSent[j].value,
 		       hosts[i]->icmpInfo->icmpMsgRcvd[j].value);
 #endif
@@ -253,11 +253,11 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	}
       }
 
-      /* traceEvent(TRACE_INFO, "file=%s\n", fileName); */
+      /* traceEvent(CONST_TRACE_INFO, "file=%s\n", fileName); */
 
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       accessMutex(&myGlobals.graphMutex, "icmpPlugin");
 #endif
 
@@ -281,7 +281,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
       fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -297,15 +297,15 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     tmpStr = strtok_r(NULL, "&", &strtokState);
     hostIpAddress.s_addr = strtoul(tmpStr, (char **)NULL, 10);
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "-> %s [%u]\n", tmpStr, hostIpAddress.s_addr);
+    traceEvent(CONST_TRACE_INFO, "-> %s [%u]\n", tmpStr, hostIpAddress.s_addr);
 #endif
     strtok_r(NULL, "=", &strtokState);
     icmpId = atoi(strtok_r(NULL, "&", &strtokState));
   }
 
-  /* traceEvent(TRACE_INFO, "-> %s%d", sign, icmpColumnSort); */
+  /* traceEvent(CONST_TRACE_INFO, "-> %s%d", sign, icmpColumnSort); */
 
-  sendHTTPHeader(HTTP_TYPE_HTML, 0);  
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);  
   printHTMLheader("ICMP Statistics", 0);
 
   if(num == 0) {
@@ -369,7 +369,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s> %s",
 		  getRowColor(),
-		  makeHostLink(hosts[idx], LONG_FORMAT, 0, 0)) < 0) 
+		  makeHostLink(hosts[idx], FLAG_HOSTLINK_HTML_FORMAT, 0, 0)) < 0) 
 	BufferTooShort();
       sendString(buf);
 
@@ -421,7 +421,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       sendString("</TR>\n");
 
       /* Avoid huge tables */
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
       if(printedEntries++ > myGlobals.maxNumLines)
 	break;
 #endif
@@ -440,8 +440,8 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 /* ****************************** */
 
 static void termIcmpFunct(void) {
-  traceEvent(TRACE_INFO, "Thanks for using icmpWatch..."); fflush(stdout);
-  traceEvent(TRACE_INFO, "Done.\n"); fflush(stdout);
+  traceEvent(CONST_TRACE_INFO, "Thanks for using icmpWatch..."); fflush(stdout);
+  traceEvent(CONST_TRACE_INFO, "Done.\n"); fflush(stdout);
 }
 
 /* ****************************** */
@@ -471,7 +471,7 @@ PluginInfo* icmpPluginEntryFctn(void) {
 #else
   PluginInfo* PluginEntryFctn(void) {
 #endif
-    traceEvent(TRACE_INFO, "Welcome to %s. (C) 1999 by Luca Deri.\n",
+    traceEvent(CONST_TRACE_INFO, "Welcome to %s. (C) 1999 by Luca Deri.\n",
 	       icmpPluginInfo->pluginName);
     
     return(icmpPluginInfo);

@@ -46,13 +46,7 @@ static const char *rrd_subdirs[] =
 #include "ntop.h"
 #include "globals-report.h"
 
-#ifdef WIN32
-#define HAVE_RRD
-#endif
-
 #ifdef HAVE_RRD
-
-/* #define RRD_DEBUG 2 */
 
 #include <dirent.h>
 
@@ -60,17 +54,13 @@ static const char *rrd_subdirs[] =
 int optind, opterr;
 #endif
 
-#define DETAIL_LOW     0
-#define DETAIL_MEDIUM  1
-#define DETAIL_HIGH    2
-
 static unsigned short initialized = 0, active = 0, dumpInterval, dumpDetail;
 static char *hostsFilter;
 static Counter numTotalRRDs = 0;
 static unsigned long numRuns = 0, numRRDerrors = 0;
 static time_t start_tm, end_tm, rrdTime;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 pthread_t rrdThread;
 #endif
 
@@ -176,10 +166,8 @@ void doubleSlash(char *str) {
 
 #ifdef WIN32
 #define _mkdir(a) mkdir(a)
-#define SEPARATOR '\\'
 #else
 #define _mkdir(a) mkdir(a, (mode_t)0700)
-#define SEPARATOR '/'
 #endif
 
 void mkdir_p(char *path) {
@@ -190,18 +178,18 @@ void mkdir_p(char *path) {
 #endif
 
   for(i=0; path[i] != '\0'; i++)
-    if(path[i] == SEPARATOR) {
+    if(path[i] == CONST_PATH_SEP) {
       path[i] = '\0';
       _mkdir(path);
 #if RRD_DEBUG >= 3
-      /* traceEvent(TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path); */
+      /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path); */
 #endif
-      path[i] = SEPARATOR;
+      path[i] = CONST_PATH_SEP;
     }
 
   _mkdir(path);
 #if RRD_DEBUG >= 2
-  /* traceEvent(TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path); */
+  /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path); */
 #endif
 }
 
@@ -235,7 +223,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
     int x;
 
     for (x = 0; x < argc; x++)
-      traceEvent(TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
   }
 #endif
 
@@ -275,7 +263,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   struct dirent* dp;
   int numEntries = 0;
 
-  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 
   sprintf(path, "%s/%s", myGlobals.rrdPath, rrdPath);
 
@@ -321,17 +309,17 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
     if(dp->d_name[0] == '.')
       continue;
-    else if(strlen(dp->d_name) < strlen(RRD_EXTENSION)+3)
+    else if(strlen(dp->d_name) < strlen(CONST_RRD_EXTENSION)+3)
       continue;
 
-    rsrcName = &dp->d_name[strlen(dp->d_name)-strlen(RRD_EXTENSION)-3];
-    if(strcmp(rsrcName, "Num"RRD_EXTENSION) == 0)
+    rsrcName = &dp->d_name[strlen(dp->d_name)-strlen(CONST_RRD_EXTENSION)-3];
+    if(strcmp(rsrcName, "Num"CONST_RRD_EXTENSION) == 0)
       isGauge = 1;
     else
       isGauge = 0;
 
-    rsrcName = &dp->d_name[strlen(dp->d_name)-strlen(RRD_EXTENSION)];
-    if(strcmp(rsrcName, RRD_EXTENSION))
+    rsrcName = &dp->d_name[strlen(dp->d_name)-strlen(CONST_RRD_EXTENSION)];
+    if(strcmp(rsrcName, CONST_RRD_EXTENSION))
       continue;
 
     rc = sumCounter(rrdPath, dp->d_name, startTime, endTime, &total, &average);
@@ -431,7 +419,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     strftime(startTimeBuf, sizeof(startTimeBuf), "%H:%M:%S", localtime_r(&start_tm, &workT));
     strftime(endTimeBuf,   sizeof(endTimeBuf), "%H:%M:%S", localtime_r(&end_tm, &workT));
     strftime(fileTimeBuf,  sizeof(fileTimeBuf), "%H:%M:%S", localtime_r(&reusebuf.st_mtime, &workT));
-    traceEvent(TRACE_INFO, "RRD_DEBUG: Reuse of '%s' (%s > %s > %s)? is %spossible...\n",
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Reuse of '%s' (%s > %s > %s)? is %spossible...\n",
 	       fname,
 	       startTimeBuf,
 	       fileTimeBuf,
@@ -441,14 +429,14 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
     if (rc != 0) {
       if (errno != ENOENT)
-	traceEvent(TRACE_INFO, "RRD: stat('%s') failed, %d...\n", fname, errno);
+	traceEvent(CONST_TRACE_INFO, "RRD: stat('%s') failed, %d...\n", fname, errno);
       reusebuf.st_mtime = 0;
     }
 
     if ( (reusebuf.st_mtime <= start_tm) || (reusebuf.st_mtime >= end_tm) ) {
       /* Recreate - delete existing and make a new one */
       if ( (unlink(fname) != 0) && (errno != ENOENT) ) {
-	traceEvent(TRACE_ERROR, "RRD: ERROR: unlink('%s') failed, %d...\n", fname, errno);
+	traceEvent(CONST_TRACE_ERROR, "RRD: ERROR: unlink('%s') failed, %d...\n", fname, errno);
       }
       argv[argc++] = "rrd_graph";
       argv[argc++] = fname;
@@ -479,7 +467,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
 #if RRD_DEBUG >= 3
       for (x = 0; x < argc; x++)
-	traceEvent(TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
 #endif
 
       optind=0; /* reset gnu getopt */
@@ -498,13 +486,13 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
     if(rc == 0) {
 #ifdef WIN32
-      sendHTTPHeader(HTTP_TYPE_GIF, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_GIF, 0);
 #else
-      sendHTTPHeader(HTTP_TYPE_PNG, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0);
 #endif
       sendGraphFile(fname, myGlobals.reuseRRDgraphics /* Do we unlink? 0=yes, 1=no */);
     } else {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("RRD Graph", 0);
       snprintf(path, sizeof(path), "<I>Error while building graph of the requested file. %s</I>",
 	       rrd_get_error());
@@ -512,7 +500,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
       rrd_clear_error();
     }
   } else {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     printHTMLheader("RRD Graph", 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD file)</I>");
@@ -572,26 +560,26 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     rc = rrd_create(argc, argv);
 
     if (rrd_test_error()) {
-      traceEvent(TRACE_WARNING, "RRD: rrd_create(%s) error: %s\n", 
+      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s\n", 
 		 path, rrd_get_error());
       rrd_clear_error();
       numRRDerrors++;
     }
 
 #if RRD_DEBUG > 0
-    traceEvent(TRACE_INFO, "RRD_DEBUG: rrd_create(%s, %s, %u)=%d", 
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrd_create(%s, %s, %u)=%d", 
 	       hostPath, key, (unsigned long)value, rc);
 #endif
     createdCounter = 1;
   }
 
-#ifdef RRD_DEBUG > 0
+#if RRD_DEBUG > 0
   argc = 0;
   argv[argc++] = "rrd_last";
   argv[argc++] = path;
 
   if(rrd_last(argc, argv) >= rrdTime) {
-    traceEvent(TRACE_INFO, "RRD_DEBUG: WARNING rrd_update not performed (RRD already updated)");
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: WARNING rrd_update not performed (RRD already updated)");
   }
 #endif
 
@@ -643,16 +631,16 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     int x;
 
     numRRDerrors++;
-    traceEvent(TRACE_WARNING, "RRD: rrd_update(%s) error: %s\n", path, rrd_get_error());
+    traceEvent(CONST_TRACE_WARNING, "RRD: rrd_update(%s) error: %s\n", path, rrd_get_error());
     rrd_clear_error();
 
-    traceEvent(TRACE_INFO, "RRD call stack (counter created: %d):", createdCounter);
+    traceEvent(CONST_TRACE_INFO, "RRD call stack (counter created: %d):", createdCounter);
     for	(x = 0; x < argc; x++)
-      traceEvent(TRACE_INFO, "argv[%d]: %s", x, argv[x]);
+      traceEvent(CONST_TRACE_INFO, "argv[%d]: %s", x, argv[x]);
   }
 
 #if RRD_DEBUG > 0
-  traceEvent(TRACE_INFO, "RRD_DEBUG: rrd_update(%s, %u, %u)=%d", path, (unsigned long)value, rc);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrd_update(%s, %u, %u)=%d", path, (unsigned long)value, rc);
 #endif
 
 }
@@ -711,9 +699,9 @@ static void commonRRDinit(void) {
   /* **************************** */
 
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
-    sprintf(value, "%d", RRD_DEFAULT_INTERVAL);
+    sprintf(value, "%d", DEFAULT_RRD_INTERVAL);
     storePrefsValue("rrd.dataDumpInterval", value);
-    dumpInterval = RRD_DEFAULT_INTERVAL;
+    dumpInterval = DEFAULT_RRD_INTERVAL;
   } else {
     dumpInterval = atoi(value);
   }
@@ -747,8 +735,8 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dumpDetail", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpDetail", "2" /* DETAIL_HIGH */);
-    dumpDetail = DETAIL_HIGH;
+    storePrefsValue("rrd.dumpDetail", FLAG_RRD_DETAIL_HIGH_STR);
+    dumpDetail = FLAG_RRD_DETAIL_HIGH;
   } else {
     dumpDetail  = atoi(value);
   }
@@ -762,16 +750,16 @@ static void commonRRDinit(void) {
   }
 
 #ifdef RRD_DEBUG
-  traceEvent(TRACE_INFO, "RRD_DEBUG: Parameters:\n");
-  traceEvent(TRACE_INFO, "RRD_DEBUG:     dumpInterval %d seconds\n", dumpInterval);
-  traceEvent(TRACE_INFO, "RRD_DEBUG:     dumpHosts %s\n", dumpHosts == 0 ? "no" : "yes");
-  traceEvent(TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s\n", dumpInterfaces == 0 ? "no" : "yes");
-  traceEvent(TRACE_INFO, "RRD_DEBUG:     dumpMatrix %s\n", dumpMatrix == 0 ? "no" : "yes");
-  traceEvent(TRACE_INFO, "RRD_DEBUG:     dumpDetail %s\n",
-	     dumpDetail == DETAIL_HIGH ? "high" :
-             (dumpDetail == DETAIL_MEDIUM ? "medium" : "low"));
-  traceEvent(TRACE_INFO, "RRD_DEBUG:     hostsFilter %s\n", hostsFilter);
-  traceEvent(TRACE_INFO, "RRD_DEBUG:     rrdPath %s\n", myGlobals.rrdPath);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Parameters:\n");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterval %d seconds\n", dumpInterval);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHosts %s\n", dumpHosts == 0 ? "no" : "yes");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s\n", dumpInterfaces == 0 ? "no" : "yes");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMatrix %s\n", dumpMatrix == 0 ? "no" : "yes");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDetail %s\n",
+	     dumpDetail == FLAG_RRD_DETAIL_HIGH ? "high" :
+             (dumpDetail == FLAG_RRD_DETAIL_MEDIUM ? "medium" : "low"));
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     hostsFilter %s\n", hostsFilter);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s\n", myGlobals.rrdPath);
 #endif
 
   initialized = 1;
@@ -780,14 +768,10 @@ static void commonRRDinit(void) {
 /* ****************************** */
 
 
-#define ACTION_NONE   0
-#define ACTION_GRAPH  1
-#define ACTION_LIST   2
-
 static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[64], startTime[32], endTime[32], rrdPrefix[32];
-  u_char action = ACTION_NONE;
+  u_char action = FLAG_RRD_ACTION_NONE;
   int _dumpFlows=0, _dumpHosts=0, _dumpInterfaces=0, _dumpMatrix=0;
 
   if (initialized == 0)
@@ -796,7 +780,7 @@ static void handleRRDHTTPrequest(char* url) {
   if((url != NULL) && (url[0] != '\0')) {
     unescape_url(url);
 
-    /* traceEvent(TRACE_INFO, "RRD: URL=%s", url); */
+    /* traceEvent(CONST_TRACE_INFO, "RRD: URL=%s", url); */
 
     urlPiece = strtok_r(url, "&", &mainState);
     strcpy(startTime, "now-12h");
@@ -808,13 +792,13 @@ static void handleRRDHTTPrequest(char* url) {
       key = strtok_r(urlPiece, "=", &strtokState);
       if(key != NULL) value = strtok_r(NULL, "=", &strtokState);
 
-      /* traceEvent(TRACE_INFO, "RRD: key(%s)=%s", key, value);  */
+      /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);  */
 
       if(value && key) {
 
 	if(strcmp(key, "action") == 0) {
-	  if(strcmp(value, "graph") == 0)     action = ACTION_GRAPH;
-	  else if(strcmp(value, "list") == 0) action = ACTION_LIST;
+	  if(strcmp(value, "graph") == 0)     action = FLAG_RRD_ACTION_GRAPH;
+	  else if(strcmp(value, "list") == 0) action = FLAG_RRD_ACTION_LIST;
 	} else if(strcmp(key, "key") == 0) {
 	  int len = strlen(value), i;
 
@@ -877,7 +861,7 @@ static void handleRRDHTTPrequest(char* url) {
 	  _dumpFlows = 1;
 	} else if(strcmp(key, "dumpDetail") == 0) {
 	  dumpDetail = atoi(value);
-	  if(dumpDetail > DETAIL_HIGH) dumpDetail = DETAIL_HIGH;
+	  if(dumpDetail > FLAG_RRD_DETAIL_HIGH) dumpDetail = FLAG_RRD_DETAIL_HIGH;
 	  snprintf(buf, sizeof(buf), "%d", dumpDetail);
 	  storePrefsValue("rrd.dumpDetail", buf);
 	} else if(strcmp(key, "dumpHosts") == 0) {
@@ -892,8 +876,8 @@ static void handleRRDHTTPrequest(char* url) {
       urlPiece = strtok_r(NULL, "&", &mainState);
     }
 
-    if(action == ACTION_NONE) {
-      /* traceEvent(TRACE_INFO, "RRD: dumpFlows=%d", dumpFlows); */
+    if(action == FLAG_RRD_ACTION_NONE) {
+      /* traceEvent(CONST_TRACE_INFO, "RRD: dumpFlows=%d", dumpFlows); */
       dumpFlows=_dumpFlows, dumpHosts=_dumpHosts,
 	dumpInterfaces=_dumpInterfaces, dumpMatrix=_dumpMatrix;
       sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dumpFlows", buf);
@@ -903,17 +887,17 @@ static void handleRRDHTTPrequest(char* url) {
     }
   }
 
-  /* traceEvent(TRACE_INFO, "RRD: action=%d", action); */
+  /* traceEvent(CONST_TRACE_INFO, "RRD: action=%d", action); */
 
-  if(action == ACTION_GRAPH) {
+  if(action == FLAG_RRD_ACTION_GRAPH) {
     graphCounter(rrdKey, rrdName, rrdTitle, startTime, endTime, rrdPrefix);
     return;
-  } else if(action == ACTION_LIST) {
+  } else if(action == FLAG_RRD_ACTION_LIST) {
     listResource(rrdKey, rrdTitle, startTime, endTime);
     return;
   }
 
-  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
   printHTMLheader("RRD Preferences", 0);
 
   sendString("<CENTER>\n");
@@ -965,17 +949,17 @@ static void handleRRDHTTPrequest(char* url) {
 
   sendString("<TR><TH ALIGN=LEFT>RRD Detail</TH><TD>");
   if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Low\n",
-	      DETAIL_LOW, (dumpDetail == DETAIL_LOW) ? "CHECKED" : "") < 0)
+	      FLAG_RRD_DETAIL_LOW, (dumpDetail == FLAG_RRD_DETAIL_LOW) ? "CHECKED" : "") < 0)
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Medium\n",
-	      DETAIL_MEDIUM, (dumpDetail == DETAIL_MEDIUM) ? "CHECKED" : "") < 0)
+	      FLAG_RRD_DETAIL_MEDIUM, (dumpDetail == FLAG_RRD_DETAIL_MEDIUM) ? "CHECKED" : "") < 0)
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Full\n",
-	      DETAIL_HIGH, (dumpDetail == DETAIL_HIGH) ? "CHECKED" : "") < 0)
+	      FLAG_RRD_DETAIL_HIGH, (dumpDetail == FLAG_RRD_DETAIL_HIGH) ? "CHECKED" : "") < 0)
     BufferTooShort();
   sendString(buf);
   sendString("</TD></TR>\n");
@@ -1036,7 +1020,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   int cycleCount=0;
 
 #ifdef RRD_DEBUG
-  traceEvent(TRACE_INFO, "RRD_DEBUG: rrdMainLoop()");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop()");
 #endif
 
   if (initialized == 0)
@@ -1068,7 +1052,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 #if RRD_DEBUG >= 1
     strftime(endTime, sizeof(endTime), "%Y-%m-%d %H:%M:%S", localtime_r(&end_tm, &workT));
-    traceEvent(TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds (interval %d, end at %s)\n", 
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds (interval %d, end at %s)\n", 
 	       sleep_tm, 
 	       dumpInterval,
 	       endTime);
@@ -1123,7 +1107,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd);
 
 
-	  if(dumpDetail >= DETAIL_MEDIUM) {
+	  if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
 	    updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent);
 	    updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd);
 	    updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent);
@@ -1184,13 +1168,13 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    updateTrafficCounter(rrdPath, "otherRcvd", &el->otherRcvd);
 	  }
 
-	  if(dumpDetail == DETAIL_HIGH) {
+	  if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
 	    updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers);
 	    updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers);
 	    
 	    if((hostKey == el->hostNumIpAddress) && el->protoIPTrafficInfos) {
 #ifdef RRD_DEBUG
-	      traceEvent(TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
+	      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
 #endif
 
 	      sprintf(rrdPath, "%s/hosts/%s/IP_", myGlobals.rrdPath, hostKey);
@@ -1248,7 +1232,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(i));
 	updateCounter(rrdPath, "ipBytes",       myGlobals.device[i].ipBytes.value);
 
-	if(dumpDetail >= DETAIL_MEDIUM) {
+	if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
 	  updateCounter(rrdPath, "droppedPkts", myGlobals.device[i].droppedPkts.value);
 	  updateCounter(rrdPath, "fragmentedIpBytes", myGlobals.device[i].fragmentedIpBytes.value);
 	  updateCounter(rrdPath, "tcpBytes", myGlobals.device[i].tcpBytes.value);
@@ -1278,7 +1262,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateCounter(rrdPath, "tooLongPkts", myGlobals.device[i].rcvdPktStats.tooLong.value);
 	}
 
-	if(dumpDetail == DETAIL_HIGH) {
+	if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
 	  if(myGlobals.device[i].ipProtoStats != NULL) {
 	    snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_", myGlobals.rrdPath,  myGlobals.device[i].humanFriendlyName);
 
@@ -1336,7 +1320,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     }
 
 #ifdef RRD_DEBUG
-    traceEvent(TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)\n",
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)\n",
 	       (unsigned long)(numTotalRRDs-numRRDs), (unsigned long)numTotalRRDs);
 #endif
 
@@ -1351,7 +1335,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     sprintf(rrdPath, "%s/%s", myGlobals.rrdPath, rrd_subdirs[0]);
 #ifdef RRD_DEBUG
-    traceEvent(TRACE_INFO, "RRD_DEBUG: beginning old file purge (%s).", rrdPath);
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: beginning old file purge (%s).", rrdPath);
 #endif
 
     workDir = opendir(rrdPath);
@@ -1366,13 +1350,13 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      strftime(fileTimeBuf, sizeof(fileTimeBuf), 
 		       "%H:%M:%S", 
 		       localtime_r(&statbuf.st_mtime, &workT));
-	      traceEvent(TRACE_INFO, "RRD_DEBUG: oldfilepurge %s, mod @ %s\n",
+	      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: oldfilepurge %s, mod @ %s\n",
 			 fname,
 			 fileTimeBuf);
 #endif
 	      if ((unlink(fname) != 0) && (errno != ENOENT)) {
 		purgeCountErrors++;
-		traceEvent(TRACE_ERROR, "RRD: ERROR: unlink('%s') failed, %d...\n", fname, errno);
+		traceEvent(CONST_TRACE_ERROR, "RRD: ERROR: unlink('%s') failed, %d...\n", fname, errno);
 	      } else {
 		purgeCountUnlink++;
 	      }
@@ -1381,24 +1365,22 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	}
       }
 #ifdef RRD_DEBUG
-      traceEvent(TRACE_INFO, "RRD: finished old file purge (%d files, %d deleted, %d errors).",
+      traceEvent(CONST_TRACE_INFO, "RRD: finished old file purge (%d files, %d deleted, %d errors).",
 		 purgeCountFiles,
 		 purgeCountUnlink,
 		 purgeCountErrors);
 #endif
     } else {
-      traceEvent(TRACE_ERROR, "RRD: Unable to opendir(%s), errno=%d\n", rrdPath, errno);
+      traceEvent(CONST_TRACE_ERROR, "RRD: Unable to opendir(%s), errno=%d\n", rrdPath, errno);
     }
   }
 
 #ifdef RRD_DEBUG
-  traceEvent(TRACE_INFO, "RRD_DEBUG: rrdMainLoop() terminated.");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop() terminated.");
 #endif
 
   return(0);
 }
-
-#undef RRD_DEBUG 
 
 /* ****************************** */
 
@@ -1406,7 +1388,7 @@ static void initRrdFunct(void) {
   char dname[256];
   int i;
 
-  traceEvent(TRACE_INFO, "Welcome to the RRD plugin...");
+  traceEvent(CONST_TRACE_INFO, "Welcome to the RRD plugin...");
 
   if(myGlobals.rrdPath == NULL)
     commonRRDinit();
@@ -1414,12 +1396,12 @@ static void initRrdFunct(void) {
   sprintf(dname, "%s", myGlobals.rrdPath);
   if (_mkdir(dname) == -1) { 
     if (errno != EEXIST) {
-      traceEvent(TRACE_ERROR, "RRD: ERROR: Disabled - unable to create base directory (err %d, %s)\n", errno, dname);
+      traceEvent(CONST_TRACE_ERROR, "RRD: ERROR: Disabled - unable to create base directory (err %d, %s)\n", errno, dname);
       /* Return w/o creating the rrd thread ... disabled */
       return;
     }
   } else {
-    traceEvent(TRACE_INFO, "RRD: Created base directory (%s)\n", dname);
+    traceEvent(CONST_TRACE_INFO, "RRD: Created base directory (%s)\n", dname);
   }
 
   for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
@@ -1427,19 +1409,19 @@ static void initRrdFunct(void) {
     sprintf(dname, "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
     if (_mkdir(dname) == -1) {
       if (errno != EEXIST) {
-	traceEvent(TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)\n", errno, dname);
+	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)\n", errno, dname);
 	/* Return w/o creating the rrd thread ... disabled */
 	return;
       }
     } else {
-      traceEvent(TRACE_INFO, "RRD: Note: Created directory (%s)\n", dname);
+      traceEvent(CONST_TRACE_INFO, "RRD: Note: Created directory (%s)\n", dname);
     }
   } 
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   /* This plugin works only with threads */
   createThread(&rrdThread, rrdMainLoop, NULL);
-  traceEvent(TRACE_INFO, "RRD: Started thread (%ld) for data collection.", rrdThread);
+  traceEvent(CONST_TRACE_INFO, "RRD: Started thread (%ld) for data collection.", rrdThread);
 #endif
 
   fflush(stdout);
@@ -1449,12 +1431,12 @@ static void initRrdFunct(void) {
 /* ****************************** */
 
 static void termRrdFunct(void) {
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   if(active) killThread(&rrdThread);
 #endif
 
-  traceEvent(TRACE_INFO, "RRD: Thanks for using the rrdPlugin");
-  traceEvent(TRACE_INFO, "RRD: Done.\n");
+  traceEvent(CONST_TRACE_INFO, "RRD: Thanks for using the rrdPlugin");
+  traceEvent(CONST_TRACE_INFO, "RRD: Done.\n");
   fflush(stdout);
 }
 
@@ -1463,7 +1445,7 @@ static void termRrdFunct(void) {
 static void initRrdFunct(void) { }
 static void termRrdFunct(void) { }
 static void handleRRDHTTPrequest(char* url) {
-  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
   printHTMLheader("RRD Preferences", 0);
   printFlagedWarning("<I>This plugin is disabled as ntop has not been compiled with RRD support</I>");
   sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
@@ -1500,7 +1482,7 @@ PluginInfo* rrdPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(TRACE_INFO, "RRD: Welcome to %s. (C) 2002 by Luca Deri.\n",
+  traceEvent(CONST_TRACE_INFO, "RRD: Welcome to %s. (C) 2002 by Luca Deri.\n",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);
