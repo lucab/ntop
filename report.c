@@ -4795,7 +4795,7 @@ void printIpTrafficMatrix(void) {
 /* ************************ */
 
 void printThptStatsMatrix(int sortedColumn _UNUSED_) {
-  int i;
+  int i, ratio=1;
   char label[32], label1[32], buf[BUF_SIZE];
   time_t tmpTime;
   struct tm t;
@@ -4821,8 +4821,8 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
       strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
       snprintf(buf, sizeof(buf), "<TR %s><TD ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
 	      "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>",
-	      getRowColor(), label, label1,
-	      formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].trafficValue/8));
+	      getRowColor(), label1, label,
+	      formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].trafficValue/ratio));
       sendString(buf);
 
       if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].last60MinutesThpt[i].topHostSentIdx] != NULL) {
@@ -4831,7 +4831,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 			     hash_hostTraffic[device[actualReportDeviceId].
 					     last60MinutesThpt[i].topHostSentIdx],
 			     LONG_FORMAT, 0, 0),
-		formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].topSentTraffic/8));
+		formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].topSentTraffic/ratio));
 	sendString(buf);
 
 	if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
@@ -4842,7 +4842,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 					       last60MinutesThpt[i].secondHostSentIdx],
 			       LONG_FORMAT, 0, 0),
 		  formatThroughput(device[actualReportDeviceId].
-				   last60MinutesThpt[i].secondSentTraffic/8));
+				   last60MinutesThpt[i].secondSentTraffic/ratio));
 	  sendString(buf);
 	}
 
@@ -4855,7 +4855,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 					       last60MinutesThpt[i].thirdHostSentIdx],
 			       LONG_FORMAT, 0, 0),
 		  formatThroughput(device[actualReportDeviceId].
-				   last60MinutesThpt[i].thirdSentTraffic/8));
+				   last60MinutesThpt[i].thirdSentTraffic/ratio));
 	  sendString(buf);
 	}
       } else
@@ -4873,7 +4873,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 					     last60MinutesThpt[i].topHostRcvdIdx],
 			      LONG_FORMAT, 0, 0),
 		formatThroughput(device[actualReportDeviceId].
-				 last60MinutesThpt[i].topRcvdTraffic/8));
+				 last60MinutesThpt[i].topRcvdTraffic/ratio));
 	sendString(buf);
 
 	if(device[actualReportDeviceId].
@@ -4885,7 +4885,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 					       last60MinutesThpt[i].secondHostRcvdIdx],
 			       LONG_FORMAT, 0, 0),
 		  formatThroughput(device[actualReportDeviceId].
-				   last60MinutesThpt[i].secondRcvdTraffic/8));
+				   last60MinutesThpt[i].secondRcvdTraffic/ratio));
 	  sendString(buf);
 	}
 
@@ -4897,7 +4897,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 					       last60MinutesThpt[i].thirdHostRcvdIdx],
 			       LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last60MinutesThpt[i].thirdRcvdTraffic/8));
+				     last60MinutesThpt[i].thirdRcvdTraffic/ratio));
 	  sendString(buf);
 	}
       } else
@@ -4930,7 +4930,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 	snprintf(buf, sizeof(buf), "<TR %s><TD ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
 		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=LEFT><TABLE BORDER=1>",
 		getRowColor(), label, label1,
-		formatThroughput(device[actualReportDeviceId].last24HoursThpt[i].trafficValue/8));
+		formatThroughput(device[actualReportDeviceId].last24HoursThpt[i].trafficValue/ratio));
 	sendString(buf);
 
 	if(device[actualReportDeviceId].
@@ -4942,7 +4942,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 					       last24HoursThpt[i].topHostSentIdx],
 			       LONG_FORMAT, 0, 0),
 		  formatThroughput(device[actualReportDeviceId].
-				   last24HoursThpt[i].topSentTraffic/8));
+				   last24HoursThpt[i].topSentTraffic/ratio));
 	  sendString(buf);
 
 	  if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
@@ -4953,7 +4953,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 						 last24HoursThpt[i].secondHostSentIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].secondSentTraffic/8));
+				     last24HoursThpt[i].secondSentTraffic/ratio));
 	    sendString(buf);
 	  }
 
@@ -4965,7 +4965,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 						 last24HoursThpt[i].thirdHostSentIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].thirdSentTraffic/8));
+				     last24HoursThpt[i].thirdSentTraffic/ratio));
 	    sendString(buf);
 	  }
 	}
@@ -4982,7 +4982,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 					       last24HoursThpt[i].topHostRcvdIdx],
 			       LONG_FORMAT, 0, 0),
 		  formatThroughput(device[actualReportDeviceId].
-				   last24HoursThpt[i].topRcvdTraffic/8));
+				   last24HoursThpt[i].topRcvdTraffic/ratio));
 	  sendString(buf);
 
 	  if(device[actualReportDeviceId].
@@ -4994,7 +4994,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 						 last24HoursThpt[i].secondHostRcvdIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].secondRcvdTraffic/8));
+				     last24HoursThpt[i].secondRcvdTraffic/ratio));
 	    sendString(buf);
 	  }
 
@@ -5006,7 +5006,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 						 last24HoursThpt[i].thirdHostRcvdIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].thirdRcvdTraffic/8));
+				     last24HoursThpt[i].thirdRcvdTraffic/ratio));
 	    sendString(buf);
 	  }
 
@@ -5603,10 +5603,14 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
 
   memset(theMsgs, 0, sizeof(theMsgs));
 
+  printf("0) EVENT !!!! \n");
+
   if(eventFile == NULL) {
     if(theHost == NULL) printNoDataYet();
     return; /* No rules are currently active */
   }
+
+  printf("EVENT !!!!\n");
 
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "printHostEvent");
@@ -5648,21 +5652,21 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
 	  theMsgTable[numEntries] = &(theMsgs[numEntries]);
 	  numEntries++;
 	}
-
+	
 	if(data_data.dptr != NULL) 
 	  free(data_data.dptr);
       }
     }
-
+    
     free(key_data.dptr);
   } /* while */
-
+  
   if(numEntries == 0) {
     if(theHost == NULL)  {
       /* All the events */
       printNoDataYet();
     }
-
+    
     return;
   }
 
@@ -5854,21 +5858,75 @@ void fillDomainName(HostTraffic *el) {
 
 /* ******************************** */
 
-void printDebugInfo(void) {
+static void printFeatureConfigInfo(char* feature, char* status) {
+  sendString("<TR><TH ALIGN=left>");
+  sendString(feature);
+  sendString("</TH><TD ALIGN=right>");
+  sendString(status);
+  sendString("</td></tr>\n");
+}
+
+/* ******************************** */
+
+void printNtopConfigInfo(void) {
   char buf[BUF_SIZE];
 
-  sendString("</CENTER><TABLE BORDER=1>\n");
-  snprintf(buf, sizeof(buf), "<TR><TH>actualHashSize</TH><TD>%d</TD></TR>\n",
+
+  sendString("<CENTER><H1>Current ntop Configuration</H1>\n");
+
+  sendString("<P><HR><P><TABLE BORDER=1>\n");
+
+  printFeatureConfigInfo("OS", osName);
+  printFeatureConfigInfo("ntop Version", version);
+  printFeatureConfigInfo("Built on", buildDate);
+
+#ifdef HAVE_OPENSSL
+  printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", "Present");
+#else
+  printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", "Absent");
+#endif
+
+#ifdef MULTITHREADED
+  printFeatureConfigInfo("Multithreaded", "Yes");
+#else
+  printFeatureConfigInfo("Multithreaded", "No");
+#endif
+
+#ifdef HAVE_GDCHART
+  printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Present");
+#else
+  printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Absent");
+#endif
+
+#ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
+  printFeatureConfigInfo("<A HREF=http://ucd-snmp.ucdavis.edu/>UCD SNMP</A>", "Present");
+#else
+  printFeatureConfigInfo("<A HREF=http://ucd-snmp.ucdavis.edu/>UCD SNMP </A>", "Absent");
+#endif
+
+#ifdef HAVE_LIBWRAP
+  printFeatureConfigInfo("TCP Wrappers", "Present");
+#else
+  printFeatureConfigInfo("TCP Wrappers", "Absent");
+#endif
+
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  printFeatureConfigInfo("Async. Addr. Resolution", "Yes");
+#else
+  printFeatureConfigInfo("Async. Addr. Resolution", "No");
+#endif
+
+  snprintf(buf, sizeof(buf), "<TR><TH align=left>actualHashSize</TH><TD align=right>%d</TD></TR>\n",
 	  (int)device[actualReportDeviceId].actualHashSize);
   sendString(buf);
-  snprintf(buf, sizeof(buf), "<TR><TH>Hash hosts</TH><TD>%d [%d %%]</TD></TR>\n",
+  snprintf(buf, sizeof(buf), "<TR><TH align=left>Hash hosts</TH><TD align=right>%d [%d %%]</TD></TR>\n",
 	  (int)device[actualReportDeviceId].hostsno,
 	  (((int)device[actualReportDeviceId].hostsno*100)/
 	   (int)device[actualReportDeviceId].actualHashSize));
   sendString(buf);
 
 #ifdef MEMORY_DEBUG
-  snprintf(buf, sizeof(buf), "<TR><TH>Allocated Memory</TH><TD>%s</TD></TR>\n",
+  snprintf(buf, sizeof(buf), "<TR><TH align=left>Allocated Memory</TH><TD align=right>%s</TD></TR>\n",
 	  formatBytes(allocatedMemory, 0));
   sendString(buf);
 #endif

@@ -104,7 +104,7 @@ void emitEvent(FilterRule *rule,
   theMsg.destHost.s_addr   = dstHost->hostIpAddress.s_addr;
   theMsg.ruleId = rule->ruleId;
   theMsg.severity = rule->actionType;
-  strncpy(theMsg.message, msg, MESSAGE_MAX_LEN);
+  strncpy(theMsg.message, msg, MAX_EVENT_MSG_SIZE);
   data_data.dptr = (char*)&theMsg; data_data.dsize = sizeof(theMsg);
 
 #ifdef MULTITHREADED

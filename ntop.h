@@ -1476,6 +1476,7 @@ typedef struct logMessage {
 #define PLUGINS_HEADER                "plugins/"
 #define STR_SHOW_PLUGINS              "showPlugins.html"
 #define SHUTDOWN_NTOP_HTML            "shutdown.html"
+#define INFO_NTOP_HTML                "info.html"
 #define TRAFFIC_STATS_HTML            "trafficStats.html"
 #define NW_EVENTS_HTML                "networkEvents.html"
 

@@ -67,7 +67,7 @@ extern void printNoDataYet(void);
 extern void listNetFlows(void);
 extern void printHostEvents(HostTraffic *theHost, int column, int revertOrder);
 extern void fillDomainName(HostTraffic *el);
-extern void printDebugInfo(void);
+extern void printNtopConfigInfo(void);
 
 /* webInterface.c */
 extern void initializeWeb(void);

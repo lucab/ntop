@@ -322,7 +322,7 @@ void printHTTPheader(void) {
   sendString(">\n<LINK REL=stylesheet HREF=/style.css type=\"text/css\">\n");
   sendString("<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n");
   sendString("<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
-  sendString("</HEAD>\n<BODY BACKGROUND=/white_bg.gif BGCOLOR=#FFFFFF>\n");
+  sendString("</HEAD>\n<BODY BACKGROUND=/white_bg.gif>\n");
 }
 
 /* ************************* */
@@ -411,7 +411,7 @@ static void returnHTTPaccessDenied(void) {
   sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server [default user=admin,pw=admin];\"\n");
   sendString("Connection: close\n");
   sendString("Content-Type: text/html\n\n");
-  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY BACKGROUND=white_bg.gif>\n"
+  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY BACKGROUND=/white_bg.gif>\n"
 	     "<H1>Error 401</H1>\nUnauthorized to access the document\n</BODY>\n</HTML>\n");
   logHTTPaccess(401);
 }
@@ -422,7 +422,7 @@ static void returnHTTPaccessForbidden(void) {
   sendString("HTTP/1.0 403 Forbidded\n");
   sendString("Connection: close\n");
   sendString("Content-Type: text/html\n\n");
-  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY BACKGROUND=white_bg.gif>\n"
+  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY BACKGROUND=/white_bg.gif>\n"
 	     "<H1>Error 401</H1>\nServer refused to fulfill your request.\n</BODY>\n</HTML>\n");
   logHTTPaccess(403);
 }
@@ -641,7 +641,7 @@ static void returnHTTPPage(char* pageName, int postLen) {
   } else if((strcmp(pageName, "leftmenu.html") == 0)
 	    || (strcmp(pageName, "leftmenu-nojs.html") == 0)) {
     sendHTTPProtoHeader(); sendHTTPHeaderType();
-    sendString("<HTML>\n<BODY BACKGROUND=white_bg.gif BGCOLOR=#FFFFFF>\n"
+    sendString("<HTML>\n<BODY BACKGROUND=/white_bg.gif>\n"
 	       "<center>\n<pre>\n\n</pre>\n\n");
     sendString("<FONT FACE=Helvetica SIZE=+2>Welcome<br>to<br>\n");
     sendString("ntop!</FONT>\n<pre>\n</pre>\n");
@@ -723,7 +723,7 @@ static void returnHTTPPage(char* pageName, int postLen) {
     switchNwInterface(sortedColumn);
   } else if(strcmp(pageName, "home.html") == 0) {
     sendHTTPProtoHeader(); sendHTTPHeaderType();
-    sendString("<html>\n<body BACKGROUND=white_bg.gif bgcolor=#FFFFFF><CENTER><FONT FACE=Helvetica>"
+    sendString("<html>\n<body BACKGROUND=/white_bg.gif><CENTER><FONT FACE=Helvetica>"
 	       "<H1>Welcome to ntop!</H1></center><hr>");
     sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
     sendString("currently using the network and reports information concerning the IP\n");
@@ -900,7 +900,7 @@ static void returnHTTPPage(char* pageName, int postLen) {
     printHostEvents(NULL, sortedColumn, revertOrder);
   } else if(strcmp(pageName, "Credits.html") == 0) {
     sendHTTPProtoHeader(); sendHTTPHeaderType();
-    sendString("<HTML>\n<BODY BACKGROUND=white_bg.gif BGCOLOR=#FFFFFF>\n<FONT FACE=Helvetica>\n");
+    sendString("<HTML>\n<BODY BACKGROUND=/white_bg.gif>\n<FONT FACE=Helvetica>\n");
     sendString("<H1><center>Credits</H1></center><p><hr><br><b>ntop</b> has been created by\n");
     sendString("<A HREF=\"http://jake.unipi.it/~deri/\">Luca Deri</A> while studying how to model\n");
     sendString("network traffic. He was unsatisfied of the many network traffic analysis tools\n");
@@ -960,10 +960,9 @@ static void returnHTTPPage(char* pageName, int postLen) {
       deleteURL(NULL);
     else
       deleteURL(&questionMark[1]);
-
-  } else if(strncmp(pageName, "debug.html", strlen("debug.html")) == 0) {
-    sendHTTPProtoHeader(); sendHTTPHeaderType();
-    printDebugInfo();
+  } else if(strncmp(pageName, INFO_NTOP_HTML, strlen(INFO_NTOP_HTML)) == 0) {
+    sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
+    printNtopConfigInfo();
   } else if(strcmp(pageName, "doAddURL") == 0) {
     printTrailer=0;
     doAddURL(postLen /* \r\n */);
@@ -1204,7 +1203,7 @@ void handleHTTPrequest(struct in_addr from) {
     snprintf(buf, sizeof(buf), "Server: ntop/%s (%s)\n", version, osName);
     sendString(buf);
     sendHTTPProtoHeader(); sendHTTPHeaderType();
-    sendString("<HTML>\n<TITLE>???</TITLE>\n<BODY BACKGROUND=white_bg.gif>\n"
+    sendString("<HTML>\n<TITLE>???</TITLE>\n<BODY BACKGROUND=/white_bg.gif>\n"
 	       "<H1>Error</H1>\nUnkown page\n</BODY>\n</HTML>\n");
   }
 
