@@ -2266,7 +2266,6 @@ static int returnHTTPPage(char* pageName,
         theHost = &pageName[strlen(CONST_BAR_LUNSTATS_DIST)+1];
         if(strlen(theHost) >= 31) theHost[31] = 0;
 
-        traceEvent (CONST_TRACE_ALWAYSDISPLAY, "returnHTTPPage: theHost = %s\n", theHost);
         for (i=strlen(theHost); i>0; i--) {
 	  if(theHost[i] == '?') {
 	    theHost[i] = '\0';
@@ -2285,7 +2284,6 @@ static int returnHTTPPage(char* pageName,
         urlFixupFromRFC1945Inplace(hostName);
         /* printf("HostName: '%s'\r\n", hostName); */
         
-        traceEvent (CONST_TRACE_ALWAYSDISPLAY, "Checking for %s\n", hostName);
         for(el=getFirstHost(myGlobals.actualReportDeviceId); 
             el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 	  if(!isFcHost(el)) {
@@ -2295,13 +2293,13 @@ static int returnHTTPPage(char* pageName,
 	       && ((strcmp(el->hostNumIpAddress, hostName) == 0)
 		   || (strcmp(el->ethAddressString, hostName) == 0))) {
 	      break;
-	    } else {
+	    }
+          } else {
 	      if((el->fcCounters->hostNumFcAddress != NULL) &&
 		 strcmp(el->fcCounters->hostNumFcAddress, hostName) == 0)
-		break;
-	    }
-	  }
-	}
+                  break;
+          }
+        }
 	
 	if(el == NULL) {
 	  returnHTTPpageNotFound(NULL);
