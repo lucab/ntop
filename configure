@@ -1339,7 +1339,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.94.116-2003-08-26"
+SCRIPTVER="v2.2.94.117-2003-09-02"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -4904,6 +4904,14 @@ case "${libtoolversion}" in
 
         echo "*******************************************************************"
         exit 1
+        ;;
+    *1\.3\.4\-freebsd\-ports*)
+        echo "* FreeBSD ports 1.3.4 seems to work, so we will let it slide..."
+        echo "*"
+        echo "* Fasten your seat belt and good luck!  If you are injured, the"
+        echo "* development team will disavow any knowledge of your intentions."
+        echo "*"
+        echo "*******************************************************************"
         ;;
     *1\.3*)
         echo "*******************************************************************"

@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.94])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.94.116-2003-08-26"
+SCRIPTVER="v2.2.94.117-2003-09-02"
 
 dnl>
 dnl> generate the config header
@@ -265,6 +265,14 @@ case "${libtoolversion}" in
         NTOP_SUGGESTION([libtool], [1.4.3], [143])
         echo "*******************************************************************"
         exit 1
+        ;;
+    *1\.3\.4\-freebsd\-ports*)
+        echo "* FreeBSD ports 1.3.4 seems to work, so we will let it slide..."
+        echo "*"
+        echo "* Fasten your seat belt and good luck!  If you are injured, the"
+        echo "* development team will disavow any knowledge of your intentions."
+        echo "*"
+        echo "*******************************************************************"
         ;;
     *1\.3*)
         echo "*******************************************************************"
