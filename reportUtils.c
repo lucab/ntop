@@ -2168,7 +2168,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 
     if(sessionIdx == 0) {
       /* Now print currently established TCP sessions (if any) */
-      for(idx=1, numSessions=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].numTotSessions; idx++)
+      for(idx=1, numSessions=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].numTcpSessions; idx++)
 	if((myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL)
 	   && ((myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx]->initiatorIdx == elIdx)
 	       || (myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx]->remotePeerIdx == elIdx))) {

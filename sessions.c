@@ -62,30 +62,34 @@ static void updatePortList(HostTraffic *theHost,
   
   if(theHost == NULL) return;
   
-  for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
-    if(theHost->recentlyUsedClientPorts[i] == clientPort) {
-      found = 1;
-      break;
+  if(clientPort > 0) {
+    for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
+      if(theHost->recentlyUsedClientPorts[i] == clientPort) {
+	found = 1;
+	break;
+      }
+    
+    if(!found) {
+      for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
+	theHost->recentlyUsedClientPorts[i] =  theHost->recentlyUsedClientPorts[i+1];    
+      theHost->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] = clientPort;
     }
-
-  if(!found) {
-    for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
-      theHost->recentlyUsedClientPorts[i] =  theHost->recentlyUsedClientPorts[i+1];    
-    theHost->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] = clientPort;
   }
 
   /* ********************************* */
 
-  for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
-    if(theHost->recentlyUsedServerPorts[i] == serverPort) {
-      found = 1;
-      break;
+  if(serverPort > 0) {
+    for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
+      if(theHost->recentlyUsedServerPorts[i] == serverPort) {
+	found = 1;
+	break;
+      }
+    
+    if(!found) {
+      for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
+	theHost->recentlyUsedServerPorts[i] =  theHost->recentlyUsedServerPorts[i+1];    
+      theHost->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] = serverPort;
     }
-
-  if(!found) {
-    for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
-      theHost->recentlyUsedServerPorts[i] =  theHost->recentlyUsedServerPorts[i+1];    
-    theHost->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] = serverPort;
   }
 }
 
@@ -103,16 +107,21 @@ void updateUsedPorts(HostTraffic *srcHost,
   if(srcHost == dstHost) return;
 
   /* Now let's update the list of ports recently used by the hosts */
-  if(sport > dport) 
+  if(sport > dport) {
     clientPort = sport, serverPort = dport;
-  else
+    
+    if(srcHost->hashListBucket != myGlobals.otherHostEntryIdx)
+      updatePortList(srcHost, clientPort, 0);
+    if(dstHost->hashListBucket != myGlobals.otherHostEntryIdx)
+      updatePortList(dstHost, 0, serverPort);
+  } else {
     clientPort = dport, serverPort = sport;
 
-  if(srcHost->hashListBucket != myGlobals.otherHostEntryIdx)
-    updatePortList(srcHost, clientPort, serverPort);
-
-  if(dstHost->hashListBucket != myGlobals.otherHostEntryIdx)
-    updatePortList(dstHost, clientPort, serverPort);
+    if(srcHost->hashListBucket != myGlobals.otherHostEntryIdx)
+      updatePortList(srcHost, 0, serverPort);
+    if(dstHost->hashListBucket != myGlobals.otherHostEntryIdx)
+      updatePortList(dstHost, clientPort, 0);
+  }
 
   /* **************** */
 
@@ -381,7 +390,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   if(!myGlobals.enableSessionHandling) return;
 #ifndef DEBUG
   traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions (device=%d, sessions=%d)\n",
-	     actualDeviceId, myGlobals.device[actualDeviceId].numTotSessions);
+	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
   for(idx=0; idx<myGlobals.device[actualDeviceId].numTotSessions; idx++) {

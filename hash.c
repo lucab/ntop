@@ -640,7 +640,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    sz = myGlobals.device[actualDeviceId].actualHashSize*sizeof(struct hostTraffic*);
 	    myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)realloc(myGlobals.device[actualDeviceId].hash_hostTraffic, sz);
 	    memset(&myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx],
-		   0, sizeof(struct hostTraffic*)*list->idx);
+		   0, sizeof(struct hostTraffic*)*(myGlobals.device[actualDeviceId].actualHashSize-list->idx));
 	    traceEvent(TRACE_INFO, "Extending hash size [newSize=%d][deviceId=%d]",
 		       myGlobals.device[actualDeviceId].actualHashSize,
 		       actualDeviceId);
