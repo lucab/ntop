@@ -73,7 +73,7 @@ static void resolveAddress(struct in_addr *hostAddr,
   int addr, i;
   struct hostent *hp = NULL;
 #ifdef HAVE_GETHOSTBYADDR_R
-  struct hostent _hp;
+  struct hostent _hp, *__hp;
   int h_errnop;
   char buffer[512];
 #endif
@@ -230,8 +230,14 @@ static void resolveAddress(struct in_addr *hostAddr,
 			  &error_num);
 #else /* default */
 #ifdef HAVE_GETHOSTBYADDR_R
+#ifdef __sun
+    hp = gethostbyaddr_r((const char*)&theAddr, sizeof(struct in_addr), 
+			 AF_INET, &_hp, buffer,
+			 sizeof(buffer), &h_errnop);
+#else
     hp = gethostbyaddr_r((const char*)&theAddr, sizeof(struct in_addr), AF_INET,
-			 &_hp, buffer, sizeof(buffer), &h_errnop);
+			 &_hp, buffer, sizeof(buffer), &__hp, &h_errnop);
+#endif
 #else
     hp = (struct hostent*)gethostbyaddr((char*)&theAddr, sizeof(struct in_addr), AF_INET);
 #endif
