@@ -941,6 +941,11 @@
 #define CONST_PCAPNONBLOCKING_SLEEP_TIME    30000000
 
 /*
+ * Interval to run the (background) fingerprint lookup scan
+ */
+#define CONST_FINGERPRINT_LOOP_INTERVAL     300 /* 5m */
+
+/*
  * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
  */
 #define CONST_OSFINGERPRINT_FILE            "etter.passive.os.fp"

@@ -648,6 +648,67 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
 /* **************************************** */
 
+#ifdef CFG_MULTITHREADED
+
+void* scanFingerprintLoop(void* notUsed _UNUSED_) {
+  HostTraffic *el;
+  int i, deviceId, countScan, countResolved;
+#ifdef FINGERPRINT_DEBUG
+  int countCycle=0;
+#endif
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Fingerprint scan thread running...");
+
+  for(;;) {
+
+    countScan=0;
+    countResolved=0;
+
+    myGlobals.nextFingerprintScan = time(NULL) + CONST_FINGERPRINT_LOOP_INTERVAL;
+
+    HEARTBEAT(0, "scanFingerprintLoop(), sleep()...", NULL);
+    sleep(CONST_FINGERPRINT_LOOP_INTERVAL);
+
+    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
+    HEARTBEAT(0, "scanFingerprintLoop(), sleep()...woke", NULL);
+    myGlobals.actTime = time(NULL);
+#ifdef FINGERPRINT_DEBUG
+    traceEvent(CONST_TRACE_NOISY, "FINGERPRINT_DEBUG: starting cycle %d", ++countCycle);
+#endif
+
+    for(deviceId=0; deviceId<myGlobals.numDevices; deviceId++) {
+      for(el=getFirstHost(deviceId);
+          el != NULL; el = getNextHost(deviceId, el)) {
+        if(el->fingerprint == NULL) continue;
+        if(el->fingerprint[0] == ':') continue;
+        if(addrnull(&el->hostIpAddress)) continue;
+        if(el->hostNumIpAddress[0] == '\0') continue;
+        countScan++;
+        setHostFingerprint(el);
+        if((el->fingerprint[0] == ':') && (el->fingerprint[0] != '\0')) countResolved++;
+      }
+
+#ifdef MAKE_WITH_SCHED_YIELD
+      sched_yield(); /* Allow other threads to run */
+#endif
+
+    }
+
+    if(countScan > 0)
+      traceEvent(CONST_TRACE_NOISY, "OSFP: scanFingerprintLoop() checked %d, resolved %d",
+                 countScan, countResolved);
+
+  }
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Fingerprint Scan thread (%ld) terminated", 
+	     myGlobals.scanFingerprintsThreadId);
+  myGlobals.nextFingerprintScan = 0;
+  return(NULL); 
+}
+#endif
+
+/* **************************************** */
+
 #ifndef CFG_MULTITHREADED
 void packetCaptureLoop(time_t *lastTime, int refreshRate) {
   int numPkts=0, pcap_fd = pcap_fileno(myGlobals.device[0].pcapPtr);

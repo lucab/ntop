@@ -4339,6 +4339,7 @@ void printFlagedWarning(char *text) {
 /* ********************************** */
 
 void printPageTitle(char *text) {
+  sendString("<p>&nbsp;</p>\n");
   switch (myGlobals.capturePackets) {
       case FLAG_NTOPSTATE_RUN:
           break;
@@ -4359,13 +4360,14 @@ void printPageTitle(char *text) {
 
   sendString("<center>\n<H1><font face=\"Helvetica, Arial, Sans Serif\">");
   sendString(text);
-  sendString("</font></H1>\n<p>&nbsp;</p>\n</center>\n");
+  sendString("</font></H1>\n</center>\n");
 }
 
 void printSectionTitle(char *text) {
-  sendString("<center>\n<H2><font face=\"Helvetica, Arial, Sans Serif\">");
+  sendString("<p>&nbsp;</p>\n"
+             "<center>\n<H2><font face=\"Helvetica, Arial, Sans Serif\">");
   sendString(text);
-  sendString("</font></H2>\n<p>&nbsp;</p>\n</center>\n");
+  sendString("</font></H2>\n</center>\n");
 }
 
 /* ******************************** */
@@ -4397,7 +4399,7 @@ static void printLocalHostsCharacterization(void) {
 	 ) {
 	if(!headerSent) {
 	  sendString("<p><hr><p>\n<CENTER>\n");
-	  printHTMLheader("Hosts Characterization", NULL, 0);
+	  printSectionTitle("Hosts Characterization");
 
 	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG">Host</TH>"
 		     "<TH>Unhealthy<br>Host</TH>"
@@ -4455,6 +4457,81 @@ static void printLocalHostsCharacterization(void) {
     if(h > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", h); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
     if(i > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", i); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
     sendString("</TABLE></CENTER>\n");
+  }
+}
+
+/* ******************************** */
+
+static printFingerprintCounts(int countScanned, int countWithoutFP, int countBroadcast,
+                              int countMulticast, int countRemote, int countNotIP,
+                              int countUnknownFP, int unknownFPsEtc,
+                              char *unknownFPs) {
+
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  struct tm t;
+
+  sendString("<p><hr><p>\n");
+
+  printSectionTitle("Fingerprint Statistics");
+
+  if(snprintf(buf, sizeof(buf), 
+              "<center>\n<table>\n"
+              "<tr><th colspan=\"2\"><i>Scanned</i></th></tr>\n"
+              "<tr><td>Hosts</td><td align=\"right\">%d</td></tr>\n"
+              "<tr><th colspan=\"2\"><i>less:</i></th></tr>\n"
+              "<tr><td>No fingerprint</td><td align=\"right\">%d</td></tr>\n"
+              "<tr><td>Broadcast</td><td align=\"right\">%d</td></tr>\n"
+              "<tr><td>Multicast</td><td align=\"right\">%d</td></tr>\n"
+              "<tr><td>Remote</td><td align=\"right\">%d</td></tr>\n"
+              "<tr><td>Non IP host</td><td align=\"right\">%d</td></tr>\n"
+              "<tr><th colspan=\"2\"><i>gives:</i></th></tr>\n"
+              "<tr><td>Possible to report</td><td align=\"right\">%d</td></tr>\n",
+              countScanned,
+              countWithoutFP,
+              countBroadcast,
+              countMulticast,
+              countRemote,
+              countNotIP,
+              countScanned - countWithoutFP - countBroadcast - countMulticast
+                           - countRemote - countNotIP) < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), 
+              "<tr><td>Less: Unknown Fingerprint<sup>*</sup></td>"
+                  "<td align=\"right\">%d</td></tr>\n",
+              countUnknownFP) < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  sendString("</td></tr>\n</table>\n</center>\n");
+
+#ifdef CFG_MULTITHREADED
+  if((myGlobals.nextFingerprintScan > 0) &&
+     (countUnknownFP > 0) &&
+     (myGlobals.debugMode != 1)) {
+        strftime(buf, sizeof(buf), 
+                 CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.nextFingerprintScan, &t));
+        sendString("<p align=\"center\">Unknown fingerprints may be resolved at the "
+                   " next scan, scheduled at approximately ");
+        sendString(buf);
+        sendString(".</p>\n");
+      }
+#endif
+
+  if(unknownFPs[0] != '\0') {
+    unknownFPs[0]=' ';
+    if(snprintf(buf, sizeof(buf), 
+              "<center><p><i>Unknown Fingerprints are:</i>&nbsp;%s%s</p></center>\n",
+              unknownFPs,
+              unknownFPsEtc == 1 ? " ..." : "") < 0)
+      BufferTooShort();
+    sendString(buf);
+    sendString("<p align=\"right\">Click "
+               "<a href=\"http://ettercap.sourceforge.net/index.php?s=stuff&p=fingerprint\" "
+               "alt=\"Ettercap page at SourceForge\">here</a> to visit Ettercap's home "
+               "page at SourceForge and<br>upload new fingerprints, or download additional, "
+               "unverified, ones.</p>\n");
   }
 }
 
@@ -4565,49 +4642,10 @@ void printLocalHostsStats(void) {
 
       free(tmpTable);
 
-      if(snprintf(buf, sizeof(buf), 
-                  "<center>\n<table>\n"
-                  "<tr><th colspan=\"2\"><i>Scanned</i></th></tr>\n"
-                  "<tr><td>Hosts</td><td align=\"right\">%d</td></tr>\n"
-                  "<tr><th colspan=\"2\"><i>less:</i></th></tr>\n"
-                  "<tr><td>No fingerprint</td><td align=\"right\">%d</td></tr>\n"
-                  "<tr><td>Broadcast</td><td align=\"right\">%d</td></tr>\n"
-                  "<tr><td>Multicast</td><td align=\"right\">%d</td></tr>\n"
-                  "<tr><td>Remote</td><td align=\"right\">%d</td></tr>\n"
-                  "<tr><td>Non IP host</td><td align=\"right\">%d</td></tr>\n"
-                  "<tr><th colspan=\"2\"><i>gives:</i></th></tr>\n"
-                  "<tr><td>Possible to report</td><td align=\"right\">%d</td></tr>\n"
-                  "<tr><td>Less: Unknown Fingerprint<sup>*</sup></td>"
-                      "<td align=\"right\">%d</td></tr>\n",
-                  countScanned,
-                  countWithoutFP,
-                  countBroadcast,
-                  countMulticast,
-                  countRemote,
-                  countNotIP,
-                  countScanned - countWithoutFP - countBroadcast - countMulticast
-                               - countRemote - countNotIP,
-                  countUnknownFP) < 0)
-        BufferTooShort();
-      sendString(buf);
-
-      sendString("</table>\n</center>\n");
-
-      if(unknownFPs[0] != '\0') {
-        unknownFPs[0]=' ';
-        if(snprintf(buf, sizeof(buf), 
-                  "<center><p><i>Unknown Fingerprints are:</i>&nbsp;%s%s</p></center>\n",
-                  unknownFPs,
-                  unknownFPsEtc == 1 ? " ..." : "") < 0)
-          BufferTooShort();
-        sendString(buf);
-        sendString("<p align=\"right\">Click "
-                   "<a href=\"http://ettercap.sourceforge.net/index.php?s=stuff&p=fingerprint\" "
-                   "alt=\"Ettercap page at SourceForge\">here</a> to visit Ettercap's home "
-                   "page at SourceForge and<br>upload new fingerprints, or download additional, "
-                   "unverified, ones.</p>\n");
-      }
-
+      printFingerprintCounts(countScanned, countWithoutFP, countBroadcast,
+                             countMulticast, countRemote, countNotIP,
+                             countUnknownFP, unknownFPsEtc,
+                             unknownFPs);
 
       return;
   }
@@ -4669,26 +4707,32 @@ void printLocalHostsStats(void) {
       }
   }
 
-  sendString("</TABLE><P>");
+  sendString("</TABLE></center>\n<p>&nbsp;</p>");
 
   /* ********************************** */
 
   qsort(theOSs, MAX_NUM_OS, sizeof(OsNumInfo), cmpOSFctn);
 
-  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG">OS</TH><TH "TH_BG">Total</TH></TR>");
+  sendString("<center>" TABLE_ON "<table border=\"1\" " TABLE_DEFAULTS ">\n"
+             "<tr "TR_ON" "DARK_BG"><th "TH_BG">OS</th>\n<th "TH_BG">Total</th></tr>\n");
 
   for(i=0; i<MAX_NUM_OS; i++) {
      if(theOSs[i].name != NULL) {
-	snprintf(buf, sizeof(buf), "<TR><TH ALIGN=left>%s</TH><TD ALIGN=RIGHT>%d</TD></TR>\n", 
+	snprintf(buf, sizeof(buf), "<tr><th align=\"left\">%s</th><td aling=\"right\">%d</td></tr>\n", 
 		 theOSs[i].name, theOSs[i].num);
 	sendString(buf);
 	free(theOSs[i].name);
       }
   }
 
-  sendString("</TABLE></CENTER>");
+  sendString("</table>\n</center>\n");
 
   free(tmpTable);
+
+  printFingerprintCounts(countScanned, countWithoutFP, countBroadcast,
+                         countMulticast, countRemote, countNotIP,
+                         countUnknownFP, unknownFPsEtc,
+                         unknownFPs);
 
   printLocalHostsCharacterization();
 }

@@ -1038,6 +1038,13 @@ void initThreads(void) {
   createMutex(&myGlobals.hostsHashMutex);
 
   /*
+   * Create the thread (3) - SFP - Scan Fingerprints
+   */
+  createThread(&myGlobals.scanFingerprintsThreadId, scanFingerprintLoop, NULL);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for fingerprinting",
+             myGlobals.scanFingerprintsThreadId);
+
+  /*
    * Create the thread (4) - SIH - Scan Idle Hosts - optional
    */
   if(myGlobals.rFileName == NULL) {

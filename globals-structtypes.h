@@ -1828,6 +1828,7 @@ typedef struct ntopGlobals {
    * HTS - Hash Purge
    */
   PthreadMutex purgeMutex;
+
   /*
    * HTS - Host Traffic Statistics
    */
@@ -1837,6 +1838,12 @@ typedef struct ntopGlobals {
    * SIH - Scan Idle Hosts - optional
    */
   pthread_t scanIdleThreadId;
+
+  /*
+   * SFP - Scan Fingerprints
+   */
+  pthread_t scanFingerprintsThreadId;
+  time_t nextFingerprintScan;
 
   /*
    * DNSAR - DNS Address Resolution - optional

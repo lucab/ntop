@@ -252,8 +252,7 @@ extern void addDefaultProtocols(void);
 extern int mapGlobalToLocalIdx(int port);
 #ifdef CFG_MULTITHREADED
 extern void *scanIdleLoop(void *notUsed);
-#endif
-#ifndef CFG_MULTITHREADED
+extern void *scanFingerprintLoop(void *notUsed);
 extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
 #endif
 extern RETSIGTYPE cleanup(int signo);
