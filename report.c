@@ -880,7 +880,7 @@ void printHostsTraffic(int reportType,
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			formatBytes(el->ipProtosList[idx1].rcvd.value, 1)) < 0) BufferTooShort();
 	    sendString(buf);
-	    
+
 	    idx1++, protoList = protoList->next;
 	  }
 
@@ -927,7 +927,7 @@ void printHostsTraffic(int reportType,
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			formatBytes(el->ipProtosList[idx1].sent.value, 1)) < 0) BufferTooShort();
 	    sendString(buf);
-	    
+
 	    idx1++, protoList = protoList->next;
 	  }
 
@@ -979,10 +979,10 @@ void printHostsTraffic(int reportType,
 			formatBytes(el->ipProtosList[idx1].sent.value
 				    +el->ipProtosList[idx1].rcvd.value, 1)) < 0) BufferTooShort();
 	    sendString(buf);
-	    
+
 	    idx1++, protoList = protoList->next;
 	  }
-	  
+
           if(snprintf(buf, sizeof(buf),
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
                       formatBytes(el->otherSent.value+el->otherRcvd.value, 1)
@@ -2308,7 +2308,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
-#endif   
+#endif
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL) {
       char *sport, *dport;
@@ -2677,7 +2677,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 			  CONST_COLOR_1, partialTotal, percentage);
 	}
       }
-      
+
       if(total > remainingTraffic)
 	remainingTraffic = total - remainingTraffic;
       else
@@ -2864,10 +2864,10 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
 
     {
-      ProtocolsList *protoList = myGlobals.ipProtosList;    
+      ProtocolsList *protoList = myGlobals.ipProtosList;
       int idx1 = 0;
-      
-      while(protoList != NULL) {	  
+
+      while(protoList != NULL) {
 	if(total > (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value)
 	  total -= (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
 	else
@@ -2875,7 +2875,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
 	idx1++, protoList = protoList->next;
       }
-    }      
+    }
 
     if(total == 0)
       return;
@@ -3032,9 +3032,9 @@ void printProtoTraffic(void) {
 		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
 
   {
-    ProtocolsList *protoList = myGlobals.ipProtosList;    
+    ProtocolsList *protoList = myGlobals.ipProtosList;
     int idx = 0;
-    
+
     while(protoList != NULL) {
       printTableEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1,
 		      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/1024,
@@ -3580,7 +3580,7 @@ void printThptStatsMatrix(int sortedColumn) {
 
       if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostSentSerial)) {
 	HostTraffic tmpEl;
-	  
+
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].thirdHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
@@ -4398,6 +4398,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
   u_int numEntries=0, i, maxHosts;
   HostTraffic **tmpTable, *el;
   char buf[LEN_GENERAL_WORK_BUFFER];
+  float marcoRcvd = 0, marcoSent = 0;
 
   maxHosts = ifName->hostsno; /* save it as it can change */
   tmpTable = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
@@ -4430,20 +4431,37 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 
   if(numEntries > 0) {
     int lastId = 0;
+    Counter dataSent, dataRcvd;
+
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
 
+    /*
+      AS Data Sent/Rcvd patch courtesy of Marco Sanson <marco.sanson@infvic.it>
+    */
+
     if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
-		"<TH "TH_BG">%s</A></TH><TH "TH_BG">Hosts</TH></TR>",
+		"<TH "TH_BG">%s</A></TH><TH "TH_BG">Hosts</TH><TH "TH_BG">Data Sent</TH><TH "TH_BG">Data Rcvd</TH></TR>",
 		criteria == 0 ? "AS" : "VLAN") < 0)
       BufferTooShort();
     sendString(buf);
+
+    dataSent = dataRcvd = 0;
 
     for(i=0; i<numEntries; i++) {
       el = tmpTable[numEntries-i-1];
 
       if(((criteria == 0) && (lastId != el->hostAS))
 	 || ((criteria == 1) && (lastId != el->vlanId))) {
-	if(i > 0) sendString("</TR>");
+	if(i > 0) {
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+		      formatBytes(dataSent, 1), formatBytes(dataRcvd, 1)) < 0)
+	    BufferTooShort();
+
+	  sendString(buf);
+	  sendString("</TR>");
+	  dataSent = dataRcvd = 0;
+	}
 
 	if(criteria == 0 /* AS */) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT>"
@@ -4456,6 +4474,9 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 	    BufferTooShort();
 	}
 
+	dataSent += el->bytesSent.value;
+	dataRcvd += el->bytesRcvd.value;
+	
 	sendString(buf);
 	lastId = el->hostAS;
       }
@@ -4464,6 +4485,12 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
       sendString("<br>\n");
     }
 
+    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+		formatBytes(dataSent, 1), formatBytes(dataRcvd, 1)) < 0)
+      BufferTooShort();
+    
+    sendString(buf);
     sendString("</TR>\n</TABLE>\n</CENTER>");
   } else {
     printFlagedWarning("<I>No entries to display(yet)</I>");
@@ -4541,7 +4568,7 @@ void showPortTraffic(u_short portNr) {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-    if(recentlyUsedPort(el, portNr, 0)) {      
+    if(recentlyUsedPort(el, portNr, 0)) {
       if(numRecords == 0) {
 	sendString("<TABLE BORDER>\n<TR><TH>Client</TH><TH>Server</TH></TR>\n");
 	sendString("<TR>\n<TD>\n");
@@ -4575,6 +4602,6 @@ void showPortTraffic(u_short portNr) {
   if(numRecords == 0) {
     sendString("<P>No hosts found: the information for this port has been purged in the meantime</CENTER><P>\n");
   } else
-    sendString("\n&nbsp;\n</TD>\n</TR>\n</TABLE>\n</CENTER>");    
+    sendString("\n&nbsp;\n</TD>\n</TR>\n</TABLE>\n</CENTER>");
 
 }
