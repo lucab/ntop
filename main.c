@@ -520,11 +520,13 @@ static int parseOptions(int argc, char* argv []) {
       strncpy(myGlobals.domainName, optarg, MAXHOSTNAMELEN);
       break;
 
+#ifndef WIN32
     case 'E':
       myGlobals.enableExternalTools = 1;
       myGlobals.isLsofPresent  = checkCommand("lsof");
       myGlobals.isNmapPresent  = checkCommand("nmap");
       break;
+#endif
 
     case 'F':
       stringSanityCheck(optarg);
