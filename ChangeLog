@@ -61,6 +61,35 @@
         for OS fingerprinting.
       - Automatic creation of problem report skeleton.
       - Plugins menu shows plugins disabled due to problems.
+      - Eliminated (we hope) the requirement for the auto* tools
+        (autoconf, automake and libtools) to be installed in order
+        to compile the ntop source.
+      - Default protocol list (if no -p option) changed to:
+
+            FTP=ftp|ftp-data
+            HTTP=http|www|https|3128     3128 is Squid, the HTTP cache
+            DNS=name|domain
+            Telnet=telnet|login
+            NBios-IP=netbios-ns|netbios-dgm|netbios-ssn
+            Mail=pop-2|pop-3|pop3|kpop|smtp|imap|imap2
+            DHCP-BOOTP=67-68
+            SNMP=snmp|snmp-trap
+            NNTP=nntp
+            NFS=mount|pcnfs|bwnfs|nfsd|nfsd-status
+            X11=6000-6010
+            SSH=22
+ 
+            Peer-to-Peer Protocols
+            ----------------------
+            Gnutella=6346|6347|6348
+            Kazaa=1214
+            WinMX=6699|7730
+            DirectConnect=0              Dummy port as this is a pure P2P protocol
+            eDonkey=4661-4665
+
+            Instant Messenger
+            -----------------
+            Messenger=1863|5000|5001|5190-5193
 
       - Internal reorg:
           * Almost all structures and typedefs moved into new file,
@@ -177,6 +206,8 @@
       - netFlow has white/black list to control what hosts are updated.
       - Accepts v7 flows (converts to v5 for internal processing)
       - Added specification of the local network for netFlow devices.
+      - Fixed double counting of bytes/packets send/received.
+      - Added an OPTION to count unclassified traffic as ftp-data.
 
 
     sFlow (Plugin)

@@ -18,7 +18,7 @@
 
 <hr>
 <!-- Creator     : groff version 1.18 -->
-<!-- CreationDate: Fri Mar 28 10:36:12 2003 -->
+<!-- CreationDate: Wed Apr  2 10:21:13 2003 -->
 <a name="NAME"></a>
 <h2>NAME</h2>
 <!-- INDENTATION -->
@@ -49,7 +49,8 @@
 [<b>-l</b>|<b>--pcap-log</b> <i>&lt;path&gt;</i>]
 [<b>-m</b>|<b>--local-subnets</b> <i>&lt;addresses&gt;</i>]
 [<b>-n</b>|<b>--numeric-ip-addresses</b>]
-[<b>-p</b>|<b>--protocols</b> <i>&lt;list&gt;</i>]
+[<b>-o</b>|<b>--no-mac</b>] [<b>-p</b>|<b>--protocols</b>
+<i>&lt;list&gt;</i>]
 [<b>-q</b>|<b>--create-suspicious-packets</b>]
 [<b>-r</b>|<b>--refresh-time</b> <i>&lt;number&gt;</i>]
 [<b>-s</b>|<b>--no-promiscuous</b>]
@@ -80,8 +81,8 @@
 <p>Unix options:</p>
 <!-- INDENTATION -->
 <p>[<b>-d</b>|<b>--daemon</b>] [<b>-i</b>|<b>--interface</b>
-<i>&lt;name&gt;</i>] [<b>-o</b>|<b>--no-mac</b>]
-[<b>-u</b>|<b>--user</b> <i>&lt;user&gt;</i>]
+<i>&lt;name&gt;</i>] [<b>-u</b>|<b>--user</b>
+<i>&lt;user&gt;</i>]
 [<b>-E</b>|<b>--enable-external-tools</b>]
 [<b>-K</b>|<b>--enable-debug</b>] [<b>-L</b>]
 [<b>-use-syslog</b> <i>&lt;facility&gt;</i>]
@@ -115,7 +116,7 @@ needed to access the information captured by the <b>ntop</b>
 program.</p>
 <!-- INDENTATION -->
 <p>An older, and unsupported version, <b>intop</b> can be
-started either in a terminal window.</p>
+started in a terminal window.</p>
 </td>
 </table></p>
 <a name="COMMAND&minus;LINE OPTIONS"></a>
@@ -143,12 +144,13 @@ d contains just the line &rsquo;-d&rsquo;, then the
 effective command line is -t 3 -d -u ntop. Multiple @s are
 permitted.</p>
 <!-- INDENTATION -->
-<p>Remember, most ntop options are &quot;sticky&quot;, that
-is they just set an internal flag. Invoking them multiple
-times doesn&rsquo;t change <b>ntop&rsquo;s</b> behavior.
-However, options that set a value, such as --trace-level,
-will use the LAST value given: --trace-level 2 --trace-level
-3 will run as --trace-level 3.</p>
+<p>Remember, most <b>ntop</b> options are
+&quot;sticky&quot;, that is they just set an internal flag.
+Invoking them multiple times doesn&rsquo;t change
+<b>ntop&rsquo;s</b> behavior. However, options that set a
+value, such as --trace-level, will use the LAST value given:
+--trace-level 2 --trace-level 3 will run as --trace-level
+3.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -165,14 +167,13 @@ will use the LAST value given: --trace-level 2 --trace-level
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>By default <b>ntop</b> logs HTTP accesses in the file
-ntop.access.log in the current directory. Use this flag to
-specify the path of the file where HTTP accesses will be
-logged. Each log entry is in Apache-like style. The only
-difference between Apache and <b>ntop</b> is that
-<b>ntop</b> added a new column has been added. Such column
-contains the time (in milliseconds) that ntop needed in
-order to serve the request.</p>
+<p>By default <b>ntop</b> does not maintain an http log. Use
+this flag to specify the path of the file where HTTP
+accesses will be logged. Each log entry is in Apache-like
+style. The only difference between Apache and <b>ntop</b> is
+that an additional column has been added which has the time
+(in milliseconds) that <b>ntop</b> needed in order to serve
+the request.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -229,7 +230,8 @@ you can experience severe memory usage.</p>
 <td width="13%"></td>
 <td width="86%">
 <p>This flag causes ntop to become a daemon, i.e. it is
-started in background and detached from the terminal.</p>
+started in background and runs detached from the
+terminal.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -265,7 +267,7 @@ will display.</p>
 <td width="13%"></td>
 <td width="86%">
 <p>Specifies the file containing tcpdump captured traffic
-that has to be used by ntop. Note: if you specify -f ntop
+that has to be used by ntop. NOTE: if you specify -f ntop
 will not capture any traffic after the file has been read.
 This option is mostly used for debug purposes.</p>
 </td>
@@ -286,8 +288,9 @@ This option is mostly used for debug purposes.</p>
 <td width="86%">
 <p>Use this flag to tell <b>ntop</b> that you do care only
 about local hosts (use -m to specify local nets). This flag
-is useful when <b>ntop</b> sees many hosts (e.g. border
-gateway) but only the local ones need to be tracked.</p>
+is useful on large networks or those that see many hosts,
+(e.g. a border router or gateway), yet only the local ones
+need to be tracked.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -322,16 +325,22 @@ usage.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>Specifies the network interface used by <b>ntop</b> If
-multiple interfaces are used (this feature is available only
-if ntop is compiled with thread support) they have to be
-separated with a comma. For instance -i &quot;eth0,lo&quot;.
-Traffic information obtained by all the interfaces is merged
-together as if the traffic would have been produced by one
-interface. Use the -M flag for not merging traffic.</p>
+<p>Specifies the network interface used by <b>ntop</b></p>
+<!-- INDENTATION -->
+<p>If multiple interfaces are used (this feature is
+available only if ntop is compiled with thread support)
+their names must be separated with a comma. For instance -i
+&quot;eth0,lo&quot;.</p>
+<!-- INDENTATION -->
+<p>By default, traffic information obtained by all the
+interfaces is merged together as if the traffic were seen by
+only one interface. Use the -M flag to keep traffic separate
+by interface.</p>
 <!-- INDENTATION -->
 <p>Win32 note: This is the number of the interface, not
-it&rsquo;s name. Use ??? to see a list of interfaces.</p>
+it&rsquo;s name. Run <b>ntop</b> -h to see a list of
+interface name-number mappings (at the end of the help
+information).</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -387,7 +396,8 @@ pcap format (useful for debug).</p>
 <p>This flag allows users to specify the subnets whose
 traffic is considered local. The format is &lt;network
 address&gt;/&lt;# subnet mask bits&gt;[,&lt;network
-address&gt;/&lt;# subnet mask bits&gt;]. For instance
+address&gt;/&lt;# subnet mask bits&gt;]. Both netmasks and
+CIDR notation may be used, for instance
 &quot;131.114.21.0/24,10.0.0.0/255.0.0.0&quot;.</p>
 </td>
 </table>
@@ -430,6 +440,10 @@ the <b>n</b> key while <b>intop</b> is running.</p>
 addresses but just IP addresses. This option is useful
 whenever ntop is started on an interface where MAC addresses
 cannot be really trusted (e.g. port/VLAN mirror).</p>
+<!-- INDENTATION -->
+<p>Be aware that information which is dependent upon the MAC
+addresses (such as IPX) will not be collected nor
+displayed.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -458,21 +472,28 @@ is either a valid protocol specified inside the
 6000-6500). If the -p flag is omitted the following default
 value is used:</p>
 <!-- INDENTATION -->
-<p>FTP=ftp|ftp-data HTTP=http|www|https|3128 DNS=name|domain
-Telnet=telnet|login
+<p>FTP=ftp|ftp-data HTTP=http|www|https|3128 3128 is Squid,
+the HTTP cache DNS=name|domain Telnet=telnet|login
 NBios-IP=netbios-ns|netbios-dgm|netbios-ssn
 Mail=pop-2|pop-3|pop3|kpop|smtp|imap|imap2 DHCP-BOOTP=67-68
 SNMP=snmp|snmp-trap NNTP=nntp
-NFS=mount|pcnfs|bwnfs|nfsd|nfsd-status X11=6000-6010 SSH=22
-Gnutella=6346|6347|6348 Morpheus=1214
-Messenger=1863|5000|5001|5190-5193 WinMX=6699|7730
-Audiogalaxy=41000-41900</p>
+NFS=mount|pcnfs|bwnfs|nfsd|nfsd-status X11=6000-6010
+SSH=22</p>
+<!-- INDENTATION -->
+<p>Peer-to-Peer Protocols ----------------------
+Gnutella=6346|6347|6348 Kazaa=1214 WinMX=6699|7730
+DirectConnect=0 Dummy port as this is a pure P2P protocol
+eDonkey=4661-4665</p>
+<!-- INDENTATION -->
+<p>Instant Messenger -----------------
+Messenger=1863|5000|5001|5190-5193</p>
 <!-- INDENTATION -->
 <p>If the &lt;protocol list&gt; is very long you may store
 it in a file (for instance protocol.list). To do so, specify
 the file name instead of the &lt;protocol list&gt; on the
-command line. e.g. ntop -p protocol.list instead of ntop -p
-FTP=ftp|ftp-data,HTTP=http|www|https|3128 ...</p>
+command line. e.g. <b>ntop</b> -p protocol.list instead of
+<b>ntop</b> -p FTP=ftp|ftp-data,HTTP=http|www|https|3128
+...</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -511,9 +532,9 @@ suspicious packets are found. The file is in pcap format
 <td width="13%"></td>
 <td width="86%">
 <p>Specifies the delay (in seconds) between screen updates
-(the default is 3 seconds). If the -l flag is used, it
-specifies how often entries are logged in the log file.
-Please note that if the delay is very short (1 second for
+(the default is 3 seconds).</p>
+<!-- INDENTATION -->
+<p>Please note that if the delay is very short (1 second for
 instance), ntop might not be able to process all the network
 traffic.</p>
 </td>
@@ -532,13 +553,20 @@ traffic.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>Use this flag for disabling interface promiscuous mode
-(i.e. the ability to capture ethernet frames regardless
-whether they are directed to the local ethernet card or to
-the ethernet broadcast address). Note that even if you use
-this flag, the interface could well be in promiscuous mode
-as other applications can have enabled this
-functionality.</p>
+<p>Use this flag for preventing from setting the
+interface(s) into promiscuous mode.</p>
+<!-- INDENTATION -->
+<p><b>ntop</b> must probably still be started as root, since
+the libpcap function on most systems require it to capture
+raw packets.</p>
+<!-- INDENTATION -->
+<p>This eliminates the ability of capturing ethernet frames
+regardless of whether they are directed to the local
+ethernet card or to the ethernet broadcast address.</p>
+<!-- INDENTATION -->
+<p>Even if you use this flag, the interface could well be in
+promiscuous mode as other applications may have enabled
+it.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -561,6 +589,10 @@ stdout. The trace level ranges between 0 (no trace) and 5
 higher is the trace level the more information are printed.
 Trace level 1 is used to print errors only, level 2 for both
 warnings and errors, and so on.</p>
+<!-- INDENTATION -->
+<p>Trace level 4 is called &rsquo;noisy&rsquo; and it is. It
+also enables a MSGID-nnnnn tag on every message, which may
+be useful for log watchers.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -580,7 +612,10 @@ warnings and errors, and so on.</p>
 <p>Specifies the user <b>ntop</b> should run as after it
 initializes. The value specified may be either a username or
 a numeric user id. The group id used will be the primary
-group of the user specified.</p>
+group of the user specified. If this parameter is not
+specified, ntop will try to switch first to
+&rsquo;nobody&rsquo; and then to &rsquo;anonymous&rsquo;
+before giving up.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -597,23 +632,46 @@ group of the user specified.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p><b>ntop</b> sports an embedded web server so that users
-can attach their web browsers to the specified port and
-browse traffic information remotely. Supposing to start
-<b>ntop</b> at the port <b>3000</b> (default port), the URL
-to access is http://hostname:3000/. Users and URLs to
-protect with passwords are stored in a database file. By
-default user/URL administration are accessible uniquely by
-the user <b>admin</b> with password <b>admin</b> Passwords
-are stored in an encrypted form into the database for
-further security. Please note that an HTTP server is NOT
-needed but it&rsquo;s embedded into the application. If -w
-is set to 0 the HTTP port will not be enabled (&rsquo;-w
-0&rsquo; is accepted only if <b>ntop</b> has been compiled
-with HTTPS support and <b>ntop</b> has not been started with
-&rsquo;-W 0&rsquo; [see below]). You can also use the
-IP:Port notation to bind ntop to the specified IP-Address,
-e.g. <b>-w 127.0.0.1:3000</b></p>
+<p><b>ntop</b> offers an embedded web server so that users
+can attach their web browsers to the program and browse
+traffic information remotely. This parameter specifies the
+port (and optionally the address (i.e. interface)) of the
+<b>ntop</b> web server. For example, if started with -w 3000
+(the default port), the URL to access <b>ntop</b> is
+http://hostname:3000/. If started with a full specification,
+e.g. -w 192.168.1.1:3000, <b>ntop</b> listens on only that
+address/port combination.</p>
+<!-- INDENTATION -->
+<p>If -w is set to 0 the HTTP port will not be enabled
+(&rsquo;-w 0&rsquo; is accepted only if <b>ntop</b> has been
+compiled with HTTPS support and has not been started with
+&rsquo;-W 0&rsquo; [see below]).</p>
+<!-- INDENTATION -->
+<p>Some examples:</p>
+<!-- INDENTATION -->
+<p><b>ntop -w 3000 -W 0</b> (this is the default setting)
+HTTP requests on port 3000 and no HTTPS.</p>
+<!-- INDENTATION -->
+<p><b>ntop -w 80 -W 443</b> Both HTTP and HTTPS have been
+enabled on their most common ports.</p>
+<!-- INDENTATION -->
+<p><b>ntop -w 0 -W 443</b> HTTP disabled, HTTPS enabled on
+the common port.</p>
+<!-- INDENTATION -->
+<p>An external HTTP server is NOT required NOR supported.
+The <b>ntop</b> web server is embedded into the
+application.</p>
+<!-- INDENTATION -->
+<p>By default user/URL administration are password protected
+and are accessible initially only user <b>admin</b> with a
+password set during the first run of <b>ntop</b></p>
+<!-- INDENTATION -->
+<p>Users can modify/add/delete users/URLs using ntop itself
+- see the Admin tab.</p>
+<!-- INDENTATION -->
+<p>The passwords, userids and URLs to protect with passwords
+are stored in a database file. Passwords are stored in an
+encrypted form in the database for further security.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -631,8 +689,8 @@ e.g. <b>-w 127.0.0.1:3000</b></p>
 <td width="13%"></td>
 <td width="86%">
 <p>This flag disables TCP session tracking. Use it for
-better performance or when you don&rsquo;t really care of
-tracking sessions.</p>
+better performance or when you don&rsquo;t really need/care
+to track sessions.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -649,9 +707,16 @@ tracking sessions.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
+<p>This flag is used to start <b>ntop</b> , set the admin
+password and quit. It is quite useful for installers that
+may need to automatically set the password for the admin
+user.</p>
+<!-- INDENTATION -->
 <p>-A and --set-admin-password (without a value) will prompt
-the user. You may set a specific value using
---set-admin-password=value. The = is REQUIRED!</p>
+the user for the password.</p>
+<!-- INDENTATION -->
+<p>You may set a specific value using
+--set-admin-password=value. <b>The = is REQUIRED!</b></p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -668,15 +733,19 @@ the user. You may set a specific value using
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p><b>ntop</b> , similar to what tcpdump does, allows users
-to specify an expression that restricts the type of traffic
-handled by <b>ntop</b> hence to select only the traffic of
-interest. For instance, suppose to be interested only in the
-traffic generated/received by the host jake.unipi.it.
-<b>ntop</b> can then be started with the following filter:
-&rsquo;ntop src host jake.unipi.it or dst host
-jake.unipi.it&rsquo;. See the <b>tcpdump</b> man page for
-further information about this topic.</p>
+<p><b>ntop</b> , similar to what tcpdump does (and using the
+same BPF - Berkeley Packet Filter syntax), this allows the
+user to specify an expression which restricts the traffic
+seen by <b>ntop</b> You may use this to select only the
+traffic of interest. For instance, suppose you are
+interested only in the traffic generated/received by the
+host jake.unipi.it. <b>ntop</b> can then be started with the
+following filter: &rsquo;ntop -B &quot;src host
+jake.unipi.it or dst host jake.unipi.it&quot;&rsquo;. i</p>
+<!-- INDENTATION -->
+<p>See the &rsquo;expression&rsquo; section of the
+<b>tcpdump</b> man page for further information about BPF
+filters.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -693,10 +762,11 @@ further information about this topic.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>This flag is a hint for ntop: as the network to analyze
-will be large, ntop will build a more efficient hash and
-save memory for some features (e.g traffic distribution
-during the day) that take up quite some memory.</p>
+<p>This flag is a hint for <b>ntop</b> : as the network
+being analyzed will be large, <b>ntop</b> will build a more
+efficient hash and save memory by disabling some features
+(e.g traffic distribution during the day) that take up a
+large amount of memory.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -713,9 +783,9 @@ during the day) that take up quite some memory.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>This identifies the local domain suffix, e.g. ntop.org,
-if <b>ntop</b> is having difficulty determining it from the
-interface.</p>
+<p>This identifies the local domain suffix, e.g. ntop.org.
+It may be necessary, if <b>ntop</b> is having difficulty
+determining it from the interface.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -732,9 +802,9 @@ interface.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>By default ntop does not take advance of lsof even if
-present. Use this flag if you want make ntop aware of such
-tools (if present).</p>
+<p>By default <b>ntop</b> does not take advance of lsof even
+if present. Use this flag if you want make <b>ntop</b>
+enable it&rsquo;s use of lsof if lsof is present.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -754,26 +824,32 @@ tools (if present).</p>
 <p>It is used to specify network flows similar to more
 powerful applications such as NeTraMet. A flow is a stream
 of captured packets that match a specified rule. The format
-is &lt;flow-label&gt;=&rsquo;&lt;matching
+is</p>
+<!-- INDENTATION -->
+<p><b>&lt;flow-label&gt;=&rsquo;&lt;matching
 expression&gt;&rsquo;[,&lt;flow-label&gt;=&rsquo;&lt;matching
-expression&gt;&rsquo;], where the label is used to
-symbolically identify the flow specified by the expression.
-The expression format is specified in the appendix. If an
-expression is specified, then the information concerning
-flows can be accessed following the HTML link named
-&rsquo;List NetFlows&rsquo;. For instance suppose to define
-two flows with the following expression
-&quot;LucaHosts=&rsquo;host jake.unipi.it or host
+expression&gt;&rsquo;]</b></p>
+<!-- INDENTATION -->
+<p>, where the label is used to symbolically identify the
+flow specified by the expression. The expression format is
+specified in the appendix. If an expression is specified,
+then the information concerning flows can be accessed
+following the HTML link named &rsquo;List
+NetFlows&rsquo;.</p>
+<!-- INDENTATION -->
+<p>For instance define two flows with the following
+expression <b>LucaHosts=&rsquo;host jake.unipi.it or host
 pisanino.unipi.it&rsquo;,GatewayRoutedPkts=&rsquo;gateway
-gateway.unipi.it&rsquo;&quot;. All the traffic sent/received
-by hosts jake.unipi.it or pisanino.unipi.it is collected by
-<b>ntop</b> and added to the LucaHosts flow, whereas all the
-packet routed by the gateway gateway.unipi.it are added to
-the GatewayRoutedPkts flow. If the flows list is very long
-you may store in a file (for instance flows.list) the list
-of flows and specify the file name instead of the flows list
-(in above example you will invoke &rsquo;ntop -F
-flows.list&rsquo;).</p>
+gateway.unipi.it&rsquo; .</b></p>
+<!-- INDENTATION -->
+<p>All the traffic sent/received by hosts jake.unipi.it or
+pisanino.unipi.it is collected by <b>ntop</b> and added to
+the LucaHosts flow, whereas all the packet routed by the
+gateway gateway.unipi.it are added to the GatewayRoutedPkts
+flow. If the flows list is very long you may store in a file
+(for instance flows.list) and specify the file name instead
+of the actual flows list (in the above example, this would
+be &rsquo;ntop -F flows.list&rsquo;).</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -813,11 +889,11 @@ errors.</p>
 <td width="13%"></td>
 <td width="86%">
 <p>Use this flag for using the syslog instead of stdout.
-Please note that if ntop (ever) forks a child, in any case
-the syslog will be used for this child. The (optional)
-parameter value indicates the facility (e.g. daemon,
-security) to be used for logging, using
---use-syslog=facility. The = is REQUIRED!</p>
+Please note that if ntop (ever) forks a child, regardless of
+this setting, the syslog will be used for this child. The
+(optional) parameter value indicates the facility (e.g.
+daemon, security) to be used for logging, using
+--use-syslog=facility. <b>The = is REQUIRED!</b></p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -834,9 +910,14 @@ security) to be used for logging, using
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>Forces ntop not to merge network interfaces together.
-This means that ntop will collect statistics for each
-interface and will not merge data together.</p>
+<p>Forces <b>ntop</b> not to merge network interfaces
+together. This means that <b>ntop</b> will collect
+statistics for each interface and report them separately -
+see Admin | Switch NIC to select which interface to
+report.</p>
+<!-- INDENTATION -->
+<p>Note that the netFlow and sFlow plugins will force the
+setting of -M.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -854,9 +935,9 @@ interface and will not merge data together.</p>
 <td width="13%"></td>
 <td width="86%">
 <p>Base path for the ntop-suspicious-pkts.XXX.pcap and
-normal packet log file (tcpdump). If the base path is a
-directory you have to append a / to the string for this to
-work fine.</p>
+normal packet log file (in tcpdump format). If the base path
+is a directory you have to append a / to the string for this
+to work.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -873,9 +954,12 @@ work fine.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>This allows to specify where db-files are searched or
-created (default &quot;.&quot;). In addition DBPATH/html is
-added to the searchlist for the WEB-files</p>
+<p>This specifies where <b>ntop</b></p>
+<!-- INDENTATION -->
+<p>Note that the default, &quot;.&quot; may not be what you
+expect when running <b>ntop</b> as a daemon or Win32
+service. Setting an explicit value is <b>STRONGLY</b>
+recommended.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -892,10 +976,15 @@ added to the searchlist for the WEB-files</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>It specifies the UTR of the mapper.pl utility (it&rsquo;s
-part of the ntop distribution [see www/Perl/mapper.pl]) for
-displaying host location. If you don&rsquo;t want to install
-a mapper use http://jake.ntop.org/cgi-bin/mapper.pl</p>
+<p>Specifies the URL of the mapper.pl utility. <b>ntop</b>
+creates a hyperlink to this URL by appending ?host=xxxxx and
+creates a clickable button. Any type of host lookup could be
+performed, but this is intended to lookup the geographical
+location of the host.</p>
+<!-- INDENTATION -->
+<p>A cgi-based mapper interface to http://www.multimap.com
+is part of the <b>ntop</b> distribution [see
+www/Perl/mapper.pl]).</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -931,14 +1020,11 @@ exits.</p>
 <td width="13%"></td>
 <td width="86%">
 <p>If <b>ntop</b> has been compiled with HTTPS support (via
-OpenSSL), this flag can be used to set the HTTPS port
-(default <b>3001</b> ). If the user specifies &rsquo;-W
-0&rsquo;, HTTPS support is disabled. Some examples: 1.
-<b>ntop -w 80 -W 443</b> (both HTTP and HTTPS have been
-enabled at their default ports) 2. <b>ntop -w 0 -W 443</b>
-(HTTP disabled, HTTPS enabled at the default port). You can
-also use the IP:Port notation to bind ntop to the specified
-IP-Address, e.g. <b>-w 127.0.0.1:3001</b></p>
+OpenSSL), this flag can be used to set the HTTPS port and
+address. If the user specifies &rsquo;-W 0&rsquo;, HTTPS
+support is disabled. This is the default (disabled).</p>
+<!-- INDENTATION -->
+<p>For more information, see the -w parameter above.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -976,10 +1062,10 @@ area chart.</p>
 <p>Enable a dynamic adjustment of the idle host purge
 limits. Normally the purge is limited to 1/3 of the hash
 size or 512 hosts (whichever is smaller) per cycle. This
-switch allows ntop to dynamically adjust the limit so that
-the purge takes between 0.5 and 5.0 seconds (but the minimum
-dynamic limit is 64 per cycle). These values may be adjusted
-via compile time constants.</p>
+switch allows <b>ntop</b> to dynamically adjust the limit so
+that the purge takes between 0.5 and 5.0 seconds (but the
+minimum dynamic limit is 64 per cycle). These values may be
+adjusted via compile time constants.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -997,8 +1083,8 @@ via compile time constants.</p>
 <td width="13%"></td>
 <td width="86%">
 <p>Enable the reuse of rrd graphics if appropriate (no rrd
-updates in the interim). The default, the flag not set, is
-that the graphics are recreated for each request.</p>
+updates in the interim). By default, with the flag not set,
+the graphics are recreated for each request.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -1051,9 +1137,10 @@ policyref=&quot;xxxx&quot;.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>Return ntop to old behavior on memory error. Default of
-stopcap enabled makes available the web interface with
-static content until ntop is shutdown.</p>
+<p>Return <b>ntop</b> to the old (v2.1) behavior on a memory
+error. The default of stopcap enabled makes the web
+interface available albeit with static content until
+<b>ntop</b> is shutdown.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -1089,17 +1176,22 @@ option, --enable-ignoresigpipe)</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p>Enable a watchdog for ntop webserver hangs. These usually
-happen when connecting with Netscape 6.2.2 and other
-browsers - only via https:// urls. The user gets nothing
-back and other users can&rsquo;t connect. Internally, the
-web server hangs in SSL_accept(). While packet processing
-continues, there is no way to access the data through the
-web server or shutdown ntop cleanly. With the watchdog, a
-timeout occurs after 3 seconds, and processing continues
-with a log message. Unfortunately, the user sees nothing -
-it just looks like a failed connection. (also available as a
-./configure option, --enable-sslwatchdog)</p>
+<p>Enables a &rsquo;watchdog&rsquo; for <b>ntop</b>
+webserver hangs. These usually happen when connecting with
+Netscape 6.2.2 and some other browsers - but only via
+https:// urls.</p>
+<!-- INDENTATION -->
+<p>The symptom is that the user gets nothing back and other
+users can&rsquo;t connect. Internally, the web server hangs
+in SSL_accept(). While packet processing continues, there is
+no way to access the data through the web server or shutdown
+<b>ntop</b> cleanly.</p>
+<!-- INDENTATION -->
+<p>With the watchdog, a timeout occurs after 3 seconds, and
+processing continues with a log message. Unfortunately, the
+user sees nothing - it just looks like a failed connection.
+(also available as a ./configure option,
+--enable-sslwatchdog)</p>
 </td>
 </table>
 <a name="WEB VIEWS"></a>
@@ -1112,16 +1204,12 @@ it just looks like a failed connection. (also available as a
 <td width="89%">
 <p>While <b>ntop</b> is running, multiple users can access
 the traffic information using conventional web browsers. The
-main HTML page, is divided is two frames. The left frame
-allows users to select the traffic view that will be
-displayed in the right frame. Available sections are: sort
-traffic by data sent, sort traffic by data received, traffic
-statistics, active hosts list, remote to local (i.e. inside
-the subnet defined for the network board from which the
-program is currently sniffing) IP traffic, local to remote
-IP traffic, local to local IP traffic, list of active TCP
-sessions, IP protocol distribution statistics, IP protocol
-usage, IP traffic matrix.</p>
+main HTML page is divided is three frames. The top frame is
+a familiar tabbed navigation bar, containing items such as
+&rsquo;Total&rsquo;, &rsquo;Sent&rsquo; and &rsquo;IP
+Protos&rsquo;. The left frame allows users to select the
+specific traffic view from among those for the tab. The
+resulting data will be displayed in the right frame.</p>
 </td>
 </table></p>
 <a name="NOTES"></a>
@@ -1136,50 +1224,97 @@ usage, IP traffic matrix.</p>
 tools are optional, but add to the program&rsquo;s
 capabilities.</p>
 <!-- INDENTATION -->
-<p>Other required libraries include:</p>
+<p>Required libraries include:</p>
 <!-- INDENTATION -->
-<p><b>libpcap</b> from http://www.tcpdump.org/ (The Win32
-version makes use of <b>libpcap for Win32</b> which may be
-downloaded from
-http://winpcap.polito.it/install/default.htm).</p>
+<p><b>libpcap</b> from http://www.tcpdump.org/</p>
+<!-- INDENTATION -->
+<p>The Win32 version makes use of <b>libpcap for Win32</b>
+which may be downloaded from
+http://winpcap.polito.it/install/default.htm). WARNING: The
+2.x series of <b>libpcap for Win32</b> releases will NOT
+support SMP machines.</p>
 <!-- INDENTATION -->
 <p><b>gdbm</b> from
 http://www.gnu.org/software/gdbm/gdbm.html</p>
 <!-- INDENTATION -->
 <p><b>ntop</b> requires a POSIX threads library. Although a
-single-threaded version of <b>ntop</b> will be built, it is
-not recommended for more than trivial usage.</p>
+single-threaded version of <b>ntop</b> can be built from the
+source if requested during ./configure, it is not
+recommended for more than trivial usage.</p>
+<!-- INDENTATION -->
+<p><b>intop</b> requires ncrypt and readline.</p>
 <!-- INDENTATION -->
 <p>Optional libraries include:</p>
 <!-- INDENTATION -->
 <p>The <b>gdchart</b> library, available at
-http://www.fred.net/brv/chart/.</p>
+http://www.fred.net/brv/chart/. Note that <b>ntop
+distributes an enhanced version of gdchart, 0.94c, as part
+of the ntop</b> source tree. <b>ntop has not be tested with
+the (development/beta) releases of gdchart (the 0.10</b> and
+0.11 series).</p>
 <!-- INDENTATION -->
 <p>The <b>gd</b> library, for the creation of gif files,
-available at http://www.boutell.com/gd/ (included with
-gdchart).</p>
+available at http://www.boutell.com/gd/. The 1.8.3 version
+of gd is included with gdchart 0.94c in the <b>ntop</b>
+source tree. <b>ntop</b> has not been tested with any other
+version.</p>
 <!-- INDENTATION -->
 <p>The <b>libpng</b> library, for the creation of png files,
-available at http://www.libpng.org</p>
+available at http://www.libpng.org/pub/png/libpng.html. Note
+that a version of libpng, 1.2.4, is distributed with the
+<b>ntop</b> source tree. <b>ntop</b> will also work with the
+1.0.x series, which is distributed in many Linux
+distribtions.</p>
+<!-- INDENTATION -->
+<p><b>HOWEVER</b> the two series, 1.0 and 1.2, are not
+compatible nor interoperable. If compiled against one
+version and executing against another, <b>ntop</b> will fail
+to create graphics.</p>
+<!-- INDENTATION -->
+<p>There is logic in the build script
+(gdchart0.94c/buildAll.sh) and in the program to attempt to
+catch this and rectify the problem or notify the user. This
+may not work in all cases. If you have a problem with
+graphics not being produced, check the <b>ntop</b> log and
+check the installed versions of libpng.</p>
 <!-- INDENTATION -->
 <p>(if an https:// server is desired) <b>openSSL</b> from
 the OpenSSL project available at http://www.openssl.org.</p>
 <!-- INDENTATION -->
+<p>The <b>rrdtool</b> is required by the rrd plugin. rrdtool
+creates &rsquo;Round-Robin databases&rsquo; which are used
+to hold and graph historical data. The rrdtool home page is
+http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/</p>
+<!-- INDENTATION -->
+<p><b>ntop</b> has been tested with rrdtool versions 1.0.38
+-&gt; 1.0.41. <b>ntop</b> has NOT been (successfully) tested
+with the rrdtool development versions, and there are
+significant differences between the two branches.</p>
+<!-- INDENTATION -->
+<p>Also, please note that there is a patched version of
+rrdtool 1.0.41 available in the <b>ntop</b> files area of
+SourceForge. This contains a bug fix (which will be part of
+rrdtool 1.0.42 when released). Without this fix, <b>ntop</b>
+may - rarely - crash during the create/update of an rrd.</p>
+<!-- INDENTATION -->
 <p>The <b>sflow</b> Plugin is courtesy of and supported by
 InMon Corporation, http://www.inmon.com/sflowTools.htm.</p>
 <!-- INDENTATION -->
-<p>(see the output of ./configure for a fuller listing)
-Posix threads, ncrypt, readline and:</p>
+<p>There are other optional libraries. See the output of
+./configure for a fuller listing.</p>
 <!-- INDENTATION -->
-<p>Options tools - which <b>ntop</b> will utilize if
-available - include <b>lsof
-(ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/README).</b></p>
+<p>An optional tool, which <b>ntop</b> will utilize if
+available, is <b>lsof</b> available from
+ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/README.</p>
 <!-- INDENTATION -->
-<p>Note that lsof must be configured suid root for
-<b>ntop</b> to use them. The user is cautioned to fully
-understand the security implications of that setting before
-setting the suid bit. <b>ntop</b> will function properly
-without either of these tools.</p>
+<p>lsof is used to present a remote view of the open files
+on the <b>ntop</b> host.</p>
+<!-- INDENTATION -->
+<p>Note that lsof must be configured suid root to enable
+it&rsquo;s use. <b>The user is cautioned to fully understand
+the security implications of this setting before enabling
+it. ntop</b> will function quite properly without the lsof
+tool.</p>
 </td>
 </table></p>
 <a name="SEE ALSO"></a>
@@ -1202,11 +1337,14 @@ without either of these tools.</p>
 <td width="10%"></td>
 <td width="89%">
 <p>Please send bug reports to the ntop mailing list
-&lt;ntop@ntop.org&gt;. Please code patched to
-&lt;patch@ntop.org&gt;. ntop&rsquo;s author is Luca Deri and
-can be reached at deri@ntop.org. Tool locations are current
-as of February 2002 - please send email to report new
-locations or dead links.</p>
+&lt;ntop@ntop.org&gt;. Please send code patches to
+&lt;patch@ntop.org&gt;.</p>
+<!-- INDENTATION -->
+<p>ntop&rsquo;s author is Luca Deri who can be reached at
+deri@ntop.org.</p>
+<!-- INDENTATION -->
+<p>Tool locations are current as of April 2003 - please send
+email to report new locations or dead links.</p>
 </td>
 </table></p>
 <hr>
