@@ -39,6 +39,8 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 /* ************************ */
 
+#ifdef GDC_WATCHDOG
+#warning GDC WATCHDOG Enabled
 void _GDC_out_pie(short width,
                   short height,
                   FILE* filepointer,            /* open file pointer, can be stdout */
@@ -62,7 +64,10 @@ void _GDC_out_pie(short width,
   }
   if (fork_result == (pid_t) 0) {
 
+#ifdef DEBUG
     traceEvent(TRACE_INFO, "INFO: GDC_out_pie - in child, calling\n");
+#endif
+
     GDC_out_pie(width,
                 height,
                 filepointer,
@@ -70,7 +75,11 @@ void _GDC_out_pie(short width,
                 num_points,
                 labels,
                 data);
+
+#ifdef DEBUG
     traceEvent(TRACE_INFO, "INFO: GDC_out_pie - in child, returned\n");
+#endif
+
     return;
   }
 
@@ -129,6 +138,9 @@ void _GDC_out_pie(short width,
 }
 
 #define GDC_out_pie(w, h, file, type, slices, labels, data) _GDC_out_pie(w, h, file, type, slices, labels, data)
+#else /* GDC_WATCHDOG */
+#undef GDC_out_pie
+#endif /* GDC_WATCHDOG */
 
 /* ************************ */
 
