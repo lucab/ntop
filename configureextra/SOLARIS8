@@ -1,5 +1,5 @@
 #!/bin/sh
 
 echo "        Setting Solaris 8 specific flag values"
-LDFLAGS="-L/usr/local/lib -lnsl -lsocket -liconv ${LDFLAGS}"
+LDFLAGS="-L/usr/local/lib -lnsl -lsocket ${LDFLAGS}"
 

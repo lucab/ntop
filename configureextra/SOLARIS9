@@ -2,6 +2,6 @@
 
 echo "        Setting Solaris 9 specific flag values"
 LDFLAGS="-L/opt/sfw/lib -L/usr/local/lib -R/opt/sfw/lib -R/usr/local/lib ${LDFLAGS}"
-LIBS="-lnsl -lsocket -liconv ${LIBS}"
+LIBS="-lnsl -lsocket ${LIBS}"
 CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/opt/sfw/include"
 
