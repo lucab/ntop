@@ -46,47 +46,18 @@ static int _ns_name_unpack(const u_char *msg,
 			  const u_char *eom, const u_char *src,
 			  u_char *dst, size_t dstsiz);
 
-
-#define DNS_ASYNC
-
-#ifdef DNS_ASYNC
-
-struct in_addr theAddrToResolve;
-struct hostent *resolvedAddress = NULL;
-pthread_t resolveAddressNowId;
-pthread_mutex_t mutexVariable;
-int threadCreated=0;
-pthread_cond_t condVariable;
-
-void* resolveAddressNow(void* notUsed _UNUSED_) {
-  h_errno = 0;
-
-  for(;;) {
-    accessMutex(&mutexVariable, "resolveAddressNow");
-    
-    if(theAddrToResolve.s_addr != 0) { 
-#ifdef DNS_DEBUG
-      traceEvent(TRACE_INFO, "Starting DNS Resolution of %s", 
-		 intoa(theAddrToResolve));
+/*
+  On FreeBSD gethostbyaddr() sometimes loops
+  and uses all the available memory. Hence this
+  patch is needed.
+*/
+#if defined(__FreeBSD__)
+#define USE_HOST
 #endif
-      
-      resolvedAddress = (struct hostent*)gethostbyaddr((char*)&theAddrToResolve,
-						       4, AF_INET);
-      
-#ifdef DNS_DEBUG
-      traceEvent(TRACE_INFO, "Address resolved (resolvedAddress=%x)(errno=%d)\n",
-		 resolvedAddress, h_errno);
-#endif
-      
-      theAddrToResolve.s_addr = 0;
-    }
-    releaseMutex(&mutexVariable);
-    sleep(2);
-  }
-}
 
+#ifdef USE_HOST
 
-#endif /* DNS_ASYNC */
+#endif /* USE_HOST */
 
 /* ************************************ */
 
@@ -168,7 +139,7 @@ static void resolveAddress(char* symAddr,
   }
 #endif
 
-  if(!keepAddressNumeric && capturePackets) {
+  if((!keepAddressNumeric) && capturePackets) {
     struct in_addr theAddr;
 
 #ifdef DNS_DEBUG
@@ -183,66 +154,50 @@ static void resolveAddress(char* symAddr,
     h_errno = NETDB_SUCCESS;
 #endif
 
-#ifdef DNS_ASYNC
+#ifdef USE_HOST
     {
-      int i, addrResolved=0;
-
-      theAddrToResolve.s_addr = theAddr.s_addr;
+      FILE* fd;
+      char buffer[64];
+      struct in_addr myAddr;
+      int i;
       
-      if(threadCreated == 0) 
-	createMutex(&mutexVariable);
-      else
-	releaseMutex(&mutexVariable);
-      
-      if(threadCreated == 0) {
-	createThread(&resolveAddressNowId, resolveAddressNow, NULL);
-	threadCreated = 1; 
-	sleep(2); /* I need to sleep to make sure the thread locked
-		     the semaphore. I cannot lock the mutex before
-		     creating the thread, because in this case the
-		     unlock to the mutex won't work (a mutex cannot
-		     be locked by thread A and unlocked by a different
-		     thread */
-      }
+      myAddr.s_addr = hostAddr->s_addr;
+      if(snprintf(buffer, sizeof(buffer), "/usr/bin/host %s", intoa(myAddr)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-      for(i=0; (addrResolved == 0) && (i<5); i++) {
-	if(tryLockMutex(&mutexVariable, "resolveAddressNow") == EBUSY) {
-#ifdef DNS_DEBUG
-	  traceEvent(TRACE_INFO, "Waiting (%d)", i);
-#endif
-	} else {
-	  /* NS completed */
-#ifdef DNS_DEBUG
-	  traceEvent(TRACE_INFO, "NS completed");
-#endif
-	  addrResolved = 1;
-	  break;
-	}
+      fd = sec_popen(buffer, "r");
 
-	sleep(2);
-      }
-
-      if(addrResolved == 0) {
-#ifdef DNS_DEBUG
-	traceEvent(TRACE_INFO, "===>>>>> DNS Timeout\n");
-#endif
-	killThread(&resolveAddressNowId);
-	threadCreated = 0;
-	deleteMutex(&mutexVariable);
-	resolveAddressNowId= NULL;
-	hp = NULL;
+      if(fd == NULL) {
+	tmpBuf[0] = '\0';
       } else {
-	accessMutex(&mutexVariable, "Now");
-	hp = resolvedAddress;
-#ifdef DNS_DEBUG
-	traceEvent(TRACE_INFO, "DNS Resolution OK (hp=%x)", hp);
-#endif
+	fgets(tmpBuf, sizeof(tmpBuf), fd);
+	pclose(fd);
       }
-            
-    }
-#else /* DNS_ASYNC */
-    hp = (struct hostent*)gethostbyaddr((char*)&theAddr, 4, AF_INET);
+
+      /*
+	# host 131.114.21.9
+	9.21.114.131.IN-ADDR.ARPA domain name pointer faeta.unipi.it
+	#
+      */
+
+      for(i=strlen(tmpBuf); i>0; i--)
+	if(tmpBuf[i] == ' ')
+	  break;
+      
+      if(tmpBuf[i] == ' ') {
+	res = &tmpBuf[i+1];
+	numResolvedWithDNSAddresses++;
+      } else {
+	res = _intoa(*hostAddr, tmpBuf, sizeof(tmpBuf));
+	numKeptNumericAddresses++;
+      }
+
+#ifdef DNS_DEBUG
+      traceEvent(TRACE_INFO, "Resolved to %s.", res);
 #endif
+    }
+#else /* USE_HOST */
+    hp = (struct hostent*)gethostbyaddr((char*)&theAddr, 4, AF_INET);
 
 #ifdef MULTITHREADED
     /* releaseMutex(&addressResolutionMutex); */
@@ -282,10 +237,12 @@ static void resolveAddress(char* symAddr,
       numKeptNumericAddresses++;
       res = _intoa(*hostAddr, tmpBuf , sizeof(tmpBuf));
     }
+#endif /* USE_HOST */
   } else {
     numKeptNumericAddresses++;
     res = _intoa(*hostAddr, tmpBuf, sizeof(tmpBuf));
   }
+
 
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "resolveAddress-3");
