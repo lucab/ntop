@@ -384,10 +384,12 @@ void ntop_free(void **ptr, char* file, int line) {
 void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   void *thePtr;
   
+#ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
     traceEvent(TRACE_WARNING, "WARNING: called malloc(%u) @ %s:%d", 
 	       sz, file, line);
   }
+#endif
 
   thePtr = malloc(sz);
   memset(thePtr, 0xee, sz); /* Fill it with garbage */

@@ -2818,15 +2818,21 @@ char* mapIcmpType(int icmpType) {
 /* ******************************** */
 
 #ifndef HAVE_LOCALTIME_R
+#undef localtime
 
 #ifdef MULTITHREADED
 static PthreadMutex localtimeMutex;
+static char localtimeMutexInitialized = 0;
 #endif
 
 struct tm *localtime_r(const time_t *t, struct tm *tp) {
   struct tm *theTime;
 
 #if defined(MULTITHREADED)
+  if(!) {
+    createMutex(&localtimeMutex);
+    localtimeMutexInitialized = 1;
+  }
   accessMutex(&localtimeMutex, "localtime_r");
 #endif
 
