@@ -1380,9 +1380,11 @@ void interfaceTrafficPie(void) {
   }
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    p[myDevices]   = 100*(((float)p[i])/totPkts.value);
-    lbl[myDevices] = myGlobals.device[i].humanFriendlyName;
-    myDevices++;
+    if(myGlobals.device[i].activeDevice) {
+      p[myDevices]   = 100*(((float)p[i])/totPkts.value);
+      lbl[myDevices] = myGlobals.device[i].humanFriendlyName;
+      myDevices++;
+    }
   }
 
 #ifndef WIN32

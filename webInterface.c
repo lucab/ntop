@@ -6202,20 +6202,21 @@ if(myGlobals.gdVersionGuessValue != NULL)
   /* **** */
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2),
-		  "<tr><th colspan=2 "DARK_BG">Host/Session counts - %sDevice %d (%s)</th></tr>\n",
-		  myGlobals.device[i].virtualDevice ? "Virtual " : "",
-		  i, myGlobals.device[i].name);
-    sendString(texthtml(buf, buf2));
+    if(myGlobals.device[i].activeDevice) {
+      safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2),
+		    "<tr><th colspan=2 "DARK_BG">Host/Session counts - %sDevice %d (%s)</th></tr>\n",
+		    myGlobals.device[i].virtualDevice ? "Virtual " : "",
+		    i, myGlobals.device[i].name);
+      sendString(texthtml(buf, buf2));
     
-    printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size",
-			   formatBytes(sizeof(HostTraffic), 0, buf, sizeof(buf)));
+      printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size",
+			     formatBytes(sizeof(HostTraffic), 0, buf, sizeof(buf)));
     
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize);
-    printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize);
+      printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.device[i].hostsno);
-    printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.device[i].hostsno);
+      printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
     
       for(idx=0; idx<myGlobals.device[i].actualHashSize; idx++) {
 	HostTraffic *el;
@@ -6235,24 +6236,25 @@ if(myGlobals.gdVersionGuessValue != NULL)
       }      
       
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[min %u][max %u][avg %.1f]", 
-		  minLen, maxLen, (float)totBuckets/(float)nonEmptyBuckets);
+		    minLen, maxLen, (float)totBuckets/(float)nonEmptyBuckets);
       printFeatureConfigInfo(textPrintFlag, "Bucket List Length", buf);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].hashListMaxLookups);
-    printFeatureConfigInfo(textPrintFlag, "Max host lookup", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].hashListMaxLookups);
+      printFeatureConfigInfo(textPrintFlag, "Max host lookup", buf);
 
-    if(pref->enableSessionHandling) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-		  formatBytes(sizeof(IPSession), 0, buf2, sizeof(buf2)));
-      printFeatureConfigInfo(textPrintFlag, "Session Bucket Size", buf);
+      if(pref->enableSessionHandling) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
+		      formatBytes(sizeof(IPSession), 0, buf2, sizeof(buf2)));
+	printFeatureConfigInfo(textPrintFlag, "Session Bucket Size", buf);
     
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-		  formatPkts(myGlobals.device[i].numTcpSessions, buf2, sizeof(buf2)));
-      printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
+		      formatPkts(myGlobals.device[i].numTcpSessions, buf2, sizeof(buf2)));
+	printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
       
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", 
-		  formatPkts(myGlobals.device[i].maxNumTcpSessions, buf2, sizeof(buf2)));
-      printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", 
+		      formatPkts(myGlobals.device[i].maxNumTcpSessions, buf2, sizeof(buf2)));
+	printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
+      }
     }
   }
 
