@@ -262,6 +262,8 @@ AC_ARG_WITH(gdbm-root, [  --with-gdbm-root=DIR    GNU gdbm source tree located i
 
 AC_ARG_WITH(ossl-root, [  --with-ossl-root=DIR    OpenSSL source tree located in DIR], OSSL_ROOT="$withval", OSSL_ROOT=)
 
+AC_ARG_WITH(gdchart-root, [  --with-gdchart-root=DIR GDChart source tree located in DIR], GDCHART_ROOT="$withval", GDCHART_ROOT=)
+
 AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
 dnl>
@@ -412,7 +414,7 @@ if test ".$ac_disable_curses" = ".no"; then
       echo "checking for curses.h... yes"
       AC_DEFINE(HAVE_CURSES_H)
     else
-      AC_MSG_WARN([It looks that you don't have ncurses.h/curses.h installed. Some ntop features will be disabled.])
+      AC_MSG_WARN([It looks that you don't have ncurses.h/curses.h installed. Some ntop's features will be disabled.])
     fi
   fi
 fi
@@ -495,7 +497,7 @@ echo
 dnl>
 dnl> check for `dlopen' in -ldl (MANDATORY)
 dnl>
-AC_CHECK_LIB(dl, dlopen, LIBS="$LIBS -ldl")
+AC_CHECK_LIB(dl, dlopen)
 
 dnl>
 dnl> check for `crypt' in -lcrypt (MANDATORY)
@@ -512,11 +514,8 @@ dnl> check for `sin' in -lm (MANDATORY)
 dnl>
 if test ".$ac_disable_gdchart" = ".no"; then
   AC_CHECK_LIB(m, sin, MORELIBS="$MORELIBS -lm", [
-echo "ERROR: You need libm to build ntop. Verify that you have libm.a or libm.so installed.";
+echo "ERROR: You need libm to build ntop with GDChart support. Verify that you have libm.a or libm.so installed.";
              AC_MSG_ERROR([Fatal: libm not found.])], $MORELIBS)
-
-else
-  AC_MSG_WARN([GDchart support disabled via command line option!])
 fi
 
 
@@ -527,12 +526,12 @@ dnl> check for `gethostname' or `gethostbyname' in -lnsl
 dnl> and then check for `accept' in -lsocket
 dnl> and then check for `inet_aton' in -lresolv
 dnl>
-AC_CHECK_LIB(nsl, gethostname, LIBS="$LIBS -lnsl")
+AC_CHECK_LIB(nsl, gethostname)
 if test ".`echo $LIBS | grep nsl`" = .; then
-    AC_CHECK_LIB(nsl, gethostbyname, LIBS="$LIBS -lnsl")
+    AC_CHECK_LIB(nsl, gethostbyname)
 fi
-AC_CHECK_LIB(socket, accept, LIBS="$LIBS -lsocket")
-AC_CHECK_LIB(resolv, inet_aton, LIBS="$LIBS -lresolv")
+AC_CHECK_LIB(socket, accept)
+AC_CHECK_LIB(resolv, inet_aton)
 
 dnl> both solaris and aix lack definition of `getdomainname'
 case "$host" in
@@ -581,12 +580,12 @@ dnl> Do not perform any check for the thread library,
 dnl> if the user decided to compile without multithread support.
 dnl>
 if test ".$ac_disable_multithread" = ".no"; then
-  AC_CHECK_LIB(pthread, pthread_create, LIBS="$LIBS -lpthread")
+  AC_CHECK_LIB(pthread, pthread_create)
   if test ".`echo $LIBS | grep pthread`" != .; then
 dnl>
 dnl> check for `sem_init' in -lposix4
 dnl>
-     AC_CHECK_LIB(posix4, sem_init, LIBS="$LIBS -lposix4")
+     AC_CHECK_LIB(posix4, sem_init)
      AC_DEFINE(MULTITHREADED)
      AC_DEFINE(ASYNC_ADDRESS_RESOLUTION)
   else
@@ -611,11 +610,12 @@ dnl> Make sure we link termcap with readline if we aren't already
 dnl> linking curses or termcap
 dnl>
   READLIBS=$LIBCURSES
-  case "$LIBS" in
+  case "$LIBCURSES" in
     *termcap*|*curses*)
         ;;
     *)
       AC_CHECK_LIB(termcap, tgetent, LIBTERMCAP="-ltermcap")
+      READLIBS="$READLIBS $LIBTERMCAP"
         ;;
   esac
 
@@ -623,48 +623,7 @@ dnl>
   AC_CHECK_LIB(readline, readline, LIBREADLINE="-lreadline", ,$READLIBS)
   if test "$LIBREADLINE" != "" ; then
     AC_DEFINE(HAVE_READLINE)
-    LIBREADLINE="$LIBREADLINE $READLIBS"
-  fi
-
-
-dnl> Make sure we link termcap with readline if we aren't already
-dnl> linking curses or termcap
-
-dnl>  AC_CHECK_LIB(termcap, tgetent, LIBTERMCAP="-ltermcap")
-dnl>   case "$LIBS" in
-dnl>     *termcap*|*curses*)
-dnl>        ;;
-dnl>   *)
-dnl>      LIBREADLINE="$LIBREADLINE $LIBTERMCAP"
-dnl>        ;;
-dnl>  esac
-
-fi
-
-
-dnl>
-dnl> check for `UCD-SNMP' library from University of California [http://ucd-snmp.ucdavis.edu]
-dnl>
-AC_CHECK_LIB(snmp, snmp_pdu_create, SNMPLIBS="-lsnmp -lucdagent -lucdmibs")
-
-
-dnl>
-dnl> check for `gdchart' library from Bruce Verderaime [http://www.fred.net/brv/chart/]
-dnl>
-if test ".$ac_disable_gdchart" = ".no"; then
-  AC_MSG_CHECKING([for GDchart])
-
-  if test -d ../gdchart0.94b/ &&
-       test -r ../gdchart0.94b/gd1.3/gd.h &&
-       test -r ../gdchart0.94b/gdc.h; then
-         GDCHART_ROOT="../gdchart0.94b"
-         GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
-         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd1.3 -lgd"
-         INCS="${INCS} -I$GDCHART_ROOT"
-         AC_DEFINE(HAVE_GDCHART)
-         AC_MSG_RESULT([found in $GDCHART_ROOT])
-  else
-         AC_MSG_RESULT([not found])
+    LIBREADLINE="$LIBREADLINE $LIBTERMCAP"
   fi
 fi
 
@@ -834,7 +793,13 @@ if test ".${GDBM_ROOT}" != .; then
     AC_MSG_RESULT([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
     AC_MSG_ERROR([ The GNU Gdbm Library development tree seems corrupted or incomplete!])
   fi
-elif test -d /usr/local &&
+fi
+
+
+AC_CHECK_LIB(gdbm, gdbm_open)
+
+if test ".`echo $LIBS | grep gdbm`" = .; then
+  if test -d /usr/local &&
      test -r /usr/local/lib/libgdbm.a &&
      test -r /usr/local/include/gdbm.h; then
        GDBM_ROOT="/usr/local"
@@ -842,43 +807,44 @@ elif test -d /usr/local &&
        INCS="${INCS} -I$GDBM_ROOT/include"
        AC_DEFINE(HAVE_GDBM_H)
        AC_MSG_RESULT([found in $GDBM_ROOT])
-elif test -r /usr/lib/libgdbm.a &&
-     test -r /usr/include/gdbm.h; then
-       GDBM_ROOT="/usr"
-       CORELIBS="${CORELIBS} -lgdbm"
-       AC_DEFINE(HAVE_GDBM_H)
-       AC_MSG_RESULT([found in $GDBM_ROOT])
-elif test -d ../gdbm-1.7.3 &&
-     test -r ../gdbm-1.7.3/libgdbm.a &&
-     test -r ../gdbm-1.7.3/gdbm.h; then
-       GDBM_ROOT="../gdbm-1.7.3"
-       GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
-       CORELIBS="${CORELIBS} -L$GDBM_ROOT -lgdbm"
-       INCS="${INCS} -I$GDBM_ROOT"
-       AC_DEFINE(HAVE_GDBM_H)
-       AC_MSG_RESULT([found in $GDBM_ROOT])
-elif test -d gdbm-1.7.3 &&
-     test -r gdbm-1.7.3/libgdbm.a &&
-     test -r gdbm-1.7.3/gdbm.h; then
-       GDBM_ROOT="gdbm-1.7.3"
-       GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
-       CORELIBS="${CORELIBS} -L$GDBM_ROOT -lgdbm"
-       INCS="${INCS} -I$GDBM_ROOT"
-       AC_DEFINE(HAVE_GDBM_H)
-       AC_MSG_RESULT([found in $GDBM_ROOT])
-else
-     AC_MSG_RESULT([not found! fallback for standard installation.])
-     AC_CHECK_LIB(gdbm, gdbm_close)
-     if test "$ac_tr_lib" != "HAVE_LIBGDBM"; then
-       AC_MSG_RESULT([             *** FATAL ERROR ***             ])
-       AC_MSG_RESULT([ It looks that you don't have the libgdbm distribution installed.])
-       AC_MSG_RESULT([ Download, compile and, optionally, install it.])
-       AC_MSG_RESULT([ When finished please re-run this program.])
-       AC_MSG_RESULT([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
-       AC_MSG_ERROR([ The GNU Gdbm Library development tree seems corrupted or incomplete!])
-     else
-       GDBM_ROOT="standard installation"
-     fi
+  elif test -r /usr/lib/libgdbm.a &&
+       test -r /usr/include/gdbm.h; then
+         GDBM_ROOT="/usr"
+         CORELIBS="${CORELIBS} -lgdbm"
+         AC_DEFINE(HAVE_GDBM_H)
+         AC_MSG_RESULT([found in $GDBM_ROOT])
+  elif test -d ../gdbm-1.7.3 &&
+       test -r ../gdbm-1.7.3/libgdbm.a &&
+       test -r ../gdbm-1.7.3/gdbm.h; then
+         GDBM_ROOT="../gdbm-1.7.3"
+         GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
+         CORELIBS="${CORELIBS} -L$GDBM_ROOT -lgdbm"
+         INCS="${INCS} -I$GDBM_ROOT"
+         AC_DEFINE(HAVE_GDBM_H)
+         AC_MSG_RESULT([found in $GDBM_ROOT])
+  elif test -d gdbm-1.7.3 &&
+       test -r gdbm-1.7.3/libgdbm.a &&
+       test -r gdbm-1.7.3/gdbm.h; then
+         GDBM_ROOT="gdbm-1.7.3"
+         GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
+         CORELIBS="${CORELIBS} -L$GDBM_ROOT -lgdbm"
+         INCS="${INCS} -I$GDBM_ROOT"
+         AC_DEFINE(HAVE_GDBM_H)
+         AC_MSG_RESULT([found in $GDBM_ROOT])
+  else
+       AC_MSG_RESULT([not found! fallback for standard installation.])
+       AC_CHECK_LIB(gdbm, gdbm_close)
+       if test "$ac_tr_lib" != "HAVE_LIBGDBM"; then
+         AC_MSG_RESULT([             *** FATAL ERROR ***             ])
+         AC_MSG_RESULT([ It looks that you don't have the libgdbm distribution installed.])
+         AC_MSG_RESULT([ Download, compile and, optionally, install it.])
+         AC_MSG_RESULT([ When finished please re-run this program.])
+         AC_MSG_RESULT([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
+         AC_MSG_ERROR([ The GNU Gdbm Library development tree seems corrupted or incomplete!])
+       else
+         GDBM_ROOT="standard installation"
+       fi
+  fi
 fi
 
 
@@ -890,6 +856,61 @@ dnl>
 echo
 echo "Step 7. Looking for optional GPLed libraries...."
 echo
+
+dnl>
+dnl> check for `gdchart' library by Bruce Verderaime [http://www.fred.net/brv/chart/]
+dnl> By default the configuration script will try to link against GDChart library.
+dnl> It looks if the the GDChart source code is available at the parent directory
+dnl>
+if test ".$ac_disable_gdchart" = ".no"; then
+  AC_MSG_CHECKING([for GDchart (optional package)])
+
+dnl>
+dnl> user defined directory passed as option at configuration time
+dnl>
+  if test ".${GDCHART_ROOT}" != .; then
+    if test -d $GDCHART_ROOT &&
+       test -r $GDCHART_ROOT/libgdchart.a &&
+       test -r $GDCHART_ROOT/gdc.h &&
+       test -r $GDCHART_ROOT/gd1.3/libgd.a &&
+       test -r $GDCHART_ROOT/gd1.3/gd.h; then
+         GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
+         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd1.3 -lgd"
+         INCS="${INCS} -I$GDCHART_ROOT"
+         AC_DEFINE(HAVE_GDCHART)
+         AC_MSG_RESULT([found in $GDCHART_ROOT])
+    else
+      AC_MSG_RESULT([not found in ${GDCHART_ROOT}])
+      AC_MSG_RESULT([ It looks that you don't have some files needed to use the GDChart library.])
+      AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
+      AC_MSG_RESULT([ When finished please re-run this program.])
+      AC_MSG_RESULT([ You can download the latest source tarball at http://www.fred.net/brv/chart/])
+      AC_MSG_WARN([ Some ntop's features will be disabled.])
+    fi
+dnl>
+dnl> on place source tree under the same ntop's parent directory
+dnl>
+  else
+    if test -d ../gdchart0.94b &&
+       test -r ../gdchart0.94b/gdc.h &&
+       test -r ../gdchart0.94b/libgdchart.a &&
+       test -r ../gdchart0.94b/gd1.3/libgd.a &&
+       test -r ../gdchart0.94b/gd1.3/gd.h; then
+         GDCHART_ROOT="../gdchart0.94b"
+         GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
+         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd1.3 -lgd"
+         INCS="${INCS} -I$GDCHART_ROOT"
+         AC_DEFINE(HAVE_GDCHART)
+         AC_MSG_RESULT([found in $GDCHART_ROOT])
+    else
+         AC_MSG_RESULT([not found])
+    fi
+  fi
+else
+  AC_MSG_WARN([GDchart support disabled via command line option!])
+fi
+
+
 
 dnl>
 dnl> OpenSSL by Open SLL Project
@@ -977,6 +998,12 @@ if test ".$ac_disable_openssl" = ".no"; then
 else
   AC_MSG_WARN([HTTPS support disabled via command line option!])
 fi
+
+
+dnl>
+dnl> check for `UCD-SNMP' library by University of California [http://ucd-snmp.ucdavis.edu]
+dnl>
+AC_CHECK_LIB(snmp, snmp_pdu_create, SNMPLIBS="-lsnmp -lucdagent -lucdmibs")
 
 
 echo
