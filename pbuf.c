@@ -1156,6 +1156,29 @@ static void handleSession(const struct pcap_pkthdr *h,
     if((theSession->maxWindow < tcpWin) || (theSession->maxWindow == 0))
       theSession->maxWindow = tcpWin;
 
+    /* Let's decode some Napster packets */
+    if((!theSession->napsterSession)
+       && (tcpDataLength == 1) 
+       && (theSession->bytesProtoRcvd == 0) /* This condition will not hold if you
+					       move this line of code down this
+					       function */
+       ) {
+      /* 
+	 If this is a Napster Download then it should
+	 look like "0x31 GET username song ...."
+      */
+      
+      if(packetData[0] == 0x31) {
+	theSession->napsterSession = 1;
+	napsterDownload = 1;
+      }
+      /*
+	traceEvent(TRACE_INFO, "Session check: %s:%d -> %s:%d [%x]\n",
+		 srcHost->hostSymIpAddress, sport,
+		 dstHost->hostSymIpAddress, dport, packetData[0]);
+      */
+    }
+
     if(flowDirection == CLIENT_TO_SERVER) {
       theSession->bytesProtoSent += tcpDataLength;
       theSession->bytesSent      += length;
@@ -1164,23 +1187,6 @@ static void handleSession(const struct pcap_pkthdr *h,
       theSession->bytesProtoRcvd += tcpDataLength;
       theSession->bytesReceived  += length;
       if(fragmentedData) theSession->bytesFragmentedReceived += tcpDataLength;
-    }
-
-    /* Let's decode some Napster packets */
-    if((!theSession->napsterSession)
-       && (tcpDataLength > 0) 
-       && (theSession->bytesProtoRcvd == 0)
-       && (sport == 6699)
-       ) {
-      /* 
-	 If this is a Napster Download then it should
-	 look like "0x31 GET username song ...."
-      */
-     
-      if(packetData[0] = 0x31) {
-	theSession->napsterSession = 1;
-	napsterDownload = 1;
-      }
     }
 
     if(theSession->napsterSession && (tcpDataLength > 0) ) {
@@ -1206,10 +1212,10 @@ static void handleSession(const struct pcap_pkthdr *h,
 	FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
 		
 	traceEvent(TRACE_INFO, "NAPSTER new download session: %s -> %s\n",
-		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress);
-	srcHost->napsterStats->numDownloadsRequested++,
-	  dstHost->napsterStats->numDownloadsServed++;	
+		   dstHost->hostSymIpAddress,
+		   srcHost->hostSymIpAddress);
+	dstHost->napsterStats->numDownloadsRequested++, 
+	  srcHost->napsterStats->numDownloadsServed++;	
       } else if((packetData[1] == 0x0) && (packetData[2] == 0xC8) && (packetData[3] == 0x00)) {
 	srcHost->napsterStats->numSearchSent++, dstHost->napsterStats->numSearchRcvd++;
 	
@@ -1241,7 +1247,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
 	  numNapsterSvr++;
 	  shost.s_addr = inet_addr(remoteHost);
-	  traceEvent(TRACE_INFO, "NAPSTER: %s  requested download from %s:%s",
+	  traceEvent(TRACE_INFO, "NAPSTER: %s requested download from %s:%s",
 		     srcHost->hostSymIpAddress, remoteHost, remotePort);
 	} 
       }
