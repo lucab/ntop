@@ -103,9 +103,9 @@ nfsPlugin.so: .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 #	@ln -s .libs/libwapPlugin.so wapPlugin.so
 
 install-data-local:
-	@$(top_srcdir)/mkinstalldirs $(plugindir);
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)$(plugindir);
 	@for file in $(noinst_PROGRAMS); do \
-             cp -p $$file $(plugindir)/$$file; \
+             cp -p $$file $(DESTDIR)$(plugindir)/$$file; \
          done
 # remove installed libraries
 	@for file in $(lib_LTLIBRARIES); do \
