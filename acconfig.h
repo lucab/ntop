@@ -126,4 +126,7 @@
 #undef NTOP_LITTLE_ENDIAN
 #undef NTOP_BIG_ENDIAN
 
+/* Define for IGNORE of SIGPIPE */
+#undef YES_IGNORE_SIGPIPE
+
 #endif /* _CONFIG_H_ */

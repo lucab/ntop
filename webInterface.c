@@ -1659,6 +1659,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
   );
 
+  printFeatureConfigInfo(textPrintFlag, "YES_IGNORE_SIGPIPE",
+#ifdef YES_IGNORE_SIGPIPE
+     "yes"
+#else
+     "no"
+#endif
+  );
+
   printFeatureConfigInfo(textPrintFlag, 
                          texthtml("NEED_GETDOMAINNAME (getdomainname(2) function)",
                                   "NEED_GETDOMAINNAME<br>&nbsp;&nbsp;&nbsp;getdomainname(2) function"),
@@ -2139,6 +2147,12 @@ void printNtopConfigInfo(int textPrintFlag) {
                            NTOP_DEFAULT_CHART_TYPE == GDC_AREA ? "Area" : "Bar");
 #endif
 
+#ifndef YES_IGNORE_SIGPIPE
+  printParameterConfigInfo(textPrintFlag, "--ignore-sigpipe",
+                           myGlobals.ignoreSIGPIPE == 1 ? "Yes" : "No",
+                           "No");
+#endif
+
  sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
  sendString("Note: " REPORT_ITS_EFFECTIVE "   means that "
             "this is the value after ntop has processed the parameter.");
@@ -2276,6 +2290,10 @@ void printNtopConfigInfo(int textPrintFlag) {
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpPortMapperSlots) < 0)
       BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "# Ports slots", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numHandledSIGPIPEerrors) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "# Handled SIGPIPE Errors", buf);
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numHandledHTTPrequests) < 0)
       BufferTooShort();
@@ -2887,6 +2905,11 @@ void initWeb() {
 
 /* **************************************** */
 
+void PIPEhandler(int sig) {
+    myGlobals.numHandledSIGPIPEerrors++;
+    setsignal (SIGPIPE, PIPEhandler);
+}
+
 
 /* ******************************************* */
 
@@ -2898,6 +2921,82 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 #endif
   fd_set mask, mask_copy;
   int topSock = myGlobals.sock;
+
+  /*
+   *  The great ntop "mysterious web server death" fix... and other tales of
+   *  sorcery.
+   *
+   *  The problem is that Internet Explorer (and other browsers) seem to close
+   *  the connection when they receive an unknown certificate in response to
+   *  an https:// request.  This causes a SIGPIPE and kills the web handling
+   *  thread - sometimes (for sure, the ONLY case I know of is if ntop is
+   *  run under Linux gdb connected to from a Win2K browser).
+   *
+   *  This code simply counts SIGPIPEs and ignores them. 
+   *
+   *  However, it's not that simple - under gdb under Linux (and perhaps other 
+   *  OSes), the thread mask on a child thread disables our ability to set a 
+   *  signal handler for SIGPIPE. However, gdb seems to trap the SIGPIPE and
+   *  reflect it to the code, even if the code wouldn't see it without the debug!
+   *
+   *  Hence the multi-step code.
+   *
+   *  This code SHOULD be safe.  Many other programs have had to so this.
+   *
+   *  Because I'm not sure, I've put both a compile time (--enable-ignoresigpipe)
+   *  and run-time --ignore-sigpipe option in place.
+   *
+   *  Recommended:
+   *    If you aren't seeing the "mysterious death of web server" problem:
+   *        don't worry - be happy.
+   *    If you are, try running for a while with --ignore-sigpipe
+   *        If that seems to fix it, then compile with --enable-ignoressigpipe
+   *
+   *  Burton M. Strauss III <Burton@ntopsupport.com>
+   *
+   */
+
+#ifndef YES_IGNORE_SIGPIPE
+  if (myGlobals.ignoreSIGPIPE == TRUE) {
+#else
+  {
+#endif /* YES_IGNORE_SIGPIPE */
+
+    sigset_t a_oset, a_nset;
+    sigset_t *oset, *nset;
+    int rc;
+
+    /* First, build our mask - empty, except for "UNBLOCK" SIGPIPE... */
+    oset = &a_oset;
+    nset = &a_nset;
+
+    sigemptyset(nset);
+    rc = sigemptyset(nset);
+    if (rc != 0) 
+        traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p\n", rc, nset);
+    rc = sigaddset(nset, SIGPIPE);
+    if (rc != 0)
+        traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
+
+#ifdef DEBUG
+    rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
+    traceEvent(TRACE_ERROR, "Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
+#endif
+
+    rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
+    if (rc != 0)
+        traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", nset, oset, rc);
+
+#ifdef DEBUG
+    rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
+    traceEvent(TRACE_INFO, "Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
+#endif
+
+    if (rc == 0) {
+          setsignal(SIGPIPE, PIPEhandler); 
+          traceEvent(TRACE_INFO, "Note: SIGPIPE handler set\n");
+    }
+  }
 
   FD_ZERO(&mask);
 

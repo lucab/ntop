@@ -102,6 +102,10 @@ dnl> By default the configuration script will not try to link against the TCP wr
 dnl> The choice to enable this feature is left to the user.
 ac_enable_tcpwrap=no
 
+dnl>
+dnl> By default, do NOT ignore sigpipe
+dnl>
+ac_ignore_sigpipe=no
 
 dnl>
 dnl> By default the configuration script will try to compile all the plugins in its own directory.
@@ -318,6 +322,11 @@ dnl>
 dnl> Give the user an option to compile with the TCP Wrapper support.
 dnl>
 AC_ARG_ENABLE(tcpwrap, [  --enable-tcpwrap        enable TCP Wrap support if available [default=disabled]], ac_enable_tcpwrap="yes")
+
+dnl>
+dnl> Give the user an option to RUN with SIGPIPE ignored
+dnl>
+AC_ARG_ENABLE(ignoresigpipe, [  --enable-ignoresigpipe  Ignore SIGPIPE errors [default=do not ignore]], ac_enable_ignoresigpipe="yes", ac_enable_ignoresigpipe="no")
 
 AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
@@ -586,6 +595,12 @@ echo "ERROR: You need libm to build ntop with GDChart support. Verify that you h
              AC_MSG_ERROR([Fatal: libm not found.])], $MORELIBS))
 fi
 
+dnl>
+dnl> Ignore SIGPIPE?
+dnl>
+if test ".$ac_enable_ignoresigpipe" = ".yes"; then
+  AC_DEFINE(YES_IGNORE_SIGPIPE)
+fi
 
 dnl>
 dnl> Networking libraries

@@ -264,6 +264,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.numIpPortsToHandle = 0;
   myGlobals.ipPortMapper = NULL;
   myGlobals.numIpPortMapperSlots = 0;
+  myGlobals.numHandledSIGPIPEerrors = 0;
   myGlobals.numHandledHTTPrequests = 0;
 
   /* Packet Capture */

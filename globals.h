@@ -207,6 +207,10 @@ typedef struct ntopGlobals {
   int throughput_chart_type;         /* '129' */
 #endif
 
+#ifndef YES_IGNORE_SIGPIPE
+  int ignoreSIGPIPE;                 /* '132' */
+#endif
+
   /* Other flags (these could set via command line options one day) */
   u_char enableSessionHandling;
   u_char enablePacketDecoding;
@@ -359,6 +363,7 @@ typedef struct ntopGlobals {
   u_short numIpProtosToMonitor, numIpPortsToHandle;
   PortMapper *ipPortMapper;
   int numIpPortMapperSlots;
+  volatile unsigned long numHandledSIGPIPEerrors;
   unsigned long numHandledHTTPrequests;
 
   /* Packet Capture */

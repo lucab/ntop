@@ -342,6 +342,7 @@ void initCounters(void) {
   myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
   myGlobals.capturePackets = 1;
 
+  myGlobals.numHandledSIGPIPEerrors = 0;
   myGlobals.numHandledHTTPrequests = 0;
 }
 

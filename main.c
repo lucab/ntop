@@ -149,6 +149,9 @@ static struct option const long_options[] = {
 #ifndef WIN32
   { "use-syslog",                       optional_argument, NULL, 131 },
 #endif
+#ifndef YES_IGNORE_SIGPIPE
+  { "ignore-sigpipe",                   no_argument,       NULL, 132 },
+#endif
 
   {NULL, 0, NULL, 0}
 };
@@ -253,6 +256,10 @@ void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [--throughput-bar-chart]                              Use BAR chart for graphs\n");
+
+#ifndef YES_IGNORE_SIGPIPE 
+  fprintf(fp, "    [--ignore-sigpipe]                                    Ignore SIGPIPE errors\n");
+#endif
 
 #else /* !HAVE_GETOPT_LONG */
 
@@ -667,6 +674,13 @@ static int parseOptions(int argc, char* argv []) {
       }
       break;
 #endif
+
+#ifndef YES_IGNORE_SIGPIPE 
+    case 132:
+      /* Burton M. Strauss III - Jun 2002 */
+      myGlobals.ignoreSIGPIPE = 1;
+      break;
+#endif /* YES_IGNORE_SIGPIPE */
 
     case 135:
       /* Dennis Schoen (dennis@cns.dnsalias.org) allow --set-admin-password=<password> */
