@@ -368,6 +368,16 @@ extern int isInitialSshData(char* packetData);
 extern int isInitialFtpData(char* packetData);
 extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
 
+/* prefs.c */
+extern int fetchPrefsValue(char *key, char *value, int valueLen);
+extern void storePrefsValue(char *key, char *value);
+extern void delPrefsValue(char *key);
+extern void processStrPref (char *key, char *value, char **globalVar, bool savePref);
+extern void processIntPref (char *key, char *value, int *globalVar, bool savePref);
+extern void processBoolPref (char *key, bool value, bool *globalVar, bool savePref);
+extern bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref);
+
+
 /* util.c */
 extern void setEmptySerial(HostSerial *a);
 extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
@@ -516,9 +526,6 @@ extern int _incrementUsageCounter(UsageCounter *counter,
 				  char* file, int line);
 extern char *strtolower(char *s);
 extern char *xstrncpy(char *dest, const char *src, size_t n);
-extern int fetchPrefsValue(char *key, char *value, int valueLen);
-extern void storePrefsValue(char *key, char *value);
-extern void delPrefsValue(char *key);
 extern int guessHops(HostTraffic *el);
 extern unsigned int ntop_sleep(unsigned int secs);
 extern void unescape(char *dest, int destLen, char *url);
