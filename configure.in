@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.99])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.99.013-2004-01-28"
+SCRIPTVER="v2.2.99.014-2004-02-02"
 
 dnl>
 dnl> generate the config header
@@ -1360,6 +1360,7 @@ AC_CHECK_HEADERS([pcap-bpf.h])
 AC_CHECK_LIB([pcap], [pcap_open_live])
 AC_CHECK_LIB([pcap], [pcap_open_dead], AC_DEFINE_UNQUOTED(HAVE_PCAP_OPEN_DEAD, 1, [libpcap has pcap_open_dead]))
 AC_CHECK_LIB([pcap], [pcap_lib_version], AC_DEFINE_UNQUOTED(HAVE_PCAP_LIB_VERSION, 1, [libpcap has pcap_lib_version]))
+AC_CHECK_LIB([pcap], [pcap_setnonblock], AC_DEFINE_UNQUOTED(HAVE_PCAP_SETNONBLOCK, 1, [libpcap has pcap_setnonblock]))
 
 if test ".${ac_cv_header_pcap_h}" != ".yes" ||
    (test ".${ac_cv_header_net_bpf_h}" != ".yes" &&

@@ -1750,6 +1750,10 @@ typedef struct ntopGlobals {
   char *P3Pcp;                       /* '137' */
   char *P3Puri;                      /* '138' */
 
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
+  short setNonBlocking;              /* '139' */
+#endif
+
   u_char disableStopcap;             /* '142' */
 
   short logExtra;                    /* '143' */
@@ -1943,6 +1947,7 @@ typedef struct ntopGlobals {
   u_short checkVersionStatus;
   time_t checkVersionStatusAgain;
   char *gdVersionGuess;
+  Counter setNonBlockingSleepCount;
 
   /* Purge */
   Counter numPurgedHosts, numTerminatedSessions;

@@ -144,6 +144,10 @@ static struct option const long_options[] = {
   { "p3p-cp",                           required_argument, NULL, 137 },
   { "p3p-uri",                          required_argument, NULL, 138 },
 
+#ifndef WIN32
+  { "set-pcap-nonblocking",             no_argument,       NULL, 139 },
+#endif
+
   { "disable-stopcap",                  no_argument,       NULL, 142 },
   { "log-extra",                        required_argument, NULL, 143 },
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
@@ -178,7 +182,7 @@ static void welcome (FILE * fp)
 /*
  * Wrong. Please try again accordingly to ....
  */
-void usage (FILE * fp) {
+void usage(FILE * fp) {
 	char *newLine = "";
 
 #ifdef WIN32
@@ -276,6 +280,9 @@ void usage (FILE * fp) {
   fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
   fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
+#ifndef WIN32
+  fprintf(fp, "    [--set-pcap-nonblocking]                              %sCall pcap_setnonblock\n", newLine);
+#endif
   fprintf(fp, "    [--skip-version-check]                                %sSkip ntop version check\n", newLine);
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
@@ -701,6 +708,17 @@ static int parseOptions(int argc, char* argv []) {
       if(myGlobals.P3Puri != NULL) free(myGlobals.P3Puri);
       myGlobals.P3Puri = strdup(optarg);
       break;
+
+#ifndef WIN32
+    case 139:
+ #ifdef HAVE_PCAP_SETNONBLOCK
+      myGlobals.setNonBlocking = TRUE;
+ #else
+      printf("FATAL ERROR: --set-pcap-nonblocking invalid - pcap_setnonblock() unavailable\n");
+      exit(-1);
+ #endif
+      break;
+#endif
 
     case 142: /* disable-stopcap */
       myGlobals.disableStopcap = TRUE;
@@ -1167,7 +1185,7 @@ int main(int argc, char *argv[]) {
   }
 
   if((ifStr == NULL) || (ifStr[0] == '\0')) {
-    traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: no interface has been selected. Quitting...");
+    traceEvent(CONST_TRACE_FATALERROR, "No interface has been selected. Quitting...");
     exit(-1);
   }
 

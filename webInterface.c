@@ -3418,6 +3418,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_IMG_OS_WINDOWS", "undefined");
 #endif
 
+#ifdef CONST_PCAPNONBLOCKING_SLEEP_TIME
+  printFeatureConfigNum(textPrintFlag, "CONST_PCAPNONBLOCKING_SLEEP_TIME", CONST_PCAPNONBLOCKING_SLEEP_TIME);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_PCAPNONBLOCKING_SLEEP_TIME", "undefined");
+#endif
+
 #ifdef CONST_IMG_POP_SERVER
   printFeatureConfigInfo(textPrintFlag, "CONST_IMG_POP_SERVER", CONST_IMG_POP_SERVER);
 #else
@@ -5797,6 +5803,60 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
 #endif
 
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+  printParameterConfigInfo(textPrintFlag, "--disable-schedYield",
+                           myGlobals.disableSchedYield == TRUE ? "Yes" : "No",
+                           "No");
+#endif
+
+  printParameterConfigInfo(textPrintFlag, "--disable-instantsessionpurge",
+                           myGlobals.disableInstantSessionPurge == TRUE ? "Yes" : "No",
+                           "No");
+
+  printParameterConfigInfo(textPrintFlag, "--disable-mutexextrainfo",
+                           myGlobals.disableMutexExtraInfo == TRUE ? "Yes" : "No",
+                           "No");
+
+  printParameterConfigInfo(textPrintFlag, "--disable-stopcap",
+                           myGlobals.disableStopcap == TRUE ? "Yes" : "No",
+                           "No");
+
+  printParameterConfigInfo(textPrintFlag, "--fc-only",
+                           myGlobals.printFcOnly == TRUE ? "Yes" : "No",
+                           "No");
+  
+  if(snprintf(buf, sizeof(buf), "%s%d",
+	      myGlobals.logExtra == 0 ? CONST_REPORT_ITS_DEFAULT : "",
+	      myGlobals.logExtra) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "--log-extra", buf);
+
+  printParameterConfigInfo(textPrintFlag, "--no-fc",
+                           myGlobals.noFc == TRUE ? "Yes" : "No",
+                           "No");
+
+  printParameterConfigInfo(textPrintFlag, "--no-invalid-lun",
+                           myGlobals.noInvalidLunDisplay == TRUE ? "Yes" : "No",
+                           "No");
+
+  printParameterConfigInfo(textPrintFlag, "--p3p-cp",
+                           ((myGlobals.P3Pcp == NULL) ||
+                            (myGlobals.P3Pcp[0] == '\0')) ? "none" :
+                           myGlobals.P3Pcp,
+                           "none");
+
+  printParameterConfigInfo(textPrintFlag, "--p3p-uri",
+                           ((myGlobals.P3Puri == NULL) ||
+                            (myGlobals.P3Puri[0] == '\0')) ? "none" :
+                           myGlobals.P3Puri,
+                           "none");
+
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
+  printParameterConfigInfo(textPrintFlag, "--set-pcap-nonblocking",
+                           myGlobals.setNonBlocking == TRUE ? "Yes" : "No",
+                           "No");
+#endif
+
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   printParameterConfigInfo(textPrintFlag, "--ssl-watchdog",
                            myGlobals.useSSLwatchdog == 1 ? "Yes" : "No",
@@ -5816,54 +5876,6 @@ void printNtopConfigInfo(int textPrintFlag) {
                "never be 100%.  If you find any issues, please report them to ntop-dev."
                "</i></p></td></tr>\n");
   }
-
-  printParameterConfigInfo(textPrintFlag, "--p3p-cp",
-                           ((myGlobals.P3Pcp == NULL) ||
-                            (myGlobals.P3Pcp[0] == '\0')) ? "none" :
-                           myGlobals.P3Pcp,
-                           "none");
-
-  printParameterConfigInfo(textPrintFlag, "--p3p-uri",
-                           ((myGlobals.P3Puri == NULL) ||
-                            (myGlobals.P3Puri[0] == '\0')) ? "none" :
-                           myGlobals.P3Puri,
-                           "none");
-
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-  printParameterConfigInfo(textPrintFlag, "--disable-schedYield",
-                           myGlobals.disableSchedYield == TRUE ? "Yes" : "No",
-                           "No");
-#endif
-
-  printParameterConfigInfo(textPrintFlag, "--disable-stopcap",
-                           myGlobals.disableStopcap == TRUE ? "Yes" : "No",
-                           "No");
-
-  if(snprintf(buf, sizeof(buf), "%s%d",
-	      myGlobals.logExtra == 0 ? CONST_REPORT_ITS_DEFAULT : "",
-	      myGlobals.logExtra) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "--log-extra", buf);
-
-  printParameterConfigInfo(textPrintFlag, "--disable-instantsessionpurge",
-                           myGlobals.disableInstantSessionPurge == TRUE ? "Yes" : "No",
-                           "No");
-
-  printParameterConfigInfo(textPrintFlag, "--disable-mutexextrainfo",
-                           myGlobals.disableMutexExtraInfo == TRUE ? "Yes" : "No",
-                           "No");
-
-  printParameterConfigInfo(textPrintFlag, "--fc-only",
-                           myGlobals.printFcOnly == TRUE ? "Yes" : "No",
-                           "No");
-  
-  printParameterConfigInfo(textPrintFlag, "--no-fc",
-                           myGlobals.noFc == TRUE ? "Yes" : "No",
-                           "No");
-
-  printParameterConfigInfo(textPrintFlag, "--no-invalid-lun",
-                           myGlobals.noInvalidLunDisplay == TRUE ? "Yes" : "No",
-                           "No");
 
   sendString(texthtml("\n\n", "<tr><th colspan=2>"));
   sendString("Note: " CONST_REPORT_ITS_EFFECTIVE "   means that "
@@ -6331,6 +6343,12 @@ if(myGlobals.gdVersionGuess != NULL)
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.maxPacketQueueLen) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Maximum queue", buf);
+
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.setNonBlockingSleepCount) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "--set-pcap-nonblocking sleep count", buf);
+#endif
 
 #endif
 

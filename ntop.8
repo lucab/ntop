@@ -65,12 +65,12 @@ ntop \- display top network users
 .RB [ -V | --version]
 .RB [ -X
 .IR <max_num_TCP_sessions> ]
-.RB [ --disable-stopcap ]
-.RB [ --log-extra
-.IR <number> ]
 .RB [ --disable-instantsessionpurge ]
 .RB [ --disable-schedyield ]
+.RB [ --disable-stopcap ]
 .RB [ --disable-mutexextrainfo ]
+.RB [ --log-extra
+.IR <number> ]
 .RB [ --skip-version-check ]
 .RB [ --w3c ]
 
@@ -83,7 +83,8 @@ Unix options:
 .IR <user> ]
 .RB [ -K | --enable-debug ]
 .RB [ -L ]
-.RB [ -use-syslog=
+.RB [ --pcap_setnonblock ]
+.RB [ --use-syslog=
 .IR <facility> ]
 .RB [ --webserver-queue
 .IR <number> ]
@@ -876,6 +877,38 @@ version information and then exits.
 .It2 -W --https-server
 (See the joint documentation with the -w parameter, above)
 
+.It --disable-instantsessionpurge
+.B ntop
+sets completed sessions as 'timed out' and then purge them almost instantly, which is
+not the behavior you might expect from the discussions about purge timeouts.  This switch
+makes ntop respect the timeouts for completed sessions.  It is NOT the default because
+a busy web server may have 100s or 1000s of completed sessions and this would significantly
+increase the amount of memory
+.B ntop
+uses.
+
+.It --disable-mutexextrainfo
+.B ntop
+stores extra information about the locks and unlocks of the protective mutexes it uses. Since
+.B ntop
+uses fine-grained locking, this information is updated frequently.  On some OSes, the system
+calls used to collect this informatio (getpid() and gettimeofday()) are expensive.  This option
+disables the extra information.  It should have no processing impact on
+.B ntop
+ - however should
+.B ntop
+actually deadlock, we would lose the information that sometimes tells us why.
+
+.It --disable-schedyield
+.B ntop
+uses sched_yield() calls for better interactive performance.  Under some situations, primarily
+under RedHat Linux 8.0, this can deadlock, causing the 
+.B ntop
+web server to stop responding, although
+.B ntop
+appears to still be operational according to the ps command. Use this switch to disable
+these calls, IF you are seeing deadlocks.
+
 .It --disable-stopcap
 Return 
 .B ntop 
@@ -896,37 +929,18 @@ The nnnnnnn value should be unique number for every message and should be stable
 .B ntop
 releases.  
 
-.It --disable-instantsessionpurge
+.It --pcap_setnonblock
+On some platforms, the select() call 
+.B ntop 
+uses to wait for web server requests will hang. This option sets the non-blocking 
+option (assuming it's available in the version of libpcap that is installed).
+While this fixes the problem, it also signifcantly increases the cpu usage of
 .B ntop
-sets completed sessions as 'timed out' and then purge them almost instantly, which is
-not the behavior you might expect from the discussions about purge timeouts.  This switch
-makes ntop respect the timeouts for completed sessions.  It is NOT the default because
-a busy web server may have 100s or 1000s of completed sessions and this would significantly
-increase the amount of memory
+(by turing an interupt driven process into a poll). If the web server hangs,
+but the rest of 
 .B ntop
-uses.
-
-.It --disable-schedyield
-.B ntop
-uses sched_yield() calls for better interactive performance.  Under some situations, primarily
-under RedHat Linux 8.0, this can deadlock, causing the 
-.B ntop
-web server to stop responding, although
-.B ntop
-appears to still be operational according to the ps command. Use this switch to disable
-these calls, IF you are seeing deadlocks.
-
-.It --disable-mutexextrainfo
-.B ntop
-stores extra information about the locks and unlocks of the protective mutexes it uses. Since
-.B ntop
-uses fine-grained locking, this information is updated frequently.  On some OSes, the system
-calls used to collect this informatio (getpid() and gettimeofday()) are expensive.  This option
-disables the extra information.  It should have no processing impact on
-.B ntop
- - however should
-.B ntop
-actually deadlock, we would lose the information that sometimes tells us why.
+seems to keep runing just fine, try this option.  It's know to be an issue under
+FreeBSD 4.9.
 
 .It --skip-version-check
 By default,

@@ -920,6 +920,29 @@
 #define CONST_DNSCACHE_PERMITTED_AGE        15*60
 
 /*
+ * Defines how long to sleep if there's no packet available and we are in
+ * --set-pcap-nonblocking mode.
+ *
+ * If you are running in this mode and consistently losing packets, this 
+ * value needs tweaking.
+ *
+ * There's no good data to understand the 'best' value.  The value is a
+ * tradeoff - the lower the number the more frequently we wake up and thus
+ * the more cpu used. (Zero would turn this into a continuous poll and peg
+ * the cpu usage at 100%).
+ *
+ * Higher values mean that more packets could come in during the sleep interval.
+ *
+ * The 'default' value of 0.03s (30,000,000 ns) means that - worst case
+ * (the packets begin to arrive just as ntop goes to sleep) -there could
+ * be around 50 packets for 10BaseT, 500 for 100BaseT at wakeup.
+ * ntop SHOULD be able to handle this.
+ *
+ * Value is in nanoseconds (10^-9) so 1,000,000,000 = 1s
+ */
+#define CONST_PCAPNONBLOCKING_SLEEP_TIME    30000000
+
+/*
  * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
  */
 #define CONST_OSFINGERPRINT_FILE            "etter.passive.os.fp"

@@ -23,7 +23,6 @@
 
 #include "ntop.h"
 
-
 static int *servicesMapper = NULL; /* temporary value */
 
 /* *************************** */
@@ -90,11 +89,23 @@ void* pcapDispatch(void *_i) {
 		   myGlobals.device[i].name,
 		   pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
-    } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
-      traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
-      break; /* No more packets to read */
-    } else {
-    }
+    } else if(rc == 0) {
+        if(myGlobals.rFileName != NULL) {
+          traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
+          break; /* No more packets to read */
+        } 
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
+        if(myGlobals.setNonBlocking == TRUE) {
+            /* select returned no data - either a signal or setNonBlock */
+            struct timespec sleepAmount;
+            sleepAmount.tv_sec = 0; sleepAmount.tv_nsec = CONST_PCAPNONBLOCKING_SLEEP_TIME;
+            rc = nanosleep(&sleepAmount, NULL);
+            myGlobals.setNonBlockingSleepCount++;
+         } else {
+           traceEvent(CONST_TRACE_NOISY, "TEMP: select() rc 0, not NonBlocking!");
+         }
+#endif
+    } 
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...");
