@@ -47,7 +47,7 @@ dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.2.1])
 AC_PREREQ([2.50])
-SCRIPTVER="v2.2.502-2003-04-23"
+SCRIPTVER="v2.2.1.103-2003-04-23"
 
 dnl>
 dnl> generate the config header
@@ -1643,6 +1643,9 @@ dnl> Security related
 dnl> Note: on some systems, e.g. FreeBSD, crypt() is defined in unistd.
 AC_CHECK_HEADERS([crypt.h pwd.h security/pam_appl.h shadow.h])
 
+dnl> Graphics
+AC_CHECK_HEADERS(gd.h png.h)
+
 dnl> i18n
 AC_CHECK_HEADERS([locale.h langinfo.h])
 
@@ -2149,6 +2152,56 @@ if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
     echo "*???     1. Install libgdbm"
     echo "*???    and Rerun ./configure"
     echo "*???  or 2. Use the --with-gdbm-root= option"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    AC_MSG_ERROR(Unable to continue... aborting ./configure)
+else
+    AC_MSG_RESULT(ok)
+fi
+
+AC_MSG_CHECKING([for png])
+if test ".${ac_cv_header_png_h}" != ".yes" ||
+   test ".${ac_cv_lib_png_png_read_info}" != ".yes"; then
+    AC_MSG_WARN(error)
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: png header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              png.h...${ac_cv_header_png_h}"
+    echo "*              png_read_info() in -lpng...${ac_cv_lib_png_png_read_info}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???        Install libpng (also called png and png-devel)"
+    echo "*???    and Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    AC_MSG_ERROR(Unable to continue... aborting ./configure)
+else
+    AC_MSG_RESULT(ok)
+fi
+
+AC_MSG_CHECKING([for gd])
+if test ".${ac_cv_header_gd_h}" != ".yes" ||
+   test ".${ac_cv_lib_gd_gdImageDestroy}" != ".yes"; then
+    AC_MSG_WARN(error)
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: gd header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              gd.h...${ac_cv_header_gd_h}"
+    echo "*              gdImageDestroy() in -lgd...${ac_cv_lib_gd_gdImageDestroy}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???        Install gd (and/or gd-devel)"
+    echo "*???    and Rerun ./configure"
     echo "*"
     echo "*******************************************************************"
     echo
