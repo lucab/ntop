@@ -1,12 +1,12 @@
 /*
- *  Copyright (C) 2002-04 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2002-04 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,157 +18,561 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* This plugin works only with threads */
+/*
+   ntop includes sFlow(TM), freely available from http://www.inmon.com/".
 
-/* ******************************************************************
+   Some code has been copied from the InMon sflowtool
 
-  -----------------------------------------------------------------------
-         Copyright (c) 2001 InMon Corp.  All rights reserved.
-  -----------------------------------------------------------------------
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
-
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-
-  2. Redistributions in binary form must reproduce the above
-     copyright notice, this list of conditions and the following
-     disclaimer in the documentation and/or other materials provided
-     with the distribution.
-
-  3. Redistributions of any form whatsoever must retain the following
-     acknowledgment:
-      "This product includes sFlow(TM), freely available from
-       http://www.inmon.com/".
-
-  4. All advertising materials mentioning features or use of this
-     software must display the following acknowledgment:
-      "This product includes sFlow(TM), freely available from
-       http://www.inmon.com/".
-
-  5. InMon Corp. may publish revised and/or new versions
-     of the license from time to time. Each version will be given a
-     distinguishing version number. Once covered code has been
-     published under a particular version of the license, you may
-     always continue to use it under the terms of that version. You
-     may also choose to use such covered code under the terms of any
-     subsequent version of the license published by InMon Corp.
-     No one other than the InMon Corp. has the right to modify the terms
-     applicable to covered code created under this License.
-
-  6. The name "sFlow" must not be used to endorse or promote products
-     derived from this software without prior written permission
-     from InMon Corp.  This does not apply to add-on libraries or tools
-     that work in conjunction with sFlow.  In such a case the sFlow name
-     may be used to indicate that the product supports sFlow.
-
-  7. Products derived from this software may not be called "sFlow",
-     nor may "sFlow" appear in their name, without prior written
-     permission of InMon Corp.
-
-
-  THIS SOFTWARE IS PROVIDED BY INMON CORP. ``AS IS'' AND
-  ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-  PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
-  INMON CORP. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-  OF THE POSSIBILITY OF SUCH DAMAGE.
-
-  --------------------------------------------------------------------
-
-  This software consists of voluntary contributions made by many
-  individuals on behalf of InMon Corp.
-
-  InMon Corp. can be contacted via Email at info@inmon.com.
-
-  For more information on InMon Corp. and sFlow,
-  please see http://www.inmon.com/.
-
-  InMon Public License Version 1.0 written May 31, 2001
-
-******************************************************************* */
+   This plugin works only with threads
+*/
 
 #include "ntop.h"
 #include "globals-report.h"
 
-static int debug = 0;
-static ProbeInfo probeList[MAX_NUM_PROBES];
-
 #ifdef CFG_MULTITHREADED
-pthread_t sFlowThread;
-static int threadActive;
+static void* sflowMainLoop(void* _deviceId);
 #endif
 
-static void initSflowInSocket(void); /* forward */
-static void setPluginStatus(char * status); /* forward */
+/* #define DEBUG_FLOWS */
 
-/* ****************************** */
+/* ********************************* */
 
-/* define my own IP header struct - to ease portability */
-struct myiphdr
-{
-  u_int8_t version_and_headerLen;
-  u_int8_t tos;
-  u_int16_t tot_len;
-  u_int16_t id;
-  u_int16_t frag_off;
-  u_int8_t ttl;
-  u_int8_t protocol;
-  u_int16_t check;
-  u_int32_t saddr;
-  u_int32_t daddr;
+enum SFLAddress_type {
+  SFLADDRESSTYPE_IP_V4 = 1,
+  SFLADDRESSTYPE_IP_V6 = 2
 };
 
-/* same for tcp */
-struct mytcphdr
-{
-  u_int16_t th_sport;		/* source port */
-  u_int16_t th_dport;		/* destination port */
-  u_int32_t th_seq;		/* sequence number */
-  u_int32_t th_ack;		/* acknowledgement number */
-  u_int8_t th_off_and_unused;
-  u_int8_t th_flags;
-  u_int16_t th_win;		/* window */
-  u_int16_t th_sum;		/* checksum */
-  u_int16_t th_urp;		/* urgent pointer */
+typedef union _SFLAddress_value {
+  struct in_addr ip_v4;
+  struct in6_addr ip_v6;
+} SFLAddress_value;
+
+typedef struct _SFLAddress {
+  u_int32_t type;           /* enum SFLAddress_type */
+  SFLAddress_value address;
+} SFLAddress;
+
+/* Packet header data */
+
+#define SFL_DEFAULT_HEADER_SIZE 128
+#define SFL_DEFAULT_COLLECTOR_PORT 6343
+#define SFL_DEFAULT_SAMPLING_RATE 400
+
+/* The header protocol describes the format of the sampled header */
+enum SFLHeader_protocol {
+  SFLHEADER_ETHERNET_ISO8023     = 1,
+  SFLHEADER_ISO88024_TOKENBUS    = 2,
+  SFLHEADER_ISO88025_TOKENRING   = 3,
+  SFLHEADER_FDDI                 = 4,
+  SFLHEADER_FRAME_RELAY          = 5,
+  SFLHEADER_X25                  = 6,
+  SFLHEADER_PPP                  = 7,
+  SFLHEADER_SMDS                 = 8,
+  SFLHEADER_AAL5                 = 9,
+  SFLHEADER_AAL5_IP              = 10, /* e.g. Cisco AAL5 mux */
+  SFLHEADER_IPv4                 = 11,
+  SFLHEADER_IPv6                 = 12,
+  SFLHEADER_MPLS                 = 13
 };
 
-/* and UDP */
-struct myudphdr {
-  u_int16_t uh_sport;           /* source port */
-  u_int16_t uh_dport;           /* destination port */
-  u_int16_t uh_ulen;            /* udp length */
-  u_int16_t uh_sum;             /* udp checksum */
+/* raw sampled header */
+
+typedef struct _SFLSampled_header {
+  u_int32_t header_protocol;            /* (enum SFLHeader_protocol) */
+  u_int32_t frame_length;               /* Original length of packet before sampling */
+  u_int32_t stripped;                   /* header/trailer bytes stripped by sender */
+  u_int32_t header_length;              /* length of sampled header bytes to follow */
+  u_int8_t *header_bytes;               /* Header bytes */
+} SFLSampled_header;
+
+/* decoded ethernet header */
+
+typedef struct _SFLSampled_ethernet {
+  u_int32_t eth_len;       /* The length of the MAC packet excluding
+			      lower layer encapsulations */
+  u_int8_t src_mac[8];    /* 6 bytes + 2 pad */
+  u_int8_t dst_mac[8];
+  u_int32_t eth_type;
+} SFLSampled_ethernet;
+
+/* decoded IP version 4 header */
+
+typedef struct _SFLSampled_ipv4 {
+  u_int32_t length;      /* The length of the IP packet
+			    excluding lower layer encapsulations */
+  u_int32_t protocol;    /* IP Protocol type (for example, TCP = 6, UDP = 17) */
+  struct in_addr src_ip; /* Source IP Address */
+  struct in_addr dst_ip; /* Destination IP Address */
+  u_int32_t src_port;    /* TCP/UDP source port number or equivalent */
+  u_int32_t dst_port;    /* TCP/UDP destination port number or equivalent */
+  u_int32_t tcp_flags;   /* TCP flags */
+  u_int32_t tos;         /* IP type of service */
+} SFLSampled_ipv4;
+
+/* decoded IP version 6 data */
+
+typedef struct _SFLSampled_ipv6 {
+  u_int32_t length;       /* The length of the IP packet
+			     excluding lower layer encapsulations */
+  u_int32_t protocol;     /* IP Protocol type (for example, TCP = 6, UDP = 17) */
+  struct in6_addr src_ip; /* Source IP Address */
+  struct in6_addr dst_ip; /* Destination IP Address */
+  u_int32_t src_port;     /* TCP/UDP source port number or equivalent */
+  u_int32_t dst_port;     /* TCP/UDP destination port number or equivalent */
+  u_int32_t tcp_flags;    /* TCP flags */
+  u_int32_t priority;     /* IP priority */
+} SFLSampled_ipv6;
+
+/* Extended data types */
+
+/* Extended switch data */
+
+typedef struct _SFLExtended_switch {
+  u_int32_t src_vlan;       /* The 802.1Q VLAN id of incomming frame */
+  u_int32_t src_priority;   /* The 802.1p priority */
+  u_int32_t dst_vlan;       /* The 802.1Q VLAN id of outgoing frame */
+  u_int32_t dst_priority;   /* The 802.1p priority */
+} SFLExtended_switch;
+
+/* Extended router data */
+
+typedef struct _SFLExtended_router {
+  SFLAddress nexthop;               /* IP address of next hop router */
+  u_int32_t src_mask;               /* Source address prefix mask bits */
+  u_int32_t dst_mask;               /* Destination address prefix mask bits */
+} SFLExtended_router;
+
+/* Extended gateway data */
+enum SFLExtended_as_path_segment_type {
+  SFLEXTENDED_AS_SET = 1,      /* Unordered set of ASs */
+  SFLEXTENDED_AS_SEQUENCE = 2  /* Ordered sequence of ASs */
 };
 
-/* and ICMP */
-struct myicmphdr
-{
-  u_int8_t type;		/* message type */
-  u_int8_t code;		/* type sub-code */
-  /* ignore the rest */
+typedef struct _SFLExtended_as_path_segment {
+  u_int32_t type;   /* enum SFLExtended_as_path_segment_type */
+  u_int32_t length; /* number of AS numbers in set/sequence */
+  union {
+    u_int32_t *set;
+    u_int32_t *seq;
+  } as;
+} SFLExtended_as_path_segment;
+
+typedef struct _SFLExtended_gateway {
+  SFLAddress nexthop;                       /* Address of the border router that should
+                                               be used for the destination network */
+  u_int32_t as;                             /* AS number for this gateway */
+  u_int32_t src_as;                         /* AS number of source (origin) */
+  u_int32_t src_peer_as;                    /* AS number of source peer */
+  u_int32_t dst_as_path_segments;           /* number of segments in path */
+  SFLExtended_as_path_segment *dst_as_path; /* list of seqs or sets */
+  u_int32_t communities_length;             /* number of communities */
+  u_int32_t *communities;                   /* set of communities */
+  u_int32_t localpref;                      /* LocalPref associated with this route */
+} SFLExtended_gateway;
+
+typedef struct _SFLString {
+  u_int32_t len;
+  char *str;
+} SFLString;
+
+/* Extended user data */
+
+typedef struct _SFLExtended_user {
+  u_int32_t src_charset;  /* MIBEnum value of character set used to encode a string - See RFC 2978
+			     Where possible UTF-8 encoding (MIBEnum=106) should be used. A value
+			     of zero indicates an unknown encoding. */
+  SFLString src_user;
+  u_int32_t dst_charset;
+  SFLString dst_user;
+} SFLExtended_user;
+
+/* Extended URL data */
+
+enum SFLExtended_url_direction {
+  SFLEXTENDED_URL_SRC = 1, /* URL is associated with source address */
+  SFLEXTENDED_URL_DST = 2  /* URL is associated with destination address */
 };
 
+typedef struct _SFLExtended_url {
+  u_int32_t direction;   /* enum SFLExtended_url_direction */
+  SFLString url;         /* URL associated with the packet flow.
+			    Must be URL encoded */
+  SFLString host;        /* The host field from the HTTP header */
+} SFLExtended_url;
 
-#if (!defined(HAVE_IN6_ADDR)) && (!defined(WIN32))  && (!defined(DARWIN))
-struct in6_addr
-{
-  union
-  {
-    u_int8_t u6_addr8[16];
-    u_int16_t u6_addr16[8];
-    u_int32_t u6_addr32[4];
-  } in6_u;
+/* Extended MPLS data */
+
+typedef struct _SFLLabelStack {
+  u_int32_t depth;
+  u_int32_t *stack; /* first entry is top of stack - see RFC 3032 for encoding */
+} SFLLabelStack;
+
+typedef struct _SFLExtended_mpls {
+  SFLAddress nextHop;        /* Address of the next hop */
+  SFLLabelStack in_stack;
+  SFLLabelStack out_stack;
+} SFLExtended_mpls;
+
+/* Extended NAT data
+   Packet header records report addresses as seen at the sFlowDataSource.
+   The extended_nat structure reports on translated source and/or destination
+   addesses for this packet. If an address was not translated it should
+   be equal to that reported for the header. */
+
+typedef struct _SFLExtended_nat {
+  SFLAddress src;    /* Source address */
+  SFLAddress dst;    /* Destination address */
+} SFLExtended_nat;
+
+/* additional Extended MPLS stucts */
+
+typedef struct _SFLExtended_mpls_tunnel {
+  SFLString tunnel_lsp_name;  /* Tunnel name */
+  u_int32_t tunnel_id;        /* Tunnel ID */
+  u_int32_t tunnel_cos;       /* Tunnel COS value */
+} SFLExtended_mpls_tunnel;
+
+typedef struct _SFLExtended_mpls_vc {
+  SFLString vc_instance_name; /* VC instance name */
+  u_int32_t vll_vc_id;        /* VLL/VC instance ID */
+  u_int32_t vc_label_cos;     /* VC Label COS value */
+} SFLExtended_mpls_vc;
+
+/* Extended MPLS FEC
+   - Definitions from MPLS-FTN-STD-MIB mplsFTNTable */
+
+typedef struct _SFLExtended_mpls_FTN {
+  SFLString mplsFTNDescr;
+  u_int32_t mplsFTNMask;
+} SFLExtended_mpls_FTN;
+
+/* Extended MPLS LVP FEC
+   - Definition from MPLS-LDP-STD-MIB mplsFecTable
+   Note: mplsFecAddrType, mplsFecAddr information available
+   from packet header */
+
+typedef struct _SFLExtended_mpls_LDP_FEC {
+  u_int32_t mplsFecAddrPrefixLength;
+} SFLExtended_mpls_LDP_FEC;
+
+/* Extended VLAN tunnel information
+   Record outer VLAN encapsulations that have
+   been stripped. extended_vlantunnel information
+   should only be reported if all the following conditions are satisfied:
+   1. The packet has nested vlan tags, AND
+   2. The reporting device is VLAN aware, AND
+   3. One or more VLAN tags have been stripped, either
+   because they represent proprietary encapsulations, or
+   because switch hardware automatically strips the outer VLAN
+   encapsulation.
+   Reporting extended_vlantunnel information is not a substitute for
+   reporting extended_switch information. extended_switch data must
+   always be reported to describe the ingress/egress VLAN information
+   for the packet. The extended_vlantunnel information only applies to
+   nested VLAN tags, and then only when one or more tags has been
+   stripped. */
+
+typedef SFLLabelStack SFLVlanStack;
+typedef struct _SFLExtended_vlan_tunnel {
+  SFLVlanStack stack;  /* List of stripped 802.1Q TPID/TCI layers. Each
+			  TPID,TCI pair is represented as a single 32 bit
+			  integer. Layers listed from outermost to
+			  innermost. */
+} SFLExtended_vlan_tunnel;
+
+enum SFLFlow_type_tag {
+  /* enterprise = 0, format = ... */
+  SFLFLOW_HEADER    = 1,      /* Packet headers are sampled */
+  SFLFLOW_ETHERNET  = 2,      /* MAC layer information */
+  SFLFLOW_IPV4      = 3,      /* IP version 4 data */
+  SFLFLOW_IPV6      = 4,      /* IP version 6 data */
+  SFLFLOW_EX_SWITCH    = 1001,      /* Extended switch information */
+  SFLFLOW_EX_ROUTER    = 1002,      /* Extended router information */
+  SFLFLOW_EX_GATEWAY   = 1003,      /* Extended gateway router information */
+  SFLFLOW_EX_USER      = 1004,      /* Extended TACAS/RADIUS user information */
+  SFLFLOW_EX_URL       = 1005,      /* Extended URL information */
+  SFLFLOW_EX_MPLS      = 1006,      /* Extended MPLS information */
+  SFLFLOW_EX_NAT       = 1007,      /* Extended NAT information */
+  SFLFLOW_EX_MPLS_TUNNEL  = 1008,   /* additional MPLS information */
+  SFLFLOW_EX_MPLS_VC      = 1009,
+  SFLFLOW_EX_MPLS_FTN     = 1010,
+  SFLFLOW_EX_MPLS_LDP_FEC = 1011,
+  SFLFLOW_EX_VLAN_TUNNEL  = 1012,   /* VLAN stack */
 };
-#endif /* HAVE_IN6_ADDR */
+
+typedef union _SFLFlow_type {
+  SFLSampled_header header;
+  SFLSampled_ethernet ethernet;
+  SFLSampled_ipv4 ipv4;
+  SFLSampled_ipv6 ipv6;
+  SFLExtended_switch sw;
+  SFLExtended_router router;
+  SFLExtended_gateway gateway;
+  SFLExtended_user user;
+  SFLExtended_url url;
+  SFLExtended_mpls mpls;
+  SFLExtended_nat nat;
+  SFLExtended_mpls_tunnel mpls_tunnel;
+  SFLExtended_mpls_vc mpls_vc;
+  SFLExtended_mpls_FTN mpls_ftn;
+  SFLExtended_mpls_LDP_FEC mpls_ldp_fec;
+  SFLExtended_vlan_tunnel vlan_tunnel;
+} SFLFlow_type;
+
+typedef struct _SFLFlow_sample_element {
+  struct _SFLFlow_sample_element *nxt;
+  u_int32_t tag;  /* SFLFlow_type_tag */
+  u_int32_t length;
+  SFLFlow_type flowType;
+} SFLFlow_sample_element;
+
+enum SFL_sample_tag {
+  SFLFLOW_SAMPLE = 1,              /* enterprise = 0 : format = 1 */
+  SFLCOUNTERS_SAMPLE = 2,          /* enterprise = 0 : format = 2 */
+  SFLFLOW_SAMPLE_EXPANDED = 3,     /* enterprise = 0 : format = 3 */
+  SFLCOUNTERS_SAMPLE_EXPANDED = 4  /* enterprise = 0 : format = 4 */
+};
+
+/* Format of a single flow sample */
+
+typedef struct _SFLFlow_sample {
+  /* u_int32_t tag;    */         /* SFL_sample_tag -- enterprise = 0 : format = 1 */
+  /* u_int32_t length; */
+  u_int32_t sequence_number;      /* Incremented with each flow sample
+				     generated */
+  u_int32_t source_id;            /* fsSourceId */
+  u_int32_t sampling_rate;        /* fsPacketSamplingRate */
+  u_int32_t sample_pool;          /* Total number of packets that could have been
+				     sampled (i.e. packets skipped by sampling
+				     process + total number of samples) */
+  u_int32_t drops;                /* Number of times a packet was dropped due to
+				     lack of resources */
+  u_int32_t input;                /* SNMP ifIndex of input interface.
+				     0 if interface is not known. */
+  u_int32_t output;               /* SNMP ifIndex of output interface,
+				     0 if interface is not known.
+				     Set most significant bit to indicate
+				     multiple destination interfaces
+				     (i.e. in case of broadcast or multicast)
+				     and set lower order bits to indicate
+				     number of destination interfaces.
+				     Examples:
+				     0x00000002  indicates ifIndex = 2
+				     0x00000000  ifIndex unknown.
+				     0x80000007  indicates a packet sent
+				     to 7 interfaces.
+				     0x80000000  indicates a packet sent to
+				     an unknown number of
+				     interfaces greater than 1.*/
+  u_int32_t num_elements;
+  SFLFlow_sample_element *elements;
+} SFLFlow_sample;
+
+/* same thing, but the expanded version (for full 32-bit ifIndex numbers) */
+
+typedef struct _SFLFlow_sample_expanded {
+  /* u_int32_t tag;    */         /* SFL_sample_tag -- enterprise = 0 : format = 1 */
+  /* u_int32_t length; */
+  u_int32_t sequence_number;      /* Incremented with each flow sample
+				     generated */
+  u_int32_t ds_class;             /* EXPANDED */
+  u_int32_t ds_index;             /* EXPANDED */
+  u_int32_t sampling_rate;        /* fsPacketSamplingRate */
+  u_int32_t sample_pool;          /* Total number of packets that could have been
+				     sampled (i.e. packets skipped by sampling
+				     process + total number of samples) */
+  u_int32_t drops;                /* Number of times a packet was dropped due to
+				     lack of resources */
+  u_int32_t inputFormat;          /* EXPANDED */
+  u_int32_t input;                /* SNMP ifIndex of input interface.
+				     0 if interface is not known. */
+  u_int32_t outputFormat;         /* EXPANDED */
+  u_int32_t output;               /* SNMP ifIndex of output interface,
+				     0 if interface is not known. */
+  u_int32_t num_elements;
+  SFLFlow_sample_element *elements;
+} SFLFlow_sample_expanded;
+
+/* Counter types */
+
+/* Generic interface counters - see RFC 1573, 2233 */
+
+typedef struct _SFLIf_counters {
+  u_int32_t ifIndex;
+  u_int32_t ifType;
+  u_int64_t ifSpeed;
+  u_int32_t ifDirection;        /* Derived from MAU MIB (RFC 2668)
+				   0 = unknown, 1 = full-duplex,
+				   2 = half-duplex, 3 = in, 4 = out */
+  u_int32_t ifStatus;           /* bit field with the following bits assigned:
+				   bit 0 = ifAdminStatus (0 = down, 1 = up)
+				   bit 1 = ifOperStatus (0 = down, 1 = up) */
+  u_int64_t ifInOctets;
+  u_int32_t ifInUcastPkts;
+  u_int32_t ifInMulticastPkts;
+  u_int32_t ifInBroadcastPkts;
+  u_int32_t ifInDiscards;
+  u_int32_t ifInErrors;
+  u_int32_t ifInUnknownProtos;
+  u_int64_t ifOutOctets;
+  u_int32_t ifOutUcastPkts;
+  u_int32_t ifOutMulticastPkts;
+  u_int32_t ifOutBroadcastPkts;
+  u_int32_t ifOutDiscards;
+  u_int32_t ifOutErrors;
+  u_int32_t ifPromiscuousMode;
+} SFLIf_counters;
+
+/* Ethernet interface counters - see RFC 2358 */
+typedef struct _SFLEthernet_counters {
+  u_int32_t dot3StatsAlignmentErrors;
+  u_int32_t dot3StatsFCSErrors;
+  u_int32_t dot3StatsSingleCollisionFrames;
+  u_int32_t dot3StatsMultipleCollisionFrames;
+  u_int32_t dot3StatsSQETestErrors;
+  u_int32_t dot3StatsDeferredTransmissions;
+  u_int32_t dot3StatsLateCollisions;
+  u_int32_t dot3StatsExcessiveCollisions;
+  u_int32_t dot3StatsInternalMacTransmitErrors;
+  u_int32_t dot3StatsCarrierSenseErrors;
+  u_int32_t dot3StatsFrameTooLongs;
+  u_int32_t dot3StatsInternalMacReceiveErrors;
+  u_int32_t dot3StatsSymbolErrors;
+} SFLEthernet_counters;
+
+/* Token ring counters - see RFC 1748 */
+
+typedef struct _SFLTokenring_counters {
+  u_int32_t dot5StatsLineErrors;
+  u_int32_t dot5StatsBurstErrors;
+  u_int32_t dot5StatsACErrors;
+  u_int32_t dot5StatsAbortTransErrors;
+  u_int32_t dot5StatsInternalErrors;
+  u_int32_t dot5StatsLostFrameErrors;
+  u_int32_t dot5StatsReceiveCongestions;
+  u_int32_t dot5StatsFrameCopiedErrors;
+  u_int32_t dot5StatsTokenErrors;
+  u_int32_t dot5StatsSoftErrors;
+  u_int32_t dot5StatsHardErrors;
+  u_int32_t dot5StatsSignalLoss;
+  u_int32_t dot5StatsTransmitBeacons;
+  u_int32_t dot5StatsRecoverys;
+  u_int32_t dot5StatsLobeWires;
+  u_int32_t dot5StatsRemoves;
+  u_int32_t dot5StatsSingles;
+  u_int32_t dot5StatsFreqErrors;
+} SFLTokenring_counters;
+
+/* 100 BaseVG interface counters - see RFC 2020 */
+
+typedef struct _SFLVg_counters {
+  u_int32_t dot12InHighPriorityFrames;
+  u_int64_t dot12InHighPriorityOctets;
+  u_int32_t dot12InNormPriorityFrames;
+  u_int64_t dot12InNormPriorityOctets;
+  u_int32_t dot12InIPMErrors;
+  u_int32_t dot12InOversizeFrameErrors;
+  u_int32_t dot12InDataErrors;
+  u_int32_t dot12InNullAddressedFrames;
+  u_int32_t dot12OutHighPriorityFrames;
+  u_int64_t dot12OutHighPriorityOctets;
+  u_int32_t dot12TransitionIntoTrainings;
+  u_int64_t dot12HCInHighPriorityOctets;
+  u_int64_t dot12HCInNormPriorityOctets;
+  u_int64_t dot12HCOutHighPriorityOctets;
+} SFLVg_counters;
+
+typedef struct _SFLVlan_counters {
+  u_int32_t vlan_id;
+  u_int64_t octets;
+  u_int32_t ucastPkts;
+  u_int32_t multicastPkts;
+  u_int32_t broadcastPkts;
+  u_int32_t discards;
+} SFLVlan_counters;
+
+/* Counters data */
+
+enum SFLCounters_type_tag {
+  /* enterprise = 0, format = ... */
+  SFLCOUNTERS_GENERIC      = 1,
+  SFLCOUNTERS_ETHERNET     = 2,
+  SFLCOUNTERS_TOKENRING    = 3,
+  SFLCOUNTERS_VG           = 4,
+  SFLCOUNTERS_VLAN         = 5
+};
+
+typedef union _SFLCounters_type {
+  SFLIf_counters generic;
+  SFLEthernet_counters ethernet;
+  SFLTokenring_counters tokenring;
+  SFLVg_counters vg;
+  SFLVlan_counters vlan;
+} SFLCounters_type;
+
+typedef struct _SFLCounters_sample_element {
+  struct _SFLCounters_sample_element *nxt; /* linked list */
+  u_int32_t tag; /* SFLCounters_type_tag */
+  u_int32_t length;
+  SFLCounters_type counterBlock;
+} SFLCounters_sample_element;
+
+typedef struct _SFLCounters_sample {
+  /* u_int32_t tag;    */       /* SFL_sample_tag -- enterprise = 0 : format = 2 */
+  /* u_int32_t length; */
+  u_int32_t sequence_number;    /* Incremented with each counters sample
+				   generated by this source_id */
+  u_int32_t source_id;          /* fsSourceId */
+  u_int32_t num_elements;
+  SFLCounters_sample_element *elements;
+} SFLCounters_sample;
+
+/* same thing, but the expanded version, so ds_index can be a full 32 bits */
+typedef struct _SFLCounters_sample_expanded {
+  /* u_int32_t tag;    */       /* SFL_sample_tag -- enterprise = 0 : format = 2 */
+  /* u_int32_t length; */
+  u_int32_t sequence_number;    /* Incremented with each counters sample
+				   generated by this source_id */
+  u_int32_t ds_class;           /* EXPANDED */
+  u_int32_t ds_index;           /* EXPANDED */
+  u_int32_t num_elements;
+  SFLCounters_sample_element *elements;
+} SFLCounters_sample_expanded;
+
+#define SFLADD_ELEMENT(_sm, _el) do { (_el)->nxt = (_sm)->elements; (_sm)->elements = (_el); } while(0)
+
+/* Format of a sample datagram */
+
+enum SFLDatagram_version {
+  SFLDATAGRAM_VERSION2 = 2,
+  SFLDATAGRAM_VERSION4 = 4,
+  SFLDATAGRAM_VERSION5 = 5
+};
+
+typedef struct _SFLSample_datagram_hdr {
+  u_int32_t datagram_version;      /* (enum SFLDatagram_version) = VERSION5 = 5 */
+  SFLAddress agent_address;        /* IP address of sampling agent */
+  u_int32_t sub_agent_id;          /* Used to distinguishing between datagram
+                                      streams from separate agent sub entities
+                                      within an device. */
+  u_int32_t sequence_number;       /* Incremented with each sample datagram
+				      generated */
+  u_int32_t uptime;                /* Current time (in milliseconds since device
+				      last booted). Should be set as close to
+				      datagram transmission time as possible.*/
+  u_int32_t num_records;           /* Number of tag-len-val flow/counter records to follow */
+} SFLSample_datagram_hdr;
+
+#define SFL_MAX_DATAGRAM_SIZE 1500
+#define SFL_MIN_DATAGRAM_SIZE 200
+#define SFL_DEFAULT_DATAGRAM_SIZE 1400
+
+#define SFL_DATA_PAD 400
+
+#define YES 1
+#define NO  0
+
+
 
 enum INMAddress_type {
   INMADDRESSTYPE_IP_V4 = 1,
@@ -187,7 +591,10 @@ typedef struct _INMAddress {
 
 /* Packet header data */
 
-#define INM_MAX_HEADER_SIZE         256   /* The maximum sampled header size. */
+#define INM_MAX_HEADER_SIZE 256   /* The maximum sampled header size. */
+#define INM_DEFAULT_HEADER_SIZE 128
+#define INM_DEFAULT_COLLECTOR_PORT 6343
+#define INM_DEFAULT_SAMPLING_RATE 400
 
 /* The header protocol describes the format of the sampled header */
 enum INMHeader_protocol {
@@ -276,13 +683,43 @@ typedef struct _INMExtended_router {
 
 /* Extended gateway data */
 
-typedef struct _INMExtended_gateway {
-  u_int32_t as;              /* AS number for this gateway */
-  u_int32_t src_as;
-  u_int32_t src_peer_as;
-  u_int32_t dst_as_path_length;
+enum INMExtended_as_path_segment_type {
+  INMEXTENDED_AS_SET = 1,      /* Unordered set of ASs */
+  INMEXTENDED_AS_SEQUENCE = 2  /* Ordered sequence of ASs */
+};
+  
+typedef struct _INMExtended_as_path_segment {
+  u_int32_t type;   /* enum INMExtended_as_path_segment_type */
+  u_int32_t length; /* number of AS numbers in set/sequence */
+  union {
+    u_int32_t *set;
+    u_int32_t *seq;
+  } as;
+} INMExtended_as_path_segment;
+
+/* note: the INMExtended_gateway structure has changed between v2 and v4.
+   Here is the old version first... */
+
+typedef struct _INMExtended_gateway_v2 {
+  u_int32_t as;                             /* AS number for this gateway */
+  u_int32_t src_as;                         /* AS number of source (origin) */
+  u_int32_t src_peer_as;                    /* AS number of source peer */
+  u_int32_t dst_as_path_length;             /* number of AS numbers in path */
   u_int32_t *dst_as_path;
-} INMExtended_gateway;
+} INMExtended_gateway_v2;
+
+/* now here is the new version... */
+
+typedef struct _INMExtended_gateway_v4 {
+  u_int32_t as;                             /* AS number for this gateway */
+  u_int32_t src_as;                         /* AS number of source (origin) */
+  u_int32_t src_peer_as;                    /* AS number of source peer */
+  u_int32_t dst_as_path_segments;           /* number of segments in path */
+  INMExtended_as_path_segment *dst_as_path; /* list of seqs or sets */
+  u_int32_t communities_length;             /* number of communities */
+  u_int32_t *communities;                   /* set of communities */
+  u_int32_t localpref;                      /* LocalPref associated with this route */
+} INMExtended_gateway_v4;
 
 /* Extended user data */
 typedef struct _INMExtended_user {
@@ -291,6 +728,16 @@ typedef struct _INMExtended_user {
   u_int32_t dst_user_len;
   char *dst_user;
 } INMExtended_user;
+enum INMExtended_url_direction {
+  INMEXTENDED_URL_SRC = 1, /* URL is associated with source address */
+  INMEXTENDED_URL_DST = 2  /* URL is associated with destination address */
+};
+
+typedef struct _INMExtended_url {
+  u_int32_t direction; /* enum INMExtended_url_direction */
+  u_int32_t url_len;
+  char *url;
+} INMExtended_url;
 
 /* Extended data */
 
@@ -298,7 +745,8 @@ enum INMExtended_information_type {
   INMEXTENDED_SWITCH    = 1,      /* Extended switch information */
   INMEXTENDED_ROUTER    = 2,      /* Extended router information */
   INMEXTENDED_GATEWAY   = 3,      /* Extended gateway router information */
-  INMEXTENDED_USER      = 4       /* Extended TACAS/RADIUS user information */
+  INMEXTENDED_USER      = 4,      /* Extended TACAS/RADIUS user information */
+  INMEXTENDED_URL       = 5       /* Extended URL information */
 };
 
 /* Format of a single sample */
@@ -342,9 +790,14 @@ typedef struct _INMFlow_sample {
   int gotRouter;
   INMExtended_router router;
   int gotGateway;
-  INMExtended_gateway gateway;
+  union {
+    INMExtended_gateway_v2 v2;  /* make the version explicit so that there is */
+    INMExtended_gateway_v4 v4;  /* less danger of mistakes when upgrading code */
+  } gateway;
   int gotUser;
   INMExtended_user user;
+  int gotUrl;
+  INMExtended_url url;
 } INMFlow_sample;
 
 /* Counter types */
@@ -507,8 +960,8 @@ typedef struct _INMCounters_sample {
 } INMCounters_sample;
 
 enum INMSample_types {
-  FLOWSAMPLE  = 1,
-  COUNTERSSAMPLE = 2
+   FLOWSAMPLE  = 1,
+   COUNTERSSAMPLE = 2
 };
 
 typedef union _INMSample_type {
@@ -520,10 +973,11 @@ typedef union _INMSample_type {
 
 enum INMDatagram_version {
   INMDATAGRAM_VERSION2 = 2,
+  INMDATAGRAM_VERSION4 = 4
 };
 
 typedef struct _INMSample_datagram_hdr {
-  u_int32_t datagram_version;      /* (enum INMDatagram_version) = VERSION2 */
+  u_int32_t datagram_version;      /* (enum INMDatagram_version) = VERSION4 */
   INMAddress agent_address;        /* IP address of sampling agent */
   u_int32_t sequence_number;       /* Incremented with each sample datagram
 				      generated */
@@ -533,16 +987,112 @@ typedef struct _INMSample_datagram_hdr {
   u_int32_t num_samples;           /* Number of flow and counters samples to follow */
 } INMSample_datagram_hdr;
 
+#define INM_MAX_DATAGRAM_SIZE 1500
+#define INM_MIN_DATAGRAM_SIZE 200
+#define INM_DEFAULT_DATAGRAM_SIZE 1400
+
+#define INM_DATA_PAD 400
+
+
+
+
+/* define my own IP header struct - to ease portability */
+struct myiphdr
+{
+  u_int8_t version_and_headerLen;
+  u_int8_t tos;
+  u_int16_t tot_len;
+  u_int16_t id;
+  u_int16_t frag_off;
+  u_int8_t ttl;
+  u_int8_t protocol;
+  u_int16_t check;
+  u_int32_t saddr;
+  u_int32_t daddr;
+};
+
+/* same for tcp */
+struct mytcphdr
+{
+  u_int16_t th_sport;		/* source port */
+  u_int16_t th_dport;		/* destination port */
+  u_int32_t th_seq;		/* sequence number */
+  u_int32_t th_ack;		/* acknowledgement number */
+  u_int8_t th_off_and_unused;
+  u_int8_t th_flags;
+  u_int16_t th_win;		/* window */
+  u_int16_t th_sum;		/* checksum */
+  u_int16_t th_urp;		/* urgent pointer */
+};
+
+/* and UDP */
+struct myudphdr {
+  u_int16_t uh_sport;           /* source port */
+  u_int16_t uh_dport;           /* destination port */
+  u_int16_t uh_ulen;            /* udp length */
+  u_int16_t uh_sum;             /* udp checksum */
+};
+
+/* and ICMP */
+struct myicmphdr
+{
+  u_int8_t type;		/* message type */
+  u_int8_t code;		/* type sub-code */
+  /* ignore the rest */
+};
+
+#ifdef SPOOFSOURCE
+#define SPOOFSOURCE_SENDPACKET_SIZE 2000
+struct mySendPacket {
+  struct myiphdr ip;
+  struct myudphdr udp;
+  u_char data[SPOOFSOURCE_SENDPACKET_SIZE];
+};
+#endif
+
+typedef struct _SFConfig {
+  /* sflow options */
+  u_int16_t sFlowInputPort;
+  /* netflow options */
+  u_int16_t netFlowOutputPort;
+  struct in_addr netFlowOutputIP;
+  int netFlowOutputSocket;
+  u_int16_t netFlowPeerAS;
+  int disableNetFlowScale;
+  /* tcpdump options */
+  int tcpdumpFormat;
+  u_int32_t tcpdumpHdrPad;
+  u_char zeroPad[100];
+
+#ifdef SPOOFSOURCE
+  int spoofSource;
+  u_int16_t ipid;
+  struct mySendPacket sendPkt;
+  u_int packetLen;
+#endif
+
+} SFConfig;
+
+/* make the options structure global to the program */
+static SFConfig sfConfig;
+
 typedef struct _SFSample {
   struct in_addr sourceIP;
-  struct in_addr agent_addr;
+  SFLAddress agent_addr;
+  u_int agentSubId;
 
   /* the raw pdu */
   u_char *rawSample;
   u_int rawSampleLen;
+  u_char *endp;
 
+  /* decode cursor */
+  u_long *datap;
+
+  u_int datagramVersion;
   u_int sampleType;
-  u_int samplerId;
+  u_int ds_class;
+  u_int ds_index;
 
   /* interface info */
   u_long ifIndex;
@@ -565,8 +1115,10 @@ typedef struct _SFSample {
   u_long headerProtocol;
   u_char *header;
   int headerLen;
+  u_long stripped;
 
   /* header decode */
+  int gotIPV4;
   int offsetToIPV4;
   struct in_addr dcd_srcIP;
   struct in_addr dcd_dstIP;
@@ -576,10 +1128,20 @@ typedef struct _SFSample {
   u_int dcd_sport;
   u_int dcd_dport;
   u_int dcd_tcpFlags;
+  u_int ip_fragmentOffset;
+  u_int udp_pduLen;
 
   /* ports */
+  u_long inputPortFormat;
+  u_long outputPortFormat;
   u_long inputPort;
   u_long outputPort;
+
+  /* ethernet */
+  u_int eth_type;
+  u_int eth_len;
+  u_char eth_src[8];
+  u_char eth_dst[8];
 
   /* vlan */
   u_long in_vlan;
@@ -595,23 +1157,61 @@ typedef struct _SFSample {
 #define SASAMPLE_EXTENDED_DATA_ROUTER 4
 #define SASAMPLE_EXTENDED_DATA_GATEWAY 8
 #define SASAMPLE_EXTENDED_DATA_USER 16
+#define SASAMPLE_EXTENDED_DATA_URL 32
+#define SASAMPLE_EXTENDED_DATA_MPLS 64
+#define SASAMPLE_EXTENDED_DATA_NAT 128
+#define SASAMPLE_EXTENDED_DATA_MPLS_TUNNEL 256
+#define SASAMPLE_EXTENDED_DATA_MPLS_VC 512
+#define SASAMPLE_EXTENDED_DATA_MPLS_FTN 1024
+#define SASAMPLE_EXTENDED_DATA_MPLS_LDP_FEC 2048
+#define SASAMPLE_EXTENDED_DATA_VLAN_TUNNEL 4096
 
   /* IP forwarding info */
-  struct in_addr nextHop;
+  SFLAddress nextHop;
   u_long srcMask;
   u_long dstMask;
+
+  /* BGP info */
+  SFLAddress bgp_nextHop;
   u_long my_as;
   u_long src_as;
   u_long src_peer_as;
   u_long dst_as_path_len;
   u_long *dst_as_path;
+  /* note: version 4 dst as path segments just get printed, not stored here, however
+   * the dst_peer and dst_as are filled in, since those are used for netflow encoding
+   */
+  u_long dst_peer_as;
+  u_long dst_as;
+
+  u_long communities_len;
+  u_long *communities;
+  u_long localpref;
 
   /* user id */
 #define SA_MAX_EXTENDED_USER_LEN 200
+  u_int src_user_charset;
   u_int src_user_len;
   char src_user[SA_MAX_EXTENDED_USER_LEN+1];
+  u_int dst_user_charset;
   u_int dst_user_len;
   char dst_user[SA_MAX_EXTENDED_USER_LEN+1];
+
+  /* url */
+#define SA_MAX_EXTENDED_URL_LEN 200
+#define SA_MAX_EXTENDED_HOST_LEN 200
+  u_int url_direction;
+  u_int url_len;
+  char url[SA_MAX_EXTENDED_URL_LEN+1];
+  u_int host_len;
+  char host[SA_MAX_EXTENDED_HOST_LEN+1];
+
+  /* mpls */
+  SFLAddress mpls_nextHop;
+
+  /* nat */
+  SFLAddress nat_src;
+  SFLAddress nat_dst;
 
   /* counter blocks */
   u_long statsSamplingInterval;
@@ -619,41 +1219,183 @@ typedef struct _SFSample {
 } SFSample;
 
 
-#define GETDATA32(target, datap) (target) = ntohl(*(datap)++)
-#define GETDATA32_NOBSWAP(target, datap) (target) = *(datap)++
-#define GETDATA64(target, datap) \
-  do { u_int64_t tmpLo, tmpHi;   \
-       GETDATA32(tmpHi, (datap));  \
-       GETDATA32(tmpLo, (datap));  \
-       (target) = (tmpHi << 32) + tmpLo; \
-  } while(0)
+/* ********************************* */
 
+/* Forward */
+static int setsFlowInSocket(int);
+static void setPluginStatus(char * status);
+static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
+		       u_int dstAddr, u_short dport, Counter len, int deviceId);
+static int initsFlowFunct(void);
+static void termsFlowFunct(void);
+static void termsFlowDevice(int deviceId);
+static void initsFlowDevice(int deviceId);
+#ifdef DEBUG_FLOWS
+static void handlesFlowPacket(u_char *_deviceId,
+			      const struct pcap_pkthdr *h,
+			      const u_char *p);
+#endif
+static void handlesFlowHTTPrequest(char* url);
+static void printsFlowStatisticsRcvd(int deviceId);
+static void printsFlowConfiguration(int deviceId);
+static int createsFlowDevice(int sflowDeviceId);
+static int mapsFlowDeviceToNtopDevice(int deviceId);
 
-static u_long *readExtendedSwitch(SFSample *sample, u_long *datap, u_char *endPtr)
-{
-  GETDATA32(sample->in_vlan, datap);
-  GETDATA32(sample->in_priority, datap);
-  GETDATA32(sample->out_vlan, datap);
-  GETDATA32(sample->out_priority, datap);
+/* ****************************** */
 
-  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_SWITCH;
+u_char static pluginActive = 0;
 
-  if(debug) {
-            traceEvent(CONST_TRACE_INFO, "in_vlan %lu", sample->in_vlan);
-            traceEvent(CONST_TRACE_INFO, "in_priority %lu", sample->in_priority);
-            traceEvent(CONST_TRACE_INFO, "out_vlan %lu", sample->out_vlan);
-            traceEvent(CONST_TRACE_INFO, "out_priority %lu", sample->out_priority);
+static PluginInfo sflowPluginInfo[] = {
+  {
+    VERSION, /* current ntop version */
+    "sFlow",
+    "This plugin is used to setup, activate and deactivate ntop's sFlow support.<br>"
+    "<b>ntop</b> can both collect and receive <A HREF=http://www.sflow.org/>sFlow</A> data. "
+    "Note that ntop.org is a member of the <A HREF=http://www.sflow.org/organization/>sFlow consortium</A>.<br>"
+    "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
+    "reports - <em>Remember to switch the reporting NIC via Admin | Switch NIC</em>.",
+    "2.9", /* version */
+    "<A HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
+    "sFlow", /* http://<host>:<port>/plugins/sFlow */
+    0, /* Active by default */
+    1, /* Inactive setup */
+    initsFlowFunct, /* InitFunc */
+    termsFlowFunct, /* TermFunc */
+#ifdef DEBUG_FLOWS
+    handlesFlowPacket,
+#else
+    NULL, /* PluginFunc */
+#endif
+    handlesFlowHTTPrequest,
+    NULL, /* no host creation/deletion handle */
+#ifdef DEBUG_FLOWS
+    "udp and (port 2055 or port 9995 or port 10234)",
+#else
+    NULL, /* no capture */
+#endif
+    NULL  /* no status */
+  }
+};
+
+/* ****************************** */
+
+static char* sfValue(int deviceId, char *name, int appendDeviceId) {
+  static char buf[64];
+
+  if(appendDeviceId) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "sflow.%d.%s",
+		myGlobals.device[deviceId].sflowGlobals->sflowDeviceId, name);
+  } else {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "sflow.%s", name);
   }
 
-  return datap;
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "SFLOW: sfValue=%s", buf);
+#endif
+
+  return(buf);
 }
 
-static char *IP_to_a(u_long ipaddr, char *buf)
-{
-  u_char *ip = (u_char *)&ipaddr;
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
-  return buf;
+/* ************************************** */
+
+static int setsFlowInSocket(int deviceId) {
+  struct sockaddr_in sockIn;
+  int sockopt = 1;
+
+  if(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Collector terminated");
+    closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+  }
+
+  if(myGlobals.device[deviceId].sflowGlobals->sflowInPort > 0) {
+    errno = 0;
+    myGlobals.device[deviceId].sflowGlobals->sflowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if((myGlobals.device[deviceId].sflowGlobals->sflowInSocket <= 0)
+       || (errno != 0) ) {
+      traceEvent(CONST_TRACE_INFO, "SFLOW: Unable to create a socket - returned %d, error is '%s'(%d)",
+		 myGlobals.device[deviceId].sflowGlobals->sflowInSocket, strerror(errno), errno);
+      setPluginStatus("Disabled - Unable to create listening socket.");
+      return(-1);
+    }
+
+    traceEvent(CONST_TRACE_INFO, "SFLOW: Created a UDP socket (%d)",
+	       myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+
+    setsockopt(myGlobals.device[deviceId].sflowGlobals->sflowInSocket,
+	       SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+
+    sockIn.sin_family            = AF_INET;
+    sockIn.sin_port              =(int)htons(myGlobals.device[deviceId].sflowGlobals->sflowInPort);
+    sockIn.sin_addr.s_addr       = INADDR_ANY;
+
+    if((bind(myGlobals.device[deviceId].sflowGlobals->sflowInSocket,
+	     (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0)
+       ) {
+      traceEvent(CONST_TRACE_ERROR, "SFLOW: Collector port %d already in use",
+		 myGlobals.device[deviceId].sflowGlobals->sflowInPort);
+      closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+      myGlobals.device[deviceId].sflowGlobals->sflowInSocket = 0;
+      return(0);
+    }
+
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Collector listening on port %d",
+	       myGlobals.device[deviceId].sflowGlobals->sflowInPort);
+  }
+
+#ifdef CFG_MULTITHREADED
+  if((myGlobals.device[deviceId].sflowGlobals->sflowInPort != 0)
+     && (!myGlobals.device[deviceId].sflowGlobals->threadActive)) {
+    /* This plugin works only with threads */
+    createThread(&myGlobals.device[deviceId].sflowGlobals->sflowThread,
+		 sflowMainLoop, (void*)deviceId);
+  }
+#endif
+
+  return(0);
 }
+
+/* *************************** */
+
+static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
+		       u_int dstAddr, u_short dport,
+		       Counter len, int deviceId) {
+  u_short lastFlowIgnored;
+
+  lastFlowIgnored = (*theNextFlowIgnored-1+MAX_NUM_IGNOREDFLOWS) % MAX_NUM_IGNOREDFLOWS;
+  if((myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][0] == srcAddr) &&
+     (myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][1] == sport) &&
+     (myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][2] == dstAddr) &&
+     (myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][3] == dport)) {
+    myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][4]++;
+    myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][5] += len;
+  } else {
+    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][0] = srcAddr;
+    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][1] = sport;
+    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][2] = dstAddr;
+    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][3] = dport;
+    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][4] = 1;
+    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][5] = len;
+    *theNextFlowIgnored = (*theNextFlowIgnored + 1) % MAX_NUM_IGNOREDFLOWS;
+  }
+}
+
+/* =============================================================== */
+
+/* Forward */
+void SFABORT(SFSample *s, int r);
+int printHex(const u_char *a, int len, u_char *buf, int bufLen, int marker, int bytesPerOutputLine);
+char *IP_to_a(u_long ipaddr, char *buf);
+
+#define SF_ABORT_EOS 1
+#define SF_ABORT_DECODE_ERROR 2
+#define SF_ABORT_LENGTH_ERROR 3
+
+void SFABORT(SFSample *s, int r) {
+  printf("SFABORT: %d\n");
+}
+
+
 
 /*_________________---------------------------__________________
   _________________        printHex           __________________
@@ -662,11 +1404,9 @@ static char *IP_to_a(u_long ipaddr, char *buf)
 
 static u_char bin2hex(int nib) { return (nib < 10) ? ('0' + nib) : ('A' - 10 + nib); }
 
-static int printHex(const u_char *a, int len, u_char *buf,
-	     int bufLen, int marker, int bytesPerOutputLine)
+int printHex(const u_char *a, int len, u_char *buf, int bufLen, int marker, int bytesPerOutputLine)
 {
   int b = 0, i = 0;
-
   for(; i < len; i++) {
     u_char byte;
     if(b > (bufLen - 10)) break;
@@ -690,6 +1430,54 @@ static int printHex(const u_char *a, int len, u_char *buf,
 }
 
 /*_________________---------------------------__________________
+  _________________      IP_to_a              __________________
+  -----------------___________________________------------------
+*/
+
+char *IP_to_a(u_long ipaddr, char *buf)
+{
+  u_char *ip = (u_char *)&ipaddr;
+  sprintf(buf, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+  return buf;
+}
+
+
+/*_________________---------------------------__________________
+  _________________    receiveError           __________________
+  -----------------___________________________------------------
+*/
+
+static void receiveError(SFSample *sample, char *errm, int hexdump)
+{
+  char ipbuf[51];
+  u_char scratch[6000];
+  char *msg = "";
+  char *hex = "";
+  u_long markOffset = (u_char *)sample->datap - sample->rawSample;
+  if(errm) msg = errm;
+  if(hexdump) {
+    printHex(sample->rawSample, sample->rawSampleLen, scratch, 6000, markOffset, 16);
+    hex = scratch;
+  }
+  fprintf(stderr, "%s (source IP = %s) %s\n", msg, IP_to_a(sample->sourceIP.s_addr, ipbuf), hex);
+
+  SFABORT(sample, SF_ABORT_DECODE_ERROR);
+}
+
+/*_________________---------------------------__________________
+  _________________    lengthCheck            __________________
+  -----------------___________________________------------------
+*/
+
+static void lengthCheck(SFSample *sample, char *description, u_char *start, int len) {
+  u_int32_t actualLen = (u_char *)sample->datap - start;
+  if(actualLen != len) {
+    fprintf(stderr, "%s length error (expected %d, found %d)\n", description, len, actualLen);
+    SFABORT(sample, SF_ABORT_LENGTH_ERROR);
+  }
+}
+
+/*_________________---------------------------__________________
   _________________     decodeLinkLayer       __________________
   -----------------___________________________------------------
   store the offset to the start of the ipv4 header in the sequence_number field
@@ -710,15 +1498,13 @@ static void decodeLinkLayer(SFSample *sample)
   u_int16_t type_len;
 
   /* assume not found */
-  sample->offsetToIPV4 = -1;
+  sample->gotIPV4 = NO;
 
   if(sample->headerLen < NFT_ETHHDR_SIZ) return; /* not enough for an Ethernet header */
 
-  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstMAC %02x%02x%02x%02x%02x%02x",
-	     ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
+  traceEvent(CONST_TRACE_INFO, "dstMAC %02x%02x%02x%02x%02x%02x\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
-  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcMAC %02x%02x%02x%02x%02x%02x",
-	     ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
+  traceEvent(CONST_TRACE_INFO, "srcMAC %02x%02x%02x%02x%02x%02x\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
   type_len = (ptr[0] << 8) + ptr[1];
   ptr += 2;
@@ -728,21 +1514,21 @@ static void decodeLinkLayer(SFSample *sample)
     u_int32_t vlanData = (ptr[0] << 8) + ptr[1];
     u_int32_t vlan = vlanData & 0x0fff;
     u_int32_t priority = vlanData >> 13;
+    ptr += 2;
     /*  _____________________________________ */
     /* |   pri  | c |         vlan-id        | */
     /*  ------------------------------------- */
     /* [priority = 3bits] [Canonical Format Flag = 1bit] [vlan-id = 12 bits] */
-    if(debug) {
-              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: decodedVLAN %lu", vlan);
-              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: decodedPriority %lu", priority);
-    }
+    traceEvent(CONST_TRACE_INFO, "decodedVLAN %lu\n", vlan);
+    traceEvent(CONST_TRACE_INFO, "decodedPriority %lu\n", priority);
     /* now get the type_len again (next two bytes) */
     type_len = (ptr[0] << 8) + ptr[1];
+    ptr += 2;
   }
 
   /* now we're just looking for IP */
   if(sample->headerLen < NFT_MIN_SIZ) return; /* not enough for an IPv4 header */
-
+  
   /* peek for IPX */
   if(type_len == 0x0200 || type_len == 0x0201 || type_len == 0x0600) {
 #define IPX_HDR_LEN 30
@@ -754,16 +1540,25 @@ static void decodeLinkLayer(SFSample *sample)
        ipxLen <= (IPX_HDR_LEN + IPX_MAX_DATA))
       /* we don't do anything with IPX here */
       return;
-  }
-
+  } 
+  
   if(type_len <= NFT_MAX_8023_LEN) {
     /* assume 802.3+802.2 header */
     /* check for SNAP */
     if(ptr[0] == 0xAA &&
        ptr[1] == 0xAA &&
        ptr[2] == 0x03) {
-      type_len = (ptr[3] << 8) + ptr[4];
-      ptr += 5;
+      ptr += 3;
+      if(ptr[0] != 0 ||
+	 ptr[1] != 0 ||
+	 ptr[2] != 0) {
+	traceEvent(CONST_TRACE_INFO, "VSNAP_OUI %02X-%02X-%02X\n", ptr[0], ptr[1], ptr[2]);
+	return; /* no further decode for vendor-specific protocol */
+      }
+      ptr += 3;
+      /* OUI == 00-00-00 means the next two bytes are the ethernet type (RFC 2895) */
+      type_len = (ptr[0] << 8) + ptr[1];
+      ptr += 2;
     }
     else {
       if (ptr[0] == 0x06 &&
@@ -777,9 +1572,9 @@ static void decodeLinkLayer(SFSample *sample)
       else return;
     }
   }
-
+  
   /* assume type_len is an ethernet-type now */
-
+  
   if(type_len == 0x0800) {
     /* IPV4 */
     if((end - ptr) < sizeof(struct myiphdr)) return;
@@ -790,10 +1585,10 @@ static void decodeLinkLayer(SFSample *sample)
     if((*ptr >> 4) != 4) return; /* not version 4 */
     if((*ptr & 15) < 5) return; /* not IP (hdr len must be 5 quads or more) */
     /* survived all the tests - store the offset to the start of the ip header */
+    sample->gotIPV4 = YES;
     sample->offsetToIPV4 = (ptr - start);
   }
 }
-
 
 /*_________________---------------------------__________________
   _________________     decodeIPV4            __________________
@@ -802,13 +1597,11 @@ static void decodeLinkLayer(SFSample *sample)
 
 static void decodeIPV4(SFSample *sample)
 {
-  if(sample->offsetToIPV4 > 0) {
+  if(sample->gotIPV4) {
     char buf[51];
     u_char *ptr = sample->header + sample->offsetToIPV4;
-    /* Create a local copy of the IP header (cannot overlay
-       structure in case it is not quad-aligned...some
-       platforms would core-dump if we tried that).  It's
-       OK coz this probably performs just as well anyway. */
+    /* Create a local copy of the IP header (cannot overlay structure in case it is not quad-aligned...some
+       platforms would core-dump if we tried that).  It's OK coz this probably performs just as well anyway. */
     struct myiphdr ip;
     memcpy(&ip, ptr, sizeof(ip));
     /* Value copy all ip elements into sample */
@@ -817,53 +1610,690 @@ static void decodeIPV4(SFSample *sample)
     sample->dcd_ipProtocol = ip.protocol;
     sample->dcd_ipTos = ip.tos;
     sample->dcd_ipTTL = ip.ttl;
+    traceEvent(CONST_TRACE_INFO, "ip.tot_len = %d\n", ntohs(ip.tot_len));
     /* Log out the decoded IP fields */
-    if(debug) {
-              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcIP %s", IP_to_a(sample->dcd_srcIP.s_addr, buf));
-              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstIP %s", IP_to_a(sample->dcd_dstIP.s_addr, buf));
-              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPProtocol %u", sample->dcd_ipProtocol);
-              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPTOS %u", sample->dcd_ipTos);
-              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPTTL %u", sample->dcd_ipTTL);
+    traceEvent(CONST_TRACE_INFO, "srcIP %s\n", IP_to_a(sample->dcd_srcIP.s_addr, buf));
+    traceEvent(CONST_TRACE_INFO, "dstIP %s\n", IP_to_a(sample->dcd_dstIP.s_addr, buf));
+    traceEvent(CONST_TRACE_INFO, "IPProtocol %u\n", sample->dcd_ipProtocol);
+    traceEvent(CONST_TRACE_INFO, "IPTOS %u\n", sample->dcd_ipTos);
+    traceEvent(CONST_TRACE_INFO, "IPTTL %u\n", sample->dcd_ipTTL);
+    /* check for fragments */
+    sample->ip_fragmentOffset = ntohs(ip.frag_off) & 0x1FFF;
+    if(sample->ip_fragmentOffset > 0) {
+      traceEvent(CONST_TRACE_INFO, "IPFragmentOffset %u\n", sample->ip_fragmentOffset);
     }
-    /* advance the pointer to the next protocol layer */
-    ptr += sizeof(struct myiphdr);
+    else {
+      /* advance the pointer to the next protocol layer */
+      /* ip headerLen is expressed as a number of quads */
+      ptr += (ip.version_and_headerLen & 0x0f) * 4;
 
-    switch(ip.protocol) {
-    case 1: /* ICMP */
-      {
-	struct myicmphdr icmp;
-	memcpy(&icmp, ptr, sizeof(icmp));
-	if(debug) {
-	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ICMPType %u", icmp.type);
-	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ICMPCode %u", icmp.code);
-        }
+      switch(ip.protocol) {
+      case 1: /* ICMP */
+	{
+	  struct myicmphdr icmp;
+	  memcpy(&icmp, ptr, sizeof(icmp));
+	  traceEvent(CONST_TRACE_INFO, "ICMPType %u\n", icmp.type);
+	  traceEvent(CONST_TRACE_INFO, "ICMPCode %u\n", icmp.code);
+	}
+	break;
+      case 6: /* TCP */
+	{
+	  struct mytcphdr tcp;
+	  memcpy(&tcp, ptr, sizeof(tcp));
+	  sample->dcd_sport = ntohs(tcp.th_sport);
+	  sample->dcd_dport = ntohs(tcp.th_dport);
+	  sample->dcd_tcpFlags = tcp.th_flags;
+	  traceEvent(CONST_TRACE_INFO, "TCPSrcPort %u\n", sample->dcd_sport);
+	  traceEvent(CONST_TRACE_INFO, "TCPDstPort %u\n",sample->dcd_dport);
+	  traceEvent(CONST_TRACE_INFO, "TCPFlags %u\n", sample->dcd_tcpFlags);
+	  if(sample->dcd_dport == 80) {
+	    int bytesLeft;
+	    int headerBytes = (tcp.th_off_and_unused >> 4) * 4;
+	    ptr += headerBytes;
+	    bytesLeft = sample->header + sample->headerLen - ptr;
+	  }
+	}
+	break;
+      case 17: /* UDP */
+	{
+	  struct myudphdr udp;
+	  memcpy(&udp, ptr, sizeof(udp));
+	  sample->dcd_sport = ntohs(udp.uh_sport);
+	  sample->dcd_dport = ntohs(udp.uh_dport);
+	  sample->udp_pduLen = ntohs(udp.uh_ulen);
+	  traceEvent(CONST_TRACE_INFO, "UDPSrcPort %u\n", sample->dcd_sport);
+	  traceEvent(CONST_TRACE_INFO, "UDPDstPort %u\n", sample->dcd_dport);
+	  traceEvent(CONST_TRACE_INFO, "UDPBytes %u\n", sample->udp_pduLen);
+	}
+	break;
+      default: /* some other protcol */
+	break;
       }
+    }
+  }
+}
+
+/*_________________---------------------------__________________
+  _________________      in_checksum          __________________
+  -----------------___________________________------------------
+*/
+static u_int16_t in_checksum(u_int16_t *addr, int len)
+{
+  int nleft = len;
+  u_short *w = addr;
+  u_short answer;
+  int sum = 0;
+
+  while (nleft > 1)  {
+    sum += *w++;
+    nleft -= 2;
+  }
+
+  if (nleft == 1) sum += *(u_char *)w;
+
+  sum = (sum >> 16) + (sum & 0xffff);
+  sum += (sum >> 16);
+  answer = ~sum;
+  return (answer);
+}
+
+      
+/*_________________---------------------------__________________
+  _________________   read data fns           __________________
+  -----------------___________________________------------------
+*/
+
+static u_int32_t getData32(SFSample *sample) {
+  if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
+  return ntohl(*(sample->datap)++);
+}
+
+static u_int32_t getData32_nobswap(SFSample *sample) {
+  if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
+  return *(sample->datap)++;
+}
+
+static u_int64_t getData64(SFSample *sample) {
+  u_int64_t tmpLo, tmpHi;
+  tmpHi = getData32(sample);
+  tmpLo = getData32(sample);
+  return (tmpHi << 32) + tmpLo;
+}
+
+static void skipBytes(SFSample *sample, int skip) {
+  int quads = (skip + 3) / 4;
+  sample->datap += quads;
+  if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
+}
+
+static void sf_log_next32(SFSample *sample, char *fieldName) {
+  u_int32_t val = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "%s %lu\n", fieldName, val);
+}
+
+static void sf_log_next64(SFSample *sample, char *fieldName) {
+  u_int64_t val = getData64(sample);
+  traceEvent(CONST_TRACE_INFO, "%s %llu\n", fieldName, val);
+}
+
+static u_int32_t getString(SFSample *sample, char *buf, int bufLen) {
+  u_int32_t len, read_len;
+  len = getData32(sample);
+  // truncate if too long
+  read_len = (len >= bufLen) ? (bufLen - 1) : len;
+  memcpy(buf, sample->datap, read_len);
+  buf[read_len] = '\0';   // null terminate
+  skipBytes(sample, len);
+  return len;
+}
+
+static u_int32_t getAddress(SFSample *sample, SFLAddress *address) {
+  address->type = getData32(sample);
+  if(address->type == SFLADDRESSTYPE_IP_V4)
+    address->address.ip_v4.s_addr = getData32_nobswap(sample);
+  else {
+    memcpy(&address->address.ip_v6.s6_addr, sample->datap, 16);
+    skipBytes(sample, 16);
+  }
+  return address->type;
+}
+
+static char *printAddress(SFLAddress *address, char *buf, int bufLen) {
+  if(address->type == SFLADDRESSTYPE_IP_V4)
+    IP_to_a(address->address.ip_v4.s_addr, buf);
+  else {
+    u_char *b = address->address.ip_v6.s6_addr;
+    // should really be: snprintf(buf, buflen,...) but snprintf() is not always available
+    sprintf(buf, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+	    b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7],b[8],b[9],b[10],b[11],b[12],b[13],b[14],b[15],b[16]);
+  }
+  return buf;
+}
+
+static char *printTag(u_int32_t tag, char *buf, int bufLen) {
+  // should really be: snprintf(buf, buflen,...) but snprintf() is not always available
+  sprintf(buf, "%lu:%lu", (tag >> 12), (tag & 0x00000FFF));
+  return buf;
+}
+
+static u_int32_t skipTLVRecord(SFSample *sample, u_int32_t tag, char *description) {
+  char buf[51];
+  u_int32_t len;
+  traceEvent(CONST_TRACE_INFO, "skipping unknown %s: %s\n", description, printTag(tag, buf, 50));
+  len = getData32(sample);
+  // sanity check
+  if(len > sample->rawSampleLen) SFABORT(sample, SF_ABORT_EOS);
+  else skipBytes(sample, len);
+  return len;
+}
+
+/*_________________---------------------------__________________
+  _________________    readExtendedSwitch     __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedSwitch(SFSample *sample)
+{
+  traceEvent(CONST_TRACE_INFO, "extendedType SWITCH\n");
+  sample->in_vlan = getData32(sample);
+  sample->in_priority = getData32(sample);
+  sample->out_vlan = getData32(sample);
+  sample->out_priority = getData32(sample);
+
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_SWITCH;
+  
+  traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
+  traceEvent(CONST_TRACE_INFO, "in_priority %lu\n", sample->in_priority);
+  traceEvent(CONST_TRACE_INFO, "out_vlan %lu\n", sample->out_vlan);
+  traceEvent(CONST_TRACE_INFO, "out_priority %lu\n", sample->out_priority);
+}
+
+/*_________________---------------------------__________________
+  _________________    readExtendedRouter     __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedRouter(SFSample *sample)
+{
+  u_int32_t addrType;
+  char buf[51];
+  traceEvent(CONST_TRACE_INFO, "extendedType ROUTER\n");
+  getAddress(sample, &sample->nextHop);
+  sample->srcMask = getData32(sample);
+  sample->dstMask = getData32(sample);
+
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_ROUTER;
+
+  traceEvent(CONST_TRACE_INFO, "nextHop %s\n", printAddress(&sample->nextHop, buf, 50));
+  traceEvent(CONST_TRACE_INFO, "srcSubnetMask %lu\n", sample->srcMask);
+  traceEvent(CONST_TRACE_INFO, "dstSubnetMask %lu\n", sample->dstMask);
+}
+
+/*_________________---------------------------__________________
+  _________________  readExtendedGateway_v2   __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedGateway_v2(SFSample *sample)
+{
+  traceEvent(CONST_TRACE_INFO, "extendedType GATEWAY\n");
+
+  sample->my_as = getData32(sample);
+  sample->src_as = getData32(sample);
+  sample->src_peer_as = getData32(sample);
+  sample->dst_as_path_len = getData32(sample);
+  /* just point at the dst_as_path array */
+  if(sample->dst_as_path_len > 0) {
+    sample->dst_as_path = sample->datap;
+    /* and skip over it in the input */
+    skipBytes(sample, sample->dst_as_path_len * 4);
+    // fill in the dst and dst_peer fields too
+    sample->dst_peer_as = ntohl(sample->dst_as_path[0]);
+    sample->dst_as = ntohl(sample->dst_as_path[sample->dst_as_path_len - 1]);
+  }
+  
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_GATEWAY;
+  
+  traceEvent(CONST_TRACE_INFO, "my_as %lu\n", sample->my_as);
+  traceEvent(CONST_TRACE_INFO, "src_as %lu\n", sample->src_as);
+  traceEvent(CONST_TRACE_INFO, "src_peer_as %lu\n", sample->src_peer_as);
+  traceEvent(CONST_TRACE_INFO, "dst_as %lu\n", sample->dst_as);
+  traceEvent(CONST_TRACE_INFO, "dst_peer_as %lu\n", sample->dst_peer_as);
+  traceEvent(CONST_TRACE_INFO, "dst_as_path_len %lu\n", sample->dst_as_path_len);
+  if(sample->dst_as_path_len > 0) {
+    u_int i = 0;
+    for(; i < sample->dst_as_path_len; i++) {
+      if(i == 0) traceEvent(CONST_TRACE_INFO, "dst_as_path ");
+      else traceEvent(CONST_TRACE_INFO, "-");
+      traceEvent(CONST_TRACE_INFO, "%lu", ntohl(sample->dst_as_path[i]));
+    }
+    traceEvent(CONST_TRACE_INFO, "\n");
+  }
+}
+
+/*_________________---------------------------__________________
+  _________________  readExtendedGateway      __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedGateway(SFSample *sample)
+{
+  u_int32_t segments;
+  int seg;
+  char buf[51];
+
+  traceEvent(CONST_TRACE_INFO, "extendedType GATEWAY\n");
+
+  if(sample->datagramVersion >= 5) {
+    getAddress(sample, &sample->bgp_nextHop);
+    traceEvent(CONST_TRACE_INFO, "bgp_nexthop %s\n", printAddress(&sample->bgp_nextHop, buf, 50));
+  }
+
+  sample->my_as = getData32(sample);
+  sample->src_as = getData32(sample);
+  sample->src_peer_as = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "my_as %lu\n", sample->my_as);
+  traceEvent(CONST_TRACE_INFO, "src_as %lu\n", sample->src_as);
+  traceEvent(CONST_TRACE_INFO, "src_peer_as %lu\n", sample->src_peer_as);
+  segments = getData32(sample);
+  if(segments > 0) {
+    traceEvent(CONST_TRACE_INFO, "dst_as_path ");
+    for(seg = 0; seg < segments; seg++) {
+      u_int32_t seg_type;
+      u_int32_t seg_len;
+      int i;
+      seg_type = getData32(sample);
+      seg_len = getData32(sample);
+      for(i = 0; i < seg_len; i++) {
+	u_int32_t asNumber;
+	asNumber = getData32(sample);
+	/* mark the first one as the dst_peer_as */
+	if(i == 0 && seg == 0) sample->dst_peer_as = asNumber;
+	else traceEvent(CONST_TRACE_INFO, "-");
+	/* make sure the AS sets are in parentheses */
+	if(i == 0 && seg_type == SFLEXTENDED_AS_SET) traceEvent(CONST_TRACE_INFO, "(");
+	traceEvent(CONST_TRACE_INFO, "%lu", asNumber);
+	/* mark the last one as the dst_as */
+	if(seg == (segments - 1) && i == (seg_len - 1)) sample->dst_as = asNumber;
+      }
+      if(seg_type == SFLEXTENDED_AS_SET) traceEvent(CONST_TRACE_INFO, ")");
+    }
+    traceEvent(CONST_TRACE_INFO, "\n");
+  }
+  traceEvent(CONST_TRACE_INFO, "dst_as %lu\n", sample->dst_as);
+  traceEvent(CONST_TRACE_INFO, "dst_peer_as %lu\n", sample->dst_peer_as);
+
+  sample->communities_len = getData32(sample);
+  /* just point at the communities array */
+  if(sample->communities_len > 0) sample->communities = sample->datap;
+  /* and skip over it in the input */
+  skipBytes(sample, sample->communities_len * 4);
+ 
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_GATEWAY;
+  if(sample->communities_len > 0) {
+    int j = 0;
+    for(; j < sample->communities_len; j++) {
+      if(j == 0) traceEvent(CONST_TRACE_INFO, "BGP_communities ");
+      else traceEvent(CONST_TRACE_INFO, "-");
+      traceEvent(CONST_TRACE_INFO, "%lu", ntohl(sample->communities[j]));
+    }
+    traceEvent(CONST_TRACE_INFO, "\n");
+  }
+
+  sample->localpref = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "BGP_localpref %lu\n", sample->localpref);
+
+}
+
+/*_________________---------------------------__________________
+  _________________    readExtendedUser       __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedUser(SFSample *sample)
+{
+  traceEvent(CONST_TRACE_INFO, "extendedType USER\n");
+
+  if(sample->datagramVersion >= 5) {
+    sample->src_user_charset = getData32(sample);
+    traceEvent(CONST_TRACE_INFO, "src_user_charset %d\n", sample->src_user_charset);
+  }
+
+  sample->src_user_len = getString(sample, sample->src_user, SA_MAX_EXTENDED_USER_LEN);
+
+  if(sample->datagramVersion >= 5) {
+    sample->dst_user_charset = getData32(sample);
+    traceEvent(CONST_TRACE_INFO, "dst_user_charset %d\n", sample->dst_user_charset);
+  }
+
+  sample->dst_user_len = getString(sample, sample->dst_user, SA_MAX_EXTENDED_USER_LEN);
+
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_USER;
+  
+  traceEvent(CONST_TRACE_INFO, "src_user %s\n", sample->src_user);
+  traceEvent(CONST_TRACE_INFO, "dst_user %s\n", sample->dst_user);
+}
+
+/*_________________---------------------------__________________
+  _________________    readExtendedUrl        __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedUrl(SFSample *sample)
+{
+  traceEvent(CONST_TRACE_INFO, "extendedType URL\n");
+
+  sample->url_direction = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "url_direction %lu\n", sample->url_direction);
+  sample->url_len = getString(sample, sample->url, SA_MAX_EXTENDED_URL_LEN);
+  traceEvent(CONST_TRACE_INFO, "url %s\n", sample->url);
+  if(sample->datagramVersion >= 5) {
+    sample->host_len = getString(sample, sample->host, SA_MAX_EXTENDED_HOST_LEN);
+    traceEvent(CONST_TRACE_INFO, "host %s\n", sample->host);
+  }
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_URL;
+}
+
+
+/*_________________---------------------------__________________
+  _________________       mplsLabelStack      __________________
+  -----------------___________________________------------------
+*/
+
+static void mplsLabelStack(SFSample *sample, char *fieldName)
+{
+  SFLLabelStack lstk;
+  u_int32_t lab;
+  lstk.depth = getData32(sample);
+  /* just point at the lablelstack array */
+  if(lstk.depth > 0) lstk.stack = (u_int32_t *)sample->datap;
+  /* and skip over it in the input */
+  skipBytes(sample, lstk.depth * 4);
+ 
+  if(lstk.depth > 0) {
+    int j = 0;
+    for(; j < lstk.depth; j++) {
+      if(j == 0) traceEvent(CONST_TRACE_INFO, "%s ", fieldName);
+      else traceEvent(CONST_TRACE_INFO, "-");
+      lab = ntohl(lstk.stack[j]);
+      traceEvent(CONST_TRACE_INFO, "%lu.%lu.%lu.%lu",
+	     (lab >> 12),     // label
+	     (lab >> 9) & 7,  // experimental
+	     (lab >> 8) & 1,  // bottom of stack
+	     (lab &  255));   // TTL
+    }
+    traceEvent(CONST_TRACE_INFO, "\n");
+  }
+}
+
+/*_________________---------------------------__________________
+  _________________    readExtendedMpls       __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedMpls(SFSample *sample)
+{
+  char buf[51];
+  traceEvent(CONST_TRACE_INFO, "extendedType MPLS\n");
+  getAddress(sample, &sample->mpls_nextHop);
+  traceEvent(CONST_TRACE_INFO, "mpls_nexthop %s\n", printAddress(&sample->mpls_nextHop, buf, 50));
+
+  mplsLabelStack(sample, "mpls_input_stack");
+  mplsLabelStack(sample, "mpls_output_stack");
+  
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS;
+}
+
+/*_________________---------------------------__________________
+  _________________    readExtendedNat        __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedNat(SFSample *sample)
+{
+  char buf[51];
+  traceEvent(CONST_TRACE_INFO, "extendedType NAT\n");
+  getAddress(sample, &sample->nat_src);
+  traceEvent(CONST_TRACE_INFO, "nat_src %s\n", printAddress(&sample->nat_src, buf, 50));
+  getAddress(sample, &sample->nat_dst);
+  traceEvent(CONST_TRACE_INFO, "nat_dst %s\n", printAddress(&sample->nat_dst, buf, 50));
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_NAT;
+}
+
+
+/*_________________---------------------------__________________
+  _________________    readExtendedMplsTunnel __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedMplsTunnel(SFSample *sample)
+{
+#define SA_MAX_TUNNELNAME_LEN 100
+  char tunnel_name[SA_MAX_TUNNELNAME_LEN+1];
+  u_int32_t tunnel_id, tunnel_cos;
+  
+  if(getString(sample, tunnel_name, SA_MAX_TUNNELNAME_LEN) > 0)
+    traceEvent(CONST_TRACE_INFO, "mpls_tunnel_lsp_name %s\n", tunnel_name);
+  tunnel_id = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "mpls_tunnel_id %lu\n", tunnel_id);
+  tunnel_cos = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "mpls_tunnel_cos %lu\n", tunnel_cos);
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_TUNNEL;
+}
+
+/*_________________---------------------------__________________
+  _________________    readExtendedMplsVC     __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedMplsVC(SFSample *sample)
+{
+#define SA_MAX_VCNAME_LEN 100
+  char vc_name[SA_MAX_VCNAME_LEN+1];
+  u_int32_t vll_vc_id, vc_cos;
+  if(getString(sample, vc_name, SA_MAX_VCNAME_LEN) > 0)
+    traceEvent(CONST_TRACE_INFO, "mpls_vc_name %s\n", vc_name);
+  vll_vc_id = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "mpls_vll_vc_id %lu\n", vll_vc_id);
+  vc_cos = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "mpls_vc_cos %lu\n", vc_cos);
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_VC;
+}
+
+/*_________________---------------------------__________________
+  _________________    readExtendedMplsFTN    __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedMplsFTN(SFSample *sample)
+{
+#define SA_MAX_FTN_LEN 100
+  char ftn_descr[SA_MAX_FTN_LEN+1];
+  u_int32_t ftn_mask;
+  if(getString(sample, ftn_descr, SA_MAX_FTN_LEN) > 0)
+    traceEvent(CONST_TRACE_INFO, "mpls_ftn_descr %s\n", ftn_descr);
+  ftn_mask = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "mpls_ftn_mask %lu\n", ftn_mask);
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_FTN;
+}
+
+/*_________________---------------------------__________________
+  _________________  readExtendedMplsLDP_FEC  __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedMplsLDP_FEC(SFSample *sample)
+{
+  u_int32_t fec_addr_prefix_len = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "mpls_fec_addr_prefix_len %lu\n", fec_addr_prefix_len);
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_LDP_FEC;
+}
+
+/*_________________---------------------------__________________
+  _________________  readExtendedVlanTunnel   __________________
+  -----------------___________________________------------------
+*/
+
+static void readExtendedVlanTunnel(SFSample *sample)
+{
+  u_int32_t lab;
+  SFLLabelStack lstk;
+  lstk.depth = getData32(sample);
+  /* just point at the lablelstack array */
+  if(lstk.depth > 0) lstk.stack = (u_int32_t *)sample->datap;
+  /* and skip over it in the input */
+  skipBytes(sample, lstk.depth * 4);
+ 
+  if(lstk.depth > 0) {
+    int j = 0;
+    for(; j < lstk.depth; j++) {
+      if(j == 0) traceEvent(CONST_TRACE_INFO, "vlan_tunnel ");
+      else traceEvent(CONST_TRACE_INFO, "-");
+      lab = ntohl(lstk.stack[j]);
+      traceEvent(CONST_TRACE_INFO, "0x%04x.%lu.%lu.%lu",
+	     (lab >> 16),       // TPI
+	     (lab >> 13) & 7,   // priority
+	     (lab >> 12) & 1,   // CFI
+	     (lab & 4095));     // VLAN
+    }
+    traceEvent(CONST_TRACE_INFO, "\n");
+  }
+  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_VLAN_TUNNEL;
+}
+
+/*_________________---------------------------__________________
+  _________________  readFlowSample_header    __________________
+  -----------------___________________________------------------
+*/
+
+static void readFlowSample_header(SFSample *sample)
+{
+  traceEvent(CONST_TRACE_INFO, "flowSampleType HEADER\n");
+  sample->headerProtocol = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "headerProtocol %lu\n", sample->headerProtocol);
+  sample->sampledPacketSize = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
+  if(sample->datagramVersion > 4) {
+    // stripped count introduced in sFlow version 5
+    sample->stripped = getData32(sample);
+    traceEvent(CONST_TRACE_INFO, "strippedBytes %lu\n", sample->stripped);
+  }
+  sample->headerLen = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "headerLen %lu\n", sample->headerLen);
+  
+  sample->header = (u_char *)sample->datap; /* just point at the header */
+  skipBytes(sample, sample->headerLen);
+  {
+    char scratch[2000];
+    printHex(sample->header, sample->headerLen, scratch, 2000, 0, 2000);
+    traceEvent(CONST_TRACE_INFO, "headerBytes %s\n", scratch);
+  }
+  
+  switch(sample->headerProtocol) {
+    /* the header protocol tells us where to jump into the decode */
+  case SFLHEADER_ETHERNET_ISO8023:
+    decodeLinkLayer(sample);
+    break;
+  case SFLHEADER_IPv4: 
+    sample->gotIPV4 = YES;
+    sample->offsetToIPV4 = 0;
+    break;
+  case SFLHEADER_ISO88024_TOKENBUS:
+  case SFLHEADER_ISO88025_TOKENRING:
+  case SFLHEADER_FDDI:
+  case SFLHEADER_FRAME_RELAY:
+  case SFLHEADER_X25:
+  case SFLHEADER_PPP:
+  case SFLHEADER_SMDS:
+  case SFLHEADER_AAL5:
+  case SFLHEADER_AAL5_IP:
+  case SFLHEADER_IPv6:
+  case SFLHEADER_MPLS:
+    traceEvent(CONST_TRACE_INFO, "NO_DECODE headerProtocol=%d\n", sample->headerProtocol);
+    break;
+  default:
+    fprintf(stderr, "undefined headerProtocol = %d\n", sample->headerProtocol);
+    exit(-12);
+  }
+  
+  if(sample->gotIPV4) {
+    // report the size of the original IPPdu (including the IP header)
+    traceEvent(CONST_TRACE_INFO, "IPSize %d\n",  sample->sampledPacketSize - sample->stripped - sample->offsetToIPV4);
+    decodeIPV4(sample);
+  }
+}
+
+/*_________________---------------------------__________________
+  _________________  readFlowSample_ethernet  __________________
+  -----------------___________________________------------------
+*/
+
+static void readFlowSample_ethernet(SFSample *sample)
+{
+  char *p;
+  traceEvent(CONST_TRACE_INFO, "flowSampleType ETHERNET\n");
+  sample->eth_len = getData32(sample);
+  memcpy(sample->eth_src, sample->datap, 6);
+  skipBytes(sample, 6);
+  memcpy(sample->eth_dst, sample->datap, 6);
+  skipBytes(sample, 6);
+  sample->eth_type = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "ethernet_type %lu\n", sample->eth_type);
+  traceEvent(CONST_TRACE_INFO, "ethernet_len %lu\n", sample->eth_len);
+  p = sample->eth_src;
+  traceEvent(CONST_TRACE_INFO, "ethernet_src %02x%02x%02x%02x%02x%02x\n", p[0], p[1], p[2], p[3], p[4], p[5]);
+  p = sample->eth_dst;
+  traceEvent(CONST_TRACE_INFO, "ethernet_dst %02x%02x%02x%02x%02x%02x\n", p[0], p[1], p[2], p[3], p[4], p[5]);
+}
+
+
+/*_________________---------------------------__________________
+  _________________    readFlowSample_IPv4    __________________
+  -----------------___________________________------------------
+*/
+
+static void readFlowSample_IPv4(SFSample *sample)
+{
+  traceEvent(CONST_TRACE_INFO, "flowSampleType IPV4\n");
+  sample->headerLen = sizeof(SFLSampled_ipv4);
+  sample->header = (u_char *)sample->datap; /* just point at the header */
+  skipBytes(sample, sample->headerLen);
+  {
+    char buf[51];
+    SFLSampled_ipv4 nfKey;
+    memcpy(&nfKey, sample->header, sizeof(nfKey));
+    sample->sampledPacketSize = ntohl(nfKey.length);
+    traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize); 
+    traceEvent(CONST_TRACE_INFO, "IPSize %d\n",  sample->sampledPacketSize);
+    sample->dcd_srcIP = nfKey.src_ip;
+    sample->dcd_dstIP = nfKey.dst_ip;
+    sample->dcd_ipProtocol = ntohl(nfKey.protocol);
+    sample->dcd_ipTos = ntohl(nfKey.tos);
+    traceEvent(CONST_TRACE_INFO, "srcIP %s\n", IP_to_a(sample->dcd_srcIP.s_addr, buf));
+    traceEvent(CONST_TRACE_INFO, "dstIP %s\n", IP_to_a(sample->dcd_dstIP.s_addr, buf));
+    traceEvent(CONST_TRACE_INFO, "IPProtocol %u\n", sample->dcd_ipProtocol);
+    traceEvent(CONST_TRACE_INFO, "IPTOS %u\n", sample->dcd_ipTos);
+    sample->dcd_sport = ntohl(nfKey.src_port);
+    sample->dcd_dport = ntohl(nfKey.dst_port);
+    switch(sample->dcd_ipProtocol) {
+    case 1: /* ICMP */
+      traceEvent(CONST_TRACE_INFO, "ICMPType %u\n", sample->dcd_dport);
+      /* not sure about the dest port being icmp type
+	 - might be that src port is icmp type and dest
+	 port is icmp code.  Still, have seen some
+	 implementations where src port is 0 and dst
+	 port is the type, so it may be safer to
+	 assume that the destination port has the type */
       break;
     case 6: /* TCP */
-      {
-	struct mytcphdr tcp;
-	memcpy(&tcp, ptr, sizeof(tcp));
-	sample->dcd_sport = ntohs(tcp.th_sport);
-	sample->dcd_dport = ntohs(tcp.th_dport);
-	sample->dcd_tcpFlags = tcp.th_flags;
-	if(debug) {
-	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPSrcPort %u", sample->dcd_sport);
-	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPDstPort %u",sample->dcd_dport);
-	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPFlags %u", sample->dcd_tcpFlags);
-        }
-      }
+      traceEvent(CONST_TRACE_INFO, "TCPSrcPort %u\n", sample->dcd_sport);
+      traceEvent(CONST_TRACE_INFO, "TCPDstPort %u\n", sample->dcd_dport);
+      sample->dcd_tcpFlags = ntohl(nfKey.tcp_flags);
+      traceEvent(CONST_TRACE_INFO, "TCPFlags %u\n", sample->dcd_tcpFlags);
       break;
     case 17: /* UDP */
-      {
-	struct myudphdr udp;
-	memcpy(&udp, ptr, sizeof(udp));
-	sample->dcd_sport = ntohs(udp.uh_sport);
-	sample->dcd_dport = ntohs(udp.uh_dport);
-	if(debug) {
-	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: UDPSrcPort %u", sample->dcd_sport);
-	          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: UDPDstPort %u", sample->dcd_dport);
-        }
-      }
+      traceEvent(CONST_TRACE_INFO, "UDPSrcPort %u\n", sample->dcd_sport);
+      traceEvent(CONST_TRACE_INFO, "UDPDstPort %u\n", sample->dcd_dport);
       break;
     default: /* some other protcol */
       break;
@@ -872,1032 +2302,1894 @@ static void decodeIPV4(SFSample *sample)
 }
 
 /*_________________---------------------------__________________
-  _________________   writePcapPacket         __________________
+  _________________    readFlowSample_IPv6    __________________
   -----------------___________________________------------------
 */
 
-static void writePcapPacket(SFSample *sample) {
-  struct pcap_pkthdr hdr;
-  int i;
+static void readFlowSample_IPv6(SFSample *sample)
+{
+  traceEvent(CONST_TRACE_INFO, "flowSampleType IPV6\n");
+  sample->header = (u_char *)sample->datap; /* just point at the header */
+  sample->headerLen = sizeof(SFLSampled_ipv6);
+  skipBytes(sample, sample->headerLen);
+  {
+    SFLSampled_ipv6 nfKey6;
+    memcpy(&nfKey6, sample->header, sizeof(nfKey6));
+    sample->sampledPacketSize = ntohl(nfKey6.length);
+    traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize); 
+  }
+  /* bug: more decode to do here */
+}
 
-  hdr.ts.tv_sec  = time(NULL);
-  hdr.ts.tv_usec = 0;
-  hdr.caplen     = sample->headerLen;
-  hdr.len        = sample->sampledPacketSize;
+/*_________________---------------------------__________________
+  _________________    readFlowSample_v2v4    __________________
+  -----------------___________________________------------------
+*/
 
-  if(myGlobals.sflowGlobals.sflowInSocket == 0)
-    myGlobals.sflowGlobals.initialPool = sample->samplePool;
+static void readFlowSample_v2v4(SFSample *sample)
+{
+  traceEvent(CONST_TRACE_INFO, "sampleType FLOWSAMPLE\n");
 
-  myGlobals.sflowGlobals.numSamplesReceived++;
-  myGlobals.sflowGlobals.lastSample = sample->samplePool;
+  sample->samplesGenerated = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
+  {
+    u_int32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
+    traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", sample->ds_class, sample->ds_index);
+  }
+  
+  sample->meanSkipCount = getData32(sample);
+  sample->samplePool = getData32(sample);
+  sample->dropEvents = getData32(sample);
+  sample->inputPort = getData32(sample);
+  sample->outputPort = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "meanSkipCount %lu\n", sample->meanSkipCount);
+  traceEvent(CONST_TRACE_INFO, "samplePool %lu\n", sample->samplePool);
+  traceEvent(CONST_TRACE_INFO, "dropEvents %lu\n", sample->dropEvents);
+  traceEvent(CONST_TRACE_INFO, "inputPort %lu\n", sample->inputPort);
+  if(sample->outputPort & 0x80000000) {
+    u_int32_t numOutputs = sample->outputPort & 0x7fffffff;
+    if(numOutputs > 0) traceEvent(CONST_TRACE_INFO, "outputPort multiple %d\n", numOutputs);
+    else traceEvent(CONST_TRACE_INFO, "outputPort multiple >1\n");
+  }
+  else traceEvent(CONST_TRACE_INFO, "outputPort %lu\n", sample->outputPort);
+  
+  sample->packet_data_tag = getData32(sample);
+  
+  switch(sample->packet_data_tag) {
+    
+  case INMPACKETTYPE_HEADER: readFlowSample_header(sample); break;
+  case INMPACKETTYPE_IPV4: readFlowSample_IPv4(sample); break;
+  case INMPACKETTYPE_IPV6: readFlowSample_IPv6(sample); break;
+  default: receiveError(sample, "unexpected packet_data_tag", YES); break;
+  }
 
-  NTOHL(sample->sourceIP.s_addr);
-
-  for(i=0; i<MAX_NUM_PROBES; i++) {
-    if(probeList[i].probeAddr.s_addr == 0) {
-      probeList[i].probeAddr.s_addr = sample->sourceIP.s_addr;
-      probeList[i].pkts = 1;
-      break;
-    } else if(probeList[i].probeAddr.s_addr == sample->sourceIP.s_addr) {
-      probeList[i].pkts++;
-      break;
+  sample->extended_data_tag = 0;
+  {
+    u_int x;
+    sample->num_extended = getData32(sample);
+    for(x = 0; x < sample->num_extended; x++) {
+      u_int32_t extended_tag;
+      extended_tag = getData32(sample);
+      switch(extended_tag) {
+      case INMEXTENDED_SWITCH: readExtendedSwitch(sample); break;
+      case INMEXTENDED_ROUTER: readExtendedRouter(sample); break;
+      case INMEXTENDED_GATEWAY:
+	if(sample->datagramVersion == 2) readExtendedGateway_v2(sample);
+	else readExtendedGateway(sample);
+	break;
+      case INMEXTENDED_USER: readExtendedUser(sample); break;
+      case INMEXTENDED_URL: readExtendedUrl(sample); break;
+      default: receiveError(sample, "unrecognized extended data tag", YES); break;
+      }
     }
   }
-
-#ifdef CFG_MULTITHREADED
-  /* Obviously, sflow won't work without multiple threads.
-   * We said so up front!
-   * this ifdef is just here so that we don't die when loading
-   * the plugin so we can warn you...
-   */
-  /*
-    Fix below courtesy of
-    Neil McKee <neil_mckee@inmon.com>
-  */
-  if(sample->headerProtocol == INMHEADER_ETHERNET_ISO8023)
-    queuePacket((u_char*)myGlobals.sflowGlobals.sflowDeviceId,
-		&hdr, sample->header); /* Pass the packet to ntop */
-#endif
-
 }
 
 /*_________________---------------------------__________________
-  _________________    receiveError           __________________
+  _________________    readFlowSample         __________________
   -----------------___________________________------------------
 */
 
-static void receiveError(SFSample *sample, char *errm, int hexdump, u_char *currentMark)
+static void readFlowSample(SFSample *sample, int expanded)
 {
-  char ipbuf[51];
-  u_char scratch[6000];
-  char *msg = "";
-  char *hex = "";
-  u_long markOffset = 0;
-  if(currentMark != NULL) markOffset = currentMark - sample->rawSample;
-  if(errm) msg = errm;
+  u_int32_t num_elements, sampleLength, actualSampleLength;
+  u_char *sampleStart;
 
-  if(hexdump) {
-    printHex(sample->rawSample, sample->rawSampleLen, scratch, 6000, markOffset, 16);
-    hex = scratch;
+  traceEvent(CONST_TRACE_INFO, "sampleType FLOWSAMPLE\n");
+  sampleLength = getData32(sample);
+  sampleStart = (u_char *)sample->datap;
+  sample->samplesGenerated = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
+  if(expanded) {
+    sample->ds_class = getData32(sample);
+    sample->ds_index = getData32(sample);
   }
-
-  traceEvent(CONST_TRACE_WARNING, "SFLOW: %s (source IP = %s) %s", msg, IP_to_a(sample->sourceIP.s_addr, ipbuf), hex);
-}
-
-/*_________________---------------------------__________________
-  _________________    readExtendedRouter     __________________
-  -----------------___________________________------------------
-*/
-
-static u_long *readExtendedRouter(SFSample *sample, u_long *datap, u_char *endPtr)
-{
-  u_int32_t addrType;
-  char buf[51];
-  GETDATA32(addrType, datap);
-  if(addrType == INMADDRESSTYPE_IP_V4) GETDATA32_NOBSWAP(sample->nextHop.s_addr, datap);
   else {
-    printf("nextHop addrType = %d - currently only IPV4 nexthop supported\n", addrType);
-    datap += 4; /* skip over the IPV6 address */
-    sample->nextHop.s_addr = 0;
+    u_int32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
   }
-  GETDATA32(sample->srcMask, datap);
-  GETDATA32(sample->dstMask, datap);
+  traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", sample->ds_class, sample->ds_index);
 
-  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_ROUTER;
-
-  if(debug) {
-            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: nextHop %s", IP_to_a(sample->nextHop.s_addr, buf));
-            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcSubnetMask %lu", sample->srcMask);
-            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstSubnetMask %lu", sample->dstMask);
+  sample->meanSkipCount = getData32(sample);
+  sample->samplePool = getData32(sample);
+  sample->dropEvents = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "meanSkipCount %lu\n", sample->meanSkipCount);
+  traceEvent(CONST_TRACE_INFO, "samplePool %lu\n", sample->samplePool);
+  traceEvent(CONST_TRACE_INFO, "dropEvents %lu\n", sample->dropEvents);
+  if(expanded) {
+    sample->inputPortFormat = getData32(sample);
+    sample->inputPort = getData32(sample);
+    sample->outputPortFormat = getData32(sample);
+    sample->outputPort = getData32(sample);
   }
+  else {
+    u_int32_t inp, outp;
+    inp = getData32(sample);
+    outp = getData32(sample);
+    sample->inputPortFormat = inp >> 30;
+    sample->outputPortFormat = outp >> 30;
+    sample->inputPort = inp & 0x3fffffff;
+    sample->outputPort = outp & 0x3fffffff;
+  }
+  if(sample->inputPortFormat == 3) traceEvent(CONST_TRACE_INFO, "inputPort format==3 %lu\n", sample->inputPort);
+  else if(sample->inputPortFormat == 2) traceEvent(CONST_TRACE_INFO, "inputPort multiple %lu\n", sample->inputPort);
+  else if(sample->inputPortFormat == 1) traceEvent(CONST_TRACE_INFO, "inputPort dropCode %lu\n", sample->inputPort);
+  else if(sample->inputPortFormat == 0) traceEvent(CONST_TRACE_INFO, "inputPort %lu\n", sample->inputPort);
+  if(sample->outputPortFormat == 3) traceEvent(CONST_TRACE_INFO, "outputPort format==3 %lu\n", sample->outputPort);
+  else if(sample->outputPortFormat == 2) traceEvent(CONST_TRACE_INFO, "outputPort multiple %lu\n", sample->outputPort);
+  else if(sample->outputPortFormat == 1) traceEvent(CONST_TRACE_INFO, "outputPort dropCode %lu\n", sample->outputPort);
+  else if(sample->outputPortFormat == 0) traceEvent(CONST_TRACE_INFO, "outputPort %lu\n", sample->outputPort);
 
-  return datap;
+  num_elements = getData32(sample);
+  {
+    int el;
+    for(el = 0; el < num_elements; el++) {
+      u_int32_t tag, length;
+      u_char *start;
+      char buf[51];
+      tag = getData32(sample);
+      traceEvent(CONST_TRACE_INFO, "flowBlock_tag %s\n", printTag(tag, buf, 50));
+      length = getData32(sample);
+      start = (u_char *)sample->datap;
+
+      switch(tag) {
+      case SFLFLOW_HEADER:     readFlowSample_header(sample); break;
+      case SFLFLOW_ETHERNET:   readFlowSample_ethernet(sample); break;
+      case SFLFLOW_IPV4:       readFlowSample_IPv4(sample); break;
+      case SFLFLOW_IPV6:       readFlowSample_IPv6(sample); break;
+      case SFLFLOW_EX_SWITCH:  readExtendedSwitch(sample); break;
+      case SFLFLOW_EX_ROUTER:  readExtendedRouter(sample); break;
+      case SFLFLOW_EX_GATEWAY: readExtendedGateway(sample); break;
+      case SFLFLOW_EX_USER:    readExtendedUser(sample); break;
+      case SFLFLOW_EX_URL:     readExtendedUrl(sample); break;
+      case SFLFLOW_EX_MPLS:    readExtendedMpls(sample); break;
+      case SFLFLOW_EX_NAT:     readExtendedNat(sample); break;
+      case SFLFLOW_EX_MPLS_TUNNEL:  readExtendedMplsTunnel(sample); break;
+      case SFLFLOW_EX_MPLS_VC:      readExtendedMplsVC(sample); break;
+      case SFLFLOW_EX_MPLS_FTN:     readExtendedMplsFTN(sample); break;
+      case SFLFLOW_EX_MPLS_LDP_FEC: readExtendedMplsLDP_FEC(sample); break;
+      case SFLFLOW_EX_VLAN_TUNNEL:  readExtendedVlanTunnel(sample); break;
+      default: skipTLVRecord(sample, tag, "flow_sample_element"); break;
+      }
+      lengthCheck(sample, "flow_sample_element", start, length);
+    }
+  }
+  lengthCheck(sample, "flow_sample", sampleStart, sampleLength);  
 }
 
 /*_________________---------------------------__________________
-  _________________  readExtendedGateway      __________________
+  _________________  readCounters_generic     __________________
   -----------------___________________________------------------
 */
 
-static u_long *readExtendedGateway(SFSample *sample, u_long *datap, u_char *endPtr)
+static void readCounters_generic(SFSample *sample)
 {
-  GETDATA32(sample->my_as, datap);  /* shake yo' ass */
-  GETDATA32(sample->src_as, datap);
-  GETDATA32(sample->src_peer_as, datap);
-  GETDATA32(sample->dst_as_path_len, datap);
-  /* just point at the dst_as_path array */
-  if(sample->dst_as_path_len > 0) sample->dst_as_path = datap;
-  /* and skip over it in the input */
-  datap += sample->dst_as_path_len;
-  if((u_char *)datap > (endPtr + 1)) {
-    receiveError(sample, "datap >= (endp + 1)\n", TRUE, (u_char *)datap);
-    return NULL;
-  }
+  /* the first part of the generic counters block is really just more info about the interface. */
+  sample->ifIndex = getData32(sample);      traceEvent(CONST_TRACE_INFO, "ifIndex %lu\n", sample->ifIndex);
+  sample->networkType = getData32(sample);  traceEvent(CONST_TRACE_INFO, "networkType %lu\n", sample->networkType);
+  sample->ifSpeed = getData64(sample);      traceEvent(CONST_TRACE_INFO, "ifSpeed %llu\n", sample->ifSpeed);
+  sample->ifDirection = getData32(sample);  traceEvent(CONST_TRACE_INFO, "ifDirection %lu\n", sample->ifDirection);
+  sample->ifStatus = getData32(sample);     traceEvent(CONST_TRACE_INFO, "ifStatus %lu\n", sample->ifStatus);
 
-  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_GATEWAY;
+  
+  /* the generic counters always come first */
+  sf_log_next64(sample, "ifInOctets");
+  sf_log_next32(sample, "ifInUcastPkts");
+  sf_log_next32(sample, "ifInMulticastPkts");
+  sf_log_next32(sample, "ifInBroadcastPkts");
+  sf_log_next32(sample, "ifInDiscards");
+  sf_log_next32(sample, "ifInErrors");
+  sf_log_next32(sample, "ifInUnknownProtos");
+  sf_log_next64(sample, "ifOutOctets");
+  sf_log_next32(sample, "ifOutUcastPkts");
+  sf_log_next32(sample, "ifOutMulticastPkts");
+  sf_log_next32(sample, "ifOutBroadcastPkts");
+  sf_log_next32(sample, "ifOutDiscards");
+  sf_log_next32(sample, "ifOutErrors");
+  sf_log_next32(sample, "ifPromiscuousMode");
 
-  if(debug) {
-            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: my_as %lu", sample->my_as);
-            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: src_as %lu", sample->src_as);
-            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: src_peer_as %lu", sample->src_peer_as);
-            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dst_as_path_len %lu", sample->dst_as_path_len);
-  }
-  if(sample->dst_as_path_len > 0) {
-    u_int i = 0;
-    for(; i < sample->dst_as_path_len; i++) {
-      if(i == 0) { if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dst_as_path "); }
-      else { if(debug) traceEvent(CONST_TRACE_INFO, "-"); }
-      if(debug) traceEvent(CONST_TRACE_INFO, "%lu", ntohl(sample->dst_as_path[i]));
-    }
-  }
+}
+ 
+/*_________________---------------------------__________________
+  _________________  readCounters_ethernet    __________________
+  -----------------___________________________------------------
+*/
 
-  return datap;
+static  void readCounters_ethernet(SFSample *sample)
+{
+  sf_log_next32(sample, "dot3StatsAlignmentErrors");
+  sf_log_next32(sample, "dot3StatsFCSErrors");
+  sf_log_next32(sample, "dot3StatsSingleCollisionFrames");
+  sf_log_next32(sample, "dot3StatsMultipleCollisionFrames");
+  sf_log_next32(sample, "dot3StatsSQETestErrors");
+  sf_log_next32(sample, "dot3StatsDeferredTransmissions");
+  sf_log_next32(sample, "dot3StatsLateCollisions");
+  sf_log_next32(sample, "dot3StatsExcessiveCollisions");
+  sf_log_next32(sample, "dot3StatsInternalMacTransmitErrors");
+  sf_log_next32(sample, "dot3StatsCarrierSenseErrors");
+  sf_log_next32(sample, "dot3StatsFrameTooLongs");
+  sf_log_next32(sample, "dot3StatsInternalMacReceiveErrors");
+  sf_log_next32(sample, "dot3StatsSymbolErrors");
+}	  
+
+ 
+/*_________________---------------------------__________________
+  _________________  readCounters_tokenring   __________________
+  -----------------___________________________------------------
+*/
+
+static void readCounters_tokenring(SFSample *sample)
+{
+  sf_log_next32(sample, "dot5StatsLineErrors");
+  sf_log_next32(sample, "dot5StatsBurstErrors");
+  sf_log_next32(sample, "dot5StatsACErrors");
+  sf_log_next32(sample, "dot5StatsAbortTransErrors");
+  sf_log_next32(sample, "dot5StatsInternalErrors");
+  sf_log_next32(sample, "dot5StatsLostFrameErrors");
+  sf_log_next32(sample, "dot5StatsReceiveCongestions");
+  sf_log_next32(sample, "dot5StatsFrameCopiedErrors");
+  sf_log_next32(sample, "dot5StatsTokenErrors");
+  sf_log_next32(sample, "dot5StatsSoftErrors");
+  sf_log_next32(sample, "dot5StatsHardErrors");
+  sf_log_next32(sample, "dot5StatsSignalLoss");
+  sf_log_next32(sample, "dot5StatsTransmitBeacons");
+  sf_log_next32(sample, "dot5StatsRecoverys");
+  sf_log_next32(sample, "dot5StatsLobeWires");
+  sf_log_next32(sample, "dot5StatsRemoves");
+  sf_log_next32(sample, "dot5StatsSingles");
+  sf_log_next32(sample, "dot5StatsFreqErrors");
+}
+
+ 
+/*_________________---------------------------__________________
+  _________________  readCounters_vg          __________________
+  -----------------___________________________------------------
+*/
+
+static void readCounters_vg(SFSample *sample)
+{
+  sf_log_next32(sample, "dot12InHighPriorityFrames");
+  sf_log_next64(sample, "dot12InHighPriorityOctets");
+  sf_log_next32(sample, "dot12InNormPriorityFrames");
+  sf_log_next64(sample, "dot12InNormPriorityOctets");
+  sf_log_next32(sample, "dot12InIPMErrors");
+  sf_log_next32(sample, "dot12InOversizeFrameErrors");
+  sf_log_next32(sample, "dot12InDataErrors");
+  sf_log_next32(sample, "dot12InNullAddressedFrames");
+  sf_log_next32(sample, "dot12OutHighPriorityFrames");
+  sf_log_next64(sample, "dot12OutHighPriorityOctets");
+  sf_log_next32(sample, "dot12TransitionIntoTrainings");
+  sf_log_next64(sample, "dot12HCInHighPriorityOctets");
+  sf_log_next64(sample, "dot12HCInNormPriorityOctets");
+  sf_log_next64(sample, "dot12HCOutHighPriorityOctets");
+}
+
+
+ 
+/*_________________---------------------------__________________
+  _________________  readCounters_vlan        __________________
+  -----------------___________________________------------------
+*/
+
+static void readCounters_vlan(SFSample *sample)
+{
+  sample->in_vlan = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
+  sf_log_next64(sample, "octets");
+  sf_log_next32(sample, "ucastPkts");
+  sf_log_next32(sample, "multicastPkts");
+  sf_log_next32(sample, "broadcastPkts");
+  sf_log_next32(sample, "discards");
 }
 
 /*_________________---------------------------__________________
-  _________________    readExtendedUser       __________________
+  _________________  readCountersSample_v2v4  __________________
   -----------------___________________________------------------
 */
 
-static u_long *readExtendedUser(SFSample *sample, u_long *datap, u_char *endPtr)
+static void readCountersSample_v2v4(SFSample *sample)
 {
-  GETDATA32(sample->src_user_len, datap);
-  if(sample->src_user_len) {
-    if(sample->src_user_len > SA_MAX_EXTENDED_USER_LEN) {
-      receiveError(sample, "extended_data: src_user_len > MAX\n", TRUE, (u_char *)datap);
-      return NULL;
-    }
-    memcpy(datap, sample->src_user, sample->src_user_len);
-    datap += (sample->src_user_len + 3 / 4);  /* string is padded to quad boundary */
+  traceEvent(CONST_TRACE_INFO, "sampleType COUNTERSSAMPLE\n");
+  sample->samplesGenerated = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
+  {
+    u_int32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
   }
-  sample->src_user[sample->src_user_len] = '\0';
+  traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", sample->ds_class, sample->ds_index);
 
-  /* repeat for dest */
-  GETDATA32(sample->dst_user_len, datap);
-  if(sample->dst_user_len) {
-    if(sample->dst_user_len > SA_MAX_EXTENDED_USER_LEN) {
-      receiveError(sample, "extended_data: sample->dst_user_len > MAX\n",
-		   TRUE, (u_char *)datap);
-      return NULL;
-    }
-    memcpy(datap, sample->dst_user, sample->dst_user_len);
-    datap += (sample->dst_user_len + 3 / 4);  /* string is padded to quad boundary */
+
+  sample->statsSamplingInterval = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "statsSamplingInterval %lu\n", sample->statsSamplingInterval);
+  /* now find out what sort of counter blocks we have here... */
+  sample->counterBlockVersion = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "counterBlockVersion %lu\n", sample->counterBlockVersion);
+  
+  /* first see if we should read the generic stats */
+  switch(sample->counterBlockVersion) {
+  case INMCOUNTERSVERSION_GENERIC:
+  case INMCOUNTERSVERSION_ETHERNET:
+  case INMCOUNTERSVERSION_TOKENRING:
+  case INMCOUNTERSVERSION_FDDI:
+  case INMCOUNTERSVERSION_VG:
+  case INMCOUNTERSVERSION_WAN: readCounters_generic(sample); break;
+  case INMCOUNTERSVERSION_VLAN: break;
+  default: receiveError(sample, "unknown stats version", YES); break;
   }
-  sample->dst_user[sample->dst_user_len] = '\0';
-
-  sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_USER;
-
-  if(debug) {
-            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: src_user %s", sample->src_user);
-            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dst_user %s", sample->dst_user);
+  
+  /* now see if there are any specific counter blocks to add */
+  switch(sample->counterBlockVersion) {
+  case INMCOUNTERSVERSION_GENERIC: /* nothing more */ break;
+  case INMCOUNTERSVERSION_ETHERNET: readCounters_ethernet(sample); break;
+  case INMCOUNTERSVERSION_TOKENRING:readCounters_tokenring(sample); break;
+  case INMCOUNTERSVERSION_FDDI: break;
+  case INMCOUNTERSVERSION_VG: readCounters_vg(sample); break;
+  case INMCOUNTERSVERSION_WAN: break;
+  case INMCOUNTERSVERSION_VLAN: readCounters_vlan(sample); break;
+  default: receiveError(sample, "unknown INMCOUNTERSVERSION", YES); break;
   }
-
-  return datap;
 }
 
-/* ************************* */
+/*_________________---------------------------__________________
+  _________________   readCountersSample      __________________
+  -----------------___________________________------------------
+*/
 
-static void receiveSflowSample(SFSample *sample)
+static void readCountersSample(SFSample *sample, int expanded)
 {
-  u_int32_t datagramVersion;
+  u_int32_t sampleLength;
+  u_int32_t num_elements;
+  char *sampleStart;
+  traceEvent(CONST_TRACE_INFO, "sampleType COUNTERSSAMPLE\n");
+  sampleLength = getData32(sample);
+  sampleStart = (u_char *)sample->datap;
+  sample->samplesGenerated = getData32(sample);
+  
+  traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
+  if(expanded) {
+    sample->ds_class = getData32(sample);
+    sample->ds_index = getData32(sample);
+  }
+  else {
+    u_int32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
+  }
+  traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", sample->ds_class, sample->ds_index);
+  
+  num_elements = getData32(sample);
+  {
+    int el;
+    for(el = 0; el < num_elements; el++) {
+      u_int32_t tag, length;
+      char *start;
+      char buf[51];
+      tag = getData32(sample);
+      traceEvent(CONST_TRACE_INFO, "counterBlock_tag %s\n", printTag(tag, buf, 50));
+      length = getData32(sample);
+      start = (u_char *)sample->datap;
+      
+      switch(tag) {
+      case SFLCOUNTERS_GENERIC: readCounters_generic(sample); break;
+      case SFLCOUNTERS_ETHERNET: readCounters_ethernet(sample); break;
+      case SFLCOUNTERS_TOKENRING:readCounters_tokenring(sample); break;
+      case SFLCOUNTERS_VG: readCounters_vg(sample); break;
+      case SFLCOUNTERS_VLAN: readCounters_vlan(sample); break;
+      default: skipTLVRecord(sample, tag, "counters_sample_element"); break;
+      }
+      lengthCheck(sample, "counters_sample_element", start, length);
+    }
+  }
+  lengthCheck(sample, "counters_sample", sampleStart, sampleLength);
+}
+
+/*_________________---------------------------__________________
+  _________________      readSFlowDatagram    __________________
+  -----------------___________________________------------------
+*/
+
+static void readSFlowDatagram(SFSample *sample, int deviceId)
+{
   u_int32_t addressType;
-  struct in_addr agentIP;
   u_int32_t samplesInPacket;
   struct timeval now;
-  u_long *datap = (u_long *)sample->rawSample;
-
+  char buf[51];
+  
+  /* log some datagram info */
   now.tv_sec = time(NULL);
   now.tv_usec = 0;
-  if(debug) {
-    char buf[51];
-    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: startDatagram =================================");
-    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: datagramSourceIP %s", IP_to_a(sample->sourceIP.s_addr, buf));
-    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: datagramSize %lu", sample->rawSampleLen);
-    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: unixSecondsUTC %lu", now.tv_sec);
-  }
+  traceEvent(CONST_TRACE_INFO, "datagramSourceIP %s\n", IP_to_a(sample->sourceIP.s_addr, buf));
+  traceEvent(CONST_TRACE_INFO, "datagramSize %lu\n", sample->rawSampleLen);
+  traceEvent(CONST_TRACE_INFO, "unixSecondsUTC %lu\n", now.tv_sec);
 
   /* check the version */
-  GETDATA32(datagramVersion, datap);
-  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: datagramVersion %d", datagramVersion);
-  if(datagramVersion != 2) {
-    receiveError(sample,  "unexpected datagram version number: %d\n", TRUE, (u_char *)datap);
-    return;
+  sample->datagramVersion = getData32(sample);
+
+  switch(sample->datagramVersion) {
+  case 2:
+    myGlobals.device[deviceId].sflowGlobals->numsFlowsV2Rcvd++;
+    break;
+  case 4:
+    myGlobals.device[deviceId].sflowGlobals->numsFlowsV4Rcvd++;
+    break;
+  case 5:
+    myGlobals.device[deviceId].sflowGlobals->numsFlowsV5Rcvd++;
+    break;
+  default:
+    myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd++;
+    break;
   }
 
+
+  traceEvent(CONST_TRACE_INFO, "datagramVersion %d\n", sample->datagramVersion);
+  if(sample->datagramVersion != 2 &&
+     sample->datagramVersion != 4 &&
+     sample->datagramVersion != 5) {
+    receiveError(sample,  "unexpected datagram version number\n", YES);
+  }
+  
   /* get the agent address */
-  GETDATA32(addressType, datap);
-  if(addressType != INMADDRESSTYPE_IP_V4) {
-    receiveError(sample, "currently only support INMADDRESSTYPE_IP_V4 "
-		 "as the agent IP address type", TRUE, (u_char *)datap);
-    return;
-  }
-  GETDATA32_NOBSWAP(agentIP.s_addr, datap);
+  getAddress(sample, &sample->agent_addr);
 
-  GETDATA32(sample->sequenceNo, datap);  /* this is the packet sequence number */
-  GETDATA32(sample->sysUpTime, datap);
-  GETDATA32(samplesInPacket, datap);
-
-  if(debug) {
-    char buf[51];
-    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: agent %s", IP_to_a(agentIP.s_addr, buf));
-    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sysUpTime %lu", sample->sysUpTime);
-    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: packetSequenceNo %lu", sample->sequenceNo);
-    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: samplesInPacket %lu", samplesInPacket);
+  /* version 5 has an agent sub-id as well */
+  if(sample->datagramVersion >= 5) {
+    sample->agentSubId = getData32(sample);
+    traceEvent(CONST_TRACE_INFO, "agentSubId %lu\n", sample->agentSubId);
   }
 
-  { /* now iterate and pull out the flows and counters samples */
+  sample->sequenceNo = getData32(sample);  /* this is the packet sequence number */
+  sample->sysUpTime = getData32(sample);
+  samplesInPacket = getData32(sample);
+  traceEvent(CONST_TRACE_INFO, "agent %s\n", printAddress(&sample->agent_addr, buf, 50));
+  traceEvent(CONST_TRACE_INFO, "packetSequenceNo %lu\n", sample->sequenceNo);
+  traceEvent(CONST_TRACE_INFO, "sysUpTime %lu\n", sample->sysUpTime);
+  traceEvent(CONST_TRACE_INFO, "samplesInPacket %lu\n", samplesInPacket);
+
+  /* now iterate and pull out the flows and counters samples */
+  {
     u_int32_t samp = 0;
-    u_char *endPtr = (u_char *)sample->rawSample + sample->rawSampleLen;
-
     for(; samp < samplesInPacket; samp++) {
-      u_char *startOfSample = (u_char *)datap;
-
-      if((u_char *)datap >= endPtr) {
-	receiveError(sample, "datap >= endp", TRUE, (u_char *)datap);
-	return;
-      }
-
-      GETDATA32(sample->sampleType, datap);
-      GETDATA32(sample->samplesGenerated, datap);
-      GETDATA32(sample->samplerId, datap);
-      if(debug) {
-	u_int32_t ds_class = sample->samplerId >> 24;
-	u_int32_t ds_index = sample->samplerId & 0x00ffffff;
-        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampleSequenceNo %lu", sample->samplesGenerated);
-	traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sourceId %lu:%lu", ds_class, ds_index);
-      }
-
-      switch(sample->sampleType) {
-      case FLOWSAMPLE:
-	{
-	  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampleType FLOWSAMPLE");
-	  GETDATA32(sample->meanSkipCount, datap);
-	  GETDATA32(sample->samplePool, datap);
-	  GETDATA32(sample->dropEvents, datap);
-	  GETDATA32(sample->inputPort, datap);
-	  GETDATA32(sample->outputPort, datap);
-	  if(debug) {
-	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: meanSkipCount %lu", sample->meanSkipCount);
-	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: samplePool %lu", sample->samplePool);
-	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dropEvents %lu", sample->dropEvents);
-	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: inputPort %lu", sample->inputPort);
-	            traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: outputPort %lu", sample->outputPort);
-          }
-
-	  GETDATA32(sample->packet_data_tag, datap);
-
-	  switch(sample->packet_data_tag) {
-
-	  case INMPACKETTYPE_HEADER:
-	    if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: packetDataTag INMPACKETTYPE_HEADER");
-	    GETDATA32(sample->headerProtocol, datap);
-	    GETDATA32(sample->sampledPacketSize, datap);
-	    GETDATA32(sample->headerLen, datap);
-	    if(debug) {
-	              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: headerProtocol %lu", sample->headerProtocol);
-	              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampledPacketSize %lu", sample->sampledPacketSize);
-	              traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: headerLen %lu", sample->headerLen);
-            }
-
-	    sample->header = (u_char *)datap; /* just point at the header */
-	    datap += ((sample->headerLen + 3) / 4); /* quad-alignment is required by XDR */
-	    if((u_char *)datap >= endPtr) {
-	      receiveError(sample, "datap >= endp (headerLen)", TRUE, (u_char *)datap);
-	      return;
-	    }
-	    {
-	      char scratch[2000];
-	      printHex(sample->header, sample->headerLen, scratch, 2000, 0, 2000);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: headerBytes %s", scratch);
-	    }
-	    decodeLinkLayer(sample);
-	    if(sample->offsetToIPV4 > 0) {
-	      // report the size of the original IPPdu (including the IP header)
-	      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPSize %d",  sample->sampledPacketSize - sample->offsetToIPV4);
-	      decodeIPV4(sample);
-	    }
-
-	    break;
-
-	  case INMPACKETTYPE_IPV4:
-	    if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: packetDataTag INMPACKETTYPE_IPV4");
-	    sample->headerLen = sizeof(INMSampled_ipv4);
-	    sample->header = (u_char *)datap; /* just point at the header */
-	    datap += (sample->headerLen + 3) / 4; /* quad-alignment is required by XDR */
-	    {
-	      char buf[51];
-	      INMSampled_ipv4 nfKey;
-	      memcpy(&nfKey, sample->header, sizeof(nfKey));
-	      sample->sampledPacketSize = ntohl(nfKey.length);
-	      if(debug) {
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampledPacketSize %lu", sample->sampledPacketSize);
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPSize %d",  sample->sampledPacketSize);
-              }
-	      sample->dcd_srcIP = nfKey.src_ip;
-	      sample->dcd_dstIP = nfKey.dst_ip;
-	      sample->dcd_ipProtocol = ntohl(nfKey.protocol);
-	      sample->dcd_ipTos = ntohl(nfKey.tos);
-	      if(debug) {
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcIP %s", IP_to_a(sample->dcd_srcIP.s_addr, buf));
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstIP %s", IP_to_a(sample->dcd_dstIP.s_addr, buf));
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPProtocol %u", sample->dcd_ipProtocol);
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: IPTOS %u", sample->dcd_ipTos);
-              }
-	      sample->dcd_sport = ntohl(nfKey.src_port);
-	      sample->dcd_dport = ntohl(nfKey.dst_port);
-	      switch(sample->dcd_ipProtocol) {
-	      case 1: /* ICMP */
-		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ICMPType %u", sample->dcd_sport);
-		/* not sure about the dest port being icmp code
-		   - might just be a repeat of the type */
-		break;
-	      case 6: /* TCP */
-		if(debug) {
-		          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPSrcPort %u", sample->dcd_sport);
-		          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPDstPort %u", sample->dcd_dport);
-                }
-		sample->dcd_tcpFlags = ntohl(nfKey.tcp_flags);
-		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: TCPFlags %u", sample->dcd_tcpFlags);
-		break;
-	      case 17: /* UDP */
-		if(debug) {
-		          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: UDPSrcPort %u", sample->dcd_sport);
-		          traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: UDPDstPort %u", sample->dcd_dport);
-                }
-		break;
-	      default: /* some other protcol */
-		break;
-	      }
-	    }
-	    break;
-	  case INMPACKETTYPE_IPV6:
-	    if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: packetDataTag INMPACKETTYPE_IPV6");
-
-	    sample->header = (u_char *)datap; /* just point at the header */
-	    datap += (sample->headerLen + 3) / 4; /* quad-alignment is required by XDR */
-	    {
-	      INMSampled_ipv6 nfKey6;
-	      memcpy(&nfKey6, sample->header, sizeof(nfKey6));
-	      sample->sampledPacketSize = ntohl(nfKey6.length);
-	      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampledPacketSize %lu", sample->sampledPacketSize);
-	    }
-	    /* bug: more decode to do here */
-	    break;
-
-	  default:
-	    receiveError(sample, "unexpected packet_data_tag", TRUE, (u_char *)datap);
-	    return;
-	    break;
-	  }
-
-	  /* assume no extended data */
-	  sample->extended_data_tag = 0;
-	  {
-	    u_int x;
-	    GETDATA32(sample->num_extended, datap);
-	    for(x = 0; x < sample->num_extended; x++) {
-	      u_int32_t extended_tag;
-	      GETDATA32(extended_tag, datap);
-	      switch(extended_tag) {
-	      case INMEXTENDED_SWITCH:
-		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: extendedType SWITCH");
-		if((datap = readExtendedSwitch(sample, datap, endPtr)) == NULL) return;
-		break;
-	      case INMEXTENDED_ROUTER:
-		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: extendedType ROUTER");
-		if((datap = readExtendedRouter(sample, datap, endPtr)) == NULL) return;
-		break;
-	      case INMEXTENDED_GATEWAY:
-		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: extendedType GATEWAY");
-		if((datap = readExtendedGateway(sample, datap, endPtr)) == NULL) return;
-		break;
-	      case INMEXTENDED_USER:
-		if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: extendedType USER");
-		if((datap = readExtendedUser(sample, datap, endPtr)) == NULL) return;
-		break;
-	      default:
-		receiveError(sample, "unrecognized extended data tag", TRUE, (u_char *)datap);
-		return;
-	      }
-	    }
-	  }
-
-	  writePcapPacket(sample);
+      // just read the tag, then call the approriate decode fn
+      sample->sampleType = getData32(sample);
+      traceEvent(CONST_TRACE_INFO, "startSample ----------------------\n");
+      traceEvent(CONST_TRACE_INFO, "sampleType_tag %s\n", printTag(sample->sampleType, buf, 50));
+      if(sample->datagramVersion >= 5) {
+	switch(sample->sampleType) {
+	case SFLFLOW_SAMPLE: readFlowSample(sample, NO); break;
+	case SFLCOUNTERS_SAMPLE: readCountersSample(sample, NO); break;
+	case SFLFLOW_SAMPLE_EXPANDED: readFlowSample(sample, YES); break;
+	case SFLCOUNTERS_SAMPLE_EXPANDED: readCountersSample(sample, YES); break;
+	default: skipTLVRecord(sample, sample->sampleType, "sample"); break;
 	}
-	break;
-
-      case COUNTERSSAMPLE:
-	{
-	  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sampleType COUNTERSSAMPLE");
-	  GETDATA32(sample->statsSamplingInterval, datap);
-	  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: statsSamplingInterval %lu", sample->statsSamplingInterval);
-	  /* now find out what sort of counter blocks we have here... */
-	  GETDATA32(sample->counterBlockVersion, datap);
-	  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: counterBlockVersion %lu", sample->counterBlockVersion);
-
-	  /* first see if we should read the generic stats */
-	  switch(sample->counterBlockVersion) {
-	  case INMCOUNTERSVERSION_GENERIC:
-	  case INMCOUNTERSVERSION_ETHERNET:
-	  case INMCOUNTERSVERSION_TOKENRING:
-	  case INMCOUNTERSVERSION_FDDI:
-	  case INMCOUNTERSVERSION_VG:
-	  case INMCOUNTERSVERSION_WAN:
-	    {
-	      /* the first part of the generic counters block is really just
-		 more info about the interface. */
-	      GETDATA32(sample->ifIndex, datap);
-	      GETDATA32(sample->networkType, datap);
-	      GETDATA64(sample->ifSpeed, datap);
-	      GETDATA32(sample->ifDirection, datap);
-	      GETDATA32(sample->ifStatus, datap);
-	      if(debug) {
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifIndex %lu", sample->ifIndex);
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: networkType %lu", sample->networkType);
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifSpeed %lu", sample->ifSpeed);
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifDirection %lu", sample->ifDirection);
-	                traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifStatus %lu", sample->ifStatus);
-              }
-
-	      /* the generic counters always come first */
-              if(debug) {
-	        u_int64_t cntr64;
-	        GETDATA64(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInOctets %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInUcastPkts %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInMulticastPkts %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInBroadcastPkts %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInDiscards %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInErrors %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifInUnknownProtos %Lu", cntr64);
-	        GETDATA64(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutOctets %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutUcastPkts %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutMulticastPkts %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutBroadcastPkts %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutDiscards %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifOutErrors %Lu", cntr64);
-	        GETDATA32(cntr64, datap);
-	        traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ifPromiscuousMode %Lu", cntr64);
-              }
-	    }
-	    break;
-
-	  case INMCOUNTERSVERSION_VLAN:
-	    break;
-
-	  default:
-	    receiveError(sample, "unknown stats version", TRUE, (u_char *)datap);
-	    return;
-	    break;
-	  }
-
-	  /* now see if there are any specific counter blocks to add */
-	  switch(sample->counterBlockVersion) {
-	  case INMCOUNTERSVERSION_GENERIC:
-	    /* nothing more */
-	    break;
-	  case INMCOUNTERSVERSION_ETHERNET:
-	    if(debug) {
-	      u_int32_t cntr32;
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsAlignmentErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsFCSErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsSingleCollisionFrames %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsMultipleCollisionFrames %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsSQETestErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsDeferredTransmissions %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsLateCollisions %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsExcessiveCollisions %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsInternalMacTransmitErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsCarrierSenseErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsFrameTooLongs %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsInternalMacReceiveErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot3StatsSymbolErrors %lu", cntr32);
-	    }
-	    break;
-	  case INMCOUNTERSVERSION_TOKENRING:
-	              {
-	      u_int32_t cntr32;
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsLineErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsBurstErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsACErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsAbortTransErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsInternalErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsLostFrameErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsReceiveCongestions %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsFrameCopiedErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsTokenErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsSoftErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsHardErrors %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsSignalLoss %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsTransmitBeacons %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsRecoverys %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsLobeWires %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsRemoves %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsSingles %lu", cntr32);
-	      GETDATA32(cntr32, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot5StatsFreqErrors %lu", cntr32);
-	    }
-	    break;
-	  case INMCOUNTERSVERSION_FDDI:
-	    /* nothing more (for the moment) $$$ */
-	    break;
-	  case INMCOUNTERSVERSION_VG:
-	    if(debug) {
-	      u_int64_t cntr64;
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InHighPriorityFrames %Lu", cntr64);
-	      GETDATA64(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InHighPriorityOctets %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InNormPriorityFrames %Lu", cntr64);
-	      GETDATA64(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InNormPriorityOctets %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InIPMErrors %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InOversizeFrameErrors %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InDataErrors %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12InNullAddressedFrames %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12OutHighPriorityFrames %Lu", cntr64);
-	      GETDATA64(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12OutHighPriorityOctets %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12TransitionIntoTrainings %Lu", cntr64);
-	      GETDATA64(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12HCInHighPriorityOctets %Lu", cntr64);
-	      GETDATA64(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12HCInNormPriorityOctets %Lu", cntr64);
-	      GETDATA64(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dot12HCOutHighPriorityOctets %Lu", cntr64);
-	    }
-	    break;
-	  case INMCOUNTERSVERSION_WAN:
-	    /* nothing more for the moment $$$ */
-	    break;
-	  case INMCOUNTERSVERSION_VLAN:
-	    if(debug) {
-	      u_int64_t cntr64;
-	      GETDATA32(sample->in_vlan, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: in_vlan %lu", sample->in_vlan);
-	      GETDATA64(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: octets %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: ucastPkts %Lu", cntr64);
-	      GETDATA64(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: multicastPkts %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: broadcastPkts %Lu", cntr64);
-	      GETDATA32(cntr64, datap);
-	      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: discards %Lu", cntr64);
-	    }
-	    break;
-	  default:
-	    return;
-	    break;
-	  }
-	}
-	break;
-      default:
-	return;
-	break;
       }
-      /*
-	report the size in bytes that this flowSample or
-	counterSample took up in the datagram
-      */
-      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: %s %d",
-		 (sample->sampleType == FLOWSAMPLE ?
-		  "flowSampleSize" : "countersSampleSize"),
-		 (u_char *)datap - startOfSample);
+      else {
+	switch(sample->sampleType) {
+	case FLOWSAMPLE: readFlowSample_v2v4(sample); break;
+	case COUNTERSSAMPLE: readCountersSample_v2v4(sample); break;
+	default: receiveError(sample, "unexpected sample type", YES); break;
+	}
+      }
+      traceEvent(CONST_TRACE_INFO, "endSample   ----------------------\n");
     }
   }
 }
 
-/* ****************************** */
 
-static void freeSflowMatrixMemory(void) {
-  /*
-    NOTE: we need to lock something here (TBD)
-  */
+/* =============================================================== */
 
-  if((!myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice) || (myGlobals.sflowGlobals.sflowDeviceId == -1)) return;
+/* *************************** */
 
-  if(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix != NULL) {
-    int j;
-
-    /* Courtesy of Wies-Software <wies@wiessoft.de> */
-    for(j=0; j<(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts*myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts); j++)
-        if(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix[j] != NULL)
-	  free(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix[j]);
-
-    free(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix);
-  }
-
-  if(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrixHosts != NULL)
-    free(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrixHosts);
-}
-
-/* ************************************************** */
-
-static void setSflowInterfaceMatrix() {
-  if((!myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice) || (myGlobals.sflowGlobals.sflowDeviceId == -1)) return;
-
-  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts       = 0xFFFFFFFF - myGlobals.sflowGlobals.sflowIfMask.s_addr+1;
-  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].network.s_addr = myGlobals.sflowGlobals.sflowIfAddress.s_addr;
-  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].netmask.s_addr = myGlobals.sflowGlobals.sflowIfMask.s_addr;
-  if(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts > MAX_SUBNET_HOSTS) {
-    myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts = MAX_SUBNET_HOSTS;
-    traceEvent(CONST_TRACE_WARNING, "SFLOW: Truncated network size (device %s) to %d hosts (real netmask %s)",
-	       myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].name, myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts,
-	       intoa(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].netmask));
-  }
-
-  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts*
-										       myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts,
-										       sizeof(TrafficEntry*));
-  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-												  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts);
+static void dissectFlow(SFSample *sample, int deviceId) {  
+  if(myGlobals.device[deviceId].sflowGlobals->sflowDebug)
+    readSFlowDatagram(sample, deviceId);
+  else
+    traceEvent(CONST_TRACE_INFO, "Received sflow packet");
 }
 
 /* ****************************** */
 
-static void handlesFlowHTTPrequest(char* url) {
-  char buf[1024], buf1[32], buf2[32], formatBuf[32];
-  float percentage, err;
-  struct in_addr theDest;
+#ifdef CFG_MULTITHREADED
+
+#ifdef MAKE_WITH_SFLOWSIGTRAP
+RETSIGTYPE sflowcleanup(int signo) {
+  static int msgSent = 0;
   int i;
+  void *array[20];
+  size_t size;
+  char **strings;
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-  printHTMLheader("sFlow Statistics", NULL, 0);
+  if(msgSent<10) {
+    traceEvent(CONST_TRACE_FATALERROR, "SFLOW: caught signal %d %s", signo,
+               signo == SIGHUP ? "SIGHUP" :
+               signo == SIGINT ? "SIGINT" :
+               signo == SIGQUIT ? "SIGQUIT" :
+               signo == SIGILL ? "SIGILL" :
+               signo == SIGABRT ? "SIGABRT" :
+               signo == SIGFPE ? "SIGFPE" :
+               signo == SIGKILL ? "SIGKILL" :
+               signo == SIGSEGV ? "SIGSEGV" :
+               signo == SIGPIPE ? "SIGPIPE" :
+               signo == SIGALRM ? "SIGALRM" :
+               signo == SIGTERM ? "SIGTERM" :
+               signo == SIGUSR1 ? "SIGUSR1" :
+               signo == SIGUSR2 ? "SIGUSR2" :
+               signo == SIGCHLD ? "SIGCHLD" :
+#ifdef SIGCONT
+               signo == SIGCONT ? "SIGCONT" :
+#endif
+#ifdef SIGSTOP
+               signo == SIGSTOP ? "SIGSTOP" :
+#endif
+#ifdef SIGBUS
+               signo == SIGBUS ? "SIGBUS" :
+#endif
+#ifdef SIGSYS
+               signo == SIGSYS ? "SIGSYS"
+#endif
+               : "other");
+    msgSent++;
+  }
 
-  sendString("<CENTER>\n<HR>\n");
+#ifdef HAVE_BACKTRACE
+  /* Don't double fault... */
+  /* signal(signo, SIG_DFL); */
 
-  if(url != NULL) {
-    char *key, *value;
+  /* Grab the backtrace before we do much else... */
+  size = backtrace(array, 20);
+  strings = (char**)backtrace_symbols(array, size);
 
-    key = strtok(url, "=");
-    if(key != NULL) value = strtok(NULL, "="); else value = NULL;
+  traceEvent(CONST_TRACE_FATALERROR, "SFLOW: BACKTRACE:     backtrace is:");
+  if (size < 2) {
+    traceEvent(CONST_TRACE_FATALERROR, "SFLOW: BACKTRACE:         **unavailable!");
+  } else {
+    /* Ignore the 0th entry, that's our cleanup() */
+    for (i=1; i<size; i++) {
+      traceEvent(CONST_TRACE_FATALERROR, "SFLOW: BACKTRACE:          %2d. %s", i, strings[i]);
+    }
+  }
+#endif /* HAVE_BACKTRACE */
 
-    if(value && key) {
-      if(strcmp(key, "port") == 0) {
-	if(myGlobals.sflowGlobals.sflowInPort != atoi(value)) {
-	  myGlobals.sflowGlobals.sflowInPort = atoi(value);
-	  storePrefsValue("sflow.sflowInPort", value);
-	  initSflowInSocket();
+  exit(0);
+}
+#endif /* MAKE_WITH_SFLOWSIGTRAP */
+
+/* ****************************** */
+
+static void* sflowMainLoop(void* _deviceId) {
+  fd_set sflowMask;
+  int rc, len, deviceId;
+  u_char buffer[2048];
+  struct sockaddr_in fromHost;
+
+  deviceId = (int)_deviceId;
+
+  if(!(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0)) return(NULL);
+
+#ifdef MAKE_WITH_SFLOWSIGTRAP
+  signal(SIGSEGV, sflowcleanup);
+  signal(SIGHUP,  sflowcleanup);
+  signal(SIGINT,  sflowcleanup);
+  signal(SIGQUIT, sflowcleanup);
+  signal(SIGILL,  sflowcleanup);
+  signal(SIGABRT, sflowcleanup);
+  signal(SIGFPE,  sflowcleanup);
+  signal(SIGKILL, sflowcleanup);
+  signal(SIGPIPE, sflowcleanup);
+  signal(SIGALRM, sflowcleanup);
+  signal(SIGTERM, sflowcleanup);
+  signal(SIGUSR1, sflowcleanup);
+  signal(SIGUSR2, sflowcleanup);
+  /* signal(SIGCHLD, sflowcleanup); */
+#ifdef SIGCONT
+  signal(SIGCONT, sflowcleanup);
+#endif
+#ifdef SIGSTOP
+  signal(SIGSTOP, sflowcleanup);
+#endif
+#ifdef SIGBUS
+  signal(SIGBUS,  sflowcleanup);
+#endif
+#ifdef SIGSYS
+  signal(SIGSYS,  sflowcleanup);
+#endif
+#endif /* MAKE_WITH_SFLOWSIGTRAP */
+
+  myGlobals.device[deviceId].activeDevice = 1;
+
+  myGlobals.device[deviceId].sflowGlobals->threadActive = 1;
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sflow thread(%ld) started",
+	     myGlobals.device[deviceId].sflowGlobals->sflowThread);
+
+  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
+    int maxSock = myGlobals.device[deviceId].sflowGlobals->sflowInSocket;
+
+    FD_ZERO(&sflowMask);
+    FD_SET(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, &sflowMask);
+
+    if((rc = select(maxSock+1, &sflowMask, NULL, NULL, NULL)) > 0) {
+
+      if(FD_ISSET(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, &sflowMask)){
+	len = sizeof(fromHost);
+	rc = recvfrom(myGlobals.device[deviceId].sflowGlobals->sflowInSocket,(char*)&buffer, sizeof(buffer),
+		      0,(struct sockaddr*)&fromHost, &len);
+      }
+
+#ifdef DEBUG_FLOWS
+      if(0)
+	traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: Received sFlow packet(len=%d)(deviceId=%d)",
+		   rc,  deviceId);
+#endif
+
+      if(rc > 0) {
+	int i;
+	SFSample sample;
+
+	myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd++;
+
+	NTOHL(fromHost.sin_addr.s_addr);
+
+	for(i=0; i<MAX_NUM_PROBES; i++) {
+	  if(myGlobals.device[deviceId].sflowGlobals->probeList[i].probeAddr.s_addr == 0) {
+	    myGlobals.device[deviceId].sflowGlobals->probeList[i].probeAddr.s_addr = fromHost.sin_addr.s_addr;
+	    myGlobals.device[deviceId].sflowGlobals->probeList[i].pkts = 1;
+	    break;
+	  } else if(myGlobals.device[deviceId].sflowGlobals->probeList[i].probeAddr.s_addr == fromHost.sin_addr.s_addr) {
+	    myGlobals.device[deviceId].sflowGlobals->probeList[i].pkts++;
+	    break;
+	  }
 	}
-      } else if(strcmp(key, "ifNetMask") == 0) {
-	int a, b, c, d, a1, b1, c1, d1;
 
-	if(sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d",
-		  &a, &b, &c, &d, &a1, &b1, &c1, &d1) == 8) {
-	  myGlobals.sflowGlobals.sflowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
-	  myGlobals.sflowGlobals.sflowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
-	  storePrefsValue("sflow.ifNetMask", value);
-	  freeSflowMatrixMemory(); setSflowInterfaceMatrix();
-	} else
-	  traceEvent(CONST_TRACE_WARNING, "SFLOW: Parse Error (%s)", value);
-     } else if(strcmp(key, "sflowDest") == 0) {
-	myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
-	storePrefsValue("sflow.sflowDest", value);
-      } else if(strcmp(key, "debug") == 0) {
-	debug = atoi(value);
-	storePrefsValue("sflow.debug", value);
+	memset(&sample, 0, sizeof(sample));
+	sample.rawSample = buffer;
+	sample.rawSampleLen = rc;
+	sample.sourceIP = fromHost.sin_addr;
+	sample.datap = (u_long *)sample.rawSample;
+	sample.endp = (u_char *)sample.rawSample + sample.rawSampleLen;
+
+
+
+	dissectFlow(&sample, deviceId);
+      }
+    } else {
+      if(rc < 0) {
+	traceEvent(CONST_TRACE_FATALERROR, "SFLOW: select() failed(%d, %s), terminating sflow",
+		   errno, strerror(errno));
+	break;
       }
     }
   }
 
-  /* *************************************** */
+  myGlobals.device[deviceId].sflowGlobals->threadActive = 0;
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sflow thread(%ld) terminated",
+	     myGlobals.device[deviceId].sflowGlobals->sflowThread);
 
-  sendString("<table border=0 "TABLE_DEFAULTS">\n<tr><td><table border=1 "TABLE_DEFAULTS">");
-  sendString("<TR><TH "DARK_BG" COLSPAN=4>sFlow Preferences</TH></TR>\n");
-  sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG" ALIGN=LEFT>Incoming Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
-	     "Local UDP Port</td> "
-	     "<td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
+  myGlobals.device[deviceId].activeDevice = 0;
+  return(NULL);
+}
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sflowGlobals.sflowInPort);
-  sendString(buf);
+#endif
 
-  sendString("><br>[default port is "DEFAULT_SFLOW_COLLECTOR_PORT_STR"]"
-	     "</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n<br>");
+/* ****************************** */
 
-  if(myGlobals.sflowGlobals.sflowInPort > 0) {
-    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Virtual sFlow Interface</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
-	       "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
+static void initsFlowDevice(int deviceId) {
+  int a, b, c, d, a1, b1, c1, d1, rc;
+  char value[1024], workList[1024];
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s",
-		_intoa(myGlobals.sflowGlobals.sflowIfAddress, buf1, sizeof(buf1)),
-		_intoa(myGlobals.sflowGlobals.sflowIfMask, buf2, sizeof(buf2)));
-    sendString(buf);
+  if(!pluginActive) return;
 
-    sendString("\"><br>Format: digit.digit.digit.digit/digit.digit.digit.digit</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
-  }
+  traceEvent(CONST_TRACE_INFO, "SFLOW: initializing deviceId=%d", deviceId);
 
-  /* *************************************** */
-
-  sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG" ALIGN=LEFT>Outgoing Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
-	     "Remote Collector IP Address</td> "
-	     "<td "TD_BG"><INPUT NAME=sflowDest SIZE=15 VALUE=");
-
-  theDest.s_addr = ntohl(myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr);
-  sendString(_intoa(theDest, buf, sizeof(buf)));
-
-  sendString(">:6343<br>[default sampling rate is "DEFAULT_SFLOW_SAMPLING_RATE" packets]</td>"
-	     "<td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
-
-  sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG" ALIGN=LEFT>Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
-	     "<FORM ACTION=/plugins/sFlow METHOD=GET>");
-  if(debug) {
-    sendString("<INPUT TYPE=radio NAME=debug VALUE=1 CHECKED>On");
-    sendString("<INPUT TYPE=radio NAME=debug VALUE=0>Off");
-    sendString("<p>NOTE: sFlow packets are dumped on the ntop log");
-  } else {
-    sendString("<INPUT TYPE=radio NAME=debug VALUE=1>On");
-    sendString("<INPUT TYPE=radio NAME=debug VALUE=0 CHECKED>Off");
-  }
-
-  sendString("</TD><td><INPUT TYPE=submit VALUE=Set></form></td></TR>\n");
-  sendString("</table></tr>\n");
-
-  sendString("<tr><td>"
-	     "<p><b>NOTE</b>:<ol>"
-	     "<li>Use 0 as port, and 0.0.0.0 as IP address to disable export/collection."
-	     "<li>sFlow packets are associated with a virtual device and not mixed to captured packets."
-	     "<li>sFlow activation may require ntop restart"
-	     "<li>A virtual sFlow device is activated only when incoming flow capture is enabled."
-	     "<li>You can switch devices using this <A HREF=/" CONST_SWITCH_NIC_HTML ">link</A>."
-	     "</ol></td></tr>\n");
-  sendString("</table></center><p>\n");
-
-  /* *************************************** */
-
-  if((myGlobals.sflowGlobals.sflowInSocket == 0)
-     || (myGlobals.sflowGlobals.numSamplesReceived == 0)) {
-    sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A></H5>\n");
-    sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
-    printHTMLtrailer();
+  if(myGlobals.device[deviceId].sflowGlobals == NULL) {
+    traceEvent(CONST_TRACE_ERROR, "SFLOW: initsFlowDevice internal error");
     return;
   }
 
+  setPluginStatus(NULL);
 
-  percentage = (myGlobals.sflowGlobals.lastSample-myGlobals.sflowGlobals.initialPool)/myGlobals.sflowGlobals.numSamplesReceived;
-  err = 196 * sqrt((float)(1/(float)myGlobals.sflowGlobals.numSamplesReceived));
+#ifdef CFG_MULTITHREADED
+  myGlobals.device[deviceId].sflowGlobals->threadActive = 0;
+  createMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
+#else
+  /* This plugin works only with threads */
+  setPluginStatus("Disabled - requires POSIX thread support.");
+  return(-1);
+#endif
 
-  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: [%.2f %%][Error <= %.2f%%]", percentage, err);
+  memset(myGlobals.device[deviceId].sflowGlobals->flowIgnored, 0,
+	 sizeof(myGlobals.device[deviceId].sflowGlobals->flowIgnored));
+  myGlobals.device[deviceId].sflowGlobals->nextFlowIgnored = 0;
 
-  sendString("<CENTER>\n<TABLE BORDER>\n");
-  sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
+  if(fetchPrefsValue(sfValue(deviceId, "sflowInPort", 1), value, sizeof(value)) == -1)
+    storePrefsValue(sfValue(deviceId, "sflowInPort", 1), "0");
+  else
+    myGlobals.device[deviceId].sflowGlobals->sflowInPort = atoi(value);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG"># Samples</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-	      formatPkts((Counter)myGlobals.sflowGlobals.numSamplesReceived, formatBuf, sizeof(formatBuf)));
-  sendString(buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Data Scale</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
-	      percentage);
-  sendString(buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Estimated Error</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
-	      err);
-  sendString(buf);
-
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Flow Senders</TH><TD "TD_BG" ALIGN=LEFT>");
-
-  for(i=0; i<MAX_NUM_PROBES; i++) {
-    if(probeList[i].probeAddr.s_addr == 0) break;
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%s pkts]\n",
-		_intoa(probeList[i].probeAddr, buf, sizeof(buf)),
-		formatPkts(probeList[i].pkts, formatBuf, sizeof(formatBuf)));
-    sendString(buf);
+  if((fetchPrefsValue(sfValue(deviceId, "ifNetMask", 1), value, sizeof(value)) == -1)
+     || (((rc = sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d", &a, &b, &c, &d, &a1, &b1, &c1, &d1)) != 8)
+	 && ((rc = sscanf(value, "%d.%d.%d.%d/%d", &a, &b, &c, &d, &a1)) != 5))) {
+    storePrefsValue(sfValue(deviceId, "ifNetMask", 1), "192.168.0.0/255.255.255.0");
+    myGlobals.device[deviceId].sflowGlobals->sflowIfAddress.s_addr = 0xC0A80000;
+    myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr    = 0xFFFFFF00;
+  } else {
+    myGlobals.device[deviceId].sflowGlobals->sflowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
+    if(rc == 8)
+      myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr = (a1 << 24) +(b1 << 16) +(c1 << 8) + d1;
+    else {
+      myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr = 0xffffffff >> a1;
+      myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr =~
+	myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr;
+    }
   }
 
-  sendString("</TD></TR>\n</TABLE>\n</CENTER>\n");
-  sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A></H5>\n");
-  sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
+  if(fetchPrefsValue(sfValue(deviceId, "whiteList", 1), value, sizeof(value)) == -1) {
+    storePrefsValue(sfValue(deviceId, "whiteList", 1), "");
+    myGlobals.device[deviceId].sflowGlobals->sflowWhiteList = strdup("");
+  } else
+    myGlobals.device[deviceId].sflowGlobals->sflowWhiteList = strdup(value);
+
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex, "initsFlowDevice");
+#endif
+  handleWhiteBlackListAddresses((char*)&value,
+                                myGlobals.device[deviceId].sflowGlobals->whiteNetworks,
+                                &myGlobals.device[deviceId].sflowGlobals->numWhiteNets,
+				(char*)&workList,
+                                sizeof(workList));
+  if(myGlobals.device[deviceId].sflowGlobals->sflowWhiteList != NULL)
+    free(myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
+  myGlobals.device[deviceId].sflowGlobals->sflowWhiteList = strdup(workList);
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
+#endif
+  traceEvent(CONST_TRACE_INFO, "SFLOW: White list initialized to '%s'",
+	     myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
+
+  if(fetchPrefsValue(sfValue(deviceId, "blackList", 1), value, sizeof(value)) == -1) {
+    storePrefsValue(sfValue(deviceId, "blackList", 1), "");
+    myGlobals.device[deviceId].sflowGlobals->sflowBlackList=strdup("");
+  } else
+    myGlobals.device[deviceId].sflowGlobals->sflowBlackList=strdup(value);
+
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex, "initsFlowDevice()");
+#endif
+  handleWhiteBlackListAddresses((char*)&value, myGlobals.device[deviceId].sflowGlobals->blackNetworks,
+                                &myGlobals.device[deviceId].sflowGlobals->numBlackNets, (char*)&workList,
+                                sizeof(workList));
+  if(myGlobals.device[deviceId].sflowGlobals->sflowBlackList != NULL)
+    free(myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
+
+  myGlobals.device[deviceId].sflowGlobals->sflowBlackList = strdup(workList);
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
+#endif
+  traceEvent(CONST_TRACE_INFO, "SFLOW: Black list initialized to '%s'",
+	     myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
+
+  if(fetchPrefsValue(sfValue(deviceId, "sflowAggregation", 1), value, sizeof(value)) == -1)
+    storePrefsValue(sfValue(deviceId, "sflowAggregation", 1), "0" /* noAggregation */);
+  else
+    myGlobals.device[deviceId].sflowGlobals->sflowAggregation = atoi(value);
+
+  if(fetchPrefsValue(sfValue(deviceId, "sflowAssumeFTP", 1), value, sizeof(value)) == -1) {
+    storePrefsValue(sfValue(deviceId, "sflowAssumeFTP", 1), "0" /* no */);
+    myGlobals.device[deviceId].sflowGlobals->sflowAssumeFTP = 0;
+  } else
+    myGlobals.device[deviceId].sflowGlobals->sflowAssumeFTP = atoi(value);
+
+  if(setsFlowInSocket(deviceId) != 0)  return;
+
+  if(fetchPrefsValue(sfValue(deviceId, "debug", 1), value, sizeof(value)) == -1) {
+    storePrefsValue(sfValue(deviceId, "debug", 1), "0");
+    myGlobals.device[deviceId].sflowGlobals->sflowDebug = 0;
+  } else {
+    myGlobals.device[deviceId].sflowGlobals->sflowDebug = atoi(value);
+  }
+
+  /* Allocate a pure dummy for white/black list use */
+  myGlobals.device[deviceId].sflowGlobals->dummyHost = (HostTraffic*)malloc(sizeof(HostTraffic));
+  memset(myGlobals.device[deviceId].sflowGlobals->dummyHost, 0, sizeof(HostTraffic));
+
+  myGlobals.device[deviceId].sflowGlobals->dummyHost->hostIp4Address.s_addr = 0x00112233;
+  strncpy(myGlobals.device[deviceId].sflowGlobals->dummyHost->hostNumIpAddress, "&nbsp;",
+	  sizeof(myGlobals.device[deviceId].sflowGlobals->dummyHost->hostNumIpAddress));
+  strncpy(myGlobals.device[deviceId].sflowGlobals->dummyHost->hostResolvedName, "white/black list dummy",
+	  sizeof(myGlobals.device[deviceId].sflowGlobals->dummyHost->hostResolvedName));
+  myGlobals.device[deviceId].sflowGlobals->dummyHost->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
+  strcpy(myGlobals.device[deviceId].sflowGlobals->dummyHost->ethAddressString, "00:00:00:00:00:00");
+  setEmptySerial(&myGlobals.device[deviceId].sflowGlobals->dummyHost->hostSerial);
+  myGlobals.device[deviceId].sflowGlobals->dummyHost->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*),
+											 MAX_ASSIGNED_IP_PORTS);
+}
+
+/* ****************************** */
+
+static int initsFlowFunct(void) {
+  char value[128];
+
+  pluginActive = 1;
+  myGlobals.mergeInterfaces = 0; /* Use different devices */
+
+  if((fetchPrefsValue(sfValue(0, "knownDevices", 0), value, sizeof(value)) != -1)
+     && (strlen(value) > 0)) {
+    char *strtokState, *dev;
+
+    traceEvent(CONST_TRACE_INFO, "SFLOW: initializing '%s' devices", value);
+
+    dev = strtok_r(value, ",", &strtokState);
+    while(dev != NULL) {
+      int deviceId = atoi(dev);
+
+      if(deviceId > 0) {
+	if((deviceId = createsFlowDevice(deviceId)) == -1) {
+	  pluginActive = 0;
+	  return(-1);
+	}
+      }
+
+      dev = strtok_r(NULL, ",", &strtokState);
+    }
+  } else
+    traceEvent(CONST_TRACE_INFO, "SFLOW: no devices to initialize");
+
+  return(0);
+}
+
+/* ****************************** */
+
+static void printsFlowDeviceConfiguration(void) {
+  char buf[512], value[128];
+  int i = 0;
+
+  sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
+  sendString("<tr><th "DARK_BG">Available sFlow Devices</th></tr>\n");
+  sendString("<tr><td align=left>\n");
+
+  if((fetchPrefsValue(sfValue(0, "knownDevices", 0), value, sizeof(value)) != -1)
+     && (strlen(value) > 0)) {
+    char *strtokState, *dev;
+
+    sendString("<FORM ACTION=\"/plugins/");
+    sendString(sflowPluginInfo->pluginURLname);
+    sendString("\" METHOD=GET>\n");
+
+    dev = strtok_r(value, ",", &strtokState);
+    while(dev != NULL) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
+		  dev, i == 0 ? "CHECKED" : "", SFLOW_DEVICE_NAME, dev);
+      sendString(buf);
+
+      if(pluginActive) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=/plugins/%s?device=-%s>Delete</A> ]",
+		    sflowPluginInfo->pluginURLname, dev);
+	sendString(buf);
+      }
+
+      sendString("<br>\n");
+
+      i++;
+      dev = strtok_r(NULL, ",", &strtokState);
+    }
+
+    if(pluginActive)
+      sendString("<p><INPUT TYPE=submit VALUE=\"Edit sFlow Device\">&nbsp;"
+		 "<INPUT TYPE=reset VALUE=Reset>\n</FORM><p>\n");
+  }
+
+  /* *********************** */
+
+  if(pluginActive) {
+    sendString("<FORM ACTION=\"/plugins/");
+    sendString(sflowPluginInfo->pluginURLname);
+    sendString("\" METHOD=GET>\n<input type=hidden name=device size=5 value=0>");
+    sendString("<p><INPUT TYPE=submit VALUE=\"Add sFlow Device\">&nbsp;\n</FORM><p>\n");
+  } else {
+    sendString("<p>Please enable the plugin for configuring devices<br>\n");
+  }
+
+  sendString("</td></TR></TABLE></center>");
 
   printHTMLtrailer();
 }
 
 /* ****************************** */
 
-static void* sFlowMainLoop(void* notUsed _UNUSED_) {
-  fd_set sFlowMask;
-  int rc, len;
-  u_char buffer[2048];
-  SFSample sample;
-  struct sockaddr_in fromHost;
+static void printsFlowConfiguration(int deviceId) {
+  char buf[512], buf1[32], buf2[32];
 
-  if(!(myGlobals.sflowGlobals.sflowInSocket > 0)) return(NULL);
+  sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
+  sendString("<tr><th colspan=\"4\" "DARK_BG">Incoming Flows</th></tr>\n");
 
-#ifdef CFG_MULTITHREADED
-  threadActive = 1;
-#endif
+  sendString("<tr><th colspan=2 "DARK_BG">sFlow Device</th><td align=right colspan=2>");
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sFlowMainLoop()");
-#endif
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s.%d [ <A HREF=\"/plugins/%s\"/>List</A> ]",
+	      SFLOW_DEVICE_NAME, myGlobals.device[deviceId].sflowGlobals->sflowDeviceId,
+	      sflowPluginInfo->pluginName);
+  sendString(buf);
+  sendString("</td></tr>\n");
 
-#ifdef CFG_MULTITHREADED
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sFlow thread (%ld) started...", sFlowThread);
-#endif
+  sendString("<tr><th rowspan=\"2\" "DARK_BG">Flow<br>Collection</th>\n");
 
-  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
-    FD_ZERO(&sFlowMask);
-    FD_SET(myGlobals.sflowGlobals.sflowInSocket, &sFlowMask);
+  sendString("<th "DARK_BG">Local<br>Collector<br>UDP"
+	     "<br>Port</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(sflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n<p>");
 
-    if((rc = select(myGlobals.sflowGlobals.sflowInSocket+1, &sFlowMask, NULL, NULL, NULL)) > 0) {
-      len = sizeof(fromHost);
-      rc = recvfrom(myGlobals.sflowGlobals.sflowInSocket, (char*)&buffer, sizeof(buffer),
-		    0, (struct sockaddr*)&fromHost, &len);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+  sendString(buf);
 
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: select() = %d", rc);
-#endif
-      if(rc > 0) {
-	memset(&sample, 0, sizeof(sample));
-	sample.rawSample    = buffer;
-	sample.rawSampleLen = rc;
-	sample.sourceIP     = fromHost.sin_addr;
+  sendString("<input name=\"port\" size=\"5\" value=\"");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[deviceId].sflowGlobals->sflowInPort);
+  sendString(buf);
 
-	receiveSflowSample(&sample);
+  sendString("\"> [ Use a port value of 0 to disable collection ] "
+	     "<input type=\"submit\" value=\"Set Port\">"
+	     "</p>\n</form>\n\n"
+             "<p>If you want <b>ntop</b> to display sFlow data it receives from other "
+             "hosts, i.e. act as a collector, you must specify the UDP"
+	     " port to listen to. "
+             "The default port used for sFlow is " DEFAULT_SFLOW_PORT_STR ".</p>\n"
+	     "<p align=\"right\"></p>\n");
 
-	if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: rawSampleLen: %d", sample.rawSampleLen);
-      } else {
-	if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: rawSampleLen: rc=%d", rc);
-      }
-    } else {
-      traceEvent(CONST_TRACE_INFO, "SFLOW: select() failed (%d, %s), terminating",
-                 errno,
-                 (errno == EBADF ? "EBADF" :
-                    errno == EINTR ? "EINTR" :
-                    errno == EINVAL ? "EINVAL" :
-                    errno == ENOMEM ? "ENOMEM" : "other"));
-      break;
-    }
+  if(myGlobals.device[deviceId].sflowGlobals->sflowInPort == 0)
+    sendString("<p><font color=red>WARNING</font>: "
+	       "The 'Local Collector UDP"
+	       " Port' is zero (none). "
+               "Even if this plugin is ACTIVE, you must still enter a port number for "
+               "<b>ntop</b> to receive and process sFlow data.</p>\n");
+
+  sendString("</td></tr>\n");
+
+  sendString("<tr><th "DARK_BG">Virtual<br>sFlow<br>Interface<br>Network<br>Address</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(sflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+  sendString(buf);
+
+  sendString(" <input name=\"ifNetMask\" size=\"32\" value=\"");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s",
+	      _intoa(myGlobals.device[deviceId].sflowGlobals->sflowIfAddress, buf1, sizeof(buf1)),
+	      _intoa(myGlobals.device[deviceId].sflowGlobals->sflowIfMask, buf2, sizeof(buf2)));
+  sendString(buf);
+  sendString("\"> ");
+  sendString("<input type=\"submit\" value=\"Set Interface Address\"></p>\n</form>\n");
+
+  sendString("<p>This value is in the form of a network address and mask on the "
+             "network where the actual sFlow probe is located. "
+             "<b>ntop</b> uses this value to determine which TCP/IP addresses are "
+             "local and which are remote.</p>\n"
+             "<p>You may specify this in either format, &lt;network&gt;/&lt;mask&gt; or "
+             "CIDR (&lt;network&gt;/&lt;bits&gt;). An existing value is displayed "
+             "in &lt;network&gt;/&lt;mask&gt; format.</p>\n"
+             "<p>If the sFlow probe is monitoring only a single network, then "
+             "this is all you need to set. If the sFlow probe is monitoring "
+             "multiple networks, then pick one of them for this setting and use "
+             "the -m | --local-subnets parameter to specify the others.</p>\n"
+             "<p>This interface is called 'virtual' because the <b>ntop</b> host "
+             "is not really connected to the network you specify here.</p>\n"
+             "</td></tr>\n");
+
+  sendString("<tr><th rowspan=\"3\" "DARK_BG">Filtering</th>\n");
+
+  sendString("<th "DARK_BG">White List</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(sflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+  sendString(buf);
+
+  sendString("<input name=\"whiteList\" size=\"60\" value=\"");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
+              myGlobals.device[deviceId].sflowGlobals->sflowWhiteList == NULL ?
+		" " : myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
+  sendString(buf);
+  sendString("\"> <input type=\"submit\" value=\"Set White List\"></p>\n</form>\n"
+             "<p>This is a list of one or more TCP/IP host(s)/network(s) which we will "
+             "store data from when these host(s)/network(s) occur in the sFlow records.</p>\n"
+             "</td>\n</tr>\n");
+
+  sendString("<tr><th "DARK_BG">Black List</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(sflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+  sendString(buf);
+
+  sendString("<input name=\"blackList\" size=\"60\" value=\"");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
+              myGlobals.device[deviceId].sflowGlobals->sflowBlackList == NULL ?
+		" " : myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
+  sendString(buf);
+  sendString("\"> <input type=\"submit\" value=\"Set Black List\"></p>\n</form>\n"
+             "<p>This is a list of one or more TCP/IP host(s)/network(s) which we will "
+             "exclude data from (i.e. not store it) when these host(s)/network(s) occur "
+             "in the sFlow records.</p>\n"
+             "</td>\n</tr>\n");
+
+  sendString("<tr><td colspan=\"3\"><ul>"
+	     "<li><i>Changes to white / black lists take affect immediately, "
+	     "but are NOT retro-active.</i></li>\n"
+             "<li>Use a space to disable a list.</li>\n"
+             "<li>Use a.b.c.d/32 for a single host in a list.</li>\n"
+             "<li>The white / black lists accept both &lt;network&gt;/&lt;mask&gt; and "
+             "CIDR &lt;network&gt;/&lt;bits&gt; format.  Both formats may be used in the "
+             "same list. "
+             "For example, 192.168.1.0/24 means all addresses with 24 bits of network and "
+             "thus 8 bits of host, or the range from 192.168.1.0 to 192.168.1.255. "
+             "Similarly, the list 192.168.1.0/24,192.168.2.0/255.255.255.0 means the range "
+             "from 192.168.1.0 - 192.168.2.255.</li>\n"
+             "<li>The white list and black interact this way:\n"
+             "<ul><li>If present, the black list is processed FIRST. Data from any host "
+             "matching the black list is simply thrown away.</li>\n"
+             "<li>If no black list is specified, no hosts are excluded.</li>\n"
+             "<li>If present, the white list is processed SECOND.  Data from any host "
+             "NOT matching the white list is thrown away.</li>\n"
+             "<li>If no white list is specified, the value 0.0.0.0/0 (ALL hosts) is used.</li>\n"
+             "</ul>\n</li>\n</ul>\n"
+             "</td></tr>\n");
+
+  sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
+             "<tr><th colspan=\"4\" "DARK_BG">General Options</th></tr>\n");
+
+  /* *************************************** */
+
+  sendString("<tr><th colspan=\"2\" "DARK_BG">Debug</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(sflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n<p>");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+  sendString(buf);
+
+  if(myGlobals.device[deviceId].sflowGlobals->sflowDebug) {
+    sendString("<input type=\"radio\" name=\"debug\" value=\"1\" checked>On");
+    sendString("<input type=\"radio\" name=\"debug\" value=\"0\">Off");
+  } else {
+    sendString("<input type=\"radio\" name=\"debug\" value=\"1\">On");
+    sendString("<input type=\"radio\" name=\"debug\" value=\"0\" checked>Off");
   }
 
-#ifdef CFG_MULTITHREADED
-  threadActive = 0;
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sFlow thread (%ld) terminated...", sFlowThread);
-#endif
-  return(0);
+  sendString(" <input type=\"submit\" value=\"Set Debug\"></p>\n");
+
+  sendString("</form>\n"
+             "<p>This option turns on debugging, which dumps a huge quantity of "
+             "noise into the standard <b>ntop</b> log, all about what the sFlow "
+             "plugin is doing.  If you are doing development, this might be helpful, "
+             "otherwise <i>leave it alone</i>!</p>\n"
+	     "</td>\n</tr>\n");
+
+  sendString("<tr><td colspan=4><font color=red><b>REMEMBER</b><br></font><ul><li>Regardless of settings here, "
+             "the sFlow plugin must be ACTIVE on the main plugin menu (click "
+             "<a href=\"../" CONST_SHOW_PLUGINS_HTML "\">here</a> to go back) "
+             "for <b>ntop</b> to receive and/or "
+             "process sFlow data.\n"
+             "<li>Any option not indicated as taking effect immediately will require you "
+             "to recycle (inactivate and then activate) the sFlow plugin in order "
+             "for the change to take affect.</ul></td></tr>\n");
+
+  sendString("</table>\n</center>\n");
 }
 
 /* ****************************** */
 
-static void initSflowInSocket(void) {
-  struct sockaddr_in sockIn;
-  int sockopt = 1;
+static void printsFlowStatisticsRcvd(int deviceId) {
+  char buf[512], buf1[32], buf2[32], formatBuf[32], formatBuf2[32];
+  u_int i, totFlows;
 
-  if(myGlobals.sflowGlobals.sflowInSocket != 0) {
-    if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sFlow collector terminated");
-    closeNwSocket(&myGlobals.sflowGlobals.sflowInSocket);
+  sendString("<tr " TR_ON ">\n"
+             "<th colspan=\"2\" "DARK_BG">Received Flows</th>\n"
+             "</tr>\n"
+             "<tr " TR_ON ">\n"
+             "<th " TH_BG " align=\"left\" "DARK_BG ">Flow Senders</th>\n"
+             "<td width=\"20%\">");
+
+  for(i=0; i<MAX_NUM_PROBES; i++) {
+    if(myGlobals.device[deviceId].sflowGlobals->probeList[i].probeAddr.s_addr == 0) break;
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%s pkts]<br>\n",
+                _intoa(myGlobals.device[deviceId].sflowGlobals->probeList[i].probeAddr, buf, sizeof(buf)),
+                formatPkts(myGlobals.device[deviceId].sflowGlobals->probeList[i].pkts, formatBuf, sizeof(formatBuf)));
+    sendString(buf);
+  }
+  sendString("&nbsp;</td>\n</tr>\n");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Received</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd, formatBuf, sizeof(formatBuf)));
+  sendString(buf);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets with Bad Version</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+              formatPkts(myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
+  sendString(buf);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Processed</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd -
+                         myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
+  sendString(buf);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Valid Flows Received</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsRcvd, formatBuf, sizeof(formatBuf)));
+  sendString(buf);
+
+  if(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd > 0) {
+    totFlows = myGlobals.device[deviceId].sflowGlobals->numsFlowsV2Rcvd +
+      myGlobals.device[deviceId].sflowGlobals->numsFlowsV4Rcvd +
+      myGlobals.device[deviceId].sflowGlobals->numsFlowsV5Rcvd +
+      myGlobals.device[deviceId].sflowGlobals->numBadFlowReality;
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                "<tr " TR_ON ">\n"
+                "<th " TH_BG " align=\"left\" "DARK_BG ">Average Number of Flows per Packet</th>\n"
+                "<td " TD_BG " align=\"right\">%.1f</td>\n"
+                "</tr>\n",
+		(float)totFlows/(float)myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd);
+    sendString(buf);
   }
 
-  if(myGlobals.sflowGlobals.sflowInPort > 0) {
-    myGlobals.sflowGlobals.sflowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    setsockopt(myGlobals.sflowGlobals.sflowInSocket, SOL_SOCKET, SO_REUSEADDR,
-	       (char *)&sockopt, sizeof(sockopt));
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v2 Flows Received</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV2Rcvd, formatBuf, sizeof(formatBuf)));
+  sendString(buf);
 
-    sockIn.sin_family            = AF_INET;
-    sockIn.sin_port              = (int)htons(myGlobals.sflowGlobals.sflowInPort);
-    sockIn.sin_addr.s_addr       = INADDR_ANY;
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v4 Flows Received</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV4Rcvd, formatBuf, sizeof(formatBuf)));
+  sendString(buf);
 
-    if(bind(myGlobals.sflowGlobals.sflowInSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      traceEvent(CONST_TRACE_ERROR, "SFLOW: Collector: port %d already in use - collector disabled",
-		 myGlobals.sflowGlobals.sflowInPort);
-      closeNwSocket(&myGlobals.sflowGlobals.sflowInSocket);
-      myGlobals.sflowGlobals.sflowInSocket = 0;
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v5 Flows Received</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV5Rcvd, formatBuf, sizeof(formatBuf)));
+  sendString(buf);
+
+  sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
+             "<tr " TR_ON ">\n"
+             "<th colspan=\"2\" "DARK_BG">Discarded Flows</th>\n"
+             "</tr>\n");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Bad Data</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+              formatPkts(myGlobals.device[deviceId].sflowGlobals->numBadFlowReality,
+			 formatBuf, sizeof(formatBuf)));
+  sendString(buf);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Total Number of Flows Processed</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsProcessed,
+			 formatBuf, sizeof(formatBuf)));
+  sendString(buf);
+
+  if((myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedWhiteList +
+      myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedBlackList +
+      myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedWhiteList +
+      myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedBlackList) > 0) {
+
+    sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
+               "<tr " TR_ON ">\n"
+               "<th colspan=\"2\" "DARK_BG">Accepted/Rejected Flows</th>\n"
+               "</tr>\n"
+               "<tr " TR_ON ">\n"
+               "<th " DARK_BG">&nbsp;</th>\n"
+               "<th " DARK_BG">Source / Destination</th>\n"
+               "</tr>\n");
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                "<tr " TR_ON ">\n"
+                "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - Black list</th>\n"
+                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
+                "</tr>\n",
+                formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedBlackList,
+                           formatBuf, sizeof(formatBuf)),
+                formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedBlackList,
+                           formatBuf2, sizeof(formatBuf2)));
+    sendString(buf);
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                "<tr " TR_ON ">\n"
+                "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - White list</th>\n"
+                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
+                "</tr>\n",
+                formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedWhiteList,
+                           formatBuf, sizeof(formatBuf)),
+                formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedWhiteList,
+                           formatBuf2, sizeof(formatBuf2)));
+    sendString(buf);
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                "<tr " TR_ON ">\n"
+                "<th " TH_BG " align=\"left\" "DARK_BG ">Accepted</th>\n"
+                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
+                "</tr>\n",
+                formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryAccepted,
+                           formatBuf, sizeof(formatBuf)),
+                formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryAccepted,
+                           formatBuf2, sizeof(formatBuf2)));
+    sendString(buf);
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                "<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Total</th>\n"
+                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
+                "</tr>\n",
+                formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedBlackList +
+                           myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedWhiteList +
+                           myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryAccepted,
+                           formatBuf, sizeof(formatBuf)),
+                formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedBlackList +
+                           myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedWhiteList +
+                           myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryAccepted,
+                           formatBuf2, sizeof(formatBuf2)));
+    sendString(buf);
+  }
+
+#ifdef DEBUG
+  sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
+             "<tr " TR_ON ">\n"
+             "<th colspan=\"2\" "DARK_BG">Debug></th>\n"
+             "</tr>\n"
+             "<tr " TR_ON ">\n"
+             "<th " TH_BG " align=\"left\" "DARK_BG ">White net list</th>\n"
+             "<td " TD_BG ">");
+
+  if(numWhiteNets == 0) {
+    sendString("none");
+  } else {
+    sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+               "Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+               "Hostmask<br>\n");
+
+    for(i=0; i<numWhiteNets; i++) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                  "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
+                  "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
+                  i,
+                  whiteNetworks[i][0],
+                  ((whiteNetworks[i][0] >> 24) & 0xff),
+                  ((whiteNetworks[i][0] >> 16) & 0xff),
+                  ((whiteNetworks[i][0] >>  8) & 0xff),
+                  ((whiteNetworks[i][0]      ) & 0xff),
+                  whiteNetworks[i][1],
+                  ((whiteNetworks[i][1] >> 24) & 0xff),
+                  ((whiteNetworks[i][1] >> 16) & 0xff),
+                  ((whiteNetworks[i][1] >>  8) & 0xff),
+                  ((whiteNetworks[i][1]      ) & 0xff),
+                  whiteNetworks[i][2],
+                  ((whiteNetworks[i][2] >> 24) & 0xff),
+                  ((whiteNetworks[i][2] >> 16) & 0xff),
+                  ((whiteNetworks[i][2] >>  8) & 0xff),
+                  ((whiteNetworks[i][2]      ) & 0xff)
+                  );
+      sendString(buf);
+      if(i<numWhiteNets) sendString("<br>\n");
+    }
+  }
+
+  sendString("</td>\n</tr>\n");
+
+  sendString("<tr " TR_ON ">\n"
+             "<th " TH_BG " align=\"left\" "DARK_BG ">Black net list</th>\n"
+             "<td " TD_BG ">");
+
+  if(numBlackNets == 0) {
+    sendString("none");
+  } else {
+    sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+               "Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+               "Hostmask<br>\n");
+
+    for(i=0; i<numBlackNets; i++) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                  "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
+                  "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
+                  i,
+                  blackNetworks[i][0],
+                  ((blackNetworks[i][0] >> 24) & 0xff),
+                  ((blackNetworks[i][0] >> 16) & 0xff),
+                  ((blackNetworks[i][0] >>  8) & 0xff),
+                  ((blackNetworks[i][0]      ) & 0xff),
+                  blackNetworks[i][1],
+                  ((blackNetworks[i][1] >> 24) & 0xff),
+                  ((blackNetworks[i][1] >> 16) & 0xff),
+                  ((blackNetworks[i][1] >>  8) & 0xff),
+                  ((blackNetworks[i][1]      ) & 0xff),
+                  blackNetworks[i][2],
+                  ((blackNetworks[i][2] >> 24) & 0xff),
+                  ((blackNetworks[i][2] >> 16) & 0xff),
+                  ((blackNetworks[i][2] >>  8) & 0xff),
+                  ((blackNetworks[i][2]      ) & 0xff)
+                  );
+      sendString(buf);
+      if(i<numBlackNets) sendString("<br>\n");
+    }
+  }
+
+  sendString("</td>\n</tr>\n");
+
+#endif
+
+  if(myGlobals.device[deviceId].sflowGlobals->flowIgnoredsFlow > 0) {
+    sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
+	       "<tr " TR_ON ">\n"
+	       "<th colspan=\"2\" "DARK_BG">Most Recent Ignored Flows</th>\n"
+	       "</tr>\n"
+	       "<tr " TR_ON ">\n"
+	       "<th colspan=\"2\"><table width=\"100%\" border=1 "TABLE_DEFAULTS">"
+	       "<tr><th colspan=\"2\">Flow</th>\n"
+	       "<th>Bytes</th>\n"
+	       "<th># Consecutive<br>Counts</th></tr>\n");
+
+    for (i=myGlobals.device[deviceId].sflowGlobals->nextFlowIgnored;
+	 i<myGlobals.device[deviceId].sflowGlobals->nextFlowIgnored+MAX_NUM_IGNOREDFLOWS; i++) {
+      if ((myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
+	  (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
+	if(myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
+	  safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "(%d) ", myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
+	} else {
+	  safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "&nbsp;");
+	}
+	if (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) {
+	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%.1fGB",
+		      (float)myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
+	} else if (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) {
+	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%.1fMB",
+		      (float)myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
+	} else {
+	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%u",
+		      myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
+	}
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<tr><td align=\"right\">%d.%d.%d.%d:%d</td>"
+		    "<td align=\"left\">-> %d.%d.%d.%d:%d</td>"
+		    "<td align=\"right\">%s</td>"
+		    "<td align=\"right\">%s</td></tr>\n",
+		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 24) & 0xff,
+		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 16) & 0xff,
+		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >>  8) & 0xff,
+		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0]      ) & 0xff,
+		    myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][1],
+		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 24) & 0xff,
+		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 16) & 0xff,
+		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >>  8) & 0xff,
+		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2]      ) & 0xff,
+		    myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][3],
+		    buf2, buf1);
+	sendString(buf);
+      }
+    }
+
+    sendString("</table>");
+  }
+}
+
+/* ****************************** */
+
+static int createsFlowDevice(int sflowDeviceId) {
+  int deviceId;
+  char buf[32];
+
+  traceEvent(CONST_TRACE_INFO, "SFLOW: createsFlowDevice(%d)", sflowDeviceId);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s.%d", SFLOW_DEVICE_NAME, sflowDeviceId);
+  deviceId = createDummyInterface(buf);
+
+  if(deviceId != -1) {
+    myGlobals.device[deviceId].sflowGlobals = (SflowGlobals*)malloc(sizeof(SflowGlobals));
+
+    if(myGlobals.device[deviceId].sflowGlobals == NULL) {
+      /* Not enough memory */
+      traceEvent(CONST_TRACE_ERROR, "SFLOW: not enough memory (sflowGlobals malloc)");
+      return(-1);
+    }
+
+    memset(myGlobals.device[deviceId].sflowGlobals, 0, sizeof(SflowGlobals));
+
+    myGlobals.device[deviceId].activeDevice = 1;
+    myGlobals.device[deviceId].sflowGlobals->sflowDeviceId = sflowDeviceId;
+    initsFlowDevice(deviceId);
+
+    traceEvent(CONST_TRACE_INFO, "SFLOW: createsFlowDevice created device %d",
+	     deviceId);
+  } else
+    traceEvent(CONST_TRACE_ERROR, "SFLOW: createDummyInterface failed");
+
+  return(deviceId);
+}
+
+/* ****************************** */
+
+static int mapsFlowDeviceToNtopDevice(int sflowDeviceId) {
+  int i;
+
+  for(i=0; i<myGlobals.numDevices; i++)
+    if((myGlobals.device[i].sflowGlobals != NULL)
+       && (myGlobals.device[i].sflowGlobals->sflowDeviceId == sflowDeviceId)) {
+#ifdef DEBUG
+      traceEvent(CONST_TRACE_INFO, "SFLOW: mapsFlowDeviceToNtopDevice(%d) = %d",
+		 sflowDeviceId, i);
+#endif
+      return(i);
+    } else if(myGlobals.device[i].sflowGlobals != NULL) {
+#ifdef DEBUG
+      traceEvent(CONST_TRACE_INFO, "SFLOW: mapsFlowDeviceToNtopDevice (id=%d) <=> (sflowDeviceId=%d)",
+		 i, myGlobals.device[i].sflowGlobals->sflowDeviceId);
+#endif
+    }
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "SFLOW: mapsFlowDeviceToNtopDevice(%d) failed\n",
+	     sflowDeviceId);
+#endif
+
+  return(-1); /* Not found */
+}
+
+/* ****************************** */
+
+static void handlesFlowHTTPrequest(char* _url) {
+  char workList[1024], *url;
+  int deviceId = -1, originalId = -1;
+
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+
+  /* ****************************
+   * Process URL stuff          *
+   ****************************** */
+
+  if((_url != NULL) && pluginActive) {
+    char *strtokState;
+
+    url = strtok_r(_url, "&", &strtokState);
+
+    while(url != NULL) {
+      char *device, *_value = NULL;
+
+      device = strtok(url, "=");
+      if(device != NULL) _value = strtok(NULL, "="); else _value = NULL;
+
+      if(_value && device) {
+	char value[256];
+
+	unescape(value, sizeof(value), _value);
+
+	if(strcmp(device, "device") == 0) {
+	  originalId = deviceId = atoi(value);
+
+	  if((deviceId > 0) && ((deviceId = mapsFlowDeviceToNtopDevice(deviceId)) == -1)) {
+	    printHTMLheader("sFlow Configuration Error", NULL, 0);
+	    printFlagedWarning("<I>Unable to locate the specified device. Please activate the plugin first.</I>");
+	    return;
+	  }
+	} else if(strcmp(device, "port") == 0) {
+	  if(myGlobals.device[deviceId].sflowGlobals->sflowInPort != atoi(value)) {
+	    if(deviceId > 0) {
+	      myGlobals.device[deviceId].sflowGlobals->sflowInPort = atoi(value);
+	      storePrefsValue(sfValue(deviceId, "sflowInPort", 1), value);
+	      setsFlowInSocket(deviceId);
+	    }
+	  }
+	} else if(strcmp(device, "debug") == 0) {
+	  if(deviceId > 0) {
+	    myGlobals.device[deviceId].sflowGlobals->sflowDebug = atoi(value);
+	    storePrefsValue(sfValue(deviceId, "debug", 1), value);
+	  }
+	} else if(strcmp(device, "ifNetMask") == 0) {
+	  int a, b, c, d, a1, b1, c1, d1;
+
+	  if(deviceId > 0) {
+	    if(sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d",
+		      &a, &b, &c, &d, &a1, &b1, &c1, &d1) == 8) {
+	      myGlobals.device[deviceId].sflowGlobals->sflowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
+	      myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr    = (a1 << 24) +(b1 << 16) +(c1 << 8) + d1;
+	      storePrefsValue(sfValue(deviceId, "ifNetMask", 1), value);
+	    } else if(sscanf(value, "%d.%d.%d.%d/%d", &a, &b, &c, &d, &a1) == 5) {
+	      myGlobals.device[deviceId].sflowGlobals->sflowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
+	      myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr    = 0xffffffff >> a1;
+	      myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr =~
+		myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr;
+	      storePrefsValue(sfValue(deviceId, "ifNetMask", 1), value);
+	    } else
+	      traceEvent(CONST_TRACE_ERROR, "SFLOW: HTTP request netmask parse error (%s)", value);
+	  }
+	} else if(strcmp(device, "whiteList") == 0) {
+	  /* Cleanup the http control char xform */
+	  char *fPtr=value, *tPtr=value;
+
+	  if(deviceId > 0) {
+	    while(fPtr[0] != '\0') {
+	      if((fPtr[0] == '%') && (fPtr[1] == '2')) {
+		*tPtr++ = (fPtr[2] == 'C') ? ',' : '/';
+		fPtr += 3;
+	      } else {
+		*tPtr++ = *fPtr++;
+	      }
+	    }
+	    tPtr[0]='\0';
+
+#ifdef CFG_MULTITHREADED
+	    accessMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex,
+			"handlesFlowHTTPrequest()w");
+#endif
+	    handleWhiteBlackListAddresses(value,
+					  myGlobals.device[deviceId].sflowGlobals->whiteNetworks,
+					  &myGlobals.device[deviceId].sflowGlobals->numWhiteNets,
+					  (char*)&workList,
+					  sizeof(workList));
+	    if(myGlobals.device[deviceId].sflowGlobals->sflowWhiteList != NULL)
+	      free(myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
+	    myGlobals.device[deviceId].sflowGlobals->sflowWhiteList=strdup(workList);
+#ifdef CFG_MULTITHREADED
+	    releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
+#endif
+	    storePrefsValue(sfValue(deviceId, "whiteList", 1),
+			    myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
+	  }
+	} else if(strcmp(device, "blackList") == 0) {
+	  /* Cleanup the http control char xform */
+	  char *fPtr=value, *tPtr=value;
+
+	  if(deviceId > 0) {
+	    while(fPtr[0] != '\0') {
+	      if((fPtr[0] == '%') && (fPtr[1] == '2')) {
+		*tPtr++ = (fPtr[2] == 'C') ? ',' : '/';
+		fPtr += 3;
+	      } else {
+		*tPtr++ = *fPtr++;
+	      }
+	    }
+	    tPtr[0]='\0';
+
+#ifdef CFG_MULTITHREADED
+	    accessMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex,
+			"handlesFlowHTTPrequest()b");
+#endif
+	    handleWhiteBlackListAddresses(value,
+					  myGlobals.device[deviceId].sflowGlobals->blackNetworks,
+					  &myGlobals.device[deviceId].sflowGlobals->numBlackNets,
+					  (char*)&workList,
+					  sizeof(workList));
+	    if(myGlobals.device[deviceId].sflowGlobals->sflowBlackList != NULL)
+	      free(myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
+	    myGlobals.device[deviceId].sflowGlobals->sflowBlackList=strdup(workList);
+#ifdef CFG_MULTITHREADED
+	    releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
+#endif
+	    storePrefsValue(sfValue(deviceId, "blackList", 1),
+			    myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
+	  }
+	}
+      }
+
+      url = strtok_r(NULL, "&", &strtokState);
+    }
+  }
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "SFLOW: deviceId=%d", deviceId);
+#endif
+
+  if(deviceId == -1) {
+    printHTMLheader("sFlow Device Configuration", NULL, 0);
+    sendString("<center><font color=red>WARNING: THIS PLUGIN IS WORK IN PROGRESS !</font></center>");
+    printsFlowDeviceConfiguration();
+    return;
+  } else if(deviceId < 0) {
+    /* Delete an existing device */
+    char value[128];
+    int readDeviceId;
+
+    deviceId = -deviceId;
+
+    if((deviceId < 0) || ((readDeviceId = mapsFlowDeviceToNtopDevice(deviceId)) == -1)) {
+      printHTMLheader("sFlow Configuration Error", NULL, 0);
+    sendString("<center><font color=red>WARNING: THIS PLUGIN IS WORK IN PROGRESS !</font></center>");
+      printFlagedWarning("<I>Unable to locate the specified device. Please activate the plugin first.</I>");
       return;
     }
 
-    traceEvent(CONST_TRACE_INFO, "SFLOW: Collector listening on port %d",
-	       myGlobals.sflowGlobals.sflowInPort);
+    traceEvent(CONST_TRACE_INFO, "SFLOW: Attempting to delete [deviceId=%d][sFlow device=%d]",
+	       deviceId, readDeviceId);
+
+    if(fetchPrefsValue(sfValue(deviceId, "knownDevices", 0), value, sizeof(value)) != -1) {
+      char *strtokState, *dev, value1[128];
+
+      value1[0] = '\0';
+
+      dev = strtok_r(value, ",", &strtokState);
+      while(dev != NULL) {
+	int _dev = atoi(dev);
+
+	if(_dev != deviceId) {
+	  if(value1[0] != '\0') strcat(value1, ",");
+	  strcat(value1, dev);
+	}
+
+	dev = strtok_r(NULL, ",", &strtokState);
+      }
+
+      storePrefsValue(sfValue(deviceId, "knownDevices", 0), value1);
+    }
+
+    termsFlowDevice(readDeviceId);
+
+    printHTMLheader("sFlow Device Configuration", NULL, 0);
+    sendString("<center><font color=red>WARNING: THIS PLUGIN IS WORK IN PROGRESS !</font></center>");
+    printsFlowDeviceConfiguration();
+    return;
+  } else if(deviceId == 0) {
+    /* Add new device */
+    char value[128];
+
+    if((fetchPrefsValue(sfValue(deviceId, "knownDevices", 0), value, sizeof(value)) != -1)
+       && (strlen(value) > 0)) {
+      char *strtokState, *dev, value1[128], buf[256];
+
+      traceEvent(CONST_TRACE_INFO, "SFLOW: knownDevices=%s", value);
+
+      value1[0] = '\0';
+
+      dev = strtok_r(value, ",", &strtokState);
+      while(dev != NULL) {
+	int _dev;
+
+	if(strlen(dev) > 0) {
+	  _dev = atoi(dev);
+
+	  strcat(value1, ",");
+	  strcat(value1, dev);
+
+	  if(_dev >= deviceId)
+	    deviceId = _dev+1;
+	}
+
+	dev = strtok_r(NULL, ",", &strtokState);
+      }
+
+      if(deviceId == 0) deviceId = 2;
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s,%d", value1, deviceId);
+
+      traceEvent(CONST_TRACE_INFO, "SFLOW: knownDevices=%s", buf);
+      storePrefsValue(sfValue(deviceId, "knownDevices", 0), buf);
+    } else {
+      deviceId = 2; /* 1 is reserved */
+      traceEvent(CONST_TRACE_INFO, "SFLOW: knownDevices=2");
+      storePrefsValue(sfValue(deviceId, "knownDevices", 0), "2");
+    }
+
+    if((deviceId = createsFlowDevice(deviceId)) <= 0) {
+      printHTMLheader("sFlow Configuration Error", NULL, 0);
+      sendString("<center><font color=red>WARNING: THIS PLUGIN IS WORK IN PROGRESS !</font></center>");
+      printFlagedWarning("<I>Unable to create a new sFlow device</I>");
+      return;
+    }
+  } else {
+    /* Existing device */
   }
 
-  if((myGlobals.sflowGlobals.sflowInSocket > 0) && (myGlobals.sflowGlobals.sflowDeviceId == -1)) {
-    myGlobals.sflowGlobals.sflowDeviceId = createDummyInterface(SFLOW_DEVICE_NAME);
-    setSflowInterfaceMatrix();
-    myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice = 1;
-  }
+  if(deviceId > 0) {
+    /* ****************************
+     * Print Configuration stuff  *
+     ****************************** */
+    printHTMLheader("sFlow Configuration", NULL, 0);
+    sendString("<center><font color=red>WARNING: THIS PLUGIN IS WORK IN PROGRESS !</font></center>");
+    printsFlowConfiguration(deviceId);
 
-  myGlobals.mergeInterfaces = 0; /* Use different devices */
+    sendString("<br><hr><p>\n");
 
-  if(myGlobals.sflowGlobals.sflowOutSocket == 0) {
-    char value[32];
+    if(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd > 0) {
+      /* ****************************
+       * Print statistics           *
+       ****************************** */
+      printSectionTitle("Flow Statistics");
 
-    myGlobals.sflowGlobals.sflowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    setsockopt(myGlobals.sflowGlobals.sflowOutSocket, SOL_SOCKET, SO_REUSEADDR,
-	       (char *)&sockopt, sizeof(sockopt));
+      sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
 
-    myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = 0;
-    myGlobals.sflowGlobals.sflowDest.sin_family      = AF_INET;
-    myGlobals.sflowGlobals.sflowDest.sin_port        = (int)htons(DEFAULT_SFLOW_COLLECTOR_PORT);
+      if(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd > 0)
+	printsFlowStatisticsRcvd(deviceId);
 
-    if(fetchPrefsValue("sflow.sflowDest", value, sizeof(value)) == -1)
-      storePrefsValue("sflow.sflowDest", "");
-    else if(value[0] != '\0')
-      myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
+      sendString("</table>\n</center>\n");
 
-    myGlobals.sflowGlobals.numSamplesToGo = atoi(DEFAULT_SFLOW_SAMPLING_RATE);
-  }
+      sendString("<p><table border=\"0\"><tr><td width=\"25%\" valign=\"top\" align=\"right\">"
+		 "<b>NOTES</b>:</td>\n"
+		 "<td><ul>"
+		 "<li>The virtual NIC, '" SFLOW_DEVICE_NAME "' is activated only when incoming "
+		 "flow capture is enabled.</li>\n"
+		 "<li>Once the virtual NIC is activated, it will remain available for the "
+		 "duration of the ntop run, even if you disable incoming flows.</li>\n"
+		 "<li>sFlow packets are associated with this separate, virtual device and are "
+		 "not mixed with captured packets.</li>\n"
+		 "<li>Activating incoming flows will override the command line -M | "
+		 "--no-interface-merge parameter for the duration of the ntop run.</li>\n"
+		 "<li>sFlow activation may (rarely) require ntop restart.</li>\n"
+		 "<li>You can switch the reporting device using Admin | Switch NIC, or this "
+		 "<a href=\"/" CONST_SWITCH_NIC_HTML "\" title=\"Switch NIC\">link</a>.</li>\n"
+		 "</ul></td>\n"
+		 "<td width=\"25%\">&nbsp;</td>\n</tr>\n</table>\n");
 
 #ifdef CFG_MULTITHREADED
-  if((!threadActive) && (myGlobals.sflowGlobals.sflowInSocket > 0))
-    createThread(&sFlowThread, sFlowMainLoop, NULL);
+      if(myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex.isLocked) {
+	sendString("<table><tr><td colspan=\"2\">&nbsp;</td></tr>\n"
+		   "<tr " TR_ON ">\n"
+		   "<th colspan=\"2\" "DARK_BG">Mutexes</th>\n"
+		   "</tr>\n");
+
+	sendString("<tr " TR_ON ">\n"
+		   "<th>List Mutex</th>\n<td><table>");
+	printMutexStatus(FALSE, &myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex,
+			 "White/Black list mutex");
+	sendString("</table><td></tr></table>\n");
+      }
 #endif
+    }
+  }
+
+  safe_snprintf(__FILE__, __LINE__, workList, sizeof(workList), "%s?device=%d",
+		sflowPluginInfo->pluginURLname, originalId);
+  
+  printPluginTrailer((myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd > 0) ?
+		     workList : NULL,
+                     "sFlow is a trademark of <a href=\"http://www.inmon.com/\" "
+                     "title=\"InMon home page\">InMon Corporation</a>");
+
+  printHTMLtrailer();
 }
 
 /* ****************************** */
 
-typedef struct sflowSample {
-  u_int32_t datagramVersion;
-  u_int32_t addressType;
-  u_int32_t agentAddress;
-  u_int32_t sequenceNo;
-  u_int32_t sysUpTime;
-  u_int32_t samplesInPacket;
-  u_int32_t sampleType;
-  u_int32_t sampleSequenceNo;
-  u_int32_t samplerId;
-  u_int32_t meanSkipCount;
-  u_int32_t samplePool;
-  u_int32_t dropEvents;
-  u_int32_t inputPort;
-  u_int32_t outputPort;
-  u_int32_t packet_data_tag;
-  u_int32_t headerProtocol;
-  u_int32_t sampledPacketSize;
-  u_int32_t headerLen;
-  u_char    packetData[DEFAULT_SNAPLEN];
-  u_int32_t extended_data_tag;
-} SflowSample;
+static void termsFlowDevice(int deviceId) {
+
+  traceEvent(CONST_TRACE_INFO, "SFLOW: terminating deviceId=%d", deviceId);
+
+  if(!pluginActive) return;
+
+  if(myGlobals.device[deviceId].activeDevice == 0) {
+    traceEvent(CONST_TRACE_WARNING, "SFLOW: deviceId=%d terminated already", deviceId);
+    return;
+  }
+
+  if(myGlobals.device[deviceId].sflowGlobals == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "SFLOW: deviceId=%d terminating a non-sFlow device", deviceId);
+    return;
+  }
+
+  if((deviceId >= 0) && (deviceId < myGlobals.numDevices)) {
+#ifdef CFG_MULTITHREADED
+    if(myGlobals.device[deviceId].sflowGlobals->threadActive) {
+      killThread(&myGlobals.device[deviceId].sflowGlobals->sflowThread);
+      myGlobals.device[deviceId].sflowGlobals->threadActive = 0;
+    }
+    tryLockMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex, "termsFlow");
+    deleteMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
+#endif
+
+    if(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0) {
+      closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+    }
+
+    free(myGlobals.device[deviceId].sflowGlobals);
+    myGlobals.device[deviceId].activeDevice = 0;
+  } else
+    traceEvent(CONST_TRACE_WARNING, "SFLOW: requested invalid termination of deviceId=%d", deviceId);
+}
 
 /* **************************************** */
 
-static void handleSflowPacket(u_char *_deviceId,
-			      const struct pcap_pkthdr *h,
-			      const u_char *p) {
-  SflowSample mySample;
+static void termsFlowFunct(void) {
+  char value[128];
+
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Terminating sFlow");
+
+  if((fetchPrefsValue(sfValue(0, "knownDevices", 0), value, sizeof(value)) != -1) && (strlen(value) > 0)) {
+    char *strtokState, *dev;
+
+    dev = strtok_r(value, ",", &strtokState);
+    while(dev != NULL) {
+      int deviceId = atoi(dev);
+
+      if((deviceId > 0) && ((deviceId = mapsFlowDeviceToNtopDevice(deviceId)) > 0)) {
+	termsFlowDevice(deviceId);
+      } else
+	traceEvent(CONST_TRACE_WARNING, "SFLOW: requested invalid termination of deviceId=%d", deviceId);
+
+      dev = strtok_r(NULL, ",", &strtokState);
+    }
+  } else
+    traceEvent(CONST_TRACE_INFO, "SFLOW: no devices to terminate (%s)", value);
+
+  traceEvent(CONST_TRACE_INFO, "SFLOW: Thanks for using ntop sFlow");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Done");
+  fflush(stdout);
+  pluginActive = 0;
+}
+
+/* **************************************** */
+
+#ifdef DEBUG_FLOWS
+
+static void handlesFlowPacket(u_char *_deviceId,
+				const struct pcap_pkthdr *h,
+				const u_char *p) {
   int sampledPacketSize;
   int deviceId, rc;
 
   if(myGlobals.rFileName != NULL) {
     /* ntop is reading packets from a file */
-
     struct ether_header ehdr;
     u_int caplen = h->caplen;
     u_int length = h->len;
     unsigned short eth_type;
+    u_int8_t flags = 0;
     struct ip ip;
-    struct udphdr up;
+
+    deviceId = 1; /* Dummy value */
+
+#ifdef DEBUG_FLOWS
+    if(0)
+      traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d]", caplen, length);
+#endif
 
     if(caplen >= sizeof(struct ether_header)) {
       memcpy(&ehdr, p, sizeof(struct ether_header));
@@ -1907,209 +4199,49 @@ static void handleSflowPacket(u_char *_deviceId,
 	u_int plen, hlen;
 	u_short sport, dport;
 
+#ifdef DEBUG_FLOWS
+	if(0)
+	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect");
+#endif
+
 	memcpy(&ip, p+sizeof(struct ether_header), sizeof(struct ip));
-	hlen = (u_int)ip.ip_hl * 4;
+	hlen =(u_int)ip.ip_hl * 4;
 	NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
 	plen = length-sizeof(struct ether_header);
 
+#ifdef DEBUG_FLOWS
+	if(0)
+	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect [deviceId=%d][sender=%s][proto=%d][len=%d][hlen=%d]",
+		     deviceId, intoa(ip.ip_src), ip.ip_p, plen, hlen);
+#endif
+
 	if(ip.ip_p == IPPROTO_UDP) {
-	  if(plen > (hlen+sizeof(struct udphdr))) {
-	    memcpy(&up, p+sizeof(struct ether_header)+hlen, sizeof(struct udphdr));
-	    sport = ntohs(up.uh_sport), dport = ntohs(up.uh_dport);
+	  if(plen >(hlen+sizeof(struct udphdr))) {
+	    char* rawSample    =(void*)(p+sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
+	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 
-	    if(dport == myGlobals.sflowGlobals.sflowInPort) {
-	      /* This is an sflow packet */
-	      SFSample sample;
+#ifdef DEBUG_FLOWS
+	    if(0)
+	      traceEvent(CONST_TRACE_INFO, "Rcvd from from %s [sflowGlobals=%x]", intoa(ip.ip_src),
+			 myGlobals.device[deviceId].sflowGlobals);
+#endif
 
-	      memset(&sample, 0, sizeof(sample));
-	      sample.rawSample    = (void*)(p+sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
-	      sample.rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
-	      sample.sourceIP     = ip.ip_src;
-
-	      receiveSflowSample(&sample);
-	    }
+	    myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd++;
+	    dissectFlow(rawSample, rawSampleLen, deviceId);
 	  }
 	}
+      } else {
+#ifdef DEBUG_FLOWS
+	if(0)
+	  traceEvent(CONST_TRACE_INFO, "Rcvd non-IP [0x%04X] packet to dissect", eth_type);
+#endif
       }
     }
   }
-
-  if(myGlobals.sflowGlobals.numSamplesToGo-- > 0) return;
-
-#ifdef WIN32
-  deviceId = 0;
-#else
-  deviceId = *_deviceId;
-#endif
-
-  sampledPacketSize = h->caplen < DEFAULT_SNAPLEN ? h->caplen : DEFAULT_SNAPLEN;
-
-  memset(&mySample, 0, sizeof(SflowSample));
-  mySample.datagramVersion   = htonl(INMDATAGRAM_VERSION2);
-  mySample.addressType       = htonl(INMADDRESSTYPE_IP_V4);
-  mySample.agentAddress      = htonl(myGlobals.device[deviceId].ifAddr.s_addr);
-  mySample.sequenceNo        = htonl(myGlobals.sflowGlobals.flowSampleSeqNo);
-  mySample.sysUpTime         = htonl(myGlobals.actTime);
-  mySample.samplesInPacket   = htonl(1);
-  mySample.sampleType        = htonl(FLOWSAMPLE);
-  mySample.sampleSequenceNo  = htonl(myGlobals.sflowGlobals.flowSampleSeqNo);
-  mySample.samplerId         = htonl(0); /*
-					   sFlowDataSource encoded as follows:
-					   The most significant byte of the
-					   source_id is used to indicate the
-					   type of sFlowDataSource
-					   (0 = ifIndex, 1 = smonVlanDataSource,
-					   2 = entPhysicalEntry) and the
-					   lower three bytes contain the
-					   relevant index value.
-					 */
-  mySample.meanSkipCount     = htonl(atoi(DEFAULT_SFLOW_SAMPLING_RATE));
-  mySample.samplePool        = htonl(myGlobals.device[deviceId].ethernetPkts.value);
-  mySample.dropEvents        = htonl(0);
-  mySample.inputPort         = htonl(0);
-  mySample.outputPort        = htonl(0);
-  mySample.packet_data_tag   = htonl(INMPACKETTYPE_HEADER);
-  mySample.headerProtocol    = htonl(1);
-  mySample.sampledPacketSize = htonl(sampledPacketSize);
-  mySample.headerLen         = htonl(sampledPacketSize);
-  memcpy(mySample.packetData, p, sampledPacketSize);
-  mySample.extended_data_tag = htonl(0); /* No extended data */
-
-  myGlobals.sflowGlobals.flowSampleSeqNo++;
-
-#if 1
-  if(myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr != 0) {
-    rc = sendto(myGlobals.sflowGlobals.sflowOutSocket, (const char*)&mySample, sizeof(mySample)+sampledPacketSize, 0,
-		(struct sockaddr *)&myGlobals.sflowGlobals.sflowDest, sizeof(myGlobals.sflowGlobals.sflowDest));
-
-    if(rc == 0)
-      if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sendto returned %d [errno=%d][sflowOutSocket=%d]",
-		 rc, errno, myGlobals.sflowGlobals.sflowOutSocket);
-  }
-#else
-  if(myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr != 0) {
-    debug = 1;
-    memset(&sample, 0, sizeof(sample));
-    sample.rawSample           = &mySample;
-    sample.rawSampleLen        = sizeof(mySample)+sampledPacketSize;
-    sample.sourceIP.s_addr     = 0;
-    receiveSflowSample(&sample);
-  }
-#endif
-
-  myGlobals.sflowGlobals.numSamplesToGo = atoi(DEFAULT_SFLOW_SAMPLING_RATE); /* reset value */
 }
 
-/* ****************************** */
-
-static int initsFlowFunct(void) {
-  char value[32];
-  int a, b, c, d, a1, b1, c1, d1;
-
-  setPluginStatus(NULL);
-
-#ifdef CFG_MULTITHREADED
-  threadActive = 0;
-#else
-  setPluginStatus("Disabled - requires POSIX thread support.");
-  return(-1);
 #endif
-
-  myGlobals.sflowGlobals.sflowInSocket = 0, debug = 0;
-  myGlobals.sflowGlobals.numSamplesReceived = 0,
-    myGlobals.sflowGlobals.initialPool = 0,
-    myGlobals.sflowGlobals.lastSample = 0;
-
-  memset(probeList, 0, sizeof(probeList));
-
-  if((fetchPrefsValue("sflow.ifNetMask", value, sizeof(value)) == -1)
-    || (sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d", &a, &b, &c, &d, &a1, &b1, &c1, &d1) != 8)) {
-    storePrefsValue("sflow.ifNetMask", "192.168.0.0/255.255.255.0");
-    myGlobals.sflowGlobals.sflowIfAddress.s_addr = 0xC0A80000;
-    myGlobals.sflowGlobals.sflowIfMask.s_addr    = 0xFFFFFF00;
-  } else {
-    myGlobals.sflowGlobals.sflowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
-    myGlobals.sflowGlobals.sflowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
-  }
-
-  if(fetchPrefsValue("sflow.sflowInPort", value, sizeof(value)) == -1)
-    storePrefsValue("sflow.sflowInPort", "0");
-  else
-    myGlobals.sflowGlobals.sflowInPort = atoi(value);
-
-  if(fetchPrefsValue("sflow.sflowDest", value, sizeof(value)) == -1) {
-    storePrefsValue("sflow.sflowDest", "0.0.0.0");
-    myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = 0;
-  } else
-    myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
-
-  if(fetchPrefsValue("sflow.debug", value, sizeof(value)) == -1)
-    storePrefsValue("sflow.debug", "0");
-  else
-    debug = atoi(value);
-
-  initSflowInSocket();
-
-  /* http://www.inmon.com/ */
-
-    if(myGlobals.sflowGlobals.sflowInPort > 0)
-      traceEvent(CONST_TRACE_INFO, "SFLOW: Welcome to sFlow: listening on UDP port %d",
-		 myGlobals.sflowGlobals.sflowInPort);
-
-  if(myGlobals.sflowGlobals.sflowDeviceId != -1)
-    myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice = 1;
-
-  fflush(stdout);
-  return(0);
-}
-
-/* ****************************** */
-
-static void termsFlowFunct(void) {
-
-  traceEvent(CONST_TRACE_INFO, "SFLOW: Thanks for using sFlow");
-
-#ifdef CFG_MULTITHREADED
-  if(threadActive) killThread(&sFlowThread);
-#endif
-
-  if(myGlobals.sflowGlobals.sflowInSocket > 0)  closeNwSocket(&myGlobals.sflowGlobals.sflowInSocket);
-  if(myGlobals.sflowGlobals.sflowOutSocket > 0) closeNwSocket(&myGlobals.sflowGlobals.sflowOutSocket);
-
-  if(myGlobals.sflowGlobals.sflowDeviceId != -1)
-    myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice = 0;
-
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Done");
-  fflush(stdout);
-}
-
-/* ****************************** */
-
-static PluginInfo sFlowPluginInfo[] = {
-  { 
-    VERSION, /* current ntop version */
-    "sFlowPlugin",
-    "This plugin is used to setup, activate and deactivate ntop's sFlow support.<br>"
-    "<b>ntop</b> can both collect and receive sFlow data. For more information about "
-    "sFlow, search for RFC 3176, 'InMon Corporation's sFlow: A Method for Monitoring "
-    "Traffic in Switched and Routed Networks'.<br>"
-    "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
-    "reports - <em>Remember to switch the reporting NIC via Admin | Switch NIC</em>.",
-    "2.2", /* version */
-    "<A HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
-    "sFlow", /* http://<host>:<port>/plugins/sFlowWatch */
-    0, /* Active by default */
-    1, /* Inactive setup */
-    initsFlowFunct,    /* InitFunc   */
-    termsFlowFunct,    /* TermFunc   */
-    handleSflowPacket, /* PluginFunc */
-    handlesFlowHTTPrequest,
-    NULL, /* no host creation/deletion handle */
-    "ip", /* no capture */
-    NULL /* no status */
-  }
-};
 
 /* ***************************************** */
 
@@ -2120,20 +4252,20 @@ PluginInfo* sflowPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Welcome to %s. (C) 2002-04 by Luca Deri",
-	     sFlowPluginInfo->pluginName);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Welcome to %s.(C) 2002-04 by Luca Deri",
+	     sflowPluginInfo->pluginName);
 
-  return(sFlowPluginInfo);
+  return(sflowPluginInfo);
 }
 
 /* This must be here so it can access the struct PluginInfo, above */
 static void setPluginStatus(char * status)
-   {
-       if (sFlowPluginInfo->pluginStatusMessage != NULL)
-           free(sFlowPluginInfo->pluginStatusMessage);
-       if (status == NULL) {
-           sFlowPluginInfo->pluginStatusMessage = NULL;
-       } else {
-           sFlowPluginInfo->pluginStatusMessage = strdup(status);
-       }
-   }
+{
+  if(sflowPluginInfo->pluginStatusMessage != NULL)
+    free(sflowPluginInfo->pluginStatusMessage);
+  if(status == NULL) {
+    sflowPluginInfo->pluginStatusMessage = NULL;
+  } else {
+    sflowPluginInfo->pluginStatusMessage = strdup(status);
+  }
+}

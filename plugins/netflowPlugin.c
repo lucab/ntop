@@ -2433,7 +2433,7 @@ static int mapNetFlowDeviceToNtopDevice(int netFlowDeviceId) {
 
 static void handleNetflowHTTPrequest(char* _url) {
   char workList[1024], *url;
-  int deviceId = -1;
+  int deviceId = -1, originalId = -1;
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
@@ -2458,7 +2458,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 	unescape(value, sizeof(value), _value);
 	  
 	if(strcmp(device, "device") == 0) {
-	  deviceId = atoi(value);
+	  originalId = deviceId = atoi(value);
 
 	  if((deviceId > 0) && ((deviceId = mapNetFlowDeviceToNtopDevice(deviceId)) == -1)) {
 	    printHTMLheader("NetFlow Configuration Error", NULL, 0);
@@ -2755,8 +2755,11 @@ static void handleNetflowHTTPrequest(char* _url) {
 	       "<td width=\"10%\">&nbsp;</td>\n</tr>\n</table>\n");
   }
 
+  safe_snprintf(__FILE__, __LINE__, workList, sizeof(workList), "%s?device=%d",
+		netflowPluginInfo->pluginURLname, originalId);
+  
   printPluginTrailer((myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd > 0) ?
-		     netflowPluginInfo->pluginURLname : NULL,
+		     workList : NULL,
                      "NetFlow is a trademark of <a href=\"http://www.cisco.com/\" "
                      "title=\"Cisco home page\">Cisco Systems</a>");
 

@@ -392,6 +392,10 @@ void resetDevice(int devIdx) {
     free(myGlobals.device[devIdx].netflowGlobals);
   myGlobals.device[devIdx].netflowGlobals = NULL;
 
+  if(myGlobals.device[devIdx].sflowGlobals != NULL)
+    free(myGlobals.device[devIdx].sflowGlobals);
+  myGlobals.device[devIdx].sflowGlobals = NULL;
+
   len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
 
   if(myGlobals.device[devIdx].ipProtoStats == NULL)

@@ -1187,65 +1187,6 @@ typedef struct flow_ver9_templateids {
 
 /* ******************************************* */
 
-/* **************************************
-
-   +------------------------------------+
-   |           nFlow Header             |
-   +------------------------------------+
-   |           nFlow Flow 1             |
-   +------------------------------------
-   |           nFlow Flow 2             |
-   +------------------------------------+
-   ......................................
-   +------------------------------------
-   |           nFlow Flow n             |
-   +------------------------------------+
-
-   NOTE: nFlow records are sent in gzip format
-
-   ************************************** */
-
-#define NFLOW_SUM_LEN             16
-#define NFLOW_SIZE_THRESHOLD    8192
-#define MAX_PAYLOAD_LEN         1400
-#define MAX_HASH_MUTEXES          32
-
-/* nFlow Header */
-typedef struct nflow_ver1_hdr_ext {
-  /* NetFlow v5 header-like */
-  u_int16_t version;         /* Current version=1 (nFlow v1) */
-  u_int16_t count;           /* The number of records in PDU. */
-  u_int32_t sysUptime;       /* Current time in msecs since router booted */
-  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
-  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
-  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
-  /* nFlow Extensions */
-  u_int32_t sourceId;        /* Source id */
-  u_int16_t sampleRate;      /* Sampling rate */
-  u_int16_t pad;             /* Not Used */
-  u_char    md5Sum[NFLOW_SUM_LEN];      /* MD5 summary */
-} NflowV1Header;
-
-typedef struct nflow_flow_item {
-  u_int16_t fieldType;
-  u_int16_t fieldLen;
-  char      *flowData;
-} NflowV1FlowItem;
-
-/* nFlow Flow */
-typedef struct nflow_flow {
-  u_int16_t flowsetLen;
-} NflowV1FlowRecord;
-
-#define NFLOW_VERSION        24 /* nFlow 1.0 */
-
-typedef struct flowTypes {
-  u_int16_t templateId;
-  u_int16_t templateLen;
-  u_int16_t templateType; /* 0=number, 1=IPv4 */
-  char      *templateDescr;
-} FlowTypes;
-
 #define NUM_TEMPLATES 88
 
 typedef struct flowSetV9 {
@@ -1278,7 +1219,6 @@ typedef struct netFlowGlobals {
     numDstNetFlowsEntryFailedBlackList, numDstNetFlowsEntryFailedWhiteList,
     numDstNetFlowsEntryAccepted;
   u_long numNetFlowsV9TemplRcvd, numNetFlowsV9BadTemplRcvd, numNetFlowsV9UnknTemplRcvd;
-  u_long numNflowFlowsRcvd, numNflowFlowsBadTemplRcvd, numNflowFlowsBadVersRcvd;
 
   /* Stats */
   ProbeInfo probeList[MAX_NUM_PROBES];
@@ -1292,7 +1232,6 @@ typedef struct netFlowGlobals {
   HostTraffic *dummyHost;
   u_int32_t flowIgnoredLowPort, flowIgnoredHighPort, flowAssumedFtpData;
   Counter flowIgnoredLowPortBytes, flowIgnoredHighPortBytes, flowAssumedFtpDataBytes;
-  Counter nFlowTotCompressedSize, nFlowTotUncompressedSize; 
   
   FlowSetV9 *templates;
 
@@ -1308,6 +1247,48 @@ typedef struct netFlowGlobals {
   char tempNFFname[CONST_FILEDESCRIPTORBUG_COUNT][LEN_MEDIUM_WORK_BUFFER];
 #endif
 } NetFlowGlobals;
+
+/* *********************************** */
+
+typedef struct sFlowGlobals {
+  u_char sflowDebug;
+
+  /* Flow reception */
+  AggregationType sflowAggregation;
+  int sflowInSocket, sflowDeviceId;
+  u_char sflowAssumeFTP;
+  u_short sflowInPort;
+  struct in_addr sflowIfAddress, sflowIfMask;
+  char *sflowWhiteList, *sflowBlackList;
+  u_long numsFlowsPktsRcvd;
+  u_long numsFlowsV2Rcvd, numsFlowsV4Rcvd, numsFlowsV5Rcvd, numsFlowsProcessed;
+  u_long numsFlowsRcvd, lastNumsFlowsRcvd;
+  u_long numBadsFlowsVersionsRcvd, numBadFlowReality;
+  u_long numSrcsFlowsEntryFailedBlackList, numSrcsFlowsEntryFailedWhiteList,
+    numSrcsFlowsEntryAccepted,
+    numDstsFlowsEntryFailedBlackList, numDstsFlowsEntryFailedWhiteList,
+    numDstsFlowsEntryAccepted;
+
+  /* Stats */
+  ProbeInfo probeList[MAX_NUM_PROBES];
+  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], blackNetworks[MAX_NUM_NETWORKS][3];
+  u_short numWhiteNets, numBlackNets;
+  u_int32_t flowIgnoredZeroPort, flowIgnoredsFlow, flowProcessed;
+  Counter flowIgnoredsFlowBytes;
+  Counter flowProcessedBytes;
+  u_int flowIgnored[MAX_NUM_IGNOREDFLOWS][6]; /* src, sport, dst, dport, count, bytes */
+  u_short nextFlowIgnored;
+  HostTraffic *dummyHost;
+  
+#ifdef CFG_MULTITHREADED
+  pthread_t sflowThread;
+  int threadActive;
+  PthreadMutex whiteblackListMutex;
+#endif
+  
+  u_long numSamplesReceived, initialPool, lastSample;
+  u_int32_t flowSampleSeqNo, numSamplesToGo;
+} SflowGlobals;
 
 /* *********************************** */
 
@@ -1474,9 +1455,9 @@ typedef struct ntopInterface {
   u_short numFcSessions, maxNumFcSessions;
   TrafficEntry** fcTrafficMatrix; /* Subnet traffic Matrix */
   struct hostTraffic** fcTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
-
-  /* NetFlow */
-  NetFlowGlobals *netflowGlobals;
+  
+  NetFlowGlobals *netflowGlobals;  /* NetFlow */
+  SflowGlobals *sflowGlobals;      /* sFlow */
 } NtopInterface;
 
 /* *********************************** */
@@ -1853,17 +1834,6 @@ typedef enum {
   showHostFcSessions
 } FcHostsDisplayPolicy;
 
-/* *********************************** */
-
-typedef struct sFlowGlobals {
-  int sflowOutSocket, sflowInSocket, sflowDeviceId;
-  struct in_addr sflowIfAddress, sflowIfMask;
-  u_short sflowInPort;
-  u_long numSamplesReceived, initialPool, lastSample;
-  u_int32_t flowSampleSeqNo, numSamplesToGo;
-  struct sockaddr_in sflowDest;
-} SflowGlobals;
-
 /* *************************************************************** */
 
 #define BROADCAST_HOSTS_ENTRY    0
@@ -2222,9 +2192,6 @@ typedef struct ntopGlobals {
 #endif
 
   int numChildren;
-
-  /* sFlow */
-  SflowGlobals sflowGlobals;
 
   /* rrd */
   char *rrdPath;

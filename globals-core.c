@@ -456,11 +456,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;
 
-  /* sFlow */
-  myGlobals.sflowGlobals.sflowDeviceId = -1;
-  myGlobals.sflowGlobals.sflowInPort   = 0;
-  myGlobals.sflowGlobals.sflowInSocket = 0;
-
 #ifdef CFG_MULTITHREADED
   myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
 #endif

@@ -2004,13 +2004,13 @@
 /*
  * Default port to use for netflow.
  */
-#define DEFAULT_NETFLOW_PORT_STR            "2055"
+#define DEFAULT_NETFLOW_PORT_STR   "2055"
 
 /* 
- * Default port to use for sflow.
+ * Default port to use for sFlow.
  */
-#define DEFAULT_SFLOW_COLLECTOR_PORT_STR    "6343"
-#define DEFAULT_SFLOW_COLLECTOR_PORT        atoi(DEFAULT_SFLOW_COLLECTOR_PORT_STR)
+#define DEFAULT_SFLOW_PORT_STR    "6343"
+#define DEFAULT_SFLOW_PORT        atoi(DEFAULT_SFLOW_COLLECTOR_PORT_STR)
 
 /*
  *  Sampling rate - sflow samples every n-th packet
