@@ -2805,6 +2805,20 @@ A. If you believe the filter is syntactically correct then it's likely that the
    Libpcap you have used has been compiled using an old non-reentrant version of
    flex.  Please make sure you're using version 2.5.4 or above.
 
+Q. Can you give some additional examples of filters?
+A. man tcpdump -- see "expression"
+
+   A couple of simple examples, courtesy of B. Loic:
+
+       -B "host not 192.168.1.100 and not 192.168.1.101"
+
+   to exclude hosts 192.168.1.100 and 192.168.1.101 from tracking (FQDN 
+   such as www.yahoo.com will work too). 
+
+   If you need to exclude a full IP range, you will want to use something like
+
+        -B "net not 192.168.1.0/24" 
+
 
 --------------------------------------------------------------------------------
 -----Running - Web Server-------------------------------------------------------
