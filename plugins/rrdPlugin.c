@@ -531,11 +531,15 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   char path[512], *argv[32], cmd[64];
   struct stat statbuf;
-  int argc = 0, rc, createdCounter = 0;
+  int argc = 0, rc, createdCounter = 0, i;
 
   if(value == 0) return;
 
   snprintf(path, sizeof(path), "%s%s.rrd", hostPath, key);
+
+  /* Avoid path problems */
+  for(i=strlen(hostPath); i<strlen(path); i++)
+    if(path[i] == '/') path[i]='_';
 
 #ifdef WIN32
   revertSlash(path, 0);
