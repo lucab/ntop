@@ -370,6 +370,9 @@ extern void updateElementHash(ElementHash **list, u_short srcId, u_short dstId,
 			      u_int32_t numPkts, u_int32_t numBytes);
 extern void allocateElementHash(int deviceId, u_short hashType);
 extern u_int numActiveSenders(int deviceId);
+#ifndef HAVE_GETOPT_LONG
+#include "getopt.h"
+#endif
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

@@ -1174,7 +1174,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #ifdef HAVE_GETOPT_LONG
 			 "present"
 #else
-			 "absent"
+			 "absent - provided in util.c"
 #endif
 			 );
 

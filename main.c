@@ -28,10 +28,10 @@
 /*
   Ntop options list
   -- converted to getopts_long, Burton M. Strauss III (BStrauss@acm.org)
+  -- if getopt_long isn't provided by the compiler (glibc), we have our own version in util.c
 */
-#ifdef HAVE_GETOPT_LONG
+
 #include <getopt.h>
-#endif
 
 #if defined(WIN32) && defined(__GNUC__)	/* mingw compiler */
  /* we're using the winpcap getopt() implementation
@@ -63,8 +63,6 @@ static char __see__ []    =
   along with this program. If not, write to the Free Software\n\
   Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.";
 
-
-#ifdef HAVE_GETOPT_LONG
 
 static struct option const long_options[] = {
 
@@ -158,9 +156,6 @@ static struct option const long_options[] = {
   {NULL, 0, NULL, 0}
 };
 
-#endif /* HAVE_GETOPT_LONG */
-
-
 /*
  * Hello World! This is ntop speaking...
  */
@@ -182,7 +177,6 @@ void usage (FILE * fp) {
 
   fprintf(fp, "\nUsage: %s [OPTION]\n", myGlobals.program_name);
 
-#ifdef HAVE_GETOPT_LONG
   fprintf(fp, "    [-a <path>      | --access-log-path <path>]           Path for ntop web server access log\n");
   fprintf(fp, "    [-b             | --disable-decoders]                 Disable protocol decoders\n");
   fprintf(fp, "    [-c             | --sticky-hosts]                     Idle hosts are not purged from hash\n");
@@ -264,77 +258,6 @@ void usage (FILE * fp) {
   fprintf(fp, "    [--ssl-watchdog]                                      Use ssl watchdog (NS6 problem)\n");
 #endif /* PARM_SSLWATCHDOG */
 
-#else /* !HAVE_GETOPT_LONG */
-
-  fprintf(fp, "    [-a <path> path for ntop web server access log]\n");
-  fprintf(fp, "    [-b (disable protocol decoders)]\n");
-
-  fprintf(fp, "    [-c <sticky hosts: idle hosts are not purged from hash>]\n");
-
-#ifndef WIN32
-  fprintf(fp, "    [-d (run ntop in daemon mode)]\n");
-#endif
-
-#ifndef MICRO_NTOP
-  fprintf(fp, "    [-e <max # table rows)]\n");
-#endif
-
-  fprintf(fp, "    [-f <traffic dump file (see tcpdump)>]\n");
-
-#ifndef WIN32
-  fprintf(fp, "    [-i <interface>]\n");
-#else
-  fprintf(fp, "    [-i <interface index>]\n");
-#endif
-
-  fprintf(fp, "    [-o (do not trust MAC addresses but just IPs)]\n");
-  fprintf(fp, "    [-k <show kernel filter expression in extra frame>]\n");
-  fprintf(fp, "    [-l <path> (dump packets captured on a file: debug only!)]\n");
-  fprintf(fp, "    [-m <local addresses (see man page)>]\n");
-  fprintf(fp, "    [-n (numeric IP addresses)]\n");
-  fprintf(fp, "    [-p <IP protocols to monitor> (see man page)]\n");
-  fprintf(fp, "    [-q <create file ntop-suspicious-pkts.XXX.pcap>]\n");
-  fprintf(fp, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
-  fprintf(fp, "    [-t (trace level [0-5])]\n");
-  fprintf(fp, "    [-s Disable promiscuous mode]\n");
-#ifndef WIN32
-  fprintf(fp, "    [-u <userid> | <username> (see man page)]\n");
-#endif
-
-  fprintf(fp, "    [-w <HTTP port>]\n");
-  fprintf(fp, "    [-z Disable sessions tracking]\n");
-  fprintf(fp, "    [-A <Ask for admin user password and exit]\n");
-  fprintf(fp, "    [-B <filter expression (like tcpdump)>]\n");
-  fprintf(fp, "    [-D <Internet domain name>]\n");
-
-#ifndef WIN32
-  fprintf(fp, "    [-E <enable lsof/nmap integration (if present)>]\n");
-#endif
-
-  fprintf(fp, "    [-F <flow specs (see man page)>]\n");
-
-#ifndef WIN32
-  fprintf(fp, "    [-K <enable application debug (no fork() is used)>]\n");
-#ifdef USE_SYSLOG
-  fprintf(fp, "    [-L <use syslog instead of stdout>]\n");
-#endif /* USE_SYSLOG */
-#endif
-
-  fprintf(fp, "    [-M <don't merge network interfaces (see man page)>]\n");
-  fprintf(fp, "    [-N <don't use nmap if installed>]\n");
-  fprintf(fp, "    [-P <path for db-files>]\n");
-  fprintf(fp, "    [-S <store mode> (store persistently host stats)]\n");
-  fprintf(fp, "    [-U <mapper.pl URL> | \"\" for not displaying host location]\n");
-
-#ifdef HAVE_OPENSSL
-  fprintf(fp, "    [-W <HTTPS port>]\n");
-#endif
-
-#endif /* HAVE_GETOPT_LONG */
-
-#ifdef WIN32
-  printAvailableInterfaces();
-#endif
 }
 
 
@@ -362,11 +285,7 @@ static int parseOptions(int argc, char* argv []) {
   /*
    * Parse command line options to the application via standard system calls
    */
-#ifdef HAVE_GETOPT_LONG
   while((opt = getopt_long(argc, argv, theOpts, long_options, (int *) 0)) != EOF) {
-#else
-  while((opt = getopt(argc, argv, theOpts)) != EOF) {
-#endif
     switch (opt) {
     case 'a': /* ntop access log path */
       stringSanityCheck(optarg);
