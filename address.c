@@ -229,7 +229,8 @@ static void resolveAddress(struct in_addr *hostAddr,
 			  sizeof(struct in_addr), AF_INET,
 			  &error_num);
 #else /* default */
-#ifdef HAVE_GETHOSTBYADDR_R
+#if defined(HAVE_GETHOSTBYADDR_R) && !defined(linux)
+    /* Linux seems to ha some problems with gethostbyaddr_r */
 #ifdef __sun
     hp = gethostbyaddr_r((const char*)&theAddr, sizeof(struct in_addr), 
 			 AF_INET, &_hp, buffer,
@@ -241,6 +242,11 @@ static void resolveAddress(struct in_addr *hostAddr,
 #else
     hp = (struct hostent*)gethostbyaddr((char*)&theAddr, sizeof(struct in_addr), AF_INET);
 #endif
+#endif
+    
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Called gethostbyaddr(): 0x%X [%s]", 
+	       hp, hp != NULL ? (char*)hp->h_name : "");
 #endif
 
     if (
