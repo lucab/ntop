@@ -9,7 +9,7 @@
 .TP 1.2
 .B "\\$1 | \\$2"
 ..
-.TH NTOP 8 "April 2003 (ntop 2.2)"
+.TH NTOP 8 "April 2003 (ntop 2.2.1)"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
@@ -45,7 +45,6 @@ ntop \- display top network users
 .IR "password" ]
 .RB [ -B | --filter-expression
 .IR "expression" ]
-.RB [ -C | --large-network ]
 .RB [ -D | --domain 
 .IR <name> ]
 .RB [ -F | --flow-spec
@@ -60,9 +59,7 @@ ntop \- display top network users
 .RB [ -U | --mapper 
 .IR <URL> ]
 .RB [ -V | --version]
-.RB [ --throughput-bar-chart ]
 .RB [ --dynamic-purge-limits ]
-.RB [ --reuse-rrd-graphics ]
 .RB [ --p3p-cp ]
 .RB [ --p3p-uri ]
 .RB [ --disable-stopcap ]
@@ -393,14 +390,6 @@ See the 'expression' section of the
 .B tcpdump
 man page for further information about BPF filters.
 
-.It2 -C --large-network
-This flag is a hint for 
-.B ntop
-: as the network being analyzed will be large, 
-.B ntop 
-will build a more efficient hash and save memory by disabling some features 
-(e.g traffic distribution during the day) that take up a large amount of memory.
-
 .It2 -D --domain
 This identifies the local domain suffix, e.g. ntop.org.  It may be necessary, if
 .B ntop
@@ -497,9 +486,6 @@ If the user specifies '-W 0', HTTPS support is disabled.  This is the default (d
 
 For more information, see the -w parameter above.
 
-.It --throughput-bar-chart
-Format the throughput charts with bars instead of as an area chart.
-
 .It --dynamic-purge-limits
 Enable a dynamic adjustment of the idle host purge limits.  Normally the purge is limited
 to 1/3 of the hash size or 512 hosts (whichever is smaller) per cycle.  This switch allows
@@ -507,10 +493,6 @@ to 1/3 of the hash size or 512 hosts (whichever is smaller) per cycle.  This swi
 to dynamically adjust the limit so that the purge takes between 0.5 and 5.0 seconds
 (but the minimum dynamic limit is 64 per cycle).  These values may be adjusted via compile
 time constants.
-
-.It --reuse-rrd-graphics
-Enable the reuse of rrd graphics if appropriate (no rrd updates in the interim).  
-By default, with the flag not set, the graphics are recreated for each request.
 
 .It --p3p-cp
 Tells ntop what to return in the p3p header, cp="xxxx".
