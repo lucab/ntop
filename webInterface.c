@@ -2105,10 +2105,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "-u | --user", buf);
 #endif
 
-  printParameterConfigInfo(textPrintFlag, "-z | --disable-sessions",
-                           myGlobals.enableSessionHandling == 1 ? "No" : "Yes",
-                           "No");
-
   if (myGlobals.webPort == 0) {
     strcpy(buf, "Inactive");
   } else if (myGlobals.webAddr != 0) {
