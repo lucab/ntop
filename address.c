@@ -518,17 +518,19 @@ char* intoa(struct in_addr addr) {
 
 /* ******************************* */
 
-/* This function automatically updated the instance name */
-
-void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
+void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   unsigned int addr = hostIpAddress.s_addr;
   char buf[32];
   char tmpBuf[32];
   datum key_data;
   datum data_data;
 
+  if(buffer == NULL) return;
+
+  buf[0] = '\0';
+
   if((addr == INADDR_BROADCAST) || (addr == 0x0)) {
-    updateHostNameInfo(hostIpAddress.s_addr, _intoa(hostIpAddress, buf, sizeof(buf)), actualDeviceId);
+    strcpy(buffer, "0.0.0.0");
     return;
   }
 
@@ -558,7 +560,7 @@ void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
 #ifdef GDBM_DEBUG
     traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]", retrievedAddress->symAddress, tmpBuf);
 #endif
-    updateHostNameInfo(hostIpAddress.s_addr, retrievedAddress->symAddress, actualDeviceId);
+    strcpy(buffer, retrievedAddress->symAddress);
     free(data_data.dptr);
   } else {
 #ifdef GDBM_DEBUG
@@ -568,9 +570,29 @@ void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
       traceEvent(TRACE_ERROR, "Unable to retrieve %s", tmpBuf);
 #endif
 
-    /* It might be that the size of the retieved data is wrong */
+    buffer[0] = '\0';
+    /* It might be that the size of the retrieved data is wrong */
     if(data_data.dptr != NULL) free(data_data.dptr);
+  }
 
+#ifdef DEBUG
+  traceEvent(TRACE_ERROR, "fetchAddressFromCache(%s) returned '%s'",
+	     _intoa(hostIpAddress, buf, sizeof(buf)), buffer);
+#endif
+}
+
+/* ******************************* */
+
+/* This function automatically updates the instance name */
+
+void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
+  char buf[MAX_HOST_SYM_NAME_LEN+1];
+
+  fetchAddressFromCache(hostIpAddress, buf);
+
+  if(buf[0] != '\0') {
+    updateHostNameInfo(hostIpAddress.s_addr, buf, actualDeviceId);
+  } else {
 #ifndef MULTITHREADED
     resolveAddress(&hostIpAddress, 0);
 #else

@@ -33,7 +33,8 @@ void formatUsageCounter(UsageCounter usageCtr,
 			int actualDeviceId) {
   char buf[BUF_SIZE];
   int i, sendHeader=0;
-
+  HostTraffic el;
+  
   if(topValue == 0) {
     /* No percentage is printed */
     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
@@ -51,24 +52,57 @@ void formatUsageCounter(UsageCounter usageCtr,
 		formatPkts(usageCtr.value), pctg) < 0)
       BufferOverflow();
     sendString(buf);
-
   }
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
     if((usageCtr.peersIndexes[i] != NO_PEER)
        && (usageCtr.peersIndexes[i] != 0 /* Safety check: broadcast */)) {
-      struct hostTraffic *el1;
+      datum key_data;
+      datum data_data;
+      char buf[128];
 
-      el1 = myGlobals.device[actualReportDeviceId].
-	hash_hostTraffic[checkSessionIdx(usageCtr.peersIndexes[i])];
+      sprintf(buf, "%u", usageCtr.peersIndexes[i]);
+      key_data.dptr  = buf;
+      key_data.dsize = strlen(buf)+1;
 
-      if(el1 != NULL) {
-       if(!sendHeader) {
-         sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
-         sendHeader = 1;
-       }
-       sendString("\n<li>");
-       sendString(makeHostLink(el1, 0, 0, 0));
+#ifdef MULTITHREADED
+      accessMutex(&myGlobals.gdbmMutex, "formatUsageCounter");
+#endif
+      data_data = gdbm_fetch(myGlobals.serialCache, key_data);
+#ifdef MULTITHREADED
+      releaseMutex(&myGlobals.gdbmMutex);
+#endif
+      
+      if(data_data.dptr != NULL) {
+	if(!sendHeader) {
+	  sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
+	  sendHeader = 1;
+	}
+
+	sendString("\n<li>");
+	
+	memset(&el, 0, sizeof(el));
+	if(strlen(data_data.dptr) == 17) /* MAC Address */ {
+	  strcpy(el.ethAddressString, data_data.dptr);
+	  el.hostIpAddress.s_addr = 0x1234; /* dummy */
+	} else {
+	  strcpy(el.hostNumIpAddress, data_data.dptr);
+	  el.hostIpAddress.s_addr = htonl(inet_addr(el.hostNumIpAddress));
+	  /* traceEvent(TRACE_INFO, "---------------"); */
+	  fetchAddressFromCache(el.hostIpAddress, el.hostSymIpAddress);
+	  /* traceEvent(TRACE_INFO, "==============="); */
+	  if(strcmp(el.hostSymIpAddress, el.hostNumIpAddress) == 0) {
+	    char sniffedName[MAXDNAME];
+
+	    if(getSniffedDNSName(el.hostNumIpAddress, sniffedName, sizeof(sniffedName)))
+	      strcpy(el.hostSymIpAddress, sniffedName);
+	  }
+	}
+
+	sendString(makeHostLink(&el, 0, 0, 0));
+	free(data_data.dptr);
+      } else {
+	traceEvent(TRACE_INFO, "Unable to find serial %s", buf);
       }
     }
 
@@ -284,7 +318,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
   } else {
     arrow[1] = "";  theAnchor[1] = htmlAnchor1;
   }
-  
+
   if(abs(column) == 0) {
     arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;
   } else {
@@ -381,7 +415,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     break;
 
   case 1: /* STR_SORT_DATA_RECEIVED_IP */
-  case 6: /* STR_SORT_DATA_SENT_IP */   
+  case 6: /* STR_SORT_DATA_SENT_IP */
     sendString("<CENTER>\n");
     if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
 		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
@@ -2387,20 +2421,17 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       snprintf(buf1, sizeof(buf1), " (%s)", sniffedName);
   }
 
-  if(el->hostSymIpAddress[0] == '\0') {
-    if(snprintf(buf, sizeof(buf), "Info about host %s",
-		el->ethAddressString) < 0)
+  if(el->hostSymIpAddress[0] != '\0') {
+    if(snprintf(buf, sizeof(buf), "Info about host"
+		" <A HREF=http://%s/>%s %s</A>\n", el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
+      BufferOverflow();
+  } else if(el->hostNumIpAddress[0] != '\0') {
+    if(snprintf(buf, sizeof(buf), "Info about host"
+		" <A HREF=http://%s/>%s %s</A>\n", el->hostNumIpAddress, el->hostNumIpAddress, buf1) < 0)
       BufferOverflow();
   } else {
-    if(el->hostNumIpAddress[0] == '\0') {
-      if(snprintf(buf, sizeof(buf), "Info about host %s", el->hostSymIpAddress) < 0)
-	BufferOverflow();
-    } else {
-      if(snprintf(buf, sizeof(buf), "Info about host"
-		  " <A HREF=http://%s/>%s %s</A>\n",
-		  el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
-	BufferOverflow();
-    }
+    if(snprintf(buf, sizeof(buf), "Info about host %s",	el->ethAddressString) < 0)
+      BufferOverflow();
   }
 
 #ifdef MULTITHREADED

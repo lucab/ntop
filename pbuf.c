@@ -196,15 +196,13 @@ static int handleIP(u_short port,
 
 /* ************************************ */
 
-static void addContactedPeers(u_int senderIdx, u_int receiverIdx, int actualDeviceId) {
+static void addContactedPeers(HostTraffic *sender,   u_int senderIdx, 
+			      HostTraffic *receiver, u_int receiverIdx,
+			      int actualDeviceId) {
   short i, found;
-  HostTraffic *sender, *receiver;
 
   if(senderIdx == receiverIdx)
     return;
-
-  sender = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(senderIdx)];
-  receiver = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(receiverIdx)];
 
   /* ******************************* */
 
@@ -579,7 +577,7 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
   dstHost->pktRcvd++;
 
   if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
-    addContactedPeers(srcHostIdx, dstHostIdx, actualDeviceId);
+    addContactedPeers(srcHost, srcHostIdx, dstHost, dstHostIdx, actualDeviceId);
 }
 
 /* ************************************ */

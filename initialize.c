@@ -310,6 +310,7 @@ void initCounters(int _mergeInterfaces) {
   FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &myGlobals.broadcastEntry->flags);
 
   myGlobals.broadcastEntryIdx = 0;
+  myGlobals.serialCounter     = 1 /* 0 is reserved for broadcast */;
 
   if(myGlobals.trackOnlyLocalHosts) {
     myGlobals.otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
@@ -465,7 +466,28 @@ void initGdbm(void) {
 
     traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
     exit(-1);
- }
+  }
+  
+  /* ************************************************ */
+
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/serialCache.db", myGlobals.dbPath) < 0)
+    BufferOverflow();
+
+  unlink(tmpBuf); /* Delete the old one (if present) */
+  myGlobals.serialCache = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+
+  if(myGlobals.serialCache == NULL) {
+#if defined(WIN32) && defined(__GNUC__)
+    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
+	       tmpBuf, "unknown gdbm errno");
+#else
+    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
+	       tmpBuf, gdbm_strerror(gdbm_errno));
+#endif
+    exit(-1);
+  }
+  
+  /* ************************************************ */
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", myGlobals.dbPath) < 0)
@@ -484,8 +506,6 @@ void initGdbm(void) {
     traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
 	       tmpBuf, gdbm_strerror(gdbm_errno));
 #endif
-
-    traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
     exit(-1);
   } else {
     if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", myGlobals.dbPath) < 0)
@@ -512,6 +532,7 @@ void initGdbm(void) {
   }
 }
 
+/* ************************************************************ */
 
 /*
  * Initialize all the threads used by ntop to:

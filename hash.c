@@ -20,7 +20,7 @@
 
 #include "ntop.h"
 
-#define MIN_NUM_USES   5
+#define MIN_NUM_USES   1
 
 /* ******************************* */
 
@@ -130,196 +130,6 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
       }
     } /* while */
   }
-}
-
-/* **************************************** */
-
-static int _checkIndex(HostTraffic **flaggedHosts, u_int flaggedHostsLen, u_int idx,
-		       char *fileName, int fileLine) {
-  if(idx == NO_PEER) {
-    return(0);
-  } else if(idx > flaggedHostsLen) {
-    traceEvent(TRACE_WARNING, "WARNING: index %u out of range 0-%u [%s:%d]",
-	     idx, flaggedHostsLen, fileName, fileLine);
-    return(0);
-  } else
-    return(flaggedHosts[idx] == NULL ? 0 : 1);
-}
-
-#define checkIndex(a) _checkIndex(flaggedHosts, flaggedHostsLen, a, __FILE__, __LINE__)
-
-/* **************************************** */
-
-static int _checkUsageCounter(HostTraffic **flaggedHosts, u_int flaggedHostsLen,
-			      UsageCounter *counter,
-			      char *fileName, int fileLine) {
-  int i, numFull;
-
-  for(i=0, numFull=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(_checkIndex(flaggedHosts, flaggedHostsLen, counter->peersIndexes[i],
-		   fileName, fileLine))
-      counter->peersIndexes[i] = NO_PEER;
-
-    if(counter->peersIndexes[i] != NO_PEER)
-      numFull++;
-  }
-
-  if(numFull > 0) {
-    int j;
-    
-    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-      for(j=i+1; j<MAX_NUM_CONTACTED_PEERS; j++) 
-	if((counter->peersIndexes[i] != NO_PEER) 
-	   && (counter->peersIndexes[i] == counter->peersIndexes[j])) {
-#ifdef DEBUG
-	  traceEvent(TRACE_INFO, "Removing duplicate entry (%d=%d, %d)", 
-		     i, j, counter->peersIndexes[j]);
-#endif
-	  counter->peersIndexes[j] = NO_PEER;
-	}
-  }
-
-  return(numFull);
-}
-
-#define checkUsageCounter(a, b, c) _checkUsageCounter(a, b, c, __FILE__, __LINE__)
-
-/* **************************************** */
-
-static void _checkPortUsage(HostTraffic **flaggedHosts, u_int flaggedHostsLen,
-			    PortUsage **portsUsage,
-			    char *fileName, int fileLine) {
-  int i;
-
-  for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
-    if(portsUsage[i] == NULL)
-      continue;
-    
-    if(portsUsage[i]->clientUsesLastPeer != NO_PEER)
-      if(_checkIndex(flaggedHosts, flaggedHostsLen, 
-		     portsUsage[i]->clientUsesLastPeer,
-		     fileName, fileLine))
-	portsUsage[i]->clientUsesLastPeer = NO_PEER;
-    
-    if(portsUsage[i]->serverUsesLastPeer != NO_PEER)
-      if(_checkIndex(flaggedHosts, flaggedHostsLen, 
-		     portsUsage[i]->serverUsesLastPeer,
-		     fileName, fileLine))
-	portsUsage[i]->serverUsesLastPeer = NO_PEER;
-    
-    if((portsUsage[i]->clientUsesLastPeer == NO_PEER)
-       && (portsUsage[i]->serverUsesLastPeer == NO_PEER)) {
-      free(portsUsage[i]);
-      portsUsage[i] = NULL;
-    }
-  }
-}
-
-#define checkPortUsage(a, b, c) _checkPortUsage(a, b, c, __FILE__, __LINE__)
-
-/* ************************************ */
-
-static IpGlobalSession* purgeIdleHostSessions(HostTraffic **flaggedHosts, 
-					      u_int flaggedHostsLen,
-					      IpGlobalSession *sessionScanner) {
-  if(sessionScanner != NULL) {
-    IpGlobalSession *returnValue;
-
-    if(sessionScanner->next != NULL)
-      sessionScanner->next = purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, sessionScanner->next);
-
-    if(checkUsageCounter(flaggedHosts, flaggedHostsLen, &sessionScanner->peers) == 0) {
-      /* There are no peers hence we can delete this entry */
-      returnValue = sessionScanner->next;
-      free(sessionScanner);
-    } else
-      returnValue = sessionScanner;
-
-    return(returnValue);
-  } else
-    return(NULL);
-}
-
-/* **************************************** */
-
-static void removeGlobalHostPeers(HostTraffic *el,
-				  HostTraffic **flaggedHosts,
-				  u_int flaggedHostsLen) {
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Entering removeGlobalHostPeers(0x%X)", el);
-#endif
-
-  if(!myGlobals.capturePackets) return;
-
-  if(el->tcpSessionList != NULL)
-    el->tcpSessionList = purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, el->tcpSessionList);
-
-  if(el->udpSessionList != NULL)
-    el->udpSessionList = purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, el->udpSessionList);
-
-  checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedSentPeers);
-  checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRcvdPeers);
-
-  if(el->secHostPkts != NULL) {
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->synPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rstPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rstAckPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->synFinPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->finPushUrgPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->nullPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->ackScanSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->xmasScanSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->finScanSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->nullScanSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rejectedTCPConnSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->establishedTCPConnSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->udpToClosedPortSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->udpToDiagnosticPortSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->tcpToDiagnosticPortSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->tinyFragmentSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpFragmentSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->overlappingFragmentSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->closedEmptyTCPConnSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpPortUnreachSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpHostNetUnreachSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpProtocolUnreachSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpAdminProhibitedSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->malformedPktsSent);
-
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->synPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rstPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rstAckPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->synFinPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->finPushUrgPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->nullPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->ackScanRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->xmasScanRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->finScanRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->nullScanRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rejectedTCPConnRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->establishedTCPConnRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->udpToClosedPortRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->udpToDiagnosticPortRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->tcpToDiagnosticPortRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->tinyFragmentRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpFragmentRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->overlappingFragmentRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->closedEmptyTCPConnRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpPortUnreachRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpHostNetUnreachRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpProtocolUnreachRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpAdminProhibitedRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->malformedPktsRcvd);
-  }
-
-  checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRouters);
-
-  if(el->portsUsage != NULL)
-    checkPortUsage(flaggedHosts, flaggedHostsLen, el->portsUsage);
-  
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Leaving removeGlobalHostPeers()");
-#endif
 }
 
 /* **************************************** */
@@ -599,14 +409,6 @@ void purgeIdleHosts(int actDevice) {
       traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)", idx, numFreedBuckets);
 #endif
       numFreedBuckets++;
-    } else if((myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL)
-	      && (idx != myGlobals.otherHostEntryIdx)) {
-      /*
-	 This entry is not removed but we need to remove
-	 all the references to the freed instances
-      */
-      removeGlobalHostPeers(myGlobals.device[actDevice].hash_hostTraffic[idx],
-			    theFlaggedHosts, hashLen); /* Finally refresh the hash */
     }
   }
 
@@ -620,6 +422,39 @@ void purgeIdleHosts(int actDevice) {
 #endif
 }
 #undef DEBUG 
+
+/* **************************************************** */
+
+static void addSerialMapping(HostTraffic *el) {
+  datum key_data;
+  datum data_data;
+  char tmpBuf[16];
+  
+  if(el->hostNumIpAddress[0] != '\0')
+    data_data.dptr = el->hostNumIpAddress;
+  else
+    data_data.dptr = el->ethAddressString;
+
+  data_data.dsize = strlen(data_data.dptr)+1;
+
+  sprintf(tmpBuf, "%u", el->hostSerial);
+  key_data.dptr  = tmpBuf;
+  key_data.dsize = strlen(tmpBuf)+1;
+
+#ifdef MULTITHREADED
+  accessMutex(&myGlobals.gdbmMutex, "addSerialMapping");
+#endif
+
+  if(gdbm_store(myGlobals.serialCache, key_data, data_data, GDBM_REPLACE) != 0)
+    traceEvent(TRACE_ERROR, "Error while adding '%s'", key_data.dptr);
+  else {
+    /* traceEvent(TRACE_INFO, "Stored serial %s", tmpBuf); */
+  }
+
+#ifdef MULTITHREADED
+  releaseMutex(&myGlobals.gdbmMutex);
+#endif
+}
 
 /* **************************************************** */
 
@@ -744,178 +579,181 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	}
 
 	if(!hostFound) {
-	    /* New table entry */
-	    int len;
+	  /* New host entry */
+	  int len;
 
-	    if(myGlobals.usePersistentStorage) {
-		if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
-		    el = resurrectHostTrafficInstance(etheraddr_string(ether_addr));
+	  if(myGlobals.usePersistentStorage) {
+	    if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
+	      el = resurrectHostTrafficInstance(etheraddr_string(ether_addr));
+	    else
+	      el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
+	  } else
+	    el = NULL;
+	    
+	  if(el == NULL) {
+	    el = (HostTraffic*)malloc(sizeof(HostTraffic));
+	    memset(el, 0, sizeof(HostTraffic));
+	    el->firstSeen = myGlobals.actTime;
+	  }
+	    
+	  resetHostsVariables(el);	      
+	  el->hostSerial = myGlobals.serialCounter++;
+
+	  if(isMultihomed)
+	    FD_SET(HOST_MULTIHOMED, &el->flags);
+	    
+	  el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
+	    
+	  len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
+	  el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
+	  memset(el->protoIPTrafficInfos, 0, len);
+	    
+	  list = malloc(sizeof(HashList));
+	  list->next = myGlobals.device[actualDeviceId].hashList[idx];
+	  myGlobals.device[actualDeviceId].hashList[idx] = list;
+
+	  hostFound = 0;
+	  for(i=myGlobals.device[actualDeviceId].insertIdx;
+	      i<myGlobals.device[actualDeviceId].actualHashSize; i++) {
+	    if(myGlobals.device[actualDeviceId].hash_hostTraffic[i] == NULL) {
+	      hostFound = i;
+	      break;
+	    }
+	  }
+	    
+	  if(!hostFound) {
+	    int sz;
+	      
+	    list->idx = myGlobals.device[actualDeviceId].actualHashSize;
+	    myGlobals.device[actualDeviceId].actualHashSize *= 2; /* Double */
+	    sz = myGlobals.device[actualDeviceId].actualHashSize*sizeof(struct hostTraffic*);
+	    myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)realloc(myGlobals.device[actualDeviceId].hash_hostTraffic, sz);
+	    memset(&myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx],
+		   0, sizeof(struct hostTraffic*)*list->idx);
+	    traceEvent(TRACE_INFO, "Extending hash size [newSize=%d]",
+		       myGlobals.device[actualDeviceId].actualHashSize);
+	  } else
+	    list->idx = hostFound;
+	    
+	  myGlobals.device[actualDeviceId].insertIdx = list->idx + 1;
+	  myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx] = el; /* Insert a new entry */
+	  myGlobals.device[actualDeviceId].hostsno++;
+	  el->hashListBucket = list->idx;
+
+	  if(ether_addr != NULL) {
+	    if((hostIpAddress == NULL)
+	       || ((hostIpAddress != NULL)
+		   && isPseudoLocalAddress(hostIpAddress)
+		   /* && (!isBroadcastAddress(hostIpAddress))*/
+		   )) {
+	      /* This is a local address and then the
+		 ethernet address does make sense */
+	      ethAddr = etheraddr_string(ether_addr);
+
+	      memcpy(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+	      strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
+	      symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));
+	      FD_SET(SUBNET_LOCALHOST_FLAG, &el->flags);
+	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	    } else if(hostIpAddress != NULL) {
+	      /* This is packet that's being routed or belonging to a
+		 remote network that uses the same physical wire (or forged)*/
+	      memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+
+	      memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
+	      if(!myGlobals.borderSnifferMode) FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
+
+	      if(isPrivateAddress(hostIpAddress)) FD_SET(PRIVATE_IP_ADDRESS, &el->flags);
+
+	      if(!isBroadcastAddress(hostIpAddress)) {
+		if(myGlobals.borderSnifferMode || isPseudoLocalAddress(hostIpAddress))
+		  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
 		else
-		    el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
-	    } else
-		el = NULL;
-
-	    if(el == NULL) {
-		el = (HostTraffic*)malloc(sizeof(HostTraffic));
-		memset(el, 0, sizeof(HostTraffic));
-		el->firstSeen=myGlobals.actTime;
+		  FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	      }
+	    } else {
+	      FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
+	      FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
 	    }
 
-	    resetHostsVariables(el);
+	    if(strncmp(el->ethAddressString, "FF:", 3) == 0) {
+	      /*
+		The trick below allows me not to duplicate the
+		"<broadcast>" string in the code
+	      */
+	      el->hostIpAddress.s_addr = INADDR_BROADCAST;
+	      FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	      if(isMulticastAddress(&el->hostIpAddress))
+		FD_SET(MULTICAST_HOST_FLAG, &el->flags);
+	      strncpy(el->hostNumIpAddress,
+		      _intoa(el->hostIpAddress, buf, sizeof(buf)),
+		      strlen(el->hostNumIpAddress));
+	      strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
+		      MAX_HOST_SYM_NAME_LEN);
 
-	    if(isMultihomed)
-		FD_SET(HOST_MULTIHOMED, &el->flags);
+	      if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
+		 && (el->hostIpAddress.s_addr != 0xFFFFFFFF) /* 255.255.255.255 */
+		 && isBroadcastAddress(&el->hostIpAddress)) {
+		/*
+		  The sender of this packet has obviously a wrong netmask because:
+		  - it is a local host
+		  - it has sent a packet to a broadcast address
+		  - it has not used the FF:FF:FF:FF:FF:FF MAC address
+		*/
 
-	    el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
+		traceEvent(TRACE_WARNING, "WARNING: Wrong netmask detected [%s/%s]",
+			   _intoa(el->hostIpAddress, buf, sizeof(buf)),
+			   el->ethAddressString);
+	      }
 
-	    len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
-	    el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
-	    memset(el->protoIPTrafficInfos, 0, len);
+	    } else if(hostIpAddress != NULL) {
+	      el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+	      strncpy(el->hostNumIpAddress,
+		      _intoa(*hostIpAddress, buf, sizeof(buf)),
+		      sizeof(el->hostNumIpAddress));
+	      if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	      if(isMulticastAddress(&el->hostIpAddress)) FD_SET(MULTICAST_HOST_FLAG, &el->flags);
+	      if(isPrivateAddress(hostIpAddress))        FD_SET(PRIVATE_IP_ADDRESS,  &el->flags);
 
-	    list = malloc(sizeof(HashList));
-	    list->next = myGlobals.device[actualDeviceId].hashList[idx];
-	    myGlobals.device[actualDeviceId].hashList[idx] = list;
+	      /* Trick to fill up the address cache */
+	      if(myGlobals.numericFlag == 0)
+		ipaddr2str(el->hostIpAddress, actualDeviceId);
+	      else
+		strncpy(el->hostSymIpAddress,
+			el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
+	    } else {
+	      /* el->hostNumIpAddress == "" */
+	      if(symEthName[0] != '\0') {
+		char buf[MAX_HOST_SYM_NAME_LEN];
 
-	    hostFound = 0;
-	    for(i=myGlobals.device[actualDeviceId].insertIdx;
-		i<myGlobals.device[actualDeviceId].actualHashSize; i++) {
-		if(myGlobals.device[actualDeviceId].hash_hostTraffic[i] == NULL) {
-		    hostFound = i;
-		    break;
-		}
+		if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
+		  BufferOverflow();
+		else
+		  strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
+	      } else
+		strncpy(el->hostSymIpAddress,
+			el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
 	    }
-
-	    if(!hostFound) {
-		int sz;
-		
-		list->idx = myGlobals.device[actualDeviceId].actualHashSize;
-		myGlobals.device[actualDeviceId].actualHashSize *= 2; /* Double */
-		sz = myGlobals.device[actualDeviceId].actualHashSize*sizeof(struct hostTraffic*);
-		myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)realloc(myGlobals.device[actualDeviceId].hash_hostTraffic, sz);
-		memset(&myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx],
-		       0, sizeof(struct hostTraffic*)*list->idx);
-		traceEvent(TRACE_INFO, "Extending hash size [newSize=%d]",
-			   myGlobals.device[actualDeviceId].actualHashSize);
-	    } else
-		list->idx = hostFound;
-
-	    myGlobals.device[actualDeviceId].insertIdx = list->idx + 1;
-	    myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx] = el; /* Insert a new entry */
-	    myGlobals.device[actualDeviceId].hostsno++;
-	    el->hashListBucket = list->idx;
-
-	    if(ether_addr != NULL) {
-		if((hostIpAddress == NULL)
-		   || ((hostIpAddress != NULL)
-		       && isPseudoLocalAddress(hostIpAddress)
-		       /* && (!isBroadcastAddress(hostIpAddress))*/
-		       )) {
-		    /* This is a local address and then the
-		       ethernet address does make sense */
-		    ethAddr = etheraddr_string(ether_addr);
-
-		    memcpy(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN);
-		    strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
-		    symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));
-		    FD_SET(SUBNET_LOCALHOST_FLAG, &el->flags);
-		    FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-		} else if(hostIpAddress != NULL) {
-		    /* This is packet that's being routed or belonging to a
-		       remote network that uses the same physical wire (or forged)*/
-		    memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
-
-		    memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
-		    if(!myGlobals.borderSnifferMode) FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
-
-		    if(isPrivateAddress(hostIpAddress)) FD_SET(PRIVATE_IP_ADDRESS, &el->flags);
-
-		    if(!isBroadcastAddress(hostIpAddress)) {
-			if(myGlobals.borderSnifferMode || isPseudoLocalAddress(hostIpAddress))
-			    FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-			else
-			    FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-		    }
-		} else {
-		    FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
-		    FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-		}
-
-		if(strncmp(el->ethAddressString, "FF:", 3) == 0) {
-		    /*
-		      The trick below allows me not to duplicate the
-		      "<broadcast>" string in the code
-		    */
-		    el->hostIpAddress.s_addr = INADDR_BROADCAST;
-		    FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-		    if(isMulticastAddress(&el->hostIpAddress))
-			FD_SET(MULTICAST_HOST_FLAG, &el->flags);
-		    strncpy(el->hostNumIpAddress,
-			    _intoa(el->hostIpAddress, buf, sizeof(buf)),
-			    strlen(el->hostNumIpAddress));
-		    strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
-			    MAX_HOST_SYM_NAME_LEN);
-
-		    if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
-		       && (el->hostIpAddress.s_addr != 0xFFFFFFFF) /* 255.255.255.255 */
-		       && isBroadcastAddress(&el->hostIpAddress)) {
-			/*
-			   The sender of this packet has obviously a wrong netmask because:
-			   - it is a local host
-			   - it has sent a packet to a broadcast address
-			   - it has not used the FF:FF:FF:FF:FF:FF MAC address
-			*/
-
-			traceEvent(TRACE_WARNING, "WARNING: Wrong netmask detected [%s/%s]",
-				   _intoa(el->hostIpAddress, buf, sizeof(buf)),
-				   el->ethAddressString);
-		    }
-
-		} else if(hostIpAddress != NULL) {
-		    el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-		    strncpy(el->hostNumIpAddress,
-			    _intoa(*hostIpAddress, buf, sizeof(buf)),
-			    sizeof(el->hostNumIpAddress));
-		    if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-		    if(isMulticastAddress(&el->hostIpAddress)) FD_SET(MULTICAST_HOST_FLAG, &el->flags);
-		    if(isPrivateAddress(hostIpAddress))        FD_SET(PRIVATE_IP_ADDRESS,  &el->flags);
-
-		    /* Trick to fill up the address cache */
-		    if(myGlobals.numericFlag == 0)
-			ipaddr2str(el->hostIpAddress, actualDeviceId);
-		    else
-			strncpy(el->hostSymIpAddress,
-				el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
-		} else {
-		    /* el->hostNumIpAddress == "" */
-		    if(symEthName[0] != '\0') {
-			char buf[MAX_HOST_SYM_NAME_LEN];
-
-			if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
-			    BufferOverflow();
-			else
-			    strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
-		    } else
-			strncpy(el->hostSymIpAddress,
-				el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
-		}
 
 #ifdef DEBUG
-		/*if((strcmp(etheraddr_string(ether_addr), "08:00:20:89:79:D7") == 0)
-		  || (strcmp(el->hostSymIpAddress, "more") == 0))*/
-		printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
-		       etheraddr_string(ether_addr), el->hostSymIpAddress,
-		       el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno);
+	    /*if((strcmp(etheraddr_string(ether_addr), "08:00:20:89:79:D7") == 0)
+	      || (strcmp(el->hostSymIpAddress, "more") == 0))*/
+	    printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
+		   etheraddr_string(ether_addr), el->hostSymIpAddress,
+		   el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno);
 #endif
 
-		el->lastSeen = myGlobals.actTime;
-		checkSpoofing(list->idx, actualDeviceId);
-	    }
+	    el->lastSeen = myGlobals.actTime;
+	    checkSpoofing(list->idx, actualDeviceId);
+	  }
 
 #ifdef HASH_DEBUG
-	    traceEvent(TRACE_INFO, "Adding %s/%s [idx=%d][device=%d][actualHashSize=%d]\n",
-		       el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
-		       myGlobals.device[actualDeviceId].actualHashSize);
+	  traceEvent(TRACE_INFO, "Adding %s/%s [idx=%d][device=%d][actualHashSize=%d]\n",
+		     el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
+		     myGlobals.device[actualDeviceId].actualHashSize);
 #endif
+	    
+	  addSerialMapping(el);
 	}
 
 	if(el != NULL) {

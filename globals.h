@@ -114,15 +114,16 @@ typedef struct ntopGlobals {
   NtopInterface *device;   /* pointer to the table of Network interfaces */
 
   /* Database */
-  GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache;
+  GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache, serialCache;
 
   /* the table of broadcast entries */
   u_int broadcastEntryIdx;
   HostTraffic *broadcastEntry;
-
+  
   /* the table of other hosts entries */
   u_int otherHostEntryIdx;
   HostTraffic *otherHostEntry;
+  HostSerial  serialCounter;
 
   /* Administrative */
   char *shortDomainName;

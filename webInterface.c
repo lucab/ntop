@@ -262,10 +262,11 @@ char* makeHostLink(HostTraffic *el, short mode,
       usedEthAddress = 1;
       specialMacAddress = 1;
     } else {
-	if(cutName && (symIp[0] != '*')
+	if(cutName
+	   && (symIp[0] != '*')
 	   && strcmp(symIp, el->hostNumIpAddress)) {
 	  int i;
-
+	  
 	  for(i=0; symIp[i] != '\0'; i++)
 	    if(symIp[i] == '.') {
 	      symIp[i] = '\0';

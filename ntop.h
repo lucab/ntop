@@ -744,9 +744,17 @@ typedef struct simpleProtoTrafficInfo {
 
 /* *********************** */
 
+#define ETHERNET_ADDRESS_LEN 6
+
+/* *********************** */
+
+#define HostSerial u_int32_t
+
+/* *********************** */
+
 typedef struct usageCounter {
   TrafficCounter value;
-  u_int peersIndexes[MAX_NUM_CONTACTED_PEERS];
+  HostSerial peersIndexes[MAX_NUM_CONTACTED_PEERS]; /* host serial */
 } UsageCounter;
 
 /* *********************** */
@@ -755,14 +763,7 @@ typedef struct routingCounter {
   TrafficCounter routedPkts, routedBytes;
 } RoutingCounter;
 
-/* *******************************
-
-   NOTE
-
-   Do not forget to MAP all the
-   peersIndexes [call mapIdx()]
-
-   ******************************* */
+/* *********************** */
 
 typedef struct securityHostProbes {
   UsageCounter synPktsSent, rstPktsSent, rstAckPktsSent,
@@ -993,8 +994,6 @@ typedef struct processInfoList {
 
 #define TOP_IP_PORT           65534 /* IP ports range from 0 to 65535 */
 #define TOP_ASSIGNED_IP_PORTS  1024
-
-#define ETHERNET_ADDRESS_LEN 6
 
 #define NTOP_DEFAULT_WEB_PORT 3000
 
@@ -1516,8 +1515,6 @@ typedef struct portUsage {
 #define HOST_WRONG_NETMASK                               65
 #define HOST_DUPLICATED_MAC                              66
 
-
-
 /* Macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &(a->flags))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(SUBNET_LOCALHOST_FLAG, &(a->flags)))
@@ -1676,6 +1673,7 @@ typedef struct storedAddress {
 typedef struct hostTraffic {
   u_int            hashListBucket;
   u_int16_t        numUses;
+  HostSerial       hostSerial;
   struct in_addr   hostIpAddress;
   time_t           firstSeen;
   time_t           lastSeen; /* time when this host has sent/rcvd some data  */

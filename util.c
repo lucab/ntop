@@ -1902,6 +1902,7 @@ void storeHostTrafficInstance(HostTraffic *el) {
 void resetHostsVariables(HostTraffic* el) {
 
   FD_ZERO(&(el->flags));
+
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters); 
@@ -3042,27 +3043,33 @@ void updateOSName(HostTraffic *el) {
 #undef incrementUsageCounter
 
 void _incrementUsageCounter(UsageCounter *counter,
-			    u_int peerIdx, int deviceId, 
+			    u_int peerIdx, int actualDeviceId, 
 			    char* file, int line) {
   u_int i, found=0;
+  HostTraffic *theHost;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "INFO: incrementUsageCounter(%u) @ %s:%d", peerIdx, file, line);
 #endif
-
-  if((peerIdx >= myGlobals.device[deviceId].actualHashSize) && (peerIdx != NO_PEER)) {
+  if((peerIdx >= myGlobals.device[actualDeviceId].actualHashSize) && (peerIdx != NO_PEER)) {   
     traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
-	       peerIdx, myGlobals.device[deviceId].actualHashSize, file, line);
+	       peerIdx, myGlobals.device[actualDeviceId].actualHashSize, file, line);
     return;
-  }
+  } 
+  
+ if((theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(peerIdx)]) == NULL) {
+    traceEvent(TRACE_WARNING, "WARNING: wrong Index %u @ %s:%d",
+	       peerIdx, file, line);
+    return;
+ }
 
   counter->value++;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(counter->peersIndexes[i] == NO_PEER) {
-      counter->peersIndexes[i] = peerIdx, found = 1;
+      counter->peersIndexes[i] = theHost->hostSerial, found = 1;
       break;
-    } else if(counter->peersIndexes[i] == peerIdx) {
+    } else if(counter->peersIndexes[i] == theHost->hostSerial) {
       found = 1;
       break;
     }
@@ -3072,7 +3079,7 @@ void _incrementUsageCounter(UsageCounter *counter,
     for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
       counter->peersIndexes[i] = counter->peersIndexes[i+1];
 
-    counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = peerIdx;
+    counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = theHost->hostSerial;
   }
 }
 
