@@ -929,7 +929,12 @@ static void writePcapPacket(SFSample *sample) {
   numSamplesReceived++;
   lastSample = sample->samplePool;
 
-  queuePacket(NULL, &hdr, sample->header); /* Pass the packet to ntop */
+  /* 
+     Fix below courtesy of 
+     Neil McKee <neil_mckee@inmon.com>
+  */
+  if(sample->headerProtocol == 1) /* Ethernet */
+    queuePacket(NULL, &hdr, sample->header); /* Pass the packet to ntop */
 
 }
 
