@@ -7563,6 +7563,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
                "INITWEB:%s binding problem - '%s'(%d)",
                sslOrNot, strerror(errno), errno);
     traceEvent(CONST_TRACE_INFO, "Check if another instance of ntop is running"); 
+    traceEvent(CONST_TRACE_INFO, "or if the current user (-u) can bind to the specified port"); 
     closeNwSocket(&myGlobals.sock);
     exit(-1);
   }
