@@ -98,7 +98,7 @@ bin_PROGRAMS   = ntop
 EXTRA_PROGRAMS = ntops ntopd
 bin_SCRIPTS    = ntop-config
 
-ntop_SOURCES   = main.c
+ntop_SOURCES   = main.c admin.c
 ntops_SOURCES  = $(ntop_SOURCES)
 ntopd_SOURCES  = $(ntop_SOURCES)
 
@@ -131,7 +131,7 @@ libntop_la_LIBADD       = $(CORELIBS)
 libntop_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
 # Archive for http representation, or the 'viewer'
-libntopreport_la_SOURCES = admin.c emitter.c \
+libntopreport_la_SOURCES = emitter.c \
                            globals-report.c \
                            graph.c \
                            http.c  \

@@ -106,6 +106,7 @@ static struct option const long_options[] = {
 #endif
 
   { "http-server",                      required_argument, NULL, 'w' },
+  { "set-admin-password",               required_argument, NULL, 'A' },
   { "filter-expression",                required_argument, NULL, 'B' },
   { "domain",                           required_argument, NULL, 'D' },
 
@@ -220,6 +221,7 @@ void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
+  fprintf(fp, "    [-A             | --set-admin-password]               Set password for the admin user and exit\n");
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 Packet filter expression, like tcpdump\n");
   fprintf(fp, "    [-D <name>      | --domain <name>]                    Internet domain name\n");
 
@@ -298,7 +300,7 @@ void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-w <HTTP port>]\n");
-
+  fprintf(fp, "    [-A <Set password for the admin user and exit]\n");
   fprintf(fp, "    [-B <filter expression (like tcpdump)>]\n");
   fprintf(fp, "    [-D <Internet domain name>]\n");
 
@@ -331,7 +333,7 @@ void usage (FILE * fp) {
  * Parse the command line options
  */
 static int parseOptions(int argc, char* argv []) {
-  int userSpecified = 0;
+  int userSpecified = 0, setAdminPw = 0;
 #ifdef WIN32
   int optind=0;
 #endif
@@ -340,9 +342,9 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char* theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:A:B:D:F:MP:S:U:VW:";
+  char* theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:AB:D:F:MP:S:U:VW:";
 #else
-  char* theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:A:B:D:EF:IKLMNP:S:U:VW:";
+  char* theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:AB:D:EF:IKLMNP:S:U:VW:";
 #endif
   int opt;
 
@@ -493,10 +495,13 @@ static int parseOptions(int argc, char* argv []) {
 	*myGlobals.webAddr = '\0';
 	myGlobals.webPort = atoi(myGlobals.webAddr+1);
 	myGlobals.webAddr = optarg;
-      } else {
+      } else
 	myGlobals.webPort = atoi(optarg);
-      }
       break;
+
+     case 'A':
+       setAdminPw = 1;
+       break;
 
     case 'B':
       stringSanityCheck(optarg);
@@ -616,6 +621,13 @@ static int parseOptions(int argc, char* argv []) {
       usage(stdout);
       exit(-1);
     }
+  }
+
+  if(setAdminPw) {
+    initGdbm(NULL);
+    initThreads();
+    setAdminPassword();
+    exit(0);
   }
 
   return(userSpecified);

@@ -906,7 +906,12 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 
 /* ****************************** */
 
-static void addKeyIfMissing(char* key, char* value, int encryptValue,
+/*
+  Fixes below courtesy of
+  C C Magnus Gustavsson <magnus@gustavsson.se>
+*/
+static void addKeyIfMissing(char* key, char* value, 
+			    int encryptValue, int existingOK,
 			    char *userQuestion) {
   datum key_data, return_data, data_data;
 #ifndef WIN32
@@ -918,14 +923,14 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue,
   key_data.dsize = strlen(key_data.dptr)+1;
 
 #ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "addKeyIfMissing");
+  accessMutex(&myGlobals.gdbmMutex, "addKey");
 #endif
   return_data = gdbm_fetch(myGlobals.pwFile, key_data);
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
-  if(return_data.dptr == NULL) {
+  if((return_data.dptr == NULL) || (existingOK != 0)) {
     char *thePw, pw1[16], pw2[16];
 
     /* If not existing, the add user 'admin', pw 'admin' */
@@ -985,16 +990,22 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue,
 
 /* *******************************/
 
+void setAdminPassword(void) {
+  addKeyIfMissing("1admin", NULL, 1, 1, "\nPlease enter the password for the admin user: ");
+}
+
+/* *******************************/
+
 void addDefaultAdminUser(void) {
   /* Add user 'admin/admin' if not existing */
-  addKeyIfMissing("1admin", NULL, 1, "\nPlease enter the password for the admin user: ");
+  addKeyIfMissing("1admin", NULL, 1, 0, "\nPlease enter the password for the admin user: ");
 
   /* Add user 'admin' for URL 'show...' if not existing */
-  addKeyIfMissing("2showU",      "users=1admin", 0, NULL);
-  addKeyIfMissing("2modifyU",    "users=1admin", 0, NULL);
-  addKeyIfMissing("2deleteU",    "users=1admin", 0, NULL);
-  addKeyIfMissing("2shut",       "users=1admin", 0, NULL);
-  addKeyIfMissing("2resetStats", "users=1admin", 0, NULL);
-  addKeyIfMissing("2chang",      "users=1admin", 0, NULL);
+  addKeyIfMissing("2showU",      "users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2modifyU",    "users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2deleteU",    "users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2shut",       "users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2resetStats", "users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2chang",      "users=1admin", 0, 0, NULL);
 }
 

@@ -57,6 +57,7 @@ extern void deleteURL(char* user);
 extern void doAddURL(int _len);
 extern int doChangeFilter(int len);
 extern void changeFilter(void);
+extern void setAdminPassword(void);
 extern void addDefaultAdminUser(void);
 
 /* dataFormat.c */
