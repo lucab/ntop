@@ -955,7 +955,8 @@ typedef struct ntopInterface {
   struct hostTraffic **hash_hostTraffic;
 
 #ifdef EXPERIMENTAL
-  HashList **hashList;
+  u_int16_t  insertIdx;
+  HashList** hashList;
 #endif
 
   /* ************************** */

@@ -27,7 +27,7 @@
 #include "gdcpie.h"
 #endif
 
-#ifdef EXPERIMENTAL
+#ifdef HTML_EXPERIMENTAL
 #define TABLE_ON  "<TABLE BGCOLOR=#999999 CELLSPACING=1 CELLPADDING=1 BORDER=0><TR><TD>"
 #define TABLE_OFF "</TD></TR></TABLE>"
 #define TH_BG     "BGCOLOR=#FFFFFF"
@@ -167,6 +167,7 @@ extern char *getCountryIconURL(char* domainName);
 extern char *getHostCountryIconURL(HostTraffic *el);
 extern char *getActualRowColor(void);
 extern void switchNwInterface(int _interface);
+extern void usage(void);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 

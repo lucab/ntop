@@ -168,7 +168,14 @@ static void resetDevice(int devIdx) {
 
   ptr = calloc(HASH_INITIAL_SIZE, sizeof(HostTraffic*));
   myGlobals.device[devIdx].hash_hostTraffic = ptr;
-  
+
+#ifdef EXPERIMENTAL
+  len = sizeof(struct HashList*)*HASH_LIST_SIZE;
+  myGlobals.device[devIdx].hashList = (HashList**)malloc(len);
+  memset(myGlobals.device[devIdx].hashList, 0, len);
+  myGlobals.device[devIdx].insertIdx = 0;
+#endif /* EXPERIMENTAL */
+
   myGlobals.device[devIdx].lastTotalPkts = myGlobals.device[devIdx].lastBroadcastPkts = 0;
   myGlobals.device[devIdx].lastMulticastPkts = 0;
   myGlobals.device[devIdx].lastEthernetBytes = myGlobals.device[devIdx].lastIpBytes = 0;
@@ -330,7 +337,7 @@ void initCounters(int _mergeInterfaces) {
     strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");   
     myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
   } else {
-    /* We let ntop think that otherHostEntryIdx does not exist */
+    /* We let ntop think that myGlobals.otherHostEntryIdx does not exist */
     myGlobals.otherHostEntry = NULL;
     myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx;
   }
@@ -367,7 +374,7 @@ void resetStats(void) {
   else
     interfacesToCreate = myGlobals.numDevices;
 
-  /* Do not reset the first entry (broadcastEntry) */
+  /* Do not reset the first entry (myGlobals.broadcastEntry) */
   for(i=0; i<interfacesToCreate; i++) {
     u_int j;
 
@@ -469,7 +476,7 @@ void initGdbm(void) {
   traceEvent(TRACE_INFO, "Initializing GDBM...");
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/myGlobals.addressCache.db", myGlobals.dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", myGlobals.dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   unlink(tmpBuf); /* Delete the old one (if present) */ 
@@ -670,7 +677,7 @@ char *ifName, intNames[32][256];
 myDevices = devices;
   myGlobals.device = NULL;
 
-  /* Determine the device name if not specified */
+  /* Determine the myGlobals.device name if not specified */
   ebuf[0] = '\0';
 
 #ifdef WIN32
@@ -733,7 +740,7 @@ myDevices = devices;
 #endif
 
   if (myDevices == NULL) {
-    /* No default device selected */
+    /* No default myGlobals.device selected */
 #ifndef WIN32
     tmpDev = pcap_lookupdev(ebuf);
      
@@ -907,10 +914,10 @@ void initLibpcap(char* rulesFile, int numDevices) {
     initRules(rulesFile);
 
     for(i=0; i<myGlobals.numDevices; i++) {
-      /* Fire up libpcap for each specified device */
+      /* Fire up libpcap for each specified myGlobals.device */
       char myName[80];
 
-      /* Support for virtual devices */
+      /* Support for virtual myGlobals.devices */
       char *column = strchr(myGlobals.device[i].name, ':');
 
       /*

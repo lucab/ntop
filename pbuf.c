@@ -1140,7 +1140,7 @@ static void processIpPkt(const u_char *bp,
 
   if(srcHost == NULL) {
     /* Sanity check */
-    traceEvent(TRACE_INFO, "Sanity check failed (1) [Low memory?]");
+    traceEvent(TRACE_INFO, "Sanity check failed (1) [Low memory?] (idx=%d)", srcHostIdx);
     return; /* It might be that there's not enough memory that that
 	       dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst) caused
 	       srcHost to be freed */
