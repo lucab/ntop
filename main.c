@@ -119,8 +119,6 @@ int main(int argc, char *argv[]) {
   domainName[0] = '\0';
 
   actTime = time(NULL);
-  strncpy(dbPath, DBFILE_DIR, sizeof(dbPath));
-  strncpy(accessLogPath, DETAIL_ACCESS_LOG_FILE_PATH, sizeof(accessLogPath));
 
   if ((cp = strrchr(argv[0], '/')) != NULL)
     program_name = cp + 1;
@@ -327,6 +325,9 @@ int main(int argc, char *argv[]) {
 	exit(-1);
 	/* NOTREACHED */
       }
+
+  strncpy(dbPath, DBFILE_DIR, sizeof(dbPath));
+  strncpy(accessLogPath, DETAIL_ACCESS_LOG_FILE_PATH, sizeof(accessLogPath));
 
   if(webPort == 0) {
 #ifdef HAVE_OPENSSL
