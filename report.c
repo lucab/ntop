@@ -170,12 +170,12 @@ void printTrafficStatistics() {
 	sendString(buf);
       }
 
-#ifdef TRAFFIC_HISTORY
-      if(snprintf(buf, sizeof(buf), " <A HREF=\"/ntop-bin/netTraf.pl?interface=%s\">History</A>\n",
-		  myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
-	BufferTooShort();
-      sendString(buf);
-#endif /* TRAFFIC_HISTORY */
+      if(haveTrafficHistory()) {
+	if(snprintf(buf, sizeof(buf), " <A HREF=\"/ntop-bin/netTraf.pl?interface=%s\">History</A>\n",
+		    myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
   }
 
   sendString("</TD></TR>\n");
