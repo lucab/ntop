@@ -100,11 +100,24 @@ void updateUsedPorts(HostTraffic *srcHost,
 
   /* traceEvent(TRACE_INFO, "%d\n", length); */
 
-  if((srcHost == dstHost) 
-     || (srcHost->portsUsage == NULL) 
-     || (dstHost->portsUsage == NULL))
-    return;
+  if(srcHost == dstHost) return;
 
+  /* Now let's update the list of ports recently used by the hosts */
+  if(sport > dport) 
+    clientPort = sport, serverPort = dport;
+  else
+    clientPort = dport, serverPort = sport;
+
+  if(srcHost->hashListBucket != myGlobals.otherHostEntryIdx)
+    updatePortList(srcHost, clientPort, serverPort);
+
+  if(dstHost->hashListBucket != myGlobals.otherHostEntryIdx)
+    updatePortList(dstHost, clientPort, serverPort);
+
+  /* **************** */
+
+  if((srcHost->portsUsage == NULL) || (dstHost->portsUsage == NULL))
+    return;
 
   if(sport < TOP_ASSIGNED_IP_PORTS) {
     if(srcHost->portsUsage[sport] == NULL) srcHost->portsUsage[sport] = allocatePortUsage();
@@ -151,15 +164,6 @@ void updateUsedPorts(HostTraffic *srcHost,
     dstHost->portsUsage[dport]->serverUses++;
     dstHost->portsUsage[dport]->serverUsesLastPeer = srcHost->hashListBucket;
   }
-
-  /* Now let's update the list of ports recently used by the hosts */
-  if(sport > dport) 
-    clientPort = sport, serverPort = dport;
-  else
-    clientPort = dport, serverPort = sport;
-
-  updatePortList(srcHost, clientPort, serverPort);
-  updatePortList(dstHost, clientPort, serverPort);
 }
 
 /* ************************************ */

@@ -265,10 +265,17 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(broadcastHost(el)
      || (el->hostSerial == myGlobals.broadcastEntryIdx)
      || ((el->hostIpAddress.s_addr == 0) && (el->ethAddressString[0] == '\0'))) {
-    if(mode == LONG_FORMAT)
-      return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
-    else
-      return("&lt;broadcast&gt;");
+    if(myGlobals.borderSnifferMode) {
+      if(mode == LONG_FORMAT) 
+	return("<TH "TH_BG" ALIGN=LEFT>&nbsp;</TH>");
+      else
+	return("&nbsp;");
+    } else {
+      if(mode == LONG_FORMAT) 
+	return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
+      else
+	return("&lt;broadcast&gt;");
+    }
   }
 
   blinkOn = "", blinkOff = "";

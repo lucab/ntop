@@ -249,19 +249,26 @@ void printTrafficStatistics() {
 		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts)) < 0)
 	BufferTooShort();
       sendString(buf);
-      if(snprintf(buf, sizeof(buf),
-		  "<TR %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
-		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		  getRowColor(), formatPkts(droppedByKernel)) < 0)
-	BufferTooShort();
-      sendString(buf);
+
+      if(droppedByKernel > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TR %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
+		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		    getRowColor(), formatPkts(droppedByKernel)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
+
 #ifdef MULTITHREADED
-      if(snprintf(buf, sizeof(buf), "<tr %s><TH "TH_BG" align=left>"
-		  "Dropped&nbsp;by&nbsp;ntop</th>"
-		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts)) < 0)
-	BufferTooShort();
-      sendString(buf);
+      if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts > 0) {
+	if(snprintf(buf, sizeof(buf), "<tr %s><TH "TH_BG" align=left>"
+		    "Dropped&nbsp;by&nbsp;ntop</th>"
+		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		    getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].
+					      droppedPkts)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
 #endif
     }
 

@@ -845,7 +845,7 @@ static void processIpPkt(const u_char *bp,
 	  }
 	}
 
-	if((!myGlobals.borderSnifferMode) || nonFullyRemoteSession) {
+	if((!myGlobals.borderSnifferMode) && nonFullyRemoteSession) {
 	  theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
 					srcHostIdx, sport, dstHostIdx,
 					dport, ntohs(ip.ip_len), &tp, tcpDataLength,
@@ -1088,7 +1088,7 @@ static void processIpPkt(const u_char *bp,
 			   dport, udpDataLength,
 			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
 	else
-	  updateUsedPorts(srcHost, dstHost, sport, dport, length);
+	  updateUsedPorts(srcHost, dstHost, sport, dport, udpDataLength);
 
 	sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);	
       }

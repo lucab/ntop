@@ -1795,12 +1795,12 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1></TD>",
+		    "<TD WIDTH=250 "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1></TD>",
 		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
-	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
+	sendString("<TD width=250 "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
       }
 
       if(totalRcvd > 0) {
