@@ -6188,3 +6188,14 @@ void revertDoubleColumn(char *str) {
 #endif
 
 /* ******************************************* */
+
+/* Subtract the `struct timeval' values X and Y */
+
+float timeval_subtract (struct timeval x, struct timeval y) {
+  return((float) ((long int) x.tv_sec * 1000000 +
+		  (long int) x.tv_usec -
+		  (long int) y.tv_sec * 1000000 -
+		  (long int) y.tv_usec) / 1000000.0);
+}
+
+/* ************************************ */

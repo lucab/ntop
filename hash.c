@@ -20,7 +20,6 @@
 
 #include "ntop.h"
 
-static float timeval_subtract (struct timeval x, struct timeval y); /* forward */
 
 /* #define HASH_DEBUG */
 
@@ -618,17 +617,6 @@ void freeHostInstances(int actualDeviceId) {
   }
 
   traceEvent(CONST_TRACE_INFO, "FREE_HOST: End, freed %d", num);
-}
-
-/* ************************************ */
-
-/* Subtract the `struct timeval' values X and Y */
-
-static float timeval_subtract (struct timeval x, struct timeval y) {
-  return((float) ((long int) x.tv_sec * 1000000 +
-		  (long int) x.tv_usec -
-		  (long int) y.tv_sec * 1000000 -
-		  (long int) y.tv_usec) / 1000000.0);
 }
 
 /* ************************************ */
