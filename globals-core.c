@@ -33,7 +33,7 @@ char **ntop_argv;
 /* command line options */
 u_short traceLevel, debugMode, useSyslog, accuracyLevel;
 u_char enableSessionHandling, enablePacketDecoding, enableFragmentHandling;
-u_char stickyHosts, enableSuspiciousPacketDump;
+u_char stickyHosts, enableSuspiciousPacketDump, trackOnlyLocalHosts;
 char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
 char mapperURL[256];     /* URL of the mapper CGI */
 u_int maxHashSize, topHashSize;

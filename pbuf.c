@@ -135,102 +135,106 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
      don't set i=1 because the real index is idx and not i     
   */
 
-  for(i=0; i<device[actualDeviceId].actualHashSize; i++) {
-  HASH_SLOT_FOUND:
-    el = device[actualDeviceId].hash_hostTraffic[idx]; /* (**) */
+  if(trackOnlyLocalHosts && (initialIdx == otherHostEntryIdx)) {
+    el = device[actualDeviceId].hash_hostTraffic[otherHostEntryIdx];
+    hostFound = 1;
+  } else {
+    for(i=0; i<device[actualDeviceId].actualHashSize; i++) {
+    HASH_SLOT_FOUND:
+      el = device[actualDeviceId].hash_hostTraffic[idx]; /* (**) */
 #ifdef HASH_DEBUG
-    numRuns++;
+      numRuns++;
 #endif
-    if(el != NULL) {
-      if(useIPAddressForSearching == 0) {
-	/* compare with the ethernet-address */
-	if (memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
-	  if(hostIpAddress != NULL) {
-	    if((!isMultihomed) && checkForMultihoming) {
-	      /*
-		This is a local address hence this is
-		a potential multihomed host.
-	      */
+      if(el != NULL) {
+	if(useIPAddressForSearching == 0) {
+	  /* compare with the ethernet-address */
+	  if (memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
+	    if(hostIpAddress != NULL) {
+	      if((!isMultihomed) && checkForMultihoming) {
+		/*
+		  This is a local address hence this is
+		  a potential multihomed host.
+		*/
 
-	      if((el->hostIpAddress.s_addr != 0x0)
-		 && (el->hostIpAddress.s_addr != hostIpAddress->s_addr)) {
-		isMultihomed = 1;
-		FD_SET(HOST_MULTIHOMED, &el->flags);
-	      }
+		if((el->hostIpAddress.s_addr != 0x0)
+		   && (el->hostIpAddress.s_addr != hostIpAddress->s_addr)) {
+		  isMultihomed = 1;
+		  FD_SET(HOST_MULTIHOMED, &el->flags);
+		}
 
-	      if(el->hostNumIpAddress[0] == '\0') {
-		/* This entry didn't have IP fields set: let's set them now */
-		el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-		strncpy(el->hostNumIpAddress,
-			_intoa(*hostIpAddress, buf, sizeof(buf)),
-			sizeof(el->hostNumIpAddress));
+		if(el->hostNumIpAddress[0] == '\0') {
+		  /* This entry didn't have IP fields set: let's set them now */
+		  el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+		  strncpy(el->hostNumIpAddress,
+			  _intoa(*hostIpAddress, buf, sizeof(buf)),
+			  sizeof(el->hostNumIpAddress));
 
-		if(numericFlag == 0)
-		  ipaddr2str(el->hostIpAddress);
+		  if(numericFlag == 0)
+		    ipaddr2str(el->hostIpAddress);
 
-		/* else el->hostSymIpAddress = el->hostNumIpAddress;
-		   The line below isn't necessary because (**) has
-		   already set the pointer */
-		if(isBroadcastAddress(&el->hostIpAddress))
-		  FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+		  /* else el->hostSymIpAddress = el->hostNumIpAddress;
+		     The line below isn't necessary because (**) has
+		     already set the pointer */
+		  if(isBroadcastAddress(&el->hostIpAddress))
+		    FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+		}
 	      }
 	    }
-	  }
 	  
-	  hostFound = 1;
-	  break;
-	} else if((hostIpAddress != NULL)
-		  && (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
-	  /* Spoofing or duplicated MAC address:
-	     two hosts with the same IP address and different MAC
-	     addresses
-	  */
+	    hostFound = 1;
+	    break;
+	  } else if((hostIpAddress != NULL)
+		    && (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
+	    /* Spoofing or duplicated MAC address:
+	       two hosts with the same IP address and different MAC
+	       addresses
+	    */
 
-	  setSpoofingFlag = 1;
+	    setSpoofingFlag = 1;
 
-	  if(!hasDuplicatedMac(el)) {
-	    FD_SET(HOST_DUPLICATED_MAC, &el->flags);
+	    if(!hasDuplicatedMac(el)) {
+	      FD_SET(HOST_DUPLICATED_MAC, &el->flags);
 
-	    if(enableSuspiciousPacketDump) {
-	      traceEvent(TRACE_WARNING,
-			 "Two MAC addresses found for the same IP address "
-			 "%s: [%s/%s] (spoofing detected?)",
-			 el->hostNumIpAddress,
-			 etheraddr_string(ether_addr), el->ethAddressString);
-	      dumpSuspiciousPacket();
+	      if(enableSuspiciousPacketDump) {
+		traceEvent(TRACE_WARNING,
+			   "Two MAC addresses found for the same IP address "
+			   "%s: [%s/%s] (spoofing detected?)",
+			   el->hostNumIpAddress,
+			   etheraddr_string(ether_addr), el->ethAddressString);
+		dumpSuspiciousPacket();
+	      }
 	    }
 	  }
+	} else {       	
+	  if(el->hostIpAddress.s_addr == hostIpAddress->s_addr) {
+	    hostFound = 1;
+	    break;
+	  }
 	}
-      } else {       	
-	if(((accuracyLevel <= MEDIUM_ACCURACY_LEVEL) && (idx == otherHostEntryIdx))
-	   || (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
-	  hostFound = 1;
-	  break;
-	}
+      } else {
+	/* ************************
+
+	   -- 1 --
+
+	   This code needs to be optimised. In fact everytime a
+	   new host is added to the hash, the whole hash has to
+	   be scan. This shouldn't happen with hashes. Unfortunately
+	   due to the way ntop works, a entry can appear and
+	   disappear several times from the hash, hence its position
+	   in the hash might change.
+
+	   See also -- 2 --.
+
+	   Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
+
+	   ************************ */
+
+	if(firstEmptySlot == NO_PEER) 
+	  firstEmptySlot = idx;
       }
-    } else {
-      /* ************************
 
-	 -- 1 --
-
-	 This code needs to be optimised. In fact everytime a
-	 new host is added to the hash, the whole hash has to
-	 be scan. This shouldn't happen with hashes. Unfortunately
-	 due to the way ntop works, a entry can appear and
-	 disappear several times from the hash, hence its position
-	 in the hash might change.
-
-	 See also -- 2 --.
-
-	 Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
-
-	 ************************ */
-
-      if(firstEmptySlot == NO_PEER) 
-	firstEmptySlot = idx;
+      idx = (idx+1) % device[actualDeviceId].actualHashSize;
     }
-
-    idx = (idx+1) % device[actualDeviceId].actualHashSize;
   }
 
   if(!hostFound) {
@@ -3094,7 +3098,6 @@ static void processIpPkt(const u_char *bp,
       if(!(off & 0x3fff)) {
 	if(((sport == 53) || (dport == 53) /* domain */)
 	   && enablePacketDecoding
-	   && (accuracyLevel == HIGH_ACCURACY_LEVEL)
 	   && (bp != NULL) /* packet long enough */) {
 	  short isRequest, positiveReply;
 	  u_int16_t transactionId;

@@ -36,7 +36,8 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 
   if(((*useIPAddressForSearching) == 1) 
      || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
-    if(accuracyLevel <= MEDIUM_ACCURACY_LEVEL) 
+    if(trackOnlyLocalHosts 
+       && (!isPseudoLocalAddress(hostIpAddress)))
       idx = otherHostEntryIdx;
     else 
       memcpy(&idx, &hostIpAddress->s_addr, 4);
@@ -52,7 +53,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
     (*useIPAddressForSearching) = 0;
   } else if ((hostIpAddress->s_addr == 0x0)
 	     || (hostIpAddress->s_addr == 0x1)) {
-    if(accuracyLevel  <= MEDIUM_ACCURACY_LEVEL) 
+    if(trackOnlyLocalHosts) 
       idx = otherHostEntryIdx;
     else 
       memcpy(&idx, &hostIpAddress->s_addr, 4);
@@ -65,17 +66,16 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
     memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));    
     (*useIPAddressForSearching) = 0;
   } else {
-    if(accuracyLevel <= MEDIUM_ACCURACY_LEVEL) 
-      idx = otherHostEntryIdx;
-    else {
-      if(hostIpAddress != NULL)
-	memcpy(&idx, &hostIpAddress->s_addr, 4); /* set what's needed */
-      else {
-	idx = NO_PEER;
-	traceEvent(TRACE_WARNING, "WARNING: Index calculation problem");
-      }
+    if(hostIpAddress != NULL) {
+      if(trackOnlyLocalHosts && (!isPseudoLocalAddress(hostIpAddress)))
+	idx = otherHostEntryIdx;
+      else 
+	memcpy(&idx, &hostIpAddress->s_addr, 4);     
+    } else {
+      idx = NO_PEER;
+      traceEvent(TRACE_WARNING, "WARNING: Index calculation problem");
     }
-
+        
     (*useIPAddressForSearching) = 1;
   }
 

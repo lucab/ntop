@@ -31,7 +31,7 @@ extern char **ntop_argv;
 /* command line options */
 extern u_short traceLevel, debugMode, useSyslog, accuracyLevel;
 extern u_char enableSessionHandling, enablePacketDecoding, enableFragmentHandling;
-extern u_char stickyHosts, enableSuspiciousPacketDump;
+extern u_char stickyHosts, enableSuspiciousPacketDump, trackOnlyLocalHosts;
 extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */
 extern char mapperURL[256];     /* URL of the mapper CGI */

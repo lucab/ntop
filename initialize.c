@@ -318,7 +318,7 @@ void initCounters(int _mergeInterfaces) {
 
   broadcastEntryIdx = 0;
 
-  if(accuracyLevel <= MEDIUM_ACCURACY_LEVEL) {
+  if(trackOnlyLocalHosts) {
     otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
     memset(otherHostEntry, 0, sizeof(HostTraffic));
 
@@ -417,21 +417,28 @@ int initGlobalValues(void) {
 
   switch(accuracyLevel) {
   case HIGH_ACCURACY_LEVEL:
-    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 1;
+    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 1, trackOnlyLocalHosts = 0;
     break;
   case MEDIUM_ACCURACY_LEVEL:
-    enableSessionHandling = 1, enablePacketDecoding = 0, enableFragmentHandling = 1;
+    enableSessionHandling = 1, enablePacketDecoding = 0, enableFragmentHandling = trackOnlyLocalHosts = 1;
     break;
   case LOW_ACCURACY_LEVEL:
-    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 0;
+    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 0, trackOnlyLocalHosts = 1;
     break;    
   }
 
   if(borderSnifferMode) {
+    /* Override everything that has been set before */
     enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 0;
+#ifdef MULTITHREADED
     numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
-  } else
+#endif
+    trackOnlyLocalHosts = 1;
+  } else {
+#ifdef MULTITHREADED
     numDequeueThreads = 1;
+#endif
+  }
 
   return(0);
 }

@@ -46,6 +46,8 @@
   #define DEBUG
 */
 
+/* #define ADDRESS_DEBUG */
+
 #include "ntop.h"
 #include <stdarg.h>
 
@@ -325,12 +327,9 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 unsigned short isLocalAddress(struct in_addr *addr) {
   int i;
 
-  if(borderSnifferMode) 
-    return(0); /* This is obviously remote */
-
   for(i=0; i<numDevices; i++)
     if((addr->s_addr & device[i].netmask.s_addr) == device[i].network.s_addr) {
-#ifdef DEBUG
+#ifdef ADDRESS_DEBUG
       traceEvent(TRACE_INFO, "%s is local\n", intoa(*addr));
 #endif
       return 1;
@@ -610,14 +609,16 @@ void handleLocalAddresses(char* addresses) {
 unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   int i;
 
-  if(borderSnifferMode) 
-    return(0); /* This is obviously remote */
-
   i = isLocalAddress(addr);
 
-  if(i == 1)
+  if(i == 1) {
+#ifdef ADDRESS_DEBUG
+    traceEvent(TRACE_WARNING, "%s is local\n", intoa(*addr));
+#endif
+      
     return 1; /* This is a real local address */
-  
+  }
+
   for(i=0; i<numLocalNets; i++) {
 #ifdef DEBUG
     char buf[32], buf1[32], buf2[32];
@@ -632,12 +633,12 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
 	       _intoa(addr2, buf2, sizeof(buf2)));
 #endif
     if((addr->s_addr & networks[i][NETMASK]) == networks[i][NETWORK]) {
-#ifdef DEBUG
+#ifdef ADDRESS_DEBUG
       traceEvent(TRACE_WARNING, "%s is pseudolocal\n", intoa(*addr));
 #endif
       return 1;
     } else {
-#ifdef DEBUG
+#ifdef ADDRESS_DEBUG
       traceEvent(TRACE_WARNING, "%s is NOT pseudolocal\n", intoa(*addr));
 #endif
     }
@@ -647,6 +648,10 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
      We don't check for broadcast as this check has been
      performed already by isLocalAddress() just called 
   */
+
+#ifdef ADDRESS_DEBUG
+    traceEvent(TRACE_WARNING, "%s is remote\n", intoa(*addr));
+#endif
   return(0);
 }
 
@@ -664,12 +669,12 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
 
   for(i=0; i<numLocalNets; i++) {
     if(addr->s_addr == networks[i][BROADCAST]) {
-#ifdef DEBUG
+#ifdef ADDRESS_DEBUG
       traceEvent(TRACE_WARNING, "--> %8X is pseudo broadcast\n", addr->s_addr);
 #endif
       return 1;
     }
-#ifdef DEBUG
+#ifdef ADDRESS_DEBUG
     else
       traceEvent(TRACE_WARNING, "%8X/%8X is NOT pseudo broadcast\n", addr->s_addr, networks[i][BROADCAST]);
 #endif
