@@ -60,7 +60,7 @@ ntop \- display top network users
 .RB [ -j ]
 .RB [ -K ]
 .RB [ -L ]
-.RB [ "filter expression" ]
+.RB [ -B "filter expression" ]
 .SH DESCRIPTION
 .B ntop
 shows the current network usage. It displays a list of hosts that are
@@ -246,7 +246,7 @@ Use this flag for easying application debug (eg. fork() is not used etc.)
 .It -L
 Use this flag for using the syslog instead of stdout. Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
 
-.It "filter expression"
+.It -B "filter expression"
 .B ntop
 , similar to what tcpdump does, allows users to specify an expression
 that restricts the type of traffic handled by
