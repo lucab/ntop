@@ -601,9 +601,17 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
  }
 
  /* ************************************ */
+#define incrementUsageCounter(a, b, c) _incrementUsageCounter(a, b, c, __FILE__, __LINE__)
 
-static void incrementUsageCounter(UsageCounter *counter, u_int peerIdx) {
+static void _incrementUsageCounter(UsageCounter *counter, 
+				  u_int peerIdx, int deviceId, char* file, int line) {
    u_int i, found=0;
+
+   if((peerIdx >= device[deviceId].actualHashSize) && (peerIdx != NO_PEER)) {
+     traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d", 
+		peerIdx, device[deviceId].actualHashSize, file, line);
+     return;
+   }
 
    counter->value++;
 
@@ -698,9 +706,9 @@ void scanTimedoutTCPSessions(void) {
 
 	      if((theHost != NULL) && (theRemHost != NULL)) {
 		incrementUsageCounter(&theHost->securityHostPkts.closedEmptyTCPConnSent,
-				      sessionToPurge->remotePeerIdx);
+				      sessionToPurge->remotePeerIdx, i);
 		incrementUsageCounter(&theRemHost->securityHostPkts.closedEmptyTCPConnRcvd,
-				      sessionToPurge->initiatorIdx);
+				      sessionToPurge->initiatorIdx, i);
 
 		if(enableSuspiciousPacketDump)
 		  traceEvent(TRACE_WARNING, fmt,
@@ -2047,8 +2055,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->nwLatency.tv_usec /= 2;
       theSession->sessionState = STATE_ACTIVE;
       
-      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx, actualDeviceId);
+      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
       device[actualDeviceId].numEstablishedTCPConnections++;
     } else if((addedNewEntry == 0)
 	      && ((theSession->sessionState == STATE_SYN)
@@ -2073,17 +2081,17 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       */
 
       if(sport > dport) {
-	incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
 	/* This simulates a connection establishment */
-	incrementUsageCounter(&srcHost->securityHostPkts.synPktsSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.synPktsRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.synPktsSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.synPktsRcvd, srcHostIdx, actualDeviceId);
       } else {
-	incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnRcvd, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnSent, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnRcvd, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnSent, srcHostIdx, actualDeviceId);
 	/* This simulates a connection establishment */
-	incrementUsageCounter(&dstHost->securityHostPkts.synPktsSent, srcHostIdx);
-	incrementUsageCounter(&srcHost->securityHostPkts.synPktsRcvd, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.synPktsSent, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->securityHostPkts.synPktsRcvd, dstHostIdx, actualDeviceId);
       }
 
       device[actualDeviceId].numEstablishedTCPConnections++;
@@ -2331,8 +2339,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     if(tp->th_flags == (TH_RST|TH_ACK)) {
       /* RST|ACK is sent when a connection is refused */
-      incrementUsageCounter(&srcHost->securityHostPkts.rstAckPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.rstAckPktsRcvd, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.rstAckPktsSent, dstHostIdx, actualDeviceId);
+      incrementUsageCounter(&dstHost->securityHostPkts.rstAckPktsRcvd, srcHostIdx, actualDeviceId);
       device[actualDeviceId].securityPkts.rstAckPkts++;
     } else if(tp->th_flags & TH_RST) {
       if(((theSession->initiatorIdx == srcHostIdx)
@@ -2341,8 +2349,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	 || ((theSession->initiatorIdx == dstHostIdx)
 	     && (theSession->lastInitiator2RemoteFlags[0] == TH_ACK)
 	     && (theSession->bytesReceived == 0))) {
-	incrementUsageCounter(&srcHost->securityHostPkts.ackScanRcvd, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.ackScanSent, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.ackScanRcvd, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.ackScanSent, srcHostIdx, actualDeviceId);
 	if(enableSuspiciousPacketDump) {
 	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
 		     dstHost->hostSymIpAddress, dport,
@@ -2351,24 +2359,24 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	}
       }
       /* Connection terminated */
-      incrementUsageCounter(&srcHost->securityHostPkts.rstPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.rstPktsRcvd, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.rstPktsSent, dstHostIdx, actualDeviceId);
+      incrementUsageCounter(&dstHost->securityHostPkts.rstPktsRcvd, srcHostIdx, actualDeviceId);
       device[actualDeviceId].securityPkts.rstPkts++;
     } else if(tp->th_flags == (TH_SYN|TH_FIN)) {
-      incrementUsageCounter(&srcHost->securityHostPkts.synFinPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.synFinPktsRcvd, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.synFinPktsSent, dstHostIdx, actualDeviceId);
+      incrementUsageCounter(&dstHost->securityHostPkts.synFinPktsRcvd, srcHostIdx, actualDeviceId);
       device[actualDeviceId].securityPkts.synFinPkts++;
     } else if(tp->th_flags == (TH_FIN|TH_PUSH|TH_URG)) {
-      incrementUsageCounter(&srcHost->securityHostPkts.finPushUrgPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.finPushUrgPktsRcvd, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.finPushUrgPktsSent, dstHostIdx, actualDeviceId);
+      incrementUsageCounter(&dstHost->securityHostPkts.finPushUrgPktsRcvd, srcHostIdx, actualDeviceId);
       device[actualDeviceId].securityPkts.finPushUrgPkts++;
     } else if(tp->th_flags == TH_SYN) {
-      incrementUsageCounter(&srcHost->securityHostPkts.synPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.synPktsRcvd, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.synPktsSent, dstHostIdx, actualDeviceId);
+      incrementUsageCounter(&dstHost->securityHostPkts.synPktsRcvd, srcHostIdx, actualDeviceId);
       device[actualDeviceId].securityPkts.synPkts++;
     } else if(tp->th_flags == 0x0 /* NULL */) {
-      incrementUsageCounter(&srcHost->securityHostPkts.nullPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.nullPktsRcvd, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.nullPktsSent, dstHostIdx, actualDeviceId);
+      incrementUsageCounter(&dstHost->securityHostPkts.nullPktsRcvd, srcHostIdx, actualDeviceId);
       device[actualDeviceId].securityPkts.nullPkts++;
     }
 
@@ -2394,8 +2402,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  || ((theSession->initiatorIdx == dstHostIdx)
 	      && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN)))
 	 ) {
-	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx);
-	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx, actualDeviceId);
 
 	if(enableSuspiciousPacketDump) {
 	  traceEvent(TRACE_INFO, "Host %s rejected TCP session from %s [%s:%d]<->[%s:%d] (port closed?)",
@@ -2408,8 +2416,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		 && (theSession->lastRemote2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
 		|| ((theSession->initiatorIdx == dstHostIdx)
 		    && (theSession->lastInitiator2RemoteFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))) {
-	incrementUsageCounter(&dstHost->securityHostPkts.xmasScanSent, srcHostIdx);
-	incrementUsageCounter(&srcHost->securityHostPkts.xmasScanRcvd, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.xmasScanSent, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->securityHostPkts.xmasScanRcvd, dstHostIdx, actualDeviceId);
 
 	if(enableSuspiciousPacketDump) {
 	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
@@ -2421,8 +2429,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		 && ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
 		|| ((theSession->initiatorIdx == dstHostIdx)
 		    && ((theSession->lastInitiator2RemoteFlags[0] & TH_FIN) == TH_FIN))) {
-	incrementUsageCounter(&dstHost->securityHostPkts.finScanSent, srcHostIdx);
-	incrementUsageCounter(&srcHost->securityHostPkts.finScanRcvd, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.finScanSent, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->securityHostPkts.finScanRcvd, dstHostIdx, actualDeviceId);
 
 	if(enableSuspiciousPacketDump) {
 	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
@@ -2436,8 +2444,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		|| ((theSession->initiatorIdx == dstHostIdx)
 		    && ((theSession->lastInitiator2RemoteFlags[0] == 0))
 		    && (theSession->bytesSent > 0))) {
-	incrementUsageCounter(&srcHost->securityHostPkts.nullScanRcvd, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.nullScanSent, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.nullScanRcvd, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.nullScanSent, srcHostIdx, actualDeviceId);
 
 	if(enableSuspiciousPacketDump) {
 	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
@@ -2555,19 +2563,19 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
        || (dport == 13)
        || (dport == 19)) {
       if(sessionType == IPPROTO_UDP) {
-	incrementUsageCounter(&srcHost->securityHostPkts.udpToDiagnosticPortSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.udpToDiagnosticPortRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.udpToDiagnosticPortSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.udpToDiagnosticPortRcvd, srcHostIdx, actualDeviceId);
       } else {
-	incrementUsageCounter(&srcHost->securityHostPkts.tcpToDiagnosticPortSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.tcpToDiagnosticPortRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.tcpToDiagnosticPortSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.tcpToDiagnosticPortRcvd, srcHostIdx, actualDeviceId);
       }
     } else /* sport == 7 */ {
       if(sessionType == IPPROTO_UDP) {
-	incrementUsageCounter(&srcHost->securityHostPkts.udpToDiagnosticPortSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.udpToDiagnosticPortRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.udpToDiagnosticPortSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.udpToDiagnosticPortRcvd, srcHostIdx, actualDeviceId);
       } else {
-	incrementUsageCounter(&srcHost->securityHostPkts.tcpToDiagnosticPortSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.tcpToDiagnosticPortRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.tcpToDiagnosticPortSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.tcpToDiagnosticPortRcvd, srcHostIdx, actualDeviceId);
       }
     }
   }
@@ -2576,8 +2584,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     char *fmt = "WARNING: detected tiny fragment (%d bytes) "
       "[%s:%d] -> [%s:%d] (network mapping attempt?)";
 
-    incrementUsageCounter(&srcHost->securityHostPkts.tinyFragmentSent, dstHostIdx);
-    incrementUsageCounter(&dstHost->securityHostPkts.tinyFragmentRcvd, srcHostIdx);
+    incrementUsageCounter(&srcHost->securityHostPkts.tinyFragmentSent, dstHostIdx, actualDeviceId);
+    incrementUsageCounter(&dstHost->securityHostPkts.tinyFragmentRcvd, srcHostIdx, actualDeviceId);
     if(enableSuspiciousPacketDump) {
       traceEvent(TRACE_WARNING, fmt, packetDataLength,
 		 srcHost->hostSymIpAddress, sport,
@@ -2948,8 +2956,8 @@ static void checkFragmentOverlap(u_int srcHostIdx,
       dumpSuspiciousPacket();
     }
 
-    incrementUsageCounter(&fragment->src->securityHostPkts.overlappingFragmentSent, dstHostIdx);
-    incrementUsageCounter(&fragment->dest->securityHostPkts.overlappingFragmentRcvd, srcHostIdx);
+    incrementUsageCounter(&fragment->src->securityHostPkts.overlappingFragmentSent, dstHostIdx, actualDeviceId);
+    incrementUsageCounter(&fragment->dest->securityHostPkts.overlappingFragmentRcvd, srcHostIdx, actualDeviceId);
   }
 }
                                 
@@ -3849,8 +3857,8 @@ static void processIpPkt(const u_char *bp,
     if(off & 0x3fff) {
       char *fmt = "WARNING: detected ICMP fragment [%s -> %s] (network attack attempt?)";
 
-      incrementUsageCounter(&srcHost->securityHostPkts.icmpFragmentSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.icmpFragmentRcvd, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.icmpFragmentSent, dstHostIdx, actualDeviceId);
+      incrementUsageCounter(&dstHost->securityHostPkts.icmpFragmentRcvd, srcHostIdx, actualDeviceId);
       if(enableSuspiciousPacketDump) {
 	traceEvent(TRACE_WARNING, fmt,
 		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
@@ -3949,8 +3957,8 @@ static void processIpPkt(const u_char *bp,
 		       "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
 		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	  /* Simulation of rejected TCP connection */
-	  incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnSent, dstHostIdx);
-	  incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnRcvd, srcHostIdx);
+	  incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnSent, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnRcvd, srcHostIdx, actualDeviceId);
 	  break;
 
 	case IPPROTO_UDP:
@@ -3958,19 +3966,19 @@ static void processIpPkt(const u_char *bp,
 	    traceEvent(TRACE_WARNING,
 		       "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
 		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
-	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
-	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
+	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx, actualDeviceId);
 	  break;
 	}
 
-	incrementUsageCounter(&srcHost->securityHostPkts.icmpPortUnreachSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.icmpPortUnreachRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.icmpPortUnreachSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.icmpPortUnreachRcvd, srcHostIdx, actualDeviceId);
 	break;
 
       case ICMP_UNREACH_NET:
       case ICMP_UNREACH_HOST:
-	incrementUsageCounter(&srcHost->securityHostPkts.icmpHostNetUnreachSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.icmpHostNetUnreachRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.icmpHostNetUnreachSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.icmpHostNetUnreachRcvd, srcHostIdx, actualDeviceId);
 	break;
 
       case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
@@ -3980,8 +3988,8 @@ static void processIpPkt(const u_char *bp,
 		     " (Firewalking scan attempt?)",
 		     dstHost->hostSymIpAddress,
 		     srcHost->hostSymIpAddress);
-	incrementUsageCounter(&srcHost->securityHostPkts.icmpProtocolUnreachSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.icmpProtocolUnreachRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.icmpProtocolUnreachSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.icmpProtocolUnreachRcvd, srcHostIdx, actualDeviceId);
 	break;
       case ICMP_UNREACH_NET_PROHIB:    /* Net Administratively Prohibited */
       case ICMP_UNREACH_HOST_PROHIB:   /* Host Administratively Prohibited */
@@ -3991,8 +3999,8 @@ static void processIpPkt(const u_char *bp,
 		     "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
 		     " (Firewalking scan attempt?)",
 		     dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
-	incrementUsageCounter(&srcHost->securityHostPkts.icmpAdminProhibitedSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.icmpAdminProhibitedRcvd, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.icmpAdminProhibitedSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts.icmpAdminProhibitedRcvd, srcHostIdx, actualDeviceId);
 	break;
       }
       if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
