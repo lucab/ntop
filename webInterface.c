@@ -200,7 +200,7 @@ void execCGI(char* cgiName) {
   }
 
   if(!printHeader) {
-   sendString("<HTML><BODY BGCOLOR=#FFFFFF><P><CENTER><H1>"
+   sendString("<HTML><BODY BACKGROUND=white_bg.gif BGCOLOR=#FFFFFF><P><CENTER><H1>"
 	       "<i>No Plugins available</i></H1>"
 	      "</CENTER></FONT></CENTER><p>\n");
   } else {
@@ -666,7 +666,7 @@ char* getRowColor() {
 #ifdef USE_COLOR
   if(alternateColor == 0) {
     alternateColor = 1;
-    return("BGCOLOR=#EFEFEF");
+    return("BGCOLOR=#C3C9D9"); /* EFEFEF */ 
   } else {
     alternateColor = 0;
     return("");
@@ -698,7 +698,7 @@ void switchNwInterface(int _interface) {
   int i, mwInterface=_interface-1;
   char buf[BUF_SIZE], *selected;
 
-  sendString("<html>\n<body bgcolor=#FFFFFF><CENTER><FONT FACE=Helvetica><H1>"
+  sendString("<html>\n<body BACKGROUND=white_bg.gif bgcolor=#FFFFFF><CENTER><FONT FACE=Helvetica><H1>"
 	     "Network Interface Switch"
 	     "</H1></center><hr><p><b>");
 

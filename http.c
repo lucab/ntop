@@ -319,26 +319,10 @@ void printHTTPheader() {
   sendString("<HTML>\n<HEAD>\n<META HTTP-EQUIV=REFRESH CONTENT=");
   snprintf(buf, BUF_SIZE, "%d", refreshRate);
   sendString(buf);
-  sendString(">\n");
-  sendString("<style type=\"text/css\">\n");
-  sendString("//<!--\n");
-  sendString("body {  font-family: Helvetica, Arial, sans-serif; font-size: 10pt}\n");
-  sendString("th   {  font-family: Helvetica, Arial, sans-serif; font-size: 10pt; font-weight: bold; }\n");
-  sendString("td   {  font-family: Helvetica, Arial, sans-serif; font-size: 10pt;}\n");
-  sendString("form   {  font-family: Helvetica, Arial, sans-serif; font-size: 10pt}\n");
-  sendString("h1   {  font-family: Helvetica, Verdana, Arial, sans-serif; font-size: 16pt; font-weight: bold}\n");
-  sendString("A:link    {  font-family: Helvetica, Arial, sans-serif; font-size: 10pt; text-decoration: none; color: blue}\n");
-  sendString("A:visited {  font-family: Helvetica, Arial, sans-serif; font-size: 10pt; text-decoration: none; color: blue}\n");
-  sendString("A:hover   {  font-family: Helvetica, Arial, sans-serif; font-size: 10pt; text-decoration: underline; color: red}\n");
-  sendString("A:link.nav {  font-family: Helvetica, Verdana, Arial, sans-serif; color: #000000}\n");
-  sendString("A:visited.nav {  font-family: Helvetica, Verdana, Arial, sans-serif; color: #000000}\n");
-  sendString("A:hover.nav {  font-family: Helvetica, Verdana, Arial, sans-serif; color: red;}\n");
-  sendString(".nav {  font-family: Helvetica, Verdana, Arial, sans-serif; color: #000000}\n");
-  sendString("//-->\n");
-  sendString("</style>\n");
+  sendString(">\n<LINK REL=stylesheet HREF=style.css type=\"text/css\">\n");
   sendString("<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n");
   sendString("<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
-  sendString("</HEAD>\n<BODY BGCOLOR=#FFFFFF>\n");
+  sendString("</HEAD>\n<BODY BACKGROUND=white_bg.gif BGCOLOR=#FFFFFF>\n");
 }
 
 /* ************************* */
@@ -426,7 +410,7 @@ void returnHTTPaccessDenied() {
   sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server [default user=admin,pw=admin];\"\n");
   sendString("Connection: close\n");
   sendString("Content-Type: text/html\n\n");
-  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY>\n"
+  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY BACKGROUND=white_bg.gif>\n"
 	     "<H1>Error 401</H1>\nUnauthorized to access the document\n</BODY>\n</HTML>\n");
   logHTTPaccess(401);
 }
@@ -437,7 +421,7 @@ void returnHTTPaccessForbidden() {
   sendString("HTTP/1.0 403 Forbidded\n");
   sendString("Connection: close\n");
   sendString("Content-Type: text/html\n\n");
-  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY>\n"
+  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY BACKGROUND=white_bg.gif>\n"
 	     "<H1>Error 401</H1>\nServer refused to fulfill your request.\n</BODY>\n</HTML>\n");
   logHTTPaccess(403);
 }
@@ -598,6 +582,10 @@ void returnHTTPPage(char* pageName, int postLen) {
       snprintf(tmpStr, sizeof(tmpStr), "Content-Length: %d\n\n", (len = ftell(fd)));
       fseek(fd, 0, SEEK_SET);
       sendString(tmpStr);
+
+    } else if((len > 4) && ((strcmp(&pageName[len-4], ".css") == 0))) {
+      sendHTTPProtoHeader();
+      sendString("Content-type: text/css\n");
     } else {
       sendHTTPProtoHeader();
       sendHTTPHeaderType();
@@ -652,7 +640,7 @@ void returnHTTPPage(char* pageName, int postLen) {
   } else if((strcmp(pageName, "leftmenu.html") == 0)
 	    || (strcmp(pageName, "leftmenu-nojs.html") == 0)) {
     sendHTTPProtoHeader(); sendHTTPHeaderType();
-    sendString("<HTML>\n<BODY BGCOLOR=#FFFFFF>\n"
+    sendString("<HTML>\n<BODY BACKGROUND=white_bg.gif BGCOLOR=#FFFFFF>\n"
 	       "<center>\n<pre>\n\n</pre>\n\n");
     sendString("<FONT FACE=Helvetica SIZE=+2>Welcome<br>to<br>\n");
     sendString("ntop!</FONT>\n<pre>\n</pre>\n");
@@ -734,7 +722,7 @@ void returnHTTPPage(char* pageName, int postLen) {
     switchNwInterface(sortedColumn);
   } else if(strcmp(pageName, "home.html") == 0) {
     sendHTTPProtoHeader(); sendHTTPHeaderType();
-    sendString("<html>\n<body bgcolor=#FFFFFF><CENTER><FONT FACE=Helvetica>"
+    sendString("<html>\n<body BACKGROUND=white_bg.gif bgcolor=#FFFFFF><CENTER><FONT FACE=Helvetica>"
 	       "<H1>Welcome to ntop!</H1></center><hr>");
     sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
     sendString("currently using the network and reports information concerning the IP\n");
@@ -911,7 +899,7 @@ void returnHTTPPage(char* pageName, int postLen) {
     printHostEvents(NULL, sortedColumn, revertOrder);
   } else if(strcmp(pageName, "Credits.html") == 0) {
     sendHTTPProtoHeader(); sendHTTPHeaderType();
-    sendString("<HTML>\n<BODY BGCOLOR=#FFFFFF>\n<FONT FACE=Helvetica>\n");
+    sendString("<HTML>\n<BODY BACKGROUND=white_bg.gif BGCOLOR=#FFFFFF>\n<FONT FACE=Helvetica>\n");
     sendString("<H1><center>Credits</H1></center><p><hr><br><b>ntop</b> has been created by\n");
     sendString("<A HREF=\"http://jake.unipi.it/~deri/\">Luca Deri</A> while studying how to model\n");
     sendString("network traffic. He was unsatisfied of the many network traffic analysis tools\n");
@@ -999,7 +987,7 @@ void returnHTTPPage(char* pageName, int postLen) {
   } else {
     sendHTTPProtoHeader(); sendHTTPHeaderType();
     printHTTPheader();
-    sendString("<HTML>\n<TITLE>???</TITLE>\n<BODY>\n<H1>Error</H1>\nUnknown page\n");
+    sendString("<HTML>\n<TITLE>???</TITLE>\n<BODY BACKGROUND=white_bg.gif>\n<H1>Error</H1>\nUnknown page\n");
   }
 
   if(printTrailer && (postLen == -1)) printHTTPtrailer();
@@ -1159,7 +1147,7 @@ void returnHTTPnotImplemented() {
   sendString("HTTP/1.0 501 Not Implemented\n");
   sendString("Connection: close\n");
   sendString("Content-Type: text/html\n\n");
-  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY>\n"
+  sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY BACKGROUND=white_bg.gif>\n"
 	     "<H1>Error 501</H1>\nMethod not implemented\n</BODY>\n</HTML>\n");
 
   logHTTPaccess(501);
@@ -1213,7 +1201,7 @@ void handleHTTPrequest(struct in_addr from) {
     snprintf(buf, sizeof(buf), "Server: ntop/%s (%s)\n", version, osName);
     sendString(buf);
     sendHTTPProtoHeader(); sendHTTPHeaderType();
-    sendString("<HTML>\n<TITLE>???</TITLE>\n<BODY>\n"
+    sendString("<HTML>\n<TITLE>???</TITLE>\n<BODY BACKGROUND=white_bg.gif>\n"
 	       "<H1>Error</H1>\nUnkown page\n</BODY>\n</HTML>\n");
   }
 
