@@ -104,7 +104,7 @@ CSRC =	ntop.c ntop_win32.c main.c \
 	hash.c http.c initialize.c leaks.c \
 	netflow.c pbuf.c plugin.c protocols.c \
 	qsort.c regex.c report.c reportUtils.c \
-	sessions.c sql.c term.c traffic.c \
+	sessions.c term.c traffic.c \
 	util.c vendor.c webInterface.c \
 	plugins\icmpPlugin.c plugins\lastSeenPlugin.c \
 	plugins\netflowPlugin.c plugins\nfsPlugin.c \
