@@ -1017,7 +1017,7 @@ void extendTcpSessionsHash() {
   if((device[actualDeviceId].numTotSessions*extensionFactor) < MAX_HASH_SIZE) {
     /* Fine we can enlarge the table now */
     IPSession** tmpSession;
-    int len, i, newLen, idx;
+    int i, newLen, idx;
 
     newLen = extensionFactor*sizeof(IPSession*)*device[actualDeviceId].numTotSessions;
 

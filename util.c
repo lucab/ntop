@@ -1567,7 +1567,7 @@ void storeHostTrafficInstance(HostTraffic *el) {
 
 /* ************************************ */
 
-static resetHostsVariables(HostTraffic* el) {
+static void resetHostsVariables(HostTraffic* el) {
   el->fullDomainName = NULL;
   el->dotDomainName = NULL;
   el->hostSymIpAddress[0] = '\0';
@@ -2118,7 +2118,7 @@ void fillDomainName(HostTraffic *el) {
 #endif
 }
 
-/* ********************************* *
+/* ********************************* */
 
 /* similar to Java.String.trim() */
 void trimString(char* str) {

@@ -383,8 +383,7 @@ int main(int argc, char *argv[]) {
 	/* NOTREACHED */
       }
  
-  sprintf(accessLogPath, "%s/%s", dbPath, 
-	  DETAIL_ACCESS_LOG_FILE_PATH, sizeof(accessLogPath));
+  snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s", dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
 
   if(webPort == 0) {
 #ifdef HAVE_OPENSSL

@@ -3091,8 +3091,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   memset(tmpStats, 0, len);
 
   /* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */
-  len = sizeof(DomainStats*)*device[actualReportDeviceId].actualHashSize;
-  stats = (DomainStats*)malloc(len);
+  len = sizeof(DomainStats**)*device[actualReportDeviceId].actualHashSize;
+  stats = (DomainStats**)malloc(len);
   memset(stats, 0, len);
 
   /* traceEvent(TRACE_INFO, "'%s' '%d' '%d'\n", domainName, sortedColumn, revertOrder); */

@@ -1501,8 +1501,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    /* Let's check whether this is a Napster session */
 	    if(numNapsterSvr > 0) {
 	      for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
-		if((napsterSvr[i].serverPort == sport)
-		   && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr)
+		if(((napsterSvr[i].serverPort == sport)
+		   && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr))
 		   || ((napsterSvr[i].serverPort == dport)
 		       && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
 		  theSession->napsterSession = 1;
@@ -1540,16 +1540,16 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #define NAPSTER_DOMAIN "napster.com"
 
 	      if(
-		 ((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-		  && (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-
-						       strlen(NAPSTER_DOMAIN)],
-			     NAPSTER_DOMAIN) == 0) && (sport == 8888))
+		 (((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
+		   && (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-
+							 strlen(NAPSTER_DOMAIN)],
+			      NAPSTER_DOMAIN) == 0) && (sport == 8888)))
 		 ||
-		 ((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-		  && (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-
-						       strlen(NAPSTER_DOMAIN)],
-			     NAPSTER_DOMAIN) == 0)) && (dport == 8888)) {
-
+		 (((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
+		   && (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-
+							 strlen(NAPSTER_DOMAIN)],
+			      NAPSTER_DOMAIN) == 0)) && (dport == 8888))) {
+		
 		theSession->napsterSession = 1;
 
 		traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
@@ -1660,11 +1660,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  if(rc == 200) /* HTTP/1.1 200 OK */ {
 	    srcHost->httpStats->numPositiveReplSent++;
+	    FD_SET(HOST_SVC_HTTP, &srcHost->flags);
 	    dstHost->httpStats->numPositiveReplRcvd++;
 	  } else {
 	    srcHost->httpStats->numNegativeReplSent++;
+	    FD_SET(HOST_SVC_HTTP, &srcHost->flags);
 	    dstHost->httpStats->numNegativeReplRcvd++;
-	  }
+	  } 
 
 	  if(microSecTimeDiff > 0) {
 	    if(subnetLocalHost(dstHost)) {
@@ -1919,6 +1921,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
 
       if(sport == 21) {
+	FD_SET(HOST_SVC_FTP, &srcHost->flags);
 	memset(rcStr, 0, sizeof(rcStr));
 	strncpy(rcStr, packetData, len);
 	/*
@@ -3587,8 +3590,6 @@ static void processIpPkt(const u_char *bp,
 
 	  if(strcmp(tmpBuffer, "\\MAILSLOT\\BROWSE") == 0) {
 	    /* Good: this looks like a browser announcement */
-	    int bytesRemaining = udpDataLen-151;
-
 	    if(((tmpBuffer[17] == 0x0F /* Local Master Announcement*/)
 		|| (tmpBuffer[17] == 0x01 /* Host Announcement*/))
 	       && (tmpBuffer[49] != '\0')) {

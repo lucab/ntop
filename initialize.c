@@ -183,7 +183,6 @@ void initCounters(int _mergeInterfaces) {
   char *p;
 #endif
   int len, i;
-  int actualHashSize = HASH_INITIAL_SIZE;
   static HostTraffic broadcastEntry;
 
   mergeInterfaces = _mergeInterfaces;
@@ -386,7 +385,9 @@ void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
 
 void initGdbm(void) {
   char tmpBuf[200];
+#ifdef FALLBACK
   int firstTime=1;
+#endif
 
   traceEvent(TRACE_INFO, "Initializing GDBM...");
 
@@ -506,14 +507,14 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    * (1) - NPA - Network Packet Analyzer (main thread)
    */
   createThread(&dequeueThreadId, dequeuePacket, NULL);
-  traceEvent (TRACE_INFO, "Started thread (%d) for network packet analyser.\n",
+  traceEvent (TRACE_INFO, "Started thread (%ld) for network packet analyser.\n",
 	      dequeueThreadId);
 
   /*
    * (2) - HTS - Host Traffic Statistics
    */
   createThread(&hostTrafficStatsThreadId, updateHostTrafficStatsThptLoop, NULL);
-  traceEvent (TRACE_INFO, "Started thread (%d) for host traffic statistics.\n",
+  traceEvent (TRACE_INFO, "Started thread (%ld) for host traffic statistics.\n",
 	      hostTrafficStatsThreadId);
 
   /*
@@ -521,7 +522,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    */
   if (enableThUpdate) {
     createThread(&thptUpdateThreadId, updateThptLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%d) for throughput update.", thptUpdateThreadId);
+    traceEvent (TRACE_INFO, "Started thread (%ld) for throughput update.", thptUpdateThreadId);
   }
 
   /*
@@ -529,7 +530,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    */
   if (enableIdleHosts) {
     createThread(&scanIdleThreadId, scanIdleLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%d) for idle hosts detection.\n", scanIdleThreadId);
+    traceEvent (TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n", scanIdleThreadId);
   }
 
 #ifndef MICRO_NTOP
@@ -538,7 +539,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    */
   if (enableDBsupport) {
     createThread(&dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%d) for DB update.\n", dbUpdateThreadId);
+    traceEvent (TRACE_INFO, "Started thread (%ld) for DB update.\n", dbUpdateThreadId);
   }
 #endif /* MICRO_NTOP */
 
@@ -551,7 +552,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
      * (6) - DNSAR - DNS Address Resolution - optional
      */
     createThread(&dequeueAddressThreadId, dequeueAddress, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%d) for DNS address resolution.\n", 
+    traceEvent (TRACE_INFO, "Started thread (%ld) for DNS address resolution.\n", 
 		dequeueAddressThreadId);
   }
 #endif
@@ -570,7 +571,7 @@ void initApps(void) {
      * (7) - LSOF - optional
      */
     createThread(&lsofThreadId, periodicLsofLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%d) for lsof support.\n", lsofThreadId);
+    traceEvent (TRACE_INFO, "Started thread (%ld) for lsof support.\n", lsofThreadId);
 #endif /* WIN32 */
 #else
     if(isLsofPresent) readLsofInfo();
@@ -593,9 +594,9 @@ void initDevices(char* devices) {
 
   if (devices == NULL) {
     char *tmpDev = pcap_lookupdev(ebuf);
+#ifdef WIN32
     char *ifName = tmpDev;
 
-#ifdef WIN32
     if(!isWinNT()) {
       for(i=0;; i++) {
 	if(tmpDev[i] == 0) {
@@ -981,7 +982,7 @@ void startSniffer(void) {
        * (8) - NPS - Network Packet Sniffer (main thread)
        */
       createThread(&device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
-      traceEvent (TRACE_INFO, "Started thread (%d) for network packet sniffing on %s.\n",
+      traceEvent (TRACE_INFO, "Started thread (%ld) for network packet sniffing on %s.\n",
 		  device[i].pcapDispatchThreadId, device[i].name);
     }
 #endif
