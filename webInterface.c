@@ -6262,16 +6262,19 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   sendString(texthtml("\n\nPackets\n\n", "<tr><th colspan=2 "DARK_BG">Packets</th></tr>\n"));
 
+#ifdef CFG_MULTITHREADED
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPackets) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Received", buf);
+#endif
 
+#ifdef CFG_MULTITHREADED
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPacketsProcessed) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Processed Immediately", buf);
+#endif
 
 #ifdef CFG_MULTITHREADED
-
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPacketsQueued) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Queued", buf);
@@ -7195,6 +7198,8 @@ void printNtopProblemReport(void) {
   sendString("           Memory:        _____ MB\n");
 
   sendString("\nPackets\n");
+
+#ifdef CFG_MULTITHREADED
   if(snprintf(buf, sizeof(buf), "Received:  %10u\n", myGlobals.receivedPackets) < 0)
     BufferTooShort();
   sendString(buf);
@@ -7202,6 +7207,7 @@ void printNtopProblemReport(void) {
               myGlobals.receivedPacketsProcessed) < 0)
     BufferTooShort();
   sendString(buf);
+#endif
 
 #ifdef CFG_MULTITHREADED
   if(snprintf(buf, sizeof(buf), "Queued:    %10u\n",

@@ -5054,7 +5054,7 @@ void extractAndAppend(char *userAgent, int userAgentLen,
 
 /* ===== ===== retrieve url ===== ===== */
 
-int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen) {
+int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen) {
   struct hostent *hptr;
   char *userAgent, *space;
   int rc, sock;
@@ -5064,9 +5064,9 @@ int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int buf
 #endif
 
   /* Establish the connection */
-  hptr = gethostbyname(versionSite);
+  hptr = gethostbyname(versSite);
   if (!hptr) {
-    traceEvent(CONST_TRACE_ERROR, "CHKVER: Unable to resolve site %s", versionSite);
+    traceEvent(CONST_TRACE_ERROR, "CHKVER: Unable to resolve site %s", versSite);
     return 1;
   }
 #ifdef CHKVER_DEBUG
@@ -5208,7 +5208,7 @@ int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int buf
 	      "Accept: %s\r\n"
 	      "\r\n",
 	      versionFile,
-	      versionSite,
+	      versSite,
 	      userAgent,
 	      CONST_HTTP_ACCEPT_ALL) < 0)
     BufferTooShort();

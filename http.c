@@ -2607,7 +2607,9 @@ static int checkHTTPpassword(char *theRequestedURL,
 
     traceEvent(CONST_TRACE_NOISY, "SECURITY: Loading items table");
 
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.securityItemsMutex,  "load");
+#endif
 
     key = gdbm_firstkey(myGlobals.pwFile);
     
@@ -2623,12 +2625,17 @@ static int checkHTTPpassword(char *theRequestedURL,
           break;
       }
     }
+
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.securityItemsMutex);
+#endif
   }
 
   outBuffer[0] = '\0';
 
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.securityItemsMutex,  "test");
+#endif
 
   for(i=0; i<myGlobals.securityItemsLoaded; i++) {
     if(myGlobals.securityItems[i][0] == '2') /* 2 = URL */ {
@@ -2641,7 +2648,10 @@ static int checkHTTPpassword(char *theRequestedURL,
       }
     }
   }
+
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.securityItemsMutex);
+#endif
 
   if(outBuffer[0] == '\0') {
     return 1; /* This is a non protected URL */

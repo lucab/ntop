@@ -96,16 +96,20 @@ void clearUserUrlList(void) {
 
   traceEvent(CONST_TRACE_NOISY, "SECURITY: Loading items table");
 
+#ifdef CFG_MULTITHREADED
   if(myGlobals.securityItemsMutex.isInitialized == 1)
     accessMutex(&myGlobals.securityItemsMutex, "clear");
+#endif
 
   for (i=0; i<myGlobals.securityItemsLoaded; i++) {
     free(myGlobals.securityItems[i]);
   }
   myGlobals.securityItemsLoaded = 0;
 
+#ifdef CFG_MULTITHREADED
   if(myGlobals.securityItemsMutex.isInitialized == 1)
     releaseMutex(&myGlobals.securityItemsMutex);
+#endif
 }
 
 /* *******************************/
