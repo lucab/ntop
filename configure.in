@@ -265,9 +265,9 @@ int main()
 }
 
 ]
-, [ AC_DEFINE(NTOP_BIG_ENDIAN, 1, [ntop built for big endian machine]) ]
-, [ AC_DEFINE(NTOP_LITTLE_ENDIAN, 1,  [ntop built for little endian machine]) ]
-, [ AC_DEFINE(NTOP_BIG_ENDIAN, 1, [ntop built for big endian machine]) ]
+, [ AC_DEFINE_UNQUOTED(NTOP_BIG_ENDIAN, 1, [ntop built for big endian machine]) ]
+, [ AC_DEFINE_UNQUOTED(NTOP_LITTLE_ENDIAN, 1,  [ntop built for little endian machine]) ]
+, [ AC_DEFINE_UNQUOTED(NTOP_BIG_ENDIAN, 1, [ntop built for big endian machine]) ]
 )
 
 dnl>
@@ -438,7 +438,7 @@ dnl>        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
         ;;
 
     *-sun-solaris2.5.1:* )
-        AC_DEFINE(NEED_INET_ATON, 1, [Solaris 2.5.1: Define if you need a private implementation of inet_aton (solaris 2.5.1 doesn't have it).])
+        AC_DEFINE_UNQUOTED(NEED_INET_ATON, 1, [Solaris 2.5.1: Define if you need a private implementation of inet_aton (solaris 2.5.1 doesn't have it).])
         ;;
 
     *openbsd* )
@@ -474,16 +474,16 @@ dnl> AC_HEADER_TIME
 
 dnl> This needs to be fixed but I don't know how (L.Deri - 07/10/2002)
 if test $ac_dummyvariable = yes ; then
-AC_DEFINE(DEBUG, 0, [dummy])
-AC_DEFINE(HAVE_INT16_T, 0, [dummy])
-AC_DEFINE(HAVE_INT32_T, 0, [dummy])
-AC_DEFINE(HAVE_INT64_T, 0, [dummy])
-AC_DEFINE(HAVE_INT8_T, 0, [dummy])
-AC_DEFINE(HAVE_UINT64_T, 0, [dummy])
-AC_DEFINE(HAVE_U_INT16_T, 0, [dummy])
-AC_DEFINE(HAVE_U_INT32_T, 0, [dummy])
-AC_DEFINE(HAVE_U_INT64_T, 0, [dummy])
-AC_DEFINE(HAVE_U_INT8_T, 0, [dummy])
+AC_DEFINE_UNQUOTED(DEBUG, 0, [dummy])
+AC_DEFINE_UNQUOTED(HAVE_INT16_T, 0, [dummy])
+AC_DEFINE_UNQUOTED(HAVE_INT32_T, 0, [dummy])
+AC_DEFINE_UNQUOTED(HAVE_INT64_T, 0, [dummy])
+AC_DEFINE_UNQUOTED(HAVE_INT8_T, 0, [dummy])
+AC_DEFINE_UNQUOTED(HAVE_UINT64_T, 0, [dummy])
+AC_DEFINE_UNQUOTED(HAVE_U_INT16_T, 0, [dummy])
+AC_DEFINE_UNQUOTED(HAVE_U_INT32_T, 0, [dummy])
+AC_DEFINE_UNQUOTED(HAVE_U_INT64_T, 0, [dummy])
+AC_DEFINE_UNQUOTED(HAVE_U_INT8_T, 0, [dummy])
 fi
 
 
@@ -519,7 +519,7 @@ AC_CACHE_VAL(ac_cv_ether_header_has_ea,
     CFLAGS="$LBL_SAVE_CFLAGS")
 AC_MSG_RESULT($ac_cv_ether_header_has_ea)
 if test $ac_cv_ether_header_has_ea = yes ; then
-        AC_DEFINE(ETHER_HEADER_HAS_EA, 1, [Define if the ether_header uses ether_addr structs.])
+        AC_DEFINE_UNQUOTED(ETHER_HEADER_HAS_EA, 1, [Define if the ether_header uses ether_addr structs.])
 fi
 
 
@@ -542,7 +542,7 @@ AC_CACHE_VAL(ac_cv_in6_addr_has_ea,
     CFLAGS="$LBL_SAVE_CFLAGS")
 AC_MSG_RESULT($ac_cv_in6_addr_has_ea)
 if test $ac_cv_in6_addr_has_ea = yes ; then
-        AC_DEFINE(HAVE_IN6_ADDR, 1, [Define for sFlowPlugin.c to define in6_addr for environments that don't have it...])
+        AC_DEFINE_UNQUOTED(HAVE_IN6_ADDR, 1, [Define for sFlowPlugin.c to define in6_addr for environments that don't have it...])
 fi
 
 
@@ -551,11 +551,11 @@ if test ".$ac_disable_curses" = ".no"; then
 
   if test -f "/usr/include/ncurses.h"; then
     echo "checking for ncurses.h... yes"
-    AC_DEFINE(HAVE_NCURSES_H, 1, [ Define if you have the ncurses.h header file])
+    AC_DEFINE_UNQUOTED(HAVE_NCURSES_H, 1, [ Define if you have the ncurses.h header file])
   else
     if test -f "/usr/include/curses.h"; then
       echo "checking for curses.h... yes"
-      AC_DEFINE(HAVE_CURSES_H, 1, [ Define if you have the curses.h header file])
+      AC_DEFINE_UNQUOTED(HAVE_CURSES_H, 1, [ Define if you have the curses.h header file])
     else
       AC_MSG_WARN([It looks that you don't have (n)curses.h installed hence intop will *not* be built.])
      ac_disable_intop=yes
@@ -569,7 +569,7 @@ AC_CHECK_HEADERS(alloca.h)
 
 dnl> OPTIONAL micro ntop
 if test ".$ac_micro_ntop" = ".yes"; then
-	AC_DEFINE(MICRO_NTOP, 1, [Define if you want to build micro ntop.])
+	AC_DEFINE_UNQUOTED(MICRO_NTOP, 1, [Define if you want to build micro ntop.])
 fi
 
 dnl> OPTIONAL thread headers
@@ -612,7 +612,7 @@ else
     ac_has_facilitynames=no
 fi
 if test $ac_has_facilitynames = yes ; then
-    AC_DEFINE(HAVE_FACILITYNAMES, 1, [Define if you have a glibc syslog.h or sys/syslog.h with facilitynames[] option])
+    AC_DEFINE_UNQUOTED(HAVE_FACILITYNAMES, 1, [Define if you have a glibc syslog.h or sys/syslog.h with facilitynames[] option])
 fi
 
 dnl> OPTIONAL UCD-SNMP
@@ -643,8 +643,8 @@ AC_CHECK_FUNCS(ctime_r)
 AC_CHECK_FUNCS(snprintf)
 AC_CHECK_FUNCS(getipnodebyaddr)
 AC_CHECK_FUNCS(gethostbyaddr_r)
-AC_CHECK_LIB(c, gethostbyaddr_r, AC_DEFINE(HAVE_GETHOSTBYADDR_R, 1, [Define if you have gethostbyaddr_r]), 
-AC_CHECK_LIB(nsl, gethostbyaddr_r, AC_DEFINE(HAVE_GETHOSTBYADDR_R, 1, [Define if you have gethostbyaddr_r])) )
+AC_CHECK_LIB(c, gethostbyaddr_r, AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYADDR_R, 1, [Define if you have gethostbyaddr_r]), 
+AC_CHECK_LIB(nsl, gethostbyaddr_r, AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYADDR_R, 1, [Define if you have gethostbyaddr_r])) )
 
 dnl> Check for additional functions
 AC_CHECK_FUNCS(strsep)
@@ -662,7 +662,7 @@ AC_CHECK_LIB(dl, dlopen)
 dnl>
 dnl> check for `backtrace' in -lc
 dnl>
-AC_CHECK_LIB(c, backtrace, AC_DEFINE(HAVE_BACKTRACE, 1, [Define if you have backtrace]))
+AC_CHECK_LIB(c, backtrace, AC_DEFINE_UNQUOTED(HAVE_BACKTRACE, 1, [Define if you have backtrace]))
 
 dnl>
 dnl> check for `crypt' in -lc or -lcrypt (MANDATORY)
@@ -672,7 +672,7 @@ AC_CHECK_FUNC(crypt, , AC_CHECK_LIB(c, crypt, ,
     AC_MSG_ERROR(you need the crypt library to build ntop), $MORELIBS)]))
 
 AC_CHECK_LIB(kstat, kstat_lookup)
-AC_CHECK_LIB(c, getopt_long, AC_DEFINE(HAVE_GETOPT_LONG, 1, [Define if you have getopt_long.]))
+AC_CHECK_LIB(c, getopt_long, AC_DEFINE_UNQUOTED(HAVE_GETOPT_LONG, 1, [Define if you have getopt_long.]))
 
 dnl>
 dnl> GDChart uses functions from math library,
@@ -696,7 +696,7 @@ dnl>
 dnl> Ignore SIGPIPE?
 dnl>
 if test ".$ac_enable_ignoresigpipe" = ".yes"; then
-  AC_DEFINE(YES_IGNORE_SIGPIPE, 1, [Define for IGNORE of SIGPIPE])
+  AC_DEFINE_UNQUOTED(YES_IGNORE_SIGPIPE, 1, [Define for IGNORE of SIGPIPE])
 fi
 
 dnl>
@@ -716,10 +716,10 @@ AC_CHECK_LIB(resolv, inet_aton)
 dnl> both Solaris and AIX lack definition of `getdomainname'
 case "$host" in
     *-sun-solaris2* )
-        AC_DEFINE(NEED_GETDOMAINNAME, 1, [Solaris 2: OS lacks the getdomainname(2) function.])
+        AC_DEFINE_UNQUOTED(NEED_GETDOMAINNAME, 1, [Solaris 2: OS lacks the getdomainname(2) function.])
         ;;
     *-ibm-aix4.[12].* )
-        AC_DEFINE(NEED_GETDOMAINNAME, 1, [AIX 4.1, 4.2: OS lacks the getdomainname(2) function.])
+        AC_DEFINE_UNQUOTED(NEED_GETDOMAINNAME, 1, [AIX 4.1, 4.2: OS lacks the getdomainname(2) function.])
         ;;
 esac
 
@@ -768,8 +768,8 @@ struct request_info *req;], [
 		have_wrappers=no)])
  
 	if test ".$have_wrappers" = ".yes"; then
-		AC_DEFINE(HAVE_TCPD_H, 1,  [Define if you have the TCP Wrap library (-lwrap) and headers.])
-                AC_DEFINE(HAVE_LIBWRAP, 1, [Define if you have the TCP Wrap library (-lwrap) and headers.])
+		AC_DEFINE_UNQUOTED(HAVE_TCPD_H, 1,  [Define if you have the TCP Wrap library (-lwrap) and headers.])
+                AC_DEFINE_UNQUOTED(HAVE_LIBWRAP, 1, [Define if you have the TCP Wrap library (-lwrap) and headers.])
                 MORELIBS="$MORELIBS -lwrap"
  	else
 		AC_MSG_ERROR([could not find -lwrap. rerun without --enable-tcpwrap])
@@ -810,8 +810,8 @@ dnl>
 dnl> check for `sem_init' in -lposix4
 dnl>
      AC_CHECK_LIB(posix4, sem_init)
-     AC_DEFINE(MULTITHREADED, 1, [Enable/disable multithread support])
-     AC_DEFINE(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
+     AC_DEFINE_UNQUOTED(MULTITHREADED, 1, [Enable/disable multithread support])
+     AC_DEFINE_UNQUOTED(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
   else
  AC_CHECK_LIB(pthreads, pthread_create)
   if test ".`echo $LIBS | grep pthread`" != .; then
@@ -819,13 +819,13 @@ dnl>
 dnl> check for `sem_init' in -lposix4
 dnl>
      AC_CHECK_LIB(posix4, sem_init)
-     AC_DEFINE(MULTITHREADED, 1, [Enable/disable multithread support])
-     AC_DEFINE(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
+     AC_DEFINE_UNQUOTED(MULTITHREADED, 1, [Enable/disable multithread support])
+     AC_DEFINE_UNQUOTED(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
   else
      AC_CHECK_LIB(c_r, pthread_create)
      if test ".`echo $LIBS | grep c_r`" != .; then
-     AC_DEFINE(MULTITHREADED)
-     AC_DEFINE(ASYNC_ADDRESS_RESOLUTION)
+     AC_DEFINE(MULTITHREADED, NULL)
+     AC_DEFINE(ASYNC_ADDRESS_RESOLUTION, NULL)
     else
      multithread_mode=no
     fi
@@ -862,7 +862,7 @@ dnl>
   AC_CHECK_HEADERS(readline/readline.h)
   AC_CHECK_LIB(readline, readline, LIBREADLINE="-lreadline", ,$READLIBS)
   if test "$LIBREADLINE" != "" ; then
-    AC_DEFINE(HAVE_READLINE, 1, [Define if you have the GNU readline library (-lreadline).])
+    AC_DEFINE_UNQUOTED(HAVE_READLINE, 1, [Define if you have the GNU readline library (-lreadline).])
     LIBREADLINE="$LIBREADLINE $LIBTERMCAP"
   fi
 fi
@@ -999,7 +999,7 @@ if test ".${GDBM_ROOT}" != .; then
        GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
        CORELIBS="${CORELIBS} -L$GDBM_ROOT -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT"
-       AC_DEFINE(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
+       AC_DEFINE_UNQUOTED(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
        AC_MSG_RESULT([found in $GDBM_ROOT])
   elif test -d $GDBM_ROOT &&
      test -d $GDBM_ROOT/lib &&
@@ -1009,7 +1009,7 @@ if test ".${GDBM_ROOT}" != .; then
        GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
        CORELIBS="${CORELIBS} -L$GDBM_ROOT/lib -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT/include"
-       AC_DEFINE(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
+       AC_DEFINE_UNQUOTED(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
        AC_MSG_RESULT([])
        AC_MSG_RESULT([     found in $GDBM_ROOT/lib and .../include])
   else
@@ -1034,13 +1034,13 @@ if test ".`echo $CORELIBS | grep gdbm`" = .; then
        GDBM_ROOT="/usr/local"
        CORELIBS="${CORELIBS} -L$GDBM_ROOT/lib -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT/include"
-       AC_DEFINE(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
+       AC_DEFINE_UNQUOTED(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
        AC_MSG_RESULT([found in $GDBM_ROOT])
   elif test -r /usr/lib/libgdbm.a &&
        test -r /usr/include/gdbm.h; then
          GDBM_ROOT="/usr"
          CORELIBS="${CORELIBS} -lgdbm"
-         AC_DEFINE(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
+         AC_DEFINE_UNQUOTED(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
          AC_MSG_RESULT([found in $GDBM_ROOT])
   else
        AC_CHECK_LIB(gdbm, gdbm_close)
@@ -1065,8 +1065,8 @@ echo
 echo "Step 7. Looking for optional GPLed libraries...."
 echo
 
-AC_CHECK_LIB(c, re_search, AC_DEFINE(HAVE_REGEX, 1, [Define if you have the regex lib defined inside libc]))
-AC_CHECK_LIB(z, gzopen, AC_DEFINE(HAVE_ZLIB, 1, [Define if you have the zlib]))
+AC_CHECK_LIB(c, re_search, AC_DEFINE_UNQUOTED(HAVE_REGEX, 1, [Define if you have the regex lib defined inside libc]))
+AC_CHECK_LIB(z, gzopen, AC_DEFINE_UNQUOTED(HAVE_ZLIB, 1, [Define if you have the zlib]))
 
 if test "$ac_cv_lib_z_gzopen" = "yes"; then
    AC_CHECK_HEADERS(zlib.h)
@@ -1323,7 +1323,7 @@ if test ".$gdchartok" = ".no"; then
     AC_MSG_RESULT([])
     AC_MSG_WARN([ Some of ntop's features will be disabled.])
 else
-    AC_DEFINE(HAVE_GDCHART, 1, [Define if you have the gdchart library from Bruce Verderaime [http://www.fred.net/brv/chart/].])
+    AC_DEFINE_UNQUOTED(HAVE_GDCHART, 1, [Define if you have the gdchart library from Bruce Verderaime [http://www.fred.net/brv/chart/].])
 fi
 
 
@@ -1371,7 +1371,7 @@ AC_DEFUN(ntop_testopenssl, [
              else
                  AC_MSG_RESULT([found in $1 and $2])
              fi
-             AC_DEFINE(HAVE_OPENSSL, 1, [Define if you have the OPENSSL Toolkit (-lssl) by Open SSL Project.])
+             AC_DEFINE_UNQUOTED(HAVE_OPENSSL, 1, [Define if you have the OPENSSL Toolkit (-lssl) by Open SSL Project.])
          else
              AC_MSG_RESULT([ERROR: older version])
              MORELIBS="${_MORELIBS}"
@@ -1461,13 +1461,13 @@ dnl>     Last: openssl development under the same root (i.e. in parallel with nt
       dnl> Enable SSL v3
       dnl>
       if test ".$ac_enable_sslv3" = ".yes"; then
-         AC_DEFINE(SUPPORT_SSLV3, 1, [Define if you want support for SSL v3])
+         AC_DEFINE_UNQUOTED(SUPPORT_SSLV3, 1, [Define if you want support for SSL v3])
       fi
       dnl>
       dnl> Enable SSL Watchdog?
       dnl>
       if test ".$ac_enable_sslwatchdog" = ".yes"; then
-         AC_DEFINE(USE_SSLWATCHDOG, 1, [Define if you want the SSL Watchdog compiled in (vs. runtime --use-sslwatchdog)])
+         AC_DEFINE_UNQUOTED(USE_SSLWATCHDOG, 1, [Define if you want the SSL Watchdog compiled in (vs. runtime --use-sslwatchdog)])
       fi
   fi
 else

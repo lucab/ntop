@@ -8208,7 +8208,7 @@ CFLAGS="$CFLAGS "`grep pic_flag= libtool | sed -e 's/.*pic_flag=//' -e 's/"//g'`
 
 if test "$cross_compiling" = yes; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define NTOP_BIG_ENDIAN 1
 _ACEOF
 
@@ -8242,7 +8242,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define NTOP_BIG_ENDIAN 1
 _ACEOF
 
@@ -8253,7 +8253,7 @@ echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
 ( exit $ac_status )
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define NTOP_LITTLE_ENDIAN 1
 _ACEOF
 
@@ -8524,7 +8524,7 @@ case "$host:$CC" in
 
     *-sun-solaris2.5.1:* )
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define NEED_INET_ATON 1
 _ACEOF
 
@@ -8693,52 +8693,52 @@ fi
 
 if test $ac_dummyvariable = yes ; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define DEBUG 0
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_INT16_T 0
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_INT32_T 0
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_INT64_T 0
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_INT8_T 0
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_UINT64_T 0
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_U_INT16_T 0
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_U_INT32_T 0
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_U_INT64_T 0
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_U_INT8_T 0
 _ACEOF
 
@@ -9172,7 +9172,7 @@ echo "$as_me:$LINENO: result: $ac_cv_ether_header_has_ea" >&5
 echo "${ECHO_T}$ac_cv_ether_header_has_ea" >&6
 if test $ac_cv_ether_header_has_ea = yes ; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define ETHER_HEADER_HAS_EA 1
 _ACEOF
 
@@ -9235,7 +9235,7 @@ echo "$as_me:$LINENO: result: $ac_cv_in6_addr_has_ea" >&5
 echo "${ECHO_T}$ac_cv_in6_addr_has_ea" >&6
 if test $ac_cv_in6_addr_has_ea = yes ; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_IN6_ADDR 1
 _ACEOF
 
@@ -9247,7 +9247,7 @@ if test ".$ac_disable_curses" = ".no"; then
   if test -f "/usr/include/ncurses.h"; then
     echo "checking for ncurses.h... yes"
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_NCURSES_H 1
 _ACEOF
 
@@ -9255,7 +9255,7 @@ _ACEOF
     if test -f "/usr/include/curses.h"; then
       echo "checking for curses.h... yes"
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_CURSES_H 1
 _ACEOF
 
@@ -9385,7 +9385,7 @@ done
 
 if test ".$ac_micro_ntop" = ".yes"; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define MICRO_NTOP 1
 _ACEOF
 
@@ -10162,7 +10162,7 @@ echo "${ECHO_T}no" >&6
 fi
 if test $ac_has_facilitynames = yes ; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_FACILITYNAMES 1
 _ACEOF
 
@@ -10955,7 +10955,7 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_c_gethostbyaddr_r" >&5
 echo "${ECHO_T}$ac_cv_lib_c_gethostbyaddr_r" >&6
 if test $ac_cv_lib_c_gethostbyaddr_r = yes; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_GETHOSTBYADDR_R 1
 _ACEOF
 
@@ -11017,7 +11017,7 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_nsl_gethostbyaddr_r" >&5
 echo "${ECHO_T}$ac_cv_lib_nsl_gethostbyaddr_r" >&6
 if test $ac_cv_lib_nsl_gethostbyaddr_r = yes; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_GETHOSTBYADDR_R 1
 _ACEOF
 
@@ -11231,7 +11231,7 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_c_backtrace" >&5
 echo "${ECHO_T}$ac_cv_lib_c_backtrace" >&6
 if test $ac_cv_lib_c_backtrace = yes; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_BACKTRACE 1
 _ACEOF
 
@@ -11559,7 +11559,7 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_c_getopt_long" >&5
 echo "${ECHO_T}$ac_cv_lib_c_getopt_long" >&6
 if test $ac_cv_lib_c_getopt_long = yes; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_GETOPT_LONG 1
 _ACEOF
 
@@ -12025,7 +12025,7 @@ fi
 
 if test ".$ac_enable_ignoresigpipe" = ".yes"; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define YES_IGNORE_SIGPIPE 1
 _ACEOF
 
@@ -12297,14 +12297,14 @@ fi
 case "$host" in
     *-sun-solaris2* )
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define NEED_GETDOMAINNAME 1
 _ACEOF
 
         ;;
     *-ibm-aix4.12.* )
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define NEED_GETDOMAINNAME 1
 _ACEOF
 
@@ -12537,12 +12537,12 @@ done
 
 	if test ".$have_wrappers" = ".yes"; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_TCPD_H 1
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBWRAP 1
 _ACEOF
 
@@ -12819,12 +12819,12 @@ _ACEOF
 fi
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define MULTITHREADED 1
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define ASYNC_ADDRESS_RESOLUTION 1
 _ACEOF
 
@@ -12961,12 +12961,12 @@ _ACEOF
 fi
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define MULTITHREADED 1
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define ASYNC_ADDRESS_RESOLUTION 1
 _ACEOF
 
@@ -13038,11 +13038,11 @@ fi
 
      if test ".`echo $LIBS | grep c_r`" != .; then
      cat >>confdefs.h <<\_ACEOF
-#define MULTITHREADED 1
+#define MULTITHREADED NULL
 _ACEOF
 
      cat >>confdefs.h <<\_ACEOF
-#define ASYNC_ADDRESS_RESOLUTION 1
+#define ASYNC_ADDRESS_RESOLUTION NULL
 _ACEOF
 
     else
@@ -13303,7 +13303,7 @@ fi
 
   if test "$LIBREADLINE" != "" ; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_READLINE 1
 _ACEOF
 
@@ -13507,7 +13507,7 @@ echo $ECHO_N "checking for the GNU Database Manager Library gdbm (required packa
        CORELIBS="${CORELIBS} -L$GDBM_ROOT -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT"
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_GDBM_H 1
 _ACEOF
 
@@ -13522,7 +13522,7 @@ echo "${ECHO_T}found in $GDBM_ROOT" >&6
        CORELIBS="${CORELIBS} -L$GDBM_ROOT/lib -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT/include"
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_GDBM_H 1
 _ACEOF
 
@@ -13732,7 +13732,7 @@ if test ".`echo $CORELIBS | grep gdbm`" = .; then
        CORELIBS="${CORELIBS} -L$GDBM_ROOT/lib -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT/include"
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_GDBM_H 1
 _ACEOF
 
@@ -13743,7 +13743,7 @@ echo "${ECHO_T}found in $GDBM_ROOT" >&6
          GDBM_ROOT="/usr"
          CORELIBS="${CORELIBS} -lgdbm"
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_GDBM_H 1
 _ACEOF
 
@@ -13897,7 +13897,7 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_c_re_search" >&5
 echo "${ECHO_T}$ac_cv_lib_c_re_search" >&6
 if test $ac_cv_lib_c_re_search = yes; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_REGEX 1
 _ACEOF
 
@@ -13960,7 +13960,7 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_z_gzopen" >&5
 echo "${ECHO_T}$ac_cv_lib_z_gzopen" >&6
 if test $ac_cv_lib_z_gzopen = yes; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_ZLIB 1
 _ACEOF
 
@@ -14349,7 +14349,7 @@ echo "${ECHO_T}" >&6
 echo "$as_me: WARNING:  Some of ntop's features will be disabled." >&2;}
 else
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_GDCHART 1
 _ACEOF
 
@@ -14444,7 +14444,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in ${OSSL_ROOT} and ${OSSL_ROOT}" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -14536,7 +14536,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in ${OSSL_ROOT}/lib and ${OSSL_ROOT}/include" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -14629,7 +14629,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in ${OSSL_ROOT}/lib and ${OSSL_ROOT}/include/openssl" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -14722,7 +14722,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in \"/usr/lib\" and \"/usr/include\"" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -14814,7 +14814,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in \"/usr/lib/ssl\" and \"/usr/include/ssl\"" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -14907,7 +14907,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in \"/usr/lib\" and \"/usr/include/openssl\"" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -15000,7 +15000,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in \"/usr/lib/openssl\" and \"/usr/include/openssl\"" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -15094,7 +15094,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in \"/usr/local/lib/ssl\" and \"/usr/local/include/ssl\"" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -15187,7 +15187,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in \"/usr/local/lib/openssl\" and \"/usr/local/include/openssl\"" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -15280,7 +15280,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in \"/usr/local/lib\" and \"/usr/local/include/openssl\"" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -15373,7 +15373,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in \"/usr/local/lib\" and \"/usr/local/include\"" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -15467,7 +15467,7 @@ echo "${ECHO_T}OK" >&6
 echo "${ECHO_T}found in \"../openssl\" and \"../openssl\"" >&6
              fi
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
@@ -15509,14 +15509,14 @@ echo "$as_me: error: SSL Watchdog requires openSSL. rerun without --disable-open
       fi
   else                          if test ".$ac_enable_sslv3" = ".yes"; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define SUPPORT_SSLV3 1
 _ACEOF
 
       fi
                         if test ".$ac_enable_sslwatchdog" = ".yes"; then
 
-cat >>confdefs.h <<\_ACEOF
+cat >>confdefs.h <<_ACEOF
 #define USE_SSLWATCHDOG 1
 _ACEOF
 
