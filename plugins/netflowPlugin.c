@@ -1227,9 +1227,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	      break;
 	    } else
 	      cursor = cursor->next;
-	  }
-
-	  myGlobals.numNetFlowsV9Rcvd++;
+	  } 
 
 	  if(cursor != NULL) {
 	    /* Template found */
@@ -1307,7 +1305,9 @@ static void dissectFlow(char *buffer, int bufferLen) {
 		  break;
 		}
 	      }
+	      
 	      handleV5Flow(recordActTime, recordSysUpTime, &record);
+	      myGlobals.numNetFlowsV9Rcvd++;
 	    }
 	  } else {
 #ifdef DEBUG_FLOWS
@@ -2039,7 +2039,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   if(snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets received</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
               formatPkts(myGlobals.numNetFlowsPktsRcvd, formatBuf, sizeof(formatBuf))) < 0)
@@ -2048,7 +2048,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   if(snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets with bad version</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets with Bad Version</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
               formatPkts(myGlobals.numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf))) < 0)
@@ -2057,7 +2057,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   if(snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets processed</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Processed</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
               formatPkts(myGlobals.numNetFlowsPktsRcvd -
@@ -2067,7 +2067,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   if(snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows Received</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Valid Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
               formatPkts(myGlobals.numNetFlowsRcvd, formatBuf, sizeof(formatBuf))) < 0)
@@ -2520,7 +2520,7 @@ static void printNetFlowStatisticsRcvd(void) {
 	       "<th colspan=\"2\" "DARK_BG">Most Recent Ignored Flows</th>\n"
 	       "</tr>\n"
 	       "<tr " TR_ON ">\n"
-	       "<th colspan=\"2\"><table width=\"100%\" border=\"0\" "TABLE_DEFAULTS">"
+	       "<th colspan=\"2\"><table width=\"100%\" border=1 "TABLE_DEFAULTS">"
 	       "<tr><th colspan=\"2\">Flow</th>\n"
 	       "<th>Bytes</th>\n"
 	       "<th># Consecutive<br>Counts</th></tr>\n");
