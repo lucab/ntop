@@ -251,7 +251,7 @@ libntop_la_SOURCES = address.c       dataFormat.c  \
                      ntop.c 	     pbuf.c        protocols.c        \
 		     plugin.c        qsort.c       regex.c	      \
                      sessions.c         \
-                     ssl.c           term.c        traffic.c          \
+                     term.c        traffic.c          \
                      util.c          vendor.c      version.c          \
                      ntop_darwin.c
 
@@ -267,6 +267,7 @@ libntopreport_la_SOURCES = emitter.c \
                            http.c  \
                            report.c \
                            reportUtils.c \
+                           ssl.c \
                            webInterface.c \
                            xmldump.c
 
@@ -286,11 +287,12 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 am_libntop_la_OBJECTS = address.lo dataFormat.lo getopt.lo getopt1.lo \
 	argv.lo globals-core.lo hash.lo initialize.lo leaks.lo \
 	netflow.lo ntop.lo pbuf.lo protocols.lo plugin.lo qsort.lo \
-	regex.lo sessions.lo ssl.lo term.lo traffic.lo util.lo \
-	vendor.lo version.lo ntop_darwin.lo
+	regex.lo sessions.lo term.lo traffic.lo util.lo vendor.lo \
+	version.lo ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
-	http.lo report.lo reportUtils.lo webInterface.lo xmldump.lo
+	http.lo report.lo reportUtils.lo ssl.lo webInterface.lo \
+	xmldump.lo
 libntopreport_la_OBJECTS = $(am_libntopreport_la_OBJECTS)
 EXTRA_PROGRAMS = ntops$(EXEEXT) sntop$(EXEEXT)
 bin_PROGRAMS = ntop$(EXEEXT)

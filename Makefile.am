@@ -152,7 +152,7 @@ libntop_la_SOURCES = address.c       dataFormat.c  \
                      ntop.c 	     pbuf.c        protocols.c        \
 		     plugin.c        qsort.c       regex.c	      \
                      sessions.c         \
-                     ssl.c           term.c        traffic.c          \
+                     term.c        traffic.c          \
                      util.c          vendor.c      version.c          \
                      ntop_darwin.c
 
@@ -167,6 +167,7 @@ libntopreport_la_SOURCES = emitter.c \
                            http.c  \
                            report.c \
                            reportUtils.c \
+                           ssl.c \
                            webInterface.c \
                            xmldump.c
 
