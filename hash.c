@@ -37,8 +37,8 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
     memcpy(&idx, &hostIpAddress->s_addr, 4);
     (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, /* 0 doesn't matter */
-		 device[0].hash_hostTraffic[broadcastEntryIdx]->ethAddress,
-		 ETHERNET_ADDRESS_LEN) == 0) {
+		   device[0].hash_hostTraffic[broadcastEntryIdx]->ethAddress,
+		   ETHERNET_ADDRESS_LEN) == 0) {
     idx = broadcastEntryIdx;
     (*useIPAddressForSearching) = 0;
   } else if(hostIpAddress == NULL) {
@@ -64,13 +64,13 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 #ifdef DEBUG
   if(hostIpAddress != NULL)
     traceEvent(TRACE_INFO, "computeInitialHashIdx(%s/%s/%d) = %u\n",
-	   intoa(*hostIpAddress),
-	   etheraddr_string(ether_addr),
-	   (*useIPAddressForSearching), idx);
+	       intoa(*hostIpAddress),
+	       etheraddr_string(ether_addr),
+	       (*useIPAddressForSearching), idx);
   else
     traceEvent(TRACE_INFO, "computeInitialHashIdx(<>/%s/%d) = %u\n",
-	   etheraddr_string(ether_addr),
-	   (*useIPAddressForSearching), idx);
+	       etheraddr_string(ether_addr),
+	       (*useIPAddressForSearching), idx);
 #endif
 
   return(idx);
@@ -78,7 +78,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 
 /* ******************************* */
 
-static int _mapIdx(u_int* mappings, u_int lastHashSize, u_int idx,		   
+static int _mapIdx(u_int* mappings, u_int lastHashSize, u_int idx,
 		   char* fileName, int fileLine) {
 
   if(idx == NO_PEER) {
@@ -114,7 +114,7 @@ static int _mapUsageCounter(u_int *myMappings, int myLastHashSize,
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(counter->peersIndexes[i] != NO_PEER) {
-      counter->peersIndexes[i] = _mapIdx(myMappings, myLastHashSize, 
+      counter->peersIndexes[i] = _mapIdx(myMappings, myLastHashSize,
 					 counter->peersIndexes[i], file, line);
       if(counter->peersIndexes[i] != NO_PEER)
 	numFull++;
@@ -133,7 +133,7 @@ static IpGlobalSession* purgeIdleHostSessions(u_int *mappings, u_int lastHashSiz
 					      IpGlobalSession *sessionScanner) {
   if(sessionScanner != NULL) {
     IpGlobalSession *returnValue;
-    
+
     if(sessionScanner->next != NULL)
       sessionScanner->next = purgeIdleHostSessions(mappings, lastHashSize, sessionScanner->next);
 
@@ -294,8 +294,6 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
       }
 
       for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
-
-
 	if(theHost->portsUsage[i] == NULL)
 	  continue;
 #ifdef DEBUG
@@ -314,7 +312,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 	  scanner = theHost->tcpSessionList;
 	else
 	  scanner = theHost->udpSessionList;
-	  
+
 	while(scanner != NULL) {
 	  mapUsageCounter(&scanner->peers);
 	  scanner = (IpGlobalSession*)(scanner->next);
@@ -437,14 +435,14 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "================= Hash Size %d ==========================\n",
-	 device[deviceToExtend].actualHashSize);
+	     device[deviceToExtend].actualHashSize);
 
   for(j=1,i=0; j<device[deviceToExtend].actualHashSize; j++)
     if(theHost != NULL) {
       traceEvent(TRACE_INFO, "%s [%s] (idx=%d)\n",
-	     theHost->hostNumIpAddress,
-	     theHost->ethAddressString,
-	     j);
+		 theHost->hostNumIpAddress,
+		 theHost->ethAddressString,
+		 j);
       i++;
     }
 
@@ -475,7 +473,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
       free(device[theDevice].tcpSession[i]);
       device[theDevice].tcpSession[i] = NULL;
-      device[theDevice]. numTcpSessions--;
+      device[theDevice].numTcpSessions--;
     }
   }
 }
@@ -483,7 +481,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 /* **************************************** */
 
 static int _checkIndex(u_int *flaggedHosts, u_int flaggedHostsLen, u_int idx,
-		      char *fileName, int fileLine) {
+		       char *fileName, int fileLine) {
   if(idx == NO_PEER) {
     return(0);
   } else if(idx > flaggedHostsLen) {
@@ -498,14 +496,14 @@ static int _checkIndex(u_int *flaggedHosts, u_int flaggedHostsLen, u_int idx,
 
 /* **************************************** */
 
-static void _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen, 
-			      UsageCounter *counter,
-			      char *fileName, int fileLine) {
+static void _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen,
+			       UsageCounter *counter,
+			       char *fileName, int fileLine) {
   int i;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(_checkIndex(flaggedHosts, flaggedHostsLen, counter->peersIndexes[i], 
-		  fileName, fileLine))
+    if(_checkIndex(flaggedHosts, flaggedHostsLen, counter->peersIndexes[i],
+		   fileName, fileLine))
       counter->peersIndexes[i] = NO_PEER;
   }
 }
@@ -515,7 +513,7 @@ static void _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen,
 /* **************************************** */
 
 static void removeGlobalHostPeers(HostTraffic *el,
-				  u_int *flaggedHosts, 
+				  u_int *flaggedHosts,
 				  u_int flaggedHostsLen) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering removeGlobalHostPeers(0x%X)", el);
@@ -691,7 +689,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   if(refreshHash) {
     u_int *myflaggedHosts;
     int len, idx;
-    
+
     len = sizeof(u_int)*device[theDevice].actualHashSize;
     myflaggedHosts = (u_int*)malloc(len);
     memset(myflaggedHosts, 0, len);
@@ -704,7 +702,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 			      myflaggedHosts, len); /* Finally refresh the hash */
       }
     }
-    
+
     free(myflaggedHosts);
   }
 
@@ -723,7 +721,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
       element = host->tcpSessionList;
     else
       element = host->udpSessionList;
-    
+
     while(element != NULL) {
       nextElement = element->next;
       /*
@@ -875,7 +873,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 #endif
       numFreedBuckets++;
     } else if(device[actDevice].hash_hostTraffic[idx] != NULL) {
-      /* 
+      /*
 	 This entry is not removed but we need to remove
 	 all the references to the freed instances
       */
@@ -898,6 +896,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 
 int extendTcpSessionsHash() {
   const short extensionFactor = 2;
+  static short displayError = 1;
 
   if((device[actualDeviceId].numTotSessions*extensionFactor) <= MAX_HASH_SIZE) {
     /* Fine we can enlarge the table now */
@@ -928,9 +927,17 @@ int extendTcpSessionsHash() {
 
     device[actualDeviceId].numTotSessions *= extensionFactor;
 
+    displayError = 1;
     traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d]",
 	       device[actualDeviceId].numTotSessions);
     return(0);
-  } else
+  } else {
+    if(displayError) {
+      traceEvent(TRACE_WARNING, "WARNING: unable to further extend TCP hash [actual size: %d]",
+		 device[actualDeviceId].numTotSessions);
+      displayError = 0;
+    }
+
     return(-1);
+  }
 }

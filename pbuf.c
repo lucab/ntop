@@ -1394,6 +1394,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	   (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
 	  /* The hash table is getting large: let's replace the oldest session
 	     with this one we're allocating */
+#ifdef ORIGINAL
 	  u_int usedIdx=0;
 
 	  for(idx=0; idx<device[actualDeviceId].numTotSessions; idx++) {
@@ -1410,6 +1411,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  }
 
 	  device[actualDeviceId].tcpSession[usedIdx] = NULL;
+#else
+	  return(NULL); /* No space left */
+#endif
 	} else {
 	  /* There's enough space left in the hashtable */
 	  theSession = (IPSession*)malloc(sizeof(IPSession));
