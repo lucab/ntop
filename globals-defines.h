@@ -2609,13 +2609,24 @@
 
 #ifdef WIN32
 #define INET6
+
+#ifndef s6_addr
+//
+// Duplicate these definitions here so that this file can be included by
+// kernel-mode components which cannot include ws2tcpip.h, as well as
+// by user-mode components which do.
+//
+
+typedef struct in6_addr {
+    union {
+        UCHAR       Byte[16];
+        USHORT      Word[8];
+    } u;
+} IN6_ADDR;
+
+#define in_addr6 in6_addr
 #endif
 
-#ifdef WIN32
-#define in6_addr in_addr6
-#endif
-
-#ifdef WIN32
 struct ip6_hdr
   {
     union
@@ -2630,8 +2641,8 @@ struct ip6_hdr
 	  } ip6_un1;
 		u_int8_t ip6_un2_vfc;       /* 4 bits version, top 4 bits tclass */
       } ip6_ctlun;
-    struct in_addr6 ip6_src;      /* source address */
-    struct in_addr6 ip6_dst;      /* destination address */
+    struct in6_addr ip6_src;      /* source address */
+    struct in6_addr ip6_dst;      /* destination address */
   };
 
 #define ip6_vfc   ip6_ctlun.ip6_un2_vfc

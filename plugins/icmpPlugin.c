@@ -636,6 +636,9 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   float *s, *r;
   FILE *fd;
   int icmpColumnSort = 0;
+#ifdef WIN32
+  char fileName[256];
+#endif
 
   i = sizeof(float)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   s = (float*)malloc(i); r = (float*)malloc(i);
