@@ -798,24 +798,26 @@ char* getHostCountryIconURL(HostTraffic *el) {
     }
   }
 
-  if(el->dnsTLDValue != NULL) {
-    if(snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
-                el->dnsTLDValue) < 0)
-      BufferTooShort();
-    rc = stat(path, &buf);
-
-    if(rc != 0) {
-      if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-                  CFG_DATAFILE_DIR, el->dnsTLDValue) < 0)
+  if(rc != 0) {
+    if(el->dnsTLDValue != NULL) {
+      if(snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
+                  el->dnsTLDValue) < 0)
         BufferTooShort();
       rc = stat(path, &buf);
-    }
-    if(rc == 0) {
-      img = el->dnsTLDValue;
-      if(strlen(img) == 2) 
-        source = "(Guessing from ccTLD)";
-      else
-        source = "(Guessing from gTLD)";
+  
+      if(rc != 0) {
+        if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
+                    CFG_DATAFILE_DIR, el->dnsTLDValue) < 0)
+          BufferTooShort();
+        rc = stat(path, &buf);
+      }
+      if(rc == 0) {
+        img = el->dnsTLDValue;
+        if(strlen(img) == 2) 
+          source = "(Guessing from ccTLD)";
+        else
+          source = "(Guessing from gTLD)";
+      }
     }
   }
 
