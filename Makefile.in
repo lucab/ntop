@@ -60,11 +60,6 @@ pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = .
 
-ACLOCAL = @ACLOCAL@
-AUTOCONF = /bin/sh /home/deri/network/ntop/missing --run echo
-AUTOMAKE = /bin/sh /home/deri/network/ntop/missing --run echo
-AUTOHEADER = @AUTOHEADER@
-
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -87,6 +82,15 @@ host_triplet = @host@
 EXEEXT = @EXEEXT@
 OBJEXT = @OBJEXT@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+
+
+#
+# Fake out the missing tests for the auto* tools
+#
+ACLOCAL = /bin/sh ./missing --run echo
+AUTOCONF = /bin/sh ./missing --run echo
+AUTOMAKE = /bin/sh ./missing --run echo
+AUTOHEADER = /bin/sh ./missing --run echo
 AMTAR = @AMTAR@
 AS = @AS@
 AWK = @AWK@
@@ -104,17 +108,16 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
+ECHO = @ECHO@
 INCS = @INCS@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTOP = @INTOP@
-LD = @LD@
 LIBCURSES = @LIBCURSES@
 LIBREADLINE = @LIBREADLINE@
 LIBTERMCAP = @LIBTERMCAP@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
-NM = @NM@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
@@ -223,7 +226,7 @@ ntop_CFLAGS =
 
 ntops_SOURCES = $(ntop_SOURCES)
 ntops_DEPENDENCIES = $(ntop_DEPENDENCIES)
-ntops_LDADD = $(ntop_LDADD) -lrrd
+ntops_LDADD = $(ntop_LDADD)
 ntops_LDFLAGS = $(ntop_LDFLAGS) -static
 
 #
