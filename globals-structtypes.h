@@ -1633,8 +1633,6 @@ XML*/
      */
     PthreadMutex hostsHashMutex;
                                      /*XMLNOTE &pthreadmutex hostsHashMutex   mutexes  "" */
-    u_char hostsHashMutexInitialized;
-                                     /*XML b hostsHashMutexInitialized multithread "" */
 
     /*
      * SIH - Scan Idle Hosts - optional
