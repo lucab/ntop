@@ -569,15 +569,14 @@ void purgeIdleHosts(int actDevice) {
   for(idx=1; idx<myGlobals.device[actDevice].actualHashSize; idx++)
     if((myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL)
        && (idx != myGlobals.otherHostEntryIdx)
-       && (myGlobals.device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
+       && ((myGlobals.device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
+	   || ((myGlobals.device[actDevice].hash_hostTraffic[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime))
        && (!subnetPseudoLocalHost(myGlobals.device[actDevice].hash_hostTraffic[idx]))) {
 
-      if((!myGlobals.stickyHosts)
-	 && ((myGlobals.device[actDevice].hash_hostTraffic[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) 
-	     < myGlobals.actTime)) {
-	theFlaggedHosts[idx]=myGlobals.device[actDevice].hash_hostTraffic[idx];
-	myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
-      }
+	if(!myGlobals.stickyHosts) {
+	    theFlaggedHosts[idx]=myGlobals.device[actDevice].hash_hostTraffic[idx];
+	    myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
+	}
     }
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);

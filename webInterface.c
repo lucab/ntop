@@ -366,14 +366,14 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
-		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s</TH>%s",
-		blinkOn, linkName, symIp, dynIp,
+		"<A HREF=\"/%s.html\">%s (%d)</A>%s%s%s%s%s%s%s%s</TH>%s",
+		blinkOn, linkName, symIp, el->instanceInUse, dynIp,
 		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		blinkOff, flag) < 0)
       BufferOverflow();
   } else {
-    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s</A>%s%s%s%s%s%s%s%s%s",
-		blinkOn, linkName, symIp,
+    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s (%d)</A>%s%s%s%s%s%s%s%s%s",
+		blinkOn, linkName, symIp, el->instanceInUse, 
 		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0)
       BufferOverflow();
