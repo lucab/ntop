@@ -978,6 +978,7 @@ static void processIpPkt(const u_char *bp,
 #endif
     if((!myGlobals.dontTrustMACaddr)
        && isBroadcastAddress(&dstAddr)
+       && (ether_src != NULL) && (ether_dst != NULL) /* PPP has no ethernet */
        && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
       /* forceUsingIPaddress = 1; */
 

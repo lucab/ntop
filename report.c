@@ -2360,7 +2360,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 	arrow[i] = "", theAnchor[i] = htmlAnchor1;
 
     sendString("<CENTER>\n");
-    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n"
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=80%%>\n"
 		"<TR "TR_ON" "DARK_BG"><TH "TH_BG">"
 		"%s1>Host%s</A></TH>"
 		"<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
@@ -2534,7 +2534,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	  printHTMLheader("Active TCP Sessions", NULL, 0);
 
 	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
+	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG">Client</TH>"
 		     "<TH "TH_BG">Server</TH>"
 		     "<TH "TH_BG">Data&nbsp;Sent</TH>"
@@ -3177,7 +3177,8 @@ void printProtoTraffic(void) {
   sendString("<P>"TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
-  perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
+  perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/
+	      myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
   if(perc > 100) perc = 100;
 
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT "DARK_BG">IP</TH>"
@@ -3319,7 +3320,7 @@ void printIpTrafficMatrix(void) {
 		   "&nbsp;&nbsp;To<br>&nbsp;r<br>&nbsp;o<br>&nbsp;m</SMALL></TH>\n");
       }
 
-      if(snprintf(buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER><SMALL>%s</SMALL></TH>",
+      if(snprintf(buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER "DARK_BG"><SMALL>%s</SMALL></TH>",
 		  getHostName(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i], 
 			      1, hostLinkBuf, sizeof(hostLinkBuf))) < 0)
 	BufferTooShort();
