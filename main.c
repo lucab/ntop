@@ -148,11 +148,14 @@ int main(int argc, char *argv[]) {
       switch (op) {
 	/* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
       case 'P': /* DB-Path */
+	stringSanityCheck(optarg);
 	strncpy(dbPath, optarg, sizeof(dbPath)-1)[sizeof(dbPath)-1] = '\0';
 	break;
 
       case 'a': /* ntop access log path */
-	strncpy(accessLogPath, optarg, sizeof(accessLogPath)-1)[sizeof(accessLogPath)-1] = '\0';
+	stringSanityCheck(optarg);
+	strncpy(accessLogPath, optarg, 
+		sizeof(accessLogPath)-1)[sizeof(accessLogPath)-1] = '\0';
 	break;
 
 #ifndef WIN32
@@ -181,11 +184,14 @@ int main(int argc, char *argv[]) {
 	break;
 
       case 'b': /* host:port */
+	stringSanityCheck(optarg);
 	handleDbSupport(optarg, &enableDBsupport);
 	break;
 
       case 'D': /* domain */
-	strncpy(domainName, optarg, sizeof(domainName)-1)[sizeof(domainName)-1] = '\0';
+	stringSanityCheck(optarg);
+	strncpy(domainName, optarg,
+		sizeof(domainName)-1)[sizeof(domainName)-1] = '\0';
 	break;
 
     case 'f':
@@ -214,23 +220,29 @@ int main(int argc, char *argv[]) {
 
 #ifndef WIN32
       case 'i':
+	stringSanityCheck(optarg);
 	devices = optarg;
 	break;
 #endif
 
       case 'p':
+	stringSanityCheck(optarg);
 	handleProtocols(optarg);
 	break;
 
       case 'F':
-	strncpy(flowSpecs, optarg, sizeof(flowSpecs)-1)[sizeof(flowSpecs)-1] = '\0';
+	stringSanityCheck(optarg);
+	strncpy(flowSpecs, optarg,
+		sizeof(flowSpecs)-1)[sizeof(flowSpecs)-1] = '\0';
 	break;
 
       case 'm':
+	stringSanityCheck(optarg);
 	localAddresses = strdup(optarg);
 	break;
 
       case 'l':
+	stringSanityCheck(optarg);
 	if(!isdigit(optarg[0])) {
 	  traceEvent(TRACE_ERROR, 
 		     "FATAL ERROR: flag -l expects a numeric argument.\n");
@@ -263,6 +275,7 @@ int main(int argc, char *argv[]) {
 	break;
 
       case 'w':
+	stringSanityCheck(optarg);
 	if(!isdigit(optarg[0])) {
 	  traceEvent(TRACE_ERROR, 
 		     "FATAL ERROR: flag -w expects a numeric argument.\n");
@@ -283,6 +296,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef HAVE_OPENSSL
       case 'W':
+	stringSanityCheck(optarg);
 	if(!isdigit(optarg[0])) {
 	  traceEvent(TRACE_ERROR, 
 		     "FATAL ERROR: flag -W expects a numeric argument.\n");
@@ -294,7 +308,9 @@ int main(int argc, char *argv[]) {
 #endif
 
       case 'R':
-	strncpy(rulesFile, optarg, sizeof(rulesFile)-1)[sizeof(rulesFile)-1] = '\0';
+	stringSanityCheck(optarg);
+	strncpy(rulesFile, optarg, 
+		sizeof(rulesFile)-1)[sizeof(rulesFile)-1] = '\0';
 	break;
 
       case 'M':
@@ -318,6 +334,7 @@ int main(int argc, char *argv[]) {
 
 #ifndef WIN32
       case 'u':
+	stringSanityCheck(optarg);
         if(strOnlyDigits(optarg))
          userId = atoi(optarg);
         else {

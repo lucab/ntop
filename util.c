@@ -1957,3 +1957,32 @@ FILE* getNewRandomFile(char* fileName, int len) {
 
   return(fd);
 }
+
+/* ****************************************************** */
+
+/*
+  Function added in order to catch invalid
+  strings passed on the command line.
+  
+  Thanks to Bailleux Christophe <cb@grolier.fr> for
+  pointing out the finger at the problem.
+*/
+
+void stringSanityCheck(char* string) {
+  int i, j;
+
+  for(i=0, j=1; i<strlen(string); i++) {
+    switch(string[i]) {
+    case '%':
+    case '\\':
+      j=0;
+      break;
+    }
+  }
+  
+  if(j == 0) {
+    traceEvent(TRACE_ERROR, "FATAL ERROR: Invalid string '%s' specified.", 
+	       string);
+    exit(-1);
+  }  
+}
