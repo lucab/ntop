@@ -560,7 +560,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
   datum key_data, data_data;
   char tmpBuf[96];
   u_int16_t transactionId = 0;
-  int i;
+  int i, queryNameLength;
 
   if((!enablePacketDecoding)
      ||(packetData == NULL) /* packet too short ? */)
@@ -585,65 +585,38 @@ u_int16_t processDNSPacket(const u_char *packetData,
   }
 #endif
 
-  i = strlen(hostPtr.queryName);
-
   if((*isRequest) || (!*positiveReply))
     return(transactionId);
-  else if((i > 5) 
-  	  && (!*isRequest) && (*positiveReply)
-	  && (strncmp(&hostPtr.queryName[i-5], ".arpa", 5) == 0)) {
-    char *a, *b, *c, *d;
+  if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
 
-	/* Numeric => Symbolic */
-    d = strtok(hostPtr.queryName, ".");
-    c = strtok(NULL, ".");
-    b = strtok(NULL, ".");
-    a = strtok(NULL, ".");
-    sprintf(tmpBuf, "%s.%s.%s.%s", a, b, c, d);
-
-    if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
-    key_data.dptr = tmpBuf;
-    key_data.dsize = strlen(key_data.dptr)+1;
-    data_data.dptr = hostPtr.name;
-    data_data.dsize = strlen(data_data.dptr)+1;
-
-#ifdef DNS_SNIFF_DEBUG
-    traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
-#endif
-
-#ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "processDNSPacket");
-#endif
-    gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
-#ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
-#endif
-
+  queryNameLength = strlen(hostPtr.queryName);
+  strtolower(hostPtr.queryName);
+  
+  if((queryNameLength > 5)
+     && (strncmp(&hostPtr.queryName[queryNameLength-5], ".arpa", 5) == 0))
     return(transactionId);
-  }
 
   for(i=0; i<MAXADDRS; i++) {
   	/* Symbolic => Numeric */
 
     if(hostPtr.addrList[i] != 0) {
-      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
       hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
       key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
       key_data.dsize = strlen(key_data.dptr)+1;
       data_data.dptr = hostPtr.queryName;
-      data_data.dsize = strlen(data_data.dptr)+1;
-      for(i=0; i<strlen(data_data.dptr); i++)
-	data_data.dptr[i] = tolower(data_data.dptr[i]);
+      data_data.dsize = queryNameLength+1;
 
 #ifdef DNS_SNIFF_DEBUG
-    traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
+      traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
 #endif
+
+      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
 #ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "processDNSPacket");
+      accessMutex(&gdbmMutex, "processDNSPacket");
 #endif
       gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
 #ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
+      releaseMutex(&gdbmMutex);
 #endif
     }
   }

@@ -1086,7 +1086,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     return(transactionId);
   }
 
-  eom = (u_char *)(ipPtr+length);
+  eom = (u_char *)(&answer+length);
 
   qdcount = (int)ntohs((unsigned short int)answer.qb1.qdcount);
   ancount = (int)ntohs((unsigned short int)answer.qb1.ancount);
@@ -1168,18 +1168,17 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
        * E.g. : 89.10.67.213.in-addr.arpa
        *
        */
-      char *a, *b, *c, *d, dnsBuf[48];
+      char *a, *b, *c, *d, dnsBuf[48], *strtokState;
       int len;
       unsigned long theDNSaddr;
 
       len = strlen(bp); if(len >= (sizeof(dnsBuf)-1)) len = sizeof(dnsBuf)-2;
-      memset(dnsBuf, 0, sizeof(dnsBuf));
-      strncpy(dnsBuf, bp, len);
+      xstrncpy(dnsBuf, bp, len);
 
-      d = strtok(dnsBuf, ".");
-      c = strtok(NULL, ".");
-      b = strtok(NULL, ".");
-      a = strtok(NULL, ".");
+      d = strtok_r(dnsBuf, ".", &strtokState);
+      c = strtok_r(NULL, ".", &strtokState);
+      b = strtok_r(NULL, ".", &strtokState);
+      a = strtok_r(NULL, ".", &strtokState);
 
       if(a && b && c && d) {
 	theDNSaddr = htonl(atoi(a)*(256*256*256)+atoi(b)*(256*256)+atoi(c)*256+atoi(d));
@@ -1393,7 +1392,7 @@ void cleanupHostEntries() {
 
     if(data_data.dptr != NULL) {
       if((data_data.dsize == (sizeof(StoredAddress)+1))
-	 || ((((StoredAddress*)data_data.dptr)->recordCreationTime+ADDRESS_PURGE_TIMEOUT) < actTime)) {
+	 && ((((StoredAddress*)data_data.dptr)->recordCreationTime+ADDRESS_PURGE_TIMEOUT) < actTime)) {
 	gdbm_delete(gdbm_file, key_data);
 #ifdef DEBUG
 	traceEvent(TRACE_INFO, "Deleted '%s' entry.\n", data_data.dptr);
