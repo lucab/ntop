@@ -298,7 +298,7 @@ static int handleGenericFlow(time_t recordActTime,
   HostAddr addr1, addr2;
   u_int numPkts;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
-  u_short sport, dport, proto;
+  u_short sport, dport, proto, newSession = 0;
   TrafficCounter ctr;
   int skipSRC=0, skipDST=0;
   struct pcap_pkthdr h;
@@ -525,24 +525,24 @@ static int handleGenericFlow(time_t recordActTime,
 
   if((sport != 0) && (dport != 0)) {
     if(dport < sport) {
-      if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-	if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
+      if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession) == -1) {
+	if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
-	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession);
 	  }
 	}
       }
     } else {
-      if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-	if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
+      if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession) == -1) {
+	if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
-	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession);
 	  }
 	}
       }
@@ -622,7 +622,7 @@ static int handleGenericFlow(time_t recordActTime,
 
     tp.th_sport = htons(sport), tp.th_dport = htons(dport);
     tp.th_flags = record->tcp_flags;
-    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, &tp, 0, NULL, actualDeviceId);
+    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, &tp, 0, NULL, actualDeviceId, &newSession);
     break;
 
   case 17: /* UDP */
@@ -656,7 +656,7 @@ static int handleGenericFlow(time_t recordActTime,
       }
     }
 
-    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, NULL, 0, NULL, actualDeviceId);
+    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, NULL, 0, NULL, actualDeviceId, &newSession);
     break;
 
   default:
