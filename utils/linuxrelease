@@ -38,6 +38,12 @@ if test "x${1}" = "x--debug"; then
     shift
 fi
 
+quiet="N"
+if test "x${1}" = "x--quiet"; then
+    quiet="Y"
+    shift
+fi
+
 # Is this even Linux??
 case `uname -s` in
   [Ll]inux*)
@@ -203,7 +209,9 @@ case `uname -s` in
     ;;
   *)
     # Not Linux - oops
-    echo "WARNING: This routine only works under Linux.  We'll fake it as best we can!"
+    if test "x${quiet}" != "xY"; then
+        echo "WARNING: This routine only works under Linux.  We'll fake it as best we can!"
+    fi
     distro=`uname -s`
     kernel=`uname -r`
     release="unknown"

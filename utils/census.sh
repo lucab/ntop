@@ -27,37 +27,8 @@ if test -f config.h; then
 else
   threading="unknown"
 fi
-case `uname` in
-  Linux) 
-    if test -f /etc/redhat-release; then
-      #Red Hat Linux release 8.0 (Psyche)
-      #Red Hat Linux release 7.3 (Valhalla)
-      #Red Hat Linux Advanced Server release 2.1AS (Pensacola)
-      rh=`cat /etc/redhat-release | awk ' { print \$1\$2 " " \$(NF-1) }'`
-      k=`uname -r`
-      os="${rh} ${k}"
-    else
-      os="??? linux"
-    fi
-    ;;
 
-  *BSD)
-    r=`uname -r`
-    o=`uname`
-    os="${o} ${r}"
-    ;;
-
-  SunOS)
-    r=`uname -r`
-    v=`uname -v`
-    os="Solaris ${r} ${v}"
-    ;;
-
-  *)
-    u=`uname`
-    os="${u} unknown"
-    ;;
-esac
+os=`./utils/linuxrelease --quiet`
 
 gcc=`gcc --version | head -n1`
 gccstrip=`gcc --version  | head -n1 | awk '{ gsub(/ [\(\[][^\(\)\[\]]*[\]\)]/, ""); gsub(/^ *gcc */, ""); print \$0}'`
@@ -130,12 +101,7 @@ else
 
     sleep 10
 
-    if test ".$1" = "."; then
-        tail=
-    else
-        tail="-$1-"`uname -s`
-    fi
-    cat $censusfile | mail -s ntop_census_report-$tail census@ntopsupport.com
+    cat $censusfile | mail -s "ntop_census_report-$1-`uname -s`" census@ntopsupport.com
 
     echo " ntop ./configure census was sent!  Thank you for providing the information!"
     echo ""
