@@ -1,0 +1,11 @@
+This directory contains a project for building ntop for Win32.
+In order to use it you need:
+1. the ntop source (you've got obviously)
+2. gdbm/gd/libpng/zlib sources that you can find on the Internet
+
+You will probably need to change the file paths according to your setup.
+
+NOTE: this project file is totally unsupported.
+
+--------------------------
+Luca Deri - September 2003
