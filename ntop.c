@@ -592,39 +592,58 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
 
 void* scanIdleLoop(void* notUsed _UNUSED_) {
   for(;;) {
+    int i;
+
+    sleep(SESSION_SCAN_DELAY);
+
+    if(!capturePackets) break;
+    actTime = time(NULL);
+    
+    for(i=0; i<numDevices; i++)
+      if(!device[i].virtualDevice) {
+	purgeIdleHosts(0 /* Delete only idle hosts */, i);
+#ifdef HAVE_SCHED_H
+	sched_yield(); /* Allow other threads to run */
+#else
+	sleep(1); /* leave some time to others */
+#endif
+      }
+  }
+  
+  return(NULL);
+}
+
+/* **************************************** */
+
+void* scanIdleSessionsLoop(void* notUsed _UNUSED_) {
+
+  for(;;) {
     sleep(SESSION_SCAN_DELAY);
 
     if(!capturePackets) break;
     actTime = time(NULL);
 
-    /* Don't purge hosts if the traffic is high */
-    /* if(packetQueueLen < (PACKET_QUEUE_LENGTH/3)) */ {
-      int i;
-      
 #ifdef MULTITHREADED
-      accessMutex(&hostsHashMutex, "scanIdleLoop-1");
+    accessMutex(&hostsHashMutex, "scanIdleSessionsLoop-1");
 #endif
-      scanTimedoutTCPSessions();
+    scanTimedoutTCPSessions();
 #ifdef MULTITHREADED
-      releaseMutex(&hostsHashMutex);
-#endif
-      sleep(1); /* Give some time to others... */
-
-#ifdef MULTITHREADED
-      accessMutex(&hostsHashMutex, "scanIdleLoop-2");
-#endif
-      purgeOldFragmentEntries();
-#ifdef MULTITHREADED
-      releaseMutex(&hostsHashMutex);
+    releaseMutex(&hostsHashMutex);
 #endif
 
-      sleep(1); /* Give some time to others... */
+#ifdef HAVE_SCHED_H
+      sched_yield(); /* Allow other threads to run */
+#else
+      sleep(1); /* leave some time to others */
+#endif
 
-      for(i=0; i<numDevices; i++)
-	if(!device[i].virtualDevice) {
-	  purgeIdleHosts(0 /* Delete only idle hosts */, i);
-	}
-    }
+#ifdef MULTITHREADED
+    accessMutex(&hostsHashMutex, "scanIdleSessionsLoop-2");
+#endif
+    purgeOldFragmentEntries();
+#ifdef MULTITHREADED
+    releaseMutex(&hostsHashMutex);
+#endif
 
     if(handleRules)
       scanAllTcpExpiredRules();
@@ -765,6 +784,8 @@ RETSIGTYPE cleanup(int signo) {
     killThread(&thptUpdateThreadId);
     killThread(&hostTrafficStatsThreadId);
     killThread(&scanIdleThreadId);
+    killThread(&scanIdleSessionsThreadId);
+
     if(enableDBsupport)
       killThread(&dbUpdateThreadId);
 

@@ -165,19 +165,19 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   newSize = (int)(device[deviceToExtend].actualHashSize*multiplier);
   newSize = newSize - (newSize % 2); /* I want an even hash size */
 
+#ifdef PURGE_CONSERVATION
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
   /* FIXME (DL): purgeIdleHosts() acts on actualDeviceId instead of deviceToExtend */
   if(newSize > maxHashSize) /* Hard Limit */ {
     purgeIdleHosts(1, actualDeviceId);
     return;
-  } 
-#ifdef PURGE_CONSERVATION
-  else
+  } else
     purgeIdleHosts(0, actualDeviceId); /* Delete only idle hosts */
 #endif
 
 #if defined(MULTITHREADED)
-  if(device[actualDeviceId].hostsno < (device[deviceToExtend].actualHashSize*HASH_EXTEND_THRESHOLD)) {
+  if(device[actualDeviceId].hostsno < 
+     (device[deviceToExtend].actualHashSize*HASH_EXTEND_THRESHOLD)) {
     if(tryLockMutex(&hostsHashMutex, "resizeHostHash(processPacket)") != 0) {
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "The table is already locked: let's try later");
@@ -1089,7 +1089,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   u_char goOn = 1;
 
   if(startTime < (lastPurgeTime+(SESSION_SCAN_DELAY/2)))
-     return; /* Too short */
+    return; /* Too short */
   else
     lastPurgeTime = startTime;
 
@@ -1121,8 +1121,8 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 
     if(idx<device[actDevice].actualHashSize) {
       if((device[actDevice].hash_hostTraffic[idx] != NULL)
-	&& (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
-	  && (!subnetPseudoLocalHost(device[actDevice].hash_hostTraffic[idx]))) {
+	 && (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
+	 && (!subnetPseudoLocalHost(device[actDevice].hash_hostTraffic[idx]))) {
     
 	if(ignoreIdleTime)
 	  freeEntry=1;

@@ -57,7 +57,7 @@ extern unsigned short numThreads;
 extern PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
 extern PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
 extern pthread_t dequeueThreadId, handleWebConnectionsThreadId;
-extern pthread_t thptUpdateThreadId, scanIdleThreadId;
+extern pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
 extern pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 #ifdef HAVE_GDBM_H
 extern PthreadMutex gdbmMutex;
@@ -293,6 +293,7 @@ extern void *updateThptLoop(void *notUsed);
 extern void* updateHostTrafficStatsThptLoop(void* notUsed);
 extern void *updateDBHostsTrafficLoop(void* notUsed);
 extern void *scanIdleLoop(void *notUsed);
+extern void *scanIdleSessionsLoop(void *notUsed);
 extern void *periodicLsofLoop(void *notUsed);
 extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
 extern RETSIGTYPE cleanup(int signo);

@@ -94,7 +94,10 @@ static const u_char *p_save;
 
  u_int getHostInfo(struct in_addr *hostIpAddress,
 		   u_char *ether_addr) {
-   u_int idx, i, run=0;
+   u_int idx, i;
+#ifdef PURGE_CONSERVATION
+   u_int run=0;
+#endif
    HostTraffic *el=NULL;
    u_int firstEmptySlot = NO_PEER;
    char buf[32];
@@ -354,9 +357,12 @@ static const u_char *p_save;
        }
      } else {
        /* The hashtable is full */
+#ifdef PURGE_CONSERVATION
        if(run == 0) {
 	 purgeIdleHosts(1, actualDeviceId);
-       } else {
+       } else
+#else
+	 {
 	 /* No space yet: let's delete the oldest table entry */
 	 int candidate = 0;
 	 time_t lastSeenCandidate=0;
@@ -382,8 +388,11 @@ static const u_char *p_save;
 	 freeHostInfo(actualDeviceId, candidate);
 	 idx = candidate; /* this is a hint for (**) */
        }
+#endif
 
+#ifdef PURGE_CONSERVATION
        run++;
+#endif
        goto HASH_SLOT_FOUND;
      }
    }

@@ -558,7 +558,12 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    */
   if (enableIdleHosts) {
     createThread(&scanIdleThreadId, scanIdleLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n", scanIdleThreadId);
+    traceEvent (TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
+		scanIdleThreadId);
+
+    createThread(&scanIdleSessionsThreadId, scanIdleSessionsLoop, NULL);
+    traceEvent (TRACE_INFO, "Started thread (%ld) for idle TCP sessions detection.\n", 
+		scanIdleSessionsThreadId);
   }
 
 #ifndef MICRO_NTOP
