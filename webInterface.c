@@ -3308,9 +3308,6 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   sendString(texthtml("\n\nHost/Session counts - global\n\n", "<tr><th colspan=2 "DARK_BG">Host/Session counts - global</th></tr>\n"));
 
-  printFeatureConfigInfo(textPrintFlag, "Purge idle hosts", 
-			 myGlobals.enableIdleHosts == 1 ? "Enabled" : "Disabled");
-
   if(snprintf(buf, sizeof(buf), "%u", (unsigned int)myGlobals.numPurgedHosts) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Purged hosts", buf);

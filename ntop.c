@@ -678,7 +678,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
-        purgeIdleHosts(i);
+        if(!myGlobals.stickyHosts) purgeIdleHosts(i);
 #if !defined(__FreeBSD__)
 	purgeIpPorts(i);
 #endif

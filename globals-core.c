@@ -440,8 +440,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;
 
-  myGlobals.enableIdleHosts = 1;
-
   myGlobals.netFlowInSocket = -1;
   myGlobals.netFlowOutSocket = -1;
   myGlobals.globalFlowSequence = myGlobals.globalFlowPktCount = 0;
