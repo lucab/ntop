@@ -1893,6 +1893,8 @@ void traceEvent(int eventTraceLevel, char* file,
         for (i=0; i<=strlen(format); i++) {
             messageid = (messageid << 1) ^ max(0,format[i]-32);
         }
+        /* 1st chars of file name for uniqueness */
+        messageid += (file[0]-32) * 256 + file[1]-32;
         snprintf(bufMsgID, sizeof(bufMsgID), " [MSGID%07d]", (messageid & 0x8fffff));
       }
       free(mFile);
