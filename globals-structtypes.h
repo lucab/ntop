@@ -416,6 +416,7 @@ typedef struct ttlStats {
 
 typedef struct simpleProtoTrafficInfo {
   TrafficCounter local, local2remote, remote, remote2local;
+  TrafficCounter totalFlows;
 } SimpleProtoTrafficInfo;
 
 /* *********************** */

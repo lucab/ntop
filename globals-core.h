@@ -310,7 +310,7 @@ extern RETSIGTYPE cleanup(int signo);
 extern void allocateSecurityHostPkts(HostTraffic *srcHost);
 extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 		    const u_int _length, u_short isPassiveSess,
-		    u_short p2pSessionIdx, int actualDeviceId);
+		    u_short p2pSessionIdx, int actualDeviceId, u_short newSession);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
 extern void updateHostName(HostTraffic *el);
@@ -689,7 +689,7 @@ extern IPSession* handleSession(const struct pcap_pkthdr *h,
                                 HostTraffic *dstHost, u_short dport,
                                 u_int length, struct tcphdr *tp,
                                 u_int tcpDataLength, u_char* packetData,
-                                int actualDeviceId);
+                                int actualDeviceId, u_short *newSession);
 
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
 

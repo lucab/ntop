@@ -538,15 +538,11 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 /* *********************************** */
 
 static void handleFTPSession(const struct pcap_pkthdr *h,
-			     HostTraffic *srcHost,
-			     u_short sport,
-			     HostTraffic *dstHost,
-			     u_short dport,
-			     u_int packetDataLength,
-			     u_char* packetData,
+			     HostTraffic *srcHost, u_short sport,
+			     HostTraffic *dstHost, u_short dport,
+			     u_int packetDataLength, u_char* packetData,
 			     IPSession *theSession,
-			     int actualDeviceId)
-{
+			     int actualDeviceId) {
   char *rcStr;
 
   if(sport == IP_TCP_PORT_FTP)
@@ -587,15 +583,10 @@ static void handleFTPSession(const struct pcap_pkthdr *h,
 /* *********************************** */
 
 static void handleSMTPSession (const struct pcap_pkthdr *h,
-                               HostTraffic *srcHost,
-                               u_short sport,
-                               HostTraffic *dstHost,
-                               u_short dport,
-                               u_int packetDataLength,
-                               u_char* packetData,
-                               IPSession *theSession,
-                               int actualDeviceId)
-{
+                               HostTraffic *srcHost, u_short sport,
+                               HostTraffic *dstHost, u_short dport,
+                               u_int packetDataLength, u_char* packetData,
+                               IPSession *theSession, int actualDeviceId) {
   char *rcStr;
 
   if(sport == IP_TCP_PORT_SMTP)
@@ -655,14 +646,10 @@ static void handleSMTPSession (const struct pcap_pkthdr *h,
 /* *********************************** */
 
 static void handlePOPSession (const struct pcap_pkthdr *h,
-                              HostTraffic *srcHost,
-                              u_short sport,
-                              HostTraffic *dstHost,
-                              u_short dport,
-                              u_int packetDataLength,
-                              u_char* packetData,
-                              IPSession *theSession,
-                              int actualDeviceId) {
+                              HostTraffic *srcHost, u_short sport,
+                              HostTraffic *dstHost, u_short dport,
+                              u_int packetDataLength, u_char* packetData,
+                              IPSession *theSession, int actualDeviceId) {
   char *rcStr;
 
   if((sport == IP_TCP_PORT_POP2) || (sport == IP_TCP_PORT_POP3))
@@ -703,14 +690,10 @@ static void handlePOPSession (const struct pcap_pkthdr *h,
 /* *********************************** */
 
 static void handleIMAPSession (const struct pcap_pkthdr *h,
-                               HostTraffic *srcHost,
-                               u_short sport,
-                               HostTraffic *dstHost,
-                               u_short dport,
-                               u_int packetDataLength,
-                               u_char* packetData,
-                               IPSession *theSession,
-                               int actualDeviceId) {
+                               HostTraffic *srcHost, u_short sport,
+                               HostTraffic *dstHost, u_short dport,
+                               u_int packetDataLength, u_char* packetData,
+                               IPSession *theSession, int actualDeviceId) {
   char *rcStr;
 
   if(sport == IP_TCP_PORT_IMAP)
@@ -761,18 +744,14 @@ static void handleIMAPSession (const struct pcap_pkthdr *h,
 /* *********************************** */
 
 static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
-                                  HostTraffic *srcHost,
-                                  u_short sport,
-                                  HostTraffic *dstHost,
-                                  u_short dport,
-                                  u_int packetDataLength,
-                                  u_char* packetData,
-                                  IPSession *theSession,
-                                  int actualDeviceId) {
+                                  HostTraffic *srcHost, u_short sport,
+                                  HostTraffic *dstHost, u_short dport,
+                                  u_int packetDataLength, u_char* packetData,
+                                  IPSession *theSession, int actualDeviceId) {
   u_char *rcStr;
   char *row;
 
-  if ((rcStr = (u_char*)malloc(packetDataLength+1)) == NULL) {
+  if((rcStr = (u_char*)malloc(packetDataLength+1)) == NULL) {
     traceEvent (CONST_TRACE_WARNING, "handleMsnMsgrSession: Unable to "
 		"allocate memory, MsnMsgr Session handling incomplete\n");
     return;
@@ -805,14 +784,10 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
 /* *********************************** */
 
 static void handleWinMxSession (const struct pcap_pkthdr *h,
-                                HostTraffic *srcHost,
-                                u_short sport,
-                                HostTraffic *dstHost,
-                                u_short dport,
-                                u_int packetDataLength,
-                                u_char* packetData,
-                                IPSession *theSession,
-                                int actualDeviceId) {
+                                HostTraffic *srcHost, u_short sport,
+                                HostTraffic *dstHost, u_short dport,
+                                u_int packetDataLength, u_char* packetData,
+                                IPSession *theSession, int actualDeviceId) {
   u_char *rcStr;
 
   if (((theSession->bytesProtoSent.value == 3    /* GET */)  &&
@@ -874,15 +849,11 @@ static void handleWinMxSession (const struct pcap_pkthdr *h,
 
 /* *********************************** */
 
-static void handleGnutellaSession (const struct pcap_pkthdr *h,
-                                   HostTraffic *srcHost,
-                                   u_short sport,
-                                   HostTraffic *dstHost,
-                                   u_short dport,
-                                   u_int packetDataLength,
-                                   u_char* packetData,
-                                   IPSession *theSession,
-                                   int actualDeviceId) {
+static void handleGnutellaSession(const struct pcap_pkthdr *h,
+				  HostTraffic *srcHost, u_short sport,
+                                   HostTraffic *dstHost, u_short dport,
+                                   u_int packetDataLength, u_char* packetData,
+                                   IPSession *theSession, int actualDeviceId) {
   u_char *rcStr, tmpStr[256];
 
   if(theSession->bytesProtoSent.value == 0) {
@@ -930,14 +901,10 @@ static void handleGnutellaSession (const struct pcap_pkthdr *h,
 /* *********************************** */
 
 static void handleKazaaSession(const struct pcap_pkthdr *h,
-                               HostTraffic *srcHost,
-                               u_short sport,
-                               HostTraffic *dstHost,
-                               u_short dport,
-                               u_int packetDataLength,
-                               u_char* packetData,
-                               IPSession *theSession,
-                               int actualDeviceId) {
+                               HostTraffic *srcHost, u_short sport,
+                               HostTraffic *dstHost, u_short dport,
+                               u_int packetDataLength, u_char* packetData,
+                               IPSession *theSession, int actualDeviceId) {
   char *rcStr;
   char tmpStr[256];
 
@@ -1044,14 +1011,10 @@ static void handleKazaaSession(const struct pcap_pkthdr *h,
 /* *********************************** */
 
 static void handleHTTPSession(const struct pcap_pkthdr *h,
-                              HostTraffic *srcHost,
-                              u_short sport,
-                              HostTraffic *dstHost,
-                              u_short dport,
-                              u_int packetDataLength,
-                              u_char* packetData,
-                              IPSession *theSession,
-                              int actualDeviceId) {
+                              HostTraffic *srcHost, u_short sport,
+                              HostTraffic *dstHost, u_short dport,
+                              u_int packetDataLength, u_char* packetData,
+                              IPSession *theSession, int actualDeviceId) {
   char *rcStr, tmpStr[256];
   struct timeval tvstrct;
 
@@ -1477,8 +1440,6 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.nullPkts, 1);
   }
 
-
-
   /* **************************** */
 
   if(myGlobals.runningPref.enableSuspiciousPacketDump) {
@@ -1587,17 +1548,12 @@ static int portRange(int sport, int dport, int minPort, int maxPort) {
 /* *********************************** */
 
 static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
-                                   u_short fragmentedData,
-                                   u_int tcpWin,
-                                   HostTraffic *srcHost,
-                                   u_short sport,
-                                   HostTraffic *dstHost,
-                                   u_short dport,
-                                   u_int length,
-                                   struct tcphdr *tp,
-                                   u_int packetDataLength,
-                                   u_char* packetData,
-                                   int actualDeviceId) {
+                                   u_short fragmentedData, u_int tcpWin,
+                                   HostTraffic *srcHost, u_short sport,
+                                   HostTraffic *dstHost, u_short dport,
+                                   u_int length, struct tcphdr *tp,
+                                   u_int packetDataLength, u_char* packetData,
+                                   int actualDeviceId, u_short *newSession) {
   IPSession *prevSession;
   u_int idx;
   IPSession *theSession = NULL;
@@ -1653,6 +1609,10 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
     printf("DEBUG: NEW ");
 #endif
+
+    (*newSession) = 1; /* This is a new session */
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.totalFlows, 
+			    2 /* 2 x monodirectional flows */);  
 
     if(myGlobals.device[actualDeviceId].numTcpSessions >= myGlobals.runningPref.maxNumSessions) {
       static char messageShown = 0;
@@ -2283,14 +2243,12 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 /* ************************************ */
 
 static void handleUDPSession(const struct pcap_pkthdr *h,
-                             u_short fragmentedData,
-                             HostTraffic *srcHost,
-                             u_short sport,
-                             HostTraffic *dstHost,
-                             u_short dport,
-                             u_int length,
+                             u_short fragmentedData, HostTraffic *srcHost,
+                             u_short sport, HostTraffic *dstHost,
+                             u_short dport, u_int length,
                              u_char* packetData,
-                             int actualDeviceId) {
+			     int actualDeviceId, u_short *newSession) {
+  /*
   IPSession tmpSession;
   
   memset(&tmpSession, 0, sizeof(IPSession));
@@ -2299,24 +2257,24 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
   tmpSession.bytesSent.value = length, tmpSession.bytesRcvd.value = 0;
   tmpSession.sport = sport, tmpSession.dport = dport;
   if(fragmentedData) incrementTrafficCounter(&tmpSession.bytesFragmentedSent, length);
+  */
+
+  (*newSession) = 1; /* This is always a new session */
 }
 
 /* ************************************ */
 
 IPSession* handleSession(const struct pcap_pkthdr *h,
-                         u_short fragmentedData,
-                         u_int tcpWin,
-                         HostTraffic *srcHost,
-                         u_short sport,
-                         HostTraffic *dstHost,
-                         u_short dport,
-                         u_int length,
-                         struct tcphdr *tp,
-                         u_int packetDataLength,
-                         u_char* packetData,
-                         int actualDeviceId) {
+                         u_short fragmentedData, u_int tcpWin,
+                         HostTraffic *srcHost, u_short sport,
+                         HostTraffic *dstHost, u_short dport,
+                         u_int length, struct tcphdr *tp,
+                         u_int packetDataLength, u_char* packetData,
+                         int actualDeviceId, u_short *newSession) {
   IPSession *theSession = NULL;
   u_short sessionType = 0;
+
+  (*newSession) = 0; /* Default */
 
   if((!myGlobals.runningPref.enableSessionHandling) || (myGlobals.device[actualDeviceId].tcpSession == NULL))
     return(NULL);
@@ -2368,11 +2326,11 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
   if(sessionType == IPPROTO_TCP) {
     theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
 				   dstHost, dport, length, tp, packetDataLength,
-				   packetData, actualDeviceId);
+				   packetData, actualDeviceId, newSession);
   } else if(sessionType == IPPROTO_UDP) {
     /* We don't create any permanent structures for UDP sessions */
     handleUDPSession(h, fragmentedData, srcHost, sport, dstHost, dport,
-		      length, packetData, actualDeviceId);
+		      length, packetData, actualDeviceId, newSession);
   }
 
   if((sport == IP_L4_PORT_ECHO)       || (dport == IP_L4_PORT_ECHO)

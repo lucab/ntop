@@ -148,7 +148,8 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	     const u_int _length,  u_short isPassiveSess,
-	     u_short p2pSessionIdx, int actualDeviceId) {
+	     u_short p2pSessionIdx, int actualDeviceId, 
+	     u_short newSession) {
   int idx;
   Counter length = (Counter)_length;
 
@@ -203,6 +204,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 #endif
 
   if(idx != FLAG_NO_PEER) {
+    if(newSession)
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].totalFlows, 1);
+
     if(subnetPseudoLocalHost(srcHost)) {
       if(subnetPseudoLocalHost(dstHost)) {
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
@@ -221,6 +225,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	  }
 	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdLoc, length);
 	}
+
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local, length);
       } else {
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
@@ -921,6 +926,7 @@ static void processIpPkt(const u_char *bp,
   u_char *theData, found = 0;
   TrafficCounter ctr;
   ProtocolsList *protoList;
+  u_short newSession = 0;
 
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
@@ -1265,7 +1271,6 @@ static void processIpPkt(const u_char *bp,
 	  tcpDataLength = 0;
 	  theData = NULL;
 	}
-
       } else {
 	tcpDataLength = 0;
 	theData = NULL;
@@ -1316,14 +1321,11 @@ static void processIpPkt(const u_char *bp,
 
 	      WIN = ntohs(tcp->th_win);  /* TCP window size */
 
-	      if(tcp_data != tcp_opt) /* there are some tcp_option to be parsed */
-		{
+	      if(tcp_data != tcp_opt) { /* there are some tcp_option to be parsed */		
 		  u_char *opt_ptr = tcp_opt;
 
-		  while(opt_ptr < tcp_data)
-		    {
-		      switch(*opt_ptr)
-			{
+		  while(opt_ptr < tcp_data) {
+		      switch(*opt_ptr) {
 			case TCPOPT_EOL:        /* end option: exit */
 			  opt_ptr = tcp_data;
 			  break;
@@ -1423,18 +1425,18 @@ static void processIpPkt(const u_char *bp,
 	if(1 /* nonFullyRemoteSession */) {
 #ifdef INET6
 	  if(ip6)
-              theSession = handleSession (h, fragmented, tp.th_win,
-                                          srcHost, sport, dstHost,
-                                          dport, ntohs(ip6->ip6_plen), &tp, 
-					  tcpDataLength,
-                                          theData, actualDeviceId);
+	    theSession = handleSession(h, fragmented, tp.th_win,
+				       srcHost, sport, dstHost,
+				       dport, ntohs(ip6->ip6_plen), &tp, 
+				       tcpDataLength,
+				       theData, actualDeviceId, &newSession);
 	  else
 #endif
-	    theSession = handleSession (h, (off & 0x3fff), tp.th_win,
-                                        srcHost, sport, dstHost,
-                                        dport, ip_len, &tp, 
-					tcpDataLength,
-                                        theData, actualDeviceId);
+	    theSession = handleSession(h, (off & 0x3fff), tp.th_win,
+				       srcHost, sport, dstHost,
+				       dport, ip_len, &tp, 
+				       tcpDataLength,
+				       theData, actualDeviceId, &newSession);
 	  if(theSession == NULL)
 	    isPassiveSess = 0;
 	  else
@@ -1443,16 +1445,15 @@ static void processIpPkt(const u_char *bp,
 
 	sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
 
-	if ((myGlobals.runningPref.enableOtherPacketDump) &&
-            ((sportIdx == -1) && (dportIdx == -1)))
-	  {
+	if((myGlobals.runningPref.enableOtherPacketDump) &&
+	   ((sportIdx == -1) && (dportIdx == -1))) {
 	    /*
 	       Both source & destination port are unknown. The packet will be counted to
 	       "Other TCP/UDP prot." : We dump the packet if requested
 	    */
-	    dumpOtherPacket(actualDeviceId);
-	  }
-
+	  dumpOtherPacket(actualDeviceId);
+	}
+	
 	/* choose most likely port for protocol traffic accounting
 	 * by trying lower number port first. This is based
 	 * on the assumption that lower port numbers are more likely
@@ -1473,18 +1474,18 @@ static void processIpPkt(const u_char *bp,
 	     sportIdx, dport, dportIdx); */
 
 	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess,
-		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId) == -1)
+		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession) == -1)
 	    handleIP(sport, srcHost, dstHost, length, isPassiveSess,
-		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId);
+		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession);
 	} else {
 	  /*
 	     traceEvent(CONST_TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d",
 	     sport, sportIdx, dport, dportIdx); */
 
 	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess,
-		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId) == -1)
+		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession) == -1)
 	    handleIP(dport, srcHost, dstHost, length, isPassiveSess,
-		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId);
+		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession);
 	}
       }
     }
@@ -1520,6 +1521,8 @@ static void processIpPkt(const u_char *bp,
       dport = ntohs(up.uh_dport);
 
       if(!(fragmented)) {
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.totalFlows, 1);  
+
 	/* Not fragmented */
 	if(((sport == 53) || (dport == 53) /* domain */)) {
 	  short isRequest = 0, positiveReply = 0;
@@ -1715,37 +1718,37 @@ static void processIpPkt(const u_char *bp,
 	  }
 
 
-        /* Handle UDP traffic like TCP, above -
-	   That is: if we know about the lower# port, even if it's the destination,
-	   classify the traffic that way.
-	   (BMS 12-2001)
-	*/
-        if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId) == -1)
-	    handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId);
-        } else {
-	  if(handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId) == -1)
-	    handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId);
-        }
-
 	if(nonFullyRemoteSession) {
             /* There is no session structure returned for UDP sessions */
 #ifdef INET6
 	  if(ip6)
-              handleSession (h, fragmented, 0,
-                             srcHost, sport, dstHost,
-                             dport, ntohs(ip6->ip6_plen), NULL,
-                             udpDataLength,
-                             (u_char*)(bp+hlen+sizeof(struct udphdr)),
-                             actualDeviceId);
+              handleSession(h, fragmented, 0,
+			    srcHost, sport, dstHost,
+			    dport, ntohs(ip6->ip6_plen), NULL,
+			    udpDataLength,
+			    (u_char*)(bp+hlen+sizeof(struct udphdr)),
+			    actualDeviceId, &newSession);
 	  else
 #endif
               handleSession (h, (off & 0x3fff), 0,
                              srcHost, sport, dstHost,
                              dport, ip_len, NULL, udpDataLength,
                              (u_char*)(bp+hlen+sizeof(struct udphdr)),
-                             actualDeviceId);
+                             actualDeviceId, &newSession);
 	}
+
+        /* Handle UDP traffic like TCP, above -
+	   That is: if we know about the lower# port, even if it's the destination,
+	   classify the traffic that way.
+	   (BMS 12-2001)
+	*/
+        if(dport < sport) {
+	  if(handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId, newSession) == -1)
+	    handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId, newSession);
+        } else {
+	  if(handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId, newSession) == -1)
+	    handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId, newSession);
+        }
       }
     }
 #ifdef INET6
@@ -1757,6 +1760,7 @@ static void processIpPkt(const u_char *bp,
 
   case IPPROTO_ICMP:
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpBytes, length);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.totalFlows, 1);
 
     if(tcpUdpLen < sizeof(struct icmp)) {
       if(myGlobals.runningPref.enableSuspiciousPacketDump) {
