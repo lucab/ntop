@@ -742,16 +742,17 @@ void scanTimedoutTCPSessions(void) {
 	 srcHost->portsUsage[sport] = (PortUsage*)malloc(sizeof(PortUsage));
 	 memset(srcHost->portsUsage[sport], 0, sizeof(PortUsage));
        }
-       if(dstHost->portsUsage[sport] == NULL) {
-	 dstHost->portsUsage[sport] = (PortUsage*)malloc(sizeof(PortUsage));
-	 memset(dstHost->portsUsage[sport], 0, sizeof(PortUsage));
-       }
 
        srcHost->portsUsage[sport]->serverTraffic += length;
        srcHost->portsUsage[sport]->serverUses++;
        srcHost->portsUsage[sport]->serverUsesLastPeer = dstHostIdx;
-
+       
        if(dstHostIdx != broadcastEntryIdx) {
+	 if(dstHost->portsUsage[sport] == NULL) {
+	   dstHost->portsUsage[sport] = (PortUsage*)malloc(sizeof(PortUsage));
+	   memset(dstHost->portsUsage[sport], 0, sizeof(PortUsage));
+	 }
+
 	 dstHost->portsUsage[sport]->clientTraffic += length;
 	 dstHost->portsUsage[sport]->clientUses++;
 	 dstHost->portsUsage[sport]->clientUsesLastPeer = srcHostIdx;
