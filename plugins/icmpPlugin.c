@@ -23,6 +23,12 @@
 #include "globals-report.h"
 
 #ifdef HAVE_GDCHART
+
+#include "gdc.h"
+#include "gdchart.h"
+#include "gdcpie.h"
+
+
 extern char GDC_yaxis;
 extern char* GDC_ylabel_fmt;
 

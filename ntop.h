@@ -1637,10 +1637,4 @@ typedef struct pppTunnelHeader {
 #define sec_popen(a,b) popen(a,b)
 #endif
 
-#ifdef HAVE_GDCHART
-#include "gdc.h"
-#include "gdchart.h"
-#include "gdcpie.h"
-#endif
-
 #endif /* NTOP_H */
