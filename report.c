@@ -1606,9 +1606,9 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
 void printLocalRoutersList(int actualDeviceId) {
   char buf[BUF_SIZE];
-  HostTraffic *el, *router;
+  HostTraffic *el, router;
   u_int idx, i, j, numEntries=0;
-  u_int routerList[MAX_NUM_ROUTERS];
+  HostSerial routerList[MAX_NUM_ROUTERS];
 
   printHTMLheader("Local Subnet Routers", 0);
 
@@ -1649,11 +1649,11 @@ void printLocalRoutersList(int actualDeviceId) {
 	       "<TH "TH_BG">Used by</TH></TR>\n");
 
     for(i=0; i<numEntries; i++) {
-      router = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerList[i])];
-      if(router != NULL) {
+
+      if(retrieveHost(routerList[i], &router) == 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
-		getRowColor(),
-		makeHostLink(router, SHORT_FORMAT, 0, 0)) < 0) BufferTooShort();
+		    getRowColor(),
+		    makeHostLink(&router, SHORT_FORMAT, 0, 0)) < 0) BufferTooShort();
 	sendString(buf);
 
 	for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++)
@@ -1677,7 +1677,6 @@ void printLocalRoutersList(int actualDeviceId) {
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
   }
-
 }
 
 /* ************************************ */
