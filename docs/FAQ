@@ -506,6 +506,54 @@ Q. How do you reset Admin password if we lost it?
 A. Delete ntop_pw.db and follow the procedure in docs/1STRUN.txt
 
 
+Q. How does the @filename option work e.g. /usr/bin/ntop ... @filename ...
+A. The text of 'filename', is copied - ignoring line breaks and 
+   comments (anything following a #) - into the command line.
+
+   ntop behaves as if all of the text had simply been typed directly 
+   on the command line.  Multiple @s are permitted in the command 
+   line, nesting is not.  @s in the file will cause an error.
+
+   Both are displayed on the info.html report, the "Started as"
+   shows the actual command line ntop was given and the 
+   "Resolved to" shows what ntop processed.
+
+   Started as /usr/bin/ntop -i eth0,eth1 @/root/ntop_parms -d -L
+
+   with /root/ntop_parms containing:
+
+      -p /usr/share/ntop/protocol.list 
+      -P /usr/share/ntop 
+      --throughput-bar-chart 
+      -w 192.168.42.38:3000 
+      # -W 192.168.42.38:3001 
+      -u ntop 
+      --trace-level 3 
+      -m 12.239.0.0/16,10.113.0.0/16 
+      -E 
+      -K 
+      --reuse-rrd-graphics 
+
+   becomes:
+
+   Resolved to /usr/bin/ntop -i eth0,eth1 -p /usr/share/ntop/protocol.list 
+               -P /usr/share/ntop --throughput-bar-chart -w 192.168.42.38 
+               -u ntop --trace-level 3 -m 12.239.0.0/16,10.113.0.0/16 -E 
+               -K --reuse-rrd-graphics -d -L 
+
+   Remember, most ntop options are "sticky", that is they just set an
+   internal flag. Invoking them multiple times doesn't change ntop's
+   behavior. However, options that set a value, such as --trace-level, 
+   will use the LAST value given: --trace-level 2 --trace-level 3 will 
+   run as --trace-level 3.
+
+   It is recommended that you use FULL pathnames for @filename, since
+   ntop may have different effective directories when run in different
+   ways.  However, you may wish to use relative pathnames to take
+   advantage of the different effective directories (say cron vs.
+   command line).  Just know where you're starting from.
+(Added 20Nov2002, Burton)
+
 Q. ntop seems to run but I don't see any traffic.
 A. Make sure you aren't running against the loopback (127.0.0.1) interface.
    lo shouldn't see much traffic, only that originating on the host destined
