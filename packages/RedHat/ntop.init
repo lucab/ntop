@@ -198,6 +198,7 @@ BEGIN { eff=""; \
         xvert["F"] = "flow-spec"; \
         xvert["K"] = "debug"; \
         xvert["M"] = "no-interface-merge"; \
+        xvert["N"] = "wwn-map"; \
         xvert["O"] = "output-packet-path"; \
         xvert["P"] = "db-file-path"; \
         xvert["Q"] = "spool-file-path"; \
@@ -288,16 +289,11 @@ if [ ".${ntopinterface}" = ".tbd" ]; then
 
     for eth in $iflist; do
 
-       if [ -f /etc/sysconfig/network-scripts/ifcfg-$eth ]; then
-         if ! LANG=C egrep -L "^[Nn][Tt][Oo][Pp]=['\"]?[Yy][Ee][Ss]['\"]?" \
+       if ! LANG=C egrep -L "^[Nn][Tt][Oo][Pp]=['\"]?[Yy][Ee][Ss]['\"]?" \
                 /etc/sysconfig/network-scripts/ifcfg-$eth > /dev/null ; then
-           logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth is not ntop=yes, skipping"
-           if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not ntop=yes"; fi
-           continue
-         fi
-       else
-         logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth not in network-scripts, forcing"
-         if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not in network-scripts"; fi
+            logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth is not ntop=yes, skipping"
+            if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not ntop=yes"; fi
+            continue
        fi
 
        ntopinterface="${ntopinterface} $eth"
@@ -440,18 +436,11 @@ config_interfaces () {
           if="${if},${eth}"
       fi
 
-      if [ -f /etc/sysconfig/network-scripts/ifcfg-$eth ]; then
-        if ! LANG=C egrep -L "^[Nn][Tt][Oo][Pp]=['\"]?[Yy][Ee][Ss]['\"]?" \
-               /etc/sysconfig/network-scripts/ifcfg-$eth > /dev/null ; then
-          logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth is not ntop=yes, skipping"
-          if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not ntop=yes"; fi
-          continue
-        fi
-      else
-        logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth not in network-scripts, skipping"
-        if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not in network-scripts"; fi
-        continue
-      fi
+       if ! LANG=C egrep -L "^[Nn][Tt][Oo][Pp][Cc].*=['\"]?[Yy][Ee][Ss]['\"]?" \
+                /etc/sysconfig/network-scripts/ifcfg-$eth > /dev/null ; then
+            logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth is not ntopconfigure=yes, skipping"
+            continue
+       fi
 
       logger -p ${ntopusesyslog} -t ${name} -- "INITD - Configuring $eth"
       if [ "${debug}" = "y" ]; then echo "DEBUG: Configuring $eth"; fi
@@ -460,7 +449,11 @@ config_interfaces () {
       ip=`$sudo /sbin/ip addr show $eth | \
           awk '/inet/ { printf("%s", substr($2, 1, index($2, "/")-1)) }'`
 
-      $sudo /sbin/ifconfig $eth promisc
+      $sudo /sbin/ip link set $eth promisc on 2> /dev/null
+      rc=$?
+      if [ ${rc} = 255 ]; then
+          $sudo /sbin/ifconfig $eth promisc 2> /dev/null
+      fi
       $sudo /sbin/ip link set $eth up
 
       $sudo /sbin/ip addr show $eth | logger -p ${ntopusesyslog} -t ${name}
@@ -530,7 +523,11 @@ stop () {
           if [ "${debug}" = "y" ]; then echo "DEBUG: Unconfiguring $eth"; fi
     
           $sudo /sbin/ip link set $eth down
-          $sudo /sbin/ifconfig $eth -promisc
+          $sudo /sbin/ip link set $eth promisc off 2>/dev/null
+          rc=$?
+          if [ ${rc} = 255 ]; then
+              $sudo /sbin/ifconfig $eth -promisc
+          fi
     
           $sudo /sbin/ip addr show $eth | logger -p ${ntopusesyslog} -t ${name}
           if [ "${debug}" = "y" ]; then $sudo /sbin/ip addr show $eth; fi
@@ -548,6 +545,52 @@ restart () {
   echo $"In restart, parameters are $@"
   stop
   start $@
+}
+
+valgrind () {
+
+  shift
+
+  logger -p ${ntopusesyslog} -t ${name} -- "INITD - valgrind request...checking"
+  if [ "${debug}" = "y" ]; then echo "DEBUG: Checking for valgrind"; fi
+
+  valgrind=`slocate -r 'bin\/valgrind$'`
+  rc=$?
+  if [ ${rc} != 0 ]; then
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - valgrind not found, aborting"
+      echo ""
+      echo ""
+      echo "ERROR: Unable to find valgrind (rc=${rc})"
+      echo ""
+      echo "Aborting..."
+      exit 1
+  fi
+
+  logger -p ${ntopusesyslog} -t ${name} -- "INITD - Found valgrind: ${valgrind}"
+  if [ "${debug}" = "y" ]; then echo "DEBUG: Found valgrind: ${valgrind}"; fi
+
+  echo $"Stopping..."
+  stop
+  echo $"Running under valgrind, parameters are $@"
+  prog="${valgrind} --verbose --logfile=/tmp/valgrind.log --leak-check=yes ${prog}"
+
+  start_checks
+  show_extra
+  config_interfaces
+
+  cmd=`echo $prog -i $if \
+               @${conf} \
+               $extra $@`
+
+  if [ "${debug}" = "y" ]; then echo "DEBUG: cmd pre-strip  '${cmd}'"; fi
+  cmd=`echo ${cmd} | awk '{ gsub(/  *-d/, "", $0); print $0}'`
+  cmd=`echo ${cmd} | awk '{ gsub(/  *-L/, "", $0); print $0}'`
+  cmd=`echo ${cmd} | awk '{ gsub(/  *--use-syslog=[a-zA-Z0-9]*/, "", $0); print $0}'`
+  if [ "${debug}" = "y" ]; then echo "DEBUG: cmd post-strip '${cmd}'"; fi
+
+  show_starting
+
+  ${cmd}
 }
 
 init() {
@@ -678,6 +721,10 @@ case "$1" in
 
   condrestart)
     [ -f /var/lock/subsys/ntop ] && restart || :
+  ;;
+
+  valgrind)
+    valgrind $@
   ;;
 
   status)
