@@ -835,6 +835,12 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   rc = pthread_mutex_init(&(mutexId->mutex), NULL);
 
+  if (rc != 0) {
+    traceEvent(TRACE_ERROR,
+               "ERROR: createMutex() call returned %d(%d) [%s:%d]\n", 
+               rc, errno, fileName, fileLine);
+  } else {
+
 #ifdef PTHREAD_MUTEX_ERRORCHECK_NP
 
   /* *************************************************
@@ -860,7 +866,9 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
 #endif /* PTHREAD_MUTEX_ERRORCHECK_NP */
 
-  mutexId->isInitialized = 1;
+      mutexId->isInitialized = 1;
+
+  }
 
   return(rc);
 }
@@ -869,9 +877,16 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
 void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
-  if(!mutexId->isInitialized) {
+  if(mutexId == NULL) {
     traceEvent(TRACE_ERROR,
 	       "ERROR: deleteMutex() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return;
+  }
+
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR,
+	       "ERROR: deleteMutex() call with an UN-INITIALIZED mutex [%s:%d]\n",
 	       fileName, fileLine);
     return;
   }
@@ -888,9 +903,16 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
   int rc;
 
-  if(!mutexId->isInitialized) {
+  if(mutexId == NULL) {
     traceEvent(TRACE_ERROR,
 	       "ERROR: accessMutex() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return(-1);
+  }
+
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR,
+	       "ERROR: accessMutex() call with an UN-INITIALIZED mutex [%s:%d]\n",
 	       fileName, fileLine);
     return(-1);
   }
@@ -928,9 +950,16 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		  char* fileName, int fileLine) {
   int rc;
 
-  if(!mutexId->isInitialized) {
+  if(mutexId == NULL) {
     traceEvent(TRACE_ERROR,
 	       "ERROR: tryLockMutex() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return(-1);
+  }
+
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR,
+	       "ERROR: tryLockMutex() call with an UN-INITIALIZED mutex [%s:%d]\n",
 	       fileName, fileLine);
     return(-1);
   }
@@ -969,9 +998,16 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 int _isMutexLocked(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
-  if(!mutexId->isInitialized) {
+  if(mutexId == NULL) {
     traceEvent(TRACE_ERROR,
 	       "ERROR: isMutexLocked() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return(-1);
+  }
+
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR,
+	       "ERROR: isMutexLocked() call with an UN-INITIALIZED mutex [%s:%d]\n",
 	       fileName, fileLine);
     return(-1);
   }
@@ -1003,9 +1039,16 @@ int _releaseMutex(PthreadMutex *mutexId,
 		  char* fileName, int fileLine) {
   int rc;
 
-  if(!mutexId->isInitialized) {
+  if(mutexId == NULL) {
     traceEvent(TRACE_ERROR,
 	       "ERROR: releaseMutex() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return(-1);
+  }
+
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR,
+	       "ERROR: releaseMutex() call with an UN-INITIALIZED mutex [%s:%d]\n",
 	       fileName, fileLine);
     return(-1);
   }
