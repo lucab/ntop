@@ -102,28 +102,35 @@ void addUser(char* user) {
     printFlagedWarning("<I>The specified username is invalid.</I>");
   } else {
     sendString("<CENTER>\n");
-    sendString("<FORM METHOD=POST ACTION=/doAddUser>\n");
-
+    
+    sendString("<script Language=\"JavaScript\">
+function CheckForm(theForm) {\nif (theForm.pw.value != theForm.pw1.value) {\n    alert(\"Passwords do not match. Please try again.\");\n    theForm.pw1.focus();\n    return(false);\n  }\n  return (true);\n}\n</script>\n");
+    
+    sendString("<FORM METHOD=POST ACTION=/doAddUser onsubmit=\"return CheckForm(this)\">\n");
+    
     sendString("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=5>\n");
     sendString("<TR>\n<TH ALIGN=right>User:&nbsp;</TH><TD ALIGN=left>");
     if(user != NULL) {
       decodeWebFormURL(user);
       if(snprintf(tmpStr, sizeof(tmpStr),
-	     "<INPUT TYPE=hidden NAME=user SIZE=20 VALUE=\"%s\"><B>%s</B>\n",
-	     &user[1], &user[1]) < 0)
-	 BufferOverflow();
+		  "<INPUT TYPE=hidden NAME=user SIZE=20 VALUE=\"%s\"><B>%s</B>\n",
+		  &user[1], &user[1]) < 0)
+	BufferOverflow();
       sendString(tmpStr);
     } else
       sendString("<INPUT TYPE=text NAME=user SIZE=20>\n");
+
     sendString("</TD>\n</TR>\n");
     sendString("<TR>\n<TH ALIGN=right>Password:&nbsp;</TH>"
 	       "<TD ALIGN=left><INPUT TYPE=password NAME=pw SIZE=20></TD></TR>\n");
+    sendString("<TR>\n<TH ALIGN=right>Verify Password:&nbsp;</TH>"
+	       "<TD ALIGN=left><INPUT TYPE=password NAME=pw1 SIZE=20></TD></TR>\n");
     sendString("</TABLE>\n");
 
     if(snprintf(tmpStr, sizeof(tmpStr),
-	   "<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset>\n",
-	   (user != NULL) ? "Modify User" : "Add User") < 0)
-	 BufferOverflow();
+		"<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset>\n",
+		(user != NULL) ? "Modify User" : "Add User") < 0)
+      BufferOverflow();
     sendString(tmpStr);
 
     sendString("</FORM>\n");

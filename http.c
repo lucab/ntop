@@ -719,6 +719,10 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
 /* *******************************/
 
 void returnHTTPredirect(char* destination) {
+#ifdef HAVE_ZLIB
+  compressFile = acceptGzEncoding = 0;
+#endif
+
   sendHTTPHeader(HTTP_TYPE_HTML,
 		 HTTP_FLAG_STATUS_302 | HTTP_FLAG_NO_CACHE_CONTROL | HTTP_FLAG_MORE_FIELDS);
   sendString("Location: /");
