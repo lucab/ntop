@@ -4728,27 +4728,28 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
    * n.m.x -> nmmyyy0xx  (if x>=50 yyy=x else xx=x)
    * n.ml  -> nmm000l00 (where a=1, b=2, etc.)
    */
-    int f, n=0, m=0, x=0, y=0, l=0, c=0, prerc=0;
+    unsigned int f, n=0, m=0, x=0, y=0, c=0, prerc=0;
+    unsigned char l=0;
 
     if (versionString == NULL) {
       return 999999999;
     }
 
-    f = sscanf(versionString, "%d.%dpre%d", &n, &m, &x);
+    f = sscanf(versionString, "%u.%upre%u", &n, &m, &x);
     if(f>=3) {
       prerc=2;
     } else {
-      f = sscanf(versionString, "%d.%drc%d", &n, &m, &x);
+      f = sscanf(versionString, "%u.%urc%u", &n, &m, &x);
       if(f>=3) {
         prerc=1;
       } else {
-        f = sscanf(versionString, "%d.%d%[a-z].%d", &n, &m, &l, &x);
+        f = sscanf(versionString, "%u.%u%[a-z].%u", &n, &m, &l, &x);
         if(f>=3) {
           if(l>0)
             l = tolower(l) - 'a' + 1;
         } else {
           l = 0;
-          f = sscanf(versionString, "%d.%d.%d", &n, &m, &x);
+          f = sscanf(versionString, "%u.%u.%u", &n, &m, &x);
           if (f<=0) { 
             return 999999999;
           }
@@ -4760,7 +4761,7 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
       x=0;
     }
 #ifdef CHKVER_DEBUG
-    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: %s is n%d m%d y%d l%d x%d prerc%d f=%d",
+    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: %s is n%u m%u y%u l%u x%u prerc%u f=%u",
                versionString, n, m, y, l, x, prerc, f);
 #endif
     return n*100000000 + m*1000000 + y*1000 + l*100 + x - 1000*prerc;
@@ -5315,7 +5316,7 @@ int processVersionFile(char *buf, int bufLen) {
            traceEvent(CONST_TRACE_WARNING,
                       "CHKVER: version file INVALID - ignoring version check");
            traceEvent(CONST_TRACE_WARNING,
-                      "CHKVER: Please report to ntop mailing list, codes (%d,%d,%d,%d,%d)",
+                      "CHKVER: Please report to ntop mailing list, codes (%u,%u,%u,%u,%u)",
                       oNumber, uNumber, sNumber, dNumber, vNumber);
            return 1;
        }
@@ -5323,11 +5324,11 @@ int processVersionFile(char *buf, int bufLen) {
        traceEvent(CONST_TRACE_INFO, "CHKVER: Version file is from '%s'", site);
        traceEvent(CONST_TRACE_INFO, "CHKVER: as of date is '%s'", date);
 
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: obsolete is    '%-10s' (%9d)", obsolete,    oNumber);
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: unsupported is '%-10s' (%9d)", unsupported, uNumber);
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: stable is      '%-10s' (%9d)", stable,      sNumber);
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: development is '%-10s' (%9d)", development, dNumber);
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: version is     '%-10s' (%9d)", version,     vNumber);
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: obsolete is    '%-10s' (%9u)", obsolete,    oNumber);
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: unsupported is '%-10s' (%9u)", unsupported, uNumber);
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: stable is      '%-10s' (%9u)", stable,      sNumber);
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: development is '%-10s' (%9u)", development, dNumber);
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: version is     '%-10s' (%9u)", version,     vNumber);
 
 /* Check values - set status flag */
        if(vNumber < oNumber) {
