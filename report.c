@@ -1020,10 +1020,15 @@ void printTrafficStatistics(int revertOrder) {
 	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
   
   if((i = stat(buf, &statbuf)) == 0) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"[ <A HREF=\"/plugins/rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
-		"<IMG BORDER=0 "TABLE_DEFAULTS" SRC=\"/graph.gif\" alt=\"Generate rrd graphs page\"></A> ]</TD></TR>\n",
-		getRowColor(), "RRD Stats", myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+    if(snprintf(buf, sizeof(buf),
+                "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
+                "<TD "TD_BG" align=\"center\">"
+		"<a href=\"/" CONST_PLUGINS_HEADER
+                    "rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
+                "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
+                    " alt=\"View rrd charts of historical data for this interface\"></a>"
+                "</TD></TR>\n",
+		getRowColor(), myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
       BufferTooShort();
     sendString(buf);
@@ -4372,30 +4377,6 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     if(numEntries >= maxHosts) break;
   } /* for(;;) */
 
-#ifndef EMBEDDED
-  /* RRDs for domains */
-  if (domainName != NULL) {
-    struct stat statbufDomain;
-
-    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-    snprintf(buf, sizeof(buf), "%s/interfaces/%s/domains/%s", 
-	   myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domainName);
-  
-    if((i = stat(buf, &statbufDomain)) == 0) {
-      if(snprintf(buf, sizeof(buf), 
-                "<center>Show domain-wide traffic charts&nbsp;"
-		"[ <a href=\"/" CONST_PLUGINS_HEADER "rrdPlugin?action=list&key=interfaces/%s/domains/%s&title=Domain%%20%s\">"
-		"<img border=\"0\" src=\"/graph.gif\" alt=\"Domain wide rrd statistics\"></a> ]"
-                "</center>\n<br>\n",
-		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		domainName,domainName) < 0)
-        BufferTooShort();
-      sendString(buf);
-    }
-  }
-#endif
-
   if(numEntries == 0) {
     printNoDataYet();
     free(tmpStats); free(stats);
@@ -4554,6 +4535,38 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   addPageIndicator(buf, pageNum, numEntries,
 		   myGlobals.maxNumLines,
 		   revertOrder, abs(sortedColumn));
+
+#ifndef EMBEDDED
+  /* RRDs for domains */
+  if (domainName != NULL) {
+    struct stat statbufDomain;
+
+    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+    snprintf(buf, sizeof(buf), "%s/interfaces/%s/domains/%s", 
+	   myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domainName);
+  
+    if((i = stat(buf, &statbufDomain)) == 0) {
+      if(snprintf(buf, sizeof(buf), 
+                  "<p>&nbsp;</p>\n"
+                  "<center><table border=\"0\"><tr>"
+                  "<td valign=\"middle\" align=\"right\">Show domain-wide traffic charts:</td>\n"
+                  "<td align=\"right\">"
+                  "&nbsp;&nbsp;"
+                  "<a href=\"/" CONST_PLUGINS_HEADER
+                      "rrdPlugin?action=list&key=interfaces/%s/domains/%s&title=Domain%%20%s\">"
+                  "<img border=\"0\" src=\"/graph.gif\" alt=\"Domain-wide Historical Data\"></a>"
+                  "&nbsp;&nbsp;"
+                  "</td>\n"
+                  "</tr></table>\n</center>\n"
+                  "<p>&nbsp;</p>\n",
+		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		domainName,domainName) < 0)
+        BufferTooShort();
+      sendString(buf);
+    }
+  }
+#endif
 
   sendString("<p align=\"center\"><b>NOTE</b>: The domain is determined by simply stripping off "
              "the first name, so for host x.yz.com, the domain is yz.com and for host "

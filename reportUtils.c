@@ -3992,10 +3992,15 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	     dotToSlash(key));
 
     if(stat(buf, &statbuf) == 0) {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-                  "[ <A HREF=\"/plugins/rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
-                   "<IMG BORDER=0 "TABLE_DEFAULTS" SRC=\"/graph.gif\" alt=\"link to rrd graphs\"></A> ]</TD></TR>\n",
-		  getRowColor(), "RRD Stats",
+      if(snprintf(buf, sizeof(buf),
+                  "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
+                  "<TD "TD_BG" ALIGN=\"center\">"
+                  "<a href=\"/" CONST_PLUGINS_HEADER 
+                      "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
+                  "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
+                      " alt=\"view rrd graphs of historical data for this host\"></a>"
+                  "</TD></TR>\n",
+		  getRowColor(),
                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
                   dotToSlash(key),
 		  el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
