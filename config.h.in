@@ -69,6 +69,9 @@
 /* Define if you have the snprintf function.  */
 #undef HAVE_SNPRINTF
 
+/* Define if you have the strsep function.  */
+#undef HAVE_STRSEP
+
 /* Define if you have the strtok_r function.  */
 #undef HAVE_STRTOK_R
 
