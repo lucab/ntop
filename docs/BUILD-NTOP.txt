@@ -31,20 +31,7 @@ Quick Instructions
       Sometimes having these help because they allow ./configure to
       rebuild the scripts to better match your system:
 
-         - autoconf (2.51+), automake (1.6+)
-
-1c. pep Plugin
-
-      If you are interested in pep (a plugin to use the Perl to build
-      your own reports), you'll need Perl.
-
-      If pep causes a compile error and you're not interested in it, you
-      can, after ./configure, edit the line in plugins/Makefile:
-
-          SUBDIRS = . pep
-
-      and remove the 'pep'.
-
+         - autoconf (2.53+), automake (1.6+)
 
 2. Build ntop
 
@@ -53,7 +40,58 @@ Quick Instructions
    - make
    - make install
 
-2.1 Build a static ntop
+2.1. Cleanup older versions.
+    During make install, ntop may report a couple of things...
+
+    |  Cleanup of old database files...
+    |
+    |        ...Deleting /usr/share/ntop/addressQueue.db
+    |        ...Deleting /usr/share/ntop/dnsCache.db
+
+    This is normal - since installing a new version could alter the formats,
+    we just wipe them.  ntop will happily recreate these next time and store
+    data in them.
+
+
+    |NOTE: ntop can show traffic by AS (Autonomous System) Number
+    |
+    |      Because this feature consumes a number of MB of memory,
+    |      the datafile is not installed by default.
+    |
+    |      Which, if there is no file - from this or a previous
+    |      install - effectively disables the ASN feature.
+    |
+    |      To install the AS data, type:
+    |
+    |# make install-data-as
+
+    Means pretty much what it says - ntop doesn't install the files
+    by default to conserve memory.  The file wasn't found, so you are
+    being told how to install it.
+
+
+    |  There appear to be old shared library files on your system.
+    |  You may wish to delete these if you are no longer using the
+    |  older versions.
+    |
+    |  To see the list of files, run
+    |
+    |# make listlibclean
+    |
+    |  To delete them (you will have a chance to abort before the
+    |  actual delete):
+    |
+    |# make libclean
+
+    Again, means what it says.  ntop uses the ntop version number in the
+    name of the various .so files (e.g. libntop-3.0pre2.so).  After installing
+    the new version, ntop found other versions (e.g. libntop-3.0pre1.so).  If 
+    you aren't still using that old version (tough since make install overlaid
+    /usr/bin/ntop), this is how to see what files make install things are bad
+    and how to delete them.
+
+
+2.2 Build a static ntop
 
     Sometimes you want to build ntop statically so that both shared libraries
     and plugins are included in the main program. In order to do that you need
@@ -94,11 +132,14 @@ Compile problems
       Starting with 2.2, ntop no longer goes to extreme lengths to find
       the .h and lib files.  2.2.1 continues this evolution, to the extent
       that if a header or library isn't in the standard locations, you
-      MUST tell ntop where to find it.
+      MUST tell ntop where to find it. 
+
+      3.0 adds the common /usr/local directories (e.g. /usr/local/include
+      and /usr/local/lib) to the places ntop looks by default.
 
       (Note that standard locations differ across systems and may not
-       include the common installation location for packages such as
-       /usr/local - consult the OS documentation!)
+       include the common installation location for packages on a particular
+       system, such as /opt - consult the OS documentation!)
 
       You have two choices...
 
@@ -114,11 +155,11 @@ Compile problems
       2. Use the LDFLAGS and CPPFLAGS variables, e.g.:
 
           $ export CPPFLAGS="-lm"
-          $ export LDFLAGS="-L/usr/local/lib"
+          $ export LDFLAGS="-L/opt/lib"
           $ ./configure ...
           $ make
 
-         which adds /usr/local/lib to the loader path and libm (math library
+         which adds /opt/lib to the loader path and libm (math library
          in some flavors of *nix) to the list of libraries.
 
 Notes
@@ -143,4 +184,4 @@ Updated - June 2002
 Updated - October 2002 (new ./configure scripts)
 Updated - January 2003 (automake 1.6+ vs. 1.5+)
 Updated - July 2003 (2.2.1+ changes)
-
+Updated - March 2004 (3.0 final changes)
