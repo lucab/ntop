@@ -1036,8 +1036,9 @@ void printHostsTraffic(int reportTypeReq,
     formatBuf4[32], formatBuf5[32], formatBuf6[32], formatBuf7[32],
     formatBuf8[32], formatBuf9[32];
   int reportType;
-  u_char vlanList[MAX_VLAN];
+  u_char *vlanList;
 
+  vlanList = calloc(1, MAX_VLAN); if(vlanList == NULL) return;
   vlanId = abs(vlanId);
 
   /* traceEvent(CONST_TRACE_INFO, "VLAN: %d", vlanId); */
@@ -1095,15 +1096,14 @@ void printHostsTraffic(int reportTypeReq,
       break;
   }
 
-  memset(vlanList, 0, sizeof(vlanList));
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el))
-    if(el->vlanId < MAX_VLAN) vlanList[el->vlanId] = 1;
+    if((el->vlanId > 0) && (el->vlanId < MAX_VLAN)) vlanList[el->vlanId] = 1;
 
   printHTMLheader(buf, NULL, 0);
 
   printHeader(reportTypeReq, revertOrder, abs(sortedColumn), showHostsMode, 
-	      showLocalityMode, vlanList, vlanId);
+	          showLocalityMode, vlanList, vlanId);
 
   strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
@@ -1113,8 +1113,10 @@ void printHostsTraffic(int reportTypeReq,
 
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*),
                                                         "printHostsTraffic");
-  if(tmpTable == NULL)
+  if(tmpTable == NULL) {
+      free(vlanList);
       return;
+  }
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
@@ -1658,7 +1660,8 @@ void printHostsTraffic(int reportTypeReq,
 	     "</ul><p>\n");
   
   myGlobals.lastRefreshTime = myGlobals.actTime;
-  free(tmpTable);
+ free(vlanList);
+ free(tmpTable);
 }
 
 /* ******************************* */
@@ -1783,9 +1786,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[11], *theAnchor[11], osBuf[128];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-  u_char vlanList[MAX_VLAN], foundVlan = 0, vlanStr[16];
+  u_char *vlanList, foundVlan = 0, vlanStr[16];
 
-  memset(vlanList, 0, sizeof(vlanList));
+  vlanList = calloc(1, MAX_VLAN);
+  if(vlanList == NULL) return;
   vlanId = abs(vlanId);
 
   printHTMLheader("Host Information", NULL, 0);
@@ -1794,8 +1798,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
 
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printHostsInfo");
-  if(tmpTable == NULL)
+  if(tmpTable == NULL) {
+      free(vlanList);
       return;
+  }
 
   if(revertOrder)
     sign = "", arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
@@ -2207,6 +2213,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   }
 
   free(tmpTable);
+  free(vlanList);
 }
 
 /* ************************************ */

@@ -2928,7 +2928,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     memcpy ((u_int8_t *)&el->fcCounters->hostFcAddress,
             (u_int8_t *)&theSerial.value.fcSerial.fcAddress,
             LEN_FC_ADDRESS);
-    safe_snprintf (el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress), "%02x.%02x.%02x", el->fcCounters->hostFcAddress.domain,
+    safe_snprintf (__FILE__, __LINE__, el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress), "%02x.%02x.%02x", el->fcCounters->hostFcAddress.domain,
              el->fcCounters->hostFcAddress.area, el->fcCounters->hostFcAddress.port);
     setResolvedName(el, el->fcCounters->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FCID);
 

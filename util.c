@@ -6182,11 +6182,11 @@ int cmpFctnLocationName(const void *_a, const void *_b) {
       } else {
         nameB = (*b)->ip2ccValue;
       }
-      rc = strcasecmp(nameA, nameB);
+	  rc = strcasecmp(nameA != NULL ? nameA : "", nameB != NULL ? nameB : "");
     }
 
     if(rc==0) {
-      rc=cmpFctnResolvedName(a, b);
+      rc = cmpFctnResolvedName(a, b);
     }
 
     return(rc);

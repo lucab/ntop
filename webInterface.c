@@ -164,7 +164,7 @@ void showPluginsList(char* pluginName) {
   FlowFilterList *flows = myGlobals.flowsList;
   short doPrintHeader = 0;
   char tmpBuf[LEN_GENERAL_WORK_BUFFER], *thePlugin, tmpBuf1[LEN_GENERAL_WORK_BUFFER];
-  int newPluginStatus = 0, rc;
+  int newPluginStatus = 0, rc=0;
 
   if(pluginName[0] != '\0') {
     int i;

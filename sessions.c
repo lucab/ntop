@@ -473,7 +473,7 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
 /* #define DEBUG */
 
 void scanTimedoutTCPSessions(int actualDeviceId) {
-  u_int _idx, freeSessionCount=0, purgeLimit = myGlobals.device[actualDeviceId].numTcpSessions/2;;
+  u_int _idx, freeSessionCount=0, purgeLimit;
   static u_int idx = 0;
     
   /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
@@ -486,6 +486,8 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   traceEvent(CONST_TRACE_INFO, "DEBUG: Called scanTimedoutTCPSessions (device=%d, sessions=%d)",
 	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
+
+  purgeLimit = myGlobals.device[actualDeviceId].numTcpSessions/2;
 
   for(_idx=0; _idx<MAX_TOT_NUM_SESSIONS; _idx++) {
     IPSession *nextSession, *prevSession, *theSession;

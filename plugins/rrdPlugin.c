@@ -304,7 +304,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
 
 static void listResource(char *rrdPath, char *rrdTitle,
 			 char *startTime, char* endTime) {
-  char path[512], url[256], formatBuf[32], hasNetFlow, buf[256];
+  char path[512], url[512], formatBuf[32], hasNetFlow, buf[512];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   int numEntries = 0, i, min, max;
@@ -1423,6 +1423,11 @@ static void handleRRDHTTPrequest(char* url) {
 #ifndef WIN32
   _dumpPermissions = DEFAULT_RRD_PERMISSIONS;
 #endif
+
+  rrdKey[0] = '\0';
+  rrdTitle[0] = '\0';
+  startTime[0] = '\0';
+  endTime[0] = '\0';
 
   if((url != NULL) && (url[0] != '\0')) {
     unescape_url(url);
