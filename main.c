@@ -724,6 +724,10 @@ int main(int argc, char *argv[]) {
   char ifStr[196] = {0};
   time_t lastTime;
 
+#ifdef MTRACE
+  mtrace();
+#endif
+
   /*
    * Initialize all global run-time parameters to reasonable values
    */

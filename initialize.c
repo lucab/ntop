@@ -1022,6 +1022,16 @@ void initLibpcap(void) {
     }
   }
 
+#ifdef DEBUG
+  {
+    struct in_addr addr1;
+
+    addr1.s_addr = myGlobals.device[0].network.s_addr;
+    traceEvent(TRACE_WARNING, "network %s", intoa(addr1));
+    addr1.s_addr = myGlobals.device[0].netmask.s_addr;
+    traceEvent(TRACE_WARNING, ", netmask %s.\n", intoa(addr1));
+  }
+#endif
 
 #ifdef WIN32
   /* This looks like a Win32 libpcap open issue... */

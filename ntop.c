@@ -759,7 +759,7 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef MULTITHREADED
 
   killThread(&myGlobals.dequeueThreadId);
-  
+
   if(myGlobals.isLsofPresent)
     killThread(&myGlobals.lsofThreadId);
 
@@ -907,7 +907,7 @@ RETSIGTYPE cleanup(int signo) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
 	traceEvent(TRACE_INFO, "%s packets received by filter on %s\n",
 		   formatPkts((Counter)pcapStat.ps_recv), myGlobals.device[i].name);
-	
+
 	traceEvent(TRACE_INFO, "%s packets dropped by kernel\n", formatPkts((Counter)pcapStat.ps_drop));
 #ifdef MULTITHREADED
 	traceEvent(TRACE_INFO, "%s packets dropped by ntop\n",
@@ -924,9 +924,6 @@ RETSIGTYPE cleanup(int signo) {
 
       free(myGlobals.device[i].ipTrafficMatrix);
     }
-
-    if(myGlobals.device[i].ipTrafficMatrix != NULL)
-      free(myGlobals.device[i].ipTrafficMatrix);
 
     if(myGlobals.device[i].ipTrafficMatrixHosts != NULL)
       free(myGlobals.device[i].ipTrafficMatrixHosts);
@@ -970,28 +967,29 @@ RETSIGTYPE cleanup(int signo) {
 
   free(myGlobals.device);
 
-  if(myGlobals.numProcesses > 0)
-    free(myGlobals.processes);
-
-  if(myGlobals.udpSvc) {
-    for(i=0; i<myGlobals.numActServices; i++)
-      if(myGlobals.udpSvc[i] != NULL)
-	free(myGlobals.udpSvc[i]);
-
-    free(myGlobals.udpSvc);
-  }
-
-  if(myGlobals.tcpSvc) {
-    for(i=0; i<myGlobals.numActServices; i++)
-      if(myGlobals.tcpSvc[i] != NULL)
-	free(myGlobals.tcpSvc[i]);
-
-    free(myGlobals.tcpSvc);
-  }
-
 #ifdef WIN32
   termWinsock32();
 #endif
+
+  if(myGlobals.processes != NULL) {
+    for(i=0; i<myGlobals.numProcesses; i++) {
+      free(myGlobals.processes[i]->command);
+      free(myGlobals.processes[i]->user);
+      free(myGlobals.processes[i]);
+    }
+    
+    free(myGlobals.processes);
+  }
+
+  if(myGlobals.localPorts != NULL) {
+    for(i=0; i<TOP_IP_PORT; i++) {
+      while(myGlobals.localPorts[i] != NULL) {
+	ProcessInfoList *listElement = myGlobals.localPorts[i]->next;
+	free(myGlobals.localPorts[i]);
+	myGlobals.localPorts[i] = listElement;
+      }
+    }
+  }
 
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
     free(myGlobals.protoIPTrafficInfos[i]);
@@ -1012,5 +1010,10 @@ RETSIGTYPE cleanup(int signo) {
   termLeaks();
   traceEvent(TRACE_INFO, "===================================\n");
 #endif
+
+#ifdef MTRACE
+  muntrace();
+#endif
+
   exit(0);
 }

@@ -617,7 +617,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
   fillDomainName(el);
 
   if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-	  DATAFILE_DIR, el->fullDomainName) < 0)
+	      DATAFILE_DIR, el->fullDomainName) < 0)
     BufferTooShort();
 
   if(stat(path, &buf) == 0)
@@ -1961,20 +1961,20 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "OS", osName);
 
 #ifndef WIN32
- {
-   char pid[16];
+  {
+    char pid[16];
 
-   if (myGlobals.daemonMode == 1) {
-       sprintf(pid, "%d", myGlobals.basentoppid);
-       printFeatureConfigInfo(textPrintFlag, "ntop Process Id", pid);
-       sprintf(pid, "%d", getppid());
-       printFeatureConfigInfo(textPrintFlag, "http Process Id", pid);
-   } else {
-       sprintf(pid, "%d", getppid());
-       printFeatureConfigInfo(textPrintFlag, "Process Id", pid);
-   }
+    if (myGlobals.daemonMode == 1) {
+      sprintf(pid, "%d", myGlobals.basentoppid);
+      printFeatureConfigInfo(textPrintFlag, "ntop Process Id", pid);
+      sprintf(pid, "%d", getppid());
+      printFeatureConfigInfo(textPrintFlag, "http Process Id", pid);
+    } else {
+      sprintf(pid, "%d", getppid());
+      printFeatureConfigInfo(textPrintFlag, "Process Id", pid);
+    }
 
- }
+  }
 #endif
 
   /* *************************** */
@@ -2027,7 +2027,7 @@ void printNtopConfigInfo(int textPrintFlag) {
                            NTOP_DEFAULT_TRACK_ONLY_LOCAL == 1 ? "Track local hosts only" : "Track all hosts");
 
   printParameterConfigInfo(textPrintFlag, "-o | --no-mac",
-		  myGlobals.dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
+			   myGlobals.dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
                            NTOP_DEFAULT_DONT_TRUST_MAC_ADDR == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
 
   printParameterConfigInfo(textPrintFlag, "-i | --interface" REPORT_ITS_EFFECTIVE,
@@ -2247,7 +2247,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   sendString(texthtml("\n\nRun time/Internal\n\n", 
                       "<tr><th colspan=\"2\"" TH_BG ">Run time/Internal</tr>\n"));
-
+  
 #ifndef WIN32
   if (myGlobals.enableExternalTools) {
     if(myGlobals.isLsofPresent) {
@@ -2273,7 +2273,6 @@ void printNtopConfigInfo(int textPrintFlag) {
 			     "(no -E parameter): Disabled");
     }
   }
-
 
   if (myGlobals.enableExternalTools) {
     if(myGlobals.isNmapPresent) {
@@ -2533,7 +2532,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 			    bufLength,
 			    "%s<br>", myGlobals.dataFileDirs[i])) < 0)
       BufferTooShort();
-	if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
+    if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
     bufLength   -= bufUsed;
   }
@@ -2549,7 +2548,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 			    "%s<br>",
 			    myGlobals.configFileDirs[i])) < 0)
       BufferTooShort();
-	if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
+    if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
     bufLength   -= bufUsed;
   }
@@ -2561,13 +2560,9 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   for(i=0; myGlobals.pluginDirs[i] != NULL; i++) {
     if ((bufUsed = snprintf(&buf[bufPosition],
-			    bufLength,
-			    "%s%2d. %s",
-			    i == 0 ? texthtml("\n", "") : texthtml("\n", "<br>"),
-			    i,
-			    myGlobals.pluginDirs[i])) < 0)
+			    bufLength, "%s<br>", myGlobals.pluginDirs[i])) < 0)
       BufferTooShort();
-	if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
+    if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
     bufLength   -= bufUsed;
   }

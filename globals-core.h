@@ -131,6 +131,8 @@ extern u_int createDummyInterface(char *ifName);
 extern void initLeaks(void);
 extern void termLeaks(void);
 extern void resetLeaks(void);
+
+#ifndef MTRACE
 #ifdef MEMORY_DEBUG 
 #define gdbm_firstkey(a)     ntop_gdbm_firstkey(a, __FILE__, __LINE__)
 #define gdbm_nextkey(a, b)   ntop_gdbm_nextkey(a, b, __FILE__, __LINE__)
@@ -163,6 +165,7 @@ extern void*          ntop_safecalloc(unsigned int c, unsigned int sz, char* fil
 extern void*          ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line);
 #endif
 extern char* ntop_safestrdup(char *ptr, char* file, int line);
+#endif  /* MTRACE */
 
 /* ntop.c */
 extern void handleSigHup(int signalId);
