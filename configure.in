@@ -42,9 +42,9 @@ dnl>   Edit the version # in the AC_INIT line to roll the version.
 dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm version"
 dnl>       into the stamp.
 dnl>
-AC_INIT([ntop],[2.1.92])
+AC_INIT([ntop],[2.2])
 AC_PREREQ([2.50])
-SCRIPTVER="v1.111-2003-04-10"
+SCRIPTVER="v2.2.000-2003-04-14"
 
 dnl>
 dnl> generate the config header
