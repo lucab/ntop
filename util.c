@@ -1717,14 +1717,15 @@ char* formatTime(time_t *theTime, short encodeString) {
 #define TIME_LEN    48
   static char outStr[2][TIME_LEN];
   static short timeBufIdx=0;
-  struct tm locTime;
+  struct tm *locTime, myLocTime;
 
-  localtime_r(theTime, &locTime);
+  locTime = localtime_r(theTime, &locTime);
+
   timeBufIdx = (timeBufIdx+1)%2;
   if(encodeString)
-    strftime(outStr[timeBufIdx], TIME_LEN, "%x&nbsp;%X", &locTime);
+    strftime(outStr[timeBufIdx], TIME_LEN, "%x&nbsp;%X", locTime);
   else
-    strftime(outStr[timeBufIdx], TIME_LEN, "%x %X", &locTime);
+    strftime(outStr[timeBufIdx], TIME_LEN, "%x %X", locTime);
 
   return(outStr[timeBufIdx]);
 #undef TIME_LEN

@@ -4107,9 +4107,10 @@ static char* timestamp(const struct timeval* t, int fmt) {
   static char buf [16] = {0};
 
   time_t now = time((time_t*) 0);
-  struct tm tm;
+  struct tm *tm, myTm;
 
-  localtime_r(&now, &tm);
+  tm = localtime_r(&now, &myTm);
+
   gettimeofday(&current_pkt, NULL);
 
   switch(fmt)
@@ -4127,7 +4128,7 @@ static char* timestamp(const struct timeval* t, int fmt) {
 
     case ABS_FMT:
       if(snprintf(buf, 16, "%02d:%02d:%02d.%06d",
-	       tm.tm_hour, tm.tm_min, tm.tm_sec, (int)t->tv_usec) < 0)
+	       tm->tm_hour, tm->tm_min, tm->tm_sec, (int)t->tv_usec) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       break;
 
