@@ -879,9 +879,10 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
        
     if(directory == NULL)
       traceEvent(CONST_TRACE_INFO, "Possible solution: please use '-P <directory>'");
-    else
-      traceEvent(CONST_TRACE_INFO, "Is another instance of ntop running?"); 
-
+    else {
+      traceEvent(CONST_TRACE_INFO, "1. Is another instance of ntop running?");
+      traceEvent(CONST_TRACE_INFO, "2. Make sure that the use you specified can write in the target directory"); 
+    }
     exit(-1);
   }
 }
