@@ -410,7 +410,6 @@ ntop.h
  *  The ntop globals-xxxx includes
  *
  * **************************************************************************************/
-
 #include "globals-defines.h"
 #include "globals-structtypes.h"
 
@@ -418,6 +417,8 @@ ntop.h
 #ifdef WIN32
  #include "ntop_win32.h"
 #endif
+
+
 
 /* Now the external functions, using the above... */
 #include "globals-core.h"
@@ -453,7 +454,7 @@ ntop.h
     
 */
 
-#ifdef WIN32
+#if defined(WIN32) && defined(__GNUC__)
 #ifndef DIRENT_INCLUDED
 #define DIRENT_INCLUDED
 

@@ -428,7 +428,7 @@ extern int getopt_long_only ();
     #define HEARTBEAT(a, b, ...)     _HEARTBEAT(a, __FILE__, __LINE__, b, __VA_ARGS__)
     extern void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...);
 #else
-    #define HEARTBEAT(a, b, ...)     {}
+    #define HEARTBEAT
 #endif
 
 #if defined(AIX) || defined(WIN32)
@@ -565,7 +565,7 @@ int getdomainname(char *name, size_t len);
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
     #define HEARTBEAT(a, b, ...)     _HEARTBEAT(a, __FILE__, __LINE__, b, __VA_ARGS__)
 #else
-    #define HEARTBEAT(a, b, ...)     {}
+    #define HEARTBEAT
 #endif
 
 #define GetShort(cp)	_ns_get16(cp); cp += INT16SZ;

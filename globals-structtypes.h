@@ -1114,7 +1114,7 @@ struct option
     
 */
 
-#ifdef WIN32
+#if defined(WIN32) && defined(__GNUC__)
  #ifndef DIRENT_INCLUDED
   #define DIRENT_INCLUDED
 
