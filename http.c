@@ -146,6 +146,24 @@ static void compressAndSendData(u_int*);
 
 /* ************************* */
 
+#ifdef HAVE_OPENSSL
+char* printSSLError(int errorId) {
+  switch(errorId) {
+  case SSL_ERROR_NONE:             return("SSL_ERROR_NONE");
+  case SSL_ERROR_SSL:              return("SSL_ERROR_SSL");
+  case SSL_ERROR_WANT_READ:        return("SSL_ERROR_WANT_READ");
+  case SSL_ERROR_WANT_WRITE:       return("SSL_ERROR_WANT_WRITE");
+  case SSL_ERROR_WANT_X509_LOOKUP: return("SSL_ERROR_WANT_X509_LOOKUP");
+  case SSL_ERROR_SYSCALL:          return("SSL_ERROR_SYSCALL");
+  case SSL_ERROR_ZERO_RETURN:      return("SSL_ERROR_ZERO_RETURN");
+  case SSL_ERROR_WANT_CONNECT:     return("SSL_ERROR_WANT_CONNECT");
+  default:                         return("???");
+  }
+}
+#endif
+
+/* ************************* */
+
 static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw, int thePwLen) {
@@ -192,9 +210,13 @@ static int readHTTPheader(char* theRequestedURL,
     /* printf("Rcvd %d bytes\n", recv(myGlobals.newSock, aChar, 1, MSG_PEEK)); fflush(stdout); */
 
 #ifdef HAVE_OPENSSL
-    if(myGlobals.newSock < 0)
+    if(myGlobals.newSock < 0) {
       rc = SSL_read(ssl, aChar, 1);
-    else
+      if(rc == -1) {
+	int theErr = SSL_get_error(ssl, rc);
+	traceEvent(TRACE_ERROR, "SSL read error %d (%s)", theErr, printSSLError(theErr));
+      }
+    } else
       rc = recv(myGlobals.newSock, aChar, 1, 0);
 #else
     rc = recv(myGlobals.newSock, aChar, 1, 0);
@@ -2010,7 +2032,9 @@ void handleHTTPrequest(struct in_addr from) {
     skipLeading++;
   }
 
-  if((rc = returnHTTPPage(&requestedURL[1], postLen,
+  if(requestedURL[0] == '\0') {
+    returnHTTPpageNotFound(0);
+  } else if((rc = returnHTTPPage(&requestedURL[1], postLen,
 			  &from, &httpRequestedAt, &usedFork) == 0)) {
 #if defined(HAVE_ZLIB)
     if(compressFile)
