@@ -332,6 +332,7 @@ void dumpNtopHashes(char* options, int actualDeviceId) {
       else
 	hostKey = el->ethAddressString;
 
+  REPEAT_HOSTS:
       if(numEntries > 0) { endWriteKey(lang,"",','); }
 
       initWriteKey(lang, "", hostKey, numEntries);
@@ -703,6 +704,8 @@ void dumpNtopHashes(char* options, int actualDeviceId) {
       } /* shortView */
 
       numEntries++;
+      
+      if(numEntries == 1) goto REPEAT_HOSTS;      
     }
   }
 
@@ -842,9 +845,10 @@ void dumpNtopTrafficInfo(char* options) {
 
     if(myGlobals.device[i].virtualDevice) continue;
 
-    if((key[0] != '\0') &&(strcmp(key, myGlobals.device[i].name) != 0))
+    if((key[0] != '\0') && (strcmp(key, myGlobals.device[i].name) != 0))
       continue;
 
+  REPEAT:
     if(numEntries > 0) { endWriteKey(lang,"",','); }
 
     initWriteKey(lang, "", myGlobals.device[i].name, numEntries);
@@ -1032,6 +1036,7 @@ void dumpNtopTrafficInfo(char* options) {
     }
 
     numEntries++;
+    if(numEntries == 1) goto REPEAT;
   }
 
   if(numEntries > 0) endWriteKey(lang,"", ' ');
