@@ -24,6 +24,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
 
+SUBDIRS = . pep
+
 DIST_COMMON = Makefile.am Makefile.in
 CLEANFILES  =
 EXTRA_DIST  =
