@@ -1532,7 +1532,7 @@ typedef struct dhcpStats {
   time_t assignTime;                   /* when the address was assigned */
   time_t renewalTime;                  /* when the address has to be renewed */
   time_t leaseTime;                    /* when the address lease will expire */
-  unsigned long dhcpMsgSent[NUM_DHCP_MSG], dhcpMsgRcvd[NUM_DHCP_MSG];
+  TrafficCounter dhcpMsgSent[NUM_DHCP_MSG], dhcpMsgRcvd[NUM_DHCP_MSG];
 } DHCPStats;
 
 /* *********************** */

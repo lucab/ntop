@@ -20,6 +20,7 @@ ntop \- display top network users
 .RB [ -n ]
 .RB [ -N ]
 .RB [ -M ]
+.RB [ -q ]
 .RB [ -p ]
 .IR "IP protocols to monitor" ]
 .RB [ -i 
@@ -81,6 +82,9 @@ Forces ntop not to use nmap (if it is installed).
 
 .It -M
 Forces ntop not to merge network interfaces together. This means that ntop will collect statistics for each interface and will not merge data together.
+
+.It -q
+Forces ntop to create a file ntop-suspicious-pkts.XXX.pcap (XXX is the interface name) for each network interface where are stored suspicious packets. The file is in pcap format (tcpdump).
 
 .It -n
 This causes

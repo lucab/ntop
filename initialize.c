@@ -765,12 +765,14 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	    exit(-1);
 	  }
 	}
+		
+	if(enableSuspiciousPacketDump) {
+	  sprintf(myName, "ntop-suspicious-pkts.%s.pcap", device[i].name);	  
+	  device[i].pcapErrDumper = pcap_dump_open(device[i].pcapPtr, myName);
 	
-	sprintf(myName, "ntop-suspicious-pkts.%s.pcap", device[i].name);	  
-	device[i].pcapErrDumper = pcap_dump_open(device[i].pcapPtr, myName);
-	
-	if(device[i].pcapErrDumper == NULL)
-	  traceEvent(TRACE_INFO, ebuf);
+	  if(device[i].pcapErrDumper == NULL)
+	    traceEvent(TRACE_INFO, ebuf);
+	}
       } else {
 	column[0] = 0;
 	device[i].virtualDevice = 1;

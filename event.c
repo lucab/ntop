@@ -474,5 +474,5 @@ void smurfAlert(u_int srcHostIdx, u_int dstHostIdx) {
 	     device[actualDeviceId].hash_hostTraffic[srcHostIdx]->hostSymIpAddress,
 	     device[actualDeviceId].hash_hostTraffic[dstHostIdx]->hostSymIpAddress);
 #endif
-  dumpSuspiciousPacket();
+  if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 }

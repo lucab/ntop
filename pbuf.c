@@ -1810,7 +1810,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
-	    dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  }
 
 	  free(rcStr);
@@ -1883,35 +1883,35 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
-	    dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  } else if((sport != 21) && (sport != 25) && isInitialFtpData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	    dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  } else if(((sport == 21) || (sport == 25)) && (!isInitialFtpData(rcStr))) {
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
 		       "at port %d %s:%d -> %s:%d [%s]\n", sport,
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	    dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  } else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: SSH detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	    dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr))) {
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no SSH) detected (trojan?) "
 		       "at port 22 %s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	    dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  }
 	} else if(theSession->bytesProtoRcvd == 0) {
 	  /* Uncomment when necessary
@@ -2259,7 +2259,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
       }
       /* Connection terminated */
       incrementUsageCounter(&srcHost->securityHostPkts.rstPktsSent, dstHostIdx);
@@ -2293,7 +2293,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
        && (sport == dport) && (tp->th_flags == TH_SYN)) {
       traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
 		 srcHost->hostSymIpAddress, sport);
-      dumpSuspiciousPacket();
+      if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
     }
 
     if(tp->th_flags == (TH_RST|TH_ACK)) {
@@ -2318,7 +2318,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
 		|| ((theSession->initiatorIdx == dstHostIdx)
@@ -2329,7 +2329,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRemote2InitiatorFlags[0] == 0)
 		 && (theSession->bytesReceived > 0))
@@ -2342,7 +2342,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
       }
     }
 
@@ -3572,7 +3572,7 @@ static void processIpPkt(const u_char *bp,
       } else if((sport == 7) || (dport == 7) /* echo */) {
 	char *fmt = "WARNING: host [%s] sent a UDP packet to host [%s:echo] (network mapping attempt?)";
 
-	dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 
 	if(dport == 7) {
 	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortSent, dstHostIdx);
@@ -3697,7 +3697,7 @@ static void processIpPkt(const u_char *bp,
       case ICMP_TIMESTAMP:
       case ICMP_TIMESTAMPREPLY:
       case ICMP_SOURCE_QUENCH:
-	dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	break;
       }
     }
@@ -3745,7 +3745,7 @@ static void processIpPkt(const u_char *bp,
 	/* Simulation of rejected TCP connection */
 	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnSent, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnRcvd, srcHostIdx);
-	dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	break;
 
       case IPPROTO_UDP:
@@ -3754,7 +3754,7 @@ static void processIpPkt(const u_char *bp,
 		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
 	incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
-	dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	break;
       }
     } else if((icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */)
@@ -3763,7 +3763,7 @@ static void processIpPkt(const u_char *bp,
 		 "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
 		 " (Firewalking scan attempt?)",
 		 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
-    dumpSuspiciousPacket();
+    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
     break;
 
   case IPPROTO_OSPF:
@@ -4145,7 +4145,7 @@ void processPacket(u_char *_deviceId,
 	       (unsigned long)length,
 	       device[actualDeviceId].name, deviceId);
 #endif
-    dumpSuspiciousPacket();
+    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
     /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
     length = mtuSize[device[deviceId].datalink];
     device[actualDeviceId].rcvdPktStats.tooLong++;

@@ -100,6 +100,7 @@ int main(int argc, char *argv[]) {
   sslPort = 0; /* Disabled: it can enabled using -W <SSL port> */
 #endif
 
+  enableSuspiciousPacketDump = 0;
   usePersistentStorage = 0;
   stickyHosts = 0;
 
@@ -138,19 +139,17 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12l:";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12l:q";
 #else
-  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:gt:a:u:W:12l:";
+  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:gt:a:u:W:12l:q";
 #endif
   
   while((op = getopt(argc, argv, theOpts)) != EOF)
       switch (op) {
 	/* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
 
-      case 'c': /* 
-		   Sticky hosts = hosts that are not purged
-		   when idle
-		*/
+      case 'c': /* Sticky hosts = hosts that are not purged
+		   when idle */
 	stickyHosts = 1;
 	break;
 
@@ -181,6 +180,11 @@ int main(int argc, char *argv[]) {
 	SIZE_BUF=atoi(optarg)*1024;
 	break;
 #endif
+
+      case 'q': /* allow ntop to save suspicious packets
+		   in a file in pcap (tcpdump) format */
+	enableSuspiciousPacketDump=1;
+	break;
 
       case '1': /* disable throughput update */
 	enableThUpdate=0;

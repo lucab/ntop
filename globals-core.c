@@ -30,7 +30,7 @@ char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
 /* command line options */
 u_short traceLevel;
-u_char stickyHosts;
+u_char stickyHosts, enableSuspiciousPacketDump;
 char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
 u_int maxHashSize;
 short usePersistentStorage, grabSessionInformation;

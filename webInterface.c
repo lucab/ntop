@@ -906,6 +906,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-R <matching rules file>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-N <don't use nmap if installed>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-q <create file ntop-suspicious-pkts.XXX.pcap>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-g (grab session data on screen)]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
