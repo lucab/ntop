@@ -20,6 +20,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_GDCHART
+#ifndef _GRAPH_C_
+#define GDC_LIB
+#endif
+#include "gdc.h"
+#include "gdchart.h"
+#include "gdcpie.h"
+#endif
+
 extern int maxNumLines, idleFlag, percentMode, localAddrFlag, refreshRate;
 extern int webPort, actualReportDeviceId;
 

@@ -26,10 +26,11 @@
   */
 
 #include "ntop.h"
-#include "globals-report.h"
 
 #ifdef HAVE_GDCHART
 
+#define _GRAPH_C_
+#include "globals-report.h"
 static unsigned long clr[] = { 0x0000FF, 0x00FF00, 0xFF0000,
 			       0xFF4040L, 0x80FF80L, 0x8080FFL,
 			       0xFF80FFL, 0xFFFF80L, 0x80FFFFL,
