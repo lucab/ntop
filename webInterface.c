@@ -1079,7 +1079,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
   wait_time.tv_sec = 0, wait_time.tv_usec = 0;
   if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
     handleSingleWebConnection(&mask);
-#else
+#else /* MULTITHREADED */
   while(capturePackets) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Select(ing) %d....", topSock);

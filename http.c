@@ -1023,6 +1023,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
     else {
       if(childpid) {
 	/* father process */
+	numChildren++;
 #ifdef MULTITHREADED
 	if(!mutexReleased)
 	  releaseMutex(&hashResizeMutex);
@@ -1031,7 +1032,13 @@ static int returnHTTPPage(char* pageName, int postLen) {
       } else {
 	usedFork = 1;
 	detachFromTerminal();
-	numChildren++;
+
+	/* Close inherited sockets */
+#ifdef HAVE_OPENSSL
+	if(sslInitialized) closeNwSocket(&sock_ssl);  
+#endif
+	if(webPort > 0) closeNwSocket(&sock);
+
 	alarm(120); /* Don't freeze */
 	setsignal(SIGALRM, quitNow);
       }

@@ -181,21 +181,10 @@ RETSIGTYPE handleDiedChild(int signal _UNUSED_) {
 #endif
   }
 
-  setsignal(SIGCHLD, handleDiedChild);
+  /* setsignal(SIGCHLD, handleDiedChild); */
 }
 #endif
 
-
-/* **************************************** */
-
-RETSIGTYPE dontFreeze(int signo _UNUSED_) {
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Caught a SIGALRM...\n");
-#endif
-#ifndef WIN32
-  (void)setsignal(SIGALRM, dontFreeze);
-#endif
-}
 
 /* **************************************** */
 
@@ -206,7 +195,8 @@ void daemonize(void) {
 
   signal(SIGHUP, SIG_IGN);
 #ifndef WIN32
-  setsignal(SIGCHLD, handleDiedChild);
+  /* setsignal(SIGCHLD, handleDiedChild); */
+     setsignal(SIGCHLD, SIG_IGN); 
 #endif
   signal(SIGQUIT, SIG_IGN);
 

@@ -1117,16 +1117,14 @@ void initSignals(void) {
   /*  RETSIGTYPE (*oldhandler)(int); */
 #endif
 
-#ifndef WIN32
-  (void)setsignal(SIGALRM, dontFreeze);
-#endif
   /*
     The handler below has been restored due to compatibility
     problems with om:
     Courtesy of Martin Lucina <mato@kotelna.sk>
   */
 #ifndef WIN32
-  setsignal(SIGCHLD, handleDiedChild);
+/* setsignal(SIGCHLD, handleDiedChild); */
+   setsignal(SIGCHLD, SIG_IGN);
 #endif
 
 #ifndef WIN32
