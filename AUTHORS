@@ -128,6 +128,44 @@ to the prior versions:
          elmer at linking.ee
          Ethernet-codes at Cavebear.com
 
+Contributors for ntop 3.0:
+
+         (First off, the biggies)
+
+         IPv6 - code contributed by Olivier Festor <Olivier.Festor at loria.fr> and
+                Abdelkader Lahmadi <Abdelkader.Lahmadi at loria.fr>
+                of the MADYNES Research Time (Managing DYnamic NEtworks and Services),
+                http://madynes.loria.fr/.
+
+         FibreChannel and iSCSI - code contributed by Dinesh G Dutt <ddutt at cisco.com>
+                of Cisco.
+
+         -x/-X memory limit options - Gianluca Insolvibile <g.insolvibile at cpr.it>
+
+         OpenBSD 3.4 - Julien Touche <julien.touche at lycos.com>
+
+         All | Local | Remote selections - Luigi Iotti <luigi at iotti.biz>
+
+         FreeBSD support - Michal Meloun <meloun at miracle.cz> and
+                           Stanley Hopcroft <Stanley.Hopcroft at IPAustralia.Gov.AU>
+
+         Andy <andy at shady.org>
+         B. Loic <50891 at snr.fr>
+         Christoph Zens <chris at topfen.homeip.net>
+         Chris Turbeville <turbo at verio.net>
+         Dave Dell'Amico <dave at gufi.org>
+         Dominique Lalot <lalot at univ-aix.fr>
+         Fulvio Risso <fulvio.risso at polito.it>
+         Helmut Schneider <jumper99 at gmx.de>
+         Jay Johnston <jajohnst at cisco.com> for support of the netFlow v9 effort
+         Ken Beaty <ken at ait.com>
+         Marco Sanson <marco.sanson at infvic.it>
+         Markus Rehbach <Markus.Rehbach at gmx.de>
+         Reuben Fischman <Reuben.Fischman at GDC4S.Com>
+         Robbert Kouprie <R.Kouprie at DTO.TUDelft.NL>
+         Sumit Pandya <sumit at elitecore.com>
+
+
 If you've been left off the list, it's not intentional.  Please let us know!
 
 Thanks!
