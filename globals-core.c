@@ -93,73 +93,73 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.program_name =
     (!myGlobals.program_name || !myGlobals.program_name[0]) ? (argv[0]) : (++myGlobals.program_name);
 
-
-  myGlobals.domainName[0] = '\0';
-  myGlobals.shortDomainName = '\0';
-  myGlobals.broadcastEntry = NULL;
-  myGlobals.otherHostEntry = NULL;
+  /*
+   * save command line parameters
+   */
   myGlobals.ntop_argc = argc;
   myGlobals.ntop_argv = argv;
 
-#ifdef HAVE_GDCHART
-  myGlobals.throughput_chart_type = GDC_AREA;
-#endif
-
- myGlobals.noAdminPasswordHint = 0;
-
-  /* command line options */
-  myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
-  myGlobals.debugMode = 0;
-
-#ifndef WIN32
-  myGlobals.useSyslog = 0;
-#endif
-
-  myGlobals.accuracyLevel = HIGH_ACCURACY_LEVEL;
-  myGlobals.enableSessionHandling = 0;
-  myGlobals.enablePacketDecoding = 0;
-  myGlobals.enableFragmentHandling = 0;
-
-  myGlobals.stickyHosts = 0;
-  myGlobals.enableSuspiciousPacketDump = 0;
-  myGlobals.trackOnlyLocalHosts = 0;
-
-  strncpy(myGlobals.dbPath, DBFILE_DIR, sizeof(myGlobals.dbPath));
-
-#ifdef HAVE_GDCHART
-  myGlobals.throughput_chart_type = GDC_AREA;
-#endif
 
   snprintf(myGlobals.accessLogPath, sizeof(myGlobals.accessLogPath), "%s/%s",
 	   myGlobals.dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
 
-  myGlobals.rFileName = NULL;
-  myGlobals.pcapLog = '\0';
-
-  /*
-   * If you need a good mapper look at this
-   * http://jake.ntop.org/cgi-bin/mapper.pl
-   */
-  myGlobals.mapperURL[0] = '\0';
-
-  myGlobals.maxHashSize = MAX_HASH_SIZE;
-  myGlobals.topHashSize = 0;
-  myGlobals.enableNetFlowSupport = 0;
-  myGlobals.usePersistentStorage = 0;
-  myGlobals.numericFlag = 0;
-  myGlobals.logTimeout = 0;
-
+  myGlobals.stickyHosts = 0;
   myGlobals.daemonMode = 0;
   if (strcmp(myGlobals.program_name, "ntopd") == 0) {
     myGlobals.daemonMode++;
   }
 
+  myGlobals.rFileName = NULL;
+  myGlobals.enableNetFlowSupport = 0;
+  myGlobals.borderSnifferMode = 0;
+  myGlobals.filterExpressionInExtraFrame = 0;
+  myGlobals.pcapLog = '\0';
+  myGlobals.numericFlag = 0;
+  myGlobals.enableSuspiciousPacketDump = 0;
+  myGlobals.maxHashSize = MAX_HASH_SIZE;
+  myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
+  myGlobals.accuracyLevel = HIGH_ACCURACY_LEVEL;
+  myGlobals.currentFilterExpression = NULL;
+  myGlobals.domainName[0] = '\0';
+  myGlobals.isLsofPresent = 0;
+  myGlobals.debugMode = 0;
+#ifndef WIN32
+  myGlobals.useSyslog = 0;
+#endif
   myGlobals.mergeInterfaces = 0;
+  myGlobals.isNmapPresent = 0;
+  strncpy(myGlobals.dbPath, DBFILE_DIR, sizeof(myGlobals.dbPath));
+  myGlobals.usePersistentStorage = 0;
+  myGlobals.mapperURL[0] = '\0'; /* a good mapper is at http://jake.ntop.org/cgi-bin/mapper.pl */
+
+#ifdef HAVE_GDCHART
+  myGlobals.throughput_chart_type = GDC_AREA;
+#endif
+
+  myGlobals.noAdminPasswordHint = 0;
+
+
+  /* Other flags (to be set via command line options one day) */
+  myGlobals.enableSessionHandling = 0;
+  myGlobals.enablePacketDecoding = 0;
+  myGlobals.enableFragmentHandling = 0;
+  myGlobals.trackOnlyLocalHosts = 0;
 
   /* Search paths */
   myGlobals.dataFileDirs   = _dataFileDirs;
   myGlobals.pluginDirs     = _pluginDirs;
   myGlobals.configFileDirs = _configFileDirs;
+
+  /* NICs */
+  myGlobals.numDevices = 0;
+  myGlobals.device = NULL;
+
+
+  myGlobals.shortDomainName = NULL;
+  myGlobals.broadcastEntry = NULL;
+  myGlobals.otherHostEntry = NULL;
+
+  myGlobals.topHashSize = 0;
 
   /* Debug */
   myGlobals.allocatedMemory = 0;
@@ -169,16 +169,9 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.sslPort = 0;           /* Disabled by default: it can enabled using -W <SSL port> */
 #endif
 
-  /* Logging */
-  myGlobals.nextLogTime = 0;
-
   /* Flags */
-  myGlobals.isLsofPresent = 0;
-  myGlobals.isNmapPresent = 0;
-  myGlobals.filterExpressionInExtraFrame = 0;
   myGlobals.capturePackets = 0;
   myGlobals.endNtop = 0;
-  myGlobals.borderSnifferMode = 0;
 
   /* Multithreading */
 #ifdef MULTITHREADED
@@ -340,7 +333,7 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.udpChain = NULL;
   myGlobals.icmpChain = NULL;
 
-  myGlobals.ruleSerialIdentifier=1; /* 0 will break the logic */
+  myGlobals.ruleSerialIdentifier = 1; /* 0 will break the logic */
 
   for (i = 0; i < MAX_NUM_RULES; i ++)
     myGlobals.filterRulesList[i] = NULL;
@@ -356,7 +349,8 @@ void initNtopGlobals(int argc, char * argv[])
 
   /* Misc */
   myGlobals.separator = "&nbsp;";
-  myGlobals.thisZone = 0;                 /* seconds offset from gmt to local time */
+
+  myGlobals.thisZone = gmt2local(0);      /* seconds offset from gmt to local time */
   myGlobals.numPurgedHosts = 0;
   myGlobals.numTerminatedSessions = 0;
 
@@ -367,10 +361,6 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.nextSessionTimeoutScan = 0;
   myGlobals.lastPktTime.tv_sec = 0;
   myGlobals.lastPktTime.tv_usec = 0;
-
-  /* NICs */
-  myGlobals.numDevices = 0;
-  myGlobals.device = NULL;
 
   /* Monitored Protocols */
   myGlobals.numActServices = 0;
@@ -406,8 +396,6 @@ void initNtopGlobals(int argc, char * argv[])
   for (i = 0; i < MAX_NUM_NAPSTER_SERVER; i ++)
     memset(&myGlobals.napsterSvr[i], 0, sizeof(NapsterServer));
 #endif
-
-  myGlobals.currentFilterExpression = NULL;
 
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;

@@ -50,7 +50,7 @@ static int _ns_name_unpack(const u_char *msg,
   and uses all the available memory. Hence this
   patch is needed.
 
-  On some Linux myGlobals.versions gethostbyaddr() is bugged and
+  On some Linux versions gethostbyaddr() is bugged and
   it tends to exaust all available file descriptors. If
   you want to check this try "lsof -i |grep ntop". If this
   is the case please do  '#define USE_HOST' (see below)

@@ -57,33 +57,61 @@ typedef struct ntopGlobals {
   /* general */
 
   char *program_name;           /* The name the program was run with, stripped of any leading path */
-
-  char domainName[MAXHOSTNAMELEN], *shortDomainName;
-  HostTraffic *broadcastEntry, *otherHostEntry;
-  int ntop_argc;
-  char **ntop_argv;
-
-#ifdef HAVE_GDCHART
-  int throughput_chart_type;
-#endif
+  int ntop_argc;                /* # of command line arguments */
+  char **ntop_argv;             /* vector of command line arguments */
 
   /* command line options */
-  u_short traceLevel, debugMode, useSyslog, accuracyLevel, noAdminPasswordHint;
-  u_char enableSessionHandling, enablePacketDecoding, enableFragmentHandling;
-  u_char stickyHosts, enableSuspiciousPacketDump, trackOnlyLocalHosts;
-  char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
 
-  char mapperURL[256];     /* URL of the mapper CGI */
+  char accessLogPath[200];           /* 'a' */
+  u_char stickyHosts;                /* 'c' */
+  int daemonMode;                    /* 'd' */
+  char *rFileName;                   /* 'f' */
+  u_int enableNetFlowSupport;        /* 'g' */
+  short borderSnifferMode;           /* 'j' */
+  int filterExpressionInExtraFrame;  /* 'k' */
+  char *pcapLog;                     /* 'l' */
+  int numericFlag;                   /* 'n' */
+  u_char enableSuspiciousPacketDump; /* 'q' */
+  u_int maxHashSize;                 /* 's' */
+  u_short traceLevel;                /* 't' */
+  u_short accuracyLevel;             /* 'A' */
+  char *currentFilterExpression;     /* 'B' */
+  char domainName[MAXHOSTNAMELEN];   /* 'D' */
+  int isLsofPresent;                 /* 'E' */
+  u_short debugMode;                 /* 'K' */
+  u_short useSyslog;                 /* 'L' */
+  int mergeInterfaces;               /* 'M' */
+  int isNmapPresent;                 /* 'N' */
+  char dbPath[200];                  /* 'P' */
+  short usePersistentStorage;        /* 'S' */
+  char mapperURL[256];               /* 'U' */
 
-  u_int maxHashSize, topHashSize;
-  u_int enableNetFlowSupport;
-  short usePersistentStorage;
-  int numericFlag, logTimeout, daemonMode, mergeInterfaces;
+#ifdef HAVE_GDCHART
+  int throughput_chart_type;         /* '129' */
+#endif
+  u_short noAdminPasswordHint;       /* '130' */
+
+
+  /* Other flags (to be set via command line options one day) */
+  u_char enableSessionHandling;
+  u_char enablePacketDecoding;
+  u_char enableFragmentHandling;
+  u_char trackOnlyLocalHosts;
 
   /* Search paths */
   char **dataFileDirs;
   char **pluginDirs;
   char **configFileDirs;
+
+  /* NICs */
+  int numDevices;          /* # of Network interfaces enabled for sniffing */
+  NtopInterface *device;   /* pointer to the table of Network interfaces */
+
+
+  char *shortDomainName;
+  HostTraffic *broadcastEntry, *otherHostEntry;
+
+  u_int topHashSize;
 
   /* Debug */
   size_t allocatedMemory;
@@ -93,15 +121,11 @@ typedef struct ntopGlobals {
   int sslInitialized, sslPort;
 #endif
 
-  /* Logging */
-  time_t nextLogTime;
-
   /* Flags */
-  int isLsofPresent, isNmapPresent, filterExpressionInExtraFrame;
-  short capturePackets, endNtop, borderSnifferMode;
+  short capturePackets, endNtop;
 
 
-/* Multithreading */
+  /* Multithreading */
 #ifdef MULTITHREADED
   unsigned short numThreads, numDequeueThreads;
   PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
@@ -161,10 +185,6 @@ typedef struct ntopGlobals {
   time_t nextSessionTimeoutScan;
   struct timeval lastPktTime;
 
-  /* NICs */
-  int numDevices;
-  NtopInterface *device;
-
   /* Monitored Protocols */
   int numActServices;                /* # of protocols being monitored (as stated by the protocol file) */
   ServiceEntry **udpSvc, **tcpSvc;   /* the pointers to the tables of TCP/UDP Protocols to monitor */
@@ -195,7 +215,6 @@ typedef struct ntopGlobals {
   NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
 #endif
 
-  char *currentFilterExpression;
 } NtopGlobals;
 
 #endif /* GLOBALS_H */

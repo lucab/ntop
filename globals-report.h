@@ -129,8 +129,6 @@ extern void addPageIndicator(char *url, u_int beginIdx,
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum);
 extern void printAllSessionsHTML(char* host, int actualDeviceId);
 extern void printLocalRoutersList(int actualDeviceId);
-extern void printSession(IPSession *theSession, u_short sessionType,
-                         u_short sessionCounter);
 extern void printIpAccounting(int remoteToLocal, int sortedColumn,
 			      int revertOrder, int pageNum);
 extern void printHTMLtrailer(void);

@@ -205,10 +205,6 @@ static void updateHostSessionsList(u_int theHostIdx,
 
   incrementUsageCounter(&scanner->peers, remotePeerIdx, actualDeviceId);
 
-#ifdef DEBUG
-  printSession(theSession, sessionType, scanner->sessionCounter);
-#endif
-
   switch(sessionType) {
   case IPPROTO_TCP:
     /*
@@ -683,9 +679,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->firstSeen = myGlobals.actTime;
       flowDirection = CLIENT_TO_SERVER;
 
-#ifdef DEBUG
-      printSession(theSession, sessionType, 0);
-#endif
     } 
 #if 0
     else {
@@ -1661,10 +1654,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     tmpSession.bytesSent = (TrafficCounter)length, tmpSession.bytesRcvd = 0;
     tmpSession.sport = sport, tmpSession.dport = dport;
     if(fragmentedData) tmpSession.bytesFragmentedSent += packetDataLength;
-
-#ifdef DEBUG
-    printSession(&tmpSession, sessionType, 0);
-#endif
 
     if(getPortByNum(sport, sessionType) != NULL) {
       updateHostSessionsList(srcHostIdx, sport, dstHostIdx, &tmpSession,

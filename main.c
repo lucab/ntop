@@ -48,9 +48,9 @@ extern char *optarg;
 /*
  * local variables
  */
-static int enableDBsupport=0;
-static int enableThUpdate=1;
-static int enableIdleHosts=1;
+static int enableDBsupport = 0;   /* Database support disabled by default */
+static int enableThUpdate  = 1;   /* Throughput Update support enabled by default */
+static int enableIdleHosts = 1;   /* Purging of idle hosts support enabled by default */
 
 static char *devices = NULL;
 static char *localAddresses = NULL;
@@ -427,8 +427,8 @@ static void parseOptions(int argc, char * argv []) {
 #endif
 
     case 'f':
-      myGlobals.isLsofPresent = 0; /* Don't make debugging too complex */
       myGlobals.rFileName = optarg;
+      myGlobals.isLsofPresent = 0; /* Don't make debugging too complex */
       break;
 
     case 'g': /* host:port */
@@ -636,7 +636,7 @@ static void parseOptions(int argc, char * argv []) {
       */
       myGlobals.usePersistentStorage = atoi(optarg);
       if((myGlobals.usePersistentStorage > 2)
-	 || (myGlobals.usePersistentStorage < 0)){
+	 || (myGlobals.usePersistentStorage < 0)) {
 	printf("FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
 	exit(-1);
       }
@@ -682,11 +682,11 @@ static void parseOptions(int argc, char * argv []) {
 #endif
 
     case '1': /* disable throughput update */
-      enableThUpdate=0;
+      enableThUpdate = 0;
       break;
 
     case '2': /* disable purging of idle hosts */
-      enableIdleHosts=0;
+      enableIdleHosts = 0;
       break;
 
 #ifdef HAVE_GDCHART
@@ -701,12 +701,10 @@ static void parseOptions(int argc, char * argv []) {
       break;
 
     default:
-      traceEvent(TRACE_ERROR,
-		 "FATAL ERROR: unknown ntop option, '%s'\n", argv[optind-1]);
+      printf("FATAL ERROR: unknown ntop option, '%s'\n", argv[optind-1]);
 #ifdef DEBUG
       if (op != '?')
-	traceEvent(TRACE_ERROR,
-		   "             getopt return value is '%c', %d\n", op, op);
+	printf("             getopt return value is '%c', %d\n", op, op);
 #endif
       usage(stdout);
       exit(-1);
@@ -763,20 +761,28 @@ int main(int argc, char *argv[]) {
 #endif
   }
 
+#ifndef WIN32
+
   /*
    * Must run as root since opening a network interface
-   * in promiscuous mode is a privileged operation
+   * in promiscuous mode is a privileged operation.
+   * Verify we're running as root, unless we are reading data from a file
    */
-#ifndef WIN32
   if (! myGlobals.rFileName && ((getuid () && geteuid ()) || setuid (0))) {
-    printf ("Sorry, you must be root in order to run this program.\n");
+    printf ("Sorry, %s uses network interface(s) in promiscuous mode, so it needs root permission to run.\n",
+	    myGlobals.program_name);
     exit (-1);
   }
+
 #endif
 
 
   printf("Wait please: ntop is coming up...\n");
 
+
+  /*
+   * Perform here all the initialization steps required by the ntop engine to run
+   */
 
 #ifdef MEMORY_DEBUG
   initLeaks();
@@ -787,7 +793,8 @@ int main(int argc, char *argv[]) {
 #endif
 
   /*
-   * Initialize memory/data for the protocols being monitored
+   * Initialize memory and data for the protocols being monitored trying to access
+   * 
    */
   initIPServices();
 
@@ -797,6 +804,10 @@ int main(int argc, char *argv[]) {
    * Initialize the logging database
    */
   initLogger();
+
+#ifdef HAVE_OPENSSL
+  init_ssl();
+#endif
 
   /*
    *
@@ -812,7 +823,7 @@ int main(int argc, char *argv[]) {
   initGdbm();
 
   /*
-   * time to initialize the libpcap
+   * initialize memory and data 
    */
   initDevices(devices);
 
@@ -849,6 +860,7 @@ int main(int argc, char *argv[]) {
   loadPlugins();
 #endif
 
+
   /*
     Code fragment below courtesy of
     Andreas Pfaller <apfaller@yahoo.com.au>
@@ -863,6 +875,9 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  /*
+   * set user to be as inoffensive as possible
+   */
   if ((userId != 0) || (groupId != 0)){
     /* user id specified on commandline */
     if ((setgid(groupId) != 0) || (setuid(userId) != 0)) {
@@ -905,10 +920,10 @@ int main(int argc, char *argv[]) {
   }
 
   /*
-     Moved from initialize.c (postCommandLineArgumentsInitialization) so that we
-     don't add the defaults if the user has given us at least SOMETHING to monitor
+    Moved from initialize.c (postCommandLineArgumentsInitialization) so that we
+    don't add the defaults if the user has given us at least SOMETHING to monitor
 
-     Fix courtesy of Burton M. Strauss III <BStrauss3@attbi.com>
+    Fix courtesy of Burton M. Strauss III <BStrauss3@attbi.com>
   */
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
@@ -923,6 +938,7 @@ int main(int argc, char *argv[]) {
   startPlugins();
 #endif
 
+  /* create the main listener */
   initWeb(webPort, webAddr, sslAddr);
 
   traceEvent(TRACE_INFO, "Sniffying...\n");
