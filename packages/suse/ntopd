@@ -1,0 +1,67 @@
+#! /bin/sh
+# Copyright (c) 1995-2000 S.u.S.E. GmbH Fuerth, Germany.
+#
+# Author: Remo Behn <ray@suse.de>
+#
+# /sbin/init.d/ntop
+#
+### BEGIN INIT INFO
+# Provides: ntop
+# Required-Start: $network
+# Required-Stop: $network
+# Default-Start: 3 5
+# Default-Stop: 0 1 2 6
+# Description: Tool for monitoring the network usage.
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/rc.config
+
+# Determine the base and follow a runlevel link name.
+base=${0##*/}
+link=${base#*[SK][0-9][0-9]}
+
+# Force execution if not called by a runlevel directory.
+test $link = $base && START_NTOPD=yes
+test "$START_NTOPD" = yes || exit 0
+
+# The echo return value for success (defined in /etc/rc.config).
+return=$rc_done
+case "$1" in
+    start)
+	echo -n "Starting service ntop"
+	## Start daemon with startproc(8). If this fails
+	## the echo return value is set appropriate.
+
+	startproc -q /usr/bin/ntop -i $NTOPD_IFACE -w $NTOPD_PORT -P /var/lib/ntop
+
+	rc_status -v
+	;;
+    stop)
+	echo -n "Shutting down service ntop"
+	## Stop daemon with killproc(8) and if this fails
+	## set echo the echo return value.
+
+	killproc -TERM /usr/bin/ntop
+
+	rc_status -v
+	;;
+    restart|reload)
+	$0 stop && $0 start
+	rc_status
+	;;
+    status)
+	echo -n "Checking for service ntop: "
+	## Check status with checkproc(8), if process is running
+	## checkproc will return with exit status 0.
+
+	checkproc /usr/bin/ntop
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|restart|reload|status}"
+	exit 1
+	;;
+esac
+rc_exit
+

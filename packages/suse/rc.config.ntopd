@@ -1,0 +1,25 @@
+
+#
+# start the ntopd (yes|no)
+#
+START_NTOPD="no"
+
+#
+# Specifies the network interface used by ntop
+#
+NTOPD_IFACE="eth0"
+
+#
+# Supposing to start  ntop  at  the port  3000,
+# the  URL  to  access  is http://hostname:3000/
+#
+# The default administrator user is 'admin'
+# and its password is 'admin' too. 
+# Please change the admin password ASAP !
+#
+# Please note that an HTTP server is NOT needed  in
+# order to use the program in interactive mode.
+#
+NTOPD_PORT="3000"
+
+
