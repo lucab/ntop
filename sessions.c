@@ -2399,8 +2399,10 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
             }
             memset ((char *)theSession->activeLuns[lun], 0,
                     sizeof (ScsiLunTrafficInfo));
-            theSession->activeLuns[lun]->firstSeen = h->ts;
-            theSession->activeLuns[lun]->lastIopsTime = h->ts;
+            theSession->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
+            theSession->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
+            theSession->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
+            theSession->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
         }
 
         if (lun > theSession->lunMax) {
@@ -2427,8 +2429,10 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
                 }
                 memset ((char *)dstHost->activeLuns[lun], 0,
                         sizeof (ScsiLunTrafficInfo));
-                dstHost->activeLuns[lun]->firstSeen = h->ts;
-                dstHost->activeLuns[lun]->lastIopsTime = h->ts;
+                dstHost->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
+                dstHost->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
+                dstHost->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
+                dstHost->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
             }
             hostLunStats = dstHost->activeLuns[lun];
         }
@@ -2449,8 +2453,10 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
                     return;
                 }
                 memset ((char *)srcHost->activeLuns[lun], 0, sizeof (ScsiLunTrafficInfo));
-                srcHost->activeLuns[lun]->firstSeen = h->ts;
-                srcHost->activeLuns[lun]->lastIopsTime = h->ts;
+                srcHost->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
+                srcHost->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
+                srcHost->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
+                srcHost->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
             }
             hostLunStats = srcHost->activeLuns[lun];
         }
@@ -2470,7 +2476,8 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
             }
 
             lunStats->cmdsFromLastIops = 0;
-            lunStats->lastIopsTime = h->ts;
+            lunStats->lastIopsTime.tv_sec = h->ts.tv_sec;
+            lunStats->lastIopsTime.tv_usec = h->ts.tv_usec;
         }
         else {
             lunStats->cmdsFromLastIops++;
@@ -2488,14 +2495,17 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
                 hostLunStats->minIops = iops;
             }
             hostLunStats->cmdsFromLastIops = 0;
-            hostLunStats->lastIopsTime = h->ts;
+            hostLunStats->lastIopsTime.tv_sec = h->ts.tv_sec;
+            hostLunStats->lastIopsTime.tv_usec = h->ts.tv_usec;
         }
         else {
             hostLunStats->cmdsFromLastIops++;
         }
         
-        lunStats->lastSeen = hostLunStats->lastSeen = h->ts;
-        lunStats->reqTime = hostLunStats->reqTime = h->ts;
+        lunStats->lastSeen.tv_sec = hostLunStats->lastSeen.tv_sec = h->ts.tv_sec;
+        lunStats->lastSeen.tv_usec = hostLunStats->lastSeen.tv_usec = h->ts.tv_usec;
+        lunStats->reqTime.tv_sec = hostLunStats->reqTime.tv_sec = h->ts.tv_sec;
+        lunStats->reqTime.tv_usec = hostLunStats->reqTime.tv_usec = h->ts.tv_usec;
 
         cmd = theSession->lastScsiCmd = lunStats->lastScsiCmd = bp[12];
         iocmdType = getScsiCmdType (cmd, &ioSize, bp);
@@ -3007,14 +3017,16 @@ FCSession* handleFcSession (const struct pcap_pkthdr *h,
           theSession->initiator = dstHost;
           theSession->remotePeer = srcHost;
       }
-      theSession->firstSeen = h->ts;
+      theSession->firstSeen.tv_sec = h->ts.tv_sec;
+      theSession->firstSeen.tv_usec = h->ts.tv_usec;
       theSession->sessionState = FLAG_STATE_ACTIVE;
       theSession->deviceId = actualDeviceId;
       theSession->initiator->numHostSessions++;
       theSession->remotePeer->numHostSessions++;
     }
 
-    theSession->lastSeen = h->ts;
+    theSession->lastSeen.tv_sec = h->ts.tv_sec;
+    theSession->lastSeen.tv_usec = h->ts.tv_usec;
 
     /* Typically in FC, the exchange originator is always the same entity in a
      * flow
