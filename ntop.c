@@ -206,7 +206,7 @@ void detachFromTerminal(void) {
    * then force the default
    */
   if (myGlobals.useSyslog == -1) {
-      myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
+    myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
   }
 #endif
 

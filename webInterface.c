@@ -743,17 +743,17 @@ void printNtopConfigInfo(void) {
   }
   sendString("</TD></TR>\n");
 
-  /* *************************** */
-
+#if 0
   if (myGlobals.useSyslog != -1) {
       int i;
       for (i=0; facilitynames[i].c_name != NULL; i++) {
-          if (facilitynames[i].c_val == myGlobals.useSyslog) {
-              printFeatureConfigInfo("System logging to", facilitynames[i].c_name);
-              break;
-          }
+	if (facilitynames[i].c_val == myGlobals.useSyslog) {
+	  printFeatureConfigInfo("System logging to", facilitynames[i].c_name);
+	  break;
+	}
       }
   }
+#endif
 
   /* *************************** */
 

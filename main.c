@@ -642,19 +642,21 @@ static int parseOptions(int argc, char* argv []) {
 
           stringSanityCheck(optarg);
 
+#if 0
           for (i=0; facilitynames[i].c_name != NULL; i++) {
-              if (strcmp(optarg, facilitynames[i].c_name) == 0) {
-                  break;
-              }
+	    if (strcmp(optarg, facilitynames[i].c_name) == 0) {
+	      break;
+	    }
           }
-
+	  
           if (facilitynames[i].c_name == NULL) {
-              printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
-                     optarg);
-              myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
+	    printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
+		   optarg);
+	    myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
           } else {
-              myGlobals.useSyslog = facilitynames[i].c_val;
+	    myGlobals.useSyslog = facilitynames[i].c_val;
           }
+#endif
       } else {
           printf("NOTE: --use-syslog with no facility, using default value\n");
           myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;

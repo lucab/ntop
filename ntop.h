@@ -54,8 +54,16 @@
 #if !defined(HAVE_U_INT64_T)
 #if defined(WIN32) && defined(__GNUC__)
 typedef unsigned long long u_int64_t; /* on mingw unsigned long is 32 bits */
-#else
+#else 
+#if defined(WIN32) && defined(__GNUC__)
 typedef _int64 u_int64_t;
+#else
+#if defined(HAVE_UINT64_T)
+#define u_int64_t uint64_t
+#else
+#error "Sorry, I'm unable to define u_int64_t on your platform"
+#endif
+#endif
 #endif
 #endif
 
@@ -407,18 +415,30 @@ int getdomainname(char *name, size_t len);
 
 
 /*
- * Burton Strauss - BStrauss@acm.org - removed HAVE_TCPD_H test so that constants are available
+ * Burton Strauss - BStrauss@acm.org 
+ * removed HAVE_TCPD_H test so that constants are available
+ *
+ * Readded #ifdef #endif for compiling under Solaris
+ * L.Deri - 21/05/2002
+ *
  */
-
+#ifdef HAVE_TCPD_H 
 #include <tcpd.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
+#ifdef HAVE_SYSLOG_H
+#include <sys/syslog.h>
+#endif
 
-# ifndef DEFAULT_SYSLOG_FACILITY
-#  define DEFAULT_SYSLOG_FACILITY LOG_DAEMON   /* default value, if not specified otherwise */
-# endif
-# ifndef DAEMONNAME
-#  define DAEMONNAME      "ntop"       /* for /etc/hosts.allow, /etc/hosts.deny */
-# endif
+#ifndef DEFAULT_SYSLOG_FACILITY
+#define DEFAULT_SYSLOG_FACILITY LOG_DAEMON   /* default value, if not specified otherwise */
+#endif
+
+#ifndef DAEMONNAME
+#define DAEMONNAME      "ntop"       /* for /etc/hosts.allow, /etc/hosts.deny */
+#endif
 
 #ifdef ELECTRICFENCE
 #include "efence.h"
