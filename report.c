@@ -609,9 +609,9 @@ void printTrafficStatistics(void) {
 	BufferTooShort();
       sendString(buf);
     }
-  }
 
-  sendString("</TABLE>"TABLE_OFF"</TR>\n");
+    sendString("</TABLE>"TABLE_OFF"</TR>\n");
+  }
 
   /* ********************* */
 
@@ -3464,11 +3464,13 @@ void printIpTrafficMatrix(void) {
     if(activeHosts[i] == 1) {
       numConsecutiveEmptyCells=0;
 
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
-		  getRowColor(), makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i],
-					      FLAG_HOSTLINK_TEXT_FORMAT, 1, 0)) < 0)
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT><SMALL>",  getRowColor()) < 0)
 	BufferTooShort();
       sendString(buf);
+      
+      sendString(makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i],
+			      FLAG_HOSTLINK_TEXT_FORMAT, 1, 0));
+      sendString("</SMALL></TH>");
 
       for(j=0; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; j++) {
 	int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;

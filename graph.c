@@ -1597,7 +1597,7 @@ void drawGlobalIpProtoDistribution(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  drawBar(600, 500,	/* width/height */
+  drawBar(600, 350,	/* width/height */
 	  fd,		/* open file pointer */
 	  idx,		/* number of slices */
 	  lbl,		/* slice labels */
