@@ -982,7 +982,6 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
     int len = sizeof(u_char)*device[theDevice].actualHashSize;
 
     flaggedHosts = (char*)malloc(len);
-
     memset(flaggedHosts, 0, len);
     flaggedHosts[hostIdx] = 1; /* Set the entry to free */
     freeGlobalHostPeers(host, flaggedHosts);    

@@ -814,6 +814,9 @@ static int returnHTTPPage(char* pageName, int postLen) {
   FILE *fd = NULL;
   char tmpStr[512];
   int revertOrder=0;
+#ifdef MULTITHREADED
+  u_char mutexReleased = 0;
+#endif
 #ifdef WIN32
   int i;
 #endif
@@ -972,8 +975,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
 	    || (strcmp(pageName, "leftmenu-nojs.html") == 0)) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printHTMLheader(NULL, HTML_FLAG_NO_REFRESH);
-    sendString(
-	       "<center>\n<pre>\n\n</pre>\n\n");
+    sendString("<center>\n<pre>\n\n</pre>\n\n");
     sendString("<FONT FACE=Helvetica SIZE=+2>Welcome<br>to<br>\n");
     sendString("ntop!</FONT>\n<pre>\n</pre>\n");
     sendString("<p></center><p>\n<FONT FACE=Helvetica SIZE=-1><b>\n<ol>\n");
@@ -1246,6 +1248,13 @@ static int returnHTTPPage(char* pageName, int postLen) {
       /* printf("HostName: '%s'\n", hostName); */
 
 #ifdef MULTITHREADED
+      /* It is necessary to release the mutex for avoiding
+	 a race condition with resizeHostHash() */
+      releaseMutex(&hashResizeMutex);
+      mutexReleased = 1;
+#endif
+
+#ifdef MULTITHREADED
       accessMutex(&hostsHashMutex, "hostTrafficDistrib-call");
 #endif
       for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
@@ -1473,9 +1482,10 @@ static int returnHTTPPage(char* pageName, int postLen) {
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 
 #ifdef MULTITHREADED
-  releaseMutex(&hashResizeMutex);
+  if(!mutexReleased)
+    releaseMutex(&hashResizeMutex);
 #endif
-  return (errorCode);
+  return(errorCode);
 }
 
 /* ************************* */
