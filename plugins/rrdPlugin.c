@@ -1448,6 +1448,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		/* hostKey = el->ethAddressString; */
 		/* For the time being do not save IP-less hosts */
 		el = el->next;
+
+#ifdef CFG_MULTITHREADED
+                releaseMutex(&myGlobals.hostsHashMutex);
+#endif
 		continue;
 	      }
 
@@ -1573,10 +1577,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    el = el->next;
 	  }
 	}
-
-#ifdef CFG_MULTITHREADED
-	releaseMutex(&myGlobals.hostsHashMutex);
-#endif
       } /* for(devIdx...) */
     }
 
