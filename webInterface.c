@@ -2987,6 +2987,49 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
 }
 
 /* ******************************** */
+
+#ifdef CFG_MULTITHREADED
+void printMutexStatusReport(int textPrintFlag) {
+  if(myGlobals.disableMutexExtraInfo) {
+    sendString(texthtml("\nMutexes:\n\n", 
+			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
+			  "<TR><TH>Mutex Name</TH>"
+			  "<TH>State</TH>"
+			  "<TH COLSPAN=2># Locks/Releases</TH>"));
+  } else {
+    sendString(texthtml("\nMutexes:\n\n", 
+			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
+			  "<TR><TH>Mutex Name</TH>"
+			  "<TH>State</TH>"
+			  "<TH>Last Lock</TH>"
+			  "<TH>Blocked</TH>"
+			  "<TH>Last UnLock</TH>"
+			  "<TH COLSPAN=2># Locks/Releases</TH>"
+			  "<TH>Max Lock</TH></TR>"));
+  }
+
+  printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.packetProcessMutex, "packetProcessMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.purgeMutex, "purgeMutex");
+
+#if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
+  if(myGlobals.numericFlag == 0) 
+    printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
+#endif
+
+  printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex,  "securityItemsMutex");
+  sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
+
+}
+
+#endif
+
+/* ******************************** */
+
 void printNtopConfigInfo(int textPrintFlag) {
   char buf[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
   int i;
@@ -4265,44 +4308,10 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* **************************** */
 
 #ifdef CFG_MULTITHREADED
-#if !defined(DEBUG) && !defined(WIN32)
+ #if !defined(DEBUG) && !defined(WIN32)
   if(myGlobals.debugMode)
-#endif /* DEBUG or WIN32 */
-    {
-      if(myGlobals.disableMutexExtraInfo) {
-        sendString(texthtml("\nMutexes:\n\n", 
-			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
-			  "<TR><TH>Mutex Name</TH>"
-			  "<TH>State</TH>"
-			  "<TH COLSPAN=2># Locks/Releases</TH>"));
-      } else {
-        sendString(texthtml("\nMutexes:\n\n", 
-			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
-			  "<TR><TH>Mutex Name</TH>"
-			  "<TH>State</TH>"
-			  "<TH>Last Lock</TH>"
-			  "<TH>Blocked</TH>"
-			  "<TH>Last UnLock</TH>"
-			  "<TH COLSPAN=2># Locks/Releases</TH>"
-			  "<TH>Max Lock</TH></TR>"));
-      }
-
-      printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
-      printMutexStatus(textPrintFlag, &myGlobals.packetProcessMutex, "packetProcessMutex");
-      printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
-      printMutexStatus(textPrintFlag, &myGlobals.purgeMutex, "purgeMutex");
-
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-      if(myGlobals.numericFlag == 0) 
-	printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
-#endif
-
-      printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
-      printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
-      printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
-      printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex,  "securityItemsMutex");
-      sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
-    }
+ #endif /* DEBUG or WIN32 */
+    printMutexStatusReport(textPrintFlag);
 #endif /* CFG_MULTITHREADED */
 
   if(textPrintFlag != TRUE) {

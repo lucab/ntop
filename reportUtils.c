@@ -4224,10 +4224,13 @@ void printSectionTitle(char *text) {
 
 #ifdef CFG_MULTITHREADED
 void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], buf2[64];
+  struct tm t;
 
   if(mutexId->numLocks == 0) /* Mutex never used */
     return;
+  memset(buf2, 0, sizeof(buf2));
+  strftime(buf2, sizeof(buf2), "%c", localtime_r(&mutexId->lockTime, &t));
   if(textPrintFlag == TRUE) {
     if(myGlobals.disableMutexExtraInfo) {
         if(snprintf(buf, sizeof(buf),
@@ -4239,10 +4242,12 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
     } else if(mutexId->lockAttemptLine > 0) {
         if(snprintf(buf, sizeof(buf),
                     "Mutex %s is %s.\n"
-                    "     locked: %u times, last was %s:%d(%d)\n"
+                    "     locked: %u times, last was at %s %s:%d(%d)\n"
                     "     blocked: at %s:%d%(%d)\n",
                     mutexName, mutexId->isLocked ? "locked" : "unlocked",
-                    mutexId->numLocks, mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    mutexId->numLocks,
+                    buf2,
+                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
                     mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid) < 0)
           BufferTooShort();
 		    sendString(buf);
@@ -4257,12 +4262,13 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
     } else {
         if(snprintf(buf, sizeof(buf),
                     "Mutex %s, is %s.\n"
-                    "     locked: %u times, last was %s:%d(%d)\n"
+                    "     locked: %u times, last was at %s %s:%d(%d)\n"
                     "     unlocked: %u times, last was %s:%d(%d)\n"
                     "     longest: %d sec from %s:%d\n",
                     mutexName,
                     mutexId->isLocked ? "locked" : "unlocked",
                     mutexId->numLocks,
+                    buf2,
                     mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
                     mutexId->numReleases,
                     mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
@@ -4283,13 +4289,14 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
     } else if (mutexId->lockAttemptLine > 0) {
         if(snprintf(buf, sizeof(buf),
                     "<TR><TH ALIGN=\"LEFT\">%s</TH><TD ALIGN=\"CENTER\">%s</TD>"
-                    "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
+                    "<TD ALIGN=\"RIGHT\">at %s %s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%u</TD>"
                     "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>\n",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
+                    buf2,
                     mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
                     mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
                     mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
@@ -4301,13 +4308,14 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
     } else {
         if(snprintf(buf, sizeof(buf),
                     "<TR><TH ALIGN=\"LEFT\">%s</TH><TD ALIGN=\"CENTER\">%s</TD>"
-                    "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
+                    "<TD ALIGN=\"RIGHT\">at %s %s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">&nbsp;</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%u</TD>"
                     "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>\n",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
+                    buf2,
                     mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
                     mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
                     mutexId->numLocks, mutexId->numReleases,

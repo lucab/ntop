@@ -186,6 +186,9 @@ extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printNtopConfigHInfo(int textPrintFlag);
 extern void printHostColorCode(int textPrintFlag, int isInfo);
+#ifdef CFG_MULTITHREADED
+extern void printMutexStatusReport(int textPrintFlag);
+#endif
 extern void printNtopConfigInfo(int textPrintFlag);
 extern void printNtopProblemReport(void);
 #ifdef MAKE_WITH_SSLWATCHDOG

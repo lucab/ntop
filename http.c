@@ -1539,6 +1539,12 @@ static int returnHTTPPage(char* pageName,
 #endif
     returnHTTPpageNotFound();
     printTrailer=0;
+#ifdef CFG_MULTITHREADED
+  } else if(strncmp(pageName, "showMutex.html", strlen("showMutex.html")) == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    printTrailer=0;
+    printMutexStatusReport(0);
+#endif
   } else {
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
