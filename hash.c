@@ -24,7 +24,7 @@ static float timeval_subtract (struct timeval x, struct timeval y); /* forward *
 
 /* #define HASH_DEBUG */
 
-#define DNS_DEBUG
+/* #define DNS_DEBUG */
 
 #ifdef HASH_DEBUG
 static void hashSanityCheck();
@@ -329,13 +329,17 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
       key_data.dsize = 16;
     }
 #endif
+    else
+      key_data.dsize = 0;
 
-    gdbm_delete(myGlobals.addressQueueFile, key_data);
-
+    if(key_data.dsize) {
+      gdbm_delete(myGlobals.addressQueueFile, key_data);
+      
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleting from GDBM address cache host [%s/%s]",
-	       host->hostNumIpAddress, host->hostSymIpAddress);
+      traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleting from GDBM address cache host [%s/%s]",
+		 host->hostNumIpAddress, host->hostSymIpAddress);
 #endif
+    }
   }
 
   /* Make sure this host is not part of the ipTrafficMatrixHosts list */
