@@ -791,7 +791,7 @@ static void processIpPkt(const u_char *bp,
 	  }
 	}
 
-	if((!myGlobals.borderSnifferMode) && nonFullyRemoteSession) {
+	if(nonFullyRemoteSession) {
 	  theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
 					srcHostIdx, sport, dstHostIdx,
 					dport, ntohs(ip.ip_len), &tp, tcpDataLength,
@@ -1028,7 +1028,7 @@ static void processIpPkt(const u_char *bp,
 	    handleIP(dport, srcHost, dstHost, length, 0, actualDeviceId);
         }
 
-	if((!myGlobals.borderSnifferMode) && nonFullyRemoteSession)
+	if(nonFullyRemoteSession)
 	  handleUDPSession(h, (off & 0x3fff),
 			   srcHostIdx, sport, dstHostIdx,
 			   dport, udpDataLength,
@@ -2311,8 +2311,7 @@ void processPacket(u_char *_deviceId,
     if(srcHost != NULL) srcHost->refCount--; if(dstHost != NULL) dstHost->refCount--;
   }
 
-  if((!myGlobals.borderSnifferMode)
-     && (myGlobals.flowsList != NULL) /* Handle flows last */)
+  if(myGlobals.flowsList != NULL) /* Handle flows last */
     flowsProcess(h, p, deviceId);
   
 #ifdef MULTITHREADED

@@ -16,12 +16,12 @@ ntop \- display top network users
 .B ntop
 .RB [ -a | --access-log-path
 .IR <path> ]
+.RB [ -b | --disable-decoders ]
 .RB [ -c | --sticky-hosts]
 .RB [ -f | --traffic-dump-file
 .IR file> ]
 .RB [ -g | --track-local-hosts ]
 .RB [ -h | --help ]
-.RB [ -j | --border-sniffer-mode ]
 .RB [ -k | --filter-expression-in-extra-frame ]
 .RB [ -l | --pcap-log 
 .IR <path> ]
@@ -38,6 +38,7 @@ ntop \- display top network users
 .IR <number> ]
 .RB [ -w | --http-server
 .IR <port> ]
+.RB [ -z | --disable-sessions ]
 .RB [ -B | --filter-expression
 .IR "expression" ]
 .RB [ -D | --domain 
@@ -114,6 +115,11 @@ is that
 .B ntop
 added a new column has been added. Such column contains the time (in milliseconds) that ntop needed in order to serve the request. 
 
+.It2 -b --disable-decoders
+This flag disables protocol decoders (e.g. DNS, NetBIOS). Use it for better performance or if you feel 
+.B ntop
+has problem handling some protocols.
+
 .It2 -c --sticky-hosts
 By default idle hosts are periodically purged from memory. Use this flag to prevent idle hosts from being purged from memory. NOTE: if idle hosts are kept in memory you can experience severe memory usage.
 
@@ -146,9 +152,6 @@ Specifies the network interface used by
 If multiple interfaces are used (this feature is available only if ntop is compiled with thread support) they have to be separated with a comma. For instance -i "eth0,lo". Traffic information obtained by all the interfaces is merged together as if the traffic would have been produced by one interface. Use the -M flag for not merging traffic.
 
 Win32 note: This is the number of the interface, not it's name. Use ??? to see a list of interfaces.
-
-.It2 -j --border-sniffer-mode
-When this flag is used, ntop is supposed to be installed on a line where traffic is mirrored from a switch or another network appliance.
 
 .It2 -k --filter-expression-in-extra-frame
 When this flag is used, the current filter expression is printed in an extra frame and thus always visible.
@@ -233,6 +236,9 @@ has not been started with '-W 0' [see below]).
 You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
 .B -w 127.0.0.1:3000
 .
+
+.It2 -z --disable-sessions
+This flag disables TCP session tracking. Use it for better performance or when you don't really care of tracking sessions.
 
 .It2 -A --set-admin-password
 . This flag is used to start ntop, set the admin password and quit. It is quite useful for installers that may need to set the password for the admin user.

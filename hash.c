@@ -457,7 +457,6 @@ void purgeIdleHosts(int actDevice) {
 	 && (el->lastSeen < purgeTime)) {
 
 	if((!myGlobals.stickyHosts)
-	   || (myGlobals.borderSnifferMode)
 	   || (!subnetPseudoLocalHost(el))) {
 	  theFlaggedHosts[maxBucket++] = el;
 
@@ -730,12 +729,12 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
 
 	  memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
-	  if(!myGlobals.borderSnifferMode) FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
+	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
 
 	  if(isPrivateAddress(hostIpAddress)) FD_SET(PRIVATE_IP_ADDRESS, &el->flags);
 
 	  if(!isBroadcastAddress(hostIpAddress)) {
-	    if(myGlobals.borderSnifferMode || isPseudoLocalAddress(hostIpAddress))
+	    if(isPseudoLocalAddress(hostIpAddress))
 	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
 	    else
 	      FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);

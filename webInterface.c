@@ -274,7 +274,7 @@ void showPluginsList(char* pluginName) {
 
       if(snprintf(tmpBuf1, sizeof(tmpBuf1), "<A HREF=/plugins/%s>%s</A>",
 		  flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname) < 0)
-	  BufferTooShort();
+	BufferTooShort();
 
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
@@ -341,17 +341,10 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(broadcastHost(el)
      || (el->hostSerial == myGlobals.broadcastEntryIdx)
      || ((el->hostIpAddress.s_addr == 0) && (el->ethAddressString[0] == '\0'))) {
-    if(myGlobals.borderSnifferMode) {
-      if(mode == LONG_FORMAT) 
-	return("<TH "TH_BG" ALIGN=LEFT>&nbsp;</TH>");
-      else
-	return("&nbsp;");
-    } else {
-      if(mode == LONG_FORMAT) 
-	return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
-      else
-	return("&lt;broadcast&gt;");
-    }
+    if(mode == LONG_FORMAT) 
+      return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
+    else
+      return("&lt;broadcast&gt;");
   }
 
 
@@ -2002,6 +1995,10 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.accessLogPath,
                            NTOP_DEFAULT_ACCESS_LOG_PATH);
 
+  printParameterConfigInfo(textPrintFlag, "-b | --disable-decoders",
+                           myGlobals.enablePacketDecoding == 1 ? "Yes" : "No",
+                           "No");
+
   printParameterConfigInfo(textPrintFlag, "-c | --sticky-hosts",
                            myGlobals.stickyHosts == 1 ? "Yes" : "No",
                            NTOP_DEFAULT_STICKY_HOSTS == 1 ? "Yes" : "No");
@@ -2031,10 +2028,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   printParameterConfigInfo(textPrintFlag, "-i | --interface" REPORT_ITS_EFFECTIVE,
                            myGlobals.devices,
                            NTOP_DEFAULT_DEVICES);
-
-  printParameterConfigInfo(textPrintFlag, "-j | --border-sniffer-mode",
-                           myGlobals.borderSnifferMode == 1 ? "Active" : "Inactive",
-                           NTOP_DEFAULT_BORDER_SNIFFER_MODE == 1 ? "Active" : "Inactive");
 
   printParameterConfigInfo(textPrintFlag, "-k | --filter-expression-in-extra-frame",
                            myGlobals.filterExpressionInExtraFrame == 1 ? "Yes" : "No",
@@ -2112,8 +2105,11 @@ void printNtopConfigInfo(int textPrintFlag) {
 		 myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "") < 0)
       BufferTooShort();
   }
-  printFeatureConfigInfo(textPrintFlag, "-v | --mysql-host", buf);
 #endif
+
+  printParameterConfigInfo(textPrintFlag, "-z | --disable-sessions",
+                           myGlobals.enableSessionHandling == 1 ? "No" : "Yes",
+                           "No");
 
   if (myGlobals.webPort == 0) {
     strcpy(buf, "Inactive");
@@ -2881,7 +2877,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     SSL fix courtesy of
     Curtis Doty <Curtis@GreenKey.net>
   */
-void initWeb() {
+  void initWeb() {
     int sockopt = 1;
     struct sockaddr_in sockIn;
 
@@ -3059,10 +3055,10 @@ void initWeb() {
   /* **************************************** */
 
 #ifndef WIN32
-static void PIPEhandler(int sig) {
-  myGlobals.numHandledSIGPIPEerrors++;
-  setsignal (SIGPIPE, PIPEhandler);
-}
+  static void PIPEhandler(int sig) {
+    myGlobals.numHandledSIGPIPEerrors++;
+    setsignal (SIGPIPE, PIPEhandler);
+  }
 #endif
 
   /* **************************************** */
@@ -3531,11 +3527,11 @@ static void PIPEhandler(int sig) {
               }
 
 	    if(accept_ssl_connection(myGlobals.newSock) == -1) {
-                traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
-                closeNwSocket(&myGlobals.newSock);
-                return;
+	      traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
+	      closeNwSocket(&myGlobals.newSock);
+	      return;
 	    } else {
-                myGlobals.newSock = -myGlobals.newSock;
+	      myGlobals.newSock = -myGlobals.newSock;
             }
 
 #if defined(PARM_SSLWATCHDOG) || defined(USE_SSLWATCHDOG)

@@ -46,7 +46,6 @@ void updateHostNameInfo(unsigned long numeric,
   char *hostName;
   struct in_addr addr;
   char buf[32];
-  char sqlBuf[BUF_SIZE];
   u_int idx;
 
   if(!myGlobals.capturePackets) return;

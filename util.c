@@ -3048,9 +3048,7 @@ void _incrementUsageCounter(UsageCounter *counter,
     return;
   }
 
-  if(myGlobals.borderSnifferMode
-     && ((peerIdx == myGlobals.broadcastEntryIdx)
-	 || (peerIdx == myGlobals.otherHostEntryIdx))) {
+  if((peerIdx == myGlobals.broadcastEntryIdx) || (peerIdx == myGlobals.otherHostEntryIdx)) {
     return;
   }
 

@@ -129,7 +129,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   myGlobals.rFileName = NTOP_DEFAULT_TRAFFICDUMP_FILENAME;
   myGlobals.devices = NTOP_DEFAULT_DEVICES;
-  myGlobals.borderSnifferMode = NTOP_DEFAULT_BORDER_SNIFFER_MODE;
   myGlobals.dontTrustMACaddr = NTOP_DEFAULT_DONT_TRUST_MAC_ADDR;
   myGlobals.filterExpressionInExtraFrame = NTOP_DEFAULT_FILTER_IN_FRAME;
   myGlobals.pcapLog = NTOP_DEFAULT_PCAP_LOG_FILENAME;
@@ -164,10 +163,10 @@ void initNtopGlobals(int argc, char * argv[]) {
 #endif
 
   /* Other flags (to be set via command line options one day) */
-  myGlobals.enableSessionHandling = 0;
-  myGlobals.enablePacketDecoding = 0;
-  myGlobals.enableFragmentHandling = 0;
-  myGlobals.trackOnlyLocalHosts = 0;
+  myGlobals.enableSessionHandling  = 1;
+  myGlobals.enablePacketDecoding   = 1;
+  myGlobals.enableFragmentHandling = 1;
+  myGlobals.trackOnlyLocalHosts    = 0;
 
   /* Search paths */
   myGlobals.dataFileDirs    = _dataFileDirs;

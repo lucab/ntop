@@ -455,52 +455,10 @@ void resetStats(void) {
 /* ******************************* */
 
 int initGlobalValues(void) {
-  int myAccuracy = HIGH_ACCURACY_LEVEL;
 
-  /* This routine allows a selection - at compile time - among three levels of "accuracy".
-     Moving to a lower accuracy level represents a tradeoff of less processing time per
-     packet (allowing higher throughput rates) vs. less information available from ntop.
-     
-     A parameter for this was eliminated (Apr2002) so that only somebody who really understands
-     the tradeoffs involved can choose this.  
-     
-     Note (below) that Border Sniffer Mode (-j) - of necessity - forces the equivalent of
-     LOW_ACCURACY_LEVEL
-  */
-  
-  switch(myAccuracy) {
-  case HIGH_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = 1;
-    myGlobals.enablePacketDecoding = 1;
-    myGlobals.enableFragmentHandling = 1;
-    break;
-  case MEDIUM_ACCURACY_LEVEL:
-    myGlobals.enablePacketDecoding = 0;
-    myGlobals.enableSessionHandling = 1;
-    myGlobals.enableFragmentHandling = 1;
-    break;
-  case LOW_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = 0;
-    myGlobals.enablePacketDecoding = 0;
-    myGlobals.enableFragmentHandling = 0;
-    break;
-  }
-
-  if(myGlobals.borderSnifferMode) {
-    /* Override everything that has been set before */
-    myGlobals.enableSessionHandling  = 0;
-    myGlobals.enablePacketDecoding   = 0;
-    myGlobals.enableFragmentHandling = 0;
-    myGlobals.dontTrustMACaddr       = 1;
 #ifdef MULTITHREADED
-    myGlobals.numDequeueThreads      = MAX_NUM_DEQUEUE_THREADS;
+    myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
 #endif
-    myGlobals.trackOnlyLocalHosts    = 1;
-  } else {
-#ifdef MULTITHREADED
-    myGlobals.numDequeueThreads = 1;
-#endif
-  }
 
   if(myGlobals.enableSessionHandling)
     initPassiveSessions();

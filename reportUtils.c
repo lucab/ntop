@@ -2902,7 +2902,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(symLink[i] == ':')
 	symLink[i] = '_';
 
-    if(!myGlobals.borderSnifferMode) {
+    if(!myGlobals.dontTrustMACaddr) {
       if(snprintf(shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr) < 0)
 	BufferTooShort();
     } else {
@@ -3030,7 +3030,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString("]</TD></TR>\n");
   }
 
-  if((!myGlobals.borderSnifferMode) && (!multicastHost(el))) {
+  if(!multicastHost(el)) {
     if(subnetPseudoLocalHost(el)) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
@@ -3047,7 +3047,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
   }
 
-  if((!myGlobals.borderSnifferMode) && (el->minTTL > 0)) {
+  if(el->minTTL > 0) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d:%d&nbsp;[~%d&nbsp;hop(s)]</TD></TR>\n",
 		getRowColor(), "IP&nbsp;TTL&nbsp;(Time to Live)",
@@ -3057,7 +3057,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s"
 #ifdef HAVE_RRD_H
-	      " <A HREF=javascript:popUp(\"http://localhost/cgi-bin/rrd.cgi?path=%s/pktSent.rrd\")><IMG BORDER=0 SRC=/graph.gif></A>"
+	      " <A HREF=javascript:popUp(\"http://athlon.netikos.com/cgi-bin/rrd.cgi?path=%s/pktSent.rrd\")><IMG BORDER=0 SRC=/graph.gif></A>"
 #endif
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
@@ -3077,17 +3077,16 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      formatPkts(el->pktBroadcastSent.value)) < 0) BufferTooShort();
   sendString(buf);
 
-  if(!myGlobals.borderSnifferMode) {
-    if(el->routedTraffic != NULL) {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "%s/%s Pkts</TD></TR>\n",
-		  getRowColor(), "Routed Traffic",
-		  formatBytes(el->routedTraffic->routedBytes.value, 1),
-		  formatPkts(el->routedTraffic->routedPkts.value)) < 0)
-	BufferTooShort();
-      sendString(buf);
-    }
+  if(el->routedTraffic != NULL) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		"%s/%s Pkts</TD></TR>\n",
+		getRowColor(), "Routed Traffic",
+		formatBytes(el->routedTraffic->routedBytes.value, 1),
+		formatPkts(el->routedTraffic->routedPkts.value)) < 0)
+      BufferTooShort();
+    sendString(buf);
   }
+  
 
   if((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0)) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>",
@@ -3116,11 +3115,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   else
     percentage = 100 - (((float)el->bytesSentRem.value*100)/el->bytesSent.value);
 
-  if(!myGlobals.borderSnifferMode) {
-    if(el->hostNumIpAddress[0] != '\0') {
-      printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Sent&nbsp;Stats",
-				"Local", "Rem", -1, percentage);
-    }
+  if(el->hostNumIpAddress[0] != '\0') {
+    printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Sent&nbsp;Stats",
+			      "Local", "Rem", -1, percentage);
 
     if(el->bytesSent.value > 0) {
       percentage = (((float)el->ipBytesSent.value*100)/el->bytesSent.value);
@@ -3131,7 +3128,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s"
 #ifdef HAVE_RRD_H
-	      " <A HREF=javascript:popUp(\"http://localhost/cgi-bin/rrd.cgi?path=%s/pktRcvd.rrd\")><IMG BORDER=0 SRC=/graph.gif></A>"
+	      " <A HREF=javascript:popUp(\"http://athlon.netikos.com/cgi-bin/rrd.cgi?path=%s/pktRcvd.rrd\")><IMG BORDER=0 SRC=/graph.gif></A>"
 #endif
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
@@ -3145,16 +3142,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     BufferTooShort();
   sendString(buf);
 
-  if(!myGlobals.borderSnifferMode) {
-    if(el->bytesRcvd.value == 0)
-      percentage = 0;
-    else
-      percentage = 100 - (((float)el->bytesRcvdFromRem.value*100)/el->bytesRcvd.value);
-
+  if(el->bytesRcvd.value == 0)
+    percentage = 0;
+  else
+    percentage = 100 - (((float)el->bytesRcvdFromRem.value*100)/el->bytesRcvd.value);
+  
     if(el->hostNumIpAddress[0] != '\0')
       printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Rcvd&nbsp;Stats",
 				"Local", "Rem", -1, percentage);
-  }
 
   if(el->bytesRcvd.value > 0) {
     percentage = (((float)el->ipBytesRcvd.value*100)/el->bytesRcvd.value);

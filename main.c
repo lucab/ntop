@@ -69,7 +69,7 @@ static char __see__ []    =
 static struct option const long_options[] = {
 
   { "access-log-path",                  required_argument, NULL, 'a' },
-
+  { "disable-decoders",                 no_argument,       NULL, 'b' },
   { "sticky-hosts",                     no_argument,       NULL, 'c' },
 
 #ifndef WIN32
@@ -88,7 +88,6 @@ static struct option const long_options[] = {
   { "local-subnets",                    required_argument, NULL, 'm' },
   { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
   { "no-mac",                           no_argument,       NULL, 'o' },
-  { "border-sniffer-mode",              no_argument,       NULL, 'j' },
   { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
 
 
@@ -103,6 +102,7 @@ static struct option const long_options[] = {
 #endif
 
   { "http-server",                      required_argument, NULL, 'w' },
+  { "disable-sessions",                 no_argument,       NULL, 'z' },
   { "set-admin-password",               optional_argument, NULL, 135 },
   { "filter-expression",                required_argument, NULL, 'B' },
   { "domain",                           required_argument, NULL, 'D' },
@@ -182,7 +182,7 @@ void usage (FILE * fp) {
 
 #ifdef HAVE_GETOPT_LONG
   fprintf(fp, "    [-a <path>      | --access-log-path <path>]           Path for ntop web server access log\n");
-
+  fprintf(fp, "    [-b             | --disable-decoders]                 Disable protocol decoders\n");
   fprintf(fp, "    [-c             | --sticky-hosts]                     Idle hosts are not purged from hash\n");
 
 #ifndef WIN32
@@ -220,6 +220,7 @@ void usage (FILE * fp) {
 #endif /* WIN32 */
 
   fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
+  fprintf(fp, "    [-z             | --disable-sessions]                 Disable TCP session tracking\n");
   fprintf(fp, "    [-A                                                   Ask admin user password and exit\n");
   fprintf(fp, "    [                 --set-admin-password=<pass>]        Set password for the admin user to <pass>\n");
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 Packet filter expression, like tcpdump\n");
@@ -263,6 +264,7 @@ void usage (FILE * fp) {
 #else /* !HAVE_GETOPT_LONG */
 
   fprintf(fp, "    [-a <path> path for ntop web server access log]\n");
+  fprintf(fp, "    [-b        disable protocol decoders]\n");
 
   fprintf(fp, "    [-c <sticky hosts: idle hosts are not purged from hash>]\n");
 
@@ -305,6 +307,7 @@ void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-w <HTTP port>]\n");
+  fprintf(fp, "    [-z Disable sessions tracking]\n");
   fprintf(fp, "    [-A <Ask for admin user password and exit]\n");
   fprintf(fp, "    [-B <filter expression (like tcpdump)>]\n");
   fprintf(fp, "    [-D <Internet domain name>]\n");
@@ -349,11 +352,11 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char* theOpts = "a:ce:f:ghi:jkl:m:nop:qr:st:w:AB:D:F:MO:P:S:U:VW:";
+  char* theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:D:F:MO:P:S:U:VW:";
 #elif defined(USE_SYSLOG)
-  char* theOpts = "a:cde:f:ghi:jkl:m:nop:qr:st:u:w:AB:D:EF:IKLMNO:P:S:U:VW:";
+  char* theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKLMNO:P:S:U:VW:";
 #else
-  char* theOpts = "a:cde:f:ghi:jkl:m:nop:qr:st:u:w:AB:D:EF:IKMNO:P:S:U:VW:";
+  char* theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKMNO:P:S:U:VW:";
 #endif
   int opt;
 
@@ -369,6 +372,10 @@ static int parseOptions(int argc, char* argv []) {
     case 'a': /* ntop access log path */
       stringSanityCheck(optarg);
       myGlobals.accessLogPath = strdup(optarg);
+      break;
+
+    case 'b': /* Disable protocol decoders */
+      myGlobals.enablePacketDecoding = 0;
       break;
 
       /* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
@@ -408,16 +415,6 @@ static int parseOptions(int argc, char* argv []) {
 
     case 'o':                          /* Do not trust MAC addresses */
       myGlobals.dontTrustMACaddr = 1;
-      break;
-
-    case 'j':
-      /*
-       * In this mode ntop sniffs from an interface on which
-       * the traffic has been mirrored hence:
-       * - MAC addresses are not used at all but just IP addresses
-       * - ARP packets are not handled
-       */
-      myGlobals.borderSnifferMode = 1;
       break;
 
     case 'k':                  /* update info of used kernel filter expression in extra frame */
@@ -504,6 +501,10 @@ static int parseOptions(int argc, char* argv []) {
       } else
 	myGlobals.webPort = atoi(optarg);
       break;
+
+     case 'z':
+       myGlobals.enableSessionHandling = 0;
+       break;
 
      case 'A':
        setAdminPw = 1;

@@ -562,9 +562,8 @@ void printTrafficStatistics() {
     /* ************************ */
 
 #ifdef HAVE_GDCHART
-    if(!myGlobals.borderSnifferMode)
-      sendString("<TR><TH "TH_BG">Remote Hosts Distance</TH><TD "TH_BG">"
-		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
+    sendString("<TR><TH "TH_BG">Remote Hosts Distance</TH><TD "TH_BG">"
+	       "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
 #endif /* HAVE_GDCHART */
 
     /* ********************* */
@@ -2312,12 +2311,6 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
  if(mode == SHORT_FORMAT) {
    printSectionTitle("IP Protocol Distribution");
 
-   /*
-     if(myGlobals.borderSnifferMode) {
-     printNotAvailable();
-     return;
-     }
-   */
 #ifdef HAVE_GDCHART
    sendString("<CENTER><IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p>\n</CENTER>\n");
 #endif
@@ -2963,11 +2956,6 @@ void printIpTrafficMatrix(void) {
   Counter avgTrafficLow, avgTrafficHigh, tmpCounter;
 
   printHTMLheader("IP Subnet Traffic Matrix", 0);
-
-  if(myGlobals.borderSnifferMode) {
-    printNotAvailable();
-    return;
-  }
 
   activeHosts = (short*)malloc(sizeof(short)*myGlobals.device[myGlobals.actualReportDeviceId].numHosts);
 

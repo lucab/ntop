@@ -1095,16 +1095,9 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
     int j;
 
-    for(j=0; j<=myGlobals.borderSnifferMode; j++) {
-      if(myGlobals.borderSnifferMode && (j == 0)) {
-	if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/j_%s",
-		    myGlobals.dataFileDirs[idx], pageName) < 0)
-	  BufferTooShort();
-      } else {
-	if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
-		    myGlobals.dataFileDirs[idx], pageName) < 0)
-	  BufferTooShort();
-      }
+    if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
+		myGlobals.dataFileDirs[idx], pageName) < 0)
+      BufferTooShort();
 	
       /* traceEvent(TRACE_ERROR, "Searching '%s'\n", tmpStr); */
 	
@@ -1125,7 +1118,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	traceEvent(TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
       }
     }
-  }
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "DEBUG: tmpStr=%s - fd=0x%x\n", tmpStr, fd);
