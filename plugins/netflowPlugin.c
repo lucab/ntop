@@ -33,8 +33,34 @@ static ProbeInfo probeList[MAX_NUM_PROBES];
 /* Forward */
 static void setNetFlowInSocket();
 static void setNetFlowOutSocket();
+static void setInterfaceMatrix();
 
-/* ****************************** */
+/* ************************************************** */
+
+static void setInterfaceMatrix() {
+  /* 
+     Use the interface 0 as default.
+     We'll need to add a new field into the netflow preferences to specify
+     the local network for this interface
+  */
+  myGlobals.device[myGlobals.netFlowDeviceId].numHosts       = 0xFFFFFFFF - myGlobals.netFlowIfMask.s_addr+1;
+  myGlobals.device[myGlobals.netFlowDeviceId].network.s_addr = myGlobals.netFlowIfAddress.s_addr;
+  myGlobals.device[myGlobals.netFlowDeviceId].netmask.s_addr = myGlobals.netFlowIfMask.s_addr;
+  if(myGlobals.device[myGlobals.netFlowDeviceId].numHosts > MAX_SUBNET_HOSTS) {
+    myGlobals.device[myGlobals.netFlowDeviceId].numHosts = MAX_SUBNET_HOSTS;
+    traceEvent(CONST_TRACE_WARNING, "Truncated network size (device %s) to %d hosts (real netmask %s)",
+	       myGlobals.device[myGlobals.netFlowDeviceId].name, myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
+	       intoa(myGlobals.device[myGlobals.netFlowDeviceId].netmask));
+  }
+    
+  myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*
+										       myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
+										       sizeof(TrafficEntry*));
+  myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
+												  myGlobals.device[myGlobals.netFlowDeviceId].numHosts);      
+}
+
+/* ************************************** */
 
 static void setNetFlowInSocket() {
   struct sockaddr_in sockIn;
@@ -68,21 +94,7 @@ static void setNetFlowInSocket() {
 
   if((myGlobals.netFlowInPort > 0) && (myGlobals.netFlowDeviceId == 0)) {
     myGlobals.netFlowDeviceId = createDummyInterface("NetFlow-device");
-
-    /* 
-       Use the interface 0 as default.
-       We'll need to add a new field into the netflow preferences to specify
-       the local network for this interface
-    */
-    myGlobals.device[myGlobals.netFlowDeviceId].numHosts       = myGlobals.device[0].numHosts;
-    myGlobals.device[myGlobals.netFlowDeviceId].network.s_addr = myGlobals.device[0].network.s_addr;
-    myGlobals.device[myGlobals.netFlowDeviceId].netmask.s_addr = myGlobals.device[0].netmask.s_addr;
-
-    myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*
-											 myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
-											 sizeof(TrafficEntry*));
-    myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-												    myGlobals.device[myGlobals.netFlowDeviceId].numHosts);      
+    setInterfaceMatrix(0);
   }
   myGlobals.mergeInterfaces = 0; /* Use different devices */
 }
@@ -449,7 +461,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 /* ****************************** */
 
 static void initNetFlowFunct(void) {
-  int i;
+  int i, a, b, c, d, a1, b1, c1, d1;
   char key[256], value[256];
 
 #ifdef CFG_MULTITHREADED
@@ -461,13 +473,22 @@ static void initNetFlowFunct(void) {
   else
     myGlobals.netFlowInPort = atoi(value);
 
-  setNetFlowInSocket();
-
   if(fetchPrefsValue("netFlow.netFlowDest", value, sizeof(value)) == -1)
     storePrefsValue("netFlow.netFlowDest", "0");
   else
     myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
 
+  if((fetchPrefsValue("netFlow.ifNetMask", value, sizeof(value)) == -1)
+     || (sscanf(value, "%d.%d.%d.%d%%2F%d.%d.%d.%d", &a, &b, &c, &d, &a1, &b1, &c1, &d1) != 8)) {
+    storePrefsValue("netFlow.ifNetMask", "192.168.0.0/255.255.255.0");
+    myGlobals.netFlowIfAddress.s_addr = 0xC0A80000;
+    myGlobals.netFlowIfMask.s_addr    = 0xFFFFFF00;
+  } else {
+    myGlobals.netFlowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
+    myGlobals.netFlowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
+  }
+
+  setNetFlowInSocket();
   setNetFlowOutSocket();
 
   if(fetchPrefsValue("netFlow.debug", value, sizeof(value)) == -1) {
@@ -508,7 +529,7 @@ static void initNetFlowFunct(void) {
 /* ****************************** */
 
 static void handleNetflowHTTPrequest(char* url) {
-  char buf[512];
+  char buf[512], buf1[32], buf2[32];
   int i, numEnabled = 0;
   struct in_addr theDest;
 
@@ -531,6 +552,16 @@ static void handleNetflowHTTPrequest(char* url) {
       } else if(strcmp(device, "debug") == 0) {
 	myGlobals.netFlowDebug = atoi(value);
 	storePrefsValue("netFlow.debug", value);
+      } else if(strcmp(device, "ifNetMask") == 0) {
+	int a, b, c, d, a1, b1, c1, d1;
+	
+	if(sscanf(value, "%d.%d.%d.%d%%2F%d.%d.%d.%d", 
+		  &a, &b, &c, &d, &a1, &b1, &c1, &d1) == 8) {
+	  myGlobals.netFlowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
+	  myGlobals.netFlowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
+	  storePrefsValue("netFlow.ifNetMask", value);
+	} else
+	  traceEvent(CONST_TRACE_INFO, "Parse Error (%s)", value);
       } else if(strcmp(device, "collectorIP") == 0) {
 	storePrefsValue("netFlow.netFlowDest", value);
 	myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
@@ -566,7 +597,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<table border=0>\n<tr><td><table border>");
 
-  sendString("<TR "TR_ON"><TH "TH_BG">Incoming Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Incoming Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Local Collector UDP Port:</td><td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.netFlowInPort) < 0)
@@ -576,9 +607,24 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("> <br>[default port is "DEFAULT_NETFLOW_PORT_STR"]</td><td>"
 	     "<INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
+  if(myGlobals.netFlowInPort != 0) {
+    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Virtual NetFlow Interface</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+	       "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
+    
+    if(snprintf(buf, sizeof(buf), "%s/%s", 
+		_intoa(myGlobals.netFlowIfAddress, buf1, sizeof(buf1)),
+		_intoa(myGlobals.netFlowIfMask, buf2, sizeof(buf2))) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    sendString("\"><br>Format: digit.digit.digit.digit/digit.digit.digit.digit\n"
+	       "<BR>NOTE: all changes will be available at ntop restart\n"
+	       "</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+  }
+
   /* *************************************** */
 
-  sendString("<TR "TR_ON"><TH "TH_BG">Outgoing Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Outgoing Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Remote Collector IP Address</td> "
 	     "<td "TD_BG"><INPUT NAME=collectorIP SIZE=15 VALUE=");
 
@@ -587,7 +633,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString(">:2055</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG">Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
 	     "<FORM ACTION=/plugins/NetFlow METHOD=GET>");
   if(myGlobals.netFlowDebug) {
     sendString("<INPUT TYPE=radio NAME=debug VALUE=1 CHECKED>On");
@@ -618,7 +664,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   printHTMLheader("Flow Export Preferences", 0);
   sendString("<TABLE BORDER>\n");
-  sendString("<TR "TR_ON"><TH "TH_BG">Interface Name</TH><TH "TH_BG">NetFlow Enabled</TH></TR>\n");
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Interface Name</TH><TH "TH_BG">NetFlow Enabled</TH></TR>\n");
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(!myGlobals.device[i].virtualDevice) {

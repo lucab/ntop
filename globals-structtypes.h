@@ -1766,6 +1766,7 @@ XML*/
   u_char netFlowDebug;
   int netFlowOutSocket;
   u_int32_t globalFlowSequence, globalFlowPktCount;
+  struct in_addr netFlowIfAddress, netFlowIfMask;
   NetFlow5Record theRecord;
   struct sockaddr_in netFlowDest;
   /* Flow reception */
