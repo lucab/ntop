@@ -439,6 +439,7 @@ typedef struct hostTraffic {
   char             ethAddressString[18];
   char             hostNumIpAddress[17], *fullDomainName;
   char             *dotDomainName, hostSymIpAddress[MAX_LEN_SYM_HOST_NAME], *osName;
+  u_short          dotDomainNameIsFallback;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
 

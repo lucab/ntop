@@ -295,7 +295,7 @@ static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag) {
   static char buf[5][2*LEN_GENERAL_WORK_BUFFER];
-  char symIp[256], *tmpStr, linkName[256], flag[128], colorSpec[64];
+  char symIp[256], *tmpStr, linkName[256], flag[256], colorSpec[64];
   char *dynIp, *p2p;
   char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
   short specialMacAddress = 0;
@@ -547,9 +547,9 @@ char* getHostCountryIconURL(HostTraffic *el) {
     BufferTooShort();
 
   if(stat(path, &buf) == 0)
-    ret = getCountryIconURL(el->fullDomainName);
+    ret = getCountryIconURL(el->fullDomainName, FALSE);
   else
-    ret = getCountryIconURL(el->dotDomainName);
+    ret = getCountryIconURL(el->dotDomainName, el->dotDomainNameIsFallback);
 
   if(ret == NULL)
     ret = "&nbsp;";
@@ -559,7 +559,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
 /* ************************ */
 
-char* getCountryIconURL(char* domainName) {
+char* getCountryIconURL(char* domainName, u_short fullDomainNameIsFallback) {
   if((domainName == NULL) || (domainName[0] == '\0')) {
     /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
     return("&nbsp;");
@@ -582,8 +582,13 @@ char* getCountryIconURL(char* domainName) {
     }
 
     if(snprintf(flagBuf, sizeof(flagBuf),
-		"<IMG ALT=\"Flag for domain %s\" ALIGN=MIDDLE SRC=\"/statsicons/flags/%s.gif\" BORDER=0>",
-		domainName, domainName) < 0) BufferTooShort();
+		"<IMG ALT=\"Flag for (ISO 3166 code) %s %s\" ALIGN=MIDDLE SRC=\"/statsicons/flags/%s.gif\" BORDER=0>%s",
+		domainName,
+                fullDomainNameIsFallback == TRUE ? 
+                     "(Guessing from gTLD/ccTLD)" :
+                     "(from p2c file)",
+                domainName,
+                fullDomainNameIsFallback == TRUE ? " (?)" : "") < 0) BufferTooShort();
 
     return(flagBuf);
   }
