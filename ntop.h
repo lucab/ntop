@@ -193,13 +193,13 @@ int getdomainname(char *name, size_t len);
 
 #if defined(HAVE_CRYPT_H)
 /* Fix courtesy of Charles M. Gagnon <charlesg@unixrealm.com> */
-# if defined(HAVE_OPENSSL)
-#  define des_encrypt MOVE_AWAY_des_encrypt
-#  include <crypt.h>
-#  undef des_encrypt
-# else
-#  include <crypt.h>
-# endif
+#if defined(HAVE_OPENSSL)
+#define des_encrypt MOVE_AWAY_des_encrypt
+#include <crypt.h>
+#undef des_encrypt
+#else
+#include <crypt.h>
+#endif
 #endif
 
 /*
@@ -388,12 +388,12 @@ int getdomainname(char *name, size_t len);
   do not define it
 */
 
-# ifndef ETHERTYPE_QNX
-#  define ETHERTYPE_QNX       0x8203
-# endif
-# ifndef ETHERTYPE_IPv6
-#  define ETHERTYPE_IPv6        0x86DD
-# endif
+#ifndef ETHERTYPE_QNX
+#define ETHERTYPE_QNX       0x8203
+#endif
+#ifndef ETHERTYPE_IPv6
+#define ETHERTYPE_IPv6        0x86DD
+#endif
 
 #ifndef ETHERMTU
 #define ETHERMTU  1500
@@ -427,9 +427,10 @@ int getdomainname(char *name, size_t len);
 #endif
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
-#endif
-#ifdef HAVE_SYSLOG_H
+#else
+#ifdef HAVE_SYS_SYSLOG_H
 #include <sys/syslog.h>
+#endif
 #endif
 
 #ifndef DEFAULT_SYSLOG_FACILITY
@@ -466,7 +467,6 @@ RETSIGTYPE (*setsignal(int, RETSIGTYPE (*)(int)))(int);
 #endif
 
 #if defined(WIN32) && !defined(__GNUC__)
-/*#include "ntop_win32.h"*/
 #define n_short short
 #define n_time time_t
 
