@@ -59,6 +59,7 @@ typedef struct ntopGlobals {
   char *program_name;           /* The name the program was run with, stripped of any leading path */
   int ntop_argc;                /* # of command line arguments */
   char **ntop_argv;             /* vector of command line arguments */
+  char *pwd;                    /* PWD */
 
   /* command line options */
 
@@ -146,36 +147,27 @@ typedef struct ntopGlobals {
 
 #endif /* ! USE_SEMAPHORES */
 
-
   /*
-   * (1) - NPA - Network Packet Analyzer (main thread)
+   * NPA - Network Packet Analyzer (main thread)
    */
   PthreadMutex packetQueueMutex;
   pthread_t dequeueThreadId;
 
   /*
-   * (2) - HTS - Host Traffic Statistics
+   * HTS - Host Traffic Statistics
    */
   PthreadMutex hostsHashMutex;
   pthread_t hostTrafficStatsThreadId;
 
-  /*
-   * (3) - TU - Throughput Update - optional
-   */
-  pthread_t thptUpdateThreadId;
-
-  /*
-   * (4) - SIH - Scan Idle Hosts - optional
-   */
   pthread_t scanIdleThreadId;
 
   /*
-   * (5) - DBU - DB Update - optional
+   * DBU - DB Update - optional
    */
   pthread_t dbUpdateThreadId;
 
   /*
-   * (6) - AR - Address Resolution - optional
+   * AR - Address Resolution - optional
    */
 #ifdef ASYNC_ADDRESS_RESOLUTION
   PthreadMutex addressResolutionMutex;
@@ -183,12 +175,12 @@ typedef struct ntopGlobals {
 #endif
 
   /*
-   * (7) - Purge idle host - optional
+   * Purge idle host - optional
    */
   pthread_t purgeAddressThreadId;
 
   /*
-   * (8) - Helper application lsof - optional
+   * Helper application lsof - optional
    */
   PthreadMutex lsofMutex;
   pthread_t lsofThreadId;
@@ -274,7 +266,6 @@ typedef struct ntopGlobals {
    * local variables
    */
   int enableDBsupport;   /* Database support disabled by default             */
-  int enableThUpdate;    /* Throughput Update support enabled by default     */
   int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
   
   char *localAddresses, *protoSpecs;

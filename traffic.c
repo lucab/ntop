@@ -167,7 +167,7 @@ static void updateThptStats(int deviceToUpdate,
 
 /* ******************************* */
 
-static void updateDeviceThpt(int deviceToUpdate) {
+void updateDeviceThpt(int deviceToUpdate) {
   time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime;
   u_int idx;
   HostTraffic *el;
@@ -180,6 +180,10 @@ static void updateDeviceThpt(int deviceToUpdate) {
     u_int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;
     u_int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
     short updateMinThpt, updateHourThpt;
+
+#ifndef DEBUG
+  traceEvent(TRACE_INFO, "updateDeviceStats() called.");
+#endif
     
     totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
 
@@ -198,7 +202,8 @@ static void updateDeviceThpt(int deviceToUpdate) {
     }
 
     for(idx=1; idx<myGlobals.device[deviceToUpdate].actualHashSize; idx++) {
-      if((el = myGlobals.device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
+      if(((el = myGlobals.device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) 
+	 && (el->numUses > 0)) {
 	if(broadcastHost(el))
 	  continue;
 
@@ -455,6 +460,10 @@ static void updateDeviceThpt(int deviceToUpdate) {
 
     myGlobals.device[deviceToUpdate].lastThptUpdate = myGlobals.actTime;
   }
+
+#ifndef DEBUG
+  traceEvent(TRACE_INFO, "updateDeviceStats() completed.");
+#endif
 }
 
 /* ******************************* */
@@ -462,11 +471,15 @@ static void updateDeviceThpt(int deviceToUpdate) {
 void updateThpt(void) {
   int i;
 
+#ifndef DEBUG
+  traceEvent(TRACE_INFO, "updateThpt() called");
+#endif
+
   if(myGlobals.mergeInterfaces)
     updateDeviceThpt(0);
   else {
     for(i=0; i<myGlobals.numDevices; i++)
-      updateDeviceThpt(i);  
+      updateDeviceThpt(i);
   }
 }
 
@@ -488,7 +501,7 @@ static void updateHostThpt(HostTraffic *el, int hourId) {
 
 /* ******************************* */
 
-static void updateHostsDeviceThpt(int deviceToUpdate, int hourId) {
+void updateHostsDeviceThpt(int deviceToUpdate, int hourId) {
   u_int idx;
   HostTraffic *el;
   
@@ -496,19 +509,6 @@ static void updateHostsDeviceThpt(int deviceToUpdate, int hourId) {
     if((el = myGlobals.device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
       updateHostThpt(el, hourId);
     }
-  }
-}
-
-/* ******************************* */
-
-void updateHostTrafficStatsThpt(int hourId) {
-  int i;
-
-  if(myGlobals.mergeInterfaces)
-    updateHostsDeviceThpt(0, hourId);
-  else {
-    for(i=0; i<myGlobals.numDevices; i++)
-      updateHostsDeviceThpt(i, hourId);  
   }
 }
 

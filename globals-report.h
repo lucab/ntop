@@ -242,3 +242,20 @@ extern char *makeHostLink(HostTraffic *el, short mode,
                           short cutName, short addCountryFlag);
 
 extern char *getHostName(HostTraffic *el, short cutName);
+
+/* graph.c */
+extern void sendGraphFile(char* fileName);
+extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
+extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
+extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);
+extern void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent);
+extern void pktSizeDistribPie(void);
+extern void pktTTLDistribPie(void);
+extern void ipProtoDistribPie(void);
+extern void interfaceTrafficPie(void);
+extern void pktCastDistribPie(void);
+extern void drawTrafficPie(void);
+extern void drawThptGraph(int sortedColumn);
+extern void drawGlobalProtoDistribution(void);
+extern void drawGlobalIpProtoDistribution(void);
+extern void drawHostsDistanceGraph();

@@ -66,23 +66,6 @@ extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
                              unsigned int nminutes);
 extern char* formatPkts(TrafficCounter pktNr);
 
-/* graph.c */
-extern void sendGraphFile(char* fileName);
-extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
-extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
-extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);
-extern void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent);
-extern void pktSizeDistribPie(void);
-extern void pktTTLDistribPie(void);
-extern void ipProtoDistribPie(void);
-extern void interfaceTrafficPie(void);
-extern void pktCastDistribPie(void);
-extern void drawTrafficPie(void);
-extern void drawThptGraph(int sortedColumn);
-extern void drawGlobalProtoDistribution(void);
-extern void drawGlobalIpProtoDistribution(void);
-extern void drawHostsDistanceGraph();
-
 /* hash.c */
 extern int retrieveHost(HostSerial theSerial, HostTraffic *el);
 extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
@@ -243,10 +226,11 @@ extern void termIPSessions(void);
 
 /* traffic.c */
 extern void updateThpt(void);
+extern void updateHostsDeviceThpt(int deviceToUpdate, int hourId);
+extern void updateDeviceThpt(int deviceToUpdate);
 extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
                                 TrafficCounter length, int actualDeviceId);
 extern void updateDbHostsTraffic(int deviceToUpdate);
-extern void updateHostTrafficStatsThpt(int hourId);
 extern int isInitialHttpData(char* packetData);
 extern int isInitialSshData(char* packetData);
 extern int isInitialFtpData(char* packetData);
@@ -360,6 +344,7 @@ extern char *xstrncpy(char *dest, const char *src, size_t n);
 extern int fetchPrefsValue(char *key, char *value, int valueLen);
 extern void storePrefsValue(char *key, char *value);
 extern int guessHops(HostTraffic *el);
+extern int ntop_sleep(int secs);
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

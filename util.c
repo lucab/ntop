@@ -1,9 +1,8 @@
-/*
+/**
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
  * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
- *                         Portions by Stefano Suin <stefano@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -190,7 +189,7 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 
 unsigned short isLocalAddress(struct in_addr *addr) {
   int i;
-  
+
   for(i=0; i<myGlobals.numDevices; i++)
     if((addr->s_addr & myGlobals.device[i].netmask.s_addr) == myGlobals.device[i].network.s_addr) {
 #ifdef ADDRESS_DEBUG
@@ -199,9 +198,9 @@ unsigned short isLocalAddress(struct in_addr *addr) {
       return 1;
     }
 
-  if(myGlobals.trackOnlyLocalHosts) 
+  if(myGlobals.trackOnlyLocalHosts)
     return(0);
-  
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "%s is %s\n", intoa(*addr),
 	     isLocalAddress (addr) ? "pseudolocal" : "remote");
@@ -215,7 +214,7 @@ unsigned short isLocalAddress(struct in_addr *addr) {
 unsigned short isPrivateAddress(struct in_addr *addr) {
 
   /* See http://www.isi.edu/in-notes/rfc1918.txt */
-  
+
   /* Fixes below courtesy of Wies-Software <wies@wiessoft.de> */
   if(((addr->s_addr & 0xFF000000) == 0x0A000000)    /* 10/8      */
      || ((addr->s_addr & 0xFFF00000) == 0xAC100000) /* 172.16/12  */
@@ -374,7 +373,7 @@ void handleLocalAddresses(char* addresses) {
     char *mask = strchr(address, '/');
 
     if(mask == NULL)
-      traceEvent(TRACE_INFO, "Unknown network '%s' (empty mask!). It has been ignored.\n", 
+      traceEvent(TRACE_INFO, "Unknown network '%s' (empty mask!). It has been ignored.\n",
 		 address);
     else {
       u_int32_t network, networkMask, broadcast;
@@ -393,7 +392,7 @@ void handleLocalAddresses(char* addresses) {
 
       if(bits == INVALIDNETMASK) {
 	/* malformed netmask specification */
-	traceEvent(TRACE_ERROR, 
+	traceEvent(TRACE_ERROR,
 		   "The specified netmask %s is not valid. Skipping it..\n",
 		   mask);
 	address = strtok_r(NULL, ",", &strtokState);
@@ -427,7 +426,7 @@ void handleLocalAddresses(char* addresses) {
 		   a, b, c, d, bits, network, networkMask);
       }
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "%d.%d.%d.%d/%d [0x%08x/0x%08x]\n", 
+      traceEvent(TRACE_INFO, "%d.%d.%d.%d/%d [0x%08x/0x%08x]\n",
 		 a, b, c, d, bits, network, networkMask);
 #endif
 
@@ -473,7 +472,7 @@ void handleLocalAddresses(char* addresses) {
     address = strtok_r(NULL, ",", &strtokState);
   }
 
-  /* Not used anymore */  
+  /* Not used anymore */
   free(myGlobals.localAddresses);
   myGlobals.localAddresses = NULL;
 }
@@ -518,8 +517,8 @@ unsigned short _pseudoLocalAddress(struct in_addr *addr) {
    as specified using the 'm' flag */
 unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   int i;
-  
-  if(myGlobals.trackOnlyLocalHosts) 
+
+  if(myGlobals.trackOnlyLocalHosts)
     return(0);
 
   i = isLocalAddress(addr);
@@ -528,16 +527,16 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
 #ifdef ADDRESS_DEBUG
     traceEvent(TRACE_WARNING, "%s is local\n", intoa(*addr));
 #endif
-      
+
     return 1; /* This is a real local address */
   }
 
   if(_pseudoLocalAddress(addr))
     return 1;
 
-  /* 
+  /*
      We don't check for broadcast as this check has been
-     performed already by isLocalAddress() just called 
+     performed already by isLocalAddress() just called
   */
 
 #ifdef ADDRESS_DEBUG
@@ -604,7 +603,7 @@ int32_t gmt2local(time_t t) {
   if(dir == 0)
     dir = myloc->tm_yday - gmt->tm_yday;
   dt += dir * 24 * 60 * 60;
-  
+
   return(dt);
 }
 
@@ -632,7 +631,7 @@ void handleFlowsSpecs() {
       fclose(fd);
       traceEvent(TRACE_INFO, "Error while stat() of %s\n", flows);
 
-      /* Not used anymore */  
+      /* Not used anymore */
       free(myGlobals.flowSpecs);
       myGlobals.flowSpecs = NULL;
       return;
@@ -707,7 +706,7 @@ void handleFlowsSpecs() {
 			   "It has been ignored.\n", flowSpec);
                 free(newFlow);
 
-		/* Not used anymore */  
+		/* Not used anymore */
 		free(myGlobals.flowSpecs);
 		myGlobals.flowSpecs = NULL;
                 return;
@@ -730,7 +729,7 @@ void handleFlowsSpecs() {
   if(buffer != NULL)
     free(buffer);
 
-  /* Not used anymore */  
+  /* Not used anymore */
   free(myGlobals.flowSpecs);
   myGlobals.flowSpecs = NULL;
 }
@@ -784,17 +783,17 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
 #ifdef DEBUG
   {
     int numHosts;
-    
+
     if(ioctl(fd, SIOCGIFNETMASK, (char*)&ifr) >= 0) {
-      sin = (struct sockaddr_in *)&ifr.ifr_broadaddr;  
+      sin = (struct sockaddr_in *)&ifr.ifr_broadaddr;
       numHosts = 0xFFFFFFFF - ntohl(sin->sin_addr.s_addr)+1;
-    } else 
+    } else
       numHosts = 256; /* default C class */
-    
+
     traceEvent(TRACE_INFO, "Num subnet hosts: %d\n", numHosts);
   }
 #endif
-    
+
   /* ******************************* */
 
 close(fd);
@@ -856,7 +855,7 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
      ************************************************* */
 
-  pthread_mutexattr_settype (&(mutexId->mutex), 
+  pthread_mutexattr_settype (&(mutexId->mutex),
 			     PTHREAD_MUTEX_ERRORCHECK_NP);
 
 #endif /* PTHREAD_MUTEX_ERRORCHECK_NP */
@@ -871,11 +870,11 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   if(!mutexId->isInitialized) {
-    traceEvent(TRACE_ERROR, 
+    traceEvent(TRACE_ERROR,
 	       "ERROR: deleteMutex() call with a NULL mutex [%s:%d]\n",
 	       fileName, fileLine);
     return;
-  }  
+  }
 
   pthread_mutex_unlock(&(mutexId->mutex));
   pthread_mutex_destroy(&(mutexId->mutex));
@@ -890,12 +889,12 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   int rc;
 
   if(!mutexId->isInitialized) {
-    traceEvent(TRACE_ERROR, 
+    traceEvent(TRACE_ERROR,
 	       "ERROR: accessMutex() call with a NULL mutex [%s:%d]\n",
 	       fileName, fileLine);
     return(-1);
   }
-  
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
 	     &(mutexId->mutex), where, fileName, fileLine);
@@ -930,12 +929,12 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   int rc;
 
   if(!mutexId->isInitialized) {
-    traceEvent(TRACE_ERROR, 
+    traceEvent(TRACE_ERROR,
 	       "ERROR: tryLockMutex() call with a NULL mutex [%s:%d]\n",
 	       fileName, fileLine);
     return(-1);
   }
-  
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
 	     mutexId, where, fileName, fileLine);
@@ -971,12 +970,12 @@ int _isMutexLocked(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
   if(!mutexId->isInitialized) {
-    traceEvent(TRACE_ERROR, 
+    traceEvent(TRACE_ERROR,
 	       "ERROR: isMutexLocked() call with a NULL mutex [%s:%d]\n",
 	       fileName, fileLine);
     return(-1);
   }
-  
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Checking whether 0x%X is locked [%s:%d]\n",
 	     &(mutexId->mutex), fileName, fileLine);
@@ -1005,12 +1004,12 @@ int _releaseMutex(PthreadMutex *mutexId,
   int rc;
 
   if(!mutexId->isInitialized) {
-    traceEvent(TRACE_ERROR, 
+    traceEvent(TRACE_ERROR,
 	       "ERROR: releaseMutex() call with a NULL mutex [%s:%d]\n",
 	       fileName, fileLine);
     return(-1);
   }
-  
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
 	     &(mutexId->mutex), fileName, fileLine);
@@ -1226,7 +1225,7 @@ void readLsofInfo(void) {
 	break;
     } else {
 
-      if((errno == 4 /* Interrupted system call */) 
+      if((errno == 4 /* Interrupted system call */)
 	 && (numRetries < 3) /* Avoid to loop */) {
 	numRetries++;
       } else {
@@ -1334,7 +1333,7 @@ void readLsofInfo(void) {
     }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n", 
+    traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n",
 	       command, user, thePort, portNr, portNumber);
 #endif
 
@@ -1354,7 +1353,7 @@ void readLsofInfo(void) {
 	myGlobals.processes = swapProcesses;
 
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", 
+	traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n",
 		   myGlobals.numProcesses, command, user, portNr, portNumber);
 #endif
 	myGlobals.processes[myGlobals.numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
@@ -1367,11 +1366,11 @@ void readLsofInfo(void) {
 	myGlobals.processes[myGlobals.numProcesses]->bytesSent           = 0;
 	myGlobals.processes[myGlobals.numProcesses]->bytesRcvd           = 0;
 	myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersIdx = 0;
-	
+
 	for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
 	  myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersIndexes[floater] = NO_PEER;
       }
-      
+
       idx = myGlobals.numProcesses;
       myGlobals.numProcesses++;
     } else
@@ -1449,27 +1448,27 @@ RETSIGTYPE (*setsignal (int sig, RETSIGTYPE (*func)(int)))(int)
 
 /* ************************************ */
 
-char* decodeNBstring(char* theString, char *theBuffer) {  
+char* decodeNBstring(char* theString, char *theBuffer) {
   int i=0, j = 0, len=strlen(theString);
-  
+
   while((i<len) && (theString[i] != '\0')) {
     char encodedChar, decodedChar;
-      
+
     encodedChar =  theString[i++];
     if((encodedChar < 'A') || (encodedChar > 'Z')) break; /* Wrong character */
-    
+
     encodedChar -= 'A';
     decodedChar = encodedChar << 4;
-    
+
     encodedChar =  theString[i++];
     if((encodedChar < 'A') || (encodedChar > 'Z')) break; /* Wrong character */
-    
+
     encodedChar -= 'A';
     decodedChar |= encodedChar;
-    
+
     theBuffer[j++] = decodedChar;
   }
-  
+
   theBuffer[j] = '\0';
 
   for(i=0; i<j; i++)
@@ -1676,7 +1675,7 @@ int name_interpret(char *in, char *out, int numBytes) {
     traceEvent(TRACE_WARNING, "WARNING: name_interpret error (numBytes=%d)", numBytes);
     return(-1);
   }
-  
+
   len = (*in++)/2;
   b  = out;
   *out=0;
@@ -1783,7 +1782,7 @@ void storeHostTrafficInstance(HostTraffic *el) {
 
   /*
     Before to store the instance all the pointers need
-    to be deleted (i.e. set to NULL)    
+    to be deleted (i.e. set to NULL)
   */
   resetHostsVariables(el);
 
@@ -1816,7 +1815,7 @@ void resetHostsVariables(HostTraffic* el) {
 
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
-  resetUsageCounter(&el->contactedRouters); 
+  resetUsageCounter(&el->contactedRouters);
 
   el->fullDomainName = NULL;
   el->dotDomainName = NULL;
@@ -1827,7 +1826,7 @@ void resetHostsVariables(HostTraffic* el) {
   el->nbDescr = NULL; /* Fix courtesy of Francis Pintos <francis@arhl.com.hk> */
   el->atNodeName = NULL;
   memset(el->atNodeType, 0, sizeof(el->atNodeType));
-  el->routedTraffic = NULL;  
+  el->routedTraffic = NULL;
   el->ipxHostName = NULL;
   el->numIpxNodeTypes = 0;
   el->portsUsage = NULL;
@@ -1991,7 +1990,7 @@ long delta_time (struct timeval * now,
   delta_seconds      = now -> tv_sec  - before -> tv_sec;
   delta_microseconds = now -> tv_usec - before -> tv_usec;
 
-  if(delta_microseconds < 0) { 
+  if(delta_microseconds < 0) {
     /* manually carry a one from the seconds field */
     delta_microseconds += 1000000;  /* 1e6 */
     -- delta_seconds;
@@ -2019,7 +2018,7 @@ time_t getTimeMapping(u_int16_t transactionId,
      Actually the hash is scanned completely
      if (unlikely but possible) the searched entry
      is not present into the table.
-     
+
      **************************************** */
 
   for(i=0; i<NUM_TRANSACTION_ENTRIES; i++) {
@@ -2049,31 +2048,32 @@ void traceEvent(int eventTraceLevel, char* file,
   va_list va_ap;
   va_start (va_ap, format);
 
+  /* Fix courtesy of "Burton M. Strauss III" <BStrauss@acm.org> */
   if(eventTraceLevel <= myGlobals.traceLevel) {
     char theDate[32];
-    char buf[BUF_SIZE];  
+    char buf[BUF_SIZE];
     time_t theTime = time(NULL);
     struct tm t;
 
-    if(myGlobals.traceLevel >= DEFAULT_TRACE_LEVEL) {
-#ifndef WIN32  
+#ifndef WIN32
       if(myGlobals.useSyslog)
 	openlog("ntop", LOG_PID, LOG_DAEMON);
 #endif
 
 #ifdef WIN32
-	  if(1) {
+	  if(1)
 #else
-	  if(!myGlobals.useSyslog) {
+	  if(!myGlobals.useSyslog)
 #endif
-		  strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
+	    {
+	      strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
 
-	if(myGlobals.traceLevel == DETAIL_TRACE_LEVEL) {
-	  printf("%s [%s:%d] ", theDate, file, line);
-	} else {
-	  printf("%s ", theDate);
-	}
-      }
+	      if(myGlobals.traceLevel == DETAIL_TRACE_LEVEL) {
+		printf("%s [%s:%d] ", theDate, file, line);
+	      } else {
+		printf("%s ", theDate);
+	      }
+	    }
 
       memset(buf, 0, BUF_SIZE);
 #ifdef WIN32
@@ -2084,19 +2084,20 @@ void traceEvent(int eventTraceLevel, char* file,
 #endif
 
 #ifdef WIN32
-	  if(1) {
+	  if(1)
 #else
-      if(!myGlobals.useSyslog) {
+      if(!myGlobals.useSyslog)
 #endif
-	printf("%s", buf);	
+	{
+	printf("%s", buf);
 	if(format[strlen(format)-1] != '\n')
 	  printf("\n");
-      } 
+      }
 
       /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
 #ifndef WIN32
       else {
-#if 0 
+#if 0
 	switch(myGlobals.traceLevel) {
 	case 0:
 	  syslog(LOG_ERR, "%s", buf);
@@ -2120,7 +2121,6 @@ void traceEvent(int eventTraceLevel, char* file,
       va_end (va_ap);
       fflush(stdout);
     }
-  }
 
 #ifndef WIN32
   if(myGlobals.useSyslog)
@@ -2198,10 +2198,10 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
 
 /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 
-int getSniffedDNSName(char *hostNumIpAddress, 
+int getSniffedDNSName(char *hostNumIpAddress,
 		      char *name, int maxNameLen) {
   int found = 0;
-  
+
   name[0] = 0;
 
 #ifdef HAVE_GDBM_H
@@ -2237,7 +2237,7 @@ char *strtolower(char *s) {
     *s=tolower(*s);
     s++;
   }
-  
+
   return(s);
 }
 
@@ -2256,7 +2256,7 @@ char *xstrncpy(char *dest, const char *src, size_t n) {
     *dest = '\0';
     return r;
 }
- 
+
 /* *************************************** */
 
 int strOnlyDigits(const char *s) {
@@ -2521,7 +2521,7 @@ void setNBnodeNameType(HostTraffic *theHost,
 
   if(strlen(nbName) >= (MAX_HOST_SYM_NAME_LEN-1)) /* (**) */
     nbName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
-  
+
   theHost->nbNodeType = (char)nodeType;
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
 
@@ -2533,10 +2533,10 @@ void setNBnodeNameType(HostTraffic *theHost,
     if(theHost->nbHostName == NULL) {
       theHost->nbHostName = strdup(nbName);
       updateHostName(theHost);
-      
+
       if(theHost->hostSymIpAddress[0] == '\0')
 	strcpy(theHost->hostSymIpAddress, nbName); /* See up (**) */
-            
+
 #ifdef DEBUG
       printf("nbHostName=%s [0x%X]\n", nbName, nodeType);
 #endif
@@ -2549,7 +2549,7 @@ void setNBnodeNameType(HostTraffic *theHost,
       if(strcmp(nbName, "__MSBROWSE__") && strncmp(&nbName[2], "__", 2)) {
 	theHost->nbDomainName = strdup(nbName);
       }
-      break;      
+      break;
     }
   }
 
@@ -2771,7 +2771,7 @@ void resetUsageCounter(UsageCounter *counter) {
 void resetSecurityHostTraffic(HostTraffic *el) {
 
   if(el->secHostPkts == NULL) return;
-  
+
   resetUsageCounter(&el->secHostPkts->synPktsSent);
   resetUsageCounter(&el->secHostPkts->rstPktsSent);
   resetUsageCounter(&el->secHostPkts->rstAckPktsSent);
@@ -2826,7 +2826,7 @@ void resetSecurityHostTraffic(HostTraffic *el) {
   resetUsageCounter(&el->secHostPkts->icmpHostNetUnreachRcvd);
   resetUsageCounter(&el->secHostPkts->icmpProtocolUnreachRcvd);
   resetUsageCounter(&el->secHostPkts->icmpAdminProhibitedRcvd);
-  resetUsageCounter(&el->secHostPkts->malformedPktsRcvd); 
+  resetUsageCounter(&el->secHostPkts->malformedPktsRcvd);
 
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
@@ -2955,7 +2955,7 @@ void updateOSName(HostTraffic *el) {
 #undef incrementUsageCounter
 
 void _incrementUsageCounter(UsageCounter *counter,
-			    u_int peerIdx, int actualDeviceId, 
+			    u_int peerIdx, int actualDeviceId,
 			    char* file, int line) {
   u_int i, found=0;
   HostTraffic *theHost;
@@ -2970,7 +2970,7 @@ void _incrementUsageCounter(UsageCounter *counter,
     traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
 	       peerIdx, myGlobals.device[actualDeviceId].actualHashSize-1, file, line);
     return;
-  } 
+  }
 
   if(myGlobals.borderSnifferMode
      && ((peerIdx == myGlobals.broadcastEntryIdx)
@@ -3011,9 +3011,9 @@ void _incrementUsageCounter(UsageCounter *counter,
 int fetchPrefsValue(char *key, char *value, int valueLen) {
   datum key_data;
   datum data_data;
-  
+
   if((value == NULL) || (!myGlobals.capturePackets)) return;
-  
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering fetchPrefValue()");
 #endif
@@ -3042,7 +3042,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
 #endif
 
   memset(value, 0, valueLen);
-  
+
   if(data_data.dptr != NULL) {
     if(snprintf(value, valueLen, "%s", data_data.dptr) < 0)
       BufferTooShort();
@@ -3050,7 +3050,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
     free(data_data.dptr);
     /* traceEvent(TRACE_INFO, "Read %s=%s.", key, value); */
     return(0);
-  } else 
+  } else
     return(-1);
 }
 
@@ -3065,7 +3065,7 @@ void storePrefsValue(char *key, char *value) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering storePrefsValue()");
 #endif
-  
+
   memset(&key_data, 0, sizeof(key_data));
   key_data.dptr   = key;
   key_data.dsize  = strlen(key_data.dptr);
@@ -3073,7 +3073,7 @@ void storePrefsValue(char *key, char *value) {
   memset(&data_data, 0, sizeof(data_data));
   data_data.dptr  = value;
   data_data.dsize = strlen(value);
-  
+
   if(myGlobals.prefsFile == NULL) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving storePrefsValue()");
@@ -3120,7 +3120,7 @@ struct tm *localtime_r(const time_t *t, struct tm *tp) {
 
   theTime = localtime(t);
 
-  if(theTime != NULL) 
+  if(theTime != NULL)
     memcpy(tp, theTime, sizeof(struct tm));
   else
     memset(tp, 0, sizeof(struct tm)); /* What shall I do ? */
@@ -3148,3 +3148,11 @@ int guessHops(HostTraffic *el) {
   return(numHops);
 }
 
+/* ************************************ */
+
+ int ntop_sleep(int secs) {
+   int unsleptTime = secs;
+
+   while((unsleptTime = sleep(unsleptTime)) > 0)
+     ;
+ }

@@ -410,6 +410,8 @@ int initGlobalValues(void) {
      LOW_ACCURACY_LEVEL
   */
   
+  myGlobals.pwd = strdup(getenv("PWD"));
+
   switch(myAccuracy) {
   case HIGH_ACCURACY_LEVEL:
     myGlobals.enableSessionHandling = 1;
@@ -440,7 +442,6 @@ int initGlobalValues(void) {
     myGlobals.numDequeueThreads      = MAX_NUM_DEQUEUE_THREADS;
 #endif
     myGlobals.trackOnlyLocalHosts    = 1;
-    myGlobals.enableThUpdate         = 0;
     myGlobals.enableDBsupport        = 0;
   } else {
 #ifdef MULTITHREADED
@@ -598,36 +599,29 @@ void initThreads() {
 
 #endif
 
+  createMutex(&myGlobals.gdbmMutex);       /* data to synchronize thread access to db files */
+  createMutex(&myGlobals.hashResizeMutex); /* data to synchronize thread access to host hash table */
+  createMutex(&myGlobals.graphMutex);      /* data to synchronize thread access to graph generation */
+
   /*
    * Create the thread (1) - NPA - Network Packet Analyzer (main thread)
    */
   createMutex(&myGlobals.packetQueueMutex);
   createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
-  traceEvent(TRACE_INFO, "Started thread (%ld) for network packet analyser.\n",
+  traceEvent(TRACE_INFO, "Started thread (%ld) for network packet analyser.",
 	     myGlobals.dequeueThreadId);
 
   /*
    * Create the thread (2) - HTS - Host Traffic Statistics
    */
   createMutex(&myGlobals.hostsHashMutex);
-  createThread(&myGlobals.hostTrafficStatsThreadId, updateHostTrafficStatsThptLoop, NULL);
-  traceEvent(TRACE_INFO, "Started thread (%ld) for host traffic statistics.\n",
-	     myGlobals.hostTrafficStatsThreadId);
-
-  /*
-   * Create the thread (3) - TU - Throughput Update - optional
-   */
-  if (myGlobals.enableThUpdate) {
-    createThread(&myGlobals.thptUpdateThreadId, updateThptLoop, NULL);
-    traceEvent(TRACE_INFO, "Started thread (%ld) for throughput update.", myGlobals.thptUpdateThreadId);
-  }
 
   /*
    * Create the thread (4) - SIH - Scan Idle Hosts - optional
    */
   if (myGlobals.enableIdleHosts && (myGlobals.rFileName == NULL)) {
     createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
-    traceEvent(TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
+    traceEvent(TRACE_INFO, "Started thread (%ld) for idle hosts detection.",
 	       myGlobals.scanIdleThreadId);
   }
 
@@ -637,7 +631,8 @@ void initThreads() {
    */
   if (myGlobals.enableDBsupport) {
     createThread(&myGlobals.dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
-    traceEvent(TRACE_INFO, "Started thread (%ld) for DB update.\n", myGlobals.dbUpdateThreadId);
+    traceEvent(TRACE_INFO, "Started thread (%ld) for DB update.", 
+	       myGlobals.dbUpdateThreadId);
   }
 #endif /* MICRO_NTOP */
 
@@ -650,21 +645,17 @@ void initThreads() {
      */
     for(i=0; i<myGlobals.numDequeueThreads; i++) {
       createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, NULL);
-      traceEvent(TRACE_INFO, "Started thread (%ld) for DNS address resolution.\n",
+      traceEvent(TRACE_INFO, "Started thread (%ld) for DNS address resolution.",
 		 myGlobals.dequeueAddressThreadId[i]);
     }
 
     /*
-     * Create the thread (7) - Purge idle host
+     * Create the thread (7) - Purge old DB entries
      */
     createThread(&myGlobals.purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
     traceEvent(TRACE_INFO, "Started thread (%ld) for address purge.", myGlobals.purgeAddressThreadId);
   }
 #endif
-
-  createMutex(&myGlobals.gdbmMutex);       /* data to synchronize thread access to db files */
-  createMutex(&myGlobals.hashResizeMutex); /* data to synchronize thread access to host hash table */
-  createMutex(&myGlobals.graphMutex);      /* data to synchronize thread access to graph generation */
 
 #endif /* MULTITHREADED */
 
@@ -688,7 +679,7 @@ void initApps(void) {
      */
     createMutex(&myGlobals.lsofMutex);
     createThread(&myGlobals.lsofThreadId, periodicLsofLoop, NULL);
-    traceEvent(TRACE_INFO, "Started thread (%ld) for lsof support.\n", myGlobals.lsofThreadId);
+    traceEvent(TRACE_INFO, "Started thread (%ld) for lsof support.", myGlobals.lsofThreadId);
 #endif /* WIN32 */
 
 #else
@@ -810,7 +801,7 @@ void initDevices(char* devices) {
     tmpDev = pcap_lookupdev(ebuf);
 
     if(tmpDev == NULL) {
-      traceEvent(TRACE_INFO, "Unable to locate default interface (%s)\n", ebuf);
+      traceEvent(TRACE_INFO, "Unable to locate default interface (%s)", ebuf);
       exit(-1);
     }
 #endif

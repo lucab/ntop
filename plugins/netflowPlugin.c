@@ -296,7 +296,7 @@ static void initNetFlowFunct(void) {
       if(snprintf(key, sizeof(key),
 		  "netFlow.%s.exportNetFlow",
 		  myGlobals.device[i].name) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferTooShort();
 
       if(fetchPrefsValue(key, value, sizeof(value)) == -1) {
 	storePrefsValue(key, "No");
@@ -356,7 +356,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	      if(snprintf(buf, sizeof(buf),
 			  "netFlow.%s.exportNetFlow",
 			  myGlobals.device[i].name) < 0)
-		traceEvent(TRACE_ERROR, "Buffer overflow!");
+		BufferTooShort();
 
 	      /* traceEvent(TRACE_INFO, "%s=%s", buf, value); */
 	      storePrefsValue(buf, value);
@@ -379,7 +379,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	     "Local Collector UDP Port:</td><td><INPUT NAME=port SIZE=5 VALUE=");
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.netFlowInPort) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferTooShort();
   sendString(buf);
 
   sendString("> <INPUT TYPE=submit VALUE=Set><br>"

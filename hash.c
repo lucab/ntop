@@ -276,7 +276,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
 
     Memory Recycle
   */
-  
+
   if(myGlobals.hostsCacheLen < (MAX_HOSTS_CACHE_LEN-1)) {
     myGlobals.hostsCache[myGlobals.hostsCacheLen++] = host;
   } else {
@@ -327,21 +327,31 @@ void freeHostInstances(int actualDeviceId) {
 void purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, len, maxBucket = 0, theIdx, hashFull = 0;
   time_t startTime = time(NULL);
-  static time_t lastPurgeTime = 0;
+  static time_t lastPurgeTime[MAX_NUM_DEVICES];
+  static char firstRun = 1;
   static HostTraffic **theFlaggedHosts = NULL;
   static u_int hashLen = 0;
 
-  if(startTime < (lastPurgeTime+(SESSION_SCAN_DELAY/2)))
-    return; /* Too short */
-  else
-    lastPurgeTime = startTime;
+  if(myGlobals.rFileName != NULL) return;
 
-#ifdef DEBUG
+#ifndef DEBUG
   traceEvent(TRACE_INFO, "Purging Idle Hosts... (actDevice=%d)", actDevice);
 #endif
 
+  if(firstRun) {
+    firstRun = 0;
+    memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
+  }
+
+  updateDeviceThpt(actDevice);
+
+  if(startTime < (lastPurgeTime[actDevice]+PURGE_HOSTS_DELAY))
+    return; /* Too short */
+  else
+    lastPurgeTime[actDevice] = startTime;
+
 #ifdef MULTITHREADED
-  accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
+  accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
 #endif
   purgeOldFragmentEntries(actDevice); /* let's do this too */
 #ifdef MULTITHREADED
@@ -359,9 +369,6 @@ void purgeIdleHosts(int actDevice) {
   }
   memset(theFlaggedHosts, 0, len);
 
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
-#endif
   /* Calculates entries to free */
   for(theIdx = (myGlobals.actTime % hashLen) /* random start */,
 	hashFull = 0, idx=1; idx<hashLen; idx++) {
@@ -378,15 +385,21 @@ void purgeIdleHosts(int actDevice) {
 	if((!myGlobals.stickyHosts)
 	   || (myGlobals.borderSnifferMode)
 	   || (!subnetPseudoLocalHost(el))) {
+#ifdef MULTITHREADED
+	  accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
+#endif
 	    theFlaggedHosts[maxBucket++] = el;
 	    myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
+#ifdef MULTITHREADED
+	    releaseMutex(&myGlobals.hostsHashMutex);
+#endif
 	    if(maxBucket == (MAX_NUM_PURGED_HOSTS-1)) {
 	      hashFull = 1;
 	      continue;
 	    }
 	}
       }
-      
+
       /* If (*) the entry might be NULL */
       if(myGlobals.device[actDevice].hash_hostTraffic[theIdx] != NULL)
 	myGlobals.device[actDevice].hash_hostTraffic[theIdx]->numUses = 0;
@@ -394,10 +407,6 @@ void purgeIdleHosts(int actDevice) {
 
     theIdx = (theIdx+1) % hashLen;
   }
-
-#ifdef MULTITHREADED
-  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 
   /* Now free the entries */
   for(idx=0; idx<maxBucket; idx++) {
@@ -417,6 +426,8 @@ void purgeIdleHosts(int actDevice) {
     This statement is not called as it is left for the next run
     free(theFlaggedHosts);
   */
+
+  scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
 
 #ifndef DEBUG
   if(numFreedBuckets > 0) {
@@ -467,7 +478,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char checkForMultihoming,
 		  u_char forceUsingIPaddress,
 		  int actualDeviceId) {
-    u_int idx, i, isMultihomed = 0, numRuns=0, inIdx=0, numFreedHosts = 0;
+    u_int idx, i, isMultihomed = 0, numRuns=0, inIdx=0;
 #ifndef MULTITHREADED
     u_int run=0;
 #endif
@@ -562,21 +573,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 			    break;
 			}
 		    }
-
-		    /* The entry is not the one we expect */
-		    if((!myGlobals.stickyHosts)
-		       && (numFreedHosts < 7) /* Don't free too many buckets per run ! */
-		       && ((el->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)) {
-			freeHostInfo(actualDeviceId, el, list->idx, actualDeviceId);
-			myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx] = NULL;
-
-			numFreedHosts++;
-
-#ifdef DEBUG
-			traceEvent(TRACE_INFO, "Freed host %s (idx=%d)",
-				   el->hostNumIpAddress, list->idx);
-#endif
-		    }
 		}
 
 		list = list->next;
@@ -599,7 +595,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    if(myGlobals.hostsCacheLen > 0) {
 	      el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
 	      /*
-		traceEvent(TRACE_INFO, "Fetched host from pointers cache (len=%d)", 
+		traceEvent(TRACE_INFO, "Fetched host from pointers cache (len=%d)",
 		(int)myGlobals.hostsCacheLen);
 	      */
 	    } else {

@@ -289,7 +289,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
     newFlow->pluginStatus.pluginPtr  = pluginInfo;
 
     if(snprintf(key, sizeof(key), "pluginStatus.%s", pluginInfo->pluginName) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferTooShort();
 
     if(fetchPrefsValue(key, value, sizeof(value)) == -1) {
       storePrefsValue(key, pluginInfo->activeByDefault ? "1" : "0");

@@ -1371,7 +1371,6 @@ void drawHostsDistanceGraph() {
   sendGraphFile(fileName);
 #endif
 }
-
 /* ************************ */
 
 #endif /* HAVE_GDCHART */

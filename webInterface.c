@@ -91,7 +91,11 @@ int execCGI(char* cgiName) {
   putenv("REQUEST_METHOD=GET");
   if(num == 0) putenv("QUERY_STRING=");
 
-  if(snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName) < 0)
+  if(snprintf(line, sizeof(line), "PWD=%s", myGlobals.pwd) < 0) 
+    BufferTooShort();
+  putenv(line); /* PWD */
+
+  if(snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName) < 0) 
     BufferTooShort();
 
 #ifdef DEBUG
@@ -174,7 +178,7 @@ void showPluginsList(char* pluginName) {
 
 	if(snprintf(key, sizeof(key), "pluginStatus.%s", 
 		    flows->pluginStatus.pluginPtr->pluginName) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  BufferTooShort();
 
 	storePrefsValue(key, newPluginStatus ? "1" : "0");
       }

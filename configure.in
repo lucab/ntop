@@ -513,7 +513,7 @@ AC_CHECK_LIB(dl, dlopen)
 dnl>
 dnl> check for `backtrace' in -lc
 dnl>
-AC_CHECK_LIB(c, backtrace)
+AC_CHECK_LIB(c, backtrace, AC_DEFINE(HAVE_BACKTRACE))
 
 dnl>
 dnl> check for `crypt' in -lcrypt (MANDATORY)
@@ -1135,7 +1135,7 @@ AC_DEFINE_UNQUOTED(RETSIGTYPE, void)
 AC_OUTPUT([
 Makefile
 plugins/Makefile
-plugins/pep/Makefile
+dnl> plugins/pep/Makefile
 intop/Makefile
 ntop-config
 ], [

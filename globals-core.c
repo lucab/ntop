@@ -261,7 +261,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.allocatedMemory = 0;
 #endif
 
-  myGlobals.enableThUpdate  = 1;
   myGlobals.enableIdleHosts = 1;
 
   myGlobals.netFlowInSocket = -1;  

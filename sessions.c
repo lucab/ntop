@@ -32,7 +32,7 @@ u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
   if(idx > myGlobals.device[actualDeviceId].actualHashSize) {
     traceEvent(TRACE_ERROR, "Index error idx=%u/deviceId=%d:0-%d @ [%s:%d]\n", 
 	       idx, actualDeviceId, 
-	       myGlobals.device[actualDeviceId].actualHashSize,
+	       myGlobals.device[actualDeviceId].actualHashSize-1,
 	       file, line);
     return(0); /* Last resort */
   } else 
@@ -344,7 +344,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   u_int idx, i, freeSessionCount =0;
 
   if(!myGlobals.enableSessionHandling) return;
-#ifdef DEBUG
+#ifndef DEBUG
   traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions (device=%d, sessions=%d)\n",
 	     actualDeviceId, myGlobals.device[actualDeviceId].numTotSessions);
 #endif

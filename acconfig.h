@@ -111,5 +111,7 @@
 /* Define if your host supports SNMP  */
 #undef HAVE_SNMP
 
+/* Define if you have backtrace */
+#undef HAVE_BACKTRACE
 
 #endif /* _CONFIG_H_ */

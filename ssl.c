@@ -66,7 +66,7 @@ int init_ssl(void) {
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     if(snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CERTF) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferTooShort();
 
 #ifdef WIN32
     i=0;

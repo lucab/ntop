@@ -71,6 +71,9 @@
 /* Define if you have the zlib */
 #undef HAVE_ZLIB
 
+/* Define if you have backtrace */
+#undef HAVE_BACKTRACE
+
 /* Define if you have the ctime_r function.  */
 #undef HAVE_CTIME_R
 

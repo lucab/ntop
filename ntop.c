@@ -561,84 +561,6 @@ int mapGlobalToLocalIdx(int port) {
 /* **************************************** */
 
 #ifdef MULTITHREADED
-void* updateThptLoop(void* notUsed _UNUSED_) {
-  for(;;) {
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Sleeping for %d seconds\n",
-	       THROUGHPUT_REFRESH_TIME);
-#endif
-
-    sleep(THROUGHPUT_REFRESH_TIME);
-
-    if(!myGlobals.capturePackets) break;
-
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Trying to update throughput\n");
-#endif
-
-    /* Don't update Thpt if the traffic is high */
-    /* if(myGlobals.packetQueueLen < (PACKET_QUEUE_LENGTH/3)) */ {
-      myGlobals.actTime = time(NULL);
-      accessMutex(&myGlobals.hostsHashMutex, "updateThptLoop");
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "Updating throughput\n");
-#endif
-      updateThpt(); /* Update Throughput */
-      releaseMutex(&myGlobals.hostsHashMutex);
-    }
-  }
-
-  return(NULL);
-}
-#endif
-
-/* **************************************** */
-
-#ifdef MULTITHREADED
-void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
-  time_t nextUpdate = myGlobals.actTime+3600;
-  int hourId, minuteId, lastUpdatedHour=-1;
-  char theDate[8];
-  struct tm t;
-
-  for(;;) {
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Sleeping for 60 seconds\n");
-#endif
-
-    if(!myGlobals.capturePackets) break; /* Before */
-    sleep(60);
-    if(!myGlobals.capturePackets) break; /* After */
-
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Trying to update host traffic stats");
-#endif
-
-    myGlobals.actTime = time(NULL);
-    strftime(theDate, 8, "%M", localtime_r(&myGlobals.actTime, &t));
-    minuteId = atoi(theDate);
-    strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
-    hourId = atoi(theDate);
-
-    if((minuteId <= 1) && (hourId != lastUpdatedHour)) {
-      lastUpdatedHour = hourId;
-      accessMutex(&myGlobals.hashResizeMutex, "updateHostTrafficStatsThptLoop");
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "Updating host traffic stats\n");
-#endif
-      updateHostTrafficStatsThpt(hourId); /* Update Throughput */
-      releaseMutex(&myGlobals.hashResizeMutex);
-      nextUpdate = myGlobals.actTime+3600;
-    }
-  }
-
-  return(NULL);
-}
-#endif
-
-/* **************************************** */
-
-#ifdef MULTITHREADED
 void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
   u_short updateTime = DEFAULT_DB_UPDATE_TIME; /* This should be user configurable */
 
@@ -649,9 +571,13 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
     traceEvent(TRACE_INFO, "Sleeping for %d seconds\n", updateTime);
 #endif
 
-    sleep(updateTime);
+    ntop_sleep(updateTime);
 
     if(!myGlobals.capturePackets) break;
+
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Calling updateDbHostsTraffic");
+#endif
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
@@ -675,21 +601,17 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
   for(;;) {
     int i;
 
-    sleep(300 /* 5 minutes */);
+    ntop_sleep(60 /* do not change */);
 
     if(!myGlobals.capturePackets) break;
     myGlobals.actTime = time(NULL);
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
-	purgeIdleHosts(i);
+        purgeIdleHosts(i);
 #ifdef HAVE_SCHED_H
 	sched_yield(); /* Allow other threads to run */
-#else
-	sleep(1); /* leave some time to others */
 #endif
-	if(myGlobals.enableSessionHandling)
-	  scanTimedoutTCPSessions(i);
       }
   }
 
@@ -700,7 +622,6 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
 void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
   for(;;) {
-    sleep(PURGE_ADDRESS_TIMEOUT);
     if(!myGlobals.capturePackets) break;
     myGlobals.actTime = time(NULL);
     cleanupHostEntries();
@@ -722,7 +643,7 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
     if(!myGlobals.capturePackets) break;
 
     if(myGlobals.updateLsof) {
-#ifdef DEBUG
+#ifndef DEBUG
       traceEvent(TRACE_INFO, "Wait please: reading lsof information...\n");
 #endif
       if(myGlobals.isLsofPresent) readLsofInfo();
@@ -730,7 +651,7 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
       traceEvent(TRACE_INFO, "Done with lsof.\n");
 #endif
     }
-    sleep(60);
+    ntop_sleep(60);
   }
   return(NULL);
 
@@ -817,6 +738,8 @@ RETSIGTYPE cleanup(int signo) {
   static int unloaded = 0;
   struct pcap_stat stat;
   int i;
+  
+  traceEvent(TRACE_INFO, "ntop caught signal %d", signo);
 
 #ifdef HAVE_BACKTRACE
   if (signo == SIGSEGV) {
@@ -828,20 +751,25 @@ RETSIGTYPE cleanup(int signo) {
     /* Don't double fault... */
     setsignal(SIGSEGV, SIG_DFL);
 
-    /* Grab the backtrace before we do much else... but only print it if we are in debug mode */
+    /* Grab the backtrace before we do much else... */
     size = backtrace(array, 20);
     strings = (char**)backtrace_symbols(array, size);
 
     traceEvent(TRACE_ERROR, "\n\n\n*****ntop error: Signal(%d)\n", signo);
     printf("\n\n\n*****ntop error: Signal(%d)\n", signo);
-
-      traceEvent(TRACE_ERROR, "\n     backtrace is:\n");
-      printf("\n     backtrace is:\n");
+    
+    traceEvent(TRACE_ERROR, "\n     backtrace is:\n");
+    printf("\n     backtrace is:\n");
+    if (size < 2) {
+      traceEvent(TRACE_ERROR, "         **unavailable!\n");
+      printf("         **unavailable**\n");
+    } else {
       /* Ignore the 0th entry, that's our cleanup() */
       for (i=1; i<size; i++) {
 	traceEvent(TRACE_ERROR, "          %2d. %s\n", i, strings[i]);
 	printf("          %2d. %s\n", i, strings[i]);
       }
+    }    
   }
 #endif /* HAVE_BACKTRACE */
 
@@ -858,13 +786,6 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef MULTITHREADED
 
   killThread(&myGlobals.dequeueThreadId);
-
-  killThread(&myGlobals.thptUpdateThreadId);
-  killThread(&myGlobals.hostTrafficStatsThreadId);
-
-  if(myGlobals.rFileName == NULL) {
-    if(!myGlobals.borderSnifferMode)    killThread(&myGlobals.scanIdleThreadId);
-  }
 
   if(myGlobals.enableDBsupport)
     killThread(&myGlobals.dbUpdateThreadId);
@@ -914,7 +835,7 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "Waiting until threads terminate...\n");
-  sleep(3); /* Just to wait until threads complete */
+  ntop_sleep(3); /* Just to wait until threads complete */
 #endif
 
 /* #ifdef FULL_MEMORY_FREE */

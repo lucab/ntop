@@ -135,7 +135,6 @@ static struct option const long_options[] = {
   { "https-server",                     required_argument, NULL, 'W' },
 #endif
 
-  { "no-throughput-update",             no_argument,       NULL, '1' },
   { "no-idle-host-purge",               no_argument,       NULL, '2' },
 
   /*
@@ -610,10 +609,6 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-    case '1': /* disable throughput update */
-      myGlobals.enableThUpdate = 0;
-      break;
-
     case '2': /* disable purging of idle hosts */
       myGlobals.enableIdleHosts = 0;
       break;
@@ -861,7 +856,7 @@ int main(int argc, char *argv[]) {
   pause();
 #endif
   while(!myGlobals.endNtop)
-    sleep(30);
+    ntop_sleep(30);
 
   return(0);
 }

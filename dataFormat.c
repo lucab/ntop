@@ -38,7 +38,7 @@ char* formatKBytes(float numKBytes) {
 
     if(tmpKBytes < 1024) {
       if(snprintf(outStr[bufIdx], 32, "%.1f%sMB",  tmpKBytes, myGlobals.separator) < 0) 
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferTooShort();
     } else {
       float tmpGBytes = tmpKBytes/1024;
 
@@ -85,7 +85,7 @@ char* formatBytes(TrafficCounter numBytes, short encodeString) {
     if(tmpMBytes < 1024) {
       if(snprintf(outStr[bufIdx], 32, "%.1f%sMB",
 	      tmpMBytes, locSeparator) < 0) 
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferTooShort();
     } else {
       tmpMBytes /= 1024;
 

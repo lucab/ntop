@@ -1395,7 +1395,7 @@ void queuePacket(u_char * _deviceId,
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads (dequeue) to run */
 #endif
-    sleep(1);
+    ntop_sleep(1);
   } else {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "About to queue packet... \n");
