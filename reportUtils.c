@@ -491,7 +491,9 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 /* ******************************* */
 
 char* getOSFlag(char* osName, int showOsName) {
-  static char tmpStr[96], *flagImg;
+  /* Lengthen tmpString buffer - to handle long name given by nmap for Win2k
+     Courtesy of Marcel Hauser <marcel_hauser@gmx.ch> */
+  static char tmpStr[200], *flagImg;
 
   if(strstr(osName, "Windows") != NULL)
     flagImg = "<IMG ALT=\"OS: Windows\" ALIGN=MIDDLE SRC=/statsicons/os/windows.gif>";
