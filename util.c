@@ -1129,7 +1129,8 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   if(mutexId->isLocked) {
     if((fileLine == mutexId->lockLine)
        && (strcmp(fileName, mutexId->lockFile) == 0)
-       && (myPid == mutexId->lockPid)) {
+       && (myPid == mutexId->lockPid)
+       && (pthread_equal(mutexId->lockThread, pthread_self()))) {
       traceEvent(CONST_TRACE_WARNING,
 		 "accessMutex() called '%s' with a self-LOCKED mutex [0x%X@%s:%d]",
 		 where, (void*)&(mutexId->mutex), fileName, fileLine);
@@ -1146,6 +1147,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   mutexId->lockAttemptFile[0] = '\0';
   mutexId->lockAttemptLine=0;
   mutexId->lockAttemptPid=(pid_t) 0;
+  mutexId->lockThread=pthread_self();
 
   if(rc != 0)
     traceEvent(CONST_TRACE_ERROR, "accessMutex() call '%s' failed (rc=%d) [0x%X@%s:%d]",
@@ -1208,7 +1210,9 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   if(mutexId->isLocked) {
     if((strcmp(fileName, mutexId->lockFile) == 0)
        && (fileLine == mutexId->lockLine)
-       && (myPid == mutexId->lockPid)) {
+       && (myPid == mutexId->lockPid)
+       && (pthread_equal(mutexId->lockThread, pthread_self()))
+       ) {
       traceEvent(CONST_TRACE_WARNING,
 		 "tryLockMutex() called '%s' with a self-LOCKED mutex [0x%X@%s:%d]",
 		 where, (void*)&(mutexId->mutex), fileName, fileLine);
@@ -1228,8 +1232,8 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   rc = pthread_mutex_trylock(&(mutexId->mutex));
   pthread_mutex_lock(&stateChangeMutex);
   mutexId->lockAttemptFile[0] = '\0';
-  mutexId->lockAttemptLine=0;
-  mutexId->lockAttemptPid=(pid_t) 0;
+  mutexId->lockAttemptLine = 0;
+  mutexId->lockAttemptPid = (pid_t) 0;
 
   if(rc != 0)  {
 #ifdef SEMAPHORE_DEBUG
@@ -1245,7 +1249,8 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
     mutexId->numLocks++;
     mutexId->isLocked = 1;
     mutexId->lockTime = time(NULL);
-    mutexId->lockPid=myPid;
+    mutexId->lockPid = myPid;
+    mutexId->lockThread = pthread_self();
 
     if(fileName != NULL) {
       strcpy(mutexId->lockFile, fileName);

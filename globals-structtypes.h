@@ -216,6 +216,7 @@ extern int  pthread_mutex_unlock(pthread_mutex_t *mutex);
 
 typedef struct pthreadMutex {
   pthread_mutex_t mutex;
+  pthread_t lockThread;
   char   isLocked, isInitialized;
   char   lockFile[64];
   int    lockLine;
