@@ -246,7 +246,7 @@ noinst_HEADERS = getopt.h globals-core.h globals-report.h ntop.h
 lib_LTLIBRARIES = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
-libntop_la_SOURCES = address.c    argv.c        dataFormat.c   \
+libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      getopt.c     getopt1.c     globals-core.c \
                      hash.c       iface.c       initialize.c  leaks.c        \
                      netflow.c    ntop.c        pbuf.c         \
