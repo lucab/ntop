@@ -2846,7 +2846,7 @@ FILE* getNewRandomFile(char* fileName, int len) {
   char tmpFileName[NAME_MAX];
 
   strcpy(tmpFileName, fileName);
-  if(snprintf(fileName, sizeof(fileName), "%s-%lu", tmpFileName,
+  if(snprintf(fileName, len, "%s-%lu", tmpFileName,
           myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]) < 0)
     BufferTooShort();
   fd = fopen(fileName, "wb");
