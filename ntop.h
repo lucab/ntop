@@ -1928,6 +1928,11 @@ typedef struct userList {
   struct userList *next;
 } UserList;
 
+typedef struct fileList {
+  char *fileName;
+  struct fileList *next;
+} FileList;
+
 typedef struct storedAddress {
   char   symAddress[MAX_HOST_SYM_NAME_LEN];
   time_t recordCreationTime;
@@ -2003,6 +2008,9 @@ typedef struct hostTraffic {
 
   /* POP3/SMTP... */
   UserList *userList;
+
+  /* P2P */
+  FileList *fileList;
 
   /* Interesting Packets */
   SecurityHostProbes *secHostPkts;

@@ -280,6 +280,17 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     }
   }
 
+  if(host->fileList != NULL) {
+    FileList *list = host->fileList;
+    
+    while(list != NULL) {
+      FileList *next = list->next;
+      free(list->fileName);
+      free(list);
+      list = next;
+    }
+  }
+
   /* ************************************* */
 
   if(myGlobals.isLsofPresent) {

@@ -328,8 +328,8 @@ char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag) {
   static char buf[5][BUF_SIZE];
   char symIp[256], *tmpStr, linkName[256], flag[128];
-  char *blinkOn, *blinkOff, *dynIp;
-  char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "";
+  char *dynIp;
+  char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
   short specialMacAddress = 0;
   static short bufIdx=0;
   short usedEthAddress=0;
@@ -354,7 +354,6 @@ char* makeHostLink(HostTraffic *el, short mode,
     }
   }
 
-  blinkOn = "", blinkOff = "";
 
   bufIdx = (bufIdx+1)%5;
 
@@ -479,6 +478,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(nameServerHost(el)) dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=/dns.gif BORDER=0>"; else dnsStr = "";
   if(isPrinter(el))      printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>"; else printStr = "";
   if(isSMTPhost(el))     smtpStr = "&nbsp;<IMG ALT=\"Mail (SMTP)\" SRC=/mail.gif BORDER=0>"; else smtpStr = "";
+  if(el->userList != NULL)     userStr = "&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0>"; else userStr = "";
 
   switch(isHostHealthy(el)) {
   case 0: /* OK */
@@ -498,21 +498,21 @@ char* makeHostLink(HostTraffic *el, short mode,
       linkName[i] = '_';
 
   if(mode == LONG_FORMAT) {
-    if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
+    if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
 		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s</TH>%s",
-		blinkOn, linkName, symIp, /* el->numUses, */
+		linkName, symIp, /* el->numUses, */
 		dynIp,
 		multihomed, gwStr, dnsStr,
-		printStr, smtpStr, healthStr,
-		blinkOff, flag) < 0)
+		printStr, smtpStr, healthStr, userStr,
+		flag) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s</A>"
+    if(snprintf(buf[bufIdx], BUF_SIZE, "<A HREF=\"/%s.html\" NOWRAP>%s</A>"
 		"%s%s%s%s%s%s%s%s%s",
-		blinkOn, linkName, symIp, /* el->numUses, */
+		linkName, symIp, /* el->numUses, */
 		multihomed, gwStr, dnsStr,
-		printStr, smtpStr, healthStr,
-		dynIp, blinkOff, flag) < 0)
+		printStr, smtpStr, healthStr, userStr,
+		dynIp, flag) < 0)
       BufferTooShort();    
   }
 

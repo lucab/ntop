@@ -24,7 +24,9 @@
 
 #include "ntop.h"
 
- /* ************************************ */
+/* #define P2P_DEBUG 1 */
+
+/* ************************************ */
 
 u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
   if(idx > myGlobals.device[actualDeviceId].actualHashSize) {
@@ -123,6 +125,51 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
       list->bytesSent = bytesSent, list->bytesRcvd = bytesRcvd;
       list->next = theRemHost->httpVirtualHosts;
       theRemHost->httpVirtualHosts = list;
+    }
+  }
+}
+
+/* ************************************ */
+
+static void updateFileList(char *fileName, HostTraffic *theRemHost) {
+
+  if(fileName != NULL) {
+    FileList *list = theRemHost->fileList, *lastPtr = NULL;
+    int numEntries = 0;
+
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "updateFileList: %s for host %s",
+	       fileName, theRemHost->hostNumIpAddress);
+#endif
+
+    while(list != NULL) {
+      if(strcmp(list->fileName, fileName) == 0) {
+	return;
+      } else {
+	lastPtr = list;
+	list = list->next;
+	numEntries++;
+      }
+    }
+
+    if(list == NULL) {      
+      list = (FileList*)malloc(sizeof(FileList));
+      list->fileName = strdup(fileName);
+      
+      if(numEntries >= MAX_NUM_LIST_ENTRIES) {
+	FileList *ptr = theRemHost->fileList->next;
+
+	lastPtr->next = list; /* Append */
+
+	/* Free the first entry */
+	free(theRemHost->fileList->fileName);
+	free(theRemHost->fileList);
+	/* The first ptr points to the second element */
+	theRemHost->fileList = ptr;
+      } else {
+	list->next = theRemHost->fileList;
+	theRemHost->fileList = list;
+      }
     }
   }
 }
@@ -827,6 +874,67 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  }
 
 	  free(rcStr);
+	}
+
+      } else if((dport == 1214 /* Kazaa */) /* && (packetDataLength > 0) */) {
+	if(theSession->bytesProtoSent == 0) {
+	  char *rcStr;
+	  char *strtokState, *row;
+
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength] = '\0';
+
+	  if(strncmp(rcStr, "GET ", 4) == 0) {
+
+	    row = strtok_r(rcStr, "\n", &strtokState);
+
+	    while(row != NULL) {
+	      if(strncmp(row, "GET /", 4) == 0) {
+		char *theStr = "GET /.hash=";
+		if(strncmp(row, theStr, strlen(theStr)) != 0) {
+		  char tmpStr[256], *strtokState1, *file = strtok_r(&row[4], " ", &strtokState1);
+		  int i, begin=0;
+
+		  for(i=0; file[i] != '\0'; i++) {
+		    if(file[i] == '/') begin = i;
+		  }
+
+		  begin++;
+
+		  unescape(tmpStr, sizeof(tmpStr), &file[begin]);
+
+#ifndef P2P_DEBUG
+		  traceEvent(TRACE_INFO, "Kazaa: %s->%s [%s]\n",
+			     srcHost->hostNumIpAddress,
+			     dstHost->hostNumIpAddress,
+			     tmpStr);
+#endif  
+		  updateFileList(tmpStr, srcHost);
+		}
+	      } else if(strncmp(row, "X-Kazaa-Username", 15) == 0) {
+		char *user;
+		  
+		row[strlen(row)-1] = '\0';
+		  
+		user = &row[18];
+		if(strlen(user) > 48)
+		  user[48] = '\0';
+		  
+#ifdef P2P_DEBUG
+		traceEvent(TRACE_INFO, "DEBUG: USER='%s'\n", user);
+#endif
+
+		updateHostUsers(user, srcHost);
+	      }
+	      
+	      row = strtok_r(NULL, "\n", &strtokState);
+	    }
+
+	    /* printf("==>\n\n%s\n\n", rcStr); */	  
+
+	    free(rcStr);
+	  }
 	}
       } else if(((sport == 25 /* SMTP */)  || (dport == 25 /* SMTP */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {

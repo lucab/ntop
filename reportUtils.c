@@ -3279,7 +3279,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
       tot = ss->numLocalReqSent+ss->numRemReqSent;
 
       if(tot == 0)
-	f1 = f2 = 0;
+	f1 = f2 = 0; 
       else {
 	f1 = (ss->numLocalReqSent*100)/tot;
 	f2 = (ss->numRemReqSent*100)/tot;

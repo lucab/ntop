@@ -1624,6 +1624,32 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
     sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
   }
 
+
+  /* *************************************************** */
+
+  if(el->fileList != NULL) {
+    FileList *list = el->fileList;
+
+    printSectionTitle("P2P Recently Exchanged Files\n");
+
+    sendString("<CENTER>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+	       "<TH "TH_BG">File Name</TH></TR>\n");
+    sendString("<TR><TD ALIGN=left><ol>\n");
+
+    while(list != NULL) {
+      if(snprintf(buf, sizeof(buf), "<li>%s\n", list->fileName) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      list = list->next;
+    }
+
+    sendString("</ol></TD></TR></TABLE></CENTER>\n");
+  }
+
+  /* *************************************************** */
+
   printHostSessions(el, elIdx, actualDeviceId);
 }
 
