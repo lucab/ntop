@@ -1345,11 +1345,19 @@ void checkSpoofing(u_int idxToCheck) {
 #define ADDRESS_PURGE_TIMEOUT 12*60*60 /* 12 hours */
 
 void cleanupHostEntries() { 
-  datum data_data, key_data, return_data = gdbm_firstkey(gdbm_file);
+  datum data_data, key_data, return_data;
   u_int numDbEntries = 0;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering cleanupHostEntries()");
+#endif
+
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "cleanupHostEntries");
+#endif
+  return_data = gdbm_firstkey(gdbm_file);
+#ifdef MULTITHREADED
+    releaseMutex(&gdbmMutex);
 #endif
 
   while(return_data.dptr != NULL) {
