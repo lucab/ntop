@@ -14,22 +14,22 @@
 
   The history of success.
 
-  Ntop 2.2 (actually 2.1.92 or so) was successfully tested on the following platforms:
+  Ntop 2.2 (actually 2.1.92 or as listed) was successfully tested on the following platforms:
 
 ____ Platform ________________ _Version_ Thread ___________ OS/Hw _________________ Compiler
-  i?86-*-solaris2.8           |2.1.92   | MT   | Generic i86pc i386                | ???
-  i?86-*-solaris2.6           |2.1.92   | MT   | Generic i86pc i386                | ???
-  i?86-*-linux-gnu            |2.1.92   | MT   | Red Hat Linux 9.0   2.4.18-4GB-SMP| ???
-  i686-*-linux-gnu            |2.1.92   | MT   | Red Hat Linux 8.0                 | 
-  i686-*-linux-gnu            |2.1.92   | MT   | UserMode Linux - RH 7.3/8 Hybrid  | gcc 2.96-98
-  i686-*-linux-gnu  DUAL XEON |2.1.92   | MT   | Red Hat Linux AS 2.1 2.4.9-e.12smp| gcc 3.2-7
-  i686-*-linux-gnu  DUAL      |2.1.92   | MT   | Linux-from-Scratch          2.4.19| gcc 2.95.2.1
-  i386-*-freebsd-gnu          |2.1.92   | MT   | FreeBSD 5.0-RELEASE               | ??? 
-  i386-*-freebsd-gnu          |2.1.92   | MT   | FreeBSD 4.8-RELEASE               | ??? 
-  i386-*-freebsd-gnu          |2.1.92   | MT   | FreeBSD 4.7-RELEASE-p10           | ??? 
-  i386-*-freebsd-gnu          |2.1.92   | MT   | FreeBSD 4.6.3-RELEASE             | ??? 
-  i386-*-netbsd-gnu           |2.1.92   | ST   | NetBSD 1.6                        | ??? 
-  i386-*-netbsd-gnu           |2.1.92   | ST   | NetBSD 1.5.3                      | ??? 
+  i?86-*-solaris2.8           |         | MT   | Generic i86pc i386                | 
+  i?86-*-solaris2.6           |         | MT   | Generic i86pc i386                | 
+  i?86-*-linux-gnu            |         | MT   | Red Hat Linux 9.0   2.4.18-4GB-SMP| 
+  i686-*-linux-gnu            |         | MT   | Red Hat Linux 8.0                 | 
+  i686-*-linux-gnu            |         | MT   | UserMode Linux - RH 7.3/8 Hybrid  | gcc 2.96-98
+  i686-*-linux-gnu  DUAL XEON |         | MT   | Red Hat Linux AS 2.1 2.4.9-e.12smp| gcc 3.2-7
+  i686-*-linux-gnu  DUAL      |         | MT   | Linux-from-Scratch          2.4.19| gcc 2.95.2.1
+  i386-*-freebsd-gnu          |         | MT   | FreeBSD 5.0-RELEASE               |  
+  i386-*-freebsd-gnu          |         | MT   | FreeBSD 4.8-RELEASE               |  
+  i386-*-freebsd-gnu          |         | MT   | FreeBSD 4.7-RELEASE-p10           |  
+  i386-*-freebsd-gnu          |         | MT   | FreeBSD 4.6.3-RELEASE             |  
+  i386-*-netbsd-gnu           |         | ST   | NetBSD 1.6                        |  
+  i386-*-netbsd-gnu           |         | ST   | NetBSD 1.5.3                      |  
 
 
 
