@@ -505,6 +505,7 @@ void initCounters(void) {
   /*
    * Check if the ettercap passive file exists - warn if not.
    */
+  configFileFound = 0;
   traceEvent(CONST_TRACE_NOISY, "OSFP: Looking for OS fingerprint file, %s", CONST_OSFINGERPRINT_FILE);
 
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
@@ -530,16 +531,18 @@ void initCounters(void) {
   /*
    * Check if AS file exists - warn if not.
    */
-  traceEvent(CONST_TRACE_NOISY, "OSFP: Looking for AS list file, %s", CONST_ASLIST_FILE);
+  configFileFound = 0;
+  traceEvent(CONST_TRACE_NOISY, "AS: Looking for ASN file, %s", CONST_ASLIST_FILE);
 
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
     snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_ASLIST_FILE);
 
-    traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'", buf);
+    traceEvent(CONST_TRACE_NOISY, "AS: Checking '%s'", buf);
     fd = gzopen(buf, "r");
 
     if(fd) {
-      traceEvent(CONST_TRACE_NOISY, "OSFP: ...found!");
+      traceEvent(CONST_TRACE_NOISY, "AS: ...found!");
+      configFileFound = 1;
       readASs(fd);
       gzclose(fd);
       break;
@@ -547,8 +550,8 @@ void initCounters(void) {
   }
 
   if(configFileFound == 0) {
-    traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.", CONST_ASLIST_FILE);
-    traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without AS information.");
+    traceEvent(CONST_TRACE_WARNING, "AS: Unable to open file '%s'.", CONST_ASLIST_FILE);
+    traceEvent(CONST_TRACE_NOISY, "AS: ntop continues ok, but without ASN information.");
   }
 
   /* i18n */
