@@ -408,13 +408,15 @@ static void allocateOtherHosts() {
 
 void initCounters(void) {
   int len, i;
+  FILE *fd = NULL;
+  int configFileFound = 0;
+  char buf[256];
 #ifdef MAKE_WITH_I18N
   char *workLanguage;
  #ifdef HAVE_DIRENT_H
   struct dirent **dirList;
   int j, iLang, nLang, found;
   DIR *testDirEnt;
-  char buf[256];
   char *tmpStr;
   char* realLocale;
  #endif
@@ -508,6 +510,31 @@ void initCounters(void) {
   myGlobals.sessionsCacheReused = 0;
 #endif
 
+  /*
+   * Check if the ettercap passive file exists - warn if not.
+   */
+  traceEvent(CONST_TRACE_INFO, "OSFP: Looking for OS fingerprint file, %s\n", CONST_OSFINGERPRINT_FILE);
+
+  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
+
+    snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_OSFINGERPRINT_FILE);
+    
+    traceEvent(CONST_TRACE_INFO, "OSFP: Checking '%s'\n", buf);
+    fd = fopen(buf, "r");
+
+    if(fd) {
+      traceEvent(CONST_TRACE_INFO, "OSFP: ...found!\n");
+      configFileFound = 1;
+      fclose(fd);
+      break;
+    }
+  }
+  if (configFileFound == 0) {
+      traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.\n", CONST_OSFINGERPRINT_FILE);
+      traceEvent(CONST_TRACE_INFO, "OSFP: ntop continues ok, but without OS fingerprinting.\n");
+      traceEvent(CONST_TRACE_INFO, "OSFP: If the file 'magically' appears, OS fingerprinting will automatically be enabled.\n");
+  }
+
   /* i18n */
 #ifdef MAKE_WITH_I18N
   /*
@@ -529,6 +556,7 @@ void initCounters(void) {
                  "I18N: Default language (from ntop host) is unspecified\n"); 
       myGlobals.defaultLanguage = NULL;
   }
+
   /*
    *  We initialize the array, myGlobals.supportedLanguages[] as follows...
    *    We scan the directory entries in LOCALDIR, fix 'em up and then

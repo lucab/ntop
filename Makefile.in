@@ -942,13 +942,10 @@ ntop-cert.pem:
 	/bin/rm -f privkey.pem cert.pem
 
 install-data-local:
-	@for file in $(NTOPDATA); do \
-          cp -p $$file $(DESTDIR)/$(datadir)/ntop/$$file; \
-        done
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/html;
-	@for file in $(NTOPHTML); do \
+	@for file in $(NTOPHTML) $(NTOPDATA); do \
           if test -d $$file; then \
              $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/$$file; \
            else \

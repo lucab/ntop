@@ -4130,7 +4130,7 @@ char *i18n_xvert_acceptlanguage2common(const char *input) {
 void setHostFingerprint(HostTraffic *srcHost) {
   FILE *fd = NULL;
   char *WIN, *MSS, *WSS, *ttl, *flags;
-  int S, N, D, T, done = 0, idx, configFileFound = 0;
+  int S, N, D, T, done = 0, idx;
   char fingerprint[32];
   char *strtokState;
 
@@ -4158,14 +4158,12 @@ void setHostFingerprint(HostTraffic *srcHost) {
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     char tmpStr[256];
 
-    snprintf(tmpStr, sizeof(tmpStr), "%s/etter.passive.os.fp", myGlobals.configFileDirs[idx]);
+    snprintf(tmpStr, sizeof(tmpStr), "%s/%s", myGlobals.configFileDirs[idx], CONST_OSFINGERPRINT_FILE);
     fd = fopen(tmpStr, "r");
 
     if(fd) {
       char line[384];
       char *b, *d, *ptr;
-
-      configFileFound = 1;
 
       while((!done) && fgets(line, sizeof(line), fd)) {
 	if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
@@ -4217,15 +4215,6 @@ void setHostFingerprint(HostTraffic *srcHost) {
     }
 
 	if(done) break;
-  }
-
-  if(!configFileFound) {
-    static char warningSent = 0;
-
-    if(!warningSent) {
-      traceEvent(CONST_TRACE_WARNING, "Unable to open file 'etter.passive.os.fp'");
-      warningSent = 1;
-    }
   }
 
   if(!done) {

@@ -929,6 +929,11 @@
 #define CONST_UNKNOWN_MTU                   1500
 
 /*
+ * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
+ */
+#define CONST_OSFINGERPRINT_FILE            "etter.passive.os.fp"
+
+/*
  * openSSL (https://) stuff
  *
  *  MAX_SSL_CONNECTIONS
