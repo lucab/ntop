@@ -611,6 +611,7 @@ void printHostsTraffic(int reportType,
   char buf[BUF_SIZE];
   float sentPercent, rcvdPercent;
   TrafficCounter totIpBytesSent, totIpBytesRcvd;
+  TrafficCounter totEthBytesSent, totEthBytesRcvd;
 
   strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
@@ -694,6 +695,21 @@ void printHostsTraffic(int reportType,
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
     switch(reportType) {
+    case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
+    case 5: /* STR_SORT_DATA_SENT_PROTOS */
+      totEthBytesSent = totEthBytesRcvd = 0;
+
+      for(idx=0; idx<numEntries; idx++) {
+	if(tmpTable[idx] != NULL) {
+	  totEthBytesSent += tmpTable[idx]->bytesSent;
+	  totEthBytesRcvd += tmpTable[idx]->bytesRcvd;
+	}
+      }
+
+      /* Avoid core dumps */
+      if(totEthBytesSent == 0) totEthBytesSent = 1;
+      if(totEthBytesRcvd == 0) totEthBytesRcvd = 1;
+      break;
     case 1: /* STR_SORT_DATA_RECEIVED_IP */
     case 6: /* STR_SORT_DATA_SENT_IP */
       totIpBytesSent = totIpBytesRcvd = 0;
@@ -728,8 +744,8 @@ void printHostsTraffic(int reportType,
 	switch(reportType) {
         case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
         case 5: /* STR_SORT_DATA_SENT_PROTOS */
-	  sentPercent = (100*(float)el->bytesSent)/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes;
-	  rcvdPercent = (100*(float)el->bytesRcvd)/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes;
+	  sentPercent = (100*(float)el->bytesSent)/totEthBytesSent;
+	  rcvdPercent = (100*(float)el->bytesRcvd)/totEthBytesRcvd;
 	  break;
 	case 1: /* STR_SORT_DATA_RECEIVED_IP */
         case 6: /* STR_SORT_DATA_SENT_IP */
