@@ -2079,26 +2079,26 @@ static int returnHTTPPage(char* pageName,
 	  continue;
 	}
 	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
-		    "%s/html_%s/%s",
-		    myGlobals.dataFileDirs[idx],
-		    myGlobals.defaultLanguage,
-		    pageURI);
+		      "%s/html_%s/%s",
+		      myGlobals.dataFileDirs[idx],
+		      myGlobals.defaultLanguage,
+		      pageURI);
       } else if(lang == numLang+1) {
 #endif
         safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
-		    "%s/html/%s",
-                    myGlobals.dataFileDirs[idx],
-                    pageURI);
+		      "%s/html/%s",
+		      myGlobals.dataFileDirs[idx],
+		      pageURI);
 #ifdef MAKE_WITH_I18N
       } else {
 	if(requestedLanguage[lang] == NULL) {
 	  continue;
 	}
 	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
-		    "%s/html_%s/%s",
-		    myGlobals.dataFileDirs[idx],
-		    requestedLanguage[lang],
-		    pageURI);
+		      "%s/html_%s/%s",
+		      myGlobals.dataFileDirs[idx],
+		      requestedLanguage[lang],
+		      pageURI);
       }
 #endif
 	
@@ -2124,7 +2124,7 @@ static int returnHTTPPage(char* pageName,
       }
 
 #ifdef MAKE_WITH_I18N
-b    }
+      b    }
 #endif
   }
 
@@ -2192,8 +2192,8 @@ b    }
   /* **************** */
 
   /* 
-   Revert to the full requested pageName, as these strncasecmp strcasecmp
-   check the fronts only 
+     Revert to the full requested pageName, as these strncasecmp strcasecmp
+     check the fronts only 
   */
   free(pageURI);
  
@@ -2206,19 +2206,19 @@ b    }
   }
 
   if(strncasecmp(pageName, CONST_CONFIG_NTOP_HTML, strlen(CONST_CONFIG_NTOP_HTML)) == 0) {
-      handleNtopConfig (pageName, showPrefPage, isPostMethod ? postLen : 0);
-      return(0);
+    handleNtopConfig (pageName, showPrefPage, isPostMethod ? postLen : 0);
+    return(0);
   }
 
   if ((strncasecmp(pageName, CONST_INDEX_HTML, strlen(CONST_INDEX_HTML)) == 0)
       || (strncasecmp(pageName, CONST_LEFTMENU_HTML,
                       strlen(CONST_LEFTMENU_HTML)) == 0)) {
-      if (generateNewInternalPages(pageName) == 0) {
-          /* We did the work in the function except for this */
-          if(strcasecmp(pageName, CONST_HOME_HTML) != 0) 
-              printTrailer=0;
-      }
-      return (0);
+    if (generateNewInternalPages(pageName) == 0) {
+      /* We did the work in the function except for this */
+      if(strcasecmp(pageName, CONST_HOME_HTML) != 0) 
+	printTrailer=0;
+    }
+    return (0);
   }
   
   /*
@@ -2368,24 +2368,26 @@ b    }
       return (0);
     }
      
-      /*
-        It needs to go here otherwise when we update the pcap dropped packets
-        this value is updated only in the child process and not
-        into the main one.
-      */
+    /*
+      It needs to go here otherwise when we update the pcap dropped packets
+      this value is updated only in the child process and not
+      into the main one.
+    */
     printTrafficStatistics(revertOrder);
   } else {
-      if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
-          safe_snprintf (__FILE__, __LINE__, tmpStr, sizeof (tmpStr),
-                         "<I><a href=%s>Configure Ntop</a> first. No packet "
-                         "captures analyzed</I>", CONST_CONFIG_NTOP_HTML);
-          printFlagedWarning (tmpStr);
-          return (0);
-      }
-      
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
+#endif
 
+    if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
+      safe_snprintf (__FILE__, __LINE__, tmpStr, sizeof (tmpStr),
+		     "<I><a href=%s>Configure Ntop</a> first. No packet "
+		     "captures analyzed</I>", CONST_CONFIG_NTOP_HTML);
+      printFlagedWarning (tmpStr);
+      return (0);
+    }
+    
+#if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     if(!myGlobals.runningPref.debugMode) {
 #ifdef HANDLE_DIED_CHILD
       handleDiedChild(0); /*
@@ -2903,7 +2905,7 @@ b    }
 	  urlFixupFromRFC1945Inplace(hostName);
 
 #ifdef URL_DEBUG
-        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName); 
+	  traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName); 
 #endif
 
 	  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
@@ -3009,69 +3011,69 @@ b    }
 	printNtopLogReport(FALSE);
 	printTrailer = 0;
       } else if(strncasecmp(pageName, CONST_DUMP_DATA_HTML, strlen(CONST_DUMP_DATA_HTML)) == 0) {
-	  sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
-	  if((questionMark == NULL) || (questionMark[0] == '\0'))
-	    dumpNtopHashes(NULL, NULL, myGlobals.actualReportDeviceId);
-	  else
-	    dumpNtopHashes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
-	  printTrailer = 0;
-	} else if(strncasecmp(pageName, CONST_DUMP_HOSTS_INDEXES_HTML,
-			      strlen(CONST_DUMP_HOSTS_INDEXES_HTML)) == 0) {
-	  sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
-	  if((questionMark == NULL) || (questionMark[0] == '\0'))
-	    dumpNtopHashIndexes(NULL, NULL, myGlobals.actualReportDeviceId);
-	  else
-	    dumpNtopHashIndexes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
-	  printTrailer = 0;
-	} else if(strncasecmp(pageName, CONST_DUMP_NTOP_FLOWS_HTML,
-			      strlen(CONST_DUMP_NTOP_FLOWS_HTML)) == 0) {
-	  sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
-	  if((questionMark == NULL) || (questionMark[0] == '\0'))
-	    dumpNtopFlows(NULL, NULL, myGlobals.actualReportDeviceId);
-	  else
-	    dumpNtopFlows(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
-	  printTrailer = 0;
-	} else if(strncasecmp(pageName, CONST_DUMP_NTOP_HOSTS_MATRIX_HTML,
-			      strlen(CONST_DUMP_NTOP_HOSTS_MATRIX_HTML)) == 0) {
-	  sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
-	  if((questionMark == NULL) || (questionMark[0] == '\0'))
-	    dumpNtopTrafficMatrix(NULL, NULL, myGlobals.actualReportDeviceId);
-	  else
-	    dumpNtopTrafficMatrix(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
-	  printTrailer = 0;
-	} else if(strncasecmp(pageName, CONST_DUMP_TRAFFIC_DATA_HTML,
-			      strlen(CONST_DUMP_TRAFFIC_DATA_HTML)) == 0) {
-	  sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
-	  if((questionMark == NULL) || (questionMark[0] == '\0'))
-	    dumpNtopTrafficInfo(NULL, NULL);
-	  else
-	    dumpNtopTrafficInfo(NULL, &questionMark[1]);
-	  printTrailer = 0;
-	} else if(strlen(pageName) > 5) {
-	  char hostName[32];
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
+	if((questionMark == NULL) || (questionMark[0] == '\0'))
+	  dumpNtopHashes(NULL, NULL, myGlobals.actualReportDeviceId);
+	else
+	  dumpNtopHashes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
+	printTrailer = 0;
+      } else if(strncasecmp(pageName, CONST_DUMP_HOSTS_INDEXES_HTML,
+			    strlen(CONST_DUMP_HOSTS_INDEXES_HTML)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
+	if((questionMark == NULL) || (questionMark[0] == '\0'))
+	  dumpNtopHashIndexes(NULL, NULL, myGlobals.actualReportDeviceId);
+	else
+	  dumpNtopHashIndexes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
+	printTrailer = 0;
+      } else if(strncasecmp(pageName, CONST_DUMP_NTOP_FLOWS_HTML,
+			    strlen(CONST_DUMP_NTOP_FLOWS_HTML)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
+	if((questionMark == NULL) || (questionMark[0] == '\0'))
+	  dumpNtopFlows(NULL, NULL, myGlobals.actualReportDeviceId);
+	else
+	  dumpNtopFlows(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
+	printTrailer = 0;
+      } else if(strncasecmp(pageName, CONST_DUMP_NTOP_HOSTS_MATRIX_HTML,
+			    strlen(CONST_DUMP_NTOP_HOSTS_MATRIX_HTML)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
+	if((questionMark == NULL) || (questionMark[0] == '\0'))
+	  dumpNtopTrafficMatrix(NULL, NULL, myGlobals.actualReportDeviceId);
+	else
+	  dumpNtopTrafficMatrix(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
+	printTrailer = 0;
+      } else if(strncasecmp(pageName, CONST_DUMP_TRAFFIC_DATA_HTML,
+			    strlen(CONST_DUMP_TRAFFIC_DATA_HTML)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
+	if((questionMark == NULL) || (questionMark[0] == '\0'))
+	  dumpNtopTrafficInfo(NULL, NULL);
+	else
+	  dumpNtopTrafficInfo(NULL, &questionMark[1]);
+	printTrailer = 0;
+      } else if(strlen(pageName) > 5) {
+	char hostName[32];
 
-	  for(i=strlen(pageName); i>0; i--)
-            if(pageName[i] == '?') {
-	      pageName[i] = '\0';
-	      break;
-            }
-        
-	  pageName[strlen(pageName)-5] = '\0';
-	  if(strlen(pageName) >= 31) pageName[31] = 0;
-	  urlFixupFromRFC1945Inplace(pageName);
-
-	  strncpy(hostName, pageName, sizeof(hostName));
-	  if(sortedColumn == 0) {
-            sortedColumn = 1;
+	for(i=strlen(pageName); i>0; i--)
+	  if(pageName[i] == '?') {
+	    pageName[i] = '\0';
+	    break;
 	  }
+        
+	pageName[strlen(pageName)-5] = '\0';
+	if(strlen(pageName) >= 31) pageName[31] = 0;
+	urlFixupFromRFC1945Inplace(pageName);
 
-	  printAllSessionsHTML(hostName, myGlobals.actualReportDeviceId,
-			       sortedColumn, revertOrder, pageNum, pageName,
-			       showFcHostsPage);
-	} else {
-	  printTrailer = 0;
-	  errorCode = FLAG_HTTP_INVALID_PAGE;
+	strncpy(hostName, pageName, sizeof(hostName));
+	if(sortedColumn == 0) {
+	  sortedColumn = 1;
 	}
+
+	printAllSessionsHTML(hostName, myGlobals.actualReportDeviceId,
+			     sortedColumn, revertOrder, pageNum, pageName,
+			     showFcHostsPage);
+      } else {
+	printTrailer = 0;
+	errorCode = FLAG_HTTP_INVALID_PAGE;
+      }
   }
 
   if(domainNameParm != NULL)
