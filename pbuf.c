@@ -444,9 +444,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 				    u_char initiator,
 				    int role) {
    /* This is a known port hence we're interested in */
-   IpGlobalSession *scanner=NULL, *prevScanner;
+   IpGlobalSession *scanner=NULL;
    HostTraffic *theHost, *theRemHost;
-   int i;
 
    if((theHostIdx == broadcastEntryIdx)
       || (remotePeerIdx == broadcastEntryIdx)
@@ -464,29 +463,22 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
    switch(sessionType) {
    case IPPROTO_TCP: /* 6 */
-     scanner = device[actualDeviceId].hash_hostTraffic[theHostIdx]->tcpSessionList;
+     scanner = theHost->tcpSessionList;
      break;
    case IPPROTO_UDP: /* 17 */
-     scanner = device[actualDeviceId].hash_hostTraffic[theHostIdx]->udpSessionList;
+     scanner = theHost->udpSessionList;
      break;
    }
-
-   prevScanner = scanner;
 
    while(scanner != NULL) {
      if(scanner->magic != MAGIC_NUMBER) {
        traceEvent(TRACE_ERROR, "===> Magic assertion failed (2)");
        scanner = NULL;
-       if(prevScanner != NULL) {
-	 prevScanner->next = NULL;
-       }
        break;
-     }
-
-     if((scanner->port == port) && (scanner->initiator == role))
+     } else if((scanner->port == port) 
+	       && (scanner->initiator == role))
        break;
-
-     prevScanner = scanner;
+     
      scanner = (IpGlobalSession*)(scanner->next);
    }
 
@@ -503,12 +495,12 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
      /* Add the session to the session list */
      switch(sessionType) {
      case IPPROTO_TCP:
-       scanner->next = (IpGlobalSession*)(device[actualDeviceId].hash_hostTraffic[theHostIdx]->tcpSessionList);
-       device[actualDeviceId].hash_hostTraffic[theHostIdx]->tcpSessionList = scanner; /* list head */
+       scanner->next = (IpGlobalSession*)(theHost->tcpSessionList);
+       theHost->tcpSessionList = scanner; /* list head */
        break;
      case IPPROTO_UDP:
-       scanner->next = (IpGlobalSession*)(device[actualDeviceId].hash_hostTraffic[theHostIdx]->udpSessionList);
-       device[actualDeviceId].hash_hostTraffic[theHostIdx]->udpSessionList = scanner; /* list head */
+       scanner->next = (IpGlobalSession*)(theHost->udpSessionList);
+       theHost->udpSessionList = scanner; /* list head */
        break;
      }
    }
@@ -534,21 +526,21 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
      if((initiator == SERVER_TO_CLIENT)
 	|| (initiator == CLIENT_TO_SERVER)) {
-       scanner->bytesSent += theSession->bytesSent;
-       scanner->bytesReceived += theSession->bytesReceived;
-       scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
+       scanner->bytesSent               += theSession->bytesSent;
+       scanner->bytesReceived           += theSession->bytesReceived;
+       scanner->bytesFragmentedSent     += theSession->bytesFragmentedSent;
        scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived;
      } else {
-       scanner->bytesSent += theSession->bytesReceived;
-       scanner->bytesReceived += theSession->bytesSent;
-       scanner->bytesFragmentedSent += theSession->bytesFragmentedReceived;
+       scanner->bytesSent               += theSession->bytesReceived;
+       scanner->bytesReceived           += theSession->bytesSent;
+       scanner->bytesFragmentedSent     += theSession->bytesFragmentedReceived;
        scanner->bytesFragmentedReceived += theSession->bytesFragmentedSent;
      }
      break;
    case IPPROTO_UDP:
-     scanner->bytesSent           += theSession->bytesSent;
-     scanner->bytesReceived       += theSession->bytesReceived;
-     scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
+     scanner->bytesSent               += theSession->bytesSent;
+     scanner->bytesReceived           += theSession->bytesReceived;
+     scanner->bytesFragmentedSent     += theSession->bytesFragmentedSent;
      scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived;
      break;
    }
@@ -890,7 +882,6 @@ void scanTimedoutTCPSessions(void) {
 
 	       while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
 		 u_char optionId = bootProto.bp_vend[idx++];
-		 int j;
 		 u_long tmpUlong;
 
 		 if(optionId == 255) break; /* End of options */
@@ -1412,8 +1403,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	    device[actualDeviceId].tcpSession[usedIdx] = NULL;
 	  } else {
-	    int i;
-
 	    /* There's enough space left in the hashtable */
 	    theSession = (IPSession*)malloc(sizeof(IPSession));
 	    memset(theSession, 0, sizeof(IPSession));
@@ -3171,7 +3160,6 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
 
   HostTraffic *srcHost, *dstHost;
   unsigned short hourId;
-  char theDate[8];
   struct tm t, *thisTime;
 
   if(/* (srcHostIdx == dstHostIdx) || */

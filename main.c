@@ -229,12 +229,12 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'r':
-	if(!isdigit(optarg[0])) {
-	  printf("FATAL ERROR: flag -r expects a numeric argument.\n");
-	  exit(-1);
-	}
-	refreshRate = atoi(optarg);
-	break;
+      if(!isdigit(optarg[0])) {
+	printf("FATAL ERROR: flag -r expects a numeric argument.\n");
+	exit(-1);
+      }
+      refreshRate = atoi(optarg);
+      break;
 
 #ifndef MICRO_NTOP
       case 'e':

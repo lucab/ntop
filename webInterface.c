@@ -1134,7 +1134,7 @@ void handleSingleWebConnection(fd_set *fdmask) {
   if(newSock > 0) {
 #ifdef HAVE_OPENSSL
     if(sslInitialized) 
-      if(FD_ISSET(sock_ssl, fdmask))
+      if(FD_ISSET(sock_ssl, fdmask)) {
 	if(accept_ssl_connection(newSock) == -1) {
 	  traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
 	  closeNwSocket(&newSock);
@@ -1142,6 +1142,7 @@ void handleSingleWebConnection(fd_set *fdmask) {
 	} else {
 	  newSock = -newSock;
 	}
+      }
 #endif /* HAVE_OPENSSL */
 
 #ifdef HAVE_LIBWRAP

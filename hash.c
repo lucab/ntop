@@ -150,7 +150,8 @@ static IpGlobalSession* purgeIdleHostSessions(u_int *mappings, u_int lastHashSiz
       returnValue = sessionScanner;
 
     return(returnValue);
-  }
+  } else
+    return(NULL);
 }
 
 /* ******************************* */
@@ -518,8 +519,6 @@ static void _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen,
 static void removeGlobalHostPeers(HostTraffic *el,
 				  u_int *flaggedHosts, 
 				  u_int flaggedHostsLen) {
-  int j;
-
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering removeGlobalHostPeers(0x%X)", el);
 #endif
@@ -844,10 +843,9 @@ void freeHostInstances(void) {
 /* ************************************ */
 
 void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
-  u_int idx, numFreedBuckets=0, freeEntry=0, len;
+  u_int idx, numFreedBuckets=0, len;
   time_t startTime = time(NULL);
   static time_t lastPurgeTime = 0;
-  u_char goOn = 1;
   u_int *theFlaggedHosts;
 
   if(startTime < (lastPurgeTime+(SESSION_SCAN_DELAY/2)))
@@ -909,7 +907,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 #endif
 
   traceEvent(TRACE_INFO, "Purging completed (%d sec/%d hosts deleted).",
-	     (time(NULL)-startTime), numFreedBuckets);
+	     (int)(time(NULL)-startTime), numFreedBuckets);
 }
 
 /* ******************************************** */
