@@ -343,9 +343,10 @@ unsigned short isLocalAddress(struct in_addr *addr) {
 unsigned short isPrivateAddress(struct in_addr *addr) {
 
   /* See http://www.isi.edu/in-notes/rfc1918.txt */
-
-  if(((addr->s_addr & 0xFF000000) == 0x0A000000) /* 10/24      */
-     || ((addr->s_addr & 0xFFFF0000) == 0x7F160000) /* 172.22/16  */
+  
+  /* Fixes below courtesy of Wies-Software <wies@wiessoft.de> */
+  if(((addr->s_addr & 0xFF000000) == 0x0A000000)    /* 10/8      */
+     || ((addr->s_addr & 0xFFF00000) == 0x7F100000) /* 172.16/12  */
      || ((addr->s_addr & 0xFFFF0000) == 0xC0A80000) /* 192.168/16 */
      )
     return(1);

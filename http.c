@@ -1511,12 +1511,14 @@ static int returnHTTPPage(char* pageName, int postLen) {
 	sendHTTPHeader(HTTP_TYPE_HTML, 0);
 	printAllSessionsHTML(hostName);
       }
-#endif
+#endif /* !MICRO_NTOP */
       else {
 	printTrailer = 0;
 	errorCode = HTTP_INVALID_PAGE;
       }
+#ifndef MICRO_NTOP
   }
+#endif /* !MICRO_NTOP */
 
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 

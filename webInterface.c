@@ -89,13 +89,13 @@ void execCGI(char* cgiName) {
 /* **************************************** */
  
 #if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX) || defined(DARWIN)
- void showPluginsList(char* pluginName) {
-   FlowFilterList *flows = flowsList;
-   short printHeader = 0;
-   char tmpBuf[BUF_SIZE], *thePlugin;
-   int newPluginStatus = 0;
+void showPluginsList(char* pluginName) {
+  FlowFilterList *flows = flowsList;
+  short printHeader = 0;
+  char tmpBuf[BUF_SIZE], *thePlugin;
+  int newPluginStatus = 0;
    
-   if(pluginName[0] != '\0') {
+  if(pluginName[0] != '\0') {
     int i;
     
     thePlugin = pluginName;
@@ -131,21 +131,21 @@ void execCGI(char* cgiName) {
       }
 
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR %s><TH "TH_BG" ALIGN=LEFT><A HREF=/plugins/%s>%s</TH>"
-	      "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
-	      "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
-	      "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
-	      "<TD "TD_BG" ALIGN=CENTER><A HREF="STR_SHOW_PLUGINS"?%s=%d>%s</A></TD>"
-	      "</TR>\n",
-	      getRowColor(),
-	      flows->pluginStatus.pluginPtr->pluginURLname,
-	      flows->pluginStatus.pluginPtr->pluginURLname,
-	      flows->pluginStatus.pluginPtr->pluginDescr,
-	      flows->pluginStatus.pluginPtr->pluginVersion,
-	      flows->pluginStatus.pluginPtr->pluginAuthor,
-	      flows->pluginStatus.pluginPtr->pluginURLname,
-	      flows->pluginStatus.activePlugin ? 0: 1,
-	      flows->pluginStatus.activePlugin ? 
-	      "Yes" : "<FONT COLOR=#FF0000>No</FONT>")  < 0) 
+		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
+		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=CENTER><A HREF="STR_SHOW_PLUGINS"?%s=%d>%s</A></TD>"
+		  "</TR>\n",
+		  getRowColor(),
+		  flows->pluginStatus.pluginPtr->pluginURLname,
+		  flows->pluginStatus.pluginPtr->pluginURLname,
+		  flows->pluginStatus.pluginPtr->pluginDescr,
+		  flows->pluginStatus.pluginPtr->pluginVersion,
+		  flows->pluginStatus.pluginPtr->pluginAuthor,
+		  flows->pluginStatus.pluginPtr->pluginURLname,
+		  flows->pluginStatus.activePlugin ? 0: 1,
+		  flows->pluginStatus.activePlugin ? 
+		  "Yes" : "<FONT COLOR=#FF0000>No</FONT>")  < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(tmpBuf);
     }
@@ -159,21 +159,21 @@ void execCGI(char* cgiName) {
     sendString("</TABLE>"TABLE_OFF"<p>\n");
     sendString("</CENTER>\n");
   }
- }
+}
 
 #else /* defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H) */
 
- void showPluginsList(char* pluginName) {
-   ;
- }
+void showPluginsList(char* pluginName) {
+  ;
+}
  
- void loadPlugins(void) {
-   ;
- }
+void loadPlugins(void) {
+  ;
+}
  
- void unloadPlugins(void) {
-   ;
- }
+void unloadPlugins(void) {
+  ;
+}
  
 #endif /* defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H) */
  
@@ -216,7 +216,7 @@ char* makeHostLink(HostTraffic *el, short mode,
       if(el->hostNumIpAddress[0] != '\0')
 	strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
       else {
- 	 strncpy(symIp, el->ethAddressString, sizeof(symIp)); 
+	strncpy(symIp, el->ethAddressString, sizeof(symIp)); 
 	usedEthAddress = 1;
       }
     } else if(tmpStr[0] != '\0') {
@@ -263,7 +263,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
 #ifdef MULTITHREADED
-    releaseMutex(&addressResolutionMutex);
+  releaseMutex(&addressResolutionMutex);
 #endif
 
   if(specialMacAddress) {
@@ -459,572 +459,572 @@ char* getCountryIconURL(char* domainName) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     if(stat(path, &buf) != 0) {
-       if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
-		   DATAFILE_DIR, domainName) < 0) 
-	 traceEvent(TRACE_ERROR, "Buffer overflow!");
+      if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
+		  DATAFILE_DIR, domainName) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-       if(stat(path, &buf) != 0)
-	 return("&nbsp;");
-     }
+      if(stat(path, &buf) != 0)
+	return("&nbsp;");
+    }
 
-     if(snprintf(flagBuf, sizeof(flagBuf), 
-		 "<IMG ALIGN=MIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
-		 domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(flagBuf, sizeof(flagBuf), 
+		"<IMG ALIGN=MIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
+		domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-     return(flagBuf);
-   }
- }
+    return(flagBuf);
+  }
+}
 
- /* ************************ */
+/* ************************ */
 
- char* getHostCountryIconURL(HostTraffic *el) {
-   char path[128], *ret;
-   struct stat buf;
+char* getHostCountryIconURL(HostTraffic *el) {
+  char path[128], *ret;
+  struct stat buf;
 
-   fillDomainName(el);
+  fillDomainName(el);
 
-   if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
-	    DATAFILE_DIR, el->fullDomainName) < 0) 
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-   if(stat(path, &buf) == 0)
-     ret = getCountryIconURL(el->fullDomainName);
-   else
-     ret = getCountryIconURL(el->dotDomainName);
-
-   if(ret == NULL)
-     ret = "&nbsp;";
-
-   return(ret);
- }
-
- /* ******************************* */
-
- char* getRowColor(void) {
-   /* #define USE_COLOR */
-
- #ifdef USE_COLOR
-   if(alternateColor == 0) {
-     alternateColor = 1;
-     return("BGCOLOR=#C3C9D9"); /* EFEFEF */ 
-   } else {
-     alternateColor = 0;
-     return("");
-   }
- #else
-   return("");
- #endif
- }
-
- /* ******************************* */
-
- char* getActualRowColor(void) {
-   /* #define USE_COLOR */
-
- #ifdef USE_COLOR
-   if(alternateColor == 1) {
-     return("BGCOLOR=#EFEFEF");
-   } else
-     return("");
- #else
-   return("");
- #endif
- }
-
-
- /* ******************************* */
-
- void switchNwInterface(int _interface) {
-   int i, mwInterface=_interface-1;
-   char buf[BUF_SIZE], *selected;
-
-   printHTMLheader("Network Interface Switch", HTML_FLAG_NO_REFRESH); 
-   sendString("<HR>\n<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
-
-   if(mergeInterfaces) {
-     if(snprintf(buf, sizeof(buf), "You can switch among different inferfaces if the -M "
-	      "command line switch is not used. Sorry.\n") < 0) 
-       traceEvent(TRACE_ERROR, "Buffer overflow!");
-     sendString(buf);
-   } else if((mwInterface != -1) &&
-	     ((mwInterface >= numDevices) || device[mwInterface].virtualDevice)) {
-     if(snprintf(buf, sizeof(buf), "Invalid interface selected. Sorry.\n") < 0) 
-       traceEvent(TRACE_ERROR, "Buffer overflow!");
-     sendString(buf);
-   } else if(numDevices == 1) {
-     if(snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
-	      "interface [%s]. The interface switch feature is active only when "
-	      "you active ntop with multiple interfaces (-i command line switch). "
-	      "Sorry.\n", device[actualReportDeviceId].name) < 0) 
-       traceEvent(TRACE_ERROR, "Buffer overflow!");
-     sendString(buf);
-   } else if(mwInterface >= 0) {
-     actualReportDeviceId = (mwInterface)%numDevices;
-     if(snprintf(buf, sizeof(buf), "The current interface is now [%s].\n", 
-	      device[actualReportDeviceId].name) < 0) 
-       traceEvent(TRACE_ERROR, "Buffer overflow!");
-     sendString(buf);
-   } else {
-       sendString("Available Network Interfaces:</B><P>\n<FORM ACTION="SWITCH_NIC_HTML">\n");
-
-       for(i=0; i<numDevices; i++) 
-	 if(!device[i].virtualDevice) {
-	   if(actualReportDeviceId == i)
-	     selected="CHECKED";
-	   else
-	     selected = "";
-
-	   if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
-		       i+1, selected, device[i].name) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-	   sendString(buf);
-	 }
-
-       sendString("<p><INPUT TYPE=submit>&nbsp;<INPUT TYPE=reset>\n</FORM>\n");
-       sendString("<B>");
-     }
-
-   sendString("</B>");
-   sendString("</font><p>\n");
- }
-
- /* **************************************** */
-
- void shutdownNtop(void) {
-   printHTMLheader("ntop is shutting down...", HTML_FLAG_NO_REFRESH);
-   closeNwSocket(&newSock);
-   termAccessLog();
-   cleanup(0);
- }
-
- /* ******************************** */
-
- static void printFeatureConfigInfo(char* feature, char* status) {
-   sendString("<TR><TH "TH_BG" ALIGN=left>");
-   sendString(feature);
-   sendString("</TH><TD "TD_BG" ALIGN=right>");
-   sendString(status);
-   sendString("</TD></TR>\n");
- }
-
- /* ******************************** */
-
- #ifdef MULTITHREADED
- static void printMutexStatus(PthreadMutex *mutexId, char *mutexName) {  
-    char buf[BUF_SIZE];
-
-    if(mutexId->lockLine == 0) /* Mutex never used */
-      return;
-
-    if(snprintf(buf, sizeof(buf), 
-		"<TR><TH "TH_BG" ALIGN=left>%s</TH><TD ALIGN=CENTER>%s</TD>"
-		"<TD ALIGN=RIGHT>%s:%d</TD>"
-		"<TD ALIGN=RIGHT>%s:%d</TD>"
-		"<TD ALIGN=RIGHT>%u</TD><TD ALIGN=LEFT>%u</TD>"
-		"<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>", 
-		mutexName,
-		mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
-		mutexId->lockFile, mutexId->lockLine,
-		mutexId->unlockFile, mutexId->unlockLine,
-		mutexId->numLocks, mutexId->numReleases,
-		mutexId->maxLockedDuration,
-		mutexId->maxLockedDurationUnlockFile,
-		mutexId->maxLockedDurationUnlockLine) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-    sendString(buf);
- }
- #endif
-
- void printNtopConfigInfo(void) {
-   char buf[BUF_SIZE];
- #ifdef HAVE_PCAP_VERSION
-   extern char pcap_version[];
- #endif /* HAVE_PCAP_VERSION */
-
-   printHTMLheader("Current ntop Configuration", 0);
-   sendString("<CENTER>\n");
-   sendString("<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n");
-
-   printFeatureConfigInfo("OS", osName);
-   printFeatureConfigInfo("ntop version", version);
-   printFeatureConfigInfo("Built on", buildDate);
- #ifdef HAVE_PCAP_VERSION
-   printFeatureConfigInfo("Libpcap version", pcap_version);
- #endif /* HAVE_PCAP_VERSION */
-   printFeatureConfigInfo("GDBM version", gdbm_version);
-
- #ifdef HAVE_OPENSSL
-   printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", 
-			  (char*)SSLeay_version(0));
-   if(sslPort != 0) {
-     sprintf(buf, "%d", sslPort); 
-     printFeatureConfigInfo("SSL Port", buf);
-   } else
-     printFeatureConfigInfo("SSL Port", "Not Active");
- #else
-   printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", "Absent");
- #endif
-
- #ifdef MULTITHREADED
-   printFeatureConfigInfo("Multithreaded", "Yes");
- #else
-   printFeatureConfigInfo("Multithreaded", "No");
- #endif
-
- #ifdef HAVE_GDCHART
-   printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Present");
-   printFeatureConfigInfo("Chart Format", CHART_FORMAT);
- #else
-   printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Absent");
- #endif
-
- #ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
-   printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP</A>", 
-			  (char*)VersionInfo);
- #else
-   printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP </A>", 
-			  "Absent");
- #endif
-
- #ifdef HAVE_LIBWRAP
-   printFeatureConfigInfo("TCP Wrappers", "Present");
- #else
-   printFeatureConfigInfo("TCP Wrappers", "Absent");
- #endif
-
- #ifdef ASYNC_ADDRESS_RESOLUTION
-   printFeatureConfigInfo("Async. Addr. Resolution", "Yes");
- #else
-   printFeatureConfigInfo("Async. Addr. Resolution", "No");
- #endif
-
-   if(isLsofPresent) 
-     printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support", "Yes");
-   else
-     printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support",
-			    "No (Either disabled [Use -E option] or missing)");
-
-   if(isNmapPresent) 
-     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", "Yes");
-   else
-     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", 
-			    "No (Either disabled or missing)");
-
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Actual Hash Size</TH>"
-	       "<TD "TD_BG"  align=right>%d</TD></TR>\n",
-	       (int)device[actualReportDeviceId].actualHashSize) < 0) 
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
-   sendString(buf);
-
- #ifdef MULTITHREADED
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Pkts to Process</TH>"
-	       "<TD "TD_BG"  align=right>%d</TD></TR>\n",
-	       packetQueueLen) < 0) 
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Max Queued Pkts</TH>"
-	       "<TD "TD_BG"  align=right>%u</TD></TR>\n",
-	       maxPacketQueueLen) < 0) 
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
- #endif
-
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Stored Hash Hosts</TH>"
-	       "<TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
-	       (int)device[actualReportDeviceId].hostsno,
-	       (((int)device[actualReportDeviceId].hostsno*100)/
-		(int)device[actualReportDeviceId].actualHashSize)) < 0) 
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Purged Hash Hosts</TH>"
-	       "<TD "TD_BG"  align=right>%u</TD></TR>\n",
-	       (unsigned int)numPurgedHosts) < 0) 
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># TCP Sessions</TH>"
-		"<TD "TD_BG"  align=right>%u</TD></TR>\n", 
-		device[actualReportDeviceId].numTcpSessions) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Terminated TCP Sessions</TH>"
-		"<TD "TD_BG"  align=right>%u</TD></TR>\n", 
-		(unsigned int)numTerminatedSessions) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
- #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-    accessMutex(&addressQueueMutex, "NumQueuedAddresses");
-    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Addresses</TH>"
-		"<TD "TD_BG"  align=right>%d</TD></TR>\n", addressQueueLen) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-    releaseMutex(&addressQueueMutex);
- #endif
-
-    /* **** */
-
- #if defined(MULTITHREADED)
-    accessMutex(&addressQueueMutex, "NumQueuedAddresses");
- #endif
-
-    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Resolved with DNS</TH>"
-		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedWithDNSAddresses) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Kept Numeric</TH>"
-		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", numKeptNumericAddresses) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Found on Cache</TH>"
-		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedOnCacheAddresses) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
- #if defined(MULTITHREADED)
-    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Dropped Addresses</TH>"
-		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", (long int)droppedAddresses) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
- #endif
-
- #if defined(MULTITHREADED)
-    releaseMutex(&addressQueueMutex);
- #endif
-
-    /* **** */
-
- #if defined(MULTITHREADED)
-    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Active Threads</TH>"
-		"<TD "TD_BG"  align=right>%d</TD></TR>\n", numThreads) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
- #endif
-
- #ifdef MEMORY_DEBUG
-    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Allocated Memory</TH>"
-		"<TD "TD_BG"  align=right>%s</TD></TR>\n",
-	       formatBytes(allocatedMemory, 0)) < 0) 
+  if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
+	      DATAFILE_DIR, el->fullDomainName) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
-   sendString(buf);
- #endif
 
-   if(isLsofPresent) {
-     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Monitored Processes</TH>"
-		 "<TD "TD_BG"  align=right>%d</TD></TR>\n", numProcesses) < 0)
-       traceEvent(TRACE_ERROR, "Buffer overflow!");
-     sendString(buf);
-   }
+  if(stat(path, &buf) == 0)
+    ret = getCountryIconURL(el->fullDomainName);
+  else
+    ret = getCountryIconURL(el->dotDomainName);
 
-   sendString("</TABLE>"TABLE_OFF"\n");
+  if(ret == NULL)
+    ret = "&nbsp;";
 
-   /* **************************** */
+  return(ret);
+}
 
- #ifdef MULTITHREADED
-   sendString("<P>"TABLE_ON"<TABLE BORDER=1>\n");
-   sendString("<TR><TH>Mutex Name</TH><TH>State</TH><TH>Last Lock</TH><TH>Last UnLock</TH>"
-	      "<TH COLSPAN=2># Locks/Releases</TH><TH>Max Lock</TH></TR>");
-   printMutexStatus(&gdbmMutex, "gdbmMutex");
-   printMutexStatus(&packetQueueMutex, "packetQueueMutex");
-   printMutexStatus(&addressResolutionMutex, "addressResolutionMutex");
-   printMutexStatus(&hashResizeMutex, "hashResizeMutex");  
-   if(isLsofPresent) printMutexStatus(&lsofMutex, "lsofMutex");
-   printMutexStatus(&hostsHashMutex, "hostsHashMutex");
-   printMutexStatus(&graphMutex, "graphMutex");
- #ifdef ASYNC_ADDRESS_RESOLUTION
-   if(numericFlag == 0) printMutexStatus(&addressQueueMutex, "addressQueueMutex");
- #endif
-   sendString("</TABLE>"TABLE_OFF"\n");
- #endif /* MULTITHREADED */
+/* ******************************* */
 
-   sendString("</CENTER>\n");
- }
+char* getRowColor(void) {
+  /* #define USE_COLOR */
 
- #endif /* MICRO_NTOP */
+#ifdef USE_COLOR
+  if(alternateColor == 0) {
+    alternateColor = 1;
+    return("BGCOLOR=#C3C9D9"); /* EFEFEF */ 
+  } else {
+    alternateColor = 0;
+    return("");
+  }
+#else
+  return("");
+#endif
+}
 
- /* ******************************* */
+/* ******************************* */
+
+char* getActualRowColor(void) {
+  /* #define USE_COLOR */
+
+#ifdef USE_COLOR
+  if(alternateColor == 1) {
+    return("BGCOLOR=#EFEFEF");
+  } else
+    return("");
+#else
+  return("");
+#endif
+}
+
+
+/* ******************************* */
+
+void switchNwInterface(int _interface) {
+  int i, mwInterface=_interface-1;
+  char buf[BUF_SIZE], *selected;
+
+  printHTMLheader("Network Interface Switch", HTML_FLAG_NO_REFRESH); 
+  sendString("<HR>\n<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
+
+  if(mergeInterfaces) {
+    if(snprintf(buf, sizeof(buf), "You can switch among different inferfaces if the -M "
+		"command line switch is not used. Sorry.\n") < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  } else if((mwInterface != -1) &&
+	    ((mwInterface >= numDevices) || device[mwInterface].virtualDevice)) {
+    if(snprintf(buf, sizeof(buf), "Invalid interface selected. Sorry.\n") < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  } else if(numDevices == 1) {
+    if(snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
+		"interface [%s]. The interface switch feature is active only when "
+		"you active ntop with multiple interfaces (-i command line switch). "
+		"Sorry.\n", device[actualReportDeviceId].name) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  } else if(mwInterface >= 0) {
+    actualReportDeviceId = (mwInterface)%numDevices;
+    if(snprintf(buf, sizeof(buf), "The current interface is now [%s].\n", 
+		device[actualReportDeviceId].name) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  } else {
+    sendString("Available Network Interfaces:</B><P>\n<FORM ACTION="SWITCH_NIC_HTML">\n");
+
+    for(i=0; i<numDevices; i++) 
+      if(!device[i].virtualDevice) {
+	if(actualReportDeviceId == i)
+	  selected="CHECKED";
+	else
+	  selected = "";
+
+	if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
+		    i+1, selected, device[i].name) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+	sendString(buf);
+      }
+
+    sendString("<p><INPUT TYPE=submit>&nbsp;<INPUT TYPE=reset>\n</FORM>\n");
+    sendString("<B>");
+  }
+
+  sendString("</B>");
+  sendString("</font><p>\n");
+}
+
+/* **************************************** */
+
+void shutdownNtop(void) {
+  printHTMLheader("ntop is shutting down...", HTML_FLAG_NO_REFRESH);
+  closeNwSocket(&newSock);
+  termAccessLog();
+  cleanup(0);
+}
+
+/* ******************************** */
+
+static void printFeatureConfigInfo(char* feature, char* status) {
+  sendString("<TR><TH "TH_BG" ALIGN=left>");
+  sendString(feature);
+  sendString("</TH><TD "TD_BG" ALIGN=right>");
+  sendString(status);
+  sendString("</TD></TR>\n");
+}
+
+/* ******************************** */
+
+#ifdef MULTITHREADED
+static void printMutexStatus(PthreadMutex *mutexId, char *mutexName) {  
+  char buf[BUF_SIZE];
+
+  if(mutexId->lockLine == 0) /* Mutex never used */
+    return;
+
+  if(snprintf(buf, sizeof(buf), 
+	      "<TR><TH "TH_BG" ALIGN=left>%s</TH><TD ALIGN=CENTER>%s</TD>"
+	      "<TD ALIGN=RIGHT>%s:%d</TD>"
+	      "<TD ALIGN=RIGHT>%s:%d</TD>"
+	      "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=LEFT>%u</TD>"
+	      "<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>", 
+	      mutexName,
+	      mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
+	      mutexId->lockFile, mutexId->lockLine,
+	      mutexId->unlockFile, mutexId->unlockLine,
+	      mutexId->numLocks, mutexId->numReleases,
+	      mutexId->maxLockedDuration,
+	      mutexId->maxLockedDurationUnlockFile,
+	      mutexId->maxLockedDurationUnlockLine) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+  sendString(buf);
+}
+#endif
+
+void printNtopConfigInfo(void) {
+  char buf[BUF_SIZE];
+#ifdef HAVE_PCAP_VERSION
+  extern char pcap_version[];
+#endif /* HAVE_PCAP_VERSION */
+
+  printHTMLheader("Current ntop Configuration", 0);
+  sendString("<CENTER>\n");
+  sendString("<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n");
+
+  printFeatureConfigInfo("OS", osName);
+  printFeatureConfigInfo("ntop version", version);
+  printFeatureConfigInfo("Built on", buildDate);
+#ifdef HAVE_PCAP_VERSION
+  printFeatureConfigInfo("Libpcap version", pcap_version);
+#endif /* HAVE_PCAP_VERSION */
+  printFeatureConfigInfo("GDBM version", gdbm_version);
+
+#ifdef HAVE_OPENSSL
+  printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", 
+			 (char*)SSLeay_version(0));
+  if(sslPort != 0) {
+    sprintf(buf, "%d", sslPort); 
+    printFeatureConfigInfo("SSL Port", buf);
+  } else
+    printFeatureConfigInfo("SSL Port", "Not Active");
+#else
+  printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", "Absent");
+#endif
+
+#ifdef MULTITHREADED
+  printFeatureConfigInfo("Multithreaded", "Yes");
+#else
+  printFeatureConfigInfo("Multithreaded", "No");
+#endif
+
+#ifdef HAVE_GDCHART
+  printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Present");
+  printFeatureConfigInfo("Chart Format", CHART_FORMAT);
+#else
+  printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Absent");
+#endif
+
+#ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
+  printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP</A>", 
+			 (char*)VersionInfo);
+#else
+  printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP </A>", 
+			 "Absent");
+#endif
+
+#ifdef HAVE_LIBWRAP
+  printFeatureConfigInfo("TCP Wrappers", "Present");
+#else
+  printFeatureConfigInfo("TCP Wrappers", "Absent");
+#endif
+
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  printFeatureConfigInfo("Async. Addr. Resolution", "Yes");
+#else
+  printFeatureConfigInfo("Async. Addr. Resolution", "No");
+#endif
+
+  if(isLsofPresent) 
+    printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support", "Yes");
+  else
+    printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support",
+			   "No (Either disabled [Use -E option] or missing)");
+
+  if(isNmapPresent) 
+    printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", "Yes");
+  else
+    printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", 
+			   "No (Either disabled or missing)");
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Actual Hash Size</TH>"
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
+	      (int)device[actualReportDeviceId].actualHashSize) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+#ifdef MULTITHREADED
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Pkts to Process</TH>"
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
+	      packetQueueLen) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Max Queued Pkts</TH>"
+	      "<TD "TD_BG"  align=right>%u</TD></TR>\n",
+	      maxPacketQueueLen) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+#endif
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Stored Hash Hosts</TH>"
+	      "<TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
+	      (int)device[actualReportDeviceId].hostsno,
+	      (((int)device[actualReportDeviceId].hostsno*100)/
+	       (int)device[actualReportDeviceId].actualHashSize)) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Purged Hash Hosts</TH>"
+	      "<TD "TD_BG"  align=right>%u</TD></TR>\n",
+	      (unsigned int)numPurgedHosts) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># TCP Sessions</TH>"
+	      "<TD "TD_BG"  align=right>%u</TD></TR>\n", 
+	      device[actualReportDeviceId].numTcpSessions) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Terminated TCP Sessions</TH>"
+	      "<TD "TD_BG"  align=right>%u</TD></TR>\n", 
+	      (unsigned int)numTerminatedSessions) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+  accessMutex(&addressQueueMutex, "NumQueuedAddresses");
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Addresses</TH>"
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", addressQueueLen) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+  releaseMutex(&addressQueueMutex);
+#endif
+
+  /* **** */
+
+#if defined(MULTITHREADED)
+  accessMutex(&addressQueueMutex, "NumQueuedAddresses");
+#endif
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Resolved with DNS</TH>"
+	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedWithDNSAddresses) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Kept Numeric</TH>"
+	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numKeptNumericAddresses) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Found on Cache</TH>"
+	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedOnCacheAddresses) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+#if defined(MULTITHREADED)
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Dropped Addresses</TH>"
+	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", (long int)droppedAddresses) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+#endif
+
+#if defined(MULTITHREADED)
+  releaseMutex(&addressQueueMutex);
+#endif
+
+  /* **** */
+
+#if defined(MULTITHREADED)
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Active Threads</TH>"
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", numThreads) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+#endif
+
+#ifdef MEMORY_DEBUG
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Allocated Memory</TH>"
+	      "<TD "TD_BG"  align=right>%s</TD></TR>\n",
+	      formatBytes(allocatedMemory, 0)) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+#endif
+
+  if(isLsofPresent) {
+    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Monitored Processes</TH>"
+		"<TD "TD_BG"  align=right>%d</TD></TR>\n", numProcesses) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  }
+
+  sendString("</TABLE>"TABLE_OFF"\n");
+
+  /* **************************** */
+
+#ifdef MULTITHREADED
+  sendString("<P>"TABLE_ON"<TABLE BORDER=1>\n");
+  sendString("<TR><TH>Mutex Name</TH><TH>State</TH><TH>Last Lock</TH><TH>Last UnLock</TH>"
+	     "<TH COLSPAN=2># Locks/Releases</TH><TH>Max Lock</TH></TR>");
+  printMutexStatus(&gdbmMutex, "gdbmMutex");
+  printMutexStatus(&packetQueueMutex, "packetQueueMutex");
+  printMutexStatus(&addressResolutionMutex, "addressResolutionMutex");
+  printMutexStatus(&hashResizeMutex, "hashResizeMutex");  
+  if(isLsofPresent) printMutexStatus(&lsofMutex, "lsofMutex");
+  printMutexStatus(&hostsHashMutex, "hostsHashMutex");
+  printMutexStatus(&graphMutex, "graphMutex");
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  if(numericFlag == 0) printMutexStatus(&addressQueueMutex, "addressQueueMutex");
+#endif
+  sendString("</TABLE>"TABLE_OFF"\n");
+#endif /* MULTITHREADED */
+
+  sendString("</CENTER>\n");
+}
+
+#endif /* MICRO_NTOP */
+
+/* ******************************* */
+
+void initializeWeb(void) {
+#ifndef MICRO_NTOP
+  columnSort = 0, sortSendMode = 0;
+#endif
+  addDefaultAdminUser();
+  initAccessLog();
+}
+
+/* **************************************** */
 
  /* 
     SSL fix courtesy of 
     Curtis Doty <Curtis@GreenKey.net>
  */
- void initWeb(int webPort, char* webAddr, char* sslAddr) {
-   int sockopt = 1;
-   struct sockaddr_in sin;
+void initWeb(int webPort, char* webAddr, char* sslAddr) {
+  int sockopt = 1;
+  struct sockaddr_in sin;
 
-   initReports();
-   initializeWeb();
+  initReports();
+  initializeWeb();
 
-   actualReportDeviceId = 0;
+  actualReportDeviceId = 0;
 
-   if(webPort > 0) {
-     sin.sin_family      = AF_INET;
-     sin.sin_port        = (int)htons((unsigned short int)webPort);
-     sin.sin_addr.s_addr = INADDR_ANY;
+  if(webPort > 0) {
+    sin.sin_family      = AF_INET;
+    sin.sin_port        = (int)htons((unsigned short int)webPort);
+    sin.sin_addr.s_addr = INADDR_ANY;
 
- #ifndef WIN32
-     if(sslAddr) {
-       if(!inet_aton(sslAddr,&sin.sin_addr))
-		 traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
-		    "Not binding SSL to a particular interface!\n",  sslAddr);
-     }
+#ifndef WIN32
+    if(sslAddr) {
+      if(!inet_aton(sslAddr,&sin.sin_addr))
+	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
+		   "Not binding SSL to a particular interface!\n",  sslAddr);
+    }
 
-     if (webAddr) {      /* Code added to be able to bind to a particular interface */
-       if (!inet_aton(webAddr,&sin.sin_addr))
-	 traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
-		    "Not binding to a particular interface!\n",  webAddr);
-     }
- #endif
+    if (webAddr) {      /* Code added to be able to bind to a particular interface */
+      if (!inet_aton(webAddr,&sin.sin_addr))
+	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
+		   "Not binding to a particular interface!\n",  webAddr);
+    }
+#endif
 
-     sock = socket(AF_INET, SOCK_STREAM, 0);
-     if(sock < 0) {
-       traceEvent(TRACE_ERROR, "Unable to create a new socket");
-       exit(-1);
-     }
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock < 0) {
+      traceEvent(TRACE_ERROR, "Unable to create a new socket");
+      exit(-1);
+    }
 
-     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
-   } else
-     sock = 0;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+  } else
+    sock = 0;
 
- #ifdef HAVE_OPENSSL
-   if(sslInitialized) {
-     sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
-     if(sock_ssl < 0) {
-       traceEvent(TRACE_ERROR, "unable to create a new socket");
-       exit(-1);
-     }
+#ifdef HAVE_OPENSSL
+  if(sslInitialized) {
+    sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock_ssl < 0) {
+      traceEvent(TRACE_ERROR, "unable to create a new socket");
+      exit(-1);
+    }
 
-     setsockopt(sock_ssl, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
-   }
- #endif
+    setsockopt(sock_ssl, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+  }
+#endif
 
-   if(webPort > 0) {
-     if(bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-       traceEvent(TRACE_WARNING, "bind: port %d already in use.", webPort);
-       closeNwSocket(&sock);
-       exit(-1);
-     }
-   }
+  if(webPort > 0) {
+    if(bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+      traceEvent(TRACE_WARNING, "bind: port %d already in use.", webPort);
+      closeNwSocket(&sock);
+      exit(-1);
+    }
+  }
 
- #ifdef HAVE_OPENSSL
-   if(sslInitialized) {
-     sin.sin_family      = AF_INET;
-     sin.sin_port        = (int)htons(sslPort);
-     sin.sin_addr.s_addr = INADDR_ANY;
+#ifdef HAVE_OPENSSL
+  if(sslInitialized) {
+    sin.sin_family      = AF_INET;
+    sin.sin_port        = (int)htons(sslPort);
+    sin.sin_addr.s_addr = INADDR_ANY;
 
-     if(bind(sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-       traceEvent(TRACE_ERROR, "bind: port %d already in use.", webPort);
-       closeNwSocket(&sock_ssl);
-       exit(-1);
-     }
-   }
- #endif
+    if(bind(sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+      traceEvent(TRACE_ERROR, "bind: port %d already in use.", webPort);
+      closeNwSocket(&sock_ssl);
+      exit(-1);
+    }
+  }
+#endif
 
-   if(webPort > 0) {
-     if(listen(sock, 5) < 0) {
-       traceEvent(TRACE_WARNING, "listen error.\n");
-       closeNwSocket(&sock);
-       exit(-1);
-     } 
-   }
+  if(webPort > 0) {
+    if(listen(sock, 5) < 0) {
+      traceEvent(TRACE_WARNING, "listen error.\n");
+      closeNwSocket(&sock);
+      exit(-1);
+    } 
+  }
 
- #ifdef HAVE_OPENSSL
-   if(sslInitialized) 
-     if(listen(sock_ssl, 5) < 0) {
-       traceEvent(TRACE_WARNING, "listen error.\n");
-       closeNwSocket(&sock_ssl);
-       exit(-1);
-     }
- #endif
+#ifdef HAVE_OPENSSL
+  if(sslInitialized) 
+    if(listen(sock_ssl, 5) < 0) {
+      traceEvent(TRACE_WARNING, "listen error.\n");
+      closeNwSocket(&sock_ssl);
+      exit(-1);
+    }
+#endif
 
-   if(webPort > 0) {
-     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-     if (webAddr) 
-       traceEvent(TRACE_INFO, "Waiting for HTTP connections on %s port %d...\n",
-		  webAddr, webPort);
-     else 
-       traceEvent(TRACE_INFO, "Waiting for HTTP connections on port %d...\n",
-		  webPort);
-   }
+  if(webPort > 0) {
+    /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+    if (webAddr) 
+      traceEvent(TRACE_INFO, "Waiting for HTTP connections on %s port %d...\n",
+		 webAddr, webPort);
+    else 
+      traceEvent(TRACE_INFO, "Waiting for HTTP connections on port %d...\n",
+		 webPort);
+  }
 
- #ifdef HAVE_OPENSSL
-   if(sslInitialized) 
-     traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
-		sslPort);
- #endif
+#ifdef HAVE_OPENSSL
+  if(sslInitialized) 
+    traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
+	       sslPort);
+#endif
 
- #ifdef MULTITHREADED
-   createThread(&handleWebConnectionsThreadId, handleWebConnections, NULL);
- #endif
- }
+#ifdef MULTITHREADED
+  createThread(&handleWebConnectionsThreadId, handleWebConnections, NULL);
+#endif
+}
 
- /* **************************************** */
+/* **************************************** */
 
- void initializeWeb(void) {
- #ifndef MICRO_NTOP
-   columnSort = 0, sortSendMode = 0;
- #endif
-   addDefaultAdminUser();
-   initAccessLog();
- }
+void usage(void) {
+  char buf[80];
 
- /* **************************************** */
+  if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
+	      program_name, version, THREAD_MODE, osName, buildDate) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  traceEvent(TRACE_INFO, "%s\n", buf);
 
- void usage(void) {
-   char buf[80];
+  traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
+  traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
+  if(snprintf(buf, sizeof(buf), "Written by %s.", author) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-   if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
-	       program_name, version, THREAD_MODE, osName, buildDate) < 0) 
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
-   traceEvent(TRACE_INFO, "%s\n", buf);
+  traceEvent(TRACE_INFO, "%s\n", buf);
 
-   traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
-   traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
-   if(snprintf(buf, sizeof(buf), "Written by %s.", author) < 0)
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
+  if(snprintf(buf, sizeof(buf), "Usage: %s", program_name) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-   traceEvent(TRACE_INFO, "%s\n", buf);
+  traceEvent(TRACE_INFO, "%s\n", buf);
 
-   if(snprintf(buf, sizeof(buf), "Usage: %s", program_name) < 0) 
-     traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-   traceEvent(TRACE_INFO, "%s\n", buf);
-
-   traceEvent(TRACE_INFO, "    %s\n",   "[-c <sticky hosts: idle hosts are not purged from hash>]");
- #ifdef WIN32
-   traceEvent(TRACE_INFO, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
- #else
-   traceEvent(TRACE_INFO, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
-	      ALARM_TIME, REFRESH_TIME);
- #endif
-   traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
- #ifndef WIN32
-   traceEvent(TRACE_INFO, "    %s\n",   "[-E <enable lsof/nmap integration (if present)>]");
- #endif
-   traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
-   traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
- #ifdef WIN32
-   traceEvent(TRACE_INFO, "    %s%d KB)>]\n", "[-B <NDIS buffer in Kbytes (default ",
-	      (int)(SIZE_BUF/1024));
- #endif
- #ifndef WIN32
-   traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
- #else
-   traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface index>]");
- #endif
-   traceEvent(TRACE_INFO, "    %s\n",   "[-S <store mode> (store persistently host stats)]");
-   traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
- #ifdef HAVE_OPENSSL
-   traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
- #endif
-   traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
-   traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-c <sticky hosts: idle hosts are not purged from hash>]");
+#ifdef WIN32
+  traceEvent(TRACE_INFO, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
+#else
+  traceEvent(TRACE_INFO, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
+	     ALARM_TIME, REFRESH_TIME);
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
+#ifndef WIN32
+  traceEvent(TRACE_INFO, "    %s\n",   "[-E <enable lsof/nmap integration (if present)>]");
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
+#ifdef WIN32
+  traceEvent(TRACE_INFO, "    %s%d KB)>]\n", "[-B <NDIS buffer in Kbytes (default ",
+	     (int)(SIZE_BUF/1024));
+#endif
+#ifndef WIN32
+  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
+#else
+  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface index>]");
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-S <store mode> (store persistently host stats)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
+#ifdef HAVE_OPENSSL
+  traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows)]");
 #ifndef WIN32
   traceEvent(TRACE_INFO, "    %s\n",   "[-d (daemon mode)]");
 #endif
@@ -1102,10 +1102,10 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 /* ************************************* */
  
 void handleSingleWebConnection(fd_set *fdmask) {
-   struct sockaddr_in from;
-   int from_len = sizeof(from);
+  struct sockaddr_in from;
+  int from_len = sizeof(from);
 
-   errno = 0;
+  errno = 0;
 
   if(FD_ISSET(sock, fdmask)) {
 #ifdef DEBUG
