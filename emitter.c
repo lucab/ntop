@@ -34,7 +34,7 @@
 
    Many thanks Philippe!
 */
-char * languages[] = {"", "perl","php","no"};
+char * languages[] = {"", "perl", "php", "no" };
 char buf[256];
 
 /* *************************** */
@@ -42,10 +42,10 @@ char buf[256];
 void initWriteArray ( int lang ) {
   switch (lang) {
   case PERL_LANGUAGE :
-    sendString("%hash = (\n");
+    sendString("%ntopHash = (\n");
     break ;
   case PHP_LANGUAGE :
-    sendString("$hash = array(\n");
+    sendString("$ntopHash = array(\n");
     break ;
   case NO_LANGUAGE :
     break ;
@@ -224,8 +224,6 @@ void dumpNtopHashes(char* options) {
   HostTraffic *el;
 
   memset(key, 0, sizeof(key));
-
-
 
   if(options != NULL) {
     /* language now defined into "languages[]" */
