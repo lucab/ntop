@@ -2985,11 +2985,10 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     el->fcCounters->devType = SCSI_DEV_UNINIT;
     el->magic = CONST_MAGIC_NUMBER;
     
-    if ((srcEl = findHostBySerial (theSerial, deviceId)) != NULL) {
-        strcpy (el->hostResolvedName, srcEl->hostResolvedName);
-        el->hostResolvedNameType = srcEl->hostResolvedNameType;
-    }
-    else {
+    if((srcEl = findHostBySerial (theSerial, deviceId)) != NULL) {
+      strcpy (el->hostResolvedName, srcEl->hostResolvedName);
+      el->hostResolvedNameType = srcEl->hostResolvedNameType;
+    } else {
         fcnsEntry = findFcHostNSCacheEntry (&el->fcCounters->hostFcAddress, el->fcCounters->vsanId);
         if (fcnsEntry != NULL) {
             if (fcnsEntry->alias != NULL) {
@@ -3432,7 +3431,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   sendString("<CENTER>\n<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=80%%>\n");
 
   if(el->hostNumIpAddress[0] != '\0') {
-    char *countryIcon, *hostType;
+    char *countryIcon, *hostType, tmpBuf[64];
 
     accessAddrResMutex("printAllSessions-2");
 
@@ -3465,23 +3464,29 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		countryIcon, hostType, dynIp, multihomed, multivlaned);
     sendString(buf);
 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "&nbsp;[ <A HREF=\"/"CONST_PURGE_HOST"?key=%s\">Purge Asset</A> <IMG SRC=/lock.png> ]",
+		  serial2str(el->hostSerial, tmpBuf, sizeof(tmpBuf)));
+    sendString(buf);
+    
     sendString("</TD></TR>\n");
-
+    
     if(isMultihomed(el) && (!broadcastHost(el))) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD ALIGN=RIGHT>&nbsp;<OL>",
-		  getRowColor(), "Multihomed Addresses");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD ALIGN=RIGHT>&nbsp;<OL>",
+		    getRowColor(), "Multihomed Addresses");
       sendString(buf);
-
+      
       for(theHost=getFirstHost(actualDeviceId);
 	  theHost != NULL; theHost = getNextHost(actualDeviceId, theHost)) {
 	if((theHost != el)
 	   && (memcmp(theHost->ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS) == 0)) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<LI><A HREF=/%s.html>%s</A>",
-		      theHost->hostNumIpAddress, theHost->hostNumIpAddress);
+			theHost->hostNumIpAddress, theHost->hostNumIpAddress);
 	  sendString(buf);
 	}
       } /* for */
-
+      
       sendString("</TD></TR>");
     }
 
@@ -3951,8 +3956,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   printedHeader=0;
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-      if(!emptySerial(&el->contactedRouters.peersSerials[i])) {
-	  HostSerial routerIdx = el->contactedRouters.peersSerials[i];
+    if(!emptySerial(&el->contactedRouters.peersSerials[i])) {
+      HostSerial routerIdx = el->contactedRouters.peersSerials[i];
 
       if(!emptySerial(&routerIdx)) {
 	HostTraffic *router = quickHostLink(routerIdx, myGlobals.actualReportDeviceId, &tmpEl);

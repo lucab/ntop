@@ -672,7 +672,9 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   sendString("				[null,'Active TCP Sessions','/NetNetstat.html',null,null],\n");
   sendString("				[null,'Host Fingerprint','/localHostsFingerprint.html',null,null],\n");
   sendString("				[null,'Host Characterization','/localHostsCharacterization.html',null,null],\n");
+#ifndef WIN32
   sendString("				[null,'Network Traffic Map','/networkMap.html',null,null],\n");
+#endif
   sendString("				[null,'Local Matrix','/ipTrafficMatrix.html',null,null],\n");
   sendString("		],\n");
   sendString("	],\n");
@@ -1341,7 +1343,6 @@ static int checkURLsecurity(char *url) {
 #endif
 
   /* Find the terminal . for checking the extension */
-
   for(i=strlen(workURL)-1; i >= 0; i--)
     if(workURL[i] == '.')
       break;
@@ -3215,6 +3216,9 @@ static int returnHTTPPage(char* pageName,
 	else
 	  dumpNtopTrafficInfo(NULL, &questionMark[1]);
 	printTrailer = 0;
+      } else if(strncasecmp(pageName, CONST_PURGE_HOST, strlen(CONST_PURGE_HOST)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	purgeHost(db_key);
       } else if(strlen(pageName) > 5) {
 	char hostName[32];
 

@@ -241,7 +241,8 @@ extern void printIpTrafficMatrix(void);
 extern void printFcTrafficMatrix (u_short vsanId, u_char sent);
 extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
-extern void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int revertOrder, int pageNum);
+extern void printDomainStats(char* domainName, int clusterMode, 
+			     int sortedColumn, int revertOrder, int pageNum);
 extern void printNoDataYet(void);
 extern void printNotAvailable(char* flagName);
 extern void listNetFlows(void);
@@ -249,9 +250,10 @@ extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printASList(unsigned int deviceId);
 extern void printVLANList(unsigned int deviceId);
 extern void showPortTraffic(u_short portNr);
-void drawVsanStatsGraph (unsigned int deviceId);
-void printVSANList(unsigned int deviceId);
-void handleNtopConfig (char *url, UserPrefDisplayPage page, int postLen);
+extern void drawVsanStatsGraph (unsigned int deviceId);
+extern void printVSANList(unsigned int deviceId);
+extern void handleNtopConfig (char *url, UserPrefDisplayPage page, int postLen);
+extern void purgeHost(char *serialized_serial);
 
 /* webInterface.c */
 extern int execCGI(char* cgiName);

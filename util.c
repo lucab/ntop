@@ -173,6 +173,42 @@ HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualD
 
 /* ************************************ */
 
+char* serial2str(HostSerial theSerial, char *buf, int buf_len) {
+  buf[0] = '\0';
+
+  if(buf_len >= 2*sizeof(HostSerial)) {
+    int len = 0, i;
+    char tmpStr[16];
+    char *ptr = (char*)&theSerial;
+           
+    for(i=0; i<sizeof(HostSerial); i++) {
+      snprintf(tmpStr, sizeof(tmpStr), "%02X", ptr[i] & 0xFF);
+      strcat(buf, tmpStr);
+    }
+  }
+
+  return(buf);
+}
+
+/* ************************************ */
+
+void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
+  if(buf_len >= 2*sizeof(HostSerial)) {
+    int len = 0, i, j;
+    char tmpStr[16];
+    char *ptr = (char*)theSerial;
+      
+    for(i=0, j=0; i<2*sizeof(HostSerial);) {
+      tmpStr[0] = buf[i++];
+      tmpStr[1] = buf[i++];
+      tmpStr[2] = '\0';
+      sscanf(tmpStr, "%02X", &ptr[j++]);
+    }
+  }
+}
+
+/* ************************************ */
+
 HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
   if (emptySerial (&theSerial)) return (NULL);
   if(theSerial.serialType == SERIAL_IPV4 || theSerial.serialType == SERIAL_IPV6) {
@@ -207,8 +243,7 @@ HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId) {
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-    if((el->ethAddress[0] != '\0')
-       && (!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS))) {
+    if(!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)) {
       if((vlanId > 0) && (el->vlanId != vlanId))
 	continue;
       else
@@ -6605,4 +6640,3 @@ void mkdir_p(char *tag, char *path, int permission) {
 	       errno,
 	       strerror(errno));
 }
-

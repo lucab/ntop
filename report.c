@@ -2157,6 +2157,10 @@ static int addNodeInfo(FILE *fd, HostTraffic *el) {
 /* ****************************************************************** */
 
 void makeDot() {
+#ifdef WIN32
+  returnHTTPpageNotFound("<b>This feature is not available on your platform</b>");
+  return;
+#else
   HostTraffic *el, *el2, tmpEl;
   char buf[LEN_GENERAL_WORK_BUFFER], buf1[LEN_GENERAL_WORK_BUFFER],
     path[384], dotPath[256], buf0[128], buf2[128];
@@ -2275,6 +2279,7 @@ void makeDot() {
   } else {
     returnHTTPpageNotFound("Unable to create temporary file");
   }
+#endif
 }
 
 /* ******************************* */
@@ -5933,4 +5938,66 @@ void printFcHostsTraffic(int reportType,
 
     myGlobals.lastRefreshTime = myGlobals.actTime;
     free(tmpTable);
+}
+
+/* ************************************ */
+
+void purgeHost(char *serialized_serial) {
+  HostSerial theSerial;
+  HostTraffic *el;
+
+  str2serial(&theSerial, serialized_serial, strlen(serialized_serial));
+
+#if 0
+  {
+    char buf[64];
+
+    traceEvent(CONST_TRACE_INFO, "==> %s [type=%d][serial Len=%d]\n",
+	       _addrtostr(&theSerial.value.ipSerial.ipAddress, buf, sizeof(buf)),
+	       theSerial.serialType, strlen(serialized_serial));
+
+  }
+#endif
+
+  el = findHostBySerial(theSerial, myGlobals.actualReportDeviceId);
+
+  printHTMLheader("Host Purge", NULL, 0);
+
+  if(!el) {
+    printFlagedWarning("Unable to purge the specified host: host not found");
+  } else {
+    int j, found = 0;
+
+    for(j=FIRST_HOSTS_ENTRY; (!found) && (j<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize); j++) {
+      HostTraffic *el1 = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[j], *el_prev = NULL;
+
+      while(el1 != NULL) {
+	if(el1 == el) {
+	  found = 1;
+
+	  if(el_prev == NULL)
+	    myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[j] = el1->next;
+	  else
+	    el_prev->next = el1->next;
+	  
+	  freeHostInfo(el, myGlobals.actualReportDeviceId);
+	  break;
+	}
+
+	el_prev = el1;
+	el1 = el1->next;
+      }
+    } /* for */
+
+    if(found) {
+      char buf[LEN_GENERAL_WORK_BUFFER];
+      
+      safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
+		    "<center>\n"
+		    "<p><font color=\"#FF0000\" size=\"+1\">%s</font></p>\n"
+		    "</center>\n", "Host Purged Succesfully");
+      sendString(buf);      
+    } else
+      printFlagedWarning("Unable to purge the specified host: internal error");
+  }
 }

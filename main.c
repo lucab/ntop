@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
   struct stat fileStat;
   int effective_argc;
   char **effective_argv;
-  char main[LEN_GENERAL_WORK_BUFFER], lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
+  char main_buf[LEN_GENERAL_WORK_BUFFER], lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
 
   /* printf("Wait please: ntop is coming up...\n"); */
 
@@ -455,10 +455,10 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
  
 #ifndef WIN32
-  if(getDynamicLoadPaths(main, sizeof(main), lib, sizeof(lib), env, sizeof(env)) == 0) {
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop is running from '%s'\n", main);
+  if(getDynamicLoadPaths(main_buf, sizeof(main_buf), lib, sizeof(lib), env, sizeof(env)) == 0) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop is running from '%s'\n", main_buf);
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: (but see warning on man page for the --instance parameter)\n");
-    if(strcmp(main, lib) != 0) 
+    if(strcmp(main_buf, lib) != 0) 
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop libraries are in '%s'\n", lib);
   } else {
     traceEvent(CONST_TRACE_NOISY, "NOTE: Unable to establish where ntop is running from");

@@ -986,6 +986,7 @@ void addDefaultAdminUser(void) {
   addKeyIfMissing("2configNtop", "users=1admin", 0, 0, NULL);
   addKeyIfMissing("2privacyFlag","users=1admin", 0, 0, NULL);
   addKeyIfMissing("2"CONST_EDIT_PREFS,"users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2"CONST_PURGE_HOST,"users=1admin", 0, 0, NULL);
 }
 
 /* ************************************ */

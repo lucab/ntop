@@ -1185,6 +1185,7 @@
 #define CONST_NETWORK_MAP                   "networkMap"
 #define CONST_NETWORK_IMAGE_MAP             "network_map.png"
 #define CONST_EDIT_PREFS                    "editPrefs.html"
+#define CONST_PURGE_HOST                    "purgeHost.html"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.

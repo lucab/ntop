@@ -475,7 +475,8 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   struct stat statbuf;
   int argc = 0, rc, x, y;
 
-traceEventTemp("graphCounter(%s, %s, %s, %s, %s, %s...)", rrdPath, rrdName, rrdTitle, rrdCounter, startTime, endTime);
+  traceEvent(CONST_TRACE_INFO, "graphCounter(%s, %s, %s, %s, %s, %s...)", 
+	     rrdPath, rrdName, rrdTitle, rrdCounter, startTime, endTime);
 
   memset(&buf, 0, sizeof(buf));
   memset(&buf1, 0, sizeof(buf1));
@@ -1347,7 +1348,10 @@ static void commonRRDinit(void) {
     hostsFilter = strdup(value);
     storePrefsValue("rrd.hostsFilter", hostsFilter);
 
-    traceEvent(CONST_TRACE_INFO, "====> RRD: numLocalNetworks=%d [%s]", myGlobals.numLocalNetworks, value);
+    /*
+      traceEvent(CONST_TRACE_INFO, "====> RRD: numLocalNetworks=%d [%s]",
+      myGlobals.numLocalNetworks, value);
+    */
   } else {
     hostsFilter  = strdup(value);
   }

@@ -1188,66 +1188,67 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
   return(el);
 }
 
+/* ********************************************************** */
+
 HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
-                           int actualDeviceId)
-{
-    u_int idx;
+                           int actualDeviceId) {
+  u_int idx;
 #ifndef CFG_MULTITHREADED
-    u_int run=0;
+  u_int run=0;
 #endif
-    HostTraffic *el=NULL;
-    FcNameServerCacheEntry *fcnsEntry;
-    u_short numRuns=0;
-    u_int hostFound = 0;
+  HostTraffic *el=NULL;
+  FcNameServerCacheEntry *fcnsEntry;
+  u_short numRuns=0;
+  u_int hostFound = 0;
 
-    if(hostFcAddress == NULL) {
-        traceEvent(CONST_TRACE_ERROR, "lookupFcHost: Call invoked with NULL"
-                   "FC Address, vsan = %d, device = %d", vsanId,
-                   actualDeviceId);
-        return(NULL);
+  if(hostFcAddress == NULL) {
+    traceEvent(CONST_TRACE_ERROR, "lookupFcHost: Call invoked with NULL"
+	       "FC Address, vsan = %d, device = %d", vsanId,
+	       actualDeviceId);
+    return(NULL);
+  }
+
+  idx = hashFcHost (hostFcAddress, vsanId, &el, actualDeviceId);
+
+  if(el != NULL) {
+    return (el);
+  }
+  else if(idx == FLAG_NO_PEER)
+    return(NULL);
+  else
+    el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+
+
+  hostFound = 0;  /* This is the same type as the one of HashList */
+
+  while(el != NULL) {
+    if(el->magic != CONST_MAGIC_NUMBER) {
+      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
+		 CONST_MAGIC_NUMBER, el->magic);
     }
 
-    idx = hashFcHost (hostFcAddress, vsanId, &el, actualDeviceId);
-
-    if(el != NULL) {
-        return (el);
+    if(el->hostTrafficBucket != idx) {
+      traceEvent(CONST_TRACE_WARNING, "Error: wrong bucketIdx %s/%s (expected=%d/real=%d)",
+		 el->ethAddressString, el->hostNumIpAddress,
+		 idx, el->hostTrafficBucket);
     }
-    else if(idx == FLAG_NO_PEER)
-        return(NULL);
-    else
-        el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
-
-    hostFound = 0;  /* This is the same type as the one of HashList */
-
-    while(el != NULL) {
-        if(el->magic != CONST_MAGIC_NUMBER) {
-            traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
-                       CONST_MAGIC_NUMBER, el->magic);
-        }
-
-        if(el->hostTrafficBucket != idx) {
-            traceEvent(CONST_TRACE_WARNING, "Error: wrong bucketIdx %s/%s (expected=%d/real=%d)",
-                       el->ethAddressString, el->hostNumIpAddress,
-                       idx, el->hostTrafficBucket);
-        }
-
-        if ((el->fcCounters != NULL) &&
-            (memcmp ((u_int8_t *)&(el->fcCounters->hostFcAddress), hostFcAddress, LEN_FC_ADDRESS) == 0)) {
-            hostFound = 1;
-            break;
-        }
-
-        el = el->next;
-        numRuns++;
+    if ((el->fcCounters != NULL) &&
+	(memcmp ((u_int8_t *)&(el->fcCounters->hostFcAddress), hostFcAddress, LEN_FC_ADDRESS) == 0)) {
+      hostFound = 1;
+      break;
     }
+
+    el = el->next;
+    numRuns++;
+  }
 
   if(numRuns > myGlobals.device[actualDeviceId].hashListMaxLookups) {
-      myGlobals.device[actualDeviceId].hashListMaxLookups = numRuns ;
+    myGlobals.device[actualDeviceId].hashListMaxLookups = numRuns ;
   }
 
   if(!hostFound) {
-      /* New host entry */
+    /* New host entry */
 
     if(myGlobals.device[actualDeviceId].hostsno >= myGlobals.runningPref.maxNumHashEntries) {
       static char messageShown = 0;
@@ -1271,10 +1272,10 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
       */
     } else
 #endif
-    {
-      if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL)
-	return(NULL);
-    }
+      {
+	if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL)
+	  return(NULL);
+      }
 
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
@@ -1294,7 +1295,8 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     el->fcCounters->hostFcAddress.domain = hostFcAddress->domain;
     el->fcCounters->hostFcAddress.area = hostFcAddress->area;
     el->fcCounters->hostFcAddress.port = hostFcAddress->port;
-    safe_snprintf(__FILE__, __LINE__, el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress),
+    safe_snprintf(__FILE__, __LINE__, el->fcCounters->hostNumFcAddress, 
+		  sizeof(el->fcCounters->hostNumFcAddress),
                   fc_to_str ((u_int8_t *)hostFcAddress));
     /* TBD: Resolve FC_ID to WWN */
     el->fcCounters->vsanId = vsanId;
@@ -1306,11 +1308,11 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
       else
 	setResolvedName(el, fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
 
-        memcpy (el->fcCounters->pWWN.str, fcnsEntry->pWWN.str, LEN_WWN_ADDRESS);
-        memcpy (el->fcCounters->nWWN.str, fcnsEntry->nWWN.str, LEN_WWN_ADDRESS);
+      memcpy (el->fcCounters->pWWN.str, fcnsEntry->pWWN.str, LEN_WWN_ADDRESS);
+      memcpy (el->fcCounters->nWWN.str, fcnsEntry->nWWN.str, LEN_WWN_ADDRESS);
     }
     else {
-        setResolvedName(el, el->fcCounters->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FCID);
+      setResolvedName(el, el->fcCounters->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FCID);
     }
 
 #ifdef HASH_DEBUG
@@ -1322,7 +1324,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   }
 
   if(el != NULL) {
-      el->lastSeen = myGlobals.actTime;
+    el->lastSeen = myGlobals.actTime;
   }
 
   if(el == NULL)
