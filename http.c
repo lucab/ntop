@@ -1014,12 +1014,12 @@ static int returnHTTPPage(char* pageName, int postLen) {
     int childpid;
 
     /* The URLs below are "read-only" hence I can fork a copy of ntop  */ 
-    signal(SIGHUP,  SIG_IGN);
+    /* signal(SIGHUP,  SIG_IGN); */
     /* SIGCHLD is handled in initialize.c */
-    signal(SIGQUIT, SIG_IGN);
+    /* signal(SIGQUIT, SIG_IGN); */
 
     if((childpid = fork()) < 0)
-      traceEvent(TRACE_ERROR, "An error occurred while daemonizing ntop...\n");
+      traceEvent(TRACE_ERROR, "An error occurred while forking ntop (errno=%d)...\n", errno);
     else {
       if(childpid) {
 	/* father process */
@@ -1031,6 +1031,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       } else {
 	usedFork = 1;
 	detachFromTerminal();
+	numChildren++;
 	alarm(120); /* Don't freeze */
 	setsignal(SIGALRM, quitNow);
       }

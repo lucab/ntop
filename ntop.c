@@ -43,9 +43,7 @@
 #include "ntop.h"
 
 
-#ifdef DEBUG
-static int numChildren=0;
-#endif
+int numChildren = 0;
 
 static int enableDBsupport=0;
 static int *servicesMapper = NULL; /* temporary value */
@@ -213,7 +211,7 @@ void daemonize(void) {
   signal(SIGQUIT, SIG_IGN);
 
   if((childpid=fork()) < 0)
-    traceEvent(TRACE_ERROR, "An error occurred while daemonizing ntop...\n");
+    traceEvent(TRACE_ERROR, "An error occurred while daemonizing ntop (errno=%d)...\n", errno);
   else {
     if(!childpid) { /* child */
       traceEvent(TRACE_INFO, "Bye bye: I'm becoming a daemon...\n");
@@ -230,7 +228,8 @@ void detachFromTerminal(void) {
 #ifndef MULTITHREADED
   alarm(120); /* Don't freeze */
 #endif
-
+  
+  chdir("/");
   setsid();  /* detach from the terminal */
 
 #ifdef ORIGINAL_DETACH

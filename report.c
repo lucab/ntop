@@ -62,11 +62,6 @@ int reportValues(time_t *lastTime) {
   else if(refreshRate < MIN_REFRESH_TIME)
     refreshRate = MIN_REFRESH_TIME;
 
-#ifndef WIN32
-  setsignal(SIGPIPE, ignoreSignal);
-  setsignal(SIGABRT, ignoreSignal);
-#endif
-
   return(0);
 }
 
@@ -805,15 +800,6 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
   lastRefreshTime = actTime;
   free(tmpTable);
-}
-
-/* ******************************* */
-
-static RETSIGTYPE _printHostsTraffic(int signumber_ignored) {
-  printHostsTraffic(signumber_ignored, 0, 0, 0);
-#ifndef WIN32
-  (void)setsignal(SIGALRM, _printHostsTraffic);
-#endif
 }
 
 /* ******************************* */

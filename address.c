@@ -114,10 +114,6 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 	       data_data.dptr, keyBuf);
 #endif
 
-#ifdef MULTITHREADED
-    accessMutex(&addressResolutionMutex, "resolveAddress-2");
-#endif
-    
     if(strlen(data_data.dptr) > MAX_HOST_SYM_NAME_LEN) {
       strncpy(symAddr, data_data.dptr, MAX_HOST_SYM_NAME_LEN-3);
       symAddr[MAX_HOST_SYM_NAME_LEN] = '\0';
@@ -127,9 +123,6 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
     } else
       strncpy(symAddr, data_data.dptr, MAX_HOST_SYM_NAME_LEN);
 
-#ifdef MULTITHREADED
-    releaseMutex(&addressResolutionMutex);
-#endif
     updateHostNameInfo(addr, data_data.dptr);
     free(data_data.dptr);
     numResolvedOnCacheAddresses++;
@@ -155,9 +148,6 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 #endif
     theAddr.s_addr = ntohl(hostAddr->s_addr); /* big/little endian crap */
 
-#ifdef MULTITHREADED
-    /* accessMutex(&addressResolutionMutex, "resolveAddress-gethostbyaddr"); */
-#endif
 #if !defined(WIN32) &&  !defined(AIX)
     h_errno = NETDB_SUCCESS;
 #endif
@@ -228,10 +218,6 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 					AF_INET);
 #endif
 
-#ifdef MULTITHREADED
-    /* releaseMutex(&addressResolutionMutex); */
-#endif
-
     if (
 #if !defined(WIN32) &&  !defined(AIX)
 	(h_errno == NETDB_SUCCESS) &&
@@ -265,10 +251,16 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
     } else {
       numKeptNumericAddresses++;
       res = _intoa(*hostAddr, tmpBuf , sizeof(tmpBuf));
+#ifdef DNS_DEBUG
+      traceEvent(TRACE_INFO, "Unable to resolve %s", res);
+#endif
     }
 #endif /* USE_HOST */
   } else {
     numKeptNumericAddresses++;
+#ifdef DNS_DEBUG
+      traceEvent(TRACE_INFO, "Unable to resolve %s", res);
+#endif
     res = _intoa(*hostAddr, tmpBuf, sizeof(tmpBuf));
   }
 
@@ -277,10 +269,6 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
     freehostent(hp);
 #endif
 
-#ifdef MULTITHREADED
-  accessMutex(&addressResolutionMutex, "resolveAddress-3");
-#endif
-  
   if(strlen(res) > MAX_HOST_SYM_NAME_LEN) {
     strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN-3);
     symAddr[MAX_HOST_SYM_NAME_LEN] = '\0';
@@ -292,10 +280,6 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 
   for(i=0; symAddr[i] != '\0'; i++)
     symAddr[i] = (char)tolower(symAddr[i]);
-
-#ifdef MULTITHREADED
-  releaseMutex(&addressResolutionMutex);
-#endif
 
   /* key_data has been set already */
   data_data.dptr = symAddr;
