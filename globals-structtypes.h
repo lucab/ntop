@@ -1254,6 +1254,35 @@ typedef struct netFlowGlobals {
 
 /* *********************************** */
 
+#define MAX_NUM_SFLOW_INTERFACES      256
+
+typedef struct ifCounters {
+  u_int32_t ifIndex;
+  u_int32_t ifType;
+  u_int64_t ifSpeed;
+  u_int32_t ifDirection;        /* Derived from MAU MIB (RFC 2668)
+				   0 = unknown, 1 = full-duplex,
+				   2 = half-duplex, 3 = in, 4 = out */
+  u_int32_t ifStatus;           /* bit field with the following bits assigned:
+				   bit 0 = ifAdminStatus (0 = down, 1 = up)
+				   bit 1 = ifOperStatus (0 = down, 1 = up) */
+  u_int64_t ifInOctets;
+  u_int32_t ifInUcastPkts;
+  u_int32_t ifInMulticastPkts;
+  u_int32_t ifInBroadcastPkts;
+  u_int32_t ifInDiscards;
+  u_int32_t ifInErrors;
+  u_int32_t ifInUnknownProtos;
+  u_int64_t ifOutOctets;
+  u_int32_t ifOutUcastPkts;
+  u_int32_t ifOutMulticastPkts;
+  u_int32_t ifOutBroadcastPkts;
+  u_int32_t ifOutDiscards;
+  u_int32_t ifOutErrors;
+  u_int32_t ifPromiscuousMode;
+} IfCounters;
+
+
 typedef struct sFlowGlobals {
   u_char sflowDebug;
 
@@ -1292,6 +1321,7 @@ typedef struct sFlowGlobals {
   
   u_long numSamplesReceived, initialPool, lastSample;
   u_int32_t flowSampleSeqNo, numSamplesToGo;
+  IfCounters *ifCounters[MAX_NUM_SFLOW_INTERFACES];
 } SflowGlobals;
 
 /* *********************************** */
@@ -1328,7 +1358,7 @@ typedef struct ntopInterface {
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */
   int datalink;                  /* data-link encapsulation type (see DLT_* in net/bph.h) */
-
+  u_short samplingRate;          /* default = 1 */
   u_short mtuSize,               /* MTU and header, derived from DLT and table in globals-core.c */
           headerSize;
 

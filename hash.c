@@ -1355,8 +1355,8 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   }
 
   if(el == NULL)
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "getHostInfo(idx=%d)(ptr=%p)",
-                 idx, (void*)myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "getHostInfo(idx=%d)(ptr=%p)",
+	       idx, (void*)myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
   
 #ifdef HASH_DEBUG
   hashSanityCheck();

@@ -186,8 +186,7 @@ void addPageIndicator(char *url, u_int pageNum,
 
 /* ******************************* */
 
-void printTrafficSummary (int revertOrder)
-{
+void printTrafficSummary (int revertOrder) {
   Counter unicastPkts;
   int i;
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], formatBuf1[32];
@@ -203,98 +202,72 @@ void printTrafficSummary (int revertOrder)
 
   sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Name</TH>"
 	     "<TH "TH_BG" "DARK_BG">Device</TH><TH "TH_BG" "DARK_BG">Type</TH>"
-	     "<TH "TH_BG" "DARK_BG">Speed</TH><TH "TH_BG" "DARK_BG">MTU</TH>"
+	     "<TH "TH_BG" "DARK_BG">Speed</TH><TH "TH_BG" "DARK_BG">Sampling Rate</TH><TH "TH_BG" "DARK_BG">MTU</TH>"
 	     "<TH "TH_BG" "DARK_BG">Header</TH><TH "TH_BG" "DARK_BG">Address</TH>");
 
 #ifdef INET6
   sendString("<TH "TH_BG" "DARK_BG">IPv6 Addresses</TH></TR>\n");
 #endif
 
-  if(myGlobals.runningPref.rFileName == NULL) {
-    for(i=0; i<myGlobals.numDevices; i++) {
-      if(myGlobals.device[i].activeDevice) {
-	char buf1[128];
-	NtopIfaceAddr *ifaddr;
+  for(i=0; i<myGlobals.numDevices; i++) {
+    if(myGlobals.device[i].activeDevice) {
+      char buf1[128];
+      NtopIfaceAddr *ifaddr;
 	
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
 		    myGlobals.device[i].humanFriendlyName[0] != '\0'
 		    ? myGlobals.device[i].humanFriendlyName : "&nbsp;");
-	sendString(buf);
+      sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", 
 		    myGlobals.device[i].name);
-	sendString(buf);
+      sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s%s</TD>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s%s</TD>",
 		    getNwInterfaceType(i), myGlobals.device[i].virtualDevice ? " virtual" : "");
-	sendString(buf);
+      sendString(buf);
 
-	sendString("<TD "TD_BG" ALIGN=RIGHT nowrap>&nbsp;");
-	if(myGlobals.device[i].deviceSpeed > 0) {
-	  /* The speed is known */
-	  sendString(formatAdapterSpeed(myGlobals.device[i].deviceSpeed, formatBuf, sizeof(formatBuf)));
-	} else
-	  sendString("&nbsp;");
-	sendString("</TD>");
+      sendString("<TD "TD_BG" ALIGN=RIGHT nowrap>&nbsp;");
+      if(myGlobals.device[i].deviceSpeed > 0) {
+	/* The speed is known */
+	sendString(formatAdapterSpeed(myGlobals.device[i].deviceSpeed, formatBuf, sizeof(formatBuf)));
+      } else
+	sendString("&nbsp;");
+      sendString("</TD>");
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>",
+		    myGlobals.device[i].samplingRate);
+      sendString(buf);
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", 
 		    myGlobals.mtuSize[myGlobals.device[i].datalink]);
-	sendString(buf);
+      sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", 
 		    myGlobals.headerSize[myGlobals.device[i].datalink]);
-	sendString(buf);
+      sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
 		    _intoa(myGlobals.device[i].ifAddr, buf1, sizeof(buf1)));
-	sendString(buf);
+      sendString(buf);
 
 #ifdef INET6
-	sendString("<TD ALIGN=LEFT>");
-	if(myGlobals.device[i].v6Addrs > 0) {
-	  for(ifaddr = myGlobals.device[i].v6Addrs; 
-	      ifaddr != NULL; ifaddr = ifaddr->next) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d<br>",
+      sendString("<TD ALIGN=LEFT>");
+      if(myGlobals.device[i].v6Addrs > 0) {
+	for(ifaddr = myGlobals.device[i].v6Addrs; 
+	    ifaddr != NULL; ifaddr = ifaddr->next) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d<br>",
 			_intop(&ifaddr->af.inet6.ifAddr, buf1, sizeof(buf1)),
 			ifaddr->af.inet6.prefixlen);
-	    sendString(buf);
-	  }
-	} else
-	  sendString("&nbsp;");
+	  sendString(buf);
+	}
+      } else
+	sendString("&nbsp;");
 
-	sendString("</TD>");
+      sendString("</TD>");
 #endif
-	sendString("</TR>\n");
-      }
+      sendString("</TR>\n");
     }
-  } else {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG">&nbsp;</TD>", 
-		CONST_PCAP_NW_INTERFACE_FILE);
-    sendString(buf);
-
-    sendString("<TD "TD_BG" ALIGN=CENTER>");
-
-    if(strlen(myGlobals.runningPref.rFileName) < 64)
-      sendString(myGlobals.runningPref.rFileName);
-    else {
-      for(i=strlen(myGlobals.runningPref.rFileName); i>0; i--)
-	if((myGlobals.runningPref.rFileName[i] == '/')
-	   || (myGlobals.runningPref.rFileName[i] == '\\'))
-	  break;
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "...%s", &myGlobals.runningPref.rFileName[i]);
-      sendString(buf);
-    }
-
-    sendString("</TD>");
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-#ifdef INET6
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-#endif
-    sendString("</TR>\n");
   }
 
   sendString("</TABLE>"TABLE_OFF);
@@ -302,42 +275,42 @@ void printTrafficSummary (int revertOrder)
 
   if(myGlobals.runningPref.domainName[0] != '\0') {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Local Domain Name</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
-		myGlobals.runningPref.domainName);
+		  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
+		  myGlobals.runningPref.domainName);
     sendString(buf);
   }
 
   if (myGlobals.runningPref.rFileName == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
-		ctime(&myGlobals.initialSniffTime),
-		formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
+		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
+		  ctime(&myGlobals.initialSniffTime),
+		  formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
   else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		ctime(&myGlobals.initialSniffTime));
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  ctime(&myGlobals.initialSniffTime));
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left "DARK_BG">Last Packet Seen</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
-		ctime((time_t *)&myGlobals.lastPktTime),
-		formatSeconds(myGlobals.lastPktTime.tv_sec-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
+		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
+		  ctime((time_t *)&myGlobals.lastPktTime),
+		  formatSeconds(myGlobals.lastPktTime.tv_sec-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
   
   if((i = numActiveSenders(myGlobals.actualReportDeviceId)) > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
+		  "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
     sendString(buf);
   }
 
   if((myGlobals.runningPref.currentFilterExpression != NULL)
      && (myGlobals.runningPref.currentFilterExpression[0] != '\0')) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Traffic Filter</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		myGlobals.runningPref.currentFilterExpression);
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  myGlobals.runningPref.currentFilterExpression);
     sendString(buf);
   }
 
@@ -361,135 +334,135 @@ void printTrafficSummary (int revertOrder)
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
     unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
-        - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value
-        - myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value;
+      - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value
+      - myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value;
     
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value <= 0)
-        myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value = 1;
+      myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value = 1;
     
     if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
-        if(pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStat) >= 0) {
-            /* 
-               Recent libpcap versions do not report total/cumulative values
-               but their value is reset everytime is read
-            */
+      if(pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStat) >= 0) {
+	/* 
+	   Recent libpcap versions do not report total/cumulative values
+	   but their value is reset everytime is read
+	*/
             
-            if(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value > pcapStat.ps_recv) {
-                /* The counter is reset at each run */
-                myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value += pcapStat.ps_drop;
-            } else {
-                /* The counter is NOT reset at each run */
-                myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value = pcapStat.ps_drop;
-            }
+	if(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value > pcapStat.ps_recv) {
+	  /* The counter is reset at each run */
+	  myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value += pcapStat.ps_drop;
+	} else {
+	  /* The counter is NOT reset at each run */
+	  myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value = pcapStat.ps_drop;
+	}
             
-            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                          "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;(libpcap)</th>"
-                          "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",		
-                          getRowColor(),
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value,
-                                     formatBuf, sizeof(formatBuf)),
-                          (float)(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value*100)
-                          /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value);
-            sendString(buf);
-        }
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;(libpcap)</th>"
+		      "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",		
+		      getRowColor(),
+		      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value,
+				 formatBuf, sizeof(formatBuf)),
+		      (float)(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value*100)
+		      /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value);
+	sendString(buf);
+      }
     }
     
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;(ntop)</th>"
-		"<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",		
-		getRowColor(),
-		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value, 
-			   formatBuf, sizeof(formatBuf)),
+		  "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;(ntop)</th>"
+		  "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",		
+		  getRowColor(),
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value, 
+			     formatBuf, sizeof(formatBuf)),
                   (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
                   /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value);
     sendString(buf);
 
     if (!myGlobals.runningPref.printFcOnly) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
-                      "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-                      getRowColor(),
-                      formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)),
-                      (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
-                      ethernetPkts.value);
-        sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
+		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		    getRowColor(),
+		    formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)),
+		    (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
+		    ethernetPkts.value);
+      sendString(buf);
 
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
-                      "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-                      getRowColor(),
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value, formatBuf, sizeof(formatBuf)),
-                      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
-        sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
+		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		    getRowColor(),
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value, formatBuf, sizeof(formatBuf)),
+		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
+      sendString(buf);
         
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Multicast</th>"
-                      "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-                      getRowColor(),
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf)),
-                      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
-        sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Multicast</th>"
+		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		    getRowColor(),
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf)),
+		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
+      sendString(buf);
         
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
-                      "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-                      getRowColor(), myGlobals.mtuSize[myGlobals.device[myGlobals.actualReportDeviceId].datalink],
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value, formatBuf, sizeof(formatBuf)),
-                      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
-        sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
+		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		    getRowColor(), myGlobals.mtuSize[myGlobals.device[myGlobals.actualReportDeviceId].datalink],
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value, formatBuf, sizeof(formatBuf)),
+		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
+      sendString(buf);
 
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Bad&nbsp;Packets&nbsp;(Checksum)</th>"
-                      "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-                      getRowColor(),
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value, formatBuf, sizeof(formatBuf)),
-                      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdPktStats.badChecksum.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
-        sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Bad&nbsp;Packets&nbsp;(Checksum)</th>"
+		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		    getRowColor(),
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value, formatBuf, sizeof(formatBuf)),
+		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+			    rcvdPktStats.badChecksum.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
+      sendString(buf);
     }
 
     /* ****************** */
 
     if(!myGlobals.runningPref.printIpOnly &&
        myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
-        if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
-            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
-                          "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
-                          getRowColor(),
-                          formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value, 1,
-                                      formatBuf, sizeof(formatBuf)),
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                                     formatBuf1, sizeof(formatBuf1)));
-            sendString(buf);
+      if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
+		      "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
+		      getRowColor(),
+		      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value, 1,
+				  formatBuf, sizeof(formatBuf)),
+		      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+				 formatBuf1, sizeof(formatBuf1)));
+	sendString(buf);
 #ifdef NOT_YET        
-            if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value > 0) {
-                safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                              "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
-                              "<TD "TD_BG" COLSPAN=2 align=right>%s [%.2f %%]</td></TR>\n",
-                              getRowColor(),
-                              formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value,
-                                         formatBuf, sizeof(formatBuf)),
-                              (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
-                              /(float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value);
-                sendString(buf);
-            }
+	if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value > 0) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
+			"<TD "TD_BG" COLSPAN=2 align=right>%s [%.2f %%]</td></TR>\n",
+			getRowColor(),
+			formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value,
+				   formatBuf, sizeof(formatBuf)),
+			(float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
+			/(float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value);
+	  sendString(buf);
+	}
 #endif
-        }
+      }
         
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
-                      "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-                      getRowColor(),
-                      formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)),
-                      (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
-                      fcPkts.value);
-        sendString(buf);
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
-                      "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-                      getRowColor(),
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value,
-                                 formatBuf, sizeof(formatBuf)),
-                      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value);
-        sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
+		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		    getRowColor(),
+		    formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)),
+		    (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
+		    fcPkts.value);
+      sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
+		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		    getRowColor(),
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value,
+			       formatBuf, sizeof(formatBuf)),
+		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value);
+      sendString(buf);
       
     }
     /* ****************** */
@@ -499,44 +472,44 @@ void printTrafficSummary (int revertOrder)
 
       sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Actual</th><TD "TD_BG" align=right>%s</td>"
-		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt, 
-						  1, formatBuf, sizeof(formatBuf)),
-		  myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt);
+		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
+		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt, 
+						    1, formatBuf, sizeof(formatBuf)),
+		    myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt);
       sendString(buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last Minute</th>"
-		  "<TD "TD_BG" align=right>%s</td>"
-		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt, 
-						  1, formatBuf, sizeof(formatBuf)),
-		  myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt);
+		    "<TD "TD_BG" align=right>%s</td>"
+		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
+		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt, 
+						    1, formatBuf, sizeof(formatBuf)),
+		    myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt);
       sendString(buf);
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last 5 Minutes</th>"
-		  "<TD "TD_BG" align=right>%s</td>"
-		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",		  
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt, 
-						  1, formatBuf, sizeof(formatBuf)),
-		  myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt);
+		    "<TD "TD_BG" align=right>%s</td>"
+		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",		  
+		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt, 
+						    1, formatBuf, sizeof(formatBuf)),
+		    myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt);
       sendString(buf);
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Peak</th>"
-		  "<TD "TD_BG" align=right>%s</td>"
-		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput,
-						  1, formatBuf, sizeof(formatBuf)),
-		  myGlobals.device[myGlobals.actualReportDeviceId].peakPacketThroughput);
+		    "<TD "TD_BG" align=right>%s</td>"
+		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
+		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput,
+						    1, formatBuf, sizeof(formatBuf)),
+		    myGlobals.device[myGlobals.actualReportDeviceId].peakPacketThroughput);
       sendString(buf);
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average</th>"
-		  "<TD "TD_BG" align=right>%s</td>"
-		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(),
-		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/
-				   (myGlobals.actTime-myGlobals.initialSniffTime+1), 1, formatBuf, sizeof(formatBuf)),
-		  /* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
-		  ((float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value/
-		   (float)(myGlobals.actTime-myGlobals.initialSniffTime+1)));
+		    "<TD "TD_BG" align=right>%s</td>"
+		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
+		    getRowColor(),
+		    formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/
+				     (myGlobals.actTime-myGlobals.initialSniffTime+1), 1, formatBuf, sizeof(formatBuf)),
+		    /* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
+		    ((float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value/
+		     (float)(myGlobals.actTime-myGlobals.initialSniffTime+1)));
       sendString(buf);
 
       sendString("</TABLE>"TABLE_OFF"</TR>\n");
@@ -556,7 +529,6 @@ void printTrafficSummary (int revertOrder)
     sendString("<p>\n");
     printFcTrafficSummary(0);
   }
-  
 }
 
 /* ******************************* */
@@ -578,99 +550,74 @@ void printTrafficStatistics(int revertOrder) {
 
   sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Name</TH>"
 	     "<TH "TH_BG" "DARK_BG">Device</TH><TH "TH_BG" "DARK_BG">Type</TH>"
-	     "<TH "TH_BG" "DARK_BG">Speed</TH><TH "TH_BG" "DARK_BG">MTU</TH>"
+	     "<TH "TH_BG" "DARK_BG">Speed</TH><TH "TH_BG" "DARK_BG">Sampling Rate</TH><TH "TH_BG" "DARK_BG">MTU</TH>"
 	     "<TH "TH_BG" "DARK_BG">Header</TH><TH "TH_BG" "DARK_BG">Address</TH>");
 
 #ifdef INET6
   sendString("<TH "TH_BG" "DARK_BG">IPv6 Addresses</TH></TR>\n");
 #endif
 
-  if(myGlobals.runningPref.rFileName == NULL) {
-    for(i=0; i<myGlobals.numDevices; i++) {
-      if(myGlobals.device[i].activeDevice) {
-	char buf1[128];
-	NtopIfaceAddr *ifaddr;
+  for(i=0; i<myGlobals.numDevices; i++) {
+    if(myGlobals.device[i].activeDevice) {
+      char buf1[128];
+      NtopIfaceAddr *ifaddr;
 	
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
 		    myGlobals.device[i].humanFriendlyName[0] != '\0'
 		    ? myGlobals.device[i].humanFriendlyName : "&nbsp;");
-	sendString(buf);
+      sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", 
-		      myGlobals.device[i].name);
-	sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", 
+		    myGlobals.device[i].name);
+      sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s%s</TD>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s%s</TD>",
 		    getNwInterfaceType(i), myGlobals.device[i].virtualDevice ? " virtual" : "");
-	sendString(buf);
+      sendString(buf);
 
-	sendString("<TD "TD_BG" ALIGN=RIGHT nowrap>&nbsp;");
-	if(myGlobals.device[i].deviceSpeed > 0) {
-	  /* The speed is known */
-	  sendString(formatAdapterSpeed(myGlobals.device[i].deviceSpeed, formatBuf, sizeof(formatBuf)));
-	} else
-	  sendString("&nbsp;");
-	sendString("</TD>");
+      sendString("<TD "TD_BG" ALIGN=RIGHT nowrap>&nbsp;");
+      if(myGlobals.device[i].deviceSpeed > 0) {
+	/* The speed is known */
+	sendString(formatAdapterSpeed(myGlobals.device[i].deviceSpeed, formatBuf, sizeof(formatBuf)));
+      } else
+	sendString("&nbsp;");
+      sendString("</TD>");
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>",
+		      myGlobals.device[i].samplingRate);
+	sendString(buf);
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", 
 		    myGlobals.mtuSize[myGlobals.device[i].datalink]);
-	sendString(buf);
+      sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", 
 		    myGlobals.headerSize[myGlobals.device[i].datalink]);
-	sendString(buf);
+      sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
 		    _intoa(myGlobals.device[i].ifAddr, buf1, sizeof(buf1)));
-	sendString(buf);
+      sendString(buf);
 
 #ifdef INET6
-	sendString("<TD ALIGN=LEFT>");
-	if(myGlobals.device[i].v6Addrs > 0) {
-	  for(ifaddr = myGlobals.device[i].v6Addrs; 
-	      ifaddr != NULL; ifaddr = ifaddr->next) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d<br>",
+      sendString("<TD ALIGN=LEFT>");
+      if(myGlobals.device[i].v6Addrs > 0) {
+	for(ifaddr = myGlobals.device[i].v6Addrs; 
+	    ifaddr != NULL; ifaddr = ifaddr->next) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d<br>",
 			_intop(&ifaddr->af.inet6.ifAddr, buf1, sizeof(buf1)),
 			ifaddr->af.inet6.prefixlen);
-	    sendString(buf);
-	  }
-	} else
-	  sendString("&nbsp;");
+	  sendString(buf);
+	}
+      } else
+	sendString("&nbsp;");
 
-	sendString("</TD>");
+      sendString("</TD>");
 #endif
-	sendString("</TR>\n");
-      }
+      sendString("</TR>\n");
     }
-  } else {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG">&nbsp;</TD>", 
-		CONST_PCAP_NW_INTERFACE_FILE);
-    sendString(buf);
-
-    sendString("<TD "TD_BG" ALIGN=CENTER>");
-
-    if(strlen(myGlobals.runningPref.rFileName) < 64)
-      sendString(myGlobals.runningPref.rFileName);
-    else {
-      for(i=strlen(myGlobals.runningPref.rFileName); i>0; i--)
-	if((myGlobals.runningPref.rFileName[i] == '/')
-	   || (myGlobals.runningPref.rFileName[i] == '\\'))
-	  break;
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "...%s", &myGlobals.runningPref.rFileName[i]);
-      sendString(buf);
-    }
-
-    sendString("</TD>");
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-#ifdef INET6
-    sendString("<TD "TD_BG">&nbsp;</TD>");
-#endif
-    sendString("</TR>\n");
   }
+  
 
   sendString("</TABLE>"TABLE_OFF);
   sendString("</TD></TR>\n");
@@ -738,16 +685,10 @@ void printTrafficStatistics(int revertOrder) {
     Counter dummyCounter;
 
     sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
-    if (myGlobals.runningPref.rFileName != NULL) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                      "For file: '%s' (current reporting capture file)",
-                      myGlobals.runningPref.rFileName);
-    }
-    else {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                      "For device: '%s' (current reporting device)",
-                      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-    }
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "Traffic Report for '%s' [<A HREF=/switch.html>switch</A>]",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
     
     printSectionTitle(buf);
     sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
@@ -2239,12 +2180,12 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       actUsageR = (unsigned short)(0.5+100.0*((float)el->bytesRcvd.value/
 					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
     } else {
-      actUsage  = (unsigned short)(0.5+100.0*(((float)el->fcCounters->fcPktsSent.value+(float)el->fcCounters->fcPktsRcvd.value)/
-					      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value));
-      actUsageS = (unsigned short)(0.5+100.0*((float)el->fcCounters->fcPktsSent.value/
-					      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value));
-      actUsageR = (unsigned short)(0.5+100.0*((float)el->fcCounters->fcPktsRcvd.value/
-					      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value));
+      actUsage  = (unsigned short)(0.5+100.0*(((float)el->pktSent.value+(float)el->pktRcvd.value)/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
+      actUsageS = (unsigned short)(0.5+100.0*((float)el->pktSent.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
+      actUsageR = (unsigned short)(0.5+100.0*((float)el->pktRcvd.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
     }
 
     el->actBandwidthUsage = actUsage;

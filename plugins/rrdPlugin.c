@@ -344,20 +344,23 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   sendString("</p>\n<p>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
-  sendString("<TR><TH "DARK_BG" COLSPAN=2>Traffic Summary</TH></TR>\n");
-  
-  if(strncmp(rrdTitle, "interface", strlen("interface")) == 0) {
-    min = 0, max = 4;
-  } else {
-    min = 5, max = 6;
-  }
-   
-  for(i=min; i<=max; i++) {
-    sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary"
-		"&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
-		i, rrdPath, startTime, endTime);
-    sendString(buf);
+
+  if(strstr(rrdPath, "/sFlow/") == NULL) {
+    sendString("<TR><TH "DARK_BG" COLSPAN=2>Traffic Summary</TH></TR>\n");
+    
+    if(strncmp(rrdTitle, "interface", strlen("interface")) == 0) {
+      min = 0, max = 4;
+    } else {
+      min = 5, max = 6;
+    }
+    
+    for(i=min; i<=max; i++) {
+      sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary"
+		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
+		    i, rrdPath, startTime, endTime);
+      sendString(buf);
+    }
   }
 
   directoryPointer = opendir(path);
@@ -2424,7 +2427,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if(dumpInterfaces) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
 	
-	if(myGlobals.device[devIdx].virtualDevice
+	if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
 	   || (!myGlobals.device[devIdx].activeDevice))
 	  continue;
 	   
@@ -2547,6 +2550,38 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sBytes", myGlobals.protoIPTrafficInfos[j]);
 	      updateCounter(rrdPath, tmpStr, ctr.value);
+	    }
+	  }
+	}
+
+	/* ******************************** */
+
+	if(myGlobals.device[devIdx].sflowGlobals) {
+	  for(i=0; i<MAX_NUM_SFLOW_INTERFACES; i++) {
+	    IfCounters *interface = myGlobals.device[devIdx].sflowGlobals->ifCounters[i];
+
+	    if(interface != NULL) {
+	      char buf[128], formatBuf[256], formatBuf1[256];
+	      char rrdIfPath[512];
+
+	      safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath), 
+			    "%s/interfaces/%s/sFlow/%d/", myGlobals.rrdPath,
+			    myGlobals.device[devIdx].humanFriendlyName, i);
+	      mkdir_p(rrdIfPath);
+
+	      updateCounter(rrdIfPath, "ifInOctets", interface->ifInOctets);
+	      updateCounter(rrdIfPath, "ifInUcastPkts", interface->ifInUcastPkts);
+	      updateCounter(rrdIfPath, "ifInMulticastPkts", interface->ifInMulticastPkts);
+	      updateCounter(rrdIfPath, "ifInBroadcastPkts", interface->ifInBroadcastPkts);
+	      updateCounter(rrdIfPath, "ifInDiscards", interface->ifInDiscards);
+	      updateCounter(rrdIfPath, "ifInErrors", interface->ifInErrors);
+	      updateCounter(rrdIfPath, "ifInUnknownProtos", interface->ifInUnknownProtos);
+	      updateCounter(rrdIfPath, "ifOutOctets", interface->ifOutOctets);
+	      updateCounter(rrdIfPath, "ifOutUcastPkts", interface->ifOutUcastPkts);
+	      updateCounter(rrdIfPath, "ifOutMulticastPkts", interface->ifOutMulticastPkts);
+	      updateCounter(rrdIfPath, "ifOutBroadcastPkts", interface->ifOutBroadcastPkts);
+	      updateCounter(rrdIfPath, "ifOutDiscards", interface->ifOutDiscards);
+	      updateCounter(rrdIfPath, "ifOutErrors", interface->ifOutErrors);
 	    }
 	  }
 	}

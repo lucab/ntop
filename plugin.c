@@ -239,8 +239,10 @@ static void loadPlugin(char* dirName, char* pluginName) {
       tmpBuf[sizeof(tmpBuf)-1] = '\0'; /* just in case bpfFilter is too long... */
       
       for(i=0; i<myGlobals.numDevices; i++) 
-	if(!myGlobals.device[i].virtualDevice && 
-           !myGlobals.device[i].dummyDevice) {
+	if((!myGlobals.device[i].virtualDevice)
+	   && (!myGlobals.device[i].dummyDevice)
+	   && (myGlobals.device[i].pcapPtr)
+	   ) {
 	  traceEvent(CONST_TRACE_NOISY, "Compiling filter '%s' on interface %s", 
 		     tmpBuf, myGlobals.device[i].name);
 	  rc = pcap_compile(myGlobals.device[i].pcapPtr, 

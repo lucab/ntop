@@ -83,9 +83,8 @@ void* pcapDispatch(void *_i) {
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
     
     if(rc == -1) {
-
       if(myGlobals.device[i].name != NULL) /* This is not a shutdown */
-	traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
+	traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d (%s): '%s'",
 		   i,
 		   myGlobals.device[i].humanFriendlyName,
 		   pcap_geterr(myGlobals.device[i].pcapPtr));

@@ -1088,6 +1088,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     deviceId = myGlobals.numDevices;
     myGlobals.device[deviceId].humanFriendlyName = strdup(deviceDescr);
     myGlobals.device[deviceId].name = strdup(deviceName);
+    myGlobals.device[deviceId].samplingRate =  1; /* no sampling */
     myGlobals.numDevices++;
 
     if(myGlobals.numDevices >= MAX_NUM_DEVICES) {
@@ -1451,8 +1452,11 @@ void initDevices(char* devices) {
       traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(%s): '%s'", 
 		 myGlobals.runningPref.rFileName, ebuf);
       return;
+    } else {
+      if(myGlobals.device[0].humanFriendlyName != NULL) free(myGlobals.device[0].humanFriendlyName);
+      myGlobals.device[0].humanFriendlyName = strdup(myGlobals.runningPref.rFileName);
     }
-
+    
     resetStats(0);
     initDeviceDatalink(0);
 

@@ -165,9 +165,9 @@ HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
 			   theSerial.value.ipSerial.vlanId,
 			   actualDeviceId));
   } else if (theSerial.serialType == SERIAL_FC) {
-      return (findHostByFcAddress (&theSerial.value.fcSerial.fcAddress,
-                                   theSerial.value.fcSerial.vsanId,
-                                   actualDeviceId));
+    return (findHostByFcAddress (&theSerial.value.fcSerial.fcAddress,
+				 theSerial.value.fcSerial.vsanId,
+				 actualDeviceId));
   }
   else {
     /* MAC */
@@ -1611,7 +1611,7 @@ int createThread(pthread_t *threadId,
   rc = pthread_create(threadId, NULL, __start_routine, userParm);
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_NOISY, "createThread(0x%p), rc = %s(%d)",
+    traceEvent(CONST_TRACE_NOISY, "createThread(%p), rc = %s(%d)",
 	       threadId, strerror(rc), rc);
   myGlobals.numThreads++;
   return(rc);
@@ -1624,7 +1624,7 @@ int killThread(pthread_t *threadId) {
   rc = pthread_detach(*threadId);
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_NOISY, "killThread(0x%p), rc = %s(%d)",
+    traceEvent(CONST_TRACE_NOISY, "killThread(%p), rc = %s(%d)",
 	       threadId, strerror(rc), rc);
 
   myGlobals.numThreads--;
@@ -1676,7 +1676,7 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   if(!mutexId->isInitialized) {
     if(myGlobals.endNtop == 0)
       traceEvent(CONST_TRACE_ERROR,
-                 "deleteMutex() called with an UN-INITIALIZED mutex [0x%p@%s:%d]",
+                 "deleteMutex() called with an UN-INITIALIZED mutex [%p@%s:%d]",
                  (void*)&(mutexId->mutex), fileName, fileLine);
     return;
   }
@@ -1713,7 +1713,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   if(!mutexId->isInitialized) {
     if(myGlobals.endNtop == 0)
       traceEvent(CONST_TRACE_ERROR,
-                 "accessMutex() called '%s' with an UN-INITIALIZED mutex [0x%p@%s:%d]",
+                 "accessMutex() called '%s' with an UN-INITIALIZED mutex [%p@%s:%d]",
                  where, (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
@@ -1735,7 +1735,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
          && (myPid == mutexId->lockPid)
          && (pthread_equal(mutexId->lockThread, pthread_self()))) {
         traceEvent(CONST_TRACE_WARNING,
-                   "accessMutex() called '%s' with a self-LOCKED mutex [0x%p@%s:%d]",
+                   "accessMutex() called '%s' with a self-LOCKED mutex [%p@%s:%d]",
                    where, (void*)&(mutexId->mutex), fileName, fileLine);
       }
     }
@@ -1756,12 +1756,12 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   }
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_ERROR, "accessMutex() call '%s' failed (rc=%d) [0x%p@%s:%d]",
+    traceEvent(CONST_TRACE_ERROR, "accessMutex() call '%s' failed (rc=%d) [%p@%s:%d]",
                where, rc, (void*)&(mutexId->mutex), fileName, fileLine);
   else {
 
 #ifdef SEMAPHORE_DEBUG
-    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: accessMutex() call '%s' succeeded [0x%p@%s:%d]",
+    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: accessMutex() call '%s' succeeded [%p@%s:%d]",
 	       where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
@@ -1802,7 +1802,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   if(!mutexId->isInitialized) {
     if(myGlobals.endNtop == 0)
       traceEvent(CONST_TRACE_ERROR,
-                 "tryLockMutex() called '%s' with an UN-INITIALIZED mutex [0x%p@%s:%d]",
+                 "tryLockMutex() called '%s' with an UN-INITIALIZED mutex [%p@%s:%d]",
                  where, (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
@@ -1812,7 +1812,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
    * we want to keep the unprotected field updates
    * as close to the trylock as possible!
    */
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: tryLockMutex() call '%s' called [0x%p@%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: tryLockMutex() call '%s' called [%p@%s:%d]",
              where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
@@ -1825,15 +1825,14 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
          && (pthread_equal(mutexId->lockThread, pthread_self()))
          ) {
         traceEvent(CONST_TRACE_WARNING,
-		   "tryLockMutex() called '%s' with a self-LOCKED mutex [0x%p@%s:%d]",
+		   "tryLockMutex() called '%s' with a self-LOCKED mutex [%p@%s:%d]",
 		   where, (void*)&(mutexId->mutex), fileName, fileLine);
       }
     }
 
     strcpy(mutexId->lockAttemptFile, fileName);
-    mutexId->lockAttemptLine=fileLine;
-    mutexId->lockAttemptPid=myPid;
-
+    mutexId->lockAttemptLine = fileLine;
+    mutexId->lockAttemptPid  = myPid;
   }
 
   /*
@@ -1852,12 +1851,12 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
   if(rc != 0)  {
 #ifdef SEMAPHORE_DEBUG
-    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: tryLockMutex() call '%s' failed (rc=%d) [0x%p@%s:%d]",
+    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: tryLockMutex() call '%s' failed (rc=%d) [%p@%s:%d]",
                where, rc, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   } else {
 #ifdef SEMAPHORE_DEBUG
-    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: tryLockMutex() call '%s' succeeded [0x%p@%s:%d]",
+    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: tryLockMutex() call '%s' succeeded [%p@%s:%d]",
                where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
@@ -1897,13 +1896,13 @@ int _isMutexLocked(PthreadMutex *mutexId, char* fileName, int fileLine) {
   if(!mutexId->isInitialized) {
     if(myGlobals.endNtop == 0)
       traceEvent(CONST_TRACE_ERROR,
-                 "isMutexLocked() called with an UN-INITIALIZED mutex [0x%p@%s:%d]",
+                 "isMutexLocked() called with an UN-INITIALIZED mutex [%p@%s:%d]",
                  (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
 #ifdef SEMAPHORE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: isMutexLocked() testing [0x%p@%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: isMutexLocked() testing [%p@%s:%d]",
              (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
@@ -1940,7 +1939,7 @@ int _releaseMutex(PthreadMutex *mutexId,
   if(!mutexId->isInitialized) {
     if(myGlobals.endNtop == 0)
       traceEvent(CONST_TRACE_ERROR,
-                 "releaseMutex() called with an UN-INITIALIZED mutex [0x%p@%s:%d]",
+                 "releaseMutex() called with an UN-INITIALIZED mutex [%p@%s:%d]",
                  (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
@@ -1949,20 +1948,20 @@ int _releaseMutex(PthreadMutex *mutexId,
 
   if(!mutexId->isLocked) {
     traceEvent(CONST_TRACE_WARNING,
-	       "releaseMutex() called with an UN-LOCKED mutex [0x%p@%s:%d] last unlock [pid %d, %s:%d]",
+	       "releaseMutex() called with an UN-LOCKED mutex [%p@%s:%d] last unlock [pid %d, %s:%d]",
 	       (void*)&(mutexId->mutex), fileName, fileLine,
                mutexId->unlockPid, mutexId->unlockFile, mutexId->unlockLine);
 
   }
 
 #ifdef SEMAPHORE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: releaseMutex() releasing [0x%p@%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: releaseMutex() releasing [%p@%s:%d]",
              (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->mutex));
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_ERROR, "releaseMutex() failed (rc=%d) [0x%p@%s:%d]",
+    traceEvent(CONST_TRACE_ERROR, "releaseMutex() failed (rc=%d) [%p@%s:%d]",
                rc, (void*)&(mutexId->mutex), fileName, fileLine);
   else {
     if(!myGlobals.runningPref.disableMutexExtraInfo) {
@@ -1980,7 +1979,7 @@ int _releaseMutex(PthreadMutex *mutexId,
 #ifdef SEMAPHORE_DEBUG
         if(mutexId->maxLockedDuration > 0) {
           traceEvent(CONST_TRACE_INFO,
-                     "SEMAPHORE_DEBUG: releaseMutex() was locked for maximum, %d secs [0x%p@%s:%d]",
+                     "SEMAPHORE_DEBUG: releaseMutex() was locked for maximum, %d secs [%p@%s:%d]",
                      mutexId->maxLockedDuration,
                      (void*)&(mutexId->mutex),
                      fileName, fileLine);
@@ -2004,10 +2003,10 @@ int _releaseMutex(PthreadMutex *mutexId,
 
 #ifdef SEMAPHORE_DEBUG
   if (rc != 0)
-    traceEvent(CONST_TRACE_WARNING, "SEMAPHORE_DEBUG: releaseMutex() failed (rc=%d) [0x%p@%s:%d]",
+    traceEvent(CONST_TRACE_WARNING, "SEMAPHORE_DEBUG: releaseMutex() failed (rc=%d) [%p@%s:%d]",
                (void*)&(mutexId->mutex), rc, fileName, fileLine);
   else
-    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: releaseMutex() succeeded [0x%p@%s:%d]",
+    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: releaseMutex() succeeded [%p@%s:%d]",
                (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   return(rc);
@@ -2165,9 +2164,9 @@ int checkCommand(char* commandName) {
 
   /* ok, it can be run ... is it suid? */
   rc = safe_snprintf(__FILE__, __LINE__, buf,
-               sizeof(buf),
-               "which %s 2>/dev/null",
-               commandName);
+		     sizeof(buf),
+		     "which %s 2>/dev/null",
+		     commandName);
   if(rc < 0)
     return(0);
 
@@ -2386,7 +2385,7 @@ void resetHostsVariables(HostTraffic* el) {
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
       if(el->protoIPTrafficInfos[i]) free(el->protoIPTrafficInfos[i]);
 
-      free(el->protoIPTrafficInfos);
+    free(el->protoIPTrafficInfos);
   }
   el->protoIPTrafficInfos = NULL;
   if (el->icmpInfo != NULL)            free(el->icmpInfo);
@@ -2605,13 +2604,13 @@ void traceEvent(int eventTraceLevel, char* file,
      */
     memset(buf, 0, sizeof(buf));
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s %s %s%s%s",
-		bufTime,
-		(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) ? bufMsgID : "",
-		(myGlobals.runningPref.traceLevel > CONST_DETAIL_TRACE_LEVEL) ? bufLineID : "",
-		eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
-		eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
-		eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
-		bufMsg);
+		  bufTime,
+		  (myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) ? bufMsgID : "",
+		  (myGlobals.runningPref.traceLevel > CONST_DETAIL_TRACE_LEVEL) ? bufLineID : "",
+		  eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
+		  eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
+		  eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
+		  bufMsg);
 
     /* Finished preparing message fields */
 
@@ -2862,7 +2861,7 @@ FILE* getNewRandomFile(char* fileName, int len) {
 
   strcpy(tmpFileName, fileName);
   safe_snprintf(__FILE__, __LINE__, fileName, len, "%s-%lu", tmpFileName,
-          myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
+		myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
   fd = fopen(fileName, "wb");
 #endif /* 0 */
 #else
@@ -3689,46 +3688,46 @@ void delPrefsValue (char *key) {
 static void processStrPref (char *key, char *value, char **globalVar,
                             bool savePref)
 {
-    if (key == NULL) return;
+  if (key == NULL) return;
 
-    if (strcmp (value, "") == 0) {
-        /* If a value is specified as NULL but the current value is not, delete
-         * the pref. This is assumed to be the way the user will change such a
-         * pref. 
-         */
-        if (*globalVar != NULL) {
-            free (*globalVar);
-            *globalVar = NULL;
-            if (savePref) {
-                delPrefsValue (key);
-            }
-        }
+  if (strcmp (value, "") == 0) {
+    /* If a value is specified as NULL but the current value is not, delete
+     * the pref. This is assumed to be the way the user will change such a
+     * pref. 
+     */
+    if (*globalVar != NULL) {
+      free (*globalVar);
+      *globalVar = NULL;
+      if (savePref) {
+	delPrefsValue (key);
+      }
     }
-    else {
-        if (savePref) {
+  }
+  else {
+    if (savePref) {
 
-	  if((strcmp(key, NTOP_PREF_DEVICES) == 0) 
-	     && (*globalVar && (*globalVar[0] != '\0'))) {	    
-	    /* Values can be concatenated */
-	    char tmpValue[256];
+      if((strcmp(key, NTOP_PREF_DEVICES) == 0) 
+	 && (*globalVar && (*globalVar[0] != '\0'))) {	    
+	/* Values can be concatenated */
+	char tmpValue[256];
 
-	    safe_snprintf(__FILE__, __LINE__, tmpValue, sizeof(tmpValue), "%s,%s", *globalVar, value);
-	    storePrefsValue (key, tmpValue);
-	    free(*globalVar);
-	    *globalVar = strdup (tmpValue);
-	    return;
-	  } else
-            storePrefsValue (key, value);
-        }
-
-        if (*globalVar)
-            free (*globalVar);
-
-	if((value == NULL) || (value[0] == '\0'))
-	  *globalVar = NULL;
-	else
-	  *globalVar = strdup (value);
+	safe_snprintf(__FILE__, __LINE__, tmpValue, sizeof(tmpValue), "%s,%s", *globalVar, value);
+	storePrefsValue (key, tmpValue);
+	free(*globalVar);
+	*globalVar = strdup (tmpValue);
+	return;
+      } else
+	storePrefsValue (key, value);
     }
+
+    if (*globalVar)
+      free (*globalVar);
+
+    if((value == NULL) || (value[0] == '\0'))
+      *globalVar = NULL;
+    else
+      *globalVar = strdup (value);
+  }
 }
 
 /* ******************************** */
@@ -3736,17 +3735,17 @@ static void processStrPref (char *key, char *value, char **globalVar,
 static void processIntPref (char *key, char *value, int *globalVar,
                             bool savePref)
 {
-    char buf[512];
+  char buf[512];
     
-    if ((key == NULL) || (value == NULL)) return;
+  if ((key == NULL) || (value == NULL)) return;
 
-    if (savePref) {
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
-                       "%d", atoi (value));
-        storePrefsValue (key, buf);
-    }
+  if (savePref) {
+    safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
+		   "%d", atoi (value));
+    storePrefsValue (key, buf);
+  }
     
-    *globalVar = atoi (value);
+  *globalVar = atoi (value);
 }
 
 /* ******************************** */
@@ -3754,317 +3753,317 @@ static void processIntPref (char *key, char *value, int *globalVar,
 static void processBoolPref (char *key, bool value, bool *globalVar,
                              bool savePref)
 {
-    char buf[512];
+  char buf[512];
     
-    if (key == NULL) return;
+  if (key == NULL) return;
 
-    if (savePref) {
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
-                       "%d", value);
-        storePrefsValue (key, buf);
-    }
+  if (savePref) {
+    safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
+		   "%d", value);
+    storePrefsValue (key, buf);
+  }
 
-    *globalVar = value;
+  *globalVar = value;
 }
 
 /* ******************************** */
 
 bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
 {
-    bool startCap = FALSE;
-    char buf[16], *tmpStr = NULL;
-    int tmpInt;
+  bool startCap = FALSE;
+  char buf[16], *tmpStr = NULL;
+  int tmpInt;
 
-    if(value == NULL) value = ""; /* Safer */
+  if(value == NULL) value = ""; /* Safer */
     
-    if (strcmp(key, NTOP_PREF_DEVICES) == 0) {
-        if ((pref->devices != NULL) &&
-            (strcmp (pref->devices, value))) {
-            startCap = TRUE;
-        }
+  if (strcmp(key, NTOP_PREF_DEVICES) == 0) {
+    if ((pref->devices != NULL) &&
+	(strcmp (pref->devices, value))) {
+      startCap = TRUE;
+    }
 
-	if((pref->devices == NULL) || (strstr(pref->devices, value) == NULL))
-	  processStrPref (NTOP_PREF_DEVICES, value, &pref->devices, savePref);
+    if((pref->devices == NULL) || (strstr(pref->devices, value) == NULL))
+      processStrPref (NTOP_PREF_DEVICES, value, &pref->devices, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_CAPFILE) == 0) {
+    if (((value != NULL) &&
+	 (((pref->rFileName != NULL) && (strcmp (pref->rFileName, value)))))
+	|| ((value != NULL) && ((pref->rFileName == NULL)))) {
+      startCap = TRUE;
     }
-    else if (strcmp (key, NTOP_PREF_CAPFILE) == 0) {
-        if (((value != NULL) &&
-             (((pref->rFileName != NULL) && (strcmp (pref->rFileName, value)))))
-            || ((value != NULL) && ((pref->rFileName == NULL)))) {
-            startCap = TRUE;
-        }
-        processStrPref (NTOP_PREF_CAPFILE, value, &pref->rFileName, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_FILTER) == 0) {
-        processStrPref (NTOP_PREF_FILTER, value,
-                        &pref->currentFilterExpression, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_WEBPORT) == 0) {
-        if (value != NULL) {
-            stringSanityCheck(value);
-            if(!isdigit(*value)) {
-                traceEvent (CONST_TRACE_ERROR, "flag -w expects a numeric argument.\n");
-                return(startCap);
-            }
+    processStrPref (NTOP_PREF_CAPFILE, value, &pref->rFileName, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_FILTER) == 0) {
+    processStrPref (NTOP_PREF_FILTER, value,
+		    &pref->currentFilterExpression, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_WEBPORT) == 0) {
+    if (value != NULL) {
+      stringSanityCheck(value);
+      if(!isdigit(*value)) {
+	traceEvent (CONST_TRACE_ERROR, "flag -w expects a numeric argument.\n");
+	return(startCap);
+      }
 
-            /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-            if((pref->webAddr = strchr(value,':'))) {
-                /* DS: Search for : to find xxx.xxx.xxx.xxx:port */
-                /* This code is to be able to bind to a particular interface */
-                if (savePref) {
-                    storePrefsValue (key, value);                    
-                }
-                *pref->webAddr = '\0';
-                pref->webPort = atoi(pref->webAddr+1);
-                pref->webAddr = strdup (value);
-            } else {
-                processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
-            }
-        }
-        else {
-            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
-                           DEFAULT_NTOP_WEB_PORT);
-            value = buf;
-            processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
-        }
+      /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+      if((pref->webAddr = strchr(value,':'))) {
+	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
+	/* This code is to be able to bind to a particular interface */
+	if (savePref) {
+	  storePrefsValue (key, value);                    
+	}
+	*pref->webAddr = '\0';
+	pref->webPort = atoi(pref->webAddr+1);
+	pref->webAddr = strdup (value);
+      } else {
+	processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
+      }
     }
+    else {
+      safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		     DEFAULT_NTOP_WEB_PORT);
+      value = buf;
+      processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
+    }
+  }
 #ifdef HAVE_OPENSSL
-    else if (strcmp (key, NTOP_PREF_SSLPORT) == 0) {
-        if (value != NULL) {
-            stringSanityCheck(value);
-            if(!isdigit(*value)) {
-                traceEvent (CONST_TRACE_ERROR, "flag -w expects a numeric argument.\n");
-                return(startCap);
-            }
+  else if (strcmp (key, NTOP_PREF_SSLPORT) == 0) {
+    if (value != NULL) {
+      stringSanityCheck(value);
+      if(!isdigit(*value)) {
+	traceEvent (CONST_TRACE_ERROR, "flag -w expects a numeric argument.\n");
+	return(startCap);
+      }
 
-            tmpStr = strdup (value);
-            /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-            if((pref->sslAddr = strchr(tmpStr,':'))) {
-                /* DS: Search for : to find xxx.xxx.xxx.xxx:port */
-                /* This code is to be able to bind to a particular interface */
-                if (savePref) {
-                    storePrefsValue (key, value);                    
-                }
-                *pref->sslAddr = '\0';
-                pref->sslPort = atoi(pref->sslAddr+1);
-                pref->sslAddr = value;
-            } else {
-                processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
-            }
-        }
-        if (value == NULL) {
-            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
-                           DEFAULT_NTOP_WEB_PORT);
-            value = buf;
-            processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
-        }
+      tmpStr = strdup (value);
+      /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+      if((pref->sslAddr = strchr(tmpStr,':'))) {
+	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
+	/* This code is to be able to bind to a particular interface */
+	if (savePref) {
+	  storePrefsValue (key, value);                    
+	}
+	*pref->sslAddr = '\0';
+	pref->sslPort = atoi(pref->sslAddr+1);
+	pref->sslAddr = value;
+      } else {
+	processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
+      }
     }
+    if (value == NULL) {
+      safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		     DEFAULT_NTOP_WEB_PORT);
+      value = buf;
+      processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
+    }
+  }
 #endif    
-    else if (strcmp (key, NTOP_PREF_EN_SESSION) == 0) {
-        processBoolPref (NTOP_PREF_EN_SESSION, TRUE,
-                         &pref->enableSessionHandling, savePref);
+  else if (strcmp (key, NTOP_PREF_EN_SESSION) == 0) {
+    processBoolPref (NTOP_PREF_EN_SESSION, TRUE,
+		     &pref->enableSessionHandling, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_EN_PROTO_DECODE) == 0) {
+    processBoolPref (NTOP_PREF_EN_PROTO_DECODE, TRUE,
+		     &pref->enablePacketDecoding, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_FLOWSPECS) == 0) {
+    processStrPref (NTOP_PREF_FLOWSPECS, value, &pref->flowSpecs, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_LOCALADDR) == 0) {
+    processStrPref (NTOP_PREF_LOCALADDR, value, &pref->localAddresses,
+		    savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_SPOOLPATH) == 0) {
+    processStrPref (NTOP_PREF_SPOOLPATH, value, &pref->spoolPath, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_STICKY_HOSTS) == 0) {
+    processBoolPref (NTOP_PREF_STICKY_HOSTS, TRUE, &pref->stickyHosts,
+		     savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_TRACK_LOCAL) == 0) {
+    processBoolPref (NTOP_PREF_TRACK_LOCAL, TRUE,
+		     &pref->trackOnlyLocalHosts, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_NO_PROMISC) == 0) {
+    processBoolPref (NTOP_PREF_NO_PROMISC, TRUE,
+		     &pref->disablePromiscuousMode, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_DAEMON) == 0) {
+    processBoolPref (NTOP_PREF_DAEMON, TRUE, &pref->daemonMode,
+		     savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_REFRESH_RATE) == 0) {
+    if (value == NULL) {
+      safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		     DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
+      value = buf;
     }
-    else if (strcmp (key, NTOP_PREF_EN_PROTO_DECODE) == 0) {
-        processBoolPref (NTOP_PREF_EN_PROTO_DECODE, TRUE,
-                         &pref->enablePacketDecoding, savePref);
+    processIntPref (NTOP_PREF_REFRESH_RATE, value, &pref->refreshRate,
+		    savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_MAXLINES) == 0) {
+    if (value == NULL) {
+      safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		     CONST_NUM_TABLE_ROWS_PER_PAGE);
+      value = buf;
     }
-    else if (strcmp (key, NTOP_PREF_FLOWSPECS) == 0) {
-        processStrPref (NTOP_PREF_FLOWSPECS, value, &pref->flowSpecs, savePref);
+    processIntPref (NTOP_PREF_MAXLINES, value, &pref->maxNumLines,
+		    savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_PRINT_FCORIP) == 0) {
+    tmpInt = atoi (value);
+    if (tmpInt == NTOP_PREF_VALUE_PRINT_IPONLY) {
+      pref->printIpOnly = TRUE, pref->printFcOnly = FALSE;
     }
-    else if (strcmp (key, NTOP_PREF_LOCALADDR) == 0) {
-        processStrPref (NTOP_PREF_LOCALADDR, value, &pref->localAddresses,
-                        savePref);
+    else if (tmpInt == NTOP_PREF_VALUE_PRINT_FCONLY) {
+      pref->printIpOnly = FALSE, pref->printFcOnly = TRUE;
     }
-    else if (strcmp (key, NTOP_PREF_SPOOLPATH) == 0) {
-        processStrPref (NTOP_PREF_SPOOLPATH, value, &pref->spoolPath, savePref);
+    else {
+      pref->printIpOnly = FALSE, pref->printFcOnly = FALSE;
     }
-    else if (strcmp (key, NTOP_PREF_STICKY_HOSTS) == 0) {
-        processBoolPref (NTOP_PREF_STICKY_HOSTS, TRUE, &pref->stickyHosts,
-                         savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_TRACK_LOCAL) == 0) {
-        processBoolPref (NTOP_PREF_TRACK_LOCAL, TRUE,
-                         &pref->trackOnlyLocalHosts, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_NO_PROMISC) == 0) {
-        processBoolPref (NTOP_PREF_NO_PROMISC, TRUE,
-                         &pref->disablePromiscuousMode, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_DAEMON) == 0) {
-        processBoolPref (NTOP_PREF_DAEMON, TRUE, &pref->daemonMode,
-                         savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_REFRESH_RATE) == 0) {
-        if (value == NULL) {
-            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
-                           DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
-            value = buf;
-        }
-        processIntPref (NTOP_PREF_REFRESH_RATE, value, &pref->refreshRate,
-                        savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_MAXLINES) == 0) {
-        if (value == NULL) {
-            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
-                           CONST_NUM_TABLE_ROWS_PER_PAGE);
-            value = buf;
-        }
-        processIntPref (NTOP_PREF_MAXLINES, value, &pref->maxNumLines,
-                        savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_PRINT_FCORIP) == 0) {
-        tmpInt = atoi (value);
-        if (tmpInt == NTOP_PREF_VALUE_PRINT_IPONLY) {
-            pref->printIpOnly = TRUE, pref->printFcOnly = FALSE;
-        }
-        else if (tmpInt == NTOP_PREF_VALUE_PRINT_FCONLY) {
-            pref->printIpOnly = FALSE, pref->printFcOnly = TRUE;
-        }
-        else {
-            pref->printIpOnly = FALSE, pref->printFcOnly = FALSE;
-        }
 
-        processIntPref (NTOP_PREF_PRINT_FCORIP, value, &tmpInt, savePref);
+    processIntPref (NTOP_PREF_PRINT_FCORIP, value, &tmpInt, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_NO_INVLUN) == 0) {
+    processBoolPref (NTOP_PREF_NO_INVLUN, TRUE,
+		     &pref->noInvalidLunDisplay, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_FILTER_EXTRA_FRM) == 0) {
+    processBoolPref (NTOP_PREF_FILTER_EXTRA_FRM, TRUE,
+		     &pref->filterExpressionInExtraFrame, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_W3C) == 0) {
+    processBoolPref (NTOP_PREF_W3C, TRUE, &pref->w3c, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_IPV4V6) == 0) {
+    processIntPref (NTOP_PREF_IPV4V6, value, &pref->ipv4or6, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_DOMAINNAME) == 0) {
+    processStrPref (NTOP_PREF_DOMAINNAME, value, &tmpStr,
+		    savePref);
+    if (tmpStr != NULL) {
+      strncpy (pref->domainName, tmpStr, sizeof (pref->domainName));
+      free (tmpStr);      /* alloc'd in processStrPref() */
     }
-    else if (strcmp (key, NTOP_PREF_NO_INVLUN) == 0) {
-        processBoolPref (NTOP_PREF_NO_INVLUN, TRUE,
-                         &pref->noInvalidLunDisplay, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_NUMERIC_IP) == 0) {
+    processBoolPref (NTOP_PREF_NUMERIC_IP, TRUE, &pref->numericFlag,
+		     savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_PROTOSPECS) == 0) {
+    processStrPref (NTOP_PREF_PROTOSPECS, value, &pref->protoSpecs,
+		    savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_P3PCP) == 0) {
+    processStrPref (NTOP_PREF_P3PCP, value, &pref->P3Pcp, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_P3PURI) == 0) {
+    processStrPref (NTOP_PREF_P3PURI, value, &pref->P3Puri, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_MAPPERURL) == 0) {
+    processStrPref (NTOP_PREF_MAPPERURL, value, &pref->mapperURL, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_WWN_MAP) == 0) {
+    processStrPref (NTOP_PREF_WWN_MAP, value, &pref->fcNSCacheFile,
+		    savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_MAXHASH) == 0) {
+    if (value == NULL) {
+      safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		     -1);
+      value = buf;
     }
-    else if (strcmp (key, NTOP_PREF_FILTER_EXTRA_FRM) == 0) {
-        processBoolPref (NTOP_PREF_FILTER_EXTRA_FRM, TRUE,
-                         &pref->filterExpressionInExtraFrame, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_W3C) == 0) {
-        processBoolPref (NTOP_PREF_W3C, TRUE, &pref->w3c, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_IPV4V6) == 0) {
-        processIntPref (NTOP_PREF_IPV4V6, value, &pref->ipv4or6, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_DOMAINNAME) == 0) {
-        processStrPref (NTOP_PREF_DOMAINNAME, value, &tmpStr,
-                        savePref);
-        if (tmpStr != NULL) {
-            strncpy (pref->domainName, tmpStr, sizeof (pref->domainName));
-            free (tmpStr);      /* alloc'd in processStrPref() */
-        }
-    }
-    else if (strcmp (key, NTOP_PREF_NUMERIC_IP) == 0) {
-        processBoolPref (NTOP_PREF_NUMERIC_IP, TRUE, &pref->numericFlag,
-                         savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_PROTOSPECS) == 0) {
-        processStrPref (NTOP_PREF_PROTOSPECS, value, &pref->protoSpecs,
-                        savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_P3PCP) == 0) {
-        processStrPref (NTOP_PREF_P3PCP, value, &pref->P3Pcp, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_P3PURI) == 0) {
-        processStrPref (NTOP_PREF_P3PURI, value, &pref->P3Puri, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_MAPPERURL) == 0) {
-        processStrPref (NTOP_PREF_MAPPERURL, value, &pref->mapperURL, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_WWN_MAP) == 0) {
-        processStrPref (NTOP_PREF_WWN_MAP, value, &pref->fcNSCacheFile,
-                        savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_MAXHASH) == 0) {
-        if (value == NULL) {
-            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
-                           -1);
-            value = buf;
-        }
-        processIntPref (NTOP_PREF_MAXHASH, value,
-                        &pref->maxNumHashEntries, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_MERGEIF) == 0) {
-        processBoolPref (NTOP_PREF_MERGEIF, TRUE,
-                         &pref->mergeInterfaces, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_NO_ISESS_PURGE) == 0) {
-        processBoolPref (NTOP_PREF_NO_ISESS_PURGE, TRUE,
-                         &pref->disableInstantSessionPurge, savePref);
-    }
+    processIntPref (NTOP_PREF_MAXHASH, value,
+		    &pref->maxNumHashEntries, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_MERGEIF) == 0) {
+    processBoolPref (NTOP_PREF_MERGEIF, TRUE,
+		     &pref->mergeInterfaces, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_NO_ISESS_PURGE) == 0) {
+    processBoolPref (NTOP_PREF_NO_ISESS_PURGE, TRUE,
+		     &pref->disableInstantSessionPurge, savePref);
+  }
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)                
-    else if (strcmp (key, NTOP_PREF_NOBLOCK) == 0) {
-        processBoolPref (NTOP_PREF_NOBLOCK, TRUE,
-                         &pref->setNonBlocking, savePref);
-    }
+  else if (strcmp (key, NTOP_PREF_NOBLOCK) == 0) {
+    processBoolPref (NTOP_PREF_NOBLOCK, TRUE,
+		     &pref->setNonBlocking, savePref);
+  }
 #endif                
-    else if (strcmp (key, NTOP_PREF_NO_STOPCAP) == 0) {
-        processBoolPref (NTOP_PREF_NO_STOPCAP, TRUE,
-                         &pref->disableStopcap, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_NO_TRUST_MAC) == 0) {
-        processBoolPref (NTOP_PREF_NO_TRUST_MAC, TRUE,
-                         &pref->dontTrustMACaddr, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_PCAP_LOGBASE) == 0) {
-        processStrPref (NTOP_PREF_PCAP_LOGBASE, value,
-                        &pref->pcapLogBasePath, savePref);
-    }
+  else if (strcmp (key, NTOP_PREF_NO_STOPCAP) == 0) {
+    processBoolPref (NTOP_PREF_NO_STOPCAP, TRUE,
+		     &pref->disableStopcap, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_NO_TRUST_MAC) == 0) {
+    processBoolPref (NTOP_PREF_NO_TRUST_MAC, TRUE,
+		     &pref->dontTrustMACaddr, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_PCAP_LOGBASE) == 0) {
+    processStrPref (NTOP_PREF_PCAP_LOGBASE, value,
+		    &pref->pcapLogBasePath, savePref);
+  }
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME                
-    else if (strcmp (key, NTOP_PREF_USE_SSLWATCH) == 0) {
-        processBoolPref (NTOP_PREF_USE_SSLWATCH, TRUE,
-                         &pref->useSSLwatchdog, savePref);
-    }
+  else if (strcmp (key, NTOP_PREF_USE_SSLWATCH) == 0) {
+    processBoolPref (NTOP_PREF_USE_SSLWATCH, TRUE,
+		     &pref->useSSLwatchdog, savePref);
+  }
 #endif                
-    else if (strcmp (key, NTOP_PREF_DBG_MODE) == 0) {
-        processBoolPref (NTOP_PREF_DBG_MODE, TRUE, &pref->debugMode,
-                         savePref);
+  else if (strcmp (key, NTOP_PREF_DBG_MODE) == 0) {
+    processBoolPref (NTOP_PREF_DBG_MODE, TRUE, &pref->debugMode,
+		     savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_TRACE_LVL) == 0) {
+    if (value == NULL) {
+      safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		     DEFAULT_TRACE_LEVEL);
+      value = buf;
     }
-    else if (strcmp (key, NTOP_PREF_TRACE_LVL) == 0) {
-        if (value == NULL) {
-            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
-                           DEFAULT_TRACE_LEVEL);
-            value = buf;
-        }
-        processIntPref (NTOP_PREF_TRACE_LVL, value, &pref->traceLevel,
-                        savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_DUMP_OTHER) == 0) {
-        processBoolPref (NTOP_PREF_DUMP_OTHER, TRUE,
-                         &pref->enableOtherPacketDump, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_DUMP_SUSP) == 0) {
-        processBoolPref (NTOP_PREF_DUMP_SUSP, TRUE,
-                         &pref->enableSuspiciousPacketDump, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_ACCESS_LOG) == 0) {
-        processStrPref (NTOP_PREF_ACCESS_LOG, value,
-                        &pref->accessLogFile,
-                        savePref);
-    }
+    processIntPref (NTOP_PREF_TRACE_LVL, value, &pref->traceLevel,
+		    savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_DUMP_OTHER) == 0) {
+    processBoolPref (NTOP_PREF_DUMP_OTHER, TRUE,
+		     &pref->enableOtherPacketDump, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_DUMP_SUSP) == 0) {
+    processBoolPref (NTOP_PREF_DUMP_SUSP, TRUE,
+		     &pref->enableSuspiciousPacketDump, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_ACCESS_LOG) == 0) {
+    processStrPref (NTOP_PREF_ACCESS_LOG, value,
+		    &pref->accessLogFile,
+		    savePref);
+  }
 #ifndef WIN32                
-    else if (strcmp (key, NTOP_PREF_USE_SYSLOG) == 0) {
-        if (value == NULL) {
-            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
-                           DEFAULT_NTOP_SYSLOG);
-            value = buf;
-        }
-        processIntPref (NTOP_PREF_USE_SYSLOG, value,
-                        &pref->useSyslog, savePref);
+  else if (strcmp (key, NTOP_PREF_USE_SYSLOG) == 0) {
+    if (value == NULL) {
+      safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		     DEFAULT_NTOP_SYSLOG);
+      value = buf;
     }
+    processIntPref (NTOP_PREF_USE_SYSLOG, value,
+		    &pref->useSyslog, savePref);
+  }
 #endif                
-    else if (strcmp (key, NTOP_PREF_PCAP_LOG) == 0) {
-        processStrPref (NTOP_PREF_PCAP_LOG, value, &pref->pcapLog, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_NO_MUTEX_EXTRA) == 0) {
-        processBoolPref (NTOP_PREF_NO_MUTEX_EXTRA, TRUE,
-                         &pref->disableMutexExtraInfo, savePref);
-    }
+  else if (strcmp (key, NTOP_PREF_PCAP_LOG) == 0) {
+    processStrPref (NTOP_PREF_PCAP_LOG, value, &pref->pcapLog, savePref);
+  }
+  else if (strcmp (key, NTOP_PREF_NO_MUTEX_EXTRA) == 0) {
+    processBoolPref (NTOP_PREF_NO_MUTEX_EXTRA, TRUE,
+		     &pref->disableMutexExtraInfo, savePref);
+  }
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)                
-    else if (strcmp (key, NTOP_PREF_NO_SCHEDYLD) == 0) {
-        processBoolPref (NTOP_PREF_NO_SCHEDYLD, TRUE,
-                         &pref->disableSchedYield, savePref);
-    }
+  else if (strcmp (key, NTOP_PREF_NO_SCHEDYLD) == 0) {
+    processBoolPref (NTOP_PREF_NO_SCHEDYLD, TRUE,
+		     &pref->disableSchedYield, savePref);
+  }
 #endif
-    else if (strncmp (key, "ntop.", strlen ("ntop.")) == 0) {
-        traceEvent (CONST_TRACE_WARNING, "Unknown preference: %s, value = %s\n",
-                    key, (value == NULL) ? "(null)" : value);
-    }
+  else if (strncmp (key, "ntop.", strlen ("ntop.")) == 0) {
+    traceEvent (CONST_TRACE_WARNING, "Unknown preference: %s, value = %s\n",
+		key, (value == NULL) ? "(null)" : value);
+  }
 
-    return (startCap);
+  return (startCap);
 }
 
 /* ******************************** */
@@ -4941,10 +4940,10 @@ void saveNtopPid(void) {
 
   myGlobals.basentoppid = getpid();
   safe_snprintf(__FILE__, __LINE__, pidFileName, sizeof(pidFileName), "%s/%s",
-          getuid() ?
-	  /* We're not root */ myGlobals.dbPath :
-	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
-          DEFAULT_NTOP_PIDFILE);
+		getuid() ?
+		/* We're not root */ myGlobals.dbPath :
+		/* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
+		DEFAULT_NTOP_PIDFILE);
   fd = fopen(pidFileName, "wb");
 
   if(fd == NULL) {
@@ -4963,10 +4962,10 @@ void removeNtopPid(void) {
   int rc;
 
   safe_snprintf(__FILE__, __LINE__, pidFileName, sizeof(pidFileName), "%s/%s",
-          getuid() ?
-	  /* We're not root */ myGlobals.dbPath :
-	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
-          DEFAULT_NTOP_PIDFILE);
+		getuid() ?
+		/* We're not root */ myGlobals.dbPath :
+		/* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
+		DEFAULT_NTOP_PIDFILE);
   rc = unlink(pidFileName);
   if (rc == 0) {
     traceEvent(CONST_TRACE_INFO, "TERM: Removed pid file (%s)", pidFileName);
@@ -5246,12 +5245,12 @@ HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, u_int actua
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-      if (el->fcCounters != NULL) {
-          if ((el->fcCounters->hostFcAddress.domain != 0) &&
-              (!memcmp(&el->fcCounters->hostFcAddress, fcAddr, LEN_FC_ADDRESS)) &&
-              (el->fcCounters->vsanId == vsanId))
-              return(el);
-      }
+    if (el->fcCounters != NULL) {
+      if ((el->fcCounters->hostFcAddress.domain != 0) &&
+	  (!memcmp(&el->fcCounters->hostFcAddress, fcAddr, LEN_FC_ADDRESS)) &&
+	  (el->fcCounters->vsanId == vsanId))
+	return(el);
+    }
   }
 
   return(NULL);
@@ -5441,10 +5440,10 @@ void displayPrivacyNotice(void) {
   }
 
 #if (0)
-    // Enable this only if you suspect the conversion is hosed, to collect
-    // information for the ntop-dev mailing list.
-    // Normally you would enable this, run ntop, collect the values and
-    // then shut ntop down.
+  // Enable this only if you suspect the conversion is hosed, to collect
+  // information for the ntop-dev mailing list.
+  // Normally you would enable this, run ntop, collect the values and
+  // then shut ntop down.
 #define cNV2N(a, b) \
 { \
   unsigned int vv; \
@@ -5455,26 +5454,26 @@ void displayPrivacyNotice(void) {
     traceEvent(CONST_TRACE_INFO, "CHKVER_TEST: cNV2N %-10s -> %10u OK", a, vv); \
 }
 
-    cNV2N("1.3",     103000000);
-    cNV2N("2.1",     201000000);
-    cNV2N("2.1.1",   201000001);
-    cNV2N("2.1.2",   201000002);
-    cNV2N("2.1.3",   201000003);
-    cNV2N("2.1.50",  201050000);
-    cNV2N("2.1.90",  201090000);
-    cNV2N("2.2",     202000000);
-    cNV2N("2.2a",    202000100);
-    cNV2N("2.2b",    202000200);
-    cNV2N("2.2c",    202000300);
-    cNV2N("2.2c.1",  202000301);
-    cNV2N("2.2.50",  202050000);
-    cNV2N("2.2.90",  202090000);
-    cNV2N("3.0pre1", 299998001);
-    cNV2N("3.0pre10",299998010);
-    cNV2N("3.0rc1",  299999001);
-    cNV2N("3.0rc2",  299999002);
-    cNV2N("3.0rc14", 299999014);
-    cNV2N("3.0",     300000000);
+  cNV2N("1.3",     103000000);
+  cNV2N("2.1",     201000000);
+  cNV2N("2.1.1",   201000001);
+  cNV2N("2.1.2",   201000002);
+  cNV2N("2.1.3",   201000003);
+  cNV2N("2.1.50",  201050000);
+  cNV2N("2.1.90",  201090000);
+  cNV2N("2.2",     202000000);
+  cNV2N("2.2a",    202000100);
+  cNV2N("2.2b",    202000200);
+  cNV2N("2.2c",    202000300);
+  cNV2N("2.2c.1",  202000301);
+  cNV2N("2.2.50",  202050000);
+  cNV2N("2.2.90",  202090000);
+  cNV2N("3.0pre1", 299998001);
+  cNV2N("3.0pre10",299998010);
+  cNV2N("3.0rc1",  299999001);
+  cNV2N("3.0rc2",  299999002);
+  cNV2N("3.0rc14", 299999014);
+  cNV2N("3.0",     300000000);
 #endif
 }
 
@@ -5758,14 +5757,14 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   strncat(userAgent, ")", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 
   safe_snprintf(__FILE__, __LINE__, buf, bufLen, "GET /%s HTTP/1.0\r\n"
-	      "Host: %s\r\n"
-	      "User-Agent: %s\r\n"
-	      "Accept: %s\r\n"
-	      "\r\n",
-	      versionFile,
-	      versSite,
-	      userAgent,
-	      CONST_HTTP_ACCEPT_ALL);
+		"Host: %s\r\n"
+		"User-Agent: %s\r\n"
+		"Accept: %s\r\n"
+		"\r\n",
+		versionFile,
+		versSite,
+		userAgent,
+		CONST_HTTP_ACCEPT_ALL);
 
   free(userAgent);
 
@@ -5785,11 +5784,11 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   memset(buf, 0, bufLen);
   rc = recv(sock, buf, bufLen,
 #ifdef WIN32
-	  0
+	    0
 #else
-	  MSG_WAITALL
+	    MSG_WAITALL
 #endif
-	  );
+	    );
   if (rc < 0) {
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to receive http response: %s(%d)", strerror(errno), errno);
@@ -6051,13 +6050,13 @@ void* checkVersion(void* notUsed _UNUSED_) {
 /* ********************************** */
 
 int readInputFile(FILE* fd,
-                    char* logTag,
-                    u_char forceClose,
-                    u_char compressedFormat,
-                    int countPer,
-                    char* buf,
-                    int bufLen,
-                    int* recordsRead) {
+		  char* logTag,
+		  u_char forceClose,
+		  u_char compressedFormat,
+		  int countPer,
+		  char* buf,
+		  int bufLen,
+		  int* recordsRead) {
 
   /*
    * This is a common routine to return the records from a data file, compressed or
@@ -6073,18 +6072,18 @@ int readInputFile(FILE* fd,
 
   if((fd != NULL) && (forceClose == FALSE) && (buf != NULL) && (bufLen > 0)) {
 #ifdef MAKE_WITH_ZLIB
-      if(compressedFormat)
-        getValue = gzgets(fd, buf, bufLen);
-      else
+    if(compressedFormat)
+      getValue = gzgets(fd, buf, bufLen);
+    else
 #endif
-        getValue = fgets(buf, bufLen, fd);
+      getValue = fgets(buf, bufLen, fd);
 
-      if(getValue != NULL) {
-        (*recordsRead)++;
-        if((logTag != NULL) && (countPer > 0) && ((*recordsRead) % countPer == 0))
-          traceEvent(CONST_TRACE_NOISY, "%s: ....%6d records read", logTag, (*recordsRead));
-        return(0);
-      }
+    if(getValue != NULL) {
+      (*recordsRead)++;
+      if((logTag != NULL) && (countPer > 0) && ((*recordsRead) % countPer == 0))
+	traceEvent(CONST_TRACE_NOISY, "%s: ....%6d records read", logTag, (*recordsRead));
+      return(0);
+    }
   }
 
   /* Either EOF or forceClose */
@@ -6139,8 +6138,8 @@ FILE* checkForInputFile(char* logTag, char* descr,
 #ifdef MAKE_WITH_ZLIB
     *compressedFormat = 1;
     safe_snprintf(__FILE__, __LINE__, tmpFile, sizeof(tmpFile),
-		"%s%c%s.gz",
-		myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
+		  "%s%c%s.gz",
+		  myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
     if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
     fd = gzopen(tmpFile, "r");
     /* Note, if this code is inactive, fd is NULL from above, avoids fancy ifdefs */
@@ -6149,8 +6148,8 @@ FILE* checkForInputFile(char* logTag, char* descr,
     if(fd == NULL) {
       *compressedFormat = 0;
       safe_snprintf(__FILE__, __LINE__, tmpFile, sizeof(tmpFile),
-		  "%s%c%s",
-		  myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
+		    "%s%c%s",
+		    myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
       if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
       fd = fopen(tmpFile, "r");
     }
@@ -6227,9 +6226,9 @@ FILE* checkForInputFile(char* logTag, char* descr,
 
 void urlFixupFromRFC1945Inplace(char* url) {
 
-/* Do an in-place fixup of a rfc1945 URL back to the internal name,
-   that is convert _s back to :s
- */
+  /* Do an in-place fixup of a rfc1945 URL back to the internal name,
+     that is convert _s back to :s
+  */
   int i;
 
   for(i=0; url[i] != '\0'; i++)
@@ -6240,9 +6239,9 @@ void urlFixupFromRFC1945Inplace(char* url) {
 
 void urlFixupToRFC1945Inplace(char* url) {
 
-/* Do an in-place fixup of an internal name to a RFC1945 URL,
-   that is convert :s to _s
- */
+  /* Do an in-place fixup of an internal name to a RFC1945 URL,
+     that is convert :s to _s
+  */
   int i;
 
   for(i=0; url[i] != '\0'; i++)
@@ -6279,12 +6278,12 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
 #endif
 
     if (updateType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
-        safe_snprintf(__FILE__, __LINE__, el->hostResolvedName, sizeof(el->hostResolvedName),
-                      fcwwn_to_str (updateValue));
-        el->hostResolvedName[LEN_WWN_ADDRESS_DISPLAY] = '\0';
+      safe_snprintf(__FILE__, __LINE__, el->hostResolvedName, sizeof(el->hostResolvedName),
+		    fcwwn_to_str (updateValue));
+      el->hostResolvedName[LEN_WWN_ADDRESS_DISPLAY] = '\0';
     }
     else {
-        strncpy(el->hostResolvedName, updateValue, MAX_LEN_SYM_HOST_NAME-1);
+      strncpy(el->hostResolvedName, updateValue, MAX_LEN_SYM_HOST_NAME-1);
     }
     // el->hostResolvedName[MAX_LEN_SYM_HOST_NAME-1] = '\0';
     for(i=0; el->hostResolvedName[i] != '\0'; i++)
@@ -6301,306 +6300,306 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
 
 int cmpFctnResolvedName(const void *_a, const void *_b) {
 
-/* This function is ugly, but critical, so bare with...
+  /* This function is ugly, but critical, so bare with...
 
-    It takes two HostTraffic entries and performs a standardized compare
-    of the hostResolvedName fields, reaching into OTHER fields as necessary.
+  It takes two HostTraffic entries and performs a standardized compare
+  of the hostResolvedName fields, reaching into OTHER fields as necessary.
 
-    The SOLE goal is to provide a stable comparison.
+  The SOLE goal is to provide a stable comparison.
 
-    Hopefully the results are PREDICTABLE and EXPLAINABLE, but that's totally
-    secondary.
+  Hopefully the results are PREDICTABLE and EXPLAINABLE, but that's totally
+  secondary.
 
-    Why?  Because sorts don't handle non-transitive compares very well.
+  Why?  Because sorts don't handle non-transitive compares very well.
 
-    If  A>B but B !< A, the sort will probably CHOKE.
+  If  A>B but B !< A, the sort will probably CHOKE.
 
-    Since the hostResolvedName field contains something like six or nine
-    possible types of 'names' for a host, a simple alphabetic compare
-    won't cut it.  Especially as hostResolvedName may not be valued
-    at the time of the compare...
+  Since the hostResolvedName field contains something like six or nine
+  possible types of 'names' for a host, a simple alphabetic compare
+  won't cut it.  Especially as hostResolvedName may not be valued
+  at the time of the compare...
 
-    We also can't simply just use the next valued field in the
-    sets, because we run the risk of intransitive compares,
-    where
+  We also can't simply just use the next valued field in the
+  sets, because we run the risk of intransitive compares,
+  where
 
-                    primary(a) > primary(b)
+  primary(a) > primary(b)
 
-            but
+  but
 
-                    secondary(a) < secondary(b)
+  secondary(a) < secondary(b)
 
-    and if we have say primary for a and c, but not b, risk that
-    just because a<b and b<c a !< c... this completely hoses the
-    sort.
-
-
-    So instead in this routine, we practice a gracefull, explicit fallback:
-
-    1. If the HostTraffic pointers are NULL, we return equality.
-
-       1A. If one of the HostTraffic pointers is NULL, we return THAT entry as <
-
-    2. If both of the hostResolvedName fields are NOT NULL,
-       and both of the hostResolvedNameType fields are NONE, we:
-
-       2A. Check the hostResolvedNameType fields for both A and B.
-
-           2A1. If they are identical, we perform the approprate
-                apples to apples compare.
-
-                    For example using hostNumIpAddress for a meaningful
-                    IP address sort (where 9.0.0.0 < 10.0.0.0).
-
-           2A2. If the hostResolvedNameType fields are NOT identical, we
-                do the sort on the hostResolvedNameType field itself.
+  and if we have say primary for a and c, but not b, risk that
+  just because a<b and b<c a !< c... this completely hoses the
+  sort.
 
 
-             2A1+2A2 means that we sort all of the NAMES alphabetically,
-             followed by all of the IP addresses sorted NUMERICALLY, followed by...
+  So instead in this routine, we practice a gracefull, explicit fallback:
 
-    3A. If precisely ONE of the hostResolvedName fields is NULL or precisely ONE
-        of the hostResolvedNameType fields is NONE, we return the
-        valued field < the unvalued one (so unresolved things fall to the
-        end of the sort).
+  1. If the HostTraffic pointers are NULL, we return equality.
 
-    3B. If both of the hostResolvedName fields are NULL, we fall back
-       gracefully, seeking - in the order of the _TYPE flags, a field which
-       is valued in BOTH a and b.
+  1A. If one of the HostTraffic pointers is NULL, we return THAT entry as <
 
-    4. Finally if nothing matches, we return a=b.
+  2. If both of the hostResolvedName fields are NOT NULL,
+  and both of the hostResolvedNameType fields are NONE, we:
 
-   */
+  2A. Check the hostResolvedNameType fields for both A and B.
 
-    HostTraffic **a = (HostTraffic **)_a;
-    HostTraffic **b = (HostTraffic **)_b;
-    int rc;
-    char *name1, *name2;
+  2A1. If they are identical, we perform the approprate
+  apples to apples compare.
+
+  For example using hostNumIpAddress for a meaningful
+  IP address sort (where 9.0.0.0 < 10.0.0.0).
+
+  2A2. If the hostResolvedNameType fields are NOT identical, we
+  do the sort on the hostResolvedNameType field itself.
+
+
+  2A1+2A2 means that we sort all of the NAMES alphabetically,
+  followed by all of the IP addresses sorted NUMERICALLY, followed by...
+
+  3A. If precisely ONE of the hostResolvedName fields is NULL or precisely ONE
+  of the hostResolvedNameType fields is NONE, we return the
+  valued field < the unvalued one (so unresolved things fall to the
+  end of the sort).
+
+  3B. If both of the hostResolvedName fields are NULL, we fall back
+  gracefully, seeking - in the order of the _TYPE flags, a field which
+  is valued in BOTH a and b.
+
+  4. Finally if nothing matches, we return a=b.
+
+  */
+
+  HostTraffic **a = (HostTraffic **)_a;
+  HostTraffic **b = (HostTraffic **)_b;
+  int rc;
+  char *name1, *name2;
 #ifdef CMPFCTN_DEBUG
-    char debugCmpFctn[128];
-    memset(debugCmpFctn, 0, sizeof(debugCmpFctn));
+  char debugCmpFctn[128];
+  memset(debugCmpFctn, 0, sizeof(debugCmpFctn));
 #endif
 
-    /* 1, 1A */
-    if((a == NULL) && (b == NULL)) {
-      return(0);
-    } else if(a == NULL) {
-      return(-1);
-    } else if(b == NULL) {
-      return(1);
-    }
+  /* 1, 1A */
+  if((a == NULL) && (b == NULL)) {
+    return(0);
+  } else if(a == NULL) {
+    return(-1);
+  } else if(b == NULL) {
+    return(1);
+  }
 
-    if((*a == NULL) && (*b == NULL)) {
-      return(0);
-    } else if(*a == NULL) {
-      return(-1);
-    } else if(*b == NULL) {
-      return(1);
-    }
+  if((*a == NULL) && (*b == NULL)) {
+    return(0);
+  } else if(*a == NULL) {
+    return(-1);
+  } else if(*b == NULL) {
+    return(1);
+  }
 
-    accessAddrResMutex("cmpFctnResolvedName");
+  accessAddrResMutex("cmpFctnResolvedName");
 
-    if(((*a)->hostResolvedName != NULL) &&
-       ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
-       ((*b)->hostResolvedName != NULL) &&
-       ((*b)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
+  if(((*a)->hostResolvedName != NULL) &&
+     ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
+     ((*b)->hostResolvedName != NULL) &&
+     ((*b)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
 
 #ifdef CMPFCTN_DEBUG
-      traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: cmpFctn(0x%08x, 0x%08x): %d %s vs %d %s",
-                 (*a),
-                 (*b),
-                 (*a)->hostResolvedNameType,
-                 (*a)->hostResolvedName,
-                 (*b)->hostResolvedNameType,
-                 (*b)->hostResolvedName);
+    traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: cmpFctn(0x%08x, 0x%08x): %d %s vs %d %s",
+	       (*a),
+	       (*b),
+	       (*a)->hostResolvedNameType,
+	       (*a)->hostResolvedName,
+	       (*b)->hostResolvedNameType,
+	       (*b)->hostResolvedName);
 #endif
 
-      /* 2 - valid hostResolvedName */
-      if((*a)->hostResolvedNameType == (*b)->hostResolvedNameType) {
-          /* 2A1 */
+    /* 2 - valid hostResolvedName */
+    if((*a)->hostResolvedNameType == (*b)->hostResolvedNameType) {
+      /* 2A1 */
 
-             /* Remember, order of the cases is important don't change
-              * But also remember, we're comparing only the values of the
-              * same type stored in hostResolvedName so MOST can be
-              * a straight string compare.
-              */
+      /* Remember, order of the cases is important don't change
+       * But also remember, we're comparing only the values of the
+       * same type stored in hostResolvedName so MOST can be
+       * a straight string compare.
+       */
 
-          if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME) {
-              name1 = (*a)->hostResolvedName;
-              name2 = (*b)->hostResolvedName;
-              rc = strcasecmp(name1, name2);
+      if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME) {
+	name1 = (*a)->hostResolvedName;
+	name2 = (*b)->hostResolvedName;
+	rc = strcasecmp(name1, name2);
 #ifdef CMPFCTN_DEBUG
-              strncpy(debugCmpFctn, "2A1-NAME", sizeof(debugCmpFctn));
+	strncpy(debugCmpFctn, "2A1-NAME", sizeof(debugCmpFctn));
 #endif
-          } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_IP) {
-              rc = addrcmp(&((*a)->hostIpAddress), &((*b)->hostIpAddress));
+      } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_IP) {
+	rc = addrcmp(&((*a)->hostIpAddress), &((*b)->hostIpAddress));
 #ifdef CMPFCTN_DEBUG
-              strncpy(debugCmpFctn, "2A1-IP", sizeof(debugCmpFctn));
+	strncpy(debugCmpFctn, "2A1-IP", sizeof(debugCmpFctn));
 #endif
-          } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_MAC) {
-              /*
-               * Remember - the MAC value in hostResolvedName, is proabably the
-               * translated MAC, e.g. 3COM CORPORATION:E2:DB:06 and not the
-               * 48bit value.  But, if we don't recognize the vendor, then it's the
-               * 17 character form (xx:xx:xx:xx:xx:xx).  The special case is to
-               * sort xx: form AFTER the recognized ones.
-               * We use strncasecmp so 3Com and 3COM sort together
-               */
-              name1 = (*a)->hostResolvedName;
-              name2 = (*b)->hostResolvedName;
-              if(((name1[2] == ':') && (name2[2] != ':')) ||
-                 ((name1[2] != ':') && (name2[2] == ':'))) {
-                /* One : one recognized */
-                if(name1[2] == ':') {
-                  rc=1; /* name1 (unrecognized) > name2 (recognized) */
+      } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_MAC) {
+	/*
+	 * Remember - the MAC value in hostResolvedName, is proabably the
+	 * translated MAC, e.g. 3COM CORPORATION:E2:DB:06 and not the
+	 * 48bit value.  But, if we don't recognize the vendor, then it's the
+	 * 17 character form (xx:xx:xx:xx:xx:xx).  The special case is to
+	 * sort xx: form AFTER the recognized ones.
+	 * We use strncasecmp so 3Com and 3COM sort together
+	 */
+	name1 = (*a)->hostResolvedName;
+	name2 = (*b)->hostResolvedName;
+	if(((name1[2] == ':') && (name2[2] != ':')) ||
+	   ((name1[2] != ':') && (name2[2] == ':'))) {
+	  /* One : one recognized */
+	  if(name1[2] == ':') {
+	    rc=1; /* name1 (unrecognized) > name2 (recognized) */
 #ifdef CMPFCTN_DEBUG
-                  strncpy(debugCmpFctn, "2A1-MAC-1:", sizeof(debugCmpFctn));
+	    strncpy(debugCmpFctn, "2A1-MAC-1:", sizeof(debugCmpFctn));
 #endif
-                } else {
-                  rc=-1;  /* name1 (recognized) > name2 (unrecognized) */
+	  } else {
+	    rc=-1;  /* name1 (recognized) > name2 (unrecognized) */
 #ifdef CMPFCTN_DEBUG
-                  strncpy(debugCmpFctn, "2A1-MAC-2:", sizeof(debugCmpFctn));
+	    strncpy(debugCmpFctn, "2A1-MAC-2:", sizeof(debugCmpFctn));
 #endif
-                }
-              } else {
-                rc = strcasecmp(name1, name2);
+	  }
+	} else {
+	  rc = strcasecmp(name1, name2);
 #ifdef CMPFCTN_DEBUG
-                strncpy(debugCmpFctn, "2A1-MAC", sizeof(debugCmpFctn));
+	  strncpy(debugCmpFctn, "2A1-MAC", sizeof(debugCmpFctn));
 #endif
-              }
-          } else if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FCID)
-                    && ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC_WWN)
-                    && ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS)
-                    && ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FAKE)) {
-            /* For most of the rest of the tests, we just compare the names we
-             * have - since they're always the same type, a strncasecmp test
-             * IS meaningful.
-             */
-            name1 = (*a)->hostResolvedName;
-            name2 = (*b)->hostResolvedName;
-            rc = strcasecmp(name1, name2);
+	}
+      } else if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FCID)
+		&& ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC_WWN)
+		&& ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS)
+		&& ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FAKE)) {
+	/* For most of the rest of the tests, we just compare the names we
+	 * have - since they're always the same type, a strncasecmp test
+	 * IS meaningful.
+	 */
+	name1 = (*a)->hostResolvedName;
+	name2 = (*b)->hostResolvedName;
+	rc = strcasecmp(name1, name2);
 #ifdef CMPFCTN_DEBUG
-            strncpy(debugCmpFctn, "2A1-!FC!FAKE", sizeof(debugCmpFctn));
+	strncpy(debugCmpFctn, "2A1-!FC!FAKE", sizeof(debugCmpFctn));
 #endif
-          } else if ((((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FCID)
-                      || ((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN)
-                      || ((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS))) {
-            name1 = (*a)->hostResolvedName;
-            name2 = (*b)->hostResolvedName;
-            rc = strcasecmp(name1, name2);
+      } else if ((((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FCID)
+		  || ((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN)
+		  || ((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS))) {
+	name1 = (*a)->hostResolvedName;
+	name2 = (*b)->hostResolvedName;
+	rc = strcasecmp(name1, name2);
 #ifdef CMPFCTN_DEBUG
-            strncpy(debugCmpFctn, "2A1-FC", sizeof(debugCmpFctn));
+	strncpy(debugCmpFctn, "2A1-FC", sizeof(debugCmpFctn));
 #endif
-          } else { /* FAKE */
-            name1 = (*a)->hostResolvedName;
-            name2 = (*b)->hostResolvedName;
-            rc = strcasecmp(name1, name2);
+      } else { /* FAKE */
+	name1 = (*a)->hostResolvedName;
+	name2 = (*b)->hostResolvedName;
+	rc = strcasecmp(name1, name2);
 #ifdef CMPFCTN_DEBUG
-            strncpy(debugCmpFctn, "2A1-FAKE", sizeof(debugCmpFctn));
-#endif
-          }
-      } else {
-          /* 2A2 - unequal types, so just compare the Type field */
-          if((*a)->hostResolvedNameType > (*b)->hostResolvedNameType)
-            rc = -1; /* Higher type before lower */
-          else
-            rc = 1;
-#ifdef CMPFCTN_DEBUG
-          strncpy(debugCmpFctn, "2A2!=", sizeof(debugCmpFctn));
+	strncpy(debugCmpFctn, "2A1-FAKE", sizeof(debugCmpFctn));
 #endif
       }
     } else {
-      /* If only one is not NULL/NONE, so let's do 3A */
-      if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
-         ((*b)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
-        /* a not NULL so return a<b */
-        rc = -1;
+      /* 2A2 - unequal types, so just compare the Type field */
+      if((*a)->hostResolvedNameType > (*b)->hostResolvedNameType)
+	rc = -1; /* Higher type before lower */
+      else
+	rc = 1;
 #ifdef CMPFCTN_DEBUG
-        strncpy(debugCmpFctn, "3A-a!", sizeof(debugCmpFctn));
+      strncpy(debugCmpFctn, "2A2!=", sizeof(debugCmpFctn));
 #endif
-      } else if(((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
-                ((*b)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
-        /* b not NULL so return a>b */
-        rc = 1;
+    }
+  } else {
+    /* If only one is not NULL/NONE, so let's do 3A */
+    if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
+       ((*b)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
+      /* a not NULL so return a<b */
+      rc = -1;
 #ifdef CMPFCTN_DEBUG
-        strncpy(debugCmpFctn, "3A-b!", sizeof(debugCmpFctn));
+      strncpy(debugCmpFctn, "3A-a!", sizeof(debugCmpFctn));
+#endif
+    } else if(((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
+	      ((*b)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
+      /* b not NULL so return a>b */
+      rc = 1;
+#ifdef CMPFCTN_DEBUG
+      strncpy(debugCmpFctn, "3A-b!", sizeof(debugCmpFctn));
+#endif
+    } else {
+      /* 3B - hostResolvedName not set - graceful fallback using the raw fields! */
+      char nullEthAddress[LEN_ETHERNET_ADDRESS];
+      memset(&nullEthAddress, 0, LEN_ETHERNET_ADDRESS);
+
+      /* Do we have a non 0.0.0.0 IP?  Yes: Compare it */
+      if(!addrnull(&(*a)->hostIpAddress) &&
+	 !addrnull(&(*b)->hostIpAddress)) {
+	rc = addrcmp(&((*a)->hostIpAddress), &((*b)->hostIpAddress));
+#ifdef CMPFCTN_DEBUG
+	strncpy(debugCmpFctn, "3B-IP", sizeof(debugCmpFctn));
+#endif
+
+      } else if((memcmp((*a)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0) &&
+		(memcmp((*b)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0)) {
+	/* We have a non zero MAC - compare it */
+	rc = memcmp(((*a)->ethAddress), ((*b)->ethAddress), LEN_ETHERNET_ADDRESS);
+#ifdef CMPFCTN_DEBUG
+	strncpy(debugCmpFctn, "3B-MAC", sizeof(debugCmpFctn));
+#endif
+	//TODO FC??
+      } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic != NULL)) {
+	/* Neither a nor b are null, so we can compare the fields in nonIPTraffic...
+	 *  NetBIOS, IPX then Appletalk, if we have 'em */
+	if(((*a)->nonIPTraffic->nbHostName != NULL) &&
+	   ((*b)->nonIPTraffic->nbHostName != NULL)) {
+	  rc=strcasecmp((*a)->nonIPTraffic->nbHostName, (*b)->nonIPTraffic->nbHostName);
+#ifdef CMPFCTN_DEBUG
+	  strncpy(debugCmpFctn, "3B-NB", sizeof(debugCmpFctn));
+#endif
+	} else if(((*a)->nonIPTraffic->ipxHostName != NULL) &&
+		  ((*b)->nonIPTraffic->ipxHostName != NULL)) {
+	  rc=strcasecmp((*a)->nonIPTraffic->ipxHostName, (*b)->nonIPTraffic->ipxHostName);
+#ifdef CMPFCTN_DEBUG
+	  strncpy(debugCmpFctn, "3B-IPX", sizeof(debugCmpFctn));
+#endif
+	} else if(((*a)->nonIPTraffic->atNodeName != NULL) &&
+		  ((*b)->nonIPTraffic->atNodeName != NULL)) {
+	  rc=strcasecmp((*a)->nonIPTraffic->atNodeName, (*b)->nonIPTraffic->atNodeName);
+#ifdef CMPFCTN_DEBUG
+	  strncpy(debugCmpFctn, "3B-ATALK", sizeof(debugCmpFctn));
+#endif
+	} else {
+	  rc=0;  /* can't tell 'em apart... trouble */
+#ifdef CMPFCTN_DEBUG
+	  strncpy(debugCmpFctn, "3B-0", sizeof(debugCmpFctn));
+#endif
+	}
+      } else if(((*a)->nonIPTraffic == NULL) && ((*b)->nonIPTraffic != NULL)) {
+	/* a null, b not so return a>b */
+	rc=1;
+#ifdef CMPFCTN_DEBUG
+	strncpy(debugCmpFctn, "3B-b!", sizeof(debugCmpFctn));
+#endif
+      } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic == NULL)) {
+	/* b null, a not so return a>b */
+	rc=1;
+#ifdef CMPFCTN_DEBUG
+	strncpy(debugCmpFctn, "3B-a!", sizeof(debugCmpFctn));
 #endif
       } else {
-        /* 3B - hostResolvedName not set - graceful fallback using the raw fields! */
-        char nullEthAddress[LEN_ETHERNET_ADDRESS];
-        memset(&nullEthAddress, 0, LEN_ETHERNET_ADDRESS);
-
-        /* Do we have a non 0.0.0.0 IP?  Yes: Compare it */
-        if(!addrnull(&(*a)->hostIpAddress) &&
-           !addrnull(&(*b)->hostIpAddress)) {
-          rc = addrcmp(&((*a)->hostIpAddress), &((*b)->hostIpAddress));
+	rc=0; /* nothing we can compare */
 #ifdef CMPFCTN_DEBUG
-          strncpy(debugCmpFctn, "3B-IP", sizeof(debugCmpFctn));
+	strncpy(debugCmpFctn, "3B-null", sizeof(debugCmpFctn));
 #endif
-
-        } else if((memcmp((*a)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0) &&
-                  (memcmp((*b)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0)) {
-          /* We have a non zero MAC - compare it */
-          rc = memcmp(((*a)->ethAddress), ((*b)->ethAddress), LEN_ETHERNET_ADDRESS);
-#ifdef CMPFCTN_DEBUG
-          strncpy(debugCmpFctn, "3B-MAC", sizeof(debugCmpFctn));
-#endif
-//TODO FC??
-        } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic != NULL)) {
-          /* Neither a nor b are null, so we can compare the fields in nonIPTraffic...
-           *  NetBIOS, IPX then Appletalk, if we have 'em */
-          if(((*a)->nonIPTraffic->nbHostName != NULL) &&
-             ((*b)->nonIPTraffic->nbHostName != NULL)) {
-            rc=strcasecmp((*a)->nonIPTraffic->nbHostName, (*b)->nonIPTraffic->nbHostName);
-#ifdef CMPFCTN_DEBUG
-            strncpy(debugCmpFctn, "3B-NB", sizeof(debugCmpFctn));
-#endif
-          } else if(((*a)->nonIPTraffic->ipxHostName != NULL) &&
-             ((*b)->nonIPTraffic->ipxHostName != NULL)) {
-            rc=strcasecmp((*a)->nonIPTraffic->ipxHostName, (*b)->nonIPTraffic->ipxHostName);
-#ifdef CMPFCTN_DEBUG
-            strncpy(debugCmpFctn, "3B-IPX", sizeof(debugCmpFctn));
-#endif
-          } else if(((*a)->nonIPTraffic->atNodeName != NULL) &&
-             ((*b)->nonIPTraffic->atNodeName != NULL)) {
-            rc=strcasecmp((*a)->nonIPTraffic->atNodeName, (*b)->nonIPTraffic->atNodeName);
-#ifdef CMPFCTN_DEBUG
-            strncpy(debugCmpFctn, "3B-ATALK", sizeof(debugCmpFctn));
-#endif
-          } else {
-            rc=0;  /* can't tell 'em apart... trouble */
-#ifdef CMPFCTN_DEBUG
-            strncpy(debugCmpFctn, "3B-0", sizeof(debugCmpFctn));
-#endif
-          }
-        } else if(((*a)->nonIPTraffic == NULL) && ((*b)->nonIPTraffic != NULL)) {
-          /* a null, b not so return a>b */
-          rc=1;
-#ifdef CMPFCTN_DEBUG
-          strncpy(debugCmpFctn, "3B-b!", sizeof(debugCmpFctn));
-#endif
-        } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic == NULL)) {
-          /* b null, a not so return a>b */
-          rc=1;
-#ifdef CMPFCTN_DEBUG
-          strncpy(debugCmpFctn, "3B-a!", sizeof(debugCmpFctn));
-#endif
-        } else {
-          rc=0; /* nothing we can compare */
-#ifdef CMPFCTN_DEBUG
-          strncpy(debugCmpFctn, "3B-null", sizeof(debugCmpFctn));
-#endif
-        }
       }
     }
+  }
 
-    releaseAddrResMutex();
+  releaseAddrResMutex();
 
 #ifdef CMPFCTN_DEBUG
-    traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: cmpFctn(): %s rc=%d", debugCmpFctn, rc);
+  traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: cmpFctn(): %s rc=%d", debugCmpFctn, rc);
 #endif
 
-    return(rc);
+  return(rc);
 }
 
 /* ********************************************* */
@@ -6610,60 +6609,60 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 
 int cmpFctnLocationName(const void *_a, const void *_b) {
 
-/* This function takes two HostTraffic entries and performs a
-   standardized compare of the location, either the ip2ccValue field
-   or the fallback dnsTLDValue fields, handling unvalued
-   situations to provide a stable comparison.
+  /* This function takes two HostTraffic entries and performs a
+     standardized compare of the location, either the ip2ccValue field
+     or the fallback dnsTLDValue fields, handling unvalued
+     situations to provide a stable comparison.
 
-   We translate 'loc' (rfc1918 addresses) to sort next to last
-   and unvalued items to sort last.
+     We translate 'loc' (rfc1918 addresses) to sort next to last
+     and unvalued items to sort last.
 
-   Equal valued names are sorted based first on full domain name, then
-   on hostResolvedName as the tie breakers.
- */
+     Equal valued names are sorted based first on full domain name, then
+     on hostResolvedName as the tie breakers.
+  */
 
-    HostTraffic **a = (HostTraffic **)_a;
-    HostTraffic **b = (HostTraffic **)_b;
-    int rc;
-    char *nameA, *nameB;
+  HostTraffic **a = (HostTraffic **)_a;
+  HostTraffic **b = (HostTraffic **)_b;
+  int rc;
+  char *nameA, *nameB;
 
-    rc=0;
+  rc=0;
 
-    if((*a)->ip2ccValue == NULL) {
-        nameA = "\xFF\xFF";
-    } else if(strcasecmp((*a)->ip2ccValue, "loc") == 0) {
-        nameA = "\xFF\xFE";
+  if((*a)->ip2ccValue == NULL) {
+    nameA = "\xFF\xFF";
+  } else if(strcasecmp((*a)->ip2ccValue, "loc") == 0) {
+    nameA = "\xFF\xFE";
+  } else {
+    nameA = (*a)->ip2ccValue;
+  }
+  if((*b)->ip2ccValue == NULL) {
+    nameB = "\xFF\xFF";
+  } else if(strcasecmp((*b)->ip2ccValue, "loc") == 0) {
+    nameB = "\xFF\xFE";
+  } else {
+    nameB = (*b)->ip2ccValue;
+  }
+
+  rc = strcasecmp(nameA, nameB);
+  if(rc==0) {
+    if((*a)->dnsTLDValue == NULL) {
+      nameA = "\xFF\xFF";
     } else {
-        nameA = (*a)->ip2ccValue;
+      nameA = (*a)->dnsTLDValue;
     }
-    if((*b)->ip2ccValue == NULL) {
-        nameB = "\xFF\xFF";
-    } else if(strcasecmp((*b)->ip2ccValue, "loc") == 0) {
-        nameB = "\xFF\xFE";
+    if((*b)->dnsTLDValue == NULL) {
+      nameB = "\xFF\xFF";
     } else {
-        nameB = (*b)->ip2ccValue;
+      nameB = (*b)->ip2ccValue;
     }
+    rc = strcasecmp(nameA != NULL ? nameA : "", nameB != NULL ? nameB : "");
+  }
 
-    rc = strcasecmp(nameA, nameB);
-    if(rc==0) {
-      if((*a)->dnsTLDValue == NULL) {
-        nameA = "\xFF\xFF";
-      } else {
-        nameA = (*a)->dnsTLDValue;
-      }
-      if((*b)->dnsTLDValue == NULL) {
-        nameB = "\xFF\xFF";
-      } else {
-        nameB = (*b)->ip2ccValue;
-      }
-	  rc = strcasecmp(nameA != NULL ? nameA : "", nameB != NULL ? nameB : "");
-    }
+  if(rc==0) {
+    rc = cmpFctnResolvedName(a, b);
+  }
 
-    if(rc==0) {
-      rc = cmpFctnResolvedName(a, b);
-    }
-
-    return(rc);
+  return(rc);
 }
 
 /* ************************************ */

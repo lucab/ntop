@@ -997,6 +997,15 @@ int main(int argc, char *argv[]) {
   FILE *fd;
   struct stat fileStat;
 
+
+  if(0) {
+    Counter c = 1410065408;
+    formatPkts(c, ifStr, sizeof(ifStr));
+    printf("%llu\n", c);
+    return(0);
+  }
+  
+
   /* printf("Wait please: ntop is coming up...\n"); */
 
 #ifdef MTRACE

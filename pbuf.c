@@ -2341,6 +2341,8 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     memcpy(&h, &myGlobals.packetQueue[myGlobals.packetQueueTail].h,
 	   sizeof(struct pcap_pkthdr));
 
+    deviceId = myGlobals.packetQueue[myGlobals.packetQueueTail].deviceId;
+
     /* This code should be changed ASAP. It is a bad trick that avoids ntop to
        go beyond packet boundaries (L.Deri 17/03/2003)
 
@@ -2349,21 +2351,21 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
        3. all the functions must check that they are not going beyond packet boundaries
     */
     if((h.caplen != h.len)
-       && (myGlobals.runningPref.enablePacketDecoding /* Courtesy of Ken Beaty <ken@ait.com> */)) {
+       && (myGlobals.device[deviceId].sflowGlobals == NULL) /* This warning is normal for sFlow */
+       && (myGlobals.runningPref.enablePacketDecoding /* Courtesy of Ken Beaty <ken@ait.com> */))
       traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n", h.caplen, h.len);
-    }
+
     if (myGlobals.runningPref.printIpOnly) {
         memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
-    }
-    else {
+    } else {
       memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, MAX_PACKET_LEN);
     }
+
     if(h.len > MAX_PACKET_LEN) {
       traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", h.len, MAX_PACKET_LEN);
       h.len = MAX_PACKET_LEN;
     }
 
-    deviceId = myGlobals.packetQueue[myGlobals.packetQueueTail].deviceId;
     myGlobals.packetQueueTail = (myGlobals.packetQueueTail+1) % CONST_PACKET_QUEUE_LENGTH;
     myGlobals.packetQueueLen--;
     releaseMutex(&myGlobals.packetQueueMutex);
@@ -2652,7 +2654,7 @@ void processPacket(u_char *_deviceId,
   }
 
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
-
+  
   if(caplen >= hlen) {
     HostTraffic *srcHost=NULL, *dstHost=NULL;
 
@@ -3334,10 +3336,11 @@ void processPacket(u_char *_deviceId,
            */
           processFcPkt (p, h, eth_type, actualDeviceId);
       } else if((eth_type == ETHERTYPE_IP) || (eth_type == ETHERTYPE_IPv6)) {
-	if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU))
+	if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU)) {
 	  processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
-	else
+	} else {
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
+	}
       } else if(eth_type == 0x8864) /* PPPOE */ {
         /* PPPoE - Courtesy of Andreas Pfaller Feb2003
          *   This strips the PPPoE encapsulation for traffic transiting the network.

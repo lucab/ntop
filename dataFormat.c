@@ -268,13 +268,13 @@ char* formatPkts(Counter pktNr, char* outStr, int outStrLen) {
     c = ((unsigned long)pktNr)%1000;
     safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%lu,%03lu,%03lu", a, b, c); 
   } else {
-    unsigned long a, b, c, a1, a2;
-    a = (unsigned long)(pktNr/1000000);
-    a1 = (unsigned long)(a/1000); 
-    a2 = a % 1000;
-    b = (unsigned long)((pktNr-a*1000000)/1000);
-    c = ((unsigned long)pktNr)%1000;
-    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%lu,%03lu,%03lu,%03lu", a1, a2, b, c); 
+    unsigned long a, b, c, d;
+    a = (unsigned long)(pktNr  / 1000000000);
+    b = (unsigned long)((pktNr-a*1000000000)/1000000);
+    c = (unsigned long)((pktNr-a*1000000)/1000);
+    d = ((unsigned long)pktNr)%1000;
+
+    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%u,%03u,%03u,%03u", a, b, c, d);
   }
 
   return(outStr);

@@ -877,14 +877,15 @@ void switchNwInterface(int _interface) {
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=" CONST_SWITCH_NIC_HTML ">\n");
 
     for(i=0; i<myGlobals.numDevices; i++)
-      if((!myGlobals.device[i].virtualDevice) && myGlobals.device[i].activeDevice) {
+      if((!myGlobals.device[i].virtualDevice) &&  myGlobals.device[i].activeDevice) {
 	if(myGlobals.actualReportDeviceId == i)
 	  selected="CHECKED";
 	else
 	  selected = "";
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
-		    i+1, selected, myGlobals.device[i].humanFriendlyName);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s&nbsp;[id=%d]<br>\n",
+		      i+1, selected, myGlobals.device[i].humanFriendlyName, i);
 
 	sendString(buf);
       }
