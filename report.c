@@ -2366,11 +2366,11 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
 
-    addPageIndicator("NetNetstat.html", pageNum,
-		     realNumSessions, myGlobals.maxNumLines, -1, 0);
-
+    if(el == NULL)
+      addPageIndicator("NetNetstat.html", pageNum,
+		       realNumSessions, myGlobals.maxNumLines, -1, 0);
+    
     printFooterHostLink();
-
   } else {
     if(el == NULL) {
       printHTMLheader("Active TCP Sessions", 0);
