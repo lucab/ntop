@@ -508,14 +508,14 @@ static void resetHourTraffic(u_short hourId) {
 
 /* ************************************ */
 
-static void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
-			      HostTraffic *dstHost, HostAddr *dstAddr,
-			      TrafficCounter length, Counter numPkts,
-			      int actualDeviceId) {
+void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
+		       HostTraffic *dstHost, HostAddr *dstAddr,
+		       TrafficCounter length, Counter numPkts,
+		       int actualDeviceId) {
   static u_short lastHourId=0;
   u_short hourId;
   struct tm t, *thisTime;
-
+  
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(CONST_TRACE_ERROR, "NULL host detected");
     return;

@@ -595,7 +595,9 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
 
   ctr.value = len;
   updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
-  updatePacketCount(srcHost, dstHost, ctr, numPkts, actualDeviceId);
+  updatePacketCount(srcHost, &srcHost->hostIpAddress,
+		    dstHost, &dstHost->hostIpAddress,
+		    ctr, numPkts, actualDeviceId);
 
   if(subnetPseudoLocalHost(srcHost)) {
     if(subnetPseudoLocalHost(dstHost)) {

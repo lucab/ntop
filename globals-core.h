@@ -247,6 +247,11 @@ extern void updateHostName(HostTraffic *el);
 extern void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length);
 extern void incrementUnknownProto(HostTraffic *host, int direction, u_int16_t eth_type,
 				  u_int16_t dsap, u_int16_t ssap, u_int16_t ipProto);
+extern void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
+			      HostTraffic *dstHost, HostAddr *dstAddr,
+			      TrafficCounter length, Counter numPkts,
+			      int actualDeviceId);
+
 #ifdef CFG_MULTITHREADED
 extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h, const u_char *p);
 extern void cleanupPacketQueue(void);
