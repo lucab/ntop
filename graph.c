@@ -198,7 +198,7 @@ void ipProtoDistribPie(void) {
 void interfaceTrafficPie(void) {
   char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
   float p[MAX_NUM_DEVICES];
-  int i, len, expl[] = { 0, 20, 30, 40, 50, 60 };
+  int i, len, expl[MAX_NUM_DEVICES];
   FILE *fd;
   TrafficCounter totPkts=0;
   struct pcap_stat stat;
@@ -212,6 +212,7 @@ void interfaceTrafficPie(void) {
       p[i] = (float)stat.ps_recv;
       totPkts += stat.ps_recv;
     }
+    expl[i] = 10*i;
   }
 
   if(totPkts == 0)
