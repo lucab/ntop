@@ -886,19 +886,26 @@ void deleteMutex(pthread_mutex_t *mutexId) {
 
 int _accessMutex(pthread_mutex_t *mutexId, char* where,
 		 char* fileName, int fileLine) {
-#ifdef DEBUG
+  int rc;
+#ifdef SEMPAHORE_DEBUG
   traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
 	     mutexId, where, fileName, fileLine);
   fflush(stdout);
 #endif
-  return(pthread_mutex_lock(mutexId));
+  rc = pthread_mutex_lock(mutexId);
+#ifdef SEMPAHORE_DEBUG
+  traceEvent(TRACE_INFO, "Locked 0x%X @ %s [%s:%d]\n",
+	     mutexId, where, fileName, fileLine);
+  fflush(stdout);
+#endif
+  return(rc);
 }
 
 /* ************************************ */
 
 int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
 		  char* fileName, int fileLine) {
-#ifdef DEBUG
+#ifdef SEMPAHORE_DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
 	     mutexId, where, fileName, fileLine);
   fflush(stdout);
@@ -919,7 +926,7 @@ int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
 int _isMutexLocked(pthread_mutex_t *mutexId, char* fileName, int fileLine) {
   int rc;
   
-#ifdef DEBUG
+#ifdef SEMPAHORE_DEBUG
   traceEvent(TRACE_INFO, "Checking whether 0x%X is locked [%s:%d]\n",
 	     mutexId, fileName, fileLine);
   fflush(stdout);
@@ -945,12 +952,20 @@ int _isMutexLocked(pthread_mutex_t *mutexId, char* fileName, int fileLine) {
 
 int _releaseMutex(pthread_mutex_t *mutexId,
 		  char* fileName, int fileLine) {
-#ifdef DEBUG
+  int rc;
+  
+#ifdef SEMPAHORE_DEBUG
   traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
 	     mutexId, fileName, fileLine);
   fflush(stdout);
 #endif
-  return(pthread_mutex_unlock(mutexId));
+  rc = pthread_mutex_unlock(mutexId);
+#ifdef SEMPAHORE_DEBUG
+  traceEvent(TRACE_INFO, "Unlocked 0x%X [%s:%d]\n",
+	     mutexId, fileName, fileLine);
+  fflush(stdout);
+#endif
+  return(rc);
 }
 
 /* ************************************ */
