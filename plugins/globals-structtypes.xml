@@ -197,7 +197,6 @@ typedef struct simpleProtoTrafficInfo {
 /*XMLNOTE ipTrafficMatrix ... */
 /*XMLNOTE ipTrafficMatrixHosts ... */
 
-/*XML b              exportNetFlow        parent        "" */
 /*XMLSECTIONEND */
 
 // ntopGlobals
@@ -313,8 +312,6 @@ typedef struct simpleProtoTrafficInfo {
 /*XML s P3Puri               Options    "--p3p-uri" */
 
 /*XML b disableStopcap       Options    "--disable-stopcap" */
-
-/*XML n logExtra             Options    "--log-extra" */
 
 /*XML b disableInstantSessionPurge Options "--disable-instantsessionpurge" */
 /*XML b noFc                 Options    "--no-fc" */
