@@ -822,18 +822,24 @@ static int parseOptions(int argc, char* argv []) {
   */
 
   if(!userSpecified) {
+    struct passwd *pw = NULL;
+    
     if(getuid() == 0) {
       /* We're root */
       char *user;
 
-      struct passwd *pw = getpwnam(user = "nobody");
+      pw = getpwnam(user = "nobody");
       if(pw == NULL) pw = getpwnam(user = "anonymous");
+     
+      if(pw != NULL) {
+	myGlobals.userId  = pw->pw_uid;
+	myGlobals.groupId = pw->pw_gid;
+	myGlobals.effectiveUserName = strdup(user);
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop will be started as user %s", user);
+      }
+    }
 
-      myGlobals.userId  = pw->pw_uid;
-      myGlobals.groupId = pw->pw_gid;
-      myGlobals.effectiveUserName = strdup(user);
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop will be started as user %s", user);
-    } else {
+    if(pw == NULL) {
       myGlobals.userId  = getuid();
       myGlobals.groupId = getgid();
     }
