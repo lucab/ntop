@@ -170,7 +170,6 @@ extern void* logFileLoop(void* notUsed);
 
 
 /* ntop.c */
-extern int numChildren;
 extern void handleSigHup(int signalId);
 extern void *pcapDispatch(void *_i);
 extern RETSIGTYPE handleDiedChild(int signal);

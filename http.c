@@ -1179,7 +1179,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 
 	if(childpid) {
 	  /* father process */
-	  numChildren++;
+	  myGlobals.numChildren++;
 #ifdef MULTITHREADED
 	  releaseMutex(&myGlobals.hashResizeMutex);
 #endif

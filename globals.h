@@ -312,6 +312,8 @@ typedef struct ntopGlobals {
 #ifdef HAVE_OPENSSL
   int sock_ssl;
 #endif
+
+  int numChildren;
 } NtopGlobals;
 
 #endif /* GLOBALS_H */

@@ -24,9 +24,6 @@
 #include "ntop.h"
 
 
-int numChildren = 0;
-
-static int enableDBsupport=0;
 static int *servicesMapper = NULL; /* temporary value */
 
 /* *************************** */
@@ -154,10 +151,10 @@ RETSIGTYPE handleDiedChild(int signal _UNUSED_) {
   while((pidId = waitpid(-1, &status, WNOHANG)) > 0) {
 #ifdef DEBUG
     if(status == 0) {
-      numChildren--;
+      myGlobals.numChildren--;
       traceEvent(TRACE_INFO,
 		 "A child has terminated [pid=%d status=%d children=%d]\n",
-		 pidId, status, numChildren);
+		 pidId, status, myGlobals.numChildren);
     }
 #endif
   }
@@ -833,7 +830,7 @@ RETSIGTYPE cleanup(int signo) {
     if(!myGlobals.borderSnifferMode)    killThread(&myGlobals.scanIdleThreadId);
   }
 
-  if(enableDBsupport)
+  if(myGlobals.enableDBsupport)
     killThread(&myGlobals.dbUpdateThreadId);
 
   if(myGlobals.isLsofPresent)
@@ -1011,7 +1008,7 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.numProcesses > 0)
     free(myGlobals.processes);
 
-  if(enableDBsupport) {
+  if(myGlobals.enableDBsupport) {
     closeSQLsocket(); /* *** SQL Engine *** */
 #ifdef HAVE_MYSQL
     closemySQLsocket();

@@ -2180,29 +2180,31 @@ void traceEvent(int eventTraceLevel, char* file,
 #else
       if(!myGlobals.useSyslog) {
 #endif
-	printf(buf);
+	printf("%s", buf);	
 	if(format[strlen(format)-1] != '\n')
 	  printf("\n");
       } 
+
+      /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
 #ifndef WIN32
       else {
 #if 0 
 	switch(myGlobals.traceLevel) {
 	case 0:
-	  syslog(LOG_ERR, buf);
+	  syslog(LOG_ERR, "%s", buf);
 	  break;
 	case 1:
-	  syslog(LOG_WARNING, buf);
+	  syslog(LOG_WARNING, "%s", buf);
 	  break;
 	case 2:
-	  syslog(LOG_NOTICE, buf);
+	  syslog(LOG_NOTICE, "%s", buf);
 	  break;
 	default:
-	  syslog(LOG_INFO, buf);
+	  syslog(LOG_INFO, "%s", buf);
 	  break;
 	}
 #else
-	syslog(LOG_ERR, buf);
+	syslog(LOG_ERR, "%s", buf);
 #endif
       }
 #endif
