@@ -2443,7 +2443,7 @@ void stringSanityCheck(char* string) {
   int i, j;
 
   if(string == NULL)  {
-    traceEvent(CONST_TRACE_ERROR, "FATAL ERROR: Invalid string specified.");
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid string specified.");
     exit(-1);
   }
 
@@ -2457,7 +2457,7 @@ void stringSanityCheck(char* string) {
   }
 
   if(j == 0) {
-    traceEvent(CONST_TRACE_ERROR, "FATAL ERROR: Invalid string '%s' specified.",
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid string '%s' specified.",
 	       string);
     exit(-1);
   }
@@ -2490,7 +2490,7 @@ void deviceSanityCheck(char* string) {
   }
 
   if(j == 0) {
-    traceEvent(CONST_TRACE_ERROR, "FATAL ERROR: Invalid device specified.");
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid device specified");
     exit(-1);
   }
 }
@@ -3097,7 +3097,7 @@ void storePrefsValue(char *key, char *value) {
   }
 
   if(gdbm_store(myGlobals.prefsFile, key_data, data_data, GDBM_REPLACE) != 0)
-    traceEvent(CONST_TRACE_ERROR, "Error while adding %s=%s.", key, value);
+    traceEvent(CONST_TRACE_ERROR, "While adding %s=%s.", key, value);
   else {
     /* traceEvent(CONST_TRACE_INFO, "Storing %s=%s.", key, value); */
   }
@@ -3888,7 +3888,7 @@ void saveNtopPid() {
   fd = fopen(pidFileName, "wb");
   
   if(fd == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "INIT: WARNING: Unable to create pid file (%s)", pidFileName);
+    traceEvent(CONST_TRACE_WARNING, "INIT: Unable to create pid file (%s)", pidFileName);
   } else {
     fprintf(fd, "%d\n", myGlobals.basentoppid);
     fclose(fd);

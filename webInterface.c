@@ -4335,7 +4335,7 @@ void initWeb(void) {
 #ifndef WIN32
     if(myGlobals.webAddr) {
       if(!inet_aton(myGlobals.webAddr, &sockIn.sin_addr)) {
-	traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: Unable to convert address '%s' - "
+	traceEvent(CONST_TRACE_ERROR, "WEB: Unable to convert address '%s' - "
 		   "not binding to a particular interface", myGlobals.webAddr);
 	sockIn.sin_addr.s_addr = INADDR_ANY;
       } else {
@@ -4351,7 +4351,7 @@ void initWeb(void) {
 
     myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
     if(myGlobals.sock < 0) {
-      traceEvent(CONST_TRACE_ERROR, "WEB: FATAL_ERROR: Unable to create a new socket");
+      traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new socket");
       exit(-1);
     }
 
@@ -4364,7 +4364,7 @@ void initWeb(void) {
   if(myGlobals.sslInitialized) {
     myGlobals.sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
     if(myGlobals.sock_ssl < 0) {
-      traceEvent(CONST_TRACE_ERROR, "WEB: FATAL_ERROR: Unable to create a new socket");
+      traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new socket");
       exit(-1);
     }
 
@@ -4375,7 +4375,7 @@ void initWeb(void) {
 
   if(myGlobals.webPort > 0) {
     if(bind(myGlobals.sock, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR Port %d already in use (is another instance of ntop running?)", 
+      traceEvent(CONST_TRACE_FATALERROR, "WEB: Port %d already in use (is another instance of ntop running?)", 
 		 myGlobals.webPort);
       closeNwSocket(&myGlobals.sock);
       exit(-1);
@@ -4390,11 +4390,11 @@ void initWeb(void) {
 #ifndef WIN32
     if(myGlobals.sslAddr) {
       if(!inet_aton(myGlobals.sslAddr, &sockIn.sin_addr)) {
-	traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: Unable to convert address '%s' - "
+	traceEvent(CONST_TRACE_ERROR, "WEB: Unable to convert address '%s' - "
 		   "not binding SSL to a particular interface", myGlobals.sslAddr);
 	sockIn.sin_addr.s_addr = INADDR_ANY;
       } else {
-	traceEvent(CONST_TRACE_INFO, "WEB: ERROR: Converted address '%s' - "
+	traceEvent(CONST_TRACE_INFO, "WEB: Converted address '%s' - "
 		   "binding SSL to the specific interface", myGlobals.sslAddr);
       }
     } else {
@@ -4406,7 +4406,7 @@ void initWeb(void) {
 
     if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
       /* Fix below courtesy of Matthias Kattanek <mattes@mykmk.com> */
-      traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: ssl port %d already in use (is another instance of ntop running?)",
+      traceEvent(CONST_TRACE_ERROR, "WEB: ssl port %d already in use (is another instance of ntop running?)",
 		 myGlobals.sslPort);
       closeNwSocket(&myGlobals.sock_ssl);
       exit(-1);
@@ -4416,12 +4416,9 @@ void initWeb(void) {
 
   if(myGlobals.webPort > 0) {
     if(listen(myGlobals.sock, 2) < 0) {
-      traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR: listen(%d, 2) error %d %s",
+      traceEvent(CONST_TRACE_FATALERROR, "WEB: listen(%d, 2) error %d %s",
 		 myGlobals.sock,
-		 errno == EADDRINUSE ? "EADDRINUSE" :
-		 errno == EBADF ? "EBADF" :
-		 errno == ENOTSOCK ? "ENOTSOCK" :
-		 errno == EOPNOTSUPP ? "EOPNOTSUPP" : "unknown code");
+                 strerror(errno));
       closeNwSocket(&myGlobals.sock);
       exit(-1);
     }
@@ -4430,12 +4427,9 @@ void initWeb(void) {
 #ifdef HAVE_OPENSSL
   if(myGlobals.sslInitialized)
     if(listen(myGlobals.sock_ssl, 2) < 0) {
-      traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR: listen(%d, 2) error %d %s",
+      traceEvent(CONST_TRACE_FATALERROR, "WEB: listen(%d, 2) error %d %s",
 		 myGlobals.sock_ssl,
-		 errno == EADDRINUSE ? "EADDRINUSE" :
-		 errno == EBADF ? "EBADF" :
-		 errno == ENOTSOCK ? "ENOTSOCK" :
-		 errno == EOPNOTSUPP ? "EOPNOTSUPP" : "unknown code");
+                 strerror(errno));
       closeNwSocket(&myGlobals.sock_ssl);
       exit(-1);
     }
@@ -4929,11 +4923,11 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	sigemptyset(nset);
 	rc = sigemptyset(nset);
 	if(rc != 0) 
-	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p", rc, nset);
+	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE handler set, sigemptyset() = %d, gave %p", rc, nset);
 
 	rc = sigaddset(nset, SIGPIPE);
 	if(rc != 0)
-	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p", rc, nset);
+	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE handler set, sigaddset() = %d, gave %p", rc, nset);
 
 #ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);

@@ -528,7 +528,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
   struct in_addr addr;
   datum key_data, data_data;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution thread started...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution thread running...");
 
   while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG

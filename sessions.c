@@ -1672,7 +1672,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    break;
 #ifdef DEBUG
 	  default:
-	    traceEvent(CONST_TRACE_ERROR, "DEBUG: ERROR: unable to handle received FIN (%u) !", fin);
+	    traceEvent(CONST_TRACE_ERROR, "DEBUG: Unable to handle received FIN (%u) !", fin);
 #endif
 	  }
 	}

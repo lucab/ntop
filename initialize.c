@@ -1048,7 +1048,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
   if(deviceName == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: attempt to add a NULL device");
+    traceEvent(CONST_TRACE_WARNING, "Attempt to add a NULL device");
     return;
   }
 
@@ -1354,8 +1354,8 @@ void initDevices(char* devices) {
 
 #ifdef WIN32
   if(pcap_findalldevs(&devpointer, ebuf) < 0) {
-    traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: pcap_findalldevs() call failed [%s]", ebuf);
-    traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: Have you instaled winpcap properly?");
+    traceEvent(CONST_TRACE_FATALERROR, "pcap_findalldevs() call failed [%s]", ebuf);
+    traceEvent(CONST_TRACE_FATALERROR, "Have you instaled winpcap properly?");
     exit(-1);
   } else {
     int i;

@@ -979,7 +979,7 @@ static void hashSanityCheck() {
 
 	while(el != NULL) {
 	    if(el->hostTrafficBucket != i)
-		traceEvent(CONST_TRACE_INFO, "HASH ERROR: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
+		traceEvent(CONST_TRACE_ERROR, "HASH: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
 			   i, el->ethAddressString, el->hostNumIpAddress,
 			   el->hostTrafficBucket, el->originalHostTrafficBucket,
 			   el->next);
@@ -998,7 +998,7 @@ static void hostHashSanityCheck(HostTraffic *host) {
 
 	while(el != NULL) {
 	    if(el == host)
-		traceEvent(CONST_TRACE_INFO, "HOST HASH ERROR: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
+		traceEvent(CONST_TRACE_ERROR, "HOST HASH: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
 			   i, el->ethAddressString, el->hostNumIpAddress,
 			   el->hostTrafficBucket, el->originalHostTrafficBucket,
 			   el->next);

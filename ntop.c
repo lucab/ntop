@@ -74,7 +74,7 @@ void* pcapDispatch(void *_i) {
   int pcap_fd;
   fd_set readMask;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread started...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread running...");
 
   pcap_fd = pcap_fileno(myGlobals.device[i].pcapPtr);
 
@@ -129,7 +129,7 @@ void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread started...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread running...");
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
@@ -196,7 +196,7 @@ void daemonize(void) {
   signal(SIGQUIT, SIG_IGN);
 
   if((childpid=fork()) < 0)
-    traceEvent(CONST_TRACE_ERROR, "INIT: ERROR: Occurred while daemonizing (errno=%d)", errno);
+    traceEvent(CONST_TRACE_ERROR, "INIT: Occurred while daemonizing (errno=%d)", errno);
   else {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: after fork() in %s (%d)", 
@@ -459,7 +459,7 @@ void handleProtocols(void) {
 
     if(stat(myGlobals.protoSpecs, &buf) != 0) {
       fclose(fd);
-      traceEvent(CONST_TRACE_ERROR, "PROTO_INIT: ERROR: unable to get information about file '%s'", 
+      traceEvent(CONST_TRACE_ERROR, "PROTO_INIT: Unable to get information about file '%s'", 
 		 myGlobals.protoSpecs);
       return;
     }
@@ -637,8 +637,8 @@ static void purgeIpPorts(int theDevice) {
 #ifdef CFG_MULTITHREADED
 
 void* scanIdleLoop(void* notUsed _UNUSED_) {
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) started", 
-	     myGlobals.scanIdleThreadId);
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle host scan thread running...");
 
   for(;;) {
     int i;
@@ -674,7 +674,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 void* periodicLsofLoop(void* notUsed _UNUSED_) {
   long loopCount=0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread (%ld) started", myGlobals.lsofThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread running");
 
   for(;;) {
     /*

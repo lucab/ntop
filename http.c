@@ -749,8 +749,8 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
     statusIdx = 0;
     statusFlag = 0;
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_WARNING,
-	       "DEBUG: INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n", statusIdx);
+    traceEvent(CONST_TRACE_ERROR,
+	       "DEBUG: INTERNAL: invalid HTTP status id (%d) set to zero.\n", statusIdx);
 #endif
   }
 
@@ -802,7 +802,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))){
     statusIdx = 0;
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_WARNING, "DEBUG: INTERNAL ERROR: invalid HTTP status id (%d) set to zero.",
+    traceEvent(CONST_TRACE_ERROR, "DEBUG: INTERNAL: invalid HTTP status id (%d) set to zero.",
 	       statusIdx);
 #endif
   }
@@ -889,8 +889,8 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
       break;
 #ifdef DEBUG
     default:
-      traceEvent(CONST_TRACE_INFO,
-		 "DEBUG: INTERNAL ERROR: invalid MIME type code requested (%d)\n", mimeType);
+      traceEvent(CONST_TRACE_ERROR,
+		 "DEBUG: INTERNAL: invalid MIME type code requested (%d)\n", mimeType);
 #endif
   }
 
@@ -965,7 +965,7 @@ static int checkURLsecurity(char *url) {
   /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
 
   if(((token = strstr(workURL, "%")) != NULL) && (strncmp(token, "%3A" /* : */, 3))) {
-      traceEvent(CONST_TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request (url=%s)", workURL);
+      traceEvent(CONST_TRACE_ERROR, "URL security(1): Found percent in URL...DANGER...rejecting request (url=%s)", workURL);
       /* Explicitly, we're updating the real URL, not the copy, so it's not used anywhere in ntop */
       url[0] = '\0'; 
       free(workURL);
@@ -991,35 +991,35 @@ static int checkURLsecurity(char *url) {
 
   /* a double slash? */
   if(strstr(workURL, "//") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request");
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): Found // in URL...rejecting request");
     free(workURL);
     return(2);
   }
 
   /* a double &? */
   if(strstr(workURL, "&&") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found && in URL...rejecting request");
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): Found && in URL...rejecting request");
     free(workURL);
     return(2);
   }
 
   /* a double ?? */
   if(strstr(workURL, "??") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found ?? in URL...rejecting request");
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): Found ?? in URL...rejecting request");
     free(workURL);
     return(2);
   }
 
   /* a double dot? */
   if(strstr(workURL, "..") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(3): ERROR: Found .. in URL...rejecting request");
+    traceEvent(CONST_TRACE_ERROR, "URL security(3): Found .. in URL...rejecting request");
     free(workURL);
     return(3);
   }
 
   /* Prohibited characters? */
   if((len = strcspn(workURL, CONST_URL_PROHIBITED_CHARACTERS)) < strlen(workURL)) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(4): ERROR: Prohibited character(s) [%c]"
+    traceEvent(CONST_TRACE_ERROR, "URL security(4): Prohibited character(s) [%c]"
 	       " in URL... rejecting request\n", workURL[len]);
     free(workURL);
     return(4);
@@ -1075,7 +1075,7 @@ static int checkURLsecurity(char *url) {
 	   (strcmp(&workURL[i], "pl")   == 0) || /* used for Perl CGI's */
 	   (strcmp(&workURL[i], "css")  == 0)))) {
     traceEvent(CONST_TRACE_ERROR,
-	       "URL security(5): ERROR: Found bad file extension (.%s) in URL...\n",
+	       "URL security(5): Found bad file extension (.%s) in URL...\n",
 	       &workURL[i]);
     rc = 5;
   }
