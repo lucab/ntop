@@ -84,7 +84,7 @@ extern int cmpScsiSessionsFctn (const void *_a, const void *_b);
 extern int cmpVsanFctn (const void *_a, const void *_b);
 extern int cmpFcDomainFctn (const void *_a, const void *_b);
 extern int cmpMulticastFctn(const void *_a, const void *_b);
-extern void printHostThtpShort(HostTraffic *el, int reportType);
+extern void printHostThtpShort(HostTraffic *el, int reportType, u_int hourId);
 extern int cmpHostsFctn(const void *_a, const void *_b);
 extern int cmpFcHostsFctn(const void *_a, const void *_b);
 extern void printPacketStats(HostTraffic *el, int actualDeviceId);
@@ -174,7 +174,9 @@ extern void printMulticastStats(int sortedColumn /* ignored so far */,
 extern void printVSANList(unsigned int deviceId);
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum);
 extern void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum);
-extern void printAllSessionsHTML(char* host, int actualDeviceId);
+extern void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
+                                  int revertOrder, int pageNum, char *url,
+                                  int hostInfoPage);
 /* extern void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
    int revertOrder, int pageNum, char *url,
    int hostInfoPage);

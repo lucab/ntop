@@ -2524,6 +2524,10 @@ void processPacket(u_char *_deviceId,
 
   hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
 
+  if (!myGlobals.initialSniffTime && (myGlobals.rFileName != NULL)) {
+      myGlobals.initialSniffTime = h->ts.tv_sec;
+  }
+  
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
 
   if(caplen >= hlen) {

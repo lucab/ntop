@@ -402,12 +402,21 @@ void printHeader(int reportType, int revertOrder, u_int column,
 		 HostsDisplayPolicy showHostsMode) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char *sign, *arrowGif, *arrow[64], *theAnchor[64], *url=NULL;
-  int i, soFar=2, idx;
+  int i, soFar=2, idx, j, hourId;
   char htmlAnchor[64], htmlAnchor1[64], theLink[64];
   ProtocolsList *protoList;
+  char theDate[8];
+  struct tm t;
+  char hours[][24] = {"12<BR>AM", "1<BR>AM", "2<BR>AM", "3<BR>AM", "4<BR>AM", "5<BR>AM", "6<BR>AM",
+                      "7<BR>AM", "8<BR>AM", "9<BR>AM", "10<BR>AM", "11<BR>AM", "12<BR>PM", "1<BR>PM",
+                      "2<BR>PM", "3<BR>PM", "4<BR>PM", "5<BR>PM", "6<BR>PM", "7<BR>PM", "8<BR>PM",
+                      "9<BR>PM", "10<BR>PM", "11<BR>PM"};
 
   /* printf("->%d<-\n",showHostsMode); */
 
+  strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
+  hourId = atoi(theDate);
+  
   memset(arrow, 0, sizeof(arrow));
   memset(theAnchor, 0, sizeof(theAnchor));
   memset(htmlAnchor, 0, sizeof(htmlAnchor));
@@ -615,15 +624,19 @@ void printHeader(int reportType, int revertOrder, u_int column,
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
       BufferTooShort();
     sendString(buf);
-    sendString("<TH "TH_BG">0<BR>AM</TH><TH "TH_BG">1<BR>AM</TH>"
-	       "<TH "TH_BG">2<BR>AM</TH><TH "TH_BG">3<BR>AM</TH>"
-	       "<TH "TH_BG">4<BR>AM</TH><TH "TH_BG">5<BR>AM</TH><TH "TH_BG">6<BR>AM</TH>"
-	       "<TH "TH_BG">7<BR>AM</TH><TH "TH_BG">8<BR>AM</TH><TH "TH_BG">9<BR>AM</TH>"
-	       "<TH "TH_BG">10<BR>AM</TH><TH "TH_BG">11<BR>AM</TH><TH "TH_BG">12<BR>AM</TH>\n");
-    sendString("<TH "TH_BG">1<BR>PM</TH><TH "TH_BG">2<BR>PM</TH><TH "TH_BG">3<BR>PM</TH>"
-	       "<TH "TH_BG">4<BR>PM</TH><TH "TH_BG">5<BR>PM</TH><TH "TH_BG">6<BR>PM</TH>"
-	       "<TH "TH_BG">7<BR>PM</TH><TH "TH_BG">8<BR>PM</TH><TH "TH_BG">9<BR>PM</TH>"
-	       "<TH "TH_BG">10<BR>PM</TH><TH "TH_BG">11<BR>PM</TH>\n");
+    j = hourId;
+    for (i = 0; i < 24; i++) {
+        j = j % 24;
+        if (snprintf (buf, sizeof(buf), "<TH "TH_BG">%s</TH>\n", hours[j]) < 0)
+            BufferTooShort();
+        sendString (buf);
+        if (!j) {
+            j = 23;
+        }
+        else {
+            j--;
+        }
+    }
     break;
   case SORT_DATA_RECEIVED_THPT:
   case SORT_DATA_SENT_THPT:
@@ -750,8 +763,13 @@ int sortHostFctn(const void *_a, const void *_b) {
   switch(myGlobals.columnSort) {
   case 1:
     accessAddrResMutex( "sortHostFctn");
-    rc = strcasecmp((*a)->hostSymIpAddress[0] != '\0' ? (*a)->hostSymIpAddress : (*a)->ethAddressString,
-		    (*b)->hostSymIpAddress[0] != '\0' ? (*b)->hostSymIpAddress : (*b)->ethAddressString);
+    if (isFcHost ((*a)) && isFcHost ((*b))) {
+        CMP_FC_PORT ((*a), (*b));
+    }
+    else {
+        rc = strcasecmp((*a)->hostSymIpAddress[0] != '\0' ? (*a)->hostSymIpAddress : (*a)->ethAddressString,
+                        (*b)->hostSymIpAddress[0] != '\0' ? (*b)->hostSymIpAddress : (*b)->ethAddressString);
+    }
     releaseAddrResMutex();
     return(rc);
     break;
@@ -762,16 +780,51 @@ int sortHostFctn(const void *_a, const void *_b) {
       return(-1);
       else
       return(0);*/
-    return addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress);
+      if (isFcHost ((*a)) && isFcHost ((*b))) {
+          if((*a)->hostFcAddress.domain > (*b)->hostFcAddress.domain)
+              return(1);
+          else if ((*a)->hostFcAddress.domain < (*b)->hostFcAddress.domain)
+              return (-1);
+          else {
+              if ((*a)->hostFcAddress.area > (*b)->hostFcAddress.area)
+                  return (1);
+              else if ((*a)->hostFcAddress.area < (*b)->hostFcAddress.area)
+                  return (-1);
+              else {
+                  if ((*a)->hostFcAddress.port > (*b)->hostFcAddress.port)
+                      return (1);
+                  else if ((*a)->hostFcAddress.port < (*b)->hostFcAddress.port)
+                      return (-1);
+                  else
+                      return (0);
+              }
+          }
+      }
+      else {
+          return addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress);
+      }
+
     /* return(strcasecmp((*a)->hostNumIpAddress, (*b)->hostNumIpAddress)); */
     break;
   case 3:
-    return(strcasecmp((*a)->ethAddressString, (*b)->ethAddressString));
-    break;
+      if (isFcHost ((*a)) && isFcHost ((*b))) {
+          n_a = (*a)->vsanId, n_b = (*b)->vsanId;
+          return ((n_a < n_b) ? -1 : (n_a > n_b) ? 1 : 0);
+      }
+      else {
+          return(strcasecmp((*a)->ethAddressString, (*b)->ethAddressString));
+      }
+      break;
   case 5:
-    return(strcasecmp(getVendorInfo((*a)->ethAddress, 0),
-		      getVendorInfo((*b)->ethAddress, 0)));
-    break;
+      if (isFcHost ((*a)) && isFcHost ((*b))) {
+          return(strcasecmp(getVendorInfo(&((*a)->pWWN.str[2]), 0),
+                            getVendorInfo(&((*b)->pWWN.str[2]), 0)));
+      }
+      else {
+          return(strcasecmp(getVendorInfo((*a)->ethAddress, 0),
+                            getVendorInfo((*b)->ethAddress, 0)));
+      }
+      break;
   case 6:
     if((*a)->nonIPTraffic == NULL) {
       nameA = "";
@@ -1511,8 +1564,9 @@ static char* getBgPctgColor(float pctg) {
 
 /* ******************************* */
 
-void printHostThtpShort(HostTraffic *el, int reportType) {
-  int i;
+void printHostThtpShort(HostTraffic *el, int reportType, u_int hourId)
+{
+  int i, j;
   Counter tc;
   char buf[64];
 
@@ -1534,21 +1588,23 @@ void printHostThtpShort(HostTraffic *el, int reportType) {
     }
   }
 
+  j = hourId;
   for(i=0; i<24; i++) {
     float pctg=0;
 
+    j = j % 24;
     if(tc > 0) {
       switch(reportType) {
       case SORT_DATA_RCVD_HOST_TRAFFIC:
-	pctg = (float)(el->trafficDistribution->last24HoursBytesRcvd[i].value*100)/(float)tc;
+	pctg = (float)(el->trafficDistribution->last24HoursBytesRcvd[j].value*100)/(float)tc;
 	break;
       case SORT_DATA_SENT_HOST_TRAFFIC:
-	pctg = (float)(el->trafficDistribution->last24HoursBytesSent[i].value*100)/(float)tc;
+	pctg = (float)(el->trafficDistribution->last24HoursBytesSent[j].value*100)/(float)tc;
 	break;
       case SORT_DATA_HOST_TRAFFIC:
       case TRAFFIC_STATS:
-	pctg = ( (float)(el->trafficDistribution->last24HoursBytesRcvd[i].value*100) +
-		 (float)(el->trafficDistribution->last24HoursBytesSent[i].value*100) ) / (float)tc;
+	pctg = ( (float)(el->trafficDistribution->last24HoursBytesRcvd[j].value*100) +
+		 (float)(el->trafficDistribution->last24HoursBytesSent[j].value*100) ) / (float)tc;
 	break;
       }
     }
@@ -1556,6 +1612,12 @@ void printHostThtpShort(HostTraffic *el, int reportType) {
     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT %s>&nbsp;</TD>",
 		getBgPctgColor(pctg)) < 0) BufferTooShort();
     sendString(buf);
+    if (!j) {
+        j = 23;
+    }
+    else {
+        j--;
+    }
   }
 }
 
@@ -1576,71 +1638,100 @@ int cmpHostsFctn(const void *_a, const void *_b) {
       return(-1);
       else
       return(0);*/
-    return (addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress));
-    break;
+      if(isFcHost ((*a)) && isFcHost ((*b))) {
+          return (memcmp (((u_int8_t *)&(*a)->hostFcAddress), ((u_int8_t *)&(*b)->hostFcAddress),
+                          LEN_FC_ADDRESS));
+      }
+      else {
+          return (addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress));
+      }
+      break;
 
   case 3: /* Data Sent */
-    switch(myGlobals.sortFilter) {
-    case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
-      a_ = (*a)->bytesSentLoc.value;
-      b_ = (*b)->bytesSentLoc.value;
+      if (isFcHost ((*a)) && isFcHost ((*b))) {
+          a_ = (*a)->fcBytesSent.value;
+          b_ = (*b)->fcBytesSent.value;
+      }
+      else {
+          switch(myGlobals.sortFilter) {
+          case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
+              a_ = (*a)->bytesSentLoc.value;
+              b_ = (*b)->bytesSentLoc.value;
+              break;
+          case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
+              a_ = (*a)->bytesSentRem.value;
+              b_ = (*b)->bytesSentRem.value;
+              break;
+          case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
+              a_ = (*a)->bytesSentLoc.value;
+              b_ = (*b)->bytesSentLoc.value;
+              break;
+          }
+      }
+      if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
       break;
-    case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
-      a_ = (*a)->bytesSentRem.value;
-      b_ = (*b)->bytesSentRem.value;
-      break;
-    case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
-      a_ = (*a)->bytesSentLoc.value;
-      b_ = (*b)->bytesSentLoc.value;
-      break;
-    }
-    if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
-    break;
 
   case 4: /* Data Rcvd */
-    switch(myGlobals.sortFilter) {
-    case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
-      a_ = (*a)->bytesRcvdLoc.value;
-      b_ = (*b)->bytesRcvdLoc.value;
+      if (isFcHost ((*a)) && isFcHost ((*b))) {
+          a_ = (*a)->fcBytesRcvd.value;
+          b_ = (*b)->fcBytesRcvd.value;
+      }
+      else {
+          switch(myGlobals.sortFilter) {
+          case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
+              a_ = (*a)->bytesRcvdLoc.value;
+              b_ = (*b)->bytesRcvdLoc.value;
+              break;
+          case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
+              a_ = (*a)->bytesRcvdFromRem.value;
+              b_ = (*b)->bytesRcvdFromRem.value;
+              break;
+          case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
+              a_ = (*a)->bytesRcvdLoc.value;
+              b_ = (*b)->bytesRcvdLoc.value;
+              break;
+          }
+      }
+      if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
       break;
-    case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
-      a_ = (*a)->bytesRcvdFromRem.value;
-      b_ = (*b)->bytesRcvdFromRem.value;
+
+  case 5: /* VSAN */
+      if (isFcHost ((*a)) && isFcHost ((*b))) {
+          a_ = (*a)->vsanId, b_ = (*b)->vsanId;
+          return ((a_ < b_) ? -1 : (a_ > b_) ? 1 : 0);
+      }
       break;
-    case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
-      a_ = (*a)->bytesRcvdLoc.value;
-      b_ = (*b)->bytesRcvdLoc.value;
-      break;
-    }
-    if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
-    break;
 
   default: /* Host Name */
     accessAddrResMutex("cmpHostsFctn");
 
-    name_a = (*a)->hostSymIpAddress;
+    if (isFcHost ((*a)) && isFcHost ((*b))) {
+        CMP_FC_PORT ((*a), (*b))
+            }
+    else {
+        name_a = (*a)->hostSymIpAddress;
 
-    if(name_a == NULL)
-      traceEvent(CONST_TRACE_WARNING, "cmpHostsFctn() error (1)");
-    if((name_a == NULL) || (strcmp(name_a, "0.0.0.0") == 0)) {
-      name_a = (*a)->hostNumIpAddress;
-      if((name_a == NULL) || (name_a[0] == '\0'))
-	name_a = (*a)->ethAddressString;
+        if(name_a == NULL)
+            traceEvent(CONST_TRACE_WARNING, "cmpHostsFctn() error (1)");
+        if((name_a == NULL) || (strcmp(name_a, "0.0.0.0") == 0)) {
+            name_a = (*a)->hostNumIpAddress;
+            if((name_a == NULL) || (name_a[0] == '\0'))
+                name_a = (*a)->ethAddressString;
+        }
+        
+        name_b = (*b)->hostSymIpAddress;
+
+        if(name_b == NULL)
+            traceEvent(CONST_TRACE_WARNING, "cmpHostsFctn() error (2)");
+        if((name_b == NULL) || (strcmp(name_b, "0.0.0.0") == 0)) {
+            name_b = (*b)->hostNumIpAddress;
+            if((name_b == NULL) || (name_b[0] == '\0'))
+                name_b = (*b)->ethAddressString;
+        }
+        rc = strcasecmp(name_a, name_b); /* case insensitive */
     }
-
-    name_b = (*b)->hostSymIpAddress;
-
-    if(name_b == NULL)
-      traceEvent(CONST_TRACE_WARNING, "cmpHostsFctn() error (2)");
-    if((name_b == NULL) || (strcmp(name_b, "0.0.0.0") == 0)) {
-      name_b = (*b)->hostNumIpAddress;
-      if((name_b == NULL) || (name_b[0] == '\0'))
-	name_b = (*b)->ethAddressString;
-    }
-
+    
     releaseAddrResMutex();
-    rc = strcasecmp(name_a, name_b); /* case insensitive */
-
     return(rc);
   }
 }
@@ -2745,6 +2836,7 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
   HostTraffic *theEntry = NULL;
   int found = 0;
+  FcNameServerCacheEntry *fcnsEntry;
 
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
     memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
@@ -2777,6 +2869,22 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 	strcpy(el->hostSymIpAddress, sniffedName);
       }
     }
+  } else if (theSerial.serialType == SERIAL_FC) {
+    memcpy ((u_int8_t *)&el->hostFcAddress,
+            (u_int8_t *)&theSerial.value.fcSerial.fcAddress,
+            LEN_FC_ADDRESS);
+    sprintf (el->hostNumFcAddress, "%02x.%02x.%02x", el->hostFcAddress.domain,
+             el->hostFcAddress.area, el->hostFcAddress.port);
+    strcpy(el->hostSymIpAddress, el->hostNumFcAddress);
+    el->vsanId = theSerial.value.fcSerial.vsanId;
+    
+    fcnsEntry = findFcHostNSCacheEntry (&el->hostFcAddress, el->vsanId);
+    if (fcnsEntry != NULL) {
+        strncpy (el->hostSymFcAddress, fcnsEntry->alias, MAX_LEN_SYM_HOST_NAME);
+        memcpy ((u_int8_t *)el->pWWN.str, (u_int8_t *)fcnsEntry->pWWN.str,
+                LEN_WWN_ADDRESS);
+    }
+    
   } else {
     /* MAC */
     char *ethAddr;
@@ -2799,6 +2907,11 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   HostTraffic tmpEl;
 
+  if (isFcHost (el)) {
+      printFcHostContactedPeers (el, actualDeviceId);
+      return;
+  }
+  
   if((el->pktSent.value != 0) || (el->pktRcvd.value != 0)) {
       int ok =0;
 
@@ -4555,3 +4668,2487 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
   sendString(buf);
 }
 #endif
+
+void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId)
+{
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  char *sign, *arrowGif, *arrow[48], *theAnchor[48], *url=NULL;
+  int soFar=2;
+  char htmlAnchor[64], htmlAnchor1[64];
+  char hours[][24] = {"12<BR>AM", "1<BR>AM", "2<BR>AM", "3<BR>AM", "4<BR>AM", "5<BR>AM", "6<BR>AM",
+                       "7<BR>AM", "8<BR>AM", "9<BR>AM", "10<BR>AM", "11<BR>AM", "12<BR>PM", "1<BR>PM",
+                       "2<BR>PM", "3<BR>PM", "4<BR>PM", "5<BR>PM", "6<BR>PM", "7<BR>PM", "8<BR>PM",
+                       "9<BR>PM", "10<BR>PM", "11<BR>PM"};
+  int i, j;
+
+  /* printf("->%d<-\n",screenNumber); */
+
+  if(revertOrder) {
+    sign = "";
+    arrowGif = "&nbsp;<IMG ALT=\"Ascending order, click to reverse\" SRC=arrow_up.gif BORDER=0>";
+  } else {
+    sign = "-";
+    arrowGif = "&nbsp;<IMG ALT=\"Descending order, click to reverse\" SRC=arrow_down.gif BORDER=0>";
+  }
+
+  memset(buf, 0, sizeof(buf));
+
+  switch(reportType) {
+  case SORT_DATA_RECEIVED_PROTOS:   url = CONST_SORT_DATA_RECEIVED_PROTOS_HTML;   break;
+  case SORT_DATA_RECEIVED_FC:       url = CONST_SORT_DATA_RECEIVED_FC_HTML;       break;
+  case SORT_DATA_RECEIVED_THPT:     url = CONST_SORT_DATA_RECEIVED_THPT_HTML;     break;
+  case SORT_DATA_RCVD_HOST_TRAFFIC: url = CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML; break;
+  case SORT_DATA_SENT_HOST_TRAFFIC: url = CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML; break;
+  case SORT_DATA_SENT_PROTOS:       url = CONST_SORT_DATA_SENT_PROTOS_HTML;       break;
+  case SORT_DATA_SENT_FC:           url = CONST_SORT_DATA_SENT_FC_HTML;           break;
+  case SORT_DATA_SENT_THPT:         url = CONST_SORT_DATA_SENT_THPT_HTML;         break;
+  case TRAFFIC_STATS:               url = CONST_TRAFFIC_STATS_HTML;              break;
+  case SORT_DATA_PROTOS:            url = CONST_SORT_DATA_PROTOS_HTML;            break;
+  case SORT_DATA_FC:                url = CONST_SORT_DATA_FC_HTML;                break;
+  case SORT_DATA_THPT:              url = CONST_SORT_DATA_THPT_HTML;              break;
+  case SORT_DATA_HOST_TRAFFIC:      url = CONST_SORT_DATA_HOST_TRAFFIC_HTML;      break;
+  }
+
+  if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
+    BufferTooShort();
+  if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",  url) < 0)
+    BufferTooShort();
+
+  if(abs(column) == FLAG_HOST_DUMMY_IDX) {
+    arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
+  } else {
+    arrow[0] = ""; theAnchor[0] = htmlAnchor1;
+  }
+
+  if(abs(column) == FLAG_DOMAIN_DUMMY_IDX) {
+    arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;
+  } else {
+    arrow[1] = "";  theAnchor[1] = htmlAnchor1;
+  }
+
+  if(abs(column) == 0) {
+    arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;
+  } else {
+    arrow[2] = ""; theAnchor[2] = htmlAnchor1;
+  }
+
+  switch(reportType) {
+  case SORT_DATA_RECEIVED_PROTOS:
+  case SORT_DATA_SENT_PROTOS:
+  case SORT_DATA_PROTOS:
+    sendString("<CENTER>\n");
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
+		"<TH "TH_BG" "DARK_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR">VSAN%s</A></TH>\n"
+		"<TH "TH_BG" "DARK_BG">%s"FLAG_HOST_DUMMY_IDX_STR">FC_Port%s</A></TH>\n"
+		"<TH "TH_BG" COLSPAN=2 "DARK_BG">%s0>Total Bytes%s</A></TH>\n",
+		theAnchor[1], arrow[1], theAnchor[0], arrow[0],
+                theAnchor[2], arrow[2]) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    if(abs(column) == 1)
+      { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
+    else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
+    if(abs(column) == 2)
+      { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
+    else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
+    if(abs(column) == 3)
+      { arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
+    else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
+    if(abs(column) == 4)
+      { arrow[3] = arrowGif; theAnchor[3] = htmlAnchor;  }
+    else { arrow[3] = ""; theAnchor[3] = htmlAnchor1; }
+    if(abs(column) == 5)
+      { arrow[4] = arrowGif; theAnchor[4] = htmlAnchor;  }
+    else { arrow[4] = ""; theAnchor[4] = htmlAnchor1;  }
+    if(abs(column) == 6)
+      { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor;  }
+    else { arrow[5] = ""; theAnchor[5] = htmlAnchor1;  }
+    if(abs(column) == 7)
+      { arrow[6] = arrowGif; theAnchor[6] = htmlAnchor1;  }
+
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" "DARK_BG">%s1>SCSI%s</A></TH>"
+                "<TH "TH_BG" "DARK_BG">%s2>ELS%s</A></TH><TH "TH_BG" "DARK_BG">%s3>NS%s</A></TH>"
+                "<TH "TH_BG" "DARK_BG">%s4>IP/FC%s</A><TH "TH_BG" "DARK_BG">%s5>SWILS%s</A></TH>"
+                "<TH "TH_BG" "DARK_BG">%s6>Other%s</A></TH>",
+                theAnchor[0], arrow[0], theAnchor[1], arrow[1],
+                theAnchor[2], arrow[2], theAnchor[3], arrow[3],
+                theAnchor[4], arrow[4], theAnchor[5], arrow[5]) < 0)
+      BufferTooShort();
+    sendString(buf);
+    break;
+
+  case SORT_DATA_RECEIVED_FC:
+  case SORT_DATA_SENT_FC:
+  case SORT_DATA_FC:
+    sendString("<CENTER>\n");
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
+		"<TH "TH_BG" "DARK_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR">VSAN%s</A></TH>\n"
+		"<TH "TH_BG" "DARK_BG">%s"FLAG_HOST_DUMMY_IDX_STR">FC_Port%s</A></TH>\n"
+		"<TH "TH_BG" COLSPAN=2 "DARK_BG">%s0>Total&nbsp;Bytes%s</A></TH>\n",
+		theAnchor[1], arrow[1], theAnchor[0], arrow[0],
+                theAnchor[2], arrow[2]) < 0)
+      BufferTooShort();
+    break;
+
+  case SORT_DATA_RCVD_HOST_TRAFFIC:
+  case SORT_DATA_SENT_HOST_TRAFFIC:
+  case SORT_DATA_HOST_TRAFFIC:
+    sendString("<CENTER>\n");
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1><TR >"
+		"<TH "TH_BG" "DARK_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR">VSAN%s</A></TH>"
+		"<TH "TH_BG" "DARK_BG">%s"FLAG_HOST_DUMMY_IDX_STR">FC_Port%s</A></TH>\n",
+		theAnchor[1], arrow[1], theAnchor[0], arrow[0]) < 0)
+      BufferTooShort();
+    sendString(buf);
+    j = hourId;
+    for (i = 0; i < 24; i++) {
+        j = j % 24;
+        if (snprintf (buf, sizeof(buf), "<TH "TH_BG" "DARK_BG">%s</TH>\n", hours[j]) < 0)
+            BufferTooShort();
+        sendString (buf);
+        if (!j) {
+            j = 23;
+        }
+        else {
+            j--;
+        }
+    }
+    break;
+  case SORT_DATA_RECEIVED_THPT:
+  case SORT_DATA_SENT_THPT:
+  case SORT_DATA_THPT:
+    sendString("<CENTER>\n");
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
+		"<TH "TH_BG" ROWSPAN=\"2\" "DARK_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR">VSAN%s</A></TH>"
+		"<TH "TH_BG" ROWSPAN=\"2\" "DARK_BG">%s"FLAG_HOST_DUMMY_IDX_STR">FC_Port%s</A></TH>",
+		theAnchor[1], arrow[1], theAnchor[0], arrow[0], theAnchor[2], arrow[2]) < 0)
+      BufferTooShort();
+    sendString(buf);
+    updateThpt(1);
+    if(abs(column) == 1) { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
+    else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
+    if(abs(column) == 2) { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor; }
+    else { arrow[1] = ""; theAnchor[1] = htmlAnchor1; }
+    if(abs(column) == 3) { arrow[2] = arrowGif; theAnchor[2] = htmlAnchor; }
+    else { arrow[2] = "";  theAnchor[2] = htmlAnchor1;}
+    if(abs(column) == 4) { arrow[3] = arrowGif; theAnchor[3] = htmlAnchor; }
+    else { arrow[3] = "";  theAnchor[3] = htmlAnchor1;}
+    if(abs(column) == 5) { arrow[4] = arrowGif; theAnchor[4] = htmlAnchor; }
+    else { arrow[4] = "";  theAnchor[4] = htmlAnchor1;}
+    if(abs(column) == 6) { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor; }
+    else { arrow[5] = "";  theAnchor[5] = htmlAnchor1;}
+
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\" "DARK_BG">Bytes</TH>"
+	    "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\" "DARK_BG">Packets</TH>"
+            "</TR><TR "TR_ON">") < 0)
+      BufferTooShort();
+    sendString(buf);
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" "DARK_BG">%s1>Current%s</A></TH>"
+	     "<TH "TH_BG" "DARK_BG">%s2>Avg%s</A></TH>"
+	     "<TH "TH_BG" "DARK_BG">%s3>Peak%s</A></TH>"
+	    "<TH "TH_BG" "DARK_BG">%s4>Current%s</A></TH><TH "TH_BG" "DARK_BG">%s5>Avg%s</A></TH>"
+	     "<TH "TH_BG" "DARK_BG">%s6>Peak%s</A></TH>",
+	    theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2],
+	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]) < 0)
+      BufferTooShort();
+    sendString(buf);
+    break;
+  case TRAFFIC_STATS:
+    sendString("<CENTER>\n");
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
+		"<TH "TH_BG" "DARK_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR">VSAN%s</A></TH>"
+		"<TH "TH_BG" "DARK_BG">%s"FLAG_HOST_DUMMY_IDX_STR">FC_Port%s</A></TH>",
+		theAnchor[1], arrow[1], theAnchor[0], arrow[0],
+                theAnchor[2], arrow[2]) < 0)
+      BufferTooShort();
+    sendString(buf);
+    break;
+  }
+
+  sendString("</TR>\n");
+}
+
+/* ******************************* */
+
+void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
+                        int column, int hostInfoPage)
+{
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  int soFar=2;
+  char theLink[256];
+
+  snprintf(theLink, sizeof(theLink), "/%s.html?col=%s%d&showF=", url, 
+	   revertOrder ? "-" : "", column);
+
+  switch(hostInfoPage) {
+  case showHostLunStats:
+      if ((el->devType != SCSI_DEV_INITIATOR) &&
+          (el->devType != SCSI_DEV_UNINIT)) {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[<B>LUN Statistics</B> ]&nbsp;"
+                   "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+      }
+      break;
+  case showHostLunGraphs:
+      if ((el->devType != SCSI_DEV_INITIATOR) &&
+          (el->devType != SCSI_DEV_UNINIT)) {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
+                   "[ <B>LUN Graphs</B> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+      }
+      break;
+  case showHostScsiSessionBytes:
+      if ((el->devType != SCSI_DEV_INITIATOR) &&
+          (el->devType != SCSI_DEV_UNINIT)) {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
+                   "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
+                   "[ <B>SCSI Session(Bytes)</B> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+      }
+      else {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[ <B>SCSI Session(Bytes)</B> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink);
+      }
+      break;
+  case showHostScsiSessionTimes:
+      if ((el->devType != SCSI_DEV_INITIATOR) &&
+          (el->devType != SCSI_DEV_UNINIT)) {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A>]&nbsp;"
+                   "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
+                   "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <B>SCSI Session(Times)</B> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+      }
+      else {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A>]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <B>SCSI Session(Times)</B> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink);
+      }
+      break;
+  case showHostScsiSessionStatus:
+      if ((el->devType != SCSI_DEV_INITIATOR) &&
+          (el->devType != SCSI_DEV_UNINIT)) {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
+                   "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <B>SCSI Session(Status)</B> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+      }
+      else {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <B>SCSI Session(Status)</B> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink);
+      }
+      break;
+  case showHostScsiSessionTMInfo:
+      if ((el->devType != SCSI_DEV_INITIATOR) &&
+          (el->devType != SCSI_DEV_UNINIT)) {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
+                   "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <B>SCSI Session(Task Mgmt)</B> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+      }
+      else {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <B>SCSI Session(Task Mgmt)</B> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink);
+      }
+      break;
+  case showHostFcSessions:
+      if ((el->devType != SCSI_DEV_INITIATOR) &&
+          (el->devType != SCSI_DEV_UNINIT)) {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
+                   "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <B>FC Sessions</B> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+      }
+      else {
+          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <B>FC Sessions</B> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+      }
+      break;
+  case showHostMainPage:
+  default:
+      if ((el->devType != SCSI_DEV_INITIATOR) &&
+          (el->devType != SCSI_DEV_UNINIT)) {
+          snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+                   "[<B>Main&nbsp;Page</B> ]&nbsp;"
+                   "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
+                   "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+      }
+      else {
+          snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+                   "[<B>Main&nbsp;Page</B> ]&nbsp;"
+                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+                   "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
+                   theLink, theLink, theLink, theLink, theLink);
+      }
+      break;
+  }
+  sendString(buf);
+
+    
+}
+
+/* ******************************* */
+
+int cmpFcFctn(const void *_a, const void *_b)
+{
+  HostTraffic **a = (HostTraffic **)_a;
+  HostTraffic **b = (HostTraffic **)_b;
+  Counter a_=0, b_=0, a_val, b_val;
+  float fa_=0, fb_=0;
+  short floatCompare=0, columnProtoId;
+
+  if((a == NULL) && (b != NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFcFctn() error (1)");
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFcFctn() error (2)");
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFcFctn() error (3)");
+    return(0);
+  }
+
+  if(myGlobals.columnSort == FLAG_HOST_DUMMY_IDX) {
+    int rc;
+
+    /* Host name */
+    accessAddrResMutex("cmpFctn");
+
+    CMP_FC_PORT ((*a), (*b))
+    releaseAddrResMutex();
+    return(rc);
+  } else if(myGlobals.columnSort == FLAG_DOMAIN_DUMMY_IDX) {
+    int rc;
+
+    accessAddrResMutex("cmpFctn");
+
+    a_ = (*a)->vsanId, b_ = (*b)->vsanId;
+
+    rc = (a_ < b_) ? -1 : (a_ > b_) ? 1 : 0;
+
+    releaseAddrResMutex();
+    return(rc);
+  }
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO,
+	     "reportKind=%d/columnSort=%d/sortSendMode=%d/numIpProtosToMonitor=%d\n",
+	     myGlobals.reportKind, myGlobals.columnSort, myGlobals.sortSendMode, myGlobals.numIpProtosToMonitor);
+#endif
+
+
+  switch(myGlobals.reportKind) {
+  case SORT_DATA_RECEIVED_PROTOS:
+    switch(myGlobals.columnSort) {
+    case 0:
+      a_ = (*a)->fcBytesRcvd.value, b_ = (*b)->fcBytesRcvd.value;
+      break;
+    case 1:
+        a_ = (*a)->fcFcpBytesRcvd.value;
+        b_ = (*b)->fcFcpBytesRcvd.value;
+      break;
+    case 2:
+        a_ = (*a)->fcElsBytesRcvd.value;
+        b_ = (*b)->fcElsBytesRcvd.value;
+      break;
+    case 3:
+        a_ = (*a)->fcDnsBytesRcvd.value;
+        b_ = (*b)->fcDnsBytesRcvd.value;
+      break;
+    case 4:
+        a_ = (*a)->fcIpfcBytesRcvd.value;
+        b_ = (*b)->fcIpfcBytesRcvd.value;
+        break;
+    case 5:
+        a_ = (*a)->fcSwilsBytesRcvd.value;
+        b_ = (*b)->fcSwilsBytesRcvd.value;
+        break;
+    case 6:
+        a_ = (*a)->otherFcBytesRcvd.value;
+        b_ = (*b)->otherFcBytesRcvd.value;
+        break;
+    }
+    break;
+  case SORT_DATA_RECEIVED_IP:
+    columnProtoId = myGlobals.columnSort - 1;
+    if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
+      if(columnProtoId <= 0) {
+	a_ = b_ = 0;
+      } else {
+	a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
+	  (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value;
+	b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
+	  (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value;
+      }
+    } else {
+      a_ = (*a)->ipBytesRcvd.value, b_ = (*b)->ipBytesRcvd.value;
+
+      if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
+	/* other IP */
+	int i;
+
+	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	  a_val = ((*a)->protoIPTrafficInfos[i].rcvdLoc.value
+		   +(*a)->protoIPTrafficInfos[i].rcvdFromRem.value);
+	  b_val = ((*b)->protoIPTrafficInfos[i].rcvdLoc.value
+		   +(*b)->protoIPTrafficInfos[i].rcvdFromRem.value);
+
+	  /* Better be safe... */
+	  if(a_ > a_val) a_ -= a_val; else a_ = 0;
+	  if(b_ > b_val) b_ -= b_val; else b_ = 0;
+	}
+      }
+    }
+    break;
+  case SORT_DATA_RECEIVED_THPT:
+    switch(myGlobals.columnSort) {
+    case 1:
+      fa_ = (*a)->actualRcvdThpt, fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
+      break;
+    case 2:
+      fa_ = (*a)->averageRcvdThpt, fb_ = (*b)->averageRcvdThpt, floatCompare = 1;
+      break;
+    case 3:
+      fa_ = (*a)->peakRcvdThpt, fb_ = (*b)->peakRcvdThpt, floatCompare = 1;
+      break;
+    case 4:
+      fa_ = (*a)->actualRcvdPktThpt, fb_ = (*b)->actualRcvdPktThpt, floatCompare = 1;
+      break;
+    case 5:
+      fa_ = (*a)->averageRcvdPktThpt, fb_ = (*b)->averageRcvdPktThpt, floatCompare = 1;
+      break;
+    case 6:
+      fa_ = (*a)->peakRcvdPktThpt, fb_ = (*b)->peakRcvdPktThpt, floatCompare = 1;
+      break;
+    }
+    break;
+  case SORT_DATA_RCVD_HOST_TRAFFIC:
+  case SORT_DATA_SENT_HOST_TRAFFIC:
+  case SORT_DATA_HOST_TRAFFIC:
+    /* Nothing */
+    break;
+  case SORT_DATA_SENT_PROTOS:
+    switch(myGlobals.columnSort) {
+    case 0:
+      a_ = (*a)->fcBytesSent.value, b_ = (*b)->fcBytesSent.value;
+      break;
+    case 1:
+        a_ = (*a)->fcFcpBytesSent.value;
+        b_ = (*b)->fcFcpBytesSent.value;
+      break;
+    case 2:
+        a_ = (*a)->fcElsBytesSent.value;
+        b_ = (*b)->fcElsBytesSent.value;
+      break;
+    case 3:
+        a_ = (*a)->fcDnsBytesSent.value;
+        b_ = (*b)->fcDnsBytesSent.value;
+      break;
+    case 4:
+        a_ = (*a)->fcIpfcBytesSent.value;
+        b_ = (*b)->fcIpfcBytesSent.value;
+        break;
+    case 5:
+        a_ = (*a)->fcSwilsBytesSent.value;
+        b_ = (*b)->fcSwilsBytesSent.value;
+        break;
+    case 6:
+        a_ = (*a)->otherFcBytesSent.value;
+        b_ = (*b)->otherFcBytesSent.value;
+        break;
+    }
+    break;
+  case SORT_DATA_SENT_IP:
+    columnProtoId = myGlobals.columnSort - 1;
+    if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
+      if(columnProtoId <= 0) {
+	a_ = b_ = 0;
+      } else {
+	a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value
+	  +(*a)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
+	b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value
+	  +(*b)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
+      }
+    } else {
+      a_ = (*a)->ipBytesSent.value, b_ = (*b)->ipBytesSent.value;
+
+      if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
+	/* other IP */
+	int i;
+
+	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	  a_val = ((*a)->protoIPTrafficInfos[i].sentLoc.value
+		   +(*a)->protoIPTrafficInfos[i].sentRem.value);
+	  b_val = ((*b)->protoIPTrafficInfos[i].sentLoc.value
+		   +(*b)->protoIPTrafficInfos[i].sentRem.value);
+
+	  /* Better be safe... */
+	  if(a_ > a_val) a_ -= a_val; else a_ = 0;
+	  if(b_ > b_val) b_ -= b_val; else b_ = 0;
+	}
+      }
+    }
+    break;
+  case SORT_DATA_SENT_THPT:
+    switch(myGlobals.columnSort) {
+    case 1:
+      fa_ = (*a)->actualSentThpt, fb_ = (*b)->actualSentThpt, floatCompare = 1;
+      break;
+    case 2:
+      fa_ = (*a)->averageSentThpt, fb_ = (*b)->averageSentThpt, floatCompare = 1;
+      break;
+    case 3:
+      fa_ = (*a)->peakSentThpt, fb_ = (*b)->peakSentThpt, floatCompare = 1;
+      break;
+    case 4:
+      fa_ = (*a)->actualSentPktThpt, fb_ = (*b)->actualSentPktThpt, floatCompare = 1;
+      break;
+    case 5:
+      fa_ = (*a)->averageSentPktThpt, fb_ = (*b)->averageSentPktThpt, floatCompare = 1;
+      break;
+    case 6:
+      fa_ = (*a)->peakSentPktThpt, fb_ = (*b)->peakSentPktThpt, floatCompare = 1;
+      break;
+    }
+    break;
+  case TRAFFIC_STATS:
+    /* Nothing */
+    break;
+  case SORT_DATA_PROTOS:
+    switch(myGlobals.columnSort) {
+    case 0:
+        a_ = (*a)->fcBytesSent.value + (*a)->fcBytesRcvd.value;
+        b_ = (*b)->fcBytesSent.value + (*b)->fcBytesRcvd.value;
+        break;
+    case 1:
+        a_ = (*a)->fcFcpBytesSent.value + (*a)->fcFcpBytesRcvd.value;
+        b_ = (*b)->fcFcpBytesSent.value + (*b)->fcFcpBytesRcvd.value;
+        break;
+    case 2:
+        a_ = (*a)->fcElsBytesSent.value + (*a)->fcElsBytesRcvd.value;
+        b_ = (*b)->fcElsBytesSent.value + (*b)->fcElsBytesRcvd.value;
+        break;
+    case 3:
+        a_ = (*a)->fcDnsBytesSent.value + (*a)->fcDnsBytesRcvd.value;
+        b_ = (*b)->fcDnsBytesSent.value + (*b)->fcDnsBytesRcvd.value;
+        break;
+    case 4:
+        a_ = (*a)->fcIpfcBytesSent.value + (*a)->fcIpfcBytesRcvd.value;
+        b_ = (*b)->fcIpfcBytesSent.value + (*b)->fcIpfcBytesRcvd.value;
+        break;
+    case 5:
+        a_ = (*a)->fcSwilsBytesSent.value + (*a)->fcSwilsBytesRcvd.value;
+        b_ = (*b)->fcSwilsBytesSent.value + (*b)->fcSwilsBytesRcvd.value;
+        break;
+    case 6:
+        a_ = (*a)->otherFcBytesSent.value + (*a)->otherFcBytesRcvd.value;
+        b_ = (*b)->otherFcBytesSent.value + (*b)->otherFcBytesRcvd.value;
+        break;
+    }
+    break;
+  case SORT_DATA_IP:
+    columnProtoId = myGlobals.columnSort - 1;
+    if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
+      if(columnProtoId <= 0) {
+        a_ = b_ = 0;
+      } else {
+        a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
+          (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value+
+          (*a)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value+
+          (*a)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
+        b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
+          (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value+
+          (*b)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value+
+          (*b)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
+      }
+    } else {
+      a_ = (*a)->ipBytesRcvd.value+(*a)->ipBytesSent.value;
+      b_ = (*b)->ipBytesRcvd.value+(*b)->ipBytesSent.value;
+
+      if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
+        /* other IP */
+        int i;
+
+        for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+          a_val = ((*a)->protoIPTrafficInfos[i].rcvdLoc.value
+                   +(*a)->protoIPTrafficInfos[i].rcvdFromRem.value
+                   +(*a)->protoIPTrafficInfos[i].sentLoc.value
+                   +(*a)->protoIPTrafficInfos[i].sentRem.value);
+          b_val = ((*b)->protoIPTrafficInfos[i].rcvdLoc.value
+                   +(*b)->protoIPTrafficInfos[i].rcvdFromRem.value
+                   +(*b)->protoIPTrafficInfos[i].sentLoc.value
+                   +(*b)->protoIPTrafficInfos[i].sentRem.value);
+
+          /* Better be safe... */
+          if(a_ > a_val) a_ -= a_val; else a_ = 0;
+          if(b_ > b_val) b_ -= b_val; else b_ = 0;
+        }
+      }
+    }
+    break;
+  case SORT_DATA_THPT:
+    switch(myGlobals.columnSort) {
+    case 1:
+      fa_ = (*a)->actualTThpt;
+      fb_ = (*b)->actualTThpt;
+      floatCompare = 1;
+      break;
+    case 2:
+      fa_ = (*a)->averageTThpt;
+      fb_ = (*b)->averageTThpt;
+      floatCompare = 1;
+      break;
+    case 3:
+      fa_ = (*a)->peakTThpt;
+      fb_ = (*b)->peakTThpt;
+      floatCompare = 1;
+      break;
+    case 4:
+      fa_ = (*a)->actualTPktThpt;
+      fb_ = (*b)->actualTPktThpt;
+      floatCompare = 1;
+      break;
+    case 5:
+      fa_ = (*a)->averageTPktThpt;
+      fb_ = (*b)->averageTPktThpt;
+      floatCompare = 1;
+      break;
+    case 6:
+      fa_ = (*a)->peakTPktThpt;
+      fb_ = (*b)->peakTPktThpt;
+      floatCompare = 1;
+      break;
+    }
+    break;
+  }
+
+  /*
+    traceEvent(CONST_TRACE_INFO, "%s=%u - %s=%u",
+    (*a)->hostSymIpAddress, (unsigned long)a_,
+    (*b)->hostSymIpAddress, (unsigned long)b_);
+  */
+
+  if(floatCompare == 0) {
+    if(a_ < b_) {
+      return(1);
+    } else if (a_ > b_) {
+      return(-1);
+    } else {
+      return(0);
+    }
+  } else {
+    if(fa_ < fb_) {
+      return(1);
+    } else if (fa_ > fb_) {
+      return(-1);
+    } else {
+      return(0);
+    }
+  }
+}
+
+/* ******************************* */
+
+int cmpFcSessionsFctn (const void *_a, const void *_b)
+{
+    FCSession **a = (FCSession **)_a;
+    FCSession **b = (FCSession **)_b;
+    int a_, b_;
+    int actualDeviceId, rc;
+
+    switch (myGlobals.columnSort) {
+    case 1: /* VSAN */
+        actualDeviceId = (*a)->deviceId; /* for macro checkSession */
+        a_ = (*a)->initiator->vsanId;
+        actualDeviceId = (*b)->deviceId;
+        b_ = (*b)->initiator->vsanId;
+        return ( (a_ > b_) ? 1 : (a_ < b_) ? -1 : 0 );
+        break;
+    case 2: /* Initiator Alias, pWWN or FC Addr */
+        CMP_FC_PORT (((*a)->initiator), ((*b)->initiator))
+        return (rc);
+        break;
+    case 3: /* Target Alias, pWWN or FC Addr */
+        CMP_FC_PORT (((*a)->remotePeer), ((*b)->remotePeer))
+        return (rc);
+        break;
+    case 4: /* Data Sent */
+        return ( ((*a)->bytesSent.value > (*b)->bytesSent.value) ? 1 :
+                 ((*a)->bytesSent.value < (*b)->bytesSent.value) ? -1 : 0);
+        break;
+    case 5: /* Data Rcvd */
+        return ( ((*a)->bytesRcvd.value > (*b)->bytesRcvd.value) ? 1 :
+                 ((*a)->bytesRcvd.value < (*b)->bytesRcvd.value) ? -1 : 0);
+        break;
+    case 6:
+        return (((*a)->fcpBytesSent.value > (*b)->fcpBytesSent.value) ? 1 :
+                ((*a)->fcpBytesSent.value < (*b)->fcpBytesSent.value) ? -1 : 0);
+        break;
+    case 7:
+        return (((*a)->fcpBytesRcvd.value > (*b)->fcpBytesRcvd.value) ? 1 :
+                ((*a)->fcpBytesRcvd.value < (*b)->fcpBytesRcvd.value) ? -1 : 0);
+        break;
+    case 8:
+        return (((*a)->fcElsBytesSent.value > (*b)->fcElsBytesSent.value) ? 1 :
+                ((*a)->fcElsBytesSent.value < (*b)->fcElsBytesSent.value) ? -1 : 0);
+        break;
+    case 9:
+        return (((*a)->fcElsBytesRcvd.value > (*b)->fcElsBytesRcvd.value) ? 1 :
+                ((*a)->fcElsBytesRcvd.value < (*b)->fcElsBytesRcvd.value) ? -1 : 0);
+        break;
+    case 10:
+        return (((*a)->fcDnsBytesSent.value > (*b)->fcDnsBytesSent.value) ? 1 :
+                ((*a)->fcDnsBytesSent.value < (*b)->fcDnsBytesSent.value) ? -1 : 0);
+        break;
+    case 11:
+        return (((*a)->fcDnsBytesRcvd.value > (*b)->fcDnsBytesRcvd.value) ? 1 :
+                ((*a)->fcDnsBytesRcvd.value < (*b)->fcDnsBytesRcvd.value) ? -1 : 0);
+        break;
+    case 12:
+        return (((*a)->ipfcBytesSent.value > (*b)->ipfcBytesSent.value) ? 1 :
+                ((*a)->ipfcBytesSent.value < (*b)->ipfcBytesSent.value) ? -1 : 0);
+        break;
+    case 13:
+        return (((*a)->ipfcBytesRcvd.value > (*b)->ipfcBytesRcvd.value) ? 1 :
+                ((*a)->ipfcBytesRcvd.value < (*b)->ipfcBytesRcvd.value) ? -1 : 0);
+        break;
+    case 14:
+        return (((*a)->fcSwilsBytesSent.value > (*b)->fcSwilsBytesSent.value) ? 1 :
+                ((*a)->fcSwilsBytesSent.value < (*b)->fcSwilsBytesSent.value) ? -1 : 0);
+        break;
+    case 15:
+        return (((*a)->fcSwilsBytesRcvd.value > (*b)->fcSwilsBytesRcvd.value) ? 1 :
+                ((*a)->fcSwilsBytesRcvd.value < (*b)->fcSwilsBytesRcvd.value) ? -1 : 0);
+        break;
+    case 16:
+        return (((*a)->otherBytesSent.value > (*b)->otherBytesSent.value) ? 1 :
+                ((*a)->otherBytesSent.value < (*b)->otherBytesSent.value) ? -1 : 0);
+        break;
+    case 17:
+        return (((*a)->otherBytesRcvd.value > (*b)->otherBytesRcvd.value) ? 1 :
+                ((*a)->otherBytesRcvd.value < (*b)->otherBytesRcvd.value) ? -1 : 0);
+        break;
+    case 18:
+        return (CMPTV ((*a)->firstSeen, (*b)->firstSeen));
+        break;
+        
+    case 19:
+        return (CMPTV ((*a)->lastSeen, (*b)->lastSeen));
+        break;
+        
+    default:
+        break;
+    }
+}
+
+int cmpScsiSessionsFctn (const void *_a, const void *_b)
+{
+    ScsiSessionSortEntry *a = (ScsiSessionSortEntry *)_a;
+    ScsiSessionSortEntry *b = (ScsiSessionSortEntry *)_b;
+    int a_, b_, rc;
+
+    switch (myGlobals.columnSort) {
+    case 1: /* VSAN */
+        a_ = a->initiator->vsanId;
+        b_ = b->initiator->vsanId;
+        return ( (a_ > b_) ? 1 : (a_ < b_) ? -1 : 0 );
+        break;
+    case 2: /* Initiator FC Address */
+        CMP_FC_PORT ((a->initiator), (b->initiator))
+        return (rc);
+        break;
+    case 3: /* Target FC Address */
+        CMP_FC_PORT ((a->target), (b->target))
+        return (rc);
+        break;
+    case 4: /* Data Sent */
+        /* The first three entries account for the unknown LUN entry */ 
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return ( (((FCSession *)a->stats)->unknownLunBytesSent.value > b->stats->bytesSent.value) ? 1 :
+                     (((FCSession *)a->stats)->unknownLunBytesSent.value < b->stats->bytesSent.value) ? -1 : 0);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+             return ( (a->stats->bytesSent.value > ((FCSession *)b->stats)->unknownLunBytesSent.value) ? 1 :
+                      (a->stats->bytesSent.value < ((FCSession *)b->stats)->unknownLunBytesSent.value) ? -1 : 0);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return ( (((FCSession *)a->stats)->unknownLunBytesSent.value
+                      > ((FCSession *)b->stats)->unknownLunBytesSent.value) ? 1 :
+                     (((FCSession *)a->stats)->unknownLunBytesSent.value <
+                      ((FCSession *)b->stats)->unknownLunBytesSent.value) ? -1 : 0);
+        }
+        return ( (a->stats->bytesSent.value > b->stats->bytesSent.value) ? 1 :
+                 (a->stats->bytesSent.value < b->stats->bytesSent.value) ? -1 : 0);
+        break;
+    case 5: /* Data Rcvd */
+        /* The first three entries account for the unknown LUN entry */ 
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return ( (((FCSession *)a->stats)->unknownLunBytesRcvd.value > b->stats->bytesRcvd.value) ? 1 :
+                     (((FCSession *)a->stats)->unknownLunBytesRcvd.value < b->stats->bytesRcvd.value) ? -1 : 0);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return ( (a->stats->bytesRcvd.value > ((FCSession *)b->stats)->unknownLunBytesRcvd.value) ? 1 :
+                     (a->stats->bytesRcvd.value < ((FCSession *)b->stats)->unknownLunBytesRcvd.value) ? -1 : 0);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return ( (((FCSession *)a->stats)->unknownLunBytesRcvd.value >
+                      ((FCSession *)b->stats)->unknownLunBytesRcvd.value) ? 1 :
+                     (((FCSession *)a->stats)->unknownLunBytesRcvd.value <
+                      ((FCSession *)b->stats)->unknownLunBytesRcvd.value) ? -1 : 0);
+        }
+        return ( (a->stats->bytesRcvd.value > b->stats->bytesRcvd.value) ? 1 :
+                 (a->stats->bytesRcvd.value < b->stats->bytesRcvd.value) ? -1 : 0);
+        break;
+
+    case 6:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->scsiRdBytes.value > b->stats->scsiRdBytes.value) ? 1 :
+                 (a->stats->scsiRdBytes.value < b->stats->scsiRdBytes.value) ? -1 : 0);
+        break;
+
+    case 7:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->scsiWrBytes.value > b->stats->scsiWrBytes.value) ? 1 :
+                 (a->stats->scsiWrBytes.value < b->stats->scsiWrBytes.value) ? -1 : 0);
+        break;
+
+    case 8:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->scsiOtBytes.value > b->stats->scsiOtBytes.value) ? 1 :
+                 (a->stats->scsiOtBytes.value < b->stats->scsiOtBytes.value) ? -1 : 0);
+        break;
+
+    case 9:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->minRdSize > b->stats->minRdSize) ? 1:
+                 (a->stats->minRdSize < b->stats->minRdSize) ? -1 : 0);
+        break;
+
+    case 10:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->maxRdSize > b->stats->maxRdSize) ? 1:
+                 (a->stats->maxRdSize < b->stats->maxRdSize) ? -1 : 0);
+        break;
+
+    case 11:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->minWrSize > b->stats->minWrSize) ? 1:
+                 (a->stats->minWrSize < b->stats->minWrSize) ? -1 : 0);
+        break;
+
+    case 12:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->maxWrSize > b->stats->maxWrSize) ? 1:
+                 (a->stats->maxWrSize < b->stats->maxWrSize) ? -1 : 0);
+        break;
+
+    case 13:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->minXferRdySize > b->stats->minXferRdySize) ? 1:
+                 (a->stats->minXferRdySize < b->stats->minXferRdySize) ? -1 : 0);
+        break;
+
+    case 14:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->maxXferRdySize > b->stats->maxXferRdySize) ? 1:
+                 (a->stats->maxXferRdySize < b->stats->maxXferRdySize) ? -1 : 0);
+        break;
+
+    case 15:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->minIops > b->stats->minIops) ? 1:
+                 (a->stats->minIops < b->stats->minIops) ? -1 : 0);
+        break;
+
+    case 16:
+        /* Unknown LUNs don't have any valid info to compare for this field. So
+         * we dump them at the end of the list
+         */
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->maxIops > b->stats->maxIops) ? 1:
+                 (a->stats->maxIops < b->stats->maxIops) ? -1 : 0);
+        break;
+        
+    case 17: /* # Failed Commands */
+        /* The first three entries account for the unknown LUN entry */ 
+        if ((a->lun == 0xFFFF) && (b->lun != 0xFFFF)) {
+            return (1);
+        }
+        else if ((a->lun != 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (-1);
+        }
+        else if ((a->lun == 0xFFFF) && (b->lun == 0xFFFF)) {
+            return (0);
+        }
+        return ( (a->stats->numFailedCmds > b->stats->numFailedCmds) ? 1 :
+                 (a->stats->numFailedCmds < b->stats->numFailedCmds) ? -1 : 0);
+        break;
+    case 18:
+        return (CMPTV (a->stats->minRTT, b->stats->minRTT));
+        break;
+        
+    case 19:
+        return (CMPTV (a->stats->maxRTT, b->stats->maxRTT));
+        break;
+
+    case 20:
+        return (CMPTV (a->stats->minXfrRdyRTT, b->stats->minXfrRdyRTT));
+        break;
+
+    case 21:
+        return (CMPTV (a->stats->maxXfrRdyRTT, b->stats->maxXfrRdyRTT));
+        break;
+
+    case 22:
+        return (CMPTV (a->stats->minRdFrstDataRTT, b->stats->minRdFrstDataRTT));
+        break;
+
+    case 23:
+        return (CMPTV (a->stats->maxRdFrstDataRTT, b->stats->maxRdFrstDataRTT));
+        break;
+
+    case 24:
+        return (CMPTV (a->stats->minWrFrstDataRTT, b->stats->minWrFrstDataRTT));
+        break;
+
+    case 25:
+        return (CMPTV (a->stats->maxWrFrstDataRTT, b->stats->maxWrFrstDataRTT));
+        break;
+
+    case 26:
+        return (CMPTV (a->stats->firstSeen, b->stats->firstSeen));
+        break;
+
+    case 27:
+        return (CMPTV (a->stats->lastSeen, b->stats->lastSeen));
+        break;
+
+    case 28:
+        return ( (a->stats->chkCondCnt > b->stats->chkCondCnt) ? 1 :
+                 (a->stats->chkCondCnt < b->stats->chkCondCnt) ? -1 : 0);
+        break;
+
+    case 29:
+        return ( (a->stats->busyCnt > b->stats->busyCnt) ? 1 :
+                 (a->stats->busyCnt < b->stats->busyCnt) ? -1 : 0);
+        break;
+
+    case 30:
+        return ( (a->stats->resvConflictCnt > b->stats->resvConflictCnt) ? 1 :
+                 (a->stats->resvConflictCnt < b->stats->resvConflictCnt) ? -1
+                 : 0);
+        break;
+
+    case 31:
+        return ( (a->stats->taskSetFullCnt > b->stats->taskSetFullCnt) ? 1 :
+                 (a->stats->taskSetFullCnt < b->stats->taskSetFullCnt) ? -1
+                 : 0);
+        break;
+
+    case 32:
+        return ( (a->stats->taskAbrtCnt > b->stats->taskAbrtCnt) ? 1 :
+                 (a->stats->taskAbrtCnt < b->stats->taskAbrtCnt) ? -1 : 0);
+        break;
+
+    case 33:
+        return ( (a->stats->abrtTaskSetCnt > b->stats->abrtTaskSetCnt) ? 1 :
+                 (a->stats->abrtTaskSetCnt < b->stats->abrtTaskSetCnt) ? -1 : 0);
+        break;
+
+    case 34:
+        return ( (a->stats->clearTaskSetCnt > b->stats->clearTaskSetCnt) ? 1 :
+                 (a->stats->clearTaskSetCnt < b->stats->clearTaskSetCnt) ? -1 : 0);
+        break;
+
+    case 35:
+        return ( (a->stats->tgtRstCnt > b->stats->tgtRstCnt) ? 1 :
+                 (a->stats->tgtRstCnt < b->stats->tgtRstCnt) ? -1 : 0);
+        break;
+
+    case 36:
+        return ( (a->stats->lunRstCnt > b->stats->lunRstCnt) ? 1 :
+                 (a->stats->lunRstCnt < b->stats->lunRstCnt) ? -1 : 0);
+        break;
+
+    case 37:
+        return ( (a->stats->lastTgtRstTime > b->stats->lastTgtRstTime) ? 1 :
+                 (a->stats->lastTgtRstTime < b->stats->lastTgtRstTime) ? -1 : 0);
+        break;
+
+    case 38:
+        return ( (a->stats->lastLunRstTime > b->stats->lastLunRstTime) ? 1 :
+                 (a->stats->lastLunRstTime < b->stats->lastLunRstTime) ? -1 : 0);
+        break;
+
+    default:
+        break;
+    }
+}
+
+int cmpLunFctn (const void *_a, const void *_b)
+{
+    LunStatsSortedEntry *a = (LunStatsSortedEntry *)_a;
+    LunStatsSortedEntry *b = (LunStatsSortedEntry *)_b;
+    Counter a_=0, b_=0;
+
+    switch(myGlobals.columnSort) {
+    case 1: /* LU number i.e. LUN */
+        return (a->lun > b->lun ? 1 : a->lun < b->lun ? -1 : 0);
+        break;
+
+    case 2: /* Data Sent.value */
+        a_ = a->stats->bytesSent.value;
+        b_ = b->stats->bytesSent.value;
+        if(a_ < b_) return(-1); else if (a_ > b_) return(1); else return(0);
+        break;
+
+    case 3: /* Data Rcvd.value */
+        a_ = a->stats->bytesRcvd.value;
+        b_ = b->stats->bytesRcvd.value;
+
+        if(a_ < b_) return(-1); else if (a_ > b_) return(1); else return(0);
+        break;
+
+    case 4:
+        a_ = a->stats->bytesSent.value + a->stats->bytesRcvd.value;
+        b_ = b->stats->bytesSent.value + b->stats->bytesRcvd.value;
+
+        if(a_ < b_) return(-1); else if (a_ > b_) return(1); else return(0);
+        break;
+
+    case 5:
+        a_ = a->stats->pktSent + a->stats->pktRcvd;
+        b_ = b->stats->pktSent + b->stats->pktRcvd;
+
+        if(a_ < b_) return(-1); else if (a_ > b_) return(1); else return(0);
+        break;
+
+        
+    default: /* LU number i.e. LUN */
+        return (a->lun > b->lun ? 1 : a->lun < b->lun ? -1 : 0);
+        break;
+    }
+}
+
+int cmpVsanFctn (const void *_a, const void *_b)
+{
+    FcFabricElementHash **a = (FcFabricElementHash **)_a;
+    FcFabricElementHash **b = (FcFabricElementHash **)_b;
+    Counter a_=0, b_=0;
+
+    switch(myGlobals.columnSort) {
+    case 1: /* VSAN */
+        return ((*a)->vsanId > (*b)->vsanId ? 1 : (*a)->vsanId < (*b)->vsanId ? -1 : 0);
+        break;
+
+    case 2: /* Principal Switch */
+        return (memcmp ((void *)&(*a)->principalSwitch.str,
+                        (void *)&(*b)->principalSwitch.str, 8));
+        break;
+
+    case 3: /* Total bytes */
+        a_ = (*a)->totBytes.value;
+        b_ = (*b)->totBytes.value;
+
+        if(a_ < b_) return(-1); else if (a_ > b_) return(1); else return(0);
+        break;
+        
+    case 4: /* Total Frames */
+        a_ = (*a)->totPkts.value;
+        b_ = (*b)->totPkts.value;
+
+        if(a_ < b_) return(-1); else if (a_ > b_) return(1); else return(0);
+        break;
+    }
+}
+
+/* ************************************ */
+
+int cmpFcDomainFctn (const void *_a, const void *_b)
+{
+    SortedFcDomainStatsEntry *a = (SortedFcDomainStatsEntry *)_a;
+    SortedFcDomainStatsEntry *b = (SortedFcDomainStatsEntry *)_b;
+    Counter a_=0, b_=0;
+
+    switch(myGlobals.columnSort) {
+    case 0: /* Rcvd */
+        return (a->stats->rcvdBytes.value > b->stats->rcvdBytes.value ? 1 :
+                a->stats->rcvdBytes.value < b->stats->rcvdBytes.value ? -1 : 0);
+        break;
+
+    case 2: /* Sent */
+    default:
+        return (a->stats->sentBytes.value > b->stats->sentBytes.value ? 1 :
+                a->stats->sentBytes.value < b->stats->sentBytes.value ? -1 : 0);
+        break;
+    }
+}
+
+/* ************************************ */
+
+void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
+  Counter totalSent, totalRcvd;
+  Counter actTotalSent, actTotalRcvd;
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  char linkName[LEN_GENERAL_WORK_BUFFER/2];
+
+  totalSent = el->fcBytesSent.value;
+  totalRcvd = el->fcBytesRcvd.value;
+  
+  printHostHourlyTraffic(el);
+  
+/*   printPacketStats(el, actualDeviceId); */
+
+
+  if((totalSent == 0) && (totalRcvd == 0))
+    return;
+
+  printSectionTitle("Protocol Distribution");
+
+  sendString("<CENTER>\n"
+	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100 "DARK_BG">Protocol</TH>"
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2 "DARK_BG">Total&nbsp;Bytes&nbsp;Sent</TH>"
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2 "DARK_BG">Total&nbsp;Bytes&nbsp;Rcvd</TH></TR>\n");
+
+  actTotalSent = el->fcFcpBytesSent.value;
+  actTotalRcvd = el->fcFcpBytesRcvd.value;
+
+  printTableDoubleEntry(buf, sizeof(buf), "SCSI", CONST_COLOR_1, (float)actTotalSent/1024,
+			100*((float)SD(actTotalSent, totalSent)),
+			(float)actTotalRcvd/1024,
+			100*((float)SD(actTotalRcvd, totalRcvd)));
+
+  actTotalSent = el->fcElsBytesSent.value;
+  actTotalRcvd = el->fcElsBytesRcvd.value;
+
+  printTableDoubleEntry(buf, sizeof(buf), "ELS", CONST_COLOR_1, (float)actTotalSent/1024,
+			100*((float)SD(actTotalSent, totalSent)),
+			(float)actTotalRcvd/1024,
+			100*((float)SD(actTotalRcvd, totalRcvd)));
+
+  actTotalSent = el->fcDnsBytesSent.value;
+  actTotalRcvd = el->fcDnsBytesRcvd.value;
+  
+  printTableDoubleEntry(buf, sizeof(buf), "NS", CONST_COLOR_1, (float)actTotalSent/1024,
+			100*((float)SD(actTotalSent, totalSent)),
+			(float)actTotalRcvd/1024,
+			100*((float)SD(actTotalRcvd, totalRcvd)));
+
+  actTotalSent = el->fcSwilsBytesSent.value;
+  actTotalRcvd = el->fcSwilsBytesRcvd.value;
+  
+  printTableDoubleEntry(buf, sizeof(buf), "SWILS", CONST_COLOR_1, (float)actTotalSent/1024,
+			100*((float)SD(actTotalSent, totalSent)),
+			(float)actTotalRcvd/1024,
+			100*((float)SD(actTotalRcvd, totalRcvd)));
+
+  actTotalSent = el->fcIpfcBytesSent.value;
+  actTotalRcvd = el->fcIpfcBytesRcvd.value;
+  
+  printTableDoubleEntry(buf, sizeof(buf), "IP/FC", CONST_COLOR_1, (float)actTotalSent/1024,
+			100*((float)SD(actTotalSent, totalSent)),
+			(float)actTotalRcvd/1024,
+			100*((float)SD(actTotalRcvd, totalRcvd)));
+
+  actTotalSent = el->otherFcBytesSent.value;
+  actTotalRcvd = el->otherFcBytesRcvd.value;
+  
+  printTableDoubleEntry(buf, sizeof(buf), "Others", CONST_COLOR_1, (float)actTotalSent/1024,
+			100*((float)SD(actTotalSent, totalSent)),
+			(float)actTotalRcvd/1024,
+			100*((float)SD(actTotalRcvd, totalRcvd)));
+
+  {
+      totalSent = el->fcBytesSent.value;
+      totalRcvd = el->fcBytesRcvd.value;
+
+    if((totalSent > 0) || (totalRcvd > 0)) {
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
+		  getRowColor()) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      if(el->hostNumFcAddress[0] != '\0') {
+          strncpy (linkName, fc_to_str ((u_int8_t *)&el->hostFcAddress), sizeof (linkName));
+      } 
+
+      if(totalSent > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFcTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Traffic Distribution for %s\"></TD>",
+                    linkName,
+                    fc_to_str ((u_int8_t *)&el->hostFcAddress)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      } else {
+	sendString("<TD width=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 WIDTH=250>&nbsp;</TD>");
+      }
+
+      if(totalRcvd > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFcTrafficDistrib-"
+		    "%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s\"></TD>",
+		    linkName,
+		    fc_to_str ((u_int8_t *)&el->hostFcAddress)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      } else {
+	sendString("<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 WIDTH=250>&nbsp;</TD>");
+      }
+
+      sendString("</TD></TR>");
+
+#ifdef NOT_YET
+      if((el->fcFcpBytesSent.value + el->fcElsBytesSent.value + el->fcDnsBytesSent.value + el->otherFcBytesSent.value)
+         > 0) {
+          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Traffic Distribution</TH>",
+                      getRowColor()) < 0)
+              BufferTooShort();
+          sendString(buf);
+
+          if((el->fcFcpBytesSent.value + el->fcElsBytesSent.value + el->fcDnsBytesSent.value + el->otherFcBytesSent.value) > 0) { 
+              if(snprintf(buf, sizeof(buf),
+                          "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Traffic Distribution for %s\"></TD>",
+                          fc_to_str(&el->hostFcAddress), fc_to_str (&el->hostFcAddress)) < 0)
+                  BufferTooShort();
+              sendString(buf);
+          } else
+              sendString("<TD "TD_BG" COLSPAN=2 WIDTH=250>&nbsp;</TD>");
+
+          if((el->fcFcpBytesRcvd.value + el->fcElsBytesRcvd.value + el->fcDnsBytesRcvd.value + el->otherFcBytesRcvd.value) > 0) { 
+              if(snprintf(buf, sizeof(buf),
+                          "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-"
+                          "%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s\"></TD></TR>",
+                          fc_to_str(&el->hostFcAddress), fc_to_str (&el->hostFcAddress)) < 0)
+                  BufferTooShort();
+              sendString(buf);
+          } else
+              sendString("<TD "TD_BG" COLSPAN=2 WIDTH=250>&nbsp;</TD>");
+
+          sendString("</TR>");
+      }
+#endif /* NOT_YET */  
+    }
+  }
+
+  sendString("</TABLE>"TABLE_OFF"<P>\n");
+  sendString("</CENTER>\n");
+}
+
+/* ************************************ */
+
+void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId)
+{
+    u_int i, titleSent = 0;
+    char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+    HostTraffic tmpEl;
+
+    if((el->pktSent.value != 0) || (el->pktRcvd.value != 0)) {
+        int ok =0;
+
+        for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+            if((!emptySerial(&el->contactedSentPeers.peersSerials[i])
+                && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))
+                || (!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
+                    && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))))) {
+                ok = 1;
+                break;
+            }
+
+        if(ok) {
+            HostTraffic *el2;
+            int numEntries;
+
+            for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+                if(!emptySerial(&el->contactedSentPeers.peersSerials[i])
+	     && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
+                    if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i],
+                                            myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
+                        if(numEntries == 0) {
+                            printSectionTitle("Last Contacted Peers");
+
+                            titleSent = 1;
+                            sendString("<CENTER>\n"
+                                       "<TABLE BORDER=0><TR><TD "TD_BG" VALIGN=TOP>\n");
+
+                            sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
+                                       "<TR "TR_ON"><TH "TH_BG" "DARK_BG">Sent To</TH>"
+                                       "<TH "TH_BG" "DARK_BG">Address</TH></TR>\n");
+                        }
+            
+                        if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+                                    "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
+                                    getRowColor(),
+                                    makeFcHostLink(el2,
+                                                   FLAG_HOSTLINK_TEXT_FORMAT,
+                                                   0, 0, hostLinkBuf,
+                                                   sizeof (hostLinkBuf)),
+                                    el2->hostNumFcAddress) < 0)
+                            BufferTooShort();
+
+                        sendString(buf);
+                        numEntries++;
+                    }
+                }
+
+            if(numEntries > 0) {
+                sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
+            } else {
+                sendString("&nbsp;</TD><TD "TD_BG">\n");
+            }
+
+            /* ***************************************************** */
+
+            for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+                if((!emptySerial(&el->contactedRcvdPeers.peersSerials[i]))
+                   && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
+                    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i],
+                                            myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
+                        if(numEntries == 0) {
+                            if(!titleSent) printSectionTitle("Last Contacted Peers");
+                            sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>"
+                                       "<TR "TR_ON"><TH "TH_BG" "DARK_BG">Received From</TH>"
+                                       "<TH "TH_BG" "DARK_BG">Address</TH></TR>\n");
+                        }
+
+                        if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+                                    "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+                                    getRowColor(),
+                                    makeFcHostLink(el2,
+                                                   FLAG_HOSTLINK_TEXT_FORMAT,
+                                                   0, 0, hostLinkBuf,
+                                                   sizeof (hostLinkBuf)),
+                                    el2->hostNumFcAddress) < 0)
+                            BufferTooShort();
+
+                        sendString(buf);
+                        numEntries++;
+                    }
+                }
+            
+            if(numEntries > 0) {
+                sendString("</TABLE>"TABLE_OFF"\n");
+            }
+
+            sendString("</TD></TR></TABLE>"TABLE_OFF"<P>\n");
+            sendString("</CENTER>\n");
+        } /* ok */
+    }
+    else {
+        traceEvent (CONST_TRACE_ALWAYSDISPLAY, "printFcHostContactedPeers: else part\n");
+    }
+}
+
+/* ************************************ */
+
+void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
+{
+    char buf[LEN_GENERAL_WORK_BUFFER], buf1[64],
+         hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+    float percentage;
+    Counter total, tot1;
+    char *vendorName;
+    char formatBuf[32], formatBuf1[32], formatBuf2[32];
+    
+    accessAddrResMutex("printAllSessionsHTML");
+
+    buf1[0]=0;
+
+    if (snprintf (buf, sizeof(buf), "Info about %s\n",
+                  makeFcHostLink (el, FLAG_HOSTLINK_TEXT_NO_LINK_FORMAT, 1,
+                                  0, hostLinkBuf, sizeof (hostLinkBuf))) < 0)
+        BufferTooShort();
+
+    releaseAddrResMutex();
+    printHTMLheader(buf, 0, 0);
+    sendString("<CENTER>\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n");
+
+    accessAddrResMutex("printAllSessions-2");
+
+    if (el->vsanId) {
+        if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                    "%d%s</TD></TR>\n",
+                    getRowColor(), "VSAN",
+                    el->vsanId,
+                    myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+    }
+    else {
+        if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                    "N/A%s</TD></TR>\n",
+                    getRowColor(), "VSAN",
+                    myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+    }
+    sendString(buf);
+  
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                "%s%s</TD></TR>\n",
+                getRowColor(), "FC_ID",
+                el->hostNumFcAddress,
+                myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+        BufferTooShort();
+    sendString(buf);
+
+    if (el->pWWN.str[0] != '\0') {
+        if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                    "%s%s</TD></TR>\n",
+                    getRowColor(), "Port&nbsp;WWN",
+                    fcwwn_to_str ((u_int8_t *)&el->pWWN), 
+                    myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+        sendString(buf);
+    }
+    
+    if (el->nWWN.str[0] != '\0') {
+        if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                    "%s%s</TD></TR>\n",
+                    getRowColor(), "Node&nbsp;WWN",
+                    fcwwn_to_str ((u_int8_t *)&el->nWWN), 
+                    myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+        sendString(buf);
+    }
+    
+    vendorName = getVendorInfo(&el->pWWN.str[2], 1);
+    if(vendorName[0] != '\0') {
+        if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                    "%s%s</TD></TR>\n",
+                    getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
+                    vendorName,
+                    myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+        sendString(buf);
+    }
+
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+
+    sendString("<CENTER>\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n");
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+                "<TD "TD_BG" ALIGN=RIGHT>"
+                "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
+                getRowColor(),
+                "First/Last&nbsp;Seen",
+                formatTime(&(el->firstSeen), 1, formatBuf, sizeof (formatBuf)),
+                formatTime(&(el->lastSeen), 1, formatBuf1, sizeof (formatBuf1)),
+                formatSeconds(el->lastSeen - el->firstSeen, formatBuf2,
+                              sizeof (formatBuf2))) < 0)
+        BufferTooShort();
+    sendString(buf);
+
+    if (el->numOffline.value) {
+        if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                     "%s%s</TD></TR>\n",
+                     getRowColor(), "Number&nbsp;Of&nbsp;Times&nbsp;Offline",
+                     formatPkts (el->numOffline.value, formatBuf, sizeof (formatBuf)),
+                     myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+        sendString (buf);
+        
+        if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                     "%s%s</TD></TR>\n",
+                     getRowColor(), "Last&nbsp;Offline&nbsp;Time",
+                     formatTime (&el->lastOfflineTime, 1, formatBuf, sizeof (formatBuf)),
+                     myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+        sendString (buf);
+
+        if (el->lastOnlineTime) {
+            if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                         "%s%s</TD></TR>\n",
+                         getRowColor(), "Last&nbsp;Online&nbsp;Time",
+                         formatTime (&el->lastOnlineTime, 1, formatBuf, sizeof (formatBuf)),
+                         myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+                BufferTooShort();
+            sendString (buf);
+        }
+    }
+
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+
+    sendString("<CENTER>\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n");
+
+    if (snprintf (buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+                  "<TD "TD_BG" ALIGN=RIGHT>%d&nbsp;</TD></TR>\n",
+                  getRowColor(), "MTU", el->fcRecvSize) < 0)
+        BufferTooShort();
+    sendString(buf);
+                
+    if (el->devType != SCSI_DEV_UNINIT) {
+        if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                    "%s%s</TD></TR>\n",
+                    getRowColor(), "SCSI&nbsp;Device&nbsp;Type",
+                    el->devType == SCSI_DEV_BLOCK ? "Target, Block" :
+                    el->devType == SCSI_DEV_SSC  ? "Target, Tape" :
+                    el->devType == SCSI_DEV_UNKNOWN ? "Target, Unknown" :
+                    el->devType == SCSI_DEV_INITIATOR ? "Initiator" : "Other",
+                    myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+        sendString(buf);
+    }
+
+    if ((el->devType != SCSI_DEV_UNINIT) &&
+        (el->devType != SCSI_DEV_INITIATOR)) {
+
+        if (el->vendorId[0] != '\0') {
+            if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                        "%s%s</TD></TR>\n",
+                        getRowColor(), "Device&nbsp;Vendor",
+                        el->vendorId,
+                        myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+                BufferTooShort();
+            sendString(buf);
+        }
+
+        if (el->productId[0] != '\0') {
+            if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                        "%s%s</TD></TR>\n",
+                        getRowColor(), "Product&nbsp;Name",
+                        el->productId,
+                        myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+                BufferTooShort();
+            sendString(buf);
+        }
+
+        if (el->productRev[0] != '\0') {
+            if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                        "%s%s</TD></TR>\n",
+                        getRowColor(), "Product&nbsp;Revision",
+                        el->productRev,
+                        myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+                BufferTooShort();
+            sendString(buf);
+        }
+    }
+
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+
+    sendString("<CENTER>\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n");
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
+                "</TH><TD "TD_BG" ALIGN=RIGHT>"
+                "%s/%s Pkts</TD></TR>\n",
+                getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
+                formatBytes(el->fcBytesRcvd.value, 1,
+                            formatBuf, sizeof (formatBuf)),
+                formatPkts(el->pktRcvd.value, formatBuf1,
+                           sizeof (formatBuf1))) < 0)
+        BufferTooShort();
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
+                "</TH><TD "TD_BG" ALIGN=RIGHT>"
+                "%s/%s Pkts</TD></TR>\n",
+                getRowColor(), "Total&nbsp;Data&nbsp;Sent",
+                formatBytes(el->fcBytesSent.value, 1, formatBuf,
+                            sizeof (formatBuf)),
+                formatPkts(el->pktSent.value, formatBuf1,
+                           sizeof (formatBuf1))) < 0)
+        BufferTooShort();
+    sendString(buf);
+
+    total = el->pktSent.value+el->pktRcvd.value;
+    if(total > 0) {
+        percentage = ((float)el->pktSent.value*100)/((float)total);
+        printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Pkts",
+                                  "Sent", "Rcvd", -1, percentage);
+    }
+
+    total = el->fcBytesSent.value+el->fcBytesRcvd.value;
+    if(total > 0) {
+        percentage = ((float)el->fcBytesSent.value*100)/((float)total);
+        printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Data",
+                                  "Sent", "Rcvd", -1, percentage);
+    }
+
+    tot1 = el->class3Sent.value + el->class3Rcvd.value;
+    if ((total > 0) && (tot1 > 0)) {
+        percentage = (((float)tot1*100)/total);
+        printTableEntryPercentage(buf, sizeof(buf), "Class&nbsp;3&nbsp;vs.&nbsp;Other&nbsp;Traffic",
+                                  "Class 3", "Other Classes", -1, percentage);
+    }
+
+    tot1 = el->fcFcpBytesRcvd.value + el->fcFcpBytesSent.value;
+    if ((total > 0) && (tot1 > 0)) {
+        percentage = (((float)tot1*100)/total);
+        printTableEntryPercentage(buf, sizeof(buf), "SCSI&nbsp;vs.&nbsp;Others&nbsp;Traffic",
+                                  "SCSI", "Others", -1, percentage);
+    }
+
+    tot1 = el->scsiReadBytes.value + el->scsiWriteBytes.value;
+    if (tot1 > 0) {
+        percentage = (((float)el->scsiReadBytes.value*100)/tot1);
+        printTableEntryPercentage(buf, sizeof(buf), "SCSI&nbsp;Read&nbsp;vs.&nbsp;Write&nbsp;Bytes",
+                                  "SCSI Read", "SCSI Write", -1, percentage);
+    }
+  
+    /* **************************** */
+
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+}
+
+void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
+                        int revertOrder, int pageNum, char *url)
+{
+
+    u_int idx, numEntries, skipEntries = 0;
+    int printedEntries=0;
+    int duration;
+    LunStatsSortedEntry sortedLunTbl[MAX_LUNS_SUPPORTED];
+    LunStatsSortedEntry *entry;
+    char buf[LEN_GENERAL_WORK_BUFFER], *sign, *title=NULL;
+    char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32],
+         formatBuf4[32], formatBuf5[32];
+    char *arrowGif, *arrow[48], *theAnchor[48];
+    char htmlAnchor[64], htmlAnchor1[64], pageUrl[64];
+    char pcapFilename[128];
+    Counter dataSent, dataRcvd;
+  
+    if ((el->devType == SCSI_DEV_UNINIT) ||
+        (el->devType == SCSI_DEV_INITIATOR)) {
+        printNoDataYet();
+        return;
+    }
+    
+    printHTMLheader ("LUN Statistics", 0, 0);
+    
+    memset(buf, 0, sizeof(buf));
+    memset(sortedLunTbl, 0, sizeof (sortedLunTbl));
+
+    myGlobals.columnSort = sortedColumn;
+
+    for (idx=0, numEntries=0; idx < MAX_LUNS_SUPPORTED; idx++) {
+        if(el->activeLuns[idx] != NULL) {
+            sortedLunTbl[numEntries].lun = idx;
+            sortedLunTbl[numEntries++].stats = el->activeLuns[idx];
+        }
+    }
+
+    if(revertOrder) {
+        sign = "";
+        arrowGif = "&nbsp;<IMG ALT=\"Decending order, click to reverse\" SRC=arrow_up.gif BORDER=0>";
+    } else {
+        sign = "-";
+        arrowGif = "&nbsp;<IMG ALT=\"Ascending order, click to reverse\" SRC=arrow_down.gif BORDER=0>";
+    }
+
+    if(numEntries > 0) {
+
+        myGlobals.columnSort = sortedColumn;
+        qsort(sortedLunTbl, numEntries, sizeof(LunStatsSortedEntry), cmpLunFctn);
+
+        /* Need to add info about page in Hosts Info mode */
+        if(snprintf(htmlAnchor, sizeof(htmlAnchor),
+                    "<A HREF=/%s.html?showF=%d&page=%d&col=%s", url,
+                    showHostLunStats, pageNum, sign) < 0)
+            BufferTooShort();
+        if(snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+                    "<A HREF=/%s.html?showF=%d&page=%d&col=", url,
+                    showHostLunStats, pageNum) < 0)
+            BufferTooShort();
+        if (snprintf (pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
+                      url, showHostLunStats) < 0)
+            BufferTooShort();
+
+        if(abs(myGlobals.columnSort) == 1) {
+            arrow[1] = arrowGif;
+            theAnchor[1] = htmlAnchor;
+        } else {
+            arrow[1] = "";
+            theAnchor[1] = htmlAnchor1;
+        }
+
+        if(abs(myGlobals.columnSort) == 2)  {
+            arrow[2] = arrowGif;
+            theAnchor[2] = htmlAnchor;
+        } else {
+            arrow[2] = "";
+            theAnchor[2] = htmlAnchor1;
+        }
+
+        if(abs(myGlobals.columnSort) == 3) {
+            arrow[3] = arrowGif;
+            theAnchor[3] = htmlAnchor;
+        } else {
+            arrow[3] = "";
+            theAnchor[3] = htmlAnchor1;
+        }
+
+        if(abs(myGlobals.columnSort) == 4) {
+            arrow[4] = arrowGif;
+            theAnchor[4] = htmlAnchor;
+        } else {
+            arrow[4] = "";
+            theAnchor[4] = htmlAnchor1;
+        }
+
+#ifdef WIN32        
+        sprintf(pcapFilename, "file:%s/ntop-suspicious-pkts.none.pcap",
+                myGlobals.pcapLogBasePath); /* Added by Ola Lundqvist <opal@debian.org> */
+#else
+        sprintf(pcapFilename, "file://%s/ntop-suspicious-pkts.none.pcap",
+                myGlobals.pcapLogBasePath); /* Added by Ola Lundqvist <opal@debian.org> */
+#endif        
+        
+        sendString("<CENTER>\n");
+        if (snprintf(buf, sizeof (buf),
+                     ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
+                     "<TH "TH_BG" >%s1>LUN%s</A></TH>"
+                     "<TH "TH_BG" COLSPAN=2>Total&nbsp;Bytes</TH>"
+                     "<TH "TH_BG" COLSPAN=3>Data&nbsp;Bytes</TH>"
+                     "<TH "TH_BG" COLSPAN=2>Read&nbsp;Size</TH>"
+                     "<TH "TH_BG" COLSPAN=2>Write&nbsp;Size</TH>"
+                     "<TH "TH_BG" COLSPAN=2>Xfer&nbsp;Rdy&nbsp;Size</TH>"
+                     "<TH "TH_BG">#&nbsp;Failed&nbsp;Cmds</TH>"
+                     "<TH "TH_BG" >Duration(secs)</TH>"
+                     "<TH "TH_BG" >Last&nbsp;Seen</TH>"
+                     "</TR>\n",
+                     theAnchor[1], arrow[1]
+                     ) < 0)                 
+            BufferTooShort();
+
+        sendString(buf);
+
+        if (snprintf(buf, sizeof (buf),
+                     "<TR "TR_ON" %s>"
+                     "<TH "TH_BG"><br></TH>"
+                     "<TH "TH_BG">%s2>Sent%s</A></TH>"
+                     "<TH "TH_BG">%s3>Rcvd%s</A></TH>"
+                     "<TH "TH_BG">Read</TH>"
+                     "<TH "TH_BG">Write</TH>"
+                     "<TH "TH_BG">Other</TH>"
+                     "<TH "TH_BG">Min</TH>"
+                     "<TH "TH_BG">Max</TH>"
+                     "<TH "TH_BG">Min</TH>"
+                     "<TH "TH_BG">Max</TH>"
+                     "<TH "TH_BG">Min</TH>"
+                     "<TH "TH_BG">Max</TH>"
+                     "<TH "TH_BG"><br></TH>"
+                     "<TH "TH_BG"><br></TH>"
+                     "<TH "TH_BG"><br></TH>"
+                     "</TR>\n",
+                     getRowColor(), theAnchor[2], arrow[2], theAnchor[3],
+                     arrow[3]) < 0)
+            BufferTooShort();
+
+        sendString(buf);
+
+        for(idx=0; idx<numEntries; idx++) {
+
+            if(revertOrder)
+                entry = &sortedLunTbl[numEntries-idx-1];
+            else
+                entry = &sortedLunTbl[idx];
+
+            if((skipEntries++) < pageNum*myGlobals.maxNumLines) {
+                continue;
+            }
+            
+            dataSent = entry->stats->bytesSent.value;
+            dataRcvd = entry->stats->bytesRcvd.value;
+            duration = entry->stats->lastSeen.tv_sec-entry->stats->firstSeen.tv_sec;
+            
+            if(entry != NULL) {
+                if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+                            "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                            "</TR>\n",
+                            getRowColor(),
+                            entry->lun,
+                            formatBytes (dataSent, 1, formatBuf, sizeof (formatBuf)),
+                            formatBytes (dataRcvd, 1, formatBuf1, sizeof (formatBuf1)),
+                            formatBytes (entry->stats->scsiRdBytes.value, 1,
+                                         formatBuf2, sizeof (formatBuf2)),
+                            formatBytes (entry->stats->scsiWrBytes.value, 1,
+                                         formatBuf3, sizeof (formatBuf3)),
+                            formatBytes (entry->stats->scsiOtBytes.value, 1,
+                                         formatBuf4, sizeof (formatBuf4)),
+                            entry->stats->minRdSize,
+                            entry->stats->maxRdSize,
+                            entry->stats->minWrSize,
+                            entry->stats->maxWrSize,
+                            entry->stats->minXferRdySize,
+                            entry->stats->maxXferRdySize,
+                            entry->stats->numFailedCmds,
+                            duration,
+                            formatTime((time_t *)&(entry->stats->lastSeen), 1,
+                                       formatBuf5, sizeof (formatBuf5))
+                       ) < 0)
+                    BufferTooShort();
+                
+                sendString(buf);
+
+                /* Avoid huge tables */
+                if(printedEntries++ > myGlobals.maxNumLines)
+                    break;
+            }
+        }
+
+        sendString("</TABLE>"TABLE_OFF"\n");
+        sendString("</CENTER>\n");
+
+        addPageIndicator(pageUrl, pageNum, numEntries, myGlobals.maxNumLines,
+                         revertOrder, sortedColumn);
+
+        printFooterHostLink();
+    } else
+        printNoDataYet();
+}
+
+void printScsiLunGraphs (HostTraffic *el, int actualDeviceId)
+{
+    char buf[LEN_GENERAL_WORK_BUFFER], buf1[64];
+
+    buf[0] = buf1[0] = '\0';
+
+    if ((el->devType == SCSI_DEV_UNINIT) ||
+        (el->devType == SCSI_DEV_INITIATOR)) {
+        printNoDataYet();
+        return;
+    }
+
+    printHTMLheader ("LUN Traffic Graphs (Top 25)", 0, 0);
+    
+    printSectionTitle("LUN Traffic (Total Bytes)");
+    
+    if(snprintf(buf, sizeof(buf),
+                "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+                "<IMG SRC=drawLunStatsBytesDistribution-%s"CHART_FORMAT"?1 ALT=\"LUN Bytes Statistics "
+                "LUN Traffic (Total Bytes) %s\"></TH></TR>",
+                el->hostNumFcAddress, el->hostNumFcAddress) < 0)
+        BufferTooShort();
+    sendString(buf);
+    
+    printSectionTitle("LUN Traffic (Total Frames)");
+    
+    if(snprintf(buf, sizeof(buf),
+                "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+                "<IMG SRC=drawLunStatsPktsDistribution-%s"CHART_FORMAT"?1 ALT=\"LUN Frames Statistics "
+                "LUN Traffic (Total Frames) %s\"></TH></TR>",
+                el->hostNumFcAddress, el->hostNumFcAddress) < 0)
+        BufferTooShort();
+    sendString(buf);
+}
+
+void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
+{
+    char buf[LEN_GENERAL_WORK_BUFFER], buf1[64];
+    char formatBuf[32], formatBuf1[32];
+    int i;
+    char *vendorName;
+    u_int idx;
+    FcFabricElementHash *hash, **theHash;
+    FcDomainList *domListEntry;
+
+    accessAddrResMutex("printAllSessionsHTML");
+
+    buf1[0]=0;
+
+    if (vsanId) {
+        if(snprintf (buf, sizeof(buf), "Info about VSAN %d\n", vsanId) < 0)
+            BufferTooShort();
+    }
+    else {
+        if(snprintf (buf, sizeof(buf), "Info about VSAN\n") < 0)
+            BufferTooShort();
+    }
+
+    releaseAddrResMutex();
+
+    printHTMLheader(buf, 0, 0);
+
+    if ((theHash = myGlobals.device[actualDeviceId].vsanHash) == NULL) {
+        printNoDataYet ();
+        return;
+    }
+  
+    /* Locate the entry belonging to the VSAN */
+    idx = vsanId % MAX_ELEMENT_HASH;
+
+    if (theHash[idx] == NULL) {
+        printNoDataYet ();
+        return;
+    }
+
+    while (1) {
+        if (theHash[idx]->vsanId == vsanId)
+            break;
+
+        idx = (idx+1) % MAX_ELEMENT_HASH;
+        if(++idx == MAX_ELEMENT_HASH) {
+            printNoDataYet ();
+            return;
+        }
+    }
+
+    hash = theHash[idx];
+  
+    sendString("<CENTER>\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n");
+
+    accessAddrResMutex("printAllSessions-2");
+
+    if (hash->principalSwitch.str[0] != '\0') {
+        if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                    "%s%s</TD></TR>\n",
+                    getRowColor(), "Principal&nbsp;Switch",
+                    fcwwn_to_str (&hash->principalSwitch.str[0]), 
+                    myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+        sendString(buf);
+
+        vendorName = getVendorInfo(&hash->principalSwitch.str[2], 1);
+        if(vendorName[0] != '\0') {
+            if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                        "%s%s</TD></TR>\n",
+                        getRowColor(), "Principal&nbsp;Switch&nbsp;Vendor",
+                        vendorName,
+                        myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+                BufferTooShort();
+            sendString(buf);
+        }
+    }
+
+    if (hash->fabricConfStartTime) {
+        if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                     "%s%s</TD></TR>\n",
+                     getRowColor(), "Last&nbsp;Fabric&nbsp;Configuration&nbsp;Started&nbsp;At",
+                     formatTime (&hash->fabricConfStartTime, 1, formatBuf,
+                                 sizeof (formatBuf)),
+                     myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+        sendString(buf);
+    }
+
+    if (hash->zoneConfStartTime) {
+        if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+                     "%s%s</TD></TR>\n",
+                     getRowColor(), "Last&nbsp;Zone&nbsp;Configuration&nbsp;Started&nbsp;At",
+                     formatTime (&hash->zoneConfStartTime, 1, formatBuf,
+                                 sizeof (formatBuf)),
+                     myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
+            BufferTooShort();
+        sendString(buf);
+    }
+  
+    sendString("<TR><TH "TH_BG" align=left "DARK_BG">Switches In Fabric</TH>"
+               "<TD "TD_BG" ALIGN=RIGHT>");
+    
+    sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR "TR_ON"><TH "TH_BG" "DARK_BG">Domain</TH>"
+               "<TH "TH_BG" "DARK_BG">WWN</TH><TH "TH_BG" "DARK_BG">Switch Vendor</TH>"
+               "<TH "TH_BG" "DARK_BG">Bytes Sent</TH><TH "TH_BG" "DARK_BG">Bytes Rcvd</TH></TR>\n");
+    
+    i = hash->domainListLen;
+    domListEntry = hash->domainList;
+
+    if (domListEntry != NULL) {
+        while ((i > 0) && (domListEntry != NULL)) {
+            if (domListEntry->recordType == 1 /* TBD: Change 01 to meaningful
+                                               * define */) {
+                if (snprintf (buf, sizeof (buf), "<TR "TR_ON" %s><TD "TD_BG" align=right>%x</TD>"
+                              "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>"
+                              "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>",
+                              getRowColor(), domListEntry->domainId,
+                              fcwwn_to_str ((u_int8_t *)&domListEntry->switchWWN.str),
+                              getVendorInfo (&domListEntry->switchWWN.str[2], 1),
+                              formatBytes (hash->domainStats[domListEntry->domainId].sentBytes.value, 1,
+                                           formatBuf, sizeof (formatBuf)),
+                              formatBytes (hash->domainStats[domListEntry->domainId].rcvdBytes.value, 1,
+                                           formatBuf1, sizeof (formatBuf1))
+                        ) < 0)
+                    BufferTooShort();
+                sendString (buf);
+            }
+            
+            i -= 16;
+            domListEntry = (FcDomainList *)((char *)domListEntry + 16);
+        }
+    }
+    else {
+        /* Print just the stats, without more switch information */
+        for (i = 1; i < MAX_FC_DOMAINS; i++) {
+            if ((hash->domainStats[i].sentBytes.value != 0) ||
+                (hash->domainStats[i].rcvdBytes.value != 0)) {
+                if (snprintf (buf, sizeof (buf), "<TR "TR_ON" %s><TD "TD_BG" align=right>%x</td>"
+                              "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>"
+                              "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>",
+                              getRowColor(), i, "N/A", "N/A",
+                              formatBytes (hash->domainStats[i].sentBytes.value, 1,
+                                           formatBuf, sizeof (formatBuf)),
+                              formatBytes (hash->domainStats[i].rcvdBytes.value, 1,
+                                           formatBuf1, sizeof (formatBuf1))
+                        ) < 0)
+                    BufferTooShort();
+                sendString (buf);
+                
+            }
+        }
+    }
+    
+    sendString("</TD></TR>\n");
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+
+                
+    /* **************************** */
+    printSectionTitle("Top Domain Traffic Distribution (Sent)");
+    if(snprintf(buf, sizeof(buf),
+                "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+                "<IMG SRC=VsanDomainTrafficDistribSent-%d"CHART_FORMAT"?1 ALT=\"VSAN Domain "
+                "Traffic Distribution for VSAN %d\"></TH></TR>",
+                vsanId, vsanId) < 0)
+        BufferTooShort();
+    sendString(buf);
+
+    printSectionTitle("Top Domain Traffic Distribution (Received)");
+    if(snprintf(buf, sizeof(buf),
+                "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+                "<IMG SRC=VsanDomainTrafficDistribRcvd-%d"CHART_FORMAT"?1 ALT=\"VSAN Domain "
+                "Traffic Distribution for VSAN %d\"></TH></TR>",
+                vsanId, vsanId) < 0)
+        BufferTooShort();
+    sendString(buf);
+
+    printVsanProtocolStats (hash, actualDeviceId);
+
+#ifdef NOT_YET
+    printFcTrafficMatrix (vsanId, TRUE);
+
+    printSectionTitle("Control Traffic Distribution");
+    if(snprintf(buf, sizeof(buf),
+                "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+                "<IMG SRC=VsanControlTrafficDistrib-%d"CHART_FORMAT"?1 ALT=\"VSAN Control "
+                "Traffic Protocol Distribution for VSAN %d\"></TH></TR>",
+                vsanId, vsanId) < 0)
+        BufferTooShort();
+    sendString(buf);
+#endif
+  
+    sendString("</CENTER>\n");
+}
+
+/* ************************************ */
+
+static char* formatFcElementData (FcFabricElementHash *hash, u_char printBytes, char *buf, int bufLen)
+{
+    char formatBuf[32];
+    
+    if ((printBytes && (hash->totBytes.value == 0)) ||
+        (!printBytes && (hash->totPkts.value == 0)))
+        return("&nbsp;");
+
+    if (printBytes) {
+        if(snprintf(buf, bufLen, "%s",
+                    formatBytes(hash->totBytes.value, 1, formatBuf,
+                                sizeof (formatBuf))) < 0)
+            BufferTooShort();
+    }
+    else {
+        if(snprintf(buf, bufLen, "%s",
+                    formatPkts(hash->totPkts.value, formatBuf,
+                               sizeof (formatBuf))) < 0)
+            BufferTooShort();
+    }
+
+    return(buf);
+}
+
+/* ******************************** */
+
+void dumpFcFabricElementHash (FcFabricElementHash **theHash, char* label,
+                              u_char dumpLoopbackTraffic, u_char vsanHash)
+{
+    u_char entries[MAX_HASHDUMP_ENTRY];
+    char buf[LEN_GENERAL_WORK_BUFFER], buf1[96], buf3[96],
+         hostLinkBuf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], vsanBuf[32];
+    int i;
+    HostTraffic *el;
+
+    if(theHash == NULL) return;
+
+    /* *********** */
+
+#ifdef DEBUG
+    for(i=0; i<MAX_ELEMENT_HASH; i++)
+        if(theHash[i] != NULL) {
+            printf("[%d] ", theHash[i]->vsanId);
+            hash = theHash[i]->next;
+
+            while(hash != NULL) {
+                printf("%d ", hash->vsanId);
+                hash = hash->next;
+            }
+
+            printf("\n");
+        }
+#endif
+
+    /* *********** */
+
+    memset(entries, 0, sizeof(entries));
+
+    for (i=0; i<MAX_ELEMENT_HASH; i++) {
+        if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
+           (theHash[i]->vsanId < MAX_USER_VSAN)) {
+            if (theHash[i]->totPkts.value)
+                entries[theHash[i]->vsanId] = 1;
+        }
+    }
+
+    sendString("<CENTER><TABLE BORDER>\n<TR><TH "DARK_BG">");
+    sendString(label);
+
+    sendString("</TH><TH "DARK_BG">Principal Switch");
+    sendString("</TH><TH "DARK_BG">Total Traffic (Bytes)</TH><TH "DARK_BG">Total Traffic (Frames)</TH>");
+    sendString("<TH "DARK_BG">Last Fabric Conf Time</TH>");
+    if(vsanHash) sendString("<TH "DARK_BG">Nx_Ports</TH>");
+    sendString("</TR>\n");
+
+    /* ****************** */
+
+    for(i=0; i<MAX_HASHDUMP_ENTRY; i++) {
+        if(entries[i] == 1) {
+            if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" ALIGN=LEFT NOWRAP>"
+                        "<A HREF=\"/VSAN%d.html\">%s</A></TH>"
+                        "<TD>%s</TD><TD>%s</TD><TD>%s</TD><TD>%s</TD>", i,
+                        makeVsanLink (i, FLAG_HOSTLINK_TEXT_FORMAT, vsanBuf, sizeof (vsanBuf)),
+                        fcwwn_to_str ((u_int8_t *)&theHash[i]->principalSwitch.str),
+                        formatFcElementData(theHash[i], 1, buf1, sizeof(buf1)),
+                        formatFcElementData(theHash[i], 0, buf3, sizeof(buf3)),
+                        formatTime (&theHash[i]->fabricConfStartTime, 1,
+                                    formatBuf, sizeof (formatBuf))) < 0)
+                BufferTooShort();
+            sendString(buf);
+
+            sendString("&nbsp;");
+
+            if(vsanHash) {
+                sendString("<TD>\n");
+	
+                for(el = getFirstHost(myGlobals.actualReportDeviceId);
+                    el != NULL; el = getNextHost (myGlobals.actualReportDeviceId, el)) {
+                    if ((el->vsanId == i) && isValidFcNxPort (&el->hostFcAddress) &&
+                        (el->fcBytesSent.value || el->fcBytesRcvd.value)) {
+                        sendString("<li>");
+                        sendString (makeFcHostLink (el,
+                                                    FLAG_HOSTLINK_TEXT_FORMAT,
+                                                    0, 0, hostLinkBuf,
+                                                    sizeof(hostLinkBuf)));
+                        sendString("<br>\n");
+                    }
+                }
+                sendString("</TD>\n");
+            }
+
+            sendString("</TR>\n");
+        }
+    }
+
+    sendString("</TR>\n</TABLE>\n</CENTER>\n");
+}
+
+/* ************************************ */
+
+void printFcDisplayOptions (void)
+{
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    printHTMLheader("FC Host Display Options ", 0, 0);
+
+}
+
+/* ******************************************************** */
+
+void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId)
+{
+    Counter total;
+    char buf[LEN_GENERAL_WORK_BUFFER];
+
+    if (hash == NULL) {
+        return;
+    }
+    
+    if ((total = hash->totBytes.value) == 0) {
+        return;
+    }
+  
+    printSectionTitle("VSAN Protocol Distribution");
+
+    sendString("<CENTER>\n"
+               ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100 "DARK_BG">Protocol</TH>"
+               "<TH "TH_BG" WIDTH=200 COLSPAN=3 "DARK_BG">Total&nbsp;Bytes</TH></TR>\n");
+
+    if (hash->fcFcpBytes.value) {
+        printTableEntry (buf, sizeof(buf), "SCSI", CONST_COLOR_1,
+                         (float)hash->fcFcpBytes.value/1024,
+                         100*((float)SD(hash->fcFcpBytes.value, total)));
+    }
+
+    if (hash->fcElsBytes.value) {
+        printTableEntry (buf, sizeof(buf), "ELS", CONST_COLOR_1,
+                         (float)hash->fcElsBytes.value/1024,
+                         100*((float)SD(hash->fcElsBytes.value, total)));
+    }
+
+    if (hash->fcDnsBytes.value) {
+        printTableEntry (buf, sizeof (buf), "NS", CONST_COLOR_1,
+                         (float)hash->fcDnsBytes.value/1024,
+                         100*((float)SD(hash->fcDnsBytes.value, total)));
+    }
+
+    if (hash->fcIpfcBytes.value) {
+        printTableEntry (buf, sizeof (buf), "IP/FC", CONST_COLOR_1,
+                         (float)hash->fcIpfcBytes.value/1024,
+                         100*((float)SD(hash->fcIpfcBytes.value, total)));
+    }
+
+    if (hash->fcSwilsBytes.value) {
+        printTableEntry (buf, sizeof (buf), "SWILS", CONST_COLOR_1,
+                         (float)hash->fcSwilsBytes.value/1024,
+                         100*((float)SD(hash->fcSwilsBytes.value, total)));
+    }
+
+    if (hash->otherFcBytes.value) {
+        printTableEntry (buf, sizeof (buf), "Others", CONST_COLOR_1,
+                         (float)hash->otherFcBytes.value/1024,
+                         100*((float)SD(hash->otherFcBytes.value, total)));
+    }
+
+#if 0
+    if(total > 0) {
+
+        snprintf (linkName, sizeof (linkName), "%d", hash->vsanId);
+        
+        if(snprintf(buf, sizeof(buf),
+                    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=vsanProtocolDistrib-%s"CHART_FORMAT"?1 ALT=\"VSAN Protocol Distribution for %d\"></TD>",
+                    linkName, hash->vsanId) < 0)
+            BufferTooShort();
+        sendString(buf);
+    }
+#endif
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+}
+
+/* ************************************ */
+

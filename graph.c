@@ -1797,5 +1797,739 @@ int drawHostsDistanceGraph(int checkOnly) {
 
 /* ************************ */
 
+void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  float p[MAX_NUM_PROTOS];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "",
+		   "", "", "", "", "", "", "", "", "", "" };
+  int i, num=0, explodePieces[MAX_NUM_PROTOS];
+  FILE *fd;
+  TrafficCounter traffic, totalFcTraffic, diffTraffic;
+  char *lblstouse[] = { "SCSI", "FICON", "ELS", "NS", "IP/FC", "Others"};
+  Counter protoTrafficSent[] = {
+      theHost->fcFcpBytesSent.value,
+      theHost->fcFiconBytesSent.value,
+      theHost->fcElsBytesSent.value,
+      theHost->fcDnsBytesSent.value,
+      theHost->fcIpfcBytesSent.value,
+      theHost->otherFcBytesSent.value,
+  };
+
+  Counter protoTrafficRcvd[] = {
+      theHost->fcFcpBytesRcvd.value,
+      theHost->fcFiconBytesRcvd.value,
+      theHost->fcElsBytesRcvd.value,
+      theHost->fcDnsBytesRcvd.value,
+      theHost->fcIpfcBytesRcvd.value,
+      theHost->otherFcBytesRcvd.value,
+  };
+  int useFdOpen = 0;
+
+  totalFcTraffic.value = 0;
+  diffTraffic.value = 0;
+
+  if(dataSent)
+      totalFcTraffic.value = theHost->fcBytesSent.value;
+  else
+      totalFcTraffic.value = theHost->fcBytesRcvd.value;
+  
+  if(totalFcTraffic.value > 0) {
+      for (i = 0; i < 6; i++) {
+          if(dataSent) 
+              traffic.value = protoTrafficSent[i];
+          else 
+              traffic.value = protoTrafficRcvd[i];
+
+          if(traffic.value > 0) {
+              p[num] = (float)((100*traffic.value)/totalFcTraffic.value);
+              diffTraffic.value += traffic.value;
+
+              if(num == 0)
+                  explodePieces[num]=10;
+              else
+                  explodePieces[num]=explodePieces[num-1];
+              if (p[num]<5.0)
+                  explodePieces[num]+=9;
+              else if (p[num]>10.0)
+                  explodePieces[num]=10;
+              
+              lbl[num++] = lblstouse[i];
+          }
+      }
+  }
+
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  if(num == 1) p[0] = 100;
+
+  if(num == 1) p[0] = 100; /* just to be safe */
+  drawPie(300, 250,
+	  fd,			/* open file pointer */
+	  num,			/* number of slices */
+	  lbl,			/* slice labels */
+	  p);			/* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
+}
+
+/* ********************************** */
+
+void fcPktSizeDistribPie(void) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  float p[10];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "", ""};
+  int num=0;
+  FILE *fd;
+  int useFdOpen = 0;
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo36.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo36.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 36";
+  };
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo48.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo48.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 48";
+  };
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo52.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo52.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 52";
+  };
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo68.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo68.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 68";
+  };
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo104.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo104.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 104";
+  };
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo548.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo548.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 548";
+  };
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo1060.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo1060.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 1060";
+  };
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo2136.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo2136.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 2136";
+  };
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "> 2136";
+  };
+
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  if(num == 1) p[0] = 100; /* just to be safe */
+  drawPie(400, 250,
+	  fd,			/* open file pointer */
+	  num,			/* number of slices */
+	  lbl,			/* slice labels */
+	  p);			/* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
+}
+
+/* ******************************** */
+
+void drawGlobalFcProtoDistribution(void) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  int idx=0;
+  float p[256];
+  char *lbl[256];
+  FILE *fd;
+  int useFdOpen = 0;
+
+  p[myGlobals.numIpProtosToMonitor] = 0;
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].fcFcpBytes.value) {
+      p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcFcpBytes.value;
+      lbl[idx++] = "SCSI";
+  }
+
+  if (myGlobals.device[myGlobals.actualReportDeviceId].fcFiconBytes.value) {
+      p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcFiconBytes.value;
+      lbl[idx++] = "FICON";
+  }
+
+  if (myGlobals.device[myGlobals.actualReportDeviceId].fcElsBytes.value) {
+      p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcElsBytes.value;
+      lbl[idx++] = "ELS";
+  }
+
+  if (myGlobals.device[myGlobals.actualReportDeviceId].fcIpfcBytes.value) {
+      p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcIpfcBytes.value;
+      lbl[idx++] = "IP/FC";
+  }
+
+  if (myGlobals.device[myGlobals.actualReportDeviceId].fcDnsBytes.value) {
+      p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcDnsBytes.value;
+      lbl[idx++] = "NS";
+  }
+
+  if (myGlobals.device[myGlobals.actualReportDeviceId].fcSwilsBytes.value) {
+      p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcSwilsBytes.value;
+      lbl[idx++] = "SWILS";
+  }
+
+  if (myGlobals.device[myGlobals.actualReportDeviceId].otherFcBytes.value) {
+      p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].otherFcBytes.value;
+      lbl[idx++] = "Others";
+  }
+
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  drawBar(600, 250,	/* width/height */
+	  fd,		/* open file pointer */
+	  idx,		/* number of slices */
+	  lbl,		/* slice labels */
+	  p);		/* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
+}
+
+void drawLunStatsBytesDistribution (HostTraffic *el) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  int lun, numEntries, idx=0;
+  float p[MAX_LUNS_GRAPHED+1];
+  char *lbl[MAX_LUNS_GRAPHED+1];
+  char label[MAX_LUNS_GRAPHED+1][10];
+  LunStatsSortedEntry sortedLunTbl[MAX_LUNS_SUPPORTED];
+  LunStatsSortedEntry *entry;
+  FILE *fd;
+  int useFdOpen = 0;
+  ScsiLunTrafficInfo *lunStats;
+
+  p[MAX_LUNS_GRAPHED] = 0;
+  numEntries = 0;
+
+  memset(sortedLunTbl, 0, sizeof (sortedLunTbl));
+
+  for (lun=0, numEntries=0; lun < MAX_LUNS_SUPPORTED; lun++) {
+      if ((lunStats = el->activeLuns[lun]) != NULL) {
+          sortedLunTbl[numEntries].lun = lun;
+          sortedLunTbl[numEntries++].stats = el->activeLuns[lun];
+      }
+  }
+
+  myGlobals.columnSort = 4;     /* This is based on total I/O */
+  qsort (sortedLunTbl, numEntries, sizeof (LunStatsSortedEntry), cmpLunFctn);
+
+  idx = 0;
+  for (lun = numEntries-1; ((idx < MAX_LUNS_GRAPHED) && (lun >= 0));
+       lun--) {
+      entry = &sortedLunTbl[lun];
+      p[idx] = (float) (entry->stats->bytesSent.value +
+                        entry->stats->bytesRcvd.value);
+      if (p[idx] > 0) {
+          sprintf (label[idx],"%hd", entry->lun);
+          lbl[idx] = label[idx];
+          idx++;
+      }
+  }
+  
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  drawBar (600, 250,	/* width/height */
+           fd,		/* open file pointer */
+           idx,     /* number of slices */
+           lbl,		/* slice labels */
+           p);		/* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
+}
+
+void drawLunStatsPktsDistribution (HostTraffic *el) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  int lun, numEntries, idx=0;
+  float p[MAX_LUNS_GRAPHED+1];
+  char *lbl[MAX_LUNS_GRAPHED+1];
+  char label[MAX_LUNS_GRAPHED+1][10];
+  FILE *fd;
+  int useFdOpen = 0;
+  ScsiLunTrafficInfo *lunStats;
+  LunStatsSortedEntry sortedLunTbl[MAX_LUNS_SUPPORTED];
+  LunStatsSortedEntry *entry;
+
+  p[MAX_LUNS_GRAPHED] = 0;
+  numEntries = 0;
+
+  memset(sortedLunTbl, 0, sizeof (sortedLunTbl));
+
+  for (lun=0, numEntries=0; lun < MAX_LUNS_SUPPORTED; lun++) {
+      if ((lunStats = el->activeLuns[lun]) != NULL) {
+          sortedLunTbl[numEntries].lun = lun;
+          sortedLunTbl[numEntries++].stats = el->activeLuns[lun];
+      }
+  }
+
+  printf ("drawLunStatsPktsDistribution: #entries = %d\n", numEntries);
+  myGlobals.columnSort = 5;     /* This is based on total frames */
+  qsort (sortedLunTbl, numEntries, sizeof (LunStatsSortedEntry), cmpLunFctn);
+  
+  for (lun = numEntries-1; ((idx < MAX_LUNS_GRAPHED) && (lun >= 0));
+       lun--) {
+      entry = &sortedLunTbl[lun];
+      p[idx] = (float) (entry->stats->pktRcvd +
+                        entry->stats->pktSent);
+      if (p[idx] > 0) {
+          sprintf (label[idx],"%hd", entry->lun);
+          lbl[idx] = label[idx];
+          idx++;
+      }
+  }
+
+#ifndef WIN32
+  /* Unices */
+
+  traceEvent (CONST_TRACE_ALWAYSDISPLAY, "drawLunStatsPktsDistribution: idx = %d\n", idx);
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  drawBar (600, 250,	/* width/height */
+           fd,		/* open file pointer */
+           idx,     /* number of slices */
+           lbl,		/* slice labels */
+           p);		/* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
+}
+
+void drawVsanStatsBytesDistribution (int deviceId) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  int numVsans, idx=0, i, j;
+  float p[MAX_VSANS_GRAPHED+1];
+  char *lbl[MAX_VSANS_GRAPHED+1];
+  char label[MAX_VSANS_GRAPHED+1][10];
+  FILE *fd;
+  int useFdOpen = 0;
+  FcFabricElementHash **theHash;
+  FcFabricElementHash *tmpTable[MAX_ELEMENT_HASH];
+  
+  if ((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
+      return;
+  }
+
+  p[MAX_VSANS_GRAPHED] = 0;
+  numVsans = 0;
+
+  memset (tmpTable, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH, 0);
+  for (i=0; i<MAX_ELEMENT_HASH; i++) {
+      if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
+         (theHash[i]->vsanId < MAX_USER_VSAN)) {
+          if (theHash[i]->totBytes.value)
+              tmpTable[numVsans++] = theHash[i];
+      }
+  }
+
+  if (!numVsans) {
+      printNoDataYet ();
+      return;
+  }
+  
+  myGlobals.columnSort = 3;
+  qsort (tmpTable, numVsans, sizeof (FcFabricElementHash **), cmpVsanFctn);
+  
+  idx = 0;
+  for (i = numVsans-1, j = 0; i >= 0; i--, j++) {
+      if (tmpTable[i] != NULL) {
+          p[idx] = tmpTable[i]->totBytes.value;
+          if (tmpTable[i]->vsanId) {
+              sprintf (label[idx], "%hd", tmpTable[i]->vsanId);
+          }
+          else {
+              sprintf (label[idx], "N/A");
+          }
+          lbl[idx] = label[idx++];
+      }
+
+      if (j >= MAX_VSANS_GRAPHED)
+          break;
+  }
+
+  
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  drawBar (600, 250,	/* width/height */
+           fd,		/* open file pointer */
+           idx,     /* number of slices */
+           lbl,		/* slice labels */
+           p);		/* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
+}
+
+void drawVsanStatsPktsDistribution (int deviceId) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  int numVsans, idx=0, i, j;
+  float p[MAX_VSANS_GRAPHED+1];
+  char *lbl[MAX_VSANS_GRAPHED+1];
+  char label[MAX_VSANS_GRAPHED+1][10];
+  FILE *fd;
+  int useFdOpen = 0;
+  FcFabricElementHash **theHash;
+  FcFabricElementHash *tmpTable[MAX_ELEMENT_HASH];
+  
+  if ((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
+      return;
+  }
+
+  p[MAX_VSANS_GRAPHED] = 0;
+  numVsans = 0;
+
+  memset (tmpTable, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH, 0);
+  for (i=0; i<MAX_ELEMENT_HASH; i++) {
+      if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
+         (theHash[i]->vsanId < MAX_USER_VSAN)) {
+          if (theHash[i]->totPkts.value)
+              tmpTable[numVsans++] = theHash[i];
+      }
+  }
+
+  if (!numVsans) {
+      printNoDataYet ();
+      return;
+  }
+  
+  myGlobals.columnSort = 4;
+  qsort (tmpTable, numVsans, sizeof (FcFabricElementHash **), cmpVsanFctn);
+  
+  idx = 0;
+  for (i = numVsans-1, j = 0; i >= 0; i--, j++) {
+      if (tmpTable[i] != NULL) {
+          p[idx] = tmpTable[i]->totPkts.value;
+          if (tmpTable[i]->vsanId) {
+              sprintf (label[idx], "%d", tmpTable[i]->vsanId);
+          }
+          else {
+              sprintf (label[idx], "N/A");
+          }
+          lbl[idx] = label[idx++];
+      }
+
+      if (j >= MAX_VSANS_GRAPHED)
+          break;
+  }
+
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  drawBar (600, 250,	/* width/height */
+           fd,		/* open file pointer */
+           idx,     /* number of slices */
+           lbl,		/* slice labels */
+           p);		/* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
+}
+
+void drawVsanSwilsProtoDistribution(u_short vsanId) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  int idx=0;
+  FcFabricElementHash *hash;
+  float p[256];
+  char *lbl[256];
+  FILE *fd;
+  int useFdOpen = 0;
+
+  p[myGlobals.numIpProtosToMonitor] = 0;
+
+  hash = getFcFabricElementHash (vsanId, myGlobals.actualReportDeviceId);
+  
+  p[0] = (float)hash->dmBytes.value;
+  if (p[0] > 0) {
+      p[myGlobals.numIpProtosToMonitor] += p[0];
+      lbl[idx++] = "DM";
+  }
+
+  p[1] = (float)hash->fspfBytes.value;
+  if (p[1] > 0) {
+      p[myGlobals.numIpProtosToMonitor] += p[1];
+      lbl[idx++] = "FSPF";
+  }
+
+  p[2] = (float)hash->nsBytes.value;
+  if (p[2] > 0) {
+      p[myGlobals.numIpProtosToMonitor] += p[2];
+      lbl[idx++] = "NS";
+  }
+
+  p[3] = (float)hash->zsBytes.value;
+  if (p[3] > 0) {
+      p[myGlobals.numIpProtosToMonitor] += p[3];
+      lbl[idx++] = "ZS";
+  }
+
+  p[4] = (float)hash->rscnBytes.value;
+  if (p[4] > 0) {
+      p[myGlobals.numIpProtosToMonitor] += p[4];
+      lbl[idx++] = "SW_RSCN";
+  }
+
+  p[5] = (float)hash->fcsBytes.value;
+  if (p[5] > 0) {
+      p[myGlobals.numIpProtosToMonitor] += p[5];
+      lbl[idx++] = "FCS";
+  }
+
+  p[6] = (float)hash->otherCtlBytes.value;
+  if (p[6] > 0) {
+      p[myGlobals.numIpProtosToMonitor] += p[6];
+      lbl[idx++] = "Others";
+  }
+
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  drawPie (600, 250,	/* width/height */
+           fd,		/* open file pointer */
+           idx,		/* number of slices */
+           lbl,		/* slice labels */
+           p);		/* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
+}
+
+void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  int i, idx=0, numEntries = 0;
+  FcFabricElementHash *hash;
+  float p[MAX_VSANS_GRAPHED+1];
+  char *lbl[MAX_VSANS_GRAPHED+1], labels[MAX_VSANS_GRAPHED+1][8];
+  FILE *fd;
+  int useFdOpen = 0;
+  Counter total;
+  SortedFcDomainStatsEntry *fcDomainStats;
+
+  p[MAX_FC_DOMAINS+1] = 0;
+
+  hash = getFcFabricElementHash (vsanId, myGlobals.actualReportDeviceId);
+
+  if (hash == NULL) {
+      printNoDataYet();
+      return;
+  }
+
+  fcDomainStats = (SortedFcDomainStatsEntry *)malloc (MAX_FC_DOMAINS*sizeof (SortedFcDomainStatsEntry));
+  if (fcDomainStats == NULL) {
+      traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for SortedFcDomainStatsEntry\n");
+      printNoDataYet();
+      return;
+  }
+  memset (fcDomainStats, 0, MAX_FC_DOMAINS*sizeof (SortedFcDomainStatsEntry));
+  
+  for (i = 1; i < MAX_FC_DOMAINS; i++) {
+      if (dataSent) {
+          if (hash->domainStats[i].sentBytes.value) {
+              fcDomainStats[numEntries].domainId = i;
+              fcDomainStats[numEntries++].stats = &hash->domainStats[i];
+          }
+      }
+      else {
+          if (hash->domainStats[i].rcvdBytes.value) {
+              fcDomainStats[numEntries].domainId = i;
+              fcDomainStats[numEntries++].stats = &hash->domainStats[i];
+          }
+      }
+  }
+
+  if (numEntries == 0) {
+      printNoDataYet();
+      return;
+  }
+
+  myGlobals.columnSort = dataSent;
+  qsort (fcDomainStats, numEntries, sizeof (SortedFcDomainStatsEntry), cmpFcDomainFctn);
+  
+  for (i = numEntries-1; (idx < MAX_VSANS_GRAPHED) && (i >= 0); i--) {
+      if (dataSent) {
+          total = fcDomainStats[i].stats->sentBytes.value;
+      }
+      else {
+          total = fcDomainStats[i].stats->rcvdBytes.value;
+      }
+      if (total > 0) {
+          p[idx] = (float)total;
+          sprintf (labels[idx], "%x", fcDomainStats[i].domainId);
+          lbl[idx] = labels[idx];
+          idx++;
+      }
+  }
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  drawBar(600, 250,	/* width/height */
+	  fd,		/* open file pointer */
+	  idx,		/* number of slices */
+	  lbl,		/* slice labels */
+	  p);		/* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
+}
+
 
 #endif /* EMBEDDED */

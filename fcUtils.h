@@ -199,4 +199,46 @@
 /* FC Alias Size */
 #define FC_ALIAS_SIZE            64
 
+#define CMP_FC_PORT(a,b) \
+        if ((a->hostFcAddress.domain == 0xFF) ||                                        \
+            (b->hostFcAddress.domain == 0xFF)) {                                        \
+            /* Always compare FC_IDs for reserved FC_IDs */                             \
+            rc = memcmp (&a->hostFcAddress, &b->hostFcAddress, LEN_FC_ADDRESS);         \
+        }                                                                               \
+        else {                                                                          \
+            /* Sort such that entries with alias names show up together, then           \
+             * entries with pWWN and finally entries with FC_ID. Within each            \
+             * set, the entries must be correctly sorted.                               \
+             */                                                                         \
+            if ((a->hostSymFcAddress[0] != '\0') &&                                     \
+                (b->hostSymFcAddress[0] != '\0')) {                                     \
+                rc = strcmp(a->hostSymFcAddress, b->hostSymFcAddress);                  \
+            }                                                                           \
+            else if ((a->hostSymFcAddress[0] == 0) &&                                   \
+                     (b->hostSymFcAddress[0] != '\0')) {                                \
+                rc = 1;        /* Named entries float to top */                         \
+            }                                                                           \
+            else if ((a->hostSymFcAddress[0] != 0) &&                                   \
+                     (b->hostSymFcAddress[0] == '\0')) {                                \
+                rc = -1;        /* Named entries float to top */                        \
+            }                                                                           \
+            else if ((a->pWWN.str[0] != '\0') &&                                        \
+                     (b->pWWN.str[0] != '\0')) {                                        \
+                rc = memcmp (a->pWWN.str, b->pWWN.str, LEN_WWN_ADDRESS);                \
+            }                                                                           \
+            else if ((a->pWWN.str[0] == '\0') &&                                        \
+                     (b->pWWN.str[0] != '\0')) {                                        \
+                rc = 1;  /* pWWN entries float above FC_ID only entries */              \
+            }                                                                           \
+            else if ((a->pWWN.str[0] != '\0') &&                                        \
+                     (b->pWWN.str[0] == '\0')) {                                        \
+                rc = -1;                                                                \
+            }                                                                           \
+            else {                                                                      \
+                rc = memcmp (&a->hostFcAddress, &b->hostFcAddress, LEN_FC_ADDRESS);     \
+            }                                                                           \
+        }
+
+
+
 #endif

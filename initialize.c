@@ -519,7 +519,13 @@ void initCounters(void) {
   myGlobals.numVendorLookupFoundMulticast = 0;
   myGlobals.numVendorLookupFoundLAA = 0;
 
-  myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
+  if (myGlobals.rFileName == NULL) {
+      myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
+  }
+  else {
+      myGlobals.initialSniffTime = 0; /* We set the start when first pkt is
+                                       * read */ 
+  }
   myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
 
 /* TODO why here AND in globals-core.c? */
