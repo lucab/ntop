@@ -3432,13 +3432,13 @@ void setHostFingerprint(HostTraffic *srcHost) {
     char tmpStr[256];
 
     snprintf(tmpStr, sizeof(tmpStr), "%s/%s", myGlobals.configFileDirs[idx], CONST_OSFINGERPRINT_FILE);
-    fd = fopen(tmpStr, "r");
+    fd = gzopen(tmpStr, "r");
 
     if(fd) {
       char line[384];
       char *b, *d, *ptr;
 
-      while((!done) && fgets(line, sizeof(line)-1, fd)) {
+      while((!done) && gzgets(fd, line, sizeof(line)-1)) {
 	if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
 	line[strlen(line)-1] = '\0';
 
@@ -3484,7 +3484,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 	done = 1;
       }
 
-      fclose(fd);
+      gzclose(fd);
     }
 
     if(done) break;

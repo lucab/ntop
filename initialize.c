@@ -507,12 +507,12 @@ void initCounters(void) {
     snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_OSFINGERPRINT_FILE);
     
     traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'\n", buf);
-    fd = fopen(buf, "r");
+    fd = gzopen(buf, "r");
 
     if(fd) {
       traceEvent(CONST_TRACE_NOISY, "OSFP: ...found!\n");
       configFileFound = 1;
-      fclose(fd);
+      gzclose(fd);
       break;
     }
   }
