@@ -962,7 +962,7 @@ RETSIGTYPE cleanup(int signo) {
     free(myGlobals.currentFilterExpression);
 
   free(myGlobals.pcapLogBasePath);
-  free(myGlobals.dbPath);
+  /* free(myGlobals.dbPath); -- later, need this to remove pid */
   free(myGlobals.spoolPath);
   if (myGlobals.rrdPath != NULL)
       free(myGlobals.rrdPath);
@@ -982,6 +982,7 @@ RETSIGTYPE cleanup(int signo) {
 #ifndef WIN32
   removeNtopPid();
 #endif
+  free(myGlobals.dbPath);
 
   traceEvent(CONST_TRACE_INFO, "===================================");
   traceEvent(CONST_TRACE_INFO, "        ntop is shutdown...        ");

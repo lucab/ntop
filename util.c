@@ -3542,6 +3542,8 @@ int setSpecifiedUser(void) {
     traceEvent(CONST_TRACE_FATALERROR, "Unable to change user ID");
     exit(-1);
   }
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as requested user '%s' (%d:%d)",
+             myGlobals.effectiveUserName, myGlobals.userId, myGlobals.groupId);
 
   if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
 #if defined(DARWIN) || defined(FREEBSD)
@@ -3691,7 +3693,11 @@ void saveNtopPid(void) {
   FILE *fd;
 
   myGlobals.basentoppid = getpid();
-  sprintf(pidFileName, "%s/%s", DEFAULT_NTOP_PID_DIRECTORY, DEFAULT_NTOP_PIDFILE);
+  sprintf(pidFileName, "%s/%s",
+          getuid() ? 
+            /* We're not root */ myGlobals.dbPath :
+            /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
+          DEFAULT_NTOP_PIDFILE);
   fd = fopen(pidFileName, "wb");
 
   if(fd == NULL) {
@@ -3707,9 +3713,19 @@ void saveNtopPid(void) {
 
 void removeNtopPid(void) {
   char pidFileName[NAME_MAX];
+  int rc;
 
-  sprintf(pidFileName, "%s/%s", DEFAULT_NTOP_PID_DIRECTORY, DEFAULT_NTOP_PIDFILE);
-  unlink(pidFileName);
+  sprintf(pidFileName, "%s/%s", 
+          getuid() ? 
+            /* We're not root */ myGlobals.dbPath :
+            /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
+          DEFAULT_NTOP_PIDFILE);
+  rc = unlink(pidFileName);
+  if (rc == 0) {
+    traceEvent(CONST_TRACE_INFO, "TERM: Removed pid file (%s)", pidFileName);
+  } else {
+    traceEvent(CONST_TRACE_WARNING, "TERM: Unable to remove pid file (%s)", pidFileName);
+  }
 }
 
 #endif
