@@ -774,7 +774,7 @@ static void handleNetflowHTTPrequest(char* url) {
     char *device, *value = NULL;
 
     device = strtok(url, "=");
-    if(device != NULL) value = strtok(NULL, "=");
+    if(device != NULL) value = strtok(NULL, "="); else value = NULL;
 
     if(value && device) {
       if(strcmp(device, "port") == 0) {
@@ -1347,6 +1347,7 @@ static void termNetflowFunct(void) {
     killThread(&netFlowThread);
     threadActive = 0;
   }
+  deleteMutex(&whiteblackListMutex);
  #endif
 
   if(myGlobals.netFlowInSocket > 0) {

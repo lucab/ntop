@@ -940,7 +940,7 @@ static void handleRRDHTTPrequest(char* url) {
       char *key, *value;
 
       key = strtok_r(urlPiece, "=", &strtokState);
-      if(key != NULL) value = strtok_r(NULL, "=", &strtokState);
+      if(key != NULL) value = strtok_r(NULL, "=", &strtokState); else value = NULL;
 
       /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);  */
 

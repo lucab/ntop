@@ -1656,7 +1656,7 @@ static void handlesFlowHTTPrequest(char* url) {
     char *key, *value;
 
     key = strtok(url, "=");
-    if(key != NULL) value = strtok(NULL, "=");
+    if(key != NULL) value = strtok(NULL, "="); else value = NULL;
 
     if(value && key) {
       if(strcmp(key, "port") == 0) {
