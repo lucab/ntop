@@ -760,6 +760,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		  device[actualReportDeviceId].lastMinPktsThpt) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
+
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Last 5 Minutes</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
@@ -767,9 +768,20 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		  device[actualReportDeviceId].lastFiveMinsPktsThpt) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
-      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Peak</th><TD "TD_BG" align=right>%s</td>"
+
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Peak</th>"
+		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		  getRowColor(), formatThroughput(device[actualReportDeviceId].peakThroughput), 
+		  device[actualReportDeviceId].peakPacketThroughput) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf2);
+
+      if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Average</th>"
+		  "<TD "TD_BG" align=right>%s</td>"
+		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
+		  getRowColor(), formatThroughput(device[actualReportDeviceId].ethernetBytes/
+						  (actTime-initialSniffTime)), 
 		  device[actualReportDeviceId].peakPacketThroughput) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
@@ -2800,8 +2812,8 @@ void printThptStatsMatrix(int sortedColumn) {
 		    getRowColor(), label, label1,
 		    formatThroughput(device[actualReportDeviceId].last24HoursThpt[i].trafficValue)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	   sendString(buf);
-
+	sendString(buf);
+	
 	if(device[actualReportDeviceId].
 	   hash_hostTraffic[device[actualReportDeviceId].
 			   last24HoursThpt[i].topHostSentIdx] != NULL) {
@@ -2840,7 +2852,8 @@ void printThptStatsMatrix(int sortedColumn) {
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
-	}
+	} else
+	  sendString("&nbsp;");	
 
 	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>\n");
 
@@ -2884,9 +2897,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
-
-	  sendString("</TABLE>"TABLE_OFF"</TD></TR>\n");
-	}
+	} else
+	  sendString("&nbsp;");
+	
+	sendString("</TABLE>"TABLE_OFF"</TD></TR>\n");
       }
     }
     break;
