@@ -47,8 +47,15 @@ case `uname` in
     os="${o} ${r}"
     ;;
 
+  SunOS)
+    r=`uname -r`
+    v=`uname -v`
+    os="Solaris ${r} ${v}"
+    ;;
+
   *)
-    os="unknown"
+    u=`uname`
+    os="${u} unknown"
     ;;
 esac
 
