@@ -2950,14 +2950,16 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     strncpy(el->hostNumIpAddress,
 	    _addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 	    sizeof(el->hostNumIpAddress));
-    fetchAddressFromCache(el->hostIpAddress, el->hostResolvedName, &type);
+    if(myGlobals.numericFlag == 0) {
+      fetchAddressFromCache(el->hostIpAddress, el->hostResolvedName, &type);
 
-    if(strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0) {
-      if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
-	int i;
+      if(strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0) {
+        if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
+          int i;
 
-	for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
-	strcpy(el->hostResolvedName, sniffedName);
+          for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
+          setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_IP);
+        }
       }
     }
   } else if (theSerial.serialType == SERIAL_FC) {
