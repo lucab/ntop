@@ -82,7 +82,7 @@
 /* Define if you need a private implementation of inet_aton (solaris 2.5.1 doesn't have it). */
 #undef NEED_INET_ATON
 
-/* Define if you have the gdchart library from Bruce Verderame [http://www.fred.net/brv/chart/]. */
+/* Define if you have the gdchart library from Bruce Verderaime [http://www.fred.net/brv/chart/]. */
 #undef HAVE_GDCHART
 
 #endif /* _CONFIG_H_ */

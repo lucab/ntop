@@ -578,7 +578,7 @@ fi
 
 
 dnl>
-dnl> checks for required libraries
+dnl> check for `gdchart' library from Bruce Verderaime [http://www.fred.net/brv/chart/]
 dnl>
 
 AC_MSG_CHECKING([for GDchart])
