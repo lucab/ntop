@@ -425,11 +425,12 @@ int getdomainname(char *name, size_t len);
 #ifdef HAVE_TCPD_H 
 #include <tcpd.h>
 #endif
-#ifdef HAVE_SYSLOG_H
-#include <syslog.h>
-#else
+
 #ifdef HAVE_SYS_SYSLOG_H
 #include <sys/syslog.h>
+#else
+#ifdef HAVE_SYSLOG_H
+#include <syslog.h>
 #endif
 #endif
 
