@@ -888,8 +888,10 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   else
     lastPurgeTime = startTime;
 
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Purging Idle Hosts... (ignoreIdleTime=%d, actDevice=%d)",
 	     ignoreIdleTime, actDevice);
+#endif
 
 #ifdef MULTITHREADED
   accessMutex(&hostsHashMutex, "scanIdleLoop");
@@ -943,8 +945,10 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 
   free(theFlaggedHosts);
 
-  traceEvent(TRACE_INFO, "Purging completed (%d sec/%d hosts deleted).",
-	     (int)(time(NULL)-startTime), numFreedBuckets);
+  if(numFreedBuckets > 0) {
+    traceEvent(TRACE_INFO, "Purging completed in %d sec [%d hosts deleted]",
+	       (int)(time(NULL)-startTime), numFreedBuckets);
+  }
 }
 
 /* ******************************************** */

@@ -1003,6 +1003,12 @@ static int returnHTTPPage(char* pageName, int postLen) {
   } else if(strcmp(pageName, "doAddURL") == 0) {
     printTrailer=0;
     doAddURL(postLen /* \r\n */);    
+  } else if(strncmp(pageName, STR_SHOW_PLUGINS, strlen(STR_SHOW_PLUGINS)) == 0) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    if(questionMark == NULL)
+      showPluginsList("");
+    else
+      showPluginsList(&pageName[strlen(STR_SHOW_PLUGINS)+1]);
   } else {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
@@ -1231,12 +1237,6 @@ static int returnHTTPPage(char* pageName, int postLen) {
     } else if(strncmp(pageName, STR_DOMAIN_STATS, strlen(STR_DOMAIN_STATS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printDomainStats(NULL, abs(sortedColumn), revertOrder);
-    } else if(strncmp(pageName, STR_SHOW_PLUGINS, strlen(STR_SHOW_PLUGINS)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      if(questionMark == NULL)
-	showPluginsList("");
-      else
-	showPluginsList(&pageName[strlen(STR_SHOW_PLUGINS)+1]);
     } else if(strncmp(pageName, DOMAIN_INFO_HTML, strlen(DOMAIN_INFO_HTML)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(questionMark == NULL) questionMark = "";

@@ -713,7 +713,7 @@ void printNtopConfigInfo(void) {
     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", "Yes");
   else
     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", 
-			   "No (Either disabled or missing)");
+			   "No (Either disabled [Use -E option] or missing)");
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Actual Hash Size</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
