@@ -78,7 +78,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 
 /* ******************************* */
 
-static int _mapIdx(u_int* mappings, u_int lastHashSize, u_int idx,
+static int _mapIdx(u_int* mappings, u_int mappingsSize, u_int idx,
 		   char* fileName, int fileLine) {
 
   if(idx == NO_PEER) {
@@ -87,10 +87,10 @@ static int _mapIdx(u_int* mappings, u_int lastHashSize, u_int idx,
 	       idx, fileName, fileLine);
 #endif
     return(NO_PEER);
-  } else if(idx >= lastHashSize) {
+  } else if(idx >= mappingsSize) {
     traceEvent(TRACE_WARNING,
 	       "Index %d out of range (0...%d) [%s:%d]",
-	       idx, lastHashSize, fileName, fileLine);
+	       idx, mappingsSize, fileName, fileLine);
     return(NO_PEER);
   } else if(mappings[idx] == NO_PEER) {
     traceEvent(TRACE_WARNING,
@@ -116,13 +116,13 @@ static int _mapIdx(u_int* mappings, u_int lastHashSize, u_int idx,
 
 /* ******************************* */
 
-static int _mapUsageCounter(u_int *myMappings, int myLastHashSize,
+static int _mapUsageCounter(u_int *myMappings, int mappingSize,
 			    UsageCounter *counter, char *file, int line) {
   int i, numFull=0;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(counter->peersIndexes[i] != NO_PEER) {
-      counter->peersIndexes[i] = _mapIdx(myMappings, myLastHashSize,
+      counter->peersIndexes[i] = _mapIdx(myMappings, mappingSize,
 					 counter->peersIndexes[i], file, line);
       if(counter->peersIndexes[i] != NO_PEER)
 	numFull++;
@@ -132,18 +132,18 @@ static int _mapUsageCounter(u_int *myMappings, int myLastHashSize,
   return(numFull);
 }
 
-#define mapUsageCounter(a)  _mapUsageCounter(mappings, lastHashSize, a, __FILE__, __LINE__)
-#define mapIdx(a)           _mapIdx(mappings, lastHashSize, a, __FILE__, __LINE__)
+#define mapUsageCounter(a)  _mapUsageCounter(mappings, mappingsSize, a, __FILE__, __LINE__)
+#define mapIdx(a)           _mapIdx(mappings, mappingsSize, a, __FILE__, __LINE__)
 
 /* ************************************ */
 
-static IpGlobalSession* purgeIdleHostSessions(u_int *mappings, u_int lastHashSize,
+static IpGlobalSession* purgeIdleHostSessions(u_int *mappings, u_int mappingsSize,
 					      IpGlobalSession *sessionScanner) {
   if(sessionScanner != NULL) {
     IpGlobalSession *returnValue;
 
     if(sessionScanner->next != NULL)
-      sessionScanner->next = purgeIdleHostSessions(mappings, lastHashSize, sessionScanner->next);
+      sessionScanner->next = purgeIdleHostSessions(mappings, mappingsSize, sessionScanner->next);
 
     if(mapUsageCounter(&sessionScanner->peers) == 0) {
       /* There are no peers hence we can delete this entry */
@@ -162,7 +162,7 @@ static IpGlobalSession* purgeIdleHostSessions(u_int *mappings, u_int lastHashSiz
 void resizeHostHash(int deviceToExtend, short hashAction) {
   u_int idx, *mappings;
   float multiplier;
-  u_int i, j, newSize, lastHashSize;
+  u_int i, j, newSize, mappingsSize;
   struct hostTraffic **hash_hostTraffic;
   short numCmp = 0;
   struct ipGlobalSession *scanner=NULL;
@@ -202,19 +202,23 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   accessMutex(&hashResizeMutex, "resizeHostHash");
 #endif
 
-  if(device[deviceToExtend].actualHashSize < newSize)
+  if(device[deviceToExtend].actualHashSize < newSize) {
     traceEvent(TRACE_INFO, "Extending hash: [old=%d, new=%d]\n",
 	       device[deviceToExtend].actualHashSize, newSize);
-  else
+    mappingsSize = newSize;
+  } else {
     traceEvent(TRACE_INFO, "Shrinking hash: [old=%d, new=%d]\n",
 	       device[deviceToExtend].actualHashSize, newSize);
+    mappingsSize = device[deviceToExtend].actualHashSize;
+  }
 
   i = sizeof(HostTraffic*)*newSize;
-  hash_hostTraffic = malloc(i); memset(hash_hostTraffic, 0, i);
-  i = sizeof(int)*device[deviceToExtend].actualHashSize;
-  mappings = malloc(i);
-  for(j=1; j<device[deviceToExtend].actualHashSize; j++)
-    mappings[j] = NO_PEER;
+  hash_hostTraffic = malloc(i);
+  memset(hash_hostTraffic, 0, i);
+
+  i = sizeof(int)*mappingsSize;
+  mappings = malloc(i);  
+  memset(mappings, NO_PEER, i);
 
   /* Broadcast Entry */
   hash_hostTraffic[broadcastEntryIdx] = device[deviceToExtend].hash_hostTraffic[broadcastEntryIdx];
@@ -245,7 +249,6 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
       }
     }
 
-  lastHashSize = device[deviceToExtend].actualHashSize;
   free(device[deviceToExtend].hash_hostTraffic);
   device[deviceToExtend].hash_hostTraffic = hash_hostTraffic;
   device[deviceToExtend].actualHashSize = newSize;
