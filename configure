@@ -4985,24 +4985,24 @@ else
 fi
 
 
-echo $ac_n "checking for snmp_pdu_create in -lsnmp""... $ac_c" 1>&6
-echo "configure:4990: checking for snmp_pdu_create in -lsnmp" >&5
-ac_lib_var=`echo snmp'_'snmp_pdu_create | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for register_mib in -lucdagent""... $ac_c" 1>&6
+echo "configure:4990: checking for register_mib in -lucdagent" >&5
+ac_lib_var=`echo ucdagent'_'register_mib | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   ac_save_LIBS="$LIBS"
-LIBS="-lsnmp  $LIBS"
+LIBS="-lucdagent -lsnmp -lucdmibs $LIBS"
 cat > conftest.$ac_ext <<EOF
 #line 4998 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
-char snmp_pdu_create();
+char register_mib();
 
 int main() {
-snmp_pdu_create()
+register_mib()
 ; return 0; }
 EOF
 if { (eval echo configure:5009: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
@@ -5023,6 +5023,7 @@ if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   SNMPLIBS="-lsnmp -lucdagent -lucdmibs"
 else
   echo "$ac_t""no" 1>&6
+echo "$ac_t"" No RMON" 1>&6
 fi
 
 
@@ -5557,7 +5558,7 @@ Compiler (cflags) : ${CC} ${CFLAGS} ${DEFS}
 Include path      : ${INCS}
 System Libs       : ${LDFLAGS} ${LIBS}
 Core Libs         : ${CORELIBS}
-Additional Libs   : ${MORELIBS}
+Additional Libs   : ${MORELIBS} ${SNMPLIBS}
 LBL pcap in       : ${PCAP_ROOT}
 GNU gdbm in       : ${GDBM_ROOT}
 MultiThread mode  : ${multithread_mode}

@@ -997,7 +997,7 @@ fi
 dnl>
 dnl> check for `UCD-SNMP' library by University of California [http://ucd-snmp.ucdavis.edu]
 dnl>
-AC_CHECK_LIB(snmp, snmp_pdu_create, SNMPLIBS="-lsnmp -lucdagent -lucdmibs")
+AC_CHECK_LIB(ucdagent, register_mib, SNMPLIBS="-lsnmp -lucdagent -lucdmibs", AC_MSG_RESULT([ No RMON]), -lsnmp -lucdmibs)
 
 
 echo
@@ -1114,7 +1114,7 @@ Compiler (cflags) : ${CC} ${CFLAGS} ${DEFS}
 Include path      : ${INCS}
 System Libs       : ${LDFLAGS} ${LIBS}
 Core Libs         : ${CORELIBS}
-Additional Libs   : ${MORELIBS}
+Additional Libs   : ${MORELIBS} ${SNMPLIBS}
 LBL pcap in       : ${PCAP_ROOT}
 GNU gdbm in       : ${GDBM_ROOT}
 MultiThread mode  : ${multithread_mode}
