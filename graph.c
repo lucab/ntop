@@ -477,6 +477,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       theHost->arp_rarpSent.value+theHost->decnetSent.value+theHost->appletalkSent.value+
       theHost->netbiosSent.value+theHost->ipv6Sent.value+theHost->otherSent.value;
 
+    idx = 0;
     while(protoList != NULL) {
       totTraffic.value += theHost->ipProtosList[idx].sent.value;
       idx++, protoList = protoList->next;
@@ -489,6 +490,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       theHost->arp_rarpRcvd.value+theHost->decnetRcvd.value+theHost->appletalkRcvd.value+
       theHost->netbiosRcvd.value+theHost->ipv6Rcvd.value+theHost->otherRcvd.value;
 
+    idx = 0;
     while(protoList != NULL) {
       totTraffic.value += theHost->ipProtosList[idx].rcvd.value;
       idx++, protoList = protoList->next;
@@ -632,7 +634,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       }
     }
 
-    protoList = myGlobals.ipProtosList;  
+    idx = 0; protoList = myGlobals.ipProtosList;  
     while(protoList != NULL) {
       if(dataSent) {
 	if(theHost->ipProtosList[idx].sent.value > 0) {
