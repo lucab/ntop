@@ -95,9 +95,6 @@ typedef struct ntopGlobals {
   int throughput_chart_type;         /* '129' */
 #endif
 
-  u_short noAdminPasswordHint;       /* '130' */
-
-
   /* Other flags (these could set via command line options one day) */
   u_char enableSessionHandling;
   u_char enablePacketDecoding;

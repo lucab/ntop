@@ -138,9 +138,6 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.throughput_chart_type = GDC_AREA;
 #endif
 
-  myGlobals.noAdminPasswordHint = 0;
-
-
   /* Other flags (to be set via command line options one day) */
   myGlobals.enableSessionHandling = 0;
   myGlobals.enablePacketDecoding = 0;

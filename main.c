@@ -646,11 +646,6 @@ static void parseOptions(int argc, char * argv []) {
       break;
 #endif
 
-    case 130:
-      /* Flag to remove userid/password hint from authorization dialogs (BMS 26Jan2002) */
-      myGlobals.noAdminPasswordHint = 1;
-      break;
-
     default:
       printf("FATAL ERROR: unknown ntop option, '%s'\n", argv[optind-1]);
 #ifdef DEBUG
@@ -831,11 +826,13 @@ int main(int argc, char *argv[]) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Unable to change user ID.\n");
       exit(-1);
     }
-  }
-
-  if((geteuid() == 0) || (getegid() == 0)) {
-    traceEvent(TRACE_INFO, "WARNING: For security reasons it is STRONGLY recommended to");
-    traceEvent(TRACE_INFO, "WARNING: run ntop as unprivileged user by using the -u option!");
+  } else {
+    if((geteuid() == 0) || (getegid() == 0)) {
+      traceEvent(TRACE_INFO, "ERROR: For security reasons you cannot run ntop as root");
+      traceEvent(TRACE_INFO, "ERROR: unless you know what you're doing.");
+      traceEvent(TRACE_INFO, "ERROR: Please specify the user name using the -u option!");
+      exit(0);
+    }
   }
 #endif
 

@@ -921,8 +921,9 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
 	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
 		   "Not binding SSL to a particular interface!\n",  sslAddr);
     }
-
-    if (webAddr) {      /* Code added to be able to bind to a particular interface */
+    
+    if (webAddr) {     
+      /* Code added to be able to bind to a particular interface */
       if (!inet_aton(webAddr,&sin.sin_addr))
 	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
 		   "Not binding to a particular interface!\n",  webAddr);
@@ -935,7 +936,8 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
       exit(-1);
     }
 
-    setsockopt(myGlobals.sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+    setsockopt(myGlobals.sock, SOL_SOCKET, SO_REUSEADDR, 
+	       (char *)&sockopt, sizeof(sockopt));
   } else
     myGlobals.sock = 0;
 
@@ -947,7 +949,8 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
       exit(-1);
     }
 
-    setsockopt(myGlobals.sock_ssl, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+    setsockopt(myGlobals.sock_ssl, SOL_SOCKET, SO_REUSEADDR, 
+	       (char *)&sockopt, sizeof(sockopt));
   }
 #endif
 

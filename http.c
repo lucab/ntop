@@ -28,7 +28,23 @@
 
 #define FORK_CHILD_PROCESS
 #define URL_LEN        512
-#define URL_PROHIBITED_CHARACTERS ":@\r\n" /* DO NOT put % here - it's special cased */ 
+
+/*    This list is derived from RFC1945 in sec 3.2 Uniform Resource Identifiers
+      which defines the permitted characters in a URI/URL.  Specifically, the
+      definitions of 
+      
+      reserved       = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+"
+      unsafe         = CTL | SP | <"> | "#" | "%" | "<" | ">"
+      
+      DO NOT put % here - it's special cased - it's too dangerous to handle the same...
+
+      Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>
+*/
+#define URL_PROHIBITED_CHARACTERS     "\001\002\003\004\005\006" \
+                                  "\010\011\012\013\014\015\016" \
+                                  "\020\021\022\023\024\025\026" \
+                                  "\030\031\032\033\034\035\036" \
+                                  " \"#&+/:;<=>?@\177"
 
 struct _HTTPstatus {
     int statusCode;
@@ -757,11 +773,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   sendString(tmpStr);
 
   if(headerFlags & HTTP_FLAG_NEED_AUTHENTICATION) {
-    if(myGlobals.noAdminPasswordHint == 1) {
-      sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server;\"\n");
-    } else {
-      sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server [default user=admin,pw=admin];\"\n");
-    }
+    sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server;\"\n");
   }
 
   switch(mimeType) {
@@ -996,6 +1008,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512];
+  char *domainNameParm;
   int revertOrder=0, rc;
 #ifdef MULTITHREADED
   u_char mutexReleased = 0;
@@ -1036,7 +1049,9 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 	idx = atoi(&tkn[4]);
 	if(tkn[4] == '-') revertOrder=1;
 	sortedColumn = abs(idx);
-      } else if(strncmp(tkn, "page=", 5) == 0) {
+       } else if(strncmp(tkn, "dom=", 4) == 0) {
+	 domainNameParm = strdup(&tkn[4]);
+       } else if(strncmp(tkn, "page=", 5) == 0) {
 	pageNum = atoi(&tkn[5]);
 	if(pageNum < 0) pageNum = 0;
       } else {
@@ -1508,9 +1523,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       printDomainStats(NULL, abs(sortedColumn), revertOrder, pageNum);
     } else if(strncmp(pageName, DOMAIN_INFO_HTML, strlen(DOMAIN_INFO_HTML)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      if(questionMark == NULL) questionMark = "";
-      pageName[strlen(pageName)-5-strlen(questionMark)] = '\0';
-      printDomainStats(&pageName[strlen(DOMAIN_INFO_HTML)+1], abs(sortedColumn), revertOrder, pageNum);
+      printDomainStats(domainNameParm, abs(sortedColumn), revertOrder, pageNum);
     } else if(strcmp(pageName, TRAFFIC_STATS_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printTrafficStatistics();
@@ -1737,6 +1750,10 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 #ifndef MICRO_NTOP
   }
 #endif /* !MICRO_NTOP */
+  
+  if(domainNameParm != NULL) {
+    free(domainNameParm);
+  }
 
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 

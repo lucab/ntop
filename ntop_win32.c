@@ -576,9 +576,7 @@ inet_network(const char *cp)
   return (val);
 }
 
-struct netent *
-getnetent()
-{
+struct netent* getnetent() {
   char *p;
   register char *cp, **q;
 
@@ -624,8 +622,7 @@ getnetent()
   return (&net);
 }
 
-struct netent *getnetbyname(const char *name)
-{
+struct netent *getnetbyname(const char *name) {
   register struct netent *p;
   register char **cp;
 
@@ -668,30 +665,72 @@ int ffs (int i)
 
 /* ****************************************************** */
 
-#if defined(WIN32) && defined(__GNUC__)
-/* on mingw, struct timezone isn't defined so s/struct timezone/void/ - Scott Renfro <scott@renfro.org> */
-int gettimeofday(struct timeval *tv, void *notUsed) {
-#else
-  int gettimeofday(struct timeval *tv, struct timezone *notUsed) {
-#endif
-    tv->tv_sec = time(NULL);
-    tv->tv_usec = 0;
-    return(0);
-  }
+int gettimeofday(struct timeval *tv, 
 
-  /* ****************************************************** */
+#if defined(WIN32) && defined(__GNUC__)
+
+		 /* 
+		    on mingw, struct timezone isn't defined so s/struct timezone/void/ 
+		    Scott Renfro <scott@renfro.org> 
+		 */
+		 void *notUsed
+#else
+		 struct timezone *notUsed
+#endif
+		 ) {
+  tv->tv_sec = time(NULL);
+  tv->tv_usec = 0;
+  return(0);
+}
+
+/* ****************************************************** */
 
 /* Courtesy of Wies-Software <wies@wiessoft.de> */
-  unsigned long waitForNextEvent(unsigned long ulDelay /* ms */) {
-    unsigned long ulSlice = 1000L; // 1 Second
-
-    while (myGlobals.capturePackets && (ulDelay > 0L)) {
-      if (ulDelay < ulSlice)
-	ulSlice = ulDelay;
-      Sleep(ulSlice);
-      ulDelay -= ulSlice;
-    }
-
-    return ulDelay;
+unsigned long waitForNextEvent(unsigned long ulDelay /* ms */) {
+  unsigned long ulSlice = 1000L; /* 1 Second */
+    
+  while (myGlobals.capturePackets && (ulDelay > 0L)) {
+    if (ulDelay < ulSlice)
+      ulSlice = ulDelay;
+    Sleep(ulSlice);
+    ulDelay -= ulSlice;
   }
 
+  return ulDelay;
+}
+
+/* ************************************************************* */
+
+/* Code borrowed from http://www.cvsnt.org/ */
+
+#define DEF_INPMODE  (ENABLE_LINE_INPUT|ENABLE_ECHO_INPUT|ENABLE_PROCESSED_INPUT)
+#define HID_INPMODE  (ENABLE_LINE_INPUT|ENABLE_PROCESSED_INPUT)
+
+char* getpass(const char *prompt) {
+  static char pwd_buf[128];
+  size_t i;
+  DWORD br;
+  HANDLE hInput=GetStdHandle(STD_INPUT_HANDLE);
+  DWORD dwMode;
+
+  fputs(prompt, stderr);
+  fflush(stderr);
+  fflush(stdout);
+  FlushConsoleInputBuffer(hInput);
+  GetConsoleMode(hInput,&dwMode);
+  SetConsoleMode(hInput, ENABLE_PROCESSED_INPUT);
+
+  for(i = 0; i < sizeof (pwd_buf) - 1; ++i) {
+    ReadFile(GetStdHandle(STD_INPUT_HANDLE),pwd_buf+i,1,&br,NULL);
+    if (pwd_buf[i] == '\r')
+      break;
+    fputc('*',stdout);
+    fflush (stderr);
+    fflush (stdout);
+  }
+
+  SetConsoleMode(hInput,dwMode);
+  pwd_buf[i] = '\0';
+  fputs ("\n", stderr);
+  return pwd_buf;
+}

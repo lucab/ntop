@@ -3496,10 +3496,10 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", STR_DOMAIN_STATS) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
  } else {
-   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html?col=%s",
+   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s?col=%s",
 	       DOMAIN_INFO_HTML, domainName, sign) < 0)
      traceEvent(TRACE_ERROR, "Buffer overflow!");
-   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s_%s.html?col=",
+   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?dom=%s?col=",
 	       DOMAIN_INFO_HTML, domainName) < 0)
      traceEvent(TRACE_ERROR, "Buffer overflow!");
  }
@@ -3676,7 +3676,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       statsEntry = &tmpStats[idx];
 
     if(domainName == NULL) {
-      if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html>%s</A>",
+      if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s>%s</A>",
 	      DOMAIN_INFO_HTML, statsEntry->domainHost->fullDomainName,
 	      statsEntry->domainHost->fullDomainName) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
