@@ -753,8 +753,8 @@ void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, 
 /* ******************************* */
 
 void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
-  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
-  char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], fname[384], *label;
+  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
+  char buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], fname[384], *label;
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0;
   DIR* directoryPointer;
@@ -852,17 +852,20 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
   for(i=0, entryId=0; rrds[i] != NULL; i++) {
     struct stat statbuf;
 
-    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrds[i]);
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
+		  myGlobals.rrdPath, rrdPath, rrds[i]);
 
 #ifdef WIN32
     revertSlash(path, 0);
 #endif
 
     if(stat(path, &statbuf) == 0) {
-      safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path); 
+      safe_snprintf(__FILE__, __LINE__, buf[entryId], 2*MAX_BUF_LEN, 
+		    "DEF:ctr%d=%s:counter:AVERAGE", entryId, path); 
       argv[argc++] = buf[entryId];
-      safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		  entryId, rrd_colors[entryId], rrds[i]); 
+      safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN, 
+		    "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
+		    entryId, rrd_colors[entryId], rrds[i]); 
       argv[argc++] = buf1[entryId];
       entryId++;
     }
@@ -2571,9 +2574,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	if(myGlobals.device[devIdx].sflowGlobals) {
 	  for(i=0; i<MAX_NUM_SFLOW_INTERFACES; i++) {
 	    IfCounters *ifName = myGlobals.device[devIdx].sflowGlobals->ifCounters[i];
-
+	    
 	    if(ifName != NULL) {
-	      char buf[128], formatBuf[256], formatBuf1[256];
 	      char rrdIfPath[512];
 
 	      safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath), 
