@@ -1237,7 +1237,8 @@ void readLsofInfo(void) {
 #else
   char line[384];
   FILE *fd;
-  int i, j, found, portNumber, idx, processesIdx, numLines, processSize;
+  int i, j, found, portNumber, idx, processesIdx;
+  int numLines, processSize, numRetries;
   unsigned int fdFileno;
   ProcessInfoList *listElement;
   ProcessInfo **tmpProcesses;
@@ -1262,7 +1263,7 @@ void readLsofInfo(void) {
     return;
   }
 
-  numLines = 0;
+  numRetries = numLines = 0;
   fdFileno = fileno(fd);
   wait_time.tv_sec = 30, wait_time.tv_usec = 0;
 
@@ -1277,11 +1278,19 @@ void readLsofInfo(void) {
       } else
 	break;
     } else {
-      traceEvent(TRACE_WARNING, "WARNING: lsof() timeout (select=%d)", i);
-      pclose(fd);
-      fclose(fd1);
-      unlink(fileName);
-      return;
+
+      if((errno == 4 /* Interrupted system call */) 
+	 && (numRetries < 3) /* Avoid to loop */) {
+	numRetries++;
+      } else {
+	traceEvent(TRACE_WARNING,
+		   "WARNING: lsof() timeout (select=%d)(errno=%d: %s)",
+		   i, errno, strerror(errno));
+	pclose(fd);
+	fclose(fd1);
+	unlink(fileName);
+	return;
+      }
     }
   } /* while */
 
