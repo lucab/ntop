@@ -565,6 +565,21 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
   myGlobals.device[actualDeviceId].ethernetBytes.value += len;
   myGlobals.device[actualDeviceId].ipBytes.value       += len;
 
+  if (numPkts > 0) {
+    if (len/numPkts <= 64)
+      myGlobals.device[actualDeviceId].rcvdPktStats.upTo64.value += numPkts;
+    else if (len/numPkts <= 128)
+      myGlobals.device[actualDeviceId].rcvdPktStats.upTo128.value += numPkts;
+    else if (len/numPkts <= 256)
+      myGlobals.device[actualDeviceId].rcvdPktStats.upTo256.value += numPkts;
+    else if (len/numPkts <= 512)
+      myGlobals.device[actualDeviceId].rcvdPktStats.upTo512.value += numPkts;
+    else if (len/numPkts <= 1024)
+      myGlobals.device[actualDeviceId].rcvdPktStats.upTo1024.value += numPkts;
+    else if (len/numPkts <= 1518)
+      myGlobals.device[actualDeviceId].rcvdPktStats.upTo1518.value += numPkts;
+  }
+
 #ifdef CFG_MULTITHREADED
   /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
 #endif
