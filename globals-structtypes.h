@@ -1579,6 +1579,8 @@ typedef struct ntopGlobals {
   /*XMLSECTIONEND */
 
   HostsDisplayPolicy hostsDisplayPolicy;
+  int securityItemsLoaded;
+  char *securityItems[MAX_NUM_PWFILE_ENTRIES];
 
   /* Physical and Logical network interfaces */
 
@@ -1688,6 +1690,8 @@ typedef struct ntopGlobals {
   /*XMLNOTE &pthreadmutex tcpSessionsMutex mutexes"" */
   PthreadMutex purgePortsMutex;
   /*XMLNOTE &pthreadmutex purgePortsMutex mutexes "" */
+  PthreadMutex securityItemsMutex;
+  /*XMLNOTE &pthreadmutex securityItemsMutex mutexes "" */
 
   pthread_t handleWebConnectionsThreadId;
 

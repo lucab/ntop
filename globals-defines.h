@@ -686,6 +686,12 @@
 #define MAX_NUM_DEVICES                     32
 
 /*
+ * This defines the maximum number of entries in the ntop pwFile
+ * note that both 'users' and 'urls' are stored in here.
+ */
+#define MAX_NUM_PWFILE_ENTRIES              32
+
+/*
  * This is an IPv4 convention - it's the upper port # that is "officially assigned" (reserved)
  * for a specific service.  This controls upto what port# ntop reports in various places,
  * such as the 'TCP/UDP Service/Port Usage' section in the "Info about host" page, the
@@ -1339,8 +1345,7 @@
 #define FLAG_HTTP_INVALID_METHOD            -3
 #define FLAG_HTTP_INVALID_VERSION           -4
 #define FLAG_HTTP_REQUEST_TIMEOUT           -5
-#define FLAG_HTTP_FORBIDDEN_PAGE            -6
-#define FLAG_HTTP_INVALID_PAGE              -7
+#define FLAG_HTTP_INVALID_PAGE              -6
 
 /*
  * Flags for fileFlags in typedef struct fileList {}

@@ -932,6 +932,7 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.tcpSessionsMutex);
   deleteMutex(&myGlobals.purgePortsMutex);
+  deleteMutex(&myGlobals.securityItemsMutex);
   /* DO NOT DO deleteMutex(&myGlobals.logViewMutex); - need it for the last traceEvent()s */
 #endif
 

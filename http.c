@@ -909,10 +909,13 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 /* ************************* */
 
 static int checkURLsecurity(char *url) {
-  int rc = 0, countOKextension, len, i;
-  int countSections, countOKnumeric;
+  int len, i, begin;
   char *token;
   char *workURL;
+
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: RAW url is '%s'", url);
+#endif
 
   /*
     Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>
@@ -946,117 +949,147 @@ static int checkURLsecurity(char *url) {
     return(0);
 
   if(strlen(url) >= MAX_LEN_URL) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): URL too long (len=%d)", strlen(url));
+    traceEvent(CONST_TRACE_NOISY, "URL security(2): URL too long (len=%d)", strlen(url));
     return(2);
   }
 
-   workURL = strdup(url);
- 
-   /* Strip off parameters */
-   token = strchr(workURL, '?');
-   if(token != NULL) {
-     token[0] = '\0';
-   }
+  if(strstr(url, "%") != NULL) {
 
+    /* Convert encoding (%nn) to their base characters -
+     * we also handle the special case of %3A (:) 
+     * which we convert to _ (not :) 
+     * We handle this 1st because some of the gcc functions interpret encoding/unicode "for" us
+     */
+    for(i=0, begin=0; i<strlen(url); i++) {
+      if(url[i] == '%') {
+        if((url[i+1] == '3') && ((url[i+2] == 'A') || (url[i+2] == 'a'))) {
+          url[begin++] = '_';
+          i += 2;
+        } else {
+ 	  int v1, v2;
+          v1 = url[i+1] < '0' ? -1 :
+              url[i+1] <= '9' ? (url[i+1] - '0') :
+              url[i+1] < 'A' ? -1 :
+              url[i+1] <= 'F' ? (url[i+1] - 'A' + 10) :
+              url[i+1] < 'a' ? -1 :
+              url[i+1] <= 'f' ? (url[i+1] - 'a' + 10) : -1;
+          v2 = url[i+2] < '0' ? -1 :
+              url[i+2] <= '9' ? (url[i+2] - '0') :
+              url[i+2] < 'A' ? -1 :
+              url[i+2] <= 'F' ? (url[i+2] - 'A' + 10) :
+              url[i+2] < 'a' ? -1 :
+              url[i+2] <= 'f' ? (url[i+2] - 'a' + 10) : -1;
+
+ 	  if((v1<0) || (v2<0)) {
+ 	    url[begin++] = '\0';
+            traceEvent(CONST_TRACE_NOISY,
+                       "URL security(1): Found invald percent in URL...DANGER...rejecting request partial (url=%s...)",
+                       url);
+ 
+            /* Explicitly, update so it's not used anywhere else in ntop */
+            url[0] = '*'; url[1] = 'd'; url[2] = 'a'; url[3] = 'n'; url[4] = 'g'; url[5] = 'e'; url[6] = 'r'; url[7] = '*'; 
+            url[8] = '\0'; 
+            httpRequestedURL[0] = '*'; httpRequestedURL[1] = 'd'; httpRequestedURL[2] = 'a';
+            httpRequestedURL[3] = 'n'; httpRequestedURL[4] = 'g'; httpRequestedURL[5] = 'e';
+            httpRequestedURL[6] = 'r'; httpRequestedURL[7] = '*'; 
+            httpRequestedURL[8] = '\0'; 
+
+            return(1);
+          }
+ 
+          url[begin++] = v1 * 16 + v2;
+          i += 2;
+        }
+      } else {
+        url[begin++] = url[i];
+      }
+    }       
+
+    url[begin] = '\0';
+ 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: URL security: Testing '%s'...", workURL);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Decoded url is '%s', %% at %08x", url, strstr(url, "%"));
 #endif
 
-  /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
+  }       
 
-  if(((token = strstr(workURL, "%")) != NULL) && (strncmp(token, "%3A" /* : */, 3))) {
-      traceEvent(CONST_TRACE_ERROR, "URL security(1): Found percent in URL...DANGER...rejecting request (url=%s)", workURL);
-      /* Explicitly, we're updating the real URL, not the copy, so it's not used anywhere in ntop */
-      url[0] = '\0'; 
-      free(workURL);
+  /* Still got a % - maybe it's Unicode?  Somethings fishy... */
+  if(strstr(url, "%") != NULL) {
+      traceEvent(CONST_TRACE_INFO,
+                 "URL security(1): Found percent in decoded URL...DANGER...rejecting request");
+
+      /* Explicitly, update so it's not used anywhere else in ntop */
+      url[0] = '*'; url[1] = 'd'; url[2] = 'a'; url[3] = 'n'; url[4] = 'g'; url[5] = 'e'; url[6] = 'r'; url[7] = '*'; 
+      url[8] = '\0'; 
+      httpRequestedURL[0] = '*'; httpRequestedURL[1] = 'd'; httpRequestedURL[2] = 'a';
+      httpRequestedURL[3] = 'n'; httpRequestedURL[4] = 'g'; httpRequestedURL[5] = 'e';
+      httpRequestedURL[6] = 'r'; httpRequestedURL[7] = '*'; 
+      httpRequestedURL[8] = '\0'; 
       return(1);
   }
 
-  if(token != NULL) {
-    /* The original URL contains %3A that need to be replaced with : */
-    int begin;
-    
-    for(i=0, begin=0; i<strlen(url); i++) {
-      if((url[i] == '%') && (url[i+1] == '3') && (url[i+2] == 'A')) {
-	url[begin++] = '_';
-	i += 2;
-      } else 
-	url[begin++] = url[i];
-    }
-
-    url[begin] = '\0';
-    free(workURL);
-    return(checkURLsecurity(url));
-  }
-
   /* a double slash? */
-  if(strstr(workURL, "//") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): Found // in URL...rejecting request");
-    free(workURL);
+  if(strstr(url, "//") > 0) {
+    traceEvent(CONST_TRACE_NOISY, "URL security(2): Found // in URL...rejecting request");
     return(2);
   }
 
   /* a double &? */
-  if(strstr(workURL, "&&") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): Found && in URL...rejecting request");
-    free(workURL);
+  if(strstr(url, "&&") > 0) {
+    traceEvent(CONST_TRACE_NOISY, "URL security(2): Found && in URL...rejecting request");
     return(2);
   }
 
   /* a double ?? */
-  if(strstr(workURL, "??") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(2): Found ?? in URL...rejecting request");
-    free(workURL);
+  if(strstr(url, "??") > 0) {
+    traceEvent(CONST_TRACE_NOISY, "URL security(2): Found ?? in URL...rejecting request");
     return(2);
   }
 
   /* a double dot? */
-  if(strstr(workURL, "..") > 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(3): Found .. in URL...rejecting request");
-    free(workURL);
+  if(strstr(url, "..") > 0) {
+    traceEvent(CONST_TRACE_NOISY, "URL security(3): Found .. in URL...rejecting request");
     return(3);
   }
 
+  /* Past the bad stuff -- check the URI (not the parameters) for prohibited characters */
+  workURL = strdup(url);
+
+   token = strchr(workURL, '?');
+     if(token != NULL) {
+       token[0] = '\0';
+   }
+
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: uri is '%s'", workURL);
+#endif
+
   /* Prohibited characters? */
   if((len = strcspn(workURL, CONST_URL_PROHIBITED_CHARACTERS)) < strlen(workURL)) {
-    traceEvent(CONST_TRACE_ERROR, "URL security(4): Prohibited character(s) [%c]"
-	       " in URL... rejecting request\n", workURL[len]);
+    traceEvent(CONST_TRACE_NOISY,
+               "URL security(4): Prohibited character(s) at %d [%c] in URL... rejecting request",
+               len, workURL[len]);
     free(workURL);
     return(4);
   }
+
+/* So far, so go - check the extension */
 
 /* allow w3c/p3p.xml...
  *   NOTE that we don't allow general .p3p and .xml requests
  *        Those are bounced below...
  */
-  if(strncmp(url, STR_W3C_P3P_XML, strlen(STR_W3C_P3P_XML)) == 0) {
+  if(strncmp(workURL, STR_W3C_P3P_XML, strlen(STR_W3C_P3P_XML)) == 0) {
     free(workURL);
     return(0);
   }
   
-  if(strncmp(url, STR_NTOP_P3P, strlen(STR_NTOP_P3P)) == 0) {
+  if(strncmp(workURL, STR_NTOP_P3P, strlen(STR_NTOP_P3P)) == 0) {
     free(workURL);
     return(0);
   }
 
-  /*
-    We can't simply find the "." and test the extension, as
-    we have to allow urls of the following special forms:
-
-    [0..255].[0..255].[0..255].[0..255].html
-    xxxxxx    (no extension - just an internal name)
-    XXXXX-[0..255].[0..255].[0..255].[0..255].html
-
-    Instead, we'll tokenize the URL on the "." and check each one
-    if we get 4 valid #s plus an .htm(l)
-    Or an otherwise valid extension, we're ok
-  */
-
-  countSections = countOKnumeric = countOKextension = 0;
-
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: URL security: NOTE: Tokenizing '%s'...", workURL);
-#endif
+  /* Find the terminal . for checking the extension */
 
   for(i=strlen(workURL)-1; i >= 0; i--)
     if(workURL[i] == '.')
@@ -1074,19 +1107,15 @@ static int checkURLsecurity(char *url) {
 	   (strcmp(&workURL[i], "js")   == 0) || /* Javascript */
 	   (strcmp(&workURL[i], "pl")   == 0) || /* used for Perl CGI's */
 	   (strcmp(&workURL[i], "css")  == 0)))) {
-    traceEvent(CONST_TRACE_ERROR,
+    traceEvent(CONST_TRACE_NOISY,
 	       "URL security(5): Found bad file extension (.%s) in URL...\n",
 	       &workURL[i]);
-    rc = 5;
+    free(workURL);
+    return(5);
   }
 
-  if(rc != 0)
-    traceEvent(CONST_TRACE_ERROR,
-	       "ERROR: bad char found on '%s' (rc=%d) rejecting request",
-	       url, rc);
-
   free(workURL);
-  return(rc);
+  return(0);
 }
 
 /* ************************* */
@@ -1196,17 +1225,6 @@ static int returnHTTPPage(char* pageName,
 #endif
 
   *usedFork = 0;
-
-  /*
-     We need to check whether the URL is invalid, i.e. it contains '..' or
-     similar chars that can be used for reading system files
-  */
-  if((rc = checkURLsecurity(pageName)) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "URL security: '%s' rejected (code=%d)(client=%s)",
-	       pageName, rc, _intoa(*from, tmpStr, sizeof(tmpStr)));
-    returnHTTPaccessForbidden();
-    return(FLAG_HTTP_FORBIDDEN_PAGE);
-  }
 
   /* traceEvent(CONST_TRACE_INFO, "Page: '%s'", pageName); */
 
@@ -2150,53 +2168,84 @@ static int returnHTTPPage(char* pageName,
 
 /* ************************* */
 
-#define MAX_NUM_USERS 32
-
 static int checkHTTPpassword(char *theRequestedURL,
 			     int theRequestedURLLen _UNUSED_,
 			     char* thePw, int thePwLen) {
   char outBuffer[65], *user = NULL, users[LEN_GENERAL_WORK_BUFFER];
   int i, rc;
   datum key, nextkey;
-  static int usersLoaded = 0;
-  static char *theUsers[32];
 
   theUser[0] = '\0';
+
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Checking '%s'", theRequestedURL);
 #endif
 
-  if(usersLoaded == 0) {
+  if(myGlobals.securityItemsLoaded == 0) {
+
+    traceEvent(CONST_TRACE_NOISY, "SECURITY: Loading items table");
+
+    accessMutex(&myGlobals.securityItemsMutex,  "load");
+
     key = gdbm_firstkey(myGlobals.pwFile);
     
     while(key.dptr != NULL) {
-      theUsers[usersLoaded++] = key.dptr;
+      myGlobals.securityItems[myGlobals.securityItemsLoaded++] = key.dptr;
       nextkey = gdbm_nextkey(myGlobals.pwFile, key);
       key = nextkey;
 
-      if(usersLoaded == MAX_NUM_USERS) break;
+      if(myGlobals.securityItemsLoaded == MAX_NUM_PWFILE_ENTRIES) {
+          traceEvent(CONST_TRACE_WARNING,
+                     "Number of entries in password file, %d at limit",
+                     myGlobals.securityItemsLoaded);
+          break;
+      }
     }
+    releaseMutex(&myGlobals.securityItemsMutex);
   }
 
   outBuffer[0] = '\0';
 
-  for(i=0; i<usersLoaded; i++) {
-    if(theUsers[i][0] == '2') /* 2 = URL */ {
-      if(strncmp(&theRequestedURL[1], &theUsers[i][1],
-		 strlen(theUsers[i])-1) == 0) {
-	strncpy(outBuffer, theUsers[i], sizeof(outBuffer)-1)[sizeof(outBuffer)-1] = '\0';
+  accessMutex(&myGlobals.securityItemsMutex,  "test");
+
+  for(i=0; i<myGlobals.securityItemsLoaded; i++) {
+    if(myGlobals.securityItems[i][0] == '2') /* 2 = URL */ {
+      if(strncmp(&theRequestedURL[1], &myGlobals.securityItems[i][1],
+               strlen(myGlobals.securityItems[i])-1) == 0) {
+        strncpy(outBuffer,
+                myGlobals.securityItems[i],
+                sizeof(outBuffer)-1)[sizeof(outBuffer)-1] = '\0';
 	break;
       }
     }
   }
+  releaseMutex(&myGlobals.securityItemsMutex);
 
   if(outBuffer[0] == '\0') {
     return 1; /* This is a non protected URL */
   }
 
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Retrieving '%s'", outBuffer);
+#endif
+
   key.dptr = outBuffer;
   key.dsize = strlen(outBuffer)+1;
   nextkey = gdbm_fetch(myGlobals.pwFile, key);
+
+  if(nextkey.dptr == NULL) {
+    traceEvent(CONST_TRACE_NOISY,
+               "SECURITY: %s request for url '%s' disallowed",
+               user == NULL ? "'no user'" :
+                 strcmp(user, "") ? "'unspecified'" : user,
+               &theRequestedURL[1]);
+    return 0; /* The specified user is not among those who are
+                 allowed to access the URL */
+  }
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG: gdbm_fetch(..., '%s')='%s'", key.dptr, nextkey.dptr);
+#endif
 
   i = decodeString(thePw, (unsigned char*)outBuffer, sizeof(outBuffer));
 
@@ -2226,19 +2275,31 @@ static int checkHTTPpassword(char *theRequestedURL,
   if(snprintf(users, LEN_GENERAL_WORK_BUFFER, "1%s", user) < 0)
     BufferTooShort();
 
-  if(nextkey.dptr != NULL) {
-    if(strstr(nextkey.dptr, users) == NULL) {
-      if(nextkey.dptr != NULL) free(nextkey.dptr);
-      return 0; /* The specified user is not among those who are
-		   allowed to access the URL */
+  if(strstr(nextkey.dptr, users) == NULL) {
+    if(nextkey.dptr != NULL) free(nextkey.dptr);
+    if (strlen(&theRequestedURL[1]) > 40) {
+        theRequestedURL[40]='.';
+        theRequestedURL[41]='.';
+        theRequestedURL[42]='.';
+        theRequestedURL[43]='\0';
     }
-    
-    free(nextkey.dptr);
+    traceEvent(CONST_TRACE_NOISY,
+               "SECURITY: %s request for url '%s' disallowed",
+               user == NULL ? "'no user'" :
+                 strcmp(user, "") ? "'unspecified user'" : user,
+               &theRequestedURL[1]);
+    return 0; /* The specified user is not among those who are
+                 allowed to access the URL */
   }
+  free(nextkey.dptr);
 
   key.dptr = users;
   key.dsize = strlen(users)+1;
   nextkey = gdbm_fetch(myGlobals.pwFile, key);
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Record='%s' = '%s'", users, nextkey.dptr);
+#endif
 
   if(nextkey.dptr != NULL) {
 #ifdef WIN32
@@ -2250,6 +2311,20 @@ static int checkHTTPpassword(char *theRequestedURL,
     free (nextkey.dptr);
   } else
     rc = 0;
+
+  if(rc == 0) {
+    if (strlen(&theRequestedURL[1]) > 40) {
+      theRequestedURL[40]='.';
+      theRequestedURL[41]='.';
+      theRequestedURL[42]='.';
+      theRequestedURL[43]='\0';
+    }
+    traceEvent(CONST_TRACE_NOISY,
+               "SECURITY: %s request for url '%s' disallowed",
+               user == NULL ? "'no user'" :
+                 strcmp(user, "") ? "'unspecified user'" : user,
+               &theRequestedURL[1]);
+  }
 
   return(rc);
 }
@@ -2313,6 +2388,8 @@ void handleHTTPrequest(struct in_addr from) {
   char *requestedLanguage[MAX_LANGUAGES_REQUESTED];
   char *workSemi;
 #endif
+
+  char tmpStr[512];
 
   myGlobals.numHandledHTTPrequests++;
 
@@ -2408,6 +2485,50 @@ void handleHTTPrequest(struct in_addr from) {
   }
 
   /*
+     We need to check whether the URL is invalid, i.e. it contains '..' or
+     similar chars that can be used for reading system files
+  */
+  if((rc = checkURLsecurity(requestedURL)) != 0) {
+    traceEvent(CONST_TRACE_ERROR, "URL security: '%s' rejected (code=%d)(client=%s)",
+	       requestedURL, rc, _intoa(from, tmpStr, sizeof(tmpStr)));
+
+#if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
+   /* Note if the size of the table is zero, we simply nullify all of this
+      code (why bother wasting the work effort
+          Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
+    */
+
+    int found = 0;
+    
+    /* 
+       Let's record the IP address of this nasty
+       guy so he will stay far from ntop
+       for a while
+    */
+    for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++)
+      if(myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr == from.s_addr) {
+	found = 1;
+	break;
+      }
+    
+    if(!found) {
+      for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++) {
+	myGlobals.weDontWantToTalkWithYou[i].addr.s_addr   = myGlobals.weDontWantToTalkWithYou[i+1].addr.s_addr;
+	myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.weDontWantToTalkWithYou[i+1].lastBadAccess;
+	myGlobals.weDontWantToTalkWithYou[i].count = myGlobals.weDontWantToTalkWithYou[i+1].count;
+      }
+
+      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr = from.s_addr;
+      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].lastBadAccess = myGlobals.actTime;
+      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].count = 1;
+    }
+#endif
+
+    returnHTTPaccessForbidden();
+    return;
+  }
+
+  /*
     Fix courtesy of
     Michael Wescott <wescott@crosstor.com>
   */
@@ -2428,21 +2549,21 @@ void handleHTTPrequest(struct in_addr from) {
  */
 #ifdef MAKE_WITH_I18N
   if (workLanguage != NULL) {
-    char *tmpStr, *strtokState;
-    tmpStr = strtok_r(workLanguage, ",", &strtokState);
-    while(tmpStr != NULL) {
+    char *tmpI18Nstr, *strtokState;
+    tmpI18Nstr = strtok_r(workLanguage, ",", &strtokState);
+    while(tmpI18Nstr != NULL) {
         /* Skip leading blanks */
-        while (tmpStr[0] == ' ') tmpStr++;
+        while (tmpI18Nstr[0] == ' ') tmpI18Nstr++;
         /* Stop at the ; */
-        workSemi = strchr(tmpStr, ';');
+        workSemi = strchr(tmpI18Nstr, ';');
         if(workSemi != NULL) {
             workSemi[0] = '\0';
         }
-        requestedLanguage[numLang++] = i18n_xvert_acceptlanguage2common(tmpStr);
+        requestedLanguage[numLang++] = i18n_xvert_acceptlanguage2common(tmpI18Nstr);
         if (numLang > MAX_LANGUAGES_REQUESTED) {
-            tmpStr = NULL;
+            tmpI18Nstr = NULL;
         } else {
-            tmpStr = strtok_r(NULL, ",", &strtokState);
+            tmpI18Nstr = strtok_r(NULL, ",", &strtokState);
         }
     }
   }
@@ -2497,41 +2618,7 @@ void handleHTTPrequest(struct in_addr from) {
 
     if(!usedFork)
       logHTTPaccess(200, &httpRequestedAt, gzipBytesSent);
-  } else if(rc == FLAG_HTTP_FORBIDDEN_PAGE) {
 
-#if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
-   /* Note if the size of the table is zero, we simply nullify all of this
-      code (why bother wasting the work effort
-          Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
-    */
-
-    int found = 0;
-    
-    /* 
-       Let's record the IP address of this nasty
-       guy so he will stay far from ntop
-       for a while
-    */
-    for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++)
-      if(myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr == from.s_addr) {
-	found = 1;
-	break;
-      }
-    
-    if(!found) {
-      for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++) {
-	myGlobals.weDontWantToTalkWithYou[i].addr.s_addr   = myGlobals.weDontWantToTalkWithYou[i+1].addr.s_addr;
-	myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.weDontWantToTalkWithYou[i+1].lastBadAccess;
-	myGlobals.weDontWantToTalkWithYou[i].count = myGlobals.weDontWantToTalkWithYou[i+1].count;
-      }
-
-      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr = from.s_addr;
-      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].lastBadAccess = myGlobals.actTime;
-      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].count = 1;
-    }
-#endif
-
-    returnHTTPaccessForbidden();
   } else if(rc == FLAG_HTTP_INVALID_PAGE) {
     returnHTTPpageNotFound();
   }

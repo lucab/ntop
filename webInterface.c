@@ -4208,6 +4208,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
       printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
       printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
+      printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex,  "securityItemsMutex");
       sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
     }
 #endif /* CFG_MULTITHREADED */

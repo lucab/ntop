@@ -85,6 +85,31 @@ void showUsers(void) {
 
 /* *******************************/
 
+void clearUserUrlList(void) {
+  int i;
+
+  /*
+   * We just changed the database.
+   * Delete the in-memory copy so next time we reference it,
+   * it will be reloaded with the new values
+   */
+
+  traceEvent(CONST_TRACE_NOISY, "SECURITY: Loading items table");
+
+  if(myGlobals.securityItemsMutex.isInitialized == 1)
+    accessMutex(&myGlobals.securityItemsMutex, "clear");
+
+  for (i=0; i<myGlobals.securityItemsLoaded; i++) {
+    free(myGlobals.securityItems[i]);
+  }
+  myGlobals.securityItemsLoaded = 0;
+
+  if(myGlobals.securityItemsMutex.isInitialized == 1)
+    releaseMutex(&myGlobals.securityItemsMutex);
+}
+
+/* *******************************/
+
 void addUser(char* user) {
   char tmpStr[128];
 
@@ -150,6 +175,9 @@ void deleteUser(char* user) {
     decodeWebFormURL(user);
     key_data.dptr = user;
     key_data.dsize = strlen(user)+1;
+
+    /* Delete a URL - clear the list */
+    clearUserUrlList();  
 
     rc = gdbm_delete(myGlobals.pwFile, key_data);
 
@@ -240,6 +268,9 @@ void doAddUser(int len) {
 
       if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
 	err = "FATAL ERROR: unable to add the new user.";
+
+      /* Added user, clear the list */
+      clearUserUrlList();  
     }
   }
 
@@ -432,6 +463,9 @@ void deleteURL(char* url) {
     key_data.dptr = url;
     key_data.dsize = strlen(url)+1;
 
+    /* Delete URL, clear the list */
+    clearUserUrlList();  
+
     rc = gdbm_delete(myGlobals.pwFile, key_data);
 
     if(rc != 0) {
@@ -491,7 +525,7 @@ void doAddURL(int len) {
   if(url != NULL) {
     decodeWebFormURL(url);
     for(i=0; i<strlen(url); i++) {
-      if(!(isalpha(url[i]) || isdigit(url[i]) || (strchr("/-_?", url[i]) != NULL))) {
+      if(!(isalpha(url[i]) || isdigit(url[i]) || (strchr("/-_?.", url[i]) != NULL))) {
 	badChar = 1;
 	break;
       }
@@ -520,6 +554,9 @@ void doAddURL(int len) {
 
     if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
       err = "FATAL ERROR: unable to add the new URL.";
+
+    /* Added url, clear the list */
+    clearUserUrlList();  
   }
 
   if(err != NULL) {
@@ -935,6 +972,9 @@ static void addKeyIfMissing(char* key, char* value,
     data_data.dsize = strlen(data_data.dptr)+1;
     gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE);
 
+    /* Added user, clear the list */
+    clearUserUrlList();  
+ 
     /* print notice to the user */
     if(memcmp(key,"1admin",6) == 0)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Admin user password has been set");
