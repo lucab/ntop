@@ -42,8 +42,10 @@ static void updateThptStats(int deviceToUpdate,
   HostTraffic *topHost;
   float topThpt;
 
+  /*
   if(myGlobals.device[deviceToUpdate].dummyDevice)
     return;
+  */
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "updateThptStats(%d, %d, %d, %d, %d, %d)",

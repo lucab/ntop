@@ -4197,10 +4197,12 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   printHTMLheader("Network Load Statistics", NULL, 0);
 
+  /*
   if(myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
     printFlagedWarning("<I>Network load statistics are not available for virtual interfaces</I>");
     return;
   }
+  */
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples == 0) {
     printNoDataYet();
