@@ -33,7 +33,7 @@
 static void* sflowMainLoop(void* _deviceId);
 #endif
 
-#define DEBUG_FLOWS
+/* #define DEBUG_FLOWS */
 
 /* ********************************* */
 
@@ -1408,36 +1408,38 @@ static void handleSflowSample(SFSample *sample, int deviceId) {
     if(fd == NULL) {
       fd = fopen("/tmp/sflowpackets.pcap", "w+");
 
-      memset(&hdr, 0, sizeof(hdr));
-      hdr.magic = TCPDUMP_MAGIC;
-      hdr.version_major = PCAP_VERSION_MAJOR;
-      hdr.version_minor = PCAP_VERSION_MINOR;
-      hdr.thiszone = 0;
-      hdr.snaplen = 128;
-      hdr.sigfigs = 0;
-      hdr.linktype = DLT_EN10MB;
-      if (fwrite((char *)&hdr, sizeof(hdr), 1, fd) != 1) {
-	fprintf(stderr, "failed to write tcpdump header: %s\n", strerror(errno));
-	exit(-1);
+      if(fd) {
+	memset(&hdr, 0, sizeof(hdr));
+	hdr.magic = TCPDUMP_MAGIC;
+	hdr.version_major = PCAP_VERSION_MAJOR;
+	hdr.version_minor = PCAP_VERSION_MINOR;
+	hdr.thiszone = 0;
+	hdr.snaplen = 128;
+	hdr.sigfigs = 0;
+	hdr.linktype = DLT_EN10MB;
+	if (fwrite((char *)&hdr, sizeof(hdr), 1, fd) != 1) {
+	  fprintf(stderr, "failed to write tcpdump header: %s\n", strerror(errno));
+	  exit(-1);
+	}
+
+	fflush(fd);
       }
 
+      /* Save packet */
+      // prepare the whole thing in a buffer first, in case we are piping the output
+      // to another process and the reader expects it all to appear at once...
+      memcpy(buf, &pkthdr, sizeof(pkthdr));
+
+      bytes = sizeof(hdr);
+      memcpy(buf+bytes, sample->header, sample->headerLen);
+      bytes += sample->headerLen;
+
+      if(fwrite(buf, bytes, 1, fd) != 1) {
+	fprintf(stderr, "writePcapPacket: packet write failed: %s\n", strerror(errno));
+	exit(-3);
+      }
       fflush(fd);
     }
-
-    /* Save packet */
-    // prepare the whole thing in a buffer first, in case we are piping the output
-    // to another process and the reader expects it all to appear at once...
-    memcpy(buf, &pkthdr, sizeof(pkthdr));
-
-    bytes = sizeof(hdr);
-    memcpy(buf+bytes, sample->header, sample->headerLen);
-    bytes += sample->headerLen;
-
-    if(fwrite(buf, bytes, 1, fd) != 1) {
-      fprintf(stderr, "writePcapPacket: packet write failed: %s\n", strerror(errno));
-      exit(-3);
-    }
-    fflush(fd);
   }
 #endif
 }
