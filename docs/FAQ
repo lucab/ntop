@@ -236,7 +236,7 @@ A. Not exactly.
    of the MADYNES Research Time (Managing DYnamic NEtworks and Services), see
    http://madynes.loria.fr/.
 
-   ntop 3.0 has more than a fair amount of smarts about FibreChannel and iSCSI
+   ntop 3.0 has more than a fair amount of smarts about FibreChannel and SCSI
    thanks to code contributed by Dinesh G Dutt <ddutt@cisco.com> of Cisco. 
 
    However, since most of ntop's displayed counts are at the TCP/IP level, it
