@@ -32,6 +32,8 @@ Entries are in no particular sequence.
 Post 2.1 release entries will have a author/date stamp, (Updated/Added ddmmmyyyy by x)
 at the end.
 
+Extensive updates 30Oct2002 for the new ./configure scripts
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -83,13 +85,51 @@ Compiling
 Q. ntop doesn't compile.
 A. First, check the output from ./configure for an error message - sometimes
    people miss them.  Then review the output from make, also looking for an error.
-   Finally, look at config.log Look in config.log to see what ./configure found 
-   when looking for headers and libraries.  Usually, you are missing a critical
-   library, but tried to "make" anyway after ./configure failed.
+   Finally, look at config.log to see what ./configure found  when looking for 
+   headers and libraries.  Usually, you are missing a critical library, but tried 
+   to "make" anyway after ./configure failed.
+
+   ntop will report KEY information and PROBLEMS in large, set-off, lines:
+
+     *******************************************************************
+     *
+     * NOTE: Building ntop for a supported platform
+     *       This means we expect ntop to work without major issues
+     *
+     *            'i686-pc-linux-gnu'
+     *
+     *    Please keep the ntop-dev mailing list updated with any
+     *    successes you have or problems you encounter...
+     *
+     *   Support for this platform was most recently verified for
+     *
+     *     RedHat7.2 w/ updates           ntop 2.1.51   on 2002-10-21
+     *     Suse i686, 2.4.18-4GB-SMP      ntop 2.1.51   on 2002-10-24
+     *
+     *******************************************************************
+
+   or
+
+     *******************************************************************
+     *
+     * ERROR:  1. We were unable to find the header gdchart.h in the
+     *            standard location or the alternate location you
+     *            specified by --with-gdchart-root.
+     *
+     *>>> ./configure continues, charts will not be available.
+     *
+     *???     1. Rerun ./configure with a corrected --with-gdchart-root
+     *???  or 2. Install gdchart and rerun ./configure
+     *
+     *******************************************************************
+
+   READ THEM!
 
    Hint: It may sometimes be that you're missing the header files (often those 
    are in a -devel rpm if you're running RedHat)
 
+(Updated 30Oct2002, new ./configure scripts)
+  
 
 Q. What is "snapshot"
 A. Snapshot is a community FAQ and documentation resource at http://snapshot.ntop.org.
@@ -121,55 +161,64 @@ A. A snapshot is a dump of the ntop cvs structure, automatically generated every
 
 
 Q. I have a problem with...
-A. Please run ./autogen.sh -1 and try again.
+A. If you are compiling ntop from versions prior to 2.1.52, Please run 
+   ./autogen.sh -1 and try again.
+
    ntop is distributed with generated files from RedHat 7.2 and/or Solaris 8
    systems.  The Makefile is supposed to detect things being out of whack and
    automatically regenerate these files, but it doesn't ALWAYS work.
 
    Doing ./autogen.sh -1 makes the various generated files conform to your
    system and your tools versions.  It's the right thing to do.
+(Updated 30Oct2002, new ./configure scripts)
 
 Q: How do I force configure to build ntop without xxxx support?
 A: ./configure --help shows a bunch of configuration options available to you:
 
-      --enable-micro-ntop     compile a slim version of ntop 
-                              [default=disabled]
-      --disable-mt            disable multithread support also if available 
-                              [default=enabled]
-      --enable-mysql          enable MySQL support also if available 
-                              [default=disabled]
-      --disable-ssl           disable HTPPS support also if OpenSSL is 
-                              available [default=enabled]
-      --disable-readline      disable GNU readline support also if available
-                              [default=enabled]
-      --disable-curses        disable curses support also if available
-                              [default=enabled]
-      --disable-gdchart       disable GDChart support also if available
-                              [default=enabled]
-      --enable-tcpwrap        enable TCP Wrap support if available 
-                              [default=disabled]
-      --enable-ignoresigpipe  Ignore SIGPIPE errors [default=do not ignore]
-      --enable-sslwatchdog    Watchdog for ssl hangups (Netscape 6.2.2)
-                              [default=disabled]
-      --enable-sslv3          enable ssl v3 support if available
-                              [default=disabled]
-      +----------------------------------------------------------------------------+
-      --disable-plugins       disable compilation of plugins, also if they are 
-                              available [default=disabled]
-      --disable-intop         disable compilation of intop [default=enabled]
+  +--ntop-specific:------------------------------------------------------------+
+  --enable-configuredebug     display debug information during ./configure
+  --disable-mt                disable multithread support default=enabled
+  --enable-sslv3              enable ssl v3 support default=disabled
+  --enable-sslwatchdog        enable Watchdog for ssl hangups default=disabled
+  --disable-plugins           disable compilation of plugins default=enabled
+  --enable-micro-ntop         compile a slim version of ntop default=disabled
+  --enable-intop              enable intop (obsolete) command line version default=disabled
+  --enable-ignoresigpipe      Ignore SIGPIPE errors default=do not ignore
+  --enable-xmldump            Enable xml-based data dump default=disabled
+  --enable-showoses           display OS Support information.
+  --enable-iknowbetter        Override WILLFAIL
+  +----------------------------------------------------------------------------+
 
+  +--external-packages:--------------------------------------------------------+
+  --disable-ssl               disable HTPPS support default=enabled
+  --disable-gdchart           disable use of GDChart default=enabled
+  --enable-tcpwrap            enable use of TCP Wrapper default=disabled
+  --disable-curses            disable use of curses default=enabled
+  --disable-readline          disable use of GNU readline default=enabled
+  +-External-source-locations:-------------------------------------------------+
+  --with-pcap-root=DIR        LBNL pcap source tree located in DIR
+  --with-gdbm-root=DIR        GNU gdbm source tree located in DIR
+  --with-ossl-root=DIR        openSSL source tree located in DIR
+  --with-gdchart-root=DIR     GDChart source tree located in DIR
+  --with-gd-root=DIR          GD source tree located in DIR
+  --with-libpng-root=DIR      PNGLIB source tree located in DIR
+  --with-zlib-root=DIR        ZLIB source tree located in DIR
+  +----------------------------------------------------------------------------+
+(Updated for the new scripts, 30Oct2002)
 
 Q. Which packages/libraries do I need to compile ntop:
        glibc
        gcc
        cpp
        gawk
-       autoconf
-       automake
+       autoconf 2.5+
+       automake 1.5+
+       libtool  1.4+
        openssl (for https:// support)
        gdbm
        libpcap
-       mysql (for mySQL support)
+
+     Note that both gcc 2.95/2.96 and 3.2 are reported to work.
 
      Note that in some cases the minimal header files for a tool will be in one
 	      "package" and the execution library in another. ntop needs both so that
@@ -179,6 +228,7 @@ Q. Which packages/libraries do I need to compile ntop:
 	 (Note some packages will have additional packages as pre-requisites)
 	 
      Building libpcap requires: bison/flex  
+(Updated for the new scripts, 30Oct2002)
 
 Q. Compile dies because it's missing depcomp
 A. automake/autoconf issue.  Just copy the missing file (or make a symbolic link) into
@@ -188,7 +238,9 @@ A. automake/autoconf issue.  Just copy the missing file (or make a symbolic link
    Another user reports it is in /usr/local/share/automake in sun8. 
 
    Snapshots after February 2002 should have fixed the problem, but you may have
-   to run ./autogen.sh -1 to create the pointer.
+   to run:
+   $ automake --add-missing --gnu -c
+   to create the pointer.
 
 Q. How do I update the Vendor Table (MAC address prefixes)?
 A. ntop has (in Makefile), a rule to automatically download the latest vendor 
@@ -209,7 +261,8 @@ A. ntop has (in Makefile), a rule to automatically download the latest vendor
 
 
 Q. I get an error, libtool: link: CURRENT `-release' is not a nonnegative integer
-A. This is an autoconf problem.  The whole set of messages is typically:
+A. This is an autoconf problem.  It should be fixed in the new scripts (30Oct2002).
+   The whole set of messages is typically:
 
    [...]
    > libtool: link: CURRENT `-release' is not a nonnegative integer
@@ -557,7 +610,7 @@ A. Check your plugins and see if either netflow or sflow is active.
    (silently) force the -M switch on.
 
 
-Q. I'm seeing weird "hosts" on my network with names like	"Bridge Sp. Tree/OSI Route".
+Q. I'm seeing weird "hosts" on my network with names like "Bridge Sp. Tree/OSI Route".
    What are they?
 A. There is a list of "special" MAC address prefixes in vendor.c, specialMacInfo[].
    There are blocks of MAC addresses reserved (sometimes not formally) for special
@@ -821,7 +874,7 @@ A. (These are the ones ntop monitors if the user does not supply a -p parameter)
    The current list (July 2002) is
 
      Protocol   Ports
-	 --------   -----
+     --------   -----
      FTP        ftp ftp-data
      HTTP       http www https 3128      /* 3128 is HTTP cache */
      DNS        name domain     
@@ -867,133 +920,133 @@ A. There are a couple of options that appear only if they're not compiled in, an
    The best way to see what is actually available is to run ntop with the -h or 
    --help options and see.
 
-   Here is the FULL set as of July 2002:
+   Here is the FULL set as of October 2002:
 
      -a <path>      | --access-log-path <path>
-                                Path for ntop web server access log
+                               Path for ntop web server access log
 
-     -b <host:port> | --sql-host <host:port>
-                                SQL host for ntop database
+     -b             | --disable-decoders
+                               Disable protocol decoders
 
      -c             | --sticky-hosts
-                                Idle hosts are not purged from hash
+                               Idle hosts are not purged from hash
 
      -d             | --daemon
-                                Run ntop in daemon mode
+                               Run ntop in daemon mode
 
      -e <number>    | --max-table-rows <number>
-                                Maximum number of table rows to report
+                               Maximum number of table rows to report
 
      -f <file>      | --traffic-dump-file <file>
-                                Traffic dump file (see tcpdump)
+                               Traffic dump file (see tcpdump)
+
+     -g             | --track-local-hosts
+                               Track only local hosts
 
      -h             | --help
-                                Display this help and exit
+                               Display this help and exit
 
      -i <name>      | --interface <name>
-                                Interface name or names to monitor
+                               Interface name or names to monitor
 
-     -i <number>    | --interface <number>
-                                Interface index number to monitor
-
-     -j             | --border-sniffer-mode
-                                Set ntop in border/gateway sniffing mode
+     -o             | --no-mac
+                               ntop will trust just IP addresses (no MACs)
 
      -k             | --filter-expression-in-extra-frame
-                                kernel filter expression in extra frame
+                               Show kernel filter expression in extra frame
 
      -l <path>      | --pcap-log <path>
-                                Dump packets captured to a file (debug only!)
+                               Dump packets captured to a file (debug only!)
 
      -m <addresses> | --local-subnets <addresses>
-                                Local subnetwork(s) (see man page)
+                               Local subnetwork(s) (see man page)
 
      -n             | --numeric-ip-addresses
-                                Numeric IP addresses - no DNS resolution
+                               Numeric IP addresses - no DNS resolution
 
      -p <list>      | --protocols <list>
-                                List of IP protocols to monitor (see man page)
+                               List of IP protocols to monitor (see man page)
 
      -q             | --create-suspicious-packets
-                                Create file ntop-suspicious-pkts.XXX.pcap file
+                               Create file ntop-suspicious-pkts.XXX.pcap file
 
      -r <number>    | --refresh-time <number>
-                                Refresh time in seconds, default is %d\n", REFRESH_T
+                               Refresh time in seconds, default is 120
 
      -s             | --no-promiscuous
-                                Disable promiscuous mode
+                               Disable promiscuous mode
 
      -t <number>    | --trace-level <number>
-                                Trace level [0-5]
+                               Trace level [0-5]
 
      -u <user>      | --user <user>
-                                Userid/name to run ntop under (see man page)
-
-     -v <username:password:dbName> | --mysql-host <username:password:dbName>
-                                host for ntop database
+                               Userid/name to run ntop under (see man page)
 
      -w <port>      | --http-server <port>
-                                Web server (http:) port (or address:port) to listen on
+                               Web server (http:) port (or address:port) to listen on
 
-     -A
-                                Ask admin user password and exit
+     -z             | --disable-sessions
+                               Disable TCP session tracking
 
-     --set-admin-password=<pass>
-                                Set password for the admin user to <pass>
-     -B <filter>
-                                Packet filter expression, like tcpdump
+     -A                        Ask admin user password and exit
+
+                      --set-admin-password=<pass>
+                               Set password for the admin user to <pass>
+     -B <filter>    | --filter-expression
+
+                               Packet filter expression, like tcpdump
 
      -D <name>      | --domain <name>
-                                Internet domain name
+                               Internet domain name
 
      -E             | --enable-external-tools
-                                Enable lsof/nmap integration (if present)
+                               Enable lsof/nmap integration (if present)
 
      -F <spec>      | --flow-spec <specs>
-                                Flow specs (see man page)
+                               Flow specs (see man page)
 
      -K             | --enable-debug
-                                Enable debug mode
+                               Enable debug mode
 
-     -L 
-                                Do logging via syslog
+     -L                        Do logging via syslog
 
-     --use-syslog=<facility>
-                                Do logging via syslog, facility
-                                Note that the = is REQUIRED
+                      --use-syslog=<facility>
+                               Do logging via syslog, facility - Note that the = is REQUIRED
 
      -M             | --no-interface-merge
-                                Don't merge network interfaces (see man page)
+                               Don't merge network interfaces (see man page)
 
      -N             | --no-nmap
-                                Don't use nmap even if installed
+                               Don't use nmap even if installed
 
      -O <path>      | --pcap-file-path <path>
-                                Path for log files in pcap format
+                               Path for log files in pcap format
 
      -P <path>      | --db-file-path <path>
-                                Path for ntop internal database files
+                               Path for ntop internal database files
 
      -S <number>    | --store-mode <number>
-                                Persistent storage mode [0-none, 1-all, 2-local only]
+                               Persistent storage mode [0-none, 1-all, 2-local only]
 
      -U <URL>       | --mapper <URL>
-                                URL (mapper.pl) for displaying host location
+                               URL (mapper.pl) for displaying host location
 
      -V             | --version
-                                Output version information and exit
+                               Output version information and exit
 
      -W <port>      | --https-server <port>
-                                Web server (https:) port (or address:port) to listen on
+                               Web server (https:) port (or address:port) to listen on
 
      --throughput-bar-chart
-                                Use BAR chart for graphs
+                               Use BAR chart for graphs
 
      --ignore-sigpipe
-                                Ignore SIGPIPE errors
+                               Ignore SIGPIPE errors
 
      --ssl-watchdog
-                                Use ssl watchdog (NS6 problem)
+                               Use ssl watchdog (NS6 problem)
+
+
 
 Q. But, what about -A a/k/a --accuracy-level
 A. This option was used to set ntop into various modes which performed less 
@@ -1011,6 +1064,10 @@ A. This option was used to remove the hint text from the administrative password
 
    It was added 4Feb2002 and removed 8Mar2002 (the last traces, in usage(), were 
    removed on 4Apr2002).  
+
+
+Q. But what about SQL and mySQL
+A. Removed in 2.1.50+ versions - use rrd
 
 
 Q. What does the message "URL security(1): ERROR: Found percent in URL...DANGER...
@@ -1243,7 +1300,7 @@ A. ntop is designed as a hybrid packet analyzer, not a pure Ethernet analyzer
    For example, on my Cable Modem, I see broadcasts for a number of subnets
    that AT&T has assigned to this area (I don't see the traffic, but you get
    the picture) in an overlay structure (two or more networks on the
-   same wire, but with separate address spaces)          .   (Added, 20Sep2002, BMS)
+   same wire, but with separate address spaces).   (Added, 20Sep2002, BMS)
 
 
 Q. I am using a /16 (/25 or whatever) mask and I get this message:
@@ -1699,28 +1756,23 @@ A.     glibc, glibc-devel
        gcc
        cpp
        gawk
-       autoconf
-       automake
+       autoconf 2.5+
+       automake 1.5+
+       libtool 1.4+
        openssl, openssl-devel (for https:// support)
        gdbm, gdbm-devel
        libpcap
-       mysql-devel (for mySQL support)
 
      (Note some packages will have additional packages as pre-requisites)
 
 Q. I have compile problems, especially with plugings. 
-A. Be sure and regenerate everything on your machine, that is 
+A. The ./configure and make steps should automatically regenerated all of the 
+   files on your machine to conform to the installed set of auto* tools.
 
-       ./autogen.sh -1 
        ./configure 
        make 
        make install 
-
-   Running autogen is always safe and is a really good idea, because it 
-   recreates all of the make and configure stuff from the .in and .am files 
-   based on your specific configuration. Otherwise, you are trying to use the 
-   ones that happened to be generated on the machine of whomever uploaded them 
-   last to the CVS and that's not always a good match...  
+(Updated 30Oct2002, new ./configure scripts)
 
 
 Q. I get an error:
@@ -1913,7 +1965,8 @@ A. (Thanks to jac engel [jacengel@home.nl] for the example)
 
 Q. OK, but how to I translate \Device\Packet_xxxxx to my Froboz ModelT network card and not the
    Fubar27 that's on the motherboard.
-A1. A Google search on script "CurrentVersion\NetworkCards" finds a couple of scripts/utilities
+A1. Newer (2.1.51+) ntop versions should report both the index and the human readable information.
+A2. A Google search on script "CurrentVersion\NetworkCards" finds a couple of scripts/utilities
    that might work in various environments.
 
    Otherwise...
@@ -1927,6 +1980,7 @@ A1. A Google search on script "CurrentVersion\NetworkCards" finds a couple of sc
    The two subkeys, Servicename and the Description tells you which id maps to which NIC.
 
    (Added 13Sep2002, Burton)
+   (Updated 30Oct2002, Burton)
 
 Q. Where does ntop look for html (and gif) files under Win32?
 A. ntop looks in two places. The first is the current directory and the second is 
@@ -1971,6 +2025,15 @@ A. This is because bfpX has not been configured inside the generic bsd-kernel
     config file and rebuild the kernel.  
 
 
+NetBSD
+=-=-=-
+
+Q. Multithread?
+A. There isn't a standard POSIX thread package for NetBSD.  Both "proven" and "unproven"
+   threads have issues.  One user is bound and determined to make GNU Pth work, but pth
+   isn't quite POSIX threads and he's not getting far...
+   (Added 30Oct2002, Burton)
+
 HP-UX
 =-=-=
 
@@ -1989,10 +2052,16 @@ A: The test in the code seems wrong, but we didn't have time, nor
    #endif
 
 
-Q: Why the HP-UX version of ntop isn't multithreaded?
+Q: Why the HP-UX 10.20 version of ntop isn't multithreaded?
 A: To reduce complexity and because resources aren't availabe to provide
    full support for less commonly used OSes. Specifically Because HP's 10.20
    pthread implementation is slightly different from the POSIX standard.
+
+Q. Why is the HP-UX 11 version of ntop not multithreading?
+A. Because we don't have access to an HP-UX box and because HP has a (retarded)
+   (non-standard) implementation of POSIX threads.  The scripts are being tweaked,
+   but aren't quite right.
+   (Added 30Oct2002, Burton)
 
 
 IRIX (v1.3 information)
@@ -2446,6 +2515,11 @@ How many machines (traffic sources/destinations) and users
 
 (If you're uncomfortable giving specifics, then leave it generic, but the information 
 is necessary to allow efficient use of the community's time helping YOU with YOUR problem) 
+
+6. Configuration
+If you're having problems with ./configure, post the relevant portions of config.log too.
+Look for anything named like the library or header file that's giving you fits (e.g. for pcap.h,
+look for pcap_h stuff)
 
 AFTER POSTING: 
 
