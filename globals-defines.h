@@ -222,10 +222,6 @@
   #define MAKE_ASYNC_ADDRESS_RESOLUTION
  #endif
 
- #ifndef HAVE_LIBRRD
-  /* #define HAVE_LIBRRD ****/
- #endif
-
  #define MAKE_STATIC_PLUGIN
 
  #define CFG_LITTLE_ENDIAN                  1
@@ -305,6 +301,15 @@
 #endif
 
 /*
+ * MAKE_WITH_SCHED_YIELD is shorthand
+ */
+#if ( defined(HAVE_SCHED_H) || defined(HAVE_SYS_SCHED_H) ) && defined(HAVE_SCHED_YIELD)
+ #define MAKE_WITH_SCHED_YIELD
+#else
+ #undef MAKE_WITH_SCHED_YIELD
+#endif
+
+/*
  * Do we have the stuff we need for gdchart?
  *    ./configure sets MAKE_WITH_GDCHART - that's the reliable one.
  *    But it's possible we have some of the others set (say we found libpng).
@@ -315,8 +320,6 @@
  #undef HAVE_GDC_H 
  #undef HAVE_GD_H
  #undef HAVE_PNG_H
- #undef HAVE_GD
- #undef HAVE_PNG
 #endif
 
 /*
@@ -565,7 +568,7 @@
 /*                                                                                 */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#if defined(CFG_MULTITHREADED) && defined(HAVE_OPENSSL) && defined(HAVE_PTHREAD_H) && !defined(WIN32)
+#if defined(CFG_MULTITHREADED) && defined(HAVE_OPENSSL) && defined(HAVE_PTHREAD_H) && defined(HAVE_SETJMP_H) && !defined(WIN32)
  #define MAKE_WITH_SSLWATCHDOG
  #ifdef MAKE_WITH_SSLWATCHDOG_COMPILETIME
   /* Compile Time option */
@@ -846,13 +849,11 @@
  * On a busy network with lots of hosts coming and going, this MIGHT help - check the
  * info.html report and see if the MAX is this size.
  *
- * MAX_SESSIONS_CACHE_LEN is the same, but it caches sessions.
+ * MAX_SESSIONS_CACHE_LEN defaults to the same, but it caches sessions and could
+ * be different.
  */
 #define MAX_HOSTS_CACHE_LEN                 512
-
-#ifdef PARM_USE_SESSIONS_CACHE
- #define MAX_SESSIONS_CACHE_LEN             MAX_HOSTS_CACHE_LEN
-#endif
+#define MAX_SESSIONS_CACHE_LEN              MAX_HOSTS_CACHE_LEN
 
 /*
  * Maximum number of protocols for graphs - hostIPTrafficDistrib()
@@ -2199,19 +2200,19 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifdef CFG_MULTITHREADED
-# if defined(HAVE_OPENSSL)
-#  define THREAD_MODE "MT (SSL)"
-# else
-#  define THREAD_MODE "MT"
-# endif
+ #if defined(HAVE_OPENSSL)
+  #define THREAD_MODE "MT (SSL)"
+ #else
+  #define THREAD_MODE "MT"
+ #endif
 
 #else /* ! CFG_MULTITHREADED */
 
-#if defined(HAVE_OPENSSL)
-#define THREAD_MODE "ST (SSL)"
-#else
-#define THREAD_MODE "ST"
-#endif
+ #if defined(HAVE_OPENSSL)
+  #define THREAD_MODE "ST (SSL)"
+ #else
+  #define THREAD_MODE "ST"
+ #endif
 #endif /* CFG_MULTITHREADED */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

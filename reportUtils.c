@@ -3940,6 +3940,8 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 
 #define MAX_NUM_OS           256
 
+#ifndef MAKE_MICRO_NTOP
+
 void printLocalHostsStats() {
   u_int idx, numEntries=0;
   int printedEntries=0;
@@ -4067,6 +4069,8 @@ void printLocalHostsStats() {
 
   free(tmpTable);
 }
+
+#endif
 
 /* ******************************************************** */
 

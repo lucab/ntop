@@ -66,17 +66,11 @@
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
-/* Show we found crypto.h and set INCS */
-#undef HAVE_CRYPTO_H
-
 /* Define to 1 if you have the <crypt.h> header file. */
 #undef HAVE_CRYPT_H
 
 /* Define to 1 if you have the `ctime_r' function. */
 #undef HAVE_CTIME_R
-
-/* Define to 1 if you have the <curses.h> header file. */
-#undef HAVE_CURSES_H
 
 /* Define to 1 if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
@@ -96,9 +90,6 @@
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
 
-/* Show we found err.h and set INCS */
-#undef HAVE_ERR_H
-
 /* Define to 1 if you have the <ethertype.h> header file. */
 #undef HAVE_ETHERTYPE_H
 
@@ -108,20 +99,20 @@
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
+/* Define to 1 if you have the <float.h> header file. */
+#undef HAVE_FLOAT_H
+
 /* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
 
-/* Show we found -lgdbm and set LIBS */
-#undef HAVE_GDBM
-
-/* Show we found gdbm.h and set INCS */
+/* Define to 1 if you have the <gdbm.h> header file. */
 #undef HAVE_GDBM_H
 
-/* Enable GDChart */
-#undef HAVE_GDCHART
-
-/* Show we found gdchart.h and set INCS */
+/* Define to 1 if you have the <gdchart.h> header file. */
 #undef HAVE_GDCHART_H
+
+/* Define to 1 if you have the <gdcpie.h> header file. */
+#undef HAVE_GDCPIE_H
 
 /* Define to 1 if you have the <gdc.h> header file. */
 #undef HAVE_GDC_H
@@ -283,6 +274,9 @@
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
 
+/* Define to 1 if you have the <math.h> header file. */
+#undef HAVE_MATH_H
+
 /* Define to 1 if you have the `memchr' function. */
 #undef HAVE_MEMCHR
 
@@ -291,9 +285,6 @@
 
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
-
-/* Define to 1 if you have the <ncurses.h> header file. */
-#undef HAVE_NCURSES_H
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
@@ -331,7 +322,7 @@
 /* Define to 1 if you have the <net/if.h> header file. */
 #undef HAVE_NET_IF_H
 
-/* Enable openssl */
+/* OPENSSL is available */
 #undef HAVE_OPENSSL
 
 /* Define to 1 if you have the <openssl/crypto.h> header file. */
@@ -352,20 +343,14 @@
 /* Define to 1 if you have the <openssl/x509.h> header file. */
 #undef HAVE_OPENSSL_X509_H
 
-/* Show we found -lpcap and set LIBS */
-#undef HAVE_PCAP
-
 /* Define to 1 if you have the `pcap_freecode' function. */
 #undef HAVE_PCAP_FREECODE
 
-/* Show we found pcap.h and set INCS */
+/* Define to 1 if you have the <pcap.h> header file. */
 #undef HAVE_PCAP_H
 
 /* Define to 1 if you have the `pcap_open_dead' function. */
 #undef HAVE_PCAP_OPEN_DEAD
-
-/* Show we found pem.h and set INCS */
-#undef HAVE_PEM_H
 
 /* Define to 1 if you have the <png.h> header file. */
 #undef HAVE_PNG_H
@@ -382,9 +367,6 @@
 /* GNU readline library (-lreadline). */
 #undef HAVE_READLINE
 
-/* Define to 1 if you have the <readline/readline.h> header file. */
-#undef HAVE_READLINE_READLINE_H
-
 /* Define to 1 if you have the `regcomp' function. */
 #undef HAVE_REGCOMP
 
@@ -397,11 +379,8 @@
 /* Enable RRD */
 #undef HAVE_RRD
 
-/* Show we found rrd.h and set INCS */
+/* Define to 1 if you have the <rrd.h> header file. */
 #undef HAVE_RRD_H
-
-/* Show we found rsa.h and set INCS */
-#undef HAVE_RSA_H
 
 /* Define to 1 if you have the <sched.h> header file. */
 #undef HAVE_SCHED_H
@@ -418,8 +397,14 @@
 /* Define to 1 if you have the <semaphore.h> header file. */
 #undef HAVE_SEMAPHORE_H
 
+/* Define to 1 if you have the <setjmp.h> header file. */
+#undef HAVE_SETJMP_H
+
 /* Define to 1 if you have the <shadow.h> header file. */
 #undef HAVE_SHADOW_H
+
+/* Define to 1 if you have the <signal.h> header file. */
+#undef HAVE_SIGNAL_H
 
 /* Define to 1 if you have the `snprintf' function. */
 #undef HAVE_SNPRINTF
@@ -430,12 +415,15 @@
 /* Define to 1 if you have the `sqrt' function. */
 #undef HAVE_SQRT
 
-/* Show we found ssl.h and set INCS */
-#undef HAVE_SSL_H
-
 /* Define to 1 if `stat' has the bug that it succeeds when given the
    zero-length file name argument. */
 #undef HAVE_STAT_EMPTY_STRING_BUG
+
+/* Define to 1 if you have the <stdarg.h> header file. */
+#undef HAVE_STDARG_H
+
+/* Define to 1 if you have the <stddef.h> header file. */
+#undef HAVE_STDDEF_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -591,14 +579,8 @@
 /* Define to 1 if `vfork' works. */
 #undef HAVE_WORKING_VFORK
 
-/* Show we found x509.h and set INCS */
-#undef HAVE_X509_H
-
 /* Define to 1 if you have the <xmlversion.h> header file. */
 #undef HAVE_XMLVERSION_H
-
-/* Enable zLib */
-#undef HAVE_ZLIB
 
 /* Define to 1 if you have the <zlib.h> header file. */
 #undef HAVE_ZLIB_H
@@ -634,8 +616,11 @@
 /* Enable SSL Watchdog */
 #undef MAKE_WITH_SSLWATCHDOG_COMPILETIME
 
-/* XML Dump is available */
+/* Enable XMLDUMP */
 #undef MAKE_WITH_XMLDUMP
+
+/* ZLIB is available */
+#undef MAKE_WITH_ZLIB
 
 /* Name of package */
 #undef PACKAGE
@@ -654,6 +639,9 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* Define to 1 if the C compiler supports function prototypes. */
+#undef PROTOTYPES
 
 /* temporary definition */
 #undef RETSIGTYPE
@@ -683,13 +671,13 @@
 /* Version number of package */
 #undef VERSION
 
-/* Define for XML */
-#undef XMLDUMP
-
 /* Define to 1 if type `char' is unsigned and you are not using gcc.  */
 #ifndef __CHAR_UNSIGNED__
 # undef __CHAR_UNSIGNED__
 #endif
+
+/* Define like PROTOTYPES; this can be used by system headers. */
+#undef __PROTOTYPES
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const

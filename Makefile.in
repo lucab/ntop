@@ -108,16 +108,17 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
-ECHO = @ECHO@
 INCS = @INCS@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTOP = @INTOP@
+LD = @LD@
 LIBCURSES = @LIBCURSES@
 LIBREADLINE = @LIBREADLINE@
 LIBTERMCAP = @LIBTERMCAP@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
+NM = @NM@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
@@ -128,6 +129,7 @@ SCRIPTVER = @SCRIPTVER@
 SO_VERSION_PATCH = @SO_VERSION_PATCH@
 STRIP = @STRIP@
 VERSION = @PACKAGE_VERSION@
+XMLDUMP = @XMLDUMP@
 am__include = @am__include@
 am__quote = @am__quote@
 install_sh = @install_sh@
@@ -1101,7 +1103,7 @@ xmldump.c: xml_*.inc globals-structtypes.h
 
 xml_*.inc: globals-structtypes.h
 	@echo "Processing globals-structtypes.h to make xml_*.inc..."
-	@awk -f utils/xmldump.awk globals-structtypes.h
+	@@AWK@ -f utils/xmldump.awk globals-structtypes.h
 
 .PHONY: snapshot
 
@@ -1147,7 +1149,7 @@ faq.html: docs/FAQ
 	@echo "-----------------------------------------------"
 	@echo "Converting $< to HTML format  .... Please wait"
 	@echo ""
-	@awk -f utils/faqtohtml.awk $< | sed 's/_//g' | sed 's/[ -~]//g' > html/faq.html
+	@@AWK@ -f utils/faqtohtml.awk $< | sed 's/_//g' | sed 's/[ -~]//g' > html/faq.html
 	@cp -f html/faq.html faq.html
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"

@@ -4,8 +4,9 @@
 ## (this file is processed with 'automake' to produce Makefile.in)
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
-# Copyright (c) 1998, 2000 Luca Deri <deri@ntop.org>
+# Copyright (c) 1998-2003 Luca Deri <deri@ntop.org>
 # Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
+# Rewrite 1Q 2003 Burton M. Strauss III <burton@ntopsupport.com>
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
@@ -52,6 +53,7 @@ fi
 dnl>
 dnl>  Append a value to $LIBS -- allows us to encapsulate functionality
 dnl>           for those OSes which DO NOT check subdirectories
+dnl>     And to strip dups.
 dnl>
 
 # NTOP_APPEND_LIBS(Lvalue, lvalue)
@@ -59,314 +61,94 @@ dnl>
 AC_DEFUN([NTOP_APPEND_LIBS],  
 [dnl
 # Expansion of NTOP_APPEND_LIBS($1, $2)
-    case "${DEFINEOS}" in
-      DARWIN )
-          LIBS="$LIBS -L$1 -L$1/lib"
-          ;;
-      * )
-          LIBS="$LIBS -L$1"
-          ;;
-    esac
-    if test ".$2" != "."; then
-        LIBS="$LIBS -l$2"
+    if test ".$1" != "."; then
+        rc=`(echo $LIBS | grep '$1 ' > /dev/null 2> /dev/null; echo $?)`
+        if [[ $rc -eq 1 ]]; then 
+            case "${DEFINEOS}" in
+              DARWIN )
+                LIBS="$LIBS -L$1 -L$1/lib"
+                ;;
+              * )
+                LIBS="$LIBS -L$1"
+                ;;
+            esac
+        fi
+        if test ".$2" != "."; then
+            rc=`(echo $LIBS | grep '\-l$2 ' > /dev/null 2> /dev/null; echo $?)`
+            if [[ $rc -eq 1 ]]; then 
+                LIBS="$LIBS -l$2"
+            fi
+        fi
     fi
 # Finished expansion of NTOP_APPEND_LIBS()
 ])
 
 dnl>
-dnl> Test for a library we MUST have (pcap gdbm)
+dnl>  Append a value to $INCS -- allows us to strip dups
 dnl>
 
-# NTOP_TEST_MUSTHAVE(itemname, headername, functionname1, functionname2, VARNAME)
-# ---------------------------------------------------------------
-AC_DEFUN([NTOP_TEST_MUSTHAVE],
+# NTOP_APPEND_INCS(Ivalue)
+# ----------------------------------------------
+AC_DEFUN([NTOP_APPEND_INCS],
 [dnl
-# Expansion of NTOP_NTOP_TEST_MUSTHAVE($1, $2, $3, $4, $5)
-dnl>setup our variables...
-nt_ac_header=`echo "ac_cv_header_$2" | $as_tr_sh`
-nt_ac_lib=`echo "ac_cv_lib_$3_$2" | $as_tr_sh`
+# Expansion of NTOP_APPEND_INCS($1)
+    if test ".$1" != "."; then
+        rc=`(echo $INCS | grep '$1' > /dev/null 2> /dev/null; echo $?)`
+        if [[ $rc -eq 1 ]]; then
+            INCS="$INCS -I$1"
+        fi
+    fi
+# Finished expansion of NTOP_APPEND_INCS()
+])
 
-AC_MSG_CHECKING([for $1])
+dnl>
+dnl>  Report location
+dnl>
 
-if eval "test ""$${$nt_ac_lib}"" = yes" &&
-   eval "test ""$${$nt_ac_header}"" = yes"; then
-    if test ".${$5_ROOT}" != "."; then
-        AC_MSG_RESULT(ok)
-        echo
-        echo "******************************************************************"
-        echo "*"
-        echo "* NOTE:  You specified --with-$1-root."
-        echo "*        However, a version was found in a standard location."
-        echo "*"
-        echo "*       Since this version will be used anyway,"
-        echo "*>>>    we've ignored your specified location."
-        echo "*"
-        echo "******************************************************************"
-        echo
-        $5=
-    else
-        AC_MSG_RESULT([ok (standard location)])
-    fi
-elif test ".${$5_ROOT}" = "."; then
-    AC_MSG_RESULT([not found in standard location, no --with-$1-root, testing further...])
-    AC_MSG_CHECKING([for $1 header $2])
-    if eval "test ""$${$nt_ac_header}"" = yes"; then
-         AC_MSG_RESULT([ok, found in standard location])
-    elif test -d /usr &&
-         test -d /usr/include &&
-         test -r /usr/include/$2; then
-         AC_MSG_RESULT([ok, found in /usr/include])
-         INCS="${INCS} -I/usr/include"
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2 and set INCS])
-    elif test -d /usr &&
-         test -d /usr/include &&
-         test -d /usr/include/$1 &&
-         test -r /usr/include/$1/$2; then
-         AC_MSG_RESULT([ok, found in /usr/include/$1])
-         INCS="${INCS} -I/usr/include/$1"
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2 and set INCS])
-    elif test -d /usr &&
-         test -d /usr/local &&
-         test -d /usr/local/include &&
-         test -r /usr/local/include/$2; then
-         AC_MSG_RESULT([ok, found in /usr/local/include])
-         INCS="${INCS} -I/usr/local/include"
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2 and set INCS])
-    elif test ".${DEFINEOS}" = ".SOLARIS" &&
-         test -d /usr/local/tools/SunOS &&
-         test -d /usr/local/tools/SunOS/include &&
-         test -r /usr/local/tools/SunOS/include/$2; then
-         AC_MSG_RESULT([ok, found in /usr/local/tools/SunOS/include])
-         INCS="${INCS} -I/usr/local/tools/SunOS/include"
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2 and set INCS])
-    elif test ".${DEFINEOS}" = ".DARWIN" &&
-         test -d /sw &&
-         test -d /sw/include &&
-         test -r /sw/include/$2; then
-         AC_MSG_RESULT([ok, found in /sw/include])
-         INCS="${INCS} -I/sw/include"
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2 and set INCS])
-    elif test -r $2; then
-         AC_MSG_RESULT([ok, found in ntop directory])
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2])
-    else
-        AC_MSG_RESULT(error)
-        echo
-        echo "******************************************************************"
-        echo "*"
-        echo "* ERROR:  1. We were unable to find the header $2 in the"
-        echo "*            standard location."
-        echo "*"
-        echo "*     and 2. You did not specify an alternate location"
-        echo "*            via --with-$1-root."
-        echo "*"
-        echo "*     and 3. We also tested the following:"
-        echo "*"
-        echo "*                /usr/include"
-        echo "*                /usr/include/$1"
-        echo "*                /usr/local/include"
-        if test ".${DEFINEOS}" = ".DARWIN"; then
-            echo "*                /sw/include"
-        fi
-        if test ".${DEFINEOS}" = ".SOLARIS"; then
-            echo "*                /usr/local/tools/SunOS/include"
-        fi
-        echo "*                ntop source directory"
-        echo "*"
-        echo "*>>> No way to proceed."
-        echo "*"
-        echo "*???     1. Rerun ./configure with a corrected --with-$1-root"
-        echo "*???  or 2. Install lib$1 and rerun ./configure"
-        echo "*"
-        echo "******************************************************************"
-        echo
-        AC_MSG_ERROR(Unable to continue... aborting ./configure)
-    fi
-    AC_MSG_CHECKING([for $1 library lib$1])
-    if eval "test ""$${$nt_ac_lib}"" = yes"; then
-        AC_MSG_RESULT([ok, found in standard location, -l$1])
-        AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])
-    elif test -d /usr &&
-         test -d /usr/lib &&
-         (test -r /usr/lib/lib$1.so ||
-          test -r /usr/lib/lib$1.a); then
-        AC_MSG_RESULT([ok, found in /usr/lib])
-        LIBS="${LIBS} -L/usr/lib -l$1"
-        dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
-        AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])
-    elif test -d /usr &&
-         test -d /usr/local &&
-         test -d /usr/local/lib &&
-         (test -r /usr/local/lib/lib$1.so ||
-          test -r /usr/local/lib/lib$1.a); then
-        AC_MSG_RESULT([ok, found in /usr/local/lib])
-        LIBS="${LIBS} -L/usr/local/lib -l$1"
-        AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])
-    elif test -d /usr &&
-         test -d /usr/lib64 &&
-         (test -r /usr/lib64/lib$1.so ||
-          test -r /usr/lib64/lib$1.a); then
-        AC_MSG_RESULT([ok, found in /usr/lib64])
-        LIBS="${LIBS} -L/usr/lib64 -l$1"
-        AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])
-    elif test ".${DEFINEOS}" = ".SOLARIS" &&
-         test -d /usr/local/tools/SunOS &&
-         test -d /usr/local/tools/SunOS/lib &&
-         (test -r /usr/local/tools/SunOS/lib/lib$1.so ||
-          test -r /usr/local/tools/SunOS/lib/lib$1.a); then
-        LIBS="${LIBS} -L/usr/local/tools/SunOS/lib -l$1"
-        AC_MSG_RESULT([ok, found in /usr/local/tools/SunOS/lib])
-        AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])
-    elif test ".${DEFINEOS}" = ".DARWIN" &&
-         test -d /sw &&
-         test -d /sw/lib &&
-         test -r /sw/lib/lib$1.dylib; then
-        LIBS="${LIBS} -L/sw/lib -l$1"
-        AC_MSG_RESULT([ok, found in /sw/lib])
-        AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])
-    elif test -r $2.so ||
-         test -r $2.a; then
-         AC_MSG_RESULT([ok, found in ntop directory])
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2])
-    else
-        AC_MSG_RESULT(error)
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* ERROR:  1. We were unable to compile a test program for"
-        echo "*            $3() against -l$2."
-        echo "*"
-        echo "*     and 2. You did not specify an alternate location"
-        echo "*            via --with-$1-root."
-        echo "*"
-        echo "*     and 3. We were unable to find lib$1.so or lib$1.a"
-        echo "*            via a manual search of"
-        echo "*"
-        echo "*                /usr/lib"
-        echo "*                /usr/local/lib"
-        if test ".${DEFINEOS}" = ".DARWIN"; then
-            echo "*                /sw/lib        (lib$1.dylib)"
-        fi
-        if test ".${DEFINEOS}" = ".SOLARIS"; then
-            echo "*                /usr/local/tools/SunOS/lib"
-        fi
-        echo "*                ntop source directory"
-        echo "*"
-        echo "*>>> No way to proceed."
-        echo "*"
-        echo "*???     1. Install lib$1 and rerun ./configure"
-        echo "*???  or 2. Rerun ./configure with a corrected --with-$1-root"
-        echo "*"
-        echo "******************************************************************"
-        echo
-        AC_MSG_ERROR(Unable to continue... aborting ./configure)
-    fi
+# NTOP_RPT_LOC(item, lib, include)
+# ----------------------------------------------
+AC_DEFUN([NTOP_RPT_LOC],
+[dnl
+# Expansion of NTOP_RPT_LOC($1 $2 $3)
+if test ".$2" = "."; then
+    echo "$1 library      : standard system libraries"
 else
-    AC_MSG_RESULT([not found in standard location, testing --with-$1-root...])
-    AC_MSG_CHECKING([for $1 header, $2])
-    if eval "test ""$${$nt_ac_header}"" = yes"; then
-         AC_MSG_RESULT([ok, found in standard location])
-    dnl> Can we find $2 and lib$1 where s/he told us?
-    elif test -d ${$5_ROOT} &&
-         test -r ${$5_ROOT}/$2; then
-         AC_MSG_RESULT([ok, found in \${$5_ROOT}])
-         INCS="${INCS} -I\${$5_ROOT}"
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2 and set INCS])
-    elif test -d ${$5_ROOT} &&
-       test -d ${$5_ROOT}/include &&
-       test -r ${$5_ROOT}/include/$2; then
-         AC_MSG_RESULT([ok, found in \${$5_ROOT}/include])
-         INCS="${INCS} -I${$5_ROOT}/include"
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2 and set INCS])
-    elif test -d ${$5_ROOT} &&
-       test -d ${$5_ROOT}/include &&
-       test -d ${$5_ROOT}/include/$1 &&
-       test -r ${$5_ROOT}/include/$1/$2; then
-         AC_MSG_RESULT([ok, found in ${$5_ROOT}/include/$1])
-         INCS="${INCS} -I${$5_ROOT}/include/$1"
-         AC_DEFINE_UNQUOTED(HAVE_$5_H, 1, [Show we found $2 and set INCS])
-    else
-        AC_MSG_RESULT(error)
-        echo
-        echo "******************************************************************"
-        echo "*"
-        echo "* ERROR:  1. We were unable to find the header $2 in the"
-        echo "*            standard location or the alternate location you"
-        echo "*            specified by --with-$1-root."
-        echo "*"
-        echo "*>>> No way to proceed."
-        echo "*"
-        echo "*???     1. Rerun ./configure with a corrected --with-$1-root"
-        echo "*???  or 2. Install lib$1 and rerun ./configure"
-        echo "*"
-        echo "******************************************************************"
-        echo
-        AC_MSG_ERROR(Unable to continue... aborting ./configure)
-    fi
-    AC_MSG_CHECKING([for $1 library lib$1])
-    if eval "test ""$${$nt_ac_lib}"" = yes"; then
-        AC_MSG_RESULT([ok, found in standard location, -l$1])
-        AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])
-    else
-        oLIBS="${LIBS}"
-        NTOP_APPEND_LIBS([${$5_ROOT}])
-        LIBS="${LIBS} -lgdbm"
-        AC_CHECK_LIB([$1], [$3],
-           [AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])],
+    echo "$1 library      : $2"
+fi
+if test ".$3" = "."; then
+    echo "$1 .h           : standard system headers"
+else
+    echo "$1 .h           : $3"
+fi
+# Finished expansion of NTOP_RPT_LOC()
+])
 
-           [LIBS="${oLIBS}"
-            NTOP_APPEND_LIBS([${$5_ROOT}/lib])
-            LIBS="${LIBS} -lgdbm"
-            AC_CHECK_LIB([$1], [$4],
-               [AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])],
-               [AC_MSG_RESULT(error)
-                LIBS="${oLIBS}"
-                echo
-                echo "******************************************************************"
-                echo ""
-                echo "* ERROR:  1. We were unable to compile a test program"
-                echo "*            against -l$1 in the standard location"
-                echo ""
-                echo "*     and 2. We were unable to compile a test program for"
-                echo "*            $3() against -l$1 in the alternate"
-                echo "*            location specified by --with-$1-root."
-                echo ""
-                echo "*>>> No way to proceed."
-                echo ""
-                echo "*???     1. Rerun ./configure with a corrected --with-$1-root"
-                echo "*???  or 2. Install lib$1 and rerun ./configure"
-                echo ""
-                echo "*****************************************************************"
-                echo
-                AC_MSG_ERROR(Unable to continue... aborting ./configure)
-               ])
-           ])
+# NTOP_SET_LIBINC(item)
+# ----------------------------------------------
+AC_DEFUN([NTOP_SET_LIBINC],
+[dnl
+# Expansion of NTOP_SET_LIBINC($1)
+if test ".${ac_debug}" = ".yes"; then
+    echo "    $1: ${$1_DIRECTORY}, ${$1_LIB}, ${$1_INCLUDE}"
+fi
+if test ".${$1_DIRECTORY}" != "."; then
+    if test ".${$1_LIB}" = "."; then
+        if test -d ${$1_DIRECTORY}/lib; then
+            $1_LIB="${$1_DIRECTORY}/lib"
+        else
+            $1_LIB="${$1_DIRECTORY}"
+        fi
+    fi
+    if test ".${$1_INCLUDE}" = "."; then
+        if test -d ${$1_DIRECTORY}/include; then
+            $1_INCLUDE="${$1_DIRECTORY}/include"
+        else
+            $1_INCLUDE="${$1_DIRECTORY}"
+        fi
     fi
 fi
-# Finished expansion of NTOP_TEST_MUSTHAVE()
-])]
-
-# NTOP_OPENSSL_TESTS(where)
-# ----------------------------------------------
-AC_DEFUN([NTOP_OPENSSL_TESTS],
-[dnl
-# Expansion of NTOP_OPENSSL_TESTS($1)
-
-           test -d $1          &&
-           test -r $1/rsa.h    &&
-           test -r $1/crypto.h &&
-           test -r $1/x509.h   &&
-           test -r $1/pem.h    &&
-           test -r $1/ssl.h    &&
-           test -r $1/err.h; then
-            AC_MSG_RESULT([ok, openSSL .h files found in $1])
-            INCS="${INCS} -I$1"
-            AC_DEFINE_UNQUOTED(HAVE_RSA_H,    1, [Show we found rsa.h and set INCS])
-            AC_DEFINE_UNQUOTED(HAVE_CRYPTO_H, 1, [Show we found crypto.h and set INCS])
-            AC_DEFINE_UNQUOTED(HAVE_X509_H,   1, [Show we found x509.h and set INCS])
-            AC_DEFINE_UNQUOTED(HAVE_PEM_H,    1, [Show we found pem.h and set INCS])
-            AC_DEFINE_UNQUOTED(HAVE_SSL_H,    1, [Show we found ssl.h and set INCS])
-            AC_DEFINE_UNQUOTED(HAVE_ERR_H,    1, [Show we found err.h and set INCS])
-
-# Finished expansion of NTOP_OPENSSL_TESTS()
-])]
+if test ".${ac_debug}" = ".yes"; then
+    echo "->  $1: ${$1_DIRECTORY}, ${$1_LIB}, ${$1_INCLUDE}"
+fi
+# Finished expansion of NTOP_SET_LIBINC()
+])

@@ -174,6 +174,10 @@ ntop.h
    Courtesy of
    Brent L. Bates <blbates@vigyan.com>
 */
+/*WARNING: There is nothing in ./configure to test for or enable this 
+ * OTOP, there are no reported bugs either.
+ *   -----Burton (4/2003)
+ */
 #ifdef HAVE_STANDARDS_H
 #include <standards.h>
 #endif
@@ -355,7 +359,6 @@ ntop.h
 #ifdef HAVE_ZLIB_H
 #include <zlib.h>
 #else
-#undef HAVE_ZLIB
 #undef MAKE_WITH_ZLIB
 #endif
 
