@@ -1057,7 +1057,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   char		printedAnswers = FALSE;
   char *host_aliases[MAXALIASES];
   int   host_aliases_len[MAXALIASES], n;
-  u_char  hostbuf[MAXDNAME];
+  u_char  hostbuf[4096];
   char *addr_list[MAXADDRS + 1];
   u_int16_t transactionId, flags;
 
@@ -1090,7 +1090,11 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     Don't change it to eom = (u_char *)(&answer+length);
     unless you want to core dump !
   */
+#if 0
   eom = (u_char *)(ipPtr+length);    
+#else
+  eom = (u_char *) &answer + length;
+#endif
 
   qdcount = (int)ntohs((unsigned short int)answer.qb1.qdcount);
   ancount = (int)ntohs((unsigned short int)answer.qb1.ancount);
@@ -1231,7 +1235,19 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
       len = strlen((char *)bp) + 1;
       memcpy(hostPtr->name, bp, len);
     }
+
+/* Align bp on u_int32_t boundary */
+#if 0
     bp += (((u_int32_t)bp) % sizeof(u_int32_t));
+#else
+    {
+      u_int32_t     padding;
+      
+      padding=((u_int32_t)bp) % sizeof(u_int32_t);
+      bp += padding;
+      buflen -= padding;
+    }
+#endif
 
     if (bp + dlen >= &hostbuf[sizeof(hostbuf)]) {
       break;
@@ -1243,6 +1259,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     memcpy(*addrPtr++ = (char *)bp, cp, dlen);
     bp += dlen;
     cp += dlen;
+    buflen -= dlen;
     numAddresses++;
     haveAnswer = TRUE;
   }
