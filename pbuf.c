@@ -4485,7 +4485,8 @@ void processPacket(u_char *_deviceId,
     fflush(stdout);
   }
 
-  /* This allows me to fetch the time from
+  /* 
+     This allows me to fetch the time from
      the captured packet instead of calling
      time(NULL).
   */
