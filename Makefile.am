@@ -372,6 +372,8 @@ install: install-recursive
 	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
 	fi
 
+	@utils/checkrrdmodel.sh $(DESTDIR)/$(datadir)
+
 install-data-as:
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR);
 	@for file in AS-list.txt.gz; do \
