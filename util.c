@@ -4985,8 +4985,7 @@ void extractAndAppend(char *userAgent, int userAgentLen,
 /* ********************************** */
 
 /* ===== ===== retrieve url ===== ===== */
-int retrieveVersionFile(char *versionSite, char *versionFile,
-			char *buf, int bufLen) {
+int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen) {
   struct hostent *hptr;
   char *userAgent, *space;
   int rc, sock;
@@ -5386,10 +5385,8 @@ void* checkVersion(void* notUsed _UNUSED_) {
   /* The work buffer is a big boy so we can eat the entire XML file all at once
    * and avoid making this logic any more complex!
    */
-  char *buf;
-  int bufLen = LEN_CHECKVERSION_BUFFER;
-
-  char *versionSite, *versionFile;
+  char buf[LEN_CHECKVERSION_BUFFER];
+  char versionSite[256], *versionFile, *site;
   int rc=0;
 
   displayPrivacyNotice();
@@ -5397,37 +5394,27 @@ void* checkVersion(void* notUsed _UNUSED_) {
   if(myGlobals.skipVersionCheck == TRUE)
     return(NULL);
 
-  /* make a working copy */
-  versionSite=strdup(CONST_VERSIONCHECK_URL);
+  site = CONST_VERSIONCHECK_SITE;
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "CHKVER: Checking current ntop version at %s",
-	     versionSite);
-
-  /* then split url into site / file */
-  versionFile=strchr(versionSite, '/');
-  versionFile[0]='\0';
-  versionFile++;
+	     "CHKVER: Checking current ntop version at %s/%s", site, CONST_VERSIONCHECK_DOCUMENT);
+  
 #ifdef CHKVER_DEBUG
-  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", versionSite, versionFile);
+  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", site, CONST_VERSIONCHECK_DOCUMENT);
 #endif
 
-  buf = malloc(bufLen);
-  memset(buf, 0, bufLen);
-
-  rc = retrieveVersionFile(versionSite, versionFile, buf, bufLen);
-  free(versionSite);
+  memset(buf, 0, sizeof(buf));
+  
+  rc = retrieveVersionFile(site, CONST_VERSIONCHECK_DOCUMENT, buf, sizeof(buf));
 
   if (rc == 0) {
-    rc = processVersionFile(buf, min(bufLen, strlen(buf)));
+    rc = processVersionFile(buf, min(sizeof(buf), strlen(buf)));
   }
 
   if (rc == 0) {
     traceEvent(CONST_TRACE_INFO,
 	       "CHKVER: This version of ntop is %s", reportNtopVersionCheck());
   }
-
-  free(buf);
 
   if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NEWDEVELOPMENT)
     /* If it was new development at the 1st check, it's not magically going
