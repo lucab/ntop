@@ -491,7 +491,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 		   "", "", "", "", "", "", "", "", "", "" };
   int i, num=0, expl[MAX_NUM_PROTOS];
   FILE *fd;
-  TrafficCounter traffic, totalIPTraffic, diffTraffic;
+  TrafficCounter traffic, totalIPTraffic, diffTraffic=0;
   int useFdOpen = 0;
 
   if(theHost->protoIPTrafficInfos == NULL) {

@@ -38,6 +38,9 @@
 extern char* getpass(const char *prompt);
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 
+#define NTOP_LITTLE_ENDIAN  1
+#undef  NTOP_BIG_ENDIAN
+
 #define DATAFILE_DIR	"."
 #define PLUGIN_DIR		"."
 #define CONFIGFILE_DIR	"."

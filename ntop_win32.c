@@ -119,9 +119,9 @@ void initWinsock32() {
     exit(-1);
   }
 
-  version = "2.0.99";
+  version = "2.0.99rc1";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "09/05/2002";
+  buildDate = "17/05/2002";
 
   if(!isWinNT())
     strcpy(_wdir, ".");
@@ -1357,7 +1357,6 @@ void invokeNtop() {
 VOID ServiceStart (DWORD dwArgc, LPTSTR *lpszArgv)
 {
   pthread_t ntopThread;
-  LPTSTR    wdir;
 
   // Let the service control manager know that the service is
   // initializing.

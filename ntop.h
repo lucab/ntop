@@ -55,11 +55,7 @@
 #if defined(WIN32) && defined(__GNUC__)
 typedef unsigned long long u_int64_t; /* on mingw unsigned long is 32 bits */
 #else
-#if defined(HAVE_UINT64_T)
-#define u_int64_t uint64_t
-#else
-typedef unsigned long u_int64_t;
-#endif
+typedef _int64 u_int64_t;
 #endif
 #endif
 
@@ -724,12 +720,6 @@ typedef unsigned long long TrafficCounter;
 struct hostTraffic; /* IP Session global information */
 
 /* *********************** */
-
-/*
-typedef struct thptEntry {
-  u_char
-} HostSerial;
-*/
 
 /* #define HostSerial u_int32_t */
 

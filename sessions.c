@@ -857,17 +857,23 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  strncpy(rcStr, packetData, len);
 
-	  traceEvent(TRACE_INFO, "FTP: %s", rcStr);
+	  /* traceEvent(TRACE_INFO, "FTP: %s", rcStr); */
 
 	  /*
 	    227 Entering Passive Mode (131,114,21,11,156,95)
+		PORT 172,22,5,95,7,36
+
 	    131.114.21.11:40012 (40012 = 156 * 256 + 95)
 	  */
-	  if(strncmp(rcStr, "227", 3) == 0) {
+	  if((strncmp(rcStr, "227", 3) == 0)
+		|| (strncmp(rcStr, "PORT", 4) == 0)) {
 	    int a, b, c, d, e, f;
 
-	    sscanf(&rcStr[27], "%d,%d,%d,%d,%d,%d",
-		   &a, &b, &c, &d, &e, &f);
+		if(strncmp(rcStr, "PORT", 4) == 0) {
+			sscanf(&rcStr[5], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
+		} else {
+			sscanf(&rcStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
+		}
 	    sprintf(rcStr, "%d.%d.%d.%d", a, b, c, d);
 
 #ifdef DEBUG
