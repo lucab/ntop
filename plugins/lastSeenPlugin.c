@@ -414,18 +414,10 @@ PluginInfo* PluginEntryFctn(void) {
   traceEvent(TRACE_INFO, "Welcome to %s. (C) 1999 by Andrea Marangoni.\n", 
 	     LsPluginInfo->pluginName);
 
-#ifdef MULTITHREADED
-  accessMutex(&gdbmMutex, "PluginEntry");
-#endif 
-
   /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/LsWatch.db",dbPath) < 0) 
 traceEvent(TRACE_ERROR, "Buffer overflow!");
   LsDB = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
-
-#ifdef MULTITHREADED
-  releaseMutex(&gdbmMutex);
-#endif 
 
   if(LsDB == NULL) {
     traceEvent(TRACE_ERROR, 
