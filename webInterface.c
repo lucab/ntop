@@ -673,7 +673,7 @@ void switchNwInterface(int _interface) {
   sendString("<HR>\n");
 
   if(snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\">Note that "
-	      "the netFlow and sFlow plugins - if enabled - force -M to be set (i.e. "
+	      "the NetFlow and sFlow plugins - if enabled - force -M to be set (i.e. "
 	      "they disable interface merging).</font></p>\n") < 0)
     BufferTooShort();
   sendString(buf);
@@ -681,7 +681,7 @@ void switchNwInterface(int _interface) {
   sendString("<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
   
   if(myGlobals.mergeInterfaces) {
-    if(snprintf(buf, sizeof(buf), "Sorry, but you can not switch among different interfaces "
+    if(snprintf(buf, sizeof(buf), "Sorry, but you cannot switch among different interfaces "
                 "unless the -M command line switch is used.\n") < 0)
       BufferTooShort();
     sendString(buf);
@@ -698,11 +698,16 @@ void switchNwInterface(int _interface) {
       BufferTooShort();
     sendString(buf);
   } else if(mwInterface >= 0) {
+    char value[8];
+    
     myGlobals.actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
     if(snprintf(buf, sizeof(buf), "The current interface is now [%s].\n",
 		myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferTooShort();
     sendString(buf);
+    
+    snprintf(value, sizeof(value), "%d", myGlobals.actualReportDeviceId);
+    storePrefsValue("actualReportDeviceId", value);
   } else {
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION="SWITCH_NIC_HTML">\n");
 
@@ -2872,21 +2877,28 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* **************************************** */
 
   /*
-    SSL fix courtesy of
-    Curtis Doty <Curtis@GreenKey.net>
+    SSL fix courtesy of Curtis Doty <curtis@greenkey.net>
   */
   void initWeb() {
     int sockopt = 1;
     struct sockaddr_in sockIn;
+    char value[8];
 
     initReports();
     initializeWeb();
 
-    myGlobals.actualReportDeviceId = 0;
-
+    if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
+      storePrefsValue("actualReportDeviceId", "0");
+      myGlobals.actualReportDeviceId = 0;
+    } else {
+      myGlobals.actualReportDeviceId = atoi(value);
+      if(myGlobals.actualReportDeviceId > myGlobals.numDevices)
+	myGlobals.actualReportDeviceId = 0; /* Default */
+    }
+    
     if(myGlobals.webPort > 0) {
-      sockIn.sin_family      = AF_INET;
-      sockIn.sin_port        = (int)htons((unsigned short int)myGlobals.webPort);
+      sockIn.sin_family = AF_INET;
+      sockIn.sin_port   = (int)htons((unsigned short int)myGlobals.webPort);
 #ifndef WIN32
       if(myGlobals.webAddr) {
 	if(!inet_aton(myGlobals.webAddr, &sockIn.sin_addr)) {
@@ -2938,8 +2950,8 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized) {
-      sockIn.sin_family      = AF_INET;
-      sockIn.sin_port        = (int)htons(myGlobals.sslPort);
+      sockIn.sin_family = AF_INET;
+      sockIn.sin_port   = (int)htons(myGlobals.sslPort);
 #ifndef WIN32
       if(myGlobals.sslAddr) {
 	if(!inet_aton(myGlobals.sslAddr, &sockIn.sin_addr)) {

@@ -370,6 +370,10 @@ extern int ntop_sleep(int secs);
 extern void unescape(char *dest, int destLen, char *url);
 extern void updateElementHash(ElementHash **list, u_short srcId, u_short dstId, 
 			      u_int32_t numPkts, u_int32_t numBytes);
+extern void allocateElementHash(int deviceId, u_short hashType);
+extern void handleFlowsSpecs();
+extern void initPassiveSessions();
+extern void termPassiveSessions();
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

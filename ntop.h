@@ -1264,7 +1264,8 @@ typedef struct ntopInterface {
   u_int16_t  insertIdx;
   HashList** hashList;
 
-  ElementHash **asHash; /* Autonomous System */
+  ElementHash **asHash;   /* Autonomous System */
+  ElementHash **vlanHash; /* VLAN - Virtual LAN */
 
   /* ************************** */
 

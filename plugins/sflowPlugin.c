@@ -673,7 +673,7 @@ static u_long *readExtendedSwitch(SFSample *sample, u_long *datap, u_char *endPt
   return datap;
 }
 
-char *IP_to_a(u_long ipaddr, char *buf)
+static char *IP_to_a(u_long ipaddr, char *buf)
 {
   u_char *ip = (u_char *)&ipaddr;
   sprintf(buf, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
@@ -687,7 +687,7 @@ char *IP_to_a(u_long ipaddr, char *buf)
 
 static u_char bin2hex(int nib) { return (nib < 10) ? ('0' + nib) : ('A' - 10 + nib); }
 
-int printHex(const u_char *a, int len, u_char *buf,
+static int printHex(const u_char *a, int len, u_char *buf,
 	     int bufLen, int marker, int bytesPerOutputLine)
 {
   int b = 0, i = 0;
@@ -945,7 +945,7 @@ static void writePcapPacket(SFSample *sample) {
       break;
     }
   }
-  
+
   /*
     Fix below courtesy of
     Neil McKee <neil_mckee@inmon.com>
@@ -1531,7 +1531,22 @@ static void receiveSflowSample(SFSample *sample)
 		 (u_char *)datap - startOfSample);
     }
   }
+
+  if((sample->src_as != 0) && (sample->dst_as_path_len > 0)) {
+    allocateElementHash(myGlobals.sflowDeviceId, 0 /* AS hash */);
+    updateElementHash(myGlobals.device[myGlobals.sflowDeviceId].asHash,
+		      sample->src_as, sample->dst_as_path[0 /* The first AS is taken */],
+		      1 /* 1 packet */, sample->sampledPacketSize);
+  }
+
+  if((sample->in_vlan != 0) || (sample->out_vlan != 0)) {
+    allocateElementHash(myGlobals.sflowDeviceId, 1 /* VLAN hash */);
+    updateElementHash(myGlobals.device[myGlobals.sflowDeviceId].vlanHash, 
+		      sample->in_vlan, sample->out_vlan,
+		      1 /* 1 packet */, sample->sampledPacketSize);
+  }
 }
+
 
 /* ****************************** */
 
@@ -1628,7 +1643,6 @@ static void handlesFlowHTTPrequest(char* url) {
   }
 
 
-
   percentage = (myGlobals.lastSample-myGlobals.initialPool)/myGlobals.numSamplesReceived;
   err = 196 * sqrt((float)(1/(float)myGlobals.numSamplesReceived));
 
@@ -1668,12 +1682,8 @@ static void handlesFlowHTTPrequest(char* url) {
     sendString(buf);
   }
 
-  sendString("</TD></TR>\n");
-
-  sendString("</TABLE>\n");
-  sendString("</CENTER>\n");
-
-  sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A>.</H5>\n");
+  sendString("</TD></TR>\n</TABLE>\n</CENTER>\n");
+  sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A></H5>\n");
 
   printHTMLtrailer();
 }
@@ -2042,7 +2052,7 @@ static void termsFlowFunct(void) {
 static PluginInfo sFlowPluginInfo[] = {
   { "sFlowPlugin",
     "This plugin is used to tune ntop's sFlow support",
-    "1.2", /* version */
+    "1.2.1", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "sFlow", /* http://<host>:<port>/plugins/sFlowWatch */
     0, /* Active */

@@ -1387,6 +1387,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 		 "Domain Stats</a></li>\n");
       sendString("<li><a href=localRoutersList.html target=area ALT=\"Routers List\">"
 		 "Routers</a></li>\n");
+      sendString("<li><a href=asList.html target=area ALT=\"ASs\">ASs</a></li>\n");
+      sendString("<li><a href=vlanList.html target=area ALT=\"ASs\">VLANs</a></li>\n");
       sendString("<li><a href="STR_SHOW_PLUGINS" target=area ALT=\"Plugins List\">"
 		 "Plugins</a></li>\n");
       sendString("<li><a href="STR_SORT_DATA_THPT_STATS" target=area ALT=\"Throughput Statistics\">"
@@ -1570,6 +1572,12 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     } else if(strcmp(pageName, "localRoutersList.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printLocalRoutersList(myGlobals.actualReportDeviceId);
+    } else if(strcmp(pageName, "asList.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printASList(myGlobals.actualReportDeviceId);
+    } else if(strcmp(pageName, "vlanList.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printVLANList(myGlobals.actualReportDeviceId);
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();

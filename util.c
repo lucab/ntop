@@ -3338,7 +3338,10 @@ static void updateElementHashItem(ElementHash **theHash,
     incrementTrafficCounter(&theHash[idx]->pktsSent,  numPkts);
     incrementTrafficCounter(&hash->bytesSent, numBytes);
     incrementTrafficCounter(&hash->pktsSent,  numPkts); 
-  } else {
+  } 
+
+  if((!dataSent) 
+     || (dataSent && (srcId == dstId) /* sender and receiver are the same */)) {
     incrementTrafficCounter(&theHash[idx]->bytesRcvd, numBytes);
     incrementTrafficCounter(&theHash[idx]->pktsRcvd,  numPkts);
     incrementTrafficCounter(&hash->bytesRcvd, numBytes);
@@ -3352,8 +3355,29 @@ void updateElementHash(ElementHash **theHash,
 		       u_short srcId, u_short dstId,
 		       u_int32_t numPkts, u_int32_t numBytes) {
 
-  if(srcId < dstId) 
+  if(srcId <= dstId) 
     updateElementHashItem(theHash, srcId, dstId, numPkts, numBytes, 1);
   else
     updateElementHashItem(theHash, dstId, srcId, numPkts, numBytes, 0);
+}
+
+/* ********************************** */
+
+void allocateElementHash(int deviceId, u_short hashType) {
+  int memLen = sizeof(ElementHash*)*ELEMENT_HASH_LEN;    
+
+  switch(hashType) {
+  case 0: /* AS */
+    if(myGlobals.device[deviceId].asHash == NULL) {      
+      myGlobals.device[deviceId].asHash = (ElementHash**)malloc(memLen);
+      memset(myGlobals.device[deviceId].asHash, 0, memLen);
+    }
+    break;
+  case 1: /* VLAN */
+    if(myGlobals.device[deviceId].vlanHash == NULL) {      
+      myGlobals.device[deviceId].vlanHash = (ElementHash**)malloc(memLen);
+      memset(myGlobals.device[deviceId].vlanHash, 0, memLen);
+    }
+    break;
+  }
 }

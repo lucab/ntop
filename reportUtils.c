@@ -3652,7 +3652,7 @@ static char* formatElementData(ElementHash *hash, u_char dataSent, char *buf, in
 
 /* ******************************** */
 
-void dumpElementHash(ElementHash **theHash) {
+void dumpElementHash(ElementHash **theHash, char* label) {
   u_char entries[MAX_ENTRY];
   ElementHash *hashList[MAX_ENTRY];
   char buf[BUF_SIZE], buf1[96];
@@ -3697,8 +3697,9 @@ void dumpElementHash(ElementHash **theHash) {
     }
   }
 
-  sendString("<TABLE BORDER>\n"
-	     "<TR><TH>AS</TH><TH>Data Sent</TH><TH>Data Rcvd</TH><TH>Peers</TH></TR>\n");
+  sendString("<CENTER><TABLE BORDER>\n<TR><TH>");
+  sendString(label);
+  sendString("</TH><TH>Data Sent</TH><TH>Data Rcvd</TH><TH>Peers</TH></TR>\n");
 
   /* ****************** */
 
@@ -3746,14 +3747,16 @@ void dumpElementHash(ElementHash **theHash) {
 
 	  if(hashList[j]->bytesSent.value > 0) {
 	    if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
-			i, hashList[j]->id, formatBytes(hashList[j]->bytesSent.value, 1), formatPkts(hashList[j]->pktsSent.value)) < 0)
+			i, hashList[j]->id, formatBytes(hashList[j]->bytesSent.value, 1),
+			formatPkts(hashList[j]->pktsSent.value)) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
 
 	  if(hashList[j]->bytesRcvd.value > 0) {
 	    if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
-			hashList[j]->id, i, formatBytes(hashList[j]->bytesRcvd.value, 1), formatPkts(hashList[j]->pktsRcvd.value)) < 0)
+			hashList[j]->id, i, formatBytes(hashList[j]->bytesRcvd.value, 1), 
+			formatPkts(hashList[j]->pktsRcvd.value)) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3770,5 +3773,5 @@ void dumpElementHash(ElementHash **theHash) {
     }
   }
 
-  sendString("</TR>\n</TABLE>\n");
+  sendString("</TR>\n</TABLE>\n</CENTER>\n");
 }

@@ -190,13 +190,7 @@ static void dissectFlow(NetFlow5Record *theRecord) {
       if(dstAS != 0) dstHost->hostAS = dstAS;
 
       if((srcAS != 0) && (dstAS != 0)) {
-	if(myGlobals.device[actualDeviceId].asHash == NULL) {
-	  int memLen = sizeof(ElementHash*)*ELEMENT_HASH_LEN;
-	  
-	  myGlobals.device[actualDeviceId].asHash = (ElementHash**)malloc(memLen);
-	  memset(myGlobals.device[actualDeviceId].asHash, 0, memLen);
-	}
-	
+	allocateElementHash(actualDeviceId, 0 /* AS hash */);
 	updateElementHash(myGlobals.device[actualDeviceId].asHash, srcAS, dstAS, numPkts, len);
       }
 
@@ -578,7 +572,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
 #ifdef DEBUG_FLOWS
 #endif
-  dumpElementHash(myGlobals.device[0].asHash);
+
   printHTMLtrailer();
 }
 
@@ -657,7 +651,7 @@ static void handleNetFlowPacket(u_char *_deviceId,
 static PluginInfo netflowPluginInfo[] = {
   { "NetFlow",
     "This plugin is used to tune ntop's NetFlow support",
-    "1.2.1", /* version */
+    "1.2.2", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0,    /* Active */

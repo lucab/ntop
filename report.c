@@ -4032,3 +4032,37 @@ int haveTrafficHistory() {
 
   return(0);
 }
+
+/* ******************************* */
+
+void printASList(unsigned int deviceId) {
+
+  printHTMLheader("Autonomous Systems Traffic Statistics", 0);
+
+  if(deviceId > myGlobals.numDevices) {
+    printFlagedWarning("<I>Invalid device specified</I>");
+    return;
+  } else if(myGlobals.device[deviceId].asHash == NULL) {
+    printFlagedWarning("<I>No AS Information Available (yet).</I>");
+    return;
+  }
+
+  dumpElementHash(myGlobals.device[deviceId].asHash, "AS");
+}
+
+/* ******************************* */
+
+void printVLANList(unsigned int deviceId) {
+
+  printHTMLheader("VLAN Traffic Statistics", 0);
+
+  if(deviceId > myGlobals.numDevices) {
+    printFlagedWarning("<I>Invalid device specified</I>");
+    return;
+  } else if(myGlobals.device[deviceId].vlanHash == NULL) {
+    printFlagedWarning("<I>No VLAN Traffic Information Available (yet).</I>");
+    return;
+  }
+
+  dumpElementHash(myGlobals.device[deviceId].vlanHash, "VLAN");
+}

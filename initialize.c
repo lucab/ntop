@@ -1155,7 +1155,6 @@ void initDeviceDatalink(void) {
 #endif
 }
 
-
 /* ******************************* */
 
 void parseTrafficFilter(void) {

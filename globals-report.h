@@ -104,7 +104,7 @@ extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
 extern void dumpNtopTrafficInfo(FILE*, char* options);
 extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
 extern void checkHostProvidedServices(HostTraffic *el);
-extern void dumpElementHash(ElementHash **theHash);
+extern void dumpElementHash(ElementHash **theHash, char* label);
 
 /* report.c */
 extern void initReports(void);
@@ -149,6 +149,7 @@ extern int haveTrafficHistory();
 extern void printTrafficStatistics();
 extern int haveTrafficHistory();
 extern int haveTrafficHistory();
+extern void printASList(unsigned int deviceId);
 
 /* webInterface.c */
 extern int execCGI(char* cgiName);
