@@ -189,6 +189,11 @@ void daemonize(void) {
   if((childpid=fork()) < 0)
     traceEvent(TRACE_ERROR, "An error occurred while daemonizing ntop (errno=%d)...\n", errno);
   else {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Note: after fork() in %s (%d)\n", 
+                           childpid ? "parent" : "child",
+                           childpid);
+#endif
     if(!childpid) { /* child */
 
       myGlobals.basentoppid = getpid();
@@ -196,15 +201,17 @@ void daemonize(void) {
       fd = fopen(pidFileName, "wb");
 
       if(fd == NULL) {
-          traceEvent(TRACE_WARNING, "Unable to create pid (%s). ", pidFileName);
+          traceEvent(TRACE_WARNING, "Unable to create pid file (%s). ", pidFileName);
       } else {
           fprintf(fd, "%d\n", myGlobals.basentoppid);
           fclose(fd);
+          traceEvent(TRACE_INFO, "Created pid file (%s). ", pidFileName);
       }
 
       traceEvent(TRACE_INFO, "Bye bye: I'm becoming a daemon...\n");
       detachFromTerminal(1);
     } else { /* father */
+      traceEvent(TRACE_INFO, "Note: Parent process is exiting (this is normal)\n");
       exit(0);
     }
   }
@@ -223,6 +230,7 @@ void detachFromTerminal(int doChdir) {
    * then force the default
    */
   if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
+    traceEvent(TRACE_INFO, "NOTE: -L | --use-syslog=facility not specified, child processes will log to the default (%d).\n", DEFAULT_SYSLOG_FACILITY);
     myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
   }
 #endif

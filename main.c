@@ -931,8 +931,10 @@ int main(int argc, char *argv[]) {
   initGdbm(NULL);
 
 #ifndef WIN32
-  if(myGlobals.daemonMode)
+  if(myGlobals.daemonMode) {
     daemonize();
+    traceEvent(TRACE_INFO, "ntop is now running daemonized...\n");
+  }
 #endif
 
   /*
