@@ -115,6 +115,30 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
       return(el);
   }
 
+  if(el == NULL) {
+    /*
+      Fallback:
+      probably a local host has been searched using an IP
+      address (we should have used a MAC)
+    */
+    
+    for(idx=0; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
+      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+      
+      for(; el != NULL; el = el->next) {
+	if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))
+	  return(el);
+      }
+    }
+  }
+
+  {
+    char buf[48];
+    
+    traceEvent(CONST_TRACE_INFO, "==>>> Unable to locate host %s", 
+	       _intoa(hostIpAddress, buf, sizeof(buf)));
+  }
+
   return(NULL);
 }
 

@@ -641,7 +641,8 @@ void printHostsTraffic(int reportType,
 		       int sortedColumn,
 		       int revertOrder,
 		       int pageNum,
-		       char* url) {
+		       char* url,
+		       HostsDisplayPolicy showHostsMode) {
   u_int idx, idx1, numEntries=0;
   int printedEntries=0, hourId, maxHosts;
   char theDate[8];
@@ -684,13 +685,18 @@ void printHostsTraffic(int reportType,
   }
 
   printHTMLheader(buf, 0);
-  printHeader(reportType, revertOrder, abs(sortedColumn));
+
+  printHeader(reportType, revertOrder, abs(sortedColumn), showHostsMode);
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(broadcastHost(el) == 0) {
+      u_char addHost;
+      
       if((myGlobals.sortSendMode && (el->bytesSent.value > 0))
-	 || ((!myGlobals.sortSendMode) && (el->bytesRcvd.value > 0))) {
+	 || ((!myGlobals.sortSendMode) && (el->bytesRcvd.value > 0))
+	 || (reportType == SORT_DATA_PROTOS)
+	 ) {
 	if(((reportType == SORT_DATA_RECEIVED_IP)
 	    || (reportType == SORT_DATA_SENT_IP)
 	    || (reportType == SORT_DATA_IP))
@@ -698,10 +704,22 @@ void printHostsTraffic(int reportType,
 	  continue;
 	}
 
-	tmpTable[numEntries++] = el;
+	addHost = 1;
 
-	if(numEntries >= maxHosts)
+	switch(myGlobals.hostsDisplayPolicy) {
+	case showOnlyLocalHosts:
+	  if(!subnetPseudoLocalHost(el)) addHost = 0;
 	  break;
+	case showOnlyRemoteHosts:
+	  if(subnetPseudoLocalHost(el)) addHost = 0;
+	  break;
+	}
+
+	if(addHost) {
+	  tmpTable[numEntries++] = el;	
+	  if(numEntries >= maxHosts)
+	    break;
+	}
       }
     }
   } /* for */
@@ -861,7 +879,6 @@ void printHostsTraffic(int reportType,
 		      formatBytes(el->arp_rarpRcvd.value, 1),
 		      formatBytes(el->appletalkRcvd.value, 1)
 		      ) < 0) BufferTooShort();
-
 	  sendString(buf);
 
 	  if(snprintf(buf, sizeof(buf),
@@ -1386,8 +1403,6 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
   myGlobals.columnSort = sortedColumn;
 
   printHTMLheader("Host Information", 0);
-
-  /* printHeader(0, revertOrder, abs(sortedColumn)); */
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {

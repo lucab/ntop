@@ -684,10 +684,10 @@ static int parseOptions(int argc, char* argv []) {
   /* *********************** */
 
   if(setAdminPw) {
-      initGdbm(NULL, NULL, 1);
-      setAdminPassword(adminPw);
-      termGdbm();
-      exit(0);
+    initGdbm(NULL, NULL, 1);
+    setAdminPassword(adminPw);
+    termGdbm();
+    exit(0);
   }
 
 #ifndef WIN32
@@ -1015,10 +1015,10 @@ int main(int argc, char *argv[]) {
   }
 
 #ifndef WIN32
-  effective_argv=buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
+  effective_argv = buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
 
  /* count effective_argv[] */
-  effective_argc=0;
+  effective_argc = 0;
   while (effective_argv[effective_argc] != NULL) {
       effective_argc++;
   }
@@ -1069,6 +1069,25 @@ int main(int argc, char *argv[]) {
   reportValues(&lastTime);
 
   initNtop(myGlobals.devices);
+
+  /*
+   * Read previously stored values
+   */
+  {
+    char value[32];
+
+    if(fetchPrefsValue("globals.displayPolicy", value, sizeof(value)) == -1) {
+      myGlobals.hostsDisplayPolicy = showAllHosts /* 0 */;
+      storePrefsValue("globals.displayPolicy", "0");
+    } else {
+      myGlobals.hostsDisplayPolicy = atoi(value);
+    
+      /* Out of range check */
+      if((myGlobals.hostsDisplayPolicy < showAllHosts) 
+	 || (myGlobals.hostsDisplayPolicy > showOnlyRemoteHosts))
+	myGlobals.hostsDisplayPolicy = showAllHosts;
+    }
+  }  
 
   /* ******************************* */
 

@@ -101,7 +101,6 @@ void drawPie(short width,
   int displ;
   float radiant;
   
-
   im = gdImageCreate(width, height);
 
   white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
@@ -165,6 +164,9 @@ void drawPie(short width,
 
 /* ************************ */
 
+/* Fix for large numbers (over 4Gb) courtesy of
+   Kouprie Robbert <r.kouprie@dto.tudelft.nl>
+*/
 void drawBar(short width,
 	     short height,
 	     FILE* filepointer,            /* open file pointer, can be stdout */
@@ -172,12 +174,10 @@ void drawBar(short width,
 	     char  *labels[],              /* slice labels */
 	     float data[]) { 
   gdImagePtr im;
-  int black, white, colors[64], numColors, i;
-  float maxval=0;
-  int center_x, center_y;
-  float total, yscale, txtsz, txtht;
-  unsigned long vmargin, hmargin, base, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
-  unsigned long padding, ymax, ymin, xmax, xmin, gray;
+  int black, white, gray, colors[64], numColors, i, ngrid, base, padding;
+  int center_x, center_y, vmargin, hmargin, xsize, ysize, xpos, ypos, dypix;
+  float maxval, total, yscale, txtsz, txtht;
+  float dydat, xmax, ymax, xmin, ymin;
 
   im = gdImageCreate(width, height);
 
@@ -190,6 +190,9 @@ void drawBar(short width,
   }
 
   /* ******************************* */
+
+  maxval = 0;
+
   for(i=0, total=0; i<num_points; i++) {
     total += data[i];
     if(data[i] > maxval) maxval =  data[i];
@@ -212,28 +215,16 @@ void drawBar(short width,
   
   dydat = maxval / ngrid; // data units between grid lines
   dypix = ysize / (ngrid + 1); // pixels between grid lines
-  
-  for (i = 0; i <= (ngrid + 1); i++) { 
-    char *theStr;
-    char str[16];
- 
-    // height of grid line in units of data
-    ydat = (int)(i * dydat); 
-    
-    if(0) {
-      snprintf(str, sizeof(str), "%d", ydat);
-      theStr = str;
-    } else {
-      Counter c = ydat;
-      theStr = formatBytes(c, 0);      
-    }
 
-    // height of grid line in pixels
-    ypos = vmargin + ysize - (int)(i*dypix); 
+  // make y-axis text label from height of grid line (in data units)
+  for (i = 0; i <= (ngrid + 1); i++) { 
+    char *theStr = formatBytes(i * dydat, 0); // make label text
 
     txtsz = gdFontSmall->w*strlen(theStr); // pixel-width of label
     txtht = gdFontSmall->h; // pixel-height of label
 
+    // height of grid line in pixels
+    ypos = vmargin + ysize - (i*dypix);
     xpos = hmargin - 10 - txtsz; 
     if(xpos < 1) xpos = 1;
     

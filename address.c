@@ -37,10 +37,11 @@ static int _ns_name_unpack(const u_char *msg,
 static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int actualDeviceId);
 static void updateHostNameInfo(unsigned long numeric, char* symbolic);
 
+/* #define DNS_DEBUG */
+
 /* **************************************** */
 
 static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int actualDeviceId) {
-  char *hostName;
   struct in_addr addr;
   char buf[32];
   HostTraffic *el;
@@ -48,7 +49,6 @@ static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int 
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
   addr.s_addr = numeric;
-  hostName = _intoa(addr, buf, sizeof(buf));
 
   /* Search the instance and update its name */
     
@@ -421,7 +421,16 @@ static void resolveAddress(struct in_addr *hostAddr,
       data_data.dptr = (void*)&storedAddress;
       data_data.dsize = sizeof(storedAddress)+1;
 
-      if(updateRecord) updateHostNameInfo(addr, symAddr);
+      if(updateRecord) {
+	updateHostNameInfo(addr, symAddr);
+#ifdef DNS_DEBUG
+	traceEvent(CONST_TRACE_INFO, "Updating %s", symAddr);
+#endif
+      } else {
+#ifdef DNS_DEBUG
+	traceEvent(CONST_TRACE_INFO, "NOT updating %s", symAddr);
+#endif
+      }
 
       if(myGlobals.dnsCacheFile == NULL) {
 #ifdef DNS_DEBUG

@@ -483,11 +483,12 @@ void printFooter(int reportType) {
 
 /* ******************************* */
 
-void printHeader(int reportType, int revertOrder, u_int column) {
+void printHeader(int reportType, int revertOrder, u_int column, 
+		 HostsDisplayPolicy showHostsMode) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char *sign, *arrowGif, *arrow[64], *theAnchor[64], *url=NULL;
   int i, soFar=2, idx;
-  char htmlAnchor[64], htmlAnchor1[64];
+  char htmlAnchor[64], htmlAnchor1[64], theLink[64];
   ProtocolsList *protoList;
   /* printf("->%d<-\n",screenNumber); */
 
@@ -522,10 +523,23 @@ void printHeader(int reportType, int revertOrder, u_int column) {
   case SORT_DATA_HOST_TRAFFIC:      url = STR_SORT_DATA_HOST_TRAFFIC;      break;
   }
 
-  if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
+  if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s&showH=%d", url, sign, showHostsMode) < 0)
     BufferTooShort();
-  if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",  url) < 0)
+  if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?showH=%d&col=", url, showHostsMode) < 0)
     BufferTooShort();
+
+  if(myGlobals.hostsDisplayPolicy != showHostsMode) {
+    char tmp[8];
+
+    myGlobals.hostsDisplayPolicy = showHostsMode;
+
+    if((myGlobals.hostsDisplayPolicy < showAllHosts) 
+       || (myGlobals.hostsDisplayPolicy > showOnlyRemoteHosts))
+      myGlobals.hostsDisplayPolicy = showAllHosts;
+
+    snprintf(tmp, sizeof(tmp), "%d", myGlobals.hostsDisplayPolicy);
+    storePrefsValue("globals.displayPolicy", tmp);
+  }
 
   if(abs(column) == FLAG_HOST_DUMMY_IDX) {
     arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
@@ -544,6 +558,33 @@ void printHeader(int reportType, int revertOrder, u_int column) {
   } else {
     arrow[2] = ""; theAnchor[2] = htmlAnchor1;
   }
+
+  snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&showH=", url, sign, column);
+
+  switch(showHostsMode) {
+  case showOnlyLocalHosts:
+  snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+	   "[ <A HREF=%s0>All</A> ]&nbsp;"
+	   "<B>[ <A HREF=%s1>Local Only</A> ]</B>&nbsp;"
+	   "[ <A HREF=%s2>Remote Only</A> ]&nbsp;</p>", 
+	   theLink, theLink, theLink);
+    break;
+  case showOnlyRemoteHosts:
+  snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+	   "[ <A HREF=%s0>All</A> ]&nbsp;"
+	   "[ <A HREF=%s1>Local Only</A> ]&nbsp;"
+	   "<B>[ <A HREF=%s2>Remote Only</A> ]</B>&nbsp;</p>",
+	   theLink, theLink, theLink);
+    break;
+  default:
+  snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+	   "<B>[ <A HREF=%s0>All</A> ]</B>&nbsp;"
+	   "[ <A HREF=%s1>Local Only</A> ]&nbsp;"
+	   "[ <A HREF=%s2>Remote Only</A> ]&nbsp;</p>", 
+	   theLink, theLink, theLink);
+    break;
+  }
+  sendString(buf);
 
   switch(reportType) {
   case SORT_DATA_RECEIVED_PROTOS:
@@ -632,8 +673,13 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     protoList = myGlobals.ipProtosList, idx=0;
     while(protoList != NULL) {
 
-      if(abs(column) == BASE_PROTOS_IDX+idx) { arrow[BASE_PROTOS_IDX+idx] = arrowGif; theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor;  }
-       else { arrow[BASE_PROTOS_IDX+idx] = "";  theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor1;  }
+      if(abs(column) == BASE_PROTOS_IDX+idx) { 
+	arrow[BASE_PROTOS_IDX+idx] = arrowGif; 
+	theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor; 
+      } else { 
+	arrow[BASE_PROTOS_IDX+idx] = ""; 
+	theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor1; 
+      }
        
       if(snprintf(buf, sizeof(buf), "<TH "TH_BG">%s%d>%s%s</A></TH>",
 		  theAnchor[BASE_PROTOS_IDX+idx], BASE_PROTOS_IDX+idx, 

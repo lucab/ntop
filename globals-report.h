@@ -59,7 +59,7 @@ extern void printTableEntryPercentage(char *buf, int bufLen,
 				      float percentage);
 extern void printSectionTitle(char *text);
 extern void printFlagedWarning(char *text);
-extern void printHeader(int reportType, int revertOrder, u_int column);
+extern void printHeader(int reportType, int revertOrder, u_int column, HostsDisplayPolicy showHostsMode);
 extern void printFooterHostLink(void);
 extern void printFooter(int reportType);
 extern char* getOSFlag(HostTraffic *el, char *_osName, int showOsName, char *tmpStr, int tmpStrLen);
@@ -144,7 +144,8 @@ extern void addPageIndicator(char *url, u_int beginIdx,
 extern void printTrafficStatistics(void);
 extern void printHostsTraffic(int reportType,
 			      int sortedColumn, int revertOrder,
-			      int pageNum, char* url);
+			      int pageNum, char* url, 
+			      HostsDisplayPolicy showHostsMode);
 extern void printMulticastStats(int sortedColumn /* ignored so far */,
                                 int revertOrder, int pageNum);
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum);

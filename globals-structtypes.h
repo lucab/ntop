@@ -1380,6 +1380,14 @@ typedef enum {
 
 /* *************************************************************** */
 
+typedef enum {
+  showAllHosts = 0,
+  showOnlyLocalHosts,
+  showOnlyRemoteHosts
+} HostsDisplayPolicy;
+
+/* *************************************************************** */
+
 #define BROADCAST_HOSTS_ENTRY    0
 #define OTHER_HOSTS_ENTRY        1
 #define FIRST_HOSTS_ENTRY        2 /* first available host entry */
@@ -1565,12 +1573,14 @@ XML*/
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
                                      /*XML b enableFragmentHandling Options  "" */
-/*XMLSECTIONEND */
+  /*XMLSECTIONEND */
+
+  HostsDisplayPolicy hostsDisplayPolicy;
 
   /* Physical and Logical network interfaces */
 
-/*XMLSECTIONBEGIN xml_g_intf.inc root myGlobals */
-  /*XML e Interfaces           root:Interfaces  "" */
+  /* XMLSECTIONBEGIN xml_g_intf.inc root myGlobals  */
+  /* XML e Interfaces           root:Interfaces  "" */
 
   u_short numDevices;                    /* total network interfaces */
   u_short numRealDevices;                /* # of network interfaces enabled for sniffing */
