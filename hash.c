@@ -99,9 +99,13 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
   int i;
 
   for(i=0; i<myGlobals.device[theDevice].numTotSessions; i++) {
-    IPSession *prevSession, *nextSession, *theSession = myGlobals.device[theDevice].tcpSession[i];
+    IPSession *prevSession, *nextSession, *theSession;
 
-    prevSession = theSession;
+#ifdef MULTITHREADED
+    accessMutex(&myGlobals.hostsHashMutex, "freeHostSessions");
+#endif
+
+    prevSession = theSession = myGlobals.device[theDevice].tcpSession[i];
 
     while(theSession != NULL) {
       nextSession = theSession->next;
@@ -125,6 +129,10 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 	traceEvent(TRACE_WARNING, "Internal Error (1)");
       }
     } /* while */
+
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.hostsHashMutex);
+#endif
   }
 }
 
@@ -468,7 +476,7 @@ void purgeIdleHosts(int actDevice) {
 
 	  myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
 	  if(maxBucket >= (len-1)) {
-	    hashFull = 1;
+	    hashFull = 1;	
 #ifdef MULTITHREADED
 	    releaseMutex(&myGlobals.hostsHashMutex);
 #endif
