@@ -382,6 +382,9 @@
 /* Define to 1 if you have the <pcap-bpf.h> header file. */
 #undef HAVE_PCAP_BPF_H
 
+/* libpcap has pcap_findalldevs */
+#undef HAVE_PCAP_FINDALLDEVS
+
 /* Define to 1 if you have the <pcap.h> header file. */
 #undef HAVE_PCAP_H
 
@@ -390,9 +393,6 @@
 
 /* libpcap has pcap_open_dead */
 #undef HAVE_PCAP_OPEN_DEAD
-
-/* libpcap has pcap_setnonblock */
-#undef HAVE_PCAP_SETNONBLOCK
 
 /* Define to 1 if you have the <png.h> header file. */
 #undef HAVE_PNG_H

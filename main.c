@@ -142,9 +142,6 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
   fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
-#ifndef WIN32
-  fprintf(fp, "    [--set-pcap-nonblocking]                              %sCall pcap_setnonblock\n", newLine);
-#endif
   fprintf(fp, "    [--skip-version-check]                                %sSkip ntop version check\n", newLine);
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);

@@ -1154,14 +1154,14 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	pcap_open_live(myGlobals.device[deviceId].name,
 		       myGlobals.runningPref.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN,
 		       myGlobals.runningPref.disablePromiscuousMode == 1 ? 0 : 1,
-		       100 /* ms */, ebuf);
+		       1000 /* ms */, ebuf);
     }
     else {
         myGlobals.device[deviceId].pcapPtr =
 	pcap_open_live(myGlobals.device[deviceId].name,
 		       MAX_PACKET_LEN,
 		       myGlobals.runningPref.disablePromiscuousMode == 1 ? 0 : 1,
-		       100 /* ms */, ebuf);
+		       1000 /* ms */, ebuf);
     }
 
       if(myGlobals.device[deviceId].pcapPtr == NULL) {

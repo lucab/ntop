@@ -147,10 +147,6 @@ static struct option const long_options[] = {
   { "p3p-cp",                           required_argument, NULL, 137 },
   { "p3p-uri",                          required_argument, NULL, 138 },
 
-#ifndef WIN32
-  { "set-pcap-nonblocking",             no_argument,       NULL, 139 },
-#endif
-
   { "disable-stopcap",                  no_argument,       NULL, 142 },
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
@@ -621,17 +617,6 @@ int parseOptions(int argc, char* argv[]) {
 	free(myGlobals.runningPref.P3Puri);
       myGlobals.runningPref.P3Puri = strdup(optarg);
       break;
-
-#ifndef WIN32
-    case 139:
-#ifdef HAVE_PCAP_SETNONBLOCK
-      myGlobals.runningPref.setNonBlocking = TRUE;
-#else
-      printf("FATAL ERROR: --set-pcap-nonblocking invalid - pcap_setnonblock() unavailable\n");
-      exit(-1);
-#endif
-      break;
-#endif
 
     case 142: /* disable-stopcap */
       myGlobals.runningPref.disableStopcap = TRUE;

@@ -23,6 +23,11 @@
 
 #include "ntop.h"
 
+#ifdef HAVE_BACKTRACE
+  extern size_t backtrace(void* thearray[], int thearraylen);
+  extern char** backtrace_symbols(void* thearray[], int thearraylen);
+#endif
+
 static int *servicesMapper = NULL; /* temporary value */
 
 /* *************************** */
@@ -70,17 +75,19 @@ void* pcapDispatch(void *_i) {
   int i = (int)_i;
   struct pcap_stat pcapStats;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap (%s) dispatch thread running...",
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch(%s) thread running...",
 	     myGlobals.device[i].humanFriendlyName);
 
-  /* Reset stats before to start */
+  /* Reset stats before to start (needed by modern libpcap versions) */
   if(myGlobals.runningPref.rFileName == NULL) {
     pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
   }
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     HEARTBEAT(2, "pcapDispatch()", NULL);
-    rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
+    /* rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i); */
+
+    rc = pcap_loop(myGlobals.device[i].pcapPtr, -1, queuePacket, (u_char*)_i);
 
     if(rc == -1) {
       if(myGlobals.device[i].name != NULL) /* This is not a shutdown */
@@ -91,23 +98,14 @@ void* pcapDispatch(void *_i) {
       break;
     } else if(rc == 0) {
       if(myGlobals.runningPref.rFileName != NULL) {
-	traceEvent(CONST_TRACE_INFO, "pcap_dispatch (%s) returned %d [No more packets to read]",
+	traceEvent(CONST_TRACE_INFO, "pcap_loop (%s) returned %d [No more packets to read]",
 		   myGlobals.device[i].humanFriendlyName, rc);
 	break; /* No more packets to read */
       }
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-      if(myGlobals.runningPref.setNonBlocking == TRUE) {
-	/* select returned no data - either a signal or setNonBlock */
-	struct timespec sleepAmount;
-	sleepAmount.tv_sec = 0; sleepAmount.tv_nsec = CONST_PCAPNONBLOCKING_SLEEP_TIME;
-	rc = nanosleep(&sleepAmount, NULL);
-	myGlobals.setNonBlockingSleepCount++;
-      }
-#endif
     }
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch thread terminated...");
 
 #if 0
   cleanup(2);

@@ -5725,12 +5725,6 @@ void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
                            pref->P3Puri,
                            "none");
 
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-  printParameterConfigInfo(textPrintFlag, "--set-pcap-nonblocking",
-                           pref->setNonBlocking == TRUE ? "Yes" : "No",
-                           "No");
-#endif
-
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   printParameterConfigInfo(textPrintFlag, "--ssl-watchdog",
                            pref->useSSLwatchdog == 1 ? "Yes" : "No",
@@ -6171,11 +6165,6 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.maxPacketQueueLen);
   printFeatureConfigInfo(textPrintFlag, "Maximum Queue", buf);
-
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.setNonBlockingSleepCount);
-  printFeatureConfigInfo(textPrintFlag, "--set-pcap-nonblocking sleep count", buf);
-#endif
 
 #endif
 
