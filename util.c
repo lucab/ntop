@@ -495,6 +495,7 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
       if(iface_if_getinfo(ii) & IFACE_INFO_UP) {
 	/* Allocate memory for IPv6 addresses*/
 	count = iface_if_addrcount(ii, AF_INET6);
+	if(count == 0) break;
 	addrs = (NtopIfaceAddr *)calloc(count, sizeof(NtopIfaceAddr));
 	addr_pos = 0;
 	for(ia = iface_getaddr_first(ii, AF_INET6) ; ia ;
