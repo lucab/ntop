@@ -22460,6 +22460,8 @@ echo
 
 ac_config_files="$ac_config_files Makefile"
 
+ac_config_files="$ac_config_files myrrd/Makefile"
+
 
 if test ".${ac_enable_ntcsh}" = ".yes"; then
     ac_config_files="$ac_config_files ntcsh/Makefile"
@@ -22962,6 +22964,7 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+  "myrrd/Makefile" ) CONFIG_FILES="$CONFIG_FILES myrrd/Makefile" ;;
   "ntcsh/Makefile" ) CONFIG_FILES="$CONFIG_FILES ntcsh/Makefile" ;;
   "plugins/Makefile" ) CONFIG_FILES="$CONFIG_FILES plugins/Makefile" ;;
   "plugins/pep/Makefile" ) CONFIG_FILES="$CONFIG_FILES plugins/pep/Makefile" ;;

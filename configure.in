@@ -2743,6 +2743,7 @@ AC_SUBST(SCRIPTVER)
 AC_SUBST(SO_VERSION_PATCH)
 
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([myrrd/Makefile])
 
 if test ".${ac_enable_ntcsh}" = ".yes"; then
     AC_CONFIG_FILES([ntcsh/Makefile])
