@@ -116,7 +116,7 @@ $(PROG): $(OBJ)
 
 version.o: version.c
 version.c:
-	@rm $@
+	@rm -f $@
 	@echo char *version = "$(VERSION)"; > $@
 	@echo char *osName  = "$(OSNAME)"; >> $@
 	@echo char *author  = "Luca Deri <deri@unipi.it>"; >> $@
