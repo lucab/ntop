@@ -748,18 +748,21 @@ void printNtopConfigInfo(void) {
   sendString(buf);
 
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-  accessMutex(&addressQueueMutex, "NumQueuedAddresses");
-  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Addresses</TH>"
-	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", addressQueueLen) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
-  releaseMutex(&addressQueueMutex);
+  if(numericFlag == 0) {
+    accessMutex(&addressQueueMutex, "NumQueuedAddresses");
+    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Addresses</TH>"
+		"<TD "TD_BG"  align=right>%d</TD></TR>\n", addressQueueLen) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+    releaseMutex(&addressQueueMutex);
+  }
 #endif
 
   /* **** */
 
 #if defined(MULTITHREADED)
-  accessMutex(&addressQueueMutex, "NumQueuedAddresses");
+    if(numericFlag == 0) 
+      accessMutex(&addressQueueMutex, "NumQueuedAddresses");
 #endif
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Resolved with DNS</TH>"
@@ -778,14 +781,17 @@ void printNtopConfigInfo(void) {
   sendString(buf);
 
 #if defined(MULTITHREADED)
-  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Dropped Addresses</TH>"
-	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", (long int)droppedAddresses) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
+  if(numericFlag == 0) {
+    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Dropped Addresses</TH>"
+		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", (long int)droppedAddresses) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  }
 #endif
 
 #if defined(MULTITHREADED)
-  releaseMutex(&addressQueueMutex);
+  if(numericFlag == 0) 
+    releaseMutex(&addressQueueMutex);
 #endif
 
   /* **** */

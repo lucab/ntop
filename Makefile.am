@@ -149,9 +149,9 @@ man_MANS = ntop.8 intop/intop.1
 
 .PHONY: snapshot
 
-ntopd: ntop
-	@ln -sf ntop ntopd
-	@-(cd .libs && ln -sf ntop ntopd)
+#ntopd: ntop
+#	@ln -sf ntop ntopd
+#	@-(cd .libs && ln -sf ntop ntopd)
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # Distribution

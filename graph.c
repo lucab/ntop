@@ -824,10 +824,12 @@ void drawTrafficPie(void) {
   int num=0, expl[] = { 5, 5 };
   FILE *fd;
 
+  if(device[actualReportDeviceId].ethernetBytes == 0) return;
+
   ip = device[actualReportDeviceId].ipBytes;
   nonIp = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
 
-  p[0] = ip*100/(device[actualReportDeviceId].ethernetBytes+1); num++;
+  p[0] = ip*100/device[actualReportDeviceId].ethernetBytes; num++;
   p[1] = 100-p[0];
 
   if(p[1] > 0)

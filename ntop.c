@@ -496,7 +496,7 @@ void addDefaultProtocols(void) {
   handleProtocolList("Mail", "pop-2|pop-3|pop3|kpop|smtp|imap|imap2|");
   handleProtocolList("DHCP/BOOTP", "67-68|");
   handleProtocolList("SNMP", "snmp|snmp-trap|");
-  handleProtocolList("NEWS", "nntp|");
+  handleProtocolList("NNTP", "nntp|");
   handleProtocolList("NFS", "mount|pcnfs|bwnfs|nfsd|nfsd-status|");
   handleProtocolList("X11", "6000-6010|");
   /* 22 == ssh (just to make sure the port is defined) */

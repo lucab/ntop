@@ -118,17 +118,21 @@ void dumpNtopTrafficInfo(char* options);
 /* report.c */
 extern void initReports(void);
 extern int reportValues(time_t *lastTime);
-extern RETSIGTYPE printHostsTraffic(int signumber_ignored, int reportType,
-                                    int sortedColumn, int revertOrder);
+extern void printHostsTraffic(int sortSendMode, int reportType,
+			      int sortedColumn, int revertOrder,
+			      int pageNum, char* url);
 extern void printMulticastStats(int sortedColumn /* ignored so far */,
-                                int revertOrder);
-extern RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder);
+                                int revertOrder, int pageNum);
+extern void addPageIndicator(char *url, u_int beginIdx,
+			     u_int numEntries, u_int linesPerPage,
+			     int revertOrder, int numCol);
+extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum);
 extern void printAllSessionsHTML(char* host);
 extern void printLocalRoutersList(void);
 extern void printSession(IPSession *theSession, u_short sessionType,
                          u_short sessionCounter);
-extern RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
-                                    int revertOrder);
+extern void printIpAccounting(int remoteToLocal, int sortedColumn,
+			      int revertOrder, int pageNum);
 extern void printHTMLtrailer(void);
 extern void returnHTTPredirect(char* destination);
 extern void printActiveTCPSessions(void);

@@ -1436,8 +1436,7 @@ typedef struct ipSession {
   u_char  passiveFtpSession;        /* checked if this is a passive FTP session */
 } IPSession;
 
-
-#define MAX_NUM_TABLE_ROWS      384
+#define MAX_NUM_TABLE_ROWS      128
 
 typedef struct hostAddress {
   unsigned int numAddr;

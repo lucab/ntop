@@ -66,10 +66,52 @@ int reportValues(time_t *lastTime) {
 
 /* ******************************* */
 
-RETSIGTYPE printHostsTraffic(int signumber_ignored,
-			     int reportType,
-			     int sortedColumn,
-			     int revertOrder) {
+void addPageIndicator(char *url, u_int pageNum,
+		      u_int numEntries, u_int linesPerPage,
+		      int revertOrder, int numCol)  {  
+  char buf[BUF_SIZE], prevBuf[BUF_SIZE/2], nextBuf[BUF_SIZE/2], shortBuf[16];
+  int numPages = (numEntries+maxNumLines-1)/maxNumLines;
+  int actPage  = pageNum+1;
+
+  if(numPages <= 1) return;
+
+  if(snprintf(shortBuf, sizeof(shortBuf), 
+	      "%s%d", revertOrder == 1 ? "-" : "", numCol) < 0)
+     traceEvent(TRACE_ERROR, "Buffer overflow!");  
+      
+  if(pageNum > 1) {
+    if(snprintf(prevBuf, sizeof(prevBuf), 
+		"<A HREF=\"%s?page=0&col=%s\">&lt;&lt;</A> "
+		"<A HREF=\"%s?page=%d&col=%s\">&lt;</A>",
+		url, shortBuf, url, pageNum-1, shortBuf) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");    
+  } else
+    prevBuf[0] = '\0';
+  
+  if(actPage < numPages) {
+    if(snprintf(nextBuf, sizeof(nextBuf), 
+		"<A HREF=\"%s?page=%d&col=%s\">&gt;</A> "
+		"<A HREF=\"%s?page=%d&col=%s\">&gt;&gt;</A>", 
+		url, pageNum+1, shortBuf, 
+		url, numPages-1, shortBuf) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");    
+  } else
+    nextBuf[0] = '\0';  
+  
+  if(snprintf(buf, sizeof(buf), "<P><B> %s [ %d / %d ] %s</B>",
+	      prevBuf, actPage, numPages, nextBuf) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+}
+
+/* ******************************* */
+
+void printHostsTraffic(int sortSendMode,
+		       int reportType,
+		       int sortedColumn,
+		       int revertOrder,
+		       int pageNum,
+		       char* url) {
   u_int idx, numEntries=0;
   int printedEntries=0, hourId;
   char theDate[8];
@@ -80,18 +122,12 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   float sentPercent, rcvdPercent;
   struct pcap_stat stat;
 
-  /*
-    printf("%d - %d - %d - %d\n",
-    signumber_ignored, reportType, sortedColumn, revertOrder);
-  */
   strftime(theDate, 8, "%H", localtime_r(&actTime, &t));
   hourId = atoi(theDate);
 
   memset(buf, 0, sizeof(buf));
   tmpTable = (HostTraffic**)malloc(device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
   memset(tmpTable, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
-
-  sortSendMode = signumber_ignored;
 
   if(sortSendMode == 0)
     snprintf(buf, sizeof(buf), "Network Traffic: Data Received");
@@ -101,7 +137,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
     snprintf(buf, sizeof(buf), "Global Traffic Statistics");
   printHTMLheader(buf, 0);
 
-  if(signumber_ignored == 2)
+  if(sortSendMode == 2)
     goto PRINT_TOTALS;
 
   printHeader(reportType, revertOrder, abs(sortedColumn));
@@ -131,58 +167,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       columnSort = HOST_DUMMY_IDX_VALUE; /* Host name */
     else if(sortedColumn == DOMAIN_DUMMY_IDX_VALUE)
       columnSort = DOMAIN_DUMMY_IDX_VALUE; /* domain name */
-    else if(reportType == 0 /* Interactive mode */) {
-      switch(sortedColumn) {
-      case 0:
-	/* Nothing to do */
-	break;
-      case 1: /* TCP */
-	screenNumber = 0, columnSort = 1;
-	break;
-      case 2: /* UDP */
-	screenNumber = 0, columnSort = 2;
-	break;
-      case 3: /* ICMP */
-	screenNumber = 0, columnSort = 3;
-	break;
-      case 4: /* DLC */
-	screenNumber = 1, columnSort = 1;
-	break;
-      case 5: /* IPX */
-	screenNumber = 1, columnSort = 2;
-	break;
-      case 6: /* Decnet */
-	screenNumber = 1, columnSort = 3;
-	break;
-      case 7: /* (R)ARP */
-	screenNumber = 2, columnSort = 1;
-	break;
-      case 8: /* AppleTalk */
-	screenNumber = 2, columnSort = 2;
-	break;
-      case 9: /* OSPF */
-	screenNumber = 2, columnSort = 3;
-	break;
-      case 10: /* NetBios */
-	screenNumber = 3, columnSort = 1;
-	break;
-      case 11: /* IGMP */
-	screenNumber = 3, columnSort = 2;
-	break;
-      case 12: /* OSI */
-	screenNumber = 3, columnSort = 3;
-	break;
-      case 13: /* QNX */
-	screenNumber = 0, columnSort = 4;
-	break;
-      case 14: /* STP */
-	screenNumber = 1, columnSort = 5;
-	break;
-      case 15: /* Other */
-	screenNumber = 0, columnSort = 5;
-	break;
-      }
-    } else if(reportType == 1) {
+    else if(reportType == 1) {
       /* if(sortedColumn == 0) sortedColumn = 1; */
       screenNumber = DUMMY_IDX_VALUE /* dirty trick */, columnSort = sortedColumn;
     } else if((reportType == 2) /* Thpt */
@@ -198,7 +183,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
-    for(idx=0; idx<numEntries; idx++) {
+    for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
       int i;
       TrafficCounter a, b, c, d, e;
       char webHostName[BUF_SIZE];
@@ -449,11 +434,10 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	  }
 
 	  sendString("</TR>\n");
-	  printedEntries++;
 	}
 
 	/* Avoid huge tables */
-	if(printedEntries > maxNumLines)
+	if(printedEntries++ > maxNumLines)
 	  break;
       }
     }
@@ -463,8 +447,11 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   sendString("\n</TABLE>"TABLE_OFF"\n");
   sendString("</CENTER>\n");
 
+  addPageIndicator(url, pageNum, numEntries, maxNumLines, 
+		   revertOrder, abs(sortedColumn));
+
  PRINT_TOTALS:
-  if(signumber_ignored == 2) {
+  if(sortSendMode == 2) {
     TrafficCounter unicastPkts=0, avgPktLen;
 
     if(reportType == 0) {
@@ -837,7 +824,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 /* ******************************* */
 
 void printMulticastStats(int sortedColumn /* ignored so far */,
-			 int revertOrder) {
+			 int revertOrder,
+			 int pageNum) {
   u_int idx, numEntries=0;
   int printedEntries=0;
   HostTraffic *el;
@@ -872,9 +860,9 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   if(numEntries > 0) {
     columnSort = sortedColumn; /* Host name */
 
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_MULTICAST_STATS, sign) < 0)
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", STR_MULTICAST_STATS, sign) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_MULTICAST_STATS) < 0)
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", STR_MULTICAST_STATS) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     if(abs(columnSort) == 0) {
@@ -944,7 +932,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpMulticastFctn);
 
-    for(idx=0; idx<numEntries; idx++) {
+    for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
      if(revertOrder)
 	el = tmpTable[numEntries-idx-1];
       else
@@ -972,6 +960,9 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
+
+    addPageIndicator(STR_MULTICAST_STATS, pageNum, numEntries, maxNumLines, 
+		     revertOrder, abs(sortedColumn));        
   } else
     printNoDataYet();
 
@@ -981,7 +972,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
 /* ******************************* */
 
-RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
+void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
   u_int idx, numEntries;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
@@ -1026,9 +1017,9 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
   if(numEntries > 0) {
     quicksort(tmpTable, numEntries, sizeof(struct hostTraffic*), sortHostFctn);
 
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", HOSTS_INFO_HTML, sign) < 0)
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", HOSTS_INFO_HTML, sign) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", HOSTS_INFO_HTML) < 0)
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", HOSTS_INFO_HTML) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     if(abs(columnSort) == 1) {
@@ -1106,7 +1097,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-    for(idx=0; idx<numEntries; idx++) {
+    for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
       if(revertOrder)
 	el = tmpTable[numEntries-idx-1];
       else
@@ -1284,7 +1275,11 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
+
+    addPageIndicator(HOSTS_INFO_HTML, pageNum, numEntries, maxNumLines, 
+		     revertOrder, abs(sortedColumn));   
   }
+
   free(tmpTable);
 }
 
@@ -1604,8 +1599,8 @@ void printTCPSessions(void) {
 
 /* ************************************ */
 
-RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
-			     int revertOrder) {
+void printIpAccounting(int remoteToLocal, int sortedColumn,
+		       int revertOrder, int pageNum) {
   u_int idx, numEntries;
   int printedEntries=0;
   HostTraffic *el, **tmpTable;
@@ -1689,9 +1684,9 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
     sortFilter = remoteToLocal;
     quicksort(tmpTable, numEntries, sizeof(struct hostTraffic*), cmpHostsFctn);
 
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", str, sign) < 0)
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", str, sign) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", str) < 0)
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", str) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     if(abs(columnSort) == 1) {
@@ -1739,7 +1734,7 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 
     sendString(buf);
 
-    for(idx=0; idx<numEntries; idx++) {
+    for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
       if(revertOrder)
 	el = tmpTable[numEntries-idx-1];
       else
@@ -1797,6 +1792,10 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
     }
 
     sendString("</TABLE>"TABLE_OFF"\n");
+
+    addPageIndicator(str, pageNum, numEntries, maxNumLines, 
+		     revertOrder, abs(sortedColumn));   
+
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
 	       "<TH "TH_BG">Total Traffic</TH><TH "TH_BG">Data Sent</TH>\n"
 	       "<TH "TH_BG">Data Received</TH><TH "TH_BG">Used Bandwidth</TH></TR>\n");
@@ -2296,6 +2295,8 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     if(total == 0)
       return;
     else {
+      int numProtosFound = 0;
+
       printSectionTitle("Global TCP/UDP Protocol Distribution");
 
       sendString("<CENTER>\n");
@@ -2316,6 +2317,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	  partialTotal /= 1024;
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
+	  numProtosFound++;
 	  printTableEntry(buf, sizeof(buf), protoIPTrafficInfos[i],
 			  COLOR_1, partialTotal, percentage);
 	}
@@ -2333,8 +2335,9 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       }
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TD "TD_BG" COLSPAN=3 ALIGN=CENTER>"
-		 "<IMG SRC=drawGlobalIpProtoDistribution"CHART_FORMAT"></TD></TR>\n");
+      if(numProtosFound > 0)
+	sendString("<TR><TD "TD_BG" COLSPAN=3 ALIGN=CENTER>"
+		   "<IMG SRC=drawGlobalIpProtoDistribution"CHART_FORMAT"></TD></TR>\n");
 #endif
       sendString("</TABLE>"TABLE_OFF"<P>\n");
       sendString("</CENTER>\n");
@@ -3154,13 +3157,13 @@ void printThptStats(int sortedColumn _UNUSED_) {
   sendString("<CENTER>\n");
 
 #ifdef HAVE_GDCHART
-   sendString("<A HREF=\"thptStatsMatrix.html?1\" BORDER=0>"
-	      "<IMG SRC=\"thptGraph"CHART_FORMAT"?1\"></A><BR>\n");
+   sendString("<A HREF=\"thptStatsMatrix.html?col=1\" BORDER=0>"
+	      "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=1\"></A><BR>\n");
    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	   formatTimeStamp(0, 0, 0),
 	   formatTimeStamp(0, 0, 60)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 #else
-   sendString("<A HREF=\"thptStatsMatrix.html?1\" BORDER=0>");
+   sendString("<A HREF=\"thptStatsMatrix.html?col=1\" BORDER=0>");
    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4></A><BR>",
 	   formatTimeStamp(0, 0, 0),
 	   formatTimeStamp(0, 0, 60)) < 0)
@@ -3171,13 +3174,13 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   if(device[actualReportDeviceId].numThptSamples > 60) {
 #ifdef HAVE_GDCHART
-    sendString("<P><A HREF=\"thptStatsMatrix.html?2\" BORDER=0>"
-	       "<IMG SRC=\"thptGraph"CHART_FORMAT"?2\"></A><BR>\n");
+    sendString("<P><A HREF=\"thptStatsMatrix.html?col=2\" BORDER=0>"
+	       "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=2\"></A><BR>\n");
     if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	    formatTimeStamp(0, 0, 0),
 	    formatTimeStamp(0, 24, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 #else
-    sendString("<P><A HREF=\"thptStatsMatrix.html?2\" BORDER=0>");
+    sendString("<P><A HREF=\"thptStatsMatrix.html?col=2\" BORDER=0>");
     if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4></A><BR>",
 	    formatTimeStamp(0, 0, 0),
 	    formatTimeStamp(0, 24, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -3187,7 +3190,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 #ifdef HAVE_GDCHART
     if(device[actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
-      sendString("<P><IMG SRC=\"thptGraph"CHART_FORMAT"?3\"><BR>\n");
+      sendString("<P><IMG SRC=\"thptGraph"CHART_FORMAT"?col=3\"><BR>\n");
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	      formatTimeStamp(0, 0, 0),
 	      formatTimeStamp(30, 0, 0)) < 0)
@@ -3389,15 +3392,15 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
     totBytesRcvd = 1;
 
   if(domainName == NULL) {
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_DOMAIN_STATS, sign) < 0)
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", STR_DOMAIN_STATS, sign) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_DOMAIN_STATS) < 0)
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", STR_DOMAIN_STATS) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
  } else {
-   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html?%s",
+   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html?col=%s",
 	       DOMAIN_INFO_HTML, domainName, sign) < 0)
      traceEvent(TRACE_ERROR, "Buffer overflow!");
-   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s_%s.html?",
+   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s_%s.html?col=",
 	       DOMAIN_INFO_HTML, domainName) < 0)
      traceEvent(TRACE_ERROR, "Buffer overflow!");
  }
@@ -3680,7 +3683,7 @@ void listNetFlows(void) {
   }
 
   if(numEntries == 0) {
-    sendString("<CENTER><P><H1>No available/active Network Flows</H1><p>"
+    sendString("<CENTER><P><H1>No Available/Active Network Flows</H1><p>"
 	       " (see <A HREF=ntop.html>man</A> page)</CENTER>\n");
   }
 }
@@ -3781,9 +3784,9 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
       arrowGif = "&nbsp;<IMG ALT=\"Ascending order, click to reverse\" SRC=arrow_down.gif BORDER=0>";
     }
 
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", NW_EVENTS_HTML, sign)  < 0)
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", NW_EVENTS_HTML, sign)  < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", NW_EVENTS_HTML) < 0)
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", NW_EVENTS_HTML) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 

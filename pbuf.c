@@ -2736,6 +2736,8 @@ static void processIpPkt(const u_char *bp,
   struct timeval tvstrct;
   u_char *theData;
 
+  device[actualDeviceId].ipBytes += length;
+
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
    * Paul D. Smith <psmith@baynetworks.com>
@@ -2884,8 +2886,6 @@ static void processIpPkt(const u_char *bp,
       dstHost->bytesReceivedFromRemote += length;
     }
   }
-
-  device[actualDeviceId].ipBytes += length;
 
 #if PACKET_DEBUG
   /*
