@@ -43,7 +43,7 @@ dnl> version and name of the game
 dnl>
 NTOP_MAJOR_VERSION=2
 NTOP_MINOR_VERSION=1
-NTOP_MICRO_VERSION=50
+NTOP_MICRO_VERSION=51
 NTOP_INTERFACE_AGE=0
 NTOP_BINARY_AGE=0
 NTOP_VERSION=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION.$NTOP_MICRO_VERSION
@@ -1450,10 +1450,24 @@ dnl>     openssl development tree under the same ntop's root source directory or
           fi
       fi
       if test ".$ac_cv_has_openssl" = ".no"; then
+          ntop_testopenssl("../openssl-0.9.6h", "../openssl-0.9.6h/ssl")
+          if test ".$ac_cv_has_openssl" = ".yes"; then
+              AC_MSG_WARN([ ntop has not been tested with openssl-0.9.6h])
+              AC_MSG_RESULT([          this didn't exist])
+              AC_MSG_RESULT([          (but we'll give it a try anyway])
+          fi
+      fi
+      if test ".$ac_cv_has_openssl" = ".no"; then
+          ntop_testopenssl("../openssl-0.9.6g", "../openssl-0.9.6g/ssl")
+          if test ".$ac_cv_has_openssl" = ".yes"; then
+              AC_MSG_WARN([ ntop has not been tested with openssl-0.9.6g])
+              AC_MSG_RESULT([          (but we'll give it a try anyway])
+          fi
+      fi
+      if test ".$ac_cv_has_openssl" = ".no"; then
           ntop_testopenssl("../openssl-0.9.6f", "../openssl-0.9.6f/ssl")
           if test ".$ac_cv_has_openssl" = ".yes"; then
               AC_MSG_WARN([ ntop has not been tested with openssl-0.9.6f])
-              AC_MSG_RESULT([          this didn't exist])
               AC_MSG_RESULT([          (but we'll give it a try anyway])
           fi
       fi
@@ -1461,7 +1475,6 @@ dnl>     openssl development tree under the same ntop's root source directory or
           ntop_testopenssl("../openssl-0.9.6e", "../openssl-0.9.6e/ssl")
           if test ".$ac_cv_has_openssl" = ".yes"; then
               AC_MSG_WARN([ ntop has not been tested with openssl-0.9.6e])
-              AC_MSG_RESULT([          this was released after 2.1's release date])
               AC_MSG_RESULT([          (but we'll give it a try anyway])
           fi
       fi
