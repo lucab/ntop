@@ -192,15 +192,22 @@ static int readHTTPheader(char* theRequestedURL,
     FD_SET((unsigned int)topSock, &mask);
 
     /* printf("About to call select()\n"); fflush(stdout); */
+    
+    if(myGlobals.newSock > 0) {
+      /* 
+	 Call select only for HTTP.
+	 Fix courtesy of Olivier Maul <oli@42.nu>
+      */
 
-    /* select returns immediately */
-    wait_time.tv_sec = 10; wait_time.tv_usec = 0;
-    if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 0) {
-      errorCode = HTTP_REQUEST_TIMEOUT; /* Timeout */
+      /* select returns immediately */
+      wait_time.tv_sec = 10; wait_time.tv_usec = 0;
+      if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 0) {
+	errorCode = HTTP_REQUEST_TIMEOUT; /* Timeout */
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "DEBUG: Timeout while reading from socket.\n");
+	traceEvent(TRACE_INFO, "DEBUG: Timeout while reading from socket.\n");
 #endif
-      break;
+	break;
+      }
     }
 
     /* printf("About to call recv()\n"); fflush(stdout); */
