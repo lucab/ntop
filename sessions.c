@@ -291,7 +291,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 
     incrementTrafficCounter(&srcHost->portsUsage[sport]->serverTraffic, length);
     srcHost->portsUsage[sport]->serverUses++;
-    srcHost->portsUsage[sport]->serverUsesLastPeer = dstHost->hostTrafficBucket;
+    srcHost->portsUsage[sport]->serverUsesLastPeer = dstHost->hostSerial;
 
     if(dstHost->portsUsage[sport] == NULL)
       dstHost->portsUsage[sport] = allocatePortUsage();
@@ -302,7 +302,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 
     incrementTrafficCounter(&dstHost->portsUsage[sport]->clientTraffic, length);
     dstHost->portsUsage[sport]->clientUses++;
-    dstHost->portsUsage[sport]->clientUsesLastPeer = srcHost->hostTrafficBucket;
+    dstHost->portsUsage[sport]->clientUsesLastPeer = srcHost->hostSerial;
   }
 
   if(dport < MAX_ASSIGNED_IP_PORTS) {
@@ -314,7 +314,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 
     incrementTrafficCounter(&srcHost->portsUsage[dport]->clientTraffic, length);
     srcHost->portsUsage[dport]->clientUses++;
-    srcHost->portsUsage[dport]->clientUsesLastPeer = dstHost->hostTrafficBucket;
+    srcHost->portsUsage[dport]->clientUsesLastPeer = dstHost->hostSerial;
 
     if(dstHost->portsUsage[dport] == NULL)
       dstHost->portsUsage[dport] = allocatePortUsage();
@@ -325,7 +325,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 
     incrementTrafficCounter(&dstHost->portsUsage[dport]->serverTraffic, length);
     dstHost->portsUsage[dport]->serverUses++;
-    dstHost->portsUsage[dport]->serverUsesLastPeer = srcHost->hostTrafficBucket;
+    dstHost->portsUsage[dport]->serverUsesLastPeer = srcHost->hostSerial;
   }
 }
 
@@ -1668,15 +1668,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		     (int)theSession->bytesRetranR2I.value);
 #endif
 	}
-
-#ifdef DEBUG
-	printf("%s:%d->",
-	       myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->initiatorIdx]->hostSymIpAddress,
-	       theSession->sport);
-   	printf("%s:%d\n",
-	       myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->remotePeerIdx]->hostSymIpAddress,
-	       theSession->dport);
-#endif
       }
 
       if(theSession->initiator == srcHost)

@@ -112,6 +112,7 @@ extern void printHTMLheader(char *title, int  headerFlags);
 #ifdef HAVE_OPENSSL
 extern char* printSSLError(int errorId);
 #endif /* HAVE_OPENSSL */
+extern void sendHTTPHeader(int mimeType, int headerFlags);
 extern void returnHTTPbadRequest();
 extern void returnHTTPaccessDenied();
 extern void returnHTTPaccessForbidden();
@@ -120,6 +121,18 @@ extern void returnHTTPpageGone();
 extern void returnHTTPrequestTimedOut();
 extern void returnHTTPnotImplemented();
 extern void returnHTTPversionNotSupported();
+#define STR_FAVICON_ICO                 "favicon.ico"
+#define STR_INDEX_HTML                  "index.html"
+#define PLUGINS_HEADER                  "plugins/"
+#define DUMP_DATA_HTML                  "dumpData.html"
+#define DUMP_TRAFFIC_DATA_HTML          "dumpTrafficData.html"
+#define DUMP_HOSTS_INDEXES_HTML         "dumpDataIndexes.html"
+#define DUMP_NTOP_FLOWS_HTML            "dumpFlows.html"
+#define DUMP_NTOP_HOSTS_MATRIX_HTML     "dumpHostsMatrix.html"
+
+#ifdef MAKE_WITH_XMLDUMP
+ #define DUMP_NTOP_XML                  "dump.xml"
+#endif
 
 /* report.c */
 extern void initReports(void);
@@ -247,30 +260,6 @@ extern void* sslwatchdogChildThread(void* notUsed _UNUSED_);
 
 #define STR_W3C_P3P_XML                 "w3c/p3p.xml"
 #define STR_NTOP_P3P                    "ntop.p3p"
-
-/* http.c */
-extern void sendHTTPHeader(int mimeType, int headerFlags);
-extern void returnHTTPbadRequest();
-extern void returnHTTPaccessDenied();
-extern void returnHTTPaccessForbidden();
-extern void returnHTTPpageNotFound();
-extern void returnHTTPpageGone();
-extern void returnHTTPrequestTimedOut();
-extern void returnHTTPnotImplemented();
-extern void returnHTTPversionNotSupported();
-
-#define STR_FAVICON_ICO                 "favicon.ico"
-#define STR_INDEX_HTML                  "index.html"
-#define PLUGINS_HEADER                  "plugins/"
-#define DUMP_DATA_HTML                  "dumpData.html"
-#define DUMP_TRAFFIC_DATA_HTML          "dumpTrafficData.html"
-#define DUMP_HOSTS_INDEXES_HTML         "dumpDataIndexes.html"
-#define DUMP_NTOP_FLOWS_HTML            "dumpFlows.html"
-#define DUMP_NTOP_HOSTS_MATRIX_HTML     "dumpHostsMatrix.html"
-
-#ifdef MAKE_WITH_XMLDUMP
- #define DUMP_NTOP_XML                  "dump.xml"
-#endif
 
 /* webInterface.c */
 extern void *handleWebConnections(void* notUsed);

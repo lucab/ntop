@@ -631,7 +631,7 @@ static void purgeIpPorts(int theDevice) {
       el != NULL; el = getNextHost(theDevice, el)) {
     int k;
     
-    for(k=0; i<MAX_NUM_RECENT_PORTS; i++) {
+    for(k=0; k<MAX_NUM_RECENT_PORTS; k++) {
       marker[el->recentlyUsedServerPorts[k]] = 1;
       marker[el->recentlyUsedClientPorts[k]] = 1;
     }

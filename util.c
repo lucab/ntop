@@ -56,8 +56,14 @@ static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
   for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
     HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
-    if(el != NULL)
+    if(el != NULL) {     
+      if(el->magic != CONST_MAGIC_NUMBER) {
+	traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
+		   CONST_MAGIC_NUMBER, el->magic);
+      }
+      
       return(el);
+    }
   }
 
   return(NULL);
@@ -72,9 +78,14 @@ HostTraffic* getFirstHost(u_int actualDeviceId) {
 /* ************************************ */
 
 HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {  
-  if(host->next != NULL)
+  if(host->next != NULL) {
+    if(host->next->magic != CONST_MAGIC_NUMBER) {
+      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
+		 CONST_MAGIC_NUMBER, host->next->magic);
+    }
+    
     return(host->next);
-  else {
+  } else {
     u_int nextIdx = host->hostTrafficBucket+1;
 
     if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
@@ -3455,15 +3466,15 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
   snprintf(fingerprint, sizeof(fingerprint)-1, "%s", srcHost->fingerprint);
   strtokState = NULL;
-  WIN = strtok_r(fingerprint, ":", &strtokState);
-  MSS = strtok_r(NULL, ":", &strtokState);
-  ttl = strtok_r(NULL, ":", &strtokState);
-  WSS = strtok_r(NULL, ":", &strtokState);
-  S = atoi(strtok_r(NULL, ":", &strtokState));
-  N = atoi(strtok_r(NULL, ":", &strtokState));
-  D = atoi(strtok_r(NULL, ":", &strtokState));
-  T = atoi(strtok_r(NULL, ":", &strtokState));
-  flags = strtok_r(NULL, ":", &strtokState);
+  WIN = strtok_r(fingerprint, ":", &strtokState); if(!WIN) goto unknownFingerprint;
+  MSS = strtok_r(NULL, ":", &strtokState);     if(!MSS)    goto unknownFingerprint;
+  ttl = strtok_r(NULL, ":", &strtokState);     if(!ttl)    goto unknownFingerprint;
+  WSS = strtok_r(NULL, ":", &strtokState);     if(!WSS)    goto unknownFingerprint;
+  S = atoi(strtok_r(NULL, ":", &strtokState)); if(!S)      goto unknownFingerprint;
+  N = atoi(strtok_r(NULL, ":", &strtokState)); if(!N)      goto unknownFingerprint;
+  D = atoi(strtok_r(NULL, ":", &strtokState)); if(!D)      goto unknownFingerprint;
+  T = atoi(strtok_r(NULL, ":", &strtokState)); if(!T)      goto unknownFingerprint;
+  flags = strtok_r(NULL, ":", &strtokState);   if(!flags)  goto unknownFingerprint;
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     char tmpStr[256];
@@ -3517,7 +3528,8 @@ void setHostFingerprint(HostTraffic *srcHost) {
 	
 	free(srcHost->fingerprint);
 	srcHost->fingerprint = strdup(&line[28]);
-	/* traceEvent(CONST_TRACE_INFO, "[%s] -> [%s]\n", srcHost->hostNumIpAddress, srcHost->fingerprint);*/
+	/* traceEvent(CONST_TRACE_INFO, "[%s] -> [%s]\n",
+	   srcHost->hostNumIpAddress, srcHost->fingerprint);*/
 	done = 1;
       }
 
@@ -3529,6 +3541,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
   if(!done) {
     /* Unknown fingerprint */
+  unknownFingerprint:
     free(srcHost->fingerprint);
     srcHost->fingerprint = strdup(":"); /* Empty OS name */
   }

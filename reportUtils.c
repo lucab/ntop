@@ -3880,25 +3880,6 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 
   if(theHash == NULL) return;
 
-  /* *********** */
-
-#ifdef DEBUG
-  for(i=0; i<MAX_ELEMENT_HASH; i++)
-    if(theHash[i] != NULL) {
-      printf("[%d] ", theHash[i]->id);
-      hash = theHash[i]->next;
-
-      while(hash != NULL) {
-	printf("%d ", hash->id);
-	hash = hash->next;
-      }
-
-      printf("\n");
-    }
-#endif
-
-  /* *********** */
-
   memset(entries, 0, sizeof(entries));
 
   for(i=0; i<MAX_ELEMENT_HASH; i++) {
@@ -4049,7 +4030,6 @@ void printLocalHostsStats() {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId); 
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-
     if((broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
        && ((el->hostNumIpAddress[0] != '\0') && (el->hostIpAddress.s_addr != '0' /* 0.0.0.0 */) /* This host speaks IP */)
@@ -4073,6 +4053,9 @@ void printLocalHostsStats() {
 	theOSs[i].name = strdup(&el->fingerprint[1]);
 	theOSs[i].num++;
       }
+
+      if(numEntries >= myGlobals.device[myGlobals.actualReportDeviceId].hostsno)
+	break;
     }
   }
 

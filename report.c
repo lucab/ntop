@@ -695,7 +695,11 @@ void printHostsTraffic(int reportType,
 	   && (el->hostNumIpAddress[0] == '\0')) {
 	  continue;
 	}
+
 	tmpTable[numEntries++]=el;
+
+	if(numEntries >= myGlobals.device[myGlobals.actualReportDeviceId].hostsno)
+	  break;
       }
     }
   } /* for */
@@ -1207,6 +1211,9 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     if(((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0))
        && (!broadcastHost(el)))
       tmpTable[numEntries++] = el;
+
+    if(numEntries >= myGlobals.device[myGlobals.actualReportDeviceId].hostsno)
+      break;
   }
 
   printHTMLheader("Multicast Statistics", 0);
@@ -1366,6 +1373,9 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       maxBandwidthUsage = actUsage;
 
     tmpTable[numEntries++] = el;
+
+    if(numEntries >= myGlobals.device[myGlobals.actualReportDeviceId].hostsno)
+      break;    
   }
 
   if(numEntries > 0) {
@@ -1775,8 +1785,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	  if(el->portsUsage[idx]->clientUsesLastPeer == FLAG_NO_PEER)
 	    peerHost = NULL;
 	  else
-	    peerHost = myGlobals.device[myGlobals.actualReportDeviceId].
-	      hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
+	    peerHost = findHostBySerial(el->portsUsage[idx]->clientUsesLastPeer, actualDeviceId);
 
 	  if(peerHost == NULL) {
 	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
@@ -1798,8 +1807,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	  if(el->portsUsage[idx]->serverUsesLastPeer == FLAG_NO_PEER)
 	    peerHost = NULL;
 	  else
-	    peerHost = myGlobals.device[myGlobals.actualReportDeviceId].
-	      hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->serverUsesLastPeer)];
+	    peerHost = findHostBySerial(el->portsUsage[idx]->serverUsesLastPeer, actualDeviceId);
 
 	  if(peerHost == NULL) {
 	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
@@ -2393,25 +2401,22 @@ void printIpProtocolUsage(void) {
   hosts = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
   memset(hosts, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
 
-  /* Further checks courtesy of Scott Renfro <scott@renfro.org> */
-  if(myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic != NULL) {
-    for(el=getFirstHost(myGlobals.actualReportDeviceId); 
-	el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-      if(subnetPseudoLocalHost(el) && (el->hostNumIpAddress[0] != '\0')) {
-	hosts[hostsNum++] = el;
+  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    if(subnetPseudoLocalHost(el) && (el->hostNumIpAddress[0] != '\0')) {
+      hosts[hostsNum++] = el;
 
-	if(el->portsUsage != NULL) {
-	  for(j=0; j<MAX_ASSIGNED_IP_PORTS; j++) {
-	    if(el->portsUsage[j] != NULL)  {
-	      clientPorts[j] += el->portsUsage[j]->clientUses;
-	      serverPorts[j] += el->portsUsage[j]->serverUses;
-	      numPorts++;
-	    }
+      if(el->portsUsage != NULL) {
+	for(j=0; j<MAX_ASSIGNED_IP_PORTS; j++) {
+	  if(el->portsUsage[j] != NULL)  {
+	    clientPorts[j] += el->portsUsage[j]->clientUses;
+	    serverPorts[j] += el->portsUsage[j]->serverUses;
+	    numPorts++;
 	  }
 	}
       }
-    } /* for */
-  }
+    }
+  } /* for */
 
   if(numPorts == 0) {
     printNoDataYet();

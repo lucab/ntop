@@ -431,7 +431,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
       && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
      || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost))
 	 && (!broadcastHost(srcHost)) && (!multicastHost(srcHost)))) {
-   HostTraffic *router = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
+    HostTraffic *router = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 
     if(((router->hostNumIpAddress[0] != '\0')
 	&& (broadcastHost(router)
@@ -701,7 +701,7 @@ static void processIpPkt(const u_char *bp,
       && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
      /* forceUsingIPaddress = 1; */
 
-     srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
+     srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
      if(srcHost != NULL) {
        if(vlanId != -1) srcHost->vlanId = vlanId;
        if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
@@ -720,8 +720,8 @@ static void processIpPkt(const u_char *bp,
      IMPORTANT:
      do NOT change the order of the lines below (see isBroadcastAddress call)
    */
-   dstHost = getHostInfo(&ip.ip_dst, ether_dst, 1, 0, actualDeviceId);
-   srcHost = getHostInfo(&ip.ip_src, ether_src,
+   dstHost = lookupHost(&ip.ip_dst, ether_dst, 1, 0, actualDeviceId);
+   srcHost = lookupHost(&ip.ip_src, ether_src,
 			 /*
 			   Don't check for multihoming when
 			   the destination address is a broadcast address
@@ -733,7 +733,7 @@ static void processIpPkt(const u_char *bp,
      /* Sanity check */
      traceEvent(CONST_TRACE_ERROR, "Sanity check failed (1) [Low memory?]");
      return; /* It might be that there's not enough memory that that
-		dstHost = getHostInfo(&ip.ip_dst, ether_dst) caused
+		dstHost = lookupHost(&ip.ip_dst, ether_dst) caused
 		srcHost to be freed */
    }
    
@@ -2139,14 +2139,14 @@ void processPacket(u_char *_deviceId,
 	/* IPX */
 	IPXpacket ipxPkt;
 
-	srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
+	srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (5) [Low memory?]");
 	  return;
 	}
 
-	dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
+	dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (6) [Low memory?]");
@@ -2177,14 +2177,14 @@ void processPacket(u_char *_deviceId,
 
 	trp = (struct tokenRing_header*)orig_p;
 	ether_src = (u_char*)trp->trn_shost, ether_dst = (u_char*)trp->trn_dhost;
-	srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
+	srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (7) [Low memory?]");
 	  return;
 	}
 
-	dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
+	dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (8) [Low memory?]");
@@ -2212,14 +2212,14 @@ void processPacket(u_char *_deviceId,
 	   && (p[sizeof(struct ether_header)+4] == 0x0)) {
 	  /* IPX */
 
-	  srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
+	  srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
 	  if(srcHost == NULL) {
 	    /* Sanity check */
 	    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (9) [Low memory?]");
 	    return;
 	  }
 
-	  dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
+	  dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 	  if(dstHost == NULL) {
 	    /* Sanity check */
 	    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (10) [Low memory?]");
@@ -2231,8 +2231,8 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	} else if(!myGlobals.dontTrustMACaddr) {
 	  /* MAC addresses are meaningful here */
-	  srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
-	  dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
+	  srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+	  dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 
 	  if((srcHost != NULL) && (dstHost != NULL)) {
 	    TrafficCounter ctr;
@@ -2528,14 +2528,14 @@ void processPacket(u_char *_deviceId,
 	else
 	  length = 0;
 
-	srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
+	srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (11) [Low memory?]");
 	  return;
 	}
 
-	dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
+	dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
@@ -2554,17 +2554,17 @@ void processPacket(u_char *_deviceId,
 	    case ARPOP_REPLY: /* ARP REPLY */
 	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      dstHost = getHostInfo(&addr, (u_char*)&arpHdr.arp_tha, 0, 0, actualDeviceId);
+	      dstHost = lookupHost(&addr, (u_char*)&arpHdr.arp_tha, 0, 0, actualDeviceId);
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHost = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
+	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      if(srcHost != NULL) incrementTrafficCounter(&srcHost->arpReplyPktsSent, 1);
 	      if(dstHost != NULL) incrementTrafficCounter(&dstHost->arpReplyPktsRcvd, 1);
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHost = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
+	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) incrementTrafficCounter(&srcHost->arpReqPktsSent, 1);
 	    }
 	  }

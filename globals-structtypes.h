@@ -334,7 +334,7 @@ typedef struct trafficDistribution {
 
 typedef struct portUsage {
   u_short        clientUses, serverUses;
-  u_int          clientUsesLastPeer, serverUsesLastPeer;
+  HostSerial     clientUsesLastPeer, serverUsesLastPeer;
   TrafficCounter clientTraffic, serverTraffic;
 } PortUsage;
 
@@ -438,7 +438,9 @@ typedef struct ipGlobalSession {
 
 /* Host Traffic */
 typedef struct hostTraffic {
-  u_short          hostTrafficBucket /* Index in the **hash_hostTraffic list */;
+  u_short          magic;
+  u_int            hostTrafficBucket; /* Index in the **hash_hostTraffic list */
+  u_int            originalHostTrafficBucket; /* REMOVE */
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;

@@ -224,9 +224,9 @@ extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 			      TrafficCounter length,
 			      Counter pktCount,
 			      int actualDeviceId);
-extern HostTraffic* getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
-				u_char checkForMultihoming,
-				u_char forceUsingIPaddress, int actualDeviceId);
+extern HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr, 
+			       u_char checkForMultihoming,
+			       u_char forceUsingIPaddress, int actualDeviceId);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
 extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,

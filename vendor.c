@@ -50,7 +50,7 @@
  *       you really need is certainly possible.
  *
  *   Special MAC
- *       The special mac table is referenced - getHostInfo() in hash.c calls
+ *       The special mac table is referenced - lookupHost() in hash.c calls
  *       getSpecialMacInfo() in util.c - each time a new (pseudo) local host
  *       is found.
  *
