@@ -420,7 +420,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 		 HostsDisplayPolicy showHostsMode,
 		 LocalityDisplayPolicy showLocalityMode) {
   char buf[LEN_GENERAL_WORK_BUFFER];
-  char *sign, *arrowGif, *arrow[128], *theAnchor[128], *url=NULL, *url0=NULL, *url1=NULL, *url2=NULL;
+  char *sign, *arrowGif, *arrow[128], *theAnchor[128], *url=NULL;
   int i, soFar=2, idx, j, hourId;
   char htmlAnchor[128], htmlAnchor1[128], theLink[128];
   ProtocolsList *protoList;
@@ -452,8 +452,6 @@ void printHeader(int reportType, int revertOrder, u_int column,
   memset(buf, 0, sizeof(buf));
 
   switch(reportType) {
-  case SORT_DATA_RCVD_HOST_TRAFFIC: url = CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML; break;
-  case SORT_DATA_SENT_HOST_TRAFFIC: url = CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML; break;
   case TRAFFIC_STATS:               url = CONST_TRAFFIC_STATS_HTML;               break;
   case SORT_DATA_PROTOS:            url = CONST_SORT_DATA_PROTOS_HTML;            break;
   case SORT_DATA_IP:                url = CONST_SORT_DATA_IP_HTML;                break;
@@ -520,61 +518,30 @@ void printHeader(int reportType, int revertOrder, u_int column,
   sendString(buf);
 
   if(reportType != TRAFFIC_STATS) {
-    switch(reportType) {
-    case SORT_DATA_PROTOS:
-    case SORT_DATA_SENT_PROTOS:
-    case SORT_DATA_RECEIVED_PROTOS:
-      url0 = CONST_SORT_DATA_PROTOS_HTML;
-      url1 = CONST_SORT_DATA_PROTOS_HTML;
-      url2 = CONST_SORT_DATA_PROTOS_HTML;
-      break;
-    case SORT_DATA_IP:  
-    case SORT_DATA_SENT_IP:
-    case SORT_DATA_RECEIVED_IP:
-      url0 = CONST_SORT_DATA_IP_HTML;
-      url1 = CONST_SORT_DATA_IP_HTML;
-      url2 = CONST_SORT_DATA_IP_HTML;
-      break;
-    case SORT_DATA_THPT: 
-    case SORT_DATA_SENT_THPT:
-    case SORT_DATA_RECEIVED_THPT:
-      url0 = CONST_SORT_DATA_THPT_HTML;
-      url1 = CONST_SORT_DATA_THPT_HTML;
-      url2 = CONST_SORT_DATA_THPT_HTML;
-      break;
-    case SORT_DATA_HOST_TRAFFIC:
-    case SORT_DATA_SENT_HOST_TRAFFIC:
-    case SORT_DATA_RCVD_HOST_TRAFFIC:
-      url0 = CONST_SORT_DATA_THPT_HTML;
-      url1 = CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML;
-      url2 = CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML;
-      break;
-    }
-
     switch(showLocalityMode) {
     case showSentReceived:
       snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
   	     "<b>Data:</b> [<b> All </b>]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
-  	     url1, revertOrder ? "-" : "", column, showHostsMode,
-  	     url2, revertOrder ? "-" : "", column, showHostsMode);
+  	     url, revertOrder ? "-" : "", column, showHostsMode,
+  	     url, revertOrder ? "-" : "", column, showHostsMode);
       break;
     case showOnlySent:
       snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
   	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
   	     "[<b> Sent Only </b>]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
-  	     url0, revertOrder ? "-" : "", column, showHostsMode,
-  	     url2, revertOrder ? "-" : "", column, showHostsMode);
+  	     url, revertOrder ? "-" : "", column, showHostsMode,
+  	     url, revertOrder ? "-" : "", column, showHostsMode);
       break;
     default:
       snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
   	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
   	     "[<b> Received Only </b>]&nbsp;",
-  	     url0, revertOrder ? "-" : "", column, showHostsMode,
-  	     url1, revertOrder ? "-" : "", column, showHostsMode);
+  	     url, revertOrder ? "-" : "", column, showHostsMode,
+  	     url, revertOrder ? "-" : "", column, showHostsMode);
       break;
     }
     sendString(buf);

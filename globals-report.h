@@ -174,6 +174,7 @@ extern void addPageIndicator(char *url, u_int beginIdx,
 			     u_int numEntries, u_int linesPerPage,
 			     int revertOrder, int numCol);
 extern void printTrafficStatistics(int revertOrder);
+extern int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocalityMode);
 extern void printHostsTraffic(int reportType,
 			      int sortedColumn, int revertOrder,
 			      int pageNum, char* url, 

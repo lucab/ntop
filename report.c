@@ -1046,7 +1046,57 @@ void printTrafficStatistics(int revertOrder) {
 
 /* ******************************* */
 
-void printHostsTraffic(int reportType,
+int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocalityMode) {
+  int rc;
+
+  rc=reportTypeReq;
+
+  switch(reportTypeReq) {
+    case SORT_DATA_HOST_TRAFFIC:
+      switch(showLocalityMode) {
+        case showOnlySent:
+          rc = SORT_DATA_SENT_HOST_TRAFFIC;
+          break;
+        case showOnlyReceived:
+          rc = SORT_DATA_RCVD_HOST_TRAFFIC;
+      }
+      break;
+    case SORT_DATA_PROTOS:
+      switch(showLocalityMode) {
+        case showOnlySent:
+          rc = SORT_DATA_SENT_PROTOS;
+          break;
+        case showOnlyReceived:
+          rc = SORT_DATA_RECEIVED_PROTOS;
+      }
+      break;
+    case SORT_DATA_IP:
+      switch(showLocalityMode) {
+        case showOnlySent:
+          rc = SORT_DATA_SENT_IP;
+          break;
+        case showOnlyReceived:
+          rc = SORT_DATA_RECEIVED_IP;
+      }
+      break;
+    case SORT_DATA_THPT:
+      switch(showLocalityMode) {
+        case showOnlySent:
+          rc = SORT_DATA_SENT_THPT;
+          break;
+        case showOnlyReceived:
+          rc = SORT_DATA_RECEIVED_THPT;
+      }
+      break;
+  }
+
+  return(rc);
+ 
+}
+
+/* ******************************* */
+
+void printHostsTraffic(int reportTypeReq,
 		       int sortedColumn,
 		       int revertOrder,
 		       int pageNum,
@@ -1067,6 +1117,9 @@ void printHostsTraffic(int reportType,
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32],
     formatBuf4[32], formatBuf5[32], formatBuf6[32], formatBuf7[32],
     formatBuf8[32], formatBuf9[32];
+  int reportType;
+
+  reportType=combineReportTypeLocality(reportTypeReq, showLocalityMode);
 
   memset(buf, 0, sizeof(buf));
   switch(reportType) {
@@ -1120,7 +1173,7 @@ void printHostsTraffic(int reportType,
   }
 
   printHTMLheader(buf, NULL, 0);
-  printHeader(reportType, revertOrder, abs(sortedColumn), showHostsMode, showLocalityMode);
+  printHeader(reportTypeReq, revertOrder, abs(sortedColumn), showHostsMode, showLocalityMode);
 
   strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
