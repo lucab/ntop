@@ -18,10 +18,15 @@
  */
 
 /****** data declarations ***** */
+
 /* globals-core.c */
 extern NtopGlobals myGlobals;
 #ifdef MAKE_WITH_SYSLOG
 extern MYCODE myFacilityNames[];
+#endif
+
+#if defined(INET6)
+extern struct in6_addr _in6addr_linklocal_allnodes;
 #endif
 
 /* Fix courtesy of Tim Gardner <timg@tpi.com> */

@@ -387,7 +387,7 @@ char* makeHostLink(HostTraffic *el, short mode,
       usedEthAddress = 1;
     }
   } else if(tmpStr[0] != '\0') {
-    strncpy(symIp, tmpStr, sizeof(symIp));
+    snprintf(symIp, sizeof(symIp), "%s", tmpStr);
     if(tmpStr[strlen(tmpStr)-1] == ']') /* "... [MAC]" */ {
       usedEthAddress = 1;
       specialMacAddress = 1;
@@ -499,7 +499,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(linkName[i] == ':')
       linkName[i] = '_';
 
-  if(strstr(symIp, ":"))
+  if(symIp[2] == ':')
     usedEthAddress = 1;
 
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {

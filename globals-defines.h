@@ -2256,10 +2256,6 @@
 #define in6_addr in_addr6
 #endif
 
-#ifndef IN6ADDR_LINKLOCAL_ALLNODES_INIT
-struct in6_addr _in6addr_linklocal_allnodes;
-#endif /*  IN6ADDR_LINKLOCAL_ALLNODES_INIT */
-
 #ifndef IN6_IS_ADDR_MULTICAST
 #define IN6_IS_ADDR_MULTICAST(a) (((uint8_t *) (a))[0] == 0xff)
 #endif

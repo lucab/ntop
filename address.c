@@ -103,7 +103,7 @@ static void resolveAddress(HostAddr *hostAddr,
 #endif
 
   key_data.dptr = _addrtonum(hostAddr, tmpBuf, sizeof(tmpBuf));
-  key_data.dsize = strlen(keyBuf)+1;
+  key_data.dsize = sizeof(keyBuf)+1;
   
   if(myGlobals.dnsCacheFile == NULL) {
 #ifdef DNS_DEBUG
@@ -446,8 +446,8 @@ static void resolveAddress(HostAddr *hostAddr,
       else {
         myGlobals.dnsCacheStoredLookup++;
 
-#ifdef GDBM_DEBUG
-        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Added data: '%s' [%s]", symAddr, keyBuf);
+#ifdef DNS_DEBUG
+        traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Added data: '%s'='%s'", key_data.dptr, data_data.dptr);
 #endif
       }
 

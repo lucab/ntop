@@ -57,10 +57,10 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
       return(OTHER_HOSTS_ENTRY);
     } else {
       /* idx = hostIpAddress->s_addr; */
-      if (hostIpAddress->hostFamily == AF_INET)
+      if(hostIpAddress->hostFamily == AF_INET)
 	idx = (hostIpAddress->Ip4Address.s_addr & 0xffff) ^ ((hostIpAddress->Ip4Address.s_addr >> 15) & 0xffff);
 #ifdef INET6
-      else if (hostIpAddress->hostFamily == AF_INET6)
+      else if(hostIpAddress->hostFamily == AF_INET6)
 	idx = in6_hash(&hostIpAddress->Ip6Address);
 #endif
     }
@@ -86,10 +86,10 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 	return(OTHER_HOSTS_ENTRY);
       } else {
 	/* idx = hostIpAddress->s_addr; */
-	if (hostIpAddress->hostFamily == AF_INET)
+	if(hostIpAddress->hostFamily == AF_INET)
 	  idx = (hostIpAddress->Ip4Address.s_addr & 0xffff) ^ ((hostIpAddress->Ip4Address.s_addr >> 15) & 0xffff);
 #ifdef INET6
-	else if (hostIpAddress->hostFamily == AF_INET6)
+	else if(hostIpAddress->hostFamily == AF_INET6)
 	  idx = in6_hash(&hostIpAddress->Ip6Address);
 #endif
       }
@@ -361,36 +361,36 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 #if RECYCLE_MEMORY
   if(myGlobals.hostsCacheLen < (MAX_HOSTS_CACHE_LEN-1)) {
     myGlobals.hostsCache[myGlobals.hostsCacheLen++] = host;
-    if (myGlobals.hostsCacheLen > myGlobals.hostsCacheLenMax)
+    if(myGlobals.hostsCacheLen > myGlobals.hostsCacheLenMax)
       myGlobals.hostsCacheLenMax = myGlobals.hostsCacheLen;
   } else
 #endif
     {
 
-#if (0)
+#if(0)
 /* Temporary code to see what's being covered up by the memset() below */
       char xbuf[1024];
       int ii;
       memset(xbuf, 0, sizeof(xbuf));
       snprintf(xbuf, sizeof(xbuf), "TEMP: free of host (0x%08x) magic(%u) not cleared:", host, host->magic);
       ii=strlen(xbuf);
-      if (host->fullDomainName != NULL) strcat(xbuf, " fullDomainName");
-      if (host->dotDomainName != NULL) strcat(xbuf, " dotDomainName");
-      if (host->fingerprint != NULL) strcat(xbuf, " fingerprint");
-      if (host->nonIPTraffic != NULL) strcat(xbuf, " nonIPTraffic");
-      if (host->nonIpProtoTrafficInfos != NULL) strcat(xbuf, " nonIpProtoTrafficInfos");
-      if (host->trafficDistribution != NULL) strcat(xbuf, " trafficDistribution");
-      if (host->routedTraffic != NULL) strcat(xbuf, " routedTraffic");
-      if (host->portsUsage != NULL) strcat(xbuf, " portsUsage");
-      if (host->protocolInfo != NULL) strcat(xbuf, " protocolInfo");
-      if (host->secHostPkts != NULL) strcat(xbuf, " secHostPkts");
-      if (host->icmpInfo != NULL) strcat(xbuf, " icmpInfo");
-      if (host->ipProtosList != NULL) strcat(xbuf, " ipProtosList");
-      if (host->protoIPTrafficInfos != NULL) strcat(xbuf, " protoIPTrafficInfos");
-      if (host->unknownProtoSent != NULL) strcat(xbuf, " unknownProtoSent");
-      if (host->unknownProtoRcvd != NULL) strcat(xbuf, " unknownProtoRcvd");
-      if (host->next != NULL) strcat(xbuf, " next");
-      if (strlen(xbuf) != ii) traceEvent(CONST_TRACE_INFO, xbuf);
+      if(host->fullDomainName != NULL) strcat(xbuf, " fullDomainName");
+      if(host->dotDomainName != NULL) strcat(xbuf, " dotDomainName");
+      if(host->fingerprint != NULL) strcat(xbuf, " fingerprint");
+      if(host->nonIPTraffic != NULL) strcat(xbuf, " nonIPTraffic");
+      if(host->nonIpProtoTrafficInfos != NULL) strcat(xbuf, " nonIpProtoTrafficInfos");
+      if(host->trafficDistribution != NULL) strcat(xbuf, " trafficDistribution");
+      if(host->routedTraffic != NULL) strcat(xbuf, " routedTraffic");
+      if(host->portsUsage != NULL) strcat(xbuf, " portsUsage");
+      if(host->protocolInfo != NULL) strcat(xbuf, " protocolInfo");
+      if(host->secHostPkts != NULL) strcat(xbuf, " secHostPkts");
+      if(host->icmpInfo != NULL) strcat(xbuf, " icmpInfo");
+      if(host->ipProtosList != NULL) strcat(xbuf, " ipProtosList");
+      if(host->protoIPTrafficInfos != NULL) strcat(xbuf, " protoIPTrafficInfos");
+      if(host->unknownProtoSent != NULL) strcat(xbuf, " unknownProtoSent");
+      if(host->unknownProtoRcvd != NULL) strcat(xbuf, " unknownProtoRcvd");
+      if(host->next != NULL) strcat(xbuf, " next");
+      if(strlen(xbuf) != ii) traceEvent(CONST_TRACE_INFO, xbuf);
 #endif
 
       /* No room left: it's time to free the bucket */
@@ -620,9 +620,9 @@ void setHostSerial(HostTraffic *el) {
     el->hostSerial.serialType = SERIAL_MAC;
     memcpy(&el->hostSerial.value.ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS);
   } else {
-    if (el->hostIpAddress.hostFamily == AF_INET){
+    if(el->hostIpAddress.hostFamily == AF_INET){
       el->hostSerial.serialType = SERIAL_IPV4;
-    }else if (el->hostIpAddress.hostFamily == AF_INET6){
+    }else if(el->hostIpAddress.hostFamily == AF_INET6){
       el->hostSerial.serialType = SERIAL_IPV6;
     }
     addrcpy(&el->hostSerial.value.ipAddress,&el->hostIpAddress);
@@ -715,7 +715,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	  }
 	  hostFound = 1;
 	  break;	
-	}else if (hostIpAddress == NULL){  /* Mac Addresses */
+	}else if(hostIpAddress == NULL){  /* Mac Addresses */
 	  hostFound = 1;
 	  break;
 	}
@@ -840,10 +840,10 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	/* This is packet that's being routed or belonging to a
 	   remote network that uses the same physical wire (or forged)*/
 	memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
-	if (hostIpAddress->hostFamily == AF_INET)
+	if(hostIpAddress->hostFamily == AF_INET)
 	  memcpy(el->ethAddress, &hostIpAddress->Ip4Address.s_addr, 4); /* Dummy/unique eth address */
 #ifdef INET6
-	else if (hostIpAddress->hostFamily == AF_INET6)
+	else if(hostIpAddress->hostFamily == AF_INET6)
 	  memcpy(el->ethAddress, &hostIpAddress->Ip6Address.s6_addr[8], 4);
 #endif
 
@@ -867,13 +867,13 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	  The trick below allows me not to duplicate the
 	  "<broadcast>" string in the code
 	*/
-	if (hostIpAddress->hostFamily == AF_INET)
+	if(hostIpAddress->hostFamily == AF_INET)
 	  el->hostIp4Address.s_addr = INADDR_BROADCAST;
 #ifdef INET6
-	else if (hostIpAddress->hostFamily == AF_INET6)
+	else if(hostIpAddress->hostFamily == AF_INET6)
 	  el->hostIp6Address = _in6addr_linklocal_allnodes;
-
 #endif
+
 	FD_SET(FLAG_BROADCAST_HOST, &el->flags);
 	if(isMulticastAddress(&el->hostIpAddress))
 	  FD_SET(FLAG_MULTICAST_HOST, &el->flags);
@@ -968,7 +968,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 
 #ifdef DEBUG
     {
-      if ((hostIpAddress != NULL) && (hostIpAddress->hostFamily == AF_INET6)){
+      if((hostIpAddress != NULL) && (hostIpAddress->hostFamily == AF_INET6)){
 	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 	traceEvent(CONST_TRACE_INFO, "lookupHost(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]",
 		   idx, actualDeviceId,

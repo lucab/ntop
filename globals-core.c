@@ -84,6 +84,9 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
   int allow_severity, deny_severity;
 #endif /* HAVE_LIBWRAP */
 
+#if defined(INET6)
+struct in6_addr _in6addr_linklocal_allnodes;
+#endif
 
 /* ************************************************************ */
 
