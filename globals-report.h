@@ -135,6 +135,8 @@ extern int out_graph(short gifwidth,
 		     ... );
 #endif
 
+extern FILE* getNewRandomFile(char* fileName, int len);
+
 /* **************************** */
 
 #define STR_INDEX_HTML                  "index.html"

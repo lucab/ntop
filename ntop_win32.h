@@ -58,8 +58,6 @@ typedef long int32_t;
 
 extern int getopt(int num, char *const *argv, const char *opts);
 extern int gettimeofday(struct timeval*, struct timezone*);
-extern int getNewRandomFile(char* fileName, int len);
-
 
 extern ULONG GetHostIPAddr();
 

@@ -585,9 +585,9 @@ int ffs (int i)
 /* ****************************************************** */
 
 int gettimeofday(struct timeval *tv, struct timezone *notUsed) {
-	tv->tv_sec = time(NULL);
-    tv->tv_usec = 0;
-	return(0);
+  tv->tv_sec = time(NULL);
+  tv->tv_usec = 0;
+  return(0);
 }
 
 /* ****************************************************** */
@@ -600,25 +600,5 @@ int snprintf(char *string, size_t maxlen, const char *format, ...) {
   vsprintf(string,format,args);
   va_end(args);
   return ret;
-}
-
-
-/* ****************************************************** */
-
-int getNewRandomFile(char* fileName, int len) {
-  int fd;
-
-#ifndef WIN32
-  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
-  if(((tmpfd = mkstemp(fileName)) < 0)
-     || (fchmod(tmpfd, 0600) < 0)
-     || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    return(-1);
-#else
-    tmpnam(fileName);
-	fd = fopen(fileName, "wb");
-#endif
-
-	return(fd);
 }
 

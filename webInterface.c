@@ -522,7 +522,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(mode == LONG_FORMAT)
-    snprintf(buf[bufIdx], 384, "<TH ALIGN=LEFT>%s<A HREF=\"/%s.html\">%s</A>%s</TH>%s",
+    snprintf(buf[bufIdx], 384, "<TH ALIGN=LEFT NOWRAP>%s<A HREF=\"/%s.html\">%s</A>%s</TH>%s",
 	    blinkOn, linkName, symIp, blinkOff, flag);
   else
     snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\">%s</A>%s%s",

@@ -157,6 +157,14 @@ int getdomainname(char *name, size_t len);
 # include <dlfcn.h>
 #endif
 
+/* 
+   Courtesy of  
+   Brent L. Bates <blbates@vigyan.com>
+*/
+#ifdef HAVE_STANDARDS_H
+#include <standards.h>
+#endif
+
 #if defined(HAVE_CRYPT_H)
 /* Fix courtesy of Charles M. Gagnon <charlesg@unixrealm.com> */
 # if defined(HAVE_OPENSSL)

@@ -1922,3 +1922,23 @@ int strOnlyDigits(const char *s) {
   return 1;
 }
 
+/* ****************************************************** */
+
+FILE* getNewRandomFile(char* fileName, int len) {
+  FILE* fd;
+
+#ifndef WIN32
+  int tmpfd;
+
+  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
+  if(((tmpfd = mkstemp(fileName)) < 0)
+     || (fchmod(tmpfd, 0600) < 0)
+     || ((fd = fdopen(tmpfd, "wb")) == NULL))
+    return(NULL);
+#else
+  tmpnam(fileName);
+  fd = fopen(fileName, "wb");
+#endif
+
+  return(fd);
+}
