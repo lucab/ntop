@@ -229,12 +229,10 @@ static void resetDevice(int devIdx) {
   ptr = calloc(HASH_INITIAL_SIZE, sizeof(HostTraffic*));
   myGlobals.device[devIdx].hash_hostTraffic = ptr;
 
-#ifdef EXPERIMENTAL
   len = sizeof(struct HashList*)*HASH_LIST_SIZE;
   myGlobals.device[devIdx].hashList = (HashList**)malloc(len);
   memset(myGlobals.device[devIdx].hashList, 0, len);
   myGlobals.device[devIdx].insertIdx = 0;
-#endif /* EXPERIMENTAL */
 
   myGlobals.device[devIdx].lastTotalPkts = myGlobals.device[devIdx].lastBroadcastPkts = 0;
   myGlobals.device[devIdx].lastMulticastPkts = 0;

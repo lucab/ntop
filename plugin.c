@@ -125,20 +125,6 @@ static char* dlerror() {
 
 /* ******************* */
 
-void notifyPluginsHashResize(int oldSize, int newSize, int* mappings) {
-  FlowFilterList *flows = myGlobals.flowsList;
-
-  while(flows != NULL)
-    if((flows->pluginStatus.pluginPtr != NULL)
-       && (flows->pluginStatus.activePlugin)
-       && (flows->pluginStatus.pluginPtr->resizeFunct != NULL))
-      flows->pluginStatus.pluginPtr->resizeFunct(oldSize, newSize, mappings);
-    else
-      flows = flows->next;
-}
-
-/* ******************* */
-
 #ifndef MICRO_NTOP
 
 #if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)

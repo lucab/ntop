@@ -101,11 +101,11 @@ extern void drawGlobalIpProtoDistribution(void);
 extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
                                    u_char *ether_addr,
                                    short* useIPAddressForSearching, int actualDeviceId);
-extern void resizeHostHash(int deviceToExtend, short action, int actualDeviceId);
 extern void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int ignoreIdleTime, int devId);
 extern int extendTcpSessionsHash(int actualDeviceId);
+extern void purgeHostIdx(int theDevice, u_int hostIdx);
 
 /* http.c */
 extern void sendStringLen(char *theString, unsigned int len);

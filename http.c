@@ -1537,8 +1537,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       /* printf("HostName: '%s'\n", hostName); */
 
 #ifdef MULTITHREADED
-      /* It is necessary to release the mutex for avoiding
-	 a race condition with resizeHostHash() */
+      /* It is necessary to release the mutex for avoiding a race condition */
       releaseMutex(&myGlobals.hashResizeMutex);
       mutexReleased = 1;
 #endif

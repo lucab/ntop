@@ -656,9 +656,14 @@ typedef struct packetInformation {
 } PacketInformation;
 
 
-#ifdef EXPERIMENTAL
-#include "experimental.h"
-#endif /* EXPERIMENTAL */
+typedef struct hash_list {
+  u_int16_t idx; /* Index of this entry in hostTraffic */
+  struct hash_list *next;
+} HashList;
+
+
+#define HASH_LIST_SIZE    ((u_int16_t)-1) /* Static hash size */
+
 
 # if defined(HAVE_OPENSSL)
 #  define THREAD_MODE "MT (SSL)"
@@ -826,12 +831,6 @@ typedef struct ipFragment {
 */
 #define SERVICE_HASH_SIZE     50000
 
-#define EXTEND_HASH             1
-#define RESIZE_HASH             2
-#define HASH_EXTEND_RATIO      1.50  /* 150 % */
-#define HASH_RESIZE_RATIO      0.75  /*  75 % */
-#define HASH_EXTEND_THRESHOLD  0.85  /*  85 % */
-
 
 /* Forward */
 struct ipSession;
@@ -963,11 +962,8 @@ typedef struct ntopInterface {
   u_int  hostsno;        /* # of valid entries in the following table */
   u_int  actualHashSize, hashThreshold, topHashThreshold;
   struct hostTraffic **hash_hostTraffic;
-
-#ifdef EXPERIMENTAL
   u_int16_t  insertIdx;
   HashList** hashList;
-#endif
 
   /* ************************** */
 
@@ -1376,7 +1372,6 @@ typedef struct ipGlobalSession {
 
 typedef void(*VoidFunc)(void);
 typedef void(*PluginFunc)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
-typedef void(*HashResizePluginFunc)(u_int oldSize, u_int newSize, int* mappings);
 typedef void(*PluginHTTPFunc)(char* url);
 
 typedef struct pluginInfo {
@@ -1390,7 +1385,6 @@ typedef struct pluginInfo {
   VoidFunc startFunc, termFunc;
   PluginFunc pluginFunc;    /* Initialize here all the plugin structs... */
   PluginHTTPFunc httpFunct; /* Set it to NULL if the plugin doesn't speak HTTP */
-  HashResizePluginFunc resizeFunct; /* Function called when the main hash is resized */
   char* bpfFilter;          /* BPF filter for selecting packets that
        		               will be routed to the plugin  */
 } PluginInfo;
@@ -1679,9 +1673,7 @@ typedef struct storedAddress {
 
 /* Host Traffic */
 typedef struct hostTraffic {
-#ifdef EXPERIMENTAL
   u_int hashListBucket;
-#endif /* EXPERIMENTAL */
   struct in_addr   hostIpAddress;
   time_t           firstSeen;
   time_t           lastSeen; /* time when this host has sent/rcvd some data  */
