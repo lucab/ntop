@@ -85,7 +85,7 @@ icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	cc -bundle -flat_namespace -undefined suppress -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
 
 sflowPlugin.so: .libs/libsflowPlugin.so@SO_VERSION_PATCH@
-	@ln -s .libs/libfslowPlugin.so sflowPlugin.so
+	@ln -s .libs/libsflowPlugin.so sflowPlugin.so
 
 .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
 	cc -bundle -flat_namespace -undefined suppress -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
