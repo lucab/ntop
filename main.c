@@ -321,7 +321,6 @@ static void usage (FILE * fp)
 	   ALARM_TIME, REFRESH_TIME);
 #endif
 
-  fprintf(fp, "    [-s <max hash size (default 32768)>]\n");
   fprintf(fp, "    [-t (trace level [0-5])]\n");
 
 #ifndef WIN32
@@ -485,14 +484,6 @@ static void parseOptions(int argc, char * argv []) {
 	exit(-1);
       }
       refreshRate = atoi(optarg);
-      break;
-
-    case 's':
-      myGlobals.maxHashSize = atoi(optarg);
-      if(myGlobals.maxHashSize < 64) {
-	myGlobals.maxHashSize = 64;
-	printf("Max hash size set to 64 (minimum hash size)");
-      }
       break;
 
     case 't':

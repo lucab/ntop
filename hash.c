@@ -567,16 +567,18 @@ void purgeIdleHosts(int actDevice) {
 #endif
   /* Calculates entries to free */
   for(idx=1; idx<myGlobals.device[actDevice].actualHashSize; idx++)
-    if((myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL)
-       && (idx != myGlobals.otherHostEntryIdx)
-       && ((myGlobals.device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
-	   || ((myGlobals.device[actDevice].hash_hostTraffic[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime))
-       && (!subnetPseudoLocalHost(myGlobals.device[actDevice].hash_hostTraffic[idx]))) {
-
+    if(myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL) {
+      if((idx != myGlobals.otherHostEntryIdx)
+	 && (myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses == 0)
+	 && (!subnetPseudoLocalHost(myGlobals.device[actDevice].hash_hostTraffic[idx]))) {
+	
 	if(!myGlobals.stickyHosts) {
-	    theFlaggedHosts[idx]=myGlobals.device[actDevice].hash_hostTraffic[idx];
-	    myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
+	  theFlaggedHosts[idx] = myGlobals.device[actDevice].hash_hostTraffic[idx];
+	  myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
 	}
+      }
+
+      myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses = 0;
     }
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
@@ -612,62 +614,6 @@ void purgeIdleHosts(int actDevice) {
 #endif
 }
 /* #undef DEBUG */
-
-/* ******************************************** */
-
-int extendTcpSessionsHash(int actualDeviceId) {
-  const short extensionFactor = 2;
-  static short displayError = 1;
-
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Called extendTcpSessionsHash(%d)", actualDeviceId);
-#endif
-
-  if((myGlobals.device[actualDeviceId].numTotSessions*extensionFactor) <= MAX_HASH_SIZE) {
-    /* Fine we can enlarge the table now */
-    IPSession** tmpSession;
-    int i, newLen, idx;
-
-    newLen = extensionFactor*sizeof(IPSession*)*myGlobals.device[actualDeviceId].numTotSessions;
-
-    tmpSession = myGlobals.device[actualDeviceId].tcpSession;
-    myGlobals.device[actualDeviceId].tcpSession = (IPSession**)malloc(newLen);
-    memset(myGlobals.device[actualDeviceId].tcpSession, 0, newLen);
-
-    newLen = myGlobals.device[actualDeviceId].numTotSessions*extensionFactor;
-    for(i=0; i<myGlobals.device[actualDeviceId].numTotSessions; i++) {
-      IPSession *nextSession, *thisSession = tmpSession[i];
-
-      while(thisSession != NULL) {
-	idx = (u_int)((tmpSession[i]->initiatorRealIp.s_addr+
-		       tmpSession[i]->remotePeerRealIp.s_addr+
-		       tmpSession[i]->sport+
-		       tmpSession[i]->dport) % newLen);
-
-	nextSession = thisSession->next;
-	thisSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
-	myGlobals.device[actualDeviceId].tcpSession[idx] = thisSession;
-	thisSession = nextSession;
-      } /* while */
-    }
-    free(tmpSession);
-
-    myGlobals.device[actualDeviceId].numTotSessions *= extensionFactor;
-
-    displayError = 1;
-    traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d][deviceId=%d]",
-	       myGlobals.device[actualDeviceId].numTotSessions, actualDeviceId);
-    return(0);
-  } else {
-    if(displayError) {
-      traceEvent(TRACE_WARNING, "WARNING: unable to further extend TCP hash [actual size: %d]",
-		 myGlobals.device[actualDeviceId].numTotSessions);
-      displayError = 0;
-    }
-
-    return(-1);
-  }
-}
 
 /* **************************************************** */
 
@@ -980,6 +926,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		       useIPAddressForSearching);
 #endif
 	}
+
+	el->numUses++;
     } else
 	return(idx);
 

@@ -284,7 +284,7 @@ void initCounters(int _mergeInterfaces) {
     myGlobals.dummyEthAddress[len] = len;
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    myGlobals.device[i].numTotSessions = HASH_INITIAL_SIZE; /* Initial value */
+    myGlobals.device[i].numTotSessions = HASH_LIST_SIZE;
     len = sizeof(IPSession*)*myGlobals.device[i].numTotSessions;
     myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
     memset(myGlobals.device[i].tcpSession, 0, len);
@@ -365,7 +365,7 @@ void resetStats(void) {
 
     for(j=1; j<myGlobals.device[i].actualHashSize; j++)
       if(myGlobals.device[i].hash_hostTraffic[j] != NULL) {
-	freeHostInfo(i, j, 1, i);
+	freeHostInfo(i, myGlobals.device[i].hash_hostTraffic[j], 1, i);
 	myGlobals.device[i].hash_hostTraffic[j] = NULL;
       }
 

@@ -421,7 +421,8 @@ int getdomainname(char *name, size_t len);
 #endif
 
 /*
- * Packet Capture Library by Lawrence Berkeley National Laboratory - Network Research Group
+ * Packet Capture Library by Lawrence Berkeley National Laboratory 
+ * Network Research Group
  */
 #include "pcap.h"
 
@@ -466,14 +467,13 @@ extern const char *gdbm_strerror (int);
 
 #define DUMMY_SOCKET_VALUE -999
 #define MULTIPLY_FACTORY   0.75
-#define AVERAGE_BUCKET_FILL   5
 
 /* ********************************************* */
 
 #ifndef PACKETSZ /* Missing declarations */
 
 /*
- * Define constants based on rfc883
+ * Define constants based on RFC 883
  */
 #define PACKETSZ	512		/* maximum packet size */
 #define MAXDNAME	256		/* maximum domain name */
@@ -647,16 +647,14 @@ typedef struct pthreadMutex {
 typedef struct packetInformation {
   unsigned short deviceId;
   struct pcap_pkthdr h;
-  u_char p[2*DEFAULT_SNAPLEN+1]; /*
-				   NOTE:
-				   Remove 2* as soon as we are sure
-				   that ntop does not do beyond boundaries
-				   TODO (ASAP!)
-				 */
+  u_char p[2*DEFAULT_SNAPLEN+1]; /* NOTE:
+				    Remove 2* as soon as we are sure
+				    that ntop does not go beyond boundaries
+				    TODO (ASAP!) **/
 } PacketInformation;
 
 typedef struct hash_list {
-  u_int16_t idx; /* Index of this entry in hostTraffic */
+  u_int16_t idx;          /* Index of this entry in hostTraffic */
   struct hash_list *next;
 } HashList;
 
@@ -1357,8 +1355,8 @@ typedef struct ipGlobalSession {
   time_t lastSeen;                 /* time when the session has been closed    */
   u_short sessionCounter;          /* # of sessions we've observed             */
   TrafficCounter bytesSent;        /* # bytes sent     (peer -> initiator)     */
-  TrafficCounter bytesRcvd;    /* # bytes rcvd (peer -> initiator)     */
-  TrafficCounter bytesFragmentedSent, bytesFragmentedRcvd; /* IP Fragments */
+  TrafficCounter bytesRcvd;        /* # bytes rcvd (peer -> initiator)         */
+  TrafficCounter bytesFragmentedSent, bytesFragmentedRcvd; /* IP Fragments     */
   UsageCounter peers;              /* session peers */
   struct ipGlobalSession  *next;   /* next element (linked list)               */
 } IpGlobalSession;
@@ -1370,6 +1368,9 @@ typedef struct ipGlobalSession {
 typedef void(*VoidFunc)(void);
 typedef void(*PluginFunc)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
 typedef void(*PluginHTTPFunc)(char* url);
+#ifdef SESSION_PLUGIN
+typedef void(*PluginSessionFunc)(IPSession *sessionToPurge, int actualDeviceId);
+#endif
 
 typedef struct pluginInfo {
   /* Plugin Info */
@@ -1382,6 +1383,9 @@ typedef struct pluginInfo {
   VoidFunc startFunc, termFunc;
   PluginFunc pluginFunc;    /* Initialize here all the plugin structs... */
   PluginHTTPFunc httpFunct; /* Set it to NULL if the plugin doesn't speak HTTP */
+#ifdef SESSION_PLUGIN
+  PluginSessionFunc sessionFunct; /* Set it to NULL if the plugin doesn't care of terminated sessions */
+#endif
   char* bpfFilter;          /* BPF filter for selecting packets that
        		               will be routed to the plugin  */
 } PluginInfo;
@@ -1670,7 +1674,8 @@ typedef struct storedAddress {
 
 /* Host Traffic */
 typedef struct hostTraffic {
-  u_int hashListBucket;
+  u_int            hashListBucket;
+  u_int16_t        numUses;
   struct in_addr   hostIpAddress;
   time_t           firstSeen;
   time_t           lastSeen; /* time when this host has sent/rcvd some data  */
@@ -1678,7 +1683,6 @@ typedef struct hostTraffic {
 				  for this host will be updated */
   u_char           ethAddress[ETHERNET_ADDRESS_LEN];
   u_char           lastEthAddress[ETHERNET_ADDRESS_LEN]; /* used for remote addresses */
-  u_short          instanceInUse; /* If so, this instance cannot be purged */
   char             ethAddressString[18];
   char             hostNumIpAddress[17], *fullDomainName;
   char             *dotDomainName, hostSymIpAddress[MAX_HOST_SYM_NAME_LEN], *osName;

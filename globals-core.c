@@ -108,14 +108,12 @@ void initNtopGlobals(int argc, char * argv[])
   }
 
   myGlobals.rFileName = NULL;
-  myGlobals.enableNetFlowSupport = 0;
   myGlobals.devices = NULL;
   myGlobals.borderSnifferMode = 0;
   myGlobals.filterExpressionInExtraFrame = 0;
   myGlobals.pcapLog = NULL;
   myGlobals.numericFlag = 0;
   myGlobals.enableSuspiciousPacketDump = 0;
-  myGlobals.maxHashSize = MAX_HASH_SIZE;
   myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
   myGlobals.accuracyLevel = HIGH_ACCURACY_LEVEL;
   myGlobals.currentFilterExpression = NULL;

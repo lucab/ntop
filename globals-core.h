@@ -105,7 +105,6 @@ extern void freeHostInfo(int theDevice, HostTraffic *host,
 			 u_int hostIdx, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
-extern int extendTcpSessionsHash(int actualDeviceId);
 extern void purgeHostIdx(int theDevice, u_int hostIdx);
 
 /* http.c */
@@ -455,3 +454,4 @@ extern IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 				   u_short sport, u_int dstHostIdx,
 				   u_short dport, u_int length,
 				   u_char* packetData, int actualDeviceId);
+extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);

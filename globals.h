@@ -124,11 +124,10 @@ typedef struct ntopGlobals {
   u_int otherHostEntryIdx;
   HostTraffic *otherHostEntry;
 
-  /* administrative */
+  /* Administrative */
   char *shortDomainName;
 
 #ifdef MULTITHREADED
-
   unsigned short numThreads;           /* # of running threads */
 
 #ifdef USE_SEMAPHORES
@@ -195,9 +194,7 @@ typedef struct ntopGlobals {
   PthreadMutex lsofMutex;
   pthread_t lsofThreadId;
 
-
   unsigned short numDequeueThreads;
-
 
   PthreadMutex gdbmMutex;
   PthreadMutex hashResizeMutex;
@@ -208,9 +205,7 @@ typedef struct ntopGlobals {
 #ifdef ASYNC_ADDRESS_RESOLUTION
   TrafficCounter droppedAddresses;
 #endif
-
 #endif /* MULTITHREADED */
-
 
   /* SSL support */
 #ifdef HAVE_OPENSSL
@@ -284,8 +279,6 @@ typedef struct ntopGlobals {
 #ifdef MEMORY_DEBUG
   size_t allocatedMemory;
 #endif
-
-
 } NtopGlobals;
 
 #endif /* GLOBALS_H */

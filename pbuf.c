@@ -735,20 +735,12 @@ static void processIpPkt(const u_char *bp,
     return; /* It might be that there's not enough memory that that
 	       dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst) caused
 	       srcHost to be freed */
-  } else {
-    /* Lock the instance so that the next call
-       to getHostInfo won't purge it */
-      /* srcHost->instanceInUse++; */
   }
 
   if(dstHost == NULL) {
     /* Sanity check */
     traceEvent(TRACE_INFO, "Sanity check failed (2) [Low memory?]");
     return;
-  } else {
-    /* Lock the instance so that the next call
-       to getHostInfo won't purge it */
-      /* dstHost->instanceInUse++; */
   }
 
 #ifdef DEBUG
@@ -1428,9 +1420,6 @@ static void processIpPkt(const u_char *bp,
 	     (int)myGlobals.device[actualDeviceId].udpBytes,
 	     (int)myGlobals.device[actualDeviceId].icmpBytes, length);
 #endif
-
-  /* Unlock the instance */
-  /* srcHost->instanceInUse--, dstHost->instanceInUse--; */
 }
 
 /* ************************************ */
@@ -1990,10 +1979,7 @@ void processPacket(u_char *_deviceId,
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(TRACE_INFO, "Sanity check failed (5) [Low memory?]");
-	} else {
-	  /* Lock the instance so that the next call
-	     to getHostInfo won't purge it */
-	    /* srcHost->instanceInUse++; */
+	  return;
 	}
 
 	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -2001,11 +1987,9 @@ void processPacket(u_char *_deviceId,
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(TRACE_INFO, "Sanity check failed (6) [Low memory?]");
-	} else {
-	  /* Lock the instance so that the next call
-	     to getHostInfo won't purge it */
-	    /* dstHost->instanceInUse++; */
+	  return;
 	}
+
 	memcpy((char *)&ipxPkt, (char *)p+sizeof(struct ether_header), sizeof(IPXpacket));
 
 	if(ntohs(ipxPkt.dstSocket) == 0x0452) {
@@ -2027,10 +2011,7 @@ void processPacket(u_char *_deviceId,
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(TRACE_INFO, "Sanity check failed (7) [Low memory?]");
-	} else {
-	  /* Lock the instance so that the next call
-	     to getHostInfo won't purge it */
-	    /* srcHost->instanceInUse++; */
+	  return;
 	}
 
 	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -2038,10 +2019,7 @@ void processPacket(u_char *_deviceId,
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(TRACE_INFO, "Sanity check failed (8) [Low memory?]");
-	} else {
-	  /* Lock the instance so that the next call
-	     to getHostInfo won't purge it */
-	    /* dstHost->instanceInUse++; */
+	  return;
 	}
 
 	srcHost->otherSent += length;
@@ -2066,10 +2044,7 @@ void processPacket(u_char *_deviceId,
 	  if(srcHost == NULL) {
 	    /* Sanity check */
 	    traceEvent(TRACE_INFO, "Sanity check failed (9) [Low memory?]");
-	  } else {
-	    /* Lock the instance so that the next call
-	       to getHostInfo won't purge it */
-	      /* srcHost->instanceInUse++; */
+	    return;
 	  }
 
 	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -2077,10 +2052,7 @@ void processPacket(u_char *_deviceId,
 	  if(dstHost == NULL) {
 	    /* Sanity check */
 	    traceEvent(TRACE_INFO, "Sanity check failed (10) [Low memory?]");
-	  } else {
-	    /* Lock the instance so that the next call
-	       to getHostInfo won't purge it */
-	      /* dstHost->instanceInUse++; */
+	    return;
 	  }
 
 	  srcHost->ipxSent += length, dstHost->ipxRcvd += length;
@@ -2376,10 +2348,7 @@ void processPacket(u_char *_deviceId,
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(TRACE_INFO, "Sanity check failed (11) [Low memory?]");
-	} else {
-	  /* Lock the instance so that the next call
-	     to getHostInfo won't purge it */
-	    /* srcHost->instanceInUse++; */
+	  return;
 	}
 
 	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -2387,10 +2356,7 @@ void processPacket(u_char *_deviceId,
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(TRACE_INFO, "Sanity check failed (12) [Low memory?]");
-	} else {
-	  /* Lock the instance so that the next call
-	     to getHostInfo won't purge it */
-	    /* dstHost->instanceInUse++; */
+	  return;
 	}
 
 	switch(eth_type) {
@@ -2458,12 +2424,6 @@ void processPacket(u_char *_deviceId,
 	updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length, actualDeviceId);
       }
     }
-
-    /* Unlock the instances */
-    /* 
-       if(srcHost != NULL) srcHost->instanceInUse--;
-       if(dstHost != NULL) dstHost->instanceInUse--;
-    */
   }
 
   if(myGlobals.flowsList != NULL) /* Handle flows last */

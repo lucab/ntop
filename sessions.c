@@ -298,22 +298,9 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
       }
     }
 
-    if(myGlobals.enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
-    notifyTCPSession(sessionToPurge, actualDeviceId);
+    handlePluginSessionTermination(sessionToPurge, actualDeviceId);
   }
   
-  if(sessionToPurge->initiatorIdx != NO_PEER) {
-    HostTraffic *client = myGlobals.device[actualDeviceId].
-      hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
-    if(client && (client->instanceInUse > 0)) client->instanceInUse--;
-  }
-  
-  if(sessionToPurge->remotePeerIdx != NO_PEER) {
-    HostTraffic *server = myGlobals.device[actualDeviceId].
-      hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
-    if(server && (server->instanceInUse > 0)) server->instanceInUse--;
-  }
-
   /*
    * Having updated the session information, 'theSession'
    * can now be purged.
@@ -484,7 +471,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     dstHost->hostSymIpAddress, dport, idx);
 #endif
 
- RESCAN_LIST:
   if(sessionType == IPPROTO_TCP) {
     IPSession *prevSession;
 
@@ -546,21 +532,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		 myGlobals.device[actualDeviceId].numTcpSessions,
 		 (myGlobals.device[actualDeviceId].numTotSessions*AVERAGE_BUCKET_FILL));
 #endif
-
-      /* MULTIPLY_FACTORY courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
-      if(myGlobals.device[actualDeviceId].numTcpSessions >
-	 (myGlobals.device[actualDeviceId].numTotSessions*AVERAGE_BUCKET_FILL)) {
-	/* If possible this table will be enlarged */
-
-	if(extendTcpSessionsHash(actualDeviceId) == 0) {
-	  /* The table has been extended successfully */
-
-	  /* A goto il necessary as when the hash is extended all
-	     the pointers changed hence some references (eg. sessions[])
-	     are no longer valid) */
-	  goto RESCAN_LIST;
-	}
-      }
 
       /* We don't check for space here as the datastructure allows
 	 ntop to store sessions as needed 
@@ -686,7 +657,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->passiveFtpSession = isPassiveSession(dstHost->hostIpAddress.s_addr, dport);
       theSession->firstSeen = myGlobals.actTime;
       flowDirection = CLIENT_TO_SERVER;
-      srcHost->instanceInUse++, dstHost->instanceInUse++;
     } 
 
 #ifdef DEBUG
@@ -1861,5 +1831,26 @@ IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 #endif
 
   return(theSession);
+}
+
+/* ******************* */
+
+void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId) {
+#ifdef SESSION_PLUGIN
+  FlowFilterList *flows = myGlobals.flowsList;
+  while(flows != NULL) {
+    if((flows->pluginStatus.pluginPtr != NULL)
+       && (flows->pluginStatus.pluginPtr->sessionFunct != NULL)
+       && (!flows->pluginStatus.activePlugin)) {
+      flows->pluginStatus.pluginPtr->sessionFunct(sessionToPurge, actualDeviceId);
+    }
+    
+    flows = flows->next;
+  }
+#endif
+
+ /* To remove ASAP */
+  if(myGlobals.enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
+  notifyTCPSession(sessionToPurge, actualDeviceId);
 }
 
