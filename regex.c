@@ -1,5 +1,5 @@
 /* Extended regular expression matching and search library,
-   myGlobals.version 0.12.
+   version 0.12.
    (Implements POSIX draft P10003.2/D11.2, except for
    internationalization features.)
 
@@ -4748,7 +4748,7 @@ re_exec (s)
      Also, regexec will try a match beginning after every newline.
 
      If REG_ICASE is set, then we considers upper- and lowercase
-     myGlobals.versions of letters to be equivalent when matching.
+     versions of letters to be equivalent when matching.
 
      If REG_NOSUB is set, then when PREG is passed to regexec, that
      routine will report only success or failure, and nothing about the
@@ -4967,8 +4967,8 @@ regfree (preg)
 /*
 Local variables:
 make-backup-files: t
-myGlobals.version-control: t
-trim-myGlobals.versions-without-asking: nil
+version-control: t
+trim-versions-without-asking: nil
 End:
 */
 

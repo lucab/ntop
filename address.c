@@ -1076,6 +1076,9 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   traceEvent(TRACE_INFO, "id=0x%X - flags=0x%X\n", transactionId, flags);
 #endif
 
+  if(length > sizeof(answer))
+    length = sizeof(answer);
+
   memset(&answer, 0, sizeof(answer));
   memcpy(&answer, ipPtr, length);
 

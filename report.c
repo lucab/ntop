@@ -85,8 +85,8 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(pageNum >= 1) {
     if(snprintf(prevBuf, sizeof(prevBuf), 
-		"<A HREF=\"%s?page=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 ALIGN=vmiddle></A> "
-		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/back.gif BORDER=0 ALIGN=vmiddle></A>",
+		"<A HREF=\"%s?page=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 ALIGN=vmiddle ALT=\"Back to first page\"></A> "
+		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/back.gif BORDER=0 ALIGN=vmiddle ALT=\"Prior page\"></A>",
 		url, shortBuf, url, pageNum-1, shortBuf) < 0)
       BufferOverflow();  
   } else
@@ -94,8 +94,8 @@ void addPageIndicator(char *url, u_int pageNum,
   
   if(actPage < numPages) {
     if(snprintf(nextBuf, sizeof(nextBuf), 
-		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 ALIGN=vmiddle></A> "
-		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle></A>", 
+		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 ALIGN=vmiddle ALT=\"Next Page\"></A> "
+		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle ALT=\"Forward to last page\"></A>", 
 		url, pageNum+1, shortBuf, 
 		url, numPages-1, shortBuf) < 0)
       BufferOverflow();  
