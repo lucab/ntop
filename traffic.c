@@ -502,12 +502,14 @@ void updateTrafficMatrix(HostTraffic *srcHost,
     id = a*myGlobals.device[actualDeviceId].numHosts+b;
     if(myGlobals.device[actualDeviceId].ipTrafficMatrix[id] == NULL)
       myGlobals.device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
-    myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->bytesSent += length;
+    myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->bytesSent += length,
+      myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->pktsSent++;
 
     id = b*myGlobals.device[actualDeviceId].numHosts+a;
     if(myGlobals.device[actualDeviceId].ipTrafficMatrix[id] == NULL)
       myGlobals.device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
-    myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->bytesRcvd += length;
+    myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->bytesRcvd += length,
+      myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->pktsRcvd++;
   }
 }
 

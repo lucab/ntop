@@ -721,8 +721,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  strncpy(el->hostNumIpAddress,
 		  _intoa(el->hostIpAddress, buf, sizeof(buf)),
 		  strlen(el->hostNumIpAddress));
-	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
-		  MAX_HOST_SYM_NAME_LEN);
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN-1);
 
 	  if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
 	     && (el->hostIpAddress.s_addr != 0xFFFFFFFF) /* 255.255.255.255 */
@@ -765,7 +764,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	if(myGlobals.numericFlag == 0)
 	  ipaddr2str(el->hostIpAddress, actualDeviceId);
 	else
-	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN-1);
       } else {
 	/* el->hostNumIpAddress == "" */
 	if(symEthName[0] != '\0') {
@@ -773,10 +772,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=\"/card.gif\" ALT=\"Network Interface Card (NIC)\"  BORDER=0>", symEthName) < 0)
 	    BufferTooShort();
-	  else
-	    strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN_HTML);
+
+	  buf[MAX_HOST_SYM_NAME_LEN-1] = '\0';
+	  strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN-1);
 	} else
-	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN_HTML);
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN-1);
       }
 
 #ifdef HASH_DEBUG

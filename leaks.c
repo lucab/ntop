@@ -48,7 +48,7 @@ unsigned int PrintMemoryBlocks(); /* Forward declaration */
 
 /* *************************************** */
 
-void* myMalloc(size_t theSize, int theLine, char* theFile) {
+static void* myMalloc(size_t theSize, int theLine, char* theFile) {
   MemoryBlock *tmpBlock;
 
 #if defined(MULTITHREADED)
@@ -98,7 +98,7 @@ void* myMalloc(size_t theSize, int theLine, char* theFile) {
 
 /* *************************************** */
 
-void* myCalloc(size_t numObj, size_t theSize, int theLine, char* theFile) {
+static void* myCalloc(size_t numObj, size_t theSize, int theLine, char* theFile) {
   int numElems = numObj*theSize;
   void* thePtr = myMalloc(numElems, theLine, theFile);
 
@@ -110,7 +110,7 @@ void* myCalloc(size_t numObj, size_t theSize, int theLine, char* theFile) {
 
 /* *************************************** */
 
-void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
+static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr, *theNewPtr;
   
 #if defined(MULTITHREADED)
@@ -160,7 +160,7 @@ void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
 
 /* *************************************** */
 
-void myFree(void **thePtr, int theLine, char* theFile) {
+static void myFree(void **thePtr, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr;
   
 #if defined(MULTITHREADED)
@@ -203,7 +203,7 @@ void myFree(void **thePtr, int theLine, char* theFile) {
 
 /* *************************************** */
 
-char* myStrdup(char* theStr, int theLine, char* theFile) {
+static char* myStrdup(char* theStr, int theLine, char* theFile) {
   char* theOut;
   int len = strlen(theStr);
   
@@ -507,6 +507,25 @@ void ntop_safefree(void **ptr, char* file, int line) {
   } else {
     free(*ptr);
     *ptr = NULL;
+  }
+}
+
+/* ****************************************** */
+
+#undef strdup /* just to be safe */
+char* ntop_safestrdup(char *ptr, char* file, int line) {
+  
+  if(ptr == NULL) {
+    traceEvent(TRACE_WARNING, "WARNING: strdup of NULL pointer @ %s:%d", file, line);
+  } else {
+    char* theOut;
+    int len = strlen(ptr);
+    
+    theOut = (char*)malloc((len+1)*sizeof(char));
+    if(len > 0) strncpy(theOut, ptr, len);
+    theOut[len] = '\0';
+    
+    return(theOut);
   }
 }
 

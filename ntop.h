@@ -1011,7 +1011,8 @@ struct ipSession;
 struct hostTraffic;
 
 typedef struct trafficEntry {
-  TrafficCounter bytesSent, bytesRcvd;
+  TrafficCounter pktsSent, bytesSent;
+  TrafficCounter pktsRcvd, bytesRcvd;
 } TrafficEntry;
 
 typedef struct serviceEntry {

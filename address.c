@@ -100,13 +100,13 @@ static void resolveAddress(struct in_addr *hostAddr,
 
     /* Sanity check */
     if(strlen(retrievedAddress->symAddress) > MAX_HOST_SYM_NAME_LEN) {
-      strncpy(symAddr, retrievedAddress->symAddress, MAX_HOST_SYM_NAME_LEN-3);
-      symAddr[MAX_HOST_SYM_NAME_LEN] = '\0';
-      symAddr[MAX_HOST_SYM_NAME_LEN-1] = '.';
+      strncpy(symAddr, retrievedAddress->symAddress, MAX_HOST_SYM_NAME_LEN-4);
+      symAddr[MAX_HOST_SYM_NAME_LEN-1] = '\0';
       symAddr[MAX_HOST_SYM_NAME_LEN-2] = '.';
       symAddr[MAX_HOST_SYM_NAME_LEN-3] = '.';
+      symAddr[MAX_HOST_SYM_NAME_LEN-4] = '.';
     } else
-      strncpy(symAddr, retrievedAddress->symAddress, MAX_HOST_SYM_NAME_LEN);
+      strncpy(symAddr, retrievedAddress->symAddress, MAX_HOST_SYM_NAME_LEN-1);
 
     updateHostNameInfo(addr, retrievedAddress->symAddress, actualDeviceId);
     myGlobals.numResolvedOnCacheAddresses++;
@@ -276,11 +276,11 @@ static void resolveAddress(struct in_addr *hostAddr,
 #endif
 
   if(strlen(res) > MAX_HOST_SYM_NAME_LEN) {
-    strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN-3);
-    symAddr[MAX_HOST_SYM_NAME_LEN] = '\0';
-    symAddr[MAX_HOST_SYM_NAME_LEN-1] = '.';
+    strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN-4);
+    symAddr[MAX_HOST_SYM_NAME_LEN-1] = '\0';
     symAddr[MAX_HOST_SYM_NAME_LEN-2] = '.';
     symAddr[MAX_HOST_SYM_NAME_LEN-3] = '.';
+    symAddr[MAX_HOST_SYM_NAME_LEN-4] = '.';
   } else
     strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN-1);
 
