@@ -378,7 +378,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 			formatBytes(el->igmpReceived, 1),
 			formatBytes(el->osiReceived, 1),
 			formatBytes(el->qnxReceived, 1),
-			formatBytes(el->stpRcvd, 1),
+			formatBytes(el->stpReceived, 1),
 			formatBytes(el->otherReceived, 1)
 			) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      

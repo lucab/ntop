@@ -38,6 +38,302 @@ static unsigned long clr[] = { 0x0000FF, 0x00FF00, 0xFF0000,
 
 /* ************************ */
 
+void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
+  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  float p[20];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
+		   "", "", "", "", "", "", "", "", "", "" };
+  int len, num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
+			     45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+  FILE *fd;
+  TrafficCounter totTraffic;
+
+  fd = getNewRandomFile(fileName, NAME_MAX);
+
+#ifdef MULTITHREADED
+    accessMutex(&graphMutex, "pktHostTrafficDistrib");
+#endif
+
+  if(dataSent) {
+    totTraffic = theHost->tcpSentLocally+theHost->tcpSentRemotely+
+      theHost->udpSentLocally+theHost->udpSentRemotely+
+      theHost->icmpSent+theHost->ospfSent+theHost->igmpSent+theHost->stpSent
+      +theHost->ipxSent+theHost->osiSent+theHost->dlcSent+
+      theHost->arp_rarpSent+theHost->decnetSent+theHost->appletalkSent+
+      theHost->netbiosSent+theHost->qnxSent+theHost->otherSent;
+  } else {
+    totTraffic = theHost->tcpReceivedLocally+theHost->tcpReceivedFromRemote+ 
+      theHost->udpReceivedLocally+theHost->udpReceivedFromRemote+
+      theHost->icmpReceived+theHost->ospfReceived+theHost->igmpReceived+theHost->stpReceived
+      +theHost->ipxReceived+theHost->osiReceived+theHost->dlcReceived+
+      theHost->arp_rarpReceived+theHost->decnetReceived+theHost->appletalkReceived+
+      theHost->netbiosReceived+theHost->qnxReceived+theHost->otherReceived;
+  }
+
+  if(totTraffic > 0) {
+    if(dataSent) {
+      if(theHost->tcpSentLocally+theHost->tcpSentRemotely > 0) {
+	p[num] = (float)((100*(theHost->tcpSentLocally+
+			       theHost->tcpSentRemotely))/totTraffic);
+	lbl[num++] = "TCP";
+      }
+      
+      if(theHost->udpSentLocally+theHost->udpSentRemotely > 0) {
+	p[num] = (float)((100*(theHost->udpSentLocally+
+			       theHost->udpSentRemotely))/totTraffic);
+	lbl[num++] = "UDP";
+      }
+
+      if(theHost->icmpSent > 0) {
+	p[num] = (float)((100*theHost->icmpSent)/totTraffic);
+	lbl[num++] = "ICMP";
+      }
+      
+      if(theHost->ospfSent > 0) {
+	p[num] = (float)((100*theHost->ospfSent)/totTraffic);
+	lbl[num++] = "OSPF";
+      }
+      
+      if(theHost->igmpSent > 0) {
+	p[num] = (float)((100*theHost->igmpSent)/totTraffic);
+	lbl[num++] = "IGMP";
+      }
+      
+      if(theHost->stpSent > 0) {
+	p[num] = (float)((100*theHost->stpSent)/totTraffic);
+	lbl[num++] = "STP";
+      }
+      
+      if(theHost->ipxSent > 0) {
+	p[num] = (float)((100*theHost->ipxSent)/totTraffic);
+	lbl[num++] = "IPX";
+      }
+
+      if(theHost->osiSent > 0) {
+	p[num] = (float)((100*theHost->osiSent)/totTraffic);
+	lbl[num++] = "OSI";
+      }
+      
+      if(theHost->arp_rarpSent > 0) {
+	p[num] = (float)((100*theHost->arp_rarpSent)/totTraffic);
+	lbl[num++] = "(R)ARP";
+      }
+      
+      if(theHost->decnetSent > 0) {
+	p[num] = (float)((100*theHost->decnetSent)/totTraffic);
+	lbl[num++] = "DECNET";
+      }
+      
+      if(theHost->appletalkSent > 0) {
+	p[num] = (float)((100*theHost->appletalkSent)/totTraffic);
+	lbl[num++] = "AppleTalk";
+      }
+      
+      if(theHost->netbiosSent > 0) {
+	p[num] = (float)((100*theHost->netbiosSent)/totTraffic);
+	lbl[num++] = "NetBios";
+      }
+      
+      if(theHost->qnxSent > 0) {
+	p[num] = (float)((100*theHost->qnxSent)/totTraffic);
+	lbl[num++] = "QNX";
+      }
+      
+      if(theHost->otherSent > 0) {
+	p[num] = (float)((100*theHost->otherSent)/totTraffic);
+	lbl[num++] = "Other";
+      }      
+    } else {
+      if(theHost->tcpReceivedLocally+theHost->tcpReceivedFromRemote > 0) {
+	p[num] = (float)((100*(theHost->tcpReceivedLocally+
+			       theHost->tcpReceivedFromRemote))/totTraffic);
+	lbl[num++] = "TCP";
+      }
+      
+      if(theHost->udpReceivedLocally+theHost->udpReceivedFromRemote > 0) {
+	p[num] = (float)((100*(theHost->udpReceivedLocally+
+			       theHost->udpReceivedFromRemote))/totTraffic);
+	lbl[num++] = "UDP";
+      }
+
+      if(theHost->icmpReceived > 0) {
+	p[num] = (float)((100*theHost->icmpReceived)/totTraffic);
+	lbl[num++] = "ICMP";
+      }
+      
+      if(theHost->ospfReceived > 0) {
+	p[num] = (float)((100*theHost->ospfReceived)/totTraffic);
+	lbl[num++] = "OSPF";
+      }
+      
+      if(theHost->igmpReceived > 0) {
+	p[num] = (float)((100*theHost->igmpReceived)/totTraffic);
+	lbl[num++] = "IGMP";
+      }
+      
+      if(theHost->stpReceived > 0) {
+	p[num] = (float)((100*theHost->stpReceived)/totTraffic);
+	lbl[num++] = "STP";
+      }
+      
+      if(theHost->ipxReceived > 0) {
+	p[num] = (float)((100*theHost->ipxReceived)/totTraffic);
+	lbl[num++] = "IPX";
+      }
+
+      if(theHost->osiReceived > 0) {
+	p[num] = (float)((100*theHost->osiReceived)/totTraffic);
+	lbl[num++] = "OSI";
+      }
+      
+      if(theHost->arp_rarpReceived > 0) {
+	p[num] = (float)((100*theHost->arp_rarpReceived)/totTraffic);
+	lbl[num++] = "(R)ARP";
+      }
+      
+      if(theHost->decnetReceived > 0) {
+	p[num] = (float)((100*theHost->decnetReceived)/totTraffic);
+	lbl[num++] = "DECNET";
+      }
+      
+      if(theHost->appletalkReceived > 0) {
+	p[num] = (float)((100*theHost->appletalkReceived)/totTraffic);
+	lbl[num++] = "AppleTalk";
+      }
+      
+      if(theHost->netbiosReceived > 0) {
+	p[num] = (float)((100*theHost->netbiosReceived)/totTraffic);
+	lbl[num++] = "NetBios";
+      }
+      
+      if(theHost->qnxReceived > 0) {
+	p[num] = (float)((100*theHost->qnxReceived)/totTraffic);
+	lbl[num++] = "QNX";
+      }
+      
+      if(theHost->otherReceived > 0) {
+	p[num] = (float)((100*theHost->otherReceived)/totTraffic);
+	lbl[num++] = "Other";
+      }      
+    }
+
+    GDCPIE_LineColor = 0x000000L;
+    GDCPIE_explode   = expl;    /* default: NULL - no explosion */
+    GDCPIE_Color     = clr;
+    GDCPIE_BGColor   = 0xFFFFFFL;
+    GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+    GDCPIE_percent_labels = GDCPIE_PCT_NONE;
+    
+    GDC_out_pie(250,			/* width */
+		250,			/* height */
+		fd,			/* open file pointer */
+		GDC_3DPIE,		/* or GDC_2DPIE */
+		num,			/* number of slices */
+		lbl,			/* slice labels (unlike out_png(), can be NULL */
+		p);			/* data array */
+
+    fclose(fd);
+
+#ifdef MULTITHREADED
+    releaseMutex(&graphMutex);
+#endif
+
+    if((fd = fopen(fileName, "rb")) != NULL) {
+      for(;;) {
+	len = fread(tmpStr, sizeof(char), 255, fd);
+	if(len <= 0) break;
+	sendStringLen(tmpStr, len);
+      }
+
+      fclose(fd);
+    }
+
+    unlink(fileName);
+  }
+}
+
+/* ************************ */
+
+void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
+  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  float p[20];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
+		   "", "", "", "", "", "", "", "", "", "" };
+  int i, len, num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
+			     45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+  FILE *fd;
+  TrafficCounter traffic, totalIPTraffic;
+
+  fd = getNewRandomFile(fileName, NAME_MAX);
+
+#ifdef MULTITHREADED
+  accessMutex(&graphMutex, "pktHostTrafficDistrib");
+#endif
+
+  totalIPTraffic = 0;
+
+  for(i=0; i<numIpProtosToMonitor; i++) 
+    if(dataSent)
+      totalIPTraffic += theHost->protoIPTrafficInfos[i].sentLocally+
+	theHost->protoIPTrafficInfos[i].sentRemotely;
+    else
+      totalIPTraffic += theHost->protoIPTrafficInfos[i].receivedLocally+
+	theHost->protoIPTrafficInfos[i].receivedFromRemote;
+
+  if(totalIPTraffic > 0) {
+    for(i=0; i<numIpProtosToMonitor; i++) {
+      if(dataSent)
+	traffic = theHost->protoIPTrafficInfos[i].sentLocally+
+	  theHost->protoIPTrafficInfos[i].sentRemotely;
+      else
+	traffic = theHost->protoIPTrafficInfos[i].receivedLocally+
+	  theHost->protoIPTrafficInfos[i].receivedFromRemote;
+	
+      if(traffic > 0) {
+	p[num] = (float)((100*traffic)/totalIPTraffic);
+	lbl[num++] = protoIPTrafficInfos[i];
+      } 	
+ 
+      if(num >= 20) break; /* Too much stuff */
+   }
+  }
+
+  GDCPIE_LineColor = 0x000000L;
+  GDCPIE_explode   = expl;    /* default: NULL - no explosion */
+  GDCPIE_Color     = clr;
+  GDCPIE_BGColor   = 0xFFFFFFL;
+  GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+  GDCPIE_percent_labels = GDCPIE_PCT_NONE;
+    
+  GDC_out_pie(250,			/* width */
+	      250,			/* height */
+	      fd,			/* open file pointer */
+	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      num,			/* number of slices */
+	      lbl,			/* slice labels (unlike out_png(), can be NULL */
+	      p);			/* data array */
+
+  fclose(fd);
+
+#ifdef MULTITHREADED
+  releaseMutex(&graphMutex);
+#endif
+
+  if((fd = fopen(fileName, "rb")) != NULL) {
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), 255, fd);
+      if(len <= 0) break;
+      sendStringLen(tmpStr, len);
+    }
+
+    fclose(fd);
+  }
+
+  unlink(fileName);
+}
+
+/* ********************************** */
+
 void pktSizeDistribPie(void) {
   char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[7];

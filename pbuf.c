@@ -48,7 +48,7 @@
   #define FREE_HOST_INFO
   #define PURGE_DEBUG
   #define PACKET_DEBUG
-  #define FARGMENT_DEBUG
+  #define FRAGMENT_DEBUG
 */
 
  #define SESSION_PATCH /* Experimental (L.Deri) */
@@ -631,8 +631,10 @@ static const u_char *p_save;
    if(found == -1)
      found = scanner->lastPeer; /* (*) */
 
-   scanner->peersIdx[scanner->lastPeer] = remotePeerIdx; /* Note found == scanner->lastPeer (*) */
-   scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
+   scanner->peersIdx[found] = remotePeerIdx; /* Note found == scanner->lastPeer (*) */
+
+   if(found == scanner->lastPeer)
+     scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
 
    switch(sessionType) {
    case IPPROTO_TCP:
@@ -1332,7 +1334,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   IPSession *theSession = NULL;
   short flowDirection;
   char addedNewEntry = 0;
-  u_short sessionType, check, napsterDownload=0;
+  u_short sessionType, check, napsterDownload=0, found;
   u_short sessSport, sessDport;
   HostTraffic *srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
   HostTraffic *dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
@@ -1384,7 +1386,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
   if(sessionType == IPPROTO_TCP) {
-    for(i=0; i<device[actualDeviceId].numTotSessions; i++) {
+    for(i=0, found=0; i<device[actualDeviceId].numTotSessions; i++) {
       theSession = sessions[idx];
 
       if(theSession != NULL) {
@@ -1392,12 +1394,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	   && (theSession->remotePeerIdx == dstHostIdx)
 	   && (theSession->sport == sport)
 	   && (theSession->dport == dport)) {
+	  found = 1;
 	  flowDirection = CLIENT_TO_SERVER;
 	  break;
 	} else if((theSession->initiatorIdx == dstHostIdx)
 		  && (theSession->remotePeerIdx == srcHostIdx)
 		  && (theSession->sport == dport)
 		  && (theSession->dport == sport)) {
+	  found = 1;
 	  flowDirection = SERVER_TO_CLIENT;
 	  break;
 	}
@@ -1426,10 +1430,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       idx = ((idx+1) % device[actualDeviceId].numTotSessions);
     }
 
-    if(i == device[actualDeviceId].numTotSessions) {
+    /*
+      traceEvent(TRACE_INFO, "Search for session: %d (%d <-> %d)", 
+                              found, sport, dport);
+    */
+
+    if(!found) {
       if(firstEmptySlot != NO_PEER) {
-	if(theSession == NULL) {
-	  /* New Session */
+	/* New Session */
 #ifdef DEBUG
 	  printf(" NEW ");
 #endif
@@ -1475,6 +1483,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	    theSession->magic = MAGIC_NUMBER;
 	    (*numSessions)++;
+
+	    traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
+		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostSymIpAddress, sport,
+		       device[actualDeviceId].numTcpSessions);
 
 	    /* Let's check whether this is a Napster session */
 	    if(numNapsterSvr > 0) {
@@ -1571,7 +1584,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
 	  printSession(theSession, sessionType, 0);
 #endif
-	}
       }
     }
 
@@ -2269,17 +2281,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
        && (sport == dport) && (tp->th_flags == TH_SYN)) {
       traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
 		 srcHost->hostSymIpAddress, sport);
-    }
-
-    if(((theSession->initiatorIdx == srcHostIdx)
-	&& (theSession->lastRemote2InitiatorFlags[0] == TH_SYN))
-       || ((theSession->initiatorIdx == dstHostIdx)
-	   && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN))
-       && (tp->th_flags == (TH_SYN|TH_ACK)))  {
-      traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
-		 dstHost->hostSymIpAddress, dport,
-		 srcHost->hostSymIpAddress, sport,
-		 device[actualDeviceId].numTcpSessions);
     }
 
     if(tp->th_flags == (TH_RST|TH_ACK)) {
@@ -4388,7 +4389,7 @@ void processPacket(u_char *_deviceId,
 
 	  if(sap_type == 0x42) {
 	    /* Spanning Tree */
-	    srcHost->stpSent += length, dstHost->stpRcvd += length;
+	    srcHost->stpSent += length, dstHost->stpReceived += length;
 	    device[actualDeviceId].stpBytes += length;
 	  } else if(sap_type == 0xE0) {
 	      /* NetWare */

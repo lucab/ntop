@@ -624,7 +624,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
       
       free(device[theDevice].tcpSession[i]);
       device[theDevice].tcpSession[i] = NULL;
-     device[theDevice]. numTcpSessions--;
+      device[theDevice]. numTcpSessions--;
     }
   }
 }

@@ -1219,7 +1219,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	a_ = (*a)->otherReceived, b_ = (*b)->otherReceived;
 	break;
       case 1:
-	a_ = (*a)->stpRcvd, b_ = (*b)->stpRcvd;
+	a_ = (*a)->stpReceived, b_ = (*b)->stpReceived;
 	break;
       }
     }
@@ -1816,7 +1816,8 @@ void printHostTrafficStats(HostTraffic *el) {
   totalReceived += el->icmpReceived+el->ospfReceived+el->igmpReceived;
   totalReceived += el->ipxReceived+el->dlcReceived+el->arp_rarpReceived;
   totalReceived += el->decnetReceived+el->appletalkReceived;
-  totalReceived +=  el->osiReceived+el->netbiosReceived+el->qnxReceived+el->stpRcvd+el->otherReceived;
+  totalReceived += el->osiReceived+el->netbiosReceived+el->qnxReceived
+    +el->stpReceived+el->otherReceived;
 
   actTotalSent = el->tcpSentLocally+el->tcpSentRemotely;
   actTotalReceived = el->tcpReceivedLocally+el->tcpReceivedFromRemote;
@@ -1908,14 +1909,39 @@ void printHostTrafficStats(HostTraffic *el) {
 
   printTableDoubleEntry(buf, sizeof(buf), "STP", COLOR_1, (float)el->stpSent/1024,
 			100*((float)SD(el->stpSent, totalSent)),
-			(float)el->stpRcvd/1024,
-			100*((float)SD(el->stpRcvd, totalReceived)));
+			(float)el->stpReceived/1024,
+			100*((float)SD(el->stpReceived, totalReceived)));
 
   printTableDoubleEntry(buf, sizeof(buf), "Other", COLOR_1, (float)el->otherSent/1024,
 			100*((float)SD(el->otherSent, totalSent)),
 			(float)el->otherReceived/1024,
 			100*((float)SD(el->otherReceived, totalReceived)));
 /*#endif */
+
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>"
+	      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1>"
+	      "</TD>"
+	      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT">"
+	      "</TD></TR>",
+	      getRowColor(), 
+	      el->hostNumIpAddress,
+	      el->hostNumIpAddress) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+  
+ 
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>"
+	      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1>"
+	      "</TD>"
+	      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT">"
+	      "</TD></TR>",
+	      getRowColor(), 
+	      el->hostNumIpAddress,
+	      el->hostNumIpAddress) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+  
+ 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
 }
@@ -2039,7 +2065,7 @@ char *getSessionState(IPSession *session) {
 
 void printHostSessions(HostTraffic *el, u_int elIdx) {
   char buf[BUF_SIZE];
-  struct ipGlobalSession *scanner=NULL;
+  IpGlobalSession *scanner=NULL;
   char *sessionType=NULL;
   u_short numSessions;
   u_int idx, i;
@@ -2117,8 +2143,8 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  } else {
 	    if(snprintf(buf, sizeof(buf), "<LI><A HREF=%s.html>%s</A>\n",
-			host->hostNumIpAddress,
-			host->hostSymIpAddress) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+			host->hostNumIpAddress, host->hostSymIpAddress) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  }
 #ifdef MULTITHREADED
 	  releaseMutex(&addressResolutionMutex);
@@ -2136,7 +2162,6 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
   }
-
 
   /* Now print currently established TCP sessions (if any) */
   for(idx=1, numSessions=0; idx<device[actualReportDeviceId].numTotSessions; idx++)
@@ -2199,7 +2224,8 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 	  dport = _dport;
 	}
 	remotePeer = makeHostLink(device[actualReportDeviceId].
-				  hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].tcpSession[idx]->remotePeerIdx)],
+				  hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].
+								   tcpSession[idx]->remotePeerIdx)],
 				  SHORT_FORMAT, 0, 0);
 	dataSent     = device[actualReportDeviceId].tcpSession[idx]->bytesSent;
 	dataReceived = device[actualReportDeviceId].tcpSession[idx]->bytesReceived;

@@ -585,9 +585,9 @@ void dumpNtopHashes(char* options) {
 	sendString(buf);
       }
 
-      if(el->stpRcvd > 0) {
+      if(el->stpReceived > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "stpRcvd", el->stpRcvd)
+		    "stpReceived", el->stpReceived)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }

@@ -1622,7 +1622,7 @@ typedef struct hostTraffic {
 
   /* non IP */
   IcmpHostInfo    *icmpInfo;
-  TrafficCounter  stpSent, stpRcvd; /* Spanning Tree */
+  TrafficCounter  stpSent, stpReceived; /* Spanning Tree */
   TrafficCounter  ipxSent, ipxReceived;
   TrafficCounter  osiSent, osiReceived;
   TrafficCounter  dlcSent, dlcReceived;
@@ -1652,7 +1652,6 @@ typedef struct hostTraffic {
      newly resurrected.
 
      *************** IMPORTANT *************** */
-
 } HostTraffic;
 
 /* **************************** */

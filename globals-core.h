@@ -210,6 +210,8 @@ extern void fireEvent(FilterRule *rule, HostTraffic *srcHost,
 extern void smurfAlert(u_int srcHostIdx, u_int dstHostIdx);
 
 /* graph.c */
+extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
+extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void pktSizeDistribPie(void);
 extern void ipProtoDistribPie(void);
 extern void interfaceTrafficPie(void);
@@ -470,3 +472,4 @@ extern void createVendorTable(void);
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
 #endif
+ 
