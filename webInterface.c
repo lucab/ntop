@@ -2601,17 +2601,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **** */
 
-  sendString(texthtml("\n\nHost Hash counts\n\n", "<tr><th colspan=\"2\">Host Hash counts</th></tr>\n"));
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d [%d %%]", (int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
-              (((int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno*100)/
-               (int)myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
+  sendString(texthtml("\n\nHost/Session counts - global\n\n", "<tr><th colspan=\"2\">Host/Session counts - global</th></tr>\n"));
 
   printFeatureConfigInfo(textPrintFlag, "Purge idle hosts", 
 			 myGlobals.enableIdleHosts == 1 ? "Enabled" : "Disabled");
@@ -2639,21 +2629,40 @@ void printNtopConfigInfo(int textPrintFlag) {
       }
   }
 
-  /* **** */
-
   if(myGlobals.enableSessionHandling) {
-    sendString(texthtml("\n\nTCP Session counts\n\n", "<tr><th colspan=\"2\">TCP Session counts</th></tr>\n"));
-    if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].numTcpSessions)) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
-
-    if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].maxNumTcpSessions)) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
-
     if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.numTerminatedSessions)) < 0)
       BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Terminated", buf);
+    printFeatureConfigInfo(textPrintFlag, "Terminated Sessions", buf);
+  }
+
+  /* **** */
+
+  for (i=0; i<myGlobals.numDevices; i++) {
+      if (snprintf(buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name) < 0)
+          BufferTooShort();
+      if (snprintf(buf2, sizeof(buf2), "<tr><th colspan=\"2\">Host/Session counts - Device %d (%s)</th></tr>\n", i, myGlobals.device[i].name) < 0)
+          BufferTooShort();
+      sendString(texthtml(buf, buf2));
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize) < 0)
+          BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
+
+      if(snprintf(buf, sizeof(buf), "%d [%d %%]", (int)myGlobals.device[i].hostsno,
+                  (((int)myGlobals.device[i].hostsno*100)/
+                   (int)myGlobals.device[i].actualHashSize)) < 0)
+          BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
+
+
+      if(myGlobals.enableSessionHandling) {
+          if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].numTcpSessions)) < 0)
+              BufferTooShort();
+          printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
+    
+          if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].maxNumTcpSessions)) < 0)
+              BufferTooShort();
+          printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
+      }
   }
 
   /* **** */
