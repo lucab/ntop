@@ -1507,6 +1507,7 @@ static void arbitraryAction(char *rrdName,
         traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(ip)... ignored (sanitized: %s)", rrdIP);
         return;
     }
+    len=strlen(rrdIP);
     for(i=0; i<len; i++) if(rrdIP[i] == '.') rrdIP[i] = CONST_PATH_SEP;
     safe_snprintf(__FILE__, __LINE__, rrdKey, sizeof(rrdKey), "interfaces/%s/hosts/%s/", rrdInterface, rrdIP);
   }
