@@ -1575,14 +1575,14 @@ struct flow_ver5_rec {
   u_int32_t Last;       /* and of last packet of the flow */
   u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
   u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  u_int8_t pad1;        /* pad to word boundary */
-  u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
-  u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-  u_int8_t tos;         /* IP Type-of-Service */
+  u_int8_t  pad1;       /* pad to word boundary */
+  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
+  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
   u_int16_t dst_as;     /* dst peer/origin Autonomous System */
   u_int16_t src_as;     /* source peer/origin Autonomous System */
-  u_int8_t dst_mask;    /* destination route's mask bits */
-  u_int8_t src_mask;    /* source route's mask bits */
+  u_int8_t  dst_mask;   /* destination route's mask bits */
+  u_int8_t  src_mask;   /* source route's mask bits */
   u_int16_t pad2;       /* pad to word boundary */
 };
 
@@ -1613,14 +1613,14 @@ struct flow_ver7_rec {
   u_int32_t Last;       /* and of last packet of the flow */
   u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
   u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  u_int8_t flags;       /* Shortcut mode(dest only,src only,full flows*/
-  u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
-  u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-  u_int8_t tos;         /* IP Type-of-Service */
+  u_int8_t  flags;      /* Shortcut mode(dest only,src only,full flows*/
+  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
+  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
   u_int16_t dst_as;     /* dst peer/origin Autonomous System */
   u_int16_t src_as;     /* source peer/origin Autonomous System */
-  u_int8_t dst_mask;    /* destination route's mask bits */
-  u_int8_t src_mask;    /* source route's mask bits */
+  u_int8_t  dst_mask;   /* destination route's mask bits */
+  u_int8_t  src_mask;   /* source route's mask bits */
   u_int16_t pad2;       /* pad to word boundary */
   u_int32_t router_sc;  /* Router which is shortcut by switch */
 };
@@ -2338,6 +2338,7 @@ typedef struct ntopGlobals {
     numDstNetFlowsEntryFailedBlackList, numDstNetFlowsEntryFailedWhiteList,
     numDstNetFlowsEntryAccepted;
   u_long numNetFlowsV9TemplRcvd, numNetFlowsV9BadTemplRcvd, numNetFlowsV9UnknTemplRcvd;
+  u_long numNflowFlowsRcvd, numNflowFlowsBadTemplRcvd, numNflowFlowsBadVersRcvd;
 
   /* sFlow */
   int sflowOutSocket, sflowInSocket, sflowDeviceId;

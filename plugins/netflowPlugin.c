@@ -23,6 +23,71 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+/* ******************************************* */
+
+/* **************************************
+
+   +------------------------------------+
+   |           nFlow Header             |
+   +------------------------------------+
+   |           nFlow Flow 1             |
+   +------------------------------------
+   |           nFlow Flow 2             |
+   +------------------------------------+
+   ......................................
+   +------------------------------------
+   |           nFlow Flow n             |
+   +------------------------------------+
+
+   NOTE: nFlow records are sent in gzip format
+
+   ************************************** */
+
+#define NFLOW_SUM_LEN             16
+#define NFLOW_SIZE_THRESHOLD    8192
+#define MAX_PAYLOAD_LEN         1400
+#define MAX_HASH_MUTEXES          32
+
+/* nFlow Header */
+typedef struct nflow_ver1_hdr_ext {
+  /* NetFlow v5 header-like */
+  u_int16_t version;         /* Current version=1 (nFlow v1) */
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  /* nFlow Extensions */
+  u_int32_t sourceId;        /* Source id */
+  u_int16_t sampleRate;      /* Sampling rate */
+  u_int16_t pad;             /* Not Used */
+  u_char    md5Sum[NFLOW_SUM_LEN];      /* MD5 summary */
+} NflowV1Header;
+
+typedef struct nflow_flow_item {
+  u_int16_t fieldType;
+  u_int16_t fieldLen;
+  char      *flowData;
+} NflowV1FlowItem;
+
+/* nFlow Flow */
+typedef struct nflow_flow {
+  u_int16_t flowsetLen;
+} NflowV1FlowRecord;
+
+#define NFLOW_VERSION        24 /* nFlow 1.0 */
+
+typedef struct flowTypes {
+  u_int16_t templateId;
+  u_int16_t templateLen;
+  u_int16_t templateType; /* 0=number, 1=IPv4 */
+  char      *templateDescr;
+} FlowTypes;
+
+#define NUM_TEMPLATES 88
+
+/* ******************************************* */
+
 #ifdef CFG_MULTITHREADED
 static pthread_t netFlowThread;
 static int threadActive;
@@ -61,6 +126,7 @@ static FlowSetV9 *templates = NULL;
 
 static u_int32_t flowIgnoredLowPort, flowIgnoredHighPort, flowAssumedFtpData;
 static Counter flowIgnoredLowPortBytes, flowIgnoredHighPortBytes, flowAssumedFtpDataBytes;
+static Counter nFlowTotCompressedSize = 0, nFlowTotUncompressedSize = 0;
 
 /* Forward */
 static int setNetFlowInSocket();
@@ -154,11 +220,11 @@ static void freeNetFlowMatrixMemory() {
     int j;
 
     /* Courtesy of Wies-Software <wies@wiessoft.de> */
-    for(j=0; j<(myGlobals.device[myGlobals.netFlowDeviceId].numHosts * 
+    for(j=0; j<(myGlobals.device[myGlobals.netFlowDeviceId].numHosts *
 		myGlobals.device[myGlobals.netFlowDeviceId].numHosts); j++)
       if(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j] != NULL)
 	free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j]);
-    
+
     free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix);
   }
 
@@ -170,7 +236,7 @@ static void freeNetFlowMatrixMemory() {
 
 static void setNetFlowInterfaceMatrix() {
   if((!myGlobals.device[myGlobals.netFlowDeviceId].activeDevice)
-     || (myGlobals.netFlowDeviceId == -1)) 
+     || (myGlobals.netFlowDeviceId == -1))
     return;
 
   myGlobals.device[myGlobals.netFlowDeviceId].numHosts       = 0xFFFFFFFF - myGlobals.netFlowIfMask.s_addr+1;
@@ -255,7 +321,7 @@ static int setNetFlowInSocket() {
       }
     } else
       myGlobals.netFlowDeviceId = createDummyInterface(NETFLOW_DEVICE_NAME);
-    
+
     myGlobals.device[myGlobals.netFlowDeviceId].activeDevice = 1;
     setNetFlowInterfaceMatrix();
   }
@@ -721,13 +787,17 @@ static void dissectFlow(char *buffer, int bufferLen) {
     /* rest of flowHeader will not be used */
 
     for(j=i=0; i<numFlows; i++) {
-      the5Record.flowRecord[i].srcaddr = the7Record.flowRecord[i].srcaddr;
-      the5Record.flowRecord[i].dstaddr = the7Record.flowRecord[i].dstaddr;
-      the5Record.flowRecord[i].srcport = the7Record.flowRecord[i].srcport;
-      the5Record.flowRecord[i].dstport = the7Record.flowRecord[i].dstport;
-      the5Record.flowRecord[i].dPkts   = the7Record.flowRecord[i].dPkts;
-      the5Record.flowRecord[i].dOctets = the7Record.flowRecord[i].dOctets;
-      the5Record.flowRecord[i].prot    = the7Record.flowRecord[i].prot;
+      the5Record.flowRecord[i].srcaddr   = the7Record.flowRecord[i].srcaddr;
+      the5Record.flowRecord[i].dstaddr   = the7Record.flowRecord[i].dstaddr;
+      the5Record.flowRecord[i].srcport   = the7Record.flowRecord[i].srcport;
+      the5Record.flowRecord[i].dstport   = the7Record.flowRecord[i].dstport;
+      the5Record.flowRecord[i].dPkts     = the7Record.flowRecord[i].dPkts;
+      the5Record.flowRecord[i].dOctets   = the7Record.flowRecord[i].dOctets;
+      the5Record.flowRecord[i].prot      = the7Record.flowRecord[i].prot;
+      the5Record.flowRecord[i].tos       = the7Record.flowRecord[i].tos;
+      the5Record.flowRecord[i].First     = the7Record.flowRecord[i].First;
+      the5Record.flowRecord[i].Last      = the7Record.flowRecord[i].Last;
+      the5Record.flowRecord[i].tcp_flags = the7Record.flowRecord[i].tcp_flags;
       /* rest of flowRecord will not be used */
     }
   }
@@ -936,9 +1006,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	}
       }
     } /* for */
-  } else if(the5Record.flowHeader.version != htons(5)) {
-    myGlobals.numBadNetFlowsVersionsRcvd++;
-  } else {
+  } else if(the5Record.flowHeader.version == htons(5)) {
     int i, numFlows = ntohs(the5Record.flowHeader.count);
 
     if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
@@ -963,6 +1031,133 @@ static void dissectFlow(char *buffer, int bufferLen) {
 #ifdef CFG_MULTITHREADED
     releaseMutex(&whiteblackListMutex);
 #endif
+  } else {
+    /* Last attempt: is this nFlow ? */
+    char uncompressBuf[1500], *rcvdBuf;
+    uLongf uncompressLen = sizeof(uncompressBuf);
+    NflowV1Header *header = (NflowV1Header*)buffer;
+    int rc, i;
+
+    /* First attempt: uncompressed flow */
+    if(ntohs(header->version) != NFLOW_VERSION) {
+      /* Second attempt: compressed flow */
+      if((rc = uncompress(uncompressBuf, &uncompressLen, buffer, bufferLen)) == Z_OK) {
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, "Received compressed flow: %d -> %d [+%.1f %%]\n",
+		   bufferLen, (int)uncompressLen, (float)(100*(int)uncompressLen)/(float)bufferLen-100);
+#endif
+	rc = uncompressLen;
+	rcvdBuf = uncompressBuf;
+	header = (NflowV1Header*)rcvdBuf;
+
+	if(ntohs(header->version) != NFLOW_VERSION) {
+	  myGlobals.numNflowFlowsBadVersRcvd++;
+	} else {
+	  int numRecords = 0, bufBegin, bufLen;
+
+	  nFlowTotCompressedSize += bufferLen, nFlowTotUncompressedSize += uncompressLen;
+
+#ifdef DEBUG_FLOWS
+	  traceEvent(CONST_TRACE_INFO, "Header version: %d\n", ntohs(header->version));
+	  traceEvent(CONST_TRACE_INFO, "count:          %d\n", ntohs(header->count));
+	  traceEvent(CONST_TRACE_INFO, "sysUptime:      %d\n", ntohl(header->sysUptime));
+	  traceEvent(CONST_TRACE_INFO, "flow_sequence:  %d\n", ntohl(header->flow_sequence));
+	  traceEvent(CONST_TRACE_INFO, "sourceId:       %d\n", ntohl(header->sourceId));
+	  traceEvent(CONST_TRACE_INFO, "sampleRate:     %d\n", ntohs(header->sampleRate));
+	  traceEvent(CONST_TRACE_INFO, "md5Sum:        ");
+	  for(i=0; i<NFLOW_SUM_LEN; i++) traceEvent(CONST_TRACE_INFO, "%02X", header->md5Sum[i]);
+#endif
+
+	  memset(&the5Record, 0, sizeof(the5Record));
+
+	  /* Convert the nFlow record into a NetFlow V5 flow */
+	  the5Record.flowHeader.version = htons(5);
+	  the5Record.flowHeader.count = header->count;
+	  the5Record.flowHeader.sysUptime = header->sysUptime;
+	  the5Record.flowHeader.unix_secs = header->unix_secs;
+	  the5Record.flowHeader.unix_nsecs = header->unix_nsecs;
+	  the5Record.flowHeader.flow_sequence = header->flow_sequence;
+
+	  bufBegin = sizeof(NflowV1Header);
+	  bufLen = uncompressLen;
+
+	  while(bufBegin < bufLen) {
+	    u_int16_t flowLen;
+	    
+	    memcpy(&flowLen, &rcvdBuf[bufBegin], 2);
+	    flowLen = ntohs(flowLen);	   
+	    bufBegin += 2, flowLen -= 2;	    
+	    if(numRecords >= CONST_V5FLOWS_PER_PAK) break;
+
+	    while(flowLen > 0) {
+	      u_int8_t t8;
+	      u_int16_t t16, len, templateId;
+	      u_int32_t t32;
+	      	      
+	      memcpy(&templateId, &rcvdBuf[bufBegin], 2); bufBegin += 2; flowLen -= 2; templateId = ntohs(templateId);
+	      memcpy(&len, &rcvdBuf[bufBegin], 2); bufBegin += 2; flowLen -= 2; len = ntohs(len);
+
+#ifdef DEBUG_FLOWS
+	      traceEvent(CONST_TRACE_INFO, "Template: [id=%d][len=%d]", templateId, len);
+#endif
+
+	      if(len > 16 /* MAX LEN */) {
+		myGlobals.numNflowFlowsBadTemplRcvd++;
+		break; 
+	      }
+
+	      switch(templateId) {
+	      case 8:
+		memcpy(&the5Record.flowRecord[numRecords].srcaddr, &rcvdBuf[bufBegin], len);
+		break;
+	      case 12:
+		memcpy(&the5Record.flowRecord[numRecords].dstaddr, &rcvdBuf[bufBegin], len);
+		break;
+	      case 7:
+		memcpy(&the5Record.flowRecord[numRecords].srcport, &rcvdBuf[bufBegin], len);
+		break;
+	      case 11:
+		memcpy(&the5Record.flowRecord[numRecords].dstport, &rcvdBuf[bufBegin], len);
+		break;
+	      case 2:
+		memcpy(&the5Record.flowRecord[numRecords].dPkts, &rcvdBuf[bufBegin], len);
+		break;
+	      case 1:
+		memcpy(&the5Record.flowRecord[numRecords].dOctets, &rcvdBuf[bufBegin], len);
+		break;
+	      case 4:
+		memcpy(&the5Record.flowRecord[numRecords].prot, &rcvdBuf[bufBegin], len);
+		break;
+	      case 5:
+		memcpy(&the5Record.flowRecord[numRecords].tos, &rcvdBuf[bufBegin], len);
+		break;
+	      case 22:
+		memcpy(&the5Record.flowRecord[numRecords].First, &rcvdBuf[bufBegin], len);
+		break;
+	      case 21:
+		memcpy(&the5Record.flowRecord[numRecords].Last, &rcvdBuf[bufBegin], len);
+		break;
+	      case 6:
+		memcpy(&the5Record.flowRecord[numRecords].tcp_flags, &rcvdBuf[bufBegin], len);
+		break;
+	      }
+
+	      bufBegin += len, flowLen -= len;
+	    }
+
+	    numRecords++;
+	  }
+
+	  for(i=0; i<numRecords; i++) handleV5Flow(&the5Record.flowRecord[i]);
+	  myGlobals.numNflowFlowsRcvd++;
+	}
+      } else {
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, "Uncompress failed [rc=%d]. This is not an nFlow", rc);
+#endif
+      }
+    } else
+      myGlobals.numBadNetFlowsVersionsRcvd++; /* CHANGE */
   }
 }
 
@@ -1423,13 +1618,13 @@ static void handleNetflowHTTPrequest(char* url) {
   if(myGlobals.netFlowInPort == 0)
     sendString("<p><b><font color=red>WARNING</font>: "
 	       "The 'Local Collector UDP Port' is zero (none). "
-	       "You must enter a port number to receive netFlow data.</b>\n");  
+	       "You must enter a port number to receive netFlow data.</b>\n");
 
   sendString("</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Virtual NetFlow Interface<br>Network Address</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
-  
+
   if(snprintf(buf, sizeof(buf), "%s/%s",
 	      _intoa(myGlobals.netFlowIfAddress, buf1, sizeof(buf1)),
 	      _intoa(myGlobals.netFlowIfMask, buf2, sizeof(buf2))) < 0)
@@ -1638,26 +1833,30 @@ static void handleNetflowHTTPrequest(char* url) {
       }
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V5 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V5 Flows Rcvd</TH>"
+		  "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsV5Rcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V7 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V7 Flows Rcvd</TH>"
+		  "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsV7Rcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V9 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V9 Flows Rcvd</TH>"
+		  "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsV9Rcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(myGlobals.numNetFlowsV9TemplRcvd) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Total V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Total V9 Templates Rcvd</TH>"
+		    "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		    formatPkts(myGlobals.numNetFlowsV9TemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	   BufferTooShort();
 	sendString(buf);
@@ -1665,56 +1864,93 @@ static void handleNetflowHTTPrequest(char* url) {
 
       if(myGlobals.numNetFlowsV9BadTemplRcvd) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Bad V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Bad V9 Templates Rcvd</TH>"
+		    "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		    formatPkts(myGlobals.numNetFlowsV9BadTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
       }
 
-
       if(myGlobals.numNetFlowsV9UnknTemplRcvd) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V9 Flows with Unknown Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num V9 Flows with Unknown Templates Rcvd</TH>"
+		    "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		    formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
+
+      if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num nFlows Rcvd</TH>"
+		  "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatPkts(myGlobals.numNflowFlowsRcvd, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      snprintf(buf, sizeof(buf),
+	       "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Avg nFlow Compression Save</TH>"
+	       "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%.1f %%</TD></TR>\n",
+	       (float)(100*(int)nFlowTotUncompressedSize)/(float)nFlowTotCompressedSize-100);
+      sendString(buf);
+
+     if(myGlobals.numNflowFlowsBadTemplRcvd > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num nFlows with Unknown Templates Rcvd</TH>"
+		    "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    formatPkts(myGlobals.numNflowFlowsBadTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
+
+      if(myGlobals.numNflowFlowsBadVersRcvd > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num nFlows with Unknown Templates Rcvd</TH>"
+		    "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    formatPkts(myGlobals.numNflowFlowsBadVersRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
       }
 
       sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Discarded Flows</TH></TR>\n");
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Zero Packet Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Zero Packet Count</TH>"
+		  "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowPkts, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Zero Byte Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Zero Byte Count</TH>"
+		  "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowBytes, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Bad Data</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Bad Data</TH>"
+		  "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowReality, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Unknown Template</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Num Flows with Unknown Template</TH>"
+		  "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Tot Num Flows Processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT "DARK_BG">Tot Num Flows Processed</TH>"
+		  "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsProcessed, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
-      if(myGlobals.numSrcNetFlowsEntryFailedWhiteList +
-	 myGlobals.numSrcNetFlowsEntryFailedBlackList +
-	 myGlobals.numDstNetFlowsEntryFailedWhiteList +
-	 myGlobals.numDstNetFlowsEntryFailedBlackList > 0) {
+      if((myGlobals.numSrcNetFlowsEntryFailedWhiteList +
+	  myGlobals.numSrcNetFlowsEntryFailedBlackList +
+	  myGlobals.numDstNetFlowsEntryFailedWhiteList +
+	  myGlobals.numDstNetFlowsEntryFailedBlackList) > 0) {
 
 	sendString("<TR><TH COLSPAN=4 "DARK_BG">Accepted/Rejected Flows</TH></TR>");
 	sendString("<TR><TD COLSPAN=4 ALIGN=\"CENTER\"><TABLE BORDER=\"1\" width=100%>");
@@ -2083,13 +2319,13 @@ static void handleNetFlowPacket(u_char *_deviceId,
 /* ****************************** */
 
 static PluginInfo netflowPluginInfo[] = {
-  { 
+  {
     VERSION, /* current ntop version */
     "NetFlow",
-    "This plugin is used to setup, activate and deactivate ntop's NetFlow support.<br>"
-    "ntop can both collect and receive NetFlow V5/V7/V9 data. Received NetFlow data is "
+    "This plugin is used to setup, activate and deactivate nFlow/NetFlow support.<br>"
+    "ntop can both collect and receive <A HREF=http://www.nflow.org/>nFlow</A> and NetFlow V5/V7/V9 data. Received flow data is "
     "reported as a separate 'NIC' in the regular ntop reports.",
-    "3.0", /* version */
+    "3.1", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
