@@ -132,8 +132,8 @@ static void resolveAddress(struct in_addr *hostAddr,
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving resolveAddress()");
 #endif
-     free(data_data.dptr);
-     return;
+    free(data_data.dptr);
+    return;
   } else {
 #ifdef GDBM_DEBUG
     if(data_data.dptr != NULL)
@@ -320,7 +320,7 @@ static void resolveAddress(struct in_addr *hostAddr,
     traceEvent(TRACE_INFO, "Added data: '%s' [%s]\n", symAddr, keyBuf);
 #endif
   }
-
+  
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
@@ -438,9 +438,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 
     key_data = data_data;
 
-    if(firstRun
-       || (key_data.dptr == NULL)
-       ) {
+    if(firstRun || (key_data.dptr == NULL)) {
       data_data = gdbm_firstkey(myGlobals.addressCache);
       firstRun = 0;
     } else {
@@ -450,7 +448,8 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 
 #ifdef DNS_DEBUG
     if ((data_data.dptr == NULL) && (myGlobals.addressQueueLen > 0)) {
-      traceEvent(TRACE_INFO, "firstkey/nextkey for returned null, but address queue length is %d\n",
+      traceEvent(TRACE_INFO, 
+		 "firstkey/nextkey for returned null, but address queue length is %d\n",
 		 myGlobals.addressQueueLen);
     }
 #endif
@@ -469,16 +468,17 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #endif
 
       gdbm_delete(myGlobals.addressCache, data_data);
+      free(data_data.dptr);
     } else
-      addr.s_addr = 0x0;
-
+      addr.s_addr = NULL;
+    
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
-
-    if(addr.s_addr != 0x0) {
+    
+    if(addr.s_addr != NULL) {
       resolveAddress(&addr, 0, 0 /* use default device */);
-
+      
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Resolved address %u\n", addr.s_addr);
 #endif

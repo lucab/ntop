@@ -1862,7 +1862,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 #endif
 
   if(snprintf(users, BUF_SIZE, "1%s", user) < 0)
-      BufferTooShort();
+    BufferTooShort();
 
   if(return_data.dptr != NULL) {
     if(strstr(return_data.dptr, users) == NULL) {
@@ -1873,7 +1873,7 @@ static int checkHTTPpassword(char *theRequestedURL,
       return 0; /* The specified user is not among those who are
 		   allowed to access the URL */
     }
-
+    
     free(return_data.dptr);
   }
 

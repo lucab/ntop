@@ -3347,11 +3347,11 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
       return(strcasecmp(a->domainHost->fullDomainName, b->domainHost->fullDomainName));
     } else {
 #ifdef MULTITHREADED
-      accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
+      if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
 #endif
       rc = strcasecmp(a->domainHost->hostSymIpAddress, b->domainHost->hostSymIpAddress);
 #ifdef MULTITHREADED
-      releaseMutex(&myGlobals.addressResolutionMutex);
+      if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     }
 
@@ -3682,7 +3682,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       int blankId;
 
 #ifdef MULTITHREADED
-      accessMutex(&myGlobals.addressResolutionMutex, "getHostIcon");
+      if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "getHostIcon");
 #endif
 
       blankId = strlen(statsEntry->domainHost->hostSymIpAddress)-
@@ -3691,7 +3691,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       strncpy(tmpBuf, statsEntry->domainHost->hostSymIpAddress, sizeof(tmpBuf));
 
 #ifdef MULTITHREADED
-      releaseMutex(&myGlobals.addressResolutionMutex);
+      if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
       if((blankId > 0)

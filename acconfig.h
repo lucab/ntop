@@ -43,6 +43,7 @@
 #undef NEED_GETDOMAINNAME
 
 /* Define to have essential fallback. */
+#undef HAVE_UINT64_T
 #undef HAVE_U_INT64_T
 #undef HAVE_U_INT32_T
 #undef HAVE_U_INT16_T

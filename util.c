@@ -2220,7 +2220,7 @@ int getSniffedDNSName(char *hostNumIpAddress,
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
-    if(data.dptr) {
+    if(data.dptr != NULL) {
       xstrncpy(name, data.dptr, maxNameLen);
       free(data.dptr);
       found = 1;
@@ -2395,7 +2395,8 @@ void fillDomainName(HostTraffic *el) {
     return;
 
 #ifdef MULTITHREADED
-  accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
+  if(myGlobals.numericFlag == 0) 
+    accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
 #endif
 
   if((el->hostSymIpAddress[0] == '*')
@@ -2405,7 +2406,8 @@ void fillDomainName(HostTraffic *el) {
     /* NOTE: theDomainHasBeenComputed(el) = 0 */
     el->fullDomainName = el->dotDomainName = "";
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.addressResolutionMutex);
+    if(myGlobals.numericFlag == 0) 
+      releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return;
   }
@@ -2450,7 +2452,8 @@ void fillDomainName(HostTraffic *el) {
     }
 
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.addressResolutionMutex);
+    if(myGlobals.numericFlag == 0) 
+      releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return;
   }
@@ -2472,6 +2475,7 @@ void fillDomainName(HostTraffic *el) {
   /* traceEvent(TRACE_INFO, "'%s'\n", el->domainName); */
 
 #ifdef MULTITHREADED
+  if(myGlobals.numericFlag == 0) 
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 }

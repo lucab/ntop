@@ -481,39 +481,6 @@ void purgeIdleHosts(int actDevice) {
 
 /* **************************************************** */
 
-static void addSerialMapping(HostTraffic *el) {
-  datum key_data;
-  datum data_data;
-  char tmpBuf[16];
-
-  if(el->hostNumIpAddress[0] != '\0')
-    data_data.dptr = el->hostNumIpAddress;
-  else
-    data_data.dptr = el->ethAddressString;
-
-  data_data.dsize = strlen(data_data.dptr)+1;
-
-  sprintf(tmpBuf, "%u", el->hostSerial);
-  key_data.dptr  = tmpBuf;
-  key_data.dsize = strlen(tmpBuf)+1;
-
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "addSerialMapping");
-#endif
-
-  if(gdbm_store(myGlobals.serialCache, key_data, data_data, GDBM_REPLACE) != 0)
-    traceEvent(TRACE_ERROR, "Error while adding '%s'", key_data.dptr);
-  else {
-    /* traceEvent(TRACE_INFO, "Stored serial %s", tmpBuf); */
-  }
-
-#ifdef MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
-#endif
-}
-
-/* **************************************************** */
-
 u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char *ether_addr,
 		  u_char checkForMultihoming,
@@ -649,7 +616,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       }
 
       resetHostsVariables(el);
+
+#if 0
       el->hostSerial = myGlobals.serialCounter++;
+#endif
 
       if(isMultihomed)
 	FD_SET(HOST_MULTIHOMED, &el->flags);
@@ -812,7 +782,33 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		 myGlobals.device[actualDeviceId].actualHashSize);
 #endif
 
-      addSerialMapping(el);
+      {
+	char buf[8];
+
+	if(el->hostNumIpAddress[0] == '\0') {
+	  buf[0] = 1; /* This is a MAC */
+	  buf[1] = 0;
+	  memcpy(&buf[2], el->ethAddress, 6);
+	} else {
+	  buf[0] = 0; /* This is an IP */
+	  buf[1] = 0; buf[2] = 0; buf[3] = 0;
+	  memcpy(&buf[4], &el->hostIpAddress.s_addr, 4);
+	}
+
+#ifndef _BIG_ENDIAN
+	{
+	  char buf1[8];
+	  int i;
+	  
+	  for(i=0; i<8; i++)
+	    buf1[i] = buf[7-i];
+	  
+	  memcpy(buf, buf1, 8);
+	}
+#endif
+		
+	memcpy(&el->hostSerial, buf, 8);
+      }
     }
 
     if(el != NULL) {
@@ -846,9 +842,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 int retrieveHost(HostSerial theSerial, HostTraffic *el) {
   if((theSerial != NO_PEER)
      && (theSerial != myGlobals.broadcastEntryIdx /* Safety check: broadcast */)) {
-    datum key_data;
-    datum data_data;
-    char buf[128];
+    char theBytes[8];
 
     if(theSerial == myGlobals.broadcastEntryIdx) {
       memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
@@ -857,46 +851,63 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
       memcpy(el, myGlobals.otherHostEntry, sizeof(HostTraffic));
       return(0);
     }
+    
+    /*
+       Unused
+        |
+        |        IP
+        V     -------
+      X X X X X X X X 
+      ^   -----------
+      |        MAC
+      | 
+      1 = MAC
+      0 = IP
 
-    sprintf(buf, "%u", theSerial);
-    key_data.dptr  = buf;
-    key_data.dsize = strlen(buf)+1;
+    */
 
-#ifdef MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "retrieveHost");
-#endif
-    data_data = gdbm_fetch(myGlobals.serialCache, key_data);
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
+    memcpy(theBytes, &theSerial, 8);
 
-    if(data_data.dptr != NULL) {
-      memset(el, 0, sizeof(HostTraffic));
-      /* memset(&el->flags, 0, sizeof(fd_set)); */
-      el->hostSerial = theSerial;
-      if(strlen(data_data.dptr) == 17) /* MAC Address */ {
-	strcpy(el->ethAddressString, data_data.dptr);
-	el->hostIpAddress.s_addr = 0x1234; /* dummy */
-      } else {
-	strcpy(el->hostNumIpAddress, data_data.dptr);
-	el->hostIpAddress.s_addr = htonl(inet_addr(el->hostNumIpAddress));
-	/* traceEvent(TRACE_INFO, "---------------"); */
-	fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
-	/* traceEvent(TRACE_INFO, "==============="); */
-	if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
-	  char sniffedName[MAXDNAME];
+#ifndef _BIG_ENDIAN
+    {
+      char buf1[8];
+      int i;
 
-	  if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))
-	    strcpy(el->hostSymIpAddress, sniffedName);
-	}
-      }
+      for(i=0; i<8; i++)
+	buf1[i] = theBytes[7-i];
 
-      free(data_data.dptr);
-      return(0);
-    } else {
-      traceEvent(TRACE_INFO, "Unable to find serial %s", buf);
-      return(-1);
+      memcpy(theBytes, buf1, 8);
     }
+#endif
+
+    memset(el, 0, sizeof(HostTraffic));
+    el->hostSerial = theSerial;
+
+    if(theBytes[0] == 0) {
+      /* IP */
+      char buf[32];
+
+      memcpy(&el->hostIpAddress.s_addr, &theBytes[4], 4);
+      strncpy(el->hostNumIpAddress,
+	      _intoa(el->hostIpAddress, buf, sizeof(buf)),
+	      sizeof(el->hostNumIpAddress));
+      fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
+      if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
+	char sniffedName[MAXDNAME];
+	
+	if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))
+	  strcpy(el->hostSymIpAddress, sniffedName);
+      }
+    } else {
+      /* MAC */
+      char *ethAddr;
+      
+      memcpy(el->ethAddress, &theBytes[2], 6);
+      ethAddr = etheraddr_string(el->ethAddress);
+      strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
+      el->hostIpAddress.s_addr = 0x1234; /* dummy */
+    }
+    return(0);
   } else
     return(-1);
 }

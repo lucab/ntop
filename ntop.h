@@ -55,7 +55,11 @@
 #if defined(WIN32) && defined(__GNUC__)
 typedef unsigned long long u_int64_t; /* on mingw unsigned long is 32 bits */
 #else
+#if defined(HAVE_UINT64_T)
+#define u_int64_t uint64_t
+#else
 typedef unsigned long u_int64_t;
+#endif
 #endif
 #endif
 
@@ -727,7 +731,9 @@ typedef struct thptEntry {
 } HostSerial;
 */
 
-#define HostSerial u_int32_t
+/* #define HostSerial u_int32_t */
+
+#define HostSerial u_int64_t
 
 /* *********************** */
 
@@ -2120,5 +2126,11 @@ typedef struct pppTunnelHeader {
 #else
 #define sleep(a)  ntop_sleep(a)
 #endif
+
+typedef struct serialCacheEntry {
+  char isMAC;
+  char data[17];
+  u_long creationTime;
+} SerialCacheEntry;
 
 #endif /* NTOP_H */

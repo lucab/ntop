@@ -283,7 +283,8 @@ char* makeHostLink(HostTraffic *el, short mode,
   bufIdx = (bufIdx+1)%5;
 
 #ifdef MULTITHREADED
-  accessMutex(&myGlobals.addressResolutionMutex, "makeHostLink");
+  if(myGlobals.numericFlag == 0) 
+    accessMutex(&myGlobals.addressResolutionMutex, "makeHostLink");
 #endif
 
   if((el == myGlobals.otherHostEntry)
@@ -299,7 +300,8 @@ char* makeHostLink(HostTraffic *el, short mode,
       BufferTooShort();
 
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.addressResolutionMutex);
+    if(myGlobals.numericFlag == 0) 
+      releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(buf[bufIdx]);
   }
@@ -337,7 +339,8 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
 #ifdef MULTITHREADED
-  releaseMutex(&myGlobals.addressResolutionMutex);
+  if(myGlobals.numericFlag == 0) 
+    releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
   if(specialMacAddress) {
@@ -456,7 +459,8 @@ char* getHostName(HostTraffic *el, short cutName) {
   bufIdx = (bufIdx+1)%5;
 
 #ifdef MULTITHREADED
-  accessMutex(&myGlobals.addressResolutionMutex, "getHostName");
+  if(myGlobals.numericFlag == 0) 
+    accessMutex(&myGlobals.addressResolutionMutex, "getHostName");
 #endif
 
   tmpStr = el->hostSymIpAddress;
@@ -485,7 +489,8 @@ char* getHostName(HostTraffic *el, short cutName) {
     strncpy(buf[bufIdx], el->ethAddressString, 80);
 
 #ifdef MULTITHREADED
-  releaseMutex(&myGlobals.addressResolutionMutex);
+  if(myGlobals.numericFlag == 0) 
+    releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
   return(buf[bufIdx]);
@@ -935,7 +940,8 @@ void printNtopConfigInfo(void) {
 	     "<TH COLSPAN=2># Locks/Releases</TH><TH>Max Lock</TH></TR>");
   printMutexStatus(&myGlobals.gdbmMutex, "gdbmMutex");
   printMutexStatus(&myGlobals.packetQueueMutex, "packetQueueMutex");
-  printMutexStatus(&myGlobals.addressResolutionMutex, "addressResolutionMutex");
+  if(myGlobals.numericFlag == 0) 
+    printMutexStatus(&myGlobals.addressResolutionMutex, "addressResolutionMutex");
   printMutexStatus(&myGlobals.hashResizeMutex, "hashResizeMutex");
   if(myGlobals.isLsofPresent) printMutexStatus(&myGlobals.lsofMutex, "lsofMutex");
   printMutexStatus(&myGlobals.hostsHashMutex, "hostsHashMutex");

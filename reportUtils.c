@@ -1190,7 +1190,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 
   default: /* Host Name */
 #ifdef MULTITHREADED
-    accessMutex(&myGlobals.addressResolutionMutex, "cmpHostsFctn");
+    if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "cmpHostsFctn");
 #endif
 
     name_a = (*a)->hostSymIpAddress;
@@ -1214,7 +1214,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
     }
 
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.addressResolutionMutex);
+    if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
     rc = strcasecmp(name_a, name_b); /* case insensitive */
@@ -2475,7 +2475,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   char *dynIp, *multihomed;
 
 #ifdef MULTITHREADED
-  accessMutex(&myGlobals.addressResolutionMutex, "printAllSessionsHTML");
+  if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "printAllSessionsHTML");
 #endif
 
   buf1[0]=0;
@@ -2498,7 +2498,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
 #ifdef MULTITHREADED
-  releaseMutex(&myGlobals.addressResolutionMutex);
+  if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
   printHTMLheader(buf, 0);
@@ -2509,18 +2509,18 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     char *countryIcon, *hostType;
 
 #ifdef MULTITHREADED
-    accessMutex(&myGlobals.addressResolutionMutex, "printAllSessions-2");
+    if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "printAllSessions-2");
 #endif
 
     /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
     if(strcmp(el->hostNumIpAddress, el->hostSymIpAddress) != 0) {
 #ifdef MULTITHREADED
-      releaseMutex(&myGlobals.addressResolutionMutex);
+      if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
       countryIcon = getHostCountryIconURL(el);
     } else {
 #ifdef MULTITHREADED
-      releaseMutex(&myGlobals.addressResolutionMutex);
+      if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
       countryIcon = "";
     }
@@ -3334,7 +3334,8 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
   int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts + j;
 
 #ifdef MULTITHREADED
-  accessMutex(&myGlobals.addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
+  if(myGlobals.numericFlag == 0) 
+    accessMutex(&myGlobals.addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
 #endif
 
   if((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
@@ -3367,7 +3368,7 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
   }
 
 #ifdef MULTITHREADED
-  releaseMutex(&myGlobals.addressResolutionMutex);
+  if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
   return(buf);

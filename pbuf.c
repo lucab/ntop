@@ -166,20 +166,20 @@ int handleIP(u_short port,
 
 /* ************************************ */
 
-static void addContactedPeers(HostTraffic *sender,
-			      HostTraffic *receiver,
+static void addContactedPeers(HostTraffic *sender, HostTraffic *receiver,
 			      int actualDeviceId) {
   if((sender == NULL)
      || (receiver == NULL)
      || (sender->hostTrafficBucket == receiver->hostTrafficBucket)) {
-    traceEvent(TRACE_ERROR, "Sanity check failed @ addContactedPeers");
+    if((sender != NULL) && (sender->hostTrafficBucket == 0)) return; /* This is not a problem */
+    traceEvent(TRACE_ERROR, "Sanity check failed @ addContactedPeers (0x%X, 0x%X)", sender, receiver);
     return;
   }
-
+  
   if((!broadcastHost(sender))  && (sender->hostTrafficBucket != myGlobals.otherHostEntryIdx)) {
     incrementUsageCounter(&sender->contactedSentPeers, receiver->hostTrafficBucket, actualDeviceId);
   }
-
+  
   if((!broadcastHost(receiver)) && (receiver->hostTrafficBucket != myGlobals.otherHostEntryIdx)) {
     incrementUsageCounter(&receiver->contactedRcvdPeers, sender->hostTrafficBucket, actualDeviceId);
   }

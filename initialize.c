@@ -494,25 +494,6 @@ void initGdbm(char *directory) {
 
   /* ************************************************ */
 
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/serialCache.db", directory != NULL ? directory : myGlobals.dbPath) < 0)
-    BufferTooShort();
-
-  unlink(tmpBuf); /* Delete the old one (if present) */
-  myGlobals.serialCache = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
-
-  if(myGlobals.serialCache == NULL) {
-#if defined(WIN32) && defined(__GNUC__)
-    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
-	       tmpBuf, "unknown gdbm errno");
-#else
-    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
-	       tmpBuf, gdbm_strerror(gdbm_errno));
-#endif
-    exit(-1);
-  }
-
-  /* ************************************************ */
-
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/prefsCache.db", directory != NULL ? directory : myGlobals.dbPath) < 0)
     BufferTooShort();
 
