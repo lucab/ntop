@@ -335,7 +335,7 @@ void showURLs(void) {
 /* *******************************/
 
 void addURL(char* url) {
-  int i;
+  int i, numUsers=0;
   datum key_data, return_data;
   char *aubuf=NULL, *authorisedUser[20];
   char tmpStr[128];
@@ -406,11 +406,16 @@ void addURL(char* url) {
 	  if(strcmp(authorisedUser[i], key_data.dptr) == 0)
 	    found = 1;
 	}
+
+	/* Make sure that at least a user is selected */
+	if((numUsers == 0) && (authorisedUser[0] == NULL)) found = 1;
+
         if(snprintf(tmpStr, sizeof(tmpStr),
-	         "<OPTION VALUE=%s %s>%s",
-	         key_data.dptr, found ? "SELECTED" : "", &key_data.dptr[1]) < 0)
+		    "<option value=%s %s>%s</option>",
+		    key_data.dptr, found ? "SELECTED" : "", &key_data.dptr[1]) < 0)
 	 BufferTooShort();
         sendString(tmpStr);
+	numUsers++;
       }
 
       return_data = gdbm_nextkey(myGlobals.pwFile, key_data);
