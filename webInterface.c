@@ -2748,7 +2748,9 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigNum(textPrintFlag, "PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL", PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL);
 
+#ifdef LINUX /* Linux only */
   printFeatureConfigNum(textPrintFlag, "SLL_HDR_LEN", SLL_HDR_LEN);
+#endif
 
   printFeatureConfigInfo(textPrintFlag, "THREAD_MODE", THREAD_MODE);
 
