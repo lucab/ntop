@@ -2661,7 +2661,7 @@ void printIpTrafficMatrix(void) {
 /* ************************ */
 
 void printThptStatsMatrix(int sortedColumn) {
-  int i, ratio=1;
+  int i, ratio=8;
   char label[32], label1[32], buf[BUF_SIZE];
   time_t tmpTime;
   struct tm t;

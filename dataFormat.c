@@ -171,6 +171,8 @@ char* formatThroughput(float numBytes) {
   static char outStr[5][32];
   static short bufIdx=0;
   float numBits;
+  static int divider = 1000;   /* As SNMP does instead of using 1024
+				  ntop divides for 1000 */
 
   bufIdx = (bufIdx+1)%5;
 
@@ -179,12 +181,12 @@ char* formatThroughput(float numBytes) {
 
   if (numBits < 100)
     numBits = 0; /* Avoid very small decimal values */
-
-  if (numBits < 1024) {
+  
+  if (numBits < divider) {
     if(snprintf(outStr[bufIdx], 32, "%.1f%sbps", numBits, separator) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-  } else if (numBits < 1048576) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/1024), separator) < 0) 
+  } else if (numBits < (divider*divider)) {
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/divider), separator) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
     if(snprintf(outStr[bufIdx], 32, "%.1f%sMbps", ((float)(numBits)/1048576), separator) < 0) 
