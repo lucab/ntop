@@ -190,7 +190,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   }
 
   printedHashWarning = 0;
-  accessMutex(&hostsHashMutex, "resizeHostHash(processPacket)");
+  accessMutex(&hostsHashMutex,  "resizeHostHash(processPacket)");
   accessMutex(&hashResizeMutex, "resizeHostHash");
 #endif
 
@@ -525,6 +525,35 @@ static void _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen,
 
 /* **************************************** */
 
+static void _checkPortUsage(u_int *mappings, u_int lastHashSize,
+			    PortUsage **portsUsage,
+			    char *fileName, int fileLine) {
+  int i;
+
+  for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
+    if(portsUsage[i] == NULL)
+      continue;
+    
+    if(portsUsage[i]->clientUsesLastPeer != NO_PEER)
+      portsUsage[i]->clientUsesLastPeer = mapIdx(portsUsage[i]->clientUsesLastPeer);
+    if(portsUsage[i]->clientUsesLastPeer == NO_PEER) portsUsage[i]->clientUses = 0;
+    
+    if(portsUsage[i]->serverUsesLastPeer != NO_PEER)
+      portsUsage[i]->serverUsesLastPeer = mapIdx(portsUsage[i]->serverUsesLastPeer);
+    if(portsUsage[i]->serverUsesLastPeer == NO_PEER) portsUsage[i]->serverUses = 0;
+    
+    if((portsUsage[i]->clientUsesLastPeer == NO_PEER)
+       && (portsUsage[i]->serverUsesLastPeer == NO_PEER)) {
+      free(portsUsage[i]);
+      portsUsage[i] = NULL;
+    }
+  }
+}
+
+#define checkPortUsage(a, b, c) _checkPortUsage(a, b, c, __FILE__, __LINE__)
+
+/* **************************************** */
+
 static void removeGlobalHostPeers(HostTraffic *el,
 				  u_int *flaggedHosts,
 				  u_int flaggedHostsLen) {
@@ -586,7 +615,8 @@ static void removeGlobalHostPeers(HostTraffic *el,
   }
 
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRouters);
-
+  checkPortUsage(flaggedHosts, flaggedHostsLen, el->portsUsage);
+  
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Leaving removeGlobalHostPeers()");
 #endif
