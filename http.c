@@ -1378,19 +1378,6 @@ static int returnHTTPPage(char* pageName,
     return(0);
   }
 
-#ifdef PARM_ENABLE_EXPERIMENTAL
-  /*
-   * This gives a run time hook for setting things...
-   *   Either based on the flag, myGlobals.experimentalFlagSet or physically done here...
-   */
-  if(strncmp(pageName, "experimentalRequest.html", strlen("experimentalRequest.html")) == 0) {
-    myGlobals.experimentalFlagSet = 1;
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    sendString("<P>Your request has been received!</P>\n");
-    return(0);
-  }
-#endif
-
   if(strncmp(pageName, PLUGINS_HEADER, strlen(PLUGINS_HEADER)) == 0) {
     if(handlePluginHTTPRequest(&pageName[strlen(PLUGINS_HEADER)])) {
       return(0);
@@ -1496,8 +1483,9 @@ static int returnHTTPPage(char* pageName,
 #endif
     returnHTTPpageNotFound();
     printTrailer=0;
-  } else {
+  } 
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
+  else {
     int childpid;
 
     if((!myGlobals.debugMode) 
@@ -1513,7 +1501,7 @@ static int returnHTTPPage(char* pageName,
 			    other platforms signal handling is broken as the system
 			    creates zombies although we decided to ignore SIGCHLD
 			  */
-#endif
+#endif /* HANDLE_DIED_CHILD */
 
 #if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
       /* Child processes must log to syslog.
@@ -1529,7 +1517,7 @@ static int returnHTTPPage(char* pageName,
 		     DEFAULT_SYSLOG_FACILITY);
 	}
       }
-#endif
+#endif /* !defined(WIN32) && defined(MAKE_WITH_SYSLOG) */
 
       /* The URLs below are "read-only" hence I can fork a copy of ntop  */
       if((childpid = fork()) < 0)
@@ -1543,7 +1531,6 @@ static int returnHTTPPage(char* pageName,
 	  compressFile = 0;
 	  return(0);
 	} else {
-
 #ifdef MAKE_WITH_HTTPSIGTRAP
           signal(SIGSEGV, httpcleanup);
           signal(SIGHUP,  httpcleanup);
@@ -1578,7 +1565,7 @@ static int returnHTTPPage(char* pageName,
 	  /* Close inherited sockets */
 #ifdef HAVE_OPENSSL
 	  if(myGlobals.sslInitialized) closeNwSocket(&myGlobals.sock_ssl);
-#endif
+#endif /* HAVE_OPENSSL */
 	  if(myGlobals.webPort > 0) closeNwSocket(&myGlobals.sock);
 
 	  signal(SIGALRM, quitNow);
@@ -2046,7 +2033,6 @@ static int returnHTTPPage(char* pageName,
       printNtopProblemReport();
       printTrailer = 0;
     } else
-#endif
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
@@ -2101,6 +2087,7 @@ static int returnHTTPPage(char* pageName,
 	errorCode = FLAG_HTTP_INVALID_PAGE;
       }
   }
+#endif
 
   if(domainNameParm != NULL)
     free(domainNameParm);

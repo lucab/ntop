@@ -2591,14 +2591,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigNum(textPrintFlag, "PACKETSZ", PACKETSZ);
 
-  printFeatureConfigInfo(textPrintFlag, "PARM_ENABLE_EXPERIMENTAL",
-#ifdef PARM_ENABLE_EXPERIMENTAL
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "PARM_FORK_CHILD_PROCESS",
 #ifdef PARM_FORK_CHILD_PROCESS
                          "yes"
