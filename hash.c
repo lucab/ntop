@@ -111,12 +111,10 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
       if((theSession->initiatorIdx == hostIdx) || (theSession->remotePeerIdx == hostIdx)) {	
        if(myGlobals.device[theDevice].tcpSession[i] == theSession) {
 	 myGlobals.device[theDevice].tcpSession[i] = theSession->next;
+	 prevSession = myGlobals.device[theDevice].tcpSession[i];
        } else {
 	 prevSession->next = nextSession;
        }
-
-	if(prevSession == theSession)
-	  prevSession = myGlobals.device[theDevice].tcpSession[i];
        
         freeSession(theSession, theDevice);
 	theSession = prevSession;
