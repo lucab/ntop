@@ -824,11 +824,6 @@ static int parseOptions(int argc, char* argv []) {
       /* exit(-1); */
   }
 
-  if((myGlobals.rFileName != NULL) && ((myGlobals.localAddresses == NULL) && !myGlobals.printFcOnly)) {
-    traceEvent(CONST_TRACE_FATALERROR, "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used");
-    exit(-1);
-  }
-  
 #ifndef WIN32
   /*
     The user has not specified the uid using the -u flag.

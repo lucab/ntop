@@ -1052,7 +1052,9 @@ void handleLocalAddresses(char* addresses) {
 
   /* Not used anymore */
   if(myGlobals.localAddresses != NULL) free(myGlobals.localAddresses);
-  myGlobals.localAddresses = strdup(localAddresses);
+  
+  if(localAddresses[0]  != '\0')
+    myGlobals.localAddresses = strdup(localAddresses);
 }
 
 /* ********************************* */

@@ -569,6 +569,12 @@ void initNtop(char *devices) {
   /* Handle local addresses (if any) */
   handleLocalAddresses(myGlobals.localAddresses);
 
+  if((myGlobals.rFileName != NULL) && ((myGlobals.localAddresses == NULL) && !myGlobals.printFcOnly)) {
+    traceEvent(CONST_TRACE_FATALERROR, 
+	       "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used");
+    exit(-1);
+  }
+  
   if(myGlobals.currentFilterExpression != NULL)
     parseTrafficFilter();
   else
