@@ -153,7 +153,7 @@ lib_LTLIBRARIES    = libntop.la libntopreport.la
 libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      getopt.c     getopt1.c     globals-core.c \
                      hash.c       iface.c       initialize.c  leaks.c        \
-                     netflow.c    ntop.c        pbuf.c         \
+                     ntop.c        pbuf.c         \
                      plugin.c     protocols.c   \
                      sessions.c   term.c        util.c         \
                      traffic.c    vendor.c      version.c      \
@@ -165,7 +165,7 @@ libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
-                           http.c          netflow.c         \
+                           http.c          \
                            report.c        reportUtils.c     ssl.c   \
                            webInterface.c
 

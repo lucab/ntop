@@ -1142,11 +1142,7 @@ typedef struct ntopInterface {
   struct fcSession **fcSession;
   u_short numFcSessions, maxNumFcSessions;
   TrafficEntry** fcTrafficMatrix; /* Subnet traffic Matrix */
-  struct hostTraffic** fcTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
-  
-  /* ************************** */
-
-  u_char exportNetFlow; /* NETFLOW_EXPORT_... */
+  struct hostTraffic** fcTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */  
 } NtopInterface;
 
 typedef struct processInfo {
@@ -1359,132 +1355,6 @@ typedef struct badGuysAddr {
   time_t         lastBadAccess;
   u_int16_t      count;
 } BadGuysAddr;
-
-/* *************************** */
-
-/*
-  For more info see:
-
-  http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm
-
-  ftp://ftp.net.ohio-state.edu/users/maf/cisco/
-*/
-
-struct flow_ver5_hdr {
-  u_int16_t version;         /* Current version=5*/
-  u_int16_t count;           /* The number of records in PDU. */
-  u_int32_t sysUptime;       /* Current time in msecs since router booted */
-  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
-  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
-  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
-  u_int8_t  engine_type;     /* Type of flow switching engine (RP,VIP,etc.)*/
-  u_int8_t  engine_id;       /* Slot number of the flow switching engine */
-};
-
-struct flow_ver5_rec {
-  u_int32_t srcaddr;    /* Source IP Address */
-  u_int32_t dstaddr;    /* Destination IP Address */
-  u_int32_t nexthop;    /* Next hop router's IP Address */
-  u_int16_t input;      /* Input interface index */
-  u_int16_t output;     /* Output interface index */
-  u_int32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st
-			   & last packet in this flow)*/
-  u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st
-			   & last packet in  this flow)*/
-  u_int32_t First;      /* SysUptime at start of flow */
-  u_int32_t Last;       /* and of last packet of the flow */
-  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  u_int8_t  pad1;       /* pad to word boundary */
-  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
-  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-  u_int8_t  tos;        /* IP Type-of-Service */
-  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
-  u_int16_t src_as;     /* source peer/origin Autonomous System */
-  u_int8_t  dst_mask;   /* destination route's mask bits */
-  u_int8_t  src_mask;   /* source route's mask bits */
-  u_int16_t pad2;       /* pad to word boundary */
-};
-
-typedef struct single_flow_ver5_rec {
-  struct flow_ver5_hdr flowHeader;
-  struct flow_ver5_rec flowRecord[CONST_V5FLOWS_PER_PAK+1 /* safe against buffer overflows */];
-} NetFlow5Record;
-
-struct flow_ver7_hdr {
-  u_int16_t version;         /* Current version=7*/
-  u_int16_t count;           /* The number of records in PDU. */
-  u_int32_t sysUptime;       /* Current time in msecs since router booted */
-  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
-  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
-  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
-  u_int32_t reserved;
-};
-
-struct flow_ver7_rec {
-  u_int32_t srcaddr;    /* Source IP Address */
-  u_int32_t dstaddr;    /* Destination IP Address */
-  u_int32_t nexthop;    /* Next hop router's IP Address */
-  u_int16_t input;      /* Input interface index */
-  u_int16_t output;     /* Output interface index */
-  u_int32_t dPkts;      /* Packets sent in Duration */
-  u_int32_t dOctets;    /* Octets sent in Duration */
-  u_int32_t First;      /* SysUptime at start of flow */
-  u_int32_t Last;       /* and of last packet of the flow */
-  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  u_int8_t  flags;      /* Shortcut mode(dest only,src only,full flows*/
-  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
-  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-  u_int8_t  tos;        /* IP Type-of-Service */
-  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
-  u_int16_t src_as;     /* source peer/origin Autonomous System */
-  u_int8_t  dst_mask;   /* destination route's mask bits */
-  u_int8_t  src_mask;   /* source route's mask bits */
-  u_int16_t pad2;       /* pad to word boundary */
-  u_int32_t router_sc;  /* Router which is shortcut by switch */
-};
-
-typedef struct single_flow_ver7_rec {
-  struct flow_ver7_hdr flowHeader;
-  struct flow_ver7_rec flowRecord[CONST_V7FLOWS_PER_PAK+1 /* safe against buffer overflows */];
-} NetFlow7Record;
-
-/* ************************************ */
-
-/* NetFlow v9/IPFIX */
-
-typedef struct flow_ver9_hdr {
-  u_int16_t version;         /* Current version=9*/
-  u_int16_t count;           /* The number of records in PDU. */
-  u_int32_t sysUptime;       /* Current time in msecs since router booted */
-  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
-  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
-  u_int32_t sourceId;        /* Source id */
-} V9FlowHeader; 
-
-typedef struct flow_ver9_template_field {
-  u_int16_t fieldType;
-  u_int16_t fieldLen;
-} V9TemplateField;
-
-typedef struct flow_ver9_template {
-  u_int16_t templateFlowset; /* = 0 */
-  u_int16_t flowsetLen;
-  u_int16_t templateId;
-  u_int16_t fieldCount;
-} V9Template;
-
-typedef struct flow_ver9_flow_set {
-  u_int16_t templateId;
-  u_int16_t flowsetLen;
-} V9FlowSet;
-
-typedef struct flow_ver9_templateids {
-  u_int16_t templateId;
-  u_int16_t templateLen;
-  char      *templateDescr;
-} V9TemplateId;
 
 /* ******** Token Ring ************ */
 
@@ -2028,21 +1898,17 @@ typedef struct ntopGlobals {
   int numChildren;
 
   /* NetFlow */
-  int netFlowAssumeFTP;
-  /* Flow emission */
   u_char netFlowDebug;
-  int netFlowOutSocket;
-  u_int32_t globalFlowSequence, globalFlowPktCount;
-  struct in_addr netFlowIfAddress, netFlowIfMask;
-  char *netFlowWhiteList, *netFlowBlackList;
-  NetFlow5Record theRecord;
-  struct sockaddr_in netFlowDest;
+
   /* Flow reception */
   AggregationType netFlowAggregation;
   int netFlowInSocket, netFlowDeviceId;
+  u_char netFlowAssumeFTP;
   u_short netFlowInPort;
+  struct in_addr netFlowIfAddress, netFlowIfMask;
+  char *netFlowWhiteList, *netFlowBlackList;
   u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsSent, numNetFlowsV5Rcvd;
-  u_long numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed, numNetFlowsRcvd;
+  u_long numNetFlowsV1Rcvd, numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed, numNetFlowsRcvd;
   u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
   u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,
     numSrcNetFlowsEntryAccepted,

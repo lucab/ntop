@@ -4401,6 +4401,8 @@ void printPageTitle(char *text) {
   sendString("</font></H1>\n</center>\n");
 }
 
+/* ******************************** */
+
 void printSectionTitle(char *text) {
   sendString("<p>&nbsp;</p>\n"
              "<center>\n<H2><font face=\"Helvetica, Arial, Sans Serif\">");
@@ -4410,7 +4412,7 @@ void printSectionTitle(char *text) {
 
 /* ******************************** */
 
-static void printHostsCharacterization(void) {
+void printHostsCharacterization(void) {
   u_int a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0, unhealthy=0, totHosts=0;
   HostTraffic *el;
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], headerSent = 0;
@@ -4436,10 +4438,9 @@ static void printHostsCharacterization(void) {
 	 || (isHostHealthy(el) != 0)
 	 ) {
 	if(!headerSent) {
-	  sendString("<p><hr><p>\n<CENTER>\n");
-	  printSectionTitle("Hosts Characterization");
+	  printHTMLheader("Hosts Characterization", NULL, 0);
 
-	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG">Host</TH>"
+	  sendString("<center>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG">Host</TH>"
 		     "<TH>Unhealthy<br>Host</TH>"
 		     "<TH>L2 Switch<br>Bridge</TH>"
 		     "<TH>Gateway</TH>"
@@ -4560,13 +4561,13 @@ static printFingerprintCounts(int countScanned, int countWithoutFP, int countBro
 
   sendString("<p><hr><p>\n");
 
-  printSectionTitle("Fingerprint Statistics");
+  printSectionTitle("Host Fingerprint Statistics");
 
   if(snprintf(buf, sizeof(buf), 
-              "<center>\n<table>\n"
+              "<center>\n<table border=1 "TABLE_DEFAULTS">\n"
               "<tr><th colspan=\"2\"><i>Scanned</i></th></tr>\n"
               "<tr><td>Hosts</td><td align=\"right\">%d</td></tr>\n"
-              "<tr><th colspan=\"2\"><i>less:</i></th></tr>\n"
+              "<tr><th colspan=\"2\"><i>Less:</i></th></tr>\n"
               "<tr><td>No fingerprint</td><td align=\"right\">%d</td></tr>\n"
               "<tr><td>Broadcast</td><td align=\"right\">%d</td></tr>\n"
               "<tr><td>Multicast</td><td align=\"right\">%d</td></tr>\n",
@@ -4576,6 +4577,7 @@ static printFingerprintCounts(int countScanned, int countWithoutFP, int countBro
               countMulticast) < 0)
     BufferTooShort();
   sendString(buf);
+
   if(fingerprintRemote != TRUE) {
     if(snprintf(buf, sizeof(buf), 
                 "<tr><td>Remote</td><td align=\"right\">%d</td></tr>\n",
@@ -4583,9 +4585,10 @@ static printFingerprintCounts(int countScanned, int countWithoutFP, int countBro
       BufferTooShort();
     sendString(buf);
   }
+
   if(snprintf(buf, sizeof(buf), 
               "<tr><td>Non IP host</td><td align=\"right\">%d</td></tr>\n"
-              "<tr><th colspan=\"2\"><i>gives:</i></th></tr>\n"
+              "<tr><th colspan=\"2\"><i>Gives:</i></th></tr>\n"
               "<tr><td>Possible to report</td><td align=\"right\">%d</td></tr>\n",
               countNotIP,
               countScanned - countWithoutFP - countBroadcast - countMulticast
@@ -4607,14 +4610,14 @@ static printFingerprintCounts(int countScanned, int countWithoutFP, int countBro
     BufferTooShort();
   sendString(buf);
 
-  sendString("</td></tr>\n</table>\n</center>\n");
+  sendString("</td></tr>\n</table>\n<p><table border=0 width=80%%>\n");
 
-  sendString("<p><sup>*</sup>&nbsp;<i>Can not resolve</i>&nbsp;means "
+  sendString("<tr><td><sup>*</sup>&nbsp;<i>Can not resolve</i>&nbsp;means "
              "either the fingerprint was incomplete, or we tried to resolve "
              "it on a previous scan and it was not on file. "
-             "No further action will occur for these hosts.</p>\n");
+             "No further action will occur for these hosts.</td></tr>\n");
 
-  sendString("<p><sup>**</sup>&nbsp;<i>Unknown Fingerprints</i>&nbsp;means "
+  sendString("<tr><td><sup>**</sup>&nbsp;<i>Unknown Fingerprints</i>&nbsp;means "
              "we have not tried to resolve them yet.\n"
              "<ul>");
 
@@ -4645,18 +4648,19 @@ static printFingerprintCounts(int countScanned, int countWithoutFP, int countBro
              "alt=\"Ettercap page at SourceForge\">here</a> to visit Ettercap's home "
              "page at SourceForge and upload new fingerprints, or download additional, "
              "unverified, ones.</li>\n"
-             "</ul></p>\n");
+             "</ul></td></tr>\n");
 
   if(fingerprintRemote != TRUE)
-    sendString("<p>&nbsp;</p>\n"
-               "<p align=\"center\">Fingerprinting of non-local hosts may be erroneous "
+    sendString("<tr><td>Fingerprinting of non-local hosts may be erroneous "
                "- routers and intermediate hosts can alter the characteristics used to "
-               "determine the operating system.<br>Unfortunately, this can also occur because "
+               "determine the operating system. Unfortunately, this can also occur because "
                "of entries not in the signature file, " CONST_OSFINGERPRINT_FILE "(.gz) - "
                "and there's no way to tell."
                "\n<br>That said, if you would like to see a page with ALL host fingerprints, "
-               "local and remote, click <a href=\"" CONST_HOSTS_ALL_INFO_HTML 
-               "\" title=\"All host fingerprints page\">here</a></p>\n");
+               "local and remote, click <a href=\"" CONST_HOSTS_LOCAL_FINGERPRINT_HTML 
+               "\" title=\"All host fingerprints page\">here</a></td></tr>\n");
+
+  sendString("</table></center>\n");
 }
 
 /* ******************************** */
@@ -4681,11 +4685,10 @@ void printHostsStats(int fingerprintRemote) {
   memset(theOSs, 0, sizeof(theOSs));
   memset(unknownFPs, 0, sizeof(unknownFPs));
 
-  printHTMLheader("OS Summary", NULL, BITFLAG_HTML_NO_REFRESH);
+  printHTMLheader("Host Fingerprint: OS Summary", NULL, BITFLAG_HTML_NO_REFRESH);
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
     printFlagedWarning("<I>Host statistics (OS fingerprinting) are not available for virtual interfaces</I>");
-    printHostsCharacterization();
     return;
   }
 
@@ -4880,9 +4883,6 @@ void printHostsStats(int fingerprintRemote) {
                          countUnknownFP, unknownFPsEtc, countCantResolve,
                          fingerprintRemote,
                          unknownFPs);
-
-  printHostsCharacterization();
-
 }
 
 /* ******************************************************** */
@@ -6833,7 +6833,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
         return;
     }
     
-    printHTMLheader ("LUN Statistics", 0, 0);
+    printHTMLheader("LUN Statistics", 0, 0);
     
     memset(buf, 0, sizeof(buf));
     memset(sortedLunTbl, 0, sizeof (sortedLunTbl));
@@ -7477,4 +7477,3 @@ void printPluginTrailer(char *left, char *middle) {
 }
 
 /* ************************************ */
-

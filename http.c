@@ -1381,11 +1381,14 @@ int generateInternalPages(char* pageName) {
       menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
       menuitem(CONST_IP_PROTO_USAGE_HTML, "Ports Used", "");
       menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Active TCP Sessions", "");
-      menuitem(CONST_HOSTS_LOCAL_INFO_HTML, "Host (OS) Summary", "");
+      menuitem(CONST_HOSTS_LOCAL_FINGERPRINT_HTML, "Hosts Fingerprint", "");
       menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Local Matrix", "");
 
       sendString("<p><b>FibreChannel</b></p>\n");
-//Fibre Channel:  Traffic  |   Throughput  |   Activity  |   Hosts  |   Traffic Per Port  |   Sessions  |   VSANs  |   VSAN Summary 
+      /*
+	Fibre Channel:  Traffic  |   Throughput  |   Activity  |   Hosts  |   Traffic Per Port  
+	|   Sessions  |   VSANs  |   VSAN Summary 
+      */
       menuitem(CONST_FC_DATA_HTML, "Traffic", "");
       menuitem(CONST_FC_THPT_HTML, "Throughput", "");
       menuitem(CONST_FC_ACTIVITY_HTML, "Activty", "");
@@ -2010,12 +2013,14 @@ static int returnHTTPPage(char* pageName,
     } else if(strncasecmp(pageName, CONST_FC_HOSTS_INFO_HTML,
                       strlen(CONST_FC_HOSTS_INFO_HTML)) == 0) {
         printFcHostsInfo(sortedColumn, revertOrder, pageNum);
-    } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_INFO_HTML, strlen(CONST_HOSTS_LOCAL_INFO_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_FINGERPRINT_HTML, 
+			  strlen(CONST_HOSTS_LOCAL_FINGERPRINT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHostsStats(FALSE);
-    } else if(strncasecmp(pageName, CONST_HOSTS_ALL_INFO_HTML, strlen(CONST_HOSTS_ALL_INFO_HTML)) == 0) {
+    } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_CHARACT_HTML, 
+			  strlen(CONST_HOSTS_LOCAL_CHARACT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHostsStats(TRUE);
+      printHostsCharacterization();
     } else if(strncasecmp(pageName, CONST_SORT_DATA_PROTOS_HTML, strlen(CONST_SORT_DATA_PROTOS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder, 
@@ -2070,7 +2075,7 @@ static int returnHTTPPage(char* pageName,
       if(sortedColumn == 0) { sortedColumn = 1; }
       printIpAccounting(FLAG_LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
     } else if(strncasecmp(pageName, CONST_ACTIVE_TCP_SESSIONS_HTML,
-                      strlen(CONST_ACTIVE_TCP_SESSIONS_HTML)) == 0) {
+			  strlen(CONST_ACTIVE_TCP_SESSIONS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printActiveTCPSessions(myGlobals.actualReportDeviceId, pageNum, NULL);
     } else if(strncasecmp(pageName, CONST_MULTICAST_STATS_HTML, strlen(CONST_MULTICAST_STATS_HTML)) == 0) {

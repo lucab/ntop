@@ -1635,12 +1635,6 @@ static void processIpPkt(const u_char *bp,
 	  handleUDPSession(h, fragmented,
 			   srcHost, sport, dstHost, dport, udpDataLength,
 			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
-#ifdef INET6
-	if(ip6)
-	  sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip6->ip6_plen), actualDeviceId);
-	else
-#endif
-	  sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);
       }
     }
 #ifdef INET6
@@ -1837,8 +1831,6 @@ static void processIpPkt(const u_char *bp,
 	}
 	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
       }
-
-      sendICMPflow(srcHost, dstHost, ntohs(ip.ip_len), actualDeviceId);
     }
     break;
 #ifdef INET6
@@ -1995,8 +1987,6 @@ static void processIpPkt(const u_char *bp,
 	}
 	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
       }
-
-      sendICMPflow(srcHost, dstHost, ntohs(ip6->ip6_plen), actualDeviceId);
     }
     break;
 
@@ -2030,7 +2020,6 @@ static void processIpPkt(const u_char *bp,
       incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, nh);
       incrementTrafficCounter(&dstHost->otherRcvd, length);
       incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, nh);
-      sendOTHERflow(srcHost, dstHost, nh, ip_len, actualDeviceId);
     }
     break;
   }

@@ -3283,9 +3283,11 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 
 #ifdef CONST_HOSTS_LOCAL_INFO_HTML
-  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_INFO_HTML", CONST_HOSTS_LOCAL_INFO_HTML);
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_FINGERPRINT_HTML", CONST_HOSTS_LOCAL_FINGERPRINT_HTML);
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_CHARACT", CONST_HOSTS_LOCAL_CHARACT_HTML);
 #else
-  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_INFO_HTML", "undefined");
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_FINGERPRINT_HTML", "undefined");
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_CHARACT_HTML", "undefined");
 #endif
 
 #ifdef CONST_HTTP_ACCEPT_ALL
@@ -5474,9 +5476,10 @@ void printMutexStatusReport(int textPrintFlag) {
 
 void printNtopConfigInfo(int textPrintFlag) {
   char buf[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
-  int i;
-  int bufLength, bufPosition, bufUsed;
-
+  int i, bufLength, bufPosition, bufUsed;
+  unsigned int idx, minLen=-1, maxLen=0;
+  unsigned long totBuckets=0, nonEmptyBuckets=0;
+  
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
   struct mallinfo memStats;
   int totalHostsMonitored = 0;
@@ -6300,7 +6303,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPacketsProcessed) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Processed immediately", buf);
+  printFeatureConfigInfo(textPrintFlag, "Processed Immediately", buf);
 
 #ifdef CFG_MULTITHREADED
 
@@ -6316,11 +6319,11 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.packetQueueLen) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Current queue", buf);
+  printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.maxPacketQueueLen) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum queue", buf);
+  printFeatureConfigInfo(textPrintFlag, "Maximum Queue", buf);
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.setNonBlockingSleepCount) < 0)
@@ -6332,11 +6335,12 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   /* **** */
 
-  sendString(texthtml("\n\nHost/Session counts - global\n\n", "<tr><th colspan=2 "DARK_BG">Host/Session counts - global</th></tr>\n"));
+  sendString(texthtml("\n\nHost/Session counts - global\n\n",
+		      "<tr><th colspan=2 "DARK_BG">Host/Session counts - global</th></tr>\n"));
 
   if(snprintf(buf, sizeof(buf), "%u", (unsigned int)myGlobals.numPurgedHosts) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Purged hosts", buf);
+  printFeatureConfigInfo(textPrintFlag, "Purged Hosts", buf);
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.maximumHostsToPurgePerCycle) < 0)
     BufferTooShort();
@@ -6360,13 +6364,14 @@ if(myGlobals.gdVersionGuessValue != NULL)
   for(i=0; i<myGlobals.numDevices; i++) {
     if(snprintf(buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name) < 0)
       BufferTooShort();
-    if(snprintf(buf2, sizeof(buf2), "<tr><th colspan=2 "DARK_BG">Host/Session counts - Device %d (%s)</th></tr>\n", i, myGlobals.device[i].name) < 0)
+    if(snprintf(buf2, sizeof(buf2), "<tr><th colspan=2 "DARK_BG">Host/Session counts - Device %d (%s)</th></tr>\n",
+		i, myGlobals.device[i].name) < 0)
       BufferTooShort();
     sendString(texthtml(buf, buf2));
-
+    
     printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size",
-	formatBytes(sizeof(HostTraffic), 0, buf, sizeof(buf)));
-
+			   formatBytes(sizeof(HostTraffic), 0, buf, sizeof(buf)));
+    
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
@@ -6375,10 +6380,6 @@ if(myGlobals.gdVersionGuessValue != NULL)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
     
-    {
-      unsigned int idx, minLen=-1, maxLen=0;
-      unsigned long totBuckets=0, nonEmptyBuckets=0;
-
       for(idx=0; idx<myGlobals.device[i].actualHashSize; idx++) {
 	HostTraffic *el;
 
@@ -6400,7 +6401,6 @@ if(myGlobals.gdVersionGuessValue != NULL)
 		  minLen, maxLen, (float)totBuckets/(float)nonEmptyBuckets) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Bucket List Length", buf);
-    }
 
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].hashListMaxLookups) < 0)
       BufferTooShort();

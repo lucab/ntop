@@ -450,14 +450,11 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   /* NetFlow */
   myGlobals.netFlowInSocket = -1;
-  myGlobals.netFlowOutSocket = -1;
 
   /* sFlow */
   myGlobals.sflowDeviceId = -1;
   myGlobals.sflowInPort   = 0;
   myGlobals.sflowInSocket = 0;
-
-  myGlobals.globalFlowSequence = myGlobals.globalFlowPktCount = 0;
 
 #ifdef CFG_MULTITHREADED
   myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;

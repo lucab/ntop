@@ -249,7 +249,7 @@ lib_LTLIBRARIES = libntop.la libntopreport.la
 libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      getopt.c     getopt1.c     globals-core.c \
                      hash.c       iface.c       initialize.c  leaks.c        \
-                     netflow.c    ntop.c        pbuf.c         \
+                     ntop.c        pbuf.c         \
                      plugin.c     protocols.c   \
                      sessions.c   term.c        util.c         \
                      traffic.c    vendor.c      version.c      \
@@ -262,7 +262,7 @@ libntop_la_LDFLAGS = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAG
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
-                           http.c          netflow.c         \
+                           http.c          \
                            report.c        reportUtils.c     ssl.c   \
                            webInterface.c
 
@@ -285,13 +285,12 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 
 am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo fcUtils.lo \
 	getopt.lo getopt1.lo globals-core.lo hash.lo iface.lo \
-	initialize.lo leaks.lo netflow.lo ntop.lo pbuf.lo plugin.lo \
-	protocols.lo sessions.lo term.lo util.lo traffic.lo vendor.lo \
-	version.lo ntop_darwin.lo
+	initialize.lo leaks.lo ntop.lo pbuf.lo plugin.lo protocols.lo \
+	sessions.lo term.lo util.lo traffic.lo vendor.lo version.lo \
+	ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
-	http.lo netflow.lo report.lo reportUtils.lo ssl.lo \
-	webInterface.lo
+	http.lo report.lo reportUtils.lo ssl.lo webInterface.lo
 libntopreport_la_OBJECTS = $(am_libntopreport_la_OBJECTS)
 EXTRA_PROGRAMS = ntops$(EXEEXT) sntop$(EXEEXT)
 bin_PROGRAMS = ntop$(EXEEXT)
@@ -324,8 +323,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/http.Plo ./$(DEPDIR)/icmpPlugin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/iface.Plo ./$(DEPDIR)/initialize.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/lastSeenPlugin.Po ./$(DEPDIR)/leaks.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/main.Po ./$(DEPDIR)/netflow.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/netflowPlugin.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/main.Po ./$(DEPDIR)/netflowPlugin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/nfsPlugin.Po ./$(DEPDIR)/ntop-admin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ntop-main.Po ./$(DEPDIR)/ntop.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/ntop_darwin.Plo ./$(DEPDIR)/pbuf.Plo \
@@ -360,11 +358,10 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 DIST_COMMON = README $(ETTER_PASSIVE) $(noinst_HEADERS) AUTHORS \
 	CONTENTS COPYING ChangeLog INSTALL MANIFESTO Makefile.am \
 	Makefile.in NEWS PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 \
-	aclocal.m4 compile config.guess config.h.in config.sub \
-	configure configure.in depcomp html/faq.html install-sh \
-	ltconfig ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 \
-	ntop.html ntop.txt oui.txt.gz p2c.opt.table.gz \
-	specialMAC.txt.gz\
+	aclocal.m4 config.guess config.h.in config.sub configure \
+	configure.in depcomp html/faq.html install-sh ltconfig \
+	ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html \
+	ntop.txt oui.txt.gz p2c.opt.table.gz specialMAC.txt.gz\
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES) $(sntop_SOURCES)
 
@@ -533,7 +530,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lastSeenPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netflow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netflowPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nfsPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntop-admin.Po@am__quote@

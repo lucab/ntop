@@ -23,6 +23,178 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+/* *************************** */
+
+#define CONST_FLOW_VERSION_1		    1
+#define CONST_V1FLOWS_PER_PAK		    30
+
+#define CONST_FLOW_VERSION_5		    5
+#define CONST_V5FLOWS_PER_PAK		    30
+
+#define CONST_FLOW_VERSION_7		    7
+#define CONST_V7FLOWS_PER_PAK		    28
+
+/*
+  For more info see:
+
+  http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm
+
+  ftp://ftp.net.ohio-state.edu/users/maf/cisco/
+*/
+
+/* ********************************* */
+
+struct flow_ver1_hdr {
+  u_int16_t version;         /* Current version = 1*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
+};
+
+struct flow_ver1_rec {
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t dPkts;      /* Packets sent in Duration */
+  u_int32_t dOctets;    /* Octets sent in Duration */
+  u_int32_t First;      /* SysUptime at start of flow */
+  u_int32_t Last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t pad;        /* pad to word boundary */
+  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
+  u_int8_t  pad2[7];    /* pad to word boundary */
+};
+
+typedef struct single_flow_ver1_rec {
+  struct flow_ver1_hdr flowHeader;
+  struct flow_ver1_rec flowRecord[CONST_V1FLOWS_PER_PAK+1 /* safe against buffer overflows */];
+} NetFlow1Record;
+
+/* ********************************* */
+
+struct flow_ver5_hdr {
+  u_int16_t version;         /* Current version=5*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int8_t  engine_type;     /* Type of flow switching engine (RP,VIP,etc.)*/
+  u_int8_t  engine_id;       /* Slot number of the flow switching engine */
+};
+
+struct flow_ver5_rec {
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st
+			   & last packet in this flow)*/
+  u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st
+			   & last packet in  this flow)*/
+  u_int32_t First;      /* SysUptime at start of flow */
+  u_int32_t Last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int8_t  pad1;       /* pad to word boundary */
+  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
+  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int16_t src_as;     /* source peer/origin Autonomous System */
+  u_int8_t  dst_mask;   /* destination route's mask bits */
+  u_int8_t  src_mask;   /* source route's mask bits */
+  u_int16_t pad2;       /* pad to word boundary */
+};
+
+typedef struct single_flow_ver5_rec {
+  struct flow_ver5_hdr flowHeader;
+  struct flow_ver5_rec flowRecord[CONST_V5FLOWS_PER_PAK+1 /* safe against buffer overflows */];
+} NetFlow5Record;
+
+/* ********************************* */
+
+struct flow_ver7_hdr {
+  u_int16_t version;         /* Current version=7*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int32_t reserved;
+};
+
+struct flow_ver7_rec {
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t dPkts;      /* Packets sent in Duration */
+  u_int32_t dOctets;    /* Octets sent in Duration */
+  u_int32_t First;      /* SysUptime at start of flow */
+  u_int32_t Last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int8_t  flags;      /* Shortcut mode(dest only,src only,full flows*/
+  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
+  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int16_t src_as;     /* source peer/origin Autonomous System */
+  u_int8_t  dst_mask;   /* destination route's mask bits */
+  u_int8_t  src_mask;   /* source route's mask bits */
+  u_int16_t pad2;       /* pad to word boundary */
+  u_int32_t router_sc;  /* Router which is shortcut by switch */
+};
+
+typedef struct single_flow_ver7_rec {
+  struct flow_ver7_hdr flowHeader;
+  struct flow_ver7_rec flowRecord[CONST_V7FLOWS_PER_PAK+1 /* safe against buffer overflows */];
+} NetFlow7Record;
+
+/* ************************************ */
+
+/* NetFlow v9/IPFIX */
+
+typedef struct flow_ver9_hdr {
+  u_int16_t version;         /* Current version=9*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int32_t sourceId;        /* Source id */
+} V9FlowHeader;
+
+typedef struct flow_ver9_template_field {
+  u_int16_t fieldType;
+  u_int16_t fieldLen;
+} V9TemplateField;
+
+typedef struct flow_ver9_template {
+  u_int16_t templateFlowset; /* = 0 */
+  u_int16_t flowsetLen;
+  u_int16_t templateId;
+  u_int16_t fieldCount;
+} V9Template;
+
+typedef struct flow_ver9_flow_set {
+  u_int16_t templateId;
+  u_int16_t flowsetLen;
+} V9FlowSet;
+
+typedef struct flow_ver9_templateids {
+  u_int16_t templateId;
+  u_int16_t templateLen;
+  char      *templateDescr;
+} V9TemplateId;
+
 /* ******************************************* */
 
 /* **************************************
@@ -131,7 +303,6 @@ static Counter nFlowTotCompressedSize = 0, nFlowTotUncompressedSize = 0;
 
 /* Forward */
 static int setNetFlowInSocket();
-static int setNetFlowOutSocket();
 static void setNetFlowInterfaceMatrix();
 static void freeNetFlowMatrixMemory();
 static void setPluginStatus(char * status);
@@ -158,10 +329,10 @@ static PluginInfo netflowPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate nFlow/NetFlow support.<br>"
     "<b>ntop</b> can both collect and receive "
     "<a href=\"http://www.nflow.org/\" alt=\"link to nflow.org\">nFlow</A> and NetFlow "
-    "V5/V7/V9 data (search at www.cisco.com for more info about NetFlow).<br>"
+    "V1/V5/V7/V9 data (search at www.cisco.com for more info about NetFlow).<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports - <em>Remember to switch the reporting NIC via Admin | Switch NIC</em>.",
-    "3.1", /* version */
+    "3.2", /* version */
     "<a href=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
@@ -175,7 +346,7 @@ static PluginInfo netflowPluginInfo[] = {
 #endif
     handleNetflowHTTPrequest,
 #ifdef DEBUG_FLOWS
-    "udp and (port 2055 or port 9995)",
+    "udp and (port 2055 or port 9995 or port 10234)",
 #else
     NULL, /* no capture */
 #endif
@@ -327,8 +498,8 @@ static int setNetFlowInSocket() {
       setPluginStatus("Disabled - Unable to create listening socket.");
       return(-1);
     }
-    traceEvent(CONST_TRACE_INFO, "NETFLOW: Created a socket (%d)", myGlobals.netFlowInSocket);
 
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: Created a socket (%d)", myGlobals.netFlowInSocket);
 
     setsockopt(myGlobals.netFlowInSocket, SOL_SOCKET, SO_REUSEADDR,(char *)&sockopt, sizeof(sockopt));
 
@@ -379,47 +550,6 @@ static int setNetFlowInSocket() {
 
 /* *************************** */
 
-static int setNetFlowOutSocket() {
-  if(myGlobals.netFlowOutSocket <= 0) {
-    char value[256];
-    int sockopt = 1;
-
-    myGlobals.netFlowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
-
-    if((myGlobals.netFlowOutSocket <= 0) || (errno != 0) ) {
-      traceEvent(CONST_TRACE_INFO, "NETFLOW: Unable to create a socket - returned %d, error is '%s'(%d)",
-		 myGlobals.netFlowOutSocket, strerror(errno), errno);
-      setPluginStatus("Disabled - Unable to create sending socket.");
-      return(-1);
-    }
-    traceEvent(CONST_TRACE_INFO, "NETFLOW: Created a socket (%d)", myGlobals.netFlowOutSocket);
-
-    setsockopt(myGlobals.netFlowOutSocket, SOL_SOCKET, SO_REUSEADDR,
-	       (char *)&sockopt, sizeof(sockopt));
-
-    myGlobals.netFlowDest.sin_addr.s_addr = 0;
-    myGlobals.netFlowDest.sin_family      = AF_INET;
-    myGlobals.netFlowDest.sin_port        =(int)htons(atoi(DEFAULT_NETFLOW_PORT_STR));
-
-    if(fetchPrefsValue("netFlow.netFlowDest", value, sizeof(value)) == -1)
-      storePrefsValue("netFlow.netFlowDest", "");
-    else if(value[0] != '\0') {
-      myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
-      if(myGlobals.netFlowDest.sin_addr.s_addr > 0)
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
-		   "NETFLOW: Exporting NetFlow's towards %s:%s",
-		   value, DEFAULT_NETFLOW_PORT_STR);
-      else
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
-		   "NETFLOW: Export disabled at user request");
-    }
-  }
-
-  return(0);
-}
-
-/* ****************************** */
-
 static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
 		       u_int dstAddr, u_short dport,
 		       Counter len) {
@@ -461,7 +591,7 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
   myGlobals.numNetFlowsRcvd++;
 
   numPkts  = ntohl(record->dPkts);
-  len      =(Counter)ntohl(record->dOctets);
+  len      = (Counter)ntohl(record->dOctets);
 
   /* Bad flow(zero packets) */
   if(numPkts == 0) {
@@ -834,14 +964,14 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
 
 static void dissectFlow(char *buffer, int bufferLen) {
   NetFlow5Record the5Record;
-  NetFlow7Record the7Record;
+  int flowVersion;
 
 #ifdef DEBUG
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
 #endif
 
   memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);
-  memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ? sizeof(the7Record): bufferLen);
+  flowVersion = ntohs(the5Record.flowHeader.version);
 
   /*
     Convert V7 flows into V5 flows in order to make ntop
@@ -849,31 +979,61 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
     Courtesy of Bernd Ziller <bziller@ba-stuttgart.de>
   */
-  if(the7Record.flowHeader.version == htons(7)) {
-    int numFlows = ntohs(the7Record.flowHeader.count);
-    int i, j;
+  if((flowVersion == 1) || (flowVersion == 7)) {
+    int numFlows, i, j;
+    NetFlow1Record the1Record;
+    NetFlow7Record the7Record;
 
-    if(numFlows > CONST_V7FLOWS_PER_PAK) numFlows = CONST_V7FLOWS_PER_PAK;
+    if(flowVersion == 1) {
+      memcpy(&the1Record, buffer, bufferLen > sizeof(the1Record) ? sizeof(the1Record): bufferLen);
+      numFlows = ntohs(the1Record.flowHeader.count);
+      if(numFlows > CONST_V1FLOWS_PER_PAK) numFlows = CONST_V1FLOWS_PER_PAK;
+      myGlobals.numNetFlowsV1Rcvd += numFlows;
+    } else {
+      memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ? sizeof(the7Record): bufferLen);
+      numFlows = ntohs(the7Record.flowHeader.count);
+      if(numFlows > CONST_V7FLOWS_PER_PAK) numFlows = CONST_V7FLOWS_PER_PAK;
+      myGlobals.numNetFlowsV7Rcvd += numFlows;
+    }
+
+#ifdef DEBUG_FLOWS
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: +++++++ version=%d/flows=%d", 
+	       flowVersion, numFlows);
+#endif
 
     the5Record.flowHeader.version = htons(5);
     the5Record.flowHeader.count = htons(numFlows);
     /* rest of flowHeader will not be used */
 
     for(j=i=0; i<numFlows; i++) {
-      the5Record.flowRecord[i].srcaddr   = the7Record.flowRecord[i].srcaddr;
-      the5Record.flowRecord[i].dstaddr   = the7Record.flowRecord[i].dstaddr;
-      the5Record.flowRecord[i].srcport   = the7Record.flowRecord[i].srcport;
-      the5Record.flowRecord[i].dstport   = the7Record.flowRecord[i].dstport;
-      the5Record.flowRecord[i].dPkts     = the7Record.flowRecord[i].dPkts;
-      the5Record.flowRecord[i].dOctets   = the7Record.flowRecord[i].dOctets;
-      the5Record.flowRecord[i].prot      = the7Record.flowRecord[i].prot;
-      the5Record.flowRecord[i].tos       = the7Record.flowRecord[i].tos;
-      the5Record.flowRecord[i].First     = the7Record.flowRecord[i].First;
-      the5Record.flowRecord[i].Last      = the7Record.flowRecord[i].Last;
-      the5Record.flowRecord[i].tcp_flags = the7Record.flowRecord[i].tcp_flags;
-      /* rest of flowRecord will not be used */
+      if(flowVersion == 7) {
+	the5Record.flowRecord[i].srcaddr   = the7Record.flowRecord[i].srcaddr;
+	the5Record.flowRecord[i].dstaddr   = the7Record.flowRecord[i].dstaddr;
+	the5Record.flowRecord[i].srcport   = the7Record.flowRecord[i].srcport;
+	the5Record.flowRecord[i].dstport   = the7Record.flowRecord[i].dstport;
+	the5Record.flowRecord[i].dPkts     = the7Record.flowRecord[i].dPkts;
+	the5Record.flowRecord[i].dOctets   = the7Record.flowRecord[i].dOctets;
+	the5Record.flowRecord[i].prot      = the7Record.flowRecord[i].prot;
+	the5Record.flowRecord[i].tos       = the7Record.flowRecord[i].tos;
+	the5Record.flowRecord[i].First     = the7Record.flowRecord[i].First;
+	the5Record.flowRecord[i].Last      = the7Record.flowRecord[i].Last;
+	the5Record.flowRecord[i].tcp_flags = the7Record.flowRecord[i].tcp_flags;
+	/* rest of flowRecord will not be used */
+      } else {
+	the5Record.flowRecord[i].srcaddr   = the1Record.flowRecord[i].srcaddr;
+	the5Record.flowRecord[i].dstaddr   = the1Record.flowRecord[i].dstaddr;
+	the5Record.flowRecord[i].srcport   = the1Record.flowRecord[i].srcport;
+	the5Record.flowRecord[i].dstport   = the1Record.flowRecord[i].dstport;
+	the5Record.flowRecord[i].dPkts     = the1Record.flowRecord[i].dPkts;
+	the5Record.flowRecord[i].dOctets   = the1Record.flowRecord[i].dOctets;
+	the5Record.flowRecord[i].prot      = the1Record.flowRecord[i].prot;
+	the5Record.flowRecord[i].tos       = the1Record.flowRecord[i].tos;
+	the5Record.flowRecord[i].First     = the1Record.flowRecord[i].First;
+	the5Record.flowRecord[i].Last      = the1Record.flowRecord[i].Last;
+	/* rest of flowRecord will not be used */
+      }
     }
-  }
+  }  /* DON'T ADD a else here ! */
 
   if(the5Record.flowHeader.version == htons(9)) {
     /* NetFlowV9 Record */
@@ -1085,7 +1245,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
     if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
 
 #ifdef DEBUG_FLOWS
-    /* traceEvent(CONST_TRACE_INFO, "dissectFlow(%d flows)", numFlows); */
+    traceEvent(CONST_TRACE_INFO, "dissectFlow(%d flows)", numFlows);
 #endif
 
 #ifdef CFG_MULTITHREADED
@@ -1096,10 +1256,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
     for(i=0; i<numFlows; i++)
       handleV5Flow(&the5Record.flowRecord[i]);
 
-    if(the7Record.flowHeader.version == htons(7))
-      myGlobals.numNetFlowsV7Rcvd += numFlows;
-    else
-      myGlobals.numNetFlowsV5Rcvd += numFlows;
+    myGlobals.numNetFlowsV5Rcvd += numFlows;
 
 #ifdef CFG_MULTITHREADED
     releaseMutex(&whiteblackListMutex);
@@ -1156,17 +1313,17 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
 	  while(bufBegin < bufLen) {
 	    u_int16_t flowLen;
-	    
+
 	    memcpy(&flowLen, &rcvdBuf[bufBegin], 2);
-	    flowLen = ntohs(flowLen);	   
-	    bufBegin += 2, flowLen -= 2;	    
+	    flowLen = ntohs(flowLen);
+	    bufBegin += 2, flowLen -= 2;
 	    if(numRecords >= CONST_V5FLOWS_PER_PAK) break;
 
 	    while(flowLen > 0) {
 	      u_int8_t t8;
 	      u_int16_t t16, len, templateId;
 	      u_int32_t t32;
-	      	      
+
 	      memcpy(&templateId, &rcvdBuf[bufBegin], 2); bufBegin += 2; flowLen -= 2; templateId = ntohs(templateId);
 	      memcpy(&len, &rcvdBuf[bufBegin], 2); bufBegin += 2; flowLen -= 2; len = ntohs(len);
 
@@ -1176,7 +1333,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
 	      if(len > 16 /* MAX LEN */) {
 		myGlobals.numNflowFlowsBadTemplRcvd++;
-		break; 
+		break;
 	      }
 
 	      switch(templateId) {
@@ -1427,11 +1584,6 @@ static int initNetFlowFunct(void) {
   else
     myGlobals.netFlowInPort = atoi(value);
 
-  if(fetchPrefsValue("netFlow.netFlowDest", value, sizeof(value)) == -1)
-    storePrefsValue("netFlow.netFlowDest", "0");
-  else
-    myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
-
   if((fetchPrefsValue("netFlow.ifNetMask", value, sizeof(value)) == -1)
      || (((rc = sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d", &a, &b, &c, &d, &a1, &b1, &c1, &d1)) != 8)
 	 && ((rc = sscanf(value, "%d.%d.%d.%d/%d", &a, &b, &c, &d, &a1)) != 5))) {
@@ -1504,7 +1656,6 @@ static int initNetFlowFunct(void) {
 #endif
 
   if(setNetFlowInSocket() != 0)  return(-1);
-  if(setNetFlowOutSocket() != 0) return(-1);
 
   if(fetchPrefsValue("netFlow.debug", value, sizeof(value)) == -1) {
     storePrefsValue("netFlow.debug", "0");
@@ -1512,25 +1663,6 @@ static int initNetFlowFunct(void) {
   } else {
     myGlobals.netFlowDebug = atoi(value);
   }
-
-  for(i=0; i<myGlobals.numDevices; i++)
-    if(!myGlobals.device[i].virtualDevice) {
-      if(snprintf(key, sizeof(key),
-		  "netFlow.%s.exportNetFlow",
-		  myGlobals.device[i].name) < 0)
-	BufferTooShort();
-
-      if(fetchPrefsValue(key, value, sizeof(value)) == -1) {
-	storePrefsValue(key, "No");
-      } else {
-	/* traceEvent(CONST_TRACE_INFO, "%s=%s", key, value); */
-
-	if(strcmp(value, "Yes") == 0)
-	  myGlobals.device[i].exportNetFlow = FLAG_NETFLOW_EXPORT_ENABLED;
-	else
-	  myGlobals.device[i].exportNetFlow = FLAG_NETFLOW_EXPORT_DISABLED;
-      }
-    }
 
   /* Allocate a pure dummy for white/black list use */
   dummyHost = (HostTraffic*)malloc(sizeof(HostTraffic));
@@ -1562,88 +1694,105 @@ static void printNetFlowConfiguration(void) {
   u_int i, numEnabled=0;
   struct in_addr theDest;
 
-  sendString("<center>"
-             "<p><font color=red>REMEMBER</font>: Regardless of settings here, "
-             "the netFlow plugin must be ACTIVE on the main plugin menu (click "
-             "<a href=\"../" CONST_SHOW_PLUGINS_HTML "\">here</a> to go back) "
-             "for <b>ntop</b> to receive and/or "
-             "process netFlow data.</p>\n"
-             "<p>Any option not indicated as taking effect immediately will require you "
-             "to recycle (inactivate and then activate) the netFlow plugin in order "
-             "for the change to take affect.</p>\n"
-             "<table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n"
-             "<tr><th colspan=\"2\" "DARK_BG">Item</th>\n"
-             "<th "DARK_BG">Description</th>\n"
-             "<th "DARK_BG">Action</th></tr>\n");
-
-  sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
-             "<tr><th colspan=\"4\" "DARK_BG"><i>Incoming Flows</i></th></tr>\n");
-
+  sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
+  sendString("<tr><th colspan=\"4\" "DARK_BG">Incoming Flows</th></tr>\n");
   sendString("<tr><th rowspan=\"2\" "DARK_BG">Flow<br>Collection</th>\n");
 
-  sendString("<th "DARK_BG">Local<br>Collector<br>UDP Port</th>\n"
-             "<td>"
-             "<p>If you want <b>ntop</b> to display netFlow data it receives from other "
+  sendString("<th "DARK_BG">Local<br>Collector<br>UDP Port</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(netflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n<p><input name=\"port\" size=\"5\" value=\"");
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.netFlowInPort) < 0)
+    BufferTooShort();
+  sendString(buf);
+  sendString("\"> "
+	     "[ Use a port value of 0 to disable collection ] "
+	     "<input type=\"submit\" value=\"Set Port\">"	    
+	     "</p>\n</form>\n\n"
+             "<p>If you want <b>ntop</b> to display NetFlow data it receives from other "
              "hosts, i.e. act as a collector, you must specify the UDP port to listen to. "
-             "The default port used for netFlow is " DEFAULT_NETFLOW_PORT_STR ".</p>\n"
-	     "<p align=\"right\"><i>Use a port value of 0 to disable collection.</i></p>\n");
+             "The default port used for NetFlow is " DEFAULT_NETFLOW_PORT_STR ".</p>\n"
+	     "<p align=\"right\"></p>\n");
 
   if(myGlobals.netFlowInPort == 0)
     sendString("<p><font color=red>WARNING</font>: "
 	       "The 'Local Collector UDP Port' is zero (none). "
                "Even if this plugin is ACTIVE, you must still enter a port number for "
-               "<b>ntop</b> to receive and process netFlow data.</p>\n");
+               "<b>ntop</b> to receive and process NetFlow data.</p>\n");
 
-  sendString("</td>\n");
+  sendString("</td></tr>\n");
 
-  sendString("<td "TD_BG" align=\"center\"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString("<tr><th "DARK_BG">Virtual<br>NetFlow<br>Interface<br>Network<br>Address</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n"
-             "<p><input name=\"port\" size=\"5\" value=\"");
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.netFlowInPort) < 0)
-    BufferTooShort();
-  sendString(buf);
-  sendString("\"></p>\n"
-             "<p><input type=\"submit\" value=\"Set\"></p>\n"
-             "</form>\n</td>\n"
-             "</tr>\n");
-
-
-  sendString("<tr><th "DARK_BG">Virtual<br>NetFlow<br>Interface<br>Network<br>Address</th>\n"
-             "<td>"
-             "<p>This value is in the form of a network address and mask on the "
-             "network where the actual netFlow probe is located. "
-             "<b>ntop</b> uses this value to determine which TCP/IP addresses are "
-             "local and which are remote.</p>\n"
-             "<p>You may specify this in either format, &lt;network&gt;/&lt;mask&gt; or "
-             "CIDR (&lt;network&gt;/&lt;bits&gt;). An existing value is displayed "
-             "in &lt;network&gt;/&lt;mask&gt; format.</p>\n"
-             "<p>If the netFlow probe is monitoring only a single network, then "
-             "this is all you need to set. If the netFlow probe is monitoring "
-             "multiple networks, then pick one of them for this setting and use "
-             "the -m | --local-subnets parameter to specify the others.</p>\n"
-             "<p>This interface is called 'virtual' because the <b>ntop</b> host "
-             "is not really connected to the network you specify here.</p>\n"
-             "</td>\n");
-
-  sendString("<td "TD_BG" align=\"center\"><form action=\"/" CONST_PLUGINS_HEADER);
-  sendString(netflowPluginInfo->pluginURLname);
-  sendString("\" method=GET>\n"
-             "<p><input name=\"ifNetMask\" size=\"32\" value=\"");
+             " <input name=\"ifNetMask\" size=\"32\" value=\"");
   if(snprintf(buf, sizeof(buf), "%s/%s",
 	      _intoa(myGlobals.netFlowIfAddress, buf1, sizeof(buf1)),
 	      _intoa(myGlobals.netFlowIfMask, buf2, sizeof(buf2))) < 0)
     BufferTooShort();
   sendString(buf);
-  sendString("\"></p>\n"
-             "<p><input type=\"submit\" value=\"Set\"></p>\n"
-             "</form>\n</td>\n"
-             "</tr>\n");
+  sendString("\"> <input type=\"submit\" value=\"Set Interface Address\"></p>\n</form>\n");
 
-  sendString("<tr><th colspan=\"2\" "DARK_BG">Flow Aggregation</th>\n"
-             "<td>"
-             "<p><b>ntop</b> can aggregate (combine) netFlow information based "
-             "on a number of 'policies'.  The default is to store all netFlow "
+  sendString("<p>This value is in the form of a network address and mask on the "
+             "network where the actual NetFlow probe is located. "
+             "<b>ntop</b> uses this value to determine which TCP/IP addresses are "
+             "local and which are remote.</p>\n"
+             "<p>You may specify this in either format, &lt;network&gt;/&lt;mask&gt; or "
+             "CIDR (&lt;network&gt;/&lt;bits&gt;). An existing value is displayed "
+             "in &lt;network&gt;/&lt;mask&gt; format.</p>\n"
+             "<p>If the NetFlow probe is monitoring only a single network, then "
+             "this is all you need to set. If the NetFlow probe is monitoring "
+             "multiple networks, then pick one of them for this setting and use "
+             "the -m | --local-subnets parameter to specify the others.</p>\n"
+             "<p>This interface is called 'virtual' because the <b>ntop</b> host "
+             "is not really connected to the network you specify here.</p>\n"
+             "</td></tr>\n");
+
+  sendString("<tr><th colspan=\"2\" "DARK_BG">Flow Aggregation</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(netflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n"
+             "<p><SELECT NAME=netFlowAggregation>");
+
+  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+              noAggregation,
+              (myGlobals.netFlowAggregation == noAggregation) ? " SELECTED" : "",
+              "None (no aggregation)") < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+              portAggregation,
+              (myGlobals.netFlowAggregation == portAggregation) ? " SELECTED" : "",
+              "TCP/UDP Port") < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+              hostAggregation,
+              (myGlobals.netFlowAggregation == hostAggregation) ? " SELECTED" : "",
+              "Host") < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+              protocolAggregation,
+              (myGlobals.netFlowAggregation == protocolAggregation) ? " SELECTED" : "",
+              "Protocol (TCP, UDP, ICMP)") < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+              asAggregation,
+              (myGlobals.netFlowAggregation == asAggregation) ? " SELECTED" : "",
+              "AS") < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  sendString("</select> <input type=\"submit\" value=\"Set Aggregation Policy\"></p>\n"
+             "</form><p><b>ntop</b> can aggregate (combine) NetFlow information based "
+             "on a number of 'policies'.  The default is to store all NetFlow "
              "data (perform no addregation).  Other choices are:</p>\n"
              "<ul>\n"
              "<li><b>Port Aggregation</b>&nbsp;combines all traffic by port number, "
@@ -1658,7 +1807,7 @@ static void printNetFlowConfiguration(void) {
                  "protocol (TCP, UDP or ICMP), regardless of source or destination "
                  "address or port. For example, all ICMP traffic would be combined, "
                  "regardless of origin or destination.</li>\n"
-             "<li><b>AS Aggregation</b>&nbsp; combines all netFlow data by AS "
+             "<li><b>AS Aggregation</b>&nbsp; combines all NetFlow data by AS "
                  "(Autonomous System) number, that is as if the source and destination "
                  "address and port were all zero. For more information on AS Numbers, "
                  "see <a href=\"http://www.faqs.org/rfcs/rfc1930.html\" "
@@ -1668,92 +1817,34 @@ static void printNetFlowConfiguration(void) {
              "</ul>\n"
              "</td>\n");
 
-  sendString("<td "TD_BG" align=\"center\"><form action=\"/" CONST_PLUGINS_HEADER);
-  sendString(netflowPluginInfo->pluginURLname);
-  sendString("\" method=GET>\n"
-             "<p><SELECT NAME=netFlowAggregation>");
-
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              noAggregation, 
-              (myGlobals.netFlowAggregation == noAggregation) ? " SELECTED" : "",
-              "None (no aggregation)") < 0)
-    BufferTooShort();
-  sendString(buf);
-
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              portAggregation, 
-              (myGlobals.netFlowAggregation == portAggregation) ? " SELECTED" : "",
-              "TCP/UDP Port") < 0)
-    BufferTooShort();
-  sendString(buf);
-
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              hostAggregation, 
-              (myGlobals.netFlowAggregation == hostAggregation) ? " SELECTED" : "",
-              "Host") < 0)
-    BufferTooShort();
-  sendString(buf);
-
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              protocolAggregation, 
-              (myGlobals.netFlowAggregation == protocolAggregation) ? " SELECTED" : "",
-              "Protocol (TCP, UDP, ICMP)") < 0)
-    BufferTooShort();
-  sendString(buf);
-
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              asAggregation, 
-              (myGlobals.netFlowAggregation == asAggregation) ? " SELECTED" : "",
-              "AS") < 0)
-    BufferTooShort();
-  sendString(buf);
-
-  sendString("</SELECT>\n");
-  sendString("</p>\n"
-             "<p><input type=\"submit\" value=\"Set\"></p>\n"
-             "</form>\n</td>\n"
-             "</tr>\n");
-
   sendString("<tr><th rowspan=\"3\" "DARK_BG">Filtering</th>\n");
 
-  sendString("<th "DARK_BG">White list</th>\n"
-             "<td>"
-             "<p>This is a list of one or more TCP/IP host(s)/network(s) which we will "
-             "store data from when these host(s)/network(s) occur in the netFlow records.</p>\n"
-             "</td>\n");
-
-  sendString("<td "TD_BG" align=\"center\"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString("<th "DARK_BG">White List</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
   sendString(netflowPluginInfo->pluginURLname);
-  sendString("\" method=GET>\n"
-             "<p><input name=\"whiteList\" size=\"60\" value=\"");
-  if(snprintf(buf, sizeof(buf), "%s", 
+  sendString("\" method=GET>\n <input name=\"whiteList\" size=\"60\" value=\"");
+  if(snprintf(buf, sizeof(buf), "%s",
               myGlobals.netFlowWhiteList == NULL ? " " : myGlobals.netFlowWhiteList) < 0)
     BufferTooShort();
   sendString(buf);
-  sendString("\"></p>\n"
-             "<p><input type=\"submit\" value=\"Set\"></p>\n"
-             "</form>\n</td>\n"
-             "</tr>\n");
-
-  sendString("<tr><th "DARK_BG">Black list</th>\n"
-             "<td>"
+  sendString("\"> <input type=\"submit\" value=\"Set White List\"></p>\n</form>\n"
              "<p>This is a list of one or more TCP/IP host(s)/network(s) which we will "
-             "exclude data from (i.e. not store it) when these host(s)/network(s) occur "
-             "in the netFlow records.</p>\n"
-             "</td>\n");
+             "store data from when these host(s)/network(s) occur in the NetFlow records.</p>\n"
+             "</td>\n</tr>\n");
 
-  sendString("<td "TD_BG" align=\"center\"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString("<tr><th "DARK_BG">Black List</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
   sendString(netflowPluginInfo->pluginURLname);
-  sendString("\" method=GET>\n"
-             "<p><input name=\"blackList\" size=\"60\" value=\"");
+  sendString("\" method=GET> <input name=\"blackList\" size=\"60\" value=\"");
   if(snprintf(buf, sizeof(buf), "%s",
               myGlobals.netFlowBlackList == NULL ? " " : myGlobals.netFlowBlackList) < 0)
     BufferTooShort();
   sendString(buf);
-  sendString("\"></p>\n"
-             "<p><input type=\"submit\" value=\"Set\"></p>\n"
-             "</form>\n</td>\n"
-             "</tr>\n");
+  sendString("\"> <input type=\"submit\" value=\"Set Black List\"></p>\n</form>\n"
+             "<p>This is a list of one or more TCP/IP host(s)/network(s) which we will "
+             "exclude data from (i.e. not store it) when these host(s)/network(s) occur "
+             "in the NetFlow records.</p>\n"
+             "</td>\n</tr>\n");
 
   sendString("<tr><td colspan=\"3\"><ul>"
 	     "<li><i>Changes to white / black lists take affect immediately, "
@@ -1778,99 +1869,11 @@ static void printNetFlowConfiguration(void) {
              "</td></tr>\n");
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
-             "<tr><th colspan=\"4\" "DARK_BG"><i>Outgoing Flows</i></th></tr>\n");
+             "<tr><th colspan=\"4\" "DARK_BG">General Options</th></tr>\n");
 
-  sendString("<tr><th rowspan=\"2\" "DARK_BG">Flow<br>Distribution<br>(export)</th>\n");
+  sendString("<tr><th colspan=\"2\" "DARK_BG">Assume FTP</th>\n");
 
-  sendString("<th "DARK_BG">Interfaces</th>\n"
-             "<td>"
-             "<p>You may choose to export netFlow data from each of <b>ntop</b>'s network "
-             "interfaces individually. The list of available interfaces and their current "
-             "status is to the right of this text.</p>\n"
-             "<p>NOTE that this list may include the netflow and sflow devices "
-             "although not supported, it should be possible to take sflow data in and "
-             "export netFlow out.  It should not be possible to re-export netFlow data "
-             "but it's late in the release cycle and these are hard to test and would be "
-             "very hard to fix, so ... just don't try it... OK?</p>\n"
-             "</td>\n");
-
-  sendString("<td "TD_BG" align=\"center\">"
-             "<p>[ Click to toggle ]</p>\n");
-
-  for(i=0; i<myGlobals.numDevices; i++) {
-    if(!myGlobals.device[i].virtualDevice) {
-      if(snprintf(buf, sizeof(buf), 
-                  "<p>%s&nbsp;[ <a href=\"/" CONST_PLUGINS_HEADER "%s?%s=%s\">%s</a> ]</p>\n",
-		  myGlobals.device[i].name,
-                  netflowPluginInfo->pluginURLname,
-                  myGlobals.device[i].name,
-		  myGlobals.device[i].exportNetFlow == FLAG_NETFLOW_EXPORT_ENABLED ? "No" : "Yes",
-		  myGlobals.device[i].exportNetFlow == FLAG_NETFLOW_EXPORT_ENABLED ? "Enabled" : "Disabled") < 0)
-	BufferTooShort();
-      sendString(buf);
-
-      if(myGlobals.device[i].exportNetFlow == FLAG_NETFLOW_EXPORT_ENABLED)
-	numEnabled++;
-    }
-  }
-
-  sendString("</td>\n</tr>\n");
-
-  sendString("<tr><th "DARK_BG">Remote<br>Collector<br>IP<br>Address</th>\n"
-             "<td>"
-             "<p><b>ntop</b> is perfectly happy to collect data from it's interfaces and "
-             "send that in the form of netFlow v5 packets to somebody, but whom? "
-             "This is where you tell <b>ntop</b> the destination for the netFlow packets.</p>\n"
-             "<p>You may only set ONE destination. If you need to send these packets to "
-             "multiple destinations, you will need to cobble together something using "
-             "spintered.net's <a href=\"http://www.splintered.net/sw/flow-tools/\" "
-                 "title=\"link to flow-tools\">flow-tools</a> flow-fanout.</p>\n"
-	     "<p align=\"right\"><i>Use an address of 0.0.0.0 to disable export.</i></p>\n"
-             "<p align=\"right\"><i>You may set only the destination address, "
-             "the port is always 2055</i></p>\n"
-             "</td>\n");
-
-  sendString("<td "TD_BG" align=\"center\"><form action=\"/" CONST_PLUGINS_HEADER);
-  sendString(netflowPluginInfo->pluginURLname);
-  sendString("\" method=GET>\n"
-             "<p><input name=\"collectorIP\" size=\"15\" value=\"");
-  theDest.s_addr = ntohl(myGlobals.netFlowDest.sin_addr.s_addr);
-  sendString(_intoa(theDest, buf, sizeof(buf)));
-  sendString("\">&nbsp;:2055</p>\n"
-             "<p><input type=\"submit\" value=\"Set\"></p>\n"
-             "</form>\n</td>\n"
-             "</tr>\n");
-
-  if((numEnabled == 0) || (ntohl(myGlobals.netFlowDest.sin_addr.s_addr) == 0)) {
-    sendString("<tr><th colspan=\"4\" align=\"center\">"
-               "<b><font color=red>WARNING</font>: ");
-    if(numEnabled == 0)
-      sendString("ALL interfaces are disabled - ");
-    if(ntohl(myGlobals.netFlowDest.sin_addr.s_addr) == 0)
-      sendString("No destination set - ");
-    sendString("no flows will be exported!</b></th></tr>\n");
-  }
-
-  sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
-             "<tr><th colspan=\"4\" "DARK_BG"><i>General Options</i></th></tr>\n");
-
-  sendString("<tr><th colspan=\"2\" "DARK_BG">Assume FTP</th>\n"
-             "<td>"
-             "<p><b>ntop</b> handles the FTP protocol differently when using netFlow data "
-             "vs. the normal full protocol analysis. In the netFlow data, <b>ntop</b> sees "
-             "only the address and port number and so can not monitor the ftp control channel "
-             "to detect which dynamically assigned ports are being used for ftp data.</p>\n"
-             "<p>This option tells <b>ntop</b> to assume that data from an unknown high "
-             "(&gt;1023) port to an unknown high port should be treated as FTP data.</p>\n"
-             "<p align=\"center\"><b>Use this only if you understand your data flows.</b></p>\n"
-             "<p>For most situations this is not a good assumption - for example, "
-             "peer-to-peer traffic also is high port to high port. "
-             "However, in limited situations, this option enables you to obtain a more "
-             "correct view of your traffic.</p>\n"
-             "<p align=\"right\"><i>This option takes effect IMMEDIATELY</i></p>\n"
-             "</td>\n");
-
-  sendString("<td "TD_BG" align=\"center\"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
   if(myGlobals.netFlowAssumeFTP) {
@@ -1880,21 +1883,26 @@ static void printNetFlowConfiguration(void) {
     sendString("<input type=\"radio\" name=\"netFlowAssumeFTP\" value=\"1\">Yes\n"
                "<input type=\"radio\" name=\"netFlowAssumeFTP\" value=\"0\" checked>No\n");
   }
-  sendString("</p>\n<p><input type=\"submit\" value=\"Set\"></p>\n"
-             "</form>\n</td>\n"
-             "</tr>\n");
+  sendString(" <input type=\"submit\" value=\"Set FTP Policy\"></p>\n"
+             "</form>\n"
+             "<p><b>ntop</b> handles the FTP protocol differently when using NetFlow data "
+             "vs. the normal full protocol analysis. In the NetFlow data, <b>ntop</b> sees "
+             "only the address and port number and so can not monitor the ftp control channel "
+             "to detect which dynamically assigned ports are being used for ftp data.</p>\n"
+             "<p>This option tells <b>ntop</b> to assume that data from an unknown high "
+             "(&gt;1023) port to an unknown high port should be treated as FTP data.</p>\n"
+             "<p><b>Use this only if you understand your data flows.</b></p>\n"
+             "<p>For most situations this is not a good assumption - for example, "
+             "peer-to-peer traffic also is high port to high port. "
+             "However, in limited situations, this option enables you to obtain a more "
+             "correct view of your traffic.</p>\n"
+             "<p align=\"right\"><i>This option takes effect IMMEDIATELY</i></p>\n"
+	     "</td>\n</tr>\n");
 
   /* *************************************** */
 
-  sendString("<tr><th colspan=\"2\" "DARK_BG">Debug</th>\n"
-             "<td>"
-             "<p>This option turns on debugging, which dumps a huge quantity of "
-             "noise into the standard <b>ntop</b> log, all about what the netFlow "
-             "plugin is doing.  If you are doing development, this might be helpful, "
-             "otherwise <i>leave it alone</i>!</p>\n"
-             "</td>\n");
-
-  sendString("<td "TD_BG" align=\"center\"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString("<tr><th colspan=\"2\" "DARK_BG">Debug</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
 
@@ -1906,13 +1914,25 @@ static void printNetFlowConfiguration(void) {
     sendString("<input type=\"radio\" name=\"debug\" value=\"0\" checked>Off");
   }
 
-  sendString("</p>\n<p><input type=\"submit\" value=\"Set\"></p>\n"
-             "</form>\n</td>\n"
-             "</tr>\n");
+  sendString(" <input type=\"submit\" value=\"Set Debug\"></p>\n</form>\n"
+             "<p>This option turns on debugging, which dumps a huge quantity of "
+             "noise into the standard <b>ntop</b> log, all about what the NetFlow "
+             "plugin is doing.  If you are doing development, this might be helpful, "
+             "otherwise <i>leave it alone</i>!</p>\n"
+	     "</td>\n</tr>\n");
+
+  sendString("<tr><td colspan=4><font color=red><b>REMEMBER</b><br></font><ul><li>Regardless of settings here, "
+             "the NetFlow plugin must be ACTIVE on the main plugin menu (click "
+             "<a href=\"../" CONST_SHOW_PLUGINS_HTML "\">here</a> to go back) "
+             "for <b>ntop</b> to receive and/or "
+             "process NetFlow data.\n"
+             "<li>Any option not indicated as taking effect immediately will require you "
+             "to recycle (inactivate and then activate) the NetFlow plugin in order "
+             "for the change to take affect.</ul></td></tr>\n");
 
   sendString("</table>\n</center>\n");
-
 }
+
 /* ****************************** */
 
 static void printNetFlowStatisticsRcvd(void) {
@@ -1921,7 +1941,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-             "<th colspan=\"2\" "DARK_BG"><i>Received Flows</i></th>\n"
+             "<th colspan=\"2\" "DARK_BG">Received Flows</th>\n"
              "<td width=\"20%\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
              "<th " TH_BG " align=\"left\" "DARK_BG ">Flow Senders</th>\n"
@@ -2094,7 +2114,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-             "<th colspan=\"2\" "DARK_BG"><i>Discarded Flows</i></th>\n"
+             "<th colspan=\"2\" "DARK_BG">Discarded Flows</th>\n"
              "<td width=\"20%\">&nbsp;</td></tr>\n");
 
   if(snprintf(buf, sizeof(buf),
@@ -2149,7 +2169,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
     sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
                "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-               "<th colspan=\"2\" "DARK_BG"><i>Accepted/Rejected Flows</i></th>\n"
+               "<th colspan=\"2\" "DARK_BG">Accepted/Rejected Flows</th>\n"
                "<td width=\"20%\">&nbsp;</td></tr>\n"
                "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
                "<th " DARK_BG">&nbsp;</th>\n"
@@ -2159,9 +2179,9 @@ static void printNetFlowStatisticsRcvd(void) {
     if(snprintf(buf, sizeof(buf),
                 "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - Black list</th>\n"
-                "<td " TD_BG " align=\"center\">%s&nbsp;/&nbsp;%s</td>\n"
+                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
                 "<td width=\"20%\">&nbsp;</td></tr>\n",
-                formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList, 
+                formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList,
                            formatBuf, sizeof(formatBuf)),
                 formatPkts(myGlobals.numDstNetFlowsEntryFailedBlackList,
                            formatBuf2, sizeof(formatBuf2))) < 0)
@@ -2171,11 +2191,11 @@ static void printNetFlowStatisticsRcvd(void) {
     if(snprintf(buf, sizeof(buf),
                 "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - White list</th>\n"
-                "<td " TD_BG " align=\"center\">%s&nbsp;/&nbsp;%s</td>\n"
+                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
                 "<td width=\"20%\">&nbsp;</td></tr>\n",
-                formatPkts(myGlobals.numSrcNetFlowsEntryFailedWhiteList, 
+                formatPkts(myGlobals.numSrcNetFlowsEntryFailedWhiteList,
                            formatBuf, sizeof(formatBuf)),
-                formatPkts(myGlobals.numDstNetFlowsEntryFailedWhiteList, 
+                formatPkts(myGlobals.numDstNetFlowsEntryFailedWhiteList,
                            formatBuf2, sizeof(formatBuf2))) < 0)
         BufferTooShort();
     sendString(buf);
@@ -2183,11 +2203,11 @@ static void printNetFlowStatisticsRcvd(void) {
     if(snprintf(buf, sizeof(buf),
                 "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Accepted</th>\n"
-                "<td " TD_BG " align=\"center\">%s&nbsp;/&nbsp;%s</td>\n"
+                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
                 "<td width=\"20%\">&nbsp;</td></tr>\n",
                 formatPkts(myGlobals.numSrcNetFlowsEntryAccepted,
                            formatBuf, sizeof(formatBuf)),
-                formatPkts(myGlobals.numDstNetFlowsEntryAccepted, 
+                formatPkts(myGlobals.numDstNetFlowsEntryAccepted,
                            formatBuf2, sizeof(formatBuf2))) < 0)
         BufferTooShort();
     sendString(buf);
@@ -2195,7 +2215,7 @@ static void printNetFlowStatisticsRcvd(void) {
     if(snprintf(buf, sizeof(buf),
                 "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
                   "<th " TH_BG " align=\"left\" "DARK_BG ">Total</th>\n"
-                "<td " TD_BG " align=\"center\">%s&nbsp;/&nbsp;%s</td>\n"
+                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
                 "<td width=\"20%\">&nbsp;</td></tr>\n",
                 formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList +
                            myGlobals.numSrcNetFlowsEntryFailedWhiteList +
@@ -2203,7 +2223,7 @@ static void printNetFlowStatisticsRcvd(void) {
                            formatBuf, sizeof(formatBuf)),
                 formatPkts(myGlobals.numDstNetFlowsEntryFailedBlackList +
                            myGlobals.numDstNetFlowsEntryFailedWhiteList +
-                           myGlobals.numDstNetFlowsEntryAccepted, 
+                           myGlobals.numDstNetFlowsEntryAccepted,
                            formatBuf2, sizeof(formatBuf2))) < 0)
         BufferTooShort();
     sendString(buf);
@@ -2212,11 +2232,11 @@ static void printNetFlowStatisticsRcvd(void) {
 #ifdef DEBUG
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-             "<th colspan=\"2\" "DARK_BG"><i>Debug</i></th>\n"
+             "<th colspan=\"2\" "DARK_BG">Debug></th>\n"
              "<td width=\"20%\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
              "<th " TH_BG " align=\"left\" "DARK_BG ">White net list</th>\n"
-             "<td " TD_BG " align=\"center\">");
+             "<td " TD_BG ">");
 
   if(numWhiteNets == 0) {
     sendString("none");
@@ -2256,7 +2276,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   sendString("<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
              "<th " TH_BG " align=\"left\" "DARK_BG ">Black net list</th>\n"
-             "<td " TD_BG " align=\"center\">");
+             "<td " TD_BG ">");
 
   if(numBlackNets == 0) {
     sendString("none");
@@ -2298,7 +2318,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-             "<th colspan=\"2\" "DARK_BG"><i>Less: Ignored Flows</i></th>\n"
+             "<th colspan=\"2\" "DARK_BG">Less: Ignored Flows</th>\n"
              "<td width=\"20%\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
              "<th " DARK_BG ">&nbsp;</th>\n"
@@ -2362,7 +2382,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-             "<th colspan=\"2\" "DARK_BG"><i>Gives: Counted Flows</i></th>\n"
+             "<th colspan=\"2\" "DARK_BG">Gives: Counted Flows</th>\n"
              "<td width=\"20%\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
              "<th " DARK_BG ">&nbsp;</th>\n"
@@ -2403,7 +2423,7 @@ static void printNetFlowStatisticsRcvd(void) {
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-             "<th colspan=\"2\" "DARK_BG"><i>Most Recent Ignored Flows</i></th>\n"
+             "<th colspan=\"2\" "DARK_BG">Most Recent Ignored Flows</th>\n"
              "<td width=\"20%\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
              "<th colspan=\"2\"><table width=\"100%\" border=\"0\">"
@@ -2467,7 +2487,7 @@ static void printNetFlowStatisticsSent(void) {
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-             "<th colspan=\"2\" "DARK_BG"><i>Sent Flows</i></th>\n"
+             "<th colspan=\"2\" "DARK_BG">Sent Flows</th>\n"
              "<td width=\"20%\">&nbsp;</td></tr>\n");
 
   if(snprintf(buf, sizeof(buf),
@@ -2507,14 +2527,10 @@ static void handleNetflowHTTPrequest(char* url) {
   u_int i;
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-  printHTMLheader("NetFlow", NULL, 0);
 
-  sendString("<br>\n<HR>\n");
-
-  /* ****************************** 
-     * Process URL stuff          *
-     ****************************** */
-
+  /* ****************************
+   * Process URL stuff          *
+   ****************************** */
   if(url != NULL) {
     char *device, *value = NULL;
 
@@ -2547,7 +2563,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	} else if(sscanf(value, "%d.%d.%d.%d/%d",
 			 &a, &b, &c, &d, &a1) == 5) {
 	  myGlobals.netFlowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
-	  myGlobals.netFlowIfMask.s_addr    = 0xffffffff >> a1; 
+	  myGlobals.netFlowIfMask.s_addr    = 0xffffffff >> a1;
 	  myGlobals.netFlowIfMask.s_addr =~ myGlobals.netFlowIfMask.s_addr;
 	  storePrefsValue("netFlow.ifNetMask", value);
 	  freeNetFlowMatrixMemory(); setNetFlowInterfaceMatrix();
@@ -2607,98 +2623,68 @@ static void handleNetflowHTTPrequest(char* url) {
 	releaseMutex(&whiteblackListMutex);
 #endif
 	storePrefsValue("netFlow.blackList", myGlobals.netFlowBlackList);
-      } else if(strcmp(device, "collectorIP") == 0) {
-	storePrefsValue("netFlow.netFlowDest", value);
-	myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
-
-	if(myGlobals.netFlowDest.sin_addr.s_addr > 0)
-	  traceEvent(CONST_TRACE_INFO, "NETFLOW: Exporting NetFlow's towards %s:%s", value, DEFAULT_NETFLOW_PORT_STR);
-	else
-	  traceEvent(CONST_TRACE_INFO, "NETFLOW: Export disabled at user request");
-      } else {
-	for(i=0; i<myGlobals.numDevices; i++)
-	  if(!myGlobals.device[i].virtualDevice) {
-	    if(strcmp(myGlobals.device[i].name, device) == 0) {
-	      if(snprintf(buf, sizeof(buf),
-			  "netFlow.%s.exportNetFlow",
-			  myGlobals.device[i].name) < 0)
-		BufferTooShort();
-
-	      /* traceEvent(CONST_TRACE_INFO, "%s=%s", buf, value); */
-	      storePrefsValue(buf, value);
-
-	      if(!strcmp(value, "No")) {
-		myGlobals.device[i].exportNetFlow = FLAG_NETFLOW_EXPORT_DISABLED;
-	      } else {
-		myGlobals.device[i].exportNetFlow = FLAG_NETFLOW_EXPORT_ENABLED;
-	      }
-	    }
-	  }
       }
     }
   }
 
-  /* ****************************** 
-     * Print Configuration stuff  *
-     ****************************** */
-
-  printSectionTitle("Configuration");
-
+  /* ****************************
+   * Print Configuration stuff  *
+   ****************************** */
+  printHTMLheader("NetFlow Configuration", NULL, 0);
   printNetFlowConfiguration();
-
-  /* ****************************** 
-     * Print statistics           *
-     ****************************** */
-
-  sendString("<br><hr>\n");
-  printSectionTitle("Statistics");
+  
+  sendString("<br><hr><p>\n");
 
   if((myGlobals.numNetFlowsPktsRcvd > 0) ||(myGlobals.numNetFlowsPktsSent > 0)) {
-
-    sendString("<center><table border=\"0\">\n");
-
+    /* ****************************
+     * Print statistics           *
+     ****************************** */
+    printSectionTitle("Flow Statistics");
+    
+    sendString("<center><table border=\"0\" "TABLE_DEFAULTS">\n");
+    
     if(myGlobals.numNetFlowsPktsRcvd > 0)
       printNetFlowStatisticsRcvd();
     if(myGlobals.numNetFlowsPktsSent > 0)
       printNetFlowStatisticsSent();
 
     sendString("</table>\n</center>\n");
-  }
 
-  sendString("<table border=\"0\"><tr><td width=\"25%\" valign=\"top\" align=\"right\">"
-             "<b>NOTES</b>:</td>\n"
-             "<td><ul>"
-	     "<li>The virtual NIC, '" NETFLOW_DEVICE_NAME "' is activated only when incoming "
-             "flow capture is enabled.</li>\n"
-             "<li>Once the virtual NIC is activated, it will remain available for the "
-	     "duration of the ntop run, even if you disable incoming flows.</li>\n"
-	     "<li>NetFlow packets are associated with this separate, virtual device and are "
-	     "not mixed with captured packets.</li>\n"
-             "<li>Activating incoming flows will override the command line -M | "
-	     "--no-interface-merge parameter for the duration of the ntop run.</li>\n"
-	     "<li>NetFlow activation may (rarely) require ntop restart.</li>\n"
-	     "<li>You can switch the reporting device using Admin | Switch NIC, or this "
-             "<a href=\"/" CONST_SWITCH_NIC_HTML "\" title=\"Switch NIC\">link</a>.</li>\n"
-	     "</ul></td>\n"
-             "<td width=\"25%\">&nbsp;</td>\n</tr>\n</table>\n");
+    sendString("<p><table border=\"0\"><tr><td width=\"25%\" valign=\"top\" align=\"right\">"
+	       "<b>NOTES</b>:</td>\n"
+	       "<td><ul>"
+	       "<li>The virtual NIC, '" NETFLOW_DEVICE_NAME "' is activated only when incoming "
+	       "flow capture is enabled.</li>\n"
+	       "<li>Once the virtual NIC is activated, it will remain available for the "
+	       "duration of the ntop run, even if you disable incoming flows.</li>\n"
+	       "<li>NetFlow packets are associated with this separate, virtual device and are "
+	       "not mixed with captured packets.</li>\n"
+	       "<li>Activating incoming flows will override the command line -M | "
+	       "--no-interface-merge parameter for the duration of the ntop run.</li>\n"
+	       "<li>NetFlow activation may (rarely) require ntop restart.</li>\n"
+	       "<li>You can switch the reporting device using Admin | Switch NIC, or this "
+	       "<a href=\"/" CONST_SWITCH_NIC_HTML "\" title=\"Switch NIC\">link</a>.</li>\n"
+	       "</ul></td>\n"
+	       "<td width=\"25%\">&nbsp;</td>\n</tr>\n</table>\n");
 
 #ifdef CFG_MULTITHREADED
-  if(whiteblackListMutex.isLocked) {
-    sendString("<table><tr><td colspan=\"4\">&nbsp;</td></tr>\n"
-             "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-             "<th colspan=\"2\" "DARK_BG"><i>Mutexes</i></th>\n"
-             "<td width=\"20%\">&nbsp;</td></tr>\n");
+    if(whiteblackListMutex.isLocked) {
+      sendString("<table><tr><td colspan=\"4\">&nbsp;</td></tr>\n"
+		 "<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
+		 "<th colspan=\"2\" "DARK_BG">Mutexes</th>\n"
+		 "<td width=\"20%\">&nbsp;</td></tr>\n");
 
-    sendString("<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
-               "<th>List Mutex</th>\n<td><table>");
-    printMutexStatus(FALSE, &whiteblackListMutex, "White/Black list mutex");
-    sendString("</table><td><td width=\"20%\">&nbsp;</td></tr></table>\n");
-  }
+      sendString("<tr " TR_ON "><td width=\"20%\">&nbsp;</td>\n"
+		 "<th>List Mutex</th>\n<td><table>");
+      printMutexStatus(FALSE, &whiteblackListMutex, "White/Black list mutex");
+      sendString("</table><td><td width=\"20%\">&nbsp;</td></tr></table>\n");
+    }
 #endif
+  }
 
-  /* ****************************** 
-     * Print closing              *
-     ****************************** */
+  /* ******************************
+   * Print closing              *
+   ****************************** */
 
   sendString("<table border=\"0\"><tr><td width=\"10%\">&nbsp;</td>\n"
              "<td><p>Please be aware that <b>ntop</b> is not the best solution if you "
@@ -2709,7 +2695,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	     "<p>If you are looking for a cheap, dedicated hardware NetFlow probe you "
 	     "should look into "
              "<a href=\"http://www.ntop.org/nBox86/\" "
-                 "title=\"nBox86 page\"><b>nBox<sup>86</sup></b></a> "
+	     "title=\"nBox86 page\"><b>nBox<sup>86</sup></b></a> "
 	     "<img src=\"/nboxLogo.gif\" alt=\"nBox logo\">.</p>\n"
 	     "</td>\n"
              "<td width=\"10%\">&nbsp;</td>\n</tr>\n</table>\n");
@@ -2719,7 +2705,7 @@ static void handleNetflowHTTPrequest(char* url) {
 		     NULL,
                      "NetFlow is a trademark of <a href=\"http://www.cisco.com/\" "
                      "title=\"Cisco home page\">Cisco Systems</a>");
-  
+
   printHTMLtrailer();
 }
 
@@ -2811,6 +2797,8 @@ static void handleNetFlowPacket(u_char *_deviceId,
 #ifdef DEBUG_FLOWS
 	    traceEvent(CONST_TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src));
 #endif
+
+	    myGlobals.numNetFlowsPktsRcvd++;
 	    dissectFlow(rawSample, rawSampleLen);
 	  }
 	}

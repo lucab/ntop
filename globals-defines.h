@@ -1098,7 +1098,6 @@
 
 #define CONST_ADD_URLS_HTML                 "addURLs.html"
 #define CONST_ADD_USERS_HTML                "addUsers.html"
-#define CONST_HOSTS_ALL_INFO_HTML           "allHostsInfo.html"
 #define CONST_BAR_ALLPROTO_DIST             "allProtoDistribution"
 #define CONST_AS_LIST_HTML                  "asList.html"
 #define CONST_CHANGE_FILTER_HTML            "changeFilter.html"
@@ -1150,7 +1149,8 @@
 #define CONST_PIE_IP_TRAFFIC                "ipTrafficPie"
 #define CONST_LEFTMENU_HTML                 "leftmenu.html"
 #define CONST_LEFTMENU_NOJS_HTML            "leftmenu-nojs.html"
-#define CONST_HOSTS_LOCAL_INFO_HTML         "localHostsInfo.html"
+#define CONST_HOSTS_LOCAL_FINGERPRINT_HTML  "localHostsFingerprint.html"
+#define CONST_HOSTS_LOCAL_CHARACT_HTML      "localHostsCharacterization.html"
 #define CONST_LOCAL_ROUTERS_LIST_HTML       "localRoutersList.html"
 #define CONST_MODIFY_URL                    "modifyURL"
 #define CONST_MODIFY_USERS                  "modifyUsers"
@@ -1536,15 +1536,6 @@
 #define CONST_LLC_RR          0x0100
 #define CONST_LLC_RNR         0x0500
 #define CONST_LLC_REJ         0x0900
-
-/*
- * NetFlow
- */
-#define CONST_FLOW_VERSION_5		    5
-#define CONST_V5FLOWS_PER_PAK		    30
-
-#define CONST_FLOW_VERSION_7		    7
-#define CONST_V7FLOWS_PER_PAK		    28
 
 /* This is 'ftp-data' from /etc/services */
 #define CONST_FTPDATA                       20

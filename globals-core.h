@@ -602,15 +602,6 @@ extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
 extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
 extern void createVendorTable(struct stat *statbuf);
 
-/* netflow.c */
-extern void termNetFlowExporter(void);
-extern void sendTCPSessionFlow(IPSession *theSession, int actualDeviceId);
-extern void sendICMPflow(HostTraffic *srcHost, HostTraffic *dstHost, u_int length, u_int actualDeviceId);
-extern void sendUDPflow(HostTraffic *srcHost, HostTraffic *dstHost, 
-			u_int sport, u_int dport, u_int length, u_int actualDeviceId);
-extern void sendOTHERflow(HostTraffic *srcHost, HostTraffic *dstHost, 
-			  u_int8_t proto, u_int length, u_int actualDeviceId);
-
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);

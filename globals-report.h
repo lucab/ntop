@@ -69,6 +69,7 @@ extern void printTableEntryPercentage(char *buf, int bufLen,
 				      float percentage);
 extern void printPageTitle(char *text);
 extern void printSectionTitle(char *text);
+extern void printHostsCharacterization(void);
 extern void printFlagedWarning(char *text);
 extern void printHeader(int reportType, int revertOrder, u_int column, 
                         HostsDisplayPolicy showHostsMode,
