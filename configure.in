@@ -254,6 +254,11 @@ AC_ARG_WITH(  zlib-root,
               ZLIB_ROOT="$withval",
               ZLIB_ROOT=)
 
+AC_ARG_WITH(  rrd-root,
+              [  --with-rrd-root=DIR         RRD located in DIR],
+              RRD_ROOT="$withval",
+              RRD_ROOT=)
+
 AC_ARG_ENABLE(showoses,
               [  --enable-showoses           display OS Support information.],
               [echo
@@ -305,7 +310,7 @@ else
     if test ".${rc}" = ".0"; then
         AC_MSG_RESULT(no)
     else
-        grep '1\.7$' /tmp/automake.$$ > /dev/null
+        grep '1\.[[67]]$' /tmp/automake.$$ > /dev/null
         rc=$?
         if test ".${rc}" = ".0"; then
             AC_MSG_RESULT(no)
@@ -2842,24 +2847,200 @@ if test ".${ac_enable_intop}" = ".yes"; then
     fi
 fi
 
+if test ".${RRD_ROOT}" != "." &&
+   test ! -d ${RRD_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-rrd-root option."
+    echo "*"
+    echo "*>>> Continuing without the --with-rrd-root option"
+    echo "*"
+    echo "*    ./configure will complete successfully but rrd may be disabled"
+    echo "*"
+    echo "*???     1. Correct the --with-rrd-root value and rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    RRD_ROOT=
+fi 
+
 AC_MSG_CHECKING([for rrd])
-if test ".${ac_cv_lib_rrd_rrd_create}" != ".yes"; then
-    AC_MSG_RESULT(error)
-dnl> TODO Um... how do we enforce this?
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* WARNING:  1. librrd has not been found."
-    echo "*"
-    echo "*>>>    The rrdPlugin will not be built."
-    echo "*"
-    echo "*???     1. Install RRDtool from http://www.rrdtool.org/"
-    echo "*??? and 2. rerun ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
+ac_disable_rrd="no"
+
+if test ".${ac_cv_header_rrd_h}"        = ".yes" &&
+   test ".${ac_cv_lib_rrd_rrd_create}"   = ".yes"; then
+    AC_DEFINE_UNQUOTED([HAVE_RRD], 1, [Enable RRD])
+    if test ".${RRD_ROOT}" != "."; then
+        AC_MSG_RESULT(ok)
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* NOTE:  You specified (or implied) --with-rrd-root.  However,"
+        echo "*        a version was found in a standard location."
+        echo "*"
+        echo "*       Since this version will be used anyway,"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        RRD_ROOT=
+    else
+        AC_MSG_RESULT([ok (standard location)])
+    fi
+elif test ".${RRD_ROOT}" = "."; then
+    AC_MSG_RESULT([not found in standard location, no --with-rrd-root, testing further...])
+    AC_MSG_CHECKING([for rrd header])
+    if test -d /usr &&
+       test -d /usr/include &&
+       test -r /usr/include/rrd.h; then
+        AC_MSG_RESULT([ok, found in /usr/include])
+        INCS="${INCS} -I/usr/include"
+        AC_DEFINE_UNQUOTED(HAVE_RRD_H, 1, [Show we found rrd.h and set INCS])
+    elif test -d /usr &&
+       test -d /usr/local &&
+       test -d /usr/local/include &&
+       test -r /usr/local/include/rrd.h; then
+        AC_MSG_RESULT([ok, found in /usr/local/include])
+        INCS="${INCS} -I/usr/local/include"
+        AC_DEFINE_UNQUOTED(HAVE_RRD_H, 1, [Show we found rrd.h and set INCS])
+    else
+        AC_MSG_RESULT(error)
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* ERROR:  1. We were unable to find the header rrd.h in the"
+        echo "*            standard location."
+        echo "*"
+        echo "*     and 2. You did not specify an alternate location"
+        echo "*            via --with-rrd-root"
+        echo "*"
+        echo "*     and 3. We also tested the following:"
+        echo "*"
+        echo "*                /usr/include"
+        echo "*                /usr/local/include"
+        echo "*"
+        echo "*>>> ./configure continues, rrd will not be available."
+        echo "*"
+        echo "*???     1. Rerun ./configure with a corrected --with-rrd-root"
+        echo "*???  or 2. Install rrd and rerun ./configure"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        ac_disable_rrd="yes"
+    fi
+    if test ".${ac_disable_rrd}" = ".yes"; then
+        nop="yes"
+    else
+        AC_MSG_CHECKING([for rrd library])
+        if test -d /usr &&
+           test -d /usr/lib &&
+           (test -r /usr/lib/librrd.so ||
+            test -r /usr/lib/librrd.a); then
+            AC_MSG_RESULT([ok, found in /usr/lib])
+            RRDLIB="${RRDLIB} -L/usr/lib -lrrd"
+            dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
+            AC_DEFINE_UNQUOTED([HAVE_RRD], 1, [Enable RRD])
+        elif test -d /usr &&
+           test -d /usr/local &&
+           test -d /usr/local/lib &&
+           (test -r /usr/local/lib/librrd.so ||
+            test -r /usr/local/lib/librrd.a); then
+            AC_MSG_RESULT([ok, found in /usr/local/lib])
+            RRDLIB="${RRDLIB} -L/usr/local/lib -lrrd"
+            AC_DEFINE_UNQUOTED([HAVE_RRD], 1, [Enable RRD])
+        else
+            AC_MSG_RESULT(error)
+            echo
+            echo "*******************************************************************"
+            echo "*"
+            echo "* ERROR:  1. We were unable to compile a test program for"
+            echo "*            rrd_create() against -lrrd."
+            echo "*"
+            echo "*     and 2. You did not specify an alternate location"
+            echo "*            via --with-rrd-root"
+            echo "*"
+            echo "*     and 3. We were unable to find librrd.so or librrd.a"
+            echo "*            via a manual search of"
+            echo "*"
+            echo "*                /usr/lib"
+            echo "*                /usr/local/lib"
+            echo "*"
+            echo "*>>> ./configure continues, rrd will not be available."
+            echo "*"
+            echo "*???     1. Rerun ./configure with a corrected --with-rrd-root"
+            echo "*???  or 2. Install rrd and rerun ./configure"
+            echo "*"
+            echo "*******************************************************************"
+            echo
+            ac_disable_rrd="yes"
+        fi
+    fi
 else
-    AC_MSG_RESULT(ok)
+    AC_MSG_RESULT([not found in standard location, testing further...])
+    dnl> Can we find rrd.h and librrd where s/he told us?
+ 
+    AC_MSG_CHECKING([for rrd header])
+ 
+    RRD_ROOT=`(cd ${RRD_ROOT} && pwd)`
+    if test -d ${RRD_ROOT} &&
+       test -r ${RRD_ROOT}/rrd.h; then
+        AC_MSG_RESULT([ok, rrd.h found in ${RRD_ROOT}])
+        INCS="${INCS} -I${RRD_ROOT}"
+        AC_DEFINE_UNQUOTED(HAVE_RRD_H, 1, [Show we found rrd.h and set INCS])
+    elif test -d ${RRD_ROOT} &&
+       test -d ${RRD_ROOT}/include &&
+       test -r ${RRD_ROOT}/include/rrd.h; then
+        AC_MSG_RESULT([ok, rrd.h found in ${RRD_ROOT}/include])
+        INCS="${INCS} -I${RRD_ROOT}/include"
+        AC_DEFINE_UNQUOTED(HAVE_RRD_H, 1, [Show we found rrd.h and set INCS])
+    else
+        AC_MSG_RESULT(error)
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* ERROR:  1. We were unable to find the header rrd.h in the"
+        echo "*            standard location or the alternate location you"
+        echo "*            specified by --with-rrd-root"
+        echo "*"
+        echo "*>>> ./configure continues, rrd will not be available."
+        echo "*"
+        echo "*???     1. Rerun ./configure with a corrected --with-rrd-root"
+        echo "*???  or 2. Install rrd and rerun ./configure"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        ac_disable_rrd="yes"
+    fi
+ 
+    if test ".${ac_disable_rrd}" != ".yes"; then
+        dnl> We use LIBS for the _CHECK_LIB, then back it out below, setting RRDLIB for
+        dnl> the plugin, if we find it.
+        oLIBS="${LIBS}"
+        NTOP_APPEND_LIBS([${RRD_ROOT}/lib])
+        AC_CHECK_LIB([rrd], [rrd_update], [
+            RRDLIB="${RRDLIB} -L${RRD_ROOT}/lib -lrrd"
+            AC_DEFINE_UNQUOTED([HAVE_RRD], 1, [Enable RRD])
+        ], [
+            echo
+            echo "*******************************************************************"
+            echo "*"
+            echo "* ERROR:  1. We were unable to compile a test program for"
+            echo "*            rrd_create() against -lrrd in the standard"
+            echo "*            location nor in the alternate location you"
+            echo "*            specified by --with-rrd-root"
+            echo "*"
+            echo "*>>> ./configure continues, rrd will not be available."
+            echo "*"
+            echo "*???     1. Rerun ./configure with a corrected --with-rrd-root"
+            echo "*???  or 2. Install rrd and rerun ./configure"
+            echo "*"
+            echo "*******************************************************************"
+            echo
+            ac_disable_rrd="yes"
+        ])
+        LIBS="${oLIBS}"
+    fi
 fi
 
 echo
