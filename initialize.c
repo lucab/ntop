@@ -1273,7 +1273,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
       strcat(workDevices, myGlobals.device[i].name);
     }
   }
-
+  
   if(myGlobals.devices != NULL) free(myGlobals.devices);
   myGlobals.devices = workDevices;
 
@@ -1287,9 +1287,13 @@ void addDevice(char* deviceName, char* deviceDescr) {
     struct in_addr myLocalHostAddress;
 
     if(myGlobals.numDevices < MAX_NUM_DEVICES) {
-      for(k=0; k<8; k++) {
+      traceEvent(CONST_TRACE_INFO, "Checking %s for additional devices", myGlobals.device[deviceId].name);
+     
+     for(k=0; k<8; k++) {
 	if(snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[deviceId].name, k) < 0)
 	  BufferTooShort();
+
+	traceEvent(CONST_TRACE_NOISY, "Checking %s", tmpDeviceName);
 	if(getLocalHostAddress(&myLocalHostAddress, tmpDeviceName) == 0) {
 	  /* The virtual interface exists */
 
@@ -1303,9 +1307,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	  myGlobals.device[myGlobals.numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
 	  if(myLocalHostAddress.s_addr == myGlobals.device[deviceId].ifAddr.s_addr)
 	    continue; /* No virtual Interfaces */
-	  myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(deviceDescr);
+	 myGlobals.device[myGlobals.numDevices].virtualDevice = 1;
+	 myGlobals.device[myGlobals.numDevices].activeDevice = 1;
+	 myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(deviceDescr);
 	  myGlobals.device[myGlobals.numDevices++].name = strdup(deviceName);
-	  traceEvent(CONST_TRACE_INFO, "Added: %s", deviceName);
+	  traceEvent(CONST_TRACE_INFO, "Added virtual interface: '%s' [%s]", tmpDeviceName, deviceDescr);
 	} else
 	  break; /* No virtual interface */
       }
@@ -1426,7 +1432,8 @@ void initDevices(char* devices) {
       exit(-1);
     }
 
-    tmpDescr = tmpDev;
+    tmpDescr = tmpDev;    
+    traceEvent(CONST_TRACE_NOISY, "Default device is '%s'", tmpDescr);
 #endif
 
     addDevice(tmpDev, tmpDescr);
