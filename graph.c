@@ -47,37 +47,44 @@ void pktSizeDistribPie(void) {
   fd = getNewRandomFile(fileName, NAME_MAX);
 
   if(device[actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo64)/(float)device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo64)/
+      (float)device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 64";
   };
 
   if(device[actualReportDeviceId].rcvdPktStats.upTo128 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo128)/(float)device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo128)/
+      (float)device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 128";
   };
 
   if(device[actualReportDeviceId].rcvdPktStats.upTo256 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo256)/(float)device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo256)/
+      (float)device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 256";
   };
 
   if(device[actualReportDeviceId].rcvdPktStats.upTo512 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo512)/(float)device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo512)/
+      (float)device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 512";
   };
 
   if(device[actualReportDeviceId].rcvdPktStats.upTo1024 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo1024)/(float)device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo1024)/
+      (float)device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 1024";
   };
 
   if(device[actualReportDeviceId].rcvdPktStats.upTo1518 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo1518)/(float)device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo1518)/
+      (float)device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 1518";
   };
 
   if(device[actualReportDeviceId].rcvdPktStats.above1518 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.above1518)/(float)device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.above1518)/
+      (float)device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "> 1518";
   };
 
@@ -94,12 +101,12 @@ void pktSizeDistribPie(void) {
 #endif
 
   GDC_out_pie(250,			/* width */
-	  250,			/* height */
-	  fd,			/* open file pointer */
-	  GDC_3DPIE,		/* or GDC_2DPIE */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL */
-	  p);			/* data array */
+	      250,			/* height */
+	      fd,			/* open file pointer */
+	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      num,			/* number of slices */
+	      lbl,			/* slice labels (unlike out_png(), can be NULL */
+	      p);			/* data array */
 
   fclose(fd);
 
@@ -108,19 +115,20 @@ void pktSizeDistribPie(void) {
 #endif
 
   if((fd = fopen(fileName, "rb")) != NULL) {
-	for(;;) {
-		len = fread(tmpStr, sizeof(char), 255, fd);
-		if(len <= 0) break;
-		sendStringLen(tmpStr, len);
-  }
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), 255, fd);
+      if(len <= 0) break;
+      sendStringLen(tmpStr, len);
+    }
 
-  fclose(fd);
+    fclose(fd);
   }
 
   unlink(fileName);
 }
 
 /* ************************ */
+
 void ipProtoDistribPie(void) {
   char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
   float p[3];
@@ -164,12 +172,12 @@ void ipProtoDistribPie(void) {
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
   GDC_out_pie(250,			/* width */
-	  250,			/* height */
-	  fd,			/* open file pointer */
-	  GDC_3DPIE,		/* or GDC_2DPIE */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL */
-	  p);			/* data array */
+	      250,			/* height */
+	      fd,			/* open file pointer */
+	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      num,			/* number of slices */
+	      lbl,			/* slice labels (unlike out_png(), can be NULL */
+	      p);			/* data array */
 
   fclose(fd);
 
@@ -177,14 +185,14 @@ void ipProtoDistribPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-   if((fd = fopen(fileName, "rb")) != NULL) {
-	for(;;) {
-		len = fread(tmpStr, sizeof(char), 255, fd);
-		if(len <= 0) break;
-		sendStringLen(tmpStr, len);
-  }
+  if((fd = fopen(fileName, "rb")) != NULL) {
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), 255, fd);
+      if(len <= 0) break;
+      sendStringLen(tmpStr, len);
+    }
 
-  fclose(fd);
+    fclose(fd);
   }
 
   unlink(fileName);
@@ -249,14 +257,14 @@ void interfaceTrafficPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-   if((fd = fopen(fileName, "rb")) != NULL) {
-     for(;;) {
-       len = fread(tmpStr, sizeof(char), 255, fd);
-       if(len <= 0) break;
-       sendStringLen(tmpStr, len);
-     }
+  if((fd = fopen(fileName, "rb")) != NULL) {
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), 255, fd);
+      if(len <= 0) break;
+      sendStringLen(tmpStr, len);
+    }
      
-     fclose(fd);
+    fclose(fd);
   }
 
   unlink(fileName);
@@ -312,12 +320,12 @@ void pktCastDistribPie(void) {
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
   GDC_out_pie(250,			/* width */
-	  250,			/* height */
-	  fd,			/* open file pointer */
-	  GDC_3DPIE,		/* or GDC_2DPIE */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL */
-	  p);			/* data array */
+	      250,			/* height */
+	      fd,			/* open file pointer */
+	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      num,			/* number of slices */
+	      lbl,			/* slice labels (unlike out_png(), can be NULL */
+	      p);			/* data array */
 
   fclose(fd);
 
@@ -326,13 +334,13 @@ void pktCastDistribPie(void) {
 #endif
 
   if((fd = fopen(fileName, "rb")) != NULL) {
-	for(;;) {
-		len = fread(tmpStr, sizeof(char), 255, fd);
-		if(len <= 0) break;
-		sendStringLen(tmpStr, len);
-  }
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), 255, fd);
+      if(len <= 0) break;
+      sendStringLen(tmpStr, len);
+    }
 
-  fclose(fd);
+    fclose(fd);
   }
 
   unlink(fileName);
@@ -370,12 +378,12 @@ void drawTrafficPie(void) {
   GDCPIE_Color     = clr;
 
   GDC_out_pie(250,			/* width */
-	  250,			/* height */
-	  fd,			/* open file pointer */
-	  GDC_3DPIE,		/* or GDC_2DPIE */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL */
-	  p);			/* data array */
+	      250,			/* height */
+	      fd,			/* open file pointer */
+	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      num,			/* number of slices */
+	      lbl,			/* slice labels (unlike out_png(), can be NULL */
+	      p);			/* data array */
 
   fclose(fd);
 
@@ -384,13 +392,13 @@ void drawTrafficPie(void) {
 #endif
 
   if((fd = fopen(fileName, "rb")) != NULL) {
-	for(;;) {
-		len = fread(tmpStr, sizeof(char), 255, fd);
-		if(len <= 0) break;
-		sendStringLen(tmpStr, len);
-	}
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), 255, fd);
+      if(len <= 0) break;
+      sendStringLen(tmpStr, len);
+    }
 
-  fclose(fd);
+    fclose(fd);
   }
 
   unlink(fileName);
@@ -422,15 +430,15 @@ void drawThptGraph(int sortedColumn) {
   GDC_yaxis=1;
   GDC_ylabel_fmt = "%d Bps";
 
-  for(i=0; i<60; i++) {
-    lbls[i] = labels[i];
-    labels[i][0] = '\0';
-  }
-
   fd = getNewRandomFile(fileName, NAME_MAX);
 
   switch(sortedColumn) {
   case 1: /* 60 Minutes */
+    for(i=0; i<60; i++) {
+      lbls[59-i] = labels[i];
+      labels[i][0] = '\0';
+    }
+
     len = device[actualReportDeviceId].numThptSamples;
     if(len > 60) len = 60;
     for(i=0; i<len; i++) {
@@ -439,17 +447,17 @@ void drawThptGraph(int sortedColumn) {
     }
 
     for(maxData=0, i=0; i<len; i++) {
-      graphData[i] = device[actualReportDeviceId].last60MinutesThpt[i].trafficValue;
-      if(graphData[i] > maxData) maxData = graphData[i];
+      graphData[59-i] = device[actualReportDeviceId].last60MinutesThpt[i].trafficValue;
+      if(graphData[59-i] > maxData) maxData = graphData[59-i];
     }
 
     if(maxData > 1048576 /* 1024*1024 */) {
       for(i=0; i<len; i++)
-	graphData[i] /= 1048576;
+	graphData[59-i] /= 1048576;
       GDC_ylabel_fmt = "%.1f Mbps";
     } else if(maxData > 1024) {
       for(i=0; i<len; i++)
-	graphData[i] /= 1024;
+	graphData[59-i] /= 1024;
       GDC_ylabel_fmt = "%.1f Kbps";
     }
 
@@ -463,6 +471,11 @@ void drawThptGraph(int sortedColumn) {
 	      graphData);  /* dataset 1               */
     break;
   case 2: /* 24 Hours */
+    for(i=0; i<24; i++) {
+      lbls[23-i] = labels[i];
+      labels[i][0] = '\0';
+    }
+
     len = device[actualReportDeviceId].numThptSamples/60;
     if(len > 24) len = 24;
     for(i=0; i<len; i++) {
@@ -471,17 +484,17 @@ void drawThptGraph(int sortedColumn) {
     }
 
     for(maxData=0, i=0; i<len; i++) {
-      graphData[i] = device[actualReportDeviceId].last24HoursThpt[i].trafficValue;
-      if(graphData[i] > maxData) maxData = graphData[i];
+      graphData[23-i] = device[actualReportDeviceId].last24HoursThpt[i].trafficValue;
+      if(graphData[23-i] > maxData) maxData = graphData[23-i];
     }
 
     if(maxData > 1048576 /* 1024*1024 */) {
       for(i=0; i<len; i++)
-	graphData[i] /= 1048576;
+	graphData[23-i] /= 1048576;
       GDC_ylabel_fmt = "%.1f Mbps";
     } else if(maxData > 1024) {
       for(i=0; i<len; i++)
-	graphData[i] /= 1024;
+	graphData[23-i] /= 1024;
       GDC_ylabel_fmt = "%.1f Kbps";
     }
 
@@ -495,6 +508,11 @@ void drawThptGraph(int sortedColumn) {
 	      graphData);    /* dataset 1               */
     break;
   case 3: /* 30 Days */
+    for(i=0; i<30; i++) {
+      lbls[29-i] = labels[i];
+      labels[i][0] = '\0';
+    }
+
     len = device[actualReportDeviceId].numThptSamples/(24*60);
     if(len > 30) len = 30;
     for(i=0; i<len; i++) {
@@ -503,19 +521,19 @@ void drawThptGraph(int sortedColumn) {
     }
 
     for(maxData=0, i=0; i<len; i++) {
-      graphData[i] = device[actualReportDeviceId].last30daysThpt[i];
-      if(graphData[i] > maxData) maxData = graphData[i];
+      graphData[29-i] = device[actualReportDeviceId].last30daysThpt[i];
+      if(graphData[29-i] > maxData) maxData = graphData[29-i];
     }
 
     GDC_title = "Last 30 Days Average Throughput";
 
     if(maxData > 1048576 /* 1024*1024 */) {
       for(i=0; i<len; i++)
-	graphData[i] /= 1048576;
+	graphData[29-i] /= 1048576;
       GDC_ylabel_fmt = "%.1f Mbps";
     } else if(maxData > 1024) {
       for(i=0; i<len; i++)
-	graphData[i] /= 1024;
+	graphData[29-i] /= 1024;
       GDC_ylabel_fmt = "%.1f Kb";
     }
 
@@ -536,13 +554,13 @@ void drawThptGraph(int sortedColumn) {
 #endif
 
   if((fd = fopen(fileName, "rb")) != NULL) {
-	for(;;) {
-		len = fread(tmpStr, sizeof(char), 255, fd);
-		if(len <= 0) break;
-		sendStringLen(tmpStr, len);
-  }
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), 255, fd);
+      if(len <= 0) break;
+      sendStringLen(tmpStr, len);
+    }
 
-  fclose(fd);
+    fclose(fd);
   }
 
   unlink(fileName);
@@ -623,14 +641,14 @@ void drawGlobalProtoDistribution(void) {
 #endif
 
   if((fd = fopen(fileName, "rb")) != NULL) {
-	for(totLen=0;;) {
-		len = fread(tmpStr, sizeof(char), 255, fd);
-		if(len <= 0) break;
-		totLen += len;
-		sendStringLen(tmpStr, len);
-  }
+    for(totLen=0;;) {
+      len = fread(tmpStr, sizeof(char), 255, fd);
+      if(len <= 0) break;
+      totLen += len;
+      sendStringLen(tmpStr, len);
+    }
 
-  fclose(fd);
+    fclose(fd);
   }
 
   unlink(fileName);
@@ -685,12 +703,12 @@ void drawGlobalIpProtoDistribution(void) {
 #endif
 
   if((fd = fopen(fileName, "rb")) != NULL) {
-	for(;;) {
-		len = fread(tmpStr, sizeof(char), 255, fd);
-		if(len <= 0) break;
-		sendStringLen(tmpStr, len);
-  }
-	fclose(fd);
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), 255, fd);
+      if(len <= 0) break;
+      sendStringLen(tmpStr, len);
+    }
+    fclose(fd);
   }
   unlink(fileName);
 }

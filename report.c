@@ -2883,14 +2883,13 @@ void printThptStatsMatrix(int sortedColumn) {
 	  }
 
 	  sendString("</TABLE>"TABLE_OFF"</TD></TR>\n");
-	  sendString("<CENTER>\n");
 	}
       }
     }
     break;
   }
 
-  sendString("</TABLE>"TABLE_OFF"\n");
+  sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
 }
 
 /* ************************ */
@@ -2950,6 +2949,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
     }
 #endif
   }
+
+  sendString("</CENTER>\n");
 }
 
 /* ************************ */
