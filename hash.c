@@ -98,6 +98,14 @@ static int _mapIdx(u_int* mappings, u_int lastHashSize, u_int idx,
 	       idx, fileName, fileLine);
     return(NO_PEER);
   } else {
+
+#ifdef DEBUG
+    if((idx != 0) && (mappings[idx] == 0)) {
+      traceEvent(TRACE_INFO, "Mapping %d -> %d [%s:%d]",
+		 idx, mappings[idx], fileName, fileLine);
+    }
+#endif
+    
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Mapping %d -> %d [%s:%d]",
 	       idx, mappings[idx], fileName, fileLine);
@@ -307,11 +315,9 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 
 	if(theHost->portsUsage[i]->clientUsesLastPeer != NO_PEER)
 	  theHost->portsUsage[i]->clientUsesLastPeer = mapIdx(theHost->portsUsage[i]->clientUsesLastPeer);
-	if(theHost->portsUsage[i]->clientUsesLastPeer == NO_PEER) theHost->portsUsage[i]->clientUses = 0;
 
 	if(theHost->portsUsage[i]->serverUsesLastPeer != NO_PEER)
 	  theHost->portsUsage[i]->serverUsesLastPeer = mapIdx(theHost->portsUsage[i]->serverUsesLastPeer);
-	if(theHost->portsUsage[i]->serverUsesLastPeer == NO_PEER) theHost->portsUsage[i]->serverUses = 0;
 
 	if((theHost->portsUsage[i]->clientUsesLastPeer == NO_PEER)
 	   && (theHost->portsUsage[i]->serverUsesLastPeer == NO_PEER)) {
@@ -525,7 +531,7 @@ static void _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen,
 
 /* **************************************** */
 
-static void _checkPortUsage(u_int *mappings, u_int lastHashSize,
+static void _checkPortUsage(u_int *flaggedHosts, u_int flaggedHostsLen,
 			    PortUsage **portsUsage,
 			    char *fileName, int fileLine) {
   int i;
@@ -535,12 +541,16 @@ static void _checkPortUsage(u_int *mappings, u_int lastHashSize,
       continue;
     
     if(portsUsage[i]->clientUsesLastPeer != NO_PEER)
-      portsUsage[i]->clientUsesLastPeer = mapIdx(portsUsage[i]->clientUsesLastPeer);
-    if(portsUsage[i]->clientUsesLastPeer == NO_PEER) portsUsage[i]->clientUses = 0;
+      if(_checkIndex(flaggedHosts, flaggedHostsLen, 
+		     portsUsage[i]->clientUsesLastPeer,
+		     fileName, fileLine))
+	portsUsage[i]->clientUsesLastPeer = NO_PEER;
     
     if(portsUsage[i]->serverUsesLastPeer != NO_PEER)
-      portsUsage[i]->serverUsesLastPeer = mapIdx(portsUsage[i]->serverUsesLastPeer);
-    if(portsUsage[i]->serverUsesLastPeer == NO_PEER) portsUsage[i]->serverUses = 0;
+      if(_checkIndex(flaggedHosts, flaggedHostsLen, 
+		     portsUsage[i]->serverUsesLastPeer,
+		     fileName, fileLine))
+	portsUsage[i]->serverUsesLastPeer = NO_PEER;
     
     if((portsUsage[i]->clientUsesLastPeer == NO_PEER)
        && (portsUsage[i]->serverUsesLastPeer == NO_PEER)) {

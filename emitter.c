@@ -376,6 +376,13 @@ void dumpNtopHashes(char* options) {
       wrtLlongItm  (lang, "\t", "otherReceived",    el->otherReceived,',');
       /* ********************************* */
 
+      if(el->routedTraffic) {
+	initWriteKey(lang, "\t", "RoutingCounter");
+	wrtLlongItm(lang,"\t\t","routedPkts", el->routedTraffic->routedPkts,',');
+	wrtLlongItm(lang,"\t\t","routedBytes", el->routedTraffic->routedBytes,',');
+	endWriteKey(lang,"\t",',');
+      }
+
       if(el->protoIPTrafficInfos) {
 	initWriteKey (lang, "\t", "IP");
 	

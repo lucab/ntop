@@ -3182,8 +3182,8 @@ void printHostDetailedInfo(HostTraffic *el) {
     sendString(buf);
 
     if(nameServerHost(el))     sendString("&nbsp;<IMG SRC=/dns.gif BORDER=0>&nbsp;Name Server<br>");
-    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG SRC=router.gif BORDER=0>&nbsp;<br>");
-    if(isSMTPhost(el))         sendString("SMTP Server<br>");
+    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG SRC=/router.gif BORDER=0>&nbsp;<br>");
+    if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG SRC=/mail.gif BORDER=0>&nbsp;<br>");
     if(isPOPhost(el))          sendString("POP Server<br>");
     if(isIMAPhost(el))         sendString("IMAP Server<br>");
     if(isDirectoryHost(el))    sendString("Directory Server<br>");

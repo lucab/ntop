@@ -1122,8 +1122,7 @@ void initSignals(void) {
     Courtesy of Martin Lucina <mato@kotelna.sk>
   */
 #ifndef WIN32
-  (void)setsignal(SIGCHLD, handleDiedChild);
-  /* signal(SIGCHLD, SIG_IGN); */
+  setsignal(SIGCHLD, handleDiedChild);
 #endif
 
 #ifndef WIN32

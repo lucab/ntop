@@ -207,7 +207,9 @@ void daemonize(void) {
   int childpid;
 
   signal(SIGHUP, SIG_IGN);
-  signal(SIGCHLD, SIG_IGN);
+#ifndef WIN32
+  setsignal(SIGCHLD, handleDiedChild);
+#endif
   signal(SIGQUIT, SIG_IGN);
 
   if((childpid=fork()) < 0)

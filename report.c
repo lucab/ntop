@@ -1339,9 +1339,13 @@ void printAllSessionsHTML(char* host) {
 
       if(el->portsUsage[idx]->clientUses > 0) {
 	/* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-	peerHost = device[actualReportDeviceId].
-	  hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
 
+	if(el->portsUsage[idx]->clientUsesLastPeer == NO_PEER)
+	  peerHost = NULL;
+	else
+	  peerHost = device[actualReportDeviceId].
+	    hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
+	
 	if(peerHost == NULL) {
 	  /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
 	  strncpy(webHostName, "&nbsp;", sizeof(webHostName));
@@ -1358,8 +1362,12 @@ void printAllSessionsHTML(char* host) {
 	sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
 
       if(el->portsUsage[idx]->serverUses > 0) {
-	peerHost = device[actualReportDeviceId].
-	  hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->serverUsesLastPeer)];
+
+	if(el->portsUsage[idx]->serverUsesLastPeer == NO_PEER)
+	  peerHost = NULL;
+	else
+	  peerHost = device[actualReportDeviceId].
+	    hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->serverUsesLastPeer)];
 
 	if(peerHost == NULL) {
 	  /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */

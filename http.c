@@ -22,6 +22,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+#define TEST
 #ifdef TEST
 #define FORK_CHILD_PROCESS
 #endif
@@ -1009,7 +1010,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
 
     /* The URLs below are "read-only" hence I can fork a copy of ntop  */ 
     signal(SIGHUP,  SIG_IGN);
-    signal(SIGCHLD, SIG_IGN);
+    /* SIGCHLD is handled in initialize.c */
     signal(SIGQUIT, SIG_IGN);
 
     if((childpid = fork()) < 0)

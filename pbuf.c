@@ -732,13 +732,25 @@ static void updateUsedPorts(HostTraffic *srcHost,
       if(srcHost->portsUsage[sport] == NULL)
 	srcHost->portsUsage[sport] = allocatePortUsage();
 
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "Adding svr peer %u", dstHostIdx);
+#endif
+
       srcHost->portsUsage[sport]->serverTraffic += length;
       srcHost->portsUsage[sport]->serverUses++;
       srcHost->portsUsage[sport]->serverUsesLastPeer = dstHostIdx;
 
+      if(sport == 25 /* SMTP */) FD_SET(HOST_SVC_SMTP, &srcHost->flags);
+      else if((sport == 109)  /* pop2 */ || (sport == 110) /* pop3 */) FD_SET(HOST_SVC_POP, &srcHost->flags);
+      else if((sport == 143) /* imap */) FD_SET(HOST_SVC_IMAP, &srcHost->flags);
+
       if(dstHostIdx != broadcastEntryIdx) {
 	if(dstHost->portsUsage[sport] == NULL)
 	  dstHost->portsUsage[sport] = allocatePortUsage();
+
+#ifdef DEBUG
+	traceEvent(TRACE_INFO, "Adding client peer %u", dstHostIdx);
+#endif
 
 	dstHost->portsUsage[sport]->clientTraffic += length;
 	dstHost->portsUsage[sport]->clientUses++;
@@ -749,21 +761,29 @@ static void updateUsedPorts(HostTraffic *srcHost,
 
   if(dstHostIdx != broadcastEntryIdx) {
     if(dport < TOP_ASSIGNED_IP_PORTS) {
+      if(srcHost->portsUsage[dport] == NULL)
+	srcHost->portsUsage[dport] = allocatePortUsage();
+
+#ifdef DEBUG      
+      traceEvent(TRACE_INFO, "Adding client peer %u", dstHostIdx);
+#endif
+
+      srcHost->portsUsage[dport]->clientTraffic += length;
+      srcHost->portsUsage[dport]->clientUses++;
+      srcHost->portsUsage[dport]->clientUsesLastPeer = dstHostIdx;
+      
       if(srcHostIdx != broadcastEntryIdx) {
-	if(srcHost->portsUsage[dport] == NULL)
-	  srcHost->portsUsage[dport] = allocatePortUsage();
+	if(dstHost->portsUsage[dport] == NULL)
+	  dstHost->portsUsage[dport] = allocatePortUsage();
 
-	srcHost->portsUsage[dport]->clientTraffic += length;
-	srcHost->portsUsage[dport]->clientUses++;
-	srcHost->portsUsage[dport]->clientUsesLastPeer = dstHostIdx;
+#ifdef DEBUG
+	traceEvent(TRACE_INFO, "Adding svr peer %u", srcHostIdx);
+#endif
+
+	dstHost->portsUsage[dport]->serverTraffic += length;
+	dstHost->portsUsage[dport]->serverUses++;
+	dstHost->portsUsage[dport]->serverUsesLastPeer = srcHostIdx;
       }
-
-      if(dstHost->portsUsage[dport] == NULL)
-	dstHost->portsUsage[dport] = allocatePortUsage();
-
-      dstHost->portsUsage[dport]->serverTraffic += length;
-      dstHost->portsUsage[dport]->serverUses++;
-      dstHost->portsUsage[dport]->serverUsesLastPeer = srcHostIdx;
     }
   }
 }

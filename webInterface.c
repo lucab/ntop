@@ -182,7 +182,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   static char buf[5][384];
   char symIp[256], *tmpStr, linkName[256], flag[128];
   char *blinkOn, *blinkOff, *dynIp;
-  char *multihomed, *gwStr, *dnsStr, *printStr, *healthStr;
+  char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr;
   short specialMacAddress = 0;
   static short bufIdx=0;
   short usedEthAddress=0;
@@ -319,14 +319,12 @@ char* makeHostLink(HostTraffic *el, short mode,
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
-  if(isDHCPClient(el)) dynIp = "&nbsp;(dyn)"; else dynIp = "";
-  if(isMultihomed(el))
-    multihomed = "&nbsp;<IMG SRC=/multihomed.gif BORDER=0>&nbsp;"; 
-  else
-    multihomed = "";
-  if(gatewayHost(el)) gwStr = "&nbsp;<IMG SRC=/router.gif BORDER=0>&nbsp;"; else gwStr = "";
+  if(isDHCPClient(el))   dynIp = "&nbsp;(dyn)"; else dynIp = "";
+  if(isMultihomed(el))   multihomed = "&nbsp;<IMG SRC=/multihomed.gif BORDER=0>&nbsp;"; else multihomed = "";
+  if(gatewayHost(el))    gwStr = "&nbsp;<IMG SRC=/router.gif BORDER=0>&nbsp;"; else gwStr = "";
   if(nameServerHost(el)) dnsStr = "&nbsp;<IMG SRC=/dns.gif BORDER=0>&nbsp;"; else dnsStr = "";
-  if(isPrinter(el)) printStr = "&nbsp;<IMG SRC=/printer.gif BORDER=0>&nbsp;"; else printStr = "";
+  if(isPrinter(el))      printStr = "&nbsp;<IMG SRC=/printer.gif BORDER=0>&nbsp;"; else printStr = "";
+  if(isSMTPhost(el))     smtpStr = "&nbsp;<IMG SRC=/mail.gif BORDER=0>&nbsp;"; else smtpStr = "";
   
   switch(isHostHealthy(el)) {
   case 0: /* OK */
@@ -342,15 +340,15 @@ char* makeHostLink(HostTraffic *el, short mode,
  
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
-		"<A HREF=\"/%s.html\">%s%s %s%s%s%s%s</A>%s</TH>%s",
+		"<A HREF=\"/%s.html\">%s%s %s%s%s%s%s%s</A>%s</TH>%s",
 		blinkOn, linkName, symIp, dynIp, 
-		multihomed, gwStr, dnsStr, printStr, healthStr,
+		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s %s%s%s%s%s</A>%s%s",
+    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s %s%s%s%s%s%s</A>%s%s",
 		blinkOn, linkName, symIp, 
-		multihomed, gwStr, dnsStr, printStr, healthStr,
+		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
