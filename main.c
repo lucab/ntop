@@ -140,6 +140,7 @@ static struct option const long_options[] = {
 
   { "disable-stopcap",                  no_argument,       NULL, 142 },
   { "log-extra",                        required_argument, NULL, 143 },
+  { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
 
   {NULL, 0, NULL, 0}
 };
@@ -252,6 +253,8 @@ void usage (FILE * fp) {
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
 
   fprintf(fp, "    [--log-extra <level>]                                 %sAdd extra information to log messages\n", newLine);
+
+  fprintf(fp, "    [--disable-instantsessionpurge                        %sDisable instant FIN session purge\n", newLine);
 
 #ifdef WIN32
   printAvailableInterfaces();
@@ -667,6 +670,10 @@ static int parseOptions(int argc, char* argv []) {
 
     case 143: /* log-extra */
       myGlobals.logExtra = min(max(0, atoi(optarg)), CONST_EXTRA_TRACE_MSGID);
+      break;
+
+    case 144: /* disable-instantsessionpurge */
+      myGlobals.disableInstantSessionPurge = TRUE;
       break;
 
     default:

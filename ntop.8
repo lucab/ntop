@@ -64,6 +64,7 @@ ntop \- display top network users
 .RB [ --disable-stopcap ]
 .RB [ --log-extra
 .IR <number> ]
+.RB [ --disable-instantsessionpurge ]
 
 Unix options:
 
@@ -486,6 +487,18 @@ Setting 2 adds a [MSGIDnnnnnnn] tag at the end of every log message.
 The nnnnnnn value should be unique number for every message and should be stable across 
 .B ntop
 releases.  Both are useful for debugging and for using log watching and filtering packages.
+
+.It --disable-instantsessionpurge
+.B ntop
+sets completed sessions and 'timed out' and then purges them almost instantly, which is
+not the behavior you might expect from the discussions about purge timeouts.  This switch
+makes ntop respect the timeouts for completed sessions.  It is NOT the default because
+a busy web server may have 100s or 1000s of completed sessions and this would significantly
+increase the amount of memory
+.B ntop
+uses.
+
+
 
 .SH "WEB VIEWS"
 While

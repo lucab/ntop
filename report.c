@@ -2362,6 +2362,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		     "<TH "TH_BG">Active&nbsp;Since</TH>"
 		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		     "<TH "TH_BG">Duration</TH>"
+		     "<TH "TH_BG">Inactive</TH>"
 		     "<TH "TH_BG">Latency</TH>"
 #ifdef PARM_PRINT_ALL_SESSIONS
 		     "<TH "TH_BG">State</TH>"
@@ -2392,10 +2393,14 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	if((myGlobals.actTime < session->firstSeen)
 	   || (session->firstSeen == 0))
 	  session->firstSeen = myGlobals.actTime;
+	if((myGlobals.actTime < session->lastSeen)
+	   || (session->lastSeen == 0))
+	  session->lastSeen = myGlobals.actTime;
 
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s:%s%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -2416,7 +2421,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		    formatBytes(dataRcvd, 1),
 		    formatTime(&(session->firstSeen), 1),
 		    formatTime(&(session->lastSeen), 1),
-		    formatSeconds(myGlobals.actTime-session->firstSeen),
+                    formatSeconds(session->lastSeen-session->firstSeen),
+                    formatSeconds(myGlobals.actTime-session->lastSeen),
 		    formatLatency(session->nwLatency, session->sessionState)
 #ifdef PARM_PRINT_ALL_SESSIONS
 		    , getSessionState(session)

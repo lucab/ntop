@@ -1777,9 +1777,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		     srcHost->hostSymIpAddress);
 	  dumpSuspiciousPacket(actualDeviceId);
 	}
+
+        theSession->sessionState = FLAG_STATE_TIMEOUT;
       }
 
-      theSession->sessionState = FLAG_STATE_TIMEOUT;
+      if(myGlobals.disableInstantSessionPurge != TRUE)
+        theSession->sessionState = FLAG_STATE_TIMEOUT;
+
       updateUsedPorts(srcHost, dstHost, sport, dport,
 		      (u_int)(theSession->bytesSent.value+theSession->bytesRcvd.value));
 

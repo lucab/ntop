@@ -1569,6 +1569,9 @@ XML*/
   short logExtra;                    /* '143' */
                                      /*XML n logExtra             Options    "--log-extra" */
 
+  u_char disableInstantSessionPurge; /* '144' */
+                                     /*XML b disableInstantSessionPurge Options    "--disable-instantsessionpurge" */
+
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
                                      /*XML b enableFragmentHandling Options  "" */

@@ -2942,6 +2942,10 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "--log-extra", buf);
 
+  printParameterConfigInfo(textPrintFlag, "--disable-instantsessionpurge",
+                           myGlobals.disableInstantSessionPurge == TRUE ? "Yes" : "No",
+                           "No");
+
   sendString(texthtml("\n\n", "<tr><th colspan=2>"));
   sendString("Note: " CONST_REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");
