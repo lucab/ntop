@@ -2438,6 +2438,14 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
 
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipCountryCount) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "IP to country flag table (entries)", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Total Hash Collisions (Vendor/Special) (lookup)", buf);
+
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
   {
     struct mallinfo memStats;
@@ -2491,10 +2499,20 @@ void printNtopConfigInfo(int textPrintFlag) {
   if (textPrintFlag == TRUE) {
     sendString(texthtml("\n\nMemory Usage\n\n", "<tr><th colspan=\"2\">Memory Usage</th></tr>\n"));
 
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipCountryCount) < 0)
-        BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "IP to country flag table (entries)", buf);
-
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.specialHashLoadSize) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Size (bytes)", buf);
+  
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadSize) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (bytes)", buf);
+  
+    if(snprintf(buf, sizeof(buf), "%d (%.1f MB)",
+               myGlobals.vendorHashLoadSize,
+               (float) myGlobals.vendorHashLoadSize /(1024.0*1024.0)) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Size (bytes)", buf);
+  
     if(snprintf(buf, sizeof(buf), "%d (%.1f MB)", myGlobals.ipCountryMem, (float)myGlobals.ipCountryMem/(1024.0*1024.0)) < 0)
         BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "IP to country flag table (bytes)", buf);
@@ -2546,35 +2564,37 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
 #endif
 
-  sendString(texthtml("\n\nMAC/IPX Hash tables\n\n", "<tr><th colspan=\"2\">MAC/IPX Hash Tables</th></tr>\n"));
+  if (textPrintFlag == TRUE) {
+    sendString(texthtml("\n\nMAC/IPX Hash tables\n\n", "<tr><th colspan=\"2\">MAC/IPX Hash Tables</th></tr>\n"));
 
-  if(snprintf(buf, sizeof(buf), "%d", MAX_SPECIALMAC_NAME_HASH) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Size", buf);
+    if(snprintf(buf, sizeof(buf), "%d", MAX_SPECIALMAC_NAME_HASH) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Size (entries)", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.specialHashLoadCollisions) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Collisions (load)", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.specialHashLoadCollisions) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Collisions (load)", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size", buf);
+    if(snprintf(buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (entries)", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadCollisions) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Collisions (load)", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadCollisions) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Collisions (load)", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", MAX_VENDOR_NAME_HASH) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Size", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.vendortable_h_Size) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Vendor MAC vendortable.h Size (entries)", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.vendorHashLoadCollisions) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Collisions (load)", buf);
+    if(snprintf(buf, sizeof(buf), "%d", MAX_VENDOR_NAME_HASH) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Size (entries)", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Total Hash Collisions (Vendor/Special) (lookup)", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.vendorHashLoadCollisions) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Collisions (load)", buf);
+  }
 
   /* **** */
 

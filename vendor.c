@@ -530,16 +530,27 @@ void createVendorTable(void) {
 }
 #endif
 
-  for(idx=0; vendorInfo[idx].vendorName != NULL; idx++)
+  myGlobals.vendortable_h_Size = 0;
+  myGlobals.vendorHashLoadSize = sizeof(vendorHash);
+  for(idx=0; vendorInfo[idx].vendorName != NULL; idx++) {
+    myGlobals.vendortable_h_Size++;
+    myGlobals.vendorHashLoadSize += sizeof(VendorInfo) + strlen(vendorInfo[idx].vendorName);
     myGlobals.vendorHashLoadCollisions += 
         addMacTableEntry(vendorHash, &vendorInfo[idx], MAX_VENDOR_NAME_HASH);
+  }
 
-  for(idx=0; specialMacInfo[idx].vendorName != NULL; idx++)
+  myGlobals.specialHashLoadSize = sizeof(specialMacHash);
+  for(idx=0; specialMacInfo[idx].vendorName != NULL; idx++) {
+    myGlobals.specialHashLoadSize += sizeof(VendorInfo) + strlen(specialMacInfo[idx].vendorName);
     myGlobals.specialHashLoadCollisions += 
         addMacTableEntry(specialMacHash, &specialMacInfo[idx], MAX_SPECIALMAC_NAME_HASH);
+  }
 
-  for(idx=0; ipxSAP[idx].vendorName != NULL; idx++)
+  myGlobals.ipxsapHashLoadSize = sizeof(ipxSAPhash);
+  for(idx=0; ipxSAP[idx].vendorName != NULL; idx++) {
+    myGlobals.ipxsapHashLoadSize += sizeof(VendorInfo) + strlen(ipxSAP[idx].vendorName);
     myGlobals.ipxsapHashLoadCollisions += 
         addMacTableEntry(ipxSAPhash, &ipxSAP[idx], MAX_IPXSAP_NAME_HASH);
+  }
 }
 

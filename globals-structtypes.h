@@ -1813,6 +1813,11 @@ XML*/
       vendorHashLoadCollisions,
       specialHashLoadCollisions,
       ipxsapHashLoadCollisions;
+  /* Hash table sizes - counted during load */
+  int vendorHashLoadSize,
+      vendortable_h_Size,
+      specialHashLoadSize,
+      ipxsapHashLoadSize;
 
   /* i18n */
 #ifdef MAKE_WITH_I18N
