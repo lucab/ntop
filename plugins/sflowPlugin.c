@@ -1625,7 +1625,7 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
   SFSample sample;
   struct sockaddr_in fromHost;
 
-  if(!(myGlobals.sflowInSocket > 0)) return;
+  if(!(myGlobals.sflowInSocket > 0)) return(NULL);
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "sFlowMainLoop()");
@@ -1706,9 +1706,7 @@ static void initSflowInSocket() {
 
   if(myGlobals.sflowOutSocket == 0) {
     char value[32];
-    struct hostent *hostAddr;
-    struct sockaddr_in dest;
-
+    
     myGlobals.sflowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
     setsockopt(myGlobals.sflowOutSocket, SOL_SOCKET, SO_REUSEADDR,
 	       (char *)&sockopt, sizeof(sockopt));
@@ -1802,7 +1800,6 @@ static void handleSflowPacket(u_char *_deviceId,
 			      const u_char *p) {
   SflowSample mySample;
   int sampledPacketSize;
-  SFSample sample;
   int deviceId, rc;
 
   if(myGlobals.numSamplesToGo-- > 0) return;
