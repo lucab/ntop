@@ -1,10 +1,35 @@
-/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+/* config.h.in.  Generated from configure.in by autoheader.  */
+/*
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ * Custom Ntop defines, the meat for 'autoconf'
+ *
+ * Copyright (c) 1998-2001 Luca Deri <deri@ntop.org>
+ * Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
+ *
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ */
 
-/* Define as the return type of signal handlers (int or void).  */
-#undef RETSIGTYPE
 
-/* Define if you have the ANSI C header files.  */
-#undef STDC_HEADERS
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
+
+
+/* insert here custom defines */
 
 /* Define if you want to build micro ntop. */
 #undef MICRO_NTOP
@@ -34,6 +59,7 @@
 #undef HAVE_INT8_T
 #undef u_int
 
+
 #undef RETSIGTYPE
 
 /* Define if you have the <gdbm.h> header file. */
@@ -41,6 +67,9 @@
 
 /* Define if the ether_header uses ether_addr structs. */
 #undef ETHER_HEADER_HAS_EA
+
+/* Define if you have the thread library (-lpthread). */
+#undef HAVE_LIBTHREAD
 
 /* Define if you have the OPENSSL Toolkit (-lssl) by Open SSL Project. */
 #undef HAVE_OPENSSL
@@ -56,6 +85,9 @@
 
 /* Define if you want to have a multithreaded version of ntop. */
 #undef MULTITHREADED
+
+/* Define if you have the curses library (-lncurses or -lcurses). */
+#undef HAVE_LIBCURSES
 
 /* Define if you have the ncurses.h or curses.h header files (specific to handle Solaris 2.7) */
 #undef HAVE_NCURSES_H
@@ -86,6 +118,15 @@
 /* Define if you have a glibc syslog.h or sys/syslog.h with facilitynames[] option */
 #undef HAVE_FACILITYNAMES
 
+/* Ntop directories */
+#undef PLUGIN_DIR
+#undef DATAFILE_DIR
+#undef CONFIGFILE_DIR
+#undef DBFILE_DIR
+
+/* Define if your host supports SNMP  */
+#undef HAVE_SNMP
+
 /* Define if you have backtrace */
 #undef HAVE_BACKTRACE
 
@@ -99,231 +140,372 @@
 /* Define for sFlowPlugin.c to define in6_addr for environments that don't have it... */
 #undef HAVE_IN6_ADDR
 
-/* Define if you have the ctime_r function.  */
-#undef HAVE_CTIME_R
+#endif /* _CONFIG_H_ */
 
-/* Define if you have the gethostbyaddr_r function.  */
-#undef HAVE_GETHOSTBYADDR_R
-
-/* Define if you have the getipnodebyaddr function.  */
-#undef HAVE_GETIPNODEBYADDR
-
-/* Define if you have the localtime_r function.  */
-#undef HAVE_LOCALTIME_R
-
-/* Define if you have the snprintf function.  */
-#undef HAVE_SNPRINTF
-
-/* Define if you have the strsep function.  */
-#undef HAVE_STRSEP
-
-/* Define if you have the strtok_r function.  */
-#undef HAVE_STRTOK_R
-
-/* Define if you have the <alloca.h> header file.  */
-#undef HAVE_ALLOCA_H
-
-/* Define if you have the <arpa/inet.h> header file.  */
-#undef HAVE_ARPA_INET_H
-
-/* Define if you have the <arpa/nameser.h> header file.  */
-#undef HAVE_ARPA_NAMESER_H
-
-/* Define if you have the <crypt.h> header file.  */
-#undef HAVE_CRYPT_H
-
-/* Define if you have the <dirent.h> header file.  */
-#undef HAVE_DIRENT_H
-
-/* Define if you have the <dl.h> header file.  */
-#undef HAVE_DL_H
-
-/* Define if you have the <dlfcn.h> header file.  */
-#undef HAVE_DLFCN_H
-
-/* Define if you have the <errno.h> header file.  */
-#undef HAVE_ERRNO_H
-
-/* Define if you have the <ethertype.h> header file.  */
-#undef HAVE_ETHERTYPE_H
-
-/* Define if you have the <fcntl.h> header file.  */
-#undef HAVE_FCNTL_H
-
-/* Define if you have the <gdbm.h> header file.  */
-#undef HAVE_GDBM_H
-
-/* Define if you have the <if.h> header file.  */
-#undef HAVE_IF_H
-
-/* Define if you have the <net/bpf.h> header file.  */
-#undef HAVE_NET_BPF_H
-
-/* Define if you have the <net/ethernet.h> header file.  */
-#undef HAVE_NET_ETHERNET_H
-
-/* Define if you have the <net/if.h> header file.  */
-#undef HAVE_NET_IF_H
-
-/* Define if you have the <netdb.h> header file.  */
-#undef HAVE_NETDB_H
-
-/* Define if you have the <netinet/if_ether.h> header file.  */
-#undef HAVE_NETINET_IF_ETHER_H
-
-/* Define if you have the <netinet/in.h> header file.  */
-#undef HAVE_NETINET_IN_H
-
-/* Define if you have the <netinet/in_systm.h> header file.  */
-#undef HAVE_NETINET_IN_SYSTM_H
-
-/* Define if you have the <netinet/ip.h> header file.  */
-#undef HAVE_NETINET_IP_H
-
-/* Define if you have the <netinet/ip_icmp.h> header file.  */
-#undef HAVE_NETINET_IP_ICMP_H
-
-/* Define if you have the <netinet/tcp.h> header file.  */
-#undef HAVE_NETINET_TCP_H
-
-/* Define if you have the <netinet/udp.h> header file.  */
-#undef HAVE_NETINET_UDP_H
-
-/* Define if you have the <pthread.h> header file.  */
-#undef HAVE_PTHREAD_H
-
-/* Define if you have the <pwd.h> header file.  */
-#undef HAVE_PWD_H
-
-/* Define if you have the <readline/readline.h> header file.  */
-#undef HAVE_READLINE_READLINE_H
-
-/* Define if you have the <rrd.h> header file.  */
-#undef HAVE_RRD_H
-
-/* Define if you have the <sched.h> header file.  */
-#undef HAVE_SCHED_H
-
-/* Define if you have the <security/pam_appl.h> header file.  */
-#undef HAVE_SECURITY_PAM_APPL_H
-
-/* Define if you have the <semaphore.h> header file.  */
-#undef HAVE_SEMAPHORE_H
-
-/* Define if you have the <shadow.h> header file.  */
-#undef HAVE_SHADOW_H
-
-/* Define if you have the <signal.h> header file.  */
-#undef HAVE_SIGNAL_H
-
-/* Define if you have the <stdio.h> header file.  */
-#undef HAVE_STDIO_H
-
-/* Define if you have the <stdlib.h> header file.  */
-#undef HAVE_STDLIB_H
-
-/* Define if you have the <string.h> header file.  */
-#undef HAVE_STRING_H
-
-/* Define if you have the <sys/ioctl> header file.  */
-#undef HAVE_SYS_IOCTL
-
-/* Define if you have the <sys/ldr.h> header file.  */
-#undef HAVE_SYS_LDR_H
-
-/* Define if you have the <sys/sched.h> header file.  */
-#undef HAVE_SYS_SCHED_H
-
-/* Define if you have the <sys/select.h> header file.  */
-#undef HAVE_SYS_SELECT_H
-
-/* Define if you have the <sys/socket.h> header file.  */
-#undef HAVE_SYS_SOCKET_H
-
-/* Define if you have the <sys/sockio.h> header file.  */
-#undef HAVE_SYS_SOCKIO_H
-
-/* Define if you have the <sys/stat.h> header file.  */
-#undef HAVE_SYS_STAT_H
-
-/* Define if you have the <sys/syslog.h> header file.  */
-#undef HAVE_SYS_SYSLOG_H
-
-/* Define if you have the <sys/time.h> header file.  */
-#undef HAVE_SYS_TIME_H
-
-/* Define if you have the <sys/types.h> header file.  */
-#undef HAVE_SYS_TYPES_H
-
-/* Define if you have the <sys/un.h> header file.  */
-#undef HAVE_SYS_UN_H
-
-/* Define if you have the <sys/wait.h> header file.  */
-#undef HAVE_SYS_WAIT_H
-
-/* Define if you have the <syslog.h> header file.  */
-#undef HAVE_SYSLOG_H
-
-/* Define if you have the <tcpd.h> header file.  */
-#undef HAVE_TCPD_H
-
-/* Define if you have the <unistd.h> header file.  */
-#undef HAVE_UNISTD_H
-
-/* Define if you have the <zlib.h> header file.  */
-#undef HAVE_ZLIB_H
-
-/* Define if you have the c library (-lc).  */
-#undef HAVE_LIBC
-
-/* Define if you have the c_r library (-lc_r).  */
-#undef HAVE_LIBC_R
-
-/* Define if you have the dl library (-ldl).  */
-#undef HAVE_LIBDL
-
-/* Define if you have the gdbm library (-lgdbm).  */
-#undef HAVE_LIBGDBM
-
-/* Define if you have the kstat library (-lkstat).  */
-#undef HAVE_LIBKSTAT
-
-/* Define if you have the nsl library (-lnsl).  */
-#undef HAVE_LIBNSL
-
-/* Define if you have the pcap library (-lpcap).  */
-#undef HAVE_LIBPCAP
-
-/* Define if you have the posix4 library (-lposix4).  */
-#undef HAVE_LIBPOSIX4
-
-/* Define if you have the pthread library (-lpthread).  */
-#undef HAVE_LIBPTHREAD
-
-/* Define if you have the pthreads library (-lpthreads).  */
-#undef HAVE_LIBPTHREADS
-
-/* Define if you have the resolv library (-lresolv).  */
-#undef HAVE_LIBRESOLV
-
-/* Define if you have the rrd library (-lrrd).  */
-#undef HAVE_LIBRRD
-
-/* Define if you have the socket library (-lsocket).  */
-#undef HAVE_LIBSOCKET
-
-/* Data file directory */
-#undef DATAFILE_DIR
+/* Enable/disable address resolution */
+#undef ASYNC_ADDRESS_RESOLUTION
 
 /* Configuration file directory */
 #undef CONFIGFILE_DIR
 
-/* Run files directory */
-#undef RUN_DIR
-
-/* Plugin installation directory */
-#undef PLUGIN_DIR
+/* Data file directory */
+#undef DATAFILE_DIR
 
 /* Database file directory */
 #undef DBFILE_DIR
 
+/* dummy */
+#undef DEBUG
+
+/* Define if the ether_header uses ether_addr structs. */
+#undef ETHER_HEADER_HAS_EA
+
+/* Define to 1 if you have the <alloca.h> header file. */
+#undef HAVE_ALLOCA_H
+
+/* Define to 1 if you have the <arpa/inet.h> header file. */
+#undef HAVE_ARPA_INET_H
+
+/* Define to 1 if you have the <arpa/nameser.h> header file. */
+#undef HAVE_ARPA_NAMESER_H
+
+/* Define if you have backtrace */
+#undef HAVE_BACKTRACE
+
+/* Define to 1 if you have the <crypt.h> header file. */
+#undef HAVE_CRYPT_H
+
+/* Define to 1 if you have the `ctime_r' function. */
+#undef HAVE_CTIME_R
+
+/* Define if you have the curses.h header file */
+#undef HAVE_CURSES_H
+
+/* Define to 1 if you have the <dirent.h> header file. */
+#undef HAVE_DIRENT_H
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the <dl.h> header file. */
+#undef HAVE_DL_H
+
+/* Define to 1 if you have the <errno.h> header file. */
+#undef HAVE_ERRNO_H
+
+/* Define to 1 if you have the <ethertype.h> header file. */
+#undef HAVE_ETHERTYPE_H
+
+/* Define if you have a glibc syslog.h or sys/syslog.h with facilitynames[]
+   option */
+#undef HAVE_FACILITYNAMES
+
+/* Define to 1 if you have the <fcntl.h> header file. */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <gdbm.h> header file. */
+#undef HAVE_GDBM_H
+
+/* Define if you have the gdchart library from Bruce Verderaime
+   [http://www.fred.net/brv/chart/]. */
+#undef HAVE_GDCHART
+
+/* Define if you have gethostbyaddr_r */
+#undef HAVE_GETHOSTBYADDR_R
+
+/* Define to 1 if you have the `getipnodebyaddr' function. */
+#undef HAVE_GETIPNODEBYADDR
+
+/* Define if you have getopt_long. */
+#undef HAVE_GETOPT_LONG
+
+/* Define to 1 if you have the <if.h> header file. */
+#undef HAVE_IF_H
+
+/* Define for sFlowPlugin.c to define in6_addr for environments that don't
+   have it... */
+#undef HAVE_IN6_ADDR
+
+/* dummy */
+#undef HAVE_INT16_T
+
+/* dummy */
+#undef HAVE_INT32_T
+
+/* dummy */
+#undef HAVE_INT64_T
+
+/* dummy */
+#undef HAVE_INT8_T
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `c' library (-lc). */
+#undef HAVE_LIBC
+
+/* Define to 1 if you have the `c_r' library (-lc_r). */
+#undef HAVE_LIBC_R
+
+/* Define to 1 if you have the `dl' library (-ldl). */
+#undef HAVE_LIBDL
+
+/* Define to 1 if you have the `gdbm' library (-lgdbm). */
+#undef HAVE_LIBGDBM
+
+/* Define to 1 if you have the `kstat' library (-lkstat). */
+#undef HAVE_LIBKSTAT
+
+/* Define to 1 if you have the `m' library (-lm). */
+#undef HAVE_LIBM
+
+/* Define to 1 if you have the `nsl' library (-lnsl). */
+#undef HAVE_LIBNSL
+
+/* Define to 1 if you have the `pcap' library (-lpcap). */
+#undef HAVE_LIBPCAP
+
+/* Define to 1 if you have the `posix4' library (-lposix4). */
+#undef HAVE_LIBPOSIX4
+
+/* Define to 1 if you have the `pthread' library (-lpthread). */
+#undef HAVE_LIBPTHREAD
+
+/* Define to 1 if you have the `pthreads' library (-lpthreads). */
+#undef HAVE_LIBPTHREADS
+
+/* Define to 1 if you have the `resolv' library (-lresolv). */
+#undef HAVE_LIBRESOLV
+
+/* Define to 1 if you have the `rrd' library (-lrrd). */
+#undef HAVE_LIBRRD
+
+/* Define to 1 if you have the `socket' library (-lsocket). */
+#undef HAVE_LIBSOCKET
+
+/* Define if you have the TCP Wrap library (-lwrap) and headers. */
+#undef HAVE_LIBWRAP
+
+/* Define to 1 if you have the `localtime_r' function. */
+#undef HAVE_LOCALTIME_R
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define if you have the ncurses.h header file */
+#undef HAVE_NCURSES_H
+
+/* Define to 1 if you have the <netdb.h> header file. */
+#undef HAVE_NETDB_H
+
+/* Define to 1 if you have the <netinet/if_ether.h> header file. */
+#undef HAVE_NETINET_IF_ETHER_H
+
+/* Define to 1 if you have the <netinet/in.h> header file. */
+#undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the <netinet/in_systm.h> header file. */
+#undef HAVE_NETINET_IN_SYSTM_H
+
+/* Define to 1 if you have the <netinet/ip.h> header file. */
+#undef HAVE_NETINET_IP_H
+
+/* Define to 1 if you have the <netinet/ip_icmp.h> header file. */
+#undef HAVE_NETINET_IP_ICMP_H
+
+/* Define to 1 if you have the <netinet/tcp.h> header file. */
+#undef HAVE_NETINET_TCP_H
+
+/* Define to 1 if you have the <netinet/udp.h> header file. */
+#undef HAVE_NETINET_UDP_H
+
+/* Define to 1 if you have the <net/bpf.h> header file. */
+#undef HAVE_NET_BPF_H
+
+/* Define to 1 if you have the <net/ethernet.h> header file. */
+#undef HAVE_NET_ETHERNET_H
+
+/* Define to 1 if you have the <net/if.h> header file. */
+#undef HAVE_NET_IF_H
+
+/* Define if you have the OPENSSL Toolkit (-lssl) by Open SSL Project. */
+#undef HAVE_OPENSSL
+
+/* Define to 1 if you have the <pthread.h> header file. */
+#undef HAVE_PTHREAD_H
+
+/* Define to 1 if you have the <pwd.h> header file. */
+#undef HAVE_PWD_H
+
+/* Define if you have the GNU readline library (-lreadline). */
+#undef HAVE_READLINE
+
+/* Define to 1 if you have the <readline/readline.h> header file. */
+#undef HAVE_READLINE_READLINE_H
+
+/* Define if you have the regex lib defined inside libc */
+#undef HAVE_REGEX
+
+/* Define to 1 if you have the <rrd.h> header file. */
+#undef HAVE_RRD_H
+
+/* Define to 1 if you have the <sched.h> header file. */
+#undef HAVE_SCHED_H
+
+/* Define to 1 if you have the <security/pam_appl.h> header file. */
+#undef HAVE_SECURITY_PAM_APPL_H
+
+/* Define to 1 if you have the <semaphore.h> header file. */
+#undef HAVE_SEMAPHORE_H
+
+/* Define to 1 if you have the <shadow.h> header file. */
+#undef HAVE_SHADOW_H
+
+/* Define to 1 if you have the <signal.h> header file. */
+#undef HAVE_SIGNAL_H
+
+/* Define to 1 if you have the `snprintf' function. */
+#undef HAVE_SNPRINTF
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strsep' function. */
+#undef HAVE_STRSEP
+
+/* Define to 1 if you have the `strtok_r' function. */
+#undef HAVE_STRTOK_R
+
+/* Define to 1 if you have the <syslog.h> header file. */
+#undef HAVE_SYSLOG_H
+
+/* Define to 1 if you have the <sys/ioctl> header file. */
+#undef HAVE_SYS_IOCTL
+
+/* Define to 1 if you have the <sys/ldr.h> header file. */
+#undef HAVE_SYS_LDR_H
+
+/* Define to 1 if you have the <sys/sched.h> header file. */
+#undef HAVE_SYS_SCHED_H
+
+/* Define to 1 if you have the <sys/select.h> header file. */
+#undef HAVE_SYS_SELECT_H
+
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#undef HAVE_SYS_SOCKET_H
+
+/* Define to 1 if you have the <sys/sockio.h> header file. */
+#undef HAVE_SYS_SOCKIO_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/syslog.h> header file. */
+#undef HAVE_SYS_SYSLOG_H
+
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <sys/un.h> header file. */
+#undef HAVE_SYS_UN_H
+
+/* Define to 1 if you have the <sys/wait.h> header file. */
+#undef HAVE_SYS_WAIT_H
+
+/* Define if you have the TCP Wrap library (-lwrap) and headers. */
+#undef HAVE_TCPD_H
+
+/* dummy */
+#undef HAVE_UINT64_T
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* dummy */
+#undef HAVE_U_INT16_T
+
+/* dummy */
+#undef HAVE_U_INT32_T
+
+/* dummy */
+#undef HAVE_U_INT64_T
+
+/* dummy */
+#undef HAVE_U_INT8_T
+
+/* Define if you have the zlib */
+#undef HAVE_ZLIB
+
+/* Define to 1 if you have the <zlib.h> header file. */
+#undef HAVE_ZLIB_H
+
+/* Define if you want to build micro ntop. */
+#undef MICRO_NTOP
+
+/* Enable/disable multithread support */
+#undef MULTITHREADED
+
+/* AIX 4.1, 4.2: OS lacks the getdomainname(2) function. */
+#undef NEED_GETDOMAINNAME
+
+/* Solaris 2.5.1: Define if you need a private implementation of inet_aton
+   (solaris 2.5.1 doesn't have it). */
+#undef NEED_INET_ATON
+
+/* ntop built for big endian machine */
+#undef NTOP_BIG_ENDIAN
+
+/* ntop built for little endian machine */
+#undef NTOP_LITTLE_ENDIAN
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Plugin installation directory */
+#undef PLUGIN_DIR
+
+/* temporary definition */
+#undef RETSIGTYPE
+
+/* Run files directory */
+#undef RUN_DIR
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define if you want support for SSL v3 */
+#undef SUPPORT_SSLV3
+
+/* Define if you want the SSL Watchdog compiled in (vs. runtime
+   --use-sslwatchdog) */
+#undef USE_SSLWATCHDOG
+
+/* Define for IGNORE of SIGPIPE */
+#undef YES_IGNORE_SIGPIPE
