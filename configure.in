@@ -50,8 +50,11 @@ dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm vers
 dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.2.90])
+
+dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
-SCRIPTVER="v2.2.90.107-2003-07-15"
+
+SCRIPTVER="v2.2.90.108-2003-08-07"
 
 dnl>
 dnl> generate the config header
@@ -1354,7 +1357,16 @@ AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(CFG_BIG_ENDIAN, 1, [ntop built for big endian
 dnl> Presets for the make flags go here...
 CFLAGS="${CFLAGS}"
 CPPFLAGS="${CPPFLAGS}"
-LDFLAGS="${LDFLAGS} -L$MYRRD -lmyrrd"
+case "${target}:${CC}" in
+    *-*-darwin*:* )
+        dnl> Per Luca, Mac seems to needs this, although it's strange, as 
+        dnl> libmyrrd.a doesn't yet exist at ./configure time.
+        LDFLAGS="${LDFLAGS} -L$MYRRD -lmyrrd"
+        ;;
+    * )
+        LDFLAGS="${LDFLAGS}"
+        ;;
+esac
 
 if test ".${ac_debug}" = ".yes"; then
     echo "DEBUG: CC            is '${CC}')"
