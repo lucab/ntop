@@ -14,7 +14,7 @@ run.
 
 The (recommended) minimal command line is:
 
-/usr/bin/ntop -P <your directory> -u <ntopuserid>
+/usr/bin/ntop -P <your directory> -u <ntopuserid> -A
 
 DO NOT give the -d parameter.  You may need other parameters if the default 
 values interfere with ntop's ability to run.  But this execution will not be 
@@ -22,7 +22,7 @@ operational for long, so don't bother with a full command line.
 
 The output from ntop will look like this:
 
-[root@tigger root]# /usr/bin/ntop -P /usr/share/ntop -u ntop
+[root@tigger root]# /usr/bin/ntop -P /usr/share/ntop -u ntop -A
 Wait please: ntop is coming up...
 DD/MMM/YYYY HH:MM:SS Initializing IP services...
 SSL is present but https is disabled: use -W <https port> for enabling it
@@ -44,43 +44,10 @@ Please enter the password again:
 
 *****enter the admin password again and press enter!
 
-*****ntop will come up...
-
-DD/MMM/YYYY HH:MM:SS Waiting for HTTP connections on port 3000...
-DD/MMM/YYYY HH:MM:SS Sniffying...
-DD/MMM/YYYY HH:MM:SS Started thread (9226) for web server.
-DD/MMM/YYYY HH:MM:SS Started thread (10251) for network packet sniffing on eth0.
-
-*****Switch to your web browser and shutdown ntop
-
-DD/MMM/YYYY HH:MM:SS Cleaning up...
-DD/MMM/YYYY HH:MM:SS Waiting until threads terminate...
-DD/MMM/YYYY HH:MM:SS Freeing hash host instances... (3 device(s) to save)
-DD/MMM/YYYY HH:MM:SS 2 instances freed
-DD/MMM/YYYY HH:MM:SS Freeing hash host instances... (3 device(s) to save)
-DD/MMM/YYYY HH:MM:SS 0 instances freed
-DD/MMM/YYYY HH:MM:SS Freeing hash host instances... (3 device(s) to save)
-DD/MMM/YYYY HH:MM:SS 0 instances freed
-DD/MMM/YYYY HH:MM:SS Unloading plugins (if any)...
-DD/MMM/YYYY HH:MM:SS Thanks for using PDAWatch...
-DD/MMM/YYYY HH:MM:SS Done.
-DD/MMM/YYYY HH:MM:SS Thanks for using sFlow
-DD/MMM/YYYY HH:MM:SS Done.
-DD/MMM/YYYY HH:MM:SS Thanks for using nfsWatchPlugin...
-DD/MMM/YYYY HH:MM:SS Done.
-DD/MMM/YYYY HH:MM:SS Thanks for using LsWatch...
-DD/MMM/YYYY HH:MM:SS Done.
-DD/MMM/YYYY HH:MM:SS Thanks for using icmpWatch...
-DD/MMM/YYYY HH:MM:SS Done.
-DD/MMM/YYYY HH:MM:SS Cisco NetFlow exporter terminated.
-DD/MMM/YYYY HH:MM:SS Freeing device eth0 (idx=0)...
-DD/MMM/YYYY HH:MM:SS 208 packets received by filter on eth0
-DD/MMM/YYYY HH:MM:SS 65 packets dropped by kernel
-DD/MMM/YYYY HH:MM:SS 0 packets dropped by ntop
-DD/MMM/YYYY HH:MM:SS Freeing device NetFlow-device (idx=1)...
-DD/MMM/YYYY HH:MM:SS Freeing device sFlow-device (idx=2)...
+*****ntop will store the password and stop.
 
 You should now be able to run ntop as usual.
 
 ------------------------------------------------------
-Burton M. Strauss III <BStrauss@acm.org>    April 2002
+Burton M. Strauss III <BStrauss@acm.org>      May 2002
+(Revised to reflect the -A parameter)
