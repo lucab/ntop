@@ -1557,6 +1557,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 		if((numLocalNets > 0)
 		   && (!__pseudoLocalAddress(&el->hostIpAddress, networks, numLocalNets))) {
+	          el = el->next;
 #ifdef CFG_MULTITHREADED
                   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
