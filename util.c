@@ -5301,6 +5301,17 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   }
   strncat(userAgent, ")", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 
+  /* Not the 1st time?  Send uptime too */
+  if((myGlobals.checkVersionStatusAgain > 0) &&
+     (myGlobals.runningPref.rFileName == NULL)) {
+    char buf[LEN_SMALL_WORK_BUFFER];
+
+    memset(&buf, 0, sizeof(buf));
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_SMALL_WORK_BUFFER, " uptime(%d)", time(NULL)-myGlobals.initialSniffTime);
+
+    strncat(userAgent, buf, (LEN_SMALL_WORK_BUFFER - strlen(userAgent) - 1));
+  }
+
   safe_snprintf(__FILE__, __LINE__, buf, bufLen, "GET /%s HTTP/1.0\r\n"
 		"Host: %s\r\n"
 		"User-Agent: %s\r\n"
