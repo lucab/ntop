@@ -2176,7 +2176,8 @@ void make_dot() {
   
   if(stat(dotPath, &statbuf) != 0) {
     snprintf(buf, sizeof(buf), 
-	     "Missing 'dot' tool (expected %s). Please set its path (key dot.path) into the preferences file",
+	     "<b>Missing 'dot' tool (expected %s). Please set its path (key dot.path) "
+	     "<A HREF="CONST_EDIT_PREFS">here</A>.</b>",
 	     dotPath);
     returnHTTPpageNotFound(buf);
     return;

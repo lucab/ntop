@@ -9104,3 +9104,55 @@ int handlePluginHTTPRequest(char* url) {
   return(0); /* Plugin not found */
 }
 
+/* *******************************/
+
+void edit_prefs(char *db_key, char *db_val) {
+  datum key, nextkey;
+
+  printHTMLheader("Edit Preferences", NULL, 0);
+
+  sendString("<CENTER><TABLE BORDER=1 "TABLE_DEFAULTS">\n"
+	     "<TR><TH ALIGN=CENTER "DARK_BG">Preference</TH>"
+	     "<TH ALIGN=CENTER "DARK_BG">Configured Value</TH>"
+	     "<TH ALIGN=CENTER "DARK_BG">Action</TH></TR>\n");
+
+  if(db_key && db_val) {
+    unescape_url(db_val);
+
+    if(db_val[0] == '\0')
+      delPrefsValue(db_key);
+    else
+      storePrefsValue(db_key, db_val);
+  }
+
+  key = gdbm_firstkey(myGlobals.prefsFile);
+  while (key.dptr) {
+    char buf[1024];
+    char val[512];
+    
+    if (fetchPrefsValue(key.dptr, val, sizeof(val)) == 0) {     
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<FORM ACTION="CONST_EDIT_PREFS">"
+		    "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=HIDDEN NAME=key VALUE=\"%s\">%s</TH>"
+		    "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"%s\"></TD>"
+		    "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Set></TD></TR></FORM>\n",
+		    key.dptr, key.dptr, val);
+      sendString(buf);
+    }
+
+    nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
+    free (key.dptr);
+    key = nextkey;
+  }
+
+  sendString("<FORM ACTION="CONST_EDIT_PREFS">"
+	     "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=TEXT NAME=key VALUE=\"\"></TH>"
+	     "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"\"></TD>"
+	     "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Add></TD></TR></FORM>\n");
+  
+  sendString("</TABLE></CENTER>\n");
+
+  sendString("<P><SMALL><B>NOTE:</B> set the value to \"\" (empty value) to delete an entry</SMALL><p>\n");
+  
+}
+

@@ -1178,6 +1178,7 @@
 #define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
 #define CONST_NETWORK_MAP                   "networkMap"
 #define CONST_NETWORK_IMAGE_MAP             "network_map.png"
+#define CONST_EDIT_PREFS                    "editPrefs.html"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.

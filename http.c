@@ -698,6 +698,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   sendString("		[null,'Switch NIC','/switch.html',null,null],\n");
   sendString("		['<IMG SRC=/lock.png>','Configure',null,null,null,\n");
   sendString("			['<IMG SRC=/lock.png>','Startup Options','/configNtop.html',null,null],\n");
+  sendString("			['<IMG SRC=/lock.png>','Preferences','/"CONST_EDIT_PREFS"',null,null],\n");
   sendString("			['<IMG SRC=/lock.png>','Packet Filter','/changeFilter.html',null,null],\n");
   sendString("			['<IMG SRC=/lock.png>','Reset Stats','/resetStats.html',null,null],\n");
   sendString("			['<IMG SRC=/lock.png>','Web Users','/showUsers.html',null,null],\n");
@@ -2070,6 +2071,7 @@ static int returnHTTPPage(char* pageName,
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512], *domainNameParm = NULL, *minus;
+  char *db_key = NULL, *db_val = NULL;
   int revertOrder=0, vlanId=0;
   struct tm t;
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
@@ -2111,6 +2113,10 @@ static int returnHTTPPage(char* pageName,
 	sortedColumn = abs(idx);
       } else if(strncmp(tkn, "dom=", 4) == 0) {
 	domainNameParm = strdup(&tkn[4]);
+      } else if(strncmp(tkn, "key=", 4) == 0) {
+	db_key = strdup(&tkn[4]);
+      } else if(strncmp(tkn, "val=", 4) == 0) {
+	db_val = strdup(&tkn[4]);
       } else if(strncmp(tkn, "port=", 5) == 0) {
 	portNr = atoi(&tkn[5]);
       } else if(strncmp(tkn, "unit=", 5) == 0) {
@@ -2863,7 +2869,11 @@ static int returnHTTPPage(char* pageName,
       } else if(strncasecmp(pageName,CONST_NETWORK_MAP, strlen(CONST_NETWORK_MAP)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	make_dot();
-	printTrailer=0;
+	printTrailer=1;
+      } else if(strncasecmp(pageName, CONST_EDIT_PREFS, strlen(CONST_EDIT_PREFS)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	edit_prefs(db_key, db_val);
+	printTrailer=1;
       } else if(strncasecmp(pageName, CONST_BAR_IPPROTO_DIST,
 			    strlen(CONST_BAR_IPPROTO_DIST)) == 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
@@ -3219,8 +3229,9 @@ static int returnHTTPPage(char* pageName,
       }
   }
 
-  if(domainNameParm != NULL)
-    free(domainNameParm);
+  if(domainNameParm != NULL) free(domainNameParm);
+  if(db_key != NULL) free(db_key);
+  if(db_val != NULL) free(db_val);
 
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 
@@ -3862,4 +3873,3 @@ int readHTTPpostData(int len, char *buf, int buflen)
 
   return (idx);
 }
-

@@ -238,6 +238,7 @@ void doAddUser(int len) {
 	}
       }
     }
+
     if(pw != NULL)
       decodeWebFormURL(pw);
 
@@ -646,8 +647,10 @@ int doChangeFilter(int len) {
 			myGlobals.device[i].netmask.s_addr) < 0)
 	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
 	  traceEvent(CONST_TRACE_ERROR,
-		    "Wrong filter '%s' (%s) on interface %s - using old filter",
-		    myGlobals.runningPref.currentFilterExpression, pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
+		     "Wrong filter '%s' (%s) on interface %s - using old filter",
+		     myGlobals.runningPref.currentFilterExpression, 
+		     pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
+
 	  err="The syntax of the defined filter is wrong.";
 	} else{
 #ifdef HAVE_PCAP_FREECODE
@@ -880,7 +883,8 @@ static void addKeyIfMissing(char* key, char* value,
 	 * Courtesy of Ambrose Li <a.c.li@ieee.org>
 	 *
 	 */
-	traceEvent(CONST_TRACE_FATALERROR, "No password for admin user - please re-run ntop in non-daemon mode first");
+	traceEvent(CONST_TRACE_FATALERROR, 
+		   "No password for admin user - please re-run ntop in non-daemon mode first");
 	exit(1);
       }
 
@@ -981,6 +985,7 @@ void addDefaultAdminUser(void) {
   addKeyIfMissing("2chang",      "users=1admin", 0, 0, NULL);
   addKeyIfMissing("2configNtop", "users=1admin", 0, 0, NULL);
   addKeyIfMissing("2privacyFlag","users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2"CONST_EDIT_PREFS,"users=1admin", 0, 0, NULL);
 }
 
 /* ************************************ */
@@ -1007,6 +1012,7 @@ void addDefaultAdminUser(void) {
         safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT TYPE=radio NAME=%s VALUE=1 %s>Yes<INPUT TYPE=radio NAME=%s VALUE=0 %s>No<br>%s</TD></TR>\n", bg, title, name, value ? "CHECKED" : "", name, !value ? "CHECKED" : "", descr); \
         sendString (buf);
 
+/* ************************************************* */
 
 int processNtopConfigData (char *buf, int savePref)
 {
@@ -1191,6 +1197,8 @@ int processNtopConfigData (char *buf, int savePref)
 
     return (startCap);
 }
+
+/* ************************************************* */
 
 void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 {
@@ -1391,7 +1399,9 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
       int i, rc;
       char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
-      sendString("<TR><INPUT TYPE=HIDDEN NAME=BASIC_PREFS VALUE=1><TD ALIGN=LEFT "DARK_BG">Capture Interfaces (-i)</TD><TD>\n");
+      sendString("<TR><INPUT TYPE=HIDDEN NAME=BASIC_PREFS VALUE=1>"
+		 "<TD ALIGN=LEFT "DARK_BG">Capture Interfaces (-i)</TD><TD>\n");
+
       if(((rc = pcap_findalldevs(&devpointer, ebuf)) >= 0) && (devpointer != NULL)) {
 
 	for (i = 0; devpointer != 0; i++) {
@@ -1711,7 +1721,8 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
   }
 
   sendString ("<P Align=CENTER><FONT COLOR = \"FF00FF\">Settings take effect at next startup</FONT></CENTER><P>");
-  sendString ("<P Align=CENTER><FONT COLOR = \"FF00FF\">See <a href = \"info.html\">Show Configuration</A> for runtime values</FONT></CENTER><P>");
+  sendString ("<P Align=CENTER><FONT COLOR = \"FF00FF\">See <a href = \"info.html\">Show Configuration</A>"
+	      " for runtime values</FONT></CENTER><P>");
 
   printHTMLtrailer();
 }

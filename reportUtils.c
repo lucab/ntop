@@ -774,7 +774,7 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, i
   flagImg = NULL;
 
   for(i=0; osInfos[i].link != NULL; i++) {
-    if(strcasestr(theOsName, osInfos[i].name) != NULL) {
+    if(strstr(theOsName, osInfos[i].name) != NULL) {
       flagImg = osInfos[i].link;
       break;
     }

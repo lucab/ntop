@@ -460,7 +460,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 
       /* key_data has been set already */
       data_data.dptr = (void*)&storedAddress;
-      data_data.dsize = sizeof(storedAddress);
+      data_data.dsize = sizeof(storedAddress)+1;
 
       if(updateRecord) {
 	updateHostNameInfo(*hostAddr, symAddr, symAddrType);
@@ -809,7 +809,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
   
   data_data = gdbm_fetch(myGlobals.dnsCacheFile, key_data);
 
-  if((data_data.dptr != NULL) && (data_data.dsize == (sizeof(StoredAddress))) ) {
+  if((data_data.dptr != NULL) && (data_data.dsize == (sizeof(StoredAddress)+1)) ) {
     StoredAddress *retrievedAddress;
     
     retrievedAddress = (StoredAddress*)data_data.dptr;

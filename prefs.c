@@ -1302,5 +1302,4 @@ void initUserPrefs (UserPref *pref)
    pref->skipVersionCheck = DEFAULT_NTOP_SKIP_VERSION_CHECK;
 }
 
-
 /* *******************************/

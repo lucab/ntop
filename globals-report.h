@@ -286,6 +286,7 @@ extern void* sslwatchdogChildThread(void* notUsed _UNUSED_);
 #endif
 extern int printNtopLogReport(int printAsText);
 extern char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize);
+extern void edit_prefs(char *db_key, char *db_val);
 
 /* **************************** */
 
