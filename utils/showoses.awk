@@ -130,4 +130,8 @@ END {
     print "Status of blank means that the support level depends"
     print "upon ntop settings and/or other factors."
     print ""
+    print ""
+    print "--enable-showoses complete, remainder of ./configure tasks"
+    print "are NOT done.  Rerun without --enable-showoses for that."
+    print ""
 }
