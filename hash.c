@@ -56,8 +56,10 @@ u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
        && (!_pseudoLocalAddress(hostIpAddress))) {
       *el = myGlobals.otherHostEntry;
       return(OTHER_HOSTS_ENTRY);
-    } else
-      idx = hostIpAddress->s_addr;
+    } else {
+      /* idx = hostIpAddress->s_addr; */
+      idx = (hostIpAddress->s_addr & 0xffff) ^ ((hostIpAddress->s_addr >> 15) & 0xffff);
+    }
 
     (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, myGlobals.broadcastEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0) {
