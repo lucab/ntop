@@ -291,6 +291,13 @@ static const char *rrd_summary_packet_sizes[] = {
   NULL
 };
 
+static const char *rrd_summary_local_remote_ip_bytes[] = {
+  "ipLocalBytes",
+  "ipLocalToRemoteBytes",
+  "ipRemoteToLocalBytes",
+  NULL
+};
+
 static const char *rrd_summary_host_sentRcvd_packets[] = { 
   "pktSent",
   "pktRcvd",
