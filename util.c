@@ -1404,8 +1404,8 @@ void readLsofInfo(void) {
       portNumber = getAllPortByName(thePort);
     }
 
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "DEBUG: %s - %s - %s (%s/%d)\n",
+#ifdef LSOF_DEBUG
+    traceEvent(TRACE_INFO, "LSOF_DEBUG: %s - %s - %s (%s/%d)\n",
 	       command, user, thePort, portNr, portNumber);
 #endif
 
@@ -1424,8 +1424,8 @@ void readLsofInfo(void) {
 	if(myGlobals.processes != NULL) free(myGlobals.processes);
 	myGlobals.processes = swapProcesses;
 
-#ifdef DEBUG
-	traceEvent(TRACE_INFO, "DEBUG: %3d) %s %s %s/%d\n",
+#ifdef LSOF_DEBUG
+	traceEvent(TRACE_INFO, "LSOF_DEBUG: %3d) %s %s %s/%d\n",
 		   myGlobals.numProcesses, command, user, portNr, portNumber);
 #endif
 	myGlobals.processes[myGlobals.numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
@@ -1482,7 +1482,9 @@ void readLsofInfo(void) {
 #endif
 
   free(tmpProcesses);
-  traceEvent(TRACE_INFO, "readLsofInfo completed (%d sec).", (int)(time(NULL)-startTime));
+#ifdef LSOF_DEBUG
+  traceEvent(TRACE_INFO, "LSOF_DEBUG: readLsofInfo completed (%d sec).", (int)(time(NULL)-startTime));
+#endif
 #endif /* WIN32 */
 }
 

@@ -2588,6 +2588,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     defined(HASH_DEBUG)                || \
     defined(HOST_FREE_DEBUG)           || \
     defined(HTTP_DEBUG)                || \
+    defined(LSOF_DEBUG)                || \
     defined(MEMORY_DEBUG)              || \
     defined(NETFLOW_DEBUG)             || \
     defined(PACKET_DEBUG)              || \
@@ -2681,6 +2682,14 @@ void printNtopConfigInfo(int textPrintFlag) {
 
       printFeatureConfigInfo(textPrintFlag,     "HTTP_DEBUG",
 #ifdef HTTP_DEBUG
+			     "yes"
+#else
+			     "no"
+#endif
+			     );
+
+      printFeatureConfigInfo(textPrintFlag,     "LSOF_DEBUG",
+#ifdef LSOF_DEBUG
 			     "yes"
 #else
 			     "no"

@@ -97,6 +97,10 @@
  */
 /* #define HTTP_DEBUG */
 
+/* LSOF_DEBUG logs information about ntop's use of lsof
+ */
+/* #define LSOF_DEBUG */
+
 /* MEMORY_DEBUG turns on the code in leaks.c (ntop_safexxxx) which monitors
  *  memory allocations for leaks.
  *  WARNING: There is code in pbuf.c that will stop ntop after a specified

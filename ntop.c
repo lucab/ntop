@@ -602,12 +602,12 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
     if(!myGlobals.capturePackets) break;
 
     if(myGlobals.updateLsof) {
-#ifndef DEBUG
-      traceEvent(TRACE_INFO, "Wait please: reading lsof information...\n");
+#ifdef LSOF_DEBUG
+      traceEvent(TRACE_INFO, "LSOF_DEBUG: Wait please: reading lsof information...\n");
 #endif
       if(myGlobals.isLsofPresent) readLsofInfo();
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "Done with lsof.\n");
+#ifdef LSOF_DEBUG
+      traceEvent(TRACE_INFO, "LSOF_DEBUT: Done with lsof.\n");
 #endif
     }
     sleep(60);
