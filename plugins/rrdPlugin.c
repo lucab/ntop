@@ -52,7 +52,7 @@ static const char *rrd_subdirs[] =
 
 #ifdef HAVE_RRD
 
-/* #define RRD_DEBUG 4 */
+/* #define RRD_DEBUG 2 */
 
 #include <dirent.h>
 
@@ -67,9 +67,8 @@ int optind, opterr;
 static unsigned short initialized = 0, active = 0, dumpInterval, dumpDetail;
 static char *hostsFilter;
 static Counter numTotalRRDs = 0;
-static unsigned long numRuns = 0;
-
-static time_t start_tm, end_tm;
+static unsigned long numRuns = 0, numRRDerrors = 0;
+static time_t start_tm, end_tm, rrdTime;
 
 #ifdef MULTITHREADED
 pthread_t rrdThread;
@@ -211,7 +210,7 @@ void mkdir_p(char *path) {
 int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average) {
   char *argv[32], path[256];
-  int argc = 0;
+  int argc = 0, rc;
   time_t        start,end;
   unsigned long step, ds_cnt,i;
   rrd_value_t   *data,*datai, _total, _val;
@@ -223,7 +222,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   revertSlash(path, 0);
 #endif
 
-  argv[argc++] = "rrd_fecth";
+  argv[argc++] = "rrd_fetch";
   argv[argc++] = path;
   argv[argc++] = "AVERAGE";
   argv[argc++] = "--start";
@@ -243,8 +242,10 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   optind=0; /* reset gnu getopt */
   opterr=0; /* no error messages */
 
-  if(rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data) == -1)
+  rc = rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data);
+  if(rc == -1) {
     return(-1);
+  }
 
   datai  = data, _total = 0;
 
@@ -524,7 +525,6 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   char path[512], *argv[32], cmd[64];
   struct stat statbuf;
   int argc = 0, rc, createdCounter = 0;
-  time_t theTime =  myGlobals.actTime;
 
   if(value == 0) return;
 
@@ -551,7 +551,7 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     argv[argc++] = path;
     argv[argc++] = "--start";
     snprintf(startStr, sizeof(startStr), "%u", 
-	     theTime-1 /* -1 avoids subsequent rrd_update call problems */);
+	     rrdTime-1 /* -1 avoids subsequent rrd_update call problems */);
     argv[argc++] = startStr;
 
     if(isCounter) {
@@ -568,12 +568,14 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
     optind=0; /* reset gnu getopt */
     opterr=0; /* no error messages */
+
     rc = rrd_create(argc, argv);
 
     if (rrd_test_error()) {
       traceEvent(TRACE_WARNING, "RRD: rrd_create(%s) error: %s\n", 
 		 path, rrd_get_error());
       rrd_clear_error();
+      numRRDerrors++;
     }
 
 #if RRD_DEBUG > 0
@@ -614,25 +616,27 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
     */
 
-    sprintf(cmd, "%u:u", theTime-10); /* u = undefined */
+    sprintf(cmd, "%u:u", rrdTime-10); /* u = undefined */
   } else {
-    sprintf(cmd, "%u:%u", theTime, (unsigned long)value);
+    sprintf(cmd, "%u:%u", rrdTime, (unsigned long)value);
   }
 
   argv[argc++] = cmd;
 
   optind=0; /* reset gnu getopt */
   opterr=0; /* no error messages */
+
   rc = rrd_update(argc, argv);
   numTotalRRDs++;
 
   if (rrd_test_error()) {
     int x;
 
+    numRRDerrors++;
     traceEvent(TRACE_WARNING, "RRD: rrd_update(%s) error: %s\n", path, rrd_get_error());
     rrd_clear_error();
 
-    traceEvent(TRACE_INFO, "RRD call stack:");
+    traceEvent(TRACE_INFO, "RRD call stack (counter created: %d):", createdCounter);
     for	(x = 0; x < argc; x++)
       traceEvent(TRACE_INFO, "argv[%d]: %s", x, argv[x]);
   }
@@ -976,6 +980,11 @@ static void handleRRDHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
 
+  sendString("<TR><TH ALIGN=LEFT>RRD Update Errors</TH><TD>");
+  if(snprintf(buf, sizeof(buf), "%lu RRD update errors</TD></TR>\n", (unsigned long)numRRDerrors) < 0)
+    BufferTooShort();
+  sendString(buf);
+
   sendString("<TR><TH ALIGN=LEFT>RRD Graphic Requests</TH><TD>");
   if (myGlobals.reuseRRDgraphics) {
     if(snprintf(buf, sizeof(buf), "%lu RRD graphics requested (%lu reused)</TD></TR>\n",
@@ -1061,6 +1070,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...woke", sleep_tm);
 
     numRuns++;
+    rrdTime =  myGlobals.actTime;
 
     /* ****************************************************** */
 
