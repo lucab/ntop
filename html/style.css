@@ -75,3 +75,11 @@ font-family: Helvetica, Verdana, Arial, sans-serif}
 .nav
 {color: #000000;
 font-family: Helvetica, Verdana, Arial, sans-serif}
+
+A.age0min { color:#FF0000 }
+A.age5min { color:#FF00FF }
+A.age15min { color:#FF7F00 }
+A.age30min { color:#007FFF }
+A.age60min { color:#0000FF }
+
+
