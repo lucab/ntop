@@ -100,6 +100,9 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   it is necessary to free all the (eventual) sessions of 
   such host.  
 */
+
+#define MUTEX_FHS_MASK         (max(0, min(65535, (1 << MUTEX_FHS_GRANULARITY) - 1)))
+
 static void freeHostSessions(u_int hostIdx, int theDevice) {
   int i;
 
@@ -107,7 +110,18 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
     IPSession *prevSession, *nextSession, *theSession;
 
 #ifdef MULTITHREADED
-    accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
+    if (i & MUTEX_FHS_MASK == 0) {
+        accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
+    } else if (!myGlobals.tcpSessionsMutex.isLocked) {
+        traceEvent(TRACE_ERROR, 
+                   "IDLE_PURGE: DANGER: Mutex UNLOCKED. "
+                   "unlocked: %u times, last was %s:%d "
+                   "locked: %u times, last was %s:%d.\n",
+                   myGlobals.tcpSessionsMutex.numReleases,
+                   myGlobals.tcpSessionsMutex.unlockFile, myGlobals.tcpSessionsMutex.unlockLine,
+                   myGlobals.tcpSessionsMutex.numLocks,
+                   myGlobals.tcpSessionsMutex.lockFile, myGlobals.tcpSessionsMutex.lockLine);
+    }
 #endif
 
     prevSession = theSession = myGlobals.device[theDevice].tcpSession[i];
@@ -135,9 +149,22 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
     } /* while */
 
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.tcpSessionsMutex);
+    if (i & MUTEX_FHS_MASK == 0) {
+        releaseMutex(&myGlobals.tcpSessionsMutex);
+#ifdef HAVE_SCHED_H
+	sched_yield(); /* Allow other threads to run */
+#endif
+    }
 #endif
   }
+
+#ifdef MULTITHREADED
+  /* Final free (unless we end on the count...) */
+  if (i & MUTEX_FHS_MASK != 0) {
+      releaseMutex(&myGlobals.tcpSessionsMutex);
+  }
+#endif
+
 }
 
 /* ********************************* */
@@ -429,6 +456,7 @@ void purgeIdleHosts(int actDevice) {
   HostTraffic **theFlaggedHosts = NULL;
   u_int len;
   int newHostsToPurgePerCycle;
+  char purgeStats[128];
 
   float hiresDeltaTime;
   struct timeval hiresTimeStart, hiresTimeEnd;
@@ -436,9 +464,8 @@ void purgeIdleHosts(int actDevice) {
   if(myGlobals.rFileName != NULL) return;
 
   if(firstRun) {
-#ifdef IDLE_PURGE_DEBUG
-    traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: purgeIdleHosts - firstRun!\n");
-#endif
+    traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: purgeIdleHosts - firstRun (mutex every %d times through the loop)\n",
+                           MUTEX_FHS_MASK+1);
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
   }
@@ -564,13 +591,24 @@ void purgeIdleHosts(int actDevice) {
   gettimeofday(&hiresTimeEnd, NULL);
   hiresDeltaTime=timeval_subtract(hiresTimeEnd, hiresTimeStart);
 
-#ifdef IDLE_PURGE_DEBUG
   if(numFreedBuckets > 0) {
-    traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Elapsed Time is %.2f seconds, %d hosts deleted, %.3f per.\n", 
-                           hiresDeltaTime,
-	                   numFreedBuckets,
-                           hiresDeltaTime / numFreedBuckets);
+      if(snprintf(purgeStats, 
+                  sizeof(purgeStats), 
+                  "Device %d: %d hosts deleted, elapsed time is %.6f seconds (%.6f per host).", 
+                  actDevice,
+                  numFreedBuckets,
+                  hiresDeltaTime,
+                  hiresDeltaTime / numFreedBuckets) < 0)
+          BufferTooShort();
+  } else {
+      if(snprintf(purgeStats, 
+                  sizeof(purgeStats), 
+                  "Device %d: no hosts deleted.",
+                  actDevice) < 0)
+          BufferTooShort();
   }
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: %s\n", purgeStats);
 #endif
 
   if ((myGlobals.dynamicPurgeLimits == 1) && (numFreedBuckets > 0)) {
@@ -580,7 +618,7 @@ void purgeIdleHosts(int actDevice) {
        */
 
 #ifdef IDLE_PURGE_DEBUG
-      traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Time targets MIN %.2f ... actual %.2f ... MAX %.2f\n",
+      traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Time targets MIN %.2f ... actual %.6f ... MAX %.2f\n",
                              NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME,
                              hiresDeltaTime,
                              NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME);

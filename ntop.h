@@ -707,6 +707,11 @@ extern const char *gdbm_strerror (int);
 #define NUM_SESSION_INFO                     384  /* used in util.c */
 #define MAX_NUM_SESSION_INFO  2*NUM_SESSION_INFO  /* Not yet used */
 
+#define MUTEX_FHS_GRANULARITY  6  /* 0 >= MUTEX_FHS_GRANULARITY >= 15
+                                   *   Determines how often to access/release mutexes
+                                   *   in freeHostSessions() every pow(2, MUTEX_FHS_GRANULARITY) - 1
+                                   */
+
 /* SSLWATCHDOG stuff *************************** */
 #if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
 
@@ -2510,5 +2515,16 @@ typedef struct probeInfo {
   struct in_addr probeAddr;
   u_int32_t      pkts;
 } ProbeInfo;
+
+/* **************************************************************************************
+ *  #define value tests 
+ *
+ *                              put 'em here so people aren't tempted to override them...
+ *
+ * **************************************************************************************/
+
+#if MUTEX_FHS_GRANULARITY < 0 || MUTEX_FHS_GRANULARITY > 15
+#error MUTEX_FHS_GRANULARITY out of range 0..15!
+#endif 
 
 #endif /* NTOP_H */

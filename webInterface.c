@@ -756,13 +756,24 @@ void shutdownNtop(void) {
 /* ******************************** */
 
 static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* status) {
+  char *tmpStr;
+  char *strtokState;
+
   sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
   sendString(feature);
   sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
   if (status == NULL) {
     sendString("(nil)");
   } else {
-    sendString(status);
+
+    tmpStr = strtok_r(status, "\n", &strtokState);
+    while(tmpStr != NULL) {
+        sendString(tmpStr);
+        tmpStr = strtok_r(NULL, "\n", &strtokState);
+        if (tmpStr != NULL) {
+            sendString(texthtml("\n          ", "<BR>"));
+        }
+    }
   }
   sendString(texthtml("\n", "</TD></TR>\n"));
 }
