@@ -215,14 +215,14 @@ ntop.html: ntop.txt
 
 install-data-local:
 	@cp -p ntop-cert.pem $(bindir)/ntop-cert.pem
-	@$(top_srcdir)/mkinstalldirs $(libdir)/plugins;
-	@$(top_srcdir)/mkinstalldirs $(datadir)/ntop;
-	@$(top_srcdir)/mkinstalldirs $(datadir)/ntop/html;
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop;
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/html;
 	@for file in $(NTOPHTML); do \
           if test -d $$file; then \
-             $(top_srcdir)/mkinstalldirs $(datadir)/ntop/$$file; \
+             $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/$$file; \
            else \
-             cp -p $$file $(datadir)/ntop/$$file; \
+             cp -p $$file $(DESTDIR)/$(datadir)/ntop/$$file; \
           fi; \
         done
 
