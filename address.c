@@ -1336,14 +1336,17 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 
     if (numAliases > 0) {
       for (i = 0; i < numAliases; i++) {
-	memcpy(hostPtr->aliases[i], host_aliases[i],
-	       host_aliases_len[i]);
+	if(host_aliases[i] != NULL)
+	  memcpy(hostPtr->aliases[i], host_aliases[i], host_aliases_len[i]);
+	else break;
       }
       hostPtr->aliases[i][0] = '\0';
     }
     if (numAddresses > 0) {
       for (i = 0; i < numAddresses; i++) {
-	memcpy(&hostPtr->addrList[i], addr_list[i], hostPtr->addrLen);
+	if(addr_list[i] != NULL)
+	  memcpy(&hostPtr->addrList[i], addr_list[i], hostPtr->addrLen);
+	else break;
       }
       hostPtr->addrList[i] = 0;
     }
