@@ -1773,12 +1773,14 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "-t | --trace-level", buf);
 
+#ifndef WIN32
   if(snprintf(buf, sizeof(buf), "%s (uid=%d, gid=%d)",
                                  myGlobals.effectiveUserName,
                                  myGlobals.userId,
                                  myGlobals.groupId) < 0)
       BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "-u | --user", buf);
+#endif
 
 #ifdef HAVE_MYSQL
   if (myGlobals.enableDBsupport == 1) {
@@ -1838,11 +1840,11 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.flowSpecs == NULL ? "none" : myGlobals.flowSpecs,
                            NTOP_DEFAULT_FLOW_SPECS == NULL ? "none" : NTOP_DEFAULT_FLOW_SPECS);
 
+#ifndef WIN32
   printParameterConfigInfo(textPrintFlag, "-K | --enable-debug",
                             myGlobals.debugMode == 1 ? "Yes" : "No",
                             NTOP_DEFAULT_DEBUG_MODE == 1 ? "Yes" : "No");
 
-#ifndef WIN32
   if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
       printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "No");
   } else {
@@ -1887,6 +1889,7 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.mapperURL,
                            NTOP_DEFAULT_MAPPER_URL);
 
+#ifdef HAVE_OPENSSL
   if (myGlobals.sslInitialized == 0) {
       strcpy(buf, "Uninitialized");
   } else if (myGlobals.sslPort == 0) {
@@ -1906,10 +1909,13 @@ void printNtopConfigInfo(int textPrintFlag) {
           BufferTooShort();
   }
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
+#endif
 
+#ifdef HAVE_GDCHART
   printParameterConfigInfo(textPrintFlag, "--throughput-chart-type",
                            myGlobals.throughput_chart_type == GDC_AREA ? "Area" : "Bar",
                            NTOP_DEFAULT_CHART_TYPE == GDC_AREA ? "Area" : "Bar");
+#endif
 
  sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
  sendString("Note: " REPORT_ITS_EFFECTIVE "   means that "
