@@ -974,10 +974,10 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
   if (myGlobals.logView != NULL) {
-      for(i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++)
-          if (myGlobals.logView[i] != NULL) 
-              free(myGlobals.logView[i]);
-      free(myGlobals.logView);
+    for(i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++)
+      if (myGlobals.logView[i] != NULL) 
+	free(myGlobals.logView[i]);
+    free(myGlobals.logView);
   }
 
 #ifdef WIN32

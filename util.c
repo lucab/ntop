@@ -273,11 +273,23 @@ unsigned short isLocalAddress(struct in_addr *addr, u_int deviceId) {
 
   if(addr == NULL) return(0);
 
-  if((addr->s_addr & myGlobals.device[deviceId].netmask.s_addr) == myGlobals.device[deviceId].network.s_addr) {
+  if(!myGlobals.mergeInterfaces) {
+    if((addr->s_addr & myGlobals.device[deviceId].netmask.s_addr) == myGlobals.device[deviceId].network.s_addr) {
 #ifdef ADDRESS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local", intoa(*addr));
+      traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local", intoa(*addr));
 #endif
-    return 1;
+      return 1;
+    }
+  } else {
+    int i;
+
+    for(i=0; i<myGlobals.numDevices; i++)
+      if((addr->s_addr & myGlobals.device[i].netmask.s_addr) == myGlobals.device[i].network.s_addr) {
+#ifdef ADDRESS_DEBUG
+	traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local", intoa(*addr));
+#endif
+	return 1;
+      }
   }
 
   if(myGlobals.trackOnlyLocalHosts)

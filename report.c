@@ -641,10 +641,10 @@ void printTrafficStatistics(void) {
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		  getRowColor(),
 		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/
-				   (myGlobals.actTime-myGlobals.initialSniffTime), 1),
+				   (myGlobals.actTime-myGlobals.initialSniffTime+1), 1),
 		  /* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
 		  ((float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value/
-		   (float)(myGlobals.actTime-myGlobals.initialSniffTime))) < 0)
+		   (float)(myGlobals.actTime-myGlobals.initialSniffTime+1))) < 0)
 	BufferTooShort();
       sendString(buf);
     }

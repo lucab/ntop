@@ -237,9 +237,9 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 #endif
 
   if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
-  if(host->unknownProtoSent   != NULL) free(host->unknownProtoSent);
-  if(host->unknownProtoRcvd   != NULL) free(host->unknownProtoRcvd);
-  if(host->ipProtosList       != NULL) free(host->ipProtosList);
+  if(host->unknownProtoSent   != NULL)  free(host->unknownProtoSent);
+  if(host->unknownProtoRcvd   != NULL)  free(host->unknownProtoRcvd);
+  if(host->ipProtosList       != NULL)  free(host->ipProtosList);
 
   if(host->nonIPTraffic) {
     if(host->nonIPTraffic->nbHostName != NULL)          free(host->nonIPTraffic->nbHostName);

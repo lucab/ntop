@@ -1368,7 +1368,7 @@ static void processIpPkt(const u_char *bp,
       if(icmpPkt.icmp_type <= ICMP_MAXTYPE) {
 	short dumpPacket = 1;
 	if(srcHost->icmpInfo == NULL) {
-	  if ( (srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
+	  if((srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
 	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
@@ -1920,8 +1920,12 @@ void processPacket(u_char *_deviceId,
 
   updateDevicePacketStats(length, actualDeviceId);
 
+
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetPkts, 1);
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetBytes, h->len);
+
+  if(myGlobals.mergeInterfaces && actualDeviceId != deviceId)
+    incrementTrafficCounter(&myGlobals.device[deviceId].ethernetPkts, 1);
 
   if(myGlobals.device[actualDeviceId].pcapDumper != NULL)
     pcap_dump((u_char*)myGlobals.device[actualDeviceId].pcapDumper, h, p);

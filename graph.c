@@ -1150,7 +1150,6 @@ void interfaceTrafficPie(void) {
   int i;
   FILE *fd;
   TrafficCounter totPkts;
-  struct pcap_stat pcapStat;
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0;
   int useFdOpen = 0;
@@ -1159,10 +1158,8 @@ void interfaceTrafficPie(void) {
 
   for(i=0; i<myGlobals.numDevices; i++)
     if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
-      if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
-	p[i] = (float)pcapStat.ps_recv;
-	totPkts.value += pcapStat.ps_recv;
-      }
+      p[i] = (float)myGlobals.device[i].ethernetPkts.value;
+      totPkts.value += myGlobals.device[i].ethernetPkts.value;
     }
 
   if(totPkts.value == 0)
@@ -1520,7 +1517,7 @@ void drawGlobalProtoDistribution(void) {
 
 void drawGlobalIpProtoDistribution(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
-  int i, idx=0, idx1 = 0;
+  int i, idx=0, idx1 = 0, maxNumDisplayProto = 13;
   float p[256];
   char *lbl[256];
   FILE *fd;
@@ -1549,6 +1546,8 @@ void drawGlobalIpProtoDistribution(void) {
       lbl[idx] = myGlobals.protoIPTrafficInfos[i];
       idx++;
     }
+
+    if(idx >= maxNumDisplayProto) break;
   }
 
   /*  Add a bar for the Other TCP/UDP based protocols
