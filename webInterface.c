@@ -3973,7 +3973,7 @@ void printNtopLogReport(void) {
     sendString("<pre>");
 
 #ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.logViewMutex, "reporting");
+    pthread_mutex_lock(&myGlobals.logViewMutex);
 #endif
 
     for (i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++) {
@@ -3987,7 +3987,7 @@ void printNtopLogReport(void) {
     }
 
 #ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.logViewMutex);
+    pthread_mutex_unlock(&myGlobals.logViewMutex);
 #endif
 
     sendString("</pre>");

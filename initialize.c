@@ -888,6 +888,9 @@ void reinitMutexes (void) {
  * Although the ntop 2.2 code has the ILLUSION that the resources are protected
  * they are not!  The code is wrong, but a real fix will have to be in 2.3...
  * (BMS 06-2003, ntop 2.2c)
+ *
+ * NOTE: For the logViewMutex, we must use the native calls, not the enhanced ones
+ *       in util.c - otherwise the calls to traceEvent() cause deadlocks!
  */
   createMutex(&myGlobals.logViewMutex);
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
@@ -895,6 +898,11 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.packetQueueMutex);
   createMutex(&myGlobals.hostsHashMutex);
+  createMutex(&myGlobals.watchedThreadMutex);
+
+  if(myGlobals.isLsofPresent) {
+      createMutex(&myGlobals.lsofMutex);
+  }
 
  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
