@@ -144,9 +144,7 @@ extern void printNotAvailable(void);
 extern void listNetFlows(void);
 extern void fillDomainName(HostTraffic *el);
 extern void printNtopConfigInfo(int textPrintFlag);
-extern void printTrafficStatistics();
 extern void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId);
-extern void printTrafficStatistics();
 extern void printASList(unsigned int deviceId);
 
 /* webInterface.c */
@@ -296,5 +294,3 @@ extern void drawThptGraph(int sortedColumn);
 extern void drawGlobalProtoDistribution(void);
 extern void drawHostsDistanceGraph();
 extern void drawGlobalIpProtoDistribution(void);
-extern void drawHostsDistanceGraph();
-extern void drawHostsDistanceGraph();
