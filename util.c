@@ -1082,6 +1082,9 @@ void readLsofInfo(void) {
 
   if(fd == NULL) {
     isLsofPresent = 0;
+#ifdef MULTITHREADED
+    releaseMutex(&lsofMutex);
+#endif
     return;
   }
 
@@ -1152,7 +1155,6 @@ void readLsofInfo(void) {
 
     if(!found) {
       int floater;
-
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", numProcesses, command, user, portNr, portNumber);
 #endif
@@ -1572,6 +1574,7 @@ static resetHostsVariables(HostTraffic* el) {
   el->osName = NULL;
   el->nbHostName = NULL;
   el->nbDomainName = NULL;
+  el->nbDescr = NULL; /* Fix courtesy of Francis Pintos <francis@arhl.com.hk> */
   el->atNodeName = NULL;
   memset(el->atNodeType, 0, sizeof(el->atNodeType));
   el->ipxHostName = NULL;
