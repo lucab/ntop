@@ -461,6 +461,14 @@ void dumpNtopHashes(char* options) {
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
+      
+      /* Added by Andreas Pfaller <a.pfaller@pop.gun.de> */
+      if(el->rstAckPktsSent.value > 0) {
+	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
+		    "rstAckPktsSent", el->rstAckPktsSent.value)
+	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      }
 
       if(el->rstPktsSent.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
@@ -497,6 +505,14 @@ void dumpNtopHashes(char* options) {
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
+
+      /* Added by Andreas Pfaller <a.pfaller@pop.gun.de> */
+      if(el->rstAckPktsRcvd.value > 0) {
+	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
+		    "rstAckPktsRcvd", el->rstAckPktsRcvd.value)
+ 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+ 	sendString(buf);
+       }
 
       if(el->rstPktsRcvd.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",

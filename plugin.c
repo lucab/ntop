@@ -32,7 +32,6 @@ extern PluginInfo* icmpPluginEntryFctn(void);
 extern PluginInfo* arpPluginEntryFctn(void);
 extern PluginInfo* nfsPluginEntryFctn(void);
 extern PluginInfo* wapPluginEntryFctn(void);
-extern PluginInfo* remIntPluginEntryFctn(void);
 #ifdef RMON_SUPPORT
 extern PluginInfo* rmonPluginEntryFctn(void);
 #endif

@@ -1787,7 +1787,8 @@ void printActiveTCPSessions(void) {
 		  formatTime(&(tcpSession[idx]->firstSeen), 1),
 		  formatTime(&(tcpSession[idx]->lastSeen), 1),
 		  formatSeconds(actTime-tcpSession[idx]->firstSeen),
-		  formatLatency(tcpSession[idx]->nwLatency)
+		  formatLatency(tcpSession[idx]->nwLatency, 
+				tcpSession[idx]->sessionState)
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 		  , getSessionState(tcpSession[idx])
 #endif

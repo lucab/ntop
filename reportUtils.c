@@ -1572,7 +1572,7 @@ void printTCPflagsStats(HostTraffic *el) {
     sendString("</TR>\n");
   }
 
-  if((el->synPktsSent.value+el->synPktsRcvd.value) > 0) {
+  if((el->rstAckPktsSent.value+el->rstAckPktsRcvd.value) > 0) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST|ACK</TH>",
 		getRowColor()) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2141,7 +2141,8 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 		  formatTime(&(tcpSession[idx]->firstSeen), 1),
 		  formatTime(&(tcpSession[idx]->lastSeen), 1),
 		  formatSeconds(actTime-tcpSession[idx]->firstSeen),
-		  formatLatency(tcpSession[idx]->nwLatency)
+		  formatLatency(tcpSession[idx]->nwLatency, 
+				tcpSession[idx]->sessionState)
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 		  , getSessionState(tcpSession[idx])
 #endif

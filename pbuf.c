@@ -320,11 +320,13 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	el->contactedSentPeersIndexes[i] = NO_PEER;
 	el->contactedRcvdPeersIndexes[i] = NO_PEER;
 	el->synPktsSent.peersIndexes[i] = NO_PEER;
+	el->rstAckPktsSent.peersIndexes[i] = NO_PEER;
 	el->rstPktsSent.peersIndexes[i] = NO_PEER;
 	el->synFinPktsSent.peersIndexes[i] = NO_PEER;
 	el->finPushUrgPktsSent.peersIndexes[i] = NO_PEER;
 	el->nullPktsSent.peersIndexes[i] = NO_PEER;
 	el->synPktsRcvd.peersIndexes[i] = NO_PEER;
+	el->rstAckPktsRcvd.peersIndexes[i] = NO_PEER;
 	el->rstPktsRcvd.peersIndexes[i] = NO_PEER;
 	el->synFinPktsRcvd.peersIndexes[i] = NO_PEER;
 	el->finPushUrgPktsRcvd.peersIndexes[i] = NO_PEER;
@@ -984,17 +986,17 @@ static void handleBootp(HostTraffic *srcHost,
 				 tmpHostName[MAX_HOST_SYM_NAME_LEN],
 				 tmpDomainName[MAX_HOST_SYM_NAME_LEN];
 		    int hostLen, i;
-		    
+
 			memset(tmpHostName, 0, sizeof(tmpHostName));
 		    strncpy(tmpHostName, realDstHost->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
 		    for(i=0; i<strlen(tmpHostName); i++)
 		      if(tmpHostName[i] == '.')
 			break;
-		    
+
 		    tmpHostName[i] = '\0';
-		    		      
+
 		    strcpy(tmpDomainName, &bootProto.bp_vend[idx]);
-		    
+
 		    if(strcmp(tmpHostName, tmpDomainName) != 0) {
 		      if(snprintf(tmpName, sizeof(tmpName), "%s.%s",
 				  tmpHostName, tmpDomainName) < 0)
@@ -1012,7 +1014,7 @@ static void handleBootp(HostTraffic *srcHost,
 		      }
 		    }
 		  }
-		  
+
 		  idx += len;
 		  break;
 		case 19: /* IP Forwarding */
@@ -1375,6 +1377,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
 	printf(" NEW ");
 #endif
+
+#ifdef TESTLUCA
 	if(tp->th_flags & TH_FIN) {
 	  /* We've received a FIN for a session that
 	     we've not seen (ntop started when the session completed).
@@ -1385,6 +1389,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 #endif
 	  return; /* Nothing else to do */
 	}
+#endif
 
 	if((*numSessions) > (HASHNAMESIZE/2)) {
 	  /* The hash table is getting large: let's replace the oldest session
@@ -1417,11 +1422,13 @@ static void handleSession(const struct pcap_pkthdr *h,
 	    theSession->nwLatency.tv_sec = h->ts.tv_sec;
 	    theSession->nwLatency.tv_usec = h->ts.tv_usec;
 	    theSession->sessionState = STATE_SYN;
+	  } if(tp->th_flags & TH_FIN) {
+	    theSession->sessionState = STATE_TIMEOUT;
 	  } else {
 	    /*
-	      It might be that this session was 
+	      It might be that this session was
 	      already active when ntop started up
-	    */	    
+	    */
 	    theSession->sessionState = STATE_ACTIVE;
 	    srcHost->numEstablishedTCPConnections++,
 	      dstHost->numEstablishedTCPConnections++,
@@ -1474,11 +1481,13 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 	    if(
 	       ((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-		&& (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-strlen(NAPSTER_DOMAIN)],
+		&& (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-
+						     strlen(NAPSTER_DOMAIN)],
 			   NAPSTER_DOMAIN) == 0) && (sport == 8888))
 	       ||
 	       ((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-		&& (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-strlen(NAPSTER_DOMAIN)],
+		&& (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-
+						     strlen(NAPSTER_DOMAIN)],
 			   NAPSTER_DOMAIN) == 0)) && (dport == 8888)) {
 
 	      theSession->napsterSession = 1;
@@ -1737,17 +1746,26 @@ static void handleSession(const struct pcap_pkthdr *h,
     if((theSession->maxWindow < tcpWin) || (theSession->maxWindow == 0))
       theSession->maxWindow = tcpWin;
 
-    if(((tp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) 
+#ifdef DEBUG
+    if(tp->th_flags & TH_ACK) printf("ACK ");
+    if(tp->th_flags & TH_SYN) printf("SYN ");
+    if(tp->th_flags & TH_FIN) printf("FIN ");
+    if(tp->th_flags & TH_RST) printf("RST ");
+    if(tp->th_flags & TH_PUSH) printf("PUSH");
+    printf("\n");
+#endif
+
+    if(((tp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK))
        && (theSession->sessionState == STATE_SYN))  {
       theSession->sessionState = STATE_SYN_ACK ;
-    } else if(((tp->th_flags & TH_ACK) == TH_ACK) 
+    } else if(((tp->th_flags & TH_ACK) == TH_ACK)
 	       && (theSession->sessionState == STATE_SYN_ACK)) {
       theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
       if((h->ts.tv_usec-theSession->nwLatency.tv_usec) < 0) {
 	theSession->nwLatency.tv_usec = 1000000-(h->ts.tv_usec-theSession->nwLatency.tv_usec);
 	theSession->nwLatency.tv_sec--;
-      } else 
+      } else
 	theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
 
 	  theSession->nwLatency.tv_sec /= 2;
@@ -1756,7 +1774,7 @@ static void handleSession(const struct pcap_pkthdr *h,
       srcHost->numEstablishedTCPConnections++,
 	dstHost->numEstablishedTCPConnections++,
 	device[actualDeviceId].numEstablishedTCPConnections++;
-    } else if((addedNewEntry == 0) 
+    } else if((addedNewEntry == 0)
 	      && ((theSession->sessionState == STATE_SYN)
 		  || (theSession->sessionState == STATE_SYN_ACK))) {
       /* We might have lost a packet so we cannot calculate latency */
@@ -1790,16 +1808,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 		 srcHost->hostSymIpAddress, sport,
 		 dstHost->hostSymIpAddress, dport, packetData[0]);
       */
-    }
-
-    if(flowDirection == CLIENT_TO_SERVER) {
-      theSession->bytesProtoSent += packetDataLength;
-      theSession->bytesSent      += length;
-      if(fragmentedData) theSession->bytesFragmentedSent += packetDataLength;
-    } else {
-      theSession->bytesProtoRcvd += packetDataLength;
-      theSession->bytesReceived  += length;
-      if(fragmentedData) theSession->bytesFragmentedReceived += packetDataLength;
     }
 
     if(theSession->napsterSession && (packetDataLength > 0) ) {
@@ -2010,6 +2018,16 @@ static void handleSession(const struct pcap_pkthdr *h,
       incrementUsageCounter(&dstHost->rstAckPktsRcvd, srcHostIdx);
       device[actualDeviceId].rstAckPkts++;
     } else if((tp->th_flags & TH_RST) == TH_RST) {
+      if(((theSession->initiatorIdx == srcHostIdx)
+	  && ((theSession->lastRemote2InitiatorFlags[0] & TH_ACK) == TH_ACK)
+	  && (theSession->bytesSent == 0))
+	 || ((theSession->initiatorIdx == dstHostIdx)
+	     && ((theSession->lastInitiator2RemoteFlags[0] & TH_ACK) == TH_ACK)
+	     && (theSession->bytesReceived == 0))) {
+	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
+		   srcHost->hostSymIpAddress, sport,
+		   dstHost->hostSymIpAddress, dport);		   
+      }
       /* Connection terminated */
       incrementUsageCounter(&srcHost->rstPktsSent, dstHostIdx);
       incrementUsageCounter(&dstHost->rstPktsRcvd, srcHostIdx);
@@ -2039,33 +2057,98 @@ static void handleSession(const struct pcap_pkthdr *h,
        http://www.synnergy.net/Archives/Papers/dethy/host-detection.txt
 
     */
-    if((((theSession->initiatorIdx == srcHostIdx) && ((theSession->lastRemote2InitiatorFlags & TH_SYN) == TH_SYN))
-	|| ((theSession->initiatorIdx == dstHostIdx) && ((theSession->lastInitiator2RemoteFlags & TH_SYN) == TH_SYN)))
+    if((((theSession->initiatorIdx == srcHostIdx)
+	 && ((theSession->lastRemote2InitiatorFlags[0] & TH_SYN) == TH_SYN))
+	|| ((theSession->initiatorIdx == dstHostIdx)
+	    && ((theSession->lastInitiator2RemoteFlags[0] & TH_SYN) == TH_SYN)))
        && ((tp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)))
-      
+
       {
-	traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d]", 
-		   srcHost->hostSymIpAddress, sport,
-		   dstHost->hostSymIpAddress, dport);
+	traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d]",		   
+		   dstHost->hostSymIpAddress, dport,
+		   srcHost->hostSymIpAddress, sport);
       }
 
-    if((((theSession->initiatorIdx == srcHostIdx) && ((theSession->lastRemote2InitiatorFlags & TH_SYN) == TH_SYN))
-	|| ((theSession->initiatorIdx == dstHostIdx) && ((theSession->lastInitiator2RemoteFlags & TH_SYN) == TH_SYN)))
+    if((((theSession->initiatorIdx == srcHostIdx)
+	 && ((theSession->lastRemote2InitiatorFlags[0] & TH_SYN) == TH_SYN))
+	|| ((theSession->initiatorIdx == dstHostIdx)
+	    && ((theSession->lastInitiator2RemoteFlags[0] & TH_SYN) == TH_SYN)))
        && ((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK)))
-      
+
       {
-	traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)", 
+	traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
 		   dstHost->hostSymIpAddress, dport,
-		   srcHost->hostSymIpAddress, sport);		   
+		   srcHost->hostSymIpAddress, sport);
+      }
+
+    if((((theSession->initiatorIdx == srcHostIdx)
+	 && ((theSession->lastRemote2InitiatorFlags[0]
+	      & (TH_FIN|TH_PUSH|TH_URG)) == (TH_FIN|TH_PUSH|TH_URG)))
+	|| ((theSession->initiatorIdx == dstHostIdx)
+	    && ((theSession->lastInitiator2RemoteFlags[0]
+		 & (TH_FIN|TH_PUSH|TH_URG)) == (TH_FIN|TH_PUSH|TH_URG))))
+       && ((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK)))
+
+      {
+	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
+		   dstHost->hostSymIpAddress, dport,
+		   srcHost->hostSymIpAddress, sport);
+      } else if((((theSession->initiatorIdx == srcHostIdx)
+		  && ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
+		 || ((theSession->initiatorIdx == dstHostIdx)
+		     && ((theSession->lastInitiator2RemoteFlags[0] & TH_FIN) == TH_FIN)))
+		&& ((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK)))
+
+	{
+	  traceEvent(TRACE_INFO, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
+		     dstHost->hostSymIpAddress, dport,
+		     srcHost->hostSymIpAddress, sport);
+	} else if((((theSession->initiatorIdx == srcHostIdx)
+		    && (theSession->lastRemote2InitiatorFlags[0] == 0)
+		    && (theSession->bytesReceived > 0)
+		    ))
+		  || ((theSession->initiatorIdx == dstHostIdx)
+		      && ((theSession->lastInitiator2RemoteFlags[0] == 0))
+		      && (theSession->bytesSent > 0))
+		  && ((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK))
+		  )
+	  {
+	    traceEvent(TRACE_INFO, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d] [s=%d/r=%d/f=%d]",
+		       srcHost->hostSymIpAddress, sport,
+		       dstHost->hostSymIpAddress, dport,
+		       theSession->bytesSent, theSession->bytesReceived,
+		       fragmentedData);
       }
 
    /* **************************** */
 
     /* Save session flags */
     if(theSession->initiatorIdx == srcHostIdx) {
-      theSession->lastInitiator2RemoteFlags = tp->th_flags;
+      int i;
+
+      for(i=0; i<MAX_NUM_STORED_FLAGS-1; i++)
+	theSession->lastInitiator2RemoteFlags[i+1] =
+	  theSession->lastInitiator2RemoteFlags[i];
+
+      theSession->lastInitiator2RemoteFlags[0] = tp->th_flags;
     } else {
-      theSession->lastRemote2InitiatorFlags = tp->th_flags;
+      int i;
+
+      for(i=0; i<MAX_NUM_STORED_FLAGS-1; i++)
+	theSession->lastRemote2InitiatorFlags[i+1] =
+	  theSession->lastRemote2InitiatorFlags[i];
+
+      theSession->lastRemote2InitiatorFlags[0] = tp->th_flags;
+    }
+
+    if(flowDirection == CLIENT_TO_SERVER) {
+      theSession->bytesProtoSent += packetDataLength;
+      theSession->bytesSent      += length;
+      if(fragmentedData) theSession->bytesFragmentedSent += packetDataLength;
+    } else {
+      theSession->bytesProtoRcvd += packetDataLength;
+      theSession->bytesReceived  += length;
+      if(fragmentedData) theSession->bytesFragmentedReceived += packetDataLength;
     }
   } else if(sessionType == IPPROTO_UDP) {
     IPSession tmpSession;
@@ -3361,7 +3444,10 @@ static void processIpPkt(const u_char *bp,
     if((icmpPkt.icmp_type == ICMP_ECHO)
        && (broadcastHost(dstHost) || multicastHost(dstHost)))
       smurfAlert(srcHostIdx, dstHostIdx);
-    break;
+    else if(icmpPkt.icmp_type == ICMP_UNREACH_PORT /* Port Unreachable */)
+      traceEvent(TRACE_INFO, "Host [%s] sent UDP data to a closed port of host [%s] (UDP scan attempt?)", 
+		 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
+   break;
 
   case IPPROTO_OSPF:
     proto = "OSPF";
@@ -3756,7 +3842,7 @@ void processPacket(u_char *_deviceId,
 	struct llc llc;
 
 	/*
-	  Info on SNAP/LLC: 
+	  Info on SNAP/LLC:
 	  http://www.erg.abdn.ac.uk/users/gorry/course/lan-pages/llc.html
 	  http://www.ece.wpi.edu/courses/ee535/hwk96/hwk3cd96/li/li.html
 	  http://www.ece.wpi.edu/courses/ee535/hwk96/hwk3cd96/li/li.html
@@ -3940,7 +4026,7 @@ void processPacket(u_char *_deviceId,
 	u_char sap_type;
 	struct llc llcHeader;
 
-	if((ether_dst != NULL) 
+	if((ether_dst != NULL)
 	   && (strcmp(etheraddr_string(ether_dst), "FF:FF:FF:FF:FF:FF") == 0)
 	   && (p[sizeof(struct ether_header)] == 0xff)
 	   && (p[sizeof(struct ether_header)+1] == 0xff)
@@ -4109,17 +4195,17 @@ void processPacket(u_char *_deviceId,
 	    srcHost->dlcSent += length;
 	    dstHost->dlcReceived += length;
 	    device[actualDeviceId].dlcBytes += length;
-	  } else if (sap_type == 0xAA) {  
+	  } else if (sap_type == 0xAA) {
 	    u_int16_t snapType;
-	    
+
 	    p1 = (u_char*)(p1+sizeof(llcHeader));
 	    memcpy(&snapType, p1, sizeof(snapType));
 
 	    snapType = ntohs(snapType);
 	    /*
-	      See section 
+	      See section
 	      "ETHERNET NUMBERS OF INTEREST" in RFC 1060
-	      
+
 	      http://www.faqs.org/rfcs/rfc1060.html
 	     */
 	    if((snapType == 0x809B) || (snapType == 0x80F3)) {
@@ -4178,7 +4264,7 @@ void processPacket(u_char *_deviceId,
 	      srcHost->otherSent += length;
 	      dstHost->otherReceived += length;
 	      device[actualDeviceId].otherBytes += length;
-	    }	    
+	    }
 	  } else if ((sap_type == 0x06)
 		     || (sap_type == 0xFE)
 		     || (sap_type == 0xFC)) {  /* OSI */
@@ -4204,7 +4290,7 @@ void processPacket(u_char *_deviceId,
 	if((device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU))
 	  processIpPkt(p, h, length, ether_src, ether_dst);
 	else
-	  processIpPkt(p+hlen, h, length, ether_src, ether_dst);	
+	  processIpPkt(p+hlen, h, length, ether_src, ether_dst);
       } else { /* Non IP */
 	struct ether_arp arpHdr;
 	struct in_addr addr;

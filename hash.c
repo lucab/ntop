@@ -648,9 +648,10 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 	    el->contactedSentPeersIndexes[j] = NO_PEER;
 	  if(el->contactedRcvdPeersIndexes[j] == hostIdx)
 	    el->contactedRcvdPeersIndexes[j] = NO_PEER;
-
 	  if(el->synPktsSent.peersIndexes[j] == hostIdx)
 	    el->synPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->rstAckPktsSent.peersIndexes[j] == hostIdx)
+	    el->rstAckPktsSent.peersIndexes[j] = NO_PEER;
 	  if(el->rstPktsSent.peersIndexes[j] == hostIdx)
 	    el->rstPktsSent.peersIndexes[j] = NO_PEER;
 	  if(el->synFinPktsSent.peersIndexes[j] == hostIdx)
@@ -662,6 +663,8 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 
 	  if(el->synPktsRcvd.peersIndexes[j] == hostIdx)
 	    el->synPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->rstAckPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->rstAckPktsRcvd.peersIndexes[j] = NO_PEER;
 	  if(el->rstPktsRcvd.peersIndexes[j] == hostIdx)
 	    el->rstPktsRcvd.peersIndexes[j] = NO_PEER;
 	  if(el->synFinPktsRcvd.peersIndexes[j] == hostIdx)

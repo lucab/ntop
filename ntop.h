@@ -1258,6 +1258,7 @@ typedef struct flowFilterList {
 } FlowFilterList;
 
 #define MAGIC_NUMBER                1968 /* Magic year actually */
+#define MAX_NUM_STORED_FLAGS           4
 
 /* IP Session Information */
 typedef struct ipSession {
@@ -1274,10 +1275,10 @@ typedef struct ipSession {
   TrafficCounter bytesReceived;     /* # bytes received (peer -> initiator)[IP] */
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
-  TrafficCounter bytesFragmentedSent;     /* IP Fragments */
-  TrafficCounter bytesFragmentedReceived; /* IP Fragments */
-  u_int minWindow, maxWindow;       /* TCP window size */
-  struct timeval nwLatency;         /* Network Latency */
+  TrafficCounter bytesFragmentedSent;     /* IP Fragments                       */
+  TrafficCounter bytesFragmentedReceived; /* IP Fragments                       */
+  u_int minWindow, maxWindow;       /* TCP window size                          */
+  struct timeval nwLatency;         /* Network Latency                          */
   u_short numFin;                   /* # FIN pkts received                      */
   u_short numFinAcked;              /* # ACK pkts received                      */
   tcp_seq lastAckIdI2R;             /* ID of the last ACK received              */
@@ -1290,7 +1291,8 @@ typedef struct ipSession {
   TrafficCounter lastFlags;         /* flags of the last TCP packet             */
   u_int32_t lastCSAck, lastSCAck;   /* they store the last ACK ids C->S/S->C    */
   u_int32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
-  u_char lastInitiator2RemoteFlags, lastRemote2InitiatorFlags; /* TCP flags  */
+  u_char lastInitiator2RemoteFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
+  u_char lastRemote2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
   u_short sessionState;             /* actual session state                     */
   u_char  napsterSession;           /* check if this is a napster session       */
 } IPSession;
