@@ -4278,6 +4278,11 @@ void printNtopProblemReport(void) {
   unsigned int v, scramble, raw;
   int i, j;
 
+#ifndef WIN32
+  struct pcap_stat pcapStats;
+  memset(&pcapStats, 0, sizeof(struct pcap_stat));
+#endif
+
   t = time(NULL);
 
   sendString("Cut out this entire section and paste into an e-mail message.  Fill in the\n");
@@ -4512,6 +4517,22 @@ void printNtopProblemReport(void) {
       }
 
     }
+
+/* pcap_stats gets weirded out under some circumstances under WIN32 - skip this */
+#ifndef WIN32 
+    if((myGlobals.device[i].pcapPtr != NULL) && 
+       (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0)) {
+      snprintf(buf, sizeof(buf), "          pcap stats: Received %u Dropped %u", 
+                                 pcapStats.ps_recv,
+                                 pcapStats.ps_drop);
+      sendString(buf);
+      if (pcapStats.ps_ifdrop > 0) {
+        snprintf(buf, sizeof(buf), ", ifDropped %u", pcapStats.ps_ifdrop);
+        sendString(buf);
+      }
+      sendString("\n");
+    }
+#endif
 
     sendString("          Mfg: ____________________  Model: ____________________\n");
     sendString("          NIC Speed: 10/100/1000/Other  Bus: PCI ISA USB Firewire Other\n");
