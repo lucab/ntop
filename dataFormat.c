@@ -282,7 +282,7 @@ char* formatTimeStamp(unsigned int ndays,
     static short bufIdx=0;
 
     bufIdx = (bufIdx+1)%LEN_TIME_STAMP_BUFFER;
-    theTime = myGlobals.actTime-(ndays*86500)-(nhours*3600)-(nminutes*60);
+    theTime = myGlobals.actTime-(ndays*86400)-(nhours*3600)-(nminutes*60);
     strncpy(timeBuffer[bufIdx], ctime(&theTime), 32);
     timeBuffer[bufIdx][strlen(timeBuffer[bufIdx])-1] = '\0'; /* Remove trailer '\n' */
     return(timeBuffer[bufIdx]);
