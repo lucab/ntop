@@ -8,6 +8,7 @@
 #    Crude, but marginally effective, uses the /etc/xxxxxx-release file.
 #
 #    Tested:   RH 7.2 7.3, 8.0, 9, 2.1AS 2.1ES
+#              Fedora Core 1
 #              Mandrake 9.1
 #              Debian 2.2 3.0(Woody)
 #              Gentoo 
