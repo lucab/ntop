@@ -610,7 +610,7 @@ static void purgeIpPorts(int theDevice) {
 
   marker = (char*)calloc(1, MAX_IP_PORT);
   
-  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {
+  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
     int k;
 
     if(i == myGlobals.otherHostEntryIdx)

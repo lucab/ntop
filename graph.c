@@ -37,6 +37,8 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
                                0x7fffd4L, 0xffb6c1L, 0x708090L,
                                0x6495edL, 0xdeb887L, 0x6b8e23L};
 
+#define MIN_SLICE_PERCENTAGE 0.1 /* % */
+
 /* ************************ */
 
 #if !defined(PARM_DISABLE_GDC_WATCHDOG) && !defined(WIN32)
@@ -247,155 +249,155 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       if(theHost->tcpSentLoc.value+theHost->tcpSentRem.value > 0) {
 	p[num] = (float)((100*(theHost->tcpSentLoc.value+
 			       theHost->tcpSentRem.value))/totTraffic.value);
-	lbl[num++] = "TCP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "TCP";
       }
 
       if(theHost->udpSentLoc.value+theHost->udpSentRem.value > 0) {
 	p[num] = (float)((100*(theHost->udpSentLoc.value+
 			       theHost->udpSentRem.value))/totTraffic.value);
-	lbl[num++] = "UDP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "UDP";
       }
 
       if(theHost->icmpSent.value > 0) {
 	p[num] = (float)((100*theHost->icmpSent.value)/totTraffic.value);
-	lbl[num++] = "ICMP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
       }
 
       if(theHost->ospfSent.value > 0) {
 	p[num] = (float)((100*theHost->ospfSent.value)/totTraffic.value);
-	lbl[num++] = "OSPF";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSPF";
       }
 
       if(theHost->igmpSent.value > 0) {
 	p[num] = (float)((100*theHost->igmpSent.value)/totTraffic.value);
-	lbl[num++] = "IGMP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IGMP";
       }
 
       if(theHost->stpSent.value > 0) {
 	p[num] = (float)((100*theHost->stpSent.value)/totTraffic.value);
-	lbl[num++] = "STP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
       }
 
       if(theHost->ipxSent.value > 0) {
 	p[num] = (float)((100*theHost->ipxSent.value)/totTraffic.value);
-	lbl[num++] = "IPX";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPX";
       }
 
       if(theHost->dlcSent.value > 0) {
 	p[num] = (float)((100*theHost->dlcSent.value)/totTraffic.value);
-	lbl[num++] = "DLC";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
       }
 
       if(theHost->osiSent.value > 0) {
 	p[num] = (float)((100*theHost->osiSent.value)/totTraffic.value);
-	lbl[num++] = "OSI";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSI";
       }
 
       if(theHost->arp_rarpSent.value > 0) {
 	p[num] = (float)((100*theHost->arp_rarpSent.value)/totTraffic.value);
-	lbl[num++] = "(R)ARP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
       }
 
       if(theHost->decnetSent.value > 0) {
 	p[num] = (float)((100*theHost->decnetSent.value)/totTraffic.value);
-	lbl[num++] = "DECNET";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DECNET";
       }
 
       if(theHost->appletalkSent.value > 0) {
 	p[num] = (float)((100*theHost->appletalkSent.value)/totTraffic.value);
-	lbl[num++] = "AppleTalk";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "AppleTalk";
       }
 
       if(theHost->netbiosSent.value > 0) {
 	p[num] = (float)((100*theHost->netbiosSent.value)/totTraffic.value);
-	lbl[num++] = "NetBios";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "NetBios";
       }
 
       if(theHost->ipv6Sent.value > 0) {
 	p[num] = (float)((100*theHost->ipv6Sent.value)/totTraffic.value);
-	lbl[num++] = "IPv6";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPv6";
       }
 
       if(theHost->otherSent.value > 0) {
 	p[num] = (float)((100*theHost->otherSent.value)/totTraffic.value);
-	lbl[num++] = "Other";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "Other";
       }
     } else {
       if(theHost->tcpRcvdLoc.value+theHost->tcpRcvdFromRem.value > 0) {
 	p[num] = (float)((100*(theHost->tcpRcvdLoc.value+
 			       theHost->tcpRcvdFromRem.value))/totTraffic.value);
-	lbl[num++] = "TCP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "TCP";
       }
 
       if(theHost->udpRcvdLoc.value+theHost->udpRcvdFromRem.value > 0) {
 	p[num] = (float)((100*(theHost->udpRcvdLoc.value+
 			       theHost->udpRcvdFromRem.value))/totTraffic.value);
-	lbl[num++] = "UDP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "UDP";
       }
 
       if(theHost->icmpRcvd.value > 0) {
 	p[num] = (float)((100*theHost->icmpRcvd.value)/totTraffic.value);
-	lbl[num++] = "ICMP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
       }
 
       if(theHost->ospfRcvd.value > 0) {
 	p[num] = (float)((100*theHost->ospfRcvd.value)/totTraffic.value);
-	lbl[num++] = "OSPF";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSPF";
       }
 
       if(theHost->igmpRcvd.value > 0) {
 	p[num] = (float)((100*theHost->igmpRcvd.value)/totTraffic.value);
-	lbl[num++] = "IGMP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IGMP";
       }
 
       if(theHost->stpRcvd.value > 0) {
 	p[num] = (float)((100*theHost->stpRcvd.value)/totTraffic.value);
-	lbl[num++] = "STP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
       }
 
       if(theHost->ipxRcvd.value > 0) {
 	p[num] = (float)((100*theHost->ipxRcvd.value)/totTraffic.value);
-	lbl[num++] = "IPX";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPX";
       }
 
       if(theHost->dlcRcvd.value > 0) {
 	p[num] = (float)((100*theHost->dlcRcvd.value)/totTraffic.value);
-	lbl[num++] = "DLC";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
       }
 
       if(theHost->osiRcvd.value > 0) {
 	p[num] = (float)((100*theHost->osiRcvd.value)/totTraffic.value);
-	lbl[num++] = "OSI";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSI";
       }
 
       if(theHost->arp_rarpRcvd.value > 0) {
 	p[num] = (float)((100*theHost->arp_rarpRcvd.value)/totTraffic.value);
-	lbl[num++] = "(R)ARP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
       }
 
       if(theHost->decnetRcvd.value > 0) {
 	p[num] = (float)((100*theHost->decnetRcvd.value)/totTraffic.value);
-	lbl[num++] = "DECNET";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DECNET";
       }
 
       if(theHost->appletalkRcvd.value > 0) {
 	p[num] = (float)((100*theHost->appletalkRcvd.value)/totTraffic.value);
-	lbl[num++] = "AppleTalk";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "AppleTalk";
       }
 
       if(theHost->netbiosRcvd.value > 0) {
 	p[num] = (float)((100*theHost->netbiosRcvd.value)/totTraffic.value);
-	lbl[num++] = "NetBios";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "NetBios";
       }
 
       if(theHost->ipv6Rcvd.value > 0) {
 	p[num] = (float)((100*theHost->ipv6Rcvd.value)/totTraffic.value);
-	lbl[num++] = "IPv6";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPv6";
       }
 
       if(theHost->otherRcvd.value > 0) {
 	p[num] = (float)((100*theHost->otherRcvd.value)/totTraffic.value);
-	lbl[num++] = "Other";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "Other";
       }
     }
 
@@ -474,32 +476,32 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     if(dataSent) {
       if(theHost->tcpFragmentsSent.value > 0) {
 	p[num] = (float)((100*(theHost->tcpFragmentsSent.value))/totTraffic.value);
-	lbl[num++] = "TCP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "TCP";
       }
 
       if(theHost->udpFragmentsSent.value > 0) {
 	p[num] = (float)((100*(theHost->udpFragmentsSent.value))/totTraffic.value);
-	lbl[num++] = "UDP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "UDP";
       }
 
       if(theHost->icmpFragmentsSent.value > 0) {
 	p[num] = (float)((100*(theHost->icmpFragmentsSent.value))/totTraffic.value);
-	lbl[num++] = "ICMP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
       }
     } else {
       if(theHost->tcpFragmentsRcvd.value > 0) {
 	p[num] = (float)((100*(theHost->tcpFragmentsRcvd.value))/totTraffic.value);
-	lbl[num++] = "TCP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "TCP";
       }
 
       if(theHost->udpFragmentsRcvd.value > 0) {
 	p[num] = (float)((100*(theHost->udpFragmentsRcvd.value))/totTraffic.value);
-	lbl[num++] = "UDP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "UDP";
       }
 
       if(theHost->icmpFragmentsRcvd.value > 0) {
 	p[num] = (float)((100*(theHost->icmpFragmentsRcvd.value))/totTraffic.value);
-	lbl[num++] = "ICMP";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
       }
     }
 

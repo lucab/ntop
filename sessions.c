@@ -725,7 +725,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if((sport == 80 /* HTTP */)
 	 && (theSession->bytesProtoRcvd.value == 0)
 	 && (packetDataLength > 0)) {
-	strncpy(tmpStr, packetData, 16);
+	memcpy(tmpStr, packetData, 16);
 	tmpStr[16] = '\0';
 
 	if(strncmp(tmpStr, "HTTP/1", 6) == 0) {
@@ -1003,7 +1003,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  char *strtokState, *row;
 
 	  rcStr = (char*)malloc(packetDataLength+1);
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
 
 	  if(strncmp(rcStr, "HTTP", 4) == 0) {
@@ -1037,7 +1037,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  char *theStr = "GET /get/";
 
 	  rcStr = (char*)malloc(packetDataLength+1);
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
 
 	  if(strncmp(rcStr, theStr, strlen(theStr)) == 0) {
@@ -1076,7 +1076,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  theSession->isP2P = FLAG_P2P_WINMX;
 	  rcStr = (char*)malloc(packetDataLength+1);
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
 
 	  row = strtok_r(rcStr, "\"", &strtokState);
@@ -1159,7 +1159,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  int beginIdx = 11, i;
 
 	  rcStr = (char*)malloc(packetDataLength+1);
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength-1);
 	  rcStr[packetDataLength-1] = '\0';
 
 	  if(strncmp(rcStr, "MAIL FROM:", 10) == 0) {
@@ -1201,7 +1201,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    || (theSession->bytesProtoSent.value < 64)) /* The sender name is sent at the beginning of the communication */
 	   && (packetDataLength > 7)) {
 	  rcStr = (char*)malloc(packetDataLength+1);
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength-2] = '\0';
 
 	  if((strncmp(rcStr, "USER ", 5) == 0) && strcmp(&rcStr[5], "anonymous")) {
@@ -1237,7 +1237,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    || (theSession->bytesProtoSent.value < 64)) /* The user name is sent at the beginning of the communication */
 	   && (packetDataLength > 4)) {
 	  rcStr = (char*)malloc(packetDataLength+1);
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength-1] = '\0';
 
 	  if(strncmp(rcStr, "USER ", 5) == 0) {
@@ -1268,7 +1268,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    || (theSession->bytesProtoSent.value < 64)) /* The sender name is sent at the beginning of the communication */
 	   && (packetDataLength > 7)) {
 	  rcStr = (char*)malloc(packetDataLength+1);
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength-1] = '\0';
 
 	  if(strncmp(rcStr, "2 login ", 8) == 0) {
@@ -1304,7 +1304,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	   ) {
 
 	  rcStr = (char*)malloc(packetDataLength+1);
-	  strncpy(rcStr, packetData, packetDataLength);
+	  memcpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength-1] = '\0';
 
 	  /* traceEvent(CONST_TRACE_INFO, "rcStr '%s'", rcStr); */
@@ -1379,7 +1379,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       */
       if((theSession->bytesProtoSent.value == 0) && (len > 0)) {
 	memset(tmpStr, 0, sizeof(tmpStr));
-	strncpy(tmpStr, packetData, len);
+	memcpy(tmpStr, packetData, len);
 
 	if(myGlobals.enablePacketDecoding) {
 	  if((dport != 80)
@@ -1449,7 +1449,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	if((sport == 21) || (dport == 21)) {
 	  FD_SET(FLAG_HOST_TYPE_SVC_FTP, &srcHost->flags);
 	  memset(tmpStr, 0, sizeof(tmpStr));
-	  strncpy(tmpStr, packetData, len);
+	  memcpy(tmpStr, packetData, len);
 
 	  /* traceEvent(CONST_TRACE_INFO, "FTP: %s", tmpStr); */
 
