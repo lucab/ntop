@@ -507,7 +507,7 @@ void purgeIdleHosts(int actDevice) {
 	}
 
 	scannedHosts++;
-	if(numHosts >= maxHosts) break;
+	if(numHosts >= (maxHosts-1)) break;
       } /* while */
     }
 #ifdef CFG_MULTITHREADED
