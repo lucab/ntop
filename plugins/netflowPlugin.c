@@ -38,6 +38,8 @@ static u_short numWhiteNets, numBlackNets;
 static u_int32_t flowIgnoredInHandleIP, flowIgnoredZeroPort, flowIgnoredNETFLOW;
 static u_int flowIgnored[MAX_NUM_IGNOREDFLOWS][6]; /* src, sport, dst, dport, count, bytes */
 static u_short nextFlowIgnored;
+static HostTraffic *dummyHost;
+static u_int dummyHostIdx;
 
 #ifdef MAKE_WITH_FTPDATA_ASSUMED
 static u_int32_t flowIgnoredLowPort, flowAssumedFtpData;
@@ -193,7 +195,7 @@ void ignoreFlow(u_short* nextFlowIgnored, u_int srcAddr, u_short sport,
 static void dissectFlow(char *buffer, int bufferLen) {
   NetFlow5Record the5Record;
   NetFlow7Record the7Record;
-  int srcOK, dstOK;
+  int skipSRC, skipDST;
 
 #ifdef DEBUG
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
@@ -326,7 +328,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
       /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
 #endif
 
-      switch((srcOK = isOKtoSave(ntohl(the5Record.flowRecord[i].srcaddr), 
+      switch((skipSRC = isOKtoSave(ntohl(the5Record.flowRecord[i].srcaddr), 
 				 whiteNetworks, blackNetworks,
 				 numWhiteNets, numBlackNets)) ) {
           case 1:
@@ -338,7 +340,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
           default:
               myGlobals.numSrcNetFlowsEntryAccepted++;
       }
-      switch((dstOK = isOKtoSave(ntohl(the5Record.flowRecord[i].dstaddr), 
+      switch((skipDST = isOKtoSave(ntohl(the5Record.flowRecord[i].dstaddr), 
 				 whiteNetworks, blackNetworks,
 				 numWhiteNets, numBlackNets)) ) {
           case 1:
@@ -354,32 +356,29 @@ static void dissectFlow(char *buffer, int bufferLen) {
 #ifdef DEBUG
       traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - src - returned %s",
                  ntohl(the5Record.flowRecord[i].srcaddr),
-                 srcOK == 0 ? "OK" : srcOK == 1 ? "failed White list" : "failed Black list");
+                 skipSRC == 0 ? "OK" : skipSRC == 1 ? "failed White list" : "failed Black list");
       traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - dst - returned %s",
                  ntohl(the5Record.flowRecord[i].dstaddr),
-                 dstOK == 0 ? "OK" : dstOK == 1 ? "failed White list" : "failed Black list");
+                 skipDST == 0 ? "OK" : skipDST == 1 ? "failed White list" : "failed Black list");
 #endif
 
-      if(dstOK == 0) {
+      if(!skipDST) {
           dstHostIdx = getHostInfo(&b, NULL, 0, 1, myGlobals.netFlowDeviceId);
           dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
       } else {
-          dstHostIdx = myGlobals.otherHostEntryIdx;
-          dstHost = myGlobals.otherHostEntry;
+          dstHostIdx = dummyHostIdx;
+          dstHost    = dummyHost;
       }
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: dstHostIdx: %d", dstHostIdx);
-#endif
 
-      if(srcOK == 0) {
+      if(!skipSRC) {
           srcHostIdx = getHostInfo(&a, NULL, 0, 1, myGlobals.netFlowDeviceId);
           srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
       } else {
-          srcHostIdx = myGlobals.otherHostEntryIdx;
-          srcHost = myGlobals.otherHostEntry;
+          srcHostIdx = dummyHostIdx;
+          srcHost    = dummyHost;
       }
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: srcHostIdx: %d", dstHostIdx);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: dstHostIdx: %d srcHostIdx: %d", dstHostIdx, srcHostIdx);
 #endif
 
       if((srcHost == NULL) ||(dstHost == NULL)) continue;
@@ -489,16 +488,6 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	break;
       case 6: /* TCP */
 	myGlobals.device[actualDeviceId].tcpBytes.value += len;
-	if(subnetPseudoLocalHost(dstHost))
-	  srcHost->tcpSentLoc.value += len;
-	else
-	  srcHost->tcpSentRem.value += len;
-
-	if(subnetPseudoLocalHost(srcHost))
-	  dstHost->tcpRcvdLoc.value += len;
-	else
-	  dstHost->tcpRcvdFromRem.value += len;
-
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	/*
 	  incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent.value, dstHostIdx, actualDeviceId);
@@ -538,16 +527,6 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
 	updateInterfacePorts(actualDeviceId, sport, dport, len);
 	updateUsedPorts(srcHost, dstHost, sport, dport, len);
-
-	if(subnetPseudoLocalHost(dstHost))
-	  incrementTrafficCounter(&srcHost->udpSentLoc, len);
-	else
-	  incrementTrafficCounter(&srcHost->udpSentRem, len);
-
-	if(subnetPseudoLocalHost(srcHost))
-	  incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
-	else
-	  incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
 
 	if(subnetPseudoLocalHost(srcHost)) {
 	  if(subnetPseudoLocalHost(dstHost)) {
@@ -768,6 +747,21 @@ static int initNetFlowFunct(void) {
 	  myGlobals.device[i].exportNetFlow = FLAG_NETFLOW_EXPORT_DISABLED;
       }
     }
+
+    /* Allocate a pure dummy for white/black list use */
+    dummyHost = (HostTraffic*)malloc(sizeof(HostTraffic));
+    memset(dummyHost, 0, sizeof(HostTraffic));
+
+    dummyHost->hostIpAddress.s_addr = 0x00112233;
+    strncpy(dummyHost->hostNumIpAddress, "&nbsp;",
+            sizeof(dummyHost->hostNumIpAddress));
+    strncpy(dummyHost->hostSymIpAddress, "white/black list dummy",
+            sizeof(dummyHost->hostSymIpAddress));
+    strcpy(dummyHost->ethAddressString, "00:00:00:00:00:00");
+    dummyHostIdx = FLAG_NO_PEER;
+    dummyHost->hostSerial = dummyHostIdx;
+    dummyHost->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*),
+                                                               MAX_ASSIGNED_IP_PORTS);
 
 #ifdef CFG_MULTITHREADED
   if((myGlobals.netFlowInPort != 0) &&(!threadActive)) {

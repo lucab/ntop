@@ -1168,6 +1168,25 @@ void printHostsTraffic(int reportType,
     idx = 0;
 
   sendString("\n</TABLE>"TABLE_OFF"\n");
+
+  switch(reportType) {
+  case SORT_DATA_RCVD_HOST_TRAFFIC:
+  case SORT_DATA_SENT_HOST_TRAFFIC:
+  case SORT_DATA_HOST_TRAFFIC:
+  case SORT_DATA_RECEIVED_THPT:
+  case SORT_DATA_SENT_THPT:
+  case SORT_DATA_THPT:
+    break;
+  case SORT_DATA_RECEIVED_PROTOS:
+  case SORT_DATA_RECEIVED_IP:
+  case SORT_DATA_SENT_PROTOS:
+  case SORT_DATA_SENT_IP:
+  case SORT_DATA_PROTOS:
+  case SORT_DATA_IP:
+    sendString("<P><I>Note: These counters do not include broadcasts and will not equal the 'Global Protocol Distribution'</I></P>\n");
+    break;
+  }
+
   sendString("</CENTER>\n");
 
   printFooter(reportType);
@@ -2902,7 +2921,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	  printSectionTitle("TCP/UDP Traffic Port Distribution");
 	
 	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
-		     "<TH "TH_BG" COLSPAN=2>TCP/UDP&nbsp;Port</TH>"
+		     "<TH "TH_BG">TCP/UDP&nbsp;Port</TH>"
 		     "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
 
 	  quicksort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
@@ -2915,14 +2934,14 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
 	      if(symPort == NULL) symPort = "";
 
-	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</td>"
-			  "<TH "TH_BG" ALIGN=RIGHT><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%d</A></TH>"
+	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+                          "<TH "TH_BG" ALIGN=LEFT><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>&nbsp;(%d)</TH>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "</TR>\n",
-			  getRowColor(), symPort, 
-			  ipPorts[i]->port, ipPorts[i]->port,
+			  getRowColor(),
+			  ipPorts[i]->port, symPort, ipPorts[i]->port,
 			  formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1),
 			  formatBytes(ipPorts[i]->sent, 1),
 			  formatBytes(ipPorts[i]->rcvd, 1)
@@ -2938,10 +2957,14 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 #endif
 	free(ipPorts);
 	sendString("</TABLE>"TABLE_OFF"<P>\n");	
-	sendString("<p><H5>The above table does not contain absolute values as it is periodically reset every minute.</H5>\n");
+	sendString("<p><H5>Data in the table above is purged every minute.");
+        if (idx >= 32) 
+            sendString(" This extract is just a sample of the packets ntop has seen.");
+        sendString("</H5>\n");
       }
 
       /* ********************** */
+      sendString("<p>Note: This report includes broadcast packets</p>\n");
       sendString("</CENTER>\n");
     }
   }
