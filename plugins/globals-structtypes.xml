@@ -1,0 +1,357 @@
+/*
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *                          http://www.ntop.org
+ *
+ * Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
+ *
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+/* ************************************************************* */
+
+typedef struct simpleProtoTrafficInfo {
+  TrafficCounter local, local2remote, remote, remote2local;
+  TrafficCounter lastLocal, lastLocal2remote, lastRem, lastRem2local;
+} SimpleProtoTrafficInfo;
+/*XMLSECTIONBEGIN xml_s_simpleprototrafficinfo.inc parent input */
+/*XML e      SimpleProtoTrafficInfo         parent:Work            "" */
+/*XML trafficcounter local                          Work                   "" */
+/*XML trafficcounter local2remote                   Work                   "" */
+/*XML trafficcounter remote                         Work                   "" */
+/*XML trafficcounter remote2local                   Work                   "" */
+/*XML trafficcounter lastLocal                      Work                   "" */
+/*XML trafficcounter lastLocal2remote               Work                   "" */
+/*XML trafficcounter lastRem                        Work                   "" */
+/*XML trafficcounter lastRem2local                  Work                   "" */
+/*XMLSECTIONEND */
+
+// NtopInterface
+/*XMLSECTIONBEGIN xml_s_ntopinterface.inc parent input */
+/*XMLNOTE - use parent, not work, because the parent node is defined in g_intf.inc */
+/*XML s              name                 parent        "" */
+/*XML s              humanFriendlyName    parent        "" */
+/*XML h              flags                parent        "status of the interface" */
+/*XML h              addr                 parent        "" */
+/*XML s              ipdot                parent        "" */
+/*XML s              fqdn                 parent        "" */
+
+/*XML in_addr        network              parent        "" */
+/*XML in_addr        netmask              parent        "" */
+/*XML n:u            numHosts             parent        "" */
+/*XML in_addr        ifAddr               parent        "" */
+/*XML time_t         started              parent        "" */
+/*XML time_t         firstpkt             parent        "" */
+/*XML time_t         lastpkt              parent        "" */
+
+/*XMLNOTE TODO pcap_t *pcapPtr; */
+/*XMLNOTE TODO pcap_dumper_t *pcapDumper; */
+/*XMLNOTE TODO pcap_dumper_t *pcapErrDumper */
+/*XMLNOTE TODO pcap_dumper_t *pcapOtherDumper */
+
+/*XML b              virtualDevice        parent        "" */
+/*XML b              dummyDevice          parent        "" */
+/*XML n              snaplen              parent        "" */
+/*XML h              datalink             parent        "" */
+/*XML s              filter               parent        "" */
+/*XML n              fd                   parent        "" */
+
+/*XML e              packetStats          parent:Work   "" */
+/*XML trafficcounter receivedPkts         Work          "" */
+/*XML trafficcounter droppedPkts          Work          "" */
+/*XML trafficcounter ethernetPkts         Work          "" */
+/*XML trafficcounter broadcastPkts        Work          "" */
+/*XML trafficcounter multicastPkts        Work          "" */
+/*XML trafficcounter ipPkts               Work          "" */
+/*XML trafficcounter lastMinEthernetPkts  Work          "" */
+/*XML trafficcounter lastFiveMinsEthernetPkts  Work     "" */
+/*XML trafficcounter lastNumEthernetPkts  Work          "" */
+/*XML trafficcounter lastEthernetPkts     Work          "" */
+/*XML trafficcounter lastTotalPkts        Work          "" */
+/*XML trafficcounter lastBroadcastPkts    Work          "" */
+/*XML trafficcounter lastMulticastPkts    Work          "" */
+
+/*XML e              byteStats            parent:Work   "" */
+/*XML trafficcounter ethernetBytes        Work          "" */
+/*XML trafficcounter ipBytes              Work          "" */
+/*XML trafficcounter fragmentedIpBytes    Work          "" */
+/*XML trafficcounter tcpBytes             Work          "" */
+/*XML trafficcounter udpBytes             Work          "" */
+/*XML trafficcounter otherIpBytes         Work          "" */
+/*XML trafficcounter icmpBytes            Work          "" */
+/*XML trafficcounter dlcBytes             Work          "" */
+/*XML trafficcounter ipxBytes             Work          "" */
+/*XML trafficcounter stpBytes             Work          "" */
+/*XML trafficcounter decnetBytes          Work          "" */
+/*XML trafficcounter netbiosBytes         Work          "" */
+/*XML trafficcounter arpRarpBytes         Work          "" */
+/*XML trafficcounter atalkBytes           Work          "" */
+/*XML trafficcounter egpBytes             Work          "" */
+/*XML trafficcounter osiBytes             Work          "" */
+/*XML trafficcounter ipv6Bytes            Work          "" */
+/*XML trafficcounter otherBytes           Work          "" */
+/*XML trafficcounter lastMinEthernetBytes Work          "" */
+/*XML trafficcounter lastFiveMinsEthernetBytes Work     "" */
+/*XML trafficcounter lastEthernetBytes    Work          "" */
+/*XML trafficcounter lastIpBytes          Work          "" */
+/*XML trafficcounter lastNonIpBytes       Work          "" */
+
+/*XMLNOTE TODO PortCounter    *ipPorts[MAX_IP_PORT]; */
+
+/*XML &packetstats   rcvdPktStats         parent        "" */
+/*XML &ttlstats      rcvdPktTTLStats      parent        "" */
+
+/*XML e              throughputStats      parent:Work   "" */
+/*XML n:f            peakThroughput       Work          "" */
+/*XML n:f            actualThpt           Work          "" */
+/*XML n:f            lastMinThpt          Work          "" */
+/*XML n:f            lastFiveMinsThpt     Work          "" */
+/*XML n:f            peakPacketThroughput Work          "" */
+/*XML n:f            actualPktsThpt       Work          "" */
+/*XML n:f            lastMinPktsThpt      Work          "" */
+/*XML n:f            lastFiveMinsPktsThpt Work          "" */
+/*XML time_t         lastThptUpdate       Work          "" */
+/*XML time_t         lastMinThptUpdate    Work          "" */
+/*XML time_t         lastHourThptUpdate   Work          "" */
+/*XML time_t         lastFiveMinsThptUpdate Work        "" */
+/*XML n:f            throughput           Work          "" */
+/*XML n:f            packetThroughput     Work          "" */
+/*XML n:u            numThptSamples       Work          "" */
+/*XML e              last60MinutesThpt    Work:Work2    "" */
+/*XML n:u            last60MinutesThptIdx Work2         "" */
+/*XMLFOR indexT 0 59 <= */
+/*XML *              indexT               Work2:Work3   "" 
+  if (snprintf(buf, sizeof(buf), "%d", indexT) < 0) BufferTooShort();
+  elWork3 = newxml_simplestring(elWork2,
+  "index",
+  buf,
+  "");
+  XML*/
+/*XMLIF input->last60MinutesThpt[indexT].trafficValue != 0.0 */
+/*XML &thptentry     last60MinutesThpt[indexT] Work3         "" */
+/*XMLFI */
+/*XMLROF*/
+/*XML e              last24HoursThpt      Work:Work2    "" */
+/*XML n:u            last24HoursThptIdx   Work2         "" */
+/*XMLFOR indexT 0 23 <= */
+/*XML *              indexT               Work2:Work3   "" 
+  if (snprintf(buf, sizeof(buf), "%d", indexT) < 0) BufferTooShort();
+  elWork3 = newxml_simplestring(elWork2,
+  "index",
+  buf,
+  "");
+  XML*/
+/*XMLIF input->last24HoursThpt[indexT].trafficValue != 0.0 */
+/*XML &thptentry     last24HoursThpt[indexT] Work3         "" */
+/*XMLFI */
+/*XMLROF*/
+/*XML e              last30daysThpr       Work:Work2    "" */
+/*XML n:u            last30daysThptIdx    Work2         "" */
+/*XMLFOR indexT 0 29 <= */
+/*XMLIF input->last30daysThpt[indexT] != 0.0 */
+/*XML *              indexT               Work2         "" 
+  if (snprintf(buf, sizeof(buf), "%d", indexT) < 0) BufferTooShort();
+  if (snprintf(buf2, sizeof(buf2), "%f", input->last30daysThpt[indexT]) < 0) BufferTooShort();
+  newxml_simplestring(elWork2,
+  "index",
+  buf,
+  "");
+  XML*/
+/*XMLFI*/
+/*XMLROF*/
+
+/*XML e              protocolStats        parent:Work   "" */
+/*XML e              tcp                  Work:Work2    "" */
+/*XML &simpleprototrafficinfo tcpGlobalTrafficStats  Work2 "" */
+/*XML e              udp                  Work:Work2    "" */
+/*XML &simpleprototrafficinfo udpGlobalTrafficStats  Work2 "" */
+/*XML e              icmp                 Work:Work2    "" */
+/*XML &simpleprototrafficinfo icmpGlobalTrafficStats Work2 "" */
+/*XMLFOR iProtoIndex 0 myGlobals.numIpProtosToMonitor */
+/*XMLPREFIX myGlobals */
+/*XML s                      protoIPTrafficInfos[iProtoIndex]!ipprotocol Work:Work2 "" */
+/*XMLPREFIX input */
+/*XML &simpleprototrafficinfo ipProtoStats[iProtoIndex] Work2 "" */
+/*XMLROF */
+
+/*XML trafficcounter numEstablishedTCPConnections parent "" */
+
+/*XML n:u            hostsno              parent        "" */
+/*XML n:u            actualHashSize       parent        "" */
+
+/*XMLNOTE Special handling for the big sub-structures */
+/*XMLNOTE ipSession ... */
+/*XMLNOTE ipTrafficMatrix ... */
+/*XMLNOTE ipTrafficMatrixHosts ... */
+
+/*XML b              exportNetFlow        parent        "" */
+/*XMLSECTIONEND */
+
+// ntopGlobals
+
+/*XMLNOTE
+   *
+   *  Technically, this is all one structure - literally EVERYTHING is in myGlobals, 
+   *  so we can't really just dump it as one structure - it's huge, unwieldy, etc.
+   *
+   *  So we impose an arbitrary organization, grouping the sections into things 
+   *  to request by switches on the dump.xml URL.  We do this based on the comments
+   *  which split up the sections.
+   *
+   */
+
+/*XMLSECTIONBEGIN xml_g_invoke.inc root myGlobals */
+/*XML e Invoke               root:Invoke      "" */
+/*XML e ExecutionEnvironment Invoke:Execenv   "" */
+/*XML e paths                Invoke:Paths     "" */
+/*XML e CommandLineOptions   Invoke:Options   "" */
+
+  /* How is ntop run? */
+
+/*XML s program_name         Execenv          "" */
+/*XML n basentoppid          Execenv          "" */
+
+/*XML s startedAs            Execenv          "" */
+/*XML n ntop_argc            Execenv          "" */
+/*XML e ntop_argv            Execenv:Arg      "" */
+/*XML * ntop_argc            Arg              ""
+			     for (i=0; i<myGlobals.ntop_argc; i++) {
+                             if (snprintf(buf, sizeof(buf), "%d", i) < 0)
+			     BufferTooShort();
+                             newxml(GDOME_ELEMENT_NODE, elArg, "parameter",
+			     "index", buf,
+			     "value", myGlobals.ntop_argv[i]);
+			     }
+			     XML*/
+
+/*XMLNOTE TODO dataFileDirs */
+/*XMLNOTE TODO pluginDirs */
+/*XMLNOTE TODO configFileDirs */
+
+/*XML s accessLogPath        Options    "-a | --access-log-path" */
+/*XML b enablePacketDecoding Options    "-b | --disable-decoders" */
+/*XML b stickyHosts          Options    "-c | --sticky-hosts" */
+/*XML b daemonMode           Options    "-d | --daemon: run as daemon flag" */
+/*XML n maxNumLines          Options    "-e | --max-table-rows: maximum lines/page" */
+/*XML s rFileName            Options    "-f | --traffic-dump-file: input packet capture file" */
+/*XML s trackOnlyLocalHosts  Options    "-g | --track-local-hosts" */
+/*XML s devices              Options    "-i | --interface" */
+/*XML b enableOtherPacketDump Options "-j | --create-other-packets" */
+/*XML s filterExpressionInExtraFrame Options "-k | --filter-expression-in-extra-frame" */
+/*XML s pcapLog              Options    "-l | --pcap-log" */
+/*XML s localAddresses       Options    "-m | --local-subnets" */
+/*XML b numericFlag          Options    "-n | --numeric-ip-addresses" */
+/*XML b dontTrustMACaddr     Options    "-o | --no-mac" */
+/*XML s protoSpecs           Options    "-p | --protocols" */
+/*XML b enableSuspiciousPacketDump Options "-q | --create-suspicious-packets" */
+/*XML n refreshRate          Options    "-r | --refresh-time" */
+/*XML b disablePromiscuousMode Options  "-s | --no-promiscuous" */
+/*XML n traceLevel           Options    "-t | --trace-level" */
+/*XML n maxNumHashEntries    Options    "-x  <max num hash entries>" */
+/*XML n maxNumSessions       Options    "-X  <max num TCP sessions>" */
+#ifndef WIN32
+/*XML * effectiveUserName    Options    ""
+				       if (snprintf(buf, sizeof(buf), "(uid=%d, gid=%d)",
+				       myGlobals.userId,
+				       myGlobals.groupId) < 0)
+                                       BufferTooShort();
+				       newxml(GDOME_ELEMENT_NODE, elOptions, "effectiveUserName",
+				       "value", myGlobals.effectiveUserName,
+				       "EffectiveId", buf,
+				       "description", "-u | --user");
+				       XML*/
+#endif
+/*XML n defaultVsan          Options    "-v | --default-vsan" */                               
+/*XML s webAddr              Options    "-w | --http-server address"  */
+/*XML n webPort              Options    "-w | --http-server :port" */
+  //TODO int ipv4or6;                       /* '6/4' */ 
+/*XML b enableSessionHandling Options   "-z | --disable-sessions" */
+/*XML s currentFilterExpression Options "-B | --filter-expression" */
+/*XML s domainName           Options    "-D | --domain" */
+/*XML b flowSpecs            Options    "-F | --flow-spec" */
+
+#ifndef WIN32
+/*XML b debugMode            Options    "-K | --enable-debug" */
+/*XML n useSyslog            Options    "-L | --use-syslog" */
+#endif
+
+/*XML b mergeInterfaces      Options    "-M | --no-interface-merge" */
+/*XML s pcapLogBasePath      Options    "-O | --pcap-file-path" */
+/*XML s fcNSCacheFile        Options    "-N | --wwn-map" */
+/*XML s dbPath               Options    "-P | --db-file-path" */
+/*XML s spoolPath            Options    "-Q | --spool-file-path" */
+/*XML s printFcOnly          Options    "-S | --fc-only" */
+/*XML s mapperURL            Options    "-U | --mapper" */
+
+#ifdef HAVE_OPENSSL
+/*XML s sslAddr              Options    "-W | --https-server address" */
+/*XML n sslPort              Options    "-W | --https-server :port" */
+#endif
+
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+/*XML b useSSLwatchdog       Options    "--ssl-watchdog" */
+#endif
+
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+/*XML b disableSchedYield    Options    "--disable-schedyield" */
+#endif
+
+/*XML s P3Pcp                Options    "--p3p-cp" */
+/*XML s P3Puri               Options    "--p3p-uri" */
+
+/*XML b disableStopcap       Options    "--disable-stopcap" */
+
+/*XML n logExtra             Options    "--log-extra" */
+
+/*XML b disableInstantSessionPurge Options "--disable-instantsessionpurge" */
+/*XML b noFc                 Options    "--no-fc" */
+/*XML b noInvalidLunDisplay  Options    "--no-invalid-lun" */
+
+/*XML b disableMutexExtraInfo Options   "--disable-mutexextrainfo" */
+
+/*XML b skipVersionCheck     Options    "--skip-version-check" */
+
+/*XML b enableFragmentHandling Options  "" */
+/*XMLSECTIONEND */
+
+// Physical and Logical network interfaces 
+
+/*XMLSECTIONBEGIN xml_g_intf.inc root myGlobals  */
+/*XML e Interfaces           root:Interfaces  "" */
+
+/*XML n numDevices           Interfaces "" */
+/*XMLFOR i 0 myGlobals.numDevices */
+/*XML *   device          Interfaces            ""
+    if (snprintf(buf, sizeof(buf), "%d", i) < 0)
+    BufferTooShort();
+    elWork = newxml(GDOME_ELEMENT_NODE,
+    elInterfaces,
+    "device",
+    "index", buf, 
+    "description", "");
+    XML*/
+/*XML &ntopinterface device[i] Work "" */
+/*XMLROF */
+/*XMLSECTIONEND */
+
+#ifdef CFG_MULTITHREADED
+/*XMLSECTIONBEGIN xml_g_multithread.inc root myGlobals */
+/*XML e                      ThreadInfo                root:multithread "" */
+/*XML n:u numThreads         multithread "" */
+/*XML n:u numDequeueThreads  multithread "" */
+/*XMLSECTIONEND */
+#endif /* CFG_MULTITHREADED */
+

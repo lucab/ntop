@@ -42,30 +42,30 @@ INCLUDES = -I.. @INCS@
 #
 # The meat for ntop
 #
-noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so \
-                  netflowPlugin.so nfsPlugin.so  \
-                  pdaPlugin.so  \
-		  sflowPlugin.so rrdPlugin.so
-#		  rmonPlugin.so
+noinst_PROGRAMS = \
+                  icmpPlugin.so \
+                  lastSeenPlugin.so \
+                  netflowPlugin.so \
+                  nfsPlugin.so  \
+                  pdaPlugin.so \
+                  rrdPlugin.so \
+                  sflowPlugin.so \
+                  xmldumpPlugin.so
+#                 rmonPlugin.so
 
-lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
-                  libnetflowPlugin.la  libnfsPlugin.la  \
-                  libpdaPlugin.la  \
-		  libsflowPlugin.la librrdPlugin.la
-#		  librmonPlugin.la
+lib_LTLIBRARIES = \
+                  libicmpPlugin.la \
+                  liblastSeenPlugin.la \
+                  libnetflowPlugin.la \
+                  libnfsPlugin.la \
+                  libpdaPlugin.la \
+                  librrdPlugin.la \
+                  libsflowPlugin.la \
+                  libxmldumpPlugin.la
+#                 librmonPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-
-librrdPlugin_la_SOURCES = rrdPlugin.c
-librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-librrdPlugin_la_LIBADD = -L../myrrd -lmyrrd
-
-libpdaPlugin_la_SOURCES = pdaPlugin.c
-libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-
-libsflowPlugin_la_SOURCES = sflowPlugin.c
-libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
 liblastSeenPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -75,6 +75,19 @@ libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 libnfsPlugin_la_SOURCES = nfsPlugin.c
 libnfsPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+
+libpdaPlugin_la_SOURCES = pdaPlugin.c
+libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+
+librrdPlugin_la_SOURCES = rrdPlugin.c
+librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+librrdPlugin_la_LIBADD = -L../myrrd -lmyrrd
+
+libsflowPlugin_la_SOURCES = sflowPlugin.c
+libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+
+libxmldumpPlugin_la_SOURCES = xmldumpPlugin.c
+libxmldumpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 #librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
 #librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -92,11 +105,23 @@ libnfsPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 icmpPlugin.so$(EXEEXT): .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libicmpPlugin.so icmpPlugin.so
 
-.libs/librrdPlugin.so@SO_VERSION_PATCH@:
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
+.libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
 
-rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
+lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/liblastSeenPlugin.so lastSeenPlugin.so
+
+.libs/libnetflowPlugin.so@SO_VERSION_PATCH@:
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ netflowPlugin.o
+
+netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/libnetflowPlugin.so netflowPlugin.so
+
+.libs/libnfsPlugin.so@SO_VERSION_PATCH@:
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
+
+nfsPlugin.so$(EXEEXT): .libs/libnfsPlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/libnfsPlugin.so nfsPlugin.so
 
 .libs/libpdaPlugin.so@SO_VERSION_PATCH@:
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
@@ -104,29 +129,23 @@ rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libpdaPlugin.so pdaPlugin.so
 
+.libs/librrdPlugin.so@SO_VERSION_PATCH@:
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
+
+rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
+
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
 
 sflowPlugin.so$(EXEEXT): .libs/libsflowPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libsflowPlugin.so sflowPlugin.so
 
-.libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
+.libs/libxmldumpPlugin.so@SO_VERSION_PATCH@:
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@ xmldumpPlugin.o
 
-lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/liblastSeenPlugin.so lastSeenPlugin.so
-
-.libs/libnfsPlugin.so@SO_VERSION_PATCH@:
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
-
-netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libnetflowPlugin.so netflowPlugin.so
-
-.libs/libnetflowPlugin.so@SO_VERSION_PATCH@:
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ netflowPlugin.o
-
-nfsPlugin.so$(EXEEXT): .libs/libnfsPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libnfsPlugin.so nfsPlugin.so
+xmldumpPlugin.so$(EXEEXT): .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/libxmldumpPlugin.so xmldumpPlugin.so
 
 #.libs/librmonPlugin.so@SO_VERSION_PATCH@:
 #	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
@@ -143,5 +162,16 @@ install-data-local:
 	@for file in $(lib_LTLIBRARIES); do \
              rm -f $(DESTDIR)$(libdir)/$$file; \
          done
+
+#
+# Special stuff for xml auto-generation of code from the "doc":
+#
+xmldumpPlugin.$(OBJEXT): xml_g_cmdopt.inc
+
+xmldumpPlugin.c: xml_*.inc globals-structtypes.xml
+
+xml_*.inc: globals-structtypes.xml
+	@echo "Processing globals-structtypes.xml to make xml_*.inc..."
+	@@AWK@ -f ../utils/xmldump.awk globals-structtypes.xml
 
 .NOTPARALLEL:

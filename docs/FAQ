@@ -534,16 +534,6 @@ A. If a basic ./configure can't find something, you'll have to tell ntop
        --with-ossl-lib=DIR          or libssl located in DIR
        --with-ossl-include=DIR      or ssl.h located in DIR
        --with-localedir=DIR        LOCALE files located in DIR (i18n)
-       --with-xml2-root=DIR        libxml2 located in DIR
-       --with-xml2-lib=DIR          or libxml2 located in DIR
-       --with-xml2-include=DIR      or .h located in DIR
-       --with-gdome-root=DIR       libgdome located in DIR
-       --with-gdome-lib=DIR         or libgdome located in DIR
-       --with-gdome-include=DIR     or .h located in DIR
-       --with-glib-root=DIR        libglib located in DIR
-       --with-glib-lib=DIR           or libglib located in DIR
-       --with-glib-include=DIR       or .h located in DIR
-       --with-glibconfig-root=DIR  glibconfig.h source in DIR
        +-----------------------------------------------------------------------+
 
    You can see that there is a pattern, every --with-xxxxx-root has an
@@ -644,7 +634,6 @@ A. These (and the with/without options) pretty much do what you think - they
        --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]
        --enable-i18n               Enable (limited) internationalization
                                    [default=disabled]
-       --enable-xmldump            Enable xml-based data dump [default=disabled]
        --enable-showoses           display OS Support information.
        +-----------------------------------------------------------------------+
 

@@ -26,7 +26,7 @@
 # not normally executed by persons compiling ntop.
 
 # It is designed for the developers of ntop to create various .inc files
-# used by xmldump.c.  It should be run after any changes to globals.h or
+# used by xmldumpPlugin.c.  It should be run after any changes to globals.h or
 # ntop.h
 
 # Note that it IS perfectly safe to run, since you should NEVER be editing
@@ -36,9 +36,9 @@
 
 #  This script is designed to extract structured comments from ntop .h files 
 #  to create c code in the .inc files which are the xml (gdome) statements 
-#  for xmldump.c to build the DOM structure.
+#  for xmldumpPlugin.c to build the DOM structure.
 
-#  Beware - between this routine and the convenience functions in xmldump.c, 
+#  Beware - between this routine and the convenience functions in xmldumpPlugin.c, 
 #  A LOT of complexity is hidden.
 
 # The "structured comment language":
@@ -199,16 +199,16 @@ BEGIN {
     ##type_appendindex["si"]                      ="i"
 
     #
-    # Load a list of stuff defined in xmldump.awk
+    # Load a list of stuff defined in xmldumpPlugin.c
     #
-    system("grep '^ *#define *newxml_' xmldump.c >/tmp/xmldump1")
+    system("grep '^ *#define *newxml_' xmldumpPlugin.c >/tmp/xmldump1")
     while (getline < "/tmp/xmldump1" > 0) {
         i=index($2, "(")
         macro=substr($2, 1, i-1)
         gsub(/newxml_/, "", macro)
         type_macroname_conversion[macro]    = "newxml_" macro
     }
-    system("grep '^GdomeElement \\* newxml_' xmldump.c > /tmp/xmldump2")
+    system("grep '^GdomeElement \\* newxml_' xmldumpPlugin.c > /tmp/xmldump2")
     while (getline < "/tmp/xmldump2" > 0) {
         i=index($3, "(")
         functionname=substr($3, 1, i-1)
@@ -630,8 +630,8 @@ $1 == "/*XML" {
                         printf("        /*XMLNOTE ..appendvalue...'%s' */\n", macroappendvalue)
                         printf("        /*XMLNOTE format..........'%s' */\n", format) }
 
-     # To set the result AND use simplenumeric we can't just use the xmldump.c macro...
-         # Since this is dependent on the xmldump.c macros, we hardcode their names here...
+     # To set the result AND use simplenumeric we can't just use the xmldumpPlugin.c macro...
+         # Since this is dependent on the xmldumpPlugin.c macros, we hardcode their names here...
      buftext=""
      if ( (macro=="newxml_simplenumeric") && (result != "") ) {
          if (debug != "") printf("      /*XMLNOTE numeric+result - macroname was %s, set to newxml_simplestring */\n", macro)
