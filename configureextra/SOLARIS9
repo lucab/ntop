@@ -5,3 +5,8 @@ LDFLAGS="-L/opt/sfw/lib -L/usr/local/lib -R/opt/sfw/lib -R/usr/local/lib ${LDFLA
 LIBS="-lnsl -lsocket ${LIBS}"
 CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/opt/sfw/include"
 
+. configureextra/functions
+
+# Test for GNU libiconv (e.g. SunFreeware)
+test_library iconv    iconv_open
+

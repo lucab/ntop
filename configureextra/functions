@@ -66,16 +66,19 @@ _ACEOF
     rm -f conftest.$ac_objext conftest$ac_exeext conftest.msg
     eval $ac_link 2> conftest.msg
     ce_status=$?
-    if (! test $ce_status); then
+
+    if [ $ce_status -eq 0 ]; then
       ac_try='test -s conftest$ac_exeext'
       eval $ac_try
       ce_status=$?
     fi
-    if (! test $ce_status); then
+    if [ $ce_status -eq 0 ]; then
       echo "ok"
-      ac_cv_lib_dld_shl_load=yes
+      ac_set='export ac_cv_lib_$1_$2=yes'
+      eval $ac_set
+      have=`echo $1 | awk '{ print toupper($0) }'`
       cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBDLD 1
+#define HAVE_LIB$have 1
 _ACEOF
     
     else
@@ -83,13 +86,14 @@ _ACEOF
       echo ""
       cat conftest.msg
       echo ""
-      if test ".${ac_debug}" = ".yes"; then
+      if [ ".${ac_debug}" = ".yes" ]; then
           echo "test program was:"
           echo ""
           sed 's/^/| /' conftest.$ac_ext
           echo ""
       fi
-      ac_cv_lib_dld_shl_load=no
+      ac_set='export ac_cv_lib_$1_$2=no'
+      eval $ac_set
       LIBS=$ac_check_lib_save_LIBS
     fi
     
