@@ -717,7 +717,7 @@ typedef struct fcNameServerCache {
 typedef struct fcScsiCounters {
   /* FC-Specific stuff */
   FcAddress        hostFcAddress;
-  short            vsanId;           /* VLAN Id (0 if not set) */
+  short            vsanId;           /* VSAN Id (0 if not set) */
   char             hostNumFcAddress[LEN_FC_ADDRESS_DISPLAY];
 
   /* FC/SCSI Info */
