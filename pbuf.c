@@ -1033,7 +1033,8 @@ static void processIpPkt(const u_char *bp,
 			  break;
 			default:
 			  opt_ptr++;
-			  opt_ptr += (*opt_ptr - 1);
+			  if (*opt_ptr > 0) 
+			    opt_ptr += (*opt_ptr - 1);
 			  break;
 			}
 		    }
