@@ -28,6 +28,8 @@ finished == "yes" {
         compiler="*"
     }
     flag=substr($1, 5)
+    gsub(/\[\[/, "[", flag)
+    gsub(/\]\]/, "]", flag)
     next
 }
 
