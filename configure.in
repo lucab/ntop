@@ -451,6 +451,10 @@ dnl>        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
 	DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
         ;;
 
+    *hpux*)
+	CFLAGS="-DHPUX ${CFLAGS}"
+	;;
+
 dnl>    *-sun-solaris2*:cc )
 dnl>        # shut-up harmless warnings caused by do-while macros on Solaris
 dnl>        test ".$ac_cv_prog_gcc" = ".no" && CFLAGS="$CFLAGS -w"
