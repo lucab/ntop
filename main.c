@@ -341,8 +341,10 @@ static int parseOptions(int argc, char* argv []) {
    * Parse command line options to the application via standard system calls
    */
 #ifdef HAVE_GETOPT_LONG
+  traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
   while((opt = getopt_long(argc, argv, theOpts, long_options, &opt_index)) != EOF) {
 #else
+  traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt to process parameters");
   while((opt = getopt(argc, argv, theOpts)) != EOF) {
 #endif
 #ifdef PARAM_DEBUG
