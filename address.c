@@ -51,10 +51,10 @@ static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int 
   hostName = _intoa(addr, buf, sizeof(buf));
 
   /* Search the instance and update its name */
-
-  accessAddrResMutex("updateHostNameInfo");
     
   el = findHostByNumIP(addr, actualDeviceId);
+
+  accessAddrResMutex("updateHostNameInfo");
 
   if(el != NULL) {    
     if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1)) 
@@ -74,14 +74,13 @@ static void updateHostNameInfo(unsigned long numeric, char* symbolic) {
     updateDeviceHostNameInfo(numeric, symbolic, i);
 }
 
-
 /* ************************************ */
 
 static void resolveAddress(struct in_addr *hostAddr,
 			   short keepAddressNumeric, int actualDeviceId) {
   char symAddr[MAX_LEN_SYM_HOST_NAME];
   StoredAddress storedAddress;
-  int addr, i, addToCacheFlag=0;
+  int addr, i, addToCacheFlag=0, updateRecord=0;
   struct hostent *hp = NULL;
   char* res;
   char keyBuf[16];
@@ -299,6 +298,8 @@ static void resolveAddress(struct in_addr *hostAddr,
 	(hp != NULL) && (hp->h_name != NULL)) {
       char *dotp = (char*)hp->h_name;
 
+      updateRecord = 1;
+
 #ifdef DNS_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved to %s.", dotp);
 #endif
@@ -420,7 +421,7 @@ static void resolveAddress(struct in_addr *hostAddr,
       data_data.dptr = (void*)&storedAddress;
       data_data.dsize = sizeof(storedAddress)+1;
 
-      updateHostNameInfo(addr, symAddr);
+      if(updateRecord) updateHostNameInfo(addr, symAddr);
 
       if(myGlobals.dnsCacheFile == NULL) {
 #ifdef DNS_DEBUG
@@ -621,7 +622,7 @@ char* intoa(struct in_addr addr) {
 
 /* ******************************* */
 
-void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
+int fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   unsigned int addr = hostIpAddress.s_addr;
   char buf[32];
   char tmpBuf[32];
@@ -636,7 +637,7 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
 
   if((addr == INADDR_BROADCAST) || (addr == 0x0)) {
     strcpy(buffer, "0.0.0.0");
-    return;
+    return(0);
   }
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0)
@@ -690,6 +691,8 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   traceEvent(CONST_TRACE_INFO, "fetchAddressFromCache(%s) returned '%s'",
 	     _intoa(hostIpAddress, buf, sizeof(buf)), buffer);
 #endif
+
+  return(1);
 }
 
 /* ******************************* */
@@ -701,9 +704,7 @@ void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
 
   myGlobals.numipaddr2strCalls++;
 
-  fetchAddressFromCache(hostIpAddress, buf);
-
-  if(buf[0] != '\0') {
+  if(fetchAddressFromCache(hostIpAddress, buf)  && (buf[0] != '\0')) {
     updateHostNameInfo(hostIpAddress.s_addr, buf);
   } else {
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
