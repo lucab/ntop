@@ -52,6 +52,69 @@ static u_short dumpFlows, dumpHosts, dumpInterfaces, dumpMatrix;
 
 #include <rrd.h>
 
+static char **calcpr=NULL;
+
+static void calfree (void) {
+  if (calcpr) {
+    long i;
+    for(i=0;calcpr[i];i++){
+      if (calcpr[i]){
+	free(calcpr[i]);
+      }
+    } 
+    if (calcpr) {
+      free(calcpr);
+    }
+  }
+}
+
+/* ******************************************* */
+
+void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle) {
+  char path[512], *argv[16], cmd[64], buf[96], buf1[96];
+  struct stat statbuf;
+  int argc = 0, rc, x, y;
+
+  sprintf(path, "%s/rrd/%s%s.rrd", myGlobals.dbPath, rrdPath, rrdName);
+
+  if(stat(path, &statbuf) == 0) {
+    char startStr[32], counterStr[64];
+
+    argv[argc++] = "rrd_graph";
+    argv[argc++] = "/tmp/rrd_graph.gif";
+    argv[argc++] = "--start";
+    argv[argc++] = "now-1d";
+    snprintf(buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
+    argv[argc++] = buf;
+    snprintf(buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle);
+    argv[argc++] = buf1;
+
+    optind=0; /* reset gnu getopt */
+    opterr=0; /* no error messages */
+    rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+
+    calfree();
+
+    if(rc == 0) {
+      /* traceEvent(TRACE_WARNING, "x=%d/y=%d", x, y); */
+      sendHTTPHeader(HTTP_TYPE_GIF, 0);
+      sendGraphFile("/tmp/rrd_graph.gif");
+    } else {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHTMLheader("RRD Graph", 0);  
+      printFlagedWarning("<I>Error while building graph of the requested file.</I>");
+      printf("ERROR: %s\n",rrd_get_error());
+    }
+  } else {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHTMLheader("RRD Graph", 0);  
+      printFlagedWarning("<I>Error while building graph of the requested file "
+			 "(unknown RRD file)</I>");
+  }
+}
+
+/* ******************************* */
+
 void updateCounter(char *hostPath, char *key, Counter value) {
   char path[512], *argv[16], cmd[64];
   struct stat statbuf;
@@ -130,9 +193,12 @@ void unescape_url(char *url) {
 
 /* ******************************* */
 
-static void handleRRDHTTPrequest(char* url) {
-  char buf[1024], *strtokState, *mainState, *urlPiece;
+#define ACTION_NONE   0
+#define ACTION_GRAPH  1
 
+static void handleRRDHTTPrequest(char* url) {
+  char buf[1024], *strtokState, *mainState, *urlPiece, rrdKey[64], rrdName[64], rrdTitle[64];
+  u_char action = ACTION_NONE;
   if((url != NULL) && (url[0] != '\0')) {
     unescape_url(url);
 
@@ -150,7 +216,28 @@ static void handleRRDHTTPrequest(char* url) {
       /* traceEvent(TRACE_INFO, "%s=%s", key, value);  */
 
       if(value && key) {
-	if(strcmp(key, "interval") == 0) {
+
+	if(strcmp(key, "action") == 0) {
+	  if(strcmp(value, "graph") == 0) action = ACTION_GRAPH;
+	} else if(strcmp(key, "key") == 0) {
+	  int len = strlen(value);
+	  
+	  if(len >= sizeof(rrdKey)) len = sizeof(rrdKey)-1;
+	  strncpy(rrdKey, value, len);
+	  rrdKey[len] = '\0';
+	} else if(strcmp(key, "name") == 0) {
+	  int len = strlen(value);
+	  
+	  if(len >= sizeof(rrdName)) len = sizeof(rrdName)-1;
+	  strncpy(rrdName, value, len);
+	  rrdName[len] = '\0';
+	} else if(strcmp(key, "title") == 0) {
+	  int len = strlen(value);
+	  
+	  if(len >= sizeof(rrdTitle)) len = sizeof(rrdTitle)-1;
+	  strncpy(rrdTitle, value, len);
+	  rrdTitle[len] = '\0';
+	} else if(strcmp(key, "interval") == 0) {
 	  if(dumpInterval != atoi(value)) {
 	    dumpInterval = atoi(value);
 	    storePrefsValue("rrd.dataDumpInterval", value);
@@ -173,12 +260,18 @@ static void handleRRDHTTPrequest(char* url) {
       urlPiece = strtok_r(NULL, "&", &mainState);
     }
 
-    /* traceEvent(TRACE_INFO, "dumpFlows=%d", dumpFlows); */
+    if(action == ACTION_NONE) {    
+      /* traceEvent(TRACE_INFO, "dumpFlows=%d", dumpFlows); */
+      sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dumpFlows", buf);
+      sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dumpHosts", buf);
+      sprintf(buf, "%d", dumpInterfaces); storePrefsValue("rrd.dumpInterfaces", buf);
+      sprintf(buf, "%d", dumpMatrix);     storePrefsValue("rrd.dumpMatrix", buf);
+    }
+  }
 
-    sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dumpFlows", buf);
-    sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dumpHosts", buf);
-    sprintf(buf, "%d", dumpInterfaces); storePrefsValue("rrd.dumpInterfaces", buf);
-    sprintf(buf, "%d", dumpMatrix);     storePrefsValue("rrd.dumpMatrix", buf);
+  if(action == ACTION_GRAPH) {    
+    graphCounter(rrdKey, rrdName, rrdTitle);
+    return;
   }
 
   sendHTTPHeader(HTTP_TYPE_HTML, 0);

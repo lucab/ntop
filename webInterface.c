@@ -2588,10 +2588,8 @@ void printNtopConfigInfo(int textPrintFlag) {
 #ifndef WIN32
   printFeatureConfigInfo(textPrintFlag, "include path", include_path);
 #endif
-  printFeatureConfigInfo(textPrintFlag, "core libraries", core_libs);
   printFeatureConfigInfo(textPrintFlag, "system libraries", system_libs);
 #ifndef WIN32
-  printFeatureConfigInfo(textPrintFlag, "additional libraries", additional_libs);
   printFeatureConfigInfo(textPrintFlag, "install path", install_path);
 #endif
 #if defined(__GNUC__)

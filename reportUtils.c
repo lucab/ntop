@@ -3419,7 +3419,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s"
 #ifdef HAVE_RRD_H
-	      " <A HREF=javascript:popUp(\"http://athlon.netikos.com/cgi-bin/rrd.cgi?path=%s/pktSent.rrd\")><IMG BORDER=0 SRC=/graph.gif></A>"
+	      " <A HREF=javascript:popUp(\"/plugins/rrdPlugin?action=graph&key=hosts/%s/&name=pktSent&title=pktSent\")>"
+	      "<IMG BORDER=0 SRC=/graph.gif></A>"
 #endif
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
@@ -3490,7 +3491,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s"
 #ifdef HAVE_RRD_H
-	      " <A HREF=javascript:popUp(\"http://athlon.netikos.com/cgi-bin/rrd.cgi?path=%s/pktRcvd.rrd\")><IMG BORDER=0 SRC=/graph.gif></A>"
+	      " <A HREF=javascript:popUp(\"/plugins/rrdPlugin?action=graph&key=hosts/%s/&name=pktRcvd&title=pktRcvd\")>"
+	      "<IMG BORDER=0 SRC=/graph.gif></A>"
 #endif
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
