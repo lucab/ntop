@@ -69,7 +69,7 @@ static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount 
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
 static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
-static unsigned long numRuns = 0, numRRDerrors = 0;
+static unsigned long numRuns = 0, numRRDerrors = 0, numRRDCycles=0;
 static time_t start_tm, end_tm, rrdTime;
 
 #ifdef CFG_MULTITHREADED
@@ -1811,19 +1811,6 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("to limit the number of files per subdirectory.");
   sendString("<li>Do not use the ':' character in the path as it is forbidded by rrd</ul></TD></tr>\n");
 
-  sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Updates</TH><TD>");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu RRD files updated</TD></TR>\n", (unsigned long)numTotalRRDUpdates);
-  sendString(buf);
-
-  sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Update Errors</TH><TD>");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu RRD update errors</TD></TR>\n", (unsigned long)numRRDerrors);
-  sendString(buf);
-
-  sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Graphic Requests</TH><TD>");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu RRD graphics requested</TD></TR>\n",
-	      (unsigned long)rrdGraphicRequests);
-  sendString(buf);
-
 #ifndef WIN32
   sendString("<TR><TH ALIGN=LEFT "DARK_BG">File/Directory Permissions</TH><TD>");
   sendString("<ul>\n");
@@ -1858,10 +1845,26 @@ static void handleRRDHTTPrequest(char* url) {
              "</ul>\n</TD></TR>\n");
 #endif
 
-  sendString("<tr><td colspan=\"2\" align=\"center\">"
-             "<input type=submit value=\"Save Preferences\"></td></tr></table>\n"
-             "</form>\n<p></center>\n");
+  sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<br><input type=submit value=\"Save Preferences\"><br>&nbsp;</td></tr>\n"
+             "<tr><th align=\"center\" colspan=\"2\" "DARK_BG">RRD Plugin Statistics</th></tr>\n");
 
+  sendString("<tr><th align=\"left\" "DARK_BG">Cycles</th><td>");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDCycles);
+  sendString(buf);
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Files Updated</th><td>");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numTotalRRDUpdates);
+  sendString(buf);
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Update Errors</th><td>");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDerrors);
+  sendString(buf);
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Graphic Requests</th><td>");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)rrdGraphicRequests);
+  sendString(buf);
+
+  sendString("</table>\n</form>\n<p></center>\n");
 
   printPluginTrailer(NULL,
                      "<a href=\"http://www.rrdtool.org/\" title=\"rrd home page\">RRDtool</a> "
@@ -2235,7 +2238,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   u_short numLocalNets;
   int sleep_tm, devIdx, idx;
   char rrdPath[512];
-  int cycleCount=0;
   ProtocolsList *protoList;
   char dname[256];
   int i;
@@ -2323,7 +2325,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     char endTime[32];
 #endif
 
-    cycleCount++;
+    numRRDCycles++;
 
     do {
       end_tm += dumpInterval;
