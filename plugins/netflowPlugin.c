@@ -2370,7 +2370,7 @@ static int mapNetFlowDeviceToNtopDevice(int netFlowDeviceId) {
   for(i=0; i<myGlobals.numDevices; i++)
     if((myGlobals.device[i].netflowGlobals != NULL)
        && (myGlobals.device[i].netflowGlobals->netFlowDeviceId == netFlowDeviceId)) {
-#ifndef DEBUG
+#ifdef DEBUG
       traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice(%d) = %d",
 		 netFlowDeviceId, i);
 #endif
