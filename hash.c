@@ -561,12 +561,14 @@ void purgeIdleHosts(int actDevice) {
   gettimeofday(&hiresTimeEnd, NULL);
   hiresDeltaTime=timeval_subtract(hiresTimeEnd, hiresTimeStart);
 
+#ifdef IDLE_PURGE_DEBUG
   if(numFreedBuckets > 0) {
-    traceEvent(TRACE_INFO, "IDLE_PURGE: Elapsed Time is %.2f seconds, %d hosts deleted, %.3f per.\n", 
+    traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Elapsed Time is %.2f seconds, %d hosts deleted, %.3f per.\n", 
                            hiresDeltaTime,
 	                   numFreedBuckets,
                            hiresDeltaTime / numFreedBuckets);
   }
+#endif
 
   if ( (myGlobals.dynamicPurgeLimits == 1) && (numFreedBuckets > 0) ) {
       /* 
