@@ -67,7 +67,7 @@ typedef struct ntopGlobals {
 #endif
 
   /* command line options */
-  u_short traceLevel, debugMode, useSyslog, accuracyLevel;
+  u_short traceLevel, debugMode, useSyslog, accuracyLevel, noAdminPasswordHint;
   u_char enableSessionHandling, enablePacketDecoding, enableFragmentHandling;
   u_char stickyHosts, enableSuspiciousPacketDump, trackOnlyLocalHosts;
   char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;

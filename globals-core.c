@@ -103,6 +103,8 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.throughput_chart_type = GDC_AREA;
 #endif
 
+ myGlobals.noAdminPasswordHint = 0;
+
   /* command line options */
   myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
   myGlobals.debugMode = 0;
@@ -122,6 +124,10 @@ void initNtopGlobals(int argc, char * argv[])
 
   strncpy(myGlobals.dbPath, DBFILE_DIR, sizeof(myGlobals.dbPath));
 
+#ifdef HAVE_GDCHART
+  myGlobals.throughput_chart_type = GDC_AREA;
+#endif
+  
   snprintf(myGlobals.accessLogPath, sizeof(myGlobals.accessLogPath), "%s/%s",
 	   myGlobals.dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
 

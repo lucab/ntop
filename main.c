@@ -171,6 +171,7 @@ static struct option const long_options[] = {
 #ifdef HAVE_GDCHART
   { "throughput-bar-chart",             no_argument,       NULL, 129 },
 #endif
+  {"no-admin-password-hint",            no_argument,       NULL, 130},
 
   {NULL, 0, NULL, 0}
 };
@@ -689,14 +690,32 @@ static void parseOptions (int argc, char * argv [])
       enableIdleHosts=0;
       break;
 
+#ifdef HAVE_GDCHART
+    case 129:
+      myGlobals.throughput_chart_type = GDC_BAR;
+      break;
+#endif
+      
+    case 130:
+      /* Flag to remove userid/password hint from authorization dialogs (BMS 26Jan2002) */
+      myGlobals.noAdminPasswordHint = 1;
+      break;
+
     default:
+      traceEvent(TRACE_ERROR,
+		 "FATAL ERROR: unknown ntop option, '%s'\n", argv[optind-1]);
+#ifdef DEBUG
+      if (op != '?') 
+	traceEvent(TRACE_ERROR,
+		   "             getopt return value is '%c', %d\n", op, op);
+#endif
       usage(stdout);
       exit(-1);
     }
   }
 
   if (argc > optind + 1)
-    {
+    { 
       fprintf (stdout, "\nWrong option(s): \" ");
       while (optind < argc)
 	fprintf (stdout, "%s ", argv [optind ++]);

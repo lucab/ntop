@@ -748,7 +748,11 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   sendString(tmpStr);
 
   if(headerFlags & HTTP_FLAG_NEED_AUTHENTICATION) {
-    sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server [default user=admin,pw=admin];\"\n");
+    if (myGlobals.noAdminPasswordHint == 1) {
+      sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server;\"\n");
+    } else {
+      sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server [default user=admin,pw=admin];\"\n");
+    }
   }
 
   switch(mimeType) {
