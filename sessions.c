@@ -368,8 +368,6 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     }
   }
 
-  handlePluginSessionTermination(sessionToPurge, actualDeviceId);
-
 #ifdef SESSION_TRACE_DEBUG
   {
     char buf[32], buf1[32];
@@ -3473,23 +3471,5 @@ FCSession* handleFcSession (const struct pcap_pkthdr *h,
       releaseMutex(&myGlobals.fcSessionsMutex);
 #endif
       return (theSession);
-}
-
-/* ******************* */
-
-void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId) {
-#ifdef SESSION_PLUGIN
-  FlowFilterList *flows = myGlobals.flowsList;
-
-  while(flows != NULL) {
-    if((flows->pluginStatus.pluginPtr != NULL)
-       && (flows->pluginStatus.pluginPtr->sessionFunct != NULL)
-       && (!flows->pluginStatus.activePlugin)) {
-      flows->pluginStatus.pluginPtr->sessionFunct(sessionToPurge, actualDeviceId);
-    }
-
-    flows = flows->next;
-  }
-#endif
 }
 

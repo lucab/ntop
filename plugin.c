@@ -404,6 +404,19 @@ void startPlugins(void) {
   }
 }
 
-/* ************************************* */
+/* ******************* */
 
+void handlePluginHostCreationDeletion(HostTraffic *el, u_char hostCreation) {
+  FlowFilterList *flows = myGlobals.flowsList;
+
+  while(flows != NULL) {
+    if(flows->pluginStatus.pluginMemoryPtr != NULL) {
+      if(flows->pluginStatus.activePlugin 
+	 && (flows->pluginStatus.pluginPtr->crtDltFunct != NULL))
+	flows->pluginStatus.pluginPtr->crtDltFunct(el, hostCreation);
+    }
+    
+    flows = flows->next;
+  }
+}
 

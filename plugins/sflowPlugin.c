@@ -2105,6 +2105,7 @@ static PluginInfo sFlowPluginInfo[] = {
     termsFlowFunct,    /* TermFunc   */
     handleSflowPacket, /* PluginFunc */
     handlesFlowHTTPrequest,
+    NULL, /* no host creation/deletion handle */
     "ip", /* no capture */
     NULL /* no status */
   }

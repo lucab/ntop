@@ -175,6 +175,7 @@ static PluginInfo pluginInfo[] = {
 #else
     emptyHTTPhandler, /* no handler */
 #endif
+    NULL, /* no host creation/deletion handle */
     NULL, /* no capture */
     NULL  /* no status */
   }

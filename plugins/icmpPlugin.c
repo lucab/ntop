@@ -71,6 +71,7 @@ static PluginInfo icmpPluginInfo[] = {
     termIcmpFunct, /* TermFunc   */
     NULL, /* PluginFunc */
     handleIcmpWatchHTTPrequest,
+    NULL, /* no host creation/deletion handle */
     NULL /* no capture */,
     NULL /* no status */
   }

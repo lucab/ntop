@@ -121,8 +121,9 @@ static PluginInfo rrdPluginInfo[] = {
     termRRDfunct, /* TermFunc   */
     NULL, /* PluginFunc */
     handleRRDHTTPrequest,
+    NULL, /* no host creation/deletion handle */
     NULL, /* no capture */
-    NULL /* no status */
+    NULL  /* no status */
   }
 };
 

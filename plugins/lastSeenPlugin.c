@@ -52,6 +52,7 @@ static PluginInfo LsPluginInfo[] = {
     termLsFunct, /* TermFunc   */
     handleLsPacket, /* PluginFunc */
     handleLsHTTPrequest,
+    NULL, /* no host creation/deletion handle */
     "ip or (vlan and ip)", /* BPF filter: filter all the IP packets */
     NULL /* no status */
   }

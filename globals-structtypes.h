@@ -199,7 +199,7 @@ typedef struct hostAddr {
     struct in6_addr _hostIp6Address;
 #endif
   } addr;
-}HostAddr;
+} HostAddr;
 
 #define Ip4Address addr._hostIp4Address
 
@@ -225,10 +225,10 @@ typedef struct _ipSerial {
 } IpSerial;
 
 typedef struct hostSerial {
-  u_char serialType; /* 0 == empty */
+  u_char serialType;     /* 0 == empty */
   union {
     EthSerial ethSerial; /* hostSerial == SERIAL_MAC */
-    IpSerial  ipSerial;/* hostSerial == SERIAL_IPV4/SERIAL_IPV6 */
+    IpSerial  ipSerial;  /* hostSerial == SERIAL_IPV4/SERIAL_IPV6 */
     FcSerial  fcSerial;
   } value;
 } HostSerial;
@@ -1596,29 +1596,25 @@ typedef void(*VoidFunct)(void);
 typedef int(*IntFunct)(void);
 typedef void(*PluginFunct)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
 typedef void(*PluginHTTPFunct)(char* url);
-#ifdef SESSION_PLUGIN
-typedef void(*PluginSessionFunc)(IPSession *sessionToPurge, int actualDeviceId);
-#endif
+typedef void(*PluginCreateDeleteFunct)(HostTraffic*, u_char);
 
 typedef struct pluginInfo {
   /* Plugin Info */
-  char *pluginNtopVersion;  /* Version of ntop for which the plugin was compiled */
-  char *pluginName;         /* Short plugin name (e.g. icmpPlugin) */
-  char *pluginDescr;        /* Long plugin description */
+  char *pluginNtopVersion;   /* Version of ntop for which the plugin was compiled */
+  char *pluginName;          /* Short plugin name (e.g. icmpPlugin) */
+  char *pluginDescr;         /* Long plugin description */
   char *pluginVersion;
   char *pluginAuthor;
-  char *pluginURLname;      /* Set it to NULL if the plugin doesn't speak HTTP */
-  char activeByDefault;     /* Set it to 1 if this plugin is active by default */
-  char inactiveSetup;       /* Set it to 1 if this plugin can be called inactive for setup */
+  char *pluginURLname;       /* Set it to NULL if the plugin doesn't speak HTTP */
+  char activeByDefault;      /* Set it to 1 if this plugin is active by default */
+  char inactiveSetup;        /* Set it to 1 if this plugin can be called inactive for setup */
   IntFunct startFunct;
   VoidFunct termFunct;
-  PluginFunct pluginFunct;    /* Initialize here all the plugin structs... */
+  PluginFunct pluginFunct;   /* Initialize here all the plugin structs... */
   PluginHTTPFunct httpFunct; /* Set it to NULL if the plugin doesn't speak HTTP */
-#ifdef SESSION_PLUGIN
-  PluginSessionFunct sessionFunct; /* Set it to NULL if the plugin doesn't care of terminated sessions */
-#endif
-  char* bpfFilter;          /* BPF filter for selecting packets that
-       		               will be routed to the plugin  */
+  PluginCreateDeleteFunct crtDltFunct; /* Called whenever a host is created/deleted */
+  char* bpfFilter;           /* BPF filter for selecting packets that
+				will be routed to the plugin */
   char *pluginStatusMessage;
 } PluginInfo;
 

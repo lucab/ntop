@@ -128,6 +128,8 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
   return(idx);
 }
 
+/* ************************************ */
+
 u_int hashFcHost (FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
                   int actualDeviceId)
 {
@@ -224,9 +226,9 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
       }
   }
   else {
-      for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
+    for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
           FCSession *prevSession, *nextSession, *theSession;
-
+	  
           if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
               return;
 
@@ -340,6 +342,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 #endif
     }
   }
+
+  handlePluginHostCreationDeletion(host, 0 /* host deletion */);
 
   /* Make sure this host is not part of the ipTrafficMatrixHosts list */
   if((myGlobals.device[actualDeviceId].ipTrafficMatrix != NULL)
@@ -1194,6 +1198,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 #endif
 
     setHostSerial(el);
+    handlePluginHostCreationDeletion(el, 1 /* host creation */);
   }
 
 

@@ -80,6 +80,7 @@ static PluginInfo netflowPluginInfo[] = {
     NULL, /* PluginFunc */
 #endif
     handleNetflowHTTPrequest,
+    NULL, /* no host creation/deletion handle */
 #ifdef DEBUG_FLOWS
     "udp and (port 2055 or port 9995 or port 10234)",
 #else
