@@ -483,7 +483,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
     }
   }
 
-  el->lastSeen = actTime;
+  if(el != NULL) {
+    el->lastSeen = actTime;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
@@ -492,6 +493,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	     el->hostNumIpAddress, device[actualDeviceId].hostsno,
 	     useIPAddressForSearching);
 #endif
+  }
 
   return(idx);
 }
@@ -1331,6 +1333,11 @@ static void handleSession(const struct pcap_pkthdr *h,
   HostTraffic *srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
   HostTraffic *dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
   struct timeval tvstrct;
+
+  if((srcHost == NULL) || (dstHost == NULL)) {
+    traceEvent(TRACE_INFO, "Sanity check failed (3) [Low memory?]");
+    return;
+  }
 
   /*
     Note: do not move the {...} down this function
@@ -2440,6 +2447,11 @@ static int handleIP(u_short port,
   srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
   dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
+  if((srcHost == NULL) || (dstHost == NULL)) {
+    traceEvent(TRACE_INFO, "Sanity check failed (4) [Low memory?]");
+    return;
+  }
+
   if(idx != -1) {
     if(subnetPseudoLocalHost(srcHost)) {
       if(subnetPseudoLocalHost(dstHost)) {
@@ -3076,21 +3088,27 @@ static void processIpPkt(const u_char *bp,
   NTOHL(ip.ip_src.s_addr);
   srcHostIdx = getHostInfo(&ip.ip_src, ether_src);
   srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+
+  NTOHL(ip.ip_dst.s_addr);
+  dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst);
+  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+
   if(srcHost == NULL) {
     /* Sanity check */
-    traceEvent(TRACE_INFO, "Sanity check failed (1)\n");
+    traceEvent(TRACE_INFO, "Sanity check failed (1) [Low memory?]");
+    return; /* It might be that there's not enough memory that that
+	       dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst) caused
+	       srcHost to be freed */
   } else {
     /* Lock the instance so that the next call
        to getHostInfo won't purge it */
     srcHost->instanceInUse++;
   }
 
-  NTOHL(ip.ip_dst.s_addr);
-  dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst);
-  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
   if(dstHost == NULL) {
     /* Sanity check */
-    traceEvent(TRACE_INFO, "Sanity check failed (2)\n");
+    traceEvent(TRACE_INFO, "Sanity check failed (2) [Low memory?]");
+    return;
   } else {
     /* Lock the instance so that the next call
        to getHostInfo won't purge it */
@@ -4151,7 +4169,7 @@ void processPacket(u_char *_deviceId,
 	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (3)\n");
+	  traceEvent(TRACE_INFO, "Sanity check failed (5) [Low memory?]");
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
@@ -4162,7 +4180,7 @@ void processPacket(u_char *_deviceId,
 	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (4)\n");
+	  traceEvent(TRACE_INFO, "Sanity check failed (6) [Low memory?]");
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
@@ -4188,7 +4206,7 @@ void processPacket(u_char *_deviceId,
 	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (3)\n");
+	  traceEvent(TRACE_INFO, "Sanity check failed (7) [Low memory?]");
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
@@ -4199,7 +4217,7 @@ void processPacket(u_char *_deviceId,
 	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (4)\n");
+	  traceEvent(TRACE_INFO, "Sanity check failed (8) [Low memory?]");
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
@@ -4226,7 +4244,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	  if(srcHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(TRACE_INFO, "Sanity check failed (3)\n");
+	    traceEvent(TRACE_INFO, "Sanity check failed (9) [Low memory?]");
 	  } else {
 	    /* Lock the instance so that the next call
 	       to getHostInfo won't purge it */
@@ -4237,7 +4255,7 @@ void processPacket(u_char *_deviceId,
 	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	  if(dstHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(TRACE_INFO, "Sanity check failed (4)\n");
+	    traceEvent(TRACE_INFO, "Sanity check failed (10) [Low memory?]");
 	  } else {
 	    /* Lock the instance so that the next call
 	       to getHostInfo won't purge it */
@@ -4506,7 +4524,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	  if(srcHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(TRACE_INFO, "Sanity check failed (5)\n");
+	    traceEvent(TRACE_INFO, "Sanity check failed (11) [Low memory?]");
 	  } else {
 	    /* Lock the instance so that the next call
 	       to getHostInfo won't purge it */
@@ -4517,7 +4535,7 @@ void processPacket(u_char *_deviceId,
 	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	  if(dstHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(TRACE_INFO, "Sanity check failed (6)\n");
+	    traceEvent(TRACE_INFO, "Sanity check failed (12) [Low memory?]");
 	  } else {
 	    /* Lock the instance so that the next call
 	       to getHostInfo won't purge it */
