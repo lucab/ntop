@@ -166,6 +166,73 @@ void printTableEntryPercentage(char *buf, int bufLen,
 			       float percentage) {
   int int_perc = (int)percentage;
 
+  /* This shouldn't happen */
+  if(int_perc < 0)
+    int_perc = 0;
+  else if(int_perc > 100)
+    int_perc = 100;
+
+  switch(int_perc) {
+  case 0:
+    if(total == -1) {
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+		  getRowColor(), label, COLOR_2, label_2) < 0)
+	BufferTooShort();
+    } else {
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+		  getRowColor(), label, formatKBytes(total), COLOR_2, label_2) < 0)
+	BufferTooShort();
+    }
+    break;
+  case 100:
+    if(total == -1) {
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+		  getRowColor(), label, COLOR_1, label_1) < 0)
+	BufferTooShort();
+    } else {
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+		  getRowColor(), label, formatKBytes(total), COLOR_1, label_1) < 0)
+	BufferTooShort();
+    }
+    break;
+  default:
+    if(total == -1) {
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+             "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label,
+             int_perc, COLOR_1,
+             label_1, percentage, (100-int_perc), COLOR_2,
+             label_2, (100-percentage)) < 0) BufferTooShort();
+    } else {
+      if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+             "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label, formatKBytes(total),
+             int_perc, COLOR_1,
+             label_1, percentage, (100-int_perc), COLOR_2,
+		  label_2, (100-percentage)) < 0) BufferTooShort();
+    }
+  }
+
+  sendString(buf);
+}
+
+#if 0
+void printTableEntryPercentage(char *buf, int bufLen,
+			       char *label, char* label_1,
+			       char* label_2, float total,
+			       float percentage) {
+  int int_perc = (int)percentage;
+
   if(percentage < 0.5)
     int_perc = 0;
   else if(percentage > 99.5)
@@ -276,6 +343,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
 
   sendString(buf);
 }
+#endif
 
 /* ******************************* */
 
