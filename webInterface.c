@@ -734,12 +734,12 @@ static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
     return;
   if(textPrintFlag == TRUE) {
     if(snprintf(buf, sizeof(buf),
-                "Mutex %s, is %s. "
-                "locked: %u times, last was %s:%d, "
-                "unlocked: %u times, last was %s:%d "
-                "longest: %d sec from %s:%d\n",
+                "Mutex %s, is %s.\n"
+                "     locked: %u times, last was %s:%d\n"
+                "     unlocked: %u times, last was %s:%d\n"
+                "     longest: %d sec from %s:%d\n",
   	        mutexName,
-	        mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
+	        mutexId->isLocked ? "locked" : "unlocked",
 	        mutexId->numLocks,
 	        mutexId->lockFile, mutexId->lockLine,
 	        mutexId->numReleases,
@@ -2693,7 +2693,7 @@ sendString(texthtml("\n\nAddress counts\n\n", "<tr><th colspan=\"2\">Address cou
   if(myGlobals.debugMode)
 #endif /* DEBUG or WIN32 */
   {
-    sendString(texthtml("\nMutexes:\n", 
+    sendString(texthtml("\nMutexes:\n\n", 
                         "<P>"TABLE_ON"<TABLE BORDER=1>\n"
                         "<TR><TH>Mutex Name</TH>"
                         "<TH>State</TH>"
