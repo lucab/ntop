@@ -151,7 +151,6 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
   mySQLupdateHostTraffic(host);
 #endif
 
-  myGlobals.device[theDevice].hash_hostTraffic[hostIdx] = NULL;
   myGlobals.device[theDevice].hostsno--;
 
 #ifdef FREE_HOST_INFO
@@ -337,6 +336,7 @@ void freeHostInstances(int actualDeviceId) {
 	num++;
 	freeHostInfo(actualDeviceId, myGlobals.device[actualDeviceId].hash_hostTraffic[idx],
 		     idx, actualDeviceId);
+	myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;
       }
     }
   }
@@ -348,7 +348,7 @@ void freeHostInstances(int actualDeviceId) {
 /* #define DEBUG */
 
 void purgeIdleHosts(int actDevice) {
-  u_int idx, numFreedBuckets=0, len, hashLen;
+  u_int idx, numFreedBuckets=0, len, hashLen, maxBucket = 0;
   time_t startTime = time(NULL);
   static time_t lastPurgeTime = 0;
   HostTraffic **theFlaggedHosts;
@@ -389,8 +389,8 @@ void purgeIdleHosts(int actDevice) {
 	 && (!subnetPseudoLocalHost(myGlobals.device[actDevice].hash_hostTraffic[idx]))) {
 	
 	if(!myGlobals.stickyHosts) {
-	  theFlaggedHosts[idx] = myGlobals.device[actDevice].hash_hostTraffic[idx];
-	  myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
+	    theFlaggedHosts[maxBucket++] = myGlobals.device[actDevice].hash_hostTraffic[idx];
+	    myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
 	}
       }
 
@@ -402,14 +402,14 @@ void purgeIdleHosts(int actDevice) {
 #endif
 
   /* Now free the entries */
-  for(idx=1; idx<hashLen; idx++) {
-    if((idx != myGlobals.otherHostEntryIdx) && (theFlaggedHosts[idx] != NULL)) {
-      freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
+  for(idx=0; idx<maxBucket; idx++) {
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)", idx, numFreedBuckets);
+      traceEvent(TRACE_INFO, "Purging host (idx=%d/%s) (%d hosts purged)", 
+		 idx, theFlaggedHosts[idx]->hostSymIpAddress, numFreedBuckets);
 #endif
+      
+      freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
       numFreedBuckets++;
-    }
   }
 
   free(theFlaggedHosts);
@@ -563,7 +563,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		    if((!myGlobals.stickyHosts)
 		       && (numFreedHosts < 7) /* Don't free too many buckets per run ! */
 		       && ((el->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)) {
-		      freeHostInfo(actualDeviceId, el, list->idx, actualDeviceId);
+			freeHostInfo(actualDeviceId, el, list->idx, actualDeviceId);
+			myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx] = NULL;
 
 			numFreedHosts++;
 

@@ -1871,7 +1871,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
       TrafficCounter dataSent, dataRcvd;
       IPSession *session = myGlobals.device[actualReportDeviceId].tcpSession[idx];
             
-      while(session != NULL) { 
+      while((session != NULL) && (printedSessions < maxNumLines)) { 
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
 	if(session->sessionState != STATE_ACTIVE) {
 	  session = session->next;
@@ -1962,13 +1962,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 		    ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	sendString(buf);
-	printedSessions++;
-
-	/* Avoid huge tables */
-	if(printedSessions++ > maxNumLines)
-	  break;
-
 	session = session->next;
+	printedSessions++;
       }
     }
 
