@@ -1292,7 +1292,7 @@ typedef struct {
 #define DB_TIMEOUT_REFRESH_TIME      30 /* seconds */
 #define DEFAULT_DB_UPDATE_TIME       60 /* seconds */
 #define HASHNAMESIZE               4096
-#define MAX_HASH_SIZE              32768
+#define MAX_HASH_SIZE              1024 /* 32768 */ /* <<<<=== TEST */
 
 /*
  * 75% is the threshold for the hash table: it's time to

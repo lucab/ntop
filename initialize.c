@@ -934,7 +934,9 @@ void initLibpcap(char* rulesFile, int numDevices) {
       if((!myGlobals.device[i].virtualDevice) && (column == NULL)) {
 	myGlobals.device[i].pcapPtr =
 	  pcap_open_live(myGlobals.device[i].name,
-			 myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN, 1, 100 /* ms */, ebuf);
+			 myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN, 
+			 myGlobals.disablePromiscuousMode == 1 ? 0 : 1, 
+			 100 /* ms */, ebuf);
 
 	if(myGlobals.device[i].pcapPtr == NULL) {
 	  traceEvent(TRACE_INFO, ebuf);

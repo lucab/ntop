@@ -34,6 +34,7 @@ ntop \- display top network users
 .RB [ -q | --create-suspicious-packets ]
 .RB [ -r | --refresh-time 
 .IR <number> ]
+.RB [ -s | --no-promiscuous ]
 .RB [ -t | --trace-level 
 .IR <number> ]
 .RB [ -w | --http-server
@@ -192,6 +193,9 @@ Forces ntop to create a file ntop-suspicious-pkts.XXX.pcap (XXX is the interface
 Specifies the delay (in seconds) between screen updates (the default is 3 seconds). If the -l flag is used, it specifies how often entries are logged in the log file. Please
 note that if the delay is very short (1 second for instance), ntop might not
 be able to process all the network traffic.
+
+.It2 -s --no-promiscuous
+Use this flag for disabling interface promiscuous mode (i.e. the ability to capture ethernet frames regardless whether they are directed to the local ethernet card or to the ethernet broadcast address). Note that even if you use this flag, the interface could well be in  promiscuous mode as other applications can have enabled this functionality.
 
 .It2 -t --trace-level
 This flag specifies the level of

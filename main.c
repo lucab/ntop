@@ -95,6 +95,7 @@ static struct option const long_options[] = {
   { "protocols",                        required_argument, NULL, 'p' },
   { "create-suspicious-packets",        no_argument,       NULL, 'q' },
   { "refresh-time",                     required_argument, NULL, 'r' },
+  { "no-promiscuous",                   no_argument,       NULL, 's' },
   { "trace-level",                      required_argument, NULL, 't' },
 
 #ifndef WIN32
@@ -172,14 +173,12 @@ static void welcome (FILE * fp)
 /*
  * Wrong. Please try again accordingly to ....
  */
-static void usage (FILE * fp)
-{
+static void usage (FILE * fp) {
   welcome(fp);
 
   fprintf(fp, "\nUsage: %s [OPTION]\n", myGlobals.program_name);
 
 #ifdef HAVE_GETOPT_LONG
-
   fprintf(fp, "    [-a <path>      | --access-log-path <path>]           Path for ntop web server access log\n");
 
 #ifdef HAVE_MYSQL
@@ -214,7 +213,7 @@ static void usage (FILE * fp)
   fprintf(fp, "    [-p <list>      | --protocols <list>]                 List of IP protocols to monitor (see man page)\n");
   fprintf(fp, "    [-q             | --create-suspicious-packets]        Create file ntop-suspicious-pkts.XXX.pcap file\n");
   fprintf(fp, "    [-r <number>    | --refresh-time <number>]            Refresh time in seconds, default is %d\n", REFRESH_TIME);
-  fprintf(fp, "    [-s <number>    | --max-hash-size <number>]           Maximum hash table size, default = %d\n", MAX_HASH_SIZE);
+  fprintf(fp, "    [-s             | --no-promiscuous]                   Disable promiscuous mode\n");
   fprintf(fp, "    [-t <number>    | --trace-level <number>]             Trace level [0-5]\n");
 
 #ifndef WIN32
@@ -453,6 +452,10 @@ static int parseOptions(int argc, char* argv []) {
 
     case 'q': /* allow ntop to save suspicious packets in a file in pcap (tcpdump) format */
       myGlobals.enableSuspiciousPacketDump = 1;
+      break;
+
+    case 's': 
+      myGlobals.disablePromiscuousMode = 1;
       break;
 
     case 'r':

@@ -100,6 +100,7 @@ typedef struct ntopGlobals {
   u_char enablePacketDecoding;
   u_char enableFragmentHandling;
   u_char trackOnlyLocalHosts;
+  u_char disablePromiscuousMode;
 
   /* Search paths */
   char **dataFileDirs;
@@ -262,9 +263,7 @@ typedef struct ntopGlobals {
   TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
 
   u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
-
   u_short *mtuSize;
-
   u_short *headerSize;
 
 #ifdef ENABLE_NAPSTER
