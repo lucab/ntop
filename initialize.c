@@ -1059,8 +1059,6 @@ void initLibpcap(void) {
     for(i=0; i<myGlobals.numDevices; i++) {
       int memlen;
 
-#define MAX_SUBNET_HOSTS 1024
-
       if(myGlobals.device[i].netmask.s_addr == 0) {
 	/* In this case we are using a dump file */
 	myGlobals.device[i].netmask.s_addr = 0xFFFFFF00; /* dummy */

@@ -509,6 +509,10 @@ extern const char *gdbm_strerror (int);
 
 #define MAX_NUM_PROTOS      64   /* Maximum number of protocols for graphs */
 
+#define MAX_SUBNET_HOSTS                1024 /* used in util.c */
+
+#define NUM_SESSION_INFO                 128 /* used in util.c */
+#define MAX_NUM_SESSION_INFO  2*NUM_SESSION_INFO  /* Not yet used */
 
 /* ********************************************* */
 
@@ -1901,6 +1905,8 @@ struct pbuf {
 #define PIPE_READ_TIMEOUT        15       /*      seconds */
 
 #define ADDRESS_PURGE_TIMEOUT 12*60*60 /* 12 hours */
+
+#define PASSIVE_SESSION_PURGE_TIMEOUT    60 /* seconds */
 
 /* **************************** */
 

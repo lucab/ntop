@@ -49,11 +49,6 @@
 #define BROADCAST              2
 #define INVALIDNETMASK        -1
 
-#define NUM_SESSION_INFO                     128
-#define MAX_NUM_SESSION_INFO  2*NUM_SESSION_INFO  /* Not yet used */
-
-#define PASSIVE_SESSION_PURGE_TIMEOUT    60 /* seconds */
-
 static SessionInfo *passiveSessions;
 static u_short numLocalNets=0, passiveSessionsLen;
 
@@ -1238,11 +1233,6 @@ int checkCommand(char* commandName) {
 }
 
 /* ************************************ */
-
-/*
-  #define DEBUG
-  #define USE_LSOF_DUMP
-*/
 
 void readLsofInfo(void) {
 #ifdef WIN32

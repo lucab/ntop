@@ -1652,6 +1652,26 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
 
 
+  if(snprintf(buf, sizeof(buf),
+              "ntop.h: #define MAX_SUBNET_HOSTS %d", MAX_SUBNET_HOSTS) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum network size (hosts per interface)", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "ntop.h: #define NUM_SESSION_INFO %d", NUM_SESSION_INFO) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Allocated # of passive FTP sessions", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "ntop.h: #define MAX_NUM_SESSION_INFO %d", MAX_NUM_SESSION_INFO) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of passive FTP sessions (not used)", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "ntop.h: #define PASSIVE_SESSION_PURGE_TIMEOUT %d", PASSIVE_SESSION_PURGE_TIMEOUT) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Inactive passive FTP session timeout (seconds)", buf);
+
 
   sendString(texthtml("\n\nCompile Time: Hash Table Sizes\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Hash Table Sizes</tr>\n"));
