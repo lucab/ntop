@@ -5143,6 +5143,7 @@ done
 if test "$ac_cv_header_gdbm_h" = no ; then
      if test -f "/usr/local/include/gdbm.h"; then
          INCS="${INCS} -I/usr/local/include"
+         CORELIBS="${CORELIBS} -L/usr/local/lib"
          cat >> confdefs.h <<\EOF
 #define HAVE_GDBM_H 1
 EOF
@@ -5165,7 +5166,7 @@ echo
 
 if test ".$ac_disable_gdchart" = ".no"; then
   echo $ac_n "checking for GDchart (optional package)""... $ac_c" 1>&6
-echo "configure:5169: checking for GDchart (optional package)" >&5
+echo "configure:5170: checking for GDchart (optional package)" >&5
 
   if test ".${GDCHART_ROOT}" != .; then
     if test -d $GDCHART_ROOT &&
@@ -5220,7 +5221,7 @@ fi
 
 if test ".$ac_disable_openssl" = ".no"; then
   echo $ac_n "checking for OpenSSL Library by Open SLL Project (optional package)""... $ac_c" 1>&6
-echo "configure:5224: checking for OpenSSL Library by Open SLL Project (optional package)" >&5
+echo "configure:5225: checking for OpenSSL Library by Open SLL Project (optional package)" >&5
   if test ".${OSSL_ROOT}" != .; then
     if test -d $OSSL_ROOT &&
        test -r $OSSL_ROOT/libssl.a &&
@@ -5312,7 +5313,7 @@ else
 fi
 
 echo $ac_n "checking for register_mib in -lucdagent""... $ac_c" 1>&6
-echo "configure:5316: checking for register_mib in -lucdagent" >&5
+echo "configure:5317: checking for register_mib in -lucdagent" >&5
 ac_lib_var=`echo ucdagent'_'register_mib | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -5320,7 +5321,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lucdagent -lsnmp -lucdagent -lucdmibs $LIBS $MORELIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 5324 "configure"
+#line 5325 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -5331,7 +5332,7 @@ int main() {
 register_mib()
 ; return 0; }
 EOF
-if { (eval echo configure:5335: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5336: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
