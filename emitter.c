@@ -1233,6 +1233,7 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
     while(tmpStr != NULL) {
       int j;
 
+      i=0;
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;
 
