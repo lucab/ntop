@@ -1550,13 +1550,24 @@ void drawGlobalProtoDistribution(void) {
 
 void drawGlobalIpProtoDistribution(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
-  int i, idx=0;
+  int i, idx=0, idx1 = 0;
   float p[256];
   char *lbl[256];
   FILE *fd;
   int useFdOpen = 0;
+  ProtocolsList *protoList = myGlobals.ipProtosList;
+  float total, partialTotal = 0;
 
-  p[myGlobals.numIpProtosToMonitor] = 0;
+  total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
+
+  while(protoList != NULL) {
+    if(total > (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value)
+      total -= (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
+    else
+      total = 0;
+    
+    idx1++, protoList = protoList->next;
+  }
 
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
     p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
@@ -1564,10 +1575,19 @@ void drawGlobalIpProtoDistribution(void) {
     p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
       +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
     if(p[idx] > 0) {
-      p[myGlobals.numIpProtosToMonitor] += p[idx];
+      partialTotal += p[idx];
       lbl[idx] = myGlobals.protoIPTrafficInfos[i];
       idx++;
     }
+  }
+
+  /*  Add a bar for the Other TCP/UDP based protocols 
+      Courtesy of Robbert Kouprie <r.kouprie@dto.tudelft.nl>
+  */
+  if (total > partialTotal) {
+    lbl[idx] = "Other";
+    p[idx] = total - partialTotal;
+    idx++;
   }
 
 #ifndef WIN32

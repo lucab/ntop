@@ -20,7 +20,7 @@
 
 /* This plugin works only with threads */
 
-#define RRD_DEBUG  8
+/* #define RRD_DEBUG  8 */
 
 /*
 
