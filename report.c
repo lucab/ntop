@@ -573,14 +573,14 @@ void printTrafficStatistics() {
 
     sendString("<TR><TH "TH_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
-		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts.value/sec</td></TR>\n",
+		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt),
 		myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt) < 0)
       BufferTooShort();
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Last Minute</th>"
 		"<TD "TD_BG" align=right>%s</td>"
-		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts.value/sec</td></TR>\n",
+		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt),
 		myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt) < 0)
       BufferTooShort();
@@ -588,7 +588,7 @@ void printTrafficStatistics() {
 
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Last 5 Minutes</th>"
 		"<TD "TD_BG" align=right>%s</td>"
-		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts.value/sec</td></TR>\n",
+		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt),
 		myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt) < 0)
       BufferTooShort();
@@ -596,7 +596,7 @@ void printTrafficStatistics() {
 
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Peak</th>"
 		"<TD "TD_BG" align=right>%s</td>"
-		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts.value/sec</td></TR>\n",
+		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput),
 		myGlobals.device[myGlobals.actualReportDeviceId].peakPacketThroughput) < 0)
       BufferTooShort();
@@ -604,7 +604,7 @@ void printTrafficStatistics() {
 
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Average</th>"
 		"<TD "TD_BG" align=right>%s</td>"
-		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts.value/sec</td></TR>\n",
+		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		getRowColor(),
 		formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/(myGlobals.actTime-myGlobals.initialSniffTime)),
 		/* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
@@ -942,9 +942,9 @@ void printHostsTraffic(int reportType,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts.value/sec</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts.value/sec</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts.value/sec</TD>",
+			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
 			getRowColor(), webHostName,
 			formatThroughput(el->actualRcvdThpt),
 			formatThroughput(el->averageRcvdThpt),
@@ -962,9 +962,9 @@ void printHostsTraffic(int reportType,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts.value/sec</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts.value/sec</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts.value/sec</TD>",
+			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
 			getRowColor(), webHostName,
 			formatThroughput(el->actualSentThpt),
 			formatThroughput(el->averageSentThpt),

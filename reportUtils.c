@@ -1298,8 +1298,8 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       sendString("<CENTER>\n"
 		 ""TABLE_ON"<TABLE BORDER=1 WIDTH=100%><TR "TR_ON"><TH "TH_BG">TCP Flags</TH>"
-		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent.value</TH>"
-		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd.value</TH></TR>\n");
+		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent</TH>"
+		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd</TH></TR>\n");
 
       if((el->secHostPkts->synPktsSent.value.value+el->secHostPkts->synPktsRcvd.value.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>SYN</TH>",
@@ -1388,8 +1388,8 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       sendString("<CENTER>\n"
 		 ""TABLE_ON"<TABLE BORDER=1 WIDTH=100%><TR "TR_ON"><TH "TH_BG">Anomaly</TH>"
-		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent.value&nbsp;to</TH>"
-		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd.value&nbsp;from</TH>"
+		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent&nbsp;to</TH>"
+		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd&nbsp;from</TH>"
 		 "</TR>\n");
 
       if((el->secHostPkts->ackScanSent.value.value+el->secHostPkts->ackScanRcvd.value.value) > 0) {
@@ -1578,8 +1578,8 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
   sendString("<CENTER>\n"
 	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
-	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent.value</TH>"
-	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Rcvd.value</TH></TR>\n");
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Rcvd</TH></TR>\n");
 
   printTableDoubleEntry(buf, sizeof(buf), "TCP", COLOR_1, (float)el->tcpFragmentsSent.value/1024,
 			100*((float)SD(el->tcpFragmentsSent.value, totalSent)),
@@ -1714,8 +1714,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
   sendString("<CENTER>\n"
 	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
-	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent.value</TH>"
-	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Rcvd.value</TH></TR>\n");
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Rcvd</TH></TR>\n");
 
   printTableDoubleEntry(buf, sizeof(buf), "TCP", COLOR_1, (float)actTotalSent/1024,
 			100*((float)SD(actTotalSent, totalSent)),
@@ -3055,9 +3055,16 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
   }
 
-  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s"
+#ifdef HAVE_RRD_H
+	      " <A HREF=javascript:popUp(\"http://localhost/cgi-bin/rrd.cgi?path=%s/pktSent.rrd\")><IMG BORDER=0 SRC=/graph.gif></A>"
+#endif
+	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Sent",
+#ifdef HAVE_RRD_H
+	      el->hostNumIpAddress,
+#endif
 	      formatBytes(el->bytesSent.value, 1), formatPkts(el->pktSent.value),
 	      formatPkts(el->pktDuplicatedAckSent.value),
 	      (int)(((float)el->pktDuplicatedAckSent.value*100)/(float)(el->pktSent.value+1))
@@ -3122,9 +3129,16 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
   }
 
-  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s"
+#ifdef HAVE_RRD_H
+	      " <A HREF=javascript:popUp(\"http://localhost/cgi-bin/rrd.cgi?path=%s/pktRcvd.rrd\")><IMG BORDER=0 SRC=/graph.gif></A>"
+#endif
+	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
+#ifdef HAVE_RRD_H
+	      el->hostNumIpAddress,
+#endif
 	      formatBytes(el->bytesRcvd.value, 1), formatPkts(el->pktRcvd.value),
 	      formatPkts(el->pktDuplicatedAckRcvd.value),
 	      (int)((float)(el->pktDuplicatedAckRcvd.value*100)/(float)(el->pktRcvd.value+1))) < 0)
