@@ -3032,18 +3032,26 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(printedHeader > 1)
     sendString("</OL></TD></TR>\n");
 
+
   if((el->hostNumIpAddress[0] != '\0')
      && (!subnetPseudoLocalHost(el))
      && (!multicastHost(el))
-     && (!privateIPAddress(el))
-     && myGlobals.mapperURL) {
+     && (!privateIPAddress(el))) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"<IMG SRC=\"%s?host=%s\" WIDTH=320 HEIGHT=200></TD></TR>\n",
-		getRowColor(),
-		"Host Physical Location",
-		myGlobals.mapperURL, el->hostNumIpAddress) < 0)
+		"[ <A HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
+		getRowColor(), "Further Host Information", el->hostNumIpAddress) < 0)
       BufferOverflow();
     sendString(buf);
+    
+    if(myGlobals.mapperURL) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "<IMG SRC=\"%s?host=%s\" WIDTH=320 HEIGHT=200></TD></TR>\n",
+		  getRowColor(),
+		  "Host Physical Location",
+		  myGlobals.mapperURL, el->hostNumIpAddress) < 0)
+      BufferOverflow();
+      sendString(buf);
+    }
   }
 
   checkHostHealthness(el);
