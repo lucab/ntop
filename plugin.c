@@ -37,7 +37,11 @@ extern PluginInfo* rmonPluginEntryFctn(void);
 #endif
 
 #ifndef RTLD_NOW 
+#ifdef RTLD_LAZY
 #define RTLD_NOW RTLD_LAZY 
+#else
+#define RTLD_NOW 1 /* MacOS X Patch */
+#endif
 #endif
 
 /* ******************* */
@@ -138,7 +142,7 @@ void notifyPluginsHashResize(int oldSize, int newSize, int* mappings) {
 
 #ifndef MICRO_NTOP
 
-#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32)
+#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
 static void loadPlugin(char* dirName, char* pluginName) {
   char pluginPath[256];
   char tmpBuf[BUF_SIZE];
@@ -350,7 +354,7 @@ void loadPlugins(void) {
 #else /* STATIC_PLUGIN */
   loadPlugin(NULL, "icmpPlugin");
   loadPlugin(NULL, "nfsPlugin");
-  loadPlugin(NULL, "wapPlugin");
+  /* loadPlugin(NULL, "wapPlugin"); */
 #ifdef RMON_SUPPORT
   loadPlugin(NULL, "rmonPlugin");
 #endif

@@ -86,7 +86,7 @@ void execCGI(char* cgiName) {
  
 /* **************************************** */
  
-#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX)
+#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX) || defined(DARWIN)
  void showPluginsList(char* pluginName) {
    FlowFilterList *flows = flowsList;
    short printHeader = 0;
