@@ -187,7 +187,6 @@ extern void *updateThptLoop(void *notUsed);
 extern void* updateHostTrafficStatsThptLoop(void* notUsed);
 extern void *updateDBHostsTrafficLoop(void* notUsed);
 extern void *scanIdleLoop(void *notUsed);
-extern void *scanIdleSessionsLoop(void *notUsed);
 extern void *periodicLsofLoop(void *notUsed);
 extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
 extern RETSIGTYPE cleanup(int signo);

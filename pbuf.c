@@ -964,8 +964,23 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	flowDirection = SERVER_TO_CLIENT;
 	break;
       } else {
-	prevSession = theSession;
-	theSession = theSession->next;
+	/* Delete the session if too old */
+	if(((theSession->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)
+	   || ((theSession->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)) {
+	  IPSession *nextSession = theSession->next;
+
+	  if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
+	    myGlobals.device[actualDeviceId].tcpSession[idx] = nextSession;
+	  } else {
+	    prevSession->next = nextSession;
+	  }
+	  
+	  freeSession(theSession, actualDeviceId);
+	  theSession = nextSession;
+	} else {
+	  prevSession = theSession;
+	  theSession = theSession->next;
+	}
       }
     }
 

@@ -99,7 +99,7 @@ typedef struct ntopGlobals {
   PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
   PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
   pthread_t dequeueThreadId, handleWebConnectionsThreadId;
-  pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
+  pthread_t thptUpdateThreadId, scanIdleThreadId;
   pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
   pthread_t purgeAddressThreadId;
   PthreadMutex gdbmMutex;

@@ -596,12 +596,6 @@ int i;
     traceEvent (TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
 		myGlobals.scanIdleThreadId);
      }
-
-if(myGlobals.enableSessionHandling) {
-    createThread(&myGlobals.scanIdleSessionsThreadId, scanIdleSessionsLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%ld) for idle TCP sessions detection.\n",
-		myGlobals.scanIdleSessionsThreadId);
-}
   }
 
 #ifndef MICRO_NTOP

@@ -726,53 +726,6 @@ void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
 
 /* **************************************** */
 
-void* scanIdleSessionsLoop(void* notUsed _UNUSED_) {
-
-  for(;;) {
-    int i;
-    
-    sleep(SESSION_SCAN_DELAY);
-
-    if(!myGlobals.capturePackets) break;
-    myGlobals.actTime = time(NULL);
-
-    for(i=0; i<myGlobals.numDevices; i++) {
-#ifdef MULTITHREADED
-      accessMutex(&myGlobals.hostsHashMutex, "scanIdleSessionsLoop-1");
-#endif
-      scanTimedoutTCPSessions(i);
-#ifdef MULTITHREADED
-      releaseMutex(&myGlobals.hostsHashMutex);
-#endif
-    }
-
-#ifdef HAVE_SCHED_H
-    sched_yield(); /* Allow other threads to run */
-#else
-    sleep(1); /* leave some time to others */
-#endif
-
-    for(i=0; i<myGlobals.numDevices; i++) {
-#ifdef MULTITHREADED
-      accessMutex(&myGlobals.hostsHashMutex, "scanIdleSessionsLoop-2");
-#endif
-      purgeOldFragmentEntries(i);
-#ifdef MULTITHREADED
-      releaseMutex(&myGlobals.hostsHashMutex);
-#endif
-    }
-    
-    if(myGlobals.handleRules){
-      for(i=0; i<myGlobals.numDevices; i++)
-	scanAllTcpExpiredRules(i);
-    }
-  }
-
-  return(NULL);
-}
-
-/* **************************************** */
-
 #ifdef MULTITHREADED
 void* periodicLsofLoop(void* notUsed _UNUSED_) {
   for(;;) {
@@ -899,8 +852,7 @@ RETSIGTYPE cleanup(int signo) {
   killThread(&myGlobals.hostTrafficStatsThreadId);
 
   if(myGlobals.rFileName == NULL) {
-      if(!myGlobals.borderSnifferMode)    killThread(&myGlobals.scanIdleThreadId);
-      if(myGlobals.enableSessionHandling) killThread(&myGlobals.scanIdleSessionsThreadId);
+    if(!myGlobals.borderSnifferMode)    killThread(&myGlobals.scanIdleThreadId);
   }
 
   if(enableDBsupport)
