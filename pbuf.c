@@ -695,7 +695,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	  if(myGlobals.enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
 	  notifyTCPSession(sessionToPurge, actualDeviceId);
 #ifdef HAVE_MYSQL
-	  mySQLnotifyTCPSession(sessionToPurge);
+	  mySQLnotifyTCPSession(sessionToPurge, actualDeviceId);
 #endif
 	  myGlobals.numTerminatedSessions++;
 	  free(sessionToPurge); /* No inner pointers to free */

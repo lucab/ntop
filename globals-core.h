@@ -413,7 +413,7 @@ extern void closemySQLsocket(void);
 extern void mySQLupdateHostNameInfo(unsigned long numeric, char* symbolic);
 extern void mySQLupdateHostTraffic(HostTraffic *el);
 extern void mySQLnotifyHostCreation(HostTraffic *el);
-extern void mySQLnotifyTCPSession(IPSession *session);
+extern void mySQLnotifyTCPSession(IPSession *session, int actualDeviceId);
 extern void mySQLupdateDBOSname(HostTraffic *el);
 #endif /* HAVE_MYSQL */
 

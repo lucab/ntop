@@ -98,7 +98,6 @@ int main(int argc, char *argv[]) {
   char *flowSpecs, *protoSpecs, rulesFile[128], ifStr[196], *theOpts;
   time_t lastTime;
 #ifdef HAVE_GETOPT_LONG
-  char *theOpts;
   int getop_long_index;
   static struct option long_options[] = {
     /* Common options */

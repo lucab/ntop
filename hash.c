@@ -503,7 +503,7 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
 	/* Session to purge */
 	notifyTCPSession(myGlobals.device[deviceToExtend].tcpSession[j], actualDeviceId);
 #ifdef HAVE_MYSQL
-	mySQLnotifyTCPSession(myGlobals.device[deviceToExtend].tcpSession[j]);
+	mySQLnotifyTCPSession(myGlobals.device[deviceToExtend].tcpSession[j], actualDeviceId);
 #endif
 	free(myGlobals.device[deviceToExtend].tcpSession[j]); /* No inner pointers to free */
 	myGlobals.device[deviceToExtend].numTcpSessions--;
