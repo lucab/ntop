@@ -2218,9 +2218,9 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
        2. MAX_PACKET_LEN should probably be removed
        3. all the functions must check that they are not going beyond packet boundaries
     */
-    if (h.caplen != h.len) {
-        traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n",
-                    h.caplen, h.len);
+    if((h.caplen != h.len)
+       && (myGlobals.enablePacketDecoding /* Courtesy of Ken Beaty <ken@ait.com> */)) {
+      traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n", h.caplen, h.len);
     }
     if (myGlobals.noFc) {
         memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
