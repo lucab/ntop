@@ -1026,7 +1026,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows)]");
 #ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-d (daemon mode)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-d (run ntop in daemon mode)]");
 #endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-m <local addresses (see man page)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");

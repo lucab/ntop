@@ -165,7 +165,7 @@ u_short mtuSize[] = {
   UNKNOWN_MTU,  /* ARCNET */
   UNKNOWN_MTU,  /* Serial Line IP */
   UNKNOWN_MTU,  /* Point-to-point Protocol */
-  4352,	        /* FDDI */
+  4470,	        /* FDDI - Courtesy of Richard Parvass <Richard.Parvass@ReckittBenckiser.com> */
   9180,         /* LLC/SNAP encapsulated atm */
   UNKNOWN_MTU,  /* raw IP */
   UNKNOWN_MTU,  /* BSD/OS Serial Line IP */
