@@ -25,7 +25,7 @@
 #define SNMP_PORT            161
 #define AGENT_NAME    "ntopRmon"
 
-#ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
+#ifdef HAVE_SNMP
 
 #include <ucd-snmp/ucd-snmp-config.h>
 #include <ucd-snmp/ucd-snmp-includes.h>
@@ -82,7 +82,7 @@ static PluginInfo rmonPluginInfo[] = {
   { AGENT_NAME,
     "ntop RMON Agent",
     "1.0", /* plugin version */
-    "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>",
+    "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "ntopRmon", /* http://<host>:<port>/plugins/remoteInterface */
     0,    /* Not Active */
     startRmonPlugin, /* StartFunc */
@@ -104,7 +104,7 @@ PluginInfo* rmonPluginEntryFctn(void) {
     traceEvent(TRACE_INFO, "Welcome to %s. (C) 2000 by Luca Deri.\n", 
 	       rmonPluginInfo->pluginName);
 
-
+    
     /* print log errors to stderr */
     snmp_enable_stderrlog();
 
@@ -130,14 +130,14 @@ PluginInfo* rmonPluginEntryFctn(void) {
     return(rmonPluginInfo);
   }
 
-#else /*  HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H */
+#else /*  HAVE_SNMP */
 
 /* ****************************** */
 
 static void handleRmonHTTPrequest(char* url) {
   sendHTTPHeader(HTTP_TYPE_HTML, 0);
   printHTMLheader("ntop RMON Interface", 0);
-  printFlagedWarning("<I>This plugin is disabled as UCD-SNMP is missing</I>");
+  printFlagedWarning("<I>This plugin is disabled as NET-SNMP is missing</I>");
   printHTMLtrailer();
 }
 
@@ -147,7 +147,7 @@ static PluginInfo rmonPluginInfo[] = {
   { AGENT_NAME,
     "ntop RMON Agent",
     "1.0", /* plugin version */
-    "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>",
+    "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "ntopRmon", /* http://<host>:<port>/plugins/remoteInterface */
     0,    /* Not Active */
     NULL, /* StartFunc */
@@ -168,17 +168,17 @@ PluginInfo* PluginEntryFctn(void) {
   
   traceEvent(TRACE_INFO, "Welcome to %s. (C) 2000 by Luca Deri.\n", 
 	     rmonPluginInfo->pluginName); 
-  traceEvent(TRACE_INFO, "WARNING: plugin disabled [missing UCD-SNMP]");
+  traceEvent(TRACE_INFO, "WARNING: plugin disabled [missing NET-SNMP]");
 
   return(rmonPluginInfo);
 }
 
-#endif /*  HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H */
+#endif /*  HAVE_SNMP */
 
 
 /* ========================= rmon.c ========================= */
 
-#ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
+#ifdef HAVE_SNMP
 
 /******************************************************* */
 
@@ -614,6 +614,7 @@ unsigned char* var_rmon(struct variable *vp,
                 size_t  *var_len, 
                 WriteMethod **write_method) {
 
+  printf("Request !!!\n");
 
   /* variables we may use later */
   /*
@@ -6301,4 +6302,8 @@ write_eventStatus(int      action,
   return SNMP_ERR_NOERROR;
 }
 
-#endif /* HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H */
+ int __divdi3() {
+   return(0);
+ }
+
+#endif /* HAVE_SNMP */
