@@ -1102,15 +1102,16 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);
 #endif
+
+#ifdef MULTITHREADED
+  accessMutex(&hostsHashMutex, "scanIdleLoop");
+#endif
       
   for(idx=1; idx<device[actDevice].actualHashSize; idx++) {
-#ifdef MULTITHREADED
-    accessMutex(&hostsHashMutex, "scanIdleLoop");
-#endif
     if((device[actDevice].hash_hostTraffic[idx] != NULL)
        && (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
        && (!subnetPseudoLocalHost(device[actDevice].hash_hostTraffic[idx]))) {
-
+      
       if(ignoreIdleTime)
 	freeEntry=1;
       else if(((device[actDevice].hash_hostTraffic[idx]->lastSeen+
@@ -1126,17 +1127,15 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 
 	if((device[actDevice].hostsno < device[actDevice].hashThreshold)
 	   || (numFreedBuckets > MIN_NUM_FREED_BUCKETS)) {
-#ifdef MULTITHREADED
-	  releaseMutex(&hostsHashMutex);
-#endif
 	  break; /* We freed enough space */
 	}
       }
     }
-#ifdef MULTITHREADED
-    releaseMutex(&hostsHashMutex);
-#endif
   }
+
+#ifdef MULTITHREADED
+  releaseMutex(&hostsHashMutex);
+#endif
 
   traceEvent(TRACE_INFO, "Purging completed.");
 }
