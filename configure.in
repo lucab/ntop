@@ -1046,8 +1046,7 @@ dnl>
 dnl> Do not walk in the plugins/ subdir if the user decided he/she does not need any plugin.
 dnl>
 if test "$ac_disable_plugins" = yes; then
-    PLUGINS=''
-else
+  PLUGINS=''
   AC_MSG_WARN([compilation of ntop's plugins disabled via command line option!])
 fi
 
