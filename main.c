@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
   domainName[0] = '\0';
 
   actTime = time(NULL);
-  strncpy(dbPath, "/tmp/", sizeof(dbPath));
+  strncpy(dbPath, DBFILE_DIR, sizeof(dbPath));
   strncpy(accessLogPath, DETAIL_ACCESS_LOG_FILE_PATH, sizeof(accessLogPath));
 
   if ((cp = strrchr(argv[0], '/')) != NULL)
@@ -395,10 +395,15 @@ int main(int argc, char *argv[]) {
   
   if((userId != 0) || (groupId != 0)){
     /* user id specified on commandline */
-    if (setgid(groupId)!=0 || setuid(userId)!=0) {
+    if ((setgid(groupId) != 0) || (setuid(userId) != 0)) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Unable to change user ID.\n");
       exit(-1);
     }
+  }
+  
+  if((geteuid() == 0) || (getegid() == 0)) {
+    traceEvent(TRACE_INFO, "WARNING: For security reasons it is STRONGLY recommended to");
+    traceEvent(TRACE_INFO, "         run ntop as unprivileged user by using the -u option!");
   }
 #endif
 

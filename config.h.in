@@ -51,6 +51,15 @@
 /* Define if you have the gdchart library from Bruce Verderaime [http://www.fred.net/brv/chart/]. */
 #undef HAVE_GDCHART
 
+/* Define if you have the ctime_r function.  */
+#undef HAVE_CTIME_R
+
+/* Define if you have the localtime_r function.  */
+#undef HAVE_LOCALTIME_R
+
+/* Define if you have the strtok_r function.  */
+#undef HAVE_STRTOK_R
+
 /* Define if you have the <alloca.h> header file.  */
 #undef HAVE_ALLOCA_H
 
@@ -227,3 +236,16 @@
 
 /* Define if you have the wrap library (-lwrap).  */
 #undef HAVE_LIBWRAP
+
+/* Data file directory */
+#undef DATAFILE_DIR
+
+/* Configuration file directory */
+#undef CONFIGFILE_DIR
+
+/* Plugin installation directory */
+#undef PLUGIN_DIR
+
+/* Database file directory */
+#undef DBFILE_DIR
+

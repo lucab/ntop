@@ -319,10 +319,10 @@ void printHTTPheader() {
   sendString("<HTML>\n<HEAD>\n<META HTTP-EQUIV=REFRESH CONTENT=");
   snprintf(buf, BUF_SIZE, "%d", refreshRate);
   sendString(buf);
-  sendString(">\n<LINK REL=stylesheet HREF=style.css type=\"text/css\">\n");
+  sendString(">\n<LINK REL=stylesheet HREF=/style.css type=\"text/css\">\n");
   sendString("<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n");
   sendString("<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
-  sendString("</HEAD>\n<BODY BACKGROUND=white_bg.gif BGCOLOR=#FFFFFF>\n");
+  sendString("</HEAD>\n<BODY BACKGROUND=/white_bg.gif BGCOLOR=#FFFFFF>\n");
 }
 
 /* ************************* */
@@ -378,13 +378,14 @@ void logHTTPaccess(int rc) {
  char theDate[48], myUser[64], buf[24];
  struct timeval loggingAt;
  unsigned long msSpent;
- 
+ struct tm t;
+
  if(accessLogFd != NULL) {
    gettimeofday(&loggingAt, NULL);
 
    msSpent = (unsigned long)(delta_time(&loggingAt, &httpRequestedAt)/1000);
  
-   strftime(theDate, 32, "%d/%b/%Y:%H:%M:%S +0000", localtime(&actTime));
+   strftime(theDate, 32, "%d/%b/%Y:%H:%M:%S +0000", localtime_r(&actTime, &t));
 
    if((theUser == NULL)
       || (theUser[0] == '\0'))
@@ -528,8 +529,8 @@ void returnHTTPPage(char* pageName, int postLen) {
     strncpy(pageName, STR_INDEX_HTML, sizeof(STR_INDEX_HTML));
 
   /* Search in the local directory first... */
-  for(idx=0; dirs[idx] != NULL; idx++) {
-    snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s", dirs[idx], pageName);
+  for(idx=0; dataFileDirs[idx] != NULL; idx++) {
+    snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s", dataFileDirs[idx], pageName);
 
 #ifdef WIN32
     i=0;
@@ -555,19 +556,19 @@ void returnHTTPPage(char* pageName, int postLen) {
 	   || (strcmp(&pageName[len-4], ".jpg") == 0))) {
       char theDate[48];
       time_t theTime;
-
+      struct tm t;
 
       sendHTTPProtoHeader();
 
       theTime = actTime;
 
-      strftime(theDate, 32, "%a, %d %b %Y %H:%M:%S GMT", localtime(&theTime));
+      strftime(theDate, 32, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
       snprintf(tmpStr, sizeof(tmpStr), "Date: %s\n", theDate);
       sendString(tmpStr);
 
       theTime += 3600;
 
-      strftime(theDate, 32, "%a, %d %b %Y %H:%M:%S GMT", localtime(&theTime));
+      strftime(theDate, 32, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
       snprintf(tmpStr, sizeof(tmpStr), "Expires: %s\n", theDate);
       sendString(tmpStr);
 

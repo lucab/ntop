@@ -94,8 +94,11 @@ target_triplet = @target@
 AS = @AS@
 CC = @CC@
 CFLAGS = @CFLAGS@
+CONFIGFILE_DIR = @CONFIGFILE_DIR@
 CPP = @CPP@
 CXX = @CXX@
+DATAFILE_DIR = @DATAFILE_DIR@
+DBFILE_DIR = @DBFILE_DIR@
 DLLTOOL = @DLLTOOL@
 INTOPAPP = @INTOPAPP@
 LD = @LD@
@@ -110,6 +113,7 @@ NTOP_RELEASE = @NTOP_RELEASE@
 NTOP_VERSION_INFO = @NTOP_VERSION_INFO@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
+PLUGIN_DIR = @PLUGIN_DIR@
 RANLIB = @RANLIB@
 REMOTEINTERFACE = @REMOTEINTERFACE@
 
@@ -137,7 +141,7 @@ SUBDIRS = . plugins @INTOPAPP@ @REMOTEINTERFACE@
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FAQ FILES HACKING               INSTALL KNOWN_BUGS MANIFESTO NEWS PORTING README               README.Suse SUPPORT_NTOP.txt               THANKS THREADS-FAQ TODO               ntop.8 ntop.txt ntop.html               ntop-cert.pem ntop-rules.8 rules.sample
 
 
-NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/statsicons            html/statsicons/flags html/statsicons/os            html/statsicons/flags/*.gif html/statsicons/os/*.gif
+NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.css html/statsicons            html/statsicons/flags html/statsicons/os            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
 
 EXTRA_DIST = Makefile.am Makefile.in              acconfig.h acinclude.m4 acinclude.m4.in              autogen.sh config.guess config.h.in config.sub              configure configure.in              install-sh libtool ltconfig ltmain.sh              missing mkinstalldirs ntop-config.in              vt.sed

@@ -119,7 +119,9 @@ extern u_int broadcastEntryIdx;
 extern unsigned short alternateColor, maxNameLen;
 extern int deviceId, mergeInterfaces; /* Set by processPacket() */
 
-extern char *dirs[];
+extern const char *dataFileDirs[];
+extern const char *pluginDirs[];
+extern const char *configFileDirs[];
 
 extern ProcessInfo *processes[MAX_NUM_PROCESSES];
 extern u_short numProcesses;
@@ -615,6 +617,14 @@ int verify_callback(int ok, X509_STORE_CTX *ctx);
 /* util.c */
 extern char* intoa(struct in_addr addr);
 extern int strOnlyDigits(const char *s);
+
+#ifndef HAVE_LOCALTIME_R
+extern struct tm *localtime_r(const time_t *t, struct tm *tp);
+#endif
+
+#ifndef HAVE_STRTOK_R
+extern char *strtok_r(char *s, const char *delim, char **save_ptr)
+#endif
 
 #ifdef WIN32
 extern ULONG GetHostIPAddr();

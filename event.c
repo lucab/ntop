@@ -1,10 +1,10 @@
 /*
  *  Copyright (C) 1998-2000 Luca Deri <deri@ntop.org>
  *                          Portions by Stefano Suin <stefano@ntop.org>
- *                      
+ *
  *  			  Centro SERRA, University of Pisa
  *  			  http://www.ntop.org/
- *  					
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -22,9 +22,9 @@
 
 #include "ntop.h"
 
-static char *actions[] = { 
+static char *actions[] = {
   "ALARM",
-  "INFO" 
+  "INFO"
 };
 
 /* ****************************************** */
@@ -54,7 +54,7 @@ char* icmpType2Str(short icmp_type) {
 
 void emitEvent(FilterRule *rule,
 	       HostTraffic *srcHost,
-	       u_int srcHostIdx, 
+	       u_int srcHostIdx,
 	       HostTraffic *dstHost,
 	       u_int dstHostIdx,
 	       short icmpType,
@@ -63,15 +63,16 @@ void emitEvent(FilterRule *rule,
   char ruleTime[32], msg[MAX_EVENT_MSG_SIZE], tmpStr[48];
   datum key_data, data_data;
   EventMsg theMsg;
+  struct tm t;
 
   if(eventFile == NULL) return;
 
-  strftime(ruleTime, 32, "%Y-%m-%d %H:%M:%S", localtime(&actTime));  
+  strftime(ruleTime, 32, "%Y-%m-%d %H:%M:%S", localtime_r(&actTime, &t));
 
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "emitEvent");
-#endif 
-  
+#endif
+
   if(icmpType == -1)
     snprintf(msg, MAX_EVENT_MSG_SIZE, "%s %s %s %s:%s->%s:%s",
 	    ruleTime, actions[rule->actionType],
@@ -82,16 +83,16 @@ void emitEvent(FilterRule *rule,
     snprintf(msg, MAX_EVENT_MSG_SIZE, "%s %s %s %s->%s [%s]",
 	    ruleTime, actions[rule->actionType],
 	    rule->ruleLabel,
-	    srcHost->hostSymIpAddress, 
+	    srcHost->hostSymIpAddress,
 	    dstHost->hostSymIpAddress, icmpType2Str(icmpType));
 
 #ifdef MULTITHREADED
   releaseMutex(&addressResolutionMutex);
-#endif 
+#endif
 
   snprintf(tmpStr, sizeof(tmpStr), "%lu %lu %lu",
-	  (unsigned long)srcHost->hostIpAddress.s_addr, 
-	  (unsigned long)dstHost->hostIpAddress.s_addr, 
+	  (unsigned long)srcHost->hostIpAddress.s_addr,
+	  (unsigned long)dstHost->hostIpAddress.s_addr,
 	  (unsigned long)actTime);
 
   /*traceEvent(TRACE_INFO, "%s) %s\n", tmpStr, msg); */
@@ -108,11 +109,11 @@ void emitEvent(FilterRule *rule,
 
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "emitEvent-2");
-#endif 
-  gdbm_store(eventFile, key_data, data_data, GDBM_REPLACE);	
+#endif
+  gdbm_store(eventFile, key_data, data_data, GDBM_REPLACE);
 #ifdef MULTITHREADED
   releaseMutex(&gdbmMutex);
-#endif 
+#endif
 }
 
 /* ****************************************** */
@@ -122,11 +123,11 @@ void scanExpiredRules(FilterRule *rule) {
     /* Let's check whether there are some expired rules */
     int i, rulesFound;
 
-    for(i=0, rulesFound=0; (i<MAX_NUM_RULES) && (rulesFound < rule->numMatchedRules); i++)      
+    for(i=0, rulesFound=0; (i<MAX_NUM_RULES) && (rulesFound < rule->numMatchedRules); i++)
       if(rule->queuedPacketRules[i] != NULL) {
-	if(((rule->queuedPacketRules[i]->firstMatchTime+rule->expireTime)   < actTime) 
-	   && ((rule->queuedPacketRules[i]->firstMatchTime+rule->unitValue) < actTime) 
-	   && ((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime)  < actTime) 
+	if(((rule->queuedPacketRules[i]->firstMatchTime+rule->expireTime)   < actTime)
+	   && ((rule->queuedPacketRules[i]->firstMatchTime+rule->unitValue) < actTime)
+	   && ((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime)  < actTime)
 	   ) {
 	  /* This rule is expired */
 	  u_short doEmitEvent = 0;
@@ -154,12 +155,12 @@ void scanExpiredRules(FilterRule *rule) {
 
 	  if(doEmitEvent)
 	    emitEvent(rule,
-		      device[actualDeviceId].hash_hostTraffic[checkSessionIdx(rule->queuedPacketRules[i]->srcHostIdx)], 
-		      rule->queuedPacketRules[i]->srcHostIdx, 
-		      device[actualDeviceId].hash_hostTraffic[checkSessionIdx(rule->queuedPacketRules[i]->dstHostIdx)], 
+		      device[actualDeviceId].hash_hostTraffic[checkSessionIdx(rule->queuedPacketRules[i]->srcHostIdx)],
+		      rule->queuedPacketRules[i]->srcHostIdx,
+		      device[actualDeviceId].hash_hostTraffic[checkSessionIdx(rule->queuedPacketRules[i]->dstHostIdx)],
 		      rule->queuedPacketRules[i]->dstHostIdx, -1,
-		      rule->queuedPacketRules[i]->sport, 
-		      rule->queuedPacketRules[i]->dport);	
+		      rule->queuedPacketRules[i]->sport,
+		      rule->queuedPacketRules[i]->dport);
 
 #ifdef DEBUG
 	 traceEvent(TRACE_INFO, "Packet rule [%s] free (1)\n", rule->ruleLabel);
@@ -185,7 +186,7 @@ void scanAllTcpExpiredRules() {
 #endif
 
   for(i=0; i<ruleSerialIdentifier; i++)
-    if(filterRulesList[i] != NULL) 
+    if(filterRulesList[i] != NULL)
       scanExpiredRules(filterRulesList[i]);
 }
 
@@ -193,12 +194,12 @@ void scanAllTcpExpiredRules() {
 
 void fireEvent(FilterRule *rule,
 	       HostTraffic *srcHost,
-	       u_int srcHostIdx, 
+	       u_int srcHostIdx,
 	       HostTraffic *dstHost,
 	       u_int dstHostIdx,
 	       short icmpType,
 	       u_short sport,
-	       u_short dport, 
+	       u_short dport,
 	       u_int length) {
   int i, rulesFound;
 
@@ -207,15 +208,15 @@ void fireEvent(FilterRule *rule,
 #endif
 
   scanExpiredRules(rule);
-    
+
     /* This is not a rule 'per se' but it is used to clear
        other events if marked before */
   if(rule->ruleIdCleared) {
     FilterRule *ruleToClear = filterRulesList[rule->ruleIdCleared];
     MatchedRule **queuedPacketRules = ruleToClear->queuedPacketRules;
-    
+
     for(i=0, rulesFound=0; (i<MAX_NUM_RULES) && (rulesFound<ruleToClear->numMatchedRules); i++) {
-      
+
       if(ruleToClear->queuedPacketRules[i] == NULL)
 	continue;
       else
@@ -236,7 +237,7 @@ void fireEvent(FilterRule *rule,
 #ifdef DEBUG
 #ifdef MULTITHREADED
 	accessMutex(&addressResolutionMutex, "fireEvent");
-#endif 
+#endif
 	printf("Rules matched %s %s/%s->%s/%s (len %d)\n",
 	       ruleToClear->ruleLabel,
 	       srcHost->hostSymIpAddress, getAllPortByNum(sport),
@@ -244,20 +245,20 @@ void fireEvent(FilterRule *rule,
 	       length);
 #ifdef MULTITHREADED
 	releaseMutex(&addressResolutionMutex);
-#endif 
+#endif
 	printf("Packet rule [%s] free (2)\n", rule->ruleLabel);
 #endif
-	  
+
 	  if(ruleToClear->rearmTime == 0) {
 	    free(queuedPacketRules[i]);
 	    queuedPacketRules[i] = NULL;
 	  } else
 	    queuedPacketRules[i]->numMatches = 0;
-	  	  
+
 	  ruleToClear->numMatchedRules--;
 	  if(!rule->clearAllRule)
 	    return;
-      } 
+      }
     }
 
     return;
@@ -272,7 +273,7 @@ void fireEvent(FilterRule *rule,
 	continue;
       else
 	rulesFound++;
-      
+
       if((rule->revert
 	  && (rule->queuedPacketRules[i]->srcHostIdx == dstHostIdx)
 	  && (rule->queuedPacketRules[i]->dstHostIdx == srcHostIdx)
@@ -286,10 +287,10 @@ void fireEvent(FilterRule *rule,
 	  && ((rule->dport == NOT_ANY_PORT) || (rule->queuedPacketRules[i]->dport == dport)))) {
 	/* Rules match */
 	u_short purgeRule=0;
-	
+
 	if((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime) > actTime) {
 #ifdef DEBUG
-	 traceEvent(TRACE_INFO, "Rule %s is disabled (%d more seconds)\n", 
+	 traceEvent(TRACE_INFO, "Rule %s is disabled (%d more seconds)\n",
 		    rule->ruleLabel,
 		    ((rule->queuedPacketRules[i]->lastMatchTime+rule->rearmTime) - actTime));
 #endif
@@ -298,7 +299,7 @@ void fireEvent(FilterRule *rule,
 	}
 
 	rule->queuedPacketRules[i]->numMatches++;
-	  
+
 	if((rule->unitValue == 0) || (rule->pktComparisonType != PACKET_FRAGMENT_COUNT)) {
 	  if((rule->queuedPacketRules[i]->firstMatchTime+rule->expireTime) < actTime)
 	    purgeRule = 1;
@@ -323,13 +324,13 @@ void fireEvent(FilterRule *rule,
 
 	if(purgeRule) {
 	  rule->queuedPacketRules[i]->lastMatchTime = actTime;
-	  emitEvent(rule, srcHost, 
-		    rule->queuedPacketRules[i]->srcHostIdx, 
-		    dstHost, 
+	  emitEvent(rule, srcHost,
+		    rule->queuedPacketRules[i]->srcHostIdx,
+		    dstHost,
 		    rule->queuedPacketRules[i]->dstHostIdx, icmpType,
-		    rule->queuedPacketRules[i]->sport, 
-		    rule->queuedPacketRules[i]->dport);	
-	    
+		    rule->queuedPacketRules[i]->sport,
+		    rule->queuedPacketRules[i]->dport);
+
 #ifdef DEBUG
 	 traceEvent(TRACE_INFO, "Packet rule [%s] free (3)\n", rule->ruleLabel);
 #endif
@@ -338,7 +339,7 @@ void fireEvent(FilterRule *rule,
 	    free(rule->queuedPacketRules[i]);
 	    rule->queuedPacketRules[i] = NULL;
 	  } else
-	    rule->queuedPacketRules[i]->numMatches = 0;	 
+	    rule->queuedPacketRules[i]->numMatches = 0;
 	}
 
 	return; /* Don't look any further */
@@ -348,7 +349,7 @@ void fireEvent(FilterRule *rule,
 
   if(rule->numMatchedRules == (MAX_NUM_RULES-1)) {
     /* All we can do is to immediately emit the event */
-    emitEvent(rule, srcHost, srcHostIdx, 
+    emitEvent(rule, srcHost, srcHostIdx,
 	      dstHost, dstHostIdx, icmpType,
 	      sport, dport);
   } else {
@@ -362,7 +363,7 @@ void fireEvent(FilterRule *rule,
 	  continue;
 	else
 	  rulesFound++;
-	  
+
 	if((rule->revert
 	    && (rule->queuedPacketRules[i]->srcHostIdx == dstHostIdx)
 	    && (rule->queuedPacketRules[i]->dstHostIdx == srcHostIdx)
@@ -402,13 +403,13 @@ void fireEvent(FilterRule *rule,
 
 	  if(purgeRule) {
 	    rule->queuedPacketRules[i]->lastMatchTime = actTime;
-	    emitEvent(rule, srcHost, 
-		      rule->queuedPacketRules[i]->srcHostIdx, 
-		      dstHost, 
+	    emitEvent(rule, srcHost,
+		      rule->queuedPacketRules[i]->srcHostIdx,
+		      dstHost,
 		      rule->queuedPacketRules[i]->dstHostIdx, icmpType,
-		      rule->queuedPacketRules[i]->sport, 
-		      rule->queuedPacketRules[i]->dport);	
-	      
+		      rule->queuedPacketRules[i]->sport,
+		      rule->queuedPacketRules[i]->dport);
+
 #ifdef DEBUG
 	   traceEvent(TRACE_INFO, "Packet rule [%s] free (4)\n", rule->ruleLabel);
 #endif
@@ -444,28 +445,28 @@ void fireEvent(FilterRule *rule,
 	  }
     }
   }
-  
-  emitEvent(rule, srcHost, srcHostIdx, 
+
+  emitEvent(rule, srcHost, srcHostIdx,
 	    dstHost, dstHostIdx, icmpType,
 	    sport, dport);
 }
-  
+
 
 /* **************************************** */
 
 void smurfAlert(u_int srcHostIdx, u_int dstHostIdx) {
   FilterRule smurfing;
-  
+
   memset(&smurfing, 0, sizeof(FilterRule));
   smurfing.ruleId = 999;
   smurfing.ruleLabel = "smurfing";
   smurfing.actionType = ACTION_ALARM;
-  
+
   emitEvent(&smurfing,  device[actualDeviceId].hash_hostTraffic[srcHostIdx], srcHostIdx,
 	    device[actualDeviceId].hash_hostTraffic[dstHostIdx],
 	    dstHostIdx, ICMP_ECHO, 0, 0);
 
-#ifdef DEBUG  
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "WARNING: smurfing detected (%s->%s)\n",
 	     device[actualDeviceId].hash_hostTraffic[srcHostIdx]->hostSymIpAddress,
 	     device[actualDeviceId].hash_hostTraffic[dstHostIdx]->hostSymIpAddress);

@@ -261,18 +261,16 @@ void loadPlugins() {
   int idx;
   DIR* directoryPointer=NULL;
 #else
-#ifndef WIN32
   char tmpStr[512], _tmpnam[255];
   FILE *fd;
   int rc;
-#endif
 #endif
   
   traceEvent(TRACE_INFO, "Loading plugins (if any)...\n");
   
 #ifndef STATIC_PLUGIN
-  for(idx=0; dirs[idx] != NULL; idx++) {
-    snprintf(dirPath, sizeof(dirPath), "%s/plugins", dirs[idx]);
+  for(idx=0; pluginDirs[idx] != NULL; idx++) {
+    snprintf(dirPath, sizeof(dirPath), "%s", pluginDirs[idx]);
 
     directoryPointer = opendir(dirPath);
 

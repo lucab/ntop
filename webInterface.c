@@ -625,13 +625,15 @@ char* getCountryIconURL(char* domainName) {
     char path[256];
     struct stat buf;
 
-    snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", dbPath, domainName);
+    snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
+	     DATAFILE_DIR, domainName);
 
     if(stat(path, &buf) != 0)
       return("&nbsp;");
 
-    snprintf(flagBuf, sizeof(flagBuf), "<IMG ALIGN=ABSMIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
-	    domainName);
+    snprintf(flagBuf, sizeof(flagBuf), 
+	     "<IMG ALIGN=ABSMIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
+	     domainName);
 
     return(flagBuf);
   }

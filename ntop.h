@@ -23,6 +23,15 @@
 #ifndef NTOP_H
 #define NTOP_H
 
+/* 
+   On some systems these defines make reentrant library 
+   routines available.
+
+   Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
+*/
+#define _REENTRANT
+#define _THREAD_SAFE
+
 #if defined(HAVE_CONFIG_H)
 # include "config.h"
 #endif
@@ -1199,7 +1208,7 @@ typedef struct icmpHostInfo {
 #define DEFAULT_TRACE_LEVEL          3
 #define DETAIL_TRACE_LEVEL           5
 
-#define DETAIL_ACCESS_LOG_FILE_PATH  "./ntop.access.log"
+#define DETAIL_ACCESS_LOG_FILE_PATH  DBFILE_DIR"/ntop.access.log"
 
 /* *********************** */
 
@@ -1210,6 +1219,7 @@ typedef struct icmpHostInfo {
 typedef struct hostTraffic
 {
   struct in_addr hostIpAddress;
+   time_t         firstSeen;
   time_t         lastSeen;     /* time when this host has 
 				  sent/received some data  */
   time_t         nextDBupdate; /* next time when the DB entry 
@@ -1389,8 +1399,9 @@ struct pbuf {
 #define TWO_MSL_TIMEOUT          120     /* 2 minutes */
 #define DOUBLE_TWO_MSL_TIMEOUT   (2*TWO_MSL_TIMEOUT)
 
-#define IDLE_HOST_PURGE_TIMEOUT  3600    /*   1 hour  */
-#define PIPE_READ_TIMEOUT        15 /* seconds */
+#define IDLE_HOST_PURGE_TIMEOUT  1*60*60    /*  1 hours   */
+#define IDLE_SESSION_TIMEOUT     30*60      /* 30 minutes */
+#define PIPE_READ_TIMEOUT        15         /* seconds    */
 
 /* **************************** */
 

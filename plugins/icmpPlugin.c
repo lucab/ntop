@@ -626,6 +626,7 @@ static void runICMPgarbageCollector() {
   datum return_data;
   char tmpTime[32];
   time_t theTime;
+  char *strtokState;
 
   if(actTime > garbageTime) {
 #ifdef DEBUG
@@ -650,7 +651,7 @@ static void runICMPgarbageCollector() {
       releaseMutex(&gdbmMutex);
 #endif
       strncpy(tmpTime, key_data.dptr, sizeof(tmpTime));
-      theTime = atol(strtok(tmpTime, "/"));
+      theTime = atol(strtok_r(tmpTime, "/", &strtokState));
       if(theTime < garbageTime) {
 #ifdef DEBUG
 	printf("Purging entry %u/%u\n", theTime,garbageTime);
@@ -797,7 +798,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   int num, idx, icmpId=-1;
   HostTraffic **hosts;
   struct in_addr hostIpAddress;
-  char  **lbls;
+  char  **lbls, *strtokState;
   float *s, *r;
   FILE *fd;
   int tmpfd;
@@ -905,15 +906,15 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     }
 #endif
 
-    strtok(url, "=");
+    strtok_r(url, "=", &strtokState);
 
-    tmpStr = strtok(NULL, "&");
+    tmpStr = strtok_r(NULL, "&", &strtokState);
     hostIpAddress.s_addr = strtoul(tmpStr, (char **)NULL, 10);
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "-> %s [%u]\n", tmpStr, hostIpAddress.s_addr);
 #endif
-    strtok(NULL, "=");
-    icmpId = atoi(strtok(NULL, "&"));
+    strtok_r(NULL, "=", &strtokState);
+    icmpId = atoi(strtok_r(NULL, "&", &strtokState));
   }
 
   sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
@@ -925,7 +926,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     printHTTPtrailer();
     return;
   }
-
 
 #ifdef HAVE_GDCHART
   if(hostIpAddress.s_addr == 0)

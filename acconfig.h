@@ -85,4 +85,11 @@
 /* Define if you have the gdchart library from Bruce Verderaime [http://www.fred.net/brv/chart/]. */
 #undef HAVE_GDCHART
 
+/* Ntop directories */
+#undef PLUGIN_DIR
+#undef DATAFILE_DIR
+#undef CONFIGFILE_DIR
+#undef DBFILE_DIR
+
+
 #endif /* _CONFIG_H_ */

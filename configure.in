@@ -435,6 +435,13 @@ echo "Step 5. Looking for required system libraries...."
 echo
 
 dnl>
+dnl> check for reentrant library routines
+dnl>
+AC_CHECK_FUNCS(strtok_r)
+AC_CHECK_FUNCS(localtime_r)
+AC_CHECK_FUNCS(ctime_r)
+
+dnl>
 dnl> check for `dlopen' in -ldl (MANDATORY)
 dnl>
 AC_CHECK_LIB(dl, dlopen)
@@ -921,6 +928,42 @@ AC_SUBST(CCLD)
 AC_SUBST(REMOTEINTERFACE)
 AC_SUBST(INTOPAPP)
 
+dnl>
+dnl> ntops directories
+dnl>
+DATAFILE_DIR=$datadir/ntop
+DATAFILE_DIR=`(
+    test "x$prefix" = xNONE && prefix=$ac_default_prefix
+    eval echo "$DATAFILE_DIR"
+)`
+AC_DEFINE_UNQUOTED(DATAFILE_DIR,"$DATAFILE_DIR", [Data file directory])
+AC_SUBST(DATAFILE_DIR)
+
+CONFIGFILE_DIR=$sysconfdir/ntop
+CONFIGFILE_DIR=`(
+    test "x$prefix" = xNONE && prefix=$ac_default_prefix
+    eval echo "$CONFIGFILE_DIR"
+)`
+AC_DEFINE_UNQUOTED(CONFIGFILE_DIR,"$CONFIGFILE_DIR", [Configuration file directory])
+AC_SUBST(CONFIGFILE_DIR)
+
+PLUGIN_DIR=$libdir/ntop/plugins
+PLUGIN_DIR=`(
+  test "x$prefix" = xNONE && prefix=$ac_default_prefix
+  test "x$exec_prefix" = xNONE && exec_prefix=${prefix}
+  eval echo "$PLUGIN_DIR"
+)`
+AC_DEFINE_UNQUOTED(PLUGIN_DIR,"$PLUGIN_DIR", [Plugin installation directory])
+AC_SUBST(PLUGIN_DIR)
+
+DBFILE_DIR=$localstatedir/ntop
+DBFILE_DIR=`(
+  test "x$prefix" = xNONE && prefix=$ac_default_prefix
+  eval echo "$DBFILE_DIR"
+)`
+AC_DEFINE_UNQUOTED(DBFILE_DIR,"$DBFILE_DIR", [Database file directory])
+AC_SUBST(DBFILE_DIR)
+ 
 dnl> temporary
 AC_DEFINE_UNQUOTED(RETSIGTYPE, void)
 

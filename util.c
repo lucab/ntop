@@ -640,30 +640,27 @@ void printLogTime()
  * Use gmtime() and localtime() to keep things simple.
  * [Borrowed from tcpdump]
  */
-int32_t gmt2local(time_t t)
-{
-  register int dt, dir;
-  register struct tm *gmt, *loc;
+int32_t gmt2local(time_t t) {
+  int dt, dir;
+  struct tm *gmt, loc;
 
   if(t == 0)
     t = time(NULL);
-  /*
-    gmt = &sgmt;
-    *gmt = *gmtime(&t);
-    */
+
   gmt = gmtime(&t);
-  loc = localtime(&t);
-  dt = (loc->tm_hour - gmt->tm_hour) * 60 * 60 +
-    (loc->tm_min - gmt->tm_min) * 60;
+  localtime_r(&t, &loc);
+  
+  dt = (loc.tm_hour - gmt->tm_hour)*60*60+
+    (loc.tm_min - gmt->tm_min)*60;
 
   /*
    * If the year or julian day is different, we span 00:00 GMT
    * and must add or subtract a day. Check the year first to
    * avoid problems when the julian day wraps.
    */
-  dir = loc->tm_year - gmt->tm_year;
+  dir = loc.tm_year - gmt->tm_year;
   if(dir == 0)
-    dir = loc->tm_yday - gmt->tm_yday;
+    dir = loc.tm_yday - gmt->tm_yday;
   dt += dir * 24 * 60 * 60;
 
   return (dt);
@@ -1529,13 +1526,15 @@ char* formatTime(time_t *theTime, short encodeString) {
 #define TIME_LEN    48
   static char outStr[2][TIME_LEN];
   static short timeBufIdx=0;
-  struct tm* locTime = localtime(theTime);
+  struct tm locTime;
 
+  localtime_r(theTime, &locTime);
   timeBufIdx = (timeBufIdx+1)%2;
   if(encodeString)
-    strftime(outStr[timeBufIdx], TIME_LEN, "%x&nbsp;%X", locTime);
+    strftime(outStr[timeBufIdx], TIME_LEN, "%x&nbsp;%X", &locTime);
   else
-    strftime(outStr[timeBufIdx], TIME_LEN, "%x %X", locTime);
+    strftime(outStr[timeBufIdx], TIME_LEN, "%x %X", &locTime);
+
   return(outStr[timeBufIdx]);
 #undef TIME_LEN
 }
@@ -1648,6 +1647,7 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     el->nextDBupdate = 0;
     el->dnsStats = NULL;
     el->httpStats = NULL;
+    el->icmpInfo = NULL;
 
 #ifdef STORAGE_DEBUG
    traceEvent(TRACE_INFO, "Resurrected instance: '%s/%s'\n",
@@ -1804,9 +1804,10 @@ void traceEvent(int eventTraceLevel, char* file,
   if(eventTraceLevel <= traceLevel) {
     char theDate[32];
     time_t theTime = time(NULL);
+    struct tm t;
 
     if(traceLevel >= DEFAULT_TRACE_LEVEL) {
-      strftime(theDate, 32, "%d/%b/%Y:%H:%M:%S", localtime(&theTime));
+      strftime(theDate, 32, "%d/%b/%Y:%H:%M:%S", localtime_r(&theTime, &t));
 
       if(traceLevel == DETAIL_TRACE_LEVEL)
 	printf("%s [%s:%d] ", theDate, file, line);
@@ -1836,7 +1837,24 @@ char *_strncpy(char *dest, const char *src, size_t n) {
   return(dest);
 }
 
+/* ******************************************** */
 
+/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+#ifndef HAVE_LOCALTIME_R
+struct tm *localtime_r(const time_t *t, struct tm *tp) {
+  /* 
+     This is a temporary placeholder for systems that don't
+     have a reentrant localtime() function.
+     THIS VERSION IS NOT REENTRANT!
+  */
+#warning "Non-reentrant localtime() used!"
+  *tp=*localtime(t);
+  return tp;
+}
+#endif
+
+/* ******************************************** */
+ 
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
 #ifndef HAVE_STRTOK_R
 /* Reentrant string tokenizer.  Generic version.

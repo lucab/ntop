@@ -457,7 +457,7 @@ void doAddURL(int _len) {
   if(_len <= 0) {
     err = "ERROR: both url and users must be non empty fields.";
   } else {
-    char *url, *users;
+    char *url, *users, *strtokState;
 
     while(len > 0)
       {
@@ -507,7 +507,7 @@ void doAddURL(int _len) {
 
     /* traceEvent(TRACE_INFO, "Data: '%s' (%d)\n", postData, idx); */
 
-    url = strtok(postData, "&");
+    url = strtok_r(postData, "&", &strtokState);
     url = &url[4 /* strlen("url=") */];
 
     users = &url[strlen(url)+1];

@@ -123,10 +123,4 @@
     10 most active hosts ever.
     (Rodney Clark)
 
-57. The parsing of the lsof output does not correctly handle
-    protocols (ports) which contain a "-" 
-    (e.g. a line ends with "*:ftp-data (LISTEN)" or
-    "1.2.3.4:ftp-data->5.6.7.8:1234"). The first version
-    is easy to correct but the second version will need
-    some changes to the strtok() parsing.
-    Andreas Pfaller <a.pfaller@pop.gun.de>
+57. Fixed.

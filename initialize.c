@@ -64,10 +64,10 @@ void initIPServices() {
   memset(udpSvc, 0, sizeof(udpSvc));
   memset(tcpSvc, 0, sizeof(tcpSvc));
 
-  for(idx=0; dirs[idx] != NULL; idx++) {
+  for(idx=0; configFileDirs[idx] != NULL; idx++) {
     char tmpStr[64];
 
-    snprintf(tmpStr, sizeof(tmpStr), "%s/services", dirs[idx]);
+    snprintf(tmpStr, sizeof(tmpStr), "%s/services", configFileDirs[idx]);
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {

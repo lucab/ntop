@@ -125,7 +125,7 @@ static void handleLsHTTPrequest(char* url) {
   LsHostInfo tablehost[MY_NETWORK*256];
   LsHostNote HostN;
   HostTraffic *HostT;
-  struct tm * loctime;
+  struct tm loctime;
   struct in_addr char_ip;
   int entry = 0, num_hosts;
 
@@ -231,8 +231,8 @@ static void handleLsHTTPrequest(char* url) {
     else
       tmp = no_info;
 
-    loctime = localtime(&tablehost[entry].LastUpdated);
-    strftime(tmpTime,25,"%d-%m-%Y&nbsp;%H:%M",loctime);
+    localtime_r(&tablehost[entry].LastUpdated, &loctime);
+    strftime(tmpTime,25,"%d-%m-%Y&nbsp;%H:%M", &loctime);
 
     snprintf(tmpStr, sizeof(tmpStr), "<TR %s>%s</TH>"
 	    "<TH ALIGN=LEFT>&nbsp;&nbsp;%s&nbsp;&nbsp</TH>"
@@ -250,7 +250,9 @@ static void handleLsHTTPrequest(char* url) {
     entry--;
   }
   sendString("</TABLE></CENTER><p>\n");
-  snprintf(tmpStr, sizeof(tmpStr), "<hr><CENTER><b>%u</b> host(s) collected.</CENTER><br>",num_hosts);
+  snprintf(tmpStr, sizeof(tmpStr), 
+	   "<hr><CENTER><b>%u</b> host(s) collected.</CENTER><br>",
+	   num_hosts);
   sendString(tmpStr);
   printHTTPtrailer();
 }

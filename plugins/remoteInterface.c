@@ -226,6 +226,7 @@ void* remIntLoop(void* notUsed) {
   while(1) {
     char udpBuf[4096];
     struct sockaddr_in source;
+    char *strtokState;
 
     if(select(topSock+1, &mask, 0, 0, NULL) == 1) {
       int rc, length = sizeof(struct sockaddr);
@@ -270,8 +271,8 @@ void* remIntLoop(void* notUsed) {
 		    (struct sockaddr*)&source, sizeof(source));
       } else if(strncasecmp(udpBuf, FIND_HOST_BY_IP_CMD, 
 			    strlen(FIND_HOST_BY_IP_CMD)) == 0) {
-	char *ipAddress = strtok(&udpBuf[strlen(FIND_HOST_BY_IP_CMD)+1], " ");
-	
+	char *ipAddress = strtok_r(&udpBuf[strlen(FIND_HOST_BY_IP_CMD)+1],
+				   " ", &strtokState);
 	if(ipAddress == NULL) {
 	  snprintf(udpBuf, sizeof(udpBuf), "%s\n", WRONG_COMMAND_SYNTAX_RC);
 	  rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
@@ -280,7 +281,8 @@ void* remIntLoop(void* notUsed) {
 	}
       } else if(strncasecmp(udpBuf, FIND_HOST_BY_MAC_CMD, 
 			    strlen(FIND_HOST_BY_MAC_CMD)) == 0) {
-	char *macAddress = strtok(&udpBuf[strlen(FIND_HOST_BY_MAC_CMD)+1], " ");
+	char *macAddress = strtok_r(&udpBuf[strlen(FIND_HOST_BY_MAC_CMD)+1],
+				    " ", &strtokState);
 	
 	if(macAddress == NULL) {
 	  snprintf(udpBuf, sizeof(udpBuf), "%s\n", WRONG_COMMAND_SYNTAX_RC);

@@ -442,6 +442,7 @@ void drawThptGraph(int sortedColumn) {
   time_t tmpTime;
   unsigned long  sc[2]    = { 0xFF0000, 0x8080FF };
   float graphData[60], maxData;
+  struct tm t;
 
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawThptGraph");
@@ -473,7 +474,7 @@ void drawThptGraph(int sortedColumn) {
     if(len > 60) len = 60;
     for(i=0; i<len; i++) {
       tmpTime = actTime-i*60;
-      strftime(labels[i], 32, "%H:%M", localtime(&tmpTime));
+      strftime(labels[i], 32, "%H:%M", localtime_r(&tmpTime, &t));
     }
 
     for(maxData=0, i=0; i<len; i++) {
@@ -505,7 +506,7 @@ void drawThptGraph(int sortedColumn) {
     if(len > 24) len = 24;
     for(i=0; i<len; i++) {
       tmpTime = actTime-((i+1)*60*60);
-      strftime(labels[i], 32, "%b %d %H:%M", localtime(&tmpTime));
+      strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
     }
 
     for(maxData=0, i=0; i<len; i++) {
@@ -537,7 +538,7 @@ void drawThptGraph(int sortedColumn) {
     if(len > 30) len = 30;
     for(i=0; i<len; i++) {
       tmpTime = actTime-((i+1)*(60*60*24));
-      strftime(labels[i], 32, "%b %d %H:%M", localtime(&tmpTime));
+      strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
     }
 
     for(maxData=0, i=0; i<len; i++) {

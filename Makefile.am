@@ -59,7 +59,7 @@ DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FAQ FILES HACKING \
               ntop.8 ntop.txt ntop.html \
               ntop-cert.pem ntop-rules.8 rules.sample
 
-NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/statsicons \
+NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.css html/statsicons \
            html/statsicons/flags html/statsicons/os \
            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 

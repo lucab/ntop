@@ -2805,15 +2805,18 @@ void printHostDetailedInfo(HostTraffic *el) {
        && FD_ISSET((unsigned long)(el->hostIpAddress.s_addr) % 256 /* C-class */,
 		   &ipTrafficMatrixPromiscHosts)) {
       /* Promiscuous mode */
-      sendString("&nbsp;<BLINK><B><FONT COLOR=#FF0000>[Promiscuous Mode Host]</FONT></B></BLINK>");
+      sendString("&nbsp;<BLINK><B><FONT COLOR=#FF0000>[Promiscuous Mode Host]</FONT>"
+		 "</B></BLINK>");
       sendString("</TD></TR>\n");
     }
   }
 
   snprintf(buf, sizeof(buf), "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>"
-	  "%s</TD></TR>\n",
-	  getRowColor(),
-	  "Last&nbsp;Seen", formatTime(&(el->lastSeen), 1));
+	  "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s</TD></TR>\n",
+	   getRowColor(),
+	   "First/Last&nbsp;Seen",
+           formatTime(&(el->firstSeen), 1),
+           formatTime(&(el->lastSeen), 1));
   sendString(buf);
 
   if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
@@ -4764,6 +4767,7 @@ void printThptStatsMatrix(int sortedColumn) {
   int i;
   char label[32], label1[32], buf[BUF_SIZE];
   time_t tmpTime;
+  struct tm t;
 
   printHTTPheader();
   sendString("<CENTER><P><H1>Throughput Statistics Matrix</H1><P>\n");
@@ -4781,9 +4785,9 @@ void printThptStatsMatrix(int sortedColumn) {
 	break;
 
       tmpTime = actTime-(i*60);
-      strftime(label, 32, "%H:%M", localtime(&tmpTime));
+      strftime(label, 32, "%H:%M", localtime_r(&tmpTime, &t));
       tmpTime = actTime-((i+1)*60);
-      strftime(label1, 32, "%H:%M", localtime(&tmpTime));
+      strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
       snprintf(buf, sizeof(buf), "<TR %s><TD ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
 	      "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>",
 	      getRowColor(), label, label1,
@@ -4889,9 +4893,9 @@ void printThptStatsMatrix(int sortedColumn) {
 	  break;
 
 	tmpTime = actTime-(i*60*60);
-	strftime(label, 32, "%H:%M", localtime(&tmpTime));
+	strftime(label, 32, "%H:%M", localtime_r(&tmpTime, &t));
 	tmpTime = actTime-((i+1)*60*60);
-	strftime(label1, 32, "%H:%M", localtime(&tmpTime));
+	strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
 	snprintf(buf, sizeof(buf), "<TR %s><TD ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
 		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=LEFT><TABLE BORDER=1>",
 		getRowColor(), label, label1,

@@ -57,8 +57,8 @@ int init_ssl() {
 
   memset(ssl, 0, sizeof(ssl));
 
-  for(idx=0; dirs[idx] != NULL; idx++) {    
-    snprintf(buf, sizeof(buf), "%s/%s", dirs[idx], CERTF);    
+  for(idx=0; configFileDirs[idx] != NULL; idx++) {    
+    snprintf(buf, sizeof(buf), "%s/%s", configFileDirs[idx], CERTF);    
 
 #ifdef WIN32
     i=0;

@@ -168,22 +168,9 @@ char* osName;
 char* author;
 #endif
 
-char *dirs[] = { 
-  dbPath,                /* Courtesy of Ralf Amandi <ralf.amandi@accordata.net> */
-#ifdef WIN32
-  ".",                   /* Local   */
-#else
-  "/usr/local/bin",      /* Default (when compiled from sources) */
-  "/etc/ntop",           /* Default (a suggestion for packagers) */
-  "/opt/ntop/etc/ntop",  /* Solaris */
-  "/usr/local/etc/ntop", /* BSD     */
-  "/usr/lib/ntop",       /* Suse    */
-  "/usr/share/ntop",     /* Suse    */
-  "/usr/local/share",   
-  ".",                   /* Local   */
-#endif
-  NULL };
-
+const char *dataFileDirs[]={".", DATAFILE_DIR, NULL};
+const char *pluginDirs[]={"./plugins", PLUGIN_DIR, NULL};
+const char *configFileDirs[]={".", CONFIGFILE_DIR, "/etc", NULL};
 
 ProcessInfo *processes[MAX_NUM_PROCESSES];
 u_short numProcesses;

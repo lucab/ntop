@@ -291,10 +291,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
       } else
 	el = NULL;
-
+      
       if(el == NULL) {
 	el = (HostTraffic*)malloc(sizeof(HostTraffic));
 	memset(el, 0, sizeof(HostTraffic));
+	el->firstSeen=actTime;
       }
 
       len = (size_t)numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
@@ -649,6 +650,7 @@ void scanTimedoutTCPSessions() {
 	    might be still open, but that are probably closed and we've
 	    lost some packets */
 	 || ((tcpSession[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < actTime)
+	 || ((tcpSession[idx]->lastSeen+IDLE_SESSION_TIMEOUT) < actTime)
 	 )
 	{
 	  IPSession *sessionToPurge = tcpSession[idx];
@@ -2639,35 +2641,39 @@ time_t delta_time_in_milliseconds (struct timeval * now,
 /*
  * Return a well formatted timestamp.
  */
-static char * timestamp (const struct timeval * t, int fmt)
+static char* timestamp(const struct timeval* t, int fmt)
 {
   static char buf [16] = {0};
 
-  time_t now = time ((time_t *) 0);
-  struct tm * tm = localtime (& now);
+  time_t now = time((time_t*) 0);
+  struct tm tm;
 
-  gettimeofday (& current_pkt, NULL);
+  localtime_r(&now, &tm);
+  gettimeofday(&current_pkt, NULL);
 
-  switch (fmt)
+  switch(fmt)
     {
     default:
     case DELTA_FMT:
       /*
-       * calculate the difference in milliseconds since the previous packet was displayed
+       * calculate the difference in milliseconds since		
+       * the previous packet was displayed
        */
-      snprintf (buf, 16, "%10ld ms", delta_time_in_milliseconds (& current_pkt, & last_pkt));
+      snprintf(buf, 16, "%10ld ms", 
+	       delta_time_in_milliseconds(&current_pkt, &last_pkt));
       break;
 
     case ABS_FMT:
-      snprintf (buf, 16, "%02d:%02d:%02d.%06d",
-		tm -> tm_hour, tm -> tm_min, tm -> tm_sec, (int) t -> tv_usec);
+      snprintf(buf, 16, "%02d:%02d:%02d.%06d",
+	       tm.tm_hour, tm.tm_min, tm.tm_sec, (int)t->tv_usec);
       break;
 
     case RELATIVE_FMT:
       /*
        * calculate the difference in milliseconds since the previous packet was displayed
        */
-      snprintf (buf, 16, "%10ld ms", delta_time_in_milliseconds (& current_pkt, & first_pkt));
+      snprintf(buf, 16, "%10ld ms", 
+	       delta_time_in_milliseconds(&current_pkt, &first_pkt));
       break;
     }
 
