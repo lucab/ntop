@@ -109,8 +109,8 @@ void printTableDoubleEntry(char *buf, int bufLen,
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
-           "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
-           "<TD WIDTH=100><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
+           "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
+           "<TD WIDTH=100><IMG ALT=\"100%%\"ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
            getRowColor(), label, formatKBytes(totalS)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
@@ -118,11 +118,11 @@ void printTableDoubleEntry(char *buf, int bufLen,
     if(snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
 	     "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
 	     "<TD WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
-	     "<TR><TD><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12></TD>"
-	     "<TD "TD_BG"  ALIGN=CENTER WIDTH=\"%d\">"
+	     "<TR><TD><IMG  ALT=\"%d%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12></TD>"
+	     "<TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\">"
 	     "<P>&nbsp;</TD></TR></TABLE></TD>\n",
 	     getRowColor(), label, formatKBytes(totalS),
-	     (100*int_perc)/100, (100*(100-int_perc))/100) < 0)
+	     int_perc, (100*int_perc)/100, (100*(100-int_perc))/100) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
@@ -152,17 +152,17 @@ void printTableDoubleEntry(char *buf, int bufLen,
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		"<TD WIDTH=100><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"100\" HEIGHT=12></TD></TR>\n",
+		"<TD WIDTH=100><IMG ALIGN=MIDDLE ALT=\"100\" SRC=/gauge.jpg WIDTH=\"100\" HEIGHT=12></TD></TR>\n",
 		formatKBytes(totalR)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   default:
     if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
-           "<TD  WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
-           "<TR><TD><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
-           "</TD><TD "TD_BG"  ALIGN=CENTER WIDTH=\"%d\">"
-           "<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
-           formatKBytes(totalR),
-           (100*int_perc)/100, (100*(100-int_perc))/100) < 0)
+		"<TD  WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
+		"<TR><TD><IMG ALT=\"%d%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
+		"</TD><TD "TD_BG"  ALIGN=CENTER WIDTH=\"%d\">"
+		"<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
+		formatKBytes(totalR),
+		int_perc, (100*int_perc)/100, (100*(100-int_perc))/100) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
@@ -249,10 +249,10 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 
   if(revertOrder) {
     sign = "";
-    arrowGif = "&nbsp;<IMG SRC=arrow_up.gif BORDER=0>";
+    arrowGif = "&nbsp;<IMG ALT=\"Ascending order, click to reverse\" SRC=arrow_up.gif BORDER=0>";
   } else {
     sign = "-";
-    arrowGif = "&nbsp;<IMG SRC=arrow_down.gif BORDER=0>";
+    arrowGif = "&nbsp;<IMG ALT=\"Descending order, click to reverse\" SRC=arrow_down.gif BORDER=0>";
   }
 
   memset(buf, 0, sizeof(buf));
@@ -553,29 +553,29 @@ char* getOSFlag(char* osName, int showOsName) {
   static char tmpStr[96], *flagImg;
 
   if(strstr(osName, "Windows") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/windows.gif>";
+    flagImg = "<IMG ALT=\"OS: Windows\" ALIGN=MIDDLE SRC=/statsicons/os/windows.gif>";
   else if(strstr(osName, "IRIX") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/irix.gif>";
+    flagImg = "<IMG ALT=\"OS: Irix\" ALIGN=MIDDLE SRC=/statsicons/os/irix.gif>";
   else if(strstr(osName, "Linux") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/linux.gif>";
+    flagImg = "<IMG ALT=\"OS: Linux\" ALIGN=MIDDLE SRC=/statsicons/os/linux.gif>";
   else if(strstr(osName, "SunOS") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>";
+    flagImg = "<IMG  ALT=\"OS: SunOS\" ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>";
   else if(strstr(osName, "Solaris") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>";
+    flagImg = "<IMG  ALT=\"OS: Solaris\" ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>";
   else if(strstr(osName, "HP/JETdirect") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>";
+    flagImg = "<IMG  ALT=\"OS: HP/JetDirect\" ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>";
   else if(strstr(osName, "Mac") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/mac.gif>";
+    flagImg = "<IMG  ALT=\"OS: Apple Mac\" ALIGN=MIDDLE SRC=/statsicons/os/mac.gif>";
   else if(strstr(osName, "Novell") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/novell.gif>";
-  else if((strstr(osName, "BSD") != NULL) || (strstr(osName, "Unix") != NULL))
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>";
+    flagImg = "<IMG ALT=\"OS: Novell\" ALIGN=MIDDLE SRC=/statsicons/os/novell.gif>";
+  else if((strstr(osName, "BSD") != NULL) 
+	  || (strstr(osName, "Unix") != NULL)
+	  || (strstr(osName, "Berkeley") != NULL))
+    flagImg = "<IMG ALT=\"OS: BSD Unix\" ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>";
   else if(strstr(osName, "HP-UX") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>";
+    flagImg = "<IMG ALT=\"OS: HP-UX\" ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>";
   else if(strstr(osName, "AIX") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/aix.gif>";
-  else if(strstr(osName, "Berkeley") != NULL)
-    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>";
+    flagImg = "<IMG ALT=\"OS: AIX\" ALIGN=MIDDLE SRC=/statsicons/os/aix.gif>";
   else
     flagImg = NULL;
 
@@ -2656,17 +2656,19 @@ static void checkHostHealthness(HostTraffic *el) {
      || hasDuplicatedMac(el)
      ) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s "
-		"<IMG SRC=/Risk_high.gif> <IMG SRC=/Risk_medium.gif> <IMG SRC=/Risk_low.gif>"
+		"<IMG ALT=\"High Risk\" SRC=/Risk_high.gif> "
+		"<IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif> "
+		"<IMG  ALT=\"Low Risk\" SRC=/Risk_low.gif>"
 		"</TH><TD "TD_BG" ALIGN=RIGHT NOWRAP><OL>", getRowColor(),
 		"Network Healthness") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     if(hasWrongNetmask(el))
-      sendString("<LI><IMG SRC=/Risk_medium.gif><A HREF=/help.html#1>"
+      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/help.html#1>"
 		 "Wrong network mask or bridging enabled</A>\n");
 
     if(hasDuplicatedMac(el))
-      sendString("<LI><IMG SRC=/Risk_high.gif><A HREF=/help.html#2>"
+      sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/help.html#2>"
 		 "Duplicated MAC found for this IP address (spoofing?)</A>\n");
 
     sendString("</OL></TD></TR>\n");
@@ -2700,15 +2702,15 @@ void checkHostProvidedServices(HostTraffic *el) {
 		"Host Type") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-    if(isServer(el))              sendString("Server<br>");
-    if(isWorkstation(el))         sendString("Workstation<br>");
-    if(isMasterBrowser(el))       sendString("Master Browser<br>");
-    if(isPrinter(el))             sendString("Printer&nbsp;<IMG SRC=printer.gif BORDER=0><br>");
-    if(isBridgeHost(el))          sendString("Bridge<br>");
+    if(isServer(el))           sendString("Server<br>");
+    if(isWorkstation(el))      sendString("Workstation<br>");
+    if(isMasterBrowser(el))    sendString("Master Browser<br>");
+    if(isPrinter(el))          sendString("Printer&nbsp;<IMG ALT=Printer SRC=printer.gif BORDER=0><br>");
+    if(isBridgeHost(el))       sendString("Bridge<br>");
 
-    if(nameServerHost(el))     sendString("&nbsp;<IMG SRC=/dns.gif BORDER=0>&nbsp;Name Server<br>");
-    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG SRC=/router.gif BORDER=0>&nbsp;<br>");
-    if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG SRC=/mail.gif BORDER=0>&nbsp;<br>");
+    if(nameServerHost(el))     sendString("&nbsp;<IMG ALT=\"DNS Server\" SRC=/dns.gif BORDER=0>&nbsp;Name Server<br>");
+    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>&nbsp;<br>");
+    if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG ALT=\"Mail Server (SMTP)\"  SRC=/mail.gif BORDER=0>&nbsp;<br>");
     if(isPOPhost(el))          sendString("POP Server<br>");
     if(isIMAPhost(el))         sendString("IMAP Server<br>");
     if(isDirectoryHost(el))    sendString("Directory Server<br>");
@@ -2723,8 +2725,8 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(isNapsterClient(el))       sendString("Napster Client<br>");
 #endif
 
-    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG SRC=/bulb.gif BORDER=0><br>");
-    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG SRC=/wheel.gif BORDER=0>&nbsp;<br>");
+    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG ALT=\"DHCP Client\" SRC=/bulb.gif BORDER=0><br>");
+    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=/wheel.gif BORDER=0>&nbsp;<br>");
     sendString("</TD></TR>");
   }
 }
@@ -2802,7 +2804,7 @@ void printHostDetailedInfo(HostTraffic *el) {
       dynIp = "";
 
     if(isMultihomed(el) && (!broadcastHost(el)))
-      multihomed = "&nbsp;-&nbsp;multihomed&nbsp;<IMG SRC=/multihomed.gif BORDER=0>";
+      multihomed = "&nbsp;-&nbsp;multihomed&nbsp;<IMG ALT=\"Multihomed Host SRC=/multihomed.gif BORDER=0>";
     else
       multihomed = "";
 
@@ -3016,7 +3018,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     } else {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
-		  getRowColor(), "MAC&nbsp;Address <IMG SRC=/card.gif BORDER=0>",
+		  getRowColor(), "MAC&nbsp;Address <IMG ALT=\"Network Interface Card (NIC)\" SRC=/card.gif BORDER=0>",
 		  el->ethAddressString,
 		  separator /* it avoids empty cells not to be rendered */) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -3054,7 +3056,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"<A HREF=%s.html>%s</A>%s</TD></TR>\n",
-		getRowColor(), "Last MAC Address/Router <IMG SRC=/card.gif BORDER=0>",
+		getRowColor(), "Last MAC Address/Router <IMG ALT=\"Network Interface Card (NIC)/Router\" SRC=/card.gif BORDER=0>",
 		symLink, symMacAddr,
 		separator /* it avoids empty cells not to be rendered */) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -3576,20 +3578,21 @@ void printTableEntry(char *buf, int bufLen,
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
 		"<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
-		"<TD ALIGN=CENTER WIDTH=250><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
+		"<TD ALIGN=CENTER WIDTH=250><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
 		"</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   default:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
-	    "<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
-	    "<TD "TD_BG" WIDTH=250><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"250\">"
-	    "<TR><TD><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
-	    "</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
-	    "<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
-	    getRowColor(), label, formatKBytes(total),
-	    (250*int_perc)/100, (250*(100-int_perc))/100, getActualRowColor()) < 0)
+		"<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
+		"<TD "TD_BG" WIDTH=250><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"250\">"
+		"<TR><TD><IMG ALIGN=MIDDLE ALT=\"%d%%\" SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
+		"</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
+		"<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
+		getRowColor(), label, formatKBytes(total),
+		int_perc, (250*int_perc)/100, 
+		(250*(100-int_perc))/100, getActualRowColor()) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
@@ -3737,7 +3740,7 @@ void printFlagedWarning(char *text) {
 
   snprintf(buf, BUF_SIZE,
  	   "<CENTER>\n"
- 	   "<P><IMG SRC=/warning.gif>\n"
+ 	   "<P><IMG ALT=Warning SRC=/warning.gif>\n"
  	   "<P><FONT COLOR=\"#FF0000\" SIZE=+1>%s</FONT>\n"
  	   "</CENTER>\n", text);
   sendString(buf);

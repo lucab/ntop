@@ -113,7 +113,6 @@ static int readHTTPheader(char* theRequestedURL, int theRequestedURLLen, char *t
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
 static void logHTTPaccess(int rc);
 static void returnHTTPspecialStatusCode(int statusIdx);
-static int checkURLsecurity(char *url);
 static int returnHTTPPage(char* pageName, int postLen);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 
@@ -182,7 +181,7 @@ static int readHTTPheader(char* theRequestedURL,
       /* FIXME (DL): is valid to write to the socket after this condition? */
       break; /* Empty line */
 
-    } else if ((errorCode == 0) && !isprint(aChar[0]) && !isspace(aChar[0])) {
+    } else if((errorCode == 0) && !isprint(aChar[0]) && !isspace(aChar[0])) {
       errorCode = HTTP_INVALID_REQUEST;
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Rcvd non expected char '%c' [%d/0x%x]\n", aChar[0], aChar[0], aChar[0]);
@@ -264,7 +263,7 @@ static int readHTTPheader(char* theRequestedURL,
 	}
 	idxChar=0;
       } else if(idxChar > sizeof(lineStr)-2) {
-	if (errorCode == 0) {
+	if(errorCode == 0) {
 	  errorCode = HTTP_INVALID_REQUEST;
 #ifdef DEBUG
 	  traceEvent(TRACE_INFO, "Line too long (hackers ?)");
@@ -417,10 +416,10 @@ void sendStringLen(char *theString, unsigned int len) {
 	bytesSent += rc;
 	retries++;
 	goto RESEND;
-      } else if (errno == EPIPE /* Broken pipe: the  client has disconnected */) {
+      } else if(errno == EPIPE /* Broken pipe: the  client has disconnected */) {
 	closeNwSocket(&newSock);
 	return;
-      } else if (errno == EBADF /* Bad file descriptor: a
+      } else if(errno == EBADF /* Bad file descriptor: a
 				   disconnected client is still sending */) {
 	closeNwSocket(&newSock);
 	return;
@@ -512,7 +511,7 @@ void printHTMLtrailer(void) {
   }
 
   len=strlen(buf);
-  if (*currentFilterExpression!='\0') {
+  if(*currentFilterExpression!='\0') {
     if(snprintf(&buf[len], BUF_SIZE-len,
 		"with kernel (libpcap) filtering expression </B>\"%s\"<B>\n",
 		currentFilterExpression) < 0)
@@ -725,7 +724,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   sendString(tmpStr);
 
   if(headerFlags & HTTP_FLAG_IS_CACHEABLE) {
-    sendString("Cache-Control: max-age=3600, must-revalidate, public\n");
+    sendString("Cache-Control: max-age=3600, must-revalidate, public\n"); 
   } else if((headerFlags & HTTP_FLAG_NO_CACHE_CONTROL) == 0) {
     sendString("Cache-Control: no-cache\n");
     sendString("Expires: 0\n");
@@ -779,19 +778,114 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 /* ************************* */
 
 static int checkURLsecurity(char *url) {
-  int rc = 0, i, len=strlen(url);
+  int rc = 0, i, extCharacter, countOKext, len=strlen(url);
+  char ext[4];
 
-  for(i=1; i<len; i++)
-    if((url[i] == '.') && (url[i-1] == '.')) {
-      rc = 1;
-      break;
-    } else if((url[i] == '/') && (url[i-1] == '/')) {
-      rc = 1;
-      break;
-    } else if((url[i] == '.') && (url[i-1] == '/')) {
-      rc = 1;
-      break;
+  /* 
+     Courtesy of "Burton M. Strauss III" <bstrauss3@attbi.com> 12-2001
+     
+     This is a fix against Unicode exploits.
+  
+     Let's be really smart about this - instead of defending against
+     hostile requests we don't yet know about, let's make sure it
+     we only serve up the very limited set of pages we're interested
+     in serving up...
+
+     http://server[:port]/url
+     Our urls end in .htm(l), .css, .jpg, .gif or .png
+
+     We don't want to serve requests that attempt to hide or obscure our
+     server.  Yes, we MIGHT somehow reject a marginally legal request, but
+     tough!
+
+     Any character that shouldn't be in a CLEAR request, causes us to
+     bounce the request...
+
+     For example,
+     //, .. and /.    -- directory transversal
+     \r, \n           -- used to hide stuff in logs
+     :, @             -- used to obscure logins, etc.
+     unicode exploits -- used to hide the above
+  */
+
+  /* No URL?  That is our default action... */
+  if(len == 0) {
+    return(0);
+  }
+
+  /* 
+     Unicode encoded, a : or @ or \r or \n - no dice 
+
+     NOTE (Luca Deri):
+     I have removed the ':' from the list below. This is because
+     ntop uses them for identifying MAC addresses. 
+     This needs to be changed in the near future. TODO     
+  */
+  if(strcspn(url, "%@\r\n") < len) {
+#ifndef DEBUG
+    traceEvent(TRACE_ERROR, "Found % : @ \\r or \\n in URL (%s)...\n", url);
+#endif
+    return(1);
+  }
+
+  /* a double slash? */
+  if(strstr(url, "//") > 0) {
+#ifndef DEBUG
+    traceEvent(TRACE_ERROR, "Found // in URL...\n");
+#endif
+    return(1);
+  }
+
+  /* a double dot? */
+  if(strstr(url, "..") > 0) {
+#ifndef DEBUG
+    traceEvent(TRACE_ERROR, "Found .. in URL...\n");
+#endif
+    return(1);
+  }
+
+  /*
+    The code below is experimental and it needs to 
+    be fixed as it blocks valid URLs (eg. 192.42.249.12.html)
+  */
+    
+#if 0
+  /* 
+     let's check after the each . (page extension), so
+     x.gif.vbs doesn't get past us.  Since there should
+     only be ONE extension, we'll simply and reject if
+     ANY extension is bad. 
+  */
+  countOKext = 0;
+  for (i=0; i<len; i++) {
+    if(url[i] == '.') {
+      for (extCharacter=1; extCharacter<=3; extCharacter++) {
+	ext[extCharacter-1] = (i+extCharacter < len) ? (char)tolower(url[i+extCharacter]) : '\0';
+      }
+      ext[3] = '\0';
+
+      if((strcmp(ext , "htm") == 0) ||
+	  (strcmp(ext , "jpg") == 0) ||
+	  (strcmp(ext , "png") == 0) ||
+	  (strcmp(ext , "gif") == 0) ||
+	  (strcmp(ext , "css") == 0) ) {
+	countOKext++;
+	continue;
+      } else {
+	/* bad extension! */
+#ifndef DEBUG
+	traceEvent(TRACE_ERROR, "Found bad file extension (%s) in URL...\n", ext);
+#endif
+	rc=1;
+	break;
+      }
     }
+  }
+
+  if(countOKext > 1) {
+    rc=1;
+  }
+#endif
 
   return(rc);
 }
@@ -820,10 +914,11 @@ static int returnHTTPPage(char* pageName, int postLen) {
   int i;
 #endif
 
-  /* We need to check whether the URL
+  /* 
+     We need to check whether the URL
      is invalid, i.e. it contains '..' or
-     similar chars that can be used to read
-     system files
+     similar chars that can be used for
+     reading system files
   */
   if(checkURLsecurity(pageName) != 0)
     return (HTTP_FORBIDDEN_PAGE);
@@ -901,14 +996,16 @@ static int returnHTTPPage(char* pageName, int postLen) {
 
     sendHTTPHeader(mimeType, HTTP_FLAG_IS_CACHEABLE | HTTP_FLAG_MORE_FIELDS);
 
-    if (actTime > statbuf.st_mtime) { /* just in case the system clock is wrong... */
+    if(actTime > statbuf.st_mtime) { /* just in case the system clock is wrong... */
         theTime = statbuf.st_mtime - thisZone;
         strftime(theDate, sizeof(theDate)-1, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
         theDate[sizeof(theDate)-1] = '\0';
         if(snprintf(tmpStr, sizeof(tmpStr), "Last-Modified: %s\n", theDate) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
         sendString(tmpStr);
     }
+
+    sendString("Accept-Ranges: bytes\n");
 
     fseek(fd, 0, SEEK_END);
     if(snprintf(tmpStr, sizeof(tmpStr), "Content-Length: %d\n", (len = ftell(fd))) < 0)
@@ -964,7 +1061,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
     changeFilter();
   } else if(strncmp(pageName, "doChangeFilter", strlen("doChangeFilter")) == 0) {
     printTrailer=0;
-    if (doChangeFilter(postLen)==0) /*resetStats()*/;
+    if(doChangeFilter(postLen)==0) /*resetStats()*/;
   } else if(strncmp(pageName, FILTER_INFO_HTML, strlen(FILTER_INFO_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printHTMLheader(NULL, HTML_FLAG_NO_REFRESH);
@@ -1276,7 +1373,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       else
 	switchNwInterface(atoi(&equal[1]));
     } else if(strcmp(pageName, "home_.html") == 0) {
-      if (filterExpressionInExtraFrame){
+      if(filterExpressionInExtraFrame){
 	sendHTTPHeader(HTTP_TYPE_HTML, 0);
         sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
         sendString("border=\"0\" frameborder=\"0\">\n");
@@ -1638,12 +1735,12 @@ static int checkHTTPpassword(char *theRequestedURL,
   if(snprintf(users, BUF_SIZE, "1%s", user) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-  if (return_data.dptr != NULL) {
+  if(return_data.dptr != NULL) {
     if(strstr(return_data.dptr, users) == NULL) {
 #ifdef MULTITHREADED
       releaseMutex(&gdbmMutex);
 #endif
-      if (return_data.dptr != NULL) free(return_data.dptr);
+      if(return_data.dptr != NULL) free(return_data.dptr);
       return 0; /* The specified user is not among those who are
 		   allowed to access the URL */
     }
@@ -1655,7 +1752,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   key_data.dsize = strlen(users)+1;
   return_data = gdbm_fetch(pwFile, key_data);
 
-  if (return_data.dptr != NULL) {
+  if(return_data.dptr != NULL) {
 #ifdef WIN32
     rc = !strcmp(return_data.dptr, thePw);
 #else

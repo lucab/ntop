@@ -379,9 +379,11 @@ int _releaseMutex(PthreadMutex *mutexId,
       mutexId->maxLockedDurationUnlockLine = fileLine;
     }
 
+#ifdef DEBUG
     traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs",
 	       &(mutexId->mutex), fileName, fileLine,
 	       mutexId->maxLockedDuration);
+#endif
   }
 
   mutexId->isLocked = 0;

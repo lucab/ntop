@@ -348,7 +348,7 @@ void initCounters(int _mergeInterfaces) {
   capturePackets = 1;
   endNtop = 0;
 
-  topHashSize = 0, numHandledHTTPrequests = 0;  
+  numHandledHTTPrequests = 0;  
 }
 
 /* ******************************* */
@@ -886,15 +886,13 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	Courtesy of: Nicolai Petri <Nicolai@atomic.dk>
       */
       if(column == NULL) {
-	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1,
-					   100 /* ms */, ebuf);
+	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1, 100 /* ms */, ebuf);
 
 	if(device[i].pcapPtr == NULL) {
 	  traceEvent(TRACE_INFO, ebuf);
 	  traceEvent(TRACE_INFO, "Please select another interface using the -i flag.");
 	  exit(-1);
 	}
-
 
 	if(pcapLog != NULL) {
 	  if(strlen(pcapLog) > 64)
@@ -1098,12 +1096,14 @@ void parseTrafficFilter(char *argv[], int optind) {
 	       device[i].name[0] == '0' ? "<pcap file>" : device[i].name);
 	    exit(-1);
 	  } else
-	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", currentFilterExpression, device[i].name);
+	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", 
+	      currentFilterExpression, device[i].name);
 	}
       }
     } else
     currentFilterExpression = strdup("");	/* so that it isn't NULL! */
-  }
+  }  else
+  currentFilterExpression = strdup("");	/* so that it isn't NULL! */  
 }
 
 /* *************************** */
@@ -1118,13 +1118,9 @@ static void ignoreThisSignal(int signalId) {
 /* ******************************* */
 
 void initSignals(void) {
-#ifndef WIN32
-  /*  RETSIGTYPE (*oldhandler)(int); */
-#endif
-
-  /*
-    The handler below has been restored due to compatibility
-    problems with om:
+/*
+    The handler below has been restored due 
+    to compatibility problems:
     Courtesy of Martin Lucina <mato@kotelna.sk>
   */
 #ifndef WIN32
@@ -1139,12 +1135,6 @@ void initSignals(void) {
   setsignal(SIGHUP,  handleSigHup);
   setsignal(SIGPIPE, ignoreThisSignal);
   setsignal(SIGABRT, ignoreThisSignal);
-
-  /* Cooperate with nohup(1) */
-  /*
-    if ((oldhandler = setsignal(SIGHUP, cleanup)) != SIG_DFL)
-    setsignal(SIGHUP, oldhandler);
-  */
 #endif
 }
 

@@ -26,6 +26,8 @@ extern char *version, *osName, *author, *buildDate;
 extern char *program_name;
 extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
 extern HostTraffic *broadcastEntry, *otherHostEntry;
+extern int ntop_argc;
+extern char **ntop_argv;
 
 /* command line options */
 extern u_short traceLevel, debugMode, useSyslog, accuracyLevel;
@@ -218,6 +220,7 @@ extern void smurfAlert(u_int srcHostIdx, u_int dstHostIdx);
 extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);
+extern void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent);
 extern void pktSizeDistribPie(void);
 extern void ipProtoDistribPie(void);
 extern void interfaceTrafficPie(void);

@@ -28,6 +28,8 @@ char *version, *osName, *author, *buildDate;
 char *program_name;
 char domainName[MAXHOSTNAMELEN], *shortDomainName;
 HostTraffic *broadcastEntry, *otherHostEntry;
+int ntop_argc;
+char **ntop_argv;
 
 /* command line options */
 u_short traceLevel, debugMode, useSyslog, accuracyLevel;

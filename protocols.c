@@ -555,12 +555,12 @@ u_int16_t processDNSPacket(const u_char *packetData,
   datum key_data, data_data;
   char tmpBuf[96];
 #endif
-  u_int16_t transactionId;
+  u_int16_t transactionId = 0;
   int i;
 
   if((accuracyLevel < HIGH_ACCURACY_LEVEL)
      ||(packetData == NULL) /* packet too short ? */)
-    return(NULL);
+    return(transactionId);
 
   memset(&hostPtr, 0, sizeof(DNSHostInfo));
 

@@ -5,15 +5,9 @@ How to create your own SSL certificate
 
 2) Compile and install OpenSSL
 
-3) Run:
-   openssl req -new -x509 -sha1 -extensions v3_ca -nodes -days 365 -out cert.pem
+3) make ntop-cert.pem
 
-4) Do: 'cat privkey.pem cert.pem > ntop-cert.pem'
-
-5) Remove privkey.pem cert.pem 
-
-6) You certificate is now stored in ntop-cert.pem
-
+4) You certificate is now stored in ntop-cert.pem
 
 -----
-Luca Deri, April 2000
+Luca Deri <deri@ntop.org> - December 2001

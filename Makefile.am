@@ -58,8 +58,7 @@ SUBDIRS = . @PLUGINS@ @INTOP@
 
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
-              SUPPORT_NTOP.txt \
-              THANKS \
+              SUPPORT_NTOP.txt THANKS \
               ntop.8 ntop.txt ntop.html \
               ntop-cert.pem ntop-rules.8 rules.sample
 
@@ -146,7 +145,7 @@ libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD       = $(MORELIBS)
 libntopreport_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
-man_MANS = ntop.8
+man_MANS = ntop.8 intop/intop.1
 
 .PHONY: snapshot
 
@@ -214,6 +213,11 @@ ntop.html: ntop.txt
 	@echo "-----------------------------------------------"
 	@echo ""
 
+ntop-cert.pem:
+	openssl req -new -x509 -sha1 -extensions v3_ca -nodes -days 365 -out cert.pem
+	cat privkey.pem cert.pem > ntop-cert.pem
+	/bin/rm -f privkey.pem cert.pem
+
 install-data-local:
 	@cp -p ntop-cert.pem $(bindir)/ntop-cert.pem
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
@@ -253,53 +257,31 @@ dnvt:
 dnsapt:
 	@(cd Internet; wget -c http://www.isi.edu/in-notes/iana/assignments/novell-sap-numbers)
 
-# rpm for Suse 6.x (tested on 6.0/6.3) 
-# Courtesy of Ralf.Amandi@accordata.net
-make-suse: ntop # ntop.html # man2html not exists? FIXME
-	echo "Only root can do this. Wait please...."
-	# Builddir /var/tmp/ntop
-	rm -Rf /var/tmp/ntop
-	$(mkinstalldirs) /var/tmp/ntop
-	# Copy
-	$(mkinstalldirs) /var/tmp/ntop/usr/sbin
-	cp ntop /var/tmp/ntop/usr/sbin
-	$(mkinstalldirs) /var/tmp/ntop/usr/share/ntop
-	cp -R  html /var/tmp/ntop/usr/share/ntop
-	cp -R  plugins /var/tmp/ntop/usr/share/ntop
-	cp -R  database /var/tmp/ntop/usr/share/ntop
-	chmod 0440 *.pem	# Make sure it can only be accessed by root
-	cp *.pem /var/tmp/ntop/usr/share/ntop
-	cp -R packages/suse6/var /var/tmp/ntop
-	cp -R packages/suse6/sbin /var/tmp/ntop
-	$(mkinstalldirs) /var/tmp/ntop/sbin/init.d/rc2.d
-	$(mkinstalldirs) /var/tmp/ntop/sbin/init.d/rc3.d
-	# 06.02.00 I have changed S20ntopd/K20ntopd to S22ntopd/K08ntopd 
-	# to get the right start order with mySQL (S20)
-	ln -s ../ntopd /var/tmp/ntop/sbin/init.d/rc2.d/S22ntopd
-	ln -s ../ntopd /var/tmp/ntop/sbin/init.d/rc2.d/K08ntopd
-	ln -s ../ntopd /var/tmp/ntop/sbin/init.d/rc3.d/S22ntopd
-	ln -s ../ntopd /var/tmp/ntop/sbin/init.d/rc3.d/K08ntopd
-	ln -s ../ntopdb /var/tmp/ntop/sbin/init.d/rc2.d/S21ntopdb
-	ln -s ../ntopdb /var/tmp/ntop/sbin/init.d/rc2.d/K09ntopdb
-	ln -s ../ntopdb /var/tmp/ntop/sbin/init.d/rc3.d/S21ntopdb
-	ln -s ../ntopdb /var/tmp/ntop/sbin/init.d/rc3.d/K09ntopdb
-	cp services /var/tmp/ntop/usr/share/ntop/services
-	cp -pr CHANGES COPYING FAQ FILES TO_DO VERSION /usr/src/packages/BUILD
-	chown root:root /usr/src/packages/BUILD/*
-	chown -R root:root /var/tmp/ntop
-	chmod gou+x /var/tmp/ntop/usr/sbin/ntop
-	chmod u+s /var/tmp/ntop/usr/sbin/ntop
-	chmod u+x /var/tmp/ntop/usr/share/ntop/database/mySQLserver.pl
-	chmod u+x /var/tmp/ntop/sbin/init.d/ntopd
-	chmod u+x /var/tmp/ntop/sbin/init.d/ntopdb
-	$(mkinstalldirs) /var/tmp/ntop/usr/man/man8
-	cp ntop.8 ntop-rules.8 /var/tmp/ntop/usr/man/man8
-	( echo 'Version: $(VERSION)' ; cat packages/suse6/suse.spec )>packages/suse6/ntop-$(VERSION)-1.spec
-	rpm -bb packages/suse6/ntop-$(VERSION)-1.spec
-# Does not work, hosttype: i686, dir:i386	
-#	mv /usr/src/packages/RPMS/$(HOSTTYPE)/ntop-$(VERSION)-1.suse-$(HOSTTYPE).rpm packages
-	echo "Package create in /usr/src/packages/RPMS/$(HOSTTYPE)/"
-	rm -Rf /var/tmp/ntop
+#
+# Below you can find some rules for
+# building packages automatically. Most
+# of them are outdated and need to be updated.
+# 
+
+#
+# rpm for Suse 7 (tested on 7.3)
+# Based on work of Ralf.Amandi <ralf.amandi@accordata.net>
+#
+make-suse:
+	./configure --prefix=/usr --mandir=/usr/share/man --localstatedir=/var/lib
+	make
+	make install
+	$(mkinstalldirs) /usr/share/man/man8/ /usr/share/man/man1/ /usr/share/doc/packages/ntop
+	cp ntop.8 /usr/share/man/man8/
+	cp intop/intop.1 /usr/share/man/man1/
+	gzip -f /usr/share/man/man8/ntop.8
+	gzip -f /usr/share/man/man1/intop.1
+	cp -r docs/* /usr/share/doc/packages/ntop
+	install -m 755  packages/suse/ntopd /etc/init.d/ntopd
+	ln -sf ../../etc/init.d/ntopd /usr/sbin/rcntopd
+	install -m 644  packages/suse/rc.config.ntopd /var/adm/fillup-templates/rc.config.ntopd
+	mkdir -p /var/lib/ntop
+	rpm -bb packages/suse/ntop.spec
 
 
 #make-deb: ntop ntop.html

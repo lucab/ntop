@@ -1110,11 +1110,13 @@ int _releaseMutex(PthreadMutex *mutexId,
 	mutexId->maxLockedDurationUnlockLine = fileLine;
       }
 
+#ifdef DEBUG
       if(mutexId->maxLockedDuration > 0) {
 	traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
 		   (void*)&(mutexId->mutex), fileName, fileLine,
 		   mutexId->maxLockedDuration);
       }
+#endif
    }
 
     /* traceEvent(TRACE_ERROR, "UNLOCKED 0x%X", &(mutexId->mutex));  */
@@ -2160,7 +2162,12 @@ void traceEvent(int eventTraceLevel, char* file,
       }
 
       memset(buf, 0, BUF_SIZE);
+#ifdef WIN32
+      /* Windows lacks of vsnprintf */
+      vsprintf(buf, format, va_ap);
+#else
       vsnprintf(buf, BUF_SIZE-1, format, va_ap);
+#endif
 
       if(!useSyslog) {
 	printf(buf);
@@ -2334,18 +2341,19 @@ int strOnlyDigits(const char *s) {
 
 FILE* getNewRandomFile(char* fileName, int len) {
   FILE* fd;
-  char tmpFileName[NAME_MAX];
 
 #ifndef WIN32
+#if 0
   int tmpfd;
 
-#if 0
   /* Patch courtesy of Thomas Biege <thomas@suse.de> */
   if(((tmpfd = mkstemp(fileName)) < 0)
      || (fchmod(tmpfd, 0600) < 0)
      || ((fd = fdopen(tmpfd, "wb")) == NULL))
     fd = NULL;
 #else
+  char tmpFileName[NAME_MAX];
+
   strcpy(tmpFileName, fileName);
   sprintf(fileName, "%s-%lu", tmpFileName, numHandledHTTPrequests);
   fd = fopen(fileName, "wb");

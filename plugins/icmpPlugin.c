@@ -30,33 +30,6 @@ struct tok {
   char *s;  /* string */
 };
 
-/* Formats for most of the ICMP_UNREACH codes */
-static struct tok unreach2str[] = {
-  { ICMP_UNREACH_NET,		"net %s unreachable" },
-  { ICMP_UNREACH_HOST,		"host %s unreachable" },
-  { ICMP_UNREACH_SRCFAIL,       "%s unreachable - source route failed" },
-  { ICMP_UNREACH_NET_UNKNOWN,	"net %s unreachable - unknown" },
-  { ICMP_UNREACH_HOST_UNKNOWN,	"host %s unreachable - unknown" },
-  { ICMP_UNREACH_ISOLATED,      "%s unreachable - source host isolated" },
-  { ICMP_UNREACH_NET_PROHIB,    "net %s unreachable - admin prohibited" },
-  { ICMP_UNREACH_HOST_PROHIB,   "host %s unreachable - admin prohibited" },
-  { ICMP_UNREACH_TOSNET,        "net %s unreachable - tos prohibited" },
-  { ICMP_UNREACH_TOSHOST,       "host %s unreachable - tos prohibited" },
-  { ICMP_UNREACH_FILTER_PROHIB, "host %s unreachable - admin prohibited filter" },
-  { ICMP_UNREACH_HOST_PRECEDENCE, "host %s unreachable - host precedence violation" },
-  { ICMP_UNREACH_PRECEDENCE_CUTOFF, "host %s unreachable - precedence cutoff" },
-  { 0,				NULL }
-};
-
-/* Formats for the ICMP_REDIRECT codes */
-static struct tok type2str[] = {
-  { ICMP_REDIRECT_NET,		"redirect %s to net %s" },
-  { ICMP_REDIRECT_HOST,		"redirect %s to host %s" },
-  { ICMP_REDIRECT_TOSNET,	"redirect-tos %s to net %s" },
-  { ICMP_REDIRECT_TOSHOST,	"redirect-tos %s to net %s" },
-  { 0,				NULL }
-};
-
 /* rfc1191 */
 struct mtu_discovery {
   short unused;
@@ -74,23 +47,6 @@ struct id_rdiscovery {
   u_int32_t ird_addr;
   u_int32_t ird_pref;
 };
-
-static char *tok2str(register const struct tok *lp,
-		     register const char *fmt,
-		     register int v) {
-  static char buf[128];
-
-  while (lp->s != NULL) {
-    if (lp->v == v)
-      return (lp->s);
-    ++lp;
-  }
-  if (fmt == NULL)
-    fmt = "#%d";
-
-  if(snprintf(buf, sizeof(buf), fmt, v) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-  return (buf);
-}
 
 /* ****************************** */
 
@@ -213,7 +169,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   char  **lbls, *strtokState;
   float *s, *r;
   FILE *fd;
-  int tmpfd;
 
   i = sizeof(float)*device[actualReportDeviceId].actualHashSize;
   s = (float*)malloc(i); r = (float*)malloc(i);

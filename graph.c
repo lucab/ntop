@@ -922,7 +922,7 @@ void drawThptGraph(int sortedColumn) {
     GDC_title = "Last 60 Minutes Average Throughput";
     out_graph(600, 300,    /* width, height           */
 	      fd,          /* open FILE pointer       */
-	      GDC_AREA,    /* chart type              */
+	      GDC_BAR,     /* chart type              */
 	      60,          /* num points per data set */
 	      lbls,        /* X labels array of char* */
 	      1,           /* number of data sets     */
@@ -959,7 +959,7 @@ void drawThptGraph(int sortedColumn) {
     GDC_title = "Last 24 Hours Average Throughput";
     out_graph(600, 300,      /* width, height           */
 	      fd,            /* open FILE pointer       */
-	      GDC_AREA,      /* chart type              */
+	      GDC_BAR,       /* chart type              */
 	      24,            /* num points per data set */
 	      lbls,          /* X labels array of char* */
 	      1,             /* number of data sets     */
@@ -997,7 +997,7 @@ void drawThptGraph(int sortedColumn) {
 
     out_graph(600, 300,          /* width, height           */
 	      fd,                /* open FILE pointer       */
-	      GDC_AREA,          /* chart type              */
+	      GDC_BAR,           /* chart type              */
 	      30,                /* num points per data set */
 	      lbls,              /* X labels array of char* */
 	      1,                 /* number of data sets     */
@@ -1020,7 +1020,6 @@ void drawThptGraph(int sortedColumn) {
 void drawGlobalProtoDistribution(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   TrafficCounter ip, nonIp;
-  int totLen;
   float p[256]; /* Fix courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
   char	*lbl[16];
   FILE *fd;

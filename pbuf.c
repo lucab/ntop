@@ -62,7 +62,9 @@ static const struct pcap_pkthdr *h_save;
 static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 
+#ifdef DEBUG
 static void dumpHash(); /* Forward */
+#endif
 
  /* ************************************ */
 
@@ -95,7 +97,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char *ether_addr,
 		  u_char checkForMultihoming,
 		  u_char forceUsingIPaddress) {
-  u_int idx, i, isMultihomed = 0;
+  u_int idx, i, isMultihomed = 0, numRuns=0, initialIdx;
 #ifndef MULTITHREADED
   u_int run=0;
 #endif
@@ -113,6 +115,14 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
   idx = computeInitialHashIdx(hostIpAddress, ether_addr, &useIPAddressForSearching);
   idx = (u_int)(idx % device[actualDeviceId].actualHashSize);
+  initialIdx = idx;
+
+#ifndef DEBUG
+  if(strcmp(etheraddr_string(ether_addr), "00:D0:B7:19:C0:4C") == 0) {
+    traceEvent(TRACE_INFO, "INFO: here we go [initialIdx=%d]", initialIdx);
+    dumpHash();
+  }
+#endif
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Searching from slot %d [size=%d]\n",
@@ -127,19 +137,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   for(i=0; i<device[actualDeviceId].actualHashSize; i++) {
   HASH_SLOT_FOUND:
     el = device[actualDeviceId].hash_hostTraffic[idx]; /* (**) */
-
+    numRuns++;
     if(el != NULL) {
       if(useIPAddressForSearching == 0) {
-
-#ifdef DEBUG
-	if(strcmp(el->ethAddressString, "00:02:A5:51:1F:AA") == 0) {
-	  traceEvent(TRACE_INFO, "INFO: found pidc01 (1) [0x%X/%s/hostFound=%d]",
-		     el, 
-		     etheraddr_string(ether_addr),
-		     hostFound);
-	}
-#endif
-
 	/* compare with the ethernet-address */
 	if (memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
 	  if(hostIpAddress != NULL) {
@@ -223,7 +223,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	 ************************ */
 
-      if(firstEmptySlot == NO_PEER)
+      if(firstEmptySlot == NO_PEER) 
 	firstEmptySlot = idx;
     }
 
@@ -234,14 +234,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
     if(firstEmptySlot != NO_PEER) {
       /* New table entry */
       int len;
-
-#ifdef DEBUG
-	if(strcmp(etheraddr_string(ether_addr), "00:02:A5:51:1F:AA") == 0) {
-	  dumpHash();
-	  traceEvent(TRACE_INFO, "INFO: found pidc01 (2) [0x%X/hostFound=%d]",
-		     el, hostFound);
-	}
-#endif
 
       if(usePersistentStorage) {
 	if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
@@ -423,6 +415,15 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 #endif
       goto HASH_SLOT_FOUND;
     }
+  } else {
+#ifndef DEBUG
+    if((numRuns*2) > device[actualDeviceId].actualHashSize) {
+      traceEvent(TRACE_ERROR, "Num Runs: %d/%d [idx=%d][initialIdx=%d]", 
+		 numRuns, device[actualDeviceId].actualHashSize, 
+		 idx, initialIdx);
+      dumpHash();
+    }
+#endif
   }
 
   if(el != NULL) {
@@ -2840,17 +2841,17 @@ static void processIpPkt(const u_char *bp,
     dstHost->instanceInUse++;
   }
 
+#ifdef DEBUG
   if(rFileName != NULL) {
     static int numPkt=1;
 
-#ifdef DEBUG
     traceEvent(TRACE_INFO, "%d) %s -> %s",
 	       numPkt++,
 	       srcHost->hostNumIpAddress,
 	       dstHost->hostNumIpAddress);
     fflush(stdout);
-#endif
   }
+#endif
 
   if(ip.ip_ttl != 255) {
     if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;
@@ -3084,7 +3085,9 @@ static void processIpPkt(const u_char *bp,
 #endif
 
       if(!(off & 0x3fff)) {
-	if((sport == 53) || (dport == 53) /* domain */) {
+	if(((sport == 53) || (dport == 53) /* domain */)
+	   && (accuracyLevel == HIGH_ACCURACY_LEVEL)
+	   && (bp != NULL) /* packet long enough */) {
 	  short isRequest, positiveReply;
 	  u_int16_t transactionId;
 
@@ -3509,6 +3512,7 @@ void queuePacket(u_char * _deviceId,
    - If the queue is getting full then periodically wait
      until a slot is freed
   *****************************/
+  int len;
 
 #ifdef WIN32_DEMO
   static int numQueuedPackets=0;
@@ -3540,9 +3544,13 @@ void queuePacket(u_char * _deviceId,
 #endif
     accessMutex(&packetQueueMutex, "queuePacket");
     memcpy(&packetQueue[packetQueueHead].h, h, sizeof(struct pcap_pkthdr));
-    memset(packetQueue[packetQueueHead].p, 0, DEFAULT_SNAPLEN);
-    memcpy(packetQueue[packetQueueHead].p, p, h->caplen);
-    packetQueue[packetQueueHead].deviceId = *_deviceId;
+    memset(packetQueue[packetQueueHead].p, 0, sizeof(packetQueue[packetQueueHead].p));
+    /* Just to be safe */
+    len = h->caplen;
+    if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
+    memcpy(packetQueue[packetQueueHead].p, p, len);
+    packetQueue[packetQueueHead].h.caplen = len;
+    packetQueue[packetQueueHead].deviceId = (unsigned short)_deviceId;
     packetQueueHead = (packetQueueHead+1) % PACKET_QUEUE_LENGTH;
     packetQueueLen++;
     if(packetQueueLen > maxPacketQueueLen)
@@ -3797,9 +3805,12 @@ void processPacket(u_char *_deviceId,
   FILE * fd;
   unsigned char ipxBuffer[128];
 
-#ifdef DEBUG
+#ifndef DEBUG
   static long numPkt=0;
   traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
+
+  if(numPkt == 597)
+    traceEvent(TRACE_INFO, "Here we go!");  
 #endif
 
   /* **************************** */
@@ -3857,8 +3868,9 @@ void processPacket(u_char *_deviceId,
   if(length > mtuSize[device[deviceId].datalink]) {
     /* Sanity check */
     if(enableSuspiciousPacketDump) {
-      traceEvent(TRACE_INFO, "Packet # %u too long (len = %d)!\n", 
-		 (unsigned long)device[deviceId].ethernetPkts, length);
+      traceEvent(TRACE_INFO, "Packet # %u too long (len = %u)!\n", 
+		 (unsigned int)device[deviceId].ethernetPkts, 
+		 (unsigned int)length);
       dumpSuspiciousPacket();
     }
 
@@ -4664,6 +4676,7 @@ void _incrementUsageCounter(UsageCounter *counter,
 
 /* ************************************ */
 
+#ifndef DEBUG
 /* Debug only */
 static void dumpHash() {
   int i;
@@ -4679,3 +4692,4 @@ static void dumpHash() {
     }
   }
 }
+#endif /* DEBUG */

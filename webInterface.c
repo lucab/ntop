@@ -300,29 +300,29 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isDHCPClient(el))
-    dynIp = "&nbsp;<IMG SRC=/bulb.gif BORDER=0>&nbsp;"; 
+    dynIp = "&nbsp;<IMG ALT=\"DHCP Client\" SRC=/bulb.gif BORDER=0>&nbsp;"; 
   else { 
     if(isDHCPServer(el))
-      dynIp = "&nbsp;<IMG SRC=/wheel.gif BORDER=0>&nbsp;"; 
+      dynIp = "&nbsp;<IMG ALT=\"DHCP Server\" SRC=/wheel.gif BORDER=0>&nbsp;"; 
     else
       dynIp = ""; 
   }
   
-  if(isMultihomed(el))   multihomed = "&nbsp;<IMG SRC=/multihomed.gif BORDER=0>&nbsp;"; else multihomed = "";
-  if(gatewayHost(el))    gwStr = "&nbsp;<IMG SRC=/router.gif BORDER=0>&nbsp;"; else gwStr = "";
-  if(nameServerHost(el)) dnsStr = "&nbsp;<IMG SRC=/dns.gif BORDER=0>&nbsp;"; else dnsStr = "";
-  if(isPrinter(el))      printStr = "&nbsp;<IMG SRC=/printer.gif BORDER=0>&nbsp;"; else printStr = "";
-  if(isSMTPhost(el))     smtpStr = "&nbsp;<IMG SRC=/mail.gif BORDER=0>&nbsp;"; else smtpStr = "";
+  if(isMultihomed(el))   multihomed = "&nbsp;<IMG ALT=\"Multihomed host\" SRC=/multihomed.gif BORDER=0>&nbsp;"; else multihomed = "";
+  if(gatewayHost(el))    gwStr = "&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>&nbsp;"; else gwStr = "";
+  if(nameServerHost(el)) dnsStr = "&nbsp;<IMG ALT=\"DNS Server\" SRC=/dns.gif BORDER=0>&nbsp;"; else dnsStr = "";
+  if(isPrinter(el))      printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>&nbsp;"; else printStr = "";
+  if(isSMTPhost(el))     smtpStr = "&nbsp;<IMG ALT=\"Mail Server (SMTP)\" SRC=/mail.gif BORDER=0>&nbsp;"; else smtpStr = "";
   
   switch(isHostHealthy(el)) {
   case 0: /* OK */
     healthStr = "";
     break;
   case 1: /* Warning */
-    healthStr = "<IMG SRC=/Risk_medium.gif BORDER=0>";
+    healthStr = "<IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif BORDER=0>";
     break;
   case 2: /* Error */
-    healthStr = "<IMG SRC=/Risk_high.gif BORDER=0>";
+    healthStr = "<IMG ALT=\"High Risk\" SRC=/Risk_high.gif BORDER=0>";
     break;
   }  
  
@@ -430,10 +430,10 @@ char* getCountryIconURL(char* domainName) {
       if(stat(path, &buf) != 0)
 	return("&nbsp;");
     }
-
+    
     if(snprintf(flagBuf, sizeof(flagBuf), 
-		"<IMG ALIGN=MIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
-		domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		"<IMG ALT=\"Flag for domain %s\"  ALIGN=MIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
+		domainName, domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     return(flagBuf);
   }
@@ -602,6 +602,7 @@ static void printMutexStatus(PthreadMutex *mutexId, char *mutexName) {
 
 void printNtopConfigInfo(void) {
   char buf[BUF_SIZE];
+  int i;
 #ifdef HAVE_PCAP_VERSION
   extern char pcap_version[];
 #endif /* HAVE_PCAP_VERSION */
@@ -613,6 +614,18 @@ void printNtopConfigInfo(void) {
   printFeatureConfigInfo("OS", osName);
   printFeatureConfigInfo("ntop version", version);
   printFeatureConfigInfo("Built on", buildDate);
+  
+  /* *************************** */
+
+  sendString("<TR><TH "TH_BG" ALIGN=left>Started as</TH><TD "TD_BG" ALIGN=right>");
+  for(i=0; i<ntop_argc; i++) {
+    sendString(ntop_argv[i]);
+    sendString(" ");
+  } 
+  sendString("</TD></TR>\n");
+
+  /* *************************** */
+
 #ifdef HAVE_PCAP_VERSION
   printFeatureConfigInfo("Libpcap version", pcap_version);
 #endif /* HAVE_PCAP_VERSION */

@@ -93,6 +93,9 @@ int main(int argc, char *argv[]) {
 
   printf("Wait please: ntop is coming up...\n");
 
+  ntop_argc = argc;
+  ntop_argv = argv;
+
 #ifndef WIN32
   if (freopen("/dev/null", "w", stderr) == NULL) {
     traceEvent(TRACE_WARNING,
@@ -138,7 +141,11 @@ int main(int argc, char *argv[]) {
   traceLevel = DEFAULT_TRACE_LEVEL;
   accuracyLevel = HIGH_ACCURACY_LEVEL;
   domainName[0] = '\0';
-  strcpy(mapperURL, "http://jake.ntop.org/cgi-bin/mapper.pl");
+  /*
+    If you need a good mapper look at this
+    http://jake.ntop.org/cgi-bin/mapper.pl
+  */
+  mapperURL[0] = '\0';
   pcapLog = NULL;
   actTime = time(NULL);
   strncpy(dbPath, DBFILE_DIR, sizeof(dbPath));

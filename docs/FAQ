@@ -52,7 +52,7 @@ Q. When I compile ntop I get the following error:
    > make[1]: *** [all-recursive] Error 1
    > make[1]: Leaving directory `/usr/local/src/ntop'
    > make: *** [all-recursive-am] Error 2
-A. It seems that some version of GNU autoconf is broken so
+A. It seems that some versions of GNU autoconf (> 2.13) are broken so
    some macros are not expanded and then the compilation fail.
    Workarounds:
    - downgrade to a stable autoconf version

@@ -109,10 +109,10 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 #endif
 
   /* First check whether the address we search for is cached... */
-  if((data_data.dptr != NULL) 
+  if((data_data.dptr != NULL)
      && (data_data.dsize == (sizeof(StoredAddress)+1))) {
     StoredAddress *retrievedAddress;
-    
+
     retrievedAddress = (StoredAddress*)data_data.dptr;
 #ifdef GDBM_DEBUG
     traceEvent(TRACE_INFO, "Fetched data (2): '%s' [%s]\n",
@@ -142,7 +142,7 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
       traceEvent(TRACE_ERROR, "Dropped data for %s [wrong data size]", keyBuf);
     else
       traceEvent(TRACE_ERROR, "Unable to retrieve %s", keyBuf);
-#endif    
+#endif
 
     /* It might be that the size of the retieved data is wrong */
     if(data_data.dptr != NULL) free(data_data.dptr);
@@ -154,7 +154,7 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 #ifdef HAVE_GETIPNODEBYADDR
     int error_num;
 #endif
-    
+
 #ifdef DNS_DEBUG
     traceEvent(TRACE_INFO, "Resolving %s...", intoa(*hostAddr));
 #endif
@@ -172,8 +172,8 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
       int i, len;
 
       myAddr.s_addr = hostAddr->s_addr;
-      if(snprintf(buffer, sizeof(buffer), 
-		  "/usr/bin/host %s", 
+      if(snprintf(buffer, sizeof(buffer),
+		  "/usr/bin/host %s",
 		  intoa(myAddr)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
 
@@ -183,7 +183,7 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 	tmpBuf[0] = '\0';
       } else {
 	char *rspStr;
-	
+
 	memset(tmpBuf, 0, sizeof(tmpBuf));
 	rspStr = fgets(tmpBuf, sizeof(tmpBuf), fd);
 	pclose(fd);
@@ -199,13 +199,13 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 
       len = strlen(tmpBuf);
       if(len > 0) {
-	tmpBuf[--len] = '\0'; 
+	tmpBuf[--len] = '\0';
 
 	for(i=len; i>0; i--)
 	  if(tmpBuf[i] == ' ')
 	    break;
       }
-      
+
       if((len > 0) && (i > 0) && (tmpBuf[i] == ' ')) {
 	res = &tmpBuf[i+1];
 	numResolvedWithDNSAddresses++;
@@ -225,8 +225,8 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 			  sizeof(struct in_addr), AF_INET,
 			  &error_num);
 #else /* default */
-    hp = (struct hostent*)gethostbyaddr((char*)&theAddr, 
-					sizeof(struct in_addr), 
+    hp = (struct hostent*)gethostbyaddr((char*)&theAddr,
+					sizeof(struct in_addr),
 					AF_INET);
 #endif
 
@@ -302,7 +302,7 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
   data_data.dsize = sizeof(storedAddress)+1;
 
   updateHostNameInfo(addr, symAddr);
-  
+
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "resolveAddress-4");
 #endif
@@ -348,7 +348,7 @@ static void queueAddress(struct in_addr elem) {
    traceEvent(TRACE_INFO, "Dropping address!!! [addr queue=%d/max=%d]\n",
 	      addressQueueLen, maxAddressQueueLen);
 #endif
-    /* The address is kept in numerical form (i.e. no conversion will take place) */  
+    /* The address is kept in numerical form (i.e. no conversion will take place) */
     numKeptNumericAddresses++;
     droppedAddresses++;
 #ifdef HAVE_SCHED_H
@@ -404,7 +404,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     traceEvent(TRACE_INFO, "Waiting for address...\n");
 #endif
 
-    while((addressQueueLen == 0) 
+    while((addressQueueLen == 0)
 	  && (capturePackets) /* Courtesy of Wies-Software <wies@wiessoft.de> */
 	  ) {
 #ifdef USE_SEMAPHORES
@@ -507,7 +507,7 @@ void ipaddr2str(struct in_addr hostIpAddress) {
   datum key_data;
   datum data_data;
 #endif
-  
+
   if((addr == INADDR_BROADCAST) || (addr == 0x0)) {
     updateHostNameInfo(hostIpAddress.s_addr, _intoa(hostIpAddress, buf, sizeof(buf)));
     return;
@@ -515,10 +515,10 @@ void ipaddr2str(struct in_addr hostIpAddress) {
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
- 
+
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(key_data.dptr)+1;
-  
+
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "ipaddr2str");
 #endif
@@ -530,10 +530,10 @@ void ipaddr2str(struct in_addr hostIpAddress) {
   releaseMutex(&gdbmMutex);
 #endif
 
-  if((data_data.dptr != NULL) 
+  if((data_data.dptr != NULL)
      && (data_data.dsize == (sizeof(StoredAddress)+1))) {
     StoredAddress *retrievedAddress;
-    
+
     retrievedAddress = (StoredAddress*)data_data.dptr;
 
 #ifdef GDBM_DEBUG
@@ -547,7 +547,7 @@ void ipaddr2str(struct in_addr hostIpAddress) {
       traceEvent(TRACE_ERROR, "Dropped data for %s [wrong data size]", tmpBuf);
     else
       traceEvent(TRACE_ERROR, "Unable to retrieve %s", tmpBuf);
-#endif    
+#endif
 
     /* It might be that the size of the retieved data is wrong */
     if(data_data.dptr != NULL) free(data_data.dptr);
@@ -652,7 +652,7 @@ static u_char fddi_bit_swap[] = {
 void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc, char *fdst)
 {
   int i;
-  
+
   for (i = 0; i < 6; ++i)
     fdst[i] = fddi_bit_swap[fddip->dhost[i]];
   for (i = 0; i < 6; ++i)
@@ -1096,7 +1096,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     if (cp > eom)
       return(transactionId);
   }
-  
+
   /* Skip over rest of question section. */
   while (qdcount-- > 0) {
     n = (short)_dn_skipname(cp, eom);
@@ -1142,7 +1142,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     } else if (type == T_PTR) {
       /*
        * Found a "pointer" to the real name.
-       * 
+       *
        * E.g. : 89.10.67.213.in-addr.arpa
        *
        */
@@ -1155,16 +1155,16 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
       strncpy(dnsBuf, bp, len);
 
       d = strtok(dnsBuf, ".");
-      c = strtok(NULL, ".");    
+      c = strtok(NULL, ".");
       b = strtok(NULL, ".");
       a = strtok(NULL, ".");
-      
+
       if(a && b && c && d) {
 	theDNSaddr = htonl(atoi(a)*(256*256*256)+atoi(b)*(256*256)+atoi(c)*256+atoi(d));
 	memcpy(&addr_list[addr_list_idx++], (char*)&theDNSaddr, sizeof(char*));
 	hostPtr->addrLen = INADDRSZ;
 	hostPtr->addrList[0] = theDNSaddr;
-	
+
 	n = (short)dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
 	if (n < 0) {
 	  cp += n;
@@ -1304,7 +1304,7 @@ void checkSpoofing(u_int idxToCheck) {
 	/* Spoofing detected */
 	FilterRule spoofing;
 
-	
+
 	if((!hasDuplicatedMac(el))
 	   && (!hasDuplicatedMac(device[actualDeviceId].hash_hostTraffic[idxToCheck]))) {
 	  FD_SET(HOST_DUPLICATED_MAC, &device[actualDeviceId].hash_hostTraffic[idxToCheck]->flags);
@@ -1320,8 +1320,8 @@ void checkSpoofing(u_int idxToCheck) {
 		    idxToCheck, -1, 0, 0);
 
 	  if(enableSuspiciousPacketDump) {
-	    traceEvent(TRACE_WARNING, 
-		       "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)", 
+	    traceEvent(TRACE_WARNING,
+		       "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)",
 		       el->hostNumIpAddress,
 		       device[actualDeviceId].hash_hostTraffic[idxToCheck]->ethAddressString,
 		       el->ethAddressString);
@@ -1338,13 +1338,13 @@ void checkSpoofing(u_int idxToCheck) {
 /* ****************************************** */
 
 /*
-  Let's remove from the database those entries that 
+  Let's remove from the database those entries that
   have been added a while ago
 */
 
 #define ADDRESS_PURGE_TIMEOUT 12*60*60 /* 12 hours */
 
-void cleanupHostEntries() { 
+void cleanupHostEntries() {
   datum data_data, key_data, return_data;
   u_int numDbEntries = 0;
 
@@ -1381,10 +1381,12 @@ void cleanupHostEntries() {
     }
 #ifdef MULTITHREADED
     releaseMutex(&gdbmMutex);
+#ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads to run */
 #endif
-  
+#endif
+
     if(data_data.dptr != NULL) free(data_data.dptr);
     free(key_data.dptr);
-  }    
+  }
 }

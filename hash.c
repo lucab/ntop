@@ -166,8 +166,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   u_int idx, *mappings;
   float multiplier;
   u_int i, j, newSize, mappingsSize;
-  struct hostTraffic **hash_hostTraffic;
-  short numCmp = 0;
+  struct hostTraffic **hash_hostTraffic;  
   struct ipGlobalSession *scanner=NULL;
 
   if(!capturePackets)
@@ -240,7 +239,24 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   for(i=1; i<device[deviceToExtend].actualHashSize; i++)
     if((i != otherHostEntryIdx) 
        && (device[deviceToExtend].hash_hostTraffic[i] != NULL)) {
-      idx = computeInitialHashIdx(&device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress,
+      struct in_addr *hostIpAddress;
+      short numCmp = 0;
+
+      /*
+	This is very important as computeInitialHashIdx() behaves
+	*very* differently when the first argument is NULL. As 
+	hash_hostTraffic[i]->hostIpAddress is never NULL at best its value
+	is 0x0 so the pointer to hash_hostTraffic[i]->hostIpAddress is never
+	NULL even if the value is 0x0. For this reason the variable
+	hostIpAddress has been added.
+      */
+
+      if(device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress.s_addr == 0x0)
+	hostIpAddress = NULL;
+      else
+	hostIpAddress = &device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress;
+
+      idx = computeInitialHashIdx(hostIpAddress,
 				  device[deviceToExtend].hash_hostTraffic[i]->ethAddress,
 				  &numCmp);
 
