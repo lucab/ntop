@@ -1491,9 +1491,7 @@ dnl> Following used by regex.c only
 AC_CHECK_FUNCS([bzero])
 
 AC_CHECK_FUNCS([pcap_freecode])
-echo "()))))))))))))))))))))))))))))))))))))))))"
 AC_CHECK_FUNCS([pcap_open_dead])
-echo "()))))))))))))))))))))))))))))))))))))))))"
 
 dnl> Check if malloc.h has mallinfo...
 AC_MSG_CHECKING([for mallinfo in malloc.h])

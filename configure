@@ -19610,7 +19610,6 @@ _ACEOF
 fi
 done
 
-echo "()))))))))))))))))))))))))))))))))))))))))"
 
 for ac_func in pcap_open_dead
 do
@@ -19687,7 +19686,6 @@ _ACEOF
 fi
 done
 
-echo "()))))))))))))))))))))))))))))))))))))))))"
 
 echo "$as_me:$LINENO: checking for mallinfo in malloc.h" >&5
 echo $ECHO_N "checking for mallinfo in malloc.h... $ECHO_C" >&6
