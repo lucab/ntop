@@ -527,18 +527,32 @@ void updateThpt(void) {
 
 /* ******************************* */
 
+/* Check if a host can be potentially added the host matrix */
+int isMatrixHost(HostTraffic *host, int actualDeviceId) {
+  if((deviceLocalAddress(&host->hostIpAddress, actualDeviceId) || multicastHost(host))
+     && (!broadcastHost(host)))
+    return(1);
+  else
+    return(0);
+}
+
+/* ******************************* */
+
+unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId) {
+  return((unsigned int)(host->hostIpAddress.s_addr) % myGlobals.device[actualDeviceId].numHosts);
+}
+
+/* ******************************* */
+
 void updateTrafficMatrix(HostTraffic *srcHost,
 			 HostTraffic *dstHost,
 			 TrafficCounter length, 
 			 int actualDeviceId) {
-  if((deviceLocalAddress(&srcHost->hostIpAddress, actualDeviceId) || multicastHost(srcHost))
-     && (deviceLocalAddress(&dstHost->hostIpAddress, actualDeviceId) || multicastHost(dstHost))
-     && (!broadcastHost(srcHost))
-     && (!broadcastHost(dstHost))) {
-    unsigned long a, b, id;    
+  if(isMatrixHost(srcHost, actualDeviceId) 
+     && isMatrixHost(dstHost, actualDeviceId)) {
+    unsigned int a, b, id;    
 
-    a = (unsigned long)(srcHost->hostIpAddress.s_addr) % myGlobals.device[actualDeviceId].numHosts;
-    b = (unsigned long)(dstHost->hostIpAddress.s_addr) % myGlobals.device[actualDeviceId].numHosts;
+    a = matrixHostHash(srcHost, actualDeviceId), b = matrixHostHash(dstHost, actualDeviceId);
 
     myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[a] = srcHost, 
       myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[b] = dstHost;

@@ -332,7 +332,8 @@ void updateUsedPorts(HostTraffic *srcHost,
 /* ************************************ */
 
 void freeSession(IPSession *sessionToPurge, int actualDeviceId,
-		 u_char allocateMemoryIfNeeded) {
+		 u_char allocateMemoryIfNeeded,
+		 u_char lockMutex /* unused so far */) {
   /* Session to purge */
 
   if(sessionToPurge->magic != CONST_MAGIC_NUMBER) {
@@ -478,7 +479,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	  prevSession->next = nextSession;
 
 	freeSessionCount++;
-	freeSession(theSession, actualDeviceId, 1);
+	freeSession(theSession, actualDeviceId, 1, 0 /* locked by the purge thread */);
 	theSession = prevSession;
       } else /* This session will NOT be freed */ {
 	prevSession = theSession;
@@ -616,7 +617,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  } else
 	    prevSession->next = nextSession;
 
-	  freeSession(theSession, actualDeviceId, 1);
+	  freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
 	  theSession = prevSession;
 	} else {
 	  prevSession = theSession;
@@ -1918,7 +1919,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       } else
 	prevSession->next = theSession->next;
 
-      freeSession(theSession, actualDeviceId, 1);
+      freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
 #ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif

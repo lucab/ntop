@@ -1014,10 +1014,8 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
     traceEvent(CONST_TRACE_ERROR,
                "ERROR: createMutex() call returned %d(%d) [%s:%d]\n",
                rc, errno, fileName, fileLine);
-  } else {
-
+  } else {    
     mutexId->isInitialized = 1;
-
   }
 
   return(rc);

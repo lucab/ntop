@@ -282,6 +282,8 @@ extern void termIPSessions(void);
 
 /* traffic.c */
 extern void updateThpt(void);
+extern int isMatrixHost(HostTraffic *host, int actualDeviceId);
+extern unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId);
 extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
                                 TrafficCounter length, int actualDeviceId);
 extern void updateDbHostsTraffic(int deviceToUpdate);
@@ -512,7 +514,7 @@ extern void sendOTHERflow(HostTraffic *srcHost, HostTraffic *dstHost,
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
-extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, u_char allocateMemoryIfNeeded);
+extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);

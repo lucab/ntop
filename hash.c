@@ -21,6 +21,9 @@
 #include "ntop.h"
 
 static float timeval_subtract (struct timeval x, struct timeval y); /* forward */
+
+#define HASH_DEBUG
+
 #ifdef HASH_DEBUG
 static void hashSanityCheck();
 static void hostHashSanityCheck(HostTraffic *host);
@@ -141,7 +144,8 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 	} else
 	  prevSession->next = nextSession;
 
-	freeSession(theSession, theDevice, 0 /* don't allocate */);
+	freeSession(theSession, theDevice, 0 /* don't allocate */, 
+		    0 /* locked by the purge thread */);
 	theSession = prevSession;
       } else {
 	prevSession = theSession;
@@ -182,9 +186,31 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   if((host == NULL) || myGlobals.device[actualDeviceId].dummyDevice)
     return;
 
+  /* If this is one of the special ones, let's clear the other pointer to it
+   * to prevent a free of freed memory error later.
+   */
+  if(host == myGlobals.otherHostEntry) {
+    traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(otherHostEntry)");
+    return;
+  }
+  
+  if(host == myGlobals.broadcastEntry) {
+    traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(broadcastEntry)");
+    return;
+  }
+
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Entering freeHostInfo(%u)", host->hostTrafficBucket);
 #endif
+
+  /* ********** */
+
+  /* Make sure this host is not part of the ipTrafficMatrixHosts list */  
+  if(isMatrixHost(host, actualDeviceId)) {
+    myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[matrixHostHash(host, actualDeviceId)] = NULL;
+  }
+
+  freeHostSessions(host, actualDeviceId);
 
   myGlobals.device[actualDeviceId].hostsno--;
 
@@ -308,13 +334,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   /* ********** */
 
-  /* If this is one of the special ones, let's clear the other pointer to it
-   * to prevent a free of freed memory error later.
-   */
-  if (host == myGlobals.otherHostEntry)
-      myGlobals.otherHostEntry = NULL;
-  if (host == myGlobals.broadcastEntry)
-      myGlobals.broadcastEntry = NULL;
   /*
     Do not free the host pointer but add it to
     a list of 'ready to use' pointers.
@@ -450,15 +469,15 @@ void purgeIdleHosts(int actDevice) {
   purgeTime = startTime-PARM_HOST_PURGE_INTERVAL; /* Time used to decide whether a host need to be purged */
 
 #ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
-#endif
-
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
 #endif
   purgeOldFragmentEntries(actDevice); /* let's do this too */
 #ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
 #endif
 
   /* Calculates entries to free */
@@ -502,7 +521,7 @@ void purgeIdleHosts(int actDevice) {
 	    el = el->next;
 	  } else {
 	    prev->next = el->next;
-	    prev = el; el = el->next;
+	    el = el->next;
 	  }
 
 	  if(maxBucket >= (len-1)) {
@@ -670,7 +689,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 
   while(el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
-       traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
+      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
 		 CONST_MAGIC_NUMBER, el->magic);
     }
     if(el->hostTrafficBucket != idx) {
@@ -1069,8 +1088,6 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
 }
 
 /* ************************************ */
-/* ************************************ */
-/* ************************************ */
 
 #ifdef HASH_DEBUG
 
@@ -1125,13 +1142,5 @@ static void hostHashSanityCheck(HostTraffic *host) {
   }
 }
 
-/* Debug only */
-static void dumpHash() {
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
-      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-    traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: (%3d) %s / %s",
-	       i, el->ethAddressString, el->hostNumIpAddress);
-  }
-}
 #endif /* HASH_DEBUG */
 

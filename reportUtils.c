@@ -867,7 +867,7 @@ int sortHostFctn(const void *_a, const void *_b) {
       nameB = (*b)->nonIPTraffic->nbHostName;
     else if((*b)->nonIPTraffic->atNodeName != NULL)
       nameB = (*b)->nonIPTraffic->atNodeName;
-    else if((*a)->nonIPTraffic->atNetwork != 0) {
+    else if((*b)->nonIPTraffic->atNetwork != 0) {
       if(snprintf(nameB_str, sizeof(nameB_str), "%d.%d",
 		  (*b)->nonIPTraffic->atNetwork, (*b)->nonIPTraffic->atNode) < 0)
 	BufferTooShort();
@@ -4147,21 +4147,20 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
   if(textPrintFlag == TRUE) {
     if(mutexId->lockAttemptLine > 0) {
         if(snprintf(buf, sizeof(buf),
-                    "Mutex %s, is %s.\n"
+                    "Mutex %s is %s.\n"
                     "     locked: %u times, last was %s:%d(%d)\n"
-                    "     Blocked: at %s:%d%(d)\n",
+                    "     blocked: at %s:%d%(%d)\n",
+                    mutexName, mutexId->isLocked ? "locked" : "unlocked",
+                    mutexId->numLocks, mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid) < 0)
+          BufferTooShort();
+		    sendString(buf);
+
+        if(snprintf(buf, sizeof(buf),
                     "     unlocked: %u times, last was %s:%d(%d)\n"
                     "     longest: %d sec from %s:%d\n",
-                    mutexName,
-                    mutexId->isLocked ? "locked" : "unlocked",
-                    mutexId->numLocks,
-                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
-                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
-                    mutexId->numReleases,
-                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-                    mutexId->maxLockedDuration,
-                    mutexId->maxLockedDurationUnlockFile,
-                    mutexId->maxLockedDurationUnlockLine) < 0)
+                    mutexId->numReleases, mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
+                    mutexId->maxLockedDuration, mutexId->maxLockedDurationUnlockFile, mutexId->maxLockedDurationUnlockLine) < 0)
           BufferTooShort();
     } else {
         if(snprintf(buf, sizeof(buf),
