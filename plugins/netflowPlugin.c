@@ -637,7 +637,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   signal(SIGTERM, netflowcleanup);
   signal(SIGUSR1, netflowcleanup);
   signal(SIGUSR2, netflowcleanup);
-  signal(SIGCHLD, netflowcleanup);
+  /* signal(SIGCHLD, netflowcleanup); */
 #ifdef SIGCONT
   signal(SIGCONT, netflowcleanup);
 #endif
