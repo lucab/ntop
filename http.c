@@ -1487,13 +1487,7 @@ static int returnHTTPPage(char* pageName,
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
 
-    if((!myGlobals.debugMode) 
-       && (!myGlobals.largeNetwork) /*
-				      On a large network we probably use a lot of memory
-				      so a fork() will require even more memory and this
-				      is not what we want
-				    */       
-       ) {
+    if(!myGlobals.debugMode) {
 #ifdef HANDLE_DIED_CHILD
       handleDiedChild(0); /*
 			    Workaround because on this OpenBSD and
@@ -1863,7 +1857,6 @@ static int returnHTTPPage(char* pageName,
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
-#ifdef CFG_USE_GRAPHICS
     } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawThptGraph(sortedColumn);
@@ -1993,7 +1986,6 @@ static int returnHTTPPage(char* pageName,
 	printTrailer=0;
       }
     }
-#endif /* CFG_USE_GRAPHICS */
     } else if(strcmp(pageName, "Credits.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("Credits", BITFLAG_HTML_NO_REFRESH);

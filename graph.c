@@ -25,8 +25,6 @@
 
 #include "ntop.h"
 
-#ifdef CFG_USE_GRAPHICS
-
 #define _GRAPH_C_
 #include "globals-report.h"
 
@@ -1635,5 +1633,4 @@ int drawHostsDistanceGraph(int checkOnly) {
 
 /* ************************ */
 
-#endif /* CFG_USE_GRAPHICS */
 

@@ -1459,8 +1459,6 @@ XML*/
 
   char *currentFilterExpression;     /* 'B' */
                                      /*XML s currentFilterExpression Options "-B | --filter-expression" */
-  u_char largeNetwork;               /* 'C' */
-                                     /*XML b largeNetwork         Options    "-C | --large-network" */
   char domainName[MAXHOSTNAMELEN];   /* 'D' */
                                      /*XML s domainName           Options    "-D | --domain" */
   u_char enableExternalTools;        /* 'E' */
@@ -1505,9 +1503,6 @@ XML*/
 
   int dynamicPurgeLimits;            /* '134' */
                                      /*XML n dynamicPurgeLimits   Options    "--dynamic-purge-limits" */
-
-  int reuseRRDgraphics;              /* '136' */
-                                     /*XML b reuseRRDgraphics     Options    "--reuse-rrd-graphics" */
 
   char *P3Pcp;                       /* '137' */
                                      /*XML s P3Pcp                Options    "--p3p-cp" */

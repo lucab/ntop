@@ -94,7 +94,6 @@ static struct option const long_options[] = {
   { "http-server",                      required_argument, NULL, 'w' },
   { "disable-sessions",                 no_argument,       NULL, 'z' },
   { "filter-expression",                required_argument, NULL, 'B' },
-  { "large-network",                    no_argument,       NULL, 'C' },
   { "domain",                           required_argument, NULL, 'D' },
 
 #ifndef WIN32
@@ -139,9 +138,7 @@ static struct option const long_options[] = {
   { "dynamic-purge-limits",             no_argument,       NULL, 134 },
   { "set-admin-password",               optional_argument, NULL, 135 },
 
-#ifdef HAVE_RRD
   { "reuse-rrd-graphics",               no_argument,       NULL, 136 },
-#endif
 
   { "p3p-cp",                           required_argument, NULL, 137 },
   { "p3p-uri",                          required_argument, NULL, 138 },
@@ -520,10 +517,6 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.currentFilterExpression = strdup(optarg);
       break;
 
-    case 'C':
-      myGlobals.largeNetwork = 1;
-      break;
-
     case 'D':                                        /* domain */
       stringSanityCheck(optarg);
       strncpy(myGlobals.domainName, optarg, MAXHOSTNAMELEN);
@@ -678,12 +671,6 @@ static int parseOptions(int argc, char* argv []) {
         setAdminPw = 1;
       }
       break;
-
-#ifdef HAVE_RRD
-    case 136:
-      myGlobals.reuseRRDgraphics = 1;
-      break;
-#endif
 
     case 137:
       stringSanityCheck(optarg);

@@ -781,8 +781,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       if(isMultihomed)
 	FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
 
-      if(!myGlobals.largeNetwork)
-	el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
+      el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
 
       len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
       if ( (el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len)) == NULL) return;

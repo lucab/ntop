@@ -32,13 +32,8 @@
 #define TR_ON     ""
 #endif
 
-#ifdef WIN32
-#define CHART_FORMAT ".gif"
-#define MIME_TYPE_CHART_FORMAT FLAG_HTTP_TYPE_GIF
-#else
 #define CHART_FORMAT ".png"
 #define MIME_TYPE_CHART_FORMAT FLAG_HTTP_TYPE_PNG
-#endif
 
 /*
   Courtesy of

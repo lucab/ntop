@@ -1988,10 +1988,8 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   char buf[LEN_GENERAL_WORK_BUFFER];
-#ifdef CFG_USE_GRAPHICS
   char linkName[LEN_GENERAL_WORK_BUFFER/2];
   int i;
-#endif
 
   totalSent = el->tcpFragmentsSent.value + el->udpFragmentsSent.value + el->icmpFragmentsSent.value;
   totalRcvd = el->tcpFragmentsRcvd.value + el->udpFragmentsRcvd.value + el->icmpFragmentsRcvd.value;
@@ -2021,7 +2019,6 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->icmpFragmentsRcvd.value/1024,
 			100*((float)SD(el->icmpFragmentsRcvd.value, totalRcvd)));
 
-#ifdef CFG_USE_GRAPHICS
   {
     if((totalSent > 0) || (totalRcvd > 0)) {
       if(snprintf(buf, sizeof(buf),
@@ -2096,7 +2093,6 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       sendString("</TD></TR>");
     }
   }
-#endif
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
@@ -2108,10 +2104,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   Counter actTotalSent, actTotalRcvd;
   char buf[LEN_GENERAL_WORK_BUFFER];
-#ifdef CFG_USE_GRAPHICS
   char linkName[LEN_GENERAL_WORK_BUFFER/2];
   int i;
-#endif
 
   totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value;
   totalSent += el->icmpSent.value+el->ospfSent.value+el->igmpSent.value+el->ipxSent.value+el->dlcSent.value+el->arp_rarpSent.value;
@@ -2220,7 +2214,6 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->otherRcvd.value/1024,
 			100*((float)SD(el->otherRcvd.value, totalRcvd)));
 
-#ifdef CFG_USE_GRAPHICS
   {
     totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+
       el->udpSentLoc.value+el->udpSentRem.value+
@@ -2306,7 +2299,6 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       }
     }
   }
-#endif
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");

@@ -23340,6 +23340,66 @@ else
 echo "${ECHO_T}ok" >&6
 fi
 
+echo "$as_me:$LINENO: checking for png" >&5
+echo $ECHO_N "checking for png... $ECHO_C" >&6
+if test ".${ac_cv_header_png_h}" != ".yes" ||
+   test ".${ac_cv_lib_png_png_read_info}" != ".yes"; then
+    { echo "$as_me:$LINENO: WARNING: error" >&5
+echo "$as_me: WARNING: error" >&2;}
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: png header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              png.h...${ac_cv_header_png_h}"
+    echo "*              png_read_info() in -lpng...${ac_cv_lib_png_png_read_info}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???        Install libpng (also called png and png-devel)"
+    echo "*???    and Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    { { echo "$as_me:$LINENO: error: Unable to continue... aborting ./configure" >&5
+echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
+   { (exit 1); exit 1; }; }
+else
+    echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6
+fi
+
+echo "$as_me:$LINENO: checking for gd" >&5
+echo $ECHO_N "checking for gd... $ECHO_C" >&6
+if test ".${ac_cv_header_gd_h}" != ".yes" ||
+   test ".${ac_cv_lib_gd_gdImageDestroy}" != ".yes"; then
+    { echo "$as_me:$LINENO: WARNING: error" >&5
+echo "$as_me: WARNING: error" >&2;}
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: gd header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              gd.h...${ac_cv_header_gd_h}"
+    echo "*              gdImageDestroy() in -lgd...${ac_cv_lib_gd_gdImageDestroy}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???        Install gd (and/or gd-devel)"
+    echo "*???    and Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    { { echo "$as_me:$LINENO: error: Unable to continue... aborting ./configure" >&5
+echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
+   { (exit 1); exit 1; }; }
+else
+    echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6
+fi
+
 echo
 echo "-------------------------------------------------------------------"
 echo
@@ -24291,16 +24351,6 @@ fi
 
 cat >>confdefs.h <<_ACEOF
 #define RETSIGTYPE void
-_ACEOF
-
-
-cat >>confdefs.h <<_ACEOF
-#define CFG_USE_GRAPHICS 1
-_ACEOF
-
-
-cat >>confdefs.h <<_ACEOF
-#define HAVE_RRD 1
 _ACEOF
 
 # Expansion of NTOP_APPEND_LIBS($MYRRD, myrrd)

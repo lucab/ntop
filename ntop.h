@@ -386,9 +386,7 @@ ntop.h
 #endif
 #endif
 
-#ifdef HAVE_RRD_H
 #include "rrd.h"
-#endif
 
 #ifdef HAVE_GETOPT_H
 #include "getopt.h"

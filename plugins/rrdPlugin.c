@@ -53,8 +53,6 @@ static const char *rrd_subdirs[] =
 #include "ntop.h"
 #include "globals-report.h"
 
-#ifdef HAVE_RRD
-
 static void setPluginStatus(char * status);
  
 #ifdef WIN32
@@ -74,11 +72,11 @@ pthread_t rrdThread;
 
 static u_short dumpFlows, dumpHosts, dumpInterfaces, dumpMatrix, shownCreate=0;
 
-static Counter rrdGraphicRequests=0, rrdGraphicReuse=0;
+static Counter rrdGraphicRequests=0;
 
 static DIR * workDir;
 static struct dirent *workDirent;
-struct tm workT;
+
 
 #ifdef RRD_DEBUG
 char startTimeBuf[32], endTimeBuf[32], fileTimeBuf[32];
@@ -412,7 +410,6 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 		  char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[32], buf[384], buf1[384], fname[384], *label;
   struct stat statbuf;
-  struct stat reusebuf;
   int argc = 0, rc, x, y;
 
   sprintf(path, "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
@@ -437,40 +434,11 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
   rrdGraphicRequests++;
 
   if(stat(path, &statbuf) == 0) {
-    rc = stat(fname, &reusebuf);
-
-#if RRD_DEBUG >= 2
-    strftime(startTimeBuf, sizeof(startTimeBuf), "%H:%M:%S", localtime_r(&start_tm, &workT));
-    strftime(endTimeBuf,   sizeof(endTimeBuf), "%H:%M:%S", localtime_r(&end_tm, &workT));
-    strftime(fileTimeBuf,  sizeof(fileTimeBuf), "%H:%M:%S", localtime_r(&reusebuf.st_mtime, &workT));
-    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Reuse of '%s' (%s > %s > %s)? is %spossible...\n",
-	       fname,
-	       startTimeBuf,
-	       fileTimeBuf,
-	       endTimeBuf,
-	       ( (reusebuf.st_mtime > start_tm) && (reusebuf.st_mtime < end_tm) ) ? "" : "NOT " );
-#endif
-
-    if (rc != 0) {
-      if (errno != ENOENT)
-	traceEvent(CONST_TRACE_ERROR, "RRD: lookup of file '%s' failed, %d", fname, errno);
-      reusebuf.st_mtime = 0;
-    }
-
-    if ( (reusebuf.st_mtime <= start_tm) || (reusebuf.st_mtime >= end_tm) ) {
-      /* Recreate - delete existing and make a new one */
-      if ( (unlink(fname) != 0) && (errno != ENOENT) ) {
-	traceEvent(CONST_TRACE_ERROR, "RRD: unlink('%s') failed, %d...\n", fname, errno);
-      }
       argv[argc++] = "rrd_graph";
       argv[argc++] = fname;
       argv[argc++] = "--lazy";
       argv[argc++] = "--imgformat";
-#ifdef WIN32
-      argv[argc++] = "GIF";
-#else
       argv[argc++] = "PNG";
-#endif
       argv[argc++] = "--vertical-label";
       argv[argc++] = label;
       argv[argc++] = "--start";
@@ -500,13 +468,6 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
       calfree();
 
-    } else {
-
-      /* Reuse, so we tell the code below that the "create" worked! */
-      rrdGraphicReuse++;
-      rc = 0;
-    } 
-
 
     if(rc == 0) {
 #ifdef WIN32
@@ -514,7 +475,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 #else
       sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0);
 #endif
-      sendGraphFile(fname, myGlobals.reuseRRDgraphics /* Do we unlink? 0=yes, 1=no */);
+      sendGraphFile(fname, 0);
     } else {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("RRD Graph", 0);
@@ -712,6 +673,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
         if (!strcmp(rrdError, "error: illegal attempt to update using time")) {
             char errTimeBuf1[32], errTimeBuf2[32], errTimeBuf3[32];
             time_t rrdLast;
+	    struct tm workT;
+
             strftime(errTimeBuf1, sizeof(errTimeBuf1), "%Y-%m-%d %H:%M:%S", localtime_r(&myGlobals.actTime, &workT));
             strftime(errTimeBuf2, sizeof(errTimeBuf2), "%H:%M:%S", localtime_r(&rrdTime, &workT));
             argc = 0;
@@ -1198,18 +1161,11 @@ static void handleRRDHTTPrequest(char* url) {
   sendString(buf);
 
   sendString("<TR><TH ALIGN=LEFT>RRD Graphic Requests</TH><TD>");
-  if (myGlobals.reuseRRDgraphics) {
-    if(snprintf(buf, sizeof(buf), "%lu RRD graphics requested (%lu reused)</TD></TR>\n",
-		(unsigned long)rrdGraphicRequests,
-		(unsigned long)rrdGraphicReuse) < 0)
-      BufferTooShort();
-  } else {
-    if(snprintf(buf, sizeof(buf), "%lu RRD graphics requested</TD></TR>\n",
-		(unsigned long)rrdGraphicRequests) < 0) 
-      BufferTooShort();
-  }
+  if(snprintf(buf, sizeof(buf), "%lu RRD graphics requested</TD></TR>\n",
+	      (unsigned long)rrdGraphicRequests) < 0) 
+    BufferTooShort();
   sendString(buf);
-
+  
   sendString("<TD COLSPAN=2 ALIGN=center><INPUT TYPE=submit VALUE=Set></td></FORM></tr>\n");
   sendString("</TABLE>\n<p></CENTER>\n");
 
@@ -1691,11 +1647,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
         break;
     }
 
-    /* If we're reusing, every 5th cycle (25m), purge the old graphics */
-    if ( (!myGlobals.reuseRRDgraphics) || (cycleCount % 5 != 0) ) {
-      continue;
-    }
-
     purgeCountFiles=0;
     purgeCountUnlink=0;
     purgeCountErrors=0;
@@ -1819,19 +1770,6 @@ static void termRRDfunct(void) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Done");
   fflush(stdout);
 }
-
-#else /* HAVE_RRD */
-
-static void initRRDfunct(void) { }
-static void termRRDfunct(void) { }
-static void handleRRDHTTPrequest(char* url) {
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-  printHTMLheader("RRD Preferences", 0);
-  printFlagedWarning("<I>This plugin is disabled as ntop has not been compiled with RRD support</I>");
-  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
-}
-
-#endif /* HAVE_RRD */
 
 /* ************************************* */
 

@@ -194,10 +194,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   myGlobals.dynamicPurgeLimits = 0;
 
-#ifdef HAVE_RRD
-  myGlobals.reuseRRDgraphics = 0;
-#endif
-
   /* Other flags (to be set via command line options one day) */
   myGlobals.enableFragmentHandling = 1;
 

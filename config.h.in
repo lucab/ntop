@@ -36,9 +36,6 @@
 /* ntop built for unknown machine */
 #undef CFG_UNKNOWN_ENDIAN
 
-/* ntop built with graphics support (provided by RRD) */
-#undef CFG_USE_GRAPHICS
-
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
    */
@@ -113,6 +110,9 @@
 
 /* Define to 1 if you have the <gdome.h> header file. */
 #undef HAVE_GDOME_H
+
+/* Define to 1 if you have the <gd.h> header file. */
+#undef HAVE_GD_H
 
 /* Define to 1 if you have the `gethostbyaddr' function. */
 #undef HAVE_GETHOSTBYADDR
@@ -346,6 +346,9 @@
 /* Define to 1 if you have the `pcap_open_dead' function. */
 #undef HAVE_PCAP_OPEN_DEAD
 
+/* Define to 1 if you have the <png.h> header file. */
+#undef HAVE_PNG_H
+
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
 
@@ -366,9 +369,6 @@
 
 /* Define to 1 if you have the `re_comp' function. */
 #undef HAVE_RE_COMP
-
-/* ntop is built with RRD support (myrrd/) */
-#undef HAVE_RRD
 
 /* Define to 1 if you have the <sched.h> header file. */
 #undef HAVE_SCHED_H
