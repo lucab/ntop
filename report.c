@@ -375,7 +375,7 @@ void printTrafficStatistics(int revertOrder) {
     sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
     if(snprintf(buf, sizeof(buf),
 		"For device: '%s' (current reporting device)",
-		myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
+		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
       BufferTooShort();
     printSectionTitle(buf);
     sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");

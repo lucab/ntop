@@ -943,7 +943,7 @@ void switchNwInterface(int _interface) {
 	  selected = "";
 
 	if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
-		    i+1, selected, myGlobals.device[i].name) < 0) BufferTooShort();
+		    i+1, selected, myGlobals.device[i].humanFriendlyName) < 0) BufferTooShort();
 
 	sendString(buf);
       }

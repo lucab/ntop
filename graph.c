@@ -1372,7 +1372,7 @@ void interfaceTrafficPie(void) {
   for(i=0; i<myGlobals.numDevices; i++) {
     if((!myGlobals.device[i].virtualDevice) && (p[i] > 0))  {
       p[myDevices]   = 100*(((float)p[i])/totPkts.value);
-      lbl[myDevices] = myGlobals.device[i].name;
+      lbl[myDevices] = myGlobals.device[i].humanFriendlyName;
       myDevices++;
     }
   }

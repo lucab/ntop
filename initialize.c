@@ -1547,7 +1547,7 @@ void initDevices(char* devices) {
 	  descr[strlen(descr)-1] = '\0';
 
 	strncpy(intNames[ifIdx], devpointer->name, MAX_IF_NAME);
-	strncpy(intDescr[ifIdx], descr, MAX_IF_NAME);
+	snprintf(intDescr[ifIdx], MAX_IF_NAME, "%s_%d", descr, ifIdx);
 
 	if(defaultIdx == -1) {
 	  if((!strstr(intNames[ifIdx], "PPP")) /* Avoid to use the PPP interface */

@@ -2076,11 +2076,7 @@ void queuePacket(u_char *_deviceId,
   traceEvent(CONST_TRACE_INFO, "Got packet from %s (%d)", myGlobals.device[*_deviceId].name, *_deviceId);
 #endif
 
-#ifdef WIN32
-  deviceId = 0;
-#else
   deviceId = (int)_deviceId;
-#endif
 
   incrementTrafficCounter(&myGlobals.device[getActualInterface(deviceId)].receivedPkts, 1);
 
@@ -2463,11 +2459,7 @@ void processPacket(u_char *_deviceId,
   */
   myGlobals.actTime = h->ts.tv_sec;
 
-#ifdef WIN32
-  deviceId = 0;
-#else
   deviceId = (int)_deviceId;
-#endif
 
   actualDeviceId = getActualInterface(deviceId);
 

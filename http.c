@@ -684,7 +684,7 @@ void printHTMLtrailer(void) {
     for(i=len=numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
       if(!myGlobals.device[i].virtualDevice) {
 	if(snprintf(&buf[len], LEN_GENERAL_WORK_BUFFER - len, "%s%s",
-		    (numRealDevices>0) ? "," : "Listening on [", myGlobals.device[i].name) < 0)
+		    (numRealDevices>0) ? "," : "Listening on [", myGlobals.device[i].humanFriendlyName) < 0)
 	  BufferTooShort();
 	numRealDevices++;
       }
