@@ -437,9 +437,11 @@ int initGlobalValues(void) {
     myGlobals.enablePacketDecoding   = 0;
     myGlobals.enableFragmentHandling = 0;
 #ifdef MULTITHREADED
-    myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
+    myGlobals.numDequeueThreads      = MAX_NUM_DEQUEUE_THREADS;
 #endif
-    myGlobals.trackOnlyLocalHosts = 1;
+    myGlobals.trackOnlyLocalHosts    = 1;
+    myGlobals.enableThUpdate         = 0;
+    myGlobals.enableDBsupport        = 0;
   } else {
 #ifdef MULTITHREADED
     myGlobals.numDequeueThreads = 1;
