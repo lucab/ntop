@@ -48,7 +48,6 @@ noinst_PROGRAMS = \
                   netflowPlugin.so \
                   pdaPlugin.so \
                   rrdPlugin.so \
-                  rrdAlarmPlugin.so \
                   sflowPlugin.so \
                   xmldumpPlugin.so
 
@@ -58,7 +57,6 @@ lib_LTLIBRARIES = \
                   libnetflowPlugin.la \
                   libpdaPlugin.la \
                   librrdPlugin.la \
-                  librrdAlarmPlugin.la \
                   libsflowPlugin.la \
                   libxmldumpPlugin.la
 
@@ -77,10 +75,6 @@ libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 librrdPlugin_la_LIBADD = -L../myrrd -lmyrrd
-
-librrdAlarmPlugin_la_SOURCES = rrdAlarmPlugin.c
-librrdAlarmPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-librrdAlarmPlugin_la_LIBADD = -L../myrrd -lmyrrd
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -123,12 +117,6 @@ pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 
 rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
-
-.libs/librrdAlarmPlugin.so@SO_VERSION_PATCH@:
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librrdAlarmPlugin.so@SO_VERSION_PATCH@ rrdAlarmPlugin.o
-
-rrdAlarmPlugin.so$(EXEEXT): .libs/librrdAlarmPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/librrdAlarmPlugin.so rrdAlarmPlugin.so
 
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
