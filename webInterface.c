@@ -2918,10 +2918,12 @@ void initWeb() {
 
 /* **************************************** */
 
+#ifndef WIN32
 void PIPEhandler(int sig) {
     myGlobals.numHandledSIGPIPEerrors++;
     setsignal (SIGPIPE, PIPEhandler);
 }
+#endif
 
 
 /* ******************************************* */
@@ -2935,6 +2937,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
   fd_set mask, mask_copy;
   int topSock = myGlobals.sock;
 
+#ifndef WIN32
   /*
    *  The great ntop "mysterious web server death" fix... and other tales of
    *  sorcery.
@@ -3010,6 +3013,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
           traceEvent(TRACE_INFO, "Note: SIGPIPE handler set\n");
     }
   }
+#endif /* WIN32 */
 
   FD_ZERO(&mask);
 

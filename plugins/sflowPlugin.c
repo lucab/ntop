@@ -158,7 +158,7 @@ struct myicmphdr
 };
 
 
-#ifndef HAVE_IN6_ADDR
+#if (!defined(HAVE_IN6_ADDR)) && (!defined(WIN32))
 struct in6_addr
 {
   union
