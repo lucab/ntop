@@ -2128,6 +2128,154 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   free(tmpTable);
 }
 
+/* ****************************************************************** */
+
+static makeHostName(HostTraffic *el, char *buf, int len) {
+  if(el->hostResolvedName[0] != '\0') strcpy(buf, el->hostResolvedName);
+  else if(el->hostNumIpAddress[0] != '\0') strcpy(buf, el->hostNumIpAddress);
+  else if(el->ethAddressString[0] != '\0') strcpy(buf, el->ethAddressString);
+}
+
+/* ****************************************************************** */
+
+#define LOCAL_COLOR     "mistyrose2"
+#define REMOTE_COLOR    "lightsteelblue1"
+
+static int addNodeInfo(FILE *fd, HostTraffic *el) {
+  char buf0[128], buf1[128];
+
+  makeHostName(el, buf0, sizeof(buf0));
+  makeHostLink(el, FLAG_HOSTLINK_TEXT_LITE_FORMAT, 0, 0, buf1, sizeof(buf1));
+  if(buf1[0] != '\0') {
+    fprintf(fd, "\"%s\" [URL=\"%s\", color=%s];\n", buf0, buf1, 
+	   subnetLocalHost(el) ? LOCAL_COLOR : REMOTE_COLOR);
+    return(1);
+  }
+  return(0);
+}
+
+/* ****************************************************************** */
+
+void make_dot() {
+  HostTraffic *el, *el2, tmpEl;
+  char buf[LEN_GENERAL_WORK_BUFFER], buf1[LEN_GENERAL_WORK_BUFFER],
+    path[384], dotPath[256], buf0[128], buf2[128];
+  FILE *fd, *cmap, *in, *out;
+  struct stat statbuf;
+
+  /*
+    First of all let's see if the path of dot is inside
+    the preferences
+  */
+  if(fetchPrefsValue("dot.path", buf, sizeof(buf)) != -1) {
+    snprintf(dotPath, sizeof(dotPath), "%s", buf);
+  } else {
+    snprintf(dotPath, sizeof(dotPath), "/usr/local/bin/dot");
+    storePrefsValue("dot.path", dotPath); /* Set the default */
+  }
+  
+  if(stat(dotPath, &statbuf) != 0) {
+    snprintf(buf, sizeof(buf), 
+	     "Missing 'dot' tool (expected %s). Please set its path (key dot.path) into the preferences file",
+	     dotPath);
+    returnHTTPpageNotFound(buf);
+    return;
+  }
+
+  snprintf(path, sizeof(path), "%s/ntop-all.dot", myGlobals.spoolPath);
+  fd = fopen(path, "w");
+
+  if(fd != NULL) {
+    for(el=getFirstHost(myGlobals.actualReportDeviceId);
+	el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+      int numEntries, i, urlSent = 0;
+
+      if(subnetLocalHost(el)) {
+	makeHostName(el, buf, sizeof(buf));
+		      
+	for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+	  if(!emptySerial(&el->contactedSentPeers.peersSerials[i])
+	     && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
+	    if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
+	      
+	      makeHostName(el2, buf1, sizeof(buf1));
+	      if(addNodeInfo(fd, el2)) {
+		fprintf(fd, "\"%s\" -> \"%s\";\n", buf, buf1);
+		if(!urlSent) urlSent = addNodeInfo(fd, el);
+	      }
+	    }	  
+	  }
+
+	/* ****************************** */
+
+	for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+	  if(!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
+	     && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
+	    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
+
+	      makeHostName(el2, buf1, sizeof(buf1));
+	      if(addNodeInfo(fd, el2)) {
+		fprintf(fd, "\"%s\" -> \"%s\";\n", buf1, buf);
+		if(!urlSent) urlSent = addNodeInfo(fd, el);
+	      }
+	    }	  
+	  }
+      }
+    }
+	
+    fclose(fd);
+
+    snprintf(path, sizeof(path), "sort -u %s/ntop-all.dot > %s/ntop-sort.dot", myGlobals.spoolPath, myGlobals.spoolPath);
+    /* traceEvent(CONST_TRACE_INFO, path); */ system(path);
+
+    snprintf(path, sizeof(path), "%s/ntop.dot", myGlobals.spoolPath);
+    out = fopen(path, "w");
+    
+    if(out != NULL) {
+      fprintf(out, "digraph ntop {\n");
+      fprintf(out, "node [shape = polygon, sides=4, fontsize=9, style=filled, fontname=\"Helvetica\"];\n");
+
+      snprintf(path, sizeof(path), "%s/ntop-sort.dot", myGlobals.spoolPath);
+      if((in = fopen(path, "r")) != NULL) {
+	while(!feof(in) && (fgets(buf, sizeof(buf), in) != NULL))
+	  fprintf(out, "%s", buf);
+      }
+      
+      fprintf(out, "}\n");
+      fclose(out);
+      fclose(in);
+    }
+
+    snprintf(path, sizeof(path), "%s -Tpng -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP, 
+	     dotPath, myGlobals.spoolPath, myGlobals.spoolPath);
+    /* traceEvent(CONST_TRACE_INFO, path); */ system(path);
+
+    snprintf(path, sizeof(path), "%s -Tcmap -Goverlap=false %s/ntop.dot", dotPath, myGlobals.spoolPath);
+    /* traceEvent(CONST_TRACE_INFO, path); */
+    cmap = popen(path, "r");  
+
+    if(cmap != NULL) {
+      printHTMLheader("Local Network Traffic Map", NULL, 0);
+      sendString("<p><center><img src=\"/"CONST_NETWORK_IMAGE_MAP"\" usemap=\"#G\" ismap=\"ismap\" border=\"0\">");
+      sendString("</center><map id=\"G\" name=\"G\">\n");
+      
+      while(!feof(cmap) && (fgets(buf, sizeof(buf), cmap) != NULL))
+	sendString(buf);
+      
+      sendString("</map>\n");
+
+      sendString("<p><small>Graph generated by Dot, part of <A HREF=http://www.graphviz.org>Graphviz</A>, created by "
+		 "<A HREF=http://www.research.att.com/>AT&T Research</A>.</small>\n");
+      
+      fclose(cmap);
+    } else {    
+      returnHTTPpageNotFound("Unable to generate cmap file (Is dot installed?)");
+    }
+  } else {
+    returnHTTPpageNotFound("Unable to create temporary file");
+  }
+}
+
 /* ******************************* */
 
 void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vlanId) {
@@ -3439,9 +3587,10 @@ void printIpProtocolUsage(void) {
 
   for(j=0; j<MAX_ASSIGNED_IP_PORTS; j++)
     if((clientPorts[j] > 0) || (serverPorts[j] > 0)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=CENTER>%d</TD>"
-		  "<TD "TD_BG">\n", getRowColor(), 
-		  getAllPortByNum(j, portBuf, sizeof(portBuf)), j);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
+		    "<TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=CENTER>%d</TD>"
+		    "<TD "TD_BG">\n", getRowColor(), 
+		    getAllPortByNum(j, portBuf, sizeof(portBuf)), j);
       sendString(buf);
 
       if(clientPorts[j] > 0) {

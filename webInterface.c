@@ -650,6 +650,8 @@ char* makeHostLink(HostTraffic *el, short mode,
 		usedEthAddress ? CONST_IMG_NIC_CARD : "",
 		gwStr, brStr, dnsStr,
                 printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
+  } else if(mode == FLAG_HOSTLINK_TEXT_LITE_FORMAT) {
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "/%s%s.html", linkName, vlanStr);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
                 "%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",

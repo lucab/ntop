@@ -2960,8 +2960,9 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 	    sizeof(el->hostNumIpAddress));
     if(myGlobals.runningPref.numericFlag == 0) {
       fetchAddressFromCache(el->hostIpAddress, el->hostResolvedName, &type);
+
       el->hostResolvedNameType = type;
-      if(strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0) {
+      if((strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0) || (el->hostResolvedName[0] == '\0')) {
         if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
           int i;
 
@@ -2974,7 +2975,8 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     memcpy ((u_int8_t *)&el->fcCounters->hostFcAddress,
             (u_int8_t *)&theSerial.value.fcSerial.fcAddress,
             LEN_FC_ADDRESS);
-    safe_snprintf (__FILE__, __LINE__, el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress), "%02x.%02x.%02x", el->fcCounters->hostFcAddress.domain,
+    safe_snprintf (__FILE__, __LINE__, el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress), 
+		   "%02x.%02x.%02x", el->fcCounters->hostFcAddress.domain,
              el->fcCounters->hostFcAddress.area, el->fcCounters->hostFcAddress.port);
     setResolvedName(el, el->fcCounters->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FCID);
 

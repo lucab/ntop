@@ -804,13 +804,12 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
      
   key_data.dptr = _addrtonum(&hostIpAddress,keyBuf, sizeof(keyBuf));
   key_data.dsize = strlen(key_data.dptr)+1;
-  
+
   if(myGlobals.dnsCacheFile == NULL) return(0); /* ntop is quitting... */
   
   data_data = gdbm_fetch(myGlobals.dnsCacheFile, key_data);
-  
-  if((data_data.dptr != NULL) &&
-     (data_data.dsize == (sizeof(StoredAddress)+1)) ) {
+
+  if((data_data.dptr != NULL) && (data_data.dsize == (sizeof(StoredAddress))) ) {
     StoredAddress *retrievedAddress;
     
     retrievedAddress = (StoredAddress*)data_data.dptr;

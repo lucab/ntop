@@ -671,6 +671,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   sendString("				[null,'Active TCP Sessions','/NetNetstat.html',null,null],\n");
   sendString("				[null,'Host Fingerprint','/localHostsFingerprint.html',null,null],\n");
   sendString("				[null,'Host Characterization','/localHostsCharacterization.html',null,null],\n");
+  sendString("				[null,'Network Traffic Map','/networkMap.html',null,null],\n");
   sendString("				[null,'Local Matrix','/ipTrafficMatrix.html',null,null],\n");
   sendString("		],\n");
   sendString("	],\n");
@@ -2197,64 +2198,72 @@ static int returnHTTPPage(char* pageName,
   token   = strchr(pageURI, '?');
   if(token != NULL) token[0] = '\0';
 
+  if(strcmp(pageURI, CONST_NETWORK_IMAGE_MAP) == 0) {
+    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+		  "%s/%s", myGlobals.spoolPath, pageURI);
+    fd = fopen(tmpStr, "rb");
+  } else {
 #ifdef MAKE_WITH_I18N
-  for(lang=0; (!found) && lang < numLang + 2; lang++) {
+    for(lang=0; (!found) && lang < numLang + 2; lang++) {
 #endif
-    for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
+      for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
 #ifdef MAKE_WITH_I18N
-      if(lang == numLang) {
-	if(myGlobals.defaultLanguage == NULL) {
-	  continue;
-	}
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
-		      "%s/html_%s/%s",
-		      myGlobals.dataFileDirs[idx],
-		      myGlobals.defaultLanguage,
-		      pageURI);
-      } else if(lang == numLang+1) {
+	if(lang == numLang) {
+	  if(myGlobals.defaultLanguage == NULL) {
+	    continue;
+	  }
+	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+			"%s/html_%s/%s",
+			myGlobals.dataFileDirs[idx],
+			myGlobals.defaultLanguage,
+			pageURI);
+	} else if(lang == numLang+1) {
 #endif
-        safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
-		      "%s/html/%s",
-		      myGlobals.dataFileDirs[idx],
-		      pageURI);
+	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+			"%s/html/%s",
+			myGlobals.dataFileDirs[idx],
+			pageURI);
 #ifdef MAKE_WITH_I18N
-      } else {
-	if(requestedLanguage[lang] == NULL) {
-	  continue;
+	} else {
+	  if(requestedLanguage[lang] == NULL) {
+	    continue;
+	  }
+	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+			"%s/html_%s/%s",
+			myGlobals.dataFileDirs[idx],
+			requestedLanguage[lang],
+			pageURI);
 	}
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
-		      "%s/html_%s/%s",
-		      myGlobals.dataFileDirs[idx],
-		      requestedLanguage[lang],
-		      pageURI);
-      }
 #endif
 
 #ifdef WIN32
-      i=0;
-      while(tmpStr[i] != '\0') {
-	if(tmpStr[i] == '/') tmpStr[i] = '\\';
-	i++;
-      }
+	i=0;
+	while(tmpStr[i] != '\0') {
+	  if(tmpStr[i] == '/') tmpStr[i] = '\\';
+	  i++;
+	}
 #endif
 
 #if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
-      traceEvent(CONST_TRACE_INFO, "HTTP/I18N/URL_DEBUG: Testing for page %s at %s", pageURI, tmpStr);
+	traceEvent(CONST_TRACE_INFO, "HTTP/I18N/URL_DEBUG: Testing for page %s at %s",
+		   pageURI, tmpStr);
 #endif
 
-      if(stat(tmpStr, &statbuf) == 0) {
-	if((fd = fopen(tmpStr, "rb")) != NULL) {
-	  found = 1;
-	  break;
+	if(stat(tmpStr, &statbuf) == 0) {
+	  if((fd = fopen(tmpStr, "rb")) != NULL) {
+	    found = 1;
+	    break;
+	  }
+
+	  traceEvent(CONST_TRACE_ERROR, "Cannot open file '%s', ignored...", tmpStr);
 	}
 
-	traceEvent(CONST_TRACE_ERROR, "Cannot open file '%s', ignored...", tmpStr);
-      }
-
 #ifdef MAKE_WITH_I18N
-    }
+      }
 #endif
+    }
   }
+   
 
 #ifdef URL_DEBUG
   traceEvent(CONST_TRACE_INFO, "URL_DEBUG: tmpStr=%s - fd=0x%x", tmpStr, fd);
@@ -2850,6 +2859,10 @@ static int returnHTTPPage(char* pageName,
 			    strlen(CONST_BAR_ALLPROTO_DIST)) == 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
 	drawGlobalProtoDistribution();
+	printTrailer=0;
+      } else if(strncasecmp(pageName,CONST_NETWORK_MAP, strlen(CONST_NETWORK_MAP)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	make_dot();
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_BAR_IPPROTO_DIST,
 			    strlen(CONST_BAR_IPPROTO_DIST)) == 0) {

@@ -1176,6 +1176,8 @@
 #define CONST_VSAN_LIST_HTML                "vsanList.html"
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
 #define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
+#define CONST_NETWORK_MAP                   "networkMap"
+#define CONST_NETWORK_IMAGE_MAP             "network_map.png"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.
@@ -1751,6 +1753,7 @@
 #define FLAG_HOSTLINK_HTML_FORMAT           1
 #define FLAG_HOSTLINK_TEXT_FORMAT           2
 #define FLAG_HOSTLINK_TEXT_NO_LINK_FORMAT   3
+#define FLAG_HOSTLINK_TEXT_LITE_FORMAT      4
 
 /*
  * Used in http.c and util.c to flag that a socket is closed and should not be

@@ -1212,6 +1212,12 @@ typedef struct flowSetV9 {
 typedef struct netFlowGlobals {
   u_char netFlowDebug;
 
+  /* Flow Storage */
+  char *dumpPath;
+  u_short dumpInterval;
+  time_t dumpFdCreationTime;
+  FILE *dumpFd;
+
   /* Flow reception */
   AggregationType netFlowAggregation;
   int netFlowInSocket, netFlowDeviceId;
@@ -1878,6 +1884,17 @@ typedef enum {
 
 /* *********************************** */
 
+#ifdef WIN32
+#define mode_t int
+#endif
+
+#ifdef WIN32
+#define _mkdir(a, b) mkdir(a)
+#else
+#define _mkdir(a, b) mkdir(a, b)
+#endif
+
+
 #define BROADCAST_HOSTS_ENTRY    0
 #define OTHER_HOSTS_ENTRY        1
 #define FIRST_HOSTS_ENTRY        2 /* first available host entry */
@@ -2247,10 +2264,7 @@ typedef struct ntopGlobals {
 
   /* rrd */
   char *rrdPath;
-#ifndef WIN32
-  mode_t rrdDirectoryPermissions,
-         rrdUmask;
-#endif
+  mode_t rrdDirectoryPermissions, rrdUmask;
 
   /* http.c */
   FILE *accessLogFd;

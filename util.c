@@ -6362,3 +6362,45 @@ char* vlan2name(int vlanId, char *buf, int buf_len) {
 
   return(buf);
 }
+
+/* ******************************************* */
+
+void mkdir_p(char *path, int permission) {
+  int i, rc;
+
+  if(path == NULL) {
+    traceEvent(CONST_TRACE_NOISY, "RRD: mkdir(null) skipped");
+    return;
+  }
+
+#ifdef WIN32
+  revertSlash(path, 0);
+#endif
+
+  /* Start at 1 to skip the root */
+  for(i=1; path[i] != '\0'; i++)
+    if(path[i] == CONST_PATH_SEP) {
+      path[i] = '\0';
+#if RRD_DEBUG >= 3
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
+#endif
+      rc = _mkdir(path, permission);
+      if((rc != 0) && (errno != EEXIST) )
+	traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
+		   path,
+		   errno,
+		   strerror(errno));
+      path[i] = CONST_PATH_SEP;
+    }
+
+#if RRD_DEBUG >= 2
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
+#endif
+  _mkdir(path, permission);
+  if((rc != 0) && (errno != EEXIST) )
+    traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
+	       path,
+	       errno,
+	       strerror(errno));
+}
+
