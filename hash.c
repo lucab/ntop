@@ -1125,11 +1125,12 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 	numFreedBuckets++;
 
 	if((device[actDevice].hostsno < device[actDevice].hashThreshold)
-	   || (numFreedBuckets > MIN_NUM_FREED_BUCKETS))
+	   || (numFreedBuckets > MIN_NUM_FREED_BUCKETS)) {
 #ifdef MULTITHREADED
 	  releaseMutex(&hostsHashMutex);
 #endif
 	  break; /* We freed enough space */
+	}
       }
     }
 #ifdef MULTITHREADED
