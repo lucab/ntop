@@ -19,54 +19,27 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*
-    Compile:
-
-$ gcc -o lookuptest lookuptest.c
-
- */
-
-#define VERSION "1.0"
+#define VERSION "2.0"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-
-
-#define QUAD2IP(a,b,c,d) ((a)<<24 | (b)<<16 | (c<<8) | (d))
-#define PREFIX2MASK(n) (~0UL<<(32-(n)))
+#include <getopt.h>
+#include "p2clib.h"
 
 typedef struct IPNode 
 {
   struct IPNode *b[2];
-  char cc[4];
+  char cc[8];
 } IPNode;
 
 IPNode *Head;
 
-/* ******************************************************************* */
+char *OptTableFilename="./p2c.opt.table";
 
-u_int32_t xaton(char *s)
-{
-  u_int32_t a, b, c, d;
+/* ************************************************************************* */
 
-  if (4!=sscanf(s, "%d.%d.%d.%d", &a, &b, &c, &d))
-    return 0;
-  return ((a&0xFF)<<24)|((b&0xFF)<<16)|((c&0xFF)<<8)|(d&0xFF);
-}
-
-/* ******************************************************************* */
-
-char *xntoa(u_int32_t ip, char *result, int len)
-{
-  snprintf(result, len, "%d.%d.%d.%d",
-           (ip>>24)&0xFF, (ip>>16)&0xFF, (ip>>8)&0xFF, ip&0xFF);
-  return result;
-}
-
-/* ******************************************************************* */
-  
 void addNodeInternal(u_int32_t ip, int prefix, char *country)
 {
   IPNode *p1=Head;
@@ -87,11 +60,48 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country)
     p1=p2;
   }
   if (p2->cc[0]==0) {
-    strcpy(p2->cc, country);
+    strncpy(p2->cc, country, sizeof(p2->cc));
+    p2->cc[sizeof(p2->cc)-1]=0;
   }
 }
 
-/* ******************************************************************* */
+/* ************************************************************************* */
+
+void initIPCountryTable(void)
+{
+  FILE *fd;
+  
+  if ((Head=malloc(sizeof(IPNode)))==NULL)
+    exit(1);
+  strcpy(Head->cc, "***");
+  Head->b[0]=NULL;
+  Head->b[1]=NULL;  
+
+  fd = fopen(OptTableFilename, "r");
+  if (fd==NULL) {
+    perror(OptTableFilename);
+    exit(EXIT_FAILURE);
+  }
+
+  while (!feof(fd)) {
+    char buff[256];
+    char *strtokState, *cc, *ip, *prefix;
+      
+    if (fgets(buff, sizeof(buff), fd)==NULL)
+      continue;
+    if ((cc=strtok_r(buff, ":", &strtokState))==NULL)
+      continue;
+    if ((ip=strtok_r(NULL, "/", &strtokState))==NULL)
+      continue;
+    if ((prefix=strtok_r(NULL, "\n", &strtokState))==NULL)
+      continue;
+    
+    addNodeInternal(xaton(ip), atoi(prefix), cc);
+  }
+  fclose(fd);
+}
+
+/* ************************************************************************* */
 
 char *ip2CountryCode(u_int32_t ip)
 {
@@ -113,80 +123,72 @@ char *ip2CountryCode(u_int32_t ip)
   return cc;
 }
 
-/* ******************************************************************* */
+/* ************************************************************************* */
 
-void initIPCountryTable(void)
+void usage(void)
 {
-  FILE *fd;
-  
-  if ((Head=malloc(sizeof(IPNode)))==NULL)
-    exit(1);
-  strcpy(Head->cc, "***");
-  Head->b[0]=NULL;
-  Head->b[1]=NULL;  
+  fprintf(stderr, "lookuptest %s\n", VERSION);
+  fprintf(stderr, "Usage: lookuptest [OPTION]... [IP]...\n");
+  fprintf(stderr, "Lookup country codes for specified IPs.\n");
+  fprintf(stderr, "If no IPs are specified on the commandline a list of IPs is read from stdin.\n\n");
+  fprintf(stderr, "  -t fname  Read mapping table from fname\n\n");
+  fprintf(stderr, "Example: ./lookuptest 19.203.239.24, returns:\n\n");
+  fprintf(stderr, "19.203.239.24: ***/0 US/6 IL/29\n\n");
+  fprintf(stderr, "  Which means the address, 19.203.239.24 is contained in the root block ***/0 (always).\n");
+  fprintf(stderr, "  More specifically it is contained in a /6 listed as in the US and\n");
+  fprintf(stderr, "  most specifically it is in a /29 which is listed as in IL (Israel).\n\n");
+  exit(EXIT_FAILURE);
+}
 
-  fd = fopen("p2c.opt.table", "r");
+/* ************************************************************************* */
 
-  if (fd!=NULL) {
-    while (!feof(fd)) {
-      char buff[256];
-      char *strtokState, *cc, *ip, *prefix;
-      
-      if (fgets(buff, sizeof(buff), fd)==NULL)
-        continue;
-      if ((cc=strtok_r(buff, ":", &strtokState))==NULL)
-        continue;
-      if ((ip=strtok_r(NULL, "/", &strtokState))==NULL)
-        continue;
-      if ((prefix=strtok_r(NULL, "\n", &strtokState))==NULL)
-        continue;
-      
-      addNodeInternal(xaton(ip), atoi(prefix), cc);
+void parseOptions(int argc, char *argv[])
+{
+  int c;
+
+  while ((c=getopt(argc, argv, "?ht:"))!=-1) {
+    switch (c) {
+      case 't':
+        OptTableFilename=optarg;
+        break;
+      case '?':
+      case 'h':
+      default:
+        usage();
+        break;
     }
-    fclose(fd);
   }
 }
 
-/* ******************************************************************* */
+/* ************************************************************************* */
 
 int main(int argc, char *argv[])
 {
-  int i, usage=0, first=1, quiet=1;
+  int i;
 
-  if ( (argc >= 2) && 
-       ( (strncasecmp("-h", argv[1], 2) == 0) ||
-         (strncasecmp("--h", argv[1], 3) == 0) ) ) {
-    usage=1;
-  } else if ( (argc >= 2) && 
-       ( (strncasecmp("-q", argv[1], 2) == 0) ||
-         (strncasecmp("--q", argv[1], 3) == 0) ) ) {
-    quiet=0;
-    first++;
-  }
+  parseOptions(argc, argv);
 
-  if ( (usage) || (argc < 2) ) {
-    printf("ntop (http://www.ntop.org) ip2cc lookuptest, version %s\n\n", VERSION);
-    printf("Function: Converts ip address(es) to country codes\n\n");
-    printf("Usage: lookuptest [-help] [-quiet] address [address...]\n\n");
-    printf("Example: ./lookuptest 19.203.239.24, returns:\n\n");
-    printf("19.203.239.24: ***/0 US/6 IL/29\n\n");
-    printf("  Which means the address, 19.203.239.24 is contained in the root block ***/0 (always).\n");
-    printf("  More specifically it is contained in a /6 listed as in the US and\n");
-    printf("  most specifically it is in a /29 which is listed as in IL (Israel).\n\n");
-    exit(0);
-  }
-
-  if(quiet) printf("ntop (http://www.ntop.org) ip2cc lookuptest, version %s\n\n", VERSION);
-  if(quiet) printf("Loading table...\n");
   initIPCountryTable();
 
-  if(quiet) printf("Processing addresses...\n");
-  for (i=first; i<argc; i++) {
-    printf("    %s: ", argv[i]);
-    ip2CountryCode(xaton(argv[i]));
-    printf("\n");
+  if (optind>=argc) {
+    while (!feof(stdin)) {
+      char buff[64];
+      
+      fgets(buff, sizeof(buff)-1, stdin);
+      if (!feof(stdin)) {
+        ip2CountryCode(xaton(buff));
+        printf("\n");
+      }
+    }
   }
-  if(quiet) printf("Done!\n\n");
-  exit(0);
+  else {
+    for (i=optind; i<argc; i++) {
+      printf("%s: ", argv[i]);
+      ip2CountryCode(xaton(argv[i]));
+      printf("\n");
+    }
+  }
+  
+  exit(EXIT_SUCCESS);
 }
 

@@ -58,6 +58,7 @@ echo ""
 echo "  Preparing work directory..."
 echo ""
 mkdir $work
+cp utils/p2clib.* $work
 cp utils/prefixtablegen.c $work
 cp utils/inetnum2countryalloc.c $work
 
@@ -89,8 +90,9 @@ echo "                  (the ripe file is over 40MB)."
 echo ""
 echo "                   Time for a cup of coffee..."
 echo ""
-gcc -lm  -o prefixtablegen prefixtablegen.c
-gcc -o inetnum2countryalloc inetnum2countryalloc.c
+gcc -c -o p2clib p2clib.c
+gcc -lm -o prefixtablegen prefixtablegen.c p2clib.o
+gcc -o inetnum2countryalloc inetnum2countryalloc.c p2clib.o
 
 wget -O 1_apnic.data $apnic
 wget -O 1_arin.data $arin
@@ -146,7 +148,7 @@ fi
 echo ""
 echo "  Processing downloaded data..."
 echo ""
-cat *.data | ./prefixtablegen
+./prefixtablegen -v *.data
 
 echo ""
 echo "  Copying file(s) to ntop directory..."

@@ -19,107 +19,42 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*
-    Compile:
+/* ************************************************************************* */
 
-$ gcc -lm -o prefixtablegen prefixtablegen.c
-
- */
-
-#define VERSION "1.0"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <getopt.h>
+#include "p2clib.h"
 
-/* Make this code run in more places - thanks to Chris Turbeville [turbo@verio.net] */
-/* Yeah - you will have to have run ./configure first. S'be'it ----- Burton */
-#include "../config.h"
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_NET_PPP_DEFS_H
-#include <net/ppp_defs.h>
-#endif
+/* Note: Setting DO_FREES to 0 skips free() calls for performance reasons.
+   Since the program exits anyway after the run the leak does
+   not really matter.
+*/
+#define DO_FREES 0
 
-#define QUAD2IP(a,b,c,d) ((a)<<24 | (b)<<16 | (c<<8) | (d))
-#define PREFIX2MASK(n) (~0UL<<(32-(n)))
+#define VERSION "2.0"
 
 extern double log2(double);
 
 typedef struct IPNode 
 {
   struct IPNode *b[2];
-  char cc[4];
+  char cc[8];
+  int  fnum;
 } IPNode;
 
 IPNode *Head;
+int OptVerbose=0;
+int OptReportDuplicateMappings=0;
+int OptReportConflictingMappings=0;
+int OptEmitConflictingMappings=0;
+int OptOnlyTest=0;
 
-int NodeCount=0;
-int EntryCount=0;
-
-char *strtolower(char *s) {
-  while (*s) {
-    *s=tolower(*s);
-    s++;
-  }
-  
-  return(s);
-}
-
-
-char *strtoupper(char *s) {
-  while (*s) {
-    *s=toupper(*s);
-    s++;
-  }
-  
-  return(s);
-}
-
-
-u_int32_t xaton(char *s)
-{
-  u_int32_t a, b, c, d;
-
-  if (4!=sscanf(s, "%d.%d.%d.%d", &a, &b, &c, &d))
-    return 0;
-  return ((a&0xFF)<<24)|((b&0xFF)<<16)|((c&0xFF)<<8)|(d&0xFF);
-}
-
-
-char *xntoa(u_int32_t ip, char *result, int len)
-{
-  snprintf(result, len, "%d.%d.%d.%d",
-           (ip>>24)&0xFF, (ip>>16)&0xFF, (ip>>8)&0xFF, ip&0xFF);
-  return result;
-}
-
-int range2prefix(u_int32_t range)
-{
-  static const u_int32_t rtable[]=
-    {
-      0x00000000,
-      0x00000001, 0x00000003, 0x00000007, 0x0000000F,
-      0x0000001F, 0x0000003F, 0x0000007F, 0x000000FF,
-      0x000001FF, 0x000003FF, 0x000007FF, 0x00000FFF,
-      0x00001FFF, 0x00003FFF, 0x00007FFF, 0x0000FFFF,
-      0x0001FFFF, 0x0003FFFF, 0x0007FFFF, 0x000FFFFF,
-      0x001FFFFF, 0x003FFFFF, 0x007FFFFF, 0x00FFFFFF,
-      0x01FFFFFF, 0x03FFFFFF, 0x07FFFFFF, 0x0FFFFFFF,
-      0x1FFFFFFF, 0x3FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF
-    };
-  int i;
-
-  for (i=32; i>=0; i--)
-    if (range==rtable[i])
-      return (32-i);
-
-  return -1;
-}
-
+/* ************************************************************************* */
 
 int imaxblock(u_int32_t ip, int prefix)
 {
@@ -130,6 +65,8 @@ int imaxblock(u_int32_t ip, int prefix)
   }
   return prefix;
 }
+
+/* ************************************************************************* */
 
 void recursiveDump(FILE *fp, IPNode *p, u_int32_t ip, int prefix)
 {
@@ -144,12 +81,17 @@ void recursiveDump(FILE *fp, IPNode *p, u_int32_t ip, int prefix)
       recursiveDump(fp, p->b[i], ip | (i<<(31-prefix)), prefix+1);
 }
 
+/* ************************************************************************* */
+
 void printInfo(char *msg, char *country, u_int32_t ip, int prefix)
 {
   char ips[32];
 
-  fprintf(stderr, "%s: %3s-%s/%d\n", msg, country, xntoa(ip, ips, sizeof(ips)), prefix);
+  fprintf(stderr, "%s: %3s:%s/%d\n", msg, country, xntoa(ip, ips, sizeof(ips)), prefix);
 }
+
+/* ************************************************************************* */
+
 
 IPNode *consolidateTree(IPNode *p, char *country)
 {
@@ -157,10 +99,7 @@ IPNode *consolidateTree(IPNode *p, char *country)
   char *cc=country;
 
   if (strcmp(p->cc, country)==0)
-  {
     p->cc[0]=0;
-    EntryCount--;
-  }
     
   if (p->cc[0]!=0)
     cc=p->cc;
@@ -171,25 +110,22 @@ IPNode *consolidateTree(IPNode *p, char *country)
 
   if (p->b[0]==NULL && p->b[1]==NULL &&
       (p->cc[0]==0 || strcmp(country, p->cc)==0)) {
-    NodeCount--;
-    if (p->cc[0]!=0)
-      EntryCount--;
+#if DO_FREES
     free(p);
+#endif
     return NULL;
   }
 
   if (p->b[0]!=NULL && p->b[1]!=NULL &&
       p->b[0]->cc[0]!=0 && p->b[1]->cc[0]!=0 &&
-      strcmp(p->b[0]->cc, p->b[1]->cc)==0)
-  {
+      strcmp(p->b[0]->cc, p->b[1]->cc)==0) {
     strcpy(p->cc, p->b[0]->cc);
-    EntryCount-=2;
     for (i=0; i<2; i++) {
       p->b[i]->cc[0]=0;
-      if (p->b[i]->b[0]==NULL && p->b[i]->b[1]==NULL)
-      {
-        NodeCount--;
+      if (p->b[i]->b[0]==NULL && p->b[i]->b[1]==NULL) {
+#if DO_FREES
         free(p->b[i]);
+#endif
         p->b[i]=NULL;
       }
     }
@@ -198,9 +134,9 @@ IPNode *consolidateTree(IPNode *p, char *country)
   return p;
 }
 
-  
+/* ************************************************************************* */
 
-void addNodeInternal(u_int32_t ip, int prefix, char *country)
+void addNodeInternal(u_int32_t ip, int prefix, char *country, int fnum)
 {
   IPNode *p1=Head;
   IPNode *p2;
@@ -210,8 +146,7 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country)
     b=(ip>>(31-i)) & 0x1;
     if (!p1->b[b]) {
       if (!(p2=malloc(sizeof(IPNode))))
-        exit(1);
-      NodeCount++;
+        exit(EXIT_FAILURE);
       memset(p2, 0, sizeof(IPNode));
       p1->b[b]=p2;
     }
@@ -222,14 +157,41 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country)
   }
   if (p2->cc[0]==0) {
     strcpy(p2->cc, country);
-    EntryCount++;
+    p2->fnum=fnum;
+  }
+  else if (OptReportConflictingMappings || OptEmitConflictingMappings) {
+   /* Note: the strstr test is a little too simple but works ok */
+    if (strcmp(p2->cc, "LOC")!=0) {
+      if (strstr(p2->cc, country)==NULL) { 
+        if (OptReportConflictingMappings) {
+          fprintf(stderr, "%2d-%2d %3s ", p2->fnum, fnum, p2->cc);
+          printInfo("CONFLICT", country, ip, prefix);
+        }
+
+        if (OptEmitConflictingMappings) {
+          i=strlen(p2->cc);
+          if (strlen(p2->cc)+strlen(country)+1 < sizeof(p2->cc)) {
+            strcat(p2->cc, "+");
+            strcat(p2->cc, country);
+          }
+          else {
+            fprintf(stderr, "%2d-%2d %s ", p2->fnum, fnum, p2->cc);
+            printInfo("Too many conflicts", country, ip, prefix);
+          }
+        }
+      }
+      else if (OptReportDuplicateMappings) {
+        fprintf(stderr, "%2d-%2d %3s ", p2->fnum, fnum, p2->cc);
+        printInfo("DUPLICATE", country, ip, prefix);
+      }
+    }
   }
 }
 
+/* ************************************************************************* */
 
-void addNode(u_int32_t ip, int range, char *country) 
+void addNode(u_int32_t ip, int range, char *country, int fnum) 
 {
-//  char ips[32];
   u_int32_t ip1, ip2;
   int maxsize, maxdiff;
 
@@ -239,8 +201,6 @@ void addNode(u_int32_t ip, int range, char *country)
   if (!ip)
     return;
 
-//  fprintf(stderr, "%s (%d) -> ", xntoa(ip, ips, sizeof(ips)), range);
-
   ip1=ip;
   ip2=ip1+range-1;
   while (ip2>=ip1 && ip1!=0) {
@@ -249,99 +209,151 @@ void addNode(u_int32_t ip, int range, char *country)
     if (maxsize<maxdiff)
       maxsize=maxdiff;
 
-//    fprintf(stderr, "%s/%d ", xntoa(ip1, ips, sizeof(ips)), maxsize);
-    addNodeInternal(ip1, maxsize, country);
+    addNodeInternal(ip1, maxsize, country, fnum);
     ip1 += 1 << (32-maxsize);
   }
-//  fprintf(stderr, "\n");
 }
 
-  
-void initIPCountryTable(void)
+/* ************************************************************************* */
+
+void initIPCountryTable(int argc, char *argv[])
 {
+  int i;
+  FILE *fin;
+  
   if ((Head=malloc(sizeof(IPNode)))==NULL)
-    exit(1);
+    exit(EXIT_FAILURE);
   strcpy(Head->cc, "***");
   Head->b[0]=NULL;
   Head->b[1]=NULL;  
   
-  addNode(QUAD2IP(10,0,0,0), 256*256*256, "LOC");
-  addNode(QUAD2IP(127,0,0,0), 256*256*256, "LOC");
-  addNode(QUAD2IP(172,16,0,0), 16*256*256, "LOC");
-  addNode(QUAD2IP(192,168,0,0), 256*256, "LOC");
-
-  while (!feof(stdin)) {
-    char buff[256];
-    char *strtokState, *token, *cc, *ip, *range;
-
-    if (fgets(buff, sizeof(buff), stdin)==NULL)
-      continue;
-    if ((token=strtok_r(buff, "|", &strtokState))==NULL)
-      continue;
-    if ((cc=strtok_r(NULL, "|", &strtokState))==NULL)
-      continue;
-    if ((token=strtok_r(NULL, "|", &strtokState))==NULL)
-      continue;
-    if (strcmp(token, "ipv4"))
-      continue;
-    if ((ip=strtok_r(NULL, "|", &strtokState))==NULL)
-      continue;
-    if ((range=strtok_r(NULL, "|", &strtokState))==NULL)
+  addNode(QUAD2IP(10,0,0,0), 256*256*256, "LOC", 0);
+  addNode(QUAD2IP(127,0,0,0), 256*256*256, "LOC", 0);
+  addNode(QUAD2IP(172,16,0,0), 16*256*256, "LOC", 0);
+  addNode(QUAD2IP(192,168,0,0), 256*256, "LOC", 0);
+ 
+  for (i=0; i<argc-optind; i++) {
+    if ((fin=fopen(argv[i+optind], "r"))==NULL)
       continue;
 
-    strtoupper(cc);
-    if (strcmp(cc, "GB")==0)
-      cc="UK";
+    if (OptVerbose || OptReportConflictingMappings)
+      fprintf(stderr, "== Reading File %d: %s\n", i, argv[i+optind]);
+    
+    while (!feof(fin)) {
+      char buff[256];
+      char *strtokState, *token, *cc, *ip, *range;
 
-    addNode(xaton(ip), atoi(range), cc);
+      if (fgets(buff, sizeof(buff), fin)==NULL)
+        continue;
+      if ((token=strtok_r(buff, "|", &strtokState))==NULL)
+        continue;
+      if ((cc=strtok_r(NULL, "|", &strtokState))==NULL)
+        continue;
+      if ((token=strtok_r(NULL, "|", &strtokState))==NULL)
+        continue;
+      if (strcmp(token, "ipv4"))
+        continue;
+      if ((ip=strtok_r(NULL, "|", &strtokState))==NULL)
+        continue;
+      if ((range=strtok_r(NULL, "|", &strtokState))==NULL)
+        continue;
+
+      strtoupper(cc);
+      if (strcmp(cc, "GB")==0)
+        cc="UK";
+
+      addNode(xaton(ip), atoi(range), cc, i);
+    }
+    fclose(fin);
   }
 }
 
+/* ************************************************************************* */
+
+void usage(void)
+{
+  fprintf(stderr, "prefixtablegen %s\n", VERSION);
+  fprintf(stderr, "Usage: prefixtablegen [OPTION]... [FILE]...\n");
+  fprintf(stderr, "Generate raw (p2c.raw.table) and optimized (p2c.opt.table)\n");
+  fprintf(stderr, "IP prefix to country mapping files.\n\n");
+  fprintf(stderr, "  -v   Print progress information\n");
+  fprintf(stderr, "  -c   Print information about conflicting entries\n");
+  fprintf(stderr, "  -C   Output all conflicting country names to mapping files\n");
+  fprintf(stderr, "       WARNING: These files are not compatible with ntop\n");
+  fprintf(stderr, "  -d   Print information about duplicate entries\n");
+  fprintf(stderr, "  -t   Test only, dont write output file\n");
+  exit(EXIT_FAILURE);
+}
+
+/* ************************************************************************* */
+
+void parseOptions(int argc, char *argv[])
+{
+  int c;
+
+  while ((c=getopt(argc, argv, "?cCdthv"))!=-1) {
+    switch (c) {
+      case 'c':
+        OptReportConflictingMappings=1;
+        break;
+      case 'C':
+        OptEmitConflictingMappings=1;
+        break;
+      case 'd':
+        OptReportDuplicateMappings=1;
+        break;
+      case 't':
+        OptOnlyTest=1;
+        break;
+      case 'v':
+        OptVerbose++;
+        break;
+      case '?':
+      case 'h':
+      default:
+      	usage();
+        break;
+    }
+  }
+}
+
+/* ************************************************************************* */
 
 int main(int argc, char *argv[]) 
 {
   FILE *fp;
-  int usage=0, quiet=1;
 
-  if ( (argc >= 2) &&
-       ( (strncasecmp("-h", argv[1], 2) == 0) ||
-         (strncasecmp("--h", argv[1], 3) == 0) ) ) {
-    usage=1;
-  } else if ( (argc >= 2) &&
-       ( (strncasecmp("-q", argv[1], 2) == 0) ||
-         (strncasecmp("--q", argv[1], 3) == 0) ) ) {
-    quiet=0;
+  parseOptions(argc, argv);
+    
+  initIPCountryTable(argc, argv);
+
+  if (!OptOnlyTest) {
+    if (OptVerbose)
+      fprintf(stderr, "== Creating file p2c.raw.table ...\n");
+    if ((fp=fopen("p2c.raw.table", "w"))==NULL)
+      exit(EXIT_FAILURE);
+    if (OptVerbose)
+      fprintf(stderr, "== Writing file p2c.raw.table ...\n");
+    recursiveDump(fp, Head, 0, 0);
+    fclose(fp);
+    
+    if (OptVerbose)
+      fprintf(stderr, "== Creating file p2c.opt.table ...\n");
+    if ((fp=fopen("p2c.opt.table", "w"))==NULL)
+      exit(EXIT_FAILURE);
+    if (OptVerbose)
+      fprintf(stderr, "== Optimizing table size ...\n");
+    consolidateTree(Head, "");
+    if (OptVerbose)
+      fprintf(stderr, "== Writing file p2c.opt.table ...\n");
+    recursiveDump(fp, Head, 0, 0);
+    
+    fclose(fp);
   }
 
-  if (usage) {
-    printf("ntop (http://www.ntop.org) ip2cc prefixtablegen, version %s\n\n", VERSION);
-    printf("Function: Generate raw and optimized p2c files, p2c.raw.table and p2c.opt.table\n\n");
-    printf("Usage: cat *.data | ./prefixtablegen [-help] [-quiet]\n\n");
-    exit(0);
-  }
+  if (OptVerbose)
+    fprintf(stderr, "== Done\n");
 
-  if(quiet) printf("ntop (http://www.ntop.org) ip2cc prefixtablegen, version %s\n\n", VERSION);
- 
-  if(quiet) printf("  Initializing table (reading data)...\n\n");
-  initIPCountryTable();
-
-  if(quiet) printf("  Creating raw file...\n\n");
-  if ((fp=fopen("p2c.raw.table", "w"))==NULL)
-    exit(1);
-  if(quiet) printf("  Dumping raw table...\n\n");
-  recursiveDump(fp, Head, 0, 0);
-  fclose(fp);
-  
-  if(quiet) printf("  Creating optimized file...\n\n");
-  if ((fp=fopen("p2c.opt.table", "w"))==NULL)
-    exit(1);
-  if(quiet) printf("  Optimizing...\n\n");
-  consolidateTree(Head, "");
-  if(quiet) printf("  Dumping raw table...\n\n");
-  recursiveDump(fp, Head, 0, 0);
-  fclose(fp);
-
-  if(quiet) printf("Done!\n\n");
-  exit(0);
+  exit(EXIT_SUCCESS);
 }
 
