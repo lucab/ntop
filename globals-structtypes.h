@@ -1670,7 +1670,7 @@ typedef struct ntopGlobals {
   NtopInterface *device;   /* pointer to the table of Network interfaces */
 
   /* Database */
-  GDBM_FILE dnsCacheFile, pwFile, addressQueueFile, prefsFile, macPrefixFile;
+  GDBM_FILE dnsCacheFile, pwFile, addressQueueFile, prefsFile, macPrefixFile, fingerprintFile;
 
   /* the table of broadcast entries */
   HostTraffic *broadcastEntry;

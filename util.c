@@ -25,6 +25,7 @@
 #include <stdarg.h>
 
 /* #define ADDRESS_DEBUG */
+/* #define FINGERPRINT_DEBUG */
 
 #ifdef MEMORY_DEBUG
 #include "leaks.h"
@@ -3853,9 +3854,8 @@ char *i18n_xvert_acceptlanguage2common(const char *input) {
 /* *************************************** */
 
 void setHostFingerprint(HostTraffic *srcHost) {
-  FILE *fd = NULL;
   char *WIN, *MSS, *WSS, *ttl, *flags, *work;
-  int S, N, D, T, done = 0;
+  int S, N, D, T, done = 0, numEntries=0;
   char fingerprint[32];
   char *strtokState;
   u_char compressedFormat;
@@ -3870,7 +3870,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
     traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint() failed test 1");
 #endif
     return;
-}
+  }
 
 #ifdef FINGERPRINT_DEBUG
   traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint() '%s'(%d)",
@@ -3883,13 +3883,13 @@ void setHostFingerprint(HostTraffic *srcHost) {
     traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint() failed test 2");
 #endif
     return;
-}
+  }
   if(strlen(srcHost->fingerprint) < 28) {
 #ifdef FINGERPRINT_DEBUG
     traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint() failed test 3");
 #endif
     return;
-}
+  }
 
   if(myGlobals.childntoppid != 0) {
 #ifdef FINGERPRINT_DEBUG
@@ -3918,74 +3918,69 @@ void setHostFingerprint(HostTraffic *srcHost) {
   flags = strtok_r(NULL, ":", &strtokState);   if(!flags)  goto unknownFingerprint;
 
 #ifdef FINGERPRINT_DEBUG
-  traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: WIN%s MSS%s ttl%s WSS%s S%d N%d D%d T%s FLAGS%s",
+  traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: WIN%s MSS%s ttl%s WSS%s S%d N%d D%d T%d FLAGS%s",
              WIN, MSS, ttl, WSS, S, N, D, T, flags);
 #endif
 
-  fd=checkForInputFile(NULL, NULL, CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
+  while(1) {
+    char *line, lineKey[8];
+    char *b, *d, *ptr;
+    datum key_data;
+    datum data_data;
 
-  if(fd != NULL) {
-      char line[384];
-      char *b, *d, *ptr;
-      int numLoaded=0;
-      while(readInputFile(fd, NULL, FALSE, compressedFormat, 0,
-            line, sizeof(line), &numLoaded) == 0) {
+    snprintf(lineKey, sizeof(lineKey), "%d", numEntries++);
+    memset(&key_data, 0, sizeof(key_data));
+    key_data.dptr = lineKey; key_data.dsize = strlen(key_data.dptr);
 
-	if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
-	line[strlen(line)-1] = '\0';
+    data_data = gdbm_fetch(myGlobals.fingerprintFile, key_data);
+    if(data_data.dptr != NULL) {
 
-	strtokState = NULL;
-	ptr = strtok_r(line, ":", &strtokState); if(ptr == NULL) continue;
-	if(strcmp(ptr, WIN)) continue;
-	b = strtok_r(NULL, ":", &strtokState); if(b == NULL) continue;
-	if(strcmp(MSS, "_MSS") != 0) {
-	  if(strcmp(b, "_MSS") != 0) {
-	    if(strcmp(b, MSS)) continue;
-	  }
+      line = data_data.dptr, strtokState = NULL;
+      ptr = strtok_r(line, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
+      if(strcmp(ptr, WIN)) { free(data_data.dptr); continue; }
+      b = strtok_r(NULL, ":", &strtokState); if(b == NULL) { free(data_data.dptr); continue; }
+      if(strcmp(MSS, "_MSS") != 0) {
+	if(strcmp(b, "_MSS") != 0) {
+	  if(strcmp(b, MSS)) { free(data_data.dptr); continue; }
 	}
+      }
 
-	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
-	if(strcmp(ptr, ttl)) continue;
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
+      if(strcmp(ptr, ttl)) { free(data_data.dptr); continue; }
 
-	d = strtok_r(NULL, ":", &strtokState); if(d == NULL) continue;
-	if(strcmp(WSS, "WS") != 0) {
-	  if(strcmp(d, "WS") != 0) {
-	    if(strcmp(d, WSS)) continue;
-	  }
+      d = strtok_r(NULL, ":", &strtokState); if(d == NULL) { free(data_data.dptr); continue; }
+      if(strcmp(WSS, "WS") != 0) {
+	if(strcmp(d, "WS") != 0) {
+	  if(strcmp(d, WSS)) { free(data_data.dptr); continue; }
 	}
+      }
 
-	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
-	if(atoi(ptr) != S) continue;
-	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
-	if(atoi(ptr) != N) continue;
-	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
-	if(atoi(ptr) != D) continue;
-	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
-	if(atoi(ptr) != T) continue;
-	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
-	if(strcmp(ptr, flags)) continue;
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
+      if(atoi(ptr) != S) { free(data_data.dptr); continue; }
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
+      if(atoi(ptr) != N) { free(data_data.dptr); continue; }
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
+      if(atoi(ptr) != D) { free(data_data.dptr); continue; }
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
+      if(atoi(ptr) != T) { free(data_data.dptr); continue; }
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
+      if(strcmp(ptr, flags)) { free(data_data.dptr); continue; }
 
-	/* NOTE
-	   strlen(srcHost->fingerprint) is 29 as the fingerprint length is so
-	   Example: 0212:_MSS:80:WS:0:1:0:0:A:LT
-	*/
+      /* NOTE
+	 strlen(srcHost->fingerprint) is 29 as the fingerprint length is so
+	 Example: 0212:_MSS:80:WS:0:1:0:0:A:LT
+      */
 
-	if(srcHost->fingerprint) free(srcHost->fingerprint);
-	srcHost->fingerprint = strdup(&line[28]);
+      if(srcHost->fingerprint) free(srcHost->fingerprint);
+      srcHost->fingerprint = strdup(&line[28]);
 
-	done = 1;
+      done = 1;
 
-        readInputFile(fd, NULL, TRUE, compressedFormat, 0, NULL, 0, &numLoaded);
-
-        break;
-
-      } /* while ! eof */
+      free(data_data.dptr);
+      break;
+    } else
+      break; /* No more signatures */
   }
-#ifdef FINGERPRINT_DEBUG
-    else
-      traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: Unable to open file");
-#endif
-
 
   if(!done) {
     /* Unknown fingerprint */
@@ -3993,8 +3988,9 @@ void setHostFingerprint(HostTraffic *srcHost) {
     srcHost->fingerprint[0] = ':', srcHost->fingerprint[1] = '\0';
   }
 #ifdef FINGERPRINT_DEBUG
-    else
-      traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: match! %s", srcHost->fingerprint);
+  else
+    traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: match! %s [%d runs]",
+	       srcHost->fingerprint, numEntries);
 #endif
 
   releaseAddrResMutex();
@@ -5574,11 +5570,9 @@ int readInputFile(FILE* fd,
 
 /* ********************************** */
 
-FILE* checkForInputFile(char* logTag,
-                      char* descr,
-                      char* fileName,
-                      struct stat *dbStat,
-                      u_char* compressedFormat) {
+FILE* checkForInputFile(char* logTag, char* descr,
+			char* fileName,	struct stat *dbStat,
+			u_char* compressedFormat) {
 
   int configFileFound=FALSE, idx;
   char tmpFile[LEN_GENERAL_WORK_BUFFER];
@@ -5605,89 +5599,90 @@ FILE* checkForInputFile(char* logTag,
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
 
 #ifdef MAKE_WITH_ZLIB
-      *compressedFormat = 1;
-      if(snprintf(tmpFile, sizeof(tmpFile),
-                  "%s%c%s.gz",
-                  myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName) < 0)
-        BufferTooShort();
-      if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
-      fd = gzopen(tmpFile, "r");
-      /* Note, if this code is inactive, fd is NULL from above, avoids fancy ifdefs */
+    *compressedFormat = 1;
+    if(snprintf(tmpFile, sizeof(tmpFile),
+		"%s%c%s.gz",
+		myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName) < 0)
+      BufferTooShort();
+    if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
+    fd = gzopen(tmpFile, "r");
+    /* Note, if this code is inactive, fd is NULL from above, avoids fancy ifdefs */
 #endif
 
-      if(fd == NULL) {
-	*compressedFormat = 0;
-	if(snprintf(tmpFile, sizeof(tmpFile),
-                    "%s%c%s",
-                    myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName) < 0)
-          BufferTooShort();
-        if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
-	fd = fopen(tmpFile, "r");
-      }
+    if(fd == NULL) {
+      *compressedFormat = 0;
+      if(snprintf(tmpFile, sizeof(tmpFile),
+		  "%s%c%s",
+		  myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName) < 0)
+	BufferTooShort();
+      if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
+      fd = fopen(tmpFile, "r");
+    }
 
-      if(fd != NULL) {
-	configFileFound = TRUE;
-        if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: ...Found", logTag);
-        break;
-      }
+    if(fd != NULL) {
+      configFileFound = TRUE;
+      if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: ...Found", logTag);
+      break;
+    }
   } /* for */
 
   if (configFileFound != TRUE) {
-      if(logTag != NULL)
-        traceEvent(CONST_TRACE_WARNING, "%s: Unable to open file '%s'", logTag, fileName);
-      return(NULL);
+    if(logTag != NULL)
+      traceEvent(CONST_TRACE_WARNING, "%s: Unable to open file '%s'", logTag, fileName);
+    return(NULL);
   }
 
   if(dbStat) {
-      struct stat checkStat;
+    struct stat checkStat;
 
+    if(logTag != NULL) {
+      memset(bufTime, 0, sizeof(bufTime));
+      memset(bufTime2, 0, sizeof(bufTime2));
+      strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
+	       localtime_r(&(dbStat->st_ctime), &t));
+      strftime(bufTime2, sizeof(bufTime2), CONST_LOCALE_TIMESPEC,
+	       localtime_r(&(dbStat->st_mtime), &t));
+      traceEvent(CONST_TRACE_NOISY, "%s: Database created %s, last modified %s", logTag, bufTime, bufTime2);
+    }
+
+    /* Check time stamps... */
+    if(!stat(tmpFile, &checkStat)) {
+      time_t compareTime;
+      /* Pick the later - so if you copy/move a file we know it */
+      compareTime = max(checkStat.st_ctime, checkStat.st_mtime);
       if(logTag != NULL) {
-        memset(bufTime, 0, sizeof(bufTime));
-        memset(bufTime2, 0, sizeof(bufTime2));
-        strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
-                 localtime_r(&(dbStat->st_ctime), &t));
-        strftime(bufTime2, sizeof(bufTime2), CONST_LOCALE_TIMESPEC,
-                 localtime_r(&(dbStat->st_mtime), &t));
-        traceEvent(CONST_TRACE_NOISY, "%s: Database created %s, last modified %s", logTag, bufTime, bufTime2);
+	memset(bufTime, 0, sizeof(bufTime));
+	strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
+		 localtime_r(&compareTime, &t));
+	traceEvent(CONST_TRACE_NOISY, "%s: Input file created/last modified %s", logTag, bufTime);
       }
-
-      /* Check time stamps... */
-      if(!stat(tmpFile, &checkStat)) {
-        time_t compareTime;
-        /* Pick the later - so if you copy/move a file we know it */
-        compareTime = max(checkStat.st_ctime, checkStat.st_mtime);
-        if(logTag != NULL) {
-          memset(bufTime, 0, sizeof(bufTime));
-          strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
-                   localtime_r(&compareTime, &t));
-          traceEvent(CONST_TRACE_NOISY, "%s: Input file created/last modified %s", logTag, bufTime);
-        }
-        if(dbStat->st_mtime >= compareTime) {
-          if(logTag != NULL)
-            traceEvent(CONST_TRACE_INFO,"%s: File '%s' does not need to be reloaded", logTag, tmpFile);
+      if(dbStat->st_mtime >= compareTime) {
+	if(logTag != NULL)
+	  traceEvent(CONST_TRACE_INFO,"%s: File '%s' does not need to be reloaded", logTag, tmpFile);
 #ifdef MAKE_WITH_ZLIB
-          if(*compressedFormat)
-            gzclose(fd);
-          else
+	if(*compressedFormat)
+	  gzclose(fd);
+	else
 #endif
-            fclose(fd);
-          return(NULL);
-        } else {
-          if(logTag != NULL)
-            traceEvent(CONST_TRACE_INFO, "%s: Loading newer file '%s'", logTag, tmpFile);
-        }
+	  fclose(fd);
+	return(NULL);
       } else {
-        if(logTag != NULL) {
-          traceEvent(CONST_TRACE_WARNING,
-                     "%s: Unable to check file age %s(%d)",
-                     logTag, strerror(errno), errno);
-          traceEvent(CONST_TRACE_INFO, "%s: File '%s' loading", logTag, tmpFile);
-        }
+	if(logTag != NULL)
+	  traceEvent(CONST_TRACE_INFO, "%s: Loading newer file '%s'", logTag, tmpFile);
       }
+    } else {
+      if(logTag != NULL) {
+	traceEvent(CONST_TRACE_WARNING,
+		   "%s: Unable to check file age %s(%d)",
+		   logTag, strerror(errno), errno);
+	traceEvent(CONST_TRACE_INFO, "%s: File '%s' loading", logTag, tmpFile);
+      }
+    }
   } else {
     if(logTag != NULL)
       traceEvent(CONST_TRACE_INFO, "%s: Loading file '%s'", logTag, tmpFile);
   }
+
   return(fd);
 }
 

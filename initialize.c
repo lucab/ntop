@@ -251,8 +251,8 @@ static void initIPCountryTable(void) {
 
 	  addNodeInternal(xaton(ip), atoi(prefix), cc, 0);
       }
-      myGlobals.ipCountryCount += numRead;
 
+      myGlobals.ipCountryCount += numRead;
   } else {
     traceEvent(CONST_TRACE_WARNING,
                "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data)");
@@ -513,29 +513,6 @@ void initCounters(void) {
   myGlobals.sessionsCacheLenMax = 0;
   myGlobals.sessionsCacheReused = 0;
 #endif
-
-  /*
-   * Check if the ettercap passive file exists - warn if not.
-   *   Note we're only checking here, so we forceClose...
-   */
-  fd=checkForInputFile("OSFP",
-                       "OS fingerprint table",
-                       CONST_OSFINGERPRINT_FILE,
-                       NULL,
-                       &compressedFormat);
-  if(fd != NULL) {
-      readInputFile(fd,
-                    "OSFP",  
-                    TRUE,
-                    compressedFormat,
-                    0,
-                    NULL, 0,
-                    &numRead);
-
-  } else {
-      traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without OS fingerprinting.");
-      traceEvent(CONST_TRACE_NOISY, "OSFP: If the file 'magically' appears, OS fingerprinting will automatically be enabled.");
-  }
 
   /*
    * Process ASN file

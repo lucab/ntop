@@ -107,6 +107,7 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
   initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
   initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, -1,    NULL);
   initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
+  initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",    spoolDirectory, FALSE,  &statbuf);
   createVendorTable(&statbuf);
 }
 
