@@ -282,8 +282,10 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
       theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
       theRemHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
 
-      if((theHost != NULL) && (theRemHost != NULL)) {
+      if(theHost != NULL)    theHost->instanceInUse--;
+      if(theRemHost != NULL) theRemHost->instanceInUse--;
 
+      if((theHost != NULL) && (theRemHost != NULL)) {
 	allocateSecurityHostPkts(theHost);
 	incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
 			      sessionToPurge->remotePeerIdx, actualDeviceId);
@@ -669,7 +671,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
 #endif /* ENABLE_NAPSTER */
 
-
       theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
       myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
       theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
@@ -679,26 +680,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->passiveFtpSession = isPassiveSession(dstHost->hostIpAddress.s_addr, dport);
       theSession->firstSeen = myGlobals.actTime;
       flowDirection = CLIENT_TO_SERVER;
-
+      srcHost->instanceInUse++, dstHost->instanceInUse++;
     } 
-#if 0
-    else {
-      /* Existing session */
-
-      if(theSession != myGlobals.device[actualDeviceId].tcpSession[idx]) {
-	/* Move the session at the beginning of the list */
-	prevSession->next = theSession->next;
-	theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
-	myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
-
-	/*
-	  traceEvent(TRACE_INFO, "Swapped session: %s:%d->%s:%d",
-	  srcHost->hostNumIpAddress, sport,
-	  dstHost->hostNumIpAddress, dport);
-	*/
-      }
-    }
-#endif
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "->%d\n", idx);

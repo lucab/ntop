@@ -132,7 +132,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
 /* **************************************** */
 
-static int _checkIndex(u_int *flaggedHosts, u_int flaggedHostsLen, u_int idx,
+static int _checkIndex(HostTraffic **flaggedHosts, u_int flaggedHostsLen, u_int idx,
 		       char *fileName, int fileLine) {
   if(idx == NO_PEER) {
     return(0);
@@ -141,16 +141,16 @@ static int _checkIndex(u_int *flaggedHosts, u_int flaggedHostsLen, u_int idx,
 	     idx, flaggedHostsLen, fileName, fileLine);
     return(0);
   } else
-    return(flaggedHosts[idx]);
+    return(flaggedHosts[idx] == NULL ? 0 : 1);
 }
 
 #define checkIndex(a) _checkIndex(flaggedHosts, flaggedHostsLen, a, __FILE__, __LINE__)
 
 /* **************************************** */
 
-static int _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen,
-			       UsageCounter *counter,
-			       char *fileName, int fileLine) {
+static int _checkUsageCounter(HostTraffic **flaggedHosts, u_int flaggedHostsLen,
+			      UsageCounter *counter,
+			      char *fileName, int fileLine) {
   int i, numFull;
 
   for(i=0, numFull=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
@@ -184,7 +184,7 @@ static int _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen,
 
 /* **************************************** */
 
-static void _checkPortUsage(u_int *flaggedHosts, u_int flaggedHostsLen,
+static void _checkPortUsage(HostTraffic **flaggedHosts, u_int flaggedHostsLen,
 			    PortUsage **portsUsage,
 			    char *fileName, int fileLine) {
   int i;
@@ -217,7 +217,7 @@ static void _checkPortUsage(u_int *flaggedHosts, u_int flaggedHostsLen,
 
 /* ************************************ */
 
-static IpGlobalSession* purgeIdleHostSessions(u_int *flaggedHosts, 
+static IpGlobalSession* purgeIdleHostSessions(HostTraffic **flaggedHosts, 
 					      u_int flaggedHostsLen,
 					      IpGlobalSession *sessionScanner) {
   if(sessionScanner != NULL) {
@@ -241,7 +241,7 @@ static IpGlobalSession* purgeIdleHostSessions(u_int *flaggedHosts,
 /* **************************************** */
 
 static void removeGlobalHostPeers(HostTraffic *el,
-				  u_int *flaggedHosts,
+				  HostTraffic **flaggedHosts,
 				  u_int flaggedHostsLen) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering removeGlobalHostPeers(0x%X)", el);
@@ -322,9 +322,8 @@ static void removeGlobalHostPeers(HostTraffic *el,
 
 /* **************************************** */
 
-void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualDeviceId) {
-  u_int j, i;
-  HostTraffic *host;
+void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDeviceId) {
+  u_int j, i;  
   IpGlobalSession *nextElement, *element;
 
   host = myGlobals.device[theDevice].hash_hostTraffic[checkSessionIdx(hostIdx)];
@@ -333,8 +332,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualD
     return;  
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)",
-	     host->hostNumIpAddress, hostIdx);
+  traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)", host->hostNumIpAddress, hostIdx);
 #endif
 
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
@@ -357,9 +355,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualD
   if(host->nbDomainName != NULL)        free(host->nbDomainName);
   if(host->nbDescr != NULL)             free(host->nbDescr);
   if(host->atNodeName != NULL)          free(host->atNodeName);
-  for(i=0; i<MAX_NODE_TYPES; i++)
-    if(host->atNodeType[i] != NULL)
-      free(host->atNodeType[i]);
+  for(i=0; i<MAX_NODE_TYPES; i++)       if(host->atNodeType[i] != NULL) free(host->atNodeType[i]);
   if(host->atNodeName != NULL)          free(host->atNodeName);
   if(host->ipxHostName != NULL)         free(host->ipxHostName);
 
@@ -419,35 +415,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualD
       myGlobals.device[theDevice].last24HoursThpt[i].thirdHostRcvdIdx = NO_PEER;
   }
 
-  /*
-    Check whether there are hosts that have the host being
-    purged as peer. Fixes courtesy of
-    Andreas Pfaller <apfaller@yahoo.com.au>.
-  */
-
-  if(refreshHash) {
-    u_int *myflaggedHosts;
-    unsigned int len, idx;
-
-    len = sizeof(u_int)*myGlobals.device[theDevice].actualHashSize;
-    myflaggedHosts = (u_int*)malloc(len);
-    memset(myflaggedHosts, 0, len);
-    myflaggedHosts[hostIdx] = 1; /* Set the entry to free */
-
-    for(idx=1; idx<myGlobals.device[theDevice].actualHashSize; idx++) {
-      if((idx != hostIdx) /* Don't remove the instance we're freeing */
-	 && (idx != myGlobals.otherHostEntryIdx)
-	 && (myGlobals.device[theDevice].hash_hostTraffic[idx] != NULL)) {
-	removeGlobalHostPeers(myGlobals.device[theDevice].hash_hostTraffic[idx],
-			      myflaggedHosts, 
-			      myGlobals.device[theDevice].actualHashSize); /* Finally refresh the hash */
-      }
-    }
-
-    free(myflaggedHosts);
-  }
-
-  if(host->routedTraffic != NULL)          free(host->routedTraffic);
+  if(host->routedTraffic != NULL) free(host->routedTraffic);
 
   if(host->portsUsage != NULL) {
     for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++)
@@ -557,7 +525,8 @@ void freeHostInstances(int actualDeviceId) {
     for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
       if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL) {
 	num++;
-	freeHostInfo(actualDeviceId, idx, 0, actualDeviceId);
+	freeHostInfo(actualDeviceId, myGlobals.device[actualDeviceId].hash_hostTraffic[idx],
+		     idx, actualDeviceId);
       }
     }
   }
@@ -566,12 +535,12 @@ void freeHostInstances(int actualDeviceId) {
 }
 
 /* ************************************ */
-
-void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
+#define DEBUG
+void purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, len;
   time_t startTime = time(NULL);
   static time_t lastPurgeTime = 0;
-  u_int *theFlaggedHosts;
+  HostTraffic **theFlaggedHosts;
 
   if(startTime < (lastPurgeTime+(SESSION_SCAN_DELAY/2)))
     return; /* Too short */
@@ -579,8 +548,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
     lastPurgeTime = startTime;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Purging Idle Hosts... (ignoreIdleTime=%d, actDevice=%d)",
-	     ignoreIdleTime, actDevice);
+  traceEvent(TRACE_INFO, "Purging Idle Hosts... (actDevice=%d)", actDevice);
 #endif
 
 #ifdef MULTITHREADED
@@ -591,8 +559,8 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
-  len = sizeof(u_int)*myGlobals.device[actDevice].actualHashSize;
-  theFlaggedHosts = (u_int*)malloc(len);
+  len = sizeof(HostTraffic*)*myGlobals.device[actDevice].actualHashSize;
+  theFlaggedHosts = (HostTraffic**)malloc(len);
   memset(theFlaggedHosts, 0, len);
 
 #ifdef MULTITHREADED
@@ -605,19 +573,22 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
        && (myGlobals.device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
        && (!subnetPseudoLocalHost(myGlobals.device[actDevice].hash_hostTraffic[idx]))) {
 
-      if((ignoreIdleTime)
-	 || (((myGlobals.device[actDevice].hash_hostTraffic[idx]->lastSeen+
-	       IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime) && (!myGlobals.stickyHosts)))
-	theFlaggedHosts[idx]=1;
+      if((!myGlobals.stickyHosts)
+	 && ((myGlobals.device[actDevice].hash_hostTraffic[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) 
+	     < myGlobals.actTime))	 
+	theFlaggedHosts[idx]=myGlobals.device[actDevice].hash_hostTraffic[idx];
+      myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
     }
+#ifdef MULTITHREADED
+  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
 
   /* Now free the entries */
   for(idx=1; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
-    if((idx != myGlobals.otherHostEntryIdx) && (theFlaggedHosts[idx] == 1)) {
-      freeHostInfo(actDevice, idx, 0, actDevice);
+    if((idx != myGlobals.otherHostEntryIdx) && (theFlaggedHosts[idx] != NULL)) {
+      freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)",
-		 idx, numFreedBuckets);
+      traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)", idx, numFreedBuckets);
 #endif
       numFreedBuckets++;
     } else if((myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL)
@@ -632,10 +603,6 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
     }
   }
 
-#ifdef MULTITHREADED
-  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
-
   free(theFlaggedHosts);
 
 #ifdef DEBUG
@@ -645,6 +612,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   }
 #endif
 }
+#undef DEBUG
 
 /* ******************************************** */
 
@@ -809,7 +777,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		    if((!myGlobals.stickyHosts)
 		       && (numFreedHosts < 7) /* Don't free too many buckets per run ! */
 		       && ((el->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)) {
-			freeHostInfo(actualDeviceId, list->idx, 0, actualDeviceId);
+		      freeHostInfo(actualDeviceId, el, list->idx, actualDeviceId);
 
 			numFreedHosts++;
 

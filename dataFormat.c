@@ -262,12 +262,21 @@ char* formatPkts(TrafficCounter pktNr) {
 	    (unsigned long)(pktNr/1000),
 	    ((unsigned long)pktNr)%1000) < 0) 
      BufferOverflow();
-  } else {
+  } else if(pktNr < 1000000000) {
     unsigned long a, b, c;
     a = (unsigned long)(pktNr/1000000);
     b = (unsigned long)((pktNr-a*1000000)/1000);
     c = ((unsigned long)pktNr)%1000;
     if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu,%03lu", a, b, c) < 0) 
+     BufferOverflow();
+  } else {
+    unsigned long a, b, c, a1, a2;
+    a = (unsigned long)(pktNr/1000000);
+    a1 = (unsigned long)(pktNr/1000); 
+    a2 = a % 1000;
+    b = (unsigned long)((pktNr-a*1000000)/1000);
+    c = ((unsigned long)pktNr)%1000;
+    if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu,%03lu,%03lu", a1, a2, b, c) < 0) 
      BufferOverflow();
   }
 

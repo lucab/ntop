@@ -655,15 +655,12 @@ typedef struct packetInformation {
 				 */
 } PacketInformation;
 
-
 typedef struct hash_list {
   u_int16_t idx; /* Index of this entry in hostTraffic */
   struct hash_list *next;
 } HashList;
 
-
 #define HASH_LIST_SIZE    ((u_int16_t)-1) /* Static hash size */
-
 
 # if defined(HAVE_OPENSSL)
 #  define THREAD_MODE "MT (SSL)"
@@ -1681,7 +1678,7 @@ typedef struct hostTraffic {
 				  for this host will be updated */
   u_char           ethAddress[ETHERNET_ADDRESS_LEN];
   u_char           lastEthAddress[ETHERNET_ADDRESS_LEN]; /* used for remote addresses */
-  u_char           instanceInUse; /* If so, this instance cannot be purged */
+  u_short          instanceInUse; /* If so, this instance cannot be purged */
   char             ethAddressString[18];
   char             hostNumIpAddress[17], *fullDomainName;
   char             *dotDomainName, hostSymIpAddress[MAX_HOST_SYM_NAME_LEN], *osName;

@@ -101,9 +101,10 @@ extern void drawGlobalIpProtoDistribution(void);
 extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
                                    u_char *ether_addr,
                                    short* useIPAddressForSearching, int actualDeviceId);
-extern void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualDeviceId);
+extern void freeHostInfo(int theDevice, HostTraffic *host, 
+			 u_int hostIdx, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
-extern void purgeIdleHosts(int ignoreIdleTime, int devId);
+extern void purgeIdleHosts(int devId);
 extern int extendTcpSessionsHash(int actualDeviceId);
 extern void purgeHostIdx(int theDevice, u_int hostIdx);
 
