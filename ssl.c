@@ -72,8 +72,9 @@ int init_ssl(void) {
   }
   
   if(fd == NULL) {
-    traceEvent(TRACE_WARNING, "Unable to find SSL certificate '%s'. SSL support has been disabled\n",
-	   CERTF);
+    traceEvent(TRACE_WARNING, 
+	       "Unable to find SSL certificate '%s'. SSL support has been disabled\n",
+	       CERTF);
     return(-1);
   } else
     fclose(fd);
@@ -113,11 +114,12 @@ int init_ssl(void) {
   }
     
   if (!SSL_CTX_check_private_key(ctx)) {
-    traceEvent(TRACE_WARNING, "Private key does not match the certificate public key\n");
+    traceEvent(TRACE_WARNING, "Private key does not match the certificate public key");
     return(5);
   }
 
   sslInitialized=1;
+  traceEvent(TRACE_INFO, "SSL initialized successfully");
   return(0);
 }
 
