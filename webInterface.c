@@ -624,10 +624,10 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(el->vlanId > 0) {
-    char tmp[256];
+    char tmp[256], tmpBuf[64];
 
     safe_snprintf(__FILE__, __LINE__, vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
-    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%s (vlan %d)", symIp, el->vlanId);
+    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%s (vlan %s)", symIp, vlan2name(el->vlanId, tmpBuf, sizeof(tmpBuf)));
     safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "%s", tmp);
   } else {
     vlanStr[0] = '\0';
@@ -879,7 +879,8 @@ void switchNwInterface(int _interface) {
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=" CONST_SWITCH_NIC_HTML ">\n");
 
     for(i=0; i<myGlobals.numDevices; i++)
-      if((!myGlobals.device[i].virtualDevice) &&  myGlobals.device[i].activeDevice) {
+      if(((!myGlobals.device[i].virtualDevice) || (myGlobals.device[i].sflowGlobals)|| (myGlobals.device[i].netflowGlobals))	  
+	 &&  myGlobals.device[i].activeDevice) {
 	if(myGlobals.actualReportDeviceId == i)
 	  selected="CHECKED";
 	else

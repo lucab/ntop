@@ -6339,3 +6339,17 @@ PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) 
 
   return(newPort);
 }
+
+/* *************************************************** */
+
+char* vlan2name(int vlanId, char *buf, int buf_len) {
+  char key[64];
+
+  snprintf(key, sizeof(key), "vlan.%d", vlanId);
+
+  if(fetchPrefsValue(key, buf, buf_len) == -1) {
+    snprintf(buf, sizeof(buf), "%d", vlanId);
+  }
+
+  return(buf);
+}

@@ -1251,7 +1251,7 @@ typedef struct netFlowGlobals {
 
 /* *********************************** */
 
-#define MAX_NUM_SFLOW_INTERFACES      256
+#define MAX_NUM_SFLOW_INTERFACES      4096
 
 typedef struct ifCounters {
   u_int32_t ifIndex;

@@ -2245,17 +2245,17 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     sendString("</P>\n");
 
     if(foundVlan) {
-      u_char found = 0;
+      u_char found = 0, tmpBuf[64];
 
       sendString("<p><b>VLAN</b>: ");
 
       for(i=0; i<MAX_VLAN; i++)
 	if(vlanList[i] == 1) {
 	  if(i == vlanId)
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%d</b> ] ", i), found = 1;
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%s</b> ] ", vlan2name(i, tmpBuf, sizeof(tmpBuf))), found = 1;
 	  else
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d&vlan=%d\">%d</A> ] ",
-			  CONST_HOSTS_INFO_HTML, showBytes, i, i);
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d&vlan=%d\">%s</A> ] ",
+			  CONST_HOSTS_INFO_HTML, showBytes, i, vlan2name(i, tmpBuf, sizeof(tmpBuf)));
 	
 	  sendString(buf);
 	}

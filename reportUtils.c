@@ -3700,9 +3700,11 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if(el->vlanId != -1) {
+    char tmpBuf[64];
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"%d</TD></TR>\n", getRowColor(), "VLAN&nbsp;Id", el->vlanId);
-      sendString(buf);
+		  "%s</TD></TR>\n", getRowColor(), "VLAN&nbsp;Id", vlan2name(el->vlanId, tmpBuf, sizeof(tmpBuf)));
+    sendString(buf);
   }
 
   if(el->nonIPTraffic) {

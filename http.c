@@ -724,7 +724,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
     sendString("<script language=\"JavaScript\"><!--\n");
     sendString("	cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n");
     sendString("--></script>\n");
-    sendString("</th><th class=\"leftmenuitem\" align=right>(C) 1998-2004 - "
+    sendString("</th><th class=\"leftmenuitem\" align=right>(C) 1998-2005 - "
 	       "<a href=\"mailto:deri@ntop.org\" title=\"Email Luca\">L. Deri</a>&nbsp;&nbsp;</th></tr>\n");
     sendString("</table>\n");
     
@@ -744,21 +744,21 @@ void printHTMLtrailer(void) {
           break;
           ;
       case FLAG_NTOPSTATE_STOPCAP:
-          sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
-                     "Packet capture stopped"
-                     "</B></FONT></CENTER>");
-          break;
-          ;
-      case FLAG_NTOPSTATE_TERM:
-          sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
-                     "ntop stopped"
-                     "</B></FONT></CENTER>");
-          break;
-          ;
+	sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+		   "Packet capture stopped"
+		   "</B></FONT></CENTER>");
+	break;
+	;
+  case FLAG_NTOPSTATE_TERM:
+    sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+	       "ntop stopped"
+	       "</B></FONT></CENTER>");
+    break;
+    ;
   }
-
+  
   sendString("\n<hr>\n<h5><font face=\"Helvetica, Arial, Sans Serif\" size=\"-1\"><b>\n");
-
+  
   safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s ",
 	      ctime(&myGlobals.actTime));
   sendString(buf);
@@ -840,7 +840,7 @@ void printHTMLtrailer(void) {
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
   sendString(buf);
 
-  sendString("<br>\n&copy; 1998-2004 by <a href=\"mailto:&#100;&#101;&#114;&#105;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\">Luca Deri</a>\n");
+  sendString("<br>\n&copy; 1998-2005 by <a href=\"mailto:&#100;&#101;&#114;&#105;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\">Luca Deri</a>\n");
   sendString("</b></font></h5>\n</BODY>\n</HTML>\n");
 }
 
@@ -1554,7 +1554,7 @@ int generateInternalPages(char* pageName) {
                  "border=\"0\" align=\"middle\">");
 
       sendString("</ol>\n"
-                 "<p><center><b>&copy; 1998-2004 by "
+                 "<p><center><b>&copy; 1998-2005 by "
                  "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
                  "</body>\n</html>\n");
       return 0;
@@ -1787,7 +1787,7 @@ static int generateNewInternalPages(char* pageName) {
                  "border=\"0\" align=\"middle\">");
 
       sendString("</ol>\n"
-                 "<p><center><b>&copy; 1998-2004 by "
+                 "<p><center><b>&copy; 1998-2005 by "
                  "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
                  "</body>\n</html>\n");
       return 0;
@@ -1981,7 +1981,7 @@ int generateNew1InternalPages(char* pageName) {
                  "border=\"0\" align=\"middle\">");
 
       sendString("</ol>\n"
-                 "<p><center><b>&copy; 1998-2004 by "
+`                 "<p><center><b>&copy; 1998-2005 by "
                  "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
                  "</body>\n</html>\n");
       return 0;

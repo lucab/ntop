@@ -368,6 +368,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   directoryPointer = opendir(path);
 
   if(directoryPointer == NULL) {
+    sendString("</TABLE>");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<I>(1) Unable to read directory %s</I>", path);
     traceEvent(CONST_TRACE_INFO, "RRD: %s", buf);
     printFlagedWarning(buf);

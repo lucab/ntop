@@ -631,6 +631,7 @@ extern unsigned short isOKtoSave(u_int32_t addr,
 extern float timeval_subtract(struct timeval x, struct timeval y);
 extern void freePortsUsage(PortUsage *ports);
 extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
+extern char* vlan2name(int vlanId, char *buf, int buf_len);
 
 /* Formatting for %.2f ... */
 #define xvertDOT00MB(v)(((float)(v)/(float)(1024.0*1024.0))+0.005)

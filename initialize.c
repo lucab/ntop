@@ -1496,7 +1496,6 @@ void initDevices(char* devices) {
     return;
   }
 
-  memset(&devpointer, 0, sizeof(pcap_if_t));
   if(pcap_findalldevs(&devpointer, ebuf) < 0) {
     traceEvent(CONST_TRACE_ERROR, "pcap_findalldevs() call failed [%s]", ebuf);
     traceEvent(CONST_TRACE_ERROR, "Have you instaled libpcap/winpcap properly?");
