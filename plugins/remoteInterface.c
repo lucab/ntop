@@ -2,10 +2,6 @@
  *  Copyright (C) 1998-2000 Luca Deri <deri@ntop.org>
  *                          Andrea Bettarini <abettarini@excitecorp.com>
  *
- *  			    Centro SERRA, University of Pisa
- *  			    http://www.ntop.org/
- *
- *     		            Excite Italia
  *  		            http://www.excite.it/
  *
  *  This program is free software; you can redistribute it and/or modify
