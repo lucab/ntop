@@ -660,35 +660,35 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
 
 /* ************************* */
 
-static void returnHTTPbadRequest() {
+void returnHTTPbadRequest() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_400);
 }
 
-static void returnHTTPaccessDenied() {
+void returnHTTPaccessDenied() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_401 | HTTP_FLAG_NEED_AUTHENTICATION);
 }
 
-static void returnHTTPaccessForbidden() {
+void returnHTTPaccessForbidden() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_403);
 }
 
-static void returnHTTPpageNotFound() {
+void returnHTTPpageNotFound() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_404);
 }
 
-static void returnHTTPpageGone() {
+void returnHTTPpageGone() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_410);
 }
 
-static void returnHTTPrequestTimedOut() {
+void returnHTTPrequestTimedOut() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_408);
 }
 
-static void returnHTTPnotImplemented() {
+void returnHTTPnotImplemented() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_501);
 }
 
-static void returnHTTPversionNotSupported() {
+void returnHTTPversionNotSupported() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_505);
 }
 
@@ -726,8 +726,6 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
       BufferTooShort();
     sendString(buf);
   }
-
-  printHTMLtrailer();
 
   logHTTPaccess(HTTPstatus[statusIdx].statusCode, NULL, 0);
 }

@@ -229,6 +229,14 @@ extern int out_graph(short gifwidth,
 
 /* http.c */
 extern void sendHTTPHeader(int mimeType, int headerFlags);
+extern void returnHTTPbadRequest();
+extern void returnHTTPaccessDenied();
+extern void returnHTTPaccessForbidden();
+extern void returnHTTPpageNotFound();
+extern void returnHTTPpageGone();
+extern void returnHTTPrequestTimedOut();
+extern void returnHTTPnotImplemented();
+extern void returnHTTPversionNotSupported();
 
 #define STR_FAVICON_ICO                 "favicon.ico"
 #define STR_INDEX_HTML                  "index.html"
