@@ -2270,28 +2270,52 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
   FlowFilterList *list = myGlobals.flowsList;
 
   while(list != NULL) {
-    if((list->pluginStatus.activePlugin)
-       && (list->fcode[deviceId].bf_insns != NULL)
-       && (bpf_filter(list->fcode[deviceId].bf_insns,
-		      (u_char*)p, h->len, h->caplen))) {
-      incrementTrafficCounter(&list->bytes, h->len);
-      incrementTrafficCounter(&list->packets, 1);
-      if(list->pluginStatus.pluginPtr != NULL) {
-	void(*pluginFunct)(u_char*, const struct pcap_pkthdr*, const u_char*);
+#ifdef DEBUG
+    if(!list->pluginStatus.activePlugin)
+      traceEvent(CONST_TRACE_NOISY, "%s inactive", list->flowName);
+    else if(list->fcode[deviceId].bf_insns == NULL)
+      traceEvent(CONST_TRACE_NOISY, "%s no filter", list->flowName);
+#endif
 
-	pluginFunct = (void(*)(u_char *_deviceId, const struct pcap_pkthdr*,
-			      const u_char*))list->pluginStatus.pluginPtr->pluginFunct;
-	pluginFunct((u_char*)&deviceId, h, p);
+    if((list->pluginStatus.activePlugin) &&
+       (list->fcode[deviceId].bf_insns != NULL)) {
 #ifdef DEBUG
-	printf("Match on %s for '%s'\n", myGlobals.device[deviceId].name,
-	       list->flowName);
-#endif
+      {
+        struct ether_header *ep;
+        u_int16_t et=0, et8021q=0;
+        ep = (struct ether_header *)p;
+        et = ntohs(ep->ether_type);
+        if(et == ETHERTYPE_802_1Q) {
+          et8021q = et;
+          ep = (struct ether_header *)(p+4);
+          et = ntohs(ep->ether_type);
+        }
+        traceEvent(CONST_TRACE_NOISY, "%smatch on %s for '%s' %s0x%04x-%s-%d/%d", 
+                   bpf_filter(list->fcode[deviceId].bf_insns, (u_char*)p, h->len, h->caplen) ?
+                     "" : "No ",
+                   myGlobals.device[deviceId].name,
+                   list->flowName,
+                   et8021q == ETHERTYPE_802_1Q ? "(802.1q) " : "",
+                   et,
+                   et == ETHERTYPE_IP ? "IPv4" :
+                     et == ETHERTYPE_IPv6 ? "IPv6" :
+                     et == ETHERTYPE_ARP ? "ARP" :
+                     et == ETHERTYPE_REVARP ? "RARP" :
+                     "other",
+                   h->len, h->caplen);
       }
-    } else {
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "No match on %s for '%s'", myGlobals.device[deviceId].name,
-		 list->flowName);
 #endif
+      if(bpf_filter(list->fcode[deviceId].bf_insns, (u_char*)p, h->len, h->caplen)) {
+        incrementTrafficCounter(&list->bytes, h->len);
+        incrementTrafficCounter(&list->packets, 1);
+        if(list->pluginStatus.pluginPtr != NULL) {
+          void(*pluginFunct)(u_char*, const struct pcap_pkthdr*, const u_char*);
+
+	  pluginFunct = (void(*)(u_char *_deviceId, const struct pcap_pkthdr*,
+                         const u_char*))list->pluginStatus.pluginPtr->pluginFunct;
+	  pluginFunct((u_char*)&deviceId, h, p);
+        }
+      }
     }
 
     list = list->next;
