@@ -147,8 +147,8 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(pageNum >= 1) {
     if(snprintf(prevBuf, sizeof(prevBuf),
-		"<A HREF=\"%s%cpage=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 ALIGN=vmiddle ALT=\"Back to first page\"></A> "
-		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/back.gif BORDER=0 ALIGN=vmiddle ALT=\"Prior page\"></A>",
+		"<A HREF=\"%s%cpage=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Back to first page\"></A> "
+		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/back.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Prior page\"></A>",
 		url, separator, shortBuf, url, separator, pageNum-1, shortBuf) < 0)
       BufferTooShort();
   } else
@@ -156,8 +156,8 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(actPage < numPages) {
     if(snprintf(nextBuf, sizeof(nextBuf),
-		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 ALIGN=vmiddle ALT=\"Next Page\"></A> "
-		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
+		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Next Page\"></A> "
+		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
 		url, separator, pageNum+1, shortBuf, url, separator, numPages-1, shortBuf) < 0)
       BufferTooShort();
   }  else
@@ -186,12 +186,12 @@ void printTrafficStatistics(int revertOrder) {
   unicastPkts = 0;
   printHTMLheader("Global Traffic Statistics", NULL, 0);
 
-  sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
+  sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Interface(s)</TH>"
 	     "<TD "TD_BG" ALIGN=RIGHT>");
 
-  sendString(""TABLE_ON"<TABLE BORDER=\"1\" WIDTH=\"100%\">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Name</TH>"
+  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Name</TH>"
 	     "<TH "TH_BG" "DARK_BG">Device</TH><TH "TH_BG" "DARK_BG">Type</TH>"
 	     "<TH "TH_BG" "DARK_BG">Speed</TH><TH "TH_BG" "DARK_BG">MTU</TH>"
 	     "<TH "TH_BG" "DARK_BG">Header</TH><TH "TH_BG" "DARK_BG">Address</TH>");
@@ -347,7 +347,7 @@ void printTrafficStatistics(int revertOrder) {
 
 #ifndef EMBEDDED
   if(myGlobals.numRealDevices > 1)
-    sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3>"
+    sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		 "<IMG SRC=\"interfaceTrafficPie"CHART_FORMAT"\" alt=\"interface traffic chart\"></TD></TR>\n");
 #endif
 
@@ -360,10 +360,10 @@ void printTrafficStatistics(int revertOrder) {
                   myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
           BufferTooShort();
       printSectionTitle(buf);
-      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
+      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
       sendString("<TR><TH "TH_BG" align=left "DARK_BG">Packets</TH><TD "TH_BG">\n"
-                 "<TABLE BORDER=1 WIDTH=\"100%\">\n");
+                 "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n");
 
       unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
           - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value
@@ -570,7 +570,7 @@ void printTrafficStatistics(int revertOrder) {
 
 #ifndef EMBEDDED
           if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
-              sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
+              sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
                          "<IMG SRC=\"pktSizeDistribPie"CHART_FORMAT"\" alt=\"pktSize distribution chart\"></TH></TR>\n");
 #endif
 
@@ -597,7 +597,7 @@ void printTrafficStatistics(int revertOrder) {
 
       if(!myGlobals.noFc &&
          myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
-          sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">FC Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=\"100%\">");
+          sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">FC Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
         
           if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
               if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
@@ -752,7 +752,7 @@ void printTrafficStatistics(int revertOrder) {
               BufferTooShort();
           sendString(buf);
       
-          sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" "DARK_BG" ALIGN=CENTER COLSPAN=3>"
+          sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" "DARK_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
                      "<IMG SRC=\"fcPktSizeDistribPie"CHART_FORMAT"\" alt=\"FC pktSize distribution chart\"></TH></TR>\n");
       
           if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
@@ -778,7 +778,7 @@ void printTrafficStatistics(int revertOrder) {
       }
       /* ****************** */
 
-      sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=\"100%\">");
+      sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
                   "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
                   getRowColor(),
@@ -938,7 +938,7 @@ void printTrafficStatistics(int revertOrder) {
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       updateThpt(0);
 
-      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=\"100%\">");
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Actual</th><TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt, 
@@ -1001,7 +1001,7 @@ void printTrafficStatistics(int revertOrder) {
   if((i = stat(buf, &statbuf)) == 0) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"[ <A HREF=\"/plugins/rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
-		"<IMG BORDER=0 SRC=\"/graph.gif\" alt=\"Generate rrd graphs page\"></A> ]</TD></TR>\n",
+		"<IMG BORDER=0 "TABLE_DEFAULTS" SRC=\"/graph.gif\" alt=\"Generate rrd graphs page\"></A> ]</TD></TR>\n",
 		getRowColor(), "RRD Stats", myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
       BufferTooShort();
@@ -1711,7 +1711,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 	arrow[i] = "", theAnchor[i] = htmlAnchor1;
     
     sendString("<CENTER>\n");
-    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG"><TH "TH_BG">%s0>Host%s</A></TH>\n"
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">%s0>Host%s</A></TH>\n"
 		"<TH "TH_BG">%s1>Domain%s</A></TH>"
 		"<TH "TH_BG">%s2>Pkts Sent%s</A></TH>"
 		"<TH "TH_BG">%s3>Data Sent%s</A></TH>"
@@ -1850,7 +1850,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     }
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-      if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON" "DARK_BG">"
+      if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 		  "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
 		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		  "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
@@ -1877,7 +1877,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  ) < 0)
 	BufferTooShort();
     } else {
-      if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON" "DARK_BG">"
+      if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 		  "<TH "TH_BG">%s1>Host%s</A></TH>\n"
 		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		  "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
@@ -2129,7 +2129,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		    formatSeconds(el->lastSeen - el->firstSeen, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
-
+	
 	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%d</A></TD>", el->hostAS) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -2272,7 +2272,7 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
 	if(i == 0) {
 	  printSectionTitle("TCP/UDP&nbsp;Service/Port&nbsp;Usage\n");
 	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON" "DARK_BG">"
+	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG">IP&nbsp;Service</TH>"
 		     "<TH "TH_BG">Port</TH>"
 		     "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
@@ -2284,11 +2284,11 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
 	}
 
 	if(svc != NULL) {
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		      "<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx) < 0)
 	    BufferTooShort();
 	} else {
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%d</TH>"
+	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%d</TH>"
 		      "<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx) < 0)
 	    BufferTooShort();
 	}
@@ -2362,7 +2362,7 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
 
     printSectionTitle("TCP/UDP - Traffic on Other Ports\n");
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON" "DARK_BG">"
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
 	       "</TR>\n");
 
@@ -2406,7 +2406,7 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
 
     printSectionTitle("TCP/UDP Recently Used Ports\n");
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON" "DARK_BG">"
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
 	       "</TR>\n");
 
@@ -2451,7 +2451,7 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
     printSectionTitle("P2P Recently Exchanged Files\n");
 
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
 	       "<TH "TH_BG" NOWRAP>File Name</TH></TR>\n");
     sendString("<TR><TD align=left "DARK_BG"><ol>\n");
 
@@ -2517,7 +2517,7 @@ void printLocalRoutersList(int actualDeviceId) {
     return;
   } else {
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG"><TH "TH_BG">Router Name</TH>"
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">Router Name</TH>"
 	       "<TH "TH_BG">Used by</TH></TR>\n");
 
     for(i=0; i<numEntries; i++) {
@@ -2677,7 +2677,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 	arrow[i] = "", theAnchor[i] = htmlAnchor1;
 
     sendString("<CENTER>\n");
-    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\">\n"
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n"
 		"<TR "TR_ON" "DARK_BG"><TH "TH_BG">"
 		"%s1>Host%s</A></TH>"
 		"<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
@@ -2756,7 +2756,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     addPageIndicator(str, pageNum, numEntries, myGlobals.maxNumLines,
 		     revertOrder, abs(sortedColumn));
 
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\">\n<TR "TR_ON" "DARK_BG">"
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">Total Traffic</TH><TH "TH_BG">Data Sent</TH>\n"
 	       "<TH "TH_BG">Data Rcvd</TH><TH "TH_BG">Used Bandwidth</TH></TR>\n");
 
@@ -2804,8 +2804,6 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], 
     formatBuf4[32], formatBuf5[32], formatBuf6[32];
 
-  printHTMLheader("Active TCP Sessions", NULL, 0);
-
   if(!myGlobals.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");
     return;
@@ -2848,9 +2846,9 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	}
 
 	if(printedSessions == 0) {
-
+	  printHTMLheader("Active TCP Sessions", NULL, 0);
 	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG">"
+	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG">Client</TH>"
 		     "<TH "TH_BG">Server</TH>"
 		     "<TH "TH_BG">Data&nbsp;Sent</TH>"
@@ -2894,15 +2892,15 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	  session->lastSeen = myGlobals.actTime;
 
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s:%s%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 #ifdef PARM_PRINT_ALL_SESSIONS
 		    "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
 #endif
@@ -2963,7 +2961,7 @@ void printIpProtocolUsage(void) {
   char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   int portBufLen;
   
-  printHTMLheader("TCP/UDP Protocol Subnet Usage", NULL, 0);
+  printHTMLheader("TCP/UDP: Local Protocol Usage", NULL, 0);
 
   memset(clientPorts, 0, sizeof(clientPorts));
   memset(serverPorts, 0, sizeof(serverPorts));
@@ -3000,7 +2998,7 @@ void printIpProtocolUsage(void) {
   /* Hosts are now in a contiguous structure (hosts[])... */
 
   sendString("<CENTER>\n");
-  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG"><TH "TH_BG" COLSPAN=2>Service</TH>"
+  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG" COLSPAN=2>Service</TH>"
 	     "<TH "TH_BG">Clients</TH><TH "TH_BG">Servers</TH>\n");
 
   for(j=0; j<MAX_ASSIGNED_IP_PORTS; j++)
@@ -3134,7 +3132,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     if(total == 0)
       printNoDataYet();
     else {
-      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
 		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
@@ -3147,7 +3145,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 				"TCP", "UDP", total, percentage);
 
       sendString("</TABLE>"TABLE_OFF"<P>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
                  "Percentage</TH></TR>\n");
@@ -3170,7 +3168,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       if(remainingTraffic > 0) {
 	percentage = ((float)(remainingTraffic*100))/((float)total);
-	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Prot.",
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
 			CONST_COLOR_1, remainingTraffic, percentage);
       }
 
@@ -3189,7 +3187,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printNoDataYet();
     else {
       sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
 		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
@@ -3203,7 +3201,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 				"TCP", "UDP", total, percentage);
 
       sendString("</TABLE>"TABLE_OFF);
-      sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+      sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
 		 "Percentage</TH></TR>\n");
@@ -3226,7 +3224,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       if(remainingTraffic > 0) {
 	percentage = ((float)(remainingTraffic*100))/((float)total);
-	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Prot.",
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
 			CONST_COLOR_1, remainingTraffic, percentage);
       }
       sendString("</TABLE>"TABLE_OFF"\n<P>\n");
@@ -3244,7 +3242,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     if(total == 0)
       printNoDataYet();
     else {
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
                  "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
                  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
                  "Percentage</TH></TR>\n");
@@ -3257,7 +3255,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
                                 "TCP", "UDP", total, percentage);
 
       sendString("</TABLE>"TABLE_OFF"\n");
-      sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+      sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
                  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
                  "Percentage</TH></TR>\n");
@@ -3283,7 +3281,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       if(remainingTraffic > 0) {
         percentage = ((float)(remainingTraffic*100))/((float)total);
         printTableEntry(buf, sizeof(buf),
-			"Other&nbsp;TCP/UDP-based&nbsp;Prot.",
+			"Other&nbsp;TCP/UDP-based&nbsp;Protocols",
                         CONST_COLOR_1, remainingTraffic, percentage);
       }
 
@@ -3301,7 +3299,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printNoDataYet();
     else {
       sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
 		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH>"
 		 "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
@@ -3315,7 +3313,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 				"TCP", "UDP", total, percentage);
 
       sendString("</TABLE>"TABLE_OFF);
-      sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+      sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH>"
 		 "<TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
@@ -3338,7 +3336,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       if(remainingTraffic > 0) {
 	percentage = ((float)(remainingTraffic*100))/((float)total);
-	printTableEntry(buf, sizeof(buf), "Other&nbsp;IP-based&nbsp;Prot.",
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;IP-based&nbsp;Protocols",
 			CONST_COLOR_1, remainingTraffic, percentage);
       }
       sendString("</TABLE>"TABLE_OFF"<P>\n");
@@ -3369,7 +3367,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printSectionTitle("Global TCP/UDP Protocol Distribution");
 
       sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
 		 "TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
 		 "Percentage</TH></TR>\n");
@@ -3398,13 +3396,13 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       if(remainingTraffic > 0) {
 	percentage = ((float)(remainingTraffic*100))/((float)total);
-	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Prot.",
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
 			CONST_COLOR_1, remainingTraffic/1024, percentage);
       }
 
 #ifndef EMBEDDED
       if(numProtosFound > 0)
-	sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER>"
+	sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 		   "<IMG SRC=\"drawGlobalIpProtoDistribution"CHART_FORMAT"\" alt=\"Global ipProtocol distribution chart\"></TD></TR>\n");
 #endif
       sendString("</TABLE>"TABLE_OFF"<P>\n");
@@ -3427,7 +3425,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	if(idx > 0) {
 	  printSectionTitle("TCP/UDP Traffic Port Distribution:<br>Last Minute View");
 
-	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG">"
+	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG" colspan=2>TCP/UDP Port</TH>"
 		     "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
 
@@ -3489,7 +3487,7 @@ void printProtoTraffic(void) {
 
   printSectionTitle("Global Protocol Distribution");
   sendString("<CENTER>\n");
-  sendString("<P>"TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>Protocol</TH>"
+  sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
   perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/
@@ -3499,7 +3497,7 @@ void printProtoTraffic(void) {
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT "DARK_BG">IP</TH>"
 	      "<TD "TD_BG" WIDTH=50 ALIGN=RIGHT>%s"
 	      "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
-	      "<TABLE BORDER=1 WIDTH=\"100%%\">",
+	      "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\">",
 	      getRowColor(),
 	      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1,
 			  formatBuf, sizeof(formatBuf)),
@@ -3587,7 +3585,7 @@ void printProtoTraffic(void) {
 		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
 
 #ifndef EMBEDDED
-  sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER>"
+  sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 	     "<IMG SRC=\"drawGlobalProtoDistribution"CHART_FORMAT"\" alt=\"global protocol distribution chart\"></TD></TR>\n");
 #endif
 
@@ -3633,7 +3631,7 @@ void printIpTrafficMatrix(void) {
     if(activeHosts[i] == 1) {
       if(numEntries == 1) {
 	sendString("<CENTER>\n");
-	sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG"><SMALL>&nbsp;F&nbsp;"
+	sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG"><SMALL>&nbsp;F&nbsp;"
 		   "&nbsp;&nbsp;To<br>&nbsp;r<br>&nbsp;o<br>&nbsp;m</SMALL></TH>\n");
       }
 
@@ -3755,7 +3753,7 @@ void printThptStatsMatrix(int sortedColumn) {
   switch(sortedColumn) {
   case 1:
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON" "DARK_BG">"
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">Sampling Period</TH>"
 	       "<TH "TH_BG">Average Thpt</TH>"
 	       "<TH "TH_BG">Top Hosts Sent Thpt</TH>"
@@ -3769,10 +3767,10 @@ void printThptStatsMatrix(int sortedColumn) {
       strftime(label, 32, "%H:%M", localtime_r(&tmpTime, &t));
       tmpTime = myGlobals.actTime-((i+1)*60);
       strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TD "TD_BG" ALIGN=CENTER>"
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=CENTER>"
 		  "<B>%s&nbsp;-&nbsp;%s</B></TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"
-		  "<TABLE BORDER=1 WIDTH=100%%>",
+		  "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%%>",
 		  getRowColor(), label1, label,
 		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				   last60MinutesThpt[i].trafficValue, 1, 
@@ -3832,7 +3830,7 @@ void printThptStatsMatrix(int sortedColumn) {
       /* ************************* */
 
       if(!dataSent) sendString("&nbsp;");
-      sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>\n");
+      sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%%>\n");
       dataSent = 0;
 
       /* ************************* */
@@ -3895,11 +3893,9 @@ void printThptStatsMatrix(int sortedColumn) {
       return;
     } else {
       sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
-		 "<TH "TH_BG">Sampling Period</TH>"
-		 "<TH "TH_BG">Average Thpt</TH>"
-		 "<TH "TH_BG">Top Thpt Sent Hosts</TH>"
-		 "<TH "TH_BG">Top Rcvd Sent Hosts</TH>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
+		 "<TH "TH_BG">Sampling Period</TH><TH "TH_BG">Average Thpt</TH>"
+		 "<TH "TH_BG">Top Thpt Sent Hosts</TH><TH "TH_BG">Top Rcvd Sent Hosts</TH>"
 		 "</TR>\n");
 
       for(i=0; i<24; i++) {
@@ -3911,7 +3907,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	tmpTime = myGlobals.actTime-((i+1)*60*60);
 	strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TD "TD_BG" ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG">"TABLE_ON"<TABLE BORDER=1>",
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG">"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">",
 		    getRowColor(), label, label1,
 		    formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				     last24HoursThpt[i].trafficValue, 1, 
@@ -3969,7 +3965,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	/* ************************* */
 
 	sendString("&nbsp;");
-	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG">"TABLE_ON"<TABLE BORDER=1>\n");
+	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG">"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
 	/* ************************* */
 
@@ -4050,7 +4046,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
   sendString("<CENTER>\n");
 
 #ifndef EMBEDDED
-  sendString("<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=1\" BORDER=0>"
+  sendString("<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=1\" BORDER=0 BGCOLOR=white>"
 	     "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=1\" alt=\"Current Hour throughput chart\"></A><BR>\n");
 #endif
 
@@ -4062,7 +4058,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 60) {
 #ifndef EMBEDDED
-    sendString("<P><A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=2\" BORDER=0>"
+    sendString("<P><A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=2\" BORDER=0 BGCOLOR=white>"
 	       "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=2\" alt=\"Current Day throughput chart\"></A><BR>\n");
 #endif
     if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
@@ -4295,7 +4291,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   /* Split below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
   sendString("<CENTER>\n");
   if(snprintf(buf, sizeof(buf),
-	      ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG">"
+	      ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 	      "<TH "TH_BG">%s0>Name%s</A></TH>"
 	      "<TH "TH_BG">%s1>Domain%s</A></TH>"
 	      "<TH "TH_BG" COLSPAN=2>%s2>Sent%s</A></TH>"
@@ -4406,8 +4402,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 		   myGlobals.maxNumLines,
 		   revertOrder, abs(sortedColumn));
 
-  sendString("<p><b>NOTE</b>: The domain is determined by simply stripping off the "
-             "first name, so for host x.yz.com, the domain is yz.com and for host "
+  sendString("<p><b>NOTE</b>: The domain is determined by simply stripping off the<br>"
+             "first name, so for host x.yz.com, the domain is yz.com and for host<br>"
              "x.y.z.com, the domain is y.z.com</p>\n");
 
   free(tmpStats); free(stats);
@@ -4505,7 +4501,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
   }
   
   sendString("<CENTER>\n");
-  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\">\n<TR "DARK_BG">");
+  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n<TR "DARK_BG">");
   sendString("<TH "TH_BG">Time</TH>");
   sendString("<TH "TH_BG">Tot. Traffic Sent</TH>");
   sendString("<TH "TH_BG">% Traffic Sent</TH>");
@@ -4542,7 +4538,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
   for(i=0; i<strlen(targetStr); i++) if(targetStr[i] == ':') targetStr[i] = '_';
   
   if(tcSent > 0) {
-    if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG">"
+    if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
                                   "<IMG SRC=\"/hostTimeTrafficDistribution-%s"CHART_FORMAT"?1\""
                                     " alt=\"hostTraffic sent distribution chart\">"
                                   "</TD>\n",
@@ -4553,7 +4549,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
        sendString("<TD COLSPAN=2 "TD_BG">&nbsp;</TD>\n");
 
   if(tcRcvd > 0) {
-    if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG">"
+    if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
                                   "<IMG SRC=\"/hostTimeTrafficDistribution-%s"CHART_FORMAT"\""
                                     " alt=\"hostTraffic rcvd distribution chart\">"
                                   "</TD>\n",
@@ -4618,7 +4614,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
       AS Data Sent/Rcvd patch courtesy of Marco Sanson <marco.sanson@infvic.it>
     */
 
-    if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON" "DARK_BG">"
+    if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 		"<TH "TH_BG">%s</A></TH><TH "TH_BG">Hosts</TH><TH "TH_BG">Data Sent</TH><TH "TH_BG">Data Rcvd</TH></TR>",
 		criteria == 0 ? "AS" : "VLAN") < 0)
       BufferTooShort();
@@ -4753,7 +4749,7 @@ void showPortTraffic(u_short portNr) {
   recentlyUsedPortSent:
     if(recentlyUsedPort(el, portNr, 0)) {
       if(numRecords == 0) {
-	sendString("<TABLE BORDER>\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
+	sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
 	sendString("<TR>\n<TD>\n");
       }
 
@@ -4782,7 +4778,7 @@ void showPortTraffic(u_short portNr) {
   recentlyUsedPortRcvd:
     if(recentlyUsedPort(el, portNr, 1)) {
       if(numRecords == 0) {
-	sendString("<TABLE BORDER>\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
+	sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
 	sendString("<TR>\n<TD>\n");
 	sendString("\n&nbsp;\n</TD><TD>\n");
       }
@@ -5254,7 +5250,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
         theAnchor[0] = htmlAnchor1;
     }
 
-    if (snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+    if (snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                  "<TH "TH_BG" "DARK_BG">%s3>VSAN%s</A></TH>"
                  "<TH "TH_BG" "DARK_BG">%s1>FC_Port%s</A></TH>"
                  "</TH><TH "TH_BG" "DARK_BG">%s2>FC&nbsp;Address%s</A></TH>\n"
@@ -5426,7 +5422,7 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
         }
     }
     sendString("<CENTER>\n");
-    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                 "<TH "TH_BG" "DARK_BG">%s5\">VSAN%s</a></TH>"
                 "<TH "TH_BG" "DARK_BG">%s1\">FC_Port%s</a></TH>"
                 "<TH "TH_BG" "DARK_BG">%s2\">FC_ID%s</a></TH>\n"
@@ -5495,7 +5491,7 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
     addPageIndicator(CONST_FC_TRAFFIC_HTML, pageNum, numEntries, myGlobals.maxNumLines,
                      revertOrder, abs(sortedColumn));
 
-    sendString("<P><CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+    sendString("<P><CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                "<TH "TH_BG" ALIGN=RIGHT "DARK_BG">Total Traffic</TH>"
                "<TH "TH_BG" ALIGN=RIGHT "DARK_BG">Used Bandwidth</TH></TR>\n");
 
@@ -5714,7 +5710,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
                 if (snprintf(buf, sizeof (buf),
-                             ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
+                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s1>VSAN%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s2>Initiator%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s3>Target%s</A></TH>"
@@ -6082,7 +6078,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
                 sendString("<CENTER>\n");
 
                 if (snprintf(buf, sizeof (buf),
-                             ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
+                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s1>VSAN%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s2>Initiator%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s3>Target%s</A></TH>"
@@ -6379,7 +6375,7 @@ int printScsiSessionStatusInfo (int actualDeviceId, int sortedColumn,
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
                 if (snprintf(buf, sizeof (buf),
-                             ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
+                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
                              "<TH "TH_BG" "DARK_BG">%s1>VSAN%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG">%s2>Initiator%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG">%s3>Target%s</A></TH>"
@@ -6637,7 +6633,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
                 if (snprintf(buf, sizeof (buf),
-                             ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
+                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
                              "<TH "TH_BG" "DARK_BG">%s1>VSAN%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG">%s2>Initiator%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG">%s3>Target%s</A></TH>"
@@ -6856,7 +6852,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
                 if (snprintf (buf, sizeof (buf),
-                              ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
+                              ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
                               "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s1>VSAN%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s2>Sender%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s3>Receiver%s</A></TH>\n"
@@ -7034,7 +7030,7 @@ void printFcProtocolDistribution(int mode, int revertOrder)
         printSectionTitle("Global FibreChannel Protocol Distribution");
 
         sendString("<CENTER>\n");
-        sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR "TR_ON"><TH "TH_BG" "DARK_BG" WIDTH=150>"
+        sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=500><TR "TR_ON"><TH "TH_BG" "DARK_BG" WIDTH=150>"
                    "FC&nbsp;Protocol</TH>"
                    "<TH "TH_BG" WIDTH=50 "DARK_BG">Total&nbsp;Bytes</TH><TH "TH_BG" WIDTH=250 COLSPAN=2 "DARK_BG">"
                    "Percentage</TH></TR>\n");
@@ -7106,7 +7102,7 @@ void printFcProtocolDistribution(int mode, int revertOrder)
         }
         
         if(numProtosFound > 0)
-            sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER>"
+            sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
                        "<IMG SRC=\"drawGlobalFcProtoDistribution"CHART_FORMAT"\" alt=\"Global FC protocol distribution chart\"></TD></TR>\n");
         sendString("</TABLE>"TABLE_OFF"<P>\n");
 
@@ -7178,10 +7174,10 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
           if(numEntries == 1) {
               sendString("<CENTER>\n");
               if (sent) 
-                  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON"><TH "TH_BG" ALIGN=LEFT><SMALL>&nbsp;F&nbsp;"
+                  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON"><TH "TH_BG" ALIGN=LEFT><SMALL>&nbsp;F&nbsp;"
                              "&nbsp;&nbsp;To<br>&nbsp;r<br>&nbsp;o<br>&nbsp;m</SMALL></TH>\n");
               else
-                  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON"><TH "TH_BG" ALIGN=LEFT><SMALL>&nbsp;B&nbsp;"
+                  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON"><TH "TH_BG" ALIGN=LEFT><SMALL>&nbsp;B&nbsp;"
                              "&nbsp;&nbsp;From<br>&nbsp;y<br></SMALL></TH>\n");
           }
 
@@ -7324,6 +7320,7 @@ void drawVsanStatsGraph (unsigned int deviceId)
         printFlagedWarning("<I>Invalid device specified</I>");
         return;
     } else if ((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
+          printHTMLheader("VSAN Summary", 0, 0);
         printNoDataYet();
         return;
     }
@@ -7345,7 +7342,7 @@ void drawVsanStatsGraph (unsigned int deviceId)
     qsort (tmpTable, numVsans, sizeof (FcFabricElementHash **), cmpVsanFctn);
 
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=600><TR "TR_ON"><TH "TH_BG" "DARK_BG" WIDTH=25>"
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=600><TR "TR_ON"><TH "TH_BG" "DARK_BG" WIDTH=25>"
                "VSAN</TH>"
                "<TH "TH_BG" "DARK_BG" WIDTH=75>Total&nbsp;Bytes</TH><TH "TH_BG" "DARK_BG" WIDTH=500 COLSPAN=2>"
                "Percentage</TH></TR>\n");

@@ -979,7 +979,10 @@ static int checkURLsecurity(char *url) {
 
 #ifdef URL_DEBUG
 #endif
+
+#if 0
     traceEvent(CONST_TRACE_INFO, "URL_DEBUG: RAW url is '%s'", url);
+#endif
 
   /*
     Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>

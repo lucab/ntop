@@ -515,7 +515,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     usedEthAddress = 1;
 
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
-    if(snprintf(buf, bufLen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
+    if(snprintf(buf, bufLen, "<TH "TH_BG" ALIGN=LEFT NOWRAP WIDTH=250>"
 		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s%s%s%s%s</TH>%s",
 		linkName, "", symIp, 
 		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)), dynIp, multihomed, 
@@ -524,7 +524,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		ntpStr, healthStr, userStr, p2p, flag) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf, bufLen, "<A HREF=\"/%s.html\" %s NOWRAP>%s</A>"
+    if(snprintf(buf, bufLen, "<A HREF=\"/%s.html\" %s NOWRAP WIDTH=250>%s</A>"
 		"%s%s%s%s%s%s%s%s%s%s%s%s%s",
 		linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), symIp, 
 		multihomed, 
@@ -716,7 +716,6 @@ char* getActualRowColor(void) {
 #endif
 }
 
-
 /* ******************************* */
 
 void switchNwInterface(int _interface) {
@@ -817,7 +816,7 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
   sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
   sendString(feature);
   sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
-  if(status == NULL) {
+  if((status == NULL) || (status[0] == '\0')) {
     sendString("(nil)");
   } else {
     if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", status) < 0)
@@ -877,7 +876,7 @@ static void printParameterConfigInfo(int textPrintFlag, char* feature, char* sta
   } else if( (defaultValue != NULL) && (strcmp(status, defaultValue) == 0) ){
     sendString(CONST_REPORT_ITS_DEFAULT);
   }
-  if(status == NULL) {
+  if((status == NULL) ||(status[0] == '\0')) {
     sendString("(nil)");
   } else {
     sendString(status);
@@ -3053,7 +3052,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
 void printHostColorCode(int textPrintFlag, int isInfo) {
   if(textPrintFlag != TRUE) {
-    sendString("<CENTER><TABLE BORDER=\"0\">"
+    sendString("<CENTER><TABLE BORDER=0>"
 	       "<TR>"
 	       "<TD COLSPAN=5 align=\"center\">The color of the host link");
     if(isInfo == 1)
@@ -3139,7 +3138,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printHostColorCode(textPrintFlag, 1);
   sendString(texthtml("\n", 
-                      "<CENTER>\n<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n"
+                      "<CENTER>\n<P><HR><P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
                       "<tr><th colspan=2 "DARK_BG"" TH_BG ">Basic information</tr>\n"));
   printFeatureConfigInfo(textPrintFlag, "ntop version", version);
   printFeatureConfigInfo(textPrintFlag, "Configured on", configureDate);
@@ -3631,7 +3630,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   sendString(texthtml("\n\nntop Web Server\n\n",
                       "<tr><th colspan=\"2\" "DARK_BG">ntop Web Server</th></tr>\n"
                       "<tr><td colspan=\"2\" align=\"center\">\n"
-                        "<table>\n"));
+                        "<table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
 
   sendString(texthtml("Item..................http://...................https://",
                       "<tr><th>Item</th><th>http://</th><th>https://</th></tr>\n"));
@@ -3748,8 +3747,8 @@ void printNtopConfigInfo(int textPrintFlag) {
                                 FALSE);
   sendString(texthtml("",
                       "<tr><td colspan=\"3\">Notes: "
-                          "Counts may not total because of in-process requests.<br>"
-                          "Each request to the ntop web server - frameset, individual "
+                          "<li>Counts may not total because of in-process requests."
+                          "<li>Each request to the ntop web server - frameset, individual "
                           "page, chart, etc. is counted separately"
                           "</td>\n"
                       "</table>\n</td></tr>\n"));
@@ -4052,7 +4051,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   sendString(texthtml("\n\nAddress Resolution\n\n", "<tr><th colspan=2 "DARK_BG">Address Resolution</th></tr>\n"));
 
-  sendString(texthtml("DNS sniffed:\n\n", "<tr><td align=\"center\">DNS sniffed</td>\n<td><table>\n"));
+  sendString(texthtml("DNS Sniffed:\n\n", "<tr><th TH "TH_BG" ALIGN=LEFT>DNS Sniffed</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
 
   if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffCount) < 0)
     BufferTooShort();
@@ -4121,7 +4120,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
 
   if(myGlobals.numericFlag == 0) {
-    sendString(texthtml("\n\nQueued - dequeueAddress():\n\n", "<tr><td align=\"center\">Queued</td>\n<td><table>\n"));
+    sendString(texthtml("\n\nQueued - dequeueAddress():\n\n", "<tr><TH "TH_BG" ALIGN=LEFT>Queued</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
 
     if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedCount) < 0)
       BufferTooShort();
@@ -4188,7 +4187,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     }
   }
 
-  sendString(texthtml("\n\nDNS lookup calls:\n\n", "<tr><td align=\"center\">DNS lookup calls</td>\n<td><table>\n"));
+  sendString(texthtml("\n\nDNS Lookup Calls:\n\n", "<tr><TH "TH_BG" ALIGN=LEFT>DNS Lookup Calls</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
 
   if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numAttemptingResolutionWithDNS) < 0)
     BufferTooShort();
@@ -4320,7 +4319,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 			      "<tr><th colspan=2 "DARK_BG">IP Address reject list</th></tr>\n"));
 	  sendString(texthtml("\nAddress ... Count ... Last Bad Access ... Lockout Expires\n",
 			      "<tr><th>Rejects</th>"
-			      "<td><table border=\"1\">"
+			      "<td><TABLE BORDER=1>"
 			      "<tr><th>Address</th><th>Count</th>"
 			      "<th>Last Bad Access</th><th>Lockout Expires</th></tr>"));
 	}

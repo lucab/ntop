@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2003-2004 Burton M. Strausss III <Burton@ntopsupport.com>
+ *  Copyright (C) 2003-2004 Burton M. Strausss III <burton@ntopsupport.com>
  *                          Luca Deri <deri@ntop.org>
  *                      
  *  			    http://www.ntop.org/
@@ -396,7 +396,7 @@ static void handleXmldumpHTTPrequest(char* url) {
              "<p><b>Changes take affect immediately.</b></p>\n"
              "<br>\n");
 
-  sendString("<table border=0>\n<tr><td><table border>");
+  sendString("<table border=0 "TABLE_DEFAULTS">\n<tr><td><table border=1 "TABLE_DEFAULTS">");
 
   sendString("<tr "TR_ON">\n"
                "<th "TH_BG" align=\"left\" width=\"240\">Setting</th>\n"

@@ -1617,7 +1617,7 @@ static void handleNetflowHTTPrequest(char* url) {
     }
   }
 
-  sendString("<center><table border=0>\n<tr><td><table border>");
+  sendString("<center><table border=0 "TABLE_DEFAULTS">\n<tr><td><table border=1 "TABLE_DEFAULTS">");
   sendString("<tr><th colspan=4 "DARK_BG">Incoming Flows</th></tr>");
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Flow Collection</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Local Collector UDP Port:</td><td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");

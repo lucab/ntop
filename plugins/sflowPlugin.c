@@ -1677,7 +1677,7 @@ static void handlesFlowHTTPrequest(char* url) {
 
   /* *************************************** */
 
-  sendString("<table border=0>\n<tr><td><table border>");
+  sendString("<table border=0 "TABLE_DEFAULTS">\n<tr><td><table border=1 "TABLE_DEFAULTS">");
   sendString("<TR><TH "DARK_BG" COLSPAN=4>sFlow Preferences</TH></TR>\n");
   sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG" ALIGN=LEFT>Incoming Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	     "Local UDP Port</td> "

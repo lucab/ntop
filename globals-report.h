@@ -24,15 +24,19 @@
 #define TH_BG     "BGCOLOR=\"#DDDDDD\""
 #define TD_BG     "BGCOLOR=\"#DDDDDD\""
 #define TR_ON     "onmouseover=\"setPointer(this, '#CCFFCC', '#DDDDDD')\" onmouseout=\"setPointer(this, '#DDDDDD', '#DDDDDD')\""
+#define TABLE_DEFAULTS ""
+#define DARK_BG     "BGCOLOR=\"#DDDDDD\""
 #else
 #define TABLE_ON  ""
 #define TABLE_OFF ""
 #define TH_BG     ""
 #define TD_BG     ""
 #define TR_ON     ""
+#define TABLE_DEFAULTS " CELLSPACING=0 CELLPADDING=2"
+#define DARK_BG   "BGCOLOR=#E7E9F2" /* If you change it change it into the stylesheet too */
 #endif
 
-#define DARK_BG     "BGCOLOR=\"#DDDDDD\""
+
 
 /* Used for HTML tables */
 #define BASE_PROTOS_IDX  30
