@@ -39,27 +39,6 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 /* ************************ */
 
-static void sendGraphFile(char* fileName) {
-  FILE *fd;
-  int len;
-  char tmpStr[256];
-
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), sizeof(tmpStr)-1, fd);
-      if(len <= 0) break;
-      sendStringLen(tmpStr, len);
-    }
-
-    fclose(fd);
-  }
-
-  unlink(fileName);
-}
-
-
-/* ************************ */
-
 void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[20];
@@ -252,8 +231,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
 #endif
 
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-
+    fd = fdopen(abs(newSock), "ab");
     GDCPIE_LineColor = 0x000000L;
     GDCPIE_explode   = expl;    /* default: NULL - no explosion */
     GDCPIE_Color     = clr;
@@ -274,8 +252,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.graphMutex);
 #endif
-
-    sendGraphFile(fileName);
   }
 }
 
@@ -338,7 +314,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
 #endif
 
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+    fd = fdopen(abs(newSock), "ab");
 
     GDCPIE_LineColor = 0x000000L;
     GDCPIE_explode   = expl;    /* default: NULL - no explosion */
@@ -360,8 +336,6 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.graphMutex);
 #endif
-
-    sendGraphFile(fileName);
   }
 }
 
@@ -403,7 +377,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
 #endif
 
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+    fd = fdopen(abs(newSock), "ab");
 
     GDCPIE_LineColor      = 0x000000L;
     GDCPIE_explode        = expl;      /* default: NULL - no explosion */
@@ -425,8 +399,6 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.graphMutex);
 #endif
-
-    sendGraphFile(fileName);
   }
 }
 
@@ -520,7 +492,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
 #endif
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -542,8 +514,6 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 /* ********************************** */
@@ -602,7 +572,7 @@ void pktSizeDistribPie(void) {
   accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
 #endif
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -624,8 +594,6 @@ void pktSizeDistribPie(void) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 /* ********************************** */
@@ -689,7 +657,7 @@ void pktTTLDistribPie(void) {
   accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
 #endif
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -711,8 +679,6 @@ void pktTTLDistribPie(void) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -724,7 +690,7 @@ void ipProtoDistribPie(void) {
   int num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   p[num] = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local+
 		   myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
@@ -768,8 +734,6 @@ void ipProtoDistribPie(void) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -808,7 +772,7 @@ void interfaceTrafficPie(void) {
   accessMutex(&myGlobals.graphMutex, "interfaceTrafficPie");
 #endif
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;
@@ -830,8 +794,6 @@ void interfaceTrafficPie(void) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -875,7 +837,7 @@ void pktCastDistribPie(void) {
   accessMutex(&myGlobals.graphMutex, "pktCastDistribPie");
 #endif
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -897,8 +859,6 @@ void pktCastDistribPie(void) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -926,7 +886,7 @@ void drawTrafficPie(void) {
   accessMutex(&myGlobals.graphMutex, "drawTrafficPie");
 #endif
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   GDCPIE_LineColor = 0x000000L;
   GDCPIE_BGColor   = 0xFFFFFFL;
@@ -947,8 +907,6 @@ void drawTrafficPie(void) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -969,7 +927,7 @@ void drawThptGraph(int sortedColumn) {
   accessMutex(&myGlobals.graphMutex, "drawThptGraph");
 #endif
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   GDC_BGColor    = 0xFFFFFFL;                  /* backgound color (white) */
   GDC_LineColor  = 0x000000L;                  /* line color      (black) */
@@ -1098,8 +1056,6 @@ void drawThptGraph(int sortedColumn) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 
@@ -1151,7 +1107,7 @@ void drawGlobalProtoDistribution(void) {
   accessMutex(&myGlobals.graphMutex, "drawGlobalProtoDistribution");
 #endif
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   GDC_LineColor      = 0x000000L;
   GDC_BGColor        = 0xFFFFFFL;
@@ -1173,8 +1129,6 @@ void drawGlobalProtoDistribution(void) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -1204,7 +1158,7 @@ void drawGlobalIpProtoDistribution(void) {
   accessMutex(&myGlobals.graphMutex, "drawGlobalIpProtoDistribution");
 #endif
 
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+  fd = fdopen(abs(newSock), "ab");
 
   GDC_LineColor = 0x000000L;
   GDC_BGColor   = 0xFFFFFFL;
@@ -1225,8 +1179,6 @@ void drawGlobalIpProtoDistribution(void) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
-
-  sendGraphFile(fileName);
 }
 
 #endif /* HAVE_GDCHART */
