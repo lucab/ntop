@@ -59,6 +59,7 @@ static void updateRoutedTraffic(HostTraffic *router) {
 int handleIP(u_short port,
 	     HostTraffic *srcHost, HostTraffic *dstHost,
 	     u_int length,  u_short isPassiveSess,
+	     u_short p2pSessionIdx,
 	     int actualDeviceId) {
   int idx;
 
@@ -69,12 +70,41 @@ int handleIP(u_short port,
 
   if(isPassiveSess) {
     /* Emulate non passive session */
-    idx = mapGlobalToLocalIdx(20 /* ftp-data */);
-  } else
-    idx = mapGlobalToLocalIdx(port);
+    idx = myGlobals.FTPIdx;
+  } else {
+    if(p2pSessionIdx) {
+      switch(p2pSessionIdx) {
+      case P2P_GNUTELLA:
+	idx = myGlobals.GnutellaIdx;
+	break;
+      case P2P_KAZAA:
+	idx = myGlobals.KazaaIdx;
+	break;
+      case P2P_WINMX:
+	idx = myGlobals.WinMXIdx;
+	break;
+      case P2P_DIRECTCONNECT:
+	idx = myGlobals.DirectConnectIdx;
+	break;
+      default:
+	idx = -1;
+	break;
+      }
+    } else 
+      idx = mapGlobalToLocalIdx(port);
+  }
 
   if(idx == -1)
     return(-1); /* Unable to locate requested index */
+  else if (idx >= myGlobals.numIpProtosToMonitor) {
+    traceEvent(TRACE_ERROR, "Discarding idx=%d for port=%d", idx, port);    
+    return(-1);
+  }
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "port=%d - isPassiveSess=%d - p2pSessionIdx=%d - idx=%d", 
+	     port, isPassiveSess, p2pSessionIdx, idx);
+#endif
 
   if(idx != NO_PEER) {
     if(subnetPseudoLocalHost(srcHost)) {
@@ -820,8 +850,9 @@ static void processIpPkt(const u_char *bp,
       }
 
       if((sport > 0) && (dport > 0)) {
-	IPSession *theSession;
+	IPSession *theSession = NULL;
 	u_short isPassiveSess = 0, nonFullyRemoteSession = 1;
+	int sportIdx, dportIdx;
 
 	/* It might be that tcpDataLength is 0 when
 	   the rcvd packet is fragmented and the main
@@ -877,12 +908,24 @@ static void processIpPkt(const u_char *bp,
 	 *
 	 * Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>
 	 */
-	if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, actualDeviceId) == -1)
-	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, actualDeviceId);
+	
+	sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
+
+	if((dport < sport) && (! ((sportIdx != -1) && (dportIdx == -1)))
+	    || ((sportIdx == -1) && (dportIdx != -1))) {
+	  /* traceEvent(TRACE_INFO, "[1] sportIdx(%d)=%d - dportIdx(%d)=%d", sport, sportIdx, dport, dportIdx); */
+
+	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, 
+		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId) == -1)
+	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, 
+		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId);
 	} else {
-	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, actualDeviceId) == -1)
-	    handleIP(dport, srcHost, dstHost, length, isPassiveSess, actualDeviceId);
+	  /* traceEvent(TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d", sport, sportIdx, dport, dportIdx); */
+	  
+	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, 
+		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId) == -1)
+	    handleIP(dport, srcHost, dstHost, length, isPassiveSess, 
+		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId);
 	}
       }
     }
@@ -1083,11 +1126,11 @@ static void processIpPkt(const u_char *bp,
 	   (BMS 12-2001)
 	*/
         if (dport < sport) {
-	  if (handleIP(dport, srcHost, dstHost, length, 0, actualDeviceId) == -1)
-	    handleIP(sport, srcHost, dstHost, length, 0, actualDeviceId);
+	  if (handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId) == -1)
+	    handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId);
         } else {
-	  if (handleIP(sport, srcHost, dstHost, length, 0, actualDeviceId) == -1)
-	    handleIP(dport, srcHost, dstHost, length, 0, actualDeviceId);
+	  if (handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId) == -1)
+	    handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId);
         }
 
 	if(nonFullyRemoteSession)

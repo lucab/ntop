@@ -181,7 +181,6 @@
  * used to drive the ntop's behaviour at run-time
  */
 typedef struct ntopGlobals {
-
   /* general */
   char *program_name;           /* The name the program was run with, stripped of any leading path */
   int ntop_argc;                /* # of command line arguments */
@@ -497,6 +496,8 @@ typedef struct ntopGlobals {
   u_long heartbeatCounter;
 #endif
 
+  /* Peer2Peer Protocol Indexes */
+  u_short GnutellaIdx, KazaaIdx, WinMXIdx, DirectConnectIdx, FTPIdx;
 } NtopGlobals;
 
 

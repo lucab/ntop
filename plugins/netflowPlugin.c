@@ -240,11 +240,11 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
       if((sport != 0) && (dport != 0)) {
 	if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, len, 0, actualDeviceId) == -1)
-	    handleIP(sport, srcHost, dstHost, len, 0, actualDeviceId);
+	  if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1)
+	    handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId);
 	} else {
-	  if(handleIP(sport, srcHost, dstHost, len, 0, actualDeviceId) == -1)
-	    handleIP(dport, srcHost, dstHost, len, 0, actualDeviceId);
+	  if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1)
+	    handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId);
 	}
       }
 

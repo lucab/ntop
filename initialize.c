@@ -778,7 +778,7 @@ void initDevices(char* devices) {
     static char tmpString[128];
     int i, j,ifDescrPos = 0;
     unsigned short *ifName; /* UNICODE */
-    char *ifDescr;
+    char *ifDescr, *openParent;
 
     ifName = (unsigned short *)tmpDev;
 
@@ -794,14 +794,17 @@ void initDevices(char* devices) {
 	  tmpString[j++] = tmpDev[i];
       }
 
-      tmpString[j++] = 0;
-      ifDescr += strlen(ifDescr)+1;
-		 
+      tmpString[j++] = 0;		 
       tmpDev = &tmpDev[i+3];
       tmpDescr = ifDescr;
+      ifDescr += strlen(ifDescr)+1;
 
-      strcpy(intDescr[ifIdx], ifDescr);
+	  openParent = strstr(tmpDescr, "(");
+	  if(openParent != NULL) openParent[0] = '\0';
+	  if(tmpDescr[strlen(tmpDescr)-1] == ' ') tmpDescr[strlen(tmpDescr)-1] = '\0';
+      strcpy(intDescr[ifIdx], tmpDescr);
       strcpy(intNames[ifIdx++], tmpString);
+
       defaultIdx = 0;
     }
     if(defaultIdx != -1) {
@@ -1123,8 +1126,8 @@ void initLibpcap(void) {
 	+ 4096 /* Max 4096 hosts used for multicast */;
       if(myGlobals.device[i].numHosts > MAX_SUBNET_HOSTS) {
 	myGlobals.device[i].numHosts = MAX_SUBNET_HOSTS;
-	traceEvent(TRACE_WARNING, "Truncated network size to %d hosts (real netmask %s)",
-		   myGlobals.device[i].numHosts, intoa(myGlobals.device[i].netmask));
+	traceEvent(TRACE_WARNING, "Truncated network size (device %s) to %d hosts (real netmask %s)",
+		   myGlobals.device[i].name, myGlobals.device[i].numHosts, intoa(myGlobals.device[i].netmask));
       }
 
       memlen = sizeof(TrafficEntry*)*myGlobals.device[i].numHosts*myGlobals.device[i].numHosts;
@@ -1212,12 +1215,14 @@ void initDeviceDatalink(void) {
                                       myGlobals.device[i].name,
                                       myGlobals.device[i].datalink);
         } else {
-            traceEvent(TRACE_INFO, "Device %d(%s) DLT_ is %d, assuming mtu %d, header %d\n", 
+#ifdef DEBUG
+	  traceEvent(TRACE_INFO, "Device %d(%s) DLT_ is %d, assuming mtu %d, header %d\n", 
                                    i,
                                    myGlobals.device[i].name,
                                    myGlobals.device[i].datalink,
                                    myGlobals.mtuSize[myGlobals.device[i].datalink],
                                    myGlobals.headerSize[myGlobals.device[i].datalink]);
+#endif
             if ( (myGlobals.mtuSize[myGlobals.device[i].datalink] == 0) ||
                  (myGlobals.mtuSize[myGlobals.device[i].datalink] == UNKNOWN_MTU) ) {
                 traceEvent(TRACE_INFO, "WARNING: MTU value for DLT_  %d, is zero or unknown. " \

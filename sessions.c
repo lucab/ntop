@@ -964,6 +964,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 		    updateFileList(tmpStr, P2P_DOWNLOAD_MODE, srcHost);
 		    updateFileList(tmpStr, P2P_UPLOAD_MODE, dstHost);
+		    theSession->isP2P = P2P_KAZAA;
 		  }
 		}
 	      } else if(strncmp(row, "X-Kazaa-Username", 15) == 0) {
@@ -978,6 +979,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		/* traceEvent(TRACE_INFO, "DEBUG: USER='%s'\n", user); */
 
 		updateHostUsers(user, P2P_USER, srcHost);
+		theSession->isP2P = P2P_KAZAA;
 	      }
 
 	      row = strtok_r(NULL, "\n", &strtokState);
@@ -1010,6 +1012,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 		updateFileList(file, P2P_UPLOAD_MODE, srcHost);
 		updateFileList(file, P2P_DOWNLOAD_MODE, dstHost);
+		theSession->isP2P = P2P_KAZAA;
 		break;
 	      }
 	      row = strtok_r(NULL, "\n", &strtokState);
@@ -1051,6 +1054,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 	      updateFileList(tmpStr, P2P_DOWNLOAD_MODE, srcHost);
 	      updateFileList(tmpStr, P2P_UPLOAD_MODE, dstHost);
+	      theSession->isP2P = P2P_GNUTELLA;
 	  }
 	  free(rcStr);
 	}
@@ -1060,6 +1064,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  char *user, *strtokState, *strtokState1, *row, *file;
 	  int i, begin=0;
 
+	  theSession->isP2P = P2P_WINMX;
 	  rcStr = (char*)malloc(packetDataLength+1);
 	  strncpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
@@ -1271,7 +1276,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     || (!strncmp(rcStr, "$MyNick", 7))
 	     || (!strncmp(rcStr, "$Quit", 5))) {
 	    /* See dcplusplus.sourceforge.net */
-	      
+
+	    theSession->isP2P = P2P_DIRECTCONNECT;	      
 	    if(!strncmp(rcStr, "$MyNick", 7)) {
 	      updateHostUsers(strtok(&rcStr[8], "|"), P2P_USER, srcHost);
 	    } else if(!strncmp(rcStr, "$Get", 4)) {

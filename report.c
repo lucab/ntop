@@ -132,42 +132,60 @@ void printTrafficStatistics() {
 
   sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG" align=left>Nw Interface Type</TH>"
+  sendString("<TR "TR_ON"><TH "TH_BG" align=left>Network Interface(s)</TH>"
 	     "<TD "TD_BG" ALIGN=RIGHT>");
 
-  if(myGlobals.mergeInterfaces) {
-    for(i=0; i<myGlobals.numDevices; i++) {
-      if(i > 0) sendString("<br>");
+  
+  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR "TR_ON"><TH "TH_BG">Name</TH>"
+	     "<TH "TH_BG">Device</TH><TH "TH_BG">Type</TH><TH "TH_BG">MTU</TH><TH "TH_BG">Header</TH><TH "TH_BG">Address</TH></TR>\n");
 
-      if(myGlobals.rFileName == NULL) {
-	char buf1[128], buf2[64];
+  for(i=0; i<myGlobals.numDevices; i++) {
+    if(myGlobals.rFileName == NULL) {
+      char buf1[128], buf2[64];
 
-	if(snprintf(buf, sizeof(buf), "%s (%s%s) [%s/%s]",
-		    myGlobals.device[i].humanFriendlyName, getNwInterfaceType(i),
-		    myGlobals.device[i].virtualDevice ? " virtual" : "",
-		    _intoa(myGlobals.device[i].network, buf1, sizeof(buf1)),
-		    _intoa(myGlobals.device[i].netmask, buf2, sizeof(buf2))
-		    ) < 0)
-	  BufferTooShort();
-	sendString(buf);
-      } else {
-	if(snprintf(buf, sizeof(buf), "%s [%s]",
-		    getNwInterfaceType(i), PCAP_NW_INTERFACE) < 0)
-	  BufferTooShort();
-	sendString(buf);
-      }
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
+		  myGlobals.device[i].humanFriendlyName) < 0)
+	BufferTooShort();
+      sendString(buf);
+	
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", myGlobals.device[i].name) < 0)
+	BufferTooShort();
+      sendString(buf);
+	
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s%s</TD>",
+		  getNwInterfaceType(i), myGlobals.device[i].virtualDevice ? " virtual" : "") < 0)
+	BufferTooShort();
+      sendString(buf);
+	
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.mtuSize[myGlobals.device[i].datalink]) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.headerSize[myGlobals.device[i].datalink]) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s/%s</TD></TR>\n",
+		  _intoa(myGlobals.device[i].network, buf1, sizeof(buf1)),
+		  _intoa(myGlobals.device[i].netmask, buf2, sizeof(buf2))) < 0)
+	BufferTooShort();
+      sendString(buf);
+    } else {
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>Pcap file</TD><TD "TD_BG">&nbsp;</TD>") < 0)
+	BufferTooShort();
+      sendString(buf);
+	
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", PCAP_NW_INTERFACE) < 0)
+	BufferTooShort();
+      sendString(buf);
+	
+      sendString("<TD "TD_BG">&nbsp;</TD>");
+      sendString("<TD "TD_BG">&nbsp;</TD>");
+      sendString("<TD "TD_BG">&nbsp;</TD></TR>\n");
     }
-  } else {
-    /* myGlobals.mergeInterfaces == 0 */
-      if(!myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
-	if(snprintf(buf, sizeof(buf), "%s [%s]",
-		    getNwInterfaceType(myGlobals.actualReportDeviceId),
-		    myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
-	  BufferTooShort();
-	sendString(buf);
-      }
   }
 
+  sendString("</TABLE>"TABLE_OFF);
   sendString("</TD></TR>\n");
 
   if(myGlobals.domainName[0] != '\0') {
@@ -564,7 +582,7 @@ void printTrafficStatistics() {
 	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value +
 	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value +
 	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value) > 0) {
-      sendString("<TR><TH "TH_BG" ALIGN=LEFT>Remote Hosts Distance</TH><TD "TH_BG">"
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT>Remote Hosts Distance</TH><TD "TH_BG" ALIGN=CENTER>"
 		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
     }
 #endif /* HAVE_GDCHART */
@@ -2278,7 +2296,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 	  session->firstSeen = myGlobals.actTime;
 
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s:%s%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -2295,7 +2313,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 				 hash_hostTraffic[checkSessionIdx(myGlobals.device[myGlobals.actualReportDeviceId].
 								  tcpSession[idx]->initiatorIdx)],
 				 SHORT_FORMAT, 0, 0),
-		    sport,
+		    sport, 
+		    myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx]->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
 		    makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 				 hash_hostTraffic[checkSessionIdx(myGlobals.device[myGlobals.actualReportDeviceId].
 								  tcpSession[idx]->remotePeerIdx)],

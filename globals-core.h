@@ -56,7 +56,7 @@ extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
 extern int handleIP(u_short port,
 		    HostTraffic *srcHost, HostTraffic *dstHost,
 		    u_int length,  u_short isPassiveSession,
-		    int actualDeviceId);
+		    u_short p2pSessionIdx, int actualDeviceId);
 extern u_int16_t handleDNSpacket(const u_char *ipPtr, 
                                  DNSHostInfo *hostPtr, short length,
                                  short *isRequest, short *positiveReply);

@@ -285,7 +285,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 	       idx, protoName);
     }
 
-    return(1);
+    return(idx);
   }
 
   for(i=1; i<myGlobals.numActServices; i++) {
@@ -307,7 +307,7 @@ static short handleProtocol(char* protoName, char *protocol) {
       } else if(printWarnings)
 	printf("WARNING: protocol '%s' has been discarded (multiple instances).\n",
 	       protocol);
-      return(1);
+      return(idx);
     }
   }
 
@@ -320,7 +320,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 
 /* **************************************** */
 
-static void handleProtocolList(char* protoName,
+static int handleProtocolList(char* protoName,
 			       char *protocolList) {
   char tmpStr[255];
   char* lastEntry, *protoEntry;
@@ -346,7 +346,7 @@ static void handleProtocolList(char* protoName,
     rc = handleProtocol(protoName, lastEntry);
 
     if(rc != -1)
-      increment=1;
+      increment = 1;
 
     lastEntry = &protoEntry[1];
   }
@@ -357,6 +357,7 @@ static void handleProtocolList(char* protoName,
     else
       myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos, sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
 
+    rc = myGlobals.numIpProtosToMonitor;
     myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
     myGlobals.numIpProtosToMonitor++;
 #ifdef DEBUG
@@ -364,6 +365,12 @@ static void handleProtocolList(char* protoName,
 	       myGlobals.numIpProtosToMonitor, protoName, protocolList);
 #endif
   }
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "handleProtocolList(%s) = %d", protoName, rc);
+#endif
+
+  return(rc);
 }
 
 /* **************************************** */
@@ -520,7 +527,7 @@ void handleProtocols() {
 /* **************************************** */
 
 void addDefaultProtocols(void) {
-  handleProtocolList("FTP",      "ftp|ftp-data|");
+  myGlobals.FTPIdx = handleProtocolList("FTP",      "ftp|ftp-data|");
   handleProtocolList("HTTP",     "http|www|https|3128|"); /* 3128 is HTTP cache */
   handleProtocolList("DNS",      "name|domain|");
   handleProtocolList("Telnet",   "telnet|login|");
@@ -533,12 +540,15 @@ void addDefaultProtocols(void) {
   handleProtocolList("X11",      "6000-6010|");
   /* 22 == ssh (just to make sure the port is defined) */
   handleProtocolList("SSH",      "22|");
+
   /* Peer-to-Peer Protocols */
-  handleProtocolList("Gnutella", "6346|6347|6348|");
-  handleProtocolList("Morpheus", "1214|");
+  myGlobals.GnutellaIdx = handleProtocolList("Gnutella", "6346|6347|6348|");
+  myGlobals.KazaaIdx = handleProtocolList("Kazaa",       "1214|");
+  myGlobals.WinMXIdx = handleProtocolList("WinMX",       "6699|7730|");
+  myGlobals.DirectConnectIdx = handleProtocolList("DirectConnect",    "0|"); /* Dummy port as this is a pure P2P protocol */
+  handleProtocolList("eDonkey",    "4661-4665|");
+
   handleProtocolList("Messenger", "1863|5000|5001|5190-5193|");
-  handleProtocolList("WinMX",    "6699|7730|");
-  handleProtocolList("Audiogalaxy",    "41000-41900|");
 }
 
 /* **************************************** */

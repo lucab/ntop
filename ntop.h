@@ -1759,12 +1759,16 @@ typedef struct sessionInfo {
   time_t  creationTime;
 } SessionInfo;
 
+/* Some defines for the isP2P field of "struct ipSession" */
+#define P2P_GNUTELLA             1
+#define P2P_KAZAA                2
+#define P2P_WINMX                3
+#define P2P_DIRECTCONNECT        4
+
 /* IP Session Information */
 typedef struct ipSession {
   u_short magic;
-#ifdef EXPERIMENTAL
   u_char isP2P;                     /* Set to 1 if this is a P2P session          */
-#endif
   u_int initiatorIdx;               /* initiator address   (IP address)           */
   struct in_addr initiatorRealIp;   /* Real IP address (if masqueraded and known) */
   u_short sport;                    /* initiator address   (port)                 */
