@@ -339,6 +339,8 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
   numPkts  = ntohl(record->dPkts);
   len      =(Counter)ntohl(record->dOctets);
 
+  myGlobals.numNetFlowsProcessed++;
+
   /* Bad flow(zero packets) */
   if(numPkts == 0) {
     myGlobals.numBadFlowPkts++;
@@ -354,8 +356,6 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
     myGlobals.numBadFlowReality++;
     return(0);
   }
-
-  myGlobals.numNetFlowsProcessed++;
 
   a.s_addr = ntohl(record->srcaddr);
   b.s_addr = ntohl(record->dstaddr);
@@ -689,6 +689,8 @@ static void dissectFlow(char *buffer, int bufferLen) {
 #ifdef DEBUG
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
 #endif
+
+  myGlobals.numNetFlowsPktsRcvd++;
 
   memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);
   memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ? sizeof(the7Record): bufferLen);
@@ -1083,8 +1085,6 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 
       if(rc > 0) {
 	int i;
-
-	myGlobals.numNetFlowsPktsRcvd++;
 
 	NTOHL(fromHost.sin_addr.s_addr);
 
@@ -1970,7 +1970,6 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("<p></CENTER></CENTER>\n");
   sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");
   sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
-
 
   printHTMLtrailer();
 }
