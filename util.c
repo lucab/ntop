@@ -1375,10 +1375,10 @@ int _releaseMutex(PthreadMutex *mutexId,
 
 #ifdef SEMAPHORE_DEBUG
   if (rc != 0) 
-    traceEvent(CONST_TRACE_WARNING, "releaseMutex() failed (rc=%d) [0x%X@%s:%d]",
+    traceEvent(CONST_TRACE_WARNING, "SEMAPHORE_DEBUG: releaseMutex() failed (rc=%d) [0x%X@%s:%d]",
                (void*)&(mutexId->mutex), rc, fileName, fileLine);
   else
-    traceEvent(CONST_TRACE_INFO, "releaseMutex() succeeded [0x%X@%s:%d]",
+    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: releaseMutex() succeeded [0x%X@%s:%d]",
                (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   return(rc);
