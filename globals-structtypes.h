@@ -752,7 +752,7 @@ typedef struct hostTraffic {
   float            actualRcvdPktThpt, averageRcvdPktThpt, peakRcvdPktThpt,
     actualSentPktThpt, averageSentPktThpt, peakSentPktThpt,
     actualTPktThpt, averageTPktThpt, peakTPktThpt;
-  unsigned short   actBandwidthUsage;
+  unsigned short   actBandwidthUsage, actBandwidthUsageS, actBandwidthUsageR;
   TrafficDistribution *trafficDistribution;
   u_int32_t        numHostSessions;
 

@@ -493,16 +493,16 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   switch(isHostHealthy(el)) {
   case 0: /* OK */
-    healthStr = "<!-- 495 -->";
+    healthStr = "";
     break;
   case 1: /* Minor */
-    healthStr = "<!-- 498 --> " CONST_IMG_LOW_RISK;
+    healthStr = CONST_IMG_LOW_RISK;
     break;
   case 2: /* Warning */
-    healthStr = "<!-- 501 --> " CONST_IMG_MEDIUM_RISK;
+    healthStr = CONST_IMG_MEDIUM_RISK;
     break;
   case 3: /* Error */
-    healthStr = "<!--504 --> " CONST_IMG_HIGH_RISK;
+    healthStr = CONST_IMG_HIGH_RISK;
     break;
   }
 
@@ -744,10 +744,11 @@ void switchNwInterface(int _interface) {
       BufferTooShort();
     sendString(buf);
   } else if(myGlobals.numDevices == 1) {
-    if(snprintf(buf, sizeof(buf), "Sorry, you are currently capturing traffic from a single "
-		"interface [%s]. This interface switch feature is meaningful only when "
-		"your ntop instance captures traffic from multiple interfaces. "
-                "Specify additional interfaces via the -i command line switch at run time.",
+    if(snprintf(buf, sizeof(buf), "Sorry, you are currently capturing traffic from only a "
+		"single interface [%s].<br><br>"
+                "</b> This interface switch feature is meaningful only when your ntop "
+                "instance captures traffic from multiple interfaces. You must specify "
+                "additional interfaces via the -i command line switch at run time.<b>",
 		myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferTooShort();
     sendString(buf);

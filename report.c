@@ -35,6 +35,21 @@ static void ignoreSignal(int signalId) {
 
 /* ******************************* */
 
+void printBandwidthFooter(void) {
+    sendString("<p><b>NOTE</b>: Bandwidth values are the percentage of the total bytes that "
+               "<b>ntop</b> has seen on the interface.  Hover the mouse to see the actual "
+               "value (rounded to the nearest full percentage point).  <i>The total of the "
+               "values will NOT be 100% as local traffic will be counted TWICE (once as "
+               "sent and again as received).</i><p>\n"
+               "<p>The SENT bandwidth is shown as "
+               "<img align=\"absmiddle\" src=\"/gaugeS.jpg\" alt=\"Sent\" WIDTH=\"25\" HEIGHT=\"12\">"
+               " and the RECEIVED bandwidth is shown as "
+               "<img align=\"absmiddle\" src=\"/gaugeR.jpg\" alt=\"Received\" WIDTH=\"25\" HEIGHT=\"12\">"
+               "</p>");
+}
+
+/* ******************************* */
+
 void initReports(void) {
   int i;
   char value[LEN_SMALL_WORK_BUFFER];
@@ -1103,9 +1118,11 @@ void printHostsTraffic(int reportType,
   strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
 
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
+  /* save ths as it can change */
 
-  tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printHostsTraffic");
+  tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*),
+                                                        "printHostsTraffic");
   if(tmpTable == NULL)
       return;
 
@@ -1803,16 +1820,22 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-    unsigned short actUsage;
+    unsigned short actUsage, actUsageS, actUsageR;
 
     if(isFcHost (el) || broadcastHost(el)) continue;
 
-    actUsage = (unsigned short)(100*((float)el->bytesSent.value/
+    actUsage  = (unsigned short)(0.5+100.0*(((float)el->bytesSent.value+(float)el->bytesRcvd.value)/
+				     (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+    actUsageS = (unsigned short)(0.5+100.0*((float)el->bytesSent.value/
+				     (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+    actUsageR = (unsigned short)(0.5+100.0*((float)el->bytesRcvd.value/
 				     (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
 
     el->actBandwidthUsage = actUsage;
     if(el->actBandwidthUsage > maxBandwidthUsage)
       maxBandwidthUsage = actUsage;
+    el->actBandwidthUsageS = actUsageS;
+    el->actBandwidthUsageR = actUsageR;
 
     tmpTable[numEntries++] = el;
     getHostAS(el);
@@ -1856,7 +1879,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		  "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
 		  "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
-		  "<TH "TH_BG">%s4\">Sent&nbsp;Bandwidth%s</A></TH>\n"
+		  "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
 		  "<TH "TH_BG">%s5\">Nw&nbsp;Board&nbsp;Vendor%s</A></TH>\n"
 		  "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
 		  "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
@@ -1882,7 +1905,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		  "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		  "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
-		  "<TH "TH_BG">%s4\">Sent&nbsp;Bandwidth%s</A></TH>\n"
+		  "<TH "TH_BG">%s4\">Bandwidth%s:</A></TH>\n"
 		  "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
 		  "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
 		  "<TH "TH_BG">%s9\">Age%s</A></TH>\n"
@@ -2083,7 +2106,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	}
 
 	sendString("&nbsp;</TD>");
-	printBar(buf, sizeof(buf), el->actBandwidthUsage, maxBandwidthUsage, 3);
+        printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 3);
 
 	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", tmpName2) < 0)
@@ -2130,9 +2153,17 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	  BufferTooShort();
 	sendString(buf);
 	
-	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%d</A></TD>", el->hostAS) < 0)
-	  BufferTooShort();
-	sendString(buf);
+        if(el->hostAS == 0) {
+          sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>&nbsp;</TD>");
+        } else {
+          if(snprintf(buf, sizeof(buf),
+                      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>"
+                        "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" alt=\"Lookup ASN (offsite)\">%d</a>"
+                      "</TD>",
+                      el->hostAS, el->hostAS) < 0)
+            BufferTooShort();
+          sendString(buf);
+        }
 
 	sendString("</TR>\n");
 	printedEntries++;
@@ -2150,6 +2181,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     sendString("</CENTER>\n");
 
     printFooterHostLink();
+
+    printBandwidthFooter();   
 
     addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.maxNumLines,
 		     revertOrder, abs(sortedColumn));
@@ -2553,6 +2586,8 @@ void printLocalRoutersList(int actualDeviceId) {
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
 
+    printHostColorCode(FALSE, 0);
+
     printFooterHostLink();
   }
 }
@@ -2942,6 +2977,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		       myGlobals.device[actualDeviceId].numTcpSessions,
 		       myGlobals.maxNumLines, -1, 0);
 
+    printHostColorCode(FALSE, 0);
+
     printFooterHostLink();
   } else {
     if(el == NULL) {
@@ -3046,6 +3083,8 @@ void printIpProtocolUsage(void) {
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
 
+  printHostColorCode(FALSE, 0);
+
   printFooterHostLink();
 
   free(hosts);
@@ -3054,30 +3093,54 @@ void printIpProtocolUsage(void) {
 /* ********************************** */
 
 void printBar(char *buf, int bufLen,
-	      unsigned short percentage,
+	      unsigned short percentageS, /* or the ONLY percentage if R = FLAG_NONSPLITBAR */
+	      unsigned short percentageR,
 	      unsigned short maxPercentage,
 	      unsigned short ratio) {
-  int int_perc = (int)((100*percentage)/maxPercentage);
 
   /* This shouldn't happen */
-  if(int_perc < 0) {
-    int_perc = 0;
-    percentage = 0;
-  } else if(int_perc > 100) {
-    int_perc = 100;
-    percentage = 100;
-  }
+  if(maxPercentage > 100) { maxPercentage = 100; }
 
-  switch(int_perc) {
-  case 0:
-    if(snprintf(buf, bufLen, "<TD "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor()) < 0)
-      BufferTooShort();
-    break;
-  default:
-    if(snprintf(buf, bufLen, "<TD "TD_BG" ALIGN=LEFT><IMG ALIGN=ABSMIDDLE SRC=\"/gauge.jpg\""
-		" ALT=\"%d%%\" WIDTH=%d HEIGHT=12>&nbsp;</TD>\n",
-		int_perc, ratio*int_perc) < 0) BufferTooShort();
-    break;
+  if(percentageR == FLAG_NONSPLITBAR) {
+    /* Single bar */
+    if(percentageS > maxPercentage) { percentageS = maxPercentage; }
+
+    switch(percentageS) {
+      case 0:
+        if(snprintf(buf, bufLen, "<TD "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor()) < 0)
+          BufferTooShort();
+        break;
+      default:
+        if(snprintf(buf, bufLen,
+                    "<TD "TD_BG" ALIGN=LEFT>"
+                    "<IMG ALIGN=ABSMIDDLE SRC=\"/gauge.jpg\" ALT=\"%d%%\" WIDTH=%d HEIGHT=12>"
+                    "&nbsp;</TD>\n",
+		    percentageS, ratio*percentageS) < 0)
+          BufferTooShort();
+        break;
+    }
+  } else {
+    /* Could happen because of rounding */
+    if((percentageS+percentageR) > maxPercentage) 
+      percentageR--;
+    if((percentageS+percentageR) > maxPercentage) 
+      percentageS--;
+
+    switch(percentageS+percentageR) {
+      case 0:
+        if(snprintf(buf, bufLen, "<TD "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor()) < 0)
+          BufferTooShort();
+        break;
+      default:
+        if(snprintf(buf, bufLen,
+                    "<TD "TD_BG" ALIGN=LEFT>"
+                    "<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeS.jpg\" ALT=\"Sent %d%%\" WIDTH=%d HEIGHT=12>"
+                    "<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeR.jpg\" ALT=\"Received %d%%\" WIDTH=%d HEIGHT=12>"
+                    "&nbsp;</TD>\n",
+                    percentageS, ratio*percentageS, percentageR, ratio*percentageR) < 0)
+          BufferTooShort();
+        break;
+    }
   }
 
   sendString(buf);
@@ -4289,37 +4352,46 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       arrow[i] = "", theAnchor[i] = htmlAnchor1;
   
   /* Split below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
-  sendString("<CENTER>\n");
+  sendString("<CENTER>\n" TABLE_ON "<TABLE BORDER=1>");
   if(snprintf(buf, sizeof(buf),
-	      ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-	      "<TH "TH_BG">%s0>Name%s</A></TH>"
-	      "<TH "TH_BG">%s1>Domain%s</A></TH>"
-	      "<TH "TH_BG" COLSPAN=2>%s2>Sent%s</A></TH>"
-	      "<TH "TH_BG" COLSPAN=2>%s3>Rcvd%s</A></TH>"
-	      "<TH "TH_BG">%s4>TCP&nbsp;Sent%s</A></TH>",
-	      theAnchor[0], arrow[0],
-	      theAnchor[1], arrow[1],
-	      theAnchor[2], arrow[2],
-	      theAnchor[3], arrow[3],
-	      theAnchor[4], arrow[4]) < 0)
+              "<TR "TR_ON" "DARK_BG">"
+              "<TH "TH_BG" rowspan=\"3\">%s0>Name%s</A></TH>"
+              "<TH "TH_BG" rowspan=\"3\">%s1>Domain%s</A></TH>"
+              "<TH "TH_BG" colspan=\"8\">TCP/IP</A></TH>"
+              "<TH "TH_BG" colspan=\"4\">ICMP</A></TH>\n",
+              theAnchor[0], arrow[0],
+              theAnchor[1], arrow[1]) < 0)
     BufferTooShort();
   sendString(buf);
 
+  sendString( "<TR "TR_ON" "DARK_BG">"
+              "<TH "TH_BG" colspan=\"4\">TCP</A></TH>"
+              "<TH "TH_BG" colspan=\"4\">UDP</A></TH>"
+              "<TH "TH_BG" colspan=\"2\">IPv4</A></TH>"
+              "<TH "TH_BG" colspan=\"2\">IPv6</A></TH></TR>\n");
+
   if(snprintf(buf, sizeof(buf),
-	      "<TH "TH_BG">%s5>TCP&nbsp;Rcvd%s</A></TH>"
-	      "<TH "TH_BG">%s6>UDP&nbsp;Sent%s</A></TH>"
-	      "<TH "TH_BG">%s7>UDP&nbsp;Rcvd%s</A></TH>"
-	      "<TH "TH_BG">%s8>ICMP&nbsp;Sent%s</A></TH>"
-	      "<TH "TH_BG">%s9>ICMP&nbsp;Rcvd%s</A></TH>"
-	      "<TH "TH_BG">%s10>ICMPv6&nbsp;Sent%s</A></TH>"
-	      "<TH "TH_BG">%s11>ICMPv6&nbsp;Rcvd%s</A></TH>",
-	      theAnchor[5], arrow[5],
-	      theAnchor[6], arrow[6],
-	      theAnchor[7], arrow[7],
-	      theAnchor[8], arrow[8],
-	      theAnchor[9], arrow[9],
-	      theAnchor[10], arrow[10],
-	      theAnchor[11], arrow[11]) < 0)
+              "<TR "TR_ON" "DARK_BG">"
+              "<TH "TH_BG" colspan=\"2\">%s2>Sent%s</A></TH>"
+              "<TH "TH_BG" colspan=\"2\">%s3>Rcvd%s</A></TH>"
+              "<TH "TH_BG">%s4>Sent%s</A></TH>"
+              "<TH "TH_BG">%s5>Rcvd%s</A></TH>"
+              "<TH "TH_BG">%s6>Sent%s</A></TH>"
+              "<TH "TH_BG">%s7>Rcvd%s</A></TH>"
+              "<TH "TH_BG">%s8>Sent%s</A></TH>"
+              "<TH "TH_BG">%s9>Rcvd%s</A></TH>"
+              "<TH "TH_BG">%s10>Sent%s</A></TH>"
+              "<TH "TH_BG">%s11>Rcvd%s</A></TH></TR>\n",
+              theAnchor[2], arrow[2],
+              theAnchor[3], arrow[3],
+              theAnchor[4], arrow[4],
+              theAnchor[5], arrow[5],
+              theAnchor[6], arrow[6],
+              theAnchor[7], arrow[7],
+              theAnchor[8], arrow[8],
+              theAnchor[9], arrow[9],
+              theAnchor[10], arrow[10],
+              theAnchor[11], arrow[11]) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -4402,8 +4474,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 		   myGlobals.maxNumLines,
 		   revertOrder, abs(sortedColumn));
 
-  sendString("<p><b>NOTE</b>: The domain is determined by simply stripping off the<br>"
-             "first name, so for host x.yz.com, the domain is yz.com and for host<br>"
+  sendString("<p align=\"center\"><b>NOTE</b>: The domain is determined by simply stripping off "
+             "the first name, so for host x.yz.com, the domain is yz.com and for host "
              "x.y.z.com, the domain is y.z.com</p>\n");
 
   free(tmpStats); free(stats);
@@ -4641,7 +4713,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 
 	if(criteria == 0 /* AS */) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT "DARK_BG">"
-		      "<A HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A>"
+                      "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" alt=\"Lookup ASN (offsite)\">%d</a>"
 		      "</TH><TH "TH_BG" ALIGN=LEFT>", el->hostAS, el->hostAS) < 0)
 	    BufferTooShort();
 	} else {
@@ -5312,7 +5384,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
                 BufferTooShort();
             sendString(buf);
 
-            printBar(buf, sizeof(buf), el->actBandwidthUsage, maxBandwidthUsage, 3);
+            printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 3);
 
             if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2) < 0)
                 BufferTooShort();
@@ -5339,6 +5411,8 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     
     printFooterHostLink();
     
+    printBandwidthFooter();   
+
     addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries,
                      myGlobals.maxNumLines, revertOrder, abs(sortedColumn));
 

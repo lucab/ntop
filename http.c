@@ -111,6 +111,8 @@ static int readHTTPheader(char* theRequestedURL,
                           int thePwLen,
                           char *theAgent,
                           int theAgentLen,
+                          char *theReferer,
+                          int theRefererLen,
                           char *theLanguage,
                           int theLanguageLen);
 static int returnHTTPPage(char* pageName,
@@ -119,6 +121,7 @@ static int returnHTTPPage(char* pageName,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
+                          char *referer,
                           char *requestedLanguage[],
                           int numLang);
 #else
@@ -127,13 +130,16 @@ static int readHTTPheader(char* theRequestedURL,
                           char *thePw,
                           int thePwLen,
                           char *theAgent,
-                          int theAgentLen);
+                          int theAgentLen,
+                          char *theReferer,
+                          int theRefererLen);
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
-                          char *agent);
+                          char *agent,
+                          char *referer);
 #endif
 
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
@@ -170,12 +176,14 @@ static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw, int thePwLen,
                           char *theAgent, int theAgentLen,
+                          char *theReferer, int theRefererLen,
                           char *theLanguage, int theLanguageLen)
 #else
 static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw, int thePwLen,
-                          char *theAgent, int theAgentLen)
+                          char *theAgent, int theAgentLen,
+                          char *theReferer, int theRefererLen)
 #endif
 {
 #ifdef HAVE_OPENSSL
@@ -357,6 +365,9 @@ static int readHTTPheader(char* theRequestedURL,
 	} else if((idxChar >= 12)
 		  && (strncasecmp(lineStr, "User-Agent: ", 12) == 0)) {
 	  strncpy(theAgent, &lineStr[12], theAgentLen-1)[theAgentLen-1] = '\0';
+	} else if((idxChar >= 9)
+		  && (strncasecmp(lineStr, "Referer: ", 9) == 0)) {
+	  strncpy(theReferer, &lineStr[9], theRefererLen-1)[theRefererLen-1] = '\0';
 	}
 	idxChar=0;
       } else if(idxChar > sizeof(lineStr)-2) {
@@ -691,7 +702,7 @@ void printHTMLtrailer(void) {
     sendString(buf);
   }
   
-  sendString("<BR>\n&copy; 1998-2004 by <A HREF=\"mailto:deri@ntop.org\">Luca Deri</A>\n");
+  sendString("<BR>\n&copy; 1998-2004 by <A HREF=\"mailto:&#100;&#101;&#114;&#105;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\">Luca Deri</A>\n");
   sendString("</B></FONT>\n</BODY>\n</HTML>\n");
 }
 
@@ -1262,6 +1273,186 @@ RETSIGTYPE httpcleanup(int signo) {
 }
 #endif /* MAKE_WITH_HTTPSIGTRAP */
 
+/* ******************************************
+   * This block of code generates internal  *
+   * copies of the major navigational pages *
+   * which are normally in the html/        *
+   * directory, in case that directory is   *
+   * damaged.                               *
+   *                                        *
+   * There are also a few real pages        *
+   * in here.                               *
+   *                                        *
+   * Please keep these menus up to date...  *
+   *                                        *
+   * Return 0 if you generated the page     *
+   *        1 if not                        *
+   *                                        *
+   **************************************** */
+
+int generateInternalPages(char* pageName) {
+  if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
+      sendString("<!-- Internally generated page -->\n");
+      sendString("<frameset cols=160,* framespacing=\"0\" border=\"0\" frameborder=\"0\">\n");
+      sendString("    <frame src=\"" CONST_LEFTMENU_HTML "\" name=\"Menu\" "
+                     "marginwidth=\"0\" marginheight=\"0\">\n");
+      sendString("    <frame src=\"" CONST_HOME_HTML "\" name=\"area\" "
+                     "marginwidth=\"5\" marginheight=\"0\">\n");
+      sendString("    <noframes>\n");
+      sendString("    <body>\n\n");
+      sendString("    </body>\n");
+      sendString("    </noframes>\n");
+      sendString("</frameset>\n");
+      sendString("</html>\n");
+      return 0;
+    }
+
+#define menuitem(const,title,img) sendString("<li><a href=\"" const "\" alt=\"" title "\" target=\"area\">" img title "</a></li>\n");
+
+    if((strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
+       (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
+      sendString("<!-- Internally generated page -->\n");
+      sendString("<!-- This is a menu for the internally generated frameset and is"
+                 "     usable for those whose browsers do not support frames... -->\n");
+      sendString("<h3>Welcome to ntop!</h3>\n");
+      sendString("<ol>\n");
+
+      sendString("<p><b>About</b></p>\n");
+      menuitem(CONST_HOME_UNDERSCORE_HTML,  "What's ntop?", "");
+      menuitem(CONST_INFO_NTOP_HTML, "Configuration", "");
+      menuitem(CONST_CREDITS_HTML, "Credits", "");
+      menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
+      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report", 
+               "<img src=\"/bug.png\" alt=\"create ntop problem report\" "
+                "width=\"23\" height=\"20\" border=\"0\" align=\"middle\">");
+      menuitem("ntophelp.html", "Help Me!", 
+               "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
+                 "border=\"0\" align=\"middle\">");
+
+      sendString("<p><b>Summary</b></p>\n");
+      menuitem(CONST_TRAFFIC_STATS_HTML, "Traffic", "");
+      menuitem(CONST_HOSTS_INFO_HTML, "Hosts", "");
+      menuitem(CONST_SORT_DATA_THPT_STATS_HTML, "Network Load", "");
+      menuitem(CONST_AS_LIST_HTML, "ASN Info", "");
+      menuitem(CONST_VLAN_LIST_HTML, "VLAN Info", "");
+      if(myGlobals.flowsList != NULL)
+        menuitem(CONST_NET_FLOWS_HTML, "Net Flows", "");
+
+      sendString("<p><b>All Protocols</b></p>\n");
+      menuitem(CONST_SORT_DATA_PROTOS_HTML, "Traffic", "");
+      menuitem(CONST_SORT_DATA_THPT_HTML, "Throughput", "");
+      menuitem(CONST_SORT_DATA_HOST_TRAFFIC_HTML, "Activity", "");
+
+      sendString("<p><b>IP Summary</b></p>\n");
+      menuitem(CONST_SORT_DATA_IP_HTML, "Traffic", "");
+      menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
+      menuitem(CONST_DOMAIN_STATS_HTML, "Domain", "");
+      menuitem(CONST_IP_PROTO_DISTRIB_HTML, "Distribution", "");
+      menuitem(CONST_IP_L_2_L_HTML, "Local &raquo; Local", "");
+      menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
+      menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
+      menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
+
+      sendString("<p><b>Local IP</b></p>\n");
+      menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
+      menuitem(CONST_IP_PROTO_USAGE_HTML, "Ports Used", "");
+      menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Active TCP Sessions", "");
+      menuitem(CONST_HOSTS_LOCAL_INFO_HTML, "Host (OS) Summary", "");
+      menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Local Matrix", "");
+
+      sendString("<p><b>FibreChannel</b></p>\n");
+//Fibre Channel:  Traffic  |   Throughput  |   Activity  |   Hosts  |   Traffic Per Port  |   Sessions  |   VSANs  |   VSAN Summary 
+      menuitem(CONST_FC_DATA_HTML, "Traffic", "");
+      menuitem(CONST_FC_THPT_HTML, "Throughput", "");
+      menuitem(CONST_FC_ACTIVITY_HTML, "Activty", "");
+      menuitem(CONST_FC_HOSTS_INFO_HTML, "Hosts", "");
+      menuitem(CONST_FC_TRAFFIC_HTML, "Throughput", "");
+      menuitem(CONST_FC_SESSIONS_HTML, "Sessions", "");
+      menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
+      menuitem(CONST_VSAN_DISTRIB_HTML, "VSAN Summary", "");
+
+      sendString("<p><b>SCSI</b></p>\n");
+      menuitem(CONST_SCSI_BYTES_HTML, "Bytes", "");
+      menuitem(CONST_SCSI_STATUS_HTML, "Status", "");
+      menuitem(CONST_SCSI_TIMES_HTML, "Times", "");
+      menuitem(CONST_SCSI_TM_HTML, "Task Management", "");
+
+      sendString("<p><b>Admin</b></p>\n");
+      menuitem(CONST_SHOW_PLUGINS_HTML, "Plugins", "");
+      if(!myGlobals.mergeInterfaces)
+        menuitem(CONST_SWITCH_NIC_HTML, "Switch NIC", "");
+      menuitem("dump.html", "Dump Data", "");
+      menuitem(CONST_VIEW_LOG_HTML, "Log", "");
+      menuitem(CONST_CHANGE_FILTER_HTML, "Change Filter", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_RESET_STATS_HTML, "Reset Statistics", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHOW_USERS_HTML, "show Users", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHOW_URLS_HTML, "show URLs", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHUTDOWN_NTOP_HTML, "Shutdown", CONST_IMG_LOCK "&nbsp;");
+
+      sendString("</ol>\n"
+                 "<p><center><b>&copy; 1998-2004 by "
+                 "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
+                 "</body>\n</html>\n");
+      return 0;
+    }
+#undef menuitem
+
+    if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
+      if(myGlobals.filterExpressionInExtraFrame){
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+        sendString("<!-- Internally generated page -->\n");
+        sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
+        sendString("border=\"0\" frameborder=\"0\">\n");
+        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"2\" ");
+        sendString("marginheight=\"2\" name=\"area\">\n");
+        sendString("    <frame src=\"" CONST_FILTER_INFO_HTML"\" marginwidth=\"0\" ");
+        sendString("marginheight=\"0\" name=\"filterinfo\">\n");
+        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
+        sendString("  </frameset>\n</html>\n");
+      } else {	/* frame so that "area" is defined */
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+        sendString("<!-- Internally generated page -->\n");
+        sendString("<html>\n  <frameset rows=\"100%,*\" framespacing=\"0\" ");
+        sendString("border=\"0\" frameborder=\"0\">\n");
+        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"0\" ");
+        sendString("marginheight=\"0\" name=\"area\">\n");
+        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
+        sendString("  </frameset>\n</html>\n");
+      }
+      return 0;
+    }
+
+    if(strcasecmp(pageName, CONST_HOME_HTML) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      sendString("<!-- Internally generated page -->\n");
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
+      sendString("<FONT FACE=Helvetica>\n<HR>\n");
+      sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
+      sendString("currently using the network and reports information concerning the IP\n");
+      sendString("(Internet Protocol) and Fibre Channel (FC) traffic generated by each host. The traffic is \n");
+      sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
+      sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
+		 "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
+		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
+      sendString("NFS<li>X11</ul>\n<p>\n");
+      sendString("<li>Fibre Channel<ul><li>Control Traffic - SW2,GS3,ELS<li>SCSI</ul></ul><p>\n");
+      sendString("<p><b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
+      sendString("open source software</A> and encourages everyone to modify, improve\n ");
+      sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
+      sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
+      sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
+      sendString("<A HREF=\"mailto:&#110;&#116;&#111;&#112;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"> mailing list</A>.</p>\n");
+      sendString("<p>For information on <b>ntop</b> and information privacy, see ");
+      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
+      return 0;
+    }
+    return 1; /* Not in this bunch, boss */
+}
+
 /* **************************************** */
 
 #ifdef MAKE_WITH_I18N
@@ -1271,6 +1462,7 @@ static int returnHTTPPage(char* pageName,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
+                          char *referer,
                           char *requestedLanguage[],
                           int numLang) {
 #else
@@ -1279,7 +1471,8 @@ static int returnHTTPPage(char* pageName,
                           HostAddr *from,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
-                          char *agent) {
+                          char *agent,
+                          char *referer) {
 #endif
 
   char *questionMark, *pageURI, *token;
@@ -1772,180 +1965,10 @@ static int returnHTTPPage(char* pageName,
   } else
 #endif
 
-  if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
-      sendString("<!-- Internally generated page -->\n");
-      sendString("<frameset cols=160,* framespacing=\"0\" border=\"0\" frameborder=\"0\">\n");
-      sendString("    <frame src=\"" CONST_LEFTMENU_HTML "\" name=\"Menu\" "
-                     "marginwidth=\"0\" marginheight=\"0\">\n");
-      sendString("    <frame src=\"" CONST_HOME_HTML "\" name=\"area\" "
-                     "marginwidth=\"5\" marginheight=\"0\">\n");
-      sendString("    <noframes>\n");
-      sendString("    <body>\n\n");
-      sendString("    </body>\n");
-      sendString("    </noframes>\n");
-      sendString("</frameset>\n");
-      sendString("</html>\n");
-      printTrailer=0;
-    } else if((strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0)
-	      || (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
-      sendString("<!-- Internally generated page -->\n");
-      sendString("<center>\n<pre>\n\n</pre>\n\n");
-      sendString("<FONT FACE=Helvetica SIZE=+2>Welcome<br>to<br>\n");
-      sendString("ntop!</FONT>\n<pre>\n</pre>\n");
-      sendString("<p></center><p>\n<FONT FACE=Helvetica SIZE=-1><b>\n<ol>\n");
-      sendString("<li><a href=\"" CONST_HOME_UNDERSCORE_HTML "\" target=area>What's ntop?</a></li>\n");
-      sendString("<li>Data Rcvd<ul>");
-      sendString("<li><a href=\"" CONST_SORT_DATA_RECEIVED_PROTOS_HTML "\" target=area "
-		 "ALT=\"Data Received (all protocols)\">All Protoc.</a></li>\n");
-      sendString("<li><a href=\"" CONST_SORT_DATA_RECEIVED_IP_HTML "\" target=area "
-		 "ALT=\"IP Data Received\">IP</a></li>\n");
-      sendString("<li><a href=\"" CONST_SORT_DATA_RECEIVED_THPT_HTML "\" target=area "
-		 "ALT=\"Data Received Throughput\">Thpt</a></li></ul></li>\n");
-      sendString("<li><a href=\"" CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML "\" target=area "
-		 "ALT=\"Data Received Host Traffic\">Traffic</a></li></ul></li>\n");
-
-      sendString("<li>Data Sent<ul>");
-      sendString("<li><a href=\"" CONST_SORT_DATA_SENT_PROTOS_HTML "\" target=area "
-		 "ALT=\"Data Sent (all protocols)\">All Protoc.</a></li>\n");
-      sendString("<li><a href=\"" CONST_SORT_DATA_SENT_IP_HTML "\" target=area "
-		 "ALT=\"IP Data Sent\">IP</a></li>\n");
-      sendString("<li><a href=\"" CONST_SORT_DATA_SENT_THPT_HTML "\" target=area "
-		 "ALT=\"Data Sent Throughput\">Thpt</a></li></ul></li>\n");
-      sendString("<li><a href=\"" CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML "\" target=area "
-		 "ALT=\"Data Sent Host Traffic\">Traffic</a></li></ul></li>\n");
-
-      sendString("<li>Total Data<ul>");
-      sendString("<li><a href=" CONST_SORT_DATA_PROTOS_HTML " target=area "
-		 "ALT=\"Data (all protocols)\">All Protoc.</a></li>\n");
-      sendString("<li><a href=" CONST_SORT_DATA_IP_HTML " target=area "
-		 "ALT=\"IP Data\">IP</a></li>\n");
-      sendString("<li><a href=" CONST_SORT_DATA_THPT_HTML " target=area "
-		 "ALT=\"Data Throughput\">Thpt</a></li></ul></li>\n");
-      sendString("<li><a href=" CONST_SORT_DATA_HOST_TRAFFIC_HTML " target=area "
-		 "ALT=\"Data Host Traffic\">Traffic</a></li></ul></li>\n");
-
-      sendString("<li><a href=\"" CONST_MULTICAST_STATS_HTML "\" target=area "
-                  "ALT=\"Multicast Stats\">Multicast Stats</a></li>\n");
-      sendString("<li><a href=\"" CONST_TRAFFIC_STATS_HTML "\" target=area "
-                  "ALT=\"Traffic Statistics\">Traffic Stats</a></li>\n");
-      sendString("<li><a href=\"" CONST_DOMAIN_STATS_HTML "\" target=area "
-                 "ALT=\"Domain Traffic Statistics\">Domain Stats</a></li>\n");
-      sendString("<li><a href=\"" CONST_LOCAL_ROUTERS_LIST_HTML "\" target=area "
-                 "ALT=\"Routers List\">Routers</a></li>\n");
-      sendString("<li><a href=\"" CONST_AS_LIST_HTML "\" target=area "
-                 "ALT=\"ASs\">ASs</a></li>\n");
-      sendString("<li><a href=\"" CONST_VLAN_LIST_HTML "\" target=area "
-                 "ALT=\"ASs\">VLANs</a></li>\n");
-      sendString("<li><a href=\"" CONST_SHOW_PLUGINS_HTML "\" target=area "
-                 "ALT=\"Plugins List\">Plugins</a></li>\n");
-      sendString("<li><a href=" CONST_SORT_DATA_THPT_STATS_HTML " target=area "
-                 "ALT=\"Throughput Statistics\">Thpt Stats</a></li>\n");
-      sendString("<li><a href=" CONST_HOSTS_INFO_HTML " target=area "
-                 "ALT=\"Hosts Information\">Hosts Info</a></li>\n");
-      sendString("<li><a href=" CONST_IP_R_2_L_HTML " target=area "
-                 "ALT=\"Rem to Local IP Traffic\">R-&gt;L IP Traffic</a></li>\n");
-      sendString("<li><a href=" CONST_IP_L_2_R_HTML " target=area "
-                 "ALT=\"Local to Rem IP Traffic\">L-&gt;R IP Traffic</a></li>\n");
-      sendString("<li><a href=" CONST_IP_L_2_L_HTML " target=area "
-                 "ALT=\"Local IP Traffic\">L&lt;-&gt;L IP Traffic</a></li>\n");
-      sendString("<li><a href=" CONST_ACTIVE_TCP_SESSIONS_HTML " target=area "
-                 "ALT=\"Active TCP Sessions\">Active TCP Sessions</a></li>\n");
-      sendString("<li><a href=" CONST_IP_PROTO_DISTRIB_HTML " target=area "
-                 "ALT=\"IP Protocol Distribution\">IP Protocol Distribution</a></li>\n");
-      sendString("<li><a href=" CONST_IP_PROTO_USAGE_HTML " target=area "
-                 "ALT=\"IP Protocol Subnet Usage\">IP Protocol Usage</a></li>\n");
-      sendString("<li><a href=" CONST_IP_TRAFFIC_MATRIX_HTML " target=area "
-                 "ALT=\"IP Traffic Matrix\">IP Traffic Matrix</a></li>\n");
-
-      if(myGlobals.flowsList != NULL)
-	sendString("<li><a href=" CONST_NET_FLOWS_HTML " target=area "
-                   "ALT=\"NetFlows\">NetFlows List</a></li>\n");
-
-      sendString("<li><a href=" CONST_SHOW_USERS_HTML " target=area "
-                 "ALT=\"Admin Users\">Admin Users</a></li>\n");
-      sendString("<li><a href=" CONST_SHOW_URLS_HTML " target=area "
-                 "ALT=\"Admin URLs\">Admin URLs</a></li>\n");
-
-      if(!myGlobals.mergeInterfaces)
-	sendString("<li><a href=" CONST_SWITCH_NIC_HTML " target=area "
-                   "ALT=\"Switch NICs\">Switch NICs</a></li>\n");
-
-      sendString("<li><a href=\"" CONST_SHUTDOWN_NTOP_HTML "\" target=area "
-                 "ALT=\"Shutdown ntop\">Shutdown ntop</a></li>\n");
-      sendString("<li><a href=\"" CONST_PRIVACYNOTICE_HTML "\" target=area "
-                 "ALT=\"Privacy Notice\">Privacy Notice</a></li>\n");
-      sendString("<li><a href=\"" CONST_MAN_NTOP_HTML "\" target=area "
-                 "ALT=\"Man Page\">Man Page</a></li>\n");
-      sendString("<li><a href=\"" CONST_CREDITS_HTML "\" target=area "
-                 "ALT=\"Credits\">Credits</a></li>\n");
-      sendString("</ol>\n<center>\n<b>\n\n");
-      sendString("<pre>\n</pre>&copy; 1998-2004<br>by<br>"
-		 "<A HREF=\"http://luca.ntop.org/\" target=\"area\">"
-		 "Luca Deri</A></FONT><pre>\n");
-      sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");
-      printTrailer=0;
-    } else if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
-      if(myGlobals.filterExpressionInExtraFrame){
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-        sendString("<!-- Internally generated page -->\n");
-        sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
-        sendString("border=\"0\" frameborder=\"0\">\n");
-        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"2\" ");
-        sendString("marginheight=\"2\" name=\"area\">\n");
-        sendString("    <frame src=\"" CONST_FILTER_INFO_HTML"\" marginwidth=\"0\" ");
-        sendString("marginheight=\"0\" name=\"filterinfo\">\n");
-        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
-        sendString("  </frameset>\n</html>\n");
+    if(generateInternalPages(pageName) == 0) {
+      /* We did the work in the function except for this */
+      if(strcasecmp(pageName, CONST_HOME_HTML) != 0) 
         printTrailer=0;
-      } else {	/* frame so that "area" is defined */
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-        sendString("<!-- Internally generated page -->\n");
-        sendString("<html>\n  <frameset rows=\"100%,*\" framespacing=\"0\" ");
-        sendString("border=\"0\" frameborder=\"0\">\n");
-        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"0\" ");
-        sendString("marginheight=\"0\" name=\"area\">\n");
-        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
-        sendString("  </frameset>\n</html>\n");
-        printTrailer=0;
-      }
-    } else if(strcasecmp(pageName, CONST_HOME_HTML) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      sendString("<!-- Internally generated page -->\n");
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
-      sendString("<FONT FACE=Helvetica>\n<HR>\n");
-      sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
-      sendString("currently using the network and reports information concerning the IP\n");
-      sendString("(Internet Protocol) and Fibre Channel (FC) traffic generated by each host. The traffic is \n");
-      sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
-      sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
-		 "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
-		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
-      sendString("NFS<li>X11</ul>\n<p>\n");
-      sendString("<li>Fibre Channel<ul><li>Control Traffic - SW2,GS3,ELS<li>SCSI</ul></ul><p>\n");
-      sendString("<p><b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
-      sendString("open source software</A> and encourages everyone to modify, improve\n ");
-      sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
-      sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
-      sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
-      sendString("<A HREF=mailto:ntop@ntop.org> mailing list</A>.</p>\n");
-      sendString("<p>For information on <b>ntop</b> and information privacy, see ");
-      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
-    } else if(strncasecmp(pageName, CONST_SORT_DATA_RECEIVED_PROTOS_HTML,
-		      strlen(CONST_SORT_DATA_RECEIVED_PROTOS_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHostsTraffic(SORT_DATA_RECEIVED_PROTOS, sortedColumn, revertOrder, 
-                        pageNum, CONST_SORT_DATA_RECEIVED_PROTOS_HTML,
-                        showHostsMode, showLocalityMode);
-    } else if(strncasecmp(pageName, CONST_SORT_DATA_RECEIVED_IP_HTML, 
-                      strlen(CONST_SORT_DATA_RECEIVED_IP_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHostsTraffic(SORT_DATA_RECEIVED_IP, sortedColumn, revertOrder,
-			pageNum, CONST_SORT_DATA_RECEIVED_IP_HTML,
-                        showHostsMode, showLocalityMode);
     } else if(strncasecmp(pageName, CONST_FC_DATA_HTML, 
                       strlen(CONST_FC_DATA_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
@@ -1959,46 +1982,6 @@ static int returnHTTPPage(char* pageName,
                       strlen(CONST_THPT_STATS_MATRIX_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printThptStatsMatrix(sortedColumn);
-    } else if(strncasecmp(pageName, CONST_SORT_DATA_RECEIVED_THPT_HTML,
-                      strlen(CONST_SORT_DATA_RECEIVED_THPT_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-      printHostsTraffic(SORT_DATA_RECEIVED_THPT, sortedColumn, 
-                        revertOrder, pageNum, CONST_SORT_DATA_RECEIVED_THPT_HTML,
-                        showHostsMode, showLocalityMode);
-    } else if(strncasecmp(pageName, CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML,
-                      strlen(CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-      printHostsTraffic(SORT_DATA_RCVD_HOST_TRAFFIC, sortedColumn, revertOrder, 
-                        pageNum, CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML,
-                        showHostsMode, showLocalityMode);
-    } else if(strncasecmp(pageName, CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML,
-                      strlen(CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-      printHostsTraffic(SORT_DATA_SENT_HOST_TRAFFIC, sortedColumn, revertOrder,
-                        pageNum, CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML,
-                        showHostsMode, showLocalityMode);
-    } else if(strncasecmp(pageName, CONST_SORT_DATA_SENT_PROTOS_HTML,
-                      strlen(CONST_SORT_DATA_SENT_PROTOS_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHostsTraffic(SORT_DATA_SENT_PROTOS, sortedColumn, revertOrder,
-                        pageNum, CONST_SORT_DATA_SENT_PROTOS_HTML,
-                        showHostsMode, showLocalityMode);
-    } else if(strncasecmp(pageName, CONST_SORT_DATA_SENT_IP_HTML,
-                      strlen(CONST_SORT_DATA_SENT_IP_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHostsTraffic(SORT_DATA_SENT_IP, sortedColumn, revertOrder,
-			pageNum, CONST_SORT_DATA_SENT_IP_HTML,
-                        showHostsMode, showLocalityMode);
-    } else if(strncasecmp(pageName, CONST_SORT_DATA_SENT_THPT_HTML,
-                      strlen(CONST_SORT_DATA_SENT_THPT_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-      printHostsTraffic(SORT_DATA_SENT_THPT, sortedColumn, revertOrder, 
-                        pageNum, CONST_SORT_DATA_SENT_THPT_HTML,
-                        showHostsMode, showLocalityMode);
     } else if(strncasecmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsInfo(sortedColumn, revertOrder, pageNum);
@@ -2431,31 +2414,43 @@ static int returnHTTPPage(char* pageName,
     } else if(strcasecmp(pageName, CONST_CREDITS_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("Credits", NULL, BITFLAG_HTML_NO_REFRESH);
-      sendString("<FONT FACE=Helvetica>\n");
-      sendString("<p><hr><br><b>ntop</b> has been created by\n");
-      sendString("<A HREF=\"http://luca.ntop.org/\">Luca Deri</A> while studying how to model\n");
-      sendString("network traffic. He was unsatisfied of the many network traffic analysis tools\n");
-      sendString("he had access to, and decided to write a new application able to report network\n");
-      sendString("traffic information in a way similar to the popular Unix top command. At that \n");
-      sendString("point in time (it was June 1998) <b>ntop</b> was born.<p>The current release is very\n");
-      sendString("different from the initial one as it includes many features and media support.<p>\n");
-      sendString("<b>ntop</b> has definitively more than an author:<ul>\n");
-      sendString("<li><A HREF=\"mailto:stefano@ntop.org\">Stefano Suin</A> has contributed with ");
-      sendString("several ideas and comments<li><A HREF=\"mailto:Abdelkader.Lahmadi@loria.fr\">Abdelkader Lahmadi</A>\n");
-      sendString("and <A HREF=\"mailto:Olivier.Festor@loria.fr\">Olivier Festor</A> provided IPv6 support\n");
-      sendString("<li><A HREF=\"mailto:ddutt@cisco.com\">Dinesh G. Dutt</A> for iSCSI/FiberChannel support");
-      sendString("<li><A HREF=\"mailto:burton@ntopsupport.com\">Burton Strauss</A>\n");
-      sendString(" the ntop factotum (user support, bug fixing, testing, packaging).</ul><p>\n");
-      sendString(" In addition, many other people downloaded this program, tested it,\n");
-      sendString("joined the <A HREF=http://lists.ntop.org/mailman/listinfo/ntop>ntop</A>\n");
-      sendString("and <A HREF=http://lists.ntop.org/mailman/listinfo/ntop-dev>ntop-dev</A> mailing lists,\n");
-      sendString("reported problems, changed it and improved significantly. This is because\n");
-      sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its author, but\n");
-      sendString("to the whole Internet community. Their names are throught "
-		 "the <b>ntop</b> code.<p>");
-      sendString("The author would like to thank all these people who contributed to <b>ntop</b> and\n");
-      sendString("turned it into a first class network monitoring tool. Many thanks guys!<p>\n");
-      sendString("</FONT><p>\n");
+      sendString("<hr><br>");
+      sendString("<p><b>ntop</b> was been created by ");
+      sendString("<a href=\"http://luca.ntop.org/\" title=\"Luca's home page\">");
+      sendString("Luca Deri</a> while studying how to model network traffic. He was unsatisfied");
+      sendString("by the many network traffic analysis tools he had access to, and decided to ");
+      sendString("write a new application able to report network traffic information in a way");
+      sendString("similar to the popular Unix top command. At that point in time (it was June ");
+      sendString("1998) <b>ntop</b> was born.</p>");
+      sendString("<p>The current release is very different from the initial one as it includes");
+      sendString("many features and much additional media support.</p>");
+      sendString("<p><b>ntop</b> has definitively more than one author:</p>");
+/* Addresses are blinded to prevent easy spam harvest - 
+ *   see http://www.wbwip.com/wbw/emailencoder.html 
+ */
+      sendString("<ul><li><a href=\"mailto:&#115;&#116;&#101;&#102;&#097;&#110;&#111;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"");
+      sendString(" title=\"Send mail to Stefano\">Stefano Suin</a>");
+      sendString("has contributed several ideas and comments</li>");
+      sendString("<li><a href=\"mailto:&#097;&#098;&#100;&#101;&#108;&#107;&#097;&#100;&#101;&#114;&#046;&#108;&#097;&#104;&#109;&#097;&#100;&#105;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\"");
+      sendString(" title=\"Send mail to Abdelkader\">Abdelkader Lahmadi</a>");
+      sendString("and <a href=\"mailto:&#111;&#108;&#105;&#118;&#105;&#101;&#114;&#046;&#102;&#101;&#115;&#116;&#111;&#114;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\"");
+      sendString(" title=\"Send mail to Olivier\">Olivier Festor</a> provided IPv6 support</li>");
+      sendString("<li><a href=\"mailto:&#100;&#100;&#117;&#116;&#116;&#064;&#099;&#105;&#115;&#099;&#111;&#046;&#099;&#111;&#109;\"");
+      sendString(" title=\"Send mail to Dinesh\">Dinesh G. Dutt</a> for iSCSI/FiberChannel support</li>");
+      sendString("<li><a href=\"mailto:&#098;&#117;&#114;&#116;&#111;&#110;&#064;&#110;&#116;&#111;&#112;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#046;&#099;&#111;&#109;\"");
+      sendString(" title=\"Send mail to Burton\">Burton Strauss</a>");
+      sendString("the ntop factotum (user support, bug fixing, testing, packaging).</li></ul>");
+      sendString("<p>In addition, many other people downloaded this program, tested it,");
+      sendString("joined the <a href=\"http://lists.ntop.org/mailman/listinfo/ntop\"");
+      sendString(" title=\"ntop mailing list signup page\">ntop</a>");
+      sendString("and <a href=\"http://lists.ntop.org/mailman/listinfo/ntop-dev\"");
+      sendString(" title=\"ntop-dev mailing list signup page\">ntop-dev</a> mailing lists,");
+      sendString("reported problems, changed it and improved significantly. This is because");
+      sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its author,");
+      sendString("but to the whole Internet community. Their names are throught the <b>ntop</b>");
+      sendString("code.</p>");
+      sendString("<p>The author would like to thank all these people who contributed to <b>ntop</b>");
+      sendString("and turned it into a first class network monitoring tool. Many thanks guys!</p>");
     } else if(strncasecmp(pageName, CONST_INFO_NTOP_HTML, strlen(CONST_INFO_NTOP_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printNtopConfigInfo(FALSE);
@@ -2777,7 +2772,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
 void handleHTTPrequest(HostAddr from) {
   int skipLeading, postLen, usedFork = 0;
-  char requestedURL[MAX_LEN_URL], pw[64], agent[256];
+  char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256];
   int rc, i;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
@@ -2831,6 +2826,7 @@ void handleHTTPrequest(HostAddr from) {
   memset(requestedURL, 0, sizeof(requestedURL));
   memset(pw, 0, sizeof(pw));
   memset(agent, 0, sizeof(agent));
+  memset(referer, 0, sizeof(referer));
 
 #ifdef MAKE_WITH_I18N
   memset(requestedLanguage, 0, sizeof(requestedLanguage));
@@ -2848,6 +2844,8 @@ void handleHTTPrequest(HostAddr from) {
                           sizeof(pw),
                           agent,
                           sizeof(agent),
+                          referer,
+                          sizeof(referer),
                           workLanguage,
                           sizeof(workLanguage));
 #else
@@ -2856,17 +2854,19 @@ void handleHTTPrequest(HostAddr from) {
                           pw,
                           sizeof(pw),
                           agent,
-                          sizeof(agent));
+                          sizeof(agent),
+                          referer,
+                          sizeof(referer));
 #endif
 
 #if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
  traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Requested URL = '%s', length = %d", requestedURL, postLen);
  traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: User-Agent = '%s'", agent);
+ traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Referer = '%s'", referer);
 
  #ifdef MAKE_WITH_I18N
   traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Accept-Language = '%s'", workLanguage);
  #endif
-
 #endif
 
   if(postLen >= -1) {
@@ -2998,6 +2998,7 @@ void handleHTTPrequest(HostAddr from) {
   rc = returnHTTPPage(&requestedURL[1], postLen,
 		      &from, &httpRequestedAt, &usedFork,
                       agent,
+                      referer,
                       requestedLanguage,
                       numLang);
 

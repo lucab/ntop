@@ -215,7 +215,7 @@ extern void printScsiLunStats (HostTraffic *el, int actualDeviceId,
                                int pageNum, char *lun);
 extern void printScsiLunGraphs (HostTraffic *el, int actualDeviceId);
 extern void printIpProtocolUsage(void);
-extern void printBar(char *buf, int bufLen, unsigned short percentage,
+extern void printBar(char *buf, int bufLen, unsigned short percentageS, unsigned short percentageR,
                      unsigned short maxPercentage, unsigned short ratio);
 extern void printIpProtocolDistribution(int mode, int revertOrder);
 extern void printFcProtocolDistribution(int mode, int revertOrder);

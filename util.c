@@ -251,7 +251,7 @@ int in6_isglobal(struct in6_addr *addr) {
 
 /* ***************************** */
 
-unsigned short addrcmp(HostAddr *addr1, HostAddr *addr2) {
+short addrcmp(HostAddr *addr1, HostAddr *addr2) {
   if (addr1->hostFamily != addr2->hostFamily)
     return 1;
   switch (addr1->hostFamily){

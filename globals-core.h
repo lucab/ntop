@@ -65,10 +65,6 @@ extern int optind;
 extern int opterr;
 extern int optopt;
 #endif /* HAVE_GETOPT_H */
-extern int emptySerial(HostSerial *a);
-extern int cmpSerial(HostSerial *a, HostSerial *b);
-extern int copySerial(HostSerial *a, HostSerial *b);
-extern void setEmptySerial(HostSerial *a);
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
 extern int ntop_sched_yield(char *file, int line);
 #endif
@@ -76,7 +72,6 @@ extern char *reportNtopVersionCheck(void);
 extern void* checkVersion(void*);
 extern unsigned int convertNtopVersionToNumber(char *versionString);
 extern void displayPrivacyNotice(void);
-extern char *reportNtopVersionCheck(void);
 extern void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen, char *title, char *input);
 extern void extractAndAppend(char *userAgent, int userAgentLen, char *title, char *input);
 extern int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen);
@@ -369,13 +364,6 @@ extern unsigned short in6_isPrivateAddress(struct in6_addr *addr);
 #endif
 extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
 extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
-extern unsigned short addrcmp(HostAddr *addr1, HostAddr *addr2);
-extern HostAddr *addrcpy(HostAddr *dst, HostAddr *src);
-extern int addrinit(HostAddr *addr);
-extern unsigned short addrget(HostAddr *Haddr,void *addr, int *family , int *size);
-extern unsigned short addrput(int family, HostAddr *dst, void *src);
-extern unsigned short addrnull(HostAddr *addr);
-extern unsigned short addrfull(HostAddr *addr);
 extern unsigned short in_isBroadcastAddress(struct in_addr *addr);
 extern unsigned short in_isMulticastAddress(struct in_addr *addr);
 extern unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId);
@@ -390,7 +378,6 @@ extern unsigned short isBroadcastAddress(HostAddr *addr);
 extern unsigned short isMulticastAddress(HostAddr *addr);
 extern unsigned short isLocalAddress(HostAddr *addr, u_int actualDeviceId);
 extern int dotted2bits(char *mask);
-extern void handleFlowsSpecs();
 extern void handleLocalAddresses(char* addresses);
 extern unsigned short isPseudoLocalAddress(HostAddr *addr, u_int actualDeviceId);
 extern unsigned short _pseudoLocalAddress(HostAddr *addr);
@@ -402,7 +389,6 @@ extern unsigned short isPseudoBroadcastAddress(HostAddr *addr);
 extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
 extern char *dotToSlash(char *name);
-extern void handleFlowsSpecs();
 extern int getLocalHostAddress(struct in_addr *hostIpAddress, char* device);
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
@@ -505,8 +491,7 @@ extern u_int numActiveVsans(u_int deviceId);
 extern u_int32_t xaton(char *s);
 extern void addNodeInternal(u_int32_t ip, int prefix, char *country, int as);
 extern char *ip2CountryCode(HostAddr ip);
-extern unsigned long in6_hash(struct in6_addr *addr);
-extern unsigned short addrcmp(HostAddr *addr1, HostAddr *addr2);
+extern short addrcmp(HostAddr *addr1, HostAddr *addr2);
 extern HostAddr     * addrcpy(HostAddr *dst, HostAddr *src);
 extern int            addrinit(HostAddr *addr);
 extern unsigned short addrget(HostAddr *Haddr,void *addr, int *family , int *size);
@@ -515,7 +500,6 @@ extern unsigned short addrnull(HostAddr *addr);
 extern unsigned short addrfull(HostAddr *addr);
 extern unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, 
 				   int size);
-extern unsigned short addrlookup(struct in6_addr *addr,  NtopIfaceAddr *addrs);
 extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, 
 				 int sport, int dport);
 extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, 
@@ -535,7 +519,6 @@ extern void readASs(FILE *fd);
 extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
 extern int copySerial(HostSerial *a, HostSerial *b);
-extern void setEmptySerial(HostSerial *a);
 extern void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS */, u_short thePort);
 #ifndef WIN32
 extern void saveNtopPid(void);
@@ -589,7 +572,6 @@ extern char **buildargv(const char *argv);
 #ifndef HAVE_FREEARGV
 extern void freeargv(char **argv);
 #endif
-extern void fillDomainName(HostTraffic *el);
 void handleWhiteBlackListAddresses(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
                                    u_short *numNets, char* outAddresses,
                                    int outAddressesLen);

@@ -981,6 +981,9 @@
 #define FLAG_CHECKVERSION_DEVELOPMENT       6
 #define FLAG_CHECKVERSION_NEWDEVELOPMENT    7
 
+/* Flag for printBar() */
+#define FLAG_NONSPLITBAR                    999  /* Anything > 100 < MAX_SHORT will work */
+
 /*
  * Items which affect the listen() call in webInterface.c.  Making this larger
  * allows the tcp/ip stack to queue more requests for the ntop web server
@@ -1978,6 +1981,16 @@
  *  Sampling rate - sflow samples every n-th packet
  */
 #define DEFAULT_SFLOW_SAMPLING_RATE  "400"
+
+/*
+ * Text string to lookup an ASN
+ */
+#define DEFAULT_AS_LOOKUP_URL          "http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS"
+
+/*
+ * img tag for lock (secure URL)
+ */
+#define CONST_IMG_LOCK                 "<img src=\"/lock.png\" alt=\"secured URL\" border=\"0\">"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* MISSING items                                                                   */
