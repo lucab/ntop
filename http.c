@@ -170,14 +170,14 @@ static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw, int thePwLen,
                           char *theAgent, int theAgentLen,
-                          char *theLanguage, int theLanguageLen) {
+                          char *theLanguage, int theLanguageLen)
 #else
 static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw, int thePwLen,
-                          char *theAgent, int theAgentLen) {
+                          char *theAgent, int theAgentLen)
 #endif
-
+{
 #ifdef HAVE_OPENSSL
   SSL* ssl = getSSLsocket(-myGlobals.newSock);
 #endif
@@ -231,7 +231,7 @@ static int readHTTPheader(char* theRequestedURL,
     if(myGlobals.newSock < 0) {
       rc = SSL_read(ssl, aChar, 1);
       if(rc == -1)
-          ntop_ssl_error_report("read");
+	ntop_ssl_error_report("read");
     } else
       rc = recv(myGlobals.newSock, aChar, 1, 0);
 #else
@@ -299,11 +299,11 @@ static int readHTTPheader(char* theRequestedURL,
 	      tmpStr = &lineStr[4];
 	    } else if((idxChar >= 4) && (strncmp(lineStr, "POST ", 5) == 0)) {
 	      tmpStr = &lineStr[5];
-/*
-  HEAD method could be supported with some litle modifications...
-  } else if((idxChar >= 4) && (strncmp(lineStr, "HEAD ", 5) == 0)) {
-  tmpStr = &lineStr[5];
-*/
+	      /*
+		HEAD method could be supported with some litle modifications...
+		} else if((idxChar >= 4) && (strncmp(lineStr, "HEAD ", 5) == 0)) {
+		tmpStr = &lineStr[5];
+	      */
 	    } else {
 	      errorCode = FLAG_HTTP_INVALID_METHOD;
 #ifdef DEBUG
@@ -311,9 +311,29 @@ static int readHTTPheader(char* theRequestedURL,
 #endif
 	    }
 
-	    if(tmpStr)
-	      strncpy(theRequestedURL, tmpStr,
+	    if(tmpStr) {
+	      int beginIdx;
+
+	      /*
+		Before to copy the URL let's check whether
+		it has been sent through a proxy 
+	      */
+	      
+	      if(strncmp(tmpStr, "http://", 7) == 0)
+		beginIdx = 7;
+	      else if(strncmp(tmpStr, "https://", 8) == 0)
+		beginIdx = 8;
+	      else 
+		beginIdx = 0;
+
+	      if(beginIdx > 0) {
+		while((tmpStr[beginIdx] != '\0') && (tmpStr[beginIdx] != '/'))
+		  beginIdx++;
+	      }
+
+	      strncpy(theRequestedURL, &tmpStr[beginIdx],
 		      theRequestedURLLen-1)[theRequestedURLLen-1] = '\0';
+	    }
 	  }
 
 	} else if((idxChar >= 21)
@@ -1041,7 +1061,6 @@ static int checkURLsecurity(char *url) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Decoded url is '%s', %% at %08x", url, strstr(url, "%"));
 #endif
-
   }       
 
   /* Still got a % - maybe it's Unicode?  Somethings fishy... */
