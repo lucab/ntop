@@ -1051,16 +1051,16 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
           c = (int) ((network >>  8) & 0xff);
           d = (int) ((network >>  0) & 0xff);
 
-          if ((laBufferUsed = snprintf(&localAddresses[laBufferPosition],
+          laBufferUsed = safe_snprintf(&localAddresses[laBufferPosition],
                                        localAddressesLen,
                                        "%s%d.%d.%d.%d/%d",
                                        (*numNetworks) == 0 ? "" : ", ",
                                        a, b, c, d,
-                                       bits)) < 0)
-            BufferTooShort();
-
-          laBufferPosition  += laBufferUsed;
-          localAddressesLen -= laBufferUsed;
+                                       bits);
+          if(laBufferUsed > 0) {
+            laBufferPosition  += laBufferUsed;
+            localAddressesLen -= laBufferUsed;
+          }
 
           (*numNetworks)++;
 
@@ -2163,13 +2163,13 @@ int checkCommand(char* commandName) {
   }
 
   /* ok, it can be run ... is it suid? */
-  if (snprintf(buf,
+  rc = safe_snprintf(buf,
                sizeof(buf),
                "which %s 2>/dev/null",
-               commandName) < 0) {
-    BufferTooShort();
+               commandName);
+  if(rc < 0)
     return(0);
-  }
+
   rc=0;
   fd = popen(buf, "r");
   if (errno == 0) {
@@ -2571,8 +2571,7 @@ void traceEvent(int eventTraceLevel, char* file,
         unsigned int messageid = 0;
         int i;
 
-        if(snprintf(bufLineID, sizeof(bufLineID), "[%s:%d] ", &mFile[beginFileIdx], line) < 0)
-          BufferTooShort();
+        safe_snprintf(bufLineID, sizeof(bufLineID), "[%s:%d] ", &mFile[beginFileIdx], line);
 
         /* Hash the message format into an id */
         for (i=0; i<=strlen(format); i++) {
@@ -2581,8 +2580,7 @@ void traceEvent(int eventTraceLevel, char* file,
 
         /* 1st chars of file name for uniqueness */
         messageid += (file[0]-32) * 256 + file[1]-32;
-        if(snprintf(bufMsgID, sizeof(bufMsgID), "[MSGID%07d]", (messageid & 0x8fffff)) < 0)
-          BufferTooShort();
+        safe_snprintf(bufMsgID, sizeof(bufMsgID), "[MSGID%07d]", (messageid & 0x8fffff));
       }
 
       free(mFile);
@@ -2598,16 +2596,14 @@ void traceEvent(int eventTraceLevel, char* file,
     /* Second we prepare the complete log message into buf
      */
     memset(buf, 0, sizeof(buf));
-    if(snprintf(buf, sizeof(buf), "%s %s %s%s%s",
+    safe_snprintf(buf, sizeof(buf), "%s %s %s%s%s",
 		bufTime,
 		(myGlobals.traceLevel >= CONST_DETAIL_TRACE_LEVEL) ? bufMsgID : "",
 		(myGlobals.traceLevel > CONST_DETAIL_TRACE_LEVEL) ? bufLineID : "",
 		eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
 		eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
 		eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
-		bufMsg
-		) < 0)
-      BufferTooShort();
+		bufMsg);
 
     /* Finished preparing message fields */
 
@@ -2852,9 +2848,8 @@ FILE* getNewRandomFile(char* fileName, int len) {
   char tmpFileName[NAME_MAX];
 
   strcpy(tmpFileName, fileName);
-  if(snprintf(fileName, len, "%s-%lu", tmpFileName,
-          myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]) < 0)
-    BufferTooShort();
+  safe_snprintf(fileName, len, "%s-%lu", tmpFileName,
+          myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
   fd = fopen(fileName, "wb");
 #endif /* 0 */
 #else
@@ -2953,6 +2948,59 @@ int snprintf(char *string, size_t maxlen, const char *format, ...) {
   return ret;
 }
 #endif
+
+/* Development of the following routine was partly sponsored by an anonymous 
+ * multi-national corporation
+ */
+
+// ===============================================================================
+// Better 'n the usual safe_snprintf() < 0) BufferTooShort() crud...
+
+//    safe_snprintf(xxxxxFile, sizeof(xxxxxFile),
+//                  "%s/xxxxx-%s",
+//                  outputDirectory,
+//                  timestamp);
+
+int _safe_snprintf(char* file, int line, 
+                   char* buf, size_t sizeofbuf,
+                   char* format, ...) {
+  va_list va_ap;
+  int rc;
+
+  va_start (va_ap, format);
+
+  rc = vsnprintf(buf, sizeofbuf, format, va_ap);
+  if(rc < 0)
+    traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d", file, line);
+  else if(rc >= sizeofbuf) {
+    traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d (increase to at least %d)",
+               file, line, rc);
+    rc = 0 - rc;
+  }
+
+  va_end (va_ap);
+  return(rc);
+}
+
+// One that works like people expect it to
+//  int strncat(char *dest, const char *src, size_t n);
+//  Where it returns the final string length (-n if it won't fit) and
+//  n is the size of the dest
+int _safe_strncat(char* file, int line, 
+                   char* dest, size_t sizeofdest,
+                   char* src) {
+  int rc = strlen(dest) + strlen(src) + 1;
+
+  if(rc > sizeofdest) {
+    traceEvent(CONST_TRACE_ERROR, "strncat buffer too short @ %s:%d (increase to at least %d)",
+               file, line, rc);
+    return(0 - rc);
+  }
+
+  strncat(dest, src, (sizeofdest - strlen(dest) - 1));
+  return(strlen(dest));
+}
+
 
 /* ************************ */
 
@@ -3278,8 +3326,7 @@ char* getAllPortByNum(int port, char *outBuf, int outBufLen) {
   if(rsp != NULL)
     return(rsp);
   else {
-    if(snprintf(outBuf, outBufLen, "%d", port) < 0)
-      BufferTooShort();
+    safe_snprintf(outBuf, outBufLen, "%d", port);
     return(outBuf);
   }
 }
@@ -3420,8 +3467,7 @@ char* mapIcmpType(int icmpType) {
   case 17: return("MASKREQ");
   case 18: return("MASKREPLY");
   default:
-    if(snprintf(icmpString, sizeof(icmpString), "%d", icmpType) < 0)
-      BufferTooShort();
+    safe_snprintf(icmpString, sizeof(icmpString), "%d", icmpType);
     return(icmpString);
   }
 }
@@ -3788,7 +3834,7 @@ void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...) {
   if((format != NULL) && (PARM_SHOW_NTOP_HEARTBEAT >= beatLevel) ) {
     memset(buf, 0, LEN_GENERAL_WORK_BUFFER);
     va_start(va_ap, format);
-    vsnprintf(buf, LEN_GENERAL_WORK_BUFFER-1, format, va_ap);
+    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER-1, format, va_ap);
     va_end(va_ap);
 
     traceEvent(CONST_TRACE_INFO, "HEARTBEAT(%09u)[%s:%d]: %s", myGlobals.heartbeatCounter, file, line, buf);
@@ -3906,8 +3952,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
   accessAddrResMutex("setHostFingerprint");
 
-  if(snprintf(fingerprint, sizeof(fingerprint)-1, "%s", srcHost->fingerprint) < 0)
-    BufferTooShort();
+  safe_snprintf(fingerprint, sizeof(fingerprint)-1, "%s", srcHost->fingerprint);
   strtokState = NULL;
   WIN = strtok_r(fingerprint, ":", &strtokState); if(!WIN) goto unknownFingerprint;
   MSS = strtok_r(NULL, ":", &strtokState);     if(!MSS)    goto unknownFingerprint;
@@ -3934,7 +3979,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
     datum key_data;
     datum data_data;
 
-    snprintf(lineKey, sizeof(lineKey), "%d", numEntries++);
+    safe_snprintf(lineKey, sizeof(lineKey), "%d", numEntries++);
     memset(&key_data, 0, sizeof(key_data));
     key_data.dptr = lineKey; key_data.dsize = strlen(key_data.dptr);
 
@@ -4415,12 +4460,11 @@ void saveNtopPid(void) {
   FILE *fd;
 
   myGlobals.basentoppid = getpid();
-  if(snprintf(pidFileName, sizeof(pidFileName), "%s/%s",
+  safe_snprintf(pidFileName, sizeof(pidFileName), "%s/%s",
           getuid() ?
 	  /* We're not root */ myGlobals.dbPath :
 	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
-          DEFAULT_NTOP_PIDFILE) < 0)
-    BufferTooShort();
+          DEFAULT_NTOP_PIDFILE);
   fd = fopen(pidFileName, "wb");
 
   if(fd == NULL) {
@@ -4438,12 +4482,11 @@ void removeNtopPid(void) {
   char pidFileName[NAME_MAX];
   int rc;
 
-  if(snprintf(pidFileName, sizeof(pidFileName), "%s/%s",
+  safe_snprintf(pidFileName, sizeof(pidFileName), "%s/%s",
           getuid() ?
 	  /* We're not root */ myGlobals.dbPath :
 	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
-          DEFAULT_NTOP_PIDFILE) < 0)
-    BufferTooShort();
+          DEFAULT_NTOP_PIDFILE);
   rc = unlink(pidFileName);
   if (rc == 0) {
     traceEvent(CONST_TRACE_INFO, "TERM: Removed pid file (%s)", pidFileName);
@@ -4573,7 +4616,7 @@ inet_ntop4(src, dst, size)
   char tmp[sizeof "255.255.255.255"];
   int nprinted;
 
-  nprinted = snprintf(tmp, sizeof(tmp), fmt, src[0], src[1], src[2], src[3]);
+  nprinted = safe_snprintf(tmp, sizeof(tmp), fmt, src[0], src[1], src[2], src[3]);
   if (nprinted < 0)
     return (NULL);  /* we assume "errno" was set by "snprintf()" */
   if ((size_t)nprinted > size) {
@@ -4654,7 +4697,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size) {
       tp += strlen(tp);
       break;
     }
-    tp += sprintf(tp, "%x", words[i]);
+    tp += safe_snprintf(tp, sizeof(tp), "%x", words[i]);
   }
   /* Was it a trailing run of 0x00's? */
   if (best.base != -1 && (best.base + best.len) ==
@@ -5131,8 +5174,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
 
   userAgent=malloc(LEN_GENERAL_WORK_BUFFER);
   memset(userAgent, 0, LEN_GENERAL_WORK_BUFFER);
-  if(snprintf(userAgent, LEN_GENERAL_WORK_BUFFER, "ntop/%s", version) < 0)
-    BufferTooShort();
+  safe_snprintf(userAgent, LEN_GENERAL_WORK_BUFFER, "ntop/%s", version);
 
   /* Convert any spaces in the version to +s
    *   e.g. 2.2.98 0300 -> 2.2.98+0300
@@ -5226,7 +5268,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   }
   strncat(userAgent, ")", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 
-  if(snprintf(buf, bufLen, "GET /%s HTTP/1.0\r\n"
+  safe_snprintf(buf, bufLen, "GET /%s HTTP/1.0\r\n"
 	      "Host: %s\r\n"
 	      "User-Agent: %s\r\n"
 	      "Accept: %s\r\n"
@@ -5234,8 +5276,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
 	      versionFile,
 	      versSite,
 	      userAgent,
-	      CONST_HTTP_ACCEPT_ALL) < 0)
-    BufferTooShort();
+	      CONST_HTTP_ACCEPT_ALL);
 
   free(userAgent);
 
@@ -5608,10 +5649,9 @@ FILE* checkForInputFile(char* logTag, char* descr,
 
 #ifdef MAKE_WITH_ZLIB
     *compressedFormat = 1;
-    if(snprintf(tmpFile, sizeof(tmpFile),
+    safe_snprintf(tmpFile, sizeof(tmpFile),
 		"%s%c%s.gz",
-		myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName) < 0)
-      BufferTooShort();
+		myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
     if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
     fd = gzopen(tmpFile, "r");
     /* Note, if this code is inactive, fd is NULL from above, avoids fancy ifdefs */
@@ -5619,10 +5659,9 @@ FILE* checkForInputFile(char* logTag, char* descr,
 
     if(fd == NULL) {
       *compressedFormat = 0;
-      if(snprintf(tmpFile, sizeof(tmpFile),
+      safe_snprintf(tmpFile, sizeof(tmpFile),
 		  "%s%c%s",
-		  myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName) < 0)
-	BufferTooShort();
+		  myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
       if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
       fd = fopen(tmpFile, "r");
     }

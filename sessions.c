@@ -975,8 +975,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  if(srcHost->fingerprint == NULL) {
 		    char buffer[64], *delimiter;
 
-		    if(snprintf(buffer, sizeof(buffer), ":%s", os) < 0)
-                      BufferTooShort();
+		    safe_snprintf(buffer, sizeof(buffer), ":%s", os);
 		    
 		    if((delimiter = strchr(buffer, ';')) != NULL) delimiter[0] = '\0';
 		    if((delimiter = strchr(buffer, '(')) != NULL) delimiter[0] = '\0';
@@ -1552,8 +1551,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		} else {
 			sscanf(&tmpStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
 		}
-	    if(snprintf(tmpStr, sizeof(tmpStr), "%d.%d.%d.%d", a, b, c, d) < 0)
-              BufferTooShort();
+	    safe_snprintf(tmpStr, sizeof(tmpStr), "%d.%d.%d.%d", a, b, c, d);
 
 #ifdef FTP_DEBUG
 	    traceEvent(CONST_TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",

@@ -120,8 +120,7 @@ void initIPServices(void) {
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     char tmpStr[64];
 
-    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]) < 0)
-      BufferTooShort();
+    safe_snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]);
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {
@@ -151,8 +150,7 @@ void initIPServices(void) {
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     char tmpStr[64];
 
-    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]) < 0)
-      BufferTooShort();
+    safe_snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]);
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {
@@ -648,10 +646,9 @@ void initCounters(void) {
 		     dirList[iLang]->d_name);
 	  for(i=0; (!found) && (myGlobals.dataFileDirs[i] != NULL); i++) {
 
-	    if(snprintf(buf, sizeof(buf), "%s/html_%s",
+	    safe_snprintf(buf, sizeof(buf), "%s/html_%s",
 			myGlobals.dataFileDirs[i],
-			tmpStr) < 0)
-	      BufferTooShort();
+			tmpStr);
 #ifdef WIN32
 	    j=0;
 	    while (buf[j] != '\0') {
@@ -847,10 +844,9 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
   */
 
   memset(&tmpBuf, 0, sizeof(tmpBuf));
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/%s",
+  safe_snprintf(tmpBuf, sizeof(tmpBuf), "%s/%s",
 	      directory != NULL ? directory : myGlobals.dbPath,
-	      dbName) < 0)
-    BufferTooShort();
+	      dbName);
 
   if(statbuf) {
     if(stat(tmpBuf, statbuf) == 0) {
@@ -1200,16 +1196,23 @@ void addDevice(char* deviceName, char* deviceDescr) {
       if(myGlobals.pcapLog != NULL) {
 	if(strlen(myGlobals.pcapLog) > 64)
 	  myGlobals.pcapLog[64] = '\0';
-	if(snprintf(myName, sizeof(myName), "%s%c%s.%s.pcap",
-		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-		CONST_PATH_SEP, myGlobals.pcapLog, 		
-#ifdef WIN32
-		myGlobals.device[deviceId].humanFriendlyName
-#else
-		myGlobals.device[deviceId].name
-#endif
-		) < 0)
-          BufferTooShort();
+//#ifdef WIN32
+//        safe_snprintf(myName, sizeof(myName), "%s%c%s.%s.pcap",
+//                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//                CONST_PATH_SEP, myGlobals.pcapLog,
+//                myGlobals.device[deviceId].humanFriendlyName);
+//#else
+//        safe_snprintf(myName, sizeof(myName), "%s%c%s.%s.pcap",
+//                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//                CONST_PATH_SEP, myGlobals.pcapLog,
+//                myGlobals.device[deviceId].name);
+//#endif
+        safe_snprintf(myName, sizeof(myName), "%s%c%s.%s.pcap",
+                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+                CONST_PATH_SEP, myGlobals.pcapLog,
+                myGlobals.device[deviceId].humanFriendlyName != NULL ?
+                    myGlobals.device[deviceId].humanFriendlyName :
+                    myGlobals.device[deviceId].name);
 
 	myGlobals.device[deviceId].pcapDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
@@ -1221,16 +1224,24 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
 
     if(myGlobals.enableSuspiciousPacketDump) {
-	if(snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
-		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-		CONST_PATH_SEP,
-#ifdef WIN32
-		myGlobals.device[deviceId].humanFriendlyName
-#else
-		myGlobals.device[deviceId].name
-#endif
-		    ) < 0)
-          BufferTooShort();
+//#ifdef WIN32
+//	safe_snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
+//		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//		CONST_PATH_SEP,
+//		myGlobals.device[deviceId].humanFriendlyName);
+//#else
+//	safe_snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
+//		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//		CONST_PATH_SEP,
+//		myGlobals.device[deviceId].name);
+//#endif
+        safe_snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
+                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+                CONST_PATH_SEP,
+                myGlobals.device[deviceId].humanFriendlyName != NULL ?
+                    myGlobals.device[deviceId].humanFriendlyName :
+                    myGlobals.device[deviceId].name);
+
 	myGlobals.device[deviceId].pcapErrDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
 	if(myGlobals.device[deviceId].pcapErrDumper == NULL) {
@@ -1241,16 +1252,23 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
 
       if(myGlobals.enableOtherPacketDump) {
-	if(snprintf(myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
-		myGlobals.pcapLogBasePath,
-		CONST_PATH_SEP,
-#ifdef WIN32
-		myGlobals.device[deviceId].humanFriendlyName
-#else
-		myGlobals.device[deviceId].name
-#endif
-		) < 0)
-          BufferTooShort();
+//#ifdef WIN32
+//	safe_snprintf(myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
+//		myGlobals.pcapLogBasePath,
+//		CONST_PATH_SEP,
+//		myGlobals.device[deviceId].humanFriendlyName);
+//#else
+//        safe_snprintf(myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
+//                myGlobals.pcapLogBasePath,
+//                CONST_PATH_SEP,
+//                myGlobals.device[deviceId].name);
+//#endif
+        safe_snprintf(myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
+                myGlobals.pcapLogBasePath,
+                CONST_PATH_SEP,
+                myGlobals.device[deviceId].humanFriendlyName != NULL ?
+                    myGlobals.device[deviceId].humanFriendlyName :
+                    myGlobals.device[deviceId].name);
 
 	myGlobals.device[deviceId].pcapOtherDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
@@ -1399,8 +1417,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     if(myGlobals.numDevices < MAX_NUM_DEVICES) {
       traceEvent(CONST_TRACE_INFO, "Checking %s for additional devices", myGlobals.device[deviceId].name);
       for(k=0; k<=MAX_NUM_DEVICES_VIRTUAL; k++) {
-	if(snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[deviceId].name, k) < 0)
-	  BufferTooShort();
+	safe_snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[deviceId].name, k);
 
 	traceEvent(CONST_TRACE_NOISY, "Checking %s", tmpDeviceName);
 	if(getLocalHostAddress(&myLocalHostAddress, tmpDeviceName) == 0) {
@@ -1475,16 +1492,24 @@ void initDevices(char* devices) {
     initDeviceDatalink(0);
 
     if(myGlobals.enableSuspiciousPacketDump) {
-      if(snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
-	      myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-	      CONST_PATH_SEP,
-#ifdef WIN32
-	      myGlobals.device[0].humanFriendlyName
-#else
-	      myGlobals.device[0].name
-#endif
-	      ) < 0)
-          BufferTooShort();
+//#ifdef WIN32
+//      safe_snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
+//	      myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//	      CONST_PATH_SEP,
+//	      myGlobals.device[0].humanFriendlyName);
+//#else
+//      safe_snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
+//              myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//              CONST_PATH_SEP,
+//              myGlobals.device[0].name);
+//#endif
+      safe_snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
+              myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+              CONST_PATH_SEP,
+              myGlobals.device[0].humanFriendlyName != NULL ?
+                  myGlobals.device[0].humanFriendlyName :
+                  myGlobals.device[0].name);
+
         myGlobals.device[0].pcapErrDumper = pcap_dump_open(myGlobals.device[0].pcapPtr, myName);
         
         if(myGlobals.device[0].pcapErrDumper == NULL)
@@ -1528,7 +1553,7 @@ void initDevices(char* devices) {
 	  descr[strlen(descr)-1] = '\0';
 
 	strncpy(intNames[ifIdx], devpointer->name, MAX_IF_NAME);
-	snprintf(intDescr[ifIdx], MAX_IF_NAME, "%s_%d", descr, ifIdx);
+	safe_snprintf(intDescr[ifIdx], MAX_IF_NAME, "%s_%d", descr, ifIdx);
 
 	if(defaultIdx == -1) {
 	  if((!strstr(intNames[ifIdx], "PPP")) /* Avoid to use the PPP interface */

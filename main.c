@@ -354,7 +354,7 @@ static int parseOptions(int argc, char* argv []) {
   traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
   while((opt = getopt_long(argc, argv, theOpts, long_options, &opt_index)) != EOF) {
 #ifdef PARAM_DEBUG
-    traceEvent(CONST_TRACE_INFO, "getopt(%d/%c/%s)", opt, opt, optarg);
+    traceEvent(CONST_TRACE_INFO, "PARAM_DEBUG: getopt(%d/%c/%s)", opt, opt, optarg);
 #endif
 
     switch (opt) {
@@ -944,8 +944,7 @@ int main(int argc, char *argv[]) {
   readBuffer = (char*)malloc(LEN_FGETS_BUFFER) /* big just to be safe */;
   memset(readBuffer, 0, LEN_FGETS_BUFFER);
 
-  if(snprintf(cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]) < 0)
-      BufferTooShort();
+  safe_snprintf(cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]);
 
   /*
    * Prepend FORCE_RUNTIME_PARM from configureextra 
@@ -973,42 +972,20 @@ int main(int argc, char *argv[]) {
 #endif
       readBufferWork = strchr(argv[i], '=');
       if (readBufferWork != NULL) {
-          /* NOTE: This code was already safe, in that it checked the length
-           * before doing the s t r c a t and used our BufferTooShort() macro
-           * to provide meaningful feedback.
-           *
-           * However, some individuals just do greps and report anything they
-           * find as a 'security problem' without looking at the code.
-           *
-           * Changing to strncat avoids the FUD and is a belt & suspenders
-           * type preventative measure.  (BMSIII - 2004-02)
-           */
-	if (strlen(cmdLineBuffer) + strlen(argv[i]) + 5 >= LEN_CMDLINE_BUFFER) {
-	  BufferTooShort();
-	} else {
-	  readBufferWork[0] = '\0';
-	  strncat(cmdLineBuffer, argv[i], (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	  strncat(cmdLineBuffer, "=\"", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	  strncat(cmdLineBuffer, &readBufferWork[1], (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	  strncat(cmdLineBuffer, "\" ", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	}
+        readBufferWork[0] = '\0';
+        safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, argv[i]);
+        safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, "=\"");
+        safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, &readBufferWork[1]);
+        safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, "\" ");
       } else {
 	readBufferWork = strchr(argv[i], ' ');
 	if (readBufferWork != NULL) {
-	  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 4 < LEN_CMDLINE_BUFFER) {
-	    strncat(cmdLineBuffer, "\"", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	    strncat(cmdLineBuffer, argv[i], (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	    strncat(cmdLineBuffer, "\" ", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	  } else {
-	    BufferTooShort();
-	  }
+	  safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, "\"");
+	  safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, argv[i]);
+	  safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, "\" ");
 	} else {
-	  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LEN_CMDLINE_BUFFER) {
-	    strncat(cmdLineBuffer, argv[i], (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	    strncat(cmdLineBuffer, " ", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	  } else {
-	    BufferTooShort();
-	  }
+	  safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, argv[i]);
+	  safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, " ");
 	}
       }
     } else {
@@ -1074,12 +1051,8 @@ int main(int argc, char *argv[]) {
 #ifdef PARAM_DEBUG
 	printf("PARAM_DEBUG:      -> '%s'\n", readBuffer);
 #endif
-	if (strlen(cmdLineBuffer) + strlen(readBuffer) + 2 < LEN_CMDLINE_BUFFER) {
-	  strncat(cmdLineBuffer, " ", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	  strncat(cmdLineBuffer, readBuffer, (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
-	} else {
-	  BufferTooShort();
-	}
+	safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, " ");
+	safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, readBuffer);
       }
 
       fclose(fd);
@@ -1174,12 +1147,11 @@ int main(int argc, char *argv[]) {
     for (i=0; i<myGlobals.numDevices; i++) {
       char tmpBuf[64];
 
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "%s%s", 
+      safe_snprintf(tmpBuf, sizeof(tmpBuf), "%s%s", 
                   (i>0) ? "," : "",
                   (myGlobals.device[i].humanFriendlyName != NULL) ?
                       myGlobals.device[i].humanFriendlyName :
-                      myGlobals.device[i].name)  < 0)
-        BufferTooShort();
+                      myGlobals.device[i].name);
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
     }
   }

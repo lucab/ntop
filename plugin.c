@@ -57,36 +57,32 @@ static char* dlerror() {
 	return("Too many errors, rest skipped");
 	break;
       case 2:
-	if(snprintf(tmpStr, sizeof(tmpStr), "Can't load library [%s]", errName) < 0) 
-	  BufferTooShort();
+	safe_snprintf(tmpStr, sizeof(tmpStr), "Can't load library [%s]", errName); 
 	break;
       case 3:
-	if(snprintf(tmpStr, sizeof(tmpStr), "Can't find symbol in library [%s]", errName) < 0) 
-	  BufferTooShort();
+	safe_snprintf(tmpStr, sizeof(tmpStr), "Can't find symbol in library [%s]", errName); 
 	break;
       case 4:
 	return("Rld data offset or symbol index out of range or bad relocation type");
 	break;
       case 5:
-	if(snprintf(tmpStr, sizeof(tmpStr), "File not valid, executable xcoff [%s]", errName) < 0)
-	  BufferTooShort();
+	safe_snprintf(tmpStr, sizeof(tmpStr), "File not valid, executable xcoff [%s]", errName);
 	return(tmpStr);
 	break;
       case 6:
-	if(snprintf(tmpStr, sizeof(tmpStr), "The errno associated with the failure if not ENOEXEC,"
+	safe_snprintf(tmpStr, sizeof(tmpStr), "The errno associated with the failure if not ENOEXEC,"
 		" it indicates the underlying error, such as no memory [%s][errno=%d]", 
-		errName, errno) < 0) BufferTooShort();
+		errName, errno);
 	return(tmpStr);
 	break;
       case 7:
-	if(snprintf(tmpStr, sizeof(tmpStr), 
+	safe_snprintf(tmpStr, sizeof(tmpStr), 
 		    "Member requested from a file which is not an archive or does not"
-		    "contain the member [%s]", errName) < 0) BufferTooShort();
+		    "contain the member [%s]", errName);
 	return(tmpStr);
 	break;
       case 8:
-	if(snprintf(tmpStr, sizeof(tmpStr), "Symbol type mismatch [%s]", errName) < 0)
-	  BufferTooShort();
+	safe_snprintf(tmpStr, sizeof(tmpStr), "Symbol type mismatch [%s]", errName);
 	return(tmpStr);
 	break;
       case 9:
@@ -99,8 +95,7 @@ static char* dlerror() {
 	return("Insufficient permission to add entries to a loader domain");
 	break;
       default:
-	if(snprintf(tmpStr, sizeof(tmpStr), "Unknown error [%d]", errCode) < 0) 
-	  BufferTooShort();
+	safe_snprintf(tmpStr, sizeof(tmpStr), "Unknown error [%d]", errCode);
 	return(tmpStr);
       }
     }
@@ -134,8 +129,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 #endif
   FlowFilterList *newFlow;
 
-  if(snprintf(pluginPath, sizeof(pluginPath), "%s/%s", dirName != NULL ? dirName : ".", pluginName) < 0)
-    BufferTooShort();
+  safe_snprintf(pluginPath, sizeof(pluginPath), "%s/%s", dirName != NULL ? dirName : ".", pluginName);
 
   traceEvent(CONST_TRACE_NOISY, "Loading plugin '%s'", pluginPath);
 
@@ -272,8 +266,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 #endif
     newFlow->pluginStatus.pluginPtr       = pluginInfo;
 
-    if(snprintf(key, sizeof(key), "pluginStatus.%s", pluginInfo->pluginName) < 0)
-      BufferTooShort();
+    safe_snprintf(key, sizeof(key), "pluginStatus.%s", pluginInfo->pluginName);
 
     if(fetchPrefsValue(key, value, sizeof(value)) == -1) {
       storePrefsValue(key, pluginInfo->activeByDefault ? "1" : "0");
@@ -307,8 +300,7 @@ void loadPlugins(void) {
   
 #ifndef MAKE_STATIC_PLUGIN
   for(idx=0; myGlobals.pluginDirs[idx] != NULL; idx++) {
-    if(snprintf(dirPath, sizeof(dirPath), "%s", myGlobals.pluginDirs[idx]) < 0) 
-      BufferTooShort();
+    safe_snprintf(dirPath, sizeof(dirPath), "%s", myGlobals.pluginDirs[idx]);
 
     directoryPointer = opendir(dirPath);
 

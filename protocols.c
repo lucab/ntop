@@ -52,6 +52,7 @@ void handleBootp(HostTraffic *srcHost,
 		 int actualDeviceId) {
   BootProtocol bootProto;
   u_int len;
+  int rc;
   char savechar; /* Courtesy of
 		    Axel Thimm <Axel.Thimm+ntop@physik.fu-berlin.de>
 		 */
@@ -251,10 +252,9 @@ void handleBootp(HostTraffic *srcHost,
 		    tmpDomainName[len] = '\0';
 
 		    if(strcmp(tmpHostName, tmpDomainName) != 0) {
-		      if(snprintf(tmpName, sizeof(tmpName), "%s.%s",
-				  tmpHostName, tmpDomainName) < 0)
-			BufferTooShort();
-		      else {
+		      rc = safe_snprintf(tmpName, sizeof(tmpName), "%s.%s",
+				  tmpHostName, tmpDomainName);
+		      if (rc >= 0) {
 			hostLen = len;
 			len = strlen(tmpName);
 
@@ -638,8 +638,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
              min(MAX_LEN_SYM_HOST_NAME-1, strlen(hostPtr.queryName)));
       storedAddress.symAddressType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
 
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", ntohl(hostPtr.addrList[i])) < 0)
-         BufferTooShort();
+      safe_snprintf(tmpBuf, sizeof(tmpBuf), "%u", ntohl(hostPtr.addrList[i]));
       key_data.dptr = (void*)&tmpBuf;
       key_data.dsize = strlen(key_data.dptr)+1;
       data_data.dptr = (void*)&storedAddress;
@@ -887,8 +886,7 @@ void handleNetbios(HostTraffic *srcHost,
 	  if(srcHost->fingerprint == NULL) {
 	    char buffer[64];
 
-	    if(snprintf(buffer, sizeof(buffer), ":%s", &data[45]) < 0)
-              BufferTooShort();
+	    safe_snprintf(buffer, sizeof(buffer), ":%s", &data[45]);
 	    accessAddrResMutex("makeHostLink");
 	    srcHost->fingerprint = strdup(buffer);
 	    releaseAddrResMutex();
@@ -922,8 +920,7 @@ void handleNetbios(HostTraffic *srcHost,
 	  if(srcHost->fingerprint == NULL) {
 	    char buffer[64];
 
-	    if(snprintf(buffer, sizeof(buffer), ":%s", &data[i]) < 0)
-              BufferTooShort();
+	    safe_snprintf(buffer, sizeof(buffer), ":%s", &data[i]);
 	    accessAddrResMutex("makeHostLink");
 	    srcHost->fingerprint = strdup(buffer);
 	    releaseAddrResMutex();

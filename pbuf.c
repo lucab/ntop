@@ -363,13 +363,12 @@ static void checkFragmentOverlap(HostTraffic *srcHost,
        && fragment->lastOffset < fragmentOffset+dataLength)) {
     if(myGlobals.enableSuspiciousPacketDump) {
       char buf[LEN_GENERAL_WORK_BUFFER];
-      if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Detected overlapping packet fragment [%s->%s]: "
+      safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Detected overlapping packet fragment [%s->%s]: "
                "fragment id=%d, actual offset=%d, previous offset=%d\n",
                fragment->src->hostResolvedName,
                fragment->dest->hostResolvedName,
                fragment->fragmentId, fragmentOffset,
-               fragment->lastOffset) < 0)
-        BufferTooShort();
+               fragment->lastOffset);
 
       dumpSuspiciousPacket(actualDeviceId);
     }
@@ -1285,17 +1284,16 @@ static void processIpPkt(const u_char *bp,
 		    }
 		}
 
-	      if(WS == -1) { if(snprintf(WSS, sizeof(WSS), "WS") < 0) BufferTooShort(); }
-	      else { if(snprintf(WSS, sizeof(WSS), "%02d", WS) < 0) BufferTooShort(); }
+	      if(WS == -1) { safe_snprintf(WSS, sizeof(WSS), "WS"); }
+	      else { safe_snprintf(WSS, sizeof(WSS), "%02d", WS); }
 	      
-	      if(MSS == -1) { if(snprintf(_MSS, sizeof(_MSS), "_MSS") < 0) BufferTooShort(); }
-	      else { if(snprintf(_MSS, sizeof(_MSS), "%04X", MSS) < 0) BufferTooShort(); }
+	      if(MSS == -1) { safe_snprintf(_MSS, sizeof(_MSS), "_MSS"); }
+	      else { safe_snprintf(_MSS, sizeof(_MSS), "%04X", MSS); }
 
-	      if(snprintf(fingerprint, sizeof(fingerprint),
+	      safe_snprintf(fingerprint, sizeof(fingerprint),
 		       "%04X:%s:%02X:%s:%d:%d:%d:%d:%c:%02X",
 		       WIN, _MSS, ttl = TTL_PREDICTOR(ip.ip_ttl), WSS , S, N, D, T,
-		       (tcp->th_flags & TH_ACK) ? 'A' : 'S', tcpUdpLen) < 0)
-                BufferTooShort();
+		       (tcp->th_flags & TH_ACK) ? 'A' : 'S', tcpUdpLen);
 
 #if 0
 	      traceEvent(CONST_TRACE_INFO, "[%s][%s]", srcHost->hostNumIpAddress, fingerprint);

@@ -27,23 +27,19 @@ char* formatKBytes(float numKBytes, char *outStr, int outStrLen) {
   if(numKBytes < 0) return(""); /* It shouldn't happen */
 
   if(numKBytes < 1024) {
-    if(snprintf(outStr, outStrLen, "%.1f%sKB", numKBytes, myGlobals.separator) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%.1f%sKB", numKBytes, myGlobals.separator);
   } else {
     float tmpKBytes = numKBytes/1024;
 
     if(tmpKBytes < 1024) {
-      if(snprintf(outStr, outStrLen, "%.1f%sMB",  tmpKBytes, myGlobals.separator) < 0) 
-	BufferTooShort();
+      safe_snprintf(outStr, outStrLen, "%.1f%sMB",  tmpKBytes, myGlobals.separator);
     } else {
       float tmpGBytes = tmpKBytes/1024;
 
       if(tmpGBytes < 1024) {
-	if(snprintf(outStr, outStrLen, "%.1f%sGB", tmpGBytes, myGlobals.separator)  < 0) 
-	 BufferTooShort();
+	safe_snprintf(outStr, outStrLen, "%.1f%sGB", tmpGBytes, myGlobals.separator);
       } else {
-	if(snprintf(outStr, outStrLen, "%.1f%sTB", ((float)(tmpGBytes)/1024), myGlobals.separator) < 0) 
-	 BufferTooShort();
+	safe_snprintf(outStr, outStrLen, "%.1f%sTB", ((float)(tmpGBytes)/1024), myGlobals.separator);
       }
     }
   }
@@ -64,29 +60,21 @@ char* formatBytes(Counter numBytes, short encodeString, char* outStr, int outStr
   if(numBytes == 0) {
     return("0"); /* return("&nbsp;"); */
   } else if(numBytes < 1024) {
-    if(snprintf(outStr, outStrLen, "%lu", (unsigned long)numBytes) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%lu", (unsigned long)numBytes);
   } else if (numBytes < 1048576) {
-    if(snprintf(outStr, outStrLen, "%.1f%sKB",
-		((float)(numBytes)/1024), locSeparator) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%.1f%sKB", ((float)(numBytes)/1024), locSeparator);
   } else {
     float tmpMBytes = ((float)numBytes)/1048576;
 
     if(tmpMBytes < 1024) {
-      if(snprintf(outStr, outStrLen, "%.1f%sMB",
-	      tmpMBytes, locSeparator) < 0) 
-	BufferTooShort();
+      safe_snprintf(outStr, outStrLen, "%.1f%sMB", tmpMBytes, locSeparator);
     } else {
       tmpMBytes /= 1024;
 
       if(tmpMBytes < 1024) {
-	if(snprintf(outStr, outStrLen, "%.1f%sGB", tmpMBytes, locSeparator) < 0) 
-	 BufferTooShort();
+	safe_snprintf(outStr, outStrLen, "%.1f%sGB", tmpMBytes, locSeparator);
       } else {
-	if(snprintf(outStr, outStrLen, "%.1f%sTB",
-		((float)(tmpMBytes)/1024), locSeparator) < 0)
-	 BufferTooShort();
+	safe_snprintf(outStr, outStrLen, "%.1f%sTB", ((float)(tmpMBytes)/1024), locSeparator);
       }
     }
   }
@@ -100,26 +88,21 @@ char* formatAdapterSpeed(Counter numBits, char* outStr, int outStrLen) {
   if(numBits == 0) {
     return("0"); /* return("&nbsp;"); */
   } else if(numBits < 1000) {
-    if(snprintf(outStr, outStrLen, "%lu", (unsigned long)numBits) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%lu", (unsigned long)numBits); 
   } else if(numBits < 1000000) {
-    if(snprintf(outStr, outStrLen, "%.1f Kb", (float)(numBits)/1000) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%.1f Kb", (float)(numBits)/1000); 
   } else {
     float tmpMBytes = ((float)numBits)/1000000;
 
     if(tmpMBytes < 1000) {
-      if(snprintf(outStr, outStrLen, "%.1f Mb", tmpMBytes) < 0) 
-	BufferTooShort();
+      safe_snprintf(outStr, outStrLen, "%.1f Mb", tmpMBytes); 
     } else {
       tmpMBytes /= 1000;
 
       if(tmpMBytes < 1000) {
-	if(snprintf(outStr, outStrLen, "%.1f Gb", tmpMBytes) < 0) 
-	 BufferTooShort();
+	safe_snprintf(outStr, outStrLen, "%.1f Gb", tmpMBytes); 
       } else {
-	if(snprintf(outStr, outStrLen, "%.1f Tb", ((float)(tmpMBytes)/1000)) < 0)
-	 BufferTooShort();
+	safe_snprintf(outStr, outStrLen, "%.1f Tb", ((float)(tmpMBytes)/1000));
       }
     }
   }
@@ -153,23 +136,19 @@ char* formatSeconds(unsigned long sec, char* outStr, int outStrLen) {
     char yearStr[32];
 
     if(days > 365) {
-      snprintf(yearStr, sizeof(yearStr), "%d years, ", days/365);
+      safe_snprintf(yearStr, sizeof(yearStr), "%d years, ", days/365);
       days %= 365;
     } else
       yearStr[0] = '\0';
 
-    if(snprintf(outStr, outStrLen, "%s%u day%s %u:%02u:%02lu", 
-		yearStr, days, (days>1)?"s":"", hour, min, sec) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%s%u day%s %u:%02u:%02lu", 
+		yearStr, days, (days>1)?"s":"", hour, min, sec);
   } else if(hour > 0) {
-    if(snprintf(outStr, outStrLen, "%u:%02u:%02lu", hour, min, sec)  < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%u:%02u:%02lu", hour, min, sec);
   } else if(min > 0) {
-    if(snprintf(outStr, outStrLen, "%u:%02lu", min, sec) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%u:%02lu", min, sec);
   } else {
-    if(snprintf(outStr, outStrLen, "%lu sec", sec) < 0)
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%lu sec", sec);
   }
 
   return(outStr);
@@ -182,11 +161,9 @@ char* formatMicroSeconds(unsigned long microsec,
   float f = ((float)microsec)/1000;
 
   if(f < 1000) {
-    if(snprintf(outStr, outStrLen, "%.1f ms", f) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%.1f ms", f); 
   } else {
-    if(snprintf(outStr, outStrLen, "%.1f sec", (f/1000))  < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%.1f sec", (f/1000));
   } 
   return(outStr);
 }
@@ -211,14 +188,11 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */, u_char htmlFormat
     numBits = 0; /* Avoid very small decimal values */
   
   if (numBits < divider) {
-    if(snprintf(outStr, outStrLen, "%.1f%sbps", numBits, separator) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%.1f%sbps", numBits, separator); 
   } else if (numBits < (divider*divider)) {
-    if(snprintf(outStr, outStrLen, "%.1f%sKbps", ((float)(numBits)/divider), separator) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%.1f%sKbps", ((float)(numBits)/divider), separator); 
   } else {
-    if(snprintf(outStr, outStrLen, "%.1f%sMbps", ((float)(numBits)/1048576), separator) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%.1f%sMbps", ((float)(numBits)/1048576), separator); 
   }
 
 #ifdef DEBUG
@@ -242,9 +216,8 @@ char* formatLatency(struct timeval tv, u_short sessionState, char* outStr, int o
     */
     return("&nbsp;");
   } else {
-    if(snprintf(outStr, outStrLen, "%.1f&nbsp;ms",
-	    (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000)) < 0)
-      BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%.1f&nbsp;ms",
+	    (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000));
     return(outStr);
   }
 }
@@ -274,20 +247,17 @@ char* formatTimeStamp(unsigned int ndays,
 
 char* formatPkts(Counter pktNr, char* outStr, int outStrLen) {
   if(pktNr < 1000) {
-    if(snprintf(outStr, outStrLen, "%lu", (unsigned long)pktNr) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%lu", (unsigned long)pktNr); 
   } else if(pktNr < 1000000) {
-    if(snprintf(outStr, outStrLen, "%lu,%03lu",
+    safe_snprintf(outStr, outStrLen, "%lu,%03lu",
 	    (unsigned long)(pktNr/1000),
-	    ((unsigned long)pktNr)%1000) < 0) 
-     BufferTooShort();
+	    ((unsigned long)pktNr)%1000); 
   } else if(pktNr < 1000000000) {
     unsigned long a, b, c;
     a = (unsigned long)(pktNr/1000000);
     b = (unsigned long)((pktNr-a*1000000)/1000);
     c = ((unsigned long)pktNr)%1000;
-    if(snprintf(outStr, outStrLen, "%lu,%03lu,%03lu", a, b, c) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%lu,%03lu,%03lu", a, b, c); 
   } else {
     unsigned long a, b, c, a1, a2;
     a = (unsigned long)(pktNr/1000000);
@@ -295,8 +265,7 @@ char* formatPkts(Counter pktNr, char* outStr, int outStrLen) {
     a2 = a % 1000;
     b = (unsigned long)((pktNr-a*1000000)/1000);
     c = ((unsigned long)pktNr)%1000;
-    if(snprintf(outStr, outStrLen, "%lu,%03lu,%03lu,%03lu", a1, a2, b, c) < 0) 
-     BufferTooShort();
+    safe_snprintf(outStr, outStrLen, "%lu,%03lu,%03lu,%03lu", a1, a2, b, c); 
   }
 
   return(outStr);

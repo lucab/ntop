@@ -96,14 +96,13 @@ int init_ssl(void) {
     RAND_add(configure_parameters, strlen(configure_parameters), (double)4.0);
 
     gettimeofday(&TOD, NULL);
-    if(snprintf(buf, sizeof(buf), "%d%u%u%x%x%x", 
+    safe_snprintf(buf, sizeof(buf), "%d%u%u%x%x%x", 
                     getpid(),
                     TOD.tv_sec,
                     TOD.tv_usec,
                     myGlobals.startedAs,
                     myGlobals.udpSvc,
-                    myGlobals.tcpSvc ) < 0)
-      BufferTooShort();
+                    myGlobals.tcpSvc );
     RAND_add(buf, strlen(buf), (double)24.0);
 
     directoryPointer = opendir(myGlobals.dbPath);
@@ -112,8 +111,7 @@ int init_ssl(void) {
     } else {
         while((dp = readdir(directoryPointer)) != NULL) {
             if (dp->d_name[0] != '.') {
-                if (snprintf(buf, sizeof(buf), "%s/%s", myGlobals.dbPath, dp->d_name) < 0)
-                    BufferTooShort();
+                safe_snprintf(buf, sizeof(buf), "%s/%s", myGlobals.dbPath, dp->d_name);
                 if (stat(buf, &fStat) == 0) {
                     RAND_add(&fStat, sizeof(fStat), (double)16.0);
                 }
@@ -132,8 +130,7 @@ int init_ssl(void) {
   }
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
-    if(snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CONST_SSL_CERTF_FILENAME) < 0)
-      BufferTooShort();
+    safe_snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CONST_SSL_CERTF_FILENAME);
 
 #ifdef WIN32
     revertSlash(buf, 0);

@@ -1194,7 +1194,7 @@ void installService(int argc, char **argv)
 	/* ****************************************** */
 	  // Set the service name. Courtesy of Yuri Francalacci <yuri@ntop.org>
       sprintf(szParamKey2, "SYSTEM\\CurrentControlSet\\Services\\%s",SZSERVICENAME);
-	snprintf(szDescr, sizeof(szDescr), "Ntop v.%s %s - Web-based network traffic monitor. http://www.ntop.org/",
+      safe_snprintf(szDescr, sizeof(szDescr), "Ntop v.%s %s - Web-based network traffic monitor. http://www.ntop.org/",
 	   version, THREAD_MODE);
 
       // Set the file value (where the message resources are located.... in this case, our runfile.)

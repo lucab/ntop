@@ -134,8 +134,7 @@ static void drawLegend(gdImagePtr im,
     gdImageRectangle(im, edge_x-1, edge_y-1, edge_x+CONST_LEGEND_BOX_SIZE+1,
                      edge_y+CONST_LEGEND_BOX_SIZE+1, labelColor);
 #ifdef SHOW_PERCENTAGE
-    if(snprintf(str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total) < 0)
-      BufferTooShort();
+    safe_snprintf(str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total);
     gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-5, str, labelColor);
 #else
     gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-3, labels[i], labelColor);
@@ -399,8 +398,7 @@ void drawArea(short width, short height,
   for (i = 0; i <= (ngrid + 1); i++) {
     // height of grid line in units of data
     ydat = i * dydat;
-    if(snprintf(str, sizeof(str), "%.1f", ydat) < 0)
-      BufferTooShort();
+    safe_snprintf(str, sizeof(str), "%.1f", ydat);
 
     // height of grid line in pixels
     ypos = vmargin/2 + ysize - (int)(i*dypix);
@@ -464,7 +462,7 @@ void drawArea(short width, short height,
       gdImageLine(im, points[0].x, points[0].y, points[3].x, points[3].y, black);
 
       if((i % 2) == 0) {
-	if(snprintf(str, sizeof(str), "%5s", labels[i]) < 0) BufferTooShort();
+	safe_snprintf(str, sizeof(str), "%5s", labels[i]);
 	gdImageStringUp(im, gdFontSmall, points[0].x-gdFontSmall->w, height-2, str, black);
       }
 
@@ -1804,8 +1802,7 @@ int drawHostsDistanceGraph(int checkOnly) {
   memset(graphData, 0, sizeof(graphData));
 
   for(i=0; i<=30; i++) {
-    if(snprintf(labels[i], sizeof(labels[i]), "%d", i) < 0)
-      BufferTooShort();
+    safe_snprintf(labels[i], sizeof(labels[i]), "%d", i);
     lbls[i] = labels[i];
     graphData[i] = 0;
   }
@@ -2151,7 +2148,7 @@ void drawLunStatsBytesDistribution (HostTraffic *el) {
       p[idx] = (float) (entry->stats->bytesSent.value +
                         entry->stats->bytesRcvd.value);
       if (p[idx] > 0) {
-          sprintf (label[idx],"%hd", entry->lun);
+          safe_snprintf(label[idx], sizeof(label[idx]), "%hd", entry->lun);
           lbl[idx] = label[idx];
           idx++;
       }

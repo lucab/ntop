@@ -561,15 +561,13 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
       hash ^= host->fcCounters->hostFcAddress.domain;
       hash ^= host->fcCounters->hostFcAddress.area;
       hash ^= host->fcCounters->hostFcAddress.port;
-      if(snprintf(tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->fcCounters->vsanId, 
+      safe_snprintf(tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->fcCounters->vsanId, 
 		  host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
-		  host->fcCounters->hostFcAddress.port, hash) < 0)
-	BufferTooShort();
+		  host->fcCounters->hostFcAddress.port, hash);
     } else {
-      if(snprintf (tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x",
+      safe_snprintf(tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x",
 		   host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
-		   host->fcCounters->hostFcAddress.port, host) < 0)
-	BufferTooShort();
+		   host->fcCounters->hostFcAddress.port, host);
     }
     str = tmpBuf;
 	
