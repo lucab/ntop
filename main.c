@@ -63,139 +63,197 @@ extern __attribute__((dllimport)) char *optarg;
 extern char *optarg;
 #endif
 
-void usage(void) {
-  char buf[80];
 
-  if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)",
-	      myGlobals.program_name, version, THREAD_MODE, osName, buildDate) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  traceEvent(TRACE_INFO, "%s\n", buf);
+/*
+ * Wrong. Please try again accordingly to ....
+ */
+static void welcome (FILE * fp) {
+  fprintf (fp, "%s v.%s %s [%s] (%s build)\n",
+	   myGlobals.program_name, version, THREAD_MODE, osName, buildDate);
 
-  traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
-  traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
-  if(snprintf(buf, sizeof(buf), "Written by %s.", author) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  fprintf (fp, "Copyright 1998-2002 by %s.\n", author);
+  fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
+}
 
-  traceEvent(TRACE_INFO, "%s\n", buf);
 
-  if(snprintf(buf, sizeof(buf), "Usage: %s", myGlobals.program_name) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-  traceEvent(TRACE_INFO, "%s\n", buf);
+/*
+ * Wrong. Please try again accordingly to ....
+ */
+static void usage (FILE * fp)
+{
+  welcome (fp);
+
+  fprintf (fp, "\nUsage: %s\n", myGlobals.program_name);
 
 #ifdef HAVE_GETOPT_LONG
-  traceEvent(TRACE_INFO, "    [-c | --sticky-hosts]                     idle hosts are not purged from hash\n");
-#ifdef WIN32
-  traceEvent(TRACE_INFO, "    [-r <number> | --refresh-time <number>]   refresh time in seconds, default is %d\n", REFRESH_TIME);
-#else
-  traceEvent(TRACE_INFO, "    [-r <number> | --refresh-time <number>]   refresh time in seconds, default is %d (interactive) or %d (web)\n",
- 	     ALARM_TIME, REFRESH_TIME);
-#endif
-  traceEvent(TRACE_INFO, "    [-f <file> | --traffic-dump-file <file>]  traffic dump file (see tcpdump)\n");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    [-E | --enable-external-tools]            enable lsof/nmap integration (if present)\n");
-#endif
-  traceEvent(TRACE_INFO, "    [-n | --numeric-ip-addresses]             numeric IP addresses - no DNS resolution\n");
-  traceEvent(TRACE_INFO, "    [-p <list> | --protocols <list>]          List of IP protocols to monitor (see man page)\n");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    [-i <name> | --interface <name>]          Interface name or names to monitor\n");
-#else
-  traceEvent(TRACE_INFO, "    [-i <number> | --interface <number>]      Interface index number to monitor\n");
-#endif
-  traceEvent(TRACE_INFO, "    [-S <number> | --store-mode <number>]     Persistant storage mode [0-none, 1-local, 2-all\n");
-  traceEvent(TRACE_INFO, "    [-w <port> | --http-server]               Web server (http:) port (or address:port) to listen on\n");
-#ifdef HAVE_OPENSSL
-  traceEvent(TRACE_INFO, "    [-W <port> | --https-server]              Web server (https:) port (or address:port) to listen on\n");
-#endif
-  traceEvent(TRACE_INFO, "    [-D <name> | --domain <name>]             Internet domain name\n");
-  traceEvent(TRACE_INFO, "    [-e <number> | --max-table-rows <number>] Maximum number of table rows to report\n");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    [-d | --daemon ]                          Run ntop in daemon mode\n");
-#endif
-  traceEvent(TRACE_INFO, "    [-m <addresses> | --local-subnets <addresses>] Local subnetwork(s) (see man page)\n");
-  traceEvent(TRACE_INFO, "    [-s <number> | --max-hash-size <number>]  Maximum hash table size, default = %d\n", MAX_HASH_SIZE);
-  traceEvent(TRACE_INFO, "    [-F <spec> | --flow-spec <specs>]         Flow specs (see man page)\n");
-  traceEvent(TRACE_INFO, "    [-b <host:port> | --sql-host <host:port>] SQL host for ntop database\n");
+
+  fprintf (fp, "    [-a <path> | --access-log-path <path>     Path for ntop web server access log\n");
+
 #ifdef HAVE_MYSQL
-  traceEvent(TRACE_INFO, "    [-v <username:password:dbName> | --mysql-host <username:password:dbName>] MySQL host for ntop database\n");
+  fprintf (fp, "    [-b <host:port> | --sql-host <host:port>] SQL host for ntop database\n");
 #endif
-  traceEvent(TRACE_INFO, "    [-R <file> | --filter-rule <file>]        matching rules file\n");
-  traceEvent(TRACE_INFO, "    [-N | --no-nmap]                          don't use nmap even if installed\n");
-  traceEvent(TRACE_INFO, "    [-M | --no-interface-merge]               don't merge network interfaces (see man page)\n");
-  traceEvent(TRACE_INFO, "    [-q | --create-suspicious-packets         create file ntop-suspicious-pkts.XXX.pcap file\n");
-  traceEvent(TRACE_INFO, "    [-l <path> | --pcap-log <path>            Dump packets captured to a file (debug only!)\n");
-  traceEvent(TRACE_INFO, "    [-P <path> | --db-file-path <path>        Path for ntop internal database files\n");
-  traceEvent(TRACE_INFO, "    [-a <path> | --access-log-path <path>     Path for ntop web server access log\n");
-  traceEvent(TRACE_INFO, "    [-g <host:port> | --cisco-netflow-host <host:port>] Cisco NetFlow host and port\n");
-  traceEvent(TRACE_INFO, "    [-t <number> | --trace-level <number>]    Trace level [0-5]\n");
-  traceEvent(TRACE_INFO, "    [-A <number> | --accuracy-level <number>] Accuracy level [0-2]\n");
-  traceEvent(TRACE_INFO, "    [-u <user> | --user <user>]               Userid/name to run ntop under (see man page)\n");
-  traceEvent(TRACE_INFO, "    [-U <URL> | --mapper <URL>]               URL (mapper.pl) for displaying host location\n");
-  traceEvent(TRACE_INFO, "    [-k | --filter-expression-in-extra-frame] Show kernel filter expression in extra frame\n");
-  traceEvent(TRACE_INFO, "    [-j | --border-sniffer-mode]              Set ntop in border/gateway sniffing mode\n");
-  traceEvent(TRACE_INFO, "    [-B <filter expression>]                  Packet filter expression, like tcpdump\n\n\n");
+
+  fprintf (fp, "    [-c | --sticky-hosts]                     Idle hosts are not purged from hash\n");
+
+#ifndef WIN32
+  fprintf (fp, "    [-d | --daemon ]                          Run ntop in daemon mode\n");
+#endif
+
+#ifndef MICRO_NTOP
+  fprintf (fp, "    [-e <number> | --max-table-rows <number>] Maximum number of table rows to report\n");
+#endif
+
+  fprintf (fp, "    [-f <file> | --traffic-dump-file <file>]  Traffic dump file (see tcpdump)\n");
+  fprintf (fp, "    [-g <host:port> | --cisco-netflow-host <host:port>] Cisco NetFlow host and port\n");
+
+#ifndef WIN32
+  fprintf (fp, "    [-i <name> | --interface <name>]          Interface name or names to monitor\n");
+#else
+  fprintf (fp, "    [-i <number> | --interface <number>]      Interface index number to monitor\n");
+#endif
+
+  fprintf (fp, "    [-j | --border-sniffer-mode]              Set ntop in border/gateway sniffing mode\n");
+  fprintf (fp, "    [-k | --filter-expression-in-extra-frame] Show kernel filter expression in extra frame\n");
+  fprintf (fp, "    [-l <path> | --pcap-log <path>            Dump packets captured to a file (debug only!)\n");
+  fprintf (fp, "    [-m <addresses> | --local-subnets <addresses>] Local subnetwork(s) (see man page)\n");
+  fprintf (fp, "    [-n | --numeric-ip-addresses]             Numeric IP addresses - no DNS resolution\n");
+  fprintf (fp, "    [-p <list> | --protocols <list>]          List of IP protocols to monitor (see man page)\n");
+  fprintf (fp, "    [-q | --create-suspicious-packets         Create file ntop-suspicious-pkts.XXX.pcap file\n");
+
+#ifdef WIN32
+  fprintf (fp, "    [-r <number> | --refresh-time <number>]   Refresh time in seconds, default is %d\n", REFRESH_TIME);
+#else
+  fprintf (fp, "    [-r <number> | --refresh-time <number>]   Refresh time in seconds, default is %d (interactive) or %d (web)\n",
+	   ALARM_TIME, REFRESH_TIME);
+#endif
+
+  fprintf (fp, "    [-s <number> | --max-hash-size <number>]  Maximum hash table size, default = %d\n", MAX_HASH_SIZE);
+  fprintf (fp, "    [-t <number> | --trace-level <number>]    Trace level [0-5]\n");
+
+#ifndef WIN32
+  fprintf (fp, "    [-u <user> | --user <user>]               Userid/name to run ntop under (see man page)\n");
+#endif /* WIN32 */
+
+#ifdef HAVE_MYSQL
+  fprintf (fp, "    [-v <username:password:dbName> | --mysql-host <username:password:dbName>] MySQL host for ntop database\n");
+#endif
+
+  fprintf (fp, "    [-w <port> | --http-server]               Web server (http:) port (or address:port) to listen on\n");
+  fprintf (fp, "    [-A <number> | --accuracy-level <number>] Accuracy level [0-2]\n");
+  fprintf (fp, "    [-B <filter expression>]                  Packet filter expression, like tcpdump\n");
+  fprintf (fp, "    [-D <name> | --domain <name>]             Internet domain name\n");
+
+#ifndef WIN32
+  fprintf (fp, "    [-E | --enable-external-tools]            Enable lsof/nmap integration (if present)\n");
+#endif
+
+  fprintf (fp, "    [-F <spec> | --flow-spec <specs>]         Flow specs (see man page)\n");
+
+#ifndef WIN32
+  fprintf (fp, "    [-K | --enable-debug]                     Enable debug mode\n");
+  fprintf (fp, "    [-L | --enable-syslog]                    Enable logging via syslog\n");
+#endif
+
+  fprintf (fp, "    [-M | --no-interface-merge]               don't merge network interfaces (see man page)\n");
+  fprintf (fp, "    [-N | --no-nmap]                          don't use nmap even if installed\n");
+  fprintf (fp, "    [-P <path> | --db-file-path <path>        Path for ntop internal database files\n");
+  fprintf (fp, "    [-R <file> | --filter-rule <file>]        matching rules file\n");
+  fprintf (fp, "    [-S <number> | --store-mode <number>]     Persistent storage mode [0-none, 1-local, 2-all\n");
+  fprintf (fp, "    [-U <URL> | --mapper <URL>]               URL (mapper.pl) for displaying host location\n");
+
+#ifdef HAVE_OPENSSL
+  fprintf (fp, "    [-W <port> | --https-server]              Web server (https:) port (or address:port) to listen on\n");
+#endif
 
 #else /* !HAVE_GETOPT_LONG */
-  traceEvent(TRACE_INFO, "    %s\n",   "[-c <sticky hosts: idle hosts are not purged from hash>]");
-#ifdef WIN32
-  traceEvent(TRACE_INFO, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
-#else
-  traceEvent(TRACE_INFO, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
-	     ALARM_TIME, REFRESH_TIME);
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-E <enable lsof/nmap integration (if present)>]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
-#else
-  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface index>]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-S <store mode> (store persistently host stats)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
-#ifdef HAVE_OPENSSL
-  traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows)]");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-d (run ntop in daemon mode)]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-m <local addresses (see man page)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-F <flow specs (see man page)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-b <client:port (ntop DB client)>]");
+
+  fprintf (fp, "    [-a <path> path for ntop web server access log\n");
+
 #ifdef HAVE_MYSQL
-  traceEvent(TRACE_INFO, "    %s\n",   "[-v <username:password:dbName (ntop mySQL client)>]");
+  fprintf (fp, "    [-b <client:port (ntop DB client)>]\n");
 #endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-R <matching rules file>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-N <don't use nmap if installed>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-q <create file ntop-suspicious-pkts.XXX.pcap>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-l <path> (dump packets captured on a file: debug only!)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-g <client:port (Cisco NetFlow client)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-A (accuracy level [0-2])]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-U <mapper.pl URL> | \"\" for not displaying host location ]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-k <show kernel filter expression in extra frame>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-j (set ntop in border gateway sniffing mode)]");
+
+  fprintf (fp, "    [-c <sticky hosts: idle hosts are not purged from hash>]\n");
+
 #ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-K <enable application debug (no fork() is used)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-L <use syslog instead of stdout>]");
+  fprintf (fp, "    [-d (run ntop in daemon mode)]\n");
 #endif
-  traceEvent(TRACE_INFO, "    %s\n\n", "[-B <filter expression (like tcpdump)>]");
+
+#ifndef MICRO_NTOP
+  fprintf (fp, "    [-e <max # table rows)]\n");
+#endif
+
+  fprintf (fp, "    [-f <traffic dump file (see tcpdump)>]\n");
+  fprintf (fp, "    [-g <client:port (Cisco NetFlow client)>]\n");
+
+#ifndef WIN32
+  fprintf (fp, "    [-i <interface>]\n");
+#else
+  fprintf (fp, "    [-i <interface index>]\n");
+#endif
+
+  fprintf (fp, "    [-j (set ntop in border gateway sniffing mode)]\n");
+  fprintf (fp, "    [-k <show kernel filter expression in extra frame>]\n");
+  fprintf (fp, "    [-l <path> (dump packets captured on a file: debug only!)]\n");
+  fprintf (fp, "    [-m <local addresses (see man page)>]\n");
+  fprintf (fp, "    [-n (numeric IP addresses)]\n");
+  fprintf (fp, "    [-p <IP protocols to monitor> (see man page)]\n");
+  fprintf (fp, "    [-q <create file ntop-suspicious-pkts.XXX.pcap>]\n");
+
+#ifdef WIN32
+  fprintf (fp, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
+#else
+  fprintf (fp, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
+	   ALARM_TIME, REFRESH_TIME);
+#endif
+
+  fprintf (fp, "    [-s <max hash size (default 32768)>]\n");
+  fprintf (fp, "    [-t (trace level [0-5])]\n");
+
+#ifndef WIN32
+  fprintf (fp, "    [-u <userid> | <username> (see man page)]\n");
+#endif
+
+#ifdef HAVE_MYSQL
+  fprintf (fp, "    [-v <username:password:dbName (ntop mySQL client)>]\n");
+#endif
+
+  fprintf (fp, "    [-w <HTTP port>]\n");
+
+  fprintf (fp, "    [-A (accuracy level [0-2])]\n");
+  fprintf (fp, "    [-B <filter expression (like tcpdump)>]\n");
+  fprintf (fp, "    [-D <Internet domain name>]\n");
+
+#ifndef WIN32
+  fprintf (fp, "    [-E <enable lsof/nmap integration (if present)>]\n");
+#endif
+
+  fprintf (fp, "    [-F <flow specs (see man page)>]\n");
+
+#ifndef WIN32
+  fprintf (fp, "    [-K <enable application debug (no fork() is used)>]\n");
+  fprintf (fp, "    [-L <use syslog instead of stdout>]\n");
+#endif
+
+  fprintf (fp, "    [-M <don't merge network interfaces (see man page)>]\n");
+  fprintf (fp, "    [-N <don't use nmap if installed>]\n");
+  fprintf (fp, "    [-P <path for db-files>]\n");
+  fprintf (fp, "    [-R <matching rules file>]\n");
+  fprintf (fp, "    [-S <store mode> (store persistently host stats)]\n");
+  fprintf (fp, "    [-U <mapper.pl URL> | \"\" for not displaying host location ]\n");
+
+#ifdef HAVE_OPENSSL
+  fprintf (fp, "    [-W <HTTPS port>]\n");
+#endif
+
 #endif /* HAVE_GETOPT_LONG */
 }
 
 
 /* That's the meat */
 int main(int argc, char *argv[]) {
-  int pflag, i, len;
+  int i, len;
 #ifdef WIN32
   int optind=0;
 #else
@@ -272,8 +330,6 @@ int main(int argc, char *argv[]) {
   };  
 #endif /* HAVE_GETOPT_LONG */
 
-  printf("Wait please: ntop is coming up...\n");
-
   initNtopGlobals();
   myGlobals.ntop_argc = argc;
   myGlobals.ntop_argv = argv;
@@ -311,7 +367,7 @@ int main(int argc, char *argv[]) {
   myGlobals.logTimeout = 0;
   myGlobals.tcpChain = NULL, myGlobals.udpChain = NULL, myGlobals.icmpChain = NULL;
   devices = NULL;
-  myGlobals.daemonMode = pflag = myGlobals.numericFlag = myGlobals.debugMode = 0;
+  myGlobals.daemonMode = myGlobals.numericFlag = myGlobals.debugMode = 0;
 
 #ifndef WIN32
   myGlobals.useSyslog = 0;
@@ -634,7 +690,7 @@ int main(int argc, char *argv[]) {
       break;
 
     default:
-      usage();
+      usage(stdout);
       exit(-1);
       /* NOTREACHED */
     }
@@ -679,6 +735,8 @@ int main(int argc, char *argv[]) {
   initGdbm();
 
   initDevices(devices);
+
+  printf("Wait please: ntop is coming up...\n");
 
   traceEvent(TRACE_INFO, "ntop v.%s %s [%s] (%s build)",
 	     version, THREAD_MODE, osName, buildDate);
