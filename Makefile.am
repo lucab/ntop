@@ -78,9 +78,10 @@ PLUGINSFILES   = `cat plugins/FILES`
 REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
 INTOPFILES     = `cat intop/FILES`
 DATABASEFILES  = `cat database/FILES`
+DOCSFILES      = `cat docs/FILES`
 
 THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) \
-		       $(INTOPFILES) $(DATABASEFILES)
+		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES)
 
 #
 # This Makefile is responsible for creating:
