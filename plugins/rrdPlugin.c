@@ -382,7 +382,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
 /* ******************************************* */
 
-int endsWith(char* label, char* pattern) {
+static int endsWith(char* label, char* pattern) {
   int lenLabel, lenPattern;
 
   lenLabel   = strlen(label);
@@ -521,7 +521,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
 /* ******************************* */
 
-void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
+static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   char path[512], *argv[32], cmd[64];
   struct stat statbuf;
   int argc = 0, rc, createdCounter = 0;
@@ -695,7 +695,7 @@ void unescape_url(char *url) {
 
 /* ******************************* */
 
-void commonRRDinit(void) {
+static void commonRRDinit(void) {
   char value[64];
 
   /* **************************** */
@@ -1175,8 +1175,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
 
 	  if(dumpDetail == DETAIL_HIGH) {
-	    updateTrafficCounter(rrdPath, "totContactedSentPeers", &el->totContactedSentPeers);
-	    updateTrafficCounter(rrdPath, "totContactedRcvdPeers", &el->totContactedRcvdPeers);
+	    updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers);
+	    updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers);
 	    
 	    if((hostKey == el->hostNumIpAddress) && el->protoIPTrafficInfos) {
 #ifdef RRD_DEBUG
@@ -1360,7 +1360,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			 fname,
 			 fileTimeBuf);
 #endif
-	      if ( (unlink(fname) != 0) && (errno != ENOENT) ) {
+	      if ((unlink(fname) != 0) && (errno != ENOENT)) {
 		purgeCountErrors++;
 		traceEvent(TRACE_ERROR, "RRD: ERROR: unlink('%s') failed, %d...\n", fname, errno);
 	      } else {
@@ -1466,7 +1466,7 @@ static void handleRRDHTTPrequest(char* url) {
 static PluginInfo rrdPluginInfo[] = {
   { "rrdPlugin",
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
-    "This plugin also produces the graphs of rrd data, available via a"
+    "This plugin also produces the graphs of rrd data, available via a "
     "link from the various 'Info about host xxxxx' reports.",
     "2.1", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",

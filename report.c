@@ -132,7 +132,7 @@ void printTrafficStatistics() {
 
   sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG">Nw Interface Type</TH>"
+  sendString("<TR "TR_ON"><TH "TH_BG" align=left>Nw Interface Type</TH>"
 	     "<TD "TD_BG" ALIGN=RIGHT>");
 
   if(myGlobals.mergeInterfaces) {
@@ -150,16 +150,6 @@ void printTrafficStatistics() {
 		    ) < 0)
 	  BufferTooShort();
 	sendString(buf);
-
-	if(haveTrafficHistory()) {
-	  if(!myGlobals.device[i].virtualDevice) {
-	    if(snprintf(buf, sizeof(buf),
-		      "  [ <A HREF=\"/ntop-bin/netTraf.pl?interface=%s\">History</A> ]\n",
-			myGlobals.device[i].name) < 0)
-	      BufferTooShort();
-	    sendString(buf);
-	  }
-	}
       } else {
 	if(snprintf(buf, sizeof(buf), "%s [%s]",
 		    getNwInterfaceType(i), PCAP_NW_INTERFACE) < 0)
@@ -176,26 +166,19 @@ void printTrafficStatistics() {
 	  BufferTooShort();
 	sendString(buf);
       }
-
-      if(haveTrafficHistory()) {
-	if(snprintf(buf, sizeof(buf), " <A HREF=\"/ntop-bin/netTraf.pl?interface=%s\">History</A>\n",
-		    myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
-	  BufferTooShort();
-	sendString(buf);
-      }
   }
 
   sendString("</TD></TR>\n");
 
   if(myGlobals.domainName[0] != '\0') {
-    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">Local Domain Name</TH>"
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left>Local Domain Name</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
 		myGlobals.domainName) < 0)
       BufferTooShort();
     sendString(buf);
   }
 
-  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">Sampling Since</TH>"
+  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left>Sampling Since</TH>"
 	      "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 	      ctime(&myGlobals.initialSniffTime),
 	      formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime)) < 0)
@@ -203,7 +186,7 @@ void printTrafficStatistics() {
   sendString(buf);
 
   if((i = numActiveSenders(myGlobals.actualReportDeviceId)) > 0) {
-    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">Active Hosts</TH>"
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left>Active Hosts</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i) < 0)
       BufferTooShort();
     sendString(buf);
@@ -211,7 +194,7 @@ void printTrafficStatistics() {
 
   if((myGlobals.currentFilterExpression != NULL)
      && (myGlobals.currentFilterExpression[0] != '\0')) {
-    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">Traffic Filter</TH>"
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left>Traffic Filter</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		myGlobals.currentFilterExpression) < 0)
       BufferTooShort();
@@ -220,7 +203,7 @@ void printTrafficStatistics() {
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
     Counter dummyCounter;
-    sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
+    sendString("<TR><TH "TH_BG" align=left>Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
 
 #ifdef HAVE_GDCHART
     if(myGlobals.mergeInterfaces && (myGlobals.numDevices > 1)) {
@@ -636,8 +619,6 @@ void printTrafficStatistics() {
     }
   }
       
-  sendString("</TABLE>"TABLE_OFF"</TR>\n");
-
   /* RRD */ 
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
  snprintf(buf, sizeof(buf), "%s/interfaces/%s", myGlobals.rrdPath, 
@@ -653,6 +634,7 @@ void printTrafficStatistics() {
     sendString(buf);    
   } 
 
+  sendString("</TABLE>"TABLE_OFF"</TR>\n");
   sendString("</TABLE></CENTER>\n");
 }
 
@@ -4215,22 +4197,11 @@ void listNetFlows(void) {
   		     "<TH "TH_BG">Packets</TH><TH "TH_BG">Traffic</TH></TR>");
   	}
 
-	if(haveTrafficHistory()) {
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>"
-		      "<A HREF=\"/ntop-bin/netTraf.pl?flow=%s\">%s</A></TH><TD "TD_BG" ALIGN=RIGHT>%s"
-		      "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		      getRowColor(), list->flowName, list->flowName,
-		      formatPkts(list->packets.value),
-		      formatBytes(list->bytes.value, 1)) < 0) BufferTooShort();
-
-	} else {
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s"
-		      "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		      getRowColor(), list->flowName,
-		      formatPkts(list->packets.value),
-		      formatBytes(list->bytes.value, 1)) < 0) BufferTooShort();
-	}
-
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s"
+		    "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    getRowColor(), list->flowName,
+		    formatPkts(list->packets.value),
+		    formatBytes(list->bytes.value, 1)) < 0) BufferTooShort();
 	sendString(buf);
 
 	numEntries++;
@@ -4333,36 +4304,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
 /* ************************** */
 
-int haveTrafficHistory() {
-  int idx;
-  static int found = 0;
-  struct stat statbuf;
-  
-  if(found) return(1); /* cached value */
-
-  for(idx=0, found = 0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
-    char tmpStr[384];
-
-    if(snprintf(tmpStr, sizeof(tmpStr), "%s/data", myGlobals.dataFileDirs[idx]) < 0)
-      BufferTooShort();
-
-    if(stat(tmpStr, &statbuf) == 0) {
-      return(1);
-      break;
-    } else {
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "Unable to find history data on %s", tmpStr);
-#endif
-    }
-  }
-
-  return(0);
-}
-
-/* ******************************* */
-
 void printASList(unsigned int deviceId) {
-
   printHTMLheader("Autonomous Systems Traffic Statistics", 0);
 
   if(deviceId > myGlobals.numDevices) {
@@ -4379,7 +4321,6 @@ void printASList(unsigned int deviceId) {
 /* ******************************* */
 
 void printVLANList(unsigned int deviceId) {
-
   printHTMLheader("VLAN Traffic Statistics", 0);
 
   if(deviceId > myGlobals.numDevices) {

@@ -2184,10 +2184,11 @@ void printNtopConfigInfo(int textPrintFlag) {
   } else {
     if(snprintf(buf, sizeof(buf),
 		"%sActive, all interfaces, port %d",
-		( (myGlobals.webAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.webPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
-		myGlobals.webPort) < 0)
+		((myGlobals.webAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.webPort == NTOP_DEFAULT_WEB_PORT) )
+		? REPORT_ITS_DEFAULT : "", myGlobals.webPort) < 0)
       BufferTooShort();
   }
+
   printFeatureConfigInfo(textPrintFlag, "-w | --http-server", buf);
 
   printParameterConfigInfo(textPrintFlag, "-z | --disable-sessions",
@@ -2236,7 +2237,6 @@ void printNtopConfigInfo(int textPrintFlag) {
     }
   }
 #endif /* USE_SYSLOG */
-
 #endif /* WIN32 */
 
   printParameterConfigInfo(textPrintFlag, "-M | --no-interface-merge" REPORT_ITS_EFFECTIVE,
@@ -2247,7 +2247,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   printParameterConfigInfo(textPrintFlag, "-N | --no-nmap" REPORT_ITS_EFFECTIVE,
                            myGlobals.isNmapPresent == 1 ? "Yes (nmap will be used)" : "No (nmap will not be used)",
                            NTOP_DEFAULT_NMAP_PRESENT == 1 ? "Yes (nmap will be used)" : "");
-
 
   printParameterConfigInfo(textPrintFlag, "-O | --pcap-file-path",
                            myGlobals.pcapLogBasePath,
@@ -2269,15 +2268,14 @@ void printNtopConfigInfo(int textPrintFlag) {
   } else if (myGlobals.sslAddr != 0) {
     if(snprintf(buf, sizeof(buf),
 		"%sActive, address %s, port %d",
-		( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
-		myGlobals.sslAddr,
-		myGlobals.sslPort) < 0)
+		( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) 
+		? REPORT_ITS_DEFAULT : "", myGlobals.sslAddr,myGlobals.sslPort) < 0)
       BufferTooShort();
   } else {
     if(snprintf(buf, sizeof(buf),
 		"%sActive, all interfaces, port %d",
-		( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
-		myGlobals.sslPort) < 0)
+		( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) 
+		? REPORT_ITS_DEFAULT : "", myGlobals.sslPort) < 0)
       BufferTooShort();
   }
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
@@ -2435,13 +2433,11 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 
 #ifdef HAVE_ZLIB
-  printFeatureConfigInfo(textPrintFlag, "zlib version", zlibVersion());
+  printFeatureConfigInfo(textPrintFlag, "zlib version", (char*)zlibVersion());
 #endif
 
   printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    myGlobals.enablePacketDecoding == 1 ? "Enabled" : "Disabled");
-
   printFeatureConfigInfo(textPrintFlag, "Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
-
   printFeatureConfigInfo(textPrintFlag, "Tracking only local hosts", myGlobals.trackOnlyLocalHosts == 1 ? "Yes" : "No");
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpProtosToMonitor) < 0)
@@ -3182,7 +3178,6 @@ void printNtopConfigInfo(int textPrintFlag) {
 	sslwatchdogClearLock(SSLWATCHDOG_BOTH);
       }
 #endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
-
   }
 
   /* **************************************** */
@@ -3318,7 +3313,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **************************************** */
 
-  void sslwatchdogSighandler (int signum)
+  void sslwatchdogSighandler(int signum)
     {
       /* If this goes off, the ssl_accept() below didn't respond */
       signal(SIGUSR1, SIG_DFL);

@@ -229,10 +229,8 @@ void detachFromTerminal(int doChdir) {
    * If no facility was set through -L | --use-syslog=facility
    * then force the default
    */
-  if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
-    traceEvent(TRACE_INFO, "NOTE: -L | --use-syslog=facility not specified, child processes will log to the default (%d).\n", DEFAULT_SYSLOG_FACILITY);
+  if(myGlobals.useSyslog == NTOP_SYSLOG_NONE)
     myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
-  }
 #endif
 
   if(doChdir) chdir("/");
@@ -1007,9 +1005,6 @@ RETSIGTYPE cleanup(int signo) {
     releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
 
-    if(myGlobals.device[i].ipPorts != NULL)
-      free(myGlobals.device[i].ipPorts);
-
     free(myGlobals.device[i].name);
 
     if(myGlobals.device[i].pcapDumper != NULL)
@@ -1030,7 +1025,7 @@ RETSIGTYPE cleanup(int signo) {
 
     free(myGlobals.device[i].hashList);
   }
-
+  
   free(myGlobals.device);
 
 #ifdef MULTITHREADED

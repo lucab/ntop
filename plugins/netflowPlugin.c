@@ -32,9 +32,13 @@ static int threadActive;
 
 static ProbeInfo probeList[MAX_NUM_PROBES];
 
+/* Forward */
+static void setNetFlowInSocket();
+static void setNetFlowOutSocket();
+
 /* ****************************** */
 
-void setNetFlowInSocket() {
+static void setNetFlowInSocket() {
   struct sockaddr_in sockIn;
   int sockopt = 1;
 
@@ -72,7 +76,7 @@ void setNetFlowInSocket() {
 
 /* *************************** */
 
-void setNetFlowOutSocket() {
+static void setNetFlowOutSocket() {
   if(myGlobals.netFlowOutSocket <= 0) {
     char value[256];
     int sockopt = 1;

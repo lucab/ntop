@@ -120,6 +120,7 @@ extern void addPageIndicator(char *url, u_int beginIdx,
 			     u_int numEntries, u_int linesPerPage,
 			     int revertOrder, int numCol);
 extern void printTrafficStatistics();
+extern void printVLANList(unsigned int deviceId);
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum);
 extern void printAllSessionsHTML(char* host, int actualDeviceId);
 extern void printLocalRoutersList(int actualDeviceId);
@@ -161,9 +162,17 @@ extern void switchNwInterface(int _interface);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printNtopConfigHInfo(int textPrintFlag);
+#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+extern int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag);
+extern int sslwatchdogClearLock(int parentchildFlag);
+extern int sslwatchdogGetLock(int parentchildFlag);
+extern int sslwatchdogSignal(int parentchildFlag);
+extern int sslwatchdogSetState(int stateNewValue, int parentchildFlag, int enterLockedFlag, int exitLockedFlag);
+extern void sslwatchdogSighandler(int signum);
+extern void* sslwatchdogChildThread(void* notUsed _UNUSED_);
+#endif /* defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG) */
 
 #ifdef HAVE_GDCHART
-
 #ifndef _GLOBALS_REPORT_C_
 #define GDC_LIB
 #endif

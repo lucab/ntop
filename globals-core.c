@@ -27,7 +27,7 @@
 
 NtopGlobals myGlobals;
 
-#ifndef HAVE_GETOPT_H
+#if !defined(HAVE_GETOPT_H) && !defined(DARWIN)
 char *optarg;
 int optind;
 int opterr;

@@ -26,11 +26,7 @@
 #ifndef MICRO_NTOP
 static int pdaColumnSort = 0;
  
-/* ****************************** */
 
-void printPDAHTMLheader(void)  {
-  sendHTTPHeader(HTTP_TYPE_HTML, HTTP_FLAG_NO_CACHE_CONTROL | HTTP_FLAG_MORE_FIELDS);
-}
 
 /* ********************** */
 
@@ -102,8 +98,8 @@ static void printHtmlIndex(void) {
      #endif
 
      actualDeviceId = getActualInterface(deviceId); */
-
-  printPDAHTMLheader();
+  
+  sendHTTPHeader(HTTP_TYPE_HTML, HTTP_FLAG_NO_CACHE_CONTROL | HTTP_FLAG_MORE_FIELDS);
 
   for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++)
     if(((el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx]) != NULL) 

@@ -41,6 +41,8 @@ extern char *version, *osName, *author, *buildDate,
 /****** function declarations ***** */
 
 /* address.c */
+extern void updateHostNameInfo(unsigned long numeric, char* symbolic, int actualDeviceId);
+extern int printable(int ch);
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
 extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
@@ -106,6 +108,17 @@ extern void sendGIFHeaderType(void);
 extern void sendHTTPProtoHeader(void);
 extern void handleHTTPrequest(struct in_addr from);
 extern void printHTMLheader(char *title, int  headerFlags);
+#ifdef HAVE_OPENSSL
+extern char* printSSLError(int errorId);
+#endif /* HAVE_OPENSSL */
+extern void returnHTTPbadRequest();
+extern void returnHTTPaccessDenied();
+extern void returnHTTPaccessForbidden();
+extern void returnHTTPpageNotFound();
+extern void returnHTTPpageGone();
+extern void returnHTTPrequestTimedOut();
+extern void returnHTTPnotImplemented();
+extern void returnHTTPversionNotSupported();
 
 /* initialize.c */
 extern void initIPServices(void);
@@ -166,6 +179,8 @@ extern char* ntop_safestrdup(char *ptr, char* file, int line);
 #endif  /* MTRACE */
 
 /* ntop.c */
+extern void createPortHash();
+extern void handleProtocols();
 extern void handleSigHup(int signalId);
 extern void *pcapDispatch(void *_i);
 extern RETSIGTYPE handleDiedChild(int);
@@ -186,6 +201,8 @@ extern RETSIGTYPE cleanup(int signo);
 extern void* cleanupExpiredHostEntriesLoop(void*);
  
 /* pbuf.c */
+extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
+			      TrafficCounter length, int actualDeviceId);
 extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress, int actualDeviceId);
 extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
 			 u_char checkForMultihoming,
@@ -254,6 +271,12 @@ extern int isInitialFtpData(char* packetData);
 extern void updateDeviceThpt(int deviceToUpdate);
 
 /* util.c */
+extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
+				u_short *numNetworks, char *localAddresses, 
+				int localAddressesLen);
+extern void handleFlowsSpecs();
+extern void initPassiveSessions();
+extern void termPassiveSessions();
 extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
 extern void resetTrafficCounter(TrafficCounter *ctr);
 extern HostTraffic* findHostByNumIP(char* numIPaddr, int actualDeviceId);

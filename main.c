@@ -270,7 +270,8 @@ void usage (FILE * fp) {
  * Parse the command line options
  */
 static int parseOptions(int argc, char* argv []) {
-  int userSpecified = 0, setAdminPw = 0, i;
+  int userSpecified = 0, setAdminPw = 0, i, opt;
+  char* theOpts;
 #ifdef WIN32
   int optind=0;
 #endif
@@ -279,13 +280,12 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char* theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:S:U:VW:";
+  theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:S:U:VW:";
 #elif defined(USE_SYSLOG)
-  char* theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKLMNO:P:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKLMNO:P:S:U:VW:";
 #else
-  char* theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKMNO:P:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKMNO:P:S:U:VW:";
 #endif
-  int opt;
 
 /* * * * * * * * * * */
 
@@ -293,6 +293,7 @@ static int parseOptions(int argc, char* argv []) {
    * Parse command line options to the application via standard system calls
    */
   while((opt = getopt_long(argc, argv, theOpts, long_options, (int *) 0)) != EOF) {
+    /* traceEvent(TRACE_INFO, "getopt_long(%d/%c/%s)", opt, opt, optarg); */
     switch (opt) {
     case 'a': /* ntop access log path */
       stringSanityCheck(optarg);
@@ -1003,11 +1004,15 @@ int main(int argc, char *argv[]) {
       exit(-1);
     }
   } else {
-    if((!userSpecified) && ((geteuid() == 0) || (getegid() == 0))) {
-      traceEvent(TRACE_INFO, "ERROR: For security reasons you cannot run ntop as root");
-      traceEvent(TRACE_INFO, "ERROR: unless you know what you're doing.");
-      traceEvent(TRACE_INFO, "ERROR: Please specify the user name using the -u option!");
-      exit(0);
+    if((geteuid() == 0) || (getegid() == 0)) {
+      if(!userSpecified) {
+	traceEvent(TRACE_INFO, "ERROR: For security reasons you cannot run ntop as root");
+	traceEvent(TRACE_INFO, "ERROR: unless you know what you're doing.");
+	traceEvent(TRACE_INFO, "ERROR: Please specify the user name using the -u option!");
+	exit(0);
+      } else {
+	traceEvent(TRACE_INFO, "INFO: For security reasons you should not run ntop as root (-u)!");
+      }
     }
   }
 #endif

@@ -538,7 +538,7 @@ void printHTMLheader(char *title, int  headerFlags) {
 
 void printHTMLtrailer(void) {
   char buf[BUF_SIZE];
-  int i, len;
+  int i, len, numRealDevices = 0;
 
   sendString("\n<P><HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><B>\n");
 
@@ -555,15 +555,13 @@ void printHTMLtrailer(void) {
   if(myGlobals.rFileName != NULL) {
     if(snprintf(buf, BUF_SIZE, "Listening on [%s]\n", PCAP_NW_INTERFACE) < 0)
       BufferTooShort();
-  } else {
-    int numRealDevices;
-    
+  } else {   
     buf[0] = '\0';
 
     for(i=len=numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
       if(!myGlobals.device[i].virtualDevice) {
 	if(snprintf(&buf[len], BUF_SIZE-len, "%s%s",
-		    (numRealDevices>0) ? "," : "listening on [", myGlobals.device[i].name) < 0)
+		    (numRealDevices>0) ? "," : "Listening on [", myGlobals.device[i].name) < 0)
 	  BufferTooShort();
 	numRealDevices++;
       }
@@ -592,6 +590,13 @@ void printHTMLtrailer(void) {
 
   sendString(buf);
 
+  if(numRealDevices > 0) {
+    if(snprintf(buf, BUF_SIZE, "<br>Web report active on interface %s",
+		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+  
   sendString("<BR>\n&copy; 1998-2002 by <A HREF=mailto:deri@ntop.org>Luca Deri</A>\n");
   sendString("</B></FONT>\n</BODY>\n</HTML>\n");
 }
@@ -1348,13 +1353,28 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 				    */       
        ) {
       handleDiedChild(0); /*
-			     Workaround because on this OpenBSD and
-			     other platforms signal handling is broken as the system
-			     creates zombies although we decided to ignore SIGCHLD
+			    Workaround because on this OpenBSD and
+			    other platforms signal handling is broken as the system
+			    creates zombies although we decided to ignore SIGCHLD
 			  */
+      
+#if !defined(WIN32) && defined(USE_SYSLOG)
+      /* Child processes must log to syslog.
+       * If no facility was set through -L | --use-syslog=facility
+       * then force the default
+       */
+      if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
+	char messageSent = 0;
+
+	if(!messageSent) {
+	  messageSent = 1;
+	  traceEvent(TRACE_INFO, "NOTE: -L | --use-syslog=facility not specified, child processes will log to the default (%d).\n", 
+		     DEFAULT_SYSLOG_FACILITY);
+	}
+      }
+#endif
 
       /* The URLs below are "read-only" hence I can fork a copy of ntop  */
-
       if((childpid = fork()) < 0)
 	traceEvent(TRACE_ERROR, "An error occurred while forking ntop [errno=%d]..", errno);
       else {
