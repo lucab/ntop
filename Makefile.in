@@ -330,7 +330,7 @@ DIST_COMMON = README $(noinst_HEADERS) AUTHORS CONTENTS COPYING \
 	ChangeLog INSTALL MANIFESTO Makefile.am Makefile.in NEWS \
 	PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 aclocal.m4 \
 	config.guess config.h.in config.sub configure configure.in \
-	depcomp install-sh ltmain.sh missing mkinstalldirs \
+	depcomp install-sh ltconfig ltmain.sh missing mkinstalldirs \
 	ntop-cert.pem\ ntop-config.in ntop.8 ntop.html ntop.txt
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntopd_SOURCES) $(ntops_SOURCES)
