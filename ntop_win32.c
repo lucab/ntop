@@ -329,12 +329,18 @@ int _releaseMutex(PthreadMutex *mutexId,
 		  char* fileName, int fileLine) {
 
   time_t lockDuration;
+  BOOL rc;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n", 
 	     mutexId->mutex, fileName, fileLine); 
 #endif
-  ReleaseMutex(mutexId->mutex);
+  rc = ReleaseMutex(mutexId->mutex);
+
+  if(rc == 0) {
+	traceEvent(TRACE_ERROR, "ERROR while unlocking 0x%X [%s:%d] (LastError=%d)\n", 
+	     mutexId->mutex, fileName, fileLine, GetLastError()); 
+  }
 
   lockDuration = time(NULL) - mutexId->lockTime;
 

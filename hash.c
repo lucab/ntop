@@ -649,23 +649,25 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 	mapIdx(device[deviceToExtend].last24HoursThpt[j].thirdHostRcvdIdx);
   }
 
-#ifdef MULTITHREADED
-  accessMutex(&lsofMutex, "processes Map");
-#endif
-  for(j=0; j<MAX_NUM_PROCESSES; j++) {
-    if(processes[j] != NULL) {
-      int i;
+  if(isLsofPresent) {
+	#ifdef MULTITHREADED
+	  accessMutex(&lsofMutex, "processes Map");
+	#endif
+	  for(j=0; j<MAX_NUM_PROCESSES; j++) {
+		if(processes[j] != NULL) {
+		  int i;
 
-      for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-	if(processes[j]->contactedIpPeersIndexes[i] != NO_PEER)
-	  processes[j]->contactedIpPeersIndexes[i] =
-	    mapIdx(processes[j]->contactedIpPeersIndexes[i]);
-      }
-    }
+		  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+		if(processes[j]->contactedIpPeersIndexes[i] != NO_PEER)
+		  processes[j]->contactedIpPeersIndexes[i] =
+			mapIdx(processes[j]->contactedIpPeersIndexes[i]);
+		  }
+		}
+	  }
+	#ifdef MULTITHREADED
+	  releaseMutex(&lsofMutex);
+	#endif
   }
-#ifdef MULTITHREADED
-  releaseMutex(&lsofMutex);
-#endif
 
   for(j=0; j<device[deviceToExtend].numTotSessions; j++) {
     if(device[deviceToExtend].tcpSession[j] != NULL) {

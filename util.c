@@ -894,6 +894,7 @@ void deleteMutex(PthreadMutex *mutexId) {
 int _accessMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
   int rc;
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
 	     &(mutexId->mutex), where, fileName, fileLine);

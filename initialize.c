@@ -43,6 +43,8 @@
 #include "ntop.h"
 
 
+static u_char threadsInitialized = 0;
+
 /* ******************************* */
 
 void initIPServices(void) {
@@ -341,7 +343,8 @@ void resetStats(void) {
   traceEvent(TRACE_INFO, "Resetting traffic statistics...");
 
 #ifdef MULTITHREADED
-  accessMutex(&hostsHashMutex, "resetStats");
+  if(threadsInitialized)
+    accessMutex(&hostsHashMutex, "resetStats");
 #endif
 
   if(mergeInterfaces)
@@ -371,7 +374,8 @@ void resetStats(void) {
   }
   
 #ifdef MULTITHREADED
-  releaseMutex(&hostsHashMutex);
+  if(threadsInitialized)
+    releaseMutex(&hostsHashMutex);
 #endif
 }
 
@@ -594,6 +598,8 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   }
 #endif
 #endif
+
+  threadsInitialized = 1;
 }
 
 /* ******************************* */
