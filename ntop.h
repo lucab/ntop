@@ -78,10 +78,20 @@
  */
 /* #define FTP_DEBUG */
 
-/* GDBM_DEBUG logs the activites in address.c related to
+/* GDBM_DEBUG logs the activites in address.c related to gdbm
  *  It also causes updateOSName() in util.c to log it's updates.
  */
 /* #define GDBM_DEBUG */
+
+/* GDC_WATCHDOG_DEBUG logs the activites in graph.c related to the
+ *  gdchart watchdog.
+ *
+ * DISABLE_GDC_WATCHDOG disables the watchdog and returns ntop to the
+ *  pre 2.1.52 behavor - which means that a libpng conflict will kill
+ *  the ntop web browser thread.
+ */
+/* #define GDC_WATCHDOG_DEBUG */
+/* #define DISABLE_GDC_WATCHDOG */
 
 /* HASH_DEBUG logs the adding of values to the hash.  It also enables
  * (a presently unused) routine, hashDump().

@@ -39,8 +39,8 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 /* ************************ */
 
-#ifdef GDC_WATCHDOG
-#warning GDC WATCHDOG Enabled
+#ifndef DISABLE_GDC_WATCHDOG
+
 void _GDC_out_pie(short width,
                   short height,
                   FILE* filepointer,            /* open file pointer, can be stdout */
@@ -56,6 +56,10 @@ void _GDC_out_pie(short width,
   struct stat statbuf;
   char tmpStr[512];
 
+#ifdef GDC_WATCHDOG_DEBUG
+  traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: GDC_out_pie forking...\n");
+#endif
+
   fork_result = fork();
 
   if (fork_result == (pid_t) -1) {
@@ -64,8 +68,8 @@ void _GDC_out_pie(short width,
   }
   if (fork_result == (pid_t) 0) {
 
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "INFO: GDC_out_pie - in child, calling\n");
+#ifdef GDC_WATCHDOG_DEBUG
+    traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: in child, calling\n");
 #endif
 
     GDC_out_pie(width,
@@ -76,24 +80,32 @@ void _GDC_out_pie(short width,
                 labels,
                 data);
 
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "INFO: GDC_out_pie - in child, returned\n");
+#ifdef GDC_WATCHDOG_DEBUG
+    traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: in child, returned\n");
 #endif
 
-    return;
+    exit(0);
   }
 
   /* parent */
-  wait_result = wait(&status);
+
+#ifdef GDC_WATCHDOG_DEBUG
+  traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: in parent, waiting for %d...\n", fork_result);
+#endif
+
+  wait_result = waitpid(fork_result, &status, 0);
+
   if (wait_result == (pid_t) -1) {
       traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(002) - wait failed/interrupted");
   } else if (wait_result != fork_result) {
       traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(003) - unexpected child termination");
   } else if (status) {
-       traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(004) - child abnormal termination");
+      traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(004) - child abnormal termination");
   } else {
-       traceEvent(TRACE_INFO, "INFO: GDC_out_pie - in parent, ran OK\n");
-       return;
+#ifdef GDC_WATCHDOG_DEBUG
+      traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: in parent, ran OK\n");
+#endif
+      return;
   }
 
   /* Some kind of failure -- send PIE-ERROR.png */
@@ -123,12 +135,20 @@ void _GDC_out_pie(short width,
   }
   
   if(fd != NULL) {
+      int bufsize=sizeof(tmpStr);
+#ifdef GDC_WATCHDOG_DEBUG
+      traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: sending error graphic, '%s'\n", tmpStr);
+#endif
       for(;;) {
-          len = fread(tmpStr, sizeof(char), sizeof(tmpStr), fd);
-          if(len <= 0) break;
+          len = fread(tmpStr, sizeof(char), bufsize, fd);
+          if(len > 0) {
               sendStringLen(tmpStr, len);
+          }
+          if(len <= bufsize) break;
       }
-
+#ifdef GDC_WATCHDOG_DEBUG
+      traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: sent error graphic\n");
+#endif
       fclose(fd);
   } else {
       traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(005) - unable to find %s\n", 
@@ -138,9 +158,19 @@ void _GDC_out_pie(short width,
 }
 
 #define GDC_out_pie(w, h, file, type, slices, labels, data) _GDC_out_pie(w, h, file, type, slices, labels, data)
-#else /* GDC_WATCHDOG */
+
+#else /* DISABLE_GDC_WATCHDOG */
+
 #undef GDC_out_pie
-#endif /* GDC_WATCHDOG */
+#warning
+#warning
+#warning
+#warning GDC WATCHDOG Disabled - ntop web server will crash on libpng version conflicts.
+#warning
+#warning
+#warning
+
+#endif /* DISABLE_GDC_WATCHDOG */
 
 /* ************************ */
 
@@ -148,13 +178,30 @@ void sendGraphFile(char* fileName) {
   FILE *fd;
   int len;
   char tmpStr[256];
+  int bufSize=sizeof(tmpStr)-1;
+
+#ifdef GDC_WATCHDOG_DEBUG
+  int byteCount=0;
+
+  traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: Sending graphics file, %s\n", fileName);
+#endif
 
   if((fd = fopen(fileName, "rb")) != NULL) {
+
     for(;;) {
-      len = fread(tmpStr, sizeof(char), sizeof(tmpStr)-1, fd);
+      len = fread(tmpStr, sizeof(char), bufSize, fd);
+      if(len > 0) {
+#ifdef GDC_WATCHDOG_DEBUG
+          byteCount += len;
+#endif
+          sendStringLen(tmpStr, len);
+      }
       if(len <= 0) break;
-      sendStringLen(tmpStr, len);
     }
+
+#ifdef GDC_WATCHDOG_DEBUG
+    traceEvent(TRACE_INFO, "DEBUG: Sent graphics file, %d bytes\n", byteCount);
+#endif
 
     fclose(fd);
   } else 
