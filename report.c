@@ -617,7 +617,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       }
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktCastDistribPie></TH></TR>\n");
+      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktCastDistribPie.png></TH></TR>\n");
 #endif
 
       /*
@@ -700,7 +700,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString(buf2);
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktSizeDistribPie></TH></TR>\n");
+      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktSizeDistribPie.png></TH></TR>\n");
 #endif
 
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long</th>"
@@ -740,7 +740,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString(buf2);
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=2><IMG SRC=ipTrafficPie></TH></TR>\n");
+      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=2><IMG SRC=ipTrafficPie.png></TH></TR>\n");
 #endif
 
       updateThpt();
@@ -1948,7 +1948,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	       "</H1><br>\n");
 
 #ifdef HAVE_GDCHART
-    sendString("<IMG SRC=ipProtoDistribPie><p></CENTER>\n");
+    sendString("<IMG SRC=ipProtoDistribPie.png><p></CENTER>\n");
 #endif
 
     sendString("<CENTER><P><H1>Local Traffic</H1><P>\n");
