@@ -28,7 +28,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 			    int actualDeviceId) {
   u_int idx = 0;
 
-  if(myGlobals.borderSnifferMode)  /* MAC addresses don't make sense here */
+  if(myGlobals.dontTrustMACaddr)  /* MAC addresses don't make sense here */
     (*useIPAddressForSearching) = 1;
 
   if(((*useIPAddressForSearching) == 1)

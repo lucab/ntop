@@ -745,11 +745,14 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
 
 /* Report statistics and write out the raw packet file */
 RETSIGTYPE cleanup(int signo) {
-  static int unloaded = 0;
+  static int unloaded = 0, msgSent = 0;
   struct pcap_stat stat;
   int i;
   
-  traceEvent(TRACE_INFO, "ntop caught signal %d", signo);
+  if(!msgSent) {
+    traceEvent(TRACE_INFO, "ntop caught signal %d", signo);
+    msgSent = 1;
+  }
 
 #ifdef HAVE_BACKTRACE
   if (signo == SIGSEGV) {

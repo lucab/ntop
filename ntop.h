@@ -1915,6 +1915,13 @@ typedef struct logMessage {
 
 /* *************************** */
 
+typedef struct badGuysAddr {
+  struct in_addr addr;
+  time_t         lastBadAccess;
+} BadGuysAddr;
+
+/* *************************** */
+
 /*
   For more info see:
 

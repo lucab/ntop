@@ -1980,7 +1980,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 		printSectionTitle("Last Contacted Peers");
 		titleSent = 1;
 		sendString("<CENTER>\n"
-			   "<TABLE BORDER=0 WIDTH=100%><TR><TD "TD_BG" VALIGN=TOP>\n");
+			   "<TABLE BORDER=0><TR><TD "TD_BG" VALIGN=TOP>\n");
 
 		sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
 			   "<TR><TH "TH_BG">Sent To</TH>"
@@ -2012,7 +2012,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	  if(retrieveHost(el->contactedRcvdPeers.peersIndexes[i], &el2) == 0) {
 	      if(numEntries == 0) {
 		if(!titleSent) printSectionTitle("Last Contacted Peers");
-		sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
+		sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>"
 			   "<TR><TH "TH_BG">Received From</TH>"
 			   "<TH "TH_BG">Address</TH></TR>\n");
 	      }
@@ -2982,16 +2982,25 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if((el->pktMulticastSent > 0) || (el->pktMulticastRcvd > 0)) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;-"
-		"&nbsp;Rcvd&nbsp;%s/%s&nbsp;Pkts</TD></TR>\n",
-		getRowColor(), "Multicast&nbsp;Traffic",
-		formatBytes(el->bytesMulticastSent, 1),
-		formatPkts(el->pktMulticastSent),
-		formatBytes(el->bytesMulticastRcvd, 1),
-		formatPkts(el->pktMulticastRcvd)
-		) < 0) BufferTooShort();
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>",
+		getRowColor(), "Multicast&nbsp;Traffic") < 0) BufferTooShort();
     sendString(buf);
+    
+    if(el->pktMulticastSent > 0) {
+      if(snprintf(buf, sizeof(buf), "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;-",
+		  formatBytes(el->bytesMulticastSent, 1),
+		  formatPkts(el->pktMulticastSent)) < 0) BufferTooShort();
+      sendString(buf);
+    } 
+
+    if(el->pktMulticastRcvd > 0) {
+      if(snprintf(buf, sizeof(buf), "Rcvd&nbsp;%s/%s&nbsp;Pkts",
+		  formatBytes(el->bytesMulticastRcvd, 1),
+		  formatPkts(el->pktMulticastRcvd)) < 0) BufferTooShort();
+      sendString(buf);
+    } 
+
+    sendString("</TD></TR>\n");
   }
 
   if(el->bytesSent == 0)

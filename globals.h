@@ -68,6 +68,7 @@ typedef struct ntopGlobals {
   char *rFileName;                   /* 'f' */
   char *devices;                     /* 'i' */
   short borderSnifferMode;           /* 'j' */
+  short dontTrustMACaddr;            /* internal */
   int filterExpressionInExtraFrame;  /* 'k' */
   char *pcapLog;                     /* 'l' */
   int numericFlag;                   /* 'n' */
@@ -125,7 +126,7 @@ typedef struct ntopGlobals {
 
   /* Administrative */
   char *shortDomainName;
-  struct in_addr weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES];
+  BadGuysAddr weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES];
 
 #ifdef MULTITHREADED
   unsigned short numThreads;           /* # of running threads */

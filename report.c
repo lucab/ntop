@@ -1089,24 +1089,24 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
       if(el != NULL) {
 	if(snprintf(buf, sizeof(buf), "<TR %s>%s"
-		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		"</TR>\n",
-		getRowColor(), makeHostLink(el, LONG_FORMAT, 0, 1),
-		formatPkts(el->pktMulticastSent),
-		formatBytes(el->bytesMulticastSent, 1),
-		formatPkts(el->pktMulticastRcvd),
-		formatBytes(el->bytesMulticastRcvd, 1)
-		) < 0) BufferTooShort();
-
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		    "</TR>\n",
+		    getRowColor(), makeHostLink(el, LONG_FORMAT, 0, 1),
+		    formatPkts(el->pktMulticastSent),
+		    formatBytes(el->bytesMulticastSent, 1),
+		    formatPkts(el->pktMulticastRcvd),
+		    formatBytes(el->bytesMulticastRcvd, 1)
+		    ) < 0) BufferTooShort();
+	
 	sendString(buf);
-
-      /* Avoid huge tables */
-      if(printedEntries++ > myGlobals.maxNumLines)
-	break;
+	
+	/* Avoid huge tables */
+	if(printedEntries++ > myGlobals.maxNumLines)
+	  break;
       }
     }
-
+    
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
 
@@ -1620,7 +1620,7 @@ void printLocalRoutersList(int actualDeviceId) {
 
   printHTMLheader("Local Subnet Routers", 0);
 
-  if(myGlobals.borderSnifferMode) {
+  if(myGlobals.dontTrustMACaddr) {
     printNotAvailable();
     return;
   }
@@ -2251,10 +2251,10 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
    printSectionTitle("IP Protocol Distribution");
 
    /*
-  if(myGlobals.borderSnifferMode) {
-    printNotAvailable();
-    return;
-  }
+     if(myGlobals.borderSnifferMode) {
+     printNotAvailable();
+     return;
+     }
    */
 #ifdef HAVE_GDCHART
    sendString("<CENTER><IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p>\n</CENTER>\n");
@@ -3946,19 +3946,25 @@ void printHostHourlyTraffic(HostTraffic *el) {
 /* ************************** */
 
 int haveTrafficHistory() {
-  int idx, found;
+  int idx;
+  static found = 0;
   struct stat statbuf;
+  
+  if(found) return(1); /* cached value */
 
   for(idx=0, found = 0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
     char tmpStr[384];
 
-    if(snprintf(tmpStr, sizeof(tmpStr), "%s/data",
-		myGlobals.dataFileDirs[idx]) < 0)
+    if(snprintf(tmpStr, sizeof(tmpStr), "%s/data", myGlobals.dataFileDirs[idx]) < 0)
       BufferTooShort();
 
     if(stat(tmpStr, &statbuf) == 0) {
       return(1);
       break;
+    } else {
+#ifndef DEBUG
+      traceEvent(TRACE_INFO, "Unable to find history data on %s", tmpStr);
+#endif
     }
   }
 

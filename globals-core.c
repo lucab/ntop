@@ -121,6 +121,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.rFileName = NULL;
   myGlobals.devices = NULL;
   myGlobals.borderSnifferMode = 0;
+  myGlobals.dontTrustMACaddr = 0;
   myGlobals.filterExpressionInExtraFrame = 0;
   myGlobals.pcapLog = NULL;
   myGlobals.numericFlag = 0;

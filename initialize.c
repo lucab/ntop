@@ -438,6 +438,7 @@ int initGlobalValues(void) {
     myGlobals.enableSessionHandling  = 0;
     myGlobals.enablePacketDecoding   = 0;
     myGlobals.enableFragmentHandling = 0;
+    myGlobals.dontTrustMACaddr       = 1;
 #ifdef MULTITHREADED
     myGlobals.numDequeueThreads      = MAX_NUM_DEQUEUE_THREADS;
 #endif
@@ -447,6 +448,7 @@ int initGlobalValues(void) {
 #ifdef MULTITHREADED
     myGlobals.numDequeueThreads = 1;
 #endif
+    myGlobals.dontTrustMACaddr  = 0;
   }
 
   if(myGlobals.enableSessionHandling)
@@ -640,8 +642,7 @@ void initThreads(void) {
      * Create the thread (7) - Purge old DB entries
      */
     if(!myGlobals.borderSnifferMode) {
-      createThread(&myGlobals.purgeAddressThreadId,
-		   cleanupExpiredHostEntriesLoop, NULL);
+      createThread(&myGlobals.purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
       traceEvent(TRACE_INFO, "Started thread (%ld) for address purge.", 
 		 myGlobals.purgeAddressThreadId);
     }

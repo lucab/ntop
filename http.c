@@ -1075,38 +1075,38 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 
   /* Search in the local directory first... */
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
-      int j;
+    int j;
 
-      for(j=0; j<=myGlobals.borderSnifferMode; j++) {
-	  if(myGlobals.borderSnifferMode && (j == 0)) {
-	      if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/j_%s",
-			  myGlobals.dataFileDirs[idx], pageName) < 0)
-		BufferTooShort();
-	  } else {
-	    if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
-			myGlobals.dataFileDirs[idx], pageName) < 0)
-	      BufferTooShort();
-	  }
-
-	  /* traceEvent(TRACE_ERROR, "Searching '%s'\n", tmpStr); */
-
-#ifdef WIN32
-	  i=0;
-	  while(tmpStr[i] != '\0') {
-	      if(tmpStr[i] == '/') tmpStr[i] = '\\';
-	      i++;
-	  }
-#endif
-
-	  if(stat(tmpStr, &statbuf) == 0) {
-	    if((fd = fopen(tmpStr, "rb")) != NULL) {
-	      found = 1;
-	      break;
-	    }
-
-	    traceEvent(TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
-	  }
+    for(j=0; j<=myGlobals.borderSnifferMode; j++) {
+      if(myGlobals.borderSnifferMode && (j == 0)) {
+	if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/j_%s",
+		    myGlobals.dataFileDirs[idx], pageName) < 0)
+	  BufferTooShort();
+      } else {
+	if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
+		    myGlobals.dataFileDirs[idx], pageName) < 0)
+	  BufferTooShort();
       }
+	
+      /* traceEvent(TRACE_ERROR, "Searching '%s'\n", tmpStr); */
+	
+#ifdef WIN32
+      i=0;
+      while(tmpStr[i] != '\0') {
+	if(tmpStr[i] == '/') tmpStr[i] = '\\';
+	i++;
+      }
+#endif
+	
+      if(stat(tmpStr, &statbuf) == 0) {
+	if((fd = fopen(tmpStr, "rb")) != NULL) {
+	  found = 1;
+	  break;
+	}
+
+	traceEvent(TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
+      }
+    }
   }
 
 #ifdef DEBUG
@@ -1983,12 +1983,21 @@ void handleHTTPrequest(struct in_addr from) {
   requestFrom = &from;
   NTOHL(requestFrom->s_addr);
 
-  for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++)
-    if(myGlobals.weDontWantToTalkWithYou[i].s_addr == from.s_addr) {
+  for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
+    if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr == from.s_addr) {
+      myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.actTime;
       traceEvent(TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
 		 _intoa(from, requestedURL, sizeof(requestedURL)));
       return;
+    } else if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess+300 /* 5 minutes */) < myGlobals.actTime) {
+      /*
+	We 'forget' the address of this nasty guy after 5 minutes
+	since its last bad access as we hope that he will be nicer
+	with ntop in the future.
+      */
+      memset(&myGlobals.weDontWantToTalkWithYou[i], 0, sizeof(BadGuysAddr));
     }
+  }
 
   memset(requestedURL, 0, sizeof(requestedURL));
   memset(pw, 0, sizeof(pw));
@@ -2070,16 +2079,19 @@ void handleHTTPrequest(struct in_addr from) {
        for a while
     */
     for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++)
-      if(myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].s_addr == from.s_addr) {
+      if(myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr == from.s_addr) {
 	found = 1;
 	break;
       }
     
     if(!found) {
-      for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++)
-	myGlobals.weDontWantToTalkWithYou[i] = myGlobals.weDontWantToTalkWithYou[i+1];
+      for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++) {
+	myGlobals.weDontWantToTalkWithYou[i].addr.s_addr   = myGlobals.weDontWantToTalkWithYou[i+1].addr.s_addr;
+	myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.weDontWantToTalkWithYou[i+1].lastBadAccess;
+      }
 
-      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].s_addr = from.s_addr;
+      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr = from.s_addr;
+      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].lastBadAccess = myGlobals.actTime;
     }
 
     returnHTTPaccessForbidden(0);

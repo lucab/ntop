@@ -60,7 +60,7 @@ void handleBootp(HostTraffic *srcHost,
 
   if((!myGlobals.enablePacketDecoding)
      || (packetData == NULL) /* packet too short ? */
-     || (myGlobals.borderSnifferMode))
+     || (myGlobals.dontTrustMACaddr))
     return;
 
   switch(sport) {

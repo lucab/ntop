@@ -189,8 +189,10 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   if(((sessionToPurge->bytesProtoSent == 0)
       || (sessionToPurge->bytesProtoRcvd == 0))
      && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
-     /* "Valid" TCP session used to skip faked sessions (e.g. portscans
-	with one faked packet + 1 response [RST usually]) */
+     /*
+       "Valid" TCP session used to skip faked sessions (e.g. portscans
+       with one faked packet + 1 response [RST usually]) 
+     */
      ) {
     HostTraffic *theHost, *theRemHost;
     char *fmt = "WARNING: detected TCP connection with no data exchanged "
@@ -286,6 +288,10 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	 || ((thisSession->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)
 	 || ((thisSession->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)
 	 ) {
+#ifdef MULTITHREADED
+	accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
+#endif
+
 	if((prevSession != NULL) && (prevSession != thisSession))
 	  prevSession->next = nextSession;
 	else
@@ -308,6 +314,10 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
 	freeSessionCount++; 
 	freeSession(thisSession, actualDeviceId, 1);
+
+#ifdef MULTITHREADED
+	releaseMutex(&myGlobals.hostsHashMutex);
+#endif
       }
 
       thisSession = nextSession;

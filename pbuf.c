@@ -625,7 +625,7 @@ static void processIpPkt(const u_char *bp,
 
   NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
-  if((!myGlobals.borderSnifferMode)
+  if((!myGlobals.dontTrustMACaddr)
      && isBroadcastAddress(&ip.ip_dst)
      && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
     /* forceUsingIPaddress = 1; */
@@ -697,12 +697,12 @@ static void processIpPkt(const u_char *bp,
     if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
   }
 
-  if((!myGlobals.borderSnifferMode) && (!myGlobals.device[actualDeviceId].dummyDevice))
-    checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
   updatePacketCount(srcHost, dstHost, (TrafficCounter)h->len, actualDeviceId);
 
-  if((!myGlobals.borderSnifferMode) && (!myGlobals.device[actualDeviceId].dummyDevice))
+  if((!myGlobals.dontTrustMACaddr) && (!myGlobals.device[actualDeviceId].dummyDevice)) {
+    checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
     updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
+  }
 
   srcHost->ipBytesSent += length, dstHost->ipBytesRcvd += length;
 
@@ -1869,7 +1869,7 @@ void processPacket(u_char *_deviceId,
 
     if((myGlobals.device[deviceId].datalink != DLT_PPP)
        && (myGlobals.device[deviceId].datalink != DLT_RAW)) {
-      if((!myGlobals.borderSnifferMode) && (eth_type == 0x8137)) {
+      if((!myGlobals.dontTrustMACaddr) && (eth_type == 0x8137)) {
 	/* IPX */
 	IPXpacket ipxPkt;
 
@@ -1931,7 +1931,7 @@ void processPacket(u_char *_deviceId,
 	struct llc llcHeader;
 
 	if((ether_dst != NULL)
-	   && (!myGlobals.borderSnifferMode)
+	   && (!myGlobals.dontTrustMACaddr)
 	   && (strcmp(etheraddr_string(ether_dst), "FF:FF:FF:FF:FF:FF") == 0)
 	   && (p[sizeof(struct ether_header)] == 0xff)
 	   && (p[sizeof(struct ether_header)+1] == 0xff)
@@ -1956,7 +1956,7 @@ void processPacket(u_char *_deviceId,
 
 	  srcHost->ipxSent += length, dstHost->ipxRcvd += length;
 	  myGlobals.device[actualDeviceId].ipxBytes += length;
-	} else if(!myGlobals.borderSnifferMode) {
+	} else if(!myGlobals.dontTrustMACaddr) {
 	  /* MAC addresses are meaningful here */
 	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -2223,7 +2223,7 @@ void processPacket(u_char *_deviceId,
 	  processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId);
 	else
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId);
-      } else  /* Non IP */ if(!myGlobals.borderSnifferMode) {
+      } else  /* Non IP */ if(!myGlobals.dontTrustMACaddr) {
 	/* MAC addresses are meaningful here */
 	struct ether_arp arpHdr;
 	struct in_addr addr;
