@@ -265,6 +265,10 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
     thisSession = myGlobals.device[actualDeviceId].tcpSession[idx];
     prevSession = thisSession;
       
+#ifdef MULTITHREADED
+    accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
+#endif
+
     while(thisSession != NULL) {
       if(thisSession->magic != MAGIC_NUMBER) {
 	thisSession = NULL;
@@ -288,10 +292,6 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	 || ((thisSession->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)
 	 || ((thisSession->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)
 	 ) {
-#ifdef MULTITHREADED
-	accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
-#endif
-
 	if((prevSession != NULL) && (prevSession != thisSession))
 	  prevSession->next = nextSession;
 	else
@@ -315,9 +315,6 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	freeSessionCount++; 
 	freeSession(thisSession, actualDeviceId, 1);
 
-#ifdef MULTITHREADED
-	releaseMutex(&myGlobals.hostsHashMutex);
-#endif
       }
 
       thisSession = nextSession;
@@ -326,6 +323,9 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	traceEvent(TRACE_WARNING, "Internal Error (3)");
       }
     } /* while */
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.hostsHashMutex);
+#endif    
   } /* end for */
 
 #ifdef DEBUG
