@@ -28,7 +28,7 @@ char *version, *osName, *author, *buildDate;
 #endif
 
 void initNtopGlobals() {
-  u_short _mtuSize[] = {
+  static u_short _mtuSize[] = {
     8232,   	/* no link-layer encapsulation */
     /* 1500 + 14 bytes header 
        Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
@@ -48,7 +48,7 @@ void initNtopGlobals() {
     UNKNOWN_MTU	/* BSD/OS Point-to-point Protocol */
   };
 
-  u_short _headerSize[] = {
+  static u_short _headerSize[] = {
     NULL_HDRLEN,  /* no link-layer encapsulation */
     sizeof(struct ether_header),	        /* Ethernet (10Mb) */
     UNKNOWN_MTU,  /* Experimental Ethernet (3Mb) */
