@@ -834,12 +834,10 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
 
-    /*
-      if(myGlobals.broadcastEntry != NULL)
+    if(myGlobals.broadcastEntry != NULL)
       freeHostInfo(myGlobals.broadcastEntry, i);
-      if(myGlobals.otherHostEntry != NULL)
+    if(myGlobals.otherHostEntry != NULL)
       freeHostInfo(myGlobals.otherHostEntry, i);
-    */
 
     while(myGlobals.device[i].fragmentList != NULL) {
       IpFragment *fragment = myGlobals.device[i].fragmentList->next;
@@ -927,8 +925,22 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].ipProtoStats != NULL)
       free(myGlobals.device[i].ipProtoStats);
 
+    if(myGlobals.device[i].ipProtosList != NULL)
+      free(myGlobals.device[i].ipProtosList);
+
     if(myGlobals.device[i].hash_hostTraffic != NULL)
       free(myGlobals.device[i].hash_hostTraffic);
+
+    if(myGlobals.device[i].ipPorts != NULL) {
+      int port;
+
+      for(port=0; port<MAX_IP_PORT; port++)
+	if(myGlobals.device[i].ipPorts[port] != NULL) 
+	  free(myGlobals.device[i].ipPorts[port]);
+
+      free(myGlobals.device[i].ipPorts);
+    }
+    
 
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
@@ -939,6 +951,7 @@ RETSIGTYPE cleanup(int signo) {
     releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
 
+    free(myGlobals.device[i].humanFriendlyName);
     free(myGlobals.device[i].name);
 
     if(myGlobals.device[i].pcapDumper != NULL)
@@ -987,6 +1000,13 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.currentFilterExpression != NULL)
     free(myGlobals.currentFilterExpression);
 
+  if(myGlobals.localAddresses != NULL) free(myGlobals.localAddresses);
+  if(myGlobals.effectiveUserName != NULL) free(myGlobals.effectiveUserName);
+  if(myGlobals.devices != NULL) free(myGlobals.devices);
+
+  /* One day we should free myGlobals.countryFlagHead */
+
+  
   free(myGlobals.pcapLogBasePath);
   /* free(myGlobals.dbPath); -- later, need this to remove pid */
   free(myGlobals.spoolPath);

@@ -1880,7 +1880,7 @@ void processPacket(u_char *_deviceId,
 
     /* traceEvent(CONST_TRACE_INFO, "%ld (%ld)", numPkt, length); */
 
-    if(numPkt ==  /* 10000 */ 1000000) {
+    if(numPkt ==  /* 10000 */ 1000) {
       cleanup(2);
     } else
       numPkt++;

@@ -220,7 +220,7 @@ static void initIPCountryTable(void) {
   traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <-> Country code mapping file");
 
   myGlobals.ipCountryCount = 0;
-  if((myGlobals.countryFlagHead=malloc(sizeof(IPNode))) == NULL) {
+  if((myGlobals.countryFlagHead = malloc(sizeof(IPNode))) == NULL) {
     traceEvent(CONST_TRACE_FATALERROR, "IP2CC: Unable to allocate table memory. Quitting...");
     exit(1);
   }
@@ -1036,7 +1036,7 @@ void initApps(void) {
 void addDevice(char* deviceName, char* deviceDescr) {
   int i, deviceId, mallocLen, memlen;
   NtopInterface *tmpDevice;
-  char *workDevices;
+  char *workDevices = NULL;
   char myName[80], *column = NULL;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
@@ -1464,6 +1464,8 @@ void initDevices(char* devices) {
       addDevice(tmpDev, tmpDescr == NULL ? tmpDev : tmpDescr);
       tmpDev = strtok_r(NULL, ",", &strtokState);
     } /* while */
+
+    free(workDevices);
   }
 }
 
