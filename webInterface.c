@@ -2496,6 +2496,24 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 #endif
 
+  if (textPrintFlag == TRUE) {
+    sendString(texthtml("\n\nMemory Usage\n\n", "<tr><th colspan=\"2\">Memory Usage</th></tr>\n"));
+
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipCountryCount) < 0)
+        BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "IP to country flag table (entries)", buf);
+
+    if(snprintf(buf, sizeof(buf), "%d (%.1f MB)", myGlobals.ipCountryMem, (float)myGlobals.ipCountryMem/(1024.0*1024.0)) < 0)
+        BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "IP to country flag table (bytes)", buf);
+
+    if (myGlobals.ipCountryCount > 0) {
+        if(snprintf(buf, sizeof(buf), "%.1f", (float)myGlobals.ipCountryMem/myGlobals.ipCountryCount) < 0)
+            BufferTooShort();
+        printFeatureConfigInfo(textPrintFlag, "Bytes per entry", buf);
+    }
+  }
+
   sendString(texthtml("\n\nHost Memory Cache\n\n", "<tr><th colspan=\"2\">Host Memory Cache</th></tr>\n"));
 
   if(snprintf(buf, sizeof(buf), 

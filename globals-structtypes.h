@@ -1817,6 +1817,9 @@ XML*/
   char *strftimeFormat[MAX_LANGUAGES_SUPPORTED];
 #endif
 
-  IPNode *countryFlagHead; /* Pointer for country flags */
+ /* for country flags */
+  IPNode *countryFlagHead;
+  int  ipCountryMem, ipCountryCount;
+
 } NtopGlobals;
 

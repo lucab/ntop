@@ -3389,6 +3389,7 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country) {
       if(!(p2=malloc(sizeof(IPNode))))
         exit(1);
       memset(p2, 0, sizeof(IPNode));
+      myGlobals.ipCountryMem += sizeof(IPNode);
       p1->b[b]=p2;
     }
     else

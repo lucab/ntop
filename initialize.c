@@ -215,10 +215,14 @@ void initIPServices(void) {
 static void initIPCountryTable(void) {
   int idx;
   
+  traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <->> Country code mapping file\n");
+
+  myGlobals.ipCountryCount = 0;
   if((myGlobals.countryFlagHead=malloc(sizeof(IPNode))) == NULL) {
-    traceEvent(CONST_TRACE_ERROR, "Unable to allocate further memory. Quitting...");		 
+    traceEvent(CONST_TRACE_ERROR, "ERROR: IP2CC: Unable to allocate table memory. Quitting...\n");
     exit(1);
   }
+  myGlobals.ipCountryMem += sizeof(IPNode);
 
   strcpy(myGlobals.countryFlagHead->cc, "***");
 
@@ -233,12 +237,14 @@ static void initIPCountryTable(void) {
     fd = fopen(tmpStr, "r");
 
     if (fd!=NULL) {
+      traceEvent(CONST_TRACE_INFO, "IP2CC: ...found at %s.\n", tmpStr);
       while (!feof(fd)) {
         char buff[256];
         char *strtokState, *token, *cc, *ip, *prefix;
 
         if (fgets(buff, sizeof(buff), fd)==NULL)
           continue;
+
         if ((cc=strtok_r(buff, ":", &strtokState))==NULL)
           continue;
         if ((ip=strtok_r(NULL, "/", &strtokState))==NULL)
@@ -249,11 +255,19 @@ static void initIPCountryTable(void) {
         strtolower(cc);
         
         addNodeInternal(xaton(ip), atoi(prefix), cc);
+        myGlobals.ipCountryCount++;
       }
 
       fclose(fd);
+      traceEvent(CONST_TRACE_INFO, "IP2CC: ...%d records read.\n", myGlobals.ipCountryCount);
     } else 
-      traceEvent(CONST_TRACE_WARNING, "WARNING: Unable to read config. file %s.\n", tmpStr);
+      traceEvent(CONST_TRACE_INFO, "IP2CC: ...not found at %s.\n", tmpStr);
+  }
+  if (myGlobals.ipCountryCount == 0) {
+      traceEvent(CONST_TRACE_WARNING, 
+                 "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data).\n");
+      traceEvent(CONST_TRACE_WARNING, 
+                 "IP2CC: ntop will perform correctly but without this minor feature.\n");
   }
 }
 
