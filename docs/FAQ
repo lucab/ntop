@@ -11,9 +11,7 @@
 
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
                         Fully revised for ntop 3.0
-
-       (If you are reading this before 3.0 is really released, e.g.
-          3.0pre1 or some such, consider it "Back to the Future")
+                           Updated for ntop 3.1
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Compiled by Burton M. Strauss III <Burton@ntopsupport.com> - comments to him!
@@ -43,59 +41,57 @@ Note that some of this FAQ is based on the entries people contributed
 to the community FAQ formerly at http://snapshot.ntop.org.  Lots more are 
 based on messages to the ntop and ntop-dev mailing lists.
 
-Post 3.0 release entries will have a author/date stamp, at the end:
-
-(Updated/Added ddmmmyyyy by x)
-
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 TOP 10 - the questions everyone asks...
 
-Q1(a) Can I store data in a SQL database?
-  (b) When ntop stops I lose all my data.  Why?
-  (c) Why doesn't the -S option work?
+Q1(a). Can I store data in a SQL database?
+Q1(b). When ntop stops I lose all my data.  Why?
+Q1(c). Why doesn't the -S option work?
 
-  A. ntop used to optionally store some data in a SQL database.  The code was
-     broken, difficult to maintain, etc. and was removed.  A LONG TIME AGO.
-     If you are reading about this in 'some' documentation - update.  Current
-     ntop is 3.0.
+A. ntop used to optionally store some data in a SQL database.  The code was
+   broken, difficult to maintain, etc. and was removed.  A LONG TIME AGO.
+   If you are reading about this in 'some' documentation - update.
 
-     There are scripts that various users have offered to take the data dump
-     and insert it into a SQL database.  Search the back traffic on the mailing
-     list for them.
+   Current ntop is 3.1, which is the only version we support.
 
-     Yes, ntop uses memory based structures to hold usage data and they are lost
-     when you reset or restart ntop.
+   There are scripts that various users have offered to take the data dump
+   and insert it into a SQL database.  Search the back traffic on the mailing
+   list for them.
 
-     Persistent storage is in the RRD databases - there's a paper @ SourceForge
-     that explains them.
+   Yes, ntop uses memory based structures to hold usage data and they are lost
+   when you reset or restart ntop.
 
-     There was another option for some persistence - it was -S - look down about
-     5K lines in this FAQ for an article about it, "What was the -S option?".
+   Persistent storage is in the RRD databases - there's a paper @ SourceForge
+   that explains them.
+
+   There was another option for some persistence - it was -S - look down about
+   5K lines in this FAQ for an article about it, "What was the -S option?".
 
 
 Q2. The archive isn't indexed, so I can't search it.
-A.  Use gmane: http://search.gmain.org (lists are called gmane.linux.ntop.general
-    and gmane.linux.ntop.devel) or use Google with the keyword ntop and the site 
-    option "site:listgateway.unipi.it" plus your query:
+A. Use gmane: http://search.gmain.org (lists are called gmane.linux.ntop.general
+   and gmane.linux.ntop.devel) or use Google with the keyword ntop and the site 
+   option "site:listgateway.unipi.it" plus your query:
 
-    site:listgateway.unipi.it ntop freebsd
+        site:listgateway.unipi.it ntop freebsd
 
 
 Q3. ntop crashed and the last log message is "xxxxx".
-A.  Sorry, that's useless.  ntop is multi-threaded and processes 100s or 1000s of
-    packets per second.  The last log message is probably from the wrong thread 
-    and many seconds out of date.
+A. Sorry, that's useless.  ntop is multi-threaded and processes 100s or 1000s of
+   packets per second.  The last log message is probably from the wrong thread 
+   and many seconds out of date.
 
-    To capture the true failure point, you need to run under the debugger (gdb) 
-    and send us the bt full information.  Instructions are at the bottom of this
-    document.  Look for "GDB ultraMini-tutorial".
+   To capture the true failure point, you need to run under the debugger (gdb) 
+   and send us the bt full information.  Instructions are at the bottom of this
+   document.  Look for "GDB ultraMini-tutorial".
 
- 3(a) What about the backtrace?
- A. Again, probably useless.  Use gdb and capture the full failure point info. If you
-    want to see more, look for "Q. What about the backtrace?" below.
+Q3(a). What about the backtrace?
+A. Again, probably useless.  Use gdb and capture the full failure point info. If you
+   want to see more, look for "Q. What about the backtrace?" below.
+
 
 Q4. I'm running out of memory.
 A. Basically ntop uses a lot of memory - it stores a chunk of information about each 
@@ -104,36 +100,43 @@ A. Basically ntop uses a lot of memory - it stores a chunk of information about 
 
 
 Q5. Dropped packets?
-A.  There are lots of reasons - look for "Q. Why does ntop drop packets?" below.
-    Short version, is that as long as it's random, the information you glean from ntop
-    (32% of our usage is P2P Music) is still valid.  But you are probably understating
-    any problems.
+A. There are lots of reasons - look for "Q. Why does ntop drop packets?" below.
+   Short version, is that as long as it's random, the information you glean from ntop
+   (32% of our usage is P2P Music) is still valid.  But you are probably understating
+   any problems.
 
 Q6. The docs at ntop.org say ...
-A.  Stop right there.  They're out of date (notice, for example, the man page is
-    July 2002?).
+A. Stop right there.  They're out of date (notice, for example, the man page is
+   July 2002?).
 
-    The only current stuff is this FAQ (which gets out of date quickly) the other files
-    in the distribution and the mailing lists.
+   The only current stuff is this FAQ (which gets out of date quickly) the other files
+   in the distribution and the mailing lists.
 
-    You can access the updated FAQ from docs/FAQ in the cvs or from your ntop instance
-    (click on the (?) icon in the "About" menu and read down 1/2 a page or so.
+   You can access the updated FAQ from docs/FAQ in the cvs or from your ntop instance
+   (click on the (?) icon in the "About" menu and read down 1/2 a page or so.
 
 
 Q7. How do I report a problem?
-A.  Best way is to use the PR (Problem Report) form - it automatically includes a lot of
-    the important information about your ntop instance.  In the "About" menu, click on the
-    "Bug" icon.  This generates a text form you can copy into your email program, update
-    and send.
+A. Best way is to use the PR (Problem Report) form - it automatically includes a lot of
+   the important information about your ntop instance.  In the "About" menu, click on the
+   "Bug" icon.  This generates a text form you can copy into your email program, update
+   and send.
+
 
 Q8. HACK ALERT HACK ALERT - ntop is sending information to some machine called "jake".
-A.  Chill.  Take a deep breath.
+A. Chill.  Take a deep breath.
 
-    Jake is the cannonical name for version.ntop.org.  All you are seeing is the version
-    check.  See "Q. What's with the version check?" below.
+   Jake is the cannonical name for version.ntop.org.  All you are seeing is the version
+   check.  See "Q. What's with the version check?" below.
 
 
-Q9.
+Q9. The program asks for password for "ntop HTTP server". When I started NTOP for the first 
+    time, it asked me to set admin password, and i put "xxxxxxxx". The user is "xxxxxxxxxx"
+    but I get "Unauthorized to access the document". Why?
+A. The correct user to specify for the ntop web server is admin.
+   The -u value in the command line or parameter file is the account ntop runs under.
+
+
 Q10.
  
 --------------------------------------------------------------------------------
@@ -148,10 +151,6 @@ A. SourceForge -- http://sourceforge.net/projects/ntop/
 
    There is also a cvs (current development) maintained at cvs.ntop.org.
    (instructions are on the download page of www.ntop.org)
-
-     DO NOT (under ANY circumstances) USE THE SOURCE FILES FROM 
-     http://snapshot.ntop.org!!!!! They are broken, incomplete and
-     WILL NOT WORK. (See 'snapshot, cvs and the Wiki' below)
 
 
 Q. What is ntop?
@@ -199,12 +198,15 @@ A. mrtg reads the counters maintained by various devices such as routers, using
    mrtg is focused on 'layer 2' (the tcp/ip and other low level protocol).
 
 Q. And ntop?
-A. ntop doesn't use snmp - it's not a device centric view of the network.
-   Instead ntop actually processes the network packets directly.
+A. ntop doesn't use snmp for it's main analysis - it's not a device centric 
+   view of the network.  Instead ntop actually processes the network packets
+   directly.
 
 
 Q. What's wrong with snmp?
-A. Nothing.
+A. Nothing.  As of 3.1, ntop has some sort of snmp plugin.
+
+   It's just different.
 
    snmp is a pull protocol, that is a monitoring tool has to pull the
    information from the device.  snmp has 'traps' that is alert messages which
@@ -337,17 +339,19 @@ A. Not exactly.
 
 
 Q. ntop runs under?
-A. ntop is known to work under Linux, Mac OS X, FreeBSD, OpenBSD (3.4, nothing
-   earlier) NetBSD (with issues) and Win32.
+A. ntop is known to work under Linux, Mac OS X, FreeBSD, Solaris and Win32.
 
-   ntop development is done primarily on RedHat Linux and Mac OS.
+   ntop development is done primarily on Fedora Linux.
 
-   Luca also does a port to Win32 (MS Visual C++) and works in the Sun
+   Luca also does a port to Win32 (MS Visual C++) and used to work in the Sun
    Solaris environment.
 
-   I (Burton) usually work under RedHat Linux, but have a multi-boot system
-   for testing that runs various Linux distros, FreeBSD (4.9 and 5.2),
-   NetBSD, Solaris 8 i86 and OpenBSD.
+   I (Burton) usually work under Fedora Linux, but have a multi-boot system
+   for testing that runs various Linux distros, FreeBSD (4.10 and 5.3)
+   and Solaris 10 i86.
+
+   I could do NetBSD and OpenBSD, but those have big problems and ntop
+   probably won't work.
 
    During the ntop 3.0 development cycle, we did some development and
    testing on various platforms.  Here's data from the version.xml log
@@ -399,12 +403,16 @@ A. ntop is known to work under Linux, Mac OS X, FreeBSD, OpenBSD (3.4, nothing
    pld 1.1; redhat 1, 2.1, 6.2, 7.0, 7.1; slackware 7.1.0, 8.1 and 9.0-beta; 
    suse 6.3, 7.0, 8.0 and 8.1; and yellowdog 3.0.
 
- Running under pretty much any *nix is at least theoretically possible.
- But it takes interested party/parties and access to resources - some of the
- things that ntop does such as libpcap and loading plugins are tied tighter
- to the OS than you might like.
+   With ntop 3.1, the patterns were similar - just reflecting the then current
+   releases (e.g. Fedora Core 2/3 etc.)  Gentoo showed up a bit also.
 
- There are sections below about each specific OS.
+
+Running under pretty much any *nix is at least theoretically possible.
+But it takes interested party/parties and access to resources - some of the
+things that ntop does such as libpcap and loading plugins are tied tighter
+to the OS than you might like.
+
+There are sections below about each specific OS.
 
 
 --------------------------------------------------------------------------------
@@ -496,7 +504,7 @@ A. (A personal peeve from Burton...)
 
 
 Q. Ok, where can I find what does exist.
-A. http://www.ntop.org has pointers and some (dated) documents.
+A. http://www.ntop.org has pointers and some (very out-dated) documents.
 
    The documentation in the docs/ directory, the Documentation files at SourceForge
    and some at http://www.ntopsupport.com are basically all that there is.
@@ -506,11 +514,6 @@ A. http://www.ntop.org has pointers and some (dated) documents.
 
    Please contribute to the ntop community by writing things up for inclusion
    in this FAQ or other documents!
-
-   You can even do this all by yourself at the ntop Wiki, 
-   http://www.burtonstrauss.com/pmwiki/pmwiki.php?pagename=Ntop.HomePage
-   (But note that whether it remains available depends on whether people 
-   contribute)
 
 
 Q. I can't find a file at SourceForge!
@@ -531,7 +534,7 @@ A. Make sure it's a supported release!
 
    We support only the current versions of ntop.  This is either:
 
-       * the last release, e.g. v3.0.
+       * the last release, e.g. v3.1.
        * the current cvs (cvs.ntop.org)
        * the latest development version posted at SourceForge (if one)
 
@@ -745,7 +748,7 @@ A. For the first time you try ./configure, there's a script on SourceForge in
    you.
 
 
-Q. And the OTHER options?
+Q. And the OTHER options
 A. There is a set that tells ntop where to install stuff.  For simplicity,
    the two you might want to change are:
 
@@ -798,6 +801,7 @@ A. These (and the with/without options) pretty much do what you think - they
        --enable-static-plugins     Enable static linked plugins sntop,
                                    default=dynamic]
        --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]
+       --disable-snmp              Disable SNMP support [default=disable]
        --enable-i18n               Enable (limited) internationalization
                                    [default=disabled]
        --enable-showoses           display OS Support information.
@@ -926,17 +930,17 @@ Q. Which packages/libraries do I need to compile ntop:
        gdbm (We have people using 1.7.3, 1.8.0, 1.8.2 and 1.8.3)
 
        libpcap
-          We recommend 0.7.2, but ntop works with most 0.6.x versions. 
-          The newest version, 0.8.x works too - there are ntop fixes since 
-          late 2.2.9x releases for this.
+          We recommend 0.8.3, but ntop works with most 0.7.2 and later versions. 
 
           STAY AWAY from older versions, especially under Linux.
 
           Note: Building libpcap requires: bison/flex
 
 
-       gd (1.8.x - stay away from 2.x development versions)
-          http://www.boutell.com/gd/gd.html
+       gd 
+          http://www.boutell.com/gd/gd.html - note that many distros have both
+          the 1.8.x and 2.x series installed for differnt packages that require
+          them.  This occasionally causes problems.
 
        libpng (1.2.x - although ntop works with 1.0.x versions, the two libpng
               versions are not compatible and will often cause version conflicts
@@ -946,13 +950,17 @@ Q. Which packages/libraries do I need to compile ntop:
 
        cpp
 
-       gcc
-          Note: Both gcc 2.95/2.96 and 3.2/3.3 are reported to work.  Across a lot
-                of software, gcc 3.0 had problems - no clue re ntop.
-          For you folks still running 2.94, I think I fixed all the compile errors,
-          but upgrade for ghu's sake!
+       gcc (versions we know work)
+          Fedora Core 2 - 3.3.3
+          Fedora Core 3 - 
+          RedHat 9 - 3.2.2
+          FreeBSD 4.10 - 2.95.4!
+          FreeBSD 5.3 - 3.4.2
+          Gentoo - 3.3.4
 
-       libtool  1.4+ (distribution with 1.4.2)
+          So most versions of gcc should work, but there are no promisses.
+
+       libtool  1.4+ (distribution is built with 1.4.2)
                      (there are successes reported with 1.3.4 or 1.3.5 -
                       use --enable-iknowbetter)
 
@@ -976,7 +984,7 @@ Q. The auto* tools?
 A. Only if you are going to rebuild the distributed script files:
 
            autoconf 2.5+ (distribution with 2.57)
-           automake 1.6+ (distribution with 1.6.1)
+           automake 1.6+ (distribution with 1.8.3)
 
 
 Q. Optional libraries?
@@ -1004,16 +1012,13 @@ A. First, check if you're using a supported OS.
 
    It works (albeit with severe limitations) on NetBSD.
 
-   It works on OpenBSD 3.4 (only).
-
-   It used to work under MinGW, but that broke after 2.1.3 and we need somebody
-   with some technical skills and an interest in MinGW to fix it.
+   It should work under MinGW - see the BUILD file in docs.
 
    Anything else, you are in untested waters.  Some cases we know there are
    problems, others we just haven't tested.
 
 
-Q. But that was as of 18Aug2003?
+Q. But that was as of Dec2004?
 A. Yes.  For the latest scoop, run ./configure --enable-showoses
 
    ntop will perform the basic ./configure tests (make sure you have a c
@@ -1936,7 +1941,7 @@ A. Are the ntop threads still there?  Use ps to check, for example:
      501 18335 18330 S    00:00:00 Web Server
      501 18336 18330 R    00:00:32 eth1
      501 18337 18330 S    00:00:41 eth2
-i
+
    If you connect to the running ntop via gdb, you can see this:
 
    $ gdb /usr/bin/ntop 18327
@@ -2364,8 +2369,8 @@ A. This MIGHT work:
 
 Q. What are the default protocols ntop monitors?
 A. (These are the ones ntop monitors if the user does not supply a -p parameter)
-   Check addDefaultProtocols() in ntop.c around line 520.
-   The current list (August 2003) is
+   Check addDefaultProtocols() in ntop.c around line 525.
+   The current list (December 2004) is
 
      Protocol   Ports
      --------   -----
@@ -2379,13 +2384,15 @@ A. (These are the ones ntop monitors if the user does not supply a -p parameter)
      DHCP/BOOTP 67-68
      SNMP       snmp snmp-trap
      NNTP       nntp
-     NFS        mount pcnfs bwnfs nfsd nfsd-status
+     NFS/AFS    mount pcnfs bwnfs nfsd nfsd-status 7000-7009
      X11        6000-6010
      SSH        22
      Gnutella   6346 6347 6348
      Morpheus   1214
      WinMX      6699 7730
+     DirectConnect 
      eDonkey    4661-4665
+     BitTorrent 6881-6999 6969
      Messenger  1863 5000 5001 5190-5193
 
    Note that the names come from /etc/services (or your system's equivalent).
@@ -4660,8 +4667,7 @@ A. By default, ntop's Makefile binds the static libmyrrd library to create ntop'
 --------------------------------------------------------------------------------
 
 Q. How do I access netFlow or sFlow data from ntop?
-A. You need to configure ntop as a listener (it can also be a collector, but
-   that data shows up in the receiving interface, not under netFlow/sFlow).
+A. You need to configure ntop as a listener.
 
    First, use the appropriate plugin to set the parameters - basically the port
    you want ntop to listen on.  Then, using the Admin | Set Interface menu item,
@@ -4669,38 +4675,8 @@ A. You need to configure ntop as a listener (it can also be a collector, but
    sFlow-device).
 
 
-Q. Is there any parameter to set to tell sFlow which interface/ip address
-   to use when exporting the flows?
-A. No. All ntop does is send a packet to the network addressed to the
-   destination you request.
-
-   Typically if the ntop host is multihomed, the routing service will pick the
-   the MOST SPECIFIC route with the lowest metric # that is selected.  E.g., if
-   this is the routing table:
-
-   Kernel IP routing table
-   Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-   192.168.2.0    0.0.0.0          255.255.255.0   U     0      0        0 eth0
-   192.168.2.129  0.0.0.0          255.255.255.128 U     0      0        0 eth2
-   192.168.2.146  0.0.0.0          255.255.255.255 U     0      0        0 eth1
-   192.168.2.146  0.0.0.0          255.255.255.255 U     1      0        0 eth2
-   127.0.0.0       0.0.0.0         255.0.0.0       U     0      0        0 lo
-   0.0.0.0         192.168.2.1     0.0.0.0         UG    0      0        0 eth0
-
-   A packet to 192.168.2.146 goes via eth1 (equally specific routes, so it
-   chooses based on the metric 0 vs. 1)
-
-   A packet to 192.168.2.145 goes via eth2  (192.168.2.129/25 is more specific
-   than 192.168.2.0/24)
-
-   A packet to 192.168.2.46 goes via eth0
-
-   A packet to 10.1.1.1 goes via eth0 (the gateway is the least specific route,
-   but it is the best match)
-
-   But how it goes out (and thus the source IP address) is totally up to the OS.
-   Just be aware when it gets to the sflow collector, it might have an
-   unexpected ip address as the source.
+Q. Can I use ntop as a netflow collector.
+A. Not in the current versions - you used to be able, but that code was removed.
 
 
 --------------------------------------------------------------------------------
@@ -4882,9 +4858,10 @@ A. Snapshot was a community FAQ and documentation resource at
 
 
 Q. Is there a community resource that replaces (enhances) snapshot.
-A. Yes. There is now an ntop Wiki at
-     http://www.burtonstrauss.com/pmwiki/pmwiki.php?pagename=Ntop.HomePage
-   Whether it remains available depends on whether people contribute.
+A. Nope.
+
+   There was a Wiki created after 3.0 release.  But the ratio of defacements
+   to community contributions was 2:1.  So I killed it.
 
 
 Q. What was "a snapshot" or "the snapshots"?
@@ -4908,15 +4885,9 @@ A. A snapshot was a dump of the ntop cvs structure, automatically generated
    (releases 2.2b and 2.2c), the development again outpaced the stable version and
    using the cvs again was almost manditory. 
 
-   If the 3.0 release doesn't work, drop by the mailing lists and check the back
+   If the 3.1 release doesn't work, drop by the mailing lists and check the back
    traffic to see if this is a common problem.  If it's not, try the latest
    snapshot or ask for a recommendation of which version is the best to use.
-
-   As with 2.2, we plan to have a cvs branch to allow for 3.0a/b/c
-   releases while 3.1 is being developed (3.1.1, 3.1.2, etc.).
-
-   Note that the ntop_2_2_patches branch broke the snapshot extract script, so
-   snapshots ARE NO LONGER RECOMENDED OR SUPPORTED.
 
 
 --------------------------------------------------------------------------------
@@ -4931,324 +4902,19 @@ A. Obsolete code is code that is no longer being maintained nor part of ntop,
 
    Code in obsolete/ IS NOT MAINTAINED, even minimally.
 
-   Specifics?  (As of June 2002)
-
-       Various programs and functions which supported "rules" were determined to
-       be obsolete were removed from ntop in late March 2002. This included a
-       substantial number of lines of code, which was simply removed. Entire
-       modules were placed into the obsolete/ directory.
-               ntop-rules.8
-               event.c
-               rules.c
-               rules.h
-               rules.sample
-
-       Various plugin programs, which were no longer being supported, were
-       removed from ntop in late March 2002. These entire modules were placed
-       into the obsolete/ directory.
-               wapPlugin.c
-               rmon.h
-               rmonPlugin.c
-
-       Various lines of code (totaling a substantial number, widely scattered
-       Throughout ntop), which had provided compile-time selectable support
-       (#define ENABLE_NAPSTER) for analysis of the (late) Napster protocol were
-       removed on 4Apr2002.  
-
-
-Q. I get an error, libtool: link: CURRENT `-release' is not a nonnegative
-   integer
-A. This is an autoconf problem.  It should be fixed. 
-   The whole set of messages is typically:
-
-   [...]
-   > libtool: link: CURRENT `-release' is not a nonnegative integer
-   > libtool: link: `-release' is not valid version information
-   > make[2]: *** [libntop.la] Error 1
-   > make[2]: Leaving directory `/usr/local/src/ntop'
-   > make[1]: *** [all-recursive] Error 1
-   > make[1]: Leaving directory `/usr/local/src/ntop'
-   > make: *** [all-recursive-am] Error 2
-
-   From Luca:
-
-       "AFAIK this is a bug of autoconf that's not able to expand some macros,
-        namely those that contain the version number. The workaround is to
-        downgrade to the previous autoconf version."
-
-       Workarounds:
-       - downgrade to a stable autoconf version
-       - edit all the ntop Makefile(s), add "0:0:0" behind any
-         occurrence of "version-info" and "2.0" behind
-         "-release".
-
-
-   Other Solutions:
-
-   1) Burton posted a personal patch to do the above for Makefile.am on
-      Thu Dec 20 2001 - "Compile problems with -release". Check the ntop-dev
-      archive.
-
-   2) Older versions (e.g. Slackware 7.xx) of Linux installations have older
-      versions of automake, which don't exhibit the bug.
-
-   3) (Sean O'Neill) "I cheated a bit and hacked libtool by changing the
-      following"
-
-        current="$2"
-          to
-        current=0
-
-    4) The new ./configure scripts - call it versions after Nov2002 - fix this.
-
-
-Q, How to Build the (obsolete) RMON plugin
-A. Without any guarantees...
-
-    0) Please do NOT use a precompiled UCD package unless you know what you're
-       doing.
-
-    1) Fetch UCD-SNMP [See http://net-snmp.sourceforge.net/developer.html]
-
-    2) Compile the stuff as specified as follows :
-        [see also http://net-snmp.sourceforge.net/tutorial/toolkit/demon/]
-    > ./configure --with-mib-modules="agentx"
-    > make
-    > make install
-
-    3) Once you this stuff ready you can build the ntop/RMON plugins.
-
-    4) Now start ntop.
-
-    5) The ntop/RMON plugin listens on port 161 (the default SNMP port).
-        If you want to test the agent you can use the 'tkMib' tool that comes
-        with UCD-SNMP [see http://net-snmp.sourceforge.net/tkmib.jpg].
-
-   NOTE: If you use tkMib do not forget to do "setenv MIBS ALL" (csh shells),
-         otherwise you won't see the RMON MIB.
-
-   How to Build the RMON plugin (bis) created 04/03 2002 by pierlo
-
-   The following works with :
-     - ntop v.2.0.1
-     - UCD-SNMP v.4.2.3
-     - openSSL v.0.9.6c
-
-     0. Requirements
-     * Make sure that ntop works properly
-
-     * Make sure that openSSL & openSSL libraries are correctly installed
-       (no WARNING when ntop is started !). If not, download and install
-       the latest versions)
-
-     * fetch & install UCD-SNMP :
-     tar -xvzf XXXXX.tar.gz
-     ./configure --enable-shared
-     make
-     umask 022
-     make install
-
-     1. uncomment lines around 474 and 1035 in configure.in file :
-
-     dnl>OPTIONAL UCD-SNMP
-     dnl>AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h)
-     (...)
-     dnl> check for `UCD-SNMP' library by University of California
-         [http://ucd-snmp.ucdavis.edu]
-     dnl>AC_CHECK_LIB(ucdagent, register_mib, [AC_DEFINE(HAVE_SNMP) 
-           SNMPLIBS="-L/usr/local/lib -lsnmp -lucdagent -lucdmibs"],
-           , -lsnmp -lucdagent -lucdmibs $LIBS $MORELIBS)
-
-     (remove the dnl> from the AC_ lines)
-
-     * in /ntop/plugins/rmonPlugin.c file, replace :
-
-     line 702 approx. : droppedPackets with droppedPkts
-     (there is only one occurence, so it may not be difficult to find)
-
-     line 676 approx. :
-     if (header_simple_table (vp,name,length,exact,var_len,
-          write_method,numDevices)
-
-     with :
-
-     if (header_simple_table(vp,name,length,exact,var_len,
-          write_method,myGlobals.numDevices)
-
-     and :
-
-     long_ret = (long)(device[ifNum]
-
-     with
-
-     long_ret = (long)(myGlobals.device[ifNum]
-
-     (lines 690 to 782 approx., about 13 occurences to change)
-
-     2. launch /ntop/autogen.sh -1
-
-     3. launch /ntop/configure
-
-     Be sure that :
-
-     * there is no warning about openSSL libraries !
-
-     * the following checks are successful :
-     " Step 4. Looking for both required and optional system headers....
-     (...)
-     checking for ucd-snmp/ucd-snmp-agent-includes.h... yes"
-     (...)
-
-     "Step 7. Looking for optional GPLed libraries....
-     (...)
-     checking for register_mib in -lucdagent... yes"
-
-     -> NO warning about openSSL libraries here ! If any trouble,
-     check config.log file, which may help to get round the problem...
-     Looking at ls.so.conf file and checking libraries pathes may also be
-     helpful.
-
-     3. edit /ntop/plugins/Makefile : replace every ocurence of "icmpPlugin"
-        with "rmonPlugin".
-
-     4. Launch /ntop/plugins/make
-
-     5. Theoretically, RMON plugin is built and is ready to work ! If you have
-        a error message like "undefined symbol..." when ntop started...
-        I don't know how to fix it.
-
-     Hope I didn't forget anything... Have fun !
-
-     P-L.
-
-
-Q. I don't understand -j | --border-sniffer-mode
-A. Welcome to the club <grin />
-
-   Quoting from Luca's comment:
-
-   "-j is used when you are starting ntop on a mirrored interface where you
-   cannot trust MAC addresses."
-
-   ntop uses MAC addresses for many things to differentiate among machines.
-   IP addresses and names can mean many things, but hardware addresses are
-   supposed to be unique.  This is usually true, but gets hairy when you
-   introduce a switch into the network which is also copying all of the
-   packets it sees to a monitoring port.
-
-   Understand how a switch works: In short, a switch monitors the network it
-   sees and knows which mac address(es) are on which ports.  When it received a
-   packet, it forwards it to only that port. Broadcasts are forwarded to all
-   ports.
-
-   So an ntop instance, sniffer, whatever only sees a fraction of the traffic.
-
-   In many managed switches, there is an option for a "repeater" or "monitoring"
-   or "spanned" port, which receives all traffic, so that network monitoring can
-   be performed there.
-
-   However, When the switch sends out packets on the monitoring port, it must
-   rewrite them to be valid Ethernet packets with a valid (i.e. the switch's)
-   MAC address and ntop gets confused.
-
-   Note that:
-
-   1. -j usually requires you to specify the local network (-m) as a mirrored
-      interface might have a wrong/ip-less/privare IP address.
-
-   2. -j disables some features as TCP session tracking etc.
-
-   In future versions -j will disappear and it will be replaced with more flags
-   for better controlling all these options.
-
-   With multiple switches in a hierarchy, you have to place the ntop instance
-   or instances carefully, depending upon what you want to monitor.
-
-   For example, most lans have a switch in each area with its uplink connected
-   to a backbone switch.  Servers and gateways are then placed off one or more
-   backbone ports.  This keeps departmental traffic isolated from each other,
-   while making enterprise wide and inter-department traffic feasible.  ntop
-   would have to be monitoring the backbone switch, but you would need to be
-   aware of what ntop is NOT seeing and place additional monitors.
-
-   For example, you could place additional ntop instances in the departments,
-   using the netflow or sFlow plugins to receive flow information from them
-   which wouldn't be visible to the backbone instance. (I'll note that I haven't
-   actually tried this, myself. -----Burton)
-
-
-Q. When I run with -j | --border-sniffer-mode, there are different menus.
-A. Yes.
-
-   The menus are just html files.  There is a set for regular mode and a
-   j_xxx.html set for border sniffer mode.  Why?  Because there are things
-   that simply don't work in border-sniffer-mode, so why let the user
-   request those pages.
-
-
-Q. OK, but it changed after 2.1.2 (i.e. in 2.1.50) what are the NEW parameters?
-A. There were four new parameters introduced when -j | --border-sniffer-mode
-   was removed.  Whether the old parameter really did all the same things as
-   the new ones is irrelevant and left to code-archeologists.  What matters
-   is what the new ones are and what they do!
-
 
 Q. What was the -S option?
 A. The -S option was the --store-mode option, or the "Persistent storage mode"
    Ntop's internal structures are basically an array of devices (network
    interfaces), which contains an array of hosts (specific machines seen on the
-   device.
-
-   So device[0] is the 1st network interface, and device[2] the third.
-   device[0].host[0] would be, say, the local file server and device[0].host[1]
-   would be a simple host. device[1].host[1] is a completely different set of
-   counts from device[0].host[1].
-
-   The -S options tells ntop to store information about a specific host in a
-   database from run to run (-S 0 none, -S 1 all and -S 2 only local hosts).
-
-   This is only the count information about the host and does not store the
-   information about a device (a network interface). Further, items of
-   dynamically allocated storage (the devices name) are not stored.
-
-   Data is retrieved on a subsequent run ONLY when traffic is seen from that
-   host after the restart.  (I suppose you could script a ping to each host you
-   care about and force the reload that way, but it hasn't been tested...)
-
-   So if you go into the host details (e.g. the 192.168.1.1.html page) you
-   should see prior-run information.
-
-   But if you're looking for device throughput to be preserved... nope...
-
-   Also, ntop stores the information during 1) reset and 2) shutdown. So if ntop
-   crashes, the persistent data will be lost.
+   device.  The -S option told ntop to store information about hosts in a 
+   database where it could be retrieved on a subsequent run.
 
    This option was removed from ntop in the 2.1.52 development version.
 
 
-Q. What was the -A option, a/k/a --accuracy-level?
-A. This option was used to set ntop into various modes which performed less
-   processing, in order to handle higher traffic volumes.
-
-   It was added on 14Dec2001 (just before v2.0) and was removed on 11Mar2002,
-   although traces survived in usage() until April 2002.
-
-   Note that the CODE remains in initialize.c for use by EXPERTS if necessary.
-
-
-Q. What was the --no-admin-password-hint option?
-A. This option was used to remove the hint text from the administrative password
-   entry message box.
-
-   It was added 4Feb2002 and removed 8Mar2002 (the last traces, in usage(), were
-   removed on 4Apr2002).
-
 --------------------------------------------------------------------------------
 -----Solaris--------------------------------------------------------------------
-                                        During the ntop 2.2 development cycle,
-                                        we did development/testing under:
-                                           Solaris 2.5, 7 and 8 (i86)
-
                                         During the ntop 3.0 development cycle,
                                         we did development/testing under:
                                            Solaris 8 (i86) and 9
@@ -5282,15 +4948,6 @@ A. Always remember to use gnu make.
 
 --------------------------------------------------------------------------------
 -----BSD - FreeBSD--------------------------------------------------------------
-                                        During the ntop 2.2 development cycle,
-                                        we did development/testing under:
-                                           4.6.3
-                                           5.0
-
-                                        Users reported success with:
-                                           4.7
-                                           4.8
-
                                         During the ntop 3.0 development cycle,
                                         we did development/testing under:
                                            4.8 and 4.9
@@ -5344,7 +5001,8 @@ A. Yes.  See FreeBSD bug bin/17437 at
    However - ntop ran for years without the pthread_atfork() code, so we're
    no worse off in 3.0 under FreeBSD than in 2.2 or 2.1...
 
-   There was a flurry of problems late in the 3.0 development cycle having to
+Q. The web server problem?
+A. There was a flurry of problems late in the 3.0 development cycle having to
    do with a seeming deadlock of the ntop web server (it's actually not dead,
    just walking at about 0.001KPH).
 
@@ -5356,6 +5014,42 @@ A. Yes.  See FreeBSD bug bin/17437 at
    For more on this, read the threads at gmane - look for "FreeBSD and pthreads" - 
    that's probably the best summary.  But there's stuff on this back at least to 
    October 2003 - look for Stanley's problems with CPU usage.
+
+A. With 3.1, we should be automatically setting this under FreeBSD and nowhere
+   else.  So it should be sort of automatic.  If you like to live dangerously,
+   you can try using the web configuration page to DISABLE the option under
+   FreeBSD.
+
+   One of three things will happen:
+
+   1. ntop runs fine.
+   2. The webserver runs slowly at first.
+   3. The web server hangs.
+
+   #1: Congratulations, you are running on a system which doesn't actually have
+   the bug.  We would love to know the precise version of FreeBSD - the best way
+   is to run cpp -dM and tell use the value for 
+
+       #define __FreeBSD_cc_version 
+
+   #2: Expected.  There's some further special case coding in the ntop web
+   server to decrease the pcap_dispatch() timeout.  This lets the web server
+   work throught it's angst faster.
+
+   #3: This is really #2, you just don't have enough patience to way the minutes,
+   hours or days it takes for the first web server page to come up.
+
+   In cases #2 or #3, just go back to using --set-pcap-nonblocking.
+
+A. Also, understand that --set-pcap-nonblocking is going to increase ntop's
+   cpu usage.  It will probably come close to pegging the CPU at 100%.  Yet
+   strangely other processes won't seem to be impacted. (Of course, you really
+   should be running ntop on it's own host, anyway, right?).
+
+   This is because of how the work-around is coded. ntop should step aside
+   briefly and let them run.
+
+   Just be aware of it and don't ask on the mailing lists.
 
 
 Q. Um... something about bad fds?
@@ -5387,8 +5081,8 @@ Q. So?
 A. 3.1 - I could never make it work.  Problem seems to be that the gnu tools such
    as ld don't support a.out systems very well.
 
-A. 3.4 - Should work.  Julien Touche <julien.touche@lycos.com> sweated buckets
-   to make this work and reported that it did in January 2004.
+A. 3.4 - Julien Touche <julien.touche@lycos.com> sweated buckets to make it work
+   with partial success, but ultimately it didn't work.
 
 
 --------------------------------------------------------------------------------
@@ -5450,7 +5144,7 @@ A. When RH9 came out with NPTL, we had lots of problems.  NPTL is much closer
    to POSIX threads, but very different from the old linuxthreads.  At the same
    time, we had problems with the glibc 2.3.x (vs. 2.2.x) update.
 
-   By the end of the development cycle, a couple of memory management fixes
+   By the end of the 3.0 development cycle, a couple of memory management fixes
    seem to have made the NPTL/glibc problems go away.  But if they're still out
    there, they are quite nasty.  Random unexplained BOMBs and such.
 
@@ -5704,26 +5398,8 @@ A. The .exe distributed through ntop.org is built with Visual C++ 6.0.
 
 
 Q. Does ntop (v3.0) work under MinGW?
-A. No - There are problems with versions of ntop after 2.1.3 under MinGW -
-   it won't build.
-
-
-Q. When I type 'make' it complains about a makefile error.
-A: Remember to use -f Makefile.MinGW or whatever is appropriate - see
-   BUILD-MinGW.txt.
-
-
-Q. Mingw make of Ntop fails when using the single-file distribution
-   MinGW-1.1.tar.gz with make errors about version.c like :
-    zsh: no matches found: *version
-    make: *** [version.c] Error 1
-A. Be sure that your PATH setting in the DOS command box of the Mingw bin
-   directory ends with a backslash.
-    This is OK:
-        set path=C:\Mingw\bin\;%path%
-    This is wrong:
-        set path=C:\Mingw\bin;%path%
-                             ^
+A. Yes (I think) -  During the 3.1 development cycle changes were made to
+   support MinGW and it should again work - see docs/BUILD-MinGW.txt
 
 
 --------------------------------------------------------------------------------
@@ -5900,6 +5576,8 @@ ntop-dev is for code and development questions.  The ntop-dev list goes to fewer
 people, those who have self-selected themselves to be interested in ntop at the
 code level.
 
+ntop-misc is for other products - nProbe, nBox, PF_RING, etc.
+
 Discussions about the current cvs version belong in ntop-dev.
 
 If a discussion gets too technical, you may be asked to "move it to ntop-dev".
@@ -6073,6 +5751,13 @@ The actual flow of ntop development was 2.1 -> 2.1.1 -> 2.1.2 -> 2.1.50
 
 The actual flow of ntop development was 2.2.1..4 ->
                                     -> 2.2.90..99 -> 3.0pre1 -> 3.0
+
+3.1
+===
+
+The actual flow of ntop development was 3.0.50.. ->
+                                    -> 3.0.50.. -> 3.1rc1 -> 3.1
+
 
 
 FEE-BASED SUPPORT
