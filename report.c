@@ -2885,9 +2885,6 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	    idx++;
 	  }
 	}
-#ifdef CFG_MULTITHREADED
-	releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
 	quicksort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
 
@@ -2915,6 +2912,9 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	  }
 	} /* for */
 
+#ifdef CFG_MULTITHREADED
+	releaseMutex(&myGlobals.gdbmMutex);
+#endif
 	free(ipPorts);
 	sendString("</TABLE>"TABLE_OFF"<P>\n");	
       }
