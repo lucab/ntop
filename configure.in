@@ -388,6 +388,16 @@ AC_HAVE_HEADERS(pwd.h stdio.h errno.h stdlib.h unistd.h string.h signal.h fcntl.
 dnl> MANDATORY the GNU database manager gdbm
 AC_HAVE_HEADERS(gdbm.h)
 
+
+if test "$ac_cv_header_gdbm_h" = no ; then
+    AC_MSG_RESULT([             *** FATAL ERROR ***             ])
+    AC_MSG_RESULT([ It looks that you don't have some files needed to use the GDBM library.])
+    AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
+    AC_MSG_RESULT([ When finished please re-run this program.])
+    AC_MSG_ERROR([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
+fi
+
+
 dnl> OPTIONAL general purpose headers
 AC_CHECK_HEADERS(sys/select.h sys/ldr.h sys/sockio.h dl.h dirent.h dlfcn.h)
 
