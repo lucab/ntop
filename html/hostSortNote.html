@@ -1,106 +1,107 @@
-<!DOCTYPE html public "-//W3C//DTD HTML 4.01 Transitional//EN"><!-- ntop v3.0 release, Burton Strauss, Feb2004 -->
-<HTML>
-<HEAD>
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN"><!-- ntop v3.0 release, Burton Strauss, Feb2004 -->
+<html>
+<head>
 <!-- Validates as HTML 4.01 Transitional with the addition of the following tag -->
-<!--
-<META http-equiv="Content-Type" content="text/html; charset=utf-8">-->
-<META http-equiv="Expires" content="0">
-<META http-equiv="Pragma" content="no-cache">
-<META http-equiv="Content-Style-Type" content="text/css">
-<META http-equiv="Window-target" content="_top">
-<META name="ROBOTS" content="NOINDEX,NOFOLLOW">
-<META name="description" content="ntop (http://www.ntop.org) status for a network.">
-<META name="author" content="ntop">
-<META name="generator" content="ntop v3.0"><LINK rel="stylesheet" type="text/css" href="style.css">
-<TITLE>About sorting of 'host' and 'domain'</TITLE>
-</HEAD>
-<BODY background="white_bg.gif" bgcolor="#FFFFFF" link="blue" vlink="blue">
-<P>&nbsp;</P>
-<CENTER>
-<H2><FONT face="Helvetica, Arial, Sans Serif">About sorting of 'host' and 'domain'</FONT></H2>
-</CENTER>
-<CENTER>
-	<TABLE border="1" cellspacing="0" cellpadding="2">
-		<TR bgcolor="#E7E9F2">
-			<TH>Host&nbsp;
-                         <IMG src="/arrow_down.gif" border="0" alt="Descending order">
-			</TH>
-			<TH>	Domain
-			</TH>
-			<TH>	IP&nbsp;Address
-			</TH>
-			<TH>	MAC&nbsp;Address
-			</TH>
-			<TH>etc.
-			</TH>
-		</TR>
-		<TR>
-			<TH align="LEFT" nowrap width="250">	paintedlady.burtonstrauss.us
-			</TH>
-			<TD align="RIGHT" nowrap>	&nbsp;
-			</TD>
-			<TD align="RIGHT">	192.168.xxx.xxx
-			</TD>
-			<TD align="RIGHT">	00:01:03:xx:xx:xx
-			</TD>
-			<TD rowspan="5">&nbsp;</TD>
-		</TR>
-		<TR>
-			<TH align="LEFT" nowrap width="250">	pooh
-			</TH>
-			<TD align="RIGHT" nowrap>	&nbsp;
-			</TD>
-			<TD align="RIGHT">	192.168.yyy.yyy
-			</TD>
-			<TD align="RIGHT">	00:60:97:yy:yy:yy
-			</TD>
-		</TR>
-		<TR>
-			<TH align="LEFT" nowrap width="250">www.burtonstrauss.com
-                         <IMG alt="OS: Linux" align="middle" src="/statsicons/os/linux.gif">&nbsp;
-                         <IMG src="/web.gif" border="0" alt="HTTP Server">
-			</TH>
-			<TD align="RIGHT" nowrap>	&nbsp;
-			</TD>
-			<TD align="RIGHT">	217.160.zzz.zzz
-			</TD>
-			<TD align="RIGHT">	&nbsp;
-			</TD>
-		</TR>
-		<TR>
-			<TH align="LEFT" nowrap width="250">3COM CORPORATION:aa:aa:aa
-                         <IMG src="/card.gif" border="0" alt="Network Card">
-			</TH>
-			<TD align="RIGHT" nowrap>	&nbsp;
-			</TD>
-			<TD align="RIGHT">	&nbsp;
-			</TD>
-			<TD align="RIGHT">	00:10:4B:aa:aa:aa
-			</TD>
-		</TR>
-		<TR>
-			<TH align="LEFT" nowrap width="250">00:60:97:bb:bb:bb
-                         <IMG src="/card.gif" border="0" alt="Network Card">
-			</TH>
-			<TD align="RIGHT" nowrap>	&nbsp;
-			</TD>
-			<TD align="RIGHT">	&nbsp;
-			</TD>
-			<TD align="RIGHT">	00:60:97:bb:bb:bb
-			</TD>
-		</TR>
-	</TABLE>
-<P></CENTER>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Window-target" content="_top">
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<meta name="description" content="ntop (http://www.ntop.org) status for a network.">
+<meta name="author" content="ntop">
+<meta name="generator" content="ntop v3.0"><link rel="stylesheet" type="text/css" href="style.css">
+<title>About sorting of 'host' and 'domain'</title>
+</head>
+<body background="white_bg.gif" bgcolor="#FFFFFF" link="blue" vlink="blue">
 <p>&nbsp;</p>
+<center><h2><font face="Helvetica, Arial, Sans Serif">About sorting of 'host' and 'domain'</font></h2></center>
+<center>
+<p><!-- Drop edited output from hostsInfo.html here -->
+	<table border="1" cellspacing="0" cellpadding="2">
+		<tr bgcolor="#E7E9F2">
+			<th>	Host
+			</th>
+			<th>	Domain&nbsp;<img src="/arrow_down.gif" border="0" alt="Descending order, click to reverse">
+			</th>
+			<th>	IP&nbsp;Address
+			</th>
+			<th>	MAC&nbsp;Address
+			</th>
+			<td rowspan="7">Other<br>columns<br>of<br>data<br>...
+			</td>
+		</tr>
+		<tr>
+			<th align="left" nowrap width="250">	192.168.xxx.1
+			</th>
+			<td align="center">	Local<!-- RFC1918 -->
+			</td>
+			<td align="RIGHT">	192.168.xxx.1
+			</td>
+			<td align="RIGHT">	00:E0:18:xx:xx:xx
+			</td>
+		</tr>
+		<tr>
+			<th align="left" nowrap width="250">	pooh
+			</th>
+			<td align="center">	Local<!-- RFC1918 -->
+			</td>
+			<td align="RIGHT">	192.168.xxx.2
+			</td>
+			<td align="RIGHT">	00:60:97:xx:xx:xx
+			</td>
+		</tr>
+		<tr>
+			<th align="left" nowrap width="250">	xmlrpc.rhn.redhat.com<img src="/Risk_low.gif" border="0" alt="Low Risk">
+			</th>
+			<td align="center"><img alt="Flag for (ISO 3166 code) us (from p2c file)" align="middle" src="/statsicons/flags/us.gif" border="0">
+			</td>
+			<td align="RIGHT">	66.187.232.101
+			</td>
+			<td align="RIGHT">	&nbsp;
+			</td>
+		</tr>
+		<tr>
+			<th align="left" nowrap width="250">	www.ford.com
+			</th>
+			<td align="center"><img alt="Flag for (ISO 3166 code) us (from p2c file)" align="middle" src="/statsicons/flags/us.gif" border="0">
+			</td>
+			<td align="RIGHT">	136.1.240.21
+			</td>
+			<td align="RIGHT">	&nbsp;
+			</td>
+		</tr>
+		<tr>
+			<th align="left" nowrap width="250">	www.ford.co.uk
+				<td align="center"><img alt="Flag for (ISO 3166 code) us (from p2c file)" align="middle" src="/statsicons/flags/us.gif" border="0">
+				</td>
+			</th>
+			<td align="RIGHT">	136.8.154.16
+			</td>
+			<td align="RIGHT">	&nbsp;
+			</td>
+		</tr>
+		<tr>
+			<th align="left" nowrap width="250">	3COM CORPORATION:E2:DB:06
+			</th>
+			<td align="center">	&nbsp;<!-- stat(***) failed -->
+			</td>
+			<td align="RIGHT">	&nbsp;
+			</td>
+			<td align="RIGHT">	00:10:4B:E2:DB:06
+			</td>
+		</tr>
+	</table>	<!-- End hostsInfo.html --></p></center>
+<p>&nbsp;</p><h3>Hosts</h3>
 <p>The 'hosts' column is actually a composite of many items of information tracked and 
 discovered by <b>ntop</b> for display.  This field contains the best information we have 
 as to the <i>name</i> of a host, be that a DNS resolved name, an IP address, a 
 MAC address or something else.</p>
-<p>Because it is a composite, a simple alphanumerical sort (0, 1, 2, 3 ... a, b, c ...) 
+<p>Because it is a composite, a simple alphanumeric sort (0, 1, 2, 3 ... a, b, c ...) 
 is not used. It is perfectly normal, and correct, to see - as in the example above - a 
 host 'name' beginning with "w", such as www.burtonstrauss.com followed by one beginning 
 '3COM', which is normally earlier in an alphanumeric sort. The first level of sorting is 
-by the type of the item and the second is alphanumerical (or numerical or whatever
+by the type of the item and the second is alphanumeric (or numerical or whatever
 makes sense) within types.</p>
 <p>This means - for example within an ascending sort - that all DNS names will be in 
 alphabetical order. Following the DNS names comes IP addresses (sorted in numerical 
@@ -110,10 +111,9 @@ After IP addresses come other types of items in sequences appropriate to their t
 <p>The actual value displayed in the hosts column may be further processed as part of 
 creating the actual html link. These affect the displayed value, but NOT the sort sequence.</p>
 <p>The most visible of these changes is that all MAC addresses are NOT sorted as their native
-48-bit quantities.  There are cases where <B>ntop</B> recognizes a special MAC code (such 
+48-bit quantities.  There are cases where <b>ntop</b> recognizes a special MAC code (such 
 as Spanning Tree Bridge) or recognizes the vendor code from the 
-<a href="http://standards.ieee.org/regauth/oui/index.shtml" 
-  title="Off-site link to IEEE OUI download/query page">IEEE OUI</a>
+<a href="http://standards.ieee.org/regauth/oui/index.shtml" title="Off-site link to IEEE OUI download/query page">IEEE OUI</a>
 (Organizational Unique Identifier) list and adjusts the displayed information.
 These adjusted names will appear followed by the last 24 (unique) bits, e.g. as 3COM 
 CORPORATION:ff:ff:ff, and are sorted without regard to upper and lower case, so that all 
@@ -125,19 +125,127 @@ of their 48-bit values.
 Note that if the actual 48-bit value not displayed, it is visible as a tooltip (title)
 by hovering the mouse over the link.</p>
 <p>&nbsp;</p>
-<p>Finally, it is possible for items to be listed (and thus sorted, before <B>ntop</B> has come
+<p>Finally, it is possible for items to be listed (and thus sorted, before <b>ntop</b> has come
 to a final decision about the 'name'. These items are sorted last, based on the underlying 
-fields <B>ntop</B> maintains about each host. This can look 'odd' - wait a minute or so and 
+fields <b>ntop</b> maintains about each host. This can look 'odd' - wait a minute or so and 
 resort - things should clear up.</p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><h3>Domain</h3>
 <p>A similar situation applies to sorting the 'Domain' column.  This column is sorted
-in alphabetic sequence of the two character ISO 3166 code (US for United States, CA for
-Canada, DE for Germany, etc.), followed by entries using the RFC 1918 addresses 
-(10.0.0.0/8, 176.16.0.0/16 and 192.168.0.0/16).  Domains which are equal are sorted by the
-host value as a fall-back, to which the above caveats apply.</p>
-<p>The domain column too is not immediately set, and so the domain column sort may be 
-'odd' in appearance.  You have seen this effect if you have noticed that it may take
-a while for the flags to appear in the column.  The fall-back for the domain column
-is the 'host' column, so this may not help until the data stablizes.</p>
-</BODY>
-</HTML>
+in alphabetic sequence of the two character 
+<a href="http://www.iso.ch/iso/en/prods-services/iso3166ma/">ISO 3166</a>
+code (e.g. US for United States, CA for
+Canada, DE for Germany), followed by <i>local</i> entries.
+<p>A flag value of <i>local</i> shows that the IP address is part of the 
+RFC 1918 
+(<a href="http://www.faqs.org/rfcs/rfc1918.html">http://www.faqs.org/rfcs/rfc1918.html</a>)
+"Address Allocation for Private Internets") address ranges, 10.0.0.0/8, 176.16.0.0/16 and 
+192.168.0.0/16.
+These are typically addresses assigned by a LAN, corporate or ISP's DHCP server to enable 
+NAT (Network Address Translation, as defined by 
+<a href="http://www.faqs.org/rfcs/rfc1631.html">http://www.faqs.org/rfcs/rfc1631.html</a>).</p>
+<p>Domains which are equal are sorted - as fall-backs - by 1) the full domain name (i.e. stripped of the 1st 
+qualified) and then 2) the host value.</p>
+<p>Unfortunately, the fall-back criteria are also not immediately set, and so the domain column
+sort may be 'odd' in appearance until the data stabilizes.  You have seen this effect if you have 
+noticed that at first domain entries seem out of sequence and that it may take
+a while for the flags to appear in the column.  This is annoying but perfectly normal.</p><h3>But the flag data is wrong!!!!</h3>
+<p>You will notice that there may not be much correlation between the last qualifiers 
+(e.g. .com or .co.uk) and the country flag shown.  This is because <b>ntop</b> uses
+data from  various sources to map an IP address such as 141.113.96.150 to it's physical location.
+And, frankly, their data isn't very good.</p>
+<p>The primary source are the regional number registries:</p>
+	<ul>
+		<li>APNIC, <i>Asia Pacific Network Information Centre</i> at http://www.apnic.net</li>
+		<li>ARIN, <i>American Registry for Internet Numbers</i> at http://www.arin.net</li>
+		<li>LACNIC, <i>Latin American and Caribbean Internet Addresses Registry</i> at http://www..net</li>
+		<li>RIPE, <i>R&eacute;seaux IP Europ&eacute;ens</i> at http://www..net</li>
+	</ul>
+<p>We also include Tier 1 registry data from Cable &amp; Wireless - because the registry data 
+at the regional registries is so messed up.  Similar data might be available for other Tier 1 
+ISPs - tracking down the files is the hard part - start the search at 
+http://www.irr.net/docs/list.html and/or RADB - ftp.radb.net.</p>
+<p>Still - this data is often wrong or incomplete.  Perhaps more frequently, a web site is 
+hosted somewhere different than you might think or is distributed
+around the world (and you are seeing a local mirror) or is part of a private block, where
+the subdivisions are simply not known.</p>
+<p>For example, Ford.com makes sense tagged as "US" since that's where Ford's headquarters is 
+located.  However ford.co.uk, also "US", seems odd.
+If one looks up the ip address, you find that the entire block is assigned to Ford Motor Company
+with a US address:
+<pre>02/28/04 09:48:05 IP block 136.8.154.16
+Trying 136.8.154.16 at ARIN
+Trying 136.8.154 at ARIN
+
+OrgName:    Ford Motor Company 
+OrgID:      FORDMO
+Address:    P.O. Box 2053, RM E-1121
+City:       Dearborn
+StateProv:  MI
+PostalCode: 48121-2053
+Country:    US
+
+NetRange:   136.1.0.0 - 136.140.255.255 
+CIDR:       136.1.0.0/16, 136.2.0.0/15, 136.4.0.0/14, 136.8.0.0/13, 136.16.0.0/12, 136.32.0.0/11, 136.64.0.0/10, 136.128.0.0/13, 136.136.0.0/14, 136.140.0.0/16 
+NetName:    FORD-NETS
+NetHandle:  NET-136-1-0-0-1
+Parent:     NET-136-0-0-0-0
+NetType:    Direct Assignment
+NameServer: DNS004.FORD.COM
+NameServer: DNS003.FORD.COM
+Comment:    
+RegDate:    1989-08-22
+Updated:    1999-12-01
+
+TechHandle: ZF4-ARIN
+TechName:   Ford Motor Company 
+TechPhone:  +1-313-390-7095
+TechEmail:  dnsadmin@ford.com 
+
+# ARIN WHOIS database, last updated 2004-02-27 19:15
+# Enter ? for additional hints on searching ARIN's WHOIS database.</pre>
+If you then look in <b>ntop</b>'s p2c table, you find:
+<pre>US:136.1.0.0/16</pre>
+Mystery solved.  ARIN allocated the block to a US company, so that's what ARIN
+lists the allocation as.</p>
+<p>Could <b>ntop</b> do better - yes, but only with knowledge of the 
+(non-public) internal division of Ford's address block. If you have that knowledge
+and it is important to you, then create a private p2c table.  If you do a</p>
+<pre>make p2ctable</pre>
+<p>in the <b>ntop</b> source directory, you invoke the <i>utils/p2c</i> script, which
+downloads the raw data from the registries and builds a new p2c file.  It also has
+the capability for adding 'manual' override information via files named manual.something.
+For example, if you created a file manual.ford:</p>
+<pre>ford|UK|ipv4|136.8.154.0|256|</pre>
+<p>and rebuild the p2c file, that breakdown of Ford's range would now be reflected in
+the country flags.</p>
+<p>The manual file format is</p>
+<pre><i>name|countrycode|ipv4|address|number of addresses</i></pre>
+<p>Where 
+<i>name</i> can be anything you want, 
+<i>countrycode</i> must be 1, 2 or 3 characters and 
+is used to create the IMG tag for the flag shown, i.e. xxx.gif,
+<i>ipv4</i> is the constant 'ipv4', 
+<i>address</i> is a numeric IP address
+and 
+<i>number of addresses</i> is, well, the number of sequential addresses this
+applies to.
+Thus the line says that addresses from 136.8.154.0 - 136.8.154.255 are located in
+the UK.  Check the rebuilt table and there it is:</p>
+<pre>US:136.4.0.0/14
+US:136.8.0.0/13
+UK:136.8.154.0/24
+US:136.16.0.0/12
+US:136.32.0.0/11</pre>
+<p>Is that correct?  Who knows.  But it's a good example.</p>
+<p>Another 'clever' thing you could do is to override ARIN's data with these lines:</p>
+<pre>ford|FMK|ipv4|136.1.0.0|9175040|
+ford|FMC|ipv4|136.8.154.0|256|</pre>
+
+(9175040 represents 140 * 256 * 256 which is the size of the Ford block)</p>
+<p>Now if you create fmc.gif and fmk.gif - perhaps the Ford and Ford/UK flags, those are what
+will show up under 'domain'.</p><h3>Tiny flags</h3>
+<p>There are plenty of sets of better/larger/more detailed flags.  As long as they're named according
+to the ISO 3166 code (e.g. us.gif for USA), <b>ntop</b> will find and use them in the html/statsicons/
+directory.  See the note in docs/FAQ for a couple of available sets.</p>
+</body>
+</html>
