@@ -4606,12 +4606,21 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
     sendString(buf);
   }
 
-  sendString("<li><p>Click "
-             "<a href=\"http://ettercap.sourceforge.net/index.php?s=stuff&p=fingerprint\" "
-             "alt=\"Ettercap page at SourceForge\">here</a> to visit Ettercap's home "
-             "page at SourceForge and upload new fingerprints, or download additional, "
-             "unverified, ones.</li>\n"
-             "</ul></td></tr>\n");
+#ifdef CONST_ETTERCAP_HOMEPAGE
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+             "<li><p>Click "
+             "<a href=\"%s\" alt=\"Ettercap page at SourceForge\">here</a> "
+             "to visit Ettercap's home page at SourceForge. "
+             "And, click "
+             "<a href=\"%s%s\" alt=\"Ettercap fingerprint upload page\">here</a> "
+             " to upload new fingerprints, or download additional (unverified) ones.</li>\n",
+             CONST_ETTERCAP_HOMEPAGE,
+             CONST_ETTERCAP_HOMEPAGE, CONST_ETTERCAP_FINGERPRINT);
+  sendString(buf);
+#endif
+
+  sendString("<li><p>You can use the 'make dnetter' command, part of the ntop source distribution, "
+             "to download the latest fingerprint file from the Ettercap cvs.</p></li>\n");
 
   if(fingerprintRemote != TRUE)
     sendString("<tr><td>Fingerprinting of non-local hosts may be erroneous "

@@ -926,7 +926,13 @@
 #define CONST_OSFINGERPRINT_FILE            "etter.finger.os"
 
 /*
- * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
+ * SourceForge page to submit new fingerprints for Ettercap...
+ */
+#define CONST_ETTERCAP_HOMEPAGE             "http://ettercap.sourceforge.net/"
+#define CONST_ETTERCAP_FINGERPRINT          "fingerprint.php"
+
+/*
+ * Autonomous System Number list file...
  */
 #define CONST_ASLIST_FILE                   "AS-list.txt"
 
