@@ -51,19 +51,19 @@ lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
 		  librmonPlugin.la libwapPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
-libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
-liblastSeenPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+liblastSeenPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 libnfsPlugin_la_SOURCES = nfsPlugin.c
-libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
-librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@
+librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 libwapPlugin_la_SOURCES = wapPlugin.c
-libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 
 #
@@ -72,19 +72,32 @@ libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 #
 
 
-
+.libs/libicmpPlugin.so@SO_VERSION_PATCH@:
+	cc -bundle -flat_namespace -undefined suppress -o .libs/libicmpPlugin.so@SO_VERSION_PATCH@ icmpPlugin.o
 
 icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
 
+.libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
+	cc -bundle -flat_namespace -undefined suppress -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
+
 lastSeenPlugin.so: .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/liblastSeenPlugin.so lastSeenPlugin.so
+
+.libs/libnfsPlugin.so@SO_VERSION_PATCH@:
+	cc -bundle -flat_namespace -undefined suppress -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
 
 nfsPlugin.so: .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
 
+.libs/librmonPlugin.so@SO_VERSION_PATCH@:
+	cc -bundle -flat_namespace -undefined suppress -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
+
 rmonPlugin.so: .libs/librmonPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/librmonPlugin.so rmonPlugin.so
+
+.libs/libwapPlugin.so@SO_VERSION_PATCH@:
+	cc -bundle -flat_namespace -undefined suppress -o .libs/libwapPlugin.so@SO_VERSION_PATCH@ wapPlugin.o
 
 wapPlugin.so: .libs/libwapPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libwapPlugin.so wapPlugin.so
