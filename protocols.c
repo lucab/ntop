@@ -169,6 +169,8 @@ void handleBootp(HostTraffic *srcHost,
 		if(myGlobals.numericFlag == 0) ipaddr2str(realDstHost->hostIpAddress, 1);
                 if (realDstHost->dnsDomainValue != NULL) free(realDstHost->dnsDomainValue);
 		realDstHost->dnsDomainValue = NULL;
+                if (realDstHost->dnsTLDValue != NULL) free(realDstHost->dnsTLDValue);
+		realDstHost->dnsTLDValue = NULL;
 		if (realDstHost->ip2ccValue != NULL) free(realDstHost->ip2ccValue);
 		realDstHost->ip2ccValue = NULL;
 		if(isBroadcastAddress(&realDstHost->hostIpAddress))

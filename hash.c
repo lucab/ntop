@@ -476,6 +476,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   if(host->dnsDomainValue != NULL) free(host->dnsDomainValue);
   host->dnsDomainValue = NULL;
+  if(host->dnsTLDValue != NULL) free(host->dnsTLDValue);
+  host->dnsTLDValue = NULL;
   if(host->ip2ccValue != NULL) free(host->ip2ccValue);
   host->ip2ccValue = NULL;
 
@@ -513,6 +515,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
       ii=strlen(xbuf);
       if(host->dnsDomainValue != NULL)
         strncat(xbuf, " dnsDomainValue", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->dnsTLDValue != NULL)
+        strncat(xbuf, " dnsTLDValue", (sizeof(xbuf) - strlen(xbuf) - 1));
       if(host->ip2ccValue != NULL)
         strncat(xbuf, " ip2ccValue", (sizeof(xbuf) - strlen(xbuf) - 1));
       if(host->fingerprint != NULL)

@@ -720,7 +720,7 @@ typedef struct hostTraffic {
   u_char           ethAddress[LEN_ETHERNET_ADDRESS];
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
-  char             hostNumIpAddress[47], *dnsDomainValue;
+  char             hostNumIpAddress[47], *dnsDomainValue, *dnsTLDValue;
   char             *ip2ccValue, hostResolvedName[MAX_LEN_SYM_HOST_NAME], *fingerprint;
   short            hostResolvedNameType;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */

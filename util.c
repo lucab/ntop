@@ -2342,6 +2342,8 @@ void resetHostsVariables(HostTraffic* el) {
   el->hostAS = 0;
   if (el->dnsDomainValue != NULL)      free(el->dnsDomainValue);
   el->dnsDomainValue = NULL;
+  if (el->dnsTLDValue != NULL)      free(el->dnsTLDValue);
+  el->dnsTLDValue = NULL;
   if (el->ip2ccValue != NULL)       free(el->ip2ccValue);
   el->ip2ccValue = NULL;
   el->hostResolvedName[0] = '\0';
@@ -2941,6 +2943,8 @@ void fillDomainName(HostTraffic *el) {
   /* Reset values... */
   if(el->dnsDomainValue != NULL) free(el->dnsDomainValue);
   el->dnsDomainValue = NULL;
+  if(el->dnsTLDValue != NULL) free(el->dnsTLDValue);
+  el->dnsTLDValue = NULL;
   if(el->ip2ccValue != NULL) free(el->ip2ccValue);
   el->ip2ccValue = NULL;
 
@@ -2973,6 +2977,30 @@ void fillDomainName(HostTraffic *el) {
    * last choice, leave it null from above
    */
   if(i > 0)
+    el->dnsTLDValue = strdup(&el->hostResolvedName[i+1]);
+  else if (myGlobals.shortDomainName != NULL) {
+    /* Walk back to the last . */
+    i = strlen(el->hostResolvedName)-1;
+    while(i > 0)
+      if(myGlobals.shortDomainName[i] == '.')
+        break;
+      else
+        i--;
+    if(i > 0)
+      el->dnsTLDValue = strdup(&(myGlobals.shortDomainName[i+1]));
+  }
+
+
+  /* Walk Forwards to the first . */
+  for(i=0; i<strlen(el->hostResolvedName)-1; i++) {
+    if(el->hostResolvedName[i] == '.')
+      break;
+  }
+
+  /* If we have it (.), use it, otherwise use the shortDomainName set at startup
+   * last choice, leave it null from above
+   */
+  if(i < strlen(el->hostResolvedName)-1)
     el->dnsDomainValue = strdup(&el->hostResolvedName[i+1]);
   else if (myGlobals.shortDomainName != NULL)
     el->dnsDomainValue = strdup(myGlobals.shortDomainName);
@@ -6013,7 +6041,7 @@ int cmpFctnLocationName(const void *_a, const void *_b) {
 
 /* This function takes two HostTraffic entries and performs a 
    standardized compare of the location, either the ip2ccValue field
-   or the fallback dnsDomainValue fields, handling unvalued
+   or the fallback dnsTLDValue fields, handling unvalued
    situations to provide a stable comparison.
 
    We translate 'loc' (rfc1918 addresses) to sort next to last
@@ -6047,12 +6075,12 @@ int cmpFctnLocationName(const void *_a, const void *_b) {
 
     rc = strcasecmp(nameA, nameB);
     if(rc==0) {
-      if((*a)->dnsDomainValue == NULL) {
+      if((*a)->dnsTLDValue == NULL) {
         nameA = "\xFF\xFF";
       } else {
-        nameA = (*a)->dnsDomainValue;
+        nameA = (*a)->dnsTLDValue;
       }
-      if((*b)->dnsDomainValue == NULL) {
+      if((*b)->dnsTLDValue == NULL) {
         nameB = "\xFF\xFF";
       } else {
         nameB = (*b)->ip2ccValue;

@@ -796,20 +796,20 @@ char* getHostCountryIconURL(HostTraffic *el) {
     }
   }
 
-  if(el->dnsDomainValue != NULL) {
+  if(el->dnsTLDValue != NULL) {
     if(snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
-                el->dnsDomainValue) < 0)
+                el->dnsTLDValue) < 0)
       BufferTooShort();
     rc = stat(path, &buf);
 
     if(rc != 0) {
       if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-                  CFG_DATAFILE_DIR, el->dnsDomainValue) < 0)
+                  CFG_DATAFILE_DIR, el->dnsTLDValue) < 0)
         BufferTooShort();
       rc = stat(path, &buf);
     }
     if(rc == 0) {
-      img = el->dnsDomainValue;
+      img = el->dnsTLDValue;
       if(strlen(img) == 2) 
         source = "(Guessing from ccTLD)";
       else
@@ -821,7 +821,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
     /* Nothing worked... */
     if(snprintf(flagBuf, sizeof(flagBuf), "&nbsp;<!-- No flag for %s or %s -->",
                 el->ip2ccValue != NULL  ? el->ip2ccValue  : "null",
-                el->dnsDomainValue != NULL ? el->dnsDomainValue : "null") < 0)
+                el->dnsTLDValue != NULL ? el->dnsTLDValue : "null") < 0)
       BufferTooShort();
   } else {
     if(snprintf(flagBuf, sizeof(flagBuf),
