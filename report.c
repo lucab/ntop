@@ -1120,6 +1120,7 @@ void printHostsTraffic(int reportType,
   }
 
   printHTMLheader(buf, NULL, 0);
+  printHeader(reportType, revertOrder, abs(sortedColumn), showHostsMode, showLocalityMode);
 
   strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
@@ -1173,10 +1174,6 @@ void printHostsTraffic(int reportType,
       - sort data according to the selected column
       - 'recycle' (somebody would call this "code reuse") the cmpFctn function
     */
-
-      printHeader(reportType, revertOrder, abs(sortedColumn), showHostsMode, showLocalityMode);
-
-    myGlobals.columnSort = 0;
 
     if(sortedColumn == FLAG_HOST_DUMMY_IDX)
       myGlobals.columnSort = FLAG_HOST_DUMMY_IDX; /* Host name */
