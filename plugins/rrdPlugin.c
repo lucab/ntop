@@ -596,7 +596,7 @@ static PluginInfo rrdPluginInfo[] = {
     "1.0.2", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
-    1, /* Active */
+    0, /* Active */
     initRrdFunct, /* TermFunc   */
     termRrdFunct, /* TermFunc   */
     NULL, /* PluginFunc */
