@@ -1780,15 +1780,24 @@ void resetHostsVariables(HostTraffic* el) {
 
   el->vlanId = -1;
   el->hostAS = 0;
+  if (el->fullDomainName != NULL)      free(el->fullDomainName);
   el->fullDomainName = NULL;
+  if (el->dotDomainName != NULL)       free(el->dotDomainName);
   el->dotDomainName = NULL;
   el->hostSymIpAddress[0] = '\0';
+  if (el->fingerprint != NULL)         free(el->fingerprint);
   el->fingerprint = NULL;
+  if (el->nonIPTraffic != NULL)        free(el->nonIPTraffic);
   el->nonIPTraffic = NULL;
+  if (el->routedTraffic != NULL)       free(el->routedTraffic);
   el->routedTraffic = NULL;
+  if (el->portsUsage != NULL)          free(el->portsUsage);
   el->portsUsage = NULL;
+  if (el->protoIPTrafficInfos != NULL) free(el->protoIPTrafficInfos);
   el->protoIPTrafficInfos = NULL;
+  if (el->icmpInfo != NULL)            free(el->icmpInfo);
   el->icmpInfo = NULL;
+  if (el->protocolInfo != NULL)        free(el->protocolInfo);
   el->protocolInfo = NULL;
 
   resetUsageCounter(&el->contactedSentPeers);
@@ -1800,6 +1809,7 @@ void resetHostsVariables(HostTraffic* el) {
   memset(el->otherIpPortsRcvd, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
   memset(el->otherIpPortsSent, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
 
+  if (el->secHostPkts != NULL)         free(el->secHostPkts);
   el->secHostPkts = NULL;
 }
 
@@ -2347,20 +2357,27 @@ int snprintf(char *string, size_t maxlen, const char *format, ...) {
 
 void fillDomainName(HostTraffic *el) {
   u_int i;
+  char *ip2cc;
 
   if(theDomainHasBeenComputed(el)
      || (el->hostSymIpAddress    == NULL)
      || (el->hostSymIpAddress[0] == '\0')) {
-	  el->fullDomainName = "";
+	  el->fullDomainName = strdup("");
     return;
   }
 
   accessAddrResMutex("fillDomainName");
 
-  el->dotDomainName = ip2CountryCode(el->hostIpAddress.s_addr);
-  if(el->dotDomainName == NULL) {
+  /* Reset values... */
+  if(el->fullDomainName != NULL) free(el->fullDomainName);
+  if(el->dotDomainName != NULL) free(el->dotDomainName);
+
+  ip2cc = ip2CountryCode(el->hostIpAddress.s_addr);
+  if(ip2cc == NULL) {
     /* We are unable to associate a domain with an IP address. */
-    el->dotDomainName = "";
+    el->dotDomainName = strdup("");
+  } else {
+    el->dotDomainName = strdup(ip2cc);
   }
 
   if((el->hostSymIpAddress[0] == '*')
@@ -2368,13 +2385,13 @@ void fillDomainName(HostTraffic *el) {
      || (isdigit(el->hostSymIpAddress[strlen(el->hostSymIpAddress)-1]) &&
 	 isdigit(el->hostSymIpAddress[0]))) {
     /* NOTE: theDomainHasBeenComputed(el) = 0 */
-    el->fullDomainName = "";
+    el->fullDomainName = strdup("");
     releaseAddrResMutex();
     return;
   }
 
   FD_SET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &el->flags);
-  el->fullDomainName = ""; /* Reset values... */
+
 
   i = strlen(el->hostSymIpAddress)-1;
 
@@ -2406,9 +2423,9 @@ void fillDomainName(HostTraffic *el) {
 	 && (strcmp(&el->hostSymIpAddress[len-len1-1], myGlobals.domainName) == 0))
 	el->hostSymIpAddress[len-len1-1] = '\0';
 
-      el->fullDomainName = myGlobals.domainName;
+      el->fullDomainName = strdup(myGlobals.domainName);
     } else {
-      el->fullDomainName = "";
+      el->fullDomainName = strdup("");
     }
 
     releaseAddrResMutex();
@@ -2425,13 +2442,13 @@ void fillDomainName(HostTraffic *el) {
     else
       i++;
 
-  if((el->hostSymIpAddress[i] == '.')
-     && (strlen(el->hostSymIpAddress) > (i+1)))
-    el->fullDomainName = &el->hostSymIpAddress[i+1];
-  else
-	  el->fullDomainName = "";
+    if((el->hostSymIpAddress[i] == '.')
+       && (strlen(el->hostSymIpAddress) > (i+1)))
+      el->fullDomainName = strdup(&el->hostSymIpAddress[i+1]);
+    else
+      el->fullDomainName = strdup("");
 
-  /* traceEvent(CONST_TRACE_INFO, "'%s'", el->domainName); */
+    /* traceEvent(CONST_TRACE_INFO, "'%s'", el->domainName); */
 
   releaseAddrResMutex();
 }

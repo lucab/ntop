@@ -1158,11 +1158,13 @@ void interfaceTrafficPie(void) {
 
   totPkts.value = 0;
 
-  for(i=0; i<myGlobals.numDevices; i++)
+  for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
       p[i] = (float)myGlobals.device[i].ethernetPkts.value;
       totPkts.value += myGlobals.device[i].ethernetPkts.value;
-    }
+    } else
+      p[i] = 0.0;
+  }
 
   if(totPkts.value == 0)
     totPkts.value++;

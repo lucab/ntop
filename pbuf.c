@@ -2706,8 +2706,9 @@ void processPacket(u_char *_deviceId,
   if(myGlobals.resetHashNow == 1) {
     int i;
 
-    traceEvent(CONST_TRACE_INFO, "Resetting stats");
+    traceEvent(CONST_TRACE_INFO, "Resetting stats on user request...");
     for(i=0; i<myGlobals.numDevices; i++) resetStats(i);
+    traceEvent(CONST_TRACE_INFO, "User requested stats reset complete");
     myGlobals.resetHashNow = 0;
   }
 }

@@ -1464,8 +1464,13 @@ static int returnHTTPPage(char* pageName,
   } else if(strncmp(pageName, RESET_STATS_HTML, strlen(RESET_STATS_HTML)) == 0) {
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("All statistics are now reset", BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader("Statistics reset requested...", BITFLAG_HTML_NO_REFRESH);
     myGlobals.resetHashNow = 1; /* resetStats(); */
+    sendString("<P>NOTE: Statistics will be reset at the next safe point, which "
+                  "is at the end of processing for the current/next packet and "
+                  "may have already occured.<br>\n"
+                  "<i>Reset takes a few seconds - please do not immediately request "
+                  "the next page from the ntop web server or it will appear to hang.</i></P>\n");
   } else if(strncmp(pageName, SWITCH_NIC_HTML, strlen(SWITCH_NIC_HTML)) == 0) {
     char *equal = strchr(pageName, '=');
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);

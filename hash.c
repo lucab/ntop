@@ -302,7 +302,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
       while(list != NULL) {
 	UserList *next = list->next;
-	free(list->userName);
+        if(list->userName != NULL)
+          free(list->userName);
 	free(list);
 	list = next;
       }
@@ -313,7 +314,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
       while(list != NULL) {
 	FileList *next = list->next;
-	free(list->fileName);
+        if(list->fileName != NULL) 
+          free(list->fileName);
 	free(list);
 	list = next;
       }
@@ -322,13 +324,16 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     if(host->protocolInfo->dnsStats  != NULL) free(host->protocolInfo->dnsStats);
     if(host->protocolInfo->httpStats != NULL) free(host->protocolInfo->httpStats);
     if(host->protocolInfo->dhcpStats != NULL) free(host->protocolInfo->dhcpStats);
-    free(host->protocolInfo);
   }
+  if(host->protocolInfo != NULL) free(host->protocolInfo);
 
   /* ************************************* */
 
   if(host->icmpInfo != NULL) free(host->icmpInfo);
   if(host->trafficDistribution != NULL) free(host->trafficDistribution);
+
+  if(host->fullDomainName != NULL) free(host->fullDomainName);
+  if(host->dotDomainName != NULL) free(host->dotDomainName);
 
   /* ********** */
   /*
@@ -352,6 +357,33 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   } else
 #endif
     {
+
+#if (0)
+/* Temporary code to see what's being covered up by the memset() below */
+      char xbuf[1024];
+      int ii;
+      memset(xbuf, 0, sizeof(xbuf));
+      snprintf(xbuf, sizeof(xbuf), "TEMP: free of host (0x%08x) magic(%u) not cleared:", host, host->magic);
+      ii=strlen(xbuf);
+      if (host->fullDomainName != NULL) strcat(xbuf, " fullDomainName");
+      if (host->dotDomainName != NULL) strcat(xbuf, " dotDomainName");
+      if (host->fingerprint != NULL) strcat(xbuf, " fingerprint");
+      if (host->nonIPTraffic != NULL) strcat(xbuf, " nonIPTraffic");
+      if (host->nonIpProtoTrafficInfos != NULL) strcat(xbuf, " nonIpProtoTrafficInfos");
+      if (host->trafficDistribution != NULL) strcat(xbuf, " trafficDistribution");
+      if (host->routedTraffic != NULL) strcat(xbuf, " routedTraffic");
+      if (host->portsUsage != NULL) strcat(xbuf, " portsUsage");
+      if (host->protocolInfo != NULL) strcat(xbuf, " protocolInfo");
+      if (host->secHostPkts != NULL) strcat(xbuf, " secHostPkts");
+      if (host->icmpInfo != NULL) strcat(xbuf, " icmpInfo");
+      if (host->ipProtosList != NULL) strcat(xbuf, " ipProtosList");
+      if (host->protoIPTrafficInfos != NULL) strcat(xbuf, " protoIPTrafficInfos");
+      if (host->unknownProtoSent != NULL) strcat(xbuf, " unknownProtoSent");
+      if (host->unknownProtoRcvd != NULL) strcat(xbuf, " unknownProtoRcvd");
+      if (host->next != NULL) strcat(xbuf, " next");
+      if (strlen(xbuf) != ii) traceEvent(CONST_TRACE_INFO, xbuf);
+#endif
+
       /* No room left: it's time to free the bucket */
       memset(host, 0, sizeof(HostTraffic)); /* Debug code */
       free(host);      
@@ -396,6 +428,7 @@ void freeHostInstances(int actualDeviceId) {
 
       while(el != NULL) {
 	HostTraffic *nextEl = el->next;
+	el->next = NULL;
 	num++;
 	freeHostInfo(el, actualDeviceId);
 #ifdef MAKE_WITH_SCHED_YIELD
@@ -500,6 +533,7 @@ void purgeIdleHosts(int actDevice) {
 	  else
 	    myGlobals.device[actDevice].hash_hostTraffic[idx] = next;
 
+          el->next = NULL;
 	  el = next;
 	} else {
 	  /* Move to next host */

@@ -167,7 +167,10 @@ void handleBootp(HostTraffic *srcHost,
 			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
 		if(myGlobals.numericFlag == 0) ipaddr2str(realDstHost->hostIpAddress, actualDeviceId);
-		realDstHost->fullDomainName = realDstHost->dotDomainName = "";
+                if (realDstHost->fullDomainName != NULL) free(realDstHost->fullDomainName);
+		realDstHost->fullDomainName = strdup("");
+		if (realDstHost->dotDomainName != NULL) free(realDstHost->dotDomainName);
+		realDstHost->dotDomainName = strdup("");
 		if(isBroadcastAddress(&realDstHost->hostIpAddress))
 		  FD_SET(FLAG_BROADCAST_HOST, &realDstHost->flags);
 		else

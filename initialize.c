@@ -1048,7 +1048,7 @@ void initApps(void) {
  */
 void addDevice(char* deviceName, char* deviceDescr) {
   int i, deviceId, mallocLen, memlen;
-  NtopInterface *tmpDevice;
+  NtopInterface *tmpDevice, *oldDevice;
   char *workDevices = NULL;
   char myName[80], *column = NULL;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
@@ -1077,7 +1077,9 @@ void addDevice(char* deviceName, char* deviceDescr) {
     tmpDevice = (NtopInterface*)malloc(mallocLen);
     memset(tmpDevice, 0, mallocLen);
     memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*(myGlobals.numDevices));
+    oldDevice = myGlobals.device;
     myGlobals.device = tmpDevice;
+    if (oldDevice != NULL) free(oldDevice);
     deviceId = myGlobals.numDevices;
     myGlobals.device[deviceId].humanFriendlyName = strdup(deviceDescr);
     myGlobals.device[deviceId].name = strdup(deviceName);

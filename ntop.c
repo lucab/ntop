@@ -878,12 +878,17 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 #ifdef CFG_MULTITHREADED
+  tryLockMutex(&myGlobals.packetProcessMutex, "cleanup");
   deleteMutex(&myGlobals.packetProcessMutex);
+  tryLockMutex(&myGlobals.packetQueueMutex, "cleanup");
   deleteMutex(&myGlobals.packetQueueMutex);
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-  if(myGlobals.numericFlag == 0)
+  if(myGlobals.numericFlag == 0) {
+    tryLockMutex(&myGlobals.addressResolutionMutex, "cleanup");
     deleteMutex(&myGlobals.addressResolutionMutex);
+  }
 #endif
+  tryLockMutex(&myGlobals.hostsHashMutex, "cleanup");
   deleteMutex(&myGlobals.hostsHashMutex);
 
 #ifdef MAKE_WITH_SEMAPHORES
@@ -902,7 +907,9 @@ RETSIGTYPE cleanup(int signo) {
   termGdbm();
 
 #ifdef CFG_MULTITHREADED
+  tryLockMutex(&myGlobals.gdbmMutex, "cleanup");
   deleteMutex(&myGlobals.gdbmMutex);
+  tryLockMutex(&myGlobals.purgeMutex, "cleanup");
   deleteMutex(&myGlobals.purgeMutex);
 #endif
 
@@ -994,8 +1001,11 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.startedAs != NULL) free(myGlobals.startedAs);
 
 #ifdef CFG_MULTITHREADED
+  tryLockMutex(&myGlobals.tcpSessionsMutex, "cleanup");
   deleteMutex(&myGlobals.tcpSessionsMutex);
+  tryLockMutex(&myGlobals.purgePortsMutex, "cleanup");
   deleteMutex(&myGlobals.purgePortsMutex);
+  tryLockMutex(&myGlobals.securityItemsMutex, "cleanup");
   deleteMutex(&myGlobals.securityItemsMutex);
   /* DO NOT DO deleteMutex(&myGlobals.logViewMutex); - need it for the last traceEvent()s */
 #endif
