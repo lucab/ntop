@@ -1408,6 +1408,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  "<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
 		  "<TH "TH_BG">%s5>Nw&nbsp;Board&nbsp;Vendor%s</A></TH>"
 		  "<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
+		  "<TH "TH_BG">%s8>Host&nbsp;Contacts%s</A></TH>"
 		  "</TR>\n",
 		  theAnchor[1], arrow[1],
 		  theAnchor[0], arrow[0],
@@ -1416,7 +1417,9 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  theAnchor[6], arrow[6],
 		  theAnchor[4], arrow[4],
 		  theAnchor[5], arrow[5],
-		  theAnchor[7], arrow[7]) < 0)
+		  theAnchor[7], arrow[7],
+		  theAnchor[8], arrow[8]
+		  ) < 0)
 	BufferTooShort();
     } else {
       if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
@@ -1426,13 +1429,16 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  "<TH "TH_BG">%s6>Other&nbsp;Name(s)%s</A></TH>"
 		  "<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
 		  "<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
+		  "<TH "TH_BG">%s8>Host&nbsp;Contacts%s</A></TH>"
 		  "</TR>\n",
 		  theAnchor[1], arrow[1],
 		  theAnchor[0], arrow[0],
 		  theAnchor[2], arrow[2],
 		  theAnchor[6], arrow[6],
 		  theAnchor[4], arrow[4],
-		  theAnchor[7], arrow[7]) < 0)
+		  theAnchor[7], arrow[7],
+		  theAnchor[8], arrow[8]
+		  ) < 0)
 	BufferTooShort();
     }
     sendString(buf);
@@ -1639,6 +1645,11 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	      BufferTooShort();
 	    sendString(buf);
 	  }
+
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%lu</TD>",
+		      (unsigned long)(el->totContactedSentPeers+el->totContactedRcvdPeers)) < 0)
+	    BufferTooShort();
+	  sendString(buf);
 
 #if 0
 	  /* Time distance */

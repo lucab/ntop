@@ -357,7 +357,7 @@ extern void resetUsageCounter(UsageCounter *counter);
 extern void resetSecurityHostTraffic(HostTraffic *el);
 extern char *mapIcmpType(int icmpType);
 extern void updateOSName(HostTraffic *el);
-extern void _incrementUsageCounter(UsageCounter *counter,
+extern int _incrementUsageCounter(UsageCounter *counter,
 				   u_int peerIdx, int deviceId,
 				   char* file, int line);
 extern char *strtolower(char *s);

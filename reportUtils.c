@@ -830,6 +830,17 @@ int sortHostFctn(const void *_a, const void *_b) {
     else
       return(0);
     break;
+  case 8:
+    n_a = (*a)->totContactedSentPeers+(*a)->totContactedRcvdPeers;
+    n_b = (*b)->totContactedSentPeers+(*b)->totContactedRcvdPeers;
+
+    if(n_a < n_b)
+      return(1);
+    else if(n_a > n_b)
+      return(-1);
+    else
+      return(0);
+    break;
   case 4:
   default:
     if((*a)->actBandwidthUsage < (*b)->actBandwidthUsage)
@@ -2461,9 +2472,15 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	    }
 	  }
 
-      if(numEntries > 0)
-	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
-      else
+      if(numEntries > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Contacts</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%d</TD></TR>\n",
+		    getRowColor(), el->totContactedSentPeers) < 0)
+	  BufferTooShort();	
+       sendString(buf);
+
+       sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
+      } else
 	sendString("&nbsp;</TD><TD "TD_BG">\n");
 
       /* ***************************************************** */
@@ -2492,8 +2509,15 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	  }
 
 
-      if(numEntries > 0)
+      if(numEntries > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Rcvd Contacts</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%d</TD></TR>\n",
+		    getRowColor(), el->totContactedRcvdPeers) < 0)
+	  BufferTooShort();	
+	sendString(buf);
+	
 	sendString("</TABLE>"TABLE_OFF"\n");
+      }
 
       sendString("</TD></TR></TABLE>"TABLE_OFF"<P>\n");
       sendString("</CENTER>\n");

@@ -1302,6 +1302,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	FD_SET(HOST_SVC_IMAP, &srcHost->flags);
 	break;
       case 515:
+      case 9100: /* JetDirect */
 	FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
 	break;
       }

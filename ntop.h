@@ -1754,6 +1754,9 @@ typedef struct sessionInfo {
 /* IP Session Information */
 typedef struct ipSession {
   u_short magic;
+#ifdef EXPERIMENTAL
+  u_char isP2P;                     /* Set to 1 if this is a P2P session          */
+#endif
   u_int initiatorIdx;               /* initiator address   (IP address)           */
   struct in_addr initiatorRealIp;   /* Real IP address (if masqueraded and known) */
   u_short sport;                    /* initiator address   (port)                 */
@@ -1769,7 +1772,7 @@ typedef struct ipSession {
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
   TrafficCounter bytesFragmentedSent;     /* IP Fragments                       */
-  TrafficCounter bytesFragmentedRcvd; /* IP Fragments                           */
+  TrafficCounter bytesFragmentedRcvd;     /* IP Fragments                       */
   u_int minWindow, maxWindow;       /* TCP window size                          */
   struct timeval nwLatency;         /* Network Latency                          */
   u_short numFin;                   /* # FIN pkts rcvd                          */
@@ -2123,6 +2126,7 @@ typedef struct hostTraffic {
   
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */
   IpGlobalSession  *tcpSessionList, *udpSessionList; /* list of sessions initiated/rcvd by this host */
+  Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */
   UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */
   UsageCounter     contactedRouters;     /* routers contacted by this host */

@@ -1862,9 +1862,9 @@ int getActualInterface(int deviceId) {
 /* ************************************ */
 
 void resetHostsVariables(HostTraffic* el) {
-
   FD_ZERO(&(el->flags));
 
+  el->totContactedSentPeers = el->totContactedRcvdPeers = 0;
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
@@ -2933,14 +2933,15 @@ void updateOSName(HostTraffic *el) {
 /* Do not delete this line! */
 #undef incrementUsageCounter
 
-void _incrementUsageCounter(UsageCounter *counter,
-			    u_int peerIdx, int actualDeviceId,
-			    char* file, int line) {
+int _incrementUsageCounter(UsageCounter *counter,
+			   u_int peerIdx, int actualDeviceId,
+			   char* file, int line) {
   u_int i, found=0;
   HostTraffic *theHost;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "DEBUG: incrementUsageCounter(%u) @ %s:%d", peerIdx, file, line);
+  traceEvent(TRACE_INFO, "DEBUG: incrementUsageCounter(%u) @ %s:%d",
+	     peerIdx, file, line);
 #endif
 
   if(peerIdx == NO_PEER) return;
@@ -2951,7 +2952,8 @@ void _incrementUsageCounter(UsageCounter *counter,
     return;
   }
 
-  if((peerIdx == myGlobals.broadcastEntryIdx) || (peerIdx == myGlobals.otherHostEntryIdx)) {
+  if((peerIdx == myGlobals.broadcastEntryIdx) 
+     || (peerIdx == myGlobals.otherHostEntryIdx)) {
     return;
   }
 
@@ -2966,7 +2968,8 @@ void _incrementUsageCounter(UsageCounter *counter,
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(counter->peersIndexes[i] == NO_PEER) {
-      counter->peersIndexes[i] = theHost->hostSerial, found = 1;
+      counter->peersIndexes[i] = theHost->hostSerial;
+      return(1);
       break;
     } else if(counter->peersIndexes[i] == theHost->hostSerial) {
       found = 1;
@@ -2980,7 +2983,10 @@ void _incrementUsageCounter(UsageCounter *counter,
 
     /* Add host serial and not it's index */
     counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = theHost->hostSerial;
+    return(1); /* New entry added */
   }
+
+  return(0);
 }
 
 /* ******************************** */
