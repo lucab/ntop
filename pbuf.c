@@ -1422,7 +1422,10 @@ static void handleSession(const struct pcap_pkthdr *h,
 	    theSession->nwLatency.tv_sec = h->ts.tv_sec;
 	    theSession->nwLatency.tv_usec = h->ts.tv_usec;
 	    theSession->sessionState = STATE_SYN;
-	  } if(tp->th_flags & TH_FIN) {
+	  } 
+	  
+#if 0
+	  else if(tp->th_flags & TH_FIN) {
 	    theSession->sessionState = STATE_TIMEOUT;
 	  } else {
 	    /*
@@ -1433,7 +1436,9 @@ static void handleSession(const struct pcap_pkthdr *h,
 	    srcHost->numEstablishedTCPConnections++,
 	      dstHost->numEstablishedTCPConnections++,
 	      device[actualDeviceId].numEstablishedTCPConnections++;
+		theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
 	  }
+#endif
 
 	  theSession->magic = MAGIC_NUMBER;
 	  (*numSessions)++;
@@ -1881,6 +1886,8 @@ static void handleSession(const struct pcap_pkthdr *h,
      */
     if(tp->th_flags & TH_FIN) {
       u_int32_t fin = ntohl(tp->th_seq)+packetDataLength;
+
+	  theSession->sessionState = STATE_TIMEOUT;
 
       if(sport < dport) /* Server->Client */
 	check = (fin != theSession->lastSCFin);
