@@ -278,7 +278,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	} else if(hostIpAddress != NULL) {
 	  /* This is packet that's being routed or belonging to a
 	     remote network that uses the same physical wire (or forged)*/
-
 	  memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
 
 	  memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
@@ -771,6 +770,24 @@ static void updateUsedPorts(HostTraffic *srcHost,
 
 /* ************************************ */
 
+static void updateRoutedTraffic(HostTraffic *router) {
+  if(router != NULL) {
+    if(router->routedTraffic == NULL) {
+      int mallocLen = sizeof(RoutingCounter);
+      
+	router->routedTraffic = (RoutingCounter*)malloc(mallocLen);
+	memset(router->routedTraffic, 0, mallocLen);
+    }
+    
+    if(router->routedTraffic != NULL) { /* malloc() didn't fail */
+      router->routedTraffic->routedPkts++;
+      router->routedTraffic->routedBytes += h_save->len - sizeof(struct ether_header);
+    }
+  }
+}
+
+/* ************************************ */
+
 static void handleBootp(HostTraffic *srcHost,
 			HostTraffic *dstHost,
 			u_short sport,
@@ -839,7 +856,7 @@ static void handleBootp(HostTraffic *srcHost,
 	    */
 	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
 	    if(realDstHost == NULL) {
-	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr, 0, 0);
+	      u_int hostIdx = getHostInfo(/* &bootProto.bp_yiaddr */ NULL, bootProto.bp_chaddr, 0, 0);
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
 #endif
@@ -917,8 +934,9 @@ static void handleBootp(HostTraffic *srcHost,
 		    incrementUsageCounter(&realDstHost->contactedRouters, hostIdx, actualDeviceId);
 
 		    trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-		    if(trafficHost != NULL)
+		    if(trafficHost != NULL) {
 		      FD_SET(GATEWAY_HOST_FLAG, &trafficHost->flags);
+		    }
 		  }
 
 		  /* *************** */
@@ -3131,11 +3149,10 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
 static void checkNetworkRouter(HostTraffic *srcHost,
 			       HostTraffic *dstHost,
 			       u_char *ether_dst) {
-  if(subnetLocalHost(srcHost)
-     && (!subnetLocalHost(dstHost))
-     && (!broadcastHost(dstHost))
-     && (!multicastHost(dstHost))
-     ) {
+  if((subnetLocalHost(srcHost) && (!subnetLocalHost(dstHost)) 
+      && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
+     || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost)) 
+	 && (!broadcastHost(srcHost)) && (!multicastHost(srcHost)))) {
     u_int routerIdx, j;
     HostTraffic *router;
 
@@ -3143,11 +3160,12 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 
     router = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
 
-    if(broadcastHost(router)
-       || multicastHost(router)
-       || (!subnetLocalHost(router))
-       || (router->hostNumIpAddress[0] == '\0') /* No IP: is this a special
-						   Multicast address ? */
+    if(((router->hostNumIpAddress[0] != '\0')
+       && (broadcastHost(router)
+	   || multicastHost(router)
+	   || (!subnetLocalHost(router)) /* No IP: is this a special Multicast address ? */))
+       || (router->hostIpAddress.s_addr == dstHost->hostIpAddress.s_addr)
+       || (memcmp(router->ethAddress, dstHost->ethAddress, ETHERNET_ADDRESS_LEN) == 0)
        )
       return;
 
@@ -3161,16 +3179,17 @@ static void checkNetworkRouter(HostTraffic *srcHost,
     }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "router [idx=%d/%s/%s/%s] used by host [%s] for destination [%s/%s]\n",
+    traceEvent(TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",
+	       srcHost->ethAddressString, srcHost->hostNumIpAddress, srcHost->hostSymIpAddress, 
+	       dstHost->ethAddressString, dstHost->hostNumIpAddress, dstHost->hostSymIpAddress, 
 	       routerIdx,
 	       router->ethAddressString,
 	       router->hostNumIpAddress,
-	       router->hostSymIpAddress,
-	       srcHost->hostSymIpAddress,
-	       dstHost->hostNumIpAddress,
-	       etheraddr_string(ether_dst));
+	       router->hostSymIpAddress);
+
 #endif
     FD_SET(GATEWAY_HOST_FLAG, &router->flags);
+    updateRoutedTraffic(router);
   }
 }
 
@@ -4380,8 +4399,7 @@ void dumpSuspiciousPacket() {
 
 void processPacket(u_char *_deviceId,
 		   const struct pcap_pkthdr *h,
-		   const u_char *p)
-{
+		   const u_char *p) {
   struct ether_header ehdr;
   struct tokenRing_header *trp;
   struct fddi_header *fddip;
@@ -4490,7 +4508,7 @@ void processPacket(u_char *_deviceId,
 
   memcpy(&lastPktTime, &h->ts, sizeof(lastPktTime));
 
-  fd = device [deviceId].fdv;
+  fd = device[deviceId].fdv;
 
   /*
    * Show a hash character for each packet captured
@@ -4501,7 +4519,7 @@ void processPacket(u_char *_deviceId,
   }
 
   /* ethernet assumed */
-  if (caplen >= hlen) {
+  if(caplen >= hlen) {
     HostTraffic *srcHost=NULL, *dstHost=NULL;
     u_int srcHostIdx, dstHostIdx;
 
@@ -4517,7 +4535,7 @@ void processPacket(u_char *_deviceId,
       extract_fddi_addrs(fddip, (char *)ESRC(&ehdr), (char *)EDST(&ehdr));
       ether_src = (u_char*)ESRC(&ehdr), ether_dst = (u_char*)EDST(&ehdr);
 
-      if ((fddip->fc & FDDIFC_CLFF) == FDDIFC_LLC_ASYNC) {
+      if((fddip->fc & FDDIFC_CLFF) == FDDIFC_LLC_ASYNC) {
 	struct llc llc;
 
 	/*
@@ -4527,9 +4545,9 @@ void processPacket(u_char *_deviceId,
 	  http://www.ece.wpi.edu/courses/ee535/hwk96/hwk3cd96/li/li.html
 	*/
 	memcpy((char *)&llc, (char *)p, min(caplen, sizeof(llc)));
-	if (llc.ssap == LLCSAP_SNAP && llc.dsap == LLCSAP_SNAP
+	if(llc.ssap == LLCSAP_SNAP && llc.dsap == LLCSAP_SNAP
 	    && llc.llcui == LLC_UI) {
-	  if (caplen >= sizeof(llc)) {
+	  if(caplen >= sizeof(llc)) {
 	    caplen -= sizeof(llc);
 	    length -= sizeof(llc);
 	    p += sizeof(llc);
@@ -4588,7 +4606,7 @@ void processPacket(u_char *_deviceId,
 
       hlen = sizeof(struct tokenRing_header) - 18;
 
-      if (trp->trn_shost[0] & TR_RII) /* Source Routed Packet */
+      if(trp->trn_shost[0] & TR_RII) /* Source Routed Packet */
 	hlen += ((ntohs(trp->trn_rcf) & TR_RCF_LEN_MASK) >> 8);
 
       length -= hlen, caplen -= hlen;
@@ -4596,7 +4614,7 @@ void processPacket(u_char *_deviceId,
       p += hlen;
       trllc = (struct tokenRing_llc *)p;
 
-      if (trllc->dsap == 0xAA && trllc->ssap == 0xAA)
+      if(trllc->dsap == 0xAA && trllc->ssap == 0xAA)
 	hlen = sizeof(struct tokenRing_llc);
       else
 	hlen = sizeof(struct tokenRing_llc) - 5;
@@ -4605,7 +4623,7 @@ void processPacket(u_char *_deviceId,
 
       p += hlen;
 
-      if (hlen == sizeof(struct tokenRing_llc))
+      if(hlen == sizeof(struct tokenRing_llc))
 	eth_type = ntohs(trllc->ethType);
       else
 	eth_type = 0;
@@ -4627,7 +4645,7 @@ void processPacket(u_char *_deviceId,
     /*
      * Time to show the Ethernet Packet Header (when enabled).
      */
-    if (fd && device [deviceId].ethv)
+    if(fd && device [deviceId].ethv)
       fprintf (fd, "ETHER:  ----- Ether Header -----\n"),
 	fprintf (fd, "ETHER:\n"),
 	fprintf (fd, "ETHER:  Packet %ld arrived at %s\n",
@@ -4816,6 +4834,8 @@ void processPacket(u_char *_deviceId,
 		case 0x0021: /* NAS SNA gateway */
 		case 0x055d: /* Attachmate SNA gateway */
 		  FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
+		  /* ==> updateRoutedTraffic(srcHost);
+		     is not needed as there are no routed packets */
 		  break;
 
 		case 0x0004: /* File server */
@@ -4871,19 +4891,19 @@ void processPacket(u_char *_deviceId,
 
 	    srcHost->ipxSent += length, dstHost->ipxReceived += length;
 	    device[actualDeviceId].ipxBytes += length;
-	  } else if (llcHeader.ssap == LLCSAP_NETBIOS
+	  } else if(llcHeader.ssap == LLCSAP_NETBIOS
 		     && llcHeader.dsap == LLCSAP_NETBIOS) {
 	    /* Netbios */
 	    srcHost->netbiosSent += length;
 	    dstHost->netbiosReceived += length;
 	    device[actualDeviceId].netbiosBytes += length;
-	  } else if ((sap_type == 0xF0) || (sap_type == 0xB4)
+	  } else if((sap_type == 0xF0) || (sap_type == 0xB4)
 		     || (sap_type == 0xC4) || (sap_type == 0xF8)) {
 	    /* DLC (protocol used for printers) */
 	    srcHost->dlcSent += length;
 	    dstHost->dlcReceived += length; FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
 	    device[actualDeviceId].dlcBytes += length;
-	  } else if (sap_type == 0xAA /* SNAP */) {
+	  } else if(sap_type == 0xAA /* SNAP */) {
 	    u_int16_t snapType;
 
 	    p1 = (u_char*)(p1+sizeof(llcHeader));
@@ -4965,9 +4985,9 @@ void processPacket(u_char *_deviceId,
 	      dstHost->otherReceived += length;
 	      device[actualDeviceId].otherBytes += length;
 	    }
-	  } else if ((sap_type == 0x06)
-		     || (sap_type == 0xFE)
-		     || (sap_type == 0xFC)) {  /* OSI */
+	  } else if((sap_type == 0x06)
+		    || (sap_type == 0xFE)
+		    || (sap_type == 0xFC)) {  /* OSI */
 	    srcHost->osiSent += length;
 	    dstHost->osiReceived += length;
 	    device[actualDeviceId].osiBytes += length;

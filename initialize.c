@@ -42,7 +42,7 @@
 
 #include "ntop.h"
 
-
+static HostTraffic broadcastEntry;
 static u_char threadsInitialized = 0;
 
 /* ******************************* */
@@ -212,7 +212,6 @@ void initCounters(int _mergeInterfaces) {
   char *p;
 #endif
   int len, i;
-  static HostTraffic broadcastEntry;
 
   numPurgedHosts = numTerminatedSessions = 0;
 
@@ -1061,7 +1060,8 @@ void initDeviceDatalink(void) {
   for(i=0; i<numDevices; i++)
     if(!device[i].virtualDevice) {
       device[i].datalink = pcap_datalink(device[i].pcapPtr);
-      if(device[i].name[0] == 'l') /* loopback check */
+      if((device[i].name[0] == 'l') /* loopback check */
+	 && (device[i].name[1] == 'o'))
 	device[i].datalink = DLT_NULL;
     }
 #endif

@@ -3090,6 +3090,16 @@ void printHostDetailedInfo(HostTraffic *el) {
 	  formatPkts(el->pktBroadcastSent)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
+  if(el->routedTraffic != NULL) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+		"%s/%s Pkts</TD></TR>\n",
+		getRowColor(), "Routed Traffic",
+		formatBytes(el->routedTraffic->routedBytes, 1),
+		formatPkts(el->routedTraffic->routedPkts)) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);    
+  }
+
   if((el->pktMulticastSent > 0) || (el->pktMulticastRcvd > 0)) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
 	    "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;-"

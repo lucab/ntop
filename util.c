@@ -1900,6 +1900,7 @@ void resetHostsVariables(HostTraffic* el) {
   el->nbDescr = NULL; /* Fix courtesy of Francis Pintos <francis@arhl.com.hk> */
   el->atNodeName = NULL;
   memset(el->atNodeType, 0, sizeof(el->atNodeType));
+  el->routedTraffic = NULL;  
   el->ipxHostName = NULL;
   el->numIpxNodeTypes = 0;
   el->portsUsage = NULL;

@@ -209,8 +209,8 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
     mappings[j] = NO_PEER;
 
   /* Broadcast Entry */
-  hash_hostTraffic[0] = device[deviceToExtend].hash_hostTraffic[0];
-  mappings[0] = 0;
+  hash_hostTraffic[broadcastEntryIdx] = device[deviceToExtend].hash_hostTraffic[broadcastEntryIdx];
+  mappings[broadcastEntryIdx] = broadcastEntryIdx;
 
   for(i=1; i<device[deviceToExtend].actualHashSize; i++)
     if(device[deviceToExtend].hash_hostTraffic[i] != NULL) {
@@ -748,6 +748,8 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
     free(myflaggedHosts);
   }
+
+  if(host->routedTraffic != NULL)          free(host->routedTraffic);
 
   if(host->portsUsage != NULL) {
     for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++)

@@ -147,7 +147,6 @@ extern unsigned int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQu
 
 extern TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
 extern u_int broadcastEntryIdx;
-extern HostTraffic broadcastEntry;
 extern u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 extern u_short mtuSize[], headerSize[];
 

@@ -1272,19 +1272,21 @@ void printAllSessionsHTML(char* host) {
   u_int idx, elIdx, i;
   HostTraffic *el=NULL;
   char buf[BUF_SIZE];
+  u_short found = 0;
 
-  for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
+  for(elIdx=0; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
     el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
 
     if((elIdx != broadcastEntryIdx)
        && (el != NULL)
-       && (el->hostNumIpAddress != NULL)
        && ((strcmp(el->hostNumIpAddress, host) == 0)
-	   || (strcmp(el->ethAddressString, host) == 0)))
+	   || (strcmp(el->ethAddressString, host) == 0))) {
+      found = 1;
       break;
+    }
   }
 
-  if(el == NULL) {
+  if((el == NULL) || (!found)) {
     if(snprintf(buf, sizeof(buf), 
 		"Unable to generate the page requested [%s]\n", host) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");

@@ -150,7 +150,6 @@ u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
 TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
 
 u_int broadcastEntryIdx;
-HostTraffic broadcastEntry;
 u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 
 u_short mtuSize[] = {

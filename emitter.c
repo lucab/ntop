@@ -267,9 +267,8 @@ void dumpNtopHashes(char* options) {
      end trace */
   initWriteArray (lang);
 
-  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
-    if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
-       && (broadcastHost(el) == 0)) {
+  for(idx=0; idx<device[actualDeviceId].actualHashSize; idx++) {
+    if((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL) {
       char *hostKey;
 
       if(key[0] != '\0') {
@@ -377,24 +376,26 @@ void dumpNtopHashes(char* options) {
       wrtLlongItm  (lang, "\t", "otherReceived",    el->otherReceived,',');
       /* ********************************* */
 
-      initWriteKey (lang, "\t", "IP");
-
-      for(j=0; j<numIpProtosToMonitor; j++) {
-
-	if(j > 0) { endWriteKey (lang,"\t\t",','); }
-
-	initWriteKey (lang, "\t\t", protoIPTrafficInfos[j]);
-	wrtLlongItm(lang,"\t\t\t","sentLocally",
-		    el->protoIPTrafficInfos[j].sentLocally,',');
-	wrtLlongItm(lang,"\t\t\t","sentRemotely",
-		    el->protoIPTrafficInfos[j].sentRemotely,',');
-	wrtLlongItm(lang,"\t\t\t","receivedLocally",
-		    el->protoIPTrafficInfos[j].receivedLocally,',');
-	wrtLlongItm(lang,"\t\t\t","receivedFromRemote",
-		    el->protoIPTrafficInfos[j].receivedFromRemote,' ');
+      if(el->protoIPTrafficInfos) {
+	initWriteKey (lang, "\t", "IP");
+	
+	for(j=0; j<numIpProtosToMonitor; j++) {
+	  
+	  if(j > 0) { endWriteKey (lang,"\t\t",','); }
+	  
+	  initWriteKey (lang, "\t\t", protoIPTrafficInfos[j]);
+	  wrtLlongItm(lang,"\t\t\t","sentLocally",
+		      el->protoIPTrafficInfos[j].sentLocally,',');
+	  wrtLlongItm(lang,"\t\t\t","sentRemotely",
+		      el->protoIPTrafficInfos[j].sentRemotely,',');
+	  wrtLlongItm(lang,"\t\t\t","receivedLocally",
+		      el->protoIPTrafficInfos[j].receivedLocally,',');
+	  wrtLlongItm(lang,"\t\t\t","receivedFromRemote",
+		      el->protoIPTrafficInfos[j].receivedFromRemote,' ');
+	}
+	endWriteKey (lang,"\t\t",',');
+	endWriteKey (lang,"\t",',');
       }
-      endWriteKey (lang,"\t\t",',');
-      endWriteKey (lang,"\t",',');
 
       /* ***************************************** */
 

@@ -711,6 +711,12 @@ typedef struct usageCounter {
   u_int peersIndexes[MAX_NUM_CONTACTED_PEERS];
 } UsageCounter;
 
+/* *********************** */
+
+typedef struct routingCounter {
+  TrafficCounter routedPkts, routedBytes;
+} RoutingCounter;
+
 /* *******************************
    
    NOTE
@@ -1663,6 +1669,8 @@ typedef struct hostTraffic {
   unsigned short   actBandwidthUsage;
   TrafficCounter   lastCounterBytesSent, last24HoursBytesSent[25], lastDayBytesSent,
                    lastCounterBytesRcvd, last24HoursBytesRcvd[25], lastDayBytesRcvd;
+  /* Routing */
+  RoutingCounter   *routedTraffic;
 
   /* IP */
   PortUsage        **portsUsage; /* 0...TOP_ASSIGNED_IP_PORTS */
