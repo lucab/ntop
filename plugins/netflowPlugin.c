@@ -684,9 +684,15 @@ static int handleV5Flow(time_t recordActTime,
   case 1: /* ICMP */
     myGlobals.device[actualDeviceId].icmpBytes.value += len;
     srcHost->icmpSent.value += len, dstHost->icmpRcvd.value += len;
+    myGlobals.device[actualDeviceId].netflowGlobals->numNetFlowsICMPRcvd++,
+      myGlobals.device[actualDeviceId].netflowGlobals->totalNetFlowsICMPSize += len;
     break;
+
   case 6: /* TCP */
     myGlobals.device[actualDeviceId].tcpBytes.value += len;
+    myGlobals.device[actualDeviceId].netflowGlobals->numNetFlowsTCPRcvd++,
+      myGlobals.device[actualDeviceId].netflowGlobals->totalNetFlowsTCPSize += len;
+
     allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     updateInterfacePorts(actualDeviceId, sport, dport, len);
@@ -721,6 +727,9 @@ static int handleV5Flow(time_t recordActTime,
     break;
 
   case 17: /* UDP */
+    myGlobals.device[actualDeviceId].netflowGlobals->numNetFlowsUDPRcvd++,
+      myGlobals.device[actualDeviceId].netflowGlobals->totalNetFlowsUDPSize += len;
+
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
     updateInterfacePorts(actualDeviceId, sport, dport, len);
     updateUsedPorts(srcHost, dstHost, sport, dport, len);
@@ -749,6 +758,11 @@ static int handleV5Flow(time_t recordActTime,
     }
 
     session = handleTCPSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, NULL, 0, NULL, actualDeviceId);
+    break;
+
+  default:
+    myGlobals.device[actualDeviceId].netflowGlobals->numNetFlowsOtherRcvd++,
+      myGlobals.device[actualDeviceId].netflowGlobals->totalNetFlowsOtherSize += len;
     break;
   }
 
@@ -1991,7 +2005,8 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Zero Packet Count</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowPkts, formatBuf, sizeof(formatBuf)));
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowPkts, 
+			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(buf, sizeof(buf),
@@ -1999,7 +2014,8 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Zero Byte Count</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowBytes, formatBuf, sizeof(formatBuf)));
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowBytes, 
+			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(buf, sizeof(buf),
@@ -2007,7 +2023,8 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Bad Data</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowReality, formatBuf, sizeof(formatBuf)));
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowReality, 
+			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(buf, sizeof(buf),
@@ -2015,7 +2032,8 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Unknown Template</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf)));
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd, 
+			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(buf, sizeof(buf),
@@ -2023,7 +2041,8 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "<th " TH_BG " align=\"left\" "DARK_BG ">Total Number of Flows Processed</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsProcessed, formatBuf, sizeof(formatBuf)));
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsProcessed, 
+			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   if((myGlobals.device[deviceId].netflowGlobals->numSrcNetFlowsEntryFailedWhiteList +

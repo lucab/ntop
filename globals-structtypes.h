@@ -1272,7 +1272,10 @@ typedef struct netFlowGlobals {
   struct in_addr netFlowIfAddress, netFlowIfMask;
   char *netFlowWhiteList, *netFlowBlackList;
   u_long numNetFlowsPktsRcvd, numNetFlowsV5Rcvd;
-  u_long numNetFlowsV1Rcvd, numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed, numNetFlowsRcvd;
+  u_long numNetFlowsV1Rcvd, numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed;
+  u_long numNetFlowsRcvd, lastNumNetFlowsRcvd;
+  u_long totalNetFlowsTCPSize, totalNetFlowsUDPSize, totalNetFlowsICMPSize, totalNetFlowsOtherSize; 
+  u_long numNetFlowsTCPRcvd, numNetFlowsUDPRcvd, numNetFlowsICMPRcvd, numNetFlowsOtherRcvd; 
   u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
   u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,
     numSrcNetFlowsEntryAccepted,

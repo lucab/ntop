@@ -1793,7 +1793,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     /* ****************************************************** */
 
     if(dumpDomains) {
-
       DomainStats **stats, *tmpStats, *statsEntry;
       u_int maxHosts = 0;
       Counter totBytesSent = 0;
@@ -1823,9 +1822,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	}
 	
 	/* walk through all hosts, getting their domain names and counting stats */
-	for (el = getFirstHost(devIdx);
-	  el != NULL; el = getNextHost(devIdx, el)) {
-
+	for (el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el)) {
 	    fillDomainName(el);
 	    
 	    /* if we didn't get a domain name, bail out */
@@ -2136,6 +2133,55 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateGauge(rrdPath,   "knownHostsNum", myGlobals.device[devIdx].hostsno);
 	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(devIdx));
 	updateCounter(rrdPath, "ipBytes",       myGlobals.device[devIdx].ipBytes.value);
+
+	if(myGlobals.device[devIdx].netflowGlobals != NULL) {
+	  updateCounter(rrdPath, "numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd);
+	  updateCounter(rrdPath, "numFlows", myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd);
+	  updateCounter(rrdPath, "numDiscardedFlows", 
+			myGlobals.device[devIdx].netflowGlobals->numBadFlowPkts+
+			myGlobals.device[devIdx].netflowGlobals->numBadFlowBytes+
+			myGlobals.device[devIdx].netflowGlobals->numBadFlowReality+
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsV9UnknTemplRcvd);
+
+	  updateGauge(rrdPath, "averageTcpNewFlowSize", 
+		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize/
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
+	  updateGauge(rrdPath, "averageUdpNewFlowSize", 
+		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize/
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
+	  updateGauge(rrdPath, "averageIcmpNewFlowSize", 
+		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize/
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
+	  updateGauge(rrdPath, "averageOtherNewFlowSize", 
+		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize/
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
+
+	  updateGauge(rrdPath, "numTcpNewFlows", 
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
+	  updateGauge(rrdPath, "numUdpNewFlows", 
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
+	  updateGauge(rrdPath, "numIcmpNewFlows", 
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
+	  updateGauge(rrdPath, "numOtherNewFlows", 
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
+
+	  updateGauge(rrdPath, "numNewFlows", 
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd-
+			myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd);
+
+	  /* Update Counters */
+	  myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd = 
+	    myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd; 
+	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize = 0;
+	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize = 0;
+	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize = 0;
+	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize = 0;
+	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd = 0;
+	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd = 0;
+	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd = 0;
+	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd = 0;
+	  
+	}
 
 	if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
 	  updateCounter(rrdPath, "droppedPkts", myGlobals.device[devIdx].droppedPkts.value);
