@@ -1081,7 +1081,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  else
 	    dstHost->httpStats->numRemoteReqRcvd++;
 	} else {
-	  rcStr[10]=0;
 	  traceEvent(TRACE_INFO, "%s -> %s [%s]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
@@ -1090,7 +1089,7 @@ static void handleSession(const struct pcap_pkthdr *h,
       } else if((sport == 8875 /* Napster Redirector */) 
 		&& (tcpDataLength > 0)) {
 	char address[64];
-	struct in_addr_t svrAddr;
+	struct in_addr svrAddr;
 	int i;
 
 	FD_SET(HOST_SVC_NAPSTER_REDIRECTOR, &srcHost->flags);
@@ -1123,8 +1122,10 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
 	}
 
-	dstHost->napsterStats->numConnectionsRequested++, 
-	  srcHost->napsterStats->numConnectionsServed++;
+	srcHost->napsterStats->numConnectionsServed++,
+	  dstHost->napsterStats->numConnectionsRequested++;	  
+	srcHost->napsterStats->bytesSent += tcpDataLength, 
+	dstHost->napsterStats->bytesRcvd += tcpDataLength;
       }
     }
 
@@ -1245,8 +1246,7 @@ static void handleSession(const struct pcap_pkthdr *h,
     } else if(tp->th_flags & TH_ACK) {
       u_int32_t ack = ntohl(tp->th_ack);
 
-      if((ack == theSession->lastAckIdI2R)
-	 && (ack == theSession->lastAckIdR2I)) {
+      if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
 	if(theSession->initiatorIdx == srcHostIdx) {
 	  theSession->numDuplicatedAckI2R++;
 	  theSession->bytesRetranI2R += length;

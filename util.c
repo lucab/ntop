@@ -1665,6 +1665,7 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     el->udpSessionList = NULL;
     el->nextDBupdate = 0;
     el->dnsStats = NULL;
+    el->napsterStats = NULL;
     el->httpStats = NULL;
     el->icmpInfo = NULL;
 

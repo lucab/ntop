@@ -248,46 +248,58 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	  if(sortSendMode) {
 	    if(reportType == 0) /* Protos */ {
 	      if(snprintf(buf, sizeof(buf), "<TR %s>%s"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
-		      getRowColor(), webHostName,
-		      formatBytes(el->bytesSent, 1), sentPercent, separator,
-		      formatBytes(el->tcpSentLocally+el->tcpSentRemotely, 1),
-		      formatBytes(el->udpSentLocally+el->udpSentRemotely, 1),
-		      formatBytes(el->icmpSent, 1),
-		      formatBytes(el->dlcSent, 1),
-		      formatBytes(el->ipxSent, 1),
-		      formatBytes(el->decnetSent, 1),
-		      formatBytes(el->arp_rarpSent, 1),
-		      formatBytes(el->appletalkSent, 1)
-		      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+			  getRowColor(), webHostName,
+			  formatBytes(el->bytesSent, 1), sentPercent, separator,
+			  formatBytes(el->tcpSentLocally+el->tcpSentRemotely, 1),
+			  formatBytes(el->udpSentLocally+el->udpSentRemotely, 1),
+			  formatBytes(el->icmpSent, 1),
+			  formatBytes(el->dlcSent, 1),
+			  formatBytes(el->ipxSent, 1),
+			  formatBytes(el->decnetSent, 1),
+			  formatBytes(el->arp_rarpSent, 1),
+			  formatBytes(el->appletalkSent, 1)
+			  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	      sendString(buf);
 
 	      if(snprintf(buf, sizeof(buf), 
-		       "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		       "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		       "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
-		       formatBytes(el->ospfSent, 1),
-		       formatBytes(el->netbiosSent, 1),
-		       formatBytes(el->igmpSent, 1),
-		       formatBytes(el->osiSent, 1),
-		       formatBytes(el->qnxSent, 1),
-		       formatBytes(el->otherSent, 1)
-		       ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+			  formatBytes(el->ospfSent, 1),
+			  formatBytes(el->netbiosSent, 1),
+			  formatBytes(el->igmpSent, 1),
+			  formatBytes(el->osiSent, 1),
+			  formatBytes(el->qnxSent, 1),
+			  formatBytes(el->otherSent, 1)
+			  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      
 	      sendString(buf);
 	    } else if(reportType == 1) /* IP Protos */ {
 	      TrafficCounter totalIPTraffic=0;
-
+	      
 	      if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=RIGHT>%.1f%s%%</TD>",
 		      getRowColor(), webHostName,
 		      formatBytes(el->bytesSent, 1), sentPercent, separator) < 0) 
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
+
+	      if(el->napsterStats != NULL) {
+		if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			    formatBytes(el->napsterStats->bytesRcvd, 1)) < 0)
+		  traceEvent(TRACE_ERROR, "Buffer overflow!");
+		sendString(buf);
+	      } else {
+		sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
+	      }
 
 	      for(i=0; i<numIpProtosToMonitor; i++) {
 		totalIPTraffic += el->protoIPTrafficInfos[i].sentLocally+
@@ -385,6 +397,15 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 			  rcvdPercent, separator) < 0) 
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
+
+	      if(el->napsterStats != NULL) {
+		if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			    formatBytes(el->napsterStats->bytesSent, 1)) < 0)
+		  traceEvent(TRACE_ERROR, "Buffer overflow!");
+		sendString(buf);
+	      } else {
+		sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
+	      }
 
 	      for(i=0; i<numIpProtosToMonitor; i++) {
 		totalIPTraffic += el->protoIPTrafficInfos[i].receivedLocally+

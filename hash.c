@@ -457,11 +457,26 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
     if(tcpSession[j] != NULL) {
       tcpSession[j]->initiatorIdx  = mapIdx(tcpSession[j]->initiatorIdx);
       tcpSession[j]->remotePeerIdx = mapIdx(tcpSession[j]->remotePeerIdx);
+
+      if((tcpSession[j]->initiatorIdx == NO_PEER)
+	 || (tcpSession[j]->remotePeerIdx == NO_PEER)) {
+	/* Session to purge */
+	notifyTCPSession(tcpSession[j]);
+	free(tcpSession[j]); /* No inner pointers to free */
+	tcpSession[j] = NULL;
+      }
     }
 
     if(udpSession[j] != NULL) {
       udpSession[j]->initiatorIdx  = mapIdx(udpSession[j]->initiatorIdx);
       udpSession[j]->remotePeerIdx = mapIdx(udpSession[j]->remotePeerIdx);
+
+      if((udpSession[j]->initiatorIdx == NO_PEER)
+	 || (udpSession[j]->remotePeerIdx == NO_PEER)) {
+	/* Session to purge */
+	free(udpSession[j]); /* No inner pointers to free */
+	udpSession[j] = NULL;
+      }
     }
   }
 

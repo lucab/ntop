@@ -237,25 +237,33 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 
     if((reportType == 0) || (reportType == 1)) {
       if(reportType == 0) {
-	if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_SORT_DATA_SENT_PROTOS, sign) < 0) 
+	if(snprintf(htmlAnchor, sizeof(htmlAnchor), 
+		    "<A HREF=/%s?%s", STR_SORT_DATA_SENT_PROTOS, sign) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_SORT_DATA_SENT_PROTOS) < 0) 
+	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+		    "<A HREF=/%s?", STR_SORT_DATA_SENT_PROTOS) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       } else {
-	if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_SORT_DATA_SENT_IP, sign) < 0) 
+	if(snprintf(htmlAnchor, sizeof(htmlAnchor), 
+		    "<A HREF=/%s?%s", STR_SORT_DATA_SENT_IP, sign) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_SORT_DATA_SENT_IP) < 0)
+	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), 
+		    "<A HREF=/%s?", STR_SORT_DATA_SENT_IP) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
     } else if(reportType == 2) {
-      if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_SENT_THPT, sign) < 0)
+      if(snprintf(htmlAnchor, sizeof(htmlAnchor), 
+		  "<A HREF=/%s?%s",   STR_SORT_DATA_SENT_THPT, sign) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_SENT_THPT) < 0) 
+      if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), 
+		  "<A HREF=/%s?",   STR_SORT_DATA_SENT_THPT) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
     } else if(reportType == 3) {
-      if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_SENT_HOST_TRAFFIC, sign) < 0) 
+      if(snprintf(htmlAnchor, sizeof(htmlAnchor), 
+		  "<A HREF=/%s?%s",   STR_SORT_DATA_SENT_HOST_TRAFFIC, sign) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_SENT_HOST_TRAFFIC) < 0) 
+      if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), 
+		  "<A HREF=/%s?",   STR_SORT_DATA_SENT_HOST_TRAFFIC) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
     }
 
@@ -304,9 +312,11 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       } else {
 	if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", 
-		    STR_SORT_DATA_RECEIVED_IP, sign) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		    STR_SORT_DATA_RECEIVED_IP, sign) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", 
-		    STR_SORT_DATA_RECEIVED_IP) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		    STR_SORT_DATA_RECEIVED_IP) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
     } else if(reportType == 2) {
       if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   
@@ -317,9 +327,11 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
     } else if(reportType == 3) {
       if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",  
-		  STR_SORT_DATA_RCVD_HOST_TRAFFIC, sign)  < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  STR_SORT_DATA_RCVD_HOST_TRAFFIC, sign)  < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
       if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",  
-		  STR_SORT_DATA_RCVD_HOST_TRAFFIC) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  STR_SORT_DATA_RCVD_HOST_TRAFFIC) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
     }
 
     if((reportType == 0) || (reportType == 1)) {
@@ -421,8 +433,21 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else if(reportType == 1) {
-    int soFar=1;
-
+    int soFar=2;
+    
+    if(abs(column) == 1) {
+	arrow[0] = arrowGif;
+	theAnchor[0] = htmlAnchor;
+      } else {
+	arrow[0] = "";
+	theAnchor[0] = htmlAnchor1;
+      }
+    
+    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>%s%s</A></TH>",
+		theAnchor[0], 1, "Napster", arrow[0]) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+    
     for(i=0; i<numIpProtosToMonitor; i++) {
       if(abs(column) == soFar) {
 	arrow[0] = arrowGif;
@@ -432,7 +457,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	theAnchor[0] = htmlAnchor1;
       }
       if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>%s%s</A></TH>",
-	      theAnchor[0], i+1, protoIPTrafficInfos[i], arrow[0]) < 0) 
+	      theAnchor[0], i+2, protoIPTrafficInfos[i], arrow[0]) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       soFar++;
@@ -444,7 +469,8 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       arrow[0] = "";  theAnchor[0] = htmlAnchor1;
     }
     if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>Other&nbsp;IP%s</A></TH>", 
-	     theAnchor[0], i+1, arrow[0]) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	     theAnchor[0], i+2, arrow[0]) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else if(reportType == 2) {
     updateThpt();
@@ -793,11 +819,24 @@ int cmpFctn(const void *_a, const void *_b) {
 	  fa_ = (*a)->actualSentThpt, fb_ = (*b)->actualSentThpt, floatCompare = 1;
 	  break;
 	default:
-	  if(idx < numIpProtosToMonitor) {
-	    a_ = (*a)->protoIPTrafficInfos[idx].sentLocally
-	      +(*a)->protoIPTrafficInfos[idx].sentRemotely;
-	    b_ = (*b)->protoIPTrafficInfos[idx].sentLocally
-	      +(*b)->protoIPTrafficInfos[idx].sentRemotely;
+
+	  if(idx <= numIpProtosToMonitor) {
+	    if(idx == 0) {
+	      if((*a)->napsterStats == NULL)
+		a_ = 0;
+	      else
+		a_ = (*a)->napsterStats->bytesSent;
+
+	      if((*b)->napsterStats == NULL)
+		b_ = 0;
+	      else
+		b_ = (*b)->napsterStats->bytesSent;
+	    } else {
+	      a_ = (*a)->protoIPTrafficInfos[idx-1].sentLocally
+		+(*a)->protoIPTrafficInfos[idx-1].sentRemotely;
+	      b_ = (*b)->protoIPTrafficInfos[idx-1].sentLocally
+		+(*b)->protoIPTrafficInfos[idx-1].sentRemotely;
+	    }
 	  } else {
 	    int i;
 
@@ -841,12 +880,24 @@ int cmpFctn(const void *_a, const void *_b) {
 	  fa_ = (*a)->actualRcvdThpt,
 	    fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
 	  break;
-	default:
-	  if(idx < numIpProtosToMonitor) {
-	    a_ = (*a)->protoIPTrafficInfos[idx].receivedLocally
-	      +(*a)->protoIPTrafficInfos[idx].receivedFromRemote;
-	    b_ = (*b)->protoIPTrafficInfos[idx].receivedLocally
-	      +(*b)->protoIPTrafficInfos[idx].receivedFromRemote;
+	default:	
+	  if(idx <= numIpProtosToMonitor) {
+	    if(idx == 0) {
+	      if((*a)->napsterStats == NULL)
+		a_ = 0;
+	      else
+		a_ = (*a)->napsterStats->bytesRcvd;
+
+	      if((*b)->napsterStats == NULL)
+		b_ = 0;
+	      else
+		b_ = (*b)->napsterStats->bytesRcvd;
+	    } else {
+	      a_ = (*a)->protoIPTrafficInfos[idx-1].receivedLocally
+		+(*a)->protoIPTrafficInfos[idx-1].receivedFromRemote;
+	      b_ = (*b)->protoIPTrafficInfos[idx-1].receivedLocally
+		+(*b)->protoIPTrafficInfos[idx-1].receivedFromRemote;
+	    }
 	  } else {
 	    int i;
 
@@ -2544,11 +2595,8 @@ void printHostUsedServices(HostTraffic *el) {
   if(el->napsterStats != NULL)     
     printNapsterStats(el);
   
-  if((el->dnsStats == NULL)
-     && (el->httpStats == NULL)
-     )
+  if((el->dnsStats == NULL) && (el->httpStats == NULL))
     return;
-
 
   tot = 0;
 

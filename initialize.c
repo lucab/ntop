@@ -68,7 +68,7 @@ void initIPServices(void) {
   for(idx=0; configFileDirs[idx] != NULL; idx++) {
     char tmpStr[64];
 
-    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", configFileDirs[idx]) < 0) 
+    if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", configFileDirs[idx]) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     fd = fopen(tmpStr, "r");
 
@@ -82,7 +82,7 @@ void initIPServices(void) {
 	  int numPort;
 
 	  /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-	  if (3 == sscanf(tmpStr, "%63[^ \t] %d/%15s", name, &numPort, proto)) {	    
+	  if (3 == sscanf(tmpStr, "%63[^ \t] %d/%15s", name, &numPort, proto)) {
 	    /* traceEvent(TRACE_INFO, "'%s' - '%s' - '%d'\n", name, proto, numPort); */
 
 	    if(strcmp(proto, "tcp") == 0)
@@ -123,6 +123,50 @@ void initIPServices(void) {
 }
 /* ******************************* */
 
+/*
+   Function below courtesy of
+   Eric Dumazet <dada1@cosmosbay.com>
+*/
+static void resetDevice(int deviceId) {
+  int len;
+
+  device[deviceId].actualHashSize = HASH_INITIAL_SIZE;
+  device[deviceId].hashThreshold = (unsigned int)(device[deviceId].actualHashSize*0.5);
+  device[deviceId].topHashThreshold = (unsigned int)(device[deviceId].actualHashSize*0.75);
+
+  len = sizeof(HostTraffic*)*device[deviceId].actualHashSize;
+  device[deviceId].hash_hostTraffic = malloc(len);
+  memset(device[deviceId].hash_hostTraffic, 0, len);
+
+  device[deviceId].lastTotalPkts = device[deviceId].lastBroadcastPkts = 0;
+  device[deviceId].lastMulticastPkts = 0;
+  device[deviceId].lastEthernetBytes = device[deviceId].lastIpBytes = 0;
+  device[deviceId].lastNonIpBytes = 0;
+
+  device[deviceId].tcpBytes = device[deviceId].udpBytes = 0;
+  device[deviceId].icmpBytes = device[deviceId].dlcBytes = 0;
+  device[deviceId].ipxBytes = device[deviceId].netbiosBytes = 0;
+  device[deviceId].decnetBytes = device[deviceId].arpRarpBytes = 0;
+  device[deviceId].atalkBytes = device[deviceId].otherBytes = 0;
+  device[deviceId].otherIpBytes = 0;
+
+  device[deviceId].lastThptUpdate = device[deviceId].lastMinThptUpdate =
+    device[deviceId].lastHourThptUpdate = device[deviceId].lastFiveMinsThptUpdate = time(NULL);
+  device[deviceId].lastMinEthernetBytes = device[deviceId].lastFiveMinsEthernetBytes = 0;
+  memset(&device[deviceId].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+  memset(&device[deviceId].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+  memset(&device[deviceId].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+  device[deviceId].hash_hostTraffic[broadcastEntryIdx] = &broadcastEntry;
+  memset(device[deviceId].last60MinutesThpt, 0, sizeof(device[deviceId].last60MinutesThpt));
+  memset(device[deviceId].last24HoursThpt, 0, sizeof(device[deviceId].last24HoursThpt));
+  memset(device[deviceId].last30daysThpt, 0, sizeof(device[deviceId].last30daysThpt));
+  device[deviceId].last60MinutesThptIdx=0, device[deviceId].last24HoursThptIdx=0,
+    device[deviceId].last30daysThptIdx=0;
+  device[deviceId].hostsno = 1; /* Broadcast entry */
+}
+
+/* ******************************* */
+
 void initCounters(int _mergeInterfaces) {
 #ifndef WIN32
   char *p;
@@ -144,9 +188,8 @@ void initCounters(int _mergeInterfaces) {
   if(domainName[0] == '\0') {
     if((getdomainname(domainName, MAXHOSTNAMELEN) != 0)
        || (domainName[0] == '\0')
-       || (strcmp(domainName, "(none)") == 0))
-      {
-	if ((gethostname(domainName, MAXHOSTNAMELEN) == 0)
+       || (strcmp(domainName, "(none)") == 0)) {
+	if((gethostname(domainName, MAXHOSTNAMELEN) == 0)
 	    && ((p = memchr(domainName, '.', MAXHOSTNAMELEN)) != NULL)) {
 	  domainName[MAXHOSTNAMELEN - 1] = '\0';
 	  /*
@@ -215,32 +258,6 @@ void initCounters(int _mergeInterfaces) {
   memset(hnametable, 0, sizeof(hnametable));
 #endif
 
-  for(i=0; i<numDevices; i++) {
-    if((!mergeInterfaces)
-       || (mergeInterfaces && (i == 0))) {
-      device[i].actualHashSize = actualHashSize;
-      device[i].hashThreshold = (unsigned int)(device[i].actualHashSize*0.5);
-      device[i].topHashThreshold = (unsigned int)(device[i].actualHashSize*0.75);
-
-      len = sizeof(HostTraffic*)*device[i].actualHashSize;
-      device[i].hash_hostTraffic = malloc(len);
-      memset(device[i].hash_hostTraffic, 0, len);
-      
-      device[i].lastTotalPkts = device[i].lastBroadcastPkts = 0;
-      device[i].lastMulticastPkts = 0;
-      device[i].lastEthernetBytes = device[i].lastIpBytes = 0;
-      device[i].lastNonIpBytes = 0;
-      
-      device[i].tcpBytes = device[i].udpBytes = 0;
-      device[i].icmpBytes = device[i].dlcBytes = 0;
-      device[i].ipxBytes = device[i].netbiosBytes = 0;
-      device[i].decnetBytes = device[i].arpRarpBytes = 0;
-      device[i].atalkBytes = device[i].otherBytes = 0;
-      device[i].otherIpBytes = 0;
-      device[i].hostsno = 0;
-    }
-  }
-
   memset(tcpSession, 0, sizeof(tcpSession));
   memset(udpSession, 0, sizeof(udpSession));
 
@@ -256,9 +273,9 @@ void initCounters(int _mergeInterfaces) {
   for(i=0; i<ETHERNET_ADDRESS_LEN; i++)
     broadcastEntry.ethAddress[i] = 255;
   broadcastEntry.hostIpAddress.s_addr = 0xFFFFFFFF;
-  strncpy(broadcastEntry.hostNumIpAddress, "broadcast", 
+  strncpy(broadcastEntry.hostNumIpAddress, "broadcast",
 	 sizeof(broadcastEntry.hostNumIpAddress));
-  strncpy(broadcastEntry.hostSymIpAddress, broadcastEntry.hostNumIpAddress, 
+  strncpy(broadcastEntry.hostSymIpAddress, broadcastEntry.hostNumIpAddress,
 	  sizeof(broadcastEntry.hostSymIpAddress));
   FD_SET(SUBNET_LOCALHOST_FLAG, &broadcastEntry.flags);
   FD_SET(BROADCAST_HOST_FLAG, &broadcastEntry.flags);
@@ -266,21 +283,8 @@ void initCounters(int _mergeInterfaces) {
 
   broadcastEntryIdx = 0;
 
-  for(i=0; i<numDevices; i++) {
-    if((!mergeInterfaces)
-       || (mergeInterfaces && (i == 0))) {
-      device[i].hash_hostTraffic[broadcastEntryIdx] = &broadcastEntry;
-      memset(device[i].last60MinutesThpt, 0, sizeof(device[i].last60MinutesThpt));
-      memset(device[i].last24HoursThpt, 0, sizeof(device[i].last24HoursThpt));
-      memset(device[i].last30daysThpt, 0, sizeof(device[i].last30daysThpt));
-      device[i].last60MinutesThptIdx=0, device[i].last24HoursThptIdx=0, 
-	device[i].last30daysThptIdx=0;
-      device[i].hostsno++; /* A new entry has just been added */  
-    }
-  }
-  
   fragmentList = NULL;
- 
+
   resetStats();
   createVendorTable();
   initialSniffTime = lastRefreshTime = time(NULL);
@@ -294,7 +298,7 @@ void resetStats(void) {
   int i, interfacesToCreate;
 
   traceEvent(TRACE_INFO, "Resetting traffic statistics...");
-  
+
 #ifdef MULTITHREADED
   accessMutex(&hostsHashMutex, "resetStats");
 #endif
@@ -307,29 +311,16 @@ void resetStats(void) {
   /* Do not reset the first entry (broadcastEntry) */
   for(i=0; i<interfacesToCreate; i++) {
     u_int j;
-    
+
     for(j=1; j<device[i].actualHashSize; j++)
       if(device[i].hash_hostTraffic[j] != NULL) {
 	freeHostInfo(i, j);
 	device[i].hash_hostTraffic[j] = NULL;
       }
 
-    device[i].ethernetPkts = 0, device[i].lastNumEthernetPkts = 0;
-    device[i].ethernetBytes = 0;
-    device[i].ipBytes = 0;
-    device[i].broadcastPkts = 0;
-    device[i].multicastPkts = 0;
-    device[i].peakThroughput = 0, device[i].peakPacketThroughput = 0;
-    device[i].throughput = 0;
-    device[i].lastThptUpdate = device[i].lastMinThptUpdate =
-      device[i].lastHourThptUpdate = device[i].lastFiveMinsThptUpdate = time(NULL);
-    device[i].lastMinEthernetBytes = device[i].lastFiveMinsEthernetBytes = 0;
-    device[i].hostsno = 0;
-    memset(&device[i].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-    memset(&device[i].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-    memset(&device[i].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+    resetDevice(i);
   }
-  
+
   FD_ZERO(&ipTrafficMatrixPromiscHosts);
 
   for(i=0; i<HASHNAMESIZE; i++) {
@@ -351,19 +342,19 @@ void resetStats(void) {
 
 /* ******************************* */
 
-int initGlobalValues(void) {  
+int initGlobalValues(void) {
   actualDeviceId = 0;
 
 #ifndef WIN32
   if((rFileName == NULL) && (geteuid() != 0)) {
     traceEvent(TRACE_INFO, "Sorry, you must be superuser in order to run ntop.\n");
     exit(-1);
-  }  
+  }
 #endif
 
 #ifdef HAVE_OPENSSL
   init_ssl();
-#endif  
+#endif
 
   return(0);
 }
@@ -388,26 +379,26 @@ void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
 
 /* ******************************* */
 
-void initGdbm(void) { 
+void initGdbm(void) {
   char tmpBuf[200];
   int firstTime=1;
 
 #ifdef HAVE_GDBM_H
   /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0) 
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
  RETRY_INIT_GDBM:
   if(gdbm_file == NULL) {
-    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n", 
+    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
 	       tmpBuf, gdbm_strerror(gdbm_errno));
 
 #ifdef FALLBACK
     if(firstTime) {
       firstTime = 0;
       strcpy(dbPath, "/tmp");
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0) 
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
       traceEvent(TRACE_ERROR, "Fallback solution: reverting to /tmp for the database directory\n");
@@ -449,11 +440,11 @@ void initGdbm(void) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
       exit(-1);
     }
-    
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", dbPath) < 0) 
+
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", dbPath) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     hostsInfoFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
-    
+
     if(hostsInfoFile == NULL) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
       exit(-1);
@@ -675,7 +666,7 @@ void initDevices(char* devices) {
 
       if(numDevices < MAX_NUM_DEVICES) {
 	for(k=0; k<8; k++) {
-	  if(snprintf(tmpDevice, sizeof(tmpDevice), "%s:%d", device[i].name, k) < 0) 
+	  if(snprintf(tmpDevice, sizeof(tmpDevice), "%s:%d", device[i].name, k) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  if(getLocalHostAddress(&myLocalHostAddress, tmpDevice) == 0) {
 	    /* The virtual interface exists */
@@ -710,16 +701,16 @@ static void initRules(char *rulesFile) {
     handleRules = 1;
     parseRules(rulesFile);
 
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/event.db", dbPath) < 0) 
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/event.db", dbPath) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     eventFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
-    
+
     if(eventFile == NULL) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
       exit(-1);
     }
   } else
-    eventFile = NULL;  
+    eventFile = NULL;
 }
 
 /* ******************************* */
@@ -731,25 +722,25 @@ void initLibpcap(char* rulesFile, int numDevices) {
     int i;
 
     initRules(rulesFile);
-    
-    for(i=0; i<numDevices; i++) {      
+
+    for(i=0; i<numDevices; i++) {
       /* Fire up libpcap for each specified device */
 
       /* Support for virtual devices */
       char *column = strchr(device[i].name, ':');
 
       /*
-	The timeout below for packet capture 
+	The timeout below for packet capture
 	has been set to 100ms.
 
-	Courtesy of: Nicolai Petri <Nicolai@atomic.dk> 
+	Courtesy of: Nicolai Petri <Nicolai@atomic.dk>
       */
       if(column == NULL)
 	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1,
 					   100 /* ms */, ebuf);
       else {
 	column[0] = 0;
-	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1, 
+	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1,
 					   100 /* ms */, ebuf);
 	column[0] = ':';
       }
@@ -761,7 +752,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
     }
 
     for(i=0; i<numDevices; i++) {
-      if (pcap_lookupnet(device[i].name, &device[i].network.s_addr, 
+      if (pcap_lookupnet(device[i].name, &device[i].network.s_addr,
 			 &device[i].netmask.s_addr, ebuf) < 0) {
 	/* Fix for IP-less interfaces (e.g. bridge)
 	   Courtesy of Diana Eichert <deicher@sandia.gov>
@@ -920,7 +911,7 @@ void initSignals(void) {
 /* ***************************** */
 
 void startSniffer(void) {
-  int i; 
+  int i;
 
 #ifdef MULTITHREADED
   for(i=0; i<numDevices; i++) {
