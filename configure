@@ -1330,7 +1330,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v3.0rc1-001-2004-03-18"
+SCRIPTVER="v3.0.050-002-2004-03-21"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -24898,7 +24898,11 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <tcpd.h>
+
+ #ifdef HAVE_SYS_TYPES_H
+ #include <sys/types.h>
+ #endif
+ #include <tcpd.h>
  int allow_severity = 0;
  int deny_severity  = 0;
 

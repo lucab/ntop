@@ -50,7 +50,7 @@ AC_INIT([ntop],[3.0rc1])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.0rc1-001-2004-03-18"
+SCRIPTVER="v3.0.050-002-2004-03-21"
 
 dnl>
 dnl> generate the config header
@@ -2572,7 +2572,11 @@ if test ".${ac_enable_tcpwrap}" = ".yes"; then
         fi
         oLIBS="${LIBS}"
         LIBS="${LIBS} -lwrap"
-        AC_TRY_LINK([#include <tcpd.h>
+        AC_TRY_LINK([
+ #ifdef HAVE_SYS_TYPES_H
+ #include <sys/types.h>
+ #endif
+ #include <tcpd.h>
  int allow_severity = 0;
  int deny_severity  = 0;
 
