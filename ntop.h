@@ -30,9 +30,6 @@
    Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
 */
 #define _REENTRANT
-#if !defined(_THREAD_SAFE)
-# define _THREAD_SAFE
-#endif
 
 #if defined(HAVE_CONFIG_H)
 # include "config.h"
@@ -205,7 +202,11 @@ int getdomainname(char *name, size_t len);
 
 #if defined(HAVE_PTHREAD_H)
 # include <pthread.h>
+# if !defined(_THREAD_SAFE)
+#  define _THREAD_SAFE
+# endif
 #endif
+
 
 #ifndef WIN32
 #ifdef HAVE_PWD_H
