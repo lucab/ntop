@@ -1824,7 +1824,7 @@ void processPacket(u_char *_deviceId,
   FILE * fd;
   unsigned char ipxBuffer[128];
   int deviceId, actualDeviceId, vlanId=-1;
-
+  AnyHeader *anyHeader;
 
 #ifdef MEMORY_DEBUG
   {
@@ -1887,8 +1887,8 @@ void processPacket(u_char *_deviceId,
   if(myGlobals.device[actualDeviceId].pcapDumper != NULL)
     pcap_dump((u_char*)myGlobals.device[actualDeviceId].pcapDumper, h, p);
 
-  if ( (myGlobals.device[deviceId].datalink < MAX_DLT_ARRAY) &&
-       (length > myGlobals.mtuSize[myGlobals.device[deviceId].datalink]) ) {
+  if((myGlobals.device[deviceId].datalink < MAX_DLT_ARRAY) 
+     && (length > myGlobals.mtuSize[myGlobals.device[deviceId].datalink]) ) {
     /* Sanity check */
     if(myGlobals.enableSuspiciousPacketDump) {
       traceEvent(CONST_TRACE_WARNING, "Packet # %u too long (len = %u)!\n",
@@ -1975,6 +1975,22 @@ void processPacket(u_char *_deviceId,
       }
       break;
 
+#ifdef LINUX      
+    case DLT_ANY:  /* Linux 'any' device */
+      anyHeader = (AnyHeader*)p;
+      length -= sizeof(AnyHeader); /* don't count nullhdr */
+      eth_type = ntohs(anyHeader->protoType);
+#if PACKET_DEBUG
+      printf("pktType:        0x%x\n", ntohs(anyHeader->pktType));
+      printf("llcAddressType: 0x%x\n", ntohs(anyHeader->llcAddressType));
+      printf("llcAddressLen:  0x%x\n", ntohs(anyHeader->llcAddressLen));
+      printf("eth_type:       0x%x\n", eth_type);
+#endif
+      ether_src = ether_dst = myGlobals.dummyEthAddress;
+      processIpPkt(p+sizeof(AnyHeader), h, length, ether_src, ether_dst, actualDeviceId, vlanId);
+      break;
+#endif
+
     case DLT_NULL: /* loopaback interface */
       /*
 	Support for ethernet headerless interfaces (e.g. lo0)
@@ -2005,7 +2021,7 @@ void processPacket(u_char *_deviceId,
       ether_src = ether_dst = NULL;
       processIpPkt(p+headerDisplacement, h, length, NULL, NULL, actualDeviceId, vlanId);
       break;
-
+#if 0 /* Handled by DLT_ANY */
       /* PPPoE patch courtesy of Stefano Picerno <stefanopp@libero.it> */
 #ifdef LINUX
     case DLT_LINUX_SLL: /* Linux capture interface */
@@ -2014,6 +2030,7 @@ void processPacket(u_char *_deviceId,
       ether_src = ether_dst = NULL;
       processIpPkt(p+ SLL_HDR_LEN , h, length, ether_src, ether_dst, actualDeviceId, vlanId);
       break;
+#endif
 #endif
 
     case DLT_IEEE802: /* Token Ring */
@@ -2075,8 +2092,8 @@ void processPacket(u_char *_deviceId,
      */
     if(fd && myGlobals.device [deviceId].ethv)
         fprintf (fd, "PACKET_DEBUG: ETHER:  ----- Ether Header -----\n\n"),
-	fprintf (fd, "                      Packet %ld arrived at %s\n",
-		 myGlobals.device [actualDeviceId].ethernetPkts, timestamp (& h->ts, FLAG_TIMESTAMP_FMT_ABS)),
+	fprintf (fd, "                      Packet %ld\n",
+		 myGlobals.device [actualDeviceId].ethernetPkts);
 	fprintf (fd, "                      Total size  = %d : header = %d : data = %d\n",
 		 length, hlen, length - hlen),
 	fprintf (fd, "                      Source      = %s\n", etheraddr_string (ether_src)),
@@ -2086,10 +2103,7 @@ void processPacket(u_char *_deviceId,
 
     if((myGlobals.device[deviceId].datalink != DLT_PPP)
        && (myGlobals.device[deviceId].datalink != DLT_RAW)
-#ifdef LINUX
-       && (myGlobals.device[deviceId].datalink != DLT_LINUX_SLL)  
-#endif
-       ) {
+       && (myGlobals.device[deviceId].datalink != DLT_ANY)) {
       if((!myGlobals.dontTrustMACaddr) && (eth_type == 0x8137)) {
 	/* IPX */
 	IPXpacket ipxPkt;
@@ -2330,10 +2344,10 @@ void processPacket(u_char *_deviceId,
 #endif
 	      }
 
-	      incrementTrafficCounter(&srcHost->ipxSent, length), incrementTrafficCounter(&dstHost->ipxRcvd, length);
+	      incrementTrafficCounter(&srcHost->ipxSent, length),
+		incrementTrafficCounter(&dstHost->ipxRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
-	    } else if((llcHeader.ssap == LLCSAP_NETBIOS)
-		      && (llcHeader.dsap == LLCSAP_NETBIOS)) {
+	    } else if((llcHeader.ssap == LLCSAP_NETBIOS) && (llcHeader.dsap == LLCSAP_NETBIOS)) {
 	      /* Netbios */
 	      if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	      if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));

@@ -734,8 +734,10 @@ void resetStats(int deviceId) {
   /* Do not reset the first entry (myGlobals.broadcastEntry) */
   for(j=1; j<myGlobals.device[deviceId].actualHashSize; j++)
     if(myGlobals.device[deviceId].hash_hostTraffic[j] != NULL) {
-      freeHostInfo(deviceId, myGlobals.device[deviceId].hash_hostTraffic[j], deviceId); /* ** */
-      myGlobals.device[deviceId].hash_hostTraffic[j] = NULL;
+      if(j != myGlobals.otherHostEntryIdx) {
+	freeHostInfo(deviceId, myGlobals.device[deviceId].hash_hostTraffic[j], deviceId);
+	myGlobals.device[deviceId].hash_hostTraffic[j] = NULL;
+      }
     }
 
   resetDevice(deviceId);
@@ -750,7 +752,6 @@ void resetStats(int deviceId) {
 
   myGlobals.device[deviceId].hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.broadcastEntry;
   if(myGlobals.otherHostEntryIdx != myGlobals.broadcastEntryIdx) {
-    allocateOtherHosts(); /* Freed by ** */
     myGlobals.device[deviceId].hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntry;
   }
 
@@ -948,7 +949,7 @@ void initApps(void) {
  * if device is "none" it adds a dummy interface
  */
 void addDevice(char* deviceName, char* deviceDescr) {
-  int i, deviceId, j, mallocLen, memlen;
+  int i, deviceId, mallocLen, memlen;
   NtopInterface *tmpDevice;
   char *workDevices;
   char myName[80], *column;
@@ -1226,7 +1227,10 @@ void initDevices(char* devices) {
   if(myGlobals.rFileName != NULL) {
     createDummyInterface("none");
     myGlobals.device[0].dummyDevice = 0;
-    myGlobals.device[0].pcapPtr = pcap_open_offline(myGlobals.rFileName, ebuf);
+    myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.rFileName, ebuf);
+    resetStats(0);
+    initDeviceDatalink(0);
+
     strcpy(myGlobals.device[0].name, "pcap-file");
     myGlobals.numDevices = 1;
 

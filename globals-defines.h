@@ -1920,6 +1920,10 @@
  #define DLT_PPP_BSDOS	14	/* BSD/OS Point-to-point Protocol */
 #endif
 
+#ifndef DLT_ANY
+#define DLT_ANY	        113	/* Linux 'any' device */
+#endif
+
 /* ******************************** */
 
 /* PPPoE patch courtesy of Stefano Picerno <stefanopp@libero.it> */

@@ -105,6 +105,10 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 /* ******************************* */
 
 void allocateOtherHosts() {
+  if(myGlobals.otherHostEntry != NULL) {
+    traceEvent(CONST_TRACE_WARNING, "Attempting to call twice allocateOtherHosts()");
+    return;
+  }
   myGlobals.otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
   memset(myGlobals.otherHostEntry, 0, sizeof(HostTraffic));
 

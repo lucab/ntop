@@ -61,8 +61,8 @@ extern int opterr;
 extern int optopt;
 #endif /* HAVE_GETOPT_H */
 extern int setSpecifiedUser();
-u_short ip2AS(u_int32_t ip);
-void readASs(FILE *fd);
+extern u_short ip2AS(u_int32_t ip);
+extern void readASs(FILE *fd);
 
 /****** function declarations ***** */
 

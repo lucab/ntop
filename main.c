@@ -337,9 +337,9 @@ static int parseOptions(int argc, char* argv []) {
 #ifdef WIN32
   theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:S:U:VW:";
 #elif defined(MAKE_WITH_SYSLOG)
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKLMO:P:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKLMO:P:S:U:VW:";
 #else
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKMO:P:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKMO:P:S:U:VW:";
 #endif
 
 /* * * * * * * * * * */

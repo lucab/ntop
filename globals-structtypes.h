@@ -1240,6 +1240,17 @@ struct tokenRing_llc {
   u_int16_t ethType;		/* ethertype field   */
 };
 
+/* ******** ANY ************ */
+
+typedef struct anyHeader {
+  u_int16_t  pktType;
+  u_int16_t  llcAddressType;
+  u_int16_t  llcAddressLen;
+  u_char     ethAddress[LEN_ETHERNET_ADDRESS];
+  u_int16_t  pad;
+  u_int16_t  protoType;
+} AnyHeader;
+
 /* ******** FDDI ************ */
 
 typedef struct fddi_header {
