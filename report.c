@@ -1442,7 +1442,7 @@ void printSession(IPSession *theSession, u_short sessionType,
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "printSessions");
 #endif
-  fprintf(logd," %s %s:%s %s %s:%s s=%lu/r=%lu\n",
+  fprintf(logd," %s %s:%s %s %s:%s s=%llu/r=%llu\n",
 	  _sessionType,
 	  device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theSession->initiatorIdx)]->hostSymIpAddress, _sport,
 	  direction,
