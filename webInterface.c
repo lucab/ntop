@@ -936,7 +936,7 @@ void switchNwInterface(int _interface) {
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=" CONST_SWITCH_NIC_HTML ">\n");
 
     for(i=0; i<myGlobals.numDevices; i++)
-      if(!myGlobals.device[i].virtualDevice) {
+      if((!myGlobals.device[i].virtualDevice) && myGlobals.device[i].activeDevice) {
 	if(myGlobals.actualReportDeviceId == i)
 	  selected="CHECKED";
 	else

@@ -797,7 +797,7 @@ static int parseOptions(int argc, char* argv []) {
 
       traceEvent(CONST_TRACE_WARNING, "The web interface will be disabled");
       traceEvent(CONST_TRACE_INFO, "If enabled, the rrd plugin will collect data");
-      traceEvent(CONST_TRACE_INFO, "If enabled, the netFlow and/or sFlow plugins will collect and/or transmit data");
+      traceEvent(CONST_TRACE_INFO, "If enabled, the NetFlow and/or sFlow plugins will collect and/or transmit data");
       traceEvent(CONST_TRACE_INFO, "This may or may not be what you want");
       traceEvent(CONST_TRACE_INFO, "but without the web interface you can't set plugin parameters");
       myGlobals.webInterfaceDisabled = 1;

@@ -789,7 +789,7 @@ void purgeIdleHosts(int actDevice) {
     scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
 
   gettimeofday(&hiresTimeEnd, NULL);
-  hiresDeltaTime=timeval_subtract(hiresTimeEnd, hiresTimeStart);
+  hiresDeltaTime = timeval_subtract(hiresTimeEnd, hiresTimeStart);
 
   if(numFreedBuckets > 0)
     traceEvent(CONST_TRACE_NOISY, 
@@ -957,7 +957,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 	  break;
 	}
       } else {
-	/* -o | --no-mac (or netFlow, which doesn't have MACs) - compare with only the IP address */
+	/* -o | --no-mac (or NetFlow, which doesn't have MACs) - compare with only the IP address */
 	if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
 	  hostFound = 1;
 	  break;

@@ -298,13 +298,6 @@
 #endif
 
 /*
- * This flag turns on a signal trap in rrdPlugin.c.  If you're seeing
- * rrd simply and silently die, this might catch the signal and log
- * it for analysis.
- */
-/* #define MAKE_WITH_RRDSIGTRAP */
-
-/*
  * This flag turns on a signal trap in netflowPlugin.c.  If you're seeing
  * netflow simply and silently die, this might catch the signal and log
  * it for analysis.
@@ -456,14 +449,9 @@
  */
 /* #define PROBLEMREPORTID_DEBUG */
 
-/* P2P_DEBUG enables debug messages during p2p protocol processing.
+/* P2P_DEBUG enables debug messages during P2P protocol processing.
  */
 /* #define P2P_DEBUG 1 */
-
-/* RRD_DEBUG controls debug messages in rrdPlugin.c.  Define it for some messages
- * or set it to 1 for more, 2 for lots of detail or 3 for huge (every rrd call)
- */
-/* #define RRD_DEBUG */
 
  /*
   * SEMAPHORE_DEBUG causes util.c to log information about semaphore operations.
@@ -1019,16 +1007,6 @@
  * will silently ignore larger values...
  */
 #define MAX_WEBSERVER_REQUEST_QUEUE_LEN     20
-
-/*
- * Optional: Set a default font for the rrd generated graphs
- *   Courtesy of Chris Turbeville
- */
-/*
- #define CONST_RRD_DEFAULT_FONT_SIZE      "8"
- #define CONST_RRD_DEFAULT_FONT_PATH      "/usr/openwin/lib/X11/fonts/TrueType/"
- #define CONST_RRD_DEFAULT_FONT_NAME      "ArialNarrow-Bold.ttf"
-*/
 
 /*
  * How many dummy files to create for the HAVE_FILEDESCRIPTORBUG fix
@@ -1977,14 +1955,6 @@
 /* -O and -P are special, see globals-core.h */
 
 #define DEFAULT_NTOP_MAPPER_URL             NULL     /* -U */
-
-/*
- * How often should we update rrd statistics?  Overridden in rrd plugin
- */
-#define DEFAULT_RRD_INTERVAL                300  /* seconds - rrd counter (default) interval */
-#define DEFAULT_RRD_HOURS                   72   /* hours of interval by interval data (default) */
-#define DEFAULT_RRD_DAYS                    90   /* days of hour by hour data (default) */
-#define DEFAULT_RRD_MONTHS                  36   /* months of day by day data (default) */
 
 /*
  * What should we set tracing to unless we have a parameter?

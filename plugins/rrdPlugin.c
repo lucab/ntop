@@ -63,7 +63,7 @@ int optind, opterr;
 #endif
 
 static unsigned short initialized = 0, active = 0, dumpInterval, dumpDetail;
-static unsigned short dumpDays, dumpHours, dumpMonths;
+static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
 static Counter numTotalRRDs = 0;
 static unsigned long numRuns = 0, numRRDerrors = 0;
@@ -98,6 +98,7 @@ void mkdir_p(char *path);
 static int initRRDfunct(void);
 static void termRRDfunct(void);
 static void handleRRDHTTPrequest(char* url);
+static void addRrdDelay();
 
 /* ************************************* */
 
@@ -200,6 +201,33 @@ static void fillupArgv(int argc, int maxArgc, char *argv[]) {
 
 /* ******************************************* */
 
+void addRrdDelay() {
+  static struct timeval lastSleep;
+  struct timeval thisSleep;
+  float deltaMs;
+
+  if(dumpDelay == 0) return;
+
+  gettimeofday(&thisSleep, NULL);
+
+  deltaMs = (timeval_subtract(thisSleep, lastSleep) / 1000) - dumpDelay;
+
+  if(deltaMs > 0) {
+#ifdef WIN32
+    Sleep((int)dumpDelay);
+#else
+    struct timespec sleepAmount;
+    
+    sleepAmount.tv_sec = 0; sleepAmount.tv_nsec = (int)dumpDelay * 1000;
+    nanosleep(&sleepAmount, NULL);
+#endif
+  }
+
+  gettimeofday(&lastSleep, NULL);
+}
+
+/* ******************************************* */
+
 int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average) {
   char *argv[32], path[512];
@@ -234,6 +262,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
 
   rrd_clear_error();
+  addRrdDelay();
   rc = rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data);
 
 #ifdef CFG_MULTITHREADED
@@ -527,6 +556,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
     rrd_clear_error();
+    addRrdDelay();
     rc = rrd_graph(argc, argv, &calcpr, &x, &y);
 
     calfree();
@@ -697,6 +727,7 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
+  addRrdDelay();
   rc = rrd_graph(argc, argv, &calcpr, &x, &y);
 
   calfree();
@@ -858,6 +889,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
     rrd_clear_error();
+    addRrdDelay();
     rc = rrd_create(argc, argv);
 
     if(rrd_test_error()) {
@@ -897,6 +929,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
+  addRrdDelay();
   if(rrd_last(argc, argv) >= rrdTime) {
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: WARNING rrd_update not performed (RRD already updated)");
   }
@@ -954,6 +987,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
+  addRrdDelay();
   rc = rrd_update(argc, argv);
 
   numTotalRRDs++;
@@ -1093,6 +1127,14 @@ static void commonRRDinit(void) {
   } else {
     dumpMonths = atoi(value);
   }
+
+  if(fetchPrefsValue("rrd.rrdDumpDelay", value, sizeof(value)) == -1) {
+    if(snprintf(value, sizeof(value), "%d", DEFAULT_RRD_DUMP_DELAY) < 0)
+      BufferTooShort();
+    storePrefsValue("rrd.rrdDumpDelay", value);
+    dumpDelay = DEFAULT_RRD_DUMP_DELAY;
+  } else
+    dumpDelay = atoi(value);
 
   if(fetchPrefsValue("rrd.dataDumpDomains", value, sizeof(value)) == -1) {
     storePrefsValue("rrd.dataDumpDomains", "0");
@@ -1453,7 +1495,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<center><form action=\"/plugins/rrdPlugin\" method=GET>\n"
              "<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
              "<TR><TH ALIGN=CENTER "DARK_BG">Item</TH>"
-                 "<TH ALIGN=CENTER "DARK_BG">Description and notes</TH></TR>\n"
+                 "<TH ALIGN=CENTER "DARK_BG">Description and Notes</TH></TR>\n"
              "<TR><TH ALIGN=LEFT "DARK_BG">Dump Interval</TH><TD>"
 	     "<INPUT NAME=interval SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpInterval) < 0)
@@ -1474,6 +1516,7 @@ static void handleRRDHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
   sendString("><br>Specifies how many days of hourly data is stored permanently.</TD></tr>\n");
+
   sendString("<TR><TH ALIGN=LEFT "DARK_BG">Dump Months</TH><TD>"
 	     "<INPUT NAME=months SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpMonths) < 0)
@@ -1483,6 +1526,14 @@ static void handleRRDHTTPrequest(char* url) {
 
   sendString("<TR><TD ALIGN=CENTER COLSPAN=2><B>WARNING:</B>&nbsp;"
 	     "Changes to the above values will ONLY affect NEW rrds</TD></TR>");
+
+  sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Update Delay</TH><TD>"
+	     "<INPUT NAME=delay, SIZE=5 VALUE=");
+  if(snprintf(buf, sizeof(buf), "%d", (int)dumpDelay) < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  sendString("><br>Specifies how many ms to wait between two consecutive RRD updates. Increase this value to distribute RRD load on I/O over the time. Note that a combination of large delays and many RRDs to update can slow down the RRD plugin performance</TD></tr>\n");
 
   sendString("<TR><TH ALIGN=LEFT "DARK_BG">Data to Dump</TH><TD>");
 
@@ -2119,9 +2170,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     if(dumpInterfaces) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-
-	if(myGlobals.device[devIdx].virtualDevice) continue;
-
+	
+	if(myGlobals.device[devIdx].virtualDevice
+	   || (!myGlobals.device[devIdx].activeDevice))
+	  continue;
+	   
 	if(snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath,
                     myGlobals.device[devIdx].humanFriendlyName) < 0)
             BufferTooShort();
