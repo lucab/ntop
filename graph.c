@@ -626,7 +626,8 @@ void pktCastDistribPie(void) {
   };
 
   if(device[actualReportDeviceId].broadcastPkts > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].broadcastPkts)/(float)device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*device[actualReportDeviceId].broadcastPkts)/
+      (float)device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "Broadcast";
   };
 

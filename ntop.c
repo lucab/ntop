@@ -53,11 +53,6 @@ static int enableDBsupport=0;
 
 #ifndef WIN32
 void handleSigHup(int signalId _UNUSED_) {
-  traceEvent(TRACE_INFO, "Caught sighup: statistics have been reset.\n");
-  resetStats();
-
-  /* ************************************** */
-
 #ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "========================================");
   traceEvent(TRACE_INFO, "gdbmMutex is %s", isMutexLocked(&gdbmMutex) ? "*locked*" : "unlocked");
@@ -75,8 +70,8 @@ void handleSigHup(int signalId _UNUSED_) {
   traceEvent(TRACE_INFO, "========================================");
 #endif /* MULTITHREADED */
 
-  /* ************************************** */
-
+  resetStats();
+  traceEvent(TRACE_INFO, "Caught sighup: statistics have been reset.\n");
   (void)setsignal(SIGHUP,  handleSigHup);
 }
 

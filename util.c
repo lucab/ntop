@@ -1127,6 +1127,9 @@ void readLsofInfo(void) {
   } else {
     traceEvent(TRACE_WARNING, "WARNING: lsof() timeout (1)");
     pclose(fd);
+#ifdef MULTITHREADED
+    releaseMutex(&lsofMutex);
+#endif
     return;
   }
 
