@@ -718,7 +718,8 @@ int main(int argc, char *argv[]) {
           rc = stat(&argv[i][1], &fileStat);
           if (rc != 0) {
               if (errno = ENOENT) {
-                  printf("ERROR: File not found\n");
+                  printf("ERROR: Parameter file %s not found/unable to access\n",
+		         &argv[i][1]);
               } else {
                   printf("ERROR: %d in stat(%s, ...)\n", errno, &argv[i][1]);
               }
