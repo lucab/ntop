@@ -213,6 +213,21 @@ ntop.html: ntop.txt
 	@echo "-----------------------------------------------"
 	@echo ""
 
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-
+# rules to translate ASCII files to HTML
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+ntop.html: ntop.8
+	@echo ""
+	@echo "-----------------------------------------------"
+	@echo "Converting $< to HTML format  .... Please wait"
+	@echo ""
+	@man2html < ntop.8 > html/ntop.html
+	@echo "$@ done !"
+	@echo "-----------------------------------------------"
+	@echo ""
+
 ntop-cert.pem:
 	openssl req -new -x509 -sha1 -extensions v3_ca -nodes -days 365 -out cert.pem
 	cat privkey.pem cert.pem > ntop-cert.pem
