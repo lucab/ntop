@@ -721,7 +721,7 @@ void dumpNtopHashIndexes(char* options) {
 
 void dumpNtopTrafficInfo(char* options) {
   char intoabuf[32], key[16], localbuf[32], filter[128];
-  int lang=DEFAULT_LANGUAGE, i;
+  int lang=DEFAULT_LANGUAGE, i, num;
   struct re_pattern_buffer filterPattern;
 
   memset(key, 0, sizeof(key));
@@ -781,13 +781,12 @@ void dumpNtopTrafficInfo(char* options) {
 
   initWriteArray(lang);
 
-  for(i=0; i<numDevices; i++) {
+  for(i=0, num=0; i<numDevices; i++) {
     int j;
 
     if(device[i].virtualDevice) continue;
 
-
-    if(i > 0) { endWriteKey(lang,"",','); }
+    if(num > 0) { endWriteKey(lang,"",','); }
 
     if((key[0] != '\0') &&(strcmp(key, device[i].name) != 0))
       continue;
@@ -968,6 +967,7 @@ void dumpNtopTrafficInfo(char* options) {
 							    device[i].icmpGlobalTrafficStats.remote,',');
     if(checkFilter(filter, &filterPattern, "icmpRemote2Local")) wrtLlongItm(lang,"\t","icmpRemote2Local",
 							    device[i].icmpGlobalTrafficStats.remote2local,' ');
+    num++;
   }
 
   endWriteKey(lang,"",' ');
