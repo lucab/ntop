@@ -1604,10 +1604,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       Counter totBytesSent = 0;
       Counter totBytesRcvd = 0;
       HostTraffic *el;
-      u_int numEntries = 0;
       u_short keyValue=0;
 
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
+        u_int numEntries = 0;
 
 	// save this as it may change
 	maxHosts = myGlobals.device[devIdx].hostsno;
