@@ -37,6 +37,7 @@ extern PluginInfo* sflowPluginEntryFctn(void);
 #ifdef RMON_SUPPORT
 extern PluginInfo* rmonPluginEntryFctn(void);
 #endif
+extern PluginInfo* netflowPluginEntryFctn(void);
 #endif
 
 #ifndef RTLD_NOW 
@@ -228,7 +229,9 @@ static void loadPlugin(char* dirName, char* pluginName) {
 */
   else if(strcmp(pluginName, "sflowPlugin") == 0)
     pluginInfo = sflowPluginEntryFctn();
-/*
+  else if(strcmp(pluginName, "netflowPlugin") == 0)
+    pluginInfo = netflowPluginEntryFctn();
+	/*
   else if(strcmp(pluginName, "rrdPlugin") == 0)
     pluginInfo = rrdPluginEntryFctn();
 */
@@ -366,6 +369,7 @@ void loadPlugins(void) {
   loadPlugin(NULL, "nfsPlugin");
   /* loadPlugin(NULL, "wapPlugin"); */
   loadPlugin(NULL, "sflowPlugin");
+  loadPlugin(NULL, "netflowPlugin");
   /* loadPlugin(NULL, "rrdPlugin"); */
 #ifdef RMON_SUPPORT
   loadPlugin(NULL, "rmonPlugin");
