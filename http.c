@@ -2588,8 +2588,10 @@ static int returnHTTPPage(char* pageName,
 #endif /* HAVE_OPENSSL */
 	  if(myGlobals.runningPref.webPort > 0) closeNwSocket(&myGlobals.sock);
 
+#if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
 	  signal(SIGALRM, quitNow);
-	  alarm(15); /* Don't freeze */
+	  alarm(120); /* Don't freeze */
+#endif
 	}
       }
     }

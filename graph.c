@@ -228,6 +228,33 @@ void drawPie(short width,
 
 /* ************************ */
 
+struct bar_elements {
+  char *label;
+  float data;
+};
+
+/* ************************************************ */
+
+static int cmpElementsFctn(const void *_a, const void *_b) {
+  struct bar_elements *a = (struct bar_elements *)_a;
+  struct bar_elements *b = (struct bar_elements *)_b;
+
+  if((a == NULL) && (b != NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (1)");
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (2)");
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (3)");
+    return(0);
+  }
+
+  return((a)->data < (b)->data ? 1 : -1);
+}
+
+  /* ************************************************ */
+
 /* Fix for large numbers (over 4Gb) courtesy of
    Kouprie Robbert <r.kouprie@dto.tudelft.nl>
 */
@@ -242,6 +269,24 @@ void drawBar(short width,
   int center_x, center_y, vmargin, hmargin, xsize, ysize, xpos, ypos, dypix;
   float maxval, total, yscale, txtsz, txtht;
   float dydat, xmax, ymax, xmin, ymin;
+  struct bar_elements *elems;
+
+  if(num_points <= 0) return;
+  
+  elems = (struct bar_elements*)malloc(sizeof(struct bar_elements)*num_points);
+  if(elems == NULL) return; /* Not enough memory */
+
+  for(i=0; i<num_points; i++) {
+    elems[i].label = labels[i];
+    elems[i].data = data[i];
+  }
+
+  qsort(elems, num_points, sizeof(struct bar_elements), cmpElementsFctn);
+
+  for(i=0; i<num_points; i++) {
+    labels[i] = elems[i].label;
+    data[i] = elems[i].data;
+  }
 
   im = gdImageCreate(width, height);
 
@@ -341,6 +386,7 @@ void drawBar(short width,
   drawLegend(im, width, height, num_points, labels, data, colors, black);
   gdImagePng(im, filepointer);
   gdImageDestroy(im);
+  free(elems);
 }
 
 /* ************************** */
