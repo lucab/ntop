@@ -1369,19 +1369,19 @@ void initDeviceDatalink(int deviceId) {
   case 't': /* TokenRing */
     myGlobals.device[deviceId].datalink = DLT_IEEE802;
     traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is \"t...\", treating as DLT_IEEE802 (TokenRing)",
-	       i,
+	      deviceId,
 	       myGlobals.device[deviceId].name);
     break;
   case 'l': /* Loopback */
     myGlobals.device[deviceId].datalink = DLT_NULL;
     traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is loopback, treating as DLT_NULL",
-	       i,
+	       deviceId,
 	       myGlobals.device[deviceId].name);
     break;
   default:
     myGlobals.device[deviceId].datalink = DLT_EN10MB; /* Ethernet */
     traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s), treating as DLT_EN10MB (10/100/1000 Ethernet)",
-	       i,
+	       deviceId,
 	       myGlobals.device[deviceId].name);
   }
 #endif
@@ -1389,7 +1389,7 @@ void initDeviceDatalink(int deviceId) {
   if(strncmp(myGlobals.device[deviceId].name, "tun", 3) == 0) {
     myGlobals.device[deviceId].datalink = DLT_PPP;
     traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is \"tun\", treating as DLT_PPP",
-	       i,
+	       deviceId,
 	       myGlobals.device[deviceId].name);
   }
 #else /* Not FreeBSD */
@@ -1413,7 +1413,7 @@ void initDeviceDatalink(int deviceId) {
   } else {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) DLT_ is %d, assuming mtu %d, header %d",
-	       i,
+	       deviceId,
 	       myGlobals.device[deviceId].name,
 	       myGlobals.device[deviceId].datalink,
 	       myGlobals.mtuSize[myGlobals.device[deviceId].datalink],
