@@ -3813,27 +3813,13 @@ void processPacket(u_char *_deviceId,
     traceEvent(TRACE_INFO, "Here we go!");  
 #endif
 
-  /* **************************** */
-
-  if(0) {
-    struct in_addr addr;
-    struct hostent *hostAddr;
-
-    hostAddr = gethostbyname("172.22.5.225");
-    memcpy(&addr.s_addr,
-	   hostAddr->h_addr_list[0],
-	   hostAddr->h_length);
-
-    printf("isPseudoLocalAddress=%d\n", isPseudoLocalAddress(&addr));
-    printf("isBroadcastAddress=%d\n",   isBroadcastAddress(&addr));
-  }
-
-  /* **************************** */
-
   if(!capturePackets)
     return;
 
   h_save = h, p_save = p;
+
+  if(length > caplen)
+    length = caplen; /* Partial capture */
 
 #ifdef DEBUG
   if(rFileName != NULL) {

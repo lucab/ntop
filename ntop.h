@@ -631,7 +631,12 @@ typedef struct pthreadMutex {
 typedef struct packetInformation {
   unsigned short deviceId;
   struct pcap_pkthdr h;
-  u_char p[DEFAULT_SNAPLEN+1];
+  u_char p[2*DEFAULT_SNAPLEN+1]; /*
+				   NOTE:
+				   Remove 2* as soon as we are sure
+				   that ntop does not do beyond boundaries
+				   TODO (ASAP!)
+				 */
 } PacketInformation;
 
 # if defined(HAVE_OPENSSL)

@@ -34,6 +34,12 @@
 
  ******************************************************* */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifndef HAVE_REGEX
+
 /* AIX requires this to be the first thing in the file. */
 #if defined (_AIX) && !defined (REGEX_MALLOC)
   #pragma alloca
@@ -46,10 +52,6 @@
 
 /* We need this for `regex.h', and perhaps for the Emacs include files.  */
 #include <sys/types.h>
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 /* The `emacs' switch turns on certain matching commands
    that make sense only in Emacs. */
@@ -4969,3 +4971,5 @@ version-control: t
 trim-versions-without-asking: nil
 End:
 */
+
+#endif /* HAVE_REGEX */
