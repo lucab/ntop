@@ -21,7 +21,7 @@
 
 <hr>
 <!-- Creator     : groff version 1.18 -->
-<!-- CreationDate: Sat Oct 25 07:38:33 2003 -->
+<!-- CreationDate: Mon Dec  1 10:47:16 2003 -->
 <a name="NAME"></a>
 <h2>NAME</h2>
 <!-- INDENTATION -->
@@ -63,6 +63,7 @@
 [<b>-z</b>|<b>--disable-sessions</b>]
 [<b>-A</b>|<b>--set-admin-password</b> <i>password</i>]
 [<b>-B</b>|<b>--filter-expression</b> <i>expression</i>]
+[<b>-C</b> <i>&lt;config</i>mode&gt;<i>]</i>
 [<b>-D</b>|<b>--domain</b> <i>&lt;name&gt;</i>]
 [<b>-F</b>|<b>--flow-spec</b> <i>&lt;specs&gt;</i>]
 [<b>-M</b>|<b>--no-interface-merge</b>]
@@ -84,8 +85,8 @@
 <p>[<b>-d</b>|<b>--daemon</b>] [<b>-i</b>|<b>--interface</b>
 <i>&lt;name&gt;</i>] [<b>-u</b>|<b>--user</b>
 <i>&lt;user&gt;</i>] [<b>-K</b>|<b>--enable-debug</b>]
-[<b>-L</b>] [<b>-use-syslog=</b>
-<i>&lt;facility&gt;</i>]</p>
+[<b>-L</b>] [<b>-use-syslog=</b> <i>&lt;facility&gt;</i>]
+[<b>--webserver-queue</b> <i>&lt;number&gt;</i>]</p>
 <!-- INDENTATION -->
 <p>Windows option:</p>
 <!-- INDENTATION -->
@@ -1082,6 +1083,35 @@ currently available.</p>
 <tr valign="top" align="left">
 <td width="10%"></td>
 <td width="89%">
+<p><b>-C |</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p>This instruments ntop to be used in two configurations:
+host and network mode. In host mode (default) ntop works as
+usual: the IP addresses received are those of real hosts. In
+host mode the IP addresses received are those of the C-class
+network to which the address belongs. Using ntop in network
+mode is extremely useful when installed in a traffic
+exchange (e.g. in the middle of the Internet) whereas the
+host mode should be used when ntop is installed on the edge
+of a network (e.g. inside a company). The network mode
+significantly reduces the amount of work ntop has to perform
+and it has to be used whenever ntop is used to find out how
+the network traffic flows and not to pin-point specific
+hosts.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
 <p><b>-D | --domain</b></p></td>
 </table></p>
 <!-- INDENTATION -->
@@ -1573,6 +1603,29 @@ NIC&quot; on that Admin menu.</p>
 <p><b>ntop</b> requires a number of external tools and
 libraries to operate. Certain other tools are optional, but
 add to the program&rsquo;s capabilities.</p>
+</td>
+</table></p>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--webserver-queue</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p>Specifies the maximum number of web server requests for
+the tcp/ip stack to retain in it&rsquo;s queue awaiting
+delivery to the <b>ntop</b> web server. Requests in excess
+of this queue may be dropped (allowing for retransmission)
+or rejected at the tcp/ip stack level, depending upon the
+OS. Whatever happens, happens at the OS level, without any
+information being delivered to <b>ntop</b></p>
 <!-- INDENTATION -->
 <p>Required libraries include:</p>
 <!-- INDENTATION -->
@@ -1628,7 +1681,7 @@ InMon Corporation, http://www.inmon.com/sflowTools.htm.</p>
 <p>Tool locations are current as of July 2003 - please send
 email to report new locations or dead links.</p>
 </td>
-</table></p>
+</table>
 <a name="SEE ALSO"></a>
 <h2>SEE ALSO</h2>
 <!-- INDENTATION -->
