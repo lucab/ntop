@@ -39,6 +39,9 @@ INCLUDES  = -I. $(INCS)
 LIBS      = @LIBS@ @MORELIBS@
 CCLD      = @CCLD@
 
+CORELIBS  = @CORELIBS@
+MORELIBS  = @MORELIBS@
+
 
 DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.db ntops ntopd ntop-config
 CLEANFILES     = $(DISTCLEANFILES)
@@ -101,8 +104,8 @@ ntop_DEPENDENCIES = libntop.la libntopreport.la
 ntop_LDADD        = libntop.la libntopreport.la
 ntop_LDFLAGS      =
 
-ntops_DEPENDENCIES = libntop.la libntopreport.la
-ntops_LDADD        = libntop.la libntopreport.la
+ntops_DEPENDENCIES = libntopreport.la libntop.la
+ntops_LDADD        = libntopreport.la libntop.la
 ntops_LDFLAGS      = -static
 
 noinst_HEADERS     = globals-core.h globals-report.h graph.h ntop.h regex.h rules.h
@@ -120,7 +123,7 @@ libntop_la_SOURCES = address.c       dataFormat.c  event.c      \
                      vendortable.h
 
 libntop_la_DEPENDENCIES = config.h
-libntop_la_LIBADD       =
+libntop_la_LIBADD       = $(CORELIBS)
 libntop_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
 
 # the Archive
@@ -133,7 +136,7 @@ libntopreport_la_SOURCES = admin.c \
 
 
 libntopreport_la_DEPENDENCIES = config.h
-libntopreport_la_LIBADD       =
+libntopreport_la_LIBADD       = $(MORELIBS)
 libntopreport_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
 
 man_MANS = ntop.8

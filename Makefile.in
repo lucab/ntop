@@ -108,7 +108,6 @@ LIBREADLINE = @LIBREADLINE@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
-MORELIBS = @MORELIBS@
 NM = @NM@
 NTOP_RELEASE = @NTOP_RELEASE@
 NTOP_VERSION_INFO = @NTOP_VERSION_INFO@
@@ -131,6 +130,9 @@ INCS = @INCS@
 INCLUDES = -I. $(INCS)
 LIBS = @LIBS@ @MORELIBS@
 CCLD = @CCLD@
+
+CORELIBS = @CORELIBS@
+MORELIBS = @MORELIBS@
 
 DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.db ntops ntopd ntop-config
 CLEANFILES = $(DISTCLEANFILES)
@@ -180,8 +182,8 @@ ntop_DEPENDENCIES = libntop.la libntopreport.la
 ntop_LDADD = libntop.la libntopreport.la
 ntop_LDFLAGS = 
 
-ntops_DEPENDENCIES = libntop.la libntopreport.la
-ntops_LDADD = libntop.la libntopreport.la
+ntops_DEPENDENCIES = libntopreport.la libntop.la
+ntops_LDADD = libntopreport.la libntop.la
 ntops_LDFLAGS = -static
 
 noinst_HEADERS = globals-core.h globals-report.h graph.h ntop.h regex.h rules.h
@@ -193,7 +195,7 @@ libntop_la_SOURCES = address.c       dataFormat.c  event.c                      
 
 
 libntop_la_DEPENDENCIES = config.h
-libntop_la_LIBADD = 
+libntop_la_LIBADD = $(CORELIBS)
 libntop_la_LDFLAGS = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
 
 # the Archive
@@ -201,7 +203,7 @@ libntopreport_la_SOURCES = admin.c                            globals-report.c  
 
 
 libntopreport_la_DEPENDENCIES = config.h
-libntopreport_la_LIBADD = 
+libntopreport_la_LIBADD = $(MORELIBS)
 libntopreport_la_LDFLAGS = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
 
 man_MANS = ntop.8
@@ -590,7 +592,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
