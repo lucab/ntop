@@ -2285,7 +2285,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   HostTraffic *el;
   HostTraffic** tmpTable;
-  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[11], *theAnchor[11], osBuf[128];
+  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[11], *theAnchor[11], osBuf[160];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   u_char *vlanList, foundVlan = 0, vlanStr[16];
