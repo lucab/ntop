@@ -23,37 +23,236 @@
 
 #define PERL_LANGUAGE       1
 #define PHP_LANGUAGE        2
-#define DEFAULT_LANGUAGE    PHP_LANGUAGE
+#define NO_LANGUAGE         3
+#define NB_LANGUAGES        3
+#define DEFAULT_LANGUAGE    NO_LANGUAGE
+
+
+/* 
+   This file has been significantly reworked
+   by Philippe Bereski <Philippe.Bereski@ms.alcatel.fr>
+
+   Many thanks Philippe!
+*/
+char * languages[] = {"", "perl","php","no"};
+char buf[256];
+
+/* *************************** */
+
+void initWriteArray ( int lang ) {
+  switch (lang) {
+  case PERL_LANGUAGE :
+    sendString("%hash = (\n");
+    break ;
+  case PHP_LANGUAGE :
+    sendString("$hash = array(\n");
+    break ;
+  case NO_LANGUAGE :
+    break ;
+  }
+}
+
+/* *************************** */
+
+void endWriteArray (int lang) {
+  switch (lang) {
+  case PERL_LANGUAGE :
+  case PHP_LANGUAGE :
+    sendString(");\n");
+    break ;
+  case NO_LANGUAGE :
+    sendString("\n");
+    break ;
+  }
+}
+
+/* *************************** */
+
+void initWriteKey (int lang,char * indent,char * keyName) {
+  switch (lang) {
+  case PERL_LANGUAGE :
+    if(snprintf(buf, sizeof(buf), "%s'%s' => {\n",indent, keyName) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+    break ;
+  case PHP_LANGUAGE :
+    if(snprintf(buf, sizeof(buf), "%s'%s' => array(\n",indent, keyName) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+    break ;
+  case NO_LANGUAGE :
+	
+    break ;
+  }
+}
+
+/* *************************** */
+
+void endWriteKey (int lang,char * indent, char last) {
+  /* If there is no indentation, this was the first level of key,
+     hence the end of the list. Don't add a ',' at end.
+  */
+  switch (lang) {
+  case PERL_LANGUAGE :
+    if(snprintf(buf, sizeof(buf),"%s}%c\n",indent,last) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+    break ;
+  case PHP_LANGUAGE :
+    if(snprintf(buf, sizeof(buf),"%s)%c\n",indent,last) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+    break ;
+  case NO_LANGUAGE :
+    if ( indent == "") sendString("\n");
+    break ;
+  }
+}
+
+/* *************************** */
+
+void wrtStrItm (int lang,char * indent,char * name,char * value,char last) {
+  switch (lang) {
+  case PERL_LANGUAGE :
+  case PHP_LANGUAGE :
+    /* In the case of hostNumIpAddress and hostSymIpAddress, 
+       the pointer is not null, but the string is empty.
+       In that case, don't create the key in the array.
+    */
+    if (( value != NULL ) && ( value[0] != '\0'))  {
+      if(snprintf(buf, sizeof(buf), "%s'%s' => '%s'%c\n", indent,name,value,last) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
+    }
+    break ;
+  case NO_LANGUAGE :
+    if ( value != NULL ) {
+      if(snprintf(buf, sizeof(buf), "%s|",value) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
+    } else {       
+      if(snprintf(buf, sizeof(buf), "%s|","") < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
+    }
+    break ;
+  }
+}
+
+/* *************************** */
+
+void wrtIntItm (int lang,char * indent,char * name,int value,char last) {
+  char buf[80];
+  sprintf (buf,"%d",value);
+  wrtStrItm (lang, indent, name,  buf, last);
+}
+
+/* *************************** */
+
+void wrtIntStrItm (int lang, char * indent,int name,char * value,char useless) {
+  char buf[80];
+  sprintf (buf,"%d",name);
+  wrtStrItm (lang, indent, buf,  value, ',');
+}
+
+/* *************************** */
+
+void wrtUintItm (int lang,char * indent,char * name,unsigned int value,char useless) {
+  char buf[80];
+  sprintf (buf,"%d",value);
+  wrtStrItm (lang, indent, name,  buf, ',');
+}
+
+/* *************************** */
+
+void wrtUcharItm (int lang,char * indent,char * name,u_char value,char useless) {
+  char buf[80];
+  sprintf (buf,"%d",value);
+  wrtStrItm (lang, indent, name,  buf, ',');
+}
+
+/* *************************** */
+
+void wrtFloatItm (int lang,char * indent,char * name,float value,char last) {
+  char buf[80];
+  sprintf (buf,"%0.2f",value);
+  wrtStrItm (lang, indent, name, buf, last);
+}
+
+/* *************************** */
+
+void wrtIntFloatItm (int lang,char * indent,int name,float value,char last) {
+  char buf[80];
+  sprintf (buf,"%d",name);
+  wrtFloatItm (lang, indent, buf, value, last);
+}
+
+/* *************************** */
+
+void wrtUlongItm (int lang,char * indent,char * name,unsigned long value,char useless) {
+  char buf[80];
+  sprintf (buf,"%lu",value);
+  wrtStrItm (lang, indent, name,  buf, ',');
+}
+
+/* *************************** */
+
+void wrtLlongItm (int lang,char * indent,char * name,TrafficCounter value,char last) {
+  char buf[80];
+  sprintf (buf,"%llu",value);
+  wrtStrItm (lang, indent, name, buf, last);
+}
+
+/* *************************** */
+
+void wrtTime_tItm (int lang,char * indent,char * name,time_t value,char useless) {
+  char buf[80];
+  sprintf (buf,"%ld",value);
+  wrtStrItm (lang, indent, name, buf, ',');
+}
+
+/* *************************** */
+
+void wrtUshortItm (int lang,char * indent,char * name,u_short value,char useless) {
+  char buf[80];
+  sprintf (buf,"%d",value);
+  wrtStrItm (lang, indent, name,  buf, ',');
+}
 
 /* ********************************** */
 
 void dumpNtopHashes(char* options) {
-  char buf[256], key[64];
-  int idx, numEntries=0, languageType=DEFAULT_LANGUAGE, j;
+  char key[64];
+  unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE, j;
   HostTraffic *el;
 
   memset(key, 0, sizeof(key));
 
+
+
   if(options != NULL) {
-    /* language=[perl|php] */
+    /* language now defined into "languages[]" */
     char *tmpStr, *strtokState;
 
     tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
-      int i=0;
+      int i=0; int j;
 
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;
+
+      /* If argument contains "language=something", then
+	 look in the table "languages" of known language for
+	 the choosen language. 
+      */
 
       if(tmpStr[i] == '=') {
 	tmpStr[i] = 0;
 
 	if(strcmp(tmpStr, "language") == 0) {
-	  if(strcmp(&tmpStr[i+1], "perl") == 0)
-	    languageType = PERL_LANGUAGE;
-	  else
-	    languageType = DEFAULT_LANGUAGE;
+	  lang=DEFAULT_LANGUAGE;
+	  for (j=1;j <= NB_LANGUAGES;j++) {
+	    if(strcmp(&tmpStr[i+1], languages[j]) == 0)
+	      lang = j;
+	  }
 	} else if(strcmp(tmpStr, "key") == 0) {
 	  strncpy(key, &tmpStr[i+1], sizeof(key));
 	}
@@ -62,11 +261,13 @@ void dumpNtopHashes(char* options) {
       tmpStr = strtok_r(NULL, "&", &strtokState);
     }
   }
-
-  if(languageType == PERL_LANGUAGE)
-    sendString("%hash = (\n");
-  else
-    sendString("$hash = array(\n");
+  /* debut trace
+     if(snprintf(buf, sizeof(buf), "%s\n", languages[lang]) < 0)
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+     sendString(buf);
+     traceEvent (TRACE_ERROR, buf);
+     end trace */
+  initWriteArray (lang);
 
   for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
@@ -78,1321 +279,330 @@ void dumpNtopHashes(char* options) {
 	   && strcmp(el->ethAddressString, key)
 	   && strcmp(el->hostSymIpAddress, key))
 	  continue;
-	}
+      }
 
       if(el->hostNumIpAddress[0] != '\0')
 	hostKey = el->hostNumIpAddress;
       else
 	hostKey = el->ethAddressString;
 
-      if(numEntries > 0) {
-	if(languageType == PERL_LANGUAGE)
-	  sendString("},\n\n");
-	else
-	  sendString("),\n\n");
-      }
+      if(numEntries > 0) { endWriteKey (lang,"",','); }
 
-      if(languageType == PERL_LANGUAGE) {
-	if(snprintf(buf, sizeof(buf), "'%s' => {\n", hostKey) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      } else {
-	if(snprintf(buf, sizeof(buf), "'%s' => array(\n", hostKey) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
+      initWriteKey (lang, "", hostKey);
 
       /* ************************ */
 
-      if(snprintf(buf, sizeof(buf), "\t'%s' => %d,\n", "index", idx) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
+      wrtUintItm (lang, "\t","index", idx,' ');
 
-      if(el->hostNumIpAddress[0] != '\0') {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "hostNumIpAddress",
-		    el->hostNumIpAddress)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
+      wrtStrItm (lang, "\t", "hostNumIpAddress", el->hostNumIpAddress,',');
+      wrtStrItm (lang, "\t", "hostSymIpAddress", el->hostSymIpAddress,',');
 
-      if(el->hostSymIpAddress[0] != '\0') {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "hostSymIpAddress",
-		    el->hostSymIpAddress)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(snprintf(buf, sizeof(buf), "\t'%s' => %ld,\n", "firstSeen", el->firstSeen)
-	 < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-
-      if(snprintf(buf, sizeof(buf), "\t'%s' => %ld,\n", "lastSeen", el->lastSeen)
-	 < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-
-      if(snprintf(buf, sizeof(buf), "\t'%s' => %d,\n", "minTTL", el->minTTL)
-	 < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-
-      if(snprintf(buf, sizeof(buf), "\t'%s' => %d,\n", "maxTTL", el->maxTTL)
-	 < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-
-      if(el->nbHostName != NULL) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "nbHostName", el->nbHostName)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-
-	if(el->nbDomainName != NULL) {
-	  if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "nbDomainName", el->nbDomainName)
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-	}
-
-	if(el->nbAccountName != NULL) {
-	  if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "nbAccountName", el->nbAccountName)
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-	}
-
-	if(el->nbDescr != NULL) {
-	  if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "nbDescr", el->nbDescr)
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-	}
-
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %d,\n", "nbNodeType", el->nbNodeType)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-      }
-
-      if(el->atNodeName != NULL) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "atNodeName", el->atNodeName)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %d,\n", "atNetwork", el->atNetwork)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %d,\n", "atNode", el->atNode)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-      }
-
-      if(el->ipxHostName != NULL) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "ipxHostName", el->ipxHostName)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-      }
-
-      if(el->pktSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n", "pktSent", el->pktSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
-      }
-
-      if(el->pktReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "pktReceived", el->pktReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->pktDuplicatedAckSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "pktDuplicatedAckSent",
-		    el->pktDuplicatedAckSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->pktDuplicatedAckRcvd > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "pktDuplicatedAckRcvd",
-		    el->pktDuplicatedAckRcvd)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->pktBroadcastSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "pktBroadcastSent", el->pktBroadcastSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->bytesBroadcastSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "bytesBroadcastSent", el->bytesBroadcastSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->pktMulticastSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "pktMulticastSent", el->pktMulticastSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->bytesMulticastSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "bytesMulticastSent", el->bytesMulticastSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->pktMulticastRcvd > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "pktMulticastRcvd", el->pktMulticastRcvd)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->bytesSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "bytesSent", el->bytesSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->bytesSentLocally > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "bytesSentLocally", el->bytesSentLocally)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->bytesSentRemotely > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "bytesSentRemotely", el->bytesSentRemotely)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->bytesReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "bytesReceived", el->bytesReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->bytesReceivedLocally > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "bytesReceivedLocally", el->bytesReceivedLocally)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->bytesReceivedFromRemote > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "bytesReceivedFromRemote",
-		    el->bytesReceivedFromRemote)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->actualRcvdThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "actualRcvdThpt", el->actualRcvdThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->lastHourRcvdThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "lastHourRcvdThpt", el->lastHourRcvdThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->averageRcvdThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "averageRcvdThpt", el->averageRcvdThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->peakRcvdThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "peakRcvdThpt", el->peakRcvdThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->actualSentThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "actualSentThpt", el->actualSentThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->lastHourSentThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "lastHourSentThpt", el->lastHourSentThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->averageSentThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "averageSentThpt", el->averageSentThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->peakSentThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "peakSentThpt", el->peakSentThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->actualRcvdPktThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "actualRcvdPktThpt", el->actualRcvdPktThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->averageRcvdPktThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "averageRcvdPktThpt", el->averageRcvdPktThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->peakRcvdPktThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "peakRcvdPktThpt", el->peakRcvdPktThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->actualSentPktThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "actualSentPktThpt", el->actualSentPktThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->averageSentPktThpt > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %0.2f,\n",
-		    "averageSentPktThpt", el->averageSentPktThpt)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->tcpSentLocally > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "tcpSentLocally", el->tcpSentLocally)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->tcpSentRemotely > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "tcpSentRemotely", el->tcpSentRemotely)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->udpSentLocally > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "udpSentLocally", el->udpSentLocally)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->udpSentRemotely > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "udpSentRemotely", el->udpSentRemotely)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->icmpSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "icmpSent", el->icmpSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->ospfSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "ospfSent", el->ospfSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->igmpSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "igmpSent", el->igmpSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->tcpReceivedLocally > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "tcpReceivedLocally", el->tcpReceivedLocally)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->tcpReceivedFromRemote > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "tcpReceivedFromRemote", el->tcpReceivedFromRemote)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->udpReceivedLocally > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "udpReceivedLocally", el->udpReceivedLocally)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->udpReceivedFromRemote > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "udpReceivedFromRemote",
-		    el->udpReceivedFromRemote)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->icmpReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "icmpReceived", el->icmpReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->ospfReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "ospfReceived", el->ospfReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->igmpReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "igmpReceived", el->igmpReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
+      wrtTime_tItm (lang, "\t", "firstSeen",   el->firstSeen,' ');
+      wrtTime_tItm (lang, "\t", "lastSeen",    el->lastSeen,' ');
+      wrtUshortItm(lang, "\t", "minTTL",       el->minTTL,' ');
+      wrtUshortItm(lang, "\t", "maxTTL",       el->maxTTL,' ');
+      wrtStrItm (lang, "\t", "nbHostName",     el->nbHostName,',');
+      wrtStrItm (lang, "\t", "nbDomainName",   el->nbDomainName,',');
+      wrtStrItm (lang, "\t", "nbDescr",        el->nbDescr,',');
+      wrtUcharItm  (lang, "\t", "nodeType",    el->nbNodeType,' ');
+      wrtStrItm (lang, "\t", "atNodeName",     el->atNodeName,',');
+      wrtUshortItm(lang, "\t", "atNetwork",    el->atNetwork,' ');
+      wrtUcharItm  (lang, "\t", "atNode",      el->atNode,' ');
+      wrtStrItm (lang, "\t", "ipxHostName",    el->ipxHostName,',');
+      wrtLlongItm  (lang, "\t", "pktSent",     el->pktSent,',');
+      wrtLlongItm  (lang, "\t", "pktReceived", el->pktReceived,',');
+      wrtLlongItm  (lang, "\t", "pktDuplicatedAckSent",el->pktDuplicatedAckSent,',');
+      wrtLlongItm  (lang, "\t", "pktDuplicatedAckRcvd",el->pktDuplicatedAckRcvd,',');
+      wrtLlongItm  (lang, "\t", "pktBroadcastSent",    el->pktBroadcastSent,',');
+      wrtLlongItm  (lang, "\t", "bytesMulticastSent",  el->bytesMulticastSent,',');
+      wrtLlongItm  (lang, "\t", "pktMulticastSent",    el->pktMulticastSent,',');
+      wrtLlongItm  (lang, "\t", "bytesMulticastSent",  el->bytesMulticastSent,',');
+      wrtLlongItm  (lang, "\t", "pktMulticastRcvd",    el->pktMulticastRcvd,',');
+      wrtLlongItm  (lang, "\t", "bytesSent",           el->bytesSent,',');
+      wrtLlongItm  (lang, "\t", "bytesSentLocally",    el->bytesSentLocally,',');
+      wrtLlongItm  (lang, "\t", "bytesSentRemotely",   el->bytesSentRemotely,',');
+      wrtLlongItm  (lang, "\t", "bytesReceived",       el->bytesReceived,',');
+      wrtLlongItm  (lang, "\t", "bytesReceivedLocally", el->bytesReceivedLocally,',');
+      wrtLlongItm  (lang, "\t", "bytesReceivedFromRemote",
+		    el->bytesReceivedFromRemote,',');
+      wrtFloatItm  (lang, "\t", "actualRcvdThpt",    el->actualRcvdThpt,',');
+      wrtFloatItm  (lang, "\t", "lastHourRcvdThpt",  el->lastHourRcvdThpt,',');
+      wrtFloatItm  (lang, "\t", "averageRcvdThpt",   el->averageRcvdThpt,',');
+      wrtFloatItm  (lang, "\t", "peakRcvdThpt",      el->peakRcvdThpt,',');
+      wrtFloatItm  (lang, "\t", "actualSentThpt",    el->actualSentThpt,',');
+      wrtFloatItm  (lang, "\t", "lastHourSentThpt",  el->lastHourSentThpt,',');
+      wrtFloatItm  (lang, "\t", "averageSentThpt",   el->averageSentThpt,',');
+      wrtFloatItm  (lang, "\t", "peakSentThpt",      el->peakSentThpt,',');
+      wrtFloatItm  (lang, "\t", "actualRcvdPktThpt", el->actualRcvdPktThpt,',');
+      wrtFloatItm  (lang, "\t", "averageRcvdPktThpt",el->averageRcvdPktThpt,',');
+      wrtFloatItm  (lang, "\t", "peakRcvdPktThpt",   el->peakRcvdPktThpt,',');
+      wrtFloatItm  (lang, "\t", "actualSentPktThpt", el->actualSentPktThpt,',');
+      wrtFloatItm  (lang, "\t", "averageSentPktThpt",el->tcpSentLocally,',');
+      wrtLlongItm  (lang, "\t", "tcpSentRemotely",   el->tcpSentRemotely,',');
+      wrtLlongItm  (lang, "\t", "udpSentLocally",    el->udpSentLocally,',');
+      wrtLlongItm  (lang, "\t", "udpSentRemotely",   el->udpSentRemotely,',');
+      wrtLlongItm  (lang, "\t", "icmpSent",          el->icmpSent,',');
+      wrtLlongItm  (lang, "\t", "ospfSent",          el->ospfSent,',');
+      wrtLlongItm  (lang, "\t", "igmpSent",          el->igmpSent,',');
+      wrtLlongItm  (lang, "\t", "tcpReceivedLocally",el->tcpReceivedLocally,',');
+      wrtLlongItm  (lang, "\t", "tcpReceivedFromRemote",el->tcpReceivedFromRemote,',');
+      wrtLlongItm  (lang, "\t", "udpReceivedLocally",el->udpReceivedLocally,',');
+      wrtLlongItm  (lang, "\t", "udpReceivedFromRemote",el->udpReceivedFromRemote,',');
+      wrtLlongItm  (lang, "\t", "icmpReceived",      el->icmpReceived,',');
+      wrtLlongItm  (lang, "\t", "ospfReceived",      el->ospfReceived,',');
+      wrtLlongItm  (lang, "\t", "igmpReceived",      el->igmpReceived,',');
 
       /* ***************************** */
 
-      if(el->stpSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "stpSent", el->stpSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
+      wrtLlongItm  (lang, "\t", "stpSent",          el->stpSent,',');
+      wrtLlongItm  (lang, "\t", "stpReceived",      el->stpReceived,',');
+      wrtLlongItm  (lang, "\t", "ipxSent",          el->ipxSent,',');
+      wrtLlongItm  (lang, "\t", "ipxReceived",      el->ipxReceived,',');
+      wrtLlongItm  (lang, "\t", "osiSent",          el->osiSent,',');
+      wrtLlongItm  (lang, "\t", "osiReceived",      el->osiReceived,',');
+      wrtLlongItm  (lang, "\t", "dlcSent",          el->dlcSent,',');
+      wrtLlongItm  (lang, "\t", "dlcReceived",      el->dlcReceived,',');
+      wrtLlongItm  (lang, "\t", "arp_rarpSent",     el->arp_rarpSent,',');
+      wrtLlongItm  (lang, "\t", "arp_rarpReceived", el->arp_rarpReceived,',');
+      wrtLlongItm  (lang, "\t", "arpReqPktsSent",   el->arpReqPktsSent,',');
+      wrtLlongItm  (lang, "\t", "arpReplyPktsSent", el->arpReplyPktsSent,',');
+      wrtLlongItm  (lang, "\t", "arpReplyPktsRcvd", el->arpReplyPktsRcvd,',');
+      wrtLlongItm  (lang, "\t", "decnetSent",       el->decnetSent,',');
+      wrtLlongItm  (lang, "\t", "decnetReceived",   el->decnetReceived,',');
+      wrtLlongItm  (lang, "\t", "appletalkSent",    el->appletalkSent,',');
+      wrtLlongItm  (lang, "\t", "appletalkReceived",el->appletalkReceived,',');
+      wrtLlongItm  (lang, "\t", "netbiosSent",      el->netbiosSent,',');
+      wrtLlongItm  (lang, "\t", "netbiosReceived",  el->netbiosReceived,',');
+      wrtLlongItm  (lang, "\t", "qnxSent",          el->qnxSent,',');
+      wrtLlongItm  (lang, "\t", "qnxReceived",      el->qnxReceived,',');
+      wrtLlongItm  (lang, "\t", "otherSent",        el->otherSent,',');
+      wrtLlongItm  (lang, "\t", "otherReceived",    el->otherReceived,',');
+      /* ********************************* */
 
-      if(el->stpReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "stpReceived", el->stpReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
+      initWriteKey (lang, "\t", "IP");
 
-      if(el->ipxSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "ipxSent", el->ipxSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->ipxReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "ipxReceived", el->ipxReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->osiSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "osiSent", el->osiSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->osiReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "osiReceived", el->osiReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->dlcSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "dlcSent", el->dlcSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->dlcReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "dlcReceived", el->dlcReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->arp_rarpSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "arp_rarpSent", el->arp_rarpSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->arp_rarpReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "arp_rarpReceived", el->arp_rarpReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->arpReqPktsSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "arpReqPktsSent", el->arpReqPktsSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->arpReplyPktsSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "arpReplyPktsSent", el->arpReplyPktsSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->arpReplyPktsRcvd > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "arpReplyPktsRcvd", el->arpReplyPktsRcvd)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->decnetSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "decnetSent", el->decnetSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->decnetReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "decnetReceived", el->decnetReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->appletalkSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "appletalkSent", el->appletalkSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->appletalkReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "appletalkReceived", el->appletalkReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->netbiosSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "netbiosSent", el->netbiosSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->netbiosReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "netbiosReceived", el->netbiosReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->qnxSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "qnxSent", el->qnxSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->qnxReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "qnxReceived", el->qnxReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->otherSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n", "otherSent", el->otherSent)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(el->otherReceived > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %llu,\n",
-		    "otherReceived", el->otherReceived)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-          /* ********************************* */
-
-    if(languageType == PERL_LANGUAGE) {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => {\n",
-		  "IP") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    } else {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n",
-		  "IP") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    }
-
-    if(el->protoIPTrafficInfos != NULL) {
       for(j=0; j<numIpProtosToMonitor; j++) {
-	if(j > 0) {
-	  if(languageType == PERL_LANGUAGE)
-	    sendString("\t\t},\n\n");
-	  else
-	    sendString("\t\t),\n\n");
-	}
 
-	if(languageType == PERL_LANGUAGE) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => {\n",
-		      protoIPTrafficInfos[j]) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	} else {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => array(\n",
-		      protoIPTrafficInfos[j]) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
+	if(j > 0) { endWriteKey (lang,"\t\t",','); }
 
-	if(snprintf(buf, sizeof(buf), "\t\t\t'sentLocally' => '%llu',\n",
-		    el->protoIPTrafficInfos[j].sentLocally) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	else
-	  sendString(buf);
-
-	if(snprintf(buf, sizeof(buf), "\t\t\t'sentRemotely' => '%llu',\n",
-		    el->protoIPTrafficInfos[j].sentRemotely) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	else
-	  sendString(buf);
-
-	if(snprintf(buf, sizeof(buf), "\t\t\t'receivedLocally' => '%llu',\n",
-		    el->protoIPTrafficInfos[j].receivedLocally) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	else
-	  sendString(buf);
-
-	if(snprintf(buf, sizeof(buf), "\t\t\t'receivedFromRemote' => '%llu'\n",
-		    el->protoIPTrafficInfos[j].receivedFromRemote) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	else
-	  sendString(buf);
+	initWriteKey (lang, "\t\t", protoIPTrafficInfos[j]);
+	wrtLlongItm(lang,"\t\t\t","sentLocally",
+		    el->protoIPTrafficInfos[j].sentLocally,',');
+	wrtLlongItm(lang,"\t\t\t","sentRemotely",
+		    el->protoIPTrafficInfos[j].sentRemotely,',');
+	wrtLlongItm(lang,"\t\t\t","receivedLocally",
+		    el->protoIPTrafficInfos[j].receivedLocally,',');
+	wrtLlongItm(lang,"\t\t\t","receivedFromRemote",
+		    el->protoIPTrafficInfos[j].receivedFromRemote,' ');
       }
+      endWriteKey (lang,"\t\t",',');
+      endWriteKey (lang,"\t",',');
 
-      if(languageType == PERL_LANGUAGE)
-	sendString("\t\t}\n");
-      else
-	sendString("\t\t)\n");
-    }
-
-    if(languageType == PERL_LANGUAGE)
-      sendString("\t},\n\n");
-    else
-      sendString("\t),\n\n");
-
-    /* ***************************************** */
+      /* ***************************************** */
 
       if(el->icmpInfo != NULL) {
-	if(languageType == PERL_LANGUAGE) {
-	  if(snprintf(buf, sizeof(buf), "\t'icmp' => {\n") < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	} else {
-	  if(snprintf(buf, sizeof(buf), "\t'icmp' => array(\n") < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	}
-	sendString(buf);
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_ECHO] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_ECHO",
-		      el->icmpInfo->icmpMsgSent[ICMP_ECHO])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_ECHOREPLY",
-		      el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_UNREACH] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_UNREACH",
-		      el->icmpInfo->icmpMsgSent[ICMP_UNREACH])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_ROUTERADVERT",
-		      el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_TIMXCEED",
-		      el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_PARAMPROB",
-		      el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_MASKREPLY",
-		      el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_MASKREQ",
-		      el->icmpInfo->icmpMsgSent[ICMP_MASKREQ])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_INFO_REQUEST:",
-		      el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_INFO_REPLY",
-		      el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_TIMESTAMP",
-		      el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_TIMESTAMPREPLY",
-		      el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "SENT_SOURCE_QUENCH",
-		      el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
+        initWriteKey (lang, "\t", "icmp");
+        wrtUlongItm(lang,"\t\t","SENT_ECHO",
+		    el->icmpInfo->icmpMsgSent[ICMP_ECHO],' ');
+        wrtUlongItm(lang,"\t\t","SENT_ECHOREPLY",
+		    el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY],' ');
+        wrtUlongItm(lang,"\t\t","SENT_UNREACH",
+		    el->icmpInfo->icmpMsgSent[ICMP_UNREACH],' ');
+        wrtUlongItm(lang,"\t\t","SENT_ROUTERADVERT",
+		    el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT],' ');
+        wrtUlongItm(lang,"\t\t","SENT_TMXCEED",
+		    el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED],' ');
+        wrtUlongItm(lang,"\t\t","SENT_PARAMPROB",
+		    el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB],' ');
+        wrtUlongItm(lang,"\t\t","SENT_MASKREPLY",
+		    el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY],' ');
+        wrtUlongItm(lang,"\t\t","SENT_MASKREQ",
+		    el->icmpInfo->icmpMsgSent[ICMP_MASKREQ],' ');
+        wrtUlongItm(lang,"\t\t","SENT_INFO_REQUEST",
+		    el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST],' ');
+        wrtUlongItm(lang,"\t\t","SENT_INFO_REPLY",
+		    el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY],' ');
+        wrtUlongItm(lang,"\t\t","SENT_TIMESTAMP",
+		    el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP],' ');
+        wrtUlongItm(lang,"\t\t","SENT_TIMESTAMPREPLY",
+		    el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY],' ');
+        wrtUlongItm(lang,"\t\t","SENT_SOURCE_QUENCH",
+		    el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH],' ');
 
 	/* *********************************************** */
 
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_ECHO] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_ECHO",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_ECHO])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
+        wrtUlongItm(lang,"\t\t","RCVD_ECHO",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_ECHO],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_ECHOREPLY",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_UNREACH",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_ROUTERADVERT",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_TMXCEED",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_PARAMPROB",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_MASKREPLY",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_MASKREQ",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_INFO_REQUEST",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_INFO_REPLY",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_TIMESTAMP",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_TIMESTAMPREPLY",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY],' ');
+        wrtUlongItm(lang,"\t\t","RCVD_SOURCE_QUENCH",
+		    el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH],' ');
 
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_ECHOREPLY",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_UNREACH",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_ROUTERADVERT",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_TIMXCEED",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "ICMP_PARAMPROB",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_MASKREPLY",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_MASKREQ",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_INFO_REQUEST:",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_INFO_REPLY",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_TIMESTAMP",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_TIMESTAMPREPLY",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH] > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => %ld,\n",
-		      "RCVD_SOURCE_QUENCH",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH])
-	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-	if(languageType == PERL_LANGUAGE)
-	  sendString("\t},\n\n");
-	else
-	  sendString("\t),\n\n");
+        endWriteKey (lang,"\t",',');
       }
 
-    /* ********************************* */
+      /* ********************************* */
 
       if(el->securityHostPkts != NULL) {
-	if(languageType == PERL_LANGUAGE) {
-	  if(snprintf(buf, sizeof(buf), "\t'%s' => {\n", "securityPkts") < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	} else {
-	  if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n","securityPkts") < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
+        initWriteKey (lang, "\t", "securityPkts");
+  
+        wrtLlongItm(lang,"\t\t","synPktsSent",
+		    el->securityHostPkts->synPktsSent.value,',');
+        wrtLlongItm(lang,"\t\t","synPktsRcvd",
+		    el->securityHostPkts->synPktsRcvd.value,',');
 
-	if(el->securityHostPkts->synPktsSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "synPktsSent", el->securityHostPkts->synPktsSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","rstPktsSent",
+		    el->securityHostPkts->rstPktsSent.value,',');
+        wrtLlongItm(lang,"\t\t","rstPktsRcvd",
+		    el->securityHostPkts->rstPktsRcvd.value,',');
 
-	if(el->securityHostPkts->synPktsRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "synPktsRcvd", el->securityHostPkts->synPktsRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","rstAckPktsSent",
+		    el->securityHostPkts->rstAckPktsSent.value,',');
+        wrtLlongItm(lang,"\t\t","rstAckPktsRcvd",
+		    el->securityHostPkts->rstAckPktsRcvd.value,',');
 
-	if(el->securityHostPkts->rstPktsSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "rstPktsSent", el->securityHostPkts->rstPktsSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","synFinPktsSent",
+		    el->securityHostPkts->synFinPktsSent.value,',');
+        wrtLlongItm(lang,"\t\t","synFinPktsRcvd",
+		    el->securityHostPkts->synFinPktsRcvd.value,',');
 
-	if(el->securityHostPkts->rstPktsRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "rstPktsRcvd", el->securityHostPkts->rstPktsRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","finPushUrgPktsSent",
+		    el->securityHostPkts->finPushUrgPktsSent.value,',');
+        wrtLlongItm(lang,"\t\t","finPushUrgPktsRcvd",
+		    el->securityHostPkts->finPushUrgPktsRcvd.value,',');
 
-	if(el->securityHostPkts->rstAckPktsSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "rstAckPktsSent", el->securityHostPkts->rstAckPktsSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","nullPktsSent",
+		    el->securityHostPkts->nullPktsSent.value,',');
+        wrtLlongItm(lang,"\t\t","nullPktsRcvd",
+		    el->securityHostPkts->nullPktsRcvd.value,',');
 
-	if(el->securityHostPkts->rstAckPktsRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "rstAckPktsRcvd", el->securityHostPkts->rstAckPktsRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","ackScanSent",
+		    el->securityHostPkts->ackScanSent.value,',');
+        wrtLlongItm(lang,"\t\t","ackScanRcvd",
+		    el->securityHostPkts->ackScanRcvd.value,',');
 
-	if(el->securityHostPkts->synFinPktsSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "synFinPktsSent", el->securityHostPkts->synFinPktsSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","xmasScanSent",
+		    el->securityHostPkts->xmasScanSent.value,',');
+        wrtLlongItm(lang,"\t\t","xmasScanRcvd",
+		    el->securityHostPkts->xmasScanRcvd.value,',');
 
-	if(el->securityHostPkts->synFinPktsRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "synFinPktsRcvd", el->securityHostPkts->synFinPktsRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","finScanSent",
+		    el->securityHostPkts->finScanSent.value,',');
+        wrtLlongItm(lang,"\t\t","finScanRcvd",
+		    el->securityHostPkts->finScanRcvd.value,',');
 
-	if(el->securityHostPkts->finPushUrgPktsSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "finPushUrgPktsSent", el->securityHostPkts->finPushUrgPktsSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","nullScanSent",
+		    el->securityHostPkts->nullScanSent.value,',');
+        wrtLlongItm(lang,"\t\t","nullScanRcvd",
+		    el->securityHostPkts->nullScanRcvd.value,',');
 
-	if(el->securityHostPkts->finPushUrgPktsRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "finPushUrgPktsRcvd", el->securityHostPkts->finPushUrgPktsRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","rejectedTCPConnSent",
+		    el->securityHostPkts->rejectedTCPConnSent.value,',');
+        wrtLlongItm(lang,"\t\t","rejectedTCPConnRcvd",
+		    el->securityHostPkts->rejectedTCPConnRcvd.value,',');
 
-	if(el->securityHostPkts->nullPktsSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "nullPktsSent", el->securityHostPkts->nullPktsSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","establishedTCPConnSent",
+		    el->securityHostPkts->establishedTCPConnSent.value,',');
+        wrtLlongItm(lang,"\t\t","establishedTCPConnRcvd",
+		    el->securityHostPkts->establishedTCPConnRcvd.value,',');
 
-	if(el->securityHostPkts->nullPktsRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "nullPktsRcvd", el->securityHostPkts->nullPktsRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","udpToClosedPortSent",
+		    el->securityHostPkts->udpToClosedPortSent.value,',');
+        wrtLlongItm(lang,"\t\t","udpToClosedPortRcvd",
+		    el->securityHostPkts->udpToClosedPortRcvd.value,',');
 
-	if(el->securityHostPkts->ackScanSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "ackScanSent",
-		      el->securityHostPkts->ackScanSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","udpToDiagnosticPortSent",
+		    el->securityHostPkts->udpToDiagnosticPortSent.value,',');
+        wrtLlongItm(lang,"\t\t","udpToDiagnosticPortRcvd",
+		    el->securityHostPkts->udpToDiagnosticPortRcvd.value,',');
 
-	if(el->securityHostPkts->ackScanRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "ackScanRcvd",
-		      el->securityHostPkts->ackScanRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","tcpToDiagnosticPortSent",
+		    el->securityHostPkts->tcpToDiagnosticPortSent.value,',');
+        wrtLlongItm(lang,"\t\t","tcpToDiagnosticPortRcvd",
+		    el->securityHostPkts->tcpToDiagnosticPortRcvd.value,',');
 
-	if(el->securityHostPkts->xmasScanSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "xmasScanSent",
-		      el->securityHostPkts->xmasScanSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","tinyFragmentSent",
+		    el->securityHostPkts->tinyFragmentSent.value,',');
+        wrtLlongItm(lang,"\t\t","tinyFragmentRcvd",
+		    el->securityHostPkts->tinyFragmentRcvd.value,',');
 
-	if(el->securityHostPkts->xmasScanRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "xmasScanRcvd",
-		      el->securityHostPkts->xmasScanRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","icmpFragmentSent",
+		    el->securityHostPkts->icmpFragmentSent.value,',');
+        wrtLlongItm(lang,"\t\t","icmpFragmentRcvd",
+		    el->securityHostPkts->icmpFragmentRcvd.value,',');
 
-	if(el->securityHostPkts->finScanSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "finScanSent",
-		      el->securityHostPkts->finScanSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","overlappingFragmentSent",
+		    el->securityHostPkts->overlappingFragmentSent.value,',');
+        wrtLlongItm(lang,"\t\t","overlappingFragmentRcvd",
+		    el->securityHostPkts->overlappingFragmentRcvd.value,',');
 
-	if(el->securityHostPkts->finScanRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "finScanRcvd",
-		      el->securityHostPkts->finScanRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","closedEmptyTCPConnSent",
+		    el->securityHostPkts->closedEmptyTCPConnSent.value,',');
+        wrtLlongItm(lang,"\t\t","closedEmptyTCPConnRcvd",
+		    el->securityHostPkts->closedEmptyTCPConnRcvd.value,',');
 
-	if(el->securityHostPkts->nullScanSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "nullScanSent",
-		      el->securityHostPkts->nullScanSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","icmpPortUnreachSent",
+		    el->securityHostPkts->icmpPortUnreachSent.value,',');
+        wrtLlongItm(lang,"\t\t","icmpPortUnreachRcvd",
+		    el->securityHostPkts->icmpPortUnreachRcvd.value,',');
 
-	if(el->securityHostPkts->nullScanRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "nullScanRcvd",
-		      el->securityHostPkts->nullScanRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","icmpHostNetUnreachSent",
+		    el->securityHostPkts->icmpHostNetUnreachSent.value,',');
+        wrtLlongItm(lang,"\t\t","icmpHostNetUnreachRcvd",
+		    el->securityHostPkts->icmpHostNetUnreachRcvd.value,',');
 
-	if(el->securityHostPkts->rejectedTCPConnSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "rejectedTCPConnSent",
-		      el->securityHostPkts->rejectedTCPConnSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","icmpProtocolUnreachSent",
+		    el->securityHostPkts->icmpProtocolUnreachSent.value,',');
+        wrtLlongItm(lang,"\t\t","icmpProtocolUnreachRcvd",
+		    el->securityHostPkts->icmpProtocolUnreachRcvd.value,',');
 
-	if(el->securityHostPkts->rejectedTCPConnRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "rejectedTCPConnRcvd",
-		      el->securityHostPkts->rejectedTCPConnRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","icmpAdminProhibitedSent",
+		    el->securityHostPkts->icmpAdminProhibitedSent.value,',');
+        wrtLlongItm(lang,"\t\t","icmpAdminProhibitedRcvd",
+		    el->securityHostPkts->icmpAdminProhibitedRcvd.value,',');
 
-	if(el->securityHostPkts->establishedTCPConnSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "establishedTCPConnSent",
-		      el->securityHostPkts->establishedTCPConnSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
+        wrtLlongItm(lang,"\t\t","malformedPktsSent",
+		    el->securityHostPkts->malformedPktsSent.value,',');
+        wrtLlongItm(lang,"\t\t","malformedPktsRcvd",
+		    el->securityHostPkts->malformedPktsRcvd.value,',');
 
-	if(el->securityHostPkts->establishedTCPConnRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "establishedTCPConnRcvd",
-		      el->securityHostPkts->establishedTCPConnRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->udpToClosedPortSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "udpToClosedPortSent",
-		      el->securityHostPkts->udpToClosedPortSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->udpToClosedPortRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "udpToClosedPortRcvd",
-		      el->securityHostPkts->udpToClosedPortRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->udpToDiagnosticPortSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "udpToDiagnosticPortSent",
-		      el->securityHostPkts->udpToDiagnosticPortSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->udpToDiagnosticPortRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "udpToDiagnosticPortRcvd",
-		      el->securityHostPkts->udpToDiagnosticPortRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->tcpToDiagnosticPortSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "tcpToDiagnosticPortSent",
-		      el->securityHostPkts->tcpToDiagnosticPortSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->tcpToDiagnosticPortRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "tcpToDiagnosticPortRcvd",
-		      el->securityHostPkts->tcpToDiagnosticPortRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->tinyFragmentSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "tinyFragmentSent",
-		      el->securityHostPkts->tinyFragmentSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->tinyFragmentRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "tinyFragmentRcvd",
-		      el->securityHostPkts->tinyFragmentRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpFragmentSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpFragmentSent",
-		      el->securityHostPkts->icmpFragmentSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpFragmentRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpFragmentRcvd",
-		      el->securityHostPkts->icmpFragmentRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->overlappingFragmentSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "overlappingFragmentSent",
-		      el->securityHostPkts->overlappingFragmentSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->overlappingFragmentRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "overlappingFragmentRcvd",
-		      el->securityHostPkts->overlappingFragmentRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->closedEmptyTCPConnSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "closedEmptyTCPConnSent",
-		      el->securityHostPkts->closedEmptyTCPConnSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->closedEmptyTCPConnRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "closedEmptyTCPConnRcvd",
-		      el->securityHostPkts->closedEmptyTCPConnRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpPortUnreachSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpPortUnreachSent",
-		      el->securityHostPkts->icmpPortUnreachSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpPortUnreachRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpPortUnreachRcvd",
-		      el->securityHostPkts->icmpPortUnreachRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpHostNetUnreachSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpHostNetUnreachSent",
-		      el->securityHostPkts->icmpHostNetUnreachSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpHostNetUnreachRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpHostNetUnreachRcvd",
-		      el->securityHostPkts->icmpHostNetUnreachRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpProtocolUnreachSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpProtocolUnreachSent",
-		      el->securityHostPkts->icmpProtocolUnreachSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpProtocolUnreachRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpProtocolUnreachRcvd",
-		      el->securityHostPkts->icmpProtocolUnreachRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpAdminProhibitedSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpAdminProhibitedSent",
-		      el->securityHostPkts->icmpAdminProhibitedSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->icmpAdminProhibitedRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "icmpAdminProhibitedRcvd",
-		      el->securityHostPkts->icmpAdminProhibitedRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->malformedPktsSent.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "malformedPktSent",
-		      el->securityHostPkts->malformedPktsSent.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(el->securityHostPkts->malformedPktsRcvd.value > 0) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		      "malformedPktRcvd",
-		      el->securityHostPkts->malformedPktsRcvd.value) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  else
-	    sendString(buf);
-	}
-
-	if(languageType == PERL_LANGUAGE)
-	  sendString("\t},\n\n");
-	else
-	  sendString("\t),\n\n");
+	endWriteKey (lang,"\t",',');
       }
 
-    /* ***************************** */
-
-      if(el->ethAddressString[0] != '\0') {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => '%s'\n", "ethAddressString",
-		    el->ethAddressString)
-	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
+      /* ***************************** */
+      wrtStrItm (lang, "\t", "ethAddressString",el->ethAddressString,' ');
 
       numEntries++;
     }
   }
-
-  if(languageType == PERL_LANGUAGE)
-    sendString("}\n\n");
-  else
-    sendString(")\n\n");
-
-  sendString(");\n");
+  endWriteKey (lang,"",' ');
+  endWriteArray(lang);
 }
 
 /* ********************************** */
 
 void dumpNtopHashIndexes(char* options) {
-  char buf[256];
-  int idx, numEntries=0, languageType=DEFAULT_LANGUAGE;
+  unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE;
   HostTraffic *el;
 
   if(options != NULL) {
@@ -1402,7 +612,7 @@ void dumpNtopHashIndexes(char* options) {
     tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
-      int i=0;
+      int i=0; int j;
 
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;
@@ -1411,53 +621,46 @@ void dumpNtopHashIndexes(char* options) {
 	tmpStr[i] = 0;
 
 	if(strcmp(tmpStr, "language") == 0) {
-	  if(strcmp(&tmpStr[i+1], "perl") == 0)
-	    languageType = PERL_LANGUAGE;
-	  else
-	    languageType = DEFAULT_LANGUAGE;
+
+	  lang=DEFAULT_LANGUAGE;
+	  for (j=1;j <= NB_LANGUAGES;j++) {
+	    if(strcmp(&tmpStr[i+1], languages[j]) == 0)
+	      lang = j;
+	  }
 	}
       }
 
       tmpStr = strtok_r(NULL, "&", &strtokState);
     }
   }
-
-  if(languageType == PERL_LANGUAGE)
-    sendString("%hash = (\n");
-  else
-    sendString("$hash = array(\n");
+  initWriteArray (lang);
 
   for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0)) {
       char *hostKey;
 
-      if(numEntries > 0)
-	sendString(",\n");
-
       if(el->hostNumIpAddress[0] != '\0')
 	hostKey = el->hostNumIpAddress;
       else
 	hostKey = el->ethAddressString;
 
-      if(snprintf(buf, sizeof(buf), "\t'%d' => '%s'", idx, hostKey) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
+      wrtIntStrItm ( lang, "", idx, hostKey,'\n');
 
       numEntries++;
     }
   }
 
-  sendString("\n);\n");
+  endWriteArray(lang);
 }
 
 /* ********************************** */
 
 void dumpNtopTrafficInfo(char* options) {
-  char buf[256], intoabuf[32], key[16];
-  int languageType=DEFAULT_LANGUAGE, i;
+  char intoabuf[32], key[16], localbuf[32];
+  int lang=DEFAULT_LANGUAGE, i;
 
-   memset(key, 0, sizeof(key));
+  memset(key, 0, sizeof(key));
 
   if(options != NULL) {
     /* language=[perl|php] */
@@ -1466,7 +669,7 @@ void dumpNtopTrafficInfo(char* options) {
     tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
-      int i=0;
+      int i=0; int j;
 
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;
@@ -1475,10 +678,11 @@ void dumpNtopTrafficInfo(char* options) {
 	tmpStr[i] = 0;
 
 	if(strcmp(tmpStr, "language") == 0) {
-	  if(strcmp(&tmpStr[i+1], "perl") == 0)
-	    languageType = PERL_LANGUAGE;
-	  else
-	    languageType = DEFAULT_LANGUAGE;
+	  lang=DEFAULT_LANGUAGE;
+	  for (j=1;j <= NB_LANGUAGES;j++) {
+	    if(strcmp(&tmpStr[i+1], languages[j]) == 0)
+	      lang = j;
+	  }
 	} else if(strcmp(tmpStr, "key") == 0) {
 	  strncpy(key, &tmpStr[i+1], sizeof(key));
 	}
@@ -1487,687 +691,186 @@ void dumpNtopTrafficInfo(char* options) {
       tmpStr = strtok_r(NULL, "&", &strtokState);
     }
   }
-
-  if(languageType == PERL_LANGUAGE)
-    sendString("%interfaces = (\n");
-  else
-    sendString("$interfaces = array(\n");
+  initWriteArray (lang);
 
   for(i=0; i<numDevices; i++) {
     int j;
 
     if(device[i].virtualDevice) continue;
 
-    if(i > 0) {
-      if(languageType == PERL_LANGUAGE)
-	sendString("},\n\n");
-      else
-	sendString("),\n\n");
-    }
+
+    if( i > 0) { endWriteKey (lang,"",','); }
 
     if((key[0] != '\0') && (strcmp(key, device[i].name) != 0))
       continue;
 
-    if(languageType == PERL_LANGUAGE) {
-      if(snprintf(buf, sizeof(buf), "'%s' => {\n", device[i].name) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    } else {
-      if(snprintf(buf, sizeof(buf), "'%s' => array(\n", device[i].name) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
+    initWriteKey (lang, "", device[i].name);
+
+
+    wrtStrItm(lang, "\t", "ipdot", device[i].ipdot,',');
+    wrtStrItm(lang, "\t", "fqdn", device[i].fqdn,',');
+
+    snprintf(localbuf, sizeof(localbuf), "%s", 
+	     _intoa(device[i].network, intoabuf, sizeof(intoabuf)));
+    wrtStrItm(lang, "\t", "network",  localbuf,',');
+    snprintf(localbuf, sizeof(localbuf), "%s", 
+	     _intoa(device[i].netmask, intoabuf, sizeof(intoabuf)));
+    wrtStrItm(lang, "\t", "netmask", localbuf,',');
+    snprintf(localbuf, sizeof(localbuf), "%s", 
+	     _intoa(device[i].ifAddr, intoabuf, sizeof(intoabuf)));
+    wrtStrItm(lang, "\t", "ifAddr",  localbuf,',');
+
+    wrtTime_tItm (lang, "\t", "started",  device[i].started,' ');
+    wrtTime_tItm (lang, "\t", "firstpkt", device[i].firstpkt,' ');
+    wrtTime_tItm (lang, "\t", "lastpkt",  device[i].lastpkt,' ');
+    wrtIntItm    (lang, "\t", "virtualDevice",(int)device[i].virtualDevice,',');
+    wrtIntItm    (lang, "\t", "snaplen",  device[i].snaplen,',');
+    wrtIntItm    (lang, "\t", "datalink", device[i].datalink,',');
+    wrtStrItm (lang, "\t", "filter",   device[i].filter ? device[i].filter : "",',');
+    wrtLlongItm  (lang, "\t", "droppedPackets",device[i].droppedPackets,',');
+    wrtLlongItm  (lang, "\t", "ethernetPkts",device[i].ethernetPkts,',');
+    wrtLlongItm  (lang, "\t", "broadcastPkts",device[i].broadcastPkts,',');
+    wrtLlongItm  (lang, "\t", "multicastPkts",device[i].multicastPkts,',');
+    wrtLlongItm  (lang, "\t", "ethernetBytes",device[i].ethernetBytes,',');
+    wrtLlongItm  (lang, "\t", "ipBytes",device[i].ipBytes,',');
+    wrtLlongItm  (lang, "\t", "tcpBytes",device[i].tcpBytes,',');
+    wrtLlongItm  (lang, "\t", "udpBytes",device[i].udpBytes,',');
+    wrtLlongItm  (lang, "\t", "otherIpBytes",device[i].otherIpBytes,',');
+    wrtLlongItm  (lang, "\t", "icmpBytes",device[i].icmpBytes,',');
+    wrtLlongItm  (lang, "\t", "dlcBytes",device[i].dlcBytes,',');
+    wrtLlongItm  (lang, "\t", "ipxBytes",device[i].ipxBytes,',');
+    wrtLlongItm  (lang, "\t", "stpBytes",device[i].stpBytes,',');
+    wrtLlongItm  (lang, "\t", "decnetBytes",device[i].decnetBytes,',');
+    wrtLlongItm  (lang, "\t", "netbiosBytes",device[i].netbiosBytes,',');
+    wrtLlongItm  (lang, "\t", "arpRarpBytes",device[i].arpRarpBytes,',');
+    wrtLlongItm  (lang, "\t", "atalkBytes",device[i].atalkBytes,',');
+    wrtLlongItm  (lang, "\t", "ospfBytes",device[i].ospfBytes,',');
+    wrtLlongItm  (lang, "\t", "egpBytes",device[i].egpBytes,',');
+    wrtLlongItm  (lang, "\t", "igmpBytes",device[i].igmpBytes,',');
+    wrtLlongItm  (lang, "\t", "osiBytes",device[i].osiBytes,',');
+    wrtLlongItm  (lang, "\t", "qnxByte",device[i].qnxBytes,',');
+    wrtLlongItm  (lang, "\t", "otherBytes",device[i].otherBytes,',');
+    wrtLlongItm  (lang, "\t", "lastMinEthernetBytes", 
+		  device[i].lastMinEthernetBytes,',');
+    wrtLlongItm  (lang, "\t", "lastFiveMinsEthernetBytes", 
+		  device[i].lastFiveMinsEthernetBytes,',');
+    wrtLlongItm  (lang, "\t", "lastMinEthernetPkts",device[i].lastMinEthernetPkts,',');
+    wrtLlongItm  (lang, "\t", "lastFiveMinsEthernetPkts",
+		  device[i].lastFiveMinsEthernetPkts,',');
+    wrtLlongItm  (lang, "\t", "upTo64",device[i].rcvdPktStats.upTo64,',');
+    wrtLlongItm  (lang, "\t", "upTo128",device[i].rcvdPktStats.upTo128,',');
+    wrtLlongItm  (lang, "\t", "upTo256",device[i].rcvdPktStats.upTo256,',');
+    wrtLlongItm  (lang, "\t", "upTo512",device[i].rcvdPktStats.upTo512,',');
+    wrtLlongItm  (lang, "\t", "upTo1024",device[i].rcvdPktStats.upTo1024,',');
+    wrtLlongItm  (lang, "\t", "upTo1518",device[i].rcvdPktStats.upTo1518,',');
+    wrtLlongItm  (lang, "\t", "above1518",device[i].rcvdPktStats.above1518,',');
+    wrtLlongItm  (lang, "\t", "shortest",device[i].rcvdPktStats.shortest,',');
+    wrtLlongItm  (lang, "\t", "longest",device[i].rcvdPktStats.longest,',');
+    wrtLlongItm  (lang, "\t", "badChecksum",device[i].rcvdPktStats.badChecksum,',');
+    wrtLlongItm  (lang, "\t", "tooLong",device[i].rcvdPktStats.tooLong,',');
+    wrtFloatItm  (lang, "\t", "peakThroughput",device[i].peakThroughput,',');
+    wrtFloatItm  (lang, "\t", "actualThpt",device[i].actualThpt,',');
+    wrtFloatItm  (lang, "\t", "lastMinThpt",device[i].lastMinThpt,',');
+    wrtFloatItm  (lang, "\t", "lastFiveMinsThpt",device[i].lastFiveMinsThpt,',');
+    wrtFloatItm  (lang, "\t", "peakPacketThroughput",device[i].peakPacketThroughput,',');
+    wrtFloatItm  (lang, "\t", "actualPktsThpt",device[i].actualPktsThpt,',');
+    wrtFloatItm  (lang, "\t", "lastMinPktsThpt",device[i].lastMinPktsThpt,',');
+    wrtFloatItm  (lang, "\t", "lastFiveMinsPktsThpt",device[i].lastFiveMinsPktsThpt,',');
+    wrtLlongItm  (lang, "\t", "throughput", device[i].throughput,',');
+    wrtFloatItm  (lang, "\t", "packetThroughput",device[i].packetThroughput,',');
+
+    /* ********************************* */
+    initWriteKey (lang, "\t", "last60MinutesThpt");
+
+    for(j=0; j<59; j++) {
+      wrtIntFloatItm(lang,"\t\t",j+1,device[i].last60MinutesThpt[j].trafficValue,',');
     }
-
-    if(device[i].ipdot != NULL) {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "ipdot",
-		  device[i].ipdot) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
-    }
-
-    if(device[i].fqdn) {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "fqdn", device[i].fqdn) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
-    }
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "network",
-		_intoa(device[i].network, intoabuf, sizeof(intoabuf))) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "netmask",
-		_intoa(device[i].netmask, intoabuf, sizeof(intoabuf))) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "ifAddr",
-		_intoa(device[i].ifAddr, intoabuf, sizeof(intoabuf))) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%ld',\n",
-		"started", device[i].started) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%ld',\n",
-		"firstpkt", device[i].firstpkt) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%ld',\n",
-		"lastpkt", device[i].lastpkt) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%d',\n",
-		"virtualDevice",
-		(int)device[i].virtualDevice) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%d',\n",
-		"snaplen", device[i].snaplen) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%d',\n",
-		"datalink", device[i].datalink) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n",
-		"filter", device[i].filter ? device[i].filter : "") < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"droppedPackets", device[i].droppedPackets) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"ethernetPkts", device[i].ethernetPkts) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"broadcastPkts", device[i].broadcastPkts) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"multicastPkts", device[i].multicastPkts) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"ethernetBytes", device[i].ethernetBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"ipBytes", device[i].ipBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"tcpBytes", device[i].tcpBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"udpBytes", device[i].udpBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"otherIpBytes", device[i].otherIpBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"icmpBytes", device[i].icmpBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"dlcBytes", device[i].dlcBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"ipxBytes", device[i].ipxBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"stpBytes", device[i].stpBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"decnetBytes", device[i].decnetBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"netbiosBytes", device[i].netbiosBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"arpRarpBytes", device[i].arpRarpBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"atalkBytes", device[i].atalkBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"ospfBytes", device[i].ospfBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"egpBytes", device[i].egpBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"igmpBytes", device[i].igmpBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"osiBytes", device[i].osiBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"qnxBytes", device[i].qnxBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"otherBytes", device[i].otherBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"lastMinEthernetBytes",
-		device[i].lastMinEthernetBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"lastFiveMinsEthernetBytes",
-		device[i].lastFiveMinsEthernetBytes) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"lastMinEthernetPkts",
-		device[i].lastMinEthernetPkts) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"lastFiveMinsEthernetPkts",
-		device[i].lastFiveMinsEthernetPkts) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"upTo64", device[i].rcvdPktStats.upTo64) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"upTo128", device[i].rcvdPktStats.upTo128) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"upTo256", device[i].rcvdPktStats.upTo256) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"upTo512", device[i].rcvdPktStats.upTo512) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"upTo1024", device[i].rcvdPktStats.upTo1024) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"upTo1518", device[i].rcvdPktStats.upTo1518) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"above1518", device[i].rcvdPktStats.above1518) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"shortest",
-		device[i].rcvdPktStats.shortest) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"longest",
-		device[i].rcvdPktStats.longest) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"badChecksum",
-		device[i].rcvdPktStats.badChecksum) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"tooLong",
-		device[i].rcvdPktStats.tooLong) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%0.2f',\n",
-		"peakThroughput", device[i].peakThroughput) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%0.2f',\n",
-		"actualThpt", device[i].actualThpt) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%0.2f',\n",
-		"lastMinThpt", device[i].lastMinThpt) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%0.2f',\n",
-		"lastFiveMinsThpt", device[i].lastFiveMinsThpt) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%0.2f',\n",
-		"peakPacketThroughput", device[i].peakPacketThroughput) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%0.2f',\n",
-		"actualPktsThpt", device[i].actualPktsThpt) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%0.2f',\n",
-		"lastMinPktsThpt", device[i].lastMinPktsThpt) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%0.2f',\n",
-		"lastFiveMinsPktsThpt", device[i].lastFiveMinsPktsThpt) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n",
-		"throughput", device[i].throughput) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%0.2f',\n",
-		"packetThroughput",
-		device[i].packetThroughput) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
+    wrtIntFloatItm(lang,"\t\t",j+1, device[i].last60MinutesThpt[j].trafficValue,' ');
+    endWriteKey(lang,"\t",',');
 
     /* ********************************* */
 
-    if(languageType == PERL_LANGUAGE) {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => {\n",
-		  "last60MinutesThpt") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    } else {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n",
-		  "last60MinutesThpt") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
+    initWriteKey (lang, "\t", "last24HoursThpt");
+
+    for(j=0; j<23; j++) {
+      wrtIntFloatItm  (lang, "\t\t", j+1, device[i].last24HoursThpt[j].trafficValue,',');
     }
-
-    for(j=0; j<60; j++) {
-      if(snprintf(buf, sizeof(buf), "\t\t'%d' => '%0.2f'",
-		  j+1 , device[i].last60MinutesThpt[j].trafficValue) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
-
-      if(j < 59)
-	sendString(",\n");
-      else
-	sendString("\n");
-    }
-
-    if(languageType == PERL_LANGUAGE)
-      sendString("\t},\n\n");
-    else
-      sendString("\t),\n\n");
+    wrtIntFloatItm(lang,"\t\t",j+1,device[i].last24HoursThpt[j].trafficValue,' ');
+    endWriteKey(lang,"\t",',');
 
     /* ********************************* */
 
-    if(languageType == PERL_LANGUAGE) {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => {\n",
-		  "last24HoursThpt") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    } else {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n",
-		  "last24HoursThpt") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
+    initWriteKey (lang, "\t", "last30daysThpt");
+
+    for(j=0; j<29; j++) {
+      wrtIntFloatItm(lang,"\t\t",j+1,device[i].last30daysThpt[j],',');
     }
-
-    for(j=0; j<24; j++) {
-      if(snprintf(buf, sizeof(buf), "\t\t'%d' => '%0.2f'",
-		  j+1 , device[i].last24HoursThpt[j].trafficValue) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
-
-      if(j < 23)
-	sendString(",\n");
-      else
-	sendString("\n");
-    }
-
-    if(languageType == PERL_LANGUAGE)
-      sendString("\t},\n\n");
-    else
-      sendString("\t),\n\n");
-
-    /* ********************************* */
-
-    if(languageType == PERL_LANGUAGE) {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => {\n",
-		  "last30daysThpt") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    } else {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n",
-		  "last30daysThpt") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    }
-
-    for(j=0; j<30; j++) {
-      if(snprintf(buf, sizeof(buf), "\t\t'%d' => '%0.2f'",
-		  j+1 , device[i].last30daysThpt[j]) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
-
-      if(j < 29)
-	sendString(",\n");
-      else
-	sendString("\n");
-    }
-
-    if(languageType == PERL_LANGUAGE)
-      sendString("\t},\n\n");
-    else
-      sendString("\t),\n\n");
+    wrtIntFloatItm(lang,"\t\t",j+1,device[i].last30daysThpt[j],' ');
+    endWriteKey(lang,"\t",',');
 
     /* ********************************* */
 
     if(device[i].ipProtoStats != NULL) {
-      if(languageType == PERL_LANGUAGE) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => {\n",
-		    "IP") < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      } else {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n",
-		    "IP") < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
+      initWriteKey (lang, "\t", "IP");
 
       for(j=0; j<numIpProtosToMonitor; j++) {
-	if(j > 0) {
-	  if(languageType == PERL_LANGUAGE)
-	    sendString("\t\t},\n\n");
-	  else
-	    sendString("\t\t),\n\n");
-	}
-
-	if(languageType == PERL_LANGUAGE) {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => {\n",
-		      protoIPTrafficInfos[j]) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	} else {
-	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => array(\n",
-		      protoIPTrafficInfos[j]) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	}
-
-	if(snprintf(buf, sizeof(buf), "\t\t\t'local' => '%llu',\n",
-		    device[i].ipProtoStats[j].local) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	else
-	  sendString(buf);
-
-	if(snprintf(buf, sizeof(buf), "\t\t\t'local2remote' => '%llu',\n",
-		    device[i].ipProtoStats[j].local2remote) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	else
-	  sendString(buf);
-
-	if(snprintf(buf, sizeof(buf), "\t\t\t'remote2local' => '%llu',\n",
-		    device[i].ipProtoStats[j].remote2local) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	else
-	  sendString(buf);
-
-	if(snprintf(buf, sizeof(buf), "\t\t\t'remote' => '%llu'\n",
-		    device[i].ipProtoStats[j].remote) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	else
-	  sendString(buf);
+	if(j > 0) endWriteKey (lang, "\t\t",',');
+        initWriteKey (lang, "\t\t", protoIPTrafficInfos[j]);
+        wrtLlongItm(lang,"\t\t\t","local",
+		    device[i].ipProtoStats[j].local,',');
+        wrtLlongItm(lang,"\t\t\t","local2remote",
+		    device[i].ipProtoStats[j].local2remote,',');
+        wrtLlongItm(lang,"\t\t\t","remote2local",
+		    device[i].ipProtoStats[j].remote2local,',');
+        wrtLlongItm(lang,"\t\t\t","remote",
+		    device[i].ipProtoStats[j].remote,' ');
       }
-
-      if(languageType == PERL_LANGUAGE)
-	sendString("\t\t}\n");
-      else
-	sendString("\t\t)\n");
-
-      if(languageType == PERL_LANGUAGE)
-	sendString("\t},\n\n");
-      else
-	sendString("\t),\n\n");
+      endWriteKey(lang,"\t\t",',');
+      endWriteKey(lang,"\t",',');
     }
 
     /* ********************************* */
 
-    if(languageType == PERL_LANGUAGE) {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => {\n", "TCPflags") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    } else {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n","TCPflags") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    }
+    initWriteKey (lang, "\t", "TCPflags");
 
-    if(device[i].numEstablishedTCPConnections > 0) {
-      if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
-		  "numEstablishedTCPConnections",
-		  device[i].numEstablishedTCPConnections) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-      sendString(buf);
-    }
+    wrtLlongItm(lang,"\t\t","numEstablishedTCPConnections",
+		device[i].numEstablishedTCPConnections,' ');
 
-    if(languageType == PERL_LANGUAGE)
-      sendString("\t},\n\n");
-    else
-      sendString("\t),\n\n");
+    endWriteKey(lang,"\t",',');
 
     /* ********************************* */
 
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "tcpLocal",
-		device[i].tcpGlobalTrafficStats.local) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "tcpLocal2Remote",
-		device[i].tcpGlobalTrafficStats.local2remote) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "tcpRemote",
-		device[i].tcpGlobalTrafficStats.remote) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "tcpRemote2Local",
-		device[i].tcpGlobalTrafficStats.remote2local) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
+    wrtLlongItm(lang,"\t","tcpLocal", 
+		device[i].tcpGlobalTrafficStats.local,',');
+    wrtLlongItm(lang,"\t","tcpLocal2Remote",  
+		device[i].tcpGlobalTrafficStats.local2remote,',');
+    wrtLlongItm(lang,"\t","tcpRemote",  
+		device[i].tcpGlobalTrafficStats.remote,',');
+    wrtLlongItm(lang,"\t","tcpRemote2Local",  
+		device[i].tcpGlobalTrafficStats.remote2local,',');
 
     /* ********************************* */
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "udpLocal",
-		device[i].udpGlobalTrafficStats.local) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "udpLocal2Remote",
-		device[i].udpGlobalTrafficStats.local2remote) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "udpRemote",
-		device[i].udpGlobalTrafficStats.remote) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "udpRemote2Local",
-		device[i].udpGlobalTrafficStats.remote2local) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
+    wrtLlongItm(lang,"\t","udpLocal",  
+		device[i].udpGlobalTrafficStats.local,',');
+    wrtLlongItm(lang,"\t","udpLocal2Remote",  
+		device[i].udpGlobalTrafficStats.local2remote,',');
+    wrtLlongItm(lang,"\t","udpRemote",  
+		device[i].udpGlobalTrafficStats.remote,',');
+    wrtLlongItm(lang,"\t","udpRemote2Local",  
+		device[i].udpGlobalTrafficStats.remote2local,',');
 
     /* ********************************* */
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "icmpLocal",
-		device[i].icmpGlobalTrafficStats.local) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "icmpLocal2Remote",
-		device[i].icmpGlobalTrafficStats.local2remote) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu',\n", "icmpRemote",
-		device[i].icmpGlobalTrafficStats.remote) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
-
-    if(snprintf(buf, sizeof(buf), "\t'%s' => '%llu'\n", "icmpRemote2Local",
-		device[i].icmpGlobalTrafficStats.remote2local) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
-      sendString(buf);
+    wrtLlongItm(lang,"\t","icmpLocal", 
+		device[i].icmpGlobalTrafficStats.local,',');
+    wrtLlongItm(lang,"\t","icmpLocal2Remote", 
+		device[i].icmpGlobalTrafficStats.local2remote,',');
+    wrtLlongItm(lang,"\t","icmpRemote",
+		device[i].icmpGlobalTrafficStats.remote,',');
+    wrtLlongItm(lang,"\t","icmpRemote2Local",
+		device[i].icmpGlobalTrafficStats.remote2local,' ');
   }
-
-  if(languageType == PERL_LANGUAGE)
-    sendString("}\n\n");
-  else
-    sendString(")\n\n");
-
-  sendString(");\n");
+  endWriteKey(lang,"",' ');
+  endWriteArray(lang);
 }
+
+
