@@ -67,7 +67,7 @@ int execCGI(char* cgiName) {
   char* userName = "nobody", line[384], buf[512];
   struct passwd * newUser = NULL;
   FILE *fd;
-  int num, i;
+  int num, i, rc;
   struct timeval wait_time;
 
   if(!(newUser = getpwnam(userName))) {
@@ -89,17 +89,21 @@ int execCGI(char* cgiName) {
     }
 
   putenv("REQUEST_METHOD=GET");
-  if(num == 0) putenv("QUERY_STRING=");
 
-  if(snprintf(line, sizeof(line), "WD=%s", myGlobals.pwd) < 0) 
+  if(num == 0) {
+    if(snprintf(line, sizeof(line), "QUERY_STRING=%s", getenv("PWD")) < 0) 
+      BufferTooShort();
+    putenv(line); /* PWD */
+    traceEvent(TRACE_INFO, line);
+  }
+
+  putenv("WD="DATAFILE_DIR);
+
+  if(snprintf(line, sizeof(line), "%s/cgi/%s", DATAFILE_DIR, cgiName) < 0) 
     BufferTooShort();
-  putenv(line); /* PWD */
-
-  if(snprintf(line, sizeof(line), "%s/cgi/%s", myGlobals.pwd, cgiName) < 0) 
-    BufferTooShort();
-
+  
 #ifndef DEBUG
-  traceEvent(TRACE_INFO, "Executing CGI '%s' (wd=%s)", line, myGlobals.pwd);
+  traceEvent(TRACE_INFO, "Executing CGI '%s'", line);
 #endif
 
   if((fd = popen(line, "r")) == NULL) {

@@ -410,8 +410,6 @@ int initGlobalValues(void) {
      LOW_ACCURACY_LEVEL
   */
   
-  myGlobals.pwd = strdup(getenv("PWD"));
-
   switch(myAccuracy) {
   case HIGH_ACCURACY_LEVEL:
     myGlobals.enableSessionHandling = 1;
@@ -655,8 +653,12 @@ void initThreads() {
     /*
      * Create the thread (7) - Purge old DB entries
      */
-    createThread(&myGlobals.purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
-    traceEvent(TRACE_INFO, "Started thread (%ld) for address purge.", myGlobals.purgeAddressThreadId);
+    if(!myGlobals.borderSnifferMode) {
+      createThread(&myGlobals.purgeAddressThreadId,
+		   cleanupExpiredHostEntriesLoop, NULL);
+      traceEvent(TRACE_INFO, "Started thread (%ld) for address purge.", 
+		 myGlobals.purgeAddressThreadId);
+    }
   }
 #endif
 

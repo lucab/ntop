@@ -21,7 +21,7 @@
 #include "ntop.h"
 
 #define MIN_NUM_USES            1
-#define MAX_NUM_PURGED_HOSTS  512
+#define MAX_NUM_PURGED_HOSTS  768
 
 /* ******************************* */
 
@@ -324,12 +324,12 @@ void freeHostInstances(int actualDeviceId) {
 /* #define DEBUG */
 
 void purgeIdleHosts(int actDevice) {
-  u_int idx, numFreedBuckets=0, len, maxBucket = 0, theIdx, hashFull = 0;
+  u_int idx, numFreedBuckets=0, maxBucket = 0, theIdx, hashFull = 0, hashLen;
   time_t startTime = time(NULL);
   static time_t lastPurgeTime[MAX_NUM_DEVICES];
   static char firstRun = 1;
   static HostTraffic **theFlaggedHosts = NULL;
-  static u_int hashLen = 0;
+  static u_int len;
 
   if(myGlobals.rFileName != NULL) return;
 
@@ -340,6 +340,8 @@ void purgeIdleHosts(int actDevice) {
   if(firstRun) {
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
+    len = sizeof(HostTraffic*)* MAX_NUM_PURGED_HOSTS;
+    theFlaggedHosts = (HostTraffic**)malloc(len);    
   }
 
   updateDeviceThpt(actDevice);
@@ -356,19 +358,11 @@ void purgeIdleHosts(int actDevice) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
-  /*
-    hashLen is necessary as the hash size can change while purging
-    hosts outside of the mutex's
-  */
-  if(hashLen != myGlobals.device[actDevice].actualHashSize) {
-    hashLen = myGlobals.device[actDevice].actualHashSize;
-    len = sizeof(HostTraffic*)* MAX_NUM_PURGED_HOSTS;
-    if(theFlaggedHosts != NULL) free(theFlaggedHosts); /* free old list */
-    theFlaggedHosts = (HostTraffic**)malloc(len);
-  }
+
   memset(theFlaggedHosts, 0, len);
 
   /* Calculates entries to free */
+  hashLen = myGlobals.device[actDevice].actualHashSize;
   for(theIdx = (myGlobals.actTime % hashLen) /* random start */,
 	hashFull = 0, idx=1; idx<hashLen; idx++) {
     HostTraffic *el;
@@ -422,7 +416,9 @@ void purgeIdleHosts(int actDevice) {
   }
 
   /*
+    NOTE:
     This statement is not called as it is left for the next run
+    Anyway we should free this memory sometimes before to shut down.
     free(theFlaggedHosts);
   */
 

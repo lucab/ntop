@@ -791,9 +791,11 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
-      for(i=0; i<myGlobals.numDequeueThreads; i++)
-	  killThread(&myGlobals.dequeueAddressThreadId[i]);
-    killThread(&myGlobals.purgeAddressThreadId);
+    for(i=0; i<myGlobals.numDequeueThreads; i++)
+      killThread(&myGlobals.dequeueAddressThreadId[i]);
+
+    if(!myGlobals.borderSnifferMode)
+      killThread(&myGlobals.purgeAddressThreadId);
   }
 #endif
 

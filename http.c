@@ -822,7 +822,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 /* ************************* */
 
 static int checkURLsecurity(char *url) {
-  int rc = 0, tokenCharacter, countOKextension, len;
+  int rc = 0, tokenCharacter, countOKextension, len, i;
   int countSections, countOKnumeric, xvertValue;
   char *token;
   char *workURL = NULL;
@@ -869,7 +869,7 @@ static int checkURLsecurity(char *url) {
     traceEvent(TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request\n");
     url[0] = '\0';
     return(1);
-  }
+    }
   */
 
   /* a double slash? */
@@ -935,81 +935,30 @@ static int checkURLsecurity(char *url) {
   traceEvent(TRACE_INFO, "URL security: NOTE: Tokenizing '%s'...\n", workURL);
 #endif
 
-  token = strtok_r(workURL, ".-", &strtokState);
-
-  while(token != NULL) {
-
-    countSections++;
-
-    if(isdigit(token[0])) {
-      xvertValue = atoi(&token[0]);
-      if((xvertValue >= 0) && (xvertValue <= 255) )
-	countOKnumeric++;
-
-    } else if(countSections > 1) {
-      for (tokenCharacter=0; tokenCharacter<=strlen(token); tokenCharacter++) {
-	token[tokenCharacter] = (char)tolower(token[tokenCharacter]);
-      }
-      if((strcmp(token , "htm") == 0)  ||
-	 (strcmp(token , "html") == 0) ||
-	 (strcmp(token , "txt") == 0)  ||
-	 (strcmp(token , "jpg") == 0)  ||
-	 (strcmp(token , "png") == 0)  ||
-	 (strcmp(token , "gif") == 0)  ||
-	 (strcmp(token , "ico") == 0)  ||
-	 (strcmp(token , "css") == 0) ) {
-	countOKextension++;
-      } else {
-	/* bad extension! - bounce now... */
-	traceEvent(TRACE_ERROR, "URL security(5): ERROR: Found bad file extension (.%s) in URL...\n", token);
-	rc = 5;
-	break;
-      }
-    }
-
-    /* Yes, "." is correct - after the 1st section, we only care about .s */
-    token = strtok_r(NULL, ".", &strtokState);
+  for(i=strlen(workURL)-1; i>0; i--)
+    if(workURL[i] == '.') 
+      break;
+  i++;
+  if(!((strcmp(&workURL[i] , "htm") == 0)  ||
+       (strcmp(&workURL[i] , "html") == 0) ||
+       (strcmp(&workURL[i] , "txt") == 0)  ||
+       (strcmp(&workURL[i] , "jpg") == 0)  ||
+       (strcmp(&workURL[i] , "png") == 0)  ||
+       (strcmp(&workURL[i] , "gif") == 0)  ||
+       (strcmp(&workURL[i] , "ico") == 0)  ||
+       (strcmp(&workURL[i] , "css") == 0) )) {
+    traceEvent(TRACE_ERROR, 
+	       "URL security(5): ERROR: Found bad file extension (.%s) in URL...\n", 
+	       &workURL[i]);
+    rc = 5;
   }
 
-  if(rc == 0) {
-    /* So far, so good and we're being strict... */
-
-    /* OK, test what we have... the only valid patterns are:
-
-       Pattern          countSections  countOKextension  countOKnumeric
-       xxxxxxxx         1              0                 na
-       xxxxx.html       2              1                 na
-       192.168.1.1.html 5              1                 4
-       xxxxxxxx-192.168.1.1.html
-       6              1                 4
-    */
-    switch (countSections) {
-    case 1:
-      if(countOKextension != 0) {
-	rc = 6;
-      }
-      break;
-    case 2:
-      if(countOKextension != 1) {
-	rc = 7;
-      }
-      break;
-    case 5:
-    case 6:
-      if((countOKextension != 1) || (countOKnumeric != 4) ) {
-	rc = 8;
-      }
-      break;
-    default:
-      rc = 9;
-    }
-  }
-
-  if(workURL != NULL)
-    free(workURL);
+  if(workURL != NULL) free(workURL);
 
   if(rc != 0)
-    traceEvent(TRACE_ERROR, "ERROR: bad char found on '%s' (rc=%d) rejecting request", url, rc);
+    traceEvent(TRACE_ERROR, 
+	       "ERROR: bad char found on '%s' (rc=%d) rejecting request",
+	       url, rc);
 
   return(rc);
 }
