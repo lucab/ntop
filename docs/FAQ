@@ -1019,6 +1019,71 @@ A. This  flag  allows users to specify the subnets whose traffic is considered
         <network address>/<# subnet mask bits>[,<network address>/<#  subnet mask bits>]. 
    For instance "131.114.21.0/24,10.0.0.0/255.0.0.0".
 
+Q. (followup) but what does it MEAN?
+A. Surprisingly, it means EXACTLY what it says.  Treat traffic on the listed subnet(s) 
+   as local.
+
+   ntop differentiates between local traffic and remote traffic.  There are actually 
+   four classes (although only three are routinely reported) L->L L->R R->L and R->R.
+
+   Suppose your IP is 1.2.3.4 with a 255.255.255.0 netmask (a/k/a 1.2.3.4/24)
+
+   Under the TCP/IP protocol, traffic with any address 1.2.3.1 -> 1.2.3.254 does not 
+   get routed.  It's "local".
+
+   Your buddy is at 1.2.3.9 and the router is 1.2.3.1, so your network looks like this:
+
+   the       +--------+
+   world-----+ Router +--1.2.3.1--------------------------------------
+             +--------+                | 1.2.3.4             | 1.2.3.9
+                                  +--------+            +--------+
+                                  |  You   |            |  Buddy |
+                                  +--------+            +--------+
+
+   Say you send a packet to your buddy at 1.2.3.9. You build a packet with SRC=1.2.3.4 
+   DST=1.2.3.9 and you data and cast it out the wire.   (For purposes of this illustration, 
+   ignore the fact the your TCP stack would recognize the "local" nature of the packet and 
+   actually use another, lower level protocol, called Ethernet to deliver it.)
+
+   The router (1.2.3.1) looks at it, does the math and ignores it - it's local
+   Your buddy (1.2.3.9) looks at it, says - gee, that's me and reads it
+
+   This is L->L traffic.
+
+   Now you send a packet to ntop.org at 131.114.21.9.  Again, SRC=1.2.3.4 and now 
+   DST=131.114.21.9.
+
+   The router (1.2.3.1) looks at it, does the math and says - oops, I have to send it out 
+      to the world
+   Your buddy (1.2.3.9) looks at it, says - gee that's NOT me and ignores it
+
+   This is L->R traffic.
+
+
+   Now it's perfectly possible to have multiple (physical) networks on the same physical 
+   wire.  Say that your ISP chooses to put 1.2.4.1-1.2.4.254 (1.2.4.0/24) on the same wire.
+   (Why would they do this - maybe it's a big pipe and only a few users or whatever).
+
+   A packet from 1.2.4.4 -> 1.2.4.9 is seen by
+
+   The router - no, that too is local, ignore it
+   You (1.2.3.4): (1.2.4.9) - not me - ignore it
+   Buddy (1.2.3.9) - um... 1.2.4.9 - not me - ignore it
+
+   And that's perfectly legal.
+
+   But what if you are the ISP and you want ntop to see ALL the traffic on that wire?  
+   ntop will figure out from it's own IP address that the 1.2.3.0/24 traffic is local, 
+   but it will classify the 1.2.4.0/24 as REMOTE.
+
+   And that is what the --local-subnets switch does.  It tells ntop to treat that 
+   1.2.4.0/24 traffic as local.
+
+   If there isn't any other traffic on the wire, then telling ntop to treat it as local 
+   won't change a thing.
+
+   You can always use a packet sniffer, such as tcpdump to scan the traffic on the wire 
+   and see what's really there...                          (Added, 08Aug2002, BMS)
 
 Q. I am using a /16 (/25 or whatever) mask and I get this message:
       Truncated network size to 1024 hosts (real netmask 255.255.255.0)
