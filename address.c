@@ -68,6 +68,7 @@ static int _ns_name_unpack(const u_char *msg,
 
 static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
   char symAddr[MAX_HOST_SYM_NAME_LEN];
+  StoredAddress storedAddress;
   int addr, i;
   struct hostent *hp = NULL;
   char* res;
@@ -108,32 +109,43 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 #endif
 
   /* First check whether the address we search for is cached... */
-  if(data_data.dptr != NULL) {
+  if((data_data.dptr != NULL) 
+     && (data_data.dsize == (sizeof(StoredAddress)+1))) {
+    StoredAddress *retrievedAddress;
+    
+    retrievedAddress = (StoredAddress*)data_data.dptr;
 #ifdef GDBM_DEBUG
     traceEvent(TRACE_INFO, "Fetched data (2): '%s' [%s]\n",
-	       data_data.dptr, keyBuf);
+	       retrievedAddress->symAddress, keyBuf);
 #endif
 
-    if(strlen(data_data.dptr) > MAX_HOST_SYM_NAME_LEN) {
-      strncpy(symAddr, data_data.dptr, MAX_HOST_SYM_NAME_LEN-3);
+    /* Sanity check */
+    if(strlen(retrievedAddress->symAddress) > MAX_HOST_SYM_NAME_LEN) {
+      strncpy(symAddr, retrievedAddress->symAddress, MAX_HOST_SYM_NAME_LEN-3);
       symAddr[MAX_HOST_SYM_NAME_LEN] = '\0';
       symAddr[MAX_HOST_SYM_NAME_LEN-1] = '.';
       symAddr[MAX_HOST_SYM_NAME_LEN-2] = '.';
       symAddr[MAX_HOST_SYM_NAME_LEN-3] = '.';
     } else
-      strncpy(symAddr, data_data.dptr, MAX_HOST_SYM_NAME_LEN);
+      strncpy(symAddr, retrievedAddress->symAddress, MAX_HOST_SYM_NAME_LEN);
 
-    updateHostNameInfo(addr, data_data.dptr);
-    free(data_data.dptr);
+    updateHostNameInfo(addr, retrievedAddress->symAddress);
     numResolvedOnCacheAddresses++;
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving resolveAddress()");
 #endif
-    return;
+     free(data_data.dptr);
+     return;
   } else {
 #ifdef GDBM_DEBUG
-    traceEvent(TRACE_ERROR, "Unable to retrieve %s\n", keyBuf);
-#endif
+    if(data_data.dptr != NULL)
+      traceEvent(TRACE_ERROR, "Dropped data for %s [wrong data size]", keyBuf);
+    else
+      traceEvent(TRACE_ERROR, "Unable to retrieve %s", keyBuf);
+#endif    
+
+    /* It might be that the size of the retieved data is wrong */
+    if(data_data.dptr != NULL) free(data_data.dptr);
   }
 #endif
 
@@ -276,14 +288,18 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
     symAddr[MAX_HOST_SYM_NAME_LEN-2] = '.';
     symAddr[MAX_HOST_SYM_NAME_LEN-3] = '.';
   } else
-    strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN);
+    strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN-1);
 
   for(i=0; symAddr[i] != '\0'; i++)
     symAddr[i] = (char)tolower(symAddr[i]);
 
+  memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
+  strcpy(storedAddress.symAddress, symAddr);
+  storedAddress.recordCreationTime = actTime;
+
   /* key_data has been set already */
-  data_data.dptr = symAddr;
-  data_data.dsize = strlen(symAddr)+1;
+  data_data.dptr = (void*)&storedAddress;
+  data_data.dsize = sizeof(storedAddress)+1;
 
   updateHostNameInfo(addr, symAddr);
   
@@ -514,16 +530,27 @@ void ipaddr2str(struct in_addr hostIpAddress) {
   releaseMutex(&gdbmMutex);
 #endif
 
-  if(data_data.dptr != NULL) {
+  if((data_data.dptr != NULL) 
+     && (data_data.dsize == (sizeof(StoredAddress)+1))) {
+    StoredAddress *retrievedAddress;
+    
+    retrievedAddress = (StoredAddress*)data_data.dptr;
+
 #ifdef GDBM_DEBUG
-    traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]", data_data.dptr, tmpBuf);
+    traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]", retrievedAddress->symAddress, tmpBuf);
 #endif
-    updateHostNameInfo(hostIpAddress.s_addr, data_data.dptr);
+    updateHostNameInfo(hostIpAddress.s_addr, retrievedAddress->symAddress);
     free(data_data.dptr);
   } else {
 #ifdef GDBM_DEBUG
-    traceEvent(TRACE_INFO, "Unable to retrieve %s", tmpBuf);
-#endif
+    if(data_data.dptr != NULL)
+      traceEvent(TRACE_ERROR, "Dropped data for %s [wrong data size]", tmpBuf);
+    else
+      traceEvent(TRACE_ERROR, "Unable to retrieve %s", tmpBuf);
+#endif    
+
+    /* It might be that the size of the retieved data is wrong */
+    if(data_data.dptr != NULL) free(data_data.dptr);
 
 #ifndef MULTITHREADED
     resolveAddress(&hostIpAddress, 0);
@@ -1307,3 +1334,49 @@ void checkSpoofing(u_int idxToCheck) {
 }
 
 
+
+/* ****************************************** */
+
+/*
+  Let's remove from the database those entries that 
+  have been added a while ago
+*/
+
+#define ADDRESS_PURGE_TIMEOUT 12*60*60 /* 12 hours */
+
+void cleanupHostEntries() { 
+  datum data_data, key_data, return_data = gdbm_firstkey(gdbm_file);
+  u_int numDbEntries = 0;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Entering cleanupHostEntries()");
+#endif
+
+  while(return_data.dptr != NULL) {
+    numDbEntries++;
+    key_data = return_data;
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "cleanupHostEntries");
+#endif
+    return_data = gdbm_nextkey(gdbm_file, key_data);
+    data_data = gdbm_fetch(gdbm_file, key_data);
+
+    if(data_data.dptr != NULL) {
+      if((data_data.dsize == (sizeof(StoredAddress)+1))
+	 || ((((StoredAddress*)data_data.dptr)->recordCreationTime+ADDRESS_PURGE_TIMEOUT) < actTime)) {
+	gdbm_delete(gdbm_file, key_data);
+#ifdef DEBUG
+	traceEvent(TRACE_INFO, "Deleted '%s' entry.\n", data_data.dptr);
+#endif
+	numDbEntries--;
+      }
+    }
+#ifdef MULTITHREADED
+    releaseMutex(&gdbmMutex);
+    sched_yield(); /* Allow other threads to run */
+#endif
+  
+    if(data_data.dptr != NULL) free(data_data.dptr);
+    free(key_data.dptr);
+  }    
+}

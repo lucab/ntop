@@ -657,6 +657,25 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 	sleep(1); /* leave some time to others */
 #endif
       }
+
+    
+    /* Remove !!!!!!!*/
+    cleanupHostEntries();
+  }
+  
+  return(NULL);
+}
+
+/* **************************************** */
+
+void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
+  for(;;) {
+    int i;
+
+    sleep(PURGE_ADDRESS_TIMEOUT);
+    if(!capturePackets) break;
+    actTime = time(NULL);    
+    cleanupHostEntries();
   }
   
   return(NULL);
@@ -835,8 +854,10 @@ RETSIGTYPE cleanup(int signo) {
     killThread(&lsofThreadId);
   
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  if(numericFlag == 0)
+  if(numericFlag == 0) {
     killThread(&dequeueAddressThreadId);
+    killThread(&purgeAddressThreadId);
+  }
 #endif
   
   killThread(&handleWebConnectionsThreadId);

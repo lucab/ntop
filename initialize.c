@@ -445,31 +445,8 @@ void initGdbm(void) {
     traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
     exit(-1);
   } else {
-    /* Let's remove from the database entries that were not
-       yet resolved in (i.e. those such as "*132.23.45.2*")
-    */
-    datum data_data, key_data, return_data = gdbm_firstkey (gdbm_file);
-    u_int numDbEntries = 0;
-
-    while(return_data.dptr != NULL) {
-      numDbEntries++;
-      key_data = return_data;
-      return_data = gdbm_nextkey(gdbm_file, key_data);
-      data_data = gdbm_fetch(gdbm_file, key_data);
-      if((data_data.dptr != NULL) && (data_data.dptr[0] == '*')) {
-	gdbm_delete(gdbm_file, key_data);
-#ifdef DEBUG
-	traceEvent(TRACE_INFO, "Deleted '%s' entry.\n", data_data.dptr);
-#endif
-	numDbEntries--;
-      }
-
-      if(data_data.dptr != NULL) free(data_data.dptr);
-      free(key_data.dptr);
-    }
-
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", dbPath) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", dbPath) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
     pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
     if(pwFile == NULL) {
@@ -585,7 +562,13 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
     createThread(&dequeueAddressThreadId, dequeueAddress, NULL);
     traceEvent (TRACE_INFO, "Started thread (%ld) for DNS address resolution.\n",
 		dequeueAddressThreadId);
-  }
+
+    /*
+     * (7) - Purge old host addresses
+     */
+        createThread(&purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
+        traceEvent (TRACE_INFO, "Started thread (%ld) for address purge.", purgeAddressThreadId);
+   }
 #endif
 #endif
 
@@ -645,8 +628,7 @@ void initDevices(char* devices) {
 
   ifName = tmpDev;
 
-  if(!isWinNT()) {
-	 
+  if(!isWinNT()) {	 
 	 for(i=0;; i++) {
       if(tmpDev[i] == 0) {
 	if(ifName[0] == '\0')

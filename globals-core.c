@@ -71,6 +71,7 @@ PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
 pthread_t dequeueThreadId, handleWebConnectionsThreadId;
 pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
 pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
+pthread_t purgeAddressThreadId;
 #ifdef HAVE_GDBM_H
 PthreadMutex gdbmMutex;
 #endif /* HAVE_GDBM_H */

@@ -60,6 +60,7 @@ extern PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
 extern pthread_t dequeueThreadId, handleWebConnectionsThreadId;
 extern pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
 extern pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
+extern pthread_t purgeAddressThreadId;
 #ifdef HAVE_GDBM_H
 extern PthreadMutex gdbmMutex;
 #endif
@@ -167,6 +168,7 @@ extern u_int16_t handleDNSpacket(const u_char *ipPtr, u_short displ,
                                  DNSHostInfo *hostPtr, short n,
                                  short *isRequest, short *positiveReply);
 extern void checkSpoofing(u_int idxToCheck);
+extern void cleanupHostEntries();
 
 /* admin.c */
 extern void showUsers(void);
@@ -285,6 +287,7 @@ extern void*          ntop_safecalloc(unsigned int c, unsigned int sz, char* fil
 extern void*          ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line);
 #endif
 
+
 /* logger.c */
 extern void initLogger(void);
 extern void termLogger(void);
@@ -312,6 +315,7 @@ extern void *scanIdleSessionsLoop(void *notUsed);
 extern void *periodicLsofLoop(void *notUsed);
 extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
 extern RETSIGTYPE cleanup(int signo);
+extern void* cleanupExpiredHostEntriesLoop(void*);
  
 /* pbuf.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, __FILE__, __LINE__)

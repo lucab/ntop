@@ -1629,6 +1629,11 @@ typedef struct icmpHostInfo {
 #define MAX_HOST_SYM_NAME_LEN     64
 #define MAX_NODE_TYPES             8
 
+typedef struct storedAddress {
+  char   symAddress[MAX_HOST_SYM_NAME_LEN];
+  time_t recordCreationTime;
+} StoredAddress;
+
 /* Host Traffic */
 typedef struct hostTraffic {
   struct in_addr   hostIpAddress;
@@ -1803,6 +1808,7 @@ struct pbuf {
 
 #define IDLE_HOST_PURGE_TIMEOUT  30*60    /*   30 minutes */
 #define IDLE_SESSION_TIMEOUT     30*60    /*   30 minutes */
+#define PURGE_ADDRESS_TIMEOUT    120*60   /*   2  hours   */
 #define PIPE_READ_TIMEOUT        15       /*      seconds */
 
 /* **************************** */
