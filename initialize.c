@@ -649,6 +649,17 @@ void initThreads(void) {
 
 #endif /* MULTITHREADED */
 
+#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+#ifdef PARM_SSLWATCHDOG
+  if (myGlobals.useSSLwatchdog == 1)
+#endif
+  {
+      traceEvent(TRACE_INFO, "Initializing Condvar for ssl watchdog.");
+      createCondvar(&myGlobals.sslwatchdogCondvar);
+      myGlobals.sslwatchdogCondvar.predicate = SSLWATCHDOG_STATE_UNINIT;
+  }
+#endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
+
   myGlobals.hostsHashMutexInitialized = 1;
 }
 

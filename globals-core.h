@@ -280,6 +280,7 @@ extern int _releaseMutex(PthreadMutex *mutexId,
 extern int createCondvar(ConditionalVariable *condvarId);
 extern void deleteCondvar(ConditionalVariable *condvarId);
 extern int waitCondvar(ConditionalVariable *condvarId);
+extern int timedwaitCondvar(ConditionalVariable *condvarId, struct timespec *expiration);
 extern int signalCondvar(ConditionalVariable *condvarId);
 #define createMutex(a)     _createMutex(a, __FILE__, __LINE__)
 #define accessMutex(a, b)  _accessMutex(a, b, __FILE__, __LINE__)

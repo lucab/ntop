@@ -124,6 +124,16 @@
  */
 /* #define SESSION_TRACE_DEBUG */
 
+/*
+ * SSLWATCHDOG_DEBUG causes webInterface.c to log the activities of the
+ * parent and child(watchdog) threads in exhaustive details.
+ * 
+ *   Note the code below (in derived settings) to undef this if the USE_SSLWATCHDOG 
+ *        option isn't enabled.      Leave that alone!
+ *
+ */
+/* #define SSLWATCHDOG_DEBUG */
+
 /* STORAGE_DEBUG causes util.c to log the store/resurrection of host information,
  * i.e. the -S command line parameter.
  */
@@ -150,6 +160,7 @@
 /* #define PRINT_RETRANSMISSION_DATA */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*                                   includes                              */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
@@ -662,6 +673,30 @@ extern const char *gdbm_strerror (int);
 #define strncasecmp(a, b, c) strnicmp(a, b, c)
 #endif
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* DERIVED SETTINGS - these encapsulate complex definitions for simplicity */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* SSLWATCHDOG - multithreaded, openSSL, pthreads and NOT WIN32.
+ *    USE_SSLWATCHDOG - selected at ./configure time
+ *    PARM_SSLWATCHDOG - option at run time
+ */
+#if defined(MULTITHREADED) && defined(HAVE_OPENSSL) && defined(HAVE_PTHREAD_H) && !defined(WIN32) 
+#if !defined(USE_SSLWATCHDOG)
+#undef SSLWATCHDOG_DEBUG
+#define PARM_SSLWATCHDOG
+#else
+#undef PARM_SSLWATCHDOG
+#endif 
+#else
+#undef USE_SSLWATCHDOG
+#undef SSLWATCHDOG_DEBUG
+#endif
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*                          Constants and structures                       */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 #ifdef WIN32
 #define MAX_NUM_DEVICES 1
 #else
@@ -685,6 +720,34 @@ extern const char *gdbm_strerror (int);
 
 #define NUM_SESSION_INFO                 128 /* used in util.c */
 #define MAX_NUM_SESSION_INFO  2*NUM_SESSION_INFO  /* Not yet used */
+
+/* SSLWATCHDOG stuff *************************** */
+#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+
+#define SSLWATCHDOG_PARENT 0
+#define SSLWATCHDOG_CHILD  1
+#define SSLWATCHDOG_BOTH  -1
+
+#define SSLWATCHDOG_STATE_UNINIT         0  /* No child */
+#define SSLWATCHDOG_STATE_WAITINGREQUEST 1  /* waiting for request */
+#define SSLWATCHDOG_STATE_HTTPREQUEST    2  /* http request received */
+#define SSLWATCHDOG_STATE_HTTPCOMPLETE   3  /* Parent done w/ http */
+#define SSLWATCHDOG_STATE_FINISHED       9
+ 
+#endif
+
+#ifdef HAVE_OPENSSL
+
+typedef struct ssl_connection {
+  SSL* ctx;
+  int  socketId;
+} SSL_connection;
+
+#define MAX_SSL_CONNECTIONS 32
+
+#define CERTF  "ntop-cert.pem"
+
+#endif /* HAVE_OPENSSL */
 
 /* ********************************************* */
 

@@ -27,18 +27,6 @@
 
 #ifdef HAVE_OPENSSL
 
-static SSL_CTX* ctx;
-
-typedef struct ssl_connection {
-  SSL* ctx;
-  int  socketId;
-} SSL_connection;
-
-#define MAX_SSL_CONNECTIONS 32
-static SSL_connection ssl[MAX_SSL_CONNECTIONS];
-
-#define CERTF  "ntop-cert.pem"
-
 int verify_callback(int ok, X509_STORE_CTX *ctx);
 
 void ntop_ssl_error_report(char * whyMe) {
@@ -75,7 +63,7 @@ int init_ssl(void) {
     return(0); /* The user decided NOT to use SSL */
   }
 
-  memset(ssl, 0, sizeof(ssl));
+  memset(myGlobals.ssl, 0, sizeof(myGlobals.ssl));
 
   traceEvent(TRACE_INFO, "Initializing SSL...");
 
@@ -110,40 +98,40 @@ int init_ssl(void) {
 #else
   meth = SSLv2_server_method();
 #endif
-  ctx = SSL_CTX_new (meth);
-  if (!ctx) {
+  myGlobals.ctx = SSL_CTX_new (meth);
+  if (!myGlobals.ctx) {
     ntop_ssl_error_report("ssl_init-server_method");
     return(2);
   }
 
-  SSL_CTX_set_options(ctx, SSL_OP_ALL); /* Enable the work-arounds */
+  SSL_CTX_set_options(myGlobals.ctx, SSL_OP_ALL); /* Enable the work-arounds */
 
 #ifdef SUPPORT_SSLV3
-  SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1); 
+  SSL_CTX_set_options(myGlobals.ctx, SSL_OP_NO_TLSv1); 
 #endif
 
-  if ((!SSL_CTX_load_verify_locations(ctx, NULL, NULL)) ||
-      (!SSL_CTX_set_default_verify_paths(ctx))) {
+  if ((!SSL_CTX_load_verify_locations(myGlobals.ctx, NULL, NULL)) ||
+      (!SSL_CTX_set_default_verify_paths(myGlobals.ctx))) {
       ntop_ssl_error_report("ssl_init-verify");
     }
 
-  SSL_CTX_set_session_id_context(ctx,
+  SSL_CTX_set_session_id_context(myGlobals.ctx,
 				 (void*)&s_server_session_id_context,
 				 sizeof s_server_session_id_context);
 
-  SSL_CTX_set_client_CA_list(ctx,SSL_load_client_CA_file(NULL));
+  SSL_CTX_set_client_CA_list(myGlobals.ctx,SSL_load_client_CA_file(NULL));
 
-  if (SSL_CTX_use_certificate_file(ctx, buf, SSL_FILETYPE_PEM) <= 0) {
+  if (SSL_CTX_use_certificate_file(myGlobals.ctx, buf, SSL_FILETYPE_PEM) <= 0) {
     ntop_ssl_error_report("ssl_init-use_cert");
     return(3);
   }
 
-  if (SSL_CTX_use_PrivateKey_file(ctx, buf, SSL_FILETYPE_PEM) <= 0) {
+  if (SSL_CTX_use_PrivateKey_file(myGlobals.ctx, buf, SSL_FILETYPE_PEM) <= 0) {
     ntop_ssl_error_report("ssl_init-use_pvtkey");
     return(4);
   }
 
-  if (!SSL_CTX_check_private_key(ctx)) {
+  if (!SSL_CTX_check_private_key(myGlobals.ctx)) {
     traceEvent(TRACE_ERROR, "Private key does not match the certificate public key");
     return(5);
   }
@@ -218,16 +206,16 @@ int accept_ssl_connection(int fd) {
   if(!myGlobals.sslInitialized) return(-1);
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
-    if(ssl[i].ctx == NULL) {
-      ssl[i].ctx = SSL_new(ctx);
-      if (ssl[i].ctx==NULL)
+    if(myGlobals.ssl[i].ctx == NULL) {
+      myGlobals.ssl[i].ctx = SSL_new(myGlobals.ctx);
+      if (myGlobals.ssl[i].ctx==NULL)
           exit (1);
-      SSL_clear(ssl[i].ctx);
-      SSL_set_fd(ssl[i].ctx, fd);
-      ssl[i].socketId = fd;
+      SSL_clear(myGlobals.ssl[i].ctx);
+      SSL_set_fd(myGlobals.ssl[i].ctx, fd);
+      myGlobals.ssl[i].socketId = fd;
 
-      if(!SSL_is_init_finished(ssl[i].ctx))
-	init_ssl_connection(ssl[i].ctx);
+      if(!SSL_is_init_finished(myGlobals.ssl[i].ctx))
+	init_ssl_connection(myGlobals.ssl[i].ctx);
       break;
     }
   }
@@ -246,9 +234,9 @@ SSL* getSSLsocket(int fd) {
   if(!myGlobals.sslInitialized) return(NULL);
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
-    if((ssl[i].ctx != NULL)
-       && (ssl[i].socketId == fd)) {
-      return(ssl[i].ctx);
+    if((myGlobals.ssl[i].ctx != NULL)
+       && (myGlobals.ssl[i].socketId == fd)) {
+      return(myGlobals.ssl[i].ctx);
     }
   }
 
@@ -263,11 +251,11 @@ void term_ssl_connection(int fd) {
   if(!myGlobals.sslInitialized) return;
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
-    if((ssl[i].ctx != NULL)
-       && (ssl[i].socketId == fd)) {
-      close(ssl[i].socketId);
-      SSL_free(ssl[i].ctx);
-      ssl[i].ctx = NULL;
+    if((myGlobals.ssl[i].ctx != NULL)
+       && (myGlobals.ssl[i].socketId == fd)) {
+      close(myGlobals.ssl[i].socketId);
+      SSL_free(myGlobals.ssl[i].ctx);
+      myGlobals.ssl[i].ctx = NULL;
     }
   }
 }
@@ -280,10 +268,10 @@ void term_ssl(void) {
   if(!myGlobals.sslInitialized) return;
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
-    if(ssl[i].ctx != NULL) {
-      close(ssl[i].socketId);
-      SSL_free (ssl[i].ctx);
-      ssl[i].ctx = NULL;
+    if(myGlobals.ssl[i].ctx != NULL) {
+      close(myGlobals.ssl[i].socketId);
+      SSL_free (myGlobals.ssl[i].ctx);
+      myGlobals.ssl[i].ctx = NULL;
     }
   }
 

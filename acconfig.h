@@ -76,6 +76,9 @@
 /* Define if you have the OPENSSL Toolkit (-lssl) by Open SSL Project. */
 #undef HAVE_OPENSSL
 
+/* Define if you want the SSL Watchdog compiled in (vs. runtime --use-sslwatchdog) */
+#undef USE_SSLWATCHDOG
+
 /* Define if you want support for SSL v3 */
 #undef SUPPORT_SSLV3
 

@@ -229,6 +229,10 @@ typedef struct ntopGlobals {
   int ignoreSIGPIPE;                 /* '132' */
 #endif
 
+#ifdef PARM_SSLWATCHDOG
+  int useSSLwatchdog;                /* '133' */
+#endif
+
   /* Other flags (these could set via command line options one day) */
   u_char enableSessionHandling;
   u_char enablePacketDecoding;
@@ -342,7 +346,17 @@ typedef struct ntopGlobals {
   /* SSL support */
 #ifdef HAVE_OPENSSL
   int sslInitialized;
-#endif
+
+  SSL_CTX* ctx;
+  SSL_connection ssl[MAX_SSL_CONNECTIONS];
+
+#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+  /* sslwatchdog stuff... */
+  ConditionalVariable sslwatchdogCondvar;
+  pthread_t sslwatchdogChildThreadId;
+#endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
+
+#endif /* HAVE_OPENSSL */
 
   /* Termination flags */
   short capturePackets;      /* tells to ntop if data are to be collected */
@@ -386,6 +400,9 @@ typedef struct ntopGlobals {
   int numIpPortMapperSlots;
   volatile unsigned long numHandledSIGPIPEerrors;
   unsigned long numHandledHTTPrequests;
+#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+  unsigned long numHTTPSrequestTimeouts;
+#endif /* USE_SSL_WATCHDOG || PARM_SSLWATCHDOG */
 
   /* Packet Capture */
 #if defined(MULTITHREADED)

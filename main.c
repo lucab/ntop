@@ -154,6 +154,9 @@ static struct option const long_options[] = {
 #ifndef YES_IGNORE_SIGPIPE
   { "ignore-sigpipe",                   no_argument,       NULL, 132 },
 #endif
+#ifdef PARM_SSLWATCHDOG
+  { "ssl-watchdog",                     no_argument,       NULL, 133 },
+#endif /* PARM_SSLWATCHDOG */
 
   {NULL, 0, NULL, 0}
 };
@@ -264,6 +267,9 @@ void usage (FILE * fp) {
 #ifndef YES_IGNORE_SIGPIPE 
   fprintf(fp, "    [--ignore-sigpipe]                                    Ignore SIGPIPE errors\n");
 #endif
+#ifdef PARM_SSLWATCHDOG
+  fprintf(fp, "    [--ssl-watchdog]                                      Use ssl watchdog (NS6 problem)\n");
+#endif /* PARM_SSLWATCHDOG */
 
 #else /* !HAVE_GETOPT_LONG */
 
@@ -685,6 +691,13 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.ignoreSIGPIPE = 1;
       break;
 #endif /* YES_IGNORE_SIGPIPE */
+
+#ifdef PARM_SSLWATCHDOG 
+    case 133:
+      /* Burton M. Strauss III - Jun 2002 */
+      myGlobals.useSSLwatchdog = 1;
+      break;
+#endif /* PARM_SSLWATCHDOG */
 
     case 135:
       /* Dennis Schoen (dennis@cns.dnsalias.org) allow --set-admin-password=<password> */

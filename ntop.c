@@ -814,6 +814,18 @@ RETSIGTYPE cleanup(int signo) {
 
   killThread(&myGlobals.handleWebConnectionsThreadId);
 
+#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+  if (myGlobals.sslwatchdogChildThreadId != 0) {
+      killThread(&myGlobals.sslwatchdogChildThreadId);
+  }
+#ifdef PARM_SSLWATCHDOG
+  if (myGlobals.useSSLwatchdog == 1)
+#endif
+  {
+      deleteCondvar(&myGlobals.sslwatchdogCondvar);
+  }
+#endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
+
 #ifdef FULL_MEMORY_FREE
   cleanupAddressQueue();
   cleanupPacketQueue();

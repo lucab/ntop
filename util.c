@@ -1147,6 +1147,28 @@ int waitCondvar(ConditionalVariable *condvarId) {
 
 /* ************************************ */
 
+int timedwaitCondvar(ConditionalVariable *condvarId, struct timespec *expiration) {
+  int rc;
+
+  if((rc = pthread_mutex_lock(&condvarId->mutex)) != 0)
+    return rc;
+
+  while(condvarId->predicate <= 0) {
+    rc = pthread_cond_timedwait(&condvarId->condvar, &condvarId->mutex, expiration);
+    if (rc == ETIMEDOUT) {
+        return rc;
+    }
+  }
+
+  condvarId->predicate--;
+
+  rc = pthread_mutex_unlock(&condvarId->mutex);
+
+  return rc;
+}
+
+/* ************************************ */
+
 int signalCondvar(ConditionalVariable *condvarId) {
   int rc;
 
