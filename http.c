@@ -3672,9 +3672,11 @@ void handleHTTPrequest(HostAddr from) {
   }
 
   if(requestedURL[0] == '\0') {
+#ifdef MAKE_WITH_I18N
     for (i=numLang; i>=0; i--) {
       free(requestedLanguage[i]);
     }
+#endif
     returnHTTPpageNotFound(NULL);
   }
 
