@@ -864,7 +864,12 @@ static void processIpPkt(const u_char *bp,
 
       /* Sanity check */
       if(tcpUdpLen >= (tp.th_off * 4)) {
+	/* Real lenght if we captured the full packet */
 	tcpDataLength = tcpUdpLen - (tp.th_off * 4);
+	
+	/* Actual lenght scaled with caplen */
+	tcpDataLength = h->caplen - (h->len - tcpDataLength);
+
 	theData = (u_char*)(bp+hlen+(tp.th_off * 4));
       } else {
 	tcpDataLength = 0;

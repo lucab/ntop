@@ -3457,7 +3457,6 @@ void setHostFingerprint(HostTraffic *srcHost) {
   char fingerprint[32];
   char *strtokState;
   
-  return; /* REMOVE */
   if((srcHost->fingerprint == NULL)       /* No fingerprint yet    */
      || (srcHost->fingerprint[0] == ':')  /* OS already calculated */
      || (strlen(srcHost->fingerprint) < 28))
