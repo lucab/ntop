@@ -703,7 +703,9 @@ void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc, char *fdst)
 
    ************************************* */
 
+#ifndef NS_INT16SZ
 #define NS_INT16SZ      sizeof(u_int16_t)       /* #/bytes of data in a u_int16_t */
+#endif
 
 #ifndef NS_GET16
 #define NS_GET16(s, cp) { \
