@@ -84,7 +84,6 @@ static struct option const long_options[] = {
 #endif
 
   { "traffic-dump-file",                required_argument, NULL, 'f' },
-  { "cisco-netflow-host",               required_argument, NULL, 'g' },
   { "help",                             no_argument,       NULL, 'h' },
   { "interface",                        required_argument, NULL, 'i' },
   { "border-sniffer-mode",              no_argument,       NULL, 'j' },
@@ -196,7 +195,6 @@ static void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-f <file>      | --traffic-dump-file <file>]         Traffic dump file (see tcpdump)\n");
-  fprintf(fp, "    [-g <host:port> | --cisco-netflow-host <host:port>]   Cisco NetFlow host and port\n");
   fprintf(fp, "    [-h             | --help]                             Display this help and exit\n");
 
 #ifndef WIN32
@@ -276,7 +274,6 @@ static void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-f <traffic dump file (see tcpdump)>]\n");
-  fprintf(fp, "    [-g <client:port (Cisco NetFlow client)>]\n");
 
 #ifndef WIN32
   fprintf(fp, "    [-i <interface>]\n");
@@ -402,11 +399,6 @@ static int parseOptions(int argc, char* argv []) {
     case 'f':
       myGlobals.rFileName = strdup(optarg);
       myGlobals.isLsofPresent = 0;               /* Don't make debugging too complex */
-      break;
-
-    case 'g': /* host:port */
-      stringSanityCheck(optarg);
-      handleNetFlowSupport(optarg);
       break;
 
     case 'h':                                /* help */
