@@ -1321,7 +1321,6 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     addPageIndicator(STR_MULTICAST_STATS, pageNum, numEntries, myGlobals.maxNumLines,
 		     revertOrder, abs(sortedColumn));
 
-    sendString("<BR><b>Color Code</b>");
     printFooterHostLink();
 
   } else
@@ -1333,13 +1332,36 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
 /* ******************************* */
 
+static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
+  int age;
+
+  /* return(""); */
+
+  if(myGlobals.actTime - el->firstSeen > 60*60)
+    age = 60;
+  else if (myGlobals.actTime - el->firstSeen > 30*60)
+    age = 30;
+  else if (myGlobals.actTime - el->firstSeen > 15*60)
+    age = 15;
+  else if (myGlobals.actTime - el->firstSeen > 5*60)
+    age = 5;
+  else
+    age = 0;
+  
+  snprintf(buf, bufSize, "class=\"age%dmin\"", age);
+  
+  return(buf);
+}
+
+/* ******************************* */
+
 void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
   u_int idx, numEntries;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   struct hostTraffic *el;
   struct hostTraffic** tmpTable;
-  char buf[LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[12], *theAnchor[12];
+  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[12], *theAnchor[12];
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
@@ -1385,7 +1407,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", HOSTS_INFO_HTML) < 0)
       BufferTooShort();
 
-    for(i=1; i<=8; i++) {
+    for(i=1; i<=9; i++) {
       if(abs(myGlobals.columnSort) == i) {
 	arrow[i] = arrowGif;
 	theAnchor[i] = htmlAnchor;
@@ -1414,6 +1436,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  "<TH "TH_BG">%s5>Nw&nbsp;Board&nbsp;Vendor%s</A></TH>"
 		  "<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
 		  "<TH "TH_BG">%s8>Host&nbsp;Contacts%s</A></TH>"
+		  "<TH "TH_BG">%s9>Age%s</A></TH>"
 		  "</TR>\n",
 		  theAnchor[1], arrow[1],
 		  theAnchor[0], arrow[0],
@@ -1423,7 +1446,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  theAnchor[4], arrow[4],
 		  theAnchor[5], arrow[5],
 		  theAnchor[7], arrow[7],
-		  theAnchor[8], arrow[8]
+		  theAnchor[8], arrow[8],
+		  theAnchor[9], arrow[9]
 		  ) < 0)
 	BufferTooShort();
     } else {
@@ -1435,6 +1459,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  "<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
 		  "<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
 		  "<TH "TH_BG">%s8>Host&nbsp;Contacts%s</A></TH>"
+		  "<TH "TH_BG">%s9>Age%s</A></TH>"
 		  "</TR>\n",
 		  theAnchor[1], arrow[1],
 		  theAnchor[0], arrow[0],
@@ -1442,7 +1467,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  theAnchor[6], arrow[6],
 		  theAnchor[4], arrow[4],
 		  theAnchor[7], arrow[7],
-		  theAnchor[8], arrow[8]
+		  theAnchor[8], arrow[8],
+		  theAnchor[9], arrow[9]
 		  ) < 0)
 	BufferTooShort();
     }
@@ -1669,6 +1695,11 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	  sendString(buf);
 #endif
 
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</A></TD>",
+		      formatSeconds(el->lastSeen - el->firstSeen)) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+
 	  sendString("</TR>\n");
 	  printedEntries++;
 	}
@@ -1684,7 +1715,6 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
 
-    sendString("<BR><b>Color Code</b>");
     printFooterHostLink();
 
     addPageIndicator(HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.maxNumLines,
@@ -1978,7 +2008,6 @@ void printLocalRoutersList(int actualDeviceId) {
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
 
-    sendString("<BR><b>Color Code</b>");
     printFooterHostLink();
   }
 }
@@ -2212,7 +2241,6 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
 
-    sendString("<BR><b>Color Code</b>");
     printFooterHostLink();
 
   } else
@@ -2365,7 +2393,6 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     addPageIndicator("NetNetstat.html", pageNum,
 		     realNumSessions, myGlobals.maxNumLines, -1, 0);
 
-    sendString("<BR><b>Color Code</b>");
     printFooterHostLink();
 
   } else {
@@ -2469,7 +2496,6 @@ void printIpProtocolUsage(void) {
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
 
-  sendString("<BR><b>Color Code</b>");
   printFooterHostLink();
 
   free(hosts);
@@ -3443,7 +3469,6 @@ void printIpTrafficMatrix(void) {
   sendString("</TABLE>"TABLE_OFF"\n<P>\n");
   sendString("</CENTER>\n");
 
-  sendString("<BR><b>Color Code</b>");
   printFooterHostLink();
 
   free(activeHosts);

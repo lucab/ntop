@@ -375,21 +375,10 @@ void printTableEntryPercentage(char *buf, int bufLen,
 /* ******************************* */
 
 void printFooterHostLink(void) {
-
-    char buf[LEN_GENERAL_WORK_BUFFER];
-
-    sendString("<TABLE BORDER=\"0\">"
-                 "<TR>"
-                   "<TD COLSPAN=5 align=\"center\">The host link color indicates how recently the host was first seen</TD>"
-                 "</TR>"
-                 "<TR>"
-                   "<TD>&nbsp;&nbsp;<A href=# class=\"age0min\">0 to 5 minutes</A>&nbsp;&nbsp;</TD>"
-                   "<TD>&nbsp;&nbsp;<A href=# class=\"age5min\">5 to 15 minutes</A>&nbsp;&nbsp;</TD>"
-                   "<TD>&nbsp;&nbsp;<A href=# class=\"age15min\">15 to 30 minutes</A>&nbsp;&nbsp;</TD>"
-                   "<TD>&nbsp;&nbsp;<A href=# class=\"age30min\">30 to 60 minutes</A>&nbsp;&nbsp;</TD>"
-                   "<TD>&nbsp;&nbsp;<A href=# class=\"age60min\">60+ minutes</A>&nbsp;&nbsp;</TD>"
-                 "</TR></TABLE>\n");
+  ;
 }
+
+/* ******************************* */
 
 void printFooterTrafficPct(void) {
 
@@ -432,8 +421,7 @@ void printFooter(int reportType) {
     case SORT_DATA_SENT_THPT:
     case SORT_DATA_THPT:
     case SORT_DATA_HOST_TRAFFIC:      
-        sendString("<BR><b>Color Code</b>");
-        break;
+      break;
   }
 
   sendString("<CENTER>\n");
@@ -742,10 +730,12 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName) {
   /* Lengthen tmpString buffer - to handle long name given by nmap for Win2k
      Courtesy of Marcel Hauser <marcel_hauser@gmx.ch> */
-  static char tmpStr[200], *flagImg;
+  static char tmpStr[200], *flagImg = "";
   char *theOsName;
 
   if((el == NULL) && (elOsName == NULL)) return("");
+
+  tmpStr[0] = '\0';
 
   if(elOsName != NULL)
     theOsName = elOsName;
@@ -756,8 +746,9 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName) {
     
     theOsName = &el->fingerprint[1];
   }
-
-  if(strstr(theOsName, "Windows") != NULL)
+  if(theOsName[0] == '\0') 
+    return("");
+  else if(strstr(theOsName, "Windows") != NULL)
     flagImg = "<IMG ALT=\"OS: Windows\" ALIGN=MIDDLE SRC=/statsicons/os/windows.gif>";
   else if(strstr(theOsName, "IRIX") != NULL)
     flagImg = "<IMG ALT=\"OS: Irix\" ALIGN=MIDDLE SRC=/statsicons/os/irix.gif>";
@@ -786,15 +777,15 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName) {
 
   if(!showOsName) {
     if(flagImg != NULL)
-      strncpy(tmpStr, flagImg, sizeof(tmpStr));
+      snprintf(tmpStr, sizeof(tmpStr), "%s", flagImg);
     else
-      strncpy(tmpStr, "", sizeof(tmpStr));
+      tmpStr[0] = "";
   } else {
     if(flagImg != NULL) {
       if(snprintf(tmpStr, sizeof(tmpStr), "%s&nbsp;[%s]", flagImg, theOsName) < 0)
 	BufferTooShort();
     } else
-      strncpy(tmpStr, theOsName, sizeof(tmpStr));
+      snprintf(tmpStr, sizeof(tmpStr), "%s", theOsName);
   }
 
   return(tmpStr);
@@ -896,6 +887,17 @@ int sortHostFctn(const void *_a, const void *_b) {
   case 8:
     n_a = (*a)->totContactedSentPeers+(*a)->totContactedRcvdPeers;
     n_b = (*b)->totContactedSentPeers+(*b)->totContactedRcvdPeers;
+
+    if(n_a < n_b)
+      return(1);
+    else if(n_a > n_b)
+      return(-1);
+    else
+      return(0);
+    break;
+  case 9:
+    n_a = (*a)->lastSeen-(*a)->firstSeen;
+    n_b = (*b)->lastSeen-(*b)->firstSeen;
 
     if(n_a < n_b)
       return(1);
