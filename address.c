@@ -91,7 +91,8 @@ static int validDNSName(char *name) {
     len = strlen(name);
   
   for(i=0; i<len; i++)
-    if(!(isalnum(name[i]) || (name[i] == '-') || (name[i] == '_')))
+    if(!(isalnum(name[i]) || (name[i] == '-') 
+	 || (name[i] == '_') || (name[i] == '.')))
       return(0);
   
   return(1);
