@@ -28,6 +28,8 @@
 int maxNumLines = MAX_NUM_TABLE_ROWS;
 int idleFlag, percentMode, localAddrFlag, refreshRate;
 int webPort, actualReportDeviceId;
+int sortSendMode=0;
+short sortFilter;
 
 short screenNumber, columnSort;
 int sock, newSock;

@@ -497,7 +497,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString(buf2);
 
 
-      sendString("<TR><TH "TH_BG">Packets</TH><TH "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
+      sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
 
 #ifdef HAVE_GDCHART
       if(numDevices > 1) {
@@ -655,7 +655,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	      formatPkts(device[actualReportDeviceId].rcvdPktStats.badChecksum));
       sendString(buf2);
 
-      sendString("</TABLE></TR><TR><TH "TH_BG">Traffic</TH><TH "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
+      sendString("</TABLE></TR><TR><TH "TH_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
       snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Total</th><TD "TD_BG" align=right>%s</td></TR>\n",
 	      getRowColor(), formatBytes(device[actualReportDeviceId].ethernetBytes, 1));
       sendString(buf2);
@@ -674,7 +674,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
       updateThpt();
 
-      sendString("</TABLE></TR><TR><TH "TH_BG">Throughput</TH><TH "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
+      sendString("</TABLE></TR><TR><TH "TH_BG">Throughput</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
       snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 	      "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 	      getRowColor(), formatThroughput(device[actualReportDeviceId].actualThpt),
@@ -1855,7 +1855,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printNoDataYet();
     else {
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage<</TH></TR>\n");
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
 

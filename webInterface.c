@@ -816,3 +816,102 @@ void shutdownNtop(void) {
   termAccessLog();
   termReports();
 }
+
+/* **************************************** */
+
+/* ******************************** */
+
+static void printFeatureConfigInfo(char* feature, char* status) {
+  sendString("<TR><TH "TH_BG" ALIGN=left>");
+  sendString(feature);
+  sendString("</TH><TD "TD_BG"  ALIGN=right>");
+  sendString(status);
+  sendString("</td></tr>\n");
+}
+
+/* ******************************** */
+
+void printNtopConfigInfo(void) {
+  char buf[BUF_SIZE];
+
+
+  sendString("<CENTER><H1>Current ntop Configuration</H1>\n");
+
+  sendString("<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n");
+
+  printFeatureConfigInfo("OS", osName);
+  printFeatureConfigInfo("ntop Version", version);
+  printFeatureConfigInfo("Built on", buildDate);
+
+#ifdef HAVE_OPENSSL
+  printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", "Present");
+#else
+  printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", "Absent");
+#endif
+
+#ifdef MULTITHREADED
+  printFeatureConfigInfo("Multithreaded", "Yes");
+#else
+  printFeatureConfigInfo("Multithreaded", "No");
+#endif
+
+#ifdef HAVE_GDCHART
+  printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Present");
+#else
+  printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Absent");
+#endif
+
+#ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
+  printFeatureConfigInfo("<A HREF=http://ucd-snmp.ucdavis.edu/>UCD SNMP</A>", "Present");
+#else
+  printFeatureConfigInfo("<A HREF=http://ucd-snmp.ucdavis.edu/>UCD SNMP </A>", "Absent");
+#endif
+
+#ifdef HAVE_LIBWRAP
+  printFeatureConfigInfo("TCP Wrappers", "Present");
+#else
+  printFeatureConfigInfo("TCP Wrappers", "Absent");
+#endif
+
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  printFeatureConfigInfo("Async. Addr. Resolution", "Yes");
+#else
+  printFeatureConfigInfo("Async. Addr. Resolution", "No");
+#endif
+
+  if(isLsofPresent) 
+    printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support", "Yes");
+  else
+    printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support",
+			   "No (Either disabled or missing)");
+
+  if(isNepedPresent) 
+    printFeatureConfigInfo("<A HREF=http://apostols.org/projectz/neped/>Neped</A> Support", "Yes");
+  else
+    printFeatureConfigInfo("<A HREF=http://apostols.org/projectz/neped/>Neped</A> Support", 
+			   "No (Either disabled or missing)");
+
+  if(isNmapPresent) 
+    printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", "Yes");
+  else
+    printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", 
+			   "No (Either disabled or missing)");
+
+  snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>actualHashSize</TH><TD "TD_BG"  align=right>%d</TD></TR>\n",
+	  (int)device[actualReportDeviceId].actualHashSize);
+  sendString(buf);
+  snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Hash hosts</TH><TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
+	  (int)device[actualReportDeviceId].hostsno,
+	  (((int)device[actualReportDeviceId].hostsno*100)/
+	   (int)device[actualReportDeviceId].actualHashSize));
+  sendString(buf);
+
+#ifdef MEMORY_DEBUG
+  snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Allocated Memory</TH><TD "TD_BG"  align=right>%s</TD></TR>\n",
+	  formatBytes(allocatedMemory, 0));
+  sendString(buf);
+#endif
+
+  sendString("</TABLE>"TABLE_OFF"\n");
+}
+
