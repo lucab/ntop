@@ -35,7 +35,7 @@ dnl> version and name of the game
 dnl>
 NTOP_MAJOR_VERSION=2
 NTOP_MINOR_VERSION=0
-NTOP_MICRO_VERSION=0
+NTOP_MICRO_VERSION=1
 NTOP_INTERFACE_AGE=0
 NTOP_BINARY_AGE=0
 NTOP_VERSION=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION.$NTOP_MICRO_VERSION
@@ -62,7 +62,7 @@ VERSION=$NTOP_VERSION
 
 echo
 echo "Welcome to $PACKAGE, Version $VERSION"
-echo "[Copyright (c) 1998-2001 Luca Deri <deri@ntop.org>]"
+echo "[Copyright (c) 1998-2002 Luca Deri <deri@ntop.org>]"
 echo
 
 dnl>

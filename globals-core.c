@@ -1,6 +1,5 @@
 /*
- *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
- *                          Portions by Stefano Suin <stefano@ntop.org>
+ *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -60,8 +59,7 @@ time_t nextLogTime;
 
 /* Flags */
 int isLsofPresent, isNmapPresent, filterExpressionInExtraFrame;
-short capturePackets;
-short endNtop;
+short capturePackets, endNtop, borderSnifferMode;
 
 
 /* Multithreading */
@@ -69,7 +67,6 @@ short endNtop;
 unsigned short numThreads;
 PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
 PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
-
 pthread_t dequeueThreadId, handleWebConnectionsThreadId;
 pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
 pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;

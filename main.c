@@ -1,6 +1,5 @@
 /*
- *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
- *                          Portions by Stefano Suin <stefano@ntop.org>
+ *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -160,9 +159,9 @@ int main(int argc, char *argv[]) {
   }
 
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:kA:";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:kA:j";
 #else
-  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kKLA:";
+  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kKLA:j";
 #endif
 
   while((op = getopt(argc, argv, theOpts)) != EOF) {
@@ -303,6 +302,16 @@ int main(int argc, char *argv[]) {
 
     case 'N':
       isNmapPresent = 0;
+      break;
+
+    case 'j':
+      /*
+	In this mode ntop sniffs from an interface on which
+	 the traffic has been mirrored hence:
+	 - MAC addresses are not used at all but just IP addresses
+	 - ARP packets are not handled
+      */
+      borderSnifferMode = 1;
       break;
 
     case 'w':
@@ -498,7 +507,7 @@ int main(int argc, char *argv[]) {
     }
 
   traceEvent(TRACE_INFO, "Listening on [%s]", ifStr);
-  traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
+  traceEvent(TRACE_INFO, "Copyright 1998-2002 by %s\n", author);
   traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
   traceEvent(TRACE_INFO, "Initializing...\n");
 

@@ -1,6 +1,5 @@
 /*
- *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
- *                          Portions by Stefano Suin <stefano@ntop.org>
+ *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -1034,6 +1033,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-U <mapper.pl URL> | \"\" for not displaying host location ]");  
   traceEvent(TRACE_INFO, "    %s\n",   "[-k <show kernel filter expression in extra frame>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-j (set ntop in border gateway sniffing mode)]");
 #ifndef WIN32
   traceEvent(TRACE_INFO, "    %s\n",   "[-K <enable application debug (no fork() is used)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-L <use syslog instead of stdout>]");

@@ -1079,21 +1079,11 @@ compiler."
 	    # These systems don't actually have c library (as such)
 	    continue
 	    ;;
-	  *-*-rhapsody* | *-*-darwin1.[012])
-	    # Rhapsody C library is in the System framework
-	    deplibs="$deplibs -framework System"
-	    continue
-	    ;;
 	  esac
 	elif test "$arg" = "-lm"; then
 	  case "$host" in
 	  *-*-cygwin* | *-*-beos*)
 	    # These systems don't actually have math library (as such)
-	    continue
-	    ;;
-	  *-*-rhapsody* | *-*-darwin1.[012])
-	    # Rhapsody math library is in the System framework
-	    deplibs="$deplibs -framework System"
 	    continue
 	    ;;
 	  esac
@@ -1763,16 +1753,6 @@ compiler."
 	  versuffix="-$major-$age-$revision"
 	  ;;
 
-	darwin)
-	  # Like Linux, but with the current version available in
-	  # verstring for coding it into the library header
-	  major=.`expr $current - $age`
-	  versuffix="$major.$age.$revision"
-	  # Darwin ld doesn't like 0 for these options...
-	  minor_current=`expr $current + 1`
-	  verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"
-	  ;;
-
 	*)
 	  $echo "$modename: unknown library version type \`$version_type'" 1>&2
 	  echo "Fatal configuration error.  See the $PACKAGE docs for more information." 1>&2
@@ -1783,16 +1763,7 @@ compiler."
 	# Clear the version info if we defaulted, and they specified a release.
 	if test -z "$vinfo" && test -n "$release"; then
 	  major=
-	  case "$version_type" in
-	  darwin)
-	    # we can't check for "0.0" in archive_cmds due to quoting
-	    # problems, so we reset it completely
-	    verstring=""
-	    ;;
-	  *)
-	    verstring="0.0"
-	    ;;
-	  esac
+	  verstring="0.0"
 	  if test "$need_version" = no; then
 	    versuffix=
 	  else
@@ -1824,8 +1795,8 @@ compiler."
 	*-*-cygwin* | *-*-mingw* | *-*-os2* | *-*-beos*)
 	  # these systems don't actually have a c library (as such)!
 	  ;;
-        *-*-rhapsody* | *-*-darwin1.[012])
-	  # Rhapsody C library is in the System framework
+        *-*-rhapsody*)
+	  # rhapsody is a little odd...
 	  deplibs="$deplibs -framework System"
 	  ;;
 	*)

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *                          Portions by Stefano Suin <stefano@ntop.org>
  *
  *			    http://www.ntop.org/
@@ -524,7 +524,7 @@ void printHTMLtrailer(void) {
 
   sendString(buf);
 
-  sendString("<BR>\n&copy; 1998-2001 by <A HREF=mailto:deri@ntop.org>Luca Deri</A>\n");
+  sendString("<BR>\n&copy; 1998-2002 by <A HREF=mailto:deri@ntop.org>Luca Deri</A>\n");
   sendString("</B></FONT>\n</BODY>\n</HTML>\n");
 }
 
@@ -1229,14 +1229,11 @@ static int returnHTTPPage(char* pageName, int postLen) {
     int childpid;
 
     if(!debugMode) {
-#ifdef __OpenBSD__
       handleDiedChild(0); /*
-			     Workaround because on this platform
-			     signal handling is broken as the system
-			     creates zombies although we decided to
-			     ignore SIGCHLD
+			     Workaround because on this OpenBSD and
+			     other platforms signal handling is broken as the system
+			     creates zombies although we decided to ignore SIGCHLD
 			  */
-#endif
 
       /* The URLs below are "read-only" hence I can fork a copy of ntop  */
 
@@ -1359,7 +1356,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       sendString("<li><a href=ntop.html target=area ALT=\"Man Page\">Man Page</a></li>\n");
       sendString("<li><a href=Credits.html target=area ALT=\"Credits\">Credits</a></li>\n");
       sendString("</ol>\n<center>\n<b>\n\n");
-      sendString("<pre>\n</pre>&copy; 1998-2001<br>by<br>"
+      sendString("<pre>\n</pre>&copy; 1998-2002<br>by<br>"
 		 "<A HREF=\"http://luca.ntop.org/\" target=\"area\">"
 		 "Luca Deri</A></FONT><pre>\n");
       sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");

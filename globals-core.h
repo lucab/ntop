@@ -1,6 +1,5 @@
 /*
- *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
- *                          Portions by Stefano Suin <stefano@ntop.org>
+ *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -52,7 +51,7 @@ extern time_t nextLogTime;
 
 /* Flags */
 extern int isLsofPresent, isNepedPresent, isNmapPresent, filterExpressionInExtraFrame;
-extern short capturePackets, endNtop;
+extern short capturePackets, endNtop, borderSnifferMode;
  
  
 /* Multithreading */
