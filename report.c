@@ -4607,7 +4607,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
       targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
   }
 
-  for(i=0; i<strlen(targetStr); i++) if(targetStr[i] == ':') targetStr[i] = '_';
+  urlFixupToRFC1945Inplace(targetStr);
   
   if(tcSent > 0) {
     if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
@@ -5628,10 +5628,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
             break;
         }
       
-    /* Patch for ethernet addresses and MS Explorer */
-    for(i=0; url[i] != '\0'; i++)
-        if(url[i] == '_')
-            url[i] = ':';
+    urlFixupToRFC1945Inplace(url);
 
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionBytes");
@@ -6008,10 +6005,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
             break;
         }
       
-    /* Patch for ethernet addresses and MS Explorer */
-    for(i=0; url[i] != '\0'; i++)
-        if(url[i] == '_')
-            url[i] = ':';
+    urlFixupFromRFC1945Inplace(url);
 
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionTimes");
@@ -6311,10 +6305,7 @@ int printScsiSessionStatusInfo (int actualDeviceId, int sortedColumn,
             break;
         }
       
-    /* Patch for ethernet addresses and MS Explorer */
-    for(i=0; url[i] != '\0'; i++)
-        if(url[i] == '_')
-            url[i] = ':';
+    urlFixupFromRFC1945Inplace(url);
 
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionStatusInfo");
@@ -6567,10 +6558,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
             break;
         }
       
-    /* Patch for ethernet addresses and MS Explorer */
-    for(i=0; url[i] != '\0'; i++)
-        if(url[i] == '_')
-            url[i] = ':';
+    urlFixupFromRFC1945Inplace(url);
 
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionTmInfo");
@@ -6824,10 +6812,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
             break;
         }
       
-    /* Patch for ethernet addresses and MS Explorer */
-    for(i=0; url[i] != '\0'; i++)
-        if(url[i] == '_')
-            url[i] = ':';
+    urlFixupFromRFC1945Inplace(url);
 
     /*
       Due to the way sessions are handled, sessions before those to

@@ -81,6 +81,8 @@ extern FILE* checkForInputFile(char* logTag, char* descr, char* fileName, struct
                                u_char* compressedFormat);
 extern int readInputFile(FILE* fd, char* logTag, u_char forceClose, u_char compressedFormat,
                          int countPer, char* buf, int bufLen, int* recordsRead);
+extern void urlFixupFromRFC1945Inplace(char* url);
+extern void urlFixupToRFC1945Inplace(char* url);
 
 /****** function declarations ***** */
 

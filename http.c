@@ -1050,6 +1050,7 @@ static int checkURLsecurity(char *url) {
     /* Convert encoding (%nn) to their base characters -
      * we also handle the special case of %3A (:) 
      * which we convert to _ (not :) 
+         * See urlFixupFromRFC1945Inplace() and urlFixupToRFC1945Inplace()
      * We handle this 1st because some of the gcc functions interpret encoding/unicode "for" us
      */
     for(i=0, begin=0; i<strlen(url); i++) {
@@ -2234,12 +2235,7 @@ static int returnHTTPPage(char* pageName,
         
         memset(hostName, 0, sizeof(hostName));
         strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
-
-        /* Patch for ethernet addresses and MS Explorer */
-        for(i=0; hostName[i] != '\0'; i++)
-            if(hostName[i] == '_')
-                hostName[i] = ':';
-        
+        urlFixupFromRFC1945Inplace(hostName);
         /* printf("HostName: '%s'\r\n", hostName); */
         
         traceEvent (CONST_TRACE_ALWAYSDISPLAY, "Checking for %s\n", hostName);
@@ -2284,12 +2280,7 @@ static int returnHTTPPage(char* pageName,
         
         memset(hostName, 0, sizeof(hostName));
         strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
-
-        /* Patch for ethernet addresses and MS Explorer */
-        for(i=0; hostName[i] != '\0'; i++)
-            if(hostName[i] == '_')
-                hostName[i] = ':';
-        
+        urlFixupFromRFC1945Inplace(hostName);
         /* printf("HostName: '%s'\r\n", hostName); */
         
         for(el=getFirstHost(myGlobals.actualReportDeviceId); 
@@ -2369,12 +2360,7 @@ static int returnHTTPPage(char* pageName,
 
       memset(hostName, 0, sizeof(hostName));
       strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
-
-      /* Patch for ethernet addresses and MS Explorer */
-      for(i=0; hostName[i] != '\0'; i++)
-	if(hostName[i] == '_')
-	  hostName[i] = ':';
-
+      urlFixupFromRFC1945Inplace(hostName);
       /* printf("HostName: '%s'\r\n", hostName); */
 
       for(el=getFirstHost(myGlobals.actualReportDeviceId); 
@@ -2531,11 +2517,7 @@ static int returnHTTPPage(char* pageName,
         
 	pageName[strlen(pageName)-5] = '\0';
 	if(strlen(pageName) >= 31) pageName[31] = 0;
-
-	/* Patch for ethernet addresses and MS Explorer */
-	for(i=0; pageName[i] != '\0'; i++)
-	  if(pageName[i] == '_')
-	    pageName[i] = ':';
+        urlFixupFromRFC1945Inplace(pageName);
 
 	strncpy(hostName, pageName, sizeof(hostName));
         if (sortedColumn == 0) {

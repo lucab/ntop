@@ -5582,4 +5582,33 @@ FILE* checkForInputFile(char* logTag,
   }
   return(fd);
 }
+
+/* ******************************************** */
+/* Fixup routines for ethernet addresses */
+
+void urlFixupFromRFC1945Inplace(char* url) {
+
+/* Do an in-place fixup of a rfc1945 URL back to the internal name,
+   that is convert _s back to :s
+ */
+  int i;
+
+  for(i=0; url[i] != '\0'; i++)
+    if(url[i] == '_')
+      url[i] = ':';
+
+}
+ 
+void urlFixupToRFC1945Inplace(char* url) {
+
+/* Do an in-place fixup of an internal name to a RFC1945 URL, 
+   that is convert :s to _s
+ */
+  int i;
+
+  for(i=0; url[i] != '\0'; i++)
+    if(url[i] == ':')
+      url[i] = '_';
+
+}
  

@@ -2220,10 +2220,9 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       } else {
         strncpy(linkName, el->ethAddressString, sizeof(linkName));
       }
+
       /* For Ethernet and IPv6 addresses */
-      for(i=0; linkName[i] != '\0'; i++)
-          if(linkName[i] == ':')
-            linkName[i] = '_';  /* to avoid escaping chars */
+      urlFixupToRFC1945Inplace(linkName);
 
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
@@ -2518,10 +2517,9 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       } else {
         strncpy(linkName, el->ethAddressString, sizeof(linkName));
       }
+
       /* For Ethernet and Ipv6 addresses */
-      for(i=0; linkName[i] != '\0'; i++)
-	if(linkName[i] == ':')
-            linkName[i] = '_';  /* to avoid escaping chars */
+      urlFixupToRFC1945Inplace(linkName);
 
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
@@ -3617,9 +3615,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
       symMacAddr = etheraddr_string(el->ethAddress, etherbuf);
       strcpy(symLink, symMacAddr);
-      for(i=0; symLink[i] != '\0'; i++)
-	if(symLink[i] == ':')
-	  symLink[i] = '_';
+      urlFixupToRFC1945Inplace(symLink);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "<A HREF=%s.html>%s</A>%s</TD></TR>\n",
@@ -3663,9 +3659,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     symMacAddr = etheraddr_string(el->lastEthAddress, etherbuf);
     strcpy(symLink, symMacAddr);
-    for(i=0; symLink[i] != '\0'; i++)
-      if(symLink[i] == ':')
-	symLink[i] = '_';
+    urlFixupToRFC1945Inplace(symLink);
 
     if(!myGlobals.dontTrustMACaddr) {
       if(snprintf(shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr) < 0)
