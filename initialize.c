@@ -1122,10 +1122,12 @@ void addDevice(char* deviceName, char* deviceDescr) {
 		     myGlobals.device[deviceId].name);
 	  exit(-1);
 	}
-	if(PacketGetNetType (a,&adapter)) {
+	
+	if(PacketGetNetType (a, &adapter)) {
 	  myGlobals.device[deviceId].deviceSpeed = adapter.LinkSpeed;
-	} else
-	  PacketCloseAdapter((LPTSTR)myGlobals.device[deviceId].name);
+	}
+
+	PacketCloseAdapter((LPTSTR)myGlobals.device[deviceId].name);
       }
 #else
     if(setuid(0) == -1) {
