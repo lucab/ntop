@@ -43,11 +43,11 @@ INCLUDES = -I.. @INCS@
 # The meat for ntop
 #
 noinst_PROGRAMS = arpPlugin.so icmpPlugin.so lastSeenPlugin.so \
-                  nfsPlugin.so remoteInterface.so \
+                  nfsPlugin.so \
 		  rmonPlugin.so wapPlugin.so
 
 lib_LTLIBRARIES = libarpPlugin.la libicmpPlugin.la liblastSeenPlugin.la \
-                  libnfsPlugin.la libremoteInterface.la \
+                  libnfsPlugin.la \
 		  librmonPlugin.la libwapPlugin.la
 
 libarpPlugin_la_SOURCES = arpPlugin.c
@@ -64,9 +64,6 @@ libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 
 librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
 librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@
-
-libremoteInterface_la_SOURCES = remoteInterface.c remoteInterface.h
-libremoteInterface_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 
 libwapPlugin_la_SOURCES = wapPlugin.c
 libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
@@ -88,9 +85,6 @@ lastSeenPlugin.so: .libs/liblastSeenPlugin.so
 
 nfsPlugin.so: .libs/libnfsPlugin.so
 	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
-
-remoteInterface.so: .libs/libremoteInterface.so
-	@ln -s .libs/libremoteInterface.so remoteInterface.so
 
 rmonPlugin.so: .libs/librmonPlugin.so
 	@ln -s .libs/librmonPlugin.so rmonPlugin.so
