@@ -471,7 +471,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 void updateThpt(void) {
   int i;
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "updateThpt() called");
 #endif
 

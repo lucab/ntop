@@ -935,18 +935,20 @@ static int checkURLsecurity(char *url) {
   traceEvent(TRACE_INFO, "URL security: NOTE: Tokenizing '%s'...\n", workURL);
 #endif
 
-  for(i=strlen(workURL)-1; i>0; i--)
+  for(i=strlen(workURL)-1; i >= 0; i--)
     if(workURL[i] == '.') 
       break;
   i++;
-  if(!((strcmp(&workURL[i] , "htm") == 0)  ||
-       (strcmp(&workURL[i] , "html") == 0) ||
-       (strcmp(&workURL[i] , "txt") == 0)  ||
-       (strcmp(&workURL[i] , "jpg") == 0)  ||
-       (strcmp(&workURL[i] , "png") == 0)  ||
-       (strcmp(&workURL[i] , "gif") == 0)  ||
-       (strcmp(&workURL[i] , "ico") == 0)  ||
-       (strcmp(&workURL[i] , "css") == 0) )) {
+
+  if((i > 0) 
+     && (!((strcmp(&workURL[i] , "htm") == 0)  ||
+	   (strcmp(&workURL[i] , "html") == 0) ||
+	   (strcmp(&workURL[i] , "txt") == 0)  ||
+	   (strcmp(&workURL[i] , "jpg") == 0)  ||
+	   (strcmp(&workURL[i] , "png") == 0)  ||
+	   (strcmp(&workURL[i] , "gif") == 0)  ||
+	   (strcmp(&workURL[i] , "ico") == 0)  ||
+	   (strcmp(&workURL[i] , "css") == 0)))) {
     traceEvent(TRACE_ERROR, 
 	       "URL security(5): ERROR: Found bad file extension (.%s) in URL...\n", 
 	       &workURL[i]);
