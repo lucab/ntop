@@ -1331,9 +1331,11 @@ dnl> Used only by plugins/rrdPlugin.c
 AC_CHECK_HEADERS(rrd.h)
 
 dnl> XML dump
+if test ".${ac_enable_xmldump}" = ".yes"; then
 AC_CHECK_HEADERS(glib.h glibconfig.h)
 AC_CHECK_HEADERS(xmlversion.h)
 AC_CHECK_HEADERS(gdome.h)
+fi
 
 echo
 echo "Testing for common typedefs and structures..."
@@ -1429,9 +1431,11 @@ AC_CHECK_LIB([rrd], [rrd_create], [
 ])
 
 dnl> XML dump
+if test ".${ac_enable_xmldump}" = ".yes"; then
 AC_CHECK_LIB([glib], [g_date_julian])
 AC_CHECK_LIB([xml2], [xmlCheckVersion])
 AC_CHECK_LIB([gdome], [gdome_di_saveDocToFile])
+fi
 
 echo
 echo "Testing for library functions..."
@@ -1487,6 +1491,9 @@ dnl> Following used by regex.c only
 AC_CHECK_FUNCS([bzero])
 
 AC_CHECK_FUNCS([pcap_freecode])
+echo "()))))))))))))))))))))))))))))))))))))))))"
+AC_CHECK_FUNCS([pcap_open_dead])
+echo "()))))))))))))))))))))))))))))))))))))))))"
 
 dnl> Check if malloc.h has mallinfo...
 AC_MSG_CHECKING([for mallinfo in malloc.h])
