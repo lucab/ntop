@@ -648,7 +648,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
   if(host->securityHostPkts != NULL) {
     free(host->securityHostPkts);
-    host->securityHostPkts = NULL; /* just to be safe... */
+    host->securityHostPkts = NULL; /* just to be safe in case of persistent storage */
   }
 
   if(host->osName != NULL)

@@ -232,6 +232,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	   el = resurrectHostTrafficInstance(etheraddr_string(ether_addr));
 	 else
 	   el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
+
        } else
 	 el = NULL;
 
@@ -241,14 +242,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	 el->firstSeen=actTime;
        }
 
+       resetHostsVariables(el);
+
        len = (size_t)numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
        el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
        memset(el->protoIPTrafficInfos, 0, len);
-
-       FD_ZERO(&(el->flags));
-       resetUsageCounter(&el->contactedSentPeers);
-       resetUsageCounter(&el->contactedRcvdPeers);
-       resetUsageCounter(&el->contactedRouters); 
 
        device[actualDeviceId].hash_hostTraffic[firstEmptySlot] = el; /* Insert a new entry */
        idx = firstEmptySlot;
@@ -2311,8 +2309,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     if((theSession->sessionState == STATE_FIN2_ACK2)
        || (tp->th_flags & TH_RST)) /* abortive release */ {
-      if(theSession->sessionState < STATE_ACTIVE) {
-	/* Received RST packet before to complete the 3-way handshake */
+      if(theSession->sessionState == STATE_SYN_ACK) {
+	/* 
+	   Received RST packet before to complete the 3-way handshake.
+	   Note that the message is emitted only of the reset is received
+	   while in STATE_SYN_ACK. In fact if it has been received in 
+	   STATE_SYN this message has not to be emitted because this is 
+	   a rejected session.
+	 */
 	if(enableSuspiciousPacketDump) {
 	  traceEvent(TRACE_WARNING, "WARNING: TCP session [%s:%d]<->[%s:%d] reset by %s "
 		     "without completing 3-way handshake",

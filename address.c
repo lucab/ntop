@@ -79,6 +79,8 @@ static void resolveAddress(char* symAddr,
   datum data_data;
 #endif
 
+  if(!capturePackets) return;
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering resolveAddress()");
 #endif
@@ -307,7 +309,7 @@ static void resolveAddress(char* symAddr,
 #ifdef HAVE_MYSQL
   mySQLupdateHostNameInfo(addr, data_data.dptr);
 #endif
-
+  
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "resolveAddress-4");
 #endif

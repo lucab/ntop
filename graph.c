@@ -283,6 +283,9 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   FILE *fd;
   TrafficCounter traffic, totalIPTraffic;
 
+  if(theHost->protoIPTrafficInfos == NULL)
+    return;
+  
   fd = getNewRandomFile(fileName, NAME_MAX);
 
 #ifdef MULTITHREADED

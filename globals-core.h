@@ -444,7 +444,7 @@ extern char *getNwInterfaceType(int i);
 extern char *formatTime(time_t *theTime, short encodeString);
 extern int getActualInterface(void);
 extern void storeHostTrafficInstance(HostTraffic *el);
-
+extern void resetHostsVariables(HostTraffic* el);
 extern HostTraffic *resurrectHostTrafficInstance(char *key);
 extern u_short in_cksum(const u_short *addr, int len, u_short csum);
 extern void addTimeMapping(u_int16_t transactionId, struct timeval theTime);

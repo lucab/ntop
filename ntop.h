@@ -1618,84 +1618,84 @@ typedef struct icmpHostInfo {
 
 /* Host Traffic */
 typedef struct hostTraffic {
-  struct in_addr hostIpAddress;
-  time_t         firstSeen;
-  time_t         lastSeen; /* time when this host has sent/received some data  */
-  time_t         nextDBupdate; /* next time when the DB entry
+  struct in_addr   hostIpAddress;
+  time_t           firstSeen;
+  time_t           lastSeen; /* time when this host has sent/received some data  */
+  time_t           nextDBupdate; /* next time when the DB entry
 				  for this host will be updated */
-  u_char         ethAddress[ETHERNET_ADDRESS_LEN];
-  u_char         lastEthAddress[ETHERNET_ADDRESS_LEN]; /* used for remote addresses */
-  u_char         instanceInUse; /* If so, this instance cannot be purged */
-  char           ethAddressString[18];
-  char           hostNumIpAddress[17], *fullDomainName;
-  char           *dotDomainName, hostSymIpAddress[MAX_HOST_SYM_NAME_LEN], *osName;
-  struct in_addr hostIpAddresses[MAX_MULTIHOMING_ADDRESSES];
-  u_short        minTTL, maxTTL; /* IP TTL (Time-To-Live) */
+  u_char           ethAddress[ETHERNET_ADDRESS_LEN];
+  u_char           lastEthAddress[ETHERNET_ADDRESS_LEN]; /* used for remote addresses */
+  u_char           instanceInUse; /* If so, this instance cannot be purged */
+  char             ethAddressString[18];
+  char             hostNumIpAddress[17], *fullDomainName;
+  char             *dotDomainName, hostSymIpAddress[MAX_HOST_SYM_NAME_LEN], *osName;
+  struct in_addr   hostIpAddresses[MAX_MULTIHOMING_ADDRESSES];
+  u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
 
   /* NetBIOS */
-  char           nbNodeType, *nbHostName, *nbAccountName, *nbDomainName, *nbDescr;
+  char             nbNodeType, *nbHostName, *nbAccountName, *nbDomainName, *nbDescr;
 
   /* AppleTalk*/
-  u_short        atNetwork;
-  u_char         atNode;
-  char           *atNodeName, *atNodeType[MAX_NODE_TYPES];
+  u_short          atNetwork;
+  u_char           atNode;
+  char             *atNodeName, *atNodeType[MAX_NODE_TYPES];
 
   /* IPX */
-  char           *ipxHostName;
-  u_short        numIpxNodeTypes, ipxNodeType[MAX_NODE_TYPES];
+  char             *ipxHostName;
+  u_short          numIpxNodeTypes, ipxNodeType[MAX_NODE_TYPES];
 
-  fd_set         flags;
-  TrafficCounter pktSent, pktReceived,
-    pktDuplicatedAckSent, pktDuplicatedAckRcvd;
-  TrafficCounter lastPktSent, lastPktReceived;
-  TrafficCounter pktBroadcastSent, bytesBroadcastSent;
-  TrafficCounter pktMulticastSent, bytesMulticastSent,
-                 pktMulticastRcvd, bytesMulticastRcvd;
-  TrafficCounter lastBytesSent, lastHourBytesSent,
-    bytesSent, bytesSentLocally, bytesSentRemotely;
-  TrafficCounter lastBytesReceived, lastHourBytesReceived, bytesReceived,
-                 bytesReceivedLocally, bytesReceivedFromRemote;
-  float          actualRcvdThpt, lastHourRcvdThpt, averageRcvdThpt, peakRcvdThpt,
-                 actualSentThpt, lastHourSentThpt, averageSentThpt, peakSentThpt;
-  float          actualRcvdPktThpt, averageRcvdPktThpt, peakRcvdPktThpt,
-                 actualSentPktThpt, averageSentPktThpt, peakSentPktThpt;
-  unsigned short actBandwidthUsage;
-  TrafficCounter lastCounterBytesSent, last24HoursBytesSent[25], lastDayBytesSent,
-                 lastCounterBytesRcvd, last24HoursBytesRcvd[25], lastDayBytesRcvd;
+  fd_set           flags;
+  TrafficCounter   pktSent, pktReceived,
+                   pktDuplicatedAckSent, pktDuplicatedAckRcvd;
+  TrafficCounter   lastPktSent, lastPktReceived;
+  TrafficCounter   pktBroadcastSent, bytesBroadcastSent;
+  TrafficCounter   pktMulticastSent, bytesMulticastSent,
+                   pktMulticastRcvd, bytesMulticastRcvd;
+  TrafficCounter   lastBytesSent, lastHourBytesSent,
+                   bytesSent, bytesSentLocally, bytesSentRemotely;
+  TrafficCounter   lastBytesReceived, lastHourBytesReceived, bytesReceived,
+                   bytesReceivedLocally, bytesReceivedFromRemote;
+  float            actualRcvdThpt, lastHourRcvdThpt, averageRcvdThpt, peakRcvdThpt,
+                   actualSentThpt, lastHourSentThpt, averageSentThpt, peakSentThpt;
+  float            actualRcvdPktThpt, averageRcvdPktThpt, peakRcvdPktThpt,
+                   actualSentPktThpt, averageSentPktThpt, peakSentPktThpt;
+  unsigned short   actBandwidthUsage;
+  TrafficCounter   lastCounterBytesSent, last24HoursBytesSent[25], lastDayBytesSent,
+                   lastCounterBytesRcvd, last24HoursBytesRcvd[25], lastDayBytesRcvd;
 
   /* IP */
-  PortUsage      *portsUsage[TOP_ASSIGNED_IP_PORTS];
-  TrafficCounter tcpSentLocally, tcpSentRemotely, udpSentLocally,
-                 udpSentRemotely, icmpSent, ospfSent, igmpSent;
-  TrafficCounter tcpReceivedLocally, tcpReceivedFromRemote, udpReceivedLocally,
-                 udpReceivedFromRemote, icmpReceived, ospfReceived, igmpReceived;
+  PortUsage        *portsUsage[TOP_ASSIGNED_IP_PORTS];
+  TrafficCounter   tcpSentLocally, tcpSentRemotely, udpSentLocally,
+                   udpSentRemotely, icmpSent, ospfSent, igmpSent;
+  TrafficCounter   tcpReceivedLocally, tcpReceivedFromRemote, udpReceivedLocally,
+                   udpReceivedFromRemote, icmpReceived, ospfReceived, igmpReceived;
 
   /* Interesting Packets */  
   SecurityHostProbes *securityHostPkts;  
 
   /* non IP */
-  IcmpHostInfo    *icmpInfo;
-  TrafficCounter  stpSent, stpReceived; /* Spanning Tree */
-  TrafficCounter  ipxSent, ipxReceived;
-  TrafficCounter  osiSent, osiReceived;
-  TrafficCounter  dlcSent, dlcReceived;
-  TrafficCounter  arp_rarpSent, arp_rarpReceived;
-  TrafficCounter  arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd;
-  TrafficCounter  decnetSent, decnetReceived;
-  TrafficCounter  appletalkSent, appletalkReceived;
-  TrafficCounter  netbiosSent, netbiosReceived;
-  TrafficCounter  qnxSent, qnxReceived;
-  TrafficCounter  otherSent, otherReceived;
+  IcmpHostInfo     *icmpInfo;
+  TrafficCounter   stpSent, stpReceived; /* Spanning Tree */
+  TrafficCounter   ipxSent, ipxReceived;
+  TrafficCounter   osiSent, osiReceived;
+  TrafficCounter   dlcSent, dlcReceived;
+  TrafficCounter   arp_rarpSent, arp_rarpReceived;
+  TrafficCounter   arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd;
+  TrafficCounter   decnetSent, decnetReceived;
+  TrafficCounter   appletalkSent, appletalkReceived;
+  TrafficCounter   netbiosSent, netbiosReceived;
+  TrafficCounter   qnxSent, qnxReceived;
+  TrafficCounter   otherSent, otherReceived;
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/received by this host */
-  IpGlobalSession *tcpSessionList, *udpSessionList; /* list of sessions initiated/received by this host */
-  UsageCounter    contactedSentPeers; /* peers that talked with this host */
-  UsageCounter    contactedRcvdPeers; /* peers that talked with this host */
-  UsageCounter    contactedRouters; /* routers contacted by this host */
-  ServiceStats *dnsStats, *httpStats;
+  IpGlobalSession  *tcpSessionList, *udpSessionList; /* list of sessions initiated/received by this host */
+  UsageCounter     contactedSentPeers; /* peers that talked with this host */
+  UsageCounter     contactedRcvdPeers; /* peers that talked with this host */
+  UsageCounter     contactedRouters; /* routers contacted by this host */
+  ServiceStats     *dnsStats, *httpStats;
 #ifdef ENABLE_NAPSTER
-  NapsterStats *napsterStats;
+  NapsterStats     *napsterStats;
 #endif
-  DHCPStats    *dhcpStats;
+  DHCPStats        *dhcpStats;
 
   /* *************** IMPORTANT ***************
 

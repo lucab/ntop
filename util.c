@@ -1827,6 +1827,12 @@ void storeHostTrafficInstance(HostTraffic *el) {
   traceEvent(TRACE_INFO, "storeHostTrafficInstance(%s)\n", key);
 #endif
 
+  /*
+    Before to store the instance all the pointers need
+    to be deleted (i.e. set to NULL)    
+  */
+  resetHostsVariables(el);
+
   key_data.dptr = key;
   key_data.dsize = strlen(key_data.dptr);
   data_data.dptr = (void*)el;
@@ -1854,7 +1860,13 @@ void storeHostTrafficInstance(HostTraffic *el) {
 
 /* ************************************ */
 
-static void resetHostsVariables(HostTraffic* el) {
+void resetHostsVariables(HostTraffic* el) {
+
+  FD_ZERO(&(el->flags));
+  resetUsageCounter(&el->contactedSentPeers);
+  resetUsageCounter(&el->contactedRcvdPeers);
+  resetUsageCounter(&el->contactedRouters); 
+
   el->fullDomainName = NULL;
   el->dotDomainName = NULL;
   el->hostSymIpAddress[0] = '\0';
@@ -1882,6 +1894,8 @@ static void resetHostsVariables(HostTraffic* el) {
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
+
+  el->securityHostPkts = NULL;
 }
 
 /* ************************************ */
