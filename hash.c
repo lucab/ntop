@@ -695,7 +695,7 @@ void purgeIdleHosts(int actDevice) {
 	if((el->refCount == 0) 
 	   && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
 	       || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
-	   && (!broadcastHost(el))
+	   && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
 	   && ((!myGlobals.runningPref.stickyHosts)
 	       || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
                    ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
