@@ -76,25 +76,37 @@ ac_disable_async_resolution=no
 multithread_mode=yes
 
 dnl>
-dnl> by default ntop will try to link against OpenSSL Library, if available.
+dnl> By default ntop will try to link against OpenSSL library, if available.
 dnl> The choice to disable this feature is left to the user.
 ac_disable_openssl=no
 
 dnl>
-dnl> by default ntop will try to link against curses library, if available.
+dnl> By default ntop will try to link against curses library, if available.
 dnl> The choice to disable this feature is left to the user.
 ac_disable_curses=no
 
 dnl>
-dnl> by default ntop will not try to link against the TCP wrapper library, if available.
+dnl> By default ntop will not try to link against the TCP wrapper library, if available.
 dnl> The choice to enable this feature is left to the user.
 ac_enable_tcpwrap=no
 
 dnl>
-dnl> by default ntop will try to compile the remoteInterface module, which
+dnl> By default ntop will try to link against GDChart library, if available.
+dnl> The choice to disable this feature is left to the user.
+ac_disable_gdchart=no
+
+dnl>
+dnl> By default ntop will try to compile all the plugins in its own directory.
+dnl> The choice to disable this feature is left to the user.
+PLUGINS=plugins
+ac_disable_plugins=no
+
+
+dnl>
+dnl> By default ntop will try to compile the remoteInterface module, which
 dnl> needs a C++ compiler.
 dnl> The choice to disable this feature is left to the user.
-REMOTEINTERFACE=remoteInterface
+REMOTEINTERFACE=remoteInterfaceAPI
 ac_disable_ri=no
 
 
@@ -262,9 +274,19 @@ dnl>
 AC_ARG_ENABLE(curses, [  --disable-curses        disable curses support also if available [default=no]], ac_disable_curses="yes", ac_disable_curses="no")
 
 dnl>
+dnl> Give the user an option to compile without the GDChart support.
+dnl>
+AC_ARG_ENABLE(gdchart, [  --disable-gdchart       disable GDChart support also if available [default=no]], ac_disable_gdchart="yes", ac_disable_gdchart="no")
+
+dnl>
 dnl> Give the user an option to compile with the TCP Wrapper support.
 dnl>
 AC_ARG_ENABLE(tcpwrap, [  --enable-tcpwrap        enable TCP Wrap support if available [default=no]], ac_enable_tcpwrap="yes")
+
+dnl>
+dnl> Give the user an option to avoid to compile all the plugins.
+dnl>
+AC_ARG_ENABLE(plugins, [  --disable-plugins       disable compilation of plugins, also if they are available [default=no]], ac_disable_plugins="yes")
 
 dnl>
 dnl> Give the user an option to compile without the C++ support
@@ -272,14 +294,15 @@ dnl>
 AC_ARG_ENABLE(ri, [  --disable-ri            disable support for Remote Interface also if a C++ compiler is available [default=no]], ac_disable_ri="yes")
 
 
+
 dnl>
 dnl> OPTIONAL Look a C++ Compiler.
 dnl>
 if test ".$ac_disable_ri" = ".no"; then
   AC_PROG_CXX
-  REMOTEINTERFACE=remoteInterfaceAPI
+else
+  REMOTEINTERFACE=
 fi
-
 
 
 dnl>
@@ -416,6 +439,9 @@ if test ".$ac_enable_tcpwrap" = ".yes"; then
  AC_CHECK_HEADERS(tcpd.h syslog.h)
 fi
 
+dnl> OPTIONAL UCD-SNMP
+AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h, HAVE_SNMP="yes")
+
 
 dnl>
 dnl> check whether we've to define essential typedefs
@@ -444,20 +470,41 @@ AC_CHECK_FUNCS(ctime_r)
 dnl>
 dnl> check for `dlopen' in -ldl (MANDATORY)
 dnl>
-AC_CHECK_LIB(dl, dlopen)
+AC_CHECK_LIB(dl, dlopen, , [
+echo "ERROR: You need libdl to build ntop. Verify that you have libdl.a or libdl.so installed.";
+             AC_MSG_ERROR([Fatal: libdl not found.])])
 
 dnl>
 dnl> check for `crypt' in -lcrypt (MANDATORY)
 dnl>
-AC_CHECK_LIB(crypt, crypt)
+AC_CHECK_LIB(crypt, crypt, MORELIBS="-lcrypt", [
+echo "ERROR: You need libcrypt to build ntop. Verify that you have libcrypt.a or libcrypt.so installed.";
+             AC_MSG_ERROR([Fatal: libcrypt not found.])], $MORELIBS)
 
 dnl>
-dnl> gdchart uses functions from math library
+dnl> gdchart uses functions from math library,
 dnl> so make sure we link against the math library if needed
 dnl>
 dnl> check for `sin' in -lm (MANDATORY)
 dnl>
-AC_CHECK_LIB(m, sin)
+if test ".$ac_disable_gdchart" = ".no"; then
+  AC_CHECK_LIB(m, sin, MORELIBS="-lm", [
+echo "ERROR: You need libm to build ntop. Verify that you have libm.a or libm.so installed.";
+             AC_MSG_ERROR([Fatal: libm not found.])], $MORELIBS)
+
+else
+  AC_MSG_WARN([GDchart support disabled via command line option!])
+fi
+
+
+dnl>
+dnl> Do not walk in the plugins/ subdir if the user decided he/she does not need any plugin.
+dnl>
+if test "$ac_disable_plugins" = yes; then
+    PLUGINS=''
+else
+  AC_MSG_WARN([compilation of ntop's plugins disabled via command line option!])
+fi
 
 
 dnl>
@@ -474,7 +521,7 @@ fi
 AC_CHECK_LIB(socket, accept)
 AC_CHECK_LIB(resolv, inet_aton)
 
-        # both solaris and aix lack definition of `getdomainname'
+dnl> both solaris and aix lack definition of `getdomainname'
 case "$host" in
     *-sun-solaris2* )
         AC_DEFINE(NEED_GETDOMAINNAME)
@@ -540,13 +587,13 @@ fi
 dnl>
 dnl> GNU ReadLine Library (optional)
 dnl>
-LIBREADLINE='-lreadline'
-LIBTERMCAP=''
-INTOPAPP='intop'
+dnl> LIBREADLINE='-lreadline'
+dnl> LIBTERMCAP=''
+INTOP='intop'
 
 if test "$ac_disable_readline" = yes; then
     LIBREADLINE=''
-    INTOPAPP=''
+    INTOP=''
 fi
 
 dnl>
@@ -558,7 +605,7 @@ if test "$LIBREADLINE" != "" ; then
   if test ".`echo $LIBS | grep readline`" != .; then
     AC_DEFINE(HAVE_READLINE)
   else
-    INTOPAPP=''
+    INTOP=''
   fi
 fi
 
@@ -575,32 +622,30 @@ if test "$LIBREADLINE" != "" ; then
      esac
 fi
 
-dnl> OPTIONAL UCD-SNMP
-AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h, HAVE_SNMP="yes")
 
 if test ".$HAVE_SNMP" = ".yes"; then
-AC_CHECK_LIB(snmp, snmp_pdu_create, LIBS="$LIBS -lsnmp -lucdagent -lucdmibs")
+  AC_CHECK_LIB(snmp, snmp_pdu_create, SNMPLIBS="-lsnmp -lucdagent -lucdmibs")
 fi
-
 
 
 dnl>
 dnl> check for `gdchart' library from Bruce Verderaime [http://www.fred.net/brv/chart/]
 dnl>
+if test ".$ac_disable_gdchart" = ".no"; then
+  AC_MSG_CHECKING([for GDchart])
 
-AC_MSG_CHECKING([for GDchart])
-
-if test -d ../gdchart0.94b/ &&
-     test -r ../gdchart0.94b/gd1.3/gd.h &&
-     test -r ../gdchart0.94b/gdc.h; then
-       GDCHART_ROOT="../gdchart0.94b"
-       GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
-       LIBS="-L$GDCHART_ROOT -L$GDCHART_ROOT/gd1.3 -lgdchart -lgd ${LIBS}"
-       INCS="${INCS} -I$GDCHART_ROOT"
-       AC_DEFINE(HAVE_GDCHART)
-       AC_MSG_RESULT([found in $GDCHART_ROOT])
-else
-       AC_MSG_RESULT([not found])
+  if test -d ../gdchart0.94b/ &&
+       test -r ../gdchart0.94b/gd1.3/gd.h &&
+       test -r ../gdchart0.94b/gdc.h; then
+         GDCHART_ROOT="../gdchart0.94b"
+         GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
+         LIBS="${LIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd1.3 -lgd"
+         INCS="${INCS} -I$GDCHART_ROOT"
+         AC_DEFINE(HAVE_GDCHART)
+         AC_MSG_RESULT([found in $GDCHART_ROOT])
+  else
+         AC_MSG_RESULT([not found])
+  fi
 fi
 
 
@@ -628,7 +673,7 @@ if test ".${PCAP_ROOT}" != .; then
      test -r $PCAP_ROOT/libpcap.a &&
      test -r $PCAP_ROOT/pcap.h; then
        PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
-       LIBS="-L$PCAP_ROOT -lpcap ${LIBS}"
+       LIBS="${LIBS} -L$PCAP_ROOT -lpcap"
        INCS="${INCS} -I$PCAP_ROOT"
        AC_MSG_RESULT([found in $PCAP_ROOT])
   else
@@ -641,13 +686,13 @@ if test ".${PCAP_ROOT}" != .; then
     AC_MSG_ERROR([ The LBL Packet Capture Library development tree seems corrupted or incomplete!])
   fi
 dnl>
-dnl> default installation as defined in latest available libpcap-0.4a7
+dnl> default installation as defined in latest available libpcap-0.4a6
 dnl>
 elif test -d /usr/local &&
      test -r /usr/local/lib/libpcap.a &&
      test -r /usr/local/include/pcap.h; then
        PCAP_ROOT="/usr/local"
-       LIBS="-L$PCAP_ROOT/lib -lpcap ${LIBS}"
+       LIBS="${LIBS} -L$PCAP_ROOT/lib -lpcap"
        INCS="${INCS} -I$PCAP_ROOT/include"
        AC_MSG_RESULT([found in $PCAP_ROOT])
 dnl>
@@ -656,7 +701,7 @@ dnl>
 elif test -r /usr/lib/libpcap.a &&
      test -r /usr/include/pcap.h; then
        PCAP_ROOT="standard installation"
-       LIBS="-lpcap ${LIBS}"
+       LIBS="${LIBS} -lpcap"
        AC_MSG_RESULT([found in $PCAP_ROOT])
 dnl>
 dnl> unusual and more complex installation used by some packagers
@@ -665,29 +710,47 @@ dnl>
 elif test -r /usr/lib/libpcap.a &&
      test -r /usr/include/pcap/pcap.h; then
        PCAP_ROOT="semi-standard installation"
-       LIBS="-lpcap ${LIBS}"
+       LIBS="${LIBS} -lpcap"
        INCS="${INCS} -I/usr/include/pcap"
        AC_MSG_RESULT([found in $PCAP_ROOT])
 dnl>
 dnl> on place source tree under the same ntop's root
 dnl>
-elif test -d ../libpcap-0.4a7 &&
-     test -r ../libpcap-0.4a7/libpcap.a &&
-     test -r ../libpcap-0.4a7/pcap.h; then
-       PCAP_ROOT="../libpcap-0.4a7"
-       PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
-       LIBS="-L$PCAP_ROOT -lpcap ${LIBS}"
+elif test -d ../libpcap-0.4 &&
+     test -r ../libpcap-0.4/libpcap.a &&
+     test -r ../libpcap-0.4/pcap.h; then
+       PCAP_ROOT=`cd ../libpcap-0.4 && pwd`
+       LIBS="${LIBS} -L$PCAP_ROOT -lpcap"
+       INCS="${INCS} -I$PCAP_ROOT"
+       AC_MSG_RESULT([found in $PCAP_ROOT])
+dnl>
+dnl> on place source tree under the same ntop's root
+dnl>
+elif test -d ../libpcap-0.4a6 &&
+     test -r ../libpcap-0.4a6/libpcap.a &&
+     test -r ../libpcap-0.4a6/pcap.h; then
+       PCAP_ROOT=`cd ../libpcap-0.4a6 && pwd`
+       LIBS="${LIBS} -L$PCAP_ROOT -lpcap"
        INCS="${INCS} -I$PCAP_ROOT"
        AC_MSG_RESULT([found in $PCAP_ROOT])
 dnl>
 dnl> on place source tree as ntop subdir
 dnl>
-elif test -d libpcap-0.4a7 &&
-     test -r libpcap-0.4a7/libpcap.a &&
-     test -r libpcap-0.4a7/pcap.h; then
-       PCAP_ROOT="libpcap-0.4a7"
-       PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
-       LIBS="-L$PCAP_ROOT -lpcap ${LIBS}"
+elif test -d libpcap-0.4 &&
+     test -r libpcap-0.4/libpcap.a &&
+     test -r libpcap-0.4/pcap.h; then
+       PCAP_ROOT=`cd libpcap-0.4 && pwd`
+       LIBS="${LIBS} -L$PCAP_ROOT -lpcap"
+       INCS="${INCS} -I$PCAP_ROOT"
+       AC_MSG_RESULT([found in $PCAP_ROOT])
+dnl>
+dnl> on place source tree as ntop subdir
+dnl>
+elif test -d libpcap-0.4a6 &&
+     test -r libpcap-0.4a6/libpcap.a &&
+     test -r libpcap-0.4a6/pcap.h; then
+       PCAP_ROOT=`cd libpcap-0.4a6 && pwd`
+       LIBS="${LIBS} -L$PCAP_ROOT -lpcap"
        INCS="${INCS} -I$PCAP_ROOT"
        AC_MSG_RESULT([found in $PCAP_ROOT])
 else
@@ -738,7 +801,7 @@ if test ".${GDBM_ROOT}" != .; then
      test -r $GDBM_ROOT/libgdbm.a &&
      test -r $GDBM_ROOT/gdbm.h; then
        GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
-       LIBS="-L$GDBM_ROOT -lgdbm ${LIBS}"
+       LIBS="${LIBS} -L$GDBM_ROOT -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT"
        AC_DEFINE(HAVE_GDBM_H)
        AC_MSG_RESULT([found in $GDBM_ROOT])
@@ -755,14 +818,14 @@ elif test -d /usr/local &&
      test -r /usr/local/lib/libgdbm.a &&
      test -r /usr/local/include/gdbm.h; then
        GDBM_ROOT="/usr/local"
-       LIBS="-L$GDBM_ROOT/lib -lgdbm ${LIBS}"
+       LIBS="${LIBS} -L$GDBM_ROOT/lib -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT/include"
        AC_DEFINE(HAVE_GDBM_H)
        AC_MSG_RESULT([found in $GDBM_ROOT])
 elif test -r /usr/lib/libgdbm.a &&
      test -r /usr/include/gdbm.h; then
        GDBM_ROOT="/usr"
-       LIBS="-lgdbm ${LIBS}"
+       LIBS="${LIBS} -lgdbm"
        AC_DEFINE(HAVE_GDBM_H)
        AC_MSG_RESULT([found in $GDBM_ROOT])
 elif test -d ../gdbm-1.7.3 &&
@@ -770,7 +833,7 @@ elif test -d ../gdbm-1.7.3 &&
      test -r ../gdbm-1.7.3/gdbm.h; then
        GDBM_ROOT="../gdbm-1.7.3"
        GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
-       LIBS="-L$GDBM_ROOT -lgdbm ${LIBS}"
+       LIBS="${LIBS} -L$GDBM_ROOT -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT"
        AC_DEFINE(HAVE_GDBM_H)
        AC_MSG_RESULT([found in $GDBM_ROOT])
@@ -779,7 +842,7 @@ elif test -d gdbm-1.7.3 &&
      test -r gdbm-1.7.3/gdbm.h; then
        GDBM_ROOT="gdbm-1.7.3"
        GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
-       LIBS="-L$GDBM_ROOT -lgdbm ${LIBS}"
+       LIBS="${LIBS} -L$GDBM_ROOT -lgdbm"
        INCS="${INCS} -I$GDBM_ROOT"
        AC_DEFINE(HAVE_GDBM_H)
        AC_MSG_RESULT([found in $GDBM_ROOT])
@@ -828,7 +891,7 @@ if test ".$ac_disable_openssl" = ".no"; then
        test -r $OSSL_ROOT/libssl.a &&
        test -r $OSSL_ROOT/openssl/ssl.h; then
          OSSL_ROOT=`cd ${OSSL_ROOT} && pwd`
-         LIBS="-L$OSSL_ROOT -lssl ${LIBS}"
+         LIBS="${LIBS} -L$OSSL_ROOT -lssl"
          INCS="${INCS} -I$OSSL_ROOT"
          AC_DEFINE(HAVE_OPENSSL)
          AC_MSG_RESULT([found in $OSSL_ROOT])
@@ -846,21 +909,21 @@ if test ".$ac_disable_openssl" = ".no"; then
        test -r /usr/local/ssl/lib/libcrypto.a &&
        test -r /usr/local/ssl/include/openssl/ssl.h; then
          OSSL_ROOT="/usr/local/ssl"
-         LIBS="-L$OSSL_ROOT/lib -lssl -lcrypto ${LIBS}"
+         LIBS="${LIBS} -L$OSSL_ROOT/lib -lssl -lcrypto"
          INCS="${INCS} -I$OSSL_ROOT/include"
          AC_DEFINE(HAVE_OPENSSL)
          AC_MSG_RESULT([found in $OSSL_ROOT])
   elif test -r /usr/lib/ssl/libssl.a &&
        test -r /usr/include/ssl/ssl.h; then
          OSSL_ROOT="/usr/lib/ssl"
-         LIBS="-lssl -lcrypto ${LIBS}"
+         LIBS="${LIBS} -lssl -lcrypto"
          INCS="${INCS} -I/usr/include/ssl"
          AC_DEFINE(HAVE_OPENSSL)
          AC_MSG_RESULT([found in $OSSL_ROOT])
   elif test -r /usr/lib/libssl.a &&
        test -r /usr/include/openssl/ssl.h; then
          OSSL_ROOT="/usr/lib/"
-         LIBS="-lssl -lcrypto ${LIBS}"
+         LIBS="${LIBS} -lssl -lcrypto"
          INCS="${INCS} -I/usr/include/openssl"
          AC_DEFINE(HAVE_OPENSSL)
          AC_MSG_RESULT([found in $OSSL_ROOT])
@@ -870,7 +933,7 @@ if test ".$ac_disable_openssl" = ".no"; then
        test -r ../openssl-0.9.4/openssl/ssl/ssl.h; then
          OSSL_ROOT="../openssl-0.9.4"
          OSSL_ROOT=`cd ${OSSL_ROOT} && pwd`
-         LIBS="-L$OSSL_ROOT -lssl -lcrypto ${LIBS}"
+         LIBS="${LIBS} -L$OSSL_ROOT -lssl -lcrypto"
          INCS="${INCS} -I$OSSL_ROOT/ssl"
          AC_DEFINE(HAVE_OPENSSL)
          AC_MSG_RESULT([found in $OSSL_ROOT])
@@ -879,7 +942,7 @@ if test ".$ac_disable_openssl" = ".no"; then
        test -r openssl-0.9.4/openssl/ssl/ssl.h; then
          OSSL_ROOT="openssl-0.9.4"
          OSSL_ROOT=`cd ${OSSL_ROOT} && pwd`
-         LIBS="-L$OSSL_ROOT -lssl -lcrypto ${LIBS}"
+         LIBS="${LIBS} -L$OSSL_ROOT -lssl -lcrypto"
          INCS="${INCS} -I$OSSL_ROOT/ssl"
          AC_DEFINE(HAVE_OPENSSL)
          AC_MSG_RESULT([found in $OSSL_ROOT])
@@ -918,6 +981,7 @@ AC_SUBST(VERSION)
 
 AC_SUBST(LIBCURSES)
 AC_SUBST(LIBREADLINE)
+AC_SUBST(SNMPLIBS)
 
 AC_SUBST(INCS)
 AC_SUBST(LIBS)
@@ -925,8 +989,11 @@ AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(CCLD)
 
+AC_SUBST(SNMPLIBS)
+
+AC_SUBST(PLUGINS)
+AC_SUBST(INTOP)
 AC_SUBST(REMOTEINTERFACE)
-AC_SUBST(INTOPAPP)
 
 dnl>
 dnl> ntops directories
@@ -984,12 +1051,14 @@ esac])
 
 dnl>
 dnl> versioning
-dnl>
+dnl> echo "char * buildDate = \"08/11/00 07:04:32 PM";" >> version.c
+dnl> date +"%D %r" | sed -e 's/.*/char * buildDate = "&";/' >> version.c
 echo "creating version.c"
 /bin/rm -f version.c
-echo $VERSION  | sed -e 's/.*/char * version = "&";/' > version.c
-./config.guess | sed -e 's/.*/char * osName  = "&";/' >> version.c
-echo "char * author  = \"Luca Deri <deri@ntop.org>\";" >> version.c
+echo $VERSION  | sed -e 's/.*/char * version   = "&";/' > version.c
+./config.guess | sed -e 's/.*/char * osName    = "&";/' >> version.c
+echo "char * author    = \"Luca Deri <deri@ntop.org>\";" >> version.c
+date -R | sed -e 's/.*/char * buildDate = "&";/' >> version.c
 
 echo "
 
