@@ -41,7 +41,14 @@ font-size: 12px}
 
 h1
 {font-family: Helvetica, Verdana, Arial, sans-serif;
+text-decoration:underline;
+text-align: center;
 font-size: 16pt;
+font-weight: bold}
+
+h2
+{font-family: Verdana, Arial, Helvetica, sans-serif;
+font-size: 14pt;
 font-weight: bold}
 
 A:link
