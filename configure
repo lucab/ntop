@@ -6095,7 +6095,7 @@ else
 echo "configure:6096: checking for GDchart (optional package)" >&5
   echo "$ac_t""" 1>&6
 
-  if test ".${GDCHART_ROOT}${GD_ROOT}${LIBPNG_ROOT}${ZLIB_ROOT}" == "."; then
+  if test ".${GDCHART_ROOT}${GD_ROOT}${LIBPNG_ROOT}${ZLIB_ROOT}" = "."; then
     if test ".$ac_enable_showgdcharttests" = ".yes"; then
         echo $ac_n "checking for gdchart in ntop source tree, ../gdchart0.94c""... $ac_c" 1>&6
 echo "configure:6102: checking for gdchart in ntop source tree, ../gdchart0.94c" >&5
@@ -6136,25 +6136,25 @@ echo "configure:6134: checking for gdchart in specified location(s)" >&5
 
     NTOP_TREE_GDCHART="../gdchart0.94c"
     NTOP_TREE_GDCHART=`cd ${NTOP_TREE_GDCHART} && pwd`
-    if test ".${GDCHART_ROOT}" == "."; then
+    if test ".${GDCHART_ROOT}" = "."; then
         if test ".$ac_enable_showgdcharttests" = ".yes"; then
             echo "$ac_t""    --with-gdchart-root= not set, using ../gdchart0.94c " 1>&6
         fi
          GDCHART_ROOT="${NTOP_TREE_GDCHART}"
     fi
-    if test ".${GD_ROOT}" == "."; then
+    if test ".${GD_ROOT}" = "."; then
         if test ".$ac_enable_showgdcharttests" = ".yes"; then
             echo "$ac_t""    --with-gd-root= not set, using --with-gdchart-root value " 1>&6
         fi
         GD_ROOT="${GDCHART_ROOT}"
     fi
-    if test ".${LIBPNG_ROOT}" == "."; then
+    if test ".${LIBPNG_ROOT}" = "."; then
         if test ".$ac_enable_showgdcharttests" = ".yes"; then
             echo "$ac_t""    --with-libpng-root= not set, using --with-gdchart-root value " 1>&6
         fi
         LIBPNG_ROOT="${GDCHART_ROOT}"
     fi
-    if test ".${ZLIB_ROOT}" == "."; then
+    if test ".${ZLIB_ROOT}" = "."; then
         if test ".$ac_enable_showgdcharttests" = ".yes"; then
             echo "$ac_t""    --with-zlib-root= not set, using --with-gdchart-root value " 1>&6
         fi
@@ -6298,7 +6298,7 @@ echo "configure:6134: checking for gdchart in specified location(s)" >&5
   fi
 fi
 
-if test ".$gdchartok" == ".no"; then
+if test ".$gdchartok" = ".no"; then
     echo "$ac_t""" 1>&6
     echo "$ac_t"" It looks like you don't have some of the files needed to use the GDChart library." 1>&6
     echo "$ac_t""" 1>&6

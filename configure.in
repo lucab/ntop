@@ -1079,7 +1079,7 @@ else
   AC_MSG_CHECKING([for GDchart (optional package)])
   AC_MSG_RESULT([])
 
-  if test ".${GDCHART_ROOT}${GD_ROOT}${LIBPNG_ROOT}${ZLIB_ROOT}" == "."; then
+  if test ".${GDCHART_ROOT}${GD_ROOT}${LIBPNG_ROOT}${ZLIB_ROOT}" = "."; then
 dnl>
 dnl>  Case #1 -- ntop source tree!
 dnl>
@@ -1127,7 +1127,7 @@ dnl>
 dnl>
 dnl>     First, if gdchart isn't set, use the ntop source tree...
 dnl>
-    if test ".${GDCHART_ROOT}" == "."; then
+    if test ".${GDCHART_ROOT}" = "."; then
         if test ".$ac_enable_showgdcharttests" = ".yes"; then
             AC_MSG_RESULT([    --with-gdchart-root= not set, using ../gdchart0.94c ])
         fi
@@ -1136,19 +1136,19 @@ dnl>
 dnl>
 dnl>     Then, if any of the other parameters aren't set, copy the value from gdchart
 dnl>
-    if test ".${GD_ROOT}" == "."; then
+    if test ".${GD_ROOT}" = "."; then
         if test ".$ac_enable_showgdcharttests" = ".yes"; then
             AC_MSG_RESULT([    --with-gd-root= not set, using --with-gdchart-root value ])
         fi
         GD_ROOT="${GDCHART_ROOT}"
     fi
-    if test ".${LIBPNG_ROOT}" == "."; then
+    if test ".${LIBPNG_ROOT}" = "."; then
         if test ".$ac_enable_showgdcharttests" = ".yes"; then
             AC_MSG_RESULT([    --with-libpng-root= not set, using --with-gdchart-root value ])
         fi
         LIBPNG_ROOT="${GDCHART_ROOT}"
     fi
-    if test ".${ZLIB_ROOT}" == "."; then
+    if test ".${ZLIB_ROOT}" = "."; then
         if test ".$ac_enable_showgdcharttests" = ".yes"; then
             AC_MSG_RESULT([    --with-zlib-root= not set, using --with-gdchart-root value ])
         fi
@@ -1295,7 +1295,7 @@ dnl>
   fi
 fi
 
-if test ".$gdchartok" == ".no"; then
+if test ".$gdchartok" = ".no"; then
     AC_MSG_RESULT([])
     AC_MSG_RESULT([ It looks like you don't have some of the files needed to use the GDChart library.])
     AC_MSG_RESULT([])
