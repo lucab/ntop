@@ -22,7 +22,7 @@
 
 #include "ntop.h"
 
-int maxNumLines;
+int maxNumLines = MAX_NUM_TABLE_ROWS;
 int idleFlag, percentMode, localAddrFlag, refreshRate;
 int webPort, actualReportDeviceId;
 

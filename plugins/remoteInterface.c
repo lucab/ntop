@@ -29,7 +29,11 @@
 
 extern int webPort; /* main.c */
 
+/* Patch courtesy of H. Morrow Long <morrow.long@yale.edu> */
+#ifdef MULTITHREADED
 static pthread_t remIntTreadId;
+#endif
+
 static int remIntSock, locIntSock;
 
 static void termRemIntFunct() {

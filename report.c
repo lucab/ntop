@@ -73,7 +73,8 @@ void termReports() {
 /* **************************************** */
 
 int reportValues(time_t *lastTime) {
-  maxNumLines = MAX_NUM_TABLE_ROWS;
+  if(maxNumLines == 0)
+    maxNumLines = MAX_NUM_TABLE_ROWS;
 
   *lastTime = time(NULL) + refreshRate;
 
