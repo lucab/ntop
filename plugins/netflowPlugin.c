@@ -70,7 +70,7 @@ void setNetFlowInSocket() {
 
 void setNetFlowOutSocket() {
   if(myGlobals.netFlowOutSocket <= 0) {
-    char value[32];
+    char value[256];
     int sockopt = 1;
 
     myGlobals.netFlowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -138,7 +138,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 
 	  for(i=0; i<numFlows; i++) {
 	    int actualDeviceId;
-	    char buf[32], buf1[32];
+	    char buf[256], buf1[256];
 	    struct in_addr a, b;
 	    u_int srcHostIdx, dstHostIdx, numPkts, len;
 	    HostTraffic *srcHost=NULL, *dstHost=NULL;
@@ -266,7 +266,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 
 static void initNetFlowFunct(void) {
   int i;
-  char key[32], value[32];
+  char key[256], value[256];
 
 #ifdef MULTITHREADED
   threadActive = 0;
