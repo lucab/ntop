@@ -1743,7 +1743,7 @@ int name_interpret(char *in, char *out, int numBytes) {
 
   if(numBytes <= 0) {
     traceEvent(TRACE_WARNING, "WARNING: name_interpret error (numBytes=%d)", numBytes);
-    return(0);
+    return(-1);
   }
   
   len = (*in++)/2;
@@ -1752,13 +1752,13 @@ int name_interpret(char *in, char *out, int numBytes) {
 
   if(len > 30 || len < 1) {
     traceEvent(TRACE_WARNING, "WARNING: name_interpret error (numBytes=%d)", numBytes);
-    return(0);
+    return(-1);
   }
 
   while (len--) {
     if(in[0] < 'A' || in[0] > 'P' || in[1] < 'A' || in[1] > 'P') {
       *out = 0;
-      return(0);
+      return(-1);
     }
 
     *out = ((in[0]-'A')<<4) + (in[1]-'A');

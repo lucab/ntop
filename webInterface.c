@@ -786,7 +786,7 @@ void printNtopConfigInfo(void) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Found on Cache</TH>"
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Found in Cache</TH>"
 	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedOnCacheAddresses) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);

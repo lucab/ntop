@@ -844,9 +844,12 @@ RETSIGTYPE cleanup(int signo) {
   killThread(&dequeueThreadId);
   killThread(&thptUpdateThreadId);
   killThread(&hostTrafficStatsThreadId);
-  killThread(&scanIdleThreadId);
-  killThread(&scanIdleSessionsThreadId);
-  
+
+  if(rFileName == NULL) {
+    killThread(&scanIdleThreadId);
+    killThread(&scanIdleSessionsThreadId);
+  }
+
   if(enableDBsupport)
     killThread(&dbUpdateThreadId);
   

@@ -531,7 +531,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   /*
    * (4) - SIH - Scan Idle Hosts - optional
    */
-  if (enableIdleHosts) {
+  if (enableIdleHosts && (rFileName == NULL)) {
     createThread(&scanIdleThreadId, scanIdleLoop, NULL);
     traceEvent (TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
 		scanIdleThreadId);
@@ -566,8 +566,8 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
     /*
      * (7) - Purge old host addresses
      */
-        createThread(&purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
-        traceEvent (TRACE_INFO, "Started thread (%ld) for address purge.", purgeAddressThreadId);
+     createThread(&purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
+     traceEvent (TRACE_INFO, "Started thread (%ld) for address purge.", purgeAddressThreadId);
    }
 #endif
 #endif

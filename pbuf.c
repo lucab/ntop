@@ -3799,7 +3799,7 @@ static void processIpPkt(const u_char *bp,
 	    if(!notEnoughData) {
 	      nodeType = name_interpret(name, nbName, udpDataLen-displ);
 
-	      if(nodeType != 0) {
+	      if(nodeType != -1) {
 		setNBnodeNameType(srcHost, (char)nodeType, nbName);
 
 		displ += offset; /* see ** */
@@ -3819,7 +3819,7 @@ static void processIpPkt(const u_char *bp,
 		  if(!notEnoughData) {
 		    nodeType = name_interpret(name, domain, length-displ);
 
-		    if(nodeType != 0) {
+		    if(nodeType != -1) {
 		      for(i=0; domain[i] != '\0'; i++)
 			if(domain[i] == ' ') { domain[i] = '\0'; break; }
 
