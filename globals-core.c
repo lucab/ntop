@@ -1,21 +1,24 @@
 /*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *                          http://www.ntop.org/
  *
- *		 	    http://www.ntop.org/
+ * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include "ntop.h"
@@ -29,7 +32,7 @@ char *version, *osName, *author, *buildDate;
 
 static u_short _mtuSize[] = {
   8232,   	/* no link-layer encapsulation */
-  /* 1500 + 14 bytes header 
+  /* 1500 + 14 bytes header
      Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
   1500+sizeof(struct ether_header),   /* Ethernet (10Mb) */
   UNKNOWN_MTU,  /* Experimental Ethernet (3Mb) */
@@ -72,6 +75,9 @@ static char *_pluginDirs[]     = { "./plugins", PLUGIN_DIR, NULL };
 static char *_configFileDirs[] = { ".", CONFIGFILE_DIR, "/etc", NULL };
 
 
+/*
+ * Initialize all global run-time parameters to default (reasonable!!!) values
+ */
 void initNtopGlobals(int argc, char * argv[])
 {
   int i;
@@ -82,7 +88,8 @@ void initNtopGlobals(int argc, char * argv[])
    * Notice the program name
    */
   myGlobals.program_name = strrchr(argv[0], PATH_SEP);
-  myGlobals.program_name = (!myGlobals.program_name || !myGlobals.program_name[0]) ? (argv[0]) : (++myGlobals.program_name);
+  myGlobals.program_name =
+    (!myGlobals.program_name || !myGlobals.program_name[0]) ? (argv[0]) : (++myGlobals.program_name);
 
 
   myGlobals.domainName[0] = '\0';
@@ -135,7 +142,7 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.logTimeout = 0;
 
   myGlobals.daemonMode = 0;
-  if(strcmp(myGlobals.program_name, "ntopd") == 0) {
+  if (strcmp(myGlobals.program_name, "ntopd") == 0) {
     myGlobals.daemonMode++;
   }
 
@@ -170,6 +177,8 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.numThreads = 0;
   myGlobals.numDequeueThreads = 0;
 
+  /* the following code needs a major revision */
+#if (0)
   memset(&myGlobals.packetQueueMutex.mutex, 0, sizeof(pthread_mutex_t));
   myGlobals.packetQueueMutex.isLocked = 0;
   myGlobals.packetQueueMutex.isInitialized = 0;
@@ -289,7 +298,11 @@ void initNtopGlobals(int argc, char * argv[])
 # ifdef ASYNC_ADDRESS_RESOLUTION
   memset(&myGlobals.queueAddressCondvar, 0, sizeof(ConditionalVariable));
 # endif /* USE_SEMAPHORES */
-#endif 
+#endif
+
+
+#endif /* 0 */
+
 
 #ifdef ASYNC_ADDRESS_RESOLUTION
   for (i = 0; i < MAX_NUM_DEQUEUE_THREADS; i ++)

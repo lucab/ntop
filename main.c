@@ -1,42 +1,24 @@
 /*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *                          http://www.ntop.org/
  *
- *		 	    http://www.ntop.org/
+ * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- */
-
-/*
- * Copyright (c) 1994, 1996
- *	The Regents of the University of California.  All rights reserved.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that: (1) source code distributions
- * retain the above copyright notice and this paragraph in its entirety, (2)
- * distributions including binary code include the above copyright notice and
- * this paragraph in its entirety in the documentation or other materials
- * provided with the distribution, and (3) all advertising materials mentioning
- * features or use of this software display the following acknowledgement:
- * ``This product includes software developed by the University of California,
- * Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
- * the University nor the names of its contributors may be used to endorse
- * or promote products derived from this software without specific prior
- * written permission.
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include "ntop.h"
@@ -63,7 +45,6 @@ extern __attribute__((dllimport)) char *optarg;
 extern char *optarg;
 #endif
 
-
 /*
  * local variables
  */
@@ -84,6 +65,117 @@ static char *webAddr = NULL;
 static char *flowSpecs = NULL;
 static char rulesFile[128] = {0};
 static char *sslAddr = NULL;
+
+static char __free__ []   =
+"  This program is free software; you can redistribute it and/or modify\n\
+  it under the terms of the GNU General Public License as published by\n\
+  the Free Software Foundation; either version 2 of the License, or\n\
+  (at your option) any later version.";
+static char __notice__ [] =
+"  This program is distributed in the hope that it will be useful,\n\
+  but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
+  GNU General Public License for more details.";
+
+static char __see__ []    =
+"  You should have received a copy of the GNU General Public License\n\
+  along with this program. If not, write to the Free Software\n\
+  Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.";
+
+
+#ifdef HAVE_GETOPT_LONG
+
+static struct option const long_options[] = {
+
+  { "access-log-path",                  required_argument, NULL, 'a' },
+
+#ifdef HAVE_MYSQL
+  { "sql-host",                         required_argument, NULL, 'b' },
+#endif
+
+  { "sticky-hosts",                     no_argument,       NULL, 'c' },
+
+#ifndef WIN32
+  { "daemon",                           no_argument,       NULL, 'd' },
+#endif
+
+#ifndef MICRO_NTOP
+  { "max-table-rows",                   required_argument, NULL, 'e' },
+#endif
+
+  { "traffic-dump-file",                required_argument, NULL, 'f' },
+  { "cisco-netflow-host",               required_argument, NULL, 'g' },
+  { "help",                             no_argument,       NULL, 'h' },
+  { "interface",                        required_argument, NULL, 'i' },
+  { "border-sniffer-mode",              no_argument,       NULL, 'j' },
+  { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
+  { "pcap-log",                         required_argument, NULL, 'l' },
+  { "local-subnets",                    required_argument, NULL, 'm' },
+  { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
+  { "protocols",                        required_argument, NULL, 'p' },
+  { "create-suspicious-packets",        no_argument,       NULL, 'q' },
+  { "refresh-time",                     required_argument, NULL, 'r' },
+  { "max-hash-size",                    required_argument, NULL, 's' },
+  { "trace-level",                      required_argument, NULL, 't' },
+
+#ifndef WIN32
+  { "user",                             required_argument, NULL, 'u' },
+#endif
+
+#ifdef HAVE_MYSQL
+  { "mysql-host",                       required_argument, NULL, 'v' },
+#endif
+
+  { "http-server",                      required_argument, NULL, 'w' },
+  { "accuracy-level",                   required_argument, NULL, 'A' },
+  { "filter-expression",                required_argument, NULL, 'B' },
+  { "domain",                           required_argument, NULL, 'D' },
+
+#ifndef WIN32
+  { "enable-external-tools",            no_argument,       NULL, 'E' },
+#endif
+
+  { "flow-spec",                        required_argument, NULL, 'F' },
+
+#ifndef WIN32
+  { "interactive-mode",                 no_argument,       NULL, 'I' }, /* interactive mode no longer used */
+  { "debug",                            no_argument,       NULL, 'K' },
+  { "use-syslog",                       no_argument,       NULL, 'L' },
+#endif
+
+  { "no-interface-merge",               no_argument,       NULL, 'M' },
+
+#ifndef WIN32
+  { "no-nmap",                          no_argument,       NULL, 'N' },
+#endif
+
+  { "db-file-path",                     required_argument, NULL, 'P' },
+  { "filter-rule",                      required_argument, NULL, 'R' },
+  { "store-mode",                       required_argument, NULL, 'S' },
+  { "mapper",                           required_argument, NULL, 'U' },
+  { "version",                          no_argument,       0,    'V' },
+
+#ifdef HAVE_OPENSSL
+  { "https-server",                     required_argument, NULL, 'W' },
+#endif
+
+  { "no-throughput-update",             no_argument,       NULL, '1' },
+  { "no-idle-host-purge",               no_argument,       NULL, '2' },
+
+  /*
+   * long ONLY options - put these here with numeric arguments,
+   *  over 127 (i.e. > ascii max char)
+   * (since op is unsigned this is fine)
+   *  add corresponding case nnn: below
+   */
+#ifdef HAVE_GDCHART
+  { "throughput-bar-chart",             no_argument,       NULL, 129 },
+#endif
+
+  {NULL, 0, NULL, 0}
+};
+
+#endif /* HAVE_GETOPT_LONG */
 
 
 /*
@@ -106,11 +198,11 @@ static void usage (FILE * fp)
 {
   welcome(fp);
 
-  fprintf(fp, "\nUsage: %s\n", myGlobals.program_name);
+  fprintf(fp, "\nUsage: %s [OPTION]\n", myGlobals.program_name);
 
 #ifdef HAVE_GETOPT_LONG
 
-  fprintf(fp, "    [-a <path>      | --access-log-path <path>            Path for ntop web server access log\n");
+  fprintf(fp, "    [-a <path>      | --access-log-path <path>]           Path for ntop web server access log\n");
 
 #ifdef HAVE_MYSQL
   fprintf(fp, "    [-b <host:port> | --sql-host <host:port>]             SQL host for ntop database\n");
@@ -119,7 +211,7 @@ static void usage (FILE * fp)
   fprintf(fp, "    [-c             | --sticky-hosts]                     Idle hosts are not purged from hash\n");
 
 #ifndef WIN32
-  fprintf(fp, "    [-d             | --daemon ]                          Run ntop in daemon mode\n");
+  fprintf(fp, "    [-d             | --daemon]                           Run ntop in daemon mode\n");
 #endif
 
 #ifndef MICRO_NTOP
@@ -128,6 +220,7 @@ static void usage (FILE * fp)
 
   fprintf(fp, "    [-f <file>      | --traffic-dump-file <file>]         Traffic dump file (see tcpdump)\n");
   fprintf(fp, "    [-g <host:port> | --cisco-netflow-host <host:port>]   Cisco NetFlow host and port\n");
+  fprintf(fp, "    [-h             | --help]                             Display this help and exit\n");
 
 #ifndef WIN32
   fprintf(fp, "    [-i <name>      | --interface <name>]                 Interface name or names to monitor\n");
@@ -137,11 +230,11 @@ static void usage (FILE * fp)
 
   fprintf(fp, "    [-j             | --border-sniffer-mode]              Set ntop in border/gateway sniffing mode\n");
   fprintf(fp, "    [-k             | --filter-expression-in-extra-frame] Show kernel filter expression in extra frame\n");
-  fprintf(fp, "    [-l <path>      | --pcap-log <path>                   Dump packets captured to a file (debug only!)\n");
+  fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  Dump packets captured to a file (debug only!)\n");
   fprintf(fp, "    [-m <addresses> | --local-subnets <addresses>]        Local subnetwork(s) (see man page)\n");
   fprintf(fp, "    [-n             | --numeric-ip-addresses]             Numeric IP addresses - no DNS resolution\n");
   fprintf(fp, "    [-p <list>      | --protocols <list>]                 List of IP protocols to monitor (see man page)\n");
-  fprintf(fp, "    [-q             | --create-suspicious-packets         Create file ntop-suspicious-pkts.XXX.pcap file\n");
+  fprintf(fp, "    [-q             | --create-suspicious-packets]        Create file ntop-suspicious-pkts.XXX.pcap file\n");
   fprintf(fp, "    [-r <number>    | --refresh-time <number>]            Refresh time in seconds, default is %d\n", REFRESH_TIME);
   fprintf(fp, "    [-s <number>    | --max-hash-size <number>]           Maximum hash table size, default = %d\n", MAX_HASH_SIZE);
   fprintf(fp, "    [-t <number>    | --trace-level <number>]             Trace level [0-5]\n");
@@ -154,7 +247,7 @@ static void usage (FILE * fp)
   fprintf(fp, "    [-v <username:password:dbName> | --mysql-host <username:password:dbName>] MySQL host for ntop database\n");
 #endif
 
-  fprintf(fp, "    [-w <port>      | --http-server]                      Web server (http:) port (or address:port) to listen on\n");
+  fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
   fprintf(fp, "    [-A <number>    | --accuracy-level <number>]          Accuracy level [0-2]\n");
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 Packet filter expression, like tcpdump\n");
   fprintf(fp, "    [-D <name>      | --domain <name>]                    Internet domain name\n");
@@ -172,13 +265,14 @@ static void usage (FILE * fp)
 
   fprintf(fp, "    [-M             | --no-interface-merge]               Don't merge network interfaces (see man page)\n");
   fprintf(fp, "    [-N             | --no-nmap]                          Don't use nmap even if installed\n");
-  fprintf(fp, "    [-P <path>      | --db-file-path <path>               Path for ntop internal database files\n");
+  fprintf(fp, "    [-P <path>      | --db-file-path <path>]              Path for ntop internal database files\n");
   fprintf(fp, "    [-R <file>      | --filter-rule <file>]               Matching rules file\n");
-  fprintf(fp, "    [-S <number>    | --store-mode <number>]              Persistent storage mode [0-none, 1-local, 2-all\n");
+  fprintf(fp, "    [-S <number>    | --store-mode <number>]              Persistent storage mode [0-none, 1-local, 2-all]\n");
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     URL (mapper.pl) for displaying host location\n");
+  fprintf(fp, "    [-V             | --version]                          Output version information and exit\n");
 
 #ifdef HAVE_OPENSSL
-  fprintf(fp, "    [-W <port>      | --https-server]                     Web server (https:) port (or address:port) to listen on\n");
+  fprintf(fp, "    [-W <port>      | --https-server <port>]              Web server (https:) port (or address:port) to listen on\n");
 #endif
 
   fprintf(fp, "    [-1             | --no-throughput-update>] \n");
@@ -276,7 +370,7 @@ static void usage (FILE * fp)
 /*
  * Parse the command line options
  */
-static void parseoptions (int argc, char * argv [])
+static void parseOptions (int argc, char * argv [])
 {
   int len;
 
@@ -284,105 +378,13 @@ static void parseoptions (int argc, char * argv [])
   int optind=0;
 #endif
 
-#ifdef HAVE_GETOPT_LONG
-  int getop_long_index;
-
-  static struct option long_options[] = {
-    { "access-log-path",                  required_argument, NULL, 'a' },
-
-#ifdef HAVE_MYSQL
-    { "sql-host",                         required_argument, NULL, 'b' },
-#endif
-
-    { "sticky-hosts",                     no_argument,       NULL, 'c' },
-
-#ifndef WIN32
-    { "daemon",                           no_argument,       NULL, 'd' },
-#endif
-
-#ifndef MICRO_NTOP
-    { "max-table-rows",                   required_argument, NULL, 'e' },
-#endif
-
-    { "traffic-dump-file",                required_argument, NULL, 'f' },
-    { "cisco-netflow-host",               required_argument, NULL, 'g' },
-    { "help",                             no_argument,       NULL, 'h' },
-    { "interface",                        required_argument, NULL, 'i' },
-    { "border-sniffer-mode",              no_argument,       NULL, 'j' },
-    { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
-    { "pcap-log",                         required_argument, NULL, 'l' },
-    { "local-subnets",                    required_argument, NULL, 'm' },
-    { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
-    { "protocols",                        required_argument, NULL, 'p' },
-    { "create-suspicious-packets",        no_argument,       NULL, 'q' },
-    { "refresh-time",                     required_argument, NULL, 'r' },
-    { "max-hash-size",                    required_argument, NULL, 's' },
-    { "trace-level",                      required_argument, NULL, 't' },
-
-#ifndef WIN32
-    { "user",                             required_argument, NULL, 'u' },
-#endif
-
-#ifdef HAVE_MYSQL
-    { "mysql-host",                       required_argument, NULL, 'v' },
-#endif
-
-    { "http-server",                      required_argument, NULL, 'w' },
-    { "accuracy-level",                   required_argument, NULL, 'A' },
-    { "filter-expression",                required_argument, NULL, 'B' },
-    { "domain",                           required_argument, NULL, 'D' },
-
-#ifndef WIN32
-    { "enable-external-tools",            no_argument,       NULL, 'E' },
-#endif
-
-    { "flow-spec",                        required_argument, NULL, 'F' },
-
-#ifndef WIN32
-    { "interactive-mode",                 no_argument,       NULL, 'I' }, /* interactive mode no longer used */
-    { "debug",                            no_argument,       NULL, 'K' },
-    { "use-syslog",                       no_argument,       NULL, 'L' },
-#endif
-
-    { "no-interface-merge",               no_argument,       NULL, 'M' },
-
-#ifndef WIN32
-    { "no-nmap",                          no_argument,       NULL, 'N' },
-#endif
-
-    { "db-file-path",                     required_argument, NULL, 'P' },
-    { "filter-rule",                      required_argument, NULL, 'R' },
-    { "store-mode",                       required_argument, NULL, 'S' },
-    { "mapper",                           required_argument, NULL, 'U' },
-
-#ifdef HAVE_OPENSSL
-    { "https-server",                     required_argument, NULL, 'W' },
-#endif
-
-    { "no-throughput-update",             no_argument,       NULL, '1' },
-    { "no-idle-host-purge",               no_argument,       NULL, '2' },
-
-    /*
-     * long ONLY options - put these here with numeric arguments,
-     *  over 127 (i.e. > ascii max char)
-     * (since op is unsigned this is fine)
-     *  add corresponding case nnn: below
-     */
-#ifdef HAVE_GDCHART
-    { "throughput-bar-chart",             no_argument,       NULL, 129 },
-#endif
-
-    {0, 0, 0, 0}
-  };
-#endif /* HAVE_GETOPT_LONG */
-
   /*
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:s:t:w:A:D:F:MP:R:S:U:W:12";
+  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:s:t:w:A:D:F:MP:R:S:U:VW:12";
 #else
-  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:s:t:u:v:w:A:D:EF:IKLMNP:R:S:U:W:12";
+  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:s:t:u:v:w:A:D:EF:IKLMNP:R:S:U:VW:12";
 #endif
   int opt;
 
@@ -390,7 +392,7 @@ static void parseoptions (int argc, char * argv [])
    * Parse command line options to the application via standard system calls
    */
 #ifdef HAVE_GETOPT_LONG
-  while((opt = getopt_long(argc, argv, theOpts, long_options, &getop_long_index)) != EOF) {
+  while((opt = getopt_long(argc, argv, theOpts, long_options, (int *) 0)) != EOF) {
 #else
   while((opt = getopt(argc, argv, theOpts)) != EOF) {
 #endif
@@ -433,6 +435,10 @@ static void parseoptions (int argc, char * argv [])
       stringSanityCheck(optarg);
       handleNetFlowSupport(optarg);
       break;
+
+    case 'h': /* help */
+      usage(stdout);
+      exit(0);
 
     case 'i':
       stringSanityCheck(optarg);
@@ -494,7 +500,7 @@ static void parseoptions (int argc, char * argv [])
       myGlobals.maxHashSize = atoi(optarg);
       if(myGlobals.maxHashSize < 64) {
 	myGlobals.maxHashSize = 64;
-	traceEvent(TRACE_INFO, "Max hash size set to 64 (minimum hash size)");
+	printf("Max hash size set to 64 (minimum hash size)");
       }
       break;
 
@@ -644,6 +650,14 @@ static void parseoptions (int argc, char * argv [])
 	strcpy(myGlobals.mapperURL, optarg);
       break;
 
+    case 'V': /* version */
+      welcome(stdout);
+      fprintf(stdout, "\n");
+      fprintf(stdout, "%s\n\n", __free__);
+      fprintf(stdout, "%s\n\n", __notice__);
+      fprintf(stdout, "%s\n\n", __see__);
+      exit(0);
+
 #ifdef HAVE_OPENSSL
     case 'W':
       stringSanityCheck(optarg);
@@ -680,6 +694,18 @@ static void parseoptions (int argc, char * argv [])
       exit(-1);
     }
   }
+
+  if (argc > optind + 1)
+    {
+      fprintf (stdout, "\nWrong option(s): \" ");
+      while (optind < argc)
+	fprintf (stdout, "%s ", argv [optind ++]);
+      fprintf (stdout, "\"\n");
+      usage (stdout);
+      exit (0);
+    }
+
+
 }
 
 
@@ -688,7 +714,6 @@ static void parseoptions (int argc, char * argv [])
 int main(int argc, char *argv[]) {
 
   int i;
-
   char ifStr[196] = {0};
   time_t lastTime;
 
@@ -697,41 +722,41 @@ int main(int argc, char *argv[]) {
    */
   initNtopGlobals(argc, argv);
 
-#ifdef MEMORY_DEBUG
-  initLeaks();
-#endif
-
   /*
    * Parse command line options to the application via standard system calls
    */
-  parseoptions (argc, argv);
+  parseOptions (argc, argv);
 
-  if(webPort == 0) {
+
+  /* ***************************** */
+
+  if (webPort == 0) {
 #ifdef HAVE_OPENSSL
-    if(myGlobals.sslPort == 0) {
-      traceEvent(TRACE_ERROR,
-		 "FATAL ERROR: both -W and -w can't be set to 0.\n");
+    if (myGlobals.sslPort == 0) {
+      printf("FATAL ERROR: both -W and -w can't be set to 0.\n");
       exit(-1);
     }
 #else
-    traceEvent(TRACE_ERROR,
-	       "FATAL ERROR: -w can't be set to 0.\n");
+    printf("FATAL ERROR: -w can't be set to 0.\n");
     exit(-1);
 #endif
   }
 
-  /* ***************************** */
-
 #ifdef HAVE_OPENSSL
-  if(myGlobals.sslPort == 0)
-    traceEvent(TRACE_INFO, "SSL is present but https is disabled: "
-	       "use -W <https port> for enabling it\n");
+  if (myGlobals.sslPort == 0)
+    printf("SSL is present but https is disabled: use -W <https port> for enabling it\n");
+#endif
+
+  printf("Wait please: ntop is coming up...\n");
+
+
+#ifdef MEMORY_DEBUG
+  initLeaks();
 #endif
 
   initIPServices();
 
-  initLogger(); /* Do not call this function before myGlobals.dbPath
-		   is initialized */
+  initLogger();
 
   initGlobalValues();
 
@@ -745,22 +770,20 @@ int main(int argc, char *argv[]) {
 
   initDevices(devices);
 
-  printf("Wait please: ntop is coming up...\n");
-
   traceEvent(TRACE_INFO, "ntop v.%s %s [%s] (%s build)",
 	     version, THREAD_MODE, osName, buildDate);
 
-  if(myGlobals.rFileName != NULL)
+  if (myGlobals.rFileName != NULL)
     strncpy(ifStr, PCAP_NW_INTERFACE, sizeof(ifStr));
   else
-    for(i=0; i<myGlobals.numDevices; i++) {
+    for (i=0; i<myGlobals.numDevices; i++) {
       char tmpBuf[48];
 
-      if(i>0) {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
+      if (i>0) {
+	if (snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       } else {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
+	if (snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
@@ -782,7 +805,7 @@ int main(int argc, char *argv[]) {
     Andreas Pfaller <apfaller@yahoo.com.au>
   */
 #ifndef WIN32
-  if((getuid() != geteuid()) || (getgid() != getegid())) {
+  if ((getuid() != geteuid()) || (getgid() != getegid())) {
     /* setuid binary, drop privileges */
     if (setgid(getgid())!=0 || setuid(getuid())!=0) {
       traceEvent(TRACE_ERROR,
@@ -791,7 +814,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if((userId != 0) || (groupId != 0)){
+  if ((userId != 0) || (groupId != 0)){
     /* user id specified on commandline */
     if ((setgid(groupId) != 0) || (setuid(userId) != 0)) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Unable to change user ID.\n");
@@ -799,13 +822,13 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if((geteuid() == 0) || (getegid() == 0)) {
+  if ((geteuid() == 0) || (getegid() == 0)) {
     traceEvent(TRACE_INFO, "WARNING: For security reasons it is STRONGLY recommended to");
     traceEvent(TRACE_INFO, "WARNING: run ntop as unprivileged user by using the -u option!");
   }
 #endif
 
-  if(localAddresses != NULL) {
+  if (localAddresses != NULL) {
     handleLocalAddresses(localAddresses);
     free(localAddresses);
     localAddresses = NULL;
@@ -813,21 +836,21 @@ int main(int argc, char *argv[]) {
 
   initDeviceDatalink();
 
-  if(myGlobals.currentFilterExpression != NULL)
+  if (myGlobals.currentFilterExpression != NULL)
     parseTrafficFilter();
   else
     myGlobals.currentFilterExpression = strdup(""); /* so that it isn't NULL! */
 
   /* Handle flows (if any) */
-  if(flowSpecs != NULL) {
-    if(flowSpecs[0] != '\0')
+  if (flowSpecs != NULL) {
+    if (flowSpecs[0] != '\0')
       handleFlowsSpecs(flowSpecs);
     free(flowSpecs);
   }
 
   /* Patch courtesy of Burton M. Strauss III <BStrauss3@attbi.com> */
-  if(protoSpecs != NULL) {
-    if(protoSpecs[0] != '\0')
+  if (protoSpecs != NULL) {
+    if (protoSpecs[0] != '\0')
       handleProtocols(protoSpecs);
     free(protoSpecs);
   }
@@ -860,9 +883,8 @@ int main(int argc, char *argv[]) {
 #endif
 
   /*
-    In multithread mode, a separate thread handles
-    packet sniffing
-  */
+   * In multithread mode, a separate thread handles packet sniffing
+   */
 #ifndef MULTITHREADED
   packetCaptureLoop(&lastTime, refreshRate);
 #else

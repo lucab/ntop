@@ -1,22 +1,25 @@
 /*
- *  Copyright (C) 2002      Rocco Carbone <rocco@ntop.org>
- *                          Luca Deri <deri@ntop.org>
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *                          http://www.ntop.org/
  *
- *		 	    http://www.ntop.org/
+ * Copyright (C) 2002   Luca Deri <deri@ntop.org>
+ *                      Rocco Carbone <rocco@ntop.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include "ntop.h"
@@ -47,12 +50,14 @@
 #define NOW ((time_t) time ((time_t *) 0))
 
 /*
- * used to drive the ntop's behaviour via command line options
+ * used to drive the ntop's behaviour at run-time
  */
 typedef struct ntopGlobals {
   /* general */
-  char *program_name;
-  char domainName[MAXHOSTNAMELEN], *shortDomainName;
+
+  char *program_name;           /* The name the program was run with, stripped of any leading path */
+ 
+ char domainName[MAXHOSTNAMELEN], *shortDomainName;
   HostTraffic *broadcastEntry, *otherHostEntry;
   int ntop_argc;
   char **ntop_argv;
@@ -61,12 +66,14 @@ typedef struct ntopGlobals {
   int throughput_chart_type;
 #endif
 
-/* command line options */
+  /* command line options */
   u_short traceLevel, debugMode, useSyslog, accuracyLevel;
   u_char enableSessionHandling, enablePacketDecoding, enableFragmentHandling;
   u_char stickyHosts, enableSuspiciousPacketDump, trackOnlyLocalHosts;
   char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
+
   char mapperURL[256];     /* URL of the mapper CGI */
+
   u_int maxHashSize, topHashSize;
   u_int enableNetFlowSupport;
   short usePersistentStorage;
@@ -103,6 +110,7 @@ typedef struct ntopGlobals {
   pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
   pthread_t purgeAddressThreadId;
   PthreadMutex gdbmMutex;
+
 #ifdef USE_SEMAPHORES
   sem_t queueSem;
 #ifdef ASYNC_ADDRESS_RESOLUTION
@@ -113,7 +121,7 @@ typedef struct ntopGlobals {
 #ifdef ASYNC_ADDRESS_RESOLUTION
   ConditionalVariable queueAddressCondvar;
 #endif /* USE_SEMAPHORES */
-#endif 
+#endif
 #ifdef ASYNC_ADDRESS_RESOLUTION
   pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_THREADS];
   TrafficCounter droppedAddresses;
@@ -129,7 +137,7 @@ typedef struct ntopGlobals {
   u_short numProcesses;
   ProcessInfoList *localPorts[TOP_IP_PORT];
 
-/* Filter Chains */
+  /* Filter Chains */
   u_short handleRules;
   FlowFilterList *flowsList;
   FilterRuleChain *tcpChain, *udpChain, *icmpChain;
@@ -142,7 +150,7 @@ typedef struct ntopGlobals {
 #endif
   u_long numResolvedWithDNSAddresses, numKeptNumericAddresses, numResolvedOnCacheAddresses;
 
-/* Misc */
+  /* Misc */
   char *separator;
   int32_t thisZone; /* seconds offset from gmt to local time */
   u_long numPurgedHosts, numTerminatedSessions;
@@ -156,7 +164,7 @@ typedef struct ntopGlobals {
   int numDevices;
   NtopInterface *device;
 
-/* Monitored Protocols */
+  /* Monitored Protocols */
   char **protoIPTrafficInfos;
   u_short numIpProtosToMonitor, numIpPortsToHandle;
   PortMapper *ipPortMapper;
@@ -164,7 +172,7 @@ typedef struct ntopGlobals {
   unsigned long numHandledHTTPrequests;
   ServiceEntry **udpSvc, **tcpSvc;
 
-/* Packet Capture */
+  /* Packet Capture */
 #if defined(MULTITHREADED)
   PacketInformation packetQueue[PACKET_QUEUE_LENGTH+1];
   u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
