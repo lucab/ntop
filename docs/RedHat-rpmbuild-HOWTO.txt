@@ -46,6 +46,9 @@ running RedHat 7.2 updated to be reasonably current with
 various packages.  tigger is also my ntop development machine.
 All of which is irrelevant for the purposes of creating rpms!
 
+NB: Jul2002 - I upgraded to 384MB - found a cheap 256MB DIMM.
+    Performance is a lot better, but nothing really changes.
+
 Building rpms works best if you are running as root.  And on
 a system without complications (other services running, etc).
 Accordingly, I've used User Mode Linux (uml), which is 
@@ -125,7 +128,28 @@ following list (it's in the ntop.spec file):
 
 BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, 
              autoconf, automake, openssl, openssl-devel, 
-             gdbm, gdbm-devel, libpcap, MySQL-shared
+             gdbm, gdbm-devel, libpcap, mysql, mysql-devel
+
+Key version# information (These aren't REQUIRED, it's just
+what I use):
+
+    Kernel: 2.4.18-15um
+
+    autoconf-2.13-14
+    automake-1.4p5-2
+    cpp-2.96-98
+    gawk-3.1.0-3
+    gcc-2.96-98
+    gdbm-1.8.0-10
+    gdbm-devel-1.8.0-10
+    glibc-2.2.4-13
+    glibc-common-2.2.4-13
+    glibc-devel-2.2.4-13
+    libpcap-0.6.2-9
+    mysql-3.23.41-1
+    mysql-devel-3.23.41-1
+    openssl-0.9.6b-8
+    openssl-devel-0.9.6b-8
 
 Login to the real machine as you.
 
@@ -164,56 +188,66 @@ other files you need:
 
 Also put the ntop.spec file into ./redhat/SPECS
 
-The spec file is the key to the build process:
+The spec file is the key to the build process (This is the RC3 version,
+other than directory structure and comments, it should be the 2.1 version):
 
 Summary: ntop shows the network usage
 Name: ntop
-Version: 2.0.99RC2
-Release:  20020604
-Source: http://luca.ntop.org/ntop-2.0.99-rc2.tgz
+Version: 2.0.99RC3
+Release:  20020704
+Source: ntop-2.0.99RC3-20020704.tgz
 Source1: ntop.init
 Source2: ntop.logrotate
 Patch1: force-i386.patch
+Patch2: version.patch
 Copyright: GPL
 Group: Applications/System
-BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, openssl, openssl-devel, gdbm, gdbm-devel, libpcap, MySQL-shared
+BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, openssl,
+openssl-devel, gdbm, gdbm-devel, libpcap, mysql-devel
 Requires: glibc, openssl, gdbm, ncurses, libpcap
 Buildroot: %{_tmppath}/%{name}-root
 Prereq: /sbin/chkconfig, /sbin/ldconfig
 
 %description
-ntop is a network and traffic analyzer that provides a wealth of information on
-various networking hosts and protocols. ntop is primarily accessed via a built-in 
-web interface. Optionally, data may be stored into a database for analysis or 
-extracted from the web server in formats suitable for manipulation in perl or php.
+ntop is a network and traffic analyzer that provides a wealth of information
+on
+various networking hosts and protocols. ntop is primarily accessed via a
+built-in
+web interface. Optionally, data may be stored into a database for analysis or
+extracted from the web server in formats suitable for manipulation in perl or
+php.
 
 Note that the command line version, intop, is largely unsupported.
 
 See docs/1STRUN.txt for the 1st time startup procedure!
 
-This is RELEASE CANDIDATE 2 for ntop 2.1, built from the source posted by Luca Deri
-on 04Jun2002, with a patch (hopefully) for the libpng issue.
+This version - RC3 - includes a fix for the https:// hangs, see
+--use-sslwatchdog.
+
+SSLv3 is enabled.
 %prep
 %setup -q -c ${NAME}${VERSION}
 %patch 1 -P
 
 %build
 unset RPM_OPT_FLAGS
-%undefine optflags 
+%undefine optflags
 # ntop craps out here with gcc2.96-98 and full optimization!
 # First, build static libraries - use the new buildAll script
-cd RC2/gdchart0.94c
+cd gdchart0.94c
 ./buildAll.sh
 cd ../ntop
 # Now, configure and build ntop
-%configure --enable-optimize  --bindir=%{_sbindir} 
+%configure --enable-optimize  --bindir=%{_sbindir} --enable-sslv3
+make
+patch -p0 < ../../../SOURCES/version.patch
 make
 
 %install
-cd RC2/ntop
+cd ntop
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d \
          $RPM_BUILD_ROOT/%{_sbindir} \
-         $RPM_BUILD_ROOT/etc/logrotate.d 
+         $RPM_BUILD_ROOT/etc/logrotate.d
 
 make install DESTDIR=$RPM_BUILD_ROOT
 
@@ -273,6 +307,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libicmpPlugin*
 
 %changelog
+* Thu Jul 03 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated to RC3
+
+* Thu Jun 20 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated to RC2A - unofficial post RC2 build.
+
 * Tue Jun 04 2002 Burton M. Strauss III <burton@ntopsupport.com>
 - Updated to RC2
 
@@ -287,7 +327,6 @@ rm -rf $RPM_BUILD_ROOT
 
 * Thu Oct 11 2001 Hal Burgiss <hal@foobox.net>
 - Updated for 2.0 pre-release snapshots. Many changes.
-
 
 It's documented in many places, it's a standard rpm file.  You can see
 where I stole it from (Thanks Hal), all I did was fixup a few things.
@@ -513,4 +552,203 @@ case $1 in
         echo "du         shows actual disk space usage"
         exit 1
 esac
+
+==========================================
+Because somebody always wants to know, here is what's on the system.
+
+Kernel: 2.4.18-15um
+
+Installed packages (90% of which are un-necessary):
+
+2.4.18-15um
+
+4Suite-0.11-2
+MAKEDEV-3.2-5
+PyXML-0.6.5-4
+SysVinit-2.78-19
+a2ps-4.13b-15
+alchemist-1.0.18-1
+anacron-2.3-17
+ash-0.3.7-2
+at-3.1.8-20
+authconfig-4.1.19-1
+autoconf-2.13-14
+automake-1.4p5-2
+basesystem-7.0-2
+bash-2.05-8
+binutils-2.11.90.0.8-9
+bzip2-1.0.1-4
+bzip2-libs-1.0.1-4
+chkconfig-1.2.24-1
+console-tools-19990829-36
+cpio-2.4.2-23
+cpp-2.96-98
+cracklib-2.7-12
+cracklib-dicts-2.7-12
+crontabs-1.10-1
+cyrus-sasl-1.5.24-20
+cyrus-sasl-md5-1.5.24-20
+cyrus-sasl-plain-1.5.24-20
+db1-1.85-7
+db2-2.4.14-7
+db3-3.2.9-4
+dev-3.2-5
+dhcpcd-1.3.18pl8-13
+diffutils-2.7.2-2
+dosfstools-2.7-1
+e2fsprogs-1.23-2
+ed-0.2-21
+emacs-20.7-41
+expat-1.95.1-7
+file-3.35-2
+filesystem-2.1.6-2
+fileutils-4.1-4
+findutils-4.1.7-1
+freetype-2.0.3-7
+gawk-3.1.0-3
+gcc-2.96-98
+gcc-c++-2.96-98
+gdbm-1.8.0-10
+gdbm-devel-1.8.0-10
+glib-1.2.10-5
+glibc-2.2.4-13
+glibc-common-2.2.4-13
+glibc-devel-2.2.4-13
+gmp-3.1.1-4
+grep-2.4.2-7
+groff-1.17.2-3
+groff-perl-1.17.2-3
+grub-0.90-11
+gzip-1.3-15
+hdparm-4.1-2
+hotplug-2001_04_24-11
+indexhtml-7.2-1
+info-4.0b-3
+initscripts-6.40-1
+ipchains-1.3.10-10
+iproute-2.2.4-14
+iptables-1.2.3-1
+iputils-20001110-6
+kbdconfig-1.9.14-1
+kernel-2.4.7-10
+kernel-BOOT-2.4.7-10
+kernel-debug-2.4.7-10
+kernel-enterprise-2.4.7-10
+kernel-headers-2.4.7-10
+kernel-smp-2.4.7-10
+kon2-fonts-0.3.9b-7
+krb5-devel-1.2.2-13
+krb5-libs-1.2.2-13
+krb5-workstation-1.2.2-13
+ksymoops-2.4.1-1
+kudzu-0.99.23-1
+less-358-21
+libpcap-0.6.2-9
+libstdc++-2.96-98
+libstdc++-devel-2.96-98
+libtermcap-2.0.8-28
+libxml2-2.4.2-1
+libxslt-1.0.1-3
+lilo-21.4.4-14
+lockdev-1.0.0-14
+logrotate-3.5.9-1
+lokkit-0.50-6
+losetup-2.11g-5
+m4-1.4.1-5
+mailcap-2.1.6-1
+mailx-8.1.1-22
+make-3.79.1-8
+man-1.5i2-6
+mingetty-0.9.4-18
+mkbootdisk-1.4.2-3
+mkinitrd-3.2.6-1
+mktemp-1.5-11
+modutils-2.4.6-4
+mount-2.11g-5
+mouseconfig-4.23-1
+mpage-2.5.1-7
+mysql-3.23.41-1
+mysql-devel-3.23.41-1
+ncurses-5.2-12
+ncurses-devel-5.2-12
+net-tools-1.60-3
+netconfig-0.8.11-7
+newt-0.50.33-1
+nkf-1.92-6
+ntsysv-1.2.24-1
+openldap-2.0.11-13
+openssh-2.9p2-7
+openssh-clients-2.9p2-7
+openssh-server-2.9p2-7
+openssl-0.9.6b-8
+openssl-devel-0.9.6b-8
+openssl-perl-0.9.6b-8
+pam-0.75-14
+parted-1.4.16-8
+passwd-0.64.1-7
+patch-2.5.4-10
+pcre-3.4-2
+perl-5.6.0-17
+perl-DBI-1.18-1
+perl-DateManip-5.39-5
+perl-Digest-MD5-2.13-1
+perl-HTML-Parser-3.25-2
+perl-HTML-Tagset-3.03-3
+perl-MIME-Base64-2.12-6
+perl-NKF-1.71-2
+perl-Parse-Yapp-1.04-3
+perl-Storable-0.6.11-6
+perl-URI-1.12-5
+perl-XML-Dumper-0.4-5
+perl-XML-Encoding-1.01-2
+perl-XML-Grove-0.46alpha-3
+perl-XML-Parser-2.30-7
+perl-XML-Twig-2.02-2
+perl-libnet-1.0703-6
+perl-libwww-perl-5.53-3
+perl-libxml-enno-1.02-5
+perl-libxml-perl-0.07-5
+popt-1.6.4-7x
+procmail-3.21-1
+procps-2.0.7-11
+psmisc-20.1-2
+psutils-1.17-13
+pwdb-0.61.1-3
+python-1.5.2-35
+quota-3.01pre9-3
+readline-4.2-2
+redhat-logos-1.1.3-1
+redhat-release-7.2-1
+rootfiles-7.2-1
+rpm-4.0.4-7x
+rpm-build-4.0.4-7x
+sed-3.02-10
+setserial-2.17-4
+setup-2.5.7-1
+setuptool-1.8-2
+sh-utils-2.0.11-5
+shadow-utils-20000902-4
+slang-1.4.4-4
+slocate-2.6-1
+sysklogd-1.4.1-4
+syslinux-1.52-2
+tar-1.13.19-6
+tcsh-6.10-6
+termcap-11.0.1-10
+textutils-2.0.14-2
+time-1.7-14
+timeconfig-3.2.2-1
+tmpwatch-2.8-2
+unzip-5.42-1
+utempter-0.5.2-6
+util-linux-2.11f-9
+vim-common-5.8-7
+vim-minimal-5.8-7
+vixie-cron-3.0.1-63
+wget-1.7-3
+which-2.12-3
+words-2-17
+zlib-1.1.3-24
+
+
 
