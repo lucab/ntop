@@ -135,12 +135,12 @@ void initWinsock32() {
     exit(-1);
   }
 
-  version = "2.0 beta";
+  version = "pre-2.0";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "13/08/2001";
+  buildDate = "23/11/2001";
 
   if(isWinNT())
-    osName = "WinNT/2K";
+    osName = "WinNT/2K/XP";
   else
     osName = "Win95/98/ME";
 

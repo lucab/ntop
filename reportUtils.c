@@ -3197,6 +3197,14 @@ void printHostDetailedInfo(HostTraffic *el) {
     printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Received&nbsp;Stats",
 			      "Local", "Remote", -1, percentage);
 
+  if(el->bytesReceived == 0)
+    percentage = 100;
+  else
+    percentage = ((float)el->bytesSent*100)/el->bytesReceived;
+  
+  printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vd.&nbsp;Rcvd&nbsp;Data",
+			    "Sent", "Rcvd", -1, percentage);
+
   /* ******************** */
 
   printedHeader=0;

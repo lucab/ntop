@@ -152,7 +152,7 @@ void* pcapDispatch(void *_i) {
   int i = (int)_i;
 
   for(;capturePackets == 1;) {
-    rc = pcap_dispatch(device[i].pcapPtr, 1, queuePacket, (u_char*) &_i);
+    rc = pcap_dispatch(device[i].pcapPtr, 1, queuePacket, (u_char*) _i);
     if(rc == -1) {
       traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
 		 pcap_geterr(device[i].pcapPtr));
