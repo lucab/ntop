@@ -167,7 +167,6 @@ extern char *getCountryIconURL(char* domainName);
 extern char *getHostCountryIconURL(HostTraffic *el);
 extern char *getActualRowColor(void);
 extern void switchNwInterface(int _interface);
-extern void usage(void);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 
