@@ -693,6 +693,7 @@ void printNtopConfigInfo(void) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
+#ifdef MULTITHREADED
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Pkts to Process</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
 	      packetQueueLen) < 0) 
@@ -704,6 +705,7 @@ void printNtopConfigInfo(void) {
 	      maxPacketQueueLen) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
+#endif
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Stored Hash Hosts</TH>"
 	      "<TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",

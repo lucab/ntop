@@ -881,7 +881,7 @@ static void freeGlobalHostPeers(HostTraffic *el, u_char *flaggedHosts) {
 
 /* Delayed free */
 void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
-  u_int idx, j, i;
+  u_int j, i;
   HostTraffic *host = device[theDevice].hash_hostTraffic[checkSessionIdx(hostIdx)];
   IpGlobalSession *nextElement, *element;
 
@@ -982,11 +982,10 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
     int len = sizeof(u_char)*device[theDevice].actualHashSize;
 
     flaggedHosts = (char*)malloc(len);
+
     memset(flaggedHosts, 0, len);
-
     flaggedHosts[hostIdx] = 1; /* Set the entry to free */
-
-    freeGlobalHostPeers(device[theDevice].hash_hostTraffic[idx], flaggedHosts);
+    freeGlobalHostPeers(host, flaggedHosts);    
     free(flaggedHosts);
   }
 
