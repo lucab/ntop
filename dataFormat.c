@@ -309,7 +309,7 @@ char* formatPkts(Counter pktNr) {
   } else {
     unsigned long a, b, c, a1, a2;
     a = (unsigned long)(pktNr/1000000);
-    a1 = (unsigned long)(pktNr/1000); 
+    a1 = (unsigned long)(a/1000); 
     a2 = a % 1000;
     b = (unsigned long)((pktNr-a*1000000)/1000);
     c = ((unsigned long)pktNr)%1000;
