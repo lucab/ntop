@@ -9,7 +9,7 @@
 .TP 1.2
 .B "\\$1 | \\$2"
 ..
-.TH NTOP 8 "March 2002"
+.TH NTOP 8 "July 2002"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
@@ -56,7 +56,6 @@ ntop \- display top network users
 .IR <URL> ]
 .RB [ -V | --version]
 .RB [ --throughput-bar-chart ]
-.RB [ --no-admin-password-hint ]
 
 Not available on micro-ntop:
 
@@ -76,6 +75,7 @@ Unix options:
 .RB [ -L ]
 .RB [ -use-syslog
 .IR <facility> ]
+.RB [ --ignore-sigpipe ]
 
 Win32 option:
 
@@ -93,6 +93,7 @@ OpenSSL option:
 
 .RB [ -W | --https-server
 .IR <port> ]
+.RB [ --use-sslwatchdog ]
 
 .SH DESCRIPTION
 .B ntop
@@ -318,8 +319,19 @@ You can also use the IP:Port notation to bind ntop to the specified IP-Address, 
 .It --throughput-bar-chart
 Format the throughput charts with bars instead of as an area chart.
 
-.It --no-admin-password-hint
-Supppresses the hint about the (default) admin password in the dialog boxes.
+.It --ignore-sigpipe                                    
+Enable a handler for SIGPIPE errors. This usually happens only under debug (gdb).
+(also available as a ./configure option, --enable-ignoresigpipe)
+
+.It --use-sslwatchdog
+Enable a watchdog for ntop webserver hangs.  These usually happen when connecting
+with Netscape 6.2.2 and other browsers - only via https:// urls.  The user gets 
+nothing back and other users can't connect.  Internally, the web server hangs in 
+SSL_accept().  While packet processing continues, there is no way to access the 
+data through the web server or shutdown ntop cleanly.  With the watchdog, a
+timeout occurs after 3 seconds, and processing continues with a log message.
+Unfortunately, the user sees nothing - it just looks like a failed connection.
+(also available as a ./configure option, --enable-sslwatchdog)
 
 .SH "WEB VIEWS"
 While
