@@ -223,15 +223,6 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 
   handlePluginSessionTermination(sessionToPurge, actualDeviceId);
   
-  /*
-   * Having updated the session information, 'theSession'
-   * can now be purged.
-   */
-  sessionToPurge->magic = 0;
-  myGlobals.numTerminatedSessions++;
-
-  myGlobals.device[actualDeviceId].numTcpSessions--;
-
 #ifdef SESSION_TRACE_DEBUG
   {
     char buf[32], buf1[32];
@@ -242,6 +233,15 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numTcpSessions);
   }
 #endif
+
+  /*
+   * Having updated the session information, 'theSession'
+   * can now be purged.
+   */
+  sessionToPurge->magic = 0;
+  myGlobals.numTerminatedSessions++;
+
+  myGlobals.device[actualDeviceId].numTcpSessions--;
 
   /* Memory recycle */
   if(myGlobals.sessionsCacheLen < (MAX_SESSIONS_CACHE_LEN-1)) {
@@ -298,27 +298,13 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	 ) {
 	if((prevSession != NULL) && (prevSession != thisSession))
 	  prevSession->next = nextSession;
-	else
-	  myGlobals.device[actualDeviceId].tcpSession[idx] = NULL;
-
-	if(myGlobals.device[actualDeviceId].tcpSession[idx] == thisSession) {
-#ifdef DEBUG
-	  traceEvent(TRACE_WARNING, "DEBUG: Found problem on idx %d", idx);
-#endif
-	  myGlobals.device[actualDeviceId].tcpSession[idx] = thisSession->next;
-
-	  if(myGlobals.device[actualDeviceId].tcpSession[idx] == 
-	     myGlobals.device[actualDeviceId].tcpSession[idx]->next) {
-#ifdef DEBUG
-	    traceEvent(TRACE_WARNING, "DEBUG: Patched problem on idx %d", idx);
-#endif
-	    myGlobals.device[actualDeviceId].tcpSession[idx]->next = NULL;
-	  }
+	else {
+	  myGlobals.device[actualDeviceId].tcpSession[idx] = nextSession;
+	  prevSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 	}
 
 	freeSessionCount++; 
 	freeSession(thisSession, actualDeviceId, 1);
-
       }
 
       thisSession = nextSession;
