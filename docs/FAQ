@@ -247,6 +247,61 @@ A. automake/autoconf issue.  Just copy the missing file (or make a symbolic link
    $ automake --add-missing --gnu -c
    to create the pointer.
 
+Q. ntop make fails with a message about being unable to create a .deps file
+A. Check the permissions on the (hidden) .deps (and .libs) directories - if root 
+   owns them your non-root userid may not be able to create files in there
+
+Q. ntop make fails with a message about a missing .deps file
+A. Basically, it's a automake 1.5 bug, related to dependency tracking.
+
+   ntop requires automake 1.6+ - that dependency is EXPLICT in the Makefile.am!
+
+   Since we distribute ntop with scripts generated from 1.6.3, you would *think*
+   they should work, regardless of what version of automake is installed.
+
+   That's not the case.  The problem occurs because automake gets invoked by
+   ./configure to copy the missing gnu files such as depcomp.  If you have 1.5
+   installed, it then remakes the plugins/Makefile as a 1.5 version, which fails.
+
+   A test was added in 2.1.55 (snapshots on/after 21Jan2003) to trap this.
+
+Q. Why is the .deps problem mostly happening under FreeBSD?
+A. Because the FreeBSD ports tree only has 1.5, but that's a FreeBSD ports problem, 
+   not ntop's.  If you search the FreeBSD lists on Google, there's lots of traffic
+   about a 1.6 version for FreeBSD, but it doesn't seem to be in the tree.  What's
+   there is:
+
+     ./devel/automake
+        -- which is 1.5
+     ./devel/automake14
+     ./devel/automake17
+        -- which does NOT work
+
+Q. So how do I work around the problem?
+A. Install 1.6.3.  It's quite easy, does NOT require root.  The steps are listed
+   in the ./configure message, repeated below:
+
+      Download automake 1.6.3 from gnu
+          $ wget http://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.gz
+
+      Untar it 
+          $ tar xfvz automake-1.6.3.tar.gz
+
+      Make it
+          $ cd automake-1.6.3
+          $ ./configure --prefix=/home/<whatever>/automake163
+          $ make
+          $ make install
+
+      Add it to your path (this is bash, but other shells, can do it too)
+
+          $ PATH=/home/<whatever>automake163/bin:$PATH
+          $ export PATH
+
+      And then untar, ./configure and make ntop.
+(Added three .deps questions, 20Jan2003)
+
+
 Q. How do I update the Vendor Table (MAC address prefixes)?
 A. ntop has (in Makefile), a rule to automatically download the latest vendor 
    information table from the IEEE and a rule to rebuild the vendor table 
@@ -305,6 +360,8 @@ A. This is an autoconf problem.  It should be fixed in the new scripts (30Oct200
           to 
         current=0 
 
+    4) The new ./configure scripts - call it versions after Nov2002 - fix this.
+(Updated 2003-Jan-20)
 
 Q. Why do we have static linked libraries in buildAll.sh?
 A. I (Burton) don't know the history, but I have some guesses...  First the facts...
