@@ -1798,7 +1798,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString(buf2);
 
 
-      sendString("<TR><TH "TH_BG">Packets</TH><TH "TH_BG">\n"TABLE_ON"<TABLE BORDER=0 WIDTH=100%%>");
+      sendString("<TR><TH "TH_BG">Packets</TH><TH "TH_BG">\n<TABLE BORDER=0 WIDTH=100%%>");
 
 #ifdef HAVE_GDCHART
       if(numDevices > 1) {
@@ -1956,7 +1956,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	      formatPkts(device[actualReportDeviceId].rcvdPktStats.badChecksum));
       sendString(buf2);
 
-      sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG">Traffic</TH><TH "TH_BG">\n"TABLE_ON"<TABLE BORDER=0 WIDTH=100%%>");
+      sendString("</TABLE></TR><TR><TH "TH_BG">Traffic</TH><TH "TH_BG">\n<TABLE BORDER=0 WIDTH=100%%>");
       snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Total</th><TD "TD_BG" align=right>%s</td></TR>\n",
 	      getRowColor(), formatBytes(device[actualReportDeviceId].ethernetBytes, 1));
       sendString(buf2);
@@ -1975,7 +1975,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
       updateThpt();
 
-      sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG">Throughput</TH><TH "TH_BG">\n"TABLE_ON"<TABLE BORDER=0 WIDTH=100%%>");
+      sendString("</TABLE></TR><TR><TH "TH_BG">Throughput</TH><TH "TH_BG">\n<TABLE BORDER=0 WIDTH=100%%>");
       snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 	      "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 	      getRowColor(), formatThroughput(device[actualReportDeviceId].actualThpt),
@@ -1994,8 +1994,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	      getRowColor(), formatThroughput(device[actualReportDeviceId].peakThroughput/8), device[actualReportDeviceId].peakPacketThroughput);
       sendString(buf2);
 
-      sendString("</TABLE>"TABLE_OFF"</TR></TABLE>"TABLE_OFF""
-		 "</CENTER>\n");
+      sendString("</TABLE></TR></TABLE></CENTER>\n");
     }
   } else {
     /* if(reportType == 0) */
@@ -4234,10 +4233,10 @@ static void printTableEntry(char *buf, int bufLen,
   default:
     snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 	    "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-	    "<TD "TD_BG">"TABLE_ON"<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+	    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 	    "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
 	    "<P>%.1f&nbsp;%%</TD><TD "TD_BG"  ALIGN=CENTER WIDTH=\"%d%%\" %s>"
-	    "<P>&nbsp;</TD></TR></TABLE>"TABLE_OFF"</TD></TR>\n",
+	    "<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
 	    getRowColor(), label, formatKBytes(total),
 	    int_perc, color, percentage, (100-int_perc), getActualRowColor());
   }
@@ -4466,7 +4465,7 @@ void printProtoTraffic(void) {
 	     "<TH "TH_BG" WIDTH=10%%>Data</TH><TH "TH_BG" WIDTH=70%%>Percentage</TH></TR>\n");
   snprintf(buf, sizeof(buf), "<TH "TH_BG" WIDTH=20%% ALIGN=LEFT>IP</TH><TD "TD_BG"  WIDTH=10%% ALIGN=RIGHT>%s"
 	  "&nbsp;(%.1f%%)</TD><TD "TD_BG"  WIDTH=70%%>"
-	  ""TABLE_ON"<TABLE BORDER=0 WIDTH=\"100%%\">", formatBytes(device[actualReportDeviceId].ipBytes, 1),
+	  "<TABLE BORDER=0 WIDTH=\"100%%\">", formatBytes(device[actualReportDeviceId].ipBytes, 1),
 	  100*((float)device[actualReportDeviceId].ipBytes/device[actualReportDeviceId].ethernetBytes));
   sendString(buf);
 
@@ -4483,7 +4482,7 @@ void printProtoTraffic(void) {
 		  (float)device[actualReportDeviceId].otherIpBytes/1024,
 		  ((float)device[actualReportDeviceId].otherIpBytes/device[actualReportDeviceId].ipBytes));
 
-  sendString("</TABLE>"TABLE_OFF"</TR>");
+  sendString("</TABLE></TR>");
 
   printTableEntry(buf, sizeof(buf), "(R)ARP", COLOR_1,
 		  (float)device[actualReportDeviceId].arpRarpBytes/1024,

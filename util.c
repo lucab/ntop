@@ -343,7 +343,7 @@ static int int2bits(int number) {
   if((number > 255) || (number < 0))
     {
 #ifdef DEBUG
-      printf ("int2bits (%3d) = %d\n", number, INVALIDNETMASK);
+      traceEvent(TRACE_ERROR, "int2bits (%3d) = %d\n", number, INVALIDNETMASK);
 #endif
       return (INVALIDNETMASK);
     }
@@ -358,14 +358,14 @@ static int int2bits(int number) {
       if(number != ((~(0xff >> bits)) & 0xff))
 	{
 #ifdef DEBUG
-	  printf ("int2bits (%3d) = %d\n", number, INVALIDNETMASK);
+	  traceEvent(TRACE_ERROR, "int2bits (%3d) = %d\n", number, INVALIDNETMASK);
 #endif
 	  return (INVALIDNETMASK);
 	}
       else
 	{
 #ifdef DEBUG
-	  printf ("int2bits (%3d) = %d\n", number, bits);
+	  traceEvent(TRACE_ERROR, "int2bits (%3d) = %d\n", number, bits);
 #endif
 	  return (bits);
 	}
@@ -407,7 +407,7 @@ int dotted2bits(char *mask) {
   if((fields_num == 1) && (fields[0] <= 32) && (fields[0] >= 0))
     {
 #ifdef DEBUG
-      printf ("dotted2bits (%s) = %d\n", mask, fields[0]);
+      traceEvent(TRACE_ERROR, "dotted2bits (%s) = %d\n", mask, fields[0]);
 #endif
       return (fields[0]);
     }
@@ -424,7 +424,7 @@ int dotted2bits(char *mask) {
 	  /* whenever a 0 bits field is reached there are no more */
 	  /* fields to scan                                       */
 #ifdef DEBUG
-	  printf ("dotted2bits (%15s) = %d\n", mask, bits);
+	  traceEvent(TRACE_ERROR, "dotted2bits (%15s) = %d\n", mask, bits);
 #endif
 	  /* In this case we are in a bits (not dotted quad) notation */
 	  return (fields[0]);
@@ -434,7 +434,7 @@ int dotted2bits(char *mask) {
 	}
     }
 #ifdef DEBUG
-  printf ("dotted2bits (%15s) = %d\n", mask, bits);
+  traceEvent(TRACE_ERROR, "dotted2bits (%15s) = %d\n", mask, bits);
 #endif
   return (bits);
 }
@@ -459,8 +459,8 @@ void handleLocalAddresses(char* addresses) {
       bits = dotted2bits (mask);
 
       if(sscanf(address, "%d.%d.%d.%d", &a, &b, &c, &d) != 4) {
-	  printf ("Unknown network '%s' .. skipping. Check network numbers.\n",
-		  address);
+	  traceEvent(TRACE_ERROR, "Unknown network '%s' .. skipping. Check network numbers.\n",
+		     address);
 	  address = strtok_r(NULL, ",", &strtokState);
 	  continue;
       }
@@ -468,7 +468,7 @@ void handleLocalAddresses(char* addresses) {
       if(bits == INVALIDNETMASK)
 	{
 	  /* malformed netmask specification */
-          printf ("The specified netmask %s is not valid. Skipping it..\n",
+          traceEvent(TRACE_ERROR, "The specified netmask %s is not valid. Skipping it..\n",
 		  mask);
 	  address = strtok_r(NULL, ",", &strtokState);
 	  continue;
@@ -481,12 +481,12 @@ void handleLocalAddresses(char* addresses) {
       networkMask = ~networkMask;
 
 #ifdef DEBUG
-      printf ("Nw=%08X - Mask: %08X [%08X]\n", network, networkMask, (network & networkMask));
+      traceEvent(TRACE_INFO "Nw=%08X - Mask: %08X [%08X]\n", network, networkMask, (network & networkMask));
 #endif
       if((networkMask >= 0xFFFFFF00) /* Courtesy of Roy-Magne Mo <romo@interpost.no> */
 	 && ((network & networkMask) != network))  {
 	/* malformed network specification */
-	printf ("WARNING: %d.%d.%d.%d/%d is not a valid network number\n",
+	traceEvent(TRACE_ERROR, "WARNING: %d.%d.%d.%d/%d is not a valid network number\n",
 		a, b, c, d, bits);
 
 	/* correcting network numbers as specified in the netmask */
@@ -497,7 +497,7 @@ void handleLocalAddresses(char* addresses) {
 	c = (int) ((network >>  8) & 0xff);
 	d = (int) ((network >>  0) & 0xff);
 
-	printf ("Assuming %d.%d.%d.%d/%d [0x%08x/0x%08x]\n\n",
+	traceEvent(TRACE_ERROR, "Assuming %d.%d.%d.%d/%d [0x%08x/0x%08x]\n\n",
 		a, b, c, d, bits, network, networkMask);
       }
 #ifdef DEBUG
@@ -527,7 +527,7 @@ void handleLocalAddresses(char* addresses) {
 			c = (int) ((network >>  8) & 0xff);
 			d = (int) ((network >>  0) & 0xff);
 
-			printf("WARNING: Discarded network %d.%d.%d.%d/%d: "
+			traceEvent(TRACE_WARNING, "WARNING: Discarded network %d.%d.%d.%d/%d: "
 			   "this is the local network.\n",
 			   a, b, c, d, bits);
 			found = 1;
@@ -541,7 +541,7 @@ void handleLocalAddresses(char* addresses) {
 			numLocalNets++;
 		  }
       } else
-	printf("Unable to handle network (too many entries!).\n");
+	traceEvent(TRACE_WARNING, "Unable to handle network (too many entries!).\n");
     }
 
     address = strtok_r(NULL, ",", &strtokState);
@@ -577,7 +577,7 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
 #endif
     if((addr->s_addr & networks[i][NETMASK]) == networks[i][NETWORK]) {
 #ifdef DEBUG
-      printf ("%s is pseudolocal\n", intoa(*addr));
+      traceEvent(TRACE_WARNING, "%s is pseudolocal\n", intoa(*addr));
 #endif
       return 1;
     }
@@ -596,19 +596,19 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
   int i;
 
 #ifdef DEBUG
-  printf ("Checking %8X (pseudo broadcast)\n", addr->s_addr);
+  traceEvent(TRACE_WARNING, "Checking %8X (pseudo broadcast)\n", addr->s_addr);
 #endif
 
   for(i=0; i<numLocalNets; i++) {
     if(addr->s_addr == networks[i][BROADCAST]) {
 #ifdef DEBUG
-      printf ("--> %8X is pseudo broadcast\n", addr->s_addr);
+      traceEvent(TRACE_WARNING, "--> %8X is pseudo broadcast\n", addr->s_addr);
 #endif
       return 1;
     }
 #ifdef DEBUG
     else
-      printf ("%8X/%8X is NOT pseudo broadcast\n", addr->s_addr, networks[i][BROADCAST]);
+      traceEvent(TRACE_WARNING, "%8X/%8X is NOT pseudo broadcast\n", addr->s_addr, networks[i][BROADCAST]);
 #endif
   }
 
@@ -716,7 +716,7 @@ void handleFlowsSpecs(char* flows) {
       if((len <= 2)
 	 || (flowSpec[0] != '\'')
 	 || (flowSpec[len-1] != '\''))
-	printf("Wrong flow specification \"%s\" (missing \'). "
+	traceEvent(TRACE_WARNING, "Wrong flow specification \"%s\" (missing \'). "
 	       "It has been ignored.\n", flowSpec);
       else {
 	flowSpec[len-1] = '\0';
@@ -744,7 +744,7 @@ void handleFlowsSpecs(char* flows) {
                                 flowSpec, 1, device[i].netmask.s_addr);
               
               if(rc < 0) {
-                printf("Wrong flow specification \"%s\" (syntax error). "
+                traceEvent(TRACE_WARNING, "Wrong flow specification \"%s\" (syntax error). "
                        "It has been ignored.\n", flowSpec);
                 free(newFlow);
                 return;
@@ -1935,11 +1935,21 @@ FILE* getNewRandomFile(char* fileName, int len) {
   if(((tmpfd = mkstemp(fileName)) < 0)
      || (fchmod(tmpfd, 0600) < 0)
      || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    return(NULL);
+    fd = NULL;
 #else
   tmpnam(fileName);
   fd = fopen(fileName, "wb");
 #endif
+
+  if(fd == NULL) {
+    traceEvent(TRACE_WARNING, "Unable to create temp. file (%s). "
+	       "Using tmpnam() now...", fileName);
+    tmpnam(fileName);
+    fd = fopen(fileName, "wb");
+    if(fd == NULL) {
+      traceEvent(TRACE_ERROR, "tmpnam(%s) failed.", fileName);
+    }
+  }
 
   return(fd);
 }
