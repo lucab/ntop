@@ -1133,6 +1133,7 @@ typedef struct ipSession {
   u_int32_t lastCSAck, lastSCAck;   /* they store the last ACK ids C->S/S->C    */
   u_int32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
   u_short sessionState;             /* actual session state                     */
+  u_char  napsterSession;           /* check if this is a napster session       */
 } IPSession;
 
 
@@ -1172,6 +1173,10 @@ typedef struct portUsage
 #define HOST_SVC_HTTP					 17
 #define HOST_SVC_WINS					 18
 #define HOST_SVC_BRIDGE					 19
+#define HOST_SVC_NAPSTER_REDIRECTOR			 20
+#define HOST_SVC_NAPSTER_SERVER			         21
+#define HOST_SVC_NAPSTER_CLIENT			         22
+
 
 /* Macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &(a->flags))
@@ -1194,7 +1199,21 @@ typedef struct portUsage
 #define isHTTPhost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_HTTP, &(a->flags)))
 #define isWINShost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_WINS, &(a->flags)))
 #define isBridgeHost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_BRIDGE, &(a->flags)))
+#define isNapsterRedirector(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_REDIRECTOR, &(a->flags)))
+#define isNapsterServer(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_SERVER, &(a->flags)))
+#define isNapsterClient(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_CLIENT, &(a->flags)))
 
+/* ******** Napster *************** */
+
+/* Cache of Napster Servers */
+#define MAX_NUM_NAPSTER_SERVER  32
+
+typedef struct napsterServer {
+  struct in_addr serverAddress;
+  u_short serverPort;
+} NapsterServer;
+
+NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
 
 /* *********************** */
 
@@ -1235,6 +1254,15 @@ typedef struct serviceStats {
 
 /* *********************** */
 
+typedef struct napsterStats {
+  TrafficCounter numConnectionsRequested, numConnectionsServed;
+  TrafficCounter numSearchSent, numSearchRcvd;
+  TrafficCounter numDownloadsRequested, numDownloadsServed;
+  TrafficCounter bytesSent, bytesRcvd;
+} NapsterStats;
+
+/* *********************** */
+
 typedef struct icmpHostInfo {
   unsigned long icmpMsgSent[ICMP_MAXTYPE+1];
   unsigned long icmpMsgRcvd[ICMP_MAXTYPE+1];
@@ -1264,7 +1292,7 @@ typedef struct icmpHostInfo {
 typedef struct hostTraffic
 {
   struct in_addr hostIpAddress;
-   time_t         firstSeen;
+  time_t         firstSeen;
   time_t         lastSeen;     /* time when this host has
 				  sent/received some data  */
   time_t         nextDBupdate; /* next time when the DB entry
@@ -1338,6 +1366,7 @@ typedef struct hostTraffic
   u_int contactedRcvdPeersIdx;
   u_int contactedRouters[MAX_NUM_HOST_ROUTERS]; /* routers contacted by this host */
   ServiceStats *dnsStats, *httpStats;
+  NapsterStats *napsterStats;
 
   /* *************** IMPORTANT ***************
 

@@ -1415,7 +1415,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 
     if(fgets(line, 383, fd) == NULL)
       break;
-    /* else printf("Garbage: '%s'\n",  line); */
+    else printf("Garbage: '%s'\n",  line); 
   }
   pclose(fd);
 

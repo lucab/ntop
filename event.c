@@ -97,7 +97,7 @@ void emitEvent(FilterRule *rule,
 	  (unsigned long)actTime) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-  /*traceEvent(TRACE_INFO, "%s) %s\n", tmpStr, msg); */
+  traceEvent(TRACE_INFO, "Event: %s\n", msg);
 
   key_data.dptr = tmpStr; key_data.dsize = strlen(tmpStr)+1;
   memset(&theMsg, 0, sizeof(theMsg));
@@ -238,7 +238,7 @@ void fireEvent(FilterRule *rule,
 	  && (queuedPacketRules[i]->sport == sport)
 	  && (queuedPacketRules[i]->dport == dport))) {
 	/* Rules match */
-
+#ifdef DEBUG
 #ifdef MULTITHREADED
 	accessMutex(&addressResolutionMutex, "fireEvent");
 #endif
@@ -250,7 +250,8 @@ void fireEvent(FilterRule *rule,
 #ifdef MULTITHREADED
 	releaseMutex(&addressResolutionMutex);
 #endif
-	/* printf("Packet rule [%s] free (2)\n", rule->ruleLabel); */
+	printf("Packet rule [%s] free (2)\n", rule->ruleLabel);
+#endif
 
 	  if(ruleToClear->rearmTime == 0) {
 	    free(queuedPacketRules[i]);

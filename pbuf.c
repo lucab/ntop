@@ -58,6 +58,8 @@
 
 #include "ntop.h"
 
+static int napsterSvrInsertIdx = 0;
+
 /* ************************************ */
 
 u_int _checkSessionIdx(u_int idx, char* file, int line) {
@@ -798,7 +800,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 			  u_int length,
 			  struct tcphdr *tp,
 			  u_int tcpDataLength,
-			  char* packetData) {
+			  u_char* packetData) {
   u_int idx, initialIdx;
   IPSession *theSession = NULL;
   short flowDirection;
@@ -898,11 +900,29 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 	  sessions[usedIdx] = NULL;
 	} else {
+	  int i;
+	  
 	  /* There's enough space left in the hashtable */
 	  theSession = (IPSession*)malloc(sizeof(IPSession));
 	  memset(theSession, 0, sizeof(IPSession));
 	  theSession->magic = MAGIC_NUMBER;
 	  (*numSessions)++;
+	  
+	  /* Let's check whether this is a Napster session */
+	  
+	  for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
+	    if((napsterSvr[i].serverPort == sport) 
+	       && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr)
+	       || ((napsterSvr[i].serverPort == dport)
+		   && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
+	      theSession->napsterSession = 1;
+	      napsterSvr[i].serverPort = 0; /* Free slot */
+
+	      traceEvent(TRACE_INFO, "NAPSTER new session: %s -> %s\n",
+			 srcHost->hostSymIpAddress,
+			 dstHost->hostSymIpAddress);
+	    }
+	  }	 	  
 	}
 
 	while(sessions[initialIdx] != NULL)
@@ -933,7 +953,8 @@ static void handleSession(const struct pcap_pkthdr *h,
     /* ***************************************** */
 
     if(tcpDataLength > 0) {
-      if((sport == 80) && (theSession->bytesProtoRcvd == 0)) {
+      if((sport == 80 /* HTTP */) 
+	 && (theSession->bytesProtoRcvd == 0)) {
 	char rcStr[18];
 
 	strncpy(rcStr, packetData, 16);
@@ -1011,7 +1032,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 #endif
 	  }
 	}
-      } else if((dport == 80) && (theSession->bytesProtoSent == 0)) {
+      } else if((dport == 80 /* HTTP */) 
+		&& (theSession->bytesProtoSent == 0)) {
 	char rcStr[18];
 
 	strncpy(rcStr, packetData, 16);
@@ -1061,6 +1083,43 @@ static void handleSession(const struct pcap_pkthdr *h,
 		     dstHost->hostSymIpAddress,
 		     rcStr);
 	}
+      } else if((sport == 8875 /* Napster Redirector */) 
+		&& (tcpDataLength > 0)) {
+	char address[64];
+	in_addr_t svrAddr;
+	int i;
+
+	FD_SET(HOST_SVC_NAPSTER_REDIRECTOR, &srcHost->flags);
+	FD_SET(HOST_SVC_NAPSTER_CLIENT,     &dstHost->flags);
+
+	strncpy(address, packetData, tcpDataLength);
+	address[tcpDataLength-2] = 0;
+	traceEvent(TRACE_INFO, "NAPSTER: %s -> %s [%s][len=%d]\n",
+		     srcHost->hostSymIpAddress,
+		     dstHost->hostSymIpAddress,
+		     address, tcpDataLength);
+
+	for(i=1; i<tcpDataLength-2; i++)
+	  if(address[i] == ':') {
+	    address[i] = '\0';
+	    break;
+	  }
+
+	napsterSvr[napsterSvrInsertIdx].serverAddress.s_addr = ntohl(inet_addr(address));
+	napsterSvr[napsterSvrInsertIdx].serverPort = atoi(&address[i+1]);
+	napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
+
+	if(srcHost->napsterStats == NULL) {
+	  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+	  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
+	}
+	if(dstHost->napsterStats == NULL) {
+	  dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+	  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
+	}
+
+	dstHost->napsterStats->numConnectionsRequested++, 
+	  srcHost->napsterStats->numConnectionsServed++;
       }
     }
 
@@ -1080,6 +1139,59 @@ static void handleSession(const struct pcap_pkthdr *h,
       theSession->bytesProtoRcvd += tcpDataLength;
       theSession->bytesReceived  += length;
       if(fragmentedData) theSession->bytesFragmentedReceived += tcpDataLength;
+    }
+
+    /* Let's decode some Napster packets */
+    if(theSession->napsterSession && (tcpDataLength > 0) ) {
+      if(srcHost->napsterStats == NULL) {
+	srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+	memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
+      }
+      if(dstHost->napsterStats == NULL) {
+	dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+	memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
+      }
+
+      srcHost->napsterStats->bytesSent += tcpDataLength, 
+	dstHost->napsterStats->bytesRcvd += tcpDataLength;
+
+      printf("%x %x %x\n", 
+	     packetData[1],
+	     packetData[2],
+	     packetData[3]);
+
+      if((packetData[1] == 0x0) && (packetData[2] == 0xC8) && (packetData[3] == 0x00)) {
+	srcHost->napsterStats->numSearchSent++, dstHost->napsterStats->numSearchRcvd++;
+	
+	traceEvent(TRACE_INFO, "NAPSTER search: %s -> %s\n",
+		   srcHost->hostSymIpAddress,
+		   dstHost->hostSymIpAddress);	
+      } else if((packetData[1] == 0x0) && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
+	char tmpBuf[64], *remoteHost, *remotePort;
+	int i, j;
+	struct in_addr shost;
+	
+	srcHost->napsterStats->numDownloadsRequested++,
+	  dstHost->napsterStats->numDownloadsServed++;
+	
+	/* LEN 00 CC 00 <remote user name> 
+	   <remote user IP> <remote user port> <payload> */
+
+	memcpy(tmpBuf, &packetData[4], (tcpDataLength<64) ? tcpDataLength : 63);
+	strtok(tmpBuf, " "); /* remote user */
+	remoteHost = strtok(NULL, " ");
+	remotePort = strtok(NULL, " ");
+
+	napsterSvr[napsterSvrInsertIdx].serverPort = atoi(remotePort);
+	if(napsterSvr[napsterSvrInsertIdx].serverPort != 0) {
+	  napsterSvr[napsterSvrInsertIdx].serverAddress.s_addr = inet_addr(remoteHost);
+	  napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
+	  
+	  shost.s_addr = inet_addr(remoteHost);
+	  traceEvent(TRACE_INFO, "NAPSTER download from %s:%s [%s]\n",
+		     inet_ntoa(shost), remotePort, remoteHost);
+	} 
+      }
     }
 
     /*
@@ -1366,7 +1478,7 @@ static void handleTCPSession(const struct pcap_pkthdr *h,
 			     u_int length,
 			     struct tcphdr *tp,
 			     u_int tcpDataLength,
-			     char* packetData) {
+			     u_char* packetData) {
   if(
 #ifdef SESSION_PATCH
      1
@@ -1399,7 +1511,7 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
 			     u_int dstHostIdx,
 			     u_short dport,
 			     u_int length,
-			     char* packetData) {  
+			     u_char* packetData) {  
   handleSession(h, udpSession,
 		&numUdpSessions, fragmentedData, 0,
 		srcHostIdx, sport,
@@ -2180,7 +2292,7 @@ static void processIpPkt(const u_char *bp,
       handleTCPSession(h, (off & 0x3fff), tp.th_win,
 		       srcHostIdx, sport, dstHostIdx,
 		       dport, length, &tp, tcpDataLength,
-		       (char*)(bp+hlen+(tp.th_off * 4)));
+		       (u_char*)(bp+hlen+(tp.th_off * 4)));
       
       if(grabSessionInformation) {
 	grabSession(srcHost, sport, dstHost, dport,
@@ -2425,7 +2537,7 @@ static void processIpPkt(const u_char *bp,
 
       handleUDPSession(h, (off & 0x3fff), 
 		       srcHostIdx, sport, dstHostIdx,
-		       dport, length, (char*)(bp+length));
+		       dport, length, (u_char*)(bp+length));
     }
     break;
 

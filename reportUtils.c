@@ -1864,7 +1864,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       TrafficCounter dataSent, dataReceived, retrDataSent, retrDataRcvd;
       TrafficCounter fragDataSent, fragDataRcvd;
       int retrSentPercentage, retrRcvdPercentage;
-      char fragStrSent[64], fragStrRcvd[64];
+      char fragStrSent[64], fragStrRcvd[64], *napsterSession;
 
       if(numSessions == 0) {
 	sendString("<P><H1>Active TCP Sessions</H1><P>\n");
@@ -1962,8 +1962,13 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
 
+      if(tcpSession[idx]->napsterSession)
+	napsterSession = " [Napster]";
+      else
+	napsterSession = "";
+
       if(snprintf(buf, sizeof(buf), "<TR %s>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s%s</TD>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s:%s</TD>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
 #ifdef PRINT_RETRANSMISSION_DATA
@@ -1974,8 +1979,8 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
 #endif
 	       , getRowColor(),
-	       sport,
-	       remotePeer, dport,
+		  sport, napsterSession,
+		  remotePeer, dport,
 	       formatBytes(dataSent, 1), fragStrSent,
 #ifdef PRINT_RETRANSMISSION_DATA
 	       formatBytes(retrDataSent, 1),
@@ -2377,16 +2382,24 @@ void printHostDetailedInfo(HostTraffic *el) {
   if(isServer(el)
      || isWorkstation(el)
      || isPrinter(el)
-     || isBridgeHost(el)) {
+     || isBridgeHost(el)
+     || isNapsterRedirector(el)
+     || isNapsterServer(el)
+     || isNapsterClient(el)
+     ) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>",
 	    getRowColor(),
 	    "Host Type") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-    if(isServer(el))           sendString("Server<br>");
-    if(isWorkstation(el))      sendString("Workstation<br>");
-    if(isPrinter(el))          sendString("Printer<br>");
-    if(isBridgeHost(el))       sendString("Bridge");
+    if(isServer(el))              sendString("Server<br>");
+    if(isWorkstation(el))         sendString("Workstation<br>");
+    if(isPrinter(el))             sendString("Printer<br>");
+    if(isBridgeHost(el))          sendString("Bridge");
+    if(isNapsterRedirector(el))   sendString("Napster Redirector");
+    if(isNapsterServer(el))       sendString("Napster Server");
+    if(isNapsterClient(el))       sendString("Napster Client");
+
     sendString("</TD></TR>");
   }
 
@@ -2490,11 +2503,50 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 
 /* ************************************ */
 
+static void printNapsterStats(HostTraffic *el) {
+
+  sendString("<P><H1>Napster &nbsp;Stats</H1><P>\n");
+  
+  sendString(""TABLE_ON"<TABLE BORDER=1>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Connections Requested</TH><TD ALIGN=RIGHT>");
+  sendString(formatPkts(el->napsterStats->numConnectionsRequested)); 
+  sendString("</TD></TR>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Connections Served</TH><TD ALIGN=RIGHT>");
+  sendString(formatPkts(el->napsterStats->numConnectionsServed)); 
+  sendString("</TD></TR>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Search Requested</TH><TD ALIGN=RIGHT>");
+  sendString(formatPkts(el->napsterStats->numSearchSent)); 
+  sendString("</TD></TR>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Search Served</TH><TD ALIGN=RIGHT>");
+  sendString(formatPkts(el->napsterStats->numSearchRcvd)); 
+  sendString("</TD></TR>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Downloads Requested</TH><TD ALIGN=RIGHT>");
+  sendString(formatPkts(el->napsterStats->numDownloadsRequested)); 
+  sendString("</TD></TR>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Downloads Served</TH><TD ALIGN=RIGHT>");
+  sendString(formatPkts(el->napsterStats->numDownloadsServed)); 
+  sendString("</TD></TR>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>Data Sent</TH><TD ALIGN=RIGHT>");
+  sendString(formatBytes(el->napsterStats->bytesSent, 1)); 
+  sendString("</TD></TR>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>Data Received</TH><TD ALIGN=RIGHT>");
+  sendString(formatBytes(el->napsterStats->bytesRcvd, 1)); 
+  sendString("</TD></TR>\n");
+
+  sendString("</TABLE>"TABLE_OFF"\n");
+}
+
+/* ************************************ */
+
 void printHostUsedServices(HostTraffic *el) {
   TrafficCounter tot;
 
+  if(el->napsterStats != NULL)     
+    printNapsterStats(el);
+  
   if((el->dnsStats == NULL)
-     && (el->httpStats == NULL))
+     && (el->httpStats == NULL)
+     )
     return;
 
 

@@ -164,9 +164,9 @@ static FilterRule* parseFilterRule(u_short ruleType,
     else if(!strcmp(&token[i+1], "!usedport")) rule->dport = NOT_USED_PORT;
     else {
       if(ruleType == TCP_RULE)
-	rule->sport = getPortByName(tcpSvc, &token[i+1]);
+	rule->dport = getPortByName(tcpSvc, &token[i+1]);
       else
-	rule->sport = getPortByName(udpSvc, &token[i+1]);
+	rule->dport = getPortByName(udpSvc, &token[i+1]);
 
       if(rule->dport > TOP_IP_PORT) {
 	traceEvent(TRACE_INFO, "Skipping line %d (unknown dport)\n", lineNum);

@@ -58,6 +58,8 @@ void initIPServices(void) {
   initWinsock32();
 #endif
 
+  memset(napsterSvr, 0, sizeof(napsterSvr));
+
   for(i=0; i<TOP_IP_PORT; i++) ipPortMapper[i] = -1;
 
   memset(udpSvc, 0, sizeof(udpSvc));
