@@ -559,6 +559,7 @@ typedef struct storedAddress {
   char   symAddress[MAX_LEN_SYM_HOST_NAME];
   time_t recordCreationTime;
   short  symAddressType;
+  char   pad; /* Quiet valgrind */
 } StoredAddress;
 
 typedef struct macInfo {

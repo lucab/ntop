@@ -133,6 +133,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 
   memset(&keyBuf, 0, sizeof(keyBuf));
   memset(&dataBuf, 0, sizeof(dataBuf));
+  memset(&storedAddress, 0, sizeof(storedAddress));
 
   key_data.dptr = _addrtonum(hostAddr, keyBuf, sizeof(keyBuf));
   key_data.dsize = strlen(keyBuf)+1;
@@ -459,7 +460,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 
       /* key_data has been set already */
       data_data.dptr = (void*)&storedAddress;
-      data_data.dsize = sizeof(storedAddress)+1;
+      data_data.dsize = sizeof(storedAddress);
 
       if(updateRecord) {
 	updateHostNameInfo(*hostAddr, symAddr, symAddrType);

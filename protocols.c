@@ -642,7 +642,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
       key_data.dptr = (void*)&tmpBuf;
       key_data.dsize = strlen(key_data.dptr)+1;
       data_data.dptr = (void*)&storedAddress;
-      data_data.dsize = sizeof(storedAddress)+1;
+      data_data.dsize = sizeof(storedAddress);
 
 #ifdef DNS_SNIFF_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: Sniffed DNS response: %s(%d) = %s(t=%d)",
