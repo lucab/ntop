@@ -504,7 +504,7 @@ void initNtopGlobals(int argc, char * argv[]) {
     }
   }
 
-  myGlobals.startedAs = strdup(startedAs);
+  myGlobals.startedAs = startedAs;
 
   /* FC & SCSI-specific stuff */
   myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;

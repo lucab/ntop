@@ -400,14 +400,15 @@ void iface_destroy(struct iface_handler *hdlr) {
   if (hdlr) {
     if (hdlr->addr_list)
       free(hdlr->addr_list);
-#ifndef LINUX
     if (hdlr->if_list) {
+#if defined(HAVE_IFLIST_SYSCTL) && defined(HAVE_SYSCTL)
       int i;
       for (i = 0 ; i < hdlr->if_count ; i++)
 	if (hdlr->if_list[i].phys.addr)
 	  free(hdlr->if_list[i].phys.addr);
-    }
 #endif
+      free(hdlr->if_list);
+    }
     free(hdlr);
   }
 }

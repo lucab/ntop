@@ -866,6 +866,7 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
      (Minor fix for intop - Burton Strauss (BStrauss@acm.org) - Apr2002)
   */
 
+  memset(&tmpBuf, 0, sizeof(tmpBuf));
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/%s",
 	      directory != NULL ? directory : myGlobals.dbPath,
 	      dbName) < 0)

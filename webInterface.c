@@ -6753,7 +6753,8 @@ if(myGlobals.gdVersionGuessValue != NULL)
   /* **** */
 
 #ifdef MEMORY_DEBUG
-  printFeatureConfigInfo(textPrintFlag, "Allocated Memory", formatBytes(myGlobals.allocatedMemory, 0));
+  printFeatureConfigInfo(textPrintFlag, "Allocated Memory",
+                         formatBytes(myGlobals.allocatedMemory, 0, buf, sizeof(buf)));
 #endif
 
   /* **** */

@@ -2235,6 +2235,9 @@ static void termRRDfunct(void) {
   }
 #endif
 
+  if(hostsFilter != NULL) free(hostsFilter);
+  if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
+
 #ifdef CFG_MULTITHREADED
   deleteMutex(&rrdMutex);
 #endif

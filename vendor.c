@@ -477,6 +477,7 @@ void createVendorTable(struct stat *dbStat) {
                          &compressedFormat);
     if(fd != NULL) {
       numLoaded=0;
+      numRead=0;
       while(readInputFile(fd,
                           "VENDOR", 
                           FALSE,

@@ -988,6 +988,7 @@ RETSIGTYPE cleanup(int signo) {
   deleteMutex(&myGlobals.purgeMutex);
 #endif
 
+traceEvent(CONST_TRACE_INFO, "TEMP: %05d %d", __LINE__, myGlobals.numDevices);
   for(i=0; i<myGlobals.numDevices; i++) {
     int j;
 
@@ -1038,7 +1039,7 @@ RETSIGTYPE cleanup(int signo) {
     
 
 #ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
+    accessMutex(&myGlobals.tcpSessionsMutex, "cleanup");
 #endif
     if(myGlobals.device[i].tcpSession != NULL)
       free(myGlobals.device[i].tcpSession);
@@ -1067,6 +1068,18 @@ RETSIGTYPE cleanup(int signo) {
       */
       myGlobals.device[i].pcapPtr = NULL;
     }
+
+#ifdef INET6
+    {
+      NtopIfaceAddr * tmp;
+      while(myGlobals.device[i].v6Addrs) {
+        tmp=myGlobals.device[i].v6Addrs;
+        myGlobals.device[i].v6Addrs=myGlobals.device[i].v6Addrs->next;
+        free(tmp);
+      }
+    }
+#endif
+
   }
   
   free(myGlobals.device);

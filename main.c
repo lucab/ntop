@@ -959,8 +959,8 @@ int main(int argc, char *argv[]) {
      (force_runtime[0] != '\0')) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Run time parameter %s forced via configureextra",
                force_runtime);
-    strncat(cmdLineBuffer, force_runtime, (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
-    strncat(cmdLineBuffer, " ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+    strncat(cmdLineBuffer, force_runtime, (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
+    strncat(cmdLineBuffer, " ", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
   }
 
   /* Now we process the parameter list, looking for a @filename
@@ -992,25 +992,25 @@ int main(int argc, char *argv[]) {
 	  BufferTooShort();
 	} else {
 	  readBufferWork[0] = '\0';
-	  strncat(cmdLineBuffer, argv[i], (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
-	  strncat(cmdLineBuffer, "=\"", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
-	  strncat(cmdLineBuffer, &readBufferWork[1], (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
-	  strncat(cmdLineBuffer, "\" ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, argv[i], (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, "=\"", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, &readBufferWork[1], (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, "\" ", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
 	}
       } else {
 	readBufferWork = strchr(argv[i], ' ');
 	if (readBufferWork != NULL) {
 	  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 4 < LEN_CMDLINE_BUFFER) {
-	    strncat(cmdLineBuffer, "\"", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
-	    strncat(cmdLineBuffer, argv[i], (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
-	    strncat(cmdLineBuffer, "\" ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	    strncat(cmdLineBuffer, "\"", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
+	    strncat(cmdLineBuffer, argv[i], (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
+	    strncat(cmdLineBuffer, "\" ", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
 	  } else {
 	    BufferTooShort();
 	  }
 	} else {
 	  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LEN_CMDLINE_BUFFER) {
-	    strncat(cmdLineBuffer, argv[i], (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
-	    strncat(cmdLineBuffer, " ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	    strncat(cmdLineBuffer, argv[i], (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
+	    strncat(cmdLineBuffer, " ", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
 	  } else {
 	    BufferTooShort();
 	  }
@@ -1080,8 +1080,8 @@ int main(int argc, char *argv[]) {
 	printf("PARAM_DEBUG:      -> '%s'\n", readBuffer);
 #endif
 	if (strlen(cmdLineBuffer) + strlen(readBuffer) + 2 < LEN_CMDLINE_BUFFER) {
-	  strncat(cmdLineBuffer, " ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
-	  strncat(cmdLineBuffer, readBuffer, (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, " ", (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, readBuffer, (LEN_CMDLINE_BUFFER - strlen(cmdLineBuffer) - 1));
 	} else {
 	  BufferTooShort();
 	}

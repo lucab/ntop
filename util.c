@@ -447,7 +447,7 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
   int count, addr_pos;
 
   if(!(ih = iface_new()))
-    goto oops;
+    return NULL;
 
   for(ii = iface_getif_first(ih) ; ii ; ii = iface_getif_next(ii))
     if(!strcmp(ii->name,device))
@@ -478,8 +478,6 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
 #endif
   return addrs;
 
- oops:
-  return NULL;
 }
 #endif
 
