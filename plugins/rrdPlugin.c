@@ -1284,10 +1284,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   char value[512 /* leave it big for hosts filter */];
   u_int32_t networks[32][3];
   u_short numLocalNets;
-  int sleep_tm, devIdx;
+  int sleep_tm, devIdx, idx;
   char rrdPath[512];
   int cycleCount=0;
   char *adjHostName;
+  ProtocolsList *protoList;
 
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) started", rrdThread);
@@ -1443,15 +1444,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		updateTrafficCounter(rrdPath, "udpSentLoc", &el->udpSentLoc);
 		updateTrafficCounter(rrdPath, "udpSentRem", &el->udpSentRem);
 		updateTrafficCounter(rrdPath, "icmpSent", &el->icmpSent);
-		updateTrafficCounter(rrdPath, "ospfSent", &el->ospfSent);
-		updateTrafficCounter(rrdPath, "igmpSent", &el->igmpSent);
 		updateTrafficCounter(rrdPath, "tcpRcvdLoc", &el->tcpRcvdLoc);
 		updateTrafficCounter(rrdPath, "tcpRcvdFromRem", &el->tcpRcvdFromRem);
 		updateTrafficCounter(rrdPath, "udpRcvdLoc", &el->udpRcvdLoc);
 		updateTrafficCounter(rrdPath, "udpRcvdFromRem", &el->udpRcvdFromRem);
 		updateTrafficCounter(rrdPath, "icmpRcvd", &el->icmpRcvd);
-		updateTrafficCounter(rrdPath, "ospfRcvd", &el->ospfRcvd);
-		updateTrafficCounter(rrdPath, "igmpRcvd", &el->igmpRcvd);
 		updateTrafficCounter(rrdPath, "tcpFragmentsSent", &el->tcpFragmentsSent);
 		updateTrafficCounter(rrdPath, "tcpFragmentsRcvd", &el->tcpFragmentsRcvd);
 		updateTrafficCounter(rrdPath, "udpFragmentsSent", &el->udpFragmentsSent);
@@ -1481,6 +1478,17 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd);
 		updateTrafficCounter(rrdPath, "otherSent", &el->otherSent);
 		updateTrafficCounter(rrdPath, "otherRcvd", &el->otherRcvd);
+
+		protoList = myGlobals.ipProtosList, idx=0;
+		while(protoList != NULL) {
+		  char buf[64];
+
+		  if(snprintf(buf, sizeof(buf), "%sSent", protoList->protocolName) < 0) BufferTooShort();
+		  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx].sent);
+		  if(snprintf(buf, sizeof(buf), "%sRcvd", protoList->protocolName) < 0) BufferTooShort();
+		  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx].rcvd);
+		  idx++, protoList = protoList->next;
+		}		
 	      }
 
 	      if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
@@ -1582,9 +1590,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateCounter(rrdPath, "netbiosBytes", myGlobals.device[devIdx].netbiosBytes.value);
 	  updateCounter(rrdPath, "arpRarpBytes", myGlobals.device[devIdx].arpRarpBytes.value);
 	  updateCounter(rrdPath, "atalkBytes", myGlobals.device[devIdx].atalkBytes.value);
-	  updateCounter(rrdPath, "ospfBytes", myGlobals.device[devIdx].ospfBytes.value);
 	  updateCounter(rrdPath, "egpBytes", myGlobals.device[devIdx].egpBytes.value);
-	  updateCounter(rrdPath, "igmpBytes", myGlobals.device[devIdx].igmpBytes.value);
 	  updateCounter(rrdPath, "osiBytes", myGlobals.device[devIdx].osiBytes.value);
 	  updateCounter(rrdPath, "ipv6Bytes", myGlobals.device[devIdx].ipv6Bytes.value);
 	  updateCounter(rrdPath, "otherBytes", myGlobals.device[devIdx].otherBytes.value);
@@ -1596,6 +1602,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateCounter(rrdPath, "upTo1518Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo1518.value);
 	  updateCounter(rrdPath, "badChecksumPkts", myGlobals.device[devIdx].rcvdPktStats.badChecksum.value);
 	  updateCounter(rrdPath, "tooLongPkts", myGlobals.device[devIdx].rcvdPktStats.tooLong.value);
+
+	  protoList = myGlobals.ipProtosList, idx=0;
+	  while(protoList != NULL) {
+	    updateCounter(rrdPath, protoList->protocolName, myGlobals.device[devIdx].ipProtosList[idx].value);	    
+	    idx++, protoList = protoList->next;
+	  }
 	}
 
 	if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
@@ -1629,7 +1641,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	for(i=1; i<myGlobals.device[k].numHosts; i++)
 	  for(j=1; j<myGlobals.device[k].numHosts; j++) {
 	    if(i != j) {
-	      int idx = i*myGlobals.device[k].numHosts+j;
+	      idx = i*myGlobals.device[k].numHosts+j;
 
 	      if(myGlobals.device[k].ipTrafficMatrix[idx] == NULL)
 		continue;
