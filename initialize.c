@@ -678,6 +678,9 @@ void initApps(void) {
 
 #else
     readLsofInfo();
+    if (myGlobals.numProcesses == 0) {
+        traceEvent(TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?\n");
+    }
 #endif
   }
 }

@@ -1277,6 +1277,9 @@ void readLsofInfo(void) {
   }
 
   fd = popen("lsof -i -n -w", "r");
+#ifdef LSOF_DEBUG
+  traceEvent(TRACE_INFO, "LSOF_DEBUG: Call to lsof returned %s\n", fd == NULL ? "error" : "ok");
+#endif
 
   if(fd == NULL) {
     fclose(fd);

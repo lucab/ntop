@@ -607,6 +607,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #ifndef WIN32
 #ifdef MULTITHREADED
 void* periodicLsofLoop(void* notUsed _UNUSED_) {
+  long loopCount=0;
   for(;;) {
     /*
       refresh process list each minute
@@ -620,8 +621,11 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
       traceEvent(TRACE_INFO, "LSOF_DEBUG: Wait please: reading lsof information...\n");
 #endif
       if(myGlobals.isLsofPresent) readLsofInfo();
+      if ( (++loopCount == 1) && (myGlobals.numProcesses == 0) ) {
+          traceEvent(TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?\n");
+      }
 #ifdef LSOF_DEBUG
-      traceEvent(TRACE_INFO, "LSOF_DEBUT: Done with lsof.\n");
+      traceEvent(TRACE_INFO, "LSOF_DEBUG: Done with lsof.\n");
 #endif
     }
     sleep(60);
