@@ -62,7 +62,7 @@ int reportValues(time_t *lastTime) {
   else if(refreshRate < MIN_REFRESH_TIME)
     refreshRate = MIN_REFRESH_TIME;
 
-#ifdef WIN32
+#ifndef WIN32
   setsignal(SIGPIPE, ignoreSignal);
   setsignal(SIGABRT, ignoreSignal);
 #endif
