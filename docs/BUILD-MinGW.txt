@@ -4,11 +4,15 @@ against the Microsoft runtime and not the cygwin runtime).
 
 Prerequistes:
 
-(Tested notes updated for ntop version 2.0.99RC2)
+Tested notes updated for ntop version 2.0.99RC2 and for ntop cvs snapshot
+as of 15jun2002 (courtesy of Jac Engel).
+
 (Most MinGW software is now available through SourceForge at
  http://sourceforge.net/project/showfiles.php?group_id=2435, or
  the MinGW packages repository at http://sourceforge.net/projects/mingwrep/)
 
+Note that as you unzip archives, use the folder names!
+     It's suggested that everything be unzipped under a base name of C:\MinGW.
 
   1) MinGW      (available from http://www.mingw.org)
      Tested against mingw-runtime-1.3.tar.gz
@@ -29,20 +33,44 @@ Prerequistes:
           textutils-2.0-mingw32.zip
           w32api-1.4-2.tar.gz
 
+OR:
+
+1..4) A prepackaged release of MinGW, MinGW-1.1.tar.gz (which is 
+      available from http://www.mingw.org) can also be used (it just installs
+      more "stuff", but it's an integrated set and may be less trouble.
+
+
   5) WinPCAP developer's pack (available from
      This was tested with Release 2.3 of WinPcap, available at 
      http://netgroup-serv.polito.it/winpcap/install/bin/WPdpack_2_3.zip
 
+     Note: unzip (use folder names) into C:\Mingw and execute 
+           C:\Mingw\WPdpack\Drivers\WinPcap_2_3.exe
+
   6) gdbm for win32/mingw (from http://sourceforge.net/projects/mingwrep)
      This was tested with gdbm-1.8.0-20010430.zip
 
+     Note: unzip (use folder names) into C:\Mingw\gdbm
+
   7) ntop  (available from http://www.ntop.org)
+     This was last tested with http://snapshot.ntop.org/tgz/ntop-02-06-13.tgz
+
+     Note: unzip (use folder names) into C:\ntop-02-06-13.
 
   8) rm (normally part of fileutils, but seemingly not available for MinGW).
       There is a "usable" version of rm (rm.bat) in the utils/ directory.
       If you don't have a real version of rm, copy this file to somewhere
       on your MinGW path.
 
+OR:
+
+  8) UnxUtils package UnxUtils.zip at:
+     http://www.wzw.tu-muenchen.de/~syring/win32/UnxUtils.html
+
+     Note: unzip only patch.exe and rm.exe to C:\mingw\bin
+            rm.exe is required as defined in ntop\makefile.mingw to make ntop.
+	    patch.exe is only required if diff files are available/required.
+ 
 Steps
 
   1) Install all prerequisites
@@ -54,6 +82,13 @@ Steps
      LIB_GDBM        (where libgdbm.a is found)
      LIB_WPDPACK     (where libpcap.a is found)
 
+    e.g.:
+
+     INC_GDBM=-Ic:/Mingw/gdbm/include
+     INC_WPDPACK=-Ic:/Mingw/wpdpack/include
+     LIB_GDBM=-Lc:/Mingw/gdbm/lib
+     LIB_WPDPACK=-Lc:/Mingw/wpdpack/lib
+
      If you're using a separate gdchart, gd, libpng, or libz, you'll
      also need to change the include and library paths for these as well.
 
@@ -61,7 +96,7 @@ Steps
 
      3a) Build zlib
 
-         cd gdchart0.94c/zlib1.1.4
+         cd gdchart0.94c/zlib-1.1.4
          make -f Makefile.mingw
          cd ../..
 
@@ -69,7 +104,7 @@ Steps
 
          cd gdchart0.94c/gd-1.8.3/libpng-1.2.4
          make -f scripts/makefile.mingw
-         cd ../../../
+         cd ../../..
 
      3c) Build gd
 
@@ -89,13 +124,18 @@ Steps
      make -f Makefile.mingw
 
 
-  5) Package ntop and the dependent files
+  5) Install ntop and the dependent files
 
-     Into the install directory, copy ntop.exe and the html
-     subdirectory hierarchy.
+     Create a directory e.g. C:\ntop and copy ntop.exe and the WHOLE html
+     subdirectory hierarchy into it.
 
      Ensure that the appropriate DLL's are in your path.  For this
      build, that includes libgdbm-2.dll and wpcap.dll.
+
+     Copy libgdbm-2.dll (exists in C:\Mingw\gdbm\bin) to C:\ntop
+
+     wpcap.dll is installed into C:\WINNT\system32 by WinPcap2_3.exe, so
+     this file is should already be available through your path.
 
      If you have grep installed, the following commandline will tell
      you which files need to be in either the same directory as
@@ -106,8 +146,11 @@ Steps
   6) Use it
 
      Execute ntop.exe from the install directory.  You can get command
-     line help by running ntop.exe -h
+     line help by running ntop.exe -h and from the EXTENSIVE entries
+     about Win32 in docs/FAQ.
 
 -- 
 November 2001 - Scott Renfro <scott@renfro.org>
 June 2002 - Burton M. Strauss III <Burton@ntopsupport.com>
+September 2002 - Burton M. Strauss III <Burton@ntopsupport.com> with help from Jac Engel.
+
