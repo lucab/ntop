@@ -1430,7 +1430,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	  while(el != NULL) {
 	    if((el == myGlobals.otherHostEntry) || (el == myGlobals.broadcastEntry)
-	       || broadcastHost(el)) {
+	       || broadcastHost(el) || (myGlobals.trackOnlyLocalHosts && (!subnetPseudoLocalHost(el)))) {
 	      el = el->next;
 	      continue;
 	    }
