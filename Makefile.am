@@ -1,8 +1,9 @@
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
-# Copyright (c) 1998-2002 Luca Deri <deri@ntop.org>
+# Copyright (c) 1998-2004 Luca Deri <deri@ntop.org>
 # Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
+# Updates 2003-2004 Luca Deri and Burton Strauss
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # This program is free software; you can redistribute it and/or modify
@@ -201,7 +202,7 @@ ntop.txt: ntop.8
 	@echo "       If we hang here, then you are probably "
 	@echo "       running make not GNU make (gmake)"
 	@echo ""
-	@groff -mandoc -Tascii $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -~]//g' > ntop.txt
+	@groff -mandoc -Tascii $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -\~]//g' > ntop.txt
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
 	@echo ""
@@ -220,7 +221,7 @@ ntop.html: ntop.8
 	@echo "       If we hang here, then you are probably "
 	@echo "       running make not GNU make (gmake)"
 	@echo ""
-	@groff -mandoc -Thtml $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -~]//g' > html/ntop.html
+	@groff -mandoc -Thtml $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -\~]//g' > html/ntop.html
 	@cp -f html/ntop.html ntop.html
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
@@ -239,7 +240,7 @@ faq.html: docs/FAQ
 	@echo "       If we hang here, then you are probably "
 	@echo "       running make not GNU make (gmake)"
 	@echo ""
-	@@AWK@ -f utils/faqtohtml.awk $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -~]//g' > html/faq.html
+	@@AWK@ -f utils/faqtohtml.awk $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -\~]//g' > html/faq.html
 	@cp -f html/faq.html faq.html
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
