@@ -96,7 +96,7 @@ static void calfree (void) {
 void revertSlash(char *str) {
 	int i;
 
-	for(i=0; str[i] != '\0'; i++) 
+	for(i=0; str[i] != '\0'; i++)
 		if(str[i] == '/')
 			str[i] = '\\';
 }
@@ -207,7 +207,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 #ifdef WIN32
   revertSlash(path);
 #endif
-  
+
   directoryPointer = opendir(path);
 
   if(directoryPointer == NULL) {
@@ -236,7 +236,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   sendString("</p>\n<p>\n<TABLE BORDER>\n");
 
-  sendString("<TR><TH>Graph</TH><TH>Total</TH><TH>Average</TH></TR>\n");
+  sendString("<TR><TH>Graph</TH><TH>Total</TH></TR>\n");
 
   while((dp = readdir(directoryPointer)) != NULL) {
     char *rsrcName;
@@ -261,7 +261,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
     rc = sumCounter(rrdPath, dp->d_name, startTime, endTime, &total, &average);
 
-    if(isGauge 
+    if(isGauge
        || ((rc >= 0) && (total > 0))) {
       rsrcName[0] = '\0';
       rsrcName = dp->d_name;
@@ -277,19 +277,17 @@ static void listResource(char *rrdPath, char *rrdTitle,
       /* printf("rsrcName: %s\n", rsrcName); */
 
       if(isGauge) {
-	snprintf(path, sizeof(path), "&nbsp;</TD><TD ALIGN=RIGHT>%.0f", average);
+	sendString("&nbsp;");
       } else {
 	if((strncmp(rsrcName, "pkt", 3) == 0)
 	   || ((strlen(rsrcName) > 4) && (strcmp(&rsrcName[strlen(rsrcName)-4], "Pkts") == 0))) {
-	  snprintf(path, sizeof(path), "%s Pkt</TD><TD ALIGN=RIGHT>%.1f Pkts/sec",
-		   formatPkts(total), (float)average);
+	  snprintf(path, sizeof(path), "%s Pkt</TD>", formatPkts(total));
 	} else {
-	  snprintf(path, sizeof(path), "%s</TD><TD ALIGN=RIGHT>%s",
-		   formatBytes(total, 1), formatThroughput(average));
+	  snprintf(path, sizeof(path), "%s", formatBytes(total, 1));
 	}
+	sendString(path);
       }
-      
-      sendString(path);     
+
       sendString("</TD></TR>\n");
       numEntries++;
     }
@@ -310,9 +308,23 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
 /* ******************************************* */
 
+int endsWith(char* label, char* pattern) {
+  int lenLabel, lenPattern;
+
+  lenLabel   = strlen(label);
+  lenPattern = strlen(pattern);
+
+  if(lenPattern >= lenLabel)
+    return(0);
+  else 
+    return(!strcmp(&label[lenLabel-lenPattern], pattern));
+}
+
+/* ******************************************* */
+
 void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 		  char *startTime, char* endTime) {
-  char path[512], *argv[16], buf[96], buf1[96], fname[256];
+  char path[512], *argv[16], buf[96], buf1[96], fname[256], *label;
   struct stat statbuf;
   int argc = 0, rc, x, y;
 
@@ -324,6 +336,10 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
   revertSlash(fname);
 #endif
 
+  if(endsWith(rrdName, "Bytes")) label = "Bytes/sec";
+  else if(endsWith(rrdName, "Pkts")) label = "Packets/sec";
+  else label = "";
+
   if(stat(path, &statbuf) == 0) {
     argv[argc++] = "rrd_graph";
     argv[argc++] = fname;
@@ -334,6 +350,8 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 #else
     argv[argc++] = "PNG";
 #endif
+    argv[argc++] = "--vertical-label";
+    argv[argc++] = label;
     argv[argc++] = "--start";
     argv[argc++] = startTime;
     argv[argc++] = "--end";
@@ -342,8 +360,12 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     argv[argc++] = buf;
     snprintf(buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle);
     argv[argc++] = buf1;
+    argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s";
+    argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
+    argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
+    argv[argc++] = "GPRINT:ctr:LAST:Current\\: %3.1lf%s";
 
- #ifdef DEBUG
+#ifdef DEBUG
     for (x = 0; x < argc; x++)
       traceEvent(TRACE_INFO, "%d: %s", x, argv[x]);
 #endif
@@ -386,7 +408,7 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 #ifdef WIN32
   revertSlash(path);
 #endif
-  
+
   if(stat(path, &statbuf) != 0) {
     char startStr[32], counterStr[64];
     int step = 300;
@@ -859,7 +881,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	  sprintf(rrdPath, "%s/rrd/hosts/%s/", myGlobals.dbPath, hostKey);
 	  mkdir_p(rrdPath);
-	  
+
 	  updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
 	  updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
 	  updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
@@ -937,11 +959,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	      for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 		char key[128];
-		sprintf(key, "%sSent", myGlobals.protoIPTrafficInfos[j]);
+		sprintf(key, "%sSentBytes", myGlobals.protoIPTrafficInfos[j]);
 		updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].sentLoc.value+
 			      el->protoIPTrafficInfos[j].sentRem.value);
 
-		sprintf(key, "%sRcvd", myGlobals.protoIPTrafficInfos[j]);
+		sprintf(key, "%sRcvdBytes", myGlobals.protoIPTrafficInfos[j]);
 		updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].rcvdLoc.value+
 			      el->protoIPTrafficInfos[j].rcvdFromRem.value);
 	      }
@@ -974,7 +996,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if(dumpInterfaces) {
       for(i=0; i<myGlobals.numDevices; i++) {
 
-	
+
 	if(myGlobals.device[i].virtualDevice) continue;
 
 	sprintf(rrdPath, "%s/rrd/interfaces/%s/", myGlobals.dbPath,  myGlobals.device[i].name);
@@ -1020,10 +1042,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(dumpDetail == DETAIL_HIGH) {
 	  if(myGlobals.device[i].ipProtoStats != NULL) {
-	    sprintf(rrdPath, "%s/rrd/interfaces/%s/IP.", myGlobals.dbPath,  myGlobals.device[i].name);
+	    snprintf(rrdPath, sizeof(rrdPath), "%s/rrd/interfaces/%s/IP.", myGlobals.dbPath,  myGlobals.device[i].name);
 
 	    for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 	      TrafficCounter ctr;
+	      char tmpStr[128];
 
 	      ctr.value =
 		myGlobals.device[i].ipProtoStats[j].local.value+
@@ -1031,7 +1054,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		myGlobals.device[i].ipProtoStats[j].remote2local.value+
 		myGlobals.device[i].ipProtoStats[j].remote.value;
 
-	      updateCounter(rrdPath, myGlobals.protoIPTrafficInfos[j], ctr.value);
+	      snprintf(tmpStr, sizeof(tmpStr), "%sBytes", myGlobals.protoIPTrafficInfos[j]);
+	      updateCounter(rrdPath, tmpStr, ctr.value);
 	    }
 	  }
 	}
@@ -1061,7 +1085,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			  myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
 			  myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
 		  mkdir_p(rrdPath);
-	
+
 		  updateCounter(rrdPath, "pkts",
 				myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value);
 
