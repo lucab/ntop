@@ -1169,8 +1169,7 @@ static void handleRRDHTTPrequest(char* url) {
              "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
   sendString(myGlobals.rrdPath);
   sendString("\">");
-  sendString("<br>NOTE: The 'large rrd population' option is in effect.\n");
-  sendString("This means that the rrd files will be in a subdirectory structure, e.g.\n");
+  sendString("<br>NOTE: The rrd files will be in a subdirectory structure, e.g.\n");
   if (snprintf(buf, sizeof(buf),
 #ifdef WIN32
 	       "%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
@@ -1180,16 +1179,7 @@ static void handleRRDHTTPrequest(char* url) {
                myGlobals.rrdPath) < 0)
     BufferTooShort();
   sendString(buf);
-  sendString("instead of a single level structure, ");
-  if (snprintf(buf, sizeof(buf),
-#ifdef WIN32
-	       "%s\\interfaces\\interface-name\\12.239.98.199\\xxxxx.rrd\n",
-#else
-	       "%s/interfaces/interface-name/12.239.98.199/xxxxx.rrd\n",
-#endif
-               myGlobals.rrdPath) < 0)
-    BufferTooShort();
-  sendString(buf);
+  sendString("to limit the number of files per subdirectory.");
   sendString("</TD></tr>\n");
 
   sendString("<TR><TH ALIGN=LEFT>RRD Updates</TH><TD>");
