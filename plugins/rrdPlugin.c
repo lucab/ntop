@@ -849,6 +849,7 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
       rrds = (char**)myRRDs;
       closedir(directoryPointer);
     }
+    label = "Bytes/sec";
     break;
   case 5: rrds = (char**)rrd_summary_host_sentRcvd_packets; label = "Packets/sec"; break;
   case 6: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bytes/sec"; break;
