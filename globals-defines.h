@@ -1524,11 +1524,30 @@
 #define FLAG_RRD_DETAIL_LOW                 0
 #define FLAG_RRD_DETAIL_MEDIUM              1
 #define FLAG_RRD_DETAIL_HIGH                2
-#define CONST_RRD_DETIL_DEFAULT             FLAG_RRD_DETAIL_HIGH
+#define CONST_RRD_DETAIL_DEFAULT            FLAG_RRD_DETAIL_HIGH
 
 #define FLAG_RRD_ACTION_NONE                0
 #define FLAG_RRD_ACTION_GRAPH               1
 #define FLAG_RRD_ACTION_LIST                2
+
+#define CONST_RRD_PERMISSIONS_PRIVATE       0
+#define CONST_RRD_PERMISSIONS_GROUP         1
+#define CONST_RRD_PERMISSIONS_EVERYONE      2
+
+#define DEFAULT_RRD_PERMISSIONS             CONST_RRD_PERMISSIONS_PRIVATE
+
+/* Remember these are OCTAL constants and MUST have a leading 0 -
+ * see man chmod but tricky because the apply to both files 
+ * and directories - and rrd_create uses 0666 */
+#define CONST_RRD_D_PERMISSIONS_PRIVATE     0700
+#define CONST_RRD_D_PERMISSIONS_GROUP       0750
+#define CONST_RRD_D_PERMISSIONS_EVERYONE    0755
+#define CONST_RRD_UMASK_PRIVATE             0066
+#define CONST_RRD_UMASK_GROUP               0026
+#define CONST_RRD_UMASK_EVERYONE            0022
+
+#define DEFAULT_RRD_DIRECTORY_PERMISSIONS   CONST_RRD_D_PERMISSIONS_PRIVATE
+#define DEFAULT_RRD_UMASK                   CONST_RRD_UMASK_PRIVATE
 
 /* **************************** */
 

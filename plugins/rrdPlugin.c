@@ -38,6 +38,7 @@ Plugin History
 2.2     Version roll (preparatory) for ntop 2.2
 2.2a    Multiple RRAs
 2.2b    Large rrd population option
+2.3     Updates, fixes, etc ... for ntop 2.3
 
 Remember, there are TWO paths into this - one is through the main loop,
 if the plugin is active, the other is through the http function if the
@@ -78,6 +79,9 @@ pthread_t rrdThread;
 #endif
 
 static u_short dumpFlows, dumpHosts, dumpInterfaces, dumpMatrix, shownCreate=0;
+#ifndef WIN32
+static u_short dumpPermissions;
+#endif
 
 static Counter rrdGraphicRequests=0;
 
@@ -163,7 +167,7 @@ void revertDoubleColumn(char *str) {
 #ifdef WIN32
 #define _mkdir(a) mkdir(a)
 #else
-#define _mkdir(a) mkdir(a, (mode_t)0700)
+#define _mkdir(a) mkdir(a, myGlobals.rrdDirectoryPermissions)
 #endif
 
 void mkdir_p(char *path) {
@@ -736,8 +740,10 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     int x;
     char *rrdError;
 
+#if RRD_DEBUG >= 3
     for (x = 0; x < argc; x++)
       traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+#endif
 
     numRRDerrors++;
     rrdError = rrd_get_error();
@@ -829,6 +835,25 @@ void unescape_url(char *url) {
 
 /* ******************************* */
 
+void setGlobalPermissions(int permissionsFlag) {
+  switch (permissionsFlag) {
+    case CONST_RRD_PERMISSIONS_GROUP:
+      myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_GROUP;
+      myGlobals.rrdUmask = CONST_RRD_UMASK_GROUP;
+      break;
+    case CONST_RRD_PERMISSIONS_EVERYONE:
+      myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_EVERYONE;
+      myGlobals.rrdUmask = CONST_RRD_UMASK_EVERYONE;
+      break;
+    default:
+      myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_PRIVATE;
+      myGlobals.rrdUmask = CONST_RRD_UMASK_PRIVATE;
+      break;
+  }
+}
+
+/* ******************************* */
+
 static void commonRRDinit(void) {
   char value[1024];
 
@@ -907,9 +932,9 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dataDumpDetail", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", CONST_RRD_DETIL_DEFAULT);
+    snprintf(value, sizeof(value), "%d", CONST_RRD_DETAIL_DEFAULT);
     storePrefsValue("rrd.dataDumpDetail", value);
-    dumpDetail = CONST_RRD_DETIL_DEFAULT;
+    dumpDetail = CONST_RRD_DETAIL_DEFAULT;
   } else {
     dumpDetail  = atoi(value);
   }
@@ -929,6 +954,22 @@ static void commonRRDinit(void) {
     unescape(myGlobals.rrdPath, vlen, value);
   }
 
+#ifndef WIN32
+  if(fetchPrefsValue("rrd.permissions", value, sizeof(value)) == -1) {
+    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_PERMISSIONS);
+    storePrefsValue("rrd.permissions", value);
+    dumpPermissions = DEFAULT_RRD_PERMISSIONS;
+  } else {
+    dumpPermissions = atoi(value);
+  }
+  setGlobalPermissions(dumpPermissions);
+  traceEvent(CONST_TRACE_INFO, "RRD: Mask for new directories is %04o",
+             myGlobals.rrdDirectoryPermissions);
+  umask(myGlobals.rrdUmask);
+  traceEvent(CONST_TRACE_INFO, "RRD: Mask for new files is %04o",
+             myGlobals.rrdUmask);
+#endif
+
 #ifdef RRD_DEBUG
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Parameters:");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterval %d seconds", dumpInterval);
@@ -943,7 +984,11 @@ static void commonRRDinit(void) {
              (dumpDetail == FLAG_RRD_DETAIL_MEDIUM ? "medium" : "low"));
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     hostsFilter %s", hostsFilter);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s", myGlobals.rrdPath);
+#ifndef WIN32
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     umask %04o", myGlobals.rrdUmask);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     DirPerms %04o", myGlobals.rrdDirectoryPermissions);
 #endif
+#endif /* RRD_DEBUG */
 
   initialized = 1;
 }
@@ -956,6 +1001,9 @@ static void handleRRDHTTPrequest(char* url) {
   u_char action = FLAG_RRD_ACTION_NONE;
   int _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths;
   char * _hostsFilter;
+#ifndef WIN32
+  int _dumpPermissions;
+#endif
 
   if(initialized == 0)
     commonRRDinit();
@@ -965,12 +1013,15 @@ static void handleRRDHTTPrequest(char* url) {
   _dumpHosts=0;
   _dumpInterfaces=0;
   _dumpMatrix=0;
-  _dumpDetail=CONST_RRD_DETIL_DEFAULT;
+  _dumpDetail=CONST_RRD_DETAIL_DEFAULT;
   _dumpInterval=DEFAULT_RRD_INTERVAL;
   _dumpHours=DEFAULT_RRD_HOURS;
   _dumpDays=DEFAULT_RRD_DAYS;
   _dumpMonths=DEFAULT_RRD_MONTHS;
   _hostsFilter = NULL;
+#ifndef WIN32
+  _dumpPermissions = DEFAULT_RRD_PERMISSIONS;
+#endif
 
   if((url != NULL) && (url[0] != '\0')) {
     unescape_url(url);
@@ -1072,6 +1123,15 @@ static void handleRRDHTTPrequest(char* url) {
 	  _dumpInterfaces = 1;
 	} else if(strcmp(key, "dumpMatrix") == 0) {
 	  _dumpMatrix = 1;
+#ifndef WIN32
+	} else if(strcmp(key, "permissions") == 0) {
+	  _dumpPermissions = atoi(value);
+          if((_dumpPermissions != CONST_RRD_PERMISSIONS_PRIVATE) &&
+             (_dumpPermissions != CONST_RRD_PERMISSIONS_GROUP) &&
+             (_dumpPermissions != CONST_RRD_PERMISSIONS_EVERYONE)) {
+            _dumpPermissions = DEFAULT_RRD_PERMISSIONS;
+          }
+#endif
 	}
       }
 
@@ -1089,6 +1149,10 @@ static void handleRRDHTTPrequest(char* url) {
       dumpInterfaces=_dumpInterfaces;
       dumpMatrix=_dumpMatrix;
       dumpDetail = _dumpDetail;
+#ifndef WIN32
+      dumpPermissions = _dumpPermissions;
+      setGlobalPermissions(_dumpPermissions);
+#endif
       snprintf(buf, sizeof(buf), "%d", dumpInterval);   storePrefsValue("rrd.dataDumpInterval", buf);
       snprintf(buf, sizeof(buf), "%d", dumpHours);      storePrefsValue("rrd.dataDumpHours", buf);
       snprintf(buf, sizeof(buf), "%d", dumpDays);       storePrefsValue("rrd.dataDumpDays", buf);
@@ -1106,6 +1170,16 @@ static void handleRRDHTTPrequest(char* url) {
 	_hostsFilter = NULL;
       }
       storePrefsValue("rrd.hostsFilter", hostsFilter);
+#ifndef WIN32
+      snprintf(buf, sizeof(buf), "%d", dumpPermissions);storePrefsValue("rrd.permissions", buf);
+      umask(myGlobals.rrdUmask);
+#ifdef RRD_DEBUG
+      traceEvent(CONST_TRACE_INFO, "RRD: Mask for new directories set to %04o",
+                 myGlobals.rrdDirectoryPermissions);
+      traceEvent(CONST_TRACE_INFO, "RRD: Mask for new files set to %04o",
+                 myGlobals.rrdUmask);
+#endif
+#endif
       shownCreate=0;
     }
   }
@@ -1242,6 +1316,43 @@ static void handleRRDHTTPrequest(char* url) {
 	      (unsigned long)rrdGraphicRequests) < 0)
     BufferTooShort();
   sendString(buf);
+
+#ifndef WIN32
+  sendString("<TR><TH ALIGN=LEFT>File/Directory Permissions</TH><TD>");
+  sendString("<ul>\n");
+  if(snprintf(buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Private - ",
+              CONST_RRD_PERMISSIONS_PRIVATE,
+              (dumpPermissions == CONST_RRD_PERMISSIONS_PRIVATE) ? "CHECKED" : "") < 0)
+    BufferTooShort();
+  sendString(buf);
+  sendString("means that ONLY the ntop userid will be able to view the files</li>\n");
+
+  if(snprintf(buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Group - ",
+              CONST_RRD_PERMISSIONS_GROUP,
+              (dumpPermissions == CONST_RRD_PERMISSIONS_GROUP) ? "CHECKED" : "") < 0)
+    BufferTooShort();
+  sendString(buf);
+  sendString("means that all users in the same group as the ntop userid will be able to view the rrd files.\n");
+  sendString("<br><i>(this is a bad choice if ntop's group is 'nobody' along with many other service ids)</i></li>\n");
+
+  if(snprintf(buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Everyone - ",
+              CONST_RRD_PERMISSIONS_EVERYONE,
+              (dumpPermissions == CONST_RRD_PERMISSIONS_EVERYONE) ? "CHECKED" : "") < 0)
+    BufferTooShort();
+  sendString(buf);
+  sendString("means that everyone on the ntop host system will be able to view the rrd files.</li>\n");
+
+  sendString("</ul><br>\n<B>WARNING</B>:&nbsp;Changing this setting affects only new files "
+             "and directories! "
+             "<i>Unless you go back and fixup existing file and directory permissions:</i><br>\n"
+             "<ul><li>Users will retain access to any rrd file or directory they currently have "
+             "access to even if you change to a more restrictive setting.</li>\n"
+             "<li>Users will not gain access to any rrd file or directory they currently do not "
+             "have access to even if you change to a less restrictive setting. Further, existing "
+             "directory permissions may prevent them from reading new files created in existing "
+             "directories.</li>\n"
+             "</ul>\n</TD></TR>\n");
+#endif
 
   sendString("<TD COLSPAN=2 ALIGN=center><INPUT TYPE=submit VALUE=Set></td></FORM></tr>\n");
   sendString("</TABLE>\n<p></CENTER>\n");

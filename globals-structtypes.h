@@ -1876,6 +1876,10 @@ typedef struct ntopGlobals {
 
   /* rrd */
   char *rrdPath;
+#ifndef WIN32
+  mode_t rrdDirectoryPermissions,
+         rrdUmask;
+#endif
 
   /* http.c */
   FILE *accessLogFd;

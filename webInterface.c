@@ -2914,6 +2914,25 @@ void printNtopConfigHInfo(int textPrintFlag) {
    *
    */
 
+  /* ***Plugins stuff************************ */
+  if(textPrintFlag == TRUE) {
+      sendString("\n\nPLUGINS:\n\n");
+
+      sendString("RRD:\n");
+
+      printFeatureConfigInfo(textPrintFlag, "RRD path", myGlobals.rrdPath);
+#ifndef WIN32
+      if(snprintf(buf, sizeof(buf),
+                  "%04o", myGlobals.rrdDirectoryPermissions) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "New directory permissions", buf);
+      if(snprintf(buf, sizeof(buf),
+                  "%04o", myGlobals.rrdUmask) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "New file umask", buf);
+#endif
+
+  }
 }
 
 /* ******************************** */
