@@ -225,11 +225,13 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   if(host->osName != NULL)
     free(host->osName);
 
-  for(i=0; i<myGlobals.numProcesses; i++) {
-    if(myGlobals.processes[i] != NULL) {
-      for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-	if(myGlobals.processes[i]->contactedIpPeersIndexes[j] == host->hostTrafficBucket)
-	  myGlobals.processes[i]->contactedIpPeersIndexes[j] = NO_PEER;
+  if(myGlobals.isLsofPresent) {
+    for(i=0; i<myGlobals.numProcesses; i++) {
+      if(myGlobals.processes[i] != NULL) {
+	for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
+	  if(myGlobals.processes[i]->contactedIpPeersIndexes[j] == host->hostTrafficBucket)
+	    myGlobals.processes[i]->contactedIpPeersIndexes[j] = NO_PEER;
+      }
     }
   }
 
@@ -245,54 +247,58 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     free(host->portsUsage);
   }
 
-  for(i=0; i<2; i++) {
-    if(i == 0)
-      element = host->tcpSessionList;
-    else
-      element = host->udpSessionList;
+  if(myGlobals.enableSessionHandling) {
+    for(i=0; i<2; i++) {
+      if(i == 0)
+	element = host->tcpSessionList;
+      else
+	element = host->udpSessionList;
 
-    while(element != NULL) {
-      if(element->magic != MAGIC_NUMBER) {
-	traceEvent(TRACE_ERROR, "===> Magic assertion failed (3) for host %s", host->hostNumIpAddress);
+      while(element != NULL) {
+	if(element->magic != MAGIC_NUMBER) {
+	  traceEvent(TRACE_ERROR, "===> Magic assertion failed (3) for host %s", host->hostNumIpAddress);
+	}
+
+	nextElement = element->next;
+	/*
+	  The 'peers' field shouldn't be a problem because an idle host
+	  isn't supposed to have any session
+	*/
+	free(element);
+	element = nextElement;
       }
-
-      nextElement = element->next;
-      /*
-	The 'peers' field shouldn't be a problem because an idle host
-	isn't supposed to have any session
-      */
-      free(element);
-      element = nextElement;
     }
+
+    host->tcpSessionList = host->udpSessionList = NULL;
+
+
+    freeHostSessions(host->hostTrafficBucket, actualDeviceId);
   }
 
-  host->tcpSessionList = host->udpSessionList = NULL;
-
-  freeHostSessions(host->hostTrafficBucket, actualDeviceId);
-
-  if(host->httpVirtualHosts != NULL) {
-    VirtualHostList *list = host->httpVirtualHosts;
+  if(myGlobals.enablePacketDecoding) {
+    if(host->httpVirtualHosts != NULL) {
+      VirtualHostList *list = host->httpVirtualHosts;
     
-    while(list != NULL) {
-      VirtualHostList *next = list->next;
-      if(list->virtualHostName != NULL) /* This is a silly check as it should be true all the time */
-	free(list->virtualHostName);
-      free(list);
-      list = next;
+      while(list != NULL) {
+	VirtualHostList *next = list->next;
+	if(list->virtualHostName != NULL) /* This is a silly check as it should be true all the time */
+	  free(list->virtualHostName);
+	free(list);
+	list = next;
+      }
     }
-  }
  
-  if(host->userList != NULL) {
-    UserList *list = host->userList;
+    if(host->userList != NULL) {
+      UserList *list = host->userList;
     
-    while(list != NULL) {
-      UserList *next = list->next;
-      free(list->userName);
-      free(list);
-      list = next;
+      while(list != NULL) {
+	UserList *next = list->next;
+	free(list->userName);
+	free(list);
+	list = next;
+      }
     }
   }
-
   if(host->fileList != NULL) {
     FileList *list = host->fileList;
     
@@ -410,6 +416,7 @@ void freeHostInstances(int actualDeviceId) {
 }
 
 /* ************************************ */
+
 /* Subtract the `struct timeval' values X and Y */
 
 float timeval_subtract (struct timeval x, struct timeval y) {
@@ -418,6 +425,8 @@ float timeval_subtract (struct timeval x, struct timeval y) {
           (long int) y.tv_sec * 1000000 - 
           (long int) y.tv_usec) / 1000000.0;
 }
+
+/* ************************************ */
 
 void purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, maxBucket = 0, theIdx, hashFull = 0, hashLen;
@@ -556,7 +565,8 @@ void purgeIdleHosts(int actDevice) {
 
   free(theFlaggedHosts);
 
-  scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
+  if(myGlobals.enableSessionHandling)
+    scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
 
   gettimeofday(&hiresTimeEnd, NULL);
   hiresDeltaTime=timeval_subtract(hiresTimeEnd, hiresTimeStart);
@@ -570,7 +580,7 @@ void purgeIdleHosts(int actDevice) {
   }
 #endif
 
-  if ( (myGlobals.dynamicPurgeLimits == 1) && (numFreedBuckets > 0) ) {
+  if ((myGlobals.dynamicPurgeLimits == 1) && (numFreedBuckets > 0)) {
       /* 
        * Dynamically adjust the maximum # of hosts we'll purge per cycle
        * so that it takes no more than a parameter (in seconds).
