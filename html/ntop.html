@@ -19,15 +19,17 @@ ntop - display top network users
 
 <I>&lt;path&gt;</I>]
 
+[<B>-b</B>|<B>--disable-decoders</B>]
+
 [<B>-c</B>|<B>--sticky-hosts]</B>
 
 [<B>-f</B>|<B>--traffic-dump-file</B>
 
 <I>file&gt;</I>]
 
-[<B>-h</B>|<B>--help</B>]
+[<B>-g</B>|<B>--track-local-hosts</B>]
 
-[<B>-j</B>|<B>--border-sniffer-mode</B>]
+[<B>-h</B>|<B>--help</B>]
 
 [<B>-k</B>|<B>--filter-expression-in-extra-frame</B>]
 
@@ -60,6 +62,8 @@ ntop - display top network users
 [<B>-w</B>|<B>--http-server</B>
 
 <I>&lt;port&gt;</I>]
+
+[<B>-z</B>|<B>--disable-sessions</B>]
 
 [<B>-B</B>|<B>--filter-expression</B>
 
@@ -106,8 +110,7 @@ Not available on micro-ntop:
 
 <I>&lt;number&gt;</I>]
 
-
-
+<P>
 Unix options:
 <P>
 [<B>-d</B>|<B>--daemon</B>]
@@ -115,6 +118,8 @@ Unix options:
 [<B>-i</B>|<B>--interface</B>
 
 <I>&lt;name&gt;</I>]
+
+[<B>-o</B>|<B>--no-mac</B>]
 
 [<B>-u</B>|<B>--user</B>
 
@@ -138,17 +143,6 @@ Win32 option:
 [<B>-i</B>|<B>--interface</B>
 
 <I>&lt;number&gt;</I>]
-
-<P>
-mySQL options:
-<P>
-[<B>-b</B>|<B>--sql-host</B>
-
-<I>&lt;host:port&gt;</I>]
-
-[<B>-v</B>|<B>--mysql-host</B>
-
-<I>&lt;username:password:dbName&gt;</I>]
 
 <P>
 OpenSSL option:
@@ -197,11 +191,11 @@ is that
 added a new column has been added. Such column contains the time (in milliseconds) that ntop needed in order to serve the request. 
 <P>
 
-2 -b --sql-host
-Exports
+2 -b --disable-decoders
+This flag disables protocol decoders (e.g. DNS, NetBIOS). Use it for better performance or if you feel 
 <B>ntop</B>
 
-traffic information into a SQL database. The flag specifies (in http-like host format) the address (IP:port) of a SQL client. The database/ directory part of ntop contains a few clients. Please use one of those.
+has problem handling some protocols.
 <P>
 
 2 -c --sticky-hosts
@@ -223,6 +217,16 @@ will display.
 Specifies the file containing tcpdump captured traffic that has to be used by ntop. Note: if you specify -f ntop will not capture any traffic after the file has been read. This option is mostly used for debug purposes.
 <P>
 
+2 -g --track-local-hosts
+Use this flag to tell
+<B>ntop </B>
+
+that you do care only about local hosts (use -m to specify local nets). This flag is useful when 
+<B>ntop</B>
+
+sees many hosts (e.g. border gateway) but only the local ones need to be tracked.
+<P>
+
 2 -h --help
 Print help information for 
 <B>ntop</B>
@@ -237,10 +241,6 @@ Specifies the network interface used by
 If multiple interfaces are used (this feature is available only if ntop is compiled with thread support) they have to be separated with a comma. For instance -i &quot;eth0,lo&quot;. Traffic information obtained by all the interfaces is merged together as if the traffic would have been produced by one interface. Use the -M flag for not merging traffic.
 <P>
 Win32 note: This is the number of the interface, not it's name. Use ??? to see a list of interfaces.
-<P>
-
-2 -j --border-sniffer-mode
-When this flag is used, ntop is supposed to be installed on a line where traffic is mirrored from a switch or another network appliance.
 <P>
 
 2 -k --filter-expression-in-extra-frame
@@ -312,8 +312,11 @@ username or a numeric user id. The group id used will be the primary group of
 the user specified.
 <P>
 
-2 -v --mysql-host
-Specifies the mySQL database connection information (user:password:database:host).
+2 -o --no-mac
+Specifies the user
+<B>ntop</B>
+
+should not trust MAC addresses but just IP addresses. This option is useful whenever ntop is started on an interface where MAC addresses cannot be really trusted (e.g. port/VLAN mirror).
 <P>
 
 2 -w --http-server
@@ -348,6 +351,10 @@ has not been started with '-W 0' [see below]).
 You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
 <B>-w 127.0.0.1:3000</B>
 
+<P>
+
+2 -z --disable-sessions
+This flag disables TCP session tracking. Use it for better performance or when you don't really care of tracking sessions.
 <P>
 
 2 -A --set-admin-password
@@ -525,10 +532,6 @@ The
 
 library, for the creation of png files, available at 
 <P>
-<B>mySQL</B>
-
-available at <A HREF="http://www.mysql.com/">http://www.mysql.com/</A>
-<P>
 <B>openSSL</B>
 
 from the OpenSSL project, if an https:// server is desired, available at <A HREF="http://www.openssl.org.">http://www.openssl.org.</A>
@@ -579,6 +582,6 @@ Tool locations are current as of February 2002 - please send email to report new
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 08:21:13 GMT, July 23, 2002
+Time: 16:12:38 GMT, September 30, 2002
 </BODY>
 </HTML>
