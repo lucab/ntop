@@ -55,7 +55,7 @@
 #if defined(WIN32) && defined(__GNUC__)
 typedef unsigned long long u_int64_t; /* on mingw unsigned long is 32 bits */
 #else 
-#if defined(WIN32) && defined(__GNUC__)
+#if defined(WIN32)
 typedef _int64 u_int64_t;
 #else
 #if defined(HAVE_UINT64_T)
