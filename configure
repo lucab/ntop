@@ -1339,7 +1339,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.94.115-2003-08-22"
+SCRIPTVER="v2.2.94.116-2003-08-26"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -23778,14 +23778,19 @@ echo $ECHO_N "checking for gcc getopt_long... $ECHO_C" >&6
 if test ".${ac_cv_lib_c_getopt_long}" = ".yes"; then
     echo "$as_me:$LINENO: result: found - long command line options are enabled" >&5
 echo "${ECHO_T}found - long command line options are enabled" >&6
-
-cat >>confdefs.h <<_ACEOF
-#define HAVE_GETOPT_LONG 1
-_ACEOF
-
 else
     echo "$as_me:$LINENO: result: not found - long command line options are enabled using ntop code" >&5
 echo "${ECHO_T}not found - long command line options are enabled using ntop code" >&6
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* NOTE: getopt_long does not appear to be provided on this system."
+    echo "*"
+    echo "*>>>    No worries - activating our built-in (libiberty) version."
+    echo "*>>>    ntop should work properly."
+    echo "*"
+    echo "*******************************************************************"
+    echo
 fi
 
 if test ".${ac_cv_header_sys_syslog_h}" = ".yes" ||

@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.94])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.94.115-2003-08-22"
+SCRIPTVER="v2.2.94.116-2003-08-26"
 
 dnl>
 dnl> generate the config header
@@ -2659,9 +2659,18 @@ dnl>
 AC_MSG_CHECKING([for gcc getopt_long])
 if test ".${ac_cv_lib_c_getopt_long}" = ".yes"; then
     AC_MSG_RESULT([found - long command line options are enabled])
-    AC_DEFINE_UNQUOTED(HAVE_GETOPT_LONG, 1, [getopt_long() is available])
 else
     AC_MSG_RESULT([not found - long command line options are enabled using ntop code])
+    echo
+    echo "*******************************************************************"
+    echo "*"      
+    echo "* NOTE: getopt_long does not appear to be provided on this system."
+    echo "*"
+    echo "*>>>    No worries - activating our built-in (libiberty) version."
+    echo "*>>>    ntop should work properly."
+    echo "*"      
+    echo "*******************************************************************"
+    echo
 fi
 
 dnl>
