@@ -2239,6 +2239,12 @@ void stringSanityCheck(char* string) {
 	       string);
     exit(-1);
   }
+
+  if((string[strlen(string)-1] == '/') ||
+     (string[strlen(string)-1] == '\\')) {
+    traceEvent(CONST_TRACE_WARNING, "Trailing slash removed from argument '%s'", string);
+    string[strlen(string)-1] = '\0';
+  }
 }
 
 /* ****************************************************** */
