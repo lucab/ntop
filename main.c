@@ -43,7 +43,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#if defined(WIN32)
+#if defined(WIN32) && defined(__GNUC__)	/* mingw compiler */
  /* we're using the winpcap getopt() implementation
   * which has the globals inside the dll, so a simple
   * extern declaration is insufficient on win32
@@ -51,12 +51,8 @@
   * Scott Renfro <scott@renfro.org>
   *
   */
-#if defined(__GNUC__)		/* mingw compiler */
 extern __attribute__((dllimport)) char *optarg;
-#else /* assume msvc */
-extern __dllspec(dllimport) char *optarg;
-#endif
-#else  /* not win32 */
+#else  /* !WIN32 */
 extern char *optarg;
 #endif
 
@@ -189,12 +185,6 @@ int main(int argc, char *argv[]) {
 	printf("intop provides you curses support. "
 	       "ntop -I is no longer used.\n");
 	return(-1);
-#endif
-
-#ifdef WIN32
-      case 'B':
-	SIZE_BUF=atoi(optarg)*1024;
-	break;
 #endif
 
       case 'q': /* allow ntop to save suspicious packets

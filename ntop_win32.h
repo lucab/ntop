@@ -97,32 +97,11 @@ extern ULONG GetHostIPAddr();
 #define DLT_PPP		9	/* Point-to-point Protocol */
 #define DLT_FDDI	10	/* FDDI */
 
-/* 
- *
- * these are defined in more recent versions of winpcap, so wrap them
- * in conditionals to prevent redefinition
- *
- * Scott Renfro <scott@renfro.org>
- *
- */
-#if !defined(DLT_ATM_RFC1483)
-#define DLT_ATM_RFC1483	11	/* LLC/SNAP encapsulated atm */
-#endif
-#if !defined(DLT_RAW)
-#define DLT_RAW		12	/* raw IP */
-#endif
-#if !defined(DLT_SLIP_BSDOS)
-#define DLT_SLIP_BSDOS	13	/* BSD/OS Serial Line IP */
-#endif
-#if !defined(DLT_PPP_BSDOS)
-#define DLT_PPP_BSDOS	14	/* BSD/OS Point-to-point Protocol */
-#endif
-
 /*
  * Ethernet address - 6 octets
  */
 struct ether_addr {
-	u_char	ether_addr_octet[6];
+  u_char ether_addr_octet[6];
 };
 
 /*
@@ -421,6 +400,5 @@ typedef struct conditionalVariable {
 #define MAX_NUM_PACKETS   1000
 
 extern short isWinNT();
-extern int SIZE_BUF;
 
 /* #define WIN32_DEMO */

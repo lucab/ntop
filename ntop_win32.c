@@ -43,10 +43,6 @@ char* getNwBoardMacAddress(char *deviceName); /* forward */
 
 ULONG GetHostIPAddr(); /* forward declaration */
 
-#if defined(WIN32) && defined(__GNUC__) && !defined(SIZE_BUF)
-/* on mingw, this isn't defined anywhere - Scott Renfro <scott@renfro.org> */
-int SIZE_BUF;
-#endif
 
 #ifdef ORIGINAL_NTOP
 
@@ -139,7 +135,6 @@ void initWinsock32() {
     exit(-1);
   }
 
-  SIZE_BUF = 5 * 1024 * 1024; /* 5MB buffer */
   version = "2.0 beta";
   author  = "Luca Deri <deri@ntop.org>";
   buildDate = "13/08/2001";

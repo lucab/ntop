@@ -1970,6 +1970,7 @@ typedef struct pppTunnelHeader {
 #define PPP_HDRLEN  4
 
 /* ******************************** */
+
 #ifndef DLT_RAW
 #define DLT_RAW		12	/* raw IP */
 #endif

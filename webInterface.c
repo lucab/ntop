@@ -1013,10 +1013,6 @@ void usage(void) {
 #endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
-#ifdef WIN32
-  traceEvent(TRACE_INFO, "    %s%d KB)>]\n", "[-B <NDIS buffer in Kbytes (default ",
-	     (int)(SIZE_BUF/1024));
-#endif
 #ifndef WIN32
   traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
 #else

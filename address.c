@@ -1130,27 +1130,40 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
       continue;
     } else if (type == T_PTR) {
       /*
-       *  Found a "pointer" to the real name.
+       * Found a "pointer" to the real name.
+       * 
+       * E.g. : 89.10.67.213.in-addr.arpa
+       *
        */
-      int a, b, c, d;
+      char *a, *b, *c, *d, dnsBuf[48];
+      int len;
       unsigned long theDNSaddr;
 
-      sscanf((char *)bp, "%d.%d.%d.%d.in-addr.arpa", &d, &c, &b, &a);
+      len = strlen(bp); if(len >= (sizeof(dnsBuf)-1)) len = sizeof(dnsBuf)-2;
+      memset(dnsBuf, 0, sizeof(dnsBuf));
+      strncpy(dnsBuf, bp, len);
 
-      theDNSaddr = htonl(a*(256*256*256)+b*(256*256)+c*256+d);
-      memcpy(&addr_list[addr_list_idx++], (char*)&theDNSaddr, sizeof(char*));
-      hostPtr->addrLen = INADDRSZ;
-      hostPtr->addrList[0] = theDNSaddr;
-
-      n = (short)dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
-      if (n < 0) {
+      d = strtok(dnsBuf, ".");
+      c = strtok(NULL, ".");    
+      b = strtok(NULL, ".");
+      a = strtok(NULL, ".");
+      
+      if(a && b && c && d) {
+	theDNSaddr = htonl(atoi(a)*(256*256*256)+atoi(b)*(256*256)+atoi(c)*256+atoi(d));
+	memcpy(&addr_list[addr_list_idx++], (char*)&theDNSaddr, sizeof(char*));
+	hostPtr->addrLen = INADDRSZ;
+	hostPtr->addrList[0] = theDNSaddr;
+	
+	n = (short)dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
+	if (n < 0) {
+	  cp += n;
+	  continue;
+	}
 	cp += n;
-	continue;
+	len = strlen((char *)bp) + 1;
+	memcpy(hostPtr->name, bp, len);
+	haveAnswer = TRUE;
       }
-      cp += n;
-      len = strlen((char *)bp) + 1;
-      memcpy(hostPtr->name, bp, len);
-      haveAnswer = TRUE;
       break;
     } else if (type != T_A) {
       cp += dlen;
