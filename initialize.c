@@ -472,8 +472,6 @@ void initCounters(void) {
     myGlobals.device[i].fragmentList = NULL;
   }
 
-  myGlobals.numProcesses = 0;
-
   myGlobals.ipxsapHashLoadCollisions = 0;
   myGlobals.hashCollisionsLookup     = 0;
 
@@ -899,10 +897,6 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.packetQueueMutex);
   createMutex(&myGlobals.hostsHashMutex);
 
-  if(myGlobals.isLsofPresent) {
-      createMutex(&myGlobals.lsofMutex);
-  }
-
  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
     createMutex(&myGlobals.addressResolutionMutex);
@@ -1006,30 +1000,10 @@ void initThreads(void) {
 
 
 /*
- * Initialize helper applications (e.g. ntop uses 'lsof' to list open connections)
+ * Initialize helper applications
  */
 void initApps(void) {
-  if(myGlobals.isLsofPresent) {
-
-#ifdef CFG_MULTITHREADED
-#ifndef WIN32
-    myGlobals.updateLsof = 1;
-    memset(myGlobals.localPorts, 0, sizeof(myGlobals.localPorts)); /* myGlobals.localPorts is used by lsof */
-    /*
-     * (8) - LSOF - optional
-     */
-    createMutex(&myGlobals.lsofMutex);
-    createThread(&myGlobals.lsofThreadId, periodicLsofLoop, NULL);
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for lsof support", myGlobals.lsofThreadId);
-#endif /* WIN32 */
-
-#else
-    readLsofInfo();
-    if(myGlobals.numProcesses == 0) {
-      traceEvent(CONST_TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?");
-    }
-#endif
-  }
+  /* Nothing to do at the moment */
 }
 
 

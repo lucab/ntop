@@ -96,10 +96,6 @@ static struct option const long_options[] = {
   { "filter-expression",                required_argument, NULL, 'B' },
   { "domain",                           required_argument, NULL, 'D' },
 
-#ifndef WIN32
-  { "enable-external-tools",            no_argument,       NULL, 'E' },
-#endif
-
   { "flow-spec",                        required_argument, NULL, 'F' },
 
 #ifndef WIN32
@@ -220,10 +216,6 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 %sPacket filter expression, like tcpdump\n", newLine);
   fprintf(fp, "    [-D <name>      | --domain <name>]                    %sInternet domain name\n", newLine);
 
-#ifndef WIN32
-  fprintf(fp, "    [-E             | --enable-external-tools]            %sEnable lsof integration (if present)\n", newLine);
-#endif
-
   fprintf(fp, "    [-F <spec>      | --flow-spec <specs>]                %sFlow specs (see man page)\n", newLine);
 
 #ifndef WIN32
@@ -331,9 +323,9 @@ static int parseOptions(int argc, char* argv []) {
 #ifdef WIN32
   theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:Q:S:U:VW:";
 #elif defined(MAKE_WITH_SYSLOG)
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKLMO:P:Q:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:F:IKLMO:P:Q:S:U:VW:";
 #else
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKMO:P:Q:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:F:IKMO:P:Q:S:U:VW:";
 #endif
 
   /* * * * * * * * * * */
@@ -379,7 +371,6 @@ static int parseOptions(int argc, char* argv []) {
 
     case 'f':
       myGlobals.rFileName = strdup(optarg);
-      myGlobals.isLsofPresent = 0;               /* Don't make debugging too complex */
       break;
 
     case 'g':
@@ -504,13 +495,6 @@ static int parseOptions(int argc, char* argv []) {
       stringSanityCheck(optarg);
       strncpy(myGlobals.domainName, optarg, MAXHOSTNAMELEN);
       break;
-
-#ifndef WIN32
-    case 'E':
-      myGlobals.enableExternalTools = 1;
-      myGlobals.isLsofPresent  = checkCommand("lsof");
-      break;
-#endif
 
     case 'F':
       stringSanityCheck(optarg);

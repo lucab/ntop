@@ -53,8 +53,6 @@ void handleSigHup(int signalId _UNUSED_) {
      printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
 #endif
 
-  if(myGlobals.isLsofPresent)
-     printMutexInfo(&myGlobals.lsofMutex, "myGlobals.lsofMutex");
    printMutexInfo(&myGlobals.hostsHashMutex, "myGlobals.hostsHashMutex");
   traceEvent(CONST_TRACE_INFO, "========================================");
 #endif /* CFG_MULTITHREADED */
@@ -671,47 +669,6 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #endif
 
 /* **************************************** */
-#ifndef WIN32
-#ifdef CFG_MULTITHREADED
-void* periodicLsofLoop(void* notUsed _UNUSED_) {
-  long loopCount=0;
-
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread running");
-
-  for(;;) {
-    /*
-      refresh process list each minute
-      if needed
-    */
-
-    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
-
-    if(myGlobals.updateLsof) {
-    HEARTBEAT(0, "periodicLsofLoop()", NULL);
-#ifdef LSOF_DEBUG
-      traceEvent(CONST_TRACE_INFO, "LSOF_DEBUG: Wait please: reading lsof information");
-#endif
-      if(myGlobals.isLsofPresent) readLsofInfo();
-      if ( (++loopCount == 1) && (myGlobals.numProcesses == 0) ) {
-          traceEvent(CONST_TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?");
-      }
-#ifdef LSOF_DEBUG
-      traceEvent(CONST_TRACE_INFO, "LSOF_DEBUG: Done with lsof");
-#endif
-    }
-    HEARTBEAT(0, "periodicLsofLoop(), sleep(60)...", NULL);
-    sleep(60);
-    HEARTBEAT(0, "periodicLsofLoop(), sleep(60)...woke", NULL);
-  }
-
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread (%ld) terminated", myGlobals.lsofThreadId);
-  return(NULL); 
-
-}
-#endif
-#endif /* WIN32 */
-
-/* **************************************** */
 
 #ifndef CFG_MULTITHREADED
 void packetCaptureLoop(time_t *lastTime, int refreshRate) {
@@ -839,9 +796,6 @@ RETSIGTYPE cleanup(int signo) {
 
   killThread(&myGlobals.dequeueThreadId);
 
-  if(myGlobals.isLsofPresent)
-    killThread(&myGlobals.lsofThreadId);
-
   #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
     for(i=0; i<myGlobals.numDequeueThreads; i++)
@@ -943,8 +897,6 @@ RETSIGTYPE cleanup(int signo) {
 #endif
   deleteMutex(&myGlobals.hostsHashMutex);
 
-  if(myGlobals.isLsofPresent)
-    deleteMutex(&myGlobals.lsofMutex);
 #ifdef MAKE_WITH_SEMAPHORES
   deleteSem(&myGlobals.queueSem);
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
@@ -1047,26 +999,6 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef WIN32
   termWinsock32();
 #endif
-
-  if(myGlobals.processes != NULL) {
-    for(i=0; i<myGlobals.numProcesses; i++) {
-      free(myGlobals.processes[i]->command);
-      free(myGlobals.processes[i]->user);
-      free(myGlobals.processes[i]);
-    }
-    
-    free(myGlobals.processes);
-  }
-
-  if(myGlobals.localPorts != NULL) {
-    for(i=0; i<MAX_IP_PORT; i++) {
-      while(myGlobals.localPorts[i] != NULL) {
-	ProcessInfoList *listElement = myGlobals.localPorts[i]->next;
-	free(myGlobals.localPorts[i]);
-	myGlobals.localPorts[i] = listElement;
-      }
-    }
-  }
 
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
     free(myGlobals.protoIPTrafficInfos[i]);

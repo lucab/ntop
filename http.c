@@ -1695,9 +1695,6 @@ static int returnHTTPPage(char* pageName,
 		 "IP Traffic Matrix</a></li>\n");
       sendString("<li><a href="NW_EVENTS_HTML" target=area ALT=\"Network Events\">"
 		 "Network Events</a></li>\n");
-      if(myGlobals.isLsofPresent)
-	sendString("<li><a href="STR_LSOF_DATA" target=area "
-		   "ALT=\"Local Processes Nw Usage\">Local Nw Usage</a></li>\n");
 
       if(myGlobals.flowsList != NULL)
 	sendString("<li><a href=NetFlows.html target=area ALT=\"NetFlows\">"
@@ -1826,22 +1823,6 @@ static int returnHTTPPage(char* pageName,
       if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder, 
 			pageNum, STR_SORT_DATA_HOST_TRAFFIC, showHostsMode);
-    } else if(strncmp(pageName, PROCESS_INFO_HTML, strlen(PROCESS_INFO_HTML)) == 0) {
-      if(myGlobals.isLsofPresent) {
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-	printProcessInfo(sortedColumn /* process PID */, myGlobals.actualReportDeviceId);
-      } else {
-	returnHTTPpageGone();
-	printTrailer=0;
-      }
-    } else if(strncmp(pageName, STR_LSOF_DATA, strlen(STR_LSOF_DATA)) == 0) {
-      if(myGlobals.isLsofPresent) {
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-	printLsofData(sortedColumn);
-      } else {
-	returnHTTPpageGone();
-	printTrailer=0;
-      }
     } else if(strcmp(pageName, "NetFlows.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       listNetFlows();

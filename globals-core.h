@@ -224,11 +224,6 @@ extern int mapGlobalToLocalIdx(int port);
 #ifdef CFG_MULTITHREADED
 extern void *scanIdleLoop(void *notUsed);
 #endif
-#ifndef WIN32
-#ifdef CFG_MULTITHREADED
-extern void *periodicLsofLoop(void *notUsed);
-#endif
-#endif
 #ifndef CFG_MULTITHREADED
 extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
 #endif
@@ -379,9 +374,6 @@ extern void trimString(char*);
 extern FILE* getNewRandomFile(char* fileName, int len);
 extern void stringSanityCheck(char* string);
 extern int checkCommand(char* commandName);
-#ifndef WIN32
-extern void readLsofInfo(void);
-#endif
 extern void setHostFingerprint(HostTraffic *srcHost);
 extern char* decodeNBstring(char* theString, char *theBuffer);
 extern void closeNwSocket(int *sockId);

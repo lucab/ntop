@@ -160,7 +160,6 @@ extern void printBar(char *buf, int bufLen, unsigned short percentage,
 extern void printIpProtocolDistribution(int mode, int revertOrder);
 extern void printProtoTraffic(void);
 extern void printProcessInfo(int processPid, int actualReportDeviceId);
-extern void printLsofData(int mode);
 extern void printIpTrafficMatrix(void);
 extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
@@ -235,9 +234,7 @@ extern void printNtopLogReport(void);
 #define STR_MULTICAST_STATS             "multicastStats.html"
 #define HOSTS_INFO_HTML                 "hostsInfo.html"
 #define HOSTS_LOCAL_INFO_HTML           "localHostsInfo.html"
-#define STR_LSOF_DATA                   "lsofData.html"
 #define SHOW_PORT_TRAFFIC               "showPortTraffic.html"
-#define PROCESS_INFO_HTML               "processInfo.html"
 #define IP_R_2_L_HTML                   "IpR2L.html"
 #define IP_L_2_R_HTML                   "IpL2R.html"
 #define IP_L_2_L_HTML                   "IpL2L.html"

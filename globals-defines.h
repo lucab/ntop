@@ -160,11 +160,6 @@
 #define PARM_SESSION_PURGE_MINIMUM_IDLE     10*60
 
 /*
- *  How long to wait for pipe reads (e.g. lsof)?
- */
-#define PARM_PIPE_READ_TIMEOUT              15
-
-/*
  *  How long before a passive ftp session timesout?
  */
 #define PARM_PASSIVE_SESSION_MINIMUM_IDLE   60
@@ -436,10 +431,6 @@
  */
 /* #define I18N_DEBUG */
 
-/* LSOF_DEBUG logs information about ntop's use of lsof
- */
-/* #define LSOF_DEBUG */
-
 /* MEMORY_DEBUG turns on the code in leaks.c (ntop_safexxxx) which monitors
  *  memory allocations for leaks.
  *  WARNING: There is code in pbuf.c that will stop ntop after a specified
@@ -610,14 +601,6 @@
  *  asyncronously.
  */
 #define MAX_NUM_DEQUEUE_THREADS             1
-
-/*
- * In readLsofInfo(), this is the maximum # of processes to report information about.
- *
- *  You might increase this on a busy system, if you don't mind paging through lots
- *  of output, and if lsof is fast enough (check PARM_PIPE_READ_TIMEOUT).
- */
-#define MAX_NUM_PROCESSES_READLSOFINFO      1024
 
 /* Hash size */
 #define CONST_HASH_INITIAL_SIZE             16*1024
@@ -1027,7 +1010,6 @@
 /*
  * This is basically an IPv4 limit - the number of ports is a 16 bit integer.
  *  Constant is used in NtopInterface to define the per-host ports structure, ipPorts[]
- *  And in NtopGlobals for the lsof populated structure localPorts[]
  */
 #define MAX_IP_PORT                         65534 /* IP ports range from 0 to 65535 */
 
@@ -1570,9 +1552,6 @@
 /*
  * External URLs...
  */
-#define HTML_LSOF_URL                       "http://freshmeat.net/projects/lsof/"
-#define CONST_HTML_LSOF_URL_ALT             "lsof home page at freshmeat.net"
-
 #define HTML_OPENSSL_URL                    "http://www.openssl.org/"
 #define CONST_HTML_OPENSSL_URL_ALT          "OpenSSL home page"
 
@@ -2198,16 +2177,6 @@
  /* #define PARM_USE_HOST */
 #endif
 
-/*
- * On some Linux versions gethostbyaddr() is bugged and it tends to exaust all available 
- * file descriptors.
- *
- * If you want to check this try "lsof -i |grep ntop". If this fails, please uncomment
- * the '#define PARM_USE_HOST' (below) in order to overcome this flaw.
- */
-#ifdef LINUX
- /* #define PARM_USE_HOST */
-#endif
 
 /*
  * Somehow, gcc under HPUX decides to build a c++ version of malloc.h

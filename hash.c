@@ -261,16 +261,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   if(host->fingerprint != NULL)
     free(host->fingerprint);
 
-  if(myGlobals.isLsofPresent) {
-    for(i=0; i<myGlobals.numProcesses; i++) {
-      if(myGlobals.processes[i] != NULL) {
-	for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-	  if(cmpSerial(&myGlobals.processes[i]->contactedIpPeersSerials[j], &host->hostSerial))
-	    setEmptySerial(&myGlobals.processes[i]->contactedIpPeersSerials[j]);
-      }
-    }
-  }
-
   if(host->routedTraffic != NULL) free(host->routedTraffic);
 
   if(host->portsUsage != NULL) {
@@ -325,31 +315,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   }
 
   /* ************************************* */
-
-  if(myGlobals.isLsofPresent) {
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.lsofMutex, "readLsofInfo-2");
-#endif
-    for(j=0; j<MAX_IP_PORT; j++) {
-      if(myGlobals.localPorts[j] != NULL) {
-	ProcessInfoList *scanner = myGlobals.localPorts[j];
-
-	while(scanner != NULL) {
-	  if(scanner->element != NULL) {
-	    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-	      if(cmpSerial(&scanner->element->contactedIpPeersSerials[i], &host->hostSerial))
-		setEmptySerial(&scanner->element->contactedIpPeersSerials[i]);
-	    }
-	  }
-
-	  scanner = scanner->next;
-	}
-      }
-    }
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.lsofMutex);
-#endif
-  }
 
   if(host->icmpInfo != NULL) free(host->icmpInfo);
   if(host->trafficDistribution != NULL) free(host->trafficDistribution);

@@ -1060,13 +1060,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Maximum # of network interface devices", buf);
 
   if(snprintf(buf, sizeof(buf),
-              "#define MAX_NUM_PROCESSES_READLSOFINFO %d", MAX_NUM_PROCESSES_READLSOFINFO) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of processes for lsof report", buf);
-
-
-
-  if(snprintf(buf, sizeof(buf),
               "#define MAX_SUBNET_HOSTS %d", MAX_SUBNET_HOSTS) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Maximum network size (hosts per interface)", buf);
@@ -2493,8 +2486,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigNum(textPrintFlag, "MAX_NUM_PROBES", MAX_NUM_PROBES);
 
-  printFeatureConfigNum(textPrintFlag, "MAX_NUM_PROCESSES_READLSOFINFO", MAX_NUM_PROCESSES_READLSOFINFO);
-
   printFeatureConfigNum(textPrintFlag, "MAX_NUM_PROTOS", MAX_NUM_PROTOS);
 
   printFeatureConfigNum(textPrintFlag, "MAX_NUM_PROTOS_SCREENS", MAX_NUM_PROTOS_SCREENS);
@@ -2534,8 +2525,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "PARM_MIN_WEBPAGE_AUTOREFRESH_TIME", PARM_MIN_WEBPAGE_AUTOREFRESH_TIME);
 
   printFeatureConfigNum(textPrintFlag, "PARM_PASSIVE_SESSION_MINIMUM_IDLE", PARM_PASSIVE_SESSION_MINIMUM_IDLE);
-
-  printFeatureConfigNum(textPrintFlag, "PARM_PIPE_READ_TIMEOUT", PARM_PIPE_READ_TIMEOUT);
 
   printFeatureConfigNum(textPrintFlag, "PARM_SESSION_PURGE_MINIMUM_IDLE", PARM_SESSION_PURGE_MINIMUM_IDLE);
 
@@ -2839,10 +2828,6 @@ void printNtopConfigInfo(int textPrintFlag) {
                            DEFAULT_NTOP_DOMAIN_NAME == NULL ? "none" :
 			   DEFAULT_NTOP_DOMAIN_NAME);
 
-  printParameterConfigInfo(textPrintFlag, "-E | --enable-external-tools",
-			   myGlobals.enableExternalTools == 1 ? "Yes" : "No",
-                           DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE == 1 ? "Yes" : "No");
-
   printParameterConfigInfo(textPrintFlag, "-F | --flow-spec",
                            myGlobals.flowSpecs == NULL ? "none" : myGlobals.flowSpecs,
                            DEFAULT_NTOP_FLOW_SPECS == NULL ? "none" : DEFAULT_NTOP_FLOW_SPECS);
@@ -2964,33 +2949,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   sendString(texthtml("\n\nRun time/Internal\n\n", 
                       "<tr><th colspan=2 "DARK_BG"" TH_BG ">Run time/Internal</tr>\n"));
   
-#ifndef WIN32
-  if(myGlobals.enableExternalTools) {
-    if(myGlobals.isLsofPresent) {
-      if(textPrintFlag == TRUE) {
-	printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Yes");
-      } else {
-	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>",
-			       "Yes");
-      }
-    } else {
-      if(textPrintFlag == TRUE) {
-	printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Not found on system OR unable to run suid root");
-      } else {
-	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>\"",
-			       "Not found on system");
-      }
-    }
-  } else {
-    if(textPrintFlag == TRUE) {
-      printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "(no -E parameter): Disabled");
-    } else {
-      printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>",
-			     "(no -E parameter): Disabled");
-    }
-  }
-#endif
-
   if(myGlobals.webPort != 0) {
     if(myGlobals.webAddr != 0) {
       if(snprintf(buf, sizeof(buf), "http://%s:%d", myGlobals.webAddr, myGlobals.webPort) < 0)
@@ -3711,17 +3669,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Allocated Memory", formatBytes(myGlobals.allocatedMemory, 0));
 #endif
 
-  if(myGlobals.isLsofPresent) {
-
-    sendString(texthtml("\n\nlsof data\n\n", "<tr><th colspan=2 "DARK_BG">lsof data</th></tr>\n"));
-
-    printFeatureConfigInfo(textPrintFlag, "Updating", myGlobals.updateLsof ? "Yes" : "No");
-  
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numProcesses) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "# Monitored Processes", buf);
-  }
-
   /* **** */
 
   sendString(texthtml("Directory (search) order\n\n", "<tr><th colspan=2 "DARK_BG">Directory (search) order</th></tr>\n"));
@@ -3886,7 +3833,6 @@ void printNtopConfigInfo(int textPrintFlag) {
     defined(IDLE_PURGE_DEBUG)          || \
     defined(HOST_FREE_DEBUG)           || \
     defined(HTTP_DEBUG)                || \
-    defined(LSOF_DEBUG)                || \
     defined(MEMORY_DEBUG)              || \
     defined(NETFLOW_DEBUG)             || \
     defined(PACKET_DEBUG)              || \
@@ -3931,10 +3877,6 @@ void printNtopConfigInfo(int textPrintFlag) {
 	printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 #endif
 
-#ifndef WIN32
-      if(myGlobals.isLsofPresent)
-	printMutexStatus(textPrintFlag, &myGlobals.lsofMutex,      "lsofMutex");
-#endif
       printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
       printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
       printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");

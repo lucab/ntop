@@ -172,8 +172,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
   myGlobals.currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;
   strncpy((char *) &myGlobals.domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.domainName));
-  myGlobals.enableExternalTools = DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE;
-  myGlobals.isLsofPresent = 0;
   myGlobals.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
 
 #ifndef WIN32
@@ -257,17 +255,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* Termination flags */
   myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;    /* By default data are collected into internal variables */
   myGlobals.endNtop = 0;
-
-  myGlobals.processes = NULL;
-  myGlobals.numProcesses = 0;
-
-  /* lsof support */
-  if(myGlobals.isLsofPresent)
-    myGlobals.updateLsof = 1;
-  else
-    myGlobals.updateLsof = 0;
-  for (i = 0; i < MAX_IP_PORT; i ++)
-    myGlobals.localPorts[i] = NULL;       /* myGlobals.localPorts is used by lsof */
 
   myGlobals.dnsSniffCount = 0;
   myGlobals.dnsSniffRequestCount = 0;

@@ -1516,10 +1516,6 @@ XML*/
                                      /*XML s currentFilterExpression Options "-B | --filter-expression" */
   char domainName[MAXHOSTNAMELEN];   /* 'D' */
                                      /*XML s domainName           Options    "-D | --domain" */
-  u_char enableExternalTools;        /* 'E' */
-  int isLsofPresent;                 /* 'E' */
-                                     /*XML b isLsofPresent        Options    "" */
-                                     /*XML b enableExternalTools  Options    "-E | --enable-external-tools" */
   char *flowSpecs;                   /* 'F' */
                                      /*XML b flowSpecs            Options    "-F | --flow-spec" */
 
@@ -1678,13 +1674,6 @@ XML*/
  #endif
 
     /*
-     * Helper application lsof - optional
-     */
-    PthreadMutex lsofMutex;
-                                     /*XMLNOTE &pthreadmutex lsofMutex mutexes "" */
-    pthread_t lsofThreadId;
-
-    /*
      * Control mutexes
      */
     PthreadMutex gdbmMutex;
@@ -1723,12 +1712,6 @@ XML*/
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
   u_long heartbeatCounter;
 #endif
-
-  /* lsof support */
-  u_short updateLsof;
-  ProcessInfo **processes;
-  u_short numProcesses;
-  ProcessInfoList *localPorts[MAX_IP_PORT];
 
   /* Filter Chains */
   FlowFilterList *flowsList;

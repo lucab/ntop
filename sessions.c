@@ -1995,16 +1995,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     tmpSession.bytesSent.value = length, tmpSession.bytesRcvd.value = 0;
     tmpSession.sport = sport, tmpSession.dport = dport;
     if(fragmentedData) incrementTrafficCounter(&tmpSession.bytesFragmentedSent, packetDataLength);
-
-      if(myGlobals.isLsofPresent) {
-#ifdef CFG_MULTITHREADED
-	accessMutex(&myGlobals.lsofMutex, "handleSession-1");
-#endif
-	myGlobals.updateLsof = 1; /* Force lsof update */
-#if defined(CFG_MULTITHREADED)
-	releaseMutex(&myGlobals.lsofMutex);
-#endif
-    }
   }
 
   if((sport == 7)     || (dport == 7)  /* echo */
@@ -2069,66 +2059,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   return(theSession);
 }
 
-/* ************************************ */
-
-#ifndef WIN32
-static void addLsofContactedPeers(ProcessInfo *process, HostTraffic *peerHost, int actualDeviceId) {
-  u_int i;
-
-  if((process == NULL) || (peerHost == NULL) || broadcastHost(peerHost))
-    return;
-
-  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-      if(cmpSerial(&process->contactedIpPeersSerials[i], &peerHost->hostSerial))
-	  return;
-
-  process->contactedIpPeersSerials[process->contactedIpPeersIdx] = peerHost->hostSerial;
-  process->contactedIpPeersIdx = (process->contactedIpPeersIdx+1) % MAX_NUM_CONTACTED_PEERS;
-}
-#endif /* WIN32 */
-
-/* ************************************ */
-
-#ifndef WIN32
-static void handleLsof(HostTraffic *srcHost,
-		       u_short sport,
-		       HostTraffic *dstHost,
-		       u_short dport,
-		       u_int length,
-		       int actualDeviceId) {
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.lsofMutex, "readLsofInfo-3");
-#endif
-
-  if(subnetLocalHost(srcHost))
-    if((sport < MAX_IP_PORT) && (myGlobals.localPorts[sport] != NULL)) {
-      ProcessInfoList *scanner = myGlobals.localPorts[sport];
-
-      while(scanner != NULL) {
-	incrementTrafficCounter(&scanner->element->bytesSent, length);
-	scanner->element->lastSeen   = myGlobals.actTime;
-	addLsofContactedPeers(scanner->element, dstHost, actualDeviceId);
-	scanner = scanner->next;
-      }
-    }
-
-  if(subnetLocalHost(dstHost))
-    if((dport < MAX_IP_PORT) && (myGlobals.localPorts[dport] != NULL)) {
-      ProcessInfoList *scanner = myGlobals.localPorts[dport];
-
-      while(scanner != NULL) {
-	incrementTrafficCounter(&scanner->element->bytesRcvd, length);
-	scanner->element->lastSeen   = myGlobals.actTime;
-	addLsofContactedPeers(scanner->element, srcHost, actualDeviceId);
-	scanner = scanner->next;
-      }
-    }
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.lsofMutex);
-#endif
-}
-#endif /* WIN32*/
-
 /* *********************************** */
 
 IPSession* handleTCPSession(const struct pcap_pkthdr *h,
@@ -2143,21 +2073,13 @@ IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 			    u_int tcpDataLength,
 			    u_char* packetData,
 			    int actualDeviceId) {
-  IPSession* theSession;
+  return(handleSession(h, fragmentedData, tcpWin,
+		       srcHost, sport,
+		       dstHost, dport,
+		       length, tp,
+		       tcpDataLength, packetData,
+		       actualDeviceId));
 
-  theSession = handleSession(h, fragmentedData, tcpWin,
-			     srcHost, sport,
-			     dstHost, dport,
-			     length, tp,
-			     tcpDataLength, packetData,
-			     actualDeviceId);
-
-#ifndef WIN32
-  if(myGlobals.isLsofPresent)
-    handleLsof(srcHost, sport, dstHost, dport, length, actualDeviceId);
-#endif
-
-  return(theSession);
 }
 
 /* ************************************ */
@@ -2171,19 +2093,10 @@ IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 			    u_int length,
 			    u_char* packetData,
 			    int actualDeviceId) {
-  IPSession* theSession;
-
-  theSession = handleSession(h, fragmentedData, 0,
-			     srcHost, sport,
-			     dstHost, dport, length,
-			     NULL, length, packetData, actualDeviceId);
-
-#ifndef WIN32
-  if(myGlobals.isLsofPresent)
-    handleLsof(srcHost, sport, dstHost, dport, length, actualDeviceId);
-#endif
-
-  return(theSession);
+  return(handleSession(h, fragmentedData, 0,
+		       srcHost, sport,
+		       dstHost, dport, length,
+		       NULL, length, packetData, actualDeviceId));
 }
 
 /* ******************* */

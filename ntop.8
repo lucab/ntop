@@ -72,7 +72,6 @@ Unix options:
 .IR <name> ]
 .RB [ -u | --user 
 .IR <user> ]
-.RB [ -E | --enable-external-tools ]
 .RB [ -K | --enable-debug ]
 .RB [ -L ]
 .RB [ -use-syslog
@@ -381,13 +380,6 @@ man page for further information about BPF filters.
 This identifies the local domain suffix, e.g. ntop.org.  It may be necessary, if
 .B ntop
 is having difficulty determining it from the interface.
-
-.It2 -E --enable-external-tools
-By default 
-.B ntop 
-does not take advance of lsof even if present. Use this flag if you want make 
-.B ntop 
-enable it's use of lsof if lsof is present.
 
 .It2 -F --flow-spec
 It is used to specify network flows similar to more powerful applications such as NeTraMet. 
