@@ -203,12 +203,12 @@ RETSIGTYPE dontFreeze(int signo _UNUSED_) {
 
 #ifndef WIN32
 
-void daemonize(void) {
+void daemonize(void) { 
   int childpid;
 
-  (void)signal(SIGHUP, SIG_IGN);
-  (void)signal(SIGCHLD, SIG_IGN);
-  (void)signal(SIGQUIT, SIG_IGN);
+  signal(SIGHUP, SIG_IGN);
+  signal(SIGCHLD, SIG_IGN);
+  signal(SIGQUIT, SIG_IGN);
 
   if((childpid=fork()) < 0)
     traceEvent(TRACE_ERROR, "An error occurred while daemonizing ntop...\n");

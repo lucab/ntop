@@ -332,7 +332,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  if(symEthName[0] != '\0') {
 	    char buf[MAX_HOST_SYM_NAME_LEN];
 
-	    if(snprintf(buf, sizeof(buf), "%s [MAC]", symEthName) < 0)
+	    if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    else
 	      strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);

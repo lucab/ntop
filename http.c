@@ -22,6 +22,8 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+#define FORK_CHILD_PROCESS
+
 struct _HTTPstatus {
     int statusCode;
     char *reasonPhrase;
@@ -185,7 +187,6 @@ static int readHTTPheader(char* theRequestedURL,
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Rcvd non expected char '%c' [%d/0x%x]\n", aChar[0], aChar[0], aChar[0]);
 #endif
-
     } else {
 
       if(aChar[0] == '\r') {
@@ -813,7 +814,7 @@ static int checkURLsecurity(char *url) {
 
 static int returnHTTPPage(char* pageName, int postLen) {
   char *questionMark = strchr(pageName, '?');
-  int sortedColumn, printTrailer=1, idx;
+  int sortedColumn, printTrailer=1, idx, usedFork = 0;
   int errorCode=0;
   struct stat statbuf;
   FILE *fd = NULL;
@@ -963,461 +964,23 @@ static int returnHTTPPage(char* pageName, int postLen) {
 #endif
 
 #ifndef MICRO_NTOP
-  if(strcmp(pageName, STR_INDEX_HTML) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_BODY);
-    sendString("<frameset cols=160,* framespacing=0 border=0 frameborder=0>\n");
-    sendString("    <frame src=leftmenu.html name=Menu marginwidth=0 marginheight=0>\n");
-    sendString("    <frame src=home.html name=area marginwidth=5 marginheight=0>\n");
-    sendString("    <noframes>\n");
-    sendString("    <body>\n\n");
-    sendString("    </body>\n");
-    sendString("    </noframes>\n");
-    sendString("</frameset>\n");
-    sendString("</html>\n");
-    printTrailer=0;
-  } else if((strcmp(pageName, "leftmenu.html") == 0)
-	    || (strcmp(pageName, "leftmenu-nojs.html") == 0)) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader(NULL, HTML_FLAG_NO_REFRESH);
-    sendString("<center>\n<pre>\n\n</pre>\n\n");
-    sendString("<FONT FACE=Helvetica SIZE=+2>Welcome<br>to<br>\n");
-    sendString("ntop!</FONT>\n<pre>\n</pre>\n");
-    sendString("<p></center><p>\n<FONT FACE=Helvetica SIZE=-1><b>\n<ol>\n");
-    sendString("<li><a href=home.html target=area>What's ntop?</a></li>\n");
-    sendString("<li>Data Rcvd<ul>");
-    sendString("<li><a href="STR_SORT_DATA_RECEIVED_PROTOS" target=area "
-	       "ALT=\"Data Received (all protocols)\">All Protoc.</a></li>\n");
-    sendString("<li><a href="STR_SORT_DATA_RECEIVED_IP" target=area "
-	       "ALT=\"IP Data Received\">IP</a></li>\n");
-    sendString("<li><a href="STR_SORT_DATA_RECEIVED_THPT" target=area "
-	       "ALT=\"Data Received Throughput\">Thpt</a></li></ul></li>\n");
-    sendString("<li><a href="STR_SORT_DATA_RCVD_HOST_TRAFFIC" target=area "
-	       "ALT=\"Data Received Host Traffic\">Traffic</a></li></ul></li>\n");
-
-    sendString("<li>Data Sent<ul>");
-    sendString("<li><a href="STR_SORT_DATA_SENT_PROTOS" target=area "
-	       "ALT=\"Data Sent (all protocols)\">All Protoc.</a></li>\n");
-    sendString("<li><a href="STR_SORT_DATA_SENT_IP" target=area "
-	       "ALT=\"IP Data Sent\">IP</a></li>\n");
-    sendString("<li><a href="STR_SORT_DATA_SENT_THPT" target=area "
-	       "ALT=\"Data Sent Throughput\">Thpt</a></li></ul></li>\n");
-    sendString("<li><a href="STR_SORT_DATA_SENT_HOST_TRAFFIC" target=area "
-	       "ALT=\"Data Sent Host Traffic\">Traffic</a></li></ul></li>\n");
-
-    sendString("<li><a href="STR_MULTICAST_STATS" target=area ALT=\"Multicast Stats\">"
-	       "Multicast Stats</a></li>\n");
-    sendString("<li><a href=trafficStats.html target=area ALT=\"Traffic Statistics\">"
-	       "Traffic Stats</a></li>\n");
-    sendString("<li><a href="STR_DOMAIN_STATS" target=area ALT=\"Domain Traffic Statistics\">"
-	       "Domain Stats</a></li>\n");
-    sendString("<li><a href=localRoutersList.html target=area ALT=\"Routers List\">"
-	       "Routers</a></li>\n");
-    sendString("<li><a href="STR_SHOW_PLUGINS" target=area ALT=\"Plugins List\">"
-	       "Plugins</a></li>\n");
-    sendString("<li><a href="STR_SORT_DATA_THPT_STATS" target=area ALT=\"Throughput Statistics\">"
-	       "Thpt Stats</a></li>\n");
-    sendString("<li><a href="HOSTS_INFO_HTML" target=area ALT=\"Hosts Information\">"
-	       "Hosts Info</a></li>\n");
-    sendString("<li><a href="IP_R_2_L_HTML" target=area ALT=\"Remote to Local IP Traffic\">"
-	       "R-&gt;L IP Traffic</a></li>\n");
-    sendString("<li><a href="IP_L_2_R_HTML" target=area ALT=\"Local to Remote IP Traffic\">"
-	       "L-&gt;R IP Traffic</a></li>\n");
-    sendString("<li><a href="IP_L_2_L_HTML" target=area ALT=\"Local IP Traffic\">"
-	       "L&lt;-&gt;L IP Traffic</a></li>\n");
-    sendString("<li><a href=NetNetstat.html target=area ALT=\"Active TCP Sessions\">"
-	       "Active TCP Sessions</a></li>\n");
-    sendString("<li><a href=ipProtoDistrib.html target=area ALT=\"IP Protocol Distribution\">"
-	       "IP Protocol Distribution</a></li>\n");
-    sendString("<li><a href=ipProtoUsage.html target=area ALT=\"IP Protocol Subnet Usage\">"
-	       "IP Protocol Usage</a></li>\n");
-    sendString("<li><a href=ipTrafficMatrix.html target=area ALT=\"IP Traffic Matrix\">"
-	       "IP Traffic Matrix</a></li>\n");
-    sendString("<li><a href="NW_EVENTS_HTML" target=area ALT=\"Network Events\">"
-	       "Network Events</a></li>\n");
-    if(isLsofPresent)
-      sendString("<li><a href="STR_LSOF_DATA" target=area "
-		 "ALT=\"Local Processes Nw Usage\">Local Nw Usage</a></li>\n");
-
-    if(flowsList != NULL)
-      sendString("<li><a href=NetFlows.html target=area ALT=\"NetFlows\">"
-		 "NetFlows List</a></li>\n");
-
-#ifdef HAVE_GDBM_H
-    sendString("<li><a href=showUsers.html target=area ALT=\"Admin Users\">Admin Users</a></li>\n");
-    sendString("<li><a href=showURLs.html target=area ALT=\"Admin URLs\">Admin URLs</a></li>\n");
-#endif
-
-    if(!mergeInterfaces)
-      sendString("<li><a href="SWITCH_NIC_HTML" target=area ALT=\"Switch NICs\">Switch NICs</a></li>\n");
-
-    sendString("<li><a href="SHUTDOWN_NTOP_HTML" target=area ALT=\"Shutdown ntop\">"
-	       "Shutdown ntop</a></li>\n");
-    sendString("<li><a href=ntop.html target=area ALT=\"Man Page\">Man Page</a></li>\n");
-    sendString("<li><a href=Credits.html target=area ALT=\"Credits\">Credits</a></li>\n");
-    sendString("</ol>\n<center>\n<b>\n\n");
-    sendString("<pre>\n</pre>&copy; 1998-2001<br>by<br>"
-	       "<A HREF=\"http://luca.ntop.org/\" target=\"area\">"
-	       "Luca Deri</A></FONT><pre>\n");
-    sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");
-    printTrailer=0;
-  } else if(strncmp(pageName, SWITCH_NIC_HTML, strlen(SWITCH_NIC_HTML)) == 0) {
-    char *equal = strchr(pageName, '=');
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-
-    if(equal == NULL)
-      switchNwInterface(0);
-    else
-      switchNwInterface(atoi(&equal[1]));
-  } else if(strcmp(pageName, "home.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH);
-    sendString("<FONT FACE=Helvetica>\n<HR>\n");
-    sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
-    sendString("currently using the network and reports information concerning the IP\n");
-    sendString("(Internet Protocol) traffic generated by each host. The traffic is \n");
-    sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
-    sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
-	       "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
-	       "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
-    sendString("NFS<li>X11</ul></UL>\n<p>\n");
-    sendString("<b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
-    sendString("open source software</A> and encourages everyone to modify, improve\n ");
-    sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
-    sendString("to the enclosed licence (see COPYING).<p>Problems, bugs, questions, ");
-    sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
-    sendString("<A HREF=mailto:ntop@ntop.org> mailing list</A>.\n</font>");
-  } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_PROTOS,
-		    strlen(STR_SORT_DATA_RECEIVED_PROTOS)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHostsTraffic(0, 0, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_IP, strlen(STR_SORT_DATA_RECEIVED_IP)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHostsTraffic(0, 1, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, STR_SORT_DATA_THPT_STATS, strlen(STR_SORT_DATA_THPT_STATS)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printThptStats(sortedColumn);
-  } else if(strncmp(pageName, STR_THPT_STATS_MATRIX, strlen(STR_THPT_STATS_MATRIX)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printThptStatsMatrix(sortedColumn);
-  } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_THPT, strlen(STR_SORT_DATA_RECEIVED_THPT)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-    printHostsTraffic(0, 2, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, STR_SORT_DATA_RCVD_HOST_TRAFFIC, strlen(STR_SORT_DATA_RCVD_HOST_TRAFFIC)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-    printHostsTraffic(0, 3, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, STR_SORT_DATA_SENT_HOST_TRAFFIC, strlen(STR_SORT_DATA_SENT_HOST_TRAFFIC)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-    printHostsTraffic(1, 3, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, STR_SORT_DATA_SENT_PROTOS, strlen(STR_SORT_DATA_SENT_PROTOS)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHostsTraffic(1, 0, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, STR_SORT_DATA_SENT_IP, strlen(STR_SORT_DATA_SENT_IP)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHostsTraffic(1, 1, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, STR_SORT_DATA_SENT_THPT, strlen(STR_SORT_DATA_SENT_THPT)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-    printHostsTraffic(1, 2, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, HOSTS_INFO_HTML, strlen(HOSTS_INFO_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHostsInfo(sortedColumn, revertOrder);
-  } else if(strncmp(pageName, PROCESS_INFO_HTML, strlen(PROCESS_INFO_HTML)) == 0) {
-    if(isLsofPresent) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printProcessInfo(sortedColumn /* process PID */);
-    } else {
-      returnHTTPpageGone();
-      printTrailer=0;
-    }
-  } else if(strncmp(pageName, STR_LSOF_DATA, strlen(STR_LSOF_DATA)) == 0) {
-    if(isLsofPresent) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printLsofData(sortedColumn);
-    } else {
-      returnHTTPpageGone();
-      printTrailer=0;
-    }
-  } else if(strcmp(pageName, "NetFlows.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    listNetFlows();
-  } else if(strncmp(pageName, IP_R_2_L_HTML, strlen(IP_R_2_L_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if(sortedColumn == 0) { sortedColumn = 1; }
-    printIpAccounting(REMOTE_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, IP_L_2_R_HTML, strlen(IP_L_2_R_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if(sortedColumn == 0) { sortedColumn = 1; }
-    printIpAccounting(LOCAL_TO_REMOTE_ACCOUNTING, sortedColumn, revertOrder);
-  } else if(strncmp(pageName, IP_L_2_L_HTML, strlen(IP_L_2_L_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if(sortedColumn == 0) { sortedColumn = 1; }
-    printIpAccounting(LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder);
-  } else if(strcmp(pageName, "NetNetstat.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printActiveTCPSessions();
-  } else if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
+  if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     shutdownNtop();
   } else if(strncmp(pageName, RESET_STATS_HTML, strlen(RESET_STATS_HTML)) == 0) {
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader("All statistics are now reseted", HTML_FLAG_NO_REFRESH);
+    printHTMLheader("All statistics are now reset", HTML_FLAG_NO_REFRESH);
     resetStats();
-  } else if(strncmp(pageName, STR_MULTICAST_STATS, strlen(STR_MULTICAST_STATS)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printMulticastStats(sortedColumn, revertOrder);
-  } else if(strncmp(pageName, STR_DOMAIN_STATS, strlen(STR_DOMAIN_STATS)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printDomainStats(NULL, abs(sortedColumn), revertOrder);
-  } else if(strncmp(pageName, STR_SHOW_PLUGINS, strlen(STR_SHOW_PLUGINS)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if(questionMark == NULL)
-      showPluginsList("");
-    else
-      showPluginsList(&pageName[strlen(STR_SHOW_PLUGINS)+1]);
-  } else if(strncmp(pageName, DOMAIN_INFO_HTML, strlen(DOMAIN_INFO_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if(questionMark == NULL) questionMark = "";
-    pageName[strlen(pageName)-5-strlen(questionMark)] = '\0';
-    printDomainStats(&pageName[strlen(DOMAIN_INFO_HTML)+1], abs(sortedColumn), revertOrder);
-  } else if(strcmp(pageName, TRAFFIC_STATS_HTML) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHostsTraffic(2, 0, 0, revertOrder);
-    printProtoTraffic();
-    sendString("<p>\n");
-    printIpProtocolDistribution(LONG_FORMAT, revertOrder);
-  } else if(strcmp(pageName, "ipProtoDistrib.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader(NULL, 0);
-    printIpProtocolDistribution(SHORT_FORMAT, revertOrder);
-  } else if(strcmp(pageName, "ipTrafficMatrix.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printIpTrafficMatrix();
-  } else if(strcmp(pageName, "localRoutersList.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printLocalRoutersList();
-  } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printIpProtocolUsage();
-#ifdef HAVE_GDCHART
-  } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
-    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-    drawThptGraph(sortedColumn);
+  } else if(strcmp(pageName, "doAddUser") == 0) {
     printTrailer=0;
-  } else if(strncmp(pageName, "ipTrafficPie", strlen("ipTrafficPie")) == 0) {
-    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-    drawTrafficPie();
-    printTrailer=0;
-  } else if(strncmp(pageName, "pktCastDistribPie", strlen("pktCastDistribPie")) == 0) {
-    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-    pktCastDistribPie();
-    printTrailer=0;
-  } else if(strncmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
-    if(device[actualReportDeviceId].ethernetPkts > 0) {
-      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-      pktSizeDistribPie();
-      printTrailer=0;
-    } else {
-      printNoDataYet();
-    }
-  } else if(strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
-    char hostName[32], *theHost;
-
-    theHost = &pageName[strlen("hostTrafficDistrib")+1];
-
-    if(strlen(theHost) <= strlen(CHART_FORMAT)) {
-      printNoDataYet();
-    } else {
-      u_int elIdx, i;
-      HostTraffic *el=NULL;
-
-      if(strlen(theHost) >= 31) theHost[31] = 0;
-      for(i=strlen(theHost); i>0; i--)
-	if(theHost[i] == '?') {
-	  theHost[i] = '\0';
-	  break;
-	}
-
-      memset(hostName, 0, sizeof(hostName));
-      strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
-
-      /* Patch for ethernet addresses and MS Explorer */
-      for(i=0; hostName[i] != '\0'; i++)
-	if(hostName[i] == '_')
-	  hostName[i] = ':';
-
-      /* printf("HostName: '%s'\n", hostName); */
-
-#ifdef MULTITHREADED
-      /* It is necessary to release the mutex for avoiding
-	 a race condition with resizeHostHash() */
-      releaseMutex(&hashResizeMutex);
-      mutexReleased = 1;
-#endif
-
-#ifdef MULTITHREADED
-      accessMutex(&hostsHashMutex, "hostTrafficDistrib-call");
-#endif
-      for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
-	el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
-
-	if((elIdx != broadcastEntryIdx)
-	   && (el != NULL)
-	   && (el->hostNumIpAddress != NULL)
-	   && ((strcmp(el->hostNumIpAddress, hostName) == 0)
-	       || (strcmp(el->ethAddressString, hostName) == 0)))
-	  break;
-      }
-
-      if(el == NULL) {
-	returnHTTPpageNotFound();
-	printTrailer=0;
-      } else {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-
-	hostTrafficDistrib(el, sortedColumn);
-	printTrailer=0;
-      }
-
-#ifdef MULTITHREADED
-      releaseMutex(&hostsHashMutex);
-#endif
-    }
-  } else if(strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0) {
-    char hostName[32], *theHost;
-
-    theHost = &pageName[strlen("hostIPTrafficDistrib")+1];
-
-    if(strlen(theHost) <= strlen(CHART_FORMAT)) {
-      printNoDataYet();
-    } else {
-      u_int elIdx, i;
-      HostTraffic *el=NULL;
-
-      if(strlen(theHost) >= 31) theHost[31] = 0;
-      for(i=strlen(theHost); i>0; i--)
-	if(theHost[i] == '?') {
-	  theHost[i] = '\0';
-	  break;
-	}
-
-      memset(hostName, 0, sizeof(hostName));
-      strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
-
-      /* Patch for ethernet addresses and MS Explorer */
-      for(i=0; hostName[i] != '\0'; i++)
-	if(hostName[i] == '_')
-	  hostName[i] = ':';
-
-      /* printf("HostName: '%s'\n", hostName); */
-
-#ifdef MULTITHREADED
-      accessMutex(&hostsHashMutex, "hostIPTrafficDistrib-call");
-#endif
-      for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
-	el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
-
-	if((elIdx != broadcastEntryIdx)
-	   && (el != NULL)
-	   && (el->hostNumIpAddress != NULL)
-	   && ((strcmp(el->hostNumIpAddress, hostName) == 0)
-	       || (strcmp(el->ethAddressString, hostName) == 0)))
-	  break;
-      }
-
-      if(el == NULL) {
-	returnHTTPpageNotFound();
-	printTrailer=0;
-      } else {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-
-	hostIPTrafficDistrib(el, sortedColumn);
-	printTrailer=0;
-      }
-
-#ifdef MULTITHREADED
-      releaseMutex(&hostsHashMutex);
-#endif
-    }
-  } else if(strncmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
-    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-    ipProtoDistribPie();
-    printTrailer=0;
-  } else if(strncmp(pageName, "interfaceTrafficPie", strlen("interfaceTrafficPie")) == 0) {
-    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-    interfaceTrafficPie();
-    printTrailer=0;
-  } else if(strncmp(pageName, "drawGlobalProtoDistribution",
-		    strlen("drawGlobalProtoDistribution")) == 0) {
-    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-    drawGlobalProtoDistribution();
-    printTrailer=0;
-  } else if(strncmp(pageName, "drawGlobalIpProtoDistribution",
-		    strlen("drawGlobalIpProtoDistribution")) == 0) {
-    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-    drawGlobalIpProtoDistribution();
-    printTrailer=0;
-#endif
-  } else if(strncmp(pageName, NW_EVENTS_HTML, strlen(NW_EVENTS_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHostEvents(NULL, sortedColumn, revertOrder);
-  } else if(strcmp(pageName, "Credits.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader("Credits", HTML_FLAG_NO_REFRESH);
-    sendString("<FONT FACE=Helvetica>\n");
-    sendString("<p><hr><br><b>ntop</b> has been created by\n");
-    sendString("<A HREF=\"http://luca.ntop.org/\">Luca Deri</A> while studying how to model\n");
-    sendString("network traffic. He was unsatisfied of the many network traffic analysis tools\n");
-    sendString("he had access to, and decided to write a new application able to report network\n");
-    sendString("traffic information in a way similar to the popular Unix top command. At that \n");
-    sendString("point in time (it was June 1998) <b>ntop</b> was born.<p>The current release is very\n");
-    sendString("different from the initial one for several reasons. In particular it: <ul>\n");
-    sendString("<li>is much more sophisticated <li>has both a command line and a web interface\n");
-    sendString("<li>is capable of handling both IP and non IP protocols </ul> <p> Although it\n");
-    sendString("might not seem so, <b>ntop</b> has definitively more than an author.\n");
-    sendString("<A HREF=\"mailto:stefano@ntop.org\">Stefano Suin</A> has contributed with ");
-    sendString("some code fragments to the version 1.0 of <b>ntop</b>\n");
-    sendString(". In addition, many other people downloaded this program, tested it,\n");
-    sendString("joined the <A HREF=http://mailserver.unipi.it/lists/ntop/archive/>ntop mailing list</A>,\n");
-    sendString("reported problems, changed it and improved significantly. This is because\n");
-    sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its author, but\n");
-    sendString("to the whole Internet community. Their names are throught "
-	       "the <b>ntop</b> code.<p>");
-    sendString("The author would like to thank all these people who contributed to <b>ntop</b> and\n");
-    sendString("turned it into a first class network monitoring tool. Many thanks guys!<p>\n");
-    sendString("</FONT><p>\n");
-#ifdef HAVE_GDBM_H
-  } else if(strcmp(pageName, "showUsers.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    showUsers();
-  } else if(strcmp(pageName, "addUser.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    addUser(NULL);
-  } else if(strncmp(pageName, "modifyUser", strlen("modifyUser")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    if((questionMark == NULL) || (questionMark[0] == '\0'))
-      addUser(NULL);
-    else
-      addUser(&questionMark[1]);
+    doAddUser(postLen /* \r\n */);
   } else if(strncmp(pageName, "deleteUser", strlen("deleteUser")) == 0) {
     printTrailer=0;
     if((questionMark == NULL) || (questionMark[0] == '\0'))
       deleteUser(NULL);
     else
       deleteUser(&questionMark[1]);
-  } else if(strcmp(pageName, "doAddUser") == 0) {
-    printTrailer=0;
-    doAddUser(postLen /* \r\n */);
-  } else if(strcmp(pageName, "showURLs.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    showURLs();
-  } else if(strcmp(pageName, "addURL.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    addURL(NULL);
   } else if(strncmp(pageName, "modifyURL", strlen("modifyURL")) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     if((questionMark == NULL) || (questionMark[0] == '\0')) {
@@ -1432,57 +995,518 @@ static int returnHTTPPage(char* pageName, int postLen) {
       deleteURL(&questionMark[1]);
   } else if(strcmp(pageName, "doAddURL") == 0) {
     printTrailer=0;
-    doAddURL(postLen /* \r\n */);
-#endif /* HAVE_GDBM_H */
-  } else if(strncmp(pageName, INFO_NTOP_HTML, strlen(INFO_NTOP_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printNtopConfigInfo();
-  } else
-#endif /* MICRO_NTOP */
-    if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_TEXT, 0);
-    if((questionMark == NULL) || (questionMark[0] == '\0'))
-      dumpNtopHashes(NULL);
-    else
-      dumpNtopHashes(&questionMark[1]);
-    printTrailer = 0;
-  } else if(strncmp(pageName, DUMP_HOSTS_INDEXES_HTML, strlen(DUMP_HOSTS_INDEXES_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_TEXT, 0);
-    if((questionMark == NULL) || (questionMark[0] == '\0'))
-      dumpNtopHashIndexes(NULL);
-    else
-      dumpNtopHashIndexes(&questionMark[1]);
-    printTrailer = 0;
-  } else if(strncmp(pageName, DUMP_TRAFFIC_DATA_HTML, strlen(DUMP_TRAFFIC_DATA_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_TEXT, 0);
-    if((questionMark == NULL) || (questionMark[0] == '\0'))
-      dumpNtopTrafficInfo(NULL);
-    else
-      dumpNtopTrafficInfo(&questionMark[1]);
-    printTrailer = 0;
- }
-#ifndef MICRO_NTOP
-    else if(strlen(pageName) > 5) {
-    int i;
-    char hostName[32];
+    doAddURL(postLen /* \r\n */);    
+  } else {
+#ifdef FORK_CHILD_PROCESS
+    int childpid;
 
-    pageName[strlen(pageName)-5] = '\0';
-    if(strlen(pageName) >= 31) pageName[31] = 0;
+    /* The URLs below are "read-only" hence I can fork a copy of ntop  */ 
+    signal(SIGHUP,  SIG_IGN);
+    signal(SIGCHLD, SIG_IGN);
+    signal(SIGQUIT, SIG_IGN);
 
-    /* Patch for ethernet addresses and MS Explorer */
-    for(i=0; pageName[i] != '\0'; i++)
-      if(pageName[i] == '_')
-	pageName[i] = ':';
-
-    strncpy(hostName, pageName, sizeof(hostName));
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printAllSessionsHTML(hostName);
-  }
-#endif
+    if((childpid = fork()) < 0)
+      traceEvent(TRACE_ERROR, "An error occurred while daemonizing ntop...\n");
     else {
-      printTrailer = 0;
-      errorCode = HTTP_INVALID_PAGE;
+      if(childpid) {
+	/* father process */
+#ifdef MULTITHREADED
+	if(!mutexReleased)
+	  releaseMutex(&hashResizeMutex);
+#endif
+	return(0);
+      } else {
+	usedFork = 1;
+	detachFromTerminal();
+      }
     }
+#endif
+    
+    if(strcmp(pageName, STR_INDEX_HTML) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_BODY);
+      sendString("<frameset cols=160,* framespacing=0 border=0 frameborder=0>\n");
+      sendString("    <frame src=leftmenu.html name=Menu marginwidth=0 marginheight=0>\n");
+      sendString("    <frame src=home.html name=area marginwidth=5 marginheight=0>\n");
+      sendString("    <noframes>\n");
+      sendString("    <body>\n\n");
+      sendString("    </body>\n");
+      sendString("    </noframes>\n");
+      sendString("</frameset>\n");
+      sendString("</html>\n");
+      printTrailer=0;
+    } else if((strcmp(pageName, "leftmenu.html") == 0)
+	      || (strcmp(pageName, "leftmenu-nojs.html") == 0)) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHTMLheader(NULL, HTML_FLAG_NO_REFRESH);
+      sendString("<center>\n<pre>\n\n</pre>\n\n");
+      sendString("<FONT FACE=Helvetica SIZE=+2>Welcome<br>to<br>\n");
+      sendString("ntop!</FONT>\n<pre>\n</pre>\n");
+      sendString("<p></center><p>\n<FONT FACE=Helvetica SIZE=-1><b>\n<ol>\n");
+      sendString("<li><a href=home.html target=area>What's ntop?</a></li>\n");
+      sendString("<li>Data Rcvd<ul>");
+      sendString("<li><a href="STR_SORT_DATA_RECEIVED_PROTOS" target=area "
+		 "ALT=\"Data Received (all protocols)\">All Protoc.</a></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_RECEIVED_IP" target=area "
+		 "ALT=\"IP Data Received\">IP</a></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_RECEIVED_THPT" target=area "
+		 "ALT=\"Data Received Throughput\">Thpt</a></li></ul></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_RCVD_HOST_TRAFFIC" target=area "
+		 "ALT=\"Data Received Host Traffic\">Traffic</a></li></ul></li>\n");
+
+      sendString("<li>Data Sent<ul>");
+      sendString("<li><a href="STR_SORT_DATA_SENT_PROTOS" target=area "
+		 "ALT=\"Data Sent (all protocols)\">All Protoc.</a></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_SENT_IP" target=area "
+		 "ALT=\"IP Data Sent\">IP</a></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_SENT_THPT" target=area "
+		 "ALT=\"Data Sent Throughput\">Thpt</a></li></ul></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_SENT_HOST_TRAFFIC" target=area "
+		 "ALT=\"Data Sent Host Traffic\">Traffic</a></li></ul></li>\n");
+
+      sendString("<li><a href="STR_MULTICAST_STATS" target=area ALT=\"Multicast Stats\">"
+		 "Multicast Stats</a></li>\n");
+      sendString("<li><a href=trafficStats.html target=area ALT=\"Traffic Statistics\">"
+		 "Traffic Stats</a></li>\n");
+      sendString("<li><a href="STR_DOMAIN_STATS" target=area ALT=\"Domain Traffic Statistics\">"
+		 "Domain Stats</a></li>\n");
+      sendString("<li><a href=localRoutersList.html target=area ALT=\"Routers List\">"
+		 "Routers</a></li>\n");
+      sendString("<li><a href="STR_SHOW_PLUGINS" target=area ALT=\"Plugins List\">"
+		 "Plugins</a></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_THPT_STATS" target=area ALT=\"Throughput Statistics\">"
+		 "Thpt Stats</a></li>\n");
+      sendString("<li><a href="HOSTS_INFO_HTML" target=area ALT=\"Hosts Information\">"
+		 "Hosts Info</a></li>\n");
+      sendString("<li><a href="IP_R_2_L_HTML" target=area ALT=\"Remote to Local IP Traffic\">"
+		 "R-&gt;L IP Traffic</a></li>\n");
+      sendString("<li><a href="IP_L_2_R_HTML" target=area ALT=\"Local to Remote IP Traffic\">"
+		 "L-&gt;R IP Traffic</a></li>\n");
+      sendString("<li><a href="IP_L_2_L_HTML" target=area ALT=\"Local IP Traffic\">"
+		 "L&lt;-&gt;L IP Traffic</a></li>\n");
+      sendString("<li><a href=NetNetstat.html target=area ALT=\"Active TCP Sessions\">"
+		 "Active TCP Sessions</a></li>\n");
+      sendString("<li><a href=ipProtoDistrib.html target=area ALT=\"IP Protocol Distribution\">"
+		 "IP Protocol Distribution</a></li>\n");
+      sendString("<li><a href=ipProtoUsage.html target=area ALT=\"IP Protocol Subnet Usage\">"
+		 "IP Protocol Usage</a></li>\n");
+      sendString("<li><a href=ipTrafficMatrix.html target=area ALT=\"IP Traffic Matrix\">"
+		 "IP Traffic Matrix</a></li>\n");
+      sendString("<li><a href="NW_EVENTS_HTML" target=area ALT=\"Network Events\">"
+		 "Network Events</a></li>\n");
+      if(isLsofPresent)
+	sendString("<li><a href="STR_LSOF_DATA" target=area "
+		   "ALT=\"Local Processes Nw Usage\">Local Nw Usage</a></li>\n");
+
+      if(flowsList != NULL)
+	sendString("<li><a href=NetFlows.html target=area ALT=\"NetFlows\">"
+		   "NetFlows List</a></li>\n");
+
+      sendString("<li><a href=showUsers.html target=area ALT=\"Admin Users\">Admin Users</a></li>\n");
+      sendString("<li><a href=showURLs.html target=area ALT=\"Admin URLs\">Admin URLs</a></li>\n");
+
+      if(!mergeInterfaces)
+	sendString("<li><a href="SWITCH_NIC_HTML" target=area ALT=\"Switch NICs\">Switch NICs</a></li>\n");
+
+      sendString("<li><a href="SHUTDOWN_NTOP_HTML" target=area ALT=\"Shutdown ntop\">"
+		 "Shutdown ntop</a></li>\n");
+      sendString("<li><a href=ntop.html target=area ALT=\"Man Page\">Man Page</a></li>\n");
+      sendString("<li><a href=Credits.html target=area ALT=\"Credits\">Credits</a></li>\n");
+      sendString("</ol>\n<center>\n<b>\n\n");
+      sendString("<pre>\n</pre>&copy; 1998-2001<br>by<br>"
+		 "<A HREF=\"http://luca.ntop.org/\" target=\"area\">"
+		 "Luca Deri</A></FONT><pre>\n");
+      sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");
+      printTrailer=0;
+    } else if(strncmp(pageName, SWITCH_NIC_HTML, strlen(SWITCH_NIC_HTML)) == 0) {
+      char *equal = strchr(pageName, '=');
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+
+      if(equal == NULL)
+	switchNwInterface(0);
+      else
+	switchNwInterface(atoi(&equal[1]));
+    } else if(strcmp(pageName, "home.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH);
+      sendString("<FONT FACE=Helvetica>\n<HR>\n");
+      sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
+      sendString("currently using the network and reports information concerning the IP\n");
+      sendString("(Internet Protocol) traffic generated by each host. The traffic is \n");
+      sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
+      sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
+		 "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
+		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
+      sendString("NFS<li>X11</ul></UL>\n<p>\n");
+      sendString("<b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
+      sendString("open source software</A> and encourages everyone to modify, improve\n ");
+      sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
+      sendString("to the enclosed licence (see COPYING).<p>Problems, bugs, questions, ");
+      sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
+      sendString("<A HREF=mailto:ntop@ntop.org> mailing list</A>.\n</font>");
+    } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_PROTOS,
+		      strlen(STR_SORT_DATA_RECEIVED_PROTOS)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostsTraffic(0, 0, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_IP, strlen(STR_SORT_DATA_RECEIVED_IP)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostsTraffic(0, 1, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, STR_SORT_DATA_THPT_STATS, strlen(STR_SORT_DATA_THPT_STATS)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printThptStats(sortedColumn);
+    } else if(strncmp(pageName, STR_THPT_STATS_MATRIX, strlen(STR_THPT_STATS_MATRIX)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printThptStatsMatrix(sortedColumn);
+    } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_THPT, strlen(STR_SORT_DATA_RECEIVED_THPT)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      printHostsTraffic(0, 2, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, STR_SORT_DATA_RCVD_HOST_TRAFFIC, strlen(STR_SORT_DATA_RCVD_HOST_TRAFFIC)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      printHostsTraffic(0, 3, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, STR_SORT_DATA_SENT_HOST_TRAFFIC, strlen(STR_SORT_DATA_SENT_HOST_TRAFFIC)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      printHostsTraffic(1, 3, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, STR_SORT_DATA_SENT_PROTOS, strlen(STR_SORT_DATA_SENT_PROTOS)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostsTraffic(1, 0, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, STR_SORT_DATA_SENT_IP, strlen(STR_SORT_DATA_SENT_IP)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostsTraffic(1, 1, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, STR_SORT_DATA_SENT_THPT, strlen(STR_SORT_DATA_SENT_THPT)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      printHostsTraffic(1, 2, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, HOSTS_INFO_HTML, strlen(HOSTS_INFO_HTML)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostsInfo(sortedColumn, revertOrder);
+    } else if(strncmp(pageName, PROCESS_INFO_HTML, strlen(PROCESS_INFO_HTML)) == 0) {
+      if(isLsofPresent) {
+	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+	printProcessInfo(sortedColumn /* process PID */);
+      } else {
+	returnHTTPpageGone();
+	printTrailer=0;
+      }
+    } else if(strncmp(pageName, STR_LSOF_DATA, strlen(STR_LSOF_DATA)) == 0) {
+      if(isLsofPresent) {
+	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+	printLsofData(sortedColumn);
+      } else {
+	returnHTTPpageGone();
+	printTrailer=0;
+      }
+    } else if(strcmp(pageName, "NetFlows.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      listNetFlows();
+    } else if(strncmp(pageName, IP_R_2_L_HTML, strlen(IP_R_2_L_HTML)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = 1; }
+      printIpAccounting(REMOTE_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, IP_L_2_R_HTML, strlen(IP_L_2_R_HTML)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = 1; }
+      printIpAccounting(LOCAL_TO_REMOTE_ACCOUNTING, sortedColumn, revertOrder);
+    } else if(strncmp(pageName, IP_L_2_L_HTML, strlen(IP_L_2_L_HTML)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = 1; }
+      printIpAccounting(LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder);
+    } else if(strcmp(pageName, "NetNetstat.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printActiveTCPSessions();
+    } else if(strncmp(pageName, STR_MULTICAST_STATS, strlen(STR_MULTICAST_STATS)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printMulticastStats(sortedColumn, revertOrder);
+    } else if(strncmp(pageName, STR_DOMAIN_STATS, strlen(STR_DOMAIN_STATS)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printDomainStats(NULL, abs(sortedColumn), revertOrder);
+    } else if(strncmp(pageName, STR_SHOW_PLUGINS, strlen(STR_SHOW_PLUGINS)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(questionMark == NULL)
+	showPluginsList("");
+      else
+	showPluginsList(&pageName[strlen(STR_SHOW_PLUGINS)+1]);
+    } else if(strncmp(pageName, DOMAIN_INFO_HTML, strlen(DOMAIN_INFO_HTML)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(questionMark == NULL) questionMark = "";
+      pageName[strlen(pageName)-5-strlen(questionMark)] = '\0';
+      printDomainStats(&pageName[strlen(DOMAIN_INFO_HTML)+1], abs(sortedColumn), revertOrder);
+    } else if(strcmp(pageName, TRAFFIC_STATS_HTML) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostsTraffic(2, 0, 0, revertOrder);
+      printProtoTraffic();
+      sendString("<p>\n");
+      printIpProtocolDistribution(LONG_FORMAT, revertOrder);
+    } else if(strcmp(pageName, "ipProtoDistrib.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHTMLheader(NULL, 0);
+      printIpProtocolDistribution(SHORT_FORMAT, revertOrder);
+    } else if(strcmp(pageName, "ipTrafficMatrix.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printIpTrafficMatrix();
+    } else if(strcmp(pageName, "localRoutersList.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printLocalRoutersList();
+    } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printIpProtocolUsage();
+#ifdef HAVE_GDCHART
+    } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+      drawThptGraph(sortedColumn);
+      printTrailer=0;
+    } else if(strncmp(pageName, "ipTrafficPie", strlen("ipTrafficPie")) == 0) {
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+      drawTrafficPie();
+      printTrailer=0;
+    } else if(strncmp(pageName, "pktCastDistribPie", strlen("pktCastDistribPie")) == 0) {
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+      pktCastDistribPie();
+      printTrailer=0;
+    } else if(strncmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
+      if(device[actualReportDeviceId].ethernetPkts > 0) {
+	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+	pktSizeDistribPie();
+	printTrailer=0;
+      } else {
+	printNoDataYet();
+      }
+    } else if(strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
+      char hostName[32], *theHost;
+
+      theHost = &pageName[strlen("hostTrafficDistrib")+1];
+
+      if(strlen(theHost) <= strlen(CHART_FORMAT)) {
+	printNoDataYet();
+      } else {
+	u_int elIdx, i;
+	HostTraffic *el=NULL;
+
+	if(strlen(theHost) >= 31) theHost[31] = 0;
+	for(i=strlen(theHost); i>0; i--)
+	  if(theHost[i] == '?') {
+	    theHost[i] = '\0';
+	    break;
+	  }
+
+	memset(hostName, 0, sizeof(hostName));
+	strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
+
+	/* Patch for ethernet addresses and MS Explorer */
+	for(i=0; hostName[i] != '\0'; i++)
+	  if(hostName[i] == '_')
+	    hostName[i] = ':';
+
+      /* printf("HostName: '%s'\n", hostName); */
+
+#ifdef MULTITHREADED
+	/* It is necessary to release the mutex for avoiding
+	 a race condition with resizeHostHash() */
+	releaseMutex(&hashResizeMutex);
+	mutexReleased = 1;
+#endif
+
+#ifdef MULTITHREADED
+	accessMutex(&hostsHashMutex, "hostTrafficDistrib-call");
+#endif
+	for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
+	  el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
+
+	  if((elIdx != broadcastEntryIdx)
+	     && (el != NULL)
+	     && (el->hostNumIpAddress != NULL)
+	     && ((strcmp(el->hostNumIpAddress, hostName) == 0)
+		 || (strcmp(el->ethAddressString, hostName) == 0)))
+	    break;
+	}
+
+	if(el == NULL) {
+	  returnHTTPpageNotFound();
+	  printTrailer=0;
+	} else {
+	  sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+
+	  hostTrafficDistrib(el, sortedColumn);
+	  printTrailer=0;
+	}
+
+#ifdef MULTITHREADED
+	releaseMutex(&hostsHashMutex);
+#endif
+      }
+    } else if(strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0) {
+      char hostName[32], *theHost;
+
+      theHost = &pageName[strlen("hostIPTrafficDistrib")+1];
+
+      if(strlen(theHost) <= strlen(CHART_FORMAT)) {
+	printNoDataYet();
+      } else {
+	u_int elIdx, i;
+	HostTraffic *el=NULL;
+
+	if(strlen(theHost) >= 31) theHost[31] = 0;
+	for(i=strlen(theHost); i>0; i--)
+	  if(theHost[i] == '?') {
+	    theHost[i] = '\0';
+	    break;
+	  }
+
+	memset(hostName, 0, sizeof(hostName));
+	strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
+
+	/* Patch for ethernet addresses and MS Explorer */
+	for(i=0; hostName[i] != '\0'; i++)
+	  if(hostName[i] == '_')
+	    hostName[i] = ':';
+
+      /* printf("HostName: '%s'\n", hostName); */
+
+#ifdef MULTITHREADED
+	accessMutex(&hostsHashMutex, "hostIPTrafficDistrib-call");
+#endif
+	for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
+	  el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
+
+	  if((elIdx != broadcastEntryIdx)
+	     && (el != NULL)
+	     && (el->hostNumIpAddress != NULL)
+	     && ((strcmp(el->hostNumIpAddress, hostName) == 0)
+		 || (strcmp(el->ethAddressString, hostName) == 0)))
+	    break;
+	}
+
+	if(el == NULL) {
+	  returnHTTPpageNotFound();
+	  printTrailer=0;
+	} else {
+	  sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+
+	  hostIPTrafficDistrib(el, sortedColumn);
+	  printTrailer=0;
+	}
+
+#ifdef MULTITHREADED
+	releaseMutex(&hostsHashMutex);
+#endif
+      }
+    } else if(strncmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+      ipProtoDistribPie();
+      printTrailer=0;
+    } else if(strncmp(pageName, "interfaceTrafficPie", strlen("interfaceTrafficPie")) == 0) {
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+      interfaceTrafficPie();
+      printTrailer=0;
+    } else if(strncmp(pageName, "drawGlobalProtoDistribution",
+		      strlen("drawGlobalProtoDistribution")) == 0) {
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+      drawGlobalProtoDistribution();
+      printTrailer=0;
+    } else if(strncmp(pageName, "drawGlobalIpProtoDistribution",
+		      strlen("drawGlobalIpProtoDistribution")) == 0) {
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+      drawGlobalIpProtoDistribution();
+      printTrailer=0;
+#endif
+    } else if(strncmp(pageName, NW_EVENTS_HTML, strlen(NW_EVENTS_HTML)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostEvents(NULL, sortedColumn, revertOrder);
+    } else if(strcmp(pageName, "Credits.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHTMLheader("Credits", HTML_FLAG_NO_REFRESH);
+      sendString("<FONT FACE=Helvetica>\n");
+      sendString("<p><hr><br><b>ntop</b> has been created by\n");
+      sendString("<A HREF=\"http://luca.ntop.org/\">Luca Deri</A> while studying how to model\n");
+      sendString("network traffic. He was unsatisfied of the many network traffic analysis tools\n");
+      sendString("he had access to, and decided to write a new application able to report network\n");
+      sendString("traffic information in a way similar to the popular Unix top command. At that \n");
+      sendString("point in time (it was June 1998) <b>ntop</b> was born.<p>The current release is very\n");
+      sendString("different from the initial one for several reasons. In particular it: <ul>\n");
+      sendString("<li>is much more sophisticated <li>has both a command line and a web interface\n");
+      sendString("<li>is capable of handling both IP and non IP protocols </ul> <p> Although it\n");
+      sendString("might not seem so, <b>ntop</b> has definitively more than an author.\n");
+      sendString("<A HREF=\"mailto:stefano@ntop.org\">Stefano Suin</A> has contributed with ");
+      sendString("some code fragments to the version 1.0 of <b>ntop</b>\n");
+      sendString(". In addition, many other people downloaded this program, tested it,\n");
+      sendString("joined the <A HREF=http://mailserver.unipi.it/lists/ntop/archive/>ntop mailing list</A>,\n");
+      sendString("reported problems, changed it and improved significantly. This is because\n");
+      sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its author, but\n");
+      sendString("to the whole Internet community. Their names are throught "
+		 "the <b>ntop</b> code.<p>");
+      sendString("The author would like to thank all these people who contributed to <b>ntop</b> and\n");
+      sendString("turned it into a first class network monitoring tool. Many thanks guys!<p>\n");
+      sendString("</FONT><p>\n");
+    } else if(strcmp(pageName, "showUsers.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      showUsers();
+    } else if(strcmp(pageName, "addUser.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      addUser(NULL);
+    } else if(strncmp(pageName, "modifyUser", strlen("modifyUser")) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if((questionMark == NULL) || (questionMark[0] == '\0'))
+	addUser(NULL);
+      else
+	addUser(&questionMark[1]);
+    } else if(strcmp(pageName, "showURLs.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      showURLs();
+    } else if(strcmp(pageName, "addURL.html") == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      addURL(NULL);
+    } else if(strncmp(pageName, INFO_NTOP_HTML, strlen(INFO_NTOP_HTML)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printNtopConfigInfo();
+    } else
+#endif /* MICRO_NTOP */
+      if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
+	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+	if((questionMark == NULL) || (questionMark[0] == '\0'))
+	  dumpNtopHashes(NULL);
+	else
+	  dumpNtopHashes(&questionMark[1]);
+	printTrailer = 0;
+      } else if(strncmp(pageName, DUMP_HOSTS_INDEXES_HTML, strlen(DUMP_HOSTS_INDEXES_HTML)) == 0) {
+	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+	if((questionMark == NULL) || (questionMark[0] == '\0'))
+	  dumpNtopHashIndexes(NULL);
+	else
+	  dumpNtopHashIndexes(&questionMark[1]);
+	printTrailer = 0;
+      } else if(strncmp(pageName, DUMP_TRAFFIC_DATA_HTML, strlen(DUMP_TRAFFIC_DATA_HTML)) == 0) {
+	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+	if((questionMark == NULL) || (questionMark[0] == '\0'))
+	  dumpNtopTrafficInfo(NULL);
+	else
+	  dumpNtopTrafficInfo(&questionMark[1]);
+	printTrailer = 0;
+      }
+#ifndef MICRO_NTOP
+      else if(strlen(pageName) > 5) {
+	int i;
+	char hostName[32];
+
+	pageName[strlen(pageName)-5] = '\0';
+	if(strlen(pageName) >= 31) pageName[31] = 0;
+
+	/* Patch for ethernet addresses and MS Explorer */
+	for(i=0; pageName[i] != '\0'; i++)
+	  if(pageName[i] == '_')
+	    pageName[i] = ':';
+
+	strncpy(hostName, pageName, sizeof(hostName));
+	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+	printAllSessionsHTML(hostName);
+      }
+#endif
+      else {
+	printTrailer = 0;
+	errorCode = HTTP_INVALID_PAGE;
+      }
+  }
 
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 
@@ -1490,7 +1514,14 @@ static int returnHTTPPage(char* pageName, int postLen) {
   if(!mutexReleased)
     releaseMutex(&hashResizeMutex);
 #endif
+
+#ifdef FORK_CHILD_PROCESS
+  if(usedFork) {
+    exit(0);
+  }  
+#else
   return(errorCode);
+#endif
 }
 
 /* ************************* */
@@ -1619,7 +1650,6 @@ static void returnHTTPnotImplemented(void) {
   sendString("Content-Type: text/html\n\n");
   sendString("<HTML>\n<TITLE>Error</TITLE>\n<BODY BACKGROUND=white_bg.gif>\n"
 	     "<H1>Error 501</H1>\nMethod not implemented\n</BODY>\n</HTML>\n");
-
   logHTTPaccess(501);
 }
 #endif

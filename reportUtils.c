@@ -2888,7 +2888,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     } else {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
-		  getRowColor(), "MAC&nbsp;Address",
+		  getRowColor(), "MAC&nbsp;Address <IMG SRC=/card.gif BORDER=0>",
 		  el->ethAddressString,
 		  separator /* it avoids empty cells not to be rendered */) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2926,7 +2926,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"<A HREF=%s.html>%s</A>%s</TD></TR>\n",
-		getRowColor(), "Last MAC Address/Router",
+		getRowColor(), "Last MAC Address/Router <IMG SRC=/card.gif BORDER=0>",
 		symLink, symMacAddr,
 		separator /* it avoids empty cells not to be rendered */) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
