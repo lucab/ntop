@@ -1672,7 +1672,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 	  }
 	}
-      } else if(dport == 80 /* HTTP */) {
+      } else if((dport == 80 /* HTTP */) && (packetDataLength > 0)) {
 	if(theSession->bytesProtoSent == 0) {
 	  char *rcStr;
 
@@ -1859,7 +1859,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  not a faked session (i.e. a known protocol is running at
 	  an unknown port)
 	*/
-	if(theSession->bytesProtoSent == 0) {
+	if((theSession->bytesProtoSent == 0) && (len > 0)) {
 	  memset(rcStr, 0, sizeof(rcStr));
 	  strncpy(rcStr, packetData, len);
 
@@ -1912,7 +1912,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	      dumpSuspiciousPacket();
 	    }
 	  }
-	} else if(theSession->bytesProtoRcvd == 0) {
+	} else if((theSession->bytesProtoRcvd == 0) && (len > 0)) {
 	  /* Uncomment when necessary
 	    memset(rcStr, 0, sizeof(rcStr));
 	    strncpy(rcStr, packetData, len);
@@ -1925,50 +1925,51 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       else
 	len = packetDataLength;
 
-      if(sport == 21) {
-	FD_SET(HOST_SVC_FTP, &srcHost->flags);
-	memset(rcStr, 0, sizeof(rcStr));
+      if(len > 0) {
+	if(sport == 21) {
+	  FD_SET(HOST_SVC_FTP, &srcHost->flags);
+	  memset(rcStr, 0, sizeof(rcStr));
 
-	strncpy(rcStr, packetData, len);
-	/*
-	  227 Entering Passive Mode (131,114,21,11,156,95)
-	  131.114.21.11:40012 (40012 = 156 * 256 + 95)
-	*/
-	if(strncmp(rcStr, "227", 3) == 0) {
-	  int a, b, c, d, e, f;
+	  strncpy(rcStr, packetData, len);
+	  /*
+	    227 Entering Passive Mode (131,114,21,11,156,95)
+	    131.114.21.11:40012 (40012 = 156 * 256 + 95)
+	  */
+	  if(strncmp(rcStr, "227", 3) == 0) {
+	    int a, b, c, d, e, f;
 
-	  sscanf(&rcStr[27], "%d,%d,%d,%d,%d,%d",
-		 &a, &b, &c, &d, &e, &f);
-	  sprintf(rcStr, "%d.%d.%d.%d", a, b, c, d);
+	    sscanf(&rcStr[27], "%d,%d,%d,%d,%d,%d",
+		   &a, &b, &c, &d, &e, &f);
+	    sprintf(rcStr, "%d.%d.%d.%d", a, b, c, d);
 
 #ifdef DEBUG
-	  traceEvent(TRACE_INFO, "FTP: (%d) [%d.%d.%d.%d:%d]",
-		     inet_addr(rcStr), a, b, c, d, (e*256+f));
+	    traceEvent(TRACE_INFO, "FTP: (%d) [%d.%d.%d.%d:%d]",
+		       inet_addr(rcStr), a, b, c, d, (e*256+f));
 #endif
-	  addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
-	}
-      } else if((sport == 139) || (dport == 139)) {
-	memset(rcStr, 0, sizeof(rcStr));
-	memcpy(rcStr, packetData, len);
+	    addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
+	  }
+	} else if((sport == 139) || (dport == 139)) {
+	  memset(rcStr, 0, sizeof(rcStr));
+	  memcpy(rcStr, packetData, len);
 
-	if(rcStr[0] == 0x81) /* Session request */ {
-	  char decodedStr[64];
-	  int pos;
+	  if(rcStr[0] == 0x81) /* Session request */ {
+	    char decodedStr[64];
+	    int pos;
 
-	  pos = 5;	  
-	  decodeNBstring(&rcStr[5], decodedStr);
+	    pos = 5;	  
+	    decodeNBstring(&rcStr[5], decodedStr);
 	  
-	  if((decodedStr[0] != '\0') && (dstHost->nbHostName == NULL))
-	    dstHost->nbHostName = strdup(decodedStr); /* dst before src */
+	    if((decodedStr[0] != '\0') && (dstHost->nbHostName == NULL))
+	      dstHost->nbHostName = strdup(decodedStr); /* dst before src */
 	  
-	  pos = 5+(2*strlen(decodedStr))+2;
-	  decodeNBstring(&rcStr[pos], decodedStr);
+	    pos = 5+(2*strlen(decodedStr))+2;
+	    decodeNBstring(&rcStr[pos], decodedStr);
 	  
-	  if((decodedStr[0] != '\0') && (srcHost->nbHostName == NULL))
-	    srcHost->nbHostName = strdup(decodedStr);	  
-	} else if((rcStr[0] == 0x0) /* Message type: Session message */
-		  && (rcStr[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
-	  int i;
+	    if((decodedStr[0] != '\0') && (srcHost->nbHostName == NULL))
+	      srcHost->nbHostName = strdup(decodedStr);	  
+	  } else if((rcStr[0] == 0x0) /* Message type: Session message */
+		    && (rcStr[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
+	    int i;
 
 #ifdef DEBUG
 	    for(i=0; i<len; i++)
@@ -2009,7 +2010,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		srcHost->osName = strdup(&rcStr[i]);
 	    }
 	  }
-      }
+	}
+      } /* len > 0 */
     }
 
     /* ***************************************** */
@@ -2147,19 +2149,20 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress);
 #endif
-	} else if((packetData[1] == 0x0) && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
+	} else if((packetData[1] == 0x0) 
+		  && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
 	  char tmpBuf[64], *remoteHost, *remotePort, *strtokState;
 
 	  struct in_addr shost;
 
 	  srcHost->napsterStats->numDownloadsRequested++,
 	    dstHost->napsterStats->numDownloadsServed++;
-
-	/*
-	   LEN 00 CC 00 <remote user name>
-	   <remote user IP> <remote user port> <payload>
-	*/
-
+	  
+	  /*
+	    LEN 00 CC 00 <remote user name>
+	    <remote user IP> <remote user port> <payload>
+	  */
+	  
 	  memcpy(tmpBuf, &packetData[4], (packetDataLength<64) ? packetDataLength : 63);
 	  strtok_r(tmpBuf, " ", &strtokState); /* remote user */
 	  if((remoteHost = strtok_r(NULL, " ", &strtokState)) != NULL) {

@@ -240,7 +240,8 @@ void initCounters(int _mergeInterfaces) {
 	 * Replaced memmove with memcpy
 	 * Igor Schein <igor@txc.com>
 	 */
-	memcpy(domainName, ++p, (MAXHOSTNAMELEN+domainName-p));
+	++p;
+	memcpy(domainName, p, (MAXHOSTNAMELEN+domainName-p));
 
       } else
 	domainName[0] = '\0';

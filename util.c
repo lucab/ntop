@@ -2209,7 +2209,7 @@ int getSniffedDNSName(char *hostNumIpAddress,
     releaseMutex(&gdbmMutex);
 #endif
 
-    if (data.dptr) {
+    if(data.dptr) {
       strncpy(name, data.dptr, maxNameLen-1);
       name[maxNameLen-1]=0;
       free(data.dptr);
