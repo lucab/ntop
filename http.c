@@ -134,7 +134,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 
 #ifdef HAVE_ZLIB
-static char compressedFilePath[16];
+static char compressedFilePath[256];
 static short compressFile = 0, acceptGzEncoding;
 static FILE *compressFileFd=NULL;
 static void compressAndSendData(u_int*);

@@ -1056,8 +1056,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  free(rcStr);
 	}
       } else if((dport == 6699) /* WinMX */ && (packetDataLength > 0)) {
-	if((theSession->bytesProtoSent.value == 3 /* GET */)
-	   && (theSession->bytesProtoRcvd.value == 1 /* 1 */)) {
+	if(((theSession->bytesProtoSent.value == 3    /* GET */)  && (theSession->bytesProtoRcvd.value <= 1 /* 1 */))
+	   || ((theSession->bytesProtoSent.value == 4 /* SEND */) && (theSession->bytesProtoRcvd.value <= 1 /* 1 */))) {
 	  char *user, *strtokState, *strtokState1, *row, *file;
 	  int i, begin=0;
 
@@ -1077,9 +1077,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	      }
 
 	      begin++;
-
 	      file = &file[begin];
-
 	      if(strlen(file) > 64) file[strlen(file)-64] = '\0';
 
 #ifdef P2P_DEBUG
@@ -1088,10 +1086,18 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			 dstHost->hostNumIpAddress,
 			 user, file);
 #endif
-	      updateFileList(file, P2P_DOWNLOAD_MODE, srcHost);
-	      updateFileList(file, P2P_UPLOAD_MODE,   dstHost);
-	      updateHostUsers(user, P2P_USER, srcHost);
 
+	      if(theSession->bytesProtoSent.value == 3) {
+		/* GET */ 
+		updateFileList(file,  P2P_DOWNLOAD_MODE, srcHost);
+		updateFileList(file,  P2P_UPLOAD_MODE,   dstHost);
+		updateHostUsers(user, P2P_USER, srcHost);
+	      } else {
+		/* SEND */
+		updateFileList(file,  P2P_UPLOAD_MODE,   srcHost);
+		updateFileList(file,  P2P_DOWNLOAD_MODE, dstHost);
+		updateHostUsers(user, P2P_USER, dstHost);
+	      }
 	    }
 	  }
 
