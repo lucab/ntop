@@ -42,6 +42,10 @@ Plugin History
 Remember, there are TWO paths into this - one is through the main loop,
 if the plugin is active, the other is through the http function if the
 plugin is NOT active.  So initialize stuff in BOTH places!
+
+
+Aberrant RRD Behavior (http://cricket.sourceforge.net/aberrant/) 
+patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 */
 
 static const char *rrd_subdirs[] =
@@ -414,6 +418,9 @@ static int endsWith(char* label, char* pattern) {
 void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 		  char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[32], buf[384], buf1[384], fname[384], *label;
+#ifdef HAVE_RRD_ABERRANT_BEHAVIOR
+  char buf2[384], buf3[384], buf4[384];
+#endif
   struct stat statbuf;
   int argc = 0, rc, x, y;
 
@@ -458,6 +465,19 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:LAST:Current\\: %3.1lf%s";
+#ifdef HAVE_RRD_ABERRANT_BEHAVIOR
+    snprintf(buf2,sizeof(buf2), "DEF:pred=%s:counter:HWPREDICT", path);
+    argv[argc++] = buf2;
+    snprintf(buf3,sizeof(buf3), "DEF:dev=%s:counter:DEVPREDICT", path);
+    argv[argc++] = buf3;
+    snprintf(buf4,sizeof(buf4), "DEF:fail=%s:counter:FAILURES", path);
+    argv[argc++] = buf4;
+    argv[argc++] = "TICK:fail#ffffa0:1.0:Anomalia";
+    argv[argc++] = "CDEF:upper=pred,dev,2,*,+";
+    argv[argc++] = "CDEF:lower=pred,dev,2,*,-";
+    argv[argc++] = "LINE1:upper#ff0000:Upper";
+    argv[argc++] = "LINE2:lower#ff0000:Lower";
+#endif
 
 #if RRD_DEBUG >= 3
     for (x = 0; x < argc; x++)
@@ -518,6 +538,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   if(stat(path, &statbuf) != 0) {
     char startStr[32], stepStr[32], counterStr[64], intervalStr[32];
     char minStr[32], maxStr[32], daysStr[32], monthsStr[32];
+#ifdef HAVE_RRD_ABERRANT_BEHAVIOR
+    char tempStr[64];
+#endif
     int step = dumpInterval;
     int value1, value2;
     unsigned long topValue;
@@ -575,6 +598,11 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
       snprintf(monthsStr, sizeof(monthsStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpMonths * 30);
       argv[argc++] = monthsStr;
     }
+
+#ifdef HAVE_RRD_ABERRANT_BEHAVIOR
+    snprintf(tempStr, sizeof(tempStr), "RRA:HWPREDICT:1440:0.1:0.0035:20");
+    argv[argc++] = tempStr;
+#endif
 
     if (shownCreate == 0) {
       char buf[LEN_GENERAL_WORK_BUFFER];
