@@ -58,7 +58,7 @@
 
 #include "ntop.h"
 
-static int napsterSvrInsertIdx = 0;
+static int numNapsterSvr = 0,napsterSvrInsertIdx = 0;
 
 /* ************************************ */
 
@@ -909,20 +909,24 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  (*numSessions)++;
 	  
 	  /* Let's check whether this is a Napster session */
-	  
-	  for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
-	    if((napsterSvr[i].serverPort == sport) 
-	       && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr)
-	       || ((napsterSvr[i].serverPort == dport)
-		   && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
-	      theSession->napsterSession = 1;
-	      napsterSvr[i].serverPort = 0; /* Free slot */
-
-	      traceEvent(TRACE_INFO, "NAPSTER new session: %s -> %s\n",
-			 srcHost->hostSymIpAddress,
-			 dstHost->hostSymIpAddress);
-	    }
-	  }	 	  
+	  if(numNapsterSvr > 0) {
+	    for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
+	      if((napsterSvr[i].serverPort == sport) 
+		 && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr)
+		 || ((napsterSvr[i].serverPort == dport)
+		     && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
+		theSession->napsterSession = 1;
+		napsterSvr[i].serverPort = 0; /* Free slot */
+		numNapsterSvr--;
+		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
+		FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
+		
+		traceEvent(TRACE_INFO, "NAPSTER new session: %s -> %s\n",
+			   srcHost->hostSymIpAddress,
+			   dstHost->hostSymIpAddress);
+	      }
+	    }	 	  
+	  }
 	}
 
 	while(sessions[initialIdx] != NULL)
@@ -1108,7 +1112,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 	napsterSvr[napsterSvrInsertIdx].serverAddress.s_addr = ntohl(inet_addr(address));
 	napsterSvr[napsterSvrInsertIdx].serverPort = atoi(&address[i+1]);
 	napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
-
+	numNapsterSvr++;
+	
 	if(srcHost->napsterStats == NULL) {
 	  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
 	  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
@@ -1186,7 +1191,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	if(napsterSvr[napsterSvrInsertIdx].serverPort != 0) {
 	  napsterSvr[napsterSvrInsertIdx].serverAddress.s_addr = inet_addr(remoteHost);
 	  napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
-	  
+	  numNapsterSvr++;
 	  shost.s_addr = inet_addr(remoteHost);
 	  traceEvent(TRACE_INFO, "NAPSTER download from %s:%s [%s]\n",
 		     inet_ntoa(shost), remotePort, remoteHost);

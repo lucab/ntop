@@ -690,9 +690,10 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
   releaseMutex(&lsofMutex);
 #endif
 
-  if(host->icmpInfo  != NULL) free(host->icmpInfo);
-  if(host->dnsStats  != NULL) free(host->dnsStats);
-  if(host->httpStats != NULL) free(host->httpStats);
+  if(host->icmpInfo     != NULL) free(host->icmpInfo);
+  if(host->dnsStats     != NULL) free(host->dnsStats);
+  if(host->httpStats    != NULL) free(host->httpStats);
+  if(host->napsterStats != NULL) free(host->napsterStats);
 
   /* ********** */
 
@@ -702,7 +703,7 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
   if(freeListLen == FREE_LIST_LEN) {
     free(freeHostList[nextIdxToFree]); /* This is the real free */
     freeHostList[nextIdxToFree] = host;
-    nextIdxToFree = (nextIdxToFree+1)%FREE_LIST_LEN;
+    nextIdxToFree = (nextIdxToFree+1) % FREE_LIST_LEN;
   } else
     freeHostList[freeListLen++] = host;
 }
