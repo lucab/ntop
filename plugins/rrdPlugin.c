@@ -54,6 +54,8 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 #include "rrdPlugin.h"
 
 static void setPluginStatus(char * status);
+static void addRrdDelay();
+
 #ifdef CFG_MULTITHREADED
 static PthreadMutex rrdMutex;
 #endif
@@ -201,7 +203,7 @@ static void fillupArgv(int argc, int maxArgc, char *argv[]) {
 
 /* ******************************************* */
 
-void addRrdDelay() {
+static void addRrdDelay() {
   static struct timeval lastSleep;
   struct timeval thisSleep;
   float deltaMs;
@@ -605,7 +607,7 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
   int argc = 0, rc, x, y, i, entryId=0;
   DIR* directoryPointer;
 
-  path[0] = '\0';
+  path[0] = '\0', label = "";
 
   switch(graphId) {
   case 0: rrds = (char**)rrd_summary_packets; label = "Packets/sec"; break;
