@@ -888,6 +888,9 @@ RETSIGTYPE cleanup(int signo) {
 
   free(device);
 
+  if(numProcesses > 0)
+    free(processes);
+  
   if(enableDBsupport) {
     closeSQLsocket(); /* *** SQL Engine *** */
 #ifdef HAVE_MYSQL

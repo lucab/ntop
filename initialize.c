@@ -326,6 +326,9 @@ void initCounters(int _mergeInterfaces) {
 
   broadcastEntryIdx = 0;
 
+  numProcesses = 0;
+  numProcesses = NULL;
+  
   resetStats();
   createVendorTable();
   initialSniffTime = lastRefreshTime = time(NULL);

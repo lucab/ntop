@@ -90,7 +90,7 @@ extern GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile;
 
 /* lsof support */
 extern u_short updateLsof;
-extern ProcessInfo *processes[MAX_NUM_PROCESSES];
+extern ProcessInfo **processes;
 extern u_short numProcesses;
 extern ProcessInfoList *localPorts[TOP_IP_PORT];
 

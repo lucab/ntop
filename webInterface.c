@@ -791,6 +791,13 @@ void printNtopConfigInfo(void) {
   sendString(buf);
 #endif
 
+  if(isLsofPresent) {
+    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Monitored Processes</TH>"
+		"<TD "TD_BG"  align=right>%d</TD></TR>\n", numProcesses, 0) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  }
+
   sendString("</TABLE>"TABLE_OFF"\n");
 
   /* **************************** */

@@ -1186,10 +1186,10 @@ void readLsofInfo(void) {
 #else
   char line[384];
   FILE *fd;
-  int i, j, found, portNumber, idx, processesIdx;
+  int i, j, found, portNumber, idx, processesIdx, numLines, processSize;
   unsigned int fdFileno;
   ProcessInfoList *listElement;
-  ProcessInfo *tmpProcesses[MAX_NUM_PROCESSES];
+  ProcessInfo **tmpProcesses;
   fd_set mask;
   struct timeval wait_time;
   char fileName[NAME_MAX] = "/tmp/lsof-XXXXXX";
@@ -1211,14 +1211,17 @@ void readLsofInfo(void) {
     return;
   }
 
+  numLines = 0;
   fdFileno = fileno(fd);
   wait_time.tv_sec = 30, wait_time.tv_usec = 0;
+
   while(1) {
     FD_ZERO(&mask);
     FD_SET(fdFileno, &mask);
 
     if((i = select(fdFileno+1, &mask, 0, 0, &wait_time)) == 1) {
       if(fgets(line, 383, fd) != NULL) {
+	numLines++;
 	fprintf(fd1, "%s", line);
       } else
 	break;
@@ -1233,6 +1236,11 @@ void readLsofInfo(void) {
 
   pclose(fd);
   fclose(fd1);
+
+  numLines--;
+
+  if(numLines <= 0)
+    return; /* No processes */
 
   fd = fopen(fileName, "r");
   if(fd == NULL) {
@@ -1319,7 +1327,8 @@ void readLsofInfo(void) {
     }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n", command, user, thePort, portNr, portNumber);
+    traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n", 
+	       command, user, thePort, portNr, portNumber);
 #endif
 
     if(portNumber == -1)
@@ -1327,24 +1336,35 @@ void readLsofInfo(void) {
 
     if(!found) {
       int floater;
+
+      if(numProcesses < MAX_NUM_PROCESSES) {
+	ProcessInfo **swapProcesses;
+
+	swapProcesses = (ProcessInfo**)malloc((numProcesses+1)*sizeof(ProcessInfo*));
+	if(numProcesses > 0)
+	  memcpy(swapProcesses, processes, numProcesses*sizeof(ProcessInfo*));
+	free(processes);
+	processes = swapProcesses;
+
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", 
-		 numProcesses, command, user, portNr, portNumber);
+	traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", 
+		   numProcesses, command, user, portNr, portNumber);
 #endif
-      processes[numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
-      processes[numProcesses]->command             = strdup(command);
-      processes[numProcesses]->user                = strdup(user);
-      processes[numProcesses]->pid                 = pid;
-      processes[numProcesses]->firstSeen           = actTime;
-      processes[numProcesses]->lastSeen            = actTime;
-      processes[numProcesses]->marker              = 1;
-      processes[numProcesses]->bytesSent           = 0;
-      processes[numProcesses]->bytesReceived       = 0;
-      processes[numProcesses]->contactedIpPeersIdx = 0;
-
-      for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
-	processes[i]->contactedIpPeersIndexes[floater] = NO_PEER;
-
+	processes[numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
+	processes[numProcesses]->command             = strdup(command);
+	processes[numProcesses]->user                = strdup(user);
+	processes[numProcesses]->pid                 = pid;
+	processes[numProcesses]->firstSeen           = actTime;
+	processes[numProcesses]->lastSeen            = actTime;
+	processes[numProcesses]->marker              = 1;
+	processes[numProcesses]->bytesSent           = 0;
+	processes[numProcesses]->bytesReceived       = 0;
+	processes[numProcesses]->contactedIpPeersIdx = 0;
+	
+	for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
+	  processes[numProcesses]->contactedIpPeersIndexes[floater] = NO_PEER;
+      }
+      
       idx = numProcesses;
       numProcesses++;
     } else
@@ -1359,8 +1379,11 @@ void readLsofInfo(void) {
   fclose(fd);
   unlink(fileName);
 
-  memcpy(tmpProcesses, processes, sizeof(processes));
-  memset(processes, 0, sizeof(processes));
+  processSize = sizeof(ProcessInfo*)*numProcesses;
+  tmpProcesses = (ProcessInfo**)malloc(processSize);
+
+  memcpy(tmpProcesses, processes, processSize);
+  memset(processes, 0, processSize);
 
   for(i=0, processesIdx=0; i<numProcesses; i++) {
     if(tmpProcesses[i]->marker == 0) {
@@ -1381,6 +1404,7 @@ void readLsofInfo(void) {
   releaseMutex(&lsofMutex);
 #endif
 
+  free(tmpProcesses);
   traceEvent(TRACE_INFO, "readLsofInfo completed (%d sec).", (time(NULL)-startTime));
 #endif /* WIN32 */
 }

@@ -2442,12 +2442,15 @@ void printProcessInfo(int processPid) {
 
 void printLsofData(int mode) {
   char buf[BUF_SIZE];
-  int i, j, found;
-  int numUsers;
-  ProcessInfo *processesList[MAX_NUM_PROCESSES];
+  int i, j, found, processSize;
+  int numUsers, numProcessesToDisplay;
+  ProcessInfo **processesList;
   UsersTraffic usersTraffic[256], *usersTrafficList[256];
 
   /* ************************ */
+  
+  processSize = sizeof(ProcessInfo*)*numProcesses;
+  processesList = (ProcessInfo**)malloc(processSize);
 
   printHTMLheader("Local Network Usage by Process", 0);
   sendString("<CENTER>\n");
@@ -2466,15 +2469,16 @@ void printLsofData(int mode) {
   accessMutex(&lsofMutex, "buildHTMLBrowserWindowsLabel");
 #endif
 
-  memcpy(processesList, processes, sizeof(processes));
+  memcpy(processesList, processes, processSize);
   columnSort = mode;
   quicksort(processesList, numProcesses, sizeof(ProcessInfo*), cmpProcesses);
 
   /* Avoid huge tables */
-  if(numProcesses > maxNumLines)
-    numProcesses = maxNumLines;
+  numProcessesToDisplay = numProcesses;
+  if(numProcessesToDisplay > maxNumLines)
+    numProcessesToDisplay = maxNumLines;
 
-  for(i=0, numUsers=0; i<numProcesses; i++) {
+  for(i=0, numUsers=0; i<numProcessesToDisplay; i++) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"><A HREF=\""PROCESS_INFO_HTML"?%d\">%s</A></TD>"
 	    "<TD "TD_BG" ALIGN=CENTER>%d</TD>"
 	    "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
@@ -2573,6 +2577,8 @@ void printLsofData(int mode) {
 #ifdef MULTITHREADED
   releaseMutex(&lsofMutex);
 #endif
+
+  free(processesList);
 }
 
 /* ************************ */

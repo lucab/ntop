@@ -98,7 +98,7 @@ GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile;
 
 /* lsof support */
 u_short updateLsof;
-ProcessInfo *processes[MAX_NUM_PROCESSES];
+ProcessInfo **processes;
 u_short numProcesses;
 ProcessInfoList *localPorts[TOP_IP_PORT];
 

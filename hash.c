@@ -650,22 +650,22 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   }
 
   if(isLsofPresent) {
-	#ifdef MULTITHREADED
-	  accessMutex(&lsofMutex, "processes Map");
-	#endif
-	  for(j=0; j<MAX_NUM_PROCESSES; j++) {
-	    if(processes[j] != NULL) {
-	      int i;
-	      
-	      for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-		if(processes[j]->contactedIpPeersIndexes[i] != NO_PEER)
-		  processes[j]->contactedIpPeersIndexes[i] =
-		    mapIdx(processes[j]->contactedIpPeersIndexes[i]);
-	      }
-	    }
-	  }
 #ifdef MULTITHREADED
-	  releaseMutex(&lsofMutex);
+    accessMutex(&lsofMutex, "processes Map");
+#endif
+    for(j=0; j<numProcesses; j++) {
+      if(processes[j] != NULL) {
+	int i;
+	
+	for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+	  if(processes[j]->contactedIpPeersIndexes[i] != NO_PEER)
+	    processes[j]->contactedIpPeersIndexes[i] =
+	      mapIdx(processes[j]->contactedIpPeersIndexes[i]);
+	}
+      }
+    }
+#ifdef MULTITHREADED
+    releaseMutex(&lsofMutex);
 #endif
   }
   
@@ -925,7 +925,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   if(host->osName != NULL)
     free(host->osName);
 
-  for(i=0; i<MAX_NUM_PROCESSES; i++) {
+  for(i=0; i<numProcesses; i++) {
     if(processes[i] != NULL) {
       for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
 	if(processes[i]->contactedIpPeersIndexes[j] == hostIdx)
