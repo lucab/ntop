@@ -54,8 +54,10 @@ void termIPSessions(void) {
       IPSession *session = myGlobals.device[j].tcpSession[i];
 
       while(session != NULL) {
+	IPSession *nextSession;
+	nextSession = session->next;
 	free(session);
-	session = session->next;
+	session = nextSession;
       }
     }
 

@@ -109,6 +109,10 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 
   if(!(myGlobals.netFlowInSocket > 0)) return;
 
+  
+  traceEvent(TRACE_INFO, "Welcome to netFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
+  traceEvent(TRACE_INFO, "Started thread (%ld) for netFlow.\n", netFlowThread);
+  
   for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&netflowMask);
     FD_SET(myGlobals.netFlowInSocket, &netflowMask);
@@ -427,7 +431,7 @@ static PluginInfo netflowPluginInfo[] = {
     "1.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
-    1, /* Active */
+    0, /* Active */
     initNetFlowFunct, /* InitFunc   */
     NULL, /* TermFunc   */
     NULL, /* PluginFunc */

@@ -204,8 +204,8 @@ static void updateDeviceThpt(int deviceToUpdate) {
 
 	el->actualRcvdThpt       = (float)(el->bytesRcvd-el->lastBytesRcvd)/timeDiff;
 	if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
-	if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
 	el->actualSentThpt       = (float)(el->bytesSent-el->lastBytesSent)/timeDiff;
+	if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
 	el->lastBytesSent        = el->bytesSent;
 	el->lastBytesRcvd        = el->bytesRcvd;
 
@@ -213,8 +213,8 @@ static void updateDeviceThpt(int deviceToUpdate) {
 
 	el->actualRcvdPktThpt    = (float)(el->pktRcvd-el->lastPktRcvd)/timeDiff;
 	if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
-	if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
 	el->actualSentPktThpt    = (float)(el->pktSent-el->lastPktSent)/timeDiff;
+	if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
 	el->lastPktSent          = el->pktSent;
 	el->lastPktRcvd          = el->pktRcvd;
 

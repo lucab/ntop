@@ -66,7 +66,7 @@ static int _ns_name_unpack(const u_char *msg,
 
 /* ************************************ */
 
-static void resolveAddress(struct in_addr *hostAddr, 
+static void resolveAddress(struct in_addr *hostAddr,
 			   short keepAddressNumeric, int actualDeviceId) {
   char symAddr[MAX_HOST_SYM_NAME_LEN];
   StoredAddress storedAddress;
@@ -339,6 +339,7 @@ static void queueAddress(struct in_addr elem) {
   datum key_data, data_data;
 #endif
   char tmpBuf[32];
+  int rc;
 
   if(myGlobals.trackOnlyLocalHosts && (!_pseudoLocalAddress(&elem)))
     return;
@@ -347,34 +348,41 @@ static void queueAddress(struct in_addr elem) {
   accessMutex(&myGlobals.gdbmMutex, "queueAddress");
 #endif
 
-/*
-  sprintf(tmpBuf, "%u", elem.s_addr);
-  key_data.dptr = tmpBuf;
-  key_data.dsize = strlen(tmpBuf)+1;
-*/
+  /* Fix - Burton Strauss (BStrauss@acm.org) 2002-04-04
+           Make sure tmpBuf has a value and
+           Prevent increment of queue length on failure (i.e. add of existing value)
+           Incidentally, speed this up by eliminating the fetch/store sequence in favor of
+           a single store.
+  */
   key_data.dptr = (void*)&elem.s_addr;
   key_data.dsize = 4;
 
-  data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
+  sprintf(tmpBuf, "%u", elem.s_addr);
+  data_data.dptr = tmpBuf;
+  data_data.dsize = strlen(tmpBuf)+1;
 
-  if(data_data.dptr == NULL) {
-    data_data.dptr = tmpBuf;
-    data_data.dsize = strlen(tmpBuf)+1;
+  rc = gdbm_store(myGlobals.addressCache, key_data, data_data, GDBM_INSERT);
 
-    if(gdbm_store(myGlobals.addressCache, key_data, data_data, GDBM_REPLACE) != 0)
-    printf("Error while adding address '%s'\n", tmpBuf);
-
-    myGlobals.addressQueueLen++;
-    if(myGlobals.addressQueueLen > myGlobals.maxAddressQueueLen) myGlobals.maxAddressQueueLen = myGlobals.addressQueueLen;
+  if (rc == 0) {
+      myGlobals.addressQueueLen++;
+      if (myGlobals.addressQueueLen > myGlobals.maxAddressQueueLen)
+	myGlobals.maxAddressQueueLen = myGlobals.addressQueueLen;
 
 #ifdef DNS_DEBUG
    traceEvent(TRACE_INFO, "Queued address '%s' [addr queue=%d/max=%d]\n",
 	      tmpBuf, myGlobals.addressQueueLen, myGlobals.maxAddressQueueLen);
 #endif
   } else {
-      if(data_data.dptr != NULL)  /* Address already in queue */ 
-	  free(data_data.dptr);
+    /* rc = 1 is duplicate key, which is fine.  Other codes are problems... */
+    if (rc != 1) {
+      traceEvent(TRACE_WARNING, "Failed(%d): Queue address '%s' [addr queue=%d/max=%d] (processing continues)\n",
+		 rc, tmpBuf, myGlobals.addressQueueLen, myGlobals.maxAddressQueueLen);
+    }
+#ifdef DNS_DEBUG
+    traceEvent(TRACE_INFO, "Queuing of address '%s' - duplicate in queue (ntop continues ok)\n",                     tmpBuf);
+#endif
   }
+
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
@@ -429,33 +437,40 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #endif
 
     key_data = data_data;
-    
+
     if(firstRun
-       || (key_data.dptr == NULL) 
-	) {
+       || (key_data.dptr == NULL)
+       ) {
       data_data = gdbm_firstkey(myGlobals.addressCache);
-	firstRun = 0;
+      firstRun = 0;
     } else {
-	data_data = gdbm_nextkey(myGlobals.addressCache, key_data);
-	if(key_data.dptr != NULL) free(key_data.dptr);
+      data_data = gdbm_nextkey(myGlobals.addressCache, key_data);
+      if(key_data.dptr != NULL) free(key_data.dptr);
     }
 
-  if(data_data.dptr != NULL) {
+#ifdef DNS_DEBUG
+    if ((data_data.dptr == NULL) && (myGlobals.addressQueueLen > 0)) {
+      traceEvent(TRACE_INFO, "firstkey/nextkey for returned null, but address queue length is %d\n",
+		 myGlobals.addressQueueLen);
+    }
+#endif
+
+    if(data_data.dptr != NULL) {
       myGlobals.addressQueueLen--;
 
       /* addr.s_addr = (unsigned long)atol(data_data.dptr); */
-      memcpy(&addr.s_addr, data_data.dptr, 4); 
+      memcpy(&addr.s_addr, data_data.dptr, 4);
 
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Dequeued address... [%u][key=%s] (#addr=%d)\n",
-		 addr.s_addr, 
+		 addr.s_addr,
 		 key_data.dptr == NULL ? "<>" : key_data.dptr,
 		 myGlobals.addressQueueLen);
 #endif
 
       gdbm_delete(myGlobals.addressCache, data_data);
     } else
-	addr.s_addr = 0x0;
+      addr.s_addr = 0x0;
 
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
@@ -470,7 +485,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     }
   } /* endless loop */
 
-  traceEvent(TRACE_INFO, "Address resultion terminated...");
+  traceEvent(TRACE_INFO, "Address resolution terminated...");
   return(NULL); /* NOTREACHED */
 }
 
@@ -1119,7 +1134,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     unless you want to core dump !
   */
 #if 0
-  eom = (u_char *)(ipPtr+length);    
+  eom = (u_char *)(ipPtr+length);
 #else
   eom = (u_char *) &answer + length;
 #endif
@@ -1270,7 +1285,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 #else
     {
       u_int32_t     padding;
-      
+
       padding=((u_int32_t)bp) % sizeof(u_int32_t);
       bp += padding;
       buflen -= padding;
@@ -1367,14 +1382,14 @@ void checkSpoofing(u_int idxToCheck, int actualDeviceId) {
   HostTraffic *el;
 
   for(i=1; i<myGlobals.device[actualDeviceId].actualHashSize; i++) {
-    if((i != idxToCheck) 
+    if((i != idxToCheck)
        && (i != myGlobals.otherHostEntryIdx)
        && ((el = myGlobals.device[actualDeviceId].hash_hostTraffic[i]) != NULL)) {
       if((el->hostIpAddress.s_addr != 0x0)
 	 && (myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck] != NULL)
 	 && (el->hostIpAddress.s_addr ==
 	     myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->hostIpAddress.s_addr)) {
-	/* Spoofing detected */	    
+	/* Spoofing detected */
 	if((!hasDuplicatedMac(el))
 	   && (!hasDuplicatedMac(myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]))) {
 	  FD_SET(HOST_DUPLICATED_MAC, &myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->flags);

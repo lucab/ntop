@@ -217,6 +217,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     return("&nbsp;");
 
   if(broadcastHost(el)
+     || (el->hostSerial == myGlobals.broadcastEntryIdx)
      || ((el->hostIpAddress.s_addr == 0) && (el->ethAddressString[0] == '\0'))) {
     if(mode == LONG_FORMAT)
       return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
@@ -232,7 +233,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   accessMutex(&myGlobals.addressResolutionMutex, "makeHostLink");
 #endif
 
-  if(el == myGlobals.otherHostEntry) {
+  if((el == myGlobals.otherHostEntry) || (el->hostSerial == myGlobals.otherHostEntryIdx)) {
     char *fmt;
 
     if(mode == LONG_FORMAT)
@@ -1033,6 +1034,10 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
   int topSock = myGlobals.sock;
 
   FD_ZERO(&mask);
+
+  traceEvent(TRACE_INFO, "Started thread (%ld) for web server.\n",
+             myGlobals.handleWebConnectionsThreadId);
+
 
   if(myGlobals.webPort > 0)
     FD_SET((unsigned int)myGlobals.sock, &mask);

@@ -204,11 +204,20 @@ static void addContactedPeers(HostTraffic *sender,   u_int senderIdx,
   if(senderIdx == receiverIdx)
     return;
 
+  /*
+    if(strcmp(sender->hostNumIpAddress, "172.22.5.92") == 0)
+    traceEvent(TRACE_INFO, "addContactedPeers(%d)", receiverIdx);
+    else if(strcmp(receiver->hostNumIpAddress, "172.22.5.92") == 0)
+    traceEvent(TRACE_INFO, "addContactedPeers(%d)", senderIdx);
+  */
+
   /* ******************************* */
 
   if((senderIdx != myGlobals.broadcastEntryIdx) 
      && (senderIdx != myGlobals.otherHostEntryIdx)) {
     if(sender != NULL) {
+
+      #if 0
       for(found=0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	if(sender->contactedSentPeers.peersIndexes[i] != NO_PEER) {
 	  HostTraffic el;
@@ -217,12 +226,12 @@ static void addContactedPeers(HostTraffic *sender,   u_int senderIdx,
 	     || (((receiverIdx == myGlobals.broadcastEntryIdx) 
 		  || (receiverIdx == myGlobals.otherHostEntryIdx)
 		  || broadcastHost(receiver)))) {
-	    HostTraffic el;
-	    
+
 	    if(retrieveHost(sender->contactedSentPeers.peersIndexes[i], &el) == 0) {
 	      HostTraffic *el1 = &el;
+
 	      if(broadcastHost(el1)) {
-		found = 1;
+		found = 1; /* we don't count broadcast traffic */
 		break;
 	      }
 	    }
@@ -230,26 +239,30 @@ static void addContactedPeers(HostTraffic *sender,   u_int senderIdx,
 	}
 
       if(found == 0)
+	#endif
 	incrementUsageCounter(&sender->contactedSentPeers, receiverIdx, actualDeviceId);
     }
   }
 
   /* ******************************* */
+
   if((receiverIdx != myGlobals.broadcastEntryIdx) 
      && (receiverIdx != myGlobals.otherHostEntryIdx)) {
     if(receiver != NULL) {
+      #if 0
       for(found=0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	if(receiver->contactedRcvdPeers.peersIndexes[i] != NO_PEER) {
+	  HostTraffic el;
+	  
 	  if((receiver->contactedRcvdPeers.peersIndexes[i] == senderIdx)
 	     || (((senderIdx == myGlobals.broadcastEntryIdx) 
 		  || (senderIdx == myGlobals.otherHostEntryIdx)
-		  || broadcastHost(sender)))) {
-	    HostTraffic el;
+		  || broadcastHost(sender)))) {	    
 	    
-	    if(retrieveHost(receiver->contactedSentPeers.peersIndexes[i], &el) == 0) {
+	    if(retrieveHost(receiver->contactedRcvdPeers.peersIndexes[i], &el) == 0) {
 	      HostTraffic *el1 = &el;
 	      if(broadcastHost(el1)) {
-		found = 1;
+		found = 1; /* we don't count broadcast traffic */
 		break;
 	      }
 	    }
@@ -257,6 +270,7 @@ static void addContactedPeers(HostTraffic *sender,   u_int senderIdx,
 	}
 
       if(found == 0)
+#endif
 	incrementUsageCounter(&receiver->contactedRcvdPeers, senderIdx, actualDeviceId);
     }
   }

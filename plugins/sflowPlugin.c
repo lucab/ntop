@@ -1631,6 +1631,8 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
   traceEvent(TRACE_INFO, "sFlowMainLoop()");
 #endif
 
+  traceEvent(TRACE_INFO, "Started thread (%ld) for sFlow.\n", sFlowThread);
+  
   for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&sFlowMask);
     FD_SET(myGlobals.sflowInSocket, &sFlowMask);
@@ -1918,7 +1920,7 @@ static PluginInfo sFlowPluginInfo[] = {
     "1.1", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "sFlow", /* http://<host>:<port>/plugins/sFlowWatch */
-    1, /* Active */
+    0, /* Active */
     initsFlowFunct,    /* InitFunc   */
     termsFlowFunct,    /* TermFunc   */
     handleSflowPacket, /* PluginFunc */

@@ -803,10 +803,18 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
 
 int retrieveHost(HostSerial theSerial, HostTraffic *el) {
   if((theSerial != NO_PEER) 
-     && (theSerial != 0 /* Safety check: broadcast */)) {
+     && (theSerial != myGlobals.broadcastEntryIdx /* Safety check: broadcast */)) {
     datum key_data;
     datum data_data;
     char buf[128];
+
+    if(theSerial == myGlobals.broadcastEntryIdx) {
+      memcpy(el, &myGlobals.broadcastEntry, sizeof(HostTraffic));
+      return(0);
+    } else if(theSerial == myGlobals.otherHostEntryIdx) {
+      memcpy(el, &myGlobals.otherHostEntry, sizeof(HostTraffic));
+      return(0);
+    }
 
     sprintf(buf, "%u", theSerial);
     key_data.dptr  = buf;
@@ -821,7 +829,9 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
 #endif
       
     if(data_data.dptr != NULL) {
-      memset(el, 0, sizeof(el));
+      /* memset(el, 0, sizeof(HostTraffic)); */
+      memset(&el->flags, 0, sizeof(fd_set));
+      el->hostSerial = theSerial;
       if(strlen(data_data.dptr) == 17) /* MAC Address */ {
 	strcpy(el->ethAddressString, data_data.dptr);
 	el->hostIpAddress.s_addr = 0x1234; /* dummy */

@@ -450,15 +450,16 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 }
 
 /* ************************ */
+#define MAX_NUM_PROTOS      64
 
 void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
-  float p[20];
+  float p[MAX_NUM_PROTOS];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int i, num=0, expl[20];
+  int i, num=0, expl[MAX_NUM_PROTOS];
   FILE *fd;
-  TrafficCounter traffic, totalIPTraffic;
+  TrafficCounter traffic, totalIPTraffic, diffTraffic;
 
   if(theHost->protoIPTrafficInfos == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: Graph failure (5)");
@@ -467,45 +468,46 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
   totalIPTraffic = 0;
 
-  for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
-    if(dataSent)
-      totalIPTraffic += theHost->protoIPTrafficInfos[i].sentLoc+
-	theHost->protoIPTrafficInfos[i].sentRem;
-    else
-      totalIPTraffic += theHost->protoIPTrafficInfos[i].rcvdLoc+
-	theHost->protoIPTrafficInfos[i].rcvdFromRem;
-
+  if(dataSent)
+    totalIPTraffic = theHost->ipBytesSent;
+  else
+    totalIPTraffic = theHost->ipBytesRcvd;
+  
   if(totalIPTraffic > 0) {
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
       if(dataSent)
-	traffic = theHost->protoIPTrafficInfos[i].sentLoc+
-	  theHost->protoIPTrafficInfos[i].sentRem;
+	traffic = theHost->protoIPTrafficInfos[i].sentLoc+theHost->protoIPTrafficInfos[i].sentRem;
       else
-	traffic = theHost->protoIPTrafficInfos[i].rcvdLoc+
-	  theHost->protoIPTrafficInfos[i].rcvdFromRem;
+	traffic = theHost->protoIPTrafficInfos[i].rcvdLoc+theHost->protoIPTrafficInfos[i].rcvdFromRem;
 
       if(traffic > 0) {
 	p[num] = (float)((100*traffic)/totalIPTraffic);
+	diffTraffic += traffic;
 
         if(num==0)
           expl[num]=10;
         else
           expl[num]=expl[num-1];
-	if (p[num]<5.0)
-	  expl[num]+=9;
-	else if (p[num]>10.0)
-	  expl[num]=10;
+	if (p[num]<5.0) expl[num]+=9; else if (p[num]>10.0) expl[num]=10;
 
 	lbl[num++] = myGlobals.protoIPTrafficInfos[i];
       }
 
-      if(num >= 20) break; /* Too much stuff */
-   }
+      if(num >= MAX_NUM_PROTOS) break; /* Too much stuff */
+    }
   }
 
   if(num == 0) {
     traceEvent(TRACE_WARNING, "WARNING: Graph failure (4)");
     return; /* TODO: this has to be handled better */
+  }
+
+  if(diffTraffic < totalIPTraffic) {
+    diffTraffic = totalIPTraffic - diffTraffic;
+    p[num] = (float)((100*diffTraffic)/totalIPTraffic);
+    expl[num]=expl[num-1];
+    if(p[num]<5.0) expl[num]+=9; else if (p[num]>10.0) expl[num]=10;
+    lbl[num++] = "Other";
   }
 
 #ifdef MULTITHREADED
@@ -540,7 +542,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
 #ifdef WIN32
-	sendGraphFile(fileName);
+  sendGraphFile(fileName);
 #endif
 }
 

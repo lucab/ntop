@@ -986,10 +986,11 @@ int cmpFctn(const void *_a, const void *_b) {
   }
 
   /*
-  traceEvent(TRACE_INFO, "%s=%u - %s=%u",
-	     (*a)->hostSymIpAddress, (unsigned long)a_,
-	     (*b)->hostSymIpAddress, (unsigned long)b_);
+    traceEvent(TRACE_INFO, "%s=%u - %s=%u",
+    (*a)->hostSymIpAddress, (unsigned long)a_,
+    (*b)->hostSymIpAddress, (unsigned long)b_);
   */
+
   if(floatCompare == 0) {
     if(a_ < b_) {
       return(1);
@@ -1848,7 +1849,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       }
 
     if(ok) {
-      struct hostTraffic *el1;
+      struct hostTraffic *el1, el2;
       int numEntries;
 
       printSectionTitle("Last Contacted Peers");
@@ -1857,26 +1858,24 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
-	     && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
-	      el1 = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[
-		  checkSessionIdx(el->contactedSentPeers.peersIndexes[i])];
+	     && (el->contactedSentPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
 
-	      if(el1 != NULL) {
-		  if(numEntries == 0) {
-		      sendString(""TABLE_ON"<TABLE BORDER=1 VALIGN=TOP WIDTH=100%>"
-				 "<TR><TH "TH_BG">Receiver Name</TH>"
-				 "<TH "TH_BG">Receiver Address</TH></TR>\n");
-		  }
-
-		  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-			      "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
-			      getRowColor(),
-			      makeHostLink(el1, 0, 0, 0),
-			      el1->hostNumIpAddress) < 0) BufferOverflow();
-
-		  sendString(buf);
-		  numEntries++;
+	    if(retrieveHost(el->contactedSentPeers.peersIndexes[i], &el2) == 0) {	   
+	      if(numEntries == 0) {
+		sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
+			   "<TR><TH "TH_BG">Sent To</TH>"
+			   "<TH "TH_BG">Address</TH></TR>\n");
 	      }
+
+	      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+			  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
+			  getRowColor(), makeHostLink(&el2, 0, 0, 0),
+			  el2.hostNumIpAddress) < 0) 
+		BufferOverflow();
+
+	      sendString(buf);
+	      numEntries++;
+	    }
 	  }
 
       if(numEntries > 0)
@@ -1886,27 +1885,27 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
       /* ***************************************************** */
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if(el->contactedRcvdPeers.peersIndexes[i] != NO_PEER) {
-	  el1 = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[
-                       checkSessionIdx(el->contactedRcvdPeers.peersIndexes[i])];
-
-	  if(el1 != NULL) {
-	    if(numEntries == 0) {
-	      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
-			 "<TR><TH "TH_BG">Sender Name</TH>"
-			 "<TH "TH_BG">Sender Address</TH></TR>\n");
+	if((el->contactedRcvdPeers.peersIndexes[i] != NO_PEER)   
+	   && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
+	  
+	  if(retrieveHost(el->contactedRcvdPeers.peersIndexes[i], &el2) == 0) {	   
+	      if(numEntries == 0) {
+		sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
+			   "<TR><TH "TH_BG">Recevived From</TH>"
+			   "<TH "TH_BG">Address</TH></TR>\n");
+	      }
+	      
+	      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+			  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
+			  getRowColor(), makeHostLink(&el2, 0, 0, 0),
+			  el2.hostNumIpAddress) < 0) 
+		BufferOverflow();
+	      
+	      sendString(buf);
+	      numEntries++;
 	    }
-
-	    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		     "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
-		    getRowColor(),
-		    makeHostLink(el1, 0, 0, 0),
-		    el1->hostNumIpAddress) < 0) BufferOverflow();
-
-	    sendString(buf);
-	    numEntries++;
 	  }
-	}
+	  
 
       if(numEntries > 0)
 	sendString("</TABLE>"TABLE_OFF"\n");
@@ -2045,7 +2044,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	}
       }
 
-      sendString("</UL>&nbsp;</TD></TR>\n");
+      sendString("</UL></TD></TR>\n");
 
       scanner = (IpGlobalSession*)(scanner->next);
     }

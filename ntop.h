@@ -712,6 +712,12 @@ struct hostTraffic; /* IP Session global information */
 
 /* *********************** */
 
+/*
+typedef struct thptEntry {
+  u_char 
+} HostSerial;
+*/
+
 #define HostSerial u_int32_t
 
 /* *********************** */

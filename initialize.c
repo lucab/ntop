@@ -306,9 +306,10 @@ void initCounters() {
   FD_SET(SUBNET_LOCALHOST_FLAG, &myGlobals.broadcastEntry->flags);
   FD_SET(BROADCAST_HOST_FLAG, &myGlobals.broadcastEntry->flags);
   FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &myGlobals.broadcastEntry->flags);
+  myGlobals.broadcastEntry->hostSerial = 0;
 
   myGlobals.broadcastEntryIdx = 0;
-  myGlobals.serialCounter     = 1 /* 0 is reserved for broadcast */;
+  myGlobals.serialCounter     = 2 /* 0 is reserved for broadcast/1 for otherHosts */;
 
   if(myGlobals.trackOnlyLocalHosts) {
     myGlobals.otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
@@ -321,6 +322,7 @@ void initCounters() {
 	    sizeof(myGlobals.otherHostEntry->hostSymIpAddress));
     strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
     myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
+    myGlobals.otherHostEntry->hostSerial = myGlobals.otherHostEntryIdx;
   } else {
     /* We let ntop think that otherHostEntryIdx does not exist */
     myGlobals.otherHostEntry = NULL;
