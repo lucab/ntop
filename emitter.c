@@ -324,7 +324,7 @@ static void wrtUshortItm(FILE *fDescr, int lang, char *indent, char *name,
 /* ********************************** */
 
 static int checkFilter(char* theStr, char* strToMatch) {
-  if((theStr == NULL) || (strToMatch == NULL))
+  if((theStr == NULL) || (theStr[0] == '\0') || (strToMatch == NULL))
     return(0);
   else
     return(!strstr(theStr, strToMatch));
@@ -497,7 +497,7 @@ static void decrementRefCount(HostTraffic *el) {
 
 void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64], filter[128], *hostKey = NULL;
-  unsigned int idx, numEntries=0, lang=DEFAULT_FLAG_LANGUAGE, j, localView=0;
+  unsigned int numEntries=0, lang=DEFAULT_FLAG_LANGUAGE, j, localView=0;
   HostTraffic *el;
   unsigned char shortView = 0;
   char workSymIpAddress[MAX_LEN_SYM_HOST_NAME_HTML];
@@ -601,7 +601,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
     if(!shortView) {
       if(checkFilter(filter, "index"))
-	wrtUintItm(fDescr, lang, "\t","index", idx, ' ', numEntries);
+	wrtUintItm(fDescr, lang, "\t","index", 0, ' ', numEntries);
 
       if(checkFilter(filter, "hostNumIpAddress"))
 	wrtStrItm(fDescr, lang, "\t", "hostNumIpAddress", el->hostNumIpAddress, ',', numEntries);
@@ -1111,7 +1111,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 /* ********************************** */
 
 void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
-  unsigned int idx, numEntries=0, lang=DEFAULT_FLAG_LANGUAGE;
+  unsigned int numEntries=0, lang=DEFAULT_FLAG_LANGUAGE;
   HostTraffic *el;
 
   if(options != NULL) {
@@ -1160,7 +1160,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
       else
 	hostKey = el->ethAddressString;
       
-      wrtIntStrItm(fDescr, lang, "", idx, hostKey,'\n', numEntries);
+      wrtIntStrItm(fDescr, lang, "", 0, hostKey,'\n', numEntries);
       
       numEntries++;
     }    

@@ -56,6 +56,8 @@ typedef int NDIS_STATUS, *PNDIS_STATUS;
 #define strcasecmp _stricmp
 
 extern int getopt(int num, char *const *argv, const char *opts);
+#define getopt getopt____
+
 #if defined(WIN32) && defined(__GNUC__)
 /* on mingw, struct timezone isn't defined so s/struct timezone/void/ - Scott Renfro <scott@renfro.org> */
 extern int gettimeofday(struct timeval*, void*);

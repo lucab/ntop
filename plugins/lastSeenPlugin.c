@@ -188,7 +188,7 @@ static void handleLsHTTPrequest(char* url) {
 
   /* ========================================================================= */
 
-  quicksort(( void *)&tablehost[0],entry,sizeof(LsHostInfo),SortLS);
+  qsort(( void *)&tablehost[0],entry,sizeof(LsHostInfo),SortLS);
   num_hosts=entry;
   entry--;
   printSectionTitle("Last Seen Statistics");

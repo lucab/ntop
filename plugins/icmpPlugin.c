@@ -224,7 +224,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       /* Avoid to draw too many entries */
       if(num > myGlobals.maxNumLines) num = myGlobals.maxNumLines;
 
-      quicksort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
+      qsort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
 
       for(i=0; i<num; i++) {
 	if(hosts[i] != NULL) {
@@ -328,7 +328,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
 
-  quicksort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
+  qsort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
 
   for(i=0, printedEntries=0; i<num; i++)
     if(hosts[i] != NULL) {

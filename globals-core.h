@@ -112,7 +112,6 @@ extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
 extern char* formatPkts(Counter pktNr);
 
 /* hash.c */
-extern int retrieveHost(HostSerial theSerial, HostTraffic *el);
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);

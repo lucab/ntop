@@ -147,7 +147,7 @@ ULONG GetHostIPAddr () {
   stLclAddr.sin_addr.s_addr = INADDR_ANY;
 
   /* Get the local hostname */
-  nRet = gethostname(szLclHost, 64);
+  nRet = gethostname(szLclHost, sizeof(szLclHost));
   if(nRet != SOCKET_ERROR) {
     /* Resolve hostname for local address */
     lpstHostent = gethostbyname((LPSTR)szLclHost);

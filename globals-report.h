@@ -72,7 +72,7 @@ extern void printHostFragmentStats(HostTraffic *el, int actualDeviceId);
 extern void printTotalFragmentStats(HostTraffic *el, int actualDeviceId);
 extern void printHostContactedPeers(HostTraffic *el, int actualDeviceId);
 extern char *getSessionState(IPSession *session);
-extern void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId);
+extern void printHostSessions(HostTraffic *el, int actualDeviceId);
 extern u_short isHostHealthy(HostTraffic *el);
 extern void printHostDetailedInfo(HostTraffic *el, int actualDeviceId);
 extern void printServiceStats(char* svcName, ServiceStats* ss, short printSentStats);

@@ -3526,7 +3526,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 	   Example: 0212:_MSS:80:WS:0:1:0:0:A:LT
 	*/
 
-	free(srcHost->fingerprint);
+	if(srcHost->fingerprint) free(srcHost->fingerprint);
 	srcHost->fingerprint = strdup(&line[28]);
 	/* traceEvent(CONST_TRACE_INFO, "[%s] -> [%s]\n",
 	   srcHost->hostNumIpAddress, srcHost->fingerprint);*/
@@ -3541,9 +3541,8 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
   if(!done) {
     /* Unknown fingerprint */
-  unknownFingerprint:
-    free(srcHost->fingerprint);
-    srcHost->fingerprint = strdup(":"); /* Empty OS name */
+  unknownFingerprint: /* Empty OS name */
+    srcHost->fingerprint[0] = ':', srcHost->fingerprint[1] = '\0';
   }
 
   releaseAddrResMutex();

@@ -66,6 +66,7 @@ void handleSigHup(int signalId _UNUSED_) {
 
 /* *************************** */
 
+#ifndef WIN32
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
@@ -121,8 +122,8 @@ void* pcapDispatch(void *_i) {
   return(NULL); 
 }
 
+#else /* WIN32 */
 
-#if 0 /* WIN32 */
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
@@ -147,7 +148,7 @@ void* pcapDispatch(void *_i) {
   return(NULL); 
 
 }
-#endif
+#endif /* WIN32 */
 
 /* **************************************** */
 
@@ -602,6 +603,10 @@ static void purgeIpPorts(int theDevice) {
   
   if(myGlobals.device[myGlobals.actualReportDeviceId].numHosts == 0) return;
 
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
+#endif
+
   if(firstRun) {
     traceEvent(CONST_TRACE_INFO, 
                "PORT_PURGE: purgeIpPorts firstRun (mutex every %d times through the loop)\n",
@@ -609,16 +614,14 @@ static void purgeIpPorts(int theDevice) {
     firstRun = 0;
   }
 
-
   /* **********************************
+     Marker used to be defined ad char marker[MAX_IP_PORT];
+     Unfortunately under FreeBSD this caused a core dump.
+     Probably because the amount of memory allocated on the
+     heap was too much. With dynamic memory allocation
+     the problem is gone.
 
-  marker used to be defined ad char marker[MAX_IP_PORT];
-  Unfortunately under FreeBSD this caused a core dump.
-  Probably because the amount of memory allocated on the
-  heap was too much. With dynamic memory allocation
-  the problem is gone.
-
-  ********************************** */
+     ********************************** */
 
   marker = (char*)calloc(1, MAX_IP_PORT);
 
@@ -639,8 +642,8 @@ static void purgeIpPorts(int theDevice) {
   for(i=1; i<MAX_IP_PORT; i++) {
 #ifdef CFG_MULTITHREADED
     if((i & CONST_MUTEX_PHP_MASK) == 0) {
-        accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
-        mutexLocked = 1;
+      accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
+      mutexLocked = 1;
     }
 #endif
     if((marker[i] == 0) && (myGlobals.device[theDevice].ipPorts[i] != NULL)) {
@@ -652,12 +655,12 @@ static void purgeIpPorts(int theDevice) {
     }
 #ifdef CFG_MULTITHREADED
     if (((i+1) & CONST_MUTEX_PHP_MASK) == 0) {
-        if(mutexLocked) {
-            releaseMutex(&myGlobals.purgePortsMutex);
-            mutexLocked = 0;
-        }
+      if(mutexLocked) {
+	releaseMutex(&myGlobals.purgePortsMutex);
+	mutexLocked = 0;
+      }
 #ifdef MAKE_WITH_SCHED_YIELD
-        sched_yield(); /* Allow other threads to run */
+      sched_yield(); /* Allow other threads to run */
 #endif
     }
 #endif
@@ -667,11 +670,14 @@ static void purgeIpPorts(int theDevice) {
 
 #ifdef CFG_MULTITHREADED
   if(mutexLocked) {
-      releaseMutex(&myGlobals.purgePortsMutex);
-      mutexLocked = 0;
+    releaseMutex(&myGlobals.purgePortsMutex);
+    mutexLocked = 0;
   }
 #endif
 
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.purgeMutex);
+#endif
 }
 
 /* **************************************** */
@@ -936,10 +942,12 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
 
-    if(myGlobals.broadcastEntry != NULL)
+    /*
+      if(myGlobals.broadcastEntry != NULL)
       freeHostInfo(myGlobals.broadcastEntry, i);
-    if(myGlobals.otherHostEntry != NULL)
+      if(myGlobals.otherHostEntry != NULL)
       freeHostInfo(myGlobals.otherHostEntry, i);
+    */
 
     while(myGlobals.device[i].fragmentList != NULL) {
       IpFragment *fragment = myGlobals.device[i].fragmentList->next;

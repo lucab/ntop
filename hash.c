@@ -45,7 +45,7 @@ static u_int hash(struct in_addr *hostIpAddress,  u_char *ether_addr,
     if(myGlobals.trackOnlyLocalHosts
        && (!isLocalAddress(hostIpAddress, actualDeviceId))
        && (!_pseudoLocalAddress(hostIpAddress))) {
-      *el = myGlobals.otherHostEntry; 
+      *el = myGlobals.otherHostEntry;
       return(OTHER_HOSTS_ENTRY);
     } else
       memcpy(&idx, &hostIpAddress->s_addr, 4);
@@ -144,7 +144,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 	} else
 	  prevSession->next = nextSession;
 
-	freeSession(theSession, theDevice, 0 /* don't allocate */, 
+	freeSession(theSession, theDevice, 0 /* don't allocate */,
 		    0 /* locked by the purge thread */);
 	theSession = prevSession;
       } else {
@@ -193,11 +193,16 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(otherHostEntry)");
     return;
   }
-  
+
   if(host == myGlobals.broadcastEntry) {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(broadcastEntry)");
     return;
   }
+
+   if(host->magic != CONST_MAGIC_NUMBER) {
+      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
+		 CONST_MAGIC_NUMBER, host->magic);
+    }
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Entering freeHostInfo(%u)", host->hostTrafficBucket);
@@ -205,7 +210,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   /* ********** */
 
-  /* Make sure this host is not part of the ipTrafficMatrixHosts list */  
+  /* Make sure this host is not part of the ipTrafficMatrixHosts list */
   if(isMatrixHost(host, actualDeviceId)) {
     int id = matrixHostHash(host, actualDeviceId);
 
@@ -221,9 +226,9 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   myGlobals.device[actualDeviceId].hostsno--;
 
-#ifdef HOST_FREE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleted a hash_hostTraffic entry [slotId=%d/%s]\n",
-	     host->hostTrafficBucket, host->hostSymIpAddress);
+#if 1
+  traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleted a hash_hostTraffic entry [%s/%s]\n",
+	     host->ethAddressString, host->hostSymIpAddress);
 #endif
 
   if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
@@ -338,6 +343,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   }
 
   if(host->icmpInfo != NULL) free(host->icmpInfo);
+  if(host->trafficDistribution != NULL) free(host->trafficDistribution);
 
   /* ********** */
 
@@ -357,7 +363,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     myGlobals.hostsCache[myGlobals.hostsCacheLen++] = host;
     if (myGlobals.hostsCacheLen > myGlobals.hostsCacheLenMax)
         myGlobals.hostsCacheLenMax = myGlobals.hostsCacheLen;
-  } else 
+  } else
 #endif
 {
     /* No room left: it's time to free the bucket */
@@ -373,7 +379,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
 /* ************************************ */
 
-/* 
+/*
    This function is called before the final
    cleanup when ntop shutsdown
 */
@@ -523,7 +529,7 @@ void purgeIdleHosts(int actDevice) {
 	   ) {
 	  theFlaggedHosts[maxBucket++] = el;
 
-	  if(prev == NULL) {	      
+	  if(prev == NULL) {
 	    myGlobals.device[actDevice].hash_hostTraffic[el->hostTrafficBucket] = el->next; /* (*) */
 	    el = el->next;
 	  } else {
@@ -536,7 +542,7 @@ void purgeIdleHosts(int actDevice) {
 	    hashFull = 1;
 	    break;
 	  }
-	  
+
 	  continue; /* We have updated our pointers already */
 	}
       }
@@ -656,7 +662,7 @@ void purgeIdleHosts(int actDevice) {
 /*
   Searches a host and returns it. If the host is not
   present in the hash a new bucket is created
-*/ 
+*/
 HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 			 u_char checkForMultihoming,    u_char forceUsingIPaddress,
 			 int actualDeviceId) {
@@ -781,7 +787,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 
   if(!hostFound) {
     /* New host entry */
-    int len, currentIdx;
+    int len;
 
 #if RECYCLE_MEMORY
     if(myGlobals.hostsCacheLen > 0) {
@@ -811,13 +817,13 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
     len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
     if((el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len)) == NULL) return(NULL);
     memset(el->protoIPTrafficInfos, 0, len);
-    
+
     el->magic = CONST_MAGIC_NUMBER;
     el->hostTrafficBucket = idx; /* Set the bucket index */
     el->originalHostTrafficBucket = idx; /* Set the bucket index */
 
     /* traceEvent(CONST_TRACE_INFO, "new entry added at bucket %d", idx); */
-    
+
     /* Put the new entry on top of the list */
     el->next = myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket];
     myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket] = el;  /* Insert a new entry */
@@ -970,7 +976,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
       memcpy(&el->hostSerial, buf, 8);
     }
   }
-  
+
 
   if(el != NULL) {
     el->lastSeen = myGlobals.actTime;
@@ -1002,110 +1008,16 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 
 /* ************************************ */
 
-int retrieveHost(HostSerial theSerial, HostTraffic *el) {
-  HostTraffic *theEntry = NULL;
-  int found = 0;
-  u_int idx;
-
-  if(theSerial != FLAG_NO_PEER) {
-
-    char theBytes[8];
-
-    if(theSerial == myGlobals.broadcastEntry->hostSerial) {
-      memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
-      return(0);
-    } else if(theSerial == myGlobals.otherHostEntry->hostSerial) {
-      memcpy(el, myGlobals.otherHostEntry, sizeof(HostTraffic));
-      return(0);
-    }
-
-    /*
-       Unused
-        |
-        |        IP
-        V     -------
-      X X X X X X X X
-      ^   -----------
-      |        MAC
-      |
-      1 = MAC
-      0 = IP
-
-    */
-
-    memcpy(theBytes, &theSerial, 8);
-
-#ifdef CFG_LITTLE_ENDIAN
-    {
-      unsigned char buf1[8];
-      int i;
-
-      for(i=0; i<8; i++)
-	buf1[i] = theBytes[7-i];
-
-      memcpy(theBytes, buf1, 8);
-    }
-#endif
-
-    memset(el, 0, sizeof(HostTraffic));
-    el->hostSerial = theSerial;
-
-    if(theBytes[0] == 0) {
-      /* IP */
-      char buf[32];
-
-      memcpy(&el->hostIpAddress.s_addr, &theBytes[4], 4);
-      theEntry = findHostByNumIP(el->hostIpAddress, myGlobals.actualReportDeviceId);
-      
-      if(theEntry == NULL) {
-	strncpy(el->hostNumIpAddress,
-		_intoa(el->hostIpAddress, buf, sizeof(buf)),
-		sizeof(el->hostNumIpAddress));
-	fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
-	if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
-	  char sniffedName[MAXDNAME];
-
-	  if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))
-	    strcpy(el->hostSymIpAddress, sniffedName);
-	}
-      } else {
-	memcpy(el, theEntry, sizeof(HostTraffic));
-      }
-    } else {
-      /* MAC */
-      char *ethAddr;
-
-      memcpy(el->ethAddress, &theBytes[2], LEN_ETHERNET_ADDRESS);
-      theEntry = findHostByMAC(el->ethAddress, myGlobals.actualReportDeviceId);
-
-      if(theEntry == NULL) {
-	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
-
-	ethAddr = etheraddr_string(el->ethAddress, etherbuf);
-	strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
-	el->hostIpAddress.s_addr = 0x1234; /* dummy */
-      } else {
-	memcpy(el, theEntry, sizeof(HostTraffic));
-      }
-    }
-
-    return(0);
-  } else
-    return(-1);
-}
-
-/* ************************************ */
-
 #ifdef HASH_DEBUG
 
 static void dumpHash() {
   int i=0;
   HostTraffic *el;
 
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
-	       i++, el->ethAddressString, el->hostNumIpAddress, 
+	       i++, el->ethAddressString, el->hostNumIpAddress,
 	       el->hostTrafficBucket, el->originalHostTrafficBucket,
 	       el->next);
   }
@@ -1118,11 +1030,11 @@ static void hashSanityCheck() {
 
   for(i=FIRST_HOSTS_ENTRY; i<myGlobals.device[0].actualHashSize; i++) {
     HostTraffic *el = myGlobals.device[0].hash_hostTraffic[i];
-    
+
     while(el != NULL) {
       if(el->hostTrafficBucket != i)
 	traceEvent(CONST_TRACE_INFO, "HASH ERROR: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
-		   i, el->ethAddressString, el->hostNumIpAddress, 
+		   i, el->ethAddressString, el->hostNumIpAddress,
 		   el->hostTrafficBucket, el->originalHostTrafficBucket,
 		   el->next);
       el = el->next;
@@ -1137,11 +1049,11 @@ static void hostHashSanityCheck(HostTraffic *host) {
 
   for(i=FIRST_HOSTS_ENTRY; i<myGlobals.device[0].actualHashSize; i++) {
     HostTraffic *el = myGlobals.device[0].hash_hostTraffic[i];
-    
+
     while(el != NULL) {
       if(el == host)
 	traceEvent(CONST_TRACE_INFO, "HOST HASH ERROR: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
-		   i, el->ethAddressString, el->hostNumIpAddress, 
+		   i, el->ethAddressString, el->hostNumIpAddress,
 		   el->hostTrafficBucket, el->originalHostTrafficBucket,
 		   el->next);
       el = el->next;

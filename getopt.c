@@ -52,7 +52,7 @@
 #define GETOPT_INTERFACE_VERSION 2
 #if !defined _LIBC && defined __GLIBC__ && __GLIBC__ >= 2
 # include <gnu-versions.h>
-# if _GNU_GETOPT_INTERFACE_VERSION == GETOPT_INTERFACE_VERSION
+# if _GNU_GETOPT<_INTERFACE_VERSION == GETOPT_INTERFACE_VERSION
 #  define ELIDE_CODE
 # endif
 #endif

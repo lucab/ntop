@@ -20,7 +20,7 @@
 
 /* This plugin works only with threads */
 
-/* #define RRD_DEBUG  8 */
+#define RRD_DEBUG  8
 
 /*
 
@@ -237,6 +237,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   opterr=0; /* no error messages */
 
   rc = rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data);
+
   if(rc == -1) {
     return(-1);
   }
@@ -445,14 +446,15 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
       optind=0; /* reset gnu getopt */
       opterr=0; /* no error messages */
-      rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+
+	  rc = rrd_graph(argc, argv, &calcpr, &x, &y);
 
       calfree();
-
 
     if(rc == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0);
       sendGraphFile(fname, 0);
+	  unlink(fname);
     } else {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("RRD Graph", 0);
@@ -565,7 +567,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     optind=0; /* reset gnu getopt */
     opterr=0; /* no error messages */
 
-    rc = rrd_create(argc, argv);
+	rc = rrd_create(argc, argv);
 
     if (rrd_test_error()) {
       traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s", 
@@ -633,6 +635,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   opterr=0; /* no error messages */
 
   rc = rrd_update(argc, argv);
+  
   numTotalRRDs++;
 
   if (rrd_test_error()) {
@@ -667,7 +670,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
                        errTimeBuf2,
                        rrdLast,
                        rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
-        }
+        } else if (strstr(rrdError, "is not an RRD file")) {
+			unlink(path);
+		}
 
         rrd_clear_error();
     }
@@ -1229,9 +1234,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   u_int32_t networks[32][3];
   u_short numLocalNets;
   int sleep_tm, devIdx;
-  char rrdPath[512], fname[512];
-  struct stat statbuf;
-  int purgeCountFiles, purgeCountUnlink, purgeCountErrors;
+  char rrdPath[512];
   int cycleCount=0;
   char *adjHostName;
 
@@ -1289,7 +1292,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 #if RRD_DEBUG >= 1
     char endTime[32];
-    struct tm t;
 #endif
  
     cycleCount++;
@@ -1300,11 +1302,14 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     } while (sleep_tm < 0);
 
 #if RRD_DEBUG >= 1
+	{
+		 struct tm workT; 
     strftime(endTime, sizeof(endTime), "%Y-%m-%d %H:%M:%S", localtime_r(&end_tm, &workT));
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds (interval %d, end at %s)\n", 
 	       sleep_tm, 
 	       dumpInterval,
 	       endTime);
+	}
 #endif
 
     HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...", sleep_tm);
@@ -1622,53 +1627,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if (myGlobals.capturePackets == FLAG_NTOPSTATE_STOPCAP) {
         traceEvent(CONST_TRACE_WARNING, "RRD: STOPCAP, ending rrd thread");
         break;
-    }
-
-    purgeCountFiles=0;
-    purgeCountUnlink=0;
-    purgeCountErrors=0;
-
-    snprintf(rrdPath, sizeof(rrdPath), "%s/%s", myGlobals.rrdPath, rrd_subdirs[0]);
-#ifdef RRD_DEBUG
-    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: beginning old file purge (%s).", rrdPath);
-#endif
-
-    workDir = opendir(rrdPath);
-    if (workDir != NULL) {
-      while((workDirent = readdir(workDir)) != NULL) {
-	if(workDirent->d_name[0] != '.') {
-	  purgeCountFiles++;
-	  snprintf(fname, sizeof(fname), "%s/%s", rrdPath, workDirent->d_name);
-	  if(stat(fname, &statbuf) == 0) {
-	    if (myGlobals.actTime - statbuf.st_mtime > 2 * dumpInterval) {
-#ifdef RRD_DEBUG
-	      strftime(fileTimeBuf, sizeof(fileTimeBuf), 
-		       "%H:%M:%S", 
-		       localtime_r(&statbuf.st_mtime, &workT));
-	      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: oldfilepurge %s, mod @ %s\n",
-			 fname,
-			 fileTimeBuf);
-#endif
-	      if ((unlink(fname) != 0) && (errno != ENOENT)) {
-		purgeCountErrors++;
-		traceEvent(CONST_TRACE_ERROR, "RRD: unlink('%s') failed, %d...\n", fname, errno);
-	      } else {
-		purgeCountUnlink++;
-	      }
-	    }
-	  }
-	}
-      }
-#ifdef RRD_DEBUG
-      traceEvent(CONST_TRACE_INFO, "RRD: finished old file purge (%d files, %d deleted, %d errors).",
-		 purgeCountFiles,
-		 purgeCountUnlink,
-		 purgeCountErrors);
-#endif
-
-      closedir(workDir);
-    } else {
-      traceEvent(CONST_TRACE_ERROR, "RRD: Unable to opendir(%s), errno=%d", rrdPath, errno);
     }
   }
 

@@ -1931,7 +1931,7 @@ static int returnHTTPPage(char* pageName,
     if(strlen(theHost) <= strlen(CHART_FORMAT)) {
       printNoDataYet();
     } else {
-      u_int elIdx, i;
+      u_int i;
       HostTraffic *el=NULL;
 
       if(strlen(theHost) >= 31) theHost[31] = 0;

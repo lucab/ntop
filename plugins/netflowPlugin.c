@@ -253,7 +253,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
       char theFlags[256];
       u_int16_t srcAS, dstAS;
       struct in_addr a, b;
-      u_int srcHostIdx, dstHostIdx, numPkts;
+      u_int numPkts;
       HostTraffic *srcHost=NULL, *dstHost=NULL;
       u_short sport, dport, proto;
       TrafficCounter ctr;
@@ -392,24 +392,15 @@ static void dissectFlow(char *buffer, int bufferLen) {
                  skipDST == 0 ? "OK" : skipDST == 1 ? "failed White list" : "failed Black list");
 #endif
 
-      if(!skipDST) {
-	dstHostIdx = getHostInfo(&b, NULL, 0, 1, myGlobals.netFlowDeviceId);
-	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-      } else {
-	dstHostIdx = dummyHostIdx;
-	dstHost    = dummyHost;
-      }
+      if(!skipDST)
+	dstHost = lookupHost(&b, NULL, 0, 1, myGlobals.netFlowDeviceId);
+      else
+	dstHost = dummyHost;
 
-      if(!skipSRC) {
-	srcHostIdx = getHostInfo(&a, NULL, 0, 1, myGlobals.netFlowDeviceId);
-	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-      } else {
-	srcHostIdx = dummyHostIdx;
-	srcHost    = dummyHost;
-      }
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: dstHostIdx: %d srcHostIdx: %d", dstHostIdx, srcHostIdx);
-#endif
+      if(!skipSRC)
+	srcHost = lookupHost(&a, NULL, 0, 1, myGlobals.netFlowDeviceId);
+      else
+	srcHost = dummyHost;
 
       if((srcHost == NULL) ||(dstHost == NULL)) continue;
 
@@ -490,12 +481,6 @@ static void dissectFlow(char *buffer, int bufferLen) {
       case 6: /* TCP */
 	myGlobals.device[actualDeviceId].tcpBytes.value += len;
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	/*
-	  incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent.value, dstHostIdx, actualDeviceId);
-	  incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
-	  incrementUsageCounter(&srcHost->secHostPkts->terminatedTCPConnSent.value, dstHostIdx, actualDeviceId);
-	  incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
-	*/
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
 	updateInterfacePorts(actualDeviceId, sport, dport, len);
 	updateUsedPorts(srcHost, dstHost, sport, dport, len);

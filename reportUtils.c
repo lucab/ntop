@@ -55,7 +55,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 			int actualDeviceId) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   int i, sendHeader=0;
-  HostTraffic el;
+  HostTraffic *el;
 
   if(topValue == 0) {
     /* No percentage is printed */
@@ -78,14 +78,14 @@ void formatUsageCounter(UsageCounter usageCtr,
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(usageCtr.peersSerials[i] != FLAG_NO_PEER) {
-      if(retrieveHost(usageCtr.peersSerials[i], &el) == 0) {
-	if(!sendHeader) {
+		if((el = findHostBySerial(usageCtr.peersSerials[i], myGlobals.actualReportDeviceId)) != NULL) {
+ 	if(!sendHeader) {
 	  sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
 	  sendHeader = 1;
 	}
 
 	sendString("\n<li>");
-	sendString(makeHostLink(&el, 0, 0, 0));
+	sendString(makeHostLink(el, 0, 0, 0));
       } else
 	traceEvent(CONST_TRACE_WARNING, "Unable to find serial %u - host skipped",
 		   (unsigned int)usageCtr.peersSerials[i]);
@@ -2570,14 +2570,15 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	}
 
     if(ok) {
-      struct hostTraffic el2;
+      HostTraffic *el2;
       int numEntries;
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if((el->contactedSentPeers.peersSerials[i] != FLAG_NO_PEER)
 	     && (el->contactedSentPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial)) {
 
-	    if(retrieveHost(el->contactedSentPeers.peersSerials[i], &el2) == 0) {
+	    if((el2 = findHostBySerial(el->contactedSentPeers.peersSerials[i], 
+					myGlobals.actualReportDeviceId)) != NULL) {
 	      if(numEntries == 0) {
 		printSectionTitle("Last Contacted Peers");
 		titleSent = 1;
@@ -2591,8 +2592,8 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
 	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
-			  getRowColor(), makeHostLink(&el2, 0, 0, 0),
-			  el2.hostNumIpAddress) < 0)
+			  getRowColor(), makeHostLink(el2, 0, 0, 0),
+			  el2->hostNumIpAddress) < 0)
 		BufferTooShort();
 
 	      sendString(buf);
@@ -2617,7 +2618,8 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	if((el->contactedRcvdPeers.peersSerials[i] != FLAG_NO_PEER)
 	   && (el->contactedRcvdPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial)) {
 
-	  if(retrieveHost(el->contactedRcvdPeers.peersSerials[i], &el2) == 0) {
+	    if((el2 = findHostBySerial(el->contactedSentPeers.peersSerials[i], 
+					myGlobals.actualReportDeviceId)) != NULL) {
 	      if(numEntries == 0) {
 		if(!titleSent) printSectionTitle("Last Contacted Peers");
 		sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>"
@@ -2627,8 +2629,8 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
 	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-			  getRowColor(), makeHostLink(&el2, 0, 0, 0),
-			  el2.hostNumIpAddress) < 0)
+			  getRowColor(), makeHostLink(el2, 0, 0, 0),
+			  el2->hostNumIpAddress) < 0)
 		BufferTooShort();
 
 	      sendString(buf);
@@ -2686,7 +2688,7 @@ char *getSessionState(IPSession *session) {
 
 /* ************************************ */
 
-void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
+void printHostSessions(HostTraffic *el, int actualDeviceId) {
   printActiveTCPSessions(actualDeviceId, 0, el);
 }
 
@@ -2883,8 +2885,6 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString("</TD></TR>\n");
 
     if(isMultihomed(el) && (!broadcastHost(el))) {
-      u_int elIdx;
-
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>&nbsp;<OL>",
 		  getRowColor(), "Multihomed Addresses") < 0)
 	BufferTooShort();
@@ -3400,9 +3400,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       HostSerial routerIdx = el->contactedRouters.peersSerials[i];
 
       if(routerIdx != FLAG_NO_PEER) {
-	HostTraffic router;
+	HostTraffic *router = findHostBySerial(routerIdx, myGlobals.actualReportDeviceId);
 
-	if(retrieveHost(routerIdx, &router) == 0) {
+	if(router != NULL) {
 	  if(!printedHeader) {
 	    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
 			"Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n",
@@ -3415,7 +3415,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	  if(printedHeader > 1) sendString("<BR>");
 
 	  if(snprintf(buf, sizeof(buf), "%s\n",
-		      makeHostLink(&router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)) < 0)
+		      makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)) < 0)
 	    BufferTooShort();
 	  sendString(buf);
 	}
@@ -3982,7 +3982,6 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 
       if(vlanHash) {
 	HostTraffic *el;
-	int idx;
 
 	sendString("<TD>\n");
 
@@ -4013,7 +4012,7 @@ void printLocalHostsStats() {
   u_int idx, numEntries=0;
   HostTraffic *el, **tmpTable;
   OsNumInfo theOSs[MAX_NUM_OS];
-  int i, j;
+  int i;
   char buf[LEN_GENERAL_WORK_BUFFER];
 
   memset(theOSs, 0, sizeof(theOSs));
@@ -4060,7 +4059,7 @@ void printLocalHostsStats() {
   }
 
   myGlobals.columnSort = 0;
-  quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
+  qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
   if(numEntries > 0) {
     sendString("<CENTER>\n");
@@ -4117,7 +4116,7 @@ void printLocalHostsStats() {
 
     /* ********************************** */
 
-    quicksort(theOSs, MAX_NUM_OS, sizeof(OsNumInfo), cmpOSFctn);
+    qsort(theOSs, MAX_NUM_OS, sizeof(OsNumInfo), cmpOSFctn);
     
     sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON"><TH "TH_BG">OS</TH><TH "TH_BG">Total</TH></TR>");
 

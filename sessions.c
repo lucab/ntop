@@ -886,14 +886,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  printf("DEBUG: OS='%s'\n", os);
 #endif
 
-		  accessAddrResMutex("makeHostLink");
 		  if(srcHost->fingerprint == NULL) {
 		    char buffer[64];
 
 		    snprintf(buffer, sizeof(buffer), ":%s", os);
+		    accessAddrResMutex("makeHostLink");
 		    srcHost->fingerprint = strdup(buffer);
+		    releaseAddrResMutex();
 		  }
-		  releaseAddrResMutex();
 		}
 		break;
 	      }	else if(strncmp(row, "Host:", 5) == 0) {

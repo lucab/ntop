@@ -52,7 +52,7 @@ void handleBootp(HostTraffic *srcHost,
 		 int actualDeviceId) {
   BootProtocol bootProto = { 0 };
   u_int len;
-  char savechar; /* Courtesy of  
+  char savechar; /* Courtesy of
 		    Axel Thimm <Axel.Thimm+ntop@physik.fu-berlin.de>
 		 */
 
@@ -620,7 +620,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
 
       memset(&storedAddress, 0, sizeof(storedAddress));
       storedAddress.recordCreationTime = myGlobals.actTime;
-      memcpy(&storedAddress.symAddress, 
+      memcpy(&storedAddress.symAddress,
              hostPtr.queryName,
              min(MAX_LEN_SYM_HOST_NAME-1, strlen(hostPtr.queryName)));
 
@@ -631,7 +631,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
       data_data.dsize = sizeof(storedAddress)+1;
 
 #ifdef DNS_SNIFF_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: Sniffed DNS response: %s(%d) = %s(t=%d)", 
+      traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: Sniffed DNS response: %s(%d) = %s(t=%d)",
                  key_data.dptr, key_data.dsize,
                  ((StoredAddress *)data_data.dptr)->symAddress,
                  ((StoredAddress *)data_data.dptr)->recordCreationTime);
@@ -639,7 +639,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
 
       if(myGlobals.dnsCacheFile == NULL) return(-1); /* ntop is quitting... */
       gdbm_store(myGlobals.dnsCacheFile, key_data, data_data, GDBM_REPLACE);
-      myGlobals.dnsSniffStoredInCache++; 
+      myGlobals.dnsSniffStoredInCache++;
     }
   }
 
@@ -856,14 +856,15 @@ void handleNetbios(HostTraffic *srcHost,
 #ifdef DEBUG
 	  printf("OS: %s\n", &data[45]);
 #endif
-	  accessAddrResMutex("makeHostLink");
+
 	  if(srcHost->fingerprint == NULL) {
 	    char buffer[64];
 
 	    snprintf(buffer, sizeof(buffer), ":%s", &data[45]);
+	    accessAddrResMutex("makeHostLink");
 	    srcHost->fingerprint = strdup(buffer);
+	    releaseAddrResMutex();
 	  }
-	  releaseAddrResMutex();	  
 	} else /* dport == 139 */ {
 	  /* Request */
 	  char len;
@@ -889,14 +890,15 @@ void handleNetbios(HostTraffic *srcHost,
 	  printf("OS: %s\n", &data[i]);
 #endif
 
-	  accessAddrResMutex("makeHostLink");
+
 	  if(srcHost->fingerprint == NULL) {
 	    char buffer[64];
 
 	    snprintf(buffer, sizeof(buffer), ":%s", &data[i]);
+	    accessAddrResMutex("makeHostLink");
 	    srcHost->fingerprint = strdup(buffer);
+	    releaseAddrResMutex();
 	  }
-	  releaseAddrResMutex();	  
 	}
       }
 

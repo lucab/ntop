@@ -125,7 +125,7 @@ static void printHtmlIndex(void) {
   
   /* Data Sent */
   pdaColumnSort = 0;  
-  quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpPdaFctn); 
+  qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpPdaFctn); 
   
   for(idx=0; idx<numEntries; idx++) {
     if(idx == 5) break;
@@ -161,7 +161,7 @@ static void printHtmlIndex(void) {
 
   /* Data Rcvd */
   pdaColumnSort = 1;  
-  quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn); 
+  qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn); 
 
   for(idx=0; idx<numEntries; idx++) {
     if(idx == 5) break;

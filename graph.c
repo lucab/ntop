@@ -361,8 +361,11 @@ void drawArea(short width,
   yscale = (float)ysize / ((ngrid+1) * dydat); // pixels per data unit
 
   if(maxval > 0) {
+	 gdPoint points[5];
+
+	memset(points, 0, sizeof(points));
+
     for (i = 0; i<num_points; i++) {
-      gdPoint points[5];
       // vertical columns
       ymax = vmargin/2 + ysize; 
       ymin = ymax - (int)(data[i]*yscale); 
