@@ -4552,6 +4552,9 @@ void processPacket(u_char *_deviceId,
 
   fd = device[deviceId].fdv;
 
+  device[actualDeviceId].ethernetPkts++;
+  device[actualDeviceId].ethernetBytes += h->len;
+
   /*
    * Show a hash character for each packet captured
    */
@@ -5165,9 +5168,6 @@ void processPacket(u_char *_deviceId,
     if(srcHost != NULL) srcHost->instanceInUse--;
     if(dstHost != NULL) dstHost->instanceInUse--;
   }
-
-  device[actualDeviceId].ethernetPkts++;
-  device[actualDeviceId].ethernetBytes += h->len;
 
   if(flowsList != NULL) /* Handle flows last */
     flowsProcess(h, p);
