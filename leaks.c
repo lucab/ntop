@@ -50,6 +50,7 @@ void* myMalloc(size_t theSize, int theLine, char* theFile) {
   
   tmpBlock->blockSize = theSize;
   tmpBlock->memoryLocation = malloc(theSize);
+  memset(tmpBlock->memoryLocation, 0xff, theSize); /* Fill it with garbage */
   tmpBlock->alreadyTraced = 0;
 
   allocatedMemory += theSize;
@@ -139,7 +140,7 @@ void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
 
 /* *************************************** */
 
-void myFree(void* thePtr, int theLine, char* theFile) {
+void myFree(void **thePtr, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr;
   
 #if defined(MULTITHREADED)
@@ -148,14 +149,14 @@ void myFree(void* thePtr, int theLine, char* theFile) {
 
   theScan = theRoot;
  
-  while((theScan != NULL) && (theScan->memoryLocation != thePtr)) {
+  while((theScan != NULL) && (theScan->memoryLocation != *thePtr)) {
     lastPtr = theScan;
     theScan = theScan->nextBlock;
   }
 
   if(theScan == NULL) {
     traceEvent(TRACE_WARNING, "Free error (Ptr %p NOT allocated): %s, %d\n", 
-	    thePtr, theFile, theLine);
+	       *thePtr, theFile, theLine);
 #if defined(MULTITHREADED)
     releaseMutex(&leaksMutex);
 #endif
@@ -172,6 +173,7 @@ void myFree(void* thePtr, int theLine, char* theFile) {
       lastPtr->nextBlock = theScan->nextBlock;
 
     free(theScan);
+    *thePtr = NULL;
   }
 
 #if defined(MULTITHREADED)
@@ -368,12 +370,12 @@ char* ntop_strdup(char *str, char* file, int line) {
 
 /* ************************************ */
 
-void ntop_free(void *ptr, char* file, int line) {
+void ntop_free(void **ptr, char* file, int line) {
 #ifdef DEBUG
   traceEvent(TRACE_WARNING, "free(%x) [%s] @ %s:%d", ptr, 
 	     formatBytes(allocatedMemory, 0), file, line);
 #endif
-  return(myFree(ptr, line, file));
+  myFree(ptr, line, file);
 }
 
 #else /* MEMORY_DEBUG */

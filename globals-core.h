@@ -266,10 +266,10 @@ extern void deviceSanityCheck(char* string);
 #ifdef MEMORY_DEBUG 
 #define malloc(a) ntop_malloc((unsigned int)a, __FILE__, __LINE__)
 #define strdup(a) ntop_strdup((char*)a, __FILE__, __LINE__)
-#define free(a)   ntop_free((void*)a, __FILE__, __LINE__)
+#define free(a)   ntop_free((void*)&(a), __FILE__, __LINE__)
 extern void* ntop_malloc(unsigned int sz, char* file, int line);
 extern char* ntop_strdup(char *str, char* file, int line);
-extern void  ntop_free(void *ptr, char* file, int line);
+extern void  ntop_free(void **ptr, char* file, int line);
 #else
 #define free(a)    ntop_safefree((void*)&(a), __FILE__, __LINE__)
 extern void        ntop_safefree(void **ptr, char* file, int line);

@@ -495,11 +495,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
      /* Add the session to the session list */
      switch(sessionType) {
      case IPPROTO_TCP:
-       scanner->next = (IpGlobalSession*)(theHost->tcpSessionList);
+       scanner->next = theHost->tcpSessionList;
        theHost->tcpSessionList = scanner; /* list head */
        break;
      case IPPROTO_UDP:
-       scanner->next = (IpGlobalSession*)(theHost->udpSessionList);
+       scanner->next = theHost->udpSessionList;
        theHost->udpSessionList = scanner; /* list head */
        break;
      }

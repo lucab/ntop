@@ -137,10 +137,8 @@ static IpGlobalSession* purgeIdleHostSessions(u_int *mappings, u_int lastHashSiz
   if(sessionScanner != NULL) {
     IpGlobalSession *returnValue;
     
-    if(sessionScanner->next != NULL) {
-      sessionScanner->next = purgeIdleHostSessions(mappings, lastHashSize, 
-						   sessionScanner->next);
-    }
+    if(sessionScanner->next != NULL)
+      sessionScanner->next = purgeIdleHostSessions(mappings, lastHashSize, sessionScanner->next);
 
     if(mapUsageCounter(&sessionScanner->peers) == 0) {
       /* There are no peers hence we can delete this entry */
@@ -526,10 +524,10 @@ static void removeGlobalHostPeers(HostTraffic *el,
   if(!capturePackets) return;
 
   if(el->tcpSessionList != NULL)
-    purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, el->tcpSessionList);
+    el->tcpSessionList = purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, el->tcpSessionList);
 
   if(el->udpSessionList != NULL)
-    purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, el->udpSessionList);
+    el->udpSessionList = purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, el->udpSessionList);
 
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedSentPeers);
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRcvdPeers);
