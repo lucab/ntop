@@ -917,15 +917,17 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 
   /* ********** */
 
-  if((!broadcastHost(host))
-     && ((usePersistentStorage == 1)
-	 || subnetPseudoLocalHost(host) 
-	 /* 
-	    Courtesy of  
-	    Joel Crisp <jcrisp@dyn21-126.trilogy.com>
-	 */
-	 ))
-    storeHostTrafficInstance(host);
+  if(usePersistentStorage != 0) {
+    if((!broadcastHost(host))
+       && ((usePersistentStorage == 1)
+	   || subnetPseudoLocalHost(host) 
+	   /* 
+	      Courtesy of  
+	      Joel Crisp <jcrisp@dyn21-126.trilogy.com>
+	   */
+	   ))
+      storeHostTrafficInstance(host);
+  }
 
   if(freeListLen == FREE_LIST_LEN) {
     free(freeHostList[nextIdxToFree]); /* This is the real free */
@@ -945,7 +947,7 @@ void freeHostInstances(void) {
   else
     max = numDevices;
 
-  traceEvent(TRACE_INFO, "\nFreeing hash host instances... (%d device(s) to save)\n", max);
+  traceEvent(TRACE_INFO, "Freeing hash host instances... (%d device(s) to save)\n", max);
 
   for(i=0; i<max; i++) {
     actualDeviceId = i;
@@ -961,7 +963,7 @@ void freeHostInstances(void) {
     if(freeHostList[i] != NULL)
       free(freeHostList[i]);
 
-  traceEvent(TRACE_INFO, "\n%d instances freed\n", num);
+  traceEvent(TRACE_INFO, "%d instances freed\n", num);
 }
 
 /* ************************************ */
