@@ -144,6 +144,7 @@ AM_LDFLAGS = @LDFLAGS@
 
 DISTCLEANFILES = *.db #* *~ *.log
 CLEANFILES = $(DISTCLEANFILES)
+INSTALLCLEANFILES = addressQueue.db dnsCache.db
 
 # A list of all the files in the current directory which can be regenerated
 MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
@@ -272,6 +273,12 @@ libntopreport_la_LIBADD =
 libntopreport_la_LDFLAGS = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
 man_MANS = ntop.8
+
+CLEANLIST = `ls -l $(DESTDIR)$(libdir)/*ntop*.so $(DESTDIR)$(libdir)/*Plugin*.so | \
+          grep -v $(VERSION) | \
+          grep -v '\->' | \
+          $(AWK) '{ print $$NF }'`
+
 
 # Create ntop's package for Debian GNU/Linux using Official scripts
 # Please keep silent the building process.
@@ -1165,7 +1172,93 @@ ntop-cert.pem:
 	cat privkey.pem cert.pem > ntop-cert.pem
 	/bin/rm -f privkey.pem cert.pem
 
+listlibclean:
+	@echo ""
+	@echo "This is a list of old shared library files that will be deleted"
+	@echo "if you run 'make libclean'"
+	@echo ""
+	@for file in $(CLEANLIST); do \
+          if test -f $$file; then \
+             echo "   $$file"; \
+          fi; \
+        done
+	@echo ""
+
+libclean:
+	@echo ""
+	@echo "Cleanup of old shared library files..."
+	@echo ""
+	@echo "  This is a list of files that will be deleted..."
+	@echo ""
+	@for file in $(CLEANLIST); do \
+          if test -f $$file; then \
+             echo "   $$file"; \
+          fi; \
+        done
+	@echo ""
+	@echo ""
+	@echo "Press cntl-c to stop or enter to continue and delete these files..."
+	@read select
+	@echo ""
+	@for file in $(CLEANLIST); do \
+          if test -f $$file; then \
+             echo "   ...Deleting $$file"; \
+             rm -f $$file; \
+          fi; \
+        done
+
 install: install-recursive
+
+	@echo ""
+	@echo "------------------------------------------------------------"
+	@echo ""
+	@echo "  Cleanup of old database files..."
+	@echo ""
+	@for file in $(INSTALLCLEANFILES); do \
+	  if test -f $(DESTDIR)$(datadir)/ntop/$$file; then \
+	     echo "        ...Deleting $(DESTDIR)$(datadir)/ntop/$$file"; \
+	     rm -rf $(DESTDIR)$(datadir)/ntop/$$file; \
+	  fi; \
+	done
+
+	@if ! test -f $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/AS-list.txt.gz; then \
+	  echo ""; \
+	  echo ""; \
+	  echo "------------------------------------------------------------"; \
+	  echo ""; \
+	  echo "NOTE: ntop can show traffic by AS (Autonomous System) Number"; \
+	  echo ""; \
+	  echo "      Because this feature consumes a number of MB of memory,"; \
+	  echo "      the datafile is not installed by default."; \
+	  echo ""; \
+	  echo "      Which, if there is no file - from this or a previous"; \
+	  echo "      install - effectively disables the ASN feature."; \
+	  echo ""; \
+	  echo "      To install the AS data, type:"; \
+	  echo ""; \
+	  echo "# make install-data-as"; \
+	fi
+
+	@if test ".$(CLEANLIST)" != "."; then \
+	  echo ""; \
+	  echo ""; \
+	  echo "************************************************************"; \
+	  echo ""; \
+	  echo "  There appear to be old shared library files on your system."; \
+	  echo "  You may wish to delete these if you are no longer using the"; \
+	  echo "  older versions."; \
+	  echo ""; \
+	  echo "  To see the list of files, run"; \
+	  echo ""; \
+	  echo "# make listlibclean"; \
+	  echo ""; \
+	  echo "  To delete them (you will have a chance to abort before the"; \
+	  echo "  actual delete):"; \
+	  echo ""; \
+	  echo "# make libclean"; \
+	  echo ""; \
+	fi
+
 	@if test -f $(DESTDIR)/$(datadir)/ntop/warnuser; then \
 	  echo ""; \
 	  echo ""; \
@@ -1192,23 +1285,6 @@ install: install-recursive
 	  echo ""; \
 	  echo ""; \
 	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
-	fi
-	@if ! test -f $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/AS-list.txt.gz; then \
-	  echo ""; \
-	  echo ""; \
-	  echo "NOTE: ntop can show traffic by AS (Autonomous System) Number"; \
-	  echo ""; \
-	  echo "      Because this feature consumes a number of MB of memory,"; \
-	  echo "      the datafile is not installed by default."; \
-	  echo ""; \
-	  echo "      Which - if there is no file - from this or a previous"; \
-	  echo "      install, effectively disables the ASN feature."; \
-	  echo ""; \
-	  echo "      To install the AS data, type:"; \
-	  echo ""; \
-	  echo "# make install-data-as"; \
-	  echo ""; \
-	  echo ""; \
 	fi
 
 install-data-as:
