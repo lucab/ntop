@@ -56,12 +56,48 @@ static PortUsage* allocatePortUsage(void) {
 
 /* ************************************ */
 
+static void updatePortList(HostTraffic *theHost, 
+			   u_short clientPort, u_short serverPort) {
+  u_short i, found;
+  
+  if(theHost == NULL) return;
+  
+  for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
+    if(theHost->recentlyUsedClientPorts[i] == clientPort) {
+      found = 1;
+      break;
+    }
+
+  if(!found) {
+    for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
+      theHost->recentlyUsedClientPorts[i] =  theHost->recentlyUsedClientPorts[i+1];    
+    theHost->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] = clientPort;
+  }
+
+  /* ********************************* */
+
+  for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
+    if(theHost->recentlyUsedServerPorts[i] == serverPort) {
+      found = 1;
+      break;
+    }
+
+  if(!found) {
+    for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
+      theHost->recentlyUsedServerPorts[i] =  theHost->recentlyUsedServerPorts[i+1];    
+    theHost->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] = serverPort;
+  }
+}
+
+/* ************************************ */
+
 void updateUsedPorts(HostTraffic *srcHost,
 		     HostTraffic *dstHost,
 		     u_short sport,
 		     u_short dport,
 		     u_int length) {
-  
+  u_short clientPort, serverPort;
+
   /* traceEvent(TRACE_INFO, "%d\n", length); */
 
   if((srcHost == dstHost) 
@@ -71,8 +107,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 
 
   if(sport < TOP_ASSIGNED_IP_PORTS) {
-    if(srcHost->portsUsage[sport] == NULL)
-      srcHost->portsUsage[sport] = allocatePortUsage();
+    if(srcHost->portsUsage[sport] == NULL) srcHost->portsUsage[sport] = allocatePortUsage();
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Adding svr peer %u", dstHost->hashListBucket);
@@ -95,8 +130,7 @@ void updateUsedPorts(HostTraffic *srcHost,
   }
 
   if(dport < TOP_ASSIGNED_IP_PORTS) {
-    if(srcHost->portsUsage[dport] == NULL)
-      srcHost->portsUsage[dport] = allocatePortUsage();
+    if(srcHost->portsUsage[dport] == NULL) srcHost->portsUsage[dport] = allocatePortUsage();
 
 #ifdef DEBUG      
     traceEvent(TRACE_INFO, "Adding client peer %u", dstHost->hashListBucket);
@@ -106,7 +140,6 @@ void updateUsedPorts(HostTraffic *srcHost,
     srcHost->portsUsage[dport]->clientUses++;
     srcHost->portsUsage[dport]->clientUsesLastPeer = dstHost->hashListBucket;
       
-
     if(dstHost->portsUsage[dport] == NULL)
       dstHost->portsUsage[dport] = allocatePortUsage();
 
@@ -117,7 +150,16 @@ void updateUsedPorts(HostTraffic *srcHost,
     dstHost->portsUsage[dport]->serverTraffic += length;
     dstHost->portsUsage[dport]->serverUses++;
     dstHost->portsUsage[dport]->serverUsesLastPeer = srcHost->hashListBucket;
-  } 
+  }
+
+  /* Now let's update the list of ports recently used by the hosts */
+  if(sport > dport) 
+    clientPort = sport, serverPort = dport;
+  else
+    clientPort = dport, serverPort = sport;
+
+  updatePortList(srcHost, clientPort, serverPort);
+  updatePortList(dstHost, clientPort, serverPort);
 }
 
 /* ************************************ */

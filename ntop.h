@@ -701,6 +701,7 @@ typedef unsigned long long TrafficCounter;
 
 #define PCAP_NW_INTERFACE         "pcap file"
 #define MAX_NUM_CONTACTED_PEERS   8
+#define MAX_NUM_RECENT_PORTS      5
 #define SENT_PEERS                2
 #define RCVD_PEERS                2
 #define NO_PEER                   UINT_MAX
@@ -1718,6 +1719,7 @@ typedef struct hostTraffic {
 
   /* IP */
   PortUsage        **portsUsage; /* 0...TOP_ASSIGNED_IP_PORTS */
+  u_short          recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
   TrafficCounter   ipBytesSent, ipBytesRcvd;
   TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc,
                    udpSentRem, icmpSent, ospfSent, igmpSent;

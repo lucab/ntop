@@ -1511,6 +1511,42 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
     sendString("</CENTER>\n");
   }
 
+  if((el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] > 0)
+     || (el->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] > 0)) {
+    /* We have something to show */
+
+    printSectionTitle("TCP/UDP Recently Used Ports\n");
+    sendString("<CENTER>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1>\n"
+	       "<TR>"
+	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
+	       "</TR>\n");
+
+    sendString("<TR><TD ALIGN=LEFT><UL>");
+
+    for(idx=0; idx<MAX_NUM_RECENT_PORTS; idx++) {      
+      if(el->recentlyUsedClientPorts[idx] > 0) {
+	if(snprintf(buf, sizeof(buf), "<li>%s\n", 
+		    getAllPortByNum(el->recentlyUsedClientPorts[idx])) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
+    }
+
+    sendString("</UL></TD><TD ALIGN=LEFT><UL>");
+    
+    for(idx=0; idx<MAX_NUM_RECENT_PORTS; idx++) {      
+      if(el->recentlyUsedServerPorts[idx] > 0) {
+	if(snprintf(buf, sizeof(buf), "<li>%s\n", 
+		    getAllPortByNum(el->recentlyUsedServerPorts[idx])) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
+    }
+ 
+    sendString("</UL></TR></TABLE></CENTER>");
+  }
+
   printHostSessions(el, elIdx, actualDeviceId);
 }
 
