@@ -422,6 +422,11 @@ extern void updateElementHash(ElementHash **list, u_short srcId, u_short dstId,
 			      u_int32_t numPkts, u_int32_t numBytes);
 extern void allocateElementHash(int deviceId, u_short hashType);
 extern u_int numActiveSenders(int deviceId);
+extern u_int32_t xaton(char *s);
+extern void addNodeInternal(u_int32_t ip, int prefix, char *country);
+extern char *ip2CountryCode(u_int32_t ip);
+
+
 #ifdef HAVE_GETOPT_H
 extern int getopt_long (int ___argc, char *const *___argv,
                         const char *__shortopts,
@@ -448,6 +453,7 @@ extern void freeargv(char **argv);
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
 #endif
+
 
 #ifdef MAKE_WITH_I18N
 char *i18n_xvert_locale2common(const char *input);

@@ -2984,14 +2984,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     accessAddrResMutex("printAllSessions-2");
     
-    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
-    if(strcmp(el->hostNumIpAddress, el->hostSymIpAddress) != 0) {
-      releaseAddrResMutex();
-      countryIcon = getHostCountryIconURL(el);
-    } else {
-      releaseAddrResMutex();
-      countryIcon = "";
-    }
+    countryIcon = getHostCountryIconURL(el);
 
     if(broadcastHost(el)) hostType = "broadcast";
     else if(multicastHost(el)) hostType = "multicast";

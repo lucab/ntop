@@ -24,6 +24,7 @@
 
 #include "ntop.h"
 
+static void initIPCountryTable(void); /* Forward */
 
 /*
  * calculate the domain name for this host
@@ -209,6 +210,52 @@ void initIPServices(void) {
   addPortHashEntry(myGlobals.udpSvc, 1110,"nfsd-status");
 }
 
+/* ******************************* */
+
+static void initIPCountryTable(void) {
+  int idx;
+  
+  if((myGlobals.countryFlagHead=malloc(sizeof(IPNode))) == NULL) {
+    traceEvent(CONST_TRACE_ERROR, "Unable to allocate further memory. Quitting...");		 
+    exit(1);
+  }
+
+  strcpy(myGlobals.countryFlagHead->cc, "***");
+
+  myGlobals.countryFlagHead->b[0]=NULL;
+  myGlobals.countryFlagHead->b[1]=NULL;  
+
+  for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
+    char tmpStr[256];
+    FILE *fd;
+
+    snprintf(tmpStr, sizeof(tmpStr), "%s/p2c.opt.table", myGlobals.configFileDirs[idx]);
+    fd = fopen(tmpStr, "r");
+
+    if (fd!=NULL) {
+      while (!feof(fd)) {
+        char buff[256];
+        char *strtokState, *token, *cc, *ip, *prefix;
+
+        if (fgets(buff, sizeof(buff), fd)==NULL)
+          continue;
+        if ((cc=strtok_r(buff, ":", &strtokState))==NULL)
+          continue;
+        if ((ip=strtok_r(NULL, "/", &strtokState))==NULL)
+          continue;
+        if ((prefix=strtok_r(NULL, "\n", &strtokState))==NULL)
+          continue;
+
+        strtolower(cc);
+        
+        addNodeInternal(xaton(ip), atoi(prefix), cc);
+      }
+
+      fclose(fd);
+    } else 
+      traceEvent(CONST_TRACE_WARNING, "WARNING: Unable to read config. file %s.\n", tmpStr);
+  }
+}
 
 /* ******************************* */
 
@@ -615,6 +662,7 @@ void initCounters(void) {
              "I18N: This instance of ntop does not support multiple languages\n");
 #endif /* MAKE_WITH_I18N */
 
+  initIPCountryTable();
 }
 
 

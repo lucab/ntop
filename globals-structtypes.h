@@ -1276,6 +1276,13 @@ struct option
 };
 #endif /* HAVE_GETOPT_H */
 
+/* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
+typedef struct IPNode {
+  struct IPNode *b[2];
+  char cc[4];
+} IPNode;
+
+
 /* *************************************************************** */
 
 /*
@@ -1811,5 +1818,6 @@ XML*/
   char *strftimeFormat[MAX_LANGUAGES_SUPPORTED];
 #endif
 
+  IPNode *countryFlagHead; /* Pointer for country flags */
 } NtopGlobals;
 

@@ -2447,18 +2447,20 @@ void fillDomainName(HostTraffic *el) {
 
   accessAddrResMutex("fillDomainName");
 
+  el->dotDomainName = ip2CountryCode(el->hostIpAddress.s_addr);
+
   if((el->hostSymIpAddress[0] == '*')
      || (el->hostNumIpAddress[0] == '\0')
      || (isdigit(el->hostSymIpAddress[strlen(el->hostSymIpAddress)-1]) &&
 	 isdigit(el->hostSymIpAddress[0]))) {
     /* NOTE: theDomainHasBeenComputed(el) = 0 */
-    el->fullDomainName = el->dotDomainName = "";
+    el->fullDomainName = "";
     releaseAddrResMutex();
     return;
   }
 
   FD_SET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &el->flags);
-  el->fullDomainName = el->dotDomainName = ""; /* Reset values... */
+  el->fullDomainName = ""; /* Reset values... */
 
   i = strlen(el->hostSymIpAddress)-1;
 
@@ -2471,7 +2473,7 @@ void fillDomainName(HostTraffic *el) {
   if((i > 0)
      && strcmp(el->hostSymIpAddress, el->hostNumIpAddress)
      && (strlen(el->hostSymIpAddress) > (i+1)))
-    el->dotDomainName = &el->hostSymIpAddress[i+1];
+    ;
   else {
     /* Let's use the local domain name */
 #ifdef DEBUG
@@ -2491,9 +2493,8 @@ void fillDomainName(HostTraffic *el) {
 	el->hostSymIpAddress[len-len1-1] = '\0';
 
       el->fullDomainName = myGlobals.domainName;
-      el->dotDomainName = myGlobals.shortDomainName;
     } else {
-      el->fullDomainName = el->dotDomainName = "";
+      el->fullDomainName = "";
     }
 
     releaseAddrResMutex();
@@ -3365,6 +3366,65 @@ u_int numActiveSenders(int deviceId) {
   return(numSenders);
 }
 
+/* *************************************************** */
+
+/* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
+
+u_int32_t xaton(char *s) {
+  u_int32_t a, b, c, d;
+
+  if(4!=sscanf(s, "%d.%d.%d.%d", &a, &b, &c, &d))
+    return 0;
+  return((a&0xFF)<<24)|((b&0xFF)<<16)|((c&0xFF)<<8)|(d&0xFF);
+}
+
+/* ******************************************************************* */
+  
+void addNodeInternal(u_int32_t ip, int prefix, char *country) {
+  IPNode *p1=myGlobals.countryFlagHead;
+  IPNode *p2;
+  int i, b;
+  
+  for(i=0; i<prefix; i++) {
+    b=(ip>>(31-i)) & 0x1;
+    if(!p1->b[b]) {
+      if(!(p2=malloc(sizeof(IPNode))))
+        exit(1);
+      memset(p2, 0, sizeof(IPNode));
+      p1->b[b]=p2;
+    }
+    else
+      p2=p1->b[b];
+    
+    p1=p2;
+  }
+
+  if(p2->cc[0] == 0) {
+    strcpy(p2->cc, country);
+  }
+}
+
+/* ******************************************************************* */
+
+char *ip2CountryCode(u_int32_t ip) {
+  IPNode *p=myGlobals.countryFlagHead;
+  int i, b;
+  char *cc="";
+
+  i=0;
+  while(p!=NULL) {
+    if(p->cc[0]!=0)
+      cc=p->cc;
+    b=(ip>>(31-i)) & 0x1;
+    p=p->b[b];
+    i++;
+  }
+  return cc;
+}
+
+/* ******************************************************** */
+
+
 #ifndef WIN32
 
 /* ********************************************************
@@ -3387,7 +3447,7 @@ u_int numActiveSenders(int deviceId) {
          Libiberty is free software; you can redistribute it and/or
          modify it under the terms of the GNU Library General Public
          License as published by the Free Software Foundation; either
-         version 2 of the License, or (at your option) any later version.
+         version 2 of the License, or(at your option) any later version.
 
          Libiberty is distributed in the hope that it will be useful,
          but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -3406,11 +3466,11 @@ u_int numActiveSenders(int deviceId) {
  *     The getopt_long routine is from libiberty's getopt.c and getopt1.c
  *
             NOTE: This source is derived from an old version taken from the GNU C
-            Library (glibc).
+            Library(glibc).
  *
  *     The argv[] routines are from libiberty's argv.c
  *
-            Copyright (C) 1992, 2001 Free Software Foundation, Inc.
+            Copyright(C) 1992, 2001 Free Software Foundation, Inc.
             Written by Fred Fish @ Cygnus Support
  *
  */
@@ -3419,7 +3479,7 @@ u_int numActiveSenders(int deviceId) {
 
 /*
  * If the OS doesn't have this, we define it and provide it - code from GNU libiberty
- *  (an optional part of gcc)
+ * (an optional part of gcc)
  */
 
 # define SWAP_FLAGS(ch1, ch2)
@@ -3445,16 +3505,16 @@ static char *posixly_correct;
 static int first_nonopt;
 static int last_nonopt;
 
-static char *my_index (const char *str, int chr) {
-  while (*str) {
-      if (*str == chr)
-          return (char *) str;
+static char *my_index(const char *str, int chr) {
+  while(*str) {
+      if(*str == chr)
+          return(char *) str;
       str++;
   }
   return 0;
 }
 
-static void exchange (char **argv) {
+static void exchange(char **argv) {
   int bottom = first_nonopt;
   int middle = last_nonopt;
   int top = optind;
@@ -3465,21 +3525,21 @@ static void exchange (char **argv) {
      It leaves the longer segment in the right place overall,
      but it consists of two parts that need to be swapped next.  */
 
-  while (top > middle && middle > bottom)
+  while(top > middle && middle > bottom)
     {
-      if (top - middle > middle - bottom)
+      if(top - middle > middle - bottom)
         {
           /* Bottom segment is the short one.  */
           int len = middle - bottom;
           register int i;
 
           /* Swap it with the top part of the top segment.  */
-          for (i = 0; i < len; i++)
+          for(i = 0; i < len; i++)
             {
               tem = argv[bottom + i];
-              argv[bottom + i] = argv[top - (middle - bottom) + i];
-              argv[top - (middle - bottom) + i] = tem;
-              SWAP_FLAGS (bottom + i, top - (middle - bottom) + i);
+              argv[bottom + i] = argv[top -(middle - bottom) + i];
+              argv[top -(middle - bottom) + i] = tem;
+              SWAP_FLAGS(bottom + i, top -(middle - bottom) + i);
             }
           /* Exclude the moved bottom segment from further swapping.  */
           top -= len;
@@ -3491,12 +3551,12 @@ static void exchange (char **argv) {
           register int i;
 
           /* Swap it with the bottom part of the bottom segment.  */
-          for (i = 0; i < len; i++)
+          for(i = 0; i < len; i++)
             {
               tem = argv[bottom + i];
               argv[bottom + i] = argv[middle + i];
               argv[middle + i] = tem;
-              SWAP_FLAGS (bottom + i, middle + i);
+              SWAP_FLAGS(bottom + i, middle + i);
             }
           /* Exclude the moved top segment from further swapping.  */
           bottom += len;
@@ -3505,14 +3565,14 @@ static void exchange (char **argv) {
 
   /* Update records for the slots the non-options now occupy.  */
 
-  first_nonopt += (optind - last_nonopt);
+  first_nonopt +=(optind - last_nonopt);
   last_nonopt = optind;
 }
 
 /* Initialize the internal data when the first call is made.  */
 
-static const char *_getopt_initialize (int argv, char *const *argc, const char *optstring) {
-  /* Start processing options with ARGV-element 1 (since ARGV-element 0
+static const char *_getopt_initialize(int argv, char *const *argc, const char *optstring) {
+  /* Start processing options with ARGV-element 1(since ARGV-element 0
      is the program name); the sequence of previously skipped
      non-option ARGV-elements is empty.  */
 
@@ -3520,21 +3580,21 @@ static const char *_getopt_initialize (int argv, char *const *argc, const char *
 
   nextchar = NULL;
 
-  posixly_correct = getenv ("POSIXLY_CORRECT");
+  posixly_correct = getenv("POSIXLY_CORRECT");
 
   /* Determine how to handle the ordering of options and nonoptions.  */
 
-  if (optstring[0] == '-')
+  if(optstring[0] == '-')
     {
       ordering = RETURN_IN_ORDER;
       ++optstring;
     }
-  else if (optstring[0] == '+')
+  else if(optstring[0] == '+')
     {
       ordering = REQUIRE_ORDER;
       ++optstring;
     }
-  else if (posixly_correct != NULL)
+  else if(posixly_correct != NULL)
     ordering = REQUIRE_ORDER;
   else
     ordering = PERMUTE;
@@ -3542,7 +3602,7 @@ static const char *_getopt_initialize (int argv, char *const *argc, const char *
   return optstring;
 }
 
-int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
+int _getopt_internal(argc, argv, optstring, longopts, longind, long_only)
      int argc;
      char *const *argv;
      const char *optstring;
@@ -3552,41 +3612,41 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 {
   optarg = NULL;
 
-  if (optind == 0 || !__getopt_initialized)
+  if(optind == 0 || !__getopt_initialized)
     {
-      if (optind == 0)
+      if(optind == 0)
 	optind = 1;	/* Don't scan ARGV[0], the program name.  */
-      optstring = _getopt_initialize (argc, argv, optstring);
+      optstring = _getopt_initialize(argc, argv, optstring);
       __getopt_initialized = 1;
     }
 
-# define NONOPTION_P (argv[optind][0] != '-' || argv[optind][1] == '\0')
+# define NONOPTION_P(argv[optind][0] != '-' || argv[optind][1] == '\0')
 
-  if (nextchar == NULL || *nextchar == '\0')
+  if(nextchar == NULL || *nextchar == '\0')
     {
       /* Advance to the next ARGV-element.  */
 
       /* Give FIRST_NONOPT & LAST_NONOPT rational values if OPTIND has been
-	 moved back by the user (who may also have changed the arguments).  */
-      if (last_nonopt > optind)
+	 moved back by the user(who may also have changed the arguments).  */
+      if(last_nonopt > optind)
 	last_nonopt = optind;
-      if (first_nonopt > optind)
+      if(first_nonopt > optind)
 	first_nonopt = optind;
 
-      if (ordering == PERMUTE)
+      if(ordering == PERMUTE)
 	{
 	  /* If we have just processed some options following some non-options,
 	     exchange them so that the options come first.  */
 
-	  if (first_nonopt != last_nonopt && last_nonopt != optind)
-	    exchange ((char **) argv);
-	  else if (last_nonopt != optind)
+	  if(first_nonopt != last_nonopt && last_nonopt != optind)
+	    exchange((char **) argv);
+	  else if(last_nonopt != optind)
 	    first_nonopt = optind;
 
 	  /* Skip any additional non-options
 	     and extend the range of non-options previously skipped.  */
 
-	  while (optind < argc && NONOPTION_P)
+	  while(optind < argc && NONOPTION_P)
 	    optind++;
 	  last_nonopt = optind;
 	}
@@ -3596,13 +3656,13 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	 then exchange with previous non-options as if it were an option,
 	 then skip everything else like a non-option.  */
 
-      if (optind != argc && !strcmp (argv[optind], "--"))
+      if(optind != argc && !strcmp(argv[optind], "--"))
 	{
 	  optind++;
 
-	  if (first_nonopt != last_nonopt && last_nonopt != optind)
-	    exchange ((char **) argv);
-	  else if (first_nonopt == last_nonopt)
+	  if(first_nonopt != last_nonopt && last_nonopt != optind)
+	    exchange((char **) argv);
+	  else if(first_nonopt == last_nonopt)
 	    first_nonopt = optind;
 	  last_nonopt = argc;
 
@@ -3612,11 +3672,11 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
       /* If we have done all the ARGV-elements, stop the scan
 	 and back over any non-options that we skipped and permuted.  */
 
-      if (optind == argc)
+      if(optind == argc)
 	{
 	  /* Set the next-arg-index to point at the non-options
 	     that we previously skipped, so the caller will digest them.  */
-	  if (first_nonopt != last_nonopt)
+	  if(first_nonopt != last_nonopt)
 	    optind = first_nonopt;
 	  return -1;
 	}
@@ -3624,9 +3684,9 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
       /* If we have come to a non-option and did not permute it,
 	 either stop the scan or describe it to the caller and pass it by.  */
 
-      if (NONOPTION_P)
+      if(NONOPTION_P)
 	{
-	  if (ordering == REQUIRE_ORDER)
+	  if(ordering == REQUIRE_ORDER)
 	    return -1;
 	  optarg = argv[optind++];
 	  return 1;
@@ -3635,8 +3695,8 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
       /* We have found another option-ARGV-element.
 	 Skip the initial punctuation.  */
 
-      nextchar = (argv[optind] + 1
-		  + (longopts != NULL && argv[optind][1] == '-'));
+      nextchar =(argv[optind] + 1
+		  +(longopts != NULL && argv[optind][1] == '-'));
     }
 
   /* Decode the current option-ARGV-element.  */
@@ -3654,9 +3714,9 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 
      This distinction seems to be the most useful approach.  */
 
-  if (longopts != NULL
-      && (argv[optind][1] == '-'
-	  || (long_only && (argv[optind][2] || !my_index (optstring, argv[optind][1])))))
+  if(longopts != NULL
+      &&(argv[optind][1] == '-'
+	  ||(long_only &&(argv[optind][2] || !my_index(optstring, argv[optind][1])))))
     {
       char *nameend;
       const struct option *p;
@@ -3666,16 +3726,16 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
       int indfound = -1;
       int option_index;
 
-      for (nameend = nextchar; *nameend && *nameend != '='; nameend++)
+      for(nameend = nextchar; *nameend && *nameend != '='; nameend++)
 	/* Do nothing.  */ ;
 
       /* Test all long options for either exact match
 	 or abbreviated matches.  */
-      for (p = longopts, option_index = 0; p->name; p++, option_index++)
-	if (!strncmp (p->name, nextchar, nameend - nextchar))
+      for(p = longopts, option_index = 0; p->name; p++, option_index++)
+	if(!strncmp(p->name, nextchar, nameend - nextchar))
 	  {
-	    if ((unsigned int) (nameend - nextchar)
-		== (unsigned int) strlen (p->name))
+	    if((unsigned int)(nameend - nextchar)
+		==(unsigned int) strlen(p->name))
 	      {
 		/* Exact match found.  */
 		pfound = p;
@@ -3683,7 +3743,7 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 		exact = 1;
 		break;
 	      }
-	    else if (pfound == NULL)
+	    else if(pfound == NULL)
 	      {
 		/* First nonexact match found.  */
 		pfound = p;
@@ -3694,68 +3754,68 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	      ambig = 1;
 	  }
 
-      if (ambig && !exact)
+      if(ambig && !exact)
 	{
-	  if (opterr)
-	    fprintf (stderr, "%s: option `%s' is ambiguous\n",
+	  if(opterr)
+	    fprintf(stderr, "%s: option `%s' is ambiguous\n",
 		     argv[0], argv[optind]);
-	  nextchar += strlen (nextchar);
+	  nextchar += strlen(nextchar);
 	  optind++;
 	  optopt = 0;
 	  return '?';
 	}
 
-      if (pfound != NULL)
+      if(pfound != NULL)
 	{
 	  option_index = indfound;
 	  optind++;
-	  if (*nameend)
+	  if(*nameend)
 	    {
 	      /* Don't test has_arg with >, because some C compilers don't
 		 allow it to be used on enums.  */
-	      if (pfound->has_arg)
+	      if(pfound->has_arg)
 		optarg = nameend + 1;
 	      else
 		{
-		  if (opterr)
+		  if(opterr)
 		    {
-		      if (argv[optind - 1][1] == '-')
+		      if(argv[optind - 1][1] == '-')
 			/* --option */
-			fprintf (stderr,
+			fprintf(stderr,
 				 "%s: option `--%s' doesn't allow an argument\n",
 				 argv[0], pfound->name);
 		      else
 			/* +option or -option */
-			fprintf (stderr,
+			fprintf(stderr,
 				 "%s: option `%c%s' doesn't allow an argument\n",
 				 argv[0], argv[optind - 1][0], pfound->name);
 
-		      nextchar += strlen (nextchar);
+		      nextchar += strlen(nextchar);
 
 		      optopt = pfound->val;
 		      return '?';
 		    }
 		}
 	    }
-	  else if (pfound->has_arg == 1)
+	  else if(pfound->has_arg == 1)
 	    {
-	      if (optind < argc)
+	      if(optind < argc)
 		optarg = argv[optind++];
 	      else
 		{
-		  if (opterr)
-		    fprintf (stderr,
+		  if(opterr)
+		    fprintf(stderr,
 			   "%s: option `%s' requires an argument\n",
 			   argv[0], argv[optind - 1]);
-		  nextchar += strlen (nextchar);
+		  nextchar += strlen(nextchar);
 		  optopt = pfound->val;
 		  return optstring[0] == ':' ? ':' : '?';
 		}
 	    }
-	  nextchar += strlen (nextchar);
-	  if (longind != NULL)
+	  nextchar += strlen(nextchar);
+	  if(longind != NULL)
 	    *longind = option_index;
-	  if (pfound->flag)
+	  if(pfound->flag)
 	    {
 	      *(pfound->flag) = pfound->val;
 	      return 0;
@@ -3767,21 +3827,21 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	 or the option starts with '--' or is not a valid short
 	 option, then it's an error.
 	 Otherwise interpret it as a short option.  */
-      if (!long_only || argv[optind][1] == '-'
-	  || my_index (optstring, *nextchar) == NULL)
+      if(!long_only || argv[optind][1] == '-'
+	  || my_index(optstring, *nextchar) == NULL)
 	{
-	  if (opterr)
+	  if(opterr)
 	    {
-	      if (argv[optind][1] == '-')
+	      if(argv[optind][1] == '-')
 		/* --option */
-		fprintf (stderr, "%s: unrecognized option `--%s'\n",
+		fprintf(stderr, "%s: unrecognized option `--%s'\n",
 			 argv[0], nextchar);
 	      else
 		/* +option or -option */
-		fprintf (stderr, "%s: unrecognized option `%c%s'\n",
+		fprintf(stderr, "%s: unrecognized option `%c%s'\n",
 			 argv[0], argv[optind][0], nextchar);
 	    }
-	  nextchar = (char *) "";
+	  nextchar =(char *) "";
 	  optind++;
 	  optopt = 0;
 	  return '?';
@@ -3792,29 +3852,29 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 
   {
     char c = *nextchar++;
-    char *temp = my_index (optstring, c);
+    char *temp = my_index(optstring, c);
 
     /* Increment `optind' when we start to process its last character.  */
-    if (*nextchar == '\0')
+    if(*nextchar == '\0')
       ++optind;
 
-    if (temp == NULL || c == ':')
+    if(temp == NULL || c == ':')
       {
-	if (opterr)
+	if(opterr)
 	  {
-	    if (posixly_correct)
+	    if(posixly_correct)
 	      /* 1003.2 specifies the format of this message.  */
-	      fprintf (stderr, "%s: illegal option -- %c\n",
+	      fprintf(stderr, "%s: illegal option -- %c\n",
 		       argv[0], c);
 	    else
-	      fprintf (stderr, "%s: invalid option -- %c\n",
+	      fprintf(stderr, "%s: invalid option -- %c\n",
 		       argv[0], c);
 	  }
 	optopt = c;
 	return '?';
       }
     /* Convenience. Treat POSIX -W foo same as long option --foo */
-    if (temp[0] == 'W' && temp[1] == ';')
+    if(temp[0] == 'W' && temp[1] == ';')
       {
 	char *nameend;
 	const struct option *p;
@@ -3825,23 +3885,23 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	int option_index;
 
 	/* This is an option that requires an argument.  */
-	if (*nextchar != '\0')
+	if(*nextchar != '\0')
 	  {
 	    optarg = nextchar;
 	    /* If we end this ARGV-element by taking the rest as an arg,
 	       we must advance to the next element now.  */
 	    optind++;
 	  }
-	else if (optind == argc)
+	else if(optind == argc)
 	  {
-	    if (opterr)
+	    if(opterr)
 	      {
 		/* 1003.2 specifies the format of this message.  */
-		fprintf (stderr, "%s: option requires an argument -- %c\n",
+		fprintf(stderr, "%s: option requires an argument -- %c\n",
 			 argv[0], c);
 	      }
 	    optopt = c;
-	    if (optstring[0] == ':')
+	    if(optstring[0] == ':')
 	      c = ':';
 	    else
 	      c = '?';
@@ -3855,15 +3915,15 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	/* optarg is now the argument, see if it's in the
 	   table of longopts.  */
 
-	for (nextchar = nameend = optarg; *nameend && *nameend != '='; nameend++)
+	for(nextchar = nameend = optarg; *nameend && *nameend != '='; nameend++)
 	  /* Do nothing.  */ ;
 
 	/* Test all long options for either exact match
 	   or abbreviated matches.  */
-	for (p = longopts, option_index = 0; p->name; p++, option_index++)
-	  if (!strncmp (p->name, nextchar, nameend - nextchar))
+	for(p = longopts, option_index = 0; p->name; p++, option_index++)
+	  if(!strncmp(p->name, nextchar, nameend - nextchar))
 	    {
-	      if ((unsigned int) (nameend - nextchar) == strlen (p->name))
+	      if((unsigned int)(nameend - nextchar) == strlen(p->name))
 		{
 		  /* Exact match found.  */
 		  pfound = p;
@@ -3871,7 +3931,7 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 		  exact = 1;
 		  break;
 		}
-	      else if (pfound == NULL)
+	      else if(pfound == NULL)
 		{
 		  /* First nonexact match found.  */
 		  pfound = p;
@@ -3881,52 +3941,52 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 		/* Second or later nonexact match found.  */
 		ambig = 1;
 	    }
-	if (ambig && !exact)
+	if(ambig && !exact)
 	  {
-	    if (opterr)
-	      fprintf (stderr, "%s: option `-W %s' is ambiguous\n",
+	    if(opterr)
+	      fprintf(stderr, "%s: option `-W %s' is ambiguous\n",
 		       argv[0], argv[optind]);
-	    nextchar += strlen (nextchar);
+	    nextchar += strlen(nextchar);
 	    optind++;
 	    return '?';
 	  }
-	if (pfound != NULL)
+	if(pfound != NULL)
 	  {
 	    option_index = indfound;
-	    if (*nameend)
+	    if(*nameend)
 	      {
 		/* Don't test has_arg with >, because some C compilers don't
 		   allow it to be used on enums.  */
-		if (pfound->has_arg)
+		if(pfound->has_arg)
 		  optarg = nameend + 1;
 		else
 		  {
-		    if (opterr)
-		      fprintf (stderr, "%s: option `-W %s' doesn't allow an argument\n",
+		    if(opterr)
+		      fprintf(stderr, "%s: option `-W %s' doesn't allow an argument\n",
 			       argv[0], pfound->name);
 
-		    nextchar += strlen (nextchar);
+		    nextchar += strlen(nextchar);
 		    return '?';
 		  }
 	      }
-	    else if (pfound->has_arg == 1)
+	    else if(pfound->has_arg == 1)
 	      {
-		if (optind < argc)
+		if(optind < argc)
 		  optarg = argv[optind++];
 		else
 		  {
-		    if (opterr)
-		      fprintf (stderr,
+		    if(opterr)
+		      fprintf(stderr,
 			       "%s: option `%s' requires an argument\n",
 			       argv[0], argv[optind - 1]);
-		    nextchar += strlen (nextchar);
+		    nextchar += strlen(nextchar);
 		    return optstring[0] == ':' ? ':' : '?';
 		  }
 	      }
-	    nextchar += strlen (nextchar);
-	    if (longind != NULL)
+	    nextchar += strlen(nextchar);
+	    if(longind != NULL)
 	      *longind = option_index;
-	    if (pfound->flag)
+	    if(pfound->flag)
 	      {
 		*(pfound->flag) = pfound->val;
 		return 0;
@@ -3936,12 +3996,12 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	  nextchar = NULL;
 	  return 'W';	/* Let the application handle it.   */
       }
-    if (temp[1] == ':')
+    if(temp[1] == ':')
       {
-	if (temp[2] == ':')
+	if(temp[2] == ':')
 	  {
 	    /* This is an option that accepts an argument optionally.  */
-	    if (*nextchar != '\0')
+	    if(*nextchar != '\0')
 	      {
 		optarg = nextchar;
 		optind++;
@@ -3953,24 +4013,24 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	else
 	  {
 	    /* This is an option that requires an argument.  */
-	    if (*nextchar != '\0')
+	    if(*nextchar != '\0')
 	      {
 		optarg = nextchar;
 		/* If we end this ARGV-element by taking the rest as an arg,
 		   we must advance to the next element now.  */
 		optind++;
 	      }
-	    else if (optind == argc)
+	    else if(optind == argc)
 	      {
-		if (opterr)
+		if(opterr)
 		  {
 		    /* 1003.2 specifies the format of this message.  */
-		    fprintf (stderr,
+		    fprintf(stderr,
 			   "%s: option requires an argument -- %c\n",
 			   argv[0], c);
 		  }
 		optopt = c;
-		if (optstring[0] == ':')
+		if(optstring[0] == ':')
 		  c = ':';
 		else
 		  c = '?';
@@ -3987,13 +4047,13 @@ int _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 }
 
 int
-getopt_long (int argc,
+getopt_long(int argc,
              char *const *argv,
              const char *options,
              const struct option *long_options,
              int *opt_index)
 {
-  return _getopt_internal (argc, argv, options, long_options, opt_index, 0);
+  return _getopt_internal(argc, argv, options, long_options, opt_index, 0);
 }
 
 #endif /* HAVE_GETOPT_LONG */
@@ -4011,16 +4071,16 @@ the terminating NULL is found, and then frees vector
 itself.
 */
 
-void freeargv (char **vector) {
+void freeargv(char **vector) {
   register char **scan;
 
-  if (vector != NULL)
+  if(vector != NULL)
     {
-      for (scan = vector; *scan != NULL; scan++)
+      for(scan = vector; *scan != NULL; scan++)
 	{
-	  free (*scan);
+	  free(*scan);
 	}
-      free (vector);
+      free(vector);
     }
 }
 
@@ -4031,7 +4091,7 @@ void freeargv (char **vector) {
 /*
 Given a pointer to a string, parse the string extracting fields
 separated by whitespace and optionally enclosed within either single
-or double quotes (which are stripped off), and build a vector of
+or double quotes(which are stripped off), and build a vector of
 pointers to copies of the string for each field.  The input string
 remains unchanged.  The last element of the vector is followed by a
 NULL element.
@@ -4043,7 +4103,7 @@ returned result of buildargv, as it's argument.
 
 Returns a pointer to the argument vector if successful.  Returns
 NULL if sp is NULL or if there is insufficient memory to complete
- building the argument vector. If the input is a null string (as
+ building the argument vector. If the input is a null string(as
 opposed to a NULL pointer), then buildarg returns an argument
 vector that has one arg, a null string.
 
@@ -4061,7 +4121,7 @@ returned, as appropriate.
 
 */
 
-char **buildargv (const char *input) {
+char **buildargv(const char *input) {
   char *arg;
   char *copybuf;
   int squote = 0;
@@ -4072,36 +4132,36 @@ char **buildargv (const char *input) {
   char **argv = NULL;
   char **nargv;
 
-  if (input != NULL)
+  if(input != NULL)
     {
-      copybuf = (char *) alloca (strlen (input) + 1);
+      copybuf =(char *) alloca(strlen(input) + 1);
       /* Is a do{}while to always execute the loop once.  Always return an
 	 argv, even for null strings.  See NOTES above, test case below. */
       do
 	{
 	  /* Pick off argv[argc] */
-	  while (ISBLANK (*input))
+	  while(ISBLANK(*input))
 	    {
 	      input++;
 	    }
-	  if ((maxargc == 0) || (argc >= (maxargc - 1)))
+	  if((maxargc == 0) ||(argc >=(maxargc - 1)))
 	    {
 	      /* argv needs initialization, or expansion */
-	      if (argv == NULL)
+	      if(argv == NULL)
 		{
 		  maxargc = CONST_INITIAL_MAXARGC;
-		  nargv = (char **) malloc (maxargc * sizeof (char *));
+		  nargv =(char **) malloc(maxargc * sizeof(char *));
 		}
 	      else
 		{
 		  maxargc *= 2;
-		  nargv = (char **) realloc (argv, maxargc * sizeof (char *));
+		  nargv =(char **) realloc(argv, maxargc * sizeof(char *));
 		}
-	      if (nargv == NULL)
+	      if(nargv == NULL)
 		{
-		  if (argv != NULL)
+		  if(argv != NULL)
 		    {
-		      freeargv (argv);
+		      freeargv(argv);
 		      argv = NULL;
 		    }
 		  break;
@@ -4111,26 +4171,26 @@ char **buildargv (const char *input) {
 	    }
 	  /* Begin scanning arg */
 	  arg = copybuf;
-	  while (*input != '\0')
+	  while(*input != '\0')
 	    {
-	      if (ISBLANK (*input) && !squote && !dquote && !bsquote)
+	      if(ISBLANK(*input) && !squote && !dquote && !bsquote)
 		{
 		  break;
 		}
 	      else
 		{
-		  if (bsquote)
+		  if(bsquote)
 		    {
 		      bsquote = 0;
 		      *arg++ = *input;
 		    }
-		  else if (*input == '\\')
+		  else if(*input == '\\')
 		    {
 			  bsquote = 1;
 		    }
-		  else if (squote)
+		  else if(squote)
 		    {
-		      if (*input == '\'')
+		      if(*input == '\'')
 			{
 			  squote = 0;
 			}
@@ -4139,9 +4199,9 @@ char **buildargv (const char *input) {
 			  *arg++ = *input;
 			}
 		    }
-		  else if (dquote)
+		  else if(dquote)
 		    {
-		      if (*input == '"')
+		      if(*input == '"')
 			{
 			  dquote = 0;
 			}
@@ -4152,11 +4212,11 @@ char **buildargv (const char *input) {
 		    }
 		  else
 		    {
-		      if (*input == '\'')
+		      if(*input == '\'')
 			{
 			  squote = 1;
 			}
-		      else if (*input == '"')
+		      else if(*input == '"')
 			{
 			  dquote = 1;
 			}
@@ -4169,24 +4229,24 @@ char **buildargv (const char *input) {
 		}
 	    }
 	  *arg = '\0';
-	  argv[argc] = strdup (copybuf);
-	  if (argv[argc] == NULL)
+	  argv[argc] = strdup(copybuf);
+	  if(argv[argc] == NULL)
 	    {
-	      freeargv (argv);
+	      freeargv(argv);
 	      argv = NULL;
 	      break;
 	    }
 	  argc++;
 	  argv[argc] = NULL;
 
-	  while (ISBLANK (*input))
+	  while(ISBLANK(*input))
 	    {
 	      input++;
 	    }
 	}
-      while (*input != '\0');
+      while(*input != '\0');
     }
-  return (argv);
+  return(argv);
 }
 
 #endif /* HAVE_BUILDARGV */
@@ -4200,16 +4260,16 @@ void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...) {
 
   myGlobals.heartbeatCounter++;
 
-  if ( (format != NULL) && (PARM_SHOW_NTOP_HEARTBEAT >= beatLevel) ) {
+  if((format != NULL) &&(PARM_SHOW_NTOP_HEARTBEAT >= beatLevel) ) {
       memset(buf, 0, LEN_GENERAL_WORK_BUFFER);
-      va_start (va_ap, format);
+      va_start(va_ap, format);
 #if defined(WIN32)
       /* Windows lacks vsnprintf */
       vsprintf(buf, format, va_ap);
 #else /* WIN32 - vsnprintf */
       vsnprintf(buf, LEN_GENERAL_WORK_BUFFER-1, format, va_ap);
 #endif /* WIN32 - vsnprintf */
-      va_end (va_ap);
+      va_end(va_ap);
 
       traceEvent(CONST_TRACE_INFO, "HEARTBEAT(%09u)[%s:%d]: %s\n", myGlobals.heartbeatCounter, file, line, buf);
   }
@@ -4221,10 +4281,10 @@ char *i18n_xvert_locale2common(const char *input) {
   /*
    *  locales are                  ll[_XX][.char][@modifier]
    *
-   *  Fix it up to our common format (ll_XX), stripped of char and modifier.
+   *  Fix it up to our common format(ll_XX), stripped of char and modifier.
    *
    *    NB: We picked this common format because it's usable in a directory 
-   *        (html_ll_XX) where the Accept-Language version (ll-XX) wouldn't always be.
+   *       (html_ll_XX) where the Accept-Language version(ll-XX) wouldn't always be.
    *
    */
    char *output, *work;
@@ -4232,11 +4292,11 @@ char *i18n_xvert_locale2common(const char *input) {
    output = strdup(input);
 
    work = strchr(output, '.');
-   if (work != NULL) {
+   if(work != NULL) {
        work[0] = '\0';
    }
    work = strchr(output, '@');
-   if (work != NULL) {
+   if(work != NULL) {
        work[0] = '\0';
    }
    return output;
@@ -4246,10 +4306,10 @@ char *i18n_xvert_acceptlanguage2common(const char *input) {
   /*
    *  Accept-Language: headers are ll[-XX] or ll-*
    *
-   *  Fix it up to our common format (ll_XX), with the - swapped for a _
+   *  Fix it up to our common format(ll_XX), with the - swapped for a _
    *
    *    NB: We picked this common format because it's usable in a directory 
-   *        (html_ll_XX) where the Accept-Language version (ll-XX) wouldn't always be.
+   *       (html_ll_XX) where the Accept-Language version(ll-XX) wouldn't always be.
    *
    */
    char *output, *work;
@@ -4257,18 +4317,18 @@ char *i18n_xvert_acceptlanguage2common(const char *input) {
    output = strdup(input);
 
    work = strchr(output, '*');
-   if (work != NULL) {
+   if(work != NULL) {
        /* Backup to erase the - of the -* combo */
        work--;
        work[0] = '\0';
    }
    work = strchr(output, '-');
-   if (work != NULL) {
+   if(work != NULL) {
        work[0] = '_';
    }
    work = strchr(output, '_');
-   if (work != NULL) {
-       while (work[0] != '\0') {
+   if(work != NULL) {
+       while(work[0] != '\0') {
            work[0] = toupper(work[0]);
            work++;
        }
