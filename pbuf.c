@@ -315,6 +315,7 @@ static void checkFragmentOverlap(HostTraffic *srcHost,
 			  dstHost, actualDeviceId);
     incrementUsageCounter(&fragment->dest->secHostPkts->overlappingFragmentRcvd,
 			  srcHost, actualDeviceId);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.overlappingFragment, 1);
   }
 }
 
@@ -913,6 +914,7 @@ static void processIpPkt(const u_char *bp,
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHost, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHost, actualDeviceId);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.malformedPkts, 1);
       }
     } else {
       proto = "TCP";
@@ -1125,6 +1127,7 @@ static void processIpPkt(const u_char *bp,
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHost, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHost, actualDeviceId);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.malformedPkts, 1);
       }
     } else {
       udpDataLength = tcpUdpLen - sizeof(struct udphdr);
@@ -1334,6 +1337,7 @@ static void processIpPkt(const u_char *bp,
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHost, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHost, actualDeviceId);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.malformedPkts, 1);
       }
     } else {
       proto = "ICMP";
@@ -1350,6 +1354,7 @@ static void processIpPkt(const u_char *bp,
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHost, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHost, actualDeviceId);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.icmpFragment, 1);
 	if(myGlobals.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, fmt,
 		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
@@ -1451,6 +1456,7 @@ static void processIpPkt(const u_char *bp,
 	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	    incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnSent, dstHost, actualDeviceId);
 	    incrementUsageCounter(&dstHost->secHostPkts->rejectedTCPConnRcvd, srcHost, actualDeviceId);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.rejectedTCPConn, 1);
 	    break;
 
 	  case IPPROTO_UDP:
@@ -1461,11 +1467,13 @@ static void processIpPkt(const u_char *bp,
 	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	    incrementUsageCounter(&dstHost->secHostPkts->udpToClosedPortSent, srcHost, actualDeviceId);
 	    incrementUsageCounter(&srcHost->secHostPkts->udpToClosedPortRcvd, dstHost, actualDeviceId);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.udpToClosedPort, 1);
 	    break;
 	  }
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	  incrementUsageCounter(&srcHost->secHostPkts->icmpPortUnreachSent, dstHost, actualDeviceId);
 	  incrementUsageCounter(&dstHost->secHostPkts->icmpPortUnreachRcvd, srcHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.icmpPortUnreach, 1);
 	  break;
 
 	case ICMP_UNREACH_NET:
@@ -1473,6 +1481,7 @@ static void processIpPkt(const u_char *bp,
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	  incrementUsageCounter(&srcHost->secHostPkts->icmpHostNetUnreachSent, dstHost, actualDeviceId);
 	  incrementUsageCounter(&dstHost->secHostPkts->icmpHostNetUnreachRcvd, srcHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.icmpHostNetUnreach, 1);
 	  break;
 
 	case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
@@ -1497,6 +1506,7 @@ static void processIpPkt(const u_char *bp,
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	  incrementUsageCounter(&srcHost->secHostPkts->icmpAdminProhibitedSent, dstHost, actualDeviceId);
 	  incrementUsageCounter(&dstHost->secHostPkts->icmpAdminProhibitedRcvd, srcHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.icmpAdminProhibited, 1);
 	  break;
 	}
 	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);

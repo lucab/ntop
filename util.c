@@ -101,7 +101,7 @@ HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
 
 HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId) {
   HostTraffic *el;
-  short dummyShort;
+  short dummyShort=1;
   u_int idx = hashHost(&hostIpAddress, NULL, &dummyShort, &el, actualDeviceId);
 
   if(el != NULL)

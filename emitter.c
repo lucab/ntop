@@ -1463,18 +1463,39 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 
     /* ********************************* */
 
+    if(checkFilter(filter, "securityPkts")) {
+	initWriteKey(fDescr, lang, "\t", "securityPkts", numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "synPkts", myGlobals.device[i].securityPkts.synPkts, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "rstPkts", myGlobals.device[i].securityPkts.rstPkts, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "rstAckPkts", myGlobals.device[i].securityPkts.rstAckPkts, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "synFinPkts", myGlobals.device[i].securityPkts.synFinPkts, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "finPushUrgPkts", myGlobals.device[i].securityPkts.finPushUrgPkts, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "nullPkts", myGlobals.device[i].securityPkts.nullPkts, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "ackScan", myGlobals.device[i].securityPkts.ackScan, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "xmasScan", myGlobals.device[i].securityPkts.xmasScan, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "finScan", myGlobals.device[i].securityPkts.finScan, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "nullScan", myGlobals.device[i].securityPkts.nullScan, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "rejectedTCPConn", myGlobals.device[i].securityPkts.rejectedTCPConn, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "establishedTCPConn", myGlobals.device[i].securityPkts.establishedTCPConn, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "terminatedTCPConn", myGlobals.device[i].securityPkts.terminatedTCPConn, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "udpToClosedPort", myGlobals.device[i].securityPkts.udpToClosedPort, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "udpToDiagnosticPort", myGlobals.device[i].securityPkts.udpToDiagnosticPort, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "tcpToDiagnosticPort", myGlobals.device[i].securityPkts.tcpToDiagnosticPort, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "tinyFragment", myGlobals.device[i].securityPkts.tinyFragment, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "icmpFragment", myGlobals.device[i].securityPkts.icmpFragment, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "overlappingFragment", myGlobals.device[i].securityPkts.overlappingFragment, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "closedEmptyTCPConn", myGlobals.device[i].securityPkts.closedEmptyTCPConn, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "icmpPortUnreach", myGlobals.device[i].securityPkts.icmpPortUnreach, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "icmpHostNetUnreach", myGlobals.device[i].securityPkts.icmpHostNetUnreach, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "icmpProtocolUnreach", myGlobals.device[i].securityPkts.icmpProtocolUnreach, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "icmpAdminProhibited", myGlobals.device[i].securityPkts.icmpAdminProhibited, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "malformedPkts", myGlobals.device[i].securityPkts.malformedPkts, ',', numEntries);
+	endWriteKey(fDescr, lang,"\t", "securityPkts", ',');
+    }
+
+    /* ********************************* */
+
     if(!shortView) {
-      if(checkFilter(filter, "TCPflags")) {
-	initWriteKey(fDescr, lang, "\t", "TCPflags", numEntries);
-
-	wrtLlongItm(fDescr, lang,"\t\t","numEstablishedTCPConnections",
-		    myGlobals.device[i].numEstablishedTCPConnections, ' ', numEntries);
-
-	endWriteKey(fDescr, lang,"\t", "TCPflags", ',');
-      }
-
-      /* ********************************* */
-
       if(checkFilter(filter, "tcpLocal"))
 	wrtLlongItm(fDescr, lang,"\t","tcpLocal",
 		    myGlobals.device[i].tcpGlobalTrafficStats.local, ',', numEntries);

@@ -71,6 +71,7 @@ extern void printPacketStats(HostTraffic *el, int actualDeviceId);
 extern void printHostTrafficStats(HostTraffic *el, int actualDeviceId);
 extern void printHostFragmentStats(HostTraffic *el, int actualDeviceId);
 extern void printTotalFragmentStats(HostTraffic *el, int actualDeviceId);
+extern HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el);
 extern void printHostContactedPeers(HostTraffic *el, int actualDeviceId);
 extern char *getSessionState(IPSession *session);
 extern void printHostSessions(HostTraffic *el, int actualDeviceId);

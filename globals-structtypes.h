@@ -290,6 +290,7 @@ typedef struct routingCounter {
 
 /* *********************** */
 
+/* NOTE: anything added here must be also added in the SecurityDeviceProbes structure */
 typedef struct securityHostProbes {
   UsageCounter synPktsSent, rstPktsSent, rstAckPktsSent,
                synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
@@ -317,6 +318,32 @@ typedef struct securityHostProbes {
   UsageCounter icmpAdminProhibitedSent, icmpAdminProhibitedRcvd;
   UsageCounter malformedPktsSent,       malformedPktsRcvd;
 } SecurityHostProbes;
+
+/* NOTE: anything added here must be also added in the SecurityHostProbes structure */
+typedef struct securityDeviceProbes {
+    TrafficCounter synPkts, rstPkts, rstAckPkts,
+	synFinPkts, finPushUrgPkts, nullPkts;
+    TrafficCounter rejectedTCPConn;
+    TrafficCounter establishedTCPConn;
+    TrafficCounter terminatedTCPConn;
+
+    TrafficCounter ackScan;
+    TrafficCounter xmasScan;
+    TrafficCounter finScan;
+    TrafficCounter nullScan;
+    /* ********* */
+    TrafficCounter udpToClosedPort;
+    TrafficCounter udpToDiagnosticPort, tcpToDiagnosticPort;
+    TrafficCounter tinyFragment;
+    TrafficCounter icmpFragment;
+    TrafficCounter overlappingFragment;
+    TrafficCounter closedEmptyTCPConn;
+    TrafficCounter malformedPkts;
+    TrafficCounter icmpPortUnreach;
+    TrafficCounter icmpHostNetUnreach;
+    TrafficCounter icmpProtocolUnreach;
+    TrafficCounter icmpAdminProhibited;
+} SecurityDeviceProbes;
 
 typedef struct nonIPTraffic {
   /* NetBIOS */
@@ -728,6 +755,7 @@ typedef struct ntopInterface {
 
   SimpleProtoTrafficInfo tcpGlobalTrafficStats, udpGlobalTrafficStats, icmpGlobalTrafficStats;
   SimpleProtoTrafficInfo *ipProtoStats;
+  SecurityDeviceProbes securityPkts;
 
   TrafficCounter numEstablishedTCPConnections; /* = # really established connections */
 

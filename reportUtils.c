@@ -77,8 +77,10 @@ void formatUsageCounter(UsageCounter usageCtr,
   }
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+      HostTraffic tmpEl;
+
       if(!emptySerial(&usageCtr.peersSerials[i])) {
-	  if((el = findHostBySerial(usageCtr.peersSerials[i], myGlobals.actualReportDeviceId)) != NULL) {
+	  if((el = quickHostLink(usageCtr.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
  	if(!sendHeader) {
 	  sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
 	  sendHeader = 1;
@@ -2631,7 +2633,7 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 
 /* ************************************ */
 
-static HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
+HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
   HostTraffic *theEntry = NULL;
   int found = 0;
   u_int idx;

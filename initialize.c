@@ -379,7 +379,6 @@ void resetDevice(int devIdx) {
   myGlobals.device[devIdx].last60MinutesThptIdx = 0;
   myGlobals.device[devIdx].last24HoursThptIdx = 0;
   myGlobals.device[devIdx].last30daysThptIdx = 0;
-  resetTrafficCounter(&myGlobals.device[devIdx].numEstablishedTCPConnections);
   myGlobals.device[devIdx].hostsno = 0;
 
   myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
