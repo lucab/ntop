@@ -2926,11 +2926,11 @@ FILE* getNewRandomFile(char* fileName, int len) {
   pointing out the finger at the problem.
 */
 
-void stringSanityCheck(char* string) {
+void stringSanityCheck(char* string, char* parm) {
   int i, j;
 
   if(string == NULL)  {
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid string specified.");
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) string specified for option %s", parm);
     exit(-1);
   }
 
@@ -2938,23 +2938,161 @@ void stringSanityCheck(char* string) {
     switch(string[i]) {
     case '%':
     case '\\':
+      string[i]='.';
       j=0;
       break;
     }
   }
 
   if(j == 0) {
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid string '%s' specified.",
-	       string);
+    if(strlen(string) > 20) string[20] = '\0';
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid string specified for option %s", parm);
+    traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
     exit(-1);
   }
 
   if((string[strlen(string)-1] == '/') ||
      (string[strlen(string)-1] == '\\')) {
-    traceEvent(CONST_TRACE_WARNING, "Trailing slash removed from argument '%s'", string);
+    traceEvent(CONST_TRACE_WARNING, "Trailing slash removed from argument for option %s", parm);
     string[strlen(string)-1] = '\0';
   }
 }
+
+/* ************************** */
+
+void uriSanityCheck(char* string, char* parm, int allowParms) {
+  int i, j;
+
+//      Our reduced BNF is:
+//            relativeURI    = ["/" ] fsegment *( "/" segment )
+//            fsegment       = 1*pchar
+//            segment        = *pchar
+//     
+//            pchar          = unreserved | ":" | "@" | "&" | "=" | "+"
+//            unreserved     = ALPHA | DIGIT | safe | extra | national
+//     
+//            reserved       = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+"
+//                                    ^--- is legal character as segment sep.
+//            extra          = "!" | "*" | "'" | "(" | ")" | ","
+//            safe           = "$" | "-" | "_" | "."
+//            unsafe         = CTL | SP | <"> | "#" | "%" | "<" | ">"
+//            national       = <any OCTET excluding ALPHA, DIGIT,
+//                             reserved, extra, safe, and unsafe> 
+//      And we look for reserved or unsafe chars.
+
+// If this is a URI which we allow parms in, then we add ? & to the valid chars
+// We add : as legal for Port specification
+
+  if(string == NULL)  {
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) uri specified for option %s", parm);
+    exit(-1);
+  }
+
+  for(i=0, j=1; i<strlen(string); i++) {
+    if(string[i] <= ' ') {
+      /* CTL | SP */
+      string[i]='.';
+      j = 0;
+    } else switch(string[i]) {
+      case ';':
+      case '@':
+      case '+':
+      case '"':
+      case '#':
+      case '%':
+      case '<':
+      case '>':
+      case '\\':  /* Add this one for directory traversal */
+        string[i]='.';
+        j=0;
+        break;
+      case '=':
+      case '?':
+      case '&':
+        if(allowParms == FALSE) {
+          string[i]='.';
+          j=0;
+        }
+        break;
+    }
+  }
+
+  if(j == 0) {
+    if(strlen(string) > 40) string[40] = '\0';
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid uri specified for option %s", parm);
+    traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
+    exit(-1);
+  }
+
+}
+
+/* ************************** */
+
+void pathSanityCheck(char* string, char* parm) {
+  int i, j, k;
+
+  static char fnChar[256];
+
+// Common:
+//     Upper and lower case letters:  A - Z and a - z  
+//     Numbers  0 - 9  
+//     Period, underscore, hyphen  . _ -  
+
+// Unix:
+//     Slash
+//     Comma
+
+// Win
+//     Backslash
+//     Colon, quotes, space
+
+  if(string == NULL)  {
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) path specified for option %s", parm);
+    exit(-1);
+  }
+
+  /* one time load of table */
+  if(fnChar['a'] != 1) {
+    memset(&fnChar, 0, sizeof(fnChar));
+    for(i='0'; i<='9'; i++) fnChar[i]=1;
+    for(i='A'; i<='Z'; i++) fnChar[i]=1;
+    for(i='a'; i<='z'; i++) fnChar[i]=1;
+    fnChar['.']=1;
+    fnChar['_']=1;
+    fnChar['-']=1;
+#ifdef WIN32
+    fnChar[' ']=1;
+    fnChar['\\']=1;
+    fnChar[':']=1;
+#else
+    fnChar[',']=1;
+    fnChar['/']=1;
+#endif
+  }
+
+  k=0;
+#ifdef WIN32
+  /* Strip "ed string for test */
+  if((string[0] != '"') || (string[strlen(string)-1] != '"') )
+    k=1;
+#endif
+
+  for(i=k, j=1; i<strlen(string)-k; i++) {
+    if(fnChar[string[i]] == 0) {
+      string[i]='.';
+      j = 0;
+    }
+  }
+
+  if(j == 0) {
+    if(strlen(string) > 40) string[40] = '\0';
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid path/filename specified for option %s", parm);
+    traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
+    exit(-1);
+  }
+
+}
+
 
 /* ****************************************************** */
 

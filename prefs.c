@@ -187,7 +187,7 @@ void loadPrefs(int argc, char* argv[]) {
 
 #ifndef WIN32
     case 'u':
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-u | --user");
       if(myGlobals.effectiveUserName != NULL) free(myGlobals.effectiveUserName);
       myGlobals.effectiveUserName = strdup(optarg);
       if(strOnlyDigits(optarg))
@@ -215,7 +215,7 @@ void loadPrefs(int argc, char* argv[]) {
       break;
 
     case 'P':
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-P | --db-file-path");
       if(myGlobals.dbPath != NULL)
 	free(myGlobals.dbPath);
 
@@ -292,7 +292,7 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 'a': /* ntop access log path */
-      stringSanityCheck(optarg);
+      pathSanityCheck(optarg, "-a | --access-log-file");
       myGlobals.runningPref.accessLogFile = strdup(optarg);
       break;
 
@@ -329,7 +329,7 @@ int parseOptions(int argc, char* argv[]) {
 
     case 'i': /* More than one interface may be specified in a comma separated list */
 #ifndef WIN32
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-i | --interface");
 #endif
       myGlobals.runningPref.devices = strdup(optarg);
       break;
@@ -343,12 +343,12 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 'l':
-      stringSanityCheck(optarg);
+      pathSanityCheck(optarg, "-l | --pcap-log");
       myGlobals.runningPref.pcapLog = strdup(optarg);
       break;
 
     case 'm':
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-m | --local-subnets");
       myGlobals.runningPref.localAddresses = strdup(optarg);
       break;
 
@@ -361,7 +361,7 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 'p': /* the TCP/UDP protocols being monitored */
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-p | --protocols");
       myGlobals.runningPref.protoSpecs = strdup(optarg);
       break;
 
@@ -390,7 +390,7 @@ int parseOptions(int argc, char* argv[]) {
 
 #ifndef WIN32
     case 'u':
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-u | --user");
       if(myGlobals.effectiveUserName != NULL) free(myGlobals.effectiveUserName);
       myGlobals.effectiveUserName = strdup(optarg);
       if(strOnlyDigits(optarg))
@@ -411,7 +411,7 @@ int parseOptions(int argc, char* argv[]) {
 #endif /* WIN32 */
 
     case 'w':
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-w | --http-server");
       if(!isdigit(optarg[0])) {
 	printf("FATAL ERROR: flag -w expects a numeric argument.\n");
 	exit(-1);
@@ -441,22 +441,22 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 'B':
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-B | --filter-expression");
       myGlobals.runningPref.currentFilterExpression = strdup(optarg);
       break;
 
     case 'C': /* Sampling rate */
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-C | --sampling-rate");
       myGlobals.runningPref.samplingRate = (u_short)atoi(optarg);
       break;
 
     case 'D': /* domain */
-      stringSanityCheck(optarg);
+      uriSanityCheck(optarg, "-D | --domain", FALSE);
       strncpy(myGlobals.runningPref.domainName, optarg, MAXHOSTNAMELEN);
       break;
 
     case 'F':
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-F | --flow-spec");
       myGlobals.runningPref.flowSpecs = strdup(optarg);
       break;
 
@@ -477,21 +477,21 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 'N':
-      stringSanityCheck(optarg);
+      pathSanityCheck(optarg, "-N | --wwn-map");
       if (myGlobals.runningPref.fcNSCacheFile != NULL)
 	free (myGlobals.runningPref.fcNSCacheFile);
       myGlobals.runningPref.fcNSCacheFile = strdup (optarg);
       break;
 
     case 'O': /* pcap log path - Ola Lundqvist <opal@debian.org> */
-      stringSanityCheck(optarg);
+      pathSanityCheck(optarg, "-O | --output-packet-path");
       if(myGlobals.runningPref.pcapLogBasePath != NULL)
 	free(myGlobals.runningPref.pcapLogBasePath);
       myGlobals.runningPref.pcapLogBasePath = strdup(optarg);
       break;
 
     case 'P':
-      stringSanityCheck(optarg);
+      pathSanityCheck(optarg, "-P | --db-file-path");
       if(myGlobals.dbPath != NULL)
 	free(myGlobals.dbPath);
 
@@ -499,14 +499,14 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 'Q': /* Spool Path (ntop's spool directory) */
-      stringSanityCheck(optarg);
+      pathSanityCheck(optarg, "-Q | --spool-file-path" );
       if(myGlobals.spoolPath != NULL)
 	free(myGlobals.spoolPath);
       myGlobals.spoolPath = strdup(optarg);
       break;
 
     case 'U': /* host:port - a good mapper is at http://jake.ntop.org/cgi-bin/mapper.pl */
-      stringSanityCheck(optarg);
+      uriSanityCheck(optarg, "-U | --mapper", TRUE);
       myGlobals.runningPref.mapperURL = strdup(optarg);
       break;
 
@@ -524,7 +524,7 @@ int parseOptions(int argc, char* argv[]) {
 
 #ifdef HAVE_OPENSSL
     case 'W':
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "-W | --https-server");
       if(!isdigit(optarg[0])) {
 	printf("FATAL ERROR: flag -W expects a numeric argument.\n");
 	exit(-1);
@@ -565,7 +565,7 @@ int parseOptions(int argc, char* argv[]) {
       if (optarg) {
 	int i;
 
-	stringSanityCheck(optarg);
+	stringSanityCheck(optarg, "--use-syslog");
 
 	for (i=0; myFacilityNames[i].c_name != NULL; i++) {
 	  if (strcmp(optarg, myFacilityNames[i].c_name) == 0) {
@@ -603,7 +603,7 @@ int parseOptions(int argc, char* argv[]) {
     case 135:
       /* Dennis Schoen (dennis@cns.dnsalias.org) allow --set-admin-password=<password> */
       if (optarg) {
-        stringSanityCheck(optarg);
+        stringSanityCheck(optarg, "--set-admin-password");
 	adminPw = strdup(optarg);
       } else {
 	printf("NOTE: --set-admin-password requested, no password.  Did you forget the =?\n");
@@ -617,14 +617,14 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 137:
-      stringSanityCheck(optarg);
+      stringSanityCheck(optarg, "--p3pcp");
       if(myGlobals.runningPref.P3Pcp != NULL)
 	free(myGlobals.runningPref.P3Pcp);
       myGlobals.runningPref.P3Pcp = strdup(optarg);
       break;
 
     case 138:
-      stringSanityCheck(optarg);
+      uriSanityCheck(optarg, "--p3puri", FALSE);
       if(myGlobals.runningPref.P3Puri != NULL)
 	free(myGlobals.runningPref.P3Puri);
       myGlobals.runningPref.P3Puri = strdup(optarg);
@@ -983,7 +983,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     pref->samplingRate = (u_short)sampleRate;
   } else if(strcmp (key, NTOP_PREF_WEBPORT) == 0) {
     if (value != NULL) {
-      stringSanityCheck(value);
+      stringSanityCheck(value, "-w | --http-server");
       if(!isdigit(*value)) {
 	traceEvent (CONST_TRACE_ERROR, "flag -w expects a numeric argument.\n");
 	return(startCap);
@@ -1014,9 +1014,9 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 #ifdef HAVE_OPENSSL
   else if (strcmp (key, NTOP_PREF_SSLPORT) == 0) {
     if (value != NULL) {
-      stringSanityCheck(value);
+      stringSanityCheck(value, "-W | --https-server");
       if(!isdigit(*value)) {
-	traceEvent (CONST_TRACE_ERROR, "flag -w expects a numeric argument.\n");
+	traceEvent (CONST_TRACE_ERROR, "flag -W expects a numeric argument.\n");
 	return(startCap);
       }
 
