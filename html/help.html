@@ -19,26 +19,78 @@
 <body background=white_bg.gif>
 
 <h1><a href="http://www.ntop.org/" target="_top"><img border="0" src="ntop.gif" width="59" height="49" alt="ntop logo"></a>
-ntop Error Codes</h1>
+ntop Risk flags (
+<img src="Risk_high.gif" alt="High risk" width="12" height="14" border="0">,&nbsp;
+<img src="Risk_medium.gif" alt="Medium risk" width="11" height="13" border="0">,&nbsp;
+<img src="Risk_low.gif" alt="Low risk" width="10" height="11" border="0">
+)</h3>
+
+<p>There are a large number of causes for these flags.</p>
+<p>Very few of these can be explicitly identified as hostile activity, but
+rather can occur from a variety of causes (with network misconfiguration being the most common).
+However, because the conditions COULD result from 'hostile' activity or serious network
+configuration problems, <b>ntop</b> monitors and reports them for the
+systems administrators review.</p>
+<p>The specific condition or conditions are indicated by the colored flags and descriptive
+text or short tags on the host information report:</p>
 
 <p>Note that many of these warnings can be produced if a mirrored (Cisco span) traffic source is 
-being monitored and the -o flag is <b>not</b> specified.  In this case, the MAC layer address
-for packets is incorrect and will confuse <b>ntop</b>.</p>
+being monitored and the 
+<pre>-o | --no-mac</pre> flag is <b>not</b> specified.  In this case, the MAC layer address
+for packets may be incorrect and that will confuse <b>ntop</b>.</p>
 <hr />
-<ol>
-<h3><a name="#1">Wrong network mask or bridging enabled</a></h3>
-<p><b>ntop</b> will report this problem for those hosts that apparently have a wrong
-netmask. <b>ntop</b> detects this problem when a host sends a packet to a broadcast
+
+<h2><i><img src="Risk_high.gif" alt="High risk" width="12" height="14" border="0">&nbsp;
+High risk - problems which are rarely benign</i></h2>
+
+<h3><a name="#2">Duplicated MAC</a></h3>
+<p><b>ntop</b> will report this problem for hosts where a single MAC address (layer 2) is 
+found on packets from several IP (layer 3) addresses. 
+There are a number of possible causes:
+<ul>
+<li>The host legitimately has multiple IPs assigned.</li>
+<li>dhcp + sticky-hosts - If <b>ntop</b> is being run with the stick-hosts option and dhcp
+addressing is being used, it's possible for a host to receive address a.b.c.d, and then 
+disconnect from the network.  If that address is reassigned to another host, then when
+the first host reconnects to the network it will receive a differnent IP address.  If 
+the stick-hosts is not enabled, it's very likely that the first user of a.b.c.d would
+be purged as inactive before the dhcp lease is reassigned.  This is BENIGN.</li>
+<li>MAC spoofing - where a device deliberately changes it's MAC address to 'spoof'
+another device.  Many home users do this, where their router spoof's the address of
+the network card so that their upstread Cable or DSL provider doesn't seen the change
+when you install a router.  But bad guys also do this to bypass MAC level filters.</li>
+<li>Some hardware - notably Sun - use the same MAC address for all of the NICs attached
+to the host.  If <b>ntop</b> is monitoring these multiple segments, it will see
+'spoofed' packets.</li>
+<li>Someone is sending spoofed packets. This is probably hostile.</li>
+</ul>
+It's not normal unless you're using Sun servers, so check it out!</p>
+<p><font size="-1">Flag/Counter:&nbsp;HOST_DUPLICATED_MAC</font></p>
+<br />
+
+<h3><a name="#3">Port Zero Traffic</a></h3>
+<p><b>ntop</b> will report this problem for those hosts that produced traffic on ports 
+where we should see no traffic (e.g. port zero). Port 0 is a reserved port in 
+tcp/ip networking,
+(see <a href="http://www.iana.org/assignments/port-numbers" title="IANA port number assignments">IANA</a>)
+so that it should not be used by the tcp or udp protocols.
+It's not normal and has been used in hostile attempts to map networks (as many devices
+do not block it, even if the device blocks everything else), so check it out!</p>
+<p><font size="-1">Flag/Counter:&nbsp;HOST_IP_ZERO_PORT_TRAFFIC</font></p>
+
+<br />
+<hr />
+<h2><i><img src="Risk_medium.gif" alt="Medium risk" width="11" height="13" border="0">&nbsp;
+Unexpected packets (e.g. traffic to closed port or connection reset)</i></h2>
+
+<h3><a name="#1">Wrong network mask</a></h3>
+<p><b>ntop</b> has detected an anomalyous situation with the network mask for a host.
+This occurs if <b>ntop</b> determines that the address is a broadcast address, but the 
+actual packet destination is different.</p>
+<p>Among other causes, <b>ntop</b> detects this problem when a host sends a packet to a broadcast
 address where the destination MAC address is not FF:FF:FF:FF:FF:FF. This could
-indicate that: 
-<ul><li>such host has a wrong netmask</li>
-<li>it is a bridge.</li></ul></p>
-<h3><a name="#2">Duplicated MAC found for this IP address</a></h3>
-<b>ntop</b> will report this problem for hosts where a single MAC address is found on
-packets from several IP addresses. This could indicate that: 
-<ul><li>The host legitimately has multiple IPs assigned.</li>
-<li>Someone is sending spoofed packets.</li>
-<li>A host has a wrong netmask.</li></ul></p>
+simply indicate that the host is a bridge.</p>
+<p><i>The most likely cause of this is a misconfiguration, which SHOULD be fixed.</i></p>
 <p>Using the wrong netmask is quite common on networks where the
 netmask has changed and some of the hosts still use the old netmask.</p>
 <p>Most hosts use the netmask to determine the gateway router address, by setting the 
@@ -46,134 +98,155 @@ host portion of the address to 0x1 (i.e. the gateway for 192.168.1.1/24 is 192.1
 If problems do occur, selecting the wrong gateway for non-local packets usually leads to
 apparent failure of the entire non-local network (support call: "The network is down").
 It can also cause high packet loss, collisions, ttl expiration and other network problems.</p>
-<h3><a name="#3">Traffic on suspicious IP ports</a></h3>
-<p><b>ntop</b> will report this problem for those hosts that produced traffic on ports where 
-we should see no traffic (e.g. port zero).</p>
-<h3><a name="#4">Suspicious activities: too many host contacts</a></h3>
-Usually a host contacts a limited number of hosts in a short amount of time. This flag indicates
+<p>Note: <b>ntop</b> defines the broadcast address as either zero (0.0.0.0) or an address which
+has a host part of 0.  Perfectly normal.  However, <b>ntop</b> determines the network and host 
+portions for the monitored packet's address based on the actual configuration of <b>ntop</b>'s 
+own NIC.  So if <b>ntop</b>'s NIC has a different configuration it will tag traffic as having 
+the wrong mask.</p>
+<p><font size="-1">Flag/Counter:&nbsp;HOST_WRONG_NETMASK</font></p>
+
+<h3><a name="#4">Too many host contacts</a></h3>
+<p><b>ntop</b> keeps tabs on the number of hosts contacted by each host being monitored, called
+'peers'.  Usually a host contacts a limited number of hosts in a short amount of time. This flag indicates
 that the flagged host has contacted a large number of hosts.</p>
+<p>If the number of peers contacted - either sending to or receiving from - exceeds
+a configurable constant (globals-defines.h, CONTACTED_PEERS_THRESHOLD, default value of 1024),
+this is reported.</p>
 <p>This is not always a problem - some servers (e.g. DNS/SMTP servers) may routinely contact
-100s or 1000s of hosts in performance of their function. Hosts running PP applications, 
+100s or 1000s of hosts in performance of their function. Hosts running P2P applications, 
 often contact many different hosts to resolve a request.</p>
 <p>However, this behavior - contacting many different hosts in a short period - is also 
 indicative of a worm.  If you see this flag, you should carefully analyze the host in order 
 to see whether it is infected.</p>
-<h3><a name="#5">Unexpected packets</a></h3>
-<p>There are a large number of causes for this flag which indicates that one or more of the 
-following conditions have occurred.  The specific condition or conditions are indicated by short 
-tags on the host information report:</p>
-<table border="1">
-<tr><th width=100>Tag</th><th>Description</th><th>Counter</th></tr>
-<tr>
-<tr><td valign="top">(Sent:syn-fin)</td>
-<td><b>ntop</b> has seen one or more packets with both the <i>SYN</i> and <i>FIN</i> flags set.
+<p><font size="-1">Flag/Counter:&nbsp;totContactedSentPeers and/or totContactedRcvdPeers</font></p>
+
+<h3><a name="#5">(Sent:syn-fin)</a></h3>
+<p><b>ntop</b> has seen one or more packets with both the <i>SYN</i> and <i>FIN</i> flags set.
 This violates the tcp/ip protocol and is most often part of a port scan or denial of service
-attack. The flagged host is the SENDER of these malformed packets and should be investigated.</td>
-<td valign="bottom">synFinPktsSent</td></tr>
+attack. The flagged host is the SENDER of these malformed packets and should be investigated.</p>
+<p><font size="-1">Flag/Counter:&nbsp;synFinPktsSent</font></p>
+<br />
 
-<tr><td valign="top">(Rcvd:rst)</td>
-<td><b>ntop</b> has seen one or more packets with the <i>RST</i> flag set.  This can be normal,
+<h3>(Rcvd:rst)</h3>
+<p><b>ntop</b> has seen one or more packets with the <i>RST</i> flag set.  This can be normal,
 although should be rare.  A large number of RST packets is also seen as part of a port scan.  
-The flagged host is the RECEIVER of these packets and is the machine being scanned.</td>
-<td valign="bottom">rstPktsRcvd</td></tr>
+The flagged host is the RECEIVER of these packets and is the machine being scanned.</p>
+<p><font size="-1">Flag/Counter:&nbsp;rstPktsRcvd</font></p>
+<br />
 
-<tr><td valign="top">(Sent:xmas)</td>
-<td><b>ntop</b> has seen one or more packets with unusual combinations of flags. This is usually
+<h3>(Sent:xmas)</h3>
+<p><b>ntop</b> has seen one or more packets with unusual combinations of flags. This is usually
 seen as part of a port scan.  The flagged host is the SENDER of these packets is the
-machine performing the port scan.</td>
-<td valign="bottom">ackXmasFinSynNullScanSent</td></tr>
+machine performing the port scan.</p>
+<p><font size="-1">Flag/Counter:&nbsp;ackXmasFinSynNullScanSent</font></p>
+<br />
 
-<tr><td valign="top">(Rcvd:rejected)</td>
-<td><b>ntop</b> has seen one or more packets with the <i>ACK</i> and <i>RST</i> flags set.
+
+<h3>(Sent:Tiny frag)</h3>
+<p><b>ntop</b> has seen one or more tiny fragments (that is 128 or fewer octets) SENT
+from the flagged host.  This is not normal and can indicate a misconfigured router or
+other device, or can be part of an attack (tiny fragments have been used to slip hostile
+packets past firewalls).  Check it out.</p>
+<p><font size="-1">Flag/Counter:&nbsp;tinyFragmentSent</font></p>
+<br />
+
+<h3>(Sent:icmp frag)</h3>
+<p><b>ntop</b> has seen one or more fragmented ICMP packets SENT by the flagged host.
+ICMP packets are small and under normal operations should never be fragmented.
+This is either a misconfigured router/device or hostile. Check it out.</p>
+<p><font size="-1">Flag/Counter:&nbsp;icmpFragmentSent</font></p>
+<br />
+
+<h3>(Sent: overlapfrag)</h3>
+<p><b>ntop</b> has seen one or more packets SENT by the flagged host where the fragments
+overlap.  It's possible, but rare, to see this on network links which have problems, where
+lost packets are causing retransmission errors - perhaps <b>ntop</b> is seeing a fragment that
+never makes it to the end station.  But it should be very, very, rare.  This has also
+been used to crash Intrusion Detection Systems (IDS) prior to an attack.</p>
+<p><font size="-1">Flag/Counter:&nbsp;overlappingFragmentSent</font></p>
+<br />
+
+<h3>(Rcvd:malformed)</h3>
+<p><b>ntop</b> has seen one or more malformed packets, that is packets where the length
+field indicates a length less than the minimum header length for that type of packet. This may
+be set for TCP, UDP and/or ICMP packets. The flagged host is the RECEIVER of these
+packets, which often indicate a failing router or bad network connection.</p>
+<p><font size="-1">Flag/Counter:&nbsp;malformedPktsRcvd</font></p>
+<br />
+
+<hr />
+
+<h2><img src="Risk_low.gif" alt="Low risk" width="11" height="13" border="0">&nbsp;
+<a name="#6">Unexpected packets</a> (e.g. traffic to closed port or connection reset)</i></h2>
+
+<h3>(Rcvd:rejected)</h3>
+<p><b>ntop</b> has seen one or more packets with the <i>ACK</i> and <i>RST</i> flags set.
 This usually means that the contacted host has rejected the tcp session initiation and does
 not indicate a problem.  A high count should be looked at - perhaps a machine is attempting
-to contact a host which used to provide a service (e.g. ntp).
-</td>
-<td valign="bottom">rejectedTCPConnRcvd</td></tr>
+to contact a host which used to provide a service (e.g. ntp).</p>
+<p><font size="-1">Flag/Counter:&nbsp;rejectedTCPConnRcvd</font></p>
+<br />
 
-<tr><td valign="top">(Sent:udp to closed)</td>
+<h3>(Sent:udp to closed)</h3>
 <td><b>ntop</b> has seen one or more ICMP <i>Destination Unreachable</i> replies.  This means
 that the flagged host has SENT a packet to a remote host's port that is not accepting these
 connections.  It is usually seen when there is a misconfiguration of the sending host, such as
 the wrong dns server address.</td>
-<td valign="bottom">udpToClosedPortRcvd</td></tr>
+<p><font size="-1">Flag/Counter:&nbsp;udpToClosedPortRcvd</font></p>
+<br />
 
-<tr><td valign="top">(Sent:udp to diag)</td>
-<td><b>ntop</b> has seen one or more packets SENT by the flagged host to the 'diagnostic'
+<h3>(Sent:udp to diag)</h3>
+<p><b>ntop</b> has seen one or more packets SENT by the flagged host to the 'diagnostic'
 ports, that is to/from port 7 or to ports 9, 13 or 19.  When the internet was a smaller,
 friendlier place, these provided trivial information and ways to check if a remote machine
-was operational.  These are rarely seen today and so are flagged.</td>
-<td valign="bottom">udpToDiagnosticPortSent</td></tr>
+was operational.  These are rarely seen today and so are flagged.</p>
+<p><font size="-1">Flag/Counter:&nbsp;udpToDiagnosticPortSent</font></p>
+<br />
 
-<tr><td valign="top">(Sent:Tiny frag)</td>
-<td><b>ntop</b> has seen one or more tiny fragments (that is 128 or fewer octets) SENT
-from the flagged host.  This is not normal and can indicate a misconfigured router or
-other device, or can be part of an attack (tiny fragments have been used to slip hostile
-packets past firewalls).  Check it out.</td>
-<td valign="bottom">tinyFragmentSent</td></tr>
-
-<tr><td valign="top">(Sent:icmp frag)</td>
-<td><b>ntop</b> has seen one or more fragmented ICMP packets SENT by the flagged host.
-ICMP packets are small and under normal operations should never be fragmented.
-This is either a misconfigured router/device or hostile. Check it out.</td>
-<td valign="bottom">icmpFragmentSent</td></tr>
-
-<tr><td valign="top">(Sent: overlapfrag)</td>
-<td><b>ntop</b> has seen one or more packets SENT by the flagged host where the fragments
-overlap.  It's possible, but rare, to see this on network links which have problems, where
-lost packets are causing retransmission errors - perhaps <b>ntop</b> is seeing a fragment that
-never makes it to the end station.  But it should be very, very, rare.  This has also
-been used to crash Intrusion Detection Systems (IDS) prior to an attack.</td>
-<td valign="bottom">overlappingFragmentSent</td></tr>
-
-<tr><td valign="top">(Sent:closed-empty)</td>
-<td><b>ntop</b> has seen one or more sessions established by the flagged host where no
+<h3>(Sent:closed-empty)</h3>
+<p><b>ntop</b> has seen one or more sessions established by the flagged host where no
 data was actually sent or received.  This can happen, but is most often part of a 
 attempt to map a network.  <b>ntop</b> does not differentiate between the host performing
 the scan and the host being scanned, so it should be investigated with the understanding
-that your user might have been the target, not the perpetrator.</td>
-<td valign="bottom">closedEmptyTCPConnSent</td></tr>
+that your user might have been the target, not the perpetrator.</p>
+<p><font size="-1">Flag/Counter:&nbsp;closedEmptyTCPConnSent</font></p>
+<br />
 
-<tr><td valign="top">(Rcvd:port unreac)</td>
+<h3>(Rcvd:port unreac)</h3>
 <td><b>ntop</b> has seen one or more ICMP <i>Port Unreachable</i> messages.  These are perfectly
 legal, although optional according to the standard.  It means that the packet sent FROM the
 flagged host reached it's intended destination, but there was no process configured on that
 host to accept it.  The remote process could have died or something else could have happened.
 However, most machines don't return this and many routers filter it out since it can be used
-to map remote networks.</td>
-<td valign="bottom">icmpPortUnreachRcvd</td></tr>
+to map remote networks.</p>
+<p><font size="-1">Flag/Counter:&nbsp;icmpPortUnreachRcvd</font></p>
+<br />
 
-<tr><td valign="top">(Rcvd:hostnet unreach)</td>
+<h3>(Rcvd:hostnet unreach)</h3>
 <td><b>ntop</b> has seen one or more ICMP <i>Host Unreachable</i> or <i>Network Unreachable</i>
 messages.  Again, perfectly legal although often filtered.  Means that the host the flagged
 machine was attempting TO connect to doesn't exist. Large numbers of these can sometimes
-indicate a worm program attempting to spread by contacting random IP addresses.</td>
-<td valign="bottom">icmpHostNetUnreachRcvd</td></tr>
+indicate a worm program attempting to spread by contacting random IP addresses.</p>
+<p><font size="-1">Flag/Counter:&nbsp;icmpHostNetUnreachRcvd</font></p>
+<br />
 
-<tr><td valign="top">(Rcvd:proto unreac)</td>
+<h3>(Rcvd:proto unreac)</h3>
 <td><b>ntop</b> has seen one or more ICMP <i>Protocol Unreachable</i> messages.  These are 
 perfectly legal, although optional according to the standard.  It means that the packet sent 
 FROM the flagged host reached it's intended destination, but there was no process configured
 on that host to accept the protocol it used.  However, most machines don't return this and 
-many routers filter it out since it can be used to map remote networks.</td>
-<td valign="bottom">icmpProtocolUnreachRcvd</td></tr>
+many routers filter it out since it can be used to map remote networks.</p>
+<p><font size="-1">Flag/Counter:&nbsp;icmpProtocolUnreachRcvd</font></p>
+<br />
 
-<tr><td valign="top">(Rcvd:admin prohib)</td>
-<td><b>ntop</b> has seen one or more ICMP <i>Host Administratively Prohibited</i> or
+<h3>(Rcvd:admin prohib)</h3>
+<p><b>ntop</b> has seen one or more ICMP <i>Host Administratively Prohibited</i> or
 <i>Net Administratively Prohibited</i> messages.  These are obsolete and shouldn't be seen
 (there's a newer, rarely used code that indicates the request was filtered).  Since it's
-unusual, you should investigate.</td>
-</td>
-<td valign="bottom">icmpAdminProhibitedRcvd</td></tr>
+unusual, you should investigate.</p>
+<p><font size="-1">Flag/Counter:&nbsp;icmpAdminProhibitedRcvd</font></p>
+<br />
 
-<tr><td valign="top">(Rcvd:malformed)</td>
-<td><b>ntop</b> has seen one or more malformed packets, that is packets where the length
-field indicates a length less than the minimum header length for that type of packet. This may
-be set for TCP, UDP and/or ICMP packets. The flagged host is the RECEIVER of these
-packets, which often indicate a failing router or bad network connection.</td>
-<td valign="bottom">malformedPktsRcvd</td></tr>
-
-</table>
-
+<hr />
 </body>
 </html>

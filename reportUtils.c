@@ -3021,10 +3021,6 @@ static void checkHostHealthness(HostTraffic *el) {
 		"Network Healthness") < 0) BufferTooShort();
     sendString(buf);
 
-    if(hasWrongNetmask(el))
-      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/" CONST_NTOP_HELP_HTML "#1>"
-		 "Wrong network mask or bridging enabled</A>\n");
-
     if(hasDuplicatedMac(el))
       sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/" CONST_NTOP_HELP_HTML "#2>"
 		 "Duplicated MAC found for this IP address (spoofing?)</A>\n");
@@ -3032,6 +3028,10 @@ static void checkHostHealthness(HostTraffic *el) {
     if(hasSentIpDataOnZeroPort(el))
       sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/" CONST_NTOP_HELP_HTML "#3>"
 		 "Traffic on suspicious IP ports</A>\n");
+
+    if(hasWrongNetmask(el))
+      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/" CONST_NTOP_HELP_HTML "#1>"
+		 "Wrong network mask or bridging enabled</A>\n");
 
     if((el->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD)
        || (el->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD)) {
@@ -3044,35 +3044,40 @@ static void checkHostHealthness(HostTraffic *el) {
 	   || (el->secHostPkts->synFinPktsSent.value.value > 0)
 	   || (el->secHostPkts->rstPktsRcvd.value.value > 0)
 	   || (el->secHostPkts->ackXmasFinSynNullScanSent.value.value > 0)
-	   || (el->secHostPkts->rejectedTCPConnRcvd.value.value > 0)
-	   || (el->secHostPkts->udpToClosedPortRcvd.value.value > 0)
-	   || (el->secHostPkts->udpToDiagnosticPortSent.value.value > 0)
 	   || (el->secHostPkts->tinyFragmentSent.value.value > 0)
 	   || (el->secHostPkts->icmpFragmentSent.value.value > 0)
 	   || (el->secHostPkts->overlappingFragmentSent.value.value > 0)
-	   || (el->secHostPkts->closedEmptyTCPConnSent.value.value > 0)
-	   || (el->secHostPkts->icmpPortUnreachRcvd.value.value > 0)
-	   || (el->secHostPkts->icmpHostNetUnreachRcvd.value.value > 0)
-	   || (el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0)
-	   || (el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0)
 	   || (el->secHostPkts->malformedPktsRcvd.value.value > 0))) {
       sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/" CONST_NTOP_HELP_HTML "#5>"
 		 "Unexpected packets (e.g. traffic to closed port or connection reset)</A>:<br>\n");
       if(el->secHostPkts->synFinPktsSent.value.value > 0) sendString("(Sent:syn-fin)&nbsp;");
       if(el->secHostPkts->rstPktsRcvd.value.value > 0) sendString("(Rcvd:rst)&nbsp;");
       if(el->secHostPkts->ackXmasFinSynNullScanSent.value.value > 0) sendString("(Sent:xmas)&nbsp;");
-      if(el->secHostPkts->rejectedTCPConnRcvd.value.value > 0) sendString("(Rcvd:rejected)&nbsp;");
-      if(el->secHostPkts->udpToClosedPortRcvd.value.value > 0) sendString("(Sent:udp to closed)&nbsp;");
-      if(el->secHostPkts->udpToDiagnosticPortSent.value.value > 0) sendString("(Sent:udp to diag)&nbsp;");
       if(el->secHostPkts->tinyFragmentSent.value.value > 0) sendString("(Sent:Tiny frag)&nbsp;");
       if(el->secHostPkts->icmpFragmentSent.value.value > 0) sendString("(Sent:icmp frag)&nbsp;");
       if(el->secHostPkts->overlappingFragmentSent.value.value > 0) sendString("(Sent: overlapfrag)&nbsp;");
+      if(el->secHostPkts->malformedPktsRcvd.value.value > 0) sendString("(Rcvd:malformed)&nbsp;");
+    }
+
+    if((el->secHostPkts != NULL)
+       && ((el->secHostPkts->rejectedTCPConnRcvd.value.value > 0)
+	   || (el->secHostPkts->udpToClosedPortRcvd.value.value > 0)
+	   || (el->secHostPkts->udpToDiagnosticPortSent.value.value > 0)
+	   || (el->secHostPkts->closedEmptyTCPConnSent.value.value > 0)
+	   || (el->secHostPkts->icmpPortUnreachRcvd.value.value > 0)
+	   || (el->secHostPkts->icmpHostNetUnreachRcvd.value.value > 0)
+	   || (el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0)
+	   || (el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0))) {
+      sendString("<LI><IMG ALT=\"Low Risk\" SRC=/Risk_low.gif><A HREF=/" CONST_NTOP_HELP_HTML "#6>"
+		 "Unexpected packets (e.g. traffic to closed port or connection reset)</A>:<br>\n");
+      if(el->secHostPkts->rejectedTCPConnRcvd.value.value > 0) sendString("(Rcvd:rejected)&nbsp;");
+      if(el->secHostPkts->udpToClosedPortRcvd.value.value > 0) sendString("(Sent:udp to closed)&nbsp;");
+      if(el->secHostPkts->udpToDiagnosticPortSent.value.value > 0) sendString("(Sent:udp to diag)&nbsp;");
       if(el->secHostPkts->closedEmptyTCPConnSent.value.value > 0) sendString("(Sent:closed-empty)&nbsp;");
       if(el->secHostPkts->icmpPortUnreachRcvd.value.value > 0) sendString("(Rcvd:port unreac)&nbsp;");
       if(el->secHostPkts->icmpHostNetUnreachRcvd.value.value > 0) sendString("(Rcvd:hostnet unreac)&nbsp;");
       if(el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0) sendString("(Rcvd:proto unreac)&nbsp;");
       if(el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0) sendString("(Rcvd:admin prohib)&nbsp;");
-      if(el->secHostPkts->malformedPktsRcvd.value.value > 0) sendString("(Rcvd:malformed)&nbsp;");
     }
 
     sendString("</OL></TD></TR>\n");
