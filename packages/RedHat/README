@@ -1,16 +1,30 @@
-ntopd and ntop.spec are by Pablo Ruiz Garcia 2002 (pruiz@ip6seguridad.com).
+This directory contains the raw files (except for the ones copied
+from the normal cvs such as 1STRUN.txt) used to build the rpms
+posted at SourceForge.
 
-The files in rpmbuildfiles-2.0.99RC2-Strauss.tgz are those 
-used to create the RPMs (2.0.99RC2) posted at SourceForge 
-in June 2002.
 
-The files which were used to create the 2.0-1BETA packages found at 
-Red Hat Contib at Bero.Org (by hal@foobox.net) are not available in this
-directory.
 
-Nor are the files used by C C Magnus Gustavsson <http://magnus.gustavsson.se/>
-to create an interim build of the 10May2002 snapshot, also found (ntop-020510-1.src.rpm)
-at rpmfind.net available here.  
 
-If you need either of those files, you'll have to grab the rpm and extract them.
+For reference the rpms are normally built on ur-tigger, which is
+a RedHat 7.3+ uml (User Mode Linux) virtual machine running on 
+the RedHat 8 machine tigger.
+
+ur-tigger is more properly considered a hybrid 7.3/8 as it
+has been updated with numerous packages from RedHat 8
+including:
+
+autoconf-2.53-8
+automake-1.6.3-1
+glibc-2.3.2-4.80
+glibc-common-2.3.2-4.80
+glibc-devel-2.3.2-4.80
+glibc-kernheaders-2.4-7.16
+libtool-1.4.2-7
+libtool-libs-1.4.2-7
+
+(and their associated and required packages)
+
+Plus RedHat updates to zlib, openssl, et al.
+
+-----Burton (April 2003)
 
