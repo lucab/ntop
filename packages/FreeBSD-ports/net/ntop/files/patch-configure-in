@@ -1,16 +1,11 @@
---- ntop-3.0pre2/configure Mar 03 12:00:00 2004
-+++ configure	Thu Apr 10 18:13:06 2003
-@@ -1376,3 +1376,3 @@
- 
--NTOP_VERSION_EXTRA=""
-+NTOP_VERSION_EXTRA=" FreeBSD ports"
- 
-@@ -4897,7 +4897,7 @@
+--- ntop-3.0pre2/configure.in 2004-03-08 12:18:44.000000000 -0600
++++ configure.in 2004-03-08 17:06:01.000000000 -0600
+@@ -267,7 +267,7 @@
          echo "*******************************************************************"
          exit 1
          ;;
 -    *1\.3\.4\-freebsd\-ports*)
-+    *1\.3\.[45]\-freebsd\-ports*)
++    *1\.3\.[[45]]\-freebsd\-ports*)
          echo "* FreeBSD ports 1.3.4 seems to work, so we will let it slide..."
          echo "*"
          echo "* Fasten your seat belt and good luck!  If you are injured, the"

@@ -7,3 +7,4 @@ WWW:    http://www.ntop.org/
 
 -- Bill Fumerola  <billf@FreeBSD.org> (original port)
 -- Johann Visagie <wjv@FreeBSD.org>   (maintainer since 2.0)
+-- Burton Strauss <Burton@ntopSupport.com> (3.0 packages)

@@ -6,11 +6,12 @@
 #
 
 PORTNAME=	ntop
-PORTVERSION=	2.1.92
+PORTVERSION=	3.0pre2
 PORTREVISION=	0
 CATEGORIES=	net
 MASTER_SITES= 	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	sourceforge/ntop/
+COMMENT=        network monitor
 
 DISTNAME=	${PORTNAME}-${PORTVERSION:S|.r|-rc|}
 EXTRACT_SUFX=	.tgz
@@ -19,8 +20,8 @@ MAINTAINER=	ports@FreeBSD.org
 
 # Besides the required dependencies listed here, this port can optionally
 # make use of sysutils/lsof if installed.
-LIB_DEPENDS=	gdbm.2:${PORTSDIR}/databases/gdbm rrd:${PORTSDIR}/net/rrdtool
-BUILD_DEPENDS=	${LOCALBASE}/lib/libgdc.a:${PORTSDIR}/graphics/gdchart
+LIB_DEPENDS=	gdbm:${PORTSDIR}/databases/gdbm
+BUILD_DEPENDS=	
 
 # ntop will store its runtime database files in ${DBDIR}/ntop/
 DBDIR?=		/var/db
@@ -29,7 +30,7 @@ DBDIR?=		/var/db
 # with a flag to force it to log to ${LOGDIR}
 LOGDIR?=	/var/log
 
-WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION}/ntop
+WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION}
 USE_GMAKE=	yes
 USE_LIBTOOL=	yes
 INSTALLS_SHLIB=	yes
@@ -66,13 +67,13 @@ post-configure:
 	  pkg-message > ${PKGMESSAGE}
 
 post-install:
-	@ if ! pw groupshow ntop 2> /dev/null; then pw groupadd ntop; fi
-	@ if ! pw usershow ntop 2> /dev/null; then pw useradd ntop -g ntop -s /sbin/nologin; fi
+	@ if ! pw groupshow ntop 2>&1 > /dev/null; then pw groupadd ntop; fi
+	@ if ! pw usershow ntop 2>&1 > /dev/null; then pw useradd ntop -g ntop -s /sbin/nologin; fi
 	@ ${MKDIR} ${DBDIR}/${PORTNAME}
 	@ ${MKDIR} ${DBDIR}/${PORTNAME}/rrd
 	@ chown ntop:ntop ${DBDIR}/${PORTNAME}/rrd
-	@ mv ${PREFIX}/man/man8/i386-portbld-freebsd5.0-ntop.8 ${PREFIX}/man/man8/ntop.8
-	@ mv ${PREFIX}/bin/i386-portbld-freebsd5.0-ntop ${PREFIX}/bin/ntop
+	@ mv ${PREFIX}/man/man8/i386-portbld-freebsd*-ntop.8 ${PREFIX}/man/man8/ntop.8
+	@ mv ${PREFIX}/bin/i386-portbld-freebsd*-ntop ${PREFIX}/bin/ntop
 	@ ${MKDIR} ${PREFIX}/etc/rc.d
 	@ ${SED} -e "s#%%PREFIX%%#${PREFIX}#g" \
 	  -e "s#%%LOGDIR%%#${LOGDIR}#g" ${FILESDIR}/ntop.sh > \

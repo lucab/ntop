@@ -35,14 +35,17 @@
 
 --user ntop
 
+#Work around for FreeBSD problem with userland threads - appears to hang the web server.
+--set-pcap-nonblock
+
 # Sets the directory that ntop runs from.
 
 --db-file-path %%DBDIR%%/ntop
 
 # interface(s) that ntop will capture on
-#  DEFAULT: The 1st ethernet device, e.g. eth0 
+#  DEFAULT: The 1st sisernet device, e.g. sis0 
 
-#--interface eth0
+#--interface sis0
 
 # Configures ntop not to trust MAC addrs.  This is used when port mirroring or SPAN
 #--no-mac
@@ -75,10 +78,6 @@
 # Sets the domain.  ntop should be able to determine this automatically.
 
 #--domain mydomain.com
-
-# Allows rrd to reuse graphics (reduces cpu usage) if the data has not changed.
-
-# --reuse-rrd-graphics
 
 #Sets program to run as a daemon
 #  NOTE: For more than casual use, you probably want this.

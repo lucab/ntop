@@ -1,7 +1,14 @@
 This directory contains the files for the FreeBSD ntop ports.
 Normally the entire contents would be a .tgz, e.g:
 
-tar cfvz ntop-2.1.92.tgz net/ntop/
+tar cfvz ntop-3.0pre2.tgz net/ntop/
 
-These are the 2.1.92 files - they are identical to the 2.2 version
-except for the checksum.
+These are the 3.0pre2 files - they are pretty close to the 3.0 version, except:
+
+1. (obviously) not the final source (net/ntop/distinfo will need update)
+2. The patch in packages/FreeBSD-ports/net/ntop/files/patch-configure-in and 
+   packages/FreeBSD-ports/net/ntop/files/patch-configure which allows libtool 1.3.5
+   in addition to 1.3.4, is in the ntop cvs post 3.0pre2 and will need to be removed.
+3. Really ought to figure out the patch in net/ntop/files/patch-ntop-h and get it into
+   the baseline.
+

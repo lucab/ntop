@@ -1,4 +1,4 @@
---- ntop-2.1.92/ntop/ntop.h	Wed Apr  9 22:53:53 2003
+--- ntop-2.1.92/ntop.h	Wed Apr  9 22:53:53 2003
 +++ ntop.h	Thu Apr 10 21:15:13 2003
 @@ -224,7 +224,7 @@
  #endif
