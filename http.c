@@ -2451,7 +2451,7 @@ static int returnHTTPPage(char* pageName,
       sendString(" and <a href=\"mailto:&#111;&#108;&#105;&#118;&#105;&#101;&#114;&#046;&#102;&#101;&#115;&#116;&#111;&#114;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\"");
       sendString(" title=\"Send mail to Olivier\">Olivier Festor</a> provided IPv6 support</li>");
       sendString("<li><a href=\"mailto:&#100;&#100;&#117;&#116;&#116;&#064;&#099;&#105;&#115;&#099;&#111;&#046;&#099;&#111;&#109;\"");
-      sendString(" title=\"Send mail to Dinesh\">Dinesh G. Dutt</a> for iSCSI/FiberChannel support</li>");
+      sendString(" title=\"Send mail to Dinesh\">Dinesh G. Dutt</a> for SCSI & FiberChannel support</li>");
       sendString("<li><a href=\"mailto:&#098;&#117;&#114;&#116;&#111;&#110;&#064;&#110;&#116;&#111;&#112;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#046;&#099;&#111;&#109;\"");
       sendString(" title=\"Send mail to Burton\">Burton Strauss</a> ");
       sendString("the ntop factotum (user support, bug fixing, testing, packaging).</li></ul>");
