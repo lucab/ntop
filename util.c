@@ -3217,3 +3217,23 @@ void allocateElementHash(int deviceId, u_short hashType) {
     break;
   }
 }
+
+/* *************************************************** */
+
+u_int numActiveSenders(int deviceId) {
+  u_int numSenders = 0;
+  int i;
+
+  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
+    HostTraffic *el;
+	  
+    if((i == myGlobals.otherHostEntryIdx) || (i == myGlobals.broadcastEntryIdx)
+       || ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]) == NULL)
+       || broadcastHost(el)
+       || (el->pktSent.value == 0))
+      continue;
+    numSenders++;
+  }
+
+  return(numSenders);
+}

@@ -25,11 +25,17 @@
 /* ******************************* */
 
 static void updateThptStats(int deviceToUpdate,
-			    u_int topSentIdx, u_int secondSentIdx,  u_int thirdSentIdx,
-			    u_int topHourSentIdx, u_int secondHourSentIdx,
+			    u_int topSentIdx,
+			    u_int secondSentIdx, 
+			    u_int thirdSentIdx,
+			    u_int topHourSentIdx, 
+			    u_int secondHourSentIdx,
 			    u_int thirdHourSentIdx,
-			    u_int topRcvdIdx, u_int secondRcvdIdx, u_int thirdRcvdIdx,
-			    u_int topHourRcvdIdx, u_int secondHourRcvdIdx,
+			    u_int topRcvdIdx, 
+			    u_int secondRcvdIdx, 
+			    u_int thirdRcvdIdx,
+			    u_int topHourRcvdIdx, 
+			    u_int secondHourRcvdIdx,
 			    u_int thirdHourRcvdIdx) {
   int i;
 

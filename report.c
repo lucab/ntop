@@ -202,6 +202,12 @@ void printTrafficStatistics() {
     BufferTooShort();
   sendString(buf);
 
+  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">Active Hosts</TH>"
+	      "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n",
+	      numActiveSenders(myGlobals.actualReportDeviceId)) < 0)
+    BufferTooShort();
+  sendString(buf);
+
   if((myGlobals.currentFilterExpression != NULL)
      && (myGlobals.currentFilterExpression[0] != '\0')) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">Traffic Filter</TH>"
@@ -563,14 +569,15 @@ void printTrafficStatistics() {
     /* ************************ */
 
 #ifdef HAVE_GDCHART
-    if((myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value +
-	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value +
-	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value +
-	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value +
-	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value +
-	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value +
-	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value +
-	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value) > 0) {
+    if(myGlobals.enableSessionHandling
+       && (myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value +
+	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value +
+	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value +
+	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value +
+	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value +
+	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value +
+	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value +
+	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value) > 0) {
       sendString("<TR><TH "TH_BG">Remote Hosts Distance</TH><TD "TH_BG">"
 		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
     }
@@ -1460,7 +1467,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
 
 	  
-	  if(el->nonIPTraffic || displaySniffedName) {
+	  if(el->nonIPTraffic && displaySniffedName) {
 	    short numAddresses = 0;
 
 	    if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {

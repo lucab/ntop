@@ -973,6 +973,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     if(dumpInterfaces) {
       for(i=0; i<myGlobals.numDevices; i++) {
+
+	
 	if(myGlobals.device[i].virtualDevice) continue;
 
 	sprintf(rrdPath, "%s/rrd/interfaces/%s/", myGlobals.dbPath,  myGlobals.device[i].name);
@@ -982,9 +984,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateCounter(rrdPath, "broadcastPkts", myGlobals.device[i].broadcastPkts.value);
 	updateCounter(rrdPath, "multicastPkts", myGlobals.device[i].multicastPkts.value);
 	updateCounter(rrdPath, "ethernetBytes", myGlobals.device[i].ethernetBytes.value);
-	updateGauge(rrdPath,    "activeHostsNum",  myGlobals.device[i].hostsno);
-
-	updateCounter(rrdPath, "ipBytes", myGlobals.device[i].ipBytes.value);
+	updateGauge(rrdPath,   "knownHostsNum", myGlobals.device[i].hostsno);
+	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(i));
+	updateCounter(rrdPath, "ipBytes",       myGlobals.device[i].ipBytes.value);
 
 	if(dumpDetail >= DETAIL_MEDIUM) {
 	  updateCounter(rrdPath, "droppedPkts", myGlobals.device[i].droppedPkts.value);
