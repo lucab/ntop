@@ -152,10 +152,10 @@ static void updateFileList(char *fileName, HostTraffic *theRemHost) {
       }
     }
 
-    if(list == NULL) {      
+    if(list == NULL) {
       list = (FileList*)malloc(sizeof(FileList));
       list->fileName = strdup(fileName);
-      list->next = NULL; 
+      list->next = NULL;
       if(numEntries >= MAX_NUM_LIST_ENTRIES) {
 	FileList *ptr = theRemHost->fileList->next;
 
@@ -670,7 +670,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
       if(sport == 80) 	FD_SET(HOST_SVC_HTTP, &srcHost->flags);
       if(dport == 80) 	FD_SET(HOST_SVC_HTTP, &dstHost->flags);
-	    
+
       if((sport == 80 /* HTTP */)
 	 && (theSession->bytesProtoRcvd == 0)
 	 && (packetDataLength > 0)) {
@@ -878,7 +878,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  free(rcStr);
 	}
-
       } else if((dport == 1214 /* Kazaa */) && (packetDataLength > 0)) {
 	if(theSession->bytesProtoSent == 0) {
 	  char *rcStr;
@@ -912,30 +911,29 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			     srcHost->hostNumIpAddress,
 			     dstHost->hostNumIpAddress,
 			     tmpStr);
-#endif  
+#endif
 		  updateFileList(tmpStr, srcHost);
 		}
 	      } else if(strncmp(row, "X-Kazaa-Username", 15) == 0) {
 		char *user;
-		  
+
 		row[strlen(row)-1] = '\0';
-		  
+
 		user = &row[18];
 		if(strlen(user) > 48)
 		  user[48] = '\0';
-		  
+
 		/* traceEvent(TRACE_INFO, "DEBUG: USER='%s'\n", user); */
 
 		updateHostUsers(user, P2P_USER, srcHost);
 	      }
-	      
+
 	      row = strtok_r(NULL, "\n", &strtokState);
 	    }
 
-	    /* printf("==>\n\n%s\n\n", rcStr); */	  
-
-	    free(rcStr);
+	    /* printf("==>\n\n%s\n\n", rcStr); */
 	  }
+	  free(rcStr);
 	}
       } else if(((dport == 6346) || (dport == 6347) || (dport == 6348)) /* Gnutella */
 		&& (packetDataLength > 0)) {
@@ -951,31 +949,70 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  if(strncmp(rcStr, theStr, strlen(theStr)) == 0) {
 	    char tmpStr[256], *strtokState1, *file;
 	    int i, begin=0;
-	    
-	    row = strtok_r(rcStr, "\n", &strtokState);	    	    
+
+	    row = strtok_r(rcStr, "\n", &strtokState);
 	    file = &row[strlen(theStr)+1];
 	    if(strlen(file) > 10) file[strlen(file)-10] = '\0';
-	    
+
 	    for(i=0; file[i] != '\0'; i++) {
 	      if(file[i] == '/') begin = i;
 	    }
-	    
+
 	    begin++;
-	    
+
 	    unescape(tmpStr, sizeof(tmpStr), &file[begin]);
-	    
+
 #ifdef P2P_DEBUG
 	      traceEvent(TRACE_INFO, "Gnutella: %s->%s [%s]\n",
 			 srcHost->hostNumIpAddress,
 			 dstHost->hostNumIpAddress,
 			 tmpStr);
-#endif  
+#endif
 	      updateFileList(tmpStr, srcHost);
-	    	     
-	    /* printf("==>\n\n%s\n\n", rcStr); */	  
 
-	    free(rcStr);
+	    /* printf("==>\n\n%s\n\n", rcStr); */
 	  }
+	  free(rcStr);
+	}
+      } else if((dport == 6699) /* WinMX */ && (packetDataLength > 0)) {
+	if((theSession->bytesProtoSent == 3 /* GET */) 
+	   && (theSession->bytesProtoRcvd == 1 /* 1 */)) {
+	  char *rcStr, *user, *strtokState, *strtokState1, *row, *file;
+	  int i, begin=0;
+
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength] = '\0';
+
+	  row = strtok_r(rcStr, "\"", &strtokState);
+
+	  if(row != NULL) {
+	    user = strtok_r(row, "_", &strtokState1);
+	    file = strtok_r(NULL, "\"", &strtokState);
+
+	    for(i=0; file[i] != '\0'; i++) {
+	      if(file[i] == '\\') begin = i;
+	    }
+
+	    begin++;
+	    
+	    file = &file[begin];
+
+	    if(strlen(file) > 64) file[strlen(file)-64] = '\0';
+
+#ifdef P2P_DEBUG
+	    traceEvent(TRACE_INFO, "WinMX: %s->%s [%s][%s]\n",
+		       srcHost->hostNumIpAddress,
+		       dstHost->hostNumIpAddress,
+		       user, file);
+#endif
+	    updateFileList(file, srcHost);
+	    updateHostUsers(user, P2P_USER, srcHost);
+
+	    /* printf("==>\n\n%s\n\n", rcStr); */
+	  }
+
+	  free(rcStr);
 	}
       } else if(((sport == 25 /* SMTP */)  || (dport == 25 /* SMTP */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {
@@ -1110,9 +1147,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  if(strncmp(rcStr, "2 login ", 8) == 0) {
 	    int beginIdx = 10;
-	      
+
 	    while(rcStr[beginIdx] != '\0') {
-	      if(rcStr[beginIdx] == '\"') { 
+	      if(rcStr[beginIdx] == '\"') {
 		rcStr[beginIdx] = '\0';
 		break;
 	      }
@@ -1133,7 +1170,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  free(rcStr);
 	}
-
       }
     } else {
       /* !myGlobals.enablePacketDecoding */
