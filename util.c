@@ -2108,77 +2108,81 @@ void traceEvent(int eventTraceLevel, char* file,
     time_t theTime = time(NULL);
     struct tm t;
 
-#ifndef WIN32
-      if(myGlobals.useSyslog != NTOP_SYSLOG_NONE)
-	openlog(DAEMONNAME, LOG_PID, myGlobals.useSyslog);
-#endif
+/* We have two paths - one if we're logging, one if we aren't
+ *   Note that the no-log case is those systems which don't support it (WIN32),
+ *                                those without the headers !defined(USE_SYSLOG)
+ *                                those where it's parametrically off...
+ */
 
-#ifdef WIN32
-	  if(1)
-#else
-	  if(myGlobals.useSyslog == NTOP_SYSLOG_NONE)
-#endif
-	    {
-	      strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
+        memset(buf, 0, BUF_SIZE);
 
-	      if(myGlobals.traceLevel == DETAIL_TRACE_LEVEL) {
-		printf("%s [%s:%d] ", theDate, file, line);
-	      } else {
-		printf("%s ", theDate);
-	      }
-	    }
+#if defined(WIN32) || !defined(USE_SYSLOG)
 
-      memset(buf, 0, BUF_SIZE);
-#ifdef WIN32
-      /* Windows lacks of vsnprintf */
-      vsprintf(buf, format, va_ap);
-#else
-      vsnprintf(buf, BUF_SIZE-1, format, va_ap);
-#endif
+        strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
+        if(myGlobals.traceLevel == DETAIL_TRACE_LEVEL) {
+                printf("%s [%s:%d] ", theDate, file, line);
+        } else {
+                printf("%s ", theDate);
+        }
 
-#ifdef WIN32
-	  if(1)
-#else
-      if(myGlobals.useSyslog == NTOP_SYSLOG_NONE)
-#endif
-	{
-	printf("%s", buf);
-	if(format[strlen(format)-1] != '\n')
-	  printf("\n");
-      }
+#if defined(WIN32)
+        /* Windows lacks vsnprintf */
+        vsprintf(buf, format, va_ap);
+#else /* WIN32 - vsnprintf */
+        vsnprintf(buf, BUF_SIZE-1, format, va_ap);
+#endif /* WIN32 - vsnprintf */
 
-      /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
-#ifndef WIN32
-      else {
-#if 0
-	switch(myGlobals.traceLevel) {
-	case 0:
-	  syslog(LOG_ERR, "%s", buf);
-	  break;
-	case 1:
-	  syslog(LOG_WARNING, "%s", buf);
-	  break;
-	case 2:
-	  syslog(LOG_NOTICE, "%s", buf);
-	  break;
-	default:
-	  syslog(LOG_INFO, "%s", buf);
-	  break;
+	printf("%s%s", buf, (format[strlen(format)-1] != '\n') ? "\n" : "");
+	fflush(stdout);
+
+#else /* WIN32 || !USE_SYSLOG */
+
+       	vsnprintf(buf, BUF_SIZE-1, format, va_ap);
+
+	if(myGlobals.useSyslog != NTOP_SYSLOG_NONE) {
+
+		openlog("ntop", LOG_PID, myGlobals.useSyslog);
+
+		/* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
+	    #if (0)
+		switch(myGlobals.traceLevel) {
+		  case 0:
+			syslog(LOG_ERR, "%s", buf);
+			break;
+		  case 1:
+			syslog(LOG_WARNING, "%s", buf);
+			break;
+		  case 2:
+			syslog(LOG_NOTICE, "%s", buf);
+			break;
+		  default:
+			syslog(LOG_INFO, "%s", buf);
+			break;
+		}
+	    #else
+		syslog(LOG_ERR, "%s", buf);
+	    #endif
+		closelog();
+
+	} else {
+
+        	strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
+	        if(myGlobals.traceLevel == DETAIL_TRACE_LEVEL) {
+        	        printf("%s [%s:%d] ", theDate, file, line);
+	        } else {
+        	        printf("%s ", theDate);
+	        }
+
+		printf("%s%s", buf, (format[strlen(format)-1] != '\n') ? "\n" : "");
+		fflush(stdout);
+
 	}
-#else
-	syslog(LOG_ERR, "%s", buf);
-#endif
-      }
-#endif
+#endif /* WIN32 || !USE_SYSLOG */
 
-      va_end (va_ap);
-      fflush(stdout);
-    }
+  }
 
-#ifndef WIN32
-  if(myGlobals.useSyslog != NTOP_SYSLOG_NONE)
-    closelog();
-#endif
+  va_end (va_ap);
+
 }
 
 /* ******************************************** */

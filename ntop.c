@@ -200,7 +200,7 @@ void detachFromTerminal(void) {
   alarm(120); /* Don't freeze */
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && defined(USE_SYSLOG)
   /* Child processes must log to syslog.
    * If no facility was set through -L | --use-syslog=facility
    * then force the default

@@ -21,6 +21,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define SYSLOG_NAMES /* So that we have facilitynames */
+
 #include "ntop.h"
 #include "globals-report.h"
 
@@ -146,7 +148,7 @@ static struct option const long_options[] = {
 #ifdef HAVE_GDCHART
   { "throughput-bar-chart",             no_argument,       NULL, 129 },
 #endif
-#ifndef WIN32
+#if !defined(WIN32) && defined(USE_SYSLOG)
   { "use-syslog",                       optional_argument, NULL, 131 },
 #endif
 #ifndef YES_IGNORE_SIGPIPE
@@ -239,8 +241,10 @@ void usage (FILE * fp) {
 
 #ifndef WIN32
   fprintf(fp, "    [-K             | --enable-debug]                     Enable debug mode\n");
+#ifdef USE_SYSLOG
   fprintf(fp, "    [-L ]                                                 Do logging via syslog\n");
   fprintf(fp, "    [                 --use-syslog=<facility>]            Do logging via syslog, facility - Note that the = is REQUIRED\n");
+#endif /* USE_SYSLOG */
 #endif
 
   fprintf(fp, "    [-M             | --no-interface-merge]               Don't merge network interfaces (see man page)\n");
@@ -325,7 +329,9 @@ void usage (FILE * fp) {
 
 #ifndef WIN32
   fprintf(fp, "    [-K <enable application debug (no fork() is used)>]\n");
+#ifdef USE_SYSLOG
   fprintf(fp, "    [-L <use syslog instead of stdout>]\n");
+#endif /* USE_SYSLOG */
 #endif
 
   fprintf(fp, "    [-M <don't merge network interfaces (see man page)>]\n");
@@ -356,8 +362,10 @@ static int parseOptions(int argc, char* argv []) {
    */
 #ifdef WIN32
   char* theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:AB:D:F:MO:P:S:U:VW:";
-#else
+#elif defined(USE_SYSLOG)
   char* theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:AB:D:EF:IKLMNO:P:S:U:VW:";
+#else
+  char* theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:AB:D:EF:IKMNO:P:S:U:VW:";
 #endif
   int opt;
 
@@ -542,7 +550,9 @@ static int parseOptions(int argc, char* argv []) {
     case 'K':
       myGlobals.debugMode = 1;
       break;
+#endif
 
+#if !defined(WIN32) && defined(USE_SYSLOG)
     case 'L':
       myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
       break;
@@ -627,7 +637,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && defined(USE_SYSLOG)
     case 131:
       /*
        * Burton Strauss (BStrauss@acm.org) allow --use-syslog <facility>
@@ -649,24 +659,18 @@ static int parseOptions(int argc, char* argv []) {
 	
 	stringSanityCheck(optarg);
 	
-	/* TEMP: Comment this out until we can figure out what the Solaris equivalent is */
-	/*  BMS - 21May2002 */
-	
-	for (i=0; facilityNames[i].c_name != NULL; i++) {
-	  if (strcmp(optarg, facilityNames[i].c_name) == 0) {
+	for (i=0; facilitynames[i].c_name != NULL; i++) {
+	  if (strcmp(optarg, facilitynames[i].c_name) == 0) {
 	    break;
 	  }
 	}
 	
-	if (facilityNames[i].c_name == NULL) {
+	if (facilitynames[i].c_name == NULL) {
 	  printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
 		 optarg);
-	  
-	  /* TEMP: Just set the default value */
-	  printf("NOTE: --use-syslog currently does not support facility option, using default value\n");
 	  myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
 	} else {
-	  myGlobals.useSyslog = facilityNames[i].c_val;
+	  myGlobals.useSyslog = facilitynames[i].c_val;
 	}
       } else {
 	printf("NOTE: --use-syslog with no facility, using default value\n");

@@ -550,6 +550,14 @@ int getdomainname(char *name, size_t len);
 #include <tcpd.h>
 #endif
 
+/*
+ *  Syslog stuff.  Any routine which expects to reference facilitynames must
+ *                 define SYSLOG_NAMES before including ntop.h
+ *
+ *                 USE_SYSLOG is shorthand for defined(HAVE_SYS_SYSLOG_H) || defined(HAVE_SYSLOG_H)
+ *                 Use that ifdef everywhere else for code dependent on the includes.
+ */
+
 #undef USE_SYSLOG
 
 #ifdef HAVE_SYS_SYSLOG_H
@@ -563,17 +571,57 @@ int getdomainname(char *name, size_t len);
 #endif
 
 #ifdef USE_SYSLOG
-typedef struct _code {
-        char    *c_name;
-        int     c_val;
-} _CODE;
-
-extern _CODE facilityNames[];
 
 #ifndef DEFAULT_SYSLOG_FACILITY
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON   /* default value, if not specified otherwise */
 #endif
-#endif
+
+/* Now, if we don't have gcc, we haven't created the facilitynames table, so do it
+ * manually
+ */
+#if !defined(__GNUC__)
+
+typedef struct _code {
+        char    *c_name;
+        int     c_val;
+} CODE;
+
+/*
+ * Create the table data.  If we have the headers, we use the values, which
+ * is ripped from Linux's /usr/include/sys/syslog.h. If not, it's a table
+ * with just a null entry.
+ *
+ * NOTE: if various systems add facilities we want to support, or change
+ * the values, this has to be updated to be sensitive to the target system,
+ * compiler, etc.
+ */
+
+CODE facilitynames[] =
+  {
+    { "auth", LOG_AUTH },
+    { "cron", LOG_CRON },
+    { "daemon", LOG_DAEMON },
+    { "kern", LOG_KERN },
+    { "lpr", LOG_LPR },
+    { "mail", LOG_MAIL },
+    { "news", LOG_NEWS },
+    { "syslog", LOG_SYSLOG },
+    { "user", LOG_USER },
+    { "uucp", LOG_UUCP },
+    { "local0", LOG_LOCAL0 },
+    { "local1", LOG_LOCAL1 },
+    { "local2", LOG_LOCAL2 },
+    { "local3", LOG_LOCAL3 },
+    { "local4", LOG_LOCAL4 },
+    { "local5", LOG_LOCAL5 },
+    { "local6", LOG_LOCAL6 },
+    { "local7", LOG_LOCAL7 },
+    { NULL, -1 }                     /* Sentinal entry */
+  };
+
+#endif /* __GNUC__ */
+
+#endif /* USE_SYSLOG */
 
 #ifndef DAEMONNAME
 #define DAEMONNAME      "ntop"       /* for /etc/hosts.allow, /etc/hosts.deny */

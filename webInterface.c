@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define SYSLOG_NAMES /* So that we have facilitynames */
+
 #include "ntop.h"
 #include "globals-report.h"
 
@@ -2083,20 +2085,23 @@ void printNtopConfigInfo(int textPrintFlag) {
                             myGlobals.debugMode == 1 ? "Yes" : "No",
                             NTOP_DEFAULT_DEBUG_MODE == 1 ? "Yes" : "No");
 
+#ifdef USE_SYSLOG
   if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
       printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "No");
   } else {
-      for (i=0; facilityNames[i].c_name != NULL; i++) {
-          if (facilityNames[i].c_val == myGlobals.useSyslog) {
-              printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", facilityNames[i].c_name);
+      for (i=0; facilitynames[i].c_name != NULL; i++) {
+          if (facilitynames[i].c_val == myGlobals.useSyslog) {
+              printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", facilitynames[i].c_name);
               break;
           }
       }
-      if (facilityNames[i].c_name == NULL) {
+      if (facilitynames[i].c_name == NULL) {
           printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "**UNKNOWN**");
       }
   }
-#endif
+#endif /* USE_SYSLOG */
+
+#endif /* WIN32 */
 
   printParameterConfigInfo(textPrintFlag, "-M | --no-interface-merge" REPORT_ITS_EFFECTIVE,
                            myGlobals.mergeInterfaces == 1 ? "(Merging Interfaces) Yes" :
