@@ -3871,7 +3871,7 @@ void printSectionTitle(char *text) {
 #define MAX_NUM_OS           256
 
 void printLocalHostsStats() {
-  u_int idx, numEntries=0;
+  u_int idx, numEntries=0, maxHosts;
   HostTraffic *el, **tmpTable;
   OsNumInfo theOSs[MAX_NUM_OS];
   int i;
@@ -3886,8 +3886,9 @@ void printLocalHostsStats() {
     return;
   }
 
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  tmpTable = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
+  memset(tmpTable, 0, maxHosts*sizeof(HostTraffic*));
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId); 
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
@@ -3915,7 +3916,7 @@ void printLocalHostsStats() {
 	theOSs[i].num++;
       }
 
-      if(numEntries >= myGlobals.device[myGlobals.actualReportDeviceId].hostsno)
+      if(numEntries >= maxHosts)
 	break;
     }
   }

@@ -643,7 +643,7 @@ void printHostsTraffic(int reportType,
 		       int pageNum,
 		       char* url) {
   u_int idx, numEntries=0;
-  int printedEntries=0, hourId;
+  int printedEntries=0, hourId, maxHosts;
   char theDate[8];
   struct tm t;
   HostTraffic *el;
@@ -657,8 +657,9 @@ void printHostsTraffic(int reportType,
   hourId = atoi(theDate);
 
   memset(buf, 0, sizeof(buf));
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  tmpTable = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
+  memset(tmpTable, 0, maxHosts*sizeof(HostTraffic*));
 
   switch(reportType) {
   case SORT_DATA_RECEIVED_PROTOS:
@@ -698,7 +699,7 @@ void printHostsTraffic(int reportType,
 
 	tmpTable[numEntries++]=el;
 
-	if(numEntries >= myGlobals.device[myGlobals.actualReportDeviceId].hostsno)
+	if(numEntries >= maxHosts)
 	  break;
       }
     }
@@ -1186,7 +1187,7 @@ void printHostsTraffic(int reportType,
 void printMulticastStats(int sortedColumn /* ignored so far */,
 			 int revertOrder,
 			 int pageNum) {
-  u_int idx, numEntries=0;
+  u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   HostTraffic *el;
   HostTraffic** tmpTable;
@@ -1194,8 +1195,9 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  tmpTable = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
+  memset(tmpTable, 0, maxHosts*sizeof(HostTraffic*));
 
   /* All the ALT tags courtesy of "Burton M. Strauss III" <BStrauss3@attbi.com> */
   if(revertOrder) {
@@ -1212,7 +1214,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
        && (!broadcastHost(el)))
       tmpTable[numEntries++] = el;
 
-    if(numEntries >= myGlobals.device[myGlobals.actualReportDeviceId].hostsno)
+    if(numEntries >= maxHosts)
       break;
   }
 
@@ -1337,7 +1339,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 #define NUM_ANCHORS 10
 
 void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
-  u_int idx, numEntries=0;
+  u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   HostTraffic *el;
@@ -1346,8 +1348,9 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  tmpTable = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
+  memset(tmpTable, 0, maxHosts*sizeof(HostTraffic*));
 
   if(revertOrder) {
     sign = "";
@@ -1377,7 +1380,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     tmpTable[numEntries++] = el;
     getHostAS(el);
 
-    if(numEntries >= myGlobals.device[myGlobals.actualReportDeviceId].hostsno)
+    if(numEntries >= maxHosts)
       break;
   }
 
@@ -2002,7 +2005,7 @@ void printLocalRoutersList(int actualDeviceId) {
 
 void printIpAccounting(int remoteToLocal, int sortedColumn,
 		       int revertOrder, int pageNum) {
-  u_int idx, numEntries=0;
+  u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   HostTraffic *el, **tmpTable;
   char buf[LEN_GENERAL_WORK_BUFFER], *str=NULL, *sign, *title=NULL;
@@ -2021,8 +2024,9 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   }
 
   totalBytesSent=0, totalBytesRcvd=0;
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  tmpTable = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
+  memset(tmpTable, 0, maxHosts*sizeof(HostTraffic*));
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
@@ -2069,6 +2073,8 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 	  }
 	  break;
 	}
+
+	if(numEntries >= maxHosts) break;
       }
   }
 
@@ -2410,7 +2416,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 void printIpProtocolUsage(void) {
   HostTraffic **hosts, *el;
   u_short clientPorts[MAX_ASSIGNED_IP_PORTS], serverPorts[MAX_ASSIGNED_IP_PORTS];
-  u_int j, idx1, hostsNum=0, numPorts=0;
+  u_int j, idx1, hostsNum=0, numPorts=0, maxHosts;
   char buf[LEN_GENERAL_WORK_BUFFER];
 
   printHTMLheader("TCP/UDP Protocol Subnet Usage", 0);
@@ -2419,7 +2425,8 @@ void printIpProtocolUsage(void) {
   memset(serverPorts, 0, sizeof(serverPorts));
 
   hosts = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
-  memset(hosts, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  memset(hosts, 0, maxHosts*sizeof(HostTraffic*));
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
@@ -2436,6 +2443,8 @@ void printIpProtocolUsage(void) {
 	}
       }
     }
+
+    if(hostsNum >= maxHosts) break;
   } /* for */
 
   if(numPorts == 0) {
@@ -3816,7 +3825,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 
 /* if myGlobals.domainName == NULL -> print all domains */
 void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int pageNum) {
-  u_int idx, tmpIdx, numEntries=0, printedEntries=0, len;
+  u_int idx, tmpIdx, numEntries=0, printedEntries=0, len, maxHosts;
   u_short keyValue=0;
   HostTraffic *el;
   char buf[LEN_GENERAL_WORK_BUFFER];
@@ -3824,12 +3833,13 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   char htmlAnchor[2*LEN_GENERAL_WORK_BUFFER], htmlAnchor1[2*LEN_GENERAL_WORK_BUFFER], *sign, *arrowGif, *arrow[48], *theAnchor[48];
   Counter totBytesSent=0, totBytesRcvd=0;
 
-  len = sizeof(DomainStats)*myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  len = sizeof(DomainStats)*maxHosts;
   tmpStats = (DomainStats*)malloc(len);
   memset(tmpStats, 0, len);
 
   /* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */
-  len = sizeof(DomainStats**)*myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
+  len = sizeof(DomainStats**)*maxHosts;
   stats = (DomainStats**)malloc(len);
   memset(stats, 0, len);
 
@@ -3869,7 +3879,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       for(keyValue=0, tmpIdx=0; el->fullDomainName[tmpIdx] != '\0'; tmpIdx++)
 	keyValue += (tmpIdx+1)*(u_short)el->fullDomainName[tmpIdx];
 
-      keyValue %= myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
+      keyValue %= maxHosts;
 
       while((stats[keyValue] != NULL)
 	    && (strcasecmp(stats[keyValue]->domainHost->fullDomainName, el->fullDomainName) != 0))
@@ -3905,6 +3915,9 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     statsEntry->icmpRcvd.value  += el->icmpRcvd.value;
     statsEntry->ospfRcvd.value  += el->ospfRcvd.value;
     statsEntry->igmpRcvd.value  += el->igmpRcvd.value;
+
+
+    if(numEntries >= maxHosts) break;
   } /* for(;;) */
 
   if((domainName == NULL) || (numEntries == 0)) {
@@ -4332,13 +4345,14 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
 /* ************************** */
 
-void dumpHostsCriteria(NtopInterface *interface, u_char criteria) {
-  u_int numEntries=0, i, idx;
+void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
+  u_int numEntries=0, i, maxHosts;
   HostTraffic **tmpTable, *el;
   char buf[LEN_GENERAL_WORK_BUFFER];
 
-  tmpTable = (HostTraffic**)malloc(interface->hostsno*sizeof(HostTraffic*));
-  memset(tmpTable, 0, interface->hostsno*sizeof(HostTraffic*));
+  maxHosts = ifName->hostsno; /* save it as it can change */
+  tmpTable = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
+  memset(tmpTable, 0, maxHosts*sizeof(HostTraffic*));
 
   switch(criteria) {
     case 0: /* AS */
@@ -4353,8 +4367,6 @@ void dumpHostsCriteria(NtopInterface *interface, u_char criteria) {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-    unsigned short actUsage;
-
     switch(criteria) {
     case 0: /* AS */
       getHostAS(el);
@@ -4365,7 +4377,7 @@ void dumpHostsCriteria(NtopInterface *interface, u_char criteria) {
       break;
     }
 
-    if(numEntries >= interface->hostsno)
+    if(numEntries >= maxHosts)
       break;
   }
 
