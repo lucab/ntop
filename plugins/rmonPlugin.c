@@ -50,29 +50,7 @@ static void termRmonPlugin() {
 
 #ifdef MULTITHREADED
 void* rmonLoop(void* notUsed) {
-  /* print log errors to stderr */
-  snmp_enable_stderrlog();
-
-  /* we're an agentx subagent? */
-  if (IS_SUBAGENT) {
-    /* make us a agentx client. */
-    ds_set_boolean(DS_APPLICATION_ID, DS_AGENT_ROLE, 1);
-  }
-
-  /* initialize the agent library */
-  init_agent(AGENT_NAME);
-
-  /* initialize your mib code here */
-  init_rmon();  
-
-  /* ustMain will be used to read ustMain.conf files. */
-  init_snmp(AGENT_NAME);
-
-  /* If we're going to be a snmp master agent */
-  if (!IS_SUBAGENT)
-    init_master_agent(SNMP_PORT, NULL, NULL);
-
-  /* you're main loop here... */
+  traceEvent(TRACE_INFO, "ntop/RMON started");
   while(1) {
     /* if you use select(), see snmp_select_info() in snmp_api(3) */
     /*     --- OR ---  */
@@ -82,6 +60,14 @@ void* rmonLoop(void* notUsed) {
   return(NULL);
 }
 #endif
+
+/* ****************************** */
+
+static void startRmonPlugin() {
+#ifdef MULTITHREADED
+  createThread(&rmonTreadId, rmonLoop, NULL);
+#endif
+}
 
 /* ****************************** */
   
@@ -105,7 +91,8 @@ static PluginInfo rmonPluginInfo[] = {
     "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>",
     "ntopRmon", /* http://<host>:<port>/plugins/remoteInterface */
     0,    /* Not Active */
-    termRmonPlugin, /* TermFunc */
+    startRmonPlugin, /* StartFunc */
+    termRmonPlugin,  /* TermFunc */
     NULL, /* PluginFunc */
     handleRmonHTTPrequest,
     NULL, 
@@ -117,19 +104,37 @@ static PluginInfo rmonPluginInfo[] = {
 #ifdef STATIC_PLUGIN
 PluginInfo* rmonPluginEntryFctn() {
 #else
-PluginInfo* PluginEntryFctn() {
+  PluginInfo* PluginEntryFctn() {
 #endif
   
-  traceEvent(TRACE_INFO, "Welcome to %s. (C) 2000 by Luca Deri.\n", 
-	     rmonPluginInfo->pluginName);
+    traceEvent(TRACE_INFO, "Welcome to %s. (C) 2000 by Luca Deri.\n", 
+	       rmonPluginInfo->pluginName);
 
-#ifdef MULTITHREADED
-  createThread(&rmonTreadId, rmonLoop, NULL);
-#endif
 
-  return(rmonPluginInfo);
-}
+    /* print log errors to stderr */
+    snmp_enable_stderrlog();
 
+    /* we're an agentx subagent? */
+    if (IS_SUBAGENT) {
+      /* make us a agentx client. */
+      ds_set_boolean(DS_APPLICATION_ID, DS_AGENT_ROLE, 1);
+    }
+
+    /* initialize the agent library */
+    init_agent(AGENT_NAME);
+
+    /* initialize your mib code here */
+    init_rmon();  
+
+    /* ustMain will be used to read ustMain.conf files. */
+    init_snmp(AGENT_NAME);
+
+    /* If we're going to be a snmp master agent */
+    if (!IS_SUBAGENT)
+      init_master_agent(SNMP_PORT, NULL, NULL);
+ 
+    return(rmonPluginInfo);
+  }
 
 #else /*  HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H */
 
@@ -157,6 +162,7 @@ static PluginInfo rmonPluginInfo[] = {
     "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>",
     "ntopRmon", /* http://<host>:<port>/plugins/remoteInterface */
     0,    /* Not Active */
+    NULL, /* StartFunc */
     NULL, /* TermFunc */
     NULL, /* PluginFunc */
     handleRmonHTTPrequest,

@@ -261,6 +261,7 @@ extern void initLogger();
 extern void termLogger();
 extern char* intoa(struct in_addr addr);
 extern void loadPlugins();
+extern void startPlugins();
 extern void unloadPlugins();
 extern void addDefaultAdminUser();
 extern void cleanup_curses();
@@ -623,7 +624,7 @@ extern struct tm *localtime_r(const time_t *t, struct tm *tp);
 #endif
 
 #ifndef HAVE_STRTOK_R
-extern char *strtok_r(char *s, const char *delim, char **save_ptr)
+extern char *strtok_r(char *s, const char *delim, char **save_ptr);
 #endif
 
 #ifdef WIN32

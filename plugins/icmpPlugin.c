@@ -1228,6 +1228,7 @@ static PluginInfo icmpPluginInfo[] = {
     "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>",
     "icmpWatch", /* http://<host>:<port>/plugins/icmpWatch */
     1, /* Active */
+    NULL, /* no special startup after init */
     termIcmpFunct, /* TermFunc   */
     handleIcmpPacket, /* PluginFunc */
     handleIcmpWatchHTTPrequest,

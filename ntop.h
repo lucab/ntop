@@ -1050,7 +1050,7 @@ typedef struct ipGlobalSession {
 
 /* **************** Plugin **************** */
 
-typedef void(*TermFunc)();
+typedef void(*VoidFunc)();
 typedef void(*PluginFunc)(const struct pcap_pkthdr *h, const u_char *p);
 typedef void(*HashResizePluginFunc)(u_int oldSize, u_int newSize, u_int* mappings);
 typedef void(*PluginHTTPFunc)(char* url);
@@ -1063,7 +1063,7 @@ typedef struct pluginInfo {
   char *pluginAuthor;
   char *pluginURLname;      /* Set it to NULL if the plugin doesn't speak HTTP */
   char activeByDefault;     /* Set it to 1 if this plugin is active by default */
-  TermFunc termFunc;
+  VoidFunc startFunc, termFunc;
   PluginFunc pluginFunc;    /* Initialize here all the plugin structs... */
   PluginHTTPFunc httpFunct; /* Set it to NULL if the plugin doesn't speak HTTP */
   HashResizePluginFunc resizeFunct; /* Function called when the main hash is resized */

@@ -272,6 +272,7 @@ static PluginInfo WAPPluginInfo[] = {
     "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>", 
     "WAPPlugin",      /* http://<host>:<port>/plugins/WAPPlugin */
     0, /* Not Active */
+    NULL, /* no special startup after init */
     termWapFunct,    /* TermFunc   */
     NULL,    /* PluginFunc */
     handleWAPrequest,

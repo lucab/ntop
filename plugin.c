@@ -310,6 +310,32 @@ void loadPlugins() {
 
 /* ******************* */
 
+/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
+
+void startPlugins(void) {
+  FlowFilterList *flows = flowsList;
+
+  traceEvent(TRACE_INFO, "Starting plugin threads (if any)...\n");
+
+  while(flows != NULL) {
+    if(flows->pluginStatus.pluginPtr != NULL) {
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "Starting plugin '%s'...\n",
+		 flows->pluginStatus.pluginPtr->pluginName);
+#endif
+      if(flows->pluginStatus.pluginPtr->startFunc != NULL) {
+	void (*startFunc)();
+
+	startFunc = (void(*)())flows->pluginStatus.pluginPtr-> startFunc;
+	startFunc();
+      }
+    }
+    flows = flows->next;
+  }
+}
+
+/* ******************* */
+
 void unloadPlugins() {
   FlowFilterList *flows = flowsList;
 

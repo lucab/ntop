@@ -373,6 +373,7 @@ static PluginInfo arpPluginInfo[] = {
     "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>", 
     "arpWatch", /* http://<host>:<port>/plugins/arpWatch */
     1, /* Active */
+    NULL, /* no special startup after init */
     termArpFunct, /* TermFunc   */
     handleArpPacket, /* PluginFunc */
     handleArpWatchHTTPrequest,

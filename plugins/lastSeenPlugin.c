@@ -378,6 +378,7 @@ static PluginInfo LsPluginInfo[] = {
     "<A HREF=mailto:marangoni@unimc.it>A.Marangoni</A>", 
     "LastSeen", /* http://<host>:<port>/plugins/Ls */
     0, /* Not Active */
+    NULL, /* no special startup after init */
     termLsFunct, /* TermFunc   */
     handleLsPacket, /* PluginFunc */
     handleLsHTTPrequest,

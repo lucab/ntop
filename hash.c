@@ -579,8 +579,6 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 	purgeIdleHostSessions(hostIdx, &el->udpSessionList);
 
       for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
-	if(el->contactedRouters[j] == hostIdx)
-	  el->contactedRouters[j] = NO_PEER;
 	if(el->contactedSentPeersIndexes[j] == hostIdx)
 	  el->contactedSentPeersIndexes[j] = NO_PEER;
 	if(el->contactedRcvdPeersIndexes[j] == hostIdx)

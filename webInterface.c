@@ -647,7 +647,8 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
   fillDomainName(el);
 
-  snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", dbPath, el->fullDomainName);
+  snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif", 
+	   DATAFILE_DIR, el->fullDomainName);
 
   if(stat(path, &buf) == 0)
     ret = getCountryIconURL(el->fullDomainName);

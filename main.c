@@ -377,6 +377,7 @@ int main(int argc, char *argv[]) {
   traceEvent(TRACE_INFO, "Initialising...\n");
 
   initLibpcap(rulesFile, numDevices);
+  loadPlugins();
 
   /*
     Code fragment below courtesy of 
@@ -420,15 +421,13 @@ int main(int argc, char *argv[]) {
   if(flowSpecs[0] != '\0')
     handleFlowsSpecs(flowSpecs);
 
-  loadPlugins();
-
   initCounters(mergeInterfaces);
   initApps();
   initLogger();
   initSignals();
 
   initThreads(enableDBsupport);
-
+  startPlugins();
   initWeb(webPort, webAddr);
 
   traceEvent(TRACE_INFO, "Sniffying...\n");

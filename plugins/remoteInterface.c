@@ -207,10 +207,10 @@ void* remIntLoop(void* notUsed) {
 #endif
 
 #ifndef WIN32
-  traceEvent(TRACE_INFO, "Welcome to ntop Remote Interface [port %d][%s]\n",
+  traceEvent(TRACE_INFO, "Remote Interface started [port %d][%s]\n",
 	 webPort+2, NTOP_PATH);
 #else
-  traceEvent(TRACE_INFO, "Welcome to ntop Remote Interface [port %d]\n",
+  traceEvent(TRACE_INFO, "Remote Interface started [port %d]\n",
 	     webPort+2);
 #endif
 
@@ -254,7 +254,7 @@ void* remIntLoop(void* notUsed) {
 	rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
 		    (struct sockaddr*)&source, sizeof(source));
       } else if(strncasecmp(udpBuf, GETHOST_CMD, strlen(GETHOST_CMD)) == 0) {
-	char *strIdx = strtok(&udpBuf[strlen(GETHOST_CMD)+1], " ");
+	char *strIdx = strtok_r(&udpBuf[strlen(GETHOST_CMD)+1], " ", &strtokState);
 	u_int idx;
 	
 	if(strIdx == NULL) {
@@ -320,6 +320,14 @@ static void handleRemIntHTTPrequest(char* url) {
   printHTTPtrailer();
 }
 
+ /* ****************************** */
+ 
+static void startRemIntFunct(void) {
+#ifdef MULTITHREADED
+  createThread(&remIntTreadId, remIntLoop, NULL);
+#endif
+}
+
 /* ****************************** */
 
 static PluginInfo pluginInfo[] = {
@@ -329,6 +337,7 @@ static PluginInfo pluginInfo[] = {
     "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>",
     "remoteInterface", /* http://<host>:<port>/plugins/remoteInterface */
     0, /* Not Active */
+    startRemIntFunct, /* StartFunc */
     termRemIntFunct, /* TermFunc */
     NULL, /* PluginFunc */
     handleRemIntHTTPrequest,
@@ -346,10 +355,7 @@ PluginInfo* PluginEntryFctn() {
 
   remIntSock = 0;
 
-#ifdef MULTITHREADED
-  createThread(&remIntTreadId, remIntLoop, NULL);
-#endif
-
+  traceEvent(TRACE_INFO, "Welcome to ntop Remote Interface\n");
   return(pluginInfo);
 }
 
