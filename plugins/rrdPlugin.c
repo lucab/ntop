@@ -1686,6 +1686,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    if(i != j) {
 	      idx = i*myGlobals.device[k].numHosts+j;
 
+	      if(myGlobals.device[k].ipTrafficMatrix == NULL)
+		continue;
+	      if(myGlobals.device[k].ipTrafficMatrix == NULL)
+		continue;
 	      if(myGlobals.device[k].ipTrafficMatrix[idx] == NULL)
 		continue;
 
