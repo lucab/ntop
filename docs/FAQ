@@ -177,43 +177,77 @@ A: ./configure --help shows a bunch of configuration options available to you:
 
   +--ntop-specific:------------------------------------------------------------+
   --enable-configuredebug     display debug information during ./configure
-  --disable-mt                disable multithread support default=enabled
-  --enable-sslv3              enable ssl v3 support default=disabled
-  --enable-sslwatchdog        enable Watchdog for ssl hangups default=disabled
-  --disable-plugins           disable compilation of plugins default=enabled
-  --enable-micro-ntop         compile a slim version of ntop default=disabled
-  --enable-intop              enable intop (obsolete) command line version default=disabled
-  --enable-ignoresigpipe      Ignore SIGPIPE errors default=do not ignore
-  --enable-xmldump            Enable xml-based data dump default=disabled
+  --disable-mt                disable multithread support [default=enabled]
+  --enable-sslv3              enable ssl v3 support [default=disabled]
+  --enable-sslwatchdog        enable Watchdog for ssl hangups [default=disabled]
+  --disable-plugins           disable compilation of plugins [default=enabled]
+  --enable-static-plugins     Enable static linked plugins sntop, default=dynamic]
+  --enable-micro-ntop         compile a slim version of ntop [default=disabled]
+  --enable-intop              enable intop (obsolete) command line version [default=disabled]
+  --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]
+  --enable-i18n               Enable (limited) internationalization [default=disabled]
+  --enable-xmldump            Enable xml-based data dump [default=disabled]
+  --enable-largerrdpop        Enable large rrd population [default=disabled]
+  --enable-netflowassumeftpdata  Enable assumption that unknown ports for netflow data
+                                 are ftp-data [default=disabled]
   --enable-showoses           display OS Support information.
   --enable-iknowbetter        Override WILLFAIL
-  +----------------------------------------------------------------------------+
 
   +--external-packages:--------------------------------------------------------+
-  --disable-ssl               disable HTPPS support default=enabled
-  --disable-gdchart           disable use of GDChart default=enabled
-  --enable-tcpwrap            enable use of TCP Wrapper default=disabled
-  --disable-curses            disable use of curses default=enabled
-  --disable-readline          disable use of GNU readline default=enabled
+  --without-ssl               disable HTPPS support [default=enabled]
+  --without-gdchart           disable use of GDChart [default=enabled]
+  --with-tcpwrap              enable use of TCP Wrapper [default=disabled]
+  --without-curses            disable use of curses [intop, default=enabled]
+  --without-readline          disable use of GNU readline [intop, default=enabled]
+
   +-External-source-locations:-------------------------------------------------+
-  --with-pcap-root=DIR        LBNL pcap source tree located in DIR
-  --with-gdbm-root=DIR        GNU gdbm source tree located in DIR
-  --with-ossl-root=DIR        openSSL source tree located in DIR
-  --with-gdchart-root=DIR     GDChart source tree located in DIR
-  --with-gd-root=DIR          GD source tree located in DIR
-  --with-libpng-root=DIR      PNGLIB source tree located in DIR
-  --with-zlib-root=DIR        ZLIB source tree located in DIR
-  +----------------------------------------------------------------------------+
-(Updated for the new scripts, 30Oct2002)
+  --with-pcap-root=DIR        LBNL pcap located in DIR
+  --with-pcap-lib=DIR          or libpcap located in DIR
+  --with-pcap-include=DIR      or pcap.h located in DIR
+  --with-ossl-root=DIR        openSSL located in DIR
+  --with-ossl-lib=DIR          or libssl located in DIR
+  --with-ossl-include=DIR      or ssl.h located in DIR
+  --with-gdbm-root=DIR        GNU gdbm located in DIR
+  --with-gdbm-lib=DIR          or libgdbm located in DIR
+  --with-gdbm-include=DIR      or gdbm.h located in DIR
+  --with-zlib-root=DIR        zlib located in DIR
+  --with-zlib-lib=DIR          or libz located in DIR
+  --with-zlib-include=DIR      or zlib.h located in DIR
+  --with-gdchart-root=DIR     GDChart located in DIR
+  --with-gdchart-lib=DIR       or libgdchart located in DIR
+  --with-gdchart-include=DIR   or .h located in DIR
+  --with-gd-root=DIR          gd located in DIR
+  --with-gd-lib=DIR            or libgd located in DIR
+  --with-gd-include=DIR        or gd.h located in DIR
+  --with-libpng-root=DIR      libpng located in DIR
+  --with-libpng-lib=DIR         or libpng located in DIR
+  --with-libpng-include=DIR     or png.h located in DIR
+  --with-rrd-root=DIR         rrdtool located in DIR
+  --with-rrd-lib=DIR           or librrd located in DIR
+  --with-rrd-include=DIR       or rrd.h located in DIR
+  --with-localedir=DIR        LOCALE files located in DIR (i18n)
+  --with-xml2-root=DIR        xml2 located in DIR
+  --with-xml2-lib=DIR           or libxml2 located in DIR
+  --with-xml2-include=DIR       or .h located in DIR
+  --with-gdome-root=DIR       gdome located in DIR
+  --with-gdome-lib=DIR          or libgdome located in DIR
+  --with-gdome-include=DIR      or .h located in DIR
+  --with-glib-root=DIR        glib located in DIR
+  --with-glib-lib=DIR           or libglib located in DIR
+  --with-glib-include=DIR       or .h located in DIR
+  --with-glibconfig-root=DIR  glibconfig.h source in DIR
+
+(Updated for the new scripts, 12Apr2003)
 
 Q. Which packages/libraries do I need to compile ntop:
        glibc
        gcc
        cpp
        gawk
-       autoconf 2.5+
-       automake 1.5+
-       libtool  1.4+
+       autoconf 2.5+ (distribution is built with 2.53)
+       automake 1.6+ (distribution is build with 1.6.3)
+       libtool  1.4+ (distribution is built with 1.4.2)
+                     (there are successes reported with 1.3.4)
        openssl (for https:// support)
        gdbm
        libpcap
@@ -304,20 +338,21 @@ A. Install 1.6.3.  It's quite easy, does NOT require root.  The steps are listed
 
 Q. How do I update the Vendor Table (MAC address prefixes)?
 A. ntop has (in Makefile), a rule to automatically download the latest vendor 
-   information table from the IEEE and a rule to rebuild the vendor table 
-   (vendortable.h). 
+   information table from the IEEE, the oui.txt file ntop reads.
+
+   ntop ships with a mini oui.txt, that is a small file of the MAC addresses
+   common to my networks.
 
    If you are seeing unknown MAC address prefixes (the 1st three units), try 
-   and rebuild it:
+   the full IEEE table.  To rebuild it:
 
-     > mkdir Internet 
-     > make dnvt 
-     > make vt 
+     # make dnvt 
 
-    You will then need to recompile ntop! 
+   and then copy the new oui.txt over the one installed by ntop originally.
 
-    It does change - there are almost 600 modifications and/or new assigments between
-    the February 2002 version and the one in ntop 2.0.
+   Also note that the table changes over time - there are almost 600 modifications
+   and/or new assigments between the version shipped with ntop 2.0 and the version
+   on the IEEE site in February 2002.
 
 
 Q. I get an error, libtool: link: CURRENT `-release' is not a nonnegative integer
@@ -983,6 +1018,7 @@ A. (These are the ones ntop monitors if the user does not supply a -p parameter)
    Check addDefaultProtocols() in ntop.c around line 520.  
    The current list (July 2002) is
 
+
      Protocol   Ports
      --------   -----
      FTP        ftp ftp-data
@@ -1000,27 +1036,16 @@ A. (These are the ones ntop monitors if the user does not supply a -p parameter)
      Gnutella   6346 6347 6348     
      Morpheus   1214     
      WinMX      6699 7730     
-     Audiogalaxy 41000-41900     
+     eDonkey    4661-4665
+     Messenger  1863 5000 5001 5190-5193
 
    Note that the names come from /etc/services (or your system's equivalent).  If
    you add protocols to /etc/services, you can refer to them by name on the -p 
    parameter.
 
-
-Q. What's changed since v1.3 in that list?
-A. Added 25Jan2002: 
-
-          Gnutella: 6346 6347 6348
-          Morpheus: 1214 
-          WinMX:    6699 7730 
-
-   Added 20Mar2002: 
-
-          Audiogalaxy: 41000-41900
-
-   Removed 26Jan2002: 
-
-          Napster 
+   The list changes over time as P2P protocols appear and disappear.  Check the
+   cvs and diff ntop.c (around line 550 in void addDefaultProtocols() if you want
+   the history.
 
 
 Q. What are ntop's options?
@@ -1030,7 +1055,7 @@ A. There are a couple of options that appear only if they're not compiled in, an
    The best way to see what is actually available is to run ntop with the -h or 
    --help options and see.
 
-   Here is the FULL set as of October 2002:
+   Here is the FULL set as of April 2003:  
 
      -a <path>      | --access-log-path <path>
                                Path for ntop web server access log
@@ -1059,9 +1084,6 @@ A. There are a couple of options that appear only if they're not compiled in, an
      -i <name>      | --interface <name>
                                Interface name or names to monitor
 
-     -o             | --no-mac
-                               ntop will trust just IP addresses (no MACs)
-
      -k             | --filter-expression-in-extra-frame
                                Show kernel filter expression in extra frame
 
@@ -1073,6 +1095,9 @@ A. There are a couple of options that appear only if they're not compiled in, an
 
      -n             | --numeric-ip-addresses
                                Numeric IP addresses - no DNS resolution
+
+     -o             | --no-mac
+                               ntop will trust just IP addresses (no MACs)
 
      -p <list>      | --protocols <list>
                                List of IP protocols to monitor (see man page)
@@ -1106,6 +1131,11 @@ A. There are a couple of options that appear only if they're not compiled in, an
 
                                Packet filter expression, like tcpdump
 
+     -C             | --large-network
+                               ntop will be used to analyze a large network
+                               This is a hint which disables a couple of memory
+                               intensive features.
+
      -D <name>      | --domain <name>
                                Internet domain name
 
@@ -1126,17 +1156,11 @@ A. There are a couple of options that appear only if they're not compiled in, an
      -M             | --no-interface-merge
                                Don't merge network interfaces (see man page)
 
-     -N             | --no-nmap
-                               Don't use nmap even if installed
-
      -O <path>      | --pcap-file-path <path>
                                Path for log files in pcap format
 
      -P <path>      | --db-file-path <path>
                                Path for ntop internal database files
-
-     -S <number>    | --store-mode <number>
-                               Persistent storage mode [0-none, 1-all, 2-local only]
 
      -U <URL>       | --mapper <URL>
                                URL (mapper.pl) for displaying host location
@@ -1147,6 +1171,9 @@ A. There are a couple of options that appear only if they're not compiled in, an
      -W <port>      | --https-server <port>
                                Web server (https:) port (or address:port) to listen on
 
+                      --no-idle-host-purge
+                               DO NOT USE - DOES NOT WORK
+
      --throughput-bar-chart
                                Use BAR chart for graphs
 
@@ -1155,6 +1182,32 @@ A. There are a couple of options that appear only if they're not compiled in, an
 
      --ssl-watchdog
                                Use ssl watchdog (NS6 problem)
+
+     --disable-stopcap
+                               Disable 'STOPCAP' mode
+
+     --dynamic-purge-limits
+                               Enable dynamic adjustment of the number of hosts
+                               to purge per cycle
+
+     --reuse-rrd-graphics
+                               Reuse rrd graphics if no rrd data has been updated
+                               between requests.
+
+     --p3p-cp
+                               Value to return for p3p-cp header
+
+     --p3p-uri
+                               Value to return for p3p-uri header
+
+     --xmlfileout
+                               File name for xml dump during shutdown
+
+     --xmlfilesnap
+                               File name for snapshot xml dump during run
+
+     --xmlfilein
+                               DO NOT USE - DOES NOT WORK
 
 
 
@@ -1299,6 +1352,9 @@ A. It should work - it's passed to pcap_open_live.  Understand that it does mean
    parameter specifies if the interface is to be put into promiscuous mode, even 
    if this parameter is false, the interface could well be in promiscuous mode 
    for some other reason.
+
+   If it fails, you'll see a message and ntop will refuse to startup
+(Updated April 2003, Burton)
 
 
 Q. ntop doesn't report any traffic at all.
@@ -1491,6 +1547,9 @@ A. IP Packets have a source address & port and a destination address & port...
    (20Sep2002, BMS) Support for virtual hosts is under development and the initial
    support is in 2.1.50.
 
+   (April 2003) It's in the 2.2 release and the folks who have virtual hosts have
+   been pretty pleased.
+
 
 Q. tcpwrappers does't work
 A. Oh yes it does... for http: connections
@@ -1515,6 +1574,9 @@ Q. My filter doesn't work!  I'm running ntop like this:
                           and not dst net 192.168.10.0/24 
 A. Yup, it doesn't work.  Use the -B option and put the filter in quotes: 
       -B "(src net 192.168.10.0/24 or src host xxx.xxx.xxx.xxx ) and not dst net 192.168.10.0/24"
+   Current development versions (and 2.2) should be logging a warning that says maybe you
+   forgot the quotes
+(Updated April 2003, Burton)
 
  
 Q. I have experienced problems defining multiple filters: ntop reports 'syntax error'
@@ -1536,6 +1598,10 @@ A. ntop holds a lot of information about each host it has seen in an in-memory t
 
    To reduce memory, monitor fewer protocols or use the filter (-B "bpf filter") 
    option to monitor only parts of the network.
+
+   There have been a couple of discussions on the ntop mailing list about ntop's
+   memory usage - you might read them (search on gmane).
+(Updated April 2003, Burton)
 
    
 Q. What are High/Medium/Low risk flags
@@ -1731,9 +1797,12 @@ A. Yes.  There's a bug in all of the developent versions (at least through
         }
      }
 
+   1.0.42 was release just before 2.2 shipped and includes the patch.
+(Updated April 2003, Burton)
+
 Q. What about the multi-threaded development version?
 A. Stay away.  I only experimented with it a little bit, but it was not
-   stable.  Use 1.0.41 + the patch.
+   stable.  Use 1.0.42.
 (Updated 2003-03-29, Burton)
 
 
@@ -2264,13 +2333,54 @@ FYI: ntop development is done primarily on Solaris (Solaris 8 for i386)
 
 Solaris
 =-=--=-
+During the ntop 2.2 development cycle, we did some development and testing on:
+   Solaris 2.6
+   Solaris 8 (i86).
+Solaris 7 should work.
+Solaris 9 is an unknown quantity.
 
 Q. How do I install the ntop package on Solaris?
-A. For instance do 'pkgadd -d ntop-2.1-solaris.i386'
+A. For instance do 'pkgadd -d ntop-2.2-solaris.i386'
+(Updated, April 2003, Burton).
 
 
-BSD
-=-=
+BSD Information
+=-=-=-=-=-=-=-=
+
+Q. I get "ntop: /dev/bpf0: Device not configured", what's wrong?
+A. This is because bfpX has not been configured inside the generic bsd-kernel 
+   config file. 
+
+   If you use generic kernel config file put "pseudo-device bpfilter 16" in kernel
+    config file and rebuild the kernel.  
+
+
+During the ntop 2.2 development cycle, we did development/testing under:
+
+FreeBSD
+------- 
+   4.6.3
+   5.0
+   Users reported success with 4.7 and 4.8.
+
+OpenBSD
+-------
+   Could never make it work.  Problem seems to be that the gnu tools such
+   as ld don't support a.out systems very well.
+
+NetBSD
+------
+   Some testing was done using 1.5.3 and 1.6 - both work only in SINGLE
+   THREADED mode and so are fragile.
+
+   There isn't a standard POSIX thread package for NetBSD.  Both "proven" and "unproven"
+   threads have issues.  One user is bound and determined to make GNU Pth work, but pth
+   isn't quite POSIX threads and he's not getting far...
+
+   When -current finally incorporates the POSIX threads (it's been committed but not yet
+   part of a release) this should be revisited.
+   (Revised, April 2003, Burton)
+
 
 Q. When I type 'make' it complains about a makefile error.
 A. Always remember to use gmake on *BSD systems! (and possibly other systems as well.)
@@ -2301,6 +2411,14 @@ A. In some situations, we produce gcc link lines which expose a conflict 'tween
 
 Linux
 =-=-=
+
+During the ntop 2.2 development cycle we did development and/or testing under
+
+RedHat AS2.1, 7.2, 7.3, 8.0
+Debian
+LinuxFromScratch 3.0pre3
+
+Others should certainly work and there are user reports of many successes.
 
 Compiling
 ---------
@@ -2442,6 +2560,9 @@ A. You have a version problem with libpng.
 Win32 (MinGw)
 =-=-=-=-=-=-=
 
+The .exe distributed through ntop.org is built with Visual C++ 6.0.
+There are reports of problems using MinGW.  Forget about cygwin.
+
 Compiling
 ---------
 
@@ -2568,28 +2689,12 @@ Other Platforms - not very well supported...
 
    
    
-BSD Information
-=-=-=-=-=-=-=-=
-
-Q. I get "ntop: /dev/bpf0: Device not configured", what's wrong?
-A. This is because bfpX has not been configured inside the generic bsd-kernel 
-   config file. 
-
-   If you use generic kernel config file put "pseudo-device bpfilter 16" in kernel
-    config file and rebuild the kernel.  
-
-
-NetBSD
-=-=-=-
-
-Q. Multithread?
-A. There isn't a standard POSIX thread package for NetBSD.  Both "proven" and "unproven"
-   threads have issues.  One user is bound and determined to make GNU Pth work, but pth
-   isn't quite POSIX threads and he's not getting far...
-   (Added 30Oct2002, Burton)
 
 HP-UX
 =-=-=
+
+During the 2.2 development cycle, some work was done to make ntop work under HP-UX 11
+without breaking the HP-UX 10.20 support (limited as it is).  HP-UX 11 should work.
 
 Q: v2.0.99RCx has been reported not to compile under HP-UX 10.20
 A: The test in the code seems wrong, but we didn't have time, nor 
@@ -2612,14 +2717,15 @@ A: To reduce complexity and because resources aren't availabe to provide
    pthread implementation is slightly different from the POSIX standard.
 
 Q. Why is the HP-UX 11 version of ntop not multithreading?
-A. Because we don't have access to an HP-UX box and because HP has a (retarded)
-   (non-standard) implementation of POSIX threads.  The scripts are being tweaked,
-   but aren't quite right.
-   (Added 30Oct2002, Burton)
+A. As of 2.1.90 it should be.
+   (Updated, April 2003, Burton)
 
 
 IRIX (v1.3 information)
 =-=-=-=-=-=-=-=-=-=-=-=-
+
+During the ntop 2.2 development cycle, IRIX was not considered.  It will almost
+certainly fail.
 
 Q. Where can I find pthreads for IRIX 6.2?
 A. Irix 6.2 doesn't support POSIX threads out of of the box. You must 
@@ -2633,6 +2739,9 @@ A: When Luca used IRIX 6.2, semaphores seemed to have some problems. This is a
 
 Digital UNIX (v1.3)
 ===================
+
+During the ntop 2.2 development cycle, Digital UNIX was not considered.  It will almost
+certainly fail.
 
 Q. ntop doesn't seem to collect any data on Digital Unix.
 A. Albert Chin-A-Young <china@thewrittenword.com> said:
@@ -2651,6 +2760,9 @@ A. Albert Chin-A-Young <china@thewrittenword.com> said:
 
 AIX (v1.3)
 ==========
+
+During the ntop 2.2 development cycle, AIX was not considered.  It will almost
+certainly fail.
 
 Q. AIX: I've linked ntop against the special libcap library that's
    available on the ntop sire. Unfortunately ntop doesn't work. It
@@ -2900,6 +3012,15 @@ A. A hub is a device that links a bunch of computers together
 
    Switches and Hubs operate at the Ethernet level, not TCP/IP.
 
+A. Watch out for 'Switched hubs', which are hubs that include an
+   internal switch between 2 or more segments (for example, BUT
+   NOT LIMITED TO a 10BaseT and 100BaseT) segment.  These are hubs
+   within a segment, but switches across segments.  ntop may not 
+   see the traffic you expect if you have a 'switched hubs' and 
+   manufacturers are pretty bad about marking them. See
+   http://article.gmane.org/gmane.linux.ntop.general/5081
+(Added April 2003, Burton)
+
 A. A switch is a smart hub.
 
    Switches improve performance by creating a virtual Ethernet
@@ -3050,6 +3171,7 @@ Section 3
 
 HowTo Ask For Help (ntop mailing lists)
 =======================================
+(Updated April 2003)
 
 HOWTO ask for help on the ntop or ntop-dev mailing lists:
 
@@ -3101,6 +3223,12 @@ problem in the archives.  Titles such as "urgent" or "ntop problem" will often
 not get a response - it may be urgent to you but it's probably not an issue 
 for others.
 
+WE STRONGLY SUGGEST YOU USE THE BUILT IN AUTOMATICALLY GENERATED PROBLEM
+REPORT (About | "bug icon").  This includes most of the internal configuration
+data we ask for (and more) and has blank spots for you to fill it.
+
+Generate one, cut & paste into your mail client, edit the data and sent it.
+
 Beyond that, don't worry -- it's about information, not format.
 
 
@@ -3132,6 +3260,9 @@ time to answer you in the first place and will more than likely not get a
 different response.  If you're not sure that your message posted, check the 
 archives to see if your message is there -- please don't just keep reposting it.
 
+You can always use gmane (http://www.gmane.org) to see the last 600 or so
+postings to the lists.
+
 Please direct all original postings and subsequent replies to the list, not to 
 someone privately.  Most of us will reply solely to the mailing list, unless 
 you specifically request otherwise.  If you do request otherwise, the individual 
@@ -3156,12 +3287,13 @@ resolved.
 WHAT IS SUPPORTED?
 ==================
 
-At the time of this writing the stable version is 2.1.3 and the cvs version is 
-2.1.52.  Releases are hosted at SourceForge.
+Releases are hosted at SourceForge.
 
-What support is available is for the development version ("the cvs").  All 
-support is in the form of fixing things in the cvs, however we also attempt to
-support the current "stable" release (2.1.3).
+At the time of this writing the stable version is 2.2. What support is available
+is for the development version ("the cvs").  All support is in the form of fixing
+things in the cvs.
+
+However we also attempt to support the current "stable" release (2.2).
 
 Older versions are not supported -- especially 1.3 and the 2.0.99 series of 
 2.1 release candidates.  If you have a problem with them, please obtain the 
@@ -3170,9 +3302,12 @@ projects, we don't fix things in older versions - there simply aren't enough
 resources available.
 
 intop is not supported.  Although the code is part of the current version, 
-it's maintained on a "just enough to compile and start" basis.  The next time 
-it won't compile, it will be moved to obsolete (unless somebody volunteers to 
-become it's maintainer).
+it's maintained on a "just enough to compile and start" basis.  Rocco may be
+revisiting this post 2.2, but don't expect ANYTHING from intop in the 2.0 and
+2.1 releases.
+
+If Rocco doesn't pick up intop, the next time it won't compile, it will be moved
+to obsolete (unless somebody volunteers to become it's maintainer).
 
 Please understand that the only way to fix your problem may be a source patch, 
 which you will have to apply, compile, install and test against the cvs version 
@@ -3195,7 +3330,8 @@ or on some platforms. s'be'it -- it's a DEVELOPMENT version.
 2.1.3
 =====
 
-The actual flow of ntop development was 2.1 -> 2.1.1 -> 2.1.2 -> 2.1.50 -> 2.1.51...
+The actual flow of ntop development was 2.1 -> 2.1.1 -> 2.1.2 -> 2.1.50
+ -> 2.1.51...
 
 Version 2.1.3 was provided by Dennis Schoen [ds@teuto.net] as part of the Debian 
 project.  Dennis (manually) maintains a bitkeeper tree, based on 2.1.2 with various
@@ -3209,6 +3345,11 @@ Version 2.1.3 is an export from Dennis' tree with the version number changed and
 is equivalent to 2.1.2-1.  Dennis' graciously provided the extract and we accepted
 with thanks!
 
+2.2
+===
+
+The actual flow of ntop development was 2.1 -> 2.1.1 -> 2.1.2 -> 2.1.50
+                                     -> 2.1.51..59 -> 2.1.90..92 -> 2.2
 
 FEE-BASED SUPPORT
 =================
@@ -3246,11 +3387,30 @@ BEFORE POSTING:
      through Google??  For example, "site:lists.ntop.org rpm" will find mail list
      messages with the word "rpm" in them.
 
+     Do you know about gmane (http://www.gmane.org) has archives (searchable) of
+     the ntop lists going back into late 2001.  The lists are called
+
+          gmane.linux.ntop.devel
+          gmane.linux.ntop.general
+
+     You can read these online (the last 600 messages or so) or through the nntp
+     server.
+
 
 POSTING:
 
 Do not worry about posting TOO much information - we're pretty good at filtering
-out the noise, especially if you organize your information this way:
+out the noise.
+
+WE STRONGLY SUGGEST YOU USE THE BUILT IN AUTOMATICALLY GENERATED PROBLEM
+REPORT (About | "bug icon").  This includes most of the internal configuration
+data we ask for (and more) and has blank spots for you to fill it.
+
+Generate one, cut & paste into your mail client, edit the data and sent it.
+
+If you can't or won't use the automated problem report (say, for example you can't
+get ntop up to generate it) - don't worry -- it's about information, not format.
+Send us what you can, organized this way:
 
 1. A brief summary of the problem.
 
@@ -3311,7 +3471,7 @@ Please let us know if our help fixed the problem, didn't solve it or enabled you
 solve it yourself and what the result was.  The historical record of the ntop and 
 ntop-dev archives is the complete chain from problem to resolution.
 
-(Originally posted on 07Jan2002 to ntop and ntop-dev, updated.  This is version 13Nov2002)
+(Originally posted on 07Jan2002 to ntop and ntop-dev, updated.  This is version 12April2003)
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -3377,5 +3537,5 @@ ubp_ev = (char **) 0xbffffaa0
 
 ==========================================================================
 Original version Luca Deri, 1999-2001
-Updated Burton M. Strauss III 2002
+Updated Burton M. Strauss III 2002, 2003
 
