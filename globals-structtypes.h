@@ -1585,6 +1585,9 @@ typedef struct ntopGlobals {
   u_char disableInstantSessionPurge; /* '144' */
                                      /*XML b disableInstantSessionPurge Options    "--disable-instantsessionpurge" */
 
+  u_char disableMutexExtraInfo;      /* '145' */
+                                     /*XML b disableMutexExtraInfo      Options    "--disable-mutexextrainfo" */
+
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
   /*XML b enableFragmentHandling Options  "" */

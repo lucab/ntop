@@ -4229,7 +4229,14 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
   if(mutexId->numLocks == 0) /* Mutex never used */
     return;
   if(textPrintFlag == TRUE) {
-    if(mutexId->lockAttemptLine > 0) {
+    if(myGlobals.disableMutexExtraInfo) {
+        if(snprintf(buf, sizeof(buf),
+                    "Mutex %s is %s, locked: %u times.\n",
+                    mutexName, mutexId->isLocked ? "locked" : "unlocked",
+                    mutexId->numLocks) < 0)
+          BufferTooShort();
+        sendString(buf);
+    } else if(mutexId->lockAttemptLine > 0) {
         if(snprintf(buf, sizeof(buf),
                     "Mutex %s is %s.\n"
                     "     locked: %u times, last was %s:%d(%d)\n"
@@ -4265,14 +4272,22 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
           BufferTooShort();
     }
   } else {
-    if (mutexId->lockAttemptLine > 0) {
+    if(myGlobals.disableMutexExtraInfo) {
+        if(snprintf(buf, sizeof(buf),
+                    "<TR><TH ALIGN=\"LEFT\">%s</TH><TD ALIGN=\"CENTER\">%s</TD>"
+                    "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
+                    mutexName,
+                    mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
+                    mutexId->numLocks, mutexId->numReleases) < 0)
+          BufferTooShort();
+    } else if (mutexId->lockAttemptLine > 0) {
         if(snprintf(buf, sizeof(buf),
                     "<TR><TH ALIGN=\"LEFT\">%s</TH><TD ALIGN=\"CENTER\">%s</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%u</TD>"
-                    "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>",
+                    "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>\n",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
                     mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
@@ -4290,7 +4305,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                     "<TD ALIGN=\"RIGHT\">&nbsp;</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%u</TD>"
-                    "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>",
+                    "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>\n",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
                     mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,

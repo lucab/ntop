@@ -1141,29 +1141,33 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
              where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
-  myPid=getpid();
-  if(mutexId->isLocked) {
-    if((fileLine == mutexId->lockLine)
-       && (strcmp(fileName, mutexId->lockFile) == 0)
-       && (myPid == mutexId->lockPid)
-       && (pthread_equal(mutexId->lockThread, pthread_self()))) {
-      traceEvent(CONST_TRACE_WARNING,
-		 "accessMutex() called '%s' with a self-LOCKED mutex [0x%X@%s:%d]",
-		 where, (void*)&(mutexId->mutex), fileName, fileLine);
+  if(!myGlobals.disableMutexExtraInfo) {
+    myPid=getpid();
+    if(mutexId->isLocked) {
+      if((fileLine == mutexId->lockLine)
+         && (strcmp(fileName, mutexId->lockFile) == 0)
+         && (myPid == mutexId->lockPid)
+         && (pthread_equal(mutexId->lockThread, pthread_self()))) {
+        traceEvent(CONST_TRACE_WARNING,
+                   "accessMutex() called '%s' with a self-LOCKED mutex [0x%X@%s:%d]",
+                   where, (void*)&(mutexId->mutex), fileName, fileLine);
+      }
     }
-  }
 
-  strcpy(mutexId->lockAttemptFile, fileName);
-  mutexId->lockAttemptLine=fileLine;
-  mutexId->lockAttemptPid=myPid;
+    strcpy(mutexId->lockAttemptFile, fileName);
+    mutexId->lockAttemptLine=fileLine;
+    mutexId->lockAttemptPid=myPid;
+  }
 
   rc = pthread_mutex_lock(&(mutexId->mutex));
 
   pthread_mutex_lock(&stateChangeMutex);
-  mutexId->lockAttemptFile[0] = '\0';
-  mutexId->lockAttemptLine=0;
-  mutexId->lockAttemptPid=(pid_t) 0;
-  mutexId->lockThread=pthread_self();
+  if(!myGlobals.disableMutexExtraInfo) {
+    mutexId->lockAttemptFile[0] = '\0';
+    mutexId->lockAttemptLine=0;
+    mutexId->lockAttemptPid=(pid_t) 0;
+    mutexId->lockThread=pthread_self();
+  }
 
   if(rc != 0)
     traceEvent(CONST_TRACE_ERROR, "accessMutex() call '%s' failed (rc=%d) [0x%X@%s:%d]",
@@ -1177,14 +1181,16 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 
     mutexId->numLocks++;
     mutexId->isLocked = 1;
-    mutexId->lockTime = time(NULL);
-    mutexId->lockPid  = myPid;
-    if(fileName != NULL) {
-      strcpy(mutexId->lockFile, fileName);
-      mutexId->lockLine = fileLine;
-    }
-    if(where != NULL) {
-      strcpy(mutexId->where, where);
+    if(!myGlobals.disableMutexExtraInfo) {
+      mutexId->lockTime = time(NULL);
+      mutexId->lockPid  = myPid;
+      if(fileName != NULL) {
+        strcpy(mutexId->lockFile, fileName);
+        mutexId->lockLine = fileLine;
+      }
+      if(where != NULL) {
+        strcpy(mutexId->where, where);
+      }
     }
   }
   pthread_mutex_unlock(&stateChangeMutex);
@@ -1222,22 +1228,25 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
              where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
-  myPid = getpid();
-  if(mutexId->isLocked) {
-    if((strcmp(fileName, mutexId->lockFile) == 0)
-       && (fileLine == mutexId->lockLine)
-       && (myPid == mutexId->lockPid)
-       && (pthread_equal(mutexId->lockThread, pthread_self()))
-       ) {
-      traceEvent(CONST_TRACE_WARNING,
-		 "tryLockMutex() called '%s' with a self-LOCKED mutex [0x%X@%s:%d]",
-		 where, (void*)&(mutexId->mutex), fileName, fileLine);
+  if(!myGlobals.disableMutexExtraInfo) {
+    myPid = getpid();
+    if(mutexId->isLocked) {
+      if((strcmp(fileName, mutexId->lockFile) == 0)
+         && (fileLine == mutexId->lockLine)
+         && (myPid == mutexId->lockPid)
+         && (pthread_equal(mutexId->lockThread, pthread_self()))
+         ) {
+        traceEvent(CONST_TRACE_WARNING,
+  		 "tryLockMutex() called '%s' with a self-LOCKED mutex [0x%X@%s:%d]",
+  		 where, (void*)&(mutexId->mutex), fileName, fileLine);
+      }
     }
-  }
 
-  strcpy(mutexId->lockAttemptFile, fileName);
-  mutexId->lockAttemptLine=fileLine;
-  mutexId->lockAttemptPid=myPid;
+    strcpy(mutexId->lockAttemptFile, fileName);
+    mutexId->lockAttemptLine=fileLine;
+    mutexId->lockAttemptPid=myPid;
+
+  }
 
   /*
     Return code:
@@ -1247,9 +1256,11 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   */
   rc = pthread_mutex_trylock(&(mutexId->mutex));
   pthread_mutex_lock(&stateChangeMutex);
-  mutexId->lockAttemptFile[0] = '\0';
-  mutexId->lockAttemptLine = 0;
-  mutexId->lockAttemptPid = (pid_t) 0;
+  if(!myGlobals.disableMutexExtraInfo) {
+    mutexId->lockAttemptFile[0] = '\0';
+    mutexId->lockAttemptLine = 0;
+    mutexId->lockAttemptPid = (pid_t) 0;
+  }
 
   if(rc != 0)  {
 #ifdef SEMAPHORE_DEBUG
@@ -1264,16 +1275,18 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
     mutexId->numLocks++;
     mutexId->isLocked = 1;
-    mutexId->lockTime = time(NULL);
-    mutexId->lockPid = myPid;
-    mutexId->lockThread = pthread_self();
+    if(!myGlobals.disableMutexExtraInfo) {
+      mutexId->lockTime = time(NULL);
+      mutexId->lockPid = myPid;
+      mutexId->lockThread = pthread_self();
 
-    if(fileName != NULL) {
-      strcpy(mutexId->lockFile, fileName);
-      mutexId->lockLine = fileLine;
+      if(fileName != NULL) {
+        strcpy(mutexId->lockFile, fileName);
+        mutexId->lockLine = fileLine;
+      }
+
+      if(where != NULL) strcpy(mutexId->where, where);
     }
-
-    if(where != NULL) strcpy(mutexId->where, where);
   }
 
   pthread_mutex_unlock(&stateChangeMutex);
@@ -1360,35 +1373,39 @@ int _releaseMutex(PthreadMutex *mutexId,
     traceEvent(CONST_TRACE_ERROR, "releaseMutex() failed (rc=%d) [0x%X@%s:%d]",
                rc, (void*)&(mutexId->mutex), fileName, fileLine);
   else {
-    time_t lockDuration = time(NULL) - mutexId->lockTime;
+    if(!myGlobals.disableMutexExtraInfo) {
+      time_t lockDuration = time(NULL) - mutexId->lockTime;
 
-    if((mutexId->maxLockedDuration < lockDuration)
-       || (mutexId->maxLockedDurationUnlockLine == 0 /* Never set */)) {
-      mutexId->maxLockedDuration = lockDuration;
+      if((mutexId->maxLockedDuration < lockDuration)
+         || (mutexId->maxLockedDurationUnlockLine == 0 /* Never set */)) {
+        mutexId->maxLockedDuration = lockDuration;
 
-      if(fileName != NULL) {
-	strcpy(mutexId->maxLockedDurationUnlockFile, fileName);
-	mutexId->maxLockedDurationUnlockLine = fileLine;
-      }
+        if(fileName != NULL) {
+	  strcpy(mutexId->maxLockedDurationUnlockFile, fileName);
+	  mutexId->maxLockedDurationUnlockLine = fileLine;
+        }
 
 #ifdef SEMAPHORE_DEBUG
-      if(mutexId->maxLockedDuration > 0) {
-        traceEvent(CONST_TRACE_INFO,
-                   "SEMAPHORE_DEBUG: releaseMutex() was locked for maximum, %d secs [0x%X@%s:%d]",
-                   mutexId->maxLockedDuration,
-                   (void*)&(mutexId->mutex),
-                   fileName, fileLine);
-      }
+        if(mutexId->maxLockedDuration > 0) {
+          traceEvent(CONST_TRACE_INFO,
+                     "SEMAPHORE_DEBUG: releaseMutex() was locked for maximum, %d secs [0x%X@%s:%d]",
+                     mutexId->maxLockedDuration,
+                     (void*)&(mutexId->mutex),
+                     fileName, fileLine);
+        }
 #endif
+      }
     }
 
     mutexId->isLocked = 0;
-    mutexId->lockLine = 0;
     mutexId->numReleases++;
-    mutexId->unlockPid=getpid();
-    if(fileName != NULL) {
-      strcpy(mutexId->unlockFile, fileName);
-      mutexId->unlockLine = fileLine;
+    if(!myGlobals.disableMutexExtraInfo) {
+      mutexId->lockLine = 0;
+      mutexId->unlockPid=getpid();
+      if(fileName != NULL) {
+        strcpy(mutexId->unlockFile, fileName);
+        mutexId->unlockLine = fileLine;
+      }
     }
   }
 

@@ -146,6 +146,7 @@ static struct option const long_options[] = {
   { "disable-stopcap",                  no_argument,       NULL, 142 },
   { "log-extra",                        required_argument, NULL, 143 },
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
+  { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
 
   {NULL, 0, NULL, 0}
 };
@@ -271,6 +272,8 @@ void usage (FILE * fp) {
   fprintf(fp, "    [--log-extra <level>]                                 %sAdd extra information to log messages\n", newLine);
 
   fprintf(fp, "    [--disable-instantsessionpurge                        %sDisable instant FIN session purge\n", newLine);
+
+  fprintf(fp, "    [--disable-mutexextrainfo                             %sDisable extra mutex info\n", newLine);
 
 #ifdef WIN32
   printAvailableInterfaces();
@@ -698,6 +701,10 @@ static int parseOptions(int argc, char* argv []) {
 
     case 144: /* disable-instantsessionpurge */
       myGlobals.disableInstantSessionPurge = TRUE;
+      break;
+
+    case 145: /* disable-mutexextrainfo */
+      myGlobals.disableMutexExtraInfo = TRUE;
       break;
 
     default:

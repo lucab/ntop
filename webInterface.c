@@ -3319,6 +3319,10 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.disableInstantSessionPurge == TRUE ? "Yes" : "No",
                            "No");
 
+  printParameterConfigInfo(textPrintFlag, "--disable-mutexextrainfo",
+                           myGlobals.disableMutexExtraInfo == TRUE ? "Yes" : "No",
+                           "No");
+
   sendString(texthtml("\n\n", "<tr><th colspan=2>"));
   sendString("Note: " CONST_REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");
@@ -4246,7 +4250,14 @@ void printNtopConfigInfo(int textPrintFlag) {
   if(myGlobals.debugMode)
 #endif /* DEBUG or WIN32 */
     {
-      sendString(texthtml("\nMutexes:\n\n", 
+      if(myGlobals.disableMutexExtraInfo) {
+        sendString(texthtml("\nMutexes:\n\n", 
+			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
+			  "<TR><TH>Mutex Name</TH>"
+			  "<TH>State</TH>"
+			  "<TH COLSPAN=2># Locks/Releases</TH>"));
+      } else {
+        sendString(texthtml("\nMutexes:\n\n", 
 			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
 			  "<TR><TH>Mutex Name</TH>"
 			  "<TH>State</TH>"
@@ -4255,6 +4266,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 			  "<TH>Last UnLock</TH>"
 			  "<TH COLSPAN=2># Locks/Releases</TH>"
 			  "<TH>Max Lock</TH></TR>"));
+      }
 
       printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
       printMutexStatus(textPrintFlag, &myGlobals.packetProcessMutex, "packetProcessMutex");

@@ -12,13 +12,15 @@ NTOP(8)                                                                NTOP(8)
        [1mlog   [4m[22m<path>[24m]   [[1m-m[22m|[1m--local-subnets   [4m[22m<addresses>[24m]    [[1m-n[22m|[1m--numeric-ip-[0m
        [1maddresses[22m]  [[1m-o[22m|[1m--no-mac[22m]  [[1m-p[22m|[1m--protocols  [4m[22m<list>[24m] [[1m-q[22m|[1m--create-suspi-[0m
        [1mcious-packets[22m]   [[1m-r[22m|[1m--refresh-time   [4m[22m<number>[24m]   [[1m-s[22m|[1m--no-promiscuous[22m]
-       [[1m-t[22m|[1m--trace-level  [4m[22m<number>[24m]  [[1m-w[22m|[1m--http-server  [4m[22m<port>[24m] [[1m-z[22m|[1m--disable-[0m
-       [1msessions[22m]  [[1m-A[22m|[1m--set-admin-password  [4m[22mpassword[24m]  [[1m-B[22m|[1m--filter-expression[0m
-       [4mexpression[24m]  [[1m-D[22m|[1m--domain  [4m[22m<name>[24m]  [[1m-F[22m|[1m--flow-spec  [4m[22m<specs>[24m] [[1m-M[22m|[1m--no-[0m
-       [1minterface-merge[22m] [[1m-O[22m|[1m----output-packet-path[22m] [[1m-P[22m|[1m--db-file-path [4m[22m<path>[24m]
-       [[1m-Q[22m|[1m--spool-file-path   [4m[22m<path>[24m]   [[1m-R[22m|[1m--filter-rule  [4m[22m<file>[24m]  [4m<number>[24m]
-       [[1m-U[22m|[1m--mapper  [4m[22m<URL>[24m]  [[1m-V[22m|[1m--version]  [22m[[1m--disable-stopcap[22m]  [[1m--log-extra[0m
-       [4m<number>[24m] [[1m--disable-instantsessionpurge[22m] [[1m--disable-schedyield[22m]
+       [[1m-t[22m|[1m--trace-level  [4m[22m<number>[24m]  [[1m-x  [4m[22m<max_num_hash_entries>[24m]  [[1m-w[22m|[1m--http-[0m
+       [1mserver [4m[22m<port>[24m] [[1m-z[22m|[1m--disable-sessions[22m]  [[1m-A[22m|[1m--set-admin-password  [4m[22mpass-[0m
+       [4mword[24m]    [[1m-B[22m|[1m--filter-expression   [4m[22mexpression[24m]   [[1m-D[22m|[1m--domain   [4m[22m<name>[24m]
+       [[1m-F[22m|[1m--flow-spec  [4m[22m<specs>[24m]   [[1m-M[22m|[1m--no-interface-merge[22m]   [[1m-O[22m|[1m----output-[0m
+       [1mpacket-path[22m]  [[1m-P[22m|[1m--db-file-path  [4m[22m<path>[24m] [[1m-Q[22m|[1m--spool-file-path [4m[22m<path>[24m]
+       [[1m-R[22m|[1m--filter-rule [4m[22m<file>[24m] [4m<number>[24m] [[1m-U[22m|[1m--mapper [4m[22m<URL>[24m]  [[1m-V[22m|[1m--version][0m
+       [[1m-X  [4m[22m<max_num_TCP_sessions>[24m] [[1m--disable-stopcap[22m] [[1m--log-extra [4m[22m<number>[24m]
+       [[1m--disable-instantsessionpurge[22m]   [[1m--disable-schedyield[22m]    [[1m--disable-[0m
+       [1mmutexextrainfo[22m]
 
        Unix options:
 
@@ -129,10 +131,10 @@ NTOP(8)                                                                NTOP(8)
         expression  to  limit  the hosts which are stored if you use --sticky-
         hosts.
 
-        The idle purge is a statistical  one  -  a  random  selection  of  the
-        eligible  hosts will be purged during each cycle.  Thus it is possible
-        on a busy system for an idle host to remain in  the  [1mntop  [22mtables  and
-        appear 'active' for some considerable time after it is truly idle.
+        The idle purge is a statistical one - a random selection of the eligi-
+        ble  hosts will be purged during each cycle.  Thus it is possible on a
+        busy system for an idle host to remain in the [1mntop [22mtables  and  appear
+        'active' for some considerable time after it is truly idle.
 
 
        [1m-d | --daemon[0m
@@ -193,8 +195,8 @@ NTOP(8)                                                                NTOP(8)
         with a comma. For instance -i "eth0,lo".
 
         If not specified, the default is the first Ethernet device, e.g. eth0.
-        The specific device that is 'first' is highly system dependent.  Espe-
-        cially  on  systems  where  the  device  name reflects the driver name
+        The specific device  that  is  'first'  is  highly  system  dependent.
+        Especially  on  systems where the device name reflects the driver name
         instead of the type of interface.
 
         By default, traffic information obtained  by  all  the  interfaces  is
@@ -457,9 +459,19 @@ NTOP(8)                                                                NTOP(8)
         If  this  parameter is not specified, ntop will try to switch first to
         'nobody' and then to 'anonymous' before giving up.
 
-        NOTE: This should not be root unless you really understand  the  secu-
-        rity  risks. In order to prevent this by accident, the only way to run
-        [1mntop [22mas root is to explicitly specify -u root.  [1mDon't do it.[0m
+        NOTE: This should  not  be  root  unless  you  really  understand  the
+        security  risks. In order to prevent this by accident, the only way to
+        run [1mntop [22mas root is to explicitly specify -u root.  [1mDon't do it.[0m
+
+
+       [1m-x[0m
+
+       [1m-X[0m
+        [1mntop [22mcreates a new hash/list entry for each new host/TCP session seen.
+        In  case of DOS (Denial Of Service) an attacker can easily exhaust all
+        the host available memory because ntop is creating entries  for  dummy
+        hosts.  In  order to avoid this you can set an upper limit in order to
+        limit the memory ntop can use.
 
 
        [1m-w | --http-server[0m
@@ -569,8 +581,8 @@ NTOP(8)                                                                NTOP(8)
         tions such as NeTraMet.  A flow is a stream of captured  packets  that
         match a specified rule. The format is
 
-        "     [1m<flow-label>='<matching    expression>'[,<flow-label>='<matching[0m
-        [1mexpression>'] [22m"
+        [1m<flow-label>='<matching  expression>'[,<flow-label>='<matching expres-[0m
+        [1msion>'][0m
 
         , where the label is used to symbolically identify the flow  specified
         by  the  expression.   The  expression  format  is  specified  in  the
@@ -578,9 +590,9 @@ NTOP(8)                                                                NTOP(8)
         ing  flows  can  be  accessed following the HTML link named 'List Net-
         Flows'.
 
-        For instance define two flows with the following  expression  "  [1mLuca-[0m
-        [1mHosts='host  jake.unipi.it  or host pisanino.unipi.it',GatewayRoutedP-[0m
-        [1mkts='gateway gateway.unipi.it' [22m".
+        For instance define two flows  with  the  following  expression  [1mLuca-[0m
+        [1mHosts='host              jake.unipi.it             or             host[0m
+        [1mpisanino.unipi.it',GatewayRoutedPkts='gateway gateway.unipi.it' .[0m
 
         All   the   traffic   sent/received   by   hosts   jake.unipi.it    or
         pisanino.unipi.it  is  collected  by  [1mntop  [22mand added to the LucaHosts
@@ -759,6 +771,16 @@ NTOP(8)                                                                NTOP(8)
         this switch to disable these calls, IF you are seeing deadlocks.
 
 
+       [1m--disable-mutexextrainfo[0m
+        [1mntop [22mstores extra information about the locks and unlocks of the  pro-
+        tective  mutexes  it  uses. Since [1mntop [22muses fine-grained locking, this
+        information is updated frequently.  On some  OSes,  the  system  calls
+        used  to  collect  this  informatio  (getpid() and gettimeofday()) are
+        expensive.  This option disables the  extra  information.   It  should
+        have no processing impact on [1mntop[0m
+         -  however  should [1mntop [22mactually deadlock, we would lose the informa-
+        tion that sometimes tells us why.
+
 
 [1mWEB VIEWS[0m
        While [1mntop [22mis running, multiple users can access the  traffic  informa-
@@ -802,8 +824,8 @@ NTOP(8)                                                                NTOP(8)
        [1mgdbm [22mfrom http://www.gnu.org/software/gdbm/gdbm.html
 
        [1mntop  [22mrequires a POSIX threads library. Although a single-threaded ver-
-       sion of  [1mntop  [22mcan  be  built  from  the  source  if  requested  during
-       ./configure, it is not recommended for more than trivial usage.
+       sion of [1mntop [22mcan be built from the source if requested during ./config-
+       ure, it is not recommended for more than trivial usage.
 
        The   [1mgd   [22mlibrary,  for  the  creation  of  png  files,  available  at
        http://www.boutell.com/gd/.  [1mntop [22msupports both gd 1.X and 2.X

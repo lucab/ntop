@@ -21,7 +21,7 @@
 
 <hr>
 <!-- Creator     : groff version 1.18 -->
-<!-- CreationDate: Tue Sep 16 11:27:55 2003 -->
+<!-- CreationDate: Sat Oct 25 07:38:33 2003 -->
 <a name="NAME"></a>
 <h2>NAME</h2>
 <!-- INDENTATION -->
@@ -58,6 +58,7 @@
 [<b>-r</b>|<b>--refresh-time</b> <i>&lt;number&gt;</i>]
 [<b>-s</b>|<b>--no-promiscuous</b>]
 [<b>-t</b>|<b>--trace-level</b> <i>&lt;number&gt;</i>]
+[<b>-x</b> <i>&lt;max_num_hash_entries&gt;</i>]
 [<b>-w</b>|<b>--http-server</b> <i>&lt;port&gt;</i>]
 [<b>-z</b>|<b>--disable-sessions</b>]
 [<b>-A</b>|<b>--set-admin-password</b> <i>password</i>]
@@ -70,11 +71,13 @@
 [<b>-Q</b>|<b>--spool-file-path</b> <i>&lt;path&gt;</i>]
 [<b>-R</b>|<b>--filter-rule</b> <i>&lt;file&gt;</i>]
 <i>&lt;number&gt;</i>] [<b>-U</b>|<b>--mapper</b>
-<i>&lt;URL&gt;</i>] [<b>-V</b>|<b>--version]</b>
+<i>&lt;URL&gt;</i>] [<b>-V</b>|<b>--version]</b> [<b>-X</b>
+<i>&lt;max_num_TCP_sessions&gt;</i>]
 [<b>--disable-stopcap</b>] [<b>--log-extra</b>
 <i>&lt;number&gt;</i>]
 [<b>--disable-instantsessionpurge</b>]
-[<b>--disable-schedyield</b>]</p>
+[<b>--disable-schedyield</b>]
+[<b>--disable-mutexextrainfo</b>]</p>
 <!-- INDENTATION -->
 <p>Unix options:</p>
 <!-- INDENTATION -->
@@ -337,7 +340,7 @@ navigation between pages.</p>
 <td width="86%">
 <p>By default, <b>ntop</b> captures traffic from network
 interface cards (NICs) or from netFlow/sFlow probes.
-However, <b>ntop</b> can also read data from a file -
+wever, <b>ntop</b> can also read data from a file -
 typically a tcpdump capture or the output from one of the
 <b>ntop</b> packet capture options.</p>
 <!-- INDENTATION -->
@@ -879,6 +882,36 @@ explicitly specify -u root. <b>Don&rsquo;t do it.</b></p>
 <tr valign="top" align="left">
 <td width="10%"></td>
 <td width="89%">
+<p><b>-x</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-X</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p><b>ntop</b> creates a new hash/list entry for each new
+host/TCP session seen. In case of DOS (Denial Of Service) an
+attacker can easily exhaust all the host available memory
+because ntop is creating entries for dummy hosts. In order
+to avoid this you can set an upper limit in order to limit
+the memory ntop can use.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
 <p><b>-w | --http-server</b></p></td>
 </table></p>
 <!-- INDENTATION -->
@@ -917,7 +950,7 @@ https:// connections.</p>
 <p>Some examples:</p>
 <!-- INDENTATION -->
 <p><b>ntop -w 3000 -W 0</b> (this is the default setting)
-HTTP requests on port 3000 and no HTTPS.</p>
+TP requests on port 3000 and no HTTPS.</p>
 <!-- INDENTATION -->
 <p><b>ntop -w 80 -W 443</b> Both HTTP and HTTPS have been
 enabled on their most common ports.</p>
@@ -1081,9 +1114,9 @@ powerful applications such as NeTraMet. A flow is a stream
 of captured packets that match a specified rule. The format
 is</p>
 <!-- INDENTATION -->
-<p>&quot; <b>&lt;flow-label&gt;=&rsquo;&lt;matching
+<p><b>&lt;flow-label&gt;=&rsquo;&lt;matching
 expression&gt;&rsquo;[,&lt;flow-label&gt;=&rsquo;&lt;matching
-expression&gt;&rsquo;]</b> &quot;</p>
+expression&gt;&rsquo;]</b></p>
 <!-- INDENTATION -->
 <p>, where the label is used to symbolically identify the
 flow specified by the expression. The expression format is
@@ -1093,10 +1126,9 @@ following the HTML link named &rsquo;List
 NetFlows&rsquo;.</p>
 <!-- INDENTATION -->
 <p>For instance define two flows with the following
-expression &quot; <b>LucaHosts=&rsquo;host jake.unipi.it or
-host
+expression <b>LucaHosts=&rsquo;host jake.unipi.it or host
 pisanino.unipi.it&rsquo;,GatewayRoutedPkts=&rsquo;gateway
-gateway.unipi.it&rsquo;</b> &quot;.</p>
+gateway.unipi.it&rsquo; .</b></p>
 <!-- INDENTATION -->
 <p>All the traffic sent/received by hosts jake.unipi.it or
 pisanino.unipi.it is collected by <b>ntop</b> and added to
@@ -1465,6 +1497,31 @@ under RedHat Linux 8.0, this can deadlock, causing the
 <b>ntop</b> appears to still be operational according to the
 ps command. Use this switch to disable these calls, IF you
 are seeing deadlocks.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--disable-mutexextrainfo</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p><b>ntop</b> stores extra information about the locks and
+unlocks of the protective mutexes it uses. Since <b>ntop</b>
+uses fine-grained locking, this information is updated
+frequently. On some OSes, the system calls used to collect
+this informatio (getpid() and gettimeofday()) are expensive.
+This option disables the extra information. It should have
+no processing impact on <b>ntop</b> - however should
+<b>ntop</b> actually deadlock, we would lose the information
+that sometimes tells us why.</p>
 </td>
 </table>
 <a name="WEB VIEWS"></a>
