@@ -1794,7 +1794,7 @@ void printActiveTCPSessions(void) {
 	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%d ms</TD>"
+	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
 #endif
@@ -1813,7 +1813,7 @@ void printActiveTCPSessions(void) {
 		  formatTime(&(tcpSession[idx]->firstSeen), 1),
 		  formatTime(&(tcpSession[idx]->lastSeen), 1),
 		  formatSeconds(actTime-tcpSession[idx]->firstSeen),
-		  (tcpSession[idx]->nwLatency.tv_sec*1000+tcpSession[idx]->nwLatency.tv_usec/1000)
+		  formatLatency(tcpSession[idx]->nwLatency)
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 		  , getSessionState(tcpSession[idx])
 #endif

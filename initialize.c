@@ -867,13 +867,15 @@ void parseTrafficFilter(char *argv[], int optind) {
       struct bpf_program fcode;
 
       for(i=0; i<numDevices; i++) {
-	if((pcap_compile(device[i].pcapPtr, &fcode, expression, 1,
-			 device[i].netmask.s_addr) < 0)
-	   || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
-	  traceEvent(TRACE_ERROR,
-		     "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
-		 expression, pcap_geterr(device[i].pcapPtr), device[i].name);
-	  exit(-1);
+	if(!device[i].virtualDevice) {
+	  if((pcap_compile(device[i].pcapPtr, &fcode, expression, 1,
+			   device[i].netmask.s_addr) < 0)
+	     || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
+	    traceEvent(TRACE_ERROR,
+		       "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
+		       expression, pcap_geterr(device[i].pcapPtr), device[i].name);
+	    exit(-1);
+	  }
 	}
       }
     }

@@ -22,6 +22,8 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+/* #define PRINT_ALL_ACTIVE_SESSIONS 1 */
+
 /* ************************************ */
 
 void formatUsageCounter(UsageCounter usageCtr) {
@@ -1822,6 +1824,10 @@ void printHostContactedPeers(HostTraffic *el) {
 
 char *getSessionState(IPSession *session) {
   switch (session->sessionState) {
+  case STATE_SYN:
+    return("Sent Syn");
+  case STATE_SYN_ACK:
+    return("Rcvd Syn/Ack");
   case STATE_ACTIVE:
     return("Active");
   case STATE_FIN1_ACK0:
@@ -2119,7 +2125,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%d ms</TD>"
+		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 		  "<TD "TD_BG"  ALIGN=CENTER>%s</TD>"
 #endif
@@ -2128,7 +2134,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 		  formatTime(&(tcpSession[idx]->firstSeen), 1),
 		  formatTime(&(tcpSession[idx]->lastSeen), 1),
 		  formatSeconds(actTime-tcpSession[idx]->firstSeen),
-		  (tcpSession[idx]->nwLatency.tv_sec*1000+tcpSession[idx]->nwLatency.tv_usec/1000)
+		  formatLatency(tcpSession[idx]->nwLatency)
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 		  , getSessionState(tcpSession[idx])
 #endif

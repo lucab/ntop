@@ -1638,11 +1638,11 @@ struct pbuf {
 
 /* TCP Session State Transition */
 
-#define STATE_BEGIN                  0
-#define STATE_SYN          STATE_BEGIN
+#define STATE_SYN                    0
 #define STATE_SYN_ACK                1
 #define STATE_ACK                    2
 #define STATE_ACTIVE         STATE_ACK
+#define STATE_BEGIN       STATE_ACTIVE
 #define STATE_FIN1_ACK0              3
 #define STATE_FIN1_ACK1              4
 #define STATE_FIN2_ACK0              5

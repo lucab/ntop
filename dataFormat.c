@@ -56,7 +56,6 @@ char* formatKBytes(float numKBytes) {
   return(outStr[bufIdx]);
 }
 
-
 /* ******************************* */
 
 char* formatBytes(TrafficCounter numBytes, short encodeString) {
@@ -198,6 +197,24 @@ char* formatThroughput(float numBytes) {
 #endif
 
   return(outStr[bufIdx]);
+}
+
+/* ******************************* */
+
+char* formatLatency(struct timeval tv) {
+  
+  if((tv.tv_sec == 0) && (tv.tv_usec == 0)) {
+    /* 
+       Latency not computed (the session was initiated
+       brefore ntop started */
+    return("&nbsp;");
+  } else {
+    static char latBuf[16];
+    
+    snprintf(latBuf, sizeof(latBuf), "%.1f ms",
+	    (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000));
+    return(latBuf);
+  }
 }
 
 /* ******************************* */
