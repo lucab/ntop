@@ -209,8 +209,19 @@ static int readHTTPheader(char* theRequestedURL,
     if(myGlobals.newSock < 0) {
       rc = SSL_read(ssl, aChar, 1);
       if(rc == -1) {
-	int theErr = SSL_get_error(ssl, rc);
-	traceEvent(TRACE_ERROR, "SSL read error %d (%s)", theErr, printSSLError(theErr));
+        unsigned long l;
+        char buf[200];
+        const char *file,*data;
+        int line,flags;
+        unsigned long es;
+
+        es=CRYPTO_thread_id();
+        while ((l=ERR_get_error_line_data(&file,&line,&data,&flags)) != 0)
+                {
+                ERR_error_string_n(l, buf, sizeof buf);
+	        traceEvent(TRACE_ERROR, "SSL(read)ERROR: %lu:%s:%s:%d:%s\n",
+                                       es,buf,file,line,(flags&ERR_TXT_STRING)?data:"");
+                }
       }
     } else
       rc = recv(myGlobals.newSock, aChar, 1, 0);
