@@ -2,7 +2,7 @@
 
 echo "        Setting IBM AIX specific flag values"
 
-GCCLIB=`gcc -print-libgcc-file-name
+GCCLIB=`gcc -print-libgcc-file-name`
 cp -f $GCCLIB .
 LDFLAGS="-L. -lgcc ${LDFLAGS}"
 CCLD="cc -bI:/lib/pse.exp"
