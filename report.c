@@ -617,7 +617,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       }
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
+      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
+		 "<IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
       /*
@@ -2000,7 +2001,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 				"TCP", "UDP", total, percentage);
 
       for(i=0; i<numIpProtosToMonitor; i++) {
-	partialTotal = (float)ipProtoStats[i].local/1024;
+	partialTotal = (float)device[actualReportDeviceId].ipProtoStats[i].local/1024;
 
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
@@ -2050,7 +2051,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 				"TCP", "UDP", total, percentage);
 
       for(i=0; i<numIpProtosToMonitor; i++) {
-	partialTotal = (float)ipProtoStats[i].remote2local/1024;
+	partialTotal = (float)device[actualReportDeviceId].ipProtoStats[i].remote2local/1024;
 
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
@@ -2098,7 +2099,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 				"TCP", "UDP", total, percentage);
 
       for(i=0; i<numIpProtosToMonitor; i++) {
-	partialTotal = (float)ipProtoStats[i].local2remote/1024;
+	partialTotal = (float)device[actualReportDeviceId].ipProtoStats[i].local2remote/1024;
 
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
@@ -2139,8 +2140,10 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       remainingTraffic = 0;
 
       for(i=0; i<numIpProtosToMonitor; i++) {
-	partialTotal  = (float)ipProtoStats[i].local+ipProtoStats[i].remote;
-	partialTotal += (float)ipProtoStats[i].remote2local+ipProtoStats[i].local2remote;
+	partialTotal  = (float)device[actualReportDeviceId].ipProtoStats[i].local
+	  +device[actualReportDeviceId].ipProtoStats[i].remote;
+	partialTotal += (float)device[actualReportDeviceId].ipProtoStats[i].remote2local
+	  +device[actualReportDeviceId].ipProtoStats[i].local2remote;
 
 	if(partialTotal > 0) {
 	  partialTotal /= 1024;

@@ -754,7 +754,7 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue) {
     
     data_data.dsize = strlen(data_data.dptr)+1;
     gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE);
-  } else
+  }  else
     free(return_data.dptr);
 }
 

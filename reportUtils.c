@@ -1349,6 +1349,7 @@ void getProtocolDataSent(TrafficCounter *c,
       (*e) = 0;
   }
 }
+
 /* ******************************* */
 
 void getProtocolDataReceived(TrafficCounter *c,
@@ -1548,6 +1549,7 @@ void printTCPflagsStats(HostTraffic *el) {
   if(((el->tcpSentLocally+el->tcpSentRemotely+
        el->tcpReceivedLocally+el->tcpReceivedFromRemote) == 0)
      || ((el->synPktsSent.value+el->synPktsRcvd.value
+	  +el->rstAckPktsSent.value+el->rstAckPktsRcvd.value
 	  +el->rstPktsSent.value+el->rstPktsRcvd.value
 	  +el->synFinPktsSent.value+el->synFinPktsRcvd.value
 	  +el->finPushUrgPktsSent.value+el->finPushUrgPktsRcvd.value
@@ -1561,13 +1563,22 @@ void printTCPflagsStats(HostTraffic *el) {
     "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Received</TH></TR>\n");
 
   if((el->synPktsSent.value+el->synPktsRcvd.value) > 0) {
-
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN</TH>",
 		getRowColor()) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     formatUsageCounter(el->synPktsSent);
     formatUsageCounter(el->synPktsRcvd);
+    sendString("</TR>\n");
+  }
+
+  if((el->synPktsSent.value+el->synPktsRcvd.value) > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST|ACK</TH>",
+		getRowColor()) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+    formatUsageCounter(el->rstAckPktsSent);
+    formatUsageCounter(el->rstAckPktsRcvd);
     sendString("</TR>\n");
   }
 

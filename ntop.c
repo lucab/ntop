@@ -272,7 +272,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 
     return(1);
   }
-
+ 
   for(i=1; i<SERVICE_HASH_SIZE; i++) {
     idx = -1;
 

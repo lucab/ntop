@@ -156,7 +156,6 @@ extern ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
 extern TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
 extern HostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */
 extern fd_set ipTrafficMatrixPromiscHosts;
-extern SimpleProtoTrafficInfo *ipProtoStats;
 
 /* function declaration ***************************************************** */
 

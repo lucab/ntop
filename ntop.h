@@ -674,7 +674,6 @@ typedef struct simpleProtoTrafficInfo {
   TrafficCounter lastLocal, lastLocal2remote, lastRemote, lastRemote2local;
 } SimpleProtoTrafficInfo;
 
-
 /*
  * Interface's flags.
  */
@@ -780,6 +779,10 @@ typedef struct {
   u_short last60MinutesThptIdx, last24HoursThptIdx, last30daysThptIdx;
 
   SimpleProtoTrafficInfo tcpGlobalTrafficStats, udpGlobalTrafficStats, icmpGlobalTrafficStats;
+  SimpleProtoTrafficInfo *ipProtoStats;
+
+  TrafficCounter synPkts, rstPkts, rstAckPkts, synFinPkts, finPushUrgPkts, nullPkts;
+  TrafficCounter numEstablishedTCPConnections; /* = # really established connections */
 
 #ifdef MULTITHREADED
   pthread_t pcapDispatchThreadId;
@@ -1528,8 +1531,11 @@ typedef struct hostTraffic
                  udpReceivedFromRemote, icmpReceived, ospfReceived, igmpReceived;
 
   /* Interesting TCP Packets */
-  UsageCounter synPktsSent, rstPktsSent, synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
-  UsageCounter synPktsRcvd, rstPktsRcvd, synFinPktsRcvd, finPushUrgPktsRcvd, nullPktsRcvd;
+  UsageCounter synPktsSent, rstPktsSent, rstAckPktsSent, 
+               synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
+  UsageCounter synPktsRcvd, rstPktsRcvd, rstAckPktsRcvd, 
+               synFinPktsRcvd, finPushUrgPktsRcvd, nullPktsRcvd;
+  TrafficCounter numEstablishedTCPConnections;
 
   /* non IP */
   IcmpHostInfo    *icmpInfo;

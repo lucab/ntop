@@ -163,6 +163,13 @@ static void resetDevice(int deviceId) {
   device[deviceId].last60MinutesThptIdx=0, device[deviceId].last24HoursThptIdx=0,
     device[deviceId].last30daysThptIdx=0;
   device[deviceId].hostsno = 1; /* Broadcast entry */
+
+  len = (size_t)numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
+
+  if(device[deviceId].ipProtoStats == NULL)   
+    device[deviceId].ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
+
+  memset(device[deviceId].ipProtoStats, 0, len);
 }
 
 /* ******************************* */
@@ -263,10 +270,6 @@ void initCounters(int _mergeInterfaces) {
 
   nextSessionTimeoutScan = time(NULL)+SESSION_SCAN_DELAY;
   thisZone = gmt2local(0);
-
-  len = (size_t)numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
-  ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
-  memset(ipProtoStats, 0, len);
 
   memset(&broadcastEntry, 0, sizeof(HostTraffic));
   /* Set address to FF:FF:FF:FF:FF:FF */

@@ -1416,8 +1416,11 @@ static void handleSession(const struct pcap_pkthdr *h,
 	    /*
 	      It might be that this session was 
 	      already active when ntop started up
-	    */
+	    */	    
 	    theSession->sessionState = STATE_ACTIVE;
+	    srcHost->numEstablishedTCPConnections++,
+	      dstHost->numEstablishedTCPConnections++,
+	      device[actualDeviceId].numEstablishedTCPConnections++;
 	  }
 
 	  theSession->magic = MAGIC_NUMBER;
@@ -1745,12 +1748,18 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  theSession->nwLatency.tv_sec /= 2;
 	  theSession->nwLatency.tv_usec /= 2;
       theSession->sessionState = STATE_ACTIVE;
+      srcHost->numEstablishedTCPConnections++,
+	dstHost->numEstablishedTCPConnections++,
+	device[actualDeviceId].numEstablishedTCPConnections++;
     } else if((addedNewEntry == 0) 
 	      && ((theSession->sessionState == STATE_SYN)
 		  || (theSession->sessionState == STATE_SYN_ACK))) {
       /* We might have lost a packet so we cannot calculate latency */
       theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
       theSession->sessionState = STATE_ACTIVE;
+      srcHost->numEstablishedTCPConnections++,
+	dstHost->numEstablishedTCPConnections++,
+	device[actualDeviceId].numEstablishedTCPConnections++;
     }
 
     /* Let's decode some Napster packets */
@@ -1990,22 +1999,34 @@ static void handleSession(const struct pcap_pkthdr *h,
 
     /* ****************************** */
 
-    if(tp->th_flags & TH_RST) {
+    if((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK)) {
+      /* RST|ACK is sent when a connection is refused */
+      incrementUsageCounter(&srcHost->rstAckPktsSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->rstAckPktsRcvd, srcHostIdx);
+      device[actualDeviceId].rstAckPkts++;
+    } else if((tp->th_flags & TH_RST) == TH_RST) {
+      /* Connection terminated */
       incrementUsageCounter(&srcHost->rstPktsSent, dstHostIdx);
       incrementUsageCounter(&dstHost->rstPktsRcvd, srcHostIdx);
-    } else if((tp->th_flags & TH_SYN) == TH_SYN) {
-      incrementUsageCounter(&srcHost->synPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->synPktsRcvd, srcHostIdx);
+      device[actualDeviceId].rstPkts++;
     } else if((tp->th_flags & (TH_SYN|TH_FIN)) == (TH_SYN|TH_FIN)) {
       incrementUsageCounter(&srcHost->synFinPktsSent, dstHostIdx);
       incrementUsageCounter(&dstHost->synFinPktsRcvd, srcHostIdx);
+      device[actualDeviceId].synFinPkts++;
     } else if((tp->th_flags & (TH_FIN|TH_PUSH|TH_URG)) == (TH_FIN|TH_PUSH|TH_URG)) {
       incrementUsageCounter(&srcHost->finPushUrgPktsSent, dstHostIdx);
       incrementUsageCounter(&dstHost->finPushUrgPktsRcvd, srcHostIdx);
-    } else if(tp->th_flags == 0x0) {
+      device[actualDeviceId].finPushUrgPkts++;
+    } else if((tp->th_flags & TH_SYN) == TH_SYN) {
+      incrementUsageCounter(&srcHost->synPktsSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->synPktsRcvd, srcHostIdx);
+      device[actualDeviceId].synPkts++;
+    } else if(tp->th_flags == 0x0 /* NULL */) {
       incrementUsageCounter(&srcHost->nullPktsSent, dstHostIdx);
       incrementUsageCounter(&dstHost->nullPktsRcvd, srcHostIdx);
+      device[actualDeviceId].nullPkts++;
     }
+
     /* ****************************** */
   } else if(sessionType == IPPROTO_UDP) {
     IPSession tmpSession;
@@ -2200,13 +2221,13 @@ static int handleIP(u_short port,
 	  srcHost->protoIPTrafficInfos[idx].sentLocally += length;
 	if((dstHostIdx != broadcastEntryIdx) && (!broadcastHost(dstHost)))
 	  dstHost->protoIPTrafficInfos[idx].receivedLocally += length;
-	ipProtoStats[idx].local += length;
+	device[actualDeviceId].ipProtoStats[idx].local += length;
       } else {
 	if((srcHostIdx != broadcastEntryIdx) && (!broadcastHost(srcHost)))
 	  srcHost->protoIPTrafficInfos[idx].sentRemotely += length;
 	if((dstHostIdx != broadcastEntryIdx) && (!broadcastHost(dstHost)))
 	  dstHost->protoIPTrafficInfos[idx].receivedLocally += length;
-	ipProtoStats[idx].local2remote += length;
+	device[actualDeviceId].ipProtoStats[idx].local2remote += length;
       }
     } else {
       /* srcHost is remote */
@@ -2215,13 +2236,13 @@ static int handleIP(u_short port,
 	  srcHost->protoIPTrafficInfos[idx].sentLocally += length;
 	if((dstHostIdx != broadcastEntryIdx) && (!broadcastHost(dstHost)))
 	  dstHost->protoIPTrafficInfos[idx].receivedFromRemote += length;
-	ipProtoStats[idx].remote2local += length;
+	device[actualDeviceId].ipProtoStats[idx].remote2local += length;
       } else {
 	if((srcHostIdx != broadcastEntryIdx) && (!broadcastHost(srcHost)))
 	  srcHost->protoIPTrafficInfos[idx].sentRemotely += length;
 	if((dstHostIdx != broadcastEntryIdx) && (!broadcastHost(dstHost)))
 	  dstHost->protoIPTrafficInfos[idx].receivedFromRemote += length;
-	ipProtoStats[idx].remote += length;
+	device[actualDeviceId].ipProtoStats[idx].remote += length;
       }
     }
   }
@@ -3325,6 +3346,7 @@ static void processIpPkt(const u_char *bp,
     dstHost->otherReceived += length;
     break;
   }
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "IP=%d TCP=%d UDP=%d ICMP=%d (len=%d)\n",
 	     (int)device[actualDeviceId].ipBytes,

@@ -131,7 +131,6 @@ int deviceId; /* Set by processPacket() */
 int numDevices, actualDeviceId;
 ntopInterface_t device[MAX_NUM_DEVICES];
 
-
 /* Monitored Protocols */
 char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS];
 u_short numIpProtosToMonitor, numIpPortsToHandle;
@@ -157,8 +156,6 @@ ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
 TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
 HostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */
 fd_set ipTrafficMatrixPromiscHosts;
-
-SimpleProtoTrafficInfo *ipProtoStats;
 
 u_short mtuSize[] = {
   8232,   	/* no link-layer encapsulation */

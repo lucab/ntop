@@ -668,8 +668,10 @@ void drawGlobalIpProtoDistribution(void) {
   p[numIpProtosToMonitor] = 0;
 
   for(i=0; i<numIpProtosToMonitor; i++) {
-    p[idx]  = (float)ipProtoStats[i].local+ipProtoStats[i].remote;
-    p[idx] += (float)ipProtoStats[i].remote2local+ipProtoStats[i].local2remote;
+    p[idx]  = (float)device[actualReportDeviceId].ipProtoStats[i].local
+      +device[actualReportDeviceId].ipProtoStats[i].remote;
+     p[idx] += (float)device[actualReportDeviceId].ipProtoStats[i].remote2local
+      +device[actualReportDeviceId].ipProtoStats[i].local2remote;
     if(p[idx] > 0) {
       p[numIpProtosToMonitor] += p[idx];
       lbl[idx] = protoIPTrafficInfos[i];
