@@ -119,4 +119,8 @@
 /* Define if you have backtrace */
 #undef HAVE_BACKTRACE
 
+/* Defines for endian-ness... */
+#undef NTOP_LITTLE_ENDIAN
+#undef NTOP_BIG_ENDIAN
+
 #endif /* _CONFIG_H_ */
