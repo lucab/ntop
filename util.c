@@ -1014,6 +1014,10 @@ int _releaseMutex(PthreadMutex *mutexId,
     /* traceEvent(TRACE_ERROR, "UNLOCKED 0x%X", &(mutexId->mutex));  */
     mutexId->isLocked = 0;
     mutexId->numReleases++;
+    if(fileName != NULL) {
+      strcpy(mutexId->unlockFile, fileName);
+      mutexId->unlockLine = fileLine;
+    }
   }
 
 #ifdef SEMAPHORE_DEBUG

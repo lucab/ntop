@@ -595,11 +595,13 @@ static void printMutexStatus(PthreadMutex *mutexId, char *mutexName) {
    if(snprintf(buf, sizeof(buf), 
 	       "<TR><TH "TH_BG" ALIGN=left>%s</TH><TD ALIGN=CENTER>%s</TD>"
 	       "<TD ALIGN=RIGHT>%s:%d</TD>"
+	       "<TD ALIGN=RIGHT>%s:%d</TD>"
 	       "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=LEFT>%u</TD>"
 	       "<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>", 
 	       mutexName,
 	       mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
 	       mutexId->lockFile, mutexId->lockLine,
+	       mutexId->unlockFile, mutexId->unlockLine,
 	       mutexId->numLocks, mutexId->numReleases,
 	       mutexId->maxLockedDuration,
 	       mutexId->maxLockedDurationUnlockFile,
@@ -768,7 +770,7 @@ void printNtopConfigInfo(void) {
   /* **************************** */
 
   sendString("<P>"TABLE_ON"<TABLE BORDER=1>\n");
-  sendString("<TR><TH>Mutex Name</TH><TH>State</TH><TH>Last Lock</TH>"
+  sendString("<TR><TH>Mutex Name</TH><TH>State</TH><TH>Last Lock</TH><TH>Last UnLock</TH>"
 	     "<TH COLSPAN=2># Locks/Releases</TH><TH>Max Lock</TH></TR>");
   printMutexStatus(&gdbmMutex, "gdbmMutex");
   printMutexStatus(&packetQueueMutex, "packetQueueMutex");

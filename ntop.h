@@ -610,6 +610,8 @@ typedef struct pthreadMutex {
   char   isLocked;
   char   lockFile[64];
   int    lockLine;
+  char   unlockFile[64];
+  int    unlockLine;
   u_int  numLocks, numReleases;
 
   time_t lockTime;
