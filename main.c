@@ -138,9 +138,9 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "e:F:hr:p:i:nw:m:b:B:D:s:P:R:Sgt:a:W:12L";
+  theOpts = "e:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12";
 #else
-  theOpts = "Ide:f:F:hr:i:p:nNw:m:b:D:s:P:R:MSgt:a:u:W:12L";
+  theOpts = "Ide:f:F:hr:i:p:nNw:m:b:D:s:P:R:MS:gt:a:u:W:12";
 #endif
   
   while((op = getopt(argc, argv, theOpts)) != EOF)
@@ -303,7 +303,20 @@ int main(int argc, char *argv[]) {
 	break;
 
       case 'S':
-	usePersistentStorage = 1;
+	/* 
+	   Persitent storage only for 'local' machines 
+	   Courtesy of Joel Crisp <jcrisp@dyn21-126.trilogy.com>
+
+	   0 = no storage
+	   1 = store all hosts
+	   2 = store only local hosts
+	*/	
+	usePersistentStorage = atoi(optarg);
+	if((usePersistentStorage > 2)
+	   || (usePersistentStorage < 0)){
+	  traceEvent(TRACE_ERROR, "FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
+	  exit(-1);
+	}
 	break;
 
       case 'g':
@@ -336,16 +349,7 @@ int main(int argc, char *argv[]) {
         }
         break;
 #endif /* WIN32 */
-
-	
-      case 'L':
-	/* 
-	   Persitent storage only for 'local' machines 
-	   Courtesy of Joel Crisp <jcrisp@dyn21-126.trilogy.com>
-	*/
-	usePersistentStorage = 2;
-	break;
-
+       
       default:
 	usage();
 	exit(-1);
