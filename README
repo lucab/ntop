@@ -1,1 +1,7 @@
-See doc/ for more info.
+See files in docs/ for more info.
+
+For instructions on how to build ntop from source, see docs/BUILD-NTOP.txt (*nix) and docs/BUILD-MinGW.txt (Win32)
+
+Online information is at http://www.ntop.org, including archives of the ntop mailings lists.
+
+Contributions of effort towards writing, rewriting and updating ntop's documentation would be heartily welcomed!

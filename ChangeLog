@@ -17,6 +17,59 @@
   This is the list of all changes to this ntop source tree.
   The file NEWS contains a list of user-visible and/or major changes.
 
+          ____    ___
+  POST   |___ \  / _ \
+           __) | | | |
+          / __/_ | | |
+ =-=-=-  |____(_)|___/ =-=-=-=-=-=-=-=-=-=-=-=-=
+
+ through 12Feb2002
+   Traffic classification fixed (was classifying most as remote)
+
+ through 06Feb2002
+   sFlowPlugin
+
+ through 04Feb2002
+   Long options:  There are now long option name equivalents for all of the ntop options
+          (e.g. -p and --protocols).  Run ntop with a bum option to get the list.
+   --no-admin-password-hint option, removes the hint on the password entry dialog box
+   --throughput-bar-chart, makes the throughput charts of bar vs. area type
+   New pie chart showing the distribution of packet TTS, on the Stats tab, Traffic report
+   Longer reports are now paged.
+   If ntop doesn't like an option, it will now tell you what it didn't like:
+          FATAL ERROR: unknown ntop option, 'xxxx'
+   Default protocols are added to the monitoring list ONLY if we have nothing from the user.
+   The list of protocols (-p | --protocols option), if placed into a file, may now be on multiple lines.
+   The number of IP protocols being monitored was added to the configuration report.
+   The default protocol list includes three additional peer-to-peers:
+       handleProtocolList("Gnutella", "6346|6347|6348|");
+       handleProtocolList("Morpheus", "1214|");
+       handleProtocolList("WinMX",    "6699|7730|")
+   Idle session timeout (IDLE_SESSION_TIMEOUT) was changed from 30 to 10 minutes.
+   Handle UDP traffic is handled like TCP traffic - that is: if we know about the lower# port, even if 
+           it's the destination, classify the traffic that way.
+   Average packet length approximation in the Stats | Traffic report was fixed.
+   wheel.gif become antenna.gif for DHCP servers.
+   --border-sniffer-mode (also -j) - for using ntop in a switched environment, where the traffic is
+           being mirrored for monitoring, this makes ntop less dependend on the MAC addresses.
+
+
+          ____    ___
+         |___ \  / _ \
+           __) | | | |
+          / __/_ | | |
+ =-=-=-  |____(_)|___/ =-=-=-=-=-=-=-=-=-=-=-=-=
+
+2.0 Released 27Dec2001
+- Major improvements, too many to list
+
+
+
+1.2a13 [Snapshot]
+
+Fixed bugs:
+- Fixed PPP compatibility glitch
+          _   _____
          _   _____
         / | |___ /
         | |   |_ \
