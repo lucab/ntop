@@ -1549,10 +1549,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
                                   "PLUGIN_DIR<br>&nbsp;&nbsp;&nbsp;plugin file directory"),
                          PLUGIN_DIR);
 
+#ifdef RUN_DIR
   printFeatureConfigInfo(textPrintFlag, 
                          texthtml("RUN_DIR (run file directory)",
                                   "RUN_DIR<br>&nbsp;&nbsp;&nbsp;run file directory"),
                          RUN_DIR);
+#endif
 
   printFeatureConfigInfo(textPrintFlag, 
                          texthtml("STDC_HEADERS (ANSI C header files)",
@@ -2269,12 +2271,11 @@ sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread count
   /* **************************** */
 
 #ifdef MULTITHREADED
-#ifdef DEBUG
+#if !defined(DEBUG) && !defined(WIN32)
+  if(myGlobals.debugMode)
+#endif /* DEBUG or WIN32 */
   {
-#else
-  if(myGlobals.debugMode) {
-#endif /* DEBUG */
-    sendString(texthtml("\n\n", 
+    sendString(texthtml("\nMutexes:\n", 
                         "<P>"TABLE_ON"<TABLE BORDER=1>\n"
                         "<TR><TH>Mutex Name</TH>"
                         "<TH>State</TH>"
@@ -2285,10 +2286,15 @@ sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread count
 
     printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
     printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
+#ifdef ASYNC_ADDRESS_RESOLUTION
     if(myGlobals.numericFlag == 0) 
       printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
+#endif
     printMutexStatus(textPrintFlag, &myGlobals.hashResizeMutex, "hashResizeMutex");
-    if(myGlobals.isLsofPresent) printMutexStatus(textPrintFlag, &myGlobals.lsofMutex, "lsofMutex");
+#ifndef WIN32
+    if(myGlobals.isLsofPresent)
+      printMutexStatus(textPrintFlag, &myGlobals.lsofMutex, "lsofMutex");
+#endif
     printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex, "hostsHashMutex");
     printMutexStatus(textPrintFlag, &myGlobals.graphMutex, "graphMutex");
 #ifdef MEMORY_DEBUG
