@@ -420,9 +420,9 @@ void printHeader(int reportType, int revertOrder, u_int column,
 		 HostsDisplayPolicy showHostsMode,
 		 LocalityDisplayPolicy showLocalityMode) {
   char buf[LEN_GENERAL_WORK_BUFFER];
-  char *sign, *arrowGif, *arrow[64], *theAnchor[64], *url=NULL, *url0=NULL, *url1=NULL, *url2=NULL;
+  char *sign, *arrowGif, *arrow[128], *theAnchor[128], *url=NULL, *url0=NULL, *url1=NULL, *url2=NULL;
   int i, soFar=2, idx, j, hourId;
-  char htmlAnchor[64], htmlAnchor1[64], theLink[64];
+  char htmlAnchor[128], htmlAnchor1[128], theLink[128];
   ProtocolsList *protoList;
   char theDate[8];
   struct tm t;
@@ -497,26 +497,29 @@ void printHeader(int reportType, int revertOrder, u_int column,
   snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=", url,
 	   revertOrder ? "-" : "", column, showLocalityMode);
 
+  sendString("<CENTER><TABLE WIDTH=100%% BORDER=0><TR><TD ALIGN=LEFT>");
+
   switch(showHostsMode) {
   case showOnlyLocalHosts:
-    snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
-	     "[ <A HREF=\"%s0\">All</A> ]&nbsp;"
-	     "[<B> Local Only </B>]&nbsp;"
-	     "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;</p>",
-	     theLink, theLink);
+    snprintf(buf, sizeof(buf), 
+    "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
+    "[<B> Local Only </B>]&nbsp;"
+    "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;</TD>",
+    theLink, theLink);
+
     break;
   case showOnlyRemoteHosts:
-    snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
-	     "[ <A HREF=\"%s0\">All</A> ]&nbsp;"
+    snprintf(buf, sizeof(buf), 
+	     "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
 	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
-	     "[<B> Remote Only </B>]&nbsp;</p>",
+	     "[<B> Remote Only </B>]&nbsp;</TD>",
 	     theLink, theLink);
     break;
   default:
-    snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
-	     "[<B> All </B>]&nbsp;"
+    snprintf(buf, sizeof(buf), 
+	     "<b>Hosts:</b> [<B> All </B>]&nbsp;"
 	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
-	     "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;</p>",
+	     "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;</TD>",
 	     theLink, theLink);
     break;
   }
@@ -556,31 +559,32 @@ void printHeader(int reportType, int revertOrder, u_int column,
 
     switch(showLocalityMode) {
     case showSentReceived:
-      snprintf(buf, sizeof(buf), "<p align=\"right\">"
-  	     "[<b> All </b>]&nbsp;"
+      snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
+  	     "<b>Data:</b> [<b> All </b>]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
-  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;</p>",
+  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
   	     url1, revertOrder ? "-" : "", column, showHostsMode,
   	     url2, revertOrder ? "-" : "", column, showHostsMode);
       break;
     case showOnlySent:
-      snprintf(buf, sizeof(buf), "<p align=\"right\">"
-  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
+      snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
+  	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
   	     "[<b> Sent Only </b>]&nbsp;"
-  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;</p>",
+  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
   	     url0, revertOrder ? "-" : "", column, showHostsMode,
   	     url2, revertOrder ? "-" : "", column, showHostsMode);
       break;
     default:
-      snprintf(buf, sizeof(buf), "<p align=\"right\">"
-  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
+      snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
+  	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
-  	     "[<b> Received Only </b>]&nbsp;</p>",
+  	     "[<b> Received Only </b>]&nbsp;",
   	     url0, revertOrder ? "-" : "", column, showHostsMode,
   	     url1, revertOrder ? "-" : "", column, showHostsMode);
       break;
     }
     sendString(buf);
+    sendString("</TD></TR></TABLE></CENTER><p>");
   }
 
   switch(reportType) {
@@ -589,9 +593,9 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_PROTOS:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
-		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
-		"<TH "TH_BG" COLSPAN=2>%s0>Data%s</A></TH>\n",
+		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
+		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
+		"<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
 		theAnchor[2], arrow[2]) < 0)
       BufferTooShort();

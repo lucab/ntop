@@ -851,7 +851,8 @@ void printTrafficStatistics(int revertOrder) {
                           getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
                                                  rcvdPktTTLStats.upTo32.value)/
                           (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value, formatBuf, sizeof(formatBuf))) < 0)
+                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value,
+				     formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
               if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">32 &lt; TTL &lt; 64</th>"
@@ -859,7 +860,8 @@ void printTrafficStatistics(int revertOrder) {
                           getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
                                                  rcvdPktTTLStats.upTo64.value)/
                           (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value, formatBuf, sizeof(formatBuf))) < 0)
+                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value, 
+				     formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
               if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">64 &lt; TTL &lt; 96</th>"
@@ -867,7 +869,8 @@ void printTrafficStatistics(int revertOrder) {
                           getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
                                                  rcvdPktTTLStats.upTo96.value)/
                           (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value, formatBuf, sizeof(formatBuf))) < 0)
+                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value,
+				     formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
               if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">96 &lt; TTL &lt; 128</th>"
@@ -875,7 +878,8 @@ void printTrafficStatistics(int revertOrder) {
                           getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
                                                  rcvdPktTTLStats.upTo128.value)/
                           (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value, formatBuf, sizeof(formatBuf))) < 0)
+                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value,
+				     formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
               if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">128 &lt; TTL &lt; 160</th>"
@@ -883,7 +887,8 @@ void printTrafficStatistics(int revertOrder) {
                           getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
                                                  rcvdPktTTLStats.upTo160.value)/
                           (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value, formatBuf, sizeof(formatBuf))) < 0)
+                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value,
+				     formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
               if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">160 &lt; TTL &lt; 192</th>"
@@ -891,7 +896,8 @@ void printTrafficStatistics(int revertOrder) {
                           getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
                                                  rcvdPktTTLStats.upTo192.value)/
                           (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value, formatBuf, sizeof(formatBuf))) < 0)
+                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value,
+				     formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
               if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">192 &lt; TTL &lt; 224</th>"
@@ -899,7 +905,8 @@ void printTrafficStatistics(int revertOrder) {
                           getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
                                                  rcvdPktTTLStats.upTo224.value)/
                           (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value, formatBuf, sizeof(formatBuf))) < 0)
+                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value,
+				     formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
               if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">224 &lt; TTL &lt; 256</th>"
@@ -907,7 +914,8 @@ void printTrafficStatistics(int revertOrder) {
                           getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
                                                  rcvdPktTTLStats.upTo255.value)/
                           (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value, formatBuf, sizeof(formatBuf))) < 0)
+                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value,
+				     formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
 
@@ -933,22 +941,25 @@ void printTrafficStatistics(int revertOrder) {
       sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=\"100%\">");
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Actual</th><TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt, 1, formatBuf, sizeof(formatBuf)),
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt, 
+						  1, formatBuf, sizeof(formatBuf)),
 		  myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt, 1) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last Minute</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt, 1, formatBuf, sizeof(formatBuf)),
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt, 
+						  1, formatBuf, sizeof(formatBuf)),
 		  myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt, 1) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last 5 Minutes</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
-		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt, 1, formatBuf, sizeof(formatBuf)),
+		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",		  
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt, 
+						  1, formatBuf, sizeof(formatBuf)),
 		  myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt, 1) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -956,7 +967,8 @@ void printTrafficStatistics(int revertOrder) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Peak</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput, 1, formatBuf, sizeof(formatBuf)),
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput,
+						  1, formatBuf, sizeof(formatBuf)),
 		  myGlobals.device[myGlobals.actualReportDeviceId].peakPacketThroughput) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1045,12 +1057,12 @@ void printHostsTraffic(int reportType,
   case SORT_DATA_RECEIVED_PROTOS:
   case SORT_DATA_SENT_PROTOS:
   case SORT_DATA_PROTOS:
-    snprintf(buf, sizeof(buf), "Network Traffic (All Protocols): ");
+    snprintf(buf, sizeof(buf), "Network Traffic [All Protocols]: ");
     break;
   case SORT_DATA_RECEIVED_IP:
   case SORT_DATA_SENT_IP:
   case SORT_DATA_IP:
-    snprintf(buf, sizeof(buf), "Network Traffic (TCP/IP): ");
+    snprintf(buf, sizeof(buf), "Network Traffic [TCP/IP]: ");
     break;
   case SORT_DATA_RECEIVED_THPT:
   case SORT_DATA_SENT_THPT:
@@ -2505,14 +2517,14 @@ void printLocalRoutersList(int actualDeviceId) {
     return;
   } else {
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON"><TH "TH_BG">Router Name</TH>"
+    sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG"><TH "TH_BG">Router Name</TH>"
 	       "<TH "TH_BG">Used by</TH></TR>\n");
 
     for(i=0; i<numEntries; i++) {
       HostTraffic tmpEl;
 
       if((router = quickHostLink(routerList[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">%s</TH><TD "TD_BG" ALIGN=LEFT "DARK_BG"><UL>\n",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
 		    getRowColor(),
 		    makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, 
 				 hostLinkBuf, sizeof(hostLinkBuf))) < 0) BufferTooShort();
@@ -3743,7 +3755,7 @@ void printThptStatsMatrix(int sortedColumn) {
   switch(sortedColumn) {
   case 1:
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">Sampling Period</TH>"
 	       "<TH "TH_BG">Average Thpt</TH>"
 	       "<TH "TH_BG">Top Hosts Sent Thpt</TH>"
@@ -3759,7 +3771,7 @@ void printThptStatsMatrix(int sortedColumn) {
       strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TD "TD_BG" ALIGN=CENTER>"
 		  "<B>%s&nbsp;-&nbsp;%s</B></TH>"
-		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG">"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"
 		  "<TABLE BORDER=1 WIDTH=100%%>",
 		  getRowColor(), label1, label,
 		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
@@ -3820,7 +3832,7 @@ void printThptStatsMatrix(int sortedColumn) {
       /* ************************* */
 
       if(!dataSent) sendString("&nbsp;");
-      sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG"><TABLE BORDER=1 WIDTH=100%%>\n");
+      sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>\n");
       dataSent = 0;
 
       /* ************************* */
@@ -4557,7 +4569,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 #else
   for (i = 0, j = hourId; i < 24; i++) {
       j = j%24;
-      if (snprintf (buf, sizeof (buf), "<TR><TH "TH_BG" ALIGN=LEFT>%s</TH>\n",
+      if (snprintf (buf, sizeof (buf), "<TR><TH "TH_BG" ALIGN=RIGHT>%s</TH>\n",
                     hours[j]) < 0)
           BufferTooShort();
       sendString(buf);
@@ -4686,12 +4698,12 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 	}
 
 	if(criteria == 0 /* AS */) {
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT>"
+	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT "DARK_BG">"
 		      "<A HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A>"
-		      "</TH><TH "TH_BG" ALIGN=LEFT "DARK_BG">", el->hostAS, el->hostAS) < 0)
+		      "</TH><TH "TH_BG" ALIGN=LEFT>", el->hostAS, el->hostAS) < 0)
 	    BufferTooShort();
 	} else {
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT>%d</TH><TH "TH_BG" ALIGN=LEFT "DARK_BG">",
+	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT>%d</TH><TH "TH_BG" ALIGN=LEFT>",
 		      el->vlanId) < 0)
 	    BufferTooShort();
 	}
