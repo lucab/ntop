@@ -445,30 +445,80 @@ int signalCondvar(ConditionalVariable *condvarId) {
 
 /* ************************************ */
 
-#if 0
 void printAvailableInterfaces() {
-  ULONG nameLength = 128;
-  WCHAR adaptersName[128];
+  char ebuf[PCAP_ERRBUF_SIZE];
+  int ifIdx=0, defaultIdx, i;
+  char intNames[32][256];
+ char *tmpDev = pcap_lookupdev(ebuf);
 
-  PacketGetAdapterNames (adaptersName, &nameLength);
+  if(tmpDev == NULL) {
+    traceEvent(TRACE_INFO, "Unable to locate default interface (%s)", ebuf);
+    exit(-1);
+  }
 
-  if(isWinNT())
-    {
-      static char tmpString[128];
-      int i, j;
+  printf("\nAvailable interfaces (-i <interface index>):\n");
 
-      for(j=0, i=0; !((adaptersName[i] == 0) && (adaptersName[i+1] == 0)); i++) {
-	if(adaptersName[i] != 0)
-	  tmpString[j++] = adaptersName[i];
+  if(!isWinNT()) {
+     char *ifName = tmpDev;
+
+	 for(i=0;; i++) {
+      if(tmpDev[i] == 0) {
+	if(ifName[0] == '\0')
+	  break;
+	else {
+	  printf("   [index=%d] '%s'\n", ifIdx, ifName);
+
+	  if(ifIdx < 32) {
+	    strcpy(intNames[ifIdx], ifName);
+	    if(defaultIdx == -1) {
+	      if(strncmp(intNames[ifIdx], "PPP", 3) /* Avoid to use the PPP interface */
+		 && strncmp(intNames[ifIdx], "ICSHARE", 6)) { /* Avoid to use the internet sharing interface */
+		defaultIdx = ifIdx;
+	      }
+	    }
+	  }
+
+	  ifIdx++;
+	  ifName = &tmpDev[i+1];
+	}
       }
-
-      tmpString[j++] = 0;
-      memcpy(adaptersName, tmpString, 128);
     }
 
-  traceEvent(TRACE_INFO, "Available interfaces:\n%s", (char*)adaptersName);
+    tmpDev = intNames[defaultIdx];
+  } else {
+    /* WinNT/2K */
+    static char tmpString[128];
+    int i, j,ifDescrPos = 0;
+    unsigned short *ifName; /* UNICODE */
+	char *ifDescr;
+
+    ifName = tmpDev;
+
+	while(*(ifName+ifDescrPos) || *(ifName+ifDescrPos-1))
+		ifDescrPos++;
+	  ifDescrPos++;	/* Step over the extra '\0' */
+	ifDescr = (char*)(ifName + ifDescrPos); /* cast *after* addition */
+
+    while(tmpDev[0] != '\0') {
+
+		for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
+		  if(tmpDev[i] != 0)
+			tmpString[j++] = tmpDev[i];
+		  }
+
+		  tmpString[j++] = 0;
+		  printf("   [index=%d] %s\n             (%s)\n", ifIdx, ifDescr, tmpString);
+		  ifDescr += strlen(ifDescr)+1;
+		 
+		  tmpDev = &tmpDev[i+3];
+		  strcpy(intNames[ifIdx++], tmpString);
+		  defaultIdx = 0;
+		}
+		if(defaultIdx != -1)
+		  tmpDev = intNames[defaultIdx]; /* Default */
+  } /* while */
 }
-#endif
+
 
 /* ************************************ */
 

@@ -38,6 +38,9 @@
 #ifndef ASYNC_ADDRESS_RESOLUTION
 #define ASYNC_ADDRESS_RESOLUTION
 #endif
+#ifndef HAVE_LIBRRD
+/* #define HAVE_LIBRRD ****/
+#endif
 
 #define STATIC_PLUGIN
 
@@ -97,6 +100,8 @@ extern int gettimeofday(struct timeval*, void*);
 extern int gettimeofday(struct timeval*, struct timezone*);
 #endif
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
+
+extern void printAvailableInterfaces();
 
 extern ULONG GetHostIPAddr();
 

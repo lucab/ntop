@@ -265,7 +265,7 @@ void usage (FILE * fp) {
 #else /* !HAVE_GETOPT_LONG */
 
   fprintf(fp, "    [-a <path> path for ntop web server access log]\n");
-  fprintf(fp, "    [-b        disable protocol decoders]\n");
+  fprintf(fp, "    [-b (disable protocol decoders)]\n");
 
   fprintf(fp, "    [-c <sticky hosts: idle hosts are not purged from hash>]\n");
 
@@ -329,6 +329,10 @@ void usage (FILE * fp) {
 #endif
 
 #endif /* HAVE_GETOPT_LONG */
+
+#ifdef WIN32
+  printAvailableInterfaces();
+#endif
 }
 
 
