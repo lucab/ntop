@@ -315,9 +315,12 @@ void initCounters(int _mergeInterfaces) {
   thisZone = gmt2local(0);
 
   memset(&broadcastEntry, 0, sizeof(HostTraffic));
+  resetHostsVariables(&broadcastEntry);
+
   /* Set address to FF:FF:FF:FF:FF:FF */
   for(i=0; i<ETHERNET_ADDRESS_LEN; i++)
-    broadcastEntry.ethAddress[i] = 255;
+    broadcastEntry.ethAddress[i] = 0xFF;
+
   broadcastEntry.hostIpAddress.s_addr = 0xFFFFFFFF;
   strncpy(broadcastEntry.hostNumIpAddress, "broadcast",
 	  sizeof(broadcastEntry.hostNumIpAddress));

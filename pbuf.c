@@ -243,9 +243,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
       resetHostsVariables(el);
 
-      len = sizeof(PortUsage*)*TOP_ASSIGNED_IP_PORTS;
-      el->portsUsage = (PortUsage**)malloc(len);
-      memset(el->portsUsage, 0, len);
+      el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
 
       len = (size_t)numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
       el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);

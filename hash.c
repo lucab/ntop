@@ -224,7 +224,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
       traceEvent(TRACE_INFO, "Searching from slot %d [size=%d]\n", idx, newSize);
 #endif
 
-      for(j=0; j<newSize; j++) {
+      for(j=1; j<newSize; j++) {
 	if(hash_hostTraffic[idx] == NULL) {
 	  hash_hostTraffic[idx] = device[deviceToExtend].hash_hostTraffic[i];
 	  mappings[i] = idx;
@@ -241,8 +241,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   free(device[deviceToExtend].hash_hostTraffic);
   device[deviceToExtend].hash_hostTraffic = hash_hostTraffic;
   device[deviceToExtend].actualHashSize = newSize;
-  device[deviceToExtend].hashThreshold =
-    (unsigned int)(device[deviceToExtend].actualHashSize/2);
+  device[deviceToExtend].hashThreshold = (unsigned int)(device[deviceToExtend].actualHashSize/2);
   device[deviceToExtend].topHashThreshold =
     (unsigned int)(device[deviceToExtend].actualHashSize*HASH_EXTEND_THRESHOLD);
 
