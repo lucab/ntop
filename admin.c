@@ -559,7 +559,7 @@ void doAddURL(int len) {
   }
 
 #if 0
-  printf("URL: '%s' - users: '%s'\n", url ? url : "(not given)", 
+  printf("URL: '%s' - users: '%s'\n", url ? url : "(not given)",
 	 strlen(authorizedUsers) > 0 ? authorizedUsers : "(not given)");
   fflush(stdout);
 #endif
@@ -1003,6 +1003,10 @@ void addDefaultAdminUser(void) {
         safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT TYPE=checkbox NAME=%s VALUE=%d %s><BR>%s</TD></TR>\n", bg, title, name, value, value ? "CHECKED" : "", descr); \
         sendString (buf);
 
+#define CONFIG_RADIO_ENTRY(bg,title,name,value,descr) \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT TYPE=radio NAME=%s VALUE=1 %s>Yes<INPUT TYPE=radio NAME=%s VALUE=0 %s>No<br>%s</TD></TR>\n", bg, title, name, value ? "CHECKED" : "", name, !value ? "CHECKED" : "", descr); \
+        sendString (buf);
+
 
 int processNtopConfigData (char *buf, int savePref)
 {
@@ -1010,6 +1014,8 @@ int processNtopConfigData (char *buf, int savePref)
     int startCap = FALSE, action;
     UserPref tmpPrefs;
     char *devices = NULL, foundDevices = 0, *token;
+
+    /* traceEvent(CONST_TRACE_INFO, "RRD: buf='%s'", buf);   */
 
     token = strtok_r(buf, "&", &mainState);
     tmpPrefs = myGlobals.savedPref;
@@ -1048,7 +1054,7 @@ int processNtopConfigData (char *buf, int savePref)
         key = strtok_r(token, "=", &strtokState);
         if(key != NULL) value = strtok_r(NULL, "=", &strtokState); else value = NULL;
 
-        /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);  */
+        /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);   */
 
         if(key) {
             action = processNtopPref (key, value, savePref, &tmpPrefs);
@@ -1066,7 +1072,7 @@ int processNtopConfigData (char *buf, int savePref)
     if((tmpPrefs.devices == NULL) && (!foundDevices))
       tmpPrefs.devices = devices;
     else {
-      if(devices != NULL) free(devices);      
+      if(devices != NULL) free(devices);
     }
 
     if(tmpPrefs.devices == NULL) delPrefsValue(NTOP_PREF_DEVICES);
@@ -1272,7 +1278,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
     sendString (buf);
 
     safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
-                   "<FORM ACTION = %s%d method=POST>"
+                   "<FORM ACTION=%s%d method=POST>"
                    " <TABLE BORDER=1 "TABLE_DEFAULTS">\n"
                    "<TR><TH ALIGN=CENTER "DARK_BG">Preference</TH>"
                    "<TH ALIGN=CENTER "DARK_BG">Configured Value</TH></TR>\n",
@@ -1291,7 +1297,7 @@ char * rindex(const char *p, int ch) {
     char *p;
   } u;
   char *save;
-  
+
   u.cp = p;
   for (save = NULL;; ++u.p) {
     if (*u.p == ch)
@@ -1392,19 +1398,19 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 	  if(strcmp(devpointer->name, "any")) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			  "<INPUT TYPE=checkbox NAME=\"%s\" VALUE=\"%s\" %s>%s<br>\n",
-			  NTOP_PREF_DEVICES, devpointer->name, 
-			  (pref->devices && strstr(pref->devices, devpointer->name)) ? "CHECKED" : "", 
+			  NTOP_PREF_DEVICES, devpointer->name,
+			  (pref->devices && strstr(pref->devices, devpointer->name)) ? "CHECKED" : "",
 			  devpointer->description ? devpointer->description : devpointer->name);
 	    sendString(buf);
 	  }
-	  
+
 	  devpointer = devpointer->next;
 	}
 
 	pcap_freealldevs(devpointer);
       } else {
 	/*
-	  traceEvent(CONST_TRACE_INFO, "pcap_findalldevs failed [rc=%d][%s]\n", 
+	  traceEvent(CONST_TRACE_INFO, "pcap_findalldevs failed [rc=%d][%s]\n",
 	  rc, ebuf);
 	*/
       }
@@ -1451,11 +1457,11 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      "interface");
 #endif
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Enable Session Handling (-z)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Enable Session Handling (-z)",
 			 NTOP_PREF_EN_SESSION,
 			 pref->enableSessionHandling, "");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Enable Protocol Decoders (-b)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Enable Protocol Decoders (-b)",
 			 NTOP_PREF_EN_PROTO_DECODE,
 			 pref->enablePacketDecoding, "");
 
@@ -1468,21 +1474,21 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      pref->localAddresses,
 		      "Local subnets in ntop reports (use , to separate them). Mandatory for packet capture files");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Sticky Hosts (-c)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Sticky Hosts (-c)",
 			 NTOP_PREF_STICKY_HOSTS, pref->stickyHosts,
 			 "Don't purge idle hosts from memory");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Track Local Hosts (-g)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Track Local Hosts (-g)",
 			 NTOP_PREF_TRACK_LOCAL,
 			 pref->trackOnlyLocalHosts,
 			 "Capture data only about local hosts");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Disable Promiscuous Mode (-s)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Disable Promiscuous Mode (-s)",
 			 NTOP_PREF_NO_PROMISC,
 			 pref->disablePromiscuousMode,
 			 "Don't set the interface(s) into promiscuous mode");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Run as daemon (-d)", NTOP_PREF_DAEMON,
+    CONFIG_RADIO_ENTRY (DARK_BG, "Run as daemon (-d)", NTOP_PREF_DAEMON,
 			 pref->daemonMode, "Run Ntop as a daemon");
     break;
 
@@ -1517,18 +1523,18 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
     sendString(buf);
     sendString("</TD></TR>");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "No Info On Invalid LUNs",
+    CONFIG_RADIO_ENTRY (DARK_BG, "No Info On Invalid LUNs",
 			 NTOP_PREF_NO_INVLUN,
 			 pref->noInvalidLunDisplay,
 			 "Don't display info about non-existent LUNs");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Show Filter In Separate Frame (-k)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Show Filter In Separate Frame (-k)",
 			 NTOP_PREF_FILTER_EXTRA_FRM,
 			 pref->filterExpressionInExtraFrame,
 			 "Filter expression is in a separate frame and so "
 			 "always visible");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Use W3C", NTOP_PREF_W3C,
+    CONFIG_RADIO_ENTRY (DARK_BG, "Use W3C", NTOP_PREF_W3C,
 			 pref->w3c,
 			 "Generate 'BETTER' (but not perfect) w3c "
 			 "compliant html 4.01 output");
@@ -1559,7 +1565,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      "Only if ntop is having difficulty determining it "
 		      "from the interface or in case of capture files");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "No DNS (-n)", NTOP_PREF_NUMERIC_IP,
+    CONFIG_RADIO_ENTRY (DARK_BG, "No DNS (-n)", NTOP_PREF_NUMERIC_IP,
 			 pref->numericFlag, "Skip DNS resolution, showing "
 			 "only numeric IP addresses");
 
@@ -1599,28 +1605,28 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      "Limit number of IP sessions entries created in order"
 		      " to limit memory used by ntop");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Don't Merge Interfaces (-M)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Don't Merge Interfaces (-M)",
 			 NTOP_PREF_MERGEIF, pref->mergeInterfaces,
 			 "Don't merge data from all interfaces");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "No Instant Session Purge",
+    CONFIG_RADIO_ENTRY (DARK_BG, "No Instant Session Purge",
 			 NTOP_PREF_NO_ISESS_PURGE,
 			 pref->disableInstantSessionPurge,
 			 "Makes ntop respect the timeouts for completed "
 			 "sessions");
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Set Pcap to Nonblocking",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Set Pcap to Nonblocking",
 			 NTOP_PREF_NOBLOCK, pref->setNonBlocking,
 			 "On platforms without select(). <B>Increases CPU usage "
 			 "significantly</B>");
 #endif
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "No web on memory error",
+    CONFIG_RADIO_ENTRY (DARK_BG, "No web on memory error",
 			 NTOP_PREF_NO_STOPCAP, pref->disableStopcap,
 			 "Change default of having the web interface available "
 			 "albeit with static content until ntop is shutdown");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Don't Trust MAC Address (-o)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Don't Trust MAC Address (-o)",
 			 NTOP_PREF_NO_TRUST_MAC, pref->dontTrustMACaddr,
 			 "Situations which may require this option include "
 			 "port/VLAN mirror");
@@ -1630,20 +1636,20 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      "Directory where packet dump files are created");
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Use SSL Watchdog",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Use SSL Watchdog",
 			 NTOP_PREF_USE_SSLWATCH, pref->useSSLwatchdog,
 			 "");
 #endif
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Disable SchedYield",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Disable SchedYield",
 			 NTOP_PREF_NO_SCHEDYLD, pref->disableSchedYield,
 			 "");
 #endif
     break;
 
   case showPrefDbgPref:
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Run in debug mode (-K)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Run in debug mode (-K)",
 			 NTOP_PREF_DBG_MODE, pref->debugMode,
 			 "Simplifies debugging Ntop");
 
@@ -1651,12 +1657,12 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      pref->traceLevel,
 		      "Level of detailed messages ntop will display");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Save Other Packets (-j)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Save Other Packets (-j)",
 			 NTOP_PREF_DUMP_OTHER, pref->enableOtherPacketDump,
 			 "Useful for understanding packets unclassified by "
 			 "Ntop");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Save Suspicious Packets (-q)",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Save Suspicious Packets (-q)",
 			 NTOP_PREF_DUMP_SUSP,
 			 pref->enableSuspiciousPacketDump,
 			 "Create a dump file (pcap) of suspicious packets");
@@ -1677,7 +1683,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      "Causes a dump file to be created of the captured by "
 		      "ntop in libpcap format");
 
-    CONFIG_CHKBOX_ENTRY (DARK_BG, "Disable Extra Mutex Info",
+    CONFIG_RADIO_ENTRY (DARK_BG, "Disable Extra Mutex Info",
 			 NTOP_PREF_NO_MUTEX_EXTRA,
 			 pref->disableMutexExtraInfo,
 			 "Disables storing of extra information about the locks"
