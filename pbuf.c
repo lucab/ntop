@@ -2683,7 +2683,6 @@ static u_int handleFragment(HostTraffic *srcHost,
   return length;
 }
 
-
 /* ************************************ */
 
 void purgeOldFragmentEntries(void) {
