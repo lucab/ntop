@@ -2698,7 +2698,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     addPageIndicator(str, pageNum, numEntries, myGlobals.maxNumLines,
 		     revertOrder, abs(sortedColumn));
 
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n<TR "TR_ON" "DARK_BG">"
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"80%\">\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">Total Traffic</TH><TH "TH_BG">Data Sent</TH>\n"
 	       "<TH "TH_BG">Data Rcvd</TH><TH "TH_BG">Used Bandwidth</TH></TR>\n");
 
@@ -4821,21 +4821,21 @@ void printFcHostsTraffic(int reportType,
   case SORT_DATA_RECEIVED_IP:
   case SORT_DATA_RECEIVED_THPT:
   case SORT_DATA_RCVD_HOST_TRAFFIC:
-    snprintf(buf, sizeof(buf), "FC Traffic: Data Received");
+    snprintf(buf, sizeof(buf), "FiberChannel Traffic: Data Received");
     sortMode = 0;
     break;
   case SORT_DATA_SENT_PROTOS:
   case SORT_DATA_SENT_IP:
   case SORT_DATA_SENT_THPT:
   case SORT_DATA_SENT_HOST_TRAFFIC:
-    snprintf(buf, sizeof(buf), "FC Traffic: Data Sent");
+    snprintf(buf, sizeof(buf), "FiberChannel Traffic: Data Sent");
     sortMode = 1;
     break;
   case SORT_DATA_PROTOS:
   case SORT_DATA_IP:
   case SORT_DATA_THPT:
   case SORT_DATA_HOST_TRAFFIC:
-    snprintf(buf, sizeof(buf), "FC Traffic: Total Data (Sent+Received)");
+    snprintf(buf, sizeof(buf), "FiberChannel Traffic: Total Data (Sent+Received)");
     sortMode = 2;
     break;
   }
@@ -4858,15 +4858,15 @@ void printFcHostsTraffic(int reportType,
       }
   }
 
+  printHTMLheader(buf, 0, 0);
+  printFcHeader (reportType, revertOrder, abs(sortedColumn), hourId);
+  
   if(numEntries > 0) {
     /*
       The switch below is needed to:
       - sort data according to the selected column
       - 'recycle' (somebody would call this "code reuse") the cmpFctn function
     */
-
-      printHTMLheader(buf, 0, 0);
-      printFcHeader (reportType, revertOrder, abs(sortedColumn), hourId);
 
     myGlobals.columnSort = sortedColumn;
 
@@ -5402,7 +5402,7 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
     }
 
     str = CONST_FC_TRAFFIC_HTML;
-    title = "FC Traffic";
+    title = "FiberChannel Traffic";
 
     printHTMLheader(title, 0, 0);
 
@@ -7104,10 +7104,10 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
   /* Print a matrix, using just what the row/column header says: From -> To */
   /* This is different from IP which prints a total */
   if (vsanId) {
-      snprintf (buf, LEN_GENERAL_WORK_BUFFER, "FC Traffic Matrix For VSAN %d", vsanId);
+      snprintf (buf, LEN_GENERAL_WORK_BUFFER, "FiberChannel Traffic Matrix For VSAN %d", vsanId);
   }
   else {
-      snprintf (buf, LEN_GENERAL_WORK_BUFFER, "FC Traffic Matrix For VSAN");
+      snprintf (buf, LEN_GENERAL_WORK_BUFFER, "FiberChannel Traffic Matrix For VSAN");
   }
   
   printHTMLheader(buf, 0);

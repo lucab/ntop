@@ -386,10 +386,10 @@ void printFooter(int reportType) {
     case SORT_DATA_SENT_THPT:
     case SORT_DATA_THPT:
         printFooterHostLink();
-        sendString("<P>Peak values are the maximum value for any 10 second interval."
+        sendString("<i><P>Peak values are the maximum value for any 10 second interval."
 		   "<br>Average values are recomputed each 60 seconds, using values "
 		   "accumulated since this run of ntop was started.</P>\n");
-        sendString("<P>Note: Both values are reset each time ntop is restarted.</P>\n");
+        sendString("<P>Note: Both values are reset each time ntop is restarted.</P></i>\n");
         break;
   }
 
