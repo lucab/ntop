@@ -76,8 +76,7 @@ note that if the delay is very short (1 second for instance), ntop might not
 be able to process all the network traffic.
 
 .It -f
-Specifies the file containing tcpdump captured traffic that will be browsed before
-to start sniffing.
+Specifies the file containing tcpdump captured traffic that has to be used by ntop. Note: if you specify -f ntop will not capture any traffic after the file has been read. This option is mostly used for debug purposes.
 
 .It -N
 Forces ntop not to use nmap (if it is installed).
