@@ -1,9 +1,6 @@
 ntop (3.0pre2-1) unstable; urgency=low
 
   * rolled to 3.0pre2
-	
-ntop (3.0pre1-1) unstable; urgency=low
-
   * New upstream version.
   * AS-list.txt added to the configuration files.
   * adapted to build ntop package under directory packages/debian.official
