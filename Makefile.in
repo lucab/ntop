@@ -153,6 +153,8 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = . @PLUGINS@ @INTOP@
 
+ETTER_PASSIVE = etter.passive.os.fp
+
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
               SUPPORT_NTOP.txt THANKS \
@@ -160,12 +162,12 @@ DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               faq.html \
               ntop-cert.pem \
               p2c.opt.table \
-              etter.passive.os.fp
+              $(ETTER_PASSIVE)
 
 
 NTOPDATA = ntop-cert.pem \
            p2c.opt.table \
-           etter.passive.os.fp
+           $(ETTER_PASSIVE)
 
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
@@ -323,13 +325,13 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	uninstall-info-recursive all-recursive install-data-recursive \
 	install-exec-recursive installdirs-recursive install-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
-DIST_COMMON = README $(noinst_HEADERS) AUTHORS CONTENTS COPYING \
-	ChangeLog INSTALL MANIFESTO Makefile.am Makefile.in NEWS \
-	PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 aclocal.m4 \
-	config.guess config.h.in config.sub configure configure.in \
-	depcomp etter.passive.os.fp\ faq.html install-sh ltconfig \
-	ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html \
-	ntop.txt p2c.opt.table
+DIST_COMMON = README $(ETTER_PASSIVE)\ $(noinst_HEADERS) AUTHORS \
+	CONTENTS COPYING ChangeLog INSTALL MANIFESTO Makefile.am \
+	Makefile.in NEWS PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 \
+	aclocal.m4 config.guess config.h.in config.sub configure \
+	configure.in depcomp faq.html install-sh ltconfig ltmain.sh \
+	missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html ntop.txt \
+	p2c.opt.table
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES)
 
@@ -976,6 +978,14 @@ dnvt:
 # download the Novell SAP Protocol information table
 dnsapt:
 	@(cd Internet; wget -c http://www.iana.org/assignments/novell-sap-numbers)
+
+# download the passive ethernet fingerprint database
+dnetter:
+	if test -f $(ETTER_PASSIVE).old; then \
+	  rm -rf $(ETTER_PASSIVE).old; \
+	fi;
+	mv $(ETTER_PASSIVE) $(ETTER_PASSIVE).old
+	wget -O $(ETTER_PASSIVE) http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/~checkout~/ettercap/ettercap/etter.passive.os.fp?rev=HEAD\&content-type=text/plain
 
 # run ./configure with --showoses
 showoses:

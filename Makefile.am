@@ -53,6 +53,8 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = . @PLUGINS@ @INTOP@
 
+ETTER_PASSIVE = etter.passive.os.fp
+
 DIST_COMMON =
 DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
@@ -61,11 +63,11 @@ DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
               faq.html \
               ntop-cert.pem \
               p2c.opt.table \
-              etter.passive.os.fp
+              $(ETTER_PASSIVE)
 
 NTOPDATA = ntop-cert.pem \
            p2c.opt.table \
-           etter.passive.os.fp
+           $(ETTER_PASSIVE)
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
            html/*.css html/*.dtd \
@@ -256,6 +258,14 @@ dnvt:
 # download the Novell SAP Protocol information table
 dnsapt:
 	@(cd Internet; wget -c http://www.iana.org/assignments/novell-sap-numbers)
+
+# download the passive ethernet fingerprint database
+dnetter:
+	if test -f $(ETTER_PASSIVE).old; then \
+	  rm -rf $(ETTER_PASSIVE).old; \
+	fi;
+	mv $(ETTER_PASSIVE) $(ETTER_PASSIVE).old
+	wget -O $(ETTER_PASSIVE) http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/~checkout~/ettercap/ettercap/etter.passive.os.fp?rev=HEAD\&content-type=text/plain
 
 # run ./configure with --showoses
 showoses:
