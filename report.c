@@ -620,6 +620,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       }
 
       if(device[actualReportDeviceId].ethernetPkts > 0) {
+	TrafficCounter dummyCounter;
 
 #ifdef HAVE_GDCHART
 	sendString("<TR><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
@@ -738,11 +739,16 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		    getRowColor(), formatBytes(device[actualReportDeviceId].ipBytes, 1)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
+
+	/* Just in case... */
+	if(device[actualReportDeviceId].ethernetBytes > device[actualReportDeviceId].ipBytes)
+	  dummyCounter = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
+	else
+	  dummyCounter = 0;
+	
 	if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>Non IP Traffic</th>"
 		    "<TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(),
-		    formatBytes(device[actualReportDeviceId].ethernetBytes-
-				device[actualReportDeviceId].ipBytes, 1)) < 0) 
+		    getRowColor(), formatBytes(dummyCounter, 1)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
 

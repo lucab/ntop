@@ -499,13 +499,8 @@ void ipProtoDistribPie(void) {
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
   int len, num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
-  TrafficCounter unicastPkts;
 
   fd = getNewRandomFile(fileName, NAME_MAX);
-
-  unicastPkts = device[actualReportDeviceId].ethernetPkts
-    - device[actualReportDeviceId].broadcastPkts
-    - device[actualReportDeviceId].multicastPkts;
 
   p[num] = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.local+
 		   device[actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
@@ -519,7 +514,8 @@ void ipProtoDistribPie(void) {
     lbl[num++] = "Rem->Loc";
   }
 
-  p[2] = 100-p[0]-p[1]; if(p[2] < 0) p[2] = 0;
+  p[num] = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
+		   device[actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Loc->Rem";
   }
