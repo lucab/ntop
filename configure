@@ -5114,9 +5114,53 @@ echo
 echo "Step 7. Looking for optional GPLed libraries...."
 echo
 
+echo $ac_n "checking for re_search in -lc""... $ac_c" 1>&6
+echo "configure:5119: checking for re_search in -lc" >&5
+ac_lib_var=`echo c'_'re_search | sed 'y%./+-%__p_%'`
+if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  ac_save_LIBS="$LIBS"
+LIBS="-lc  $LIBS"
+cat > conftest.$ac_ext <<EOF
+#line 5127 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char re_search();
+
+int main() {
+re_search()
+; return 0; }
+EOF
+if { (eval echo configure:5138: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=no"
+fi
+rm -f conftest*
+LIBS="$ac_save_LIBS"
+
+fi
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  cat >> confdefs.h <<\EOF
+#define HAVE_REGEX 1
+EOF
+
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+
 if test ".$ac_disable_gdchart" = ".no"; then
   echo $ac_n "checking for GDchart (optional package)""... $ac_c" 1>&6
-echo "configure:5120: checking for GDchart (optional package)" >&5
+echo "configure:5164: checking for GDchart (optional package)" >&5
 
   if test ".${GDCHART_ROOT}" != .; then
     if test -d $GDCHART_ROOT &&
@@ -5171,7 +5215,7 @@ fi
 
 if test ".$ac_disable_openssl" = ".no"; then
   echo $ac_n "checking for OpenSSL Library by Open SLL Project (optional package)""... $ac_c" 1>&6
-echo "configure:5175: checking for OpenSSL Library by Open SLL Project (optional package)" >&5
+echo "configure:5219: checking for OpenSSL Library by Open SLL Project (optional package)" >&5
   if test ".${OSSL_ROOT}" != .; then
     if test -d $OSSL_ROOT &&
        test -r $OSSL_ROOT/libssl.a &&

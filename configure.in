@@ -860,6 +860,8 @@ echo
 echo "Step 7. Looking for optional GPLed libraries...."
 echo
 
+AC_CHECK_LIB(c, re_search, AC_DEFINE(HAVE_REGEX))
+
 dnl>
 dnl> check for `gdchart' library by Bruce Verderaime [http://www.fred.net/brv/chart/]
 dnl> By default the configuration script will try to link against GDChart library.
