@@ -619,7 +619,7 @@ void initDevices(char* devices) {
 	    /* The virtual interface exists */
 	    device[numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
 	    if(myLocalHostAddress.s_addr == device[i].ifAddr.s_addr)
-	      break; /* No virtual Interfaces */
+	      continue; /* No virtual Interfaces */
 	    device[numDevices++].name = strdup(tmpDevice);
 #ifdef DEBUG
 	    traceEvent(TRACE_INFO, "Added: %s\n", tmpDevice);

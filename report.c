@@ -4921,7 +4921,7 @@ void printThptStatsMatrix(int sortedColumn) {
       tmpTime = actTime-((i+1)*60);
       strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
       snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"  ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=0 WIDTH=100%%>",
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=LEFT><TABLE BORDER=0 WIDTH=100%%>",
 	      getRowColor(), label1, label,
 	      formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].trafficValue/ratio));
       sendString(buf);
@@ -4964,7 +4964,7 @@ void printThptStatsMatrix(int sortedColumn) {
       } else
 	sendString("&nbsp;");
 
-      sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG"  ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=0 WIDTH=100%%>\n");
+      sendString("</TABLE></TD><TD "TD_BG"  ALIGN=LEFT><TABLE BORDER=0 WIDTH=100%%>\n");
 
       /* *************************************** */
 
@@ -5006,7 +5006,7 @@ void printThptStatsMatrix(int sortedColumn) {
       } else
 	sendString("&nbsp;");
 
-      sendString("</TABLE>"TABLE_OFF"</TD></TR>\n");
+      sendString("</TABLE></TD></TR>\n");
     }
     break;
   case 2:
