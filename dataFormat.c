@@ -57,7 +57,7 @@ char* formatKBytes(float numKBytes) {
 
 /* ******************************* */
 
-char* formatBytes(TrafficCounter numBytes, short encodeString) {
+char* formatBytes(Counter numBytes, short encodeString) {
 #define BUFFER_SIZE   24
   static char outStr[BUFFER_SIZE][32];
   static short bufIdx=0;
@@ -250,7 +250,7 @@ char* formatTimeStamp(unsigned int ndays,
 
 /* ************************ */
 
-char* formatPkts(TrafficCounter pktNr) {
+char* formatPkts(Counter pktNr) {
   static short bufIdx=0;
   static char staticBuffer[8][32];
 

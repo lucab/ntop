@@ -121,6 +121,10 @@ dnl> Option to show where we're testing for openssl
 ac_enable_showopenssltests=no
 
 dnl>
+dnl> Option to enable rrdtool support
+ac_enable_rrd=no
+
+dnl>
 dnl> *** ToBeRocked ***
 dnl> user customizable section
 dnl>
@@ -227,7 +231,25 @@ dnl>
 DEFS="-DHAVE_CONFIG_H"
 CFLAGS="-g $CFLAGS"
 
-dnl Test endianness
+dnl> Does the compiler like -Wall and -pedantic? [Borrowed from rrdtool]
+if test "x$GCC" = "xyes"; then
+  oCFLAGS=$CFLAGS
+  CFLAGS="$CFLAGS  -Wshadow -Wpointer-arith -Wmissing-prototypes -Wmissing-declarations -Wnested-externs"
+  AC_CACHE_CHECK(if we can use GCC-specific compiler options, rd_cv_gcc_opt,
+                [AC_TRY_COMPILE( , return 0 ,
+                    rd_cv_gcc_opt=yes,
+                    rd_cv_gcc_opt=no )
+               ]
+        )
+  if test $rd_cv_gcc_opt = no; then
+         CFLAGS=$oCFLAGS
+  fi
+fi
+
+dnl> add pic flag in any case this makes sure all our code is relocatable
+CFLAGS="$CFLAGS "`grep pic_flag= libtool | sed -e 's/.*pic_flag=//' -e 's/"//g'`
+
+dnl> Test endianness
 AC_TRY_RUN([
 
 int main()
@@ -341,6 +363,11 @@ dnl>
 dnl> Give the user an option to show the openssl tests...
 dnl>
 AC_ARG_ENABLE(showopenssltests, [  --enable-showopenssltests show tests for openssl libraries [default=disabled]], ac_enable_showopenssltests="yes")
+
+dnl>
+dnl> Give the user an option to show the openssl tests...
+dnl>
+AC_ARG_ENABLE(rrd, [  --enable-rrd Enable rrdtool support [default=disabled]], ac_enable_rrd="yes")
 
 AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
@@ -624,6 +651,12 @@ dnl>
 if test ".$ac_disable_gdchart" = ".no"; then
   AC_CHECK_LIB(c, sin, ,  [AC_CHECK_LIB(m, sin,  , AC_MSG_ERROR([Fatal: sin() not found.]), $MORELIBS)], $MORELIBS)
   AC_CHECK_LIB(c, ceil, , [AC_CHECK_LIB(m, ceil, , AC_MSG_ERROR([Fatal: ceil() not found.]), $MORELIBS)], $MORELIBS)
+fi
+
+dnl> Check for rrdtool [http://www.rrdtool.org/] - Experimental
+if test ".$ac_enable_rrd" = ".yes"; then
+AC_CHECK_HEADERS(rrd.h)
+AC_CHECK_LIB(rrd, rrd_create, , ac_enable_rrd=no)
 fi
 
 dnl>
@@ -1036,8 +1069,10 @@ dnl>
        test -r $GDCHART_ROOT/gd-1.8.3/gd.h &&
        test -r $GDCHART_ROOT/zlib-1.1.4/libz.a; then
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
+
          MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.1 -lpng -L$GDCHART_ROOT/zlib-1.1.4 -lz"
          INCS="${INCS} -I$GDCHART_ROOT -I$GDCHART_ROOT/zlib-1.1.4"
+
          AC_DEFINE(HAVE_GDCHART)
 	 AC_DEFINE(HAVE_ZLIB)
          AC_MSG_RESULT([found in $GDCHART_ROOT])
@@ -1060,9 +1095,10 @@ dnl>
        test -r ../gdchart0.94c/gd-1.8.3/gd.h &&
        test -r ../gdchart0.94c/gd-1.8.3/libpng-1.2.1/libpng.a &&
        test -r ../gdchart0.94c/gd-1.8.3/libpng-1.2.1/gd.h; then
+	 MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.1 -lpng"
+
          GDCHART_ROOT="../gdchart0.94c"
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
-         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.1 -lpng"
          INCS="${INCS} -I$GDCHART_ROOT"
          AC_DEFINE(HAVE_GDCHART)
          AC_MSG_RESULT([found in $GDCHART_ROOT])
@@ -1384,6 +1420,10 @@ AC_SUBST(DBFILE_DIR)
 
 dnl> temporary
 AC_DEFINE_UNQUOTED(RETSIGTYPE, void)
+OBJEXT=o
+AC_SUBST(OBJEXT)
+EXEEXT=
+AC_SUBST(EXEEXT)
 
 dnl> To re-enable pep move the following line into the list below
 dnl> plugins/pep/Makefile

@@ -58,7 +58,7 @@
 #ifndef MICRO_NTOP
 
 /* reportUtils.c */
-extern void formatUsageCounter(UsageCounter usageCtr, TrafficCounter maxValue, int actualDeviceId);
+extern void formatUsageCounter(UsageCounter usageCtr, Counter maxValue, int actualDeviceId);
 extern void printTableDoubleEntry(char *buf, int bufLen,
 				  char *label, char* color,
 				  float totalS, float percentageS,
@@ -70,7 +70,7 @@ extern void printTableEntryPercentage(char *buf, int bufLen,
 extern void printSectionTitle(char *text);
 extern void printFlagedWarning(char *text);
 extern void printHeader(int reportType, int revertOrder, u_int column);
-extern char* getOSFlag(char* osName, int showOsName);
+extern char* getOSFlag(char* theOsName, int showOsName);
 extern int sortHostFctn(const void *_a, const void *_b);
 extern int cmpUsersTraffic(const void *_a, const void *_b);
 extern int cmpProcesses(const void *_a, const void *_b);
@@ -87,8 +87,7 @@ extern char *getSessionState(IPSession *session);
 extern void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId);
 extern u_short isHostHealthy(HostTraffic *el);
 extern void printHostDetailedInfo(HostTraffic *el, int actualDeviceId);
-extern void printServiceStats(char* svcName, ServiceStats* ss,
-			      short printSentStats);
+extern void printServiceStats(char* svcName, ServiceStats* ss, short printSentStats);
 extern void printHostUsedServices(HostTraffic *el, int actualDeviceId);
 extern void printHostIcmpStats(HostTraffic *el);
 extern void printTableEntry(char *buf, int bufLen,
@@ -97,14 +96,14 @@ extern void printTableEntry(char *buf, int bufLen,
 extern char* buildHTMLBrowserWindowsLabel(int i, int j);
 extern int cmpEventsFctn(const void *_a, const void *_b);
 extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
-					TrafficCounter tcSent, 
-					TrafficCounter tcRcvd);
+					Counter tcSent, Counter tcRcvd);
 extern char* getNbNodeType(char nodeType);
 extern void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId);
 extern void dumpNtopHashes(FILE*, char*, int actualDeviceId);
 extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
 extern void dumpNtopTrafficInfo(FILE*, char* options);
 extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
+extern void checkHostProvidedServices(HostTraffic *el);
 
 /* report.c */
 extern void initReports(void);
@@ -143,21 +142,27 @@ extern void printNotAvailable(void);
 extern void listNetFlows(void);
 extern void fillDomainName(HostTraffic *el);
 extern void printNtopConfigInfo(int textPrintFlag);
+extern void printTrafficStatistics();
+extern void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId);
+extern int haveTrafficHistory();
+extern void printTrafficStatistics();
+extern int haveTrafficHistory();
+extern int haveTrafficHistory();
 
 /* webInterface.c */
 extern int execCGI(char* cgiName);
 extern void showPluginsList(char* pluginName);
 /* CHECK ME: loadPlugins() and unloadPlugins() should not be in webInterface.c */
 extern void initWeb();
-extern char *calculateCellColor(TrafficCounter actualValue,
-                                TrafficCounter avgTrafficLow,
-                                TrafficCounter avgTrafficHigh);
+extern char *calculateCellColor(Counter actualValue, Counter avgTrafficLow, Counter avgTrafficHigh);
 extern char *getCountryIconURL(char* domainName);
 extern char *getHostCountryIconURL(HostTraffic *el);
 extern char *getActualRowColor(void);
 extern void switchNwInterface(int _interface);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
+extern void printNtopConfigHInfo(int textPrintFlag);
+extern void initWeb();
 
 #ifdef HAVE_GDCHART
 
@@ -271,5 +276,7 @@ extern void pktCastDistribPie(void);
 extern void drawTrafficPie(void);
 extern void drawThptGraph(int sortedColumn);
 extern void drawGlobalProtoDistribution(void);
+extern void drawHostsDistanceGraph();
 extern void drawGlobalIpProtoDistribution(void);
+extern void drawHostsDistanceGraph();
 extern void drawHostsDistanceGraph();

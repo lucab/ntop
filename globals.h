@@ -305,11 +305,6 @@ typedef struct ntopGlobals {
 #endif
 
   /*
-   * Purge idle host - optional
-   */
-  pthread_t purgeAddressThreadId;
-
-  /*
    * Helper application lsof - optional
    */
   PthreadMutex lsofMutex;

@@ -230,43 +230,43 @@ void resetDevice(int devIdx) {
   memset(myGlobals.device[devIdx].hashList, 0, len);
   myGlobals.device[devIdx].insertIdx = 0;
 
-  myGlobals.device[devIdx].droppedPkts = 0;
-  myGlobals.device[devIdx].ethernetPkts = 0;
-  myGlobals.device[devIdx].broadcastPkts = 0;
-  myGlobals.device[devIdx].multicastPkts = 0;
-  myGlobals.device[devIdx].ipPkts = 0;
-  myGlobals.device[devIdx].ethernetBytes = 0;
-  myGlobals.device[devIdx].ipBytes = 0;
-  myGlobals.device[devIdx].fragmentedIpBytes = 0;
-  myGlobals.device[devIdx].tcpBytes = 0;
-  myGlobals.device[devIdx].udpBytes = 0;
-  myGlobals.device[devIdx].otherIpBytes = 0;
-  myGlobals.device[devIdx].icmpBytes = 0;
-  myGlobals.device[devIdx].dlcBytes = 0;
-  myGlobals.device[devIdx].ipxBytes = 0;
-  myGlobals.device[devIdx].stpBytes = 0;
-  myGlobals.device[devIdx].decnetBytes = 0;
-  myGlobals.device[devIdx].netbiosBytes = 0;
-  myGlobals.device[devIdx].arpRarpBytes = 0;
-  myGlobals.device[devIdx].atalkBytes = 0;
-  myGlobals.device[devIdx].ospfBytes = 0;
-  myGlobals.device[devIdx].egpBytes = 0;
-  myGlobals.device[devIdx].igmpBytes = 0;
-  myGlobals.device[devIdx].osiBytes = 0;
-  myGlobals.device[devIdx].qnxBytes = 0;
-  myGlobals.device[devIdx].otherBytes = 0;
-  myGlobals.device[devIdx].lastMinEthernetBytes = 0;
-  myGlobals.device[devIdx].lastFiveMinsEthernetBytes = 0;
-  myGlobals.device[devIdx].lastMinEthernetPkts = 0;
-  myGlobals.device[devIdx].lastFiveMinsEthernetPkts = 0;
-  myGlobals.device[devIdx].lastNumEthernetPkts = 0;
-  myGlobals.device[devIdx].lastEthernetPkts = 0;
-  myGlobals.device[devIdx].lastTotalPkts = 0;
-  myGlobals.device[devIdx].lastBroadcastPkts = 0;
-  myGlobals.device[devIdx].lastMulticastPkts = 0;
-  myGlobals.device[devIdx].lastEthernetBytes = 0;
-  myGlobals.device[devIdx].lastIpBytes = 0;
-  myGlobals.device[devIdx].lastNonIpBytes = 0;
+  resetTrafficCounter(&myGlobals.device[devIdx].droppedPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].ethernetPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].broadcastPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].multicastPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].ipPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].ethernetBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].ipBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fragmentedIpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].tcpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].udpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].otherIpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].icmpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].dlcBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].ipxBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].stpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].decnetBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].netbiosBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].arpRarpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].atalkBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].ospfBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].egpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].igmpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].osiBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].qnxBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].otherBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastFiveMinsEthernetBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastFiveMinsEthernetPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastNumEthernetPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastEthernetPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastTotalPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastBroadcastPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastMulticastPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastEthernetBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastIpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastNonIpBytes);
   memset(&myGlobals.device[devIdx].rcvdPktStats, 0, sizeof(PacketStats));
   memset(&myGlobals.device[devIdx].rcvdPktTTLStats, 0, sizeof(TTLstats));
   myGlobals.device[devIdx].peakThroughput = 0;
@@ -287,13 +287,14 @@ void resetDevice(int devIdx) {
   myGlobals.device[devIdx].last60MinutesThptIdx = 0; 
   myGlobals.device[devIdx].last24HoursThptIdx = 0; 
   myGlobals.device[devIdx].last30daysThptIdx = 0;
-  myGlobals.device[devIdx].numEstablishedTCPConnections = 0;
+  resetTrafficCounter(&myGlobals.device[devIdx].numEstablishedTCPConnections);
   myGlobals.device[devIdx].hostsno = 0;
   myGlobals.device[devIdx].insertIdx = 0;
 
   myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
     myGlobals.device[devIdx].lastHourThptUpdate = myGlobals.device[devIdx].lastFiveMinsThptUpdate = time(NULL);
-  myGlobals.device[devIdx].lastMinEthernetBytes = myGlobals.device[devIdx].lastFiveMinsEthernetBytes = 0;
+  resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].lastFiveMinsEthernetBytes);
   memset(&myGlobals.device[devIdx].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
   memset(&myGlobals.device[devIdx].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
   memset(&myGlobals.device[devIdx].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
@@ -675,15 +676,6 @@ void initThreads(void) {
       createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, NULL);
       traceEvent(TRACE_INFO, "Started thread (%ld) for DNS address resolution.",
 		 myGlobals.dequeueAddressThreadId[i]);
-    }
-
-    /*
-     * Create the thread (7) - Purge old DB entries
-     */
-    if(!myGlobals.borderSnifferMode) {
-      createThread(&myGlobals.purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
-      traceEvent(TRACE_INFO, "Started thread (%ld) for address purge.", 
-		 myGlobals.purgeAddressThreadId);
     }
   }
 #endif

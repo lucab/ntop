@@ -1,6 +1,5 @@
 /*
  *  Copyright (C) 1998-99 Luca Deri <deri@ntop.org>
- *                        Portions by Stefano Suin <stefano@ntop.org>
  *                      
  *  			  http://www.ntop.org/
  *  					

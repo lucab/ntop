@@ -147,7 +147,7 @@ void* pcapDispatch(void *_i) {
 /* **************************************** */
 
 #ifndef WIN32
-RETSIGTYPE handleDiedChild(int signal _UNUSED_) {
+RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
   int status;
   pid_t pidId;
 
@@ -436,7 +436,7 @@ void handleProtocols() {
     bufferCurrent = buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
     traceEvent(TRACE_INFO, "Processing protocol file: '%s', size: %ld",
-                           myGlobals.protoSpecs, buf.st_size+8);
+	       myGlobals.protoSpecs, buf.st_size+8);
 
     for (;;) {
       bufferCurrent = fgets(bufferCurrent, buf.st_size, fd);
@@ -591,18 +591,6 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 }
 
 /* **************************************** */
-
-void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
-  for(;;) {
-    if(!myGlobals.capturePackets) break;
-    myGlobals.actTime = time(NULL);
-    cleanupHostEntries();
-  }
-
-  return(NULL);
-}
-
-/* **************************************** */
 #ifndef WIN32
 #ifdef MULTITHREADED
 void* periodicLsofLoop(void* notUsed _UNUSED_) {
@@ -710,7 +698,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
 /* Report statistics and write out the raw packet file */
 RETSIGTYPE cleanup(int signo) {
   static int unloaded = 0, msgSent = 0;
-  struct pcap_stat stat;
+  struct pcap_stat pcapStat;
   int i;
 
   if(!msgSent) {
@@ -723,7 +711,6 @@ RETSIGTYPE cleanup(int signo) {
     void *array[20];
     size_t size;
     char **strings;
-    size_t i;
 
     /* Don't double fault... */
     setsignal(SIGSEGV, SIG_DFL);
@@ -767,9 +754,6 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.numericFlag == 0) {
     for(i=0; i<myGlobals.numDequeueThreads; i++)
       killThread(&myGlobals.dequeueAddressThreadId[i]);
-
-    if(!myGlobals.borderSnifferMode)
-      killThread(&myGlobals.purgeAddressThreadId);
   }
 #endif
 
@@ -904,14 +888,14 @@ RETSIGTYPE cleanup(int signo) {
     traceEvent(TRACE_INFO, "Freeing device %s (idx=%d)...", myGlobals.device[i].name, i);
 
     if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
-      if (pcap_stats(myGlobals.device[i].pcapPtr, &stat) >= 0) {
+      if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
 	traceEvent(TRACE_INFO, "%s packets received by filter on %s\n",
-		   formatPkts((TrafficCounter)stat.ps_recv), myGlobals.device[i].name);
-	traceEvent(TRACE_INFO, "%s packets dropped by kernel\n",
-		   formatPkts((TrafficCounter)(stat.ps_drop)));
+		   formatPkts((Counter)pcapStat.ps_recv), myGlobals.device[i].name);
+	
+	traceEvent(TRACE_INFO, "%s packets dropped by kernel\n", formatPkts((Counter)pcapStat.ps_drop));
 #ifdef MULTITHREADED
 	traceEvent(TRACE_INFO, "%s packets dropped by ntop\n",
-		   formatPkts(myGlobals.device[i].droppedPkts));
+		   formatPkts(myGlobals.device[i].droppedPkts.value));
 #endif
       }
     }

@@ -3,7 +3,6 @@
  *                          http://www.ntop.org
  *
  * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
- *                         Portions by Stefano Suin <stefano@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -111,7 +110,7 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
 
     while(list != NULL) {
       if(strcmp(list->virtualHostName, virtualHostName) == 0) {
-	list->bytesSent += bytesSent, list->bytesRcvd += bytesRcvd;
+	incrementTrafficCounter(&list->bytesSent, bytesSent.value), incrementTrafficCounter(&list->bytesRcvd, bytesRcvd.value);
 	break;
       } else {
 	list = list->next;
@@ -277,7 +276,7 @@ void updateUsedPorts(HostTraffic *srcHost,
     traceEvent(TRACE_INFO, "DEBUG: Adding svr peer %u", dstHost->hostTrafficBucket);
 #endif
 
-    srcHost->portsUsage[sport]->serverTraffic += length;
+    incrementTrafficCounter(&srcHost->portsUsage[sport]->serverTraffic, length);
     srcHost->portsUsage[sport]->serverUses++;
     srcHost->portsUsage[sport]->serverUsesLastPeer = dstHost->hostTrafficBucket;
 
@@ -288,7 +287,7 @@ void updateUsedPorts(HostTraffic *srcHost,
     traceEvent(TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
-    dstHost->portsUsage[sport]->clientTraffic += length;
+    incrementTrafficCounter(&dstHost->portsUsage[sport]->clientTraffic, length);
     dstHost->portsUsage[sport]->clientUses++;
     dstHost->portsUsage[sport]->clientUsesLastPeer = srcHost->hostTrafficBucket;
   }
@@ -300,7 +299,7 @@ void updateUsedPorts(HostTraffic *srcHost,
     traceEvent(TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
-    srcHost->portsUsage[dport]->clientTraffic += length;
+    incrementTrafficCounter(&srcHost->portsUsage[dport]->clientTraffic, length);
     srcHost->portsUsage[dport]->clientUses++;
     srcHost->portsUsage[dport]->clientUsesLastPeer = dstHost->hostTrafficBucket;
 
@@ -311,7 +310,7 @@ void updateUsedPorts(HostTraffic *srcHost,
     traceEvent(TRACE_INFO, "DEBUG: Adding svr peer %u", srcHost->hostTrafficBucket);
 #endif
 
-    dstHost->portsUsage[dport]->serverTraffic += length;
+    incrementTrafficCounter(&dstHost->portsUsage[dport]->serverTraffic, length);
     dstHost->portsUsage[dport]->serverUses++;
     dstHost->portsUsage[dport]->serverUsesLastPeer = srcHost->hostTrafficBucket;
   }
@@ -328,8 +327,8 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     return;
   }
 
-  if(((sessionToPurge->bytesProtoSent == 0)
-      || (sessionToPurge->bytesProtoRcvd == 0))
+  if(((sessionToPurge->bytesProtoSent.value == 0)
+      || (sessionToPurge->bytesProtoRcvd.value == 0))
      && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
      /*
        "Valid" TCP session used to skip faked sessions (e.g. portscans
@@ -492,7 +491,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   u_short sessSport, sessDport;
   HostTraffic *srcHost, *dstHost, *hostToUpdate = NULL;
   struct timeval tvstrct;
-  u_char rcStr[256];
+  u_char *rcStr, tmpStr[256];
   int len = 0;
 
   if((!myGlobals.enableSessionHandling) || (myGlobals.device[actualDeviceId].numTotSessions == 0))
@@ -664,8 +663,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     /* ***************************************** */
 
-    if(packetDataLength >= sizeof(rcStr))
-      len = sizeof(rcStr);
+    if(packetDataLength >= sizeof(tmpStr))
+      len = sizeof(tmpStr);
     else
       len = packetDataLength;
 
@@ -675,10 +674,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if(dport == 80) 	FD_SET(HOST_SVC_HTTP, &dstHost->flags);
 
       if((sport == 80 /* HTTP */)
-	 && (theSession->bytesProtoRcvd == 0)
+	 && (theSession->bytesProtoRcvd.value == 0)
 	 && (packetDataLength > 0)) {
-	strncpy(rcStr, packetData, 16);
-	rcStr[16] = '\0';
+	strncpy(tmpStr, packetData, 16);
+	tmpStr[16] = '\0';
 
 	if(strncmp(rcStr, "HTTP/1", 6) == 0) {
 	  int rc;
@@ -696,7 +695,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  traceEvent(TRACE_INFO, "HTTP_DEBUG: %s->%s [%s]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
-		     rcStr);
+		     tmpStr);
 #endif
 	  if(srcHost->httpStats == NULL) {
 	    srcHost->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
@@ -708,16 +707,16 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    memset(dstHost->httpStats, 0, sizeof(ServiceStats));
 	  }
 
-	  rc = atoi(&rcStr[9]);
+	  rc = atoi(&tmpStr[9]);
 
 	  if(rc == 200) /* HTTP/1.1 200 OK */ {
-	    srcHost->httpStats->numPositiveReplSent++;
-	    dstHost->httpStats->numPositiveReplRcvd++;
+	    incrementTrafficCounter(&srcHost->httpStats->numPositiveReplSent, 1);
+	    incrementTrafficCounter(&dstHost->httpStats->numPositiveReplRcvd, 1);
 	  } else {
-	    srcHost->httpStats->numNegativeReplSent++;
-	    dstHost->httpStats->numNegativeReplRcvd++;
+	    incrementTrafficCounter(&srcHost->httpStats->numNegativeReplSent, 1);
+	    incrementTrafficCounter(&dstHost->httpStats->numNegativeReplRcvd, 1);
 	  }
-
+	    
 	  if(microSecTimeDiff > 0) {
 	    if(subnetLocalHost(dstHost)) {
 	      if((srcHost->httpStats->fastestMicrosecLocalReqMade == 0)
@@ -753,9 +752,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  }
 	}
       } else if((dport == 80 /* HTTP */) && (packetDataLength > 0)) {
-	if(theSession->bytesProtoSent == 0) {
-	  char *rcStr;
-
+	if(theSession->bytesProtoSent.value == 0) {
 	  rcStr = (char*)malloc(packetDataLength+1);
 	  strncpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
@@ -788,14 +785,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    }
 
 	    if(subnetLocalHost(dstHost))
-	      srcHost->httpStats->numLocalReqSent++;
+	      incrementTrafficCounter(&srcHost->httpStats->numLocalReqSent, 1);
 	    else
-	      srcHost->httpStats->numRemReqSent++;
+	      incrementTrafficCounter(&srcHost->httpStats->numRemReqSent, 1);
 
 	    if(subnetLocalHost(srcHost))
-	      dstHost->httpStats->numLocalReqRcvd++;
+	      incrementTrafficCounter(&dstHost->httpStats->numLocalReqRcvd, 1);
 	    else
-	      dstHost->httpStats->numRemReqRcvd++;
+	      incrementTrafficCounter(&dstHost->httpStats->numRemReqRcvd, 1);
 
 	    row = strtok_r(rcStr, "\n", &strtokState);
 
@@ -882,8 +879,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  free(rcStr);
 	}
       } else if((dport == 1214 /* Kazaa */) && (packetDataLength > 0)) {
-	if(theSession->bytesProtoSent == 0) {
-	  char *rcStr;
+	if(theSession->bytesProtoSent.value == 0) {
 	  char *strtokState, *row;
 
 	  rcStr = (char*)malloc(packetDataLength+1);
@@ -897,7 +893,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	      if(strncmp(row, "GET /", 4) == 0) {
 		char *theStr = "GET /.hash=";
 		if(strncmp(row, theStr, strlen(theStr)) != 0) {
-		  char tmpStr[256], *strtokState1, *file = strtok_r(&row[4], " ", &strtokState1);
+		  char *strtokState1, *file = strtok_r(&row[4], " ", &strtokState1);
 		  int i, begin=0;
 
 		  if(file != NULL) {
@@ -939,9 +935,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    /* printf("==>\n\n%s\n\n", rcStr); */
 	  }
 	  free(rcStr);
-	} else if((theSession->bytesProtoSent > 0) 
-		  || (theSession->bytesProtoSent < 32)) {
-	  char *rcStr;
+	} else if((theSession->bytesProtoSent.value > 0) 
+		  || (theSession->bytesProtoSent.value < 32)) {
 	  char *strtokState, *row;
 
 	  rcStr = (char*)malloc(packetDataLength+1);
@@ -974,8 +969,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	}
       } else if(((dport == 6346) || (dport == 6347) || (dport == 6348)) /* Gnutella */
 		&& (packetDataLength > 0)) {
-	if(theSession->bytesProtoSent == 0) {
-	  char *rcStr;
+	if(theSession->bytesProtoSent.value == 0) {
 	  char *strtokState, *row;
 	  char *theStr = "GET /get/";
 
@@ -984,7 +978,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  rcStr[packetDataLength] = '\0';
 
 	  if(strncmp(rcStr, theStr, strlen(theStr)) == 0) {
-	    char tmpStr[256], *strtokState1, *file;
+	    char *file;
 	    int i, begin=0;
 
 	    row = strtok_r(rcStr, "\n", &strtokState);
@@ -1011,9 +1005,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  free(rcStr);
 	}
       } else if((dport == 6699) /* WinMX */ && (packetDataLength > 0)) {
-	if((theSession->bytesProtoSent == 3 /* GET */)
-	   && (theSession->bytesProtoRcvd == 1 /* 1 */)) {
-	  char *rcStr, *user, *strtokState, *strtokState1, *row, *file;
+	if((theSession->bytesProtoSent.value == 3 /* GET */)
+	   && (theSession->bytesProtoRcvd.value == 1 /* 1 */)) {
+	  char *user, *strtokState, *strtokState1, *row, *file;
 	  int i, begin=0;
 
 	  rcStr = (char*)malloc(packetDataLength+1);
@@ -1059,10 +1053,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	else
 	  FD_SET(HOST_SVC_SMTP, &dstHost->flags);
 
-	if(((theSession->bytesProtoRcvd <64)
-	    || (theSession->bytesProtoSent <64)) /* The sender name is sent at the beginning of the communication */
+	if(((theSession->bytesProtoRcvd.value < 64)
+	    || (theSession->bytesProtoSent.value < 64)) /* The sender name is sent at the beginning of the communication */
 	   && (packetDataLength > 7)) {
-	  char *rcStr;
 	  int beginIdx = 11, i;
 
 	  rcStr = (char*)malloc(packetDataLength+1);
@@ -1104,11 +1097,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	else
 	  FD_SET(HOST_SVC_FTP, &dstHost->flags);
 
-	if(((theSession->bytesProtoRcvd <64)
-	    || (theSession->bytesProtoSent <64)) /* The sender name is sent at the beginning of the communication */
+	if(((theSession->bytesProtoRcvd.value < 64)
+	    || (theSession->bytesProtoSent.value < 64)) /* The sender name is sent at the beginning of the communication */
 	   && (packetDataLength > 7)) {
-	  char *rcStr;
-
 	  rcStr = (char*)malloc(packetDataLength+1);
 	  strncpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength-2] = '\0';
@@ -1142,10 +1133,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	else
 	  FD_SET(HOST_SVC_POP, &dstHost->flags);
 
-	if(((theSession->bytesProtoRcvd <64) || (theSession->bytesProtoSent <64)) /* The user name is sent at the beginning of the communication */
+	if(((theSession->bytesProtoRcvd.value < 64) 
+	    || (theSession->bytesProtoSent.value < 64)) /* The user name is sent at the beginning of the communication */
 	   && (packetDataLength > 4)) {
-	  char *rcStr;
-
 	  rcStr = (char*)malloc(packetDataLength+1);
 	  strncpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength-1] = '\0';
@@ -1174,11 +1164,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	else
 	  FD_SET(HOST_SVC_IMAP, &dstHost->flags);
 
-	if(((theSession->bytesProtoRcvd <64)
-	    || (theSession->bytesProtoSent <64)) /* The sender name is sent at the beginning of the communication */
+	if(((theSession->bytesProtoRcvd.value < 64)
+	    || (theSession->bytesProtoSent.value < 64)) /* The sender name is sent at the beginning of the communication */
 	   && (packetDataLength > 7)) {
-	  char *rcStr;
-
 	  rcStr = (char*)malloc(packetDataLength+1);
 	  strncpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength-1] = '\0';
@@ -1255,7 +1243,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	not a faked session (i.e. a known protocol is running at
 	an unknown port)
       */
-      if((theSession->bytesProtoSent == 0) && (len > 0)) {
+      if((theSession->bytesProtoSent.value == 0) && (len > 0)) {
 	memset(rcStr, 0, sizeof(rcStr));
 	strncpy(rcStr, packetData, len);
 
@@ -1437,7 +1425,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
       incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHostIdx, actualDeviceId);
       incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
-      myGlobals.device[actualDeviceId].numEstablishedTCPConnections++;
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     } else if((addedNewEntry == 0)
 	      && ((theSession->sessionState == STATE_SYN) || (theSession->sessionState == STATE_SYN_ACK))
 	      && (!(tp->th_flags & TH_RST))) {
@@ -1475,7 +1463,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&srcHost->secHostPkts->synPktsRcvd, dstHostIdx, actualDeviceId);
       }
 
-      myGlobals.device[actualDeviceId].numEstablishedTCPConnections++;
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     }
 
 
@@ -1534,9 +1522,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
 	if(theSession->initiatorIdx == srcHostIdx) {
 	  theSession->numDuplicatedAckI2R++;
-	  theSession->bytesRetranI2R += length;
-	  myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->initiatorIdx]->pktDuplicatedAckSent++;
-	  myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->remotePeerIdx]->pktDuplicatedAckRcvd++;
+	  incrementTrafficCounter(&theSession->bytesRetranI2R, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->initiatorIdx]->pktDuplicatedAckSent, 1);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->remotePeerIdx]->pktDuplicatedAckRcvd, 1);
 
 #ifdef DEBUG
 	  traceEvent(TRACE_INFO, "DEBUG: Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
@@ -1545,9 +1533,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 	} else {
 	  theSession->numDuplicatedAckR2I++;
-	  theSession->bytesRetranR2I += length;
-	  myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->remotePeerIdx]->pktDuplicatedAckSent++;
-	  myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->initiatorIdx]->pktDuplicatedAckRcvd++;
+	  incrementTrafficCounter(&theSession->bytesRetranR2I, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->remotePeerIdx]->pktDuplicatedAckSent, 1);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->initiatorIdx]->pktDuplicatedAckRcvd, 1);
 #ifdef DEBUG
 	  traceEvent(TRACE_INFO, "Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
 		     ack, theSession->numDuplicatedAckR2I,
@@ -1637,7 +1625,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
       theSession->sessionState = STATE_TIMEOUT;
       updateUsedPorts(srcHost, dstHost, sport, dport,
-		      (u_int)(theSession->bytesSent+theSession->bytesRcvd));
+		      (u_int)(theSession->bytesSent.value+theSession->bytesRcvd.value));
 
       if(sport == 80)
 	updateHTTPVirtualHosts(theSession->virtualPeerName, srcHost,
@@ -1659,10 +1647,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     } else if(tp->th_flags & TH_RST) {
       if(((theSession->initiatorIdx == srcHostIdx)
 	  && (theSession->lastRem2InitiatorFlags[0] == TH_ACK)
-	  && (theSession->bytesSent == 0))
+	  && (theSession->bytesSent.value == 0))
 	 || ((theSession->initiatorIdx == dstHostIdx)
 	     && (theSession->lastInitiator2RemFlags[0] == TH_ACK)
-	     && (theSession->bytesRcvd == 0))) {
+	     && (theSession->bytesRcvd.value == 0))) {
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->ackScanRcvd, dstHostIdx, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->ackScanSent, srcHostIdx, actualDeviceId);
@@ -1757,10 +1745,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  }
 	} else if(((theSession->initiatorIdx == srcHostIdx)
 		   && (theSession->lastRem2InitiatorFlags[0] == 0)
-		   && (theSession->bytesRcvd > 0))
+		   && (theSession->bytesRcvd.value > 0))
 		  || ((theSession->initiatorIdx == dstHostIdx)
 		      && ((theSession->lastInitiator2RemFlags[0] == 0))
-		      && (theSession->bytesSent > 0))) {
+		      && (theSession->bytesSent.value > 0))) {
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	  incrementUsageCounter(&srcHost->secHostPkts->nullScanRcvd, dstHostIdx, actualDeviceId);
 	  incrementUsageCounter(&dstHost->secHostPkts->nullScanSent, srcHostIdx, actualDeviceId);
@@ -1797,15 +1785,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     }
 
     if(flowDirection == CLIENT_TO_SERVER) {
-      theSession->bytesProtoSent += packetDataLength;
-      theSession->bytesSent      += length;
+      incrementTrafficCounter(&theSession->bytesProtoSent, packetDataLength);
+      incrementTrafficCounter(&theSession->bytesSent, length);
       theSession->pktSent++;
-      if(fragmentedData) theSession->bytesFragmentedSent += packetDataLength;
+      if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedSent, packetDataLength);
     } else {
-      theSession->bytesProtoRcvd += packetDataLength;
-      theSession->bytesRcvd  += length;
+      incrementTrafficCounter(&theSession->bytesProtoRcvd, packetDataLength);
+      incrementTrafficCounter(&theSession->bytesRcvd, length);
       theSession->pktRcvd++;
-      if(fragmentedData) theSession->bytesFragmentedRcvd += packetDataLength;
+      if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedRcvd, packetDataLength);
     }
 
     /* Immediately free the session */
@@ -1829,9 +1817,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     tmpSession.lastSeen = myGlobals.actTime;
     tmpSession.initiatorIdx = checkSessionIdx(srcHostIdx),
       tmpSession.remotePeerIdx = checkSessionIdx(dstHostIdx);
-    tmpSession.bytesSent = (TrafficCounter)length, tmpSession.bytesRcvd = 0;
+    tmpSession.bytesSent.value = length, tmpSession.bytesRcvd.value = 0;
     tmpSession.sport = sport, tmpSession.dport = dport;
-    if(fragmentedData) tmpSession.bytesFragmentedSent += packetDataLength;
+    if(fragmentedData) incrementTrafficCounter(&tmpSession.bytesFragmentedSent, packetDataLength);
 
       if(myGlobals.isLsofPresent) {
 #ifdef MULTITHREADED
@@ -1944,7 +1932,7 @@ static void handleLsof(u_int srcHostIdx,
       ProcessInfoList *scanner = myGlobals.localPorts[sport];
 
       while(scanner != NULL) {
-	scanner->element->bytesSent += length;
+	incrementTrafficCounter(&scanner->element->bytesSent, length);
 	scanner->element->lastSeen   = myGlobals.actTime;
 	addLsofContactedPeers(scanner->element, dstHostIdx, actualDeviceId);
 	scanner = scanner->next;
@@ -1956,7 +1944,7 @@ static void handleLsof(u_int srcHostIdx,
       ProcessInfoList *scanner = myGlobals.localPorts[dport];
 
       while(scanner != NULL) {
-	scanner->element->bytesRcvd += length;
+	incrementTrafficCounter(&scanner->element->bytesRcvd, length);
 	scanner->element->lastSeen   = myGlobals.actTime;
 	addLsofContactedPeers(scanner->element, srcHostIdx, actualDeviceId);
 	scanner = scanner->next;

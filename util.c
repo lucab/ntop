@@ -747,8 +747,8 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
   hostAddress->s_addr = GetHostIPAddr();
   return(0);
 #else
-  register int fd;
-  register struct sockaddr_in *sin;
+  int fd;
+  struct sockaddr_in *sinAddr;
   struct ifreq ifr;
 #ifdef DEBUG
   int a, b, c, d;
@@ -773,9 +773,9 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
 #endif
     rc = -1;
   } else {
-    sin = (struct sockaddr_in *)&ifr.ifr_addr;
+    sinAddr = (struct sockaddr_in *)&ifr.ifr_addr;
 
-    if((hostAddress->s_addr = ntohl(sin->sin_addr.s_addr)) == 0)
+    if((hostAddress->s_addr = ntohl(sinAddr->sin_addr.s_addr)) == 0)
       rc = -1;
   }
 
@@ -790,8 +790,8 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
     int numHosts;
 
     if(ioctl(fd, SIOCGIFNETMASK, (char*)&ifr) >= 0) {
-      sin = (struct sockaddr_in *)&ifr.ifr_broadaddr;
-      numHosts = 0xFFFFFFFF - ntohl(sin->sin_addr.s_addr)+1;
+      sinAddr = (struct sockaddr_in *)&ifr.ifr_broadaddr;
+      numHosts = 0xFFFFFFFF - ntohl(sinAddr->sin_addr.s_addr)+1;
     } else
       numHosts = 256; /* default C class */
 
@@ -1349,7 +1349,7 @@ void readLsofInfo(void) {
   fgets(line, 383, fd); /* Ignore 1st line */
 
   while(fgets(line, 383, fd) != NULL) {
-    int pid, i;
+    int pid;
     char command[32], user[32], *portNr;
     char *trailer, *thePort, *strtokState;
 
@@ -1435,8 +1435,8 @@ void readLsofInfo(void) {
 	myGlobals.processes[myGlobals.numProcesses]->firstSeen           = myGlobals.actTime;
 	myGlobals.processes[myGlobals.numProcesses]->lastSeen            = myGlobals.actTime;
 	myGlobals.processes[myGlobals.numProcesses]->marker              = 1;
-	myGlobals.processes[myGlobals.numProcesses]->bytesSent           = 0;
-	myGlobals.processes[myGlobals.numProcesses]->bytesRcvd           = 0;
+	resetTrafficCounter(&myGlobals.processes[myGlobals.numProcesses]->bytesSent);
+	resetTrafficCounter(&myGlobals.processes[myGlobals.numProcesses]->bytesRcvd);
 	myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersIdx = 0;
 
 	for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
@@ -3061,7 +3061,7 @@ void _incrementUsageCounter(UsageCounter *counter,
     return;
  }
 
-  counter->value++;
+ counter->value.value++;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(counter->peersIndexes[i] == NO_PEER) {
@@ -3212,7 +3212,7 @@ struct tm *localtime_r(const time_t *t, struct tm *tp) {
 /* ************************************ */
 
 int guessHops(HostTraffic *el) {
-  int numHops;
+  int numHops = 0;
 
   if(subnetPseudoLocalHost(el) || (el->minTTL == 0)) numHops = 0;
   else if(el->minTTL <= 8)   numHops = el->minTTL-1;
@@ -3242,7 +3242,7 @@ int ntop_sleep(int secs) {
 /* *************************************** */
 
 void unescape(char *dest, int destLen, char *url) {
-  int i, escapes, len, at;
+  int i, len, at;
   unsigned int val;
   char hex[3] = {0};
  
@@ -3264,4 +3264,16 @@ void unescape(char *dest, int destLen, char *url) {
     } else
       dest[at++] = url[i];
   }  
+}
+
+/* ******************************** */
+
+void incrementTrafficCounter(TrafficCounter *ctr, Counter value) {
+  ctr->value += value, ctr->modified = 1;
+}
+
+/* ******************************** */
+
+void resetTrafficCounter(TrafficCounter *ctr) {
+  ctr->value = 0, ctr->modified = 0;
 }

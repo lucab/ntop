@@ -48,8 +48,8 @@ static void updateRoutedTraffic(HostTraffic *router) {
     }
 
     if(router->routedTraffic != NULL) { /* malloc() didn't fail */
-      router->routedTraffic->routedPkts++;
-      router->routedTraffic->routedBytes += h_save->len - sizeof(struct ether_header);
+      incrementTrafficCounter(&router->routedTraffic->routedPkts, 1);
+      incrementTrafficCounter(&router->routedTraffic->routedBytes, h_save->len - sizeof(struct ether_header));
     }
   }
 }
@@ -58,7 +58,7 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 int handleIP(u_short port,
 	     HostTraffic *srcHost, HostTraffic *dstHost,
-	     u_int length,  u_short isPassiveSession,
+	     u_int length,  u_short isPassiveSess,
 	     int actualDeviceId) {
   int idx;
 
@@ -67,7 +67,7 @@ int handleIP(u_short port,
     return(-1);
   }
 
-  if(isPassiveSession) {
+  if(isPassiveSess) {
     /* Emulate non passive session */
     idx = mapGlobalToLocalIdx(20 /* ftp-data */);
   } else
@@ -79,24 +79,24 @@ int handleIP(u_short port,
   if(idx != NO_PEER) {
     if(subnetPseudoLocalHost(srcHost)) {
       if(subnetPseudoLocalHost(dstHost)) {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) srcHost->protoIPTrafficInfos[idx].sentLoc += length;
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
-	myGlobals.device[actualDeviceId].ipProtoStats[idx].local += length;
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentLoc, length);
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdLoc, length);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local, length);
       } else {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) srcHost->protoIPTrafficInfos[idx].sentRem += length;
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
-	myGlobals.device[actualDeviceId].ipProtoStats[idx].local2remote += length;
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentRem, length);
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdLoc, length);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local2remote, length);
       }
     } else {
       /* srcHost is remote */
       if(subnetPseudoLocalHost(dstHost)) {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) srcHost->protoIPTrafficInfos[idx].sentLoc += length;
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
-	myGlobals.device[actualDeviceId].ipProtoStats[idx].remote2local += length;
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentLoc, length);
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdFromRem, length);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote2local, length);
       } else {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) srcHost->protoIPTrafficInfos[idx].sentRem += length;
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
-	myGlobals.device[actualDeviceId].ipProtoStats[idx].remote += length;
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentRem, length);
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdFromRem, length);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote, length);
       }
     }
   }
@@ -417,30 +417,31 @@ static void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   thisTime = localtime_r(&myGlobals.actTime, &t);
   hourId = thisTime->tm_hour % 24 /* just in case... */;;
 
-  srcHost->pktSent++;
+  incrementTrafficCounter(&srcHost->pktSent, 1);
 
-  srcHost->last24HoursBytesSent[hourId] += length, dstHost->last24HoursBytesRcvd[hourId] += length;
+  incrementTrafficCounter(&srcHost->last24HoursBytesSent[hourId], length.value);
+  incrementTrafficCounter(&dstHost->last24HoursBytesRcvd[hourId], length.value);
 
   if(broadcastHost(dstHost)) {
-    srcHost->pktBroadcastSent++;
-    srcHost->bytesBroadcastSent += length;
-    myGlobals.device[actualDeviceId].broadcastPkts++;
+    incrementTrafficCounter(&srcHost->pktBroadcastSent, 1);
+    incrementTrafficCounter(&srcHost->bytesBroadcastSent, length.value);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].broadcastPkts, 1);
   } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "%s->%s\n",
 	       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
 #endif
-    srcHost->pktMulticastSent++;
-    srcHost->bytesMulticastSent += length;
-    dstHost->pktMulticastRcvd++;
-    dstHost->bytesMulticastRcvd += length;
-    myGlobals.device[actualDeviceId].multicastPkts++;
+    incrementTrafficCounter(&srcHost->pktMulticastSent, 1);
+    incrementTrafficCounter(&srcHost->bytesMulticastSent, length.value);
+    incrementTrafficCounter(&dstHost->pktMulticastRcvd, 1);
+    incrementTrafficCounter(&dstHost->bytesMulticastRcvd, length.value);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].multicastPkts, 1);
   }
 
-  srcHost->bytesSent += length;
-  if(dstHost != NULL) dstHost->bytesRcvd += length;
+  incrementTrafficCounter(&srcHost->bytesSent, length.value);
+  if(dstHost != NULL) incrementTrafficCounter(&dstHost->bytesRcvd, length.value);
 
-  dstHost->pktRcvd++;
+  incrementTrafficCounter(&dstHost->pktRcvd, 1);
 
   if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
     addContactedPeers(srcHost, dstHost, actualDeviceId);
@@ -476,14 +477,14 @@ void updateHostName(HostTraffic *el) {
 /* ************************************ */
 
 static void updateDevicePacketTTLStats(u_int ttl, int actualDeviceId) {
-  if(ttl < 32) myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo32++;
-  else if(ttl < 64) myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo64++;
-  else if(ttl < 96) myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo96++;
-  else if(ttl < 128) myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo128++;
-  else if(ttl < 160) myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo160++;
-  else if(ttl < 192) myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo192++;
-  else if(ttl < 224) myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo224++;
-  else myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo255++;
+  if(ttl < 32)       incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo32, 1);
+  else if(ttl < 64)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo64, 1);
+  else if(ttl < 96)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo96, 1);
+  else if(ttl < 128) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo128, 1);
+  else if(ttl < 160) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo160, 1);
+  else if(ttl < 192) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo192, 1);
+  else if(ttl < 224) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo224, 1);
+  else               incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo255, 1);
 }
 
 /* ************************************ */
@@ -503,10 +504,10 @@ static void processIpPkt(const u_char *bp,
   char *proto;
   u_int srcHostIdx, dstHostIdx;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
-  u_char etherAddrSrc[ETHERNET_ADDRESS_LEN+1],
-    etherAddrDst[ETHERNET_ADDRESS_LEN+1], forceUsingIPaddress = 0;
+  u_char forceUsingIPaddress = 0;
   struct timeval tvstrct;
   u_char *theData;
+  TrafficCounter ctr;
 
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
@@ -515,10 +516,10 @@ static void processIpPkt(const u_char *bp,
   memcpy(&ip, bp, sizeof(struct ip));
   hlen = (u_int)ip.ip_hl * 4;
 
-  myGlobals.device[actualDeviceId].ipPkts++;
+  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipPkts, 1);
 
   if((bp != NULL) && (in_cksum((const u_short *)bp, hlen, 0) != 0)) {
-    myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum++;
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum, 1);
     return;
   }
 
@@ -526,7 +527,7 @@ static void processIpPkt(const u_char *bp,
      Fix below courtesy of
      Christian Hammers <ch@westend.com>
   */
-  myGlobals.device[actualDeviceId].ipBytes += ntohs(ip.ip_len);
+  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipBytes, ntohs(ip.ip_len));
 
   if(ip.ip_p == GRE_PROTOCOL_TYPE) {
     /*
@@ -630,31 +631,33 @@ static void processIpPkt(const u_char *bp,
     if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
   }
 
-  updatePacketCount(srcHost, dstHost, (TrafficCounter)h->len, actualDeviceId);
+  ctr.value = h->len;
+  updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
 
   if((!myGlobals.dontTrustMACaddr) && (!myGlobals.device[actualDeviceId].dummyDevice)) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
-    updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
+    ctr.value = length;
+    updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
   }
 
-  srcHost->ipBytesSent += length, dstHost->ipBytesRcvd += length;
+  incrementTrafficCounter(&srcHost->ipBytesSent, length), incrementTrafficCounter(&dstHost->ipBytesRcvd, length);
 
   if(subnetPseudoLocalHost(srcHost)) {
     if(subnetPseudoLocalHost(dstHost)) {
-      srcHost->bytesSentLoc += length;
-      dstHost->bytesRcvdLoc += length;
+      incrementTrafficCounter(&srcHost->bytesSentLoc, length);
+      incrementTrafficCounter(&dstHost->bytesRcvdLoc, length);
     } else {
-      srcHost->bytesSentRem += length;
-      dstHost->bytesRcvdLoc += length;
+      incrementTrafficCounter(&srcHost->bytesSentRem, length);
+      incrementTrafficCounter(&dstHost->bytesRcvdLoc, length);
     }
   } else {
     /* srcHost is remote */
     if(subnetPseudoLocalHost(dstHost)) {
-      srcHost->bytesSentLoc += length;
-      dstHost->bytesRcvdFromRem += length;
+      incrementTrafficCounter(&srcHost->bytesSentLoc, length);
+      incrementTrafficCounter(&dstHost->bytesRcvdFromRem, length);
     } else {
-      srcHost->bytesSentRem += length;
-      dstHost->bytesRcvdFromRem += length;
+      incrementTrafficCounter(&srcHost->bytesSentRem, length);
+      incrementTrafficCounter(&dstHost->bytesRcvdFromRem, length);
     }
   }
 
@@ -682,17 +685,17 @@ static void processIpPkt(const u_char *bp,
 
       Courtesy of Andreas Pfaller
     */
-    myGlobals.device[actualDeviceId].fragmentedIpBytes += length;
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].fragmentedIpBytes, length);
 
     switch(ip.ip_p) {
     case IPPROTO_TCP:
-      srcHost->tcpFragmentsSent += length, dstHost->tcpFragmentsRcvd += length;
+      incrementTrafficCounter(&srcHost->tcpFragmentsSent, length), incrementTrafficCounter(&dstHost->tcpFragmentsRcvd, length);
       break;
     case IPPROTO_UDP:
-      srcHost->udpFragmentsSent += length, dstHost->udpFragmentsRcvd += length;
+      incrementTrafficCounter(&srcHost->udpFragmentsSent, length), incrementTrafficCounter(&dstHost->udpFragmentsRcvd, length);
       break;
     case IPPROTO_ICMP:
-      srcHost->icmpFragmentsSent += length, dstHost->icmpFragmentsRcvd += length;
+      incrementTrafficCounter(&srcHost->icmpFragmentsSent, length), incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
       break;
     }
   }
@@ -701,7 +704,7 @@ static void processIpPkt(const u_char *bp,
 
   switch(ip.ip_p) {
   case IPPROTO_TCP:
-    myGlobals.device[actualDeviceId].tcpBytes += tcpUdpLen;
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpBytes, tcpUdpLen);
 
     if(tcpUdpLen < sizeof(struct tcphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
@@ -746,7 +749,7 @@ static void processIpPkt(const u_char *bp,
 
       if((sport > 0) && (dport > 0)) {
 	IPSession *theSession;
-	u_short isPassiveSession = 0, nonFullyRemoteSession = 1;
+	u_short isPassiveSess = 0, nonFullyRemoteSession = 1;
 
 	/* It might be that tcpDataLength is 0 when
 	   the rcvd packet is fragmented and the main
@@ -754,24 +757,24 @@ static void processIpPkt(const u_char *bp,
 
 	if(subnetPseudoLocalHost(srcHost)) {
 	  if(subnetPseudoLocalHost(dstHost)) {
-	    srcHost->tcpSentLoc += length;
-	    dstHost->tcpRcvdLoc += length;
-	    myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local += length;
+	    incrementTrafficCounter(&srcHost->tcpSentLoc, length);
+	    incrementTrafficCounter(&dstHost->tcpRcvdLoc, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local, length);
 	  } else {
-	    srcHost->tcpSentRem += length;
-	    dstHost->tcpRcvdLoc += length;
-	    myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local2remote += length;
+	    incrementTrafficCounter(&srcHost->tcpSentRem, length);
+	    incrementTrafficCounter(&dstHost->tcpRcvdLoc, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local2remote, length);
 	  }
 	} else {
 	  /* srcHost is remote */
 	  if(subnetPseudoLocalHost(dstHost)) {
-	    srcHost->tcpSentLoc += length;
-	    dstHost->tcpRcvdFromRem += length;
-	    myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote2local += length;
+	    incrementTrafficCounter(&srcHost->tcpSentLoc, length);
+	    incrementTrafficCounter(&dstHost->tcpRcvdFromRem, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote2local, length);
 	  } else {
-	    srcHost->tcpSentRem += length;
-	    dstHost->tcpRcvdFromRem += length;
-	    myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote += length;
+	    incrementTrafficCounter(&srcHost->tcpSentRem, length);
+	    incrementTrafficCounter(&dstHost->tcpRcvdFromRem, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote, length);
 	    nonFullyRemoteSession = 0;
 	  }
 	}
@@ -782,9 +785,9 @@ static void processIpPkt(const u_char *bp,
 					dport, ntohs(ip.ip_len), &tp, tcpDataLength,
 					theData, actualDeviceId);
 	  if(theSession == NULL)
-	    isPassiveSession = 0;
+	    isPassiveSess = 0;
 	  else
-	    isPassiveSession = theSession->passiveFtpSession;
+	    isPassiveSess = theSession->passiveFtpSession;
 	} else {
 	  updateUsedPorts(srcHost, dstHost, sport, dport, tcpDataLength);
 	}
@@ -802,11 +805,11 @@ static void processIpPkt(const u_char *bp,
 	 * Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>
 	 */
 	if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSession, actualDeviceId) == -1)
-	    handleIP(sport, srcHost, dstHost, length, isPassiveSession, actualDeviceId);
+	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, actualDeviceId) == -1)
+	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, actualDeviceId);
 	} else {
-	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSession, actualDeviceId) == -1)
-	    handleIP(dport, srcHost, dstHost, length, isPassiveSession, actualDeviceId);
+	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, actualDeviceId) == -1)
+	    handleIP(dport, srcHost, dstHost, length, isPassiveSess, actualDeviceId);
 	}
       }
     }
@@ -814,7 +817,7 @@ static void processIpPkt(const u_char *bp,
 
   case IPPROTO_UDP:
     proto = "UDP";
-    myGlobals.device[actualDeviceId].udpBytes += tcpUdpLen;
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, tcpUdpLen);
 
     if(tcpUdpLen < sizeof(struct udphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
@@ -874,14 +877,14 @@ static void processIpPkt(const u_char *bp,
 	      addTimeMapping(transactionId, tvstrct);
 
 	      if(subnetLocalHost(dstHost))
-		srcHost->dnsStats->numLocalReqSent++;
+		incrementTrafficCounter(&srcHost->dnsStats->numLocalReqSent, 1);
 	      else
-		srcHost->dnsStats->numRemReqSent++;
+		incrementTrafficCounter(&srcHost->dnsStats->numRemReqSent, 1);
 
 	      if(subnetLocalHost(srcHost))
-		dstHost->dnsStats->numLocalReqRcvd++;
+		incrementTrafficCounter(&dstHost->dnsStats->numLocalReqRcvd, 1);
 	      else
-		dstHost->dnsStats->numRemReqRcvd++;
+		incrementTrafficCounter(&dstHost->dnsStats->numRemReqRcvd, 1);
 	    } else {
 	      time_t microSecTimeDiff;
 
@@ -936,11 +939,11 @@ static void processIpPkt(const u_char *bp,
 	      FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
 
 	      if(positiveReply) {
-		srcHost->dnsStats->numPositiveReplSent++;
-		dstHost->dnsStats->numPositiveReplRcvd++;
+		incrementTrafficCounter(&srcHost->dnsStats->numPositiveReplSent, 1);
+		incrementTrafficCounter(&dstHost->dnsStats->numPositiveReplRcvd, 1);
 	      } else {
-		srcHost->dnsStats->numNegativeReplSent++;
-		dstHost->dnsStats->numNegativeReplRcvd++;
+		incrementTrafficCounter(&srcHost->dnsStats->numNegativeReplSent, 1);
+		incrementTrafficCounter(&dstHost->dnsStats->numNegativeReplRcvd, 1);
 	      }
 	    }
 	  } else {
@@ -978,24 +981,24 @@ static void processIpPkt(const u_char *bp,
 
 	if(subnetPseudoLocalHost(srcHost)) {
 	  if(subnetPseudoLocalHost(dstHost)) {
-	    srcHost->udpSentLoc += length;
-	    dstHost->udpRcvdLoc += length;
-	    myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local += length;
+	    incrementTrafficCounter(&srcHost->udpSentLoc, length);
+	    incrementTrafficCounter(&dstHost->udpRcvdLoc, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local, length);
 	  } else {
-	    srcHost->udpSentRem += length;
-	    dstHost->udpRcvdLoc += length;
-	    myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local2remote += length;
+	    incrementTrafficCounter(&srcHost->udpSentRem, length);
+	    incrementTrafficCounter(&dstHost->udpRcvdLoc, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local2remote, length);
 	  }
 	} else {
 	  /* srcHost is remote */
 	  if(subnetPseudoLocalHost(dstHost)) {
-	    srcHost->udpSentLoc += length;
-	    dstHost->udpRcvdFromRem += length;
-	    myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote2local += length;
+	    incrementTrafficCounter(&srcHost->udpSentLoc, length);
+	    incrementTrafficCounter(&dstHost->udpRcvdFromRem, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote2local, length);
 	  } else {
-	    srcHost->udpSentRem += length;
-	    dstHost->udpRcvdFromRem += length;
-	    myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote += length;
+	    incrementTrafficCounter(&srcHost->udpSentRem, length);
+	    incrementTrafficCounter(&dstHost->udpRcvdFromRem, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote, length);
 	    nonFullyRemoteSession = 0;
 	  }
 	}
@@ -1027,7 +1030,7 @@ static void processIpPkt(const u_char *bp,
     break;
 
   case IPPROTO_ICMP:
-    myGlobals.device[actualDeviceId].icmpBytes += length;
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpBytes, length);
 
     if(tcpUdpLen < sizeof(struct icmp)) {
       if(myGlobals.enableSuspiciousPacketDump) {
@@ -1044,13 +1047,13 @@ static void processIpPkt(const u_char *bp,
       proto = "ICMP";
       memcpy(&icmpPkt, bp+hlen, sizeof(struct icmp));
 
-      srcHost->icmpSent += length;
-      dstHost->icmpRcvd += length;
+      incrementTrafficCounter(&srcHost->icmpSent, length);
+      incrementTrafficCounter(&dstHost->icmpRcvd, length);
 
       if(off & 0x3fff) {
 	char *fmt = "WARNING: detected ICMP fragment [%s -> %s] (network attack attempt?)";
 
-	srcHost->icmpFragmentsSent += length, dstHost->icmpFragmentsRcvd += length;
+	incrementTrafficCounter(&srcHost->icmpFragmentsSent, length), incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHostIdx, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHostIdx, actualDeviceId);
@@ -1070,14 +1073,14 @@ static void processIpPkt(const u_char *bp,
 	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
-	srcHost->icmpInfo->icmpMsgSent[icmpPkt.icmp_type]++;
+	incrementTrafficCounter(&srcHost->icmpInfo->icmpMsgSent[icmpPkt.icmp_type], 1);
 
 	if(dstHost->icmpInfo == NULL) {
 	  dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
 	  memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
-	dstHost->icmpInfo->icmpMsgRcvd[icmpPkt.icmp_type]++;
+	incrementTrafficCounter(&dstHost->icmpInfo->icmpMsgRcvd[icmpPkt.icmp_type], 1);
 
 	switch (icmpPkt.icmp_type) {
 	case ICMP_ECHOREPLY:
@@ -1124,14 +1127,14 @@ static void processIpPkt(const u_char *bp,
 
       if(subnetPseudoLocalHost(srcHost))
 	if(subnetPseudoLocalHost(dstHost))
-	  myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.local += length;
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.local, length);
 	else
-	  myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.local2remote += length;
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.local2remote, length);
       else /* srcHost is remote */
 	if(subnetPseudoLocalHost(dstHost))
-	  myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote2local += length;
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote2local, length);
 	else
-	  myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote += length;
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote, length);
 
       if(myGlobals.enableSuspiciousPacketDump
 	 && (icmpPkt.icmp_type == ICMP_ECHO)
@@ -1139,7 +1142,6 @@ static void processIpPkt(const u_char *bp,
 	traceEvent(TRACE_WARNING, "Smurf packet detected for host [%s->%s]",
 		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
       } else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
-	u_int16_t dport;
 	struct ip *oip = &icmpPkt.icmp_ip;
 
 	switch(icmpPkt.icmp_code) {
@@ -1213,26 +1215,26 @@ static void processIpPkt(const u_char *bp,
 
   case IPPROTO_OSPF:
     proto = "OSPF";
-    myGlobals.device[actualDeviceId].ospfBytes += length;
-    srcHost->ospfSent += length;
-    dstHost->ospfRcvd += length;
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ospfBytes, length);
+    incrementTrafficCounter(&srcHost->ospfSent, length);
+    incrementTrafficCounter(&dstHost->ospfRcvd, length);
     sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
     break;
 
   case IPPROTO_IGMP:
     proto = "IGMP";
-    myGlobals.device[actualDeviceId].igmpBytes += length;
-    srcHost->igmpSent += length;
-    dstHost->igmpRcvd += length;
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].igmpBytes, length);
+    incrementTrafficCounter(&srcHost->igmpSent, length);
+    incrementTrafficCounter(&dstHost->igmpRcvd, length);
     sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
     break;
 
   default:
     proto = "IP (Other)";
-    myGlobals.device[actualDeviceId].otherIpBytes += length;
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
     sport = dport = 0;
-    srcHost->otherSent += length;
-    dstHost->otherRcvd += length;
+    incrementTrafficCounter(&srcHost->otherSent, length);
+    incrementTrafficCounter(&dstHost->otherRcvd, length);
     sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
     break;
   }
@@ -1287,7 +1289,7 @@ void queuePacket(u_char * _deviceId,
     deviceId = (int)_deviceId;
 #endif
 
-    myGlobals.device[getActualInterface(deviceId)].droppedPkts++;
+    incrementTrafficCounter(&myGlobals.device[getActualInterface(deviceId)].droppedPkts, 1);
 
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads (dequeue) to run */
@@ -1398,10 +1400,10 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
        && (list->fcode[deviceId].bf_insns != NULL)
        && (bpf_filter(list->fcode[deviceId].bf_insns,
 		      (u_char*)p, h->len, h->caplen))) {
-      list->bytes += h->len;
-      list->packets++;
+      incrementTrafficCounter(&list->bytes, h->len);
+      incrementTrafficCounter(&list->packets, 1);
       if(list->pluginStatus.pluginPtr != NULL) {
-	void(*pluginFunc)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
+	void(*pluginFunc)(u_char*, const struct pcap_pkthdr*, const u_char*);
 
 	pluginFunc = (void(*)(u_char *_deviceId, const struct pcap_pkthdr*,
 			      const u_char*))list->pluginStatus.pluginPtr->pluginFunc;
@@ -1512,20 +1514,20 @@ static char* timestamp(const struct timeval* t, int fmt) {
 /* ************************************ */
 
 void updateDevicePacketStats(u_int length, int actualDeviceId) {
-  if(length < 64) myGlobals.device[actualDeviceId].rcvdPktStats.upTo64++;
-  else if(length < 128) myGlobals.device[actualDeviceId].rcvdPktStats.upTo128++;
-  else if(length < 256) myGlobals.device[actualDeviceId].rcvdPktStats.upTo256++;
-  else if(length < 512) myGlobals.device[actualDeviceId].rcvdPktStats.upTo512++;
-  else if(length < 1024) myGlobals.device[actualDeviceId].rcvdPktStats.upTo1024++;
-  else if(length < 1518) myGlobals.device[actualDeviceId].rcvdPktStats.upTo1518++;
-  else myGlobals.device[actualDeviceId].rcvdPktStats.above1518++;
+  if(length < 64)        incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo64, 1);
+  else if(length < 128)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo128, 1);
+  else if(length < 256)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo256, 1);
+  else if(length < 512)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo512, 1);
+  else if(length < 1024) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo1024, 1);
+  else if(length < 1518) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo1518, 1);
+  else                   incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.above1518, 1);
 
-  if((myGlobals.device[actualDeviceId].rcvdPktStats.shortest == 0)
-     || (myGlobals.device[actualDeviceId].rcvdPktStats.shortest > length))
-    myGlobals.device[actualDeviceId].rcvdPktStats.shortest = length;
+  if((myGlobals.device[actualDeviceId].rcvdPktStats.shortest.value == 0)
+     || (myGlobals.device[actualDeviceId].rcvdPktStats.shortest.value > length))
+    myGlobals.device[actualDeviceId].rcvdPktStats.shortest.value = length;
 
-  if(myGlobals.device[actualDeviceId].rcvdPktStats.longest < length)
-    myGlobals.device[actualDeviceId].rcvdPktStats.longest = length;
+  if(myGlobals.device[actualDeviceId].rcvdPktStats.longest.value < length)
+    myGlobals.device[actualDeviceId].rcvdPktStats.longest.value = length;
 }
 
 /* ***************************************************** */
@@ -1618,8 +1620,8 @@ void processPacket(u_char *_deviceId,
 
   updateDevicePacketStats(length, actualDeviceId);
 
-  myGlobals.device[actualDeviceId].ethernetPkts++;
-  myGlobals.device[actualDeviceId].ethernetBytes += h->len;
+  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetPkts, 1);
+  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetBytes, h->len);
 
   if(myGlobals.device[actualDeviceId].pcapDumper != NULL)
     pcap_dump((u_char*)myGlobals.device[actualDeviceId].pcapDumper, h, p);
@@ -1628,14 +1630,14 @@ void processPacket(u_char *_deviceId,
     /* Sanity check */
     if(myGlobals.enableSuspiciousPacketDump) {
       traceEvent(TRACE_INFO, "Packet # %u too long (len = %u)!\n",
-		 (unsigned int)myGlobals.device[deviceId].ethernetPkts,
+		 (unsigned int)myGlobals.device[deviceId].ethernetPkts.value,
 		 (unsigned int)length);
       dumpSuspiciousPacket(actualDeviceId);
     }
 
     /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
     length = myGlobals.mtuSize[myGlobals.device[deviceId].datalink];
-    myGlobals.device[actualDeviceId].rcvdPktStats.tooLong++;
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.tooLong, 1);
   }
 
 #ifdef MULTITHREADED
@@ -1855,11 +1857,17 @@ void processPacket(u_char *_deviceId,
 	  length -= displ;
 	  goto handleIPX;
 	} else {
-	  srcHost->ipxSent += length, dstHost->ipxRcvd += length;
-	  myGlobals.device[actualDeviceId].ipxBytes += length;
-	  updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
+	  TrafficCounter ctr;
+	  
+	  incrementTrafficCounter(&srcHost->ipxSent, length), incrementTrafficCounter(&dstHost->ipxRcvd, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
+
+	  ctr.value = length;
+	  updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
 	}
       } else if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
+	TrafficCounter ctr;
+
 	trp = (struct tokenRing_header*)orig_p;
 	ether_src = (u_char*)trp->trn_shost, ether_dst = (u_char*)trp->trn_dhost;
 	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
@@ -1878,9 +1886,11 @@ void processPacket(u_char *_deviceId,
 	  return;
 	}
 
-	srcHost->otherSent += length;
-	dstHost->otherRcvd += length;
-	updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
+	incrementTrafficCounter(&srcHost->otherSent, length);
+	incrementTrafficCounter(&dstHost->otherRcvd, length);
+	ctr.value = length;
+
+	updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
       } else if((myGlobals.device[deviceId].datalink != DLT_IEEE802)
 		&& (eth_type <= ETHERMTU) && (length > 3)) {
 	/* The code below has been taken from tcpdump */
@@ -1911,14 +1921,16 @@ void processPacket(u_char *_deviceId,
 	    return;
 	  }
 
-	  srcHost->ipxSent += length, dstHost->ipxRcvd += length;
-	  myGlobals.device[actualDeviceId].ipxBytes += length;
+	  incrementTrafficCounter(&srcHost->ipxSent, length), incrementTrafficCounter(&dstHost->ipxRcvd, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	} else if(!myGlobals.dontTrustMACaddr) {
 	  /* MAC addresses are meaningful here */
 	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 
 	  if((srcHostIdx != NO_PEER) && (dstHostIdx != NO_PEER)) {
+	    TrafficCounter ctr;
+
 	    srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	    dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
@@ -1937,8 +1949,8 @@ void processPacket(u_char *_deviceId,
 
 	    if(sap_type == 0x42) {
 	      /* Spanning Tree */
-	      srcHost->stpSent += length, dstHost->stpRcvd += length;
-	      myGlobals.device[actualDeviceId].stpBytes += length;
+	      incrementTrafficCounter(&srcHost->stpSent, length), incrementTrafficCounter(&dstHost->stpRcvd, length);
+	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].stpBytes, length);
 	    } else if(myGlobals.enablePacketDecoding && (sap_type == 0xE0)) {
 	      /* NetWare */
 	      if(!(llcHeader.ssap == LLCSAP_GLOBAL && llcHeader.dsap == LLCSAP_GLOBAL)) {
@@ -2030,8 +2042,6 @@ void processPacket(u_char *_deviceId,
 		}
 
 		if(srcHost->ipxHostName == NULL) {
-		  int i;
-
 		  for(i=1; i<strlen(serverName); i++)
 		    if((serverName[i] == '_') && (serverName[i-1] == '_')) {
 		      serverName[i-1] = '\0'; /* Avoid weird names */
@@ -2052,23 +2062,23 @@ void processPacket(u_char *_deviceId,
 #endif
 	      }
 
-	      srcHost->ipxSent += length, dstHost->ipxRcvd += length;
-	      myGlobals.device[actualDeviceId].ipxBytes += length;
+	      incrementTrafficCounter(&srcHost->ipxSent, length), incrementTrafficCounter(&dstHost->ipxRcvd, length);
+	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	    } else if((llcHeader.ssap == LLCSAP_NETBIOS)
 		      && (llcHeader.dsap == LLCSAP_NETBIOS)) {
 	      /* Netbios */
-	      srcHost->netbiosSent += length;
-	      dstHost->netbiosRcvd += length;
-	      myGlobals.device[actualDeviceId].netbiosBytes += length;
+	      incrementTrafficCounter(&srcHost->netbiosSent, length);
+	      incrementTrafficCounter(&dstHost->netbiosRcvd, length);
+	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].netbiosBytes, length);
 	    } else if((sap_type == 0xF0)
 		      || (sap_type == 0xB4)
 		      || (sap_type == 0xC4)
 		      || (sap_type == 0xF8)) {
 	      /* DLC (protocol used for printers) */
-	      srcHost->dlcSent += length;
-	      dstHost->dlcRcvd += length;
+	      incrementTrafficCounter(&srcHost->dlcSent, length);
+	      incrementTrafficCounter(&dstHost->dlcRcvd, length);
 	      FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
-	      myGlobals.device[actualDeviceId].dlcBytes += length;
+	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].dlcBytes, length);
 	    } else if(sap_type == 0xAA /* SNAP */) {
 	      u_int16_t snapType;
 
@@ -2133,9 +2143,9 @@ void processPacket(u_char *_deviceId,
 		  }
 		}
 
-		srcHost->appletalkSent += length;
-		dstHost->appletalkRcvd += length;
-		myGlobals.device[actualDeviceId].atalkBytes += length;
+		incrementTrafficCounter(&srcHost->appletalkSent, length);
+		incrementTrafficCounter(&dstHost->appletalkRcvd, length);
+		incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
 	      } else {
 		if((llcHeader.ctl.snap_ether.snap_orgcode[0] == 0x0)
 		   && (llcHeader.ctl.snap_ether.snap_orgcode[1] == 0x0)
@@ -2149,17 +2159,17 @@ void processPacket(u_char *_deviceId,
 		  FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
 		}
 
-		srcHost->otherSent += length;
-		dstHost->otherRcvd += length;
-		myGlobals.device[actualDeviceId].otherBytes += length;
+		incrementTrafficCounter(&srcHost->otherSent, length);
+		incrementTrafficCounter(&dstHost->otherRcvd, length);
+		incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
 	      }
 	    } else if(myGlobals.enablePacketDecoding
 		      && ((sap_type == 0x06)
 			  || (sap_type == 0xFE)
 			  || (sap_type == 0xFC))) {  /* OSI */
-	      srcHost->osiSent += length;
-	      dstHost->osiRcvd += length;
-	      myGlobals.device[actualDeviceId].osiBytes += length;
+	      incrementTrafficCounter(&srcHost->osiSent, length);
+	      incrementTrafficCounter(&dstHost->osiRcvd, length);
+	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].osiBytes, length);
 	    } else {
 	      /* Unknown Protocol */
 #ifdef UNKNOWN_PACKET_DEBUG
@@ -2169,11 +2179,13 @@ void processPacket(u_char *_deviceId,
 			 llcsap_string(llcHeader.ssap & ~LLC_GSAP),
 			 etheraddr_string(ether_dst));
 #endif
-	      srcHost->otherSent += length;
-	      dstHost->otherRcvd += length;
-	      myGlobals.device[actualDeviceId].otherBytes += length;
+	      incrementTrafficCounter(&srcHost->otherSent, length);
+	      incrementTrafficCounter(&dstHost->otherRcvd, length);
+	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
 	    }
-	    updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
+
+	    ctr.value = length;
+	    updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
 	  }
 	}
       } else if(eth_type == ETHERTYPE_IP) {
@@ -2185,6 +2197,7 @@ void processPacket(u_char *_deviceId,
 	/* MAC addresses are meaningful here */
 	struct ether_arp arpHdr;
 	struct in_addr addr;
+	TrafficCounter ctr;
 
 	if(eth_type == ETHERTYPE_IPv6) {
 	  static int firstTimeIpv6=1;
@@ -2232,38 +2245,38 @@ void processPacket(u_char *_deviceId,
 	      addr.s_addr = ntohl(addr.s_addr);
 	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-	      if(srcHost != NULL) srcHost->arpReplyPktsSent++;
-	      if(dstHost != NULL) dstHost->arpReplyPktsRcvd++;
+	      if(srcHost != NULL) incrementTrafficCounter(&srcHost->arpReplyPktsSent, 1);
+	      if(dstHost != NULL) incrementTrafficCounter(&dstHost->arpReplyPktsRcvd, 1);
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
 	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) srcHost->arpReqPktsSent++;
+	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) incrementTrafficCounter(&srcHost->arpReqPktsSent, 1);
 	    }
 	  }
 	  /* DO NOT ADD A break ABOVE ! */
 	case ETHERTYPE_REVARP: /* Reverse ARP */
-	  if(srcHost != NULL) srcHost->arp_rarpSent += length;
-	  if(dstHost != NULL) dstHost->arp_rarpRcvd += length;
-	  myGlobals.device[actualDeviceId].arpRarpBytes += length;
+	  if(srcHost != NULL) incrementTrafficCounter(&srcHost->arp_rarpSent, length);
+	  if(dstHost != NULL) incrementTrafficCounter(&dstHost->arp_rarpRcvd, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].arpRarpBytes, length);
 	  break;
 	case ETHERTYPE_DN: /* Decnet */
-	  srcHost->decnetSent += length;
-	  dstHost->decnetRcvd += length;
-	  myGlobals.device[actualDeviceId].decnetBytes += length;
+	  incrementTrafficCounter(&srcHost->decnetSent, length);
+	  incrementTrafficCounter(&dstHost->decnetRcvd, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].decnetBytes, length);
 	  break;
 	case ETHERTYPE_ATALK: /* AppleTalk */
 	case ETHERTYPE_AARP:
-	  srcHost->appletalkSent += length;
-	  dstHost->appletalkRcvd += length;
-	  myGlobals.device[actualDeviceId].atalkBytes += length;
+	  incrementTrafficCounter(&srcHost->appletalkSent, length);
+	  incrementTrafficCounter(&dstHost->appletalkRcvd, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
 	  break;
 	case ETHERTYPE_QNX:
-	  srcHost->qnxSent += length;
-	  dstHost->qnxRcvd += length;
-	  myGlobals.device[actualDeviceId].qnxBytes += length;
+	  incrementTrafficCounter(&srcHost->qnxSent, length);
+	  incrementTrafficCounter(&dstHost->qnxRcvd, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].qnxBytes, length);
 	  break;
 	default:
 #ifdef UNKNOWN_PACKET_DEBUG
@@ -2272,13 +2285,14 @@ void processPacket(u_char *_deviceId,
 		     dstHost->hostNumIpAddress, dstHost->ethAddressString,
 		     eth_type, eth_type);
 #endif
-	  srcHost->otherSent += length;
-	  dstHost->otherRcvd += length;
-	  myGlobals.device[actualDeviceId].otherBytes += length;
+	  incrementTrafficCounter(&srcHost->otherSent, length);
+	  incrementTrafficCounter(&dstHost->otherRcvd, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
 	  break;
 	}
 
-	updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
+	ctr.value = length;
+	updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
       }
     }
   }

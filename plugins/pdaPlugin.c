@@ -72,9 +72,9 @@ static int cmpPdaFctn(const void *_a, const void *_b) {
     b_ = (*b)->bytesRcvd; 
   }
 
-  if(a_ < b_)
+  if(a_.value < b_.value)
     return(1);
-  else if (a_ > b_)
+  else if (a_.value > b_.value)
     return(-1);
   else
     return(0);
@@ -85,7 +85,7 @@ static int cmpPdaFctn(const void *_a, const void *_b) {
 static void printHtmlIndex(void) {
   int i;
   char linkName[256];
-  int diff;
+  Counter diff;
   /*  int deviceId, actualDeviceId; */
   int actualDeviceId;
     
@@ -93,7 +93,7 @@ static void printHtmlIndex(void) {
   HostTraffic *el;
   HostTraffic* tmpTable[HASHNAMESIZE];
   char *tmpName, buf[BUF_SIZE];
-  TrafficCounter unicastPkts=0;
+  Counter unicastPkts=0;
 
   /* #ifdef WIN32
      deviceId = 0;
@@ -153,7 +153,7 @@ static void printHtmlIndex(void) {
 		"<tr><td><a href=\"/%s.html\">%s</a></td>"
 		"<td>%s</td></tr>\n",
 		linkName, tmpName,      
-		formatBytes(el->bytesSent, 1)) < 0) 
+		formatBytes(el->bytesSent.value, 1)) < 0) 
       BufferTooShort();
     sendString(buf);
   }
@@ -188,7 +188,7 @@ static void printHtmlIndex(void) {
 		"<tr><td><a href=\"/%s.html\">%s</a></td>"
 		"<td>%s</td></tr>\n",
 		linkName, tmpName,  
-		formatBytes(el->bytesRcvd, 1)) < 0) 
+		formatBytes(el->bytesRcvd.value, 1)) < 0) 
       BufferTooShort();
     sendString(buf);
   }
@@ -212,41 +212,42 @@ static void printHtmlIndex(void) {
 
   /** **/
   
-  diff = (int)(myGlobals.device[actualDeviceId].ethernetPkts -
-	       myGlobals.device[actualDeviceId].broadcastPkts -
-	       myGlobals.device[actualDeviceId].multicastPkts);
+  diff = myGlobals.device[actualDeviceId].ethernetPkts.value - myGlobals.device[actualDeviceId].broadcastPkts.value -
+    myGlobals.device[actualDeviceId].multicastPkts.value;
+
   if(diff > 0)
     unicastPkts = 0; /* It shouldn't happen */
   else 
-    unicastPkts = (TrafficCounter)diff; 
+    unicastPkts = diff; 
 
-  if(myGlobals.device[actualDeviceId].ethernetPkts <= 0) myGlobals.device[actualDeviceId].ethernetPkts = 1;
+  if(myGlobals.device[actualDeviceId].ethernetPkts.value <= 0) 
+    myGlobals.device[actualDeviceId].ethernetPkts.value = 1;
     
   if(snprintf(buf, sizeof(buf),"<tr><td>Total</td><td>%s</td></tr>\n",
-	      formatPkts(myGlobals.device[actualDeviceId].ethernetPkts)) < 0) 
+	      formatPkts(myGlobals.device[actualDeviceId].ethernetPkts.value)) < 0) 
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),"<tr><td>Unicast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
 	      formatPkts(unicastPkts),
-	      (float)(100*unicastPkts)/(float)myGlobals.device[actualDeviceId].ethernetPkts) < 0) 
+	      (float)(100*unicastPkts)/(float)myGlobals.device[actualDeviceId].ethernetPkts.value) < 0) 
     BufferTooShort();
   sendString(buf);
   if(snprintf(buf, sizeof(buf),"<tr><td>Broadcast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
-	      formatPkts(myGlobals.device[actualDeviceId].broadcastPkts),
-	      (float)(100*myGlobals.device[actualDeviceId].broadcastPkts)
-	      /(float)myGlobals.device[actualDeviceId].ethernetPkts) < 0) 
+	      formatPkts(myGlobals.device[actualDeviceId].broadcastPkts.value),
+	      (float)(100*myGlobals.device[actualDeviceId].broadcastPkts.value)
+	      /(float)myGlobals.device[actualDeviceId].ethernetPkts.value) < 0) 
     BufferTooShort();
   sendString(buf);
 
-  if(myGlobals.device[actualDeviceId].multicastPkts > 0) {
+  if(myGlobals.device[actualDeviceId].multicastPkts.value > 0) {
     if(snprintf(buf, sizeof(buf),"<tr><td>Multicast</td>"
 		"<td>%s [%.1f%%]</td></tr>\n", 
-		formatPkts(myGlobals.device[actualDeviceId].multicastPkts),
-		(float)(100*myGlobals.device[actualDeviceId].multicastPkts)
-		/(float)myGlobals.device[actualDeviceId].ethernetPkts) < 0) 
+		formatPkts(myGlobals.device[actualDeviceId].multicastPkts.value),
+		(float)(100*myGlobals.device[actualDeviceId].multicastPkts.value)
+		/(float)myGlobals.device[actualDeviceId].ethernetPkts.value) < 0) 
       BufferTooShort();
     sendString(buf);
   }

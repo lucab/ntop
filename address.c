@@ -279,7 +279,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 	int len = strlen(tmpBuf)-strlen(myGlobals.domainName);
 
 	if((len > 0) && (!strcmp(&tmpBuf[len], myGlobals.domainName))) {
-	  int i=0, foundDot=0;
+	  int foundDot=0;
 
 	  for(i=0; i<len-1; i++)
 	    if(tmpBuf[i] == '.') {
@@ -765,6 +765,8 @@ static u_int _ns_get16(const u_char *src) {
   return (dst);
 }
 
+/* ************************************ */
+
 int printable(int ch) {
   return (ch > 0x20 && ch < 0x7f);
 }
@@ -1240,7 +1242,6 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
        *
        */
       char *a, *b, *c, *d, dnsBuf[48], *strtokState;
-      int len;
       unsigned long theDNSaddr;
 
       len = strlen(bp); if(len >= (sizeof(dnsBuf)-1)) len = sizeof(dnsBuf)-2;
@@ -1429,62 +1430,6 @@ void checkSpoofing(u_int idxToCheck, int actualDeviceId) {
 	}
       }
     }
-  }
-}
-
-/* ****************************************** */
-
-/*
-  Let's remove from the database those entries that
-  have been added a while ago
-*/
-
-void cleanupHostEntries() {
-  datum data_data, key_data, return_data;
-  u_int numDbEntries = 0;
-
-  sleep(ADDRESS_PURGE_TIMEOUT);
-
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Entering cleanupHostEntries()");
-#endif
-
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "cleanupHostEntries");
-#endif
-  return_data = gdbm_firstkey(myGlobals.gdbm_file);
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
-
-  while(return_data.dptr != NULL) {
-    numDbEntries++;
-    key_data = return_data;
-#ifdef MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "cleanupHostEntries");
-#endif
-    return_data = gdbm_nextkey(myGlobals.gdbm_file, key_data);
-    data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
-
-    if(data_data.dptr != NULL) {
-      if((data_data.dsize == (sizeof(StoredAddress)+1))
-	 && ((((StoredAddress*)data_data.dptr)->recordCreationTime+ADDRESS_PURGE_TIMEOUT) < myGlobals.actTime)) {
-	gdbm_delete(myGlobals.gdbm_file, key_data);
-#ifdef DEBUG
-	traceEvent(TRACE_INFO, "Deleted '%s' entry.\n", data_data.dptr);
-#endif
-	numDbEntries--;
-      }
-    }
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#ifdef HAVE_SCHED_H
-    sched_yield(); /* Allow other threads to run */
-#endif
-#endif
-
-    if(data_data.dptr != NULL) free(data_data.dptr);
-    free(key_data.dptr);
   }
 }
 

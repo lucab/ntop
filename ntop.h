@@ -944,10 +944,15 @@ typedef struct hash_list {
 #define ADDRESS_QUEUE_LENGTH    512
 
 #ifdef WIN32
-typedef float TrafficCounter;
+tyepdef float Counter;
 #else
-typedef unsigned long long TrafficCounter;
+typedef unsigned long long Counter;
 #endif
+
+typedef struct trafficCounter {
+  Counter value;
+  u_char modified;
+} TrafficCounter;
 
 #define PCAP_NW_INTERFACE         "pcap file"
 #define MAX_NUM_CONTACTED_PEERS   8
@@ -1203,8 +1208,8 @@ typedef struct ntopInterface {
 
   time_t lastThptUpdate, lastMinThptUpdate;
   time_t lastHourThptUpdate, lastFiveMinsThptUpdate;
-  TrafficCounter throughput;
-  float packetThroughput;
+  float  throughput;
+  float  packetThroughput;
 
   unsigned long numThptSamples;
   ThptEntry last60MinutesThpt[60], last24HoursThpt[24];
@@ -1716,7 +1721,7 @@ typedef struct ipSession {
   TrafficCounter bytesRetranI2R;    /* # bytes retransmitted (due to duplicated ACKs) */
   TrafficCounter bytesRetranR2I;    /* # bytes retransmitted (due to duplicated ACKs) */
   tcp_seq finId[MAX_NUM_FIN];       /* ACK ids we're waiting for                */
-  TrafficCounter lastFlags;         /* flags of the last TCP packet             */
+  u_long lastFlags;                 /* flags of the last TCP packet             */
   u_int32_t lastCSAck, lastSCAck;   /* they store the last ACK ids C->S/S->C    */
   u_int32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
   u_char lastInitiator2RemFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags             */
@@ -1886,8 +1891,8 @@ typedef struct dhcpStats {
 
 
 typedef struct icmpHostInfo {
-  unsigned long icmpMsgSent[ICMP_MAXTYPE+1];
-  unsigned long icmpMsgRcvd[ICMP_MAXTYPE+1];
+  TrafficCounter icmpMsgSent[ICMP_MAXTYPE+1];
+  TrafficCounter icmpMsgRcvd[ICMP_MAXTYPE+1];
   time_t        lastUpdated;
 } IcmpHostInfo;
 
@@ -1964,7 +1969,6 @@ typedef struct storedAddress {
 typedef struct hostTraffic {
   u_short          hostTrafficBucket /* Index in the **hash_hostTraffic list */;
   u_short          hashListBucket    /* Index in the **hashList         list */;
-  u_int16_t        numUses;
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;
   time_t           firstSeen;
@@ -2084,7 +2088,7 @@ typedef struct domainStats {
 
 typedef struct usersTraffic {
   char*  userName;
-  TrafficCounter bytesSent, bytesRcvd;
+  Counter bytesSent, bytesRcvd;
 } UsersTraffic;
 
 /* **************************** */

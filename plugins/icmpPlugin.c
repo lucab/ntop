@@ -53,7 +53,7 @@ struct id_rdiscovery {
 static int sortICMPhosts(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
-  unsigned long n1, n2;
+  Counter n1, n2;
   int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
@@ -69,72 +69,72 @@ static int sortICMPhosts(const void *_a, const void *_b) {
 
   switch(icmpColumnSort) {
   case 2:
-    n1 = (*a)->icmpSent, n2 = (*b)->icmpSent;
+    n1 = (*a)->icmpSent.value, n2 = (*b)->icmpSent.value;
     break;
 
   case 3:
-    n1 = (*a)->icmpRcvd, n2 = (*b)->icmpRcvd;
+    n1 = (*a)->icmpRcvd.value, n2 = (*b)->icmpRcvd.value;
     break;
 
   case 4:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHO];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHO];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHO].value + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHO].value + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value;
     break;
 
   case 5:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_UNREACH] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_UNREACH] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_UNREACH].value + (*a)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_UNREACH].value + (*b)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value;
     break;
 
   case 6:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_REDIRECT] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_REDIRECT] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_REDIRECT].value + (*a)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_REDIRECT].value + (*b)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT].value;
     break;
 
   case 7:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value;
     break;
 
   case 8:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_TIMXCEED] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_TIMXCEED] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value + (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value + (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value;
     break;
 
   case 9:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_PARAMPROB] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_PARAMPROB] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_PARAMPROB].value + (*a)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_PARAMPROB].value + (*b)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value;
     break;
 
   case 10:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_MASKREQ] + (*a)->icmpInfo->icmpMsgSent[ICMP_MASKREPLY] +
-      (*a)->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ]+ (*a)->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_MASKREQ] + (*b)->icmpInfo->icmpMsgSent[ICMP_MASKREPLY] +
-      (*b)->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ]+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_MASKREQ].value + (*a)->icmpInfo->icmpMsgSent[ICMP_MASKREPLY].value +
+      (*a)->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ].value+ (*a)->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_MASKREQ].value + (*b)->icmpInfo->icmpMsgSent[ICMP_MASKREPLY].value +
+      (*b)->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ].value+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY].value;
     break;
 
   case 11:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value + (*a)->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value + (*b)->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value;
     break;
 
   case 12:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP] + (*a)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY] +
-      (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP]+ (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP] + (*b)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY] +
-      (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP]+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP].value + (*a)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY].value +
+      (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP].value+ (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP].value + (*b)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY].value +
+      (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP].value+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY].value;
     break;
 
   case 13:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST] + (*a)->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY] +
-      (*a)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST]+ (*a)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST] + (*b)->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY] +
-      (*b)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST]+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST].value + (*a)->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY].value +
+      (*a)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST].value+ (*a)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST].value + (*b)->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY].value +
+      (*b)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST].value+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY].value;
     break;
 
   case 14: /* Echo Reply */
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY].value + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value;
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY].value + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value;
     break;
 
   default:
@@ -158,8 +158,7 @@ static int sortICMPhosts(const void *_a, const void *_b) {
 
  /* ******************************* */
 
-static void formatSentRcvd(TrafficCounter sent, TrafficCounter rcvd) {
-  
+static void formatSentRcvd(Counter sent, Counter rcvd) {
   char buf[128];
   
   if (sent + rcvd == 0) {
@@ -243,11 +242,11 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	  for(j=0; j<ICMP_MAXTYPE; j++) {
 #ifdef DEBUG
 	    traceEvent(TRACE_INFO, "idx=%d/type=%d: %d/%d\n", i, j, 
-		       hosts[i]->icmpInfo->icmpMsgSent[j],
-		       hosts[i]->icmpInfo->icmpMsgRcvd[j]);
+		       hosts[i]->icmpInfo->icmpMsgSent[j].value,
+		       hosts[i]->icmpInfo->icmpMsgRcvd[j].value);
 #endif
-	    s[tot] += (float)(hosts[i]->icmpInfo->icmpMsgSent[j]);
-	    r[tot] += (float)(hosts[i]->icmpInfo->icmpMsgRcvd[j]);
+	    s[tot] += (float)(hosts[i]->icmpInfo->icmpMsgSent[j].value);
+	    r[tot] += (float)(hosts[i]->icmpInfo->icmpMsgRcvd[j].value);
 	  }
 
 	  lbls[tot++] = hosts[i]->hostSymIpAddress;
@@ -325,8 +324,8 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   sendString("<CENTER>\n");
   sendString("<TABLE BORDER>\n");
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
-	      "<TH "TH_BG">%s?%s2>Bytes Sent</A></TH>"
-	      "<TH "TH_BG">%s?%s3>Bytes Rcvd</A></TH>"
+	      "<TH "TH_BG">%s?%s2>Bytes Sent.value</A></TH>"
+	      "<TH "TH_BG">%s?%s3>Bytes Rcvd.value</A></TH>"
 	      "<TH "TH_BG">%s?%s4>Echo Req.</A></TH>"
 	      "<TH "TH_BG">%s?%s14>Echo Reply</A></TH>"
 	      "<TH "TH_BG">%s?%s5>Unreach</A></TH>"
@@ -374,49 +373,49 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>", 
-		  formatBytes(hosts[idx]->icmpSent, 1)) < 0)
+		  formatBytes(hosts[idx]->icmpSent.value, 1)) < 0)
 	BufferTooShort();
       sendString(buf);
       
       if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>", 
-		  formatBytes(hosts[idx]->icmpRcvd, 1)) < 0)
+		  formatBytes(hosts[idx]->icmpRcvd.value, 1)) < 0)
 	BufferTooShort();
       sendString(buf);
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value));
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value));
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_UNREACH]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_UNREACH]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_UNREACH].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value));
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_REDIRECT]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_REDIRECT].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT].value));
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value));
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value));
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_PARAMPROB].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value));
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]),
-                      (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_MASKREPLY].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY].value));
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value));
       
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY].value));
 
-      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]
-				      +hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]),
-		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST]
-				      +hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY]));
+      formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST].value
+					   +hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY].value),
+				 (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST].value
+					   +hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY].value));
       
       sendString("</TR>\n");
 

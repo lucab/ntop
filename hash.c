@@ -303,8 +303,6 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
 
 	while(scanner != NULL) {
 	  if(scanner->element != NULL) {
-	    int i;
-
 	    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
 	      if(scanner->element->contactedIpPeersIndexes[i] == host->hostTrafficBucket)
 		scanner->element->contactedIpPeersIndexes[i] = NO_PEER;
@@ -477,10 +475,6 @@ void purgeIdleHosts(int actDevice) {
 	  }
 	}
       }
-
-      /* If (*) the entry might be NULL */
-      if(myGlobals.device[actDevice].hash_hostTraffic[theIdx] != NULL)
-	myGlobals.device[actDevice].hash_hostTraffic[theIdx]->numUses = 0;
     }
 
     theIdx = (theIdx+1) % hashLen;
@@ -520,16 +514,16 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char checkForMultihoming,
 		  u_char forceUsingIPaddress,
 		  int actualDeviceId) {
-  u_int idx, i, isMultihomed = 0, numRuns=0, inIdx=0;
+  u_int idx, i, isMultihomed = 0;
 #ifndef MULTITHREADED
   u_int run=0;
 #endif
   HostTraffic *el=NULL;
-  unsigned char buf[32];
+  unsigned char buf[MAX_HOST_SYM_NAME_LEN_HTML];
   short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
   u_char setSpoofingFlag = 0, hostFound = 0;
-  HashList *list;
+  HashList *list = NULL;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
     traceEvent(TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
@@ -542,7 +536,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   idx = idx % HASH_LIST_SIZE;
 
   if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
-    u_int16_t hostFound = 0;  /* This is the same type as the one of HashList */
+    hostFound = 0;  /* This is the same type as the one of HashList */
 
     if(myGlobals.device[actualDeviceId].hashList[idx] != NULL) {
       list = myGlobals.device[actualDeviceId].hashList[idx];
@@ -804,8 +798,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       } else {
 	/* el->hostNumIpAddress == "" */
 	if(symEthName[0] != '\0') {
-	  char buf[MAX_HOST_SYM_NAME_LEN_HTML];
-
 	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=\"/card.gif\" ALT=\"NIC\"  BORDER=0>", symEthName) < 0)
 	    BufferTooShort();
 
@@ -822,8 +814,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 #endif
 
       {
-	char buf[8];
-
 	if(el->hostNumIpAddress[0] == '\0') {
 	  buf[0] = 1; /* This is a MAC */
 	  buf[1] = 0;
@@ -837,8 +827,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 #ifdef NTOP_LITTLE_ENDIAN
 	{
 	  unsigned char buf1[8];
-	  int i;
-	  
+
 	  for(i=0; i<8; i++)
 	    buf1[i] = buf[7-i];
 	  
@@ -863,8 +852,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		 useIPAddressForSearching);
 #endif
     }
-
-    el->numUses++;
   } else
     return(idx);
 
@@ -878,7 +865,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 /* ************************************ */
 
 int retrieveHost(HostSerial theSerial, HostTraffic *el) {
-  HostTraffic *theEntry;
+  HostTraffic *theEntry = NULL;
   int found = 0;
   u_int idx;
 

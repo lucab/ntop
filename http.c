@@ -3,7 +3,6 @@
  *                          http://www.ntop.org
  *
  * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
- *                         Portions by Stefano Suin <stefano@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -551,7 +550,7 @@ void printHTMLtrailer(void) {
       BufferTooShort();
   } else {
     int numRealDevices;
-
+    
     for(i=len=numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
       if(!myGlobals.device[i].virtualDevice) {
 	if(snprintf(&buf[len], BUF_SIZE-len, "%s%s",
@@ -561,12 +560,17 @@ void printHTMLtrailer(void) {
       }
     }
 
-    if(snprintf(&buf[len], BUF_SIZE-len, "]\n") < 0)
-      BufferTooShort();
+    if(i == 0)
+      buf[0] = '\0';
+    else {
+      if(snprintf(&buf[len], BUF_SIZE-len, "]\n") < 0)
+	BufferTooShort();
+    }
   }
 
-  len=strlen(buf);
-  if(*myGlobals.currentFilterExpression!='\0') {
+  len = strlen(buf);
+
+  if(*myGlobals.currentFilterExpression != '\0') {
     if(snprintf(&buf[len], BUF_SIZE-len,
 		"with kernel (libpcap) filtering expression </B>\"%s\"<B>\n",
 		myGlobals.currentFilterExpression) < 0)
@@ -904,7 +908,7 @@ static int checkURLsecurity(char *url) {
 
   /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
 
-  if(((token = strstr(workURL, "%")) > 0) && (strncmp(token, "%3A" /* : */, 3))) {
+  if(((token = strstr(workURL, "%")) != NULL) && (strncmp(token, "%3A" /* : */, 3))) {
       traceEvent(TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request (url=%s)\n", workURL);
       /* Explicitly, we're updating the real URL, not the copy, so it's not used anywhere in ntop */
       url[0] = '\0'; 
@@ -913,7 +917,7 @@ static int checkURLsecurity(char *url) {
 
   if(token != NULL) {
     /* The original URL contains %3A that need to be replaced with : */
-    int i, begin;
+    int begin;
     
     for(i=0, begin=0; i<strlen(url); i++) {
       if((url[i] == '%') && (url[i+1] == '3') && (url[i+2] == 'A')) {
@@ -1338,8 +1342,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 
 #if !defined(WIN32) && defined(USE_CGI)
   if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
-    int rc;
-
     sendString("HTTP/1.0 200 OK\r\n");
     rc = execCGI(&pageName[strlen(CGI_HEADER)]);
 
@@ -1601,7 +1603,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       pktCastDistribPie();
       printTrailer=0;
     } else if(strncmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
-      if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts > 0) {
+      if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	pktSizeDistribPie();
 	printTrailer=0;
@@ -1609,7 +1611,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	printNoDataYet();
       }
     } else if(strncmp(pageName, "pktTTLDistribPie", strlen("pktTTLDistribPie")) == 0) {
-      if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts > 0) {
+      if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	pktTTLDistribPie();
 	printTrailer=0;
@@ -1649,7 +1651,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	      || (strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
 	      || (strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)) {
       char hostName[32], *theHost;
-      int idx;
 
     if(strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
       idx = 0;
@@ -1741,8 +1742,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       sendString("<A HREF=\"mailto:stefano@ntop.org\">Stefano Suin</A> has contributed with ");
       sendString("some code fragments to the version 1.0 of <b>ntop</b>\n");
       sendString(". In addition, many other people downloaded this program, tested it,\n");
-      sendString("joined the <A HREF=http://listmanager.unipi.it/mailman/listinfo/ntop>ntop</A>\n");
-      sendString("and <A HREF=http://listmanager.unipi.it/mailman/listinfo/ntop-dev>ntop-dev</A> mailing lists,\n");
+      sendString("joined the <A HREF=http://lists.ntop.org/mailman/listinfo/ntop>ntop</A>\n");
+      sendString("and <A HREF=http://lists.ntop.org/mailman/listinfo/ntop-dev>ntop-dev</A> mailing lists,\n");
       sendString("reported problems, changed it and improved significantly. This is because\n");
       sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its author, but\n");
       sendString("to the whole Internet community. Their names are throught "

@@ -39,7 +39,7 @@ char *languages[] = { "", "perl", "php", "xml", "no" };
 
 /* *************************** */
 
-void sendEmitterString(FILE *fDescr, char *theString) {
+static void sendEmitterString(FILE *fDescr, char *theString) {
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "sendEmitterString(%X, '%s')", fDescr, theString);
@@ -53,9 +53,9 @@ void sendEmitterString(FILE *fDescr, char *theString) {
 
 /* *************************** */
 
-void initWriteArray(FILE *fDescr, int lang) {
+static void initWriteArray(FILE *fDescr, int lang) {
 
-  switch(fDescr, lang) {
+  switch(lang) {
   case PERL_LANGUAGE:
     sendEmitterString(fDescr, "%ntopHash =(\n");
     break ;
@@ -73,8 +73,8 @@ void initWriteArray(FILE *fDescr, int lang) {
 
 /* *************************** */
 
-void endWriteArray(FILE *fDescr, int lang) {
-  switch(fDescr, lang) {
+static void endWriteArray(FILE *fDescr, int lang) {
+  switch(lang) {
   case PERL_LANGUAGE:
   case PHP_LANGUAGE:
     sendEmitterString(fDescr, ");\n");
@@ -103,7 +103,7 @@ static void validateString(char *name) {
 
 /* *************************** */
 
-void initWriteKey(FILE *fDescr, int lang, char *indent,
+static void initWriteKey(FILE *fDescr, int lang, char *indent,
 		  char *keyName, int numEntriesSent) {
   char buf[256];
 
@@ -139,7 +139,7 @@ void initWriteKey(FILE *fDescr, int lang, char *indent,
 
 /* *************************** */
 
-void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, char last) {
+static void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, char last) {
   char buf[256];
 
   /* If there is no indentation, this was the first level of key,
@@ -174,8 +174,8 @@ void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, char last)
 
 /* *************************** */
 
-void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
-	       char *value, char last, int numEntriesSent) {
+static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
+		      char *value, char last, int numEntriesSent) {
   char buf[256];
 
   validateString(name);
@@ -214,8 +214,8 @@ void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
 
 /* *************************** */
 
-void wrtIntItm(FILE *fDescr, int lang, char *indent, char *name,
-	       int value, char last, int numEntriesSent) {
+static void wrtIntItm(FILE *fDescr, int lang, char *indent, char *name,
+		      int value, char last, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%d",value);
   wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
@@ -223,8 +223,8 @@ void wrtIntItm(FILE *fDescr, int lang, char *indent, char *name,
 
 /* *************************** */
 
-void wrtIntStrItm(FILE *fDescr, int lang, char *indent,int name,
-		  char *value, char useless, int numEntriesSent) {
+static void wrtIntStrItm(FILE *fDescr, int lang, char *indent,int name,
+			 char *value, char useless, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%d",name);
   wrtStrItm(fDescr, lang, indent, buf, value, ',', numEntriesSent);
@@ -232,8 +232,8 @@ void wrtIntStrItm(FILE *fDescr, int lang, char *indent,int name,
 
 /* *************************** */
 
-void wrtUintItm(FILE *fDescr, int lang, char *indent, char *name,
-		unsigned int value, char useless, int numEntriesSent) {
+static void wrtUintItm(FILE *fDescr, int lang, char *indent, char *name,
+		       unsigned int value, char useless, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%d",value);
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
@@ -241,8 +241,8 @@ void wrtUintItm(FILE *fDescr, int lang, char *indent, char *name,
 
 /* *************************** */
 
-void wrtUcharItm(FILE *fDescr, int lang, char *indent, char *name,
-		 u_char value, char useless, int numEntriesSent) {
+static void wrtUcharItm(FILE *fDescr, int lang, char *indent, char *name,
+			u_char value, char useless, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%d",value);
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
@@ -250,8 +250,8 @@ void wrtUcharItm(FILE *fDescr, int lang, char *indent, char *name,
 
 /* *************************** */
 
-void wrtFloatItm(FILE *fDescr, int lang, char *indent, char *name,
-		 float value, char last, int numEntriesSent) {
+static void wrtFloatItm(FILE *fDescr, int lang, char *indent, char *name,
+			float value, char last, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%0.2f",value);
   wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
@@ -259,8 +259,8 @@ void wrtFloatItm(FILE *fDescr, int lang, char *indent, char *name,
 
 /* *************************** */
 
-void wrtIntFloatItm(FILE *fDescr, int lang, char *indent, int name,
-		    float value, char last, int numEntriesSent) {
+static void wrtIntFloatItm(FILE *fDescr, int lang, char *indent, int name,
+			   float value, char last, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%d", name);
   wrtFloatItm(fDescr, lang, indent, (lang == XML_LANGUAGE) ? "number" : buf,
@@ -269,26 +269,28 @@ void wrtIntFloatItm(FILE *fDescr, int lang, char *indent, int name,
 
 /* *************************** */
 
-void wrtUlongItm(FILE *fDescr, int lang, char *indent, char *name,
-		 unsigned long value, char useless, int numEntriesSent) {
+static void wrtUlongItm(FILE *fDescr, int lang, char *indent, char *name,
+			unsigned long value, char useless, int numEntriesSent) {
   char buf[80];
+
   sprintf(buf,"%lu",value);
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
 /* *************************** */
 
-void wrtLlongItm(FILE *fDescr, int lang, char* indent, char* name,
-		 TrafficCounter value, char last, int numEntriesSent) {
+static void wrtLlongItm(FILE *fDescr, int lang, char* indent, char* name,
+			TrafficCounter value, char last, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%llu",value);
+
+  sprintf(buf,"%lu",value);
   wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 
 /* *************************** */
 
-void wrtTime_tItm(FILE *fDescr, int lang, char *indent, char *name,
-		  time_t value, char useless, int numEntriesSent) {
+static void wrtTime_tItm(FILE *fDescr, int lang, char *indent, char *name,
+			 time_t value, char useless, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%ld",value);
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
@@ -296,8 +298,8 @@ void wrtTime_tItm(FILE *fDescr, int lang, char *indent, char *name,
 
 /* *************************** */
 
-void wrtUshortItm(FILE *fDescr, int lang, char *indent, char *name,
-		  u_short value, char useless, int numEntriesSent) {
+static void wrtUshortItm(FILE *fDescr, int lang, char *indent, char *name,
+			 u_short value, char useless, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%d",value);
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
@@ -328,7 +330,6 @@ void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64], filter[128];
   unsigned int numEntries=0, lang=DEFAULT_LANGUAGE;
   struct re_pattern_buffer filterPattern;
-  unsigned char shortView = 0;
   FlowFilterList *list = myGlobals.flowsList;
 
   memset(key, 0, sizeof(key));
@@ -431,8 +432,6 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
     tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
-      int i=0, j;
-
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;
 
@@ -468,7 +467,7 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 	  if(idx == myGlobals.otherHostEntryIdx) continue;
 	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] == NULL) continue;
 
-	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent > 0) {
+	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value > 0) {
 	    if(numEntries == 0) initWriteArray(fDescr, lang);
 
 	    if(snprintf(buf, sizeof(buf), "%s_%s", 
@@ -502,13 +501,14 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 /* ********************************** */
 
 void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
-  char key[64], filter[128], *hostKey;
+  char key[64], filter[128], *hostKey = NULL;
   unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE, j, localView=0;
   HostTraffic *el;
   struct re_pattern_buffer filterPattern;
   unsigned char shortView = 0;
   char workSymIpAddress[MAX_HOST_SYM_NAME_LEN_HTML];
   char * angleLocation;
+  TrafficCounter ctr;
 
   memset(key, 0, sizeof(key));
   memset(filter, 0, sizeof(filter));
@@ -520,7 +520,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
     tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
-      int i=0, j;
+      int i=0;
 
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;
@@ -600,8 +600,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  hostKey = el->hostNumIpAddress;
 	  if(localView) {
 	    if(((!subnetPseudoLocalHost(el))
-		&& (!multicastHost(el)))
-	       || (el->numUses == 0))
+		&& (!multicastHost(el))))
 	      continue;
 	  }
 	} else {
@@ -660,6 +659,13 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	if(checkFilter(filter, &filterPattern, "pktRcvd"))
 	  wrtLlongItm(fDescr, lang, "\t", "pktRcvd", el->pktRcvd, ',', numEntries);
 
+	if(checkFilter(filter, &filterPattern, "bytesSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "bytesSent", el->ipBytesSent, ',', numEntries);
+	if(checkFilter(filter, &filterPattern, "bytesRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "bytesRcvd", el->ipBytesRcvd, ',', numEntries);
+
+	/* *************************************** */
+
 	if(!shortView) {
 	  if(checkFilter(filter, &filterPattern, "pktDuplicatedAckSent"))
 	    wrtLlongItm(fDescr, lang, "\t", "pktDuplicatedAckSent",el->pktDuplicatedAckSent, ',', numEntries);
@@ -678,18 +684,6 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  wrtLlongItm(fDescr, lang, "\t", "bytesMulticastRcvd", el->bytesMulticastRcvd, ',', numEntries);
 	if(checkFilter(filter, &filterPattern, "pktMulticastRcvd"))
 	  wrtLlongItm(fDescr, lang, "\t", "pktMulticastRcvd",  el->pktMulticastRcvd, ',', numEntries);
-
-	/* *************************************** */
-
-	if(checkFilter(filter, &filterPattern, "bytesUnicastSent"))
-	  wrtLlongItm(fDescr, lang, "\t", "bytesUnicastSent", el->ipBytesSent-el->bytesMulticastSent, ',', numEntries);
-	if(checkFilter(filter, &filterPattern, "pktUnicastSent"))
-	  wrtLlongItm(fDescr, lang, "\t", "pktUnicastSent",  el->pktSent-el->pktMulticastSent, ',', numEntries);
-
-	if(checkFilter(filter, &filterPattern, "bytesUnicastRcvd"))
-	  wrtLlongItm(fDescr, lang, "\t", "bytesUnicastRcvd", el->ipBytesRcvd-el->bytesMulticastRcvd, ',', numEntries);
-	if(checkFilter(filter, &filterPattern, "pktUnicastRcvd"))
-	  wrtLlongItm(fDescr, lang, "\t", "pktUnicastRcvd",  el->pktRcvd-el->pktMulticastRcvd, ',', numEntries);
 
 	/* *************************************** */
 
@@ -751,15 +745,19 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	if(checkFilter(filter, &filterPattern, "ipBytesRcvd"))
 	  wrtLlongItm(fDescr, lang, "\t", "ipBytesRcvd", el->ipBytesRcvd, ',', numEntries);
 
+	ctr.value = el->tcpSentLoc.value+el->tcpSentRem.value;
 	if(checkFilter(filter, &filterPattern, "tcpBytesSent"))
-	  wrtLlongItm(fDescr, lang, "\t", "tcpBytesSent", el->tcpSentLoc+el->tcpSentRem, ',', numEntries);
+	  wrtLlongItm(fDescr, lang, "\t", "tcpBytesSent", ctr, ',', numEntries);
+	ctr.value = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
 	if(checkFilter(filter, &filterPattern, "tcpBytesRcvd")) 
-	  wrtLlongItm(fDescr, lang, "\t", "tcpBytesRcvd", el->tcpRcvdLoc+el->tcpRcvdFromRem, ',', numEntries);
+	  wrtLlongItm(fDescr, lang, "\t", "tcpBytesRcvd", ctr, ',', numEntries);
 
+	ctr.value = el->udpSentLoc.value+el->udpSentRem.value;
 	if(checkFilter(filter, &filterPattern, "udpBytesSent"))
-	  wrtLlongItm(fDescr, lang, "\t", "udpBytesSent", el->udpSentLoc+el->udpSentRem, ',', numEntries);
+	  wrtLlongItm(fDescr, lang, "\t", "udpBytesSent", ctr, ',', numEntries);
+	ctr.value = el->udpRcvdLoc.value+el->udpRcvdFromRem.value;
 	if(checkFilter(filter, &filterPattern, "udpBytesRcvd")) 
-	  wrtLlongItm(fDescr, lang, "\t", "udpBytesRcvd", el->udpRcvdLoc+el->udpRcvdFromRem, ',', numEntries);
+	  wrtLlongItm(fDescr, lang, "\t", "udpBytesRcvd", ctr, ',', numEntries);
 
 	if(checkFilter(filter, &filterPattern, "icmpSent")) 
 	  wrtLlongItm(fDescr, lang, "\t", "icmpSent",        el->icmpSent, ',', numEntries);
@@ -897,60 +895,60 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  if(el->icmpInfo && checkFilter(filter, &filterPattern, "ICMP")) {
 	    initWriteKey(fDescr, lang, "\t", "ICMP", numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_ECHO",
-			el->icmpInfo->icmpMsgSent[ICMP_ECHO], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_ECHO].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_ECHOREPLY",
-			el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_UNREACH",
-			el->icmpInfo->icmpMsgSent[ICMP_UNREACH], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_UNREACH].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_ROUTERADVERT",
-			el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_TMXCEED",
-			el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_PARAMPROB",
-			el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_MASKREPLY",
-			el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_MASKREQ",
-			el->icmpInfo->icmpMsgSent[ICMP_MASKREQ], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_MASKREQ].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_INFO_REQUEST",
-			el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_INFO_REPLY",
-			el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_TIMESTAMP",
-			el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_TIMESTAMPREPLY",
-			el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","SENT_SOURCE_QUENCH",
-			el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH], ' ', numEntries);
+			el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value, ' ', numEntries);
 
 	    /* *********************************************** */
 
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_ECHO",
-			el->icmpInfo->icmpMsgRcvd[ICMP_ECHO], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_ECHOREPLY",
-			el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_UNREACH",
-			el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_ROUTERADVERT",
-			el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_TMXCEED",
-			el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_PARAMPROB",
-			el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_MASKREPLY",
-			el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_MASKREQ",
-			el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_INFO_REQUEST",
-			el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_INFO_REPLY",
-			el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_TIMESTAMP",
-			el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_TIMESTAMPREPLY",
-			el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY].value, ' ', numEntries);
 	    wrtUlongItm(fDescr, lang,"\t\t","RCVD_SOURCE_QUENCH",
-			el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH], ' ', numEntries);
+			el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value, ' ', numEntries);
 
 	    endWriteKey(fDescr, lang,"\t", "ICMP", ',');
 	  }
@@ -1167,7 +1165,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
 /* ********************************** */
 
 void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
-  char intoabuf[32], key[16], localbuf[32], filter[128], *keyName;
+  char intoabuf[32], key[16], localbuf[32], filter[128], *keyName = NULL;
   int lang=DEFAULT_LANGUAGE, i, numEntries, localView=0;
   struct re_pattern_buffer filterPattern;
   unsigned short shortView = 0;
@@ -1182,7 +1180,7 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
     tmpStr = strtok_r(options, "&", &strtokState);
 
     while(tmpStr != NULL) {
-      int i=0, j;
+      int j;
 
       while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
 	i++;
@@ -1390,7 +1388,7 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       if(checkFilter(filter, &filterPattern, "lastFiveMinsPktsThpt"))
 	wrtFloatItm(fDescr, lang, "\t", "lastFiveMinsPktsThpt",myGlobals.device[i].lastFiveMinsPktsThpt, ',', numEntries);
       if(checkFilter(filter, &filterPattern, "throughput"))
-	wrtLlongItm(fDescr, lang, "\t", "throughput", myGlobals.device[i].throughput, ',', numEntries);
+	wrtFloatItm(fDescr, lang, "\t", "throughput", myGlobals.device[i].throughput, ',', numEntries);
       if(checkFilter(filter, &filterPattern, "packetThroughput"))
 	wrtFloatItm(fDescr, lang, "\t", "packetThroughput",myGlobals.device[i].packetThroughput, ',', numEntries);
 
@@ -1451,12 +1449,16 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	    wrtLlongItm(fDescr, lang,"\t\t\t","remote",
 			myGlobals.device[i].ipProtoStats[j].remote, ' ', numEntries);
 	  } else {
+	    TrafficCounter ctr;
+
+	    ctr.value = 
+	      myGlobals.device[i].ipProtoStats[j].local.value+
+	      myGlobals.device[i].ipProtoStats[j].local2remote.value+
+	      myGlobals.device[i].ipProtoStats[j].remote2local.value+
+	      myGlobals.device[i].ipProtoStats[j].remote.value;
+	      
 	    wrtLlongItm(fDescr, lang, "\t",  myGlobals.protoIPTrafficInfos[j],
-			myGlobals.device[i].ipProtoStats[j].local+
-			myGlobals.device[i].ipProtoStats[j].local2remote+
-			myGlobals.device[i].ipProtoStats[j].remote2local+
-			myGlobals.device[i].ipProtoStats[j].remote,
-			',', numEntries);
+			ctr, ',', numEntries);
 	  }
 	}
 

@@ -18,7 +18,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_RRD_H
+#include "rrd.h"
+#endif
+
 extern NtopGlobals myGlobals;
+
 #ifdef HAVE_LIBWRAP
 extern int allow_severity, deny_severity;
 #endif
@@ -74,14 +79,14 @@ extern void addDefaultAdminUser(void);
 
 /* dataFormat.c */
 extern char* formatKBytes(float numKBytes);
-extern char* formatBytes(TrafficCounter numBytes, short encodeString);
+extern char* formatBytes(Counter numBytes, short encodeString);
 extern char* formatLatency(struct timeval tv, u_short sessionState);
 extern char* formatSeconds(unsigned long sec);
 extern char* formatMicroSeconds(unsigned long microsec);
 extern char* formatThroughput(float numBytes);
 extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
                              unsigned int nminutes);
-extern char* formatPkts(TrafficCounter pktNr);
+extern char* formatPkts(Counter pktNr);
 
 /* hash.c */
 extern int retrieveHost(HostSerial theSerial, HostTraffic *el);
@@ -149,11 +154,12 @@ extern void*          ntop_safecalloc(unsigned int c, unsigned int sz, char* fil
 #define realloc(p,sz) ntop_saferealloc(p, sz, __FILE__, __LINE__)
 extern void*          ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line);
 #endif
+extern char* ntop_safestrdup(char *ptr, char* file, int line);
 
 /* ntop.c */
 extern void handleSigHup(int signalId);
 extern void *pcapDispatch(void *_i);
-extern RETSIGTYPE handleDiedChild(int signal);
+extern RETSIGTYPE handleDiedChild(int);
 extern RETSIGTYPE dontFreeze(int signo);
 extern void daemonize(void);
 extern void detachFromTerminal(void);
@@ -238,6 +244,8 @@ extern int isInitialFtpData(char* packetData);
 extern void updateDeviceThpt(int deviceToUpdate);
 
 /* util.c */
+extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
+extern void resetTrafficCounter(TrafficCounter *ctr);
 extern HostTraffic* findHostByNumIP(char* numIPaddr, int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, int actualDeviceId);
 extern char* copy_argv(register char **argv);
@@ -355,6 +363,9 @@ extern char* getVendorInfo(u_char* ethAddress, short encodeString);
 extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
 extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
 extern void createVendorTable(void);
+extern void handleFlowsSpecs();
+extern void initPassiveSessions();
+extern void termPassiveSessions();
 
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);

@@ -129,7 +129,7 @@ int execCGI(char* cgiName) {
   char* userName = "nobody", line[384], buf[512];
   struct passwd * newUser = NULL;
   FILE *fd;
-  int num, i, rc;
+  int num, i;
   struct timeval wait_time;
 
   if(!(newUser = getpwnam(userName))) {
@@ -216,7 +216,7 @@ int execCGI(char* cgiName) {
 #if(defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX) || defined(DARWIN)
 void showPluginsList(char* pluginName) {
   FlowFilterList *flows = myGlobals.flowsList;
-  short printHeader = 0;
+  short doPrintHeader = 0;
   char tmpBuf[BUF_SIZE], *thePlugin, tmpBuf1[BUF_SIZE];
   int newPluginStatus = 0;
 
@@ -260,7 +260,7 @@ void showPluginsList(char* pluginName) {
 	storePrefsValue(key, newPluginStatus ? "1" : "0");
       }
 
-      if(!printHeader) {
+      if(!doPrintHeader) {
 	printHTMLheader("Available Plugins", 0);
  	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1><TR>\n"
@@ -269,7 +269,7 @@ void showPluginsList(char* pluginName) {
 		   "<TH "TH_BG">Author</TH>"
 		   "<TH "TH_BG">Active</TH>"
 		   "</TR>\n");
-	printHeader = 1;
+	doPrintHeader = 1;
       }
 
       if(snprintf(tmpBuf1, sizeof(tmpBuf1), "<A HREF=/plugins/%s>%s</A>",
@@ -298,7 +298,7 @@ void showPluginsList(char* pluginName) {
     flows = flows->next;
   }
 
-  if(!printHeader) {
+  if(!doPrintHeader) {
     printHTMLheader("No Plugins available", 0);
   } else {
     sendString("</TABLE>"TABLE_OFF"<p>\n");
@@ -441,7 +441,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   strncpy(linkName, tmpStr, sizeof(linkName));
 
   if(usedEthAddress) {
-    char tmpStr[256], *vendorInfo;
+    char *vendorInfo;
 
     if(el->nbHostName != NULL) {
       strncpy(symIp, el->nbHostName, sizeof(linkName));
@@ -450,8 +450,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     } else {
       vendorInfo = getVendorInfo(el->ethAddress, 0);
       if(vendorInfo[0] != '\0') {
-	sprintf(tmpStr, "%s%s", vendorInfo, &linkName[8]);
-	strcpy(symIp, tmpStr);
+	sprintf(symIp, "%s%s", vendorInfo, &linkName[8]);
       }
     }
   }
@@ -501,7 +500,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], 2*BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
 		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s%s</TH>%s",
-		linkName, symIp, /* el->numUses, */
+		linkName, symIp,
 		dynIp,
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr, userStr, p2p,
@@ -510,7 +509,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   } else {
     if(snprintf(buf[bufIdx], 2*BUF_SIZE, "<A HREF=\"/%s.html\" NOWRAP>%s</A>"
 		"%s%s%s%s%s%s%s%s%s%s",
-		linkName, symIp, /* el->numUses, */
+		linkName, symIp,
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr, userStr, p2p,
 		dynIp, flag) < 0)
@@ -572,9 +571,8 @@ char* getHostName(HostTraffic *el, short cutName) {
 
 /* ********************************** */
 
-char* calculateCellColor(TrafficCounter actualValue,
-			 TrafficCounter avgTrafficLow,
-			 TrafficCounter avgTrafficHigh) {
+char* calculateCellColor(Counter actualValue,
+			 Counter avgTrafficLow, Counter avgTrafficHigh) {
 
   if(actualValue < avgTrafficLow)
     return("BGCOLOR=#AAAAAAFF"); /* light blue */
@@ -2883,9 +2881,9 @@ void printNtopConfigInfo(int textPrintFlag) {
     SSL fix courtesy of
     Curtis Doty <Curtis@GreenKey.net>
   */
-  void initWeb() {
+void initWeb() {
     int sockopt = 1;
-    struct sockaddr_in sin;
+    struct sockaddr_in sockIn;
 
     initReports();
     initializeWeb();
@@ -2893,23 +2891,23 @@ void printNtopConfigInfo(int textPrintFlag) {
     myGlobals.actualReportDeviceId = 0;
 
     if(myGlobals.webPort > 0) {
-      sin.sin_family      = AF_INET;
-      sin.sin_port        = (int)htons((unsigned short int)myGlobals.webPort);
+      sockIn.sin_family      = AF_INET;
+      sockIn.sin_port        = (int)htons((unsigned short int)myGlobals.webPort);
 #ifndef WIN32
       if(myGlobals.webAddr) {
-	if(!inet_aton(myGlobals.webAddr, &sin.sin_addr)) {
+	if(!inet_aton(myGlobals.webAddr, &sockIn.sin_addr)) {
 	  traceEvent(TRACE_ERROR, "Unable to convert address '%s'... "
 		     "Not binding to a particular interface!\n", myGlobals.webAddr);
-	  sin.sin_addr.s_addr = INADDR_ANY;
+	  sockIn.sin_addr.s_addr = INADDR_ANY;
 	} else {
 	  traceEvent(TRACE_INFO, "Converted address '%s'... "
 		     "binding to the specific interface!\n", myGlobals.webAddr);
 	}
       } else {
-        sin.sin_addr.s_addr = INADDR_ANY;
+        sockIn.sin_addr.s_addr = INADDR_ANY;
       }
 #else
-      sin.sin_addr.s_addr = INADDR_ANY;
+      sockIn.sin_addr.s_addr = INADDR_ANY;
 #endif
 
       myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -2937,7 +2935,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 
     if(myGlobals.webPort > 0) {
-      if(bind(myGlobals.sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+      if(bind(myGlobals.sock, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
 	traceEvent(TRACE_WARNING, "bind: port %d already in use.", myGlobals.webPort);
 	closeNwSocket(&myGlobals.sock);
 	exit(-1);
@@ -2946,26 +2944,26 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized) {
-      sin.sin_family      = AF_INET;
-      sin.sin_port        = (int)htons(myGlobals.sslPort);
+      sockIn.sin_family      = AF_INET;
+      sockIn.sin_port        = (int)htons(myGlobals.sslPort);
 #ifndef WIN32
       if(myGlobals.sslAddr) {
-	if(!inet_aton(myGlobals.sslAddr, &sin.sin_addr)) {
+	if(!inet_aton(myGlobals.sslAddr, &sockIn.sin_addr)) {
 	  traceEvent(TRACE_ERROR, "Unable to convert address '%s'... "
 		     "Not binding SSL to a particular interface!\n", myGlobals.sslAddr);
-	  sin.sin_addr.s_addr = INADDR_ANY;
+	  sockIn.sin_addr.s_addr = INADDR_ANY;
 	} else {
 	  traceEvent(TRACE_INFO, "Converted address '%s'... "
 		     "binding SSL to the specific interface!\n", myGlobals.sslAddr);
 	}
       } else {
-        sin.sin_addr.s_addr = INADDR_ANY;
+        sockIn.sin_addr.s_addr = INADDR_ANY;
       }
 #else
-      sin.sin_addr.s_addr = INADDR_ANY;
+      sockIn.sin_addr.s_addr = INADDR_ANY;
 #endif
 
-      if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+      if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
 	/* Fix below courtesy of Matthias Kattanek <mattes@mykmk.com> */
 	traceEvent(TRACE_ERROR, "bind: port %d already in use.", myGlobals.sslPort);
 	closeNwSocket(&myGlobals.sock_ssl);
@@ -3061,10 +3059,10 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* **************************************** */
 
 #ifndef WIN32
-  void PIPEhandler(int sig) {
-    myGlobals.numHandledSIGPIPEerrors++;
-    setsignal (SIGPIPE, PIPEhandler);
-  }
+static void PIPEhandler(int sig) {
+  myGlobals.numHandledSIGPIPEerrors++;
+  setsignal (SIGPIPE, PIPEhandler);
+}
 #endif
 
   /* **************************************** */
@@ -3455,7 +3453,6 @@ void printNtopConfigInfo(int textPrintFlag) {
     static void handleSingleWebConnection(fd_set *fdmask) {
       struct sockaddr_in from;
       int from_len = sizeof(from);
-      int rc;
 
       errno = 0;
 
@@ -3488,9 +3485,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 #ifdef PARM_SSLWATCHDOG
 	    if (myGlobals.useSSLwatchdog == 1)
 #endif /* PARM_SSLWATCHDOG */
-	      {
-
+	      {		
 #if defined(PARM_SSLWATCHDOG) || defined(USE_SSLWATCHDOG)
+		int rc;
+
 		/* The watchdog ... */
 		if (setjmp(sslwatchdogJump) != 0) {
                   int i, j, k;
@@ -3545,10 +3543,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 	    if (myGlobals.useSSLwatchdog == 1)
 #endif /* PARM_SSLWATCHDOG */
 	      {
-                rc = sslwatchdogSetState(SSLWATCHDOG_STATE_HTTPCOMPLETE,
-                                         SSLWATCHDOG_PARENT,
-                                         0-SSLWATCHDOG_ENTER_LOCKED,
-                                         0-SSLWATCHDOG_RETURN_LOCKED);
+                int rc = sslwatchdogSetState(SSLWATCHDOG_STATE_HTTPCOMPLETE,
+					     SSLWATCHDOG_PARENT,
+					     0-SSLWATCHDOG_ENTER_LOCKED,
+					     0-SSLWATCHDOG_RETURN_LOCKED);
                 /* Wake up child */ 
                 rc = sslwatchdogSignal(SSLWATCHDOG_PARENT);
 	      }

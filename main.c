@@ -719,7 +719,7 @@ int ntop_main(int argc, char *argv[]) {
 #else
 int main(int argc, char *argv[]) {
 #endif
-  int i, userSpecified;
+  int i = 0, userSpecified;
   char ifStr[196] = {0};
   time_t lastTime;
 

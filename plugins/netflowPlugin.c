@@ -34,7 +34,7 @@ static ProbeInfo probeList[MAX_NUM_PROBES];
 /* ****************************** */
 
 void setNetFlowInSocket() {
-  struct sockaddr_in sin;
+  struct sockaddr_in sockIn;
   int sockopt = 1;
 
   if(myGlobals.netFlowInSocket > 0) {
@@ -47,11 +47,11 @@ void setNetFlowInSocket() {
 
     setsockopt(myGlobals.netFlowInSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
 
-    sin.sin_family            = AF_INET;
-    sin.sin_port              = (int)htons(myGlobals.netFlowInPort);
-    sin.sin_addr.s_addr       = INADDR_ANY;
+    sockIn.sin_family            = AF_INET;
+    sockIn.sin_port              = (int)htons(myGlobals.netFlowInPort);
+    sockIn.sin_addr.s_addr       = INADDR_ANY;
 
-    if(bind(myGlobals.netFlowInSocket, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+    if(bind(myGlobals.netFlowInSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
       traceEvent(TRACE_WARNING, "NetFlow collector: port %d already in use.",
 		 myGlobals.netFlowInPort);
       closeNwSocket(&myGlobals.netFlowInSocket);
@@ -159,7 +159,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	    int actualDeviceId;
 	    char buf[256], buf1[256];
 	    struct in_addr a, b;
-	    u_int srcHostIdx, dstHostIdx, numPkts, len;
+	    u_int srcHostIdx, dstHostIdx, numPkts;
 	    HostTraffic *srcHost=NULL, *dstHost=NULL;
 	    u_short sport, dport;
 
@@ -188,12 +188,12 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	      break;
 	    }
 
-	    myGlobals.device[actualDeviceId].ethernetPkts += numPkts;
-	    myGlobals.device[actualDeviceId].ipPkts += numPkts;
+	    myGlobals.device[actualDeviceId].ethernetPkts.value += numPkts;
+	    myGlobals.device[actualDeviceId].ipPkts.value       += numPkts;
 	    updateDevicePacketStats(len, actualDeviceId);
 
-	    myGlobals.device[actualDeviceId].ethernetBytes += len;
-	    myGlobals.device[actualDeviceId].ipBytes += len;
+	    myGlobals.device[actualDeviceId].ethernetBytes.value += len;
+	    myGlobals.device[actualDeviceId].ipBytes.value       += len;
 
 #ifdef MULTITHREADED
 	    /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
@@ -208,9 +208,9 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	    if((srcHost == NULL) || (dstHost == NULL)) continue;
 
 	    srcHost->lastSeen = dstHost->lastSeen = myGlobals.actTime;
-	    srcHost->pktSent += numPkts, dstHost->pktRcvd += numPkts;
-	    srcHost->bytesSent   += len, dstHost->bytesRcvd   += len;
-	    srcHost->ipBytesSent += len, dstHost->ipBytesRcvd += len;
+	    srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value += numPkts;
+	    srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;
+	    srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
 
 	    if((sport != 0) && (dport != 0)) {
 	      if(dport < sport) {
@@ -224,43 +224,43 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 
 	    switch(theRecord.flowRecord[i].prot) {
 	    case 1: /* ICMP */
-	      myGlobals.device[actualDeviceId].icmpBytes += len;
-	      srcHost->icmpSent += len, dstHost->icmpRcvd += len;
+	      myGlobals.device[actualDeviceId].icmpBytes.value += len;
+	      srcHost->icmpSent.value += len, dstHost->icmpRcvd.value += len;
 	      break;
 	    case 6: /* TCP */
-	      myGlobals.device[actualDeviceId].tcpBytes += len;
+	      myGlobals.device[actualDeviceId].tcpBytes.value += len;
 	      if(subnetPseudoLocalHost(dstHost))
-		srcHost->tcpSentLoc += len;
+		srcHost->tcpSentLoc.value += len;
 	      else
-		srcHost->tcpSentRem += len;
+		srcHost->tcpSentRem.value += len;
 
 	      if(subnetPseudoLocalHost(srcHost))
-		dstHost->tcpRcvdLoc += len;
+		dstHost->tcpRcvdLoc.value += len;
 	      else
-		dstHost->tcpRcvdFromRem += len;
+		dstHost->tcpRcvdFromRem.value += len;
 	      
 	      allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	      /*
-		incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHostIdx, actualDeviceId);
-		incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
-		incrementUsageCounter(&srcHost->secHostPkts->terminatedTCPConnSent, dstHostIdx, actualDeviceId);
-		incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd, srcHostIdx, actualDeviceId);
+		incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent.value, dstHostIdx, actualDeviceId);
+		incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
+		incrementUsageCounter(&srcHost->secHostPkts->terminatedTCPConnSent.value, dstHostIdx, actualDeviceId);
+		incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
 	      */
-	      myGlobals.device[actualDeviceId].numEstablishedTCPConnections++;
+	      incrementCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
 	      updateUsedPorts(srcHost, dstHost, sport, dport, len);
       
 	      break;
 	    case 17: /* UDP */
-	      myGlobals.device[actualDeviceId].udpBytes += len;
+	      incrementCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
 	      if(subnetPseudoLocalHost(dstHost))
-		srcHost->udpSentLoc += len;
+		incrementCounter(&srcHost->udpSentLoc, len);
 	      else
-		srcHost->udpSentRem += len;
+		incrementCounter(&srcHost->udpSentRem, len);
 
 	      if(subnetPseudoLocalHost(srcHost))
-		dstHost->udpRcvdLoc += len;
+		incrementCounter(&dstHost->udpRcvdLoc, len);
 	      else
-		dstHost->udpRcvdFromRem += len;
+		incrementCounter(&dstHost->udpRcvdFromRem, len);
 	      break;
 	    }
 
@@ -471,30 +471,30 @@ static void handleNetflowHTTPrequest(char* url) {
 
 /* ************************************* */
 
-if(myGlobals.numNetFlowsPktsRcvd > 0) {
-  sendString("<TABLE BORDER>\n");
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
-
-  if(snprintf(buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Pkts Rcvd</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-	      formatPkts(myGlobals.numNetFlowsPktsRcvd)) < 0)
-    BufferTooShort();
-  sendString(buf);
-
-  if(snprintf(buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flows Rcvd</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-	      formatPkts(myGlobals.numNetFlowsRcvd)) < 0)
-    BufferTooShort();
-  sendString(buf);
-
-  if(snprintf(buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flow with Bad Version</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-	      formatPkts(myGlobals.numBadFlowsVersionsRcvd)) < 0)
-    BufferTooShort();
-  sendString(buf);
-
+  if(myGlobals.numNetFlowsPktsRcvd > 0) {
+    sendString("<TABLE BORDER>\n");
+    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
+    
+    if(snprintf(buf, sizeof(buf),
+		"<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Pkts Rcvd.value</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		formatPkts(myGlobals.numNetFlowsPktsRcvd)) < 0)
+      BufferTooShort();
+    sendString(buf);
+    
+    if(snprintf(buf, sizeof(buf),
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flows Rcvd.value</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		formatPkts(myGlobals.numNetFlowsRcvd)) < 0)
+      BufferTooShort();
+    sendString(buf);
+    
+    if(snprintf(buf, sizeof(buf),
+		"<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flow with Bad Version</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		formatPkts(myGlobals.numBadFlowsVersionsRcvd)) < 0)
+      BufferTooShort();
+    sendString(buf);
+    
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD "TD_BG" ALIGN=LEFT>");
-
+  
   for(i=0; i<MAX_NUM_PROBES; i++) {
     if(probeList[i].probeAddr.s_addr == 0) break;
 

@@ -1736,7 +1736,7 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 /* ****************************** */
 
 static void initSflowInSocket() {
-  struct sockaddr_in sin;
+  struct sockaddr_in sockIn;
   int sockopt = 1;
 
   if(myGlobals.sflowInSocket != 0) {
@@ -1749,11 +1749,11 @@ static void initSflowInSocket() {
     setsockopt(myGlobals.sflowInSocket, SOL_SOCKET, SO_REUSEADDR,
 	       (char *)&sockopt, sizeof(sockopt));
 
-    sin.sin_family            = AF_INET;
-    sin.sin_port              = (int)htons(myGlobals.sflowInPort);
-    sin.sin_addr.s_addr       = INADDR_ANY;
+    sockIn.sin_family            = AF_INET;
+    sockIn.sin_port              = (int)htons(myGlobals.sflowInPort);
+    sockIn.sin_addr.s_addr       = INADDR_ANY;
 
-    if(bind(myGlobals.sflowInSocket, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+    if(bind(myGlobals.sflowInSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
       traceEvent(TRACE_WARNING, "sFlow collector: port %d already in use.",
 		 myGlobals.sflowInPort);
       closeNwSocket(&myGlobals.sflowInSocket);
@@ -1799,7 +1799,7 @@ static void initSflowInSocket() {
 /* ****************************** */
 
 static void setSflowOutSocket() {
-  struct sockaddr_in sin;
+  struct sockaddr_in sockIn;
   int sockopt = 1;
 
   if(myGlobals.sflowOutSocket != 0) {
@@ -1812,11 +1812,11 @@ static void setSflowOutSocket() {
     setsockopt(myGlobals.sflowOutSocket, SOL_SOCKET, SO_REUSEADDR,
 	       (char *)&sockopt, sizeof(sockopt));
 
-    sin.sin_family            = AF_INET;
-    sin.sin_port              = (int)htons(myGlobals.sflowInPort);
-    sin.sin_addr.s_addr       = INADDR_ANY;
+    sockIn.sin_family            = AF_INET;
+    sockIn.sin_port              = (int)htons(myGlobals.sflowInPort);
+    sockIn.sin_addr.s_addr       = INADDR_ANY;
 
-    if(bind(myGlobals.sflowOutSocket, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+    if(bind(myGlobals.sflowOutSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
       traceEvent(TRACE_WARNING, "sFlow collector: port %d already in use.",
 		 myGlobals.sflowInPort);
       closeNwSocket(&myGlobals.sflowOutSocket);
@@ -1946,7 +1946,7 @@ static void handleSflowPacket(u_char *_deviceId,
 					   relevant index value.
 					 */
   mySample.meanSkipCount     = htonl(atoi(INM_DEFAULT_SAMPLING_RATE));
-  mySample.samplePool        = htonl(myGlobals.device[deviceId].ethernetPkts);
+  mySample.samplePool        = htonl(myGlobals.device[deviceId].ethernetPkts.value);
   mySample.dropEvents        = htonl(0);
   mySample.inputPort         = htonl(0);
   mySample.outputPort        = htonl(0);

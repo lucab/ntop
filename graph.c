@@ -71,174 +71,174 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   int useFdOpen = 0;
 
   if(dataSent) {
-    totTraffic = theHost->tcpSentLoc+theHost->tcpSentRem+
-      theHost->udpSentLoc+theHost->udpSentRem+
-      theHost->icmpSent+theHost->ospfSent+theHost->igmpSent+theHost->stpSent
-      +theHost->ipxSent+theHost->osiSent+theHost->dlcSent+
-      theHost->arp_rarpSent+theHost->decnetSent+theHost->appletalkSent+
-      theHost->netbiosSent+theHost->qnxSent+theHost->otherSent;
+    totTraffic.value = theHost->tcpSentLoc.value+theHost->tcpSentRem.value+
+      theHost->udpSentLoc.value+theHost->udpSentRem.value+
+      theHost->icmpSent.value+theHost->ospfSent.value+theHost->igmpSent.value+theHost->stpSent.value
+      +theHost->ipxSent.value+theHost->osiSent.value+theHost->dlcSent.value+
+      theHost->arp_rarpSent.value+theHost->decnetSent.value+theHost->appletalkSent.value+
+      theHost->netbiosSent.value+theHost->qnxSent.value+theHost->otherSent.value;
   } else {
-    totTraffic = theHost->tcpRcvdLoc+theHost->tcpRcvdFromRem+
-      theHost->udpRcvdLoc+theHost->udpRcvdFromRem+
-      theHost->icmpRcvd+theHost->ospfRcvd+theHost->igmpRcvd+theHost->stpRcvd
-      +theHost->ipxRcvd+theHost->osiRcvd+theHost->dlcRcvd+
-      theHost->arp_rarpRcvd+theHost->decnetRcvd+theHost->appletalkRcvd+
-      theHost->netbiosRcvd+theHost->qnxRcvd+theHost->otherRcvd;
+    totTraffic.value = theHost->tcpRcvdLoc.value+theHost->tcpRcvdFromRem.value+
+      theHost->udpRcvdLoc.value+theHost->udpRcvdFromRem.value+
+      theHost->icmpRcvd.value+theHost->ospfRcvd.value+theHost->igmpRcvd.value+theHost->stpRcvd.value
+      +theHost->ipxRcvd.value+theHost->osiRcvd.value+theHost->dlcRcvd.value+
+      theHost->arp_rarpRcvd.value+theHost->decnetRcvd.value+theHost->appletalkRcvd.value+
+      theHost->netbiosRcvd.value+theHost->qnxRcvd.value+theHost->otherRcvd.value;
   }
 
-  if(totTraffic > 0) {
+  if(totTraffic.value > 0) {
     if(dataSent) {
-      if(theHost->tcpSentLoc+theHost->tcpSentRem > 0) {
-	p[num] = (float)((100*(theHost->tcpSentLoc+
-			       theHost->tcpSentRem))/totTraffic);
+      if(theHost->tcpSentLoc.value+theHost->tcpSentRem.value > 0) {
+	p[num] = (float)((100*(theHost->tcpSentLoc.value+
+			       theHost->tcpSentRem.value))/totTraffic.value);
 	lbl[num++] = "TCP";
       }
 
-      if(theHost->udpSentLoc+theHost->udpSentRem > 0) {
-	p[num] = (float)((100*(theHost->udpSentLoc+
-			       theHost->udpSentRem))/totTraffic);
+      if(theHost->udpSentLoc.value+theHost->udpSentRem.value > 0) {
+	p[num] = (float)((100*(theHost->udpSentLoc.value+
+			       theHost->udpSentRem.value))/totTraffic.value);
 	lbl[num++] = "UDP";
       }
 
-      if(theHost->icmpSent > 0) {
-	p[num] = (float)((100*theHost->icmpSent)/totTraffic);
+      if(theHost->icmpSent.value > 0) {
+	p[num] = (float)((100*theHost->icmpSent.value)/totTraffic.value);
 	lbl[num++] = "ICMP";
       }
 
-      if(theHost->ospfSent > 0) {
-	p[num] = (float)((100*theHost->ospfSent)/totTraffic);
+      if(theHost->ospfSent.value > 0) {
+	p[num] = (float)((100*theHost->ospfSent.value)/totTraffic.value);
 	lbl[num++] = "OSPF";
       }
 
-      if(theHost->igmpSent > 0) {
-	p[num] = (float)((100*theHost->igmpSent)/totTraffic);
+      if(theHost->igmpSent.value > 0) {
+	p[num] = (float)((100*theHost->igmpSent.value)/totTraffic.value);
 	lbl[num++] = "IGMP";
       }
 
-      if(theHost->stpSent > 0) {
-	p[num] = (float)((100*theHost->stpSent)/totTraffic);
+      if(theHost->stpSent.value > 0) {
+	p[num] = (float)((100*theHost->stpSent.value)/totTraffic.value);
 	lbl[num++] = "STP";
       }
 
-      if(theHost->ipxSent > 0) {
-	p[num] = (float)((100*theHost->ipxSent)/totTraffic);
+      if(theHost->ipxSent.value > 0) {
+	p[num] = (float)((100*theHost->ipxSent.value)/totTraffic.value);
 	lbl[num++] = "IPX";
       }
 
-      if(theHost->dlcSent > 0) {
-	p[num] = (float)((100*theHost->dlcSent)/totTraffic);
+      if(theHost->dlcSent.value > 0) {
+	p[num] = (float)((100*theHost->dlcSent.value)/totTraffic.value);
 	lbl[num++] = "DLC";
       }
 
-      if(theHost->osiSent > 0) {
-	p[num] = (float)((100*theHost->osiSent)/totTraffic);
+      if(theHost->osiSent.value > 0) {
+	p[num] = (float)((100*theHost->osiSent.value)/totTraffic.value);
 	lbl[num++] = "OSI";
       }
 
-      if(theHost->arp_rarpSent > 0) {
-	p[num] = (float)((100*theHost->arp_rarpSent)/totTraffic);
+      if(theHost->arp_rarpSent.value > 0) {
+	p[num] = (float)((100*theHost->arp_rarpSent.value)/totTraffic.value);
 	lbl[num++] = "(R)ARP";
       }
 
-      if(theHost->decnetSent > 0) {
-	p[num] = (float)((100*theHost->decnetSent)/totTraffic);
+      if(theHost->decnetSent.value > 0) {
+	p[num] = (float)((100*theHost->decnetSent.value)/totTraffic.value);
 	lbl[num++] = "DECNET";
       }
 
-      if(theHost->appletalkSent > 0) {
-	p[num] = (float)((100*theHost->appletalkSent)/totTraffic);
+      if(theHost->appletalkSent.value > 0) {
+	p[num] = (float)((100*theHost->appletalkSent.value)/totTraffic.value);
 	lbl[num++] = "AppleTalk";
       }
 
-      if(theHost->netbiosSent > 0) {
-	p[num] = (float)((100*theHost->netbiosSent)/totTraffic);
+      if(theHost->netbiosSent.value > 0) {
+	p[num] = (float)((100*theHost->netbiosSent.value)/totTraffic.value);
 	lbl[num++] = "NetBios";
       }
 
-      if(theHost->qnxSent > 0) {
-	p[num] = (float)((100*theHost->qnxSent)/totTraffic);
+      if(theHost->qnxSent.value > 0) {
+	p[num] = (float)((100*theHost->qnxSent.value)/totTraffic.value);
 	lbl[num++] = "QNX";
       }
 
-      if(theHost->otherSent > 0) {
-	p[num] = (float)((100*theHost->otherSent)/totTraffic);
+      if(theHost->otherSent.value > 0) {
+	p[num] = (float)((100*theHost->otherSent.value)/totTraffic.value);
 	lbl[num++] = "Other";
       }
     } else {
-      if(theHost->tcpRcvdLoc+theHost->tcpRcvdFromRem > 0) {
-	p[num] = (float)((100*(theHost->tcpRcvdLoc+
-			       theHost->tcpRcvdFromRem))/totTraffic);
+      if(theHost->tcpRcvdLoc.value+theHost->tcpRcvdFromRem.value > 0) {
+	p[num] = (float)((100*(theHost->tcpRcvdLoc.value+
+			       theHost->tcpRcvdFromRem.value))/totTraffic.value);
 	lbl[num++] = "TCP";
       }
 
-      if(theHost->udpRcvdLoc+theHost->udpRcvdFromRem > 0) {
-	p[num] = (float)((100*(theHost->udpRcvdLoc+
-			       theHost->udpRcvdFromRem))/totTraffic);
+      if(theHost->udpRcvdLoc.value+theHost->udpRcvdFromRem.value > 0) {
+	p[num] = (float)((100*(theHost->udpRcvdLoc.value+
+			       theHost->udpRcvdFromRem.value))/totTraffic.value);
 	lbl[num++] = "UDP";
       }
 
-      if(theHost->icmpRcvd > 0) {
-	p[num] = (float)((100*theHost->icmpRcvd)/totTraffic);
+      if(theHost->icmpRcvd.value > 0) {
+	p[num] = (float)((100*theHost->icmpRcvd.value)/totTraffic.value);
 	lbl[num++] = "ICMP";
       }
 
-      if(theHost->ospfRcvd > 0) {
-	p[num] = (float)((100*theHost->ospfRcvd)/totTraffic);
+      if(theHost->ospfRcvd.value > 0) {
+	p[num] = (float)((100*theHost->ospfRcvd.value)/totTraffic.value);
 	lbl[num++] = "OSPF";
       }
 
-      if(theHost->igmpRcvd > 0) {
-	p[num] = (float)((100*theHost->igmpRcvd)/totTraffic);
+      if(theHost->igmpRcvd.value > 0) {
+	p[num] = (float)((100*theHost->igmpRcvd.value)/totTraffic.value);
 	lbl[num++] = "IGMP";
       }
 
-      if(theHost->stpRcvd > 0) {
-	p[num] = (float)((100*theHost->stpRcvd)/totTraffic);
+      if(theHost->stpRcvd.value > 0) {
+	p[num] = (float)((100*theHost->stpRcvd.value)/totTraffic.value);
 	lbl[num++] = "STP";
       }
 
-      if(theHost->ipxRcvd > 0) {
-	p[num] = (float)((100*theHost->ipxRcvd)/totTraffic);
+      if(theHost->ipxRcvd.value > 0) {
+	p[num] = (float)((100*theHost->ipxRcvd.value)/totTraffic.value);
 	lbl[num++] = "IPX";
       }
 
-      if(theHost->dlcRcvd > 0) {
-	p[num] = (float)((100*theHost->dlcRcvd)/totTraffic);
+      if(theHost->dlcRcvd.value > 0) {
+	p[num] = (float)((100*theHost->dlcRcvd.value)/totTraffic.value);
 	lbl[num++] = "DLC";
       }
 
-      if(theHost->osiRcvd > 0) {
-	p[num] = (float)((100*theHost->osiRcvd)/totTraffic);
+      if(theHost->osiRcvd.value > 0) {
+	p[num] = (float)((100*theHost->osiRcvd.value)/totTraffic.value);
 	lbl[num++] = "OSI";
       }
 
-      if(theHost->arp_rarpRcvd > 0) {
-	p[num] = (float)((100*theHost->arp_rarpRcvd)/totTraffic);
+      if(theHost->arp_rarpRcvd.value > 0) {
+	p[num] = (float)((100*theHost->arp_rarpRcvd.value)/totTraffic.value);
 	lbl[num++] = "(R)ARP";
       }
 
-      if(theHost->decnetRcvd > 0) {
-	p[num] = (float)((100*theHost->decnetRcvd)/totTraffic);
+      if(theHost->decnetRcvd.value > 0) {
+	p[num] = (float)((100*theHost->decnetRcvd.value)/totTraffic.value);
 	lbl[num++] = "DECNET";
       }
 
-      if(theHost->appletalkRcvd > 0) {
-	p[num] = (float)((100*theHost->appletalkRcvd)/totTraffic);
+      if(theHost->appletalkRcvd.value > 0) {
+	p[num] = (float)((100*theHost->appletalkRcvd.value)/totTraffic.value);
 	lbl[num++] = "AppleTalk";
       }
 
-      if(theHost->netbiosRcvd > 0) {
-	p[num] = (float)((100*theHost->netbiosRcvd)/totTraffic);
+      if(theHost->netbiosRcvd.value > 0) {
+	p[num] = (float)((100*theHost->netbiosRcvd.value)/totTraffic.value);
 	lbl[num++] = "NetBios";
       }
 
-      if(theHost->qnxRcvd > 0) {
-	p[num] = (float)((100*theHost->qnxRcvd)/totTraffic);
+      if(theHost->qnxRcvd.value > 0) {
+	p[num] = (float)((100*theHost->qnxRcvd.value)/totTraffic.value);
 	lbl[num++] = "QNX";
       }
 
-      if(theHost->otherRcvd > 0) {
-	p[num] = (float)((100*theHost->otherRcvd)/totTraffic);
+      if(theHost->otherRcvd.value > 0) {
+	p[num] = (float)((100*theHost->otherRcvd.value)/totTraffic.value);
 	lbl[num++] = "Other";
       }
     }
@@ -310,39 +310,39 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
   int useFdOpen = 0;
 
   if(dataSent)
-    totTraffic = theHost->tcpFragmentsSent+theHost->udpFragmentsSent+theHost->icmpFragmentsSent;
+    totTraffic.value = theHost->tcpFragmentsSent.value+theHost->udpFragmentsSent.value+theHost->icmpFragmentsSent.value;
   else
-    totTraffic = theHost->tcpFragmentsRcvd+theHost->udpFragmentsRcvd+theHost->icmpFragmentsRcvd;
+    totTraffic.value = theHost->tcpFragmentsRcvd.value+theHost->udpFragmentsRcvd.value+theHost->icmpFragmentsRcvd.value;
 
-  if(totTraffic > 0) {
+  if(totTraffic.value > 0) {
     if(dataSent) {
-      if(theHost->tcpFragmentsSent > 0) {
-	p[num] = (float)((100*(theHost->tcpFragmentsSent))/totTraffic);
+      if(theHost->tcpFragmentsSent.value > 0) {
+	p[num] = (float)((100*(theHost->tcpFragmentsSent.value))/totTraffic.value);
 	lbl[num++] = "TCP";
       }
 
-      if(theHost->udpFragmentsSent > 0) {
-	p[num] = (float)((100*(theHost->udpFragmentsSent))/totTraffic);
+      if(theHost->udpFragmentsSent.value > 0) {
+	p[num] = (float)((100*(theHost->udpFragmentsSent.value))/totTraffic.value);
 	lbl[num++] = "UDP";
       }
 
-      if(theHost->icmpFragmentsSent > 0) {
-	p[num] = (float)((100*(theHost->icmpFragmentsSent))/totTraffic);
+      if(theHost->icmpFragmentsSent.value > 0) {
+	p[num] = (float)((100*(theHost->icmpFragmentsSent.value))/totTraffic.value);
 	lbl[num++] = "ICMP";
       }
     } else {
-      if(theHost->tcpFragmentsRcvd > 0) {
-	p[num] = (float)((100*(theHost->tcpFragmentsRcvd))/totTraffic);
+      if(theHost->tcpFragmentsRcvd.value > 0) {
+	p[num] = (float)((100*(theHost->tcpFragmentsRcvd.value))/totTraffic.value);
 	lbl[num++] = "TCP";
       }
 
-      if(theHost->udpFragmentsRcvd > 0) {
-	p[num] = (float)((100*(theHost->udpFragmentsRcvd))/totTraffic);
+      if(theHost->udpFragmentsRcvd.value > 0) {
+	p[num] = (float)((100*(theHost->udpFragmentsRcvd.value))/totTraffic.value);
 	lbl[num++] = "UDP";
       }
 
-      if(theHost->icmpFragmentsRcvd > 0) {
-	p[num] = (float)((100*(theHost->icmpFragmentsRcvd))/totTraffic);
+      if(theHost->icmpFragmentsRcvd.value > 0) {
+	p[num] = (float)((100*(theHost->icmpFragmentsRcvd.value))/totTraffic.value);
 	lbl[num++] = "ICMP";
       }
     }
@@ -413,20 +413,20 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
   int useFdOpen = 0;
 
   if(dataSent) {
-    totTraffic = theHost->ipBytesSent;
-    totFragmentedTraffic = theHost->tcpFragmentsSent+theHost->udpFragmentsSent
-      +theHost->icmpFragmentsSent;
+    totTraffic.value = theHost->ipBytesSent.value;
+    totFragmentedTraffic.value = theHost->tcpFragmentsSent.value+theHost->udpFragmentsSent.value
+      +theHost->icmpFragmentsSent.value;
   } else {
-    totTraffic = theHost->ipBytesRcvd;
-    totFragmentedTraffic = theHost->tcpFragmentsRcvd+theHost->udpFragmentsRcvd
-      +theHost->icmpFragmentsRcvd;
+    totTraffic.value = theHost->ipBytesRcvd.value;
+    totFragmentedTraffic.value = theHost->tcpFragmentsRcvd.value+theHost->udpFragmentsRcvd.value
+      +theHost->icmpFragmentsRcvd.value;
   }
 
-  if(totTraffic > 0) {
-    p[num] = (float)((100*totFragmentedTraffic)/totTraffic);
+  if(totTraffic.value > 0) {
+    p[num] = (float)((100*totFragmentedTraffic.value)/totTraffic.value);
     lbl[num++] = "Frag";
 
-    p[num] = 100-((float)(100*totFragmentedTraffic)/totTraffic);
+    p[num] = 100-((float)(100*totFragmentedTraffic.value)/totTraffic.value);
     if(p[num] > 0) { lbl[num++] = "Non Frag"; }
 
     if(num == 0) {
@@ -490,7 +490,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 		   "", "", "", "", "", "", "", "", "", "" };
   int i, num=0, expl[MAX_NUM_PROTOS];
   FILE *fd;
-  TrafficCounter traffic, totalIPTraffic, diffTraffic=0;
+  TrafficCounter traffic, totalIPTraffic, diffTraffic;
   int useFdOpen = 0;
 
   if(theHost->protoIPTrafficInfos == NULL) {
@@ -498,23 +498,24 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     return;
   }
 
-  totalIPTraffic = 0;
+  totalIPTraffic.value = 0;
+  diffTraffic.value = 0;
 
   if(dataSent)
-    totalIPTraffic = theHost->ipBytesSent;
+    totalIPTraffic.value = theHost->ipBytesSent.value;
   else
-    totalIPTraffic = theHost->ipBytesRcvd;
+    totalIPTraffic.value = theHost->ipBytesRcvd.value;
   
-  if(totalIPTraffic > 0) {
+  if(totalIPTraffic.value > 0) {
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
       if(dataSent)
-	traffic = theHost->protoIPTrafficInfos[i].sentLoc+theHost->protoIPTrafficInfos[i].sentRem;
+	traffic.value = theHost->protoIPTrafficInfos[i].sentLoc.value+theHost->protoIPTrafficInfos[i].sentRem.value;
       else
-	traffic = theHost->protoIPTrafficInfos[i].rcvdLoc+theHost->protoIPTrafficInfos[i].rcvdFromRem;
+	traffic.value = theHost->protoIPTrafficInfos[i].rcvdLoc.value+theHost->protoIPTrafficInfos[i].rcvdFromRem.value;
 
-      if(traffic > 0) {
-	p[num] = (float)((100*traffic)/totalIPTraffic);
-	diffTraffic += traffic;
+      if(traffic.value > 0) {
+	p[num] = (float)((100*traffic.value)/totalIPTraffic.value);
+	diffTraffic.value += traffic.value;
 
         if(num == 0)
           expl[num]=10;
@@ -534,9 +535,9 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     expl[num] = 10;
     lbl[num++] = "Other";
   } else {
-    if(diffTraffic < totalIPTraffic) {
-      diffTraffic = totalIPTraffic - diffTraffic;
-      p[num] = (float)((100*diffTraffic)/totalIPTraffic);
+    if(diffTraffic.value < totalIPTraffic.value) {
+      diffTraffic.value = totalIPTraffic.value - diffTraffic.value;
+      p[num] = (float)((100*diffTraffic.value)/totalIPTraffic.value);
       expl[num]=expl[num-1];
       if(p[num]<5.0) expl[num]+=9; else if (p[num]>10.0) expl[num]=10;
       lbl[num++] = "Other";
@@ -600,45 +601,45 @@ void pktSizeDistribPie(void) {
   FILE *fd;
   int useFdOpen = 0;
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "< 64";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "< 128";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "< 256";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "< 512";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "< 1024";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "< 1518";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "> 1518";
   };
 
@@ -699,51 +700,51 @@ void pktTTLDistribPie(void) {
   FILE *fd;
   int useFdOpen = 0;
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "< 32";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "< 64";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "< 96";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "< 128";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "< 160";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "< 192";
   };
 
- if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
+ if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "< 224";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255 > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "<= 255";
   };
 
@@ -803,20 +804,20 @@ void ipProtoDistribPie(void) {
   FILE *fd;
   int useFdOpen = 0;
 
-  p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local+
-		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
+  p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value+
+		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local.value)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Loc";
   }
 
-  p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
-		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
+  p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local.value+
+		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote2local.value)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Rem->Loc";
   }
 
-  p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
-		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
+  p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote.value+
+		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local2remote.value)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Loc->Rem";
   }
@@ -874,27 +875,29 @@ void interfaceTrafficPie(void) {
   float p[MAX_NUM_DEVICES];
   int i, expl[MAX_NUM_DEVICES];
   FILE *fd;
-  TrafficCounter totPkts=0;
+  TrafficCounter totPkts;
   struct pcap_stat stat;
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0;
   int useFdOpen = 0;
 
+  totPkts.value = 0;
+
   for(i=0; i<myGlobals.numDevices; i++)
     if(!myGlobals.device[i].virtualDevice) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &stat) >= 0) {
 	p[i] = (float)stat.ps_recv;
-	totPkts += stat.ps_recv;
+	totPkts.value += stat.ps_recv;
       }
       expl[i] = 10*i;
     }
 
-  if(totPkts == 0)
-    totPkts++;
+  if(totPkts.value == 0)
+    totPkts.value++;
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if((!myGlobals.device[i].virtualDevice) && (p[i] > 0))  {
-      p[myDevices]   = 100*(((float)p[i])/totPkts);
+      p[myDevices]   = 100*(((float)p[i])/totPkts.value);
       lbl[myDevices] = myGlobals.device[i].name;
       myDevices++;
     }
@@ -956,22 +959,22 @@ void pktCastDistribPie(void) {
   FILE *fd;
   TrafficCounter unicastPkts;
 
-  unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts
-    - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts
-    - myGlobals.device[myGlobals.actualReportDeviceId]. multicastPkts;
+  unicastPkts.value = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
+    - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value
+    - myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value;
 
-  if(unicastPkts > 0) {
-    p[num] = (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
+  if(unicastPkts.value > 0) {
+    p[num] = (float)(100*unicastPkts.value)/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "Unicast";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts > 0) {
-    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts)/
-      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "Broadcast";
   };
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts > 0) {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value > 0) {
     int i;
 
     p[num] = 100;
@@ -1032,19 +1035,18 @@ void pktCastDistribPie(void) {
 
 void drawTrafficPie(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
-  TrafficCounter ip, nonIp;
+  TrafficCounter ip;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
   int num=0, expl[] = { 5, 5 };
   FILE *fd;
   int useFdOpen = 0;
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes == 0) return;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value == 0) return;
 
-  ip = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
-  nonIp = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes-myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
-
-  p[0] = ip*100/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes; num++;
+  ip.value = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
+  
+  p[0] = ip.value*100/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value; num++;
   p[1] = 100-p[0];
 
   if(p[1] > 0)
@@ -1266,49 +1268,47 @@ void drawThptGraph(int sortedColumn) {
 
 void drawGlobalProtoDistribution(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
-  TrafficCounter ip, nonIp;
+  TrafficCounter ip;
   float p[256]; /* Fix courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
   char	*lbl[16];
   FILE *fd;
   int idx = 0;
   int useFdOpen = 0;
 
-  ip = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
-  nonIp = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes
-    -myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
+  ip.value = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes; lbl[idx] = "TCP";  idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].udpBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].udpBytes; lbl[idx] = "UDP"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes; lbl[idx] = "ICMP"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes; lbl[idx] = "Other IP"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes; lbl[idx] = "(R)ARP"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes; lbl[idx] = "DLC"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes; lbl[idx] = "IPX"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes;lbl[idx] = "Decnet";  idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes; lbl[idx] = "AppleTalk"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes; lbl[idx] = "OSPF"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes; lbl[idx] = "NetBios"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes; lbl[idx] = "IGMP"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].osiBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].osiBytes; lbl[idx] = "OSI"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes; lbl[idx] = "QNX"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].stpBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].stpBytes; lbl[idx] = "STP"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherBytes; lbl[idx] = "Other"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value; lbl[idx] = "TCP";  idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value; lbl[idx] = "UDP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value; lbl[idx] = "ICMP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value; lbl[idx] = "Other IP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value; lbl[idx] = "(R)ARP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value; lbl[idx] = "DLC"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value; lbl[idx] = "IPX"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value;lbl[idx] = "Decnet";  idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value; lbl[idx] = "AppleTalk"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes.value; lbl[idx] = "OSPF"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value; lbl[idx] = "NetBios"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes.value; lbl[idx] = "IGMP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value; lbl[idx] = "OSI"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes.value; lbl[idx] = "QNX"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value; lbl[idx] = "STP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value; lbl[idx] = "Other"; idx++; }
 
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "drawGlobalProtoDistribution");
@@ -1368,10 +1368,10 @@ void drawGlobalIpProtoDistribution(void) {
   p[myGlobals.numIpProtosToMonitor] = 0;
 
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-    p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local
-      +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote;
-     p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local
-      +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote;
+    p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
+      +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
+     p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
+      +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
     if(p[idx] > 0) {
       p[myGlobals.numIpProtosToMonitor] += p[idx];
       lbl[idx] = myGlobals.protoIPTrafficInfos[i];
