@@ -36,6 +36,16 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
 
+#
+#
+# IMPORTANT NOTE
+# 
+# pep, rmon and wap are experiemnts/prototypes
+# that need some additional work that will be
+# carried on on future releases
+#
+#
+
 
 SHELL = @SHELL@
 
@@ -125,7 +135,7 @@ SNMPLIBS = @SNMPLIBS@
 SO_VERSION_PATCH = @SO_VERSION_PATCH@
 VERSION = @VERSION@
 
-SUBDIRS = . pep
+SUBDIRS = . # pep
 
 DIST_COMMON = Makefile.am Makefile.in
 CLEANFILES = 
@@ -143,11 +153,13 @@ INCLUDES = -I.. @INCS@
 #
 # The meat for ntop
 #
-noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so                   nfsPlugin.so 		  rmonPlugin.so wapPlugin.so
+noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so                   nfsPlugin.so
 
+#		  rmonPlugin.so wapPlugin.so
 
-lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la                   libnfsPlugin.la 		  librmonPlugin.la libwapPlugin.la
+lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la                   libnfsPlugin.la
 
+#		  librmonPlugin.la libwapPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
@@ -157,10 +169,14 @@ liblastSeenPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FL
 
 libnfsPlugin_la_SOURCES = nfsPlugin.c
 libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+#rmonPlugin.so: .libs/librmonPlugin.so@SO_VERSION_PATCH@
+#	@ln -s .libs/librmonPlugin.so rmonPlugin.so
 
+#wapPlugin.so: .libs/libwapPlugin.so@SO_VERSION_PATCH@
+#	@ln -s .libs/libwapPlugin.so wapPlugin.so
+====== = 
 librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
 librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
-
 libwapPlugin_la_SOURCES = wapPlugin.c
 libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -177,10 +193,6 @@ liblastSeenPlugin_la_LIBADD =
 liblastSeenPlugin_la_OBJECTS =  lastSeenPlugin.lo
 libnfsPlugin_la_LIBADD = 
 libnfsPlugin_la_OBJECTS =  nfsPlugin.lo
-librmonPlugin_la_LIBADD = 
-librmonPlugin_la_OBJECTS =  rmonPlugin.lo
-libwapPlugin_la_LIBADD = 
-libwapPlugin_la_OBJECTS =  wapPlugin.lo
 PROGRAMS =  $(noinst_PROGRAMS)
 
 icmpPlugin_so_SOURCES = icmpPlugin.so.c
@@ -198,16 +210,6 @@ nfsPlugin_so_OBJECTS =  nfsPlugin.so.o
 nfsPlugin_so_LDADD = $(LDADD)
 nfsPlugin_so_DEPENDENCIES = 
 nfsPlugin_so_LDFLAGS = 
-rmonPlugin_so_SOURCES = rmonPlugin.so.c
-rmonPlugin_so_OBJECTS =  rmonPlugin.so.o
-rmonPlugin_so_LDADD = $(LDADD)
-rmonPlugin_so_DEPENDENCIES = 
-rmonPlugin_so_LDFLAGS = 
-wapPlugin_so_SOURCES = wapPlugin.so.c
-wapPlugin_so_OBJECTS =  wapPlugin.so.o
-wapPlugin_so_LDADD = $(LDADD)
-wapPlugin_so_DEPENDENCIES = 
-wapPlugin_so_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -215,14 +217,13 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gnutar
+TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/icmpPlugin.P .deps/icmpPlugin.so.P \
 .deps/lastSeenPlugin.P .deps/lastSeenPlugin.so.P .deps/nfsPlugin.P \
-.deps/nfsPlugin.so.P .deps/rmonPlugin.P .deps/rmonPlugin.so.P \
-.deps/wapPlugin.P .deps/wapPlugin.so.P
-SOURCES = $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) $(librmonPlugin_la_SOURCES) $(libwapPlugin_la_SOURCES) icmpPlugin.so.c lastSeenPlugin.so.c nfsPlugin.so.c rmonPlugin.so.c wapPlugin.so.c
-OBJECTS = $(libicmpPlugin_la_OBJECTS) $(liblastSeenPlugin_la_OBJECTS) $(libnfsPlugin_la_OBJECTS) $(librmonPlugin_la_OBJECTS) $(libwapPlugin_la_OBJECTS) icmpPlugin.so.o lastSeenPlugin.so.o nfsPlugin.so.o rmonPlugin.so.o wapPlugin.so.o
+.deps/nfsPlugin.so.P
+SOURCES = $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) icmpPlugin.so.c lastSeenPlugin.so.c nfsPlugin.so.c
+OBJECTS = $(libicmpPlugin_la_OBJECTS) $(liblastSeenPlugin_la_OBJECTS) $(libnfsPlugin_la_OBJECTS) icmpPlugin.so.o lastSeenPlugin.so.o nfsPlugin.so.o
 
 all: all-redirect
 .SUFFIXES:
@@ -300,12 +301,6 @@ liblastSeenPlugin.la: $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_DEP
 
 libnfsPlugin.la: $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libnfsPlugin_la_LDFLAGS) $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_LIBADD) $(LIBS)
-
-librmonPlugin.la: $(librmonPlugin_la_OBJECTS) $(librmonPlugin_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(librmonPlugin_la_LDFLAGS) $(librmonPlugin_la_OBJECTS) $(librmonPlugin_la_LIBADD) $(LIBS)
-
-libwapPlugin.la: $(libwapPlugin_la_OBJECTS) $(libwapPlugin_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libwapPlugin_la_LDFLAGS) $(libwapPlugin_la_OBJECTS) $(libwapPlugin_la_LIBADD) $(LIBS)
 
 mostlyclean-noinstPROGRAMS:
 
@@ -558,6 +553,12 @@ installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
+<<<<<<< Makefile.am
+>>>>>>> 1.7
+
+<<<<<<< Makefile.am
+>>>>>>> 1.7
+
 #
 # Dependencies to allow ntop loading plugins on-place
 # by default ntop looks for plugins in the plugins/ subdirectory
@@ -580,18 +581,22 @@ lastSeenPlugin.so: .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 
 nfsPlugin.so: .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
+<<<<<<< Makefile.am
 
 .libs/librmonPlugin.so@SO_VERSION_PATCH@:
 	cc -bundle -flat_namespace -undefined suppress -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
 
 rmonPlugin.so: .libs/librmonPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/librmonPlugin.so rmonPlugin.so
+>>>>>>> 1.7
 
+<<<<<<< Makefile.am
 .libs/libwapPlugin.so@SO_VERSION_PATCH@:
 	cc -bundle -flat_namespace -undefined suppress -o .libs/libwapPlugin.so@SO_VERSION_PATCH@ wapPlugin.o
 
 wapPlugin.so: .libs/libwapPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libwapPlugin.so wapPlugin.so
+>>>>>>> 1.7
 
 install-data-local:
 	@$(top_srcdir)/mkinstalldirs $(plugindir);
