@@ -78,10 +78,6 @@ extern char* etheraddr_string(const u_char *ep);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
                                char *fdst);
-extern int handleIP(u_short port,
-		    HostTraffic *srcHost, HostTraffic *dstHost,
-		    u_int length,  u_short isPassiveSession,
-		    u_short p2pSessionIdx, int actualDeviceId);
 extern u_int16_t handleDNSpacket(const u_char *ipPtr, 
                                  DNSHostInfo *hostPtr, short length,
                                  short *isRequest, short *positiveReply);
@@ -121,29 +117,6 @@ extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 extern void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
-
-/* http.c */
-extern void sendStringLen(char *theString, unsigned int len);
-extern void sendString(char *theString);
-extern void printHTTPtrailer(void);
-extern void initAccessLog(void);
-extern void termAccessLog(void);
-extern void sendHTTPHeaderType(void);
-extern void sendGIFHeaderType(void);
-extern void sendHTTPProtoHeader(void);
-extern void handleHTTPrequest(struct in_addr from);
-extern void printHTMLheader(char *title, int  headerFlags);
-#ifdef HAVE_OPENSSL
-extern char* printSSLError(int errorId);
-#endif /* HAVE_OPENSSL */
-extern void returnHTTPbadRequest();
-extern void returnHTTPaccessDenied();
-extern void returnHTTPaccessForbidden();
-extern void returnHTTPpageNotFound();
-extern void returnHTTPpageGone();
-extern void returnHTTPrequestTimedOut();
-extern void returnHTTPnotImplemented();
-extern void returnHTTPversionNotSupported();
 
 /* initialize.c */
 extern void initIPServices(void);

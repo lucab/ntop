@@ -112,6 +112,29 @@ extern void printLocalHostsStats();
 extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName);
 #endif
 
+/* http.c */
+extern void sendStringLen(char *theString, unsigned int len);
+extern void sendString(char *theString);
+extern void printHTTPtrailer(void);
+extern void initAccessLog(void);
+extern void termAccessLog(void);
+extern void sendHTTPHeaderType(void);
+extern void sendGIFHeaderType(void);
+extern void sendHTTPProtoHeader(void);
+extern void handleHTTPrequest(struct in_addr from);
+extern void printHTMLheader(char *title, int  headerFlags);
+#ifdef HAVE_OPENSSL
+extern char* printSSLError(int errorId);
+#endif /* HAVE_OPENSSL */
+extern void returnHTTPbadRequest();
+extern void returnHTTPaccessDenied();
+extern void returnHTTPaccessForbidden();
+extern void returnHTTPpageNotFound();
+extern void returnHTTPpageGone();
+extern void returnHTTPrequestTimedOut();
+extern void returnHTTPnotImplemented();
+extern void returnHTTPversionNotSupported();
+
 /* report.c */
 extern void initReports(void);
 extern int reportValues(time_t *lastTime);

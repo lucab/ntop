@@ -53,6 +53,12 @@ static const struct pcap_pkthdr *h_save;
 static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 
+/* Forward */
+static int handleIP(u_short port,
+		    HostTraffic *srcHost, HostTraffic *dstHost,
+		    const u_int _length,  u_short isPassiveSess,
+		    u_short p2pSessionIdx, int actualDeviceId);
+
 /* ******************************* */
 
 void allocateSecurityHostPkts(HostTraffic *srcHost) {
@@ -83,11 +89,10 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 /* ************************************ */
 
-int handleIP(u_short port,
-	     HostTraffic *srcHost, HostTraffic *dstHost,
-	     u_int _length,  u_short isPassiveSess,
-	     u_short p2pSessionIdx,
-	     int actualDeviceId) {
+static int handleIP(u_short port,
+		    HostTraffic *srcHost, HostTraffic *dstHost,
+		    u_int _length,  u_short isPassiveSess,
+		    u_short p2pSessionIdx, int actualDeviceId) {
   int idx;
   Counter length = (Counter)_length;
 
@@ -124,7 +129,7 @@ int handleIP(u_short port,
 
   if(idx == -1)
     return(-1); /* Unable to locate requested index */
-  else if (idx >= myGlobals.numIpProtosToMonitor) {
+  else if(idx >= myGlobals.numIpProtosToMonitor) {
     traceEvent(CONST_TRACE_ERROR, "Discarding idx=%d for port=%d", idx, port);    
     return(-1);
   }
@@ -626,7 +631,7 @@ static u_char TTL_PREDICTOR(u_char x)		/* coded by awgn <awgn@antifork.org> */
 
 static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
-			 u_int length,
+			 const u_int length,
 			 u_char *ether_src,
 			 u_char *ether_dst,
 			 int actualDeviceId,
@@ -669,7 +674,7 @@ static void processIpPkt(const u_char *bp,
      Fix below courtesy of
      Christian Hammers <ch@westend.com>
   */
-  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipBytes, ntohs(ip.ip_len));
+  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipBytes, length /* ntohs(ip.ip_len) */);
 
   if(ip.ip_p == CONST_GRE_PROTOCOL_TYPE) {
     /*
@@ -857,7 +862,7 @@ static void processIpPkt(const u_char *bp,
 
   switch(ip.ip_p) {
   case IPPROTO_TCP:
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpBytes, tcpUdpLen);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpBytes, length);
 
     if(tcpUdpLen < sizeof(struct tcphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
@@ -1064,7 +1069,7 @@ static void processIpPkt(const u_char *bp,
 
   case IPPROTO_UDP:
     proto = "UDP";
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, tcpUdpLen);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, length);
 
     if(tcpUdpLen < sizeof(struct udphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
@@ -1084,7 +1089,7 @@ static void processIpPkt(const u_char *bp,
       sport = ntohs(up.uh_sport);
       dport = ntohs(up.uh_dport);
 
-      updateInterfacePorts(actualDeviceId, sport, dport, udpDataLength);
+      updateInterfacePorts(actualDeviceId, sport, dport, length);
       updateUsedPorts(srcHost, dstHost, sport, dport, udpDataLength);
 
       if(!(off & 0x3fff)) {
@@ -1257,10 +1262,10 @@ static void processIpPkt(const u_char *bp,
 	   (BMS 12-2001)
 	*/
         if (dport < sport) {
-	  if (handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId) == -1)
+	  if(handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId) == -1)
 	    handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId);
         } else {
-	  if (handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId) == -1)
+	  if(handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId) == -1)
 	    handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId);
         }
 

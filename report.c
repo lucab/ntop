@@ -2847,7 +2847,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     }
 
   } else {
-    total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/1024; /* total is expressed in KBytes.value */
+    total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
 
     if(total == 0)
       return;
@@ -2871,12 +2871,11 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	  +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
 
 	if(partialTotal > 0) {
-	  partialTotal /= 1024;
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
 	  numProtosFound++;
 	  printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
-			  CONST_COLOR_1, partialTotal, percentage);
+			  CONST_COLOR_1, partialTotal/1024, percentage);
 	}
       }
 
@@ -2888,7 +2887,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       if(remainingTraffic > 0) {
 	percentage = ((float)(remainingTraffic*100))/((float)total);
 	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Prot.",
-			CONST_COLOR_1, remainingTraffic, percentage);
+			CONST_COLOR_1, remainingTraffic/1024, percentage);
       }
 
 #ifdef MAKE_WITH_GDCHART
@@ -2902,8 +2901,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       if(remainingTraffic > 0) {
 	PortCounter **ipPorts;
-	int idx = 0;
-	
+	int idx = 0;	
 
 	ipPorts = (PortCounter**)calloc(MAX_IP_PORT, sizeof(PortCounter*));
 
@@ -2918,10 +2916,10 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	}
 
 	if(idx > 0) {
-	  printSectionTitle("TCP/UDP Traffic Port Distribution");
+	  printSectionTitle("TCP/UDP Traffic Port Distribution:<br>Last Minute View");
 	
 	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
-		     "<TH "TH_BG">TCP/UDP&nbsp;Port</TH>"
+		     "<TH "TH_BG" colspan=2>TCP/UDP Port</TH>"
 		     "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
 
 	  quicksort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
@@ -2935,7 +2933,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	      if(symPort == NULL) symPort = "";
 
 	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
-                          "<TH "TH_BG" ALIGN=LEFT><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>&nbsp;(%d)</TH>"
+                          "<TH "TH_BG" ALIGN=LEFT><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A></th><td align=right>%d</td>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -2956,18 +2954,20 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	releaseMutex(&myGlobals.gdbmMutex);
 #endif
 	free(ipPorts);
-	sendString("</TABLE>"TABLE_OFF"<P>\n");	
-	sendString("<p><H5>Data in the table above is purged every minute.");
+	sendString("<tr><td align=left colspan=5>Notes:<ul>"
+		   "<li>sum(total traffic per port) = 2*(total IP traffic)"
+		   "<br>because the traffic per port is counted twice (sent and received)"
+		   "<li>This report includes broadcast packets</ul></td></tr>\n");
+	sendString("</TABLE>"TABLE_OFF"<P></center>\n");	
         if (idx >= 32) 
-            sendString(" This extract is just a sample of the packets ntop has seen.");
+	  sendString(" This extract is just a sample of the packets ntop has seen.");
         sendString("</H5>\n");
+      } else {
+	sendString("<p>Note:This report includes broadcast packets</p>\n");
+	sendString("</CENTER>\n");
       }
-
-      /* ********************** */
-      sendString("<p>Note: This report includes broadcast packets</p>\n");
-      sendString("</CENTER>\n");
     }
-  }
+ bh }
 }
 
 /* ************************ */
