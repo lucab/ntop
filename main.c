@@ -212,10 +212,12 @@ static int verifyOptions (void)
       
             spw = getspnam("root");
             if(spw == NULL) {
-                traceEvent(CONST_TRACE_INFO, "Unable to read shadow passwords. Become root first and start ntop again");
-                exit (-1);
+	      traceEvent(CONST_TRACE_INFO, "Unable to read shadow passwords. Become root first and start ntop again");
+	      traceEvent(CONST_TRACE_INFO, "or add -s to your startup parameters (you won't be able to capture");
+	      traceEvent(CONST_TRACE_INFO, "from a NIC but you can via NetFlow/sFlow)");
+	      exit (-1);
             } else
-                correct = spw->sp_pwdp;
+	      correct = spw->sp_pwdp;
 #else
             traceEvent(CONST_TRACE_ERROR, "Sorry: I cannot change user as your system uses and unsupported password storage mechanism.");
             traceEvent(CONST_TRACE_ERROR, "Please restart ntop with root capabilities");
