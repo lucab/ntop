@@ -154,7 +154,8 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = myrrd . @PLUGINS@
 
-ETTER_PASSIVE = etter.passive.os.fp.gz
+ETTER_PASSIVE_DOWNLOAD = etter.passive.os.fp
+ETTER_PASSIVE = $(ETTER_PASSIVE_DOWNLOAD).gz
 
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
@@ -1184,7 +1185,30 @@ sapt: saptable.h
 
 # download the vendor information table
 dnvt:
+	@echo ""
+	@echo ""
+	@echo -n "Preparing "
+	@if test -f oui.txt; then \
+	  rm -rf oui.txt; \
+	fi
+	@if test -f oui.txt.gz.old; then \
+	  rm -rf oui.txt.gz.old; \
+	fi;
+	@mv oui.txt.gz oui.txt.gz.old
+	@echo "(old oui.txt.gz file is now oui.txt.gz.old)"
+	@echo ""
 	@wget -c http://standards.ieee.org/regauth/oui/oui.txt
+	@gzip oui.txt
+	@echo ""
+	@echo ""
+	@echo -n "Old file lines were: "
+	@gunzip -c oui.txt.gz.old | wc -l
+	@echo -n "New file lines are:  "
+	@gunzip -c oui.txt.gz | wc -l
+	@echo ""
+	@echo ""
+	@echo "New file is:"
+	@ls -l oui.txt.gz
 
 # download the Novell SAP Protocol information table
 dnsapt:
@@ -1192,11 +1216,45 @@ dnsapt:
 
 # download the passive ethernet fingerprint database
 dnetter:
-	if test -f $(ETTER_PASSIVE).old; then \
+	@echo ""
+	@echo ""
+	@echo "Preparing "
+	@echo ""
+
+	@if test -f $(ETTER_PASSIVE).old; then \
+	  echo "...Deleting prior file, $(ETTER_PASSIVE).old..."; \
 	  rm -rf $(ETTER_PASSIVE).old; \
 	fi;
-	mv $(ETTER_PASSIVE) $(ETTER_PASSIVE).old
-	wget -O $(ETTER_PASSIVE) http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/~checkout~/ettercap/ettercap/etter.passive.os.fp?rev=HEAD\&content-type=text/plain
+	@if test -f $(ETTER_PASSIVE); then \
+	  echo "...Moving current $(ETTER_PASSIVE) to $(ETTER_PASSIVE).old"; \
+	  mv $(ETTER_PASSIVE) $(ETTER_PASSIVE).old; \
+	fi;
+	@for file in $(ETTER_PASSIVE) $(ETTER_PASSIVE).gz \
+		$(ETTER_PASSIVE_DOWNLOAD) $(ETTER_PASSIVE_DOWNLOAD).gz; do \
+          if test -f $$file; then \
+	     echo "...Deleting prior file, $$file..."; \
+             rm -rf $$file; \
+          fi; \
+        done
+	@echo ""
+	@echo "...Downloading new file..."
+	@wget -O $(ETTER_PASSIVE_DOWNLOAD) \
+	          http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/~checkout~/ettercap/ettercap/$(ETTER_PASSIVE_DOWNLOAD)?rev=HEAD\&content-type=text/plain
+	@echo ""
+	@echo "gziping downloaded file..."
+	@gzip $(ETTER_PASSIVE_DOWNLOAD)
+	@echo ""
+	@echo ""
+	@if test -f $(ETTER_PASSIVE).old; then \
+	  echo -n "Old file lines were: "; \
+	  gunzip -c $(ETTER_PASSIVE).old | wc -l; \
+	fi;
+	@echo -n "New file lines are:  "
+	@gunzip -c $(ETTER_PASSIVE) | wc -l
+	@echo ""
+	@echo ""
+	@echo "New file is:"
+	@ls -l $(ETTER_PASSIVE)
 
 # download the data for and make the p2c.opt.table
 p2ctable:
