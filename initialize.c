@@ -223,6 +223,8 @@ void resetDevice(int devIdx) {
   myGlobals.device[devIdx].actualHashSize = CONST_HASH_INITIAL_SIZE;
 
   ptr = calloc(CONST_HASH_INITIAL_SIZE, sizeof(HostTraffic*));
+  len = CONST_HASH_INITIAL_SIZE * sizeof(HostTraffic*);
+  memset(ptr, 0, len);
   myGlobals.device[devIdx].hash_hostTraffic = ptr;
 
   len = sizeof(struct HashList*)*myGlobals.hashListSize;
