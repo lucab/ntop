@@ -1,3 +1,4 @@
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
    _   _ _
   | \ | | |_ ___  _ __
@@ -11,8 +12,882 @@
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-  FAQ (All Platforms)
-  ===================
+  FAQ
+  ===
+
+Section 1 - All Platforms	and Section 2 - Platform Specific
+
+Section 3 - HowTo Ask For Help and GDB ultraMini-tutorial
+
+Based on the FAQ entries at http://snapshot.ntop.org and the 1.3 NTOP docs/FAQ and
+docs/THREADS-FAQ files.  Also from messages to ntop and ntop-dev mailing lists.
+Compiled by Burton M. Strauss III <Burton@ntopsupport.com> - comments to him!
+
+Note that some of this information may be dated or not completely verified for 2.1
+
+Entries are in no particular sequence.
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Section 1 - All Platforms
+=========================
+
+Q. What is ntop?
+A. ntop is an open source network top - the official website can be found at
+   http://www.ntop.org/
+
+Q. Is ntop like mrtg.
+A. No & Yes...
+
+   ntop isn't a snmp enabled monitor like mrtg.
+
+   ntop is rather a traffic monitor with it's own interfaces, which monitors
+   what it sees.
+
+   ntop also supports netFlow (Cisco) and sFlow, which allow external monitors 
+   to send information to an ntop instance.
+
+
+Compiling
+---------
+ 
+Q. ntop doesn't compile.
+A. First, check the output from ./configure for an error message - sometimes
+   people miss them.  Then review the output from make, also looking for an error.
+   Finally, look at config.log Look in config.log to see what ./configure found 
+   when looking for headers and libraries.  Usually, you are missing a critical
+   library, but tried to "make" anyway after ./configure failed.
+
+   Hint: It may sometimes be that you're missing the header files (often those 
+   are in a -devel rpm if you're running RedHat)
+
+
+Q. What is "snapshot"
+A. Snapshot is a community FAQ and documentation resource at http://snapshot.ntop.org.
+   It's also the site of "the snapshots".
+
+
+Q. What is "a snapshot" or "the snapshots"?
+A. A snapshot is a dump of the ntop cvs structure, automatically generated every
+   day at 5 minutes after midnight (Pisa time). 
+
+   Snapshots are named with their creation date, in the form of ntop-yy-mm-dd.tgz. 
+
+   Snapshots are not polished nor even "releases". They contain any update(s) 
+   checked into the cvs during the prior day.  No more, no less.
+   
+   cvs checkins (commits) are usually tested by the developer, but perhaps only in
+   one (limited) environment.  Occasionally a file is missed or a typo occurs and a 
+   snapshot won't compile. Snapshots frequently introduce bugs that aren't apparent 
+   on a quick review.  Snapshots are basically a point-in-time capture of the
+   moving development environment.  No more and no less.
+
+   With release 2.0, rapid development occurred after general release and using 
+   the latest snapshot was your best bet. With 2.1 we hope to be a little more
+   stable and to release incremental versions (e.g. 2.1a) if necessary.
+   
+   If the 2.1 release doesn't work, drop by the mailing lists and check the back
+   traffic to see if this is a common problem.  If it's not, try the latest 
+   snapshot or ask for a recommendation of which version is the best to use.  
+
+
+Q. I have a problem with...
+A. Please run ./autogen.sh -1 and try again.
+   ntop is distributed with generated files from RedHat 7.2 and/or Solaris 8
+   systems.  The Makefile is supposed to detect things being out of whack and
+   automatically regenerate these files, but it doesn't ALWAYS work.
+
+   Doing ./autogen.sh -1 makes the various generated files conform to your
+   system and your tools versions.  It's the right thing to do.
+
+Q: How do I force configure to build ntop without xxxx support?
+A: ./configure --help shows a bunch of configuration options available to you:
+
+      --enable-micro-ntop     compile a slim version of ntop 
+                              [default=disabled]
+      --disable-mt            disable multithread support also if available 
+                              [default=enabled]
+      --enable-mysql          enable MySQL support also if available 
+                              [default=disabled]
+      --disable-ssl           disable HTPPS support also if OpenSSL is 
+                              available [default=enabled]
+      --disable-readline      disable GNU readline support also if available
+                              [default=enabled]
+      --disable-curses        disable curses support also if available
+                              [default=enabled]
+      --disable-gdchart       disable GDChart support also if available
+                              [default=enabled]
+      --enable-tcpwrap        enable TCP Wrap support if available 
+                              [default=disabled]
+      --enable-ignoresigpipe  Ignore SIGPIPE errors [default=do not ignore]
+      --enable-sslwatchdog    Watchdog for ssl hangups (Netscape 6.2.2)
+                              [default=disabled]
+      --enable-sslv3          enable ssl v3 support if available
+                              [default=disabled]
+      +----------------------------------------------------------------------------+
+      --disable-plugins       disable compilation of plugins, also if they are 
+                              available [default=disabled]
+      --disable-intop         disable compilation of intop [default=enabled]
+
+
+Q. Which packages/libraries do I need to compile ntop:
+       glibc
+       gcc
+       cpp
+       gawk
+       autoconf
+       automake
+       openssl (for https:// support)
+       gdbm
+       libpcap
+       mysql (for mySQL support)
+
+     Note that in some cases the minimal header files for a tool will be in one
+	      "package" and the execution library in another. ntop needs both so that
+	      the ./configure test finds the tool. It's usually safest to install both 
+	      the tool and development packages!
+
+	 (Note some packages will have additional packages as pre-requisites)
+	 
+     Building libpcap requires: bison/flex  
+
+Q. Compile dies because it's missing depcomp
+A. automake/autoconf issue.  Just copy the missing file (or make a symbolic link) into
+   the ntop source directory.
+   
+   It's in /usr/share/automake on my Linux boxes 
+   Another user reports it is in /usr/local/share/automake in sun8. 
+
+   Snapshots after February 2002 should have fixed the problem, but you may have
+   to run ./autogen.sh -1 to create the pointer.
+
+Q. How do I update the Vendor Table (MAC address prefixes)?
+A. ntop has (in Makefile), a rule to automatically download the latest vendor 
+   information table from the IEEE and a rule to rebuild the vendor table 
+   (vendortable.h). 
+
+   If you are seeing unknown MAC address prefixes (the 1st three units), try 
+   and rebuild it:
+
+     > mkdir Internet 
+     > make dnvt 
+     > make vt 
+
+    You will then need to recompile ntop! 
+
+    It does change - there are almost 600 modifications and/or new assigments between
+    the February 2002 version and the one in ntop 2.0.
+
+
+Q. I get an error, libtool: link: CURRENT `-release' is not a nonnegative integer
+A. This is an autoconf problem.  The whole set of messages is typically:
+
+   [...]
+   > libtool: link: CURRENT `-release' is not a nonnegative integer
+   > libtool: link: `-release' is not valid version information
+   > make[2]: *** [libntop.la] Error 1
+   > make[2]: Leaving directory `/usr/local/src/ntop'
+   > make[1]: *** [all-recursive] Error 1
+   > make[1]: Leaving directory `/usr/local/src/ntop'
+   > make: *** [all-recursive-am] Error 2
+
+   From Luca: 
+
+       "AFAIK this is a bug of autoconf that's not able to expand some macros, 
+        namely those that contain the version number. The workaround is to 
+        downgrade to the previous autoconf version." 
+
+       Workarounds:
+       - downgrade to a stable autoconf version
+       - edit all the ntop Makefile(s), add "0:0:0" behind any 
+         occurence of "version-info" and "2.0" behind
+         "-release".
+
+
+   Other Solutions: 
+
+   1) Burton posted a personal patch to do the above for Makefile.am on
+      Thu Dec 20 2001 - "Compile problems with -release". Check the ntop-dev archive. 
+
+   2) Older versions (e.g. Slackware 7.xx) of Linux installations have older versions 
+      of automake, which don't exhibit the bug. 
+
+   3) (Sean O'Neill) "I cheated a bit and hacked libtool by changing the following" 
+
+        current="$2" 
+          to 
+        current=0 
+
+
+Q. Why do we have static linked libraries in buildAll.sh?
+A. I (Burton) don't know the history, but I have some guesses...  First the facts...
+
+   gdchart0.94c wasn't regularly released - it's a special release for ntop -
+   check the home page and there isn't a mention of c!
+
+   libpng-1.0.8 has different calling parameters vs. 1.2.x and DOES NOT
+   implement the typical backwards compatible entry points.  So if you compile
+   with one and .so to the other, it breaks...  nice, huh?
+
+   zlib?  Probably wouldn't have been an issue, but - as everyone else got
+   bitten by - it had been so stable for so long, that nobody even thought
+   about it...
+
+   My guess is that it simply became easier for Luca - static linking kills 
+   off a whole raft of problem reports.  But that's only a guess - I wasn't
+   involved with ntop back then...
+
+   Could it be fixed/changed??  Sure.  Volunteers are welcome.
+
+
+Q. What is "obsolete/"
+A. Obsolete code is code that is no longer being maintained nor part of ntop, but
+   it's stuck off in that directory because 1) storage is cheap and 2) it might have
+   usage someday and 3) somebody might be interested in resurecting it...
+
+   Code in obsolete/ IS NOT MAINTAINED, even minimally. 
+
+   Specifics?  (As of June 2002)
+
+       Various programs and functions which supported "rules" were determined to be
+       obsolete were removed from ntop in late March 2002. This included a substantial
+       number of lines of code which was simply removed. Entire modules were placed into 
+       the obsolete/ directory. 
+               ntop-rules.8 
+               event.c 
+               rules.c 
+               rules.h 
+               rules.sample 
+
+       Various plugin programs which were no longer being supported were removed from 
+       ntop in late March 2002. These entire modules were placed into the obsolete/ 
+       directory. 
+               wapPlugin.c 
+               rmon.h 
+               rmonPlugin.c  
+
+       Various lines of code (totaling a substantial number, widely scattered throughout 
+       ntop), which had provided compile-time selectable support (#define ENABLE_NAPSTER) 
+       for analysis of the (late) Napster protocol were removed on 4Apr2002.  
+
+
+Q, How to Build the (obsolete) RMON plugin
+A. Without any guarantees...
+
+    0) Please do NOT use a precompiled UCD package unless you know what you're doing. 
+
+    1) Fetch UCD-SNMP [See http://net-snmp.sourceforge.net/developer.html] 
+
+    2) Compile the stuff as specified as follows : 
+        [see also http://net-snmp.sourceforge.net/tutorial/toolkit/demon/] 
+    > ./configure --with-mib-modules="agentx" 
+    > make 
+    > make install 
+
+    3) Once you this stuff ready you can build the ntop/RMON plugins. 
+
+    4) Now start ntop. 
+
+    5) The ntop/RMON plugin listens on port 161 (the default SNMP port). 
+        If you want to test the agent you can use the 'tkMib' tool that comes with 
+        UCD-SNMP [see http://net-snmp.sourceforge.net/tkmib.jpg]. 
+
+   NOTE: If you use tkMib do not forget to do "setenv MIBS ALL" (csh shells), 
+         otherwise you won't see the RMON MIB.  
+
+   How to Build the RMON plugin (bis) created 04/03 2002 by pierlo  
+   
+   The following works with : 
+     - ntop v.2.0.1 
+     - UCD-SNMP v.4.2.3 
+     - openSSL v.0.9.6c 
+
+     0. Requirements 
+     * Make sure that ntop works properly 
+
+     * Make sure that openSSL & openSSL libraries are correctly installed
+       (no WARNING when ntop is started !). If not, download and install 
+       the latest versions) 
+
+     * fetch & install UCD-SNMP : 
+     tar -xvzf XXXXX.tar.gz 
+     ./configure --enable-shared 
+     make 
+     umask 022 
+     make install 
+
+     1. uncomment lines around 474 and 1035 in configure.in file : 
+
+     dnl>OPTIONAL UCD-SNMP 
+     dnl>AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h) 
+     (...) 
+     dnl> check for `UCD-SNMP' library by University of California [http://ucd-snmp.ucdavis.edu] 
+     dnl>AC_CHECK_LIB(ucdagent, register_mib, [AC_DEFINE(HAVE_SNMP) SNMPLIBS="-L/usr/local/lib -lsnmp -lucdagent -lucdmibs"], , -lsnmp -lucdagent -lucdmibs $LIBS $MORELIBS) 
+
+     (remove the dnl> from the AC_ lines) 
+
+     * in /ntop/plugins/rmonPlugin.c file, replace : 
+
+     line 702 approx. : droppedPackets with droppedPkts 
+     (there is only one occurence, so it may not be difficult to find) 
+
+     line 676 approx. : 
+     if (header_simple_table (vp,name,length,exact,var_len, 
+          write_method,numDevices) 
+
+     with : 
+
+     if (header_simple_table(vp,name,length,exact,var_len, 
+          write_method,myGlobals.numDevices) 
+
+     and : 
+
+     long_ret = (long)(device[ifNum] 
+
+     with 
+
+     long_ret = (long)(myGlobals.device[ifNum] 
+
+     (lines 690 to 782 approx., about 13 occurences to change) 
+
+     2. launch /ntop/autogen.sh -1 
+
+     3. launch /ntop/configure 
+
+     Be sure that : 
+
+     * there is no warning about openSSL libraries ! 
+
+     * the following checks are successful : 
+     " Step 4. Looking for both required and optional system headers.... 
+     (...) 
+     checking for ucd-snmp/ucd-snmp-agent-includes.h... yes" 
+     (...) 
+     
+     "Step 7. Looking for optional GPLed libraries.... 
+     (...) 
+     checking for register_mib in -lucdagent... yes" 
+
+     -> NO warning about openSSL libraries here ! If any trouble, 
+     check config.log file, which may help to get round the problem... 
+     Looking at ls.so.conf file and checking libraries pathes may also be helpful. 
+
+     3. edit /ntop/plugins/Makefile : replace every ocurence of "icmpPlugin" with "rmonPlugin". 
+
+     4. Launch /ntop/plugins/make 
+
+     5. Theoretically, RMON plugin is built and is ready to work ! If you have 
+        a error message like "undefined symbol..." when ntop started... 
+        I don't know how to fix it. 
+
+     Hope I didn't forget anything... Have fun ! 
+
+     P-L.  
+ 
+
+Running
+-------
+
+Q. What is the function of the 'ntop' script in the build directory - should I
+   call it or /usr/local/bin/ntop ?
+A. (from the comments in the script):
+
+    # ntop - temporary wrapper script for .libs/ntop
+    # Generated by ltmain.sh - GNU libtool 1.4 (1.920 2001/04/24 23:26:18)
+    #
+    # The ntop program cannot be directly executed until all the libtool
+    # libraries that it depends on are installed.
+    #
+    # This wrapper script should never be moved out of the build directory.
+    # If it is, it will not operate correctly.
+    
+   It allows you to run ntop out of the build directory before doing a "make
+   install" by doing all the necessary linkage magic - such as forcing a relink
+   if it didn't succeed originally - to the files in .libs.
+
+   Think of it as simulating make install, but not moving stuff to /usr/local
+   or wherever.
+
+
+Q. Which libraries do I need?
+A. To run ntop: glibc, gdbm, libpcap 
+      For https://, add openssl. 
+      For intop, add ncurses. 
+      For other tools and compile options, add the appropriate libraries. 
+
+
+Q. ntop seems to run, but the web server isn't up.
+A. Set the password - see docs/1STRUN.TXT
+
+
+Q. How do you reset Admin password if we lost it?
+A. Delete ntop_pw.db and follow the procedure in docs/1STRUN.txt
+
+
+Q. ntop seems to run but I don't see any traffic.
+A. Make sure you aren't running against the loopback (127.0.0.1) interface.
+   lo shouldn't see much traffic, only that originating on the host destined
+   for it (e.g. ping 127.0.0.1).
+
+
+Q. ntop stops capturing packets, except ARP and other broadcasts.  Why?
+A. Check if you have a daemon running that periodically checks for and 
+   resets interfaces in promiscuous mode?  If that happens, all you 
+   would see were broadcast packets like ARPs...
+
+   Check back in the log and see if there is a message about the interface
+   changing status.  Determine why.
+
+
+Q. How much horsepower do I need to run ntop on a network of size x?
+A. Nobody really knows.  ntop needs enough memory to store the active
+   hosts and enough cpu to keep up with the average packet flow.  The
+   buffer will handle the occasional peak, but if you see frequent
+   lost packets, you're in trouble.
+
+   Note that a few packets occasionally lost isn't a big deal for most 
+   users.  After all, the network itself has losses - I've seen my AT&T
+   Broadband connection have spurts of 30% packet loss.  Ideally in a 
+   LAN environment, the packet loss should be down in the small #s... 
+   the Ethernet standard allows 1  error in 100,000,000(10^8), but most 
+   vendors beat that by a long margin (even as high as 1 in 10^12).
+
+   Of course, those are lab measurements.  In the real world?  Not that good.
+   Electrical noise can be a real bugaboo. Remember, at a certain point, if 
+   the nic doesn't understand what it's seeing, it throws it away and 
+   declares an error.  The key is to keep up with the traffic.
+
+   Similarly, the OS kernel does the same thing in it's interrupt handling
+   (throw away packets).  Last resort, but better than hanging up the whole
+   machine.
+
+   ntop drops packets when the queue gets longer than the permitted length.
+   You can see this in the configuration page as # Queued Pkts to Process 
+   and # Max Queued Pkts.
+
+   One or two or a small number (you pick your tollerance) is ok, but constant 
+   losses isn't.  What I'm saying is that as long as ntop can keep up with the 
+   nic, then the data is as good as it gets...  if ntop can't keep up, then the 
+   data isn't very good.
+
+   If you have measurements - network size, traffic flow and %CPU used (with
+   the hardware info, of course), shoot them over to us on ntop and someday
+   maybe we'll be able to give better #s.
+
+
+Q. ntop starts up with this:
+   WARNING: Discarded network 172.20.0.0/16: this is the local network.
+A. No worries.  The message means exactly what it says - it's a warning that 
+   you gave the local network as one of the parameter(s) to -m.  Since the 
+   local networks are always local, ntop doesn't need to make them pseudo-local.
+
+
+Q. Can I set the admin password from a script?
+A. Yes, you can call ntop with the option: 
+      ntop --set-admin-password=password 	  
+
+   If you are really crazy, emulate a tty with ptty, in a python script posted at
+   Snapshot.
+
+
+Q. I changed the owner of the ntop database directory to the user
+   ntop runs as and I get prompted for the password endlessly.
+A. Don't.  At the point in the code where databases are opened, ntop has not yet
+   shed privileges.  So the databases must be owned by root.  Sensitive info,
+   such as the ntop "admin" password are stored in there, so changing ownership
+   isn't a good idea.
+
+
+Q. Can I disable logging? Totally?
+A. Sort of - if you run single threaded, without the -d or -L options.
+   Multithreaded?  No.  If ntop creates child threads, they don't have 
+   terminal access and have to have some way of reporting things.
+
+
+Q. I can't merge interfaces (-M option)?
+A. Check your plugins and see if either netflow or sflow is active.
+   Regardless of whether you're using them, if they're active, they 
+   (silently) force the -M switch on.
+
+
+Q. I'm seeing weird "hosts" on my network with names like	"Bridge Sp. Tree/OSI Route".
+   What are they?
+A. There is a list of "special" MAC address prefixes in vendor.c, specialMacInfo[].
+   There are blocks of MAC addresses reserved (sometimes not formally) for special
+   uses, such as sharing information about Spanning Tree for bridges.  These do not
+   have an IP address - they operate at a lower level - so nothing gets displayed
+   in some of ntop's fields.
+
+   A reference about protocols at the wire level is here:
+      http://www.oreillynet.com/pub/a/network/2001/03/02/net_2nd_lang.html
+
+   If you only want to see TCP/IP, then I suggest you use -B "ip" to filter
+   only TCP/IP protocol on your ntop line...
+
+
+Q. How do I see fully qualified names for all my hosts? Some are netbios
+   names!
+A. ntop doesn't SEND NetBIOS queries, it sniffs them off the traffic already on
+   the network.
+
+   There is only ONE case where ntop uses the NetBIOS names, which is if 
+   it can't resolve them via DNS (both it's own queries and from sniffing
+   responses to other's queries off the network).
+
+   So, if you have a properly functioning DNS, you'll see DNS names.  If 
+   these are (for example) internal names, unknown to the DNS server, you'll 
+   see NetBIOS names if they are available.  Lastly, you'll get IP addresses...
+
+   If you do have a DNS, and the name is resolved as part of the default
+   domain, you won't see a fully qualified name back from the DNS, so ntop
+   won't have that information.  
+   
+   So, on a real network you'll often get a mix of name resolution types:
+
+    Host                            IP Address      MAC Address      Other Name(s)
+    netnews.attbi.com               63.240.76.16
+    tigger.homeportal.2wire.net     192.168.0.xx   00:D0:09:xx:xx:xx
+    homeportal.homeportal.2wire.net 192.168.0.1    00:D0:9E:xx:xx:xx
+    swallowtail                     192.168.0.XX   00:A0:CC:xx:xx:xx SWALLOWTAIL [STRAUSS] ...
+    12-xxx-xxx-xxx.client.attbi.com 12.xxx.xxx.xxx 00:D0:9E:xx:xx:xx
+    12-xxx-xxx-yyy.client.attbi.com 12.xxx.xxx.yyy
+
+
+Q. I don't understand -j | --border-sniffer-mode
+A. Welcome to the club <grin />
+
+   Quoting from Luca's comment:
+   
+   "-j is used when you are starting ntop on a mirrored interface where you
+   cannot trust MAC addresses."
+
+   ntop uses MAC addresses for many things to differentiate among machines.
+   IP addresses and names can mean many things, but hardware addresses are
+   supposed to be unique.  This is usually true, but gets hairy when you
+   introduce a switch into the network which is also copying all of the 
+   packets it sees to a monitoring port.  
+
+   Understand how a switch works: In short, a switch monitors the network it sees
+   and knows which mac address(es) are on which ports.  When it received a packet,
+   it forwards it to only that port. Broadcasts are forwarded to all ports.
+
+   So an ntop instance, sniffer, whatever only sees a fraction of the traffic.
+
+   In many managed switches, there is an option for a "repeater" or "monitoring" 
+   or "spanned" port, which receives all traffic, so that network monitoring can 
+   be performed there.
+
+   However, When the switch sends out packets on the monitoring port, it must 
+   rewrite them to be valid Ethernet packets with a valid (i.e. the switch's)
+   MAC address and ntop gets confused.
+
+   Note that:
+
+   1. -j usually requires you to specify the local network (-m) as a mirrored
+      interface might have a wrong/ip-less/privare IP address.
+
+   2. -j disables some features as TCP session tracking etc.
+
+   In future versions -j will disappear and it will be replaced with more flags
+   for better controlling all these options.
+
+   With multiple switches in a hierarchy, you have to place the ntop instance 
+   or instances carefully, depending upon what you want to monitor.
+
+   For example, most lans have a switch in each area with it's uplink connected 
+   to a backbone switch.  Servers and gateways are then placed off one or more 
+   backbone ports.  This keeps departmental traffic isolated from each other, 
+   while making enterprise wide and inter-department traffic feasible.  ntop 
+   would have to be monitoring the backbone switch, but you would need to be 
+   aware of what ntop is NOT seeing and place additional monitors.
+
+   For example, you could place additional ntop instances in the departments, 
+   using the netflow or sFlow plugins to receive flow information from them 
+   which wouldn't be visible to the backbone instance. (I'll note that I haven't
+   actually tried this, myself. -----Burton)
+
+
+Q. When I run with -j | --border-sniffer-mode, there are different menus.
+A. Yes.
+
+   The menus are just html files.  There is a set for regular mode and a
+   j_xxx.html set for border sniffer mode.  Why?  Because there are things
+   that simply don't work in border-sniffer-mode, so why let the user
+   request those pages.
+
+
+Q. ntop shows an older, single menu interface
+A. If ntop is unable to find the file index.html it generates the page 
+   internally. That page refers to 'leftindex.html' which is the all-in-one menu 
+   you see, similar to the v1.3 menu.
+
+   To find the html files, ntop looks in the html subdirectory in two places: 
+
+      1. In the current directory (i.e. ./html), 
+   and 
+      2. In '[prefix]/share/ntop/html' 
+         (where [prefix] is set by the --prefix option of your ./configure step). 
+
+   Common causes: 
+
+      1. Is manually installing ntop in an unusual place, having forgotten to update
+         DATAFILE_DIR in config.h. Or forgetting to copy the html subdirectories, etc. 
+
+      2. Forgetting to run './autogen.sh -1' first and 'make install' last when first
+         building ntop from source. 
+
+      3. The 'intop.1' problem discussed in another FAQ entry - this leaves an 
+         partial install, which is often missing some or all of the html files. 
+
+      4. Running ntop with an explicit path from somewhere other that the directory 
+         it's installed into. For example, if you install ntop into /root/ntop, but
+         run it like this: 
+
+            cd /usr/bin 
+            /root/ntop/ntop 
+
+         It will look 1st in /usr/bin/html and then in [prefix]/share/ntop and not 
+         find the html files in /root/ntop/html!
+
+   This often occurs when running ntop as a daemon, because the current working 
+   directory of the script is not what you expect it to be! 
+ 
+
+Q. What are the default protocols ntop monitors?
+A. (These are the ones ntop monitors if the user does not supply a -p parameter)  
+   Check addDefaultProtocols() in ntop.c around line 520.  
+   The current list (July 2002) is
+
+     Protocol   Ports
+	 --------   -----
+     FTP        ftp ftp-data
+     HTTP       http www https 3128      /* 3128 is HTTP cache */
+     DNS        name domain     
+     Telnet     telnet login     
+     NBios-IP   netbios-ns netbios-dgm netbios-ssn     
+     Mail       pop-2 pop-3 pop3 kpop smtp imap imap2     
+     DHCP/BOOTP 67-68     
+     SNMP       snmp snmp-trap     
+     NNTP       nntp
+     NFS        mount pcnfs bwnfs nfsd nfsd-status
+     X11        6000-6010
+     SSH        22
+     Gnutella   6346 6347 6348     
+     Morpheus   1214     
+     WinMX      6699 7730     
+     Audiogalaxy 41000-41900     
+
+   Note that the names come from /etc/services (or your system's equivalent).  If
+   you add protocols to /etc/services, you can refer to them by name on the -p 
+   parameter.
+
+
+Q. What's changed since v1.3 in that list?
+A. Added 25Jan2002: 
+
+          Gnutella: 6346 6347 6348
+          Morpheus: 1214 
+          WinMX:    6699 7730 
+
+   Added 20Mar2002: 
+
+          Audiogalaxy: 41000-41900
+
+   Removed 26Jan2002: 
+
+          Napster 
+
+
+Q. What are ntop's options?
+A. There are a couple of options that appear only if they're not compiled in, and a few
+   that depend on various external libraries, e.g. openSSL.
+
+   The best way to see what is actually available is to run ntop with the -h or 
+   --help options and see.
+
+   Here is the FULL set as of July 2002:
+
+     -a <path>      | --access-log-path <path>
+                                Path for ntop web server access log
+
+     -b <host:port> | --sql-host <host:port>
+                                SQL host for ntop database
+
+     -c             | --sticky-hosts
+                                Idle hosts are not purged from hash
+
+     -d             | --daemon
+                                Run ntop in daemon mode
+
+     -e <number>    | --max-table-rows <number>
+                                Maximum number of table rows to report
+
+     -f <file>      | --traffic-dump-file <file>
+                                Traffic dump file (see tcpdump)
+
+     -h             | --help
+                                Display this help and exit
+
+     -i <name>      | --interface <name>
+                                Interface name or names to monitor
+
+     -i <number>    | --interface <number>
+                                Interface index number to monitor
+
+     -j             | --border-sniffer-mode
+                                Set ntop in border/gateway sniffing mode
+
+     -k             | --filter-expression-in-extra-frame
+                                kernel filter expression in extra frame
+
+     -l <path>      | --pcap-log <path>
+                                Dump packets captured to a file (debug only!)
+
+     -m <addresses> | --local-subnets <addresses>
+                                Local subnetwork(s) (see man page)
+
+     -n             | --numeric-ip-addresses
+                                Numeric IP addresses - no DNS resolution
+
+     -p <list>      | --protocols <list>
+                                List of IP protocols to monitor (see man page)
+
+     -q             | --create-suspicious-packets
+                                Create file ntop-suspicious-pkts.XXX.pcap file
+
+     -r <number>    | --refresh-time <number>
+                                Refresh time in seconds, default is %d\n", REFRESH_T
+
+     -s             | --no-promiscuous
+                                Disable promiscuous mode
+
+     -t <number>    | --trace-level <number>
+                                Trace level [0-5]
+
+     -u <user>      | --user <user>
+                                Userid/name to run ntop under (see man page)
+
+     -v <username:password:dbName> | --mysql-host <username:password:dbName>
+                                host for ntop database
+
+     -w <port>      | --http-server <port>
+                                Web server (http:) port (or address:port) to listen on
+
+     -A
+                                Ask admin user password and exit
+
+     --set-admin-password=<pass>
+                                Set password for the admin user to <pass>
+     -B <filter>
+                                Packet filter expression, like tcpdump
+
+     -D <name>      | --domain <name>
+                                Internet domain name
+
+     -E             | --enable-external-tools
+                                Enable lsof/nmap integration (if present)
+
+     -F <spec>      | --flow-spec <specs>
+                                Flow specs (see man page)
+
+     -K             | --enable-debug
+                                Enable debug mode
+
+     -L 
+                                Do logging via syslog
+
+     --use-syslog=<facility>
+                                Do logging via syslog, facility
+                                Note that the = is REQUIRED
+
+     -M             | --no-interface-merge
+                                Don't merge network interfaces (see man page)
+
+     -N             | --no-nmap
+                                Don't use nmap even if installed
+
+     -O <path>      | --pcap-file-path <path>
+                                Path for log files in pcap format
+
+     -P <path>      | --db-file-path <path>
+                                Path for ntop internal database files
+
+     -S <number>    | --store-mode <number>
+                                Persistent storage mode [0-none, 1-all, 2-local only]
+
+     -U <URL>       | --mapper <URL>
+                                URL (mapper.pl) for displaying host location
+
+     -V             | --version
+                                Output version information and exit
+
+     -W <port>      | --https-server <port>
+                                Web server (https:) port (or address:port) to listen on
+
+     --throughput-bar-chart
+                                Use BAR chart for graphs
+
+     --ignore-sigpipe
+                                Ignore SIGPIPE errors
+
+     --ssl-watchdog
+                                Use ssl watchdog (NS6 problem)
+
+Q. But, what about -A a/k/a --accuracy-level
+A. This option was used to set ntop into various modes which performed less 
+   processing, in order to handle higher traffic volumes. 
+
+   It was added on 14Dec2001 (just before v2.0) and was removed on 11Mar2002, 
+   although traces survived in usage() until April 2002. 
+
+   Note that the CODE remains in initialize.c for use by EXPERTS if necessary.  
+
+
+Q. But, but, but what about --no-admin-password-hint
+A. This option was used to remove the hint text from the administrative password 
+   entry message box. 
+
+   It was added 4Feb2002 and removed 8Mar2002 (the last traces, in usage(), were 
+   removed on 4Apr2002).  
+
+
+Q. What does the message "URL security(1): ERROR: Found percent in URL...DANGER...
+   rejecting request" mean?						 
+A. It means that ntop received a request with a percent sign (%) in it, often used 
+   as part of Unicode exploits against various web servers.  Since there is no
+   situation where ntop should process this, we reject it.
+   URLsecurity in http.c is the place where these tests occur.
+
+
+Q. What does the message "Rejected request from address x.y.z.t (it previously 
+   sent ntop a bad request)" mean?
+A. Once you send ntop a request that URLsecurity rejects, the sending address    
+   goes into a ring buffer on a 5 minute timeout where we simply drop subsequent 
+   requests...  rather than waste cycles ignoring an attack...
+
+
+Q. What are the other URL security(#) codes?
+A. 1.  Found a % in the request (Unicode problems)
+   2.  Found a parameter type code (//, &&, ??)
+   3.  Found a directory transversal code (..)
+   4.  Found a prohibited (RFC1945) character
+   5.  Found a bad extension
+
+
+Q. Is ntop localized for language x? (i18n)
+A. No.  ntop isn't really written with i18n in mind.
+
+   Most of the text is generated in-line, on the fly.
+
+   We are certainly open to some sweat equity to fix this!
+
+   My suggestion (Burton's) - as the simplest way - would be to create an 
+   new messagetext.h file, with #defines for the various translatable 
+   phrases and then work through the code moving text from in-line text to 
+   use the #defines.  Once that was in place, we could then look at some 
+   form of run-time substitution...
+
 
 Q. How can I run ntop without being root?
 A. A very simple way of doing this is:
@@ -22,83 +897,614 @@ A. A very simple way of doing this is:
    > chmod 6111 ntop
    > exit
 
-   Do not forget to use the -u flag so that ntop changes user
-   as soon as it is started.
+   This makes ntop read-only for everyone and sets the setuid and setguid bits.
+
+   Do not forget to use the -u flag so that ntop changes user as soon as it
+   is started.
+
+   Understand that setting the Setuid and Setguid bits allows ANY user to run
+   ntop and it will run with ROOT privledges.  This is very powerful, and often
+   a source of security exposure - many system hardening scripts and 
+   recomendations tell you to look for and remove the setuid and setguid bits.
+
+   DO NOT suid UNLESS YOU UNDERSTAND THE RISKS!
+
+   Also, there are unconfirmed reports of problems, causing a
+      "socket: operation not permitted"
+   message.
+
+
+Q. My security people won't let me run in promiscuous mode.
+A. Tough...
+
+   Or, use the -s option and accept the limitations...
+
+   Ask them "honestly, what is the problem" - other than having an interface
+   in promiscuous mode is a signature of a sniffer and security folks look for
+   unauthorized sniffers?
+
+   ntop needs promiscuous mode so that it sees the full range of traffic.  Any
+   similar product will do the same thing.
+
+   If the security people think traffic on the wire is secure, they're wrong!
+   Face facts - just about every Windows user, except for 2K/XP Pro (and then
+   only if TBTP have especially locked them down)can install the windows
+   version of tcpdump...
+
+   If it's a checklist item, just gen up a form to "authorize" it, have the
+   boss and VP/CIO sign it and give it to them.
+
+
+Q. -s | --no-promiscuous doesn't work
+A. It should work - it's passed to pcap_open_live.  Understand that it does mean
+   ntop sees a lot less comprehensive view of the traffic.  You won't see anything
+   different unless you do an ifconfig on the interface.  Note that while the 
+   parameter specifies if the interface is to be put into promiscuous mode, even 
+   if this parameter is false, the interface could well be in promiscuous mode 
+   for some other reason.
+
 
 Q. ntop doesn't report any traffic at all.
-A. Please make sure that there's traffic on the interface you're using. You
-   can select an interface using the '-i' flag.
+A. Understand how ntop works:  It simply listens on the interface(s) for packets,
+   then counts and interprets them.  If there aren't any packets, ntop doesn't
+   count things.
+ 
+   ntop does not sample.  It processes every packet it sees and counts them.
+   Only if there is more traffic than ntop can handle for a long period of time
+   will the packet queue hit it's limit and packets be lost.  But this is still
+   not sampling.
 
-Q. How do I force configure to build ntop without
-   lsof support?
-A. configure -enable-lsof=no
+   Make sure that there's traffic on the interface(s) you are using. You can
+   use tcpdump or a similar network sniffer tool to check.
 
-Q. How do I force configure to build ntop without
-   thread support?
-A. configure -enable-threads=no
+   If you are on a segmented network (i.e. switched), you may not see traffic
+   that isn't destined for the ntop machine unless you configure the switch to
+   set the port for the ntop host into "mirror" or "management" mode (different
+   vendors call it different things, but it's a mode where ALL traffic is copied
+   to a specific port, regardless of which port the destination host is on).
 
-Q. Linux: ntop isn't able to capture data.
-A. On some Linux distributions, the libpcap package is broken. Please
-   remove it, get the source (http://www.tcpdump.org), 
-   build libpcap and install it (both the library and the include files).
-   Then rebuild ntop from scratch.
+   If there is more than one interface in the ntop host, perhaps you aren't 
+   listening on the one that has traffic?  Check using ifconfig:
+   
+   eth0      Link encap:Ethernet  HWaddr 00:D0:09:77:85:B9  
+             inet addr:192.168.0.34  Bcast:192.168.0.255  Mask:255.255.255.0
+             UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+             RX packets:1105906 errors:0 dropped:0 overruns:0 frame:0
+             TX packets:601935 errors:0 dropped:0 overruns:0 carrier:0
+             collisions:0 txqueuelen:100 
+             RX bytes:119869887 (114.3 Mb)  TX bytes:112203781 (107.0 Mb)
+             Interrupt:11 Base address:0xc000 
 
-Q. When I compile ntop I get the following error:
-   [...]
-   > libtool: link: CURRENT `-release' is not a nonnegative integer
-   > libtool: link: `-release' is not valid version information
-   > make[2]: *** [libntop.la] Error 1
-   > make[2]: Leaving directory `/usr/local/src/ntop'
-   > make[1]: *** [all-recursive] Error 1
-   > make[1]: Leaving directory `/usr/local/src/ntop'
-   > make: *** [all-recursive-am] Error 2
-A. It seems that some versions of GNU autoconf (> 2.13) are broken so
-   some macros are not expanded and then the compilation fail.
-   Workarounds:
-   - downgrade to a stable autoconf version
-   -  edit all the ntop Makefile(s), add "0:0:0" behind any 
-      occurence of "version-info" and "2.0" behind
-      "-release".
+    If the RX and TX numbers are increasing, this shows that traffic IS flowing...
 
-Q. I start ntop with "-S 2" in order to store traffic
-   statistics. Unfortunately when I restart ntop the
-   stats are gone. What's wrong?
-A. "-S" enables ntop to store on the disk host traffic statistics. This
-   means that is host XYZ was seen by ntop in a previous run, the host
-   traffic statistics are stored on disk so that the next time ntop is
-   restarted (or if the entry was purged from memory and needs to be
-   resurrected) the host information is not empty but the traffic 
-   statistics start from the data saved on disk. Note that hosts are 
-   resurrected *only* when ntop sees traffic for such hosts. This means 
-   that when you restart ntop you *won't* see all the hosts ntop saw when 
-   it stopped, but ntop populates its memory as usual with the difference
-   that host statistics won't start from scratch but from the saved data.
+   If you have an unnumbered interface (listening only), remember you need to
+   use -m to tell ntop what is local and what isn't:
+
+   eth1      Link encap:Ethernet  HWaddr 00:30:F1:54:55:00  
+             UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+             RX packets:1596612 errors:0 dropped:0 overruns:0 frame:0
+             TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+             collisions:0 txqueuelen:100 
+             RX bytes:566953031 (540.6 Mb)  TX bytes:0 (0.0 b)
+
+   You can select an interface using the '-i' flag, e.g. -i eth1 or -i eth0,eth1.
 
 
+Q. How does -m | --local-subnets work?
+A. This  flag  allows users to specify the subnets whose traffic is considered 
+   local (called "pseudoLocal" internally).  The format is 
+        <network address>/<# subnet mask bits>[,<network address>/<#  subnet mask bits>]. 
+   For instance "131.114.21.0/24,10.0.0.0/255.0.0.0".
 
 
-   FAQ (Platform Specific)
-   =======================
+Q. I am using a /16 (/25 or whatever) mask and I get this message:
+      Truncated network size to 1024 hosts (real netmask 255.255.255.0)
+A. Yes.  ntop limits each network to 1024 hosts (a /24). If you need more, alter the
+   #define for MAX_SUBNET_HOSTS in ntop.h and recompile.  Space has to be reserved 
+   for this many hosts for each network, so the limit exists to keep memory usage
+   from growing to absurd levels on people with "class A" (/8) interfaces (e.g. 10. or
+   Cable Modems, etc.).
 
-Q. I can't run ntop on BSD systems. The error is:
-   ntop: /dev/bpf0: Device not configured
-A. This is because bfp0 has not been configured inside the generic
-   kernel config file. If you use generic kernel config file put
-   pseudo-device bpfilter 16
-   to kernel config file and rebuild the kernel.
-Q. Where can I find pthreads for IRIX 6.2?
-A. Irix 6.2 doesn't support POSIX threads out of the box. You must
-   install the patch: 2791
+ 
+Q. ntop doesn't understand virtual hosts.
+A. IP Packets have a source address & port and a destination address & port... 
+   you MUST get your head out of the application layers and revert to that simple 
+   concept.
+
+   How does Apache handle virtual hosts? It analyzes the flow at the
+   application level (layer 4) not the wire/packet/protocol (layers 1, 2 and
+   3).  It does this by re-assembling packets into a layer 4 message (e.g. GET
+   http://virtual.host.name.com/page.html)...
+
+   So, since ntop works at the packet level, it doesn't understand virtual
+   hosts.  It's a NETWORK analyzer, not an application level one.  Which is not 
+   to say you couldn't create a plugin that did the layer 4 analysis...  but 
+   ntop doesn't.
+
+
+Q. tcpwrappers does't work
+A. Oh yes it does... for http: connections
+
+   1) You have to configure it this way before compiling ntop: 
+        ./configure --enable-tcpwrap 
+
+   2) You must have the headers and libraries installed on the build machine 
+      (and on the execution machine if they aren't the same).
+
+   Remember to make the appropriate entries in hosts.allow (e.g. ntop:192.168.0.) 
+   and hosts.deny (e.g. ntop:ALL) 
+
+   However, tcpwrappers and https:// is known not to work - see docs/KNOWN_BUGS
+ 
+
+Q. My filter doesn't work!  I'm running ntop like this:
+      /usr/local/bin/ntop -u nobody -L -d -E -w 3000 -S 2 \
+                          -m 192.168.10.0/24,xxx.xxx.xxx.xxx/32 \
+                          -M -i eth0,eth1 \
+                          (src net 192.168.10.0/24 or src host xxx.xxx.xxx.xxx ) \
+                          and not dst net 192.168.10.0/24 
+A. Yup, it doesn't work.  Use the -B option and put the filter in quotes: 
+      -B "(src net 192.168.10.0/24 or src host xxx.xxx.xxx.xxx ) and not dst net 192.168.10.0/24"
+
+ 
+Q. I have experienced problems defining multiple filters: ntop reports 'syntax error'
+A. If you believe the filter is syntactically correct then it's likely that the libpcap
+   you have used has been compiled using an old non-reentrant version of flex.
+   Please make sure you're using version 2.5.4 or above.  
+
+
+Q. Why does ntop use so much memory ?
+A. ntop holds a lot of information about each host it has seen in an in-memory table.
+   Periodically, it looks at all the entries in the table and flushes any which have
+   been idle for a period of time.
+   
+   You can change the sizing of the table and the flushing interval via #define 
+   statements in ntop.h.  
+   
+   But realistically, ntop needs enough memory to hold information about what's 
+   active on YOUR network.
+
+   To reduce memory, monitor fewer protocols or use the filter (-B "bpf filter") 
+   option to monitor only parts of the network.
+
+   
+Q. What are High/Medium/Low risk flags
+A. They are set in reportUtils.c based on fairly self-obvious functions:
+      Medium: hasWrongNetmask() 
+      High: hasDuplicatedMac()
+   Often seen if you are monitoring a backbone or common network (high)
+   or if you have cloned MAC addresses for, say, a home Firewall box.
+
+
+Q. Why create Userids
+A. Multiple users allow you to control who can alter ntop's performance and/or
+   view specific information. If you look on the "Admin" tab, you will see that you can 
+   create additional users and also control which URLs can be executed by whom.
+
+   Userids could allow, for example, an ISP to allow users to access SOME 
+   network performance statistics, but not the proprietary stuff... 
+
+   Suppose you want to restrict who accesses the Multicast statistics page, multicastStats.html.
+
+   ntop uses terminal wildcards matching the names, so multicast is treated as multicast*
+   and matches multicastStats.html plus any other name beginning multicast...
+
+   howto:
+
+   1st add a new user 
+   2nd add "multicast" to the list of controlled screens and allow admin 
+       and the new user to access it (note the * wildcard is automatically added)
+
+   Try an access the screen and you are prompted for a userid/password... 
+
+   Look in http.c for all the names and #defines used... 
+
+ 
+Q. SSL is not working! I have the following error in the log/terminal:
+     10/Jun/2002 22:58:17 Started thread (6151) for network packet sniffing on 
+          eth0.1700:error:140EC0AF:SSL routines:SSL2_READ_INTERNAL:non sslv2 
+          initial packet:s2_pkt.c:187: 
+A. You forgot to put https:// instead of http:// in the url you put in your browser! 
+ 
+
+Q. Unable to find SSL certificate 'ntop-cert.pem'
+A. ntop looks such file under the current working directory, then /etc or in whatever
+   directory you configured with ./configure. 
+
+   If you want a personal certificate, you need to create it by:
+
+      >make ntop-cert.pem
+
+   It should be installed as part of "make install".  If you have a special certificate
+   or it's not present, do it (one-time) manually:
+   
+   For example to install it under /usr/local/etc, do: 
+
+   mkdir /usr/local/etc 
+   cp /usr/local/bin/ntop-cert.pem /usr/local/etc/ntop 
+ 
+   See docs/README.SSL
+
+
+Q. Can I use ntop from php/perl?
+A. Yes you can. Please see the www directory under the ntop sourcetree.  
+
+Q. How do I save data between runs?
+Q. What is the -S option?
+A. The -S option is the --store-mode option, or the "Persistent storage mode"
+   Ntop's internal structures are basically an array of devices (network interfaces), 
+   which contains an array of hosts (specific machines seen on the device. 
+
+   So device[0] is the 1st network interface, and device[2] the third. device[0].host[0] 
+   would be, say, the local file server and device[0].host[1] would be a simple host. 
+   device[1].host[1] is a completely different set of counts from device[0].host[1]. 
+
+   The -S options tells ntop to store information about a specific host in a database from 
+   run to run (-S 0 none, -S 1 all and -S 2 only local hosts).
+
+   This is only the count information about the host and does not store the information 
+   about a device (a network interface). Further, items of dynamically allocated storage
+   (the devices name) are not stored. 
+
+   Data is retrieved on a subsequent run ONLY when traffic is seen from that host after 
+   the restart.  (I suppose you could script a ping to each host you care about and force
+   the reload that way, but it hasn't been tested...)
+
+   So if you go into the host details (e.g. the 192.168.1.1.html page) you should see 
+   prior-run information. 
+
+   But if you're looking for device throughput to be preserved... nope... 
+
+   Also, ntop stores the information during 1) reset and 2) shutdown. So if ntop crashes,
+   the persistent data will be lost.  
+
+
+Q: intop doesn't....
+A: Understand that intop hasn't been supported since v1.3.  Only the very
+   minimal changes required to make it compile without errors and startup
+   in a very simple environment were made.  It hasn't been tested.
+   
+   What intop really needs is somebody to become it's maintainer.
+
+
+Q. Where can I find neped/queso?
+A. neped (Network Promiscuous Ethernet Detector) - Looks for ethernet cards in 
+       promiscuous mode in your local net. 
+   queso - Determines the remote OS sending simple tcp packets.
+
+   You could download neped/queso from http://www.apostols.org/ except that site 
+   seems to be down...
+
+   neped is at http://packetstorm.decepticons.org/UNIX/IDS/
+
+   queso was found at http://packages.debian.org/unstable/net/queso.html (look for
+   the .orig.tar.gz file)
+
+
+Other
+-----
+
+Q: Where is the documentation for x?
+A: The documentation in the docs/ directory and the FAQs etc. at 
+   http://snapshot.ntop.org/ are basically all that there is.  Please
+   contribute to the ntop community by writing things up for inclusion
+   in this FAQ or other documents!
+
+Q. What is sFlow
+A. The core component of the sFlow toolkit is the sflowtool command line utility. 
+   sflowtool interfaces to utilities such as tcpdump, ntop and Snort for detailed 
+   packet tracing and analysis, NetFlow compatible collectors for IP flow accounting, 
+   and provides text based output that can be used in scripts to provide customized 
+   analysis and reporting and for integrating with other tools such as MRTG or rrdtool. 
+
+   Some info: 
+
+   http://www.inmon.com/sflowTools.htm 
+   http://www.faqs.org/rfcs/rfc3176.html  
+
+Q. I have activated the sFlow plugin in ntop. But it doesn't seem to 
+   generate any output based on the collected sflow datagrams.
+A. sFlow can be a collector or a receiver or both, depending on the
+   settings configured via the plugin.
+
+   If you configure ntop as an sFlow collector, it will use sFlow data 
+   for generating reports, treating the remote collector(s) as another 
+   network interface - see Admin | Switch NIC.
+
+
+Q. Where is info about netflow?
+A. Dale Reed pointed out a good tech doc (no flak, just the formats) for netflow V1/5/7: 
+
+    http://www.cisco.com/univercd/cc/td/doc/product/rtrmgmt/nfc/nfc_2_0/nfc_ug/nfcform.htm  
+
+
+Q. Is there any parameter to set to tell ntop which interface/ip address 
+   to use when exporting the (netflow/sflow) flows?
+A. No. All ntop does is send a packet to the network addressed to the
+   destination you request.  
+   
+   Typically if the ntop host is multihomed, the routing service will pick the 
+   the MOST SPECIFIC route with the lowest metric # that is selected.  E.g., if 
+   this is the routing table:
+
+   Kernel IP routing table
+   Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+   192.168.2.0    0.0.0.0          255.255.255.0   U     0      0        0 eth0
+   192.168.2.129  0.0.0.0          255.255.255.128 U     0      0        0 eth2
+   192.168.2.146  0.0.0.0          255.255.255.255 U     0      0        0 eth1
+   192.168.2.146  0.0.0.0          255.255.255.255 U     1      0        0 eth2
+   127.0.0.0       0.0.0.0         255.0.0.0       U     0      0        0 lo
+   0.0.0.0         192.168.2.1     0.0.0.0         UG    0      0        0 eth0
+
+   A packet to 192.168.2.146 goes via eth1 (equally specific routes, so it chooses
+   based on the metric 0 vs. 1)
+
+   A packet to 192.168.2.145 goes via eth2  (192.168.2.129/25 is more specific than
+   192.168.2.0/24)
+
+   A packet to 192.168.2.46 goes via eth0
+
+   A packet to 10.1.1.1 goes via eth0 (the gateway is the least specific route, but
+   it is the best match)
+
+   But how it goes out (and thus the source IP address) is totally up to the OS.  
+   Just be aware when it gets to the netflow/sflow collector, it might have an 
+   unexpected ip address as the source.
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Section 2 - Specific Platforms
+==============================
+
+FYI: ntop development is done primarily on Solaris (Solaris 8 for i386)
+     and Linux (specifically RedHat 7.2 w/ updates).
+
+
+Solaris
+=-=--=-
 
 Q. How do I install the ntop package on Solaris?
-A. For instance do 'pkgadd -d ntop-1.1-solaris.i386'
+A. For instance do 'pkgadd -d ntop-2.1-solaris.i386'
+
+
+BSD
+=-=
+
+Q. When I type 'make' it complains about a makefile error.
+A. Always remember to use gmake on *BSD systems! (and possibly other systems as well.)
+
+
+Linux
+=-=-=
+
+Compiling
+---------
+
+Q. Which libraries do I need to compile ntop under RedHat 7.2:
+A.     glibc, glibc-devel
+       gcc
+       cpp
+       gawk
+       autoconf
+       automake
+       openssl, openssl-devel (for https:// support)
+       gdbm, gdbm-devel
+       libpcap
+       mysql-devel (for mySQL support)
+
+     (Note some packages will have additional packages as pre-requisites)
+
+Q. I have compile problems, especially with plugings. 
+A. Be sure and regenerate everything on your machine, that is 
+
+       ./autogen.sh -1 
+       ./configure 
+       make 
+       make install 
+
+   Running autogen is always safe and is a really good idea, because it 
+   recreates all of the make and configure stuff from the .in and .am files 
+   based on your specific configuration. Otherwise, you are trying to use the 
+   ones that happened to be generated on the machine of whomever uploaded them 
+   last to the CVS and that's not always a good match...  
+
+
+Q. I get an error:
+   /usr/bin/install: cannot create regular file
+   make install-man1 install-man8 
+   make[3]: Entering directory `/root/src/ntop/ntop' 
+   /bin/sh ./mkinstalldirs /usr/local/man/man1 
+   /usr/bin/install -c -m 644 ./intop/intop.1 
+   /usr/local/man/man1/intop/intop.1 
+   /usr/bin/install: cannot create regular file 
+   `/usr/local/man/man1/intop/intop.1': No such file or directory 
+   make[3]: *** [install-man1] Error 1 
+A. This is an automake problem.  First off, the Makefile was patched long prior to
+   release of 2.1 and this should not occur.  However, here are the two
+   work-arounds:
+
+   1) create the directory manually - note that the intop.1 man file will probably 
+      not be accessible to man. 
+
+   2) Change versions of automake. This typically is a problem with 1.4p5 (which is 
+      shipped with RedHat 7.x). Versions 1.4 and 1.5 are reported to work ok, but 
+      you must recreate the various files with 
+
+          ./autogen.sh -1 
+ 
+
+Q. Why do I have to "make install" when building libpng??
+A. You don't. 
+
+      IF you use the buildAll.sh script in gdchart0.94c 
+   or IF you don't try to be (too) clever while manually 
+         building the libpng library. 
+
+   The difference between makefile.gcc and makefile.linux in the scripts directory of 
+   libpng-1.2.1 is that makefile.gcc builds a static library, while makefile.linux 
+   builds both the static (.a) and shared (.so) libraries. 
+
+   Most people doing a manual build of the tools see ".linux" and use it, vs. the 
+   more generic sounding ".gcc", but ntop expects the ".gcc" build.
+
+   For your own personal use, it shouldn't matter - as long as the .so libraries for 
+   libpng are installed at least once. 
+
+   This could happen either via a distribution supplied package (but if the package 
+   was for version 1.0.x this WILL cause version problems).
+   
+   Or, you can install the .so library by typing "make install" the 1st time you 
+   build libpng. 
+
+   Best suggestion is to use buildAll.sh! 
+
+Q. What about Slackware
+A. Lorenzo had "Installation Notes For Slackware 8.0" available at 
+       http://80.19.145.20/ntop-Slack-inst.txt
+   although the site may (as of July2002) be down.
+
+
+
+Running
+-------
+
+Q. Segmentation fault on startup while inititializing GDBM (Slackware)
+A. This occurs if one's crypt(3) does not support the standard UNIX crypt
+   (and just returns NULL)... Change CRYPT_SALT in ntop.h from 99 to $1$99 
+   thereby forcing md5 crypting..   
+
+Q. ntop isn't able to capture data.
+A. On some (old) Linux distributions, the libpcap package is broken. Please remove it, 
+   get the source, build libpcap and install it (both the library and the include files).
+   Then rebuild ntop from scratch.  
+
+
+Q. Bad things - I see the following messages: 
+        libpng warning: Application was compiled with png.h from libpng-1.0.x 
+        libpng warning: Application is running with png.c from libpng-1.2.1 
+        gd-png: fatal libpng error: Incompatible libpng version in application and library 
+A. You have a version problem with libpng. 
+
+   First off, following the instructions in BUILD-NTOP.txt should work just fine. These 
+   problems come about when you have libpng installed (i.e. using shared libraries). 
+
+   1. If you are compiling from source, you may have png.h left over from the earlier
+      version of libpng. Remove it. 
+
+   2. (Most common under RedHat). RedHat 7.2 installs a libgd.so.1.8.4 library, which was 
+   compiled against 1.0.x series of libpng (which is fine, because RedHat 7.2 includes 
+   libpng-1.0.12). 
+
+   Updating RedHat to newer (RawHide) packages for libpng, 
+   http://www.rpmfind.net//linux/RPM/rawhide/1.0/i386/RedHat/RPMS/libpng-1.2.2-5.i386.html, 
+   should work. However, there are reports of version conflicts and required updates to 
+   multiple packages. Proceed with caution (especially if you decide to uninstall 1.2.2-5). 
+   Also, do not use --nodeps or --force, as this can leave you with two partially installed 
+   versions (see item #1, above). 
+
+   3. (Slackware) Users have reported this error from an older header file in /usr/include. 
+   Make sure to run "make install" in the libpng directory so that the latest files are in 
+   the common library locations. You can do this with buildAll.sh, just navigate back down 
+   to the libpng-1.2.1 directory first.  
+
+
+Win32 (MinGw)
+=-=-=-=-=-=-=
+
+Compiling
+---------
+
+Q. When I type 'make' it complains about a makefile error.
+A: Remember to use -f Makefile.MinGW or whatever is appropriate - seeBUILD-MinGW.txt.
+
+Q. Where can I find GDBM for Windows?
+A. GDBM for windows can be found at http://www.roth.net/libs/gdbm/  
+
+Q. Mingw make of Ntop fails when using the single-file distribution MinGW-1.1.tar.gz
+   with make errors about version.c like : 
+    zsh: no matches found: *version 
+    make: *** [version.c] Error 1 
+A. Be sure that your PATH setting in the DOS command box of the Mingw bin directory
+   ends with a backslash.
+    This is OK: 
+        set path=C:\Mingw\bin\;%path% 
+    This is wrong: 
+        set path=C:\Mingw\bin;%path% 
+		                     ^
+
+
+Running
+-------
+Q. ntop -i1 ... doesn't work
+A. ntop has special parameters under Win32
+     ntop /c <normal parms>  runs ntop with the parameters
+	 ntop /i <parameters> installs ntop as a service to run with those parameters
+	 ntop /d deletes the ntop service
+
+   Remember, ntop /i and ntop /d don't actually run the service - you need to start it.
+
+
+Other Platforms - not very well supported...
+============================================
+
+   
+   
+BSD Information
+=-=-=-=-=-=-=-=
+
+Q. I get "ntop: /dev/bpf0: Device not configured", what's wrong?
+A. This is because bfpX has not been configured inside the generic bsd-kernel 
+   config file. 
+
+   If you use generic kernel config file put "pseudo-device bpfilter 16" in kernel
+    config file and rebuild the kernel.  
+
+
+HP-UX
+=-=-=
+
+Q: v2.0.99RCx has been reported not to compile under HP-UX 10.20
+A: The test in the code seems wrong, but we didn't have time, nor 
+   the ability to test it before releasing 2.1.  Specifically,
+   
+   #if !defined(WIN32) && !defined(AIX)
+   extern int h_errno; /* netdb.h */
+   #endif
+
+   should probably be
+   #if !defined(HAVE_NETDB_H)
+   extern int h_errno; /* netdb.h */
+   #endif
+
+
+Q: Why the HP-UX version of ntop isn't multithreaded?
+A: To reduce complexity and because resources aren't availabe to provide
+   full support for less commonly used OSes. Specifically Because HP's 10.20
+   pthread implementation is slightly different from the POSIX standard.
+
+
+IRIX (v1.3 information)
+=-=-=-=-=-=-=-=-=-=-=-=-
+
+Q. Where can I find pthreads for IRIX 6.2?
+A. Irix 6.2 doesn't support POSIX threads out of of the box. You must 
+   install the patch: 2791
+
+Q: Why the IRIX version of ntop doesn't use semaphores although 
+   they are implemented in the OS?
+A: When Luca used IRIX 6.2, semaphores seemed to have some problems. This is a 
+   implementation issue only because ntop supports threads under IRIX.
+
+
+Digital UNIX (v1.3)
+===================
 
 Q. ntop doesn't seem to collect any data on Digital Unix.
 A. Albert Chin-A-Young <china@thewrittenword.com> said:
-First, to compile, make sure you don't use '-std1' which will cause problems
-compiling pbuf.c. '-std' is ok.
+   First, to compile, make sure you don't use '-std1' which will cause problems
+   compiling pbuf.c. '-std' is ok.
 
-Once ntop is compiled, do the following:
+   Once ntop is compiled, do the following:
         1. Make sure 'options PACKETFILTER' is in your kernel
            configuration file under /sys/conf. Recompile the
            kernel using 'doconfig -c [config file]' if necessary.
@@ -106,20 +1512,10 @@ Once ntop is compiled, do the following:
            % ./MAKEDEV pfilt
            % pfconfig +promisc [interface]
 
-The last part of #2 I didn't do so ntop did not collect any data.
+   The last part of #2 I didn't do so ntop did not collect any data.
 
-Q. Where can I find neped/queso?
-A. You can download neped/queso from http://www.apostols.org/
-
-Q. Where can I find GDBM for Windows?
-A. http://www.roth.net/libs/gdbm/
-
-Q. I have experienced problems defining multiple filters: ntop reports
-   'syntax error'. What shall I do?
-A. If you believe the filter is syntactically correct then it's likely
-   that the libpcap you have used has been compiled using an old
-   non-reentrant version of flex. Please make sure you're using
-   version 2.5.4 or above.
+AIX (v1.3)
+==========
 
 Q. AIX: I've linked ntop against the special libcap library that's
    available on the ntop sire. Unfortunately ntop doesn't work. It
@@ -138,152 +1534,343 @@ A: Please configure dlpi.conf int the /etc dir using the command
 Q. I have a problem on AIX. What shall I do?
 A. Read below.
    =============================================================
-From Ciaran.Deignan@bull.net Wed Oct  4 17:07:02 2000
-Date: Tue, 3 Oct 2000 10:29:52 +0200 (DFT)
-From: Ciaran.Deignan@bull.net
-To: Karandeep Singh <kdsingh@ichips.intel.com>
-Subject: Re: ntop problems
-
-On Mon, 2 Oct 2000, Karandeep Singh wrote:
-
-> Question I have for you is that if I run "strload -f /etc/dlpi.conf"
-> and create special files in /dev/dlpi, do I then have to reboot?
-> If not then this will work very well for us on our other servers.
-
-you don;t need to reboot, but you do need to execute the command each
-time you *do* reboot....
-
-there's always something...
-
-Ciaran
-
-+-------------------------------------------------------------------------+
-Ciaran Deignan                                Tel: (France) 04 76 29 79 92
-BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
-
-Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
-PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
-+-------------------------------------------------------------------------+
-
-
-From Ciaran.Deignan@bull.net Wed Oct  4 17:07:02 2000
-Date: Mon, 2 Oct 2000 12:00:18 +0200 (DFT)
-From: Ciaran.Deignan@bull.net
-To: Karandeep Singh <kdsingh@ichips.intel.com>
-Cc: l.deri@tecsiel.it
-Subject: Re: ntop problems
-
-On Tue, 26 Sep 2000, Karandeep Singh wrote:
-
-> Hi,
-> I installed "successfully" ntop from Bull site and now when I run
-> it am getting following errors. Any help would be appreciated.
-> 
->  -KD
-> 
-> <pdxfs30 157> # ntop
-> 26/Sep/2000:17:13:01 ntop v.1.3.2 ST (SSL) [powerpc-ibm-aix4.3.2.0] (08/11/00 07:04:32 PM build)
-> 26/Sep/2000:17:13:01 Listening on [en2]
-> 26/Sep/2000:17:13:01 Copyright 1998-2000 by Luca Deri <deri@ntop.org>
-> 26/Sep/2000:17:13:01 Get the freshest ntop from http://www.ntop.org/
-> 26/Sep/2000:17:13:01 Initialising...
-> 26/Sep/2000:17:13:01 /dev/dlpi/en2: No such file or directory
-
-Anyway, what you've missed (and what I've failed to find a convient way
-to communicate) is the command
-        # strload -f /etc/dlpi.conf
-which will create the special files in /dev/dlpi...
-
-This information is given in the mailing-list archives, each time libpcap
-is repackaged:
-        http://www-frec.bull.com/download/Updates.txt
-
-
-> <pdxfs30 158> # intop
-
-> exec(): 0509-036 Cannot load program intop because of the following errors:
->         0509-150   Dependent module /usr/local/lib/libreadline.a(libreadline.so) could not be loaded.
->         0509-152   Member libreadline.so is not found in archive 
-
-intop has a dependence on freeware.gnu.readline.rte
-(gnu.readline-4.1.0.1.exe), but intop doesn't work anyway :(
-
-Sorry for the complexity,
-Ciaran
-
-+-------------------------------------------------------------------------+
-Ciaran Deignan                                Tel: (France) 04 76 29 79 92
-BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
-
-Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
-PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
-+-------------------------------------------------------------------------+
-
-
-From Ciaran.Deignan@bull.net Wed Oct  4 17:07:02 2000
-Date: Mon, 18 Sep 2000 10:00:41 +0200 (DFT)
-From: Ciaran.Deignan@bull.net
-To: Bill Kurland <bill@shakespeare-nyc.com>
-Subject: Re: Freeware:ntop-1.3.2.0
-
-On Sun, 17 Sep 2000, Bill Kurland wrote:
-
-> I have tried installing ntop-1.3.2 on three different rs6000's running
-> AIX 4.3.3 with the same result and was hoping you might be kind enough
-> to help me discover my error.
-
-Humm... I don't have a /dev/ent* or /dev/en* on my system either. You live
-and learn.
-
-Anyway, what you've missed (and what I've failed to find a convient way
-to communicate) is the command
-        # strload -f /etc/dlpi.conf
-which will create the special files in /dev/dlpi...
-
-This information is given in the mailing-list archives, each time libpcap
-is repackaged:
-        http://www-frec.bull.com/download/Updates.txt
-
-Hope this helps
-Ciaran
-
-+-------------------------------------------------------------------------+
-Ciaran Deignan                                Tel: (France) 04 76 29 79 92
-BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
-
-Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
-PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
-+-------------------------------------------------------------------------+
+   From Ciaran.Deignan@bull.net Wed Oct  4 17:07:02 2000
+   Date: Tue, 3 Oct 2000 10:29:52 +0200 (DFT)
+   From: Ciaran.Deignan@bull.net
+   To: Karandeep Singh <kdsingh@ichips.intel.com>
+   Subject: Re: ntop problems
+   
+   On Mon, 2 Oct 2000, Karandeep Singh wrote:
+   
+   > Question I have for you is that if I run "strload -f /etc/dlpi.conf"
+   > and create special files in /dev/dlpi, do I then have to reboot?
+   > If not then this will work very well for us on our other servers.
+   
+   you don;t need to reboot, but you do need to execute the command each
+   time you *do* reboot....
+   
+   there's always something...
+   
+   Ciaran
+   
+   +-------------------------------------------------------------------------+
+   Ciaran Deignan                                Tel: (France) 04 76 29 79 92
+   BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
+   
+   Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
+   PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
+   +-------------------------------------------------------------------------+
+   
+   
+   From Ciaran.Deignan@bull.net Wed Oct  4 17:07:02 2000
+   Date: Mon, 2 Oct 2000 12:00:18 +0200 (DFT)
+   From: Ciaran.Deignan@bull.net
+   To: Karandeep Singh <kdsingh@ichips.intel.com>
+   Cc: l.deri@tecsiel.it
+   Subject: Re: ntop problems
+   
+   On Tue, 26 Sep 2000, Karandeep Singh wrote:
+   
+   > Hi,
+   > I installed "successfully" ntop from Bull site and now when I run
+   > it am getting following errors. Any help would be appreciated.
+   > 
+   >  -KD
+   > 
+   > <pdxfs30 157> # ntop
+   > 26/Sep/2000:17:13:01 ntop v.1.3.2 ST (SSL) [powerpc-ibm-aix4.3.2.0] (08/11/00 07:04:32 PM build)
+   > 26/Sep/2000:17:13:01 Listening on [en2]
+   > 26/Sep/2000:17:13:01 Copyright 1998-2000 by Luca Deri <deri@ntop.org>
+   > 26/Sep/2000:17:13:01 Get the freshest ntop from http://www.ntop.org/
+   > 26/Sep/2000:17:13:01 Initialising...
+   > 26/Sep/2000:17:13:01 /dev/dlpi/en2: No such file or directory
+   
+   Anyway, what you've missed (and what I've failed to find a convient way
+   to communicate) is the command
+           # strload -f /etc/dlpi.conf
+   which will create the special files in /dev/dlpi...
+   
+   This information is given in the mailing-list archives, each time libpcap
+   is repackaged:
+           http://www-frec.bull.com/download/Updates.txt
+   
+   
+   > <pdxfs30 158> # intop
+   
+   > exec(): 0509-036 Cannot load program intop because of the following errors:
+   >         0509-150   Dependent module /usr/local/lib/libreadline.a(libreadline.so) could not be loaded.
+   >         0509-152   Member libreadline.so is not found in archive 
+   
+   intop has a dependence on freeware.gnu.readline.rte
+   (gnu.readline-4.1.0.1.exe), but intop doesn't work anyway :(
+   
+   Sorry for the complexity,
+   Ciaran
+   
+   +-------------------------------------------------------------------------+
+   Ciaran Deignan                                Tel: (France) 04 76 29 79 92
+   BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
+   
+   Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
+   PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
+   +-------------------------------------------------------------------------+
 
 
-From Ciaran.Deignan@bull.net Wed Oct  4 17:07:03 2000
-Date: Wed, 6 Sep 2000 11:49:07 +0200 (DFT)
-From: Ciaran.Deignan@bull.net
-To: ry1481@csag.sbc.com
-Subject: Re: NMAP on AIX 
+   From Ciaran.Deignan@bull.net Wed Oct  4 17:07:02 2000
+   Date: Mon, 18 Sep 2000 10:00:41 +0200 (DFT)
+   From: Ciaran.Deignan@bull.net
+   To: Bill Kurland <bill@shakespeare-nyc.com>
+   Subject: Re: Freeware:ntop-1.3.2.0
+   
+   On Sun, 17 Sep 2000, Bill Kurland wrote:
+   
+   > I have tried installing ntop-1.3.2 on three different rs6000's running
+   > AIX 4.3.3 with the same result and was hoping you might be kind enough
+   > to help me discover my error.
+   
+   Humm... I don't have a /dev/ent* or /dev/en* on my system either. You live
+   and learn.
+   
+   Anyway, what you've missed (and what I've failed to find a convient way
+   to communicate) is the command
+           # strload -f /etc/dlpi.conf
+   which will create the special files in /dev/dlpi...
+   
+   This information is given in the mailing-list archives, each time libpcap
+   is repackaged:
+           http://www-frec.bull.com/download/Updates.txt
+   
+   Hope this helps
+   Ciaran
+   
+   +-------------------------------------------------------------------------+
+   Ciaran Deignan                                Tel: (France) 04 76 29 79 92
+   BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
+   
+   Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
+   PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
+   +-------------------------------------------------------------------------+
+   
+   
+   From Ciaran.Deignan@bull.net Wed Oct  4 17:07:03 2000
+   Date: Wed, 6 Sep 2000 11:49:07 +0200 (DFT)
+   From: Ciaran.Deignan@bull.net
+   To: ry1481@csag.sbc.com
+   Subject: Re: NMAP on AIX 
+   
+   On Tue, 5 Sep 2000 ry1481@csag.sbc.com wrote:
+   
+   >   I am receiving the message "/dev/dlpi/en0 does not exist. The
+   >   ethernet adapter en0 is configured but there is no /dev/dlpi/en0
+   >   directory or file.  Any suggestions would be appreciated.
+   
+   as stated in the Updates log ( http://www-frec.bull.com/docs/downlist.htm )
+   
+           This distribution uses the "dlpi" interface. If the dlpi
+           stream drivers are not loaded, the command
+                   # strload -f /etc/dlpi.conf
+           should be executed after every reboot.
+   
+   have fun
+   Ciaran
+   
+   +-------------------------------------------------------------------------+
+   Ciaran Deignan                                Tel: (France) 04 76 29 79 92
+   BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
+   
+   Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
+   PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
+   +-------------------------------------------------------------------------+
+   
+   
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Section 3
+--------------------------------------------------------------------------------
 
-On Tue, 5 Sep 2000 ry1481@csag.sbc.com wrote:
+HowTo Ask For Help (ntop mailing lists)
+=======================================
 
->   I am receiving the message "/dev/dlpi/en0 does not exist. The
->   ethernet adapter en0 is configured but there is no /dev/dlpi/en0
->   directory or file.  Any suggestions would be appreciated.
+Please understand that the mailing list is a community support effort. Despite any 
+individual's frequent postings, nobody is "responsible" for answering your question. 
+It's all on a "best efforts" basis. This is equally true of the FAQs posted at 
+http://snapshot.ntop.org. Our responses may be incomplete, in-accurate, even dead 
+wrong. Caveat Emptor! The only "guarantee" is that free support will be worth what
+you've paid for it. 
 
-as stated in the Updates log ( http://www-frec.bull.com/docs/downlist.htm )
+Use ntop for problems running ntop.
+Use ntop-dev for problems with the code.
 
-        This distribution uses the "dlpi" interface. If the dlpi
-        stream drivers are not loaded, the command
-                # strload -f /etc/dlpi.conf
-        should be executed after every reboot.
+A response from an @ntop.org user is somebody affiliated with the project. Most of 
+the people responding on ntop or ntop-dev are not formally affiliated with the project. 
+We answer questions to the best of our ability, find problems, create and test patches 
+and send them in to patches@ntop.org for inclusion. 
 
-have fun
-Ciaran
+Please direct all original postings and subsequent replies to the list, not to someone 
+privately. Most of us will reply solely to the mailing list, unless you specifically 
+request otherwise. If you do request otherwise, the individual you sent it to may 
+choose not to respond. Our posting here is NOT a public invitation to invade our e-mail 
+boxes for your free private support. 
 
-+-------------------------------------------------------------------------+
-Ciaran Deignan                                Tel: (France) 04 76 29 79 92
-BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
+You MUST use meaningful message subjects - one's that would have helped YOU find the 
+prior discussion of this or a similar problem in the archives. Titles such as "urgent" 
+or "ntop problem" will often not get a response - it may be urgent to you but... 
 
-Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
-PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
-+-------------------------------------------------------------------------+
+Understand that we can't see your machine (and wouldn't want the responsibility of
+sshing into somebody else's box as root). The only information we have is what you 
+post and the responses to our questions. 
+
+Also, understand that ntop is under rapid development. The only way to fix your problem 
+may be a source patch, which you will have to apply, compile and install. If you aren't 
+capable of doing that, then ... 
+
+If you want better than "best-efforts" support, contact the individual you desire support 
+from off-list to make financial arrangements. Please understand that people are doing 
+development in areas that are of personal interest to them, to improve ntop. If you want 
+to discuss payment for support or a specific change that is of interest to you, feel free 
+to email the individual off-list - some of us are computer consultants and can be bought, 
+with the understanding that the work product is offered back to the community in the 
+spirit of the open source movement and the strictures of the GPL. 
+
+***Do not worry about posting TOO much information - we're pretty good at filtering out 
+the noise, especially if you organize your information the way we request it, below*** 
+
+
+BEFORE POSTING: 
+
+1. Please review back message traffic from the mailing lists. 
+Your specific problem HAS been discussed recently. 
+
+2. Please review the ntop community FAQs at http://snapshot.ntop.org. 
+Your problem IS the subject of an FAQ entry. 
+Your problem IS NOW the subject of an FAQ entry. 
+
+POSTING: 
+
+In general, please give us more information (see the specifics we request, below)... 
+
+1. A brief summary of the problem. 
+
+2. Operations 
+The EXACT command line you use to invoke ntop. 
+If it's in a script, cut & paste it and 
+resolve all the variables! 
+
+Error Messages: Cut & paste the exact text. 
+If it's in the log, give us 15 or 20 lines before. 
+
+If the problem is a segmentation fault, include the backtrace (available under gcc 
+compiled version if you use the -K flag.)
+
+The exact URL you used from the browser. 
+
+3. Software 
+NTop version, source and any applied patches 
+
+If you've compiled from the source, say so! 
+
+If you're using a package (such as an .rpm), where did you get it from and what 
+is the EXACT name, version information and date? (for example, post the output 
+from rpm -q ntop -i) 
+
+OS vendor & version 
+
+gcc version (e.g. gcc --version) 
+
+glibc version 
+
+Any major upgrades (kernel, networking, etc.) 
+
+What else is running 
+
+4. Hardware 
+Type & # of processors 
+
+Amount of memory 
+
+# network interfaces and types (vendor, bus, etc.) 
+
+5. Network 
+Roughly where are the interface(s) you're monitoring (Public Internet, Private LAN,
+what?) 
+
+What's the bandwidth (e.g. 10 Mbps University internet, 1.5 Mbps T1, Cable Modem 
+capped at 1.5Mbps, 56K dialup) 
+
+How many machines (traffic sources/destinations) and users 
+
+(If you're uncomfortable giving specifics, then leave it generic, but the information 
+is necessary to allow efficient use of the community's time helping YOU with YOUR problem) 
+
+AFTER POSTING: 
+
+Please let us know if our help fixed the problem, didn't solve it or enabled you to 
+solve it yourself and what the result was. The historical record of the ntop and 
+ntop-dev archives is the complete chain from problem to resolution. 
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+GDB ultraMini-tutorial - Running ntop under gdb (debugger)
+==========================================================
+
+The very best way to debug a segmentation fault in ntop is to use gdb. The standard
+ntop compile already has the flags necessary to do this set. 
+
+(Note - if you don't have gdb, or aren't compiling yourself, this won't work) 
+
+> gdb /usr/bin/ntop (or wherever ntop is installed) 
+... 
+(gdb) set args (your usual arg string) -K 
+
+[That is, add the -K argument. While you are at it, don't give it the -d argument 
+and add -u root (replace any existing -u value) - yes, it's insecure running as root,
+ but you're not planning on doing this in production nor as a routine situation!] 
+
+it will run... when it bombs... 
+
+(gdb) list [this shows where in the code it died] 
+
+(gdb) info stack [this shows the call stack] 
+
+if there are any variables involved, you can print them: 
+
+(gdb) print deviceId 
+
+[gdb can handle pretty complex arguments in the print command, so you can say 
+"print myGlobals.device[0].hash_hostTraffic[myGlobals.broadcastEntryIdx]"
+if that's what it bombed on.] 
+
+"bt full" does a decent job of printing the stack and the back trace and the local 
+variables at each level. Just make sure you are in the thread you are interested in: 
+
+(gdb) bt full 
+#0 0x40592557 in __libc_pause () from /lib/i686/libc.so.6 
+No locals. 
+#1 0x4046b5a3 in pause () at wrapsyscall.c:123 
+result = -1073743680 
+oldtype = 0 
+#2 0x0804ac1b in main (argc=22, argv=0xbffffa44) at main.c:928 
+argc = -1073743680 
+argv = (char **) 0x0 
+i = 0 
+userSpecified = 1 
+ifStr = "eth0,eth1", '\000' 
+lastTime = 1025633918 
+#3 0x404f3647 in __libc_start_main (main=0x804a74c , argc=22, ubp_av=0xbffffa44, 
+init=0x8049600 <_init>, fini=0x804d000 <_fini>, rtld_fini=0x4000dcd4 <_dl_fini>, 
+stack_end=0xbffffa3c) at ../sysdeps/generic/libc-start.c:129 
+ubp_av = (char **) 0xbffffa44 
+fini = (void (*)()) 0x40016b4c <_dl_debug_mask> 
+rtld_fini = (void (*)()) 0xbffff87c 
+ubp_ev = (char **) 0xbffffaa0 
+(gdb)  
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 ==========================================================================
+Original version Luca Deri, 1999-2001
+Updated Burton M. Strauss III 2002
+
