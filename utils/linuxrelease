@@ -7,14 +7,16 @@
 #
 #    Crude, but marginally effective, uses the /etc/xxxxxx-release file.
 #
-#    Tested:   RH 7.2 7.3, 8.0, 9, 2.1AS 2.1ES
-#              Fedora Core 1
-#              Mandrake 9.1
+#    Tested:   RH 7.2 7.3, 8.0, 9, 2.1AS 2.1ES, 3.0AS, 3.0ES
+#              Fedora Core 1, 2, 3
+#              Mandrake 9.1, 10, 10.1
 #              Debian 2.2 3.0(Woody)
 #              Gentoo 
 #              Slackware 8.1.01
-#              SuSE 7.1 7.2a 8.0ES 8.2
+#              SuSE 7.1 7.2a 8.0ES 8.2, 9.0ES, 9.0
 #              LFS (Linux From Scratch)
+#              FreeBSD 4.9, 4.10, 5.2, 5.3
+#              NetBSD 1.6
 #
 
 #  Released under GPL...
@@ -177,7 +179,7 @@ case `uname -s` in
             # Grab the release name
             release=`cat ${releaseFile} | \
                      head -n 1 | \
-                     awk '{ for (i=1; i<=NF; i++) { if (0 + $i != 0) { print $i } } }'`
+                     awk '{ i=index($0, "("); if(i>0) { $0 = substr($0, 1, i-1) }; for (i=1; i<=NF; i++) { if (0 + $i != 0) { print $i } } }'`
     
             if test "x${release}" = "x"; then
                 if test "x${debug}" = "xY"; then
@@ -186,7 +188,7 @@ case `uname -s` in
                 release=`cat ${releaseFile} | \
                          grep -i VERSION | \
                          head -n 1 | \
-                         awk '{ for (i=1; i<=NF; i++) { if (0 + $i != 0) { print $i } } }'`
+                         awk '{ i=index($0, "("); if(i>0) { $0 = substr($0, 1, i-1) }; for (i=1; i<=NF; i++) { if (0 + $i != 0) { print $i } } }'`
             fi
     
             if test "x${release}" = "x"; then
@@ -232,14 +234,26 @@ case `uname -s` in
         fi
     fi
     ;;
+  [Ff][Rr][Ee][Ee][Bb][Ss][Dd])
+    # FreeBSD
+    if test "x${quiet}" != "xY"; then
+        echo "WARNING: This routine only works under Linux.  We'll fake it as best we can!"
+    fi
+    distro=`uname -s`
+    release=`uname -r`
+    kernel=`uname -i`
+    fullrelease="${distro} ${release}"
+    lsbrelease="Not Linux - not LSB compliant"
+    unitedrelease="Not Linux - not UnitedLinux compliant"
+    ;;
   *)
     # Not Linux - oops
     if test "x${quiet}" != "xY"; then
         echo "WARNING: This routine only works under Linux.  We'll fake it as best we can!"
     fi
     distro=`uname -s`
-    kernel=`uname -r`
-    release="unknown"
+    release=`uname -r`
+    kernel="unknown"
     fullrelease="unknown"
     lsbrelease="Not Linux - not LSB compliant"
     unitedrelease="Not Linux - not UnitedLinux compliant"
