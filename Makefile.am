@@ -40,7 +40,7 @@ LIBS      = @LIBS@
 CCLD      = @CCLD@
 
 
-DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.db ntops ntopd
+DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.db ntops ntopd ntop-config
 CLEANFILES     = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated
@@ -50,7 +50,7 @@ MAINTAINERCLEANFILES = COPYING INSTALL Makefile.in aclocal.m4 config.guess \
                        ntop-config stamp-h.in
 
 
-SUBDIRS = . plugins @INTOPAPP@ @REMOTEINTERFACE@
+SUBDIRS = . @PLUGINS@ @INTOP@ @REMOTEINTERFACE@
 
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FAQ FILES HACKING \
               INSTALL KNOWN_BUGS MANIFESTO NEWS PORTING README \
@@ -71,16 +71,16 @@ EXTRA_DIST = Makefile.am Makefile.in \
              missing mkinstalldirs ntop-config.in \
              vt.sed
 
-PLUGINS   = `cat plugins/FILES`
-REMOTEAPI = `cat remoteInterfaceAPI/FILES`
-INTOP     = `cat intop/FILES`
+PLUGINSFILES   = `cat plugins/FILES`
+REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
+INTOPFILES     = `cat intop/FILES`
 
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINS) $(REMOTEAPI) $(INTOP)
+THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) $(INTOPFILES)
 
 #
 # This Makefile is responsible for creating:
-# 1. libntopreport.la, the archive with all the code for html report
-# 2. libntop.la, the core archive
+# 1. libntop.la, the ntop core library
+# 2. libntopreport.la, the ntop library with all the code for html report
 # 3. ntop, the binary dynamically linked
 # 4. ntops, the binary statically linked
 # 5. ntopd, the ntop daemon, simply a link to the ntop binary
@@ -97,26 +97,27 @@ ntop_SOURCES   = main.c
 ntops_SOURCES  = $(ntop_SOURCES)
 ntopd_SOURCES  = $(ntop_SOURCES)
 
-ntop_DEPENDENCIES = libntopreport.la libntop.la build.c
-ntop_LDADD        = libntopreport.la libntop.la
+ntop_DEPENDENCIES = libntop.la libntopreport.la
+ntop_LDADD        = libntop.la libntopreport.la
 ntop_LDFLAGS      =
 
-ntops_DEPENDENCIES = libntopreport.la libntop.la build.c
-ntops_LDADD        = libntopreport.la libntop.la
+ntops_DEPENDENCIES = libntop.la libntopreport.la
+ntops_LDADD        = libntop.la libntopreport.la
 ntops_LDFLAGS      = -static
 
 noinst_HEADERS     = globals-core.h globals-report.h graph.h ntop.h regex.h rules.h
 
 # the Archive
-lib_LTLIBRARIES    = libntopreport.la libntop.la
+lib_LTLIBRARIES    = libntop.la libntopreport.la
 
-libntop_la_SOURCES = address.c  build.c dataFormat.c event.c \
-                     globals-core.c  hash.c initialize.c    \
-                     leaks.c logger.c   ntop.c     pbuf.c    \
-                     plugin.c   qsort.c    regex.c   \
-                     rules.c    sql.c      ssl.c   term.c \
-                     traffic.c  util.c     vendor.c  \
-                     vendortable.h  version.c
+libntop_la_SOURCES = address.c       dataFormat.c  event.c      \
+                     globals-core.c  hash.c        initialize.c \
+                     leaks.c         logger.c      ntop.c       \
+                     pbuf.c          plugin.c      qsort.c      \
+                     regex.c         rules.c       sql.c        \
+                     ssl.c           term.c        traffic.c    \
+                     util.c          vendor.c      version.c    \
+                     vendortable.h
 
 libntop_la_DEPENDENCIES = config.h
 libntop_la_LIBADD       =
@@ -124,19 +125,16 @@ libntop_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEA
 
 # the Archive
 libntopreport_la_SOURCES = admin.c \
-                           globals-report.c  graph.c    \
-                           http.c     \
-                           report.c               \
+                           globals-report.c \
+                           graph.c \
+                           http.c  \
+                           report.c \
                            webInterface.c
 
 
 libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD       =
 libntopreport_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
-
-build.c:
-	/bin/rm -f build.c
-	date +"%D %r" | sed -e 's/.*/char *buildDate = "&";/' > build.c
 
 man_MANS = ntop.8
 
@@ -149,7 +147,7 @@ ntopd: ntop
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # Distribution
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-snapshot: version.c build.c
+snapshot: version.c
 	@echo "generating configuration files ............. please wait"
 	@automake --add-missing --gnu --include-deps >/dev/null 2>&1
 	@autoconf  >/dev/null 2>&1
