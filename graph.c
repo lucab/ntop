@@ -319,7 +319,7 @@ void drawArea(short width,
   /* ************************* */
 
   vmargin = 40; // top (bottom) vertical margin for title (x-labels)
-  hmargin = 60; // left horizontal margin for y-labels
+  hmargin = 70; // left horizontal margin for y-labels
 
   base = (int)((width - hmargin) / (1+num_points)); // distance between columns
 
