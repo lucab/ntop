@@ -3089,6 +3089,90 @@ void _incrementUsageCounter(UsageCounter *counter,
 
 /* ******************************** */
 
+int fetchPrefsValue(char *key, char *value, int valueLen) {
+  datum key_data;
+  datum data_data;
+  
+  if((value == NULL) || (!myGlobals.capturePackets)) return;
+  
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Entering fetchPrefValue()");
+#endif
+  value[0] = '\0';
+
+  key_data.dptr  = key;
+  key_data.dsize = strlen(key_data.dptr);
+
+#ifdef MULTITHREADED
+  accessMutex(&myGlobals.gdbmMutex, "fetchPrefValue");
+#endif
+
+  if(myGlobals.prefsFile == NULL) {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Leaving fetchPrefValue()");
+#endif
+    return(-1); /* ntop is quitting... */
+  }
+
+  data_data = gdbm_fetch(myGlobals.prefsFile, key_data);
+
+#ifdef MULTITHREADED
+  releaseMutex(&myGlobals.gdbmMutex);
+#endif
+
+  memset(value, 0, valueLen);
+  
+  if(data_data.dptr != NULL) {
+    if(snprintf(value, valueLen, "%s", data_data.dptr) < 0)
+      BufferOverflow();
+    if(data_data.dsize < valueLen) value[data_data.dsize] = '\0';
+    free(data_data.dptr);
+    return(0);
+  } else 
+    return(-1);
+}
+
+/* ******************************** */
+
+void storePrefsValue(char *key, char *value) {
+  datum key_data;
+  datum data_data;
+
+  if((value == NULL) || (!myGlobals.capturePackets)) return;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Entering storePrefsValue()");
+#endif
+  
+  memset(&key_data, 0, sizeof(key_data));
+  key_data.dptr   = key;
+  key_data.dsize  = strlen(key_data.dptr);
+
+  memset(&data_data, 0, sizeof(data_data));
+  data_data.dptr  = value;
+  data_data.dsize = strlen(value);
+  
+#ifdef MULTITHREADED
+  accessMutex(&myGlobals.gdbmMutex, "storePrefsValue");
+#endif
+
+  if(myGlobals.prefsFile == NULL) {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Leaving storePrefsValue()");
+#endif
+    ; /* ntop is quitting... */
+  }
+
+  if(gdbm_store(myGlobals.prefsFile, key_data, data_data, GDBM_REPLACE) != 0)
+    traceEvent(TRACE_ERROR, "Error while adding %s=%s.", key, value);
+  
+#ifdef MULTITHREADED
+  releaseMutex(&myGlobals.gdbmMutex);
+#endif
+}
+
+/* ******************************** */
+
 #ifndef HAVE_LOCALTIME_R
 #undef localtime
 

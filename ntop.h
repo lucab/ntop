@@ -848,6 +848,12 @@ typedef struct serviceEntry {
 
 /* ************************************* */
 
+#define NETFLOW_EXPORT_UNKNOWN     0
+#define NETFLOW_EXPORT_DISABLED    1
+#define NETFLOW_EXPORT_ENABLED     2
+
+/* ************************************* */
+
 typedef struct ntopInterface {
   char *name;                    /* unique interface name */
   int flags;                     /* the status of the interface as viewed by ntop */
@@ -973,6 +979,11 @@ typedef struct ntopInterface {
   TrafficEntry** ipTrafficMatrix; /* Subnet traffic Matrix */
   struct hostTraffic** ipTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
   fd_set ipTrafficMatrixPromiscHosts;
+
+  /* ************************** */
+
+  u_char exportNetFlow; /* NETFLOW_EXPORT_... */
+
 } NtopInterface;
 
 typedef struct processInfo {

@@ -484,6 +484,24 @@ void initGdbm(void) {
 
   /* ************************************************ */
 
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/prefsCache.db", myGlobals.dbPath) < 0)
+    BufferOverflow();
+
+  myGlobals.prefsFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+
+  if(myGlobals.prefsFile == NULL) {
+#if defined(WIN32) && defined(__GNUC__)
+    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
+	       tmpBuf, "unknown gdbm errno");
+#else
+    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
+	       tmpBuf, gdbm_strerror(gdbm_errno));
+#endif
+    exit(-1);
+  }
+
+  /* ************************************************ */
+
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", myGlobals.dbPath) < 0)
     BufferOverflow();
@@ -1167,8 +1185,6 @@ static void ignoreThisSignal(int signalId) {
   setsignal(signalId, ignoreThisSignal);
 }
 #endif
-
-
 
 /* ******************************* */
 

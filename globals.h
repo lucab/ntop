@@ -114,7 +114,7 @@ typedef struct ntopGlobals {
   NtopInterface *device;   /* pointer to the table of Network interfaces */
 
   /* Database */
-  GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache, serialCache;
+  GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache, serialCache, prefsFile;
 
   /* the table of broadcast entries */
   u_int broadcastEntryIdx;

@@ -368,6 +368,9 @@ extern void _incrementUsageCounter(UsageCounter *counter,
 				   char* file, int line);
 extern char *strtolower(char *s);
 extern char *xstrncpy(char *dest, const char *src, size_t n);
+extern int fetchPrefsValue(char *key, char *value, int valueLen);
+extern void storePrefsValue(char *key, char *value);
+
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

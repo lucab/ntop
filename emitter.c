@@ -92,6 +92,8 @@ void endWriteArray(FILE *fDescr, int lang) {
 
 static void validateString(char *name) {
   int i;
+
+  if(name == NULL) return;
   
   for(i=0; i<strlen(name); i++)
     if(name[i] == '/') {
@@ -104,6 +106,8 @@ static void validateString(char *name) {
 void initWriteKey(FILE *fDescr, int lang, char *indent, 
 		  char *keyName, int numEntriesSent) {
   char buf[256];
+
+  if((indent == NULL) ||  (keyName == NULL)) return;
 
   validateString(keyName);
 
@@ -141,6 +145,8 @@ void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, char last)
      hence the end of the list. Don't add a ',' at end.
   */
 
+  if((indent == NULL) ||  (keyName == NULL)) return;
+  
   validateString(keyName);
   switch(lang) {
   case PERL_LANGUAGE:
@@ -253,7 +259,8 @@ void wrtIntFloatItm(FILE *fDescr, int lang, char *indent, int name,
 		    float value, char last, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%d", name);
-  wrtFloatItm(fDescr, lang, indent, (lang == XML_LANGUAGE) ? "number" : buf, value, last, numEntriesSent);
+  wrtFloatItm(fDescr, lang, indent, (lang == XML_LANGUAGE) ? "number" : buf, 
+	      value, last, numEntriesSent);
 }
 
 /* *************************** */
@@ -1134,7 +1141,6 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	if(!shortView) { initWriteKey(fDescr, lang, "\t", "IP", numEntries); }
 
 	for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
-
 	  if(!shortView) {
 	    if(j > 0) endWriteKey(fDescr, lang, "\t\t", hostKey, ',');
 	    initWriteKey(fDescr, lang, "\t\t", (hostKey = myGlobals.protoIPTrafficInfos[j]), numEntries);
