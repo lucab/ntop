@@ -3785,3 +3785,9 @@ extern int ntop_sched_yield(char *file, int line) {
 }
 
 #endif
+
+#ifdef EMBEDDED
+extern char *crypt (__const char *__key, __const char *__salt) {
+  return(__key);
+}
+#endif

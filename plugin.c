@@ -24,8 +24,9 @@
 extern PluginInfo* icmpPluginEntryFctn(void);
 extern PluginInfo* nfsPluginEntryFctn(void);
 extern PluginInfo* sflowPluginEntryFctn(void);
+#ifndef EMBEDDED
 extern PluginInfo* rrdPluginEntryFctn(void);
-/* rrd never made it into the code base */
+#endif
 extern PluginInfo* netflowPluginEntryFctn(void);
 #endif
 
@@ -203,8 +204,10 @@ static void loadPlugin(char* dirName, char* pluginName) {
     pluginInfo = sflowPluginEntryFctn();
   else if(strcmp(pluginName, "netflowPlugin") == 0)
     pluginInfo = netflowPluginEntryFctn();
+#ifndef EMBEDDED
   else if(strcmp(pluginName, "rrdPlugin") == 0)
     pluginInfo = rrdPluginEntryFctn();
+#endif
   else
     pluginInfo = NULL;
 
@@ -331,7 +334,9 @@ void loadPlugins(void) {
   loadPlugin(NULL, "nfsPlugin");
   loadPlugin(NULL, "sflowPlugin");
   loadPlugin(NULL, "netflowPlugin");
+#ifndef EMBEDDED
   loadPlugin(NULL, "rrdPlugin");
+#endif
 #endif /* MAKE_STATIC_PLUGIN */
 }
 

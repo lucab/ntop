@@ -25,6 +25,8 @@
 
 #include "ntop.h"
 
+#ifndef EMBEDDED
+
 #define _GRAPH_C_
 #include "globals-report.h"
 
@@ -1654,3 +1656,4 @@ int drawHostsDistanceGraph(int checkOnly) {
 /* ************************ */
 
 
+#endif /* EMBEDDED */

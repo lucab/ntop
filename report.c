@@ -288,9 +288,11 @@ void printTrafficStatistics(void) {
     Counter dummyCounter;
     sendString("<TR><TH "TH_BG" align=left>Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
 
+#ifndef EMBEDDED
     if(myGlobals.numRealDevices > 1)
       sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=interfaceTrafficPie"CHART_FORMAT"></TD></TR>\n");
+#endif
 
     unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
       - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value
@@ -343,9 +345,11 @@ void printTrafficStatistics(void) {
       sendString(buf);
     }
 
+#ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
+#endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       /*
@@ -433,9 +437,11 @@ void printTrafficStatistics(void) {
 	BufferTooShort();
       sendString(buf);
 
+#ifndef EMBEDDED
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
 		   "<IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
+#endif
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
@@ -499,9 +505,11 @@ void printTrafficStatistics(void) {
       BufferTooShort();
     sendString(buf);
 
+#ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=ipTrafficPie"CHART_FORMAT"></TH></TR>\n");
+#endif
 
     /* ********************* */
 
@@ -589,8 +597,10 @@ void printTrafficStatistics(void) {
 	  BufferTooShort();
 	sendString(buf);
 
+#ifndef EMBEDDED
 	sendString("<TR "TR_ON"><TH BGCOLOR=white COLSPAN=3>"
 		   "<IMG SRC=pktTTLDistribPie"CHART_FORMAT"></TH></TR>\n");
+#endif
       }
     }
 
@@ -598,9 +608,11 @@ void printTrafficStatistics(void) {
 
     /* ************************ */
 
+#ifndef EMBEDDED
     if(myGlobals.enableSessionHandling && drawHostsDistanceGraph(1))
       sendString("<TR><TH "TH_BG" ALIGN=LEFT>Remote Hosts Distance</TH><TD BGCOLOR=white ALIGN=CENTER>"
 		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
+#endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       updateThpt(0);
@@ -654,6 +666,7 @@ void printTrafficStatistics(void) {
 
   /* ********************* */
 
+#ifndef EMBEDDED
   /* RRD */
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
   snprintf(buf, sizeof(buf), "%s/interfaces/%s", 
@@ -669,6 +682,7 @@ void printTrafficStatistics(void) {
       BufferTooShort();
     sendString(buf);
   }
+#endif
 
   /* ********************* */
 
@@ -2754,7 +2768,9 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
   if(mode == FLAG_HOSTLINK_TEXT_FORMAT) {
     printSectionTitle("IP Protocol Distribution");
 
+#ifndef EMBEDDED
     sendString("<CENTER><IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p>\n</CENTER>\n");
+#endif
 
     printSectionTitle("Local Traffic");
 
@@ -3032,9 +3048,11 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 			CONST_COLOR_1, remainingTraffic/1024, percentage);
       }
 
+#ifndef EMBEDDED
       if(numProtosFound > 0)
 	sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER>"
 		   "<IMG SRC=drawGlobalIpProtoDistribution"CHART_FORMAT"></TD></TR>\n");
+#endif
       sendString("</TABLE>"TABLE_OFF"<P>\n");
 
       /* *********************** */
@@ -3207,8 +3225,10 @@ void printProtoTraffic(void) {
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/
 		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
 
+#ifndef EMBEDDED
   sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER>"
 	     "<IMG SRC=drawGlobalProtoDistribution"CHART_FORMAT"></TD></TR>\n");
+#endif
 
   sendString("</TABLE>"TABLE_OFF"<P></CENTER>\n");
 }
@@ -3650,8 +3670,11 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   sendString("<CENTER>\n");
 
+#ifndef EMBEDDED
   sendString("<A HREF=\"thptStatsMatrix.html?col=1\" BORDER=0>"
 	     "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=1\"></A><BR>\n");
+#endif
+
   if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	      formatTimeStamp(0, 0, 0),
 	      formatTimeStamp(0, 0, 60)) < 0) BufferTooShort();
@@ -3659,14 +3682,17 @@ void printThptStats(int sortedColumn _UNUSED_) {
   sendString(tmpBuf);
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 60) {
+#ifndef EMBEDDED
     sendString("<P><A HREF=\"thptStatsMatrix.html?col=2\" BORDER=0>"
 	       "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=2\"></A><BR>\n");
+#endif
     if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 		formatTimeStamp(0, 0, 0),
 		formatTimeStamp(0, 24, 0)) < 0) BufferTooShort();
 
     sendString(tmpBuf);
 
+#ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
       sendString("<P><IMG SRC=\"thptGraph"CHART_FORMAT"?col=3\"><BR>\n");
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
@@ -3675,6 +3701,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 	BufferTooShort();
       sendString(tmpBuf);
     }
+#endif
   }
 
   sendString("</CENTER>\n");

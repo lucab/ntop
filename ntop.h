@@ -396,7 +396,9 @@ ntop.h
 #include <shadow.h>
 #endif
 
+#ifndef EMBEDDED
 #include "rrd.h"
+#endif
 
 #ifdef HAVE_GETOPT_H
 #include "getopt.h"

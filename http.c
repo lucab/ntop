@@ -1927,6 +1927,7 @@ static int returnHTTPPage(char* pageName,
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
+#ifndef EMBEDDED
 #ifdef CFG_USE_GRAPHICS
     } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
@@ -2056,6 +2057,7 @@ static int returnHTTPPage(char* pageName,
       }
     }
 #endif /* CFG_USE_GRAPHICS */
+#endif /* EMBEDDED */
     } else if(strcmp(pageName, "Credits.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("Credits", BITFLAG_HTML_NO_REFRESH);

@@ -56,11 +56,14 @@ static u_short _headerSize[MAX_DLT_ARRAY];
 extern char _wdir[];
 #endif
 
-static char *_dataFileDirs[]   = { ".",
-#ifdef WIN32
-									_wdir,
+static char *_dataFileDirs[]   = { 
+#ifndef EMBEDDED
+  ".",
 #endif
-									CFG_DATAFILE_DIR, NULL };
+#ifdef WIN32
+				   _wdir,
+#endif
+				   CFG_DATAFILE_DIR, NULL };
 static char *_pluginDirs[]     = { "./plugins", CFG_PLUGIN_DIR, NULL };
 static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
 #ifdef WIN32

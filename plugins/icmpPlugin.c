@@ -217,6 +217,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   } else /* host=3240847503&icmp=3 */ {
     char *tmpStr;    
 
+#ifndef EMBEDDED
 #ifdef CFG_USE_GRAPHICS
     if(strncmp(url, "chart", strlen("chart")) == 0) {
       unsigned long  sc[2] = { 0xf08080L, 0x4682b4L }; /* see clr[] in graph.c */
@@ -270,6 +271,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       return;
     }
 #endif
+#endif /* EMBEDDED */
 
     strtok_r(url, "=", &strtokState);
 
