@@ -364,17 +364,17 @@ static int handleProtocolList(char* protoName,
   }
 
   if(increment == 1) {
-    if(myGlobals.numIpProtosToMonitor == 0)
-      myGlobals.protoIPTrafficInfos = (char**)malloc(sizeof(char*));
-    else
-      myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos, sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
-
-    rc = myGlobals.numIpProtosToMonitor;
-    myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
-    myGlobals.numIpProtosToMonitor++;
+      if(myGlobals.numIpProtosToMonitor == 0)
+	  myGlobals.protoIPTrafficInfos = (char**)malloc(sizeof(char*));
+      else
+	  myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos, sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
+      
+      rc = myGlobals.numIpProtosToMonitor;
+      myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
+      myGlobals.numIpProtosToMonitor++;
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "%d) %s - %s\n",
-	       myGlobals.numIpProtosToMonitor, protoName, protocolList);
+      traceEvent(CONST_TRACE_INFO, "%d) %s - %s\n",
+		 myGlobals.numIpProtosToMonitor, protoName, protocolList);
 #endif
   }
 

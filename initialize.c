@@ -728,16 +728,16 @@ void resetStats(int deviceId) {
 
   for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].actualHashSize; j++) {
     HostTraffic *el = myGlobals.device[deviceId].hash_hostTraffic[j], *elNext;
-    
+
     while(el != NULL) {
       elNext = el->next;
-      
-      if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))        
-	freeHostInfo(el, deviceId);            
+
+      if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
+	freeHostInfo(el, deviceId);
 
       el = elNext;
     }
-    
+
     myGlobals.device[deviceId].hash_hostTraffic[j] = NULL;
   }
 
@@ -975,7 +975,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     case '\\':
       deviceDescr[i] = '_';
     }
-  
+
   traceEvent(CONST_TRACE_NOISY, "Adding network device %s", deviceName);
 
   if((deviceName != NULL) && (strcmp(deviceName, "none") == 0)) {
@@ -1598,7 +1598,7 @@ u_int createDummyInterface(char *ifName) {
 
   if(myGlobals.otherHostEntry != NULL) {
     myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
-    myGlobals.otherHostEntry->next = NULL;    
+    myGlobals.otherHostEntry->next = NULL;
   }
 
   return(deviceId);

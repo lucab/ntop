@@ -1796,10 +1796,10 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	if(el->portsUsage[idx]->clientUses > 0) {
 	  /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 
-	  if(el->portsUsage[idx]->clientUsesLastPeer == FLAG_NO_PEER)
-	    peerHost = NULL;
-	  else
-	    peerHost = findHostBySerial(el->portsUsage[idx]->clientUsesLastPeer, actualDeviceId);
+	    if(emptySerial(&el->portsUsage[idx]->clientUsesLastPeer))
+		peerHost = NULL;
+	    else
+		peerHost = findHostBySerial(el->portsUsage[idx]->clientUsesLastPeer, actualDeviceId);
 
 	  if(peerHost == NULL) {
 	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
@@ -1818,10 +1818,10 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
 	if(el->portsUsage[idx]->serverUses > 0) {
 
-	  if(el->portsUsage[idx]->serverUsesLastPeer == FLAG_NO_PEER)
-	    peerHost = NULL;
-	  else
-	    peerHost = findHostBySerial(el->portsUsage[idx]->serverUsesLastPeer, actualDeviceId);
+	    if(emptySerial(&el->portsUsage[idx]->serverUsesLastPeer))
+		peerHost = NULL;
+	    else
+		peerHost = findHostBySerial(el->portsUsage[idx]->serverUsesLastPeer, actualDeviceId);
 
 	  if(peerHost == NULL) {
 	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
@@ -1943,11 +1943,11 @@ void printLocalRoutersList(int actualDeviceId) {
     if(subnetLocalHost(el)) {
 
       for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-	if(el->contactedRouters.peersSerials[j] != FLAG_NO_PEER) {
+	  if(!emptySerial(&el->contactedRouters.peersSerials[j])) {
 	  short found = 0;
 
 	  for(i=0; i<numEntries; i++) {
-	    if(el->contactedRouters.peersSerials[j] == routerList[i]) {
+	      if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
 	      found = 1;
 	      break;
 	    }
@@ -1980,7 +1980,7 @@ void printLocalRoutersList(int actualDeviceId) {
 	    el != NULL; el = getNextHost(actualDeviceId, el)) {
 	  if(subnetLocalHost(el)) {
 	    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-	      if(el->contactedRouters.peersSerials[j] == routerList[i]) {
+		if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
 		if(snprintf(buf, sizeof(buf), "<LI>%s</LI>\n",
 			    makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)) < 0)
 		  BufferTooShort();
@@ -3151,7 +3151,7 @@ void printProcessInfo(int processPid, int actualDeviceId) {
   sendString("</TD></TR>\n");
 
   for(j=0, numEntries=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-    if(myGlobals.processes[i]->contactedIpPeersSerials[j] != FLAG_NO_PEER) {
+      if(!emptySerial(&myGlobals.processes[i]->contactedIpPeersSerials[j])) {
 
       if(numEntries == 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Contacted&nbsp;Peers"
@@ -3501,7 +3501,7 @@ void printThptStatsMatrix(int sortedColumn) {
 
       /* ************************* */
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostSentSerial != FLAG_NO_PEER) {
+      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostSentSerial)) {
 	if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 			last60MinutesThpt[i].topHostSentSerial, myGlobals.actualReportDeviceId)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
@@ -3513,7 +3513,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	}
       }
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostSentSerial != FLAG_NO_PEER) {
+      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostSentSerial)) {
 	if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 			last60MinutesThpt[i].secondHostSentSerial, myGlobals.actualReportDeviceId)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
@@ -3525,7 +3525,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	}
       }
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostSentSerial != FLAG_NO_PEER) {
+      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostSentSerial)) {
 	if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 			last60MinutesThpt[i].thirdHostSentSerial, myGlobals.actualReportDeviceId)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
@@ -3545,7 +3545,7 @@ void printThptStatsMatrix(int sortedColumn) {
 
       /* ************************* */
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostRcvdSerial != FLAG_NO_PEER) {
+      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostRcvdSerial)) {
 		if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 			last60MinutesThpt[i].topHostRcvdSerial, myGlobals.actualReportDeviceId)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
@@ -3557,7 +3557,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	}
       }
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostRcvdSerial != FLAG_NO_PEER) {
+	 if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostRcvdSerial)) {
 	if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 			last60MinutesThpt[i].secondHostRcvdSerial, myGlobals.actualReportDeviceId)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
@@ -3569,16 +3569,16 @@ void printThptStatsMatrix(int sortedColumn) {
 	}
       }
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostRcvdSerial != FLAG_NO_PEER) {
-if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
-			last60MinutesThpt[i].thirdHostRcvdSerial, myGlobals.actualReportDeviceId)) != NULL) {
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
-		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].thirdRcvdTraffic.value)) < 0)
-	    BufferTooShort();
-	  sendString(buf); dataSent = 1;
-	}
+	 if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostRcvdSerial)) {
+	     if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
+				       last60MinutesThpt[i].thirdHostRcvdSerial, myGlobals.actualReportDeviceId)) != NULL) {
+		 if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+			     makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+			     formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
+					      last60MinutesThpt[i].thirdRcvdTraffic.value)) < 0)
+		     BufferTooShort();
+		 sendString(buf); dataSent = 1;
+	     }
       }
 
       /* ************************* */
@@ -3619,8 +3619,9 @@ if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 
 	/* ************************* */
 
-	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostSentSerial != FLAG_NO_PEER) {
-	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostSentSerial,myGlobals.actualReportDeviceId)) != NULL) {
+	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostSentSerial)) {
+	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostSentSerial,
+				    myGlobals.actualReportDeviceId)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
@@ -3630,8 +3631,9 @@ if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 	  }
 	}
 
-	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostSentSerial != FLAG_NO_PEER) {
-	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostSentSerial,myGlobals.actualReportDeviceId)) != NULL) {
+	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostSentSerial)) {
+	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostSentSerial,
+				    myGlobals.actualReportDeviceId)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
@@ -3641,8 +3643,9 @@ if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 	  }
 	}
 
-	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostSentSerial != FLAG_NO_PEER) {
-	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostSentSerial,myGlobals.actualReportDeviceId)) != NULL) {
+	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostSentSerial)) {
+	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostSentSerial,
+				    myGlobals.actualReportDeviceId)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
@@ -3659,8 +3662,9 @@ if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 
 	/* ************************* */
 
-	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial != FLAG_NO_PEER) {
-	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial,myGlobals.actualReportDeviceId)) != NULL) {
+	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial)) {
+	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial,
+				    myGlobals.actualReportDeviceId)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
@@ -3670,8 +3674,9 @@ if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 	  }
 	}
 
-	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdSerial != FLAG_NO_PEER) {
-	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdSerial,myGlobals.actualReportDeviceId)) != NULL) {
+	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdSerial)) {
+	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdSerial,
+				    myGlobals.actualReportDeviceId)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
@@ -3681,8 +3686,9 @@ if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].
 	  }
 	}
 
-	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdSerial != FLAG_NO_PEER) {
-	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdSerial,myGlobals.actualReportDeviceId)) != NULL) {
+	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdSerial)) {
+	  if((el = findHostBySerial(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdSerial,
+				    myGlobals.actualReportDeviceId)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].

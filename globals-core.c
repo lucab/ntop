@@ -472,7 +472,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   FD_SET(FLAG_SUBNET_LOCALHOST, &myGlobals.broadcastEntry->flags);
   FD_SET(FLAG_BROADCAST_HOST, &myGlobals.broadcastEntry->flags);
   FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &myGlobals.broadcastEntry->flags);
-  myGlobals.broadcastEntry->hostSerial = 0;
+  memset(&myGlobals.broadcastEntry->hostSerial, 0, sizeof(HostSerial));
 
   allocateOtherHosts();
 

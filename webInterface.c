@@ -335,7 +335,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   accessAddrResMutex("makeHostLink");
 
   if((el == myGlobals.otherHostEntry)
-     || (el->hostSerial == myGlobals.otherHostEntry->hostSerial)) {
+     || (cmpSerial(&el->hostSerial, &myGlobals.otherHostEntry->hostSerial))) {
     char *fmt;
 
     if(mode == FLAG_HOSTLINK_HTML_FORMAT)
@@ -3927,9 +3927,6 @@ void printNtopConfigInfo(int textPrintFlag) {
       printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
       printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
       printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
-#ifdef MEMORY_DEBUG
-      printMutexStatus(textPrintFlag, &myGlobals.leaksMutex,       "leaksMutex");
-#endif
       sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
     }
 #endif /* CFG_MULTITHREADED */

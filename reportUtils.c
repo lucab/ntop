@@ -77,8 +77,8 @@ void formatUsageCounter(UsageCounter usageCtr,
   }
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(usageCtr.peersSerials[i] != FLAG_NO_PEER) {
-		if((el = findHostBySerial(usageCtr.peersSerials[i], myGlobals.actualReportDeviceId)) != NULL) {
+      if(!emptySerial(&usageCtr.peersSerials[i])) {
+	  if((el = findHostBySerial(usageCtr.peersSerials[i], myGlobals.actualReportDeviceId)) != NULL) {
  	if(!sendHeader) {
 	  sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
 	  sendHeader = 1;
@@ -87,8 +87,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 	sendString("\n<li>");
 	sendString(makeHostLink(el, 0, 0, 0));
       } else
-	traceEvent(CONST_TRACE_WARNING, "Unable to find serial %u - host skipped",
-		   (unsigned int)usageCtr.peersSerials[i]);
+	traceEvent(CONST_TRACE_WARNING, "Unable to find host serial - host skipped");
     }
   }
 
@@ -2636,53 +2635,25 @@ static HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffi
   HostTraffic *theEntry = NULL;
   int found = 0;
   u_int idx;
-  char theBytes[8];
+  u_char theBytes[8];
 
-  if(theSerial == myGlobals.broadcastEntry->hostSerial) {
+  if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
     memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
     return(0);
-  } else if(theSerial == myGlobals.otherHostEntry->hostSerial) {
+  } else if(cmpSerial(&theSerial, &myGlobals.otherHostEntry->hostSerial)) {
     memcpy(el, myGlobals.otherHostEntry, sizeof(HostTraffic));
     return(0);
   }
     
-  /*
-    Unused
-    |
-    |        IP
-    V     -------
-    X X X X X X X X 
-    ^   -----------
-    |        MAC
-    | 
-    1 = MAC
-    0 = IP
-
-  */
-
-  memcpy(theBytes, &theSerial, 8);
-
-#ifdef CFG_LITTLE_ENDIAN
-  {
-    unsigned char buf1[8];
-    int i;
-
-    for(i=0; i<8; i++)
-      buf1[i] = theBytes[7-i];
-
-    memcpy(theBytes, buf1, 8);
-  }
-#endif
-
   memset(el, 0, sizeof(HostTraffic));
-  el->hostSerial = theSerial;
+  copySerial(&el->hostSerial, &theSerial);
 
-  if(theBytes[0] == 0) {
+  if(theSerial.serialType == 2) {
     /* IP */
     char sniffedName[MAXDNAME];
     char buf[LEN_GENERAL_WORK_BUFFER];
 
-    memcpy(&el->hostIpAddress.s_addr, &theBytes[4], 4);
+   el->hostIpAddress.s_addr = theSerial.value.ipAddress.s_addr;
 
     strncpy(el->hostNumIpAddress,
 	    _intoa(el->hostIpAddress, buf, sizeof(buf)),
@@ -2698,7 +2669,7 @@ static HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffi
     char *ethAddr;
     char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
-    memcpy(el->ethAddress, &theBytes[2], LEN_ETHERNET_ADDRESS);
+    memcpy(el->ethAddress, theSerial.value.ethAddress, LEN_ETHERNET_ADDRESS);
     ethAddr = etheraddr_string(el->ethAddress, etherbuf);
     strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
     el->hostIpAddress.s_addr = 0x1234; /* dummy */
@@ -2715,13 +2686,13 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
   HostTraffic tmpEl;
 
   if((el->pktSent.value != 0) || (el->pktRcvd.value != 0)) {
-    int ok =0;
+      int ok =0;
 
     for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-      if(((el->contactedSentPeers.peersSerials[i] != FLAG_NO_PEER)
-	  && (el->contactedSentPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial))
-	 || ((el->contactedRcvdPeers.peersSerials[i] != FLAG_NO_PEER)
-	     && (el->contactedRcvdPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial))) {
+	if((!emptySerial(&el->contactedSentPeers.peersSerials[i])
+	    && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))
+	   || (!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
+	       && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))))) {
 	  ok = 1;
 	  break;
 	}
@@ -2731,33 +2702,32 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       int numEntries;
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	  if((el->contactedSentPeers.peersSerials[i] != FLAG_NO_PEER)
-	     && (el->contactedSentPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial)) {
-
-	    if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], 
-				    myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	      if(numEntries == 0) {
-		printSectionTitle("Last Contacted Peers");
-		titleSent = 1;
-		sendString("<CENTER>\n"
-			   "<TABLE BORDER=0><TR><TD "TD_BG" VALIGN=TOP>\n");
-
-		sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
-			   "<TR "TR_ON"><TH "TH_BG">Sent To</TH>"
-			   "<TH "TH_BG">Address</TH></TR>\n");
+	  if(!emptySerial(&el->contactedSentPeers.peersSerials[i])
+	     && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
+	      if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], 
+				      myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
+		  if(numEntries == 0) {
+		      printSectionTitle("Last Contacted Peers");
+		      titleSent = 1;
+		      sendString("<CENTER>\n"
+				 "<TABLE BORDER=0><TR><TD "TD_BG" VALIGN=TOP>\n");
+		      
+		      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
+				 "<TR "TR_ON"><TH "TH_BG">Sent To</TH>"
+				 "<TH "TH_BG">Address</TH></TR>\n");
+		  }
+		  
+		  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+			      "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
+			      getRowColor(), makeHostLink(el2, 0, 0, 0),
+			      el2->hostNumIpAddress) < 0)
+		      BufferTooShort();
+		  
+		  sendString(buf);
+		  numEntries++;
 	      }
-
-	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
-			  getRowColor(), makeHostLink(el2, 0, 0, 0),
-			  el2->hostNumIpAddress) < 0)
-		BufferTooShort();
-
-	      sendString(buf);
-	      numEntries++;
-	    }
 	  }
-
+      
       if(numEntries > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Contacts</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%lu</TD></TR>\n",
@@ -2772,13 +2742,13 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       /* ***************************************************** */
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if((el->contactedRcvdPeers.peersSerials[i] != FLAG_NO_PEER)
-	   && (el->contactedRcvdPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial)) {
+	  if((!emptySerial(&el->contactedRcvdPeers.peersSerials[i]))
+	     && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
 
-	    if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], 
+	    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i], 
 					myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	      if(numEntries == 0) {
-		if(!titleSent) printSectionTitle("Last Contacted Peers");
+		  if(!titleSent) printSectionTitle("Last Contacted Peers");
 		sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>"
 			   "<TR "TR_ON"><TH "TH_BG">Received From</TH>"
 			   "<TH "TH_BG">Address</TH></TR>\n");
@@ -3553,10 +3523,10 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   printedHeader=0;
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(el->contactedRouters.peersSerials[i] != FLAG_NO_PEER) {
-      HostSerial routerIdx = el->contactedRouters.peersSerials[i];
+      if(!emptySerial(&el->contactedRouters.peersSerials[i])) {
+	  HostSerial routerIdx = el->contactedRouters.peersSerials[i];
 
-      if(routerIdx != FLAG_NO_PEER) {
+      if(!emptySerial(&routerIdx)) {
 	HostTraffic *router = quickHostLink(routerIdx, myGlobals.actualReportDeviceId, &tmpEl);
 
 	if(router != NULL) {
@@ -4007,7 +3977,7 @@ void printSectionTitle(char *text) {
 
 #define MAX_NUM_OS           256
 
-void printLocalHostsStats() {
+ void printLocalHostsStats() {
   u_int idx, numEntries=0, maxHosts;
   HostTraffic *el, **tmpTable;
   OsNumInfo theOSs[MAX_NUM_OS];

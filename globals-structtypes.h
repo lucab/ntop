@@ -92,7 +92,14 @@ typedef struct ether80211q {
   u_int16_t protoType;
 } Ether80211q;
 
-#define HostSerial u_int64_t
+#define SIZEOF_HOSTSERIAL   8
+typedef struct hostSerial {
+    u_char serialType; /* 0 == empty */
+    union {
+	u_char          ethAddress[LEN_ETHERNET_ADDRESS]; /* hostSerial == 1 */
+	struct in_addr  ipAddress;                        /* hostSerial == 2 */
+    } value;	
+} HostSerial;
 
 #ifdef WIN32
  #define pid_t unsigned int
@@ -222,7 +229,7 @@ typedef struct trafficCounter {
 typedef struct thptEntry {
   float trafficValue;
   /* ****** */
-  HostSerial topHostSentSerial, secondHostSentSerial, thirdHostSentSerial;
+    HostSerial topHostSentSerial, secondHostSentSerial, thirdHostSentSerial;
   TrafficCounter topSentTraffic, secondSentTraffic, thirdSentTraffic;
   /* ****** */
   HostSerial topHostRcvdSerial, secondHostRcvdSerial, thirdHostRcvdSerial;
@@ -266,8 +273,8 @@ typedef struct simpleProtoTrafficInfo {
 /* *********************** */
 
 typedef struct usageCounter {
-  TrafficCounter value;
-  HostSerial peersSerials[MAX_NUM_CONTACTED_PEERS]; /* host serial */
+    TrafficCounter value;
+    HostSerial peersSerials[MAX_NUM_CONTACTED_PEERS]; /* host serial */
 } UsageCounter;
 
 /* *********************** */
@@ -326,9 +333,9 @@ typedef struct trafficDistribution {
 } TrafficDistribution; 
 
 typedef struct portUsage {
-  u_short        clientUses, serverUses;
-  HostSerial     clientUsesLastPeer, serverUsesLastPeer;
-  TrafficCounter clientTraffic, serverTraffic;
+    u_short        clientUses, serverUses;
+    HostSerial     clientUsesLastPeer, serverUsesLastPeer;
+    TrafficCounter clientTraffic, serverTraffic;
 } PortUsage;
 
 typedef struct virtualHostList {
@@ -513,7 +520,7 @@ typedef struct hostTraffic {
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */
   UnknownProto     *unknownProtoSent, *unknownProtoRcvd; /* List of MAX_NUM_UNKNOWN_PROTOS elements */
 
-  Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
+   Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */
   UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */
   UsageCounter     contactedRouters;     /* routers contacted by this host */
@@ -910,14 +917,14 @@ XML*/
 /*XMLSECTIONEND */
 
 typedef struct processInfo {
-  char marker; /* internal use only */
-  char *command, *user;
-  time_t firstSeen, lastSeen;
-  int pid;
-  TrafficCounter bytesSent, bytesRcvd;
-  /* peers that talked with this process */
-  u_int contactedIpPeersSerials[MAX_NUM_CONTACTED_PEERS];
-  u_int contactedIpPeersIdx;
+    char marker; /* internal use only */
+    char *command, *user;
+    time_t firstSeen, lastSeen;
+    int pid;
+    TrafficCounter bytesSent, bytesRcvd;
+    /* peers that talked with this process */
+    HostSerial contactedIpPeersSerials[MAX_NUM_CONTACTED_PEERS];
+    u_int contactedIpPeersIdx;
 } ProcessInfo;
 
 typedef struct processInfoList {
@@ -1656,11 +1663,6 @@ XML*/
                                      /*XMLNOTE &pthreadmutex tcpSessionsMutex mutexes"" */
     PthreadMutex purgePortsMutex;
                                      /*XMLNOTE &pthreadmutex purgePortsMutex mutexes "" */
-
- #ifdef MEMORY_DEBUG
-    PthreadMutex leaksMutex;
-                                     /*XMLNOTE &pthreadmutex leaksMutex mutexes "" */
- #endif
 
     pthread_t handleWebConnectionsThreadId;
 

@@ -48,7 +48,7 @@ static PortUsage* allocatePortUsage(void) {
 #endif
 
   ptr = (PortUsage*)calloc(1, sizeof(PortUsage));
-  ptr->clientUsesLastPeer = FLAG_NO_PEER, ptr->serverUsesLastPeer = FLAG_NO_PEER;
+  setEmptySerial(&ptr->clientUsesLastPeer), setEmptySerial(&ptr->serverUsesLastPeer);
 
   return(ptr);
 }
@@ -2039,8 +2039,8 @@ static void addLsofContactedPeers(ProcessInfo *process, HostTraffic *peerHost, i
     return;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-    if(process->contactedIpPeersSerials[i] == peerHost->hostSerial)
-      return;
+      if(cmpSerial(&process->contactedIpPeersSerials[i], &peerHost->hostSerial))
+	  return;
 
   process->contactedIpPeersSerials[process->contactedIpPeersIdx] = peerHost->hostSerial;
   process->contactedIpPeersIdx = (process->contactedIpPeersIdx+1) % MAX_NUM_CONTACTED_PEERS;

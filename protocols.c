@@ -121,7 +121,7 @@ void handleBootp(HostTraffic *srcHost,
 	      dstHost is a broadcast address
 	    */
 
-	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr, etherbuf), actualDeviceId);
+	    realDstHost = findHostByMAC(bootProto.bp_chaddr, actualDeviceId);
 	    if(realDstHost == NULL) {
 	      realDstHost = lookupHost(/* &bootProto.bp_yiaddr */ NULL, bootProto.bp_chaddr, 0, 0, actualDeviceId);
 	    } else {
@@ -458,7 +458,7 @@ void handleBootp(HostTraffic *srcHost,
 	      dstHost is a broadcast address
 	    */
 
-	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr, etherbuf), actualDeviceId);
+	    realClientHost = findHostByMAC(bootProto.bp_chaddr, actualDeviceId);
 	    if(realClientHost == NULL) {
 	      realClientHost = lookupHost(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr, 0, 0, actualDeviceId);
 	    } else {

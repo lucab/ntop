@@ -101,10 +101,15 @@ HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
 
 HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId) {
   HostTraffic *el;
-  int idx;
+  short dummyShort;
+  u_int idx = hashHost(&hostIpAddress, NULL, &dummyShort, &el, actualDeviceId);
 
-  for(el=getFirstHost(actualDeviceId);
-      el != NULL; el = getNextHost(actualDeviceId, el)) {
+  if(el != NULL)
+      return(el); /* Found */
+  else
+      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+
+  for(; el != NULL; el = el->next) {
     if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))
       return(el);
   }
@@ -114,31 +119,30 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
 
 /* ************************************ */
 
-HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId) {
-  HostTraffic *el;
-  int idx;
-
-  for(el=getFirstHost(actualDeviceId);
-      el != NULL; el = getNextHost(actualDeviceId, el)) {
-
-    if(el->hostSerial == serial)
-      return(el);
+HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
+  if(theSerial.serialType == 1) {
+      return(findHostByNumIP(theSerial.value.ipAddress, actualDeviceId));
+  } else {
+      /* MAC */
+      return(findHostByMAC(theSerial.value.ethAddress, actualDeviceId));
   }
-
-  return(NULL);
 }
 
 /* ************************************ */
 
 HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId) {
   HostTraffic *el;
-  int idx;
+  short dummyShort;
+  u_int idx = hashHost(NULL, macAddr, &dummyShort, &el, actualDeviceId);
 
-  for(el=getFirstHost(actualDeviceId);
-      el != NULL; el = getNextHost(actualDeviceId, el)) {
-    if((el->hostNumIpAddress != NULL)
-       && (!strcmp(el->ethAddressString, macAddr)))
-      return(el);
+  if(el != NULL)
+      return(el); /* Found */
+  else
+      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+
+  for(; el != NULL; el = el->next) {
+      if((el->ethAddress[0] != '\0') && (!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)))
+	  return(el);
   }
 
   return(NULL);
@@ -1721,7 +1725,7 @@ void readLsofInfo(void) {
 	myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersIdx = 0;
 
 	for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
-	  myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersSerials[floater] = FLAG_NO_PEER;
+	    setEmptySerial(&myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersSerials[floater]);
       }
 
       idx = myGlobals.numProcesses;
@@ -2106,7 +2110,7 @@ void traceEvent(int eventTraceLevel, char* file,
      *                                   those where it's parametrically off...
      */
 
-    memset(buf, 0, LEN_GENERAL_WORK_BUFFER);
+    memset(buf, 0, sizeof(buf));
 
     if(myGlobals.traceLevel == CONST_DETAIL_TRACE_LEVEL) {
         mFile = strdup(file);
@@ -2160,7 +2164,7 @@ void traceEvent(int eventTraceLevel, char* file,
                          eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
                          eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "");
 
-        vsnprintf(buf, LEN_GENERAL_WORK_BUFFER-1, format, va_ap);
+        vsnprintf(buf, sizeof(buf)-1, format, va_ap);
         printf("%s%s", buf, (format[strlen(format)-1] != '\n') ? "\n" : "");
 
         fflush(stdout);
@@ -2850,7 +2854,7 @@ void resetUsageCounter(UsageCounter *counter) {
   memset(counter, 0, sizeof(UsageCounter));
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-    counter->peersSerials[i] = FLAG_NO_PEER;
+      setEmptySerial(&counter->peersSerials[i]);
 }
 
 /* ************************************ */
@@ -2975,22 +2979,22 @@ int _incrementUsageCounter(UsageCounter *counter,
   counter->value.value++;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(counter->peersSerials[i] == FLAG_NO_PEER) {
-      counter->peersSerials[i] = theHost->hostSerial;
-      return(1);
-      break;
-    } else if(counter->peersSerials[i] == theHost->hostSerial) {
-      found = 1;
-      break;
-    }
+      if(emptySerial(&counter->peersSerials[i])) {
+	  copySerial(&counter->peersSerials[i], &theHost->hostSerial);
+	  return(1);
+	  break;
+      } else if(cmpSerial(&counter->peersSerials[i], &theHost->hostSerial)) {
+	  found = 1;
+	  break;
+      }
   }
 
   if(!found) {
     for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
-      counter->peersSerials[i] = counter->peersSerials[i+1];
+	copySerial(&counter->peersSerials[i], &counter->peersSerials[i+1]);
 
     /* Add host serial and not it's index */
-    counter->peersSerials[MAX_NUM_CONTACTED_PEERS-1] = theHost->hostSerial;
+    copySerial(&counter->peersSerials[MAX_NUM_CONTACTED_PEERS-1], &theHost->hostSerial);
     return(1); /* New entry added */
   }
 
@@ -3449,6 +3453,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
 /* ************************************************ */
 
+#ifndef MEMORY_DEBUG
 #undef gdbm_firstkey
 #undef gdbm_nextkey
 #undef gdbm_fetch
@@ -3569,6 +3574,7 @@ int ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r) {
 
   return(rc);
 }
+#endif /* MEMORY_DEBUG */
 
 /* ******************************************* */
 
@@ -3585,14 +3591,10 @@ void handleWhiteBlackListAddresses(char* addresses,
       return;
   }
 
-
-  handleAddressLists(addresses,
-                     theNetworks,
-                     numNets,
-                     outAddresses,
+  handleAddressLists(addresses, theNetworks,
+                     numNets, outAddresses,
                      outAddressesLen,
-                     CONST_HANDLEADDRESSLISTS_NETFLOW);
-
+		     CONST_HANDLEADDRESSLISTS_NETFLOW);
 }
 
 /* ****************************** */
@@ -3631,7 +3633,6 @@ unsigned short isOKtoSave(u_int32_t addr,
 
   return(0 /* SAVE */);
 }
-
 
 #ifndef HAVE_PCAP_OPEN_DEAD
 
@@ -3820,3 +3821,26 @@ void readASs(FILE *fd) {
   traceEvent(CONST_TRACE_INFO, "Read %d ASs [Used %d KB of memory]", myGlobals.asCount, myGlobals.asMem/1024);
 }
 
+/* ********************************** */
+
+int emptySerial(HostSerial *a) {
+    return(a->serialType == 0);
+}
+
+/* ********************************** */
+
+int cmpSerial(HostSerial *a, HostSerial *b) {
+    return(!memcmp(a, b, sizeof(HostSerial)));
+}
+
+/* ********************************** */
+
+int copySerial(HostSerial *a, HostSerial *b) {
+    return(!memcpy(a, b, sizeof(HostSerial)));
+}
+
+/* ********************************** */
+
+void setEmptySerial(HostSerial *a) {
+    memset(a, 0, sizeof(HostSerial));
+}

@@ -60,6 +60,10 @@ extern int optind;
 extern int opterr;
 extern int optopt;
 #endif /* HAVE_GETOPT_H */
+extern int emptySerial(HostSerial *a);
+extern int cmpSerial(HostSerial *a, HostSerial *b);
+int copySerial(HostSerial *a, HostSerial *b);
+void setEmptySerial(HostSerial *a);
 
 /****** function declarations ***** */
 
@@ -112,6 +116,8 @@ extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
 extern char* formatPkts(Counter pktNr);
 
 /* hash.c */
+extern u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
+		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
@@ -158,13 +164,12 @@ extern void*          ntop_calloc(unsigned int c, unsigned int sz, char* file, i
 extern void*          ntop_realloc(void* ptr, unsigned int sz, char* file, int line);
 extern char*          ntop_strdup(char *str, char* file, int line);
 extern void           ntop_free(void **ptr, char* file, int line);
-extern datum          ntop_gdbm_firstkey(GDBM_FILE g, char* file, int line);
-extern datum          ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* file, int line);
-extern datum          ntop_gdbm_fetch(GDBM_FILE g, datum d, char* file, int line);
-
-#else
+extern datum          ntop_gdbm_firstkey(GDBM_FILE g, char* theFile, int theLine);
+extern datum          ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* theFile, int theLine);
+extern datum          ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine);
+#else /* MEMORY_DEBUG */
 extern int   ntop_gdbm_delete(GDBM_FILE g, datum d);
-extern datum ntop_gdbm_firstkey(GDBM_FILE g);
+extern datum ntop_gdbm_firstkey(GDBM_FILE g);;
 extern datum ntop_gdbm_nextkey(GDBM_FILE g, datum d);
 extern datum ntop_gdbm_fetch(GDBM_FILE g, datum d);
 extern int   ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r);
@@ -632,7 +637,7 @@ int getdomainname(char *name, size_t len);
 #define theDomainHasBeenComputed(a) FD_ISSET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &(a->flags))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(FLAG_SUBNET_LOCALHOST, &(a->flags)))
 #define privateIPAddress(a)         ((a != NULL) && FD_ISSET(FLAG_PRIVATE_IP_ADDRESS, &(a->flags)))
-#define broadcastHost(a)            ((a != NULL) && ((a->hostSerial == myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))))
+#define broadcastHost(a)            ((a != NULL) && (cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))))
 #define multicastHost(a)            ((a != NULL) && FD_ISSET(FLAG_MULTICAST_HOST, &(a->flags)))
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(FLAG_GATEWAY_HOST, &(a->flags)))
 #define nameServerHost(a)           ((a != NULL) && FD_ISSET(FLAG_NAME_SERVER_HOST, &(a->flags)))

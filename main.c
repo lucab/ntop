@@ -778,15 +778,15 @@ static int parseOptions(int argc, char* argv []) {
 
     if(strcmp(pw->pw_passwd, "x") == 0) {
 #ifdef HAVE_SHADOW_H
-      /* Use shadow passwords */
+	/* Use shadow passwords */
       struct spwd *spw;
-
+      
       spw = getspnam("root");
       if(spw == NULL) {
-	traceEvent(CONST_TRACE_INFO, "Unable to read shadow passwords");
-	exit(-1);
+	  traceEvent(CONST_TRACE_INFO, "Unable to read shadow passwords. Become root first and start ntop again");
+	  exit(-1);
       } else
-	correct = spw->sp_pwdp;
+	  correct = spw->sp_pwdp;
 #else
       traceEvent(CONST_TRACE_ERROR, "Sorry: I cannot change user as your system uses and unsupported password storage mechanism.");
       traceEvent(CONST_TRACE_ERROR, "Please restart ntop with root capabilities");
@@ -1112,10 +1112,6 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef WIN32
-  while(1) {
-    pause();
-  }
-#else
   while(!myGlobals.endNtop) {
     HEARTBEAT(0, "main(), sleep(3000)...", NULL);
     sleep(10);

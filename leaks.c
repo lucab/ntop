@@ -23,6 +23,7 @@
 
 #include "ntop.h"
 
+/* #define USE_GC */
 
 #ifdef MEMORY_DEBUG 
 
@@ -45,6 +46,10 @@ typedef struct memoryBlock {
 static MemoryBlock *theRoot = NULL;
 static char tmpStr[255];
 static int traceAllocs = 0;
+#ifdef MEMORY_DEBUG
+static PthreadMutex leaksMutex;
+#endif
+
 
 unsigned int PrintMemoryBlocks(); /* Forward declaration */
 
@@ -54,14 +59,14 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
   MemoryBlock *tmpBlock;
 
 #if defined(CFG_MULTITHREADED)
-  if(lockMutex) accessMutex(&myGlobals.leaksMutex, "myMalloc");
+  if(lockMutex) accessMutex(&leaksMutex, "myMalloc");
 #endif
 
   tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
 
   if(tmpBlock == NULL) {
 #if defined(CFG_MULTITHREADED)
-    if(lockMutex) releaseMutex(&myGlobals.leaksMutex);
+    if(lockMutex) releaseMutex(&leaksMutex);
 #endif
     traceEvent(CONST_TRACE_FATALERROR, "malloc (not enough memory): %s, %d\n",  theFile, theLine);
     exit(-1);
@@ -81,7 +86,7 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
 #if defined(CFG_MULTITHREADED)
-  if(lockMutex) releaseMutex(&myGlobals.leaksMutex);
+  if(lockMutex) releaseMutex(&leaksMutex);
 #endif
 }
 
@@ -114,7 +119,7 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
   MemoryBlock *theScan, *lastPtr, *theNewPtr;
   
 #if defined(CFG_MULTITHREADED)
-  accessMutex(&myGlobals.leaksMutex, "myRealloc");
+  accessMutex(&leaksMutex, "myRealloc");
 #endif
 
   theScan = theRoot;
@@ -128,7 +133,7 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
     traceEvent(CONST_TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d\n", 
 	       thePtr, theFile, theLine);
 #if defined(CFG_MULTITHREADED)
-    releaseMutex(&myGlobals.leaksMutex);
+    releaseMutex(&leaksMutex);
 #endif
     return(NULL);
   } else {    
@@ -149,7 +154,7 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
     free(theScan);     
 
 #if defined(CFG_MULTITHREADED)
-    releaseMutex(&myGlobals.leaksMutex);
+    releaseMutex(&leaksMutex);
 #endif
 
     return(theNewPtr);
@@ -162,7 +167,7 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr;
   
 #if defined(CFG_MULTITHREADED)
-  accessMutex(&myGlobals.leaksMutex, "myFree");
+  accessMutex(&leaksMutex, "myFree");
 #endif
 
   theScan = theRoot;
@@ -176,7 +181,7 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
     traceEvent(CONST_TRACE_WARNING, "Free error (Ptr %p NOT allocated): %s, %d\n", 
 	       *thePtr, theFile, theLine);
 #if defined(CFG_MULTITHREADED)
-    releaseMutex(&myGlobals.leaksMutex);
+    releaseMutex(&leaksMutex);
 #endif
     return;
   } else {
@@ -197,7 +202,7 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
   }
 
 #if defined(CFG_MULTITHREADED)
-  releaseMutex(&myGlobals.leaksMutex);
+  releaseMutex(&leaksMutex);
 #endif
 }
 
@@ -355,7 +360,7 @@ void initLeaks(void) {
   myGlobals.allocatedMemory = 0;  
 
 #ifdef CFG_MULTITHREADED
-  createMutex(&myGlobals.leaksMutex);
+  createMutex(&leaksMutex);
 #endif
 }
 
@@ -364,7 +369,7 @@ void initLeaks(void) {
 void termLeaks(void) {
   PrintMemoryBlocks();
 #ifdef CFG_MULTITHREADED
-  deleteMutex(&myGlobals.leaksMutex);
+  deleteMutex(&leaksMutex);
 #endif
 }
 
@@ -468,6 +473,7 @@ datum ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine) {
 /* ****************************************** */
 
 #undef malloc /* just to be safe */
+
 void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   void *thePtr;
   
@@ -481,7 +487,11 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   }
 #endif
 
+#ifndef USE_GC
   thePtr = malloc(sz);
+#else
+  thePtr = GC_malloc_atomic(sz);
+#endif
 
   if(thePtr == NULL) {
     traceEvent(CONST_TRACE_FATALERROR, "malloc(%d) @ %s:%d returned NULL [no more memory?]",
@@ -513,7 +523,11 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
   }
 #endif
   
+#ifndef USE_GC
   thePtr = calloc(c, sz);
+#else
+  thePtr = GC_malloc_atomic(c*sz);
+#endif
 
   if(thePtr == NULL) {
     traceEvent(CONST_TRACE_FATALERROR, 
@@ -545,7 +559,11 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
   }
 #endif
   
+#ifndef USE_GC
   thePtr = realloc(ptr, sz);
+#else
+  thePtr = GC_realloc(ptr, sz);
+#endif
 
   if(thePtr == NULL) {
     traceEvent(CONST_TRACE_FATALERROR, 
@@ -572,7 +590,9 @@ void ntop_safefree(void **ptr, char* file, int line) {
     traceEvent(CONST_TRACE_WARNING, "free of NULL pointer @ %s:%d", 
 	       file, line);
   } else {
-    free(*ptr);
+#ifndef USE_GC
+      free(*ptr);
+#endif
     *ptr = NULL;
   }
 }
@@ -588,7 +608,11 @@ char* ntop_safestrdup(char *ptr, char* file, int line) {
     char* theOut;
     int len = strlen(ptr);
     
-    theOut = (char*)malloc((len+1)*sizeof(char));
+#ifndef USE_GC
+    theOut = (char*)malloc_atomic((len+1)*sizeof(char));
+#else
+    theOut = (char*)GC_malloc_atomic((len+1)*sizeof(char));
+#endif
     if(len > 0) strncpy(theOut, ptr, len);
     theOut[len] = '\0';
     
