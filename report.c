@@ -296,7 +296,7 @@ void printTrafficStatistics(void) {
 
     sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
     if(snprintf(buf, sizeof(buf),
-                "For device: '%s' (current reporting device)",
+                "Device '%s' (current reporting device)",
                 myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferTooShort();
     printHTMLheader(buf, 0);
@@ -731,9 +731,6 @@ void printTrafficStatistics(void) {
       sendString(buf);
     }
 
-    sendString("</TABLE>"TABLE_OFF"</TR>\n");
-  }
-
   /* ********************* */
 
 #ifndef EMBEDDED
@@ -755,6 +752,9 @@ void printTrafficStatistics(void) {
 #endif
 
   /* ********************* */
+    sendString("</TABLE>"TABLE_OFF"</TR>\n");
+  }
+
 
   sendString("</TABLE></CENTER>\n");
 }

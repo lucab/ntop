@@ -337,7 +337,7 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
   int skipSRC=0, skipDST=0;
 
   numPkts  = ntohl(record->dPkts);
-  len      =(Counter)ntohl(record->dOctets);
+  len      = (Counter)ntohl(record->dOctets);
 
   myGlobals.numNetFlowsProcessed++;
 
@@ -346,11 +346,13 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
     myGlobals.numBadFlowPkts++;
     return(0);
   }
+
   /* Bad flow(zero length) */
   if(len == 0) {
     myGlobals.numBadFlowBytes++;
     return(0);
   }
+
   /* Bad flow(more packets than bytes) */
   if(numPkts > len) {
     myGlobals.numBadFlowReality++;
@@ -617,7 +619,6 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
   case 6: /* TCP */
     myGlobals.device[actualDeviceId].tcpBytes.value += len;
     allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     updateInterfacePorts(actualDeviceId, sport, dport, len);
     updateUsedPorts(srcHost, dstHost, sport, dport, len);
 
@@ -2086,7 +2087,11 @@ static PluginInfo netflowPluginInfo[] = {
     "3.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
-    0, /* Active by default */
+#ifdef EMBEDED
+    1, /* Active by default */
+#else
+    0, /* NOT active by default */
+#endif /* EMBEDDED */
     1, /* Inactive setup */
     initNetFlowFunct, /* InitFunc   */
     termNetflowFunct, /* TermFunc   */

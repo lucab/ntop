@@ -1969,7 +1969,6 @@ void processPacket(u_char *_deviceId,
 
   updateDevicePacketStats(length, actualDeviceId);
 
-
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetPkts, 1);
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetBytes, h->len);
 

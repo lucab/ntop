@@ -1577,7 +1577,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHost, actualDeviceId);
       incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHost, actualDeviceId);
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.establishedTCPConn, 1);
-      incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     } else if((addedNewEntry == 0)
 	      && ((theSession->sessionState == FLAG_STATE_SYN) || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
 	      && (!(tp->th_flags & TH_RST))) {
@@ -1618,8 +1617,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.establishedTCPConn, 1);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.synPkts, 1);
       }
-
-      incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     }
 
 

@@ -512,7 +512,7 @@ typedef struct nonIpProtoTrafficInfo {
 typedef struct hostTraffic {
   u_short          magic;
   u_int            hostTrafficBucket; /* Index in the **hash_hostTraffic list */
-  u_int            originalHostTrafficBucket; /* REMOVE */
+  u_int            originalHostTrafficBucket; /* Debug */
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;
@@ -525,7 +525,6 @@ typedef struct hostTraffic {
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
   char             hostNumIpAddress[17], *fullDomainName;
   char             *dotDomainName, hostSymIpAddress[MAX_LEN_SYM_HOST_NAME], *fingerprint;
-  u_short          dotDomainNameIsFallback;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
 
@@ -552,7 +551,6 @@ typedef struct hostTraffic {
   unsigned short   actBandwidthUsage;
   TrafficDistribution *trafficDistribution;
   u_int32_t        numHostSessions;
-
 
   /* Routing */
   RoutingCounter   *routedTraffic;
@@ -688,7 +686,6 @@ typedef struct ipSession {
 typedef struct ntopInterface {
   char *name;                    /* unique interface name */
   char *humanFriendlyName;       /* Human friendly name of the interface (needed under WinNT and above) */
-  int flags;                     /* the status of the interface as viewed by ntop */
 
   u_int32_t addr;                /* Internet address (four bytes notation) */
   char *ipdot;                   /* IP address (dot notation) */
@@ -714,9 +711,7 @@ typedef struct ntopInterface {
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */
   int datalink;                  /* data-link encapsulation type (see DLT_* in net/bph.h) */
-
   char *filter;                  /* user defined filter expression (if any) */
-
   int fd;                        /* unique identifier (Unix file descriptor) */
 
   /*
@@ -728,6 +723,7 @@ typedef struct ntopInterface {
   TrafficCounter broadcastPkts;  /* # of broadcast pkts captured by the application */
   TrafficCounter multicastPkts;  /* # of multicast pkts captured by the application */
   TrafficCounter ipPkts;         /* # of IP pkts captured by the application */
+
   /*
    * The bytes section
    */
@@ -790,8 +786,6 @@ typedef struct ntopInterface {
   SimpleProtoTrafficInfo *ipProtoStats;
   SecurityDeviceProbes securityPkts;
 
-  TrafficCounter numEstablishedTCPConnections; /* = # really established connections */
-
 #ifdef CFG_MULTITHREADED
   pthread_t pcapDispatchThreadId;
 #endif
@@ -809,7 +803,6 @@ typedef struct ntopInterface {
   u_short numTcpSessions, maxNumTcpSessions;
   TrafficEntry** ipTrafficMatrix; /* Subnet traffic Matrix */
   struct hostTraffic** ipTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
-  fd_set ipTrafficMatrixPromiscHosts;
 
   /* ************************** */
 

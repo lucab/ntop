@@ -275,7 +275,6 @@ static int readHTTPheader(char* theRequestedURL,
 #ifdef DEBUG
 	    traceEvent(CONST_TRACE_INFO, "DEBUG: Too short request line.");
 #endif
-
 	  } else if(strncmp(&lineStr[idxChar-9], " HTTP/", 6) != 0) {
 	    errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef DEBUG
@@ -288,7 +287,6 @@ static int readHTTPheader(char* theRequestedURL,
 #ifdef DEBUG
 	    traceEvent(CONST_TRACE_INFO, "DEBUG: Unsupported HTTP version.");
 #endif
-
 	  } else {
 
             lineStr[idxChar-9] = '\0'; idxChar -= 9; tmpStr = NULL;
@@ -297,11 +295,11 @@ static int readHTTPheader(char* theRequestedURL,
 	      tmpStr = &lineStr[4];
 	    } else if((idxChar >= 4) && (strncmp(lineStr, "POST ", 5) == 0)) {
 	      tmpStr = &lineStr[5];
-/*
-  HEAD method could be supported with some litle modifications...
-  } else if((idxChar >= 4) && (strncmp(lineStr, "HEAD ", 5) == 0)) {
-  tmpStr = &lineStr[5];
-*/
+	      /*
+		HEAD method could be supported with some litle modifications...
+		} else if((idxChar >= 4) && (strncmp(lineStr, "HEAD ", 5) == 0)) {
+		tmpStr = &lineStr[5];
+	      */
 	    } else {
 	      errorCode = FLAG_HTTP_INVALID_METHOD;
 #ifdef DEBUG
@@ -347,8 +345,8 @@ static int readHTTPheader(char* theRequestedURL,
       } else {
 	lineStr[idxChar++] = aChar[0];
       }
-
     }
+
     lastChar = aChar[0];
   }
 

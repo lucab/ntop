@@ -602,7 +602,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
   if(stat(path, &buf) == 0)
     ret = getCountryIconURL(el->fullDomainName, FALSE);
   else
-    ret = getCountryIconURL(el->dotDomainName, el->dotDomainNameIsFallback);
+    ret = getCountryIconURL(el->dotDomainName, FALSE);
 
   if(ret == NULL)
     ret = "&nbsp;";
