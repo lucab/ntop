@@ -1615,6 +1615,11 @@ A. Use rrd.
 Q. Where do I get rrd?
 A. http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
 
+Q. Are there rpm's?
+A. http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub 
+(Thanks to Marco Lusini for the pointer)
+
+
 Q. What was the -S option?
 A. The -S option was the --store-mode option, or the "Persistent storage mode"
    Ntop's internal structures are basically an array of devices (network interfaces), 
