@@ -851,7 +851,7 @@ fi
 
 NTOP_APPEND_INCS([/usr/local/include])
 NTOP_APPEND_LIBS([/usr/local/lib])
-CFLAGS="-${CFLAGS} -I/usr/local/include"
+CFLAGS="${CFLAGS} -I/usr/local/include"
 CPPFLAGS="${CPPFLAGS} -I/usr/local/include"
 LDFLAGS="${LDFLAGS} -L/usr/local/include"
 

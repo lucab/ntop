@@ -4285,7 +4285,7 @@ fi
     fi
 # Finished expansion of NTOP_APPEND_LIBS()
 
-CFLAGS="-${CFLAGS} -I/usr/local/include"
+CFLAGS="${CFLAGS} -I/usr/local/include"
 CPPFLAGS="${CPPFLAGS} -I/usr/local/include"
 LDFLAGS="${LDFLAGS} -L/usr/local/include"
 
