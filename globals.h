@@ -184,10 +184,12 @@ typedef struct ntopGlobals {
   char *rFileName;                   /* 'f' */
   u_char trackOnlyLocalHosts;        /* 'g' */
   char *devices;                     /* 'i' */
-  short dontTrustMACaddr;            /* 'o' */
   int filterExpressionInExtraFrame;  /* 'k' */
   char *pcapLog;                     /* 'l' */
+  char *localAddresses;              /* 'm' */
   int numericFlag;                   /* 'n' */
+  short dontTrustMACaddr;            /* 'o' */
+  char *protoSpecs;                  /* 'p' */
   u_char enableSuspiciousPacketDump; /* 'q' */
   int refreshRate;                   /* 'r' */
   u_char disablePromiscuousMode;     /* 's' */
@@ -201,6 +203,7 @@ typedef struct ntopGlobals {
   char domainName[MAXHOSTNAMELEN];   /* 'D' */
   int isLsofPresent;                 /* 'E' */
   u_char enableExternalTools;        /* 'E' */
+  char *flowSpecs;                   /* 'F' */
 
 #ifndef WIN32
   u_short debugMode;                 /* 'K' */
@@ -413,15 +416,11 @@ typedef struct ntopGlobals {
    */
   int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
   
-  char *localAddresses, *protoSpecs;
-  
 #ifndef WIN32
   int userId, groupId;
   char * effectiveUserName;
 #endif
   
-  char *flowSpecs;  
-
 #ifndef MICRO_NTOP
   int sortSendMode;
   

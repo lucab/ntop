@@ -382,7 +382,6 @@ void initCounters(void) {
   myGlobals.broadcastEntry->hostSerial = 0;
 
   myGlobals.broadcastEntryIdx = 0;
-  myGlobals.serialCounter     = 2 /* 0 is reserved for broadcast/1 for otherHosts */;
 
   allocateOtherHosts();
   myGlobals.nextSessionTimeoutScan = time(NULL)+PURGE_HOSTS_DELAY;
