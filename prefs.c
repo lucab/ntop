@@ -1285,7 +1285,7 @@ void initUserPrefs (UserPref *pref)
   pref->mapperURL = DEFAULT_NTOP_MAPPER_URL;
 #ifdef HAVE_OPENSSL
   pref->sslAddr = DEFAULT_NTOP_WEB_ADDR;
-  pref->sslPort = DEFAULT_NTOP_WEB_PORT;
+  pref->sslPort = DEFAULT_NTOP_WEB_PORT+1;
 #endif
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
    pref->useSSLwatchdog = 0;
