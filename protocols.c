@@ -597,14 +597,11 @@ u_int16_t processDNSPacket(const u_char *packetData,
     /* Symbolic => Numeric */
 
     if(hostPtr.addrList[i] != 0) {
-      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
       hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
       key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
       key_data.dsize = strlen(key_data.dptr)+1;
       data_data.dptr = hostPtr.queryName;
       data_data.dsize = queryNameLength+1;
-      for(i=0; i<strlen(data_data.dptr); i++)
-	data_data.dptr[i] = tolower(data_data.dptr[i]);
 
 #ifdef DNS_SNIFF_DEBUG
       traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
@@ -612,6 +609,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
 #ifdef MULTITHREADED
       accessMutex(&gdbmMutex, "processDNSPacket");
 #endif
+      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
       gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
 #ifdef MULTITHREADED
       releaseMutex(&gdbmMutex);
