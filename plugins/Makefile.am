@@ -43,21 +43,27 @@ INCLUDES = -I.. @INCS@
 # The meat for ntop
 #
 noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so \
-                  nfsPlugin.so  sflowPlugin.so
+                  netflowPlugin.so  nfsPlugin.so  rrdPlugin.so sflowPlugin.so
 #		  rmonPlugin.so wapPlugin.so
 
 lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
-                  libnfsPlugin.la  libsflowPlugin.la
+                  libnetflowPlugin.la  libnfsPlugin.la  librrdPlugin.la libsflowPlugin.la
 #		  librmonPlugin.la libwapPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+
+librrdPlugin_la_SOURCES = rrdPlugin.c
+librrdPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
 liblastSeenPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+
+libnetflowPlugin_la_SOURCES = netflowPlugin.c
+libnetflowPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 libnfsPlugin_la_SOURCES = nfsPlugin.c
 libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
@@ -81,6 +87,12 @@ libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
 
+.libs/librrdPlugin.so@SO_VERSION_PATCH@:
+	cc -bundle -flat_namespace -undefined suppress -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
+
+rrdPlugin.so: .libs/librrdPlugin.so@SO_VERSION_PATCH@
+	@ln -s .libs/librrdPlugin.so rrdPlugin.so
+
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	cc -bundle -flat_namespace -undefined suppress -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
 
@@ -95,6 +107,12 @@ lastSeenPlugin.so: .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 
 .libs/libnfsPlugin.so@SO_VERSION_PATCH@:
 	cc -bundle -flat_namespace -undefined suppress -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
+
+netflowPlugin.so: .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
+	@ln -s .libs/libnetflowPlugin.so netflowPlugin.so
+
+.libs/libnetflowPlugin.so@SO_VERSION_PATCH@:
+	cc -bundle -flat_namespace -undefined suppress -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ netflowPlugin.o
 
 nfsPlugin.so: .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
