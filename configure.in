@@ -2082,7 +2082,6 @@ AC_CHECK_HEADERS([tcpd.h])
 dnl> IPv6
 case "$ac_disable_ipv6" in
         yes|''|autodetect)
-                AC_DEFINE_UNQUOTED(INET6,  0, [Enable/disable ipv6 support])
                 ;;
         no)
 		AC_DEFINE_UNQUOTED(INET6,  1, [Enable/disable ipv6 support])
