@@ -16,6 +16,8 @@
   ===
 
 Section 1 - All Platforms	and Section 2 - Platform Specific
+          (some general stuff on networking and using ntop in a switched network
+           is at the end of Section 2).
 
 Section 3 - HowTo Ask For Help and GDB ultraMini-tutorial
 
@@ -1347,8 +1349,13 @@ A. You don't.
    Most people doing a manual build of the tools see ".linux" and use it, vs. the 
    more generic sounding ".gcc", but ntop expects the ".gcc" build.
 
-   For your own personal use, it shouldn't matter - as long as the .so libraries for 
-   libpng are installed at least once. 
+   The problem is that ldd (the loader) prefers the .so (shared) version and if it
+   finds it, it will link to it, even if a .a version exists.  So if you make the
+   static .a, but have the .so, that (.so) is what ntop will use.
+
+   For your own personal use, it shouldn't matter - there is NOTHING wrong with the
+   shared libraries, as long as the same version of the .so libraries for libpng are 
+   installed on BOTH the build and execution machine(s). 
 
    This could happen either via a distribution supplied package (but if the package 
    was for version 1.0.x this WILL cause version problems).
@@ -1371,12 +1378,12 @@ Running
 Q. Segmentation fault on startup while inititializing GDBM (Slackware)
 A. This occurs if one's crypt(3) does not support the standard UNIX crypt
    (and just returns NULL)... Change CRYPT_SALT in ntop.h from 99 to $1$99 
-   thereby forcing md5 crypting..   
+   thereby forcing md5 crypting..    (reported in 1.3 era)
 
 Q. ntop isn't able to capture data.
 A. On some (old) Linux distributions, the libpcap package is broken. Please remove it, 
    get the source, build libpcap and install it (both the library and the include files).
-   Then rebuild ntop from scratch.  
+   Then rebuild ntop from scratch.  (reported in 1.3 era)
 
 
 Q. Bad things - I see the following messages: 
@@ -1407,6 +1414,10 @@ A. You have a version problem with libpng.
    the common library locations. You can do this with buildAll.sh, just navigate back down 
    to the libpng-1.2.1 directory first.  
 
+   4. If you are building ntop on one machine and running on another, they may have
+   different libpng.so versions.  Even if you think you are using the static linked
+   version (buildAll.sh), be careful - see the entry (above) on "make install" for libpng.
+
 
 Win32 (MinGw)
 =-=-=-=-=-=-=
@@ -1415,7 +1426,7 @@ Compiling
 ---------
 
 Q. When I type 'make' it complains about a makefile error.
-A: Remember to use -f Makefile.MinGW or whatever is appropriate - seeBUILD-MinGW.txt.
+A: Remember to use -f Makefile.MinGW or whatever is appropriate - see BUILD-MinGW.txt.
 
 Q. Where can I find GDBM for Windows?
 A. GDBM for windows can be found at http://www.roth.net/libs/gdbm/  
@@ -1428,9 +1439,9 @@ A. Be sure that your PATH setting in the DOS command box of the Mingw bin direct
    ends with a backslash.
     This is OK: 
         set path=C:\Mingw\bin\;%path% 
-    This is wrong: 
+    This is wrong:
         set path=C:\Mingw\bin;%path% 
-		                     ^
+                             ^
 
 
 Running
@@ -1472,6 +1483,7 @@ A: The test in the code seems wrong, but we didn't have time, nor
    #endif
 
    should probably be
+
    #if !defined(HAVE_NETDB_H)
    extern int h_errno; /* netdb.h */
    #endif
@@ -1682,7 +1694,141 @@ A. Read below.
    PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
    +-------------------------------------------------------------------------+
    
+
    
+Networking...
+=============
+
+Q. What is Ethernet and TCP/IP and how do they differ?
+A. Both are protocols - that is the definition of how
+   to interpret bits on wires (or in packets) into
+   meaningful conversations.
+
+   Ethernet is the lower level, wire (or wireless) protocol,
+   concerned with moving the physical bits of data.
+
+   TCP/IP is the higer level protocol, which explains
+   how to interpret the block of bits (frame).
+
+   TCP/IP uses a familiar 32 bit "IP" address, e.g.
+   192.168.0.1.
+
+   Ethernet uses a less familiar, 48 bit unique to the NIC
+   (some times called "burned in") address, e.g. 
+   00:40:05:DE:AD:00.  This is called the MAC (Media
+   Access Control) address.
+
+   FYI: The offical IEEE MAC address lookup is at 
+       http://standards.ieee.org/regauth/oui/index.shtml
+   (Look up the first six digits, separated by -s, e.g. 00-40-05)
+
+
+Q. OK, but how is stuff sent from my computer to, say, Yahoo!?
+A. First off, your computer does a lookup - using a service
+   called DNS (Domain Name Service) to convert www.yahoo.com
+   to a numeric value, such as 66.218.71.80.
+
+   Then it builds a collection of characters that says send
+   this data from me, 192.168.0.1 to Yahoo at 66.218.71.80.
+   This is called a packet.  That gets wrapped in an Ethernet
+   frame (addressed from 00:40:05:DE:AD:00 to the MAC address
+   of the local gateway router, 0:d0:9e:6:38:00 and squirts it
+   out the router.
+
+   Packets are forwarded step by step along a path from you
+   to Yahoo by computers called routers.  This is done based 
+   on the 32 bit IP address and the router's knowledge of the
+   network.
+
+   Each router sees a Ethernet frame addressed to it (by
+   MAC address), checks the TCP/IP address to figure out 
+   where to send it next, re-wraps the TCP/IP packet in a new
+   Ethernet frame (with the from MAC as it's own and the to
+   MAC as the next hop).
+
+   This happens until the TCP/IP packet reaches the final
+   segment (the last router).  Once it reaches a router that
+   knows it has addresses 66.218.71.0-66.218.71.255 on one
+   of it's interface, the routing stops using the TCP/IP
+   address.
+
+   The last hop is done (like each intermediate hop - at the 
+   lowest level) based on the MAC address!  Specifically, the 
+   last router does an "ARP" (Address Resolution Protocol") query,
+   to find out "Who Has" address 66.218.71.80.  The NIC responds 
+   with it's MAC address:
+
+      arp who-has www.yahoo.com tell router
+      arp reply www.yahoo.com is-at 0:d0:9e:6:38:00
+
+   And the packet is routed to that address.
+
+   Alright, that's a bit simplified, but see Douglas Comer,
+   "Internetworking with TCP/IP, volume I", page 25 and 73ff.
+
+Q. So what's a hub vs. a Switch
+A. A hub is a device that links a bunch of computers together
+   at the wire (Ethernet) level.  Logically, Ethernet is a bus,
+   that is everybody sees all the traffic, just like cars crossing
+   under a highway bridge.   Physically, Ethernet is wired like
+   a star - with all the wires coming back to a central "hub".
+   The hub is just the device that makes the electric star look
+   like a shared bus.
+
+   Switches and Hubs operate at the Ethernet level, not TCP/IP.
+
+A. A switch is a smart hub.
+
+   Switches improve performance by creating a virtual Ethernet
+   bus for the duration of the packet that joins JUST the source
+   and destination ports.
+
+   A switch operates via an internal table of MAC addresses.
+   It learns (or is programmed) that 0:d0:9e:6:38:00 is on
+   port 1, while 00:40:05:DE:AD:00 is on port 3.
+
+   A packet coming in port 1, destined for 00:40:05:DE:AD:00
+   is sent out ONLY port 3.
+
+   If the switch doesn't know (or the packet is a broadcast),
+   it gets sent out all ports.
+
+   This doesn't make for MORE bandwidth, but it does use it
+   more efficiently.  That is in addition to the session between 
+   ports 1 and 3 at 100Mbps, a second, simultaneous 100Mbps 
+   session can occur between ports 2 and 4.
+
+Q. How do I use ntop in a switched network?
+A. First off, you need to be or have the support of
+   your network administrator.  (Yes, you can do something
+   called "ARP poisoning" to - maybe - get the switch to send
+   you all the traffic, but that's beyond this FAQ... STFW)
+
+   Many switches (although not the USD$50 cheap "workgroup" units)
+   have a special port or mode, where by all the traffic for the
+   entire network gets copied out that port, in addition to the
+   normal switch action.
+
+   When you invoke the monitoring mode (called span, mirror, monitor,
+   analysis, etc.), you are forcing the entire switch bandwidth out one 
+   port.  This may exceed the bandwidth of the port.  100Mbps+100Mbps 
+   >> 100Mbps!
+
+   Traffic that is being sent to the monitoring port in excess of the 
+   capacity of that port is usually dropped.  It should NOT slow down
+   the switch on other ports.  
+
+   Some switches have some buffering capability and it *may* be able to 
+   keep up with an occasional burst of traffic, as long as the average 
+   is below the port capacity and the buffer isn't exceeded.
+
+   See, for example, http://www.cisco.com/warp/public/473/41.html#archXL.
+
+   One list of switch manufacturers is the document is titled "REFERENCE: 
+   Configuring a Switch to Monitor All Traffic" from Elron Software. (The 
+   URL is long, do a Google search for "site:elronsoftware.com wi6038").
+
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -1743,8 +1889,6 @@ BEFORE POSTING:
 Your specific problem HAS been discussed recently. 
 
 2. Please review the ntop community FAQs at http://snapshot.ntop.org. 
-Your problem IS the subject of an FAQ entry. 
-Your problem IS NOW the subject of an FAQ entry. 
 
 POSTING: 
 
