@@ -227,7 +227,7 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
   fprintf(fp, "    [-A                                                   Ask admin user password and exit\n");
-  fprintf(fp, "    [                 --set-admin-password <pass>]        Set password for the admin user to <pass>\n");
+  fprintf(fp, "    [                 --set-admin-password=<pass>]        Set password for the admin user to <pass>\n");
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 Packet filter expression, like tcpdump\n");
   fprintf(fp, "    [-D <name>      | --domain <name>]                    Internet domain name\n");
 
