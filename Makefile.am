@@ -55,11 +55,11 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = . @PLUGINS@ @INTOP@
 
-DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
-              MANIFESTO NEWS PORTING  \
-              SUPPORT_NTOP.txt THANKS \
-              ntop.8 ntop.txt ntop.html \
-              ntop-cert.pem
+DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
+               MANIFESTO NEWS PORTING  \
+               SUPPORT_NTOP.txt THANKS \
+               ntop.8 ntop.txt ntop.html \
+               ntop-cert.pem
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png html/*.css html/statsicons \
            html/statsicons/flags html/statsicons/os \

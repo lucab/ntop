@@ -231,11 +231,15 @@ echo "0. aclocal.m4 ...... done"
 # 1. prepare the package to use libtool
 #
 
+echo "  Ignore a warning to update your 'aclocal.m4' by running aclocal, it was done above"
+
 if [ -f /usr/bin/glibtoolize ]; then
 glibtoolize --copy --force
 else
 libtoolize --copy --force
 fi
+
+echo "1a. libtoolize ... done"
 
 if [ ! -f libtool.m4.in ]; then
   if [ -f /usr/share/aclocal/libtool.m4 ]; then
@@ -243,7 +247,10 @@ if [ ! -f libtool.m4.in ]; then
   else
     cp /usr/local/share/aclocal/libtool.m4 libtool.m4.in
   fi
-  echo "1. libtool.m4.in ... done"
+  echo "1b. libtool.m4.in ... done"
+else
+  echo "1b. libtool.m4.in ... unnecessary, skipped"
+
 fi
 
 
@@ -270,7 +277,7 @@ echo "timestamp" > stamp-h.in
 # (optionally aclocal.m4)
 # the generated Makefile.in is compliant to GNU Makefile standard
 #
-automake --add-missing --gnu
+automake --add-missing --gnu --copy
 echo "4. Makefile.in ..... done"
 
 #

@@ -650,49 +650,49 @@ uninstall-info: uninstall-info-recursive
 .libs/libicmpPlugin.so@SO_VERSION_PATCH@:
 	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libicmpPlugin.so@SO_VERSION_PATCH@ icmpPlugin.o
 
-icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
+icmpPlugin.so$(EXEEXT): .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
 
 .libs/librrdPlugin.so@SO_VERSION_PATCH@:
 	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
 
-rrdPlugin.so: .libs/librrdPlugin.so@SO_VERSION_PATCH@
+rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/librrdPlugin.so rrdPlugin.so
 
 .libs/libpdaPlugin.so@SO_VERSION_PATCH@:
 	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
 
-pdaPlugin.so: .libs/libpdaPlugin.so@SO_VERSION_PATCH@
+pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libpdaPlugin.so pdaPlugin.so
 
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
 
-sflowPlugin.so: .libs/libsflowPlugin.so@SO_VERSION_PATCH@
+sflowPlugin.so$(EXEEXT): .libs/libsflowPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libsflowPlugin.so sflowPlugin.so
 
 .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
 	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
 
-lastSeenPlugin.so: .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
+lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/liblastSeenPlugin.so lastSeenPlugin.so
 
 .libs/libnfsPlugin.so@SO_VERSION_PATCH@:
 	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
 
-netflowPlugin.so: .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
+netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libnetflowPlugin.so netflowPlugin.so
 
 .libs/libnetflowPlugin.so@SO_VERSION_PATCH@:
 	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ netflowPlugin.o
 
-nfsPlugin.so: .libs/libnfsPlugin.so@SO_VERSION_PATCH@
+nfsPlugin.so$(EXEEXT): .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
 
 #.libs/librmonPlugin.so@SO_VERSION_PATCH@:
 #	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
 
-#rmonPlugin.so: .libs/librmonPlugin.so@SO_VERSION_PATCH@
+#rmonPlugin.so$(EXEEXT): .libs/librmonPlugin.so@SO_VERSION_PATCH@
 #	@ln -s .libs/librmonPlugin.so rmonPlugin.so
 
 install-data-local:
