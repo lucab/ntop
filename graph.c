@@ -221,7 +221,7 @@ void drawPie(short width,
   gdImageArc(im, center_x, center_y, 2*radius, 2*radius, 0, 360, black);
 #endif
 
-  drawLegend(im, width, height, num_points, labels, data, colors, black);
+  drawLegend(im, width-25, height, num_points, labels, data, colors, black);
   gdImagePng(im, filepointer);
   gdImageDestroy(im);
 }

@@ -545,7 +545,7 @@ void addDefaultProtocols(void) {
   myGlobals.WinMXIdx = handleProtocolList("WinMX",       "6699|7730|");
   myGlobals.DirectConnectIdx = handleProtocolList("DC++",    "-1|"); /* Dummy port as this is a pure P2P protocol */
   handleProtocolList("eDonkey",    "4661-4665|");
-
+  handleProtocolList("BitTorrent",    "6881-6999|6969|"); /* http://www.dessent.net/btfaq/#ports */
   handleProtocolList("Messenger", "1863|5000|5001|5190-5193|");
 }
 
