@@ -738,7 +738,7 @@ static void processIpPkt(const u_char *bp,
   } else {
     /* Lock the instance so that the next call
        to getHostInfo won't purge it */
-    srcHost->instanceInUse++;
+      /* srcHost->instanceInUse++; */
   }
 
   if(dstHost == NULL) {
@@ -748,7 +748,7 @@ static void processIpPkt(const u_char *bp,
   } else {
     /* Lock the instance so that the next call
        to getHostInfo won't purge it */
-    dstHost->instanceInUse++;
+      /* dstHost->instanceInUse++; */
   }
 
 #ifdef DEBUG
@@ -1430,7 +1430,7 @@ static void processIpPkt(const u_char *bp,
 #endif
 
   /* Unlock the instance */
-  srcHost->instanceInUse--, dstHost->instanceInUse--;
+  /* srcHost->instanceInUse--, dstHost->instanceInUse--; */
 }
 
 /* ************************************ */
@@ -1993,7 +1993,7 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
-	  srcHost->instanceInUse++;
+	    /* srcHost->instanceInUse++; */
 	}
 
 	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -2004,7 +2004,7 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
-	  dstHost->instanceInUse++;
+	    /* dstHost->instanceInUse++; */
 	}
 	memcpy((char *)&ipxPkt, (char *)p+sizeof(struct ether_header), sizeof(IPXpacket));
 
@@ -2030,7 +2030,7 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
-	  srcHost->instanceInUse++;
+	    /* srcHost->instanceInUse++; */
 	}
 
 	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -2041,7 +2041,7 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
-	  dstHost->instanceInUse++;
+	    /* dstHost->instanceInUse++; */
 	}
 
 	srcHost->otherSent += length;
@@ -2069,7 +2069,7 @@ void processPacket(u_char *_deviceId,
 	  } else {
 	    /* Lock the instance so that the next call
 	       to getHostInfo won't purge it */
-	    srcHost->instanceInUse++;
+	      /* srcHost->instanceInUse++; */
 	  }
 
 	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -2080,7 +2080,7 @@ void processPacket(u_char *_deviceId,
 	  } else {
 	    /* Lock the instance so that the next call
 	       to getHostInfo won't purge it */
-	    dstHost->instanceInUse++;
+	      /* dstHost->instanceInUse++; */
 	  }
 
 	  srcHost->ipxSent += length, dstHost->ipxRcvd += length;
@@ -2379,7 +2379,7 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
-	  srcHost->instanceInUse++;
+	    /* srcHost->instanceInUse++; */
 	}
 
 	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -2390,7 +2390,7 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  /* Lock the instance so that the next call
 	     to getHostInfo won't purge it */
-	  dstHost->instanceInUse++;
+	    /* dstHost->instanceInUse++; */
 	}
 
 	switch(eth_type) {
@@ -2460,8 +2460,10 @@ void processPacket(u_char *_deviceId,
     }
 
     /* Unlock the instances */
-    if(srcHost != NULL) srcHost->instanceInUse--;
-    if(dstHost != NULL) dstHost->instanceInUse--;
+    /* 
+       if(srcHost != NULL) srcHost->instanceInUse--;
+       if(dstHost != NULL) dstHost->instanceInUse--;
+    */
   }
 
   if(myGlobals.flowsList != NULL) /* Handle flows last */
