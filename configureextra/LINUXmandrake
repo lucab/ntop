@@ -1,0 +1,22 @@
+#!/bin/sh
+
+echo "        Setting Mandrake specific flag values"
+LDFLAGS="${LDFLAGS} -L/usr/X11R6/lib"
+CPPFLAGS="${CPPFLAGS} -lz -lm"
+
+if ! test -f /usr/X11R6/lib/libXpm.so; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "*             -lXpm not found, because the libXpm.so file does not"
+    echo "*             exist."
+    echo "*"
+    echo "*>>> Continuing, but subsequent make may fail"
+    echo "*"
+    echo "*???     1. As root, create the link:"
+    echo "*???        ln -s /usr/X11R6/lib/libXpm.so.4 /usr/X11R6/lib/libXpm.so"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    HAS_WARNING="yes"
+fi

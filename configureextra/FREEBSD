@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo "        Setting FreeBSD specific flag values"
+if test ".${LOCALEDIR}" = "."; then
+    LOCALEDIR="/usr/share/locale"
+fi
+

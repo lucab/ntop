@@ -1,0 +1,10 @@
+#!/bin/sh
+
+echo "        Setting Darwin (Mac OS X) specific flag values"
+CFLAGS="-no-cpp-precomp $CFLAGS"
+
+case "${target}" in
+   *-*-darwin5.5* )
+       DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
+   ;;
+esac

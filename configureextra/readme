@@ -1,0 +1,42 @@
+These files are used to add OS, distribution and/or release specific
+parameters, tests, etc. to ./configure
+
+Brief instructions
+
+begin with 
+
+#!/bin/sh
+
+echo "        Setting XXXXXX specific flag values"
+
+All non error/warning echo's should be indented 8 spaces for neatness...
+
+Common things to set are
+
+LDFLAGS="${LDFLAGS} -L/usr/X11R6/lib"
+CPPFLAGS="${CPPFLAGS} -lz -lm"
+
+(note that you should always use those formats so that any other settings are
+preserved).  The ${} can be first (takes effect first) or last.
+
+You can also use other shell commands, such as testing if a file exists:
+
+if ! test -f /usr/X11R6/lib/libXpm.so; then
+
+You can use case statements on the preset values target and CC to do more detailed
+version specific settings (note target is set by config.guess):
+
+case "${CC}" in
+    gcc* )
+        ...stuff...
+    ;;
+esac
+
+Finally, if you output a warning, set the flag value:
+
+HAS_WARNING="yes"
+
+You can do pretty much anything you can do in configure.
+But you can not do all the things you can do in configure.in - you 
+can NOT use autoconf macros in here.
+

@@ -1,0 +1,23 @@
+#!/bin/sh
+
+echo "        Setting RedHat 8.0 specific flag values"
+
+echo
+echo "*******************************************************************"
+echo "*"
+echo "* WARNING:    Under RedHat Linux 9.0 (and 8.0 with updated glibc"
+echo "*             rpms), there have been reported problems due to"
+echo "*             the inclusion of NPTL (new POSIX Thread Library)"
+echo "*             including mysterious crashes, broken debug, etc."
+echo "*"
+echo "*>>> Continuing, but well, y'all been warned..."
+echo "*"
+echo "*???     1. ntop 2.2.3 (cvs versions after mid Jul-2003) have all"
+echo "*???        the known fixes."
+echo "*???  or 2. Before both ./configure AND make, set the following flag:"
+echo "*???        export LD_ASSUME_KERNEL=2.4.1"
+echo "*???        (This forces the use of the old linuxthreads library)"
+echo "*"
+echo "*******************************************************************"
+echo
+HAS_WARNING="yes"
