@@ -970,7 +970,7 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
 
     if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
       /* Fix below courtesy of Matthias Kattanek <mattes@mykmk.com> */
-      traceEvent(TRACE_ERROR, "bind: port %d already in use.", sslPort);
+      traceEvent(TRACE_ERROR, "bind: port %d already in use.", myGlobals.sslPort);
       closeNwSocket(&myGlobals.sock_ssl);
       exit(-1);
     }
