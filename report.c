@@ -2239,7 +2239,7 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
     returnHTTPpageNotFound();
     return;
   } else
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
   /* ************************************ */
 

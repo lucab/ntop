@@ -2477,7 +2477,7 @@ static void handleNetflowHTTPrequest(char* url) {
   char workList[1024];
   u_int i;
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
   printHTMLheader("NetFlow", NULL, 0);
 
   sendString("<br>\n<HR>\n");

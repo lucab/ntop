@@ -192,7 +192,7 @@ static void setPluginStatus(char * status)
 /* ****************************** */
 
 static void emptyHTTPhandler(char* url) {
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
   printHTMLheader("XML Dump", NULL, 0);
   printFlagedWarning("This feature is not available as ntop<br>has not been compiled with XML support.");
   printHTMLtrailer();
@@ -356,7 +356,7 @@ static void handleXmldumpHTTPrequest(char* url) {
     return;
   }
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
   printHTMLheader("xmldump parameters", NULL, 0);
 
   sendString("<hr>\n<center>\n"

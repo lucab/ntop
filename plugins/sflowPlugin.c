@@ -1636,7 +1636,7 @@ static void handlesFlowHTTPrequest(char* url) {
   struct in_addr theDest;
   int i;
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
   printHTMLheader("sFlow Statistics", NULL, 0);
 
   sendString("<CENTER>\n<HR>\n");

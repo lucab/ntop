@@ -164,7 +164,7 @@ extern void printHTMLheader(char *title, char *htmlTitle, int headerFlags);
 #ifdef HAVE_OPENSSL
 extern char* printSSLError(int errorId);
 #endif /* HAVE_OPENSSL */
-extern void sendHTTPHeader(int mimeType, int headerFlags);
+extern void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable);
 
 /* report.c */
 extern void printBandwidthFooter(void);

@@ -273,7 +273,7 @@ static void processHTMLrequest(char* url) {
 
 static void handleLsHTTPrequest(char* url) {
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
   printHTMLheader("Last Seen Statistics", NULL, 0);
 
   if(disabled) {

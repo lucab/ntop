@@ -8165,7 +8165,7 @@ int handlePluginHTTPRequest(char* url) {
 	       (!flows->pluginStatus.pluginPtr->inactiveSetup) ) {
 		char buf[LEN_GENERAL_WORK_BUFFER], name[32];
 
-		sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+		sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 		strncpy(name, flows->pluginStatus.pluginPtr->pluginURLname, sizeof(name));
 		name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
 		if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))

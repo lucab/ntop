@@ -326,7 +326,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   struct dirent* dp;
   int numEntries = 0;
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
   snprintf(path, sizeof(path), "%s/%s", myGlobals.rrdPath, rrdPath);
 
@@ -533,7 +533,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     calfree();
 
     if(rc == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0, 1);
       sendGraphFile(fname, 0);
       unlink(fname);
     } else {
@@ -542,7 +542,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
 #endif
       
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("RRD Graph", NULL, 0);
       snprintf(path, sizeof(path), "<I>Error while building graph of the requested file. %s</I>",
 	       rrd_get_error());
@@ -554,7 +554,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     releaseMutex(&rrdMutex);
 #endif    
   } else {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("RRD Graph", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD file)</I>");
@@ -1247,7 +1247,7 @@ static void handleRRDHTTPrequest(char* url) {
     return;
   }
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
   printHTMLheader("RRD Preferences", NULL, 0);
 
   if(active == 1)

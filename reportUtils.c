@@ -7119,9 +7119,8 @@ void dumpFcFabricElementHash (FcFabricElementHash **theHash, char* label,
 
 void printFcDisplayOptions (void)
 {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("FC Host Display Options ", 0, 0);
-
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+  printHTMLheader("FC Host Display Options ", 0, 0);
 }
 
 /* ******************************************************** */

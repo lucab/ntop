@@ -333,7 +333,7 @@ static void printHtmlHostInfo(char *host _UNUSED_) {
 
 static void handlePDArequest(char* url) {
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, BITFLAG_HTTP_NO_CACHE_CONTROL | BITFLAG_HTTP_MORE_FIELDS);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, BITFLAG_HTTP_NO_CACHE_CONTROL | BITFLAG_HTTP_MORE_FIELDS, 1);
   sendString((myGlobals.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE_32 "\n" : "");
   sendString("<html>\n"
              "<head>\n");

@@ -47,7 +47,7 @@ void showUsers(void) {
     if(key_data.dptr[0] == '1') /* 1 = user */{
       if(numUsers == 0) {
 	sendString("<CENTER>\n"
-		   ""TABLE_ON"<TABLE BORDER=1>\n");
+		   ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 	sendString("<TR "DARK_BG"><TH "TH_BG">Users</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 
@@ -125,7 +125,7 @@ void addUser(char* user) {
     
     sendString("<FORM METHOD=POST ACTION=/doAddUser onsubmit=\"return CheckForm(this)\">\n");
     
-    sendString("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=5>\n");
+    sendString("<TABLE BORDER=0 "TABLE_DEFAULTS">\n");
     sendString("<TR>\n<TH ALIGN=right>User:&nbsp;</TH><TD ALIGN=left>");
     if(user != NULL) {
       decodeWebFormURL(user);
@@ -159,12 +159,11 @@ void addUser(char* user) {
 /* *******************************/
 
 void deleteUser(char* user) {
-
   if(user == NULL) {
     returnHTTPredirect(CONST_SHOW_USERS_HTML);
     return;
   } else if((strlen(user) < 2) || (user[0] != '1')) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("Delete ntop User", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning("<I>The specified username is invalid.</I>");
@@ -182,7 +181,7 @@ void deleteUser(char* user) {
     rc = gdbm_delete(myGlobals.pwFile, key_data);
 
     if(rc != 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("Delete ntop User", NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<P><HR><P>\n");
       printFlagedWarning("<B>ERROR:</B> <I>unable to delete specified user.</I>");
@@ -274,8 +273,8 @@ void doAddUser(int len) {
     }
   }
 
-  if(err != NULL) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+if(err != NULL) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("ntop user add", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning(err);
@@ -306,7 +305,7 @@ void showURLs(void) {
     if(key_data.dptr[0] == '2') { /* 2 = URL */
       if(numUsers == 0) {
 	sendString("<CENTER>\n"
-		   ""TABLE_ON"<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=5>\n");
+		   ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 	sendString("<TR "DARK_BG"><TH "TH_BG">URLs</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 
@@ -350,7 +349,7 @@ void addURL(char* url) {
     sendString("<CENTER>\n");
     sendString("<FORM METHOD=POST ACTION=/doAddURL>\n");
 
-    sendString("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3>\n");
+    sendString("<TABLE BORDER=0 "TABLE_DEFAULTS">\n");
     if(url != NULL)
       sendString("<TR>\n<TH ALIGN=right VALIGN=top><B>URL</B>:&nbsp;</TH>");
     else
@@ -456,7 +455,7 @@ void deleteURL(char* url) {
     returnHTTPredirect(CONST_SHOW_URLS_HTML);
     return;
   } else if((strlen(url) < 1) || (url[0] != '2')) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("Delete ntop URL", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning("<I>The specified URL is invalid.</I>");
@@ -474,7 +473,7 @@ void deleteURL(char* url) {
     rc = gdbm_delete(myGlobals.pwFile, key_data);
 
     if(rc != 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("Delete ntop URL", NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<P><HR><P>\n");
       printFlagedWarning("<B>ERROR:</B> <I>unable to delete specified URL.</I>");
@@ -565,7 +564,7 @@ void doAddURL(int len) {
   }
 
   if(err != NULL) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("ntop URL add", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning(err);
@@ -643,7 +642,8 @@ int doChangeFilter(int len) {
       }
     }
   }
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
   if(myGlobals.filterExpressionInExtraFrame) {
     sendString((myGlobals.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE "\n" : "");
@@ -724,8 +724,8 @@ void changeFilter(void) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
   printHTMLheader("Change kernel (libpcap) filter expression", NULL, BITFLAG_HTML_NO_REFRESH);
-  sendString("<BR><HR><P>\n");
-  sendString("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=5>\n<TR>\n");
+  sendString("<BR><HR><P><center>\n");
+  sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR>\n");
   sendString("<TH "TH_BG" ALIGN=center>Old Filter Expression:&nbsp;</TH><TD ALIGN=left>");
   if(snprintf(buf, sizeof(buf), "<B>%s",
 	     myGlobals.currentFilterExpression) < 0)
@@ -737,11 +737,11 @@ void changeFilter(void) {
   sendString("<FORM METHOD=POST ACTION=/doChangeFilter>\n");
   sendString("<TR>\n<TH "TH_BG" ALIGN=center>New Filter Expression:&nbsp;</TH>");
   sendString("<TD ALIGN=left><INPUT TYPE=text NAME=filter SIZE=40>\n");
-  sendString("</TD>\n</TR>\n</TABLE>"TABLE_OFF"\n<CENTER>");
-  sendString("<INPUT TYPE=submit VALUE=\"Change Filter\">&nbsp;&nbsp;&nbsp;");
-  sendString("<INPUT TYPE=reset  VALUE=Reset></FORM>");
+  sendString("</TD>\n</TR>\n");
+  sendString("<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=submit VALUE=\"Change Filter\">&nbsp;&nbsp;&nbsp;");
+  sendString("<INPUT TYPE=reset  VALUE=Reset></TD></TR></FORM></TABLE>"TABLE_OFF"\n");
 
-  sendString("</CENTER></P><P></B>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
+  sendString("</B><P></CENTER>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
   sendString("You can use all filter expressions libpcap can handle, \n");
   sendString("like the ones you pass to tcpdump.<BR>\n");
   sendString("If \"new filter expression\" is left empty, no filtering is performed.<BR>\n");

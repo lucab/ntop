@@ -130,7 +130,7 @@ static int sortICMPhostsRcvd(const void *_a, const void *_b) {
   }
 
   n1 = (*a)->icmpRcvd.value, n2 = (*b)->icmpRcvd.value;
- 
+
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
@@ -155,7 +155,7 @@ static int sortICMPhostsEcho(const void *_a, const void *_b) {
        (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value;
   n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHO].value +
        (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value;
- 
+
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
@@ -180,7 +180,7 @@ static int sortICMPhostsReply(const void *_a, const void *_b) {
        (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value;
   n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY].value +
        (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value;
- 
+
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
@@ -205,7 +205,7 @@ static int sortICMPhostsUnreach(const void *_a, const void *_b) {
        (*a)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value;
   n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_UNREACH].value +
        (*b)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value;
- 
+
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
@@ -230,7 +230,7 @@ static int sortICMPhostsRedirect(const void *_a, const void *_b) {
        (*a)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT].value;
   n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_REDIRECT].value +
        (*b)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT].value;
- 
+
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
@@ -255,7 +255,7 @@ static int sortICMPhostsAdvert(const void *_a, const void *_b) {
        (*a)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value;
   n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value +
        (*b)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value;
- 
+
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
@@ -280,7 +280,7 @@ static int sortICMPhostsTimeout(const void *_a, const void *_b) {
        (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value;
   n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value +
        (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value;
- 
+
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
@@ -305,7 +305,7 @@ static int sortICMPhostsBadParam(const void *_a, const void *_b) {
        (*a)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value;
   n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_PARAMPROB].value +
        (*b)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value;
- 
+
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
@@ -330,7 +330,7 @@ static int sortICMPhostsQuench(const void *_a, const void *_b) {
        (*a)->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value;
   n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value +
        (*b)->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value;
- 
+
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
@@ -434,7 +434,7 @@ static int sortICMPhostsNetmask(const void *_a, const void *_b) {
 #define CONST_ICMP_SORT_UNREACH         6
 #define CONST_ICMP_SORT_REDIRECT        7
 #define CONST_ICMP_SORT_ROUTERADVERT    8
-#define CONST_ICMP_SORT_PARAMPROB       9 
+#define CONST_ICMP_SORT_PARAMPROB       9
 #define CONST_ICMP_SORT_QUENCH          10
 #define CONST_ICMP_SORT_TIMESTAMP       11
 #define CONST_ICMP_SORT_NETMASK         12
@@ -462,7 +462,7 @@ static int cmpFctnICMPmax = sizeof(cmpFctnICMP) / sizeof(cmpFctnICMP[0]);
 
 static void formatSentRcvd(Counter sent, Counter rcvd) {
   char buf[128], formatBuf[32], formatBuf1[32];
-  
+
   if (sent + rcvd == 0) {
     strcpy(buf, "<TD "TD_BG" ALIGN=center>&nbsp;</TD>");
   } else if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s/%s</TD>",
@@ -493,9 +493,9 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
     arrowGif = "&nbsp;<IMG ALT=\"Descending order, click to reverse\" SRC=/arrow_down.gif BORDER=0>";
     sign = "";
   }
-  
+
   for(i=0; i<=14; i++)
-    if(abs(icmpColumnSort) == i) arrow[i] = arrowGif; else arrow[i] = "";  
+    if(abs(icmpColumnSort) == i) arrow[i] = arrowGif; else arrow[i] = "";
 
   sendString("<CENTER>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON" "DARK_BG">"
@@ -503,7 +503,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 	      "<TH "TH_BG" colspan=\"2\">Bytes</TH>\n"
               "<TH "TH_BG" colspan=\"11\">Sent/Recived by ICMP Type</TH>\n"
 	      "</TR>\n",
-	      pluginName, sign, CONST_ICMP_SORT_HOST, arrow[CONST_ICMP_SORT_HOST]) < 0) 
+	      pluginName, sign, CONST_ICMP_SORT_HOST, arrow[CONST_ICMP_SORT_HOST]) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -553,16 +553,16 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s> %s",
 		  getRowColor(),
 		  makeHostLink(hosts[idx], FLAG_HOSTLINK_HTML_FORMAT, 0, 0,
-			       hostLinkBuf, sizeof(hostLinkBuf))) < 0) 
+			       hostLinkBuf, sizeof(hostLinkBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
-      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>", 
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>",
 		  formatBytes(hosts[idx]->icmpSent.value, 1, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
-      
-      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>", 
+
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>",
 		  formatBytes(hosts[idx]->icmpRcvd.value, 1, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -593,7 +593,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 
       formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value),
 		     (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value));
-      
+
       formatSentRcvd((Counter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY].value),
 		     (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY].value));
 
@@ -601,7 +601,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 			       +hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY].value),
 		     (Counter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST].value
 			       +hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY].value));
-      
+
       sendString("</TR>\n");
 
       /* Avoid huge tables */
@@ -631,22 +631,22 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
   i = sizeof(char*)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   lbls = malloc(i);
-  memset(lbls, 0, i);  
+  memset(lbls, 0, i);
 
   i = sizeof(HostTraffic*)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   hosts = (HostTraffic**)malloc(i);
 
   for(i=0, num=0; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
     HostTraffic *el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
-    
+
     while(el != NULL) {
-      if((el != myGlobals.broadcastEntry) 
+      if((el != myGlobals.broadcastEntry)
 	 && (el != myGlobals.otherHostEntry)
 	 && (!broadcastHost(el))
 	 && (el->icmpInfo != NULL)) {
 	hosts[num++] = el;
       }
-      
+
       el = el->next;
     }
   }
@@ -666,7 +666,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     if(icmpColumnSort>cmpFctnICMPmax) icmpColumnSort=0;
 
   } else /* host=3240847503&icmp=3 */ {
-    char *tmpStr;    
+    char *tmpStr;
 
 #ifndef EMBEDDED
 #ifdef CFG_USE_GRAPHICS
@@ -689,7 +689,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
 	  for(j=0; j<ICMP_MAXTYPE; j++) {
 #ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "idx=%d/type=%d: %d/%d", i, j, 
+	    traceEvent(CONST_TRACE_INFO, "idx=%d/type=%d: %d/%d", i, j,
 		       hosts[i]->icmpInfo->icmpMsgSent[j].value,
 		       hosts[i]->icmpInfo->icmpMsgRcvd[j].value);
 #endif
@@ -703,7 +703,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
       /* traceEvent(CONST_TRACE_INFO, "file=%s", fileName); */
 
-      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
 
 #ifndef WIN32
       fd = fdopen(abs(myGlobals.newSock), "ab");
@@ -738,7 +738,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     icmpId = atoi(strtok_r(NULL, "&", &strtokState));
   }
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);  
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
   printHTMLheader("ICMP Statistics", NULL, 0);
 
   if(num == 0) {
@@ -754,14 +754,14 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
   printHTMLtrailer();
 
-  if(s != NULL)    
-    free(s);    
-  if(r != NULL) 
-    free(r); 
-  if(lbls != NULL) 
-    free(lbls); 
-  if(hosts != NULL) 
-    free(hosts); 
+  if(s != NULL)
+    free(s);
+  if(r != NULL)
+    free(r);
+  if(lbls != NULL)
+    free(lbls);
+  if(hosts != NULL)
+    free(hosts);
 }
 
 /* ****************************** */
@@ -781,7 +781,7 @@ PluginInfo* icmpPluginEntryFctn(void) {
 #endif
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ICMP: Welcome to %s. (C) 1999-2004 by Luca Deri",
 	       icmpPluginInfo->pluginName);
-    
+
     return(icmpPluginInfo);
 }
 
