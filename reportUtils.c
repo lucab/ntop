@@ -1726,6 +1726,8 @@ void printPacketStats(HostTraffic *el) {
 	 +el->securityHostPkts->overlappingFragmentRcvd.value
 	 +el->securityHostPkts->closedEmptyTCPConnSent.value
 	 +el->securityHostPkts->closedEmptyTCPConnRcvd.value
+	 +el->securityHostPkts->malformedPktsSent.value
+	 +el->securityHostPkts->malformedPktsRcvd.value
 	 ) > 0)) {
 
       if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
@@ -1841,6 +1843,16 @@ void printPacketStats(HostTraffic *el) {
 	sendString(buf);
 	formatUsageCounter(el->securityHostPkts->closedEmptyTCPConnSent, 0);
 	formatUsageCounter(el->securityHostPkts->closedEmptyTCPConnRcvd, 0);
+	sendString("</TR>\n");
+      }
+
+      if((el->securityHostPkts->malformedPktsSent.value+
+	  el->securityHostPkts->malformedPktsRcvd.value) > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Malformed Pkts</TH>",
+		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+	formatUsageCounter(el->securityHostPkts->malformedPktsSent, 0);
+	formatUsageCounter(el->securityHostPkts->malformedPktsRcvd, 0);
 	sendString("</TR>\n");
       }
 

@@ -744,6 +744,7 @@ typedef struct securityHostProbes {
   UsageCounter icmpHostNetUnreachSent,  icmpHostNetUnreachRcvd;
   UsageCounter icmpProtocolUnreachSent, icmpProtocolUnreachRcvd;
   UsageCounter icmpAdminProhibitedSent, icmpAdminProhibitedRcvd;
+  UsageCounter malformedPktsSent,       malformedPktsRcvd;
 } SecurityHostProbes;
 
 /* **************************** */

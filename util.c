@@ -2742,6 +2742,7 @@ void resetSecurityHostTraffic(HostTraffic *el) {
   resetUsageCounter(&el->securityHostPkts->icmpHostNetUnreachSent);
   resetUsageCounter(&el->securityHostPkts->icmpProtocolUnreachSent);
   resetUsageCounter(&el->securityHostPkts->icmpAdminProhibitedSent);
+  resetUsageCounter(&el->securityHostPkts->malformedPktsSent);
 
   /* ************* */
 
@@ -2770,4 +2771,34 @@ void resetSecurityHostTraffic(HostTraffic *el) {
   resetUsageCounter(&el->securityHostPkts->icmpHostNetUnreachRcvd);
   resetUsageCounter(&el->securityHostPkts->icmpProtocolUnreachRcvd);
   resetUsageCounter(&el->securityHostPkts->icmpAdminProhibitedRcvd);
+  resetUsageCounter(&el->securityHostPkts->malformedPktsRcvd);
+}
+
+/* ********************************************* */
+
+char* mapIcmpType(int icmpType) {
+  static char icmpString[4];
+
+  icmpType %= ICMP_MAXTYPE; /* Just to be safe... */
+
+  switch(icmpType) {
+  case 0: return("ECHOREPLY");
+  case 3: return("UNREACH");
+  case 4: return("SOURCEQUENCH");
+  case 5: return("REDIRECT");
+  case 8: return("ECHO");
+  case 9: return("ROUTERADVERT");
+  case 10: return("ROUTERSOLICI");
+  case 11: return("TIMXCEED");
+  case 12: return("PARAMPROB");
+  case 13: return("TIMESTAMP");
+  case 14: return("TIMESTAMPREPLY");
+  case 15: return("INFOREQ");
+  case 16: return("INFOREQREPLY");
+  case 17: return("MASKREQ");
+  case 18: return("MASKREPLY");
+  default:
+    sprintf(icmpString, "%d", icmpType);
+    return(icmpString);
+  }
 }

@@ -1342,6 +1342,24 @@ void dumpNtopHashes(char* options) {
 	    sendString(buf);
 	}
 
+	if(el->securityHostPkts->malformedPktsSent.value > 0) {
+	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
+		      "malformedPktSent",
+		      el->securityHostPkts->malformedPktsSent.value) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  else
+	    sendString(buf);
+	}
+
+	if(el->securityHostPkts->malformedPktsRcvd.value > 0) {
+	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%llu',\n",
+		      "malformedPktRcvd",
+		      el->securityHostPkts->malformedPktsRcvd.value) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  else
+	    sendString(buf);
+	}
+
 	if(languageType == PERL_LANGUAGE)
 	  sendString("\t},\n\n");
 	else

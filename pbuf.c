@@ -2041,8 +2041,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       incrementUsageCounter(&dstHost->securityHostPkts->establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
       device[actualDeviceId].numEstablishedTCPConnections++;
     } else if((addedNewEntry == 0)
-	      && ((theSession->sessionState == STATE_SYN)
-		  || (theSession->sessionState == STATE_SYN_ACK))) {
+	      && ((theSession->sessionState == STATE_SYN) || (theSession->sessionState == STATE_SYN_ACK))
+	      && (!(tp->th_flags & TH_RST))) {
       /*
 	We might have lost a packet so:
 	- we cannot calculate latency
@@ -2311,6 +2311,18 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     if((theSession->sessionState == STATE_FIN2_ACK2)
        || (tp->th_flags & TH_RST)) /* abortive release */ {
+      if(theSession->sessionState < STATE_ACTIVE) {
+	/* Received RST packet before to complete the 3-way handshake */
+	if(enableSuspiciousPacketDump) {
+	  traceEvent(TRACE_WARNING, "WARNING: TCP session [%s:%d]<->[%s:%d] reset by %s "
+		     "without completing 3-way handshake",
+		     srcHost->hostSymIpAddress, sport,
+		     dstHost->hostSymIpAddress, dport,
+		     srcHost->hostSymIpAddress);
+	  dumpSuspiciousPacket();
+	}
+      }
+
       theSession->sessionState = STATE_TIMEOUT;
       updateUsedPorts(srcHost, srcHostIdx, dstHost, dstHostIdx, sport, dport,
 		      (u_int)(theSession->bytesSent+theSession->bytesReceived));
@@ -3434,108 +3446,121 @@ static void processIpPkt(const u_char *bp,
 
   switch(ip.ip_p) {
   case IPPROTO_TCP:
-    proto = "TCP";
-    memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
+    if(tcpUdpLen < sizeof(struct tcphdr)) {
+      if(enableSuspiciousPacketDump) {
+	traceEvent(TRACE_WARNING, "WARNING: Malformed TCP pkt %s->%s detected",
+		   srcHost->hostSymIpAddress, 
+		   dstHost->hostSymIpAddress);
+	dumpSuspiciousPacket();
 
-    /* Sanity check */
-    if(tcpUdpLen > (tp.th_off * 4)) {
-      tcpDataLength = tcpUdpLen - (tp.th_off * 4);
-      theData = (u_char*)(bp+hlen+(tp.th_off * 4));
-    } else { 
-      tcpDataLength = 0;
-      theData = NULL;
-    }
+	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	incrementUsageCounter(&srcHost->securityHostPkts->malformedPktsSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts->malformedPktsRcvd, srcHostIdx, actualDeviceId);
+      }
+  } else {
+      proto = "TCP";
+      memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
 
-    device[actualDeviceId].tcpBytes += tcpUdpLen;
-
-    sport = ntohs(tp.th_sport);
-    dport = ntohs(tp.th_dport);
-
-    if(tcpChain) {
-      u_int displ;
-
-      if(off & 0x3fff)
-	displ = 0; /* Fragment */
-      else
-	displ = tp.th_off * 4;
-
-      checkFilterChain(srcHost, srcHostIdx,
-		       dstHost, dstHostIdx,
-		       sport, dport,
-		       tcpDataLength, /* packet length */
-		       displ+sizeof(struct tcphdr), /* offset from packet header */
-		       tp.th_flags, /* TCP flags */
-		       IPPROTO_TCP,
-		       (u_char)(off & 0x3fff), /* 1 = fragment, 0 = packet */
-		       bp, /* pointer to packet content */
-		       tcpChain, TCP_RULE);
-    }
-
-    if(off & 0x3fff)  /* Handle fragmented packets */
-      length = handleFragment(srcHost, srcHostIdx,
-			      dstHost, dstHostIdx,
-			      &sport, &dport,
-			      ntohs(ip.ip_id), off, length,
-			      ntohs(ip.ip_len) - hlen);
-
-    if((sport > 0) && (dport > 0)) {
-      IPSession *theSession;
-      u_short isPassiveSession;
-
-      /* It might be that tcpDataLength is 0 when
-	 the received packet is fragmented and the main
-	 packet has not yet been received */
-
-      if(subnetPseudoLocalHost(srcHost)) {
-	if(subnetPseudoLocalHost(dstHost)) {
-	  srcHost->tcpSentLocally += length;
-	  dstHost->tcpReceivedLocally += length;
-	  device[actualDeviceId].tcpGlobalTrafficStats.local += length;
-	} else {
-	  srcHost->tcpSentRemotely += length;
-	  dstHost->tcpReceivedLocally += length;
-	  device[actualDeviceId].tcpGlobalTrafficStats.local2remote += length;
-	}
-      } else {
-	/* srcHost is remote */
-	if(subnetPseudoLocalHost(dstHost)) {
-	  srcHost->tcpSentLocally += length;
-	  dstHost->tcpReceivedFromRemote += length;
-	  device[actualDeviceId].tcpGlobalTrafficStats.remote2local += length;
-	} else {
-	  srcHost->tcpSentRemotely += length;
-	  dstHost->tcpReceivedFromRemote += length;
-	  device[actualDeviceId].tcpGlobalTrafficStats.remote += length;
-	}
+      /* Sanity check */
+      if(tcpUdpLen > (tp.th_off * 4)) {
+	tcpDataLength = tcpUdpLen - (tp.th_off * 4);
+	theData = (u_char*)(bp+hlen+(tp.th_off * 4));
+      } else { 
+	tcpDataLength = 0;
+	theData = NULL;
       }
 
-      theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
-				    srcHostIdx, sport, dstHostIdx,
-				    dport, length, &tp, tcpDataLength,
-				    theData);
-      if(theSession == NULL)
-	isPassiveSession = 0;
-      else
-	isPassiveSession = theSession->passiveFtpSession;
+      device[actualDeviceId].tcpBytes += tcpUdpLen;
 
-      /* choose most likely port for protocol traffic accounting
-       * by trying lower number port first. This is based
-       * on the assumption that lower port numbers are more likely
-       * to be the servers and clients usually dont use ports <1024
-       * This is only relevant if both port numbers are used to
-       * gather service statistics.
-       * e.g. traffic between port 2049 (nfsd) and 113 (nntp) will
-       * be counted as nntp traffic in all directions by this heuristic
-       * and not as nntp in one direction and nfs in the return direction.
-       *
-       * Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>
-       */
-      if(dport < sport) {
-	if(handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession) == -1)
-	  handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession);
-      } else {
-	if(handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession) == -1)
-	  handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession);
+      sport = ntohs(tp.th_sport);
+      dport = ntohs(tp.th_dport);
+
+      if(tcpChain) {
+	u_int displ;
+
+	if(off & 0x3fff)
+	  displ = 0; /* Fragment */
+	else
+	  displ = tp.th_off * 4;
+
+	checkFilterChain(srcHost, srcHostIdx,
+			 dstHost, dstHostIdx,
+			 sport, dport,
+			 tcpDataLength, /* packet length */
+			 displ+sizeof(struct tcphdr), /* offset from packet header */
+			 tp.th_flags, /* TCP flags */
+			 IPPROTO_TCP,
+			 (u_char)(off & 0x3fff), /* 1 = fragment, 0 = packet */
+			 bp, /* pointer to packet content */
+			 tcpChain, TCP_RULE);
+      }
+
+      if(off & 0x3fff)  /* Handle fragmented packets */
+	length = handleFragment(srcHost, srcHostIdx,
+				dstHost, dstHostIdx,
+				&sport, &dport,
+				ntohs(ip.ip_id), off, length,
+				ntohs(ip.ip_len) - hlen);
+
+      if((sport > 0) && (dport > 0)) {
+	IPSession *theSession;
+	u_short isPassiveSession;
+
+	/* It might be that tcpDataLength is 0 when
+	   the received packet is fragmented and the main
+	   packet has not yet been received */
+
+	if(subnetPseudoLocalHost(srcHost)) {
+	  if(subnetPseudoLocalHost(dstHost)) {
+	    srcHost->tcpSentLocally += length;
+	    dstHost->tcpReceivedLocally += length;
+	    device[actualDeviceId].tcpGlobalTrafficStats.local += length;
+	  } else {
+	    srcHost->tcpSentRemotely += length;
+	    dstHost->tcpReceivedLocally += length;
+	    device[actualDeviceId].tcpGlobalTrafficStats.local2remote += length;
+	  }
+	} else {
+	  /* srcHost is remote */
+	  if(subnetPseudoLocalHost(dstHost)) {
+	    srcHost->tcpSentLocally += length;
+	    dstHost->tcpReceivedFromRemote += length;
+	    device[actualDeviceId].tcpGlobalTrafficStats.remote2local += length;
+	  } else {
+	    srcHost->tcpSentRemotely += length;
+	    dstHost->tcpReceivedFromRemote += length;
+	    device[actualDeviceId].tcpGlobalTrafficStats.remote += length;
+	  }
+	}
+
+	theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
+				      srcHostIdx, sport, dstHostIdx,
+				      dport, length, &tp, tcpDataLength,
+				      theData);
+	if(theSession == NULL)
+	  isPassiveSession = 0;
+	else
+	  isPassiveSession = theSession->passiveFtpSession;
+
+	/* choose most likely port for protocol traffic accounting
+	 * by trying lower number port first. This is based
+	 * on the assumption that lower port numbers are more likely
+	 * to be the servers and clients usually dont use ports <1024
+	 * This is only relevant if both port numbers are used to
+	 * gather service statistics.
+	 * e.g. traffic between port 2049 (nfsd) and 113 (nntp) will
+	 * be counted as nntp traffic in all directions by this heuristic
+	 * and not as nntp in one direction and nfs in the return direction.
+	 *
+	 * Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>
+	 */
+	if(dport < sport) {
+	  if(handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession) == -1)
+	    handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession);
+	} else {
+	  if(handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession) == -1)
+	    handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession);
+	}
       }
     }
     break;
@@ -3543,220 +3568,228 @@ static void processIpPkt(const u_char *bp,
   case IPPROTO_UDP:
     proto = "UDP";
 
-    /* Sanity check */
-    if(tcpUdpLen > sizeof(struct udphdr))
+    if(tcpUdpLen < sizeof(struct udphdr)) { 
+      if(enableSuspiciousPacketDump) {
+	traceEvent(TRACE_WARNING, "WARNING: Malformed UDP pkt %s->%s detected",
+		   srcHost->hostSymIpAddress, 
+		   dstHost->hostSymIpAddress);
+	dumpSuspiciousPacket();
+	
+	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	incrementUsageCounter(&srcHost->securityHostPkts->malformedPktsSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts->malformedPktsRcvd, srcHostIdx, actualDeviceId);
+      }
+    } else {
       udpDataLength = tcpUdpLen - sizeof(struct udphdr);
-    else
-      udpDataLength = 0;
 
-    device[actualDeviceId].udpBytes += tcpUdpLen;
-
-    memcpy(&up, bp+hlen, sizeof(struct udphdr));
+      device[actualDeviceId].udpBytes += tcpUdpLen;
+      memcpy(&up, bp+hlen, sizeof(struct udphdr));
 
 #ifdef SLACKWARE
-    sport = ntohs(up.source);
-    dport = ntohs(up.dest);
+      sport = ntohs(up.source);
+      dport = ntohs(up.dest);
 #else
-    sport = ntohs(up.uh_sport);
-    dport = ntohs(up.uh_dport);
+      sport = ntohs(up.uh_sport);
+      dport = ntohs(up.uh_dport);
 #endif
 
-    if(!(off & 0x3fff)) {
-      if((sport == 53) || (dport == 53) /* domain */) {
-        short isRequest, positiveReply;
-        u_int16_t transactionId;
+      if(!(off & 0x3fff)) {
+	if((sport == 53) || (dport == 53) /* domain */) {
+	  short isRequest, positiveReply;
+	  u_int16_t transactionId;
 
-	/* The DNS chain will be checked here */
-	transactionId = processDNSPacket(bp, udpDataLength, hlen, &isRequest, &positiveReply);
+	  /* The DNS chain will be checked here */
+	  transactionId = processDNSPacket(bp, udpDataLength, hlen, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
-	traceEvent(TRACE_INFO, "%s:%d->%s:%d [request: %d][positive reply: %d]\n",
-		   srcHost->hostSymIpAddress, sport,
-		   dstHost->hostSymIpAddress, dport,
-		   isRequest, positiveReply);
+	  traceEvent(TRACE_INFO, "%s:%d->%s:%d [request: %d][positive reply: %d]\n",
+		     srcHost->hostSymIpAddress, sport,
+		     dstHost->hostSymIpAddress, dport,
+		     isRequest, positiveReply);
 #endif
 
-        if(srcHost->dnsStats == NULL) {
-          srcHost->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-          memset(srcHost->dnsStats, 0, sizeof(ServiceStats));
-        }
-
-        if(dstHost->dnsStats == NULL) {
-          dstHost->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-          memset(dstHost->dnsStats, 0, sizeof(ServiceStats));
-        }
-
-        if(isRequest) {
-	  /* to be 64bit-proof we have to copy the elements */
-          tvstrct.tv_sec = h->ts.tv_sec;
-          tvstrct.tv_usec = h->ts.tv_usec;
-          addTimeMapping(transactionId, tvstrct);
-
-          if(subnetLocalHost(dstHost))
-            srcHost->dnsStats->numLocalReqSent++;
-          else
-            srcHost->dnsStats->numRemoteReqSent++;
-
-          if(subnetLocalHost(srcHost))
-            dstHost->dnsStats->numLocalReqRcvd++;
-          else
-            dstHost->dnsStats->numRemoteReqRcvd++;
-        } else {
-          time_t microSecTimeDiff;
-
-          /* to be 64bit-proof we have to copy the elements */
-          tvstrct.tv_sec = h->ts.tv_sec;
-          tvstrct.tv_usec = h->ts.tv_usec;
-          microSecTimeDiff = getTimeMapping(transactionId, tvstrct);
-
-          if(microSecTimeDiff > 0) {
-#ifdef DEBUG
-            traceEvent(TRACE_INFO, "TransactionId=0x%X [%.1f ms]\n",
-                       transactionId, ((float)microSecTimeDiff)/1000);
-#endif
-
-            if(microSecTimeDiff > 0) {
-              if(subnetLocalHost(dstHost)) {
-                if((srcHost->dnsStats->fastestMicrosecLocalReqServed == 0)
-                   || (microSecTimeDiff < srcHost->dnsStats->fastestMicrosecLocalReqServed))
-                  srcHost->dnsStats->fastestMicrosecLocalReqServed = microSecTimeDiff;
-                if(microSecTimeDiff > srcHost->dnsStats->slowestMicrosecLocalReqServed)
-                  srcHost->dnsStats->slowestMicrosecLocalReqServed = microSecTimeDiff;
-              } else {
-                if((srcHost->dnsStats->fastestMicrosecRemoteReqServed == 0)
-                   || (microSecTimeDiff < srcHost->dnsStats->fastestMicrosecRemoteReqServed))
-                  srcHost->dnsStats->fastestMicrosecRemoteReqServed = microSecTimeDiff;
-                if(microSecTimeDiff > srcHost->dnsStats->slowestMicrosecRemoteReqServed)
-                  srcHost->dnsStats->slowestMicrosecRemoteReqServed = microSecTimeDiff;
-              }
-
-              if(subnetLocalHost(srcHost)) {
-                if((dstHost->dnsStats->fastestMicrosecLocalReqMade == 0)
-                   || (microSecTimeDiff < dstHost->dnsStats->fastestMicrosecLocalReqMade))
-                  dstHost->dnsStats->fastestMicrosecLocalReqMade = microSecTimeDiff;
-                if(microSecTimeDiff > dstHost->dnsStats->slowestMicrosecLocalReqMade)
-                  dstHost->dnsStats->slowestMicrosecLocalReqMade = microSecTimeDiff;
-              } else {
-                if((dstHost->dnsStats->fastestMicrosecRemoteReqMade == 0)
-                   || (microSecTimeDiff < dstHost->dnsStats->fastestMicrosecRemoteReqMade))
-                  dstHost->dnsStats->fastestMicrosecRemoteReqMade = microSecTimeDiff;
-                if(microSecTimeDiff > dstHost->dnsStats->slowestMicrosecRemoteReqMade)
-                  dstHost->dnsStats->slowestMicrosecRemoteReqMade = microSecTimeDiff;
-              }
-            } else {
-#ifdef DEBUG
-              traceEvent(TRACE_INFO, "getTimeMapping(0x%X) failed for DNS",
-			 transactionId);
-#endif
-            }
-          }
-
-	  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	  FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
-
-          if(positiveReply) {
-            srcHost->dnsStats->numPositiveReplSent++;
-            dstHost->dnsStats->numPositiveReplRcvd++;
-          } else {
-            srcHost->dnsStats->numNegativeReplSent++;
-            dstHost->dnsStats->numNegativeReplRcvd++;
-          }
-        }
-      } else if((dport == 138 /*  NETBIOS */)
-                && ((srcHost->nbHostName == NULL)
-                    || (srcHost->nbDomainName == NULL))) {
-        char *name, nbName[64], domain[64], *data;
-        int nodeType, i, udpDataLen;
-	char *tmpdata = (char*)bp + (hlen + sizeof(struct udphdr));
-	u_char *p;
-	int offset, displ, notEnoughData = 0;
-
-	udpDataLen = length - (hlen + sizeof(struct udphdr));
-
-	if(udpDataLen > 32) {
-	  /* 32 bytes or less is not enough */
-	  data = (char*)malloc(udpDataLen);
-	  memcpy(data, tmpdata, udpDataLen);
-
-	  name = data + 14;
-	  p = (u_char*)name;
-	  if ((*p & 0xC0) == 0xC0) {
-	    displ = p[1] + 255 * (p[0] & ~0xC0);
-	    if((displ + 14) >= udpDataLen)
-	      notEnoughData = 1;
-	    else {
-	      name = data + displ;
-	      displ += 14;
-	      offset = 2;
-	    }
-	  } else {
-	    displ = 14;
-
-	    while ((displ < udpDataLen) && (*p)) {
-	      p += (*p)+1;
-	      displ++;
-	    }
-
-	    if(displ < udpDataLen)
-	      offset = ((char*)p - (char*)data) + 1;
-	    else
-	      notEnoughData = 1;
+	  if(srcHost->dnsStats == NULL) {
+	    srcHost->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	    memset(srcHost->dnsStats, 0, sizeof(ServiceStats));
 	  }
 
-	  if(!notEnoughData) {
-	    nodeType = name_interpret(name, nbName, udpDataLen-displ);
+	  if(dstHost->dnsStats == NULL) {
+	    dstHost->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
+	    memset(dstHost->dnsStats, 0, sizeof(ServiceStats));
+	  }
 
-	    if(nodeType != 0) {
-	      setNBnodeNameType(srcHost, (char)nodeType, nbName);
+	  if(isRequest) {
+	    /* to be 64bit-proof we have to copy the elements */
+	    tvstrct.tv_sec = h->ts.tv_sec;
+	    tvstrct.tv_usec = h->ts.tv_usec;
+	    addTimeMapping(transactionId, tvstrct);
 
-	      displ += offset; /* see ** */
+	    if(subnetLocalHost(dstHost))
+	      srcHost->dnsStats->numLocalReqSent++;
+	    else
+	      srcHost->dnsStats->numRemoteReqSent++;
 
-	      if(displ < udpDataLen) {
-		name = data + offset; /* ** */
-		p = (u_char*)name;
-		if ((*p & 0xC0) == 0xC0) {
-		  displ = hlen + 8 + (p[1] + 255 * (p[0] & ~0xC0));
+	    if(subnetLocalHost(srcHost))
+	      dstHost->dnsStats->numLocalReqRcvd++;
+	    else
+	      dstHost->dnsStats->numRemoteReqRcvd++;
+	  } else {
+	    time_t microSecTimeDiff;
 
-		  if(displ < length)
-		    name = ((char*)bp+displ);
-		  else
-		    notEnoughData = 1;
+	    /* to be 64bit-proof we have to copy the elements */
+	    tvstrct.tv_sec = h->ts.tv_sec;
+	    tvstrct.tv_usec = h->ts.tv_usec;
+	    microSecTimeDiff = getTimeMapping(transactionId, tvstrct);
+
+	    if(microSecTimeDiff > 0) {
+#ifdef DEBUG
+	      traceEvent(TRACE_INFO, "TransactionId=0x%X [%.1f ms]\n",
+			 transactionId, ((float)microSecTimeDiff)/1000);
+#endif
+
+	      if(microSecTimeDiff > 0) {
+		if(subnetLocalHost(dstHost)) {
+		  if((srcHost->dnsStats->fastestMicrosecLocalReqServed == 0)
+		     || (microSecTimeDiff < srcHost->dnsStats->fastestMicrosecLocalReqServed))
+		    srcHost->dnsStats->fastestMicrosecLocalReqServed = microSecTimeDiff;
+		  if(microSecTimeDiff > srcHost->dnsStats->slowestMicrosecLocalReqServed)
+		    srcHost->dnsStats->slowestMicrosecLocalReqServed = microSecTimeDiff;
+		} else {
+		  if((srcHost->dnsStats->fastestMicrosecRemoteReqServed == 0)
+		     || (microSecTimeDiff < srcHost->dnsStats->fastestMicrosecRemoteReqServed))
+		    srcHost->dnsStats->fastestMicrosecRemoteReqServed = microSecTimeDiff;
+		  if(microSecTimeDiff > srcHost->dnsStats->slowestMicrosecRemoteReqServed)
+		    srcHost->dnsStats->slowestMicrosecRemoteReqServed = microSecTimeDiff;
 		}
 
-		if(!notEnoughData) {
-		  nodeType = name_interpret(name, domain, length-displ);
-
-		  if(nodeType != 0) {
-		    for(i=0; domain[i] != '\0'; i++)
-		      if(domain[i] == ' ') { domain[i] = '\0'; break; }
-
-		    setNBnodeNameType(dstHost, (char)nodeType, domain);
-
-		    if(udpDataLen > 200) {
-		      char *tmpBuffer = &data[151];
-
-		      /*
-			We'll check if this this is
-			a browser announcments so we can
-			know more about this host
-		      */
-
-		      if(strcmp(tmpBuffer, "\\MAILSLOT\\BROWSE") == 0) {
-			/* Good: this looks like a browser announcement */
-			if(((tmpBuffer[17] == 0x0F /* Local Master Announcement*/)
-			    || (tmpBuffer[17] == 0x01 /* Host Announcement*/))
-			   && (tmpBuffer[49] != '\0')) {
-
-			  if(srcHost->nbDescr != NULL)
-			    free(srcHost->nbDescr);
-
-			  if(tmpBuffer[17] == 0x0F)
-			    FD_SET(HOST_TYPE_MASTER_BROWSER, &srcHost->flags);
-
-			  srcHost->nbDescr = strdup(&tmpBuffer[49]);
+		if(subnetLocalHost(srcHost)) {
+		  if((dstHost->dnsStats->fastestMicrosecLocalReqMade == 0)
+		     || (microSecTimeDiff < dstHost->dnsStats->fastestMicrosecLocalReqMade))
+		    dstHost->dnsStats->fastestMicrosecLocalReqMade = microSecTimeDiff;
+		  if(microSecTimeDiff > dstHost->dnsStats->slowestMicrosecLocalReqMade)
+		    dstHost->dnsStats->slowestMicrosecLocalReqMade = microSecTimeDiff;
+		} else {
+		  if((dstHost->dnsStats->fastestMicrosecRemoteReqMade == 0)
+		     || (microSecTimeDiff < dstHost->dnsStats->fastestMicrosecRemoteReqMade))
+		    dstHost->dnsStats->fastestMicrosecRemoteReqMade = microSecTimeDiff;
+		  if(microSecTimeDiff > dstHost->dnsStats->slowestMicrosecRemoteReqMade)
+		    dstHost->dnsStats->slowestMicrosecRemoteReqMade = microSecTimeDiff;
+		}
+	      } else {
 #ifdef DEBUG
-			  traceEvent(TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
+		traceEvent(TRACE_INFO, "getTimeMapping(0x%X) failed for DNS",
+			   transactionId);
 #endif
+	      }
+	    }
+
+	    /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+	    FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
+
+	    if(positiveReply) {
+	      srcHost->dnsStats->numPositiveReplSent++;
+	      dstHost->dnsStats->numPositiveReplRcvd++;
+	    } else {
+	      srcHost->dnsStats->numNegativeReplSent++;
+	      dstHost->dnsStats->numNegativeReplRcvd++;
+	    }
+	  }
+	} else if((dport == 138 /*  NETBIOS */)
+		  && ((srcHost->nbHostName == NULL)
+		      || (srcHost->nbDomainName == NULL))) {
+	  char *name, nbName[64], domain[64], *data;
+	  int nodeType, i, udpDataLen;
+	  char *tmpdata = (char*)bp + (hlen + sizeof(struct udphdr));
+	  u_char *p;
+	  int offset, displ, notEnoughData = 0;
+
+	  udpDataLen = length - (hlen + sizeof(struct udphdr));
+
+	  if(udpDataLen > 32) {
+	    /* 32 bytes or less is not enough */
+	    data = (char*)malloc(udpDataLen);
+	    memcpy(data, tmpdata, udpDataLen);
+
+	    name = data + 14;
+	    p = (u_char*)name;
+	    if ((*p & 0xC0) == 0xC0) {
+	      displ = p[1] + 255 * (p[0] & ~0xC0);
+	      if((displ + 14) >= udpDataLen)
+		notEnoughData = 1;
+	      else {
+		name = data + displ;
+		displ += 14;
+		offset = 2;
+	      }
+	    } else {
+	      displ = 14;
+
+	      while ((displ < udpDataLen) && (*p)) {
+		p += (*p)+1;
+		displ++;
+	      }
+
+	      if(displ < udpDataLen)
+		offset = ((char*)p - (char*)data) + 1;
+	      else
+		notEnoughData = 1;
+	    }
+
+	    if(!notEnoughData) {
+	      nodeType = name_interpret(name, nbName, udpDataLen-displ);
+
+	      if(nodeType != 0) {
+		setNBnodeNameType(srcHost, (char)nodeType, nbName);
+
+		displ += offset; /* see ** */
+
+		if(displ < udpDataLen) {
+		  name = data + offset; /* ** */
+		  p = (u_char*)name;
+		  if ((*p & 0xC0) == 0xC0) {
+		    displ = hlen + 8 + (p[1] + 255 * (p[0] & ~0xC0));
+
+		    if(displ < length)
+		      name = ((char*)bp+displ);
+		    else
+		      notEnoughData = 1;
+		  }
+
+		  if(!notEnoughData) {
+		    nodeType = name_interpret(name, domain, length-displ);
+
+		    if(nodeType != 0) {
+		      for(i=0; domain[i] != '\0'; i++)
+			if(domain[i] == ' ') { domain[i] = '\0'; break; }
+
+		      setNBnodeNameType(dstHost, (char)nodeType, domain);
+
+		      if(udpDataLen > 200) {
+			char *tmpBuffer = &data[151];
+
+			/*
+			  We'll check if this this is
+			  a browser announcments so we can
+			  know more about this host
+			*/
+
+			if(strcmp(tmpBuffer, "\\MAILSLOT\\BROWSE") == 0) {
+			  /* Good: this looks like a browser announcement */
+			  if(((tmpBuffer[17] == 0x0F /* Local Master Announcement*/)
+			      || (tmpBuffer[17] == 0x01 /* Host Announcement*/))
+			     && (tmpBuffer[49] != '\0')) {
+
+			    if(srcHost->nbDescr != NULL)
+			      free(srcHost->nbDescr);
+
+			    if(tmpBuffer[17] == 0x0F)
+			      FD_SET(HOST_TYPE_MASTER_BROWSER, &srcHost->flags);
+
+			    srcHost->nbDescr = strdup(&tmpBuffer[49]);
+#ifdef DEBUG
+			    traceEvent(TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
+#endif
+			  }
 			}
 		      }
 		    }
@@ -3764,242 +3797,264 @@ static void processIpPkt(const u_char *bp,
 		}
 	      }
 	    }
+
+	    free(data);
 	  }
-
-	  free(data);
-	}
-      }
-    }
-
-    if(udpChain) {
-      u_int displ;
-
-      if (off & 0x3fff)
-	displ = 0; /* Fragment */
-      else
-	displ = sizeof(struct udphdr);
-
-      checkFilterChain(srcHost, srcHostIdx,
-		       dstHost, dstHostIdx,
-		       sport, dport,
-		       udpDataLength, /* packet length */
-		       hlen,   /* offset from packet header */
-		       0,	   /* there are no UDP flags :-( */
-		       IPPROTO_UDP,
-		       (u_char)(off & 0x3fff), /* 1 = fragment, 0 = packet */
-		       bp, /* pointer to packet content */
-		       udpChain, UDP_RULE);
-    }
-
-    if (off & 0x3fff)  /* Handle fragmented packets */
-      length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
-			      &sport, &dport,
-			      ntohs(ip.ip_id), off, length,
-			      ntohs(ip.ip_len) - hlen);
-
-    if((sport > 0) && (dport > 0)) {
-      /* It might be that udpBytes is 0 when
-	 the received packet is fragmented and the main
-	 packet has not yet been received */
-
-      if(subnetPseudoLocalHost(srcHost)) {
-	if(subnetPseudoLocalHost(dstHost)) {
-	  srcHost->udpSentLocally += length;
-	  dstHost->udpReceivedLocally += length;
-	  device[actualDeviceId].udpGlobalTrafficStats.local += length;
-	} else {
-	  srcHost->udpSentRemotely += length;
-	  dstHost->udpReceivedLocally += length;
-	  device[actualDeviceId].udpGlobalTrafficStats.local2remote += length;
-	}
-      } else {
-	/* srcHost is remote */
-	if(subnetPseudoLocalHost(dstHost)) {
-	  srcHost->udpSentLocally += length;
-	  dstHost->udpReceivedFromRemote += length;
-	  device[actualDeviceId].udpGlobalTrafficStats.remote2local += length;
-	} else {
-	  srcHost->udpSentRemotely += length;
-	  dstHost->udpReceivedFromRemote += length;
-	  device[actualDeviceId].udpGlobalTrafficStats.remote += length;
 	}
       }
 
-      if(handleIP(dport, srcHostIdx, dstHostIdx, length, 0) == -1)
-	handleIP(sport, srcHostIdx, dstHostIdx, length, 0);
+      if(udpChain) {
+	u_int displ;
 
-      handleUDPSession(h, (off & 0x3fff),
-		       srcHostIdx, sport, dstHostIdx,
-		       dport, udpDataLength,
-		       (u_char*)(bp+hlen+sizeof(struct udphdr)));
-      sendUDPflow(srcHost, dstHost, sport, dport, length);
+	if (off & 0x3fff)
+	  displ = 0; /* Fragment */
+	else
+	  displ = sizeof(struct udphdr);
+
+	checkFilterChain(srcHost, srcHostIdx,
+			 dstHost, dstHostIdx,
+			 sport, dport,
+			 udpDataLength, /* packet length */
+			 hlen,   /* offset from packet header */
+			 0,	   /* there are no UDP flags :-( */
+			 IPPROTO_UDP,
+			 (u_char)(off & 0x3fff), /* 1 = fragment, 0 = packet */
+			 bp, /* pointer to packet content */
+			 udpChain, UDP_RULE);
+      }
+
+      if (off & 0x3fff)  /* Handle fragmented packets */
+	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
+				&sport, &dport,
+				ntohs(ip.ip_id), off, length,
+				ntohs(ip.ip_len) - hlen);
+
+      if((sport > 0) && (dport > 0)) {
+	/* It might be that udpBytes is 0 when
+	   the received packet is fragmented and the main
+	   packet has not yet been received */
+
+	if(subnetPseudoLocalHost(srcHost)) {
+	  if(subnetPseudoLocalHost(dstHost)) {
+	    srcHost->udpSentLocally += length;
+	    dstHost->udpReceivedLocally += length;
+	    device[actualDeviceId].udpGlobalTrafficStats.local += length;
+	  } else {
+	    srcHost->udpSentRemotely += length;
+	    dstHost->udpReceivedLocally += length;
+	    device[actualDeviceId].udpGlobalTrafficStats.local2remote += length;
+	  }
+	} else {
+	  /* srcHost is remote */
+	  if(subnetPseudoLocalHost(dstHost)) {
+	    srcHost->udpSentLocally += length;
+	    dstHost->udpReceivedFromRemote += length;
+	    device[actualDeviceId].udpGlobalTrafficStats.remote2local += length;
+	  } else {
+	    srcHost->udpSentRemotely += length;
+	    dstHost->udpReceivedFromRemote += length;
+	    device[actualDeviceId].udpGlobalTrafficStats.remote += length;
+	  }
+	}
+
+	if(handleIP(dport, srcHostIdx, dstHostIdx, length, 0) == -1)
+	  handleIP(sport, srcHostIdx, dstHostIdx, length, 0);
+
+	handleUDPSession(h, (off & 0x3fff),
+			 srcHostIdx, sport, dstHostIdx,
+			 dport, udpDataLength,
+			 (u_char*)(bp+hlen+sizeof(struct udphdr)));
+	sendUDPflow(srcHost, dstHost, sport, dport, length);
+      }
     }
     break;
 
   case IPPROTO_ICMP:
-    proto = "ICMP";
-    memcpy(&icmpPkt, bp+hlen, sizeof(struct icmp));
-    device[actualDeviceId].icmpBytes += length;
-    srcHost->icmpSent += length;
-    dstHost->icmpReceived += length;
-
-    if(off & 0x3fff) {
-      char *fmt = "WARNING: detected ICMP fragment [%s -> %s] (network attack attempt?)";
-      allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      incrementUsageCounter(&srcHost->securityHostPkts->icmpFragmentSent, dstHostIdx, actualDeviceId);
-      incrementUsageCounter(&dstHost->securityHostPkts->icmpFragmentRcvd, srcHostIdx, actualDeviceId);
+    if(tcpUdpLen < sizeof(struct icmp)) {
       if(enableSuspiciousPacketDump) {
-	traceEvent(TRACE_WARNING, fmt,
-		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+	traceEvent(TRACE_WARNING, "WARNING: Malformed ICMP pkt %s->%s detected",
+		   srcHost->hostSymIpAddress, 
+		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket();
+	
+	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	incrementUsageCounter(&srcHost->securityHostPkts->malformedPktsSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts->malformedPktsRcvd, srcHostIdx, actualDeviceId);
       }
-    }
+    } else {
+      proto = "ICMP";
+      memcpy(&icmpPkt, bp+hlen, sizeof(struct icmp));
+      device[actualDeviceId].icmpBytes += length;
+      srcHost->icmpSent += length;
+      dstHost->icmpReceived += length;
 
-    /* ************************************************************* */
-
-    if(icmpPkt.icmp_type <= ICMP_MAXTYPE) {
-      if(srcHost->icmpInfo == NULL) {
-	srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
-	memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
-      }
-
-      srcHost->icmpInfo->icmpMsgSent[icmpPkt.icmp_type]++;
-
-      if(dstHost->icmpInfo == NULL) {
-	dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
-	memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
-      }
-
-      dstHost->icmpInfo->icmpMsgRcvd[icmpPkt.icmp_type]++;
-
-      switch (icmpPkt.icmp_type) {
-      case ICMP_ECHOREPLY:
-      case ICMP_ECHO:
-	/* Do not log anything */
-	break;
-
-      case ICMP_UNREACH:
-      case ICMP_REDIRECT:
-      case ICMP_ROUTERADVERT:
-      case ICMP_TIMXCEED:
-      case ICMP_PARAMPROB:
-      case ICMP_MASKREPLY:
-      case ICMP_MASKREQ:
-      case ICMP_INFO_REQUEST:
-      case ICMP_INFO_REPLY:
-      case ICMP_TIMESTAMP:
-      case ICMP_TIMESTAMPREPLY:
-      case ICMP_SOURCE_QUENCH:
+      if(off & 0x3fff) {
+	char *fmt = "WARNING: detected ICMP fragment [%s -> %s] (network attack attempt?)";
+	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	incrementUsageCounter(&srcHost->securityHostPkts->icmpFragmentSent, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->securityHostPkts->icmpFragmentRcvd, srcHostIdx, actualDeviceId);
 	if(enableSuspiciousPacketDump) {
+	  traceEvent(TRACE_WARNING, fmt,
+		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
 	  dumpSuspiciousPacket();
 	}
-	break;
       }
 
-      if(enableSuspiciousPacketDump) {
-	traceEvent(TRACE_INFO, "Detected ICMP msg (type=%d/code=%d) from %s -> %s",
-		   icmpPkt.icmp_type, icmpPkt.icmp_code,
-		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
-      }
-    }
+      /* ************************************************************* */
 
-    /* ************************************************************* */
+      if(icmpPkt.icmp_type <= ICMP_MAXTYPE) {
+	if(srcHost->icmpInfo == NULL) {
+	  srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
+	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
+	}
 
-    if(subnetPseudoLocalHost(srcHost))
-      if(subnetPseudoLocalHost(dstHost))
-	device[actualDeviceId].icmpGlobalTrafficStats.local += length;
-      else
-	device[actualDeviceId].icmpGlobalTrafficStats.local2remote += length;
-    else /* srcHost is remote */
-      if(subnetPseudoLocalHost(dstHost))
-	device[actualDeviceId].icmpGlobalTrafficStats.remote2local += length;
-      else
-	device[actualDeviceId].icmpGlobalTrafficStats.remote += length;
+	srcHost->icmpInfo->icmpMsgSent[icmpPkt.icmp_type]++;
 
-    if(icmpChain)
-      checkFilterChain(srcHost, srcHostIdx,
-		       dstHost, dstHostIdx,
-		       0 /* sport */, 0 /* dport */,
-		       length, /* packet length */
-		       0,   /* offset from packet header */
-		       icmpPkt.icmp_type,
-		       IPPROTO_ICMP,
-		       0, /* 1 = fragment, 0 = packet */
-		       bp+hlen, /* pointer to packet content */
-		       icmpChain, ICMP_RULE);
+	if(dstHost->icmpInfo == NULL) {
+	  dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
+	  memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
+	}
 
-    if((icmpPkt.icmp_type == ICMP_ECHO)
-       && (broadcastHost(dstHost) || multicastHost(dstHost)))
-      smurfAlert(srcHostIdx, dstHostIdx);
-    else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
-      u_int16_t dport;
-      struct ip *oip = &icmpPkt.icmp_ip;
-      
-      switch(icmpPkt.icmp_code) {
-      case ICMP_UNREACH_PORT: /* Port Unreachable */
-	memcpy(&dport, ((u_char *)bp+hlen+30), sizeof(dport));
-	dport = ntohs(dport);
-	switch (oip->ip_p) {
-	case IPPROTO_TCP:
-	  if(enableSuspiciousPacketDump)
-	    traceEvent(TRACE_WARNING,
-		       "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
-		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
-	  /* Simulation of rejected TCP connection */
-	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&srcHost->securityHostPkts->rejectedTCPConnSent, dstHostIdx, actualDeviceId);
-	  incrementUsageCounter(&dstHost->securityHostPkts->rejectedTCPConnRcvd, srcHostIdx, actualDeviceId);
+	dstHost->icmpInfo->icmpMsgRcvd[icmpPkt.icmp_type]++;
+
+	switch (icmpPkt.icmp_type) {
+	case ICMP_ECHOREPLY:
+	case ICMP_ECHO:
+	  /* Do not log anything */
 	  break;
 
-	case IPPROTO_UDP:
-	  if(enableSuspiciousPacketDump)
-	    traceEvent(TRACE_WARNING,
-		       "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
-		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
-	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&dstHost->securityHostPkts->udpToClosedPortSent, srcHostIdx, actualDeviceId);
-	  incrementUsageCounter(&srcHost->securityHostPkts->udpToClosedPortRcvd, dstHostIdx, actualDeviceId);
+	case ICMP_UNREACH:
+	case ICMP_REDIRECT:
+	case ICMP_ROUTERADVERT:
+	case ICMP_TIMXCEED:
+	case ICMP_PARAMPROB:
+	case ICMP_MASKREPLY:
+	case ICMP_MASKREQ:
+	case ICMP_INFO_REQUEST:
+	case ICMP_INFO_REPLY:
+	case ICMP_TIMESTAMP:
+	case ICMP_TIMESTAMPREPLY:
+	case ICMP_SOURCE_QUENCH:
+	  if(enableSuspiciousPacketDump) {
+	    dumpSuspiciousPacket();
+	  }
 	  break;
 	}
-	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->securityHostPkts->icmpPortUnreachSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->securityHostPkts->icmpPortUnreachRcvd, srcHostIdx, actualDeviceId);
-	break;
 
-      case ICMP_UNREACH_NET:
-      case ICMP_UNREACH_HOST:
-	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->securityHostPkts->icmpHostNetUnreachSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->securityHostPkts->icmpHostNetUnreachRcvd, srcHostIdx, actualDeviceId);
-	break;
-
-      case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
-	if(enableSuspiciousPacketDump)
-	  traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
-		     "Host [%s] received a ICMP protocol Unreachable from host [%s]"
-		     " (Firewalking scan attempt?)",
-		     dstHost->hostSymIpAddress,
-		     srcHost->hostSymIpAddress);
-	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->securityHostPkts->icmpProtocolUnreachSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->securityHostPkts->icmpProtocolUnreachRcvd, srcHostIdx, actualDeviceId);
-	break;
-      case ICMP_UNREACH_NET_PROHIB:    /* Net Administratively Prohibited */
-      case ICMP_UNREACH_HOST_PROHIB:   /* Host Administratively Prohibited */
-      case ICMP_UNREACH_FILTER_PROHIB: /* Access Administratively Prohibited */
-	if(enableSuspiciousPacketDump)
-	  traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
-		     "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
-		     " (Firewalking scan attempt?)",
-		     dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
-	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->securityHostPkts->icmpAdminProhibitedSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->securityHostPkts->icmpAdminProhibitedRcvd, srcHostIdx, actualDeviceId);
-	break;
+	if(enableSuspiciousPacketDump) {
+	  if(!((icmpPkt.icmp_type == 3) && (icmpPkt.icmp_code == 3))) {
+	    /*
+	      Avoid to print twice the same message:	     
+ 	      - Detected ICMP msg (type=3/code=3) from lhost -> ahost
+	      - Host [ahost] sent UDP data to a closed port of host [lhost:10001]
+	      (scan attempt?)
+	    */
+	  
+	    traceEvent(TRACE_INFO, "Detected ICMP msg [type=%s/code=%d] %s->%s",
+		       mapIcmpType(icmpPkt.icmp_type), icmpPkt.icmp_code,
+		       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+	  }
+	}
       }
-      if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+
+      /* ************************************************************* */
+
+      if(subnetPseudoLocalHost(srcHost))
+	if(subnetPseudoLocalHost(dstHost))
+	  device[actualDeviceId].icmpGlobalTrafficStats.local += length;
+	else
+	  device[actualDeviceId].icmpGlobalTrafficStats.local2remote += length;
+      else /* srcHost is remote */
+	if(subnetPseudoLocalHost(dstHost))
+	  device[actualDeviceId].icmpGlobalTrafficStats.remote2local += length;
+	else
+	  device[actualDeviceId].icmpGlobalTrafficStats.remote += length;
+
+      if(icmpChain)
+	checkFilterChain(srcHost, srcHostIdx,
+			 dstHost, dstHostIdx,
+			 0 /* sport */, 0 /* dport */,
+			 length, /* packet length */
+			 0,   /* offset from packet header */
+			 icmpPkt.icmp_type,
+			 IPPROTO_ICMP,
+			 0, /* 1 = fragment, 0 = packet */
+			 bp+hlen, /* pointer to packet content */
+			 icmpChain, ICMP_RULE);
+
+      if((icmpPkt.icmp_type == ICMP_ECHO)
+	 && (broadcastHost(dstHost) || multicastHost(dstHost)))
+	smurfAlert(srcHostIdx, dstHostIdx);
+      else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
+	u_int16_t dport;
+	struct ip *oip = &icmpPkt.icmp_ip;
+      
+	switch(icmpPkt.icmp_code) {
+	case ICMP_UNREACH_PORT: /* Port Unreachable */
+	  memcpy(&dport, ((u_char *)bp+hlen+30), sizeof(dport));
+	  dport = ntohs(dport);
+	  switch (oip->ip_p) {
+	  case IPPROTO_TCP:
+	    if(enableSuspiciousPacketDump)
+	      traceEvent(TRACE_WARNING,
+			 "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
+			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	    /* Simulation of rejected TCP connection */
+	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	    incrementUsageCounter(&srcHost->securityHostPkts->rejectedTCPConnSent, dstHostIdx, actualDeviceId);
+	    incrementUsageCounter(&dstHost->securityHostPkts->rejectedTCPConnRcvd, srcHostIdx, actualDeviceId);
+	    break;
+
+	  case IPPROTO_UDP:
+	    if(enableSuspiciousPacketDump)
+	      traceEvent(TRACE_WARNING,
+			 "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
+			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	    incrementUsageCounter(&dstHost->securityHostPkts->udpToClosedPortSent, srcHostIdx, actualDeviceId);
+	    incrementUsageCounter(&srcHost->securityHostPkts->udpToClosedPortRcvd, dstHostIdx, actualDeviceId);
+	    break;
+	  }
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&srcHost->securityHostPkts->icmpPortUnreachSent, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->securityHostPkts->icmpPortUnreachRcvd, srcHostIdx, actualDeviceId);
+	  break;
+
+	case ICMP_UNREACH_NET:
+	case ICMP_UNREACH_HOST:
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&srcHost->securityHostPkts->icmpHostNetUnreachSent, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->securityHostPkts->icmpHostNetUnreachRcvd, srcHostIdx, actualDeviceId);
+	  break;
+
+	case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
+	  if(enableSuspiciousPacketDump)
+	    traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
+		       "Host [%s] received a ICMP protocol Unreachable from host [%s]"
+		       " (Firewalking scan attempt?)",
+		       dstHost->hostSymIpAddress,
+		       srcHost->hostSymIpAddress);
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&srcHost->securityHostPkts->icmpProtocolUnreachSent, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->securityHostPkts->icmpProtocolUnreachRcvd, srcHostIdx, actualDeviceId);
+	  break;
+	case ICMP_UNREACH_NET_PROHIB:    /* Net Administratively Prohibited */
+	case ICMP_UNREACH_HOST_PROHIB:   /* Host Administratively Prohibited */
+	case ICMP_UNREACH_FILTER_PROHIB: /* Access Administratively Prohibited */
+	  if(enableSuspiciousPacketDump)
+	    traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
+		       "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
+		       " (Firewalking scan attempt?)",
+		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&srcHost->securityHostPkts->icmpAdminProhibitedSent, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->securityHostPkts->icmpAdminProhibitedRcvd, srcHostIdx, actualDeviceId);
+	  break;
+	}
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+      }
+      sendICMPflow(srcHost, dstHost, length);
     }
-    sendICMPflow(srcHost, dstHost, length);
     break;
 
   case IPPROTO_OSPF:
