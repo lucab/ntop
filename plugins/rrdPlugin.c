@@ -1208,6 +1208,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 /* ******************************* */
 
 void updateCounter(char *hostPath, char *key, Counter value) {
+  traceEvent(CONST_TRACE_INFO, "updateCounter: [%s][%s]", hostPath, key);
   updateRRD(hostPath, key, value, 1);
 }
 
@@ -1668,7 +1669,7 @@ static void handleRRDHTTPrequest(char* url) {
     sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
 
   sendString("<center><form action=\"/plugins/rrdPlugin\" method=GET>\n"
-             "<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
+             "<TABLE BORDER=1  WIDTH=\"80%%\" "TABLE_DEFAULTS">\n"
              "<TR><TH ALIGN=CENTER "DARK_BG">Item</TH>"
                  "<TH ALIGN=CENTER "DARK_BG">Description and Notes</TH></TR>\n"
              "<TR><TH ALIGN=LEFT "DARK_BG">Dump Interval</TH><TD>"
@@ -2056,7 +2057,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
       updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers);
       updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers);
 
-      if((hostKey == el->hostNumIpAddress) && el->protoIPTrafficInfos) {
+      if(el->protoIPTrafficInfos) {
 #ifdef RRD_DEBUG
 	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
 #endif
