@@ -480,7 +480,7 @@ dnl>
 AC_CHECK_FUNCS(strtok_r)
 AC_CHECK_FUNCS(localtime_r)
 AC_CHECK_FUNCS(ctime_r)
-
+AC_CHECK_FUNCS(snprintf)
 
 
 echo

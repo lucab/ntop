@@ -2036,3 +2036,16 @@ void deviceSanityCheck(char* string) {
   }  
 }
 
+/* ****************************************************** */
+
+#ifndef HAVE_SNPRINTF
+int snprintf(char *string, size_t maxlen, const char *format, ...) {
+  int ret=0;
+  va_list args;
+  
+  va_start(args, format);
+  vsprintf(string,format,args);
+  va_end(args);
+  return ret;
+}
+#endif
