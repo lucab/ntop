@@ -871,7 +871,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	the5Record.flowRecord[i].dPkts     = the1Record.flowRecord[i].dPkts;
 	if(ntohl(the1Record.flowRecord[i].dOctets) == 0) {
 	  /* We assume that all packets are 512 bytes long */
-	  the5Record.flowRecord[i].dOctets = htonl(ntohl(the1Record.flowRecord[i].dPkts)*512);
+	  u_int32_t tmp = ntohl(the1Record.flowRecord[i].dPkts);
+	  the5Record.flowRecord[i].dOctets = htonl(tmp*512);
 	} else
 	  the5Record.flowRecord[i].dOctets = the1Record.flowRecord[i].dOctets;
 
@@ -1007,6 +1008,10 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	    V9TemplateField *fields = cursor->fields;
 	    struct flow_ver5_rec record;
 
+            /* initialize to zero */
+	    record.src_as = 0;
+	    record.dst_as = 0;
+
 #ifdef DEBUG_FLOWS
 	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d", fs.templateId);
 #endif
@@ -1073,7 +1078,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		  memcpy(&record.dst_as, &buffer[displ], 2); displ += 2;
 		  break;
 		case 16: /* SRC_AS */
-		  memcpy(&record.dst_as, &buffer[displ], 2); displ += 2;
+		  memcpy(&record.src_as, &buffer[displ], 2); displ += 2;
 		  break;
 		}
 	      }
