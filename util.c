@@ -242,6 +242,8 @@ unsigned short isLocalAddress(struct in_addr *addr, u_int deviceId) {
   traceEvent(CONST_TRACE_INFO, "NetMask: %s", intoa(myGlobals.device[deviceId].netmask));
 #endif
 
+  if(addr == NULL) return(0);
+
   if((addr->s_addr & myGlobals.device[deviceId].netmask.s_addr) == myGlobals.device[deviceId].network.s_addr) {
 #ifdef ADDRESS_DEBUG
     traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local\n", intoa(*addr));
