@@ -1342,7 +1342,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   struct timeval tvstrct;
   u_int firstEmptySlot = NO_PEER;
   char rcStr[128];
-  int len;
+  int len = 0;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(TRACE_INFO, "Sanity check failed (3) [Low memory?]");
@@ -1814,15 +1814,16 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  free(rcStr);
 	}
-      } else if((sport == 8875 /* Napster Redirector */) && (packetDataLength > 5)) {
+      } else if((sport == 8875 /* Napster Redirector */) 
+		&& (packetDataLength > 5)) {
 	char address[64] = { 0 };
-	int i, len;
+	int i;
 
 	FD_SET(HOST_SVC_NAPSTER_REDIRECTOR, &srcHost->flags);
 	FD_SET(HOST_SVC_NAPSTER_CLIENT,     &dstHost->flags);
 
-	if(packetDataLength >= 63)
-	  len = 63;
+	if(packetDataLength >= sizeof(address))
+	  len = sizeof(address)-1;
 	else
 	  len = packetDataLength;
 
@@ -1864,6 +1865,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		   about the protocol.
 		*/
 		) {
+	if(packetDataLength >= sizeof(rcStr))
+	  len = sizeof(rcStr)-1;
+	else
+	  len = packetDataLength;
+
 	/*
 	  This is a brand new session: let's check whether this is
 	  not a faked session (i.e. a known protocol is running at
@@ -1878,35 +1884,35 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     && (dport != 3128  /* squid */)
 	     && isInitialHttpData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: HTTP detected at wrong port (trojan?) "
-		       "%s:%d -> %s:%d [%s]\n",
+		       "%s:%d -> %s:%d [%s]",
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
 	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  } else if((sport != 21) && (sport != 25) && isInitialFtpData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
-		       "%s:%d -> %s:%d [%s]\n",
+		       "%s:%d -> %s:%d [%s]",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
 	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  } else if(((sport == 21) || (sport == 25)) && (!isInitialFtpData(rcStr))) {
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
-		       "at port %d %s:%d -> %s:%d [%s]\n", sport,
+		       "at port %d %s:%d -> %s:%d [%s]", sport,
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
 	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  } else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: SSH detected at wrong port (trojan?) "
-		       "%s:%d -> %s:%d [%s]\n",
+		       "%s:%d -> %s:%d [%s]  ",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
 	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr))) {
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no SSH) detected (trojan?) "
-		       "at port 22 %s:%d -> %s:%d [%s]\n",
+		       "at port 22 %s:%d -> %s:%d [%s]",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
@@ -1920,9 +1926,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	}
       }
 
+      if(packetDataLength >= sizeof(rcStr))
+	len = sizeof(rcStr)-1;
+      else
+	len = packetDataLength;
+
       if(sport == 21) {
 	FD_SET(HOST_SVC_FTP, &srcHost->flags);
 	memset(rcStr, 0, sizeof(rcStr));
+
 	strncpy(rcStr, packetData, len);
 	/*
 	  227 Entering Passive Mode (131,114,21,11,156,95)
@@ -1945,7 +1957,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	memset(rcStr, 0, sizeof(rcStr));
 	memcpy(rcStr, packetData, len);
 	
-	  if((rcStr[0] == 0x0) /* Message type: Session message */
+	if((rcStr[0] == 0x0) /* Message type: Session message */
 	     && (rcStr[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
 	    int i;
 
