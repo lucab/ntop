@@ -563,7 +563,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     int value1, value2;
     unsigned long topValue;
 
-    topValue = 100000000 /* 100 Mbps */;
+    topValue = 1000000000 /* 1 Gbit/s */;
 
     if(strncmp(key, "pkt", 3) == 0) {
       topValue /= 8*64 /* 64 bytes is the shortest packet we care of */;
