@@ -149,6 +149,8 @@ static struct option const long_options[] = {
 
   { "set-pcap-nonblocking",             no_argument,       NULL, 139 },
 
+  { "instance",                         required_argument, NULL, 140 },
+
   { "disable-stopcap",                  no_argument,       NULL, 142 },
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
@@ -641,6 +643,13 @@ int parseOptions(int argc, char* argv[]) {
  #endif
       break;
 #endif
+
+    case 140: /* instance */
+      stringSanityCheck(optarg, "--instance");
+      if(myGlobals.runningPref.instance != NULL)
+        free(myGlobals.runningPref.instance);
+      myGlobals.runningPref.instance = strdup(optarg);
+      break;
 
     case 142: /* disable-stopcap */
       myGlobals.runningPref.disableStopcap = TRUE;

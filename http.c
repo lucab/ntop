@@ -721,7 +721,16 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
     sendString("<BODY LINK=blue VLINK=blue>\n\n");
     
     sendString("<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n");
-    sendString("<tr><td colspan=\"2\" align=\"left\"><img src=\"/ntop_logo.gif\"></td></tr>\n");
+    sendString("<tr><td colspan=\"2\" align=\"left\">");
+    if(myGlobals.runningPref.instance != NULL) {
+      sendString("<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<tr><td><img src=\"/ntop_logo.gif\">");
+      sendString("</td>\n<td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
+      sendString(myGlobals.runningPref.instance);
+      sendString("</td></tr>\n</table>");
+    } else {
+      sendString("<img src=\"/ntop_logo.gif\">");
+    }
+    sendString("</td></tr>\n");
     sendString("<tr><th class=\"leftmenuitem\">\n");
     sendString("<div id=ntopMenuID>xxx</div>\n");
     sendString("<script language=\"JavaScript\"><!--\n");

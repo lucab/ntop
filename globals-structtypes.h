@@ -1972,6 +1972,8 @@ typedef struct _userPref {
   bool setNonBlocking;          /* '139' */
 #endif
 
+  char *instance;               /* '140' */
+
   bool disableStopcap;          /* '142' */
 
   bool disableInstantSessionPurge; /* '144' */

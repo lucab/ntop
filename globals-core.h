@@ -102,6 +102,11 @@ extern void revertSlash(char *str, int mode);
 extern void revertDoubleColumn(char *str);
 extern void checkUserIdentity(int userSpecified);
 
+#ifndef WIN32
+/* utildl.c */
+extern int getDynamicLoadPaths(char *main, int mainLen, char *lib, int libLen, char *env, int envLen);
+#endif
+
 /****** function declarations ***** */
 
 /* globals-core.c */

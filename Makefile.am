@@ -133,7 +133,7 @@ libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      hash.c       iface.c       initialize.c  leaks.c        \
                      ntop.c       pbuf.c         \
                      plugin.c     prefs.c       protocols.c   \
-                     sessions.c   term.c        util.c         \
+                     sessions.c   term.c        util.c        utildl.c \
                      traffic.c    vendor.c      version.c      \
                      ntop_darwin.c
 

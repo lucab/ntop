@@ -71,6 +71,7 @@ ntop \- display top network users
 .RB [ --disable-stopcap ]
 .RB [ --disable-mutexextrainfo ]
 .RB [ --fc-only ]
+.RB [ --instance ]
 .RB [ --no-fc ]
 .RB [ --no-invalid-lun ]
 .RB [ --p3p-cp ]
@@ -937,6 +938,36 @@ is shutdown.
 .It --fc-only 
 
 Display only Fibre Channel statistics.
+
+.It --instance
+
+You can run multiple instances of
+.B ntop
+simultaneously by specifying different -P values (typically through
+separate ntop.conf files).  If you set a value for this parameter (available only on the command
+line), you (1) display the 'instance' name on every web page and (2) alter the log prefix from "NTOP"
+to your chosen value.
+
+If you want to make the tag more obvious, create a .instance class in style.css, e.g.:
+
+   .instance {
+     color: #666666;
+     font-size: 18pt;
+   }
+
+Note (UNIX): To run completely different versions of the
+.B ntop
+binary, you need to compile and install into a different library (using ./configure --prefix)
+and then specify the LD_LIBRARY_PATH before invoking, e.g.
+
+LD_LIBRARY_PATH=/devel/lib/ntop/:... /devel/bin/ntop ...args...
+
+NOTE: On the web pages, 
+.B ntop 
+uses the dladdr() function.  The original Solaris routine had a bug, replicated in
+FreeBSD (and possibly other places) where it uses the ARGV[0] value - which might be
+erroneous - instead of the actual file name.  If the 'running from' value looks bogus but
+the 'libaries in' value looks ok, go with the libarary.
 
 .It --no-fc 
 

@@ -87,8 +87,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo fcUtils.lo \
 	getopt.lo getopt1.lo globals-core.lo hash.lo iface.lo \
 	initialize.lo leaks.lo ntop.lo pbuf.lo plugin.lo prefs.lo \
-	protocols.lo sessions.lo term.lo util.lo traffic.lo vendor.lo \
-	version.lo ntop_darwin.lo
+	protocols.lo sessions.lo term.lo util.lo utildl.lo traffic.lo \
+	vendor.lo version.lo ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
 	fcReport.lo http.lo report.lo reportUtils.lo ssl.lo \
@@ -135,8 +135,8 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/sflowPlugin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/snmpPlugin.Po ./$(DEPDIR)/ssl.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/term.Plo ./$(DEPDIR)/traffic.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/util.Plo ./$(DEPDIR)/vendor.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/version.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/util.Plo ./$(DEPDIR)/utildl.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/vendor.Plo ./$(DEPDIR)/version.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/webInterface.Plo
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -361,7 +361,7 @@ libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      hash.c       iface.c       initialize.c  leaks.c        \
                      ntop.c       pbuf.c         \
                      plugin.c     prefs.c       protocols.c   \
-                     sessions.c   term.c        util.c         \
+                     sessions.c   term.c        util.c        utildl.c \
                      traffic.c    vendor.c      version.c      \
                      ntop_darwin.c
 
@@ -577,6 +577,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/term.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/traffic.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utildl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vendor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/webInterface.Plo@am__quote@

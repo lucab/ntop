@@ -2709,7 +2709,10 @@ void traceEvent(int eventTraceLevel, char* file,
 #endif
 
       /* SYSLOG and set */
-      openlog("ntop", LOG_PID, myGlobals.runningPref.useSyslog);
+      if(myGlobals.runningPref.instance != NULL)
+        openlog(myGlobals.runningPref.instance, LOG_PID, myGlobals.runningPref.useSyslog);
+      else
+        openlog(CONST_DAEMONNAME, LOG_PID, myGlobals.runningPref.useSyslog);
 
       /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
 #ifdef MAKE_WITH_LOG_XXXXXX

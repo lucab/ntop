@@ -6407,7 +6407,9 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   /* This prints either as text or html, but no header so it can be included in bug reports */
 
   char buf[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
-  int i, bufLength, bufPosition, bufUsed;
+  char main[LEN_GENERAL_WORK_BUFFER], lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
+  const char *_env = NULL;
+  int i, rc, bufLength, bufPosition, bufUsed;
   unsigned int idx, minLen=-1, maxLen=0;
   unsigned long totBuckets=0, nonEmptyBuckets=0;
 
@@ -6446,6 +6448,18 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #ifdef HAVE_PCAP_LIB_VERSION
   printFeatureConfigInfo(textPrintFlag, "libpcap version", (char *)pcap_lib_version());
 #endif
+
+#ifndef WIN32
+  if(getDynamicLoadPaths(main, sizeof(main), lib, sizeof(lib), env, sizeof(env)) == 0) {
+    printFeatureConfigInfo(textPrintFlag, "Running from", main);
+    printFeatureConfigInfo(textPrintFlag, "Libraries in", lib);
+    if(textPrintFlag == TRUE)
+      printFeatureConfigInfo(textPrintFlag, "Library path", env);
+  }
+#endif
+
+  if(myGlobals.runningPref.instance != NULL) 
+    printFeatureConfigInfo(textPrintFlag, "Instance", myGlobals.runningPref.instance);
 
 #ifndef WIN32
   {
@@ -6724,6 +6738,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printParameterConfigInfo(textPrintFlag, "--fc-only",
                            pref->printFcOnly == TRUE ? "Yes" : "No",
                            "No");
+
+  printParameterConfigInfo(textPrintFlag, "--instance", 
+                           pref->instance,
+                           NULL);
 
   printParameterConfigInfo(textPrintFlag, "--no-fc",
                            pref->printIpOnly == TRUE ? "Yes" : "No",
@@ -9040,7 +9058,10 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 	    fromhost(&req);
 	    if(!hosts_access(&req)) {
 	      closelog(); /* just in case */
-	      openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
+              if(myGlobals.runningPref.instance != NULL)
+	        openlog(myGlobals.runningPref.instance, LOG_PID, deny_severity);
+              else
+	        openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
 	      syslog(deny_severity, "refused connect from %s", eval_client(&req));
 	    }
 	    else

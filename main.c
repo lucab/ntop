@@ -28,8 +28,7 @@
 /*
  * Hello World! This is ntop speaking...
  */
-void welcome (FILE * fp)
-{
+void welcome (FILE * fp) {
   fprintf (fp, "Welcome to %s v.%s %s\n[Configured on %s, built on %s]\n",
 	   myGlobals.program_name, version, THREAD_MODE, configureDate, buildDate);
   
@@ -139,6 +138,7 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
   fprintf(fp, "    [--fc-only]                                           %sDisplay only Fibre Channel statistics\n", newLine);
   fprintf(fp, "    [--no-fc]                                             %sDisable processing & Display of Fibre Channel\n", newLine);
+  fprintf(fp, "    [--instance]                                          %sSet log name for this ntop instance\n", newLine);
   fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
   fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
@@ -272,6 +272,7 @@ int main(int argc, char *argv[]) {
   struct stat fileStat;
   int effective_argc;
   char **effective_argv;
+  char main[LEN_GENERAL_WORK_BUFFER], lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
 
   /* printf("Wait please: ntop is coming up...\n"); */
 
@@ -452,6 +453,18 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2004 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
+ 
+#ifndef WIN32
+  if(getDynamicLoadPaths(main, sizeof(main), lib, sizeof(lib), env, sizeof(env)) == 0) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop is running from '%s'\n", main);
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: (but see warning on man page for the --instance parameter)\n");
+    if(strcmp(main, lib) != 0) 
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop libraries are in '%s'\n", lib);
+  } else {
+    traceEvent(CONST_TRACE_NOISY, "NOTE: Unable to establish where ntop is running from");
+  }
+#endif
+
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Initializing ntop");
 
   reportValues(&lastTime);
