@@ -1531,7 +1531,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateCounter(rrdPath, "multicastPkts", myGlobals.device[devIdx].multicastPkts.value);
 	updateCounter(rrdPath, "ethernetBytes", myGlobals.device[devIdx].ethernetBytes.value);
 	updateGauge(rrdPath,   "knownHostsNum", myGlobals.device[devIdx].hostsno);
-	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(i));
+	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(devIdx));
 	updateCounter(rrdPath, "ipBytes",       myGlobals.device[devIdx].ipBytes.value);
 
 	if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
@@ -1678,6 +1678,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		 purgeCountUnlink,
 		 purgeCountErrors);
 #endif
+
+      closedir(workDir);
     } else {
       traceEvent(CONST_TRACE_ERROR, "RRD: Unable to opendir(%s), errno=%d", rrdPath, errno);
     }
