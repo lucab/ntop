@@ -96,6 +96,14 @@
 #define NTOP_DEFAULT_DONT_TRUST_MAC_ADDR 0
 
 /*
+ * Other sizes and limits...
+ */
+#define URL_MAX_LEN                      512 /* used in http.c */
+
+#define MAX_DEVICE_NAME_LEN               64 /* used in util.c */
+
+
+/*
  * External URLs...
  */
 #define LSOF_URL        "http://freshmeat.net/projects/lsof/"

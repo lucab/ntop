@@ -775,6 +775,153 @@ static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
 void printNtopConfigHInfo(int textPrintFlag) {
   char buf[BUF_SIZE];
 
+  sendString(texthtml("\n\nCompile Time: Debug settings in ntop.h\n\n",
+                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Debug settings in ntop.h</tr>\n"));
+
+  printFeatureConfigInfo(textPrintFlag, "DEBUG",
+#ifdef DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "ADDRESS_DEBUG",
+#ifdef ADDRESS_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "DNS_DEBUG",
+#ifdef DNS_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "DNS_SNIFF_DEBUG",
+#ifdef DNS_SNIFF_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "FTP_DEBUG",
+#ifdef FTP_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "GDBM_DEBUG",
+#ifdef GDBM_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "HASH_DEBUG",
+#ifdef HASH_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "HOST_FREE_DEBUG",
+#ifdef HOST_FREE_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "HTTP_DEBUG",
+#ifdef HTTP_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "MEMORY_DEBUG",
+#ifdef MEMORY_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "NETFLOW_DEBUG",
+#ifdef NETFLOW_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "SEMAPHORE_DEBUG",
+#ifdef SEMAPHORE_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "SESSION_TRACE_DEBUG",
+#ifdef SESSION_TRACE_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "STORAGE_DEBUG",
+#ifdef STORAGE_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "UNKNOWN_PACKET_DEBUG",
+#ifdef UNKNOWN_PACKET_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "PRINT_ALL_SESSIONS",
+#ifdef PRINT_ALL_SESSIONS
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "PRINT_RETRANSMISSION_DATA",
+#ifdef PRINT_RETRANSMISSION_DATA
+     "yes"
+#else
+     "no"
+#endif
+  );
+
+  printFeatureConfigInfo(textPrintFlag, "FORK_CHILD_PROCESS",
+#ifdef FORK_CHILD_PROCESS
+     "yes (normal)"
+#else
+     "no"
+#endif
+  );
+
   sendString(texthtml("\n\nCompile Time: config.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: config.h</tr>\n"));
 
@@ -2332,6 +2479,197 @@ sendString(texthtml("\n\nAddress counts\n\n", "<tr><th colspan=\"2\">Address cou
   printFeatureConfigInfo(textPrintFlag, "additional libraries", additional_libs);
   printFeatureConfigInfo(textPrintFlag, "install path", install_path);
 #endif
+
+  /* *************************** */
+
+#if defined(DEBUG)                     || \
+    defined(ADDRESS_DEBUG)             || \
+    defined(DNS_DEBUG)                 || \
+    defined(DNS_SNIFF_DEBUG)           || \
+    defined(FRAGMENT_DEBUG)            || \
+    defined(FTP_DEBUG)                 || \
+    defined(GDBM_DEBUG)                || \
+    defined(HASH_DEBUG)                || \
+    defined(HOST_FREE_DEBUG)           || \
+    defined(HTTP_DEBUG)                || \
+    defined(MEMORY_DEBUG)              || \
+    defined(NETFLOW_DEBUG)             || \
+    defined(PACKET_DEBUG)              || \
+    defined(SEMAPHORE_DEBUG)           || \
+    defined(SESSION_TRACE_DEBUG)       || \
+    defined(STORAGE_DEBUG)             || \
+    defined(UNKNOWN_PACKET_DEBUG)      || \
+    defined(PRINT_ALL_SESSIONS)        || \
+    defined(PRINT_RETRANSMISSION_DATA) || \
+    !defined(FORK_CHILD_PROCESS)
+  if (1) { /* If one of the flags are set, we display this as part of the html version too */
+#else
+  if (textPrintFlag == TRUE) {
+#endif
+
+      sendString(texthtml("\n\nCompile Time: Debug settings in ntop.h\n\n",
+                          "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Debug settings in ntop.h</tr>\n"));
+
+      printFeatureConfigInfo(textPrintFlag, "DEBUG",
+#ifdef DEBUG
+         "yes"
+#else
+         "no"
+#endif
+          );
+
+      printFeatureConfigInfo(textPrintFlag, "ADDRESS_DEBUG",
+#ifdef ADDRESS_DEBUG
+     "yes"
+#else
+     "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "DNS_DEBUG",
+#ifdef DNS_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "DNS_SNIFF_DEBUG",
+#ifdef DNS_SNIFF_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "FRAGMENT_DEBUG",
+#ifdef FRAGMENT_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "FTP_DEBUG",
+#ifdef FTP_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "GDBM_DEBUG",
+#ifdef GDBM_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "HASH_DEBUG",
+#ifdef HASH_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "HOST_FREE_DEBUG",
+#ifdef HOST_FREE_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "HTTP_DEBUG",
+#ifdef HTTP_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "MEMORY_DEBUG",
+#ifdef MEMORY_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "NETFLOW_DEBUG",
+#ifdef NETFLOW_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "PACKET_DEBUG",
+#ifdef PACKET_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "SEMAPHORE_DEBUG",
+#ifdef SEMAPHORE_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "SESSION_TRACE_DEBUG",
+#ifdef SESSION_TRACE_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "STORAGE_DEBUG",
+#ifdef STORAGE_DEBUG
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "UNKNOWN_PACKET_DEBUG",
+#ifdef UNKNOWN_PACKET_DEBUG
+             "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "PRINT_ALL_SESSIONS",
+#ifdef PRINT_ALL_SESSIONS
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag,     "PRINT_RETRANSMISSION_DATA",
+#ifdef PRINT_RETRANSMISSION_DATA
+         "yes"
+#else
+         "no"
+#endif
+      );
+
+      printFeatureConfigInfo(textPrintFlag, "FORK_CHILD_PROCESS",
+#ifdef FORK_CHILD_PROCESS
+         "yes (normal)"
+#else
+         "no"
+#endif
+      );
+  }
 
   /* *************************** */
 

@@ -25,8 +25,132 @@
 #ifndef NTOP_H
 #define NTOP_H
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/*
+ * Debug settings...
+ *
+ *    WARNING: Descriptions are APPROXIMATE.  Check the code before turning
+ *             these on/off.  They can cause HUGE amounts of log messages,
+ *             and/or slow ntop down so it can't keep up.
+ *
+ *             Debugging code has not been widely tested, is subject to change
+ *             on a developers whim and should NOT be used on production systems!
+ *
+ *                   OK?  You've been warned!
+ *
+ *  If you add something here, remember to add it to the #ifdef and the 
+ *  detailed reporting lines in webInterface.c
+ *
+ *  1st are those normally defined.  
+ *  Comment these out to make MAJOR, debug-type changes in ntop's activities!
+ */
+
+/* Controls fork() call in http.c */
+#define FORK_CHILD_PROCESS
+
+/*
+ * 2nd are those normally NOT defined.
+ * Enable these out to make MAJOR, debug-type changes in ntop's activities!
+ *   These are usually lots and lots of log messages
+ */
+
+/* ADDRESS_DEBUG logs the activities in address.c related to testing for
+ * local, pseudolocal and remote status for ip addresses.
+ */
+/* #define ADDRESS_DEBUG */
+
+/* DNS_DEBUG logs the activites in address.c related to Name resolution.
+ */
+/* #define DNS_DEBUG */
+
+/* DNS_SNIFF_DEBUG logs the activites in pbuf.c and sessions.c related to
+ * DNS requests and replies sniffed out of the ntop monitored traffic.
+ */
+/* #define DNS_SNIFF_DEBUG */
+
+/* FRAGMENT_DEBUG logs information about packet fragments nto receives.
+ */
+/* #define FRAGMENT_DEBUG */
+
+/* FTP_DEBUG logs ftp control session information.
+ */
+/* #define FTP_DEBUG */
+
+/* GDBM_DEBUG logs the activites in address.c related to
+ *  It also causes updateOSName() in util.c to log it's updates.
+ */
+/* #define GDBM_DEBUG */
+
+/* HASH_DEBUG logs the adding of values to the hash.  It also enables
+ * (a presently unused) routine, hashDump().
+ */
+/* #define HASH_DEBUG */
+
+/* HOST_FREE_DEBUG logs the freeing of hash_hostTraffic by freeHostInfo() in hash.c
+ */
+/* #define HOST_FREE_DEBUG */
+
+/* HTTP_DEBUG logs the http sessions.  It logs HTTP/1... from source port 80
+ * and anything to destination port 80.
+ */
+/* #define HTTP_DEBUG */
+
+/* MEMORY_DEBUG turns on the code in leaks.c (ntop_safexxxx) which monitors
+ *  memory allocations for leaks.
+ *  WARNING: There is code in pbuf.c that will stop ntop after a specified
+ *           number of packets.
+ *           The size of the hash_list (later in ntop.h) is also restricted.
+ */
 /* #define MEMORY_DEBUG */
 
+/* NETFLOW_DEBUG logs the netflow packets as they are sent from 
+ * sendNetFlow() in netflow.c
+ */
+/* #define NETFLOW_DEBUG */
+
+/* PACKET_DEBUG writes the IP and ETHER packets received by ntop to
+ * a file.  Major impact on performance...
+ */
+/* #define PACKET_DEBUG */
+
+/* SEMAPHORE_DEBUG causes util.c to log information about semaphore operations.
+ */
+/* #define SEMAPHORE_DEBUG */
+
+/* SESSION_TRACE_DEBUG causes sessions.c to log the start and end of
+ * tcp sessions.
+ */
+/* #define SESSION_TRACE_DEBUG */
+
+/* STORAGE_DEBUG causes util.c to log the store/resurrection of host information,
+ * i.e. the -S command line parameter.
+ */
+/* #define STORAGE_DEBUG */
+
+/* UNKNOWN_PACKET_DEBUG causes pbuf.c to log packets that are
+ * either from an unknown protocol or of an unknown ethernet type
+ */
+/* #define UNKNOWN_PACKET_DEBUG */
+
+/*
+ * 3rd are those that cause more data (perhaps controversial or experimental) to
+ * be reported.
+ */
+
+/* PRINT_ALL_SESSIONS causes report.c/reportUtils.c to include in reports
+ * lines for sessions that are not "active".
+ */
+/* #define PRINT_ALL_SESSIONS */
+
+/* PRINT_RETRANSMISSION_DATA causes report.c/reportUtils.c to include in reports
+ * lines for sessions that are not "active".
+ */
+/* #define PRINT_RETRANSMISSION_DATA */
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
    On some systems these defines make reentrant library

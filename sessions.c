@@ -24,8 +24,6 @@
 
 #include "ntop.h"
 
-/* #define TRACE_TRAFFIC_INFO */
-
  /* ************************************ */
 
 u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
@@ -45,7 +43,7 @@ static PortUsage* allocatePortUsage(void) {
   PortUsage *ptr;
 
 #ifdef DEBUG
-  printf("allocatePortUsage() called\n");
+  printf("DEBUG: allocatePortUsage() called\n");
 #endif
 
   ptr = (PortUsage*)calloc(1, sizeof(PortUsage));
@@ -132,7 +130,7 @@ void updateUsedPorts(HostTraffic *srcHost,
     if(srcHost->portsUsage[sport] == NULL) srcHost->portsUsage[sport] = allocatePortUsage();
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Adding svr peer %u", dstHost->hostTrafficBucket);
+    traceEvent(TRACE_INFO, "DEBUG: Adding svr peer %u", dstHost->hostTrafficBucket);
 #endif
 
     srcHost->portsUsage[sport]->serverTraffic += length;
@@ -143,7 +141,7 @@ void updateUsedPorts(HostTraffic *srcHost,
       dstHost->portsUsage[sport] = allocatePortUsage();
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Adding client peer %u", dstHost->hostTrafficBucket);
+    traceEvent(TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
     dstHost->portsUsage[sport]->clientTraffic += length;
@@ -155,7 +153,7 @@ void updateUsedPorts(HostTraffic *srcHost,
     if(srcHost->portsUsage[dport] == NULL) srcHost->portsUsage[dport] = allocatePortUsage();
 
 #ifdef DEBUG      
-    traceEvent(TRACE_INFO, "Adding client peer %u", dstHost->hostTrafficBucket);
+    traceEvent(TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
     srcHost->portsUsage[dport]->clientTraffic += length;
@@ -166,7 +164,7 @@ void updateUsedPorts(HostTraffic *srcHost,
       dstHost->portsUsage[dport] = allocatePortUsage();
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Adding svr peer %u", srcHost->hostTrafficBucket);
+    traceEvent(TRACE_INFO, "DEBUG: Adding svr peer %u", srcHost->hostTrafficBucket);
 #endif
 
     dstHost->portsUsage[dport]->serverTraffic += length;
@@ -234,11 +232,11 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 
   myGlobals.device[actualDeviceId].numTcpSessions--;
 
-#ifdef TRACE_TRAFFIC_INFO
+#ifdef SESSION_TRACE_DEBUG
   {
     char buf[32], buf1[32];
 
-    traceEvent(TRACE_INFO, "Session terminated: %s:%d<->%s:%d (lastSeend=%d) (# sessions = %d)",
+    traceEvent(TRACE_INFO,i "SESSION_TRACE_DEBUG: Session terminated: %s:%d<->%s:%d (lastSeend=%d) (# sessions = %d)",
 	       _intoa(sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
 	       _intoa(sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
 	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numTcpSessions);
@@ -261,7 +259,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
   if(!myGlobals.enableSessionHandling) return;
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions (device=%d, sessions=%d)\n",
+  traceEvent(TRACE_INFO, "DEBUG: Called scanTimedoutTCPSessions (device=%d, sessions=%d)\n",
 	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
@@ -305,14 +303,14 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
 	if(myGlobals.device[actualDeviceId].tcpSession[idx] == thisSession) {
 #ifdef DEBUG
-	  traceEvent(TRACE_WARNING, "Found problem on idx %d", idx);
+	  traceEvent(TRACE_WARNING, "DEBUG: Found problem on idx %d", idx);
 #endif
 	  myGlobals.device[actualDeviceId].tcpSession[idx] = thisSession->next;
 
 	  if(myGlobals.device[actualDeviceId].tcpSession[idx] == 
 	     myGlobals.device[actualDeviceId].tcpSession[idx]->next) {
 #ifdef DEBUG
-	    traceEvent(TRACE_WARNING, "Patched problem on idx %d", idx);
+	    traceEvent(TRACE_WARNING, "DEBUG: Patched problem on idx %d", idx);
 #endif
 	    myGlobals.device[actualDeviceId].tcpSession[idx]->next = NULL;
 	  }
@@ -335,7 +333,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   } /* end for */
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "scanTimedoutTCPSessions: freed %u sessions\n", freeSessionCount);
+  traceEvent(TRACE_INFO, "DEBUG: scanTimedoutTCPSessions: freed %u sessions\n", freeSessionCount);
 #endif
 }
 
@@ -407,7 +405,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		 sport+dport) % myGlobals.device[actualDeviceId].numTotSessions);
   
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "%s:%d->%s:%d %d->",
+  traceEvent(TRACE_INFO, "DEBUG: %s:%d->%s:%d %d->",
 	     srcHost->hostSymIpAddress, sport,
 	     dstHost->hostSymIpAddress, dport, idx);
 #endif
@@ -459,17 +457,17 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Search for session: %d (%d <-> %d)", found, sport, dport);
+    traceEvent(TRACE_INFO, "DEBUG: Search for session: %d (%d <-> %d)", found, sport, dport);
 #endif
 
     if(!found) {
       /* New Session */
 #ifdef DEBUG
-      printf(" NEW ");
+      printf("DEBUG: NEW ");
 #endif
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "TCP hash [act size: %d]\n",
+      traceEvent(TRACE_INFO, "DEBUG: TCP hash [act size: %d]\n",
 		 myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
@@ -502,8 +500,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->initiatorRealIp.s_addr = srcHost->hostIpAddress.s_addr;
       theSession->remotePeerRealIp.s_addr = dstHost->hostIpAddress.s_addr;
 
-#ifdef TRACE_TRAFFIC_INFO
-      traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
+#ifdef SESSION_TRACE_DEBUG
+      traceEvent(TRACE_INFO, "SESSION_TRACE_DEBUG: New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
 		 dstHost->hostNumIpAddress, dport,
 		 srcHost->hostNumIpAddress, sport,
 		 myGlobals.device[actualDeviceId].numTcpSessions);
@@ -527,7 +525,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     } 
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "->%d\n", idx);
+    traceEvent(TRACE_INFO, "DEBUG: ->%d\n", idx);
 #endif
     theSession->lastSeen = myGlobals.actTime;
 
@@ -558,7 +556,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  microSecTimeDiff = getTimeMapping(transactionId, tvstrct);
 
 #ifdef HTTP_DEBUG
-	  traceEvent(TRACE_INFO, "%s->%s [%s]\n",
+	  traceEvent(TRACE_INFO, "HTTP_DEBUG: %s->%s [%s]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
 		     rcStr);
@@ -615,7 +613,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    }
 	  } else {
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "getTimeMapping(0x%X) failed for HTTP", transactionId);
+	    traceEvent(TRACE_INFO, "DEBUG: getTimeMapping(0x%X) failed for HTTP", transactionId);
 #endif
 	  }
 	}
@@ -628,7 +626,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  rcStr[packetDataLength] = '\0';
 
 #ifdef HTTP_DEBUG
-	  printf("%s->%s [%s]\n",
+	  printf("HTTP_DEBUG: %s->%s [%s]\n",
 		 srcHost->hostSymIpAddress,
 		 dstHost->hostSymIpAddress,
 		 rcStr);
@@ -678,7 +676,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  Mozilla/4.76 [en] (Win98; U)
 		*/
 #ifdef DEBUG
-		printf("=> '%s' (len=%d)\n", &row[12], packetDataLength);
+		printf("DEBUG: => '%s' (len=%d)\n", &row[12], packetDataLength);
 #endif
 		browser = token = strtok_r(&row[12], "(", &tokState);
 		if(token == NULL) break; else token = strtok_r(NULL, ";", &tokState);
@@ -699,14 +697,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
 		if(browser != NULL) {
 		  trimString(browser);
-		  printf("Browser='%s'\n", browser);
+		  printf("DEBUG: Browser='%s'\n", browser);
 		}
 #endif
 
 		if(os != NULL) {
 		  trimString(os);
 #ifdef DEBUG
-		  printf("OS='%s'\n", os);
+		  printf("DEBUG: OS='%s'\n", os);
 #endif
 		  if(srcHost->osName == NULL) {
 		    srcHost->osName = strdup(os);
@@ -901,8 +899,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		}
 	    sprintf(rcStr, "%d.%d.%d.%d", a, b, c, d);
 
-#ifdef DEBUG
-	    traceEvent(TRACE_INFO, "FTP: (%d) [%d.%d.%d.%d:%d]",
+#ifdef FTP_DEBUG
+	    traceEvent(TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",
 		       inet_addr(rcStr), a, b, c, d, (e*256+f));
 #endif
 	    addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
@@ -920,13 +918,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->maxWindow = tcpWin;
 
 #ifdef DEBUG
+    printf("DEBUG: [%d]", tp->th_flags);
     if(tp->th_flags & TH_ACK) printf("ACK ");
     if(tp->th_flags & TH_SYN) printf("SYN ");
     if(tp->th_flags & TH_FIN) printf("FIN ");
     if(tp->th_flags & TH_RST) printf("RST ");
     if(tp->th_flags & TH_PUSH) printf("PUSH");
-    printf(" [%d]\n", tp->th_flags);
-    printf("sessionsState=%d\n", theSession->sessionState);
+    printf("\n");
+    printf("DEBUG: sessionsState=%d\n", theSession->sessionState);
 #endif
 
     if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == STATE_SYN))  {
@@ -1065,12 +1064,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  break;
 #ifdef DEBUG
 	default:
-	  traceEvent(TRACE_ERROR, "ERROR: unable to handle received FIN (%u) !\n", fin);
+	  traceEvent(TRACE_ERROR, "DEBUG: ERROR: unable to handle received FIN (%u) !\n", fin);
 #endif
 	}
       } else {
 #ifdef DEBUG
-	printf("Rcvd Duplicated FIN %u\n", fin);
+	printf("DEBUG: Rcvd Duplicated FIN %u\n", fin);
 #endif
       }
     } else if(tp->th_flags == TH_ACK) {
@@ -1084,7 +1083,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->remotePeerIdx]->pktDuplicatedAckRcvd++;
 
 #ifdef DEBUG
-	  traceEvent(TRACE_INFO, "Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
+	  traceEvent(TRACE_INFO, "DEBUG: Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
 		     ack, theSession->numDuplicatedAckI2R,
 		     (int)theSession->bytesRetranI2R);
 #endif

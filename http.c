@@ -25,9 +25,6 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#define FORK_CHILD_PROCESS
-#define URL_LEN        512
-
 /*    This list is derived from RFC1945 in sec 3.2 Uniform Resource Identifiers
       which defines the permitted characters in a URI/URL.  Specifically, the
       definitions of
@@ -875,7 +872,7 @@ static int checkURLsecurity(char *url) {
   if((url == NULL) || (url[0] == '\0'))
     return(0);
 
-  if(strlen(url) >= URL_LEN) {
+  if(strlen(url) >= URL_MAX_LEN) {
     traceEvent(TRACE_ERROR, "URL security(2): URL too long (len=%d)", strlen(url));
     return(2);
   }
@@ -1032,10 +1029,10 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 
   if((questionMark != NULL)
      && (questionMark[0] == '?')) {
-    char requestedURL[URL_LEN];
+    char requestedURL[URL_MAX_LEN];
     char *tkn;
     
-    /* Safe strcpy as requestedURL < URL_LEN (checked by checkURLsecurity) */
+    /* Safe strcpy as requestedURL < URL_MAX_LEN (checked by checkURLsecurity) */
     strcpy(requestedURL, &questionMark[1]);
 
     tkn = strtok(requestedURL, "&");
@@ -1973,7 +1970,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
 void handleHTTPrequest(struct in_addr from) {
   int skipLeading, postLen, usedFork = 0;
-  char requestedURL[URL_LEN], pw[64];
+  char requestedURL[URL_MAX_LEN], pw[64];
   int rc, i;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;

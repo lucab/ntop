@@ -234,7 +234,6 @@ extern void termIPSessions(void);
 
 /* traffic.c */
 extern void updateThpt(void);
-extern void updateHostsDeviceThpt(int deviceToUpdate, int hourId);
 extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
                                 TrafficCounter length, int actualDeviceId);
 extern void updateDbHostsTraffic(int deviceToUpdate);

@@ -196,8 +196,8 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
 
   myGlobals.device[theDevice].hostsno--;
 
-#ifdef FREE_HOST_INFO
-  traceEvent(TRACE_INFO, "Deleted a hash_hostTraffic entry [slotId=%d/%s]\n",
+#ifdef HOST_FREE_DEBUG
+  traceEvent(TRACE_INFO, "HOST_FREE_DEBUG: Deleted a hash_hostTraffic entry [slotId=%d/%s]\n",
 	     host->hostTrafficBucket, host->hostSymIpAddress);
 #endif
 
@@ -365,7 +365,6 @@ void freeHostInstances(int actualDeviceId) {
 }
 
 /* ************************************ */
-/* #define DEBUG */
 
 void purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, maxBucket = 0, theIdx, hashFull = 0, hashLen;
@@ -781,7 +780,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       }
 
 #ifdef HASH_DEBUG
-      traceEvent(TRACE_INFO, "Adding %s/%s [idx=%d][device=%d][actualHashSize=%d]\n",
+      traceEvent(TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d]\n",
 		 el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
 		 myGlobals.device[actualDeviceId].actualHashSize);
 #endif
@@ -949,5 +948,28 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
   } else
     return(-1);
 }
+
+/* ************************************ */
+/* ************************************ */
+/* ************************************ */
+
+#ifdef HASH_DEBUG
+/* Debug only */
+static void dumpHash() {
+  int i;
+
+  for(i=1; i<myGlobals.device[0].actualHashSize; i++) {
+    HostTraffic *el = myGlobals.device[0].hash_hostTraffic[i];
+
+    if(el != NULL) {
+      traceEvent(TRACE_INFO, "HASH_DEBUG: (%3d) %s / %s",
+                 i,
+                 el->ethAddressString,
+                 el->hostNumIpAddress);
+    }
+  }
+}
+#endif /* DEBUG */
+
 
 

@@ -1967,7 +1967,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
       IPSession *session = myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx];
 
       while((session != NULL) && (printedSessions < myGlobals.maxNumLines)) {
-#ifndef PRINT_ALL_ACTIVE_SESSIONS
+#ifndef PRINT_ALL_SESSIONS
 	if(session->sessionState != STATE_ACTIVE) {
 	  session = session->next;
 	  continue;
@@ -1990,7 +1990,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		     "<TH "TH_BG">Duration</TH>"
 		     "<TH "TH_BG">Latency</TH>"
-#ifdef PRINT_ALL_ACTIVE_SESSIONS
+#ifdef PRINT_ALL_SESSIONS
 		     "<TH "TH_BG">State</TH>"
 #endif
 		     "</TR>\n");
@@ -2029,7 +2029,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-#ifdef PRINT_ALL_ACTIVE_SESSIONS
+#ifdef PRINT_ALL_SESSIONS
 		    "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
 #endif
 		    "</TR>\n",
@@ -2051,7 +2051,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 		    formatSeconds(myGlobals.actTime-session->firstSeen),
 		    formatLatency(session->nwLatency,
 				  session->sessionState)
-#ifdef PRINT_ALL_ACTIVE_SESSIONS
+#ifdef PRINT_ALL_SESSIONS
 		    , getSessionState(session)
 #endif
 		    ) < 0) BufferTooShort();

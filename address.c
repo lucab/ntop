@@ -20,19 +20,12 @@
 
 #include "ntop.h"
 
-/* #define DEBUG */
-
 /* Global */
 static char hex[] = "0123456789ABCDEF";
 
 #if !defined(WIN32) && !defined(AIX)
 extern int h_errno; /* netdb.h */
 #endif
-
-/*
-  #define DNS_DEBUG
-  #define GDBM_DEBUG
-*/
 
 /* Forward */
 static u_int _ns_get16(const u_char *src);
@@ -101,7 +94,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 
     retrievedAddress = (StoredAddress*)data_data.dptr;
 #ifdef DNS_DEBUG
-    traceEvent(TRACE_INFO, "Fetched data (2): '%s' [%s]\n",
+    traceEvent(TRACE_INFO, "DNS-DEBUG: Fetched data (2): '%s' [%s]\n",
 	       retrievedAddress->symAddress, keyBuf);
 #endif
 
@@ -125,9 +118,9 @@ static void resolveAddress(struct in_addr *hostAddr,
   } else {
 #ifdef GDBM_DEBUG
     if(data_data.dptr != NULL)
-      traceEvent(TRACE_ERROR, "Dropped data for %s [wrong data size]", keyBuf);
+      traceEvent(TRACE_ERROR, "GDBM_DEBUG: Dropped data for %s [wrong data size]", keyBuf);
     else
-      traceEvent(TRACE_ERROR, "Unable to retrieve %s", keyBuf);
+      traceEvent(TRACE_ERROR, "GDBM_DEBUG: Unable to retrieve %s", keyBuf);
 #endif
 
     /* It might be that the size of the retieved data is wrong */
@@ -141,7 +134,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #endif
 
 #ifdef DNS_DEBUG
-    traceEvent(TRACE_INFO, "Resolving %s...", intoa(*hostAddr));
+    traceEvent(TRACE_INFO, "DNS-DEBUG: Resolving %s...", intoa(*hostAddr));
 #endif
 
     theAddr.s_addr = ntohl(hostAddr->s_addr); /* big/little endian crap */
@@ -201,7 +194,7 @@ static void resolveAddress(struct in_addr *hostAddr,
       }
 
 #ifdef DNS_DEBUG
-      traceEvent(TRACE_INFO, "Resolved to %s.", res);
+      traceEvent(TRACE_INFO, "DNS-DEBUG: Resolved to %s.", res);
 #endif
     }
 #else /* USE_HOST */
@@ -239,7 +232,7 @@ static void resolveAddress(struct in_addr *hostAddr,
       char *dotp = (char*)hp->h_name;
 
 #ifdef DNS_DEBUG
-      traceEvent(TRACE_INFO, "Resolved to %s.", dotp);
+      traceEvent(TRACE_INFO, "DNS-DEBUG: Resolved to %s.", dotp);
 #endif
       strncpy(tmpBuf, dotp, sizeof(tmpBuf));
 
@@ -265,14 +258,14 @@ static void resolveAddress(struct in_addr *hostAddr,
       myGlobals.numKeptNumericAddresses++;
       res = _intoa(*hostAddr, tmpBuf , sizeof(tmpBuf));
 #ifdef DNS_DEBUG
-      traceEvent(TRACE_INFO, "Unable to resolve %s", res);
+      traceEvent(TRACE_INFO, "DNS-DEBUG: Unable to resolve %s", res);
 #endif
     }
 #endif /* USE_HOST */
   } else {
     myGlobals.numKeptNumericAddresses++;
 #ifdef DNS_DEBUG
-      traceEvent(TRACE_INFO, "Unable to resolve %s", res);
+      traceEvent(TRACE_INFO, "DNS-DEBUG: Unable to resolve %s", res);
 #endif
     res = _intoa(*hostAddr, tmpBuf, sizeof(tmpBuf));
   }
@@ -319,7 +312,7 @@ static void resolveAddress(struct in_addr *hostAddr,
     traceEvent(TRACE_ERROR, "Error while adding '%s'\n.\n", symAddr);
   else {
 #ifdef GDBM_DEBUG
-    traceEvent(TRACE_INFO, "Added data: '%s' [%s]\n", symAddr, keyBuf);
+    traceEvent(TRACE_INFO, "GDBM_DEBUG: Added data: '%s' [%s]\n", symAddr, keyBuf);
 #endif
   }
 
@@ -371,7 +364,7 @@ static void queueAddress(struct in_addr elem) {
 	myGlobals.maxAddressQueueLen = myGlobals.addressQueueLen;
 
 #ifdef DNS_DEBUG
-   traceEvent(TRACE_INFO, "Queued address '%s' [addr queue=%d/max=%d]\n",
+   traceEvent(TRACE_INFO, "DNS-DEBUG: Queued address '%s' [addr queue=%d/max=%d]\n",
 	      tmpBuf, myGlobals.addressQueueLen, myGlobals.maxAddressQueueLen);
 #endif
   } else {
@@ -381,7 +374,8 @@ static void queueAddress(struct in_addr elem) {
 		 rc, tmpBuf, myGlobals.addressQueueLen, myGlobals.maxAddressQueueLen);
     }
 #ifdef DNS_DEBUG
-    traceEvent(TRACE_INFO, "Queuing of address '%s' - duplicate in queue (ntop continues ok)\n",                     tmpBuf);
+    traceEvent(TRACE_INFO, "DNS-DEBUG: Queuing of address '%s' - duplicate in queue (ntop continues ok)\n",
+                           tmpBuf);
 #endif
   }
 
@@ -441,7 +435,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
       memcpy(&addr.s_addr, data_data.dptr, 4);
 
 #ifdef DNS_DEBUG
-      traceEvent(TRACE_INFO, "Dequeued address... [%u][key=%s] (#addr=%d)\n",
+      traceEvent(TRACE_INFO, "DNS-DEBUG: Dequeued address... [%u][key=%s] (#addr=%d)\n",
 		 addr.s_addr, key_data.dptr == NULL ? "<>" : key_data.dptr,
 		 myGlobals.addressQueueLen);
 #endif
@@ -449,7 +443,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
       resolveAddress(&addr, 0, 0 /* use default device */);
 
 #ifdef DNS_DEBUG
-      traceEvent(TRACE_INFO, "Resolved address %u\n", addr.s_addr);
+      traceEvent(TRACE_INFO, "DNS-DEBUG: Resolved address %u\n", addr.s_addr);
 #endif
 
 #ifdef MULTITHREADED
@@ -558,7 +552,7 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
     retrievedAddress = (StoredAddress*)data_data.dptr;
 
 #ifdef GDBM_DEBUG
-    traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]", retrievedAddress->symAddress, tmpBuf);
+    traceEvent(TRACE_INFO, "GDBM_DEBUG: Fetched data (1): %s [%s]", retrievedAddress->symAddress, tmpBuf);
 #endif
 
     if(snprintf(buffer, MAX_HOST_SYM_NAME_LEN, "%s", retrievedAddress->symAddress) < 0)
@@ -568,9 +562,9 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   } else {
 #ifdef GDBM_DEBUG
     if(data_data.dptr != NULL)
-      traceEvent(TRACE_ERROR, "Dropped data for %s [wrong data size]", tmpBuf);
+      traceEvent(TRACE_ERROR, "GDBM_DEBUG: Dropped data for %s [wrong data size]", tmpBuf);
     else
-      traceEvent(TRACE_ERROR, "Unable to retrieve %s", tmpBuf);
+      traceEvent(TRACE_ERROR, "GDBM_DEBUG: Unable to retrieve %s", tmpBuf);
 #endif
 
     buffer[0] = '\0';

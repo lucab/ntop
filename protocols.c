@@ -41,8 +41,6 @@
 
 #include "ntop.h"
 
-/* #define DNS_SNIFF_DEBUG */
-
 /* ************************************************ */
 
 void handleBootp(HostTraffic *srcHost,
@@ -589,12 +587,12 @@ u_int16_t processDNSPacket(const u_char *packetData,
   if((hostPtr.queryType == T_A)
      && (hostPtr.queryName[0] != '\0')
      && (hostPtr.addrList[0] != '\0')) {
-    traceEvent(TRACE_INFO, "DNS %s for %s type %d\n", *isRequest ? "request" : "reply",
+    traceEvent(TRACE_INFO, "DNS_SNIFF_DEBUG: DNS %s for %s type %d\n", *isRequest ? "request" : "reply",
 	       hostPtr.queryName, hostPtr.queryType);
 
     for(i=0; i<MAXALIASES; i++)
       if(hostPtr.aliases[i][0] != '\0') {
-	traceEvent(TRACE_INFO, "%s is alias of %s\n", hostPtr.aliases[i], hostPtr.name);
+	traceEvent(TRACE_INFO, "DNS_SNIFF_DEBUG: %s is alias of %s\n", hostPtr.aliases[i], hostPtr.name);
       }
   }
 #endif
@@ -621,7 +619,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
       data_data.dsize = queryNameLength+1;
 
 #ifdef DNS_SNIFF_DEBUG
-      traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
+      traceEvent(TRACE_INFO, "DNS_SNIFF_DEBUG: Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
 #endif
 
       if(myGlobals.gdbm_file == NULL) return(-1); /* ntop is quitting... */

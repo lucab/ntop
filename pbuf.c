@@ -21,34 +21,11 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-/*
-  #define DNS_SNIFF_DEBUG
-  #define DNS_DEBUG
-  #define GDBM_DEBUG
-  #define FREE_HOST_INFO
-  #define PURGE_DEBUG
-  #define PACKET_DEBUG
-  #define FRAGMENT_DEBUG
-*/
-
-/* #define HASH_DEBUG */
-
-/* #define TRACE_TRAFFIC_INFO */
-
-/* #define PRINT_UNKNOWN_PACKETS */
-/* #define MAPPING_DEBUG */
-
-
 #include "ntop.h"
 
 static const struct pcap_pkthdr *h_save;
 static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
-
-#ifdef HASH_DEBUG
-static void dumpHash(); /* Forward */
-#endif
 
 /* ******************************* */
 
@@ -189,14 +166,14 @@ static void addContactedPeers(HostTraffic *sender, HostTraffic *receiver,
 
 #ifdef FRAGMENT_DEBUG
 static void dumpFragmentData(IpFragment *fragment) {
-  printf("IPFragment (%p)\n", fragment);
-  printf("  %s:%d->%s:%d\n",
+  printf("FRAGMENT_DEBUG: IPFragment: (%p)\n", fragment);
+  printf("                            %s:%d->%s:%d\n",
          fragment->src->hostSymIpAddress, fragment->sport,
          fragment->dest->hostSymIpAddress, fragment->dport);
-  printf("  FragmentId=%d\n", fragment->fragmentId);
-  printf("  lastOffset=%d, totalPacketLength=%d\n",
+  printf("                            FragmentId=%d\n", fragment->fragmentId);
+  printf("                            lastOffset=%d, totalPacketLength=%d\n",
          fragment->lastOffset, fragment->totalPacketLength);
-  printf("  totalDataLength=%d, expectedDataLength=%d\n",
+  printf("                             totalDataLength=%d, expectedDataLength=%d\n",
          fragment->totalDataLength, fragment->expectedDataLength);
   fflush(stdout);
 }
@@ -371,7 +348,7 @@ void purgeOldFragmentEntries(int actualDeviceId) {
 
 #ifdef FRAGMENT_DEBUG
   if(fragcnt) {
-    printf("fragcnt=%d, expcnt=%d\n", fragcnt, expcnt);
+    printf("FRAGMENT_DEBUG: fragcnt=%d, expcnt=%d\n", fragcnt, expcnt);
     fflush(stdout);
   }
 #endif
@@ -693,14 +670,13 @@ static void processIpPkt(const u_char *bp,
    * Time to show the IP Packet Header (when enabled).
    */
   if (fd && myGlobals.device [actualDeviceId] . ipv)
-    fprintf (fd, "IP:     ----- IP Header -----\n"),
-      fprintf (fd, "IP:\n"),
-      fprintf (fd, "IP:     Packet %ld arrived at %s\n", myGlobals.device [actualDeviceId] ,
+      fprintf (fd, "PACKET_DEBUG: IP:     ----- IP Header -----\n\n"),
+      fprintf (fd, "                      Packet %ld arrived at %s\n", myGlobals.device [actualDeviceId] ,
 	       timestamp (& myGlobals.lastPktTime, ABS_FMT)),
-      fprintf (fd, "IP:     Total size  = %d : header = %d : data = %d\n",
+      fprintf (fd, "                      Total size  = %d : header = %d : data = %d\n",
 	       ip_size, ip_hlen, ip_size - ip_hlen),
-      fprintf (fd, "IP:     Source      = %s\n", inet_ntoa (ip->ip_src)),
-      fprintf (fd, "IP:     Destination = %s\n", inet_ntoa (ip->ip_dst)),
+      fprintf (fd, "                      Source      = %s\n", inet_ntoa (ip->ip_src)),
+      fprintf (fd, "                      Destination = %s\n", inet_ntoa (ip->ip_dst)),
       fflush (fd);
 #endif
 
@@ -882,7 +858,7 @@ static void processIpPkt(const u_char *bp,
 					     udpDataLength, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
-	    traceEvent(TRACE_INFO, "%s:%d->%s:%d [request: %d][positive reply: %d]\n",
+	    traceEvent(TRACE_INFO, "DNS_SNIFF_DEBUG: %s:%d->%s:%d [request: %d][positive reply: %d]\n",
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       isRequest, positiveReply);
@@ -1819,14 +1795,13 @@ void processPacket(u_char *_deviceId,
      * Time to show the Ethernet Packet Header (when enabled).
      */
     if(fd && myGlobals.device [deviceId].ethv)
-      fprintf (fd, "ETHER:  ----- Ether Header -----\n"),
-	fprintf (fd, "ETHER:\n"),
-	fprintf (fd, "ETHER:  Packet %ld arrived at %s\n",
+        fprintf (fd, "PACKET_DEBUG: ETHER:  ----- Ether Header -----\n\n"),
+	fprintf (fd, "                      Packet %ld arrived at %s\n",
 		 myGlobals.device [actualDeviceId].ethernetPkts, timestamp (& h->ts, ABS_FMT)),
-	fprintf (fd, "ETHER:  Total size  = %d : header = %d : data = %d\n",
+	fprintf (fd, "                      Total size  = %d : header = %d : data = %d\n",
 		 length, hlen, length - hlen),
-	fprintf (fd, "ETHER:  Source      = %s\n", etheraddr_string (ether_src)),
-	fprintf (fd, "ETHER:  Destination = %s\n", etheraddr_string (ether_dst));
+	fprintf (fd, "                      Source      = %s\n", etheraddr_string (ether_src)),
+	fprintf (fd, "                      Destination = %s\n", etheraddr_string (ether_dst));
     fflush (fd);
 #endif
 
@@ -2168,8 +2143,8 @@ void processPacket(u_char *_deviceId,
 	      myGlobals.device[actualDeviceId].osiBytes += length;
 	    } else {
 	      /* Unknown Protocol */
-#ifdef PRINT_UNKNOWN_PACKETS
-	      traceEvent(TRACE_INFO, "[%u] [%x] %s %s > %s\n", (u_short)sap_type,(u_short)sap_type,
+#ifdef UNKNOWN_PACKET_DEBUG
+	      traceEvent(TRACE_INFO, "UNKNOWN_PACKET_DEBUG: [%u] [%x] %s %s > %s\n", (u_short)sap_type,(u_short)sap_type,
 			 etheraddr_string(ether_src),
 			 llcsap_string(llcHeader.ssap & ~LLC_GSAP),
 			 etheraddr_string(ether_dst));
@@ -2271,8 +2246,8 @@ void processPacket(u_char *_deviceId,
 	  myGlobals.device[actualDeviceId].qnxBytes += length;
 	  break;
 	default:
-#ifdef PRINT_UNKNOWN_PACKETS
-	  traceEvent(TRACE_INFO, "%s/%s->%s/%s [eth type %d (0x%x)]\n",
+#ifdef UNKNOWN_PACKET_DEBUG
+	  traceEvent(TRACE_INFO, "UNKNOWN_PACKET_DEBUG: %s/%s->%s/%s [eth type %d (0x%x)]\n",
 		     srcHost->hostNumIpAddress, srcHost->ethAddressString,
 		     dstHost->hostNumIpAddress, dstHost->ethAddressString,
 		     eth_type, eth_type);
@@ -2296,24 +2271,4 @@ void processPacket(u_char *_deviceId,
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 }
-
-/* ************************************ */
-
-#ifdef HASH_DEBUG
-/* Debug only */
-static void dumpHash() {
-  int i;
-
-  for(i=1; i<myGlobals.device[0].actualHashSize; i++) {
-    HostTraffic *el = myGlobals.device[0].hash_hostTraffic[i];
-
-    if(el != NULL) {
-      traceEvent(TRACE_INFO, "(%3d) %s / %s",
-		 i,
-		 el->ethAddressString,
-		 el->hostNumIpAddress);
-    }
-  }
-}
-#endif /* DEBUG */
 

@@ -24,19 +24,8 @@
 
 #define _UTIL_C_
 
-/*
-  #define STORAGE_DEBUG
-  #define DEBUG
-*/
-
-/* #define ADDRESS_DEBUG */
-
 #include "ntop.h"
 #include <stdarg.h>
-
-/* #define MEMORY_DEBUG  */
-
-#define MAX_DEVICE_NAME_LEN   64
 
 #ifdef MEMORY_DEBUG
 #include "leaks.h"
@@ -151,7 +140,7 @@ unsigned short isBroadcastAddress(struct in_addr *addr) {
 	      || ((addr->s_addr & 0x000000FF) == 0x00000000) /* Network address */
 	      ) {
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "%s is a broadcast address", intoa(*addr));
+	traceEvent(TRACE_INFO, "DEBUG: %s is a broadcast address", intoa(*addr));
 #endif
 	return 1;
       }
@@ -165,7 +154,7 @@ unsigned short isBroadcastAddress(struct in_addr *addr) {
 unsigned short isMulticastAddress(struct in_addr *addr) {
   if((addr->s_addr & MULTICAST_MASK) == MULTICAST_MASK) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s is multicast [%X/%X]\n",
+    traceEvent(TRACE_INFO, "DEBUG: %s is multicast [%X/%X]\n",
 	       intoa(*addr),
 	       ((unsigned long)(addr->s_addr) & MULTICAST_MASK),
 	       MULTICAST_MASK
@@ -184,7 +173,7 @@ unsigned short isLocalAddress(struct in_addr *addr) {
   for(i=0; i<myGlobals.numDevices; i++)
     if((addr->s_addr & myGlobals.device[i].netmask.s_addr) == myGlobals.device[i].network.s_addr) {
 #ifdef ADDRESS_DEBUG
-      traceEvent(TRACE_INFO, "%s is local\n", intoa(*addr));
+      traceEvent(TRACE_INFO, "ADDRESS_DEBUG: %s is local\n", intoa(*addr));
 #endif
       return 1;
     }
@@ -193,7 +182,7 @@ unsigned short isLocalAddress(struct in_addr *addr) {
     return(0);
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "%s is %s\n", intoa(*addr),
+  traceEvent(TRACE_INFO, "DEBUG: %s is %s\n", intoa(*addr),
 	     isLocalAddress (addr) ? "pseudolocal" : "remote");
 #endif
   /* Broadcast is considered a local address */
@@ -248,7 +237,7 @@ static int int2bits(int number) {
   if((number > 255) || (number < 0))
     {
 #ifdef DEBUG
-      traceEvent(TRACE_ERROR, "int2bits (%3d) = %d\n", number, INVALIDNETMASK);
+      traceEvent(TRACE_ERROR, "DEBUG: int2bits (%3d) = %d\n", number, INVALIDNETMASK);
 #endif
       return(INVALIDNETMASK);
     }
@@ -263,14 +252,14 @@ static int int2bits(int number) {
       if(number != ((~(0xff >> bits)) & 0xff))
 	{
 #ifdef DEBUG
-	  traceEvent(TRACE_ERROR, "int2bits (%3d) = %d\n", number, INVALIDNETMASK);
+	  traceEvent(TRACE_ERROR, "DEBUG: int2bits (%3d) = %d\n", number, INVALIDNETMASK);
 #endif
 	  return(INVALIDNETMASK);
 	}
       else
 	{
 #ifdef DEBUG
-	  traceEvent(TRACE_ERROR, "int2bits (%3d) = %d\n", number, bits);
+	  traceEvent(TRACE_ERROR, "DEBUG: int2bits (%3d) = %d\n", number, bits);
 #endif
 	  return(bits);
 	}
@@ -315,7 +304,7 @@ int dotted2bits(char *mask) {
   if((fields_num == 1) && (fields[0] <= 32) && (fields[0] >= 0))
     {
 #ifdef DEBUG
-      traceEvent(TRACE_ERROR, "dotted2bits (%s) = %d\n", mask, fields[0]);
+      traceEvent(TRACE_ERROR, "DEBUG: dotted2bits (%s) = %d\n", mask, fields[0]);
 #endif
       return(fields[0]);
     }
@@ -332,7 +321,7 @@ int dotted2bits(char *mask) {
 	  /* whenever a 0 bits field is reached there are no more */
 	  /* fields to scan                                       */
 #ifdef DEBUG
-	  traceEvent(TRACE_ERROR, "dotted2bits (%15s) = %d\n", mask, bits);
+	  traceEvent(TRACE_ERROR, "DEBUG: dotted2bits (%15s) = %d\n", mask, bits);
 #endif
 	  /* In this case we are in a bits (not dotted quad) notation */
 	  return(bits /* fields[0] - L.Deri 08/2001 */);
@@ -342,7 +331,7 @@ int dotted2bits(char *mask) {
 	}
     }
 #ifdef DEBUG
-  traceEvent(TRACE_ERROR, "dotted2bits (%15s) = %d\n", mask, bits);
+  traceEvent(TRACE_ERROR, "DEBUG: dotted2bits (%15s) = %d\n", mask, bits);
 #endif
   return(bits);
 }
@@ -410,7 +399,7 @@ void handleLocalAddresses(char* addresses) {
       }
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Nw=%08X - Mask: %08X [%08X]\n",
+      traceEvent(TRACE_INFO, "DEBUG: Nw=%08X - Mask: %08X [%08X]\n",
 		 network, networkMask, (network & networkMask));
 #endif
 
@@ -432,7 +421,7 @@ void handleLocalAddresses(char* addresses) {
 		   a, b, c, d, bits, network, networkMask);
       }
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "%d.%d.%d.%d/%d [0x%08x/0x%08x]\n",
+      traceEvent(TRACE_INFO, "DEBUG: %d.%d.%d.%d/%d [0x%08x/0x%08x]\n",
 		 a, b, c, d, bits, network, networkMask);
 #endif
 
@@ -444,7 +433,7 @@ void handleLocalAddresses(char* addresses) {
       c = (int) ((broadcast >>  8) & 0xff);
       d = (int) ((broadcast >>  0) & 0xff);
 
-      traceEvent(TRACE_INFO, "Broadcast: [net=0x%08x] [broadcast=%d.%d.%d.%d]\n",
+      traceEvent(TRACE_INFO, "DEBUG: Broadcast: [net=0x%08x] [broadcast=%d.%d.%d.%d]\n",
 		 network, a, b, c, d);
 #endif
 
@@ -513,19 +502,19 @@ unsigned short _pseudoLocalAddress(struct in_addr *addr) {
     addr1.s_addr = networks[i][NETWORK];
     addr2.s_addr = networks[i][NETMASK];
 
-    traceEvent(TRACE_INFO, "%s comparing [%s/%s]\n",
+    traceEvent(TRACE_INFO, "DEBUG: %s comparing [%s/%s]\n",
 	       _intoa(*addr, buf, sizeof(buf)),
 	       _intoa(addr1, buf1, sizeof(buf1)),
 	       _intoa(addr2, buf2, sizeof(buf2)));
 #endif
     if((addr->s_addr & networks[i][NETMASK]) == networks[i][NETWORK]) {
 #ifdef ADDRESS_DEBUG
-      traceEvent(TRACE_WARNING, "%s is pseudolocal\n", intoa(*addr));
+      traceEvent(TRACE_WARNING, "ADDRESS_DEBUG: %s is pseudolocal\n", intoa(*addr));
 #endif
       return 1;
     } else {
 #ifdef ADDRESS_DEBUG
-      traceEvent(TRACE_WARNING, "%s is NOT pseudolocal\n", intoa(*addr));
+      traceEvent(TRACE_WARNING, "ADDRESS_DEBUG: %s is NOT pseudolocal\n", intoa(*addr));
 #endif
     }
   }
@@ -547,7 +536,7 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
 
   if(i == 1) {
 #ifdef ADDRESS_DEBUG
-    traceEvent(TRACE_WARNING, "%s is local\n", intoa(*addr));
+    traceEvent(TRACE_WARNING, "ADDRESS_DEBUG: %s is local\n", intoa(*addr));
 #endif
 
     return 1; /* This is a real local address */
@@ -562,7 +551,7 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   */
 
 #ifdef ADDRESS_DEBUG
-    traceEvent(TRACE_WARNING, "%s is remote\n", intoa(*addr));
+    traceEvent(TRACE_WARNING, "ADDRESS_DEBUG: %s is remote\n", intoa(*addr));
 #endif
 
   return(0);
@@ -577,19 +566,19 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
   int i;
 
 #ifdef DEBUG
-  traceEvent(TRACE_WARNING, "Checking %8X (pseudo broadcast)\n", addr->s_addr);
+  traceEvent(TRACE_WARNING, "DEBUG: Checking %8X (pseudo broadcast)\n", addr->s_addr);
 #endif
 
   for(i=0; i<numLocalNets; i++) {
     if(addr->s_addr == networks[i][BROADCAST]) {
 #ifdef ADDRESS_DEBUG
-      traceEvent(TRACE_WARNING, "--> %8X is pseudo broadcast\n", addr->s_addr);
+      traceEvent(TRACE_WARNING, "ADDRESS_DEBUG: --> %8X is pseudo broadcast\n", addr->s_addr);
 #endif
       return 1;
     }
 #ifdef ADDRESS_DEBUG
     else
-      traceEvent(TRACE_WARNING, "%8X/%8X is NOT pseudo broadcast\n", addr->s_addr, networks[i][BROADCAST]);
+      traceEvent(TRACE_WARNING, "ADDRESS_DEBUG: %8X/%8X is NOT pseudo broadcast\n", addr->s_addr, networks[i][BROADCAST]);
 #endif
   }
 
@@ -783,7 +772,7 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
   strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
   if(ioctl(fd, SIOCGIFADDR, (char*)&ifr) < 0) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "SIOCGIFADDR error: %s/errno=%d", device, errno);
+    traceEvent(TRACE_INFO, "DEBUG: SIOCGIFADDR error: %s/errno=%d", device, errno);
 #endif
     rc = -1;
   } else {
@@ -794,7 +783,7 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Local address is: %s\n", intoa(*hostAddress));
+  traceEvent(TRACE_INFO, "DEBUG: Local address is: %s\n", intoa(*hostAddress));
 #endif
 
   /* ******************************* */
@@ -809,7 +798,7 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
     } else
       numHosts = 256; /* default C class */
 
-    traceEvent(TRACE_INFO, "Num subnet hosts: %d\n", numHosts);
+    traceEvent(TRACE_INFO, "DEBUG: Num subnet hosts: %d\n", numHosts);
   }
 #endif
 
@@ -1095,7 +1084,7 @@ int _releaseMutex(PthreadMutex *mutexId,
 
 #ifdef DEBUG
       if(mutexId->maxLockedDuration > 0) {
-	traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
+	traceEvent(TRACE_INFO, "DEBUG: semaphore 0x%X [%s:%d] locked for %d secs\n",
 		   (void*)&(mutexId->mutex), fileName, fileLine,
 		   mutexId->maxLockedDuration);
       }
@@ -1195,6 +1184,13 @@ int incrementSem(sem_t *semId) {
 }
 
 /* ************************************ */
+/* NOTE: As of 2.0.99RC2, this was determined to be dead code.
+ *        It has been retained in the source for future use.
+ *
+ *        WARNING: The other semaphore routines - e.g. increment, 
+ *                 wait and delete ARE referenced?! 
+ *             Enabling semaphors will probably cause bugs!
+ */
 
 int decrementSem(sem_t *semId) {
   return(sem_trywait(semId));
@@ -1390,7 +1386,7 @@ void readLsofInfo(void) {
     }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n",
+    traceEvent(TRACE_INFO, "DEBUG: %s - %s - %s (%s/%d)\n",
 	       command, user, thePort, portNr, portNumber);
 #endif
 
@@ -1410,7 +1406,7 @@ void readLsofInfo(void) {
 	myGlobals.processes = swapProcesses;
 
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n",
+	traceEvent(TRACE_INFO, "DEBUG: %3d) %s %s %s/%d\n",
 		   myGlobals.numProcesses, command, user, portNr, portNumber);
 #endif
 	myGlobals.processes[myGlobals.numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
@@ -1552,8 +1548,8 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "getHostOS(%s:%d)\n", ipAddr, port);
-  traceEvent(TRACE_INFO, "Guessing OS of %s...\n", ipAddr);
+  traceEvent(TRACE_INFO, "DEBUG: getHostOS(%s:%d)\n", ipAddr, port);
+  traceEvent(TRACE_INFO, "DEBUG: Guessing OS of %s...\n", ipAddr);
 #endif
 
   /* 548 is the AFP (Apple Filing Protocol) */
@@ -1591,7 +1587,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
       operatingSystem[len-1] = '\0';	/* strip NL or CR from end-of-line */
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "'%s'\n", line);
+  traceEvent(TRACE_INFO, "DEBUG: '%s'\n", line);
 #endif
 
     if(strncmp(operatingSystem, OS_GUESS, strlen(OS_GUESS)) == 0) {
@@ -1631,7 +1627,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 
   if(found) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "OS is: '%s'\n", operatingSystem);
+    traceEvent(TRACE_INFO, "DEBUG: OS is: '%s'\n", operatingSystem);
 #endif
     len = strlen(operatingSystem);
     strncpy(staticOsName, operatingSystem, len-1);
@@ -1643,7 +1639,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
      strncpy(staticOsName, operatingSystem, len);
      staticOsName[sizeof(staticOsName)-1] = '\0';
 #ifdef DEBUG
-     traceEvent(TRACE_INFO, "OS is: '%s'\n", operatingSystem);
+     traceEvent(TRACE_INFO, "DEBUG: OS is: '%s'\n", operatingSystem);
 #endif
    }
 
@@ -1660,7 +1656,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
     if(fgets(line, sizeof(line)-1, fd) == NULL)
       break;
 #ifdef DEBUG
-    else printf("Garbage: '%s'\n",  line);
+    else printf("DEBUG: Garbage: '%s'\n",  line);
 #endif
   }
   pclose(fd);
@@ -1673,7 +1669,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 
 void closeNwSocket(int *sockId) {
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Closing socket %d...\n", *sockId);
+  traceEvent(TRACE_INFO, "DEBUG: Closing socket %d...\n", *sockId);
 #endif
 
   if(*sockId == DUMMY_SOCKET_VALUE)
@@ -1834,7 +1830,7 @@ void storeHostTrafficInstance(HostTraffic *el) {
     key = el->ethAddressString;
 
 #ifdef STORAGE_DEBUG
-  traceEvent(TRACE_INFO, "storeHostTrafficInstance(%s)\n", key);
+  traceEvent(TRACE_INFO, "STORAGE_DEBUG: storeHostTrafficInstance(%s)\n", key);
 #endif
 
   /*
@@ -1854,7 +1850,7 @@ void storeHostTrafficInstance(HostTraffic *el) {
 
   if(gdbm_store(myGlobals.hostsInfoFile, key_data, data_data, GDBM_REPLACE) == 0) {
 #ifdef STORAGE_DEBUG
-    traceEvent(TRACE_INFO, "Stored instance: '%s'\n", key);
+    traceEvent(TRACE_INFO, "STORAGE_DEBUG: Stored instance: '%s'\n", key);
 #endif
     fprintf(stdout, "+"); fflush(stdout);
   }
@@ -1923,7 +1919,7 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     if(data_data.dsize != sizeof(HostTraffic)) {
 #ifdef STORAGE_DEBUG
       traceEvent(TRACE_INFO,
-		 "Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
+		 "STORAGE_DEBUG: Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
 		 key, data_data.dsize, sizeof(HostTraffic));
 #endif
       gdbm_delete(myGlobals.hostsInfoFile, key_data);
@@ -1957,14 +1953,14 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
       resetHostsVariables(el);
 
 #ifdef STORAGE_DEBUG
-    traceEvent(TRACE_INFO, "\nResurrected instance: '%s/%s'\n",
+    traceEvent(TRACE_INFO, "STORAGE_DEBUG: Resurrected instance: '%s/%s'\n",
 	       el->ethAddressString, el->hostNumIpAddress);
 #endif
     fprintf(stdout, "*"); fflush(stdout);
     return(el);
   } else {
 #ifdef STORAGE_DEBUG
-    traceEvent(TRACE_INFO, "Unable to find '%s'\n", key);
+    traceEvent(TRACE_INFO, "STORAGE_DEBUG: Unable to find '%s'\n", key);
 #endif
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
@@ -2015,7 +2011,7 @@ void addTimeMapping(u_int16_t transactionId,
   int i=0;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "addTimeMapping(0x%X)\n", transactionId);
+  traceEvent(TRACE_INFO, "DEBUG: addTimeMapping(0x%X)\n", transactionId);
 #endif
   for(i=0; i<NUM_TRANSACTION_ENTRIES; i++) {
     if(myGlobals.transTimeHash[idx].transactionId == 0) {
@@ -2065,7 +2061,7 @@ time_t getTimeMapping(u_int16_t transactionId,
   int i=0;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "getTimeMapping(0x%X)\n", transactionId);
+  traceEvent(TRACE_INFO, "DEBUG: getTimeMapping(0x%X)\n", transactionId);
 #endif
 
   /* ****************************************
@@ -2083,7 +2079,7 @@ time_t getTimeMapping(u_int16_t transactionId,
       time_t msDiff = (time_t)delta_time(&theTime, &myGlobals.transTimeHash[idx].theTime);
       myGlobals.transTimeHash[idx].transactionId = 0; /* Free bucket */
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "getTimeMapping(0x%X) [diff=%d]\n",
+      traceEvent(TRACE_INFO, "DEBUG: getTimeMapping(0x%X) [diff=%d]\n",
 		 transactionId, (unsigned long)msDiff);
 #endif
       return(msDiff);
@@ -2093,7 +2089,7 @@ time_t getTimeMapping(u_int16_t transactionId,
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "getTimeMapping(0x%X) [not found]\n", transactionId);
+  traceEvent(TRACE_INFO, "DEBUG: getTimeMapping(0x%X) [not found]\n", transactionId);
 #endif
   return(0); /* Not found */
 }
@@ -2487,7 +2483,7 @@ void fillDomainName(HostTraffic *el) {
   else {
     /* Let's use the local domain name */
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "'%s' [%s/%s]\n",
+    traceEvent(TRACE_INFO, "DEBUG: '%s' [%s/%s]\n",
 	   el->hostSymIpAddress, myGlobals.domainName, myGlobals.shortDomainName);
 #endif
     if((myGlobals.domainName[0] != '\0')
@@ -2599,7 +2595,7 @@ void setNBnodeNameType(HostTraffic *theHost,
 	strcpy(theHost->hostSymIpAddress, nbName); /* See up (**) */
 
 #ifdef DEBUG
-      printf("nbHostName=%s [0x%X]\n", nbName, nodeType);
+      printf("DEBUG: nbHostName=%s [0x%X]\n", nbName, nodeType);
 #endif
     }
     break;
@@ -2626,14 +2622,12 @@ void setNBnodeNameType(HostTraffic *theHost,
 
 /* ******************************************* */
 
-/* #define DEBUG  */
-
 void addPassiveSessionInfo(u_long theHost, u_short thePort) {
   int i;
   time_t timeoutTime = myGlobals.actTime - PASSIVE_SESSION_PURGE_TIMEOUT;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Adding %ld:%d", theHost, thePort);
+  traceEvent(TRACE_INFO, "DEBUG: Adding %ld:%d", theHost, thePort);
 #endif
 
   for(i=0; i<passiveSessionsLen; i++) {
@@ -2666,7 +2660,7 @@ int isPassiveSession(u_long theHost, u_short thePort) {
   int i;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Searching for %ld:%d",
+  traceEvent(TRACE_INFO, "DEBUG: Searching for %ld:%d",
 	     theHost, thePort);
 #endif
 
@@ -2677,7 +2671,7 @@ int isPassiveSession(u_long theHost, u_short thePort) {
 	passiveSessions[i].sessionPort = 0,
 	passiveSessions[i].creationTime = 0;
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Found passive FTP session");
+      traceEvent(TRACE_INFO, "DEBUG: Found passive FTP session");
 #endif
       return(1);
     }
@@ -2713,7 +2707,7 @@ int getPortByName(ServiceEntry **theSvc, char* portName) {
 
 #ifdef DEBUG
     if(theSvc[idx] != NULL)
-      traceEvent(TRACE_INFO, "%d/%s [%s]\n",
+      traceEvent(TRACE_INFO, "DEBUG: %d/%s [%s]\n",
 		 theSvc[idx]->port,
 		 theSvc[idx]->name, portName);
 #endif
@@ -2938,7 +2932,7 @@ void updateOSName(HostTraffic *el) {
     }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "updateOSName(%s)\n", el->hostNumIpAddress);
+    traceEvent(TRACE_INFO, "DEBUG: updateOSName(%s)\n", el->hostNumIpAddress);
 #endif
 
     if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
@@ -3000,7 +2994,7 @@ void updateOSName(HostTraffic *el) {
 	printf("Error while adding myGlobals.osName for '%s'\n.\n", el->hostNumIpAddress);
       else {
 #ifdef GDBM_DEBUG
-	printf("Added data: %s [%s]\n", tmpBuf, el->osName);
+	printf("GDBM_DEBUG: Added data: %s [%s]\n", tmpBuf, el->osName);
 #endif
       }
 
@@ -3023,7 +3017,7 @@ void _incrementUsageCounter(UsageCounter *counter,
   HostTraffic *theHost;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "INFO: incrementUsageCounter(%u) @ %s:%d", peerIdx, file, line);
+  traceEvent(TRACE_INFO, "DEBUG: incrementUsageCounter(%u) @ %s:%d", peerIdx, file, line);
 #endif
 
   if(peerIdx == NO_PEER) return;
@@ -3077,7 +3071,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
   if((value == NULL) || (!myGlobals.capturePackets)) return(-1);
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Entering fetchPrefValue()");
+  traceEvent(TRACE_INFO, "DEBUG: Entering fetchPrefValue()");
 #endif
   value[0] = '\0';
 
@@ -3086,7 +3080,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
 
   if(myGlobals.prefsFile == NULL) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Leaving fetchPrefValue()");
+    traceEvent(TRACE_INFO, "DEBUG: Leaving fetchPrefValue()");
 #endif
     return(-1); /* ntop is quitting... */
   }
@@ -3125,7 +3119,7 @@ void storePrefsValue(char *key, char *value) {
   if((value == NULL) || (!myGlobals.capturePackets)) return;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Entering storePrefsValue()");
+  traceEvent(TRACE_INFO, "DEBUG:DEBUG:  Entering storePrefsValue()");
 #endif
 
   memset(&key_data, 0, sizeof(key_data));
@@ -3138,7 +3132,7 @@ void storePrefsValue(char *key, char *value) {
 
   if(myGlobals.prefsFile == NULL) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Leaving storePrefsValue()");
+    traceEvent(TRACE_INFO, "DEBUG: Leaving storePrefsValue()");
 #endif
     ; /* ntop is quitting... */
   }
