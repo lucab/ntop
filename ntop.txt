@@ -6,21 +6,21 @@ NNAAMMEE
        ntop - display top network users
 
 SSYYNNOOPPSSIISS
-       nnttoopp  [@@ffiilleennaammee] [--aa|----aacccceessss--lloogg--ppaatthh _<_p_a_t_h_>] [--bb|----ddiissaabbllee--ddeeccooddeerrss]
+       nnttoopp  [@@ffiilleennaammee] [--aa|----aacccceessss--lloogg--ffiillee _<_p_a_t_h_>] [--bb|----ddiissaabbllee--ddeeccooddeerrss]
        [--cc|----ssttiicckkyy--hhoossttss]] [--ff|----ttrraaffffiicc--dduummpp--ffiillee  _f_i_l_e_>]  [--gg|----ttrraacckk--llooccaall--
-       hhoossttss] [--hh|----hheellpp] [--jj|----ccrreeaattee--ootthheerr--ppaacckkeettss] [--kk|----ffiilltteerr--eexxpprreessssiioonn--
-       iinn--eexxttrraa--ffrraammee] [--ll|----ppccaapp--lloogg _<_p_a_t_h_>] [--mm|----llooccaall--ssuubbnneettss _<_a_d_d_r_e_s_s_e_s_>]
-       [--nn|----nnuummeerriicc--iipp--aaddddrreesssseess]   [--oo|----nnoo--mmaacc]   [--pp|----pprroottooccoollss   _<_l_i_s_t_>]
-       [--qq|----ccrreeaattee--ssuussppiicciioouuss--ppaacckkeettss] [--rr|----rreeffrreesshh--ttiimmee _<_n_u_m_b_e_r_>] [--ss|----nnoo--
-       pprroommiissccuuoouuss]  [--tt|----ttrraaccee--lleevveell  _<_n_u_m_b_e_r_>]  [--xx _<_m_a_x___n_u_m___h_a_s_h___e_n_t_r_i_e_s_>]
-       [--ww|----hhttttpp--sseerrvveerr _<_p_o_r_t_>] [--zz|----ddiissaabbllee--sseessssiioonnss] [--AA|----sseett--aaddmmiinn--ppaassss--
-       wwoorrdd  _p_a_s_s_w_o_r_d]  [--BB|----ffiilltteerr--eexxpprreessssiioonn  _e_x_p_r_e_s_s_i_o_n] [--CC _<_c_o_n_f_i_gmode>_]
-       [--DD|----ddoommaaiinn _<_n_a_m_e_>] [--FF|----ffllooww--ssppeecc _<_s_p_e_c_s_>] [--MM|----nnoo--iinntteerrffaaccee--mmeerrggee]
-       [--OO|--------oouuttppuutt--ppaacckkeett--ppaatthh]   [--PP|----ddbb--ffiillee--ppaatthh  _<_p_a_t_h_>]  [--QQ|----ssppooooll--
-       ffiillee--ppaatthh    _<_p_a_t_h_>]    [--UU|----mmaappppeerr    _<_U_R_L_>]    [--VV|----vveerrssiioonn]]    [--XX
-       _<_m_a_x___n_u_m___T_C_P___s_e_s_s_i_o_n_s_>]   [----ddiissaabbllee--iinnssttaannttsseessssiioonnppuurrggee]   [----ddiissaabbllee--
-       sscchheeddyyiieelldd] [----ddiissaabbllee--ssttooppccaapp] [----ddiissaabbllee--mmuutteexxeexxttrraaiinnffoo] [----lloogg--eexxttrraa
-       _<_n_u_m_b_e_r_>] [----sskkiipp--vveerrssiioonn--cchheecckk] [----ww33cc]
+       hhoossttss]   [--hh|----hheellpp]-file   [--jj|----ccrreeaattee--ootthheerr--ppaacckkeettss]   [--kk|----ffiilltteerr--
+       eexxpprreessssiioonn--iinn--eexxttrraa--ffrraammee] [--ll|----ppccaapp--lloogg  _<_p_a_t_h_>]  [--mm|----llooccaall--ssuubbnneettss
+       _<_a_d_d_r_e_s_s_e_s_>]  [--nn|----nnuummeerriicc--iipp--aaddddrreesssseess] [--oo|----nnoo--mmaacc] [--pp|----pprroottooccoollss
+       _<_l_i_s_t_>] [--qq|----ccrreeaattee--ssuussppiicciioouuss--ppaacckkeettss]  [--rr|----rreeffrreesshh--ttiimmee  _<_n_u_m_b_e_r_>]
+       [--ss|----nnoo--pprroommiissccuuoouuss]       [--tt|----ttrraaccee--lleevveell       _<_n_u_m_b_e_r_>]       [--xx
+       _<_m_a_x___n_u_m___h_a_s_h___e_n_t_r_i_e_s_>]  [--ww|----hhttttpp--sseerrvveerr  _<_p_o_r_t_>]  [--zz|----ddiissaabbllee--sseess--
+       ssiioonnss]   [--AA|----sseett--aaddmmiinn--ppaasssswwoorrdd   _p_a_s_s_w_o_r_d]   [--BB|----ffiilltteerr--eexxpprreessssiioonn
+       _e_x_p_r_e_s_s_i_o_n]  [--CC  _<_c_o_n_f_i_gmode>_]  [--DD|----ddoommaaiinn  _<_n_a_m_e_>]  [--FF|----ffllooww--ssppeecc
+       _<_s_p_e_c_s_>]      [--MM|----nnoo--iinntteerrffaaccee--mmeerrggee]     [--OO|--------oouuttppuutt--ppaacckkeett--ppaatthh]
+       [--PP|----ddbb--ffiillee--ppaatthh _<_p_a_t_h_>] [--QQ|----ssppooooll--ffiillee--ppaatthh  _<_p_a_t_h_>]  [--UU|----mmaappppeerr
+       _<_U_R_L_>]    [--VV|----vveerrssiioonn]]    [--XX   _<_m_a_x___n_u_m___T_C_P___s_e_s_s_i_o_n_s_>]   [----ddiissaabbllee--
+       iinnssttaannttsseessssiioonnppuurrggee] [----ddiissaabbllee--sscchheeddyyiieelldd] [----ddiissaabbllee--ssttooppccaapp] [----ddiiss--
+       aabbllee--mmuutteexxeexxttrraaiinnffoo] [----sskkiipp--vveerrssiioonn--cchheecckk] [----ww33cc]
 
        Unix options:
 
@@ -70,7 +70,7 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
         run as --trace-level 3.
 
 
-       --aa || ----aacccceessss--lloogg--ppaatthh
+       --aa || ----aacccceessss--lloogg--ffiillee
         By default nnttoopp does not maintain a log of HTTP requests to the inter-
         nal  web server.  Use this parameter to request logging and to specify
         the location of the file where these HTTP requests are logged.
@@ -88,8 +88,8 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
         192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - "GET /home.html HTTP/1.1" 200 1100/3195 10
         192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - "GET /About.html HTTP/1.1" 200 2010 10
 
-        Although  this  parameter  is called a 'path', it is actually the com-
-        plete file name of the access log.
+        This  parameter is the complete file name of the access log.  In prior
+        releases it was erroneously called --access-log-path.
 
 
        --bb || ----ddiissaabbllee--ddeeccooddeerrss
@@ -444,9 +444,9 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
         level 3 displays error, warning and informational messages.
 
         Trace level 4 is called 'noisy' and it is - generating  many  messages
-        about the internal functioning of nnttoopp..  Trace level 5 is 'noisy' plus
-        --log-extra 1, i.e.  all  possible  messages,  with  a  file:line  tag
-        prepended to every message.
+        about  the  internal functioning of nnttoopp..  Trace level 5 and above are
+        'noisy' plus extra logs, i.e. all possible messages, with a  file:line
+        tag prepended to every message.
 
 
        --uu || ----uusseerr
@@ -796,87 +796,76 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
         static content until nnttoopp is shutdown.
 
 
-       ----lloogg--eexxttrraa
-        This optional parameter controls the addition of more  information  to
-        each  log  message.   Both  choices  are useful in different ways, for
-        debugging and for using log watching and filtering packages.
-
-        Setting 1 adds a [file:line] to the  beginning  of  the  log  message.
-        Setting  2  adds  a  [MSGIDnnnnnnn] tag at the end of the log message.
-        The nnnnnnn value should be unique number for every message and should
-        be stable across nnttoopp releases.
-
-
        ----ppccaapp__sseettnnoonnbblloocckk
-        On  some platforms, the select() call nnttoopp uses to wait for web server
+        On some platforms, the select() call nnttoopp uses to wait for web  server
         requests will hang. This option sets the non-blocking option (assuming
-        it's  available  in  the version of libpcap that is installed).  While
-        this fixes the problem, it also signifcantly increases the  cpu  usage
+        it's available in the version of libpcap that  is  installed).   While
+        this  fixes  the problem, it also signifcantly increases the cpu usage
         of nnttoopp (by turing an interupt driven process into a poll). If the web
         server hangs, but the rest of nnttoopp seems to keep runing just fine, try
         this option.  It's know to be an issue under FreeBSD 4.9.
 
 
        ----sskkiipp--vveerrssiioonn--cchheecckk
-        By  default,  nnttoopp accesses a remote file to periodically check if the
-        most current version is running.  This  option  disables  that  check.
-        Please  review  the privacy notice at the bottom of this page for more
-        information.  By default, the recheck period is slightly more than  15
-        days.   This  can be adjusted via a constant in globals-defines.h.  If
-        the result of the initial check indicates that the nnttoopp version  is  a
-        'new  development'  version  (that  is newer than the latest published
-        development version), the recheck is disabled.  This is because  which
+        By default, nnttoopp accesses a remote file to periodically check  if  the
+        most  current  version  is  running.  This option disables that check.
+        Please review the privacy notice at the bottom of this page  for  more
+        information.   By default, the recheck period is slightly more than 15
+        days.  This can be adjusted via a constant in  globals-defines.h.   If
+        the  result  of the initial check indicates that the nnttoopp version is a
+        'new development' version (that is newer  than  the  latest  published
+        development  version), the recheck is disabled.  This is because which
         fixes and enhancements were present/absent from the code.
 
         NOTE: At present, the recheck does not work under Windows.
 
 
        ----ww33cc
-        By  default, nnttoopp generates displayable but not great html.  There are
-        a number of tags we do not generate because they cause  problems  with
-        older  browsers which are still commonly used or are important to look
-        good on real-world browsers.  This flag tells nnttoopp to  generate  'BET-
-        TER'  (but not perfect) w3c compliant html 4.01 output. This in no way
-        addresses all of the compatibility and markup issues.  Over  time,  we
-        would  like  to  make nnttoopp more compatible, but it will never be 100%.
+        By default, nnttoopp generates displayable but not great html.  There  are
+        a  number  of tags we do not generate because they cause problems with
+        older browsers which are still commonly used or are important to  look
+        good  on  real-world browsers.  This flag tells nnttoopp to generate 'BET-
+        TER' (but not perfect) w3c compliant html 4.01 output. This in no  way
+        addresses  all  of the compatibility and markup issues.  Over time, we
+        would like to make nnttoopp more compatible, but it will  never  be  100%.
         If you find any issues, please report them to ntop-dev.
 
 
 WWEEBB VVIIEEWWSS
-       While nnttoopp is running, multiple users can access the  traffic  informa-
+       While  nnttoopp  is running, multiple users can access the traffic informa-
        tion using their web browsers.  nnttoopp does not generate 'fancy' or 'com-
-       plex' html, although it does use frame,  shallowly  nested  tables  and
+       plex'  html,  although  it  does use frame, shallowly nested tables and
        makes minimal use of Cascading Style Sheets.
 
        We do not expect problems with any current web browser, but our ability
        to test less common ones is very limited.
 
        The main HTML page is divided into three frames. Beginning with release
-       2.3,  the menus have been compacted to small text selections stacked on
+       2.3, the menus have been compacted to small text selections stacked  on
        top of each other.
 
        The top frame is a 'tabbed' navigation bar, containing broad items such
-       as  'Total',  'Sent' and 'IP Protos'.  The middle frame is the detailed
+       as 'Total', 'Sent' and 'IP Protos'.  The middle frame is  the  detailed
        navigation or menu bar, containing the items relevant to the top selec-
-       tion,  for  example  "IP" traffic statistics from a "Totals" menu.  The
+       tion, for example "IP" traffic statistics from a  "Totals"  menu.   The
        resulting data is displayed in the bottom frame.
 
-       In documentation and this man page, when we refer to  a  page  such  as
+       In  documentation  and  this  man page, when we refer to a page such as
        Admin | Switch NIC, we mean the Broad category "Admin" and the detailed
        item "Switch NIC" on that Admin menu.
 
 
 NNOOTTEESS
-       nnttoopp requires a number of external  tools  and  libraries  to  operate.
-       Certain  other  tools  are optional, but add to the program's capabili-
+       nnttoopp  requires  a  number  of  external tools and libraries to operate.
+       Certain other tools are optional, but add to  the  program's  capabili-
        ties.
 
 
        ----wweebbsseerrvveerr--qquueeuuee
-        Specifies the maximum number of web server  requests  for  the  tcp/ip
-        stack  to  retain  in  it's  queue  awaiting  delivery to the nnttoopp web
+        Specifies  the  maximum  number  of web server requests for the tcp/ip
+        stack to retain in it's  queue  awaiting  delivery  to  the  nnttoopp  web
         server.  Requests in excess of this queue may be dropped (allowing for
-        retransmission)  or rejected at the tcp/ip stack level, depending upon
+        retransmission) or rejected at the tcp/ip stack level, depending  upon
         the OS.  Whatever happens, happens at the OS level, without any infor-
         mation being delivered to nnttoopp
 
@@ -884,7 +873,7 @@ NNOOTTEESS
 
         lliibbppccaapp from http://www.tcpdump.org/
 
-        The  Windows  version makes use of WWiinnPPccaapp (libpcap for Windows) which
+        The Windows version makes use of WWiinnPPccaapp (libpcap for  Windows)  which
         may be downloaded from http://winpcap.polito.it/install/default.htm.
 
         WARNING: The 2.x releases of WWiinnPPccaapp will NOT support SMP machines.
@@ -892,39 +881,39 @@ NNOOTTEESS
         ggddbbmm from http://www.gnu.org/software/gdbm/gdbm.html
 
         nnttoopp requires a POSIX threads library. Although a single-threaded ver-
-        sion  of  nnttoopp can be built from the source if requested during ./con-
+        sion of nnttoopp can be built from the source if requested  during  ./con-
         figure, it is not recommended for more than trivial usage.
 
-        The  ggdd  library,  for  the  creation  of  png  files,  available   at
+        The   ggdd  library,  for  the  creation  of  png  files,  available  at
         http://www.boutell.com/gd/.  nnttoopp supports both gd 1.X and 2.X
 
-        The  lliibbppnngg  library,  for  the  creation  of  png files, available at
+        The lliibbppnngg library, for  the  creation  of  png  files,  available  at
         http://www.libpng.org/pub/png/libpng.html.   nnttoopp  supports  both  the
-        1.0.x  series  and the 1.2.x series of libpng, but cautions users that
-        there are incompatibilities if you compile with one and run  with  the
-        other.   Please  read  the discussion in docs/FAQ before reporting ANY
+        1.0.x series and the 1.2.x series of libpng, but cautions  users  that
+        there  are  incompatibilities if you compile with one and run with the
+        other.  Please read the discussion in docs/FAQ  before  reporting  ANY
         problem with libpng.
 
-        (if an https:// server is desired) ooppeennSSSSLL from  the  OpenSSL  project
+        (if  an  https://  server is desired) ooppeennSSSSLL from the OpenSSL project
         available at http://www.openssl.org.
 
-        The  rrrrddttooooll  library  is required by the rrd plugin.  rrdtool creates
-        'Round-Robin databases' which are used to store and  graph  historical
-        data  in a format that permits long duration retention without growing
-        larger  over   time.    The   rrdtool   home   page   is   http://peo-
+        The rrrrddttooooll library is required by the rrd  plugin.   rrdtool  creates
+        'Round-Robin  databases'  which are used to store and graph historical
+        data in a format that permits long duration retention without  growing
+        larger   over   time.    The   rrdtool   home   page   is  http://peo-
         ple.ee.ethz.ch/~oetiker/webtools/rrdtool/
 
-        nnttoopp  includes  a  patched and frozen version of rrdtool 1.0.42 in the
-        myrrd/ directory.  Users of nnttoopp v2.3 should not need to  specifically
+        nnttoopp includes a patched and frozen version of rrdtool  1.0.42  in  the
+        myrrd/  directory.  Users of nnttoopp v2.3 should not need to specifically
         install rrdtool.
 
-        The  ssffllooww  Plugin  is courtesy of and supported by InMon Corporation,
+        The ssffllooww Plugin is courtesy of and supported  by  InMon  Corporation,
         http://www.inmon.com/sflowTools.htm.
 
         There are other optional libraries.  See the output of ./configure for
         a fuller listing.
 
-        Tool  locations  are  current  as  of July 2003 - please send email to
+        Tool locations are current as of July 2003  -  please  send  email  to
         report new locations or dead links.
 
 
@@ -933,36 +922,36 @@ SSEEEE AALLSSOO
 
 
 PPRRIIVVAACCYY NNOOTTIICCEE
-       By default at startup and at periodic intervals, the nnttoopp program  will
-       retrieve  a  file  containing current ntop program version information.
-       Retrieving this file allows this nnttoopp instance to confirm  that  it  is
+       By  default at startup and at periodic intervals, the nnttoopp program will
+       retrieve a file containing current ntop  program  version  information.
+       Retrieving  this  file  allows this nnttoopp instance to confirm that it is
        running the most current version.
 
-       The  retrieval is done using standard http:// requests, which will cre-
-       ate log records on the hosting system.  These log  records  do  contain
-       information  which  identifies  a specific nnttoopp site.  Accordingly, you
-       are being notified that this individually identifiable  information  is
+       The retrieval is done using standard http:// requests, which will  cre-
+       ate  log  records  on the hosting system.  These log records do contain
+       information which identifies a specific nnttoopp  site.   Accordingly,  you
+       are  being  notified that this individually identifiable information is
        being transmitted and recorded.
 
-       You  may  request - via the ----sskkiipp--vveerrssiioonn--cchheecckk run-time option - that
-       this check be eliminated.  If you  use  this  option,  no  individually
+       You may request - via the ----sskkiipp--vveerrssiioonn--cchheecckk run-time option  -  that
+       this  check  be  eliminated.   If  you use this option, no individually
        identifiable information is transmitted or recorded, because the entire
        retrieval and check is skipped.
 
-       We ask you to allow this retrieval and check, because it benefits  both
+       We  ask you to allow this retrieval and check, because it benefits both
        you and the nnttoopp developers.  It benefits you because you will be auto-
-       matically notified if the nnttoopp program  version  is  obsolete,  becomes
-       unsupported  or  is  no  longer current.  It benefits the developers of
-       nnttoopp because it allows us  to  determine  the  number  of  active  nnttoopp
-       instances,  and  the  operating  system/versions that users are running
-       nnttoopp under.  This allows us to focus development resources  on  systems
+       matically  notified  if  the  nnttoopp program version is obsolete, becomes
+       unsupported or is no longer current.  It  benefits  the  developers  of
+       nnttoopp  because  it  allows  us  to  determine  the number of active nnttoopp
+       instances, and the operating system/versions  that  users  are  running
+       nnttoopp  under.   This allows us to focus development resources on systems
        like those our users are using nnttoopp on.
 
-       The  individually  identifiable  information  is  contained  in the web
-       server log records which are automatically created each time  the  ver-
-       sion  file  is retrieved.  This is a function of the web server and not
-       of nnttoopp , but we do take advantage of it.  The log record shows the  IP
-       address  of  the  requestor (the nnttoopp instance) and a User-Agent header
+       The individually identifiable  information  is  contained  in  the  web
+       server  log  records which are automatically created each time the ver-
+       sion file is retrieved.  This is a function of the web server  and  not
+       of  nnttoopp , but we do take advantage of it.  The log record shows the IP
+       address of the requestor (the nnttoopp instance) and  a  User-Agent  header
        field.  We place information in the User-Agent header as follows:
 
            ntop/<version>
@@ -982,51 +971,51 @@ PPRRIIVVAACCYY NNOOTTIICCEE
 
        For example:
 
-           ntop/2.2.98 host/i686-pc-linux-gnu  distro/redhat  release/9  kern-
+           ntop/2.2.98  host/i686-pc-linux-gnu  distro/redhat  release/9 kern-
        rlse/2.4.20-8smp
-           GCC/3.2.2  config(i18n) run(i; u; P; w; t; logextra; m; instantses-
+           GCC/3.2.2 config(i18n) run(i; u; P; w; t; logextra; m;  instantses-
        sionpurge;
            schedyield; d; usesyslog=; t) gdbm/1.8.0 openssl/0.9.7a zlib/1.1.4
            access/http interfaces(eth0,eth1)
 
-       Distro and release information is determined at compile time  and  con-
-       sists  of  information typically found in the /etc/release (or similar)
+       Distro  and  release information is determined at compile time and con-
+       sists of information typically found in the /etc/release  (or  similar)
        file. See the nnttoopp tool linuxrelease for how this is determined.
 
-       gcc compiler version (if available) is the internal version #s for  the
+       gcc  compiler version (if available) is the internal version #s for the
        gcc compiler, e.g. 3.2.3.
 
-       kernrlse  is  the  Linux  Kernel  version or the xBSD 'release' such as
-       4.9-RELEASE and is determined from the uname data (if it's  available).
+       kernrlse is the Linux Kernel version or  the  xBSD  'release'  such  as
+       4.9-RELEASE  and is determined from the uname data (if it's available).
 
        The ./configure parameters are stripped of directory paths, leading -s,
-       etc. to create a short form that shows us what  ./configure  parameters
+       etc.  to  create a short form that shows us what ./configure parameters
        people are using.
 
        Similarly, the run time parameters are stripped of data and paths, just
        showing which flags are being used.
 
-       The libpcap, gdbm, openssl and zlib  versions  come  from  the  strings
+       The  libpcap,  gdbm,  openssl  and  zlib versions come from the strings
        returned by the various inquiry functions (if they're availabe).
 
        Here's a sample log record:
 
        67.xxx.xxx.xxx  -  -  [28/Dec/2003:12:11:46  -0500]  "GET  /version.xml
        HTTP/1.0"
-         200 1568 www.burtonstrauss.com "-"  "ntop/2.2.98  host/i686-pc-linux-
+         200  1568  www.burtonstrauss.com "-" "ntop/2.2.98 host/i686-pc-linux-
        gnu
          distro/redhat release/9 kernrlse/2.4.20-8smp GCC/3.2.2 config(i18n)
          run(i; u; P; w; t; logextra; m; instantsessionpurge; schedyield; d;
-         usesyslog=)    libpcap/0.8   gdbm/1.8.0   openssl/0.9.7a   zlib/1.1.4
+         usesyslog=)   libpcap/0.8   gdbm/1.8.0   openssl/0.9.7a    zlib/1.1.4
        access/http
          interfaces(eth0,eth1,eth2)" "-"
 
 
 UUSSEERR SSUUPPPPOORRTT
-       Please send bug reports to  the  ntop-dev  <ntop-dev@ntop.org>  mailing
+       Please  send  bug  reports  to the ntop-dev <ntop-dev@ntop.org> mailing
        list. The ntop <ntop@ntop.org> mailing list is used for discussing ntop
        usage issues. In order to post messages on the lists a (free) subscrip-
-       tion  is  required  in order to limit/avoid spam. Please do NOT contact
+       tion is required in order to limit/avoid spam. Please  do  NOT  contact
        the author directly unless this is a personal question.
 
        Commercial support is available under request. Please see the ntop site
@@ -1036,7 +1025,7 @@ UUSSEERR SSUUPPPPOORRTT
 
 
 AAUUTTHHOORR
-       ntop's  author  is Luca Deri (http://luca.ntop.org/) who can be reached
+       ntop's author is Luca Deri (http://luca.ntop.org/) who can  be  reached
        at <deri@ntop.org>.
 
 
@@ -1045,11 +1034,11 @@ LLIICCEENNCCEE
 
 
 AACCKKNNOOWWLLEEDDGGMMEENNTTSS
-       The author acknowledges the Centro Serra of  the  University  of  Pisa,
+       The  author  acknowledges  the  Centro Serra of the University of Pisa,
        Italy (http://www-serra.unipi.it/) for hosting the ntop sites (both web
        and mailing lists), and Burton Strauss <burton@ntopsupport.com> for his
-       help   and   user   assistance.  Many  thanks  to  Stefano  Suin  <ste-
-       fano@ntop.org> and Rocco Carbone <rocco@ntop.org> for  contributing  to
+       help  and  user  assistance.  Many  thanks  to   Stefano   Suin   <ste-
+       fano@ntop.org>  and  Rocco Carbone <rocco@ntop.org> for contributing to
        the project.
 
 

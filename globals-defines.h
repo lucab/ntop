@@ -130,11 +130,6 @@
  */
 /* #define PARM_PRINT_ALL_SESSIONS */
 
-/* PARM_PRINT_RETRANSMISSION_DATA causes report.c/reportUtils.c to include in reports
- * lines for sessions that are not "active".
- */
-/* #define PARM_PRINT_RETRANSMISSION_DATA */
-
 /* Define PARM_SHOW_NTOP_HEARTBEAT to see minimal status messages every cycle
  * from various timed processes
  */
@@ -283,15 +278,6 @@
 #endif
 
 /*
- * MAKE_WITH_SCHED_YIELD is shorthand
- */
-#if ( defined(HAVE_SCHED_H) || defined(HAVE_SYS_SCHED_H) ) && defined(HAVE_SCHED_YIELD)
- #define MAKE_WITH_SCHED_YIELD
-#else
- #undef MAKE_WITH_SCHED_YIELD
-#endif
-
-/*
  * Do we have the stuff we need for i18n?
  */
 #ifdef MAKE_WITH_I18N
@@ -333,9 +319,6 @@
 /* #define MAKE_WITH_HTTPSIGTRAP */
 
 /* EXPERIMENTAL */
-/* Define MAKE_WITH_LOG_XXXXXX if you want log messages to use more than just
- * LOG_ERR for ntop's messages. */
- 
 /* Define MAKE_WITH_LOG_XXXXXX if you want log messages to use more than just
  * LOG_ERR for ntop's messages.
  *
@@ -988,7 +971,6 @@
 /*
  * This is the URL to request the latest version information
  */
-//TEMP [ switch sites ?]
 #define CONST_VERSIONCHECK_SITE             "version.ntop.org"
 #define CONST_VERSIONCHECK_BACKUP_SITE      "www.burtonstrauss.com"
 #define CONST_VERSIONCHECK_DOCUMENT         "version.xml"
@@ -1441,9 +1423,6 @@
      */
 #define CONST_DETAIL_TRACE_LEVEL            5
 #define CONST_VERY_DETAIL_TRACE_LEVEL       6
-
-#define CONST_EXTRA_TRACE_FILELINE          1
-#define CONST_EXTRA_TRACE_MSGID             2
 
 #define CONST_TRACE_ALWAYSDISPLAY           CONST_ALWAYSDISPLAY_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_FATALERROR              CONST_FATALERROR_TRACE_LEVEL, __FILE__, __LINE__

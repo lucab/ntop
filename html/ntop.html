@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.18.1 -->
-<!-- CreationDate: Mon Feb  2 20:42:31 2004 -->
+<!-- CreationDate: Fri May 21 09:08:31 2004 -->
 <html>
 <head>
 <meta name="generator" content="groff -Thtml, see www.gnu.org">
@@ -43,12 +43,12 @@
 <td width="10%"></td>
 <td width="89%">
 <p><b>ntop</b> [<b>@filename</b>]
-[<b>-a</b>|<b>--access-log-path</b> <i>&lt;path&gt;</i>]
+[<b>-a</b>|<b>--access-log-file</b> <i>&lt;path&gt;</i>]
 [<b>-b</b>|<b>--disable-decoders</b>]
 [<b>-c</b>|<b>--sticky-hosts]</b>
 [<b>-f</b>|<b>--traffic-dump-file</b> <i>file&gt;</i>]
 [<b>-g</b>|<b>--track-local-hosts</b>]
-[<b>-h</b>|<b>--help</b>]
+[<b>-h</b>|<b>--help</b>]-file
 [<b>-j</b>|<b>--create-other-packets</b>]
 [<b>-k</b>|<b>--filter-expression-in-extra-frame</b>]
 [<b>-l</b>|<b>--pcap-log</b> <i>&lt;path&gt;</i>]
@@ -77,9 +77,8 @@
 <i>&lt;max_num_TCP_sessions&gt;</i>]
 [<b>--disable-instantsessionpurge</b>]
 [<b>--disable-schedyield</b>] [<b>--disable-stopcap</b>]
-[<b>--disable-mutexextrainfo</b>] [<b>--log-extra</b>
-<i>&lt;number&gt;</i>] [<b>--skip-version-check</b>]
-[<b>--w3c</b>]</p>
+[<b>--disable-mutexextrainfo</b>]
+[<b>--skip-version-check</b>] [<b>--w3c</b>]</p>
 <!-- INDENTATION -->
 <p>Unix options:</p>
 <!-- INDENTATION -->
@@ -166,7 +165,7 @@ value, such as --trace-level, will use the LAST value given:
 <tr valign="top" align="left">
 <td width="10%"></td>
 <td width="89%">
-<p><b>-a | --access-log-path</b></p></td>
+<p><b>-a | --access-log-file</b></p></td>
 </table>
 <!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
@@ -194,8 +193,9 @@ Log entries look like this:</p>
 192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - &quot;GET /About.html HTTP/1.1&quot; 200 2010 10
 </pre>
 <!-- INDENTATION -->
-<p>Although this parameter is called a &rsquo;path&rsquo;,
-it is actually the complete file name of the access log.</p>
+<p>This parameter is the complete file name of the access
+log. In prior releases it was erroneously called
+--access-log-path.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -343,7 +343,7 @@ navigation between pages.</p>
 <td width="86%">
 <p>By default, <b>ntop</b> captures traffic from network
 interface cards (NICs) or from netFlow/sFlow probes.
-wever, <b>ntop</b> can also read data from a file -
+However, <b>ntop</b> can also read data from a file -
 typically a tcpdump capture or the output from one of the
 <b>ntop</b> packet capture options.</p>
 <!-- INDENTATION -->
@@ -855,9 +855,9 @@ warning and informational messages.</p>
 <!-- INDENTATION -->
 <p>Trace level 4 is called &rsquo;noisy&rsquo; and it is -
 generating many messages about the internal functioning of
-<b>ntop.</b> Trace level 5 is &rsquo;noisy&rsquo; plus
---log-extra 1, i.e. all possible messages, with a file:line
-tag prepended to every message.</p>
+<b>ntop.</b> Trace level 5 and above are &rsquo;noisy&rsquo;
+plus extra logs, i.e. all possible messages, with a
+file:line tag prepended to every message.</p>
 </td>
 </table>
 <!-- INDENTATION -->
@@ -1551,32 +1551,6 @@ are seeing deadlocks.</p>
 error. The default of stopcap enabled makes the web
 interface available albeit with static content until
 <b>ntop</b> is shutdown.</p>
-</td>
-</table>
-<!-- INDENTATION -->
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td>
-<td width="89%">
-<p><b>--log-extra</b></p></td>
-</table>
-<!-- INDENTATION -->
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="13%"></td>
-<td width="86%">
-<p>This optional parameter controls the addition of more
-information to each log message. Both choices are useful in
-different ways, for debugging and for using log watching and
-filtering packages.</p>
-<!-- INDENTATION -->
-<p>Setting 1 adds a [file:line] to the beginning of the log
-message. Setting 2 adds a [MSGIDnnnnnnn] tag at the end of
-the log message. The nnnnnnn value should be unique number
-for every message and should be stable across <b>ntop</b>
-releases.</p>
 </td>
 </table>
 <!-- INDENTATION -->

@@ -1733,7 +1733,6 @@ void initDeviceDatalink(int deviceId) {
 	       myGlobals.device[deviceId].mtuSize,
 	       myGlobals.device[deviceId].headerSize);
 
-// create-suspicious-packets",        no_argument,       NULL, 'q'
 }
 
 /* ******************************* */

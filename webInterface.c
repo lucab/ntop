@@ -5255,14 +5255,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "PARM_PRINT_RETRANSMISSION_DATA",
-#ifdef PARM_PRINT_RETRANSMISSION_DATA
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
 #ifdef PARM_SESSION_PURGE_MINIMUM_IDLE
   printFeatureConfigNum(textPrintFlag, "PARM_SESSION_PURGE_MINIMUM_IDLE", PARM_SESSION_PURGE_MINIMUM_IDLE);
 #else

@@ -705,6 +705,10 @@ See the 'expression' section of the
 man page - usually available at http://www.tcpdump.org/tcpdump_man.html - for 
 further information and the best quick guide to BPF filters currently available.
 
+WARNING: If you are using complex filter expressions, especially those with =s
+or meaningful spaces in them, be sure and use the long option format,
+--filter-expression="xxxx" and not -B "xxxx".
+
 
 .It2 -C
 This instruments ntop to be used in two configurations: host and network mode. In host mode (default) ntop works as usual: the IP addresses received are those of real hosts. In host mode the IP addresses received are those of the C-class network to which the address belongs. Using ntop in network mode is extremely useful when installed in a traffic exchange (e.g. in the middle of the Internet) whereas the host mode should be used when ntop is installed on the edge of a network (e.g. inside a company). The network mode significantly reduces the amount of work ntop has to perform and it has to be used whenever ntop is used to find out how the network traffic flows and not to pin-point specific hosts.

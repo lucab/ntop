@@ -4230,7 +4230,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
-      sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" alt=\"Current 30day throughput chart><BR>\n");
+      sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" alt=\"Current 30day throughput chart\"><BR>\n");
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		  formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
 		  formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1))) < 0)
