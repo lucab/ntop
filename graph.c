@@ -2209,7 +2209,6 @@ void drawLunStatsPktsDistribution (HostTraffic *el) {
       }
   }
 
-  printf ("drawLunStatsPktsDistribution: #entries = %d\n", numEntries);
   myGlobals.columnSort = 5;     /* This is based on total frames */
   qsort (sortedLunTbl, numEntries, sizeof (LunStatsSortedEntry), cmpLunFctn);
   
@@ -2228,7 +2227,6 @@ void drawLunStatsPktsDistribution (HostTraffic *el) {
 #ifndef WIN32
   /* Unices */
 
-  traceEvent (CONST_TRACE_ALWAYSDISPLAY, "drawLunStatsPktsDistribution: idx = %d\n", idx);
   if(myGlobals.newSock < 0)
     useFdOpen = 0;
   else
