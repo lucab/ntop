@@ -1004,21 +1004,21 @@ void initWeb() {
   if(myGlobals.webPort > 0) {
     sin.sin_family      = AF_INET;
     sin.sin_port        = (int)htons((unsigned short int)myGlobals.webPort);
-    sin.sin_addr.s_addr = INADDR_ANY;
-
 #ifndef WIN32
-    if(myGlobals.sslAddr) {
-      if(!inet_aton(myGlobals.sslAddr, &sin.sin_addr))
-	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
-		   "Not binding SSL to a particular interface!\n", myGlobals.sslAddr);
-    }
-
     if(myGlobals.webAddr) {
-      /* Code added to be able to bind to a particular interface */
-      if(!inet_aton(myGlobals.webAddr, &sin.sin_addr))
-	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
-		   "Not binding to a particular interface!\n",  myGlobals.webAddr);
+      if(!inet_aton(myGlobals.webAddr, &sin.sin_addr)) {
+	traceEvent(TRACE_ERROR, "Unable to convert address '%s'... "
+		   "Not binding to a particular interface!\n", myGlobals.webAddr);
+        sin.sin_addr.s_addr = INADDR_ANY;
+      } else {
+	traceEvent(TRACE_INFO, "Converted address '%s'... "
+		   "binding to the specific interface!\n", myGlobals.webAddr);
+      }
+    } else {
+        sin.sin_addr.s_addr = INADDR_ANY;
     }
+#else
+    sin.sin_addr.s_addr = INADDR_ANY;
 #endif
 
     myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -1057,7 +1057,22 @@ void initWeb() {
   if(myGlobals.sslInitialized) {
     sin.sin_family      = AF_INET;
     sin.sin_port        = (int)htons(myGlobals.sslPort);
+#ifndef WIN32
+    if(myGlobals.sslAddr) {
+      if(!inet_aton(myGlobals.sslAddr, &sin.sin_addr)) {
+	traceEvent(TRACE_ERROR, "Unable to convert address '%s'... "
+		   "Not binding SSL to a particular interface!\n", myGlobals.sslAddr);
+        sin.sin_addr.s_addr = INADDR_ANY;
+      } else {
+	traceEvent(TRACE_INFO, "Converted address '%s'... "
+		   "binding SSL to the specific interface!\n", myGlobals.sslAddr);
+      }
+    } else {
+        sin.sin_addr.s_addr = INADDR_ANY;
+    }
+#else
     sin.sin_addr.s_addr = INADDR_ANY;
+#endif
 
     if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
       /* Fix below courtesy of Matthias Kattanek <mattes@mykmk.com> */
@@ -1097,8 +1112,12 @@ void initWeb() {
 
 #ifdef HAVE_OPENSSL
   if(myGlobals.sslInitialized)
-    traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
-	       myGlobals.sslPort);
+    if(myGlobals.sslAddr)
+      traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on %s port %d...\n",
+		 myGlobals.sslAddr, myGlobals.sslPort);
+    else
+      traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
+		 myGlobals.sslPort);
 #endif
 
 #ifdef MULTITHREADED
