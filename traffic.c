@@ -585,7 +585,7 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
 	
     /* sdbm hash algorithm */
     hash = 0;
-    while (c = *str++) {
+    while((c = *str++)) {
       hash = c + (hash << 6) + (hash << 16) - hash;
     }
 

@@ -202,7 +202,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
 	  if(srcHost->protoIPTrafficInfos[idx] == NULL) {
 	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return;
+	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 
 	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentLoc, length);
@@ -211,7 +211,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
 	  if(dstHost->protoIPTrafficInfos[idx] == NULL) {
 	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return;
+	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdLoc, length);
 	}
@@ -220,7 +220,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
 	  if(srcHost->protoIPTrafficInfos[idx] == NULL) {
 	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return;
+	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentRem, length);
 	}
@@ -228,7 +228,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
 	  if(dstHost->protoIPTrafficInfos[idx] == NULL) {
 	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return;
+	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdLoc, length);
 	}
@@ -240,7 +240,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
 	  if(srcHost->protoIPTrafficInfos[idx] == NULL) {
 	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return;
+	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentLoc, length);
 	}
@@ -248,7 +248,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
 	  if(dstHost->protoIPTrafficInfos[idx] == NULL) {
 	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return;
+	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdFromRem, length);
 	}
@@ -258,7 +258,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
 	  if(srcHost->protoIPTrafficInfos[idx] == NULL) {
 	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return;
+	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentRem, length);
 	}
@@ -266,7 +266,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
 	  if(dstHost->protoIPTrafficInfos[idx] == NULL) {
 	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return;
+	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdFromRem, length);
 	}
@@ -291,7 +291,7 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
       /* This is normal. Return without warning */
       return;
     }
-    traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (0x%X, 0x%X)",
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (%p, %p)",
 	       sender, receiver);
     return;
   }
@@ -562,12 +562,12 @@ static void checkNetworkRouter(HostTraffic *srcHost, HostTraffic *dstHost,
     traceEvent(CONST_TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",
 	       srcHost->ethAddressString, srcHost->hostNumIpAddress, srcHost->hostResolvedName,
 	       dstHost->ethAddressString, dstHost->hostNumIpAddress, dstHost->hostResolvedName,
-	       routerIdx,
 	       router->ethAddressString,
 	       router->hostNumIpAddress,
 	       router->hostResolvedName);
 
 #endif
+
     FD_SET(FLAG_GATEWAY_HOST, &router->flags);
     updateRoutedTraffic(router);
   }
@@ -1719,7 +1719,7 @@ static void processIpPkt(const u_char *bp,
 	    handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId);
         }
 
-	if(nonFullyRemoteSession)
+	if(nonFullyRemoteSession) {
             /* There is no session structure returned for UDP sessions */
 #ifdef INET6
 	  if(ip6)
@@ -1736,6 +1736,7 @@ static void processIpPkt(const u_char *bp,
                              dport, ip_len, NULL, udpDataLength,
                              (u_char*)(bp+hlen+sizeof(struct udphdr)),
                              actualDeviceId);
+	}
       }
     }
 #ifdef INET6

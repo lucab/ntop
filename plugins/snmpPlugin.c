@@ -168,10 +168,8 @@ static void simplehandlePluginHostCreationDeletion (HostTraffic * el,
 						    u_short deviceId,
 						    u_char hostCreation);
 static void initData ();
-static void resetData ();
 static void addHost (HostTraffic * el);
 static void removeHost (HostTraffic * el);
-static HostTraffic *searchHostByOid (oid *);
 static HostTraffic **getNextHostByOid (oid * reqoid);
 static HostTraffic *getFirstHostByOid ();
 static oid* create_oid(HostTraffic* el);
@@ -396,13 +394,9 @@ getHostSerialFromIndex (netsnmp_table_request_info * table_info,
   int actual_device;
   int vanid;
   netsnmp_variable_list *tmp;
-  HostAddr *dst;
-
   uint32_t mod_value[4];
   char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
   char *ethAddr;
-  char etherbuf1[LEN_ETHERNET_ADDRESS_DISPLAY];
-  char *ethAddr1;
 
   char display_buffer[20];
   int i;
@@ -490,13 +484,15 @@ getHostSerialFromIndex (netsnmp_table_request_info * table_info,
     case SERIAL_FC:
       return -1;
       break;
-    defaults:return -1;	// wrong
+
+    default:
+      return -1;	// wrong
     }
 
   return 1;
 }
 
-static compare_oidWithHost(const void* reqoid, const void* analyzingHost){
+static int compare_oidWithHost(const void* reqoid, const void* analyzingHost){
 
   oid* requestoid = *((oid**)reqoid);
   oid* analyzingOid = create_oid(*(HostTraffic**)analyzingHost);
@@ -563,7 +559,6 @@ static oid* create_oid(HostTraffic* el){
   int numberOfOid;
   oid* ptr;
   oid* tmp;
-  int i;
   int vlan;
 
   // traceEvent(CONST_TRACE_ALWAYSDISPLAY,"Dentro create_oid");
@@ -668,10 +663,13 @@ static void removeHost(HostTraffic* el){
   numberOfHost--;
 }
 
+/* NOT USED
+
 static void resetData(){
   free(arrayOfHost);
   arrayOfHost = NULL;
 }
+*/
 
 static void initData(){
   numberOfHost = 0;
@@ -720,8 +718,7 @@ static oid* encodeEth(HostTraffic* el){
 }
 static oid* encodeFc(HostTraffic* el){
   oid* tmpoid = malloc(sizeof(oid)*4);
-  int i;
-  u_int8_t* buf;
+  
   tmpoid[0] = 3;
   tmpoid[1] = el->hostSerial.value.fcSerial.fcAddress.domain;
   tmpoid[2] = el->hostSerial.value.fcSerial.fcAddress.area;
@@ -747,7 +744,8 @@ static oid* createAnswer(int column,HostTraffic* el){
 
   if(snmpDebug)
     traceEvent (CONST_TRACE_ALWAYSDISPLAY,
-		"SerialType %d, malloc for %d oid",tmp[0],numberOfOid+OID_LENGTH(ntopTable_oid)+2);
+		"SerialType %d, malloc for %d oid",
+		tmp[0], numberOfOid+OID_LENGTH(ntopTable_oid)+2);
 
   resoid = malloc((numberOfOid+OID_LENGTH(ntopTable_oid)+2)*sizeof(oid));
   for(i = 0;i<OID_LENGTH(ntopTable_oid);i++)
@@ -794,7 +792,6 @@ processRequest (netsnmp_table_request_info * table_info,
 		netsnmp_variable_list * var, HostTraffic * traffic)
 {
   struct counter64 result;
-  int result_size = sizeof(struct counter64);
   int intresult;
   char *cp;
   int size;
@@ -1351,9 +1348,7 @@ ntopTable_handler (netsnmp_mib_handler * handler,
   HostTraffic *traffic = NULL;
   HostTraffic** resultOfResearch = NULL;
   oid* resoid;
-  oid* tmp;
   int numberOfOid;
-  int i,j;
   int req_length;
 
   for (request = requests; request; request = request->next)

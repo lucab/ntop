@@ -701,7 +701,7 @@ extern int h_errno; /* netdb.h */
 #endif
 
 #ifndef BufferTooSmall
-#define BufferTooSmall(buf, len) traceEvent(CONST_TRACE_ERROR, "Buffer %s(%d@0x%08x) too small @ %s:%d", #buf, len, buf, __FILE__, __LINE__) 
+#define BufferTooSmall(buf, len) traceEvent(CONST_TRACE_ERROR, "Buffer [buffer len=%d] too small @ %s:%d", len,  __FILE__,__LINE__) 
 #endif
 
 #ifdef WIN32

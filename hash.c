@@ -108,23 +108,6 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
   if((idx == BROADCAST_HOSTS_ENTRY) || (idx == OTHER_HOSTS_ENTRY))
     idx = FIRST_HOSTS_ENTRY;
   
-#ifdef DEBUG
-  if(hostIpAddress != NULL) {
-    char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
-
-    traceEvent(CONST_TRACE_INFO, "hashHost(%s/%s/%d) = %u",
-	       intoa(*hostIpAddress),
-	       etheraddr_string(ether_addr, buf),
-	       (*useIPAddressForSearching), idx);
-  } else {
-    char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
-
-    traceEvent(CONST_TRACE_INFO, "hashHost(%s/%d) = %u",
-	       etheraddr_string(ether_addr, buf),
-	       (*useIPAddressForSearching), idx);
-  }
-#endif
-
   return(idx);
 }
 
@@ -1372,7 +1355,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   }
 
   if(el == NULL)
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "getHostInfo(idx=%d)(ptr=%x)",
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "getHostInfo(idx=%d)(ptr=%p)",
                  idx, (void*)myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
   
 #ifdef HASH_DEBUG

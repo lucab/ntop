@@ -308,7 +308,6 @@ static void loadPrefs(int argc, char* argv []) {
   datum key, nextkey;
   char buf[1024];
   int opt_index, opt;
-  char *adminPw = NULL;
 #ifdef WIN32
   int optind=0;
 #else
@@ -997,8 +996,6 @@ int main(int argc, char *argv[]) {
   char *cmdLineBuffer, *readBuffer, *readBufferWork;
   FILE *fd;
   struct stat fileStat;
-  bool startCapture = FALSE;
-  /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
 
   /* printf("Wait please: ntop is coming up...\n"); */
 

@@ -26,7 +26,6 @@
 static void sendMenuFooter(int itm1Idx, int itm2Idx);
 static void encodeWebFormURL(char *in, char *buf, int buflen);
 static void decodeWebFormURL(char *buf);
-static void copyUserPrefs (UserPref *from, UserPref *to);
 static int processNtopConfigData (char *buf, int savePref);
 
 /* *******************************/
@@ -1062,78 +1061,6 @@ void initUserPrefs (UserPref *pref)
 }
 
 /* *******************************/
-void copyUserPrefs (UserPref *from, UserPref *to)
-{
-        /* copy from admin to running */
-        to->enablePacketDecoding = from->enablePacketDecoding;
-        to->stickyHosts = from->stickyHosts;
-        to->daemonMode = from->daemonMode;
-        to->rFileName = from->rFileName;
-        to->trackOnlyLocalHosts = from->trackOnlyLocalHosts;
-        to->devices = from->devices;
-        to->enableOtherPacketDump = from->enableOtherPacketDump;
-        to->filterExpressionInExtraFrame = from->filterExpressionInExtraFrame;
-        to->pcapLog = from->pcapLog;
-        to->localAddresses = from->localAddresses;
-        to->numericFlag = from->numericFlag;
-        to->dontTrustMACaddr = from->dontTrustMACaddr;
-        to->protoSpecs = from->protoSpecs;
-        to->enableSuspiciousPacketDump = from->enableSuspiciousPacketDump;
-        to->refreshRate = from->refreshRate;
-        to->disablePromiscuousMode = from->disablePromiscuousMode;
-        to->traceLevel = from->traceLevel;
-        to->maxNumHashEntries = from->maxNumHashEntries;
-        to->webAddr = from->webAddr;
-        to->webPort = from->webPort;
-        to->ipv4or6 = from->ipv4or6;
-        to->enableSessionHandling = from->enableSessionHandling;
-        to->currentFilterExpression = from->currentFilterExpression;
-        strncpy((char *) &to->domainName,
-                (char *)&from->domainName, sizeof(to->domainName));
-        to->flowSpecs = from->flowSpecs;
-        to->debugMode = from->debugMode;
-#ifndef WIN32
-        to->useSyslog = from->useSyslog;
-#endif
-        to->mergeInterfaces = from->mergeInterfaces;
-#ifdef WIN32
-        to->pcapLogBasePath = from->pcapLogBasePath;
-#else
-        to->pcapLogBasePath = from->pcapLogBasePath;
-#endif
-        to->spoolPath = from->spoolPath;
-        to->fcNSCacheFile = from->fcNSCacheFile;
-        to->mapperURL = from->mapperURL;
-#ifdef HAVE_OPENSSL
-        to->sslAddr = from->sslAddr;
-        to->sslPort = from->sslPort;
-#endif
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-        to->useSSLwatchdog = from->useSSLwatchdog;
-#endif
-
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-        to->disableSchedYield = from->disableSchedYield;
-#endif
-
-        to->w3c = from->w3c;
-        to->P3Pcp = from->P3Pcp;
-        to->P3Puri = from->P3Puri;
-
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-        to->setNonBlocking = from->setNonBlocking;
-#endif
-        to->disableStopcap = from->disableStopcap;
-        to->disableInstantSessionPurge = from->disableInstantSessionPurge;
-        to->printIpOnly = from->printIpOnly;
-        to->printFcOnly = from->printFcOnly;
-        to->noInvalidLunDisplay = from->noInvalidLunDisplay;
-        to->disableMutexExtraInfo = from->disableMutexExtraInfo;
-
-        to->skipVersionCheck = from->skipVersionCheck;
-}
-
-/* *******************************/
 
 #define NTOP_SAVE_PREFS     "SP"
 #define NTOP_RESTORE_DEF    "RD"
@@ -1156,10 +1083,10 @@ void copyUserPrefs (UserPref *from, UserPref *to)
 
 int processNtopConfigData (char *buf, int savePref)
 {
-    char *strtokState, *mainState, *token, *button;
+    char *strtokState, *mainState;
     int startCap = FALSE, action;
-    UserPref tmpPrefs, *pref = &myGlobals.savedPref;
-    char tmp[3] = "0", *devices = NULL, foundDevices = 0;
+    UserPref tmpPrefs;
+    char *devices = NULL, foundDevices = 0, *token;
 
     token = strtok_r(buf, "&", &mainState);
     tmpPrefs = myGlobals.savedPref;
@@ -1458,7 +1385,7 @@ char * rindex(const char *p, int ch) {
 void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 {
   char buf[1024], hostStr[MAXHOSTNAMELEN+16];
-  bool action = FALSE, startCap = FALSE;
+  bool startCap = FALSE;
   int len;
   UserPref defaults, *pref = &myGlobals.savedPref;
 
@@ -1562,6 +1489,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
       sendString("</TD></TR>");
     }
 
+  default:
     CONFIG_STR_ENTRY (DARK_BG, "Capture File Path (-f)", NTOP_PREF_CAPFILE, 50,
 		      pref->rFileName,
 		      "Capture file to read from (takes precedence over "

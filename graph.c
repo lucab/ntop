@@ -2391,7 +2391,9 @@ void drawVsanStatsPktsDistribution (int deviceId) {
           else {
               sprintf (label[idx], "N/A");
           }
-          lbl[idx] = label[idx++];
+	  
+          lbl[idx] = label[idx];
+	  idx++;
       }
 
       if (j >= MAX_VSANS_GRAPHED)

@@ -41,9 +41,11 @@ static struct in6_addr *in6_cpy(struct in6_addr *dst, struct in6_addr *src) {
   return memcpy(dst, src, sizeof(struct in6_addr));
 }
 
-static struct in_addr *in4_cpy(struct in_addr *dst, struct in_addr *src) {
-  return memcpy(dst, src, sizeof(struct in_addr));
-}
+/* NOT USED
+   static struct in_addr *in4_cpy(struct in_addr *dst, struct in_addr *src) {
+   return memcpy(dst, src, sizeof(struct in_addr));
+   }
+*/
 
 static void str2in6_addr(char *str, struct in6_addr *addr) {
   int i;
@@ -54,6 +56,9 @@ static void str2in6_addr(char *str, struct in6_addr *addr) {
     addr->s6_addr[i]= x & 0xff;
   }
 }
+
+/*
+  NOTUSED
 
 static int prefixlen(void *val, int size) {
   unsigned char *name = (unsigned char *)val;
@@ -76,6 +81,7 @@ static int prefixlen(void *val, int size) {
       return(0);
   return (plen);
 }
+*/
 
 /* ************************************************* */
 
@@ -316,7 +322,6 @@ static int iface_getflags(struct iface_if *ii) {
 struct iface_handler *iface_new(void) {
   char buf[1024];
   char straddr[33];
-  char bufntop[67];
   char ifname[20];
   int ifindex, plen, scope, status;
   int found = 0;

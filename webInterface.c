@@ -7778,7 +7778,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 #endif /* MAKE_WITH_HTTPSIGTRAP */
 
 #ifndef WIN32
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) started...", getpid());
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%lu) started...", getpid());
 #endif
 #endif
 
@@ -7858,7 +7858,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
 	rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
 	if(rc != 0)
-	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d", 
+	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask set, pthread_setsigmask(SIG_UNBLOCK, %p, %p) returned %d", 
 		       nset, oset, rc);
 
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
@@ -7910,11 +7910,11 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d", rc);
 #endif
 	if(rc > 0) {
-	    HEARTBEAT(1, "handleWebConnections()", NULL);
-	    /* Now, handle the web connection ends up in SSL_Accept() */
-	    sslwatchdogDebug("->hSWC()", FLAG_SSLWATCHDOG_PARENT, "");
-	    handleSingleWebConnection(&mask);
-	    sslwatchdogDebug("hSWC()->", FLAG_SSLWATCHDOG_PARENT, "");
+	  HEARTBEAT(1, "handleWebConnections()", NULL);
+	  /* Now, handle the web connection ends up in SSL_Accept() */
+	  sslwatchdogDebug("->hSWC()", FLAG_SSLWATCHDOG_PARENT, "");
+	  handleSingleWebConnection(&mask);
+	  sslwatchdogDebug("hSWC()->", FLAG_SSLWATCHDOG_PARENT, "");
 	}
 	sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
     }

@@ -1882,7 +1882,6 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
   u_short numLocalNets;
   int idx;
   char rrdPath[512];
-  int cycleCount=0;
   char *adjHostName;
   ProtocolsList *protoList;  
   char *hostKey;
@@ -2073,7 +2072,6 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 
 static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
   char rrdPath[512];
-  int cycleCount=0;
   char *adjHostName;
   char hostKey[128];
 
@@ -2167,7 +2165,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   int sleep_tm, devIdx, idx;
   char rrdPath[512];
   int cycleCount=0;
-  char *adjHostName;
   ProtocolsList *protoList;
 
 #ifdef CFG_MULTITHREADED

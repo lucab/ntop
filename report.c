@@ -188,10 +188,9 @@ void addPageIndicator(char *url, u_int pageNum,
 
 void printTrafficSummary (int revertOrder)
 {
-  Counter unicastPkts, avgPktLen;
+  Counter unicastPkts;
   int i;
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], formatBuf1[32];
-  struct stat statbuf;
   struct pcap_stat pcapStat;
 
   unicastPkts = 0;
@@ -361,8 +360,6 @@ void printTrafficSummary (int revertOrder)
 #endif
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
-    Counter dummyCounter;
-
     unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
         - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value
         - myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value;
@@ -1361,6 +1358,9 @@ int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocal
           break;
         case showOnlyReceived:
           rc = SORT_DATA_RCVD_HOST_TRAFFIC;
+      default:
+	/* Nothign to do */
+	break;
       }
       break;
     case SORT_DATA_PROTOS:
@@ -1370,6 +1370,9 @@ int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocal
           break;
         case showOnlyReceived:
           rc = SORT_DATA_RECEIVED_PROTOS;
+      default:
+	/* Nothign to do */
+	break;
       }
       break;
     case SORT_DATA_IP:
@@ -1379,6 +1382,9 @@ int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocal
           break;
         case showOnlyReceived:
           rc = SORT_DATA_RECEIVED_IP;
+      default:
+	/* Nothign to do */
+	break;
       }
       break;
     case SORT_DATA_THPT:
@@ -1388,12 +1394,18 @@ int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocal
           break;
         case showOnlyReceived:
           rc = SORT_DATA_RECEIVED_THPT;
+      default:
+	/* Nothign to do */
+	break;
       }
       break;
+
+  default:
+    /* Nothing to do */
+    break;
   }
 
   return(rc);
- 
 }
 
 /* ******************************* */
@@ -1528,6 +1540,9 @@ void printHostsTraffic(int reportTypeReq,
 	  break;
 	case showOnlyRemoteHosts:
 	  if(subnetPseudoLocalHost(el)) addHost = 0;
+	  break;
+	default:
+	  /* Nothign to do */
 	  break;
 	}
 
