@@ -169,20 +169,20 @@ dnl>  Michael Jennings  <mej@eterm.org>  http://www.eterm.org
 dnl>  Software Engineer, VA Linux Systems Author, Eterm (www.eterm.org)
 dnl>
 
-case "$host" in
+dnl> case "$host" in
 dnl>    AIX is ___really___ incompatible with libtooland shared libraries, so....
 dnl>    disable the shared flag to no
 dnl>
-    *-ibm-aix* )
-        enable_shared=no
-        enable_static=yes
-        ;;
-
-    * )
-        enable_shared=yes
-        enable_static=yes
-        ;;
-esac
+dnl>     *-ibm-aix* )
+dnl>         enable_shared=no
+dnl>         enable_static=yes
+dnl>         ;;
+dnl> 
+dnl>     * )
+dnl>         enable_shared=yes
+dnl>         enable_static=yes
+dnl>         ;;
+dnl> esac
 
 dnl>
 dnl> checks for required development tools
@@ -192,6 +192,7 @@ echo
 echo "Step 1. Looking for required development tools...."
 echo
 
+AM_DISABLE_SHARED
 AM_PROG_LIBTOOL
 echo
 
@@ -863,6 +864,12 @@ echo
 
 AC_CHECK_LIB(c, re_search, AC_DEFINE(HAVE_REGEX))
 AC_CHECK_LIB(z, gzopen, AC_DEFINE(HAVE_ZLIB))
+
+if test "$ac_cv_lib_z_gzopen" = "yes"; then
+   AC_CHECK_HEADERS(zlib.h)
+   MORELIBS="$MORELIBS -lz"
+fi
+
 
 dnl>
 dnl> check for `gdchart' library by Bruce Verderaime [http://www.fred.net/brv/chart/]
