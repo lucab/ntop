@@ -22,7 +22,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define USE_CGI
 #include "ntop.h"
 #include "globals-report.h"
 
@@ -1313,7 +1312,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     }
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && defined(USE_CGI)
   if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
     int rc;
 

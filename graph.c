@@ -482,7 +482,6 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 }
 
 /* ************************ */
-#define MAX_NUM_PROTOS      64
 
 void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";

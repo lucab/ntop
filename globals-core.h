@@ -28,6 +28,7 @@ extern char *version, *osName, *author, *buildDate,
             *compiler_cflags,
             *include_path,
             *core_libs,
+            *system_libs,
             *additional_libs,
             *install_path;
 

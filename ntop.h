@@ -506,7 +506,9 @@ extern const char *gdbm_strerror (int);
 #define DEFAULT_COUNT    500
 
 #define DUMMY_SOCKET_VALUE -999
-#define MULTIPLY_FACTORY   0.75
+
+#define MAX_NUM_PROTOS      64   /* Maximum number of protocols for graphs */
+
 
 /* ********************************************* */
 
@@ -1047,9 +1049,6 @@ typedef struct processInfoList {
 } ProcessInfoList;
 
 #define MAX_NUM_PROCESSES          1024
-#define MAX_NUM_EVENTS              512
-#define MAX_NUM_EVENTS_TO_DISPLAY    32
-#define MIN_NUM_FREED_BUCKETS       128
 
 #define TOP_IP_PORT           65534 /* IP ports range from 0 to 65535 */
 #define TOP_ASSIGNED_IP_PORTS  1024

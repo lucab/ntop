@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define USE_CGI
-
 #include "ntop.h"
 #include "globals-report.h"
 
@@ -68,7 +66,7 @@ static int inet_aton(const char *cp, struct in_addr *addr)
 
 /* ************************************* */
 
-#ifndef WIN32
+#if !defined(WIN32) && defined(USE_CGI)
 int execCGI(char* cgiName) {
   char* userName = "nobody", line[384], buf[512];
   struct passwd * newUser = NULL;
@@ -100,7 +98,9 @@ int execCGI(char* cgiName) {
     if(snprintf(line, sizeof(line), "QUERY_STRING=%s", getenv("PWD")) < 0) 
       BufferTooShort();
     putenv(line); /* PWD */
-    traceEvent(TRACE_INFO, line);
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "NOTE: CGI %s\n", line);
+#endif
   }
 
   putenv("WD="DATAFILE_DIR);
@@ -151,7 +151,7 @@ int execCGI(char* cgiName) {
     return(0);
   }
 }
-#endif
+#endif /* !defined(WIN32) && defined(USE_CGI) */
 
 /* **************************************** */
 
@@ -584,7 +584,6 @@ char* getHostCountryIconURL(HostTraffic *el) {
 /* ******************************* */
 
 char* getRowColor(void) {
-  /* #define USE_COLOR */
 
 #ifdef USE_COLOR
   if(alternateColor == 0) {
@@ -602,7 +601,6 @@ char* getRowColor(void) {
 /* ******************************* */
 
 char* getActualRowColor(void) {
-  /* #define USE_COLOR */
 
 #ifdef USE_COLOR
   if(alternateColor == 1) {
@@ -1566,8 +1564,43 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
   );
 
-  sendString(texthtml("\n\nCompile Time: Other (derived, etc.)\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Other (derived, etc.)</tr>\n"));
+  sendString(texthtml("\n\nCompile Time: Switches, Limits, etc.  (various #defines)\n\n",
+                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Switches (#define, etc.)</tr>\n"));
+
+#ifndef WIN32
+  if(snprintf(buf, sizeof(buf),
+              "globals.h: %s USE_CGI",
+#ifdef USE_CGI
+              "#define"
+#else
+              "#undef"
+#endif
+              ) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "CGI Scripts", buf);
+#endif /* WIN32 */
+
+  if(snprintf(buf, sizeof(buf),
+              "globals.h: %s USE_COLOR",
+#ifdef USE_COLOR
+              "#define"
+#else
+              "#undef"
+#endif
+              ) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Alternate row colors", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "globals.h: %s USE_HOST",
+#ifdef USE_HOST
+              "#define"
+#else
+              "#undef"
+#endif
+              ) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Buggy gethostbyaddr() - use alternate implementation", buf);
 
 #ifdef HAVE_GDCHART
   if(snprintf(buf, sizeof(buf), 
@@ -1597,6 +1630,29 @@ void printNtopConfigHInfo(int textPrintFlag) {
               "ntop.h: #define MIN_REFRESH_TIME %d", MIN_REFRESH_TIME) < 0)
       BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Minimum refresh interval (seconds)", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "ntop.h: #define MAX_NUM_PROTOS %d", MAX_NUM_PROTOS) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of Protocols to show in graphs", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "ntop.h: #define MAX_NUM_ROUTERS %d", MAX_NUM_ROUTERS) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of routers (Local Subnet Routers report)", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "ntop.h: #define MAX_NUM_DEVICES %d", MAX_NUM_DEVICES) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of network interface devices", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "ntop.h: #define MAX_NUM_PROCESSES %d", MAX_NUM_PROCESSES) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of processes for lsof report", buf);
+
+
+
 
   sendString(texthtml("\n\nCompile Time: Hash Table Sizes\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Hash Table Sizes</tr>\n"));
@@ -2061,10 +2117,6 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "# Handled HTTP Requests", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
-
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheLen) < 0)
       BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Host Memory Cache Size", buf);
@@ -2093,6 +2145,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 /* **** */
 
   sendString(texthtml("\n\nHost Hash counts\n\n", "<tr><th colspan=\"2\">Host Hash counts</th></tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
 
   if(snprintf(buf, sizeof(buf), "%d [%d %%]", (int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
               (((int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno*100)/
@@ -2244,14 +2300,21 @@ sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread count
 
   sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=\"2\"" TH_BG ">Compile Time: ./configure</tr>\n"));
 
+#ifndef WIN32
   printFeatureConfigInfo(textPrintFlag, "./configure parameters", configure_parameters);
   printFeatureConfigInfo(textPrintFlag, "Built on (Host)", host_system_type);
   printFeatureConfigInfo(textPrintFlag, "Built for (Target)", target_system_type);
+#endif
   printFeatureConfigInfo(textPrintFlag, "compiler (cflags)", compiler_cflags);
+#ifndef WIN32
   printFeatureConfigInfo(textPrintFlag, "include path", include_path);
+#endif
   printFeatureConfigInfo(textPrintFlag, "core libraries", core_libs);
+  printFeatureConfigInfo(textPrintFlag, "system libraries", system_libs);
+#ifndef WIN32
   printFeatureConfigInfo(textPrintFlag, "additional libraries", additional_libs);
   printFeatureConfigInfo(textPrintFlag, "install path", install_path);
+#endif
 
   /* *************************** */
 

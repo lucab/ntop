@@ -46,24 +46,6 @@ static int _ns_name_unpack(const u_char *msg,
 			  const u_char *eom, const u_char *src,
 			  u_char *dst, size_t dstsiz);
 
-/*
-  On FreeBSD gethostbyaddr() sometimes loops
-  and uses all the available memory. Hence this
-  patch is needed.
-
-  On some Linux versions gethostbyaddr() is bugged and
-  it tends to exaust all available file descriptors. If
-  you want to check this try "lsof -i |grep ntop". If this
-  is the case please do  '#define USE_HOST' (see below)
-  in order to overcome this flaw.
-
-*/
-#if defined(__FreeBSD__)
-#define USE_HOST
-#endif
-
-/* #define USE_HOST */
-
 /* ************************************ */
 
 static void resolveAddress(struct in_addr *hostAddr,
@@ -727,7 +709,7 @@ void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc, char *fdst)
 
    ************************************* */
 
-#define NS_INT16SZ      2       /* #/bytes of data in a u_int16_t */
+#define NS_INT16SZ      sizeof(u_int16_t)       /* #/bytes of data in a u_int16_t */
 
 #ifndef NS_GET16
 #define NS_GET16(s, cp) { \
@@ -1418,8 +1400,6 @@ void checkSpoofing(u_int idxToCheck, int actualDeviceId) {
   Let's remove from the database those entries that
   have been added a while ago
 */
-
-#define ADDRESS_PURGE_TIMEOUT 12*60*60 /* 12 hours */
 
 void cleanupHostEntries() {
   datum data_data, key_data, return_data;
