@@ -1681,7 +1681,7 @@ typedef struct hostTraffic {
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;
   time_t           firstSeen;
-  time_t           lastSeen; /* time when this host has sent/rcvd some data  */
+  time_t           lastSeen;     /* time when this host has sent/rcvd some data  */
   time_t           nextDBupdate; /* next time when the DB entry
 				  for this host will be updated */
   u_char           ethAddress[ETHERNET_ADDRESS_LEN];

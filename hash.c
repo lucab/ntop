@@ -21,9 +21,6 @@
 #include "ntop.h"
 
 #define MIN_NUM_USES            1
-#define MAX_NUM_PURGED_HOSTS  768
-
-
 
 /* ******************************* */
 
@@ -374,25 +371,19 @@ void freeHostInstances(int actualDeviceId) {
 
 void purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, maxBucket = 0, theIdx, hashFull = 0, hashLen;
-  time_t startTime = time(NULL);
+  time_t startTime = time(NULL), purgeTime;
   static time_t lastPurgeTime[MAX_NUM_DEVICES];
   static char firstRun = 1;
-  static HostTraffic **theFlaggedHosts = NULL;
-  static u_int len;
+  HostTraffic **theFlaggedHosts = NULL;
+  u_int len;
 
   if(myGlobals.rFileName != NULL) return;
-
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Purging Idle Hosts... [actDevice=%d]", actDevice);
-#endif
 
   if(firstRun) {
     int i;
 
     firstRun = 0;
-    for(i=0; i<MAX_NUM_DEVICES; i++) lastPurgeTime[i] = startTime;
-    len = sizeof(HostTraffic*)* MAX_NUM_PURGED_HOSTS;
-    theFlaggedHosts = (HostTraffic**)malloc(len);
+    memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
   }
 
   updateDeviceThpt(actDevice);
@@ -402,6 +393,14 @@ void purgeIdleHosts(int actDevice) {
   else
     lastPurgeTime[actDevice] = startTime;
 
+  len = myGlobals.device[actDevice].actualHashSize/3;
+  theFlaggedHosts = (HostTraffic**)malloc(sizeof(HostTraffic*)*len);
+  purgeTime = startTime-PURGE_HOSTS_DELAY; /* Time used to decide whether a host need to be purged */
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Purging Idle Hosts... [actDevice=%d]", actDevice);
+#endif
+
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
 #endif
@@ -409,8 +408,6 @@ void purgeIdleHosts(int actDevice) {
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
-
-  memset(theFlaggedHosts, 0, len);
 
   /* Calculates entries to free */
   hashLen = myGlobals.device[actDevice].actualHashSize;
@@ -424,7 +421,7 @@ void purgeIdleHosts(int actDevice) {
     }
 
     if((el = myGlobals.device[actDevice].hash_hostTraffic[theIdx]) != NULL) {
-      if((!hashFull) && (el->numUses < MIN_NUM_USES)) {
+      if((!hashFull) && (el->lastSeen < purgeTime)) {
 
 	if((!myGlobals.stickyHosts)
 	   || (myGlobals.borderSnifferMode)
@@ -442,7 +439,7 @@ void purgeIdleHosts(int actDevice) {
 #ifdef MULTITHREADED
 	  releaseMutex(&myGlobals.hostsHashMutex);
 #endif
-	  if(maxBucket == (MAX_NUM_PURGED_HOSTS-1)) {
+	  if(maxBucket == (len-1)) {
 	    hashFull = 1;
 	    continue;
 	  }
@@ -471,12 +468,7 @@ void purgeIdleHosts(int actDevice) {
 #endif
   }
 
-  /*
-    NOTE:
-    This statement is not called as it is left for the next run
-    Anyway we should free this memory sometimes before to shut down.
-    free(theFlaggedHosts);
-  */
+  free(theFlaggedHosts);
 
   scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
 

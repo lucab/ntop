@@ -807,9 +807,10 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   }
 
 #ifdef HAVE_ZLIB
-  if(mimeType == MIME_TYPE_CHART_FORMAT)
+  if(mimeType == MIME_TYPE_CHART_FORMAT) {
     compressFile = 0;
-  else {
+    if(myGlobals.newSock < 0 /* SSL */) acceptGzEncoding = 0;
+  } else {
     if(acceptGzEncoding) compressFile = 1;
   }
 #endif

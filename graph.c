@@ -68,6 +68,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
+  int useFdOpen;
 
   if(dataSent) {
     totTraffic = theHost->tcpSentLoc+theHost->tcpSentRem+
@@ -252,7 +253,17 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -280,9 +291,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-    sendGraphFile(fileName);
-#endif
+    if(!useFdOpen)
+      sendGraphFile(fileName);
   }
 }
 
@@ -297,6 +307,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
+  int useFdOpen;
 
   if(dataSent)
     totTraffic = theHost->tcpFragmentsSent+theHost->udpFragmentsSent+theHost->icmpFragmentsSent;
@@ -346,7 +357,17 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -373,9 +394,8 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-	sendGraphFile(fileName);
-#endif
+    if(!useFdOpen)
+      sendGraphFile(fileName);
   }
 }
 
@@ -390,6 +410,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totFragmentedTraffic, totTraffic;
+  int useFdOpen;
 
   if(dataSent) {
     totTraffic = theHost->ipBytesSent;
@@ -418,7 +439,17 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -445,9 +476,8 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-	sendGraphFile(fileName);
-#endif
+    if(!useFdOpen)
+      sendGraphFile(fileName);
   }
 }
 
@@ -462,6 +492,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   int i, num=0, expl[MAX_NUM_PROTOS];
   FILE *fd;
   TrafficCounter traffic, totalIPTraffic, diffTraffic;
+  int useFdOpen;
 
   if(theHost->protoIPTrafficInfos == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: Graph failure (5)");
@@ -518,7 +549,17 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -546,9 +587,8 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-  sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ********************************** */
@@ -559,6 +599,7 @@ void pktSizeDistribPie(void) {
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
   FILE *fd;
+  int useFdOpen;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64)/
@@ -608,7 +649,17 @@ void pktSizeDistribPie(void) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -635,9 +686,8 @@ void pktSizeDistribPie(void) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-	sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ********************************** */
@@ -648,6 +698,7 @@ void pktTTLDistribPie(void) {
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
   FILE *fd;
+  int useFdOpen;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32 > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)/
@@ -702,7 +753,17 @@ void pktTTLDistribPie(void) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -729,9 +790,8 @@ void pktTTLDistribPie(void) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-	sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -742,6 +802,7 @@ void ipProtoDistribPie(void) {
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
   int num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
+  int useFdOpen;
 
   p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local+
 		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
@@ -766,7 +827,17 @@ void ipProtoDistribPie(void) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -793,9 +864,8 @@ void ipProtoDistribPie(void) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-	sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -809,6 +879,7 @@ void interfaceTrafficPie(void) {
   struct pcap_stat stat;
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0;
+  int useFdOpen;
 
   for(i=0; i<myGlobals.numDevices; i++)
     if(!myGlobals.device[i].virtualDevice) {
@@ -835,7 +906,17 @@ void interfaceTrafficPie(void) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -862,9 +943,8 @@ void interfaceTrafficPie(void) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-  sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -873,7 +953,7 @@ void pktCastDistribPie(void) {
   char fileName[64] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "", "", "" };
-  int num=0, expl[] = { 0, 20, 30 };
+  int num=0, expl[] = { 0, 20, 30 }, useFdOpen;
   FILE *fd;
   TrafficCounter unicastPkts;
 
@@ -903,31 +983,40 @@ void pktCastDistribPie(void) {
     lbl[num++] = "Multicast";
   };
 
-
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "pktCastDistribPie");
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
-#else
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else   
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
   GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_explode        = expl;         /* default: NULL - no explosion */
   GDCPIE_Color          = clr;
   GDCPIE_BGColor        = 0xFFFFFFL;
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
-  if(num == 1) p[0] = 100; /* just to be safe */
+  if(num == 1) p[0] = 100;  /* just to be safe */
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
 	      GDC_3DPIE,		/* or GDC_2DPIE */
-	      num,			/* number of slices */
-	      lbl,			/* slice labels (unlike out_png(), can be NULL */
+	      num,			/* number of slic2es */
+	      lbl,			/* slice labels (unlike out_png(), can be NULL) */
 	      p);			/* data array */
 
   fclose(fd);
@@ -936,9 +1025,8 @@ void pktCastDistribPie(void) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-  sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -950,6 +1038,7 @@ void drawTrafficPie(void) {
   char	*lbl[] = { "IP", "Non IP" };
   int num=0, expl[] = { 5, 5 };
   FILE *fd;
+  int useFdOpen;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes == 0) return;
 
@@ -967,7 +1056,17 @@ void drawTrafficPie(void) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -993,9 +1092,8 @@ void drawTrafficPie(void) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-  sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -1009,6 +1107,7 @@ void drawThptGraph(int sortedColumn) {
   time_t tmpTime;
   float graphData[60], maxBytesPerSecond;
   struct tm t;
+  int useFdOpen;
 
   memset(graphData, 0, sizeof(graphData));
 
@@ -1017,14 +1116,24 @@ void drawThptGraph(int sortedColumn) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDC_BGColor    = 0xFFFFFFL;                  /* backgound color (white) */
-  GDC_LineColor  = 0x000000L;                  /* line color      (black) */
-  GDC_SetColor   = &(clr[0]);                   /* assign set colors */
+  GDC_BGColor    = 0xFFFFFFL;      /* backgound color (white) */
+  GDC_LineColor  = 0x000000L;      /* line color      (black) */
+  GDC_SetColor   = &(clr[0]);       /* assign set colors */
   GDC_ytitle     = "Throughput";
   GDC_yaxis      = 1;
   GDC_ylabel_fmt = "%d Bps";
@@ -1061,11 +1170,11 @@ void drawThptGraph(int sortedColumn) {
     GDC_title = "Last 60 Minutes Average Throughput";
     out_graph(600, 300,    /* width, height           */
 	      fd,          /* open FILE pointer       */
-	      myGlobals.throughput_chart_type,    /* chart type              */
+	      myGlobals.throughput_chart_type,    /* chart type  */
 	      60,          /* num points per data set */
 	      (char**)lbls,        /* X labels array of char* */
 	      1,           /* number of data sets     */
-	      graphData);  /* dataset 1               */
+	      graphData);  /* dataset 1   */
     break;
   case 2: /* 24 Hours */
     for(i=0; i<24; i++) {
@@ -1097,12 +1206,12 @@ void drawThptGraph(int sortedColumn) {
 
     GDC_title = "Last 24 Hours Average Throughput";
     out_graph(600, 300,      /* width, height           */
-	      fd,            /* open FILE pointer       */
-	      myGlobals.throughput_chart_type,      /* chart type              */
-	      24,            /* num points per data set */
+	      fd,/* open FILE pointer       */
+	      myGlobals.throughput_chart_type,      /* chart type  */
+	      24,/* num points per data set */
 	      lbls,          /* X labels array of char* */
-	      1,             /* number of data sets     */
-	      graphData);    /* dataset 1               */
+	      1, /* number of data sets     */
+	      graphData);    /* dataset 1   */
     break;
   case 3: /* 30 Days */
     for(i=0; i<30; i++) {
@@ -1135,12 +1244,12 @@ void drawThptGraph(int sortedColumn) {
     }
 
     out_graph(600, 300,          /* width, height           */
-	      fd,                /* open FILE pointer       */
-	      myGlobals.throughput_chart_type,          /* chart type              */
-	      30,                /* num points per data set */
-	      lbls,              /* X labels array of char* */
-	      1,                 /* number of data sets     */
-	      graphData);        /* dataset 1               */
+	      fd,    /* open FILE pointer       */
+	      myGlobals.throughput_chart_type,          /* chart type  */
+	      30,    /* num points per data set */
+	      lbls,  /* X labels array of char* */
+	      1,     /* number of data sets     */
+	      graphData);        /* dataset 1   */
     break;
   }
 
@@ -1150,9 +1259,8 @@ void drawThptGraph(int sortedColumn) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-  sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -1164,9 +1272,11 @@ void drawGlobalProtoDistribution(void) {
   char	*lbl[16];
   FILE *fd;
   int idx = 0;
+  int useFdOpen;
 
   ip = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
-  nonIp = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes-myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
+  nonIp = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes
+    -myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes; lbl[idx] = "TCP";  idx++; }
@@ -1204,7 +1314,17 @@ void drawGlobalProtoDistribution(void) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1230,9 +1350,8 @@ void drawGlobalProtoDistribution(void) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-  sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ************************ */
@@ -1243,6 +1362,7 @@ void drawGlobalIpProtoDistribution(void) {
   float p[256];
   char *lbl[256];
   FILE *fd;
+  int useFdOpen;
 
   p[myGlobals.numIpProtosToMonitor] = 0;
 
@@ -1263,7 +1383,17 @@ void drawGlobalIpProtoDistribution(void) {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1288,9 +1418,8 @@ void drawGlobalIpProtoDistribution(void) {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
-#ifdef WIN32
-  sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
 
 /* ******************************** */
@@ -1301,6 +1430,7 @@ void drawHostsDistanceGraph() {
   char  *lbls[32], labels[32][8];
   FILE *fd;
   float graphData[60];
+  int useFdOpen;
 
   memset(graphData, 0, sizeof(graphData));
 
@@ -1309,14 +1439,25 @@ void drawHostsDistanceGraph() {
 #endif
 
 #ifndef WIN32
-  fd = fdopen(abs(myGlobals.newSock), "ab");
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDC_BGColor    = 0xFFFFFFL;                  /* backgound color (white) */
-  GDC_LineColor  = 0x000000L;                  /* line color      (black) */
-  GDC_SetColor   = &(clr[1]);                   /* assign set colors */
+
+  GDC_BGColor    = 0xFFFFFFL;      /* backgound color (white) */
+  GDC_LineColor  = 0x000000L;      /* line color      (black) */
+  GDC_SetColor   = &(clr[1]);       /* assign set colors */
   GDC_xtitle     = "Hops (TTL)";
   GDC_ytitle     = "Hosts";
   GDC_yaxis      = 1;
@@ -1354,11 +1495,11 @@ void drawHostsDistanceGraph() {
   GDC_title = "";
   out_graph(300, 250,    /* width, height           */
 	    fd,          /* open FILE pointer       */
-	    myGlobals.throughput_chart_type,    /* chart type              */
+	    myGlobals.throughput_chart_type,    /* chart type  */
 	    30,          /* num points per data set */
 	    lbls,        /* X labels array of char* */
 	    1,           /* number of data sets     */
-	    graphData);  /* dataset 1               */
+	    graphData);  /* dataset 1   */
 
   fclose(fd);
 
@@ -1368,10 +1509,10 @@ void drawHostsDistanceGraph() {
 
   GDC_xtitle = GDC_ytitle     = "";
 
-#ifdef WIN32
-  sendGraphFile(fileName);
-#endif
+  if(!useFdOpen)
+    sendGraphFile(fileName);
 }
+
 /* ************************ */
 
 #endif /* HAVE_GDCHART */
