@@ -1349,8 +1349,29 @@ static void commonRRDinit(void) {
 
   if(hostsFilter != NULL) free(hostsFilter);
   if(fetchPrefsValue("rrd.hostsFilter", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.hostsFilter", "");
-    hostsFilter  = strdup("");
+    int i;
+
+    value[0] = '\0';
+    for(i=0; i<myGlobals.numLocalNetworks; i++) {
+      char buf[64];
+      u_int32_t network = myGlobals.localNetworks[i][CONST_NETWORK_ENTRY];
+      u_int32_t netmask = myGlobals.localNetworks[i][CONST_NETMASK_ENTRY];
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "%d.%d.%d.%d/%d.%d.%d.%d",
+		    (int) ((network >> 24) & 0xff), (int) ((network >> 16) & 0xff),
+		    (int) ((network >>  8) & 0xff), (int) ((network >>  0) & 0xff),
+		    (int) ((netmask >> 24) & 0xff), (int) ((netmask >> 16) & 0xff),
+		    (int) ((netmask >>  8) & 0xff), (int) ((netmask >>  0) & 0xff));
+
+      if(value[0] != '\0') strcat(value, ",");
+      strcat(value, buf);
+    }
+
+    hostsFilter = strdup(value);
+    storePrefsValue("rrd.hostsFilter", hostsFilter);
+
+    traceEvent(CONST_TRACE_INFO, "====> RRD: numLocalNetworks=%d [%s]", myGlobals.numLocalNetworks, value);
   } else {
     hostsFilter  = strdup(value);
   }
@@ -1637,11 +1658,9 @@ static void handleRRDHTTPrequest(char* url) {
       storePrefsValue("rrd.dataDumpMatrix", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDetail);
       storePrefsValue("rrd.dataDumpDetail", buf);
-
-      if(hostsFilter != NULL) free(hostsFilter);
-      if(_hostsFilter == NULL) {
-	hostsFilter  = strdup("");
-      } else {
+      
+      if(_hostsFilter != NULL) {
+	if(hostsFilter != NULL) free(hostsFilter);
 	hostsFilter = _hostsFilter;
 	_hostsFilter = NULL;
       }
@@ -1661,7 +1680,6 @@ static void handleRRDHTTPrequest(char* url) {
     }
   }
 
-  if(_hostsFilter != NULL) free(_hostsFilter);
 
   /* traceEvent(CONST_TRACE_INFO, "RRD: action=%d", action); */
 
