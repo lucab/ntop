@@ -1037,6 +1037,7 @@
 #define CONST_FAVICON_ICO                   "favicon.ico"
 #define CONST_HOSTS_FC_INFO_HTML            "fcHostsInfo.html"
 #define CONST_FC_NET_STAT_HTML              "FcNetstat.html"
+#define CONST_FC_PORTS_INFO_HTML            "fcPortsInfo.html"
 #define CONST_FC_PROTOS_HTML                "fcProtos.html"
 #define CONST_FC_TRAFFIC_HTML               "fcShowStats.html"
 #define CONST_FILTER_INFO_HTML              "filterInfo.html"
@@ -1106,8 +1107,8 @@
 #define CONST_TRAFFIC_STATS_HTML            "trafficStats.html"
 #define CONST_VIEW_LOG_HTML                 "viewLog.html"
 #define CONST_VLAN_LIST_HTML                "vlanList.html"
+#define CONST_VSAN_DISTRIB_HTML             "vsanDistrib.html"
 #define CONST_VSAN_LIST_HTML                "vsanList.html"
-#define CONST_FC_PORTS_INFO_HTML            "fcPortsInfo.html"
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
 #define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
 

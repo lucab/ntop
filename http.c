@@ -2064,16 +2064,7 @@ static int returnHTTPPage(char* pageName,
     } else if(strncmp(pageName, CONST_TRAFFIC_STATS_HTML,
                       strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printTrafficStatistics();
-      if (!myGlobals.printFcOnly) {
-          printProtoTraffic();
-          sendString("<p>\n");
-          printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder);
-      }
-      if (!myGlobals.noFc) {
-          sendString("<p>\n");
-          printFcProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder);
-      }
+      printTrafficStatistics(revertOrder);
     } else if(strcmp(pageName, CONST_IP_PROTO_DISTRIB_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader(NULL, NULL, 0);
@@ -2098,10 +2089,10 @@ static int returnHTTPPage(char* pageName,
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if (sortedColumn == 0) { sortedColumn = 1; }
       printFcAccounting(FLAG_REMOTE_TO_REMOTE_ACCOUNTING, sortedColumn, revertOrder, pageNum);
-    } else if(strcmp(pageName, "vsanList.html") == 0) {
+    } else if(strcmp(pageName, CONST_VSAN_LIST_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printVSANList(myGlobals.actualReportDeviceId);
-    } else if(strcmp(pageName, "vsanDistrib.html") == 0) {
+    } else if(strcmp(pageName, CONST_VSAN_DISTRIB_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       drawVsanStatsGraph(myGlobals.actualReportDeviceId);
     } else if (strncmp (pageName, "VSAN", strlen ("VSAN")) == 0) {
@@ -2115,93 +2106,30 @@ static int returnHTTPPage(char* pageName,
                       strlen(CONST_FC_NET_STAT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
-
-      for(i=strlen(pageName); i>0; i--)
-          if(pageName[i] == '?') {
-              pageName[i] = '\0';
-              break;
-          }
-      
-      /* Patch for ethernet addresses and MS Explorer */
-      for(i=0; pageName[i] != '\0'; i++)
-	  if(pageName[i] == '_')
-              pageName[i] = ':';
-
       printFCSessions(myGlobals.actualReportDeviceId, sortedColumn, revertOrder,
                       pageNum, pageName, NULL);
     } else if (strncmp(pageName, CONST_SCSI_NET_STAT_BYTES_HTML,
                        strlen(CONST_SCSI_NET_STAT_BYTES_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
-
-      for(i=strlen(pageName); i>0; i--)
-          if(pageName[i] == '?') {
-              pageName[i] = '\0';
-              break;
-          }
-      
-      /* Patch for ethernet addresses and MS Explorer */
-      for(i=0; pageName[i] != '\0'; i++)
-	  if(pageName[i] == '_')
-              pageName[i] = ':';
-
       printScsiSessionBytes(myGlobals.actualReportDeviceId, sortedColumn,
                             revertOrder, pageNum, pageName, NULL);
-      
     } else if(strncmp(pageName, CONST_SCSI_NET_STAT_TIMES_HTML,
                       strlen(CONST_SCSI_NET_STAT_TIMES_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
-
-      for(i=strlen(pageName); i>0; i--)
-          if(pageName[i] == '?') {
-              pageName[i] = '\0';
-              break;
-          }
-      
-      /* Patch for ethernet addresses and MS Explorer */
-      for(i=0; pageName[i] != '\0'; i++)
-	  if(pageName[i] == '_')
-              pageName[i] = ':';
-
       printScsiSessionTimes (myGlobals.actualReportDeviceId, sortedColumn,
                              revertOrder, pageNum, pageName, NULL);
-      
     } else if(strncmp(pageName, CONST_SCSI_NET_STAT_STATUS_HTML,
                       strlen(CONST_SCSI_NET_STAT_STATUS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
-
-      for(i=strlen(pageName); i>0; i--)
-          if(pageName[i] == '?') {
-              pageName[i] = '\0';
-              break;
-          }
-      
-      /* Patch for ethernet addresses and MS Explorer */
-      for(i=0; pageName[i] != '\0'; i++)
-	  if(pageName[i] == '_')
-              pageName[i] = ':';
-
       printScsiSessionStatusInfo (myGlobals.actualReportDeviceId, sortedColumn,
                                   revertOrder, pageNum, pageName, NULL);
-      
     } else if(strncmp(pageName, CONST_SCSI_NET_STAT_TM_HTML,
                       strlen(CONST_SCSI_NET_STAT_TM_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
-
-      for(i=strlen(pageName); i>0; i--)
-          if(pageName[i] == '?') {
-              pageName[i] = '\0';
-              break;
-          }
-      
-      /* Patch for ethernet addresses and MS Explorer */
-      for(i=0; pageName[i] != '\0'; i++)
-	  if(pageName[i] == '_')
-              pageName[i] = ':';
-
       printScsiSessionTmInfo (myGlobals.actualReportDeviceId, sortedColumn, revertOrder,
                               pageNum, pageName, NULL);
     } else if (strncmp(pageName, "VsanControlTrafficDistrib", strlen("VsanControlTrafficDistrib")) == 0) {

@@ -176,7 +176,7 @@ void addPageIndicator(char *url, u_int pageNum,
 
 /* ******************************* */
 
-void printTrafficStatistics(void) {
+void printTrafficStatistics(int revertOrder) {
   Counter unicastPkts, avgPktLen;
   int i;
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], formatBuf1[32];
@@ -998,6 +998,16 @@ void printTrafficStatistics(void) {
   /* ********************* */
 
   sendString("</TABLE></CENTER>\n");
+
+  if (!myGlobals.printFcOnly) {
+    printProtoTraffic();
+    sendString("<p>\n");
+    printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder);
+  }
+  if (!myGlobals.noFc) {
+    sendString("<p>\n");
+    printFcProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder);
+  }
 }
 
 /* ******************************* */
@@ -5555,6 +5565,17 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
 
     memset (tmpTable, 0, myGlobals.device[actualDeviceId].numFcSessions*MAX_LUNS_SUPPORTED*sizeof(ScsiSessionSortEntry));
 
+    for(i=strlen(url); i>0; i--)
+        if(url[i] == '?') {
+            url[i] = '\0';
+            break;
+        }
+      
+    /* Patch for ethernet addresses and MS Explorer */
+    for(i=0; url[i] != '\0'; i++)
+        if(url[i] == '_')
+            url[i] = ':';
+
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionBytes");
 #endif
@@ -5927,6 +5948,17 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
 
     memset (tmpTable, 0, myGlobals.device[actualDeviceId].numFcSessions*MAX_LUNS_SUPPORTED*sizeof(ScsiSessionSortEntry));
     
+    for(i=strlen(url); i>0; i--)
+        if(url[i] == '?') {
+            url[i] = '\0';
+            break;
+        }
+      
+    /* Patch for ethernet addresses and MS Explorer */
+    for(i=0; url[i] != '\0'; i++)
+        if(url[i] == '_')
+            url[i] = ':';
+
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionTimes");
 #endif
@@ -6224,6 +6256,17 @@ int printScsiSessionStatusInfo (int actualDeviceId, int sortedColumn,
 
     memset (tmpTable, 0, myGlobals.device[actualDeviceId].numFcSessions*MAX_LUNS_SUPPORTED*sizeof(ScsiSessionSortEntry));
     
+    for(i=strlen(url); i>0; i--)
+        if(url[i] == '?') {
+            url[i] = '\0';
+            break;
+        }
+      
+    /* Patch for ethernet addresses and MS Explorer */
+    for(i=0; url[i] != '\0'; i++)
+        if(url[i] == '_')
+            url[i] = ':';
+
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionStatusInfo");
 #endif
@@ -6469,6 +6512,17 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
 
     memset (tmpTable, 0, myGlobals.device[actualDeviceId].numFcSessions*MAX_LUNS_SUPPORTED*sizeof(ScsiSessionSortEntry));
     
+    for(i=strlen(url); i>0; i--)
+        if(url[i] == '?') {
+            url[i] = '\0';
+            break;
+        }
+      
+    /* Patch for ethernet addresses and MS Explorer */
+    for(i=0; url[i] != '\0'; i++)
+        if(url[i] == '_')
+            url[i] = ':';
+
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionTmInfo");
 #endif
@@ -6718,6 +6772,17 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
 
     memset (tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].numFcSessions*sizeof(FCSession *));
     
+    for(i=strlen(url); i>0; i--)
+        if(url[i] == '?') {
+            url[i] = '\0';
+            break;
+        }
+      
+    /* Patch for ethernet addresses and MS Explorer */
+    for(i=0; url[i] != '\0'; i++)
+        if(url[i] == '_')
+            url[i] = ':';
+
     /*
       Due to the way sessions are handled, sessions before those to
       display need to be skipped

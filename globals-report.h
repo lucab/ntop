@@ -161,7 +161,7 @@ extern int reportValues(time_t *lastTime);
 extern void addPageIndicator(char *url, u_int beginIdx,
 			     u_int numEntries, u_int linesPerPage,
 			     int revertOrder, int numCol);
-extern void printTrafficStatistics(void);
+extern void printTrafficStatistics(int revertOrder);
 extern void printHostsTraffic(int reportType,
 			      int sortedColumn, int revertOrder,
 			      int pageNum, char* url, 
