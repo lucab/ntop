@@ -83,7 +83,7 @@ static PluginInfo rmonPluginInfo[] = {
     "ntop RMON Agent",
     "1.0", /* plugin version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
-    "ntopRmon", /* http://<host>:<port>/plugins/remoteInterface */
+    "ntopRmon", /* http://<host>:<port>/plugins/ntopRmon/ */
     0,    /* Not Active */
     startRmonPlugin, /* StartFunc */
     termRmonPlugin,  /* TermFunc */
@@ -148,7 +148,7 @@ static PluginInfo rmonPluginInfo[] = {
     "ntop RMON Agent",
     "1.0", /* plugin version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
-    "ntopRmon", /* http://<host>:<port>/plugins/remoteInterface */
+    "ntopRmon", /* http://<host>:<port>/plugins/ntopRmon/ */
     0,    /* Not Active */
     NULL, /* StartFunc */
     NULL, /* TermFunc */
