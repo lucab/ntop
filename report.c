@@ -3962,7 +3962,7 @@ int haveTrafficHistory() {
       return(1);
       break;
     } else {
-#ifndef DEBUG
+#ifdef DEBUG
       traceEvent(TRACE_INFO, "Unable to find history data on %s", tmpStr);
 #endif
     }
