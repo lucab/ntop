@@ -102,6 +102,7 @@ extern void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId);
 extern void dumpNtopHashes(FILE*, char*, int actualDeviceId);
 extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
 extern void dumpNtopTrafficInfo(FILE*, char* options);
+extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
 
 /* report.c */
 extern void initReports(void);
@@ -244,6 +245,7 @@ extern void returnHTTPversionNotSupported();
 #define DUMP_TRAFFIC_DATA_HTML          "dumpTrafficData.html"
 #define DUMP_HOSTS_INDEXES_HTML         "dumpDataIndexes.html"
 #define DUMP_NTOP_FLOWS_HTML            "dumpFlows.html"
+#define DUMP_NTOP_HOSTS_MATRIX_HTML     "dumpHostsMatrix.html"
 
 /* webInterface.c */
 extern void *handleWebConnections(void* notUsed);

@@ -1064,7 +1064,8 @@ void initLibpcap(void) {
 	myGlobals.device[i].netmask.s_addr = 0xFFFFFF00; /* dummy */
       }
 
-      myGlobals.device[i].numHosts = 0xFFFFFFFF - myGlobals.device[i].netmask.s_addr + 1;
+      myGlobals.device[i].numHosts = 0xFFFFFFFF - myGlobals.device[i].netmask.s_addr + 1 
+	+ 4096 /* Max 4096 hosts used for multicast */;
       if(myGlobals.device[i].numHosts > MAX_SUBNET_HOSTS) {
 	myGlobals.device[i].numHosts = MAX_SUBNET_HOSTS;
 	traceEvent(TRACE_WARNING, "Truncated network size to %d hosts (real netmask %s)",
@@ -1087,11 +1088,6 @@ void initLibpcap(void) {
       memlen = sizeof(struct hostTraffic*)*myGlobals.device[i].numHosts;
       myGlobals.device[i].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
 									      myGlobals.device[i].numHosts);
-
-#ifdef DEBUG
-      traceEvent(TRACE_WARNING, "ipTrafficMatrixHosts memlen=%.1f Mbytes",
-		 (float)memlen/(float)(1024*1024));
-#endif
 
       if(myGlobals.device[i].ipTrafficMatrixHosts == NULL) {
 	traceEvent(TRACE_ERROR, "FATAL error: malloc() failed (size %d bytes)", memlen);

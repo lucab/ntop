@@ -416,6 +416,88 @@ void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
 
 /* ********************************** */
 
+void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
+  char key[64];
+  unsigned int numEntries=0, lang=DEFAULT_LANGUAGE;
+  int i, j;
+  char buf[BUF_SIZE];
+
+  memset(key, 0, sizeof(key));
+
+  if(options != NULL) {
+    /* language now defined into "languages[]" */
+    char *tmpStr, *strtokState;
+
+    tmpStr = strtok_r(options, "&", &strtokState);
+
+    while(tmpStr != NULL) {
+      int i=0, j;
+
+      while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
+	i++;
+
+      /* If argument contains "language=something", then
+	 look in the table "languages" of known language for
+	 the choosen language.
+      */
+
+      if(tmpStr[i] == '=') {
+	tmpStr[i] = 0;
+
+	if(strcasecmp(tmpStr, "language") == 0) {
+	  lang = DEFAULT_LANGUAGE;
+	  for(j=1;j <= NB_LANGUAGES;j++) {
+	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0)
+	      lang = j;
+	  }
+	}
+      }
+
+      tmpStr = strtok_r(NULL, "&", &strtokState);
+    }
+  }
+
+  /* *************************************** */
+
+  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; i++)
+    if(i != myGlobals.otherHostEntryIdx) {
+      for(j=1; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; j++) {
+	if(i != j) {
+	  int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
+	  
+	  if(idx == myGlobals.otherHostEntryIdx) continue;
+	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] == NULL) continue;
+
+	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent > 0) {
+	    if(numEntries == 0) initWriteArray(fDescr, lang);
+
+	    if(snprintf(buf, sizeof(buf), "%s-%s", 
+			myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress,
+			myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostNumIpAddress) < 0)
+	      BufferTooShort();
+
+	  REPEAT_MATRIX:
+	    initWriteKey(fDescr, lang,  "", buf, numEntries);
+	    wrtLlongItm(fDescr, lang, "\t", "bytesSent",
+			myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent,
+			',', numEntries);
+	    endWriteKey(fDescr, lang,   "", buf, ',');
+	    numEntries++;
+	    
+	    if((lang == NO_LANGUAGE) && (numEntries == 1))
+	      goto REPEAT_MATRIX;	    
+	    
+	    numEntries++;
+	  }
+	}
+      }
+    }
+
+  if(numEntries > 0) endWriteArray(fDescr, lang);
+}
+
+/* ********************************** */
+
 void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64], filter[128], *hostKey;
   unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE, j, localView=0;
