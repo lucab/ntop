@@ -5538,10 +5538,7 @@ void* checkVersion(void* notUsed _UNUSED_) {
    * and avoid making this logic any more complex!
    */
   char buf[LEN_CHECKVERSION_BUFFER];
-  int rc=0, idx = 0, iHRT;
-  float elapsed;
-
-  iHRT = hiresIntervalTimerAlloc("Check Version");
+  int rc=0, idx = 0;
 
   displayPrivacyNotice();
 
@@ -5576,11 +5573,6 @@ void* checkVersion(void* notUsed _UNUSED_) {
     myGlobals.checkVersionStatusAgain = time(NULL) + CONST_VERSIONRECHECK_INTERVAL;
   else
     myGlobals.checkVersionStatusAgain = 0;
-
-  elapsed = hiresIntervalTimerStopAbs(iHRT);
-  traceEvent(CONST_TRACE_INFO, "CHKVER: Required %.6f seconds", elapsed);
-
-  hiresIntervalTimerFree(iHRT);
 
   return(NULL);
 }
@@ -6271,106 +6263,13 @@ void revertDoubleColumn(char *str) {
 
 /* ******************************************* */
 
-/* ************************************ */
-
-/* Subtract the `struct timeval' values X and Y,
- *
- * Modified from FSF's "The GNU C Library Reference Manual" example
- *
- * works even on some peculiar operating systems where the tv_sec
- * member has an unsigned type.
- *
- */
-
-long timeval_subtractl(struct timeval x, struct timeval y) {
-  struct timeval result;
-  /* Perform the carry for the later subtraction by updating y. */
-  if (x.tv_usec < y.tv_usec) {
-    int nsec = (y.tv_usec - x.tv_usec) / 1000000 + 1;
-    y.tv_usec -= 1000000 * nsec;
-    y.tv_sec += nsec;
-  }
-  if (x.tv_usec - y.tv_usec > 1000000) {
-    int nsec = (y.tv_usec - x.tv_usec) / 1000000;
-    y.tv_usec += 1000000 * nsec;
-    y.tv_sec -= nsec;
-  }
-
-  /* Compute the time remaining to wait.
-     tv_usec is certainly positive. */
-  result.tv_sec = x.tv_sec - y.tv_sec;
-  result.tv_usec = x.tv_usec - y.tv_usec;
-
-  /* Return 1 if result is negative. */
-  return result.tv_sec * 1000000 + result.tv_usec;
-}
-
-/* ------------------------------------------- */
-
 /* Subtract the `struct timeval' values X and Y */
 
-float timeval_subtract(struct timeval x, struct timeval y) {
-  return((float)timeval_subtractl(x, y)/1000000.0);
-}
-
-
-/* ******************************************* */
-
-int hiresIntervalTimerAlloc(char *name) {
-  int i;
-  accessMutex(&myGlobals.hiresTimerAllocMutex, "allocate");
-  for(i=0; i<MAX_INTERNALTIMEINTERVALS; i++) {
-    if(myGlobals.hiresTimers[i].name == NULL) {
-      myGlobals.hiresTimers[i].name = strdup(name);
-      break;
-    }
-    if(strcmp(myGlobals.hiresTimers[i].name, name) == 0)
-      break;
-  }
-  releaseMutex(&myGlobals.hiresTimerAllocMutex);
-
-  if(i < MAX_INTERNALTIMEINTERVALS) {
-    hiresIntervalTimerStart(i);
-    return(i);
-  }
-
-  return(-1);
-}
-
-/* ------------------------------------------- */
-
-float hiresIntervalTimerStopAbs(int i) {
- struct timeval hiresEndTm;
- gettimeofday(&hiresEndTm, NULL);
-
- if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) {
-   myGlobals.hiresTimers[i].count = 1;
-   myGlobals.hiresTimers[i].usElapsed = timeval_subtractl(hiresEndTm, (myGlobals.hiresTimers[i].startTm));
-   return((float)myGlobals.hiresTimers[i].usElapsed / 1000000.0);
- }
-
- return(-1.0);
-
-}
-
-/* ------------------------------------------- */
-
-Counter hiresIntervalTimerElapsed_us(int i) {
- if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) {
-   return(myGlobals.hiresTimers[i].usElapsed);
- }
-
- return(0);
-}
-
-/* ------------------------------------------- */
-
-float hiresIntervalTimerElapsed_s(int i) {
- if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) {
-   return((float)myGlobals.hiresTimers[i].usElapsed / 1000000.0);
- }
-
- return(0.0);
+float timeval_subtract (struct timeval x, struct timeval y) {
+  return((float) ((long int) x.tv_sec * 1000000 +
+		  (long int) x.tv_usec -
+		  (long int) y.tv_sec * 1000000 -
+		  (long int) y.tv_usec) / 1000000.0);
 }
 
 /* ************************************ */
