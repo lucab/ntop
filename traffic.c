@@ -166,261 +166,275 @@ static void updateThptStats(int deviceToUpdate,
 /* ******************************* */
 
 static void updateDeviceThpt(int deviceToUpdate) {
-    time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime;
-    u_int idx;
-    HostTraffic *el;
+  time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime;
+  u_int idx;
+  HostTraffic *el;
 
-    timeDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastThptUpdate;
+  timeDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastThptUpdate;
 
-    if(timeDiff > 10 /* secs */) {
-	u_int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;
-	u_int topHourSentIdx=NO_PEER, secondHourSentIdx=NO_PEER, thirdHourSentIdx=NO_PEER;
-	u_int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;
-	u_int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
-	short updateMinThpt, updateHourThpt;
+  if(timeDiff > 10 /* secs */) {
+    u_int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;
+    u_int topHourSentIdx=NO_PEER, secondHourSentIdx=NO_PEER, thirdHourSentIdx=NO_PEER;
+    u_int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;
+    u_int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
+    short updateMinThpt, updateHourThpt;
     
-	totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
+    totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
 
-	updateHourThpt = 0;
-	updateMinThpt = 0;
+    updateHourThpt = 0;
+    updateMinThpt = 0;
 
-	if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
-	    updateMinThpt = 1;
-	    myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
-	    if((timeHourDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
-		updateHourThpt = 1;
-		myGlobals.device[deviceToUpdate].lastHourThptUpdate = myGlobals.actTime;
-	    }
-	}
+    if((timeMinDiff = myGlobals.actTime-myGlobals.
+	device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
+      updateMinThpt = 1;
+      myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
+      if((timeHourDiff = myGlobals.actTime-myGlobals.
+	  device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
+	updateHourThpt = 1;
+	myGlobals.device[deviceToUpdate].lastHourThptUpdate = myGlobals.actTime;
+      }
+    }
 
-	for(idx=1; idx<myGlobals.device[deviceToUpdate].actualHashSize; idx++) {
-	    if((el = myGlobals.device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
-		if(broadcastHost(el))
-		    continue;
+    for(idx=1; idx<myGlobals.device[deviceToUpdate].actualHashSize; idx++) {
+      if((el = myGlobals.device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
+	if(broadcastHost(el))
+	  continue;
 
-		el->actualRcvdThpt       = (float)(el->bytesRcvd-el->lastBytesRcvd)/timeDiff;
-		if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
-		if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
-		el->actualSentThpt       = (float)(el->bytesSent-el->lastBytesSent)/timeDiff;
-		el->lastBytesSent        = el->bytesSent;
-		el->lastBytesRcvd    = el->bytesRcvd;
-
-		/* ******************************** */
-
-		el->actualRcvdPktThpt    = (float)(el->pktRcvd-el->lastPktRcvd)/timeDiff;
-		if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
-		if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
-		el->actualSentPktThpt    = (float)(el->pktSent-el->lastPktSent)/timeDiff;
-		el->lastPktSent          = el->pktSent;
-		el->lastPktRcvd      = el->pktRcvd;
-
-		/* ******************************** */
-
-		if(updateMinThpt) {
-		    el->averageRcvdThpt    = ((float)el->bytesRcvd)/totalTime;
-		    el->averageSentThpt    = ((float)el->bytesSent)/totalTime;
-		    el->averageRcvdPktThpt = ((float)el->pktRcvd)/totalTime;
-		    el->averageSentPktThpt = ((float)el->pktSent)/totalTime;
-
-		    if((topSentIdx == NO_PEER) 
-		       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx] == NULL)) {
-			topSentIdx = idx;
-		    } else {
-			if(el->actualSentThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx]->actualSentThpt) {
-			    secondSentIdx = topSentIdx;
-			    topSentIdx = idx;
-			} else {
-			    if((secondSentIdx == NO_PEER)
-			       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondSentIdx] == NULL)) {
-				secondSentIdx = idx;
-			    } else {
-				if(el->actualSentThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[secondSentIdx]->actualSentThpt) {
-				    thirdSentIdx = secondSentIdx;
-				    secondSentIdx = idx;
-				} else {
-				    if((thirdSentIdx == NO_PEER)
-				       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdSentIdx] == NULL)) {
-					thirdSentIdx = idx;
-				    } else {
-					if(el->actualSentThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdSentIdx]->actualSentThpt) {
-					    thirdSentIdx = idx;
-					}
-				    }
-				}
-			    }
-			}
-		    }
-
-		    if((topRcvdIdx == NO_PEER) 
-		       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topRcvdIdx] == NULL)) {
-			topRcvdIdx = idx;
-		    } else {
-			if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[topRcvdIdx]->actualRcvdThpt) {
-			    secondRcvdIdx = topRcvdIdx;
-			    topRcvdIdx = idx;
-			} else {
-			    if((secondRcvdIdx == NO_PEER)
-			       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx] == NULL)) {
-				secondRcvdIdx = idx;
-			    } else {
-				if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt) {
-				    thirdRcvdIdx = secondRcvdIdx;
-				    secondRcvdIdx = idx;
-				} else {
-				    if((thirdRcvdIdx == NO_PEER)
-				       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx] == NULL)) {
-					thirdRcvdIdx = idx;
-				    } else {
-					if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].
-					   hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt) {
-					    thirdRcvdIdx = idx;
-					}
-				    }
-				}
-			    }
-			}
-		    }
-
-		    if(updateHourThpt) {
-			el->lastHourRcvdThpt = (float)(el->bytesRcvd-el->lastHourBytesRcvd)/timeHourDiff;
-			el->lastHourSentThpt = (float)(el->bytesSent-el->lastHourBytesSent)/timeHourDiff;
-			el->lastHourBytesRcvd = el->bytesRcvd;
-			el->lastHourBytesSent = el->bytesSent;
-
-			if((topHourSentIdx == NO_PEER) 
-			   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourSentIdx] == NULL)) {
-			    topHourSentIdx = idx;
-			} else {
-			    if(el->lastHourSentThpt > myGlobals.device[deviceToUpdate].
-			       hash_hostTraffic[topHourSentIdx]->lastHourSentThpt) {
-				secondHourSentIdx = topHourSentIdx;
-				topHourSentIdx = idx;
-			    } else {
-				if((secondHourSentIdx == NO_PEER)
-				   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx] == NULL)) {
-				    secondHourSentIdx = idx;
-				} else {
-				    if(el->lastHourSentThpt > myGlobals.device[deviceToUpdate].
-				       hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt) {
-					thirdHourSentIdx = secondHourSentIdx;
-					secondHourSentIdx = idx;
-				    } else {
-					if((thirdHourSentIdx == NO_PEER)
-					   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx] == NULL)) {
-					    thirdHourSentIdx = idx;
-					} else {
-					    if(el->lastHourSentThpt > myGlobals.device[deviceToUpdate].
-					       hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt) {
-						thirdHourSentIdx = idx;
-					    }
-					}
-				    }
-				}
-			    }
-			}
-
-			if((topHourRcvdIdx == NO_PEER) 
-			   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx] == NULL)) {
-			    topHourRcvdIdx = idx;
-			} else {
-			    if(el->lastHourRcvdThpt > myGlobals.device[deviceToUpdate].
-			       hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt) {
-				secondHourRcvdIdx = topHourRcvdIdx;
-				topHourRcvdIdx = idx;
-			    } else {
-				if((secondHourRcvdIdx == NO_PEER)
-				   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx] == NULL)) {
-				    secondHourRcvdIdx = idx;
-				} else {
-				    if(el->lastHourRcvdThpt > myGlobals.device[deviceToUpdate].
-				       hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt) {
-					thirdHourRcvdIdx = secondHourRcvdIdx;
-					secondHourRcvdIdx = idx;
-				    } else {
-					if((thirdHourRcvdIdx == NO_PEER)
-					   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx] == NULL)) {
-					    thirdHourRcvdIdx = idx;
-					} else {
-					    if(el->lastHourRcvdThpt > myGlobals.device[deviceToUpdate].
-					       hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt) {
-						thirdHourRcvdIdx = idx;
-					    }
-					}
-				    }
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	}
+	el->actualRcvdThpt       = (float)(el->bytesRcvd-el->lastBytesRcvd)/timeDiff;
+	if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
+	if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
+	el->actualSentThpt       = (float)(el->bytesSent-el->lastBytesSent)/timeDiff;
+	el->lastBytesSent        = el->bytesSent;
+	el->lastBytesRcvd        = el->bytesRcvd;
 
 	/* ******************************** */
 
-	myGlobals.device[deviceToUpdate].throughput =
-	    myGlobals.device[deviceToUpdate].ethernetBytes-myGlobals.device[deviceToUpdate].throughput;
-	myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts-
-	    myGlobals.device[deviceToUpdate].lastNumEthernetPkts;
-	myGlobals.device[deviceToUpdate].lastNumEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
+	el->actualRcvdPktThpt    = (float)(el->pktRcvd-el->lastPktRcvd)/timeDiff;
+	if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
+	if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
+	el->actualSentPktThpt    = (float)(el->pktSent-el->lastPktSent)/timeDiff;
+	el->lastPktSent          = el->pktSent;
+	el->lastPktRcvd          = el->pktRcvd;
 
-	/* timeDiff++; */
-	myGlobals.device[deviceToUpdate].actualThpt = (float)myGlobals.device[deviceToUpdate].throughput/(float)timeDiff;
-	myGlobals.device[deviceToUpdate].actualPktsThpt = 
-	    (float)myGlobals.device[deviceToUpdate].packetThroughput/(float)timeDiff;
-
-	if(myGlobals.device[deviceToUpdate].actualThpt > myGlobals.device[deviceToUpdate].peakThroughput)
-	    myGlobals.device[deviceToUpdate].peakThroughput = myGlobals.device[deviceToUpdate].actualThpt;
-
-	if(myGlobals.device[deviceToUpdate].actualPktsThpt > myGlobals.device[deviceToUpdate].peakPacketThroughput)
-	    myGlobals.device[deviceToUpdate].peakPacketThroughput = myGlobals.device[deviceToUpdate].actualPktsThpt;
-
-	myGlobals.device[deviceToUpdate].throughput = myGlobals.device[deviceToUpdate].ethernetBytes;
-	myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts;
+	/* ******************************** */
 
 	if(updateMinThpt) {
-	    myGlobals.device[deviceToUpdate].lastMinEthernetBytes = myGlobals.device[deviceToUpdate].ethernetBytes-
-		myGlobals.device[deviceToUpdate].lastMinEthernetBytes;
-	    myGlobals.device[deviceToUpdate].lastMinThpt = 
-		(float)(myGlobals.device[deviceToUpdate].lastMinEthernetBytes)/(float)timeMinDiff;
-	    myGlobals.device[deviceToUpdate].lastMinEthernetBytes = myGlobals.device[deviceToUpdate].ethernetBytes;
-	    /* ******************* */
-	    myGlobals.device[deviceToUpdate].lastMinEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts-
-		myGlobals.device[deviceToUpdate].lastMinEthernetPkts;
-	    myGlobals.device[deviceToUpdate].lastMinPktsThpt = 
-		(float)myGlobals.device[deviceToUpdate].lastMinEthernetPkts/(float)timeMinDiff;
-	    myGlobals.device[deviceToUpdate].lastMinEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
-	    myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
+	  el->averageRcvdThpt    = ((float)el->bytesRcvd)/totalTime;
+	  el->averageSentThpt    = ((float)el->bytesSent)/totalTime;
+	  el->averageRcvdPktThpt = ((float)el->pktRcvd)/totalTime;
+	  el->averageSentPktThpt = ((float)el->pktSent)/totalTime;
+
+	  if((topSentIdx == NO_PEER) 
+	     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx] == NULL)) {
+	    topSentIdx = idx;
+	  } else {
+	    if(el->actualSentThpt > myGlobals.device[deviceToUpdate].
+	       hash_hostTraffic[topSentIdx]->actualSentThpt) {
+	      secondSentIdx = topSentIdx;
+	      topSentIdx = idx;
+	    } else {
+	      if((secondSentIdx == NO_PEER)
+		 || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondSentIdx] == NULL)) {
+		secondSentIdx = idx;
+	      } else {
+		if(el->actualSentThpt > myGlobals.device[deviceToUpdate].
+		   hash_hostTraffic[secondSentIdx]->actualSentThpt) {
+		  thirdSentIdx = secondSentIdx;
+		  secondSentIdx = idx;
+		} else {
+		  if((thirdSentIdx == NO_PEER)
+		     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdSentIdx] == NULL)) {
+		    thirdSentIdx = idx;
+		  } else {
+		    if(el->actualSentThpt > myGlobals.device[deviceToUpdate].
+		       hash_hostTraffic[thirdSentIdx]->actualSentThpt) {
+		      thirdSentIdx = idx;
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+
+	  if((topRcvdIdx == NO_PEER) 
+	     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topRcvdIdx] == NULL)) {
+	    topRcvdIdx = idx;
+	  } else {
+	    if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].
+	       hash_hostTraffic[topRcvdIdx]->actualRcvdThpt) {
+	      secondRcvdIdx = topRcvdIdx;
+	      topRcvdIdx = idx;
+	    } else {
+	      if((secondRcvdIdx == NO_PEER)
+		 || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx] == NULL)) {
+		secondRcvdIdx = idx;
+	      } else {
+		if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].
+		   hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt) {
+		  thirdRcvdIdx = secondRcvdIdx;
+		  secondRcvdIdx = idx;
+		} else {
+		  if((thirdRcvdIdx == NO_PEER)
+		     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx] == NULL)) {
+		    thirdRcvdIdx = idx;
+		  } else {
+		    if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].
+		       hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt) {
+		      thirdRcvdIdx = idx;
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+
+	  if(updateHourThpt) {
+	    el->lastHourRcvdThpt = (float)(el->bytesRcvd-el->lastHourBytesRcvd)/timeHourDiff;
+	    el->lastHourSentThpt = (float)(el->bytesSent-el->lastHourBytesSent)/timeHourDiff;
+	    el->lastHourBytesRcvd = el->bytesRcvd;
+	    el->lastHourBytesSent = el->bytesSent;
+
+	    if((topHourSentIdx == NO_PEER) 
+	       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourSentIdx] == NULL)) {
+	      topHourSentIdx = idx;
+	    } else {
+	      if(el->lastHourSentThpt > myGlobals.device[deviceToUpdate].
+		 hash_hostTraffic[topHourSentIdx]->lastHourSentThpt) {
+		secondHourSentIdx = topHourSentIdx;
+		topHourSentIdx = idx;
+	      } else {
+		if((secondHourSentIdx == NO_PEER)
+		   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx] == NULL)) {
+		  secondHourSentIdx = idx;
+		} else {
+		  if(el->lastHourSentThpt > myGlobals.device[deviceToUpdate].
+		     hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt) {
+		    thirdHourSentIdx = secondHourSentIdx;
+		    secondHourSentIdx = idx;
+		  } else {
+		    if((thirdHourSentIdx == NO_PEER)
+		       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx] == NULL)) {
+		      thirdHourSentIdx = idx;
+		    } else {
+		      if(el->lastHourSentThpt > myGlobals.device[deviceToUpdate].
+			 hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt) {
+			thirdHourSentIdx = idx;
+		      }
+		    }
+		  }
+		}
+	      }
+	    }
+
+	    if((topHourRcvdIdx == NO_PEER) 
+	       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx] == NULL)) {
+	      topHourRcvdIdx = idx;
+	    } else {
+	      if(el->lastHourRcvdThpt > myGlobals.device[deviceToUpdate].
+		 hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt) {
+		secondHourRcvdIdx = topHourRcvdIdx;
+		topHourRcvdIdx = idx;
+	      } else {
+		if((secondHourRcvdIdx == NO_PEER)
+		   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx] == NULL)) {
+		  secondHourRcvdIdx = idx;
+		} else {
+		  if(el->lastHourRcvdThpt > myGlobals.device[deviceToUpdate].
+		     hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt) {
+		    thirdHourRcvdIdx = secondHourRcvdIdx;
+		    secondHourRcvdIdx = idx;
+		  } else {
+		    if((thirdHourRcvdIdx == NO_PEER)
+		       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx] == NULL)) {
+		      thirdHourRcvdIdx = idx;
+		    } else {
+		      if(el->lastHourRcvdThpt > myGlobals.device[deviceToUpdate].
+			 hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt) {
+			thirdHourRcvdIdx = idx;
+		      }
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
 	}
-
-	if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
-	    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes = 
-		myGlobals.device[deviceToUpdate].ethernetBytes - myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes;
-	    myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;
-	    myGlobals.device[deviceToUpdate].lastFiveMinsThpt = 
-		(float)myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes/(float)myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate;
-	    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes = myGlobals.device[deviceToUpdate].ethernetBytes;
-	    /* ******************* */
-	    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts = 
-		myGlobals.device[deviceToUpdate].ethernetPkts - myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts;
-	    myGlobals.device[deviceToUpdate].lastFiveMinsPktsThpt = 
-		(float)myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts/(float)myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate;
-	    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
-	    myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = myGlobals.actTime;
-	}
-
-	if((updateMinThpt || updateHourThpt) 
-	   && ((topSentIdx        != NO_PEER) 
-	       || (topHourSentIdx != NO_PEER)
-	       || (topRcvdIdx     != NO_PEER)
-	       || (topHourRcvdIdx != NO_PEER)))
-	    updateThptStats(deviceToUpdate,
-			    topSentIdx, secondSentIdx, thirdSentIdx,
-			    topHourSentIdx, secondHourSentIdx, thirdHourSentIdx,
-			    topRcvdIdx, secondRcvdIdx, thirdRcvdIdx,
-			    topHourRcvdIdx, secondHourRcvdIdx, thirdHourRcvdIdx);
-
-	myGlobals.device[deviceToUpdate].lastThptUpdate = myGlobals.actTime;
+      }
     }
+
+    /* ******************************** */
+
+    myGlobals.device[deviceToUpdate].throughput =
+      myGlobals.device[deviceToUpdate].ethernetBytes-myGlobals.device[deviceToUpdate].throughput;
+    myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts-
+      myGlobals.device[deviceToUpdate].lastNumEthernetPkts;
+    myGlobals.device[deviceToUpdate].lastNumEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
+
+    /* timeDiff++; */
+    myGlobals.device[deviceToUpdate].actualThpt = (float)myGlobals.device[deviceToUpdate].throughput/(float)timeDiff;
+    myGlobals.device[deviceToUpdate].actualPktsThpt = 
+      (float)myGlobals.device[deviceToUpdate].packetThroughput/(float)timeDiff;
+
+    if(myGlobals.device[deviceToUpdate].actualThpt > myGlobals.device[deviceToUpdate].peakThroughput)
+      myGlobals.device[deviceToUpdate].peakThroughput = myGlobals.device[deviceToUpdate].actualThpt;
+
+    if(myGlobals.device[deviceToUpdate].actualPktsThpt > myGlobals.device[deviceToUpdate].peakPacketThroughput)
+      myGlobals.device[deviceToUpdate].peakPacketThroughput = myGlobals.device[deviceToUpdate].actualPktsThpt;
+
+    myGlobals.device[deviceToUpdate].throughput = myGlobals.device[deviceToUpdate].ethernetBytes;
+    myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts;
+
+    if(updateMinThpt) {
+      myGlobals.device[deviceToUpdate].lastMinEthernetBytes = myGlobals.device[deviceToUpdate].ethernetBytes-
+	myGlobals.device[deviceToUpdate].lastMinEthernetBytes;
+      myGlobals.device[deviceToUpdate].lastMinThpt = 
+	(float)(myGlobals.device[deviceToUpdate].lastMinEthernetBytes)/(float)timeMinDiff;
+      myGlobals.device[deviceToUpdate].lastMinEthernetBytes = myGlobals.device[deviceToUpdate].ethernetBytes;
+      /* ******************* */
+      myGlobals.device[deviceToUpdate].lastMinEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts-
+	myGlobals.device[deviceToUpdate].lastMinEthernetPkts;
+      myGlobals.device[deviceToUpdate].lastMinPktsThpt = 
+	(float)myGlobals.device[deviceToUpdate].lastMinEthernetPkts/(float)timeMinDiff;
+      myGlobals.device[deviceToUpdate].lastMinEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
+      myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
+    }
+
+    if((timeMinDiff = myGlobals.actTime-myGlobals.
+	device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
+      myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes = 
+	myGlobals.device[deviceToUpdate].ethernetBytes 
+	- myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes;
+      myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;
+      myGlobals.device[deviceToUpdate].lastFiveMinsThpt = 
+	(float)myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes/
+	(float)myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate;
+      myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes = 
+	myGlobals.device[deviceToUpdate].ethernetBytes;
+      /* ******************* */
+      myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts = 
+	myGlobals.device[deviceToUpdate].ethernetPkts 
+	- myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts;
+      myGlobals.device[deviceToUpdate].lastFiveMinsPktsThpt = 
+	(float)myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts/
+	(float)myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate;
+      myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts = 
+	myGlobals.device[deviceToUpdate].ethernetPkts;
+      myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = myGlobals.actTime;
+    }
+
+    if((updateMinThpt || updateHourThpt) 
+       && ((topSentIdx        != NO_PEER) 
+	   || (topHourSentIdx != NO_PEER)
+	   || (topRcvdIdx     != NO_PEER)
+	   || (topHourRcvdIdx != NO_PEER)))
+      updateThptStats(deviceToUpdate,
+		      topSentIdx, secondSentIdx, thirdSentIdx,
+		      topHourSentIdx, secondHourSentIdx, thirdHourSentIdx,
+		      topRcvdIdx, secondRcvdIdx, thirdRcvdIdx,
+		      topHourRcvdIdx, secondHourRcvdIdx, thirdHourRcvdIdx);
+
+    myGlobals.device[deviceToUpdate].lastThptUpdate = myGlobals.actTime;
+  }
 }
 
 /* ******************************* */

@@ -1337,10 +1337,10 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_PROTOS,
 		      strlen(STR_SORT_DATA_RECEIVED_PROTOS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(0, 0, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_PROTOS);
+      printHostsTraffic(0, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_PROTOS);
     } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_IP, strlen(STR_SORT_DATA_RECEIVED_IP)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(0, 1, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_IP);
+      printHostsTraffic(1, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_IP);
     } else if(strncmp(pageName, STR_SORT_DATA_THPT_STATS, strlen(STR_SORT_DATA_THPT_STATS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printThptStats(sortedColumn);
@@ -1350,25 +1350,25 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_THPT, strlen(STR_SORT_DATA_RECEIVED_THPT)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-      printHostsTraffic(0, 2, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_THPT);
+      printHostsTraffic(2, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_THPT);
     } else if(strncmp(pageName, STR_SORT_DATA_RCVD_HOST_TRAFFIC, strlen(STR_SORT_DATA_RCVD_HOST_TRAFFIC)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-      printHostsTraffic(0, 3, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RCVD_HOST_TRAFFIC);
+      printHostsTraffic(3, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RCVD_HOST_TRAFFIC);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_HOST_TRAFFIC, strlen(STR_SORT_DATA_SENT_HOST_TRAFFIC)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-      printHostsTraffic(1, 3, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_HOST_TRAFFIC);
+      printHostsTraffic(4, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_HOST_TRAFFIC);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_PROTOS, strlen(STR_SORT_DATA_SENT_PROTOS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(1, 0, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_PROTOS);
+      printHostsTraffic(5, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_PROTOS);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_IP, strlen(STR_SORT_DATA_SENT_IP)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(1, 1, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_IP);
+      printHostsTraffic(6, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_IP);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_THPT, strlen(STR_SORT_DATA_SENT_THPT)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-      printHostsTraffic(1, 2, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_THPT);
+      printHostsTraffic(7, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_THPT);
     } else if(strncmp(pageName, HOSTS_INFO_HTML, strlen(HOSTS_INFO_HTML)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHostsInfo(sortedColumn, revertOrder, pageNum);
@@ -1419,7 +1419,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       printDomainStats(&pageName[strlen(DOMAIN_INFO_HTML)+1], abs(sortedColumn), revertOrder, pageNum);
     } else if(strcmp(pageName, TRAFFIC_STATS_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(2, 0, 0, revertOrder, pageNum, TRAFFIC_STATS_HTML);
+      printHostsTraffic(8, 0, revertOrder, pageNum, TRAFFIC_STATS_HTML);
       printProtoTraffic();
       sendString("<p>\n");
       printIpProtocolDistribution(LONG_FORMAT, revertOrder);

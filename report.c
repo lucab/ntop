@@ -115,8 +115,7 @@ void addPageIndicator(char *url, u_int pageNum,
 
 /* ******************************* */
 
-void printHostsTraffic(int sortSendMode,
-		       int reportType,
+void printHostsTraffic(int reportType,
 		       int sortedColumn,
 		       int revertOrder,
 		       int pageNum,
@@ -176,25 +175,35 @@ void printHostsTraffic(int sortSendMode,
       columnSort = HOST_DUMMY_IDX_VALUE; /* Host name */
     else if(sortedColumn == DOMAIN_DUMMY_IDX_VALUE)
       columnSort = DOMAIN_DUMMY_IDX_VALUE; /* domain name */
-    else if(reportType == 1) {
-      /* if(sortedColumn == 0) sortedColumn = 1; */
-      screenNumber = DUMMY_IDX_VALUE /* dirty trick */, columnSort = sortedColumn;
-    } else if((reportType == 2) /* Thpt */
-	      || ((reportType == 3) /* Host Traffic */)){
-      if(sortedColumn == 0) sortedColumn = 1;
-      screenNumber = MAX_NUM_PROTOS_SCREENS /* dirty trick */, columnSort = sortedColumn;
-    }
+    else
+      columnSort = sortedColumn;
+    
+    /* 
+       reportType:
+       
+       0 STR_SORT_DATA_RECEIVED_PROTOS
+       1 STR_SORT_DATA_RECEIVED_IP
+       2 STR_SORT_DATA_RECEIVED_THPT
+       3 STR_SORT_DATA_RCVD_HOST_TRAFFIC
+       4 STR_SORT_DATA_SENT_HOST_TRAFFIC
+       5 STR_SORT_DATA_SENT_PROTOS
+       6 STR_SORT_DATA_SENT_IP
+       7 STR_SORT_DATA_SENT_THPT
+       8 TRAFFIC_STATS_HTML
+    */
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, ">reportType=%d/sortedColumn=%d/columnSort=%d/screenNumber=%d<\n",
-	       reportType, sortedColumn, columnSort, screenNumber);
+    traceEvent(TRACE_INFO, ">reportType=%d/sortedColumn=%d/columnSort=%d<\n",
+	       reportType, sortedColumn, columnSort);
 #endif
+
+    reportKind = reportType;
+    if(columnSort == 0) reportKind = 0;
 
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
     for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
       int i;
-      TrafficCounter a, b, c, d, e;
       char webHostName[BUF_SIZE];
 
       if(revertOrder)
@@ -205,13 +214,6 @@ void printHostsTraffic(int sortSendMode,
       if(el != NULL) {
 	sentPercent = (100*(float)el->bytesSent)/myGlobals.device[actualReportDeviceId].ethernetBytes;
 	rcvdPercent = (100*(float)el->bytesRcvd)/myGlobals.device[actualReportDeviceId].ethernetBytes;
-
-	a = el->bytesRcvd, b = el->bytesSent;
-
-	if(!sortSendMode)
-	  getProtocolDataRcvd(&c, &d, &e, el);
-	else
-	  getProtocolDataSent(&c, &d, &e, el);
 
 	/* Fixed buffer overflow.
 	   Courtesy of Rainer Tammer <rainer.tammer@spg.schulergroup.com>
@@ -2218,7 +2220,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     total = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
 		    myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
 
-    printSectionTitle("Rem to Local Traffic");
+    printSectionTitle("Remote to Local Traffic");
 
     if(total == 0)
       printNoDataYet();
@@ -2270,7 +2272,66 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
     /* ********************************************************** */
 
-    printSectionTitle("Local to Rem Traffic");
+    /* Courtesy of "Burton M. Strauss III" <BStrauss3@attbi.com> */
+    
+    printSectionTitle("Remote Traffic");
+
+    total = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.remote+
+		    myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.remote)/1024;
+    if(total == 0)
+      printNoDataYet();
+    else {
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+                 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+                 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+                 "Percentage</TH></TR>\n");
+      if(total == 0) total = 1; /* Avoids divisions by zero */
+      remainingTraffic = 0;
+      
+      partialTotal = (float)myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.remote/1024;
+      percentage = ((float)(partialTotal*100))/((float)total);
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+                                "TCP", "UDP", total, percentage);
+
+      sendString("</TABLE>"TABLE_OFF"\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+                 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+                 "Percentage</TH></TR>\n");
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+        partialTotal =
+	  (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].remote/1024;
+
+        if(partialTotal > 0) {
+          remainingTraffic += partialTotal;
+          percentage = ((float)(partialTotal*100))/((float)total);
+          printTableEntry(buf, sizeof(buf),
+			  myGlobals.protoIPTrafficInfos[i],
+                          COLOR_1, partialTotal, percentage);
+        }
+      }
+
+      if(total > remainingTraffic)
+        remainingTraffic = total - remainingTraffic;
+      else
+        remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+        percentage = ((float)(remainingTraffic*100))/((float)total);
+        printTableEntry(buf, sizeof(buf),
+			"Other&nbsp;TCP/UDP-based&nbsp;Prot.",
+                        COLOR_1, remainingTraffic, percentage);
+      }
+
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
+    }
+
+
+    /* ********************************************************** */
+
+    printSectionTitle("Local to Remote Traffic");
 
     total = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
 		    myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;

@@ -42,7 +42,7 @@ int webPort = NTOP_DEFAULT_WEB_PORT;
 int refreshRate = 0;
 int localAddrFlag = 1;
 int actualReportDeviceId;
-short screenNumber, columnSort;
+short columnSort, reportKind, sortFilter;
 int sock, newSock;
 #ifdef HAVE_OPENSSL
 int sock_ssl;

@@ -759,8 +759,7 @@ int cmpFctn(const void *_a, const void *_b) {
   HostTraffic **b = (HostTraffic **)_b;
   TrafficCounter a_=0, b_=0;
   float fa_=0, fb_=0;
-  int idx;
-  short oldColumnSort, floatCompare=0;
+  short floatCompare=0, columnProtoId;
 
   if((a == NULL) && (b != NULL)) {
     traceEvent(TRACE_WARNING, "WARNING (1)\n");
@@ -772,10 +771,6 @@ int cmpFctn(const void *_a, const void *_b) {
     traceEvent(TRACE_WARNING, "WARNING (3)\n");
     return(0);
   }
-
-#ifdef DEBUG
-  printf("screenNumber=%d, columnSort=%d\n", screenNumber, columnSort);
-#endif
 
   if(columnSort == HOST_DUMMY_IDX_VALUE) {
     int rc;
@@ -821,430 +816,226 @@ int cmpFctn(const void *_a, const void *_b) {
       return rc;
   }
 
-  oldColumnSort = columnSort;
-
-  if(screenNumber == DUMMY_IDX_VALUE) {
-    /* dirty trick */
-    idx = columnSort-1;
-    if(idx == -1) {
-      idx = 0;
-      columnSort = 0;
-    } else
-      columnSort = 1;
-  } else
-    idx = (screenNumber-MAX_NUM_PROTOS_SCREENS)*3;
-
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "idx=%d/columnSort=%d/sortSendMode=%d/screenNumber=%d/myGlobals.numIpProtosToMonitor=%d\n",
-	 idx, columnSort, sortSendMode, screenNumber, myGlobals.numIpProtosToMonitor);
+  traceEvent(TRACE_INFO, 
+	     "reportKind=%d/columnSort=%d/sortSendMode=%d/numIpProtosToMonitor=%d\n",
+	     reportKind, columnSort, sortSendMode, myGlobals.numIpProtosToMonitor);
 #endif
 
-  switch(columnSort) {
-  case 0:
-    if(sortSendMode) {
-      a_ = (*a)->bytesSent, b_ = (*b)->bytesSent;
-    } else {
+
+  switch(reportKind) {
+  case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
+    switch(columnSort) {
+    case 0:
       a_ = (*a)->bytesRcvd, b_ = (*b)->bytesRcvd;
-    }
-    break;
-  case 1:
-    if(sortSendMode) {
-      switch(screenNumber)
-	{
-	case 0:
-	  a_ = (*a)->tcpSentLoc+(*a)->tcpSentRem;
-	  b_ = (*b)->tcpSentLoc+(*b)->tcpSentRem;
-	  break;
-	case 1:
-	  a_ = (*a)->dlcSent, b_ = (*b)->dlcSent;
-	  break;
-	case 2:
-	  a_ = (*a)->arp_rarpSent, b_ = (*b)->arp_rarpSent;
-	  break;
-	case 3:
-	  a_ = (*a)->netbiosSent, b_ = (*b)->netbiosSent;
-	  break;
-	case MAX_NUM_PROTOS_SCREENS:
-	  fa_ = (*a)->actualSentThpt, fb_ = (*b)->actualSentThpt, floatCompare = 1;
-	  break;
-	default:
-
-	  if(idx <= myGlobals.numIpProtosToMonitor) {
-	    if(idx == 0) {
-#ifdef ENABLE_NAPSTER
-	      if((*a)->napsterStats == NULL)
-		a_ = 0;
-	      else
-		a_ = (*a)->napsterStats->bytesSent;
-
-	      if((*b)->napsterStats == NULL)
-		b_ = 0;
-	      else
-		b_ = (*b)->napsterStats->bytesSent;
-#else
-	      a_ = b_ = 0;
-#endif
-	    } else {
-	      a_ = (*a)->protoIPTrafficInfos[idx-1].sentLoc
-		+(*a)->protoIPTrafficInfos[idx-1].sentRem;
-	      b_ = (*b)->protoIPTrafficInfos[idx-1].sentLoc
-		+(*b)->protoIPTrafficInfos[idx-1].sentRem;
-	    }
-	  } else {
-	    int i;
-
-	    a_ = 0, b_ = 0;
-
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      a_ += (*a)->protoIPTrafficInfos[i].sentLoc
-		+(*a)->protoIPTrafficInfos[i].sentRem;
-	      b_ += (*b)->protoIPTrafficInfos[i].sentLoc
-		+(*b)->protoIPTrafficInfos[i].sentRem;
-	    }
-
-	    if((*a)->bytesSent > a_)
-	      a_ = (*a)->bytesSent-a_;
-	    else
-	      a_ = 0;
-
-	    if((*b)->bytesSent > b_)
-	      b_ = (*b)->bytesSent-b_;
-	    else
-	      b_ = 0;
-	  }
-	}
-    } else {
-      switch(screenNumber)
-	{
-	case 0:
-	  a_ = (*a)->tcpRcvdLoc+(*a)->tcpRcvdFromRem;
-	  b_ = (*b)->tcpRcvdLoc+(*b)->tcpRcvdFromRem;
-	  break;
-	case 1:
-	  a_ = (*a)->dlcRcvd, b_ = (*b)->dlcRcvd;
-	  break;
-	case 2:
-	  a_ = (*a)->arp_rarpRcvd, b_ = (*b)->arp_rarpRcvd;
-	  break;
-	case 3:
-	  a_ = (*a)->netbiosRcvd, b_ = (*b)->netbiosRcvd;
-	  break;
-	case MAX_NUM_PROTOS_SCREENS:
-	  fa_ = (*a)->actualRcvdThpt,
-	    fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
-	  break;
-	default:
-	  if(idx <= myGlobals.numIpProtosToMonitor) {
-	    if(idx == 0) {
-#ifdef ENABLE_NAPSTER
-	      if((*a)->napsterStats == NULL)
-		a_ = 0;
-	      else
-		a_ = (*a)->napsterStats->bytesRcvd;
-
-	      if((*b)->napsterStats == NULL)
-		b_ = 0;
-	      else
-		b_ = (*b)->napsterStats->bytesRcvd;
-#else
-	      a_ = b_ = 0;
-#endif
-	    } else {
-	      a_ = (*a)->protoIPTrafficInfos[idx-1].rcvdLoc
-		+(*a)->protoIPTrafficInfos[idx-1].rcvdFromRem;
-	      b_ = (*b)->protoIPTrafficInfos[idx-1].rcvdLoc
-		+(*b)->protoIPTrafficInfos[idx-1].rcvdFromRem;
-	    }
-	  } else {
-	    int i;
-
-	    a_ = 0, b_ = 0;
-
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      a_ += (*a)->protoIPTrafficInfos[i].rcvdLoc
-		+(*a)->protoIPTrafficInfos[i].rcvdFromRem;
-	      b_ += (*b)->protoIPTrafficInfos[i].rcvdLoc
-		+(*b)->protoIPTrafficInfos[i].rcvdFromRem;
-	    }
-
-	    if((*a)->bytesRcvd > a_)
-	      a_ = (*a)->bytesRcvd-a_;
-	    else
-	      a_ = 0;
-
-	    if((*b)->bytesRcvd > b_)
-	      b_ = (*b)->bytesRcvd-b_;
-	    else
-	      b_ = 0;
-
-	    /*
-	      traceEvent(TRACE_INFO, "=>%d (%s)<=>%d (%s)<=\n",
-	      (int)a_, (*a)->hostSymIpAddress,
-	      (int)b_, (*b)->hostSymIpAddress);
-	    */
-	  }
-	}
-    }
-    break;
-  case 2:
-    if(sortSendMode) {
-      switch(screenNumber)
-	{
-	case 0:
-	  a_ = (*a)->udpSentLoc +(*a)->udpSentRem;
-	  b_ = (*b)->udpSentLoc +(*b)->udpSentRem;
-	  break;
-	case 1:
-	  a_ = (*a)->ipxSent, b_ = (*b)->ipxSent;
-	  break;
-	case 2:
-	  a_ = (*a)->appletalkSent, b_ = (*b)->appletalkSent;
-	  break;
-	case 3:
-	  a_ = (*a)->igmpSent, b_ = (*b)->igmpSent;
-	  break;
-	case MAX_NUM_PROTOS_SCREENS:
-	  fa_ = (*a)->averageSentThpt,
-	    fb_ = (*b)->averageSentThpt, floatCompare = 1;
-	  break;
-	default:
-	  if(++idx < myGlobals.numIpProtosToMonitor) {
-	    a_ = (*a)->protoIPTrafficInfos[idx].sentLoc
-	      +(*a)->protoIPTrafficInfos[idx].sentRem;
-	    b_ = (*b)->protoIPTrafficInfos[idx].sentLoc
-	      +(*b)->protoIPTrafficInfos[idx].sentRem;
-	  } else {
-	    int i;
-
-	    a_ = 0, b_ = 0;
-
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      a_ += (*a)->protoIPTrafficInfos[i].sentLoc
-		+(*a)->protoIPTrafficInfos[i].sentRem;
-	      b_ += (*b)->protoIPTrafficInfos[i].sentLoc
-		+(*b)->protoIPTrafficInfos[i].sentRem;
-	    }
-
-	    if((*a)->bytesSent > a_)
-	      a_ = (*a)->bytesSent-a_;
-	    else
-	      a_ = 0;
-
-	    if((*b)->bytesSent > b_)
-	      b_ = (*b)->bytesSent-b_;
-	    else
-	      b_ = 0;
-	  }
-	}
-    } else {
-      switch(screenNumber)
-	{
-	case 0:
-	  a_ = (*a)->udpRcvdLoc +(*a)->udpRcvdFromRem;
-	  b_ = (*b)->udpRcvdLoc +(*b)->udpRcvdFromRem;
-	  break;
-	case 1:
-	  a_ = (*a)->ipxRcvd, b_ = (*b)->ipxRcvd;
-	  break;
-	case 2:
-	  a_ = (*a)->appletalkRcvd, b_ = (*b)->appletalkRcvd;
-	  break;
-	case 3:
-	  a_ = (*a)->igmpRcvd, b_ = (*b)->igmpRcvd;
-	  break;
-	case MAX_NUM_PROTOS_SCREENS:
-	  fa_ = (*a)->averageRcvdThpt,
-	    fb_ = (*b)->averageRcvdThpt, floatCompare = 1;
-	  break;
-	default:
-	  if(++idx < myGlobals.numIpProtosToMonitor) {
-	    a_ = (*a)->protoIPTrafficInfos[idx].rcvdLoc
-	      +(*a)->protoIPTrafficInfos[idx].rcvdFromRem;
-	    b_ = (*b)->protoIPTrafficInfos[idx].rcvdLoc
-	      +(*b)->protoIPTrafficInfos[idx].rcvdFromRem;
-	  } else {
-	    int i;
-
-	    a_ = 0, b_ = 0;
-
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      a_ += (*a)->protoIPTrafficInfos[i].rcvdLoc
-		+(*a)->protoIPTrafficInfos[i].rcvdFromRem;
-	      b_ += (*b)->protoIPTrafficInfos[i].rcvdLoc
-		+(*b)->protoIPTrafficInfos[i].rcvdFromRem;
-	    }
-
-	    if((*a)->bytesRcvd > a_)
-	      a_ = (*a)->bytesRcvd-a_;
-	    else
-	      a_ = 0;
-
-	    if((*b)->bytesRcvd > b_)
-	      b_ = (*b)->bytesRcvd-b_;
-	    else
-	      b_ = 0;
-	  }
-	}
-    }
-    break;
-  case 3:
-    if(sortSendMode) {
-      switch(screenNumber)
-	{
-	case 0:
-	  a_ = (*a)->icmpSent, b_ = (*b)->icmpSent;
-	  break;
-	case 1:
-	  a_ = (*a)->decnetSent, b_ = (*b)->decnetSent;
-	  break;
-	case 2:
-	  a_ = (*a)->ospfSent, b_ = (*b)->ospfSent;
-	  break;
-	case 3:
-	  a_ = (*a)->osiSent, b_ = (*b)->osiSent;
-	  break;
-	case 4:
-	  a_ = (*a)->qnxSent, b_ = (*b)->qnxSent;
-	  break;
-	case 5: /* MAX_NUM_PROTOS_SCREENS: */
-	  fa_ = (*a)->peakSentThpt,
-	    fb_ = (*b)->peakSentThpt, floatCompare = 1;
-	  break;
-	default:
-	  idx+=2;
-	  if(idx < myGlobals.numIpProtosToMonitor) {
-	    a_ = (*a)->protoIPTrafficInfos[idx].sentLoc
-	      +(*a)->protoIPTrafficInfos[idx].sentRem;
-	    b_ = (*b)->protoIPTrafficInfos[idx].sentLoc
-	      +(*b)->protoIPTrafficInfos[idx].sentRem;
-	  } else {
-	    int i;
-
-	    a_ = 0, b_ = 0;
-
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      a_ += (*a)->protoIPTrafficInfos[i].sentLoc
-		+(*a)->protoIPTrafficInfos[i].sentRem;
-	      b_ += (*b)->protoIPTrafficInfos[i].sentLoc
-		+(*b)->protoIPTrafficInfos[i].sentRem;
-	    }
-
-	    if((*a)->bytesSent > a_)
-	      a_ = (*a)->bytesSent-a_;
-	    else
-	      a_ = 0;
-
-	    if((*b)->bytesSent > b_)
-	      b_ = (*b)->bytesSent-b_;
-	    else
-	      b_ = 0;
-	  }
-	}
-    } else {
-      switch(screenNumber)
-	{
-	case 0:
-	  a_ = (*a)->icmpRcvd, b_ = (*b)->icmpRcvd;
-	  break;
-	case 1:
-	  a_ = (*a)->decnetRcvd, b_ = (*b)->decnetRcvd;
-	  break;
-	case 2:
-	  a_ = (*a)->ospfRcvd, b_ = (*b)->ospfRcvd;
-	  break;
-	case 3:
-	  a_ = (*a)->osiRcvd, b_ = (*b)->osiRcvd;
-	  break;
-	case MAX_NUM_PROTOS_SCREENS:
-	  fa_ = (*a)->peakRcvdThpt,
-	    fb_ = (*b)->peakRcvdThpt, floatCompare = 1;
-	  break;
-	default:
-	  idx+=2;
-	  if(idx < myGlobals.numIpProtosToMonitor) {
-	    a_ = (*a)->protoIPTrafficInfos[idx].rcvdLoc
-	      +(*a)->protoIPTrafficInfos[idx].rcvdFromRem;
-	    b_ = (*b)->protoIPTrafficInfos[idx].rcvdLoc
-	      +(*b)->protoIPTrafficInfos[idx].rcvdFromRem;
-	  } else {
-	    int i;
-
-	    a_ = 0, b_ = 0;
-
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      a_ += (*a)->protoIPTrafficInfos[i].rcvdLoc
-		+(*a)->protoIPTrafficInfos[i].rcvdFromRem;
-	      b_ += (*b)->protoIPTrafficInfos[i].rcvdLoc
-		+(*b)->protoIPTrafficInfos[i].rcvdFromRem;
-	    }
-
-	    if((*a)->bytesRcvd > a_)
-	      a_ = (*a)->bytesRcvd-a_;
-	    else
-	      a_ = 0;
-
-	    if((*b)->bytesRcvd > b_)
-	      b_ = (*b)->bytesRcvd-b_;
-	    else
-	      b_ = 0;
-	  }
-	}
+      break;
+    case 1:
+      a_ = (*a)->tcpRcvdLoc+(*a)->tcpRcvdFromRem;
+      b_ = (*b)->tcpRcvdLoc+(*b)->tcpRcvdFromRem;
+      break;
+    case 2:
+      a_ = (*a)->udpRcvdLoc +(*a)->udpRcvdFromRem;
+      b_ = (*b)->udpRcvdLoc +(*b)->udpRcvdFromRem;
+      break;
+    case 3:
+      a_ = (*a)->icmpRcvd, b_ = (*b)->icmpRcvd;
+      break;
+    case 4:
+      a_ = (*a)->dlcRcvd, b_ = (*b)->dlcRcvd;
+      break;
+    case 5:
+      a_ = (*a)->ipxRcvd, b_ = (*b)->ipxRcvd;
+      break;
+    case 6:
+      a_ = (*a)->decnetRcvd, b_ = (*b)->decnetRcvd;
+      break;
+    case 7:
+      a_ = (*a)->arp_rarpRcvd, b_ = (*b)->arp_rarpRcvd;
+      break;
+    case 8:
+      a_ = (*a)->appletalkRcvd, b_ = (*b)->appletalkRcvd;
+      break;
+    case 9:
+      a_ = (*a)->ospfRcvd, b_ = (*b)->ospfRcvd;
+      break;
+    case 10:
+      a_ = (*a)->netbiosRcvd, b_ = (*b)->netbiosRcvd;
+      break;
+    case 11:
+      a_ = (*a)->igmpRcvd, b_ = (*b)->igmpRcvd;
+      break;
+    case 12:
+      a_ = (*a)->osiRcvd, b_ = (*b)->osiRcvd;
+      break;
+    case 13:
+      a_ = (*a)->qnxRcvd, b_ = (*b)->qnxRcvd;
+      break;
+    case 14:
+      a_ = (*a)->stpRcvd, b_ = (*b)->stpRcvd;
+      break;
+    case 15:
+      a_ = (*a)->otherRcvd, b_ = (*b)->otherRcvd;
       break;
     }
     break;
-  case 4:
-    if(sortSendMode)
-      switch(screenNumber) {
-      case 0:
-	a_ = (*a)->qnxSent, b_ = (*b)->qnxSent;
-	break;
-      default:
-	fa_ = (*a)->actualSentPktThpt, fb_ = (*b)->actualSentPktThpt, floatCompare = 1;
-	break;
-      }
-    else
-      switch(screenNumber) {
-      case 0:
-	a_ = (*a)->qnxRcvd, b_ = (*b)->qnxRcvd;
-	break;
-      case MAX_NUM_PROTOS_SCREENS:
-	fa_ = (*a)->actualRcvdPktThpt, fb_ = (*b)->actualRcvdPktThpt, floatCompare = 1;
-	break;
-      }
-    break;
-  case 5:
-    if(sortSendMode) {
-      switch(screenNumber) {
-      case 0:
-	a_ = (*a)->otherSent, b_ = (*b)->otherSent;
-	break;
-      case 1:
-	a_ = (*a)->stpSent, b_ = (*b)->stpSent;
-	break;
-      case MAX_NUM_PROTOS_SCREENS:
-	fa_ = (*a)->averageSentPktThpt, fb_ = (*b)->averageSentPktThpt, floatCompare = 1;
-	break;
+  case 1: /* STR_SORT_DATA_RECEIVED_IP */
+    columnProtoId = columnSort - 1;
+    if(columnProtoId <= myGlobals.numIpProtosToMonitor) {
+      if(columnProtoId == 0) {
+#ifdef ENABLE_NAPSTER
+	if((*a)->napsterStats == NULL)
+	  a_ = 0;
+	else
+	  a_ = (*a)->napsterStats->bytesRcvd;
+	
+	if((*b)->napsterStats == NULL)
+	  b_ = 0;
+	else
+	  b_ = (*b)->napsterStats->bytesRcvd;
+#else
+	a_ = b_ = 0;
+#endif
+      } else {
+	a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc+(*a)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem;
+	b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc+(*b)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem;
       }
     } else {
-      switch(screenNumber) {
-      case 0:
-	a_ = (*a)->otherRcvd, b_ = (*b)->otherRcvd;
-	break;
-      case 1:
-	a_ = (*a)->stpRcvd, b_ = (*b)->stpRcvd;
-	break;
+      int i;
+      
+      a_ = 0, b_ = 0;
+      
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	a_ += (*a)->protoIPTrafficInfos[i].rcvdLoc
+	  +(*a)->protoIPTrafficInfos[i].rcvdFromRem;
+	b_ += (*b)->protoIPTrafficInfos[i].rcvdLoc
+	  +(*b)->protoIPTrafficInfos[i].rcvdFromRem;
       }
+      
+      if((*a)->bytesRcvd > a_)
+	a_ = (*a)->bytesRcvd-a_;
+      else
+	a_ = 0;
+      
+      if((*b)->bytesRcvd > b_)
+	b_ = (*b)->bytesRcvd-b_;
+      else
+	b_ = 0;
     }
-
     break;
-  case 6:
-    if(sortSendMode)
-      fa_ = (*a)->peakSentPktThpt, fb_ = (*b)->peakSentPktThpt, floatCompare = 1;
-    else
-      fa_ = (*a)->peakRcvdPktThpt, fb_ = (*b)->peakRcvdPktThpt, floatCompare = 1;
+  case 2: /* STR_SORT_DATA_RECEIVED_THPT */
+    fa_ = (*a)->actualRcvdThpt, fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
+    break;
+  case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
+  case 4: /* STR_SORT_DATA_SENT_HOST_TRAFFIC */
+    /* Npthing */
+    break;
+  case 5: /* STR_SORT_DATA_SENT_PROTOS */
+    switch(columnSort) {
+    case 0:
+      a_ = (*a)->bytesSent, b_ = (*b)->bytesSent;
+      break;
+    case 1:
+      a_ = (*a)->tcpSentLoc+(*a)->tcpSentRem;
+      b_ = (*b)->tcpSentLoc+(*b)->tcpSentRem;
+      break;
+    case 2:
+      a_ = (*a)->udpSentLoc +(*a)->udpSentRem;
+      b_ = (*b)->udpSentLoc +(*b)->udpSentRem;
+      break;
+    case 3:
+      a_ = (*a)->icmpSent, b_ = (*b)->icmpSent;
+      break;
+    case 4:
+      a_ = (*a)->dlcSent, b_ = (*b)->dlcSent;
+      break;
+    case 5:
+      a_ = (*a)->ipxSent, b_ = (*b)->ipxSent;
+      break;
+    case 6:
+      a_ = (*a)->decnetSent, b_ = (*b)->decnetSent;
+      break;
+    case 7:
+      a_ = (*a)->arp_rarpSent, b_ = (*b)->arp_rarpSent;
+      break;
+    case 8:
+      a_ = (*a)->appletalkSent, b_ = (*b)->appletalkSent;
+      break;
+    case 9:
+      a_ = (*a)->ospfSent, b_ = (*b)->ospfSent;
+      break;
+    case 10:
+      a_ = (*a)->netbiosSent, b_ = (*b)->netbiosSent;
+      break;
+    case 11:
+      a_ = (*a)->igmpSent, b_ = (*b)->igmpSent;
+      break;
+    case 12:
+      a_ = (*a)->osiSent, b_ = (*b)->osiSent;
+      break;
+    case 13:
+      a_ = (*a)->qnxSent, b_ = (*b)->qnxSent;
+      break;
+    case 14:
+      a_ = (*a)->stpSent, b_ = (*b)->stpSent;
+      break;
+    case 15:
+      a_ = (*a)->otherSent, b_ = (*b)->otherSent;
+      break;
+    }
+    break;
+  case 6: /* STR_SORT_DATA_SENT_IP */
+    columnProtoId = columnSort - 1;
+    if(columnProtoId <= myGlobals.numIpProtosToMonitor) {
+      if(columnProtoId == 0) {
+#ifdef ENABLE_NAPSTER
+	if((*a)->napsterStats == NULL)
+	  a_ = 0;
+	else
+	  a_ = (*a)->napsterStats->bytesSent;
+	
+	if((*b)->napsterStats == NULL)
+	  b_ = 0;
+	else
+	  b_ = (*b)->napsterStats->bytesSent;
+#else
+	a_ = b_ = 0;
+#endif
+      } else {
+	a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].sentLoc
+	  +(*a)->protoIPTrafficInfos[columnProtoId-1].sentRem;
+	b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].sentLoc
+	  +(*b)->protoIPTrafficInfos[columnProtoId-1].sentRem;
+      }
+    } else {
+      int i;
+      
+      a_ = 0, b_ = 0;
+      
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	a_ += (*a)->protoIPTrafficInfos[i].sentLoc
+	  +(*a)->protoIPTrafficInfos[i].sentRem;
+	b_ += (*b)->protoIPTrafficInfos[i].sentLoc
+	  +(*b)->protoIPTrafficInfos[i].sentRem;
+      }
+      
+      if((*a)->bytesSent > a_)
+	a_ = (*a)->bytesSent-a_;
+      else
+	a_ = 0;
+      
+      if((*b)->bytesSent > b_)
+	b_ = (*b)->bytesSent-b_;
+      else
+	b_ = 0;
+    }
+    break;
+  case 7: /* STR_SORT_DATA_SENT_THPT */
+    fa_ = (*a)->actualSentThpt, fb_ = (*b)->actualSentThpt, floatCompare = 1;
+    break;
+  case 8: /* TRAFFIC_STATS_HTML */
+    /* Nothing */
+    break;
   }
-
-  columnSort = oldColumnSort;
 
   if(floatCompare == 0) {
     if(a_ < b_) {
@@ -1328,122 +1119,6 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
-  }
-}
-
-/* ******************************* */
-
-void getProtocolDataSent(TrafficCounter *c,
-			 TrafficCounter *d,
-			 TrafficCounter *e,
-			 HostTraffic *el) {
-  int idx;
-
-  switch(screenNumber) {
-  case 0:
-    (*c) = el->tcpSentLoc + el->tcpSentRem;
-    (*d) = el->udpSentLoc + el->udpSentRem;
-    (*e) = el->icmpSent;
-    break;
-  case 1:
-    (*c) = el->dlcSent;
-    (*d) = el->ipxSent;
-    (*e) = el->decnetSent;
-    break;
-  case 2:
-    (*c) = el->arp_rarpSent;
-    (*d) = el->appletalkSent;
-    (*e) = el->ospfSent;
-    break;
-  case 3:
-    (*c) = el->netbiosSent;
-    (*d) = el->igmpSent;
-    (*e) = el->osiSent;
-    break;
-  case 4:
-    (*c) = el->qnxSent;
-    (*d) = el->otherSent;
-    (*e) = 0;
-    break;
-  default:
-    idx = (screenNumber-MAX_NUM_PROTOS_SCREENS)*3;
-    if(idx < myGlobals.numIpProtosToMonitor)
-      (*c) = el->protoIPTrafficInfos[idx].sentLoc
-	+ el->protoIPTrafficInfos[idx].sentRem;
-    else
-      (*c) = 0;
-
-    ++idx;
-    if(idx < myGlobals.numIpProtosToMonitor)
-      (*d) = el->protoIPTrafficInfos[idx].sentLoc
-	+ el->protoIPTrafficInfos[idx].sentRem;
-    else
-      (*d) = 0;
-
-    ++idx;
-    if(idx < myGlobals.numIpProtosToMonitor)
-      (*e) = el->protoIPTrafficInfos[idx].sentLoc
-	+ el->protoIPTrafficInfos[idx].sentRem;
-    else
-      (*e) = 0;
-  }
-}
-
-/* ******************************* */
-
-void getProtocolDataRcvd(TrafficCounter *c,
-			     TrafficCounter *d,
-			     TrafficCounter *e,
-			     HostTraffic *el) {
-  int idx;
-
-  switch(screenNumber) {
-  case 0:
-    (*c) = el->tcpRcvdLoc + el->tcpRcvdFromRem;
-    (*d) = el->udpRcvdLoc + el->udpRcvdFromRem;
-    (*e) = el->icmpRcvd;
-    break;
-  case 1:
-    (*c) = el->dlcRcvd;
-    (*d) = el->ipxRcvd;
-    (*e) = el->decnetRcvd;
-    break;
-  case 2:
-    (*c) = el->arp_rarpRcvd;
-    (*d) = el->appletalkRcvd;
-    (*e) = el->ospfRcvd;
-    break;
-  case 3:
-    (*c) = el->netbiosRcvd;
-    (*d) = el->igmpRcvd;
-    (*e) = el->osiRcvd;
-    break;
-  case 4:
-    (*c) = el->qnxRcvd;
-    (*d) = el->otherRcvd;
-    (*e) = 0;
-    break;
-  default:
-    idx = (screenNumber-MAX_NUM_PROTOS_SCREENS)*3;
-    if(idx < myGlobals.numIpProtosToMonitor)
-      (*c) = el->protoIPTrafficInfos[idx].rcvdLoc
-	+ el->protoIPTrafficInfos[idx].rcvdFromRem;
-    else
-      (*c) = 0;
-
-    ++idx;
-    if(idx < myGlobals.numIpProtosToMonitor)
-      (*d) = el->protoIPTrafficInfos[idx].rcvdLoc
-	+ el->protoIPTrafficInfos[idx].rcvdFromRem;
-    else
-      (*d) = 0;
-
-    ++idx;
-    if(idx < myGlobals.numIpProtosToMonitor)
-      (*e) = el->protoIPTrafficInfos[idx].rcvdLoc
-	+ el->protoIPTrafficInfos[idx].rcvdFromRem;
-    else
-      (*e) = 0;
   }
 }
 

@@ -24,6 +24,7 @@
 
 #include "ntop.h"
 
+#define TRACE_TRAFFIC_INFO
 
  /* ************************************ */
 

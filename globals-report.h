@@ -53,17 +53,9 @@
 */
 #define SD(a,b) ((b)?((float)a)/(b):0)
 
-/* #define PRINT_PKTS                 */
-/* #define PRINT_ALL_ACTIVE_SESSIONS  */
-/* #define PRINT_RETRANSMISSION_DATA  */
-
 #ifndef MICRO_NTOP
 extern int maxNumLines, sortSendMode;
-extern short sortFilter;
-
-extern short screenNumber, columnSort;
-
-/* Threads */
+extern short columnSort, reportKind, sortFilter;
 
 /* reportUtils.c */
 extern void formatUsageCounter(UsageCounter usageCtr, TrafficCounter maxValue, int actualDeviceId);
@@ -84,10 +76,6 @@ extern int cmpUsersTraffic(const void *_a, const void *_b);
 extern int cmpProcesses(const void *_a, const void *_b);
 extern int cmpFctn(const void *_a, const void *_b);
 extern int cmpMulticastFctn(const void *_a, const void *_b);
-extern void getProtocolDataSent(TrafficCounter *c, TrafficCounter *d,
-				TrafficCounter *e, HostTraffic *el);
-extern void getProtocolDataReceived(TrafficCounter *c, TrafficCounter *d,
-				    TrafficCounter *e,  HostTraffic *el);
 extern void printHostThtpShort(HostTraffic *el, short dataSent);
 extern int cmpHostsFctn(const void *_a, const void *_b);
 extern void printPacketStats(HostTraffic *el, int actualDeviceId);
@@ -118,7 +106,7 @@ void dumpNtopTrafficInfo(char* options);
 /* report.c */
 extern void initReports(void);
 extern int reportValues(time_t *lastTime);
-extern void printHostsTraffic(int sortSendMode, int reportType,
+extern void printHostsTraffic(int reportType,
 			      int sortedColumn, int revertOrder,
 			      int pageNum, char* url);
 extern void printMulticastStats(int sortedColumn /* ignored so far */,
