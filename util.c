@@ -327,6 +327,9 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 unsigned short isLocalAddress(struct in_addr *addr) {
   int i;
 
+  if(trackOnlyLocalHosts) 
+      return(0);
+  
   for(i=0; i<numDevices; i++)
     if((addr->s_addr & device[i].netmask.s_addr) == device[i].network.s_addr) {
 #ifdef ADDRESS_DEBUG
@@ -604,20 +607,8 @@ void handleLocalAddresses(char* addresses) {
 
 /* ********************************* */
 
-/* This function returns true when a host is considered local
-   as specified using the 'm' flag */
-unsigned short isPseudoLocalAddress(struct in_addr *addr) {
-  int i;
-
-  i = isLocalAddress(addr);
-
-  if(i == 1) {
-#ifdef ADDRESS_DEBUG
-    traceEvent(TRACE_WARNING, "%s is local\n", intoa(*addr));
-#endif
-      
-    return 1; /* This is a real local address */
-  }
+unsigned short _pseudoLocalAddress(struct in_addr *addr) {
+    int i;
 
   for(i=0; i<numLocalNets; i++) {
 #ifdef DEBUG
@@ -643,6 +634,32 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
 #endif
     }
   }
+
+  return(0);
+}
+
+/* ********************************* */
+
+/* This function returns true when a host is considered local
+   as specified using the 'm' flag */
+unsigned short isPseudoLocalAddress(struct in_addr *addr) {
+  int i;
+  
+  if(trackOnlyLocalHosts) 
+      return(0);
+
+  i = isLocalAddress(addr);
+
+  if(i == 1) {
+#ifdef ADDRESS_DEBUG
+    traceEvent(TRACE_WARNING, "%s is local\n", intoa(*addr));
+#endif
+      
+    return 1; /* This is a real local address */
+  }
+
+  if(_pseudoLocalAddress(addr))
+      return;
 
   /* 
      We don't check for broadcast as this check has been

@@ -2652,10 +2652,7 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
   struct tm t, *thisTime;
 
   if(/* (srcHostIdx == dstHostIdx) || */
-     (srcHostIdx == broadcastEntryIdx)
-     || (srcHostIdx == otherHostEntryIdx)
-     || (srcHostIdx == NO_PEER)
-     || (dstHostIdx == NO_PEER))
+     (srcHostIdx == NO_PEER) || (dstHostIdx == NO_PEER))
     return; /* It looks there's something wrong here */
 
   thisTime = localtime_r(&actTime, &t);
@@ -2673,7 +2670,6 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
     dstHost->last24HoursBytesRcvd[hourId] += length;
 
   if((dstHostIdx == broadcastEntryIdx)
-     || (dstHostIdx == otherHostEntryIdx) 
      || broadcastHost(dstHost)) {
     srcHost->pktBroadcastSent++;
     srcHost->bytesBroadcastSent += length;

@@ -68,7 +68,7 @@ short capturePackets, endNtop, borderSnifferMode;
 unsigned short numThreads, numDequeueThreads;
 PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
 PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
-pthread_t dequeueThreadId[MAX_NUM_DEQUEUE_THREADS], handleWebConnectionsThreadId;
+pthread_t dequeueThreadId, handleWebConnectionsThreadId;
 pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
 pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 pthread_t purgeAddressThreadId;
@@ -87,7 +87,7 @@ ConditionalVariable queueAddressCondvar;
 #endif /* USE_SEMAPHORES */
 #endif 
 #ifdef ASYNC_ADDRESS_RESOLUTION
-pthread_t dequeueAddressThreadId;
+pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_THREADS];
 TrafficCounter droppedAddresses;
 #endif
 #endif

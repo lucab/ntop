@@ -342,6 +342,9 @@ static void queueAddress(struct in_addr elem) {
 #endif
   char tmpBuf[32];
 
+  if(trackOnlyLocalHosts && (!_pseudoLocalAddress(&elem)))
+      return;
+
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "queueAddress");
 #endif
@@ -367,8 +370,8 @@ static void queueAddress(struct in_addr elem) {
 	      tmpBuf, addressQueueLen, maxAddressQueueLen);
 #endif
   } else {
-    /* Address already in queue */
-    free(data_data.dptr);
+      if(data_data.dptr != NULL)  /* Address already in queue */ 
+	  free(data_data.dptr);
   }
 #ifdef MULTITHREADED
   releaseMutex(&gdbmMutex);
@@ -393,6 +396,7 @@ void cleanupAddressQueue(void) {
 
 void* dequeueAddress(void* notUsed _UNUSED_) {
   struct in_addr addr;
+  u_char firstRun = 1;
 #ifdef HAVE_GDBM_H
   datum key_data, data_data;
 #endif
@@ -412,7 +416,8 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #else
       waitCondvar(&queueAddressCondvar);
 #endif
-      key_data.dptr = NULL;
+      key_data.dptr = data_data.dptr = NULL;
+      firstRun = 1;
     }
 
     if(!capturePackets) break;
@@ -421,34 +426,39 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     accessMutex(&gdbmMutex, "queueAddress");
 #endif
 
-    if(key_data.dptr == NULL) {
+    key_data = data_data;
+    
+    if(firstRun
+       || (key_data.dptr == NULL) 
+	) {
 	data_data = gdbm_firstkey(addressCache);
+	firstRun = 0;
     } else {
 	data_data = gdbm_nextkey(addressCache, key_data);
-	free(key_data.dptr);
+	if(key_data.dptr != NULL) free(key_data.dptr);
     }
-
-    key_data = data_data;
 
   if(data_data.dptr != NULL) {
       addressQueueLen--;
 
-      addr.s_addr = atol(data_data.dptr);
+      addr.s_addr = (unsigned long)atoll(data_data.dptr);
 
 #ifdef DNS_DEBUG
-      traceEvent(TRACE_INFO, "Dequeued address... [%u] (#addr=%d)\n",
-		 addr.s_addr, addressQueueLen);
+      traceEvent(TRACE_INFO, "Dequeued address... [%u][key=%s] (#addr=%d)\n",
+		 addr.s_addr, 
+		 key_data.dptr == NULL ? "<>" : key_data.dptr,
+		 addressQueueLen);
 #endif
 
       gdbm_delete(addressCache, data_data);
     } else
-      addr.s_addr = 0;
+	addr.s_addr = 0x0;
 
 #ifdef MULTITHREADED
     releaseMutex(&gdbmMutex);
 #endif
 
-    if(addr.s_addr != 0) {
+    if(addr.s_addr != 0x0) {
       resolveAddress(&addr, 0);
 
 #ifdef DNS_DEBUG

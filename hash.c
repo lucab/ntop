@@ -29,20 +29,19 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 			    u_char *ether_addr,
 			    short* useIPAddressForSearching) {
   u_int idx = 0;
+ 
+  if(borderSnifferMode)  /* MAC addresses don't make sense here */
+      (*useIPAddressForSearching) = 1;
 
-  
-  if(borderSnifferMode) /* MAC addresses don't make sense here */
-    (*useIPAddressForSearching) = 1;
-
-  if(((*useIPAddressForSearching) == 1) 
-     || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
-    if(trackOnlyLocalHosts 
-       && (!isPseudoLocalAddress(hostIpAddress)))
-      idx = otherHostEntryIdx;
-    else 
-      memcpy(&idx, &hostIpAddress->s_addr, 4);
-    
-    (*useIPAddressForSearching) = 1;
+  if(((*useIPAddressForSearching) == 1)     
+     || ((ether_addr == NULL) 
+	 && (hostIpAddress != NULL))) {
+      if(trackOnlyLocalHosts && (!_pseudoLocalAddress(hostIpAddress)))
+	  idx = otherHostEntryIdx;
+      else 
+	  memcpy(&idx, &hostIpAddress->s_addr, 4);
+      
+      (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, /* 0 doesn't matter */
 		   device[0].hash_hostTraffic[broadcastEntryIdx]->ethAddress,
 		   ETHERNET_ADDRESS_LEN) == 0) {

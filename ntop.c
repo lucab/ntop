@@ -842,15 +842,14 @@ RETSIGTYPE cleanup(int signo) {
 #ifndef WIN32
 #ifdef MULTITHREADED
 
-  for(i=0; i<numDequeueThreads; i++)
-    killThread(&dequeueThreadId[i]);
+  killThread(&dequeueThreadId);
 
   killThread(&thptUpdateThreadId);
   killThread(&hostTrafficStatsThreadId);
 
   if(rFileName == NULL) {
-    killThread(&scanIdleThreadId);
-    killThread(&scanIdleSessionsThreadId);
+      if(!borderSnifferMode)    killThread(&scanIdleThreadId);
+      if(enableSessionHandling) killThread(&scanIdleSessionsThreadId);
   }
 
   if(enableDBsupport)
@@ -861,7 +860,8 @@ RETSIGTYPE cleanup(int signo) {
   
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(numericFlag == 0) {
-    killThread(&dequeueAddressThreadId);
+      for(i=0; i<numDequeueThreads; i++)
+	  killThread(&dequeueAddressThreadId[i]);
     killThread(&purgeAddressThreadId);
   }
 #endif

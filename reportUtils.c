@@ -2207,48 +2207,50 @@ void printHostTrafficStats(HostTraffic *el) {
 /* ************************************ */
 
 void printHostContactedPeers(HostTraffic *el) {
-  u_int numEntries, i;
+  u_int i;
   char buf[BUF_SIZE];
 
   if((el->pktSent != 0) || (el->pktReceived != 0)) {
     int ok =0;
 
-    for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
       if((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
-	 || (el->contactedRcvdPeers.peersIndexes[i] != NO_PEER)) {
+	 && (el->contactedRcvdPeers.peersIndexes[i] != otherHostEntryIdx)) {
 	ok = 1;
 	break;
       }
 
     if(ok) {
       struct hostTraffic *el1;
+      int numEntries;
 
       printSectionTitle("Last Contacted Peers");
       sendString("<CENTER>\n"
 		 "<TABLE BORDER=0 WIDTH=100%%><TR><TD "TD_BG" VALIGN=TOP>\n");
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if(el->contactedSentPeers.peersIndexes[i] != NO_PEER) {
-	  el1 = device[actualReportDeviceId].hash_hostTraffic[
-		       checkSessionIdx(el->contactedSentPeers.peersIndexes[i])];
+	  if((el->contactedSentPeers.peersIndexes[i] != NO_PEER) 
+	     && (el->contactedRcvdPeers.peersIndexes[i] != otherHostEntryIdx)) {
+	      el1 = device[actualReportDeviceId].hash_hostTraffic[
+		  checkSessionIdx(el->contactedSentPeers.peersIndexes[i])];
 
-	  if(el1 != NULL) {
-	    if(numEntries == 0) {
-	      sendString(""TABLE_ON"<TABLE BORDER=1 VALIGN=TOP WIDTH=100%%>"
-			 "<TR><TH "TH_BG">Receiver Name</TH>"
-			 "<TH "TH_BG">Receiver Address</TH></TR>\n");
-	    }
+	      if(el1 != NULL) {
+		  if(numEntries == 0) {
+		      sendString(""TABLE_ON"<TABLE BORDER=1 VALIGN=TOP WIDTH=100%%>"
+				 "<TR><TH "TH_BG">Receiver Name</TH>"
+				 "<TH "TH_BG">Receiver Address</TH></TR>\n");
+		  }
 
-	    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		    "<TD "TD_BG"  ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
-		    getRowColor(),
-		    makeHostLink(el1, 0, 0, 0),
-		    el1->hostNumIpAddress) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+			      "<TD "TD_BG"  ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
+			      getRowColor(),
+			      makeHostLink(el1, 0, 0, 0),
+			      el1->hostNumIpAddress) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-	    sendString(buf);
-	    numEntries++;
+		  sendString(buf);
+		  numEntries++;
+	      }
 	  }
-	}
 
       if(numEntries > 0)
 	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");

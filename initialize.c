@@ -477,6 +477,7 @@ void initGdbm(void) {
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 
+  unlink(tmpBuf); /* Delete the old one (if present) */ 
   addressCache = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
   if(addressCache == NULL) {
@@ -575,11 +576,9 @@ int i;
   /*
    * (1) - NPA - Network Packet Analyzer (main thread)
    */
-   for(i=0; i<numDequeueThreads; i++) {
-      createThread(&dequeueThreadId[i], dequeuePacket, NULL);
+      createThread(&dequeueThreadId, dequeuePacket, NULL);
       traceEvent(TRACE_INFO, "Started thread (%ld) for network packet analyser.\n",
-	         dequeueThreadId[i]);
-   }
+	         dequeueThreadId);
 
   /*
    * (2) - HTS - Host Traffic Statistics
@@ -600,13 +599,18 @@ int i;
    * (4) - SIH - Scan Idle Hosts - optional
    */
   if (enableIdleHosts && (rFileName == NULL)) {
+
+    if(!borderSnifferMode) {
     createThread(&scanIdleThreadId, scanIdleLoop, NULL);
     traceEvent (TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
 		scanIdleThreadId);
+     }
 
+if(enableSessionHandling) {
     createThread(&scanIdleSessionsThreadId, scanIdleSessionsLoop, NULL);
     traceEvent (TRACE_INFO, "Started thread (%ld) for idle TCP sessions detection.\n",
 		scanIdleSessionsThreadId);
+}
   }
 
 #ifndef MICRO_NTOP
@@ -625,9 +629,11 @@ int i;
     /*
      * (6) - DNSAR - DNS Address Resolution - optional
      */
-    createThread(&dequeueAddressThreadId, dequeueAddress, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%ld) for DNS address resolution.\n",
-		dequeueAddressThreadId);
+for(i=0; i<numDequeueThreads; i++) {
+createThread(&dequeueAddressThreadId[i], dequeueAddress, NULL);
+traceEvent (TRACE_INFO, "Started thread (%ld) for DNS address resolution.\n",
+		dequeueAddressThreadId[i]);
+}
 
     /*
      * (7) - Purge old host addresses
