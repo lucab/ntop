@@ -61,7 +61,7 @@ static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
   u_int idx;
 
 #ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.hostsHashMutex, "_getFirstHost");
+  /* accessMutex(&myGlobals.hostsHashMutex, "_getFirstHost"); */
 #endif
 
   for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
@@ -74,14 +74,14 @@ static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
       }
 
 #ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.hostsHashMutex);
+      /* releaseMutex(&myGlobals.hostsHashMutex); */
 #endif
       return(el);
     }
   }
 
 #ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.hostsHashMutex);
+  /* releaseMutex(&myGlobals.hostsHashMutex); */
 #endif
   return(NULL);
 }
@@ -98,7 +98,7 @@ HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
   if(host == NULL) return(NULL);
 
 #ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.hostsHashMutex, "getNextHost");
+  /* accessMutex(&myGlobals.hostsHashMutex, "getNextHost"); */
 #endif
 
   if(host->next != NULL) {
@@ -108,14 +108,14 @@ HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
     }
 
 #ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.hostsHashMutex);
+    /* releaseMutex(&myGlobals.hostsHashMutex); */
 #endif
     return(host->next);
   } else {
     u_int nextIdx = host->hostTrafficBucket+1;
 
 #ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.hostsHashMutex);
+    /* releaseMutex(&myGlobals.hostsHashMutex); */
 #endif
     if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
       return(_getFirstHost(actualDeviceId, nextIdx));
