@@ -641,6 +641,12 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
   hashSanityCheck();
 #endif
 
+  if((hostIpAddress != NULL)
+     && (myGlobals.configurationMode == NETWORK_MODE)) {
+    /* Assume C-class network */
+    hostIpAddress->s_addr = hostIpAddress->s_addr & 0xFFFFFF00;
+  }
+
   idx = hashHost(hostIpAddress, ether_addr,
 		 &useIPAddressForSearching,
 		 &el, actualDeviceId);
@@ -894,8 +900,12 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
       strncpy(el->hostNumIpAddress,
 	      _intoa(*hostIpAddress, buf, sizeof(buf)),
 	      sizeof(el->hostNumIpAddress));
-      if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(FLAG_BROADCAST_HOST, &el->flags);
-      if(isMulticastAddress(&el->hostIpAddress)) FD_SET(FLAG_MULTICAST_HOST, &el->flags);
+
+      if(myGlobals.configurationMode == HOST_MODE) {
+	if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(FLAG_BROADCAST_HOST, &el->flags);
+	if(isMulticastAddress(&el->hostIpAddress)) FD_SET(FLAG_MULTICAST_HOST, &el->flags);
+      }
+
       if(isPrivateAddress(hostIpAddress))        FD_SET(FLAG_PRIVATE_IP_ADDRESS,  &el->flags);
       if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress, actualDeviceId)))
 	FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);

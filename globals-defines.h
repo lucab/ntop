@@ -2266,3 +2266,7 @@
 #define	SAP_RPL			0xFC
 #define	SAP_OSINL		0xFE
 #define	SAP_GLOBAL		0xFF
+
+#define HOST_MODE               0
+#define NETWORK_MODE            1
+#define MAX_MODE                NETWORK_MODE

@@ -200,11 +200,11 @@ void usage (FILE * fp) {
 #else
   fprintf(fp, "    [-i <number>    | --interface <number|name>]          %sInterface index number (or name) to monitor\n", newLine);
 #endif
-  fprintf(fp, "    [-o             | --no-mac]                           %sntop will trust just IP addresses (no MACs)\n", newLine);
-  fprintf(fp, "    [-k             | --filter-expression-in-extra-frame] %sShow kernel filter expression in extra frame\n", newLine);
   fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  %sDump packets captured to a file (debug only!)\n", newLine);
   fprintf(fp, "    [-m <addresses> | --local-subnets <addresses>]        %sLocal subnetwork(s) (see man page)\n", newLine);
   fprintf(fp, "    [-n             | --numeric-ip-addresses]             %sNumeric IP addresses - no DNS resolution\n", newLine);
+  fprintf(fp, "    [-o             | --no-mac]                           %sntop will trust just IP addresses (no MACs)\n", newLine);
+  fprintf(fp, "    [-k             | --filter-expression-in-extra-frame] %sShow kernel filter expression in extra frame\n", newLine);
   fprintf(fp, "    [-p <list>      | --protocols <list>]                 %sList of IP protocols to monitor (see man page)\n", newLine);
   fprintf(fp, "    [-q             | --create-suspicious-packets]        %sCreate file ntop-suspicious-pkts.XXX.pcap file\n", newLine);
   fprintf(fp, "    [-r <number>    | --refresh-time <number>]            %sRefresh time in seconds, default is %d\n",
@@ -216,13 +216,15 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-u <user>      | --user <user>]                      %sUserid/name to run ntop under (see man page)\n", newLine);
 #endif /* WIN32 */
 
-  fprintf(fp, "    [-x <max num hash entries> ]                          %sMax num. hash entries ntop can handle (default %u)\n", 
+  fprintf(fp, "    [-x <max num hash entries> ]                          %sMax num. hash entries (default %u)\n", 
 	  newLine, myGlobals.maxNumHashEntries);
   fprintf(fp, "    [-w <port>      | --http-server <port>]               %sWeb server (http:) port (or address:port) to listen on\n", newLine);
   fprintf(fp, "    [-z             | --disable-sessions]                 %sDisable TCP session tracking\n", newLine);
   fprintf(fp, "    [-A]                                                  %sAsk admin user password and exit\n", newLine);
   fprintf(fp, "    [               | --set-admin-password=<pass>]        %sSet password for the admin user to <pass>\n", newLine);
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 %sPacket filter expression, like tcpdump\n", newLine);
+  fprintf(fp, "    [-C <config. mode>]                                   %s0=host mode, 1=network mode (default %d)\n",
+	  newLine, myGlobals.configurationMode);
   fprintf(fp, "    [-D <name>      | --domain <name>]                    %sInternet domain name\n", newLine);
 
   fprintf(fp, "    [-F <spec>      | --flow-spec <specs>]                %sFlow specs (see man page)\n", newLine);
@@ -243,7 +245,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", 
 	  newLine);
   fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
-  fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions ntop can handle (default %u)\n", 
+  fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions (default %u)\n", 
 	  newLine, myGlobals.maxNumSessions);
 
 #ifdef HAVE_OPENSSL
@@ -343,11 +345,11 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MO:P:Q:S:U:VX:W:";
+  theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:C:D:F:MO:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKLMO:P:Q:S:U:VX:W:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLMO:P:Q:S:U:VX:W:";
 #else
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKMO:P:Q:S:U:VX:W:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKMO:P:Q:S:U:VX:W:";
 #endif
 
   /* * * * * * * * * * */
@@ -511,6 +513,19 @@ static int parseOptions(int argc, char* argv []) {
     case 'B':
       stringSanityCheck(optarg);
       myGlobals.currentFilterExpression = strdup(optarg);
+      break;
+
+    case 'C':
+      stringSanityCheck(optarg);
+      myGlobals.configurationMode = atoi(optarg);
+      if(myGlobals.configurationMode > MAX_MODE)
+	myGlobals.configurationMode = HOST_MODE;
+
+      if(myGlobals.configurationMode == NETWORK_MODE) {
+	myGlobals.enablePacketDecoding = 0; /* They do not make sense here */
+	myGlobals.numericFlag = 1;
+	myGlobals.enableSessionHandling = 0;
+      }
       break;
 
     case 'D':                                        /* domain */

@@ -1277,7 +1277,8 @@ static void processIpPkt(const u_char *bp,
 	    }
 	  } else {
 	    /* no packet decoding (let's speculate a bit) */
-	    FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
+	    if(myGlobals.configurationMode == HOST_MODE)
+	      FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 	  }
 	} else {
 	  if(myGlobals.enablePacketDecoding)

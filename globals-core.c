@@ -177,7 +177,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   strncpy((char *) &myGlobals.domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.domainName));
   myGlobals.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
   myGlobals.maxNumHashEntries = myGlobals.maxNumSessions = (u_int)-1;
-  
+  myGlobals.configurationMode = HOST_MODE;
+
 #ifndef WIN32
   myGlobals.debugMode = DEFAULT_NTOP_DEBUG_MODE;
   myGlobals.useSyslog = DEFAULT_NTOP_SYSLOG;

@@ -1495,6 +1495,8 @@ typedef struct ntopGlobals {
                                      /*XML b enablePacketDecoding Options    "-b | --disable-decoders" */
   u_char stickyHosts;                /* 'c' */
                                      /*XML b stickyHosts          Options    "-c | --sticky-hosts" */
+  u_char configurationMode;          /* 'C' */
+                                     /*XML C configurationMode    Options    "-C" */
   int daemonMode;                    /* 'd' */
                                      /*XML b daemonMode           Options    "-d | --daemon: run as daemon flag" */
   int maxNumLines;                   /* 'e' */

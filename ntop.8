@@ -47,6 +47,8 @@ ntop \- display top network users
 .IR "password" ]
 .RB [ -B | --filter-expression
 .IR "expression" ]
+.RB [ -C 
+.IR <config mode> ]
 .RB [ -D | --domain 
 .IR <name> ]
 .RB [ -F | --flow-spec
@@ -691,6 +693,11 @@ See the 'expression' section of the
 .B tcpdump
 man page - usually available at http://www.tcpdump.org/tcpdump_man.html - for 
 further information and the best quick guide to BPF filters currently available.
+
+
+.It2 -C
+This instruments ntop to be used in two configurations: host and network mode. In host mode (default) ntop works as usual: the IP addresses received are those of real hosts. In host mode the IP addresses received are those of the C-class network to which the address belongs. Using ntop in network mode is extremely useful when installed in a traffic exchange (e.g. in the middle of the Internet) whereas the host mode should be used when ntop is installed on the edge of a network (e.g. inside a company). The network mode significantly reduces the amount of work ntop has to perform and it has to be used whenever ntop is used to find out how the network traffic flows and not to pin-point specific hosts.
+
 
 .It2 -D --domain
 This identifies the local domain suffix, e.g. ntop.org.  It may be necessary, if
