@@ -501,7 +501,7 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("<CENTER>\n<HR>\n");
 
   if(url != NULL) {
-    char *device, *value;
+    char *device, *value = NULL;
 
     device = strtok(url, "=");
     if(device != NULL) value = strtok(NULL, "=");
