@@ -1,0 +1,16 @@
+Juniper Mirroring Configuration Utility
+=======================================
+
+
+The setFilter.pl tool allows people to modify the
+traffic mirroring facilities provided by Juniper
+Networks switches as described in the following paper:
+
+L.Deri, Passively Monitoring Networks at Gigabit Speeds
+Using Commodity Hardware and Open Source Software, 
+PAM 2003 conference and available from http://luca.ntop.org/
+
+As described in the paper, ntop/nProbe and Juniper switches
+have been succesfully used to monitor Gbit networks.
+
+Luca Deri <deri@ntop.org> - February 2003

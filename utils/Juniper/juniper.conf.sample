@@ -1,0 +1,24 @@
+#
+# Juniper configuration file
+#
+# L.Deri <deri@ntop.org>
+#
+
+[USER]
+user
+
+[PASSWORD]
+password
+
+[FILTER]
+firewall {
+  family inet {
+  filter pcap {
+    term mirroring {
+replace:
+      from { @filter@ }
+      then { sample; accept; }
+    }
+  }
+ }
+}
