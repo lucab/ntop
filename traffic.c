@@ -392,21 +392,17 @@ void updateThpt(void) {
 
 /* ******************************* */
 
-void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate) {
+static void updateHostThpt(HostTraffic *el, int hourId) {
+
   if(broadcastHost(el))
     return;
-
-  el->last24HoursBytesSent[hourId] = el->bytesSent - el->lastCounterBytesSent;
-  el->last24HoursBytesRcvd[hourId] = el->bytesReceived - el->lastCounterBytesRcvd;
   
-  if(fullUpdate) {
-    el->lastCounterBytesSent = el->bytesSent;
-    el->lastCounterBytesRcvd = el->bytesReceived;
+  el->lastCounterBytesSent = el->bytesSent;
+  el->lastCounterBytesRcvd = el->bytesReceived;
 
-    if(hourId == 0) {
-      el->lastDayBytesSent = el->bytesSent;
+  if(hourId == 0) {
+    el->lastDayBytesSent = el->bytesSent;
       el->lastDayBytesRcvd = el->bytesReceived;
-    }
   }
 }
 
@@ -418,7 +414,7 @@ static void updateHostsDeviceThpt(int deviceToUpdate, int hourId) {
   
   for(idx=1; idx<device[deviceToUpdate].actualHashSize; idx++) {
     if((el = device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
-      updateHostThpt(el, hourId, 1);
+      updateHostThpt(el, hourId);
     }
   }
 }

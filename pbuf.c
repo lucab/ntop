@@ -60,6 +60,7 @@
 
 static int numNapsterSvr = 0,napsterSvrInsertIdx = 0;
 
+
 /* ************************************ */
 
 u_int _checkSessionIdx(u_int idx, char* file, int line) {
@@ -2234,6 +2235,9 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
                               TrafficCounter length) {
 
   HostTraffic *srcHost, *dstHost;
+  unsigned short hourId;
+  char theDate[8];
+  struct tm t;
 
   if(/* (srcHostIdx == dstHostIdx) || */
      (srcHostIdx == broadcastEntryIdx)
@@ -2241,6 +2245,9 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
      || (dstHostIdx == NO_PEER))
     return; /* It looks there's something wrong here */
 
+  strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
+  hourId = atoi(theDate);
+  
   if(length > mtuSize[device[deviceId].datalink]) {
     /* Sanity check */
 #ifdef DEBUG
@@ -2260,6 +2267,9 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
     return;
 
   srcHost->pktSent++;
+
+  srcHost->last24HoursBytesSent[hourId] += length, 
+    dstHost->last24HoursBytesRcvd[hourId] += length;
 
   if((dstHostIdx == broadcastEntryIdx) || broadcastHost(dstHost)) {
     srcHost->pktBroadcastSent++;
@@ -3127,6 +3137,8 @@ void processPacket(u_char *_deviceId,
   /* Token-Ring Strings */
   struct tokenRing_llc *trllc;
   FILE * fd;
+  char theDate[8];
+  struct tm t;
 
 #ifdef DEBUG
   static long numPkt=0; traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
@@ -3179,11 +3191,10 @@ void processPacket(u_char *_deviceId,
   /*
    * Show a hash character for each packet captured
    */
-  if (fd && device[deviceId].hashing)
-    {
-      fprintf (fd, "#");
-      fflush(fd);
-    }
+  if (fd && device[deviceId].hashing) {
+    fprintf (fd, "#");
+    fflush(fd);
+  }
 
   /* ethernet assumed */
   if (caplen >= hlen) {
@@ -3244,6 +3255,7 @@ void processPacket(u_char *_deviceId,
 	ether_src = ether_dst = dummyEthAddress;
       }
       break;
+
     case DLT_PPP:
       headerDisplacement = PPP_HDRLEN;
       /*
@@ -3252,6 +3264,7 @@ void processPacket(u_char *_deviceId,
 
 	IMPORTANT: DO NOT PUT A break BELOW this comment
       */
+
     case DLT_RAW: /* RAW IP (no ethernet header) */
       length -= headerDisplacement; /* don't count PPP header */
       ether_src = ether_dst = NULL;
@@ -3286,6 +3299,7 @@ void processPacket(u_char *_deviceId,
       else
 	eth_type = 0;
       break;
+
     default:
       eth_type = ntohs(ehdr.ether_type);
       ether_src = ESRC(&ehdr), ether_dst = EDST(&ehdr);

@@ -353,7 +353,6 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	      if(snprintf(buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName) < 0) 
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
-	      updateHostThpt(el, hourId, 0);
 	      printHostThtpShort(el, 1);
 	    }
 
@@ -459,7 +458,6 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 			  getRowColor(), webHostName) < 0)
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
-	      updateHostThpt(el, hourId, 0);
 	      printHostThtpShort(el, 0);
 	    }
 
@@ -3660,7 +3658,6 @@ void printHostHourlyTraffic(HostTraffic *el) {
   
   strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
   hourId = atoi(theDate);
-  updateHostThpt(el, hourId, 0);
 
   sendString("<P><H1>Host Traffic Stats</H1><P>\n"TABLE_ON"<TABLE BORDER=1>\n<TR>");
   sendString("<TH "TH_BG">Time</TH>");
