@@ -536,7 +536,7 @@ void updateDbHostsTraffic(int deviceToUpdate) {
        && (!broadcastHost(el))
        && (el->nextDBupdate < myGlobals.actTime)) {
 
-      el->instanceInUse++;
+      /* el->instanceInUse++; */
 
       if(el->nextDBupdate == 0) {
 	/* traceEvent(TRACE_INFO, "1"); */
@@ -560,7 +560,7 @@ void updateDbHostsTraffic(int deviceToUpdate) {
       }
 
       el->nextDBupdate = myGlobals.actTime + DB_TIMEOUT_REFRESH_TIME;
-      el->instanceInUse--;
+      /* if(el->instanceInUse > 0) el->instanceInUse--; */
     }
   }
 }

@@ -326,8 +326,6 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
   u_int j, i;  
   IpGlobalSession *nextElement, *element;
 
-  host = myGlobals.device[theDevice].hash_hostTraffic[checkSessionIdx(hostIdx)];
-
   if(host == NULL)
     return;  
 
@@ -535,7 +533,8 @@ void freeHostInstances(int actualDeviceId) {
 }
 
 /* ************************************ */
-#define DEBUG
+/* #define DEBUG */
+
 void purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, len;
   time_t startTime = time(NULL);
@@ -575,9 +574,10 @@ void purgeIdleHosts(int actDevice) {
 
       if((!myGlobals.stickyHosts)
 	 && ((myGlobals.device[actDevice].hash_hostTraffic[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) 
-	     < myGlobals.actTime))	 
+	     < myGlobals.actTime)) {
 	theFlaggedHosts[idx]=myGlobals.device[actDevice].hash_hostTraffic[idx];
-      myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
+	myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
+      }
     }
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
@@ -612,7 +612,7 @@ void purgeIdleHosts(int actDevice) {
   }
 #endif
 }
-#undef DEBUG
+/* #undef DEBUG */
 
 /* ******************************************** */
 

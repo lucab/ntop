@@ -2041,7 +2041,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	}
       }
 
-      sendString("</UL></TR>\n");
+      sendString("</UL>&nbsp;</TD></TR>\n");
 
       scanner = (IpGlobalSession*)(scanner->next);
     }

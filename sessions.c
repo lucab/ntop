@@ -282,9 +282,6 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
       theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
       theRemHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
 
-      if(theHost != NULL)    theHost->instanceInUse--;
-      if(theRemHost != NULL) theRemHost->instanceInUse--;
-
       if((theHost != NULL) && (theRemHost != NULL)) {
 	allocateSecurityHostPkts(theHost);
 	incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
@@ -303,9 +300,18 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
 
     if(myGlobals.enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
     notifyTCPSession(sessionToPurge, actualDeviceId);
-#ifdef HAVE_MYSQL
-    mySQLnotifyTCPSession(sessionToPurge, actualDeviceId);
-#endif
+  }
+  
+  if(sessionToPurge->initiatorIdx != NO_PEER) {
+    HostTraffic *client = myGlobals.device[actualDeviceId].
+      hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
+    if(client && (client->instanceInUse > 0)) client->instanceInUse--;
+  }
+  
+  if(sessionToPurge->remotePeerIdx != NO_PEER) {
+    HostTraffic *server = myGlobals.device[actualDeviceId].
+      hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
+    if(server && (server->instanceInUse > 0)) server->instanceInUse--;
   }
 
   /*
