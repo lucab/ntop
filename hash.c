@@ -652,8 +652,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	list->idx = myGlobals.device[actualDeviceId].actualHashSize;
 	if(myGlobals.device[actualDeviceId].actualHashSize < 512)
 	  myGlobals.device[actualDeviceId].actualHashSize = 512;
+	else if(myGlobals.device[actualDeviceId].actualHashSize >= 4096)
+	  myGlobals.device[actualDeviceId].actualHashSize += 4096;
 	else
 	  myGlobals.device[actualDeviceId].actualHashSize *= 2; /* Double */
+
 	sz = myGlobals.device[actualDeviceId].actualHashSize*sizeof(struct hostTraffic*);
 	myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)realloc(myGlobals.device[actualDeviceId].hash_hostTraffic, sz);
 	memset(&myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx],
