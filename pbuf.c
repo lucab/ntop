@@ -23,6 +23,8 @@
 
 #include "ntop.h"
 
+#define MAX_PACKET_LEN          8232 /* _mtuSize[DLT_NULL] */
+
 /* PPPoE - Courtesy of Andreas Pfaller Feb2003 */
 #ifdef HAVE_LINUX_IF_PPPOX_H
  #include <linux/if_pppox.h>
@@ -1563,7 +1565,7 @@ static void processIpPkt(const u_char *bp,
 /* ************************************ */
 
 #ifdef CFG_MULTITHREADED
-void queuePacket(u_char * _deviceId,
+void queuePacket(u_char *_deviceId,
 		 const struct pcap_pkthdr *h,
 		 const u_char *p) {
   int len;
@@ -1587,6 +1589,26 @@ void queuePacket(u_char * _deviceId,
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Got packet from %s (%d)", myGlobals.device[*_deviceId].name, *_deviceId);
 #endif
+
+  if(tryLockMutex(&myGlobals.packetProcessMutex, "queuePacket") == 0) {
+    /* Locked so we can process the packet now */
+    u_char p1[MAX_PACKET_LEN];
+
+    memcpy(p1, p, DEFAULT_SNAPLEN);
+    if(h->len > MAX_PACKET_LEN) {
+      traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", h->len, MAX_PACKET_LEN);
+      h->len = MAX_PACKET_LEN;
+    }
+
+    processPacket(_deviceId, h, p1);
+    releaseMutex(&myGlobals.packetProcessMutex);
+    return;
+  }
+
+  /*
+    If we reach this point it means that somebody was already processing
+    a packet so we need to queue it
+  */
 
   if(myGlobals.packetQueueLen >= CONST_PACKET_QUEUE_LENGTH) {
     int deviceId;
@@ -1655,9 +1677,6 @@ void cleanupPacketQueue(void) {
 
 /* ************************************ */
 
-#define MAX_PACKET_LEN          8232 /* _mtuSize[DLT_NULL] */
-
-
 void* dequeuePacket(void* notUsed _UNUSED_) {
   unsigned short deviceId;
   struct pcap_pkthdr h;
@@ -1716,7 +1735,9 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 
     HEARTBEAT(9, "dequeuePacket()...processing...", NULL);
     myGlobals.actTime = time(NULL);
+    accessMutex(&myGlobals.packetProcessMutex, "dequeuePacket");
     processPacket((u_char*)((long)deviceId), &h, p);
+    releaseMutex(&myGlobals.packetProcessMutex);
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet Processor thread (%ld) terminated...", myGlobals.dequeueThreadId);
