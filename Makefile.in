@@ -379,7 +379,7 @@ libntopreport_la_DEPENDENCIES = myrrd/libmyrrd.la config.h
 libntopreport_la_LIBADD = 
 libntopreport_la_LDFLAGS = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 man_MANS = ntop.8
-CLEANLIST = `ls -l $(DESTDIR)$(libdir)/*ntop*.so $(DESTDIR)$(libdir)/*Plugin*.so | \
+CLEANLIST = `ls -l $(DESTDIR)$(libdir)/*ntop*.so $(DESTDIR)$(libdir)/*Plugin*.so $(DESTDIR)$(libdir)/*myrrd*.so | \
           grep -v $(VERSION) | \
           grep -v '\->' | \
           $(AWK) '{ print $$NF }'`

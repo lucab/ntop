@@ -163,7 +163,7 @@ myrrd/libmyrrd.la:
 acinclude.m4: acinclude.m4.ntop libtool.m4.in
 	@cat acinclude.m4.ntop libtool.m4.in >acinclude.m4
 
-CLEANLIST = `ls -l $(DESTDIR)$(libdir)/*ntop*.so $(DESTDIR)$(libdir)/*Plugin*.so | \
+CLEANLIST = `ls -l $(DESTDIR)$(libdir)/*ntop*.so $(DESTDIR)$(libdir)/*Plugin*.so $(DESTDIR)$(libdir)/*myrrd*.so | \
           grep -v $(VERSION) | \
           grep -v '\->' | \
           $(AWK) '{ print $$NF }'`
