@@ -1720,6 +1720,9 @@ static int returnHTTPPage(char* pageName,
     } else if(strncmp(pageName, HOSTS_INFO_HTML, strlen(HOSTS_INFO_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsInfo(sortedColumn, revertOrder, pageNum);
+    } else if(strncmp(pageName, HOSTS_LOCAL_INFO_HTML, strlen(HOSTS_LOCAL_INFO_HTML)) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      printLocalHostsStats();
     } else if(strncmp(pageName, STR_SORT_DATA_PROTOS, strlen(STR_SORT_DATA_PROTOS)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_PROTOS);

@@ -23,6 +23,32 @@
 
 #ifndef MAKE_MICRO_NTOP
 
+typedef struct osInfo {
+  char *name, *link;
+} OsInfo;
+
+typedef struct osNumInfo {
+  char *name;
+  unsigned short num;
+} OsNumInfo;
+
+static OsInfo osInfos[] = {
+  { "Windows",      "<IMG ALT=\"OS: Windows\" ALIGN=MIDDLE SRC=/statsicons/os/windows.gif>" },
+  { "IRIX",         "<IMG ALT=\"OS: Irix\" ALIGN=MIDDLE SRC=/statsicons/os/irix.gif>" },
+  { "Linux",        "<IMG ALT=\"OS: Linux\" ALIGN=MIDDLE SRC=/statsicons/os/linux.gif>" },
+  { "SunOS",        "<IMG  ALT=\"OS: SunOS\" ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>" },
+  { "Solaris",      "<IMG  ALT=\"OS: Solaris\" ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>" },
+  { "HP/JETdirect", "<IMG  ALT=\"OS: HP/JetDirect\" ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>" },
+  { "Mac",          "<IMG  ALT=\"OS: Apple Mac\" ALIGN=MIDDLE SRC=/statsicons/os/mac.gif>" },
+  { "Novell",       "<IMG ALT=\"OS: Novell\" ALIGN=MIDDLE SRC=/statsicons/os/novell.gif>" },
+  { "BSD",          "<IMG ALT=\"OS: BSD Unix\" ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>" },
+  { "Unix",         "<IMG ALT=\"OS: BSD Unix\" ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>"},
+  { "Berkeley",     "<IMG ALT=\"OS: BSD Unix\" ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>"},
+  { "HP-UX",        "<IMG ALT=\"OS: HP-UX\" ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>" },
+  { "AIX",          "<IMG ALT=\"OS: AIX\" ALIGN=MIDDLE SRC=/statsicons/os/aix.gif>" },
+  NULL
+};
+
 /* ************************************ */
 
 void formatUsageCounter(UsageCounter usageCtr,
@@ -63,7 +89,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 	sendString("\n<li>");
 	sendString(makeHostLink(&el, 0, 0, 0));
       } else
-	traceEvent(CONST_TRACE_INFO, "Unable to find serial %u", 
+	traceEvent(CONST_TRACE_INFO, "Unable to find serial %u",
 		   (unsigned int)usageCtr.peersIndexes[i]);
     }
   }
@@ -292,7 +318,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
              "<TD ALIGN=\"RIGHT\" WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
              getRowColor(), label,
              formatKBytes(total),
-             CONST_COLOR_1, label_1, 
+             CONST_COLOR_1, label_1,
              CONST_COLOR_2,
              CONST_COLOR_1, label_2) < 0)
         BufferTooShort();
@@ -343,7 +369,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
              "</TR></TABLE></TD>"
              "<TD ALIGN=\"RIGHT\" WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
              getRowColor(), label,
-             CONST_COLOR_1, label_1, percentage, 
+             CONST_COLOR_1, label_1, percentage,
              int_perc, CONST_COLOR_1,
              (100-int_perc), CONST_COLOR_2,
              CONST_COLOR_2, label_2, (100-percentage)) < 0)
@@ -359,7 +385,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
              "</TR></TABLE></TD>"
              "<TD ALIGN=\"RIGHT\" WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
              getRowColor(), label, formatKBytes(total),
-             CONST_COLOR_1, label_1, percentage, 
+             CONST_COLOR_1, label_1, percentage,
              int_perc, CONST_COLOR_1,
              (100-int_perc), CONST_COLOR_2,
 	     CONST_COLOR_2, label_2, (100-percentage)) < 0)
@@ -381,7 +407,6 @@ void printFooterHostLink(void) {
 /* ******************************* */
 
 void printFooterTrafficPct(void) {
-
     char buf[LEN_GENERAL_WORK_BUFFER];
 
     if (snprintf(buf, sizeof(buf),
@@ -398,7 +423,7 @@ void printFooterTrafficPct(void) {
                    "</TR>"
                  "</TABLE>\n",
                  CONST_PCTG_LOW, CONST_PCTG_LOW, CONST_PCTG_MID, CONST_PCTG_MID) < 0)
-	  
+
         BufferTooShort();
     sendString(buf);
 }
@@ -420,7 +445,7 @@ void printFooter(int reportType) {
     case SORT_DATA_RECEIVED_THPT:
     case SORT_DATA_SENT_THPT:
     case SORT_DATA_THPT:
-    case SORT_DATA_HOST_TRAFFIC:      
+    case SORT_DATA_HOST_TRAFFIC:
       break;
   }
 
@@ -440,7 +465,7 @@ void printFooter(int reportType) {
 
     case SORT_DATA_RCVD_HOST_TRAFFIC:
     case SORT_DATA_SENT_HOST_TRAFFIC:
-    case SORT_DATA_HOST_TRAFFIC:      
+    case SORT_DATA_HOST_TRAFFIC:
         printFooterHostLink();
         printFooterTrafficPct();
         break;
@@ -732,6 +757,7 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, i
      Courtesy of Marcel Hauser <marcel_hauser@gmx.ch> */
   char *flagImg = "";
   char *theOsName;
+  int i;
 
   if((el == NULL) && (elOsName == NULL)) return("");
 
@@ -743,37 +769,20 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, i
     if(el->fingerprint == NULL)   return("");
     if(el->fingerprint[0] != ':') setHostFingerprint(el);
     if(el->fingerprint[0] != ':') return("");
-    
+
     theOsName = &el->fingerprint[1];
   }
-  if(theOsName[0] == '\0') 
+  if(theOsName[0] == '\0')
     return("");
-  else if(strstr(theOsName, "Windows") != NULL)
-    flagImg = "<IMG ALT=\"OS: Windows\" ALIGN=MIDDLE SRC=/statsicons/os/windows.gif>";
-  else if(strstr(theOsName, "IRIX") != NULL)
-    flagImg = "<IMG ALT=\"OS: Irix\" ALIGN=MIDDLE SRC=/statsicons/os/irix.gif>";
-  else if(strstr(theOsName, "Linux") != NULL)
-    flagImg = "<IMG ALT=\"OS: Linux\" ALIGN=MIDDLE SRC=/statsicons/os/linux.gif>";
-  else if(strstr(theOsName, "SunOS") != NULL)
-    flagImg = "<IMG  ALT=\"OS: SunOS\" ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>";
-  else if(strstr(theOsName, "Solaris") != NULL)
-    flagImg = "<IMG  ALT=\"OS: Solaris\" ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>";
-  else if(strstr(theOsName, "HP/JETdirect") != NULL)
-    flagImg = "<IMG  ALT=\"OS: HP/JetDirect\" ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>";
-  else if(strstr(theOsName, "Mac") != NULL)
-    flagImg = "<IMG  ALT=\"OS: Apple Mac\" ALIGN=MIDDLE SRC=/statsicons/os/mac.gif>";
-  else if(strstr(theOsName, "Novell") != NULL)
-    flagImg = "<IMG ALT=\"OS: Novell\" ALIGN=MIDDLE SRC=/statsicons/os/novell.gif>";
-  else if((strstr(theOsName, "BSD") != NULL)
-	  || (strstr(theOsName, "Unix") != NULL)
-	  || (strstr(theOsName, "Berkeley") != NULL))
-    flagImg = "<IMG ALT=\"OS: BSD Unix\" ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>";
-  else if(strstr(theOsName, "HP-UX") != NULL)
-    flagImg = "<IMG ALT=\"OS: HP-UX\" ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>";
-  else if(strstr(theOsName, "AIX") != NULL)
-    flagImg = "<IMG ALT=\"OS: AIX\" ALIGN=MIDDLE SRC=/statsicons/os/aix.gif>";
-  else
-    flagImg = NULL;
+
+  flagImg = NULL;
+
+  for(i=0; osInfos[i].link != NULL; i++) {
+    if(strstr(theOsName, osInfos[i].name) != NULL) {
+      flagImg = osInfos[i].link;
+      break;
+    }
+  }
 
   if(!showOsName) {
     if(flagImg != NULL)
@@ -843,7 +852,7 @@ int sortHostFctn(const void *_a, const void *_b) {
     else if((*a)->nonIPTraffic->atNodeName != NULL)
       nameA = (*a)->nonIPTraffic->atNodeName;
     else if((*a)->nonIPTraffic->atNetwork != 0) {
-      if(snprintf(nameA_str, sizeof(nameA_str), "%d.%d", 
+      if(snprintf(nameA_str, sizeof(nameA_str), "%d.%d",
 		  (*a)->nonIPTraffic->atNetwork, (*a)->nonIPTraffic->atNode) < 0)
 	BufferTooShort();
       nameA = nameA_str;
@@ -861,7 +870,7 @@ int sortHostFctn(const void *_a, const void *_b) {
     else if((*b)->nonIPTraffic->atNodeName != NULL)
       nameB = (*b)->nonIPTraffic->atNodeName;
     else if((*a)->nonIPTraffic->atNetwork != 0) {
-      if(snprintf(nameB_str, sizeof(nameB_str), "%d.%d", 
+      if(snprintf(nameB_str, sizeof(nameB_str), "%d.%d",
 		  (*b)->nonIPTraffic->atNetwork, (*b)->nonIPTraffic->atNode) < 0)
 	BufferTooShort();
       nameB = nameB_str;
@@ -1536,10 +1545,10 @@ void printHostThtpShort(HostTraffic *el, int reportType) {
       break;
     }
   }
-  
+
   for(i=0; i<24; i++) {
     float pctg=0;
-    
+
     if(tc > 0) {
       switch(reportType) {
       case SORT_DATA_RCVD_HOST_TRAFFIC:
@@ -1555,7 +1564,7 @@ void printHostThtpShort(HostTraffic *el, int reportType) {
 	break;
       }
     }
-    
+
     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT %s>&nbsp;</TD>",
 		getBgPctgColor(pctg)) < 0) BufferTooShort();
     sendString(buf);
@@ -2523,7 +2532,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Contacts</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%lu</TD></TR>\n",
 		    getRowColor(), (unsigned long)el->totContactedSentPeers) < 0)
-	  BufferTooShort();	
+	  BufferTooShort();
        sendString(buf);
 
        sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
@@ -2560,9 +2569,9 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Contacts</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%lu</TD></TR>\n",
 		    getRowColor(), (unsigned long)el->totContactedRcvdPeers) < 0)
-	  BufferTooShort();	
+	  BufferTooShort();
 	sendString(buf);
-	
+
 	sendString("</TABLE>"TABLE_OFF"\n");
       }
 
@@ -2748,7 +2757,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     char *countryIcon, *hostType;
 
     accessAddrResMutex("printAllSessions-2");
-    
+
     countryIcon = getHostCountryIconURL(el);
 
     if(broadcastHost(el)) hostType = "broadcast";
@@ -3053,7 +3062,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d</TD></TR>\n", getRowColor(), "VLAN&nbsp;Id", el->vlanId) < 0)
       BufferTooShort();
-      sendString(buf);    
+      sendString(buf);
   }
 
   if(el->nonIPTraffic) {
@@ -3381,7 +3390,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
     snprintf(buf, sizeof(buf), "%s/hosts/%s", myGlobals.rrdPath, el->hostNumIpAddress);
-    
+
     if(stat(buf, &statbuf) == 0) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                   "[ <A HREF=\"/plugins/rrdPlugin?action=list&key=hosts/%s&title=host %s\">"
@@ -3666,7 +3675,7 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 	      formatBytes(el->trafficDistribution->last24HoursBytesSent[i].value, 0)) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(tcSent > 0)
     pctg = (float)(el->trafficDistribution->last24HoursBytesSent[i].value*100)/(float)tcSent;
   else
@@ -3752,8 +3761,8 @@ void printSectionTitle(char *text) {
 /* ******************************** */
 
 static char* formatElementData(ElementHash *hash, u_char dataSent, char *buf, int bufLen) {
-  
-  if((dataSent && (hash->bytesSent.value == 0)) 
+
+  if((dataSent && (hash->bytesSent.value == 0))
      || ((!dataSent) && (hash->bytesRcvd.value == 0)))
     return("&nbsp;");
 
@@ -3761,12 +3770,12 @@ static char* formatElementData(ElementHash *hash, u_char dataSent, char *buf, in
     if(snprintf(buf, bufLen, "%s/%s Pkts",
 		formatBytes(hash->bytesSent.value, 1),
 		formatPkts(hash->pktsSent.value)) < 0)
-      BufferTooShort();    
+      BufferTooShort();
   } else {
     if(snprintf(buf, bufLen, "%s/%s Pkts",
 		formatBytes(hash->bytesRcvd.value, 1),
 		formatPkts(hash->pktsRcvd.value)) < 0)
-      BufferTooShort();    
+      BufferTooShort();
   }
 
   return(buf);
@@ -3795,7 +3804,7 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 	  printf("%d ", hash->id);
 	  hash = hash->next;
 	}
-	
+
 	printf("\n");
       }
 #endif
@@ -3814,7 +3823,7 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 	  entries[hash->id] = 1;
 	}
 
-	hash = hash->next;	
+	hash = hash->next;
       }
     }
   }
@@ -3827,47 +3836,47 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
   /* ****************** */
 
   for(i=0; i<MAX_HASHDUMP_ENTRY; i++) {
-    if(entries[i] == 1) {            
+    if(entries[i] == 1) {
       memset(hashList, 0, sizeof(hashList));
       memset(&hashListEntry, 0, sizeof(ElementHash));
 
       for(j=0; j<MAX_ELEMENT_HASH; j++) {
 	if(theHash[j] != NULL) {
 	  hash = theHash[j]->next;
-	 
+
 	  while(hash != NULL) {
 	    if(hash->id < MAX_HASHDUMP_ENTRY) {
 	      if(hash->id == i) {
 		incrementTrafficCounter(&hashListEntry.bytesSent, hash->bytesSent.value);
-		incrementTrafficCounter(&hashListEntry.pktsSent,  hash->pktsSent.value); 
+		incrementTrafficCounter(&hashListEntry.pktsSent,  hash->pktsSent.value);
 		incrementTrafficCounter(&hashListEntry.bytesRcvd, hash->bytesRcvd.value);
-		incrementTrafficCounter(&hashListEntry.pktsRcvd,  hash->pktsRcvd.value); 		
+		incrementTrafficCounter(&hashListEntry.pktsRcvd,  hash->pktsRcvd.value);
 		hashList[theHash[j]->id] = theHash[j];
 	      } else if(theHash[j]->id == i) {
 		incrementTrafficCounter(&hashListEntry.bytesSent, theHash[j]->bytesSent.value);
-		incrementTrafficCounter(&hashListEntry.pktsSent,  theHash[j]->pktsSent.value); 
+		incrementTrafficCounter(&hashListEntry.pktsSent,  theHash[j]->pktsSent.value);
 		incrementTrafficCounter(&hashListEntry.bytesRcvd, theHash[j]->bytesRcvd.value);
-		incrementTrafficCounter(&hashListEntry.pktsRcvd,  theHash[j]->pktsRcvd.value); 		
+		incrementTrafficCounter(&hashListEntry.pktsRcvd,  theHash[j]->pktsRcvd.value);
 		hashList[theHash[j]->id] = hash;
 	      }
 	    }
-	   
+
 	    hash = hash->next;
 	  }
-	}     
+	}
       }
 
       if(snprintf(buf, sizeof(buf), "<TR><TH>%d</TH>"
 		  "<TD>%s</TD><TD>%s</TD><TD>", i,
 		  formatElementData(&hashListEntry, 1, buf1, sizeof(buf1)),
-		  formatElementData(&hashListEntry, 0, buf1, sizeof(buf1))) < 0)		  
+		  formatElementData(&hashListEntry, 0, buf1, sizeof(buf1))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       for(j=0; j<MAX_HASHDUMP_ENTRY; j++) {
 	if(hashList[j] != NULL) {
 
-	  if(dumpLoopbackTraffic 
+	  if(dumpLoopbackTraffic
 	     || ((dumpLoopbackTraffic == 0) && (i != hashList[j]->id))) {
 	    sendString("<A HREF=# onMouseOver=\"window.status='");
 
@@ -3881,13 +3890,13 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 
 	    if(hashList[j]->bytesRcvd.value > 0) {
 	      if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
-			  hashList[j]->id, i, formatBytes(hashList[j]->bytesRcvd.value, 1), 
+			  hashList[j]->id, i, formatBytes(hashList[j]->bytesRcvd.value, 1),
 			  formatPkts(hashList[j]->pktsRcvd.value)) < 0)
 		BufferTooShort();
 	      sendString(buf);
 	    }
 
-	    if(snprintf(buf, sizeof(buf), 
+	    if(snprintf(buf, sizeof(buf),
 			"';return true\" onMouseOut=\"window.status='';return true\">%d</A>\n",
 			hashList[j]->id) < 0)
 	      BufferTooShort();
@@ -3902,3 +3911,150 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 
   sendString("</TR>\n</TABLE>\n</CENTER>\n");
 }
+
+/* ************************************************ */
+
+/* ************************************ */
+
+#define MAX_NUM_OS           256
+
+void printLocalHostsStats() {
+  u_int idx, numEntries=0;
+  int printedEntries=0;
+  HostTraffic *el, **tmpTable;
+  OsNumInfo theOSs[256];
+  int numOSs = 0, i, j;
+  char buf[LEN_GENERAL_WORK_BUFFER], *str=NULL, *sign, *title=NULL;
+  Counter totalBytesSent, totalBytesRcvd, totalBytes, a=0, b=0;
+  float sentpct, rcvdpct;
+  time_t timeDiff = time(NULL)-myGlobals.initialSniffTime;
+  char *arrowGif, *arrow[48], *theAnchor[48];
+  char htmlAnchor[64], htmlAnchor1[64];
+
+  memset(theOSs, 0, sizeof(theOSs));
+
+  printHTMLheader("Local Hosts Statistics", BITFLAG_HTML_NO_REFRESH);
+
+  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+
+  for(idx=1, numEntries=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++)
+    if(/* (idx != myGlobals.otherHostEntryIdx) && */
+       ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+       && (broadcastHost(el) == 0) /* No broadcast addresses please */
+       && (multicastHost(el) == 0) /* No multicast addresses please */
+       && ((el->hostNumIpAddress[0] != '\0') && (el->hostIpAddress.s_addr != '0' /* 0.0.0.0 */) /* This host speaks IP */)
+       && subnetPseudoLocalHost(el)) {
+
+      if(el->fingerprint == NULL)   continue;
+      if(el->fingerprint[0] != ':') setHostFingerprint(el);
+      if(el->fingerprint[0] != ':') continue;
+      tmpTable[numEntries++] = el;
+
+      for(i=0; i<MAX_NUM_OS; i++) {
+	if(theOSs[i].name == NULL) break;
+	if(strcmp(theOSs[i].name, &el->fingerprint[1]) == 0) {
+	  theOSs[i].num++;
+	  break;
+	}
+      }
+
+      if(theOSs[i].name == NULL) {
+	theOSs[i].name = strdup(&el->fingerprint[1]);
+	theOSs[i].num++;
+      }
+    }
+
+  myGlobals.columnSort = 0;
+  quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
+
+  if(numEntries > 0) {
+    sendString("<CENTER>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON"><TH "TH_BG">Host</TH>");
+
+    for(i=0; i<MAX_NUM_OS; i++) {
+      if(theOSs[i].name == NULL)
+	break;
+      else {
+	snprintf(buf, sizeof(buf), "<TH>%s</TH>", theOSs[i].name);
+	sendString(buf);
+      }
+    }
+
+    sendString("</TR>\n");
+
+    for(idx=0; idx<numEntries; idx++) {
+      el = tmpTable[idx];
+
+      if(el != NULL) {
+	char *tmpName1;
+	tmpName1 = el->hostNumIpAddress;
+	if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
+	  tmpName1 = myGlobals.separator;
+
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH ALIGN=LEFT>%s</TH>",
+		    getRowColor(),
+		    makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+
+	for(i=0; i<MAX_NUM_OS; i++) {
+	  if(theOSs[i].name == NULL)
+	    break;
+	  else {
+	    if(strcmp(theOSs[i].name, &el->fingerprint[1]) == 0) {
+	      if((el->protocolInfo != NULL) && (el->protocolInfo->userList != NULL)) {
+		UserList *list = el->protocolInfo->userList;
+		sendString("<TD ALIGN=LEFT>");
+
+		while(list != NULL) {
+		  if(snprintf(buf, sizeof(buf), "<li>%s&nbsp;[", list->userName) < 0)
+		    BufferTooShort();
+		  sendString(buf);
+		  
+		  if(FD_ISSET(BITFLAG_POP_USER, &(list->userFlags))) sendString("&nbsp;POP&nbsp;");
+		  if(FD_ISSET(BITFLAG_IMAP_USER, &(list->userFlags))) sendString("&nbsp;IMAP&nbsp;");
+		  if(FD_ISSET(BITFLAG_SMTP_USER, &(list->userFlags))) sendString("&nbsp;SMTP&nbsp;");
+		  if(FD_ISSET(BITFLAG_P2P_USER, &(list->userFlags))) sendString("&nbsp;P2P&nbsp;");
+		  if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
+		  
+		  sendString("]<br>\n");
+		  list = list->next;
+		}
+		sendString("</TD>");
+
+	      } else
+		sendString("<TD ALIGN=CENTER>X</TD>");
+	    } else
+	      sendString("<TD>&nbsp;</TD>");
+	  }
+	} /* for */
+
+	sendString("</TR>\n");
+      }
+    }
+
+    sendString("<TR><TH ALIGN=LEFT>Total</TH>\n");
+
+    for(i=0; i<MAX_NUM_OS; i++) {
+      if(theOSs[i].name == NULL)
+	break;
+      else {
+	snprintf(buf, sizeof(buf), "<TH>%d</TH>", theOSs[i].num);
+	sendString(buf);
+      }
+    }
+    sendString("</TR>\n</TABLE></CENTER>");
+
+    sendString("</TABLE></CENTER>");
+
+    for(j=0; j<MAX_NUM_OS; j++) {
+      if(theOSs[i].name == NULL) break;
+      else free(theOSs[i].name);
+    }
+  } else
+    printNoDataYet();
+
+  free(tmpTable);
+}
+

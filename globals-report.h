@@ -107,6 +107,7 @@ extern void dumpNtopTrafficInfo(FILE*, char* options);
 extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
 extern void checkHostProvidedServices(HostTraffic *el);
 extern void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraffic);
+extern void printLocalHostsStats();
 
 /* report.c */
 extern void initReports(void);
@@ -230,6 +231,7 @@ extern int out_graph(short gifwidth,
 #define STR_DOMAIN_STATS                "domainTrafficStats.html"
 #define STR_MULTICAST_STATS             "multicastStats.html"
 #define HOSTS_INFO_HTML                 "hostsInfo.html"
+#define HOSTS_LOCAL_INFO_HTML           "localHostsInfo.html"
 #define STR_LSOF_DATA                   "lsofData.html"
 #define SHOW_PORT_TRAFFIC               "showPortTraffic.html"
 #define PROCESS_INFO_HTML               "processInfo.html"
