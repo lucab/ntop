@@ -621,8 +621,7 @@ void dumpNtopHashes(char* options) {
       }
 
       if(el->otherSent > 0) {
-	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n", "
-otherSent", el->otherSent)
+	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n", "otherSent", el->otherSent)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  
 	sendString(buf);
       }
@@ -635,7 +634,6 @@ otherSent", el->otherSent)
       }
 
       if(el->icmpInfo != NULL) {
-	int j;
 	if(el->icmpInfo->icmpMsgSent[ICMP_ECHO] > 0) {
 	  if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n", 
 		      "SENT_ICMP_ECHO",
@@ -869,8 +867,7 @@ otherSent", el->otherSent)
 
 void dumpNtopTrafficInfo(char* options) {
   char buf[256], intoabuf[32];
-  int idx, numEntries=0, languageType=DEFAULT_LANGUAGE, i, j;
-  HostTraffic *el;
+  int numEntries=0, languageType=DEFAULT_LANGUAGE, i, j;
 
   if((options != NULL) && (strlen(options) > 10)) {
     /* language=[perl|php] */

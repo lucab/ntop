@@ -463,8 +463,7 @@ void printHTTPheader(void) {
 
 /* ************************* */
 
-void printHTMLheader(char *title,
-                    int  headerFlags) {
+void printHTMLheader(char *title, int  headerFlags) {
   char buf[BUF_SIZE];
 
   sendString("<HTML>\n<HEAD>\n");

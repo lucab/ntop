@@ -187,7 +187,7 @@ void doAddUser(int len) {
   if(len <= 0) {
     err = "ERROR: both user and password must be non empty fields.";
   } else {
-    char postData[256], *key, *user=NULL, *pw=NULL, cpw[14];
+    char postData[256], *key, *user=NULL, *pw=NULL;
     int i, idx, badChar=0;
 
     if((idx = readHTTPpostData(len, postData, sizeof(postData))) < 0)
@@ -727,7 +727,6 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 /* *******************************/
 
 static void addKeyIfMissing(char* key, char* value, int encryptValue) {
-  char cpw[14];
   datum key_data, return_data, data_data;
 
   /* Check existence of user 'admin' */

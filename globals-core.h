@@ -199,6 +199,10 @@ extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
                              unsigned int nminutes);
 extern char* formatPkts(TrafficCounter pktNr);
 
+/* emitter.c */
+extern void dumpNtopHashes(char* options);
+extern void dumpNtopTrafficInfo(char* options);
+
 /* event.c */
 extern void emitEvent(FilterRule *rule, HostTraffic *srcHost,
                       u_int srcHostIdx, HostTraffic *dstHost,
@@ -242,6 +246,7 @@ extern void sendHTTPHeaderType(void);
 extern void sendGIFHeaderType(void);
 extern void sendHTTPProtoHeader(void);
 extern void handleHTTPrequest(struct in_addr from);
+extern void printHTMLheader(char *title, int  headerFlags);
 
 /* initialize.c */
 extern void initIPServices(void);
@@ -391,7 +396,7 @@ extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
 extern void handleFlowsSpecs(char* flows);
 extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
-
+extern void fillDomainName(HostTraffic *el);
 #ifdef MULTITHREADED
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
                         char* userParm);

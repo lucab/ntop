@@ -129,6 +129,8 @@ extern void printSession(IPSession *theSession, u_short sessionType,
                          u_short sessionCounter);
 extern RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
                                     int revertOrder);
+extern void printHTMLtrailer(void);
+extern void returnHTTPredirect(char* destination);
 extern void printActiveTCPSessions(void);
 extern void printIpProtocolUsage(void);
 extern void printBar(char *buf, int bufLen, unsigned short percentage,

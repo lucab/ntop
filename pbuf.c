@@ -1156,8 +1156,6 @@ static void handleBootp(HostTraffic *srcHost,
     /* DHCP is handled by sport 67 */
   case 68: /* BOOTP/DHCP client */
     if(packetData != NULL) {
-      char buf[32];
-
       /*
 	This is a server BOOTP/DHCP respose
 	that could be decoded. Let's try.
@@ -1191,9 +1189,7 @@ static void handleBootp(HostTraffic *srcHost,
 	      in BOOTP packets.
 	    */
 	    int idx = 4;
-	    u_int hostIdx;
-	    struct in_addr hostIpAddress;
-	    HostTraffic *trafficHost, *realClientHost;
+	    HostTraffic *realClientHost;
 
 	    /*
 	      This is the real address of the recipient because
@@ -1222,8 +1218,6 @@ static void handleBootp(HostTraffic *srcHost,
 
 	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
 		u_char optionId = bootProto.bp_vend[idx++];
-		int j;
-		u_long tmpUlong;
 
 		if(optionId == 255) break; /* End of options */
 		switch(optionId) { /* RFC 2132 */
@@ -1748,8 +1742,8 @@ static void handleSession(const struct pcap_pkthdr *h,
       } else 
 	theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
 
-      theSession->nwLatency.tv_sec /= 2;
-      theSession->nwLatency.tv_usec /= 2;
+	  theSession->nwLatency.tv_sec /= 2;
+	  theSession->nwLatency.tv_usec /= 2;
       theSession->sessionState = STATE_ACTIVE;
     } else if((addedNewEntry == 0) 
 	      && ((theSession->sessionState == STATE_SYN)

@@ -67,7 +67,7 @@ static int inet_aton(const char *cp, struct in_addr *addr)
 
 /* That's the meat */
 int main(int argc, char *argv[]) {
-  int pflag, i, fd;
+  int pflag, i;
 #ifdef WIN32
   int optind=0;
 #else
