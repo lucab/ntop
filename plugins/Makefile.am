@@ -71,19 +71,22 @@ libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 # by default ntop looks for plugins in the plugins/ subdirectory
 #
 
-icmpPlugin.so: .libs/libicmpPlugin.so
+
+
+
+icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
 
-lastSeenPlugin.so: .libs/liblastSeenPlugin.so
+lastSeenPlugin.so: .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/liblastSeenPlugin.so lastSeenPlugin.so
 
-nfsPlugin.so: .libs/libnfsPlugin.so
+nfsPlugin.so: .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
 
-rmonPlugin.so: .libs/librmonPlugin.so
+rmonPlugin.so: .libs/librmonPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/librmonPlugin.so rmonPlugin.so
 
-wapPlugin.so: .libs/libwapPlugin.so
+wapPlugin.so: .libs/libwapPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libwapPlugin.so wapPlugin.so
 
 install-data-local:
