@@ -133,6 +133,8 @@ extern void clearUserUrlList(void);
 /* hash.c */
 extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
+extern u_int hashFcHost (FcAddress *fcAddress, u_short vsanId,
+                         HostTraffic **el, int actualDeviceId);
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
@@ -140,6 +142,8 @@ extern void setHostSerial(HostTraffic *el);
 HostTraffic * lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 			 u_char checkForMultihoming, u_char forceUsingIPaddress, int actualDeviceId);
 
+HostTraffic * lookupFcHost (FcAddress *fcAddress, u_short vsanId,
+                            int actualDeviceId);
 /* initialize.c */
 extern void initIPServices(void);
 extern void resetDevice(int devIdx);
@@ -263,6 +267,7 @@ extern void cleanupPacketQueue(void);
 extern void *dequeuePacket(void* notUsed);
 #endif
 extern void updateDevicePacketStats(u_int length, int actualDeviceId);
+extern void updateFcDevicePacketStats(u_int length, int actualDeviceId);
 extern void dumpSuspiciousPacket(int actualDeviceId);
 extern void dumpOtherPacket(int actualDeviceId);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
@@ -308,7 +313,7 @@ extern void termGdbm(void);
 /* traffic.c */
 extern void updateThpt(int quickUpdate);
 extern int isMatrixHost(HostTraffic *host, int actualDeviceId);
-extern unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId);
+extern unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash);
 extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
                                 TrafficCounter length, int actualDeviceId);
 extern void updateDbHostsTraffic(int deviceToUpdate);
@@ -331,6 +336,10 @@ extern HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host);
 extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, u_int actualDeviceId);
 extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId);
+extern HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId);
+extern FcNameServerCacheEntry *findFcHostNSCacheEntry (FcAddress *fcAddr, u_short vsanId);
+extern char* fc_to_str(const u_int8_t *ad);
+extern char* fcwwn_to_str (const u_int8_t *ad);
 #ifdef INET6
 extern unsigned long in6_hash(struct in6_addr *addr);
 extern int in6_isglobal(struct in6_addr *addr);
@@ -381,7 +390,7 @@ extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
 extern char *dotToSlash(char *name);
 extern void handleFlowsSpecs();
-extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
+extern int getLocalHostAddress(struct in_addr *hostIpAddress, char* device);
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
 #ifdef CFG_MULTITHREADED
@@ -474,7 +483,12 @@ extern void storePrefsValue(char *key, char *value);
 extern int guessHops(HostTraffic *el);
 extern unsigned int ntop_sleep(unsigned int secs);
 extern void unescape(char *dest, int destLen, char *url);
+
+extern void allocateElementHash(int deviceId, u_short hashType);
+
 extern u_int numActiveSenders(u_int deviceId);
+extern u_int numActiveNxPorts(u_int deviceId);
+extern u_int numActiveVsans(u_int deviceId);
 extern u_int32_t xaton(char *s);
 extern void addNodeInternal(u_int32_t ip, int prefix, char *country, int as);
 extern char *ip2CountryCode(HostAddr ip);
@@ -595,6 +609,8 @@ extern void sendOTHERflow(HostTraffic *srcHost, HostTraffic *dstHost,
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, u_char allocateMemoryIfNeeded, u_char lockMutex);
+extern void freeFcSession (FCSession *sessionToPurge, int actualDeviceId,
+                           u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
@@ -613,6 +629,33 @@ extern IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 				   u_short dport, u_int length,
 				   u_char* packetData, int actualDeviceId);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
+
+extern FCSession* handleFcSession (const struct pcap_pkthdr *h,
+                                   u_short fragmentedData,
+                                   HostTraffic *srcHost, HostTraffic *dstHost,
+                                   u_int length, u_int payload_len, u_short oxid,
+                                   u_short rxid, u_short protocol, u_char rCtl,
+                                   u_char isXchgOrig, const u_char *bp,
+                                   int actualDeviceId);
+
+extern int isFlogiAcc (FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type,
+                       u_int8_t cmd);
+extern int fillFcHostInfo (const u_char *bp, HostTraffic *srcHost);
+extern int isPlogi (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
+extern int isLogout (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
+extern int isRscn (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
+extern int fillFcpInfo (const u_char *bp, HostTraffic *srcHost,
+                        HostTraffic *dstHost);
+extern FcFabricElementHash *getFcFabricElementHash (u_short vsanId,
+                                             int actualDeviceId);
+extern int isValidFcNxPort (FcAddress *fcAddress);
+extern int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
+                                      const u_char *bp, FcAddress *srcAddr,
+                                      FcAddress *dstAddr,
+                                      u_short protocol, u_char r_ctl,
+                                      u_int32_t pktlen);
+
+
 
 #ifdef HAVE_NETDB_H
 extern int h_errno; /* netdb.h */
@@ -713,10 +756,11 @@ int getdomainname(char *name, size_t len);
 
 /* Bit test macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &(a->flags))
+#define isFcHost(a)                 (a->l2Family == HOST_TRAFFIC_AF_FC)
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(FLAG_SUBNET_LOCALHOST, &(a->flags)))
 #define privateIPAddress(a)         ((a != NULL) && FD_ISSET(FLAG_PRIVATE_IP_ADDRESS, &(a->flags)))
-#define broadcastHost(a)            ((a != NULL) && (cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))) || ((addrnull(&a->hostIpAddress)) && (a->ethAddressString[0] == '\0')))
-#define multicastHost(a)            ((a != NULL) && FD_ISSET(FLAG_MULTICAST_HOST, &(a->flags)))
+#define broadcastHost(a)            ((a != NULL) && (!isFcHost (a)) && ((cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))) || ((a->hostIp4Address.s_addr == 0) && (a->ethAddressString[0] == '\0'))))
+#define multicastHost(a)            ((a != NULL) && (!isFcHost (a)) && FD_ISSET(FLAG_MULTICAST_HOST, &(a->flags)))
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(FLAG_GATEWAY_HOST, &(a->flags)))
 #define nameServerHost(a)           ((a != NULL) && FD_ISSET(FLAG_NAME_SERVER_HOST, &(a->flags)))
 #define subnetPseudoLocalHost(a)    ((a != NULL) && FD_ISSET(FLAG_SUBNET_PSEUDO_LOCALHOST, &(a->flags)))

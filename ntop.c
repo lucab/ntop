@@ -74,7 +74,9 @@ void* pcapDispatch(void *_i) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread running...");
 
   /* Reset stats before to start */
-  pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
+    if (myGlobals.rFileName == NULL) {
+        pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
+    }
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     HEARTBEAT(2, "pcapDispatch()", NULL);
@@ -1076,4 +1078,179 @@ RETSIGTYPE cleanup(int signo) {
   traceEvent(CONST_TRACE_INFO, "===================================");
 
   exit(0);
+}
+
+/* **************************************** */
+
+#define FC_NS_CASE_VSAN    0
+#define FC_NS_CASE_FCID    1
+#define FC_NS_CASE_PWWN    2
+#define FC_NS_CASE_NWWN    3
+#define FC_NS_CASE_ALIAS   4
+#define FC_NS_CASE_TGTTYPE 5
+
+void processFcNSCacheFile (char *filename)
+{
+    char *token, *bufptr, *strtokState;
+    FcNameServerCacheEntry *entry;
+    HostTraffic *el;
+    FcAddress fcid;
+    u_int32_t vsanId, domain, area, port, tgtType, i, j;
+    wwn_t pWWN, nWWN;
+    char alias[FC_ALIAS_SIZE];
+    FILE *fd;
+    int id, hashIdx = 0, entryFound, hex;
+    char buffer[256];
+
+    if (filename == NULL) {
+        return;
+    }
+
+    if (myGlobals.fcnsCacheHash == NULL) {
+        /* We cannot use the file if the entry is NULL */
+        return;
+    }
+    
+    if ((fd = fopen (filename, "r")) == NULL) {
+        traceEvent (CONST_TRACE_WARNING, "Unable to open FC WWN cache file %s"
+                    "error = %d\n", filename, errno);
+        return;
+    }
+
+    traceEvent (CONST_TRACE_ALWAYSDISPLAY, "Processing FC NS file %s\n", filename);
+    while (!feof (fd) && (fgets(buffer, 256, fd) != NULL)) {
+        alias[0] = '\0';
+        pWWN.str[0] = '\0';
+        nWWN.str[0] = '\0';
+        
+        /* Ignore lines that start with '#' as comments */
+        if (strrchr(buffer, '#') != NULL) {
+            continue;
+        }
+
+        /*
+         * The file is a CSV list of lines with a line format as follows:
+         * VSAN, FC_ID, pWWN, nWWN, Alias, Target type
+         *
+         * FC_ID is specified as a 3-byte hex i.e. 0xFFFFFD
+         * pWWN & nWWN are specified as octets separated by ':'
+         * Alias is a comma-separated string of max 64 chars
+         * Target type is a decimal returned by the INQUIRY command
+         *
+         * If a field is missing, it is represented by a null string i.e. two
+         * consecutive commas.
+         */
+        id = 0;
+        bufptr = buffer;
+        token = strtok_r (buffer, ",", &strtokState);
+        while (token != NULL) {
+            if (token[0]  != '\0') {
+                switch (id) {
+                case FC_NS_CASE_VSAN:
+                    if (isxdigit (*token)) {
+                        sscanf (token, "%d", &vsanId);
+                    }
+                    else {
+                        /* Invalid input. Skip rest of line */
+                        token = NULL;
+                        continue;
+                    }
+                    break;
+                case FC_NS_CASE_FCID:
+                    if (isxdigit (*token)) {
+                        if (sscanf (token, "%02hx.%02hx.%02hx", &domain, &area, &port) == 3) {
+                            fcid.domain = domain;
+                            fcid.area = area;
+                            fcid.port = port;
+                        }
+                        else {
+                            /* Invalid input. Skip rest of line */
+                            token = NULL;
+                            continue;
+                        }
+                    }
+                    else {
+                        /* Invalid input. Skip rest of line */
+                        token = NULL;
+                        continue;
+                    }
+                    break;
+                case FC_NS_CASE_PWWN:
+                    for (i = 0, j = 0; i < LEN_WWN_ADDRESS; i++) {
+                        sscanf (&token[j], "%02x:", &hex);
+                        pWWN.str[i] = (char)hex;
+                        j += 3;
+                    }
+                    break;
+                case FC_NS_CASE_NWWN:
+                    for (i = 0, j = 0; i < LEN_WWN_ADDRESS; i++) {
+                        sscanf (&token[j], "%02x:", &hex);
+                        nWWN.str[i] = (char)hex;
+                        j += 3;
+                    }
+                    break;
+                case FC_NS_CASE_ALIAS:
+                    sscanf (token, "%63s", alias);
+                    break;
+                case FC_NS_CASE_TGTTYPE:
+                    if (isxdigit (*token)) {
+                        sscanf (token, "%d", &tgtType);
+                    }
+                    else {
+                        /* Invalid input. Skip rest of line */
+                        token = NULL;
+                        continue;
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+            id++;
+
+            token = strtok_r (NULL, ",", &strtokState);
+        }
+
+        /* Validate inputs */
+        if (id < FC_NS_CASE_NWWN) {
+            continue;
+        }
+
+        /* Obtain hash index. We pass -1 for device ID since this file is
+         * device-independent.
+         */
+        hashIdx = hashFcHost (&fcid, vsanId, &el, -1);
+        entry = myGlobals.fcnsCacheHash[hashIdx];
+
+        entryFound = 0;
+        while (entry != NULL) {
+            if (memcmp ((u_int8_t *)&(entry->fcAddress), (u_int8_t *)&fcid,
+                        LEN_FC_ADDRESS) == 0) {
+                entryFound = 1;
+                break;
+            }
+
+            entry = entry->next;
+        }
+
+        if (!entryFound) {
+            if ((entry = malloc (sizeof (FcNameServerCacheEntry))) == NULL) {
+                traceEvent (CONST_TRACE_ERROR, "Unable to malloc entry for FcNameServerCache Entry\n");
+                return;
+            }
+
+            memset (entry, 0, sizeof (FcNameServerCacheEntry));
+            entry->hashIdx = hashIdx;
+            entry->next = myGlobals.fcnsCacheHash[hashIdx];
+            myGlobals.fcnsCacheHash[hashIdx] = entry;
+        }
+
+        entry->vsanId = vsanId;
+        entry->fcAddress = fcid;
+        memcpy (&entry->pWWN.str[0], &pWWN.str[0], LEN_WWN_ADDRESS);
+        memcpy (&entry->nWWN.str[0], &nWWN.str[0], LEN_WWN_ADDRESS);
+        strncpy (&entry->alias[0], alias, MAX_LEN_SYM_HOST_NAME);
+        entry->alias[MAX_LEN_SYM_HOST_NAME] = '\0';
+    }
+
 }

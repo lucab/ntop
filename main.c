@@ -23,6 +23,7 @@
 
 #include "ntop.h"
 #include "globals-report.h"
+#include "scsiUtils.h"
 
 /*
   Ntop options list
@@ -106,6 +107,8 @@ static struct option const long_options[] = {
 
   { "no-interface-merge",               no_argument,       NULL, 'M' },
 
+  { "wwn-map",                          required_argument, NULL, 'N' },
+  
   { "output-packet-path",               required_argument, NULL, 'O' },
   { "db-file-path",                     required_argument, NULL, 'P' },
   { "spool-file-path",                  required_argument, NULL, 'Q' },
@@ -153,6 +156,9 @@ static struct option const long_options[] = {
 #ifndef WIN32
   { "webserver-queue",                  required_argument, NULL, 146 },
 #endif
+  { "fc-only",                          no_argument,       NULL, 147 },
+  { "no-fc",                            no_argument,       0, 148 },
+  { "no-invalid-lun",                   no_argument,       0, 149 },
 
   {NULL, 0, NULL, 0}
 };
@@ -247,6 +253,7 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [-M             | --no-interface-merge]               %sDon't merge network interfaces (see man page)\n",
 	  newLine);
+  fprintf(fp, "    [-N             | --wwn-map]                          %sMap file providing map of WWN to FCID/VSAN\n", newLine);
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
   fprintf(fp, "    [-P <path>      | --db-file-path <path>]              %sPath for ntop internal database files\n", newLine);
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", 
@@ -287,6 +294,11 @@ void usage (FILE * fp) {
 #ifdef WIN32
   fprintf(fp, "    [--webserver-queue                                    %sSet size of listen() queue\n", newLine);
 #endif
+  
+  fprintf(fp, "    [--fc-only]                                           %sDisplay only Fibre Channel statistics\n", 
+	  newLine);
+  fprintf(fp, "    [--no-fc]                                             %sDisable processing & Display of Fibre Channel\n", newLine);
+  fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
 
 #ifdef WIN32
   printAvailableInterfaces();
@@ -356,11 +368,11 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  theOpts = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MO:P:Q:S:U:VX:W:";
+  theOpts = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MN:O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKLMO:P:Q:S:U:VX:W:";
+  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKLMN:O:P:Q:S:U:VX:W:";
 #else
-  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKMO:P:Q:S:U:VX:W:";
+  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKMN:O:P:Q:S:U:VX:W:";
 #endif
 
   /* * * * * * * * * * */
@@ -562,6 +574,12 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.mergeInterfaces = 0;
       break;
 
+    case 'N':
+        stringSanityCheck(optarg);
+        if (myGlobals.fcNSCacheFile != NULL) free (myGlobals.fcNSCacheFile);
+        myGlobals.fcNSCacheFile = strdup (optarg);
+        break;
+
     case 'O': /* pcap log path - Ola Lundqvist <opal@debian.org> */
       stringSanityCheck(optarg);
       if(myGlobals.pcapLogBasePath != NULL) free(myGlobals.pcapLogBasePath);
@@ -737,6 +755,19 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
+    case 147:
+      myGlobals.printFcOnly = TRUE;
+      myGlobals.stickyHosts = TRUE;
+      break;
+      
+    case 148:
+        myGlobals.noFc = TRUE;
+        break;
+
+    case 149:
+        myGlobals.noInvalidLunDisplay = TRUE;
+        break;
+
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);
 #ifdef DEBUG
@@ -757,6 +788,7 @@ static int parseOptions(int argc, char* argv []) {
     exit(0);
   }
 
+  myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;
 #ifndef WIN32
   /* Handle any unrecognized options, such as a nested @filename */
   if(optind < argc) {
@@ -807,7 +839,7 @@ static int parseOptions(int argc, char* argv []) {
       /* exit(-1); */
   }
 
-  if((myGlobals.rFileName != NULL) && (myGlobals.localAddresses == NULL)) {
+  if((myGlobals.rFileName != NULL) && ((myGlobals.localAddresses == NULL) && !myGlobals.printFcOnly)) {
     traceEvent(CONST_TRACE_ERROR, "When -f is used you need to set -m. Please try again.\n");
     exit(-1);
   }
@@ -1148,6 +1180,10 @@ int main(int argc, char *argv[]) {
   if(myGlobals.P3Puri != NULL)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Policy reference uri is '%s'", myGlobals.P3Puri);
 
+  if (!myGlobals.noFc && (myGlobals.fcNSCacheFile != NULL)) {
+      processFcNSCacheFile (myGlobals.fcNSCacheFile);
+  }
+  
   initNtop(myGlobals.devices);
 
   /*

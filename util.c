@@ -2325,6 +2325,8 @@ void resetHostsVariables(HostTraffic* el) {
   if (el->protocolInfo != NULL)        free(el->protocolInfo);
   el->protocolInfo = NULL;
 
+  el->vsanId = -1;
+  el->hostSymFcAddress[0] = '\0';
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
@@ -3593,6 +3595,21 @@ void resetTrafficCounter(TrafficCounter *ctr) {
   ctr->value = 0, ctr->modified = 0;
 }
 
+/* ******************************** */
+
+void allocateElementHash(int deviceId, u_short hashType) {
+  int fcmemLen = sizeof(FcFabricElementHash*)*MAX_ELEMENT_HASH;
+
+  switch(hashType) {
+  case 2: /* VSAN */
+    if(myGlobals.device[deviceId].vsanHash == NULL) {
+      myGlobals.device[deviceId].vsanHash = (FcFabricElementHash**)malloc(fcmemLen);
+      memset(myGlobals.device[deviceId].vsanHash, 0, fcmemLen);
+    }
+    break;
+  }
+}
+
 /* *************************************************** */
 
 u_int numActiveSenders(u_int deviceId) {
@@ -3601,14 +3618,39 @@ u_int numActiveSenders(u_int deviceId) {
 
   for(el=getFirstHost(deviceId);
       el != NULL; el = getNextHost(deviceId, el)) {
-    if(broadcastHost(el) || (el->pktSent.value == 0))
-      continue;
-    else
-      numSenders++;
+      if(broadcastHost(el) || (el->pktSent.value == 0))
+          continue;
+      else if (isFcHost (el) && (el->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
+          continue;
+      else
+          numSenders++;
   }
 
   return(numSenders);
 }
+
+/* *************************************************** */
+u_int numActiveVsans(u_int deviceId)
+{
+    u_int numVsans = 0, i;
+    FcFabricElementHash **theHash;
+
+    if ((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
+        return (numVsans);
+    }
+
+    for (i=0; i<MAX_ELEMENT_HASH; i++) {
+        if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
+           (theHash[i]->vsanId < MAX_USER_VSAN)) {
+            if (theHash[i]->totBytes.value)
+                numVsans++;
+        }
+    }
+
+    return (numVsans);
+}
+
+
 
 /* *************************************************** */
 
@@ -4338,6 +4380,74 @@ void removeNtopPid(void) {
 
 /* ************************************ */
 
+/* The following two routines have been extracted from Ethereal */
+static char *
+bytestring_to_str(const u_int8_t *ad, u_int32_t len, char punct) {
+  static char  str[3][32];
+  static char *cur;
+  char        *p;
+  int          i;
+  u_int32_t   octet;
+  /* At least one version of Apple's C compiler/linker is buggy, causing
+     a complaint from the linker about the "literal C string section"
+     not ending with '\0' if we initialize a 16-element "char" array with
+     a 16-character string, the fact that initializing such an array with
+     such a string is perfectly legitimate ANSI C nonwithstanding, the 17th
+     '\0' byte in the string nonwithstanding. */
+  static const char hex_digits[16] =
+      { '0', '1', '2', '3', '4', '5', '6', '7',
+        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+  if (len < 0) {
+      return "";
+  }
+  
+  len--;
+
+  if (cur == &str[0][0]) {
+    cur = &str[1][0];
+  } else if (cur == &str[1][0]) {
+    cur = &str[2][0];
+  } else {
+    cur = &str[0][0];
+  }
+  p = &cur[18];
+  *--p = '\0';
+  i = len;
+  for (;;) {
+    octet = ad[i];
+    *--p = hex_digits[octet&0xF];
+    octet >>= 4;
+    *--p = hex_digits[octet&0xF];
+    if (i == 0)
+      break;
+    if (punct)
+      *--p = punct;
+    i--;
+  }
+  return p;
+}
+
+char *
+fc_to_str(const u_int8_t *ad)
+{
+    return bytestring_to_str (ad, 3, '.');
+}
+
+char *
+fcwwn_to_str (const u_int8_t *ad)
+{
+    u_int8_t zero_wwn[LEN_WWN_ADDRESS] = {0,0,0,0,0,0,0,0};
+        
+    if (!memcmp (ad, zero_wwn, LEN_WWN_ADDRESS)) {
+        return ("N/A");
+    }
+    
+    return bytestring_to_str (ad, 8, ':');
+}
+
+/* ************************************ */
+
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
 
 #undef sched_yield
@@ -4499,3 +4609,61 @@ const char *inet_ntop(int af, const void *src, char *dst, size_t size) {
 }
 
 #endif                                                   
+
+/* *************************************************** */
+
+u_int numActiveNxPorts (u_int deviceId) {
+  u_int numSenders = 0;
+  HostTraffic *el;
+
+  for(el=getFirstHost(deviceId);
+      el != NULL; el = getNextHost(deviceId, el)) {
+      if (isFcHost (el) && (el->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
+          continue;
+      else
+          numSenders++;
+  }
+
+  return(numSenders);
+}
+
+HostTraffic* findHostByFcAddr(FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId) {
+  HostTraffic *el;
+  u_int idx = hashFcHost(fcAddr, vsanId, &el, actualDeviceId);
+
+  if(el != NULL)
+    return(el); /* Found */
+  else if(idx == FLAG_NO_PEER)
+    return(NULL);
+  else
+    el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+
+  for(; el != NULL; el = el->next) {
+    if((el->hostFcAddress.domain != 0) && (!memcmp(&el->hostFcAddress, &fcAddr, LEN_FC_ADDRESS)))
+      return(el);
+  }
+
+  return(NULL);
+}
+
+FcNameServerCacheEntry *findFcHostNSCacheEntry (FcAddress *fcAddr, u_short vsanId)
+{
+    FcNameServerCacheEntry *entry = NULL;
+    HostTraffic *el = NULL;
+    u_int hashIdx = hashFcHost(fcAddr, vsanId, &el, -1);
+
+    entry = myGlobals.fcnsCacheHash[hashIdx];
+
+    while (entry != NULL) {
+        if ((entry->vsanId == vsanId) &&
+            (memcmp ((u_int8_t *)fcAddr, (u_int8_t *)&entry->fcAddress,
+                     LEN_FC_ADDRESS) == 0))
+            return (entry);
+
+        entry = entry->next;
+    }
+
+    return (NULL);
+}
+
+/* ************************************ */

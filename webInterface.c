@@ -535,28 +535,60 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
   accessAddrResMutex("getHostName");
   tmpStr = el->hostSymIpAddress;
 
-  if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
-    /* The DNS is still getting the entry name */
-    if(el->hostNumIpAddress[0] != '\0')
-      strncpy(buf, el->hostNumIpAddress, min(bufLen, 80));
-    else
-      strncpy(buf, el->ethAddressString, min(bufLen, 80));
-  } else if(tmpStr[0] != '\0') {
-    strncpy(buf, tmpStr, min(bufLen, 80));
-    if(cutName) {
-      int i;
+  if (el->l2Family == HOST_TRAFFIC_AF_FC) {
+      if (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
+          if (el->hostSymFcAddress[0] != '\0') {
+              strncpy (buf, el->hostSymFcAddress, MAX_LEN_SYM_HOST_NAME);
+          }
+          else if (el->pWWN.str[0] != 0) {
+              snprintf (buf, sizeof(buf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
+                        el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2], el->pWWN.str[3],
+                        el->pWWN.str[4], el->pWWN.str[5], el->pWWN.str[6], el->pWWN.str[7]);
+          }
+          else if (el->hostNumFcAddress[0] != '\0') {
+              strncpy (buf, el->hostNumFcAddress, LEN_FC_ADDRESS_DISPLAY);
+          }
+          else {
+              strcpy (buf, "");
+          }
+      }
+      else {
+          if (el->hostNumFcAddress[0] != '\0') {
+              strncpy (buf, el->hostNumFcAddress, LEN_FC_ADDRESS_DISPLAY);
+          }
+      }
+  }
+  else {
+      if(broadcastHost(el)) {
+          strcpy (buf, "broadcast");
+      }
+      else {
+          tmpStr = el->hostSymIpAddress;
 
-      for(i=0; buf[i] != '\0'; i++)
-	if((buf[i] == '.')
-	   && (!(isdigit(buf[i-1])
-		 && isdigit(buf[i+1]))
-	       )) {
-	  buf[i] = '\0';
-	  break;
-	}
-    }
-  } else
-    strncpy(buf, el->ethAddressString, min(bufLen, 80));
+          if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
+              /* The DNS is still getting the entry name */
+              if(el->hostNumIpAddress[0] != '\0')
+                  strncpy(buf, el->hostNumIpAddress, 80);
+              else
+                  strncpy(buf, el->ethAddressString, 80);
+          } else if(tmpStr[0] != '\0') {
+              strncpy(buf, tmpStr, 80);
+              if(cutName) {
+                  int i;
+                  
+                  for(i=0; buf[i] != '\0'; i++)
+                      if((buf[i] == '.')
+                         && (!(isdigit(buf[i-1])
+                               && isdigit(buf[i+1]))
+                             )) {
+                          buf[i] = '\0';
+                          break;
+                      }
+              }
+          } else
+              strncpy(buf, el->ethAddressString, 80);
+      }
+  }
 
   releaseAddrResMutex();
   return(buf);
@@ -3277,6 +3309,11 @@ void printNtopConfigInfo(int textPrintFlag) {
 			   "(parameter -M set, Interfaces separate) No",
                            DEFAULT_NTOP_MERGE_INTERFACES == 1 ? "(Merging Interfaces) Yes" : "");
 
+  printParameterConfigInfo(textPrintFlag, "-N | --wwn-map",
+                           myGlobals.fcNSCacheFile,
+                           NULL);
+
+
   printParameterConfigInfo(textPrintFlag, "-O | --pcap-file-path",
                            myGlobals.pcapLogBasePath,
                            CFG_DBFILE_DIR);
@@ -3366,6 +3403,18 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printParameterConfigInfo(textPrintFlag, "--disable-mutexextrainfo",
                            myGlobals.disableMutexExtraInfo == TRUE ? "Yes" : "No",
+                           "No");
+
+  printParameterConfigInfo(textPrintFlag, "--fc-only",
+                           myGlobals.printFcOnly == TRUE ? "Yes" : "No",
+                           "No");
+  
+  printParameterConfigInfo(textPrintFlag, "--no-fc",
+                           myGlobals.noFc == TRUE ? "Yes" : "No",
+                           "No");
+
+  printParameterConfigInfo(textPrintFlag, "--no-invalid-lun",
+                           myGlobals.noInvalidLunDisplay == TRUE ? "Yes" : "No",
                            "No");
 
   sendString(texthtml("\n\n", "<tr><th colspan=2>"));
@@ -5684,3 +5733,214 @@ int handlePluginHTTPRequest(char* url) {
 
     return(0); /* Plugin not found */
 }
+
+char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
+                      short compactWWN, char *buf, int buflen)
+{
+    char *tmpStr, tmpbuf[64], colorSpec[64], *linkStr;
+    char noLink = FALSE;        /* don't create link for certain spl addr */
+    char *devTypeStr, *vendorStr, *vendorName;
+    char *switchStr = "&nbsp;<IMG SRC=/switch.gif BORDER=0>";
+
+    if(el == NULL) {
+        traceEvent (CONST_TRACE_ERROR, "makeFcHostLink: Received NULL el\n");
+        return("&nbsp;");
+    }
+
+    accessAddrResMutex("makeHostLink");
+    tmpStr = NULL;
+    devTypeStr = "";
+    vendorStr = "";
+
+    if (!cutName) {
+        if (strncmp (el->hostNumFcAddress, "ff.ff.fd", strlen ("ff.ff.fd")) == 0) {
+            tmpStr = "Fabric Controller";
+            noLink = TRUE;
+        }
+        else if (strncmp (el->hostNumFcAddress, "ff.fc", strlen ("ff.fc")) == 0) {
+            snprintf (tmpbuf, 64, "Domain Controller for %s", &el->hostNumFcAddress[6]);
+            tmpStr = tmpbuf;
+            noLink = TRUE;
+        }
+        else if (strncmp (el->hostNumFcAddress, "ff.ff.fe", sizeof ("ff.ff.fe")) == 0) {
+            tmpStr = "F_Port Server";
+            noLink = TRUE;
+        }
+        else if (strncmp (el->hostNumFcAddress, "ff.ff.fc", sizeof ("ff.ff.fc")) == 0) {
+            tmpStr = "Directory Server";
+            noLink = TRUE;
+        }
+        else if (strncmp (el->hostNumFcAddress, "00.00.00", strlen ("00.00.00")) == 0) {
+            tmpStr = el->hostNumFcAddress;
+            noLink = TRUE;
+        }
+        else {
+            /* Introduce maybe a picture or string based on HBA's vendor */
+            if (el->hostSymFcAddress[0] != '\0') {
+                tmpStr = el->hostSymFcAddress;
+            }
+            else if (el->pWWN.str[0] != '\0') {
+                if (!compactWWN) {
+                    strncpy (tmpbuf, fcwwn_to_str (el->pWWN.str),
+                             LEN_WWN_ADDRESS_DISPLAY);
+                }
+                else {
+                    snprintf (tmpbuf, sizeof(tmpbuf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
+                              el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2], el->pWWN.str[3],
+                              el->pWWN.str[4], el->pWWN.str[5], el->pWWN.str[6], el->pWWN.str[7]);
+                }
+                tmpStr = tmpbuf;
+            }
+            else {
+                tmpStr = el->hostNumFcAddress;
+            }
+            
+            if (strncmp (el->hostNumFcAddress, "ff", 2) == 0)
+                noLink = TRUE;
+
+            linkStr = el->hostNumFcAddress;
+        }
+    }
+    else {
+        if (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
+            if (el->hostSymFcAddress[0] != '\0') {
+                tmpStr = el->hostSymFcAddress;
+            }
+            else if (el->pWWN.str[0] != '\0') {
+                if (!compactWWN) {
+                    strncpy (tmpbuf, fcwwn_to_str (el->pWWN.str),
+                             LEN_WWN_ADDRESS_DISPLAY);
+                }
+                else {
+                    snprintf (tmpbuf, sizeof(tmpbuf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
+                              el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2], el->pWWN.str[3],
+                              el->pWWN.str[4], el->pWWN.str[5], el->pWWN.str[6], el->pWWN.str[7]);
+                }
+                tmpStr = tmpbuf;
+            }
+            else {
+                tmpStr = el->hostNumFcAddress;
+            }
+        }
+        else {
+            tmpStr = el->hostNumFcAddress;
+        }
+
+        linkStr = el->hostNumFcAddress;
+
+        if (strncmp (el->hostNumFcAddress, "ff", 2) == 0)
+            noLink = TRUE;
+    }
+
+    if (el->hostFcAddress.domain && (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN)) {
+        if (el->devType == SCSI_DEV_INITIATOR) {
+            devTypeStr = "&nbsp;<IMG SRC=/initiator.gif BORDER=0>";
+        }
+        else if (el->devType == SCSI_DEV_BLOCK) {
+            devTypeStr = "&nbsp;<IMG SRC=/disk.gif BORDER=0>";
+        }
+        else {
+            devTypeStr = "";
+        }
+
+        vendorName = getVendorInfo(&el->pWWN.str[2], 1);
+        if (vendorName[0] != '\0') {
+            if (!strncasecmp (vendorName, "EMULEX CORPORATION",
+                              strlen ("EMULEX CORPORATION"))) {
+                vendorStr = "&nbsp;<IMG SRC=/emulex.gif BORDER=0>";
+            }
+            else if (!strcasecmp (vendorName, "JNI Corporation")) {
+                vendorStr = "&nbsp;<IMG SRC=/jni.gif BORDER=0>";
+            }
+            else if (!strcasecmp (vendorName, "BROCADE COMMUNICATIONS SYSTEMS, Inc.")) {
+                vendorStr = "&nbsp;<IMG SRC=/brocade.gif BORDER=0>";
+            }
+            else if (!strncmp (vendorName, "EMC", strlen ("EMC"))) {
+                vendorStr = "&nbsp;<IMG SRC=/emc.gif BORDER=0>";
+            }
+            else if (!strcasecmp (vendorName, "SEAGATE TECHNOLOGY")) {
+                vendorStr = "&nbsp;<IMG SRC=/seagate.gif BORDER=0>";
+            }
+            else {
+                vendorStr = "";
+            }
+        }
+        else {
+            vendorStr = "";
+        }
+    }
+    else {
+        devTypeStr = "";
+        vendorStr = "";
+    }
+
+    if (mode == FLAG_HOSTLINK_HTML_FORMAT) {
+        if (noLink) {
+            if (snprintf (buf, buflen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
+                          "%s%s</TH>", tmpStr, switchStr) < 0)
+                BufferTooShort();
+        }
+        else {
+            if (snprintf (buf, buflen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
+                          "<A HREF=\"/%s-%d.html\" onMouseOver=\"window.status='"
+                          "%s';return true\" onMouseOut=\"window.status=''"
+                          ";return true\">%s%s%s</A></TH>", linkStr, el->vsanId,
+                          el->hostNumFcAddress, tmpStr, devTypeStr, vendorStr) < 0)
+                BufferTooShort();
+        }
+    }
+    else if (mode == FLAG_HOSTLINK_TEXT_FORMAT) {
+        if (noLink) {
+            if (snprintf(buf, buflen, "%s", tmpStr) < 0)
+                BufferTooShort();
+        }
+        else {
+            if (snprintf(buf, buflen, 
+                         "<A HREF=\"/%s-%d.html\" %s NOWRAP"
+                         "onMouseOver=\"window.status='%s';return true\""
+                         "onMouseOut=\"window.status='';return true\">%s</A>",
+                         linkStr, el->vsanId,
+                         makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
+                         el->hostNumFcAddress, tmpStr) < 0)
+                BufferTooShort();
+        }
+    }
+    else {
+        if (snprintf(buf, buflen, "%s", tmpStr) < 0)
+            BufferTooShort();
+    }
+
+    releaseAddrResMutex ();
+    return(buf);
+}
+
+/* ******************************* */
+
+char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen)
+{
+    char vsanStr[8];
+
+    accessAddrResMutex("makeHostLink");
+
+    if (vsanId) {
+        snprintf (vsanStr, sizeof (vsanStr), "%d", vsanId);
+    }
+    else {
+        snprintf (vsanStr, sizeof (vsanStr), "-");
+    }
+    
+    if (mode == FLAG_HOSTLINK_HTML_FORMAT) {
+        if (snprintf (buf, buflen, "<TH "TH_BG" ALIGN=RIGHT NOWRAP>"
+                      "<A HREF=\"/VSAN%d.html\">%s</A></TH>", vsanId, vsanStr) < 0)
+            BufferTooShort ();
+    }
+    else {
+        if (snprintf (buf, buflen,
+                      "<A HREF=\"/VSAN%d.html\">%s</A></TH>", vsanId, vsanStr) < 0)
+            BufferTooShort ();
+    }
+
+    releaseAddrResMutex ();
+    return (buf);
+}
+

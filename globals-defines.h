@@ -1023,6 +1023,10 @@
 #define LEN_ETHERNET_ADDRESS_DISPLAY        sizeof("00:00:00:00:00:00")
 #define LEN_ETHERNET_VENDOR                 3
 #define LEN_ETHERNET_VENDOR_DISPLAY         sizeof("00:00:00")
+#define LEN_FC_ADDRESS                      3
+#define LEN_FC_ADDRESS_DISPLAY              sizeof ("00.00.00")
+#define LEN_WWN_ADDRESS                     8
+#define LEN_WWN_ADDRESS_DISPLAY             sizeof ("00:00:00:00:00:00:00:00")
 
 /*
  * Maximum number of addresses in a dns packet - see handleDNSpacket()
@@ -1482,6 +1486,7 @@
  */
 #define FLAG_HOSTLINK_HTML_FORMAT           1
 #define FLAG_HOSTLINK_TEXT_FORMAT           2
+#define FLAG_HOSTLINK_TEXT_NO_LINK_FORMAT   3
 
 /*
  * Used in http.c and util.c to flag that a socket is closed and should not be
@@ -1861,6 +1866,23 @@
 
 #ifndef ETHERMTU
  #define ETHERMTU             1500
+#endif
+
+/* Additional ethertypes for FC */
+#ifndef ETHERTYPE_BRDWLK
+#define ETHERTYPE_BRDWLK      0x88AE
+#endif
+
+#ifndef ETHERTYPE_BRDWLK_OLD
+#define ETHERTYPE_BRDWLK_OLD  0xABCD
+#endif
+
+#ifndef ETHERTYPE_MDSHDR
+#define ETHERTYPE_MDSHDR      0xFCFC
+#endif
+
+#ifndef ETHERTYPE_UNKNOWN
+#define ETHERTYPE_UNKNOWN         0
 #endif
 
 /* ******************************

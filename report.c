@@ -3493,7 +3493,7 @@ void printIpTrafficMatrix(void) {
 			"%s';return true\" onMouseOut="
 			"\"window.status='';return true\"><SMALL>%s</SMALL></A></TH>\n",
 			calculateCellColor(tmpCounter, avgTrafficLow, avgTrafficHigh),
-			buildHTMLBrowserWindowsLabel(i, j),
+			buildHTMLBrowserWindowsLabel(i, j, TRUE),
 			formatBytes(tmpCounter, 1, formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);

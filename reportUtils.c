@@ -4056,7 +4056,7 @@ void printTableEntry(char *buf, int bufLen,
 
 /* ************************ */
 
-char* buildHTMLBrowserWindowsLabel(int i, int j) {
+char* buildHTMLBrowserWindowsLabel(int i, int j, u_short forIpTraffic) {
   static char buf[LEN_GENERAL_WORK_BUFFER];
   int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts + j;
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];

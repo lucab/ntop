@@ -497,6 +497,28 @@ void initNtopGlobals(int argc, char * argv[]) {
   }
 
   myGlobals.startedAs = startedAs;
+
+  /* FC & SCSI-specific stuff */
+  myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;
+
+  if (!myGlobals.noFc) {
+      if (myGlobals.fcnsCacheHash != NULL) {
+          free (myGlobals.fcnsCacheHash);
+      }
+      myGlobals.fcnsCacheHash = malloc (CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
+      if (myGlobals.fcnsCacheHash == NULL) {
+          traceEvent (CONST_TRACE_ERROR, "Unable to allocate fc Name Server Cache\n");
+      }
+
+      memset(myGlobals.fcnsCacheHash, 0,
+             CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
+
+      myGlobals.displayOption = DISPLAY_FC_DEFAULT;
+      if (!myGlobals.defaultVsan)
+          myGlobals.defaultVsan = DEFAULT_VSAN;
+  }
+  myGlobals.fcMatrixHashCollisions = 0;
+  myGlobals.fcMatrixHashUnresCollisions = 0;
 }
 
 /* ********************************* */
@@ -568,9 +590,12 @@ void initNtop(char *devices) {
   initThreads();
 
 #ifndef MAKE_MICRO_NTOP
-  traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
-  startPlugins();
-  traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
+  if (!myGlobals.printFcOnly) {
+      /* No support for any plugins in FC mode for now */
+      traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
+      startPlugins();
+      traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
+  }
 #endif
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
@@ -593,6 +618,11 @@ void initNtop(char *devices) {
 	     myGlobals.numDevices);
   traceEvent(CONST_TRACE_NOISY, "MEMORY: ipTraffixMatrix structure (no TrafficEntry loaded) is %.2fMB",
 	     xvertDOT00MB(myGlobals.ipTrafficMatrixMemoryUsage));
+
+#ifdef NOT_YET  
+  traceEvent(CONST_TRACE_NOISY, "MEMORY: fcTrafficMatrix structure (no TrafficEntry loaded) is %.2fMB",
+	     xvertDOT00MB(myGlobals.fcTrafficMatrixMemoryUsage));
+#endif  
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Sniffying...");
 

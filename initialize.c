@@ -363,6 +363,18 @@ void resetDevice(int devIdx) {
   resetTrafficCounter(&myGlobals.device[devIdx].osiBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].ipv6Bytes);
   resetTrafficCounter(&myGlobals.device[devIdx].otherBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fragmentedFcBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcFcpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcFiconBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcIpfcBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcSwilsBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcDnsBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcElsBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].otherFcBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].class2Bytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].class3Bytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].classFBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastFiveMinsEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetPkts);
@@ -375,7 +387,13 @@ void resetDevice(int devIdx) {
   resetTrafficCounter(&myGlobals.device[devIdx].lastEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastIpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastNonIpBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcEofaPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcEofAbnormalPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcAbnormalPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcBroadcastPkts);
   memset(&myGlobals.device[devIdx].rcvdPktStats, 0, sizeof(PacketStats));
+  memset(&myGlobals.device[devIdx].rcvdFcPktStats, 0, sizeof(FcPacketStats));
   memset(&myGlobals.device[devIdx].rcvdPktTTLStats, 0, sizeof(TTLstats));
   myGlobals.device[devIdx].peakThroughput = 0;
   myGlobals.device[devIdx].actualThpt = 0;
@@ -490,8 +508,13 @@ void initCounters(void) {
       len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
       myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
       memset(myGlobals.device[i].tcpSession, 0, len);
+
+      len = sizeof(FCSession *)*MAX_TOT_NUM_SESSIONS;
+      myGlobals.device[i].fcSession = (FCSession **)malloc(len);
+      memset(myGlobals.device[i].fcSession, 0, len);
     } else {
       myGlobals.device[i].tcpSession     = NULL;
+      myGlobals.device[i].fcSession      = NULL;
     }
 
     myGlobals.device[i].fragmentList = NULL;
@@ -754,7 +777,8 @@ void initCounters(void) {
 /* ******************************* */
 
 void resetStats(int deviceId) {
-  u_int j;
+  u_int j, i;
+  FCSession *session;
 
   traceEvent(CONST_TRACE_INFO, "Resetting traffic statistics for device %s",
 	     myGlobals.device[deviceId].humanFriendlyName);
@@ -792,6 +816,25 @@ void resetStats(int deviceId) {
 	free(myGlobals.device[deviceId].tcpSession[j]);
 	myGlobals.device[deviceId].tcpSession[j] = NULL;
       }
+  }
+
+  if(myGlobals.device[deviceId].fcSession != NULL) {
+    for(j=0; j<MAX_TOT_NUM_SESSIONS; j++)
+      if((session = myGlobals.device[deviceId].fcSession[j]) != NULL) {
+          for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
+              if (session->activeLuns[i] != NULL) {
+                  free (session->activeLuns[i]);
+              }
+          }
+          free(session);
+          myGlobals.device[deviceId].fcSession[j] = NULL;
+      }
+  }
+
+  /* Free VSAN Hash */
+  if (myGlobals.device[deviceId].vsanHash != NULL) {
+      free (myGlobals.device[deviceId].vsanHash);
+      myGlobals.device[deviceId].vsanHash = NULL;
   }
 
   myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
@@ -930,7 +973,9 @@ void reinitMutexes (void) {
  */
   createMutex(&myGlobals.logViewMutex);
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
-  createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
+  createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions
+                                             * access */
+  createMutex(&myGlobals.fcSessionsMutex);
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.packetQueueMutex);
   createMutex(&myGlobals.packetProcessMutex);
@@ -986,6 +1031,7 @@ void initThreads(void) {
 
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
   createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
+  createMutex(&myGlobals.fcSessionsMutex); /* data to synchronize TCP sessions access */
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.purgeMutex);       /* synchronize purging */
   createMutex(&myGlobals.securityItemsMutex);
@@ -1153,11 +1199,20 @@ void addDevice(char* deviceName, char* deviceDescr) {
     }
 #endif
 
+    if (myGlobals.noFc) {
       myGlobals.device[deviceId].pcapPtr =
 	pcap_open_live(myGlobals.device[deviceId].name,
 		       myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN,
 		       myGlobals.disablePromiscuousMode == 1 ? 0 : 1,
 		       100 /* ms */, ebuf);
+    }
+    else {
+        myGlobals.device[deviceId].pcapPtr =
+	pcap_open_live(myGlobals.device[deviceId].name,
+		       MAX_PACKET_LEN,
+		       myGlobals.disablePromiscuousMode == 1 ? 0 : 1,
+		       100 /* ms */, ebuf);
+    }
 
       if(myGlobals.device[deviceId].pcapPtr == NULL) {
 	traceEvent(CONST_TRACE_FATALERROR, "pcap_open_live(): '%s'", ebuf);
@@ -1174,7 +1229,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 #ifdef WIN32
 	sprintf(myName, "%s/%s.pcap",
 		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-		myGlobals.pcapLog);
+		deviceId);
 #else
 	sprintf(myName, "%s/%s.%s.pcap",
 		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
@@ -1189,10 +1244,16 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
       }
 
-      if(myGlobals.enableSuspiciousPacketDump) {
+    if(myGlobals.enableSuspiciousPacketDump) {
+#ifdef WIN32        
+	sprintf(myName, "%s/ntop-suspicious-pkts.dev%d.pcap",
+		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+		deviceId);
+#else
 	sprintf(myName, "%s/ntop-suspicious-pkts.%s.pcap",
 		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 		myGlobals.device[deviceId].name);
+#endif        
 	myGlobals.device[deviceId].pcapErrDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
 	if(myGlobals.device[deviceId].pcapErrDumper == NULL) {
@@ -1289,6 +1350,25 @@ void addDevice(char* deviceName, char* deviceDescr) {
       traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for ipTraffixMatrixHosts failed", memlen);
       exit(-1);
     }
+
+    /* Allocate FC Traffic Matrices */
+#ifdef NOT_YET    
+    if (!myGlobals.noFc) {
+        memlen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
+        myGlobals.device[deviceId].fcTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
+                                                                            *myGlobals.device[deviceId].numHosts,
+                                                                            sizeof(TrafficEntry*));
+        if(myGlobals.device[deviceId].fcTrafficMatrix == NULL) {
+            traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTraffixMatrix failed", memlen);
+            exit(-1);
+        }
+        myGlobals.fcTrafficMatrixMemoryUsage += memlen;
+
+        memlen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
+        myGlobals.device[deviceId].fcTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
+                                                                                       myGlobals.device[deviceId].numHosts);
+    }
+#endif    
   }
 
   /* ********************************************* */
@@ -1388,6 +1468,7 @@ void initDevices(char* devices) {
 #endif
   int found=0, intfc;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
+  char myName[80];
 
   ebuf[0] = '\0';
 
@@ -1406,6 +1487,16 @@ void initDevices(char* devices) {
     resetStats(0);
     initDeviceDatalink(0);
 
+    if(myGlobals.enableSuspiciousPacketDump) {
+        sprintf(myName, "%s/ntop-suspicious-pkts.%s.pcap",
+                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+                myGlobals.device[0].name);
+        myGlobals.device[0].pcapErrDumper = pcap_dump_open(myGlobals.device[0].pcapPtr, myName);
+        
+        if(myGlobals.device[0].pcapErrDumper == NULL)
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY, "pcap_dump_open() for suspicious packets: '%s'", ebuf);
+    }
+  
     free(myGlobals.device[0].name);
     myGlobals.device[0].name = strdup("pcap-file");
     myGlobals.numDevices = 1;
@@ -1791,6 +1882,26 @@ u_int createDummyInterface(char *ifName) {
     myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
     myGlobals.otherHostEntry->next = NULL;
   }
+
+#ifdef NOT_YET  
+  mallocLen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
+  myGlobals.device[deviceId].fcTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
+                                                                      *myGlobals.device[deviceId].numHosts,
+                                                                      sizeof(TrafficEntry*));
+  if(myGlobals.device[deviceId].fcTrafficMatrix == NULL) {
+      traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTraffixMatrix failed", mallocLen);
+      exit(-1);
+  }
+  
+  mallocLen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
+  myGlobals.device[deviceId].fcTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
+                                                                                 myGlobals.device[deviceId].numHosts);
+
+  if(myGlobals.device[deviceId].fcTrafficMatrixHosts == NULL) {
+      traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTrafficMatrixHosts failed", mallocLen);
+      exit(-1);
+  }
+#endif 
 
   return(deviceId);
 }
