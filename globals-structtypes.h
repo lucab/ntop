@@ -1484,7 +1484,7 @@ XML*/
                                      /*XML n sslPort              Options    "-W | --https-server :port" */
 #endif
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   int throughput_chart_type;         /* '129' */
                                      /*XML * throughputChartType  Options    "--throughput-chart-type"
                                      newxml_namedstring(elOptions, "throughput_chart_type",

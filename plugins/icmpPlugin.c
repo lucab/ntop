@@ -211,7 +211,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   } else /* host=3240847503&icmp=3 */ {
     char *tmpStr;    
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
     if(strncmp(url, "chart", strlen("chart")) == 0) {
       unsigned long  sc[2] = { 0xf08080L, 0x4682b4L }; /* see clr[] in graph.c */
 
@@ -310,7 +310,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   }
 
 #if 0 /* Not quite useful */
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   if(hostIpAddress.s_addr == 0)
     sendString("<BR><CENTER><IMG SRC=\"/plugins/icmpWatch?chart\"></CENTER><P>\n");
 #endif

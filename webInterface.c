@@ -3647,7 +3647,9 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
     fd_set mask, mask_copy;
     int topSock = myGlobals.sock;
 
+#ifdef CFG_MULTITHREADED
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) started...\n", myGlobals.handleWebConnectionsThreadId);
+#endif
 
 #ifndef WIN32
 #ifdef CFG_MULTITHREADED
@@ -3791,11 +3793,10 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
 	sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
       }
 
-      traceEvent(CONST_TRACE_INFO, "Terminating Web connections...");
+      traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) terminated...\n", myGlobals.handleWebConnectionsThreadId);
 
 #endif /* CFG_MULTITHREADED */
 
-      traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) terminated...\n", myGlobals.handleWebConnectionsThreadId);
       return(NULL); 
 
     }

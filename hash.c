@@ -394,15 +394,19 @@ void freeHostInstances(int actualDeviceId) {
     for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
       if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL) {
 	num++;
+#ifdef CFG_MULTITHREADED
         HEARTBEAT(1, "freeHostInstances() calling freeHostInfo(), mutex: [%s %s:%d]",   
 		  myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
 		  myGlobals.tcpSessionsMutex.lockFile,
 		  myGlobals.tcpSessionsMutex.lockLine);
+#endif
 	freeHostInfo(actualDeviceId, myGlobals.device[actualDeviceId].hash_hostTraffic[idx], actualDeviceId);
+#ifdef CFG_MULTITHREADED
         HEARTBEAT(1, "freeHostInstances() returned from freeHostInfo(), mutex: [%s %s:%d]",   
 		  myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
 		  myGlobals.tcpSessionsMutex.lockFile,
 		  myGlobals.tcpSessionsMutex.lockLine);
+#endif
 	myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;
 #ifdef HAVE_SCHED_H
 	sched_yield(); /* Allow other threads to run */
@@ -555,15 +559,19 @@ void purgeIdleHosts(int actDevice) {
 	                   idx, theFlaggedHosts[idx]->hostSymIpAddress);
 #endif
 
+#ifdef CFG_MULTITHREADED
     HEARTBEAT(1, "purgeIdleHosts() calling freeHostInfo(), mutex: [%s %s:%d]",   
                  myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
                  myGlobals.tcpSessionsMutex.lockFile,
                  myGlobals.tcpSessionsMutex.lockLine);
+#endif
     freeHostInfo(actDevice, theFlaggedHosts[idx], actDevice);
+#ifdef CFG_MULTITHREADED
     HEARTBEAT(1, "purgeIdleHosts() returning freeHostInfo(), mutex: [%s %s:%d]",   
                  myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
                  myGlobals.tcpSessionsMutex.lockFile,
                  myGlobals.tcpSessionsMutex.lockLine);
+#endif
     numFreedBuckets++;
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads to run */

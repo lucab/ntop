@@ -651,6 +651,8 @@ static void purgeIpPorts(int theDevice) {
 
 /* **************************************** */
 
+#ifdef CFG_MULTITHREADED
+
 void* scanIdleLoop(void* notUsed _UNUSED_) {
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) started...\n", myGlobals.scanIdleThreadId);
@@ -680,6 +682,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated...\n", myGlobals.scanIdleThreadId);
   return(NULL); 
 }
+#endif
 
 /* **************************************** */
 #ifndef WIN32
