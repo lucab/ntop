@@ -463,7 +463,8 @@ extern const char *gdbm_strerror (int);
 #endif
 #define MAX_NUM_ROUTERS 512
 
-#define MAX_NUM_DEQUEUE_THREADS  1
+#define MAX_HOSTS_CACHE_LEN     512
+#define MAX_NUM_DEQUEUE_THREADS   1
 
 #define DEFAULT_SNAPLEN  384 /* 68 (default) is not enough for DNS packets */
 #define DEFAULT_COUNT    500

@@ -770,6 +770,11 @@ void printNtopConfigInfo(void) {
     BufferOverflow();
   sendString(buf);
 
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Host Memory Cache Size</TH>"
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.hostsCacheLen) < 0)
+    BufferOverflow();
+  sendString(buf);
+
 #ifdef MULTITHREADED
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Pkts to Process</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",

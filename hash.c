@@ -274,7 +274,19 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
 
   purgeHostIdx(theDevice, hostIdx);
 
-  free(host);
+  /*
+    Do not free the host pointer but add it to
+    a list of 'ready to use' pointers.
+
+    Memory Recycle
+  */
+  
+  if(myGlobals.hostsCacheLen < (MAX_HOSTS_CACHE_LEN-1)) {
+    myGlobals.hostsCache[myGlobals.hostsCacheLen++] = host;
+  } else {
+    /* No room left: it's time to free the bucket */
+    free(host);
+  }
 
   myGlobals.numPurgedHosts++;
 
@@ -583,7 +595,16 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    el = NULL;
 
 	  if(el == NULL) {
-	    el = (HostTraffic*)malloc(sizeof(HostTraffic));
+	    if(myGlobals.hostsCacheLen > 0) {
+	      el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
+	      /*
+		traceEvent(TRACE_INFO, "Fetched host from pointers cache (len=%d)", 
+		(int)myGlobals.hostsCacheLen);
+	      */
+	    } else {
+	      el = (HostTraffic*)malloc(sizeof(HostTraffic));
+	    }
+
 	    memset(el, 0, sizeof(HostTraffic));
 	    el->firstSeen = myGlobals.actTime;
 	  }

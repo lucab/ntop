@@ -322,7 +322,7 @@ static int checkFilter(char* theFilter,
 
 void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64], filter[128], *hostKey;
-  unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE, j;
+  unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE, j, localView=0;
   HostTraffic *el;
   struct re_pattern_buffer filterPattern;
   unsigned char shortView = 0;
@@ -360,6 +360,8 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  strncpy(key, &tmpStr[i+1], sizeof(key));
 	} else if(strcmp(tmpStr, "view") == 0) {
 	  if(strcmp(key, "short")) shortView = 1;
+	} else if(strcmp(tmpStr, "restrict") == 0) {
+	  if(strcmp(key, "local")) localView = 1;
 	} else if(strcmp(tmpStr, "filter") == 0) {
 	  strncpy(filter, &tmpStr[i+1], sizeof(filter));
 	}
@@ -401,10 +403,17 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  continue;
       }
 
-      if(el->hostNumIpAddress[0] != '\0')
+      if(el->hostNumIpAddress[0] != '\0') {
 	hostKey = el->hostNumIpAddress;
-      else
+	if(localView) {
+	  if((!subnetPseudoLocalHost(el))
+	     || (el->numUses == 0))
+	    continue;
+	}
+      } else {
+	if(localView) continue;
 	hostKey = el->ethAddressString;
+      }
 
     REPEAT_HOSTS:
       if(numEntries > 0)
@@ -872,7 +881,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
 
 void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
   char intoabuf[32], key[16], localbuf[32], filter[128], *keyName;
-  int lang=DEFAULT_LANGUAGE, i, numEntries;
+  int lang=DEFAULT_LANGUAGE, i, numEntries, localView=0;
   struct re_pattern_buffer filterPattern;
   unsigned short shortView = 0;
 
@@ -904,6 +913,8 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	  strncpy(key, &tmpStr[i+1], sizeof(key));
 	} else if(strcmp(tmpStr, "view") == 0) {
 	  if(strcmp(key, "short")) shortView = 1;
+	} else if(strcmp(tmpStr, "restrict") == 0) {
+	  if(strcmp(key, "local")) localView = 1; /* not yet used */
 	} else if(strcmp(tmpStr, "filter") == 0) {
 	  strncpy(filter, &tmpStr[i+1], sizeof(filter));
 	}

@@ -324,6 +324,9 @@ typedef struct ntopGlobals {
   /* http.c */
   FILE *accessLogFd;
 
+  /*  ****************** */
+  HostTraffic *hostsCache[MAX_HOSTS_CACHE_LEN];
+  u_short      hostsCacheLen;
 } NtopGlobals;
 
 #endif /* GLOBALS_H */

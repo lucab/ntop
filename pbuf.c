@@ -337,8 +337,10 @@ static void checkFragmentOverlap(u_int srcHostIdx,
     }
 
     allocateSecurityHostPkts(fragment->src); allocateSecurityHostPkts(fragment->dest);
-    incrementUsageCounter(&fragment->src->secHostPkts->overlappingFragmentSent, dstHostIdx, actualDeviceId);
-    incrementUsageCounter(&fragment->dest->secHostPkts->overlappingFragmentRcvd, srcHostIdx, actualDeviceId);
+    incrementUsageCounter(&fragment->src->secHostPkts->overlappingFragmentSent,
+			  dstHostIdx, actualDeviceId);
+    incrementUsageCounter(&fragment->dest->secHostPkts->overlappingFragmentRcvd, 
+			  srcHostIdx, actualDeviceId);
   }
 }
 
