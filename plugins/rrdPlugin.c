@@ -1856,23 +1856,30 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
         u_int numEntries = 0;
 
-	// save this as it may change
+	/* save this as it may change */
 	maxHosts = myGlobals.device[devIdx].hostsno;
 	len = sizeof(DomainStats)*maxHosts;
-	tmpStats = (DomainStats*)malloc(len);
-	memset(tmpStats, 0, len);
+	tmpStats = (DomainStats*)mallocAndInitWithReportWarn(len, "rrdMainLoop");
+	if (tmpStats == NULL) {
+          traceEvent(CONST_TRACE_WARNING, "RRD: Out of memory, skipping domain RRD dumps");
+	  continue;
+	}
 
 	len = sizeof(DomainStats**)*maxHosts;
-	stats = (DomainStats**)malloc(len);
-	memset(stats, 0, len);
-
-	// walk through all hosts, getting their domain names and counting stats
+	stats = (DomainStats**)mallocAndInitWithReportWarn(len, "rrdMainLoop(2)");
+	
+	if (stats == NULL) {
+          traceEvent(CONST_TRACE_WARNING, "RRD: Out of memory, skipping domain RRD dumps");
+	  continue;
+	}
+	
+	/* walk through all hosts, getting their domain names and counting stats */
 	for (el = getFirstHost(devIdx);
 	  el != NULL; el = getNextHost(devIdx, el)) {
 
 	    fillDomainName(el);
-
-	    // if we didn't get a domain name, bail out
+	    
+	    /* if we didn't get a domain name, bail out */
 	    if ((el->dnsDomainValue == NULL)
 	       || (el->dnsDomainValue[0] == '\0')
 	       || (el->ip2ccValue == NULL)
@@ -1892,7 +1899,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      el->dnsDomainValue) != 0))
 		keyValue = (keyValue+1) % maxHosts;
 
-	    // if we just start counting for this domain...
+	    /* if we just start counting for this domain... */
 	    if(stats[keyValue] != NULL)
 	      statsEntry = stats[keyValue];
 	    else {
@@ -1905,7 +1912,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 #endif
 	    }
 
-	    // count this host's stats in the domain stats
+	    /* count this host's stats in the domain stats */
 	    totBytesSent += el->bytesSent.value;
 	    statsEntry->bytesSent.value += el->bytesSent.value;
 	    statsEntry->bytesRcvd.value += el->bytesRcvd.value;
@@ -1922,13 +1929,13 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    if(numEntries >= maxHosts) break;
 	}
 
-	// if we didn't find a single domain, continue with the next interface
+	/* if we didn't find a single domain, continue with the next interface */
 	if (numEntries == 0) {
 	    free(tmpStats); free(stats);
 	    continue;
 	}
 
-	// insert all domain data for this interface into the RRDs
+	/* insert all domain data for this interface into the RRDs */
 	for (idx=0; idx < numEntries; idx++) {
 	    statsEntry = &tmpStats[idx];
 
