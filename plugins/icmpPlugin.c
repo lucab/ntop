@@ -215,8 +215,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   FILE *fd;
   int tmpfd;
 
-  fd = getNewRandomFile(fileName, NAME_MAX);
-
   i = sizeof(float)*device[actualReportDeviceId].actualHashSize;
   s = (float*)malloc(i); r = (float*)malloc(i);
   memset(s, 0, i); memset(r, 0, i);
@@ -280,6 +278,8 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       }
 
       /* traceEvent(TRACE_INFO, "file=%s\n", fileName); */
+
+      fd = getNewRandomFile(fileName, NAME_MAX);
 
       GDC_title = "ICMP Host Traffic";
       /* The line below causes a crash on Solaris/SPARC (who knows why) */
