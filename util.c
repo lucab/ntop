@@ -720,42 +720,43 @@ void handleFlowsSpecs(char* flows) {
 	       "It has been ignored.\n", flowSpec);
       else {
 	flowSpec[len-1] = '\0';
-	flowSpec++;
-
-	rc = pcap_compile(device[0].pcapPtr, &fcode, flowSpec, 1, device[0].netmask.s_addr);
-
-	if(rc < 0)
-	 traceEvent(TRACE_INFO, "Wrong flow specification \"%s\" (syntax error). "
-		 "It has been ignored.\n", flowSpec);
-	else {
-	  FlowFilterList *newFlow;
-
-	  newFlow = (FlowFilterList*)calloc(1, sizeof(FlowFilterList));
-
-	  if(newFlow == NULL) {
-	   traceEvent(TRACE_INFO, "Fatal error: not enough memory. Bye!\n");
-	    if(buffer != NULL) free(buffer);
-	    exit(-1);
-	  } else {
-	    int i;
-
-	    newFlow->flowName = strdup(flowName);
-
-	    for(i=0; i<numDevices; i++) {
-	      rc = pcap_compile(device[i].pcapPtr, &newFlow->fcode[i],
-				flowSpec, 1, device[i].netmask.s_addr);
-
-	      if(rc < 0) {
-		printf("Wrong flow specification \"%s\" (syntax error). "
-		       "It has been ignored.\n", flowSpec);
-		return;
-	      }
-	    }
-
-	    newFlow->next = flowsList;
-	    flowsList = newFlow;
-	  }
-	}
+        flowSpec++;
+        
+        rc = pcap_compile(device[0].pcapPtr, &fcode, flowSpec, 1, device[0].netmask.s_addr);
+        
+        if(rc < 0)
+          traceEvent(TRACE_INFO, "Wrong flow specification \"%s\" (syntax error). "
+                     "It has been ignored.\n", flowSpec);
+        else {
+          FlowFilterList *newFlow;
+          
+          newFlow = (FlowFilterList*)calloc(1, sizeof(FlowFilterList));
+          
+          if(newFlow == NULL) {
+            traceEvent(TRACE_INFO, "Fatal error: not enough memory. Bye!\n");
+            if(buffer != NULL) free(buffer);
+            exit(-1);
+          } else {
+            int i;
+            
+            for(i=0; i<numDevices; i++) {
+              rc = pcap_compile(device[i].pcapPtr, &newFlow->fcode[i],
+                                flowSpec, 1, device[i].netmask.s_addr);
+              
+              if(rc < 0) {
+                printf("Wrong flow specification \"%s\" (syntax error). "
+                       "It has been ignored.\n", flowSpec);
+                free(newFlow);
+                return;
+              }
+            }
+            
+            newFlow->flowName = strdup(flowName);
+            newFlow->pluginStatus.activePlugin=1;
+            newFlow->next = flowsList;
+            flowsList = newFlow;
+          }
+        }
       }
     }
 

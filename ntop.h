@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (C) 1998-2000 Luca Deri <deri@ntop.org>
  *                          Portions by Stefano Suin <stefano@ntop.org>
@@ -1052,6 +1053,7 @@ typedef struct ipGlobalSession {
   u_short sessionCounter;          /* # of sessions we've observed             */
   TrafficCounter bytesSent;        /* # bytes sent     (peer -> initiator)     */
   TrafficCounter bytesReceived;    /* # bytes received (peer -> initiator)     */
+  TrafficCounter bytesFragmentedSent, bytesFragmentedReceived; /* IP Fragments */
   u_int lastPeer;                  /* idx of the last peer added to the list   */
   u_int peersIdx[MAX_NUM_SESSION_PEERS]; /* session peers idx          */
   struct ipGlobalSession  *next;   /* next element (linked list)               */
@@ -1115,6 +1117,8 @@ typedef struct ipSession {
   TrafficCounter bytesReceived;     /* # bytes received (peer -> initiator)[IP] */
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
+  TrafficCounter bytesFragmentedSent, bytesFragmentedReceived;  /* IP Fragments */
+  u_int minWindow, maxWindow;       /* TCP window size */
   u_short numFin;                   /* # FIN pkts received                      */
   u_short numFinAcked;              /* # ACK pkts received                      */
   tcp_seq lastAckIdI2R;             /* ID of the last ACK received              */

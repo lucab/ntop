@@ -26,7 +26,7 @@
 static int sortSendMode=0;
 
 /* #define PRINT_PKTS                 */
-/* #define PRINT_ALL_ACTIVE_SESSIONS  */
+#define PRINT_ALL_ACTIVE_SESSIONS
 /* #define PRINT_RETRANSMISSION_DATA  */
 
 static char* getBgPctgColor(float pctg);
@@ -2869,7 +2869,9 @@ static void printHostSessions(HostTraffic *el, u_int elIdx) {
        ) {
       char *sport, *dport, *remotePeer;
       TrafficCounter dataSent, dataReceived, retrDataSent, retrDataRcvd;
+      TrafficCounter fragDataSent, fragDataRcvd;
       int retrSentPercentage, retrRcvdPercentage;
+      char fragStrSent[64], fragStrRcvd[64];
 
       if(numSessions == 0) {
 	sendString("<P><H1>Active TCP Sessions</H1><P>\n");
@@ -2884,8 +2886,9 @@ static void printHostSessions(HostTraffic *el, u_int elIdx) {
 #ifdef PRINT_RETRANSMISSION_DATA
 		   "<TH "TH_BG">Retran.&nbsp;Data&nbsp;Rcvd</TH>"
 #endif
-		   "<TH "TH_BG">Active&nbsp;Since</TH>"
-		   "<TH "TH_BG">Last&nbsp;Seen</TH>"
+		   "<TH "TH_BG" NOWRAP>Window&nbsp;Size</TH>"
+		   "<TH "TH_BG" NOWRAP>Active&nbsp;Since</TH>"
+		   "<TH "TH_BG" NOWRAP>Last&nbsp;Seen</TH>"
 		   "<TH "TH_BG">Duration</TH>"
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 		   "<TH "TH_BG">State</TH>"
@@ -2910,6 +2913,8 @@ static void printHostSessions(HostTraffic *el, u_int elIdx) {
 	dataReceived = tcpSession[idx]->bytesReceived;
 	retrDataSent = tcpSession[idx]->bytesRetranI2R;
 	retrDataRcvd = tcpSession[idx]->bytesRetranR2I;
+	fragDataSent = tcpSession[idx]->bytesFragmentedSent;
+	fragDataRcvd = tcpSession[idx]->bytesFragmentedReceived;
       } else {
 	/* Responder */
 	sport = getPortByNum(tcpSession[idx]->dport, IPPROTO_TCP);
@@ -2929,6 +2934,8 @@ static void printHostSessions(HostTraffic *el, u_int elIdx) {
 	dataReceived = tcpSession[idx]->bytesSent;
 	retrDataSent = tcpSession[idx]->bytesRetranR2I;
 	retrDataRcvd = tcpSession[idx]->bytesRetranI2R;
+	fragDataSent = tcpSession[idx]->bytesFragmentedReceived;
+	fragDataRcvd = tcpSession[idx]->bytesFragmentedSent;
       }
 
       /* Sanity check */
@@ -2939,36 +2946,48 @@ static void printHostSessions(HostTraffic *el, u_int elIdx) {
       retrSentPercentage = (int)((float)(retrDataSent*100))/((float)(dataSent+1));
       retrRcvdPercentage = (int)((float)(retrDataRcvd*100))/((float)(dataReceived+1));
 
+      if(fragDataSent == 0)
+	fragStrSent[0] = '\0';
+      else
+	snprintf(fragStrSent, sizeof(fragStrSent), "(%.1f fragmented)",
+		 (int)((float)(fragDataSent*100))/((float)(dataSent+1)));
+
+      if(fragDataRcvd == 0)
+	fragStrRcvd[0] = '\0';
+      else
+	snprintf(fragStrRcvd, sizeof(fragStrRcvd), "(%.1f fragmented)",
+		 (int)((float)(fragDataRcvd*100))/((float)(dataReceived+1)));
+
       snprintf(buf, sizeof(buf), "<TR %s>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s:%s</TD>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
 #ifdef PRINT_RETRANSMISSION_DATA
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
 #endif
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
 #ifdef PRINT_RETRANSMISSION_DATA
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
 #endif
-	      , getRowColor(),
-	      sport,
-	      remotePeer, dport,
-	      formatBytes(dataSent, 1),
+	       , getRowColor(),
+	       sport,
+	       remotePeer, dport,
+	       formatBytes(dataSent, 1), fragStrSent,
 #ifdef PRINT_RETRANSMISSION_DATA
-	      formatBytes(retrDataSent, 1),
-	      retrSentPercentage,
+	       formatBytes(retrDataSent, 1),
+	       retrSentPercentage,
 #endif
-	      formatBytes(dataReceived, 1)
+	       formatBytes(dataReceived, 1), fragStrRcvd
 #ifdef PRINT_RETRANSMISSION_DATA
-	      , formatBytes(retrDataRcvd, 1),
-	      retrRcvdPercentage
+	       , formatBytes(retrDataRcvd, 1),
+	       retrRcvdPercentage
 #endif
-	      );
+	       );
 
       sendString(buf);
 
-
       snprintf(buf, sizeof(buf),
+	      "<TD "TD_BG"  ALIGN=CENTER NOWRAP>%d:%d</TD>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
@@ -2976,13 +2995,14 @@ static void printHostSessions(HostTraffic *el, u_int elIdx) {
 	      "<TD "TD_BG"  ALIGN=CENTER>%s</TD>"
 #endif
 	      "</TR>\n",
-	      formatTime(&(tcpSession[idx]->firstSeen), 1),
-	      formatTime(&(tcpSession[idx]->lastSeen), 1),
-	      formatSeconds(actTime-tcpSession[idx]->firstSeen)
+	       tcpSession[idx]->minWindow, tcpSession[idx]->maxWindow,
+	       formatTime(&(tcpSession[idx]->firstSeen), 1),
+	       formatTime(&(tcpSession[idx]->lastSeen), 1),
+	       formatSeconds(actTime-tcpSession[idx]->firstSeen)
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
-	      , getSessionState(tcpSession[idx])
+	       , getSessionState(tcpSession[idx])
 #endif
-	      );
+	       );
 
       sendString(buf);
 
@@ -3092,9 +3112,9 @@ static void printHostDetailedInfo(HostTraffic *el) {
 
   if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
     snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	    "%s&nbsp;(%s)</TD></TR>\n",
+	    "%s</TD></TR>\n",
 	    getRowColor(),
-	    "Domain", el->fullDomainName, el->dotDomainName);
+	    "Domain", el->fullDomainName);
     sendString(buf);
   }
 
@@ -5623,8 +5643,7 @@ void listNetFlows(void) {
 
   if(list != NULL) {
     while(list != NULL) {
-      if((list->pluginStatus.activePlugin)
-	 && (list->pluginStatus.pluginPtr->bpfFilter != NULL)) {
+      if(list->pluginStatus.activePlugin) {
 	if(numEntries == 0) {
 	  sendString("<CENTER><P><H1>Network Flows</H1><P>"
 		     ""TABLE_ON"<TABLE BORDER=0><TR><TH "TH_BG">Flow Name</TH>"

@@ -59,13 +59,13 @@ static void termRemIntFunct(void) {
 
 /* ****************************** */
 
-void returnHostEntry(HostTraffic* theHost, char* udpBuf) {
+void returnHostEntry(HostTraffic* theHost, char* udpBuf, int bufLen) {
   char theTime[64];
 
   char buf1[384], buf2[384], buf3[384], buf4[384];
 
   if(theHost == NULL) {
-    snprintf(udpBuf, sizeof(udpBuf), "%s\n", EMPTY_SLOT_RC);
+    snprintf(udpBuf, sizeof(bufLen), "%s\n", EMPTY_SLOT_RC);
     return;    
   }
 
@@ -154,18 +154,18 @@ void returnHostEntry(HostTraffic* theHost, char* udpBuf) {
 	  (unsigned long)theHost->otherReceived);
 
 
-  snprintf(udpBuf, sizeof(udpBuf), "%s%s%s%s", buf1, buf2, buf3, buf4);
+  snprintf(udpBuf, bufLen, "%s%s%s%s", buf1, buf2, buf3, buf4);
 }
 
 /* ****************************** */
 
-void returnHostEntryIdx(u_int idx, char* udpBuf) {
+void returnHostEntryIdx(u_int idx, char* udpBuf, int bufLen) {
   if(idx > device[actualReportDeviceId].actualHashSize) {
-    snprintf(udpBuf, sizeof(udpBuf), "%s\n", OUT_OF_RANGE_RC);
+    snprintf(udpBuf, bufLen, "%s\n", OUT_OF_RANGE_RC);
     return;
   }
 
-  returnHostEntry(device[actualReportDeviceId].hash_hostTraffic[idx], udpBuf);
+  returnHostEntry(device[actualReportDeviceId].hash_hostTraffic[idx], udpBuf, bufLen);
 }
 
 /* ****************************** */
@@ -282,7 +282,7 @@ void* remIntLoop(void* notUsed _UNUSED_) {
 	  
 	idx = atoi(strIdx);
 	
-	returnHostEntryIdx(idx, udpBuf);
+	returnHostEntryIdx(idx, udpBuf, sizeof(udpBuf));
 	rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
 		    (struct sockaddr*)&source, sizeof(source));
       } else if(strncasecmp(udpBuf, FIND_HOST_BY_IP_CMD, 
@@ -307,7 +307,7 @@ void* remIntLoop(void* notUsed _UNUSED_) {
 	  continue;
 	} 
 	
-	returnHostEntry(findHostByMAC(macAddress), udpBuf);
+	returnHostEntry(findHostByMAC(macAddress), udpBuf, sizeof(udpBuf));
 	rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
 		    (struct sockaddr*)&source, sizeof(source));
       } else {

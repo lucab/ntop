@@ -609,15 +609,21 @@ static void updateHostSessionsList(u_int theHostIdx,
        || (initiator == CLIENT_TO_SERVER)) {
       scanner->bytesSent += theSession->bytesSent;
       scanner->bytesReceived += theSession->bytesReceived;
+      scanner->bytesFragmentedSent += theSession->bytesFragmentedSent; 
+      scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived; 
     } else {
       scanner->bytesSent += theSession->bytesReceived;
       scanner->bytesReceived += theSession->bytesSent;
+      scanner->bytesFragmentedSent += theSession->bytesFragmentedReceived; 
+      scanner->bytesFragmentedReceived += theSession->bytesFragmentedSent; 
     }
     break;
   case IPPROTO_UDP:
-    scanner->bytesSent += theSession->bytesSent;
-    scanner->bytesReceived += theSession->bytesReceived;
-    break;
+    scanner->bytesSent           += theSession->bytesSent;
+    scanner->bytesReceived       += theSession->bytesReceived;
+    scanner->bytesFragmentedSent += theSession->bytesFragmentedSent; 
+    scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived; 
+   break;
   }
 }
 
@@ -785,6 +791,8 @@ static void incrementUsageCounter(UsageCounter *counter,
 static void handleSession(const struct pcap_pkthdr *h,
 			  IPSession *sessions[],
 			  u_short *numSessions,
+			  u_short fragmentedData,
+			  u_int tcpWin,
 			  u_int srcHostIdx,
 			  u_short sport,
 			  u_int dstHostIdx,
@@ -1021,9 +1029,9 @@ static void handleSession(const struct pcap_pkthdr *h,
 	if((strncmp(rcStr, "GET ", 4) == 0)
 	   || (strncmp(rcStr, "HEAD ", 5) == 0)
 	   || (strncmp(rcStr, "POST ", 5) == 0)) {
-
-	  u_int16_t transactionId = (u_int16_t)(srcHost->hostIpAddress.s_addr+3*dstHost->hostIpAddress.s_addr
-	    +5*sport+7*dport);
+	  u_int16_t transactionId = (u_int16_t)(srcHost->hostIpAddress.s_addr+
+						3*dstHost->hostIpAddress.s_addr
+						+5*sport+7*dport);
 
 	  /* to be 64bit-proof we have to copy the elements */
 	  tvstrct.tv_sec = h->ts.tv_sec;
@@ -1060,12 +1068,20 @@ static void handleSession(const struct pcap_pkthdr *h,
 
     /* ***************************************** */
 
+    if((theSession->minWindow > tcpWin) || (theSession->minWindow == 0))
+      theSession->minWindow = tcpWin;
+
+    if((theSession->maxWindow < tcpWin) || (theSession->maxWindow == 0))
+      theSession->maxWindow = tcpWin;
+
     if(flowDirection == CLIENT_TO_SERVER) {
       theSession->bytesProtoSent += tcpDataLength;
-      theSession->bytesSent += length;
+      theSession->bytesSent      += length;
+      if(fragmentedData) theSession->bytesFragmentedSent += tcpDataLength;
     } else {
       theSession->bytesProtoRcvd += tcpDataLength;
-      theSession->bytesReceived += length;
+      theSession->bytesReceived  += length;
+      if(fragmentedData) theSession->bytesFragmentedReceived += tcpDataLength;
     }
 
     /*
@@ -1074,7 +1090,6 @@ static void handleSession(const struct pcap_pkthdr *h,
      * sessions initiated/received by the hosts can be updated
      *
      */
-
     if(tp->th_flags & TH_FIN) {
       u_int32_t fin = ntohl(tp->th_seq)+tcpDataLength;
 
@@ -1086,7 +1101,7 @@ static void handleSession(const struct pcap_pkthdr *h,
       if(check) {
 	/* This is not a duplicated (retransmitted) FIN */
 	theSession->finId[theSession->numFin] = fin;
-	theSession->numFin = (theSession->numFin+1)%MAX_NUM_FIN;;
+	theSession->numFin = (theSession->numFin+1) % MAX_NUM_FIN;;
 
 	if(sport < dport) /* Server -> Client */
 	  theSession->lastSCFin = fin;
@@ -1208,6 +1223,7 @@ static void handleSession(const struct pcap_pkthdr *h,
     }
 
     /* ****************************** */
+
     if(tp->th_flags & TH_RST) {
       incrementUsageCounter(&srcHost->rstPktsSent, dstHostIdx);
       incrementUsageCounter(&dstHost->rstPktsRcvd, srcHostIdx);
@@ -1237,6 +1253,7 @@ static void handleSession(const struct pcap_pkthdr *h,
       tmpSession.remotePeerIdx = checkSessionIdx(dstHostIdx);
     tmpSession.bytesSent = (TrafficCounter)length, tmpSession.bytesReceived = 0;
     tmpSession.sport = sport, tmpSession.dport = dport;
+    if(fragmentedData) tmpSession.bytesFragmentedSent += tcpDataLength;
 
 #ifdef DEBUG
     printSession(&tmpSession, sessionType, 0);
@@ -1342,6 +1359,8 @@ static void handleLsof(u_int srcHostIdx,
 /* *********************************** */
 
 static void handleTCPSession(const struct pcap_pkthdr *h,
+			     u_short fragmentedData, 
+			     u_int tcpWin,
 			     u_int srcHostIdx,
 			     u_short sport,
 			     u_int dstHostIdx,
@@ -1362,7 +1381,8 @@ static void handleTCPSession(const struct pcap_pkthdr *h,
        open. That's why we don't count this as a session in this
        case.
     */
-    handleSession(h, tcpSession, &numTcpSessions,
+    handleSession(h, tcpSession,
+		  &numTcpSessions, fragmentedData, tcpWin,
 		  srcHostIdx, sport,
 		  dstHostIdx, dport,
 		  length, tp, tcpDataLength, packetData);
@@ -1375,14 +1395,18 @@ static void handleTCPSession(const struct pcap_pkthdr *h,
 /* ************************************ */
 
 static void handleUDPSession(const struct pcap_pkthdr *h,
+			     u_short fragmentedData,
 			     u_int srcHostIdx,
 			     u_short sport,
 			     u_int dstHostIdx,
 			     u_short dport,
 			     u_int length,
 			     char* packetData) {  
-  handleSession(h, udpSession, &numUdpSessions, srcHostIdx, sport,
-		dstHostIdx, dport, length, NULL, 0, packetData);
+  handleSession(h, udpSession,
+		&numUdpSessions, fragmentedData, 0,
+		srcHostIdx, sport,
+		dstHostIdx, dport, length, 
+		NULL, 0, packetData);
 
   if(isLsofPresent)
     handleLsof(srcHostIdx, sport, dstHostIdx, dport, length);
@@ -1950,8 +1974,10 @@ static void processIpPkt(const u_char *bp,
   }
 
   if(ip.ip_p == GRE_PROTOCOL_TYPE) {
-    /* Cisco GRE (Generic Routing Encapsulation)
-       Tunnels (RFC 1701, 1702) */
+    /* 
+       Cisco GRE (Generic Routing Encapsulation)
+       Tunnels (RFC 1701, 1702) 
+    */
     GreTunnel tunnel;
 
     memcpy(&tunnel, bp+hlen, sizeof(GreTunnel));
@@ -2016,10 +2042,12 @@ static void processIpPkt(const u_char *bp,
     fflush(stdout);
   }
 
-  if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;
-  if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
-  if((dstHost->minTTL == 0) || (ip.ip_ttl < dstHost->minTTL)) dstHost->minTTL = ip.ip_ttl;
-  if((ip.ip_ttl > dstHost->maxTTL)) dstHost->maxTTL = ip.ip_ttl;
+  if(ip.ip_ttl != 255) {
+    if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;
+    if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
+    if((dstHost->minTTL == 0) || (ip.ip_ttl < dstHost->minTTL)) dstHost->minTTL = ip.ip_ttl;
+    if((ip.ip_ttl > dstHost->maxTTL)) dstHost->maxTTL = ip.ip_ttl;
+  }
 
   checkNetworkRouter(srcHost, dstHost, ether_dst);
   updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
@@ -2096,9 +2124,9 @@ static void processIpPkt(const u_char *bp,
     }
 
     if(off & 0x3fff)  /* Handle fragmented packets */
-      length=handleFragment(srcHost, dstHost, &sport, &dport,
-                            ntohs(ip.ip_id), off, length,
-                            ntohs(ip.ip_len) - hlen);
+      length = handleFragment(srcHost, dstHost, &sport, &dport,
+			      ntohs(ip.ip_id), off, length,
+			      ntohs(ip.ip_len) - hlen);
 
     if((sport > 0) && (dport > 0)) {
       /* It might be that tcpDataLength is 0 when
@@ -2148,10 +2176,11 @@ static void processIpPkt(const u_char *bp,
 	  handleIP(dport, srcHostIdx, dstHostIdx, length);
       }
 
-      handleTCPSession(h, srcHostIdx, sport, dstHostIdx,
+      handleTCPSession(h, (off & 0x3fff), tp.th_win,
+		       srcHostIdx, sport, dstHostIdx,
 		       dport, length, &tp, tcpDataLength,
 		       (char*)(bp+hlen+(tp.th_off * 4)));
-
+      
       if(grabSessionInformation) {
 	grabSession(srcHost, sport, dstHost, dport,
 		    (char*)(bp+hlen+(tp.th_off * 4)), tcpDataLength);
@@ -2336,9 +2365,9 @@ static void processIpPkt(const u_char *bp,
     }
 
     if (off & 0x3fff)  /* Handle fragmented packets */
-      length=handleFragment(srcHost, dstHost, &sport, &dport,
-                            ntohs(ip.ip_id), off, length,
-                            ntohs(ip.ip_len) - hlen);
+      length = handleFragment(srcHost, dstHost, &sport, &dport,
+			      ntohs(ip.ip_id), off, length,
+			      ntohs(ip.ip_len) - hlen);
 
     if((sport > 0) && (dport > 0)) {
       /* It might be that udpBytes is 0 when
@@ -2371,7 +2400,8 @@ static void processIpPkt(const u_char *bp,
       if(handleIP(dport, srcHostIdx, dstHostIdx, length) == -1)
 	handleIP(sport, srcHostIdx, dstHostIdx, length);
 
-      handleUDPSession(h, srcHostIdx, sport, dstHostIdx,
+      handleUDPSession(h, (off & 0x3fff), 
+		       srcHostIdx, sport, dstHostIdx,
 		       dport, length, (char*)(bp+length));
     }
     break;
