@@ -323,26 +323,26 @@ void printTrafficStatistics(int revertOrder) {
   }
 
   if (myGlobals.rFileName == NULL) {
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
-                  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
-                  ctime(&myGlobals.initialSniffTime),
-                  formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
-      sendString(buf);
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
+		ctime(&myGlobals.initialSniffTime),
+		formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
   }
   else {
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
-                  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-                  ctime(&myGlobals.initialSniffTime)) < 0)
-          BufferTooShort();
-      sendString(buf);
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		ctime(&myGlobals.initialSniffTime)) < 0)
+      BufferTooShort();
+    sendString(buf);
 
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left "DARK_BG">Last Packet Seen</TH>"
-                  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
-                  ctime((time_t *)&myGlobals.lastPktTime),
-                  formatSeconds(myGlobals.lastPktTime.tv_sec-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
-      sendString(buf);
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left "DARK_BG">Last Packet Seen</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
+		ctime((time_t *)&myGlobals.lastPktTime),
+		formatSeconds(myGlobals.lastPktTime.tv_sec-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
   }
   
   if((i = numActiveSenders(myGlobals.actualReportDeviceId)) > 0) {
@@ -364,591 +364,564 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
   if(myGlobals.numRealDevices > 1)
     sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<IMG SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" "
-                 "alt=\"interface traffic chart\"></TD></TR>\n");
+	       "<IMG SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" "
+	       "alt=\"interface traffic chart\"></TD></TR>\n");
 #endif
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
-      Counter dummyCounter;
+    Counter dummyCounter;
 
-      sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
-      if(snprintf(buf, sizeof(buf),
-                  "For device: '%s' (current reporting device)",
-                  myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
-          BufferTooShort();
-      printSectionTitle(buf);
-      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
+    sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
+    if(snprintf(buf, sizeof(buf),
+		"For device: '%s' (current reporting device)",
+		myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
+      BufferTooShort();
+    printSectionTitle(buf);
+    sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
-      sendString("<TR><TH "TH_BG" align=left "DARK_BG">Packets</TH><TD "TH_BG">\n"
-                 "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n");
+    sendString("<TR><TH "TH_BG" align=left "DARK_BG">Packets</TH><TD "TH_BG">\n"
+	       "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n");
 
-      unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
-          - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value
-          - myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value;
+    unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
+      - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value
+      - myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value;
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value <= 0)
-          myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value = 1;
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value <= 0)
+      myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value = 1;
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
-          if (pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStat) >= 0) {
-	    
-	    /* 
-	       Recent libpcap versions do not report total/cumulative values in ps_drop
-	       but its value is reset everytime is read
-	    */
-
-	    myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value += pcapStat.ps_drop;
-              if(snprintf(buf, sizeof(buf),
-                          "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Received&nbsp;(libpcap)</th>"
-                          "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-                          getRowColor(),
-                          formatPkts((Counter)pcapStat.ps_recv, formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-	      
-              if(snprintf(buf, sizeof(buf),
-                          "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;(libpcap)</th>"
-                          "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-                          getRowColor(),
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value, formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-          }
-
-          /* The lines below need to be rewritten as the pcap_stats() function
-             does not return cumulative values hence the ps_drop value is not
-             valid
-             /*
-             if((pcapStat.ps_recv-pcapStat.ps_drop) != 
-             myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value) {
-             if(snprintf(buf, sizeof(buf),
-             "<TR "TR_ON" %s><TD "TH_BG" align=\"center\" COLSPAN=\"3\">Note:&nbsp;"
-             "A small difference between the count above and the one below is nothing "
-             "to worry about.<br>"
-             "It's due to either packets processed in the small interval between the two "
-             "lines being printed or<br>(more likely) due to the limitations of the way "
-             "that libpcap counts packets."
-             "</TD></TR>\n",
-             getRowColor()) < 0)
-             BufferTooShort();
-             sendString(buf);
-             }
-          */
+    if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
+      if(pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStat) >= 0) {
+	/* 
+	   Recent libpcap versions do not report total/cumulative values
+	   but their value is reset everytime is read
+	*/
+	  
+	if(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value > pcapStat.ps_recv) {
+	  /* The counter is reset at each run */
+	  myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value += pcapStat.ps_drop;
+	} else {
+	  /* The counter is NOT reset at each run */
+	  myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value = pcapStat.ps_drop;
+	}
+	  
+	if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;(libpcap)</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",		
+		    getRowColor(),
+		    (float)(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value*100)
+		    /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value,
+			       formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
       }
+    }
+	
+    if(snprintf(buf, sizeof(buf),
+		"<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;(ntop)</th>"
+		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",		
+		getRowColor(),
+		(float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
+		/(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value, 
+			   formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
 
-      if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total&nbsp;Received&nbsp;by&nbsp;ntop</th>"
-		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-                  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value,
-                                            formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
-      sendString(buf);
+    if(snprintf(buf, sizeof(buf),
+		"<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total&nbsp;Received&nbsp;(ntop)</th>"
+		"<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value,
+					  formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
 
-      if(snprintf(buf, sizeof(buf),
-                  "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;by&nbsp;ntop</th>"
-                  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",		
-                  getRowColor(),
-                  (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
-                  /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value,
-                  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value, formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
-      sendString(buf);
 
+    if(snprintf(buf, sizeof(buf),
+		"<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total Packets Processed</th>"
+		"<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, 
+					  formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
+		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
+		ethernetPkts.value,
+		formatPkts(unicastPkts, formatBuf, sizeof(formatBuf))) < 0) BufferTooShort();
+    sendString(buf);
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
+		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value, formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Multicast</th>"
+		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+#ifndef EMBEDDED
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
+      sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+		 "<IMG SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" "
+		 "alt=\"pktCast distribution chart\"></TH></TR>\n");
+#endif
+
+    if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       /*
-        if(snprintf(buf, sizeof(buf),
-        "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Gives:&nbsp;processed&nbsp;by&nbsp;ntop</th>"
-        "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-        getRowColor(), 
-        formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value
-        - myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value)) < 0)
-        BufferTooShort();
-        sendString(buf);
+	Very rudimental formula. Note that as specified in RMON, packets smaller
+	than 64 or larger than 1518 octets are not counted.
       */
-
-      if(snprintf(buf, sizeof(buf),
-                  "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total packets processed</th>"
-                  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-                  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Shortest</th>"
+		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
+		  getRowColor(),
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.shortest.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      avgPktLen = (96*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value
+		   +192*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value
+		   +384*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value
+		   +768*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value
+		   +1271*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value)/
+	(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value+1);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average&nbsp;Size</th>"
+		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
+		  getRowColor(), formatPkts(avgPktLen, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Longest</th>"
+		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
+		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].
+					    rcvdPktStats.longest.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
       sendString(buf);
 
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
-                  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                  getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
-                  ethernetPkts.value,
-                  formatPkts(unicastPkts, formatBuf, sizeof(formatBuf))) < 0) BufferTooShort();
-      sendString(buf);
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
-                  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)/
-                  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value, formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
-      sendString(buf);
-
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Multicast</th>"
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;64&nbsp;bytes</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)/
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.upTo64.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;128&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.upTo128.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;256&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.upTo256.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;512&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.upTo512.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;1024&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.upTo1024.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;1518&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.upTo1518.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&gt;&nbsp;1518&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.above1518.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
       sendString(buf);
 
 #ifndef EMBEDDED
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
-          sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-                     "<IMG SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" "
-                     "alt=\"pktCast distribution chart\"></TH></TR>\n");
+	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		   "<IMG SRC=\"" CONST_PIE_PKT_SIZE_DIST CHART_FORMAT "\" "
+		   "alt=\"pktSize distribution chart\"></TH></TR>\n");
 #endif
 
-      if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-          /*
-            Very rudimental formula. Note that as specified in RMON, packets smaller
-            than 64 or larger than 1518 octets are not counted.
-          */
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Shortest</th>"
-                      "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-                      getRowColor(),
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.shortest.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          avgPktLen = (96*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value
-                       +192*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value
-                       +384*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value
-                       +768*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value
-                       +1271*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value)/
-              (myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value+1);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average&nbsp;Size</th>"
-                      "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-                      getRowColor(), formatPkts(avgPktLen, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Longest</th>"
-                      "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-                      getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].
-                                                rcvdPktStats.longest.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), myGlobals.mtuSize[myGlobals.device[myGlobals.actualReportDeviceId].datalink],
+		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
 
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;64&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdPktStats.upTo64.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;128&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdPktStats.upTo128.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;256&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdPktStats.upTo256.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;512&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdPktStats.upTo512.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;1024&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdPktStats.upTo1024.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;1518&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdPktStats.upTo1518.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&gt;&nbsp;1518&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdPktStats.above1518.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Bad&nbsp;Packets&nbsp;(Checksum)</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.badChecksum.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value, formatBuf, sizeof(formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+    }
 
-#ifndef EMBEDDED
-          if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
-              sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-                         "<IMG SRC=\"" CONST_PIE_PKT_SIZE_DIST CHART_FORMAT "\" "
-                         "alt=\"pktSize distribution chart\"></TH></TR>\n");
-#endif
+    /* ****************** */
 
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), myGlobals.mtuSize[myGlobals.device[myGlobals.actualReportDeviceId].datalink],
-                      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Bad&nbsp;Packets&nbsp;(Checksum)</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdPktStats.badChecksum.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value, formatBuf, sizeof(formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-      }
-
-      /* ****************** */
-
-      if(!myGlobals.noFc &&
-         myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
-          sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">FC Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
+    if(!myGlobals.noFc &&
+       myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
+      sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">FC Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
         
-          if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
-                          "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
-                          getRowColor(),
-                          formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value, 1,
-                                      formatBuf, sizeof (formatBuf)),
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                                     formatBuf1, sizeof (formatBuf1))) < 0)
-                  BufferTooShort();
-              sendString(buf);
+      if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
+		    "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
+		    getRowColor(),
+		    formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value, 1,
+				formatBuf, sizeof (formatBuf)),
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+			       formatBuf1, sizeof (formatBuf1))) < 0)
+	  BufferTooShort();
+	sendString(buf);
 #ifdef NOT_YET        
-              if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value > 0) {
-                  if(snprintf(buf, sizeof(buf),
-                              "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
-                              "<TD "TD_BG" COLSPAN=2 align=right>%s [%.2f %%]</td></TR>\n",
-                              getRowColor(),
-                              formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value,
-                                         formatBuf, sizeof (formatBuf)),
-                              (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
-                              /(float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value) < 0)
-                      BufferTooShort();
-                  sendString(buf);
-              }
+	if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value > 0) {
+	  if(snprintf(buf, sizeof(buf),
+		      "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
+		      "<TD "TD_BG" COLSPAN=2 align=right>%s [%.2f %%]</td></TR>\n",
+		      getRowColor(),
+		      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value,
+				 formatBuf, sizeof (formatBuf)),
+		      (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
+		      /(float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+	}
 #endif
-          }
+      }
         
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
-                      fcPkts.value,
-                      formatPkts(unicastPkts, formatBuf, sizeof (formatBuf))) < 0) BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
+		  fcPkts.value,
+		  formatPkts(unicastPkts, formatBuf, sizeof (formatBuf))) < 0) BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Shortest</th>"
-                      "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-                      getRowColor(),
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.shortest.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Shortest</th>"
+		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
+		  getRowColor(),
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.shortest.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          avgPktLen = myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value/
-              myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value;
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average&nbsp;Size</th>"
-                      "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-                      getRowColor(), formatPkts(avgPktLen, formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      avgPktLen = myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value/
+	myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value;
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average&nbsp;Size</th>"
+		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
+		  getRowColor(), formatPkts(avgPktLen, formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Longest</th>"
-                      "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-                      getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].
-                                                rcvdFcPktStats.longest.value, formatBuf,
-                                                sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Longest</th>"
+		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
+		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].
+					    rcvdFcPktStats.longest.value, formatBuf,
+					    sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&le&nbsp;36&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.upTo36.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo36.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&le&nbsp;36&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.upTo36.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo36.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;48&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.upTo48.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo48.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;48&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.upTo48.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo48.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;52&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.upTo52.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo52.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;52&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.upTo52.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo52.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;68&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.upTo68.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo68.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;68&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.upTo68.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo68.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;104&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.upTo104.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo104.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;548&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.upTo548.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo548.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;1060&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.upTo1060.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo1060.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;104&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.upTo104.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo104.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;548&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.upTo548.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo548.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;1060&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.upTo1060.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo1060.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;2136&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.upTo2136.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo2136.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;2136&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.upTo2136.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo2136.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&gt;&nbsp;2136&nbsp;bytes</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.above2136.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&gt;&nbsp;2136&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.above2136.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" "DARK_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-                     "<IMG SRC=\"" CONST_PIE_FC_PKT_SZ_DIST CHART_FORMAT"\" alt=\"FC pktSize distribution chart\"></TH></TR>\n");
+      sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" "DARK_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		 "<IMG SRC=\"" CONST_PIE_FC_PKT_SZ_DIST CHART_FORMAT"\" alt=\"FC pktSize distribution chart\"></TH></TR>\n");
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), 2136,
-                      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), 2136,
+		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
       
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Bad&nbsp;EOF&nbsp;Frames</th>"
-                      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                      getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                             rcvdFcPktStats.badCRC.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-                      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.badCRC.value,
-                                 formatBuf, sizeof (formatBuf))) < 0)
-              BufferTooShort();
-          sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Bad&nbsp;EOF&nbsp;Frames</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdFcPktStats.badCRC.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.badCRC.value,
+			     formatBuf, sizeof (formatBuf))) < 0)
+	BufferTooShort();
+      sendString(buf);
           
-      }
-      /* ****************** */
+    }
+    /* ****************** */
 
-      sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
-                  "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
-                  getRowColor(),
-                  formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value, 1, formatBuf, sizeof(formatBuf)),
-                  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
+    sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
+		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
+		getRowColor(),
+		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value, 1, formatBuf, sizeof(formatBuf)),
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">IP Traffic</th>"
+		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
+		getRowColor(), formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1, formatBuf, sizeof(formatBuf)),
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value, formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Fragmented IP Traffic</th>"
+		  "<TD "TD_BG" align=right COLSPAN=2>%s [%.1f%%]</td></TR>\n",
+		  getRowColor(),
+		  formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value, 1, formatBuf, sizeof(formatBuf)),
+		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value) < 0)
+	BufferTooShort();
       sendString(buf);
+    }
 
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">IP Traffic</th>"
-                  "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
-                  getRowColor(), formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1, formatBuf, sizeof(formatBuf)),
-                  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value, formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
-      sendString(buf);
+    /* Just in case... */
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value >
+       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value)
+      dummyCounter = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value-
+	myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
+    else
+      dummyCounter = 0;
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0) {
-          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Fragmented IP Traffic</th>"
-                      "<TD "TD_BG" align=right COLSPAN=2>%s [%.1f%%]</td></TR>\n",
-                      getRowColor(),
-                      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value, 1, formatBuf, sizeof(formatBuf)),
-                      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value)/
-                      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value) < 0)
-              BufferTooShort();
-          sendString(buf);
-      }
-
-      /* Just in case... */
-      if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value >
-         myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value)
-          dummyCounter = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value-
-              myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
-      else
-          dummyCounter = 0;
-
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Non IP Traffic</th>"
-                  "<TD "TD_BG" align=right COLSPAN=2>%s</td></TR>\n",
-                  getRowColor(), formatBytes(dummyCounter, 1, formatBuf, sizeof(formatBuf))) < 0)
-          BufferTooShort();
-      sendString(buf);
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Non IP Traffic</th>"
+		"<TD "TD_BG" align=right COLSPAN=2>%s</td></TR>\n",
+		getRowColor(), formatBytes(dummyCounter, 1, formatBuf, sizeof(formatBuf))) < 0)
+      BufferTooShort();
+    sendString(buf);
 
 #ifndef EMBEDDED
-      if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
-          sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-                     "<IMG SRC=\"" CONST_PIE_IP_TRAFFIC CHART_FORMAT "\" alt=\"ipTraffic chart\"></TH></TR>\n");
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
+      sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+		 "<IMG SRC=\"" CONST_PIE_IP_TRAFFIC CHART_FORMAT "\" alt=\"ipTraffic chart\"></TH></TR>\n");
 #endif
 
-      /* ********************* */
+    /* ********************* */
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value > 0) {
-          int avgPktTTL;
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value > 0) {
+      int avgPktTTL;
 
-          avgPktTTL = (int)((16*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value
-                             +48*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value
-                             +80*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value
-                             +112*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value
-                             +144*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value
-                             +176*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value
-                             +208*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value
-                             +240*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value)/
-                            myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value);
+      avgPktTTL = (int)((16*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value
+			 +48*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value
+			 +80*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value
+			 +112*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value
+			 +144*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value
+			 +176*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value
+			 +208*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value
+			 +240*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value)/
+			myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value);
 
-          if(avgPktTTL > 0) {
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average&nbsp;TTL</th>"
-                          "<TD "TD_BG" align=right COLSPAN=2>%d</td></TR>\n",
-                          getRowColor(), avgPktTTL) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">TTL &lt; 32</th>"
-                          "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                          getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                                 rcvdPktTTLStats.upTo32.value)/
-                          (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value,
-				     formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">32 &lt; TTL &lt; 64</th>"
-                          "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                          getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                                 rcvdPktTTLStats.upTo64.value)/
-                          (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value, 
-				     formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">64 &lt; TTL &lt; 96</th>"
-                          "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                          getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                                 rcvdPktTTLStats.upTo96.value)/
-                          (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value,
-				     formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">96 &lt; TTL &lt; 128</th>"
-                          "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                          getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                                 rcvdPktTTLStats.upTo128.value)/
-                          (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value,
-				     formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">128 &lt; TTL &lt; 160</th>"
-                          "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                          getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                                 rcvdPktTTLStats.upTo160.value)/
-                          (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value,
-				     formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">160 &lt; TTL &lt; 192</th>"
-                          "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                          getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                                 rcvdPktTTLStats.upTo192.value)/
-                          (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value,
-				     formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">192 &lt; TTL &lt; 224</th>"
-                          "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                          getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                                 rcvdPktTTLStats.upTo224.value)/
-                          (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value,
-				     formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">224 &lt; TTL &lt; 256</th>"
-                          "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-                          getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-                                                 rcvdPktTTLStats.upTo255.value)/
-                          (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value,
-				     formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
+      if(avgPktTTL > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average&nbsp;TTL</th>"
+		    "<TD "TD_BG" align=right COLSPAN=2>%d</td></TR>\n",
+		    getRowColor(), avgPktTTL) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">TTL &lt; 32</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					   rcvdPktTTLStats.upTo32.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value,
+			       formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">32 &lt; TTL &lt; 64</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					   rcvdPktTTLStats.upTo64.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value, 
+			       formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">64 &lt; TTL &lt; 96</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					   rcvdPktTTLStats.upTo96.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value,
+			       formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">96 &lt; TTL &lt; 128</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					   rcvdPktTTLStats.upTo128.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value,
+			       formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">128 &lt; TTL &lt; 160</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					   rcvdPktTTLStats.upTo160.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value,
+			       formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">160 &lt; TTL &lt; 192</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					   rcvdPktTTLStats.upTo192.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value,
+			       formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">192 &lt; TTL &lt; 224</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					   rcvdPktTTLStats.upTo224.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value,
+			       formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">224 &lt; TTL &lt; 256</th>"
+		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					   rcvdPktTTLStats.upTo255.value)/
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value,
+			       formatBuf, sizeof(formatBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
 
 #ifndef EMBEDDED
-              sendString("<TR "TR_ON"><TH BGCOLOR=white COLSPAN=3>"
-                         "<IMG SRC=\"" CONST_PIE_TTL_DIST CHART_FORMAT "\" "
-                         "alt=\"pktTTD distribution chart\"></TH></TR>\n");
+	sendString("<TR "TR_ON"><TH BGCOLOR=white COLSPAN=3>"
+		   "<IMG SRC=\"" CONST_PIE_TTL_DIST CHART_FORMAT "\" "
+		   "alt=\"pktTTD distribution chart\"></TH></TR>\n");
 #endif
-          }
       }
+    }
 
-      sendString("</TABLE>"TABLE_OFF"</TR>");
-      /* ************************ */
+    sendString("</TABLE>"TABLE_OFF"</TR>");
+    /* ************************ */
 
 #ifndef EMBEDDED
     if(myGlobals.enableSessionHandling && drawHostsDistanceGraph(1))
@@ -1018,8 +991,8 @@ void printTrafficStatistics(int revertOrder) {
   /* RRD */
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
   if(snprintf(buf, sizeof(buf), "%s/interfaces/%s", 
-	   myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
+	      myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+	      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
     BufferTooShort();
   
   if((i = stat(buf, &statbuf)) == 0) {
@@ -1027,9 +1000,9 @@ void printTrafficStatistics(int revertOrder) {
                 "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
                 "<TD "TD_BG" align=\"right\">"
 		"[ <a href=\"/" CONST_PLUGINS_HEADER
-                    "rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
+		"rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
                 "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
-                    " alt=\"View rrd charts of historical data for this interface\"></a> ]"
+		" alt=\"View rrd charts of historical data for this interface\"></a> ]"
                 "</TD></TR>\n",
 		getRowColor(), myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
