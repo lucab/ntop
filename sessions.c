@@ -1016,7 +1016,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	      row = strtok_r(NULL, "\n", &strtokState);
 	    }
 	  }
-
 	  free(rcStr);
 	}
       } else if(((dport == 6346) || (dport == 6347) || (dport == 6348)) /* Gnutella */
@@ -1244,6 +1243,38 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		   srcHost->hostNumIpAddress, sport, dstHost->hostNumIpAddress, dport,
 		   &rcStr[9]);
 #endif
+	  }
+
+	  free(rcStr);
+	}
+      } else {
+	/* Further decoders */
+	if((packetDataLength > 0)
+	   && (packetData[0] == '$')
+	   && ((theSession->bytesProtoSent.value > 0) || (theSession->bytesProtoSent.value < 32))
+	   ) {
+
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength-1] = '\0';
+
+	  /* traceEvent(TRACE_INFO, "rcStr '%s'", rcStr); */
+	  if((!strncmp(rcStr, "$Get", 4))
+	     || (!strncmp(rcStr, "$Send", 5))
+	     || (!strncmp(rcStr, "$Search", 7))
+	     || (!strncmp(rcStr, "$Hello", 6))
+	     || (!strncmp(rcStr, "$MyNick", 7))
+	     || (!strncmp(rcStr, "$Quit", 5))) {
+	    /* See dcplusplus.sourceforge.net */
+	      
+	    if(!strncmp(rcStr, "$MyNick", 7)) {
+	      updateHostUsers(strtok(&rcStr[8], "|"), P2P_USER, srcHost);
+	    } else if(!strncmp(rcStr, "$Get", 4)) {
+	      char *file = strtok(&rcStr[5], "$");
+		
+	      updateFileList(file, P2P_DOWNLOAD_MODE, srcHost);
+	      updateFileList(file, P2P_UPLOAD_MODE,   dstHost);
+	    }
 	  }
 
 	  free(rcStr);
