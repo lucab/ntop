@@ -672,6 +672,7 @@ void printNtopConfigInfo(void) {
   printFeatureConfigInfo("HTTP gzip compression", "No");
 #endif
 
+
 #ifdef HAVE_GDCHART
   printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Present");
   printFeatureConfigInfo("Chart Format", CHART_FORMAT);
@@ -977,6 +978,83 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
 #ifdef MULTITHREADED
   createThread(&handleWebConnectionsThreadId, handleWebConnections, NULL);
 #endif
+}
+
+/* **************************************** */
+
+void usage(void) {
+  char buf[80];
+
+  if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
+	      program_name, version, THREAD_MODE, osName, buildDate) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  traceEvent(TRACE_INFO, "%s\n", buf);
+
+  traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
+  traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
+  if(snprintf(buf, sizeof(buf), "Written by %s.", author) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+  traceEvent(TRACE_INFO, "%s\n", buf);
+
+  if(snprintf(buf, sizeof(buf), "Usage: %s", program_name) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+  traceEvent(TRACE_INFO, "%s\n", buf);
+
+  traceEvent(TRACE_INFO, "    %s\n",   "[-c <sticky hosts: idle hosts are not purged from hash>]");
+#ifdef WIN32
+  traceEvent(TRACE_INFO, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
+#else
+  traceEvent(TRACE_INFO, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
+	     ALARM_TIME, REFRESH_TIME);
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
+#ifndef WIN32
+  traceEvent(TRACE_INFO, "    %s\n",   "[-E <enable lsof/nmap integration (if present)>]");
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
+#ifndef WIN32
+  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
+#else
+  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface index>]");
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-S <store mode> (store persistently host stats)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
+#ifdef HAVE_OPENSSL
+  traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows)]");
+#ifndef WIN32
+  traceEvent(TRACE_INFO, "    %s\n",   "[-d (run ntop in daemon mode)]");
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-m <local addresses (see man page)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-F <flow specs (see man page)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-b <client:port (ntop DB client)>]");
+#ifdef HAVE_MYSQL
+  traceEvent(TRACE_INFO, "    %s\n",   "[-v <username:password:dbName (ntop mySQL client)>]");
+#endif
+  traceEvent(TRACE_INFO, "    %s\n",   "[-R <matching rules file>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-N <don't use nmap if installed>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-q <create file ntop-suspicious-pkts.XXX.pcap>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-l <path> (dump packets captured on a file: debug only!)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-g <client:port (Cisco NetFlow client)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-A (accuracy level [0-2])]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-U <mapper.pl URL> | \"\" for not displaying host location ]");  
+  traceEvent(TRACE_INFO, "    %s\n",   "[-k <show kernel filter expression in extra frame>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-j (set ntop in border gateway sniffing mode)]");
+#ifndef WIN32
+  traceEvent(TRACE_INFO, "    %s\n",   "[-K <enable application debug (no fork() is used)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-L <use syslog instead of stdout>]");
+#endif
+  traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
 }
 
 /* ******************************************* */
