@@ -2124,8 +2124,8 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "-w | --http-server", buf);
 
   printParameterConfigInfo(textPrintFlag, "-z | --disable-sessions",
-                           myGlobals.enableSessionHandling == 1 ? "Enabled" : "Disabled",
-                           NTOP_DEFAULT_ENABLE_SESSIONHANDLE == 1 ? "Enabled" : "Disabled");
+                           myGlobals.enableSessionHandling == 1 ? "No" : "Yes",
+                           NTOP_DEFAULT_ENABLE_SESSIONHANDLE == 1 ? "No" : "Yes");
 
   printParameterConfigInfo(textPrintFlag, "-B | --filter-expression",
                            ((myGlobals.currentFilterExpression == NULL) ||
