@@ -391,6 +391,13 @@ void printTrafficStatistics(int revertOrder) {
 
       if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
           if (pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStat) >= 0) {
+	    
+	    /* 
+	       Recent libpcap versions do not report total/cumulative values in ps_drop
+	       but its value is reset everytime is read
+	    */
+
+	    myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value += pcapStat.ps_drop;
               if(snprintf(buf, sizeof(buf),
                           "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Received&nbsp;(libpcap)</th>"
                           "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
@@ -398,18 +405,12 @@ void printTrafficStatistics(int revertOrder) {
                           formatPkts((Counter)pcapStat.ps_recv, formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
+	      
               if(snprintf(buf, sizeof(buf),
-                          "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Less:&nbsp;Dropped&nbsp;(libpcap)</th>"
+                          "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;(libpcap)</th>"
                           "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
                           getRowColor(),
-                          formatPkts((Counter)pcapStat.ps_drop, formatBuf, sizeof(formatBuf))) < 0)
-                  BufferTooShort();
-              sendString(buf);
-              if(snprintf(buf, sizeof(buf),
-                          "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Gives:&nbsp;Given&nbsp;to&nbsp;ntop</th>"
-                          "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-                          getRowColor(),
-                          formatPkts((Counter)(pcapStat.ps_recv-pcapStat.ps_drop), formatBuf, sizeof(formatBuf))) < 0)
+                          formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value, formatBuf, sizeof(formatBuf))) < 0)
                   BufferTooShort();
               sendString(buf);
           }

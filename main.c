@@ -764,7 +764,7 @@ static int parseOptions(int argc, char* argv []) {
     exit(0);
   }
 
-  myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;
+  myGlobals.scsiDefaultDevType = (char)SCSI_DEV_UNINIT;
 #ifndef WIN32
   /* Handle any unrecognized options, such as a nested @filename */
   if(optind < argc) {

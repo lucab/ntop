@@ -211,9 +211,7 @@ void initIPServices(void) {
 /* ******************************* */
 
 static void initIPCountryTable(void) {
-  int idx, rc;
   u_char compressedFormat;
-  struct stat statBuf;
   char buf[LEN_GENERAL_WORK_BUFFER];
   FILE* fd;
 

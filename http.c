@@ -1889,6 +1889,15 @@ static int returnHTTPPage(char* pageName,
     storePrefsValue("globals.displayPrivacyNotice", "2");
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PRIVACY: Flag forced, notice will display each run");
     returnHTTPredirect(CONST_PRIVACYNOTICE_HTML);
+    } else if(strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
+                      strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      /*
+	It needs to go here otherwise when we update the pcap dropped packets
+	this value is updated only in the child process and not
+	into the main one.
+      */
+      printTrafficStatistics(revertOrder);
   } else {
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
@@ -2092,10 +2101,6 @@ static int returnHTTPPage(char* pageName,
                       strlen(CONST_SHOW_PORT_TRAFFIC_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       showPortTraffic(portNr);
-    } else if(strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
-                      strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printTrafficStatistics(revertOrder);
     } else if(strcasecmp(pageName, CONST_IP_PROTO_DISTRIB_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader(NULL, NULL, 0);

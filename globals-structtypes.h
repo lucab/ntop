@@ -1024,12 +1024,13 @@ typedef struct ntopInterface {
   /*
    * The packets section
    */
-  TrafficCounter receivedPkts;   /* # of pkts recevied by the application */
-  TrafficCounter droppedPkts;    /* # of pkts dropped by the application */
-  TrafficCounter ethernetPkts;   /* # of Ethernet pkts captured by the application */
-  TrafficCounter broadcastPkts;  /* # of broadcast pkts captured by the application */
-  TrafficCounter multicastPkts;  /* # of multicast pkts captured by the application */
-  TrafficCounter ipPkts;         /* # of IP pkts captured by the application */
+  TrafficCounter receivedPkts;    /* # of pkts recevied by the application */
+  TrafficCounter droppedPkts;     /* # of pkts dropped by the application */
+  TrafficCounter pcapDroppedPkts; /* # of pkts dropped by libpcap */
+  TrafficCounter ethernetPkts;    /* # of Ethernet pkts captured by the application */
+  TrafficCounter broadcastPkts;   /* # of broadcast pkts captured by the application */
+  TrafficCounter multicastPkts;   /* # of multicast pkts captured by the application */
+  TrafficCounter ipPkts;          /* # of IP pkts captured by the application */
 
   TrafficCounter fcPkts;
   TrafficCounter fcEofaPkts;
