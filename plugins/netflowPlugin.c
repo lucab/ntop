@@ -1556,9 +1556,10 @@ static void handleNetflowHTTPrequest(char* url) {
 
 /* ************************************* */
 
-  sendString("<p></CENTER>\n");
+  sendString("<p></CENTER></CENTER>\n");
   sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");
-  sendString("<p align=right>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</p>\n");
+  sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
+
 
   printHTMLtrailer();
 }

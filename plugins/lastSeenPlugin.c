@@ -219,7 +219,7 @@ static void handleLsHTTPrequest(char* url) {
     }
     /* ================================================================== */
 
-    addr.s_addr = intoa(tablehost[entry].HostIpAddress);
+    addr.s_addr = tablehost[entry].HostIpAddress.s_addr;
     HostT = findHostByNumIP(addr, myGlobals.actualReportDeviceId);
     if ( HostT )
       tmp = makeHostLink(HostT,FLAG_HOSTLINK_HTML_FORMAT,0,0);
@@ -247,10 +247,10 @@ static void handleLsHTTPrequest(char* url) {
   }
   sendString("</TABLE></CENTER><p>\n");
   if(snprintf(tmpStr, sizeof(tmpStr), 
-	   "<hr><CENTER><b>%u</b> host(s) collected.</CENTER><br>",
+	   "<CENTER><b>%u</b> host(s) collected.</CENTER><br>",
 	   num_hosts) < 0) BufferTooShort();
   sendString(tmpStr);
-  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+  sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
   printHTMLtrailer();
 }
 

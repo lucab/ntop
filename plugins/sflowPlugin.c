@@ -1753,7 +1753,8 @@ static void handlesFlowHTTPrequest(char* url) {
 
   if((myGlobals.sflowInSocket == 0)
      || (myGlobals.numSamplesReceived == 0)) {
-  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+    
+    sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
     printHTMLtrailer();
     return;
   }

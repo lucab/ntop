@@ -289,7 +289,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
   if(num == 0) {
     printNoDataYet();
-    sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+    sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
     printHTMLtrailer();
     return;
   }
