@@ -450,9 +450,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;
 
-  /* NetFlow */
-  myGlobals.netflowGlobals.netFlowInSocket = -1;
-
   /* sFlow */
   myGlobals.sflowGlobals.sflowDeviceId = -1;
   myGlobals.sflowGlobals.sflowInPort   = 0;

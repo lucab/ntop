@@ -388,6 +388,10 @@ void resetDevice(int devIdx) {
     myGlobals.device[devIdx].last30daysThptIdx=0;
   myGlobals.device[devIdx].hostsno = 1; /* Broadcast entry */
 
+  if(myGlobals.device[devIdx].netflowGlobals != NULL)
+    free(myGlobals.device[devIdx].netflowGlobals);
+  myGlobals.device[devIdx].netflowGlobals = NULL;
+
   len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
 
   if(myGlobals.device[devIdx].ipProtoStats == NULL)
@@ -1119,7 +1123,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     deviceId = myGlobals.numDevices;
     myGlobals.device[deviceId].humanFriendlyName = strdup(deviceDescr);
     myGlobals.device[deviceId].name = strdup(deviceName);
-    myGlobals.numDevices++, myGlobals.numRealDevices++;
+    myGlobals.numDevices++;
 
     if(myGlobals.numDevices >= MAX_NUM_DEVICES) {
       static u_char msgSent = 0;
@@ -1841,7 +1845,12 @@ u_int createDummyInterface(char *ifName) {
 
   mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
   tmpDevice = (NtopInterface*)malloc(mallocLen);
+  
+  if(tmpDevice == NULL)
+    return(-1);
+
   memset(tmpDevice, 0, mallocLen);
+
   if(myGlobals.numDevices > 0) {
     memcpy(tmpDevice, myGlobals.device,
 	   sizeof(NtopInterface)*myGlobals.numDevices);

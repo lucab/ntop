@@ -65,8 +65,8 @@ static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
 
     if(el != NULL) {
       if(el->magic != CONST_MAGIC_NUMBER) {
-	traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
-		   CONST_MAGIC_NUMBER, el->magic);
+	traceEvent(CONST_TRACE_WARNING, "Error: bad magic number [expected=%d/real=%d][deviceId=%d]",
+		   CONST_MAGIC_NUMBER, el->magic, actualDeviceId);
       }
 
       return(el);
@@ -3469,7 +3469,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
   datum key_data;
   datum data_data;
 
-  if((value == NULL) || (myGlobals.capturePackets == FLAG_NTOPSTATE_TERM)) return(-1);
+  if(value == NULL) return(-1);
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Entering fetchPrefValue()");

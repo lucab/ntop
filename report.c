@@ -60,15 +60,15 @@ void initReports(void) {
   /* Show device table */
   for(i=0; i<myGlobals.numDevices; i++) {
     traceEvent(CONST_TRACE_NOISY, "Device %2d. %-30s%s%s%s",
-                 i,
-                 myGlobals.device[i].humanFriendlyName != NULL ?
-                     myGlobals.device[i].humanFriendlyName :
-                     myGlobals.device[i].name,
-                 myGlobals.device[i].virtualDevice ? " (virtual)" : "",
-                 myGlobals.device[i].dummyDevice ? " (dummy)" : "",
-                 myGlobals.device[i].activeDevice ? " (active)" : "");
+	       i,
+	       myGlobals.device[i].humanFriendlyName != NULL ?
+	       myGlobals.device[i].humanFriendlyName :
+	       myGlobals.device[i].name,
+	       myGlobals.device[i].virtualDevice ? " (virtual)" : "",
+	       myGlobals.device[i].dummyDevice ? " (dummy)" : "",
+	       myGlobals.device[i].activeDevice ? " (active)" : "");
   }
-
+  
   /* Corrections on stored value */
   if(myGlobals.mergeInterfaces) {
     traceEvent(CONST_TRACE_NOISY,
@@ -363,10 +363,21 @@ void printTrafficStatistics(int revertOrder) {
   }
 
 #ifndef EMBEDDED
-  if(myGlobals.numRealDevices > 1)
-    sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-	       "<IMG SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" "
-	       "alt=\"interface traffic chart\"></TD></TR>\n");
+  if(myGlobals.numDevices > 1) {
+    int found = 0;
+    
+    for(i=0; i<myGlobals.numDevices; i++) 
+      if(myGlobals.device[i].ethernetPkts.value > 0) {
+	found = 1;
+	break;
+      }
+
+    if(found) {
+      sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		 "<IMG SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" "
+		 "alt=\"interface traffic chart\"></TD></TR>\n");
+    }
+  }
 #endif
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
@@ -436,7 +447,6 @@ void printTrafficStatistics(int revertOrder) {
 					  formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
-
 
     if(snprintf(buf, sizeof(buf),
 		"<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total Packets Processed</th>"

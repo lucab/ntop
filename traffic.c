@@ -545,47 +545,49 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
   char tmpBuf[80], *str;
   int c;
 
-    if (host->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) {
-        if (host->hostIpAddress.hostFamily == AF_INET)
-            hash = host->hostIp4Address.s_addr;
-#ifdef INET6
-        else if (host->hostIpAddress.hostFamily == AF_INET6)
-            hash = *(u_int32_t *)&host->hostIp6Address.s6_addr[0];
-#endif
-    }
-    else {
-        if (host->fcCounters->vsanId) {
-	  hash ^= host->fcCounters->vsanId;
-	  hash ^= host->fcCounters->hostFcAddress.domain;
-	  hash ^= host->fcCounters->hostFcAddress.area;
-	  hash ^= host->fcCounters->hostFcAddress.port;
-	  if(snprintf(tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->fcCounters->vsanId, 
-		      host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
-		      host->fcCounters->hostFcAddress.port, hash) < 0)
-	    BufferTooShort();
-        } else {
-	  if(snprintf (tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x",
-		       host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
-		       host->fcCounters->hostFcAddress.port, host) < 0)
-	    BufferTooShort();
-        }
-        str = tmpBuf;
-	
-        /* sdbm hash algorithm */
-        hash = 0;
-        while (c = *str++) {
-            hash = c + (hash << 6) + (hash << 16) - hash;
-        }
+  if(myGlobals.device[actualDeviceId].numHosts  == 0) return(0);
 
-        /* Assuming that the numHosts for FC is always 1024, 1021 is nearest
-         * prime */
-        if (rehash) {
-            c = (5 - hash%5);
-            hash += c;
-        }
+  if (host->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) {
+    if (host->hostIpAddress.hostFamily == AF_INET)
+      hash = host->hostIp4Address.s_addr;
+#ifdef INET6
+    else if (host->hostIpAddress.hostFamily == AF_INET6)
+      hash = *(u_int32_t *)&host->hostIp6Address.s6_addr[0];
+#endif
+  }
+  else {
+    if (host->fcCounters->vsanId) {
+      hash ^= host->fcCounters->vsanId;
+      hash ^= host->fcCounters->hostFcAddress.domain;
+      hash ^= host->fcCounters->hostFcAddress.area;
+      hash ^= host->fcCounters->hostFcAddress.port;
+      if(snprintf(tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->fcCounters->vsanId, 
+		  host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
+		  host->fcCounters->hostFcAddress.port, hash) < 0)
+	BufferTooShort();
+    } else {
+      if(snprintf (tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x",
+		   host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
+		   host->fcCounters->hostFcAddress.port, host) < 0)
+	BufferTooShort();
     }
+    str = tmpBuf;
+	
+    /* sdbm hash algorithm */
+    hash = 0;
+    while (c = *str++) {
+      hash = c + (hash << 6) + (hash << 16) - hash;
+    }
+
+    /* Assuming that the numHosts for FC is always 1024, 1021 is nearest
+     * prime */
+    if (rehash) {
+      c = (5 - hash%5);
+      hash += c;
+    }
+  }
     
-    return((unsigned int)(hash) % myGlobals.device[actualDeviceId].numHosts);
+  return((unsigned int)(hash) % myGlobals.device[actualDeviceId].numHosts);
 }
 
 /* ******************************* */
@@ -594,6 +596,9 @@ void updateTrafficMatrix(HostTraffic *srcHost,
 			 HostTraffic *dstHost,
 			 TrafficCounter length, 
 			 int actualDeviceId) {
+
+  if(myGlobals.device[actualDeviceId].numHosts == 0) return;
+  
   if(isMatrixHost(srcHost, actualDeviceId) 
      && isMatrixHost(dstHost, actualDeviceId)) {
     unsigned int a, b, id;    

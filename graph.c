@@ -1355,22 +1355,19 @@ void interfaceTrafficPie(void) {
   totPkts.value = 0;
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
-      p[i] = (float)myGlobals.device[i].ethernetPkts.value;
-      totPkts.value += myGlobals.device[i].ethernetPkts.value;
-    } else
-      p[i] = 0.0;
+    p[i] = (float)myGlobals.device[i].ethernetPkts.value;
+    totPkts.value += myGlobals.device[i].ethernetPkts.value;
   }
 
-  if(totPkts.value == 0)
-    totPkts.value++;
+  if(totPkts.value == 0) {
+    traceEvent(CONST_TRACE_WARNING, "interfaceTrafficPie: no interfaces to draw");
+    return;
+  }
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    if((!myGlobals.device[i].virtualDevice) && (p[i] > 0))  {
-      p[myDevices]   = 100*(((float)p[i])/totPkts.value);
-      lbl[myDevices] = myGlobals.device[i].humanFriendlyName;
-      myDevices++;
-    }
+    p[myDevices]   = 100*(((float)p[i])/totPkts.value);
+    lbl[myDevices] = myGlobals.device[i].humanFriendlyName;
+    myDevices++;
   }
 
 #ifndef WIN32
@@ -1389,13 +1386,19 @@ void interfaceTrafficPie(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  if(myDevices == 1) p[0] = 100; /* just to be safe */
-  drawPie(400, 250,
+  if(myDevices == 1) 
+    p[0] = 100; /* just to be safe */
+  else if(myDevices == 0) {
+    traceEvent(CONST_TRACE_WARNING, "interfaceTrafficPie: no interfaces to draw");
+    return;
+  }
+
+  drawPie(500, 250,
 	  fd,		/* open file pointer */
 	  myDevices,	/* number of slices */
 	  lbl,		/* slice labels */
 	  p);		/* data array */
-
+  
   fclose(fd);
 
   if(!useFdOpen)

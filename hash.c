@@ -344,6 +344,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   /* Make sure this host is not part of the ipTrafficMatrixHosts list */
   if((myGlobals.device[actualDeviceId].ipTrafficMatrix != NULL)
+     && (myGlobals.device[actualDeviceId].numHosts > 0)
      && isMatrixHost(host, actualDeviceId)) {
     int id = matrixHostHash(host, actualDeviceId, 0);
 
@@ -355,7 +356,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     }
   }
 
-  if((myGlobals.device[actualDeviceId].fcTrafficMatrix) != NULL) {
+  if(myGlobals.device[actualDeviceId].fcTrafficMatrix != NULL) {
       int id = matrixHostHash (host, actualDeviceId, 0);
       
       myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[id] = NULL;
@@ -892,14 +893,14 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 
   while (el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
-      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
-		 CONST_MAGIC_NUMBER, el->magic);
+      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d) [deviceId=%d]",
+		 CONST_MAGIC_NUMBER, el->magic, actualDeviceId);
     }
 
     if(el->hostTrafficBucket != idx) {
-      traceEvent(CONST_TRACE_WARNING, "Error: wrong bucketIdx %s/%s (expected=%d/real=%d)",
+      traceEvent(CONST_TRACE_WARNING, "Error: wrong bucketIdx %s/%s (expected=%d/real=%d) [deviceId=%d]",
 		 el->ethAddressString, el->hostNumIpAddress,
-		 idx, el->hostTrafficBucket);
+		 idx, el->hostTrafficBucket, actualDeviceId);
     }
 
     if(vlanId == el->vlanId) {
