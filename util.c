@@ -3492,6 +3492,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
   if(!done) {
     /* Unknown fingerprint */
+    free(srcHost->fingerprint);
     srcHost->fingerprint = strdup(":"); /* Empty OS name */
   }
 
