@@ -947,6 +947,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
   );
 
+  printFeatureConfigInfo(textPrintFlag, "SUPPORT_SSLV3",
+#ifdef SUPPORT_SSLV3
+     "yes"
+#else
+     "no"
+#endif
+  );
+
   printFeatureConfigInfo(textPrintFlag, "ETHER_HEADER_HAS_EA",
 #ifdef ETHER_HEADER_HAS_EA
      "yes"

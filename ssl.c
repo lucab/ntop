@@ -39,12 +39,27 @@ static SSL_connection ssl[MAX_SSL_CONNECTIONS];
 
 #define CERTF  "ntop-cert.pem"
 
-#define CHK_NULL(x)    if ((x)==NULL) exit (1)
-#define CHK_ERR(err,s) if ((err)==-1) { perror(s); exit(1); }
-#define CHK_SSL(err)   if ((err)==-1) { ERR_print_errors_fp(stderr); exit(2); }
-
 int verify_callback(int ok, X509_STORE_CTX *ctx);
 
+void ntop_ssl_error_report(char * whyMe) {
+    unsigned long l;
+    char buf[200];
+    const char *file,*data;
+    int line,flags;
+    unsigned long es;
+
+    es=CRYPTO_thread_id();
+    while ((l=ERR_get_error_line_data(&file,&line,&data,&flags)) != 0) {
+        ERR_error_string_n(l, buf, sizeof buf);
+        traceEvent(TRACE_ERROR, "SSL(%s)ERROR [Thread %lu]: %s at %s(%d) %s\n",
+                                whyMe,
+                                es,
+                                buf,
+                                file,
+                                line,
+                                (flags&ERR_TXT_STRING)?data:"");
+    }
+}
 
 int init_ssl(void) {
   int idx;
@@ -90,19 +105,26 @@ int init_ssl(void) {
 
   SSL_load_error_strings();
   SSLeay_add_ssl_algorithms();
+#ifdef SUPPORT_SSLV3
+  meth = SSLv23_server_method();
+#else
   meth = SSLv2_server_method();
+#endif
   ctx = SSL_CTX_new (meth);
   if (!ctx) {
-    ERR_print_errors_fp(stderr);
+    ntop_ssl_error_report("ssl_init-server_method");
     return(2);
   }
 
-  /* SSL_CTX_set_options(ctx,0); */
+  SSL_CTX_set_options(ctx, SSL_OP_ALL); /* Enable the work-arounds */
 
+#ifdef SUPPORT_SSLV3
+  SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1); 
+#endif
 
   if ((!SSL_CTX_load_verify_locations(ctx, NULL, NULL)) ||
       (!SSL_CTX_set_default_verify_paths(ctx))) {
-      ERR_print_errors_fp(stderr);
+      ntop_ssl_error_report("ssl_init-verify");
     }
 
   SSL_CTX_set_session_id_context(ctx,
@@ -112,12 +134,12 @@ int init_ssl(void) {
   SSL_CTX_set_client_CA_list(ctx,SSL_load_client_CA_file(NULL));
 
   if (SSL_CTX_use_certificate_file(ctx, buf, SSL_FILETYPE_PEM) <= 0) {
-    ERR_print_errors_fp(stderr);
+    ntop_ssl_error_report("ssl_init-use_cert");
     return(3);
   }
 
   if (SSL_CTX_use_PrivateKey_file(ctx, buf, SSL_FILETYPE_PEM) <= 0) {
-    ERR_print_errors_fp(stderr);
+    ntop_ssl_error_report("ssl_init-use_pvtkey");
     return(4);
   }
 
@@ -153,7 +175,7 @@ static int init_ssl_connection(SSL *con) {
       traceEvent(TRACE_WARNING, "verify error:%s\n", X509_verify_cert_error_string(verify_error));
     }
     else
-      ERR_print_errors_fp(stderr);
+      ntop_ssl_error_report("ssl_init_connection");
 
     return(0);
   }
@@ -198,7 +220,8 @@ int accept_ssl_connection(int fd) {
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
     if(ssl[i].ctx == NULL) {
       ssl[i].ctx = SSL_new(ctx);
-      CHK_NULL(ssl[i].ctx);
+      if (ssl[i].ctx==NULL)
+          exit (1);
       SSL_clear(ssl[i].ctx);
       SSL_set_fd(ssl[i].ctx, fd);
       ssl[i].socketId = fd;

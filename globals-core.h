@@ -218,6 +218,7 @@ extern void updateDBOSname(HostTraffic *el);
 
 /* ssl.c */
 #ifdef HAVE_OPENSSL
+extern void ntop_ssl_error_report(char * whyMe);
 extern int init_ssl(void);
 extern int accept_ssl_connection(int fd);
 extern SSL *getSSLsocket(int fd);

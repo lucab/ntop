@@ -124,6 +124,10 @@ dnl> *** ToBeRocked ***
 dnl> user customizable section
 dnl>
 
+dnl>
+dnl> By default only enable SSLv2.  This allows for v3.
+dnl> The choice to enable this feature is left to the user.
+ac_enable_sslv3=no
 
 dnl>
 dnl> look for an unique ntop's source file in the distribution
@@ -327,6 +331,11 @@ dnl>
 dnl> Give the user an option to RUN with SIGPIPE ignored
 dnl>
 AC_ARG_ENABLE(ignoresigpipe, [  --enable-ignoresigpipe  Ignore SIGPIPE errors [default=do not ignore]], ac_enable_ignoresigpipe="yes", ac_enable_ignoresigpipe="no")
+
+dnl>
+dnl> Give the user an option to compile with sslv3 support.
+dnl>
+AC_ARG_ENABLE(sslv3, [  --enable-sslv3        enable ssl v3 support if available [default=disabled]], ac_enable_sslv3="yes")
 
 AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
@@ -1024,6 +1033,9 @@ if test ".$ac_disable_openssl" = ".no"; then
          MORELIBS="${MORELIBS} -L$OSSL_ROOT -lssl"
          INCS="${INCS} -I$OSSL_ROOT"
          AC_DEFINE(HAVE_OPENSSL)
+         if test ".$ac_enable_sslv3" = ".yes"; then
+             AC_DEFINE(SUPPORT_SSLV3)
+         fi
          AC_MSG_RESULT([found in $OSSL_ROOT])
     elif test -d $OSSL_ROOT &&
        test -r $OSSL_ROOT/libssl.a &&
@@ -1032,6 +1044,9 @@ if test ".$ac_disable_openssl" = ".no"; then
          MORELIBS="${MORELIBS} -L$OSSL_ROOT/crypto -lssl"
          INCS="${INCS} -I$OSSL_ROOT/include"
          AC_DEFINE(HAVE_OPENSSL)
+         if test ".$ac_enable_sslv3" = ".yes"; then
+             AC_DEFINE(SUPPORT_SSLV3)
+         fi
          AC_MSG_RESULT([found in $OSSL_ROOT])
     else
       AC_MSG_RESULT([not found in ${OSSL_ROOT}])
@@ -1050,6 +1065,9 @@ if test ".$ac_disable_openssl" = ".no"; then
          MORELIBS="${MORELIBS} -L$OSSL_ROOT/lib -lssl -lcrypto"
          INCS="${INCS} -I$OSSL_ROOT/include"
          AC_DEFINE(HAVE_OPENSSL)
+         if test ".$ac_enable_sslv3" = ".yes"; then
+             AC_DEFINE(SUPPORT_SSLV3)
+         fi
          AC_MSG_RESULT([found in $OSSL_ROOT])
   elif test -r /usr/lib/ssl/libssl.a &&
        test -r /usr/include/ssl/ssl.h; then
@@ -1057,6 +1075,9 @@ if test ".$ac_disable_openssl" = ".no"; then
          MORELIBS="${MORELIBS} -lssl -lcrypto"
          INCS="${INCS} -I/usr/include/ssl"
          AC_DEFINE(HAVE_OPENSSL)
+         if test ".$ac_enable_sslv3" = ".yes"; then
+             AC_DEFINE(SUPPORT_SSLV3)
+         fi
          AC_MSG_RESULT([found in $OSSL_ROOT])
   elif test -r /usr/lib/libssl.a &&
        test -r /usr/include/openssl/ssl.h; then
@@ -1064,6 +1085,9 @@ if test ".$ac_disable_openssl" = ".no"; then
          MORELIBS="${MORELIBS} -lssl -lcrypto"
          INCS="${INCS} -I/usr/include/openssl"
          AC_DEFINE(HAVE_OPENSSL)
+         if test ".$ac_enable_sslv3" = ".yes"; then
+             AC_DEFINE(SUPPORT_SSLV3)
+         fi
          AC_MSG_RESULT([found in $OSSL_ROOT])
   elif test -d ../openssl-0.9.4 &&
        test -r ../openssl-0.9.4/libssl.a &&
@@ -1074,6 +1098,9 @@ if test ".$ac_disable_openssl" = ".no"; then
          MORELIBS="${MORELIBS} -L$OSSL_ROOT -lssl -lcrypto"
          INCS="${INCS} -I$OSSL_ROOT/ssl"
          AC_DEFINE(HAVE_OPENSSL)
+         if test ".$ac_enable_sslv3" = ".yes"; then
+             AC_DEFINE(SUPPORT_SSLV3)
+         fi
          AC_MSG_RESULT([found in $OSSL_ROOT])
   elif test -d openssl-0.9.4 &&
        test -r openssl-0.9.4/libssl.a &&
@@ -1083,6 +1110,9 @@ if test ".$ac_disable_openssl" = ".no"; then
          MORELIBS="${MORELIBS} -L$OSSL_ROOT -lssl -lcrypto"
          INCS="${INCS} -I$OSSL_ROOT/ssl"
          AC_DEFINE(HAVE_OPENSSL)
+         if test ".$ac_enable_sslv3" = ".yes"; then
+             AC_DEFINE(SUPPORT_SSLV3)
+         fi
          AC_MSG_RESULT([found in $OSSL_ROOT])
   else
       AC_MSG_RESULT([not found!])
@@ -1094,6 +1124,9 @@ if test ".$ac_disable_openssl" = ".no"; then
   fi
 else
   AC_MSG_WARN([HTTPS support disabled via command line option!])
+  if test ".$ac_enable_sslv3" = ".yes"; then
+      AC_MSG_WARN([--enable-sslv3 irrelevant, ignored!])
+  fi
 fi
 
 dnl>

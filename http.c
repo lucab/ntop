@@ -208,21 +208,8 @@ static int readHTTPheader(char* theRequestedURL,
 #ifdef HAVE_OPENSSL
     if(myGlobals.newSock < 0) {
       rc = SSL_read(ssl, aChar, 1);
-      if(rc == -1) {
-        unsigned long l;
-        char buf[200];
-        const char *file,*data;
-        int line,flags;
-        unsigned long es;
-
-        es=CRYPTO_thread_id();
-        while ((l=ERR_get_error_line_data(&file,&line,&data,&flags)) != 0)
-                {
-                ERR_error_string_n(l, buf, sizeof buf);
-	        traceEvent(TRACE_ERROR, "SSL(read)ERROR: %lu:%s:%s:%d:%s\n",
-                                       es,buf,file,line,(flags&ERR_TXT_STRING)?data:"");
-                }
-      }
+      if(rc == -1)
+          ntop_ssl_error_report("read");
     } else
       rc = recv(myGlobals.newSock, aChar, 1, 0);
 #else

@@ -76,6 +76,9 @@
 /* Define if you have the OPENSSL Toolkit (-lssl) by Open SSL Project. */
 #undef HAVE_OPENSSL
 
+/* Define if you want support for SSL v3 */
+#undef SUPPORT_SSLV3
+
 /* Define if you want to have a asyncrhonous address resolution. */
 #undef ASYNC_ADDRESS_RESOLUTION
 
