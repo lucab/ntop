@@ -2520,7 +2520,9 @@ void setNBnodeNameType(HostTraffic *theHost,
   if((nbName == NULL) || (strlen(nbName) == 0))
     return;
 
-  if(strlen(nbName) >= (MAX_HOST_SYM_NAME_LEN-1)) nbName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+  if(strlen(nbName) >= (MAX_HOST_SYM_NAME_LEN-1)) /* (**) */
+    nbName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+  
   theHost->nbNodeType = (char)nodeType;
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
 
@@ -2536,6 +2538,11 @@ void setNBnodeNameType(HostTraffic *theHost,
       if(theHost->nbHostName == NULL) {
 	theHost->nbHostName = strdup(nbName);
        	updateHostName(theHost);
+
+	if(theHost->hostSymIpAddress[0] == '\0') {
+	  strcpy(theHost->hostSymIpAddress, nbName); /* See up (**) */
+	}
+
 #ifdef DEBUG
 	printf("nbHostName=%s [0x%X]\n", nbName, nodeType);
 #endif
