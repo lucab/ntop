@@ -320,10 +320,13 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isDHCPClient(el)) dynIp = "&nbsp;(dyn)"; else dynIp = "";
-  if(el->hostIpAddresses[1].s_addr != 0x0) multihomed = "<IMG SRC=/multihomed.gif BORDER=0>"; else multihomed = "";
-  if(gatewayHost(el)) gwStr = "<IMG SRC=/router.gif BORDER=0>"; else gwStr = "";
-  if(nameServerHost(el)) dnsStr = "(DNS)"; else dnsStr = "";
-  if(isPrinter(el)) printStr = "<IMG SRC=/printer.gif BORDER=0>"; else printStr = "";
+  if(isMultihomed(el))
+    multihomed = "&nbsp;<IMG SRC=/multihomed.gif BORDER=0>&nbsp;"; 
+  else
+    multihomed = "";
+  if(gatewayHost(el)) gwStr = "&nbsp;<IMG SRC=/router.gif BORDER=0>&nbsp;"; else gwStr = "";
+  if(nameServerHost(el)) dnsStr = "&nbsp;<IMG SRC=/dns.gif BORDER=0>&nbsp;"; else dnsStr = "";
+  if(isPrinter(el)) printStr = "&nbsp;<IMG SRC=/printer.gif BORDER=0>&nbsp;"; else printStr = "";
   
   switch(isHostHealthy(el)) {
   case 0: /* OK */
@@ -1005,7 +1008,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-E <enable lsof/nmap integration (if present)>]");
 #endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-p <TCP/UDP protocols to monitor> (see man page)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
 #ifdef WIN32
   traceEvent(TRACE_INFO, "    %s%d KB)>]\n", "[-B <NDIS buffer in Kbytes (default ",
 	     (int)(SIZE_BUF/1024));
@@ -1021,13 +1024,9 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
 #endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows"
+  traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows)]");
 #ifndef WIN32
-	     " (use only with -w)>"
-#endif
-	     );
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-d (daemon mode (use only with -w))]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-d (daemon mode)]");
 #endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-m <local addresses (see man page)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");

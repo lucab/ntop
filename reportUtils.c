@@ -29,7 +29,7 @@
 /* ************************************ */
 
 void formatUsageCounter(UsageCounter usageCtr,
-			TrafficCounter topValue 
+			TrafficCounter topValue
 			/* If this value != 0 then a percentage is printed */
 			) {
   char buf[BUF_SIZE];
@@ -56,7 +56,7 @@ void formatUsageCounter(UsageCounter usageCtr,
   }
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-    if((usageCtr.peersIndexes[i] != NO_PEER) 
+    if((usageCtr.peersIndexes[i] != NO_PEER)
        && (usageCtr.peersIndexes[i] != 0 /* Safety check: broadcast */)) {
       struct hostTraffic *el1;
 
@@ -505,7 +505,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     } else {
       arrow[0] = "";  theAnchor[0] = htmlAnchor1;
     }
-    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>Other&nbsp;TCP/UDP%s</A></TH>",
+    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>Other&nbsp;IP%s</A></TH>",
 	     theAnchor[0], i+2, arrow[0]) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -883,7 +883,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	      else
 		b_ = (*b)->napsterStats->bytesSent;
 #else
-	      a_ = b_ = 0;	    
+	      a_ = b_ = 0;
 #endif
 	    } else {
 	      a_ = (*a)->protoIPTrafficInfos[idx-1].sentLocally
@@ -948,7 +948,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	      else
 		b_ = (*b)->napsterStats->bytesRcvd;
 #else
-	      a_ = b_ = 0;	    
+	      a_ = b_ = 0;
 #endif
 	    } else {
 	      a_ = (*a)->protoIPTrafficInfos[idx-1].receivedLocally
@@ -1863,9 +1863,9 @@ void printPacketStats(HostTraffic *el) {
 
   if(el->arpReqPktsSent+el->arpReplyPktsSent+el->arpReplyPktsRcvd > 0) {
     if(!headerSent) {
-      printSectionTitle("Packet Statistics"); 
-      sendString(tableHeader); 
-      headerSent = 1; 
+      printSectionTitle("Packet Statistics");
+      sendString(tableHeader);
+      headerSent = 1;
     }
 
     sendString("<CENTER>\n"
@@ -1880,7 +1880,7 @@ void printPacketStats(HostTraffic *el) {
 		formatPkts(el->arpReqPktsSent)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
-    
+
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Reply Rcvd</TH>"
 		"<TD "TH_BG" ALIGN=RIGHT>%s (%.1f %%)</TD></TR>",
 		getRowColor(),
@@ -1934,14 +1934,14 @@ void printHostTrafficStats(HostTraffic *el) {
 
   if((totalSent == 0 ) && (totalReceived == 0))
     return;
-  
+
   printSectionTitle("Protocol Distribution");
-  
+
   sendString("<CENTER>\n"
 	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
 	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Received</TH></TR>\n");
-  
+
   printTableDoubleEntry(buf, sizeof(buf), "TCP", COLOR_1, (float)actTotalSent/1024,
 			100*((float)SD(actTotalSent, totalSent)),
 			(float)actTotalReceived/1024,
@@ -2056,7 +2056,7 @@ void printHostTrafficStats(HostTraffic *el) {
 
       if(totalReceived > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"></TD>", 
+		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"></TD>",
 		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
@@ -2114,7 +2114,7 @@ void printHostTrafficStats(HostTraffic *el) {
   }
 
   if((a > 0) && (b > 0)) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>TCP/UDP Distribution</TH>"
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>"
 		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1>"
 		"</TD>"
 		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT">"
@@ -2260,17 +2260,17 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       if(el->tcpSessionList != NULL) {
 	printSectionTitle("IP Session History");
       }
-      
+
       scanner = el->tcpSessionList;
       sessionType = "TCP";
     } else {
       if(el->udpSessionList != NULL) {
 	printSectionTitle("IP Session History");
       }
-      
+
       scanner = el->udpSessionList;
       sessionType = "UDP";
-    } 
+    }
 
     numSessions = 0;
 
@@ -2563,9 +2563,9 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 }
 
 /* ******************************* */
-/* 
+/*
    Return codes:
-   
+
    OK          0
    Warning     1
    Error       2!
@@ -2599,11 +2599,11 @@ static void checkHostHealthness(HostTraffic *el) {
 		"Network Healthness") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-    if(hasWrongNetmask(el)) 
+    if(hasWrongNetmask(el))
       sendString("<LI><IMG SRC=/Risk_medium.gif><A HREF=/help.html#1>"
 		 "Wrong network mask or bridging enabled</A>\n");
 
-    if(hasDuplicatedMac(el)) 
+    if(hasDuplicatedMac(el))
       sendString("<LI><IMG SRC=/Risk_high.gif><A HREF=/help.html#2>"
 		 "Duplicated MAC found for this IP address (spoofing?)</A>\n");
 
@@ -2617,6 +2617,7 @@ void printHostDetailedInfo(HostTraffic *el) {
   char buf[BUF_SIZE], buf1[64], sniffedName[MAXDNAME];
   float percentage;
   int printedHeader, i;
+  char *dynIp, *multihomed;
 
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "printAllSessionsHTML");
@@ -2629,11 +2630,11 @@ void printHostDetailedInfo(HostTraffic *el) {
   }
 
   if(el->hostSymIpAddress[0] == '\0') {
-    if(snprintf(buf, sizeof(buf), "Info about %s",
+    if(snprintf(buf, sizeof(buf), "Info about host %s",
 	    el->ethAddressString) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(buf, sizeof(buf), "Info about"
+    if(snprintf(buf, sizeof(buf), "Info about host"
 		" <A HREF=http://%s/>%s %s</A>\n",
 		el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2671,172 +2672,175 @@ void printHostDetailedInfo(HostTraffic *el) {
     else if(multicastHost(el)) hostType = "multicast";
     else hostType = "unicast";
 
-    if(el->hostIpAddresses[1].s_addr == 0x0) {
-      char *dynIp;
+    if(isDHCPClient(el))
+      dynIp = "/dynamic";
+    else
+      dynIp = "";
 
-      if(isDHCPClient(el))
-	dynIp = "/dynamic";
-      else
-	dynIp = "";
+    if(isMultihomed(el))
+      multihomed = "&nbsp;-&nbsp;multihomed&nbsp;<IMG SRC=/multihomed.gif BORDER=0>";
+    else
+      multihomed = "";
 
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s]",
-	      getRowColor(),
-	      "IP&nbsp;Address",
-	      el->hostNumIpAddress,
-	      countryIcon, hostType, dynIp) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    } else {
-      int i;
-
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		  "<TD "TD_BG"  ALIGN=RIGHT><ol>",
-	      getRowColor(), "IP Address") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-
-      for(i=0; i<MAX_MULTIHOMING_ADDRESSES; i++) {
-	if(el->hostIpAddresses[i].s_addr != 0x0) {
-	  if(snprintf(buf, sizeof(buf), "<LI>%s",
-		      _intoa(el->hostIpAddresses[i],
-			     buf, sizeof(buf))) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sendString(buf);
-	} else
-	  break;
-      }
-
-      if(snprintf(buf, sizeof(buf), "</ol>%s&nbsp;[%s - multihomed&nbsp;<IMG SRC=/multihomed.gif BORDER=0>]",
-		  countryIcon, hostType) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    }
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		"<TD "TD_BG"  ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s]",
+		getRowColor(),
+		"IP&nbsp;Address",
+		el->hostNumIpAddress,
+		countryIcon, hostType, dynIp, multihomed) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
 
     sendString("</TD></TR>\n");
-  }
 
-  if(el->dhcpStats != NULL) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>",
-		getRowColor(), "DHCP Information") < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+    if(isMultihomed(el)) {
+      u_int elIdx;
 
-    sendString("<TD "TD_BG"><TABLE BORDER WIDTH=100%%>\n");
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT><OL>",
+		  getRowColor(), "Multihomed Addresses") < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "DHCP Server",
-		_intoa(el->dhcpStats->dhcpServerIpAddress, buf1, sizeof(buf1))) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+      for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
+	HostTraffic *theHost = device[actualReportDeviceId].hash_hostTraffic[elIdx];
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "Previous IP Address",
-		_intoa(el->dhcpStats->previousIpAddress, buf1, sizeof(buf1))) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+	if((theHost != NULL)
+	   && (theHost != el)
+	   && (memcmp(theHost->ethAddress, el->ethAddress, ETHERNET_ADDRESS_LEN) == 0)) {
+	  if(snprintf(buf, sizeof(buf), "<LI><A HREF=/%s.html>%s</A>",
+		      theHost->hostNumIpAddress, theHost->hostNumIpAddress) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
+	}
+      }
+      
+      sendString("</TD></TR>");
+    }
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
-		getRowColor(), "Address Assigned on",
-		formatTime(&(el->dhcpStats->assignTime), 1)) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+    if(el->dhcpStats != NULL) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>",
+		  getRowColor(), "DHCP Information") < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
-		getRowColor(), "To be Renewed Before",
-		formatTime(&(el->dhcpStats->renewalTime), 1)) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+      sendString("<TD "TD_BG"><TABLE BORDER WIDTH=100%%>\n");
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
-		getRowColor(), "Lease Ends on",
-		formatTime(&(el->dhcpStats->leaseTime), 1)) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "DHCP Server",
+		  _intoa(el->dhcpStats->dhcpServerIpAddress, buf1, sizeof(buf1))) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
 
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "Previous IP Address",
+		  _intoa(el->dhcpStats->previousIpAddress, buf1, sizeof(buf1))) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>DHCP Packets</TH>"
-		"<TH "TH_BG" ALIGN=CENTER>Sent</TH><TH "TH_BG" ALIGN=RIGHT>Rcvd</TH></TR>\n",
-		getRowColor()) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
+		  getRowColor(), "Address Assigned on",
+		  formatTime(&(el->dhcpStats->assignTime), 1)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), "DHCP Discover",
-		formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG]),
-		formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG])) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
+		  getRowColor(), "To be Renewed Before",
+		  formatTime(&(el->dhcpStats->renewalTime), 1)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
 
-   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), "DHCP Offer",
-		formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG]),
-		formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_OFFER_MSG])) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), "DHCP Request",
-		formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG]),
-		formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_REQUEST_MSG])) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), "DHCP Decline",
-		formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG]),
-		formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_DECLINE_MSG])) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), "DHCP Ack",
-		formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG]),
-		formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_ACK_MSG])) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), "DHCP Nack",
-		formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG]),
-		formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_NACK_MSG])) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), "DHCP Release",
-		formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG]),
-		formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_RELEASE_MSG])) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
+		  getRowColor(), "Lease Ends on",
+		  formatTime(&(el->dhcpStats->leaseTime), 1)) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
 
 
-   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), "DHCP Inform",
-		formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG]),
-		formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_INFORM_MSG])) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>DHCP Packets</TH>"
+		  "<TH "TH_BG" ALIGN=CENTER>Sent</TH><TH "TH_BG" ALIGN=RIGHT>Rcvd</TH></TR>\n",
+		  getRowColor()) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(), "DHCP Discover",
+		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG]),
+		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG])) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(), "DHCP Offer",
+		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG]),
+		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_OFFER_MSG])) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(), "DHCP Request",
+		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG]),
+		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_REQUEST_MSG])) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(), "DHCP Decline",
+		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG]),
+		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_DECLINE_MSG])) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(), "DHCP Ack",
+		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG]),
+		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_ACK_MSG])) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(), "DHCP Nack",
+		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG]),
+		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_NACK_MSG])) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(), "DHCP Release",
+		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG]),
+		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_RELEASE_MSG])) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
 
 
-   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), "DHCP Unknown Msg",
-		formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG]),
-		formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_UNKNOWN_MSG])) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(), "DHCP Inform",
+		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG]),
+		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_INFORM_MSG])) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
 
-    sendString("</TABLE></TD></TR>\n");
+
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>\n",
+		  getRowColor(), "DHCP Unknown Msg",
+		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG]),
+		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_UNKNOWN_MSG])) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      sendString("</TABLE></TD></TR>\n");
+    }
   }
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2863,13 +2867,33 @@ void printHostDetailedInfo(HostTraffic *el) {
      && strcmp(el->ethAddressString, "00:01:02:03:04:05") /* dummy address */) {
     char *vendorName;
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-		"%s%s</TD></TR>\n",
-		getRowColor(), "MAC&nbsp;Address",
-		el->ethAddressString,
-		separator /* it avoids empty cells not to be rendered */) < 0)
+    if(isMultihomed(el)) {
+      char *symMacAddr, symLink[32];
+      int i;
+
+      symMacAddr = etheraddr_string(el->ethAddress);
+      strcpy(symLink, symMacAddr);
+      for(i=0; symLink[i] != '\0'; i++)
+	if(symLink[i] == ':')
+	  symLink[i] = '_';
+
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "<A HREF=%s.html>%s</A>%s</TD></TR>\n",
+		  getRowColor(), "Main Host MAC Address",
+		  symLink, symMacAddr,
+		  separator /* it avoids empty cells not to be rendered */) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+    } else {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+		  "%s%s</TD></TR>\n",
+		  getRowColor(), "MAC&nbsp;Address",
+		  el->ethAddressString,
+		  separator /* it avoids empty cells not to be rendered */) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+      sendString(buf);
+    }
 
     vendorName = getVendorInfo(el->ethAddress, 1);
     if(vendorName[0] != '\0') {
@@ -2902,7 +2926,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"<A HREF=%s.html>%s</A>%s</TD></TR>\n",
-		getRowColor(), "Last MAC Address",
+		getRowColor(), "Last MAC Address/Router",
 		symLink, symMacAddr,
 		separator /* it avoids empty cells not to be rendered */) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2923,7 +2947,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     }
   }
 
-  if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {  
+  if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {
     if(el->nbAccountName) {
       if(el->nbDomainName != NULL) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
@@ -2955,13 +2979,13 @@ void printHostDetailedInfo(HostTraffic *el) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
 		  "%s (%s) %s</TD></TR>\n",
 		  getRowColor(), "NetBios&nbsp;Name",
-		  el->nbHostName, 
+		  el->nbHostName,
 		  getNbNodeType(el->nbNodeType),
 		  el->nbDescr ? el->nbDescr : "") < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
     }
-    
+
     sendString(buf);
   } else if(el->nbHostName != NULL) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
@@ -3142,7 +3166,7 @@ void printHostDetailedInfo(HostTraffic *el) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-    if(nameServerHost(el))     sendString("Name Server<br>");
+    if(nameServerHost(el))     sendString("&nbsp;<IMG SRC=/dns.gif BORDER=0>&nbsp;Name Server<br>");
     if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG SRC=router.gif BORDER=0>&nbsp;<br>");
     if(isSMTPhost(el))         sendString("SMTP Server<br>");
     if(isPOPhost(el))          sendString("POP Server<br>");
@@ -3200,7 +3224,7 @@ void printHostDetailedInfo(HostTraffic *el) {
   if(printedHeader > 1)
     sendString("</OL></TD></TR>\n");
 
-  if((el->hostNumIpAddress[0] != '\0') 
+  if((el->hostNumIpAddress[0] != '\0')
      && (!subnetPseudoLocalHost(el))
      && (!multicastHost(el))
      && (mapperURL[0] > 0)) {
@@ -3208,7 +3232,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 		"<IMG SRC=\"%s?host=%s\" WIDTH=320 HEIGHT=200></TD></TR>\n",
 		getRowColor(),
 		"Host Physical Location",
-		mapperURL, el->hostNumIpAddress) < 0) 
+		mapperURL, el->hostNumIpAddress) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
@@ -3369,7 +3393,7 @@ void printHostUsedServices(HostTraffic *el) {
     tot += el->httpStats->numLocalReqSent+el->httpStats->numRemoteReqSent;
 
   if(tot > 0) {
-    printSectionTitle("TCP/UDP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role");
+    printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role");
     sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
 	       "<TH "TH_BG">&nbsp;</TH>"
@@ -3399,7 +3423,7 @@ void printHostUsedServices(HostTraffic *el) {
     tot += el->httpStats->numLocalReqRcvd+el->httpStats->numRemoteReqRcvd;
 
   if(tot > 0) {
-    printSectionTitle("TCP/UDP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role");
+    printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role");
     sendString("<CENTER>\n");
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
 	       "<TH "TH_BG">&nbsp;</TH>"
@@ -3475,11 +3499,11 @@ void printTableEntry(char *buf, int bufLen,
 char* buildHTMLBrowserWindowsLabel(int i, int j) {
   static char buf[BUF_SIZE];
   int idx = i*device[actualReportDeviceId].numHosts + j;
-  
+
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
 #endif
-     
+
   if((device[actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
      || ((device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent == 0)
 	 && (device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived == 0)))
