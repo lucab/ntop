@@ -1267,9 +1267,17 @@ static int returnHTTPPage(char* pageName, int postLen) {
     pktCastDistribPie();
     printTrailer=0;
   } else if(strncmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
-    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-    pktSizeDistribPie();
-    printTrailer=0;
+    if((device[actualReportDeviceId].rcvdPktStats.upTo128
+	+device[actualReportDeviceId].rcvdPktStats.upTo256
+	+device[actualReportDeviceId].rcvdPktStats.upTo512
+	+device[actualReportDeviceId].rcvdPktStats.upTo1024
+	+device[actualReportDeviceId].rcvdPktStats.upTo1518) > 0) {    
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+      pktSizeDistribPie();
+      printTrailer=0;
+    } else {
+      printNoDataYet();
+    }
   } else if(strncmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
     sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
     ipProtoDistribPie();
