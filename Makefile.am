@@ -204,7 +204,7 @@ ntop.html: ntop.8
 	@echo "       If we hang here, then you are probably "
 	@echo "       running make not GNU make (gmake)"
 	@echo ""
-	@groff -mandoc -Thtml $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -\~]//g' > html/ntop.html
+	@groff -mandoc -Thtml $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -\~]//g' | @AWK@ -f utils/insertssi.awk > html/ntop.html
 	@cp -f html/ntop.html ntop.html
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"

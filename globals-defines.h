@@ -1073,6 +1073,7 @@
  *      If it's a header (ends /), end the CONST_ with _HEADER
  */
 
+#define CONST_ABTNTOP_HTML                  "aboutNtop.html"
 #define CONST_ADD_URLS_HTML                 "addURLs.html"
 #define CONST_ADD_USERS_HTML                "addUsers.html"
 #define CONST_BAR_ALLPROTO_DIST             "allProtoDistribution"
@@ -1095,6 +1096,7 @@
 #define CONST_DUMP_NTOP_HOSTS_MATRIX_HTML   "dumpHostsMatrix.html"
 #define CONST_DUMP_TRAFFIC_DATA_HTML        "dumpTrafficData.html"
 #define CONST_DUMP_NTOP_XML                 "dump.xml"
+#define CONST_EDIT_PREFS                    "editPrefs.html"
 #define CONST_FAVICON_ICO                   "favicon.ico"
 #define CONST_FC_ACTIVITY_HTML              "fcActivity.html"
 #define CONST_FC_DATA_HTML                  "fcData.html"
@@ -1107,8 +1109,6 @@
 #define CONST_FILTER_INFO_HTML              "filterInfo.html"
 #define CONST_NTOP_HELP_HTML                "help.html"
 #define CONST_HOME_HTML                     "home.html"
-#define CONST_TRAFFIC_SUMMARY_HTML          "trafficSummary.html"
-#define CONST_ABTNTOP_HTML                  "aboutNtop.html"
 #define CONST_HOME_UNDERSCORE_HTML          "home_.html"
 #define CONST_HOST_HTML                     "host.html"
 #define CONST_BAR_HOST_DISTANCE             "hostsDistanceChart"
@@ -1140,10 +1140,13 @@
 #define CONST_MULTICAST_STATS_HTML          "multicastStats.html"
 #define CONST_NET_FLOWS_HTML                "NetFlows.html"
 #define CONST_ACTIVE_TCP_SESSIONS_HTML      "NetNetstat.html"
+#define CONST_NETWORK_IMAGE_MAP             "network_map.png"
 #define CONST_CGI_HEADER                    "ntop-bin/"
 #define CONST_MAN_NTOP_HTML                 "ntop.html"
 #define CONST_NTOP_P3P                      "ntop.p3p"
 #define CONST_PROBLEMRPT_HTML               "ntopProblemReport.html"
+#define CONST_NETWORK_MAP_HTML              "networkMap.html"
+#define CONST_NETWORK_IMAGE_MAP             "network_map.png"
 #define CONST_PIE_PKT_CAST_DIST             "pktCastDistribPie"
 #define CONST_PIE_PKT_SIZE_DIST             "pktSizeDistribPie"
 #define CONST_PIE_TTL_DIST                  "pktTTLDistribPie"
@@ -1151,6 +1154,7 @@
 #define CONST_PRIVACYCLEAR_HTML             "privacyFlagClear.html"
 #define CONST_PRIVACYFORCE_HTML             "privacyFlagForce.html"
 #define CONST_PRIVACYNOTICE_HTML            "privacyNotice.html"
+#define CONST_PURGE_HOST                    "purgeHost.html"
 #define CONST_RESET_STATS_HTML              "resetStats.html"
 #define CONST_SCSI_BYTES_HTML               "ScsiBytes.html"
 #define CONST_BAR_LUNSTATS_DIST             "ScsiBytesLunDistribution"
@@ -1172,6 +1176,7 @@
 #define CONST_SORT_DATA_THPT_STATS_HTML     "thptStats.html"
 #define CONST_THPT_STATS_MATRIX_HTML        "thptStatsMatrix.html"
 #define CONST_TRAFFIC_STATS_HTML            "trafficStats.html"
+#define CONST_TRAFFIC_SUMMARY_HTML          "trafficSummary.html"
 #define CONST_VIEW_LOG_HTML                 "viewLog.html"
 #define CONST_VLAN_LIST_HTML                "vlanList.html"
 #define CONST_PIE_VSAN_CNTL_TRAF_DIST       "vsanControlTrafficDistribPie"
@@ -1182,10 +1187,12 @@
 #define CONST_VSAN_LIST_HTML                "vsanList.html"
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
 #define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
-#define CONST_NETWORK_MAP                   "networkMap"
-#define CONST_NETWORK_IMAGE_MAP             "network_map.png"
-#define CONST_EDIT_PREFS                    "editPrefs.html"
-#define CONST_PURGE_HOST                    "purgeHost.html"
+
+/*
+ *  SSI names
+ */
+#define CONST_SSI_MENUHEAD_HTML             "menuHead.html"
+#define CONST_SSI_MENUBODY_HTML             "menuBody.html"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.

@@ -1902,85 +1902,86 @@ typedef enum {
  * Preferences settable by a user, from the web page & cmd line
  *
  */
+
 typedef struct _userPref {
-  char *accessLogFile;          /* 'a' */
-  bool enablePacketDecoding;    /* 'b' */
-  bool stickyHosts;             /* 'c' */
-  bool daemonMode;              /* 'd' */
-  int  maxNumLines;             /* 'e' */
-  char *rFileName;              /* 'f' */
-  bool trackOnlyLocalHosts;     /* 'g' */
-  char *devices;                /* 'i' */
-  bool enableOtherPacketDump;   /* 'j' */
-  bool filterExpressionInExtraFrame; /* 'k' */
-  char *pcapLog;                /* 'l' */
-  char *localAddresses;         /* 'm' */
-  bool numericFlag;             /* 'n' */
-  bool dontTrustMACaddr;        /* 'o' */
-  char *protoSpecs;             /* 'p' */
-  bool enableSuspiciousPacketDump; /* 'q' */
-  int  refreshRate;             /* 'r' */
-  bool disablePromiscuousMode;  /* 's' */
-  int  traceLevel;              /* 't' */
+  char *accessLogFile;          /* -a |--access-log-file */
+  bool enablePacketDecoding;    /* -b | --disable-decoders */
+  bool stickyHosts;             /* -c | --sticky-hosts */
+  bool daemonMode;              /* -d | --daemon */
+  int  maxNumLines;             /* -e | --max-table-rows */
+  char *rFileName;              /* -f | --traffic-dump-file */
+  bool trackOnlyLocalHosts;     /* -g | --track-local-hosts */
+  char *devices;                /* -i | --interface */
+  bool enableOtherPacketDump;   /* -j | --create-other-packets */
+  bool filterExpressionInExtraFrame; /* -k | --filter-expression-in-extra-frame */
+  char *pcapLog;                /* -l | --pcap-log */
+  char *localAddresses;         /* -m | --local-subnets */
+  bool numericFlag;             /* -n | --numeric-ip-addresses */
+  bool dontTrustMACaddr;        /* -o | --no-mac */
+  char *protoSpecs;             /* -p | --protocols */
+  bool enableSuspiciousPacketDump; /* -q | --create-suspicious-packets */
+  int  refreshRate;             /* -r | --refresh-time */
+  bool disablePromiscuousMode;  /* -s | --no-promiscuous */
+  int  traceLevel;              /* -t | --trace-level */
 
-  u_int     maxNumHashEntries;  /* 'x' */
-  u_int     maxNumSessions;     /* 'X' */
+  u_int     maxNumHashEntries;  /* -x */
+  u_int     maxNumSessions;     /* -X */
 
-  u_int16_t defaultVsan;        /* 'v' */
-  char      *webAddr;           /* 'w' */
+  u_int16_t defaultVsan;        /* -v | --default-vsan */
+  char      *webAddr;           /* -w | --http-serveraddress[:port] */
   int       webPort;
-  int       ipv4or6;            /* '6/4' */
-  bool      enableSessionHandling; /* 'z' */
+  int       ipv4or6;            /* -6 -4 */
+  bool      enableSessionHandling; /* -z | --disable-sessions */
 
-  char *currentFilterExpression;/* 'B' */
-  u_short samplingRate;         /* 'C' */
-  char domainName[MAXHOSTNAMELEN]; /* 'D' */
-  char *flowSpecs;              /* 'F' */
+  char *currentFilterExpression;/* -B | --filter-expression */
+  u_short samplingRate;         /* -C | --sampling-rate */
+  char domainName[MAXHOSTNAMELEN]; /* -D | --domain */
+  char *flowSpecs;              /* -F | --flow-spec */
 
-  bool debugMode;               /* 'K' */
+  bool debugMode;               /* -K | --enable-debug */
 #ifndef WIN32
-  int  useSyslog;               /* 'L' */
+  int  useSyslog;               /* -L | --use-syslog*/
 #endif
 
-  bool mergeInterfaces;         /* 'M' */
-  char *pcapLogBasePath;        /* 'O' */ /* Added by Ola Lundqvist <opal@debian.org>. */
-  char *fcNSCacheFile;          /* 'N' */
-  bool printFcOnly;             /* 'S' */
-  char *mapperURL;              /* 'U' */
+  bool mergeInterfaces;         /* -M | --no-interface-merge */
+  char *pcapLogBasePath;        /* -O | --pcap-file-path */ /* Added by Ola Lundqvist <opal@debian.org>. */
+  char *fcNSCacheFile;          /* -N | --wwn-map */
+  char *mapperURL;              /* -U | --mapper */
 
 #ifdef HAVE_OPENSSL
-  char *sslAddr;                /* 'W' */
+  char *sslAddr;                /* -W | --https-serveraddress[:port] */
   int  sslPort;
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  bool useSSLwatchdog;          /* '133' */
+  bool useSSLwatchdog;          /* --ssl-watchdog '133' */
 #endif
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-  bool disableSchedYield;       /* '134' */
+  bool disableSchedYield;       /* --disable-schedyield '134' */
 #endif
 
-  bool w3c;                     /* '136' */
+  bool w3c;                     /* --w3c '136' */
 
-  char *P3Pcp;                  /* '137' */
-  char *P3Puri;                 /* '138' */
+  char *P3Pcp;                  /* --p3p-cp '137' */
+  char *P3Puri;                 /* --p3p-uri '138' */
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-  bool setNonBlocking;          /* '139' */
+  bool setNonBlocking;          /* --set-pcap-nonblocking '139' */
 #endif
 
-  char *instance;               /* '140' */
+  char *instance;               /* --instance '140' */
 
-  bool disableStopcap;          /* '142' */
+  bool disableStopcap;          /* --disable-stopcap '142' */
 
-  bool disableInstantSessionPurge; /* '144' */
-  bool printIpOnly;                    /* '145' */
-  bool noInvalidLunDisplay;     /* '146' */
+  bool disableInstantSessionPurge; /* --disable-instantsessionpurge '144' */
+  bool printFcOnly;             /* --fc-only '147' */
+  bool printIpOnly;             /* --no-fc '148' */
+  bool noInvalidLunDisplay;     /* --no-invalid-lun '149' */
 
-  bool disableMutexExtraInfo;   /* '145' */
+  bool disableMutexExtraInfo;   /* --disable-mutexextrainfo '145' */
 
-  bool skipVersionCheck;        /* '150' */
+  bool skipVersionCheck;        /* --skip-version-check '150' */
 } UserPref;
 
 typedef struct ntopGlobals {
@@ -2282,6 +2283,9 @@ typedef struct ntopGlobals {
 #ifdef MAKE_WITH_SSLWATCHDOG
   unsigned long numHTTPSrequestTimeouts;
 #endif
+  unsigned long numSSIRequests,
+                numBadSSIRequests,
+                numHandledSSIRequests;
   u_short webServerRequestQueueLength;
 
   /* Memory cache */

@@ -343,6 +343,9 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
     myGlobals.numUnsuccessfulDenied[i] = 0;
     myGlobals.numUnsuccessfulForbidden[i] = 0;
   }
+  myGlobals.numSSIRequests = 0;
+  myGlobals.numBadSSIRequests = 0;
+  myGlobals.numHandledSSIRequests = 0;
 
 /* create the logView stuff Mutex first... must be before the 1st traceEvent() call */
 #ifdef CFG_MULTITHREADED

@@ -511,6 +511,9 @@ void initCounters(void) {
     myGlobals.numUnsuccessfulDenied[i] = 0;
     myGlobals.numUnsuccessfulForbidden[i] = 0;
   }
+  myGlobals.numSSIRequests = 0;
+  myGlobals.numBadSSIRequests = 0;
+  myGlobals.numHandledSSIRequests = 0;
 
   myGlobals.webServerRequestQueueLength = DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN;
 

@@ -1618,7 +1618,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 
     CONFIG_RADIO_ENTRY (DARK_BG, "Don't Merge Interfaces (-M)",
 			 NTOP_PREF_MERGEIF, pref->mergeInterfaces,
-			 "Don't merge data from all interfaces");
+			 "Yes = merge data from all interfaces (if possible), No = do not merge data from all interfaces");
 
     CONFIG_RADIO_ENTRY (DARK_BG, "No Instant Session Purge",
 			 NTOP_PREF_NO_ISESS_PURGE,

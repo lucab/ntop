@@ -152,6 +152,7 @@ static int generateNewInternalPages(char* pageName);
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
 static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
 static void returnHTTPspecialStatusCode(int statusIdx, char *additionalText);
+static int checkURLsecurity(char *url);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 static char compressedFilePath[256];
 static short compressFile = 0, acceptGzEncoding;
@@ -496,14 +497,369 @@ static int decodeString(char *bufcoded,
 
 /* ************************* */
 
-void sendStringLen(char *theString, unsigned int len) {
+static void ssiMenu_Head() {
+  sendStringWOssi(
+             "<link rel=\"stylesheet\" href=\"/theme.css\" TYPE=\"text/css\">\n"
+             "<script language=\"JavaScript\" src=\"/theme.js\"></script>\n"
+             "<script language=\"JavaScript\" SRC=\"/JSCookMenu.js\"></script>\n"
+             "<script language=\"JavaScript\"><!--\n"
+             "var ntopMenu =\n"
+             "[\n"
+             "	[null,'About',null,null,null,\n"
+             "		[null,'What is ntop?','/" CONST_ABTNTOP_HTML "',null,null],\n"
+             "		[null,'Show Configuration','/" CONST_INFO_NTOP_HTML "',null,null],\n"
+             "		[null,'Credits','/" CONST_CREDITS_HTML "',null,null],\n"
+             "		[null,'Man Page','/" CONST_MAN_NTOP_HTML "',null,null],\n"
+             "		['<img src=\"/help.png\">','Help','/ntop" CONST_NTOP_HELP_HTML "',null,null],\n"
+             "		['<img src=\"/bug.png\">','Report a Problem','/" CONST_PROBLEMRPT_HTML "',null,null],\n"
+             "		[null,'FAQ','/faq.html',null,null],\n"
+             "		],\n"
+             "	[null,'Summary',null,null,null,\n"
+             "		[null,'Traffic','/" CONST_TRAFFIC_STATS_HTML "',null,null],\n"
+             "		[null,'Hosts','/" CONST_HOSTS_INFO_HTML "',null,null],\n"
+             "		[null,'Network Load','/" CONST_SORT_DATA_THPT_STATS_HTML "',null,null],\n"
+             "		[null,'ASN Info','/" CONST_AS_LIST_HTML "',null,null],\n"
+             "		[null,'VLAN Info','/" CONST_VLAN_LIST_HTML "',null,null],\n"
+             "		[null,'Network Flows','/" CONST_NET_FLOWS_HTML "',null,null],\n"
+             "		],\n"
+             "  [null,'All Protocols',null,null,null,\n"
+             "          [null,'Traffic','/" CONST_SORT_DATA_PROTOS_HTML "',null,null],\n"
+             "          [null,'Throughput','/" CONST_SORT_DATA_THPT_HTML "',null,null],\n"
+             "          [null,'Activity','/" CONST_SORT_DATA_HOST_TRAFFIC_HTML "',null,null],\n"
+             "          ],\n"
+             "	[null,'IP',null,null,null,\n"
+             "		[null,'Summary',null,null,null,\n"
+             "				[null,'Traffic','/" CONST_SORT_DATA_IP_HTML "',null,null],\n"
+             "				[null,'Multicast','/" CONST_MULTICAST_STATS_HTML "',null,null],\n"
+             "				[null,'Internet Domain','/" CONST_DOMAIN_STATS_HTML "',null,null],\n"
+             "				[null,'Host Clusters','/" CONST_CLUSTER_STATS_HTML "',null,null],\n"
+             "				[null,'Distribution','/" CONST_IP_PROTO_DISTRIB_HTML "',null,null],\n"
+             "		],\n"
+             "		[null,'Traffic Directions',null,null,null,\n"
+             "				[null,'Local to Local','/" CONST_IP_L_2_L_HTML "',null,null],\n"
+             "				[null,'Local to Remote','/" CONST_IP_L_2_R_HTML "',null,null],\n"
+             "				[null,'Remote to Local','/" CONST_IP_R_2_L_HTML "',null,null],\n"
+             "				[null,'Remote to Remote','/" CONST_IP_R_2_R_HTML "',null,null],\n"
+             "		],\n"
+             "		[null,'Local',null,null,null,\n");
+  if(myGlobals.runningPref.dontTrustMACaddr)
+    sendStringWOssi(
+             "				[null,'Routers','/" CONST_LOCAL_ROUTERS_LIST_HTML "',null,null],\n");
+  sendStringWOssi(
+             "				[null,'Ports Used','/" CONST_IP_PROTO_USAGE_HTML "',null,null],\n");
+  if(myGlobals.runningPref.enableSessionHandling)
+    sendStringWOssi(
+             "				[null,'Active TCP Sessions','/" CONST_ACTIVE_TCP_SESSIONS_HTML "',null,null],\n");
+  sendStringWOssi(
+             "				[null,'Host Fingerprint','/" CONST_HOSTS_LOCAL_FINGERPRINT_HTML "',null,null],\n"
+             "				[null,'Host Characterization','/" CONST_HOSTS_LOCAL_CHARACT_HTML "',null,null],\n");
+#ifndef WIN32
+  sendStringWOssi(
+             "				[null,'Network Traffic Map','/" CONST_NETWORK_MAP_HTML "',null,null],\n");
+#endif
+  sendStringWOssi(
+             "				[null,'Local Matrix','/" CONST_IP_TRAFFIC_MATRIX_HTML "',null,null],\n"
+             "		],\n"
+             "	],\n");
+  if(!myGlobals.runningPref.printIpOnly) {
+    sendStringWOssi(
+             "	[null,'Media',null,null,null,\n"
+             "		[null,'Fibre Channel',null,null,null,\n"
+             "				[null,'Traffic','/" CONST_FC_DATA_HTML "',null,null],\n"
+             "				[null,'Throughput','/" CONST_FC_THPT_HTML "',null,null],\n"
+             "				[null,'Activity','/" CONST_FC_ACTIVITY_HTML "',null,null],\n"
+             "				[null,'Hosts','/" CONST_FC_HOSTS_INFO_HTML "',null,null],\n"
+             "				[null,'Traffic Per Port','/" CONST_FC_TRAFFIC_HTML "',null,null],\n");
+    if(myGlobals.runningPref.enableSessionHandling) 
+      sendStringWOssi(
+             "				[null,'Sessions','/" CONST_FC_SESSIONS_HTML "',null,null],\n");
+    sendStringWOssi(
+             "				[null,'VSANs','/" CONST_VSAN_LIST_HTML "',null,null],\n"
+             "				[null,'VSAN Summary','/" CONST_VSAN_DISTRIB_HTML "',null,null],\n"
+             "		],\n");
+    if(myGlobals.runningPref.enableSessionHandling) 
+      sendStringWOssi(
+             "		[null,'SCSI Sessions',null,null,null,\n"
+             "				[null,'Bytes','/" CONST_SCSI_BYTES_HTML "',null,null],\n"
+             "				[null,'Times','/" CONST_SCSI_TIMES_HTML "',null,null],\n"
+             "				[null,'Status','/" CONST_SCSI_STATUS_HTML "',null,null],\n"
+             "				[null,'Task Management','/" CONST_SCSI_TM_HTML "',null,null],\n"
+             "		],\n");
+  sendStringWOssi(
+             "	],\n");
+  }
+  sendStringWOssi(
+             "	[null,'Admin',null,null,null,\n"
+             "		[null,'Plugins','/" CONST_SHOW_PLUGINS_HTML "',null,null],\n");
+  if(!myGlobals.runningPref.mergeInterfaces)
+    sendStringWOssi(
+             "		[null,'Switch NIC','/" CONST_SWITCH_NIC_HTML "',null,null],\n");
+  sendStringWOssi(
+             "		['<img src=\"/lock.png\">','Configure',null,null,null,\n"
+             "			['<img src=\"/lock.png\">','Startup Options','/" CONST_CONFIG_NTOP_HTML "',null,null],\n"
+             "			['<img src=\"/lock.png\">','Preferences','/"CONST_EDIT_PREFS"',null,null],\n"
+             "			['<img src=\"/lock.png\">','Packet Filter','/" CONST_CHANGE_FILTER_HTML "',null,null],\n"
+             "			['<img src=\"/lock.png\">','Reset Stats','/" CONST_RESET_STATS_HTML "',null,null],\n"
+             "			['<img src=\"/lock.png\">','Web Users','/" CONST_SHOW_USERS_HTML "',null,null],\n"
+             "			['<img src=\"/lock.png\">','Protect URLs','/" CONST_SHOW_URLS_HTML "',null,null],\n"
+             "		],\n"
+             "		['<img src=\"/lock.png\">','Shutdown','/" CONST_SHUTDOWN_NTOP_HTML "',null,null],\n"
+             "	],\n"
+             "	[null,'Utils',null,null,null,\n"
+             "		[null,'Data Dump','/dump.html',null,null],\n"
+             "		[null,'View Log','/" CONST_VIEW_LOG_HTML "',null,null]\n"
+             "		]\n"
+             "];\n"
+             "--></script>\n");
+}
+
+static void ssiMenu_Body() {
+    
+  sendStringWOssi(
+             "<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
+             " <tr>\n"
+             "  <td colspan=\"2\" align=\"left\">\n"
+             "   <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
+             "    <tr>\n"
+             "     <td colspan=\"2\" align=\"left\">");
+  if(myGlobals.runningPref.instance != NULL) {
+    sendStringWOssi(
+             "      <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
+             "       <tr>"
+             "        <td><img src=\"/ntop_logo.gif\"></td>\n"
+             "        <td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
+    sendStringWOssi(myGlobals.runningPref.instance);
+    sendStringWOssi(
+             "        </td>\n"
+             "       </tr>\n"
+             "      </table>");
+  } else {
+    sendStringWOssi(
+             "      <img src=\"/ntop_logo.gif\">");
+  }
+  sendStringWOssi(
+             "     </td>\n"
+             "    </tr>\n"
+             "   </table></td>\n"
+             " </tr>\n"
+             " <tr>\n"
+             "  <th class=\"leftmenuitem\">\n"
+             "   <div id=\"ntopMenuID\">Rut Row - bad mojo Scooby!</div>\n"
+             "<script language=\"JavaScript\"><!--\n"
+             "        cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n"
+             "-->\n"
+             "</script></th>\n"
+             "  <th class=\"leftmenuitem\" align=\"right\">(C) 1998-2005 - <a href=\"mailto:deri@ntop.org\" title=\"Email Luca\">L. Deri</A>&nbsp;&nbsp;</th>\n"
+             " </tr>\n"
+             "</table>\n"
+             "<p>&nbsp;</p>\n");
+
+}
+
+/* ************************* */
+
+static void processSSI(const char *ssiRequest) {
+
+  int rc;
+  char *ssiVirtual,
+       *ssiURIstart,
+       *ssiURIend,
+       *ssiPARMstart;
+
+  myGlobals.numSSIRequests++;
+
+#ifdef HTTP_DEBUG
+  traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: SSI: Request %d = '%s'", myGlobals.numSSIRequests, ssiRequest);
+#endif
+
+  /* We need to check if it's the ONLY form we support...
+   *  <!--#include virtual="uri" -->
+   *
+   * If it is, we need to do some of the processing we normally do in handleHTTPrequest()
+   * after the receive and before returnHTTPPage(). But not all - this is, after all
+   * a request made by ntop internally, or from an ntop .html page which you had to
+   * be root (or the ntop userid) to install in the first place...
+   *
+   *  1. We need to check whether the URL is invalid, i.e. it contains '..' or
+   *     similar chars that can be used for reading system files.
+   *  2. We can't check the password - we no longer have the Authorization header.
+   *     Besides, we already authorized the page request.
+   *  3. Strip leading /s and trailing white space
+   *  4. Break the URI into URI and PARM, then
+   *  5. Actually process it...
+   *
+   * Lastly, remember ssiRequest (and pointers to it) is a COPY, so we don't have
+   * to restore characters we null out. But, once we do so, we can't display the whole
+   * request!
+   */
+
+  if((ssiVirtual = strstr(ssiRequest, "virtual=\"")) == NULL) {
+    myGlobals.numBadSSIRequests++;
+    traceEvent(CONST_TRACE_WARNING, "SSI: Ignored invalid (form): '%s'", ssiRequest);
+#ifdef HTTP_DEBUG
+    sendString("<!-- BAD SSI: -->");
+    sendString(ssiRequest);
+#endif
+    return;
+  }
+
+  ssiURIstart = &ssiVirtual[strlen("virtual=\"")];
+
+  if((ssiURIend=strchr(ssiURIstart, '"')) == NULL) {
+    myGlobals.numBadSSIRequests++;
+    traceEvent(CONST_TRACE_WARNING, "SSI: Ignored invalid (quotes): '%s'", ssiRequest);
+#ifdef HTTP_DEBUG
+    sendString("<!-- BAD SSI: -->");
+    sendString(ssiRequest);
+#endif
+    return;
+  }
+
+  ssiURIend[0] = '\0';
+
+#ifdef HTTP_DEBUG
+  traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: SSI: Requested URI = '%s'", ssiURIstart);
+#endif
+
+  if((rc = checkURLsecurity(ssiURIstart)) != 0) {
+    myGlobals.numBadSSIRequests++;
+    traceEvent(CONST_TRACE_ERROR, "SSI: URL security: '%s' rejected (code=%d)",
+               ssiURIstart, rc);
+    return;
+  }
+
+  while(ssiURIstart[0] == '/') { ssiURIstart++; }
+  while((ssiURIend > ssiURIstart) &&
+         ((ssiURIend[0] == ' ') ||
+          (ssiURIend[0] == '\n') ||
+          (ssiURIend[0] == '\r') ||
+          (ssiURIend[0] == '\t'))) { 
+    ssiURIend[0] = '\0';
+    ssiURIend--;
+  }
+
+  if((ssiPARMstart = strchr(ssiURIstart, '?')) != NULL) {
+    /* We have parms! */
+    ssiPARMstart[0] = '\0';
+    ssiPARMstart++;
+#ifdef HTTP_DEBUG
+    traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: SSI: Adjusted URI = '%s' PARM = '%s'", ssiURIstart, ssiPARMstart);
+  } else {
+    traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: SSI: Adjusted URI = '%s'", ssiURIstart);
+#endif
+  }
+
+  if(ssiURIstart[0] == '\0') {
+    myGlobals.numBadSSIRequests++;
+    traceEvent(CONST_TRACE_WARNING, "SSI: Invalid - NULL request ignored");
+#ifdef HTTP_DEBUG
+    sendString("<!-- BAD SSI: --><!--#include virtual=\"\" -->");
+#endif
+    return;
+  }
+
+  /* And so begins the actual processing of an SSI */
+  sendString("\n<!-- BEGIN SSI ");
+  sendString(ssiURIstart);
+  if(ssiPARMstart != NULL) {
+    sendString("Parm '");
+    sendString(ssiPARMstart);
+    sendString("'>");
+  }
+  sendString(" -->\n\n");
+
+  if(strcasecmp(ssiURIstart, CONST_SSI_MENUBODY_HTML) == 0) {
+    ssiMenu_Body();
+  } else if(strcasecmp(ssiURIstart, CONST_SSI_MENUHEAD_HTML) == 0) {
+    ssiMenu_Head();
+  } else {
+    
+    /* Not recognized - oh dear */
+    sendString("<center><p><b>ERROR</b>: Unrecognized SSI request, '");
+    sendString(ssiURIstart);
+    sendString("'");
+    if(ssiPARMstart != NULL) {
+      sendString(", with parm '");
+      sendString(ssiPARMstart);
+      sendString("'");
+    }
+    sendString("</p></center>\n");
+    myGlobals.numBadSSIRequests++;
+    return;
+  }
+
+  sendString("\n<!-- END SSI ");
+  sendString(ssiURIstart);
+  sendString(" -->\n\n");
+
+  myGlobals.numHandledSSIRequests++;
+}
+  
+/* ************************* */
+
+void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
   int bytesSent, rc, retries = 0;
+  char *ssiStart, *ssiEnd, temp;
 #ifdef WIN32
   static unsigned int fileSerial = 0;
 #endif
 
   if(myGlobals.newSock == FLAG_DUMMY_SOCKET)
     return;
+
+  if((allowSSI == 1) && ((ssiStart = strstr(theString, "<!--#include")) != NULL)) {
+
+#ifdef HTTP_DEBUG
+    traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: SSI: Found <!--#include");
+#endif
+
+    if((ssiEnd = strstr(ssiStart, "-->")) != NULL) {
+
+      ssiEnd = &ssiEnd[strlen("-->")];
+
+      /*
+       * If we've found an SSI, we need to process the thirds - 
+       * before, the SSI itself and after. Either end can be empty.
+       * Plus the SSI might be incomplete...
+       *
+       * theString:  ...<!--#include ... -->... 
+       *                ^ssiStart           ^ssiEnd
+       */
+
+      /* process before */
+      if(ssiStart != theString) {
+        temp = ssiStart[0];
+        ssiStart[0] = '\0';
+        sendString(theString);
+        ssiStart[0] = temp;
+      }
+
+      /* process SSI */
+      temp = ssiEnd[0];
+      ssiEnd[0] = '\0';
+      processSSI(ssiStart);
+      ssiEnd[0] = temp;
+
+      /* process after */
+      if(ssiEnd[0] != '\0') {
+        sendString(ssiEnd);
+      }
+
+    } else {
+
+      myGlobals.numBadSSIRequests++;
+      traceEvent(CONST_TRACE_WARNING, "SSI: Ignored invalid (no close): '%s'", ssiStart);
+#ifdef HTTP_DEBUG
+      sendString("<!-- BAD SSI: -->");
+      sendString(ssiStart);
+#endif
+
+    } /* SSI: test for --> */
+
+    /* We did SOMETHING with this SSI, so we're done with sendStringLen() */
+    return;
+
+  } /* SSI: test for <!--#include */
 
   httpBytesSent += len;
 
@@ -588,8 +944,8 @@ void sendStringLen(char *theString, unsigned int len) {
 
 /* ************************* */
 
-void sendString(char *theString) {
-  sendStringLen(theString, strlen(theString));
+void _sendString(char *theString, int allowSSI) {
+  _sendStringLen(theString, strlen(theString), allowSSI);
 }
 
 /* ************************* */
@@ -624,124 +980,17 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   /* ******************************************************* */
 
-  sendString("<script language=\"JavaScript\" SRC=\"/JSCookMenu.js\"></script>\n");
   sendString("<link rel=\"stylesheet\" href=\"/style.css\" TYPE=\"text/css\">\n");
-  sendString("<link rel=\"stylesheet\" href=\"/theme.css\" TYPE=\"text/css\">\n");
-  sendString("<script language=\"JavaScript\" src=\"/theme.js\"></script>\n");
-  sendString("<script language=\"JavaScript\"><!--\n");
-  sendString("var ntopMenu =\n");
-  sendString("[\n");
-  sendString("	[null,'About',null,null,null,\n");
-  sendString("		[null,'What is ntop?','/aboutNtop.html',null,null],\n");
-  sendString("		[null,'Show Configuration','/info.html',null,null],\n");
-  sendString("		[null,'Credits','/Credits.html',null,null],\n");
-  sendString("		[null,'Man Page','/ntop.html',null,null],\n");
-  sendString("		['<IMG SRC=/help.png>','Help','/ntophelp.html',null,null],\n");
-  sendString("		['<IMG SRC=/bug.png>','Report a Problem','/ntopProblemReport.html',null,null],\n");
-  sendString("		],\n");
-  sendString("	[null,'Summary',null,null,null,\n");
-  sendString("		[null,'Traffic','/trafficStats.html',null,null],\n");
-  sendString("		[null,'Hosts','/hostsInfo.html',null,null],\n");
-  sendString("		[null,'Network Load','/thptStats.html',null,null],\n");
-  sendString("		[null,'ASN Info','/asList.html',null,null],\n");
-  sendString("		[null,'VLAN Info','/vlanList.html',null,null],\n");
-  sendString("		[null,'Network Flows','/NetFlows.html',null,null],\n");
-  sendString("		],\n");
-  sendString("  [null,'All Protocols',null,null,null,\n");
-  sendString("          [null,'Traffic','/sortDataProtos.html',null,null],\n");
-  sendString("          [null,'Throughput','/sortDataThpt.html',null,null],\n");
-  sendString("          [null,'Activity','/dataHostTraffic.html',null,null],\n");
-  sendString("          ],\n");
-  sendString("	[null,'IP',null,null,null,\n");
-  sendString("		[null,'Summary',null,null,null,\n");
-  sendString("				[null,'Traffic','/sortDataIP.html',null,null],\n");
-  sendString("				[null,'Multicast','/multicastStats.html',null,null],\n");
-  sendString("				[null,'Internet Domain','/domainStats.html',null,null],\n");
-  sendString("				[null,'Host Clusters','/"CONST_CLUSTER_STATS_HTML"',null,null],\n");
-  sendString("				[null,'Distribution','/ipProtoDistrib.html',null,null],\n");
-  sendString("		],\n");
-  sendString("		[null,'Traffic Directions',null,null,null,\n");
-  sendString("				[null,'Local to Local','/IpL2L.html',null,null],\n");
-  sendString("				[null,'Local to Remote','/IpL2R.html',null,null],\n");
-  sendString("				[null,'Remote to Local','/IpR2L.html',null,null],\n");
-  sendString("				[null,'Remote to Remote','/IpR2R.html',null,null],\n");
-  sendString("		],\n");
-  sendString("		[null,'Local',null,null,null,\n");
-  sendString("				[null,'Routers','/localRoutersList.html',null,null],\n");
-  sendString("				[null,'Ports Used','/ipProtoUsage.html',null,null],\n");
-  sendString("				[null,'Active TCP Sessions','/NetNetstat.html',null,null],\n");
-  sendString("				[null,'Host Fingerprint','/localHostsFingerprint.html',null,null],\n");
-  sendString("				[null,'Host Characterization','/localHostsCharacterization.html',null,null],\n");
-#ifndef WIN32
-  sendString("				[null,'Network Traffic Map','/networkMap.html',null,null],\n");
-#endif
-  sendString("				[null,'Local Matrix','/ipTrafficMatrix.html',null,null],\n");
-  sendString("		],\n");
-  sendString("	],\n");
-  sendString("	[null,'Media',null,null,null,\n");
-  sendString("		[null,'Fibre Channel',null,null,null,\n");
-  sendString("				[null,'Traffic','/FcData.html',null,null],\n");
-  sendString("				[null,'Throughput','/FcThpt.html',null,null],\n");
-  sendString("				[null,'Activity','/FcActivity.html',null,null],\n");
-  sendString("				[null,'Hosts','/FcHostsInfo.html',null,null],\n");
-  sendString("				[null,'Traffic Per Port','/FcShowStats.html',null,null],\n");
-  sendString("				[null,'Sessions','/FcSessions',null,null],\n");
-  sendString("				[null,'VSANs','/vsanList.html',null,null],\n");
-  sendString("				[null,'VSAN Summary','/vsanDistrib.html',null,null],\n");
-  sendString("		],\n");
-  sendString("		[null,'SCSI Sessions',null,null,null,\n");
-  sendString("				[null,'Bytes','/ScsiBytes.html',null,null],\n");
-  sendString("				[null,'Times','/ScsiTimes.html',null,null],\n");
-  sendString("				[null,'Status','/ScsiStatus.html',null,null],\n");
-  sendString("				[null,'Task Management','/ScsiTMInfo.html',null,null],\n");
-  sendString("		],\n");
-  sendString("	],\n");
-  sendString("	[null,'Admin',null,null,null,\n");
-  sendString("		[null,'Plugins','/showPlugins.html',null,null],\n");
-  sendString("		[null,'Switch NIC','/switch.html',null,null],\n");
-  sendString("		['<IMG SRC=/lock.png>','Configure',null,null,null,\n");
-  sendString("			['<IMG SRC=/lock.png>','Startup Options','/configNtop.html',null,null],\n");
-  sendString("			['<IMG SRC=/lock.png>','Preferences','/"CONST_EDIT_PREFS"',null,null],\n");
-  sendString("			['<IMG SRC=/lock.png>','Packet Filter','/changeFilter.html',null,null],\n");
-  sendString("			['<IMG SRC=/lock.png>','Reset Stats','/resetStats.html',null,null],\n");
-  sendString("			['<IMG SRC=/lock.png>','Web Users','/showUsers.html',null,null],\n");
-  sendString("			['<IMG SRC=/lock.png>','Protect URLs','/showURLs.html',null,null],\n");
-  sendString("		],\n");
-  sendString("		['<IMG SRC=/lock.png>','Shutdown','/shutdown.html',null,null],\n");
-  sendString("	],\n");
-  sendString("	[null,'Utils',null,null,null,\n");
-  sendString("		[null,'Data Dump','/dump.html',null,null],\n");
-  sendString("		[null,'View Log','/viewLog.html',null,null]\n");
-  sendString("		]\n");
-  sendString("];\n");
-  sendString("--></script>\n");
+  ssiMenu_Head();
   sendString("</head>");
 
   /* ******************************************************* */
 
   if((headerFlags & BITFLAG_HTML_NO_BODY) == 0) {
-    sendString("<BODY LINK=blue VLINK=blue>\n\n");
-    
-    sendString("<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n");
-    sendString("<tr><td colspan=\"2\" align=\"left\">");
-    if(myGlobals.runningPref.instance != NULL) {
-      sendString("<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<tr><td><img src=\"/ntop_logo.gif\">");
-      sendString("</td>\n<td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
-      sendString(myGlobals.runningPref.instance);
-      sendString("</td></tr>\n</table>");
-    } else {
-      sendString("<img src=\"/ntop_logo.gif\">");
-    }
-    sendString("</td></tr>\n");
-    sendString("<tr><th class=\"leftmenuitem\">\n");
-    sendString("<div id=ntopMenuID>xxx</div>\n");
-    sendString("<script language=\"JavaScript\"><!--\n");
-    sendString("	cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n");
-    sendString("--></script>\n");
-    sendString("</th><th class=\"leftmenuitem\" align=right>(C) 1998-2005 - "
-	       "<a href=\"mailto:deri@ntop.org\" title=\"Email Luca\">L. Deri</a>&nbsp;&nbsp;</th></tr>\n");
-    sendString("</table>\n");
-    
+
+    sendString("<body link=\"blue\" vlink=\"blue\">\n\n");
+    ssiMenu_Body();
+
     if((theTitle != NULL) && ((headerFlags & BITFLAG_HTML_NO_HEADING) == 0))
       printSectionTitle(theTitle);
   }
@@ -1454,180 +1703,6 @@ RETSIGTYPE httpcleanup(int signo) {
    *                                        *
    **************************************** */
 
-int generateInternalPages(char* pageName) {
-  if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
-      sendString("<!-- Internally generated page -->\n");
-      sendString("<frameset cols=160,* framespacing=\"0\" border=\"0\" frameborder=\"0\">\n");
-      sendString("    <frame src=\"" CONST_LEFTMENU_HTML "\" name=\"Menu\" "
-                     "marginwidth=\"0\" marginheight=\"0\">\n");
-      sendString("    <frame src=\"" CONST_TRAFFIC_STATS_HTML "\" name=\"area\" "
-                     "marginwidth=\"5\" marginheight=\"0\">\n");
-      sendString("    <noframes>\n");
-      sendString("    <body>\n\n");
-      sendString("    </body>\n");
-      sendString("    </noframes>\n");
-      sendString("</frameset>\n");
-      sendString("</html>\n");
-      return 0;
-    }
-
-#define menuitem(const,title,img) sendString("<li><a href=\"" const "\" alt=\"" title "\" target=\"area\">" img title "</a></li>\n");
-
-    if((strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
-       (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
-      sendString("<!-- Internally generated page -->\n");
-      sendString("<!-- This is a menu for the internally generated frameset and is"
-                 "     usable for those whose browsers do not support frames... -->\n");
-      sendString("<h3>Welcome to ntop!</h3>\n");
-      sendString("<ol>\n");
-
-      sendString("<p><b>Summary</b></p>\n");
-      menuitem(CONST_TRAFFIC_STATS_HTML, "Traffic", "");
-      menuitem(CONST_HOSTS_INFO_HTML, "Hosts", "");
-      menuitem(CONST_SORT_DATA_THPT_STATS_HTML, "Network Load", "");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_AS_LIST_HTML, "ASN Info", "");
-          menuitem(CONST_VLAN_LIST_HTML, "VLAN Info", "");
-          if(myGlobals.flowsList != NULL)
-              menuitem(CONST_NET_FLOWS_HTML, "Net Flows", "");
-      }
-
-      if (!myGlobals.runningPref.printFcOnly) {
-          sendString("<p><b>All Protocols</b></p>\n");
-          menuitem(CONST_SORT_DATA_PROTOS_HTML, "Traffic", "");
-          menuitem(CONST_SORT_DATA_THPT_HTML, "Throughput", "");
-          menuitem(CONST_SORT_DATA_HOST_TRAFFIC_HTML, "Activity", "");
-
-          sendString("<p><b>IP Summary</b></p>\n");
-          menuitem(CONST_SORT_DATA_IP_HTML, "Traffic", "");
-          menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
-          menuitem(CONST_DOMAIN_STATS_HTML, "Domain", "");
-          menuitem(CONST_IP_PROTO_DISTRIB_HTML, "Distribution", "");
-          menuitem(CONST_IP_L_2_L_HTML, "Local &raquo; Local", "");
-          menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
-          menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
-          menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
-
-          sendString("<p><b>Local IP</b></p>\n");
-          menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
-          menuitem(CONST_IP_PROTO_USAGE_HTML, "Ports Used", "");
-          menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Active TCP Sessions", "");
-          menuitem(CONST_HOSTS_LOCAL_FINGERPRINT_HTML, "Hosts Fingerprint", "");
-          menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Local Matrix", "");
-      }
-
-      if (!myGlobals.runningPref.printIpOnly) {
-          sendString("<p><b>FibreChannel</b></p>\n");
-          /*
-            Fibre Channel:  Traffic  |   Throughput  |   Activity  |   Hosts  |   Traffic Per Port
-            |   Sessions  |   VSANs  |   VSAN Summary
-          */
-          menuitem(CONST_FC_DATA_HTML, "Traffic", "");
-          menuitem(CONST_FC_THPT_HTML, "Throughput", "");
-          menuitem(CONST_FC_ACTIVITY_HTML, "Activty", "");
-          menuitem(CONST_FC_HOSTS_INFO_HTML, "Hosts", "");
-          menuitem(CONST_FC_TRAFFIC_HTML, "Throughput", "");
-          menuitem(CONST_FC_SESSIONS_HTML, "Sessions", "");
-          menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
-          menuitem(CONST_VSAN_DISTRIB_HTML, "VSAN Summary", "");
-
-          sendString("<p><b>SCSI</b></p>\n");
-          menuitem(CONST_SCSI_BYTES_HTML, "Bytes", "");
-          menuitem(CONST_SCSI_STATUS_HTML, "Status", "");
-          menuitem(CONST_SCSI_TIMES_HTML, "Times", "");
-          menuitem(CONST_SCSI_TM_HTML, "Task Management", "");
-      }
-
-      sendString("<p><b>Admin</b></p>\n");
-      menuitem(CONST_SHOW_PLUGINS_HTML, "Plugins", "");
-      if(!myGlobals.runningPref.mergeInterfaces)
-          menuitem(CONST_SWITCH_NIC_HTML, "Switch NIC", "");
-      menuitem("dump.html", "Dump Data", "");
-      menuitem(CONST_VIEW_LOG_HTML, "Log", "");
-      menuitem(CONST_CHANGE_FILTER_HTML, "Change Filter", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_RESET_STATS_HTML, "Reset Statistics", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHOW_USERS_HTML, "show Users", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHOW_URLS_HTML, "show URLs", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHUTDOWN_NTOP_HTML, "Shutdown", CONST_IMG_LOCK "&nbsp;");
-
-      sendString("<p><b>About</b></p>\n");
-      menuitem(CONST_ABTNTOP_HTML,  "What's ntop?", "");
-      menuitem(CONST_INFO_NTOP_HTML, "Show Configuration", "");
-      menuitem(CONST_CREDITS_HTML, "Credits", "");
-      menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
-      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report",
-               "<img src=\"/bug.png\" alt=\"create ntop problem report\" "
-                "width=\"23\" height=\"20\" border=\"0\" align=\"middle\">");
-      menuitem("ntophelp.html", "Help Me!",
-               "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
-                 "border=\"0\" align=\"middle\">");
-
-      sendString("</ol>\n"
-                 "<p><center><b>&copy; 1998-2005 by "
-                 "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
-                 "</body>\n</html>\n");
-      return 0;
-    }
-#undef menuitem
-
-    if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
-      if(myGlobals.runningPref.filterExpressionInExtraFrame){
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-        sendString("<!-- Internally generated page -->\n");
-        sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
-        sendString("border=\"0\" frameborder=\"0\">\n");
-        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"2\" ");
-        sendString("marginheight=\"2\" name=\"area\">\n");
-        sendString("    <frame src=\"" CONST_FILTER_INFO_HTML"\" marginwidth=\"0\" ");
-        sendString("marginheight=\"0\" name=\"filterinfo\">\n");
-        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
-        sendString("  </frameset>\n</html>\n");
-      } else {	/* frame so that "area" is defined */
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-        sendString("<!-- Internally generated page -->\n");
-        sendString("<html>\n  <frameset rows=\"100%,*\" framespacing=\"0\" ");
-        sendString("border=\"0\" frameborder=\"0\">\n");
-        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"0\" ");
-        sendString("marginheight=\"0\" name=\"area\">\n");
-        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
-        sendString("  </frameset>\n</html>\n");
-      }
-      return 0;
-    }
-
-    if(strcasecmp(pageName, CONST_ABTNTOP_HTML) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      sendString("<!-- Internally generated page -->\n");
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
-      sendString("<FONT FACE=Helvetica>\n<HR>\n");
-      sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
-      sendString("currently using the network and reports information concerning the IP\n");
-      sendString("(Internet Protocol) and Fibre Channel (FC) traffic generated by each host. The traffic is \n");
-      sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
-      sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
-		 "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
-		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
-      sendString("NFS<li>X11</ul>\n<p>\n");
-      sendString("<li>Fibre Channel<ul><li>Control Traffic - SW2,GS3,ELS<li>SCSI</ul></ul><p>\n");
-      sendString("<p><b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
-      sendString("open source software</A> and encourages everyone to modify, improve\n ");
-      sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
-      sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
-      sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
-      sendString("<A HREF=\"mailto:&#110;&#116;&#111;&#112;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"> mailing list</A>.</p>\n");
-      sendString("<p>For information on <b>ntop</b> and information privacy, see ");
-      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
-      return 0;
-    }
-    return 1; /* Not in this bunch, boss */
-}
-
-/* **************************************** */
-
 static int generateNewInternalPages(char* pageName) {
   if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -1686,7 +1761,6 @@ static int generateNewInternalPages(char* pageName) {
       return 0;
     }
 
-#define menuitem(const,title,img) sendString("<li><a href=\"" const "\" alt=\"" title "\" target=\"area\">" img title "</a></li>\n");
 
     if((strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
        (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
@@ -1695,117 +1769,10 @@ static int generateNewInternalPages(char* pageName) {
       sendString("<!-- Internally generated page -->\n");
       sendString("<!-- This is a menu for the internally generated frameset and is"
                  "     usable for those whose browsers do not support frames... -->\n");
-      sendString("<h3>Welcome to ntop!</h3>\n");
-      sendString("<ol>\n");
-
-      sendString("<p><b>Summary</b></p>\n");
-      menuitem(CONST_TRAFFIC_STATS_HTML, "Traffic", "");
-      menuitem(CONST_SORT_DATA_THPT_STATS_HTML, "Network Load", "");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_HOSTS_INFO_HTML, "Hosts", "");
-          menuitem(CONST_AS_LIST_HTML, "ASN Info", "");
-          menuitem(CONST_VLAN_LIST_HTML, "VLAN Info", "");
-          menuitem(CONST_HOSTS_LOCAL_FINGERPRINT_HTML, "Hosts Fingerprint", "");
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_FC_HOSTS_INFO_HTML, "FC_Ports", "");
-          menuitem(CONST_VSAN_DISTRIB_HTML, "VSANs Summary", "");
-      }
-
-      sendString("<p><b>Traffic</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_DOMAIN_STATS_HTML, "Domain", "");
-          menuitem(CONST_IP_L_2_L_HTML, "Local &raquo; Local", "");
-          menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
-          menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
-          menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
-          menuitem(CONST_IP_PROTO_DISTRIB_HTML, "IP Distribution", "");
-          menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Local Matrix", "");
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_FC_TRAFFIC_HTML, "FC_Ports", "");
-          menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
-      }
-
-      sendString("<p><b>Throughput</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_SORT_DATA_THPT_HTML, "IP_Hosts", "");
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_FC_THPT_HTML, "FC_Ports", "");
-      }
-
-      sendString("<p><b>Activity</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_SORT_DATA_HOST_TRAFFIC_HTML, "IP_Hosts", "");
-          menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
-          menuitem(CONST_IP_PROTO_USAGE_HTML, "Local Ports Used", "");
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_FC_ACTIVITY_HTML, "FC_Ports", "");
-      }
-
-      sendString("<p><b>Protocols</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_SORT_DATA_PROTOS_HTML, "All Protocols", "");
-          /* menuitem(CONST_SORT_DATA_ETH_PROTOS_HTML, "Ethernet", ""); */
-          menuitem(CONST_SORT_DATA_IP_HTML, "TCP", "");
-          menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_FC_DATA_HTML, "Fibre Channel", "");
-      }
-
-      sendString("<p><b>Sessions</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Local Active TCP Sessions", "");
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_FC_SESSIONS_HTML, "FC Sessions", "");
-          menuitem(CONST_SCSI_BYTES_HTML, "SCSI Sessions", "");
-          menuitem(CONST_SCSI_STATUS_HTML, "SCSI Status", "");
-          menuitem(CONST_SCSI_TM_HTML, "SCSI Task Management", "");
-      }
-
-      sendString("<p><b>Latencies</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_SCSI_TIMES_HTML, "SCSI", "");
-      }
-
-      sendString("<p><b>Admin</b></p>\n");
-      menuitem(CONST_CONFIG_NTOP_HTML, "Configure ntop", "");
-      menuitem(CONST_SHOW_PLUGINS_HTML, "Plugins", "");
-      if(!myGlobals.runningPref.mergeInterfaces)
-          menuitem(CONST_SWITCH_NIC_HTML, "Switch NIC", "");
-      menuitem("dump.html", "Dump Data", "");
-      menuitem(CONST_VIEW_LOG_HTML, "Log", "");
-      menuitem(CONST_CHANGE_FILTER_HTML, "Change Filter", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_RESET_STATS_HTML, "Reset Statistics", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHOW_USERS_HTML, "show Users", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHOW_URLS_HTML, "show URLs", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHUTDOWN_NTOP_HTML, "Shutdown", CONST_IMG_LOCK "&nbsp;");
-
-      sendString("<p><b>About</b></p>\n");
-      menuitem(CONST_ABTNTOP_HTML,  "What's ntop?", "");
-      menuitem(CONST_INFO_NTOP_HTML, "Show Configuration", "");
-      menuitem(CONST_CREDITS_HTML, "Credits", "");
-      menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
-      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report",
-               "<img src=\"/bug.png\" alt=\"create ntop problem report\" "
-                "width=\"23\" height=\"20\" border=\"0\" align=\"middle\">");
-      menuitem("ntophelp.html", "Help Me!",
-               "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
-                 "border=\"0\" align=\"middle\">");
-
-      sendString("</ol>\n"
-                 "<p><center><b>&copy; 1998-2005 by "
-                 "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
-                 "</body>\n</html>\n");
+      ssiMenu_Body();
+      sendString("</body>\n</html>\n");
       return 0;
     }
-#undef menuitem
 
     if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
       if(myGlobals.runningPref.filterExpressionInExtraFrame){
@@ -2287,9 +2254,10 @@ static int returnHTTPPage(char* pageName,
 #endif
 
   if(fd != NULL) {
-    char theDate[48];
+    char theDate[48],
+         *buffer;
     time_t theTime;
-    int len = strlen(pageURI), mimeType = FLAG_HTTP_TYPE_HTML;
+    int sz, len = strlen(pageURI), mimeType = FLAG_HTTP_TYPE_HTML;
 
     if(len > 4) {
       if(strcasecmp(&pageURI[len-4], ".gif") == 0)
@@ -2331,11 +2299,16 @@ static int returnHTTPPage(char* pageName,
 
     sendString("\r\n");	/* mark the end of HTTP header */
 
+    /* We are copying a file.  Let's use a big (but not absurd) buffer. */
+    sz = min(16384, statbuf.st_size+8);
+    buffer = (char*)malloc(sz);
+    memset(buffer, 0, sz);
     for(;;) {
-      len = fread(tmpStr, sizeof(char), sizeof(tmpStr)-1, fd);
+      len = fread(buffer, sizeof(char), sz-1, fd);
       if(len <= 0) break;
-      sendStringLen(tmpStr, len);
+      sendStringLen(buffer, len);
     }
+    free(buffer);
 
     fclose(fd);
     /* closeNwSocket(&myGlobals.newSock); */
@@ -2884,7 +2857,7 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
 	drawGlobalProtoDistribution();
 	printTrailer=0;
-      } else if(strncasecmp(pageName,CONST_NETWORK_MAP, strlen(CONST_NETWORK_MAP)) == 0) {
+      } else if(strncasecmp(pageName,CONST_NETWORK_MAP_HTML, strlen(CONST_NETWORK_MAP_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	makeDot();
 	printTrailer=1;

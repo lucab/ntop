@@ -7033,6 +7033,13 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                      "page, chart, etc. is counted separately</i></li></ul>\n<i>");
   }
 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numSSIRequests);
+  printFeatureConfigInfo(textPrintFlag, "# SSI Requests", buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numBadSSIRequests);
+  printFeatureConfigInfo(textPrintFlag, "# Bad SSI Requests", buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numHandledSSIRequests);
+  printFeatureConfigInfo(textPrintFlag, "# Handled SSI Requests", buf);
+
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numHandledSIGPIPEerrors);
   printFeatureConfigInfo(textPrintFlag, "# Handled SIGPIPE Errors", buf);
 

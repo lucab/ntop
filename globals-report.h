@@ -158,11 +158,14 @@ extern void printPluginTrailer(char *left, char *middle);
 /* http.c */
 extern void printHTMLtrailer(void);
 extern void returnHTTPredirect(char* destination);
-extern int generateInternalPages(char* pageName);
 void returnHTTPpageNotFound(char* additionalText);
 
-extern void sendStringLen(char *theString, unsigned int len);
-extern void sendString(char *theString);
+#define sendStringLen(a, b) _sendStringLen(a, b, 1)
+#define sendStringLenWOssi(a, b) _sendStringLen(a, b, 0)
+extern void _sendStringLen(char *theString, unsigned int len, int allowSSI);
+#define sendString(a) _sendString(a, 1)
+#define sendStringWOssi(a) _sendString(a, 0)
+extern void _sendString(char *theString, int allowSSI);
 extern void printHTTPtrailer(void);
 extern void initAccessLog(void);
 extern void termAccessLog(void);

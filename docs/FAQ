@@ -95,9 +95,11 @@ A. Sorry, that's useless.  ntop is multi-threaded and processes 100s or 1000s of
    packets per second.  The last log message is probably from the wrong thread 
    and many seconds out of date.
 
-   To capture the true failure point, you need to run under the debugger (gdb) 
-   and send us the bt full information.  Instructions are at the bottom of this
-   document.  Look for "GDB ultraMini-tutorial".
+   To capture the true 'failure point information', you need to run under the 
+   debugger (gdb) and send us the various outputs.  Instructions are at the bottom
+   of this document.  Look for "GDB ultraMini-tutorial".
+
+   Yes, you will need the source and a compiler.
 
 Q3(a). What about the backtrace?
 A. Again, probably useless.  Use gdb and capture the full failure point info. If you
@@ -143,13 +145,14 @@ A. Chill.  Take a deep breath.
 
 
 Q9. The program asks for password for "ntop HTTP server". When I started NTOP for the first 
-    time, it asked me to set admin password, and i put "xxxxxxxx". The user is "xxxxxxxxxx"
-    but I get "Unauthorized to access the document". Why?
+   time, it asked me to set admin password, and i put "xxxxxxxx". The user is "xxxxxxxxxx"
+   but I get "Unauthorized to access the document". Why?
 A. The correct user to specify for the ntop web server is admin.
    The -u value in the command line or parameter file is the account ntop runs under.
 
 
-Q10.
+Q10. TBD.
+A. Nominate your favorite - visit the ntop mail list!
  
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -203,9 +206,9 @@ A. mrtg reads the counters maintained by various devices such as routers, using
 
    Again, quoting Tobi:
 
-   "MRTG ... uses SNMP to read the traffic counters of your routers and
-    ... which logs the traffic data and creates beautiful graphs representing
-    the traffic on the monitored network connection."
+       "MRTG ... uses SNMP to read the traffic counters of your routers and
+        ... which logs the traffic data and creates beautiful graphs representing
+        the traffic on the monitored network connection."
 
    mrtg is focused on 'layer 2' (the tcp/ip and other low level protocol).
 
@@ -232,21 +235,21 @@ A. Nothing.  As of 3.1, ntop has some sort of snmp plugin.
 
    From our perspective, the problems with snmp are minor -
 
-       It can use a lot of bandwidth - especially if you're reading from devices
-                                       on the far side of slow links.
+   It can use a lot of bandwidth - especially if you're reading from devices
+   on the far side of slow links.
 
-       Pulling data out of MIBs is a complex process. MIBs can be specified in
-       an RFC, or be unique to a vendor/device.
+   Pulling data out of MIBs is a complex process. MIBs can be specified in
+   an RFC, or be unique to a vendor/device.
 
-       An snmp-based tool either has to restrict itself to the common MIBs,
-       or (most often for vendor tools) it be updated whenever a new device
-       must be supported or a MIB changes.
+   An snmp-based tool either has to restrict itself to the common MIBs,
+   or (most often for vendor tools) it be updated whenever a new device
+   must be supported or a MIB changes.
 
-       This makes snmp-based tools complex, because data may be unavailable
-       in certain versions of seemingly similar devices, etc.  For example,
-       http://www.cisco.com/public/sw-center/netmgmt/cmtk/mibs.shtml
-       is a page which links to the specific MIBs supported by various
-       Cisco devices.
+   This makes snmp-based tools complex, because data may be unavailable
+   in certain versions of seemingly similar devices, etc.  For example,
+   http://www.cisco.com/public/sw-center/netmgmt/cmtk/mibs.shtml
+   is a page which links to the specific MIBs supported by various
+   Cisco devices.
 
 
 Q. So why hasn't ntop 'won'?
@@ -589,27 +592,27 @@ A. Join the mailing list(s) and ask for help.
 
    Guidelines for asking questions:
 
-      ONE and only ONE problem / issue / question per message.
+   ONE and only ONE problem / issue / question per message.
 
-      With a meaningful subject.
+   With a meaningful subject.
 
          The goal is that if you're asking a common question, the
          subject would have allowed you to find it in the back
          traffic for the mailing list.
 
-      Post the information about your environment we ask for.
+   Post the information about your environment we ask for.
 
          We STRONGLY suggest you use the automatically generated "Problem
          Report" form that since it contains much of the necessary information.
 
-      Make sure you're in a supported environment (./configure --showoses).
+   Make sure you're in a supported environment (./configure --showoses).
 
          If it's an unsupported environment, we're interested in your efforts to
          make ntop work, but we don't have the time, resources, knowledge and/or
          interest to do it ourselves.
 
-      For software 'crashes', please run ntop under the gdb debugger and capture
-      the full failure information.
+   For software 'crashes', please run ntop under the gdb debugger and capture
+   the full failure information.
 
          Brief instructions on using gdb are at the end of this file (docs/FAQ).
 
@@ -921,6 +924,54 @@ A. The process of creating portable cross-platform scripts for building
       $ autoconf --version
       $ automake --version
       $ libtool --version
+
+
+Q. I can't build ntop... (auto* tools)
+
+A. ntop has been tested with and developed for various versions of 
+   the "GNU auto* tools" (automake, autoconf and libtool).
+
+   The basic requirements are
+
+   automake 1.6.1 or higher  (automake 1.4 and 1.5 may or may not work)
+   autoconf 2.51 or higher   (autoconf 2.13 will NOT work)
+   libtool 1.4 or higher
+
+   But that simple statement hides a lot of complexity and many potential
+   problems.  Surprisingly, this isn't solely ntop's fault, it's the 
+   combination of GNU auto* tools version to version compatiblity and 
+   because we're trying to distribute configure and make files that work
+   on all versions.  If ntop were less complex or less clever about 
+   trying to build a working program even with many components missing,
+   things would work a lot better.
+
+   The big change between autoconf 2.13 and 2.5x generated scripts is that
+   the ./configure and make steps are supposed to run the auto* commands
+   automatically if they're required.  As we've seen, this doesn't always
+   work!  
+
+   If you run into problems, you can ALWAYS recreate the generated files 
+   via this procedure:
+
+      rm -f acinclude.m4 aclocal.m4 Makefile.in config.h.in configure Makefile
+
+      find current versions of libtool, config.guess and config.sub and cp
+      them into your working directory.
+
+      cat acinclude.m4.ntop libtool.m4.in > acinclude.m4
+      aclocal
+      autoheader
+      autoconf
+      automake --gnu --copy --add-missing
+
+   and then:
+
+      ./configure ...
+      make
+      make install
+
+   as usual.
+
 
 Q. But how does it all hang together?
 A. There's a vsd (Visio)/pdf in the docs directory - ntop-autotools.pdf.
@@ -5909,6 +5960,7 @@ and ntop-dev archives is the complete chain from problem to resolution.
 
 --------------------------------------------------------------------------------
 -----GDB ultraMini-tutorial - Running ntop under gdb (debugger)-----------------
+-----or, 'capturing the failure point'
 --------------------------------------------------------------------------------
 
 The very best way to debug a segmentation fault in ntop is to use gdb. The
@@ -5927,21 +5979,10 @@ routine situation!]
 
 it will run... when it bombs...
 
-(gdb) list [this shows where in the code it died]
-
-(gdb) info stack [this shows the call stack]
-
-if there are any variables involved, you can print them:
-
-(gdb) print deviceId
-
-[gdb can handle pretty complex arguments in the print command, so you can say
-"print myGlobals.device[0].hash_hostTraffic[myGlobals.broadcastEntryIdx]"
-if that's what it bombed on.]
-
 "bt full" does a decent job of printing the stack and the back trace and the
-local variables at each level. Just make sure you are in the thread you are
-interested in:
+local variables at each level. 
+
+Just make sure you are in the thread you are interested in (i.e. DO THIS FIRST)
 
 (gdb) bt full
 #0 0x40592557 in __libc_pause () from /lib/i686/libc.so.6
@@ -5965,6 +6006,31 @@ rtld_fini = (void (*)()) 0xbffff87c
 ubp_ev = (char **) 0xbffffaa0
 (gdb)
 
+Now, continue:
+
+if there are any seemingly interesting variables involved, you can print them:
+
+(gdb) print deviceId
+
+[gdb can handle pretty complex arguments in the print command, so you can say
+"print myGlobals.device[0].hash_hostTraffic[myGlobals.broadcastEntryIdx]"
+if that's what it bombed on.]
+
+Sometimes gdb won't find a variable, that's because C used a register. S'be'it.
+
+
+Other interesting things:
+
+(gdb) list [this shows where in the code it died]
+
+(gdb) info threads [this shows the status of the multiple threads]
+
+(gdb) info stack [this shows the call stack]
+
+If you want, you can check each of the threads and THEIR status via:
+
+(gdb) thread 1 [or any valid number]
+(gdb) info stack
 
 gdb has all kinds of included help, and frankly that's all I know...
 Here are some extracts and examples:
