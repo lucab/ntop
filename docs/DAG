@@ -1,0 +1,33 @@
+How to use a DAG card with ntop
+-------------------------------
+
+Why DAG?
+========
+DAG is a very fast and efficient card used for capturing traffic
+at very high speeds. If you have a fast (Gbit and above) network
+then this is probably the very best solution you can find on
+the market.
+
+How to use ntop on DAG
+======================
+1. Get a DAG card from Endace (www.endace.com)
+2. Get the DAG toolkit from Endace and install it (e.g. on /usr/local/dag)
+3. Get lipcap 0.81 or newer from www.tcpdump.org
+4. cd libcap-XXXX
+   ./configure --with-dag=/usr/local/dag
+   make
+   make install [as root]
+5. Get the ntop source (see http://www.ntop.org/download.html)
+   from CVS
+6. Compile ntop as usual but do make sure that ntop
+   uses the libpcap you've just compiled.
+
+Credits
+=======
+Many thanks to Endace for having donated a DAG card to
+the ntop project for the purpose of integrating it with
+ntop.
+
+
+-------------------------
+Luca Deri - December 2003
