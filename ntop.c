@@ -394,11 +394,11 @@ void createPortHash() {
 
 /* **************************************** */
 
-void handleProtocols(char *protos) {
+void handleProtocols() {
   char *proto, *buffer=NULL, *strtokState, *bufferCurrent, *bufferWork;
   FILE *fd;
 
-  /* protos is either
+  /* myGlobals.protoSpecs is either
      1) a list in the form proto=port[|port][,...]
      2) the name of a file containing a list in the same format.
      Modification:  Allow the file to have multiple lines, each in
@@ -406,27 +406,28 @@ void handleProtocols(char *protos) {
      Also, ignore standard Linux comments...
   */
 
-  if (! protos || ! protos[0])
+  if((!myGlobals.protoSpecs) 
+      || (!myGlobals.protoSpecs[0]))
     return;
 
-  fd = fopen(protos, "rb");
+  fd = fopen(myGlobals.protoSpecs, "rb");
 
   if(fd == NULL) {
-    traceEvent(TRACE_INFO, "Processing protocol list: '%s'", protos);
-    proto = strtok_r(protos, ",", &strtokState);
+    traceEvent(TRACE_INFO, "Processing protocol list: '%s'", myGlobals.protoSpecs);
+    proto = strtok_r(myGlobals.protoSpecs, ",", &strtokState);
   } else {
     struct stat buf;
 
-    if(stat(protos, &buf) != 0) {
+    if(stat(myGlobals.protoSpecs, &buf) != 0) {
       fclose(fd);
-      traceEvent(TRACE_ERROR, "Error while stat() of %s\n", protos);
+      traceEvent(TRACE_ERROR, "Error while stat() of %s\n", myGlobals.protoSpecs);
       return;
     }
 
     bufferCurrent = buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
     traceEvent(TRACE_INFO, "Processing protocol file: '%s', size: %ld",
-                           protos, buf.st_size+8);
+                           myGlobals.protoSpecs, buf.st_size+8);
 
     for (;;) {
       bufferCurrent = fgets(bufferCurrent, buf.st_size, fd);

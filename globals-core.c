@@ -254,11 +254,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   myGlobals.dummyEthAddress[0] = '\0';
 
-#ifdef ENABLE_NAPSTER
-  for (i = 0; i < MAX_NUM_NAPSTER_SERVER; i ++)
-    memset(&myGlobals.napsterSvr[i], 0, sizeof(NapsterServer));
-#endif
-
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;
 

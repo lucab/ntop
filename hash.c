@@ -253,9 +253,6 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
   if(host->icmpInfo     != NULL) free(host->icmpInfo);
   if(host->dnsStats     != NULL) free(host->dnsStats);
   if(host->httpStats    != NULL) free(host->httpStats);
-#ifdef ENABLE_NAPSTER
-  if(host->napsterStats != NULL) free(host->napsterStats);
-#endif
   if(host->dhcpStats    != NULL) free(host->dhcpStats);
 
   /* ********** */

@@ -730,11 +730,13 @@ int32_t gmt2local(time_t t) {
 /* ********************************* */
 
 /* Example: "flow1='host jake',flow2='dst host born2run'" */
-void handleFlowsSpecs(char* flows) {
+void handleFlowsSpecs() {
   FILE *fd;
-  char *flow, *buffer=NULL, *strtokState;;
+  char *flow, *buffer=NULL, *strtokState, *flows;
 
-  if (! flows || ! flows[0])
+  flows = myGlobals.flowSpecs;
+
+  if((!flows) || (!flows[0]))
     return;
 
   fd = fopen(flows, "rb");
@@ -1955,9 +1957,6 @@ void resetHostsVariables(HostTraffic* el) {
   el->icmpInfo = NULL;
   el->dnsStats = NULL;
   el->httpStats = NULL;
-#ifdef ENABLE_NAPSTER
-  el->napsterStats = NULL;
-#endif
   el->dhcpStats = NULL;
 
   resetUsageCounter(&el->contactedSentPeers);

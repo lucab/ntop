@@ -787,17 +787,6 @@ void printHostsTraffic(int reportType,
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 
-#ifdef ENABLE_NAPSTER
-	    if(el->napsterStats != NULL) {
-	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(el->napsterStats->bytesRcvd, 1)) < 0)
-		traceEvent(TRACE_ERROR, "Buffer overflow!");
-	      sendString(buf);
-	    } else {
-	      sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
-	    }
-#endif
-
 	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
 	      totalIPTraffic += el->protoIPTrafficInfos[i].rcvdLoc+
 		el->protoIPTrafficInfos[i].rcvdFromRem;
@@ -829,17 +818,6 @@ void printHostsTraffic(int reportType,
 			formatBytes(el->ipBytesSent, 1), sentPercent, myGlobals.separator) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
-
-#ifdef ENABLE_NAPSTER
-	    if(el->napsterStats != NULL) {
-	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(el->napsterStats->bytesSent, 1)) < 0)
-		traceEvent(TRACE_ERROR, "Buffer overflow!");
-	      sendString(buf);
-	    } else {
-	      sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
-	    }
-#endif
 
 	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
 	      totalIPTraffic += el->protoIPTrafficInfos[i].sentLoc+

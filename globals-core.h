@@ -108,7 +108,7 @@ extern void printHTMLheader(char *title, int  headerFlags);
 /* initialize.c */
 extern void initIPServices(void);
 extern void resetDevice(int devIdx);
-extern void initCounters(int _mergeInterfaces);
+extern void initCounters();
 extern void resetStats(void);
 extern int initGlobalValues(void);
 extern void postCommandLineArgumentsInitialization(time_t *lastTime);
@@ -166,7 +166,7 @@ extern RETSIGTYPE handleDiedChild(int signal);
 extern RETSIGTYPE dontFreeze(int signo);
 extern void daemonize(void);
 extern void detachFromTerminal(void);
-extern void handleProtocols(char *protos);
+extern void handleProtocols();
 extern void addDefaultProtocols(void);
 extern int mapGlobalToLocalIdx(int port);
 extern void *updateThptLoop(void *notUsed);
@@ -210,12 +210,6 @@ extern void handleBootp(HostTraffic *srcHost, HostTraffic *dstHost,
 			u_int packetDataLength, u_char* packetData, int actualDeviceId);
 extern u_int16_t processDNSPacket(const u_char *bp, u_int length,
 				  short *isRequest, short *positiveReply);
-#ifdef ENABLE_NAPSTER
-extern void handleNapster(HostTraffic *srcHost, HostTraffic *dstHost,
-			  u_short sport, u_short dport,
-			  u_int packetDataLength, u_char* packetData,
-			  IPSession *theSession);
-#endif
 extern void handleNetbios(HostTraffic *srcHost, HostTraffic *dstHost,
 			  u_short sport, u_short dport,
 			  u_int packetDataLength, const u_char* bp,
@@ -284,7 +278,7 @@ extern unsigned short _pseudoLocalAddress(struct in_addr *addr);
 extern unsigned short isPseudoBroadcastAddress(struct in_addr *addr);
 extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
-extern void handleFlowsSpecs(char* flows);
+extern void handleFlowsSpecs();
 extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
 extern void fillDomainName(HostTraffic *el);
 #ifdef MULTITHREADED
@@ -401,12 +395,7 @@ extern void mySQLnotifyTCPSession(IPSession *session, int actualDeviceId);
 extern void mySQLupdateDBOSname(HostTraffic *el);
 #endif /* HAVE_MYSQL */
 
-#ifdef ENABLE_NAPSTER
-extern NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
-#endif
-
 /* netflow.c */
-extern int handleNetFlowSupport(char* addr /* host:port */);
 extern void termNetFlowExporter();
 extern void sendICMPflow(HostTraffic *srcHost, HostTraffic *dstHost, u_int length, u_int actualDeviceId);
 extern void sendUDPflow(HostTraffic *srcHost, HostTraffic *dstHost, 

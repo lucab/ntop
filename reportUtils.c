@@ -396,13 +396,6 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	theAnchor[0] = htmlAnchor1;
       }
 
-#ifdef ENABLE_NAPSTER
-    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>%s%s</A></TH>",
-		theAnchor[0], 1, "Napster", arrow[0]) < 0)
-      BufferOverflow();
-    sendString(buf);
-#endif
-
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
       if(abs(column) == soFar) {
 	arrow[0] = arrowGif;
@@ -829,19 +822,7 @@ int cmpFctn(const void *_a, const void *_b) {
     columnProtoId = myGlobals.columnSort - 1;
     if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
       if(columnProtoId <= 0) {
-#ifdef ENABLE_NAPSTER
-	if((*a)->napsterStats == NULL)
-	  a_ = 0;
-	else
-	  a_ = (*a)->napsterStats->bytesRcvd;
-
-	if((*b)->napsterStats == NULL)
-	  b_ = 0;
-	else
-	  b_ = (*b)->napsterStats->bytesRcvd;
-#else
 	a_ = b_ = 0;
-#endif
       } else {
 	a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc+(*a)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem;
 	b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc+(*b)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem;
@@ -950,19 +931,7 @@ int cmpFctn(const void *_a, const void *_b) {
     columnProtoId = myGlobals.columnSort - 1;
     if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
       if(columnProtoId <= 0) {
-#ifdef ENABLE_NAPSTER
-	if((*a)->napsterStats == NULL)
-	  a_ = 0;
-	else
-	  a_ = (*a)->napsterStats->bytesSent;
-
-	if((*b)->napsterStats == NULL)
-	  b_ = 0;
-	else
-	  b_ = (*b)->napsterStats->bytesSent;
-#else
 	a_ = b_ = 0;
-#endif
       } else {
 	a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].sentLoc
 	  +(*a)->protoIPTrafficInfos[columnProtoId-1].sentRem;
@@ -1836,14 +1805,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   }
 #endif
 
-#ifndef ENABLE_NAPSTER
   a = b = 0;
-#else
-  if(el->napsterStats == NULL)
-    a = 0, b = 0;
-  else
-    a = el->napsterStats->bytesSent, b = el->napsterStats->bytesRcvd;
-#endif
 
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
     a += el->protoIPTrafficInfos[i].sentLoc+
@@ -2224,14 +2186,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 		BufferOverflow();
 	    }
 
-#ifndef ENABLE_NAPSTER
 	    moreSessionInfo = "";
-#else
-	    if(session->napsterSession)
-	      moreSessionInfo = "&nbsp;[Napster]";
-	    else
-	      moreSessionInfo = "";
-#endif
 
 	    if(session->passiveFtpSession)
 	      moreSessionInfo = "&nbsp;[FTP]";
@@ -2371,9 +2326,6 @@ void checkHostProvidedServices(HostTraffic *el) {
      || isFTPhost(el)
      || isHTTPhost(el)
      || isWINShost(el)
-#ifdef ENABLE_NAPSTER
-     || isNapsterRedirector(el) || isNapsterServer(el) || isNapsterClient(el)
-#endif
      || isDHCPClient(el)        || isDHCPServer(el)
      ) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2396,13 +2348,6 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(isFTPhost(el))          sendString("FTP Server<br>");
     if(isHTTPhost(el))         sendString("HTTP Server<br>");
     if(isWINShost(el))         sendString("WINS Server<br>");
-
-
-#ifdef ENABLE_NAPSTER
-    if(isNapsterRedirector(el))   sendString("Napster Redirector<br>");
-    if(isNapsterServer(el))       sendString("Napster Server<br>");
-    if(isNapsterClient(el))       sendString("Napster Client<br>");
-#endif
 
     if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG ALT=\"DHCP Client\" SRC=/bulb.gif BORDER=0><br>");
     if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=/antenna.gif BORDER=0>&nbsp;<br>");
@@ -3165,50 +3110,8 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 
 /* ************************************ */
 
-#ifdef ENABLE_NAPSTER
-static void printNapsterStats(HostTraffic *el) {
-
-  printSectionTitle("Napster Stats");
-
-  sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Connections Requested</TH><TD ALIGN=RIGHT>");
-  sendString(formatPkts(el->napsterStats->numConnectionsRequested));
-  sendString("</TD></TR>\n");
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Connections Served</TH><TD ALIGN=RIGHT>");
-  sendString(formatPkts(el->napsterStats->numConnectionsServed));
-  sendString("</TD></TR>\n");
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Search Requested</TH><TD ALIGN=RIGHT>");
-  sendString(formatPkts(el->napsterStats->numSearchSent));
-  sendString("</TD></TR>\n");
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Search Served</TH><TD ALIGN=RIGHT>");
-  sendString(formatPkts(el->napsterStats->numSearchRcvd));
-  sendString("</TD></TR>\n");
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Downloads Requested</TH><TD ALIGN=RIGHT>");
-  sendString(formatPkts(el->napsterStats->numDownloadsRequested));
-  sendString("</TD></TR>\n");
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT># Downloads Served</TH><TD ALIGN=RIGHT>");
-  sendString(formatPkts(el->napsterStats->numDownloadsServed));
-  sendString("</TD></TR>\n");
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>Data Sent</TH><TD ALIGN=RIGHT>");
-  sendString(formatBytes(el->napsterStats->bytesSent, 1));
-  sendString("</TD></TR>\n");
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>Data Rcvd</TH><TD ALIGN=RIGHT>");
-  sendString(formatBytes(el->napsterStats->bytesRcvd, 1));
-  sendString("</TD></TR>\n");
-
-  sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
-}
-#endif
-
-/* ************************************ */
-
 void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
   TrafficCounter tot;
-
-#ifdef ENABLE_NAPSTER
-  if(el->napsterStats != NULL)
-    printNapsterStats(el);
-#endif
 
   if((el->dnsStats == NULL) && (el->httpStats == NULL))
     return;

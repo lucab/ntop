@@ -266,10 +266,6 @@ typedef struct ntopGlobals {
   u_short *mtuSize;
   u_short *headerSize;
 
-#ifdef ENABLE_NAPSTER
-  NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
-#endif
-
 #ifdef MEMORY_DEBUG
   size_t allocatedMemory;
 #endif
@@ -287,7 +283,7 @@ typedef struct ntopGlobals {
   int userId, groupId;
 #endif
   
-  char *webAddr, *flowSpecs, *rulesFile, *sslAddr;  
+  char *webAddr, *flowSpecs, *sslAddr;  
 
 #ifndef MICRO_NTOP
   int maxNumLines, sortSendMode;

@@ -2393,7 +2393,8 @@ void processPacket(u_char *_deviceId,
     }
   }
 
-  if(myGlobals.flowsList != NULL) /* Handle flows last */
+  if((!myGlobals.borderSnifferMode) 
+     && (myGlobals.flowsList != NULL) /* Handle flows last */)
     flowsProcess(h, p, deviceId);
 
 #ifdef MULTITHREADED

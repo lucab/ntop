@@ -112,7 +112,7 @@ void execCGI(char* cgiName) {
 
 /* **************************************** */
 
-#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX) || defined(DARWIN)
+#if(defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX) || defined(DARWIN)
 void showPluginsList(char* pluginName) {
   FlowFilterList *flows = myGlobals.flowsList;
   short printHeader = 0;
@@ -293,7 +293,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 #endif
   } else {
 
-    if (usedEthAddress) {
+    if(usedEthAddress) {
       if(el->nbHostName != NULL) {
 	strncpy(symIp, el->nbHostName, sizeof(linkName));
       } else if(el->ipxHostName != NULL) {
@@ -904,7 +904,7 @@ static void initializeWeb(void) {
     SSL fix courtesy of
     Curtis Doty <Curtis@GreenKey.net>
  */
-void initWeb(int webPort, char* webAddr, char* sslAddr) {
+void initWeb() {
   int sockopt = 1;
   struct sockaddr_in sin;
 
@@ -913,23 +913,23 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
 
   myGlobals.actualReportDeviceId = 0;
 
-  if(webPort > 0) {
+  if(myGlobals.webPort > 0) {
     sin.sin_family      = AF_INET;
-    sin.sin_port        = (int)htons((unsigned short int)webPort);
+    sin.sin_port        = (int)htons((unsigned short int)myGlobals.webPort);
     sin.sin_addr.s_addr = INADDR_ANY;
 
 #ifndef WIN32
-    if(sslAddr) {
-      if(!inet_aton(sslAddr,&sin.sin_addr))
+    if(myGlobals.sslAddr) {
+      if(!inet_aton(myGlobals.sslAddr, &sin.sin_addr))
 	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
-		   "Not binding SSL to a particular interface!\n",  sslAddr);
+		   "Not binding SSL to a particular interface!\n", myGlobals.sslAddr);
     }
 
-    if (webAddr) {
+    if(myGlobals.webAddr) {
       /* Code added to be able to bind to a particular interface */
-      if (!inet_aton(webAddr,&sin.sin_addr))
+      if(!inet_aton(myGlobals.webAddr, &sin.sin_addr))
 	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
-		   "Not binding to a particular interface!\n",  webAddr);
+		   "Not binding to a particular interface!\n",  myGlobals.webAddr);
     }
 #endif
 
@@ -957,9 +957,9 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
   }
 #endif
 
-  if(webPort > 0) {
+  if(myGlobals.webPort > 0) {
     if(bind(myGlobals.sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-      traceEvent(TRACE_WARNING, "bind: port %d already in use.", webPort);
+      traceEvent(TRACE_WARNING, "bind: port %d already in use.", myGlobals.webPort);
       closeNwSocket(&myGlobals.sock);
       exit(-1);
     }
@@ -997,14 +997,14 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
     }
 #endif
 
-  if(webPort > 0) {
+  if(myGlobals.webPort > 0) {
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-    if (webAddr)
+    if(myGlobals.webAddr)
       traceEvent(TRACE_INFO, "Waiting for HTTP connections on %s port %d...\n",
-		 webAddr, webPort);
+		 myGlobals.webAddr, myGlobals.webPort);
     else
       traceEvent(TRACE_INFO, "Waiting for HTTP connections on port %d...\n",
-		 webPort);
+		 myGlobals.webPort);
   }
 
 #ifdef HAVE_OPENSSL
@@ -1123,7 +1123,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
       struct request_info req;
       request_init(&req, RQ_DAEMON, DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
       fromhost(&req);
-      if (!hosts_access(&req)) {
+      if(!hosts_access(&req)) {
 	closelog(); /* just in case */
 	openlog(DAEMONNAME,LOG_PID,SYSLOG_FACILITY);
 	syslog(deny_severity, "refused connect from %s", eval_client(&req));

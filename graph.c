@@ -465,18 +465,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     return;
   }
 
-#ifdef ENABLE_NAPSTER
-  if(theHost->napsterStats == NULL)
-    totalIPTraffic = 0;
-  else {
-    if(dataSent)
-      totalIPTraffic = theHost->napsterStats->bytesSent;
-    else
-      totalIPTraffic = theHost->napsterStats->bytesRcvd;
-  }
-#else
   totalIPTraffic = 0;
-#endif
 
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
     if(dataSent)
@@ -485,22 +474,6 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     else
       totalIPTraffic += theHost->protoIPTrafficInfos[i].rcvdLoc+
 	theHost->protoIPTrafficInfos[i].rcvdFromRem;
-
-#ifdef ENABLE_NAPSTER
-  if(theHost->napsterStats != NULL) {
-    if(dataSent) {
-      if(theHost->napsterStats->bytesSent > 0) {
-	p[num] = (float)((100*theHost->napsterStats->bytesSent)/totalIPTraffic);
-	lbl[num++] = "Napster";
-      }
-    } else {
-      if(theHost->napsterStats->bytesRcvd > 0) {
-	p[num] = (float)((100*theHost->napsterStats->bytesRcvd)/totalIPTraffic);
-	lbl[num++] = "Napster";
-      }
-    }
-  }
-#endif
 
   if(totalIPTraffic > 0) {
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {

@@ -268,11 +268,10 @@ void resetDevice(int devIdx) {
 
 /* ******************************* */
 
-void initCounters(int _mergeInterfaces) {
+void initCounters() {
   int len, i;
 
   myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
-  myGlobals.mergeInterfaces = _mergeInterfaces;
 
   setDomainName();
 
@@ -397,30 +396,47 @@ void resetStats(void) {
 int initGlobalValues(void) {
   int myAccuracy = HIGH_ACCURACY_LEVEL;
 
+  /* This routine allows a selection - at compile time - among three levels of "accuracy".
+     Moving to a lower accuracy level represents a tradeoff of less processing time per
+     packet (allowing higher throughput rates) vs. less information available from ntop.
+     
+     A parameter for this was eliminated (Apr2002) so that only somebody who really understands
+     the tradeoffs involved can choose this.  
+     
+     Note (below) that Border Sniffer Mode (-j) - of necessity - forces the equivalent of
+     LOW_ACCURACY_LEVEL
+  */
+  
   switch(myAccuracy) {
   case HIGH_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 1;
+    myGlobals.enableSessionHandling = 1;
+    myGlobals.enablePacketDecoding = 1;
+    myGlobals.enableFragmentHandling = 1;
     myGlobals.trackOnlyLocalHosts = 0;
     break;
   case MEDIUM_ACCURACY_LEVEL:
     myGlobals.enablePacketDecoding = 0;
-    myGlobals.enableSessionHandling = myGlobals.enableFragmentHandling = myGlobals.trackOnlyLocalHosts = 1;
+    myGlobals.enableSessionHandling = 1;
+    myGlobals.enableFragmentHandling = 1;
+    myGlobals.trackOnlyLocalHosts = 1;
     break;
   case LOW_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0;
+    myGlobals.enableSessionHandling = 0;
+    myGlobals.enablePacketDecoding = 0;
+    myGlobals.enableFragmentHandling = 0;
     myGlobals.trackOnlyLocalHosts = 1;
     break;
   }
 
   if(myGlobals.borderSnifferMode) {
     /* Override everything that has been set before */
-    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0;
+    myGlobals.enableSessionHandling  = 0;
+    myGlobals.enablePacketDecoding   = 0;
+    myGlobals.enableFragmentHandling = 0;
 #ifdef MULTITHREADED
     myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
 #endif
     myGlobals.trackOnlyLocalHosts = 1;
-
-    myGlobals.enableSessionHandling = 1; /* ==> Luca's test <== */
   } else {
 #ifdef MULTITHREADED
     myGlobals.numDequeueThreads = 1;
@@ -936,7 +952,7 @@ void initDevices(char* devices) {
 
 /* ******************************* */
 
-void initLibpcap(char* rulesFile, int numDevices) {
+void initLibpcap() {
   char ebuf[PCAP_ERRBUF_SIZE];
 
   if(myGlobals.rFileName == NULL) {

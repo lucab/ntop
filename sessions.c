@@ -428,9 +428,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   short flowDirection = CLIENT_TO_SERVER;
   char addedNewEntry = 0;
   u_short sessionType, check, found=0;
-#ifdef ENABLE_NAPSTER
-  u_short napsterDownload = 0;
-#endif
   u_short sessSport, sessDport;
   HostTraffic *srcHost, *dstHost;
   struct timeval tvstrct;
@@ -573,94 +570,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		 srcHost->hostNumIpAddress, sport,
 		 myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
-
-#ifdef ENABLE_NAPSTER
-      /* Let's check whether this is a Napster session */
-      if(numNapsterSvr > 0) {
-	for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
-	  if(((myGlobals.napsterSvr[i].serverPort == sport)
-	      && (myGlobals.napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr))
-	     || ((myGlobals.napsterSvr[i].serverPort == dport)
-		 && (myGlobals.napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
-	    theSession->napsterSession = 1;
-	    myGlobals.napsterSvr[i].serverPort = 0; /* Free slot */
-	    numNapsterSvr--;
-	    FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-	    FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
-
-#ifdef TRACE_TRAFFIC_INFO
-	    traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
-		       srcHost->hostSymIpAddress,
-		       dstHost->hostSymIpAddress);
-#endif
-
-	    if(srcHost->napsterStats == NULL) {
-	      srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	      memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
-	    }
-
-	    if(dstHost->napsterStats == NULL) {
-	      dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	      memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
-	    }
-
-	    srcHost->napsterStats->numDownloadsRequested++,
-	      dstHost->napsterStats->numDownloadsServed++;
-	  }
-	}
-      }
-
-      if(!theSession->napsterSession)  {
-	/* This session has not been recognized as a Napster
-	   session. It might be that ntop has been started
-	   after the session started, or that ntop has
-	   lost a few packets. Let's do a final check...
-	*/
-#define NAPSTER_DOMAIN "napster.com"
-
-	if(
-	   (((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-	     && (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-
-						  strlen(NAPSTER_DOMAIN)],
-			NAPSTER_DOMAIN) == 0) && (sport == 8888)))
-	   ||
-	   (((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-	     && (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-
-						  strlen(NAPSTER_DOMAIN)],
-			NAPSTER_DOMAIN) == 0)) && (dport == 8888))) {
-
-	  theSession->napsterSession = 1;
-
-#ifdef TRACE_TRAFFIC_INFO
-	  traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
-		     srcHost->hostSymIpAddress,
-		     dstHost->hostSymIpAddress);
-#endif
-
-	  if(srcHost->napsterStats == NULL) {
-	    srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	    memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
-	  }
-
-	  if(dstHost->napsterStats == NULL) {
-	    dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	    memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
-	  }
-
-	  if(sport == 8888) {
-	    FD_SET(HOST_SVC_NAPSTER_SERVER, &srcHost->flags);
-	    FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
-	    srcHost->napsterStats->numConnectionsServed++,
-	      dstHost->napsterStats->numConnectionsRequested++;
-	  } else {
-	    FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-	    FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
-	    srcHost->napsterStats->numConnectionsRequested++,
-	      dstHost->napsterStats->numConnectionsServed++;
-	  }
-	}
-      }
-#endif /* ENABLE_NAPSTER */
 
 #ifdef MULTITHREADED
       accessMutex(&myGlobals.hashResizeMutex, "newSession");
@@ -913,53 +822,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  FD_SET(HOST_SVC_IMAP, &srcHost->flags); 
 	else
 	  FD_SET(HOST_SVC_IMAP, &dstHost->flags);
-#ifdef ENABLE_NAPSTER
-      } else if((sport == 8875 /* Napster Redirector */)
-		&& (packetDataLength > 5)) {
-	char address[64] = { 0 };
-	int i;
-
-	FD_SET(HOST_SVC_NAPSTER_REDIRECTOR, &srcHost->flags);
-	FD_SET(HOST_SVC_NAPSTER_CLIENT,     &dstHost->flags);
-
-	if(packetDataLength >= sizeof(address))
-	  len = sizeof(address)-1;
-	else
-	  len = packetDataLength;
-
-	strncpy(address, packetData, len);
-	address[len-2] = 0;
-
-#ifdef TRACE_TRAFFIC_INFO
-	traceEvent(TRACE_INFO, "NAPSTER: %s->%s [%s][len=%d]\n",
-		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress,
-		   address, packetDataLength);
-#endif
-
-	for(i=1; i<len-2; i++)
-	  if(address[i] == ':') {
-	    address[i] = '\0';
-	    break;
-	  }
-
-	myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverAddress.s_addr = ntohl(inet_addr(address));
-	myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort = atoi(&address[i+1]);
-	myGlobals.napsterSvrInsertIdx = (myGlobals.napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
-	numNapsterSvr++;
-
-	if(srcHost->napsterStats == NULL) {
-	  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
-	}
-	if(dstHost->napsterStats == NULL) {
-	  dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
-	}
-
-	srcHost->napsterStats->numConnectionsServed++,
-	  dstHost->napsterStats->numConnectionsRequested++;
-#endif /* NASPTER */
       }
     } else {
       /* !myGlobals.enablePacketDecoding */
@@ -1195,104 +1057,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       myGlobals.device[actualDeviceId].numEstablishedTCPConnections++;
     }
 
-#ifdef ENABLE_NAPSTER
-    if(myGlobals.enablePacketDecoding) {
-      /* Let's decode some Napster packets */
-      if((!theSession->napsterSession)
-	 && (packetData != NULL)
-	 && (packetDataLength == 1)
-	 && (theSession->bytesProtoRcvd == 0) /* This condition will not hold if you
-						 move this line of code down this
-						 function */
-	 ) {
-	/*
-	  If this is a Napster Download then it should
-	  look like "0x31 GET username song ...."
-	*/
-
-	if(packetData[0] == 0x31) {
-	  theSession->napsterSession = 1;
-	  napsterDownload = 1;
-	}
-
-	/*
-	  traceEvent(TRACE_INFO, "Session check: %s:%d->%s:%d [%x]\n",
-	  srcHost->hostSymIpAddress, sport,
-	  dstHost->hostSymIpAddress, dport, packetData[0]);
-	*/
-      }
-
-      if(theSession->napsterSession && (packetDataLength > 0) ) {
-	if(srcHost->napsterStats == NULL) {
-	  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
-	}
-
-	if(dstHost->napsterStats == NULL) {
-	  dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
-	}
-
-	srcHost->napsterStats->bytesSent += packetDataLength,
-	  dstHost->napsterStats->bytesRcvd += packetDataLength;
-
-	if(napsterDownload) {
-	  FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-	  FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
-
-#ifdef TRACE_TRAFFIC_INFO
-	  traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
-		     dstHost->hostSymIpAddress,
-		     srcHost->hostSymIpAddress);
-#endif
-	  dstHost->napsterStats->numDownloadsRequested++,
-	    srcHost->napsterStats->numDownloadsServed++;
-	} else if((packetData != NULL) && (packetDataLength > 4)) {
-	  if((packetData[1] == 0x0) && (packetData[2] == 0xC8) && (packetData[3] == 0x00)) {
-	    srcHost->napsterStats->numSearchSent++, dstHost->napsterStats->numSearchRcvd++;
-
-#ifdef TRACE_TRAFFIC_INFO
-	    traceEvent(TRACE_INFO, "NAPSTER search: %s->%s\n",
-		       srcHost->hostSymIpAddress,
-		       dstHost->hostSymIpAddress);
-#endif
-	  } else if((packetData[1] == 0x0)
-		    && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
-	    char tmpBuf[64], *remoteHost, *remotePort, *strtokState;
-
-	    struct in_addr shost;
-
-	    srcHost->napsterStats->numDownloadsRequested++,
-	      dstHost->napsterStats->numDownloadsServed++;
-
-	    /*
-	      LEN 00 CC 00 <remote user name>
-	      <remote user IP> <remote user port> <payload>
-	    */
-
-	    memcpy(tmpBuf, &packetData[4], (packetDataLength<64) ? packetDataLength : 63);
-	    strtok_r(tmpBuf, " ", &strtokState); /* remote user */
-	    if((remoteHost = strtok_r(NULL, " ", &strtokState)) != NULL) {
-	      if((remotePort = strtok_r(NULL, " ", &strtokState)) != NULL) {
-
-		myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort = atoi(remotePort);
-		if(myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort != 0) {
-		  myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverAddress.s_addr = inet_addr(remoteHost);
-		  myGlobals.napsterSvrInsertIdx = (myGlobals.napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
-		  numNapsterSvr++;
-		  shost.s_addr = inet_addr(remoteHost);
-#ifdef TRACE_TRAFFIC_INFO
-		  traceEvent(TRACE_INFO, "NAPSTER: %s requested download from %s:%s",
-			     srcHost->hostSymIpAddress, remoteHost, remotePort);
-#endif
-		}
-	      }
-	    }
-	  }
-	}
-      }
-    }
-#endif
        
     /*
      *

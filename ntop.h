@@ -1471,9 +1471,6 @@ typedef struct ipSession {
   u_char lastInitiator2RemFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
   u_char lastRem2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
   u_char sessionState;              /* actual session state                     */
-#ifdef ENABLE_NAPSTER
-  u_char  napsterSession;           /* checked if this is a Napster session     */
-#endif
   u_char  passiveFtpSession;        /* checked if this is a passive FTP session */
   struct ipSession *next;
 } IPSession;
@@ -1514,12 +1511,6 @@ typedef struct portUsage {
 #define HOST_SVC_WINS					 18
 #define HOST_SVC_BRIDGE					 19
 
-#ifdef ENABLE_NAPSTER
-#define HOST_SVC_NAPSTER_REDIRECTOR			 20
-#define HOST_SVC_NAPSTER_SERVER			         21
-#define HOST_SVC_NAPSTER_CLIENT			         22
-#endif
-
 #define HOST_SVC_DHCP_CLIENT			         23
 #define HOST_SVC_DHCP_SERVER			         24
 #define HOST_TYPE_MASTER_BROWSER			 25
@@ -1556,29 +1547,12 @@ typedef struct portUsage {
 #define isWINShost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_WINS, &(a->flags)))
 #define isBridgeHost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_BRIDGE, &(a->flags)))
 
-#ifdef ENABLE_NAPSTER
-#define isNapsterRedirector(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_REDIRECTOR, &(a->flags)))
-#define isNapsterServer(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_SERVER, &(a->flags)))
-#define isNapsterClient(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_CLIENT, &(a->flags)))
-#endif
-
 #define isDHCPClient(a)	            ((a != NULL) && FD_ISSET(HOST_SVC_DHCP_CLIENT, &(a->flags)))
 #define isDHCPServer(a)	            ((a != NULL) && FD_ISSET(HOST_SVC_DHCP_SERVER, &(a->flags)))
 
 /* Host health */
 #define hasWrongNetmask(a)	    ((a != NULL) && FD_ISSET(HOST_WRONG_NETMASK, &(a->flags)))
 #define hasDuplicatedMac(a)    	    ((a != NULL) && FD_ISSET(HOST_DUPLICATED_MAC, &(a->flags)))
-
-
-#ifdef ENABLE_NAPSTER
-/* Cache of Napster Servers */
-#define MAX_NUM_NAPSTER_SERVER  32
-
-typedef struct napsterServer {
-  struct in_addr serverAddress;
-  u_short serverPort;
-} NapsterServer;
-#endif
 
 /* *********************** */
 
@@ -1769,9 +1743,6 @@ typedef struct hostTraffic {
   UsageCounter     contactedRcvdPeers; /* peers that talked with this host */
   UsageCounter     contactedRouters; /* routers contacted by this host */
   ServiceStats     *dnsStats, *httpStats;
-#ifdef ENABLE_NAPSTER
-  NapsterStats     *napsterStats;
-#endif
   DHCPStats        *dhcpStats;
 
   /* *************** IMPORTANT ***************

@@ -143,7 +143,7 @@ extern void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate);
 extern void execCGI(char* cgiName);
 extern void showPluginsList(char* pluginName);
 /* CHECK ME: loadPlugins() and unloadPlugins() should not be in webInterface.c */
-extern void initWeb(int webPort, char* webAddr, char* sslAddr);
+extern void initWeb();
 extern char *calculateCellColor(TrafficCounter actualValue,
                                 TrafficCounter avgTrafficLow,
                                 TrafficCounter avgTrafficHigh);
@@ -226,6 +226,7 @@ extern int out_graph(short gifwidth,
 /* http.c */
 extern void sendHTTPHeader(int mimeType, int headerFlags);
 
+#define STR_FAVICON_ICO                 "favicon.ico"
 #define STR_INDEX_HTML                  "index.html"
 #define PLUGINS_HEADER                  "plugins/"
 #define DUMP_DATA_HTML                  "dumpData.html"

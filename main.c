@@ -127,7 +127,6 @@ static struct option const long_options[] = {
 #endif
   { "output-packet-path",               required_argument, NULL, 'O' },
   { "db-file-path",                     required_argument, NULL, 'P' },
-  { "filter-rule",                      required_argument, NULL, 'R' },
   { "store-mode",                       required_argument, NULL, 'S' },
   { "mapper",                           required_argument, NULL, 'U' },
   { "version",                          no_argument,       0,    'V' },
@@ -148,7 +147,6 @@ static struct option const long_options[] = {
 #ifdef HAVE_GDCHART
   { "throughput-bar-chart",             no_argument,       NULL, 129 },
 #endif
-  {"no-admin-password-hint",            no_argument,       NULL, 130},
 
   {NULL, 0, NULL, 0}
 };
@@ -223,7 +221,6 @@ static void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
-  fprintf(fp, "    [-A <number>    | --accuracy-level <number>]          Accuracy level [0-2]\n");
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 Packet filter expression, like tcpdump\n");
   fprintf(fp, "    [-D <name>      | --domain <name>]                    Internet domain name\n");
 
@@ -242,7 +239,6 @@ static void usage (FILE * fp) {
   fprintf(fp, "    [-N             | --no-nmap]                          Don't use nmap even if installed\n");
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            Path for log files in pcap format\n");
   fprintf(fp, "    [-P <path>      | --db-file-path <path>]              Path for ntop internal database files\n");
-  fprintf(fp, "    [-R <file>      | --filter-rule <file>]               Matching rules file\n");
   fprintf(fp, "    [-S <number>    | --store-mode <number>]              Persistent storage mode [0-none, 1-local, 2-all]\n");
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     URL (mapper.pl) for displaying host location\n");
   fprintf(fp, "    [-V             | --version]                          Output version information and exit\n");
@@ -308,7 +304,6 @@ static void usage (FILE * fp) {
 
   fprintf(fp, "    [-w <HTTP port>]\n");
 
-  fprintf(fp, "    [-A (accuracy level [0-2])]\n");
   fprintf(fp, "    [-B <filter expression (like tcpdump)>]\n");
   fprintf(fp, "    [-D <Internet domain name>]\n");
 
@@ -562,11 +557,6 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.dbPath = strdup(optarg);
       break;
 
-    case 'R':
-      stringSanityCheck(optarg);
-      myGlobals.rulesFile = strdup(optarg);
-      break;
-
     case 'S':
       /*
        * Persitent storage only for 'local' machines
@@ -732,8 +722,6 @@ int main(int argc, char *argv[]) {
   reportValues(&lastTime);
 #endif /* MICRO_NTOP */
 
-  postCommandLineArgumentsInitialization(&lastTime);
-
   initGdbm(myGlobals.dbPath);
 
   /*
@@ -768,12 +756,11 @@ int main(int argc, char *argv[]) {
   /*
    * time to initialize the libpcap
    */
-  initLibpcap(myGlobals.rulesFile, myGlobals.numDevices);
+  initLibpcap();
 
 #ifndef MICRO_NTOP
   loadPlugins();
 #endif
-
 
   /*
     Code fragment below courtesy of
@@ -809,9 +796,11 @@ int main(int argc, char *argv[]) {
 #endif
 
   /* Handle local addresses (if any) */
-  handleLocalAddresses(myGlobals.localAddresses),
-    free(myGlobals.localAddresses),
+  handleLocalAddresses(myGlobals.localAddresses);
+  if(myGlobals.localAddresses != NULL) {
+    free(myGlobals.localAddresses);
     myGlobals.localAddresses = NULL;
+  }
 
   initDeviceDatalink();
 
@@ -821,16 +810,18 @@ int main(int argc, char *argv[]) {
     myGlobals.currentFilterExpression = strdup(""); /* so that it isn't NULL! */
 
   /* Handle flows (if any) */
-  handleFlowsSpecs(myGlobals.flowSpecs),
-    free(myGlobals.flowSpecs),
+  handleFlowsSpecs();
+  if(myGlobals.flowSpecs != NULL) {
+    free(myGlobals.flowSpecs);
     myGlobals.flowSpecs = NULL;
-
+  }
 
   /* Patch courtesy of Burton M. Strauss III <BStrauss3@attbi.com> */
-  handleProtocols(myGlobals.protoSpecs),
-    free(myGlobals.protoSpecs),
+  handleProtocols();
+  if(myGlobals.protoSpecs) {
+    free(myGlobals.protoSpecs);
     myGlobals.protoSpecs = NULL;
-
+  }
 
   /*
     Moved from initialize.c (postCommandLineArgumentsInitialization) so that we
@@ -843,24 +834,26 @@ int main(int argc, char *argv[]) {
 
   createPortHash();
 
-  initCounters(myGlobals.mergeInterfaces);
+  initCounters();
   initApps();
   initSignals();
 
-  initThreads(myGlobals.enableThUpdate, myGlobals.enableIdleHosts, myGlobals.enableDBsupport);
+  initThreads();
 
 #ifndef MICRO_NTOP
   startPlugins();
 #endif
 
   /* create the main listener */
-  initWeb(myGlobals.webPort, myGlobals.webAddr, myGlobals.sslAddr);
+  initWeb();
 
   traceEvent(TRACE_INFO, "Sniffying...\n");
 
 #ifdef MEMORY_DEBUG
   resetLeaks();
 #endif
+
+  postCommandLineArgumentsInitialization(&lastTime);
 
   /*
    * In multithread mode, a separate thread handles packet sniffing

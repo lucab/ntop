@@ -1283,6 +1283,16 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 
        This NEEDS to be fixed.
     */
+  } else if(strcmp(pageName, STR_FAVICON_ICO) == 0) {
+    /* Burton Strauss (BStrauss@acm.org) - April 2002
+       favicon.ico and we don't have the file (or it would have been handled above)
+       so punt!
+    */
+#ifdef LOG_URLS
+    traceEvent(TRACE_INFO, "Note: favicon.ico request, returned 404.\n");
+#endif
+    returnHTTPpageNotFound();
+    printTrailer=0;
   } else {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
@@ -1297,7 +1307,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       /* The URLs below are "read-only" hence I can fork a copy of ntop  */
 
       if((childpid = fork()) < 0)
-	traceEvent(TRACE_ERROR, "An error occurred while forking ntop (errno=%d)...\n", errno);
+	traceEvent(TRACE_ERROR, "An error occurred while forking ntop [errno=%d]..", errno);
       else {
 	*usedFork = 1;
 
@@ -1307,6 +1317,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 #ifdef MULTITHREADED
 	  releaseMutex(&myGlobals.hashResizeMutex);
 #endif
+
 #ifdef HAVE_ZLIB
 	  compressFile = 0;
 #endif
