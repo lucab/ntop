@@ -445,7 +445,7 @@ void purgeIdleHosts(int actDevice) {
   theFlaggedHosts = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
   memset(theFlaggedHosts, 0, maxHosts*sizeof(HostTraffic*));
 
-  purgeTime = startTime-PARM_HOST_PURGE_INTERVAL; /* Time used to decide whether a host need to be purged */
+  purgeTime = startTime-PARM_HOST_PURGE_MINIMUM_IDLE; /* Time used to decide whether a host need to be purged */
 
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
