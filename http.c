@@ -3514,6 +3514,7 @@ void handleHTTPrequest(HostAddr from) {
 
 #ifdef MAKE_WITH_I18N
   memset(requestedLanguage, 0, sizeof(requestedLanguage));
+  memset(&workLanguage, 0, sizeof(workLanguage));
 #endif
 
   httpBytesSent = 0;
@@ -3645,7 +3646,7 @@ void handleHTTPrequest(HostAddr from) {
  */
 #ifdef MAKE_WITH_I18N
   if(workLanguage != NULL) {
-    char *tmpI18Nstr, *strtokState;
+    char *tmpI18Nstr, *strtokState = NULL;
     tmpI18Nstr = strtok_r(workLanguage, ",", &strtokState);
     while(tmpI18Nstr != NULL) {
         /* Skip leading blanks */
@@ -3671,6 +3672,9 @@ void handleHTTPrequest(HostAddr from) {
   }
 
   if(requestedURL[0] == '\0') {
+    for (i=numLang; i>=0; i--) {
+      free(requestedLanguage[i]);
+    }
     returnHTTPpageNotFound(NULL);
   }
 
