@@ -3098,6 +3098,11 @@ void printIpTrafficMatrix(void) {
 
   printHTMLheader("IP Subnet Traffic Matrix", 0);
 
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix == NULL) {
+    printFlagedWarning("<I>Traffic matrix is not available for the selected network interface</I>");
+    return;
+  }
+
   activeHosts = (short*)malloc(sizeof(short)*myGlobals.device[myGlobals.actualReportDeviceId].numHosts);
 
   for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {

@@ -941,7 +941,7 @@ static void addKeyIfMissing(char* key, char* value,
       while(pw1[0] == '\0') {
         thePw = getpass(userQuestion);
 
-        if(thePw[0] != '\0') {
+        if(strlen(thePw) > 5) {
           if(strlen(thePw) > (sizeof(pw1)-1)) thePw[sizeof(pw1)-1] = '\0';
           strcpy(pw1, thePw);
 
@@ -955,7 +955,9 @@ static void addKeyIfMissing(char* key, char* value,
             memset(pw1, 0, sizeof(pw1)); memset(pw2, 0, sizeof(pw2));
             sleep(1); /* It avoids message loops */
           }
-        }
+        } else {
+	  printf("Password too short (6 characters or more). Please try again.\n");
+	}
       }
 
       value = pw1;
