@@ -155,7 +155,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* Databases */
   myGlobals.gdbm_file = NULL;
   myGlobals.pwFile = NULL;
-  myGlobals.eventFile = NULL;
   myGlobals.hostsInfoFile = NULL;
   myGlobals.addressCache = NULL;
 
@@ -173,11 +172,11 @@ void initNtopGlobals(int argc, char * argv[]) {
 #ifdef MULTITHREADED
   myGlobals.numThreads = 0;            /* # of running threads */
 
-  myGlobals.numDequeueThreads = 0;
+  myGlobals.numDequeueThreads = 1;
 
 #ifdef ASYNC_ADDRESS_RESOLUTION
   for (i = 0; i < MAX_NUM_DEQUEUE_THREADS; i ++)
-    myGlobals.dequeueAddressThreadId[i] = -1;
+    myGlobals.dequeueAddressThreadId[i] = (pthread_t)-1;
   myGlobals.droppedAddresses = 0;
 #endif
 
@@ -204,18 +203,6 @@ void initNtopGlobals(int argc, char * argv[]) {
     myGlobals.updateLsof = 0;
   for (i = 0; i < TOP_IP_PORT; i ++)
     myGlobals.localPorts[i] = NULL;       /* myGlobals.localPorts is used by lsof */
-
-  /* Filter Chains */
-  myGlobals.handleRules = 0;
-  myGlobals.flowsList = NULL;
-  myGlobals.tcpChain = NULL;
-  myGlobals.udpChain = NULL;
-  myGlobals.icmpChain = NULL;
-
-  myGlobals.ruleSerialIdentifier = 1;              /* 0 will break the logic */
-
-  for (i = 0; i < MAX_NUM_RULES; i ++)
-    myGlobals.filterRulesList[i] = NULL;
 
 #if defined(ASYNC_ADDRESS_RESOLUTION)
   myGlobals.addressQueueLen = 0;

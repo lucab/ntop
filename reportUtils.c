@@ -1732,7 +1732,6 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   actTotalSent = el->tcpSentLoc+el->tcpSentRem;
   actTotalRcvd = el->tcpRcvdLoc+el->tcpRcvdFromRem;
 
-  printHostEvents(el, -1, -1);
   printHostHourlyTraffic(el);
   printPacketStats(el, actualDeviceId);
 
@@ -3396,42 +3395,6 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
 #endif
 
   return(buf);
-}
-
-/* ************************ */
-
-int cmpEventsFctn(const void *_a, const void *_b) {
-  EventMsg **a = (EventMsg**)_a;
-  EventMsg **b = (EventMsg**)_b;
-
-  switch(myGlobals.columnSort) {
-  case 0: /* Event Time */
-    if((*a)->eventTime > (*b)->eventTime)
-      return(-1);
-    else if((*a)->eventTime < (*b)->eventTime)
-      return(1);
-    else
-      return(0);
-    break;
-  case 1: /* Severity */
-    if((*a)->severity > (*b)->severity)
-      return(-1);
-    else if((*a)->severity < (*b)->severity)
-      return(1);
-    else
-      return(0);
-    break;
-  case 2: /* Rule Id */
-    if((*a)->ruleId > (*b)->ruleId)
-      return(-1);
-    else if((*a)->ruleId < (*b)->ruleId)
-      return(1);
-    else
-      return(0);
-    break;
-  }
-
-  return(0);
 }
 
 /* *********************************** */

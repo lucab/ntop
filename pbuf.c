@@ -862,26 +862,6 @@ static void processIpPkt(const u_char *bp,
       sport = ntohs(tp.th_sport);
       dport = ntohs(tp.th_dport);
 
-      if(myGlobals.tcpChain) {
-	u_int displ;
-
-	if(off & 0x3fff)
-	  displ = 0; /* Fragment */
-	else
-	  displ = tp.th_off * 4;
-
-	checkFilterChain(srcHost, srcHostIdx,
-			 dstHost, dstHostIdx,
-			 sport, dport,
-			 tcpDataLength, /* packet length */
-			 displ+sizeof(struct tcphdr), /* offset from packet header */
-			 tp.th_flags, /* TCP flags */
-			 IPPROTO_TCP,
-			 (u_char)(off & 0x3fff), /* 1 = fragment, 0 = packet */
-			 bp, /* pointer to packet content */
-			 myGlobals.tcpChain, TCP_RULE, actualDeviceId);
-      }
-
       /*
 	Don't move this code on top as it is supposed to stay here
 	as it modifies sport/sport 
@@ -1105,26 +1085,6 @@ static void processIpPkt(const u_char *bp,
 	}
       }
 
-      if(myGlobals.udpChain) {
-	u_int displ;
-
-	if (off & 0x3fff)
-	  displ = 0; /* Fragment */
-	else
-	  displ = sizeof(struct udphdr);
-
-	checkFilterChain(srcHost, srcHostIdx,
-			 dstHost, dstHostIdx,
-			 sport, dport,
-			 udpDataLength, /* packet length */
-			 hlen,   /* offset from packet header */
-			 0,	   /* there are no UDP flags :-( */
-			 IPPROTO_UDP,
-			 (u_char)(off & 0x3fff), /* 1 = fragment, 0 = packet */
-			 bp, /* pointer to packet content */
-			 myGlobals.udpChain, UDP_RULE, actualDeviceId);
-      }
-
       /*
 	Don't move this code on top as it is supposed to stay here
 	as it modifies sport/sport 
@@ -1302,22 +1262,12 @@ static void processIpPkt(const u_char *bp,
 	else
 	  myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote += length;
 
-      if(myGlobals.icmpChain)
-	checkFilterChain(srcHost, srcHostIdx,
-			 dstHost, dstHostIdx,
-			 0 /* sport */, 0 /* dport */,
-			 length, /* packet length */
-			 0,   /* offset from packet header */
-			 icmpPkt.icmp_type,
-			 IPPROTO_ICMP,
-			 0, /* 1 = fragment, 0 = packet */
-			 bp+hlen, /* pointer to packet content */
-			 myGlobals.icmpChain, ICMP_RULE, actualDeviceId);
-
-      if((icmpPkt.icmp_type == ICMP_ECHO)
-	 && (broadcastHost(dstHost) || multicastHost(dstHost)))
-	smurfAlert(srcHostIdx, dstHostIdx, actualDeviceId);
-      else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
+      if(myGlobals.enableSuspiciousPacketDump
+	 && (icmpPkt.icmp_type == ICMP_ECHO) 
+	 && (broadcastHost(dstHost) || multicastHost(dstHost))) {
+	traceEvent(TRACE_WARNING, "Smurf packet detected for host [%s->%s]",
+		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+      } else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
 	u_int16_t dport;
 	struct ip *oip = &icmpPkt.icmp_ip;
 

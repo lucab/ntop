@@ -365,8 +365,8 @@ void resetStats(void) {
 
     for(j=1; j<myGlobals.device[i].actualHashSize; j++)
       if(myGlobals.device[i].hash_hostTraffic[j] != NULL) {
-	  freeHostInfo(i, myGlobals.device[i].hash_hostTraffic[j], 1, i);
-	  myGlobals.device[i].hash_hostTraffic[j] = NULL;
+	freeHostInfo(i, myGlobals.device[i].hash_hostTraffic[j], 1, i);
+	myGlobals.device[i].hash_hostTraffic[j] = NULL;
       }
 
     resetDevice(i);
@@ -393,34 +393,34 @@ void resetStats(void) {
 /* ******************************* */
 
 int initGlobalValues(void) {
-    switch(myGlobals.accuracyLevel) {
-	case HIGH_ACCURACY_LEVEL:
-	    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 1, myGlobals.trackOnlyLocalHosts = 0;
-	    break;
-	case MEDIUM_ACCURACY_LEVEL:
-	    myGlobals.enableSessionHandling = 1, myGlobals.enablePacketDecoding = 0, myGlobals.enableFragmentHandling = myGlobals.trackOnlyLocalHosts = 1;
-	    break;
-	case LOW_ACCURACY_LEVEL:
-	    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0, myGlobals.trackOnlyLocalHosts = 1;
-	    break;
-    }
+  switch(myGlobals.accuracyLevel) {
+  case HIGH_ACCURACY_LEVEL:
+    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 1, myGlobals.trackOnlyLocalHosts = 0;
+    break;
+  case MEDIUM_ACCURACY_LEVEL:
+    myGlobals.enableSessionHandling = 1, myGlobals.enablePacketDecoding = 0, myGlobals.enableFragmentHandling = myGlobals.trackOnlyLocalHosts = 1;
+    break;
+  case LOW_ACCURACY_LEVEL:
+    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0, myGlobals.trackOnlyLocalHosts = 1;
+    break;
+  }
 
-    if(myGlobals.borderSnifferMode) {
-	/* Override everything that has been set before */
-	myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0;
+  if(myGlobals.borderSnifferMode) {
+    /* Override everything that has been set before */
+    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0;
 #ifdef MULTITHREADED
-	myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
+    myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
 #endif
-	myGlobals.trackOnlyLocalHosts = 1;
+    myGlobals.trackOnlyLocalHosts = 1;
 
-	myGlobals.enableSessionHandling = 1; /* ==> Luca's test <== */
-    } else {
+    myGlobals.enableSessionHandling = 1; /* ==> Luca's test <== */
+  } else {
 #ifdef MULTITHREADED
-	myGlobals.numDequeueThreads = 1;
+    myGlobals.numDequeueThreads = 1;
 #endif
-    }
-    myGlobals.enableSessionHandling = 0;
-    return(0);
+  }
+  myGlobals.enableSessionHandling = 0;
+  return(0);
 }
 
 /* ******************************* */
@@ -462,7 +462,7 @@ void initGdbm(void) {
     traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
     exit(-1);
   }
-  
+
   /* ************************************************ */
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/serialCache.db", myGlobals.dbPath) < 0)
@@ -481,7 +481,7 @@ void initGdbm(void) {
 #endif
     exit(-1);
   }
-  
+
   /* ************************************************ */
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
@@ -623,7 +623,7 @@ void initThreads() {
      */
     createThread(&myGlobals.purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
     traceEvent(TRACE_INFO, "Started thread (%ld) for address purge.", myGlobals.purgeAddressThreadId);
-   }
+  }
 #endif
 
   createMutex(&myGlobals.gdbmMutex);       /* data to synchronize thread access to db files */
@@ -910,31 +910,6 @@ void initDevices(char* devices) {
     getLocalHostAddress(&myGlobals.device[i].network, myGlobals.device[i].name);
 }
 
-
-/* ******************************* */
-
-static void initRules(char *rulesFile) {
-  if((rulesFile != NULL) && (rulesFile[0] != '\0')) {
-    char tmpBuf[200];
-
-    traceEvent(TRACE_INFO, "Parsing ntop rules...");
-
-    myGlobals.handleRules = 1;
-    parseRules(rulesFile);
-
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/event.db", myGlobals.dbPath) < 0)
-      BufferOverflow();
-    myGlobals.eventFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
-
-    if(myGlobals.eventFile == NULL) {
-      traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
-      exit(-1);
-    }
-  } else
-    myGlobals.eventFile = NULL;
-}
-
-
 /* ******************************* */
 
 void initLibpcap(char* rulesFile, int numDevices) {
@@ -942,8 +917,6 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
   if(myGlobals.rFileName == NULL) {
     int i;
-
-    initRules(rulesFile);
 
     for(i=0; i<myGlobals.numDevices; i++) {
       /* Fire up libpcap for each specified device */
@@ -997,8 +970,9 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
     for(i=0; i<myGlobals.numDevices; i++) {
       if((!myGlobals.device[i].virtualDevice)
-	 && (pcap_lookupnet(myGlobals.device[i].name, &myGlobals.device[i].network.s_addr,
-			    &myGlobals.device[i].netmask.s_addr, ebuf) < 0)) {
+	 && (pcap_lookupnet(myGlobals.device[i].name,
+			    (bpf_u_int32*)&myGlobals.device[i].network.s_addr,
+			    (bpf_u_int32*)&myGlobals.device[i].netmask.s_addr, ebuf) < 0)) {
 	/* Fix for IP-less interfaces (e.g. bridge)
 	   Courtesy of Diana Eichert <deicher@sandia.gov>
 	*/
@@ -1076,7 +1050,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
       memlen = sizeof(TrafficEntry*)*myGlobals.device[i].numHosts*myGlobals.device[i].numHosts;
       myGlobals.device[i].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[i].numHosts*myGlobals.device[i].numHosts,
-							 sizeof(TrafficEntry*));
+								   sizeof(TrafficEntry*));
 #ifdef DEBUG
       traceEvent(TRACE_WARNING, "ipTrafficMatrix memlen=%.1f Mbytes",
 		 (float)memlen/(float)(1024*1024));
@@ -1089,7 +1063,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
       memlen = sizeof(struct hostTraffic*)*myGlobals.device[i].numHosts;
       myGlobals.device[i].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-								    myGlobals.device[i].numHosts);
+									      myGlobals.device[i].numHosts);
 
 #ifdef DEBUG
       traceEvent(TRACE_WARNING, "ipTrafficMatrixHosts memlen=%.1f Mbytes",
@@ -1156,25 +1130,25 @@ void initDeviceDatalink(void) {
 void parseTrafficFilter() {
   /* Construct, compile and set filter */
   if(myGlobals.currentFilterExpression != NULL) {
-      int i;
-      struct bpf_program fcode;
+    int i;
+    struct bpf_program fcode;
 
-      for(i=0; i<myGlobals.numDevices; i++) {
-	if(!myGlobals.device[i].virtualDevice) {
-	  if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
-			   myGlobals.device[i].netmask.s_addr) < 0)
-	     || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
-	    traceEvent(TRACE_ERROR,
-		       "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
-		       myGlobals.currentFilterExpression,
-		       pcap_geterr(myGlobals.device[i].pcapPtr),
-		       myGlobals.device[i].name[0] == '0' ? "<pcap file>" : myGlobals.device[i].name);
-	    exit(-1);
-	  } else
-	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.",
-		       myGlobals.currentFilterExpression, myGlobals.device[i].name);
-	}
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if(!myGlobals.device[i].virtualDevice) {
+	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
+			 myGlobals.device[i].netmask.s_addr) < 0)
+	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
+	  traceEvent(TRACE_ERROR,
+		     "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
+		     myGlobals.currentFilterExpression,
+		     pcap_geterr(myGlobals.device[i].pcapPtr),
+		     myGlobals.device[i].name[0] == '0' ? "<pcap file>" : myGlobals.device[i].name);
+	  exit(-1);
+	} else
+	  traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.",
+		     myGlobals.currentFilterExpression, myGlobals.device[i].name);
       }
+    }
   } else
     myGlobals.currentFilterExpression = strdup("");	/* so that it isn't NULL! */
 }

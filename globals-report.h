@@ -135,7 +135,6 @@ extern void printDomainStats(char* domainName, int sortedColumn, int revertOrder
 extern void printNoDataYet(void);
 extern void printNotAvailable(void);
 extern void listNetFlows(void);
-extern void printHostEvents(HostTraffic *theHost, int column, int revertOrder);
 extern void fillDomainName(HostTraffic *el);
 extern void printNtopConfigInfo(void);
 extern void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate);

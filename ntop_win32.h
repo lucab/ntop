@@ -35,6 +35,7 @@
 #define STATIC_PLUGIN
 
 /* Courtesy of Wies-Software <wies@wiessoft.de> */
+extern char* getpass(const char *prompt);
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 #define sleep(a /* sec */) waitForNextEvent(1000*a /* ms */)
 

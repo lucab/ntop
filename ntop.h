@@ -49,7 +49,11 @@
  * fallbacks for essential typedefs
  */
 #if !defined(HAVE_U_INT64_T)
+#if defined(WIN32) && defined(__GNUC__)
+typedef unsigned long long u_int64_t; /* on mingw unsigned long is 32 bits */
+#else
 typedef unsigned long u_int64_t;
+#endif
 #endif
 
 #if !defined(HAVE_U_INT32_T)
@@ -430,7 +434,6 @@ int getdomainname(char *name, size_t len);
  * ntop header file(s)
  */
 #include "regex.h"
-#include "rules.h"
 
 #ifndef WIN32
 #define closesocket(a) close(a)

@@ -223,9 +223,6 @@ typedef struct ntopGlobals {
   /* Filter Chains */
   u_short handleRules;
   FlowFilterList *flowsList;
-  FilterRuleChain *tcpChain, *udpChain, *icmpChain;
-  u_short ruleSerialIdentifier;
-  FilterRule* filterRulesList[MAX_NUM_RULES];
 
   /* Address Resolution */
 #if defined(ASYNC_ADDRESS_RESOLUTION)

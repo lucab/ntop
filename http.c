@@ -875,14 +875,14 @@ static int checkURLsecurity(char *url) {
   */
 
   /* a double slash? */
-  if(strstr(url, "//") > 0) {
-    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request\n");
+  if(strstr(url, "%%") > 0) {
+    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found %% in URL...rejecting request\n");
     return(2);
   }
  
   /* a double slash? */
-  if(strstr(url, "%%") > 0) {
-    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found %% in URL...rejecting request\n");
+  if(strstr(url, "//") > 0) {
+    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request\n");
     return(2);
   }
  
@@ -1562,9 +1562,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
-    } else if(strncmp(pageName, NW_EVENTS_HTML, strlen(NW_EVENTS_HTML)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostEvents(NULL, sortedColumn, revertOrder);
 #ifdef HAVE_GDCHART
     } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);

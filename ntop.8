@@ -9,7 +9,7 @@
 .TP 1.2
 .B "\\$1 | \\$2"
 ..
-.TH NTOP 8 "December 2001"
+.TH NTOP 8 "March 2002"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
@@ -34,14 +34,10 @@ ntop \- display top network users
 .RB [ -q | --create-suspicious-packets ]
 .RB [ -r | --refresh-time 
 .IR <number> ]
-.RB [ -s | --max-hash-size 
-.IR <number> ]
 .RB [ -t | --trace-level 
 .IR <number> ]
 .RB [ -w | --http-server
 .IR <port> ]
-.RB [ -A | --accuracy-level
-.IR <number> ]
 .RB [ -B | --filter-expression
 .IR "expression" ]
 .RB [ -D | --domain 
@@ -93,7 +89,7 @@ mySQL options:
 .RB [ -v | --mysql-host
 .IR <username:password:dbName> ]
 
-openSSL option:
+OpenSSL option:
 
 .RB [ -W | --https-server
 .IR <port> ]
@@ -197,12 +193,6 @@ Specifies the delay (in seconds) between screen updates (the default is 3 second
 note that if the delay is very short (1 second for instance), ntop might not
 be able to process all the network traffic.
 
-.It2 -s --max-hash-size
-The maximum hash size can be adjusted to values below the default value of 32,768 if desired.  This will limit the maximum
-amount of memory
-.B ntop
-will use.  The value must be greater than or equal to 64.
-
 .It2 -t --trace-level
 This flag specifies the level of
 .B ntop
@@ -243,11 +233,6 @@ has not been started with '-W 0' [see below]).
 You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
 .B -w 127.0.0.1:3000
 .
-
-.It2 -A --accuracy-level
-This flag specifies the level of
-.B ntop's
-traffic analysis accuracy. Level 2 (high accuracy) is full accuracy. Level 1 (medium accuracy): ntop filters out non-local traffic and disables protocol decoding. Level 0 (low accuracy): ntop acts as level 1 and also disables TCP session handling. This flag has to be used when the network is overloaded and ntop can't keep up with the current traffic.
 
 .It2 -B --filter-expression
 .B ntop
@@ -291,9 +276,6 @@ Forces ntop not to use nmap (if it is installed).
 
 .It2 -P --db-file-path
 This allows to specify where db-files are searched or created (default "."). In addition DBPATH/html is added to the searchlist for the WEB-files
-
-.It2 -R --filter-rule
-Specifies the filter rules used by ntop for emitting alerts and warnings when the traffic matches the specified rules. Shall you need further details about filter rules, please refer to ntop-rules (8) man page.
 
 .It2 -S --store-mode
 Use this flag for telling ntop to save information about host traffic on shutdown. Valid values are: 0 = don't store hosts, 1 = store all hosts, 2 = store only local hosts. This flag allows ntop not to loose traffic stats across multiple ntop sessions. Please note that information about TCP session is (obviously) lost.
@@ -391,13 +373,12 @@ and
 
 .SH "SEE ALSO"
 .BR intop (1),
-.BR ntop-rules (8),
 .BR top (1),
 .BR tcpdump (8).
 .
 .
 .SH AUTHOR
 Please send bug reports to the ntop mailing list <ntop@ntop.org>.
+Please code patched to <patch@ntop.org>.
 ntop's author is Luca Deri and can be reached at deri@ntop.org.
 Tool locations are current as of February 2002 - please send email to report new locations or dead links.
-

@@ -1374,22 +1374,11 @@ void checkSpoofing(u_int idxToCheck, int actualDeviceId) {
 	 && (myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck] != NULL)
 	 && (el->hostIpAddress.s_addr ==
 	     myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->hostIpAddress.s_addr)) {
-	/* Spoofing detected */
-	FilterRule spoofing;
-	    
+	/* Spoofing detected */	    
 	if((!hasDuplicatedMac(el))
 	   && (!hasDuplicatedMac(myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]))) {
 	  FD_SET(HOST_DUPLICATED_MAC, &myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->flags);
 	  FD_SET(HOST_DUPLICATED_MAC, &el->flags);
-
-	  memset(&spoofing, 0, sizeof(FilterRule));
-	  spoofing.ruleId     = 999;
-	  spoofing.ruleLabel  = "spoofing";
-	  spoofing.actionType = ACTION_ALARM;
-
-	  emitEvent(&spoofing, el, i,
-		    myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck],
-		    idxToCheck, -1, 0, 0);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(TRACE_WARNING,

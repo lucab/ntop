@@ -106,7 +106,6 @@ static struct option const long_options[] = {
 #endif
 
   { "http-server",                      required_argument, NULL, 'w' },
-  { "accuracy-level",                   required_argument, NULL, 'A' },
   { "filter-expression",                required_argument, NULL, 'B' },
   { "domain",                           required_argument, NULL, 'D' },
 
@@ -117,7 +116,6 @@ static struct option const long_options[] = {
   { "flow-spec",                        required_argument, NULL, 'F' },
 
 #ifndef WIN32
-  { "interactive-mode",                 no_argument,       NULL, 'I' }, /* interactive mode no longer used */
   { "debug",                            no_argument,       NULL, 'K' },
   { "use-syslog",                       no_argument,       NULL, 'L' },
 #endif
@@ -518,13 +516,6 @@ static void parseOptions(int argc, char * argv []) {
       }
       break;
 
-    case 'A':
-      /* Accuracy Level */
-      myGlobals.accuracyLevel = atoi(optarg);
-      if(myGlobals.accuracyLevel > HIGH_ACCURACY_LEVEL)
-	myGlobals.accuracyLevel = HIGH_ACCURACY_LEVEL;
-      break;
-
     case 'B':
       stringSanityCheck(optarg);
       myGlobals.currentFilterExpression = strdup(optarg);
@@ -544,12 +535,6 @@ static void parseOptions(int argc, char * argv []) {
       stringSanityCheck(optarg);
       myGlobals.flowSpecs = strdup(optarg);
       break;
-
-#ifndef WIN32
-    case 'I':                                        /* Interactive mode */
-      printf("intop provides you curses support. ntop -I is no longer used.\n");
-      exit(-1);
-#endif
 
 #ifndef WIN32
     case 'K':

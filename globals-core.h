@@ -66,19 +66,6 @@ extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
                              unsigned int nminutes);
 extern char* formatPkts(TrafficCounter pktNr);
 
-/* event.c */
-extern void emitEvent(FilterRule *rule, HostTraffic *srcHost,
-                      u_int srcHostIdx, HostTraffic *dstHost,
-                      u_int dstHostIdx, short icmpType,
-                      u_short sport, u_short dport);
-extern void scanAllTcpExpiredRules(int actualDeviceId);
-extern void fireEvent(FilterRule *rule, HostTraffic *srcHost,
-                      u_int srcHostIdx, HostTraffic *dstHost,
-                      u_int dstHostIdx, short icmpType,
-                      u_short sport, u_short dport,
-                      u_int length, int actualDeviceId);
-extern void smurfAlert(u_int srcHostIdx, u_int dstHostIdx, int actualDeviceId);
-
 /* graph.c */
 extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
@@ -240,16 +227,6 @@ extern void unloadPlugins(void);
 /* typedef int (*compare_function_t) (const void *p1, const void *p2); */
 extern void quicksort(void *a, size_t n, size_t es,
                       int (*compare_function) (const void *p1, const void *p2));
-
-/* rules.c */
-extern void parseRules(char* path);
-extern void checkFilterChain(HostTraffic *srcHost, u_int srcHostIdx, 
-                             HostTraffic *dstHost, u_int dstHostIdx,
-                             u_short sport, u_short dport, 
-                             u_int length, u_int hlen, u_int8_t flags,     
-                             u_char protocol, u_char isFragment,  
-                             const u_char* bp, FilterRuleChain *selectedChain,
-                             u_short packetType, int actualDeviceId);
 
 /* sql.c */
 extern void handleDbSupport(char* addr /* host:port */, int* enableDBsupport);

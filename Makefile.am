@@ -59,7 +59,7 @@ DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
               SUPPORT_NTOP.txt THANKS \
               ntop.8 ntop.txt ntop.html \
-              ntop-cert.pem ntop-rules.8 rules.sample
+              ntop-cert.pem
 
 NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.png html/*.css html/statsicons \
            html/statsicons/flags html/statsicons/os \
@@ -110,18 +110,18 @@ ntops_DEPENDENCIES = libntopreport.la libntop.la
 ntops_LDADD        = libntopreport.la libntop.la
 ntops_LDFLAGS      = -static
 
-noinst_HEADERS     = globals-core.h globals-report.h ntop.h regex.h rules.h
+noinst_HEADERS     = globals-core.h globals-report.h ntop.h regex.h
 
 # all the Archives
 lib_LTLIBRARIES    = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
-libntop_la_SOURCES = address.c       dataFormat.c  event.c            \
+libntop_la_SOURCES = address.c       dataFormat.c  \
                      globals-core.c  hash.c        initialize.c       \
                      leaks.c         logger.c      mysql.c netflow.c  \
                      ntop.c 	     pbuf.c        protocols.c        \
 		     plugin.c        qsort.c       regex.c	      \
-                     rules.c         sql.c         sessions.c         \
+                     sql.c           sessions.c         \
                      ssl.c           term.c        traffic.c          \
                      util.c          vendor.c      version.c          \
                      vendortable.h   ntop_darwin.c
@@ -144,7 +144,7 @@ libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD       = $(MORELIBS)
 libntopreport_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
-man_MANS = ntop.8 ntop-rules.8 intop/intop.1
+man_MANS = ntop.8 intop/intop.1
 
 .PHONY: snapshot
 
@@ -290,13 +290,11 @@ make-suse:
 #	chown root.sys packages/debian/sbin/ntop
 #	chmod gou+x packages/debian/sbin/ntop
 #	chmod u+s packages/debian/sbin/ntop
-#	cp ntop.8 ntop-rules.8 packages/debian/usr/man/man8
+#	cp ntop.8 packages/debian/usr/man/man8
 #	gzip packages/debian/usr/man/man8/ntop.8
-#	gzip packages/debian/usr/man/man8/ntop-rules.8
 #	dpkg-deb -b packages/debian packages/ntop-$(VERSION)-$(OSNAME).deb
 #	rm packages/debian/sbin/ntop
 #	rm packages/debian/usr/man/man8/ntop.8.gz
-#	rm packages/debian/usr/man/man8/ntop-rules.8.gz
 #
 #make-generic: ntop ntop.html
 #	cp ntop packages/generic/sbin
@@ -304,14 +302,11 @@ make-suse:
 #	chown root.sys packages/generic/sbin/ntop
 #	chmod gou+x packages/generic/sbin/ntop
 #	chmod u+s packages/generic/sbin/ntop
-#	cp ntop.8 ntop-rules.8 packages/generic/usr/man/man8
 #	gzip packages/generic/usr/man/man8/ntop.8
-#	gzip packages/generic/usr/man/man8/ntop-rules.8
 #	cd packages/generic; tar cvf - . > ../ntop-$(VERSION)-$(OSNAME).tar
 #	compress packages/ntop-$(VERSION)-$(OSNAME).tar
 #	rm packages/generic/sbin/ntop
 #	rm packages/generic/usr/man/man8/ntop.8.gz
-#	rm packages/generic/usr/man/man8/ntop-rules.8.gz
 #	rm packages/generic$(etcdir)/html/*
 #
 #make-slack: ntop ntop.html
@@ -321,14 +316,11 @@ make-suse:
 #	chown root.sys packages/slackware/sbin/ntop
 #	chmod gou+x packages/slackware/sbin/ntop
 #	chmod u+s packages/slackware/sbin/ntop
-#	cp ntop.8 ntop-rules.8 packages/slackware/usr/man/man8
 #	gzip packages/slackware/usr/man/man8/ntop.8
-#	gzip packages/slackware/usr/man/man8/ntop-rules.8
 #	cd packages/slackware; tar cvfz - . > ../ntop-$(VERSION)-slackware.tgz
 #	mv packages/ntop-$(VERSION)-slackware.tgz packages/slackware
 #	rm packages/slackware/sbin/ntop
 #	rm packages/slackware/usr/man/man8/ntop.8.gz
-#	rm packages/slackware/usr/man/man8/ntop-rules.8.gz
 #	rm packages/slackware$(etcdir)/html/*
 #	echo "The package file is under packages/slackware: have fun!"
 #
@@ -340,14 +332,11 @@ make-suse:
 #	chown root.sys packages/freebsd/sbin/ntop
 #	chmod gou+x packages/freebsd/sbin/ntop
 #	chmod u+s packages/freebsd/sbin/ntop
-#	cp ntop.8 ntop-rules.8 packages/freebsd/usr/man/man8
 #	gzip packages/freebsd/usr/man/man8/ntop.8
-#	gzip packages/freebsd/usr/man/man8/ntop-rules.8
 #	cd packages/freebsd; tar cvfz - . > ../ntop-$(VERSION)-freebsd.tgz
 #	mv packages/ntop-$(VERSION)-freebsd.tgz packages/freebsd
 #	rm packages/freebsd/sbin/ntop
 #	rm packages/freebsd/usr/man/man8/ntop.8.gz
-#	rm packages/freebsd/usr/man/man8/ntop-rules.8.gz
 #	rm packages/freebsd$(etcdir)/html/*
 #	echo "The package file is under packages/freebsd: have fun!"
 #
@@ -366,7 +355,6 @@ make-suse:
 #	chmod gou+x /opt/ntop/bin/ntop
 #	chmod u+s /opt/ntop/bin/ntop
 #	cp ntop.8 /opt/ntop/man/man8
-#	cp ntop-rules.8 /opt/ntop/man/man8
 #	cd /opt/ntop; find . -print | pkgproto > prototype
 #	echo "i pkginfo=/opt/ntop/pkginfo" >> prototype
 #	cat /opt/ntop/prototype >> prototype
