@@ -64,7 +64,7 @@ void updateCounter(char *hostPath, char *key, Counter value) {
   if(stat(path, &statbuf) != 0) {
     char startStr[32], counterStr[64];
 
-    argv[argc++] = "";
+    argv[argc++] = "rrd_create";
     argv[argc++] = path;
     argv[argc++] = "--start";
     snprintf(startStr, sizeof(startStr), "%u", myGlobals.actTime);
@@ -85,10 +85,10 @@ void updateCounter(char *hostPath, char *key, Counter value) {
 #endif
   }
 
-  sprintf(cmd, "%u:%u", path, myGlobals.actTime, value);
+  sprintf(cmd, "%u:%u", myGlobals.actTime, value);
 
   argc = 0;
-  argv[argc++] = "";
+  argv[argc++] = "rrd_update";
   argv[argc++] = path;
   argv[argc++] = cmd;
 
@@ -249,6 +249,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   char value[512 /* leave it big for hosts filter */];
   u_int32_t networks[32][3];
   u_short numLocalNets;
+  int start_tm = 0, end_tm = 0, sleep_tm = 0;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "rrdMainLoop()");
@@ -317,10 +318,13 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     int childpid;
 #endif
 
+    if (start_tm != 0) end_tm = time(NULL);
+    sleep_tm = dumpInterval - (end_tm - start_tm);
+
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Sleeping for %d seconds", dumpInterval);
+    traceEvent(TRACE_INFO, "Sleeping for %d seconds", sleep_tm);
 #endif
-    sleep(dumpInterval);
+    sleep(sleep_tm);
 
     if(!myGlobals.capturePackets) return(NULL);
 
@@ -423,7 +427,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    traceEvent(TRACE_INFO, "Updating host %s", hostKey);
 #endif
 
-	    sprintf(rrdPath, "./data/hosts/%s/IP.", hostKey);
+	    sprintf(rrdPath, "%s/rrd/data/hosts/%s/IP.", myGlobals.dbPath, hostKey);
 
 	    for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 	      char key[128];
@@ -557,8 +561,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
     }
 
-    numTotalRRDs += numRRDs;
-
     traceEvent(TRACE_INFO, "%lu RRDs updated (%lu total updates)", 
 	       (unsigned long)(numTotalRRDs-numRRDs), (unsigned long)numTotalRRDs);
   }
@@ -581,6 +583,7 @@ static void initRrdFunct(void) {
 
   traceEvent(TRACE_INFO, "Welcome to the RRD plugin...");
   fflush(stdout);
+  numTotalRRDs = 0;
 }
 
 /* ****************************** */

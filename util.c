@@ -498,9 +498,9 @@ void handleLocalAddresses(char* addresses) {
 unsigned short __pseudoLocalAddress(struct in_addr *addr,
 				    u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
 				    u_short numNetworks) {
-    int i;
-
-  for(i=0; i<numLocalNets; i++) {
+  int i;
+    
+  for(i=0; i<numNetworks; i++) {
 #ifdef ADDRESS_DEBUG
     char buf[32], buf1[32], buf2[32];
     struct in_addr addr1, addr2;
