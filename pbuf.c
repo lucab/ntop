@@ -1152,10 +1152,13 @@ static void processIpPkt(const u_char *bp,
   switch(nh) {
 #ifdef INET6
   case IPPROTO_FRAGMENT:
-    advance = sizeof(struct ip6_frag);
-    if(snapend <= cp+advance) goto end;
-    nh = *cp;
-    goto loop;
+    if(ip6) {
+      advance = sizeof(struct ip6_frag);
+      if(snapend <= cp+advance) goto end;
+      nh = *cp;
+      goto loop;
+    }
+    /* If it's no IPv6 we continue */
 #endif
   case IPPROTO_TCP:
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpBytes, length);
