@@ -4018,7 +4018,11 @@ void processPacket(u_char *_deviceId,
 
   hlen = (device[deviceId].datalink == DLT_NULL) ? NULL_HDRLEN : sizeof(struct ether_header);
 
-  printf ("Datalink=%d, (hlen=%d)(caplen=%d)\n", device[deviceId].datalink, hlen, caplen);
+  /* 
+     printf ("Datalink=%d, (hlen=%d)(caplen=%d)\n", 
+     device[deviceId].datalink, hlen, caplen);
+  */
+  
   /*
    * Let's check whether it's time to free up
    * some space before to continue....
