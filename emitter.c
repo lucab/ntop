@@ -1606,73 +1606,74 @@ void dumpNtopTrafficInfo(char* options) {
 
     /* ********************************* */
 
-    if(languageType == PERL_LANGUAGE) {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => {\n",
-		  "IP") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    } else {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n",
-		  "IP") < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    }
-
-    for(j=0; j<numIpProtosToMonitor; j++) {
-      if(j > 0) {
-	if(languageType == PERL_LANGUAGE)
-	  sendString("\t\t},\n\n");
-	else
-	  sendString("\t\t),\n\n");
-      }
-
+    if(device[i].ipProtoStats != NULL) {
       if(languageType == PERL_LANGUAGE) {
-	if(snprintf(buf, sizeof(buf), "\t\t'%s' => {\n",
-		    protoIPTrafficInfos[j]) < 0)
+	if(snprintf(buf, sizeof(buf), "\t'%s' => {\n",
+		    "IP") < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       } else {
-	if(snprintf(buf, sizeof(buf), "\t\t'%s' => array(\n",
-		    protoIPTrafficInfos[j]) < 0)
+	if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n",
+		    "IP") < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      if(snprintf(buf, sizeof(buf), "\t\t\t'local' => '%lu',\n",
-		  device[i].ipProtoStats[j].local) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
+      for(j=0; j<numIpProtosToMonitor; j++) {
+	if(j > 0) {
+	  if(languageType == PERL_LANGUAGE)
+	    sendString("\t\t},\n\n");
+	  else
+	    sendString("\t\t),\n\n");
+	}
 
-      if(snprintf(buf, sizeof(buf), "\t\t\t'local2remote' => '%lu',\n",
-		  device[i].ipProtoStats[j].local2remote) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
+	if(languageType == PERL_LANGUAGE) {
+	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => {\n",
+		      protoIPTrafficInfos[j]) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
+	} else {
+	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => array(\n",
+		      protoIPTrafficInfos[j]) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
+	}
 
-      if(snprintf(buf, sizeof(buf), "\t\t\t'remote2local' => '%lu',\n",
-		  device[i].ipProtoStats[j].remote2local) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
+	if(snprintf(buf, sizeof(buf), "\t\t\t'local' => '%lu',\n",
+		    device[i].ipProtoStats[j].local) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	else
+	  sendString(buf);
 
-      if(snprintf(buf, sizeof(buf), "\t\t\t'remote' => '%lu'\n",
-		  device[i].ipProtoStats[j].remote) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	if(snprintf(buf, sizeof(buf), "\t\t\t'local2remote' => '%lu',\n",
+		    device[i].ipProtoStats[j].local2remote) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	else
+	  sendString(buf);
+
+	if(snprintf(buf, sizeof(buf), "\t\t\t'remote2local' => '%lu',\n",
+		    device[i].ipProtoStats[j].remote2local) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	else
+	  sendString(buf);
+
+	if(snprintf(buf, sizeof(buf), "\t\t\t'remote' => '%lu'\n",
+		    device[i].ipProtoStats[j].remote) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	else
+	  sendString(buf);
+      }
+
+      if(languageType == PERL_LANGUAGE)
+	sendString("\t\t}\n");
       else
-	sendString(buf);
+	sendString("\t\t)\n");
+
+      if(languageType == PERL_LANGUAGE)
+	sendString("\t},\n\n");
+      else
+	sendString("\t),\n\n");
     }
-
-    if(languageType == PERL_LANGUAGE)
-      sendString("\t\t}\n");
-    else
-      sendString("\t\t)\n");
-
-
-    if(languageType == PERL_LANGUAGE)
-      sendString("\t},\n\n");
-    else
-      sendString("\t),\n\n");
 
     /* ********************************* */
     

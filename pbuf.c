@@ -2031,12 +2031,37 @@ static void handleSession(const struct pcap_pkthdr *h,
       device[actualDeviceId].nullPkts++;
     }
 
+    /* **************************** */
+
+    /*
+      For more info aboutchecks below see
+       http://www.synnergy.net/Archives/Papers/dethy/host-detection.txt
+
+    */
+    if((((theSession->initiatorIdx == srcHostIdx) && ((theSession->lastRemote2InitiatorFlags & TH_SYN) == TH_SYN))
+	|| ((theSession->initiatorIdx == dstHostIdx) && ((theSession->lastInitiator2RemoteFlags & TH_SYN) == TH_SYN)))
+       && ((tp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)))
+      
+      {
+	traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d]", 
+		   srcHost->hostSymIpAddress, sport,
+		   dstHost->hostSymIpAddress, dport);
+      }
+
+    if((((theSession->initiatorIdx == srcHostIdx) && ((theSession->lastRemote2InitiatorFlags & TH_SYN) == TH_SYN))
+	|| ((theSession->initiatorIdx == dstHostIdx) && ((theSession->lastInitiator2RemoteFlags & TH_SYN) == TH_SYN)))
+       && ((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK)))
+      
+      {
+	traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)", 
+		   dstHost->hostSymIpAddress, dport,
+		   srcHost->hostSymIpAddress, sport);		   
+      }
+
+   /* **************************** */
+
     /* Save session flags */
     if(theSession->initiatorIdx == srcHostIdx) {
-      if((theSession->lastRemote2InitiatorFlags & TH_SYN)
-	 && (tp->th_flags & (TH_SYN|TH_ACK)))
-	traceEvent(TRACE_INFO, "New session TCP !!!\n");
-
       theSession->lastInitiator2RemoteFlags = tp->th_flags;
     } else {
       theSession->lastRemote2InitiatorFlags = tp->th_flags;
