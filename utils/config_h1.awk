@@ -68,7 +68,7 @@ $2 == "PACKAGE" { next }
 
   field=$i
 
-  if (index(field, "_DEBUG") > 0) {
+  if ((index(field, "_DEBUG") > 0) && (index(field, "DEFAULT") == 0)) {
      sortname="z" field
   } else {
      sortname=field

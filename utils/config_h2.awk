@@ -18,12 +18,19 @@ BEGIN {
     while (getline < "stoplist" > 0) {
         stopentry[$1]="y"
     }
+    firstz="y"
 }
 
 {
     if ($1 in stopentry) { next } 
 
-    if (substr($1, 1, 1) == "z") { $1 = substr($1, 2) }
+    if (substr($1, 1, 1) == "z") { 
+      $1 = substr($1, 2)
+      if(firstz == "y") {
+        firstz="n"
+        print "  /* Move the following lines */"
+      }
+    }
 
     if ($2 == "*") {
         print "  printFeatureConfigInfo(textPrintFlag, \"" $1 "\","
