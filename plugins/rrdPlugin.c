@@ -1094,7 +1094,11 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   if((!createdCounter) && (numRuns == 1)) {
     return;
   } else {
-    safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%u", rrdTime, (unsigned long)value);
+#ifdef WIN32
+    safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%I64u", rrdTime, value);
+#else
+    safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu", rrdTime, value);
+#endif
   }
 
   argv[argc++] = cmd;
