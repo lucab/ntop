@@ -2274,14 +2274,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_IGNORE_SIGPIPE",
-#ifdef MAKE_WITH_IGNORE_SIGPIPE
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLV3_SUPPORT",
 #ifdef MAKE_WITH_SSLV3_SUPPORT
                          "yes"
@@ -5203,26 +5195,22 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
 #ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
-#endif
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d", 
 		   oset, rc);
 #endif
 
-#ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
 	if(rc != 0)
 	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d", 
 		       nset, oset, rc);
-#endif
 
-#ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
-#endif
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d", 
 		   oset, rc);
 #endif
+#endif /* DARWIN */
 
 	if(rc == 0) {
 	    signal(SIGPIPE, PIPEhandler); 

@@ -9586,20 +9586,6 @@ else
 fi
 
 echo
-echo "Ignore SIGPIPE?"
-if test ".$ac_enable_ignoresigpipe" = ".yes"; then
-    echo "    ...Requested via ./configure command line option --enable-ignoresigpipe."
-
-cat >>confdefs.h <<_ACEOF
-#define MAKE_WITH_IGNORE_SIGPIPE 1
-_ACEOF
-
-else
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-ignoresigpipe"
-    echo "                                    or ntop run time option --ignore-sigpipe."
-fi
-
-echo
 echo "Internationalization (i18n)?"
 if test ".$ac_enable_i18n" = ".yes"; then
     echo "    ...Requested via ./configure command line option --enable-i18n."

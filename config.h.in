@@ -586,9 +586,6 @@
 /* Define for internationalization */
 #undef MAKE_WITH_I18N
 
-/* Define for IGNORE of SIGPIPE */
-#undef MAKE_WITH_IGNORE_SIGPIPE
-
 /* Support SSLv3 if available */
 #undef MAKE_WITH_SSLV3_SUPPORT
 

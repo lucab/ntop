@@ -1602,7 +1602,7 @@ static int returnHTTPPage(char* pageName,
           signal(SIGABRT, httpcleanup);
           signal(SIGFPE,  httpcleanup);
           signal(SIGKILL, httpcleanup);
-          signal(SIGPIPE, httpcleanup);
+          /* signal(SIGPIPE, httpcleanup); */
           signal(SIGTERM, httpcleanup);
           signal(SIGUSR1, httpcleanup);
           signal(SIGUSR2, httpcleanup);
