@@ -165,7 +165,7 @@ extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
 extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
 extern char* intoa(struct in_addr addr);
-extern void ipaddr2str(struct in_addr hostIpAddress, char* outBuf,
+extern void ipaddr2str(HostTraffic *instance, struct in_addr hostIpAddress, char* outBuf,
                        int outBufLen);
 extern char* etheraddr_string(const u_char *ep);
 extern char* llcsap_string(u_char sap);

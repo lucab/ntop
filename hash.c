@@ -657,7 +657,7 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 	 hostIdx, host->hostSymIpAddress);
 #endif
 
-  free(host->protoIPTrafficInfos);
+  if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
   if(host->nbHostName != NULL)   free(host->nbHostName);
   if(host->nbDomainName != NULL) free(host->nbDomainName);
   if(host->nbDescr != NULL)      free(host->nbDescr);
@@ -670,29 +670,6 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 
   if(host->osName != NULL)
     free(host->osName);
-
-  for(i=0; i<2; i++) {
-    IpGlobalSession *nextElement, *element;
-
-    if(i == 0)
-      element = host->tcpSessionList;
-    else
-      element = host->udpSessionList;
-
-    while(element != NULL) {
-      nextElement = element->next;
-      /*
-	 The 'peers' field shouldn't be a problem because an idle host
-	 isn't supposed to have any session
-      */
-      free(element);
-      element = nextElement;
-    }
-  }
-
-  for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++)
-    if(host->portsUsage[i] != NULL)
-      free(host->portsUsage[i]);
 
   for(i=0; i<MAX_NUM_PROCESSES; i++) {
     if(processes[i] != NULL) {
@@ -808,6 +785,29 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
       }
     }
   } /* for */
+
+  for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++)
+    if(host->portsUsage[i] != NULL)
+      free(host->portsUsage[i]);
+
+  for(i=0; i<2; i++) {
+    IpGlobalSession *nextElement, *element;
+
+    if(i == 0)
+      element = host->tcpSessionList;
+    else
+      element = host->udpSessionList;
+
+    while(element != NULL) {
+      nextElement = element->next;
+      /*
+	 The 'peers' field shouldn't be a problem because an idle host
+	 isn't supposed to have any session
+      */
+      free(element);
+      element = nextElement;
+    }
+  }
 
 #ifdef MULTITHREADED
   accessMutex(&lsofMutex, "readLsofInfo-2");

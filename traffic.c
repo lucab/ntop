@@ -516,6 +516,7 @@ int isInitialHttpData(char* packetData) {
   /* GET / HTTP/1.0 */
   if((strncmp(packetData,    "GET ",     4) == 0) /* HTTP/1.0 */
      || (strncmp(packetData, "HEAD ",    5) == 0)
+     || (strncmp(packetData, "LINK ",    5) == 0)
      || (strncmp(packetData, "POST ",    5) == 0)
      || (strncmp(packetData, "OPTIONS ", 8) == 0) /* HTTP/1.1 */
      || (strncmp(packetData, "PUT ",     4) == 0)

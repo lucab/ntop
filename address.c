@@ -337,6 +337,7 @@ static void queueAddress(struct hnamemem* elem, int elemLen) {
     addressQueue[addressQueueHead] = elem;
     addressQueueHead = ((addressQueueHead+1) % ADDRESS_QUEUE_LENGTH);
     addressQueueLen++;
+    if(elem->instance) elem->instance->instanceInUse++;
 
     if(addressQueueLen > maxAddressQueueLen) {
       maxAddressQueueLen = addressQueueLen; /* Update stats */
@@ -380,7 +381,6 @@ void cleanupAddressQueue(void) {
 
 void* dequeueAddress(void* notUsed _UNUSED_) {
   struct hnamemem *elem;
-
 
   while(capturePackets) {
 #ifdef DEBUG
@@ -428,6 +428,8 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
       resolveAddress(elem->name, &elem->addr, 1); /* Keep address numeric */
     else
       resolveAddress(elem->name, &elem->addr, 0);
+
+    if(elem->instance) elem->instance->instanceInUse--;
 
 #ifdef DEBUG
    traceEvent(TRACE_INFO, "Resolved address %s\n", elem->name);
@@ -501,7 +503,9 @@ char* intoa(struct in_addr addr) {
 
 /* ******************************* */
 
-void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen) {
+void ipaddr2str(HostTraffic *instance,
+		struct in_addr hostIpAddress, 
+		char* outBuf, int outBufLen) {
   unsigned int addr = hostIpAddress.s_addr;
   char buf[32];
 #ifdef HAVE_GDBM_H
@@ -559,6 +563,7 @@ void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen) {
 
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     p->name = outBuf;
+    p->instance = instance;
     memset(p->name, 0, MAX_HOST_SYM_NAME_LEN);
     pName = p->name;
 #ifdef WIN32
@@ -572,6 +577,7 @@ void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen) {
       if(snprintf(p->name, outBufLen, "*%s*",
 		  _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      
       queueAddress(p, outBufLen);
       return;
     }

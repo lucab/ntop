@@ -222,8 +222,8 @@ int main(int argc, char *argv[]) {
 
       case 's':
 	maxHashSize = atoi(optarg);
-	if(maxHashSize < 1024)
-	  maxHashSize = 1024;
+	if(maxHashSize < 64)
+	  maxHashSize = 64;
 	break;
 
       case 'i':

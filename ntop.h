@@ -1221,11 +1221,6 @@ typedef struct {
 
 #define MAX_HOST_NAME_LEN 26
 
-struct hnamemem {
-  struct in_addr addr;
-  char *name;
-};
-
 struct enamemem {
   u_short e_addr0;
   u_short e_addr1;
@@ -1522,8 +1517,7 @@ typedef struct icmpHostInfo {
 #define MAX_NODE_TYPES             8
 
 /* Host Traffic */
-typedef struct hostTraffic
-{
+typedef struct hostTraffic {
   struct in_addr hostIpAddress;
   time_t         firstSeen;
   time_t         lastSeen;     /* time when this host has
@@ -1612,6 +1606,14 @@ typedef struct hostTraffic
      *************** IMPORTANT *************** */
 
 } HostTraffic;
+
+/* **************************** */
+
+struct hnamemem {
+  HostTraffic *instance;
+  struct in_addr addr;
+  char *name;
+};
 
 /* **************************** */
 
