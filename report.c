@@ -294,7 +294,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
 	      if(el->napsterStats != NULL) {
 		if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			    formatBytes(el->napsterStats->bytesRcvd, 1)) < 0)
+			    formatBytes(el->napsterStats->bytesSent, 1)) < 0)
 		  traceEvent(TRACE_ERROR, "Buffer overflow!");
 		sendString(buf);
 	      } else {
@@ -400,7 +400,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
 	      if(el->napsterStats != NULL) {
 		if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			    formatBytes(el->napsterStats->bytesSent, 1)) < 0)
+			    formatBytes(el->napsterStats->bytesRcvd, 1)) < 0)
 		  traceEvent(TRACE_ERROR, "Buffer overflow!");
 		sendString(buf);
 	      } else {

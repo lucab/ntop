@@ -1917,6 +1917,9 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       int retrSentPercentage, retrRcvdPercentage;
       char fragStrSent[64], fragStrRcvd[64], *napsterSession;
 
+      if(tcpSession[idx]->remotePeerIdx == NO_PEER) /* This should not happen */
+	continue; 
+
       if(numSessions == 0) {
 	sendString("<P><H1>Active TCP Sessions</H1><P>\n");
 	sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
