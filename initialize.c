@@ -1440,12 +1440,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	 myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(tmpDeviceName);
 	  myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDeviceName);
 	  traceEvent(CONST_TRACE_INFO, "Added virtual interface: '%s'", tmpDeviceName);
-          if(myGlobals.numDevices < MAX_NUM_DEVICES) {
+          if(myGlobals.numDevices >= MAX_NUM_DEVICES) {
 	    traceEvent(CONST_TRACE_WARNING, "Stopping scan - no room for additional (virtual) interfaces");
 	    break;
           }
-	} else
-	  break; /* No virtual interface */
+	}
       }
     }
   }
