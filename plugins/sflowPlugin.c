@@ -1529,19 +1529,19 @@ static void handlesflowHTTPrequest(char* url) {
   if(snprintf(buf, sizeof(buf),
 	      "<TR><TH ALIGN=LEFT># Samples</TH><TD ALIGN=RIGHT>%u</TD></TR>\n",
 	      numSamplesReceived) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),
 	      "<TR><TH ALIGN=LEFT>Data Scale</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      percentage) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),
 	      "<TR><TH ALIGN=LEFT>Estimated Error</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      err) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
   sendString(buf);
 
   sendString("</TABLE>\n");

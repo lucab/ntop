@@ -910,6 +910,8 @@ int main(int argc, char *argv[]) {
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
 
+  createPortHash();
+
   initCounters(myGlobals.mergeInterfaces);
   initApps();
   initSignals();

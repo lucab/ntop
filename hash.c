@@ -117,10 +117,11 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 	  prevSession = myGlobals.device[theDevice].tcpSession[i];
        
         freeSession(theSession, theDevice);
-      } else
-	prevSession = prevSession->next;
-
-      theSession = nextSession;
+	theSession = prevSession;
+      } else {
+	prevSession = theSession;
+	theSession = nextSession;
+      }
 
       if(theSession && (theSession->next == theSession)) {
 	traceEvent(TRACE_WARNING, "Internal Error (1)");
@@ -1027,44 +1028,44 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 /* ********************************* */
 
 void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
-    u_int checkedIdx = checkSessionIdx(hostIdx);
-    u_short allRight = 0;
-    HostTraffic *el;
+  u_int checkedIdx = checkSessionIdx(hostIdx);
+  u_short allRight = 0;
+  HostTraffic *el;
 
-    if(checkedIdx == hostIdx)
-	if((el = myGlobals.device[actualDeviceId].hash_hostTraffic[checkedIdx]) != NULL) {
-	    if(el->hashListBucket < HASH_LIST_SIZE) {
-		HashList *list, *prevList;
-
-		if((list = myGlobals.device[actualDeviceId].hashList[el->hashListBucket]) != NULL) {
-		    prevList = list;
-
-		    while(list != NULL) {
-			if(list->idx == hostIdx) {
-			    allRight = 1;
-			    break;
-			} else {
-			    prevList = list;
-			    list = list->next;
-			}
-		    }
-
-		    if(allRight) {
-			if(list == myGlobals.device[actualDeviceId].hashList[el->hashListBucket])
-			    myGlobals.device[actualDeviceId].hashList[el->hashListBucket] =
-				list->next;
-			else
-			    prevList->next = list->next;
-
-			if(myGlobals.device[actualDeviceId].insertIdx > el->hashListBucket)
-			    myGlobals.device[actualDeviceId].insertIdx = el->hashListBucket;
-			free(list);
-		    }
-		}
+  if(checkedIdx == hostIdx)
+    if((el = myGlobals.device[actualDeviceId].hash_hostTraffic[checkedIdx]) != NULL) {
+      if(el->hashListBucket < HASH_LIST_SIZE) {
+	HashList *list, *prevList;
+	  
+	if((list = myGlobals.device[actualDeviceId].hashList[el->hashListBucket]) != NULL) {
+	  prevList = list;
+	    
+	  while(list != NULL) {
+	    if(list->idx == hostIdx) {
+	      allRight = 1;
+	      break;
+	    } else {
+	      prevList = list;
+	      list = list->next;
 	    }
+	  }
+	    
+	  if(allRight) {
+	    if(list == myGlobals.device[actualDeviceId].hashList[el->hashListBucket])
+	      myGlobals.device[actualDeviceId].hashList[el->hashListBucket] =
+		list->next;
+	    else
+	      prevList->next = list->next;
+	      
+	    if(myGlobals.device[actualDeviceId].insertIdx > el->hashListBucket)
+	      myGlobals.device[actualDeviceId].insertIdx = el->hashListBucket;
+	    free(list);
+	  }
 	}
+      }
+    }
 
-    if(allRight)
-	traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed",
-		   actualDeviceId, hostIdx);
+  if(allRight)
+    traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed",
+	       actualDeviceId, hostIdx);
 }

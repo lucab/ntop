@@ -319,7 +319,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	      pluginName, sign,
 	      pluginName, sign,
 	      pluginName, sign) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferOverflow();
   sendString(buf);
 
   quicksort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
@@ -338,19 +338,19 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       if(snprintf(buf, sizeof(buf), "<TR %s> %s",
 		  getRowColor(),
 		  makeHostLink(hosts[idx], LONG_FORMAT, 0, 0)) < 0) 
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferOverflow();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
 		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO])),
 		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO]))) < 0) 
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferOverflow();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
 		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY])),
 		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY]))) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferOverflow();
       sendString(buf);
 
 
@@ -366,7 +366,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			     icmpMsgRcvd[ICMP_UNREACH]),
 		  postAnchor) < 0) 
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+	BufferOverflow();
       sendString(buf);
 
 
@@ -381,7 +381,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 			     icmpMsgSent[ICMP_REDIRECT]),
 		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			     icmpMsgRcvd[ICMP_REDIRECT]),
-		  postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  postAnchor) < 0) BufferOverflow();
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]+
@@ -394,7 +394,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 			     icmpMsgSent[ICMP_ROUTERADVERT]),
 		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			     icmpMsgRcvd[ICMP_ROUTERADVERT]),
-		  postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  postAnchor) < 0) BufferOverflow();
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]+
@@ -407,7 +407,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 			     icmpMsgSent[ICMP_TIMXCEED]),
 		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			     icmpMsgRcvd[ICMP_TIMXCEED]),
-		  postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  postAnchor) < 0) BufferOverflow();
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]+
@@ -420,7 +420,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 			     icmpMsgSent[ICMP_PARAMPROB]),
 		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			     icmpMsgRcvd[ICMP_PARAMPROB]),
-		  postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  postAnchor) < 0) BufferOverflow();
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_MASKREQ]+
@@ -438,7 +438,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
 					      icmpMsgRcvd[ICMP_MASKREQ]+
 					      hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY])),
-		  postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  postAnchor) < 0) BufferOverflow();
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]+
@@ -451,7 +451,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 			     icmpMsgSent[ICMP_SOURCE_QUENCH]),
 		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
 			     icmpMsgRcvd[ICMP_SOURCE_QUENCH]),
-		  postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  postAnchor) < 0) BufferOverflow();
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP]+
@@ -468,7 +468,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
 					      icmpMsgRcvd[ICMP_TIMESTAMP]+
 					      hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY])),
-		  postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  postAnchor) < 0) BufferOverflow();
       sendString(buf);
 
       tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]+
@@ -485,7 +485,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
 					      icmpMsgRcvd[ICMP_INFO_REQUEST]+
 					      hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY])),
-		  postAnchor) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  postAnchor) < 0) BufferOverflow();
       sendString(buf);
 
       sendString("</TR>\n");

@@ -501,8 +501,6 @@ void handleProtocols(char *protos) {
 
   if(buffer !=NULL)
     free(buffer);
-
-  createPortHash();
 }
 
 /* **************************************** */
@@ -525,8 +523,7 @@ void addDefaultProtocols(void) {
   handleProtocolList("Gnutella", "6346|6347|6348|");
   handleProtocolList("Morpheus", "1214|");
   handleProtocolList("WinMX",    "6699|7730|");
-/* handleProtocolList("Napster",  "8888|8875|"); */
-  createPortHash();
+  /* handleProtocolList("Napster",  "8888|8875|"); */
 }
 
 /* **************************************** */
