@@ -446,6 +446,15 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	    lost some packets */
 	 || ((theSession->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)
 	 || ((theSession->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)
+	 /* Purge sessions that are not yet active and that have not completed
+	    the 3-way handshave within 1 minute */
+	 || ((theSession->sessionState < STATE_ACTIVE) && ((theSession->lastSeen+60) < myGlobals.actTime))
+	 /* Purge active sessions where one of the two peers has not sent any data
+	    (it might be that ntop has created the session bucket because it has
+	    thought that the session was already started) since 120 seconds */
+	 || ((theSession->sessionState >= STATE_ACTIVE)
+	     && ((theSession->bytesSent.value == 0) || (theSession->bytesRcvd.value == 0))
+	     && ((theSession->lastSeen+120) < myGlobals.actTime))		 
 	 ) {
 
 	if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
@@ -577,7 +586,21 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       } else {
 	/* Delete the session if too old */
 	if(((theSession->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)
-	   || ((theSession->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)) {
+	   || ((theSession->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)
+	   /* Purge sessions that are not yet active and that have not completed
+	      the 3-way handshave within 1 minute */
+	   || ((theSession->sessionState < STATE_ACTIVE) && ((theSession->lastSeen+60) < myGlobals.actTime))
+
+
+	   /* Purge active sessions where one of the two peers has not sent any data
+	      (it might be that ntop has created the session bucket because it has
+	      thought that the session was already started) since 120 seconds */
+	   || ((theSession->sessionState >= STATE_ACTIVE)
+	       && ((theSession->bytesSent.value == 0) || (theSession->bytesRcvd.value == 0))
+	       && ((theSession->lastSeen+120) < myGlobals.actTime))
+
+
+	   ) {
 	  IPSession *nextSession = theSession->next;
 
 	  if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
