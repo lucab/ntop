@@ -144,9 +144,9 @@ if test "x${ac_cv_prog_AUTOHEADER}" = "x"; then
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
- mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
- cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
- rm -f ntcsh/Makefile.in.tmp
+dnl>  mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
+dnl>   cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
+ dnl>  rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for aclocal ..."
@@ -162,9 +162,9 @@ if test "x${ac_cv_prog_ACLOCAL}" = "x"; then
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
- mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
- cat ntcsh/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
- rm -f ntcsh/Makefile.in.tmp
+dnl>   mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
+dnl>   cat ntcsh/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
+dnl>   rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for automake ..."
@@ -221,9 +221,9 @@ else
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
- mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
- cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
- rm -f ntcsh/Makefile.in.tmp
+dnl>   mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
+dnl>   cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
+dnl>   rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for autoconf ..."
@@ -274,9 +274,9 @@ else
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
- mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
- cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
- rm -f ntcsh/Makefile.in.tmp
+dnl>   mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
+dnl>   cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
+dnl>   rm -f ntcsh/Makefile.in.tmp
 fi
 
 dnl> Then check for a match with the scripts...
@@ -499,10 +499,10 @@ AC_ARG_ENABLE(  static-plugins,
               ac_enable_static_plugins="yes",
 	      ac_enable_static_plugins="no")
 
-AC_ARG_ENABLE(ntcsh,
-              [  --enable-ntcsh              enable ntcsh command line version [[default=enabled]]],
-              ac_disable_ntcsh="yes",
-              ac_disable_ntcsh="no")
+dnl>  AC_ARG_ENABLE(ntcsh,
+dnl>                [  --enable-ntcsh              enable ntcsh command line version [[default=enabled]]],
+dnl>                ac_disable_ntcsh="yes",
+dnl>                ac_disable_ntcsh="no")
 
 AC_ARG_ENABLE(ignoresigpipe,
               [  --enable-ignoresigpipe      Ignore SIGPIPE errors [[default=do not ignore]]],
@@ -678,7 +678,7 @@ DYN_FLAGS=
 EXEEXT=
 INCS=-I$MYRRD
 LIBS=
-NTCSH=
+dnl>  NTCSH=
 OBJDUMP=
 OBJEXT=o
 SO_VERSION_PATCH=
@@ -1392,75 +1392,6 @@ if test ".${ac_enable_static_plugins}" = ".yes"; then
     fi
 else
     echo "    ...(Default) Disabled. Request via ./configure command line option --enable-static-plugin."
-fi
-
-echo
-echo "ntcsh?"
-if test ".${ac_enable_ntcsh}" != ".yes"; then
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-ntcsh."
-    if test ".${ac_disable_curses}" = ".yes" ||
-       test ".${ac_disable_readline}" = ".yes"; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You did not enable ntcsh but specified ntcsh options"
-        if test ".${ac_disable_curses}" = ".yes"; then
-            echo "*                --without-curses"
-        fi
-        if test ".${ac_disable_readline}" = ".yes"; then
-            echo "*                --without-readline"
-        fi
-        echo "*"
-        echo "*>>> Ignoring the options"
-        echo "*"
-        echo "*???     1. Add the --enable-ntcsh option"
-        echo "*??? or  2. Remove the conflicting --without-xxxxx option(s)"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        ac_disable_curses="no"
-        ac_disable_readline="no"
-        HAS_WARNING="yes"
-    fi
-else
-    echo "    ...Requested via ./configure command line option --enable-ntcsh."
-    echo
-    echo "*******************************************************************"
-    echo "*******************************************************************"
-    echo "*******************************************************************"
-    echo "*"
-    echo "* WARNING:  ntcsh is UNSUPPORTED."
-    echo "*"
-    echo "*        We make the bare minimum of source changes so that ntcsh"
-    echo "*        compiles and starts up, and even that is subject to"
-    echo "*        change."
-    echo "*"
-    echo "*        If it works FOR YOU, great."
-    echo "*"
-    echo "*        If it doesn't work FOR YOU, don't bother asking about"
-    echo "*        support."
-    echo "*"
-    echo "*???     1. Use the web interface"
-    echo "*"
-    echo "*******************************************************************"
-    echo "*******************************************************************"
-    echo "*******************************************************************"
-    echo
-    HAS_WARNING="yes"
-
-    echo "  curses?"
-    if test ".${ac_disable_curses}" = ".yes"; then
-        echo "    ...Disabled via ./configure command line option --without-curses."
-    else
-        echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-curses."
-    fi
-
-    echo "  GNU readline?"
-    if test ".${ac_disable_readline}" = ".yes"; then
-        echo "    ...Disabled via ./configure command line option --without-readline."
-    else
-        echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-readline."
-    fi
 fi
 
 echo
@@ -2416,64 +2347,6 @@ if test ".${ac_enable_tcpwrap}" = ".yes"; then
     fi
 fi
 
-if test ".${ac_enable_ntcsh}" = ".yes"; then
-    AC_MSG_CHECKING(ntcsh libraries)
-    AC_MSG_RESULT([])
-    if test ".${ac_disable_curses}" = ".yes"; then
-        AC_CHECK_LIB(ncurses, initscr, 
-            AC_MSG_CHECKING(for ncurses)
-            AC_MSG_RESULT(ok)
-            LIBCURSES="-lncurses", 
-            AC_MSG_CHECKING(for ncurses)
-            AC_MSG_WARN([disabled - missing ncurses.h.])
-            ac_enable_ntcsh="no"
-        )
-    else
-        AC_CHECK_LIB(ncurses, initscr, 
-                     AC_MSG_CHECKING(for ncurses)
-                     AC_MSG_RESULT(ok)
-                     LIBCURSES="-lncurses", 
-                     AC_MSG_CHECKING(for ncurses)
-                     AC_MSG_WARN(missing)
-                     AC_CHECK_LIB(curses, initscr, 
-                                   AC_MSG_CHECKING(for curses)
-                                   AC_MSG_RESULT(ok)
-                                   LIBCURSES="-lcurses",
-                                   AC_MSG_CHECKING(for curses)
-                                   AC_MSG_WARN([disabled - missing (n)curses.h.])
-                                   ac_enable_ntcsh="no")
-        )
-    fi
-
-    if test ".${ac_enable_ntcsh}" = ".yes"; then
-
-        AC_MSG_CHECKING([for ntcsh])
-        AC_MSG_RESULT(ok)
-        NTCSH=ntcsh
-
-        if test ".${ac_disable_readline}" != ".yes"; then
-            READLIBS="${LIBCURSES}"
-            case "${LIBCURSES}" in
-                *termcap*|*curses* )
-                    ;;
-                * )
-                    AC_CHECK_LIB(termcap, tgetent, [
-                        LIBTERMCAP="-ltermcap"
-                        READLIBS="${READLIBS} ${LIBTERMCAP}"
-                        AC_MSG_RESULT([         ...using ${READLIBS}])
-                    ])
-                    ;;
-             esac
-
-             AC_CHECK_LIB(readline, readline, [
-                 LIBREADLINE="-lreadline ${LIBTERMCAP}"
-                 AC_DEFINE_UNQUOTED(HAVE_READLINE, 1, [GNU readline library (-lreadline).])
-                        AC_MSG_RESULT([         ...using ${LIBREADLINE}])
-             ], ,${READLIBS})
-        fi
-    fi
-fi
-
 echo
 echo "Miscelaneous settings..."
 echo
@@ -2669,7 +2542,8 @@ AC_SUBST(DLLTOOL)
 AC_SUBST(DYN_FLAGS)
 AC_SUBST(EXEEXT)
 AC_SUBST(INCS)
-AC_SUBST(NTCSH)
+
+dnl> AC_SUBST(NTCSH)
 AC_SUBST(LIBTOOL_DEPS)
 AC_SUBST(NTOP_VERSION_EXTRA)
 AC_SUBST(OBJDUMP)
@@ -2683,9 +2557,9 @@ AC_SUBST(SO_VERSION_PATCH)
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([myrrd/Makefile])
 
-if test ".${ac_enable_ntcsh}" = ".yes"; then
-    AC_CONFIG_FILES([ntcsh/Makefile])
-fi
+dnl> if test ".${ac_enable_ntcsh}" = ".yes"; then
+dnl>     AC_CONFIG_FILES([ntcsh/Makefile])
+dnl> fi
 
 if test ".${ac_disable_plugins}" != ".yes"; then
     AC_CONFIG_FILES([plugins/Makefile])
