@@ -1701,6 +1701,14 @@
 #define FLAG_P2P_KAZAA                      2
 #define FLAG_P2P_WINMX                      3
 #define FLAG_P2P_DIRECTCONNECT              4
+/* new */
+#define FLAG_P2P_EDONKEY                    5
+#define FLAG_P2P_FASTTRACK                  6
+#define FLAG_P2P_BITTORRENT                 7
+#define FLAG_P2P_OTHER_PROTOCOL             8
+
+#define UNKNOWN_P2P_FILE                    "&lt;unknown&nbsp;file&gt;"
+
 
 #define FLAG_DHCP_UNKNOWN_MSG               0
 #define FLAG_DHCP_DISCOVER_MSG              1

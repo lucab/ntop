@@ -2875,10 +2875,10 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
 	       "<TH "TH_BG" NOWRAP>File Name</TH></TR>\n");
-    sendString("<TR><TD align=left "DARK_BG"><ol>\n");
+    sendString("<TR><TD align=left NOWRAP><ol>\n");
 
     while(list != NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s&nbsp",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s&nbsp;",
 		  list->fileName);
       sendString(buf);
 
@@ -3317,28 +3317,28 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	  session->lastSeen = myGlobals.actTime;
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
-		    getRowColor(),
-		    makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-		    sport,
-		    session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
-		    makeHostLink(session->remotePeer, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf1, sizeof(hostLinkBuf1)),
-		    dport,
-		    formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
-		    formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1)),
-		    formatTime(&(session->firstSeen), formatBuf2, sizeof(formatBuf2)),
-		    formatTime(&(session->lastSeen), formatBuf3, sizeof(formatBuf3)),
-                    formatSeconds(session->lastSeen-session->firstSeen, formatBuf4, sizeof(formatBuf4)),
-                    formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
-		    formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6)));
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
+		      getRowColor(),
+		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
+		      sport,
+		      session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
+		      makeHostLink(session->remotePeer, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf1, sizeof(hostLinkBuf1)),
+		      dport,
+		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
+		      formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1)),
+		      formatTime(&(session->firstSeen), formatBuf2, sizeof(formatBuf2)),
+		      formatTime(&(session->lastSeen), formatBuf3, sizeof(formatBuf3)),
+		      formatSeconds(session->lastSeen-session->firstSeen, formatBuf4, sizeof(formatBuf4)),
+		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
+		      formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6)));
 	sendString(buf);
 
 #ifdef PARM_PRINT_ALL_SESSIONS

@@ -164,7 +164,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
   } else {
     if(p2pSessionIdx) {
       switch(p2pSessionIdx) {
-      case FLAG_P2P_GNUTELLA:
+      case FLAG_P2P_EDONKEY:
+	idx = myGlobals.EdonkeyIdx;
+	break;
+     case FLAG_P2P_GNUTELLA:
 	idx = myGlobals.GnutellaIdx;
 	break;
       case FLAG_P2P_KAZAA:
@@ -175,6 +178,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	break;
       case FLAG_P2P_DIRECTCONNECT:
 	idx = myGlobals.DirectConnectIdx;
+	break;
+      case FLAG_P2P_BITTORRENT:
+	idx = myGlobals.BitTorrentIdx;
 	break;
       default:
 	idx = -1;

@@ -112,7 +112,6 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
 /* ************************************ */
 
 static void updateFileList(char *fileName, u_char upDownloadMode, HostTraffic *theRemHost) {
-
   if(fileName != NULL) {
     FileList *list, *lastPtr = NULL;
     int numEntries = 0;
@@ -247,7 +246,7 @@ void updateUsedPorts(HostTraffic *srcHost,
     if(dport_idx == -1) addPortToList(dstHost, dstHost->otherIpPortsRcvd, dport);
 
     if(srcHost != myGlobals.otherHostEntry)
-      updatePortList(srcHost, clientPort, -1);    
+      updatePortList(srcHost, clientPort, -1);
     if(dstHost != myGlobals.otherHostEntry)
       updatePortList(dstHost, -1, serverPort);
   } else {
@@ -415,7 +414,7 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
                    u_char lockMutex /* unused so far */)
 {
     int i;
-    
+
     /* Session to purge */
 
     if(sessionToPurge->magic != CONST_MAGIC_NUMBER) {
@@ -473,9 +472,9 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
 void scanTimedoutTCPSessions(int actualDeviceId) {
   u_int _idx, freeSessionCount=0, purgeLimit;
   static u_int idx = 0;
-    
+
   /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
-     if((!myGlobals.runningPref.enableSessionHandling) 
+     if((!myGlobals.runningPref.enableSessionHandling)
 	|| (myGlobals.device[actualDeviceId].tcpSession == NULL)
 	|| (myGlobals.device[actualDeviceId].numTcpSessions == 0))
      return;
@@ -489,7 +488,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
   for(_idx=0; _idx<MAX_TOT_NUM_SESSIONS; _idx++) {
     IPSession *nextSession, *prevSession, *theSession;
-    
+
     idx = (idx + 1) % MAX_TOT_NUM_SESSIONS;
 
     if(freeSessionCount > purgeLimit) break;
@@ -621,7 +620,7 @@ static void handleSMTPSession (const struct pcap_pkthdr *h,
                                int actualDeviceId)
 {
   u_char *rcStr;
-    
+
   if(sport == IP_TCP_PORT_SMTP)
     FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &srcHost->flags);
   else
@@ -683,7 +682,7 @@ static void handlePOPSession (const struct pcap_pkthdr *h,
                               IPSession *theSession,
                               int actualDeviceId) {
   u_char *rcStr;
-    
+
   if((sport == IP_TCP_PORT_POP2) || (sport == IP_TCP_PORT_POP3))
     FD_SET(FLAG_HOST_TYPE_SVC_POP, &srcHost->flags);
   else
@@ -731,7 +730,7 @@ static void handleIMAPSession (const struct pcap_pkthdr *h,
                                IPSession *theSession,
                                int actualDeviceId) {
   u_char *rcStr;
-    
+
   if(sport == IP_TCP_PORT_IMAP)
     FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &srcHost->flags);
   else
@@ -902,7 +901,7 @@ static void handleGnutellaSession (const struct pcap_pkthdr *h,
                                    IPSession *theSession,
                                    int actualDeviceId) {
   u_char *rcStr, tmpStr[256];
-    
+
   if(theSession->bytesProtoSent.value == 0) {
     char *strtokState, *row;
     char *theStr = "GET /get/";
@@ -1021,7 +1020,7 @@ static void handleKazaaSession(const struct pcap_pkthdr *h,
       /* printf("==>\n\n%s\n\n", rcStr); */
     }
     free(rcStr);
-        
+
   } else if (((theSession->bytesProtoSent.value > 0)
 	      || (theSession->bytesProtoSent.value < 32))) {
     char *strtokState, *row;
@@ -1084,37 +1083,37 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
     if(strncmp(tmpStr, "HTTP/1", 6) == 0) {
       int rc;
       time_t microSecTimeDiff;
-            
+
       u_int16_t transactionId = computeTransId(&srcHost->hostIpAddress,
 					       &dstHost->hostIpAddress,
 					       sport,dport);
-            
+
       /* to be 64bit-proof we have to copy the elements */
       tvstrct.tv_sec = h->ts.tv_sec;
       tvstrct.tv_usec = h->ts.tv_usec;
       microSecTimeDiff = getTimeMapping(transactionId, tvstrct);
-            
+
 #ifdef HTTP_DEBUG
       traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: %s->%s [%s]",
 		 srcHost->hostResolvedName,
 		 dstHost->hostResolvedName, tmpStr);
 #endif
-            
+
       if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
       if(dstHost->protocolInfo == NULL) dstHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
-            
+
       if(srcHost->protocolInfo->httpStats == NULL) {
 	srcHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
 	memset(srcHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
       }
-            
+
       if(dstHost->protocolInfo->httpStats == NULL) {
 	dstHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
 	memset(dstHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
       }
-            
+
       rc = atoi(&tmpStr[9]);
-            
+
       if(rc == 200) /* HTTP/1.1 200 OK */ {
 	incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numPositiveReplSent, 1);
 	incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numPositiveReplRcvd, 1);
@@ -1122,7 +1121,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numNegativeReplSent, 1);
 	incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numNegativeReplRcvd, 1);
       }
-            
+
       if(microSecTimeDiff > 0) {
 	if(subnetLocalHost(dstHost)) {
 	  if((srcHost->protocolInfo->httpStats->fastestMicrosecLocalReqMade == 0)
@@ -1137,7 +1136,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	  if(microSecTimeDiff > srcHost->protocolInfo->httpStats->slowestMicrosecRemReqServed)
 	    srcHost->protocolInfo->httpStats->slowestMicrosecRemReqServed = microSecTimeDiff;
 	}
-                
+
 	if(subnetLocalHost(srcHost)) {
 	  if((dstHost->protocolInfo->httpStats->fastestMicrosecLocalReqMade == 0)
 	     || (microSecTimeDiff < dstHost->protocolInfo->httpStats->fastestMicrosecLocalReqMade))
@@ -1211,7 +1210,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 
 	while(row != NULL) {
 	  int len = strlen(row);
-	  
+
 	  if((len > 12) && (strncmp(row, "User-Agent:", 11) == 0)) {
 	    char *token, *tokState, *browser = NULL, *os = NULL;
 
@@ -1258,7 +1257,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 		char buffer[128], *delimiter;
 
 		safe_snprintf(__FILE__, __LINE__, buffer, sizeof(buffer), ":%s", os);
-		    
+
 		if((delimiter = strchr(buffer, ';')) != NULL) delimiter[0] = '\0';
 		if((delimiter = strchr(buffer, '(')) != NULL) delimiter[0] = '\0';
 		if((delimiter = strchr(buffer, ')')) != NULL) delimiter[0] = '\0';
@@ -1408,7 +1407,7 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
     }
   }
 
-  /* 
+  /*
    * Security checks based on TCP Flags
    */
   if((tp->th_flags == TH_ACK) && (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK)) {
@@ -1495,7 +1494,7 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.nullPkts, 1);
   }
 
-          
+
 
   /* **************************** */
 
@@ -1571,9 +1570,9 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
 	dumpSuspiciousPacket(actualDeviceId);
       }
     }
-        
+
     /* **************************** */
-        
+
     /* Save session flags */
     if(theSession->initiator == srcHost) {
       int i;
@@ -1597,6 +1596,13 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
 
 /* *********************************** */
 
+static int portRange(int sport, int dport, int minPort, int maxPort) {
+  return(((sport >= minPort) && (sport <= maxPort))
+	 || ((dport >= minPort) && (dport <= maxPort)));
+}
+
+/* *********************************** */
+
 static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
                                    u_short fragmentedData,
                                    u_int tcpWin,
@@ -1608,640 +1614,687 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
                                    struct tcphdr *tp,
                                    u_int packetDataLength,
                                    u_char* packetData,
-                                   int actualDeviceId)
-{
-    IPSession *prevSession;
-    u_int idx;
-    IPSession *theSession = NULL;
-    short flowDirection = FLAG_CLIENT_TO_SERVER;
-    char addedNewEntry = 0;
-    u_short check, found=0;
-    HostTraffic *hostToUpdate = NULL;
-    u_char *rcStr, tmpStr[256];
-    int len = 0;
+                                   int actualDeviceId) {
+  IPSession *prevSession;
+  u_int idx;
+  IPSession *theSession = NULL;
+  short flowDirection = FLAG_CLIENT_TO_SERVER;
+  char addedNewEntry = 0;
+  u_short check, found=0;
+  HostTraffic *hostToUpdate = NULL;
+  u_char *rcStr, tmpStr[256];
+  int len = 0;
 
 #ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.tcpSessionsMutex, "handleSession");
+  accessMutex(&myGlobals.tcpSessionsMutex, "handleSession");
 #endif
 
-    idx = computeIdx(&srcHost->hostIpAddress,&dstHost->hostIpAddress, sport, dport);
-    idx %= MAX_TOT_NUM_SESSIONS;
+  idx = computeIdx(&srcHost->hostIpAddress,&dstHost->hostIpAddress, sport, dport);
+  idx %= MAX_TOT_NUM_SESSIONS;
 
-    prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
+  prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
-    while(theSession != NULL) {
-        if(theSession && (theSession->next == theSession)) {
-            traceEvent(CONST_TRACE_WARNING, "Internal Error (4) (idx=%d)", idx);
-            theSession->next = NULL;
-        }
+  while(theSession != NULL) {
+    if(theSession && (theSession->next == theSession)) {
+      traceEvent(CONST_TRACE_WARNING, "Internal Error (4) (idx=%d)", idx);
+      theSession->next = NULL;
+    }
 
-        if((theSession->initiator == srcHost)
-           && (theSession->remotePeer == dstHost)
-           && (theSession->sport == sport)
-           && (theSession->dport == dport)) {
-            found = 1;
-            flowDirection = FLAG_CLIENT_TO_SERVER;
-            break;
-        } else if((theSession->initiator == dstHost)
-                  && (theSession->remotePeer == srcHost)
-                  && (theSession->sport == dport)
-                  && (theSession->dport == sport)) {
-            found = 1;
-            flowDirection = FLAG_SERVER_TO_CLIENT;
-            break;
-        } else {
-            prevSession = theSession;
-            theSession  = theSession->next;
-        }
-    } /* while */
+    if((theSession->initiator == srcHost)
+       && (theSession->remotePeer == dstHost)
+       && (theSession->sport == sport)
+       && (theSession->dport == dport)) {
+      found = 1;
+      flowDirection = FLAG_CLIENT_TO_SERVER;
+      break;
+    } else if((theSession->initiator == dstHost)
+	      && (theSession->remotePeer == srcHost)
+	      && (theSession->sport == dport)
+	      && (theSession->dport == sport)) {
+      found = 1;
+      flowDirection = FLAG_SERVER_TO_CLIENT;
+      break;
+    } else {
+      prevSession = theSession;
+      theSession  = theSession->next;
+    }
+  } /* while */
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Search for session: %d (%d <-> %d)", 
-	       found, sport, dport);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Search for session: %d (%d <-> %d)",
+	     found, sport, dport);
 #endif
 
-    if(!found) {
-        /* New Session */
+  if(!found) {
+    /* New Session */
 #ifdef DEBUG
-        printf("DEBUG: NEW ");
-#endif
-      
-        if(myGlobals.device[actualDeviceId].numTcpSessions >= myGlobals.runningPref.maxNumSessions) {
-            static char messageShown = 0;
-	
-            if(!messageShown) {
-                messageShown = 1;
-                traceEvent(CONST_TRACE_INFO, "WARNING: Max num TCP sessions (%u) reached (see -X)", 
-                           myGlobals.runningPref.maxNumSessions);
-            }
-	
-            return(NULL);
-        }
-      
-#ifdef DEBUG
-        traceEvent(CONST_TRACE_INFO, "DEBUG: TCP hash [act size: %d]",
-                   myGlobals.device[actualDeviceId].numTcpSessions);
+    printf("DEBUG: NEW ");
 #endif
 
-        /* 
-           We don't check for space here as the datastructure allows
-           ntop to store sessions as needed
-        */
+    if(myGlobals.device[actualDeviceId].numTcpSessions >= myGlobals.runningPref.maxNumSessions) {
+      static char messageShown = 0;
+
+      if(!messageShown) {
+	messageShown = 1;
+	traceEvent(CONST_TRACE_INFO, "WARNING: Max num TCP sessions (%u) reached (see -X)",
+		   myGlobals.runningPref.maxNumSessions);
+      }
+
+      return(NULL);
+    }
+
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: TCP hash [act size: %d]",
+	       myGlobals.device[actualDeviceId].numTcpSessions);
+#endif
+
+    /*
+       We don't check for space here as the datastructure allows
+       ntop to store sessions as needed
+    */
 #ifdef PARM_USE_SESSIONS_CACHE
-        /* There's enough space left in the hashtable */
-        if (myGlobals.sessionsCacheLen > 0) {
-            theSession = myGlobals.sessionsCache[--myGlobals.sessionsCacheLen];
-            myGlobals.sessionsCacheReused++;
-            /*
-              traceEvent(CONST_TRACE_INFO, "Fetched session from pointers cache (len=%d)",
-              (int)myGlobals.sessionsCacheLen);
-            */
-        } else
+    /* There's enough space left in the hashtable */
+    if (myGlobals.sessionsCacheLen > 0) {
+      theSession = myGlobals.sessionsCache[--myGlobals.sessionsCacheLen];
+      myGlobals.sessionsCacheReused++;
+      /*
+	traceEvent(CONST_TRACE_INFO, "Fetched session from pointers cache (len=%d)",
+	(int)myGlobals.sessionsCacheLen);
+      */
+    } else
 #endif
-            if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return(NULL);
-        
-        memset(theSession, 0, sizeof(IPSession));
-        addedNewEntry = 1;
+      if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return(NULL);
 
-        if(tp->th_flags == TH_SYN) {
-            theSession->nwLatency.tv_sec = h->ts.tv_sec;
-            theSession->nwLatency.tv_usec = h->ts.tv_usec;
-            theSession->sessionState = FLAG_STATE_SYN;
-        }
+    memset(theSession, 0, sizeof(IPSession));
+    addedNewEntry = 1;
 
-        theSession->magic = CONST_MAGIC_NUMBER;
+    if(tp->th_flags == TH_SYN) {
+      theSession->nwLatency.tv_sec = h->ts.tv_sec;
+      theSession->nwLatency.tv_usec = h->ts.tv_usec;
+      theSession->sessionState = FLAG_STATE_SYN;
+    }
 
-        addrcpy(&theSession->initiatorRealIp,&srcHost->hostIpAddress);
-        addrcpy(&theSession->remotePeerRealIp,&dstHost->hostIpAddress);
+    theSession->magic = CONST_MAGIC_NUMBER;
+
+    addrcpy(&theSession->initiatorRealIp,&srcHost->hostIpAddress);
+    addrcpy(&theSession->remotePeerRealIp,&dstHost->hostIpAddress);
 
 #ifdef SESSION_TRACE_DEBUG
-        traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
-                   dstHost->hostNumIpAddress, dport,
-                   srcHost->hostNumIpAddress, sport,
-                   myGlobals.device[actualDeviceId].numTcpSessions);
+    traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
+	       dstHost->hostNumIpAddress, dport,
+	       srcHost->hostNumIpAddress, sport,
+	       myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
-        myGlobals.device[actualDeviceId].numTcpSessions++;
+    myGlobals.device[actualDeviceId].numTcpSessions++;
 
-        if(myGlobals.device[actualDeviceId].numTcpSessions > myGlobals.device[actualDeviceId].maxNumTcpSessions)
-            myGlobals.device[actualDeviceId].maxNumTcpSessions = myGlobals.device[actualDeviceId].numTcpSessions;
+    if(myGlobals.device[actualDeviceId].numTcpSessions > myGlobals.device[actualDeviceId].maxNumTcpSessions)
+      myGlobals.device[actualDeviceId].maxNumTcpSessions = myGlobals.device[actualDeviceId].numTcpSessions;
 
-        theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
-        myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
+    theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
+    myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
 
-        theSession->initiator  = srcHost, theSession->remotePeer = dstHost;
-        theSession->initiator->numHostSessions++, theSession->remotePeer->numHostSessions++;
-        theSession->sport = sport;
-        theSession->dport = dport;
-        theSession->passiveFtpSession = isPassiveSession(&dstHost->hostIpAddress, dport);
-        theSession->firstSeen = myGlobals.actTime;
-        flowDirection = FLAG_CLIENT_TO_SERVER;
-    }
+    theSession->initiator  = srcHost, theSession->remotePeer = dstHost;
+    theSession->initiator->numHostSessions++, theSession->remotePeer->numHostSessions++;
+    theSession->sport = sport;
+    theSession->dport = dport;
+    theSession->passiveFtpSession = isPassiveSession(&dstHost->hostIpAddress, dport);
+    theSession->firstSeen = myGlobals.actTime;
+    flowDirection = FLAG_CLIENT_TO_SERVER;
+  }
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: ->%d", idx);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: ->%d", idx);
 #endif
-    theSession->lastSeen = myGlobals.actTime;
+  theSession->lastSeen = myGlobals.actTime;
 
-    /* ***************************************** */
+  /* ***************************************** */
 
-    if(packetDataLength >= sizeof(tmpStr))
-        len = sizeof(tmpStr);
-    else
-        len = packetDataLength;
+  if(packetDataLength >= sizeof(tmpStr))
+    len = sizeof(tmpStr);
+  else
+    len = packetDataLength;
 
-    if(myGlobals.runningPref.enablePacketDecoding) {
-        if (((sport == IP_TCP_PORT_HTTP) || (dport == IP_TCP_PORT_HTTP))
-            && (packetDataLength > 0)) {
-            handleHTTPSession (h, srcHost, sport, dstHost, dport,
-                               packetDataLength, packetData, theSession,
-                               actualDeviceId);
-        } else if((dport == IP_TCP_PORT_KAZAA) && (packetDataLength > 0)) {
-            handleKazaaSession (h, srcHost, sport, dstHost, dport,
-                                packetDataLength, packetData, theSession,
-                                actualDeviceId);
-        } else if (((dport == IP_TCP_PORT_GNUTELLA1) ||
-                    (dport == IP_TCP_PORT_GNUTELLA2) ||
-                    (dport == IP_TCP_PORT_GNUTELLA3)) 
-                   && (packetDataLength > 0)) {
-            handleGnutellaSession (h, srcHost, sport, dstHost, dport,
-                                   packetDataLength, packetData, theSession,
-                                   actualDeviceId);
-        } else if((dport == IP_TCP_PORT_WINMX) && (packetDataLength > 0)) {
-            handleWinMxSession (h, srcHost, sport, dstHost, dport,
-                                packetDataLength, packetData, theSession,
-                                actualDeviceId);
-        } else if (((sport == IP_TCP_PORT_MSMSGR) ||
-                    (dport == IP_TCP_PORT_MSMSGR)) 
-                   && (packetDataLength > 0)) {
-            handleMsnMsgrSession (h, srcHost, sport, dstHost, dport,
-                                  packetDataLength, packetData, theSession,
-                                  actualDeviceId);
-        } else if(((sport == IP_TCP_PORT_SMTP) ||
-                    (dport == IP_TCP_PORT_SMTP))
-                  && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
-            handleSMTPSession (h, srcHost, sport, dstHost, dport,
-                               packetDataLength, packetData, theSession,
-                               actualDeviceId);
-        } else if(((sport == IP_TCP_PORT_FTP)  ||
-                   (dport == IP_TCP_PORT_FTP))
-                  && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
-            handleFTPSession (h, srcHost, sport, dstHost, dport,
-                              packetDataLength, packetData, theSession,
-                              actualDeviceId);
-        } else if(((dport == IP_TCP_PORT_PRINTER) || (sport == IP_TCP_PORT_PRINTER))
-                  && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
-            if(sport == IP_TCP_PORT_PRINTER)
-                FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
-            else
-                FD_SET(FLAG_HOST_TYPE_PRINTER, &dstHost->flags);
-        } else if(((sport == IP_TCP_PORT_POP2) || (sport == IP_TCP_PORT_POP3)
-                   || (dport == IP_TCP_PORT_POP2) || (dport == IP_TCP_PORT_POP3))
-                  && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
-            handlePOPSession (h, srcHost, sport, dstHost, dport,
-                              packetDataLength, packetData, theSession,
-                              actualDeviceId);
-        } else if(((sport == IP_TCP_PORT_IMAP) || (dport == IP_TCP_PORT_IMAP))
-                  && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
-            handleIMAPSession (h, srcHost, sport, dstHost, dport,
-                               packetDataLength, packetData, theSession,
-                               actualDeviceId);
-        } else {
-            /* Further decoders */
-            if((packetDataLength > 0)
-               && (packetData[0] == '$')
-               && ((theSession->bytesProtoSent.value > 0) || (theSession->bytesProtoSent.value < 32))
-                ) {
-
-                rcStr = (char*)malloc(len+1);
-                memcpy(rcStr, packetData, len);
-                rcStr[len-1] = '\0';
-
-                /* traceEvent(CONST_TRACE_INFO, "rcStr '%s'", rcStr); */
-                if((!strncmp(rcStr, "$Get", 4))
-                   || (!strncmp(rcStr, "$Send", 5))
-                   || (!strncmp(rcStr, "$Search", 7))
-                   || (!strncmp(rcStr, "$Hello", 6))
-                   || (!strncmp(rcStr, "$MyNick", 7))
-                   || (!strncmp(rcStr, "$Quit", 5))) {
-                    /* See dcplusplus.sourceforge.net */
-
-                    theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
-                    if(!strncmp(rcStr, "$MyNick", 7)) {
-                        updateHostUsers(strtok(&rcStr[8], "|"), BITFLAG_P2P_USER, srcHost);
-                    } else if(!strncmp(rcStr, "$Get", 4)) {
-                        char *file = strtok(&rcStr[5], "$");
-
-                        updateFileList(file, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-                        updateFileList(file, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-                    }
-                }
-
-                free(rcStr);
-            }
-        }
+  if(myGlobals.runningPref.enablePacketDecoding
+     && ((theSession->bytesProtoSent.value > 0) && (theSession->bytesProtoSent.value < 128))
+     /* Reduce protocol decoding effort */
+     ) {
+    if (((sport == IP_TCP_PORT_HTTP) || (dport == IP_TCP_PORT_HTTP))
+	&& (packetDataLength > 0)) {
+      handleHTTPSession(h, srcHost, sport, dstHost, dport,
+			 packetDataLength, packetData, theSession,
+			 actualDeviceId);
+    } else if((dport == IP_TCP_PORT_KAZAA) && (packetDataLength > 0)) {
+      handleKazaaSession(h, srcHost, sport, dstHost, dport,
+			  packetDataLength, packetData, theSession,
+			  actualDeviceId);
+    } else if (((dport == IP_TCP_PORT_GNUTELLA1) ||
+		(dport == IP_TCP_PORT_GNUTELLA2) ||
+		(dport == IP_TCP_PORT_GNUTELLA3))
+	       && (packetDataLength > 0)) {
+      handleGnutellaSession(h, srcHost, sport, dstHost, dport,
+			     packetDataLength, packetData, theSession,
+			     actualDeviceId);
+    } else if((dport == IP_TCP_PORT_WINMX) && (packetDataLength > 0)) {
+      handleWinMxSession(h, srcHost, sport, dstHost, dport,
+			  packetDataLength, packetData, theSession,
+			  actualDeviceId);
+    } else if (((sport == IP_TCP_PORT_MSMSGR) ||
+		(dport == IP_TCP_PORT_MSMSGR))
+	       && (packetDataLength > 0)) {
+      handleMsnMsgrSession(h, srcHost, sport, dstHost, dport,
+			    packetDataLength, packetData, theSession,
+			    actualDeviceId);
+    } else if(((sport == IP_TCP_PORT_SMTP) ||
+	       (dport == IP_TCP_PORT_SMTP))
+	      && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
+      handleSMTPSession(h, srcHost, sport, dstHost, dport,
+			 packetDataLength, packetData, theSession,
+			 actualDeviceId);
+    } else if(((sport == IP_TCP_PORT_FTP)  ||
+	       (dport == IP_TCP_PORT_FTP))
+	      && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
+      handleFTPSession(h, srcHost, sport, dstHost, dport,
+			packetDataLength, packetData, theSession,
+			actualDeviceId);
+    } else if(((dport == IP_TCP_PORT_PRINTER) || (sport == IP_TCP_PORT_PRINTER))
+	      && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
+      if(sport == IP_TCP_PORT_PRINTER)
+	FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
+      else
+	FD_SET(FLAG_HOST_TYPE_PRINTER, &dstHost->flags);
+    } else if(((sport == IP_TCP_PORT_POP2) || (sport == IP_TCP_PORT_POP3)
+	       || (dport == IP_TCP_PORT_POP2) || (dport == IP_TCP_PORT_POP3))
+	      && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
+      handlePOPSession(h, srcHost, sport, dstHost, dport,
+			packetDataLength, packetData, theSession,
+			actualDeviceId);
+    } else if(((sport == IP_TCP_PORT_IMAP) || (dport == IP_TCP_PORT_IMAP))
+	      && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
+      handleIMAPSession(h, srcHost, sport, dstHost, dport,
+			 packetDataLength, packetData, theSession,
+			 actualDeviceId);
     } else {
-        /* !myGlobals.enablePacketDecoding */
+      /*
+	T. Karagiannis and others
 
-        switch(sport) {
-        case IP_TCP_PORT_FTP:
-            FD_SET(FLAG_HOST_TYPE_SVC_FTP, &srcHost->flags);
-            break;
-        case IP_TCP_PORT_SMTP:
-            FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &srcHost->flags);
-            break;
-        case IP_TCP_PORT_HTTP:
-        case IP_TCP_PORT_HTTPS:
-            FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
-            break;
-        case IP_TCP_PORT_POP2:
-        case IP_TCP_PORT_POP3:
-            FD_SET(FLAG_HOST_TYPE_SVC_POP, &srcHost->flags);
-            break;
-        case IP_TCP_PORT_IMAP:
-            FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &srcHost->flags);
-            break;
-        case IP_TCP_PORT_PRINTER:
-        case IP_TCP_PORT_JETDIRECT: 
-            FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
-            break;
-        }
+	File-sharing in the Internet: A characterization of
+	P2P traffic in the backbone
+      */
 
-        switch(dport) {
-        case IP_TCP_PORT_FTP:
-            FD_SET(FLAG_HOST_TYPE_SVC_FTP, &dstHost->flags);
-            break;
-        case IP_TCP_PORT_SMTP:
-            FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &dstHost->flags);
-            break;
-        case IP_TCP_PORT_HTTP:
-        case IP_TCP_PORT_HTTPS:
-            FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &dstHost->flags);
-            break;
-        case IP_TCP_PORT_POP2:
-        case IP_TCP_PORT_POP3:
-            FD_SET(FLAG_HOST_TYPE_SVC_POP, &dstHost->flags);
-            break;
-        case IP_TCP_PORT_IMAP:
-            FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &dstHost->flags);
-            break;
-        case IP_TCP_PORT_PRINTER:
-        case IP_TCP_PORT_JETDIRECT: 
-            FD_SET(FLAG_HOST_TYPE_PRINTER, &dstHost->flags);
-            break;
-        }
+      /* Further decoders */
+      if((!theSession->isP2P)
+	 && (packetDataLength > 0)
+	 && ((theSession->bytesProtoSent.value > 0) && (theSession->bytesProtoSent.value < 1400))) {
+	rcStr = (char*)malloc(len+1);
+	memcpy(rcStr, packetData, len);
+	rcStr[len-1] = '\0';
+
+	/* See dcplusplus.sourceforge.net */
+	if(portRange(sport, dport, 411, 412)
+	   || (!strncmp(rcStr, "$Connect", 8))
+	   || (!strncmp(rcStr, "$Direction", 10))
+	   || (!strncmp(rcStr, "$Hello", 6))
+	   || (!strncmp(rcStr, "$Key", 4))
+	   || (!strncmp(rcStr, "$Lock", 5))
+	   || (!strncmp(rcStr, "$MyInfo", 7))
+	   || (!strncmp(rcStr, "$Pin", 4))
+	   || (!strncmp(rcStr, "$Quit", 5))
+	   || (!strncmp(rcStr, "$Send", 5))
+	   || (!strncmp(rcStr, "$SR", 3))
+	   || (!strncmp(rcStr, "$Search", 7))) {
+	  theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	} else if(!strncmp(rcStr, "$MyNick", 7)) {
+	  theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
+	  updateHostUsers(strtok(&rcStr[8], "|"), BITFLAG_P2P_USER, srcHost);
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	} else if(!strncmp(rcStr, "$Get", 4)) {
+	  char *file = strtok(&rcStr[5], "$");
+	  theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
+	  updateFileList(file, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+	  updateFileList(file, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	} else if(portRange(sport, dport, 4661, 4665)
+		  || (rcStr[0] == 0xE3) || (rcStr[0] == 0xC5)) {
+	  theSession->isP2P = FLAG_P2P_EDONKEY;
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	} else if(portRange(sport, dport, 6881, 6889)
+		  || (!strncmp(rcStr, "GET /announce?info_hash", 23))
+		  || (!strncmp(rcStr, "GET /torrents/", 14))
+		  || (!strncmp(rcStr, "GET TrackPak", 12))
+		  || (!strncmp(rcStr, "0x13BitTorrent", 14))) {
+	  theSession->isP2P = FLAG_P2P_BITTORRENT;
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	} else if(portRange(sport, dport, 6346, 6347)
+		  || (!strncmp(rcStr,    "GNUTELLA", 8))
+		  || (!strncmp(rcStr, "GIV", 3))
+		  || (!strncmp(rcStr, "GET /uri-res/", 13))) {
+	  theSession->isP2P = FLAG_P2P_GNUTELLA;
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	} else if((!strncmp(rcStr,   "GET hash:", 9))
+		  || (!strncmp(rcStr, "PUSH", 4))
+		  || (!strncmp(rcStr, "GET /uri-res/", 12))) {
+	  /* Ares */
+	  theSession->isP2P = FLAG_P2P_OTHER_PROTOCOL;
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	} else if((!strncmp(rcStr,    "GET /$$$$$$$$$/", 15))) {
+	  /* EarthStation5 */
+	  theSession->isP2P = FLAG_P2P_OTHER_PROTOCOL;
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	}
+
+	free(rcStr);
+      }
+    }
+  } else {
+    /* !myGlobals.enablePacketDecoding */
+
+    switch(sport) {
+    case IP_TCP_PORT_FTP:
+      FD_SET(FLAG_HOST_TYPE_SVC_FTP, &srcHost->flags);
+      break;
+    case IP_TCP_PORT_SMTP:
+      FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &srcHost->flags);
+      break;
+    case IP_TCP_PORT_HTTP:
+    case IP_TCP_PORT_HTTPS:
+      FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
+      break;
+    case IP_TCP_PORT_POP2:
+    case IP_TCP_PORT_POP3:
+      FD_SET(FLAG_HOST_TYPE_SVC_POP, &srcHost->flags);
+      break;
+    case IP_TCP_PORT_IMAP:
+      FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &srcHost->flags);
+      break;
+    case IP_TCP_PORT_PRINTER:
+    case IP_TCP_PORT_JETDIRECT:
+      FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
+      break;
     }
 
-    if(packetDataLength >= sizeof(tmpStr))
-        len = sizeof(tmpStr)-1;
-    else
-        len = packetDataLength;
+    switch(dport) {
+    case IP_TCP_PORT_FTP:
+      FD_SET(FLAG_HOST_TYPE_SVC_FTP, &dstHost->flags);
+      break;
+    case IP_TCP_PORT_SMTP:
+      FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &dstHost->flags);
+      break;
+    case IP_TCP_PORT_HTTP:
+    case IP_TCP_PORT_HTTPS:
+      FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &dstHost->flags);
+      break;
+    case IP_TCP_PORT_POP2:
+    case IP_TCP_PORT_POP3:
+      FD_SET(FLAG_HOST_TYPE_SVC_POP, &dstHost->flags);
+      break;
+    case IP_TCP_PORT_IMAP:
+      FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &dstHost->flags);
+      break;
+    case IP_TCP_PORT_PRINTER:
+    case IP_TCP_PORT_JETDIRECT:
+      FD_SET(FLAG_HOST_TYPE_PRINTER, &dstHost->flags);
+      break;
+    }
+  }
 
-    /*
-      We process some FTP stuff even if protocol decoding is disabled as we
-      assume that this doesn't take up much CPU time
-    */
-    if(len > 0) {
-        if ((sport == IP_TCP_PORT_FTP) || (dport == IP_TCP_PORT_FTP)) {
-            memset(tmpStr, 0, sizeof(tmpStr));
-            memcpy(tmpStr, packetData, len);
-            
-            /* traceEvent(CONST_TRACE_INFO, "FTP: %s", tmpStr); */
-            
-            /*
-              227 Entering Passive Mode (131,114,21,11,156,95)
-              PORT 172,22,5,95,7,36
-              
-              131.114.21.11:40012 (40012 = 156 * 256 + 95)
-            */
-            if((strncmp(tmpStr, "227", 3) == 0)
-               || (strncmp(tmpStr, "PORT", 4) == 0)) {
-                int a, b, c, d, e, f;
-                
-                if(strncmp(tmpStr, "PORT", 4) == 0) {
-                    sscanf(&tmpStr[5], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
-                } else {
-                    sscanf(&tmpStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
-                }
-                safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%d.%d.%d.%d", a, b, c, d);
-                
+  if(packetDataLength >= sizeof(tmpStr))
+    len = sizeof(tmpStr)-1;
+  else
+    len = packetDataLength;
+
+  /*
+    We process some FTP stuff even if protocol decoding is disabled as we
+    assume that this doesn't take up much CPU time
+  */
+  if(len > 0) {
+    if ((sport == IP_TCP_PORT_FTP) || (dport == IP_TCP_PORT_FTP)) {
+      memset(tmpStr, 0, sizeof(tmpStr));
+      memcpy(tmpStr, packetData, len);
+
+      /* traceEvent(CONST_TRACE_INFO, "FTP: %s", tmpStr); */
+
+      /*
+	227 Entering Passive Mode (131,114,21,11,156,95)
+	PORT 172,22,5,95,7,36
+
+	131.114.21.11:40012 (40012 = 156 * 256 + 95)
+      */
+      if((strncmp(tmpStr, "227", 3) == 0)
+	 || (strncmp(tmpStr, "PORT", 4) == 0)) {
+	int a, b, c, d, e, f;
+
+	if(strncmp(tmpStr, "PORT", 4) == 0) {
+	  sscanf(&tmpStr[5], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
+	} else {
+	  sscanf(&tmpStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
+	}
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%d.%d.%d.%d", a, b, c, d);
+
 #ifdef FTP_DEBUG
-                traceEvent(CONST_TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",
-                           inet_addr(tmpStr), a, b, c, d, (e*256+f));
+	traceEvent(CONST_TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",
+		   inet_addr(tmpStr), a, b, c, d, (e*256+f));
 #endif
-                /*addPassiveSessionInfo(htonl((unsigned long)inet_addr(tmpStr)), (e*256+f));*/
-            }
-        }
-    } /* len > 0 */
+	/*addPassiveSessionInfo(htonl((unsigned long)inet_addr(tmpStr)), (e*256+f));*/
+      }
+    }
+  } /* len > 0 */
 
     /* ***************************************** */
 
-    if((theSession->minWindow > tcpWin) || (theSession->minWindow == 0))
-        theSession->minWindow = tcpWin;
+  if((theSession->minWindow > tcpWin) || (theSession->minWindow == 0))
+    theSession->minWindow = tcpWin;
 
-    if((theSession->maxWindow < tcpWin) || (theSession->maxWindow == 0))
-        theSession->maxWindow = tcpWin;
-
-#ifdef DEBUG
-    printf("DEBUG: sessionsState=%d\n", theSession->sessionState);
-#endif
-
-    /* Latency measurement */
-    if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == FLAG_STATE_SYN))  {
-        theSession->sessionState = FLAG_FLAG_STATE_SYN_ACK;
-    } else if((tp->th_flags == TH_ACK) && (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK)) {
-        if(h->ts.tv_sec >= theSession->nwLatency.tv_sec) {
-            theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
-
-            if((h->ts.tv_usec - theSession->nwLatency.tv_usec) < 0) {
-                theSession->nwLatency.tv_usec = 1000000 + h->ts.tv_usec - theSession->nwLatency.tv_usec;
-                if(theSession->nwLatency.tv_usec > 1000000) theSession->nwLatency.tv_usec = 1000000;
-                theSession->nwLatency.tv_sec--;
-            } else
-                theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
-
-            theSession->nwLatency.tv_sec /= 2;
-            theSession->nwLatency.tv_usec /= 2;
-
-            /* Sanity check */
-            if(theSession->nwLatency.tv_sec > 1000) {
-                /*
-                  This value seems to be wrong so it's better to ignore it
-                  rather than showing a false/wrong/dummy value
-                */
-                theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
-            }
-
-            theSession->sessionState = FLAG_STATE_ACTIVE;
-        } else {
-            /* The latency value is negative. There's something wrong so let's drop it */
-            theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
-        }
-
-        if(subnetLocalHost(srcHost)) {
-            hostToUpdate = dstHost;
-        } else if(subnetLocalHost(dstHost)) {
-            hostToUpdate = srcHost;
-        } else
-            hostToUpdate = NULL;
-
-        if(hostToUpdate != NULL) {
-            u_long a, b, c;
-
-            a = hostToUpdate->minLatency.tv_usec + 1000*hostToUpdate->minLatency.tv_sec;
-            b = hostToUpdate->maxLatency.tv_usec + 1000*hostToUpdate->maxLatency.tv_sec;
-            c = theSession->nwLatency.tv_usec + 1000*theSession->nwLatency.tv_sec;
-
-            if(a > c) {
-                hostToUpdate->minLatency.tv_usec = theSession->nwLatency.tv_usec;
-                hostToUpdate->minLatency.tv_sec  = theSession->nwLatency.tv_sec;
-            }
-
-            if(b < c) {
-                hostToUpdate->maxLatency.tv_usec = theSession->nwLatency.tv_usec;
-                hostToUpdate->maxLatency.tv_sec  = theSession->nwLatency.tv_sec;
-            }
-        }
-
-    } else if ((addedNewEntry == 0)
-               && ((theSession->sessionState == FLAG_STATE_SYN)
-                   || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
-               && (!(tp->th_flags & TH_RST))) {
-        /*
-          We might have lost a packet so:
-          - we cannot calculate latency
-          - we don't set the state to initialized
-        */
-
-        theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
-        theSession->sessionState = FLAG_STATE_ACTIVE;
-
-        /*
-          ntop has no way to know who started the connection
-          as the connection already started. Hence we use this simple
-          heuristic algorithm:
-          if(sport < dport) {
-          sport = server;
-          srchost = server host;
-          }
-        */
-
-        if(sport > dport) {
-            flowDirection = FLAG_CLIENT_TO_SERVER;
-        } else {
-            flowDirection = FLAG_SERVER_TO_CLIENT;
-        }
-
-        incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
-    }
-
-    /* Don't move the following call from here unless you know what you're
-     * doing.
-     *
-     * This routine takes care of almost all the security checks such as:
-     * - Dumping suspicious packets based on certain invalid TCP Flag combos 
-     * - Counting packets & bytes based on certain invalid TCP Flag combos
-     * - Checking if a known protocol is running at a not well-known port
-     */
-    tcpSessionSecurityChecks (h, srcHost, sport, dstHost, dport, tp,
-                              packetDataLength, packetData, addedNewEntry,
-                              theSession, actualDeviceId);
-    /*
-     *
-     * In this case the session is over hence the list of
-     * sessions initiated/received by the hosts can be updated
-     *
-     */
-    if(tp->th_flags & TH_FIN) {
-        u_int32_t fin = ntohl(tp->th_seq);
-
-        if(sport < dport) /* Server->Client */
-            check = (fin != theSession->lastSCFin);
-        else /* Client->Server */
-            check = (fin != theSession->lastCSFin);
-
-        if(check) {
-            /* This is not a duplicated (retransmitted) FIN */
-            theSession->finId[theSession->numFin] = fin;
-            theSession->numFin = (theSession->numFin+1) % MAX_NUM_FIN;
-
-            if(sport < dport) /* Server->Client */
-                theSession->lastSCFin = fin;
-            else /* Client->Server */
-                theSession->lastCSFin = fin;
-
-            if(tp->th_flags & TH_ACK) {
-                /* This is a FIN_ACK */
-                theSession->sessionState = FLAG_STATE_FIN2_ACK2;
-            } else {
-                switch(theSession->sessionState) {
-                case FLAG_STATE_ACTIVE:
-                    theSession->sessionState = FLAG_STATE_FIN1_ACK0;
-                    break;
-                case FLAG_STATE_FIN1_ACK0:
-                    theSession->sessionState = FLAG_STATE_FIN2_ACK1;
-                    break;
-                case FLAG_STATE_FIN1_ACK1:
-                    theSession->sessionState = FLAG_STATE_FIN2_ACK1;
-                    break;
-#ifdef DEBUG
-                default:
-                    traceEvent(CONST_TRACE_ERROR, "DEBUG: Unable to handle received FIN (%u) !", fin);
-#endif
-                }
-            }
-        } else {
-#ifdef DEBUG
-            printf("DEBUG: Rcvd Duplicated FIN %u\n", fin);
-#endif
-        }
-    } else if(tp->th_flags == TH_ACK) {
-        u_int32_t ack = ntohl(tp->th_ack);
-
-        if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
-            if(theSession->initiator == srcHost) {
-                theSession->numDuplicatedAckI2R++;
-                incrementTrafficCounter(&theSession->bytesRetranI2R, length);
-                incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckSent, 1);
-                incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckRcvd, 1);
+  if((theSession->maxWindow < tcpWin) || (theSession->maxWindow == 0))
+    theSession->maxWindow = tcpWin;
 
 #ifdef DEBUG
-                traceEvent(CONST_TRACE_INFO, "DEBUG: Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
-                           ack, theSession->numDuplicatedAckI2R,
-                           (int)theSession->bytesRetranI2R.value);
+  printf("DEBUG: sessionsState=%d\n", theSession->sessionState);
 #endif
-            } else {
-                theSession->numDuplicatedAckR2I++;
-                incrementTrafficCounter(&theSession->bytesRetranR2I, length);
-                incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckSent, 1);
-                incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckRcvd, 1);
-#ifdef DEBUG
-                traceEvent(CONST_TRACE_INFO, "Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
-                           ack, theSession->numDuplicatedAckR2I,
-                           (int)theSession->bytesRetranR2I.value);
-#endif
-            }
-        }
 
-        if(theSession->initiator == srcHost)
-            theSession->lastAckIdI2R = ack;
-        else
-            theSession->lastAckIdR2I = ack;
+  /* Latency measurement */
+  if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == FLAG_STATE_SYN))  {
+    theSession->sessionState = FLAG_FLAG_STATE_SYN_ACK;
+  } else if((tp->th_flags == TH_ACK) && (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK)) {
+    if(h->ts.tv_sec >= theSession->nwLatency.tv_sec) {
+      theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
-        if(theSession->numFin > 0) {
-            int i;
+      if((h->ts.tv_usec - theSession->nwLatency.tv_usec) < 0) {
+	theSession->nwLatency.tv_usec = 1000000 + h->ts.tv_usec - theSession->nwLatency.tv_usec;
+	if(theSession->nwLatency.tv_usec > 1000000) theSession->nwLatency.tv_usec = 1000000;
+	theSession->nwLatency.tv_sec--;
+      } else
+	theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
 
-            if(sport < dport) /* Server->Client */
-                check = (ack != theSession->lastSCAck);
-            else /* Client->Server */
-                check = (ack != theSession->lastCSAck);
+      theSession->nwLatency.tv_sec /= 2;
+      theSession->nwLatency.tv_usec /= 2;
 
-            if(check) {
-                /* This is not a duplicated ACK */
+      /* Sanity check */
+      if(theSession->nwLatency.tv_sec > 1000) {
+	/*
+	  This value seems to be wrong so it's better to ignore it
+	  rather than showing a false/wrong/dummy value
+	*/
+	theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
+      }
 
-                if(sport < dport) /* Server->Client */
-                    theSession->lastSCAck = ack;
-                else /* Client->Server */
-                    theSession->lastCSAck = ack;
-
-                for(i=0; i<theSession->numFin; i++) {
-                    if((theSession->finId[i]+1) == ack) {
-                        theSession->numFinAcked++;
-                        theSession->finId[i] = 0;
-
-                        switch(theSession->sessionState) {
-                        case FLAG_STATE_FIN1_ACK0:
-                            theSession->sessionState = FLAG_STATE_FIN1_ACK1;
-                            break;
-                        case FLAG_STATE_FIN2_ACK0:
-                            theSession->sessionState = FLAG_STATE_FIN2_ACK1;
-                            break;
-                        case FLAG_STATE_FIN2_ACK1:
-                            theSession->sessionState = FLAG_STATE_FIN2_ACK2;
-                            break;
-#ifdef DEBUG
-                        default:
-                            printf("ERROR: unable to handle received ACK (%u) !\n", ack);
-#endif
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    theSession->lastFlags = tp->th_flags;
-
-    if((theSession->sessionState == FLAG_STATE_FIN2_ACK2)
-       || (tp->th_flags & TH_RST)) /* abortive release */ {
-        if(theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK) {
-            /*
-              Rcvd RST packet before to complete the 3-way handshake.
-              Note that the message is emitted only of the reset is received
-              while in FLAG_FLAG_STATE_SYN_ACK. In fact if it has been received in
-              FLAG_STATE_SYN this message has not to be emitted because this is
-              a rejected session.
-            */
-            if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-                traceEvent(CONST_TRACE_WARNING, "TCP session [%s:%d]<->[%s:%d] reset by %s "
-                           "without completing 3-way handshake",
-                           srcHost->hostResolvedName, sport,
-                           dstHost->hostResolvedName, dport,
-                           srcHost->hostResolvedName);
-                dumpSuspiciousPacket(actualDeviceId);
-            }
-
-            theSession->sessionState = FLAG_STATE_TIMEOUT;
-        }
-
-        if(myGlobals.runningPref.disableInstantSessionPurge != TRUE)
-            theSession->sessionState = FLAG_STATE_TIMEOUT;
-
-        if(sport == IP_TCP_PORT_HTTP)
-            updateHTTPVirtualHosts(theSession->virtualPeerName, srcHost,
-                                   theSession->bytesSent, theSession->bytesRcvd);
-        else
-            updateHTTPVirtualHosts(theSession->virtualPeerName, dstHost,
-                                   theSession->bytesRcvd, theSession->bytesSent);
-    }
-
-    /* Update session stats */
-    if(flowDirection == FLAG_CLIENT_TO_SERVER) {
-        incrementTrafficCounter(&theSession->bytesProtoSent, packetDataLength);
-        incrementTrafficCounter(&theSession->bytesSent, length);
-        theSession->pktSent++;
-        if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedSent, packetDataLength);
+      theSession->sessionState = FLAG_STATE_ACTIVE;
     } else {
-        incrementTrafficCounter(&theSession->bytesProtoRcvd, packetDataLength);
-        incrementTrafficCounter(&theSession->bytesRcvd, length);
-        theSession->pktRcvd++;
-        if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedRcvd, packetDataLength);
+      /* The latency value is negative. There's something wrong so let's drop it */
+      theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
     }
 
-    /* Immediately free the session */
-    if(theSession->sessionState == FLAG_STATE_TIMEOUT) {
-        if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
-            myGlobals.device[actualDeviceId].tcpSession[idx] = theSession->next;
-        } else
-            prevSession->next = theSession->next;
+    if(subnetLocalHost(srcHost)) {
+      hostToUpdate = dstHost;
+    } else if(subnetLocalHost(dstHost)) {
+      hostToUpdate = srcHost;
+    } else
+      hostToUpdate = NULL;
+
+    if(hostToUpdate != NULL) {
+      u_long a, b, c;
+
+      a = hostToUpdate->minLatency.tv_usec + 1000*hostToUpdate->minLatency.tv_sec;
+      b = hostToUpdate->maxLatency.tv_usec + 1000*hostToUpdate->maxLatency.tv_sec;
+      c = theSession->nwLatency.tv_usec + 1000*theSession->nwLatency.tv_sec;
+
+      if(a > c) {
+	hostToUpdate->minLatency.tv_usec = theSession->nwLatency.tv_usec;
+	hostToUpdate->minLatency.tv_sec  = theSession->nwLatency.tv_sec;
+      }
+
+      if(b < c) {
+	hostToUpdate->maxLatency.tv_usec = theSession->nwLatency.tv_usec;
+	hostToUpdate->maxLatency.tv_sec  = theSession->nwLatency.tv_sec;
+      }
+    }
+
+  } else if ((addedNewEntry == 0)
+	     && ((theSession->sessionState == FLAG_STATE_SYN)
+		 || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
+	     && (!(tp->th_flags & TH_RST))) {
+    /*
+      We might have lost a packet so:
+      - we cannot calculate latency
+      - we don't set the state to initialized
+    */
+
+    theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
+    theSession->sessionState = FLAG_STATE_ACTIVE;
+
+    /*
+      ntop has no way to know who started the connection
+      as the connection already started. Hence we use this simple
+      heuristic algorithm:
+      if(sport < dport) {
+      sport = server;
+      srchost = server host;
+      }
+    */
+
+    if(sport > dport) {
+      flowDirection = FLAG_CLIENT_TO_SERVER;
+    } else {
+      flowDirection = FLAG_SERVER_TO_CLIENT;
+    }
+
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
+  }
+
+  /* Don't move the following call from here unless you know what you're
+   * doing.
+   *
+   * This routine takes care of almost all the security checks such as:
+   * - Dumping suspicious packets based on certain invalid TCP Flag combos
+   * - Counting packets & bytes based on certain invalid TCP Flag combos
+   * - Checking if a known protocol is running at a not well-known port
+   */
+  tcpSessionSecurityChecks (h, srcHost, sport, dstHost, dport, tp,
+			    packetDataLength, packetData, addedNewEntry,
+			    theSession, actualDeviceId);
+  /*
+   *
+   * In this case the session is over hence the list of
+   * sessions initiated/received by the hosts can be updated
+   *
+   */
+  if(tp->th_flags & TH_FIN) {
+    u_int32_t fin = ntohl(tp->th_seq);
+
+    if(sport < dport) /* Server->Client */
+      check = (fin != theSession->lastSCFin);
+    else /* Client->Server */
+      check = (fin != theSession->lastCSFin);
+
+    if(check) {
+      /* This is not a duplicated (retransmitted) FIN */
+      theSession->finId[theSession->numFin] = fin;
+      theSession->numFin = (theSession->numFin+1) % MAX_NUM_FIN;
+
+      if(sport < dport) /* Server->Client */
+	theSession->lastSCFin = fin;
+      else /* Client->Server */
+	theSession->lastCSFin = fin;
+
+      if(tp->th_flags & TH_ACK) {
+	/* This is a FIN_ACK */
+	theSession->sessionState = FLAG_STATE_FIN2_ACK2;
+      } else {
+	switch(theSession->sessionState) {
+	case FLAG_STATE_ACTIVE:
+	  theSession->sessionState = FLAG_STATE_FIN1_ACK0;
+	  break;
+	case FLAG_STATE_FIN1_ACK0:
+	  theSession->sessionState = FLAG_STATE_FIN2_ACK1;
+	  break;
+	case FLAG_STATE_FIN1_ACK1:
+	  theSession->sessionState = FLAG_STATE_FIN2_ACK1;
+	  break;
+#ifdef DEBUG
+	default:
+	  traceEvent(CONST_TRACE_ERROR, "DEBUG: Unable to handle received FIN (%u) !", fin);
+#endif
+	}
+      }
+    } else {
+#ifdef DEBUG
+      printf("DEBUG: Rcvd Duplicated FIN %u\n", fin);
+#endif
+    }
+  } else if(tp->th_flags == TH_ACK) {
+    u_int32_t ack = ntohl(tp->th_ack);
+
+    if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
+      if(theSession->initiator == srcHost) {
+	theSession->numDuplicatedAckI2R++;
+	incrementTrafficCounter(&theSession->bytesRetranI2R, length);
+	incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckSent, 1);
+	incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckRcvd, 1);
+
+#ifdef DEBUG
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
+		   ack, theSession->numDuplicatedAckI2R,
+		   (int)theSession->bytesRetranI2R.value);
+#endif
+      } else {
+	theSession->numDuplicatedAckR2I++;
+	incrementTrafficCounter(&theSession->bytesRetranR2I, length);
+	incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckSent, 1);
+	incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckRcvd, 1);
+#ifdef DEBUG
+	traceEvent(CONST_TRACE_INFO, "Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
+		   ack, theSession->numDuplicatedAckR2I,
+		   (int)theSession->bytesRetranR2I.value);
+#endif
+      }
+    }
+
+    if(theSession->initiator == srcHost)
+      theSession->lastAckIdI2R = ack;
+    else
+      theSession->lastAckIdR2I = ack;
+
+    if(theSession->numFin > 0) {
+      int i;
+
+      if(sport < dport) /* Server->Client */
+	check = (ack != theSession->lastSCAck);
+      else /* Client->Server */
+	check = (ack != theSession->lastCSAck);
+
+      if(check) {
+	/* This is not a duplicated ACK */
+
+	if(sport < dport) /* Server->Client */
+	  theSession->lastSCAck = ack;
+	else /* Client->Server */
+	  theSession->lastCSAck = ack;
+
+	for(i=0; i<theSession->numFin; i++) {
+	  if((theSession->finId[i]+1) == ack) {
+	    theSession->numFinAcked++;
+	    theSession->finId[i] = 0;
+
+	    switch(theSession->sessionState) {
+	    case FLAG_STATE_FIN1_ACK0:
+	      theSession->sessionState = FLAG_STATE_FIN1_ACK1;
+	      break;
+	    case FLAG_STATE_FIN2_ACK0:
+	      theSession->sessionState = FLAG_STATE_FIN2_ACK1;
+	      break;
+	    case FLAG_STATE_FIN2_ACK1:
+	      theSession->sessionState = FLAG_STATE_FIN2_ACK2;
+	      break;
+#ifdef DEBUG
+	    default:
+	      printf("ERROR: unable to handle received ACK (%u) !\n", ack);
+#endif
+	    }
+	    break;
+	  }
+	}
+      }
+    }
+  }
+
+  theSession->lastFlags = tp->th_flags;
+
+  if((theSession->sessionState == FLAG_STATE_FIN2_ACK2)
+     || (tp->th_flags & TH_RST)) /* abortive release */ {
+    if(theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK) {
+      /*
+	Rcvd RST packet before to complete the 3-way handshake.
+	Note that the message is emitted only of the reset is received
+	while in FLAG_FLAG_STATE_SYN_ACK. In fact if it has been received in
+	FLAG_STATE_SYN this message has not to be emitted because this is
+	a rejected session.
+      */
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
+	traceEvent(CONST_TRACE_WARNING, "TCP session [%s:%d]<->[%s:%d] reset by %s "
+		   "without completing 3-way handshake",
+		   srcHost->hostResolvedName, sport,
+		   dstHost->hostResolvedName, dport,
+		   srcHost->hostResolvedName);
+	dumpSuspiciousPacket(actualDeviceId);
+      }
+
+      theSession->sessionState = FLAG_STATE_TIMEOUT;
+    }
+
+    if(myGlobals.runningPref.disableInstantSessionPurge != TRUE)
+      theSession->sessionState = FLAG_STATE_TIMEOUT;
+
+    if(sport == IP_TCP_PORT_HTTP)
+      updateHTTPVirtualHosts(theSession->virtualPeerName, srcHost,
+			     theSession->bytesSent, theSession->bytesRcvd);
+    else
+      updateHTTPVirtualHosts(theSession->virtualPeerName, dstHost,
+			     theSession->bytesRcvd, theSession->bytesSent);
+  }
+
+  /* Update session stats */
+  if(flowDirection == FLAG_CLIENT_TO_SERVER) {
+    incrementTrafficCounter(&theSession->bytesProtoSent, packetDataLength);
+    incrementTrafficCounter(&theSession->bytesSent, length);
+    theSession->pktSent++;
+    if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedSent, packetDataLength);
+  } else {
+    incrementTrafficCounter(&theSession->bytesProtoRcvd, packetDataLength);
+    incrementTrafficCounter(&theSession->bytesRcvd, length);
+    theSession->pktRcvd++;
+    if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedRcvd, packetDataLength);
+  }
+
+  /* Immediately free the session */
+  if(theSession->sessionState == FLAG_STATE_TIMEOUT) {
+    if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
+      myGlobals.device[actualDeviceId].tcpSession[idx] = theSession->next;
+    } else
+      prevSession->next = theSession->next;
 
 #if DELAY_SESSION_PURGE
-        theSession->sessionState = FLAG_STATE_END; /* Session freed by scanTimedoutTCPSessions */
+    theSession->sessionState = FLAG_STATE_END; /* Session freed by scanTimedoutTCPSessions */
 #else
-        freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
+    freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
 #endif
-#ifdef CFG_MULTITHREADED
-        releaseMutex(&myGlobals.tcpSessionsMutex);
-#endif
-        return(NULL);
-    }
-
 #ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
+    return(NULL);
+  }
 
-    return(theSession);
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.tcpSessionsMutex);
+#endif
+
+  return(theSession);
 }
 
 /* ************************************ */
@@ -2254,16 +2307,15 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
                              u_short dport,
                              u_int length,
                              u_char* packetData,
-                             int actualDeviceId)
-{
-    IPSession tmpSession;
-
-    memset(&tmpSession, 0, sizeof(IPSession));
-    tmpSession.lastSeen = myGlobals.actTime;
-    tmpSession.initiator = srcHost, tmpSession.remotePeer = dstHost;
-    tmpSession.bytesSent.value = length, tmpSession.bytesRcvd.value = 0;
-    tmpSession.sport = sport, tmpSession.dport = dport;
-    if(fragmentedData) incrementTrafficCounter(&tmpSession.bytesFragmentedSent, length);
+                             int actualDeviceId) {
+  IPSession tmpSession;
+  
+  memset(&tmpSession, 0, sizeof(IPSession));
+  tmpSession.lastSeen = myGlobals.actTime;
+  tmpSession.initiator = srcHost, tmpSession.remotePeer = dstHost;
+  tmpSession.bytesSent.value = length, tmpSession.bytesRcvd.value = 0;
+  tmpSession.sport = sport, tmpSession.dport = dport;
+  if(fragmentedData) incrementTrafficCounter(&tmpSession.bytesFragmentedSent, length);
 }
 
 /* ************************************ */
@@ -2297,10 +2349,10 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
     it would be filtered out by the (**) check
   */
   if (myGlobals.runningPref.enablePacketDecoding && (tp == NULL /* UDP session */) &&
-      (srcHost->hostIpAddress.hostFamily == AF_INET && 
-       dstHost->hostIpAddress.hostFamily == AF_INET)) 
+      (srcHost->hostIpAddress.hostFamily == AF_INET &&
+       dstHost->hostIpAddress.hostFamily == AF_INET))
     handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData, actualDeviceId);
-  
+
   if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
     return(theSession);
 
@@ -2332,19 +2384,19 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
   if(sessionType == IPPROTO_TCP) {
-    theSession = handleTCPSession (h, fragmentedData, tcpWin, srcHost, sport,
+    theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
 				   dstHost, dport, length, tp, packetDataLength,
 				   packetData, actualDeviceId);
   } else if(sessionType == IPPROTO_UDP) {
-    /* We don't create any permanent structures for UDP sessions */ 
-    handleUDPSession (h, fragmentedData, srcHost, sport, dstHost, dport,
+    /* We don't create any permanent structures for UDP sessions */
+    handleUDPSession(h, fragmentedData, srcHost, sport, dstHost, dport,
 		      length, packetData, actualDeviceId);
   }
 
-  if((sport == IP_L4_PORT_ECHO)     || (dport == IP_L4_PORT_ECHO)  
-     || (sport == IP_L4_PORT_DISCARD)  || (dport == IP_L4_PORT_DISCARD)  
-     || (sport == IP_L4_PORT_DAYTIME) || (dport == IP_L4_PORT_DAYTIME) 
-     || (sport == IP_L4_PORT_CHARGEN) || (dport == IP_L4_PORT_CHARGEN) 
+  if((sport == IP_L4_PORT_ECHO)       || (dport == IP_L4_PORT_ECHO)
+     || (sport == IP_L4_PORT_DISCARD) || (dport == IP_L4_PORT_DISCARD)
+     || (sport == IP_L4_PORT_DAYTIME) || (dport == IP_L4_PORT_DAYTIME)
+     || (sport == IP_L4_PORT_CHARGEN) || (dport == IP_L4_PORT_CHARGEN)
      ) {
     char *fmt = "Detected traffic [%s:%d] -> [%s:%d] on "
       "a diagnostic port (network mapping attempt?)";
@@ -2407,103 +2459,103 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 
 static int getScsiCmdType (u_char scsiCmd, u_int32_t *ioSize, const u_char *bp)
 {
-    int cmdType;
+  int cmdType;
 
-    *ioSize = 0;
-    
-    switch (scsiCmd) {
-    case SCSI_SBC2_READ6:
-        cmdType = SCSI_READ_CMD;
-        *ioSize = (u_int32_t)bp[16];
-        break;
-    case SCSI_SBC2_READ10:
-        cmdType = SCSI_READ_CMD;
-        *ioSize = ntohs (*(u_short *)&bp[19]);
-        break;
-    case SCSI_SBC2_READ12:
-        cmdType = SCSI_READ_CMD;
-        *ioSize = ntohl (*(u_int32_t *)&bp[18]);
-        break;
-    case SCSI_SBC2_READ16:
-        cmdType = SCSI_READ_CMD;
-        *ioSize = ntohl (*(u_int32_t *)&bp[22]);
-        break;
-    case SCSI_SBC2_WRITE6:
-        cmdType = SCSI_WR_CMD;
-        *ioSize = (u_int32_t)bp[16];
-        break;
-    case SCSI_SBC2_WRITE10:
-        cmdType = SCSI_WR_CMD;
-        *ioSize = ntohs (*(u_short *)&bp[19]);
-        break;
-    case SCSI_SBC2_WRITE12:
-        cmdType = SCSI_WR_CMD;
-        *ioSize = ntohl (*(u_int32_t *)&bp[18]);
-        break;
-    case SCSI_SBC2_WRITE16:
-        cmdType = SCSI_WR_CMD;
-        *ioSize = ntohl (*(u_int32_t *)&bp[22]);
-        break;
-    default:
-        cmdType = SCSI_NONRDWR_CMD;
-        break;
-    }
-    
-    return (cmdType);
+  *ioSize = 0;
+
+  switch (scsiCmd) {
+  case SCSI_SBC2_READ6:
+    cmdType = SCSI_READ_CMD;
+    *ioSize = (u_int32_t)bp[16];
+    break;
+  case SCSI_SBC2_READ10:
+    cmdType = SCSI_READ_CMD;
+    *ioSize = ntohs (*(u_short *)&bp[19]);
+    break;
+  case SCSI_SBC2_READ12:
+    cmdType = SCSI_READ_CMD;
+    *ioSize = ntohl (*(u_int32_t *)&bp[18]);
+    break;
+  case SCSI_SBC2_READ16:
+    cmdType = SCSI_READ_CMD;
+    *ioSize = ntohl (*(u_int32_t *)&bp[22]);
+    break;
+  case SCSI_SBC2_WRITE6:
+    cmdType = SCSI_WR_CMD;
+    *ioSize = (u_int32_t)bp[16];
+    break;
+  case SCSI_SBC2_WRITE10:
+    cmdType = SCSI_WR_CMD;
+    *ioSize = ntohs (*(u_short *)&bp[19]);
+    break;
+  case SCSI_SBC2_WRITE12:
+    cmdType = SCSI_WR_CMD;
+    *ioSize = ntohl (*(u_int32_t *)&bp[18]);
+    break;
+  case SCSI_SBC2_WRITE16:
+    cmdType = SCSI_WR_CMD;
+    *ioSize = ntohl (*(u_int32_t *)&bp[22]);
+    break;
+  default:
+    cmdType = SCSI_NONRDWR_CMD;
+    break;
+  }
+
+  return (cmdType);
 }
 
 static int getScsiLunCmdInfo (FCSession *theSession, u_int16_t *lun,
                               u_char *cmd, u_int16_t oxid)
 {
-    u_int16_t i;
+  u_int16_t i;
 
-    if (theSession->lastScsiOxid == oxid) {
-        /* simple match */
-        *lun = theSession->lastLun;
-        *cmd = theSession->lastScsiCmd;
+  if (theSession->lastScsiOxid == oxid) {
+    /* simple match */
+    *lun = theSession->lastLun;
+    *cmd = theSession->lastScsiCmd;
 
-        return (TRUE);
+    return (TRUE);
+  }
+
+  /* Search through the LUN set to identify matching command */
+  /* TBD: Need to fix this as it can be quite slow if a data has no matching
+   * cmd in the capture such as if the capture began in the middle of a large
+   * transfer.
+   */
+  for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
+    if (theSession->activeLuns[i] != NULL) {
+      if (theSession->activeLuns[i]->lastOxid == oxid) {
+	*lun = i;
+	*cmd = theSession->activeLuns[i]->lastScsiCmd;
+
+	return (TRUE);
+      }
     }
+  }
 
-    /* Search through the LUN set to identify matching command */
-    /* TBD: Need to fix this as it can be quite slow if a data has no matching
-     * cmd in the capture such as if the capture began in the middle of a large
-     * transfer.
-     */
-    for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
-        if (theSession->activeLuns[i] != NULL) {
-            if (theSession->activeLuns[i]->lastOxid == oxid) {
-                *lun = i;
-                *cmd = theSession->activeLuns[i]->lastScsiCmd;
-
-                return (TRUE);
-            }
-        }
-    }
-
-    return (FALSE);
+  return (FALSE);
 }
 
 static void scsiSetMinMaxRTT (struct timeval *rtt, struct timeval *minRTT,
                               struct timeval *maxRTT)
 {
-    if (rtt->tv_sec > maxRTT->tv_sec) {
-        *maxRTT = *rtt;
-    }
-    else if ((rtt->tv_sec == maxRTT->tv_sec) &&
-             (rtt->tv_usec > maxRTT->tv_usec)) {
-        *maxRTT = *rtt;
-    }
-    
-    if ((rtt->tv_sec < minRTT->tv_sec) ||
-        ((minRTT->tv_sec == 0) &&
-         (minRTT->tv_usec == 0))) {
-        *minRTT = *rtt;
-    }
-    else if ((rtt->tv_sec == minRTT->tv_sec) &&
-             (rtt->tv_usec < minRTT->tv_usec)) {
-        *minRTT = *rtt;
-    }
+  if (rtt->tv_sec > maxRTT->tv_sec) {
+    *maxRTT = *rtt;
+  }
+  else if ((rtt->tv_sec == maxRTT->tv_sec) &&
+	   (rtt->tv_usec > maxRTT->tv_usec)) {
+    *maxRTT = *rtt;
+  }
+
+  if ((rtt->tv_sec < minRTT->tv_sec) ||
+      ((minRTT->tv_sec == 0) &&
+       (minRTT->tv_usec == 0))) {
+    *minRTT = *rtt;
+  }
+  else if ((rtt->tv_sec == minRTT->tv_sec) &&
+	   (rtt->tv_usec < minRTT->tv_usec)) {
+    *minRTT = *rtt;
+  }
 }
 
 static void processScsiPkt(const struct pcap_pkthdr *h,
@@ -2513,928 +2565,927 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
                            const u_char *bp, FCSession *theSession,
                            int actualDeviceId)
 {
-    u_char cmd, status, task_mgmt;
-    struct timeval rtt;
-    u_int16_t lun;
-    u_int32_t xferRdySize, ioSize, duration = 0, hostDur = 0, iops;
-    int iocmdType;
-    ScsiLunTrafficInfo *lunStats = NULL,
-                       *hostLunStats = NULL;
-    
-    if((srcHost == NULL) || (dstHost == NULL)) {
-        traceEvent(CONST_TRACE_ERROR, "Sanity check failed (3) [Low memory?]");
-        return;
+  u_char cmd, status, task_mgmt;
+  struct timeval rtt;
+  u_int16_t lun;
+  u_int32_t xferRdySize, ioSize, duration = 0, hostDur = 0, iops;
+  int iocmdType;
+  ScsiLunTrafficInfo *lunStats = NULL,
+    *hostLunStats = NULL;
+
+  if((srcHost == NULL) || (dstHost == NULL)) {
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (3) [Low memory?]");
+    return;
+  }
+
+  /* This field distinguishes between diff FCP frame types */
+  rCtl &= 0xF;
+
+  /*
+   * Increment session counters.
+   */
+  if (isXchgOrig) {
+    incrementTrafficCounter (&theSession->fcpBytesSent, length);
+  }
+  else {
+    incrementTrafficCounter (&theSession->fcpBytesRcvd, length);
+  }
+
+  if (rCtl != FCP_IU_CMD) {
+
+    /* Get the last SCSI Cmd, LUN matching this {VSAN, S_ID, D_ID, OX_ID}
+       tuple */
+    if (!getScsiLunCmdInfo (theSession, &lun, &cmd, oxid)) {
+      /* No matching command/lun found. Skip */
+      if (isXchgOrig) {
+	incrementTrafficCounter (&theSession->unknownLunBytesSent,
+				 length);
+      }
+      else {
+	incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+				 length);
+      }
+      return;
+    }
+    lunStats = theSession->activeLuns[lun];
+    if (lunStats == NULL) {
+      /* No LUN structure has been allocated for this LUN yet. This means
+       * it cannot be tracked as well. So, just return.
+       */
+      if (isXchgOrig) {
+	incrementTrafficCounter (&theSession->unknownLunBytesSent,
+				 length);
+      }
+      else {
+	incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+				 length);
+      }
+      return;
     }
 
-    /* This field distinguishes between diff FCP frame types */
-    rCtl &= 0xF;
-
-    /*
-     * Increment session counters.
-     */
-    if (isXchgOrig) {
-        incrementTrafficCounter (&theSession->fcpBytesSent, length);
+    if (theSession->initiator == srcHost) {
+      hostLunStats = dstHost->fcCounters->activeLuns[lun];
     }
     else {
-        incrementTrafficCounter (&theSession->fcpBytesRcvd, length);
+      hostLunStats = srcHost->fcCounters->activeLuns[lun];
     }
-    
-    if (rCtl != FCP_IU_CMD) {
 
-        /* Get the last SCSI Cmd, LUN matching this {VSAN, S_ID, D_ID, OX_ID}
-           tuple */
-        if (!getScsiLunCmdInfo (theSession, &lun, &cmd, oxid)) {
-            /* No matching command/lun found. Skip */
-            if (isXchgOrig) {
-                incrementTrafficCounter (&theSession->unknownLunBytesSent,
-                                         length);
-            }
-            else {
-                incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
-                                         length);
-            }
-            return;
-        }
-        lunStats = theSession->activeLuns[lun];
-        if (lunStats == NULL) {
-            /* No LUN structure has been allocated for this LUN yet. This means
-             * it cannot be tracked as well. So, just return.
-             */
-            if (isXchgOrig) {
-                incrementTrafficCounter (&theSession->unknownLunBytesSent,
-                                         length);
-            }
-            else {
-                incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
-                                         length);
-            }
-            return;
-        }
-        
-        if (theSession->initiator == srcHost) {
-	  hostLunStats = dstHost->fcCounters->activeLuns[lun];
-        }
-        else {
-            hostLunStats = srcHost->fcCounters->activeLuns[lun];
-        }
-
-        if (hostLunStats == NULL) {
-            /* No LUN structure has been allocated for this LUN yet. This means
-             * it cannot be tracked as well. So, just return.
-             */
-            if (isXchgOrig) {
-                incrementTrafficCounter (&theSession->unknownLunBytesSent,
-                                         length);
-            }
-            else {
-                incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
-                                         length);
-            }
-            return;
-        }
+    if (hostLunStats == NULL) {
+      /* No LUN structure has been allocated for this LUN yet. This means
+       * it cannot be tracked as well. So, just return.
+       */
+      if (isXchgOrig) {
+	incrementTrafficCounter (&theSession->unknownLunBytesSent,
+				 length);
+      }
+      else {
+	incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+				 length);
+      }
+      return;
     }
-        
-    switch (rCtl) {
-    case FCP_IU_CMD:
-      srcHost->fcCounters->devType = SCSI_DEV_INITIATOR;
-      if (dstHost->fcCounters->devType == SCSI_DEV_UNINIT) {
-            dstHost->fcCounters->devType = myGlobals.scsiDefaultDevType;
-        }
-        
-        if (bp[0] != 0) {
-            /* We have a multi-level LUN, lets see more before we give up */
-            if (bp[2] != 0) {
-                traceEvent (CONST_TRACE_WARNING, "Have a multi-level LUN for %s,"
-                            "so stats can be tracked for this LUN.\n",
-                            dstHost->fcCounters->hostNumFcAddress);
-                if (isXchgOrig) {
-                    incrementTrafficCounter (&theSession->unknownLunBytesSent,
-                                             length);
-                }
-                else {
-                    incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
-                                             length);
-                }
-                return;
-            }
-            else {
-                lun = ntohs (*(u_int16_t *)&bp[0]);
-            }
-        }
-        else {
-            lun = (u_int16_t)bp[1]; /* 2nd byte alone has LUN info */
-        }
+  }
 
-        if (lun > MAX_LUNS_SUPPORTED) {
-            traceEvent (CONST_TRACE_WARNING, "Cannot track LUNs > %d (for %s),"
-                        "so stats can be tracked for this LUN.\n",
-                        MAX_LUNS_SUPPORTED, dstHost->fcCounters->hostNumFcAddress);
-            if (isXchgOrig) {
-                incrementTrafficCounter (&theSession->unknownLunBytesSent,
-                                         length);
-            }
-            else {
-                incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
-                                         length);
-            }
-            return;
-        }
-
-        /* Check if LUN structure is allocated */
-        if (theSession->activeLuns[lun] == NULL) {
-            theSession->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
-            if (theSession->activeLuns[lun] == NULL) {
-                traceEvent (CONST_TRACE_ERROR, "Unable to allocate LUN for %d:%s\n",
-                            lun, dstHost->fcCounters->hostNumFcAddress);
-                if (isXchgOrig) {
-                    incrementTrafficCounter (&theSession->unknownLunBytesSent,
-                                             length);
-                }
-                else {
-                    incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
-                                             length);
-                }
-                return;
-            }
-            memset ((char *)theSession->activeLuns[lun], 0,
-                    sizeof (ScsiLunTrafficInfo));
-            theSession->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
-            theSession->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
-            theSession->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
-            theSession->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
-        }
-
-        if (lun > theSession->lunMax) {
-            theSession->lunMax = lun;
-        }
-
-        /* Also allocate LUN stats structure in the host data structure */
-        if (theSession->initiator == srcHost) {
-            if (dstHost->fcCounters->activeLuns[lun] == NULL) {
-                dstHost->fcCounters->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
-                
-                if (dstHost->fcCounters->activeLuns[lun] == NULL) {
-                    traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
-                                lun, dstHost->fcCounters->hostNumFcAddress);
-                    if (isXchgOrig) {
-                        incrementTrafficCounter (&theSession->unknownLunBytesSent,
-                                                 length);
-                    }
-                    else {
-                        incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
-                                                 length);
-                    }
-                    return;
-                }
-                memset ((char *)dstHost->fcCounters->activeLuns[lun], 0,
-                        sizeof (ScsiLunTrafficInfo));
-                dstHost->fcCounters->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
-                dstHost->fcCounters->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
-                dstHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
-                dstHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
-            }
-            hostLunStats = dstHost->fcCounters->activeLuns[lun];
-        }
-        else {
-            if (srcHost->fcCounters->activeLuns[lun] == NULL) {
-                srcHost->fcCounters->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo)); 
-                if (srcHost->fcCounters->activeLuns[lun] == NULL) {
-                    traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
-                                lun, srcHost->fcCounters->hostNumFcAddress);
-                    if (isXchgOrig) {
-                        incrementTrafficCounter (&theSession->unknownLunBytesSent,
-                                                 length);
-                    }
-                    else {
-                        incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
-                                                 length);
-                    }
-                    return;
-                }
-                memset ((char *)srcHost->fcCounters->activeLuns[lun], 0, sizeof (ScsiLunTrafficInfo));
-                srcHost->fcCounters->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
-                srcHost->fcCounters->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
-                srcHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
-                srcHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
-            }
-            hostLunStats = srcHost->fcCounters->activeLuns[lun];
-        }
-
-        lunStats = theSession->activeLuns[lun];
-        if ((duration = h->ts.tv_sec - lunStats->lastIopsTime.tv_sec) >= 1) {
-            /* compute iops every sec at least */
-            iops = (float) (lunStats->cmdsFromLastIops/duration);
-
-            if (iops > lunStats->maxIops) {
-                lunStats->maxIops = iops;
-            }
-
-            if (iops &&
-                ((iops < lunStats->minIops) || (lunStats->minIops == 0))) {
-                lunStats->minIops = iops;
-            }
-
-            lunStats->cmdsFromLastIops = 0;
-            lunStats->lastIopsTime.tv_sec = h->ts.tv_sec;
-            lunStats->lastIopsTime.tv_usec = h->ts.tv_usec;
-        }
-        else {
-            lunStats->cmdsFromLastIops++;
-        }
-
-        if ((hostDur = h->ts.tv_sec - hostLunStats->lastIopsTime.tv_sec) >= 1) {
-            iops = (float) hostLunStats->cmdsFromLastIops/hostDur;
-
-            if (iops > hostLunStats->maxIops) {
-                hostLunStats->maxIops = iops;
-            }
-
-            if (iops &&
-                ((iops < hostLunStats->minIops) || (hostLunStats->minIops == 0))) {
-                hostLunStats->minIops = iops;
-            }
-            hostLunStats->cmdsFromLastIops = 0;
-            hostLunStats->lastIopsTime.tv_sec = h->ts.tv_sec;
-            hostLunStats->lastIopsTime.tv_usec = h->ts.tv_usec;
-        }
-        else {
-            hostLunStats->cmdsFromLastIops++;
-        }
-        
-        lunStats->lastSeen.tv_sec = hostLunStats->lastSeen.tv_sec = h->ts.tv_sec;
-        lunStats->lastSeen.tv_usec = hostLunStats->lastSeen.tv_usec = h->ts.tv_usec;
-        lunStats->reqTime.tv_sec = hostLunStats->reqTime.tv_sec = h->ts.tv_sec;
-        lunStats->reqTime.tv_usec = hostLunStats->reqTime.tv_usec = h->ts.tv_usec;
-
-        cmd = theSession->lastScsiCmd = lunStats->lastScsiCmd = bp[12];
-        iocmdType = getScsiCmdType (cmd, &ioSize, bp);
-        
-        if (cmd == SCSI_SPC2_INQUIRY) {
-            /* Check if this is a general inquiry or page inquiry */
-            if (bp[13] & 0x1) {
-                theSession->lastScsiCmd = SCSI_SPC2_INQUIRY_EVPD;
-            }
-        }
-        theSession->lastScsiOxid = lunStats->lastOxid = oxid;
-        theSession->lastLun = lun;
-
-        if (iocmdType == SCSI_READ_CMD) {
-            incrementTrafficCounter (&theSession->numScsiRdCmd, 1);
-            incrementTrafficCounter (&lunStats->numScsiRdCmd, 1);
-            incrementTrafficCounter (&hostLunStats->numScsiRdCmd, 1);
-
-            lunStats->frstRdDataRcvd = TRUE;
-            hostLunStats->frstRdDataRcvd = TRUE;
-            
-            /* Session-specific Stats */
-            if (ioSize > lunStats->maxRdSize) {
-                lunStats->maxRdSize = ioSize;
-            }
-
-            if ((ioSize < lunStats->minRdSize) || (!lunStats->minRdSize)) {
-                lunStats->minRdSize = ioSize;
-            }
-
-            /* LUN-specific Stats */
-            if (ioSize > hostLunStats->maxRdSize) {
-                hostLunStats->maxRdSize = ioSize;
-            }
-
-            if ((ioSize < hostLunStats->minRdSize) || (!hostLunStats->minRdSize)) {
-                hostLunStats->minRdSize = ioSize;
-            }
-        }
-        else if (iocmdType == SCSI_WR_CMD) {
-            incrementTrafficCounter (&theSession->numScsiWrCmd, 1);
-            incrementTrafficCounter (&lunStats->numScsiWrCmd, 1);
-            incrementTrafficCounter (&hostLunStats->numScsiWrCmd, 1);
-
-            lunStats->frstWrDataRcvd = TRUE;
-            hostLunStats->frstWrDataRcvd = TRUE;
-
-            /* Session-specific Stats */
-            if (ioSize > lunStats->maxWrSize) {
-                lunStats->maxWrSize = ioSize;
-            }
-
-            if ((ioSize < lunStats->minWrSize) || (!lunStats->minWrSize)) {
-                lunStats->minWrSize = ioSize;
-            }
-
-            /* LUN-specific Stats */
-            if (ioSize > hostLunStats->maxWrSize) {
-                hostLunStats->maxWrSize = ioSize;
-            }
-
-            if ((ioSize < hostLunStats->minWrSize) || (!hostLunStats->minWrSize)) {
-                hostLunStats->minWrSize = ioSize;
-            }
-        }
-        else {
-            incrementTrafficCounter (&theSession->numScsiOtCmd, 1);
-            incrementTrafficCounter (&lunStats->numScsiOtCmd, 1);
-            incrementTrafficCounter (&hostLunStats->numScsiOtCmd, 1);
-        }
-
-        if ((task_mgmt = bp[10]) != 0) {
-            switch (task_mgmt) {
-            case SCSI_TM_ABORT_TASK_SET:
-                lunStats->abrtTaskSetCnt++;
-                hostLunStats->abrtTaskSetCnt++;
-                break;
-
-            case SCSI_TM_CLEAR_TASK_SET:
-                lunStats->clearTaskSetCnt++;
-                hostLunStats->clearTaskSetCnt++;
-                break;
-
-            case SCSI_TM_LUN_RESET:
-                lunStats->lunRstCnt++;
-                hostLunStats->lunRstCnt++;
-                lunStats->lastLunRstTime = myGlobals.actTime;
-                hostLunStats->lastLunRstTime = myGlobals.actTime;
-                break;
-
-            case SCSI_TM_TARGET_RESET:
-                lunStats->tgtRstCnt++;
-                hostLunStats->tgtRstCnt++;
-                lunStats->lastTgtRstTime = myGlobals.actTime;
-                hostLunStats->lastTgtRstTime = myGlobals.actTime;
-                break;
-
-            case SCSI_TM_CLEAR_ACA:
-                lunStats->clearAcaCnt++;
-                hostLunStats->clearAcaCnt++;
-                break;
-            }
-        }
-        
-        if (theSession->initiator == srcHost) {
-            incrementTrafficCounter (&(lunStats->bytesSent), length);
-            lunStats->pktSent++;
-
-            incrementTrafficCounter (&hostLunStats->bytesRcvd, length);
-            hostLunStats->pktRcvd++;
-        }
-        else {
-            incrementTrafficCounter (&lunStats->bytesRcvd, length);
-            lunStats->pktRcvd++;
-
-            incrementTrafficCounter (&hostLunStats->bytesSent, length);
-            hostLunStats->pktSent++;
-        }
-
-        break;
-    case FCP_IU_DATA:
-        switch (cmd) {
-        case SCSI_SPC2_INQUIRY:
-            
-            /* verify that we don't copy info for a non-existent LUN */
-            if ((bp[0] & 0xE0) == 0x30) {
-                traceEvent (CONST_TRACE_WARNING, "processScsiPkt: Invalid LUN ignored\n");
-            }
-            else {
-                if ((bp[0]&0x1F) == SCSI_DEV_NODEV) {
-                    lunStats->invalidLun = TRUE;
-                    hostLunStats->invalidLun = TRUE;
-                }
-                else {
-		  srcHost->fcCounters->devType = bp[0]&0x1F;
-                }
-
-                if (length >= 24+8) {
-                    strncpy (srcHost->fcCounters->vendorId, &bp[8], 8);
-                }
-                if (length >= 24+8+16) {
-                    strncpy (srcHost->fcCounters->productId, &bp[16], 16);
-                }
-                if (length >= 24+8+16+4) {
-                    strncpy (srcHost->fcCounters->productRev, &bp[32], 4);
-                }
-            }
-            break;
-#ifdef NOTYET            
-        case SCSI_SPC2_REPORTLUNS:
-            listlen = ntohl (*(int32_t *)&bp[0]);
-            offset = 4;
-            
-            if (listlen > (length-24)) {
-                listlen = length-24;
-            }
-            
-            while ((listlen > 0) && (listlen > offset)) {
-                if (bp[offset] != 0) {
-                    srcHost->lunsGt256 = TRUE;
-                }
-                listlen -= 8;
-                offset += 8;
-            }
-            
-            break;
-        case SCSI_SBC2_READCAPACITY:
-            break;
-#endif            
-        }
-        
-        iocmdType = getScsiCmdType (lunStats->lastScsiCmd, &ioSize, bp);
-
-        if (iocmdType == SCSI_READ_CMD) {
-            incrementTrafficCounter (&lunStats->scsiRdBytes, payload_len);
-            incrementTrafficCounter (&hostLunStats->scsiRdBytes, payload_len);
-
-            if (lunStats->frstRdDataRcvd) {
-                lunStats->frstRdDataRcvd = FALSE;
-                rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
-                rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
-
-                scsiSetMinMaxRTT (&rtt, &lunStats->minRdFrstDataRTT,
-                                  &lunStats->maxRdFrstDataRTT);
-                scsiSetMinMaxRTT (&rtt, &hostLunStats->minRdFrstDataRTT,
-                                  &hostLunStats->maxRdFrstDataRTT);
-            }
-        }
-        else if (iocmdType == SCSI_WR_CMD) {
-            incrementTrafficCounter (&lunStats->scsiWrBytes, payload_len);
-            incrementTrafficCounter (&hostLunStats->scsiWrBytes, payload_len);
-
-            if (lunStats->frstWrDataRcvd) {
-                lunStats->frstWrDataRcvd = FALSE;
-                rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
-                rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
-
-                scsiSetMinMaxRTT (&rtt, &lunStats->minWrFrstDataRTT,
-                                  &lunStats->maxWrFrstDataRTT);
-                scsiSetMinMaxRTT (&rtt, &hostLunStats->minWrFrstDataRTT,
-                                  &hostLunStats->maxWrFrstDataRTT);
-            }
-        }
-        else {
-            incrementTrafficCounter (&lunStats->scsiOtBytes, payload_len);
-            incrementTrafficCounter (&hostLunStats->scsiOtBytes, payload_len);
-        }
-        
-        if (theSession->initiator == srcHost) {
-            incrementTrafficCounter (&(lunStats->bytesSent), length);
-            lunStats->pktSent++;
-
-            incrementTrafficCounter (&(hostLunStats->bytesRcvd), length);
-            hostLunStats->pktRcvd++;
-        }
-        else {
-            incrementTrafficCounter (&lunStats->bytesRcvd, length);
-            lunStats->pktRcvd++;
-
-            incrementTrafficCounter (&hostLunStats->bytesSent, length);
-            hostLunStats->pktSent++;
-        }
-
-        break;
-    case FCP_IU_XFER_RDY:
-        xferRdySize = ntohl (*(u_int32_t *)&bp[4]);
-
-        if (xferRdySize > lunStats->maxXferRdySize) {
-            lunStats->maxXferRdySize = xferRdySize;
-        }
-        else if ((lunStats->minXferRdySize > xferRdySize) ||
-                 (!lunStats->minXferRdySize)) {
-            lunStats->minXferRdySize = xferRdySize;
-        }
-
-        if (xferRdySize > hostLunStats->maxXferRdySize) {
-            hostLunStats->maxXferRdySize = xferRdySize;
-        }
-        else if ((hostLunStats->minXferRdySize > xferRdySize) ||
-                 (!hostLunStats->minXferRdySize)) {
-            hostLunStats->minXferRdySize = xferRdySize;
-        }
-
-        if (theSession->initiator == srcHost) {
-            incrementTrafficCounter (&(lunStats->bytesSent), length);
-            lunStats->pktSent++;
-
-            incrementTrafficCounter (&(hostLunStats->bytesRcvd), length);
-            hostLunStats->pktRcvd++;
-        }
-        else {
-            incrementTrafficCounter (&lunStats->bytesRcvd, length);
-            lunStats->pktRcvd++;
-
-            incrementTrafficCounter (&hostLunStats->bytesSent, length);
-            hostLunStats->pktSent++;
-        }
-
-        if (lunStats->frstWrDataRcvd) {
-            rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
-            rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
-            
-            scsiSetMinMaxRTT (&rtt, &lunStats->minXfrRdyRTT,
-                              &lunStats->maxXfrRdyRTT);
-            scsiSetMinMaxRTT (&rtt, &hostLunStats->minXfrRdyRTT,
-                              &hostLunStats->maxXfrRdyRTT);
-        }
-
-        break;
-    case FCP_IU_RSP:
-        rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
-        rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
-
-        status = bp[11];
-
-        if (status != SCSI_STATUS_GOOD) {
-            /* TBD: Some failures are notifications; verify & flag real errors
-             * only
-             */ 
-            lunStats->numFailedCmds++;
-            hostLunStats->numFailedCmds++;
-
-            if (myGlobals.runningPref.enableSuspiciousPacketDump) {
-                dumpSuspiciousPacket (actualDeviceId);
-            }
-
-            switch (status) {
-            case SCSI_STATUS_CHK_CONDITION:
-                lunStats->chkCondCnt++;
-                hostLunStats->chkCondCnt++;
-                break;
-
-            case SCSI_STATUS_BUSY:
-                lunStats->busyCnt++;
-                hostLunStats->busyCnt++;
-                break;
-
-            case SCSI_STATUS_RESV_CONFLICT:
-                lunStats->resvConflictCnt++;
-                hostLunStats->resvConflictCnt++;
-                break;
-
-            case SCSI_STATUS_TASK_SET_FULL:
-                lunStats->taskSetFullCnt++;
-                hostLunStats->taskSetFullCnt++;
-                break;
-
-            case SCSI_STATUS_TASK_ABORTED:
-                lunStats->taskAbrtCnt++;
-                hostLunStats->taskAbrtCnt++;
-                break;
-
-            default:
-                lunStats->otherStatusCnt++;
-                hostLunStats->otherStatusCnt++;
-                break;
-            }
-        }
-
-        if (theSession->initiator == srcHost) {
-            incrementTrafficCounter (&(lunStats->bytesSent), length);
-            lunStats->pktSent++;
-
-            incrementTrafficCounter (&hostLunStats->bytesRcvd, length);
-            hostLunStats->pktRcvd++;
-        }
-        else {
-            incrementTrafficCounter (&lunStats->bytesRcvd, length);
-            lunStats->pktRcvd++;
-
-            incrementTrafficCounter (&(hostLunStats->bytesSent), length);
-            hostLunStats->pktSent++;
-        }
-
-        scsiSetMinMaxRTT (&rtt, &lunStats->minRTT, &lunStats->maxRTT);
-        scsiSetMinMaxRTT (&rtt, &hostLunStats->minRTT, &hostLunStats->maxRTT);
-        
-        break;
-        
-    default:
-        break;
+  switch (rCtl) {
+  case FCP_IU_CMD:
+    srcHost->fcCounters->devType = SCSI_DEV_INITIATOR;
+    if (dstHost->fcCounters->devType == SCSI_DEV_UNINIT) {
+      dstHost->fcCounters->devType = myGlobals.scsiDefaultDevType;
     }
+
+    if (bp[0] != 0) {
+      /* We have a multi-level LUN, lets see more before we give up */
+      if (bp[2] != 0) {
+	traceEvent (CONST_TRACE_WARNING, "Have a multi-level LUN for %s,"
+		    "so stats can be tracked for this LUN.\n",
+		    dstHost->fcCounters->hostNumFcAddress);
+	if (isXchgOrig) {
+	  incrementTrafficCounter (&theSession->unknownLunBytesSent,
+				   length);
+	}
+	else {
+	  incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+				   length);
+	}
+	return;
+      }
+      else {
+	lun = ntohs (*(u_int16_t *)&bp[0]);
+      }
+    }
+    else {
+      lun = (u_int16_t)bp[1]; /* 2nd byte alone has LUN info */
+    }
+
+    if (lun > MAX_LUNS_SUPPORTED) {
+      traceEvent (CONST_TRACE_WARNING, "Cannot track LUNs > %d (for %s),"
+		  "so stats can be tracked for this LUN.\n",
+		  MAX_LUNS_SUPPORTED, dstHost->fcCounters->hostNumFcAddress);
+      if (isXchgOrig) {
+	incrementTrafficCounter (&theSession->unknownLunBytesSent,
+				 length);
+      }
+      else {
+	incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+				 length);
+      }
+      return;
+    }
+
+    /* Check if LUN structure is allocated */
+    if (theSession->activeLuns[lun] == NULL) {
+      theSession->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
+      if (theSession->activeLuns[lun] == NULL) {
+	traceEvent (CONST_TRACE_ERROR, "Unable to allocate LUN for %d:%s\n",
+		    lun, dstHost->fcCounters->hostNumFcAddress);
+	if (isXchgOrig) {
+	  incrementTrafficCounter (&theSession->unknownLunBytesSent,
+				   length);
+	}
+	else {
+	  incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+				   length);
+	}
+	return;
+      }
+      memset ((char *)theSession->activeLuns[lun], 0,
+	      sizeof (ScsiLunTrafficInfo));
+      theSession->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
+      theSession->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
+      theSession->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
+      theSession->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
+    }
+
+    if (lun > theSession->lunMax) {
+      theSession->lunMax = lun;
+    }
+
+    /* Also allocate LUN stats structure in the host data structure */
+    if (theSession->initiator == srcHost) {
+      if (dstHost->fcCounters->activeLuns[lun] == NULL) {
+	dstHost->fcCounters->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
+
+	if (dstHost->fcCounters->activeLuns[lun] == NULL) {
+	  traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
+		      lun, dstHost->fcCounters->hostNumFcAddress);
+	  if (isXchgOrig) {
+	    incrementTrafficCounter (&theSession->unknownLunBytesSent,
+				     length);
+	  }
+	  else {
+	    incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+				     length);
+	  }
+	  return;
+	}
+	memset ((char *)dstHost->fcCounters->activeLuns[lun], 0,
+		sizeof (ScsiLunTrafficInfo));
+	dstHost->fcCounters->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
+	dstHost->fcCounters->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
+	dstHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
+	dstHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
+      }
+      hostLunStats = dstHost->fcCounters->activeLuns[lun];
+    }
+    else {
+      if (srcHost->fcCounters->activeLuns[lun] == NULL) {
+	srcHost->fcCounters->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
+	if (srcHost->fcCounters->activeLuns[lun] == NULL) {
+	  traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
+		      lun, srcHost->fcCounters->hostNumFcAddress);
+	  if (isXchgOrig) {
+	    incrementTrafficCounter (&theSession->unknownLunBytesSent,
+				     length);
+	  }
+	  else {
+	    incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+				     length);
+	  }
+	  return;
+	}
+	memset ((char *)srcHost->fcCounters->activeLuns[lun], 0, sizeof (ScsiLunTrafficInfo));
+	srcHost->fcCounters->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
+	srcHost->fcCounters->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
+	srcHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
+	srcHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
+      }
+      hostLunStats = srcHost->fcCounters->activeLuns[lun];
+    }
+
+    lunStats = theSession->activeLuns[lun];
+    if ((duration = h->ts.tv_sec - lunStats->lastIopsTime.tv_sec) >= 1) {
+      /* compute iops every sec at least */
+      iops = (float) (lunStats->cmdsFromLastIops/duration);
+
+      if (iops > lunStats->maxIops) {
+	lunStats->maxIops = iops;
+      }
+
+      if (iops &&
+	  ((iops < lunStats->minIops) || (lunStats->minIops == 0))) {
+	lunStats->minIops = iops;
+      }
+
+      lunStats->cmdsFromLastIops = 0;
+      lunStats->lastIopsTime.tv_sec = h->ts.tv_sec;
+      lunStats->lastIopsTime.tv_usec = h->ts.tv_usec;
+    }
+    else {
+      lunStats->cmdsFromLastIops++;
+    }
+
+    if ((hostDur = h->ts.tv_sec - hostLunStats->lastIopsTime.tv_sec) >= 1) {
+      iops = (float) hostLunStats->cmdsFromLastIops/hostDur;
+
+      if (iops > hostLunStats->maxIops) {
+	hostLunStats->maxIops = iops;
+      }
+
+      if (iops &&
+	  ((iops < hostLunStats->minIops) || (hostLunStats->minIops == 0))) {
+	hostLunStats->minIops = iops;
+      }
+      hostLunStats->cmdsFromLastIops = 0;
+      hostLunStats->lastIopsTime.tv_sec = h->ts.tv_sec;
+      hostLunStats->lastIopsTime.tv_usec = h->ts.tv_usec;
+    }
+    else {
+      hostLunStats->cmdsFromLastIops++;
+    }
+
+    lunStats->lastSeen.tv_sec = hostLunStats->lastSeen.tv_sec = h->ts.tv_sec;
+    lunStats->lastSeen.tv_usec = hostLunStats->lastSeen.tv_usec = h->ts.tv_usec;
+    lunStats->reqTime.tv_sec = hostLunStats->reqTime.tv_sec = h->ts.tv_sec;
+    lunStats->reqTime.tv_usec = hostLunStats->reqTime.tv_usec = h->ts.tv_usec;
+
+    cmd = theSession->lastScsiCmd = lunStats->lastScsiCmd = bp[12];
+    iocmdType = getScsiCmdType (cmd, &ioSize, bp);
+
+    if (cmd == SCSI_SPC2_INQUIRY) {
+      /* Check if this is a general inquiry or page inquiry */
+      if (bp[13] & 0x1) {
+	theSession->lastScsiCmd = SCSI_SPC2_INQUIRY_EVPD;
+      }
+    }
+    theSession->lastScsiOxid = lunStats->lastOxid = oxid;
+    theSession->lastLun = lun;
+
+    if (iocmdType == SCSI_READ_CMD) {
+      incrementTrafficCounter (&theSession->numScsiRdCmd, 1);
+      incrementTrafficCounter (&lunStats->numScsiRdCmd, 1);
+      incrementTrafficCounter (&hostLunStats->numScsiRdCmd, 1);
+
+      lunStats->frstRdDataRcvd = TRUE;
+      hostLunStats->frstRdDataRcvd = TRUE;
+
+      /* Session-specific Stats */
+      if (ioSize > lunStats->maxRdSize) {
+	lunStats->maxRdSize = ioSize;
+      }
+
+      if ((ioSize < lunStats->minRdSize) || (!lunStats->minRdSize)) {
+	lunStats->minRdSize = ioSize;
+      }
+
+      /* LUN-specific Stats */
+      if (ioSize > hostLunStats->maxRdSize) {
+	hostLunStats->maxRdSize = ioSize;
+      }
+
+      if ((ioSize < hostLunStats->minRdSize) || (!hostLunStats->minRdSize)) {
+	hostLunStats->minRdSize = ioSize;
+      }
+    }
+    else if (iocmdType == SCSI_WR_CMD) {
+      incrementTrafficCounter (&theSession->numScsiWrCmd, 1);
+      incrementTrafficCounter (&lunStats->numScsiWrCmd, 1);
+      incrementTrafficCounter (&hostLunStats->numScsiWrCmd, 1);
+
+      lunStats->frstWrDataRcvd = TRUE;
+      hostLunStats->frstWrDataRcvd = TRUE;
+
+      /* Session-specific Stats */
+      if (ioSize > lunStats->maxWrSize) {
+	lunStats->maxWrSize = ioSize;
+      }
+
+      if ((ioSize < lunStats->minWrSize) || (!lunStats->minWrSize)) {
+	lunStats->minWrSize = ioSize;
+      }
+
+      /* LUN-specific Stats */
+      if (ioSize > hostLunStats->maxWrSize) {
+	hostLunStats->maxWrSize = ioSize;
+      }
+
+      if ((ioSize < hostLunStats->minWrSize) || (!hostLunStats->minWrSize)) {
+	hostLunStats->minWrSize = ioSize;
+      }
+    }
+    else {
+      incrementTrafficCounter (&theSession->numScsiOtCmd, 1);
+      incrementTrafficCounter (&lunStats->numScsiOtCmd, 1);
+      incrementTrafficCounter (&hostLunStats->numScsiOtCmd, 1);
+    }
+
+    if ((task_mgmt = bp[10]) != 0) {
+      switch (task_mgmt) {
+      case SCSI_TM_ABORT_TASK_SET:
+	lunStats->abrtTaskSetCnt++;
+	hostLunStats->abrtTaskSetCnt++;
+	break;
+
+      case SCSI_TM_CLEAR_TASK_SET:
+	lunStats->clearTaskSetCnt++;
+	hostLunStats->clearTaskSetCnt++;
+	break;
+
+      case SCSI_TM_LUN_RESET:
+	lunStats->lunRstCnt++;
+	hostLunStats->lunRstCnt++;
+	lunStats->lastLunRstTime = myGlobals.actTime;
+	hostLunStats->lastLunRstTime = myGlobals.actTime;
+	break;
+
+      case SCSI_TM_TARGET_RESET:
+	lunStats->tgtRstCnt++;
+	hostLunStats->tgtRstCnt++;
+	lunStats->lastTgtRstTime = myGlobals.actTime;
+	hostLunStats->lastTgtRstTime = myGlobals.actTime;
+	break;
+
+      case SCSI_TM_CLEAR_ACA:
+	lunStats->clearAcaCnt++;
+	hostLunStats->clearAcaCnt++;
+	break;
+      }
+    }
+
+    if (theSession->initiator == srcHost) {
+      incrementTrafficCounter (&(lunStats->bytesSent), length);
+      lunStats->pktSent++;
+
+      incrementTrafficCounter (&hostLunStats->bytesRcvd, length);
+      hostLunStats->pktRcvd++;
+    }
+    else {
+      incrementTrafficCounter (&lunStats->bytesRcvd, length);
+      lunStats->pktRcvd++;
+
+      incrementTrafficCounter (&hostLunStats->bytesSent, length);
+      hostLunStats->pktSent++;
+    }
+
+    break;
+  case FCP_IU_DATA:
+    switch (cmd) {
+    case SCSI_SPC2_INQUIRY:
+
+      /* verify that we don't copy info for a non-existent LUN */
+      if ((bp[0] & 0xE0) == 0x30) {
+	traceEvent (CONST_TRACE_WARNING, "processScsiPkt: Invalid LUN ignored\n");
+      }
+      else {
+	if ((bp[0]&0x1F) == SCSI_DEV_NODEV) {
+	  lunStats->invalidLun = TRUE;
+	  hostLunStats->invalidLun = TRUE;
+	}
+	else {
+	  srcHost->fcCounters->devType = bp[0]&0x1F;
+	}
+
+	if (length >= 24+8) {
+	  strncpy (srcHost->fcCounters->vendorId, &bp[8], 8);
+	}
+	if (length >= 24+8+16) {
+	  strncpy (srcHost->fcCounters->productId, &bp[16], 16);
+	}
+	if (length >= 24+8+16+4) {
+	  strncpy (srcHost->fcCounters->productRev, &bp[32], 4);
+	}
+      }
+      break;
+#ifdef NOTYET
+    case SCSI_SPC2_REPORTLUNS:
+      listlen = ntohl (*(int32_t *)&bp[0]);
+      offset = 4;
+
+      if (listlen > (length-24)) {
+	listlen = length-24;
+      }
+
+      while ((listlen > 0) && (listlen > offset)) {
+	if (bp[offset] != 0) {
+	  srcHost->lunsGt256 = TRUE;
+	}
+	listlen -= 8;
+	offset += 8;
+      }
+
+      break;
+    case SCSI_SBC2_READCAPACITY:
+      break;
+#endif
+    }
+
+    iocmdType = getScsiCmdType (lunStats->lastScsiCmd, &ioSize, bp);
+
+    if (iocmdType == SCSI_READ_CMD) {
+      incrementTrafficCounter (&lunStats->scsiRdBytes, payload_len);
+      incrementTrafficCounter (&hostLunStats->scsiRdBytes, payload_len);
+
+      if (lunStats->frstRdDataRcvd) {
+	lunStats->frstRdDataRcvd = FALSE;
+	rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
+	rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
+
+	scsiSetMinMaxRTT (&rtt, &lunStats->minRdFrstDataRTT,
+			  &lunStats->maxRdFrstDataRTT);
+	scsiSetMinMaxRTT (&rtt, &hostLunStats->minRdFrstDataRTT,
+			  &hostLunStats->maxRdFrstDataRTT);
+      }
+    }
+    else if (iocmdType == SCSI_WR_CMD) {
+      incrementTrafficCounter (&lunStats->scsiWrBytes, payload_len);
+      incrementTrafficCounter (&hostLunStats->scsiWrBytes, payload_len);
+
+      if (lunStats->frstWrDataRcvd) {
+	lunStats->frstWrDataRcvd = FALSE;
+	rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
+	rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
+
+	scsiSetMinMaxRTT (&rtt, &lunStats->minWrFrstDataRTT,
+			  &lunStats->maxWrFrstDataRTT);
+	scsiSetMinMaxRTT (&rtt, &hostLunStats->minWrFrstDataRTT,
+			  &hostLunStats->maxWrFrstDataRTT);
+      }
+    }
+    else {
+      incrementTrafficCounter (&lunStats->scsiOtBytes, payload_len);
+      incrementTrafficCounter (&hostLunStats->scsiOtBytes, payload_len);
+    }
+
+    if (theSession->initiator == srcHost) {
+      incrementTrafficCounter (&(lunStats->bytesSent), length);
+      lunStats->pktSent++;
+
+      incrementTrafficCounter (&(hostLunStats->bytesRcvd), length);
+      hostLunStats->pktRcvd++;
+    }
+    else {
+      incrementTrafficCounter (&lunStats->bytesRcvd, length);
+      lunStats->pktRcvd++;
+
+      incrementTrafficCounter (&hostLunStats->bytesSent, length);
+      hostLunStats->pktSent++;
+    }
+
+    break;
+  case FCP_IU_XFER_RDY:
+    xferRdySize = ntohl (*(u_int32_t *)&bp[4]);
+
+    if (xferRdySize > lunStats->maxXferRdySize) {
+      lunStats->maxXferRdySize = xferRdySize;
+    }
+    else if ((lunStats->minXferRdySize > xferRdySize) ||
+	     (!lunStats->minXferRdySize)) {
+      lunStats->minXferRdySize = xferRdySize;
+    }
+
+    if (xferRdySize > hostLunStats->maxXferRdySize) {
+      hostLunStats->maxXferRdySize = xferRdySize;
+    }
+    else if ((hostLunStats->minXferRdySize > xferRdySize) ||
+	     (!hostLunStats->minXferRdySize)) {
+      hostLunStats->minXferRdySize = xferRdySize;
+    }
+
+    if (theSession->initiator == srcHost) {
+      incrementTrafficCounter (&(lunStats->bytesSent), length);
+      lunStats->pktSent++;
+
+      incrementTrafficCounter (&(hostLunStats->bytesRcvd), length);
+      hostLunStats->pktRcvd++;
+    }
+    else {
+      incrementTrafficCounter (&lunStats->bytesRcvd, length);
+      lunStats->pktRcvd++;
+
+      incrementTrafficCounter (&hostLunStats->bytesSent, length);
+      hostLunStats->pktSent++;
+    }
+
+    if (lunStats->frstWrDataRcvd) {
+      rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
+      rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
+
+      scsiSetMinMaxRTT (&rtt, &lunStats->minXfrRdyRTT,
+			&lunStats->maxXfrRdyRTT);
+      scsiSetMinMaxRTT (&rtt, &hostLunStats->minXfrRdyRTT,
+			&hostLunStats->maxXfrRdyRTT);
+    }
+
+    break;
+  case FCP_IU_RSP:
+    rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
+    rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
+
+    status = bp[11];
+
+    if (status != SCSI_STATUS_GOOD) {
+      /* TBD: Some failures are notifications; verify & flag real errors
+       * only
+       */
+      lunStats->numFailedCmds++;
+      hostLunStats->numFailedCmds++;
+
+      if (myGlobals.runningPref.enableSuspiciousPacketDump) {
+	dumpSuspiciousPacket (actualDeviceId);
+      }
+
+      switch (status) {
+      case SCSI_STATUS_CHK_CONDITION:
+	lunStats->chkCondCnt++;
+	hostLunStats->chkCondCnt++;
+	break;
+
+      case SCSI_STATUS_BUSY:
+	lunStats->busyCnt++;
+	hostLunStats->busyCnt++;
+	break;
+
+      case SCSI_STATUS_RESV_CONFLICT:
+	lunStats->resvConflictCnt++;
+	hostLunStats->resvConflictCnt++;
+	break;
+
+      case SCSI_STATUS_TASK_SET_FULL:
+	lunStats->taskSetFullCnt++;
+	hostLunStats->taskSetFullCnt++;
+	break;
+
+      case SCSI_STATUS_TASK_ABORTED:
+	lunStats->taskAbrtCnt++;
+	hostLunStats->taskAbrtCnt++;
+	break;
+
+      default:
+	lunStats->otherStatusCnt++;
+	hostLunStats->otherStatusCnt++;
+	break;
+      }
+    }
+
+    if (theSession->initiator == srcHost) {
+      incrementTrafficCounter (&(lunStats->bytesSent), length);
+      lunStats->pktSent++;
+
+      incrementTrafficCounter (&hostLunStats->bytesRcvd, length);
+      hostLunStats->pktRcvd++;
+    }
+    else {
+      incrementTrafficCounter (&lunStats->bytesRcvd, length);
+      lunStats->pktRcvd++;
+
+      incrementTrafficCounter (&(hostLunStats->bytesSent), length);
+      hostLunStats->pktSent++;
+    }
+
+    scsiSetMinMaxRTT (&rtt, &lunStats->minRTT, &lunStats->maxRTT);
+    scsiSetMinMaxRTT (&rtt, &hostLunStats->minRTT, &hostLunStats->maxRTT);
+
+    break;
+
+  default:
+    break;
+  }
 }
 
 static void processSwRscn (const u_char *bp, u_short vsanId, int actualDeviceId)
 {
-    u_char event;
-    FcAddress affectedId;
-    HostTraffic *affectedHost;
-    u_int detectFn;
+  u_char event;
+  FcAddress affectedId;
+  HostTraffic *affectedHost;
+  u_int detectFn;
 
-    if ((detectFn = ntohl (*(u_int32_t *)&bp[8])) == FC_SW_RSCN_FABRIC_DETECT) {
-        /* Only fabric-detected events have online/offline events */
-        event = bp[4] & 0xF0;
+  if ((detectFn = ntohl (*(u_int32_t *)&bp[8])) == FC_SW_RSCN_FABRIC_DETECT) {
+    /* Only fabric-detected events have online/offline events */
+    event = bp[4] & 0xF0;
 
-        if (!event) {
-            /* return as this is not an online/offline event */
-            return;
-        }
-        
-        affectedId.domain = bp[5];
-        affectedId.area = bp[6];
-        affectedId.port = bp[7];
-
-        if ((affectedHost = lookupFcHost (&affectedId, vsanId,
-                                          actualDeviceId)) != NULL) {
-            if (event == FC_SW_RSCN_PORT_ONLINE) {
-	      affectedHost->fcCounters->lastOnlineTime = myGlobals.actTime;
-            }
-            else if (event == FC_SW_RSCN_PORT_OFFLINE) {
-	      affectedHost->fcCounters->lastOfflineTime = myGlobals.actTime;
-                incrementTrafficCounter (&affectedHost->fcCounters->numOffline, 1);
-            }
-        }
+    if (!event) {
+      /* return as this is not an online/offline event */
+      return;
     }
+
+    affectedId.domain = bp[5];
+    affectedId.area = bp[6];
+    affectedId.port = bp[7];
+
+    if ((affectedHost = lookupFcHost (&affectedId, vsanId,
+				      actualDeviceId)) != NULL) {
+      if (event == FC_SW_RSCN_PORT_ONLINE) {
+	affectedHost->fcCounters->lastOnlineTime = myGlobals.actTime;
+      }
+      else if (event == FC_SW_RSCN_PORT_OFFLINE) {
+	affectedHost->fcCounters->lastOfflineTime = myGlobals.actTime;
+	incrementTrafficCounter (&affectedHost->fcCounters->numOffline, 1);
+      }
+    }
+  }
 }
 
-FCSession* handleFcSession (const struct pcap_pkthdr *h,
-                            u_short fragmentedData,
-                            HostTraffic *srcHost, HostTraffic *dstHost,
-                            u_int length, u_int payload_len, u_short oxid,
-                            u_short rxid, u_short protocol, u_char rCtl,
-                            u_char isXchgOrig, const u_char *bp,
-                            int actualDeviceId)
+FCSession* handleFcSession(const struct pcap_pkthdr *h,
+			   u_short fragmentedData,
+			   HostTraffic *srcHost, HostTraffic *dstHost,
+			   u_int length, u_int payload_len, u_short oxid,
+			   u_short rxid, u_short protocol, u_char rCtl,
+			   u_char isXchgOrig, const u_char *bp,
+			   int actualDeviceId)
 {
-    u_int idx;
-    FCSession *theSession = NULL, *prevSession;
-    char addedNewEntry = 0;
-    u_short found=0;
-    char cmd;
-    FcFabricElementHash *hash;
-    u_char opcode;
-    u_char gs_type, gs_stype;
+  u_int idx;
+  FCSession *theSession = NULL, *prevSession;
+  char addedNewEntry = 0;
+  u_short found=0;
+  char cmd;
+  FcFabricElementHash *hash;
+  u_char opcode;
+  u_char gs_type, gs_stype;
 
-    if(!myGlobals.runningPref.enableSessionHandling)
-        return(NULL);
+  if(!myGlobals.runningPref.enableSessionHandling)
+    return(NULL);
 
-    if((srcHost == NULL) || (dstHost == NULL)) {
-        traceEvent(CONST_TRACE_ERROR, "Sanity check failed (3) [Low memory?]");
-        return(NULL);
-    }
+  if((srcHost == NULL) || (dstHost == NULL)) {
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (3) [Low memory?]");
+    return(NULL);
+  }
 
-    if ((srcHost->fcCounters->vsanId > MAX_VSANS) || (dstHost->fcCounters->vsanId > MAX_VSANS)) {
-        traceEvent (CONST_TRACE_WARNING, "Not following session for invalid"
-                    " VSAN pair %d:%d", srcHost->fcCounters->vsanId, dstHost->fcCounters->vsanId);
-        return (NULL);
-    }
+  if ((srcHost->fcCounters->vsanId > MAX_VSANS) || (dstHost->fcCounters->vsanId > MAX_VSANS)) {
+    traceEvent (CONST_TRACE_WARNING, "Not following session for invalid"
+		" VSAN pair %d:%d", srcHost->fcCounters->vsanId, dstHost->fcCounters->vsanId);
+    return (NULL);
+  }
 
-    /*
-     * The hash key has to be calculated such that its value has to be the same
-     * regardless of the flow direction.
-     */
-    idx = (u_int)(((*(u_int32_t *)&srcHost->fcCounters->hostFcAddress) +
-                   (*(u_int32_t *)&dstHost->fcCounters->hostFcAddress)) +
-                  srcHost->fcCounters->vsanId + dstHost->fcCounters->vsanId);
+  /*
+   * The hash key has to be calculated such that its value has to be the same
+   * regardless of the flow direction.
+   */
+  idx = (u_int)(((*(u_int32_t *)&srcHost->fcCounters->hostFcAddress) +
+		 (*(u_int32_t *)&dstHost->fcCounters->hostFcAddress)) +
+		srcHost->fcCounters->vsanId + dstHost->fcCounters->vsanId);
 
-    idx %= MAX_TOT_NUM_SESSIONS;
+  idx %= MAX_TOT_NUM_SESSIONS;
 
 #ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.fcSessionsMutex, "handleFcSession");
+  accessMutex(&myGlobals.fcSessionsMutex, "handleFcSession");
 #endif
 
-    prevSession = theSession = myGlobals.device[actualDeviceId].fcSession[idx];
+  prevSession = theSession = myGlobals.device[actualDeviceId].fcSession[idx];
 
-    while(theSession != NULL) {
-        if(theSession && (theSession->next == theSession)) {
-            traceEvent(CONST_TRACE_WARNING, "Internal Error (4) (idx=%d)", idx);
-            theSession->next = NULL;
-        }
+  while(theSession != NULL) {
+    if(theSession && (theSession->next == theSession)) {
+      traceEvent(CONST_TRACE_WARNING, "Internal Error (4) (idx=%d)", idx);
+      theSession->next = NULL;
+    }
 
-        if((theSession->initiator == srcHost)
-           && (theSession->remotePeer == dstHost)) {
-            found = 1;
-            break;
-        } else if ((theSession->initiator == dstHost)
-                   && (theSession->remotePeer == srcHost)) {
-            found = 1;
-            break;
-        } else {
-            prevSession = theSession;
-            theSession  = theSession->next;
-        }
-    } /* while */
+    if((theSession->initiator == srcHost)
+       && (theSession->remotePeer == dstHost)) {
+      found = 1;
+      break;
+    } else if ((theSession->initiator == dstHost)
+	       && (theSession->remotePeer == srcHost)) {
+      found = 1;
+      break;
+    } else {
+      prevSession = theSession;
+      theSession  = theSession->next;
+    }
+  } /* while */
 
-    if(!found) {
-      /* New Session */
+  if(!found) {
+    /* New Session */
 #ifdef DEBUG
-      printf("DEBUG: NEW ");
+    printf("DEBUG: NEW ");
 
-      traceEvent(CONST_TRACE_INFO, "DEBUG: FC hash [act size: %d]",
-		 myGlobals.device[actualDeviceId].numFcSessions);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: FC hash [act size: %d]",
+	       myGlobals.device[actualDeviceId].numFcSessions);
 #endif
 
-      /* We don't check for space here as the datastructure allows
-	 ntop to store sessions as needed
-      */
+    /* We don't check for space here as the datastructure allows
+       ntop to store sessions as needed
+    */
 #ifdef PARM_USE_SESSIONS_CACHE
-      /* There's enough space left in the hashtable */
-      /* Verify this doesn't break anything in FC. This section hasn't been
-       * tested
-       */
-      if(myGlobals.sessionsCacheLen > 0) {
-	theSession = myGlobals.fcsessionsCache[--myGlobals.sessionsCacheLen];
-        myGlobals.sessionsCacheReused++;
-	/*
-	  traceEvent(CONST_TRACE_INFO, "Fetched session from pointers cache (len=%d)",
-	  (int)myGlobals.sessionsCacheLen);
-	*/
-      } else
+    /* There's enough space left in the hashtable */
+    /* Verify this doesn't break anything in FC. This section hasn't been
+     * tested
+     */
+    if(myGlobals.sessionsCacheLen > 0) {
+      theSession = myGlobals.fcsessionsCache[--myGlobals.sessionsCacheLen];
+      myGlobals.sessionsCacheReused++;
+      /*
+	traceEvent(CONST_TRACE_INFO, "Fetched session from pointers cache (len=%d)",
+	(int)myGlobals.sessionsCacheLen);
+      */
+    } else
 #endif
-          if ( (theSession = (FCSession*)malloc(sizeof(FCSession))) == NULL) return(NULL);
+      if ( (theSession = (FCSession*)malloc(sizeof(FCSession))) == NULL) return(NULL);
 
-      memset(theSession, 0, sizeof(FCSession));
-      addedNewEntry = 1;
+    memset(theSession, 0, sizeof(FCSession));
+    addedNewEntry = 1;
 
-      theSession->magic = CONST_MAGIC_NUMBER;
+    theSession->magic = CONST_MAGIC_NUMBER;
 
-      theSession->initiatorAddr = srcHost->fcCounters->hostFcAddress;
-      theSession->remotePeerAddr = dstHost->fcCounters->hostFcAddress;
+    theSession->initiatorAddr = srcHost->fcCounters->hostFcAddress;
+    theSession->remotePeerAddr = dstHost->fcCounters->hostFcAddress;
 
 #ifdef SESSION_TRACE_DEBUG
-      traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: New FC session [%s] <-> [%s] (# sessions = %d)",
-		 dstHost->fcCounters->hostNumFcAddress,
-		 srcHost->fcCounters->hostNumFcAddress,
-		 myGlobals.device[actualDeviceId].numFcSessions);
+    traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: New FC session [%s] <-> [%s] (# sessions = %d)",
+	       dstHost->fcCounters->hostNumFcAddress,
+	       srcHost->fcCounters->hostNumFcAddress,
+	       myGlobals.device[actualDeviceId].numFcSessions);
 #endif
 
-      myGlobals.device[actualDeviceId].numFcSessions++;
+    myGlobals.device[actualDeviceId].numFcSessions++;
 
-      if(myGlobals.device[actualDeviceId].numFcSessions > myGlobals.device[actualDeviceId].maxNumFcSessions)
-	myGlobals.device[actualDeviceId].maxNumFcSessions = myGlobals.device[actualDeviceId].numFcSessions;
+    if(myGlobals.device[actualDeviceId].numFcSessions > myGlobals.device[actualDeviceId].maxNumFcSessions)
+      myGlobals.device[actualDeviceId].maxNumFcSessions = myGlobals.device[actualDeviceId].numFcSessions;
 
-      if ((myGlobals.device[actualDeviceId].fcSession[idx] != NULL) &&
-          (myGlobals.device[actualDeviceId].fcSession[idx]->magic != CONST_MAGIC_NUMBER)) {
-            traceEvent(CONST_TRACE_WARNING, "handleFcSession: Internal Error (4) (idx=%d)",
-                       idx);
-            theSession->next = NULL;
-      }
-      else {
-          theSession->next = myGlobals.device[actualDeviceId].fcSession[idx];
-      }
-      myGlobals.device[actualDeviceId].fcSession[idx] = theSession;
-
-      if (isXchgOrig) {
-          theSession->initiator = srcHost;
-          theSession->remotePeer = dstHost;
-      }
-      else {
-          theSession->initiator = dstHost;
-          theSession->remotePeer = srcHost;
-      }
-      theSession->firstSeen.tv_sec = h->ts.tv_sec;
-      theSession->firstSeen.tv_usec = h->ts.tv_usec;
-      theSession->sessionState = FLAG_STATE_ACTIVE;
-      theSession->deviceId = actualDeviceId;
-      theSession->initiator->numHostSessions++;
-      theSession->remotePeer->numHostSessions++;
-    }
-
-    theSession->lastSeen.tv_sec = h->ts.tv_sec;
-    theSession->lastSeen.tv_usec = h->ts.tv_usec;
-
-    /* Typically in FC, the exchange originator is always the same entity in a
-     * flow
-     */
-    if (isXchgOrig) {
-        incrementTrafficCounter (&(theSession->bytesSent), length);
-        theSession->pktSent++;
+    if ((myGlobals.device[actualDeviceId].fcSession[idx] != NULL) &&
+	(myGlobals.device[actualDeviceId].fcSession[idx]->magic != CONST_MAGIC_NUMBER)) {
+      traceEvent(CONST_TRACE_WARNING, "handleFcSession: Internal Error (4) (idx=%d)",
+		 idx);
+      theSession->next = NULL;
     }
     else {
-        incrementTrafficCounter (&theSession->bytesRcvd, length);
-        theSession->pktRcvd++;
+      theSession->next = myGlobals.device[actualDeviceId].fcSession[idx];
+    }
+    myGlobals.device[actualDeviceId].fcSession[idx] = theSession;
+
+    if (isXchgOrig) {
+      theSession->initiator = srcHost;
+      theSession->remotePeer = dstHost;
+    }
+    else {
+      theSession->initiator = dstHost;
+      theSession->remotePeer = srcHost;
+    }
+    theSession->firstSeen.tv_sec = h->ts.tv_sec;
+    theSession->firstSeen.tv_usec = h->ts.tv_usec;
+    theSession->sessionState = FLAG_STATE_ACTIVE;
+    theSession->deviceId = actualDeviceId;
+    theSession->initiator->numHostSessions++;
+    theSession->remotePeer->numHostSessions++;
+  }
+
+  theSession->lastSeen.tv_sec = h->ts.tv_sec;
+  theSession->lastSeen.tv_usec = h->ts.tv_usec;
+
+  /* Typically in FC, the exchange originator is always the same entity in a
+   * flow
+   */
+  if (isXchgOrig) {
+    incrementTrafficCounter (&(theSession->bytesSent), length);
+    theSession->pktSent++;
+  }
+  else {
+    incrementTrafficCounter (&theSession->bytesRcvd, length);
+    theSession->pktRcvd++;
+  }
+
+  switch (protocol) {
+  case FC_FTYPE_SCSI:
+    processScsiPkt (h, srcHost, dstHost, length, payload_len, oxid, rxid,
+		    rCtl, isXchgOrig, bp, theSession, actualDeviceId);
+
+    break;
+  case FC_FTYPE_ELS:
+    cmd = bp[0];
+
+    if ((theSession->lastElsCmd == FC_ELS_CMD_PLOGI) && (cmd == FC_ELS_CMD_ACC)) {
+      fillFcHostInfo (bp, srcHost);
+    }
+    else if ((theSession->lastElsCmd == FC_ELS_CMD_LOGO) && (cmd == FC_ELS_CMD_ACC)) {
+      theSession->sessionState = FLAG_STATE_END;
     }
 
-    switch (protocol) {
-    case FC_FTYPE_SCSI:
-        processScsiPkt (h, srcHost, dstHost, length, payload_len, oxid, rxid,
-                        rCtl, isXchgOrig, bp, theSession, actualDeviceId);
-        
-        break;
-    case FC_FTYPE_ELS:
-        cmd = bp[0];
+    if (isXchgOrig) {
+      incrementTrafficCounter (&theSession->fcElsBytesSent, length);
+    }
+    else {
+      incrementTrafficCounter (&theSession->fcElsBytesRcvd, length);
+    }
 
-        if ((theSession->lastElsCmd == FC_ELS_CMD_PLOGI) && (cmd == FC_ELS_CMD_ACC)) {
-            fillFcHostInfo (bp, srcHost);
-        }
-        else if ((theSession->lastElsCmd == FC_ELS_CMD_LOGO) && (cmd == FC_ELS_CMD_ACC)) {
-            theSession->sessionState = FLAG_STATE_END;
-        }
+    theSession->lastElsCmd = cmd;
 
-        if (isXchgOrig) {
-            incrementTrafficCounter (&theSession->fcElsBytesSent, length);
-        }
-        else {
-            incrementTrafficCounter (&theSession->fcElsBytesRcvd, length);
-        }
-        
-        theSession->lastElsCmd = cmd;
-        
-        break;
-    case FC_FTYPE_FCCT:
-        gs_type = bp[4];
-        gs_stype = bp[5];
+    break;
+  case FC_FTYPE_FCCT:
+    gs_type = bp[4];
+    gs_stype = bp[5];
 
-        if (((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
-            ((gs_type == FCCT_GSTYPE_MGMTSVC) && (gs_stype == FCCT_GSSUBTYPE_UNS))) {
-            if (isXchgOrig) {
-                incrementTrafficCounter (&theSession->fcDnsBytesSent, length);
-            }
-            else {
-                incrementTrafficCounter (&theSession->fcDnsBytesRcvd, length);
-            }
-        }
-        else {
-            if (isXchgOrig) {
-                incrementTrafficCounter (&theSession->otherBytesSent, length);
-            }
-            else {
-                incrementTrafficCounter (&theSession->otherBytesRcvd, length);
-            }
-        }
-        break;
-    case FC_FTYPE_SWILS:
-    case FC_FTYPE_SWILS_RSP:
+    if (((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
+	((gs_type == FCCT_GSTYPE_MGMTSVC) && (gs_stype == FCCT_GSSUBTYPE_UNS))) {
+      if (isXchgOrig) {
+	incrementTrafficCounter (&theSession->fcDnsBytesSent, length);
+      }
+      else {
+	incrementTrafficCounter (&theSession->fcDnsBytesRcvd, length);
+      }
+    }
+    else {
+      if (isXchgOrig) {
+	incrementTrafficCounter (&theSession->otherBytesSent, length);
+      }
+      else {
+	incrementTrafficCounter (&theSession->otherBytesRcvd, length);
+      }
+    }
+    break;
+  case FC_FTYPE_SWILS:
+  case FC_FTYPE_SWILS_RSP:
 
-        if (isXchgOrig) {
-            incrementTrafficCounter (&theSession->fcSwilsBytesSent, length);
-        }
-        else {
-            incrementTrafficCounter (&theSession->fcSwilsBytesRcvd, length);
-        }
-        
-        hash = getFcFabricElementHash (srcHost->fcCounters->vsanId, actualDeviceId);
-        if (hash == NULL) {
-            break;
-        }
-        if (protocol == FC_FTYPE_SWILS) {
-            theSession->lastSwilsOxid = oxid;
-            theSession->lastSwilsCmd = bp[0];
-            opcode = bp[0];
-        }
-        else if (oxid == theSession->lastSwilsOxid) {
-            opcode = theSession->lastSwilsCmd;
-        }
-        else {
-            opcode = -1;        /* Uninitialized */
-        }
-        switch (opcode) {
-            case FC_SWILS_BF:
-            case FC_SWILS_RCF:
-            case FC_SWILS_EFP:
-            case FC_SWILS_DIA:
-            case FC_SWILS_RDI:
-                incrementTrafficCounter (&hash->dmBytes, length);
-                incrementTrafficCounter (&hash->dmPkts, 1);
-                break;
-            case FC_SWILS_HLO:
-            case FC_SWILS_LSU:
-            case FC_SWILS_LSA:
-                incrementTrafficCounter (&hash->fspfBytes, length);
-                incrementTrafficCounter (&hash->fspfPkts, 1);
-                break;
-            case FC_SWILS_RSCN:
-                incrementTrafficCounter (&hash->rscnBytes, length);
-                incrementTrafficCounter (&hash->rscnPkts, 1);
-                processSwRscn (bp, srcHost->fcCounters->vsanId, actualDeviceId);
-                break;
-            case FC_SWILS_DRLIR:
-            case FC_SWILS_DSCN:
-                break;
-            case FC_SWILS_MR:
-            case FC_SWILS_ACA:
-            case FC_SWILS_RCA:
-            case FC_SWILS_SFC:
-            case FC_SWILS_UFC:
-                incrementTrafficCounter (&hash->zsBytes, length);
-                incrementTrafficCounter (&hash->zsPkts, 1);
-                break;
-            case FC_SWILS_ELP:
-            case FC_SWILS_ESC:
-            default:
-                incrementTrafficCounter (&hash->otherCtlBytes, length);
-                incrementTrafficCounter (&hash->otherCtlPkts, 1);
-                break;
-        }
-        break;
-    case FC_FTYPE_SBCCS:
-        break;
-    case FC_FTYPE_IP:
-        if (isXchgOrig) {
-            incrementTrafficCounter (&theSession->ipfcBytesSent, length);
-        }
-        else {
-            incrementTrafficCounter (&theSession->ipfcBytesRcvd, length);
-        }
-        break;
-        
+    if (isXchgOrig) {
+      incrementTrafficCounter (&theSession->fcSwilsBytesSent, length);
+    }
+    else {
+      incrementTrafficCounter (&theSession->fcSwilsBytesRcvd, length);
+    }
+
+    hash = getFcFabricElementHash (srcHost->fcCounters->vsanId, actualDeviceId);
+    if (hash == NULL) {
+      break;
+    }
+    if (protocol == FC_FTYPE_SWILS) {
+      theSession->lastSwilsOxid = oxid;
+      theSession->lastSwilsCmd = bp[0];
+      opcode = bp[0];
+    }
+    else if (oxid == theSession->lastSwilsOxid) {
+      opcode = theSession->lastSwilsCmd;
+    }
+    else {
+      opcode = -1;        /* Uninitialized */
+    }
+    switch (opcode) {
+    case FC_SWILS_BF:
+    case FC_SWILS_RCF:
+    case FC_SWILS_EFP:
+    case FC_SWILS_DIA:
+    case FC_SWILS_RDI:
+      incrementTrafficCounter (&hash->dmBytes, length);
+      incrementTrafficCounter (&hash->dmPkts, 1);
+      break;
+    case FC_SWILS_HLO:
+    case FC_SWILS_LSU:
+    case FC_SWILS_LSA:
+      incrementTrafficCounter (&hash->fspfBytes, length);
+      incrementTrafficCounter (&hash->fspfPkts, 1);
+      break;
+    case FC_SWILS_RSCN:
+      incrementTrafficCounter (&hash->rscnBytes, length);
+      incrementTrafficCounter (&hash->rscnPkts, 1);
+      processSwRscn (bp, srcHost->fcCounters->vsanId, actualDeviceId);
+      break;
+    case FC_SWILS_DRLIR:
+    case FC_SWILS_DSCN:
+      break;
+    case FC_SWILS_MR:
+    case FC_SWILS_ACA:
+    case FC_SWILS_RCA:
+    case FC_SWILS_SFC:
+    case FC_SWILS_UFC:
+      incrementTrafficCounter (&hash->zsBytes, length);
+      incrementTrafficCounter (&hash->zsPkts, 1);
+      break;
+    case FC_SWILS_ELP:
+    case FC_SWILS_ESC:
     default:
-        if (isXchgOrig) {
-            incrementTrafficCounter (&theSession->otherBytesSent, length);
-        }
-        else {
-            incrementTrafficCounter (&theSession->otherBytesRcvd, length);
-        }
-        break;
+      incrementTrafficCounter (&hash->otherCtlBytes, length);
+      incrementTrafficCounter (&hash->otherCtlPkts, 1);
+      break;
     }
+    break;
+  case FC_FTYPE_SBCCS:
+    break;
+  case FC_FTYPE_IP:
+    if (isXchgOrig) {
+      incrementTrafficCounter (&theSession->ipfcBytesSent, length);
+    }
+    else {
+      incrementTrafficCounter (&theSession->ipfcBytesRcvd, length);
+    }
+    break;
+
+  default:
+    if (isXchgOrig) {
+      incrementTrafficCounter (&theSession->otherBytesSent, length);
+    }
+    else {
+      incrementTrafficCounter (&theSession->otherBytesRcvd, length);
+    }
+    break;
+  }
 
 #ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.fcSessionsMutex);
+  releaseMutex(&myGlobals.fcSessionsMutex);
 #endif
-      return (theSession);
+  return (theSession);
 }
-

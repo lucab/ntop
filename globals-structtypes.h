@@ -2285,7 +2285,7 @@ typedef struct ntopGlobals {
 #endif
 
   /* Peer2Peer Protocol Indexes */
-  u_short GnutellaIdx, KazaaIdx, WinMXIdx, DirectConnectIdx, FTPIdx;
+  u_short GnutellaIdx, KazaaIdx, WinMXIdx, DirectConnectIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx;
 
   /* Hash table collisions - counted during load */
   int ipxsapHashLoadCollisions;
