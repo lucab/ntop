@@ -53,7 +53,7 @@ void handleBootp(HostTraffic *srcHost,
 		 u_char* packetData,
 		 int actualDeviceId) {
   BootProtocol bootProto = { 0 };
-  int len;
+  u_int len;
   char savechar; /* Courtesy of  
 		    Axel Thimm <Axel.Thimm+ntop@physik.fu-berlin.de>
 		 */
@@ -111,7 +111,7 @@ void handleBootp(HostTraffic *srcHost,
 	      for recognising DHCP packets encapsulated
 	      in BOOTP packets.
 	    */
-	    int idx = 4;
+	    u_int idx = 4;
 	    u_int hostIdx;
 	    struct in_addr hostIpAddress;
 	    HostTraffic *trafficHost, *realDstHost;
