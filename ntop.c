@@ -102,7 +102,9 @@ void* pcapDispatch(void *_i) {
 	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
 		   pcap_geterr(device[i].pcapPtr));
 	break;
-      } /* elsetraceEvent(TRACE_INFO, "1) %d\n", numPkts++); */
+      } else if(rc == 0) 
+	break; /* No more packets to read */
+      /* elsetraceEvent(TRACE_INFO, "1) %d\n", numPkts++); */
     }
   }
 
@@ -630,7 +632,8 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
 	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
 		   pcap_geterr(device[0].pcapPtr));
 	continue;
-      }
+      } else if(rc == 0) 
+	break; /* No more packets to read */
     }
 
     actTime = time(NULL);
