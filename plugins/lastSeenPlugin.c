@@ -128,7 +128,7 @@ static int SortLS(const void *_a, const void *_b) {
 
 static void handleLsHTTPrequest(char* url) {
   char tmpStr[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-  char tmpTime[25], postData[128];
+  char tmpTime[LEN_TIMEFORMAT_BUFFER], postData[128];
   char *no_info = "<TH "TH_BG">-NO INFO-</TH>",*tmp, *no_note ="-";
   datum ret_data,key_data, content;
   LsHostInfo tablehost[MAX_LASTSEEN_TABLE_SIZE];
@@ -230,7 +230,7 @@ static void handleLsHTTPrequest(char* url) {
       tmp = no_info;
 
     localtime_r(&tablehost[entry].LastUpdated, &loctime);
-    strftime(tmpTime,25,"%d-%m-%Y&nbsp;%H:%M", &loctime);
+    strftime(tmpTime, sizeof(tmpTime), CONST_LOCALE_TIMESPEC, &loctime);
 
     if(snprintf(tmpStr, sizeof(tmpStr), "<TR "TR_ON" %s>%s</TH>"
 		"<TH "TH_BG" ALIGN=LEFT>&nbsp;&nbsp;%s&nbsp;&nbsp</TH>"

@@ -241,7 +241,7 @@ typedef struct simpleProtoTrafficInfo {
 /*XMLNOTE TODO pluginDirs */
 /*XMLNOTE TODO configFileDirs */
 
-/*XML s accessLogPath        Options    "-a | --access-log-path" */
+/*XML s accessLogFile        Options    "-a | --access-log-file" */
 /*XML b enablePacketDecoding Options    "-b | --disable-decoders" */
 /*XML b stickyHosts          Options    "-c | --sticky-hosts" */
 /*XML b daemonMode           Options    "-d | --daemon: run as daemon flag" */

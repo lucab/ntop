@@ -863,13 +863,13 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
 	    if(found) {
 #ifdef DEBUG_FLOWS
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]\n", template.templateId);
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]", template.templateId);
 #endif
 
 	      free(cursor->fields);
 	    } else {
 #ifdef DEBUG_FLOWS
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]\n", template.templateId);
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]", template.templateId);
 #endif
 
 	      cursor = (FlowSetV9*)malloc(sizeof(FlowSetV9));
@@ -1043,7 +1043,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
       /* Second attempt: compressed flow */
       if((rc = uncompress(uncompressBuf, &uncompressLen, buffer, bufferLen)) == Z_OK) {
 #ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Received compressed flow: %d -> %d [+%.1f %%]\n",
+	traceEvent(CONST_TRACE_INFO, "Received compressed flow: %d -> %d [+%.1f %%]",
 		   bufferLen, (int)uncompressLen, (float)(100*(int)uncompressLen)/(float)bufferLen-100);
 #endif
 	rc = uncompressLen;
@@ -1058,12 +1058,12 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	  nFlowTotCompressedSize += bufferLen, nFlowTotUncompressedSize += uncompressLen;
 
 #ifdef DEBUG_FLOWS
-	  traceEvent(CONST_TRACE_INFO, "Header version: %d\n", ntohs(header->version));
-	  traceEvent(CONST_TRACE_INFO, "count:          %d\n", ntohs(header->count));
-	  traceEvent(CONST_TRACE_INFO, "sysUptime:      %d\n", ntohl(header->sysUptime));
-	  traceEvent(CONST_TRACE_INFO, "flow_sequence:  %d\n", ntohl(header->flow_sequence));
-	  traceEvent(CONST_TRACE_INFO, "sourceId:       %d\n", ntohl(header->sourceId));
-	  traceEvent(CONST_TRACE_INFO, "sampleRate:     %d\n", ntohs(header->sampleRate));
+	  traceEvent(CONST_TRACE_INFO, "Header version: %d", ntohs(header->version));
+	  traceEvent(CONST_TRACE_INFO, "count:          %d", ntohs(header->count));
+	  traceEvent(CONST_TRACE_INFO, "sysUptime:      %d", ntohl(header->sysUptime));
+	  traceEvent(CONST_TRACE_INFO, "flow_sequence:  %d", ntohl(header->flow_sequence));
+	  traceEvent(CONST_TRACE_INFO, "sourceId:       %d", ntohl(header->sourceId));
+	  traceEvent(CONST_TRACE_INFO, "sampleRate:     %d", ntohs(header->sampleRate));
 	  traceEvent(CONST_TRACE_INFO, "md5Sum:        ");
 	  for(i=0; i<NFLOW_SUM_LEN; i++) traceEvent(CONST_TRACE_INFO, "%02X", header->md5Sum[i]);
 #endif

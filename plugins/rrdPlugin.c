@@ -770,14 +770,14 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 	time_t rrdLast;
 	struct tm workT;
 
-	strftime(errTimeBuf1, sizeof(errTimeBuf1), "%Y-%m-%d %H:%M:%S", localtime_r(&myGlobals.actTime, &workT));
-	strftime(errTimeBuf2, sizeof(errTimeBuf2), "%H:%M:%S", localtime_r(&rrdTime, &workT));
+	strftime(errTimeBuf1, sizeof(errTimeBuf1), CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.actTime, &workT));
+	strftime(errTimeBuf2, sizeof(errTimeBuf2), CONST_LOCALE_TIMESPEC, localtime_r(&rrdTime, &workT));
 	argc = 0;
 	argv[argc++] = "rrd_last";
 	argv[argc++] = path;
 
 	rrdLast = rrd_last(argc, argv);
-	strftime(errTimeBuf3, sizeof(errTimeBuf3), "%H:%M:%S", localtime_r(&rrdLast, &workT));
+	strftime(errTimeBuf3, sizeof(errTimeBuf3), CONST_LOCALE_TIMESPEC, localtime_r(&rrdLast, &workT));
 	traceEvent(CONST_TRACE_WARNING,
 		   "RRD: actTime = %d(%s), rrdTime %d(%s), lastUpd %d(%s)",
 		   myGlobals.actTime,
@@ -1543,7 +1543,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 #if RRD_DEBUG >= 1
     {
       struct tm workT;
-      strftime(endTime, sizeof(endTime), "%Y-%m-%d %H:%M:%S", localtime_r(&end_tm, &workT));
+      strftime(endTime, sizeof(endTime), CONST_LOCALE_TIMESPEC, localtime_r(&end_tm, &workT));
       traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds (interval %d, end at %s)",
 		 sleep_tm,
 		 dumpInterval,

@@ -1631,7 +1631,7 @@ GdomeElement * dumpXML_createHeader(void) {
     now  = time(NULL);
 
     elHeader = newxml(GDOME_ELEMENT_NODE, root, "ntop_dump_header",
-                                                "date",          formatTime(&now, 0, buf8, sizeof(buf8)),
+                                                "date",          formatTime(&now, buf8, sizeof(buf8)),
                                                 "hostName",      hostName,
                                                 "xml_version",   CONST_XML_VERSION,
                                                 "stable",        stableDump == TRUE ? "Yes" : "No");
