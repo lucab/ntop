@@ -112,7 +112,7 @@ extern void initCounters(int _mergeInterfaces);
 extern void resetStats(void);
 extern int initGlobalValues(void);
 extern void postCommandLineArgumentsInitialization(time_t *lastTime);
-extern void initGdbm(void);
+extern void initGdbm(char *dbPath);
 extern void initThreads();
 extern void initApps(void);
 extern void initDevices(char* devices);

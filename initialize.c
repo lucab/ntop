@@ -441,7 +441,7 @@ void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
 
 /* ******************************* */
 
-void initGdbm(void) {
+void initGdbm(char * dbPath) {
   char tmpBuf[200];
 #ifdef FALLBACK
   int firstTime=1;
@@ -450,7 +450,7 @@ void initGdbm(void) {
   traceEvent(TRACE_INFO, "Initializing GDBM...");
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", myGlobals.dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", dbPath) < 0)
     BufferOverflow();
 
   unlink(tmpBuf); /* Delete the old one (if present) */
@@ -471,7 +471,7 @@ void initGdbm(void) {
 
   /* ************************************************ */
 
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/serialCache.db", myGlobals.dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/serialCache.db", dbPath) < 0)
     BufferOverflow();
 
   unlink(tmpBuf); /* Delete the old one (if present) */
@@ -490,7 +490,7 @@ void initGdbm(void) {
 
   /* ************************************************ */
 
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/prefsCache.db", myGlobals.dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/prefsCache.db", dbPath) < 0)
     BufferOverflow();
 
   myGlobals.prefsFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
@@ -509,7 +509,7 @@ void initGdbm(void) {
   /* ************************************************ */
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", myGlobals.dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0)
     BufferOverflow();
 
   myGlobals.gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
@@ -527,7 +527,7 @@ void initGdbm(void) {
 #endif
     exit(-1);
   } else {
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", myGlobals.dbPath) < 0)
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", dbPath) < 0)
       BufferOverflow();
     myGlobals.pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
@@ -536,7 +536,7 @@ void initGdbm(void) {
       exit(-1);
     }
 
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", myGlobals.dbPath) < 0)
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", dbPath) < 0)
       BufferOverflow();
     myGlobals.hostsInfoFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 

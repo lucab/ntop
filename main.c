@@ -734,7 +734,7 @@ int main(int argc, char *argv[]) {
 
   postCommandLineArgumentsInitialization(&lastTime);
 
-  initGdbm();
+  initGdbm(myGlobals.dbPath);
 
   /*
    * initialize memory and data 
