@@ -93,7 +93,9 @@ int execCGI(char* cgiName) {
   if(snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName) < 0)
     BufferOverflow();
 
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Executing CGI '%s'", line);
+#endif
 
   if((fd = popen(line, "r")) == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: unable to exec %s\n", cgiName);
@@ -107,7 +109,9 @@ int execCGI(char* cgiName) {
     pclose(fd);
   }
 
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "CGI execution completed.");
+#endif
 
   return(0);
 }

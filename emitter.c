@@ -406,8 +406,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       if(el->hostNumIpAddress[0] != '\0') {
 	hostKey = el->hostNumIpAddress;
 	if(localView) {
-	  if((!subnetPseudoLocalHost(el))
-	     || (el->numUses == 0))
+	  if((!subnetPseudoLocalHost(el) || (el->numUses == 0)))
 	    continue;
 	}
       } else {

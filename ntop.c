@@ -924,7 +924,7 @@ RETSIGTYPE cleanup(int signo) {
 #ifndef MICRO_NTOP
   unloadPlugins();
 #endif
-  termLogger();
+
   (void)fflush(stdout);
 
   termIPServices();

@@ -707,11 +707,6 @@ int main(int argc, char *argv[]) {
 
   initPassiveSessions();
 
-  /*
-   * Initialize the logging database
-   */
-  initLogger();
-
 #ifdef HAVE_OPENSSL
   init_ssl();
 #endif

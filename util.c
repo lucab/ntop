@@ -520,7 +520,7 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   int i;
   
   if(myGlobals.trackOnlyLocalHosts) 
-      return(0);
+    return(0);
 
   i = isLocalAddress(addr);
 
@@ -533,7 +533,7 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   }
 
   if(_pseudoLocalAddress(addr))
-      return 0;
+    return 1;
 
   /* 
      We don't check for broadcast as this check has been
@@ -543,6 +543,7 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
 #ifdef ADDRESS_DEBUG
     traceEvent(TRACE_WARNING, "%s is remote\n", intoa(*addr));
 #endif
+
   return(0);
 }
 

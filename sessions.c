@@ -1461,7 +1461,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     }
   }
 
-  if((sport == 7)  || (dport == 7)  /* echo */
+  if((sport == 7)     || (dport == 7)  /* echo */
      || (sport == 9)  || (dport == 9)  /* discard */
      || (sport == 13) || (dport == 13) /* daytime */
      || (sport == 19) || (dport == 19) /* chargen */

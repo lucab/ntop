@@ -332,7 +332,6 @@ static void checkFragmentOverlap(u_int srcHostIdx,
                fragment->fragmentId, fragmentOffset,
                fragment->lastOffset);
 
-      logMessage(buf, NTOP_WARNING_MSG);
       dumpSuspiciousPacket(actualDeviceId);
     }
 

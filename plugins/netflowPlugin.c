@@ -388,7 +388,8 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString(_intoa(theDest, buf, sizeof(buf)));
 
   sendString(">:2055 <INPUT TYPE=submit VALUE=Set></FORM></td></tr>\n");
-  sendString("<TR><TH>&nbsp;</TH><TD align=center COLSPAN=2>NOTE: Use 0 to disable export/collection</TD></TR>\n");
+  sendString("<TR><TH>&nbsp;</TH><TD align=center COLSPAN=2>"
+	     "NOTE: Use 0 to disable export/collection</TD></TR>\n");
   sendString("</TABLE><p>\n");
 
   /* ************************ */
@@ -431,12 +432,12 @@ static PluginInfo netflowPluginInfo[] = {
     "1.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
-    1, /* Active */
+    1,    /* Active */
     initNetFlowFunct, /* InitFunc   */
     NULL, /* TermFunc   */
     NULL, /* PluginFunc */
     handleNetflowHTTPrequest,
-    NULL /* no capture */
+    NULL  /* no capture */
   }
 };
 

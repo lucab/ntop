@@ -150,15 +150,6 @@ extern void*          ntop_safecalloc(unsigned int c, unsigned int sz, char* fil
 extern void*          ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line);
 #endif
 
-
-/* logger.c */
-extern void initLogger(void);
-extern void termLogger(void);
-extern void logMessage(char* message, u_short severity);
-extern void LogStatsToFile(void);
-extern void* logFileLoop(void* notUsed);
-
-
 /* ntop.c */
 extern void handleSigHup(int signalId);
 extern void *pcapDispatch(void *_i);
@@ -216,9 +207,6 @@ extern void handleNetbios(HostTraffic *srcHost, HostTraffic *dstHost,
 			  u_int length, u_int hlen);
 
 /* plugin.c */
-/* CHECK ME: THIS IS NOT CALLED YET! */
-extern void notifyPluginsHashResize(int oldSize, int newSize,
-                                    int* mappings);
 extern int handlePluginHTTPRequest(char* url);
 extern void loadPlugins(void);
 extern void startPlugins(void);
@@ -244,7 +232,6 @@ extern int init_ssl(void);
 extern int accept_ssl_connection(int fd);
 extern SSL *getSSLsocket(int fd);
 extern void term_ssl_connection(int fd);
-/* CHECK ME: THIS IS NOT CALLED YET! */
 extern void term_ssl(void);
 #endif
 
