@@ -531,9 +531,10 @@ typedef struct trafficDistribution {
 } TrafficDistribution;
 
 typedef struct portUsage {
-  u_short        clientUses, serverUses;
+  u_short        port, clientUses, serverUses;
   HostSerial     clientUsesLastPeer, serverUsesLastPeer;
   TrafficCounter clientTraffic, serverTraffic;
+  struct portUsage *next;
 } PortUsage;
 
 typedef struct virtualHostList {
@@ -826,7 +827,8 @@ typedef struct hostTraffic {
   RoutingCounter   *routedTraffic;
 
   /* IP */
-  PortUsage        **portsUsage; /* 0...MAX_ASSIGNED_IP_PORTS */
+  PortUsage        *portsUsage; /* 0...MAX_ASSIGNED_IP_PORTS */
+
   /* Don't change the recentl... to unsigned ! */
   int              recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
   int              otherIpPortsRcvd[MAX_NUM_RECENT_PORTS], otherIpPortsSent[MAX_NUM_RECENT_PORTS];
@@ -1234,15 +1236,9 @@ typedef struct netFlowGlobals {
   ProbeInfo probeList[MAX_NUM_PROBES];
   u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], blackNetworks[MAX_NUM_NETWORKS][3];
   u_short numWhiteNets, numBlackNets;
-  u_int32_t flowIgnoredZeroPort, flowIgnoredNetFlow, flowProcessed;
-  Counter flowIgnoredNetFlowBytes;
-  Counter flowIgnoredZeroPortBytes, flowProcessedBytes;
-  u_int flowIgnored[MAX_NUM_IGNOREDFLOWS][6]; /* src, sport, dst, dport, count, bytes */
-  u_short nextFlowIgnored;
+  u_int32_t flowProcessed;
+  Counter flowProcessedBytes;
   HostTraffic *dummyHost;
-  u_int32_t flowIgnoredLowPort, flowIgnoredHighPort, flowAssumedFtpData;
-  Counter flowIgnoredLowPortBytes, flowIgnoredHighPortBytes, flowAssumedFtpDataBytes;
-  
   FlowSetV9 *templates;
 
 #ifdef CFG_MULTITHREADED
@@ -1306,11 +1302,8 @@ typedef struct sFlowGlobals {
   ProbeInfo probeList[MAX_NUM_PROBES];
   u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], blackNetworks[MAX_NUM_NETWORKS][3];
   u_short numWhiteNets, numBlackNets;
-  u_int32_t flowIgnoredZeroPort, flowIgnoredsFlow, flowProcessed;
-  Counter flowIgnoredsFlowBytes;
+  u_int32_t flowProcessed;
   Counter flowProcessedBytes;
-  u_int flowIgnored[MAX_NUM_IGNOREDFLOWS][6]; /* src, sport, dst, dport, count, bytes */
-  u_short nextFlowIgnored;
   HostTraffic *dummyHost;
   
 #ifdef CFG_MULTITHREADED

@@ -272,8 +272,10 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   u_int i, deleteAddressFromCache = 1;
 
-  if((host == NULL) || myGlobals.device[actualDeviceId].virtualDevice)
+  if(host == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(NULL)");
     return;
+  }
 
   /* If this is one of the special ones, let's clear the other pointer to it
    * to prevent a free of freed memory error later.
@@ -424,15 +426,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   if(host->routedTraffic != NULL) free(host->routedTraffic);
 
-  if(host->portsUsage != NULL) {
-    for(i=0; i<MAX_ASSIGNED_IP_PORTS; i++) {
-      if(host->portsUsage[i] != NULL) {
-	free(host->portsUsage[i]);
-      }
-    }
-
-    free(host->portsUsage);
-  }
+  freePortsUsage(host->portsUsage);
 
   if(myGlobals.runningPref.enablePacketDecoding && (host->protocolInfo != NULL)) {
     if(host->protocolInfo->httpVirtualHosts != NULL) {
@@ -511,57 +505,10 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   } else
 #endif
     {
-
-#if(0)
-/* Temporary code to see what's being covered up by the memset() below */
-      char xbuf[1024];
-      int ii;
-      memset(xbuf, 0, sizeof(xbuf));
-      safe_snprintf(__FILE__, __LINE__, xbuf, sizeof(xbuf),
-                  "TEMP: free of host (0x%08x) magic(%u) not cleared:", host, host->magic);
-      ii=strlen(xbuf);
-      if(host->dnsDomainValue != NULL)
-        strncat(xbuf, " dnsDomainValue", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->dnsTLDValue != NULL)
-        strncat(xbuf, " dnsTLDValue", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->ip2ccValue != NULL)
-        strncat(xbuf, " ip2ccValue", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->fingerprint != NULL)
-        strncat(xbuf, " fingerprint", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->nonIPTraffic != NULL)
-        strncat(xbuf, " nonIPTraffic", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->nonIpProtoTrafficInfos != NULL)
-        strncat(xbuf, " nonIpProtoTrafficInfos", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->trafficDistribution != NULL)
-        strncat(xbuf, " trafficDistribution", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->routedTraffic != NULL)
-        strncat(xbuf, " routedTraffic", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->portsUsage != NULL)
-        strncat(xbuf, " portsUsage", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->protocolInfo != NULL)
-        strncat(xbuf, " protocolInfo", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->secHostPkts != NULL)
-        strncat(xbuf, " secHostPkts", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->icmpInfo != NULL)
-        strncat(xbuf, " icmpInfo", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->ipProtosList != NULL)
-        strncat(xbuf, " ipProtosList", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->protoIPTrafficInfos != NULL)
-        strncat(xbuf, " protoIPTrafficInfos", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->unknownProtoSent != NULL)
-        strncat(xbuf, " unknownProtoSent", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->unknownProtoRcvd != NULL)
-        strncat(xbuf, " unknownProtoRcvd", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->next != NULL)
-        strncat(xbuf, " next", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(strlen(xbuf) != ii)
-        traceEvent(CONST_TRACE_INFO, xbuf);
-#endif
-
       /* No room left: it's time to free the bucket */
       memset(host, 0, sizeof(HostTraffic)); /* Debug code */
       free(host);
-   }
+    }
 
   myGlobals.numPurgedHosts++;
 
@@ -635,7 +582,7 @@ void purgeIdleHosts(int actDevice) {
   struct timeval hiresTimeStart, hiresTimeEnd;
   HostTraffic *el, *prev, *next;
 
-  if(myGlobals.runningPref.rFileName != NULL) return;
+  /* if(myGlobals.runningPref.rFileName != NULL) return; */
 
 #ifdef IDLE_PURGE_DEBUG
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: purgeIdleHosts() invoked");
@@ -653,7 +600,7 @@ void purgeIdleHosts(int actDevice) {
   else
     lastPurgeTime[actDevice] = startTime;
 
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  maxHosts = myGlobals.device[actDevice].hostsno; /* save it as it can change */
   theFlaggedHosts = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
   memset(theFlaggedHosts, 0, maxHosts*sizeof(HostTraffic*));
 
@@ -662,7 +609,8 @@ void purgeIdleHosts(int actDevice) {
   withSessionPurgeTime = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES;
 
 #ifdef IDLE_PURGE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Beginning noS < %d, wS < %d", noSessionPurgeTime, withSessionPurgeTime);
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Beginning noS < %d, wS < %d", 
+	     noSessionPurgeTime, withSessionPurgeTime);
 #endif
 
 #ifdef CFG_MULTITHREADED
@@ -700,14 +648,13 @@ void purgeIdleHosts(int actDevice) {
 	   && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
 	       || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
 	   && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
-	   && ((!myGlobals.runningPref.stickyHosts)
+	   && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
+	       || (!myGlobals.runningPref.stickyHosts)	       
 	       || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
                    ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
-                    || (!subnetPseudoLocalHost(el))))      /* Purge remote
-                                                            * hosts only */
+                    || (!subnetPseudoLocalHost(el)))) /* Purge remote hosts only */
                || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
-                   (el->fcCounters->hostNumFcAddress[0] == '\0')))
-            ) {
+                   (el->fcCounters->hostNumFcAddress[0] == '\0')))) {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
 	  next = el->next;
@@ -758,8 +705,8 @@ void purgeIdleHosts(int actDevice) {
 #endif
 #endif
 
-  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d [out of %d] hosts selected",
-	     numHosts, scannedHosts);
+  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d [%s] FINISHED selection, %d [out of %d] hosts selected",
+	     actDevice, myGlobals.device[actDevice].name, numHosts, scannedHosts);
 
   /* Now free the entries */
   for(idx=0; idx<numHosts; idx++) {
@@ -784,14 +731,14 @@ void purgeIdleHosts(int actDevice) {
 
   if(numFreedBuckets > 0)
     traceEvent(CONST_TRACE_NOISY,
-	       "IDLE_PURGE: Device %d [%s]: %d hosts deleted, elapsed time is %.6f seconds (%.6f per host)",
-	       actDevice,
-	       myGlobals.device[actDevice].name,
-	       numFreedBuckets,
+	       "IDLE_PURGE: Device %d [%s]: %d/%d hosts deleted, elapsed time is %.6f seconds (%.6f per host)",
+	       actDevice, myGlobals.device[actDevice].name,
+	       numFreedBuckets, maxHosts,
 	       hiresDeltaTime,
 	       hiresDeltaTime / numFreedBuckets);
   else
-    traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d: no hosts deleted", actDevice);
+    traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %s: no hosts [out of %d] deleted", 
+	       myGlobals.device[actDevice].name, maxHosts);
 }
 
 /* **************************************************** */
@@ -980,7 +927,6 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
       if(isBroadcastAddress(&el->hostIpAddress))
         FD_SET(FLAG_BROADCAST_HOST, &el->flags);
     }
-
   } else {
     /* New host entry */
     int len;
@@ -1021,7 +967,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
     if(isMultihomed)
       FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
 
-    el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
+    el->portsUsage = NULL;
 
     len = (size_t)myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**);
     if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) return(NULL);

@@ -1227,8 +1227,6 @@ typedef struct _SFSample {
 /* Forward */
 static int setsFlowInSocket(int);
 static void setPluginStatus(char * status);
-static void ignoreFlow(u_short* theNextFlowIgnored, u_int32_t srcAddr, u_short sport,
-		       u_int32_t dstAddr, u_short dport, Counter len, int deviceId);
 static int initsFlowFunct(void);
 static void termsFlowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void termsFlowDevice(int deviceId);
@@ -1374,31 +1372,6 @@ static void updateSflowInterfaceCounters(int deviceId, IfCounters *ifName) {
 
     memcpy(myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex],
 	   ifName, sizeof(IfCounters));
-  }
-}
-
-/* *************************** */
-
-static void ignoreFlow(u_short* theNextFlowIgnored, u_int32_t srcAddr, u_short sport,
-		       u_int32_t dstAddr, u_short dport,
-		       Counter len, int deviceId) {
-  u_short lastFlowIgnored;
-
-  lastFlowIgnored = (*theNextFlowIgnored-1+MAX_NUM_IGNOREDFLOWS) % MAX_NUM_IGNOREDFLOWS;
-  if((myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][0] == srcAddr) &&
-     (myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][1] == sport) &&
-     (myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][2] == dstAddr) &&
-     (myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][3] == dport)) {
-    myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][4]++;
-    myGlobals.device[deviceId].sflowGlobals->flowIgnored[lastFlowIgnored][5] += len;
-  } else {
-    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][0] = srcAddr;
-    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][1] = sport;
-    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][2] = dstAddr;
-    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][3] = dport;
-    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][4] = 1;
-    myGlobals.device[deviceId].sflowGlobals->flowIgnored[*theNextFlowIgnored][5] = len;
-    *theNextFlowIgnored = (*theNextFlowIgnored + 1) % MAX_NUM_IGNOREDFLOWS;
   }
 }
 
@@ -3020,6 +2993,7 @@ static void* sflowMainLoop(void* _deviceId) {
 #endif /* MAKE_WITH_SFLOWSIGTRAP */
 
   myGlobals.device[deviceId].activeDevice = 1;
+  myGlobals.device[deviceId].dummyDevice  = 0;
 
   myGlobals.device[deviceId].sflowGlobals->threadActive = 1;
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "THREADMGMT: sflow thread(%ld) started",
@@ -3117,10 +3091,6 @@ static void initsFlowDevice(int deviceId) {
   setPluginStatus("Disabled - requires POSIX thread support.");
   return(-1);
 #endif
-
-  memset(myGlobals.device[deviceId].sflowGlobals->flowIgnored, 0,
-	 sizeof(myGlobals.device[deviceId].sflowGlobals->flowIgnored));
-  myGlobals.device[deviceId].sflowGlobals->nextFlowIgnored = 0;
 
   if(fetchPrefsValue(sfValue(deviceId, "sflowInPort", 1), value, sizeof(value)) == -1)
     storePrefsValue(sfValue(deviceId, "sflowInPort", 1), "0");
@@ -3787,59 +3757,6 @@ static void printsFlowStatisticsRcvd(int deviceId) {
   sendString("</td>\n</tr>\n");
 
 #endif
-
-  if(myGlobals.device[deviceId].sflowGlobals->flowIgnoredsFlow > 0) {
-    sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
-	       "<tr " TR_ON ">\n"
-	       "<th colspan=\"2\" "DARK_BG">Most Recent Ignored Flows</th>\n"
-	       "</tr>\n"
-	       "<tr " TR_ON ">\n"
-	       "<th colspan=\"2\"><table width=\"100%\" border=1 "TABLE_DEFAULTS">"
-	       "<tr><th colspan=\"2\">Flow</th>\n"
-	       "<th>Bytes</th>\n"
-	       "<th># Consecutive<br>Counts</th></tr>\n");
-
-    for (i=myGlobals.device[deviceId].sflowGlobals->nextFlowIgnored;
-	 i<myGlobals.device[deviceId].sflowGlobals->nextFlowIgnored+MAX_NUM_IGNOREDFLOWS; i++) {
-      if ((myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
-	  (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
-	if(myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
-	  safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "(%d) ", myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
-	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "&nbsp;");
-	}
-	if (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) {
-	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%.1fGB",
-		      (float)myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
-	} else if (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) {
-	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%.1fMB",
-		      (float)myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
-	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%u",
-		      myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
-	}
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<tr><td align=\"right\">%d.%d.%d.%d:%d</td>"
-		    "<td align=\"left\">-> %d.%d.%d.%d:%d</td>"
-		    "<td align=\"right\">%s</td>"
-		    "<td align=\"right\">%s</td></tr>\n",
-		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 24) & 0xff,
-		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 16) & 0xff,
-		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >>  8) & 0xff,
-		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0]      ) & 0xff,
-		    myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][1],
-		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 24) & 0xff,
-		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 16) & 0xff,
-		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >>  8) & 0xff,
-		    (myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2]      ) & 0xff,
-		    myGlobals.device[deviceId].sflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][3],
-		    buf2, buf1);
-	sendString(buf);
-      }
-    }
-
-    sendString("</table>");
-  }
 }
 
 /* ****************************** */

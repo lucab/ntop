@@ -1591,8 +1591,13 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
   case showPrefAdvPref:
     CONFIG_INT_ENTRY (DARK_BG, "Max Hashes (-x)", NTOP_PREF_MAXHASH, 5,
 		      pref->maxNumHashEntries,
-		      "Limit number of hash entries created for sessions and"
-		      " hosts to limit memory used by ntop");
+		      "Limit number of host hash entries created in order"
+		      " to limit memory used by ntop");
+
+    CONFIG_INT_ENTRY (DARK_BG, "Max Sessions (-X)", NTOP_PREF_MAXSESSIONS, 5,
+		      pref->maxNumSessions,
+		      "Limit number of IP sessions entries created in order"
+		      " to limit memory used by ntop");
 
     CONFIG_CHKBOX_ENTRY (DARK_BG, "Don't Merge Interfaces (-M)",
 			 NTOP_PREF_MERGEIF, pref->mergeInterfaces,

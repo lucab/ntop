@@ -1968,6 +1968,9 @@
 
 #define DEFAULT_NTOP_MAPPER_URL             NULL     /* -U */
 
+#define DEFAULT_NTOP_MAX_HASH_ENTRIES       16384    /* -x */
+#define DEFAULT_NTOP_MAX_NUM_SESSIONS       32768    /* -X */
+
 /*
  * What should we set tracing to unless we have a parameter?
  */
@@ -2707,6 +2710,7 @@ struct ip6_hdr
 #define NTOP_PREF_MAPPERURL        "ntop.mapperURL"
 #define NTOP_PREF_WWN_MAP          "ntop.fcNSCacheFile"
 #define NTOP_PREF_MAXHASH          "ntop.maxNumHashEntries"
+#define NTOP_PREF_MAXSESSIONS      "ntop.maxNumSessions"
 #define NTOP_PREF_MERGEIF          "ntop.mergeInterfaces"
 #define NTOP_PREF_NO_ISESS_PURGE   "ntop.disableInstantSessionPurge"
 #define NTOP_PREF_NOBLOCK          "ntop.setNonBlocking"

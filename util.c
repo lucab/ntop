@@ -2397,7 +2397,7 @@ void resetHostsVariables(HostTraffic* el) {
   el->nonIPTraffic = NULL;
   if (el->routedTraffic != NULL)       free(el->routedTraffic);
   el->routedTraffic = NULL;
-  if (el->portsUsage != NULL)          free(el->portsUsage);
+  if (el->portsUsage != NULL)          freePortsUsage(el->portsUsage);
   el->portsUsage = NULL;
   if (el->protoIPTrafficInfos != NULL) {
     int i;
@@ -6273,3 +6273,61 @@ float timeval_subtract (struct timeval x, struct timeval y) {
 }
 
 /* ************************************ */
+
+void freePortsUsage(PortUsage *ports) {
+  PortUsage *act, *next;
+  
+  if(ports == NULL) return;
+
+    act = ports;
+    while(act) {
+      next = act->next;
+      free(act);
+      act = next;
+    }
+  
+    free(ports);
+}
+
+/* ************************************ */
+
+static PortUsage* allocatePortUsage(void) {
+  PortUsage *ptr;
+
+#ifdef DEBUG
+  printf("DEBUG: allocatePortUsage() called\n");
+#endif
+
+  ptr = (PortUsage*)calloc(1, sizeof(PortUsage));
+  setEmptySerial(&ptr->clientUsesLastPeer), setEmptySerial(&ptr->serverUsesLastPeer);
+
+  return(ptr);
+}
+
+/* ************************************ */
+
+/* Keep the list sorted */
+PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) {
+  PortUsage *ports = el->portsUsage, *prev = NULL, *newPort;
+
+  while((ports != NULL) && (ports->port < portIdx)) {
+    prev = ports;
+    ports = ports->next;
+  }
+
+  if(ports && (ports->port == portIdx)) return(ports); /* Found */
+  if(!createIfNecessary) return(NULL);
+
+  newPort = allocatePortUsage();
+  newPort->port = portIdx;
+
+  if(prev == NULL) {
+    el->portsUsage = newPort;
+    newPort->next = NULL;
+  } else {
+    newPort->next = prev->next;
+    prev->next = newPort;
+  }
+
+  return(newPort);
+}

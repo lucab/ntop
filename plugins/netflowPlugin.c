@@ -27,7 +27,7 @@
 static void* netflowMainLoop(void* _deviceId);
 #endif
 
-/* #define DEBUG_FLOWS */
+#define DEBUG_FLOWS 
 
 /* ********************************* */
 
@@ -36,8 +36,6 @@ static int setNetFlowInSocket(int);
 static void setNetFlowInterfaceMatrix(int);
 static void freeNetFlowMatrixMemory(int);
 static void setPluginStatus(char * status);
-static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
-		       u_int dstAddr, u_short dport, Counter len, int deviceId);
 static int initNetFlowFunct(void);
 static void termNetflowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void termNetflowDevice(int deviceId);
@@ -82,7 +80,7 @@ static PluginInfo netflowPluginInfo[] = {
     handleNetflowHTTPrequest,
     NULL, /* no host creation/deletion handle */
 #ifdef DEBUG_FLOWS
-    "udp and (port 2055 or port 2056)",
+    "udp and (port 2055 or port 2056 or port 2065)",
 #else
     NULL, /* no capture */
 #endif
@@ -258,31 +256,6 @@ static int setNetFlowInSocket(int deviceId) {
 
 /* *************************** */
 
-static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
-		       u_int dstAddr, u_short dport,
-		       Counter len, int deviceId) {
-  u_short lastFlowIgnored;
-
-  lastFlowIgnored = (*theNextFlowIgnored-1+MAX_NUM_IGNOREDFLOWS) % MAX_NUM_IGNOREDFLOWS;
-  if((myGlobals.device[deviceId].netflowGlobals->flowIgnored[lastFlowIgnored][0] == srcAddr) &&
-     (myGlobals.device[deviceId].netflowGlobals->flowIgnored[lastFlowIgnored][1] == sport) &&
-     (myGlobals.device[deviceId].netflowGlobals->flowIgnored[lastFlowIgnored][2] == dstAddr) &&
-     (myGlobals.device[deviceId].netflowGlobals->flowIgnored[lastFlowIgnored][3] == dport)) {
-    myGlobals.device[deviceId].netflowGlobals->flowIgnored[lastFlowIgnored][4]++;
-    myGlobals.device[deviceId].netflowGlobals->flowIgnored[lastFlowIgnored][5] += len;
-  } else {
-    myGlobals.device[deviceId].netflowGlobals->flowIgnored[*theNextFlowIgnored][0] = srcAddr;
-    myGlobals.device[deviceId].netflowGlobals->flowIgnored[*theNextFlowIgnored][1] = sport;
-    myGlobals.device[deviceId].netflowGlobals->flowIgnored[*theNextFlowIgnored][2] = dstAddr;
-    myGlobals.device[deviceId].netflowGlobals->flowIgnored[*theNextFlowIgnored][3] = dport;
-    myGlobals.device[deviceId].netflowGlobals->flowIgnored[*theNextFlowIgnored][4] = 1;
-    myGlobals.device[deviceId].netflowGlobals->flowIgnored[*theNextFlowIgnored][5] = len;
-    *theNextFlowIgnored = (*theNextFlowIgnored + 1) % MAX_NUM_IGNOREDFLOWS;
-  }
-}
-
-/* ****************************** */
-
 static int handleV5Flow(time_t recordActTime,
 			time_t recordSysUpTime,
 			struct flow_ver5_rec *record,
@@ -449,6 +422,7 @@ static int handleV5Flow(time_t recordActTime,
       break;
     default:
       myGlobals.device[deviceId].netflowGlobals->numSrcNetFlowsEntryAccepted++;
+      break;
     }
   }
 
@@ -466,6 +440,7 @@ static int handleV5Flow(time_t recordActTime,
       break;
     default:
       myGlobals.device[deviceId].netflowGlobals->numDstNetFlowsEntryAccepted++;
+      break;
     }
   }
 
@@ -519,85 +494,30 @@ static int handleV5Flow(time_t recordActTime,
     if(dport < sport) {
       if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
 	if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-	  if((dport == myGlobals.device[deviceId].netflowGlobals->netFlowInPort)
-	     || (sport == myGlobals.device[deviceId].netflowGlobals->netFlowInPort)) {
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlow++;
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlowBytes += len;
-	  } else if(min(sport, dport) <= 1023) {
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPort++;
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPortBytes += len;
-	    ignoreFlow(&myGlobals.device[deviceId].netflowGlobals->nextFlowIgnored,
-		       ntohl(record->srcaddr), sport,
-		       ntohl(record->dstaddr), dport,
-		       len, deviceId);
-	  } else if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
+	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
 	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
-	    myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpData++;
-	    myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpDataBytes += len;
-	  } else {
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredHighPort++;
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredHighPortBytes += len;
-	    ignoreFlow(&myGlobals.device[deviceId].netflowGlobals->nextFlowIgnored,
-		       ntohl(record->srcaddr), sport,
-		       ntohl(record->dstaddr), dport,
-		       len, deviceId);
 	  }
-	} else {
-	  myGlobals.device[deviceId].netflowGlobals->flowProcessed++;
-	  myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes += len;
 	}
-      } else {
-	myGlobals.device[deviceId].netflowGlobals->flowProcessed++;
-	myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes += len;
       }
     } else {
       if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
 	if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-	  if((dport == myGlobals.device[deviceId].netflowGlobals->netFlowInPort)
-	     || (sport == myGlobals.device[deviceId].netflowGlobals->netFlowInPort)) {
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlow++;
-	  } else if(min(sport, dport) <= 1023) {
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPort++;
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPortBytes += len;
-	    ignoreFlow(&myGlobals.device[deviceId].netflowGlobals->nextFlowIgnored,
-		       ntohl(record->srcaddr), sport,
-		       ntohl(record->dstaddr), dport,
-		       len, deviceId);
-	  } else if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
+	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
 	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
-	    myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpData++;
-	    myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpDataBytes += len;
-	  } else {
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredHighPort++;
-	    myGlobals.device[deviceId].netflowGlobals->flowIgnoredHighPortBytes += len;
-	    ignoreFlow(&myGlobals.device[deviceId].netflowGlobals->nextFlowIgnored,
-		       ntohl(record->srcaddr), sport,
-		       ntohl(record->dstaddr), dport,
-		       len, deviceId);
 	  }
-	} else {
-	  myGlobals.device[deviceId].netflowGlobals->flowProcessed++;
-	  myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes += len;
 	}
-      } else {
-	myGlobals.device[deviceId].netflowGlobals->flowProcessed++;
-	myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes += len;
       }
     }
-  } else {
-    myGlobals.device[deviceId].netflowGlobals->flowIgnoredZeroPort++;
-    myGlobals.device[deviceId].netflowGlobals->flowIgnoredZeroPortBytes += len;
-    ignoreFlow(&myGlobals.device[deviceId].netflowGlobals->nextFlowIgnored,
-	       ntohl(record->srcaddr), sport,
-	       ntohl(record->dstaddr), dport,
-	       len, deviceId);
   }
+
+  myGlobals.device[deviceId].netflowGlobals->flowProcessed++;
+  myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes += len;
 
   ctr.value = len;
   updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
@@ -1280,7 +1200,7 @@ static void* netflowMainLoop(void* _deviceId) {
 	dissectFlow(buffer, rc, deviceId);
       }
     } else {
-      if(rc < 0) {
+      if((rc < 0) && (!myGlobals.endNtop)) {
 	traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: select() failed(%d, %s), terminating netFlow",
 		   errno, strerror(errno));
 	break;
@@ -1323,10 +1243,6 @@ static void initNetFlowDevice(int deviceId) {
   setPluginStatus("Disabled - requires POSIX thread support.");
   return(-1);
 #endif
-
-  memset(myGlobals.device[deviceId].netflowGlobals->flowIgnored, 0,
-	 sizeof(myGlobals.device[deviceId].netflowGlobals->flowIgnored));
-  myGlobals.device[deviceId].netflowGlobals->nextFlowIgnored = 0;
 
   if(fetchPrefsValue(nfValue(deviceId, "netFlowInPort", 1), value, sizeof(value)) == -1)
     storePrefsValue(nfValue(deviceId, "netFlowInPort", 1), "0");
@@ -2174,158 +2090,6 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
   sendString("</td>\n</tr>\n");
 
 #endif
-
-  sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
-             "<tr " TR_ON ">\n"
-             "<th colspan=\"2\" "DARK_BG">Less: Ignored Flows</th>\n"
-             "</tr>\n"
-             "<tr " TR_ON ">\n"
-             "<th " DARK_BG ">&nbsp;</th>\n"
-             "<th><table width=\"100%\" border=\"0\" "TABLE_DEFAULTS">\n"
-             "<tr><th " TH_BG " width=\"50%\" align=\"right\">Flows</th>\n"
-	     "<th " TH_BG " width=\"50%\" align=\"right\">Bytes</th></tr>\n"
-             "</table></th>\n"
-             "</tr>\n");
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Port(s) zero (not tcp/ip)</th>\n"
-              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
-              "</table></td>\n"
-              "</tr>\n",
-              myGlobals.device[deviceId].netflowGlobals->flowIgnoredZeroPort,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredZeroPortBytes, 1, formatBuf, sizeof(formatBuf)));
-  sendString(buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">netFlow port</th>\n"
-              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
-              "</table></td>\n"
-              "</tr>\n",
-              myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlow,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlowBytes, 1, formatBuf, sizeof(formatBuf)));
-  sendString(buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Unrecognized port &lt;= 1023</th>\n"
-              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
-              "</table></td>\n"
-              "</tr>\n",
-              myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPort,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPortBytes, 1, formatBuf, sizeof(formatBuf)));
-  sendString(buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Unrecognized port &gt; 1023</th>\n"
-              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
-              "</table></td>\n"
-              "</tr>\n",
-              myGlobals.device[deviceId].netflowGlobals->flowIgnoredHighPort,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredHighPortBytes, 1, formatBuf, sizeof(formatBuf)));
-  sendString(buf);
-
-  sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
-             "<tr " TR_ON ">\n"
-             "<th colspan=\"2\" "DARK_BG">Gives: Counted Flows</th>\n"
-             "</tr>\n"
-             "<tr " TR_ON ">\n"
-             "<th " DARK_BG ">&nbsp;</th>\n"
-             "<th><table width=\"100%\" border=\"0\" "TABLE_DEFAULTS">\n"
-             "<tr><th " TH_BG " width=\"50%\" align=\"right\">Flows</th>\n"
-	     "<th " TH_BG " width=\"50%\" align=\"right\">Bytes</th></tr>\n"
-             "</table></th>\n"
-             "</tr>\n");
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Processed</th>\n"
-              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
-              "</table></td>\n"
-              "</tr>\n",
-              myGlobals.device[deviceId].netflowGlobals->flowProcessed,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes, 1, formatBuf, sizeof(formatBuf)));
-  sendString(buf);
-
-
-  if((myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpData>0) || (myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP)) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                "<tr " TR_ON ">\n"
-                "<th " TH_BG " align=\"left\" "DARK_BG ">Assumed ftpdat</th>\n"
-                "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
-                "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
-                "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
-                "</table></td>\n"
-                "</tr>\n",
-                myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpData,
-                formatBytes(myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpDataBytes, 1, formatBuf, sizeof(formatBuf)));
-    sendString(buf);
-  }
-
-  if(myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlow > 0) {
-    sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
-	       "<tr " TR_ON ">\n"
-	       "<th colspan=\"2\" "DARK_BG">Most Recent Ignored Flows</th>\n"
-	       "</tr>\n"
-	       "<tr " TR_ON ">\n"
-	       "<th colspan=\"2\"><table width=\"100%\" border=1 "TABLE_DEFAULTS">"
-	       "<tr><th colspan=\"2\">Flow</th>\n"
-	       "<th>Bytes</th>\n"
-	       "<th># Consecutive<br>Counts</th></tr>\n");
-
-    for (i=myGlobals.device[deviceId].netflowGlobals->nextFlowIgnored;
-	 i<myGlobals.device[deviceId].netflowGlobals->nextFlowIgnored+MAX_NUM_IGNOREDFLOWS; i++) {
-      if ((myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
-	  (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
-	if(myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
-	  safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "(%d) ", myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
-	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "&nbsp;");
-	}
-	if (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) {
-	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%.1fGB",
-		      (float)myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
-	} else if (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) {
-	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%.1fMB",
-		      (float)myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
-	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%u",
-		      myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
-	}
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<tr><td align=\"right\">%d.%d.%d.%d:%d</td>"
-		    "<td align=\"left\">-> %d.%d.%d.%d:%d</td>"
-		    "<td align=\"right\">%s</td>"
-		    "<td align=\"right\">%s</td></tr>\n",
-		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 24) & 0xff,
-		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 16) & 0xff,
-		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >>  8) & 0xff,
-		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0]      ) & 0xff,
-		    myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][1],
-		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 24) & 0xff,
-		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 16) & 0xff,
-		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >>  8) & 0xff,
-		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2]      ) & 0xff,
-		    myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][3],
-		    buf2, buf1);
-	sendString(buf);
-      }
-    }
-
-    sendString("</table>");
-  }
 }
 
 /* ****************************** */
@@ -2351,6 +2115,7 @@ static int createNetFlowDevice(int netFlowDeviceId) {
     memset(myGlobals.device[deviceId].netflowGlobals, 0, sizeof(NetFlowGlobals));
 
     myGlobals.device[deviceId].activeDevice = 1;
+    myGlobals.device[deviceId].dummyDevice  = 0;
     myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId = netFlowDeviceId;
     initNetFlowDevice(deviceId);
     setNetFlowInterfaceMatrix(deviceId);
@@ -2742,7 +2507,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 
 static void termNetflowDevice(int deviceId) {
 
-  traceEvent(CONST_TRACE_INFO, "NETFLOW: terminating deviceId=%d", deviceId);
+  traceEvent(CONST_TRACE_INFO, "NETFLOW: terminating device %s",  myGlobals.device[deviceId].humanFriendlyName);
 
   if(!pluginActive) return;
 

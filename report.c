@@ -2692,7 +2692,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
   if(el->portsUsage != NULL) {
     for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
-      if(el->portsUsage[idx] != NULL) {
+      PortUsage *ports = getPortsUsage(el, idx, 0);
+      if(ports != NULL) {
 	char *svc = getAllPortByNum(idx, portBuf, sizeof(portBuf));
 	char webHostName[LEN_GENERAL_WORK_BUFFER];
 	HostTraffic *peerHost;
@@ -2721,14 +2722,14 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
 	sendString(buf);
 
-	if(el->portsUsage[idx]->clientUses > 0) {
+	if(ports->clientUses > 0) {
 	  /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 	  HostTraffic tmpEl;
 
-	  if(emptySerial(&el->portsUsage[idx]->clientUsesLastPeer))
+	  if(emptySerial(&ports->clientUsesLastPeer))
 	    peerHost = NULL;
 	  else
-	    peerHost = quickHostLink(el->portsUsage[idx]->clientUsesLastPeer, actualDeviceId, &tmpEl);
+	    peerHost = quickHostLink(ports->clientUsesLastPeer, actualDeviceId, &tmpEl);
 
 	  if(peerHost == NULL) {
 	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
@@ -2740,20 +2741,20 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
 		      "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-		      el->portsUsage[idx]->clientUses,
-		      formatBytes(el->portsUsage[idx]->clientTraffic.value, 1, formatBuf, sizeof(formatBuf)),
+		      ports->clientUses,
+		      formatBytes(ports->clientTraffic.value, 1, formatBuf, sizeof(formatBuf)),
 		      webHostName);
 	  sendString(buf);
 	} else
 	  sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
 
-	if(el->portsUsage[idx]->serverUses > 0) {
+	if(ports->serverUses > 0) {
 	  HostTraffic tmpEl;
 
-	  if(emptySerial(&el->portsUsage[idx]->serverUsesLastPeer))
+	  if(emptySerial(&ports->serverUsesLastPeer))
 	    peerHost = NULL;
 	  else
-	    peerHost = quickHostLink(el->portsUsage[idx]->serverUsesLastPeer, actualDeviceId, &tmpEl);
+	    peerHost = quickHostLink(ports->serverUsesLastPeer, actualDeviceId, &tmpEl);
 
 	  if(peerHost == NULL) {
 	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
@@ -2764,8 +2765,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
 		      "<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>",
-		      el->portsUsage[idx]->serverUses,
-		      formatBytes(el->portsUsage[idx]->serverTraffic.value, 1, formatBuf, sizeof(formatBuf)),
+		      ports->serverUses,
+		      formatBytes(ports->serverTraffic.value, 1, formatBuf, sizeof(formatBuf)),
 		      webHostName);
 	  sendString(buf);
 	} else
@@ -3404,12 +3405,10 @@ void printIpProtocolUsage(void) {
       hosts[hostsNum++] = el;
 
       if(el->portsUsage != NULL) {
-	for(j=0; j<MAX_ASSIGNED_IP_PORTS; j++) {
-	  if(el->portsUsage[j] != NULL)  {
-	    clientPorts[j] += el->portsUsage[j]->clientUses;
-	    serverPorts[j] += el->portsUsage[j]->serverUses;
-	    numPorts++;
-	  }
+	PortUsage *ports = el->portsUsage;
+	while(ports) {
+	  clientPorts[j] += ports->clientUses, serverPorts[j] += ports->serverUses;
+	  numPorts++, ports = ports->next;
 	}
       }
     }
@@ -3437,11 +3436,12 @@ void printIpProtocolUsage(void) {
       sendString(buf);
 
       if(clientPorts[j] > 0) {
+	PortUsage *ports = getPortsUsage(hosts[idx1], j, 0);
+	
 	sendString("<UL>");
 	for(idx1=0; idx1<hostsNum; idx1++)
 	  if((hosts[idx1]->portsUsage != NULL)
-	     && (hosts[idx1]->portsUsage[j] != NULL) /* added 04.03.00 Ralf Amandi */
-	     && (hosts[idx1]->portsUsage[j]->clientUses > 0)) {
+	     && ports && (ports->clientUses > 0)) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
 			makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
 	    sendString(buf);
@@ -3453,11 +3453,12 @@ void printIpProtocolUsage(void) {
       sendString("</TD><TD "TD_BG">");
 
       if(serverPorts[j] > 0) {
+	PortUsage *ports = getPortsUsage(hosts[idx1], j, 0);
+
 	sendString("<UL>");
 	for(idx1=0; idx1<hostsNum; idx1++)
 	  if((hosts[idx1]->portsUsage != NULL)
-	     && (hosts[idx1]->portsUsage[j] != NULL) /* added 04.03.00 Ralf Amandi */
-	     && (hosts[idx1]->portsUsage[j]->serverUses > 0)) {
+	     && ports && (ports->serverUses > 0)) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
 			makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
 	    sendString(buf);

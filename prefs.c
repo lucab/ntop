@@ -1116,6 +1116,14 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     }
     processIntPref (NTOP_PREF_MAXHASH, value,
 		    &pref->maxNumHashEntries, savePref);
+  } else if(strcmp (key, NTOP_PREF_MAXSESSIONS) == 0) {
+    if (value == NULL) {
+      safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		     -1);
+      value = buf;
+    }
+    processIntPref (NTOP_PREF_MAXSESSIONS, value,
+		    &pref->maxNumSessions, savePref);
   } else if(strcmp (key, NTOP_PREF_MERGEIF) == 0) {
     processBoolPref (NTOP_PREF_MERGEIF, TRUE,
 		     &pref->mergeInterfaces, savePref);
@@ -1223,7 +1231,8 @@ void initUserPrefs (UserPref *pref)
   pref->refreshRate = DEFAULT_NTOP_AUTOREFRESH_INTERVAL;
   pref->disablePromiscuousMode = DEFAULT_NTOP_DISABLE_PROMISCUOUS;
   pref->traceLevel = DEFAULT_TRACE_LEVEL;
-  pref->maxNumHashEntries = pref->maxNumSessions = (u_int)-1;
+  pref->maxNumHashEntries = DEFAULT_NTOP_MAX_HASH_ENTRIES;
+  pref->maxNumSessions    = DEFAULT_NTOP_MAX_NUM_SESSIONS;
   pref->webAddr = DEFAULT_NTOP_WEB_ADDR;
   pref->webPort = DEFAULT_NTOP_WEB_PORT;
   pref->ipv4or6 = DEFAULT_NTOP_FAMILY;
@@ -1239,7 +1248,7 @@ void initUserPrefs (UserPref *pref)
   pref->mergeInterfaces = DEFAULT_NTOP_MERGE_INTERFACES;
 #ifdef WIN32
   pref->pcapLogBasePath = strdup(_wdir);     /* a NULL pointer will
-                                                        * break the logic */
+					      * break the logic */
 #else
   pref->pcapLogBasePath = strdup(CFG_DBFILE_DIR);
 #endif
@@ -1258,8 +1267,8 @@ void initUserPrefs (UserPref *pref)
    pref->disableSchedYield = DEFAULT_NTOP_SCHED_YIELD;
 #endif
 
-   pref->w3c = DEFAULT_NTOP_W3C;
-   pref->P3Pcp = DEFAULT_NTOP_P3PCP;
+   pref->w3c    = DEFAULT_NTOP_W3C;
+   pref->P3Pcp  = DEFAULT_NTOP_P3PCP;
    pref->P3Puri = DEFAULT_NTOP_P3PURI;
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
@@ -1271,7 +1280,6 @@ void initUserPrefs (UserPref *pref)
    pref->printFcOnly = DEFAULT_NTOP_PRINTFCONLY;
    pref->noInvalidLunDisplay = DEFAULT_NTOP_NO_INVLUN_DISPLAY;
    pref->disableMutexExtraInfo = DEFAULT_NTOP_DISABLE_MUTEXINFO;
-
    pref->skipVersionCheck = DEFAULT_NTOP_SKIP_VERSION_CHECK;
 }
 

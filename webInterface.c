@@ -6202,9 +6202,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
   /* **** */
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name);
-    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "<tr><th colspan=2 "DARK_BG">Host/Session counts - Device %d (%s)</th></tr>\n",
-		i, myGlobals.device[i].name);
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2),
+		  "<tr><th colspan=2 "DARK_BG">Host/Session counts - %sDevice %d (%s)</th></tr>\n",
+		  myGlobals.device[i].virtualDevice ? "Virtual " : "",
+		  i, myGlobals.device[i].name);
     sendString(texthtml(buf, buf2));
     
     printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size",

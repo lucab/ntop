@@ -629,7 +629,8 @@ extern unsigned short isOKtoSave(u_int32_t addr,
 				 u_int32_t blackNetworks[MAX_NUM_NETWORKS][3],
 				 u_short numWhiteNets, u_short numBlackNets);
 extern float timeval_subtract(struct timeval x, struct timeval y);
-
+extern void freePortsUsage(PortUsage *ports);
+extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
 
 /* Formatting for %.2f ... */
 #define xvertDOT00MB(v)(((float)(v)/(float)(1024.0*1024.0))+0.005)

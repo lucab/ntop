@@ -988,7 +988,7 @@ void initThreads(void) {
   /*
    * Create the thread (4) - SIH - Scan Idle Hosts - optional
    */
-  if ((myGlobals.runningPref.rFileName == NULL) &&
+  if (/* (myGlobals.runningPref.rFileName == NULL) && */
       (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN)) {
     createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for idle hosts detection",

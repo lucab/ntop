@@ -40,21 +40,6 @@ u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
 
 /* ************************************ */
 
-static PortUsage* allocatePortUsage(void) {
-  PortUsage *ptr;
-
-#ifdef DEBUG
-  printf("DEBUG: allocatePortUsage() called\n");
-#endif
-
-  ptr = (PortUsage*)calloc(1, sizeof(PortUsage));
-  setEmptySerial(&ptr->clientUsesLastPeer), setEmptySerial(&ptr->serverUsesLastPeer);
-
-  return(ptr);
-}
-
-/* ************************************ */
-
 void updatePortList(HostTraffic *theHost, int clientPort, int serverPort) {
   if(theHost == NULL) return;
 
@@ -235,6 +220,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 		     u_short dport,
 		     u_int length) {
   u_short clientPort, serverPort;
+  PortUsage *ports;
   int sport_idx = mapGlobalToLocalIdx(sport);
   int dport_idx = mapGlobalToLocalIdx(dport);
 
@@ -266,51 +252,45 @@ void updateUsedPorts(HostTraffic *srcHost,
 
   if((srcHost->portsUsage == NULL) || (dstHost->portsUsage == NULL))
     return;
-
+  
   if(sport < MAX_ASSIGNED_IP_PORTS) {
-    if(srcHost->portsUsage[sport] == NULL) srcHost->portsUsage[sport] = allocatePortUsage();
+    ports = getPortsUsage(srcHost, sport, 1);
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Adding svr peer %u", dstHost->hostTrafficBucket);
 #endif
 
-    incrementTrafficCounter(&srcHost->portsUsage[sport]->serverTraffic, length);
-    srcHost->portsUsage[sport]->serverUses++;
-    srcHost->portsUsage[sport]->serverUsesLastPeer = dstHost->hostSerial;
+    incrementTrafficCounter(&ports->serverTraffic, length);
+    ports->serverUses++, ports->serverUsesLastPeer = dstHost->hostSerial;
 
-    if(dstHost->portsUsage[sport] == NULL)
-      dstHost->portsUsage[sport] = allocatePortUsage();
+    ports = getPortsUsage(dstHost, sport, 1);
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
-    incrementTrafficCounter(&dstHost->portsUsage[sport]->clientTraffic, length);
-    dstHost->portsUsage[sport]->clientUses++;
-    dstHost->portsUsage[sport]->clientUsesLastPeer = srcHost->hostSerial;
+    incrementTrafficCounter(&ports->clientTraffic, length);
+    ports->clientUses++, ports->clientUsesLastPeer = srcHost->hostSerial;
   }
 
   if(dport < MAX_ASSIGNED_IP_PORTS) {
-    if(srcHost->portsUsage[dport] == NULL) srcHost->portsUsage[dport] = allocatePortUsage();
+    ports = getPortsUsage(srcHost, dport, 1);
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
-    incrementTrafficCounter(&srcHost->portsUsage[dport]->clientTraffic, length);
-    srcHost->portsUsage[dport]->clientUses++;
-    srcHost->portsUsage[dport]->clientUsesLastPeer = dstHost->hostSerial;
+    incrementTrafficCounter(&ports->clientTraffic, length);
+    ports->clientUses++, ports->clientUsesLastPeer = dstHost->hostSerial;
 
-    if(dstHost->portsUsage[dport] == NULL)
-      dstHost->portsUsage[dport] = allocatePortUsage();
+    ports = getPortsUsage(dstHost, dport, 1);
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Adding svr peer %u", srcHost->hostTrafficBucket);
 #endif
 
-    incrementTrafficCounter(&dstHost->portsUsage[dport]->serverTraffic, length);
-    dstHost->portsUsage[dport]->serverUses++;
-    dstHost->portsUsage[dport]->serverUsesLastPeer = srcHost->hostSerial;
+    incrementTrafficCounter(&ports->serverTraffic, length);
+    ports->serverUses++, ports->serverUsesLastPeer = srcHost->hostSerial;
   }
 }
 

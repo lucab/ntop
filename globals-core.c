@@ -129,8 +129,7 @@ static void allocateOtherHosts() {
 	  sizeof(myGlobals.otherHostEntry->hostResolvedName));
   myGlobals.otherHostEntry->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
   strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
-  myGlobals.otherHostEntry->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*),
-							     MAX_ASSIGNED_IP_PORTS);
+  myGlobals.otherHostEntry->portsUsage = NULL;
 }
 
 /* ************************************ */
