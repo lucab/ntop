@@ -4132,8 +4132,8 @@ void printLocalHostsStats() {
 
     /* ********************************** */
 
-    /* quicksort(theOSs, MAX_NUM_OS, sizeof(OsNumInfo), cmpOSFctn); */
-
+    quicksort(theOSs, MAX_NUM_OS, sizeof(OsNumInfo), cmpOSFctn);
+    
     sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON"><TH "TH_BG">OS</TH><TH "TH_BG">Total</TH></TR>");
 
     for(i=0; i<MAX_NUM_OS; i++) {
