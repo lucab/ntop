@@ -706,7 +706,7 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
 
 /* ************************* */
 
-void returnHTTPbadRequest() {
+ void returnHTTPbadRequest() {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_400);
 }
 

@@ -643,12 +643,6 @@ static void processIpPkt(const u_char *bp,
    memcpy(&ip, bp, sizeof(struct ip));
    hlen = (u_int)ip.ip_hl * 4;
 
-   if(vlanId != -1) {
-     allocateElementHash(actualDeviceId, 1 /* VLAN hash */);
-     updateElementHash(myGlobals.device[actualDeviceId].vlanHash,
-		       vlanId, vlanId,  1 /* 1 packet */, length);
-   }
-
    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipPkts, 1);
 
    if((bp != NULL) && (in_cksum((const u_short *)bp, hlen, 0) != 0)) {

@@ -1334,13 +1334,15 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
 /* ******************************* */
 
+#define NUM_ANCHORS 10
+
 void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
   u_int idx, numEntries=0;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
-  struct hostTraffic *el;
-  struct hostTraffic** tmpTable;
-  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[12], *theAnchor[12], osBuf[128];
+  HostTraffic *el;
+  HostTraffic** tmpTable;
+  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[NUM_ANCHORS+1], *theAnchor[NUM_ANCHORS+1], osBuf[128];
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
@@ -1373,22 +1375,23 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       maxBandwidthUsage = actUsage;
 
     tmpTable[numEntries++] = el;
+    getHostAS(el);
 
     if(numEntries >= myGlobals.device[myGlobals.actualReportDeviceId].hostsno)
-      break;    
+      break;
   }
 
   if(numEntries > 0) {
     int i;
 
-    qsort(tmpTable, numEntries, sizeof(struct hostTraffic*), sortHostFctn);
+    qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
 
     if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", HOSTS_INFO_HTML, sign) < 0)
       BufferTooShort();
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", HOSTS_INFO_HTML) < 0)
       BufferTooShort();
 
-    for(i=1; i<=9; i++) {
+    for(i=1; i<=NUM_ANCHORS; i++) {
       if(abs(myGlobals.columnSort) == i) {
 	arrow[i] = arrowGif;
 	theAnchor[i] = htmlAnchor;
@@ -1418,6 +1421,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  "<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
 		  "<TH "TH_BG">%s8>Host&nbsp;Contacts%s</A></TH>"
 		  "<TH "TH_BG">%s9>Age%s</A></TH>"
+		  "<TH "TH_BG">%s10>AS%s</A></TH>"
 		  "</TR>\n",
 		  theAnchor[1], arrow[1],
 		  theAnchor[0], arrow[0],
@@ -1428,7 +1432,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  theAnchor[5], arrow[5],
 		  theAnchor[7], arrow[7],
 		  theAnchor[8], arrow[8],
-		  theAnchor[9], arrow[9]
+		  theAnchor[9], arrow[9],
+		  theAnchor[10], arrow[10]
 		  ) < 0)
 	BufferTooShort();
     } else {
@@ -1441,6 +1446,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  "<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
 		  "<TH "TH_BG">%s8>Host&nbsp;Contacts%s</A></TH>"
 		  "<TH "TH_BG">%s9>Age%s</A></TH>"
+		  "<TH "TH_BG">%s10>AS%s</A></TH>"
 		  "</TR>\n",
 		  theAnchor[1], arrow[1],
 		  theAnchor[0], arrow[0],
@@ -1449,7 +1455,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		  theAnchor[4], arrow[4],
 		  theAnchor[7], arrow[7],
 		  theAnchor[8], arrow[8],
-		  theAnchor[9], arrow[9]
+		  theAnchor[9], arrow[9],
+		  theAnchor[10], arrow[10]
 		  ) < 0)
 	BufferTooShort();
     }
@@ -1681,6 +1688,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	    BufferTooShort();
 	  sendString(buf);
 
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%d</A></TD>", el->hostAS) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+
 	  sendString("</TR>\n");
 	  printedEntries++;
 	}
@@ -1713,9 +1724,9 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   u_short found = 0;
 
-  for(el=getFirstHost(actualDeviceId); 
-      el != NULL; el = getNextHost(actualDeviceId, el)) {    
-    if((strcmp(el->hostNumIpAddress, host) == 0) 
+  for(el=getFirstHost(actualDeviceId);
+      el != NULL; el = getNextHost(actualDeviceId, el)) {
+    if((strcmp(el->hostNumIpAddress, host) == 0)
        || (strcmp(el->ethAddressString, host) == 0)) {
       found = 1;
       break;
@@ -1924,7 +1935,7 @@ void printLocalRoutersList(int actualDeviceId) {
     return;
   }
 
-  for(el=getFirstHost(actualDeviceId); 
+  for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
     if(subnetLocalHost(el)) {
 
@@ -1962,7 +1973,7 @@ void printLocalRoutersList(int actualDeviceId) {
 	sendString(buf);
 
 
-	for(el=getFirstHost(actualDeviceId); 
+	for(el=getFirstHost(actualDeviceId);
 	    el != NULL; el = getNextHost(actualDeviceId, el)) {
 	  if(subnetLocalHost(el)) {
 	    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
@@ -2013,7 +2024,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
   memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
 
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
       if((broadcastHost(el) == 0) /* No broadcast addresses please */
 	 && (multicastHost(el) == 0) /* No multicast addresses please */
@@ -2085,7 +2096,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   if(numEntries > 0) {
     myGlobals.columnSort = sortedColumn;
     myGlobals.sortFilter = remoteToLocal;
-    qsort(tmpTable, numEntries, sizeof(struct hostTraffic*), cmpHostsFctn);
+    qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpHostsFctn);
 
     if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", str, sign) < 0)
       BufferTooShort();
@@ -2387,7 +2398,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
       printFlagedWarning("<I>No Active TCP Sessions</I>");
     }
   }
-  
+
 #ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
@@ -2410,7 +2421,7 @@ void printIpProtocolUsage(void) {
   hosts = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
   memset(hosts, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
 
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(subnetPseudoLocalHost(el) && (el->hostNumIpAddress[0] != '\0')) {
       hosts[hostsNum++] = el;
@@ -3837,7 +3848,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   else
     domainSort = 0;
 
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     fillDomainName(el);
 
@@ -4321,18 +4332,98 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
 /* ************************** */
 
+void dumpHostsCriteria(NtopInterface *interface, u_char criteria) {
+  u_int numEntries=0, i, idx;
+  HostTraffic **tmpTable, *el;
+  char buf[LEN_GENERAL_WORK_BUFFER];
+
+  tmpTable = (HostTraffic**)malloc(interface->hostsno*sizeof(HostTraffic*));
+  memset(tmpTable, 0, interface->hostsno*sizeof(HostTraffic*));
+
+  switch(criteria) {
+    case 0: /* AS */
+      printHTMLheader("AS Information", 0);
+      myGlobals.columnSort = 10;
+      break;
+    case 1: /* VLAN */
+      printHTMLheader("VLAN Information", 0);
+      myGlobals.columnSort = 11;
+      break;
+  }
+
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    unsigned short actUsage;
+
+    switch(criteria) {
+    case 0: /* AS */
+      getHostAS(el);
+      if(el->hostAS > 0)  tmpTable[numEntries++] = el;
+      break;
+    case 1: /* VLAN */
+      if(el->vlanId > 0)  tmpTable[numEntries++] = el;
+      break;
+    }
+
+    if(numEntries >= interface->hostsno)
+      break;
+  }
+
+  if(numEntries > 0) {
+    int lastId = 0;
+    qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
+
+    if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+		"<TH "TH_BG">%s</A></TH><TH "TH_BG">Hosts</TH></TR>",
+		criteria == 0 ? "AS" : "VLAN") < 0)
+	BufferTooShort();
+    sendString(buf);
+
+    for(i=0; i<numEntries; i++) {
+      el = tmpTable[numEntries-i-1];
+
+      if(((criteria == 0) && (lastId != el->hostAS))
+	 || ((criteria == 1) && (lastId != el->vlanId))) {
+	if(i > 0) sendString("</TR>");
+
+	if(criteria == 0 /* AS */) {
+	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT>"
+		      "<A HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A>"
+		      "</TH><TH "TH_BG" ALIGN=LEFT>", el->hostAS, el->hostAS) < 0)
+	    BufferTooShort();
+	} else {
+	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT>%d</TH><TH "TH_BG" ALIGN=LEFT>",
+		      el->vlanId) < 0)
+	    BufferTooShort();
+	}
+
+	sendString(buf);
+	lastId = el->hostAS;
+      }
+
+      sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0));
+      sendString("<br>\n");
+    }
+
+    sendString("</TR>\n</TABLE>\n</CENTER>");
+  } else {
+    printFlagedWarning("<I>No entries to display(yet)</I>");
+  }
+
+  free(tmpTable);
+}
+
+/* ************************** */
+
 void printASList(unsigned int deviceId) {
   printHTMLheader("Autonomous Systems Traffic Statistics", 0);
 
   if(deviceId > myGlobals.numDevices) {
     printFlagedWarning("<I>Invalid device specified</I>");
     return;
-  } else if(myGlobals.device[deviceId].asHash == NULL) {
-    printFlagedWarning("<I>No AS Information Available (yet).</I>");
-    return;
   }
 
-  dumpElementHash(myGlobals.device[deviceId].asHash, "AS", 1, 0);
+  dumpHostsCriteria(&myGlobals.device[deviceId], 0 /* AS */);
 }
 
 /* ******************************* */
@@ -4343,12 +4434,9 @@ void printVLANList(unsigned int deviceId) {
   if(deviceId > myGlobals.numDevices) {
     printFlagedWarning("<I>Invalid device specified</I>");
     return;
-  } else if(myGlobals.device[deviceId].vlanHash == NULL) {
-    printFlagedWarning("<I>No VLAN Traffic Information Available (yet).</I>");
-    return;
   }
 
-  dumpElementHash(myGlobals.device[deviceId].vlanHash, "VLAN", 0, 1);
+  dumpHostsCriteria(&myGlobals.device[deviceId], 1 /* VLAN */);
 }
 
 /* ******************************************* */
@@ -4394,7 +4482,7 @@ void showPortTraffic(u_short portNr) {
   sendString("<TABLE BORDER>\n<TR><TH>Client</TH><TH>Server</TH></TR>\n");
   sendString("<TR>\n<TD>\n");
 
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(recentlyUsedPort(el, portNr, 0)) {
       sendString("\n<LI> ");
@@ -4405,7 +4493,7 @@ void showPortTraffic(u_short portNr) {
 
   sendString("\n&nbsp;\n</TD><TD>\n");
 
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(el && recentlyUsedPort(el, portNr, 1)) {
       sendString("\n<LI> ");

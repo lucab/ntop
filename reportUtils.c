@@ -913,6 +913,26 @@ int sortHostFctn(const void *_a, const void *_b) {
     else
       return(0);
     break;
+  case 10:
+    n_a = (*a)->hostAS, n_b = (*b)->hostAS;
+
+    if(n_a < n_b)
+      return(1);
+    else if(n_a > n_b)
+      return(-1);
+    else
+      return(0);
+    break;
+  case 11:
+    n_a = (*a)->vlanId, n_b = (*b)->vlanId;
+
+    if(n_a < n_b)
+      return(1);
+    else if(n_a > n_b)
+      return(-1);
+    else
+      return(0);
+    break;
   case 4:
   default:
     if((*a)->actBandwidthUsage < (*b)->actBandwidthUsage)
@@ -3151,9 +3171,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
   }
   
-  if((as = ip2AS(el->hostIpAddress.s_addr)) != 0) {
+  if(getHostAS(el) != 0) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-	       "%d</TD></TR>\n", getRowColor(), "Origin&nbsp;AS", as) < 0)
+		"%d</TD></TR>\n", getRowColor(), "Origin&nbsp;AS", as) < 0)
       BufferTooShort();
     sendString(buf);
   }
@@ -3847,164 +3867,6 @@ void printSectionTitle(char *text) {
 }
 
 /* ******************************** */
-
-static char* formatElementData(ElementHash *hash, u_char dataSent, char *buf, int bufLen) {
-
-  if((dataSent && (hash->bytesSent.value == 0))
-     || ((!dataSent) && (hash->bytesRcvd.value == 0)))
-    return("&nbsp;");
-
-  if(dataSent) {
-    if(snprintf(buf, bufLen, "%s/%s Pkts",
-		formatBytes(hash->bytesSent.value, 1),
-		formatPkts(hash->pktsSent.value)) < 0)
-      BufferTooShort();
-  } else {
-    if(snprintf(buf, bufLen, "%s/%s Pkts",
-		formatBytes(hash->bytesRcvd.value, 1),
-		formatPkts(hash->pktsRcvd.value)) < 0)
-      BufferTooShort();
-  }
-
-  return(buf);
-}
-
-/* ******************************** */
-
-void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraffic, u_char vlanHash) {
-  u_char entries[MAX_HASHDUMP_ENTRY];
-  ElementHash *hashList[MAX_HASHDUMP_ENTRY];
-  char buf[LEN_GENERAL_WORK_BUFFER], buf1[96];
-  ElementHash *hash, hashListEntry;
-  int i, j;
-
-  if(theHash == NULL) return;
-
-  memset(entries, 0, sizeof(entries));
-
-  for(i=0; i<MAX_ELEMENT_HASH; i++) {
-    if((theHash[i] != NULL) && (theHash[i]->id < MAX_HASHDUMP_ENTRY)) {
-      entries[theHash[i]->id] = 1;
-
-      hash = theHash[i];
-      while(hash != NULL) {
-	if(hash->id < MAX_HASHDUMP_ENTRY) {
-	  entries[hash->id] = 1;
-	}
-
-	hash = hash->next;
-      }
-    }
-  }
-
-  sendString("<CENTER><TABLE BORDER>\n<TR><TH>");
-  sendString(label);
-
-  sendString("</TH><TH>Data Sent</TH><TH>Data Rcvd</TH><TH>");
-  sendString(label);
-  sendString(" Peers</TH>");
-  if(vlanHash) sendString("<TH>Hosts</TH>");
-  sendString("</TR>\n");
-
-  /* ****************** */
-
-  for(i=0; i<MAX_HASHDUMP_ENTRY; i++) {
-    if(entries[i] == 1) {
-      memset(hashList, 0, sizeof(hashList));
-      memset(&hashListEntry, 0, sizeof(ElementHash));
-
-      for(j=0; j<MAX_ELEMENT_HASH; j++) {
-	if(theHash[j] != NULL) {
-	  hash = theHash[j]->next;
-
-	  while(hash != NULL) {
-	    if(hash->id < MAX_HASHDUMP_ENTRY) {
-	      if(hash->id == i) {
-		incrementTrafficCounter(&hashListEntry.bytesSent, hash->bytesSent.value);
-		incrementTrafficCounter(&hashListEntry.pktsSent,  hash->pktsSent.value);
-		incrementTrafficCounter(&hashListEntry.bytesRcvd, hash->bytesRcvd.value);
-		incrementTrafficCounter(&hashListEntry.pktsRcvd,  hash->pktsRcvd.value);
-		hashList[theHash[j]->id] = theHash[j];
-	      } else if(theHash[j]->id == i) {
-		incrementTrafficCounter(&hashListEntry.bytesSent, theHash[j]->bytesSent.value);
-		incrementTrafficCounter(&hashListEntry.pktsSent,  theHash[j]->pktsSent.value);
-		incrementTrafficCounter(&hashListEntry.bytesRcvd, theHash[j]->bytesRcvd.value);
-		incrementTrafficCounter(&hashListEntry.pktsRcvd,  theHash[j]->pktsRcvd.value);
-		hashList[theHash[j]->id] = hash;
-	      }
-	    }
-
-	    hash = hash->next;
-	  }
-	}
-      }
-
-      if(snprintf(buf, sizeof(buf), "<TR><TH>%d</TH>"
-		  "<TD>%s</TD><TD>%s</TD><TD>", i,
-		  formatElementData(&hashListEntry, 1, buf1, sizeof(buf1)),
-		  formatElementData(&hashListEntry, 0, buf1, sizeof(buf1))) < 0)
-	BufferTooShort();
-      sendString(buf);
-
-      for(j=0; j<MAX_HASHDUMP_ENTRY; j++) {
-	if(hashList[j] != NULL) {
-
-	  if(dumpLoopbackTraffic
-	     || ((dumpLoopbackTraffic == 0) && (i != hashList[j]->id))) {
-	    sendString("<A HREF=# onMouseOver=\"window.status='");
-
-	    if(hashList[j]->bytesSent.value > 0) {
-	      if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
-			  i, hashList[j]->id, formatBytes(hashList[j]->bytesSent.value, 1),
-			  formatPkts(hashList[j]->pktsSent.value)) < 0)
-		BufferTooShort();
-	      sendString(buf);
-	    }
-
-	    if(hashList[j]->bytesRcvd.value > 0) {
-	      if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
-			  hashList[j]->id, i, formatBytes(hashList[j]->bytesRcvd.value, 1),
-			  formatPkts(hashList[j]->pktsRcvd.value)) < 0)
-		BufferTooShort();
-	      sendString(buf);
-	    }
-
-	    if(snprintf(buf, sizeof(buf),
-			"';return true\" onMouseOut=\"window.status='';return true\">%d</A>\n",
-			hashList[j]->id) < 0)
-	      BufferTooShort();
-	    sendString(buf);
-	  }
-	}
-      }
-
-      sendString("&nbsp;");
-
-      if(vlanHash) {
-	HostTraffic *el;
-
-	sendString("<TD>\n");
-
-	for(el=getFirstHost(myGlobals.actualReportDeviceId); 
-	    el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-	  if(el->vlanId == i) {
-	    sendString("<li>");
-	    sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)); 
-	    sendString("<br>\n");
-	  }
-	} /* for */
-
-	sendString("</TD>\n");
-      }
-
-      sendString("</TR>\n");
-    }
-  }
-
-  sendString("</TR>\n</TABLE>\n</CENTER>\n");
-}
-
-/* ************************************ */
 
 #define MAX_NUM_OS           256
 

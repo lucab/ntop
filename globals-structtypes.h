@@ -217,13 +217,6 @@ typedef struct trafficCounter {
   u_char modified;
 } TrafficCounter;
 
-typedef struct elementHash {
-  u_short id;
-  TrafficCounter bytesSent, pktsSent;
-  TrafficCounter bytesRcvd, pktsRcvd;  
-  struct elementHash *next;
-} ElementHash;
-
 /* ************* Types Definition ********************* */
 
 typedef struct thptEntry {
@@ -731,8 +724,6 @@ typedef struct ntopInterface {
   struct hostTraffic **hash_hostTraffic;
 
   u_short hashListMaxLookups;
-  ElementHash **asHash;   /* Autonomous System */
-  ElementHash **vlanHash; /* VLAN - Virtual LAN */
 
   /* ************************** */
 

@@ -303,6 +303,7 @@ extern void resetTrafficCounter(TrafficCounter *ctr);
 extern int setSpecifiedUser();
 extern u_short ip2AS(u_int32_t ip);
 extern void readASs(FILE *fd);
+extern u_int16_t getHostAS(HostTraffic *el);
 extern HostTraffic* getFirstHost(u_int actualDeviceId);
 extern HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host);
 extern HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId);
@@ -422,9 +423,6 @@ extern void storePrefsValue(char *key, char *value);
 extern int guessHops(HostTraffic *el);
 extern unsigned int ntop_sleep(unsigned int secs);
 extern void unescape(char *dest, int destLen, char *url);
-extern void updateElementHash(ElementHash **list, u_short srcId, u_short dstId, 
-			      u_int32_t numPkts, u_int32_t numBytes);
-extern void allocateElementHash(int deviceId, u_short hashType);
 extern u_int numActiveSenders(u_int deviceId);
 extern u_int32_t xaton(char *s);
 extern void addNodeInternal(u_int32_t ip, int prefix, char *country, int as);
