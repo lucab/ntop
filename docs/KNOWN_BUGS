@@ -8,6 +8,185 @@
              Network Top
 
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+v2.1 (Jun 2002)
+
+1. https:// & tcp wrappers
+
+     If you compile ntop with tcp wrappers and attempt to access an 
+     https:// url, it will fail with
+
+"Jun 11 14:22:52 www ntop[22622]: warning: can't get client address: Bad file descriptor"
+
+     in the log.  
+
+     hosts.allow:
+
+       ntop: 192.168.0.
+
+     hosts.deny:
+
+       ntop: ALL
+
+
+     No real clue why - the code that ntop uses:
+
+         {
+           struct request_info req;
+           request_init(&req, RQ_DAEMON, DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
+           fromhost(&req);
+           if(!hosts_access(&req)) {
+             closelog(); /* just in case */
+             openlog(DAEMONNAME, LOG_PID, deny_severity);
+             syslog(deny_severity, "refused connect from %s", eval_client(&req));
+           }
+           else
+             handleHTTPrequest(from.sin_addr);
+         }
+
+     is the same as the code used, for example, by sshd. 
+
+     It's the fromhost() call - without a value set there, there is no file descriptor
+     set, and the hosts_access() call is then "properly" rejecting the request.
+
+
+========================================
+
+2. https:// & Opera
+
+     With fixes through 25Jun2002, this works, albeit VERY SLOWLY on the handshake.
+     Sometimes as much as two minutes.  After that, clicking around through the 
+     ntop web server works fine, but it is also subject to a noticeable delay bringing
+     up the png images.
+
+     However, some versions of Opera (6.03 under Win98), give an SSL error and no results:
+
+Jun 29 08:17:31 localhost ntop[17731]: SSL(read)ERROR [Thread 17731]: error:140EC0E5:SSL routines:SSL2_READ_INTERNAL:ssl handshake failure at s2_pkt.c(142)  
+
+     Sometimes with tcp wrappers enabled you get errors:
+
+Jun 25 12:17:37 tigger ntop[26664]: SSL(ssl_init_connection)ERROR [Thread 26664]: error:1407609C:SSL routines:SSL23_GET_CLIENT_HELLO:http request at s23_srvr.c(390)  
+Jun 25 12:17:37 tigger ntop[26664]: warning: can't get client address: Bad file descriptor
+Jun 25 12:17:37 tigger last message repeated 2 times
+Jun 25 12:17:37 tigger ntop[26664]: SSL(ssl_init_connection)ERROR [Thread 26664]: error:1407609C:SSL routines:SSL23_GET_CLIENT_HELLO:http request at s23_srvr.c(390)  
+Jun 25 12:17:37 tigger ntop[26664]: warning: can't get client address: Bad file descriptor
+Jun 25 12:17:37 tigger ntop[26664]: SSL(ssl_init_connection)ERROR [Thread 26664]: error:1407609C:SSL routines:SSL23_GET_CLIENT_HELLO:http request at s23_srvr.c(390)  
+
+     It's unknown - but suspected - that this last case is the same as #1, above.
+ 
+
+========================================
+
+3. https:// & Netscape 6.2.2 et al
+
+     Hangs the ntop web server thread.  It goes into the ssl_accept() routine and 
+     never comes back.  ntop continues processing packets, but there is no way to 
+     retrieve data or softly shutdown ntop.  According to openSSL, it's a problem
+     with Netscape not handling a legal combination of flags on the handshake.
+     openSSL 0.9.6c (or d?) is supposed to have a work-around for this. Both sides 
+     (client and server) are waiting for the other to finish the handshake.  
+
+     A partial fix is present in the final code, but disabled by default.  This uses
+     a watchdog thread to detect the hang and cancel out the connection.  It means
+     that the offending user gets nothing returned, but at least the ntop web server
+     isn't hung.
+
+     The fix is enabled either by the ./configure parameter --enable-sslwatchdog
+     or the run-time parameter --ssl-watchdog.
+
+     Testing seems to show this is not necessary for:
+
+        Linux / konqueror 2.2.2 (under kde 2.2.2-2)
+        Linux / mozilla 0.9.9-12.7.2
+        Linux / mozilla 1.0.1-4
+        Linux / Netscape (Navigator) 4.78-2
+
+        Win2K / Internet Explorer 5.5
+        Win2K / Netscape (Navigator) 4.79
+        Win2K / Netscape (Navigator) 4.61 (oh the things I do for Luca...)
+
+        Win98 / Internet Explorer 5.5
+
+     It is necessary, but the fix "works" for:
+
+        Linux / Galeon 1.2.0-5
+        Linux / Galeon 1.2.5-3
+        Linux / Opera 6.0-20020225.3
+
+        Win2K / Netscape 6.2.2
+        Win2K / Opera 6.03
+
+     Remember, saying it "works" means that the hangup doesn't kill ntop's web server
+     for other users, not that the user of the offending browser will see
+     anything meaningful.  Galeon gets farther, but still hangs itself up.
+
+
+========================================
+
+4. ntop hangs during termination.
+
+Linux only.  Known on RedHat 7.2, glibc 2.2.4-13. Reported from Debian (Potato) too.
+
+Last messages in the log are:
+
+Jun 16 17:20:12 localhost ntop[5093]: Unloading plugins (if any)... 
+Jun 16 17:20:12 localhost ntop[5093]: Thanks for using icmpWatch...
+Jun 16 17:20:12 localhost ntop[5093]: Done. 
+Jun 16 17:20:12 localhost ntop[5093]: Thanks for using LsWatch...
+Jun 16 17:20:12 localhost ntop[5093]: Done. 
+
+If you use gdb, you will find that the thread (#7) is suspended and the last part of ntop
+code executed was termIPservices() in term.c (Sometimes it will seg fault at this point):
+
+(gdb) info thread
+  7 Thread 5126 (LWP 5125)  0x405a657e in chunk_free (ar_ptr=0x4065a2a0, p=0x82241f8)
+    at malloc.c:3252
+* 6 Thread 4101 (LWP 5124)  0x405e05a1 in __libc_nanosleep () from /lib/i686/libc.so.6
+  5 Thread 3076 (LWP 5123)  0x40553ba5 in __sigsuspend (set=0x41fea93c)
+    at ../sysdeps/unix/sysv/linux/sigsuspend.c:45
+  4 Thread 2051 (LWP 5122)  0x405e05a1 in __libc_nanosleep () from /lib/i686/libc.so.6
+  3 Thread 1026 (LWP 5121)  0x40553ba5 in __sigsuspend (set=0x40fea63c)
+    at ../sysdeps/unix/sysv/linux/sigsuspend.c:45
+  2 Thread 2049 (LWP 5120)  0x4060b3e7 in __poll (fds=0x82c4d6c, nfds=1, timeout=2000)
+    at ../sysdeps/unix/sysv/linux/poll.c:63
+  1 Thread 1024 (LWP 5113)  0x405e05a1 in __libc_nanosleep () from /lib/i686/libc.so.6
+(gdb) thread 7
+[Switching to thread 7 (Thread 5126 (LWP 5125))]#0  0x405a657e in chunk_free (ar_ptr=0x4065a2a0, 
+    p=0x82241f8) at malloc.c:3252
+3252        frontlink(ar_ptr, p, sz, idx, bck, fwd);
+(gdb) info stack
+#0  0x405a657e in chunk_free (ar_ptr=0x4065a2a0, p=0x82241f8) at malloc.c:3252
+#1  0x405a63e4 in __libc_free (mem=0x8224840) at malloc.c:3154
+#2  0x4028f7c1 in ntop_safefree (ptr=0x82233e0, file=0x402ab00c "term.c", line=42) at leaks.c:508
+#3  0x402a0299 in termIPServices () at term.c:42
+#4  0x40292f95 in cleanup (signo=0) at ntop.c:873
+#5  0x40060a12 in shutdownNtop () at webInterface.c:685
+#6  0x400409e6 in returnHTTPPage (pageName=0x42fea6fd "shutdown.html", postLen=-1, 
+    from=0x42fea91c, httpRequestedAt=0x42fea6b4, usedFork=0x42fea6b0) at http.c:1184
+#7  0x40042fef in handleHTTPrequest (from={s_addr = 3232235560}) at http.c:2067
+#8  0x40064401 in handleSingleWebConnection (fdmask=0x42feaa0c) at webInterface.c:2666
+#9  0x400642cb in handleWebConnections (notUsed=0x0) at webInterface.c:2597
+#10 0x404eac6f in pthread_start_thread (arg=0x42feabe0) at manager.c:284
+#11 0x404ead5f in pthread_start_thread_event (arg=0x42feabe0) at manager.c:308
+(gdb) frame 3
+#3  0x402a0299 in termIPServices () at term.c:42
+42            free(myGlobals.tcpSvc[i]);
+(gdb) print i
+$1 = 70
+(gdb) print myGlobals.tcpSvc[i]
+$2 = (ServiceEntry *) 0x8224840
+(gdb) print *myGlobals.tcpSvc[i]
+$3 = {port = 70, name = 0x0}
+
+
+========================================
+
+5. sflowPlugin does not compile in single-threaded mode
+   (it uses queuePacket, which is #ifdef ed out in pbuf.c)
+
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Older bugs (v1.3) - Unknown if these are still current
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
   KNOWN_BUGS
   ==========
@@ -167,4 +346,10 @@ int main(int argc, char* argv[]) {
 2. iPPP (Linux)
    [iPPP guys have been informed. Status: no reply]
 
-ntop works with PPP but it presents some problems with iPPP (ISDN PPP). Some packets cannot be decoded properly. Tools other than ntop (e.g. tcpdump, ethereal) can't handle such packets either.
+ntop works with PPP but it presents some problems with iPPP (ISDN PPP). Some packets cannot 
+be decoded properly. Tools other than ntop (e.g. tcpdump, ethereal) can't handle such packets 
+either.
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
