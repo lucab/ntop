@@ -978,6 +978,7 @@ static int checkURLsecurity(char *url) {
 	   (strcmp(&workURL[i] , "png") == 0)  ||
 	   (strcmp(&workURL[i] , "gif") == 0)  ||
 	   (strcmp(&workURL[i] , "ico") == 0)  ||
+	   (strcmp(&workURL[i] , "pl") == 0)   || /* used for Perl CGI's */
 	   (strcmp(&workURL[i] , "css") == 0)))) {
     traceEvent(TRACE_ERROR,
 	       "URL security(5): ERROR: Found bad file extension (.%s) in URL...\n",
