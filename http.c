@@ -44,7 +44,7 @@
                                   "\010\011\012\013\014\015\016" \
                                   "\020\021\022\023\024\025\026" \
                                   "\030\031\032\033\034\035\036" \
-                                  " \"#&+/:;<=>?@\177"
+                                  " \"#+:;<>@\177"
 
 struct _HTTPstatus {
     int statusCode;
@@ -773,7 +773,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   sendString(tmpStr);
 
   if(headerFlags & HTTP_FLAG_NEED_AUTHENTICATION) {
-    sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server;\"\n");
+      sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server;\"\n");
   }
 
   switch(mimeType) {
@@ -820,10 +820,10 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 /* ************************* */
 
 static int checkURLsecurity(char *url) {
-  int rc = 0, i, tokenCharacter, countOKextension;
+  int rc = 0, i, tokenCharacter, countOKextension, len;
   int countSections, countOKnumeric, xvertValue;
   char *token;
-  char *workURL;
+  char *workURL = NULL;
   char *strtokState;
   char *badCharacter;
   
@@ -863,15 +863,35 @@ static int checkURLsecurity(char *url) {
 #endif
 
   /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
-  if(strstr(url, "%") > 0) {
+  /*
+    if(strstr(url, "%") > 0) {
     traceEvent(TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request\n");
     url[0] = '\0';
     return(1);
   }
-  
+  */
+
   /* a double slash? */
   if(strstr(url, "//") > 0) {
     traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request\n");
+    return(2);
+  }
+ 
+  /* a double slash? */
+  if(strstr(url, "%%") > 0) {
+    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found %% in URL...rejecting request\n");
+    return(2);
+  }
+ 
+  /* a double &? */
+  if(strstr(url, "&&") > 0) {
+    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found && in URL...rejecting request\n");
+    return(2);
+  }
+ 
+  /* a double ?? */
+  if(strstr(url, "??") > 0) {
+    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found ?? in URL...rejecting request\n");
     return(2);
   }
  
@@ -882,13 +902,12 @@ static int checkURLsecurity(char *url) {
   }
 
   /* Prohibited characters? */
-  if(strcspn(url, URL_PROHIBITED_CHARACTERS) < strlen(url)) {
-    traceEvent(TRACE_ERROR, "URL security(4): ERROR: Prohibited character(s)"
-	       " in URL...rejecting request\n");
+  if((len = strcspn(url, URL_PROHIBITED_CHARACTERS)) < strlen(url)) {
+    traceEvent(TRACE_ERROR, "URL security(4): ERROR: Prohibited character(s) [%c]"
+	       " in URL... rejecting request\n", url[len]);
     return(4);
   }
   
-
   /*
     We can't simply find the "." and test the extension, as
     we have to allow urls of the following special forms:
@@ -915,7 +934,6 @@ static int checkURLsecurity(char *url) {
   traceEvent(TRACE_INFO, "URL security: NOTE: Tokenizing '%s'...\n", workURL);
 #endif
 
-
   token = strtok_r(workURL, ".-", &strtokState);
 
   while(token != NULL) {
@@ -932,11 +950,12 @@ static int checkURLsecurity(char *url) {
 	token[tokenCharacter] = (char)tolower(token[tokenCharacter]);
       }
       if((strcmp(token , "htm") == 0) ||
-	  (strcmp(token , "html") == 0) ||
-	  (strcmp(token , "jpg") == 0) ||
-	  (strcmp(token , "png") == 0) ||
-	  (strcmp(token , "gif") == 0) ||
-	  (strcmp(token , "css") == 0) ) {
+	 (strcmp(token , "html") == 0) ||
+	 (strcmp(token , "txt") == 0) ||
+	 (strcmp(token , "jpg") == 0) ||
+	 (strcmp(token , "png") == 0) ||
+	 (strcmp(token , "gif") == 0) ||
+	 (strcmp(token , "css") == 0) ) {
 	countOKextension++;
       } else {
 	/* bad extension! - bounce now... */
@@ -984,12 +1003,12 @@ static int checkURLsecurity(char *url) {
     }
   }
 
-  free(workURL);
+  if(workURL != NULL)
+    free(workURL);
 
   if(rc != 0)
-    traceEvent(TRACE_ERROR, "URL security(%d): '%s' ERROR: S=%d, E=%d, N=%d...rejecting request\n",
-	       rc, url, countSections, countOKextension, countOKnumeric);
-
+    traceEvent(TRACE_ERROR, "ERROR: bad char found on '%s' (rc=%d) rejecting request", url, rc);
+  
   return(rc);
 }
 
@@ -1008,7 +1027,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512];
-  char *domainNameParm;
+  char *domainNameParm = NULL;
   int revertOrder=0, rc;
 #ifdef MULTITHREADED
   u_char mutexReleased = 0;
@@ -1021,16 +1040,13 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
   *usedFork = 0;
 
   /*
-     We need to check whether the URL
-     is invalid, i.e. it contains '..' or
-     similar chars that can be used for
-     reading system files
+     We need to check whether the URL is invalid, i.e. it contains '..' or
+     similar chars that can be used for reading system files
   */
-
   if((rc = checkURLsecurity(pageName)) != 0) {
-    traceEvent(TRACE_ERROR, "URL security: '%s' REJECTED, code=%d\n", pageName, rc);
+    traceEvent(TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)", pageName, rc);
     returnHTTPaccessForbidden();
-     return (HTTP_FORBIDDEN_PAGE);
+    return(HTTP_FORBIDDEN_PAGE);
   }
 
   /* traceEvent(TRACE_INFO, "Page: '%s'\n", pageName); */
@@ -1751,9 +1767,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
   }
 #endif /* !MICRO_NTOP */
   
-  if(domainNameParm != NULL) {
+  if(domainNameParm != NULL)
     free(domainNameParm);
-  }
 
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 
