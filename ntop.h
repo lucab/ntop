@@ -1779,9 +1779,9 @@ struct pbuf {
 #define TWO_MSL_TIMEOUT          120        /* 2 minutes */
 #define DOUBLE_TWO_MSL_TIMEOUT   (2*TWO_MSL_TIMEOUT)
 
-#define IDLE_HOST_PURGE_TIMEOUT  1*60*60    /*  1 hours   */
-#define IDLE_SESSION_TIMEOUT     30*60      /* 30 minutes */
-#define PIPE_READ_TIMEOUT        15         /* seconds    */
+#define IDLE_HOST_PURGE_TIMEOUT  30*60    /*   30 minutes */
+#define IDLE_SESSION_TIMEOUT     30*60    /*   30 minutes */
+#define PIPE_READ_TIMEOUT        15       /*      seconds */
 
 /* **************************** */
 

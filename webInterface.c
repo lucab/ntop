@@ -769,6 +769,7 @@ void printNtopConfigInfo(void) {
 
   /* **************************** */
 
+#ifdef MULTITHREADED
   sendString("<P>"TABLE_ON"<TABLE BORDER=1>\n");
   sendString("<TR><TH>Mutex Name</TH><TH>State</TH><TH>Last Lock</TH><TH>Last UnLock</TH>"
 	     "<TH COLSPAN=2># Locks/Releases</TH><TH>Max Lock</TH></TR>");
@@ -782,8 +783,9 @@ void printNtopConfigInfo(void) {
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(numericFlag == 0) printMutexStatus(&addressQueueMutex, "addressQueueMutex");
 #endif
-   
   sendString("</TABLE>"TABLE_OFF"\n");
+#endif /* MULTITHREADED */
+
   sendString("</CENTER>\n");
 }
 

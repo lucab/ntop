@@ -739,6 +739,10 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 static void freeHostPeers(HostTraffic *el, u_int hostIdx) {
   int j;
   
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Entering freeHostPeers(0x%X, %u)", el, hostIdx);
+#endif
+
   if(el->tcpSessionList != NULL)
     purgeIdleHostSessions(hostIdx, &el->tcpSessionList);
 
@@ -864,6 +868,10 @@ static void freeHostPeers(HostTraffic *el, u_int hostIdx) {
 	el->portsUsage[j] = NULL;
       }
     }
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Leaving freeHostPeers()");
+#endif
 }
 
 /* **************************************** */
@@ -963,9 +971,9 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 
   for(idx=1; idx<device[theDevice].actualHashSize; idx++) {
     if((idx != hostIdx) /* Skip the host we're currently freeing */
-       && (device[theDevice].hash_hostTraffic[idx] != NULL))
+       && (device[theDevice].hash_hostTraffic[checkSessionIdx(idx)] != NULL))
       freeHostPeers(device[theDevice].hash_hostTraffic[idx], hostIdx);
-  } /* for */
+  }
 
   for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++)
     if(host->portsUsage[i] != NULL)
@@ -1075,6 +1083,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   u_int idx, numFreedBuckets=0, freeEntry=0;
   time_t startTime = time(NULL);
   static time_t lastPurgeTime = 0;
+  u_char goOn = 1;
 
   if(startTime < (lastPurgeTime+(SESSION_SCAN_DELAY/2)))
      return; /* Too short */
@@ -1092,39 +1101,42 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   releaseMutex(&hostsHashMutex);
 #endif
 
+  idx = 1;
+  
+  while(goOn
+	&& (device[actDevice].hostsno > device[actDevice].hashThreshold)
+	&& (numFreedBuckets < MIN_NUM_FREED_BUCKETS)) {
 #ifdef MULTITHREADED
-  accessMutex(&hostsHashMutex, "scanIdleLoop");
+    accessMutex(&hostsHashMutex, "scanIdleLoop");
 #endif
 
-  for(idx=1; idx<device[actDevice].actualHashSize; idx++) {
-    if((device[actDevice].hash_hostTraffic[idx] != NULL)
-       && (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
-       && (!subnetPseudoLocalHost(device[actDevice].hash_hostTraffic[idx]))) {
+    if(idx<device[actDevice].actualHashSize) {
+      if((device[actDevice].hash_hostTraffic[idx] != NULL)
+	&& (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
+	  && (!subnetPseudoLocalHost(device[actDevice].hash_hostTraffic[idx]))) {
+    
+	if(ignoreIdleTime)
+	  freeEntry=1;
+	else if(((device[actDevice].hash_hostTraffic[idx]->lastSeen+
+		  IDLE_HOST_PURGE_TIMEOUT) < actTime) && (!stickyHosts))
+	  freeEntry=1;
+	else
+	  freeEntry=0;
 
-      if(ignoreIdleTime)
-	freeEntry=1;
-      else if(((device[actDevice].hash_hostTraffic[idx]->lastSeen+
-		IDLE_HOST_PURGE_TIMEOUT) < actTime) && (!stickyHosts))
-	freeEntry=1;
-      else
-	freeEntry=0;
-
-      if(freeEntry) {
-	/* updateHostTraffic(device[actDevice].hash_hostTraffic[idx]); */
-	freeHostInfo(actDevice, idx);
-	numFreedBuckets++;
-
-	if((device[actDevice].hostsno < device[actDevice].hashThreshold)
-	   || (numFreedBuckets > MIN_NUM_FREED_BUCKETS)) {
-	  break; /* We freed enough space */
-	}
+	if(freeEntry) {
+	  /* updateHostTraffic(device[actDevice].hash_hostTraffic[idx]); */
+	  freeHostInfo(actDevice, idx);
+	  numFreedBuckets++;
+	} 
       }
-    }
-  }
+    } else
+      goOn = 0;
 
 #ifdef MULTITHREADED
-  releaseMutex(&hostsHashMutex);
+    releaseMutex(&hostsHashMutex);
 #endif
+    idx++;
+  }
 
   traceEvent(TRACE_INFO, "Purging completed (%d sec).", (time(NULL)-startTime));
 }
