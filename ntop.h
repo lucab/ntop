@@ -25,7 +25,7 @@
 #ifndef NTOP_H
 #define NTOP_H
 
-/* #define MEMORY_DEBUG  */
+/* #define MEMORY_DEBUG */
 
 
 /*

@@ -333,7 +333,7 @@ void purgeIdleHosts(int actDevice) {
 
   if(myGlobals.rFileName != NULL) return;
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Purging Idle Hosts... [actDevice=%d]", actDevice);
 #endif
 
@@ -424,7 +424,7 @@ void purgeIdleHosts(int actDevice) {
 
   scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
 
-#ifndef DEBUG
+#ifdef DEBUG
   if(numFreedBuckets > 0) {
     traceEvent(TRACE_INFO, "Purging completed in %d sec [%d hosts deleted]",
 	       (int)(time(NULL)-startTime), numFreedBuckets);

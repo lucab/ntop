@@ -102,7 +102,7 @@ int execCGI(char* cgiName) {
   if(snprintf(line, sizeof(line), "%s/cgi/%s", DATAFILE_DIR, cgiName) < 0) 
     BufferTooShort();
   
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Executing CGI '%s'", line);
 #endif
 

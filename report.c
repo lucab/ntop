@@ -3777,7 +3777,7 @@ void listNetFlows(void) {
 
 	if(haveTrafficHistory()) {
 	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
-		      "<A HREF=\"/ntop-bin/flowTraf.pl?name=%s\">%s</A></TH><TD "TD_BG" ALIGN=RIGHT>%s"
+		      "<A HREF=\"/ntop-bin/netTraf.pl?flow=%s\">%s</A></TH><TD "TD_BG" ALIGN=RIGHT>%s"
 		      "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		      getRowColor(), list->flowName, list->flowName,
 		      formatPkts(list->packets),

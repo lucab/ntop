@@ -86,6 +86,10 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   memset(&myGlobals, 0, sizeof(myGlobals));
 
+#ifdef MEMORY_DEBUG
+  initLeaks(); /* Don't move this below nor above */
+#endif 
+
   /*
    * Notice the program name
    */
@@ -267,8 +271,4 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.netFlowInSocket = -1;  
   myGlobals.netFlowOutSocket = -1;  
   myGlobals.globalFlowSequence = myGlobals.globalFlowPktCount = 0;
-
-#ifdef MEMORY_DEBUG
-  initLeaks();
-#endif 
 }

@@ -252,7 +252,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   u_int idx, i, freeSessionCount =0;
 
   if(!myGlobals.enableSessionHandling) return;
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions (device=%d, sessions=%d)\n",
 	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
