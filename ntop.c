@@ -718,6 +718,7 @@ RETSIGTYPE cleanup(int signo) {
   static int unloaded = 0, msgSent = 0;
   struct pcap_stat pcapStat;
   int i;
+  char buf[32];
 
   if(!msgSent) {
     traceEvent(CONST_TRACE_INFO, "CLEANUP: ntop caught signal %d", signo);
@@ -926,13 +927,14 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
 	traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s",
-		   formatPkts((Counter)pcapStat.ps_recv), myGlobals.device[i].name);
+		formatPkts((Counter)pcapStat.ps_recv, buf, sizeof(buf)), myGlobals.device[i].name);
 
-	traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (according to libpcap)", formatPkts((Counter)pcapStat.ps_drop));
+	traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (according to libpcap)",
+		formatPkts((Counter)pcapStat.ps_drop, buf, sizeof(buf)));
       }
 #ifdef CFG_MULTITHREADED
       traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (by ntop)",
-                 formatPkts(myGlobals.device[i].droppedPkts.value));
+		formatPkts(myGlobals.device[i].droppedPkts.value, buf, sizeof(buf)));
 #endif
     }
 

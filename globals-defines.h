@@ -152,7 +152,8 @@
 /*
  *  How long must a host be idle to be considered for purge?
  */
-#define PARM_HOST_PURGE_MINIMUM_IDLE        10*60
+#define PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES 10*60
+#define PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES   30*60
 
 /*
  *  How long must a session be idle to be considered for purge?

@@ -111,17 +111,17 @@ extern void setAdminPassword(char* pass);
 extern void addDefaultAdminUser(void);
 
 /* dataFormat.c */
-extern char* formatKBytes(float numKBytes);
-extern char* formatBytes(Counter numBytes, short encodeString);
-extern char* formatAdapterSpeed(Counter numBits);
-extern char* formatLatency(struct timeval tv, u_short sessionState);
-extern char* formatSeconds(unsigned long sec);
-extern char* formatMicroSeconds(unsigned long microsec);
-extern char* formatThroughput(float numBytes, u_char htmlFormat);
+extern char* formatKBytes(float numKBytes, char *outStr, int outStrLen);
+extern char* formatBytes(Counter numBytes, short encodeString, char *outStr, int outStrLen);
+extern char* formatAdapterSpeed(Counter numBits, char *outStr, int outStrLen);
+extern char* formatLatency(struct timeval tv, u_short sessionState, char *outStr, int outStrLen);
+extern char* formatSeconds(unsigned long sec, char *outStr, int outStrLen);
+extern char* formatMicroSeconds(unsigned long microsec, char *outStr, int outStrLen);
+extern char* formatThroughput(float numBytes, u_char htmlFormat, char *outStr, int outStrLen);
 extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
-                             unsigned int nminutes);
-extern char* formatPkts(Counter pktNr);
-extern char *formatTime(time_t *theTime, short encodeString);
+                             unsigned int nminutes, char *outStr, int outStrLen);
+extern char* formatPkts(Counter pktNr, char *outStr, int outStrLen);
+extern char* formatTime(time_t *theTime, short encodeString, char *outStr, int outStrLen);
 extern void clearUserUrlList(void);
 
 /* hash.c */
@@ -449,7 +449,7 @@ extern void termPassiveSessions();
 extern int getPortByName(ServiceEntry **theSvc, char* portName);
 extern char *getPortByNumber(ServiceEntry **theSvc, int port);
 extern char *getPortByNum(int port, int type);
-extern char *getAllPortByNum(int port);
+extern char *getAllPortByNum(int port, char *outStr, int outStrLen);
 extern int getAllPortByName(char* portName);
 extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
 extern void resetUsageCounter(UsageCounter *counter);

@@ -461,7 +461,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	 /* The line below allows to avoid keeping very old sessions that
 	    might be still open, but that are probably closed and we've
 	    lost some packets */
-	 || ((theSession->lastSeen+PARM_HOST_PURGE_MINIMUM_IDLE) < myGlobals.actTime)
+	 || ((theSession->lastSeen+PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES) < myGlobals.actTime)
 	 || ((theSession->lastSeen+PARM_SESSION_PURGE_MINIMUM_IDLE) < myGlobals.actTime)
 	 /* Purge sessions that are not yet active and that have not completed
 	    the 3-way handshave within 1 minute */
@@ -595,7 +595,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	break;
       } else {
 	/* Delete the session if too old */
-	if(((theSession->lastSeen+PARM_HOST_PURGE_MINIMUM_IDLE) < myGlobals.actTime)
+	if(((theSession->lastSeen+PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES) < myGlobals.actTime)
 	   || ((theSession->lastSeen+PARM_SESSION_PURGE_MINIMUM_IDLE) < myGlobals.actTime)
 	   /* Purge sessions that are not yet active and that have not completed
 	      the 3-way handshave within 1 minute */

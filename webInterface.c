@@ -335,13 +335,12 @@ static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 /* ******************************* */
 
 char* makeHostLink(HostTraffic *el, short mode,
-		   short cutName, short addCountryFlag) {
-  static char buf[5][2*LEN_GENERAL_WORK_BUFFER];
+		   short cutName, short addCountryFlag,
+                   char *buf, int bufLen) {
   char symIp[256], *tmpStr, linkName[256], flag[256], colorSpec[64];
   char *dynIp, *p2p, osBuf[128];
   char *multihomed, *gwStr, *brStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
   short specialMacAddress = 0;
-  static short bufIdx=0;
   short usedEthAddress=0;
   int i;
 
@@ -359,8 +358,6 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   setHostFingerprint(el);
 
-  bufIdx = (bufIdx+1)%5;
-
   accessAddrResMutex("makeHostLink");
 
   if((el == myGlobals.otherHostEntry)
@@ -372,11 +369,11 @@ char* makeHostLink(HostTraffic *el, short mode,
     else
       fmt = "%s";
 
-    if(snprintf(buf[bufIdx], LEN_GENERAL_WORK_BUFFER, fmt, el->hostSymIpAddress) < 0)
+    if(snprintf(buf, bufLen, fmt, el->hostSymIpAddress) < 0)
       BufferTooShort();
 
     releaseAddrResMutex();
-    return(buf[bufIdx]);
+    return(buf);
   }
 
   tmpStr = el->hostSymIpAddress;
@@ -506,7 +503,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     usedEthAddress = 1;
 
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
-    if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
+    if(snprintf(buf, bufLen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
 		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s%s%s</TH>%s",
 		linkName, "", symIp, 
 		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)), dynIp, multihomed, 
@@ -514,7 +511,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		gwStr, brStr, dnsStr, printStr, smtpStr, healthStr, userStr, p2p, flag) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<A HREF=\"/%s.html\" %s NOWRAP>%s</A>"
+    if(snprintf(buf, bufLen, "<A HREF=\"/%s.html\" %s NOWRAP>%s</A>"
 		"%s%s%s%s%s%s%s%s%s%s%s",
 		linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), symIp, 
 		multihomed, 
@@ -524,20 +521,16 @@ char* makeHostLink(HostTraffic *el, short mode,
       BufferTooShort();    
   }
 
-  return(buf[bufIdx]);
+  return(buf);
 }
 
 /* ******************************* */
 
-char* getHostName(HostTraffic *el, short cutName) {
-  static char buf[5][80];
+char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
   char *tmpStr;
-  static short bufIdx=0;
 
   if(broadcastHost(el))
     return("broadcast");
-
-  bufIdx = (bufIdx+1)%5;
 
   accessAddrResMutex("getHostName");
   tmpStr = el->hostSymIpAddress;
@@ -545,28 +538,28 @@ char* getHostName(HostTraffic *el, short cutName) {
   if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
     /* The DNS is still getting the entry name */
     if(el->hostNumIpAddress[0] != '\0')
-      strncpy(buf[bufIdx], el->hostNumIpAddress, 80);
+      strncpy(buf, el->hostNumIpAddress, min(bufLen, 80));
     else
-      strncpy(buf[bufIdx], el->ethAddressString, 80);
+      strncpy(buf, el->ethAddressString, min(bufLen, 80));
   } else if(tmpStr[0] != '\0') {
-    strncpy(buf[bufIdx], tmpStr, 80);
+    strncpy(buf, tmpStr, min(bufLen, 80));
     if(cutName) {
       int i;
 
-      for(i=0; buf[bufIdx][i] != '\0'; i++)
-	if((buf[bufIdx][i] == '.')
-	   && (!(isdigit(buf[bufIdx][i-1])
-		 && isdigit(buf[bufIdx][i+1]))
+      for(i=0; buf[i] != '\0'; i++)
+	if((buf[i] == '.')
+	   && (!(isdigit(buf[i-1])
+		 && isdigit(buf[i+1]))
 	       )) {
-	  buf[bufIdx][i] = '\0';
+	  buf[i] = '\0';
 	  break;
 	}
     }
   } else
-    strncpy(buf[bufIdx], el->ethAddressString, 80);
+    strncpy(buf, el->ethAddressString, min(bufLen, 80));
 
   releaseAddrResMutex();
-  return(buf[bufIdx]);
+  return(buf);
 }
 
 /* ********************************** */
@@ -3738,7 +3731,8 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 
   if(myGlobals.enableSessionHandling) {
-    if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.numTerminatedSessions)) < 0)
+    if(snprintf(buf, sizeof(buf), "%s",
+	formatPkts(myGlobals.numTerminatedSessions, buf2, sizeof(buf2))) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Terminated Sessions", buf);
   }
@@ -3752,7 +3746,8 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     sendString(texthtml(buf, buf2));
 
-    printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size", formatBytes(sizeof(HostTraffic), 0));
+    printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size",
+	formatBytes(sizeof(HostTraffic), 0, buf, sizeof(buf)));
 
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize) < 0)
       BufferTooShort();
@@ -3794,13 +3789,19 @@ void printNtopConfigInfo(int textPrintFlag) {
     printFeatureConfigInfo(textPrintFlag, "Max host lookup", buf);
 
     if(myGlobals.enableSessionHandling) {
-      printFeatureConfigInfo(textPrintFlag, "Session Bucket Size", formatBytes(sizeof(IPSession), 0));
 
-      if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].numTcpSessions)) < 0)
+      if(snprintf(buf, sizeof(buf), "%s",
+	formatBytes(myGlobals.device[i].numTcpSessions, 0, buf2, sizeof(buf2))) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Session Bucket Size", buf);
+    
+      if(snprintf(buf, sizeof(buf), "%s",
+	formatPkts(myGlobals.device[i].numTcpSessions, buf2, sizeof(buf2))) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
     
-      if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].maxNumTcpSessions)) < 0)
+      if(snprintf(buf, sizeof(buf), "%s", 
+		formatPkts(myGlobals.device[i].maxNumTcpSessions, buf2, sizeof(buf2))) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
     }
