@@ -870,21 +870,6 @@ static void processIpPkt(const u_char *bp,
     }
   }
 
-#if PACKET_DEBUG
-  /*
-   * Time to show the IP Packet Header (when enabled).
-   */
-  if (fd && myGlobals.device [actualDeviceId] . ipv)
-      fprintf (fd, "PACKET_DEBUG: IP:     ----- IP Header -----\n\n"),
-      fprintf (fd, "                      Packet %ld arrived at %s\n", myGlobals.device [actualDeviceId] ,
-	       timestamp (& myGlobals.lastPktTime, FLAG_TIMESTAMP_FMT_ABS)),
-      fprintf (fd, "                      Total size  = %d : header = %d : data = %d\n",
-	       ip_size, ip_hlen, ip_size - ip_hlen),
-      fprintf (fd, "                      Source      = %s\n", inet_ntoa (ip->ip_src)),
-      fprintf (fd, "                      Destination = %s\n", inet_ntoa (ip->ip_dst)),
-      fflush (fd);
-#endif
-
   off = ntohs(ip.ip_off);
 
   if (off & 0x3fff) {
@@ -1761,86 +1746,6 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
 
 /* ************************************ */
 
-
-struct timeval current_pkt = {0,0};
-struct timeval first_pkt = {0,0};
-struct timeval last_pkt = {0,0};
-
-#if PACKET_DEBUG
-/*
- * The time difference in milliseconds.
- *
- * Rocco Carbone <rocco@ntop.org>
- */
-static time_t delta_time_in_milliseconds (struct timeval * now,
-					  struct timeval * before) {
-  /*
-   * compute delta in second, 1/10's and 1/1000's second units
-   */
-  time_t delta_seconds = now->tv_sec - before->tv_sec;
-  time_t delta_milliseconds = (now->tv_usec - before->tv_usec) / 1000;
-
-  if (delta_milliseconds < 0)
-    { /* manually carry a one from the seconds field */
-      delta_milliseconds += 1000; 		/* 1e3 */
-      -- delta_seconds;
-    }
-  return ((delta_seconds * 1000) + delta_milliseconds);
-}
-#endif
-
-/* ************************************************ */
-
-#if PACKET_DEBUG
-/*
- * Return a well formatted timestamp.
- */
-static char* timestamp(const struct timeval* t, int fmt) {
-  static char buf [16] = {0};
-
-  time_t now = time((time_t*) 0);
-  struct tm *tm, myTm;
-
-  tm = localtime_r(&now, &myTm);
-
-  gettimeofday(&current_pkt, NULL);
-
-  switch(fmt)
-    {
-    default:
-    case FLAG_TIMESTAMP_FMT_DELTA:
-      /*
-       * calculate the difference in milliseconds since
-       * the previous packet was displayed
-       */
-      if(snprintf(buf, 16, "%10ld ms",
-		  delta_time_in_milliseconds(&current_pkt, &last_pkt)) < 0)
-	BufferTooShort();
-      break;
-
-    case FLAG_TIMESTAMP_FMT_ABS:
-      if(snprintf(buf, 16, "%02d:%02d:%02d.%06d",
-		  tm->tm_hour, tm->tm_min, tm->tm_sec, (int)t->tv_usec) < 0)
-	BufferTooShort();
-      break;
-
-    case FLAG_TIMESTAMP_FMT_RELATIVE:
-      /*
-       * calculate the difference in milliseconds
-       * since the previous packet was displayed
-       */
-      if(snprintf(buf, 16, "%10ld ms",
-		  delta_time_in_milliseconds(&current_pkt, &first_pkt)) < 0)
-	BufferTooShort();
-      break;
-    }
-
-  return (buf);
-}
-#endif
-
-/* ************************************ */
-
 static void addNonIpTrafficInfo(HostTraffic *el, u_int16_t proto, 
 				u_short len, u_int direction) {
   NonIpProtoTrafficInfo *nonIp;
@@ -1928,7 +1833,6 @@ void processPacket(u_char *_deviceId,
   unsigned short eth_type=0;
   /* Token-Ring Strings */
   struct tokenRing_llc *trllc;
-  FILE * fd;
   unsigned char ipxBuffer[128];
   int deviceId, actualDeviceId, vlanId=-1;
   AnyHeader *anyHeader;
@@ -2011,16 +1915,6 @@ void processPacket(u_char *_deviceId,
   hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
 
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
-
-  fd = myGlobals.device[deviceId].fdv;
-
-  /*
-   * Show a hash character for each packet captured
-   */
-  if(fd && myGlobals.device[deviceId].hashing) {
-    fprintf (fd, "#");
-    fflush(fd);
-  }
 
   /* ethernet assumed */
   if(caplen >= hlen) {
@@ -2182,24 +2076,6 @@ void processPacket(u_char *_deviceId,
 	hlen += 4; /* Skip the 802.1q header */
       }
     } /* switch(myGlobals.device[deviceId].datalink) */
-
-#if PACKET_DEBUG
-    /*
-     * Time to show the Ethernet Packet Header (when enabled).
-     */
-    if(fd && myGlobals.device [deviceId].ethv) {
-      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
-
-      fprintf (fd, "PACKET_DEBUG: ETHER:  ----- Ether Header -----\n\n");
-      fprintf (fd, "                      Packet %ld\n",
-	       myGlobals.device [actualDeviceId].ethernetPkts);
-      fprintf (fd, "                      Total size  = %d : header = %d : data = %d\n",
-	       length, hlen, length - hlen);
-      fprintf (fd, "                      Source      = %s\n", etheraddr_string (ether_src, etherbuf));
-      fprintf (fd, "                      Destination = %s\n", etheraddr_string (ether_dst, etherbuf));
-      fflush (fd);
-    }
-#endif
 
     if((myGlobals.device[deviceId].datalink != DLT_PPP)
        && (myGlobals.device[deviceId].datalink != DLT_RAW)
