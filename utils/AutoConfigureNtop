@@ -23,7 +23,8 @@
 # Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
 
-echo "AutoConfigureNtop - v1.0 - 2003-08-28"
+#echo "AutoConfigureNtop - v1.0 - 2003-08-28"
+echo "AutoConfigureNtop - v2.0 - 2004-01-28"
 
 xml=
 debug=
@@ -71,6 +72,8 @@ fi
 
 echo "BEGIN {" >> /tmp/AutoConfigureNtop.awk
 echo " o=\"\"; f=ARGC-1; for(i=ARGC-1; i>0; i--) { s[i]=ARGV[i]; ARGV[i]=\"\" }" >> /tmp/AutoConfigureNtop.awk
+echo "s[++f]=\"gdchart\"" >> /tmp/AutoConfigureNtop.awk
+echo "s[++f]=\"libpng12\"" >> /tmp/AutoConfigureNtop.awk
 echo "s[++f]=\"=/usr/lib\"" >> /tmp/AutoConfigureNtop.awk
 echo "s[++f]=\"=/usr/include\"" >> /tmp/AutoConfigureNtop.awk
 echo "s[++f]=\"=/usr/local/lib\"" >> /tmp/AutoConfigureNtop.awk
@@ -242,64 +245,33 @@ else
 fi
 
 if test ".${xml}" = ".y"; then
-  xml2=`locate xmlversion.h | grep '\/xmlversion\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
-  libxml2=`locate libxml2.so | grep '\/libpng\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
-
-  if test ".${xml2}" = ".${libxml2}"; then
-      if test ".${xml2}" != "."; then
-          echo "  --with-xml2-root=${xml2}  \\"
-      fi
-  else
-      if test ".${xml2}" != "."; then
-          echo "  --with-xml2-include=${xml2}  \\"
-      fi
-      if test ".${libxml2}" != "."; then
-          echo "  --with-xml2-lib=${libxml2}  \\"
-      fi
-  fi
-
-  gdome=`locate gdome.h | grep '\/gdome\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
-  libgdome=`locate libgdome.so | grep '\/libgdome\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
-
-  if test ".${gdome}" = ".${libgdome}"; then
-      if test ".${gdome}" != "."; then
-          echo "  --with-gdome-root=${gdome}  \\"
-      fi
-  else
-      if test ".${gdome}" != "."; then
-          echo "  --with-gdome-include=${gdome}  \\"
-      fi
-      if test ".${libgdome}" != "."; then
-          echo "  --with-gdome-lib=${libgdome}  \\"
-      fi
-  fi
-
-  glib=`locate glib.h | grep '\/glib\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
-  libglib=`locate libglib.so | grep '\/libglib\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
-
-  if test ".${glib}" = ".${libglib}"; then
-      if test ".${glib}" != "."; then
-          echo "  --with-glib-root=${glib}  \\"
-      fi
-  else
-      if test ".${glib}" != "."; then
-          echo "  --with-glib-include=${glib}  \\"
-      fi
-      if test ".${libglib}" != "."; then
-          echo "  --with-glib-lib=${libglib}  \\"
-      fi
-  fi
-
-  glibconfig=`locate glibconfig.h | grep '\/glibconfig\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
-
-  if test ".${glibconfig}" != "."; then
-      echo "  --with-glibconfig-root=${glib}  \\"
-  fi
 
   locale=`locate en_US | grep '\/en_US$' | awk -f /tmp/AutoConfigureNtop.awk $@`
 
   if test ".${locale}" != "."; then
       echo "  --with-localedir=${locale}"
   fi
+
+  echo ""
+  echo ""
+  echo "# XML Dump plugin stuff..."
+  echo "#   These go in configureextra/whatever"
+  echo ""
+
+  xml2=`locate xmlversion.h | grep '\/xmlversion\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+  echo "CPPFLAGS=\"\${CPPFLAGS} -I${xml2}\""
+
+  glib=`locate glib.h | grep '\/glib\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+  echo "CPPFLAGS=\"\${CPPFLAGS} -I${glib}\""
+
+  gdome=`locate gdome.h | grep '\/gdome\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+  echo "CPPFLAGS=\"\${CPPFLAGS} -I${gdome}\""
+
+  glibconfig=`locate glibconfig.h | grep '\/glibconfig\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+  echo "CPPFLAGS=\"\${CPPFLAGS} -I${glibconfig}\""
+
+  libglib=`locate libglib.so | grep '\/libglib\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+  echo "LDFLAGS=\"\${LDFLAGS} -L${libglib}\" -lglib"
+
 fi
 
