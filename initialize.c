@@ -527,6 +527,7 @@ void initGdbm(char *directory) {
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", directory != NULL ? directory : myGlobals.dbPath) < 0)
     BufferTooShort();
 
+  unlink(tmpBuf); /* Clear the cache */
   myGlobals.gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
 #ifdef FALLBACK

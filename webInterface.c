@@ -617,7 +617,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
   fillDomainName(el);
 
   if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-	      DATAFILE_DIR, el->fullDomainName) < 0)
+	  DATAFILE_DIR, el->fullDomainName) < 0)
     BufferTooShort();
 
   if(stat(path, &buf) == 0)
@@ -2240,6 +2240,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   sendString(texthtml("\n\nRun time/Internal\n\n", 
                       "<tr><th colspan=\"2\"" TH_BG ">Run time/Internal</tr>\n"));
 
+#ifndef WIN32
   if (myGlobals.enableExternalTools) {
     if(myGlobals.isLsofPresent) {
       if (textPrintFlag == TRUE) {
@@ -2290,6 +2291,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 			     "(no -E parameter): Disabled");
     }
   }
+#endif
 
   if(myGlobals.webPort != 0) {
     if(myGlobals.webAddr != 0) {
@@ -2521,15 +2523,13 @@ void printNtopConfigInfo(int textPrintFlag) {
   for(i=0; myGlobals.dataFileDirs[i] != NULL; i++) {
     if ((bufUsed = snprintf(&buf[bufPosition],
 			    bufLength,
-			    "%s%2d. %s",
-			    i == 0 ? texthtml("\n", "") : texthtml("\n", "<br>"),
-			    i,
-			    myGlobals.dataFileDirs[i])) < 0)
+			    "%s<br>", myGlobals.dataFileDirs[i])) < 0)
       BufferTooShort();
+	if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
     bufLength   -= bufUsed;
   }
-  printFeatureConfigInfo(textPrintFlag, "Data files", buf);
+  printFeatureConfigInfo(textPrintFlag, "Data Files", buf);
 
   bufLength = sizeof(buf);
   bufPosition = 0;
@@ -2538,15 +2538,14 @@ void printNtopConfigInfo(int textPrintFlag) {
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
     if ((bufUsed = snprintf(&buf[bufPosition],
 			    bufLength,
-			    "%s%2d. %s",
-			    i == 0 ? texthtml("\n", "") : texthtml("\n", "<br>"),
-			    i,
+			    "%s<br>",
 			    myGlobals.configFileDirs[i])) < 0)
       BufferTooShort();
+	if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
     bufLength   -= bufUsed;
   }
-  printFeatureConfigInfo(textPrintFlag, "Config files", buf);
+  printFeatureConfigInfo(textPrintFlag, "Config Files", buf);
 
   bufLength = sizeof(buf);
   bufPosition = 0;
@@ -2560,6 +2559,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 			    i,
 			    myGlobals.pluginDirs[i])) < 0)
       BufferTooShort();
+	if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
     bufLength   -= bufUsed;
   }

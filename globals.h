@@ -460,8 +460,10 @@ typedef struct ntopGlobals {
   HostTraffic *hostsCache[MAX_HOSTS_CACHE_LEN];
   u_short      hostsCacheLen;
 
+#ifdef USE_SESSIONS_CACHE
   IPSession   *sessionsCache[MAX_SESSIONS_CACHE_LEN];
   u_short      sessionsCacheLen;
+#endif
 
   u_char      resetHashNow; /* used for hash reset */
 } NtopGlobals;

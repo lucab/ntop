@@ -40,7 +40,9 @@ extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 #define NTOP_LITTLE_ENDIAN  1
 #undef  NTOP_BIG_ENDIAN
 
-#define DATAFILE_DIR	"."
+extern char _wdir[];
+
+#define DATAFILE_DIR	_wdir
 #define PLUGIN_DIR		"."
 #define CONFIGFILE_DIR	"."
 #define DBFILE_DIR      "."

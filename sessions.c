@@ -388,6 +388,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   myGlobals.numTerminatedSessions++;
   myGlobals.device[actualDeviceId].numTcpSessions--;
 
+#ifdef USE_SESSIONS_CACHE
   /* Memory recycle */
   if(myGlobals.sessionsCacheLen < (MAX_SESSIONS_CACHE_LEN-1)) {
     myGlobals.sessionsCache[myGlobals.sessionsCacheLen++] = sessionToPurge;
@@ -395,6 +396,9 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     /* No room left: it's time to free the bucket */
     free(sessionToPurge); /* No inner pointers to free */
   }
+#else
+	free(sessionToPurge);
+#endif
 }
 
 /* ************************************ */
@@ -636,6 +640,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       /* We don't check for space here as the datastructure allows
 	 ntop to store sessions as needed
       */
+#ifdef USE_SESSIONS_CACHE
       /* There's enough space left in the hashtable */
       if(myGlobals.sessionsCacheLen > 0) {
 	theSession = myGlobals.sessionsCache[--myGlobals.sessionsCacheLen];
@@ -643,9 +648,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  traceEvent(TRACE_INFO, "Fetched session from pointers cache (len=%d)",
 	  (int)myGlobals.sessionsCacheLen);
 	*/
-      } else {
+      } else
+#endif
 	theSession = (IPSession*)malloc(sizeof(IPSession));
-      }
 
       memset(theSession, 0, sizeof(IPSession));
       addedNewEntry = 1;

@@ -810,19 +810,23 @@ int main(int argc, char *argv[]) {
 
   if(myGlobals.rFileName != NULL)
     strncpy(ifStr, PCAP_NW_INTERFACE, sizeof(ifStr));
-  else
-    for (i=0; i<myGlobals.numDevices; i++) {
-      char tmpBuf[48];
-
+  else {
+	ifStr[0] = '\0';
+	  
+	  for (i=0; i<myGlobals.numDevices; i++) {
+      char tmpBuf[64];
+	  
       if(i>0) {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
-	  BufferTooShort();
+		if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
+		  BufferTooShort();
       } else {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
-	  BufferTooShort();
+		if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
+		  BufferTooShort();
       }
+
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
     }
+  }
 
   traceEvent(TRACE_INFO, "Listening on [%s]", ifStr);
   traceEvent(TRACE_INFO, "Copyright 1998-2002 by %s\n", author);

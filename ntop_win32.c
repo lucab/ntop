@@ -119,18 +119,33 @@ void initWinsock32() {
     exit(-1);
   }
 
-  version = "2.1";
+  version = "2.1.50";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "11/07/2002";
+  buildDate = "21/08/2002";
 
-  if(!isWinNT())
-    strcpy(_wdir, ".");
-
-  if(isWinNT())
-    osName = "WinNT/2K/XP";
-  else
+  if(!isWinNT()) {
     osName = "Win95/98/ME";
+    strcpy(_wdir, ".");
+  } else {
+    osName = "WinNT/2K/XP";
 
+		// Get the full path and filename of this program
+	  if(GetModuleFileName( NULL, _wdir, sizeof(_wdir) ) == 0 ) {
+		_wdir[0] = '\0';
+	  } else {
+		int i;
+
+		for(i=strlen(_wdir)-1; i>0; i--)
+		  if(_wdir[i] == '\\') {
+		_wdir[i] = '\0';
+		break;
+		  }
+	  }
+
+	  /* traceEvent(TRACE_ERROR, "Wdir=%s", _wdir); */
+  }
+
+    
 #ifdef WIN32_DEMO
   traceEvent(TRACE_INFO, "\n-----------------------------------------------------------");
   traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop myGlobals.version able to");
@@ -1175,13 +1190,11 @@ void installService(int argc, char **argv)
   }
 
   // Next, get a handle to the service control manager
-  schSCManager = OpenSCManager(NULL,
-			       NULL,
-			       SC_MANAGER_ALL_ACCESS);
+  schSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 
   if ( schSCManager ) {
 
-    schService = CreateService(schSCManager,               // SCManager database
+    schService = CreateService(schSCManager,   // SCManager database
 			       TEXT(SZSERVICENAME),        // name of service
 			       TEXT(SZSERVICEDISPLAYNAME), // name to display
 			       SERVICE_ALL_ACCESS,         // desired access
@@ -1196,7 +1209,6 @@ void installService(int argc, char **argv)
 			       NULL);                      // no password
 
     if (schService){
-
       _tprintf(TEXT("%s installed.\n"), TEXT(SZSERVICEDISPLAYNAME) );
 
       // Close the handle to this service object
@@ -1205,7 +1217,7 @@ void installService(int argc, char **argv)
       //Make a registry key to support logging messages using the service name.
       sprintf(szParamKey2, "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\%s",SZSERVICENAME);
       if(0 != makeNewKey(HKEY_LOCAL_MACHINE, szParamKey2)){
-	_tprintf(TEXT("The EventLog subkey could not be created.\n"));
+		_tprintf(TEXT("The EventLog subkey could not be created.\n"));
       }
 
       // Set the file value (where the message resources are located.... in this case, our runfile.)
@@ -1410,22 +1422,6 @@ VOID ServiceStart (DWORD dwArgc, LPTSTR *lpszArgv)
     goto cleanup;
   }
 
-  // Get the full path and filename of this program
-  if(GetModuleFileName( NULL, _wdir, sizeof(_wdir) ) == 0 ) {
-    _wdir[0] = '\0';
-  } else {
-    int i;
-
-    for(i=strlen(_wdir)-1; i>0; i--)
-      if(_wdir[i] == '\\') {
-	_wdir[i] = '\0';
-	break;
-      }
-  }
-
-  /* traceEvent(TRACE_ERROR, "Wdir=%s", _wdir); */
-
-
   // createThread(&ntopThread, invokeNtop, NULL);
   // J. R. Duarte: Create an argument string from the argument list
   convertArgListToArgString((LPTSTR) szAppParameters,0, dwArgc, lpszArgv);
@@ -1504,20 +1500,19 @@ VOID AddToMessageLog(LPTSTR lpszMsg)
       lpszStrings[0] = szMsg;
 
       if (hEventSource != NULL) {
-	ReportEvent(hEventSource,
-		    EVENTLOG_INFORMATION_TYPE,
-		    0,
-		    EVENT_GENERIC_INFORMATION,
-		    NULL,
-		    1,
-		    0,
-		    lpszStrings,
-		    NULL);
+		ReportEvent(hEventSource,
+				EVENTLOG_INFORMATION_TYPE,
+				0,
+				EVENT_GENERIC_INFORMATION,
+				NULL,
+				1,
+				0,
+				lpszStrings,
+				NULL);
 
-	DeregisterEventSource(hEventSource);
+		DeregisterEventSource(hEventSource);
       }
-    }
-  else{
+    } else {
     _tprintf(TEXT("%s\n"), lpszMsg);
   }
 }
@@ -1605,7 +1600,6 @@ VOID WINAPI controlHandler(DWORD dwCtrlCode)
 // The ServiceMain function is the entry point for the service.
 void WINAPI serviceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 {
-
   TCHAR szAppParameters[8192];
   LONG lLen = 8192;
 
@@ -1646,8 +1640,7 @@ void WINAPI serviceMain(DWORD dwArgc, LPTSTR *lpszArgv)
   if(0 != getStringValue(szAppParameters,(LPDWORD)&lLen, HKEY_LOCAL_MACHINE, szParamKey, SZAPPPARAMS)){
     dwNewArgc = 0;
     lpszNewArgv = NULL;
-  }
-  else{
+  } else {
     //If we have an argument string, convert it to a list of argc/argv type...
     lpszNewArgv = convertArgStringToArgList(lpszNewArgv, &dwNewArgc, szAppParameters);
   }
@@ -1733,8 +1726,10 @@ void main(int argc, char **argv)
   // service control manager, in which case StartServiceCtrlDispatcher
   // must be called here. A message will be printed just in case this
   // happens from the console.
-  printf("\nNo arguments in command line...");
-  printf("\nCalling StartServiceCtrlDispatcher...please wait.\n");
+  printf("\nNOTE:\nUnder your version of Windows, ntop is started as a service.\n");
+  printf("Please open the services control panel to start/stop ntop,\n");
+  printf("or type ntop /h to see all the available options.\n");
+
   if(!StartServiceCtrlDispatcher(serviceTable)) {
     printf("\n%s\n", SZFAILURE);
     AddToMessageLog(TEXT(SZFAILURE));
