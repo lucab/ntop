@@ -22,9 +22,11 @@
 #include "ntop.h"
 
 /* Static */
+#ifdef DELAYED_FREE
 #define FREE_LIST_LEN   32
 static HostTraffic *freeHostList[FREE_LIST_LEN];
 static int nextIdxToFree=0, freeListLen=0;
+#endif
 static u_char printedHashWarning = 0;
 
 /* ******************************* */
@@ -792,12 +794,16 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
       storeHostTrafficInstance(host);
   }
 
+#ifdef DELAYED_FREE
   if(freeListLen == FREE_LIST_LEN) {
     free(freeHostList[nextIdxToFree]); /* This is the real free */
     freeHostList[nextIdxToFree] = host;
     nextIdxToFree = (nextIdxToFree+1) % FREE_LIST_LEN;
   } else
     freeHostList[freeListLen++] = host;
+#else
+  free(host);
+#endif
 
   numPurgedHosts++;
 
@@ -828,9 +834,11 @@ void freeHostInstances(void) {
     }
   }
 
+#ifdef DELAYED_FREE
   for(i=0; i<FREE_LIST_LEN; i++)
     if(freeHostList[i] != NULL)
       free(freeHostList[i]);
+#endif
 
   traceEvent(TRACE_INFO, "%d instances freed\n", num);
 }
