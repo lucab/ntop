@@ -1400,5 +1400,11 @@ echo
 echo "================================================="
 echo
 
+dnl> MacOSX needs patched versions of some configure-related files
+case "$host:$CC" in
+    *darwin* )
+	cp packages/MacOSX/lt* .
+	;;
+esac
 
 exit 0
