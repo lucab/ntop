@@ -385,8 +385,14 @@
 /* Define to 1 if you have the <openssl/x509.h> header file. */
 #undef HAVE_OPENSSL_X509_H
 
+/* Define to 1 if you have the <pcap-bpf.h> header file. */
+#undef HAVE_PCAP_BPF_H
+
 /* Define to 1 if you have the <pcap.h> header file. */
 #undef HAVE_PCAP_H
+
+/* libpcap has pcap_lib_version */
+#undef HAVE_PCAP_LIB_VERSION
 
 /* libpcap has pcap_open_dead */
 #undef HAVE_PCAP_OPEN_DEAD

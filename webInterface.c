@@ -3090,6 +3090,9 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "ntop version", version);
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
   printFeatureConfigInfo(textPrintFlag, "OS", osName);
+#ifdef HAVE_PCAP_LIB_VERSION
+  printFeatureConfigInfo(textPrintFlag, "libpcap version", pcap_lib_version());
+#endif
 
 #ifndef WIN32
   {

@@ -316,16 +316,23 @@ ntop.h
 #endif
 
 /*
- * #ifdef below courtesy of
+ * #ifdefs below courtesy of
  * "David Masterson" <David.Masterson@kla-tencor.com>
+ * Scott Renfro <scott@renfro.org> (MinGW)
+ * Combined and revised 12-2003 for libpcap 0.8.x - BMSIII
  */
-#ifdef HAVE_NET_BPF_H
-#include <net/bpf.h>
-#endif
-
 #if defined(WIN32) && defined(__GNUC__)
-/* on mingw, the definitions we want are in bpf.h - Scott Renfro <scott@renfro.org>*/
-#include "bpf.h"
+ #include "bpf.h"
+#else
+ #ifdef HAVE_NET_BPF_H
+  #include <net/bpf.h>
+ #else
+  #ifdef HAVE_PCAP_BPF_H
+   #include <pcap-bpf.h>
+  #else
+   #error Neither net/bpf.h nor pcap-bpf.h found
+  #endif
+ #endif
 #endif
 
 /* **************************************************************************************
