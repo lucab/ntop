@@ -4182,7 +4182,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     statsEntry->tcpRcvd.value   += el->tcpRcvdLoc.value + el->tcpRcvdFromRem.value;
     statsEntry->udpRcvd.value   += el->udpRcvdLoc.value + el->udpRcvdFromRem.value;
     statsEntry->icmpRcvd.value  += el->icmpRcvd.value;
-    statsEntry->icmp6Sent.value  += el->icmp6Sent.value;
+    statsEntry->icmp6Rcvd.value  += el->icmp6Rcvd.value;
 
     if(numEntries >= maxHosts) break;
   } /* for(;;) */
