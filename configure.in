@@ -511,6 +511,11 @@ dnl>
 AC_CHECK_LIB(dl, dlopen)
 
 dnl>
+dnl> check for `backtrace' in -lc
+dnl>
+AC_CHECK_LIB(c, backtrace)
+
+dnl>
 dnl> check for `crypt' in -lcrypt (MANDATORY)
 dnl>
 AC_CHECK_FUNC(crypt, , AC_CHECK_LIB(c, crypt, ,
