@@ -4607,7 +4607,7 @@ extern int ntop_sched_yield(char *file, int line) {
 #endif
 
   if(!myGlobals.runningPref.disableSchedYield) {
-    sched_yield();
+    return(sched_yield());
 #ifdef DEBUG
   } else {
     traceEvent(CONST_TRACE_INFO, "DEBUG: skipping sched_yield()");

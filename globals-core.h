@@ -226,8 +226,21 @@ extern void resetLeaks(void);
 #define realloc(p, a) ntop_realloc((void*)p, (unsigned int)a,  __FILE__, __LINE__)
 #undef strdup
 #define strdup(a)     ntop_strdup((char*)a, __FILE__, __LINE__)
-/* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
-#define free(a)       ntop_free((void**)&(a), __FILE__, __LINE__)
+
+/* Fix to the free prototype courtesy of 
+   Tanner Lovelace <lovelace@opennms.org> and
+   Berthold Gunreben <bg@suse.de>
+   
+*/
+#define free(a) do {   \
+       union __x {     \
+       void **voidptr; \
+       __typeof__(&(a)) ptr;      \
+       } __x;  \
+       __x.ptr = &(a);  \
+       ntop_safefree(__x.voidptr, __FILE__, __LINE__); \
+} while (0)
+
 extern void*          ntop_malloc(unsigned int sz, char* file, int line);
 extern void*          ntop_calloc(unsigned int c, unsigned int sz, char* file, int line);
 extern void*          ntop_realloc(void* ptr, unsigned int sz, char* file, int line);

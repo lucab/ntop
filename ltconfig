@@ -1999,7 +1999,6 @@ linux-gnu*)
   else
     # Only the GNU ld.so supports shared libraries on MkLinux.
     case "$host_cpu" in
-    powerpc*) dynamic_linker=no ;;
     *) dynamic_linker='Linux ld.so' ;;
     esac
   fi

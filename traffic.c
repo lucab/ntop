@@ -247,7 +247,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   myGlobals.device[deviceToUpdate].throughput = myGlobals.device[deviceToUpdate].ethernetBytes.value;
   myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts.value;
 
-  if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastMinThptUpdate) > 60 /* 1 minute */) {
+  if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
     updateMinThpt = 1;
     myGlobals.device[deviceToUpdate].lastMinEthernetBytes.value = myGlobals.device[deviceToUpdate].ethernetBytes.value -
       myGlobals.device[deviceToUpdate].lastMinEthernetBytes.value;
@@ -263,7 +263,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
     myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
   }
 
-  if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
+  if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate) >= 300 /* 5 minutes */) {
     myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value = 
       myGlobals.device[deviceToUpdate].ethernetBytes.value - myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value;
     myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;

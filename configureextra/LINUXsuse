@@ -12,8 +12,8 @@ if ! test -f /usr/X11R6/lib/libXpm.so; then
     echo "*"
     echo "*>>> Continuing, but subsequent make may fail"
     echo "*"
-    echo "*???     1. As root, create the link:"
-    echo "*???        ln -s /usr/X11R6/lib/libXpm.so.4 /usr/X11R6/lib/libXpm.so"
+    echo "*???     1. Install the X development packages:"
+    echo "*???        yast -i xorg-x11-devel"
     echo "*"
     echo "*******************************************************************"
     echo
@@ -28,8 +28,8 @@ if ! test -f /usr/X11R6/lib/libX11.so; then
     echo "*"
     echo "*>>> Continuing, but subsequent make may fail"
     echo "*"
-    echo "*???     1. As root, create the link:"
-    echo "*???        ln -s /usr/X11R6/lib/libX11.so.6.2 /usr/X11R6/lib/libX11.so"
+    echo "*???     1. Install the X development packages:"
+    echo "*???        yast -i xorg-x11-devel"
     echo "*"
     echo "*******************************************************************"
     echo
