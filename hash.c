@@ -253,6 +253,16 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     if(host->nonIPTraffic->ipxHostName != NULL)         free(host->nonIPTraffic->ipxHostName);
     free(host->nonIPTraffic);
   }
+  
+  if(host->nonIpProtoTrafficInfos != NULL) {
+    NonIpProtoTrafficInfo *list = host->nonIpProtoTrafficInfos;
+
+    while(list != NULL) {
+      NonIpProtoTrafficInfo *next = list->next;
+      free(list);
+      list = next;
+    }
+  }
 
   if(host->secHostPkts != NULL) {
     free(host->secHostPkts);

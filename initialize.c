@@ -331,10 +331,13 @@ void resetDevice(int devIdx) {
 
   myGlobals.device[devIdx].actualHashSize = CONST_HASH_INITIAL_SIZE;
 
-  ptr = calloc(CONST_HASH_INITIAL_SIZE, sizeof(HostTraffic*));
   len = CONST_HASH_INITIAL_SIZE * sizeof(HostTraffic*);
-  memset(ptr, 0, len);
-  myGlobals.device[devIdx].hash_hostTraffic = ptr;
+  if(myGlobals.device[devIdx].hash_hostTraffic == NULL) {
+    ptr = calloc(CONST_HASH_INITIAL_SIZE, sizeof(HostTraffic*));
+    myGlobals.device[devIdx].hash_hostTraffic = ptr;
+  }
+   
+  memset(myGlobals.device[devIdx].hash_hostTraffic, 0, len); 
 
   resetTrafficCounter(&myGlobals.device[devIdx].droppedPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].ethernetPkts);
@@ -1351,7 +1354,8 @@ void initDevices(char* devices) {
     resetStats(0);
     initDeviceDatalink(0);
 
-    strcpy(myGlobals.device[0].name, "pcap-file");
+    free(myGlobals.device[0].name);
+    myGlobals.device[0].name = strdup("pcap-file");
     myGlobals.numDevices = 1;
 
     return;

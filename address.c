@@ -1164,12 +1164,12 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 			  short *isRequest,
 			  short *positiveReply) {
   querybuf      answer;
-  u_char	*cp;
+  u_char	*cp = NULL;
   char		**aliasPtr;
-  u_char	*eom, *bp;
+  u_char	*eom = NULL, *bp;
   char		**addrPtr;
-  int		type, class, queryType = T_A;
-  int		qdcount, ancount, arcount, nscount, buflen;
+  int		type=0, class, queryType = T_A;
+  int		qdcount, ancount, arcount, nscount=0, buflen;
   int		origClass=0;
   int		numAliases = 0;
   int		numAddresses = 0;
@@ -1431,7 +1431,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 
   cp = (u_char *)_res_skip((char *)&answer, 2, (char *)eom);
 
-  while (--nscount >= 0 && cp < eom) {
+  while ((--nscount >= 0) && (cp < eom)) {
     /*
      *  Go through the NS records and retrieve the names of hosts
      *  that serve the requested domain.

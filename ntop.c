@@ -94,6 +94,11 @@ void* pcapDispatch(void *_i) {
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...");
+
+#if 0
+  cleanup(2);
+#endif
+
   return(NULL); 
 }
 #endif /* CFG_MULTITHREADED */
@@ -979,6 +984,14 @@ RETSIGTYPE cleanup(int signo) {
   }
   
   free(myGlobals.device);
+
+  if(myGlobals.broadcastEntry != NULL) free(myGlobals.broadcastEntry);
+  if(myGlobals.otherHostEntry != NULL) {
+    if(myGlobals.otherHostEntry->portsUsage != NULL) free(myGlobals.otherHostEntry->portsUsage);
+    free(myGlobals.otherHostEntry);
+  }
+
+  if(myGlobals.startedAs != NULL) free(myGlobals.startedAs);
 
 #ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.tcpSessionsMutex);
