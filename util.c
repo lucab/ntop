@@ -5596,9 +5596,28 @@ FILE* checkForInputFile(char* logTag,
   if(dbStat) {
       struct stat checkStat;
 
+      if(logTag != NULL) {
+        memset(bufTime, 0, sizeof(bufTime));
+        memset(bufTime2, 0, sizeof(bufTime2));
+        strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
+                 localtime_r(&(dbStat->st_ctime), &t));
+        strftime(bufTime2, sizeof(bufTime2), CONST_LOCALE_TIMESPEC,
+                 localtime_r(&(dbStat->st_mtime), &t));
+        traceEvent(CONST_TRACE_NOISY, "%s: Database created %s, last modified %s", logTag, bufTime, bufTime2);
+      }
+
       /* Check time stamps... */
       if(!stat(tmpFile, &checkStat)) {
-        if(dbStat->st_mtime >= checkStat.st_mtime) {
+        time_t compareTime;
+        /* Pick the later - so if you copy/move a file we know it */
+        compareTime = max(checkStat.st_ctime, checkStat.st_mtime);
+        if(logTag != NULL) {
+          memset(bufTime, 0, sizeof(bufTime));
+          strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC, 
+                   localtime_r(&compareTime, &t));
+          traceEvent(CONST_TRACE_NOISY, "%s: Input file created/last modified %s", logTag, bufTime);
+        }
+        if(dbStat->st_mtime >= compareTime) {
           if(logTag != NULL)
             traceEvent(CONST_TRACE_INFO,"%s: File '%s' does not need to be reloaded", logTag, tmpFile);
 #ifdef MAKE_WITH_ZLIB
