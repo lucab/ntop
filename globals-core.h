@@ -448,7 +448,7 @@ extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
 extern int copySerial(HostSerial *a, HostSerial *b);
 extern void setEmptySerial(HostSerial *a);
-extern void addPortToList(u_short *thePorts /* 0...MAX_NUM_RECENT_PORTS */, u_short thePort);
+extern void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS */, u_short thePort);
 #ifndef WIN32
 extern void saveNtopPid(void);
 extern void removeNtopPid(void);
@@ -537,7 +537,7 @@ extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, u_char al
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
-extern void updatePortList(HostTraffic *theHost, u_short clientPort, u_short serverPort);
+extern void updatePortList(HostTraffic *theHost, int clientPort, int serverPort);
 extern IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 				   u_short fragmentedData, u_int tcpWin,
 				   HostTraffic *srcHost, u_short sport,
@@ -682,6 +682,7 @@ int getdomainname(char *name, size_t len);
 /* Host health */
 #define hasWrongNetmask(a)          ((a != NULL) && FD_ISSET(FLAG_HOST_WRONG_NETMASK, &(a->flags)))
 #define hasDuplicatedMac(a)         ((a != NULL) && FD_ISSET(FLAG_HOST_DUPLICATED_MAC, &(a->flags)))
+#define hasSentIpDataOnZeroPort(a)  ((a != NULL) && FD_ISSET(FLAG_HOST_IP_ZERO_PORT_TRAFFIC, &(a->flags)))
 
 #define ISBLANK(ch) ((ch) == ' ' || (ch) == '\t')
 

@@ -163,8 +163,9 @@ typedef struct {
 #endif /* MAKE_NTOP_PACKETSZ_DECLARATIONS */
 
 typedef struct portProtoMapper {
-  int portProto;       /* Port/proto to map */
-  int mappedPortProto; /* Mapped port/proto */
+  u_int portProto;       /* Port/proto to map */
+  u_int mappedPortProto; /* Mapped port/proto */
+  u_char dummyEntry;     /* Set to 1 if this entry is dummy */
 } PortProtoMapper;
 
 typedef struct portProtoMapperHandler {
@@ -558,8 +559,9 @@ typedef struct hostTraffic {
 
   /* IP */
   PortUsage        **portsUsage; /* 0...MAX_ASSIGNED_IP_PORTS */
-  u_short          recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
-  u_short          otherIpPortsRcvd[MAX_NUM_RECENT_PORTS], otherIpPortsSent[MAX_NUM_RECENT_PORTS];
+  /* Don't change the recentl... to unsigned ! */
+  int              recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
+  int              otherIpPortsRcvd[MAX_NUM_RECENT_PORTS], otherIpPortsSent[MAX_NUM_RECENT_PORTS];
   TrafficCounter   ipBytesSent, ipBytesRcvd;
   TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc, udpSentRem, icmpSent;
   TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd;
@@ -1835,8 +1837,7 @@ typedef struct ntopGlobals {
 #endif
   u_int ipTrafficMatrixMemoryUsage;
   u_char webInterfaceDisabled;
-  int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
-  int sortSendMode;
+  int enableIdleHosts;   /* Purging of idle hosts support enabled by default */  
   int actualReportDeviceId;
   short columnSort, reportKind, sortFilter;
   int sock, newSock;

@@ -1406,6 +1406,7 @@
 /* Flags for possible error codes */
 #define FLAG_HOST_WRONG_NETMASK             65
 #define FLAG_HOST_DUPLICATED_MAC            66
+#define FLAG_HOST_IP_ZERO_PORT_TRAFFIC      67
 
 /*
  * ->userFlags settings

@@ -1769,6 +1769,11 @@ void resetHostsVariables(HostTraffic* el) {
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
 
+  memset(el->recentlyUsedClientPorts, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
+  memset(el->recentlyUsedServerPorts, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
+  memset(el->otherIpPortsRcvd, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
+  memset(el->otherIpPortsSent, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
+
   el->secHostPkts = NULL;
 }
 
@@ -3686,8 +3691,11 @@ void setEmptySerial(HostSerial *a) {
 
 /* ********************************* */
 
-void addPortToList(u_short *thePorts /* 0...MAX_NUM_RECENT_PORTS */, u_short port) {
+void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS */, u_short port) {
   u_short i, found;
+
+  if(port == 0)
+    FD_SET(FLAG_HOST_IP_ZERO_PORT_TRAFFIC, &host->flags);
 
   for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
     if(thePorts[i] == port) {

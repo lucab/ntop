@@ -1030,7 +1030,7 @@ static void processIpPkt(const u_char *bp,
 	  }
       }
 
-      if((sport > 0) && (dport > 0)) {
+     if((sport > 0) || (dport > 0)) {
 	IPSession *theSession = NULL;
 	u_short isPassiveSess = 0, nonFullyRemoteSession = 1;
 	int sportIdx, dportIdx;

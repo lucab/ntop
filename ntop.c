@@ -200,17 +200,18 @@ void detachFromTerminal(int doChdir) {
 static short handleProtocol(char* protoName, char *protocol) {
   int i, idx, lowProtoPort, highProtoPort;
   short printWarnings = 0;
+  u_char dummyEntry = 0;
 
   if(protocol[0] == '\0')
     return(-1);
-  else if(isdigit(protocol[0])) {
+  else if(isdigit(protocol[0]) || (protocol[0] == '-')) {
     /* numeric protocol port handling */
     lowProtoPort = highProtoPort = 0;
     sscanf(protocol, "%d-%d", &lowProtoPort, &highProtoPort);
     if(highProtoPort < lowProtoPort)
       highProtoPort = lowProtoPort;
 
-    if(lowProtoPort < 0) lowProtoPort = 0;
+    if(lowProtoPort < 0) { lowProtoPort = 0; dummyEntry = 1; /* Dummy entry */ }
     if(highProtoPort >= MAX_IP_PORT) highProtoPort = MAX_IP_PORT-1;
 
     for(idx=lowProtoPort; idx<= highProtoPort; idx++) {
@@ -220,7 +221,11 @@ static short handleProtocol(char* protoName, char *protocol) {
 #ifdef DEBUG
 	printf("[%d] '%s' [port=%d]\n", myGlobals.numIpProtosToMonitor, protoName, idx);
 #endif
-	servicesMapper[idx] = myGlobals.numIpProtosToMonitor;
+
+	if(dummyEntry)
+	  servicesMapper[idx] = -myGlobals.numIpProtosToMonitor;
+	else
+	  servicesMapper[idx] = myGlobals.numIpProtosToMonitor;
       } else if(printWarnings)
 	traceEvent(CONST_TRACE_WARNING, 
                    "INIT: IP port %d (%s) has been discarded (multiple instances)",
@@ -369,6 +374,13 @@ void createPortHash(void) {
 #ifdef DEBUG
       traceEvent(CONST_TRACE_INFO, "Mapping port %d to slotId %d", i, slotId);
 #endif
+
+      if(servicesMapper[i] < 0) {
+	servicesMapper[i] = -servicesMapper[i];
+	myGlobals.ipPortMapper.theMapper[slotId].dummyEntry = 1;
+      } else
+	myGlobals.ipPortMapper.theMapper[slotId].dummyEntry = 0;
+      
       myGlobals.ipPortMapper.theMapper[slotId].portProto = i;
       myGlobals.ipPortMapper.theMapper[slotId].mappedPortProto = servicesMapper[i];
     }
@@ -514,7 +526,7 @@ void addDefaultProtocols(void) {
   myGlobals.GnutellaIdx = handleProtocolList("Gnutella", "6346|6347|6348|");
   myGlobals.KazaaIdx = handleProtocolList("Kazaa",       "1214|");
   myGlobals.WinMXIdx = handleProtocolList("WinMX",       "6699|7730|");
-  myGlobals.DirectConnectIdx = handleProtocolList("DC++",    "0|"); /* Dummy port as this is a pure P2P protocol */
+  myGlobals.DirectConnectIdx = handleProtocolList("DC++",    "-1|"); /* Dummy port as this is a pure P2P protocol */
   handleProtocolList("eDonkey",    "4661-4665|");
 
   handleProtocolList("Messenger", "1863|5000|5001|5190-5193|");
@@ -529,11 +541,13 @@ int mapGlobalToLocalIdx(int port) {
     int j, found, slotId = (3*port) % myGlobals.ipPortMapper.numSlots;
 
     for(j=0, found=0; j<myGlobals.ipPortMapper.numSlots; j++) {
-      if(myGlobals.ipPortMapper.theMapper[slotId].portProto == -1)
-	break;
-      else if(myGlobals.ipPortMapper.theMapper[slotId].portProto == port) {
-	found = 1;
-	break;
+      if(myGlobals.ipPortMapper.theMapper[slotId].dummyEntry == 0) {
+	if(myGlobals.ipPortMapper.theMapper[slotId].portProto == -1)
+	  break;
+	else if(myGlobals.ipPortMapper.theMapper[slotId].portProto == port) {
+	  found = 1;
+	  break;
+	}
       }
 
       slotId = (slotId+1) % myGlobals.ipPortMapper.numSlots;

@@ -4776,7 +4776,7 @@ void initWeb(void) {
 
   traceEvent(CONST_TRACE_INFO, "WEB: Initializing web server");
 
-  myGlobals.columnSort = 0, myGlobals.sortSendMode = 0;
+  myGlobals.columnSort = 0;
   addDefaultAdminUser();
   initAccessLog();
 

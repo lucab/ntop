@@ -55,16 +55,14 @@ static PortUsage* allocatePortUsage(void) {
 
 /* ************************************ */
 
-void updatePortList(HostTraffic *theHost, u_short clientPort, u_short serverPort) {
+void updatePortList(HostTraffic *theHost, int clientPort, int serverPort) {
   if(theHost == NULL) return;
 
-  if(clientPort > 0)
-    addPortToList(theHost->recentlyUsedClientPorts, clientPort);
+  if(clientPort >= 0)
+    addPortToList(theHost, theHost->recentlyUsedClientPorts, clientPort);
 
-  /* ********************************* */
-
-  if(serverPort > 0)
-    addPortToList(theHost->recentlyUsedServerPorts, serverPort);
+  if(serverPort >= 0)
+    addPortToList(theHost, theHost->recentlyUsedServerPorts, serverPort);
 }
 
 /* ************************************ */
@@ -232,31 +230,24 @@ void updateUsedPorts(HostTraffic *srcHost,
   int sport_idx = mapGlobalToLocalIdx(sport);
   int dport_idx = mapGlobalToLocalIdx(dport);
 
-  /* traceEvent(CONST_TRACE_INFO, "%d", length); */
-
-
-
-
   /* Now let's update the list of ports recently used by the hosts */
-  if(sport > dport) {
+  if((sport > dport) || broadcastHost(dstHost)) {
     clientPort = sport, serverPort = dport;
 
-    if(sport_idx == -1) addPortToList(srcHost->otherIpPortsSent, sport);
-    if(dport_idx == -1) addPortToList(dstHost->otherIpPortsRcvd, dport);
+    if(sport_idx == -1) addPortToList(srcHost, srcHost->otherIpPortsSent, sport);
+    if(dport_idx == -1) addPortToList(dstHost, dstHost->otherIpPortsRcvd, dport);
 
     if(srcHost != myGlobals.otherHostEntry)
-      updatePortList(srcHost, clientPort, 0);    
+      updatePortList(srcHost, clientPort, -1);    
     if(dstHost != myGlobals.otherHostEntry)
-      updatePortList(dstHost, 0, serverPort);
+      updatePortList(dstHost, -1, serverPort);
   } else {
     clientPort = dport, serverPort = sport;
 
-
-
     if(srcHost != myGlobals.otherHostEntry)
-      updatePortList(srcHost, 0, serverPort);
+      updatePortList(srcHost, -1, serverPort);
     if(dstHost != myGlobals.otherHostEntry)
-      updatePortList(dstHost, clientPort, 0);
+      updatePortList(dstHost, clientPort, -1);
   }
 
   /* **************** */

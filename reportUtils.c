@@ -1160,9 +1160,9 @@ int cmpFctn(const void *_a, const void *_b) {
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO,
-	     "reportKind=%d/columnSort=%d/sortSendMode=%d/numIpProtosToMonitor=%d\n",
+	     "reportKind=%d/columnSort=%d/numIpProtosToMonitor=%d\n",
 	     myGlobals.reportKind, myGlobals.columnSort,
-	     myGlobals.sortSendMode, myGlobals.numIpProtosToMonitor);
+	     myGlobals.numIpProtosToMonitor);
 #endif
 
   switch(myGlobals.reportKind) {
@@ -2938,6 +2938,10 @@ u_short isHostHealthy(HostTraffic *el) {
     if(riskFactor < 2) riskFactor = 2;
   }
 
+  if(hasSentIpDataOnZeroPort(el)) {
+    if(riskFactor < 2) riskFactor = 2;
+  }
+
   return(riskFactor);
 }
 
@@ -2948,6 +2952,7 @@ static void checkHostHealthness(HostTraffic *el) {
 
   if(hasWrongNetmask(el)
      || hasDuplicatedMac(el)
+     || hasSentIpDataOnZeroPort(el)
      ) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s "
 		"<IMG ALT=\"High Risk\" SRC=/Risk_high.gif> "
@@ -2964,6 +2969,10 @@ static void checkHostHealthness(HostTraffic *el) {
     if(hasDuplicatedMac(el))
       sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/help.html#2>"
 		 "Duplicated MAC found for this IP address (spoofing?)</A>\n");
+
+    if(hasSentIpDataOnZeroPort(el))
+      sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/help.html#2>"
+		 "Traffic on suspicious IP ports</A>\n");
 
     sendString("</OL></TD></TR>\n");
   }

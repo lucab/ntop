@@ -1342,16 +1342,17 @@ void initDevices(char* devices) {
     createDummyInterface("none");
     myGlobals.device[0].dummyDevice = 0;
     myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.rFileName, ebuf);
-    resetStats(0);
-    initDeviceDatalink(0);
-
-    strcpy(myGlobals.device[0].name, "pcap-file");
-    myGlobals.numDevices = 1;
 
     if(myGlobals.device[0].pcapPtr == NULL) {
       traceEvent(CONST_TRACE_FATALERROR, "pcap_open_offline(): '%s'", ebuf);
       exit(-1);
     }
+
+    resetStats(0);
+    initDeviceDatalink(0);
+
+    strcpy(myGlobals.device[0].name, "pcap-file");
+    myGlobals.numDevices = 1;
 
     return;
   }
