@@ -89,7 +89,6 @@ struct _HTTPstatus HTTPstatus[] = {
 #define BITFLAG_HTTP_STATUS_403	(18<<8)
 #define BITFLAG_HTTP_STATUS_404	(19<<8)
 #define BITFLAG_HTTP_STATUS_408	(23<<8)
-#define BITFLAG_HTTP_STATUS_410	(25<<8)
 #define BITFLAG_HTTP_STATUS_501	(32<<8)
 #define BITFLAG_HTTP_STATUS_505	(36<<8)
 
@@ -709,34 +708,38 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipByt
 /* ************************* */
 
 static void returnHTTPbadRequest(void) {
+  myGlobals.numUnsuccessfulInvalidrequests[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_400);
 }
 
 static void returnHTTPaccessDenied(void) {
+  myGlobals.numUnsuccessfulDenied[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_401 | BITFLAG_HTTP_NEED_AUTHENTICATION);
 }
 
 static void returnHTTPaccessForbidden(void) {
+  myGlobals.numUnsuccessfulForbidden[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_403);
 }
 
 void returnHTTPpageNotFound(void) {
+traceEvent(CONST_TRACE_INFO, "TEMP: myGlobals.numUnsuccessfulNotfound[]++");
+  myGlobals.numUnsuccessfulNotfound[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_404);
 }
 
-static void returnHTTPpageGone(void) {
-  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_410);
-}
-
 static void returnHTTPrequestTimedOut(void) {
+  myGlobals.numUnsuccessfulTimeout[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_408);
 }
 
 static void returnHTTPnotImplemented(void) {
+  myGlobals.numUnsuccessfulInvalidmethod[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_501);
 }
 
 static void returnHTTPversionNotSupported(void) {
+  myGlobals.numUnsuccessfulInvalidversion[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_505);
 }
 
@@ -2406,7 +2409,7 @@ void handleHTTPrequest(HostAddr from) {
 
   char tmpStr[512];
 
-  myGlobals.numHandledHTTPrequests++;
+  myGlobals.numHandledRequests[myGlobals.newSock > 0]++;
 
   gettimeofday(&httpRequestedAt, NULL);
 
@@ -2435,6 +2438,7 @@ void handleHTTPrequest(HostAddr from) {
                     _addrtostr(&from, requestedURL, sizeof(requestedURL)));
        } else {
          myGlobals.weDontWantToTalkWithYou[i].count++;
+         myGlobals.numHandledBadrequests[myGlobals.newSock > 0]++;
          traceEvent(CONST_TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
                     _addrtostr(&from, requestedURL, sizeof(requestedURL)));
          return;
@@ -2593,8 +2597,9 @@ void handleHTTPrequest(HostAddr from) {
     skipLeading++;
   }
 
-  if(requestedURL[0] == '\0')
+  if(requestedURL[0] == '\0') {
     returnHTTPpageNotFound();
+  }
 
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.purgeMutex, "returnHTTPPage");
@@ -2630,6 +2635,8 @@ void handleHTTPrequest(HostAddr from) {
 
   
   if(rc == 0) {
+    myGlobals.numSuccessfulRequests[myGlobals.newSock > 0]++;
+
     if(compressFile)
       compressAndSendData(&gzipBytesSent);
     else

@@ -841,6 +841,36 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
   sendString(texthtml("\n", "</TD></TR>\n"));
 }
 
+static void printFeatureConfigInfo3ColInt(int textPrintFlag, 
+                                          char* feature, 
+                                          int flag1, int count1, 
+                                          int flag2, int count2,
+                                          int mustShow) {
+  char tmpBuf[LEN_GENERAL_WORK_BUFFER];
+
+  if((mustShow == FALSE) && (count1+count2 == 0)) { return; }
+
+  sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"300\">"));
+  sendString(feature);
+  sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
+  if (flag1) {
+    if (snprintf(tmpBuf, sizeof(tmpBuf), "%d", count1) < 0)
+      BufferTooShort();
+    sendString(tmpBuf);
+  } else {
+    sendString("-");
+  }
+  sendString(texthtml(".....", "</TD><TD "TD_BG" ALIGN=\"right\">"));
+  if (flag2) {
+    if (snprintf(tmpBuf, sizeof(tmpBuf), "%d", count2) < 0)
+      BufferTooShort();
+    sendString(tmpBuf);
+  } else {
+    sendString("-");
+  }
+  sendString(texthtml("\n", "</TD></TR>\n"));
+}
+
 /* ******************************** */
 
 static void printParameterConfigInfo(int textPrintFlag, char* feature, char* status, char* defaultValue) {
@@ -3528,25 +3558,6 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "# IP Ports slots", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numHandledSIGPIPEerrors) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "# Handled SIGPIPE Errors", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numHandledHTTPrequests) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "# Handled HTTP Requests", buf);
-
-#ifdef MAKE_WITH_SSLWATCHDOG
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if(myGlobals.useSSLwatchdog == 1)
-#endif
-    {
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numHTTPSrequestTimeouts) < 0)
-	BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "# HTTPS Request Timeouts", buf);
-    }
-#endif
-
   if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.webServerRequestQueueLength) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "WebServer Request Queue", buf);
@@ -3598,6 +3609,106 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Local Networks", buf);
 
 
+  sendString(texthtml("\n\nntop Web Server\n\n",
+                      "<tr><th colspan=\"2\" "DARK_BG">ntop Web Server</th></tr>\n"
+                      "<tr><td colspan=\"2\" align=\"center\">\n"
+                        "<table>\n"));
+
+  sendString(texthtml("Item..................http://...................https://",
+                      "<tr><th>Item</th><th>http://</th><th>https://</th></tr>\n"));
+
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Handled Requests",
+                                myGlobals.webPort,
+                                myGlobals.numHandledRequests[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numHandledRequests[0],
+                                TRUE);
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Successful requests (200)",
+                                myGlobals.webPort,
+                                myGlobals.numSuccessfulRequests[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numSuccessfulRequests[0],
+                                TRUE);
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Bad (We don't want to talk with you) requests",
+                                myGlobals.webPort,
+                                myGlobals.numHandledBadrequests[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numHandledBadrequests[0],
+                                TRUE);
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Invalid requests - 400 BAD REQUEST",
+                                myGlobals.webPort,
+                                myGlobals.numUnsuccessfulInvalidrequests[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numUnsuccessfulInvalidrequests[0],
+                                FALSE);
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Invalid requests - 401 DENIED",
+                                myGlobals.webPort,
+                                myGlobals.numUnsuccessfulDenied[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numUnsuccessfulDenied[0],
+                                FALSE);
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Invalid requests - 403 FORBIDDEN",
+                                myGlobals.webPort,
+                                myGlobals.numUnsuccessfulForbidden[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numUnsuccessfulForbidden[0],
+                                TRUE);
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Invalid requests - 404 NOT FOUND",
+                                myGlobals.webPort,
+                                myGlobals.numUnsuccessfulNotfound[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numUnsuccessfulNotfound[0],
+                                TRUE);
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Invalid requests - 408 TIMEOUT",
+                                myGlobals.webPort,
+                                myGlobals.numUnsuccessfulTimeout[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numUnsuccessfulTimeout[0],
+                                FALSE);
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Invalid requests - 501 NOT IMPLEMENTED",
+                                myGlobals.webPort,
+                                myGlobals.numUnsuccessfulInvalidmethod[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numUnsuccessfulInvalidmethod[0],
+                                FALSE);
+  printFeatureConfigInfo3ColInt(textPrintFlag, 
+                                "# Invalid requests - 505 INVALID VERSION",
+                                myGlobals.webPort,
+                                myGlobals.numUnsuccessfulInvalidversion[1], 
+                                myGlobals.sslPort,
+                                myGlobals.numUnsuccessfulInvalidversion[0],
+                                FALSE);
+  sendString(texthtml("",
+                      "<tr><td colspan=\"3\">Notes: "
+                          "Counts may not total because of in-process requests.<br>"
+                          "Each request to the ntop web server - frameset, individual "
+                          "page, chart, etc. is counted separately"
+                          "</td>\n"
+                      "</table>\n</td></tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numHandledSIGPIPEerrors) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "# Handled SIGPIPE Errors", buf);
+
+#ifdef MAKE_WITH_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+  if(myGlobals.useSSLwatchdog == 1)
+#endif
+    {
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numHTTPSrequestTimeouts) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "# HTTPS Request Timeouts", buf);
+    }
+#endif
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
   sendString(texthtml("\n\nMemory allocation - data segment\n\n", "<tr><th colspan=2 "DARK_BG">Memory allocation - data segment</th></tr>\n"));

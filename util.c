@@ -2782,7 +2782,8 @@ FILE* getNewRandomFile(char* fileName, int len) {
   char tmpFileName[NAME_MAX];
 
   strcpy(tmpFileName, fileName);
-  sprintf(fileName, "%s-%lu", tmpFileName, myGlobals.numHandledHTTPrequests);
+  sprintf(fileName, "%s-%lu", tmpFileName, 
+          myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
   fd = fopen(fileName, "wb");
 #endif /* 0 */
 #else

@@ -330,7 +330,18 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.ipPortMapper.theMapper = NULL;
   myGlobals.ipPortMapper.numSlots = 0;
   myGlobals.numHandledSIGPIPEerrors = 0;
-  myGlobals.numHandledHTTPrequests = 0;
+  for (i=0; i<=1; i++) {
+    myGlobals.numHandledRequests[i] = 0;
+    myGlobals.numHandledBadrequests[i] = 0;
+    myGlobals.numSuccessfulRequests[i] = 0;
+    myGlobals.numUnsuccessfulInvalidrequests[i] = 0;
+    myGlobals.numUnsuccessfulInvalidmethod[i] = 0;
+    myGlobals.numUnsuccessfulInvalidversion[i] = 0;
+    myGlobals.numUnsuccessfulTimeout[i] = 0;
+    myGlobals.numUnsuccessfulNotfound[i] = 0;
+    myGlobals.numUnsuccessfulDenied[i] = 0;
+    myGlobals.numUnsuccessfulForbidden[i] = 0;
+  }
 
   /* Packet Capture */
 #if defined(CFG_MULTITHREADED)

@@ -536,8 +536,21 @@ void initCounters(void) {
   myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
   myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
 
+/* TODO why here AND in globals-core.c? */
   myGlobals.numHandledSIGPIPEerrors = 0;
-  myGlobals.numHandledHTTPrequests = 0;
+  for (i=0; i<=1; i++) {
+    myGlobals.numHandledRequests[i] = 0;
+    myGlobals.numHandledBadrequests[i] = 0;
+    myGlobals.numSuccessfulRequests[i] = 0;
+    myGlobals.numUnsuccessfulInvalidrequests[i] = 0;
+    myGlobals.numUnsuccessfulInvalidmethod[i] = 0;
+    myGlobals.numUnsuccessfulInvalidversion[i] = 0;
+    myGlobals.numUnsuccessfulTimeout[i] = 0;
+    myGlobals.numUnsuccessfulNotfound[i] = 0;
+    myGlobals.numUnsuccessfulDenied[i] = 0;
+    myGlobals.numUnsuccessfulForbidden[i] = 0;
+  }
+
   myGlobals.webServerRequestQueueLength = DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN;
 
   myGlobals.hostsCacheLen = 0;
@@ -545,7 +558,7 @@ void initCounters(void) {
   myGlobals.hostsCacheReused = 0;
 #ifdef PARM_USE_SESSIONS_CACHE
   myGlobals.sessionsCacheLen = 0;
-b  myGlobals.sessionsCacheLenMax = 0;
+  myGlobals.sessionsCacheLenMax = 0;
   myGlobals.sessionsCacheReused = 0;
 #endif
 

@@ -2356,7 +2356,16 @@ typedef struct ntopGlobals {
 
   /* http.c */
   FILE *accessLogFd;
-  unsigned long numHandledHTTPrequests;
+  unsigned long numHandledRequests[2];
+  unsigned long numHandledBadrequests[2];
+  unsigned long numSuccessfulRequests[2];
+  unsigned long numUnsuccessfulInvalidrequests[2];
+  unsigned long numUnsuccessfulInvalidmethod[2];
+  unsigned long numUnsuccessfulInvalidversion[2];
+  unsigned long numUnsuccessfulTimeout[2];
+  unsigned long numUnsuccessfulNotfound[2];
+  unsigned long numUnsuccessfulDenied[2];
+  unsigned long numUnsuccessfulForbidden[2];
 #ifdef MAKE_WITH_SSLWATCHDOG
   unsigned long numHTTPSrequestTimeouts;
 #endif
