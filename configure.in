@@ -593,7 +593,13 @@ dnl>
      AC_DEFINE(MULTITHREADED)
      AC_DEFINE(ASYNC_ADDRESS_RESOLUTION)
   else
-    multithread_mode=no
+     AC_CHECK_LIB(c_r, pthread_create)
+     if test ".`echo $LIBS | grep c_r`" != .; then
+     AC_DEFINE(MULTITHREADED)
+     AC_DEFINE(ASYNC_ADDRESS_RESOLUTION)
+    else
+     multithread_mode=no
+    fi
   fi
 fi
 else
