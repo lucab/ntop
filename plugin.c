@@ -30,8 +30,10 @@
 extern PluginInfo* icmpPluginEntryFctn(void);
 extern PluginInfo* nfsPluginEntryFctn(void);
 /* extern PluginInfo* wapPluginEntryFctn(void); */
+/* wap is obsolete */
 extern PluginInfo* sflowPluginEntryFctn(void);
-extern PluginInfo* rrdPluginEntryFctn(void);
+/* extern PluginInfo* rrdPluginEntryFctn(void); */
+/* rrd never made it into the code base */
 #ifdef RMON_SUPPORT
 extern PluginInfo* rmonPluginEntryFctn(void);
 #endif
@@ -226,8 +228,10 @@ static void loadPlugin(char* dirName, char* pluginName) {
 */
   else if(strcmp(pluginName, "sflowPlugin") == 0)
     pluginInfo = sflowPluginEntryFctn();
+/*
   else if(strcmp(pluginName, "rrdPlugin") == 0)
     pluginInfo = rrdPluginEntryFctn();
+*/
 #ifdef RMON_SUPPORT
   else if(strcmp(pluginName, "ntopRmon") == 0)
     pluginInfo = rmonPluginEntryFctn();
@@ -362,7 +366,7 @@ void loadPlugins(void) {
   loadPlugin(NULL, "nfsPlugin");
   /* loadPlugin(NULL, "wapPlugin"); */
   loadPlugin(NULL, "sflowPlugin");
-  loadPlugin(NULL, "rrdPlugin");
+  /* loadPlugin(NULL, "rrdPlugin"); */
 #ifdef RMON_SUPPORT
   loadPlugin(NULL, "rmonPlugin");
 #endif
