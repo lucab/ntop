@@ -1205,6 +1205,16 @@ install: install-recursive
 	  echo ""; \
 	fi
 
+install-data-as:
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR);
+	@for file in AS-list.txt.gz; do \
+          if test -d $$file; then \
+             $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
+           else \
+             cp -p $$file $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
+          fi; \
+        done
+
 install-data-local: ntop.txt ntop.html faq.html
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@if ! test -d $(DESTDIR)/$(datadir)/ntop; then \
