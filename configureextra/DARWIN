@@ -7,4 +7,7 @@ case "${target}" in
    *-*-darwin5.5* )
        DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
    ;;
+   *-*-darwin8* )
+   CPPFLAGS="${CPPFLAGS} -DTIGER"
+   ;;
 esac
