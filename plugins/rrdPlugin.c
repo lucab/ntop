@@ -203,6 +203,15 @@ void mkdir_p(char *path) {
 
 /* ******************************************* */
 
+static void fillupArgv(int argc, int maxArgc, char *argv[]) {
+  int i;
+
+  for(i=argc; i<maxArgc; i++)
+    argv[i] = "";
+}
+
+/* ******************************************* */
+
 int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average) {
   char *argv[32], path[512];
@@ -243,6 +252,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   accessMutex(&rrdMutex, "rrd_fetch");
 #endif
 
+  fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rc = rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data);
 
 #ifdef CFG_MULTITHREADED
@@ -461,6 +471,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     accessMutex(&rrdMutex, "rrd_graph");
 #endif
 
+    fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
     rc = rrd_graph(argc, argv, &calcpr, &x, &y);
 
     calfree();
@@ -590,6 +601,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     accessMutex(&rrdMutex, "rrd_create");
 #endif
 
+    fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
     rc = rrd_create(argc, argv);
 
     if (rrd_test_error()) {
@@ -619,6 +631,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   accessMutex(&rrdMutex, "rrd_last");
 #endif
 
+  fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   if(rrd_last(argc, argv) >= rrdTime) {
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: WARNING rrd_update not performed (RRD already updated)");
   }
@@ -673,6 +686,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   accessMutex(&rrdMutex, "rrd_update");
 #endif
 
+  fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rc = rrd_update(argc, argv);
   
   numTotalRRDs++;
@@ -1422,7 +1436,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
 	      updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
 	      updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd);
-
 
 	      if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
 		updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent);
