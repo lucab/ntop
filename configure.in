@@ -704,7 +704,7 @@ case "${target}:${CC}" in
         DEFINEOS="AIX";       STATUS="UNTESTED"
       ;;
 
-    *-*-aix[45]*:gcc* )
+    *-*-aix[[45]]*:gcc* )
         NOTE1="Trying configuration stuff from ntop 1.3 for AIX 4.1/4.2."
         DEFINEOS="AIX";       STATUS="UNTESTED"
 
@@ -953,40 +953,40 @@ echo
 echo
 echo "Multithread?"
 if test ".${ac_disable_multithread}" = ".yes"; then
-    echo "    ...Disabled via command line option --disable-mt"
+    echo "    ...Disabled via ./configure command line option --disable-mt"
     multithread_mode="disabled (Single Threaded) via --disable-mt"
 else
-    echo "    ...(Default) Requested if available. Disable via command line option --disable-mt."
+    echo "    ...(Default) Requested if available. Disable via ./configure command line option --disable-mt."
 fi
 
 echo
 echo "SSL?"
 if test ".${ac_disable_openssl}" = ".yes"; then
-    echo "    ...Disabled via command line option --without-ssl"
+    echo "    ...Disabled via ./configure command line option --without-ssl"
 else
-    echo "    ...(Default) Requested if available. Disable via command line option --without-ssl."
+    echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-ssl."
     echo "  sslv3?"
     if test ".${ac_enable_sslv3}" = ".yes"; then
         echo "    ...Requested if available AT RUN TIME."
         AC_DEFINE_UNQUOTED(MAKE_WITH_SSLV3_SUPPORT, 1, [Support SSLv3 if available])
     else
-        echo "    ...(Default) Disabled. Request via command line option --enable-sslv3"
+        echo "    ...(Default) Disabled. Request via ./configure command line option --enable-sslv3"
     fi
     if test ".${ac_enable_sslwatchdog}" = ".yes"; then
-        echo "    ...Requested via command line option --enable-sslwatchdog"
+        echo "    ...Requested via ./configure command line option --enable-sslwatchdog"
         AC_DEFINE_UNQUOTED(MAKE_WITH_SSLWATCHDOG_COMPILETIME, 1, [Enable SSL Watchdog])
     else
-        echo "    ...(Default) Disabled. Request via command line option  --enable-sslwatchdog"
-        echo "                                    or run time option."
+        echo "    ...(Default) Disabled. Request via ./configure command line option  --enable-sslwatchdog"
+        echo "                                    or ntop run time option --ssl-watchdog."
     fi
 fi
 
 echo
 echo "GDChart?"
 if test ".${ac_disable_gdchart}" = ".yes"; then
-    echo "    ...Disabled via command line option --without-gdchart"
+    echo "    ...Disabled via ./configure command line option --without-gdchart"
 else
-    echo "    ...(Default) Requested if available. Disable via command line option --without-gdchart."
+    echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-gdchart."
 fi
 
 echo
@@ -994,42 +994,42 @@ echo "XML Dump?"
 if test ".${ac_enable_xmldump}" = ".yes"; then
     echo "    ...Requested if available."
 else
-    echo "    ...(Default) Disabled. Request via command line option --enable-xmldump."
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-xmldump."
 fi
 
 echo
 echo "TCP Wrappers?"
 if test ".${ac_enable_tcpwrap}" = ".yes"; then
-    echo "    ...Requested via command line option --enable-tcpwrap"
+    echo "    ...Requested via ./configure command line option --enable-tcpwrap"
 else
-    echo "    ...(Default) Disabled. Request via command line option --enable-tcpwrap."
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-tcpwrap."
 fi
 
 echo
 echo "Plugins?"
 PLUGINS=
 if test ".${ac_disable_plugins}" = ".yes"; then
-    echo "    ...Disabled via command line option --disable-plugins"
+    echo "    ...Disabled via ./configure command line option --disable-plugins"
 else
     PLUGINS=plugins
-    echo "    ...(Default) Requested. Disable via command line option --disable-plugins."
+    echo "    ...(Default) Requested. Disable via ./configure command line option --disable-plugins."
 fi
 
 echo
 echo "Micro ntop?"
 if test ".${ac_micro_ntop}" = ".yes"; then
-    echo "    ...Requested via command line option --enable-micro-ntop."
+    echo "    ...Requested via ./configure command line option --enable-micro-ntop."
     AC_DEFINE_UNQUOTED(MAKE_MICRO_NTOP, 1, [Define to build micro ntop])
 else
-    echo "    ...(Default) Disabled. Request via command line option --enable-micro-ntop."
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-micro-ntop."
 fi
 
 echo
 echo "intop (obsolete, but it will not die!)?"
 if test ".${ac_enable_intop}" != ".yes"; then
-    echo "    ...(Default) Disabled. Request via command line option --enable-intop."
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-intop."
 else
-    echo "    ...Requested via command line option --enable-intop."
+    echo "    ...Requested via ./configure command line option --enable-intop."
     echo
     echo "*******************************************************************"
     echo "*******************************************************************"
@@ -1061,16 +1061,16 @@ else
 
     echo "  curses?"
     if test ".${ac_disable_curses}" = ".yes"; then
-        echo "    ...Disabled via command line option --without-curses."
+        echo "    ...Disabled via ./configure command line option --without-curses."
     else
-        echo "    ...(Default) Requested if available. Disable via command line option --without-curses."
+        echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-curses."
     fi
 
     echo "  GNU readline?"
     if test ".${ac_without_readline}" != ".yes"; then
-        echo "    ...Disabled via command line option --without-readline."
+        echo "    ...Disabled via ./configure command line option --without-readline."
     else
-        echo "    ...(Default) Requested if available. Disable via command line option --without-readline."
+        echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-readline."
     fi
 fi
 
@@ -1078,20 +1078,20 @@ fi
 echo
 echo "Ignore SIGPIPE?"
 if test ".$ac_enable_ignoresigpipe" = ".yes"; then
-    echo "    ...Requested via command line option --enable-ignoresigpipe."
+    echo "    ...Requested via ./configure command line option --enable-ignoresigpipe."
     AC_DEFINE_UNQUOTED(MAKE_WITH_IGNORE_SIGPIPE, 1, [Define for IGNORE of SIGPIPE])
 else
-    echo "    ...(Default) Disabled. Request via command line option --enable-ignoresigpipe"
-    echo "                                    or run time option."
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-ignoresigpipe"
+    echo "                                    or ntop run time option --ignore-sigpipe."
 fi
 
 echo
 echo "Internationalization (i18n)?"
 if test ".$ac_enable_i18n" = ".yes"; then
-    echo "    ...Requested via command line option --enable-i18n."
+    echo "    ...Requested via ./configure command line option --enable-i18n."
     AC_DEFINE_UNQUOTED(MAKE_WITH_I18N, 1, [Define for internationalization])
 else
-    echo "    ...(Default) Disabled. Request via command line option --enable-i18n"
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-i18n"
 fi
 
 echo
@@ -4038,7 +4038,7 @@ dnl>
         AC_MSG_RESULT([found - long command line options are enabled])
         AC_DEFINE_UNQUOTED(HAVE_GETOPT_LONG, 1, [getopt_long() is available])
     else
-        AC_MSG_RESULT([not found - long command line options are disabled])
+        AC_MSG_RESULT([not found - long command line options are enabled using ntop code])
     fi
 
 dnl>
