@@ -341,7 +341,6 @@ void initCounters(int _mergeInterfaces) {
   createVendorTable();
   myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
   myGlobals.capturePackets = 1;
-  myGlobals.endNtop = 0;
 
   myGlobals.numHandledHTTPrequests = 0;
 }
@@ -518,56 +517,57 @@ void initGdbm(void) {
 }
 
 
-/* ******************************* */
-
+/*
+ * Initialize all the threads used by ntop to:
+ * a) sniff packets from NICs and push them in internal data structures
+ * b) pop and decode packets
+ * c) collect data
+ * d) display/emitt information
+ */
 void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   int i;
-#ifdef MULTITHREADED
-  myGlobals.numThreads = 0;
-  createMutex(&myGlobals.gdbmMutex);
-#endif
 
 #ifdef MULTITHREADED
-  myGlobals.packetQueueLen = myGlobals.maxPacketQueueLen = myGlobals.packetQueueHead = myGlobals.packetQueueTail = 0;
 
+  /*
+   * Create two variables (semaphores) used by functions in pbuf.c to queue packets
+   */
 #ifdef USE_SEMAPHORES
+
   createSem(&myGlobals.queueSem, 0);
+
 #ifdef ASYNC_ADDRESS_RESOLUTION
   createSem(&myGlobals.queueAddressSem, 0);
 #endif
+
 #else
+
   createCondvar(&myGlobals.queueCondvar);
+
 #ifdef ASYNC_ADDRESS_RESOLUTION
   createCondvar(&myGlobals.queueAddressCondvar);
 #endif
+
 #endif
 
-  createMutex(&myGlobals.packetQueueMutex);
-  createMutex(&myGlobals.addressResolutionMutex);
-  createMutex(&myGlobals.hashResizeMutex);
-
-  if (myGlobals.isLsofPresent)
-    createMutex(&myGlobals.lsofMutex);
-
-  createMutex(&myGlobals.hostsHashMutex);
-  createMutex(&myGlobals.graphMutex);
-
   /*
-   * (1) - NPA - Network Packet Analyzer (main thread)
+   * Create the thread (1) - NPA - Network Packet Analyzer (main thread)
    */
+  createMutex(&myGlobals.packetQueueMutex);
   createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
   traceEvent(TRACE_INFO, "Started thread (%ld) for network packet analyser.\n",
 	     myGlobals.dequeueThreadId);
 
   /*
-   * (2) - HTS - Host Traffic Statistics
+   * Create the thread (2) - HTS - Host Traffic Statistics
    */
+  createMutex(&myGlobals.hostsHashMutex);
   createThread(&myGlobals.hostTrafficStatsThreadId, updateHostTrafficStatsThptLoop, NULL);
   traceEvent(TRACE_INFO, "Started thread (%ld) for host traffic statistics.\n",
 	     myGlobals.hostTrafficStatsThreadId);
 
   /*
-   * (3) - TU - Throughput Update - optional
+   * Create the thread (3) - TU - Throughput Update - optional
    */
   if (enableThUpdate) {
     createThread(&myGlobals.thptUpdateThreadId, updateThptLoop, NULL);
@@ -575,7 +575,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   }
 
   /*
-   * (4) - SIH - Scan Idle Hosts - optional
+   * Create the thread (4) - SIH - Scan Idle Hosts - optional
    */
   if (enableIdleHosts && (myGlobals.rFileName == NULL)) {
     createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
@@ -585,7 +585,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
 
 #ifndef MICRO_NTOP
   /*
-   * (5) - DBU - DB Update - optional
+   * Create the thread (5) - DBU - DB Update - optional
    */
   if (enableDBsupport) {
     createThread(&myGlobals.dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
@@ -593,11 +593,13 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   }
 #endif /* MICRO_NTOP */
 
-  myGlobals.numResolvedWithDNSAddresses = myGlobals.numKeptNumericAddresses = myGlobals.numResolvedOnCacheAddresses = 0;
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
+
+    createMutex(&myGlobals.addressResolutionMutex);
+
     /*
-     * (6) - DNSAR - DNS Address Resolution - optional
+     * Create the thread (6) - DNSAR - DNS Address Resolution - optional
      */
     for(i=0; i<myGlobals.numDequeueThreads; i++) {
       createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, NULL);
@@ -606,48 +608,70 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
     }
 
     /*
-     * (7) - Purge old host addresses
+     * Create the thread (7) - Purge idle host - optional
      */
     createThread(&myGlobals.purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
     traceEvent(TRACE_INFO, "Started thread (%ld) for address purge.", myGlobals.purgeAddressThreadId);
    }
 #endif
-#endif
+
+  createMutex(&myGlobals.gdbmMutex);       /* data to synchronize thread access to db files */
+  createMutex(&myGlobals.hashResizeMutex); /* data to synchronize thread access to host hash table */
+  createMutex(&myGlobals.graphMutex);      /* data to synchronize thread access to graph generation */
+
+#endif /* MULTITHREADED */
 
   threadsInitialized = 1;
 }
 
 
-/* ******************************* */
-
+/*
+ * Initialize helper applications (e.g. ntop uses 'lsof' to list open connections)
+ */
 void initApps(void) {
+
   if(myGlobals.isLsofPresent) {
+
 #ifdef MULTITHREADED
 #ifndef WIN32
     myGlobals.updateLsof = 1;
     memset(myGlobals.localPorts, 0, sizeof(myGlobals.localPorts)); /* myGlobals.localPorts is used by lsof */
     /*
-     * (7) - LSOF - optional
+     * (8) - LSOF - optional
      */
+    createMutex(&myGlobals.lsofMutex);
     createThread(&myGlobals.lsofThreadId, periodicLsofLoop, NULL);
     traceEvent(TRACE_INFO, "Started thread (%ld) for lsof support.\n", myGlobals.lsofThreadId);
 #endif /* WIN32 */
+
 #else
-    if(myGlobals.isLsofPresent) readLsofInfo();
+    readLsofInfo();
 #endif
   }
 }
 
 
-/* ******************************* */
-
+/*
+ * Initialize the table of NICs enabled for packet sniffing
+ *
+ * Unless we are reading data from a file:
+ *
+ * 1. find a suitable interface, if none ws not specified one
+ *    using pcap_lookupdev()
+ * 2. get the interface network number and its mask
+ *    using pcap_lookupnet()
+ * 3. get the type of the underlying network and the data-link encapsulation method
+ *    using pcap_datalink()
+ *
+ */
 void initDevices(char* devices) {
   char ebuf[PCAP_ERRBUF_SIZE], *myDevices;
   int i, j, mallocLen;
   NtopInterface *tmpDevice;
   char *tmpDev;
+
 #ifdef WIN32
-char *ifName, intNames[32][256];
+  char *ifName, intNames[32][256];
   int ifIdx = 0;
   int defaultIdx = -1;
 #endif
@@ -655,7 +679,6 @@ char *ifName, intNames[32][256];
   traceEvent(TRACE_INFO, "Initializing network devices...");
 
   myDevices = devices;
-  myGlobals.device = NULL;
 
   /* Determine the device name if not specified */
   ebuf[0] = '\0';
@@ -720,7 +743,9 @@ char *ifName, intNames[32][256];
 #endif
 
   if (myDevices == NULL) {
+
     /* No default device selected */
+
 #ifndef WIN32
     tmpDev = pcap_lookupdev(ebuf);
 
@@ -732,7 +757,7 @@ char *ifName, intNames[32][256];
 
     myGlobals.device = (NtopInterface*)calloc(1, sizeof(NtopInterface));
     myGlobals.device[0].name = strdup(tmpDev);
-    myGlobals.numDevices=1;
+    myGlobals.numDevices = 1;
   } else {
 #ifdef WIN32
     u_int selectedDevice = atoi(myGlobals.devices);
@@ -813,6 +838,7 @@ char *ifName, intNames[32][256];
 
   }
 
+
   /* ******************************************* */
 
   if(myGlobals.rFileName == NULL) {
@@ -866,7 +892,7 @@ char *ifName, intNames[32][256];
 static void initRules(char *rulesFile) {
   if((rulesFile != NULL) && (rulesFile[0] != '\0')) {
     char tmpBuf[200];
-    
+
     traceEvent(TRACE_INFO, "Parsing ntop rules...");
 
     myGlobals.handleRules = 1;

@@ -547,10 +547,13 @@ void printHTMLtrailer(void) {
 /* ******************************* */
 
 void initAccessLog(void) {
-  accessLogFd = fopen(myGlobals.accessLogPath, "a");
-  if(accessLogFd == NULL) {
-    traceEvent(TRACE_ERROR, "Unable to create file %s. Access log is disabled.",
-	       myGlobals.accessLogPath);
+
+  if (myGlobals.accessLogPath) {
+    accessLogFd = fopen(myGlobals.accessLogPath, "a");
+    if(accessLogFd == NULL) {
+      traceEvent(TRACE_ERROR, "Unable to create file %s. Access log is disabled.",
+		 myGlobals.accessLogPath);
+    }
   }
 }
 

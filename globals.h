@@ -62,11 +62,12 @@ typedef struct ntopGlobals {
 
   /* command line options */
 
-  char accessLogPath[200];           /* 'a' */
+  char *accessLogPath;               /* 'a' */
   u_char stickyHosts;                /* 'c' */
   int daemonMode;                    /* 'd' */
   char *rFileName;                   /* 'f' */
   u_int enableNetFlowSupport;        /* 'g' */
+  char *devices;                     /* 'i' */
   short borderSnifferMode;           /* 'j' */
   int filterExpressionInExtraFrame;  /* 'k' */
   char *pcapLog;                     /* 'l' */
@@ -78,21 +79,26 @@ typedef struct ntopGlobals {
   char *currentFilterExpression;     /* 'B' */
   char domainName[MAXHOSTNAMELEN];   /* 'D' */
   int isLsofPresent;                 /* 'E' */
+
+#ifndef WIN32
   u_short debugMode;                 /* 'K' */
   u_short useSyslog;                 /* 'L' */
+#endif
+
   int mergeInterfaces;               /* 'M' */
   int isNmapPresent;                 /* 'N' */
-  char dbPath[200];                  /* 'P' */
+  char *dbPath;                      /* 'P' */
   short usePersistentStorage;        /* 'S' */
-  char mapperURL[256];               /* 'U' */
+  char *mapperURL;                   /* 'U' */
 
 #ifdef HAVE_GDCHART
   int throughput_chart_type;         /* '129' */
 #endif
+
   u_short noAdminPasswordHint;       /* '130' */
 
 
-  /* Other flags (to be set via command line options one day) */
+  /* Other flags (these could set via command line options one day) */
   u_char enableSessionHandling;
   u_char enablePacketDecoding;
   u_char enableFragmentHandling;
@@ -107,54 +113,115 @@ typedef struct ntopGlobals {
   int numDevices;          /* # of Network interfaces enabled for sniffing */
   NtopInterface *device;   /* pointer to the table of Network interfaces */
 
+  /* Database */
+  GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache;
 
+  /* the table of broadcast entries */
+  u_int broadcastEntryIdx;
+  HostTraffic *broadcastEntry;
+
+  /* the table of other hosts entries */
+  u_int otherHostEntryIdx;
+  HostTraffic *otherHostEntry;
+
+  /* administrative */
   char *shortDomainName;
-  HostTraffic *broadcastEntry, *otherHostEntry;
-
   u_int topHashSize;
 
-  /* Debug */
-  size_t allocatedMemory;
+
+#ifdef MULTITHREADED
+
+  unsigned short numThreads;           /* # of running threads */
+
+#ifdef USE_SEMAPHORES
+  sem_t queueSem;
+
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  sem_t queueAddressSem;
+#endif /* ASYNC_ADDRESS_RESOLUTION */
+
+#else /* ! USE_SEMAPHORES */
+
+  ConditionalVariable queueCondvar;
+
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  ConditionalVariable queueAddressCondvar;
+#endif /* USE_SEMAPHORES */
+
+#endif /* ! USE_SEMAPHORES */
+
+
+  /*
+   * (1) - NPA - Network Packet Analyzer (main thread)
+   */
+  PthreadMutex packetQueueMutex;
+  pthread_t dequeueThreadId;
+
+  /*
+   * (2) - HTS - Host Traffic Statistics
+   */
+  PthreadMutex hostsHashMutex;
+  pthread_t hostTrafficStatsThreadId;
+
+  /*
+   * (3) - TU - Throughput Update - optional
+   */
+  pthread_t thptUpdateThreadId;
+
+  /*
+   * (4) - SIH - Scan Idle Hosts - optional
+   */
+  pthread_t scanIdleThreadId;
+
+  /*
+   * (5) - DBU - DB Update - optional
+   */
+  pthread_t dbUpdateThreadId;
+
+  /*
+   * (6) - AR - Address Resolution - optional
+   */
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  PthreadMutex addressResolutionMutex;
+  pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_THREADS];
+#endif
+
+  /*
+   * (7) - Purge idle host - optional
+   */
+  pthread_t purgeAddressThreadId;
+
+  /*
+   * (8) - Helper application lsof - optional
+   */
+  PthreadMutex lsofMutex;
+  pthread_t lsofThreadId;
+
+
+  unsigned short numDequeueThreads;
+
+
+  PthreadMutex gdbmMutex;
+  PthreadMutex hashResizeMutex;
+  PthreadMutex graphMutex;
+
+  pthread_t handleWebConnectionsThreadId;
+
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  TrafficCounter droppedAddresses;
+#endif
+
+#endif /* MULTITHREADED */
+
 
   /* SSL support */
 #ifdef HAVE_OPENSSL
   int sslInitialized, sslPort;
 #endif
 
-  /* Flags */
-  short capturePackets, endNtop;
-
-
-  /* Multithreading */
-#ifdef MULTITHREADED
-  unsigned short numThreads, numDequeueThreads;
-  PthreadMutex packetQueueMutex, hostsHashMutex, graphMutex;
-  PthreadMutex lsofMutex, addressResolutionMutex, hashResizeMutex;
-  pthread_t dequeueThreadId, handleWebConnectionsThreadId;
-  pthread_t thptUpdateThreadId, scanIdleThreadId;
-  pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
-  pthread_t purgeAddressThreadId;
-  PthreadMutex gdbmMutex;
-
-#ifdef USE_SEMAPHORES
-  sem_t queueSem;
-#ifdef ASYNC_ADDRESS_RESOLUTION
-  sem_t queueAddressSem;
-#endif /* ASYNC_ADDRESS_RESOLUTION */
-#else /* USE_SEMAPHORES */
-  ConditionalVariable queueCondvar;
-#ifdef ASYNC_ADDRESS_RESOLUTION
-  ConditionalVariable queueAddressCondvar;
-#endif /* USE_SEMAPHORES */
-#endif
-#ifdef ASYNC_ADDRESS_RESOLUTION
-  pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_THREADS];
-  TrafficCounter droppedAddresses;
-#endif
-#endif
-
-  /* Database */
-  GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache;
+  /* Termination flags */
+  short capturePackets;      /* tells to ntop if data are to be collected */
+  short endNtop;             /* graceful shutdown ntop */
 
   /* lsof support */
   u_short updateLsof;
@@ -173,10 +240,12 @@ typedef struct ntopGlobals {
 #if defined(ASYNC_ADDRESS_RESOLUTION)
   u_int addressQueueLen, maxAddressQueueLen;
 #endif
+
   u_long numResolvedWithDNSAddresses, numKeptNumericAddresses, numResolvedOnCacheAddresses;
 
   /* Misc */
   char *separator;
+
   int32_t thisZone; /* seconds offset from gmt to local time */
   u_long numPurgedHosts, numTerminatedSessions;
 
@@ -204,7 +273,6 @@ typedef struct ntopGlobals {
 
   TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
 
-  u_int broadcastEntryIdx, otherHostEntryIdx;
   u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 
   u_short *mtuSize;
@@ -214,6 +282,11 @@ typedef struct ntopGlobals {
 #ifdef ENABLE_NAPSTER
   NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
 #endif
+
+#ifdef MEMORY_DEBUG
+  size_t allocatedMemory;
+#endif
+
 
 } NtopGlobals;
 

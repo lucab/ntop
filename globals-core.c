@@ -99,11 +99,9 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.ntop_argc = argc;
   myGlobals.ntop_argv = argv;
 
-
-  snprintf(myGlobals.accessLogPath, sizeof(myGlobals.accessLogPath), "%s/%s",
-	   myGlobals.dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
-
+  myGlobals.accessLogPath = NULL;    /* access log filename disabled by default */
   myGlobals.stickyHosts = 0;
+
   myGlobals.daemonMode = 0;
   if (strcmp(myGlobals.program_name, "ntopd") == 0) {
     myGlobals.daemonMode++;
@@ -111,9 +109,10 @@ void initNtopGlobals(int argc, char * argv[])
 
   myGlobals.rFileName = NULL;
   myGlobals.enableNetFlowSupport = 0;
+  myGlobals.devices = NULL;
   myGlobals.borderSnifferMode = 0;
   myGlobals.filterExpressionInExtraFrame = 0;
-  myGlobals.pcapLog = '\0';
+  myGlobals.pcapLog = NULL;
   myGlobals.numericFlag = 0;
   myGlobals.enableSuspiciousPacketDump = 0;
   myGlobals.maxHashSize = MAX_HASH_SIZE;
@@ -122,15 +121,20 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.currentFilterExpression = NULL;
   myGlobals.domainName[0] = '\0';
   myGlobals.isLsofPresent = 0;
-  myGlobals.debugMode = 0;
+
 #ifndef WIN32
+  myGlobals.debugMode = 0;
   myGlobals.useSyslog = 0;
 #endif
+
   myGlobals.mergeInterfaces = 0;
   myGlobals.isNmapPresent = 0;
-  strncpy(myGlobals.dbPath, DBFILE_DIR, sizeof(myGlobals.dbPath));
+
+  if (! myGlobals.dbPath)
+    myGlobals.dbPath = strdup(DBFILE_DIR);   /* a NULL pointer will break the logic */
+
   myGlobals.usePersistentStorage = 0;
-  myGlobals.mapperURL[0] = '\0'; /* a good mapper is at http://jake.ntop.org/cgi-bin/mapper.pl */
+  myGlobals.mapperURL = NULL;
 
 #ifdef HAVE_GDCHART
   myGlobals.throughput_chart_type = GDC_AREA;
@@ -150,181 +154,64 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.pluginDirs     = _pluginDirs;
   myGlobals.configFileDirs = _configFileDirs;
 
-  /* NICs */
+  /* the table of enabled NICs */
   myGlobals.numDevices = 0;
   myGlobals.device = NULL;
 
-
-  myGlobals.shortDomainName = NULL;
-  myGlobals.broadcastEntry = NULL;
-  myGlobals.otherHostEntry = NULL;
-
-  myGlobals.topHashSize = 0;
-
-  /* Debug */
-  myGlobals.allocatedMemory = 0;
-
-#ifdef HAVE_OPENSSL
-  myGlobals.sslInitialized = 0;
-  myGlobals.sslPort = 0;           /* Disabled by default: it can enabled using -W <SSL port> */
-#endif
-
-  /* Flags */
-  myGlobals.capturePackets = 0;
-  myGlobals.endNtop = 0;
-
-  /* Multithreading */
-#ifdef MULTITHREADED
-  myGlobals.numThreads = 0;
-  myGlobals.numDequeueThreads = 0;
-
-  /* the following code needs a major revision */
-#if (0)
-  memset(&myGlobals.packetQueueMutex.mutex, 0, sizeof(pthread_mutex_t));
-  myGlobals.packetQueueMutex.isLocked = 0;
-  myGlobals.packetQueueMutex.isInitialized = 0;
-  myGlobals.packetQueueMutex.lockFile[0] = '\0';
-  myGlobals.packetQueueMutex.lockLine = 0;
-  myGlobals.packetQueueMutex.unlockFile[0] = '\0';
-  myGlobals.packetQueueMutex.unlockLine = 0;
-  myGlobals.packetQueueMutex.numLocks = 0;
-  myGlobals.packetQueueMutex.numReleases = 0;
-  myGlobals.packetQueueMutex.lockTime = 0;
-  myGlobals.packetQueueMutex.maxLockedDurationUnlockFile[0] = '\0';
-  myGlobals.packetQueueMutex.maxLockedDurationUnlockLine = 0;
-  myGlobals.packetQueueMutex.maxLockedDuration = 0;
-
-  memset(&myGlobals.hostsHashMutex.mutex, 0, sizeof(pthread_mutex_t));
-  myGlobals.hostsHashMutex.isLocked = 0;
-  myGlobals.hostsHashMutex.isInitialized = 0;
-  myGlobals.hostsHashMutex.lockFile[0] = '\0';
-  myGlobals.hostsHashMutex.lockLine = 0;
-  myGlobals.hostsHashMutex.unlockFile[0] = '\0';
-  myGlobals.hostsHashMutex.unlockLine = 0;
-  myGlobals.hostsHashMutex.numLocks = 0;
-  myGlobals.hostsHashMutex.numReleases = 0;
-  myGlobals.hostsHashMutex.lockTime = 0;
-  myGlobals.hostsHashMutex.maxLockedDurationUnlockFile[0] = '\0';
-  myGlobals.hostsHashMutex.maxLockedDurationUnlockLine = 0;
-  myGlobals.hostsHashMutex.maxLockedDuration = 0;
-
-  memset(&myGlobals.graphMutex.mutex, 0, sizeof(pthread_mutex_t));
-  myGlobals.graphMutex.isLocked = 0;
-  myGlobals.graphMutex.isInitialized = 0;
-  myGlobals.graphMutex.lockFile[0] = '\0';
-  myGlobals.graphMutex.lockLine = 0;
-  myGlobals.graphMutex.unlockFile[0] = '\0';
-  myGlobals.graphMutex.unlockLine = 0;
-  myGlobals.graphMutex.numLocks = 0;
-  myGlobals.graphMutex.numReleases = 0;
-  myGlobals.graphMutex.lockTime = 0;
-  myGlobals.graphMutex.maxLockedDurationUnlockFile[0] = '\0';
-  myGlobals.graphMutex.maxLockedDurationUnlockLine = 0;
-  myGlobals.graphMutex.maxLockedDuration = 0;
-
-  memset(&myGlobals.lsofMutex.mutex, 0, sizeof(pthread_mutex_t));
-  myGlobals.lsofMutex.isLocked = 0;
-  myGlobals.lsofMutex.isInitialized = 0;
-  myGlobals.lsofMutex.lockFile[0] = '\0';
-  myGlobals.lsofMutex.lockLine = 0;
-  myGlobals.lsofMutex.unlockFile[0] = '\0';
-  myGlobals.lsofMutex.unlockLine = 0;
-  myGlobals.lsofMutex.numLocks = 0;
-  myGlobals.lsofMutex.numReleases = 0;
-  myGlobals.lsofMutex.lockTime = 0;
-  myGlobals.lsofMutex.maxLockedDurationUnlockFile[0] = '\0';
-  myGlobals.lsofMutex.maxLockedDurationUnlockLine = 0;
-  myGlobals.lsofMutex.maxLockedDuration = 0;
-
-  memset(&myGlobals.addressResolutionMutex.mutex, 0, sizeof(pthread_mutex_t));
-  myGlobals.addressResolutionMutex.isLocked = 0;
-  myGlobals.addressResolutionMutex.isInitialized = 0;
-  myGlobals.addressResolutionMutex.lockFile[0] = '\0';
-  myGlobals.addressResolutionMutex.lockLine = 0;
-  myGlobals.addressResolutionMutex.unlockFile[0] = '\0';
-  myGlobals.addressResolutionMutex.unlockLine = 0;
-  myGlobals.addressResolutionMutex.numLocks = 0;
-  myGlobals.addressResolutionMutex.numReleases = 0;
-  myGlobals.addressResolutionMutex.lockTime = 0;
-  myGlobals.addressResolutionMutex.maxLockedDurationUnlockFile[0] = '\0';
-  myGlobals.addressResolutionMutex.maxLockedDurationUnlockLine = 0;
-  myGlobals.addressResolutionMutex.maxLockedDuration = 0;
-
-  memset(&myGlobals.hashResizeMutex.mutex, 0, sizeof(pthread_mutex_t));
-  myGlobals.hashResizeMutex.isLocked = 0;
-  myGlobals.hashResizeMutex.isInitialized = 0;
-  myGlobals.hashResizeMutex.lockFile[0] = '\0';
-  myGlobals.hashResizeMutex.lockLine = 0;
-  myGlobals.hashResizeMutex.unlockFile[0] = '\0';
-  myGlobals.hashResizeMutex.unlockLine = 0;
-  myGlobals.hashResizeMutex.numLocks = 0;
-  myGlobals.hashResizeMutex.numReleases = 0;
-  myGlobals.hashResizeMutex.lockTime = 0;
-  myGlobals.hashResizeMutex.maxLockedDurationUnlockFile[0] = '\0';
-  myGlobals.hashResizeMutex.maxLockedDurationUnlockLine = 0;
-  myGlobals.hashResizeMutex.maxLockedDuration = 0;
-
-  myGlobals.dequeueThreadId = 0;
-  myGlobals.handleWebConnectionsThreadId = 0;
-  myGlobals.thptUpdateThreadId = 0;
-  myGlobals.scanIdleThreadId = 0;
-  myGlobals.hostTrafficStatsThreadId = 0;
-  myGlobals.dbUpdateThreadId = 0;
-  myGlobals.lsofThreadId = 0;
-  myGlobals.purgeAddressThreadId = 0;
-
-  memset(&myGlobals.gdbmMutex.mutex, 0, sizeof(pthread_mutex_t));
-  myGlobals.gdbmMutex.isLocked = 0;
-  myGlobals.gdbmMutex.isInitialized = 0;
-  myGlobals.gdbmMutex.lockFile[0] = '\0';
-  myGlobals.gdbmMutex.lockLine = 0;
-  myGlobals.gdbmMutex.unlockFile[0] = '\0';
-  myGlobals.gdbmMutex.unlockLine = 0;
-  myGlobals.gdbmMutex.numLocks = 0;
-  myGlobals.gdbmMutex.numReleases = 0;
-  myGlobals.gdbmMutex.lockTime = 0;
-  myGlobals.gdbmMutex.maxLockedDurationUnlockFile[0] = '\0';
-  myGlobals.gdbmMutex.maxLockedDurationUnlockLine = 0;
-  myGlobals.gdbmMutex.maxLockedDuration = 0;
-
-#ifdef USE_SEMAPHORES
-  memset(&myGlobals.queueSem, 0, sizeof(sem_t));
-# ifdef ASYNC_ADDRESS_RESOLUTION
-  memset(&myGlobals.queueAddressSem, 0, sizeof(sem_t));
-# endif /* ASYNC_ADDRESS_RESOLUTION */
-
-#else /* USE_SEMAPHORES */
-
-  memset(&myGlobals.queueCondvar, 0, sizeof(ConditionalVariable));
-# ifdef ASYNC_ADDRESS_RESOLUTION
-  memset(&myGlobals.queueAddressCondvar, 0, sizeof(ConditionalVariable));
-# endif /* USE_SEMAPHORES */
-#endif
-
-
-#endif /* 0 */
-
-
-#ifdef ASYNC_ADDRESS_RESOLUTION
-  for (i = 0; i < MAX_NUM_DEQUEUE_THREADS; i ++)
-    myGlobals.dequeueAddressThreadId[i] = 0;
-  myGlobals.droppedAddresses = 0;
-#endif
-#endif
-
-  /* Database */
+  /* Databases */
   myGlobals.gdbm_file = NULL;
   myGlobals.pwFile = NULL;
   myGlobals.eventFile = NULL;
   myGlobals.hostsInfoFile = NULL;
   myGlobals.addressCache = NULL;
 
-  /* lsof support */
-  myGlobals.updateLsof = 0;
+
+  /* the table of broadcast entries */
+  myGlobals.broadcastEntryIdx = 0;
+  myGlobals.broadcastEntry = NULL;
+
+  /* the table of other hosts entries */
+  myGlobals.otherHostEntryIdx = 0;
+  myGlobals.otherHostEntry = NULL;
+
+
+  /* administrative */
+  myGlobals.shortDomainName = NULL;
+  myGlobals.topHashSize = 0;
+
+#ifdef MULTITHREADED
+  myGlobals.numThreads = 0;            /* # of running threads */
+
+  myGlobals.numDequeueThreads = 0;
+
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  for (i = 0; i < MAX_NUM_DEQUEUE_THREADS; i ++)
+    myGlobals.dequeueAddressThreadId[i] = -1;
+  myGlobals.droppedAddresses = 0;
+#endif
+
+#endif /* MULTITHREADED */
+
+
+#ifdef HAVE_OPENSSL
+  myGlobals.sslInitialized = 0;
+  myGlobals.sslPort = 0;           /* Disabled by default: it can enabled using -W <SSL port> */
+#endif
+
+  /* Termination flags */
+  myGlobals.capturePackets = 1;    /* By default data are collected into internal variables */
+  myGlobals.endNtop = 0;
+
   myGlobals.processes = NULL;
   myGlobals.numProcesses = 0;
+
+  /* lsof support */
+  if(myGlobals.isLsofPresent)
+    myGlobals.updateLsof = 1;
+  else
+    myGlobals.updateLsof = 0;
   for (i = 0; i < TOP_IP_PORT; i ++)
-    myGlobals.localPorts[i] = NULL;
+    myGlobals.localPorts[i] = NULL;       /* myGlobals.localPorts is used by lsof */
 
   /* Filter Chains */
   myGlobals.handleRules = 0;
@@ -333,16 +220,17 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.udpChain = NULL;
   myGlobals.icmpChain = NULL;
 
-  myGlobals.ruleSerialIdentifier = 1; /* 0 will break the logic */
+  myGlobals.ruleSerialIdentifier = 1;              /* 0 will break the logic */
 
   for (i = 0; i < MAX_NUM_RULES; i ++)
     myGlobals.filterRulesList[i] = NULL;
 
-  /* Address Resolution */
 #if defined(ASYNC_ADDRESS_RESOLUTION)
   myGlobals.addressQueueLen = 0;
   myGlobals.maxAddressQueueLen = 0;
 #endif
+
+  /* Address Resolution counters */
   myGlobals.numResolvedWithDNSAddresses = 0;
   myGlobals.numKeptNumericAddresses = 0;
   myGlobals.numResolvedOnCacheAddresses = 0;
@@ -388,8 +276,6 @@ void initNtopGlobals(int argc, char * argv[])
   for (i = 0; i < NUM_TRANSACTION_ENTRIES; i ++)
     memset(&myGlobals.transTimeHash[i], 0, sizeof(TransactionTime));
 
-  myGlobals.broadcastEntryIdx = 0;
-  myGlobals.otherHostEntryIdx = 0;
   myGlobals.dummyEthAddress[0] = '\0';
 
 #ifdef ENABLE_NAPSTER
@@ -399,4 +285,8 @@ void initNtopGlobals(int argc, char * argv[])
 
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;
+
+#ifdef MEMORY_DEBUG
+  myGlobals.allocatedMemory = 0;
+#endif
 }

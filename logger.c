@@ -26,11 +26,15 @@ static GDBM_FILE logDB;
 /* *************************** */
 
 void initLogger(void) {
+
   char tmpBuff[200];
+
   if(snprintf(tmpBuff, sizeof(tmpBuff), "%s/logger.db",myGlobals.dbPath) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
+
   logDB = gdbm_open (tmpBuff, 0, GDBM_NEWDB, 00664, NULL);
 }
+
 
 /* *************************** */
 

@@ -52,7 +52,6 @@ static int enableDBsupport = 0;   /* Database support disabled by default */
 static int enableThUpdate  = 1;   /* Throughput Update support enabled by default */
 static int enableIdleHosts = 1;   /* Purging of idle hosts support enabled by default */
 
-static char *devices = NULL;
 static char *localAddresses = NULL;
 static char *protoSpecs = NULL;
 
@@ -63,7 +62,7 @@ static int groupId=0;
 
 static char *webAddr = NULL;
 static char *flowSpecs = NULL;
-static char rulesFile[128] = {0};
+static char *rulesFile = NULL;
 static char *sslAddr = NULL;
 
 static char __free__ []   =
@@ -372,7 +371,6 @@ static void usage (FILE * fp)
  * Parse the command line options
  */
 static void parseOptions(int argc, char * argv []) {
-  int len;
 
 #ifdef WIN32
   int optind=0;
@@ -398,10 +396,9 @@ static void parseOptions(int argc, char * argv []) {
 #endif
     switch (opt) {
 
-    case 'a': /* ntop access log path */
+    case 'a':                                     /* ntop access log path */
       stringSanityCheck(optarg);
-      strncpy(myGlobals.accessLogPath, optarg,
-	      sizeof(myGlobals.accessLogPath)-1)[sizeof(myGlobals.accessLogPath)-1] = '\0';
+      myGlobals.accessLogPath = strdup(optarg);
       break;
 
     case 'b': /* host:port */
@@ -410,13 +407,13 @@ static void parseOptions(int argc, char * argv []) {
       break;
 
       /* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
-    case 'c': /* Sticky hosts = hosts that are not purged when idle */
+    case 'c':                                     /* Sticky hosts = hosts that are not purged when idle */
       myGlobals.stickyHosts = 1;
       break;
 
 #ifndef WIN32
     case 'd':
-      myGlobals.daemonMode=1;
+      myGlobals.daemonMode = 1;
       break;
 #endif
 
@@ -427,8 +424,8 @@ static void parseOptions(int argc, char * argv []) {
 #endif
 
     case 'f':
-      myGlobals.rFileName = optarg;
-      myGlobals.isLsofPresent = 0; /* Don't make debugging too complex */
+      myGlobals.rFileName = strdup(optarg);
+      myGlobals.isLsofPresent = 0;               /* Don't make debugging too complex */
       break;
 
     case 'g': /* host:port */
@@ -436,33 +433,32 @@ static void parseOptions(int argc, char * argv []) {
       handleNetFlowSupport(optarg);
       break;
 
-    case 'h': /* help */
+    case 'h':                                /* help */
       usage(stdout);
       exit(0);
 
-    case 'i':
+    case 'i':                          /* More than one interface may be specified in a comma separated list */
       stringSanityCheck(optarg);
-      devices = optarg;
+      myGlobals.devices = strdup(optarg);
       break;
 
     case 'j':
       /*
-	In this mode ntop sniffs from an interface on which
-	 the traffic has been mirrored hence:
-	 - MAC addresses are not used at all but just IP addresses
-	 - ARP packets are not handled
-      */
+       * In this mode ntop sniffs from an interface on which
+       * the traffic has been mirrored hence:
+       * - MAC addresses are not used at all but just IP addresses
+       * - ARP packets are not handled
+       */
       myGlobals.borderSnifferMode = 1;
       break;
 
-    case 'k':
-      /* update info of used kernel filter expression in extra frame */
-      myGlobals.filterExpressionInExtraFrame=1;
+    case 'k':                  /* update info of used kernel filter expression in extra frame */
+      myGlobals.filterExpressionInExtraFrame = 1;
       break;
 
     case 'l':
       stringSanityCheck(optarg);
-      myGlobals.pcapLog = optarg;
+      myGlobals.pcapLog = strdup(optarg);
       break;
 
     case 'm':
@@ -474,18 +470,13 @@ static void parseOptions(int argc, char * argv []) {
       myGlobals.numericFlag++;
       break;
 
-    case 'p':
+    case 'p':                     /* the TCP/UDP protocols being monitored */
       stringSanityCheck(optarg);
-      len = strlen(optarg);
-      if(len > 2048) len = 2048;
-      protoSpecs = (char*)malloc(len+1);
-      memset(protoSpecs, 0, len+1);
-      strncpy(protoSpecs, optarg, len);
+      protoSpecs = strdup(optarg);
       break;
 
-    case 'q': /* allow ntop to save suspicious packets
-		 in a file in pcap (tcpdump) format */
-      myGlobals.enableSuspiciousPacketDump=1;
+    case 'q': /* allow ntop to save suspicious packets in a file in pcap (tcpdump) format */
+      myGlobals.enableSuspiciousPacketDump = 1;
       break;
 
     case 'r':
@@ -565,14 +556,12 @@ static void parseOptions(int argc, char * argv []) {
 
     case 'B':
       stringSanityCheck(optarg);
-      myGlobals.currentFilterExpression = (char*)malloc(strlen(optarg)+1);
-      strcpy(myGlobals.currentFilterExpression, optarg);
+      myGlobals.currentFilterExpression = strdup(optarg);
       break;
 
-    case 'D': /* domain */
+    case 'D':                                        /* domain */
       stringSanityCheck(optarg);
-      strncpy(myGlobals.domainName, optarg,
-	      sizeof(myGlobals.domainName)-1)[sizeof(myGlobals.domainName)-1] = '\0';
+      strncpy(myGlobals.domainName, optarg, MAXHOSTNAMELEN);
       break;
 
     case 'E':
@@ -582,15 +571,11 @@ static void parseOptions(int argc, char * argv []) {
 
     case 'F':
       stringSanityCheck(optarg);
-      len = strlen(optarg);
-      if(len > 2048) len = 2048;
-      flowSpecs = (char*)malloc(len+1);
-      memset(flowSpecs, 0, len+1);
-      strncpy(flowSpecs, optarg, len);
+      flowSpecs = strdup(optarg);
       break;
 
 #ifndef WIN32
-    case 'I': /* Interactive mode */
+    case 'I':                                        /* Interactive mode */
       printf("intop provides you curses support. ntop -I is no longer used.\n");
       exit(-1);
 #endif
@@ -613,27 +598,25 @@ static void parseOptions(int argc, char * argv []) {
       myGlobals.isNmapPresent = 0;
       break;
 
-    case 'P': /* DB-Path */
+    case 'P':                                       /* DB-Path (ntop's spool directory) */
       stringSanityCheck(optarg);
-      strncpy(myGlobals.dbPath, optarg, sizeof(myGlobals.dbPath)-1)
-	[sizeof(myGlobals.dbPath)-1] = '\0';
+      myGlobals.dbPath = strdup(optarg);
       break;
 
     case 'R':
       stringSanityCheck(optarg);
-      strncpy(rulesFile, optarg,
-	      sizeof(rulesFile)-1)[sizeof(rulesFile)-1] = '\0';
+      rulesFile = strdup(optarg);
       break;
 
     case 'S':
       /*
-	Persitent storage only for 'local' machines
-	Courtesy of Joel Crisp <jcrisp@dyn21-126.trilogy.com>
-
-	0 = no storage
-	1 = store all hosts
-	2 = store only local hosts
-      */
+       * Persitent storage only for 'local' machines
+       * Courtesy of Joel Crisp <jcrisp@dyn21-126.trilogy.com>
+       *
+       * 0 = no storage
+       * 1 = store all hosts
+       * 2 = store only local hosts
+       */
       myGlobals.usePersistentStorage = atoi(optarg);
       if((myGlobals.usePersistentStorage > 2)
 	 || (myGlobals.usePersistentStorage < 0)) {
@@ -642,12 +625,9 @@ static void parseOptions(int argc, char * argv []) {
       }
       break;
 
-    case 'U': /* host:port */
-      if(strlen(optarg) >= (sizeof(myGlobals.mapperURL)-1)) {
-	strncpy(myGlobals.mapperURL, optarg, sizeof(myGlobals.mapperURL)-2);
-	myGlobals.mapperURL[sizeof(myGlobals.mapperURL)-1] = '\0';
-      } else
-	strcpy(myGlobals.mapperURL, optarg);
+    case 'U': /* host:port - a good mapper is at http://jake.ntop.org/cgi-bin/mapper.pl */
+      stringSanityCheck(optarg);
+      myGlobals.mapperURL = strdup(optarg);
       break;
 
     case 'V': /* version */
@@ -714,6 +694,8 @@ static void parseOptions(int argc, char * argv []) {
 #if(0)
 
   all other arguments could be used to specify a filter expression
+
+    ROCCO TODO: ask luca if this can be an alternative to -B option
 
   if(argc > optind + 1)
     {
@@ -825,7 +807,7 @@ int main(int argc, char *argv[]) {
   /*
    * initialize memory and data 
    */
-  initDevices(devices);
+  initDevices(myGlobals.devices);
 
   traceEvent(TRACE_INFO, "ntop v.%s %s [%s] (%s build)",
 	     version, THREAD_MODE, osName, buildDate);
