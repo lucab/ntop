@@ -3699,17 +3699,22 @@ void removeNtopPid(void) {
 
 /* BStrauss - August 2003 - Check the flag and skip the call... */
 extern int ntop_sched_yield(char *file, int line) {
+
+#ifdef DEBUG
   static int firstTime=0;
 
   if(firstTime) {
-    traceEvent(CONST_TRACE_INFO, "TEMP: firstTime in ntop_sched_yield()");
+    traceEvent(CONST_TRACE_INFO, "DEBUG: firstTime in ntop_sched_yield()");
     firstTime = 1;
   }
+#endif
 
   if(!myGlobals.disableSchedYield) {
       sched_yield();
+#ifdef DEBUG
   } else {
-      traceEvent(CONST_TRACE_INFO, "TEMP: skipping sched_yield()");
+      traceEvent(CONST_TRACE_INFO, "DEBUG: skipping sched_yield()");
+#endif
   }
 }
 
