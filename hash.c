@@ -353,8 +353,9 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 #endif
     {
       /* No room left: it's time to free the bucket */
-      free(host);
-    }
+      memset(host, 0, sizeof(HostTraffic)); /* Debug code */
+      free(host);      
+   }
 
   myGlobals.numPurgedHosts++;
 
@@ -509,6 +510,8 @@ void purgeIdleHosts(int actDevice) {
 	scannedHosts++;
 	if(numHosts >= (maxHosts-1)) break;
       } /* while */
+
+      if(numHosts >= (maxHosts-1)) break;
     }
 #ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.hostsHashMutex);
