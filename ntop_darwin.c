@@ -106,24 +106,21 @@ static char *dlerror_pointer = NULL;
  * __dyld_NSMakePrivateModulePublic is returned so thats all that maters to get
  * the functionality need to implement the dlopen() interfaces.
  */
-static
-enum bool
-NSMakePrivateModulePublic(
-NSModule module)
+static int NSMakePrivateModulePublic(NSModule module)
 {
-    static enum bool (*p)(NSModule module) = NULL;
+  static NSModule *p;
 
-	if(p == NULL)
-	    _dyld_func_lookup("__dyld_NSMakePrivateModulePublic",
-			      (unsigned long *)&p);
-	if(p == NULL){
+  if(p == NULL)
+    _dyld_func_lookup("__dyld_NSMakePrivateModulePublic", (unsigned long *)&p);
+
+  if(p == NULL){
 #ifdef DEBUG
-	    printf("_dyld_func_lookup of __dyld_NSMakePrivateModulePublic "
-		   "failed\n");
+    printf("_dyld_func_lookup of __dyld_NSMakePrivateModulePublic "
+	   "failed\n");
 #endif
-	    return(FALSE);
-	}
-	return(p(module));
+    return(FALSE);
+  } else
+    return(TRUE);
 }
 
 /*
@@ -208,10 +205,7 @@ struct stat *stat_buf)
 /*
  * dlopen() the MacOS X version of the FreeBSD dlopen() interface.
  */
-void *
-dlopen(
-const char *path,
-int mode)
+void* dlopen(const char *path, int mode)
 {
     const char *module_path;
     void *retval;
