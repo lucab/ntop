@@ -888,7 +888,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   if(host == NULL)
     return;
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)",
 	     host->hostNumIpAddress, hostIdx);
 #endif
@@ -1064,7 +1064,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
   numPurgedHosts++;
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Leaving freeHostInfo()");
 #endif
 }
