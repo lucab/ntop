@@ -196,6 +196,9 @@ fi
 AC_MSG_CHECKING([for libtool])
 AC_MSG_RESULT([])
 
+dnl> Fix to: library used but `LIBTOOL' not defined in `configure.in'
+AC_PROG_LIBTOOL
+
 dnl> Apple, just to be difficult, calls the gnu version glibtool...
 case "${target}:${CC}" in
     *-*-darwin*:* )
@@ -342,6 +345,13 @@ dnl>    cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/
 dnl>    rm -f plugins/pep/Makefile.in.tmp
 fi
 AUTOMAKEsave=
+
+echo "???????????????????????????????????"
+mv plugins/Makefile.in plugins/Makefile.in.tmp
+cat plugins/Makefile.in.tmp | sed -e 's|\$(AUTOMAKE)|\$(ACLOCAL); \$(AUTOMAKE)|' > plugins/Makefile.in
+rm -f plugins/Makefile.in.tmp
+echo "???????????????????????????????????"
+
 
 AUTOCONFsave="${AUTOCONF}"
 AUTOCONF=
