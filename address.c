@@ -470,13 +470,13 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
       gdbm_delete(myGlobals.addressCache, data_data);
       free(data_data.dptr);
     } else
-      addr.s_addr = NULL;
+      addr.s_addr = 0x0;
     
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
     
-    if(addr.s_addr != NULL) {
+    if(addr.s_addr != 0x0) {
       resolveAddress(&addr, 0, 0 /* use default device */);
       
 #ifdef DNS_DEBUG
