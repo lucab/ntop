@@ -315,6 +315,7 @@ char* makeHostLink(HostTraffic *el, short mode,
       return("&lt;broadcast&gt;");
   }
 
+  setHostFingerprint(el);
 
   bufIdx = (bufIdx+1)%5;
 
@@ -460,9 +461,9 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
-		"<A HREF=\"/%s.html\" %s>%s</A>%s%s%s%s%s%s%s%s%s</TH>%s",
+		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s</TH>%s",
 		linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
-		symIp,dynIp, multihomed, gwStr, dnsStr,
+		symIp, getOSFlag(el, NULL, 0), dynIp, multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr, userStr, p2p,
 		flag) < 0)
       BufferTooShort();
@@ -2196,10 +2197,6 @@ void printNtopConfigInfo(int textPrintFlag) {
 			   "(parameter -M set, Interfaces separate) No",
                            DEFAULT_NTOP_MERGE_INTERFACES == 1 ? "(Merging Interfaces) Yes" : "");
 
-  printParameterConfigInfo(textPrintFlag, "-N | --no-nmap" CONST_REPORT_ITS_EFFECTIVE,
-                           myGlobals.isNmapPresent == 1 ? "Yes (nmap will be used)" : "No (nmap will not be used)",
-                           DEFAULT_NTOP_NMAP_PRESENT == 1 ? "Yes (nmap will be used)" : "");
-
   printParameterConfigInfo(textPrintFlag, "-O | --pcap-file-path",
                            myGlobals.pcapLogBasePath,
                            CFG_DBFILE_DIR);
@@ -2324,31 +2321,6 @@ void printNtopConfigInfo(int textPrintFlag) {
       printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "(no -E parameter): Disabled");
     } else {
       printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>",
-			     "(no -E parameter): Disabled");
-    }
-  }
-
-  if (myGlobals.enableExternalTools) {
-    if(myGlobals.isNmapPresent) {
-      if (textPrintFlag == TRUE) {
-	printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "Yes");
-      } else {
-	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_NMAP_URL "\" title=\"" CONST_HTML_NMAP_URL_ALT "\">nmap</A>",
-			       "Yes");
-      }
-    } else {
-      if (textPrintFlag == TRUE) {
-	printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "-N parameter OR not found on system OR unable to run suid root");
-      } else {
-	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_NMAP_URL "\" title=\"" CONST_HTML_NMAP_URL_ALT "\">nmap</A>",
-			       "-N parameter OR not found on system");
-      }
-    }
-  } else {
-    if (textPrintFlag == TRUE) {
-      printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "(no -E parameter): Disabled");
-    } else {
-      printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_NMAP_URL "\" title=\"" CONST_HTML_NMAP_URL_ALT "\">nmap</A>",
 			     "(no -E parameter): Disabled");
     }
   }

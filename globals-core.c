@@ -61,7 +61,13 @@ static char *_dataFileDirs[]   = { ".",
 #endif
 									CFG_DATAFILE_DIR, NULL };
 static char *_pluginDirs[]     = { "./plugins", CFG_PLUGIN_DIR, NULL };
-static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR, "/etc", NULL };
+static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR, 
+#ifdef WIN32
+				   _wdir,
+#else
+				   "/etc", 
+#endif
+				   NULL };
 
 
 /*
@@ -129,7 +135,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   strncpy((char *) &myGlobals.domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.domainName));
   myGlobals.enableExternalTools = DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE;
   myGlobals.isLsofPresent = 0;
-  myGlobals.isNmapPresent = DEFAULT_NTOP_NMAP_PRESENT;
   myGlobals.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
 
 #ifndef WIN32

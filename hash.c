@@ -249,8 +249,8 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     host->secHostPkts = NULL; /* just to be safe in case of persistent storage */
   }
 
-  if(host->osName != NULL)
-    free(host->osName);
+  if(host->fingerprint != NULL)
+    free(host->fingerprint);
 
   if(myGlobals.isLsofPresent) {
     for(i=0; i<myGlobals.numProcesses; i++) {

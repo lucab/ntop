@@ -384,9 +384,7 @@
  */
 /* #define FTP_DEBUG */
 
-/* GDBM_DEBUG logs the activites in address.c related to gdbm
- *  It also causes updateOSName() in util.c to log it's updates.
- */
+/* GDBM_DEBUG logs the activites in address.c related to gdbm */
 /* #define GDBM_DEBUG */
 
 /* GDC_WATCHDOG_DEBUG logs the activites in graph.c related to the
@@ -1052,13 +1050,6 @@
 #endif
 
 /*
- * text constants for nmap os fingerprinting (util.c).  MUST match what nmap is generating.
- */
-#define CONST_OS_GUESS   "Remote operating system guess: "
-#define CONST_OS_GUESS_1 "Remote OS guesses: "
-#define CONST_OS_GUESS_2 "OS: "
-
-/*
  * This is the 2MSL timeout as defined in the TCP standard (RFC 761).
  *  Used in sessions.c and pbuf.c
  */
@@ -1537,9 +1528,6 @@
 #define HTML_LSOF_URL                       "http://freshmeat.net/projects/lsof/"
 #define CONST_HTML_LSOF_URL_ALT             "lsof home page at freshmeat.net"
 
-#define HTML_NMAP_URL                       "http://www.insecure.org/nmap"
-#define CONST_HTML_NMAP_URL_ALT             "nmap home page at insecure.org"
-
 #define HTML_GDCHART_URL                    "http://www.fred.net/brv/chart/"
 #define CONST_HTML_GDCHART_URL_ALT          "GDChart home page"
 
@@ -1605,7 +1593,6 @@
 #define DEFAULT_NTOP_DEBUG                  0              /* that means debug disabled */
 #define DEFAULT_NTOP_SYSLOG                 FLAG_SYSLOG_NONE /* -L */
 #define DEFAULT_NTOP_MERGE_INTERFACES       1        /* -M */
-#define DEFAULT_NTOP_NMAP_PRESENT           0        /* -N */
 
 /* -O and -P are special, see globals-core.h */
 
@@ -2166,8 +2153,34 @@
 #endif
 
 
+/*
+  Courtesy of http://ettercap.sourceforge.net/
+*/
+#define TCPOPT_EOL              0
+#define TCPOPT_NOP              1
+#define TCPOPT_MAXSEG           2
+#define TCPOPT_WSCALE           3
+#define TCPOPT_SACKOK           4
+#define TCPOPT_TIMESTAMP        8
+#ifndef CFG_LITTLE_ENDIAN
+#define ptohs(x) ( (u_int16_t)                       \
+                      ((u_int16_t)*((u_int8 *)x+1)<<8|  \
+                      (u_int16_t)*((u_int8 *)x+0)<<0)   \
+                    )
+
+#define ptohl(x) ( (u_int32)*((u_int8 *)x+3)<<24|  \
+                      (u_int32)*((u_int8 *)x+2)<<16|  \
+                      (u_int32)*((u_int8 *)x+1)<<8|   \
+                      (u_int32)*((u_int8 *)x+0)<<0    \
+                    )
+#else
+#define ptohs(x) *(u_int16_t *)(x)
+#define ptohl(x) *(u_int32 *)(x)
+#endif
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 

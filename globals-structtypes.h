@@ -438,7 +438,7 @@ typedef struct hostTraffic {
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
   char             ethAddressString[18];
   char             hostNumIpAddress[17], *fullDomainName;
-  char             *dotDomainName, hostSymIpAddress[MAX_LEN_SYM_HOST_NAME], *osName;
+  char             *dotDomainName, hostSymIpAddress[MAX_LEN_SYM_HOST_NAME], *fingerprint;
   u_short          dotDomainNameIsFallback;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
@@ -1470,8 +1470,6 @@ XML*/
 
   int mergeInterfaces;               /* 'M' */
                                      /*XML b mergeInterfaces      Options    "-M | --no-interface-merge" */
-  int isNmapPresent;                 /* 'N' */
-                                     /*XML b isNmapPresent        Options    "-N | --no-nmap" */
   char *pcapLogBasePath;             /* 'O' */ /* Added by Ola Lundqvist <opal@debian.org>. */
                                      /*XML s pcapLogBasePath      Options    "-O | --pcap-file-path" */
   char *dbPath;                      /* 'P' */

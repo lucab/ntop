@@ -1523,22 +1523,22 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	    if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {
 	      if((el->nonIPTraffic->nbAccountName != NULL) && ((el->nonIPTraffic->nbAccountName[0] != '0'))) {
 		if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
-		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag("Windows", 0),
+		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag(el, "Windows", 0),
 			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName, 
 			      el->nonIPTraffic->nbDomainName) < 0)
 		 BufferTooShort();
 		} else {
-		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag("Windows", 0),
+		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag(el, "Windows", 0),
 			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName) < 0)
 		    BufferTooShort();
 		}
 	      } else {
 		if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
-		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
+		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag(el, "Windows", 0),
 			      el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName) < 0)
 		    BufferTooShort();
 		} else {
-		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag("Windows", 0),
+		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0),
 			      el->nonIPTraffic->nbHostName) < 0)
 		    BufferTooShort();
 		}
@@ -1546,7 +1546,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	      sendString(buf);
 	      numAddresses++;
 	    } else if(el->nonIPTraffic->nbHostName) {
-	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag("Windows", 0),
+	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0),
 			  el->nonIPTraffic->nbHostName) < 0) BufferTooShort();
 	      sendString(buf);
 	      numAddresses++;
@@ -1572,7 +1572,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	      if(nodeName == NULL) nodeName = "";
 
 	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
-			  getOSFlag("Mac", 0), nodeName) < 0)
+			  getOSFlag(el, "Mac", 0), nodeName) < 0)
 		BufferTooShort();
 	      sendString(buf);
 
@@ -1601,7 +1601,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
 	      if(numAddresses > 0) sendString("/");
 	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
-			  getOSFlag("Novell", 0),
+			  getOSFlag(el, "Novell", 0),
 			  el->nonIPTraffic->ipxHostName) < 0)
 		BufferTooShort();
 	      sendString(buf);

@@ -50,7 +50,6 @@ ntop \- display top network users
 .RB [ -F | --flow-spec
 .IR <specs> ]
 .RB [ -M | --no-interface-merge ]
-.RB [ -N | --no-nmap ]
 .RB [ -O | ----output-packet-path ]
 .RB [ -P | --db-file-path
 .IR <path> ]
@@ -316,7 +315,7 @@ This identifies the local domain suffix, e.g. ntop.org, if
 is having difficulty determining it from the interface.
 
 .It2 -E --enable-external-tools
-By default ntop does not take advance of lsof/nmap even if present. Use this flag if you want make ntop aware of such tools (if present).
+By default ntop does not take advance of lsof even if present. Use this flag if you want make ntop aware of such tools (if present).
 
 .It2 -F --flow-spec
 It is used to specify network flows similar to more powerful applications such as NeTraMet. A flow is a stream of captured packets that match a specified rule. The format is <flow-label>='<matching expression>'[,<flow-label>='<matching expression>'], where the label is used to symbolically identify the flow specified by the expression. The expression format is specified in the appendix. If an expression is specified, then the information concerning flows can be accessed following the HTML link named 'List NetFlows'.
@@ -336,9 +335,6 @@ The (optional) parameter value indicates the facility (e.g. daemon, security) to
 
 .It2 -M --no-interface-merge
 Forces ntop not to merge network interfaces together. This means that ntop will collect statistics for each interface and will not merge data together.
-
-.It2 -N --no-nmap
-Forces ntop not to use nmap (if it is installed).
 
 .It2 -O --output-packet-path
 Base path for the ntop-suspicious-pkts.XXX.pcap and normal packet log file (tcpdump). If the base
@@ -451,15 +447,12 @@ Plugin is courtesy of and supported by InMon Corporation, http://www.inmon.com/s
 Options tools - which
 .B ntop
 will utilize if available - include
-.B nmap (http://www.insecure.org)
-and
 .B lsof (ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/README).
 
-Note that both nmap and lsof must be configured suid root for
+Note that lsof must be configured suid root for
 .B ntop
 to use them.  The user is cautioned to fully understand the security implications of that setting
-before setting the suid bit.  nmap is used to OS-fingerprint the remote hosts and lsof is used to
-obtain the "Local Usage" information presented on the "IP Protos" tab.
+before setting the suid bit.
 .B ntop
 will function properly without either of these tools.
 

@@ -739,10 +739,23 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 
 /* ******************************* */
 
-char* getOSFlag(char* theOsName, int showOsName) {
+char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName) {
   /* Lengthen tmpString buffer - to handle long name given by nmap for Win2k
      Courtesy of Marcel Hauser <marcel_hauser@gmx.ch> */
   static char tmpStr[200], *flagImg;
+  char *theOsName;
+
+  if((el == NULL) && (elOsName == NULL)) return("");
+
+  if(elOsName != NULL)
+    theOsName = elOsName;
+  else {
+    if(el->fingerprint == NULL)   return("");
+    if(el->fingerprint[0] != ':') setHostFingerprint(el);
+    if(el->fingerprint[0] != ':') return("");
+    
+    theOsName = &el->fingerprint[1];
+  }
 
   if(strstr(theOsName, "Windows") != NULL)
     flagImg = "<IMG ALT=\"OS: Windows\" ALIGN=MIDDLE SRC=/statsicons/os/windows.gif>";
@@ -3021,13 +3034,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if(el->hostNumIpAddress[0] != '\0') {
-    updateOSName(el);
+    setHostFingerprint(el);
 
-    if((el->osName != NULL) && (el->osName[0] != '\0')) {
+    if((el->fingerprint != NULL) && (el->fingerprint[0] == ':')) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "OS&nbsp;Name",
-		  getOSFlag(el->osName, 1),
+		  getOSFlag(el, NULL, 1),
 		  myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
 	BufferTooShort();
       sendString(buf);

@@ -115,9 +115,6 @@ static struct option const long_options[] = {
 
   { "no-interface-merge",               no_argument,       NULL, 'M' },
 
-#ifndef WIN32
-  { "no-nmap",                          no_argument,       NULL, 'N' },
-#endif
   { "output-packet-path",               required_argument, NULL, 'O' },
   { "db-file-path",                     required_argument, NULL, 'P' },
   { "mapper",                           required_argument, NULL, 'U' },
@@ -247,7 +244,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-D <name>      | --domain <name>]                    %sInternet domain name\n", newLine);
 
 #ifndef WIN32
-  fprintf(fp, "    [-E             | --enable-external-tools]            %sEnable lsof/nmap integration (if present)\n", newLine);
+  fprintf(fp, "    [-E             | --enable-external-tools]            %sEnable lsof integration (if present)\n", newLine);
 #endif
 
   fprintf(fp, "    [-F <spec>      | --flow-spec <specs>]                %sFlow specs (see man page)\n", newLine);
@@ -261,7 +258,6 @@ void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-M             | --no-interface-merge]               %sDon't merge network interfaces (see man page)\n", newLine);
-  fprintf(fp, "    [-N             | --no-nmap]                          %sDon't use nmap even if installed\n", newLine);
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
   fprintf(fp, "    [-P <path>      | --db-file-path <path>]              %sPath for ntop internal database files\n", newLine);
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", newLine);
@@ -312,9 +308,9 @@ static int parseOptions(int argc, char* argv []) {
 #ifdef WIN32
   theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:S:U:VW:";
 #elif defined(MAKE_WITH_SYSLOG)
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKLMNO:P:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKLMO:P:S:U:VW:";
 #else
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKMNO:P:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKMO:P:S:U:VW:";
 #endif
 
 /* * * * * * * * * * */
@@ -484,7 +480,6 @@ static int parseOptions(int argc, char* argv []) {
     case 'E':
       myGlobals.enableExternalTools = 1;
       myGlobals.isLsofPresent  = checkCommand("lsof");
-      myGlobals.isNmapPresent  = checkCommand("nmap");
       break;
 #endif
 
@@ -507,10 +502,6 @@ static int parseOptions(int argc, char* argv []) {
 
     case 'M':
       myGlobals.mergeInterfaces = 0;
-      break;
-
-    case 'N':
-      myGlobals.isNmapPresent = 0;
       break;
 
     case 'O': /* pcap log path - Ola Lundqvist <opal@debian.org> */

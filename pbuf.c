@@ -575,6 +575,29 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
 
 /* ************************************ */
 
+/*
+  Fingerprint code courtesy of ettercap
+  http://ettercap.sourceforge.net
+*/
+static u_char TTL_PREDICTOR(u_char x)		/* coded by awgn <awgn@antifork.org> */
+{						/* round the TTL to the nearest power of 2 (ceiling) */
+  register u_char i = x;
+  register u_char j = 1;
+  register u_char c = 0;
+  
+  do {
+    c += i & 1;
+    j <<= 1;
+  } while ( i >>= 1 );
+   
+  if ( c == 1 )
+    return x;
+  else
+    return ( j ? j : 0xff );
+}
+
+/* ************************************ */
+
 static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
 			 u_int length,
@@ -849,6 +872,86 @@ static void processIpPkt(const u_char *bp,
 				&sport, &dport,
 				ntohs(ip.ip_id), off, length,
 				ntohs(ip.ip_len) - hlen, actualDeviceId);
+      }
+
+     if(srcHost->fingerprint == NULL) {
+	char fingerprint[64];
+	int WIN=0, MSS=-1, WS=-1, S=0, N=0, D=0, T=0;
+	int ttl;
+	char WSS[3], _MSS[5];
+	struct tcphdr *tcp = bp+hlen;
+	u_char *tcp_opt = (u_char *)(tcp + 1);
+	u_char *tcp_data = (u_char *)((int)tcp + tcp->th_off * 4);
+
+	if (tcp->th_flags & TH_SYN)   /* only SYN or SYN-2ACK packets */
+	  {
+	    if (tcpUdpLen > 0) {
+
+	      if(ntohs(ip.ip_off) & IP_DF) D = 1;   /* don't fragment bit is set */
+
+	      WIN = ntohs(tcp->th_win);  /* TCP window size */
+
+	      if (tcp_data != tcp_opt) /* there are some tcp_option to be parsed */
+		{
+		  u_char *opt_ptr = tcp_opt;
+
+		  while(opt_ptr < tcp_data)
+		    {
+		      switch(*opt_ptr)
+			{
+			case TCPOPT_EOL:        /* end option: exit */
+			  opt_ptr = tcp_data;
+			  break;
+			case TCPOPT_NOP:
+			  N = 1;
+			  opt_ptr++;
+			  break;
+			case TCPOPT_SACKOK:
+			  S = 1;
+			  opt_ptr += 2;
+			  break;
+			case TCPOPT_MAXSEG:
+			  opt_ptr += 2;
+			  MSS = ntohs(ptohs(opt_ptr));
+			  opt_ptr += 2;
+			  break;
+			case TCPOPT_WSCALE:
+			  opt_ptr += 2;
+			  WS = *opt_ptr;
+			  opt_ptr++;
+			  break;
+			case TCPOPT_TIMESTAMP:
+			  T = 1;
+			  opt_ptr++;
+			  opt_ptr += (*opt_ptr - 1);
+			  break;
+			default:
+			  opt_ptr++;
+			  opt_ptr += (*opt_ptr - 1);
+			  break;
+			}
+		    }
+		}
+
+	      if (WS == -1) sprintf(WSS, "WS");
+	      else snprintf(WSS, sizeof(WSS), "%02d", WS);
+
+	      if (MSS == -1) sprintf(_MSS, "_MSS");
+	      else snprintf(_MSS, sizeof(_MSS), "%04X", MSS);
+                  
+	      snprintf(fingerprint, sizeof(fingerprint),
+		       "%04X:%s:%02X:%s:%d:%d:%d:%d:%c:%02X",
+		       WIN, _MSS, ttl = TTL_PREDICTOR(ip.ip_ttl), WSS , S, N, D, T, 
+		       (tcp->th_flags & TH_ACK) ? 'A' : 'S', tcpUdpLen);
+
+#if 0
+	      traceEvent(CONST_TRACE_INFO, "[%s][%s]", srcHost->hostNumIpAddress, fingerprint);
+#endif
+	      accessAddrResMutex("processIpPkt");
+	      srcHost->fingerprint = strdup(fingerprint);
+	      releaseAddrResMutex();
+	    }
+	  }
       }
 
       if((sport > 0) && (dport > 0)) {

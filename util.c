@@ -1649,137 +1649,6 @@ char* decodeNBstring(char* theString, char *theBuffer) {
   return(theBuffer);
 }
 
-/* ************************************ */
-
-char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
-#ifdef WIN32
-  return(NULL);
-#else
-  FILE *fd;
-  char line[384], *operatingSystem=NULL;
-  static char staticOsName[96];
-  int len, found=0, sockFd;
-  fd_set mask;
-  struct timeval wait_time;
-
-  if((!myGlobals.isNmapPresent) || (ipAddr[0] == '\0')) {
-    return(NULL);
-  }
-
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: getHostOS(%s:%d)\n", ipAddr, port);
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Guessing OS of %s...\n", ipAddr);
-#endif
-
-  /* 548 is the AFP (Apple Filing Protocol) */
- if(snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr) < 0)
-   BufferTooShort();
-
- fd = popen(line, "r");
-
-  if(fd == NULL) {
-    myGlobals.isNmapPresent = 0;
-    return(NULL);
-  } else
-    sockFd = fileno(fd);
-
-  if(additionalInfo != NULL) additionalInfo[0]='\0';
-
-  while(1) {
-    FD_ZERO(&mask);
-    FD_SET(sockFd, &mask);
-    wait_time.tv_sec = PARM_PIPE_READ_TIMEOUT, wait_time.tv_usec = 0;
-
-    if(select(sockFd+1, &mask, 0, 0, &wait_time) == 0) {
-      break; /* Timeout */
-    }
-
-    if((operatingSystem = fgets(line, sizeof(line)-1, fd)) == NULL)
-      break;
-
-    len = strlen(operatingSystem);
-    if ((operatingSystem[len-1] == '\n') || (operatingSystem[len-1] == '\r'))
-      operatingSystem[len-1] = '\0';	/* strip NL or CR from end-of-line */
-
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: '%s'\n", line);
-#endif
-
-    if(strncmp(operatingSystem, CONST_OS_GUESS, strlen(CONST_OS_GUESS)) == 0) {
-      operatingSystem = &operatingSystem[strlen(CONST_OS_GUESS)];
-      found = 1;
-      break;
-    }
-
-    /* Patches below courtesy of
-       Valeri V. Parchine <valeri@com-con.com> */
-
-    if((!found) &&
-       (strncmp(operatingSystem, CONST_OS_GUESS_1, strlen(CONST_OS_GUESS_1)) == 0)) {
-      operatingSystem = &operatingSystem[strlen(CONST_OS_GUESS_1)];
-      found = 1;
-      break;
-    }
-
-    if((!found) &&
-       (strncmp(operatingSystem, CONST_OS_GUESS_2, strlen(CONST_OS_GUESS_2)) == 0)) {
-      operatingSystem = &operatingSystem[strlen(CONST_OS_GUESS_2)];
-      found = 1;
-      break;
-    }
-
-    if(additionalInfo != NULL) {
-      if(isdigit(operatingSystem[0])) {
-	strcat(additionalInfo, operatingSystem);
-	strcat(additionalInfo, "<BR>\n");
-      }
-
-      /*traceEvent(CONST_TRACE_INFO, "> %s\n", operatingSystem); */
-    }
-  }
-
-  memset(staticOsName, 0, sizeof(staticOsName));
-
-  if(found) {
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: OS is: '%s'\n", operatingSystem);
-#endif
-    len = strlen(operatingSystem);
-    strncpy(staticOsName, operatingSystem, len-1);
-  }
-
-   memset(staticOsName, 0, sizeof(staticOsName));
-   if(found) {
-     len = strlen(operatingSystem);
-     strncpy(staticOsName, operatingSystem, len);
-     staticOsName[sizeof(staticOsName)-1] = '\0';
-#ifdef DEBUG
-     traceEvent(CONST_TRACE_INFO, "DEBUG: OS is: '%s'\n", operatingSystem);
-#endif
-   }
-
-  /* Read remaining data (if any) */
-  while(1) {
-    FD_ZERO(&mask);
-    FD_SET(sockFd, &mask);
-    wait_time.tv_sec = PARM_PIPE_READ_TIMEOUT; wait_time.tv_usec = 0;
-
-    if(select(sockFd+1, &mask, 0, 0, &wait_time) == 0) {
-      break; /* Timeout */
-    }
-
-    if(fgets(line, sizeof(line)-1, fd) == NULL)
-      break;
-#ifdef DEBUG
-    else printf("DEBUG: Garbage: '%s'\n",  line);
-#endif
-  }
-  pclose(fd);
-
-  return(staticOsName);
-#endif /* WIN32 */
-}
-
 /* ************************************* */
 
 void closeNwSocket(int *sockId) {
@@ -1942,7 +1811,7 @@ void resetHostsVariables(HostTraffic* el) {
   el->fullDomainName = NULL;
   el->dotDomainName = NULL;
   el->hostSymIpAddress[0] = '\0';
-  el->osName = NULL;
+  el->fingerprint = NULL;
   el->nonIPTraffic = NULL;
   el->routedTraffic = NULL;
   el->portsUsage = NULL;
@@ -2902,87 +2771,6 @@ char* mapIcmpType(int icmpType) {
   default:
     sprintf(icmpString, "%d", icmpType);
     return(icmpString);
-  }
-}
-
-/* ************************************ */
-
-void updateOSName(HostTraffic *el) {
-  datum key_data, data_data;
-
-  if(el->osName == NULL) {
-    char *theName = NULL, tmpBuf[256];
-
-    if(el->hostNumIpAddress[0] == '\0') {
-      el->osName = strdup("");
-      return;
-    }
-
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: updateOSName(%s)\n", el->hostNumIpAddress);
-#endif
-
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
-      BufferTooShort();
-    key_data.dptr = tmpBuf;
-    key_data.dsize = strlen(tmpBuf)+1;
-
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "updateOSName");
-#endif
-
-    if(myGlobals.gdbm_file == NULL) {
-#ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.gdbmMutex);
-#endif
-      return; /* ntop is quitting... */
-    }
-
-    data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
-
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
-
-    if(data_data.dptr != NULL) {
-      strncpy(tmpBuf, data_data.dptr, sizeof(tmpBuf));
-      free(data_data.dptr);
-      theName = tmpBuf;
-    }
-
-    if((theName == NULL)
-       && (subnetPseudoLocalHost(el)) /* Courtesy of Jan Johansson <j2@mupp.net> */)
-      theName = getHostOS(el->hostNumIpAddress, -1, NULL);
-
-    if(theName == NULL)
-      el->osName = strdup("");
-    else {
-      el->osName = strdup(theName);
-
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
-	BufferTooShort();
-      key_data.dptr = tmpBuf;
-      key_data.dsize = strlen(tmpBuf)+1;
-      data_data.dptr = el->osName;
-      data_data.dsize = strlen(el->osName)+1;
-
-      if(myGlobals.gdbm_file == NULL) return; /* ntop is quitting... */
-
-#ifdef CFG_MULTITHREADED
-      accessMutex(&myGlobals.gdbmMutex, "updateOSName");
-#endif
-      if(gdbm_store(myGlobals.gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
-	printf("Error while adding myGlobals.osName for '%s'\n.\n", el->hostNumIpAddress);
-      else {
-#ifdef GDBM_DEBUG
-	printf("GDBM_DEBUG: Added data: %s [%s]\n", tmpBuf, el->osName);
-#endif
-      }
-
-#ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.gdbmMutex);
-#endif
-    }
   }
 }
 
@@ -4336,3 +4124,112 @@ char *i18n_xvert_acceptlanguage2common(const char *input) {
 }
 #endif /* MAKE_WITH_I18N */
 
+/* *************************************** */
+
+void setHostFingerprint(HostTraffic *srcHost) {
+  FILE *fd = NULL;
+  char *WIN, *MSS, *WSS, *ttl, *flags;
+  int S, N, D, T, done = 0, idx, configFileFound = 0;
+  char fingerprint[32];
+  char *strtokState;
+
+  /* return; */
+  
+  if((srcHost->fingerprint == NULL)       /* No fingerprint yet    */
+     || (srcHost->fingerprint[0] == ':')  /* OS already calculated */
+     || (strlen(srcHost->fingerprint) < 28))
+    return;
+
+  accessAddrResMutex("makeHostLink");
+
+  strcpy(fingerprint, srcHost->fingerprint);
+  strtokState = NULL;
+  WIN = strtok_r(fingerprint, ":", &strtokState);
+  MSS = strtok_r(NULL, ":", &strtokState);
+  ttl = strtok_r(NULL, ":", &strtokState);
+  WSS = strtok_r(NULL, ":", &strtokState);
+  S = atoi(strtok_r(NULL, ":", &strtokState));
+  N = atoi(strtok_r(NULL, ":", &strtokState));
+  D = atoi(strtok_r(NULL, ":", &strtokState));
+  T = atoi(strtok_r(NULL, ":", &strtokState));
+  flags = strtok_r(NULL, ":", &strtokState);
+
+  for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
+    char tmpStr[256];
+
+    snprintf(tmpStr, sizeof(tmpStr), "%s/etter.passive.os.fp", myGlobals.configFileDirs[idx]);
+    fd = fopen(tmpStr, "r");
+
+    if(fd) {
+      char line[384];
+      char *b, *_c, *d, *e, *f, *g, *m, *i, *l, *ptr;
+      unsigned int a, c;
+
+      configFileFound = 1;
+
+      while((!done) && fgets(line, sizeof(line), fd)) {
+	if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
+	line[strlen(line)-1] = '\0';
+
+	strtokState = NULL;
+	ptr = strtok_r(line, ":", &strtokState); if(ptr == NULL) continue;
+	if(strcmp(ptr, WIN)) continue;
+	b = strtok_r(NULL, ":", &strtokState); if(b == NULL) continue;
+	if(strcmp(MSS, "_MSS") != 0) {
+	  if(strcmp(b, "_MSS") != 0) {
+	    if(strcmp(b, MSS)) continue;
+	  }
+	}
+
+	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+	if(strcmp(ptr, ttl)) continue;
+
+	d = strtok_r(NULL, ":", &strtokState); if(d == NULL) continue;
+	if(strcmp(WSS, "WS") != 0) {
+	  if(strcmp(d, "WS") != 0) {
+	    if(strcmp(d, WSS)) continue;
+	  }
+	}
+
+	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+	if(atoi(ptr) != S) continue;
+	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+	if(atoi(ptr) != N) continue;
+	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+	if(atoi(ptr) != D) continue;
+	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+	if(atoi(ptr) != T) continue;
+	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+	if(strcmp(ptr, flags)) continue;
+
+	free(srcHost->fingerprint);
+	srcHost->fingerprint = strdup(&line[28]); /* Set the host OS */
+
+#if 0
+	snprintf(srcHost->fingerprint, sizeof(srcHost->fingerprint)-1, "%s", &line[28]);
+	traceEvent(CONST_TRACE_INFO, "[%s] -> [%s]\n", 
+		   srcHost->hostNumIpAddress, srcHost->fingerprint);
+#endif
+	done = 1;
+      }
+
+      fclose(fd);
+    }
+  }
+
+  if(!configFileFound) {
+    static char warningSent = 0;
+
+    if(!warningSent) {
+      traceEvent(CONST_TRACE_WARNING, "Unable to open file 'etter.passive.os.fp'");
+      warningSent = 1;
+    }
+  }
+
+  if(!done) {
+    /* Unknown fingerprint */
+    strcpy(srcHost->fingerprint, ":"); /* Empty OS name */
+  }
+
+  releaseAddrResMutex();
+}

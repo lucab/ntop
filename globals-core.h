@@ -365,7 +365,7 @@ extern int checkCommand(char* commandName);
 #ifndef WIN32
 extern void readLsofInfo(void);
 #endif
-extern char *getHostOS(char* ipAddr, int port, char* additionalInfo);
+extern void setHostFingerprint(HostTraffic *srcHost);
 extern char* decodeNBstring(char* theString, char *theBuffer);
 extern void closeNwSocket(int *sockId);
 extern char *savestr(const char *str);
@@ -407,7 +407,6 @@ extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
 extern void resetUsageCounter(UsageCounter *counter);
 extern void resetSecurityHostTraffic(HostTraffic *el);
 extern char *mapIcmpType(int icmpType);
-extern void updateOSName(HostTraffic *el);
 extern int _incrementUsageCounter(UsageCounter *counter,
 				   u_int peerIdx, int deviceId,
 				   char* file, int line);

@@ -72,7 +72,7 @@ extern void printFlagedWarning(char *text);
 extern void printHeader(int reportType, int revertOrder, u_int column);
 extern void printFooterHostLink(void);
 extern void printFooter(int reportType);
-extern char* getOSFlag(char* theOsName, int showOsName);
+extern char* getOSFlag(HostTraffic *el, char *_osName, int showOsName);
 extern int sortHostFctn(const void *_a, const void *_b);
 extern int cmpUsersTraffic(const void *_a, const void *_b);
 extern int cmpProcesses(const void *_a, const void *_b);

@@ -852,8 +852,14 @@ void handleNetbios(HostTraffic *srcHost,
 #ifdef DEBUG
 	  printf("OS: %s\n", &data[45]);
 #endif
-	  if(srcHost->osName == NULL)
-	    srcHost->osName = strdup(&data[45]);
+	  accessAddrResMutex("makeHostLink");
+	  if(srcHost->fingerprint == NULL) {
+	    char buffer[64];
+
+	    snprintf(buffer, sizeof(buffer), ":%s", &data[45]);
+	    srcHost->fingerprint = strdup(buffer);
+	  }
+	  releaseAddrResMutex();	  
 	} else /* dport == 139 */ {
 	  /* Request */
 	  char len;
@@ -878,7 +884,15 @@ void handleNetbios(HostTraffic *srcHost,
 #ifdef DEBUG
 	  printf("OS: %s\n", &data[i]);
 #endif
-	  if(srcHost->osName == NULL) srcHost->osName = strdup(&data[i]);
+
+	  accessAddrResMutex("makeHostLink");
+	  if(srcHost->fingerprint == NULL) {
+	    char buffer[64];
+
+	    snprintf(buffer, sizeof(buffer), ":%s", &data[i]);
+	    srcHost->fingerprint = strdup(buffer);
+	  }
+	  releaseAddrResMutex();	  
 	}
       }
 
