@@ -1,23 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<!-- Manually updated with these headers from generated version by Burton Strauss, July 2002 -->
-<!-- Validated as HTML 4.01 Transitional by Burton Strauss, July 2002 -->
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Expires" content="0">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Content-Style-Type" content="text/css">
-<meta http-equiv="Window-target" content="_top">
-<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
-<meta name="description" content="ntop (http://www.ntop.org) status for a network.">
-<meta name="author" content="ntop">
-<meta name="generator" content="ntop v2.0">
-<link rel="stylesheet" type="text/css" href="style.css">
-<title>ntop man page</title>
-</head>
-<BODY>
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of NTOP</TITLE>
+</HEAD><BODY>
 <H1>NTOP</H1>
-Section: Maintenance Commands (8)<BR>Updated: March 2002<BR><A HREF="#index">Index</A>
+Section: Maintenance Commands (8)<BR>Updated: July 2002<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -113,8 +99,6 @@ ntop - display top network users
 
 [<B>--throughput-bar-chart</B>]
 
-[<B>--no-admin-password-hint</B>]
-
 <P>
 Not available on micro-ntop:
 <P>
@@ -146,6 +130,8 @@ Unix options:
 
 <I>&lt;facility&gt;</I>]
 
+[<B>--ignore-sigpipe</B>]
+
 <P>
 Win32 option:
 <P>
@@ -170,6 +156,8 @@ OpenSSL option:
 [<B>-W</B>|<B>--https-server</B>
 
 <I>&lt;port&gt;</I>]
+
+[<B>--use-sslwatchdog</B>]
 
 <P>
 <A NAME="lbAD">&nbsp;</A>
@@ -474,8 +462,20 @@ You can also use the IP:Port notation to bind ntop to the specified IP-Address, 
 Format the throughput charts with bars instead of as an area chart.
 <P>
 
---no-admin-password-hint
-Supppresses the hint about the (default) admin password in the dialog boxes.
+--ignore-sigpipe                                    
+Enable a handler for SIGPIPE errors. This usually happens only under debug (gdb).
+(also available as a ./configure option, --enable-ignoresigpipe)
+<P>
+
+--use-sslwatchdog
+Enable a watchdog for ntop webserver hangs.  These usually happen when connecting
+with Netscape 6.2.2 and other browsers - only via https:// urls.  The user gets 
+nothing back and other users can't connect.  Internally, the web server hangs in 
+SSL_accept().  While packet processing continues, there is no way to access the 
+data through the web server or shutdown ntop cleanly.  With the watchdog, a
+timeout occurs after 3 seconds, and processing continues with a log message.
+Unfortunately, the user sees nothing - it just looks like a failed connection.
+(also available as a ./configure option, --enable-sslwatchdog)
 <P>
 <A NAME="lbAF">&nbsp;</A>
 <H2>WEB VIEWS</H2>
@@ -579,6 +579,6 @@ Tool locations are current as of February 2002 - please send email to report new
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 14:44:04 GMT, July 02, 2002
+Time: 02:17:09 GMT, July 04, 2002
 </BODY>
 </HTML>
