@@ -4739,6 +4739,66 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
 
 /* ******************************************* */
 
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_HTTPSIGTRAP)
+
+RETSIGTYPE webservercleanup(int signo) {
+  static int msgSent = 0;
+  int i;
+  void *array[20];
+  size_t size;
+  char **strings;
+
+  if(msgSent<10) {
+    traceEvent(CONST_TRACE_FATALERROR, "webserver: caught signal %d %s", signo,
+               signo == SIGHUP ? "SIGHUP" :
+                 signo == SIGINT ? "SIGINT" :
+                 signo == SIGQUIT ? "SIGQUIT" :
+                 signo == SIGILL ? "SIGILL" :
+                 signo == SIGABRT ? "SIGABRT" :
+                 signo == SIGFPE ? "SIGFPE" :
+                 signo == SIGKILL ? "SIGKILL" :
+                 signo == SIGSEGV ? "SIGSEGV" :
+                 signo == SIGPIPE ? "SIGPIPE" :
+                 signo == SIGALRM ? "SIGALRM" :
+                 signo == SIGTERM ? "SIGTERM" :
+                 signo == SIGUSR1 ? "SIGUSR1" :
+                 signo == SIGUSR2 ? "SIGUSR2" :
+                 signo == SIGCHLD ? "SIGCHLD" :
+ #ifdef SIGCONT
+                 signo == SIGCONT ? "SIGCONT" :
+ #endif
+ #ifdef SIGSTOP
+                 signo == SIGSTOP ? "SIGSTOP" :
+ #endif
+ #ifdef SIGBUS
+                 signo == SIGBUS ? "SIGBUS" :
+ #endif
+ #ifdef SIGSYS
+                 signo == SIGSYS ? "SIGSYS"
+ #endif
+               : "other");
+    msgSent++;
+  }
+
+ #ifdef HAVE_BACKTRACE
+  size = backtrace(array, 20);
+  strings = (char**)backtrace_symbols(array, size);
+
+  traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:     backtrace is:\n");
+  if (size < 2)
+      traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:         **unavailable!\n");
+  else
+      /* Ignore the 0th entry, that's our cleanup() */
+      for (i=1; i<size; i++)
+          traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:          %2d. %s\n", i, strings[i]);
+ #endif
+
+  exit(0);
+}
+#endif /* CFG_MULTITHREADED && MAKE_WITH_HTTPSIGTRAP */
+
+/* ******************************************* */
+
 void* handleWebConnections(void* notUsed _UNUSED_) {
 #ifndef CFG_MULTITHREADED
   struct timeval wait_time;
@@ -4749,7 +4809,36 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
   int topSock = myGlobals.sock;
 
 #ifdef CFG_MULTITHREADED
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) started...\n", myGlobals.handleWebConnectionsThreadId);
+ #ifdef MAKE_WITH_HTTPSIGTRAP
+    signal(SIGSEGV, webservercleanup);
+    signal(SIGHUP,  webservercleanup);
+    signal(SIGINT,  webservercleanup);
+    signal(SIGQUIT, webservercleanup);
+    signal(SIGILL,  webservercleanup);
+    signal(SIGABRT, webservercleanup);
+    signal(SIGFPE,  webservercleanup);
+    signal(SIGKILL, webservercleanup);
+    signal(SIGPIPE, webservercleanup);
+    signal(SIGALRM, webservercleanup);
+    signal(SIGTERM, webservercleanup);
+    signal(SIGUSR1, webservercleanup);
+    signal(SIGUSR2, webservercleanup);
+    /* signal(SIGCHLD, webservercleanup); */
+  #ifdef SIGCONT
+    signal(SIGCONT, webservercleanup);
+  #endif
+  #ifdef SIGSTOP
+    signal(SIGSTOP, webservercleanup);
+  #endif
+  #ifdef SIGBUS
+    signal(SIGBUS,  webservercleanup);
+  #endif
+  #ifdef SIGSYS
+    signal(SIGSYS,  webservercleanup);
+  #endif
+ #endif /* MAKE_WITH_HTTPSIGTRAP */
+
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) started...", getpid());
 #endif
 
 #ifndef WIN32
@@ -4895,7 +4984,8 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
       sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
     }
 
-    traceEvent(CONST_TRACE_WARNING, "THREADMGMT: web connections thread (%ld) terminated...\n", myGlobals.handleWebConnectionsThreadId);
+    traceEvent(CONST_TRACE_WARNING, "THREADMGMT: web connections thread (%ld) terminated...", myGlobals.handleWebConnectionsThreadId);
+    myGlobals.handleWebConnectionsThreadId = 0;
 
 #endif /* CFG_MULTITHREADED */
 
