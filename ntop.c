@@ -598,13 +598,22 @@ int mapGlobalToLocalIdx(int port) {
 static void purgeIpPorts(int theDevice) {
   char *marker;
   HostTraffic *el;
-  int i;
+  int i, mutexLocked = 0;
+  static char firstRun = 1;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Calling purgeIpPorts(%d)", theDevice);
 #endif
   
   if(myGlobals.device[myGlobals.actualReportDeviceId].numHosts == 0) return;
+
+  if(firstRun) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+               "PORT_PURGE: purgeIpPorts firstRun (mutex every %d times through the loop)\n",
+               CONST_MUTEX_PHP_MASK+1);
+    firstRun = 0;
+  }
+
 
   /* **********************************
 
@@ -637,6 +646,12 @@ static void purgeIpPorts(int theDevice) {
      however it allows me to save memory/time... 
   */  
   for(i=1; i<MAX_IP_PORT; i++) {
+#ifdef CFG_MULTITHREADED
+    if((i & CONST_MUTEX_PHP_MASK) == 0) {
+        accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
+        mutexLocked = 1;
+    }
+#endif
     if((marker[i] == 0) && (myGlobals.device[theDevice].ipPorts[i] != NULL)) {
       free(myGlobals.device[theDevice].ipPorts[i]);
       myGlobals.device[theDevice].ipPorts[i] = NULL;
@@ -644,9 +659,28 @@ static void purgeIpPorts(int theDevice) {
       traceEvent(CONST_TRACE_INFO, "Purging ipPorts(%d)", i);
 #endif
     }
+#ifdef CFG_MULTITHREADED
+    if (((i+1) & CONST_MUTEX_PHP_MASK) == 0) {
+        if(mutexLocked) {
+            releaseMutex(&myGlobals.purgePortsMutex);
+            mutexLocked = 0;
+        }
+#ifdef MAKE_WITH_SCHED_YIELD
+        sched_yield(); /* Allow other threads to run */
+#endif
+    }
+#endif
   }
   
   free(marker);
+
+#ifdef CFG_MULTITHREADED
+  if(mutexLocked) {
+      releaseMutex(&myGlobals.purgePortsMutex);
+      mutexLocked = 0;
+  }
+#endif
+
 }
 
 /* **************************************** */
@@ -1049,6 +1083,7 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.tcpSessionsMutex);
+  deleteMutex(&myGlobals.purgePortsMutex);
 #endif
 
 #ifdef WIN32

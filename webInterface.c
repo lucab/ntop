@@ -3956,6 +3956,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
       printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
       printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
+      printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
 #ifdef MEMORY_DEBUG
       printMutexStatus(textPrintFlag, &myGlobals.leaksMutex,       "leaksMutex");
 #endif

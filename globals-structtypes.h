@@ -1674,6 +1674,8 @@ XML*/
                                      /*XMLNOTE &pthreadmutex gdbmMutex mutexes "" */
     PthreadMutex tcpSessionsMutex;
                                      /*XMLNOTE &pthreadmutex tcpSessionsMutex mutexes"" */
+    PthreadMutex purgePortsMutex;
+                                     /*XMLNOTE &pthreadmutex purgePortsMutex mutexes "" */
 
  #ifdef MEMORY_DEBUG
     PthreadMutex leaksMutex;

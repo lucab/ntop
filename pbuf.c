@@ -572,7 +572,7 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
     return;
 
 #ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "updateInterfacePorts");
+  accessMutex(&myGlobals.purgePortsMutex, "updateInterfacePorts");
 #endif
 
   if(myGlobals.device[actualDeviceId].ipPorts[sport] == NULL) {
@@ -593,7 +593,7 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
   myGlobals.device[actualDeviceId].ipPorts[dport]->rcvd += length;
 
 #ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
+  releaseMutex(&myGlobals.purgePortsMutex);
 #endif
 }
 
