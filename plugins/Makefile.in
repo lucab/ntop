@@ -1,0 +1,536 @@
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
+
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+#
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+# auto makefile for the ntop's plugins.
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#
+# Luca Deri     <deri@ntop.org>
+# Rocco Carbone <rocco@ntop.org>
+#
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+transform = @program_transform_name@
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+build_alias = @build_alias@
+build_triplet = @build@
+host_alias = @host_alias@
+host_triplet = @host@
+target_alias = @target_alias@
+target_triplet = @target@
+AS = @AS@
+CC = @CC@
+CCLD = @CCLD@
+CFLAGS = @CFLAGS@
+CPP = @CPP@
+CXX = @CXX@
+DLLTOOL = @DLLTOOL@
+INCS = @INCS@
+INTOPAPP = @INTOPAPP@
+LD = @LD@
+LDFLAGS = @LDFLAGS@
+LIBCURSES = @LIBCURSES@
+LIBREADLINE = @LIBREADLINE@
+LIBS = @LIBS@
+LIBTOOL = @LIBTOOL@
+LN_S = @LN_S@
+MAKEINFO = @MAKEINFO@
+NM = @NM@
+NTOP_RELEASE = @NTOP_RELEASE@
+NTOP_VERSION_INFO = @NTOP_VERSION_INFO@
+OBJDUMP = @OBJDUMP@
+PACKAGE = @PACKAGE@
+RANLIB = @RANLIB@
+REMOTEINTERFACE = @REMOTEINTERFACE@
+VERSION = @VERSION@
+
+DIST_COMMON = Makefile.am Makefile.in
+CLEANFILES = 
+EXTRA_DIST = 
+
+SUFFIXES = .so
+
+# 
+# Where to install the plugin 
+# 
+plugindir = $(libdir)/ntop/plugins
+
+INCLUDES = -I.. @INCS@
+
+#
+# The meat for ntop
+#
+noinst_PROGRAMS = arpPlugin.so icmpPlugin.so lastSeenPlugin.so                   nfsPlugin.so remoteInterface.so 		  rmonPlugin.so wapPlugin.so
+
+
+lib_LTLIBRARIES = libarpPlugin.la libicmpPlugin.la liblastSeenPlugin.la                   libnfsPlugin.la libremoteInterface.la 		  librmonPlugin.la libwapPlugin.la
+
+
+libarpPlugin_la_SOURCES = arpPlugin.c
+libarpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+
+libicmpPlugin_la_SOURCES = icmpPlugin.c
+libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+
+liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
+liblastSeenPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+
+libnfsPlugin_la_SOURCES = nfsPlugin.c
+libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+
+librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
+librmonPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+
+libremoteInterface_la_SOURCES = remoteInterface.c remoteInterface.h
+libremoteInterface_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+
+libwapPlugin_la_SOURCES = wapPlugin.c
+libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
+CONFIG_CLEAN_FILES = 
+LTLIBRARIES =  $(lib_LTLIBRARIES)
+
+
+DEFS = @DEFS@ -I. -I$(srcdir) -I..
+CPPFLAGS = @CPPFLAGS@
+libarpPlugin_la_LIBADD = 
+libarpPlugin_la_OBJECTS =  arpPlugin.lo
+libicmpPlugin_la_LIBADD = 
+libicmpPlugin_la_OBJECTS =  icmpPlugin.lo
+liblastSeenPlugin_la_LIBADD = 
+liblastSeenPlugin_la_OBJECTS =  lastSeenPlugin.lo
+libnfsPlugin_la_LIBADD = 
+libnfsPlugin_la_OBJECTS =  nfsPlugin.lo
+libremoteInterface_la_LIBADD = 
+libremoteInterface_la_OBJECTS =  remoteInterface.lo
+librmonPlugin_la_LIBADD = 
+librmonPlugin_la_OBJECTS =  rmonPlugin.lo
+libwapPlugin_la_LIBADD = 
+libwapPlugin_la_OBJECTS =  wapPlugin.lo
+PROGRAMS =  $(noinst_PROGRAMS)
+
+arpPlugin_so_SOURCES = arpPlugin.so.c
+arpPlugin_so_OBJECTS =  arpPlugin.so.o
+arpPlugin_so_LDADD = $(LDADD)
+arpPlugin_so_DEPENDENCIES = 
+arpPlugin_so_LDFLAGS = 
+icmpPlugin_so_SOURCES = icmpPlugin.so.c
+icmpPlugin_so_OBJECTS =  icmpPlugin.so.o
+icmpPlugin_so_LDADD = $(LDADD)
+icmpPlugin_so_DEPENDENCIES = 
+icmpPlugin_so_LDFLAGS = 
+lastSeenPlugin_so_SOURCES = lastSeenPlugin.so.c
+lastSeenPlugin_so_OBJECTS =  lastSeenPlugin.so.o
+lastSeenPlugin_so_LDADD = $(LDADD)
+lastSeenPlugin_so_DEPENDENCIES = 
+lastSeenPlugin_so_LDFLAGS = 
+nfsPlugin_so_SOURCES = nfsPlugin.so.c
+nfsPlugin_so_OBJECTS =  nfsPlugin.so.o
+nfsPlugin_so_LDADD = $(LDADD)
+nfsPlugin_so_DEPENDENCIES = 
+nfsPlugin_so_LDFLAGS = 
+remoteInterface_so_SOURCES = remoteInterface.so.c
+remoteInterface_so_OBJECTS =  remoteInterface.so.o
+remoteInterface_so_LDADD = $(LDADD)
+remoteInterface_so_DEPENDENCIES = 
+remoteInterface_so_LDFLAGS = 
+rmonPlugin_so_SOURCES = rmonPlugin.so.c
+rmonPlugin_so_OBJECTS =  rmonPlugin.so.o
+rmonPlugin_so_LDADD = $(LDADD)
+rmonPlugin_so_DEPENDENCIES = 
+rmonPlugin_so_LDFLAGS = 
+wapPlugin_so_SOURCES = wapPlugin.so.c
+wapPlugin_so_OBJECTS =  wapPlugin.so.o
+wapPlugin_so_LDADD = $(LDADD)
+wapPlugin_so_DEPENDENCIES = 
+wapPlugin_so_LDFLAGS = 
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = tar
+GZIP_ENV = --best
+DEP_FILES =  .deps/arpPlugin.P .deps/arpPlugin.so.P .deps/icmpPlugin.P \
+.deps/icmpPlugin.so.P .deps/lastSeenPlugin.P .deps/lastSeenPlugin.so.P \
+.deps/nfsPlugin.P .deps/nfsPlugin.so.P .deps/remoteInterface.P \
+.deps/remoteInterface.so.P .deps/rmonPlugin.P .deps/rmonPlugin.so.P \
+.deps/wapPlugin.P .deps/wapPlugin.so.P
+SOURCES = $(libarpPlugin_la_SOURCES) $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) $(libremoteInterface_la_SOURCES) $(librmonPlugin_la_SOURCES) $(libwapPlugin_la_SOURCES) arpPlugin.so.c icmpPlugin.so.c lastSeenPlugin.so.c nfsPlugin.so.c remoteInterface.so.c rmonPlugin.so.c wapPlugin.so.c
+OBJECTS = $(libarpPlugin_la_OBJECTS) $(libicmpPlugin_la_OBJECTS) $(liblastSeenPlugin_la_OBJECTS) $(libnfsPlugin_la_OBJECTS) $(libremoteInterface_la_OBJECTS) $(librmonPlugin_la_OBJECTS) $(libwapPlugin_la_OBJECTS) arpPlugin.so.o icmpPlugin.so.o lastSeenPlugin.so.o nfsPlugin.so.o remoteInterface.so.o rmonPlugin.so.o wapPlugin.so.o
+
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .lo .o .s .so
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu plugins/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+mostlyclean-libLTLIBRARIES:
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+
+distclean-libLTLIBRARIES:
+
+maintainer-clean-libLTLIBRARIES:
+
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libdir)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo "$(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p; \
+	  else :; fi; \
+	done
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
+	done
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+
+maintainer-clean-libtool:
+
+libarpPlugin.la: $(libarpPlugin_la_OBJECTS) $(libarpPlugin_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(libarpPlugin_la_LDFLAGS) $(libarpPlugin_la_OBJECTS) $(libarpPlugin_la_LIBADD) $(LIBS)
+
+libicmpPlugin.la: $(libicmpPlugin_la_OBJECTS) $(libicmpPlugin_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(libicmpPlugin_la_LDFLAGS) $(libicmpPlugin_la_OBJECTS) $(libicmpPlugin_la_LIBADD) $(LIBS)
+
+liblastSeenPlugin.la: $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(liblastSeenPlugin_la_LDFLAGS) $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_LIBADD) $(LIBS)
+
+libnfsPlugin.la: $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(libnfsPlugin_la_LDFLAGS) $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_LIBADD) $(LIBS)
+
+libremoteInterface.la: $(libremoteInterface_la_OBJECTS) $(libremoteInterface_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(libremoteInterface_la_LDFLAGS) $(libremoteInterface_la_OBJECTS) $(libremoteInterface_la_LIBADD) $(LIBS)
+
+librmonPlugin.la: $(librmonPlugin_la_OBJECTS) $(librmonPlugin_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(librmonPlugin_la_LDFLAGS) $(librmonPlugin_la_OBJECTS) $(librmonPlugin_la_LIBADD) $(LIBS)
+
+libwapPlugin.la: $(libwapPlugin_la_OBJECTS) $(libwapPlugin_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(libwapPlugin_la_LDFLAGS) $(libwapPlugin_la_OBJECTS) $(libwapPlugin_la_LIBADD) $(LIBS)
+
+mostlyclean-noinstPROGRAMS:
+
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+
+distclean-noinstPROGRAMS:
+
+maintainer-clean-noinstPROGRAMS:
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = plugins
+
+distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu plugins/Makefile
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+install-exec-am: install-libLTLIBRARIES
+install-exec: install-exec-am
+
+install-data-am: install-data-local
+install-data: install-data-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am: uninstall-libLTLIBRARIES
+uninstall: uninstall-am
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
+all-redirect: all-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+installdirs:
+	$(mkinstalldirs)  $(DESTDIR)$(libdir)
+
+
+mostlyclean-generic:
+
+clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-libLTLIBRARIES mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-noinstPROGRAMS \
+		mostlyclean-tags mostlyclean-depend mostlyclean-generic
+
+mostlyclean: mostlyclean-am
+
+clean-am:  clean-libLTLIBRARIES clean-compile clean-libtool \
+		clean-noinstPROGRAMS clean-tags clean-depend \
+		clean-generic mostlyclean-am
+
+clean: clean-am
+
+distclean-am:  distclean-libLTLIBRARIES distclean-compile \
+		distclean-libtool distclean-noinstPROGRAMS \
+		distclean-tags distclean-depend distclean-generic \
+		clean-am
+	-rm -f libtool
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-libLTLIBRARIES \
+		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-noinstPROGRAMS maintainer-clean-tags \
+		maintainer-clean-depend maintainer-clean-generic \
+		distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+
+.PHONY: mostlyclean-libLTLIBRARIES distclean-libLTLIBRARIES \
+clean-libLTLIBRARIES maintainer-clean-libLTLIBRARIES \
+uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
+distclean-compile clean-compile maintainer-clean-compile \
+mostlyclean-libtool distclean-libtool clean-libtool \
+maintainer-clean-libtool mostlyclean-noinstPROGRAMS \
+distclean-noinstPROGRAMS clean-noinstPROGRAMS \
+maintainer-clean-noinstPROGRAMS tags mostlyclean-tags distclean-tags \
+clean-tags maintainer-clean-tags distdir mostlyclean-depend \
+distclean-depend clean-depend maintainer-clean-depend info-am info \
+dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
+install-exec install-data-local install-data-am install-data install-am \
+install uninstall-am uninstall all-redirect all-am all installdirs \
+mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+
+
+#
+# Dependencies to allow ntop loading plugins on-place
+# by default ntop looks for plugins in the plugins/ subdirectory
+#
+
+arpPlugin.so: .libs/libarpPlugin.so
+	@ln -s .libs/libarpPlugin.so arpPlugin.so
+
+icmpPlugin.so: .libs/libicmpPlugin.so
+	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
+
+lastSeenPlugin.so: .libs/liblastSeenPlugin.so
+	@ln -s .libs/liblastSeenPlugin.so lastSeenPlugin.so
+
+nfsPlugin.so: .libs/libnfsPlugin.so
+	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
+
+remoteInterface.so: .libs/libremoteInterface.so
+	@ln -s .libs/libremoteInterface.so remoteInterface.so
+
+rmonPlugin.so: .libs/librmonPlugin.so
+	@ln -s .libs/librmonPlugin.so rmonPlugin.so
+
+wapPlugin.so: .libs/libwapPlugin.so
+	@ln -s .libs/libwapPlugin.so wapPlugin.so
+
+install-data-local:
+	@$(top_srcdir)/mkinstalldirs $(plugindir);
+	@for file in $(noinst_PROGRAMS); do \
+             cp -p $$file $(plugindir)/$$file; \
+         done
+# remove installed libraries
+	@for file in $(lib_LTLIBRARIES); do \
+             rm -f $(DESTDIR)$(libdir)/$$file; \
+         done
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

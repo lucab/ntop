@@ -1,0 +1,108 @@
+Installation on Suse Linux
+-------------------------
+
+SUSE 6.0/6.2/6.3 (others not tested) have a buggy gdbm binary.
+IT WILL NOT WORK until you recompile the gdbm library. Without it, you get
+- segment fault at the first name lookup (does not occur with -n option)
+- segment fault on starting of ntop, if db-files exists
+
+QuickTip:
+Until ntop 1.2x is not included in Suse I will maintance suse-ntop support under
+ftp://accordata.net. There you wll find precompiled binaried for ntop and gdbm.
+
+Install ready to use binaries:
+1) Download the good.gdm*.tar.gz and copy the files in the same directories as
+   they are in the package.
+2) Download the *.rpm and install it:
+   YAST: Install with "Install Package" and choose the downloaded package
+   MC: open the RPM and execute INSTALL
+   RPM: run "rpm -i RPMFILE"
+   If you have trouble, you may have to deinstall a previous ntop installation or
+   use "rpm -i --force RPMFILE"
+3) use "/etc/rc.d/ntopd start" and "/etc/rc.d/ntopd stop" to start/stop ntop
+4) To start ntop at boot-time set "START_NTOPD=yes" in /etc/rc.config
+
+
+All what to do to compile and run ntop:
+
+First you need libpcap in your system, make sure that is is installed:
+ls /usr/lib/libpca*
+Suse 6.2/6.3: libpcap is found in  "d1 - Program developement" (take libpcapn)
+Suse 6.0: I have compiled libpcap0.4 and included in the good.gdbm package
+
+Recompile libgdbm
+1) Install the source from the CD with Yast (1.8.0 if exists)
+2) unpack /usr/src/packages/SOURCES/gdbm-x.x.x.tar.gz to /usr/src
+3) copy the diff in this directory under /usr/src/gdbm-x.x.x.x
+4) change to /usr/src/gdbm-x.x.x
+5) run the patch: patch <*.dif
+6) run: ./configure --prefix=/usr
+7) run: mkdir shared	(only needed for gdbm-1.7.3)
+8) run: make
+9) run: make install
+
+Using SSL
+ntop1.2a11 will provide SSL mode if "openssl" is find at compilation time.
+At time of writing ntop-cert.pem was password protected and this conflicts
+with starting ntop at boot time.
+To remove it run:  "openssl rsa -in ntop-cert.pem -out ntop-cert.key"
+This will generate a key without password. Add the content of ntop-cert.key to
+ntop-cert.pem and remove the encrypted private key from ntop-cert.pem
+If you use your own key you should replace the pem file in /usr/share/ntop
+after installing the RPM
+
+
+Building ntop 1.2aX:
+1) Install the source under /usr/src/ntop-1.2aX
+2) change to /usr/src/ntop-1.2aX
+3) run: ./configure --prefix=/usr
+4) run: make
+
+5 a) Installing with creating an rpm (prefered):
+  run: make make-suse
+  Install the rpm found in /usr/src/packages/RPMS/i386 with YAST or mc
+  This install scripts in /etc/rc.d and adds variables to /etc/rc.config
+  If you have trouble to install, try "rpm -i --force RPMFILE" or try to
+  deinstall ntop with YAST (package "n" - network)
+  After you have installed the rpm, enable ntop in /etc/rc.config by
+  setting "START_NTOPD=yes".
+  Reboot or start it with "/etc/rc.d/ntopd start"
+  To stop ntop use "/etc/rc.d/ntopd stop"
+
+5 b) just install
+  run: make install
+  The ntop binary is copied to /usr/sbin/ntop. No other things are done!
+  Run WEB-mode with /usr/sbin/ntop -i eth0 -w 3000 -P /usr/src/NTOPPATH
+
+
+Using NTOP with a mySQL Database:
+If using the RPM just edit /etc/rc.config and set START_NTOP_mySQL=yes
+and of course START_MYSQL=yes
+The startscript /etc/rc.d/ntopdb will start at reboot and create the database
+NTOP if not exists.
+
+Without using the start-script, you first have to setup the Database:
+run: mysqladmin create NTOP
+run: mysql NTOP <database/mySQLdefs.txt
+
+Then you can start then log-scripts:
+run: perl database/mySQLserver.pl >/dev/null &
+
+
+05.02.2000 Ralf Amandi <Ralf.Amandi@accordata.net>
+
+
+Changes:
+For ntop1.2a13:
+none
+
+For ntop1.2a12:
+Startscripts for ntop-mySQL-log. To get the right start-order I moved
+S20ntopd/K20ntopd to S22ntopd/K08ntopd. You might have to delete
+old links in the directories /etc/rc.d/rc2.d and /etc/rc.d/rc3.d
+
+For ntop1.2a11:
+Modified "make make-suse" that it does not depend on the ntop-version.
+Removed the links in packages/suse6/sbin/init.d/rc*.d and put this in
+the Makefile
+Added "-d" to ntop call in /sbin/init.d/ntopd

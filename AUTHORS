@@ -1,0 +1,30 @@
+
+   _   _ _
+  | \ | | |_ ___  _ __
+  |  \| | __/ _ \| '_ \
+  | |\  | || (_) | |_) |
+  |_| \_|\__\___/| .__/
+                 |_|
+
+             Network Top
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+  AUTHORS
+  =======
+
+  This is a list of authors who have written
+  or edited parts of the ntop sources.
+
+
+  o Original author of ntop:
+    Luca Deri <deri@ntop.org>
+
+
+
+  CONTRIBUTORS
+  ============
+  o Rocco Carbone <rocco@ntop.org>
+    starting at version 1.2.13a he wrote the NtoPerl Module
+    and adapted the configuration stuff to use GNU auto{make,conf}
+

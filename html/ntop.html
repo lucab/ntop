@@ -1,0 +1,272 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+       ntop - display top network users
+
+SYNOPSIS
+       ntop  [-I] [-r refresh time] [-R filter rules] [-f traffic
+       dump file] [-n] [-N] [-M] [-p] IP  protocols  to  monitor]
+       [-i  interface]  [-e  num  rows]  [-w  port] [-d] [-S] [-P
+       dbpath] [-m local subnet] [-l log period] [-a  access  log
+       file  path]  [-t  trace level] [-F flow filter expression]
+       [filter expression]
+
+DESCRIPTION
+       ntop shows the current network usage. It displays  a  list
+       of  hosts that are currently using the network and reports
+       information concerning the (IP and non-IP) traffic  gener-
+       ated by each host.  ntop can be started either in a termi-
+       nal window (see intop ) or in  web  mode.  In  the  latter
+       case, a web browser is needed to use the program.
+
+
+
+COMMAND-LINE OPTIONS
+       -I
+        This  flag is obsolete: it used to start ntop in interac-
+        tive mode.  intop provides you a character  based  inter-
+        face.
+
+
+       -R
+        Specifies  the  filter  rules  used  by ntop for emitting
+        alerts and warnings when the traffic matches  the  speci-
+        fied  rules.  Shall you need further details about filter
+        rules, please refer to ntop-rules (8) man page.
+
+
+       -r
+        Specifies the delay (in seconds) between  screen  updates
+        (the  default  is  3 seconds). If the -l flag is used, it
+        specifies how often entries are logged in the  log  file.
+        Please note that if the delay is very short (1 second for
+        instance), ntop might not be able to process all the net-
+        work traffic.
+
+
+       -f
+        Specifies  the  file  containing tcpdump captured traffic
+        that will be browsed before to start sniffing.
+
+
+       -N
+        Forces ntop not to use nmap (if it is installed).
+
+       -M
+        Forces ntop not to  merge  network  interfaces  together.
+        This  means  that  ntop  will collect statistics for each
+        interface and will not merge data together.
+
+
+       -n
+        This causes ntop to show numeric IP addresses instead  of
+        the  symbolic  names. This option can useful when the DNS
+        is not present or quite slow.  You can toggle the address
+        format (numeric vs. symbolic) by pressing the n key while
+        ntop is running.
+
+
+       -p
+        It is used to specify the IP  protocols  that  ntop  will
+        monitor.   The   format  is  &lt;label&gt;=&lt;protocol  list&gt;  [,
+        &lt;label&gt;=&lt;protocol list&gt;], where label is used to symboli-
+        cally identify the &lt;protocol list&gt;. The format of &lt;proto-
+        col list&gt; is &lt;protocol&gt;[|&lt;protocol&gt;], where &lt;protocol&gt; is
+        either  a  valid  protocol specified inside the /etc/ser-
+        vices  file  or  a  numeric  port  range  (e.g.  80,   or
+        6000-6500).  If  the  -p  flag  is  omitted the following
+        default      value      is      used:       "FTP=ftp|ftp-
+        data,HTTP=http|www|https,DNS=name|domain,Telnet=tel-
+        net|login,NBios-IP=netbios-ns|netbios-dgm|netbios-
+        ssn,Mail=pop-2|pop-3|kpop|smtp|imap|imap2,SNMP=snmp|snmp-
+        trap,NEWS=nntp,NFS=mount|pcnfs|bwnfs|nfs|nfsd-sta-
+        tus,X11=6000-6010,SSH=ssh".  If  the  &lt;protocol  list&gt; is
+        very long you may store in a file  (for  instance  proto-
+        col.list)  the  value  of the &lt;protocol list&gt; and specify
+        the file name instead of the &lt;protocol  list&gt;  (in  above
+        example you will invoke 'ntop -p protocol.list').
+
+
+
+       -i
+        Specifies  the network interface used by ntop If multiple
+        interfaces are used (this feature is  available  only  if
+        ntop  is  compiled  with  thread support) they have to be
+        separated with a comma. For instance -i "eth0,lo".  Traf-
+        fic  information obtained by all the interfaces is merged
+        together as if the traffic would have  been  produced  by
+        one interface. Use the -M flag for not merging traffic.
+
+
+       -e
+        Is  the  manimum number of HTML table rows that ntop will
+        display. This flag makes sense in web mode only.
+
+
+       -w
+        browse traffic information remotely. Supposing  to  start
+        ntop  at  the port 3000 (default port), the URL to access
+        is http://hostname:3000/. Users and URLs to protect  with
+        passwords  are  stored  in  a  database  file. By default
+        user/URL administration are accessible  uniquely  by  the
+        user admin with password admin Passwords are stored in an
+        encrypted form into the database  for  further  security.
+        Please  note  that  an HTTP server is NOT needed but it's
+        embedded into the application.
+
+
+       -d
+        This flag causes ntop to become  a  daemon,  i.e.  it  is
+        started in background and detached from the terminal.
+
+
+       -S
+        Use  this flag for telling ntop to save information about
+        host traffic on shutdown. This allows ntop not  to  loose
+        traffic  stats across multiple ntop sessions. Please note
+        that information about TCP session is (obviously) lost.
+
+
+       -P
+        This allows to specify where  db-files  are  searched  or
+        created  (default  "."). In addition DBPATH/html is added
+        to the searchlist for the WEB-files
+
+
+       -m
+        This flag allows users to specify the subnets whose traf-
+        fic   is   considered   local.  The  format  is  &lt;network
+        address&gt;/&lt;# subnet mask bits&gt;[,&lt;network address&gt;/&lt;#  sub-
+        net        mask        bits&gt;].        For        instance
+        "131.114.21.0/24,10.0.0.0/255.0.0.0".
+
+
+       -l
+        This causes ntop to periodically (specified with  the  -r
+        flag)  log  network information data in the file ntop.log
+        whose format is self-explanatory. This flag specifies the
+        collection  time  between two consecutive log entries (in
+        seconds). Please note that it is easy to use the log file
+        to produce graphics (e.g. using gnuplot).
+
+
+       -a
+        By   default   ntop   logs  HTTP  accesses  in  the  file
+        ntop.access.log in the current directory. Use  this  flag
+        to  specify the path of the file where HTTP accesses will
+        be logged. Each log entry is in  Apache-like  style.  The
+        only  difference  between Apache and ntop is that .B ntop
+        serve the request.
+
+
+       -t
+        This flag specifies the level of ntop tracings on stdout.
+        The  trace  level ranges between 0 (no trace) and 5 (full
+        debug tracings). The default trace value is 3. The higher
+        is  the  trace  level  the  more information are printed.
+        Trace level 1 is used to print errors only, level  2  for
+        both warnings and errors, and so on.
+
+
+       -F
+        It  is used to specify network flows similar to more pow-
+        erful applications such as NeTraMet. A flow is  a  stream
+        of captured packets that match a specified rule. The for-
+        mat   is   &lt;flow-label&gt;='&lt;matching   expression&gt;'[,&lt;flow-
+        label&gt;='&lt;matching  expression&gt;'], where the label is used
+        to  symbolically  identify  the  flow  specified  by  the
+        expression.  The  expression  format  is specified in the
+        appendix. If an expression is specified, then the  infor-
+        mation  concerning  flows  can  be accessed following the
+        HTML link named 'List NetFlows'.  For instance suppose to
+        define  two  flows  with  the following expression "Luca-
+        Hosts='host         jake.unipi.it         or         host
+        pisanino.unipi.it',GatewayRoutedPkts='gateway       gate-
+        way.unipi.it'". All the traffic  sent/received  by  hosts
+        jake.unipi.it  or  pisanino.unipi.it is collected by ntop
+        and added to the LucaHosts flow, whereas all  the  packet
+        routed  by  the gateway gateway.unipi.it are added to the
+        GatewayRoutedPkts flow. If the flows list  is  very  long
+        you  may  store  in  a file (for instance flows.list) the
+        list of flows and specify the file name  instead  of  the
+        flows  list  (in  above  example you will invoke 'ntop -F
+        flows.list').
+
+
+
+
+       filter expression
+        ntop , similar to what  tcpdump  does,  allows  users  to
+        specify  an expression that restricts the type of traffic
+        handled by ntop hence  to  select  only  the  traffic  of
+        interest.  For instance, suppose to be interested only in
+        the traffic generated/received by the host jake.unipi.it.
+        ntop can then be started with the following filter: 'ntop
+        src host jake.unipi.it or dst  host  jake.unipi.it'.  See
+        the  tcpdump  man page for further information about this
+        topic.
+
+
+
+       users  can  access  the  traffic information using conven-
+       tional web browsers. The main HTML page, is divided is two
+       frames.  The left frame allows users to select the traffic
+       view that will be displayed in the right frame.  Available
+       sections  are:  sort traffic by data sent, sort traffic by
+       data received,  traffic  statistics,  active  hosts  list,
+       remote  to  local  (i.e. inside the subnet defined for the
+       network board from which the program is  currently  sniff-
+       ing)  IP  traffic,  local  to  remote IP traffic, local to
+       local IP traffic, list of active TCP sessions, IP protocol
+       distribution  statistics,  IP  protocol  usage, IP traffic
+       matrix.
+
+
+NOTES
+       ntop is based on the libpcap library that can be found  at
+       ftp://ftp.ee.lbl.gov/libpcap.tar.Z.   The   Win32  version
+       makes use of libpcap for Win32 that can be downloaded from
+       http://www.ntop.org/libpcap.html).
+
+
+SEE ALSO
+       <B>intop(1)</B>,  <B>ntop-rules(8)</B>,  <B>top(1)</B>,  <B>ngrep(8)</B>,  <B>tcpdump(8)</B>.
+       netramet(http://www.auckland.ac.nz/net/Account-
+       ing/ntm.Release.note.html).
+
+AUTHOR
+       Please   send   bug  reports  to  the  ntop  mailing  list
+       &lt;ntop@ntop.org&gt;.    ntop's    author    is    Luca    Deri
+       &lt;deri@ntop.org&gt;.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,56 @@
+
+   _   _ _
+  | \ | | |_ ___  _ __
+  |  \| | __/ _ \| '_ \
+  | |\  | || (_) | |_) |
+  |_| \_|\__\___/| .__/
+                 |_|
+
+             Network Top
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	
+  FILES
+  =====
+
+
+ChangeLog
+COPYING
+FAQ
+FILES
+INSTALL
+Makefile.in
+MANIFESTO
+README
+TODO
+
+acconfig.h      - local configuration options for the GNU autoheader tool
+acinclude.m4.in - local definitions for the GNU automake tool
+autogen.sh      - a script to start hacking the program
+                  (it tries to make all but not the coffe)
+configure.in    - source directive to the GNU autoconf tool
+
+acinclude.m4    - a machine generated file input to aclocal GNU tool
+Makefile.in     - a machine generated file from the GNU automake tool
+
+aclocal.m4      - autoconf macros
+config.h        - a machine generated file from configure.in by GNU autoheader
+config.guess    - a machine generated file from the GNU configure tool
+config.sub      - a machine generated file from the GNU configure tool
+configure       - configure script
+                  (run this first)
+install-sh      - GNU support file needed by the GNU configure script
+ltconfig        - GNU support file needed by the GNU configure script
+ltmain.sh       - GNU support file needed by the GNU configure script
+missing         - GNU support file needed by the GNU configure script
+mkinstalldirs   - GNU support file needed by the GNU configure script
+
+http.c
+ntop.8
+ntop.c
+ntop.h
+pbuf.c
+qsort.c
+report.c
+util.c
+vendor.c

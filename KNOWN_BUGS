@@ -1,0 +1,170 @@
+   _   _ _
+  | \ | | |_ ___  _ __
+  |  \| | __/ _ \| '_ \
+  | |\  | || (_) | |_) |
+  |_| \_|\__\___/| .__/
+                 |_|
+
+             Network Top
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+  KNOWN_BUGS
+  ==========
+
+
+1. Linux Sockets Bug (Platform Linux/i386)
+   [Alan.Cox@linux.org is aware of the above issue. Status: no reply]
+
+Below you can find the packetLogger code that can be used to
+reproduce the problem. Suppose to have
+host A (MAC Address 08:00:69:0B:6F:A1) and host B (MAC Address
+00:20:AF:73:C6:2E). Host B is an i386 running Linux 2.X. No matter what
+OS runs on A. Now start "packetLogger 08:00:69:0B:6F:A1 
+00:20:AF:73:C6:2E" in order to filter packets flowing though A and B. I
+suppose there's no other traffic (e.g. telnet) between A and B. Now from
+A do 'ftp B' and transfer a file C (large, e.g. > 1 MB). Stop
+packetLogger, look at the # of packets and restart it. Now from B do
+'ftp A' and transfer the very same file C [if A and B are Linux boxes
+you can start packetLogger on both hosts]. You will notice that in the
+second case you've lost many packets whereas in the first case
+everything works fine.
+
+========================================
+#include <sys/param.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <net/if.h>
+#include <linux/if_ether.h>
+#include <netinet/in.h>
+#include <errno.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+struct	ethernet_header {
+  u_char	ether_dhost[6];
+  u_char	ether_shost[6];
+  u_short	ether_type;
+};
+
+
+char* etheraddr_string(const u_char *ep)
+{
+  u_int i, j;
+  char *cp;
+  struct enamemem *tp;
+  static char buf[sizeof("00:00:00:00:00:00")];
+  char hex[] = "0123456789ABCDEF";
+
+  cp = buf;
+
+  if ((j = *ep >> 4) != 0)
+    *cp++ = hex[j];
+  else
+    *cp++ = '0';
+
+  *cp++ = hex[*ep++ & 0xf];
+
+  for(i = 5; (int)--i >= 0;) {
+    *cp++ = ':';
+    if ((j = *ep >> 4) != 0)
+      *cp++ = hex[j];
+    else
+      *cp++ = '0';
+
+    *cp++ = hex[*ep++ & 0xf];
+  }
+
+  *cp = '\0';
+
+  return (buf);
+}
+
+
+int main(int argc, char* argv[]) {
+  struct ifreq ifr;
+  struct sockaddr sa;
+  char *device = "eth0";
+  unsigned long packetNum=0, totLen=0;
+  int fd;
+
+  if(argc != 3) {
+    printf("Usage: %s <MAC Addr. host A> <MAC Addr. host B>\n", argv[0]);
+    printf("Example: %s 08:00:69:0B:6F:A1  00:20:AF:73:C6:2E\n", argv[0]);
+    return(-1);
+  }
+
+  fd = socket(PF_INET, SOCK_PACKET, htons(ETH_P_ALL));
+
+  if (fd < 0) {
+    printf("Error creating socket.\n");
+    return(-1);
+  }
+
+  /* Bind to the interface name */
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_family = AF_INET;
+  (void)strncpy(sa.sa_data, device, sizeof(sa.sa_data));
+  if (bind(fd, &sa, sizeof(sa))) {
+    printf("bind: error\n");
+    return(-1);
+  }
+
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
+  if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0 ) {
+    printf("SIOCGIFHWADDR: error\n");
+    return(-1);
+  }
+
+  /* Base the buffer size on the interface MTU */
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
+  if (ioctl(fd, SIOCGIFMTU, &ifr) < 0 ) {
+    printf("SIOCGIFMTU: error\n");
+    return(-1);
+  }
+  
+  while(1) {
+    struct sockaddr from;
+    int fromlen, cc, len=0;
+    u_char bp[2048], srcHost[64], dstHost[64];
+    struct ethernet_header *ep;
+
+    do {
+      fromlen = sizeof(from);
+      cc = recvfrom(fd, bp, 2048, 0, &from, &fromlen);      
+      len += cc;
+    } while (strcmp(device, from.sa_data));
+
+    ep = (struct ethernet_header*)bp;
+
+    strcpy(srcHost, etheraddr_string(ep->ether_shost));
+    strcpy(dstHost, etheraddr_string(ep->ether_dhost));
+
+
+    if(strcmp(srcHost, argv[1]) && strcmp(srcHost, argv[2]))
+      continue;
+    else if(strcmp(dstHost, argv[1]) && strcmp(dstHost, argv[2]))
+      continue;
+    else {
+      totLen += len;
+      printf("%5d\t%8u\t%s -> %s (len=%d)\n", 
+	     ++packetNum, totLen, srcHost, dstHost, len);
+    }
+  }
+
+  close(fd);
+  return(0);
+}
+
+========================================
+
+2. iPPP (Linux)
+   [iPPP guys have been informed. Status: no reply]
+
+ntop works with PPP but it presents some problems with iPPP (ISDN PPP). Some packets cannot be decoded properly. Tools other than ntop (e.g. tcpdump, ethereal) can't handle such packets either.

@@ -1,0 +1,33 @@
+
+addMacAddress
+-------------
+
+Allows you to add a twin MAC Address/Symbolic host name to
+the ntop.db file. ntop will then use the specified symbolic
+name instead of the MAC Address.
+
+This utility can be used by those people that run ntop
+on a network containing some non-IP hosts. 
+
+NOTES:
+1) ntop.db is owned by root -> make sure to run the
+   above tool as root or change the ntop.db permissions
+   [strongly not suggested]
+2) you CANNOT run the above tool while ntop is running
+   because the ntop.db file is locked exclusively by ntop
+
+
+addMacAddressFile.pl
+--------------------
+
+Perl script that reads the specified file and calls 
+addMacAddress for each file entry. The file format is
+the following:
+
+MAC Address	Symbolic host name
+             ^                      ^
+             |                      |
+            Tab                  return
+
+
+See sampleMACfile.txt as example file.

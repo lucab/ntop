@@ -1,0 +1,13 @@
+
+ntop is distributed under GPL2. However, if you like and use ntop, we would appreciate
+a small donation to the project using the follwing URL:
+
+http://order.kagi.com/cgi-bin/register1.cgi?UXH
+
+This is necessary because we get no founding at all from the University so I have to purchase
+personally books, hardware and software for better developing ntop and improving ntop.
+
+Thanks for supporting ntop!
+
+Cheers, Luca.
+

@@ -1,0 +1,31 @@
+
+   _   _ _
+  | \ | | |_ ___  _ __
+  |  \| | __/ _ \| '_ \
+  | |\  | || (_) | |_) |
+  |_| \_|\__\___/| .__/
+                 |_|
+
+             Network Top
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+  THREADS-FAQ
+  ===========
+
+HP-UX
+Q: Why the HP-UX version of ntop isn't multithreaded?
+A: Because HP's pthread implementation is slightly different that
+   the standard one and I don't wanna have too many code versions
+   of ntop just to be compatible with non-standard OSs.
+
+IRIX
+Q. Where can I find pthreads for IRIX 6.2?
+A. Irix 6.2 doesn't support POSIX threads out of of the box. You must 
+   install the patche: 2791
+
+Q: Why the IRIX version of ntop doesn't use semaphores although 
+   they are implemented in the OS?
+A: I have IRIX 6.2 and uder this OS relase semaphores seem to have
+   some problems. This is a implementation issue only because ntop
+   supports threads under IRIX.

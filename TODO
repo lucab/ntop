@@ -1,0 +1,132 @@
+1. Fixed.
+
+2. Fixed.
+
+3. Fixed.
+
+4. Fixed.
+
+5. Adapt ntop output as the window size changes
+   (Carl van Schaik <carl@dreamcoat.che.uct.ac.za>)
+
+6. - Add a mode where only the non-local traffic shows up
+   - Add a mode where stats reset at each ntop iteration
+   (Davin Milun <milun@cs.buffalo.edu>)
+
+7. Fixed.
+
+8. Multihoming support
+   (Luca Deri and Stefano Suin).
+
+9. It would be great if ntop could log to a file
+   in a way so that ppl can run it, then probably shutdown the machine for a
+   while and start it up again so that it _appends_ to the same statistics. ie that
+   ppl don't lose their overall-traffic-statistic.
+   (Luzian Scherrer <bug@po6.org>).
+
+11. Fixed.
+
+12. Fixed.
+
+13. Fixed.
+
+13. Fixed.
+
+14. Fixed.
+
+15. Fixed.
+
+16. Fixed.
+
+17. Fixed.
+
+18. Fixed.
+
+19. Fixed.
+
+20. Fixed.
+
+21. Fixed.
+
+23. Fixed.
+
+24. Fixed.
+
+25. Fixed.
+
+26. Fixed.
+
+27. Fixed.
+
+28. Fixed.
+
+29. Fixed.
+
+30. Fixed.
+
+31. Add an ACL that filters requests depending on the client IP address
+    (??@trinux.org).
+
+32. Fixed.
+
+33. Fixed.
+
+34. Fixed.
+
+35. Fixed.
+
+37. Fixed.
+
+38. Fixed.
+
+39. Fixed.
+
+40. Specify protocols (e.g. IPIP) on the command line as it
+    happens with IP
+    (Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+
+41. Fixed.
+
+42. Fixed.
+
+43. Fixed.
+
+44. Fixed.
+
+45. Fixed.
+
+46. Fixed.
+
+47. Fixed.
+
+48. "ntop -d -w 3000" on Slackware stops after 
+    about a minute.
+    (Bobby Hitt <bobhitt@bscnet.com>)
+
+49. Fixed.
+
+50. Fixed.
+
+51. Fixed.
+
+52. Some broadcast packets corrupt text-based display
+    (Reinhard Volk <volk@mpq.mpg.de>)
+
+53. Fixed.
+
+54. Fixed.
+
+55. Reset traffic matrix stats every 5 minutes.
+    (Mario Goorden <etmmgoo@etm.ericsson.se>)
+
+56. Maintain a static (not purgeable) list of the
+    10 most active hosts ever.
+    (Rodney Clark)
+
+57. The parsing of the lsof output does not correctly handle
+    protocols (ports) which contain a "-" 
+    (e.g. a line ends with "*:ftp-data (LISTEN)" or
+    "1.2.3.4:ftp-data->5.6.7.8:1234"). The first version
+    is easy to correct but the second version will need
+    some changes to the strtok() parsing.
+    Andreas Pfaller <a.pfaller@pop.gun.de>

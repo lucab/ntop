@@ -1,0 +1,1057 @@
+
+   _   _ _
+  | \ | | |_ ___  _ __
+  |  \| | __/ _ \| '_ \
+  | |\  | || (_) | |_) |
+  |_| \_|\__\___/| .__/
+                 |_|
+
+             Network Top
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+  ChangeLog
+  =========
+
+
+  This is the list of all changes to this ntop source tree.
+  The file NEWS contains a list of user-visible and/or major changes.
+
+         _   _____
+        / | |___ /
+        | |   |_ \
+        | |_ ___) |
+ =-=-=- |_(_)____/ =-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+1.3a0 [Snapshot]
+
+- better GNU autoconf-ified distribution
+- include initial release of NtoPerl module
+
+
+          _   ____
+         / | |___ \
+         | |   __) |
+         | |_ / __/
+ =-=-=-  |_(_)_____| =-=-=-=-=-=-=-=-=-=-=-=-=
+
+1.2a13 [Snapshot]
+
+Fixed bugs:
+- Fixed PPP compatibility glitch
+- Various fixes
+  (Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>)
+- Fixed a mutex bug that cause ntop HTML interface to lock
+- Thpt graphs didn't show the right value (graphs where
+  compressed 8x)
+- Fixed a bug in configure that prevented it to
+  recognise user specified directories
+  (e.g. --with-gdbm=...)
+- Added a fix for address resolution
+  (Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>)
+- Several fixes about address resolution and
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+- Fixed a bug (that caused a core) in the icmpPlugin when
+  ntop receives fragmented ICMP packets.
+- Added fix for 1) better handling fragmented packets and
+  2) improving fragment lookup speed.
+  (Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>)
+- Added further Suse fixes
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+- Fixed NFS plugin bug
+  (Courtesy of Scott Hebert <scott@cae.ca>)
+- Fixed incompatibility with interfaces
+  without an IP address associated (e.g. bridge)
+  (Courtesy of Diana Eichert <deicher@sandia.gov>)
+- ntop used to crash in interactive mode while
+  reading from a pcap capture file
+  (Courtesy of John Bates <johnb@up.edu>)
+- Fixed an incorrect MIME type on icmpPlugin
+- The 'Shutdown ntop' menu entry is now protected
+  by default
+- Fixed MTU size check
+  (Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>)
+- Fixed a security flaw: ntop now check whether the
+  requested URL does not contains strings such as '..'
+  that may violate system security.
+  (Courtesy of Vanja Hrustic <vanja@relaygroup.com>)
+- On the left HTML frame a link to a non JavaScript
+  menu has been added. ntop can now be used
+  confortably by non JavaScript-enabled browsers.
+  (Courtesy of Boja Morcos <????????????????>)
+- nmap, neped and lsof are now searched in the
+  PATH at ntop startup and no longer by the
+  configure script.
+- Fixed a bug in the lsof handling code.
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+- Fixed several small problems in the SQL code
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+- Fixed a bug in the code that compares the captured
+  packet size with the MTU of the capture device.
+- Fixed a bug that prevented ntop to properly
+  handle multiple capture devices
+- ntop/Linux: the libnsl -if present- is included
+  because is needed on some distributions
+  such as RH
+  (Courtesy of Brian Bothwell <brian@wisdomtools.com>)
+- Added a few fixes to the installer/Makefile
+  and compatibility issues with FreeBSD
+  (Courtesy of Borja Marcos <borjam@sarenet.es>)
+- Fixed yet another small glitch that might cause ntop
+  to crash under heavily loaded networks.
+- Fixed a bug in the Makefile 'clean'
+  (Courtesy of Anthony David <adavid@deetya.gov.au>)
+- Fixed a bug that prevented virtual interfaces
+  (e.g. eth0:0) to be properly handled by ntop.
+
+Enhancements:
+- Removed '-a' flag: ntop recognises automatically
+  multihomed interfaces.
+- Added QNX support
+  (Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>)
+- Actual throughput is now calculated everytime
+  statistics are displayed
+- Added Packets/sec 'Traffic Stats'
+  (Courtesy of Ted Staberow <tstaber@attglobal.net>)
+- Modified HostTraffic typedef: 20% memory
+  saving for each hash bucket.
+- Service/Port Usage table, now reports traffic for
+  each protocol.
+- added localhost.gif icon for RH hosts with no
+  domain set
+  (Courtesy of Kashif Rashid <Kashif.Rashid@sbs.siemens.ca>)
+- ntop not implements filter rules (-R flag).
+- ntop+SSL has now a new certificate that does no
+  longer require a password at startup.
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+- Enhanced the SuSe package
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+- Added ipalias support via the '-a' flag
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+- Update the ntop man page
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+- ntop now returns a 'HTTP/1.0 501 Not Implemented' for
+  methods other than GET/POST.
+  (Courtesy of Vanja Hrustic <vanja@relaygroup.com>)
+
+-------------------------
+
+1.2a12 [Snapshot]
+
+Fixed bugs:
+- Fixed bug with long site names
+  (Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>)
+- Fixed MySQL inconsistency
+  (Courtesy of Jone Marius Vignes <vignes@nsd.uib.no>)
+- Fixed bug with Netscape that prevented users to
+  add/modify/delete user/passwords.
+- pcap includes installed in /usr/include/pcap are now
+  found.
+- added a fix that caused getHostInfo() to return a NULL
+  when the hash table was (almost) full.
+- Fixed a counter bug (this problem has been introduced
+  when the fragment handling code has been modified)
+  (Owner: Anthony David <adavid@deetya.gov.au>)
+- Fixed a bug that caused some pie charts to show
+  an hugly picture.
+
+Enhancements:
+- Changed configure structure and improved checkings
+  (Courtesy of Albert Chin-A-Young <china@thewrittenword.com>)
+- ntop_win32.[ch] are now part of the distribution.
+- Options '-p' and '-F' accept both inline values or a file name
+  containing the specified values.
+
+-------------------------
+
+1.2a11 [Snapshot]
+
+Fixed bugs:
+- Dropped use of values.h in favour of limits.h and float.h
+  (Courtesy of Stan Brown <stanb@awod.com>)
+- Added configure flag (--enable-curses [default=yes]) for
+  preventing ntop from using curses if present.y
+  (Courtesy of Dmitriy Shishkin <bug@openpagepro.c>)
+- Fixed a gdchart bug that caused the chart library to loop
+  indefinitively.
+- Fixed a bug that caused ntop to have problems with non Ethernet
+  interfaces (this problem has been introduced when multiple
+  interface support has been added).
+- Y label is now shown on thpt graphs.
+- Fixed bug that caused nmap not to always recognise
+  the host OS.
+- Added -P flag for specifying the directory where ntop
+  creates the .db files (default is '.').
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+- Added Suse 6.X support
+  (Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net>)
+
+
+Enhancements:
+- Added SSL support via OpenSSL (www.openssl.org) if
+  installed. I've included a simple ntop-cert.pem file
+  that a certificate I created using OpenSSL. You should NOT
+  use it in an idead world. Nevertheless, if you really wanna
+  use it when ntop (with SSL support) starts up and it prompts
+  'Enter PEM pass phrase:' you should type the seed
+  I used for generating this test certificate, namely
+  '*****'. (see fix for 1.2a13)
+- Added ability to specify '*' (all URLs) for protecting
+  all URLs.
+- "make install" has been implemented
+
+-------------------------
+
+1.2a10 [Snapshot]
+
+Fixed bugs:
+- Fixed a buffer overflow caused by long URL requests
+  (Courtesy of Vanja Hrustic <vanja@relaygroup.com>)
+- Recompiled under Win32 and fixed incompatibilities
+
+Enhancements:
+- Use of cascading style sheets
+- Added icon on top of sortable table indicating
+  the sorted column name
+- If you put an html/statsicons/flags/<domain>.gif
+  then when ntop shows the flag for <domain> it uses
+  the <domain>.gif icon instead of the default one
+  (Owner: Ross Campbell <rcampbel@us.oracle.com>)
+- Added menu entry for shutting down ntop using
+  a web browser
+- Added the 's' flag that's used to specify the hash
+  table size: the smaller is the value the less memory
+  is used -> the less efficient is the hash ->
+  the slower is ntop. Life is a matter of tradeoffs!
+- Added lastSeenPlugin.c written by
+  Andrea Marangoni <marangoni@unimc.it>. This plugins
+  is a work in progess (as ntop :-)). Many thanks Andrea!
+
+------------------------------------------------------
+
+1.2a9 [Snapshot]
+
+Fixed bugs:
+- Fixed a couple of problems that caused core dumps
+  (Courtesy of Daniel Savard <daniel.savard@gespro.com>)
+- Host names are symbolic both in MT and ST mode.
+- Fixed some problems with mySQL (it use case sensitive
+  table names).
+  (Courtesy of Daniel Savard <daniel.savard@gespro.com>)
+- ntop looks for *.html/gif/jpeg files in the local html/
+  directory if such files have not been found elsewhere
+  (e.g. /etc/ntop).
+- Added a JavaScript fix for the traffic matrix
+  (Courtesy of Danijel Doriae
+   <danijel.doric@industrogradnja.tel.hr>)
+
+Enhancements:
+- Replaced queso with nmap (it looks much more realiable)
+- Added a new application (database/mySQLserver.pl) written
+  in Perl tuned for mySQL equivalent to ODBCServer.java.
+  (Courtesy of Daniel Savard <daniel.savard@gespro.com>)
+- Added TCP/IP overlapping fragments detection
+- Added ntop.ini (packages/rpm/usr/doc/ntop-1.1) startup
+  script.
+  (Courtesy of Patrick Robert <PatrickR@ncr.disa.mil>)
+- Added packet retransmission statistics
+- Added MacOSX support
+- If there is a local service file (similar to /etc/services)
+  then it's used insted of the default one (/etc/services)
+  (Courtesy of Ross Campbell <rcampbel@us.oracle.com>)
+
+ ------------------------------------------------------
+
+1.2a8 [Snapshot] (Tue Oct 26 17:33:08 MEST 1999)
+
+Fixed bugs:
+- fixed buffer overflow bug in report.c
+  (Courtesy of Rainer Tammer
+   <rainer.tammer@spg.schulergroup.com>)
+
+Enhancements:
+- Added support for multiple interfaces. For instance if
+  you want to capture traffic from both eth0 and eth1 do
+  ntop -i "eth0,eth1" ...
+- Added graphics via gdchart (http://www.fred.net/brv/chart/)
+- Added better garbage collection capability to the icmpPlugin
+
+--------------------------------------------------------
+
+1.2a7 [Snapshot]
+
+Fixed bugs:
+- fixed buffer overflow bug
+- Modified Makefile to use a symbolic link with .. instead of
+  hardcoding the $(PWD) (which don't seem to work in Linux).
+  (Courtesy of Daniel Savard <daniel.savard@gespro.com>)
+- Added HP-UX support
+  (Courtesy of Rusetsky Dimitry <dima@nbkbr.rosmail.com>)
+- Fixed bug that caused ntop to ask for the admin password
+  when plugins are accessed.
+- Fixed bug on some platforms (mainly Intel based) that due to
+  big/little endian caused the arpPlugin not to display entries
+- Fixed SLACKWARE compatibility flaws
+
+Enhancements:
+- Added -B flag (Win32 only) for specifiying the NDIS driver buffer
+- Added -D flag for specifiying the Internet domain name
+  (Owner: Stijn Jonker <s.j.c.jonker@sjc.nl>)
+- Added the capacity to bind to a network address and a port in web
+  mode if wanted: use ipaddress:port instead of port:
+  205.205.205.205:2000 instead of 2000.
+  (Courtesy of Daniel Savard <daniel.savard@gespro.com>)
+  (Owner Chris Hall <dylix@home.com>)
+- Added a reset Statistics option in the Admin portion of the web
+  page.  I didn't modify the default denied URLs to restrict access to
+  this options however.
+  (Courtesy of Daniel Savard <daniel.savard@gespro.com>)
+- Added libwrap support (i.e. ntop now handles /etc/hosts.allow
+  /etc/hosts.deny)
+  (Courtesy of Georg Schwarz <schwarz@physik.tu-berlin.de>)
+- Added an initial, incomplete version of the ODBC plugin
+  for accessing ntop from unixODBC
+
+-------------------------------------------------
+
+1.2a6 [Snapshot]
+
+Fixed bugs:
+- local throughput is now calculated correctly
+  (Owner: Philippe Dechezelles
+   <p.dechezelles@delta-informatique.com>)
+- fixed several minor glithes that caused ntop to crash
+- added support for Win 95/98.
+
+-------------------------------------------------
+
+1.2a5 [Snapshot] (Mon Aug 30 10:13:59 MEST 1999)
+
+Fixed bugs:
+- The termination process (^C) is now smoother.
+- Fixed a buffer overflow that caused core dumps when
+  ntop had to manage long symbolic host names.
+
+Enhancements:
+- Images returned via HTTP now contain the "Last-Modified"
+  entry into the HTTP header that should allow browsers
+  to better cache images.
+- Throughput stat graphics are not drawn using JavaScript
+  in order to produce "real" graphics
+- ntop extensibility via user-defined plugins: so far
+  two very simple plugins have been released (arpWatch,
+  nfsWatch). Put your plugins (or symbolic links to your
+  plugins) into the plugins/ directory.
+- DNS packets handling: ntop now decodes DNS replies in
+  order to cache sym<->num mappings hence to significantly
+  reduce the number of DNS requests
+
+-------------------------------------------------
+
+1.2a4 [Snapshot] (Mon Aug  9 17:59:15 CEST 1999)
+
+Enhancements:
+- log file now contains stats about specified IP protocols
+  (Owner: Laurent Doublein <Laurent.Doublein@par.sita.int>)
+- Users can now specify the mapping  MAC addr <-> symbolic
+  names for non-IP hosts. Under utils/ there's a new utility
+  called 'addMacAddress' that allows to do that. See the
+  utils/README file for further info.
+  (Owner: Massimo Gais <mgais@na.astro.it>)
+- Added support for JPEG files
+
+Fixed bugs:
+- "tun0" interface is now properly recognized as
+   a PPP interface under FreeBSD
+- fixed a bug that prevented "Host Info" table header
+  hyperlinks to point to valid links
+- Fixed ntop.log: ntop now logs data correctly
+  (Owner: Sebastien Brault <sebastien.brault@cnet.francetelecom.fr>)
+- ntop shouldn't display the help anymore when the
+  windows is resized.
+  (Owner: Johan Fredrik Øhman <johan@essay.org>)
+
+-------------------------------------------------
+
+1.2a3 [Snapshot] (Thu Jul 22 13:01:22 MET DST 1999)
+
+Enhancements:
+- extended domain statistics
+- added country icons
+- added OS icons
+- added CGI (Common Gateway Interface) support.
+  Everything under /cgi/ is considered a cgi-like
+  script.
+- Rewritten user/password support: pw are not stored into
+  a databse in encrypted form. Administrators can protect
+  with password selected URLs. All the administration is
+  performed with ntop. The default administrator user
+  is 'admin' with password 'admin'. Make sure you change
+  these default settings for your own security.
+
+Fixed bugs:
+- lsof/neped data now work again
+
+-------------------------------------------------
+
+1.2a2 [Snapshot]
+
+Enhancements:
+- ntop.cache has been replaced by ntop.db
+  that is created/used is ntop has been compiled
+  with GDBM support.
+- Added Internet Domain Statistics
+ (Owner: Frank Pinzin <frank.pinzin1@sheridanc.on.ca>)
+- Symbolic Internet addresses are now mapped to
+  lowercase letters
+- Added 'delayed' free: host's memory free is delayed in
+  order to avoid situations where a host being used (e.g.
+  a report is being generated) while another thread
+  is freeing it.
+- Clicking twice on a HTML column name, the sort order
+  is reverted
+- Added (basic) FDDI support
+  (Owners:
+  Ron Campbell <Ron.Campbell@unixa.nerc-wallingford.ac.uk>
+  Graeme Wilford <G.Wilford@ee.surrey.ac.uk>)
+- Added RH 6.0 pcap support
+
+Fixed bugs:
+- Some hash tables had wrong garbage collector code. In
+  particular this caused the main table become full. This
+  was the main cause of performance degradation due to
+  large lookup times.
+- red.gif is now sent properly (the HTTP header format
+  used to be of wrong type)
+- Added missing "<center>" tag on the throughput
+  graph.
+
+--------------------------------
+
+1.2a1 [Snapshot]
+
+Enhancements:
+- The list of MAC vendors is now based on
+  http://standards.ieee.org/regauth/oui/oui.txt
+  (Owner: Massimo Gais <mgais@na.astro.it>)
+- Added support for 'special' (e.g multicast/vendors specific)
+  MAC addresses
+  (Owner: Bertrand Petit <elrond@phoe.netdev.net>)
+
+Fixed bugs:
+- Peer hosts now show up
+- Fixed bug that prevented the 'Last Contacted Peers'
+  table to show up on hosts that have received but not
+  sent any packet.
+- Traffic Thpt is now sorted properly (again)
+
+--------------------------------
+
+1.2a0 [Snapshot]
+
+Enhancements:
+- Added queso (http://www.apostols.org/) support. Now each host
+  lists the OS that's *supposed* to run
+- red.gif is not included in ntop (so there's no need
+  to necessarely have it on html/)
+  (Courtesy of Hans Werner Strube <strube@physik3.gwdg.de>)
+- Porting to Digital Unix OSF/1
+  (Courtesy of Stephen Carr <Stephen.Carr@adelaide.edu.au>)
+- Added '-e' flag, that allow users to specify the maximum number
+  of HTML rows (default is 384)
+  (Owner: Dennis <d.schulze@mc-wetter.de>)
+
+--------------------------------
+
+pre3-1.1 [Candidate Release]
+
+Fixed bugs:
+- the 'sh' varable is now set properly in the Makefile
+  (Owner: Igor Schein <igor@txc.com>)
+
+--------------------------------
+
+pre2-1.1 [Candidate Release]
+
+Fixed bugs:
+- Added Slackware '-d' support
+- Fixed $HOME bug (ntop used to core when $HOME isn't defined)
+  (Owner: Richard L. Hamilton <rlhamil@mindwarp.smart.net>)
+
+Enhancements:
+- Added OSI (on Ethernet, not IP) support
+
+--------------------------------
+
+pre1-1.1 [Candidate Release]
+
+Fixed bugs:
+- Labels for 'Other IP' rows have been changed
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- 'IP Traffic' tables can now be sorted
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Fixed a bug that caused ntop to process TR packets with
+  a wrong (negative) length
+  (Owner: Holger Marzen <marzen@mgi.de>)
+- Both '.ntop' and HTML pages are now searched on
+  /etc/ntop and other dirs (see dirs[] on http.c). In addition
+  '.ntop' is first searched under $HOME.
+  (Owner: Cerqui Marco <marco.cerqui@alcatel.ch>)
+- AppleTalk fixes
+  (Owner: Bertrand Petit <elrond@phoe.netdev.net>)
+
+--------------------------------
+
+v1.1cr7 [Candidate Release]
+
+Fixed bugs:
+- Fixed minor interactive mode glitch.
+  (Owner: David.Anthony <David.Anthony@comcare.gov.au>)
+- Added missing caption to a table contained on "IP Protocol Distribution"
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Fixed a bug in formatKBytes routine (GB/TB problem)
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- OSPF and other columns in interactive mode are now
+  sorted properly (again)
+- Added support for Slackware Linux
+- Bar labels in the "Throughput Stats" graph are now more readable
+- Added '-d' flag: ntop can now become a daemon.
+- Added SIGHUP support: ntop statistics are reset when the SIGHUP signal
+  is received
+
+Enhancements:
+- The html/ directory is searched locally first and then
+  under /etc/ntop/html and other dirs such as
+  /usr/local/... opt/...
+- The makefile now can build new install packages for additional
+  platforms
+
+--------------------------------
+
+v1.1cr6 [Candidate Release]
+
+Fixed bugs:
+- Fixed a bug on broadcast addresses handling
+  that caused ntop to crash
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Fixed a buffer overflow problem
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Fixed the default refresh time in interactive mode
+- Fixed a bug that caused ntop to crash after stats
+  reset ('r' key on interactive mode)
+  (Owner: <sorry I forgot who reported me the bug>)
+- Added support for SunOS 4.x
+  (Owner: Hermann Hueni <hueni@glue.ch>)
+- lib(n)curses is not checked if (n)curses.h has not been found
+  (Owner: Dave Warner <davew@lucent.com>)
+- Fixed a bug that prevented networks flows/traffic
+  matrix entries to be updated properly.
+- Fixed a bug that caused lsof to create a costant increasing
+  list of processes (this cased ntop to crash).
+- Fixed a bug that caused wrong values for "Other IP" counters
+  to be returned.
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- HTML links for ethernet addresses are now
+  compatible with MS Explorer
+- Fixed (R)ARP bug: this is not IP but in some tables it
+  belonged to IP
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- ntop now recognizes the file 'index.html' if present in
+  the html/ directory
+
+--------------------------------
+
+v1.1cr5 [Candidate Release]
+
+Fixed bugs:
+- The optional BPF filter reported an error on the
+  screen whenever a wrong filter was specified
+- Multicast stats no longer crash ntop
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+
+Enhancements:
+- Added host peak throughput
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Default thpt refresh is now 15 seconds (it used to be 120)
+- Added customisable HTML menu appearance
+- Added bytes on multicast stats
+- Added new checks (the argument must be a number) for
+  flags that require numeric arguments
+
+---------
+
+v1.1cr4 [Candidate Release]
+
+Fixed bugs:
+- HTTP passwd compatibility glitch fixed.
+- Fixed a bug that caused some URLs to crash ntop
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Fixed a compilation glitch with Slackware
+- Token Ring on AIX works now
+  (Owner: Jean Paul López y Driessen
+          <jean_p_lopez_driessen@es.ibm.com>)
+- Fixed "IP Protocol Subnet Usage" entries
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- The local domain name used to be empty on some
+  not well configured hosts
+- The message "Dropping..." isn't displayed anymore. Instead
+  of discarding addresses, they are kept in numerical form.
+  (Owner: Davin Milun <milun@cse.buffalo.edu>)
+- Fixed cosmetic flaw
+  (Owner: William R. McDonough <wrmcd@wilmcd.com>)
+- Removed a lot (if not all) of warnings (-Wall)
+- Added new ports (ssh,domain,login,nntp) to the
+  default IP ports
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Network traffic is now counted on full packet size (ethernet
+  packet) and not on the encapsulated packet/protocol length
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Added missing captions to several tables
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Fixed a problem with PPP (analog not ISDN)
+  (Owner: Bill Swisher <bswisher@micronet.net>).
+- Several lsof fixes have been included
+
+Enhancements:
+- Added RAW IP support
+
+---------------------------------
+v1.1cr3 [Candidate Release]
+
+Fixed bugs:
+- Fixed bug that prevented some IP addresses not to be resolved
+  to their symbolic name.
+- Fixed a problem that occurred during the parsing of the
+  command line protocols (-l flag)
+- Fixed a nasty problem (pbuf.c, FIN/ACK handling) that caused some
+  data structures to be corrupted. This problem caused the ntop crash.
+- Column sort works again
+- Fixed compatibility glitches with AIX and Solaris 2.x
+- ntop (interactive mode) no longer crashes when the help
+  screen is displayed and no key has been pressed.
+  (Owner: Igor Schein <igor@txc.com>)
+
+Enhancements:
+- The code is now Win32 friendly.
+- IP Traffic Matrix content has been redesigned.
+
+
+---------------------------------
+
+v1.1cr2 [Candidate Release]
+
+Fixed Bugs:
+- ntop compiles properly on Solaris
+  (Owner: Igor Schein <igor@txc.com>)
+- Lsof accounting now displays data correctly
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- In some cases ntop didn't contain the HTTP header
+  that might have caused problems with old M$ Explorer
+  versions.
+  (Owner: Felipe Tonioli <tonioli@mtec.com.br>)
+- Non IP hosts (i.e. those that don't have an IP address)
+  are now displayed again. They are considered as non-local
+  hosts.
+
+Enhancements:
+- Added PPP interface support
+  (Owner: Fabrizio Carrai <f.carrai@iol.it>)
+- Lsof information is updated only if needed (i.e. if ntop
+  receives a packet for a local port that is not yet known)
+  and not more than once a minute.
+- configure allows to enable (default) or disable both
+  lsof and threads support:
+  - configure -enable-lsof=no
+  - configure -enable-threads=no
+
+
+-----------
+
+v1.1cr1 [Candidate Release]
+
+Fixed Bugs:
+- The 'q' key in MT/interactive mode works again
+  (Owner: Felipe Tonioli <tonioli@mtec.com.br>)
+- While symbolic addresses are resolved, the temporarely address
+  is no longer '?' but the numeric one (with '*' around to indicate
+  this special status)
+  (Owner: Felipe Tonioli <tonioli@mtec.com.br>)
+- Broadcast addresses for specified (-m flag) networks are now
+  handled properly
+  (Owner: Antonello Maiorca <marty@tai.it>)
+- Some combination of networks/netmasks were not handled properly
+  (Owner: Axel Morhenn <morhenn@comspace.de>)
+- Non IP-based hosts (e.g. IPX based) are being now displayed
+  (Owner: Rick Morris <rmorris@csp.net>)
+- Added division by zero ckecks
+  (Owner: Peter Marquardt <wwwutz@mpimg-berlin-dahlem.mpg.de>)
+
+Enhancements:
+- Added support (-m flag) for non IPv6 netmasks. Namely -m now
+  accepts both 131.114.21.0/24 and 131.114.21.0/255.255.255.0
+  (Courtesy of Antonello Maiorca <marty@tai.it>)
+- Added new HTML menu entry 'Local Nw Usage' that keeps track of the
+  traffic generated by local applications/users. This enhancement
+  makes use of lsof (see FAQ).
+
+-----------
+
+v1.1cr0 [Candidate Release]  14/01/1999
+
+Enhancements (Multithread only):
+- All the main ntop functionality are now handled by threads
+- Address resolution (DNS) is now asynchronous
+- Semaphores (where available) are now used
+
+Fixed Bugs:
+- Minor interface changes
+- Added support for AIX, HP-UX
+
+-----------
+v1.1a10 [Snapshot]
+
+Fixed Bugs:
+- Removed several warnings (-Wall)
+- Spawned child proceses should now be handled properly
+  (no zombies anymore, I hope)
+- Fixed a typo that prevented ntop to compile in single
+  thread mode
+- Fixed a bug that caused the time to be corrupted when
+  ntop returns data from an interface from which packets
+  have not yet been received
+- Removed a warning that was issued when ntop was unable to
+  locate a fragment: the code looks good but sometimes a fragment
+  is not located because ntop started capturing data after the first
+  fragment was transmitted.
+
+--------
+
+v1.1a9 [Snapshot]
+Fixed Bugs:
+- Thpt value now are shown properly
+
+Enhancements:
+- Added network flows (-F flag)
+- added multitrhead support
+
+--------
+
+v1.1a8 [Snapshot] Tue Dec 22 16:27:33 CET 1998
+
+Fixed Bugs:
+- The connection duration values have been fixed
+- Counters should now display correct values
+- The function that checked whether an address is a multicast
+  was broken.
+- Local hosts are no longer purged: this caused the traffic
+  matrix to have some problems when some hosts are purged.
+- The vendor name is now shown properly on interactive mode
+- The 'Hosts Info' page can now be properly sorted according
+  to host IP address
+  (Owner: Jerome.Le-Tanou@ujf-grenoble.fr)
+
+Enhancements:
+- Traffic is now counted using 64 bits counters
+- Some basic protocols are added to the ntop known services
+  regardeless of their inclusion in /etc/services
+- X11 has been added to the default IP protocols
+- IP fragments are now handled properly.
+  (Owners: Leon Verrall <leon@reading.sgi.com>).
+- The traffix matrix cells have a bg color (blue-green-red)
+  depending on the cell traffic
+- All HTML tables entries have now some content
+  (empty cells/rows aren't generated)
+- Added the list of the last 16 peers that exchanged data with
+  a given host (Info about ...)
+- Added a "Multicast Stats" entry
+
+--------
+
+v1.1a7 [Snapshot] Tue Dec 15 10:51:54 MET 1998
+
+Fixed Bugs:
+- install-sh has the permissions set to 755
+  (Owner: of "David.Anthony" <David.Anthony@comcare.gov.au>)
+- Some #ifdefs are missing on BSD: they are now defined in ntop.h
+  (Owner: James Ponder <james@oaktree.co.uk>)
+- The configure file resolves u_int (needed on SunOS 4.X)
+  (Owner: Rich Kulawiec <rsk@gsp.org>)
+- The configure file now checks more strictly the presence of (n)curses
+- Fixed the pcap_XXX_version problem on BSD systems
+  (Owner: James Ponder <james@oaktree.co.uk>)
+
+---------
+
+v1.1a6 [Snapshot] Mon Dec 14 16:31:01 MET 1998
+
+Fixed Bugs:
+- ntop core dump (idle sessions were not freed smoothly)
+  Unfortunately, there are apparently other problems that might
+  cause cores. Those problems are still under investigation.
+  (Owners: David.Anthony <David.Anthony@comcare.gov.au> and
+           Leon Verrall <leon@reading.sgi.com>).
+- Fixed interactive-mode column display
+- Fixed a bug that prevented UDP sessions to show up
+  properly (Info about ...)
+
+Enhancements:
+- '-m' flag has been added for specifying subnets whose traffic is
+  considered local.
+  (Owner: James Ponder <james@oaktree.co.uk>).
+- Added new links on table columns for sorting purposes
+- Added for each host (Info about ...) a table that shows the host traffic
+  and a table that displays the uses for ports (0-1024)
+  (Owner: Robert Greimel <greimel@beluga.phys.uvic.ca>)
+
+----------------------------------------------
+v1.1a5 [Snapshot] Fri Dec  4 10:47:16 MET 1998
+
+Fixed Bugs:
+- Total traffic bars/stats: the counter should now be fixed.
+ (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- The function that prints the time should now work properly
+  (Owners: "William R. McDonough" <wrmcd@wilmcd.com>,
+           "David.Anthony" <David.Anthony@comcare.gov.au>).
+- Fixed bugs that prevented some IP addresses to be converted to symbolic
+  ones.
+- HTTP passwords non '\n'-terminated are now handled properly
+  (Owner: Leon Verrall <leon@reading.sgi.com>)
+- Fixed some typos/problems in the man page
+  (Owner: Robert Greimel <greimel@beluga.phys.uvic.ca>)
+- The log file is flushed once an entry is added
+  (Owner: Robert Greimel <greimel@beluga.phys.uvic.ca>)
+- Pkts number (trafficStats.html) is now displayed correctly.
+- Fixed a bug in the traffic matrix table that prevented numeric hosts
+  name to be shown properly.
+- Optimization of the HTML code generated for the matrix table resulting in
+  smaller table size.
+- Fixed the vendor for "00:00:83" cards.
+- AppleTalk/IPX have been added to the web graphs
+  (Owner: Ian Reinhart Geiser <geiseri@msoe.edu>)
+
+Enhancements:
+- Added per protocol global statistics
+- Added bandwidth column (Hosts Info entry)
+- Table columns can now be sorted by clicking on the column name link.
+- The '-r' flag can now be used to specify HTML page refresh rate
+  (Owner: Robert Greimel <greimel@beluga.phys.uvic.ca>)
+- Added support for Netbios (over Ethernet), OSPF, IGMP.
+
+----------------------------------------------
+v1.1a4 [Snapshot] Fri Nov 20 01:08:47 CET 1998
+
+Enhancements:
+- Added (hopefully) token ring support
+  (Owner: Holger Marzen <marzen@mgi.de>/Martin Olsson <root@elof.vasteras.se>).
+- Ability to sort (HTML mode) table columns
+- IP ports (-p flag) can be specified both in numeric and symbolic form
+- Added -f flag for reading tcpdump captured traffic
+  (Owner: Matthew Franz <mdfranz@txdirect.net>).
+- Fixed interactive mode column length
+  (Owner: Davin Milun <milun@cse.Buffalo.EDU>)
+- Hosts/Connections idle for very long time will be flushed
+  (Owner: "William R. McDonough" <wrmcd@wilmcd.com>).
+- Only active TCP connections are shown (no TIME_WAIT or FIN_ACK_1 status)
+  (Owner: Lutz Vieweg <lkv@isg.de>).
+
+Fixed Bugs:
+- Colored bar percentages are now shown properly
+ (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+
+Implicitly Fixed Bugs:
+- Added support for IRC (ports 6667-7000 and 4400)
+  (Owner: Thomas Marmetschke <tom@krush.net>).
+- Added Log facility and the ability to show hourly/daily/weekly traffic like MRTG
+  (Owner: Kwon Soon Son <cessi@yellow.hpcnet.ne.kr>)
+
+-------------------------------------------------------------
+
+v1.1a3 [Snapshot] ?????
+
+Internal Release
+
+-------------------------------------------------------------
+v1.1a2 [Snapshot] ?????
+
+Fixed Bugs:
+- ntop.c:mapGlobalToLocalIdx
+  Fixed bug that caused ntop to crash when the port to examine was
+  not contained in the range 0 - TOP_IP_PORT.
+- Fixed bug that prevented time to be formatted properly
+
+
+-------------------------------------------------------------
+
+v1.1a1 [Snapshot] ?????
+
+Fixed Bugs:
+- pcap.h is now located correctly
+- http page load is damn fast now
+- fixed minor bar/color/font glithes
+
+-------------------------------------------------------------
+
+v1.0a0 [Snapshot] Fri Nov  6 00:16:30 CET 1998
+
+Enhancements:
+- Added 1 minute, 5 minutes throughput
+- Added throughput mode in both interactive ('p' key) and web mode
+  (Owner: Lutz Vieweg <lkv@isg.de>).
+- The -p/-l flags have now different functionalities.
+- Removed -L(see -l)/-d flags (too many flags = too much mess)
+- Added counter for broadcast and multicast packets
+- Changed the log format (-l flag)
+
+Bugs supposed to have been fixed:
+- With very busy nets some HTML pages generated by ntop are empty.
+  (Owner: Frank Heinzius <frimp@mms.de>).
+- Fixed throughput formula (sometimes the thput value was wrong)
+  (Owner: carlier.k@js.mil.be).
+- Added a check inside getHostInfo() that allows to find anyway and
+  entry (the ancient one is purged in the worst case) and then
+  that avoids to loop indefinitively.
+  (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
+- Some bars (web mode) didn't show percentages
+- The screen refresh (interactive mode) should display nicely: no
+  lines too long anymore. (the screen width/resize bug is still
+  open).
+
+-------------------------------------------------------------
+
+v1.0 Mon Oct  5 16:21:54 CEST 1998
+
+Enhancements:
+- Added support for further protocols (IP and non-IP ones).
+- The web interface has been redesigned
+- Added support for non IP protocols hence non IP hosts are
+  identified with ethernet addresses ('n' key toggles addresses
+  format: symbolic <-> numeric <-> MAC <-> Nw Board Vendor)
+- Added support for: NFS, Netbios (over Ethernet), X11,
+  IPX, DLC/LLC, ARP/RARP, Decnet, AppleTalk.
+- Added column sort for the three last columns ('y' key)
+- Added log facility that records TCP/UDP sessions
+- Added an online help ('h' interactive command)
+  (thanks to Peter Gervai <grin@tolna.net>).
+
+Bugs fixed:
+- Fixed glith that caused ntop to create a lot of zombie processes when
+  used in web mode.
+- Fixed bug that prevented TCP/UDP counters to show the
+  corrected values
+- Fixed a but that prevented ntop to work properly on ethernet
+  headerless interfaces such as the loopback interface
+  (thanks to Martin Kammerhofer <dada@sbox.tu-graz.ac.at>).
+- Many fixes in both ntop and configure. This is to fix some
+  glithes and make the package compatible with NetBSD.
+  (thanks to Kimmo Suominen <kim@tac.nyc.ny.us>).
+- Fixed a glitch that prevented ntop to compile under Solaris
+  2.5.x and SunOS 4.x (thanks to Peter Williams
+  <williams@eisws25.jpl.nasa.gov> and Igor Schein <igor@txc.com>).
+
+------------------------------------------------------------
+
+v0.4 Mon Aug  3 12:49:01 CEST 1998
+
+Enhancements:
+- Added web support '-w' flag. ntop can now be started in a
+ 'daemon-like mode' and accessed using a conventional web browser.
+
+Bugs fixed:
+- modified some files for better compatibility with
+  SunOS 4.X. (thanks to Pat Myrto <pat@rwing.com>).
+
+------------------------------------------------------------
+
+v0.3.1 Fri Jul 31 10:01:44 CEST 1998
+
+Bugs fixed:
+- some files contained the line #include "gnuc.h"
+  instead of #include <gnuc.h> (gnuc.h is part of libpcap).
+  (thanks to Daniel Ellis <dellis@frycomm.com>).
+- the Makefile section related to the man page installation
+  was broken (the Makefile was trying to instell ntop.1 instead
+  of ntop.8). In addition the man page had a small
+  typo. (thanks to Igor Schein <igor@txc.com>).
+- The code that calculates the network usage percentage is
+  wrong: the data sent/received percentages are inverted.
+  (thanks to Davin Milun <milun@cs.buffalo.edu>).
+- Fixed some problems that prevent ntop to compile nicely
+  on BSD systems.  (thanks to James Ponder <james@oaktree.co.uk>).
+
+------------------------------------------------------------
+
+v0.3 Thu Jul 30 11:48:05 CEST 1998
+
+Bugs fixed:
+- In some cases the last column contained some junk trailer char.
+  (thanks to Igor Schein <igor@txc.com>)
+
+Enhancements:
+- Whenever the user presses a valid key ('t' for instance), the
+  screen update is now perfomed immediately.
+- The network interface being used is not shown on the first line.
+- Pressing the space bar while ntop is running, modifies the
+  content of the last three columns.
+- A man page has been written.
+- ntop has been compiled against libpcap-0.4a7/
+  (thanks to Douglas Berry <doug@cancom.net>)
+
+------------------------------------------------------------
+
+v0.2.2 Mon Jul 13 12:20:36 CEST 1998
+
+Bugs fixed:
+- Non IP pkts value has been fixed (it was always zero).
+- Fixed hashtable bugs that caused ntop to stop working after
+  some time of activity.
+
+------------------------------------------------------------
+
+v0.2.1 Fri Jul 10 10:07:56 CEST 1998
+
+Bugs fixed:
+- Fixed some minor C problems (shown using the -Wall compile flag)
+- Fixed some minor glitches that show up on SunOS 4
+
+Enhancements:
+- enhanced the way IP packets are handled
+  (thanks to Paul D. Smith <psmith@baynetworks.com>)
+- Added the 'B' status flag to indicate a host that both
+  sends and receives
+
+------------------------------------------------------------
+
+v0.2 Thu Jul  9 15:16:30 CEST 1998
+
+Bugs fixed:
+- core dump when DNS takes a lot of time to resolve addresses
+
+Enhancements:
+- added "-p" flag: traffic can now be shown in percentage
+- added "-r" flag: refresh time setting
+- added "-d" flag: shows/hides idle (with respect to the last refresh) hosts
+            (thanks to Rui Ataide <ra@ufp.pt>)
+- network throughput is now shown on the top-right corner
+- the new defaults are: show local hosts/hide idle hosts
+- the domain name is not shown for local hosts
+
+------------------------------------------------------------
+
+v0.1.1 Tue Jul  7 20:03:07 CEST 1998
+Bugs fixed:
+- core dump when the terminal window is too large (> 80 cols)
+- ip_print: added cast to void* [this is supposed to fix
+            byte alignment problems]
+	    (thanks to Paul D. Smith <psmith@baynetworks.com>)
+Enhancements:
+- added "-l" flag: ntop lists hosts that belong to the local subnet
+
+------------------------------------------------------------
+
+v0.1 Tue Jul  7 09:40:06 MET DST 1998
+- Initial release.
+
+------------------------------------------------------------
+
+1998 - Luca Deri <deri@unipi.it>

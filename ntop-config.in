@@ -1,0 +1,146 @@
+#!/bin/sh
+#
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+# ntop library build utility
+#
+# ntop-config is a script that is used to display what compiler
+# flags and libraries were used when ntop were built.
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#
+# Copyright (c) 1998, 2000 Luca Deri <deri@ntop.org>
+# Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
+#
+# Shamelessly ripped from imlib-config.in
+#
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+exec_prefix_set=no
+
+ntop_prefix="$prefix"
+ntop_exec_prefix="$exec_prefix"
+ntop_bindir="@bindir@"
+ntop_libdir="@libdir@"
+ntop_includedir="@includedir@"
+ntop_mandir="@mandir@"
+ntop_datadir="@datadir@"
+ntop_acdir="@datadir@/aclocal"
+ntop_cflags="@CFLAGS@"
+ntop_ldflags="@LDFLAGS@"
+ntop_libs="@LIBS@"
+ntop_version="@VERSION@"
+
+# The name of this program.
+progname=`echo "$0" | sed 's%^.*/%%'`
+
+usage="$progname"
+usage="$usage [--help] [--version]"
+usage="$usage [--prefix] [--exec-prefix]"
+usage="$usage [--bindir] [--libdir] [--includedir]"
+usage="$usage [--mandir] [--datadir] [--acdir]"
+usage="$usage [--cflags] [--ldflags] [--libs]"
+if [ $# -eq 0 ]; then
+    echo "$progname:Error: Invalid option" 1>&2
+    echo "$progname:Usage: $usage" 1>&2
+    exit 1
+fi
+
+if test $# -eq 0; then
+      echo "${usage}" 1>&2
+      exit 1
+fi
+
+while test $# -gt 0; do
+  case "$1" in
+  -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+  *) optarg= ;;
+  esac
+
+  case $1 in
+    --prefix=*)
+      prefix=$optarg
+      if test $exec_prefix_set = no ; then
+        exec_prefix=$optarg
+      fi
+      ;;
+    --prefix)
+      echo $prefix
+      ;;
+    --exec-prefix=*)
+      exec_prefix=$optarg
+      exec_prefix_set=yes
+      ;;
+    --exec-prefix)
+      echo $exec_prefix
+      ;;
+    --version)
+      echo @VERSION@
+      ;;
+    --bindir)
+      echo $ntop_bindir
+      ;;
+    --libdir)
+      echo $ntop_libdir
+      ;;
+    --includedir)
+      echo $ntop_includedir
+      ;;
+    --mandir)
+      echo $ntop_mandir
+      ;;
+    --datadir)
+      echo $ntop_datadir
+      ;;
+    --acdir)
+      echo $ntop_acdir
+      ;;
+    --cflags)
+      if test @includedir@ != /usr/include ; then
+        includes=-I@includedir@
+        for i in $ntop_cflags ; do
+          if test $i = -I@includedir@ ; then
+            includes=""
+          fi
+        done      
+      fi
+      echo $includes $ntop_cflags
+      ;;
+    --libs)
+      my_ntop_libs=
+      libdirs=-L@libdir@
+      for i in $ntop_libs ; do
+        if test $i != -L@libdir@ ; then
+          if test -z "$my_ntop_libs" ; then
+            my_ntop_libs="$i"
+          else
+            my_ntop_libs="$my_ntop_libs $i"
+          fi
+        fi
+      done
+      echo $libdirs -lntop $my_ntop_libs
+      ;;
+    *)
+      echo "${usage}" 1>&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+exit 0

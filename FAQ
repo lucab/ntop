@@ -1,0 +1,87 @@
+
+   _   _ _
+  | \ | | |_ ___  _ __
+  |  \| | __/ _ \| '_ \
+  | |\  | || (_) | |_) |
+  |_| \_|\__\___/| .__/
+                 |_|
+
+             Network Top
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+  FAQ
+  ===
+
+
+Q. How can I run ntop without being root?
+A. A very simple way of doing this is:
+   > su
+   > chown root ntop
+   > chgrp root ntop
+   > chmod 6111 ntop
+   > exit
+
+Q. I can't run ntop on BSD systems. The error is:
+   ntop: /dev/bpf0: Device not configured
+A. This is because bfp0 has not been configured inside the generic
+   kernel config file. If you use generic kernel config file put
+   pseudo-device bpfilter 16
+   to kernel config file and rebuild the kernel.
+
+Q. ntop doesn't report any traffic at all.
+A. Please make sure that there's traffic on the interface you're using. You
+   can select an interface using the '-i' flag.
+
+Q. Where can I find pthreads for IRIX 6.2?
+A. Irix 6.2 doesn't support POSIX threads out of the box. You must
+   install the patch: 2791
+
+Q. Where can I find lsof?
+A. You can download lsof from
+   ftp://vic.cc.purdue.edu/pub/tools/unix/lsof
+
+Q. How do I force configure to build ntop without
+   lsof support?
+A. configure -enable-lsof=no
+
+Q. How do I force configure to build ntop without
+   thread support?
+A. configure -enable-threads=no
+
+Q. How do I install the ntop package on Solaris?
+A. For instance do 'pkgadd -d ntop-1.1-solaris.i386'
+
+Q. ntop doesn't seem to collect any data on Digital Unix.
+A. Albert Chin-A-Young <china@thewrittenword.com> said:
+First, to compile, make sure you don't use '-std1' which will cause problems
+compiling pbuf.c. '-std' is ok.
+
+Once ntop is compiled, do the following:
+        1. Make sure 'options PACKETFILTER' is in your kernel
+           configuration file under /sys/conf. Recompile the
+           kernel using 'doconfig -c [config file]' if necessary.
+        2. % cd /dev
+           % ./MAKEDEV pfilt
+           % pfconfig +promisc [interface]
+
+The last part of #2 I didn't do so ntop did not collect any data.
+
+Q. Where can I find neped/queso?
+A. You can download neped/queso from http://www.apostols.org/
+
+Q. Where can I find GDBM for Windows?
+A. http://www.roth.net/libs/gdbm/
+
+Q. I have experienced problems defining multiple filters: ntop reports
+   'syntax error'. What shall I do?
+A. If you believe the filter is syntactically correct then it's likely
+   that the libpcap you have used has been compiled using an old
+   non-reentrant version of flex. Please make sure you're using
+   version 2.5.4 or above.
+
+Q. Linux: ntop isn't able to capture data.
+A. On some Linux distributions, the libpcap package is broken. Please
+   remove it, get the source, build libpcap and install it
+   (both the library and the include files). The rebuild ntop from
+   scratch.

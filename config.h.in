@@ -1,0 +1,229 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define as the return type of signal handlers (int or void).  */
+#undef RETSIGTYPE
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define if you want a debugging version. */
+#undef DEBUG
+
+/* Define if you OS lacks the getdomainname(2) function. */
+#undef NEED_GETDOMAINNAME
+
+/* Define to have essential fallback. */
+#undef HAVE_U_INT32_T
+#undef HAVE_U_INT16_T
+#undef HAVE_U_INT8_T
+#undef HAVE_INT32_T
+#undef HAVE_INT16_T
+#undef HAVE_INT8_T
+#undef u_int
+
+#undef RETSIGTYPE
+
+/* Define if you have the <gdbm.h> header file. */
+#undef HAVE_GDBM_H
+
+/* Define if the ether_header uses ether_addr structs. */
+#undef ETHER_HEADER_HAS_EA
+
+/* Define if you have the OPENSSL Toolkit (-lssl) by Open SSL Project. */
+#undef HAVE_OPENSSL
+
+/* Define if you want to have a asyncrhonous address resolution. */
+#undef ASYNC_ADDRESS_RESOLUTION
+
+/* Define if you want to have a multithreaded version of ntop. */
+#undef MULTITHREADED
+
+/* Define if you have the ncurses.h or curses.h header files (specific to handle Solaris 2.7) */
+#undef HAVE_NCURSES_H
+#undef HAVE_CURSES_H
+
+/* Define if you have the GNU readline library (-lreadline). */
+#undef HAVE_READLINE
+
+/* Define if you need a private implementation of inet_aton (solaris 2.5.1 doesn't have it). */
+#undef NEED_INET_ATON
+
+/* Define if you have the gdchart library from Bruce Verderame [http://www.fred.net/brv/chart/]. */
+#undef HAVE_GDCHART
+
+/* Define if you have the <alloca.h> header file.  */
+#undef HAVE_ALLOCA_H
+
+/* Define if you have the <arpa/inet.h> header file.  */
+#undef HAVE_ARPA_INET_H
+
+/* Define if you have the <arpa/nameser.h> header file.  */
+#undef HAVE_ARPA_NAMESER_H
+
+/* Define if you have the <crypt.h> header file.  */
+#undef HAVE_CRYPT_H
+
+/* Define if you have the <dirent.h> header file.  */
+#undef HAVE_DIRENT_H
+
+/* Define if you have the <dl.h> header file.  */
+#undef HAVE_DL_H
+
+/* Define if you have the <dlfcn.h> header file.  */
+#undef HAVE_DLFCN_H
+
+/* Define if you have the <errno.h> header file.  */
+#undef HAVE_ERRNO_H
+
+/* Define if you have the <ethertype.h> header file.  */
+#undef HAVE_ETHERTYPE_H
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <gdbm.h> header file.  */
+#undef HAVE_GDBM_H
+
+/* Define if you have the <if.h> header file.  */
+#undef HAVE_IF_H
+
+/* Define if you have the <net/bpf.h> header file.  */
+#undef HAVE_NET_BPF_H
+
+/* Define if you have the <net/ethernet.h> header file.  */
+#undef HAVE_NET_ETHERNET_H
+
+/* Define if you have the <net/if.h> header file.  */
+#undef HAVE_NET_IF_H
+
+/* Define if you have the <netdb.h> header file.  */
+#undef HAVE_NETDB_H
+
+/* Define if you have the <netinet/if_ether.h> header file.  */
+#undef HAVE_NETINET_IF_ETHER_H
+
+/* Define if you have the <netinet/in.h> header file.  */
+#undef HAVE_NETINET_IN_H
+
+/* Define if you have the <netinet/in_systm.h> header file.  */
+#undef HAVE_NETINET_IN_SYSTM_H
+
+/* Define if you have the <netinet/ip.h> header file.  */
+#undef HAVE_NETINET_IP_H
+
+/* Define if you have the <netinet/ip_icmp.h> header file.  */
+#undef HAVE_NETINET_IP_ICMP_H
+
+/* Define if you have the <netinet/tcp.h> header file.  */
+#undef HAVE_NETINET_TCP_H
+
+/* Define if you have the <netinet/udp.h> header file.  */
+#undef HAVE_NETINET_UDP_H
+
+/* Define if you have the <pthread.h> header file.  */
+#undef HAVE_PTHREAD_H
+
+/* Define if you have the <pwd.h> header file.  */
+#undef HAVE_PWD_H
+
+/* Define if you have the <readline/readline.h> header file.  */
+#undef HAVE_READLINE_READLINE_H
+
+/* Define if you have the <sched.h> header file.  */
+#undef HAVE_SCHED_H
+
+/* Define if you have the <semaphore.h> header file.  */
+#undef HAVE_SEMAPHORE_H
+
+/* Define if you have the <signal.h> header file.  */
+#undef HAVE_SIGNAL_H
+
+/* Define if you have the <stdio.h> header file.  */
+#undef HAVE_STDIO_H
+
+/* Define if you have the <stdlib.h> header file.  */
+#undef HAVE_STDLIB_H
+
+/* Define if you have the <string.h> header file.  */
+#undef HAVE_STRING_H
+
+/* Define if you have the <sys/ioctl> header file.  */
+#undef HAVE_SYS_IOCTL
+
+/* Define if you have the <sys/ldr.h> header file.  */
+#undef HAVE_SYS_LDR_H
+
+/* Define if you have the <sys/sched.h> header file.  */
+#undef HAVE_SYS_SCHED_H
+
+/* Define if you have the <sys/select.h> header file.  */
+#undef HAVE_SYS_SELECT_H
+
+/* Define if you have the <sys/socket.h> header file.  */
+#undef HAVE_SYS_SOCKET_H
+
+/* Define if you have the <sys/sockio.h> header file.  */
+#undef HAVE_SYS_SOCKIO_H
+
+/* Define if you have the <sys/stat.h> header file.  */
+#undef HAVE_SYS_STAT_H
+
+/* Define if you have the <sys/time.h> header file.  */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the <sys/types.h> header file.  */
+#undef HAVE_SYS_TYPES_H
+
+/* Define if you have the <sys/un.h> header file.  */
+#undef HAVE_SYS_UN_H
+
+/* Define if you have the <sys/wait.h> header file.  */
+#undef HAVE_SYS_WAIT_H
+
+/* Define if you have the <syslog.h> header file.  */
+#undef HAVE_SYSLOG_H
+
+/* Define if you have the <tcpd.h> header file.  */
+#undef HAVE_TCPD_H
+
+/* Define if you have the <ucd-snmp/ucd-snmp-agent-includes.h> header file.  */
+#undef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the crypt library (-lcrypt).  */
+#undef HAVE_LIBCRYPT
+
+/* Define if you have the dl library (-ldl).  */
+#undef HAVE_LIBDL
+
+/* Define if you have the gdbm library (-lgdbm).  */
+#undef HAVE_LIBGDBM
+
+/* Define if you have the m library (-lm).  */
+#undef HAVE_LIBM
+
+/* Define if you have the nsl library (-lnsl).  */
+#undef HAVE_LIBNSL
+
+/* Define if you have the pcap library (-lpcap).  */
+#undef HAVE_LIBPCAP
+
+/* Define if you have the posix4 library (-lposix4).  */
+#undef HAVE_LIBPOSIX4
+
+/* Define if you have the pthread library (-lpthread).  */
+#undef HAVE_LIBPTHREAD
+
+/* Define if you have the readline library (-lreadline).  */
+#undef HAVE_LIBREADLINE
+
+/* Define if you have the resolv library (-lresolv).  */
+#undef HAVE_LIBRESOLV
+
+/* Define if you have the socket library (-lsocket).  */
+#undef HAVE_LIBSOCKET
+
+/* Define if you have the wrap library (-lwrap).  */
+#undef HAVE_LIBWRAP
