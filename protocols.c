@@ -56,8 +56,11 @@ void handleBootp(HostTraffic *srcHost,
   BootProtocol bootProto = { 0 };
   int len;
 
+  if(packetData == NULL) /* packet too short ? */
+    return;
+
   switch(sport) {
-  case 67: /* BOOTP/DHCP server */
+  case 67: /* BOOTP/DHCP: server -> client*/
     FD_SET(HOST_SVC_DHCP_SERVER, &srcHost->flags);
 
 #ifdef DHCP_DEBUG
@@ -70,7 +73,7 @@ void handleBootp(HostTraffic *srcHost,
       char buf[32];
 
       /*
-	This is a server BOOTP/DHCP respose
+	This is a server BOOTP/DHCP response
 	that could be decoded. Let's try.
 
 	For more info see http://www.dhcp.org/
@@ -398,11 +401,11 @@ void handleBootp(HostTraffic *srcHost,
       }
     }
     break;
-    /* DHCP is handled by sport 67 */
-  case 68: /* BOOTP/DHCP client */
+
+  case 68: /* BOOTP/DHCP: client -> server */
     if(packetData != NULL) {
       /*
-	This is a server BOOTP/DHCP respose
+	This is a server BOOTP/DHCP response
 	that could be decoded. Let's try.
 
 	For more info see http://www.dhcp.org/
@@ -552,6 +555,9 @@ u_int16_t processDNSPacket(const u_char *packetData, u_int length, u_int hlen,
   u_int16_t transactionId;
   int i;
 
+  if(packetData == NULL) /* packet too short ? */
+    return(NULL);
+
   memset(&hostPtr, 0, sizeof(DNSHostInfo));
 
   transactionId = handleDNSpacket(packetData, (u_short)(hlen+sizeof(struct udphdr)),
@@ -651,6 +657,9 @@ void handleNapster(HostTraffic *srcHost,
 #ifdef ENABLE_NAPSTER
   u_short napsterDownload = 0;
 #endif
+
+  if(packetData == NULL) /* packet too short ? */
+    return(NULL);
 
   /* Let's check whether this is a Napster session */
   if(numNapsterSvr > 0) {
@@ -902,8 +911,8 @@ void handleNetbios(HostTraffic *srcHost,
        || (srcHost->nbDomainName == NULL)))
     return; /* Already set */
 
-  if(packetData == NULL) 
-    traceEvent(TRACE_INFO, "packetData is NULL!");
+  if(packetData == NULL) /* packet too short ? */
+    return;
 
   udpDataLen = length - (hlen + sizeof(struct udphdr));
 
@@ -1123,3 +1132,4 @@ void handleNetbios(HostTraffic *srcHost,
     }
   }
 }
+

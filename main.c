@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
       enableThUpdate=0;
       break;
 
-    case '2': /* disable purgin of idle hosts */
+    case '2': /* disable purging of idle hosts */
       enableIdleHosts=0;
       break;
 

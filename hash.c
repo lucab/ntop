@@ -237,7 +237,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 				  device[deviceToExtend].hash_hostTraffic[i]->ethAddress,
 				  &numCmp);
 
-      idx = (u_int)((idx*3) % newSize);
+      idx = (u_int)(idx % newSize);
 
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Searching from slot %d [size=%d]\n", idx, newSize);

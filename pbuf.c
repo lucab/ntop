@@ -62,6 +62,7 @@ static const struct pcap_pkthdr *h_save;
 static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 
+static void dumpHash(); /* Forward */
 
  /* ************************************ */
 
@@ -103,7 +104,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   char buf[32];
   short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
-  u_char setSpoofingFlag = 0;
+  u_char setSpoofingFlag = 0, hostFound = 0;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
     traceEvent(TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
@@ -111,27 +112,34 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   }
 
   idx = computeInitialHashIdx(hostIpAddress, ether_addr, &useIPAddressForSearching);
-  idx = (u_int)((idx*3) % device[actualDeviceId].actualHashSize);
+  idx = (u_int)(idx % device[actualDeviceId].actualHashSize);
 
-  /*
-     traceEvent(TRACE_INFO, "Searching for %s@%s",
-     intoa(*hostIpAddress),
-     etheraddr_string(ether_addr));
-
-     if(hostIpAddress->s_addr == 0)
-     printf("Hello\n");
-   */
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Searching from slot %d [size=%d]\n",
 	     idx, device[actualDeviceId].actualHashSize);
 #endif
 
-  for(i=1; i<device[actualDeviceId].actualHashSize; i++) {
+  /* 
+     IMPORTANT NOTE
+     don't set i=1 because the real index is idx and not i     
+  */
+
+  for(i=0; i<device[actualDeviceId].actualHashSize; i++) {
   HASH_SLOT_FOUND:
     el = device[actualDeviceId].hash_hostTraffic[idx]; /* (**) */
 
     if(el != NULL) {
       if(useIPAddressForSearching == 0) {
+
+#ifdef DEBUG
+	if(strcmp(el->ethAddressString, "00:02:A5:51:1F:AA") == 0) {
+	  traceEvent(TRACE_INFO, "INFO: found pidc01 (1) [0x%X/%s/hostFound=%d]",
+		     el, 
+		     etheraddr_string(ether_addr),
+		     hostFound);
+	}
+#endif
+
 	/* compare with the ethernet-address */
 	if (memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
 	  if(hostIpAddress != NULL) {
@@ -163,12 +171,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		if(isBroadcastAddress(&el->hostIpAddress))
 		  FD_SET(BROADCAST_HOST_FLAG, &el->flags);
 	      }
-	    } else
-	      break;
+	    }
 	  }
-
-	  if(!isMultihomed)
-	    break;
+	  
+	  hostFound = 1;
+	  break;
 	} else if((hostIpAddress != NULL)
 		  && (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
 	  /* Spoofing or duplicated MAC address:
@@ -183,7 +190,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	    if(enableSuspiciousPacketDump) {
 	      traceEvent(TRACE_WARNING,
-			 "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)",
+			 "Two MAC addresses found for the same IP address "
+			 "%s: [%s/%s] (spoofing detected?)",
 			 el->hostNumIpAddress,
 			 etheraddr_string(ether_addr), el->ethAddressString);
 	      dumpSuspiciousPacket();
@@ -191,8 +199,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  }
 	}
       } else {
-	if (el->hostIpAddress.s_addr == hostIpAddress->s_addr)
+	if (el->hostIpAddress.s_addr == hostIpAddress->s_addr) {
+	  hostFound = 1;
 	  break;
+	}
       }
     } else {
       /* ************************
@@ -219,10 +229,18 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
     idx = (idx+1) % device[actualDeviceId].actualHashSize;
   }
 
-  if(i == device[actualDeviceId].actualHashSize) {
+  if(!hostFound) {
     if(firstEmptySlot != NO_PEER) {
       /* New table entry */
       int len;
+
+#ifdef DEBUG
+	if(strcmp(etheraddr_string(ether_addr), "00:02:A5:51:1F:AA") == 0) {
+	  dumpHash();
+	  traceEvent(TRACE_INFO, "INFO: found pidc01 (2) [0x%X/hostFound=%d]",
+		     el, hostFound);
+	}
+#endif
 
       if(usePersistentStorage) {
 	if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
@@ -261,7 +279,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	if((hostIpAddress == NULL)
 	   || ((hostIpAddress != NULL)
 	       && isPseudoLocalAddress(hostIpAddress)
-	       && (!isBroadcastAddress(hostIpAddress)))) {
+	       /* && (!isBroadcastAddress(hostIpAddress))*/
+	       )) {
 	  /* This is a local address and then the
 	     ethernet address does make sense */
 	  ethAddr = etheraddr_string(ether_addr);
@@ -306,6 +325,22 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  strlen(el->hostNumIpAddress));
 	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
 		  MAX_HOST_SYM_NAME_LEN);
+
+
+	  if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
+	     && isBroadcastAddress(&el->hostIpAddress)) {
+	    /* 
+	       The sender of this packet has obviously a wrong netmask because:
+	       - it is a local host
+	       - it has sent a packet to a broadcast address 
+	       - it has not used the FF:FF:FF:FF:FF:FF MAC address
+	    */
+
+	    traceEvent(TRACE_WARNING, "WARNING: Wrong netmask detected [%s/%s]",
+		       _intoa(el->hostIpAddress, buf, sizeof(buf)),
+		       el->ethAddressString);
+	  }
+
 	} else if(hostIpAddress != NULL) {
 	  el->hostIpAddress.s_addr = hostIpAddress->s_addr;
 	  strncpy(el->hostNumIpAddress,
@@ -447,7 +482,8 @@ static void updateHostSessionsList(u_int theHostIdx,
      || (remotePeerIdx == broadcastEntryIdx)
      || (remotePeerIdx == NO_PEER)
      || (theHostIdx == NO_PEER)
-     || ((theRemHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(remotePeerIdx)]) == NULL)
+     || ((theRemHost = device[actualDeviceId].
+	  hash_hostTraffic[checkSessionIdx(remotePeerIdx)]) == NULL)
      )
     return;
 
@@ -556,9 +592,10 @@ void allocateSecurityHostPkts(HostTraffic *srcHost) {
 void scanTimedoutTCPSessions(void) {
   u_int idx, i;
 
-#ifdef DEBUG
+#ifndef DEBUG
   traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions\n");
 #endif
+
   for(i=0; i<numDevices; i++) {
     for(idx=0; idx<device[i].numTotSessions; idx++) {
       if(device[i].tcpSession[idx] != NULL) {
@@ -794,9 +831,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     traceEvent(TRACE_INFO, "Sanity check failed (3) [Low memory?]");
     return(NULL);
   }
-
-  if(packetData == NULL) /* packet too short ? */
-    return(NULL);
 
   /*
     Note: do not move the {...} down this function
@@ -1048,7 +1082,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       else
 	len = packetDataLength;
      
-      if((sport == 80 /* HTTP */) && (theSession->bytesProtoRcvd == 0)) {
+      if((sport == 80 /* HTTP */) 
+	 && (theSession->bytesProtoRcvd == 0)
+	 && (packetDataLength > 0)) {
 	strncpy(rcStr, packetData, 16);
 	rcStr[16] = '\0';
 
@@ -1243,9 +1279,16 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	}
       } else if(((sport == 25 /* SMTP */)  || (dport == 25 /* SMTP */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {
-	if(sport == 25) FD_SET(HOST_SVC_SMTP, &srcHost->flags); else FD_SET(HOST_SVC_SMTP, &dstHost->flags);
-      } else if(((dport == 515 /* printer */) || (sport == 515)) && (theSession->sessionState == STATE_ACTIVE)) {
-	if(sport == 515) FD_SET(HOST_TYPE_PRINTER, &srcHost->flags); else FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
+	if(sport == 25) 
+	  FD_SET(HOST_SVC_SMTP, &srcHost->flags); 
+	else 
+	  FD_SET(HOST_SVC_SMTP, &dstHost->flags);
+      } else if(((dport == 515 /* printer */) || (sport == 515)) 
+		&& (theSession->sessionState == STATE_ACTIVE)) {
+	if(sport == 515) 
+	  FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
+	else 
+	  FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
       } else if(((sport == 109 /* pop2 */) || (sport == 110 /* pop3 */)
 		 || (dport == 109 /* pop2 */) || (dport == 110 /* pop3 */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {
@@ -1256,7 +1299,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
       } else if(((sport == 143 /* imap */) || (dport == 143 /* imap */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {
-	if(sport == 143) FD_SET(HOST_SVC_IMAP, &srcHost->flags); else FD_SET(HOST_SVC_IMAP, &dstHost->flags);
+	if(sport == 143) 
+	  FD_SET(HOST_SVC_IMAP, &srcHost->flags); 
+	else
+	  FD_SET(HOST_SVC_IMAP, &dstHost->flags);
 #ifdef ENABLE_NAPSTER
       } else if((sport == 8875 /* Napster Redirector */)
 		&& (packetDataLength > 5)) {
@@ -1303,7 +1349,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	srcHost->napsterStats->numConnectionsServed++,
 	  dstHost->napsterStats->numConnectionsRequested++;
-#endif
+#endif /* NASPTER */
       } else if((theSession->sessionState == STATE_ACTIVE)
 		&& ((theSession->nwLatency.tv_sec != 0)
 		    || (theSession->nwLatency.tv_usec != 0))
@@ -1437,7 +1483,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->sessionState = STATE_SYN_ACK;
     } else if((tp->th_flags == TH_ACK) && (theSession->sessionState == STATE_SYN_ACK)) {
 
-      if(h->ts.tv_sec > theSession->nwLatency.tv_sec) {
+      if(h->ts.tv_sec >= theSession->nwLatency.tv_sec) {
 	theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
 	if((h->ts.tv_usec - theSession->nwLatency.tv_usec) < 0) {
@@ -4530,3 +4576,19 @@ void _incrementUsageCounter(UsageCounter *counter,
 }
 
 /* ************************************ */
+
+/* Debug only */
+static void dumpHash() {
+  int i;
+  
+  for(i=1; i<device[0].actualHashSize; i++) {
+    HostTraffic *el = device[0].hash_hostTraffic[i];
+  
+    if(el != NULL) {
+      traceEvent(TRACE_INFO, "(%3d) %s / %s", 
+		 i,
+		 el->ethAddressString,
+		 el->hostNumIpAddress);
+    }
+  }
+}
