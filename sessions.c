@@ -898,21 +898,23 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  char tmpStr[256], *strtokState1, *file = strtok_r(&row[4], " ", &strtokState1);
 		  int i, begin=0;
 
-		  for(i=0; file[i] != '\0'; i++) {
-		    if(file[i] == '/') begin = i;
-		  }
-
-		  begin++;
-
-		  unescape(tmpStr, sizeof(tmpStr), &file[begin]);
-
+		  if(file != NULL) {
+		    for(i=0; file[i] != '\0'; i++) {
+		      if(file[i] == '/') begin = i;
+		    }
+		    
+		    begin++;
+		    
+		    unescape(tmpStr, sizeof(tmpStr), &file[begin]);
+		    
 #ifdef P2P_DEBUG
-		  traceEvent(TRACE_INFO, "Kazaa: %s->%s [%s]\n",
-			     srcHost->hostNumIpAddress,
-			     dstHost->hostNumIpAddress,
-			     tmpStr);
+		    traceEvent(TRACE_INFO, "Kazaa: %s->%s [%s]\n",
+			       srcHost->hostNumIpAddress,
+			       dstHost->hostNumIpAddress,
+			       tmpStr);
 #endif
-		  updateFileList(tmpStr, srcHost);
+		    updateFileList(tmpStr, srcHost);
+		  }
 		}
 	      } else if(strncmp(row, "X-Kazaa-Username", 15) == 0) {
 		char *user;
