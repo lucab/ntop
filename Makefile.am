@@ -218,7 +218,7 @@ ntop-cert.pem:
 	/bin/rm -f privkey.pem cert.pem
 
 install-data-local:
-	@cp -p ntop-cert.pem $(bindir)/ntop-cert.pem
+	@cp -p ntop-cert.pem $(DESTDIR)$(bindir)/ntop-cert.pem
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/html;
