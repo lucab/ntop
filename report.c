@@ -1934,7 +1934,7 @@ void printLocalRoutersList(int actualDeviceId) {
   printHTMLheader("Local Subnet Routers", 0);
 
   if(myGlobals.dontTrustMACaddr) {
-    printNotAvailable();
+    printNotAvailable("-o or --no-mac");
     return;
   }
 
@@ -2266,7 +2266,12 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int numSessions, printedSessions;
 
   if(!myGlobals.enableSessionHandling) {
-    printNotAvailable();
+    printNotAvailable("-z or --disable-sessions");
+    return;
+  }
+
+  if(el == NULL) {
+    printNoDataYet();
     return;
   }
 
@@ -4216,9 +4221,13 @@ void printNoDataYet(void) {
 
 /* ************************* */
 
-void printNotAvailable(void) {
-  printFlagedWarning("<I>Requested data is not available as due to"
-		     "<br>the way you started ntop (command line flags)</I>");
+void printNotAvailable(char * flagName) {
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  if(snprintf(buf, sizeof(buf), "<I>The requested data is not available when ntop is"
+                                "<br>started with the command line flag %s</I>",
+                                flagName) < 0)
+      BufferTooShort();
+  printFlagedWarning(buf);
 }
 
 /* ************************* */

@@ -161,7 +161,7 @@ extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
 extern void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int pageNum);
 extern void printNoDataYet(void);
-extern void printNotAvailable(void);
+extern void printNotAvailable(char* flagName);
 extern void listNetFlows(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printASList(unsigned int deviceId);
