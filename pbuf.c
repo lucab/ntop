@@ -1980,6 +1980,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     if(tp->th_flags & TH_RST) printf("RST ");
     if(tp->th_flags & TH_PUSH) printf("PUSH");
     printf(" [%d]\n", tp->th_flags);
+    printf("sessionsState=%d -> ", theSession->sessionState);
 #endif
 
     if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == STATE_SYN))  {
@@ -2137,7 +2138,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     if(tp->th_flags & TH_FIN) {
       u_int32_t fin = ntohl(tp->th_seq)+packetDataLength;
 
-      theSession->sessionState = STATE_TIMEOUT;
+      /* theSession->sessionState = STATE_TIMEOUT; */
 
       if(sport < dport) /* Server->Client */
 	check = (fin != theSession->lastSCFin);
@@ -2154,7 +2155,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	else /* Client->Server */
 	  theSession->lastCSFin = fin;
 	switch(theSession->sessionState) {
-	case STATE_BEGIN:
+	case STATE_ACTIVE:
 	  theSession->sessionState = STATE_FIN1_ACK0;
 	  break;
 	case STATE_FIN1_ACK0:
@@ -2266,6 +2267,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       updateUsedPorts(srcHost, srcHostIdx, dstHost, dstHostIdx, sport, dport,
 		      (u_int)(theSession->bytesSent+theSession->bytesReceived));
     }
+
+    /* printf("%d\n", theSession->sessionState);  */
 
     /* ****************************** */
 
