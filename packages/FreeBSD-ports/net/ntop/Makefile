@@ -71,7 +71,7 @@ post-install:
 	@ if ! pw usershow ntop 2>&1 > /dev/null; then pw useradd ntop -g ntop -s /sbin/nologin; fi
 	@ ${MKDIR} ${DBDIR}/${PORTNAME}
 	@ ${MKDIR} ${DBDIR}/${PORTNAME}/rrd
-	@ chown ntop:ntop ${DBDIR}/${PORTNAME}/rrd
+	@ chown -R ntop:ntop ${DBDIR}/${PORTNAME}
 	@ mv ${PREFIX}/man/man8/i386-portbld-freebsd*-ntop.8 ${PREFIX}/man/man8/ntop.8
 	@ mv ${PREFIX}/bin/i386-portbld-freebsd*-ntop ${PREFIX}/bin/ntop
 	@ ${MKDIR} ${PREFIX}/etc/rc.d
