@@ -1625,8 +1625,8 @@ if test ".${rc}" = ".1"; then
     echo "1. delete the existing generated files:"
     for i in acinclude.m4 \
              aclocal.m4 \
-             Makefile.in \
              config.h.in \
+             Makefile.in \
              configure \
              Makefile; do
         if test -f $i; then
@@ -3633,12 +3633,8 @@ case "${target}:${CC}" in
         DEFINEOS="FREEBSD";   STATUS="UNTESTED"
       ;;
 
-    *-*-openbsd3.1*:*gcc* )
-        DEFINEOS="OPENBSD";   STATUS="WILLFAIL"
-      ;;
-
     *-*-openbsd*:* )
-        DEFINEOS="OPENBSD";   STATUS="UNTESTED"
+        DEFINEOS="OPENBSD";   STATUS="WILLFAIL"
       ;;
 
     *-*-netbsd*1.5*:gcc* )
@@ -6553,7 +6549,7 @@ test "x$enable_libtool_lock" != xno && enable_libtool_lock=yes
 case $host in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6556 "configure"' > conftest.$ac_ext
+  echo '#line 6552 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7089,7 +7085,7 @@ chmod -w .
 save_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -o out/conftest2.$ac_objext"
 compiler_c_o=no
-if { (eval echo configure:7092: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
+if { (eval echo configure:7088: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
   # The compiler can only warn and ignore the option if not recognized
   # So say no if there are warnings
   if test -s out/conftest.err; then
@@ -8882,7 +8878,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8885 "configure"
+#line 8881 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8980,7 +8976,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8983 "configure"
+#line 8979 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H

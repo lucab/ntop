@@ -223,8 +223,8 @@ if test ".${rc}" = ".1"; then
     echo "1. delete the existing generated files:"
     for i in acinclude.m4 \
              aclocal.m4 \
-             Makefile.in \
              config.h.in \
+             Makefile.in \
              configure \
              Makefile; do
         if test -f $i; then
@@ -659,12 +659,8 @@ case "${target}:${CC}" in
         DEFINEOS="FREEBSD";   STATUS="UNTESTED"
       ;;
 
-    *-*-openbsd3.1*:*gcc* )
-        DEFINEOS="OPENBSD";   STATUS="WILLFAIL"
-      ;;
-
     *-*-openbsd*:* )
-        DEFINEOS="OPENBSD";   STATUS="UNTESTED"
+        DEFINEOS="OPENBSD";   STATUS="WILLFAIL"
       ;;
 
     *-*-netbsd*1.5*:gcc* )
