@@ -127,13 +127,6 @@ attack. The flagged host is the SENDER of these malformed packets and should be 
 <p><font size="-1">Flag/Counter:&nbsp;synFinPktsSent</font></p>
 <br />
 
-<h3>(Rcvd:rst)</h3>
-<p><b>ntop</b> has seen one or more packets with the <i>RST</i> flag set.  This can be normal,
-although should be rare.  A large number of RST packets is also seen as part of a port scan.  
-The flagged host is the RECEIVER of these packets and is the machine being scanned.</p>
-<p><font size="-1">Flag/Counter:&nbsp;rstPktsRcvd</font></p>
-<br />
-
 <h3>(Sent:xmas)</h3>
 <p><b>ntop</b> has seen one or more packets with unusual combinations of flags. This is usually
 seen as part of a port scan.  The flagged host is the SENDER of these packets is the
@@ -201,6 +194,13 @@ ports, that is to/from port 7 or to ports 9, 13 or 19.  When the internet was a 
 friendlier place, these provided trivial information and ways to check if a remote machine
 was operational.  These are rarely seen today and so are flagged.</p>
 <p><font size="-1">Flag/Counter:&nbsp;udpToDiagnosticPortSent</font></p>
+<br />
+
+<h3>(Rcvd:rst)</h3>
+<p><b>ntop</b> has seen one or more packets with the <i>RST</i> flag set.  This can be normal,
+although should be rare.  A large number of RST packets is also seen as part of a port scan.  
+The flagged host is the RECEIVER of these packets and is the machine being scanned.</p>
+<p><font size="-1">Flag/Counter:&nbsp;rstPktsRcvd</font></p>
 <br />
 
 <h3>(Sent:closed-empty)</h3>

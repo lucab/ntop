@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.18.1 -->
-<!-- CreationDate: Wed Jan  7 12:29:16 2004 -->
+<!-- CreationDate: Thu Jan 22 13:04:01 2004 -->
 <html>
 <head>
 <meta name="generator" content="groff -Thtml, see www.gnu.org">
@@ -80,7 +80,7 @@
 [<b>--disable-instantsessionpurge</b>]
 [<b>--disable-schedyield</b>]
 [<b>--disable-mutexextrainfo</b>]
-[<b>--skip-version-check</b>]</p>
+[<b>--skip-version-check</b>] [<b>--w3c</b>]</p>
 <!-- INDENTATION -->
 <p>Unix options:</p>
 <!-- INDENTATION -->
@@ -1608,6 +1608,32 @@ code.</p>
 <!-- INDENTATION -->
 <p>NOTE: At present, the recheck does not work under
 Windows.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--w3c</b></p></td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p>By default, <b>ntop</b> generates displayable but not
+great html. There are a number of tags we do not generate
+because they cause problems with older browsers which are
+still commonly used or are important to look good on
+real-world browsers. This flag tells <b>ntop</b> to generate
+&rsquo;BETTER&rsquo; (but not perfect) w3c compliant html
+4.01 output. This in no way addresses all of the
+compatibility and markup issues. Over time, we would like to
+make <b>ntop</b> more compatible, but it will never be 100%.
+If you find any issues, please report them to ntop-dev.</p>
 </td>
 </table>
 <a name="WEB VIEWS"></a>
