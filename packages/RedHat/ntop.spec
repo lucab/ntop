@@ -2,9 +2,9 @@
 
 Summary: ntop shows the network usage
 Name: ntop
-Version: 3.0pre1
+Version: 3.0pre2
 Release: 0
-Source: ntop-3.0pre1.tgz
+Source: ntop-3.0pre2.tgz
 Source1: ntop.init
 Source2: ntop.logrotate
 Source3: ntop.conf.sample
@@ -28,9 +28,11 @@ extracted from the web server in formats suitable for manipulation in perl or ph
 
 See 1STRUN.txt for the 1st time startup procedure!  See FAQ for answers to questions.
 
-ntop 3.0pre1 is a TEST release, from the ntop cvs tree at cvs.ntop.org.
+ntop 3.0pre2 is a TEST release, from the ntop cvs tree at cvs.ntop.org.
 Our intention is to release this or something much like it as ntop 3.0
 in a short period of time.
+
+The major change from 3.0pre1 is in the sorting of the 'hosts' column.  PLEASE TEST!
 
 At this time, docs/FAQ has been extensively re-written, but ChangeLog and
 PORTING have not.
@@ -46,6 +48,9 @@ For those upgrading from 2.2, note:
    The so-called 'large population model' for rrd data files is now standard.
    There is a script at SourceForge in the user contributed area to help
    convert - but backup your data FIRST.
+
+   The netflow Plugin no longer acts as a probe (that is sending netflow
+   packets to another device).
 
 This version is compiled WITH SSLv3.
 
@@ -71,7 +76,7 @@ Please send problem reports (using the automatically generated form if at all po
 unset RPM_OPT_FLAGS
 %undefine optflags 
 # Adjust the .tgz format to what we expect for build...
-mv ntop-3.0pre1 ntop
+mv ntop-3.0pre2 ntop
 # Patches
 patch -p0 < ../../SOURCES/version.patch
 #patch -p0 < ../../SOURCES/makefile_am.patch
@@ -211,6 +216,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/lib*Plugin*
 
 %changelog
+* Mon Mar 03 2004 Burton M. Strauss III <burton@ntopsupport.com>
+- v3.0pre2 - TEST release for 3.0
+
 * Mon Feb 16 2004 Burton M. Strauss III <burton@ntopsupport.com>
 - v3.0pre1 - TEST release for 3.0
 
