@@ -1,0 +1,22 @@
+--- ntop/Makefile.am.orig	2004-12-13 12:45:42.264609423 -0600
++++ ntop/Makefile.am	2004-12-13 12:46:09.581449186 -0600
+@@ -271,7 +271,7 @@
+ 
+ install: install-recursive
+ 
+-	@mkdir -p $(CFG_DBFILE_DIR)
++	@mkdir -p $(RPM_BUILD_ROOT)$(CFG_DBFILE_DIR)
+ 
+ 	@echo ""
+ 	@echo "------------------------------------------------------------"
+--- ntop/Makefile.in.orig	2004-12-13 12:45:49.286054165 -0600
++++ ntop/Makefile.in	2004-12-13 12:46:19.055699948 -0600
+@@ -1359,7 +1359,7 @@
+ 
+ install: install-recursive
+ 
+-	@mkdir -p $(CFG_DBFILE_DIR)
++	@mkdir -p $(RPM_BUILD_ROOT)$(CFG_DBFILE_DIR)
+ 
+ 	@echo ""
+ 	@echo "------------------------------------------------------------"
