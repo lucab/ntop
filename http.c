@@ -1029,6 +1029,24 @@ static int returnHTTPPage(char* pageName, int postLen) {
       showPluginsList("");
     else
       showPluginsList(&pageName[strlen(STR_SHOW_PLUGINS)+1]);
+  } else if(strcmp(pageName, "showUsers.html") == 0) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    showUsers();
+  } else if(strcmp(pageName, "addUser.html") == 0) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    addUser(NULL);
+  } else if(strncmp(pageName, "modifyUser", strlen("modifyUser")) == 0) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    if((questionMark == NULL) || (questionMark[0] == '\0'))
+      addUser(NULL);
+    else
+      addUser(&questionMark[1]);
+  } else if(strcmp(pageName, "showURLs.html") == 0) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    showURLs();
+  } else if(strcmp(pageName, "addURL.html") == 0) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    addURL(NULL);
   } else {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
@@ -1506,24 +1524,6 @@ static int returnHTTPPage(char* pageName, int postLen) {
       sendString("The author would like to thank all these people who contributed to <b>ntop</b> and\n");
       sendString("turned it into a first class network monitoring tool. Many thanks guys!<p>\n");
       sendString("</FONT><p>\n");
-    } else if(strcmp(pageName, "showUsers.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      showUsers();
-    } else if(strcmp(pageName, "addUser.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      addUser(NULL);
-    } else if(strncmp(pageName, "modifyUser", strlen("modifyUser")) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      if((questionMark == NULL) || (questionMark[0] == '\0'))
-	addUser(NULL);
-      else
-	addUser(&questionMark[1]);
-    } else if(strcmp(pageName, "showURLs.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      showURLs();
-    } else if(strcmp(pageName, "addURL.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      addURL(NULL);
     } else if(strncmp(pageName, INFO_NTOP_HTML, strlen(INFO_NTOP_HTML)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printNtopConfigInfo();
@@ -1619,7 +1619,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "checkHTTPpasswd");
 #endif
-  return_data = gdbm_firstkey (pwFile);
+  return_data = gdbm_firstkey(pwFile);
   outBuffer[0] = '\0';
 
   while (return_data.dptr != NULL) {

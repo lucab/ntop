@@ -47,7 +47,7 @@ void showUsers(void) {
 #ifdef MULTITHREADED
     accessMutex(&gdbmMutex, "showUsers");
 #endif 
-  return_data = gdbm_firstkey (pwFile);
+  return_data = gdbm_firstkey(pwFile);
 
   while (return_data.dptr != NULL) {
     /* traceEvent(TRACE_INFO, "1) -> %s\n", return_data.dptr); */
@@ -159,7 +159,7 @@ void deleteUser(char* user) {
 #ifdef MULTITHREADED
     accessMutex(&gdbmMutex, "deleteUser");
 #endif 
-    rc = gdbm_delete (pwFile, key_data);
+    rc = gdbm_delete(pwFile, key_data);
 #ifdef MULTITHREADED
     releaseMutex(&gdbmMutex);
 #endif 
@@ -287,7 +287,8 @@ void showURLs(void) {
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "showURLs");
 #endif 
-  return_data = gdbm_firstkey (pwFile);
+
+  return_data = gdbm_firstkey(pwFile);
 
   while (return_data.dptr != NULL) {
     /* traceEvent(TRACE_INFO, "1) -> %s\n", return_data.dptr); */
@@ -468,7 +469,7 @@ void deleteURL(char* url) {
 #ifdef MULTITHREADED
     accessMutex(&gdbmMutex, "deleteURL");
 #endif 
-    rc = gdbm_delete (pwFile, key_data);
+    rc = gdbm_delete(pwFile, key_data);
 #ifdef MULTITHREADED
     releaseMutex(&gdbmMutex);
 #endif 
