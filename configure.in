@@ -1418,11 +1418,13 @@ AC_CHECK_LIB([pcap], [pcap_open_live])
 AC_CHECK_LIB([pcap], [pcap_open_dead], AC_DEFINE_UNQUOTED(HAVE_PCAP_OPEN_DEAD, 1, [libpcap has pcap_open_dead]))
 AC_CHECK_LIB([pcap], [pcap_lib_version], AC_DEFINE_UNQUOTED(HAVE_PCAP_LIB_VERSION, 1, [libpcap has pcap_lib_version]))
 AC_CHECK_LIB([pcap], [pcap_setnonblock], AC_DEFINE_UNQUOTED(HAVE_PCAP_SETNONBLOCK, 1, [libpcap has pcap_setnonblock]))
+AC_CHECK_LIB([pcap], [pcap_findalldevs], AC_DEFINE_UNQUOTED(HAVE_PCAP_FINDALLDEVS, 1, [libpcap has pcap_findalldevs]))
 
 if test ".${ac_cv_header_pcap_h}" != ".yes" ||
    (test ".${ac_cv_header_net_bpf_h}" != ".yes" &&
     test ".${ac_cv_header_pcap_bpf_h}" != ".yes" ) ||
-   test ".${ac_cv_lib_pcap_pcap_open_live}" != ".yes"; then
+   (test ".${ac_cv_lib_pcap_pcap_open_live}" != ".yes") ||
+   (test ".${ac_cv_lib_pcap_pcap_findalldevs}" != ".yes"); then
     echo
     echo "*******************************************************************"
     echo "*"
@@ -1433,12 +1435,13 @@ if test ".${ac_cv_header_pcap_h}" != ".yes" ||
     echo "*              net/bpf.h...${ac_cv_header_net_bpf_h}"
     echo "*              pcap-bpf.h...${ac_cv_header_pcap_bpf_h}"
     echo "*              pcap_open_live() in -lpcap...${ac_cv_lib_pcap_pcap_open_live}"
+    echo "*              pcap_findalldevs() in -lpcap...${ac_cv_lib_pcap_pcap_findalldevs}"
     echo "*"
     echo "*  (One of the bpf files is required, but either will do)"
     echo "*"
     echo "*>>> No way to proceed."
     echo "*"
-    echo "*???     1. Install libpcap"
+    echo "*???     1. Install libpcap (http://www.tcpdump.org/)"
     echo "*???    and Rerun ./configure"
     echo "*???  or 2. Use the --with-pcap-root= option"
     echo "*"
