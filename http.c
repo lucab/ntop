@@ -502,17 +502,14 @@ void printHTMLheader(char *title, int  headerFlags) {
 
   sendString("<HTML>\n<HEAD>\n");
 
-  /*
   if(title != NULL) {
     if(snprintf(buf, BUF_SIZE, "<TITLE>%s</TITLE>\n", title) < 0)
     BufferTooShort();
     sendString(buf);
   }
-  */
 
   if((headerFlags & HTML_FLAG_NO_REFRESH) == 0) {
-    if(snprintf(buf, BUF_SIZE, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n",
-		myGlobals.refreshRate) < 0)
+    if(snprintf(buf, BUF_SIZE, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", myGlobals.refreshRate) < 0)
       BufferTooShort();
     sendString(buf);
   }

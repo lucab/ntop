@@ -1449,11 +1449,19 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
     }
   }
 
+  /* Dennis Schoen (dennis@cns.dnsalias.org)
+   *
+   * send 404 if we cannot generate the requested page
+  */
   if((el == NULL) || (!found)) {
-    if(snprintf(buf, sizeof(buf),
-		"Unable to generate the page requested [%s]\n", host) < 0)
+    if(snprintf(buf, sizeof(buf), "404 Not Found", host) < 0)
       BufferTooShort();
-    printHTMLheader(buf, 0);
+    printHTMLheader(buf, HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_HEADING);
+
+    if(snprintf(buf, sizeof(buf), "<B>Not found</B><BR><BR>Unable to generate the requested page") < 0)
+      BufferTooShort();
+    sendString(buf);
+
     return;
   }
 
