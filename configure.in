@@ -968,6 +968,17 @@ if test ".${GDBM_ROOT}" != .; then
        INCS="${INCS} -I$GDBM_ROOT"
        AC_DEFINE(HAVE_GDBM_H)
        AC_MSG_RESULT([found in $GDBM_ROOT])
+  elif test -d $GDBM_ROOT &&
+     test -d $GDBM_ROOT/lib &&
+     test -d $GDBM_ROOT/include &&
+     test -r $GDBM_ROOT/lib/libgdbm.a &&
+     test -r $GDBM_ROOT/include/gdbm.h; then
+       GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
+       CORELIBS="${CORELIBS} -L$GDBM_ROOT/lib -lgdbm"
+       INCS="${INCS} -I$GDBM_ROOT/include"
+       AC_DEFINE(HAVE_GDBM_H)
+       AC_MSG_RESULT([])
+       AC_MSG_RESULT([     found in $GDBM_ROOT/lib and .../include])
   else
     AC_MSG_RESULT([not found in ${GDBM_ROOT}])
     AC_MSG_RESULT([             *** FATAL ERROR ***             ])
