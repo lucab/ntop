@@ -2317,7 +2317,7 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
                 "requirements.</p>\n",
                 host) < 0)
       BufferTooShort();
-    returnHTTPpageNotFound(&errorAdditionalText);
+    returnHTTPpageNotFound(errorAdditionalText);
     return;
   } else
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2929,6 +2929,12 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   if(!myGlobals.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");
     return;
+  }
+
+  if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
+     (myGlobals.device[actualDeviceId].numTcpSessions == 0)) {
+     printNoDataYet();
+     return;
   }
 
   /*
