@@ -330,7 +330,7 @@ void initCounters(int _mergeInterfaces) {
     strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");   
     myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
   } else {
-    /* We let ntop think that myGlobals.otherHostEntryIdx does not exist */
+    /* We let ntop think that otherHostEntryIdx does not exist */
     myGlobals.otherHostEntry = NULL;
     myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx;
   }
@@ -367,7 +367,7 @@ void resetStats(void) {
   else
     interfacesToCreate = myGlobals.numDevices;
 
-  /* Do not reset the first entry (myGlobals.broadcastEntry) */
+  /* Do not reset the first entry (broadcastEntry) */
   for(i=0; i<interfacesToCreate; i++) {
     u_int j;
 
@@ -670,7 +670,7 @@ char *ifName, intNames[32][256];
 myDevices = devices;
   myGlobals.device = NULL;
 
-  /* Determine the myGlobals.device name if not specified */
+  /* Determine the device name if not specified */
   ebuf[0] = '\0';
 
 #ifdef WIN32
@@ -733,7 +733,7 @@ myDevices = devices;
 #endif
 
   if (myDevices == NULL) {
-    /* No default myGlobals.device selected */
+    /* No default device selected */
 #ifndef WIN32
     tmpDev = pcap_lookupdev(ebuf);
      
@@ -907,10 +907,10 @@ void initLibpcap(char* rulesFile, int numDevices) {
     initRules(rulesFile);
 
     for(i=0; i<myGlobals.numDevices; i++) {
-      /* Fire up libpcap for each specified myGlobals.device */
+      /* Fire up libpcap for each specified device */
       char myName[80];
 
-      /* Support for virtual myGlobals.devices */
+      /* Support for virtual devices */
       char *column = strchr(myGlobals.device[i].name, ':');
 
       /*
