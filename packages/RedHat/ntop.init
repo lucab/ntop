@@ -491,108 +491,112 @@ restart () {
   start $@
 }
 
+init() {
+  echo ""
+  echo ""
+
+  # check password database exists
+  if [ -d "${ntopdbfilepath}" ] && 
+     [ -f "${ntopdbfilepath}/ntop_pw.db" ]; then
+    logger -p ${ntopusesyslog} -t ${name} -- "INITD - ERROR - password database exists"
+    echo "ERROR -"
+    echo "        password database exists!"
+    echo ""
+    echo "  You probably did not want to init again, did you?"
+    echo ""
+    echo "Aborting..."
+    echo ""
+    exit 1
+  fi
+
+  if [ ".${ntopuser}" = "." ]; then
+    echo "WARNING -"
+    echo "        Execution user not set, can't do permissions"
+    echo ""
+    echo "Skipping..."
+    echo ""
+    exit 0
+  fi
+
+  echo "Creating directories and/or setting permissions..."
+
+  quiet="-f"; verbose="";
+  if [ "${debug}" = "y" ]; then quiet=""; verbose="--verbose"; fi
+
+  # The base directory...
+  if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${ntopdbfilepath}"; fi
+  if [ ! -d ${ntopdbfilepath} ]; then
+      mkdir --parents --mode=0711 ${verbose} ${ntopdbfilepath}
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopdbfilepath}"
+  fi
+  chown -R ${quiet} ${ntopuser}: ${ntopdbfilepath}
+  chmod ${quiet} 0711 ${ntopdbfilepath}
+  logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopdbfilepath}"
+
+  # rrd within that
+  if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${ntopdbfilepath}/rrd"; fi
+  if [ ! -d ${ntopdbfilepath}/rrd ]; then
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopdbfilepath}/rrd"
+      mkdir --parents --mode=0755 ${verbose} ${ntopdbfilepath}/rrd
+  fi
+  chmod ${quiet} 0755 ${ntopdbfilepath}/rrd
+  chown -R ${quiet} ${ntopuser}: ${ntopdbfilepath}/rrd
+  logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopdbfilepath}/rrd"
+
+  # temporary database path parameter, if one
+  if [ ".${ntopspoolfilepath}" != "." ]; then
+    if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${ntopspoolfilepath}"; fi
+    if ! [ -d "${ntopspoolfilepath}" ]; then
+      mkdir --parents --mode=0711 ${verbose} ${ntopspoolfilepath}
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopspoolfilepath}"
+      chown -R ${quiet} ${ntopuser}: ${ntopspoolfilepath}
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopspoolfilepath}"
+    fi
+  fi
+ 
+  # access log, if one...
+  if [ ".${ntopaccesslogpath}" != "." ]; then
+    alp=`dirname ${ntopaccesslogpath}`
+    if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${alp}"; fi
+    if ! [ -d "${alp}" ]; then
+      mkdir --parents --mode=0711 ${verbose} ${alp}
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopaccesslogpath}"
+      chown -R ${quiet} ${ntopuser}: ${alp}
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopaccesslogpath}"
+    fi
+  fi
+
+  # output path, if one...
+  if [ ".${ntopoutputpacketpath}" != "." ]; then
+    if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${ntopoutputpacketpath}"; fi
+    if ! [ -d "${ntopoutputpacketpath}" ]; then
+      mkdir --parents --mode=0711 ${verbose} ${ntopoutputpacketpath}
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopoutputpacketpath}"
+      chown -R ${quiet} ${ntopuser}: ${ntopoutputpacketpath}
+      logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopoutputpacketpath}"
+    fi
+  fi
+
+  echo ""
+  echo "Running ${prog} to set password - please respond"
+  echo ""
+  $prog --set-admin-password --db-file-path ${ntopdbfilepath}
+  echo ""
+
+  # Fixup the created files for more security.
+  chmod 0600 ${ntopdbfilepath}/ntop_pw.db
+  chmod 0600 ${ntopdbfilepath}/prefsCache.db
+  chown -R ${quiet} ${ntopuser}: ${ntopdbfilepath}/*.db
+  logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopdbfilepath}/*.db"
+
+  echo ""
+  echo "Done... ready for ${invoked} start"
+  echo ""
+}
+
 case "$1" in
   init)
-    echo ""
-    echo ""
-
-    # check password database exists
-    if [ -d "${ntopdbfilepath}" ] && 
-       [ -f "${ntopdbfilepath}/ntop_pw.db" ]; then
-      logger -p ${ntopusesyslog} -t ${name} -- "INITD - ERROR - password database exists"
-      echo "ERROR -"
-      echo "        password database exists!"
-      echo ""
-      echo "  You probably did not want to init again, did you?"
-      echo ""
-      echo "Aborting..."
-      echo ""
-      exit 1
-    fi
-
-    if [ ".${ntopuser}" = "." ]; then
-      echo "WARNING -"
-      echo "        Execution user not set, can't do permissions"
-      echo ""
-      echo "Skipping..."
-      echo ""
-      exit 0
-    fi
-
-    echo "Creating directories and/or setting permissions..."
-
-    quiet="-f"; verbose="";
-    if [ "${debug}" = "y" ]; then quiet=""; verbose="--verbose"; fi
-
-    # The base directory...
-    if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${ntopdbfilepath}"; fi
-    if [ ! -d ${ntopdbfilepath} ]; then
-        mkdir --parents --mode=0711 ${verbose} ${ntopdbfilepath}
-        logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopdbfilepath}"
-    fi
-    chown -R ${quiet} ${ntopuser}: ${ntopdbfilepath}
-    chmod ${quiet} 0711 ${ntopdbfilepath}
-    logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopdbfilepath}"
-
-    # rrd within that
-    if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${ntopdbfilepath}/rrd"; fi
-    if [ ! -d ${ntopdbfilepath}/rrd ]; then
-        logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopdbfilepath}/rrd"
-        mkdir --parents --mode=0755 ${verbose} ${ntopdbfilepath}/rrd
-    fi
-    chmod ${quiet} 0755 ${ntopdbfilepath}/rrd
-    chown -R ${quiet} ${ntopuser}: ${ntopdbfilepath}/rrd
-    logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopdbfilepath}/rrd"
-
-    # temporary database path parameter, if one
-    if [ ".${ntopspoolfilepath}" != "." ]; then
-      if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${ntopspoolfilepath}"; fi
-      if ! [ -d "${ntopspoolfilepath}" ]; then
-        mkdir --parents --mode=0711 ${verbose} ${ntopspoolfilepath}
-        logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopspoolfilepath}"
-        chown -R ${quiet} ${ntopuser}: ${ntopspoolfilepath}
-        logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopspoolfilepath}"
-      fi
-    fi
- 
-    # access log, if one...
-    if [ ".${ntopaccesslogpath}" != "." ]; then
-      alp=`dirname ${ntopaccesslogpath}`
-      if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${alp}"; Yfi
-      if ! [ -d "${alp}" ]; then
-        mkdir --parents --mode=0711 ${verbose} ${alp}
-        logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopaccesslogpath}"
-        chown -R ${quiet} ${ntopuser}: ${alp}
-        logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopaccesslogpath}"
-      fi
-    fi
-
-    # output path, if one...
-    if [ ".${ntopoutputpacketpath}" != "." ]; then
-      if [ "${debug}" = "y" ]; then echo "DEBUG: Create set ownership/permissions for ${ntopoutputpacketpath}"; fi
-      if ! [ -d "${ntopoutputpacketpath}" ]; then
-        mkdir --parents --mode=0711 ${verbose} ${ntopoutputpacketpath}
-        logger -p ${ntopusesyslog} -t ${name} -- "INITD - Created ${ntopoutputpacketpath}"
-        chown -R ${quiet} ${ntopuser}: ${ntopoutputpacketpath}
-        logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopoutputpacketpath}"
-      fi
-    fi
-
-    echo ""
-    echo "Running ${prog} to set password - please respond"
-    echo ""
-    $prog --set-admin-password --db-file-path ${ntopdbfilepath}
-    echo ""
-
-    # Fixup the created files for more security.
-    chmod 0600 ${ntopdbfilepath}/ntop_pw.db
-    chmod 0600 ${ntopdbfilepath}/prefsCache.db
-    chown -R ${quiet} ${ntopuser}: ${ntopdbfilepath}/*.db
-    logger -p ${ntopusesyslog} -t ${name} -- "INITD - Ownership/permissions set for ${ntopdbfilepath}/*.db"
-
-    echo ""
-    echo "Done... ready for ${invoked} start"
-    echo ""
+    init $@
   ;;
 
   startdebug)
