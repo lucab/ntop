@@ -937,11 +937,11 @@ static int checkURLsecurity(char *url) {
 #endif
 
   for(i=strlen(workURL)-1; i >= 0; i--)
-    if(workURL[i] == '.') 
+    if(workURL[i] == '.')
       break;
   i++;
 
-  if((i > 0) 
+  if((i > 0)
      && (!((strcmp(&workURL[i] , "htm") == 0)  ||
 	   (strcmp(&workURL[i] , "html") == 0) ||
 	   (strcmp(&workURL[i] , "txt") == 0)  ||
@@ -950,8 +950,8 @@ static int checkURLsecurity(char *url) {
 	   (strcmp(&workURL[i] , "gif") == 0)  ||
 	   (strcmp(&workURL[i] , "ico") == 0)  ||
 	   (strcmp(&workURL[i] , "css") == 0)))) {
-    traceEvent(TRACE_ERROR, 
-	       "URL security(5): ERROR: Found bad file extension (.%s) in URL...\n", 
+    traceEvent(TRACE_ERROR,
+	       "URL security(5): ERROR: Found bad file extension (.%s) in URL...\n",
 	       &workURL[i]);
     rc = 5;
   }
@@ -959,7 +959,7 @@ static int checkURLsecurity(char *url) {
   if(workURL != NULL) free(workURL);
 
   if(rc != 0)
-    traceEvent(TRACE_ERROR, 
+    traceEvent(TRACE_ERROR,
 	       "ERROR: bad char found on '%s' (rc=%d) rejecting request",
 	       url, rc);
 
@@ -1062,7 +1062,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	  }
 
 	  /* traceEvent(TRACE_ERROR, "Searching '%s'\n", tmpStr); */
-	  
+
 #ifdef WIN32
 	  i=0;
 	  while(tmpStr[i] != '\0') {
@@ -1072,16 +1072,16 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 #endif
 
 	  if(stat(tmpStr, &statbuf) == 0) {
-	    if((fd = fopen(tmpStr, "rb")) != NULL) {		
+	    if((fd = fopen(tmpStr, "rb")) != NULL) {
 	      found = 1;
 	      break;
 	    }
-	    
+
 	    traceEvent(TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
 	  }
       }
   }
-  
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "tmpStr=%s - fd=0x%x\n", tmpStr, fd);
 #endif
@@ -1177,7 +1177,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
   } else if(strncmp(pageName, SWITCH_NIC_HTML, strlen(SWITCH_NIC_HTML)) == 0) {
     char *equal = strchr(pageName, '=');
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    
+
     if(equal == NULL)
       switchNwInterface(0);
     else
@@ -1295,14 +1295,14 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 #ifndef WIN32
   if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
     int rc;
-      
+
     sendString("HTTP/1.0 200 OK\n");
     rc = execCGI(&pageName[strlen(CGI_HEADER)]);
-    
+
     if(rc != 0) {
       returnHTTPpageNotFound();
-    }    
-  } else 
+    }
+  } else
 #endif
 
   if(strcmp(pageName, STR_INDEX_HTML) == 0) {
