@@ -231,7 +231,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
     myGlobals.device[actualDeviceId].hostsno--;
 
-#if 1
+#if 0
     traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleted a hash_hostTraffic entry [%s/%s/%s]",
 	       host->ethAddressString, host->hostNumIpAddress, host->hostSymIpAddress);
 #endif

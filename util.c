@@ -2155,6 +2155,8 @@ void traceEvent(int eventTraceLevel, char* file,
     /* So, (INFO & above only) - post it to logView buffer. */
     if ((eventTraceLevel <= CONST_INFO_TRACE_LEVEL) &&
         (myGlobals.logView != NULL)) {
+      
+      if(myGlobals.logViewMutex.isInitialized)
        accessMutex(&myGlobals.logViewMutex, "reporting");
 
        if (myGlobals.logView[myGlobals.logViewNext] != NULL)
@@ -2164,6 +2166,7 @@ void traceEvent(int eventTraceLevel, char* file,
 
        myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
 
+      if(myGlobals.logViewMutex.isInitialized)
        releaseMutex(&myGlobals.logViewMutex);
     }
 
