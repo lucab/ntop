@@ -111,7 +111,7 @@ static struct option const long_options[] = {
 #endif
 
   { "http-server",                      required_argument, NULL, 'w' },
-  { "set-admin-password",               required_argument, NULL, 'A' },
+  { "set-admin-password",               no_argument,       NULL, 'A' },
   { "filter-expression",                required_argument, NULL, 'B' },
   { "domain",                           required_argument, NULL, 'D' },
 
