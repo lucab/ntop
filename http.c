@@ -453,7 +453,7 @@ void sendStringLen(char *theString, unsigned int len) {
 
       if(gzwrite(compressFileFd, theString, len) == 0) {
 	int err;
-	traceEvent(CONST_TRACE_WARNING, "WARNING: gzwrite error (%s)\n",
+	traceEvent(CONST_TRACE_WARNING, "gzwrite error (%s)",
 		   gzerror(compressFileFd, &err));
       }
       return;
@@ -1192,7 +1192,7 @@ static int returnHTTPPage(char* pageName,
      similar chars that can be used for reading system files
   */
   if((rc = checkURLsecurity(pageName)) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)(client=%s)",
+    traceEvent(CONST_TRACE_ERROR, "URL security: '%s' rejected (code=%d)(client=%s)",
 	       pageName, rc, _intoa(*from, tmpStr, sizeof(tmpStr)));
     returnHTTPaccessForbidden();
     return(FLAG_HTTP_FORBIDDEN_PAGE);

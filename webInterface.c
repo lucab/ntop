@@ -76,7 +76,7 @@ int execCGI(char* cgiName) {
   struct timeval wait_time;
 
   if(!(newUser = getpwnam(userName))) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: unable to find user %s\n", userName);
+    traceEvent(CONST_TRACE_WARNING, "Unable to find user %s\n", userName);
     return(-1);
   } else {
     setgid(newUser->pw_gid);
@@ -114,7 +114,7 @@ int execCGI(char* cgiName) {
 #endif
 
   if((fd = popen(line, "r")) == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: unable to exec %s\n", cgiName);
+    traceEvent(CONST_TRACE_WARNING, "Unable to exec %s\n", cgiName);
     return(-1);
   } else {
     fd_set mask;
@@ -725,7 +725,7 @@ void shutdownNtop(void) {
     /* Take the shutdown dump */
     rc = dumpXML(1, NULL);
     if(rc != 0) {
-      traceEvent(CONST_TRACE_ERROR, "ERROR: xml save, rc %d\n", rc);
+      traceEvent(CONST_TRACE_ERROR, "xml save, rc %d\n", rc);
     }
   }
 #endif

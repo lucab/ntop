@@ -307,7 +307,7 @@ void loadPlugins(void) {
   }
 
   if(directoryPointer == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: Unable to find the plugins/ directory");
+    traceEvent(CONST_TRACE_WARNING, "Unable to find the plugins/ directory");
     traceEvent(CONST_TRACE_INFO, "ntop continues OK, but without any plugins");
     return;
   } else

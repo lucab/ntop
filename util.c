@@ -162,7 +162,7 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 
 unsigned short isLocalAddress(struct in_addr *addr, u_int deviceId) {
   if(deviceId >= myGlobals.numDevices) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: Index %u out of range [0..%u] - address treated as remote",
+    traceEvent(CONST_TRACE_WARNING, "Index %u out of range [0..%u] - address treated as remote",
 	       deviceId, myGlobals.numDevices); 
     return(0);
   }
@@ -1025,7 +1025,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   mutexId->lockAttemptPid=(pid_t) 0;
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_ERROR, "ERROR: lock failed 0x%X [%s:%d] (rc=%d)\n",
+    traceEvent(CONST_TRACE_ERROR, "Lock failed 0x%X [%s:%d] (rc=%d)\n",
 	       (void*)&(mutexId->mutex), fileName, fileLine, rc);
   else {
 
@@ -1105,7 +1105,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   mutexId->lockAttemptPid=(pid_t) 0;
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_ERROR, "ERROR: tryLockMutex failed 0x%X [%s:%d] (rc=%d)\n",
+    traceEvent(CONST_TRACE_ERROR, "tryLockMutex failed 0x%X [%s:%d] (rc=%d)\n",
 	       (void*)&(mutexId->mutex), fileName, fileLine, rc);
   else {
 
@@ -1207,7 +1207,7 @@ int _releaseMutex(PthreadMutex *mutexId,
   rc = pthread_mutex_unlock(&(mutexId->mutex));
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_ERROR, "ERROR: unlock failed 0x%X [%s:%d]\n",
+    traceEvent(CONST_TRACE_ERROR, "Unlock failed 0x%X [%s:%d]\n",
 	       (void*)&(mutexId->mutex), fileName, fileLine);
   else {
     time_t lockDuration = time(NULL) - mutexId->lockTime;
@@ -1532,7 +1532,7 @@ void readLsofInfo(void) {
 
   fd = fopen(fileName, "r");
   if(fd == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: unable to read lsof dump file");
+    traceEvent(CONST_TRACE_WARNING, "Unable to read lsof dump file");
     unlink(fileName);
     return;
   }
@@ -1767,7 +1767,7 @@ int name_interpret(char *in, char *out, int numBytes) {
   char *b;
 
   if(numBytes <= 0) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: name_interpret error (numBytes=%d)", numBytes);
+    traceEvent(CONST_TRACE_WARNING, "name_interpret error (numBytes=%d)", numBytes);
     return(-1);
   }
 
@@ -1776,7 +1776,7 @@ int name_interpret(char *in, char *out, int numBytes) {
   *out=0;
 
   if(len > 30 || len < 1) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: name_interpret error (numBytes=%d)", numBytes);
+    traceEvent(CONST_TRACE_WARNING, "name_interpret error (numBytes=%d)", numBytes);
     return(-1);
   }
 
@@ -2895,7 +2895,7 @@ int _incrementUsageCounter(UsageCounter *counter,
   if(peerIdx == FLAG_NO_PEER) return(0);
 
   if(peerIdx >= myGlobals.device[actualDeviceId].actualHashSize) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
+    traceEvent(CONST_TRACE_WARNING, "Index %u out of range [0..%u] @ %s:%d",
 	       peerIdx, myGlobals.device[actualDeviceId].actualHashSize-1, file, line);
     return(0);
   }
@@ -2907,7 +2907,7 @@ int _incrementUsageCounter(UsageCounter *counter,
 
   if((theHost = myGlobals.device[actualDeviceId].
       hash_hostTraffic[checkSessionIdx(peerIdx)]) == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: wrong Index %u @ %s:%d",
+    traceEvent(CONST_TRACE_WARNING, "wrong Index %u @ %s:%d",
 	       peerIdx, file, line);
     return(0);
   }

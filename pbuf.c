@@ -1630,7 +1630,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     */
     memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
     if(h.len > MAX_PACKET_LEN) {
-      traceEvent(CONST_TRACE_WARNING, "WARNING: packet truncated (%d->%d)", h.len, MAX_PACKET_LEN);
+      traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", h.len, MAX_PACKET_LEN);
       h.len = MAX_PACKET_LEN;
     }
     
