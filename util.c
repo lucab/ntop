@@ -1023,7 +1023,7 @@ int checkCommand(char* commandName) {
     return 0;
   else {
     int rc = fgetc(fd);
-    fclose(fd);
+    pclose(fd);
 
     if(rc == EOF)
       return(0);
@@ -1174,7 +1174,7 @@ void readLsofInfo(void) {
     localPorts[portNumber] = listElement;
   }
 
-  fclose(fd);
+  pclose(fd);
 
   memcpy(tmpProcesses, processes, sizeof(processes));
   memset(processes, 0, sizeof(processes));
@@ -1267,7 +1267,7 @@ void readNepedInfo(void) {
       }
     }
 
-  fclose(fd);
+  pclose(fd);
 
 #ifdef MULTITHREADED
   releaseMutex(&lsofMutex);
@@ -1400,7 +1400,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
       }
     }
   }
-  fclose(fd);
+  pclose(fd);
 
   memset(staticOsName, 0, sizeof(staticOsName));
 

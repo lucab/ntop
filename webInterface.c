@@ -129,7 +129,7 @@ void execCGI(char* cgiName) {
       if(num > 0)
 	sendStringLen(line, num);
     }
-    fclose(fd);
+    pclose(fd);
   }
 }
 #endif /* USE_CGI */
