@@ -984,12 +984,17 @@ static void handleBootp(HostTraffic *srcHost,
 		  if(strcmp(realDstHost->hostSymIpAddress, realDstHost->hostNumIpAddress)) {
 		    if(strcmp(&realDstHost->hostSymIpAddress[strlen(realDstHost->hostSymIpAddress)-len],
 			      &bootProto.bp_vend[idx]) != 0) {
-		      char tmpName[2*MAX_HOST_SYM_NAME_LEN];
-		      int hostLen;
+		      char tmpName[2*MAX_HOST_SYM_NAME_LEN], tmpHostName[MAX_HOST_SYM_NAME_LEN];
+		      int hostLen, i;
 
+		      strncpy(tmpHostName, realDstHost->hostSymIpAddress, sizeof(MAX_HOST_SYM_NAME_LEN));
+		      for(i=0; (tmpHostName[i] != '\0') && (tmpHostName[i] != '.'); i++)
+			;
+
+		      tmpHostName[i] = '\0';
+		      
 		      if(snprintf(tmpName, 2*MAX_HOST_SYM_NAME_LEN, "%s.%s",
-				  realDstHost->hostSymIpAddress,
-				  &bootProto.bp_vend[idx]) < 0)
+				  tmpHostName, &bootProto.bp_vend[idx]) < 0)
 			traceEvent(TRACE_ERROR, "Buffer overflow!");
 		      else {
 			hostLen = len;
