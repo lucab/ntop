@@ -627,14 +627,12 @@ void initApps(void) {
 
 void initDevices(char* devices) {
   char ebuf[PCAP_ERRBUF_SIZE];
-  int i, j;
+  int i, j, mallocLen;
   ntopInterface_t *tmpDevice;
 
   traceEvent(TRACE_INFO, "Initializing network devices...");
 
-  i = sizeof(ntopInterface_t)*MAX_NUM_DEVICES;
-  device = (ntopInterface_t*)malloc(i);
-  memset(device, 0, i);
+  device = NULL;
 
   /* Determine the device name if not specified */
   ebuf[0] = '\0';
@@ -682,6 +680,9 @@ void initDevices(char* devices) {
 	  }
 	}
 #endif
+
+      device = (ntopInterface_t*)malloc(sizeof(ntopInterface_t));
+      memset(device, 0, sizeof(ntopInterface_t));
       device[0].name = strdup(tmpDev);
       numDevices=1;
     }
@@ -703,8 +704,7 @@ void initDevices(char* devices) {
 	nwInterface[0] = 0;
 
 	for(i=0; i<numDevices; i++)
-	  if(device[i].name
-	     && (strcmp(device[i].name, tmpDev) == 0)) {
+	  if(device[i].name && (strcmp(device[i].name, tmpDev) == 0)) {
 	    found = 1;
 	    break;
 	  }
@@ -714,6 +714,14 @@ void initDevices(char* devices) {
 	  continue;
 	}
       }
+
+
+      mallocLen = sizeof(ntopInterface_t)*(numDevices+1);
+      tmpDevice = (ntopInterface_t*)malloc(mallocLen);
+      memset(tmpDevice, 0, mallocLen);
+      memcpy(tmpDevice, device, sizeof(ntopInterface_t)*numDevices);
+      free(device);
+      device = tmpDevice;
 
       device[numDevices++].name = strdup(tmpDev);
 
@@ -746,21 +754,29 @@ void initDevices(char* devices) {
 
       if(strncmp(device[i].name, "lo", 3)) { /* Do not care of virtual loopback interfaces */
 	int k;
-	char tmpDevice[16];
+	char tmpDeviceName[16];
 	struct in_addr myLocalHostAddress;
 
 	if(numDevices < MAX_NUM_DEVICES) {
 	  for(k=0; k<8; k++) {
-	    if(snprintf(tmpDevice, sizeof(tmpDevice), "%s:%d", device[i].name, k) < 0)
+	    if(snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", device[i].name, k) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
-	    if(getLocalHostAddress(&myLocalHostAddress, tmpDevice) == 0) {
+	    if(getLocalHostAddress(&myLocalHostAddress, tmpDeviceName) == 0) {
 	      /* The virtual interface exists */
+
+	      mallocLen = sizeof(ntopInterface_t)*(numDevices+1);
+	      tmpDevice = (ntopInterface_t*)malloc(mallocLen);
+	      memset(tmpDevice, 0, mallocLen);
+	      memcpy(tmpDevice, device, sizeof(ntopInterface_t)*numDevices);
+	      free(device);
+	      device = tmpDevice;
+
 	      device[numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
 	      if(myLocalHostAddress.s_addr == device[i].ifAddr.s_addr)
 		continue; /* No virtual Interfaces */
-	      device[numDevices++].name = strdup(tmpDevice);
+	      device[numDevices++].name = strdup(tmpDeviceName);
 #ifdef DEBUG
-	      traceEvent(TRACE_INFO, "Added: %s\n", tmpDevice);
+	      traceEvent(TRACE_INFO, "Added: %s\n", tmpDeviceName);
 #endif
 	    } else
 	      break; /* No virtual interface */
@@ -772,14 +788,6 @@ void initDevices(char* devices) {
 
   for(i=0; i<numDevices; i++)
     getLocalHostAddress(&device[i].network, device[i].name);
-
-  /* As numDevices is finally calculated 'device' can now
-     be finally resized */
-  i = sizeof(ntopInterface_t)*numDevices;
-  tmpDevice = (ntopInterface_t*)malloc(i);
-  memcpy(tmpDevice, device, i);
-  free(device);
-  device = tmpDevice;
 }
 
 /* ******************************* */
