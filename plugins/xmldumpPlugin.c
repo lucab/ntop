@@ -33,28 +33,44 @@
 
 #ifdef MAKE_WITH_XMLDUMP
  #include <glibconfig.h>
+ #warning
+ #warning ===========================================================
+ #warning
+ #warning The include of gdome.h that follows will generate a lot of
+ #warning compile warnings about 'shadows a global declaration'.  
+ #warning Unfortunately, it's the way this crud is coded and can't
+ #warning be fixed.  Just ignore them!
+ #warning
  #include <gdome.h>
+ #warning
+ #warning ===========================================================
+ #warning
 #else
- /*
-  *    Missing header files, disabling xmldump plugin.
-  *
-  *       FOR MOST USERS THIS IS NOT A PROBLEM
-  */
 
+ #warning
+ #warning ===========================================================
+ #warning
+ #warning       Missing header files, disabling xmldump plugin
+ #warning
+ #warning           FOR MOST USERS THIS IS NOT A PROBLEM
+ #warning           ntop will build and run just fine... 
+ #warning
+ #warning Why?
+ #warning
  #ifndef HAVE_GLIBCONFIG_H
-  #warning glibconfig.h unavailable
+  #warning           glibconfig.h unavailable
  #endif
  #ifndef HAVE_GLIB_H
-  #warning glib.h unavailable
+  #warning           glib.h unavailable
  #endif
  #ifndef HAVE_GDOME_H
-  #warning gdome.h unavailable
+  #warning           gdome.h unavailable
  #endif
  #ifndef HAVE_XMLVERSION_H
-  #warning xmlversion.h unavailable
+  #warning           xmlversion.h unavailable
  #endif
  #ifndef CONST_XMLDUMP_PLUGIN_NAME
-  #warning CONST_XMLDUMP_PLUGIN_NAME not defined
+  #warning           CONST_XMLDUMP_PLUGIN_NAME not defined
  #endif
  #warning
  #warning ===========================================================
