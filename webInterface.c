@@ -6316,7 +6316,7 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
   if(textPrintFlag != TRUE) {
     sendString("<CENTER>\n<TABLE border=\"0\">"
 	       "<TR>"
-	       "<TD colspan=\"5\>The color of the host link");
+	       "<TD colspan=\"5\">The color of the host link");
     if(isInfo == 1)
         sendString(" on many pages");
     sendString(" indicates how recently the host was FIRST seen"
