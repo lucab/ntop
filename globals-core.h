@@ -192,6 +192,15 @@ extern void parseTrafficFilter(void);
 extern void initSignals(void);
 extern void startSniffer(void);
 extern void deviceSanityCheck(char* string);
+
+#define safe_snprintf(...) _safe_snprintf(__FILE__, __LINE__, __VA_ARGS__)
+extern int _safe_snprintf(char* file, int line,
+                          char* buf, size_t sizeofbuf,
+                          char* format, ...);
+#define safe_strncat(...) _safe_strncat(__FILE__, __LINE__, __VA_ARGS__)
+extern int _safe_strncat(char* file, int line,
+                         char* dest, size_t sizeofdest,
+                         char* src);
 extern u_int createDummyInterface(char *ifName);
 extern void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 			   int doUnlink, struct stat *statbuf);
@@ -689,8 +698,8 @@ extern int h_errno; /* netdb.h */
 #define NTOHL(x)    (x) = ntohl(x)
 #endif
 
-#ifndef BufferTooShort
-#define BufferTooShort()  traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d", __FILE__, __LINE__)
+#ifndef BufferTooSmall
+#define BufferTooSmall(buf, len) traceEvent(CONST_TRACE_ERROR, "Buffer %s(%d@0x%08x) too small @ %s:%d", #buf, len, buf, __FILE__, __LINE__) 
 #endif
 
 #ifdef WIN32
@@ -782,6 +791,7 @@ int getdomainname(char *name, size_t len);
 #define isWorkstation(a)            ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_WORKSTATION, &(a->flags)))
 #define isMasterBrowser(a)          ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_MASTER_BROWSER, &(a->flags)))
 #define isMultihomed(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_MULTIHOMED, &(a->flags)))
+#define isMultivlaned(a)            ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_MULTIVLANED, &(a->flags)))
 
 #define isPrinter(a)                ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_PRINTER, &(a->flags)))
 
