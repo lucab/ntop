@@ -29,6 +29,8 @@ static int sortSendMode=0;
 /* #define PRINT_ALL_ACTIVE_SESSIONS  */
 /* #define PRINT_RETRANSMISSION_DATA  */
 
+static char* getBgPctgColor(float pctg);
+
 /*
   Courtesy of
   Peter Marquardt <wwwutz@mpimg-berlin-dahlem.mpg.de>
@@ -492,6 +494,14 @@ static void printHeader(int reportType, int revertOrder, u_int column) {
 	    theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2],
 	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]);
     sendString(buf);
+    sendString("<TH>0 AM</TH><TH>1 AM</TH><TH>2 AM</TH><TH>3 AM</TH>"
+	       "<TH>4 AM</TH><TH>5 AM</TH><TH>6 AM</TH>"
+	       "<TH>7 AM</TH><TH>8 AM</TH><TH>9 AM</TH>"
+	       "<TH>10 AM</TH><TH>11 AM</TH><TH>12 AM</TH>\n");
+    sendString("<TH>1 PM</TH><TH>2 PM</TH><TH>3 PM</TH>"
+	       "<TH>4 PM</TH><TH>5 PM</TH><TH>6 PM</TH>"
+	       "<TH>7 PM</TH><TH>8 PM</TH><TH>9 PM</TH>"
+	       "<TH>10 PM</TH><TH>11 PM</TH>\n");
   }
 
   sendString("</TR>\n");
@@ -1335,17 +1345,53 @@ static void getProtocolDataReceived(TrafficCounter *c,
 
 /* ******************************* */
 
+static void printHostThtpShort(HostTraffic *el, short dataSent) {
+  int i;
+  TrafficCounter tc;
+  char buf[64];
+
+  for(i=0, tc=0; i<24; i++) {
+    if(dataSent)
+      tc += el->last24HoursBytesSent[i];
+    else
+      tc += el->last24HoursBytesRcvd[i];  
+  }
+  
+  for(i=0; i<24; i++) {
+    float pctg;
+
+    if(tc > 0) {
+      if(dataSent)
+	pctg = (float)(el->last24HoursBytesSent[i]*100)/(float)tc;
+      else
+	pctg = (float)(el->last24HoursBytesRcvd[i]*100)/(float)tc;
+    } else
+      pctg = 0;
+
+    snprintf(buf, sizeof(buf), "<TD ALIGN=RIGHT BGCOLOR=%s>&nbsp;</TD>",
+	     getBgPctgColor(pctg));
+    sendString(buf);
+  }
+}
+
+/* ******************************* */
+
 RETSIGTYPE printHostsTraffic(int signumber_ignored,
 			     int reportType,
 			     int sortedColumn,
 			     int revertOrder) {
   u_int idx, numEntries=0;
-  int printedEntries=0;
+  int printedEntries=0, hourId;
+  char theDate[8];
+  struct tm t;
   HostTraffic *el;
   HostTraffic* tmpTable[HASHNAMESIZE];
   char buf[BUF_SIZE], buf2[BUF_SIZE];
   float sentPercent, rcvdPercent;
   struct pcap_stat stat;
+
+  strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
+  hourId = atoi(theDate);
 
   memset(buf, 0, sizeof(buf));
   memset(tmpTable, 0, HASHNAMESIZE*sizeof(HostTraffic*));
@@ -1562,8 +1608,10 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		      el->actualSentPktThpt,
 		      el->averageSentPktThpt,
 		      el->peakSentPktThpt);
-
 	      sendString(buf);
+
+	      updateHostThpt(el, hourId, 0);
+	      printHostThtpShort(el, 1);
 	    }
 
 	    sendString("</TR>\n");
@@ -1642,6 +1690,9 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		      el->averageRcvdPktThpt,
 		      el->peakRcvdPktThpt);
 	      sendString(buf);
+
+	      updateHostThpt(el, hourId, 0);
+	      printHostThtpShort(el, 0);
 	    }
 
 	    sendString("</TR>\n");
@@ -5948,7 +5999,8 @@ static char* getBgPctgColor(float pctg) {
 /* *********************************** */
 
 static printHostHourlyTrafficEntry(HostTraffic *el, int i,
-				   TrafficCounter tcSent, TrafficCounter tcRcvd) {
+				   TrafficCounter tcSent, 
+				   TrafficCounter tcRcvd) {
   float pctg;
   char buf[BUF_SIZE];
 
