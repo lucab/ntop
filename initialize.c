@@ -70,17 +70,18 @@ void initIPServices(void) {
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {
-      char tmpStr[512];
+      char tmpLine[512];
 
-      while(fgets(tmpStr, 512, fd))
-	if((tmpStr[0] != '#') && (strlen(tmpStr) > 10)) {
+      while(fgets(tmpLine, 512, fd))
+	if((tmpLine[0] != '#') && (strlen(tmpLine) > 10)) {
 	  /* discard  9/tcp sink null */
 	  numSlots++;
 	}
       fclose(fd);
     }
   }
-    
+
+  if(numSlots == 0) numSlots = 32;    
   numActServices = 2*numSlots; /* Double the hash */
 
   /* ************************************* */
@@ -103,16 +104,16 @@ void initIPServices(void) {
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {
-      char tmpStr[512];
+      char tmpLine[512];
 
-      while(fgets(tmpStr, 512, fd))
-	if((tmpStr[0] != '#') && (strlen(tmpStr) > 10)) {
+      while(fgets(tmpLine, 512, fd))
+	if((tmpLine[0] != '#') && (strlen(tmpLine) > 10)) {
 	  /* discard  9/tcp sink null */
 	  char name[64], proto[16];
 	  int numPort;
 
 	  /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-	  if (3 == sscanf(tmpStr, "%63[^ \t] %d/%15s", name, &numPort, proto)) {
+	  if (3 == sscanf(tmpLine, "%63[^ \t] %d/%15s", name, &numPort, proto)) {
 	    /* traceEvent(TRACE_INFO, "'%s' - '%s' - '%d'\n", name, proto, numPort); */
 
 	    if(strcmp(proto, "tcp") == 0)
@@ -153,6 +154,7 @@ void initIPServices(void) {
 
   initPassiveSessions();
 }
+
 /* ******************************* */
 
 /*

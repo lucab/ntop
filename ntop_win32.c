@@ -138,12 +138,12 @@ void initWinsock32() {
   SIZE_BUF = 5 * 1024 * 1024; /* 5MB buffer */
   version = "2.0 beta";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "26/06/2001";
+  buildDate = "13/08/2001";
 
   if(isWinNT())
     osName = "WinNT/2K";
   else
-    osName = "Win95/98";
+    osName = "Win95/98/ME";
 
 #ifdef WIN32_DEMO
  traceEvent(TRACE_INFO, "\n-----------------------------------------------------------\n");
@@ -260,15 +260,18 @@ void killThread(pthread_t *threadId) {
 /* ************************************ */
 
 int createMutex(PthreadMutex *mutexId) {
-  (*mutexId) = CreateMutex(NULL, FALSE, NULL);
+
+  memset(mutexId, 0, sizeof(PthreadMutex));
+
+  mutexId->mutex = CreateMutex(NULL, FALSE, NULL);
   return(1);
 }
 
 /* ************************************ */
 
 void deleteMutex(PthreadMutex *mutexId) {
-  ReleaseMutex(*mutexId);
-  CloseHandle(*mutexId);
+  ReleaseMutex(mutexId->mutex);
+  CloseHandle(mutexId->mutex);
 }
 
 /* ************************************ */
@@ -277,10 +280,20 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n", 
-	     mutexId, where, fileName, fileLine);
+	     mutexId->mutex, where, fileName, fileLine);
 #endif
 
-  WaitForSingleObject(*mutexId, INFINITE);
+  WaitForSingleObject(mutexId->mutex, INFINITE);
+
+  mutexId->numLocks++;
+  mutexId->isLocked = 1;
+  mutexId->lockTime = time(NULL);
+  
+  if(fileName != NULL) {
+      strcpy(mutexId->lockFile, fileName);
+      mutexId->lockLine = fileLine;
+  }
+
   return(1);
 }
 
@@ -290,25 +303,62 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
-	     mutexId, where, fileName, fileLine);
+	     mutexId->mutex, where, fileName, fileLine);
   fflush(stdout);
 #endif
   
-  if(WaitForSingleObject(*mutexId, 0) == WAIT_FAILED)
+  if(WaitForSingleObject(mutexId->mutex, 0) == WAIT_FAILED)
     return(0);
-  else
+  else {
+	  mutexId->numLocks++;
+	  mutexId->isLocked = 1;
+	  mutexId->lockTime = time(NULL);
+  
+	  if(fileName != NULL) {
+		strcpy(mutexId->lockFile, fileName);
+		mutexId->lockLine = fileLine;
+	  }
+
     return(1);
+  }
 }
 
 /* ************************************ */
 
 int _releaseMutex(PthreadMutex *mutexId, 
 		  char* fileName, int fileLine) {
+
+  time_t lockDuration;
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n", 
-	     mutexId, fileName, fileLine); 
+	     mutexId->mutex, fileName, fileLine); 
 #endif
-  ReleaseMutex(*mutexId);
+  ReleaseMutex(mutexId->mutex);
+
+  lockDuration = time(NULL) - mutexId->lockTime;
+
+  if((mutexId->maxLockedDuration < lockDuration)
+       || (mutexId->maxLockedDurationUnlockLine == 0 /* Never set */)) {
+      mutexId->maxLockedDuration = lockDuration;
+
+      if(fileName != NULL) {
+	strcpy(mutexId->maxLockedDurationUnlockFile, fileName);
+	mutexId->maxLockedDurationUnlockLine = fileLine;
+      }
+
+      traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
+		 &(mutexId->mutex), fileName, fileLine,
+		 mutexId->maxLockedDuration);
+   }
+
+    mutexId->isLocked = 0;
+    mutexId->numReleases++;
+    if(fileName != NULL) {
+      strcpy(mutexId->unlockFile, fileName);
+      mutexId->unlockLine = fileLine;
+	}
+
   return(1);
 }
 

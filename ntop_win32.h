@@ -43,11 +43,16 @@ typedef int NDIS_STATUS, *PNDIS_STATUS;
 
 /* typedef ULONGLONG TrafficCounter; */
 /* typedef unsigned long TrafficCounter; */
-typedef unsigned char u_char;
+typedef unsigned char  u_char;
 typedef unsigned short u_short;
-typedef unsigned int u_int;
-typedef unsigned long u_long;
-typedef unsigned int tcp_seq;
+typedef unsigned int   u_int;
+typedef unsigned long  u_long;
+typedef unsigned int   tcp_seq;
+
+typedef u_char  uint8_t;
+typedef u_short uint16_t; 
+typedef u_int	uint32_t; 
+
 /*
 typedef unsigned long u_int32, u_int32_t;
 typedef long int32_t;
