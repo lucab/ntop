@@ -4997,7 +4997,7 @@ int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int buf
   /* Establish the connection */
   hptr = gethostbyname(versionSite);
   if (!hptr) {
-    traceEvent(CONST_TRACE_ERROR, "CHKVER: Unable to resolve site");
+    traceEvent(CONST_TRACE_ERROR, "CHKVER: Unable to resolve site %s", versionSite);
     return 1;
   }
 #ifdef CHKVER_DEBUG
