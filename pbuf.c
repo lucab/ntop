@@ -98,7 +98,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char *ether_addr,
 		  u_char checkForMultihoming,
 		  u_char forceUsingIPaddress) {
-  u_int idx, i;
+  u_int idx, i, isMultihomed = 0;
 #ifndef MULTITHREADED
   u_int run=0;
 #endif
@@ -141,41 +141,40 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  if(hostIpAddress != NULL) {
 	    int i;
 
-	    if(checkForMultihoming) {
+	    if((!isMultihomed) && checkForMultihoming) {
 	      /*
 		This is a local address hence this is
 		a potential multihomed host.
 	      */
 
-	      for(i=0; i<MAX_MULTIHOMING_ADDRESSES; i++) {
-		if(el->hostIpAddresses[i].s_addr == 0x0) {
-		  el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
-		  break;
-		} else if(el->hostIpAddresses[i].s_addr == hostIpAddress->s_addr)
-		  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-		  /* el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;     */
-		  break;
+	      if((el->hostIpAddress.s_addr != 0x0)
+		 && (el->hostIpAddress.s_addr != hostIpAddress->s_addr)) {
+		isMultihomed = 1;
+		FD_SET(HOST_MULTIHOMED, &el->flags);
 	      }
-	    }
 
-	    if(el->hostNumIpAddress[0] == '\0') {
-	      /* This entry didn't have IP fields set: let's set them now */
-	      el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-	      strncpy(el->hostNumIpAddress,
-		      _intoa(*hostIpAddress, buf, sizeof(buf)),
-		      sizeof(el->hostNumIpAddress));
+	      if(el->hostNumIpAddress[0] == '\0') {
+		/* This entry didn't have IP fields set: let's set them now */
+		el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+		strncpy(el->hostNumIpAddress,
+			_intoa(*hostIpAddress, buf, sizeof(buf)),
+			sizeof(el->hostNumIpAddress));
 
-	      if(numericFlag == 0)
-		ipaddr2str(el->hostIpAddress);
+		if(numericFlag == 0)
+		  ipaddr2str(el->hostIpAddress);
 
-	      /* else el->hostSymIpAddress = el->hostNumIpAddress;
-		 The line below isn't necessary because (**) has
-		 already set the pointer */
-	      if(isBroadcastAddress(&el->hostIpAddress))
-		FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	    }
+		/* else el->hostSymIpAddress = el->hostNumIpAddress;
+		   The line below isn't necessary because (**) has
+		   already set the pointer */
+		if(isBroadcastAddress(&el->hostIpAddress))
+		  FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	      }
+	    } else
+	      break;
 	  }
-	  break;
+
+	  if(!isMultihomed)
+	    break;
 	} else if((hostIpAddress != NULL)
 		  && (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
 	  /* Spoofing or duplicated MAC address:
@@ -246,6 +245,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       }
 
       resetHostsVariables(el);
+
+      if(isMultihomed) FD_SET(HOST_MULTIHOMED, &el->flags);
 
       el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
 
@@ -1392,28 +1393,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	if(device[actualDeviceId].numTcpSessions >
 	   (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
-	  /* The hash table is getting large: let's replace the oldest session
-	     with this one we're allocating */
-#ifdef ORIGINAL
-	  u_int usedIdx=0;
-
-	  for(idx=0; idx<device[actualDeviceId].numTotSessions; idx++) {
-	    if(device[actualDeviceId].tcpSession[idx] != NULL) {
-	      if(theSession == NULL) {
-		theSession = device[actualDeviceId].tcpSession[idx];
-		usedIdx = idx;
-	      }
-	      else if(theSession->lastSeen > device[actualDeviceId].tcpSession[idx]->lastSeen) {
-		theSession = device[actualDeviceId].tcpSession[idx];
-		usedIdx = idx;
-	      }
-	    }
-	  }
-
-	  device[actualDeviceId].tcpSession[usedIdx] = NULL;
-#else
 	  return(NULL); /* No space left */
-#endif
 	} else {
 	  /* There's enough space left in the hashtable */
 	  theSession = (IPSession*)malloc(sizeof(IPSession));

@@ -54,7 +54,6 @@ void initIPServices(void) {
   traceEvent(TRACE_INFO, "Initializing IP services...");
 
   protoIPTrafficInfos = NULL;
-  ipPortMapper = (int*)malloc(sizeof(int)*TOP_IP_PORT);
 
 #ifdef WIN32
   initWinsock32();
@@ -89,8 +88,6 @@ void initIPServices(void) {
 #ifdef ENABLE_NAPSTER
   memset(napsterSvr, 0, sizeof(napsterSvr));
 #endif
-
-  for(i=0; i<TOP_IP_PORT; i++) ipPortMapper[i] = -1;
 
   len = sizeof(ServiceEntry*)*numActServices;
   udpSvc = (ServiceEntry**)malloc(len);

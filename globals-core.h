@@ -135,7 +135,8 @@ extern ntopInterface_t *device;
 /* Monitored Protocols */
 extern char **protoIPTrafficInfos;
 extern u_short numIpProtosToMonitor, numIpPortsToHandle;
-extern int *ipPortMapper, numActServices;
+extern PortMapper *ipPortMapper;
+extern int numActServices, numIpPortMapperSlots;
 extern ServiceEntry **udpSvc, **tcpSvc;
 
 /* Packet Capture */

@@ -498,12 +498,12 @@ extern const char *gdbm_strerror (int);
 #define	T_GPOS		27		/* geographical position (withdrawn) */
 #define	T_AAAA		28		/* IP6 Address */
 #define	T_LOC		29		/* Location Information */
-	/* non standard */
+/* non standard */
 #define T_UINFO		100		/* user (finger) information */
 #define T_UID		101		/* user ID */
 #define T_GID		102		/* group ID */
 #define T_UNSPEC	103		/* Unspecified format (binary data) */
-	/* Query type values which do not appear in resource records */
+/* Query type values which do not appear in resource records */
 #define T_AXFR		252		/* transfer zone of authority */
 #define T_MAILB		253		/* transfer mailbox records */
 #define T_MAILA		254		/* transfer mail agent records */
@@ -543,6 +543,10 @@ typedef struct {
 } HEADER;
 #endif /* PACKETSZ */
 
+typedef struct portMapper {
+  int port;       /* Port to map */
+  int mappedPort; /* Mapped port */
+} PortMapper;
 
 /*
   Code below courtesy of 
@@ -1461,6 +1465,7 @@ typedef struct portUsage {
 #define HOST_SVC_DHCP_CLIENT			         23
 #define HOST_SVC_DHCP_SERVER			         24
 #define HOST_TYPE_MASTER_BROWSER			 25
+#define HOST_MULTIHOMED  			         26
 
 
 /* Flags for possible error codes */
@@ -1481,6 +1486,8 @@ typedef struct portUsage {
 #define isServer(a)		    ((a != NULL) && FD_ISSET(HOST_TYPE_SERVER, &(a->flags)))
 #define isWorkstation(a)	    ((a != NULL) && FD_ISSET(HOST_TYPE_WORKSTATION, &(a->flags)))
 #define isMasterBrowser(a)	    ((a != NULL) && FD_ISSET(HOST_TYPE_MASTER_BROWSER, &(a->flags)))
+#define isMultihomed(a)	            ((a != NULL) && FD_ISSET(HOST_MULTIHOMED, &(a->flags)))
+
 #define isPrinter(a)		    ((a != NULL) && FD_ISSET(HOST_TYPE_PRINTER, &(a->flags)))
 
 #define isSMTPhost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_SMTP, &(a->flags)))
@@ -1606,7 +1613,6 @@ typedef struct icmpHostInfo {
 /* *********************** */
 
 #define HASH_INITIAL_SIZE         32
-#define MAX_MULTIHOMING_ADDRESSES 16
 #define MAX_HOST_SYM_NAME_LEN     64
 #define MAX_NODE_TYPES             8
 
@@ -1623,7 +1629,6 @@ typedef struct hostTraffic {
   char             ethAddressString[18];
   char             hostNumIpAddress[17], *fullDomainName;
   char             *dotDomainName, hostSymIpAddress[MAX_HOST_SYM_NAME_LEN], *osName;
-  struct in_addr   hostIpAddresses[MAX_MULTIHOMING_ADDRESSES];
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
 
   /* NetBIOS */

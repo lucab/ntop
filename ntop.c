@@ -48,6 +48,7 @@ static int numChildren=0;
 #endif
 
 static int enableDBsupport=0;
+static int *servicesMapper = NULL; /* temporary value */
 
 /* *************************** */
 
@@ -289,13 +290,13 @@ static short handleProtocol(char* protoName, char *protocol) {
     if(highProtoPort >= TOP_IP_PORT) highProtoPort = TOP_IP_PORT-1;
 
     for(idx=lowProtoPort; idx<= highProtoPort; idx++) {
-      if(ipPortMapper[idx] == -1) {
+      if(servicesMapper[idx] == -1) {
 	numIpPortsToHandle++;
 
 #ifdef DEBUG
 	printf("[%d] '%s' [port=%d]\n", numIpProtosToMonitor, protoName, idx);
 #endif
-	ipPortMapper[idx] = numIpProtosToMonitor;
+	servicesMapper[idx] = numIpProtosToMonitor;
       } else if(printWarnings)
 	printf("WARNING: IP port %d (%s) has been discarded (multiple instances).\n",
 	       idx, protoName);
@@ -313,13 +314,13 @@ static short handleProtocol(char* protoName, char *protocol) {
       idx = tcpSvc[i]->port;
 
     if(idx != -1) {
-      if(ipPortMapper[idx] == -1) {
+      if(servicesMapper[idx] == -1) {
 	numIpPortsToHandle++;
 
 #ifdef DEBUG
 	printf("[%d] '%s' [%s:%d]\n", numIpProtosToMonitor, protoName, protocol, idx);
 #endif
-	ipPortMapper[idx] = numIpProtosToMonitor;
+	servicesMapper[idx] = numIpProtosToMonitor;
       } else if(printWarnings)
 	printf("WARNING: protocol '%s' has been discarded (multiple instances).\n",
 	       protocol);
@@ -341,6 +342,11 @@ static void handleProtocolList(char* protoName,
   char tmpStr[255];
   char* lastEntry, *protoEntry;
   int increment=0, rc;
+
+  if(servicesMapper == NULL) {
+    servicesMapper = (int*)malloc(sizeof(int)*TOP_IP_PORT);
+    memset(servicesMapper, -1, sizeof(int)*TOP_IP_PORT);
+  }
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "%s - %s\n", protoName, protocolList);
@@ -375,6 +381,35 @@ static void handleProtocolList(char* protoName,
 	       numIpProtosToMonitor, protoName, protocolList);
 #endif
   }
+}
+
+/* **************************************** */
+
+void createPortHash() {
+  int *tmpIpMapper, theSize, i;
+
+  /* 
+     At this point in time servicesMapper contains all
+     the port data hence we can transform it from
+     an array to a hash table.     
+  */
+  numIpPortMapperSlots = 2*numIpPortsToHandle;
+  theSize = sizeof(PortMapper)*2*numIpPortMapperSlots;
+  ipPortMapper = (PortMapper*)malloc(theSize);
+  for(i=0; i<numIpPortMapperSlots; i++) ipPortMapper[i].port = -1;
+  
+  for(i=0; i<TOP_IP_PORT; i++) {
+    if(servicesMapper[i] != -1) {
+      int slotId = (3*i) % numIpPortMapperSlots;
+
+      while(ipPortMapper[slotId].port != -1)	
+	slotId = (slotId+1) % numIpPortMapperSlots;
+      
+      ipPortMapper[slotId].port = i, ipPortMapper[slotId].mappedPort = servicesMapper[i];
+    }
+  }
+
+  free(servicesMapper);
 }
 
 /* **************************************** */
@@ -441,6 +476,8 @@ void handleProtocols(char *protos) {
 
   if(buffer !=NULL)
     free(buffer);
+
+  createPortHash();
 }
 
 /* **************************************** */
@@ -458,19 +495,29 @@ void addDefaultProtocols(void) {
   handleProtocolList("X11", "6000-6010|");
   /* 22 == ssh (just to make sure the port is defined) */
   handleProtocolList("SSH", "22|");
+
+  createPortHash();
 }
 
 /* **************************************** */
 
 int mapGlobalToLocalIdx(int port) {
   if((port < 0) || (port >= TOP_IP_PORT))
-   return -1;
+   return(-1);
   else {
+    int slotId = (3*port) % numIpPortMapperSlots;
+    
+    while(ipPortMapper[slotId].port == -1)
+      slotId = (slotId+1) % numIpPortMapperSlots;
+
+    if(ipPortMapper[slotId].port == port) {      
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "IP port %d -> %d\n",
-	       port, ipPortMapper[port]);
+      traceEvent(TRACE_INFO, "IP port %d -> %d\n",
+		 port, ipPortMapper[slotId].mappedPort);
 #endif
-    return(ipPortMapper[port]);
+      return(ipPortMapper[slotId].mappedPort);
+    } else 
+      return(-1);   
   }
 }
 
