@@ -984,6 +984,9 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].pcapErrDumper != NULL)
       pcap_dump_close(myGlobals.device[i].pcapErrDumper);
 
+    if(myGlobals.device[i].pcapOtherDumper != NULL)
+      pcap_dump_close(myGlobals.device[i].pcapOtherDumper);
+
     if(myGlobals.device[i].pcapPtr != NULL) {
       pcap_close(myGlobals.device[i].pcapPtr);
       /*

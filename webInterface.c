@@ -3146,6 +3146,10 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.devices,
                            DEFAULT_NTOP_DEVICES);
 
+  printParameterConfigInfo(textPrintFlag, "-j | --create-other-packets",
+                           myGlobals.enableOtherPacketDump == 1 ? "Enabled" : "Disabled",
+                           DEFAULT_NTOP_OTHER_PKT_DUMP == 1 ? "Enabled" : "Disabled");
+
   printParameterConfigInfo(textPrintFlag, "-k | --filter-expression-in-extra-frame",
                            myGlobals.filterExpressionInExtraFrame == 1 ? "Yes" : "No",
                            DEFAULT_NTOP_FILTER_IN_FRAME == 1 ? "Yes" : "No");

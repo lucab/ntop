@@ -255,6 +255,7 @@ extern void *dequeuePacket(void* notUsed);
 #endif
 extern void updateDevicePacketStats(u_int length, int actualDeviceId);
 extern void dumpSuspiciousPacket(int actualDeviceId);
+extern void dumpOtherPacket(int actualDeviceId);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
 extern void addNewIpProtocolToHandle(char* name, u_int16_t id, u_int16_t idAlias);

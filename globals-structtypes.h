@@ -754,6 +754,7 @@ typedef struct ntopInterface {
   pcap_t *pcapPtr;               /* LBNL pcap handler */
   pcap_dumper_t *pcapDumper;     /* LBNL pcap dumper  - enabled using the 'l' flag */
   pcap_dumper_t *pcapErrDumper;  /* LBNL pcap dumper - all suspicious packets are logged */
+  pcap_dumper_t *pcapOtherDumper;/* LBNL pcap dumper - all "other" (unknown Ethernet and IP) packets are logged */
 
   char virtualDevice;            /* set to 1 for virtual devices (e.g. eth0:1) */
   char activeDevice;             /* Is the interface active (useful for virtual interfaces) */
@@ -888,6 +889,7 @@ typedef struct ntopInterface {
 /*XMLNOTE TODO pcap_t *pcapPtr; */
 /*XMLNOTE TODO pcap_dumper_t *pcapDumper; */
 /*XMLNOTE TODO pcap_dumper_t *pcapErrDumper */
+/*XMLNOTE TODO pcap_dumper_t *pcapOtherDumper */
 
 /*XML b              virtualDevice        parent        "" */
 /*XML b              dummyDevice          parent        "" */
@@ -1564,6 +1566,8 @@ typedef struct ntopGlobals {
                                      /*XML s trackOnlyLocalHosts  Options    "-g | --track-local-hosts" */
   char *devices;                     /* 'i' */
                                      /*XML s devices              Options    "-i | --interface" */
+  u_char enableOtherPacketDump;      /* 'j' */
+                                     /*XML b enableOtherPacketDump Options "-j | --create-other-packets" */
   int filterExpressionInExtraFrame;  /* 'k' */
                                      /*XML s filterExpressionInExtraFrame Options "-k | --filter-expression-in-extra-frame" */
   char *pcapLog;                     /* 'l' */

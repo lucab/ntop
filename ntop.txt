@@ -8,13 +8,13 @@ NTOP(8)                                                                NTOP(8)
 [1mSYNOPSIS[0m
        [1mntop  [22m[[1m@filename[22m] [[1m-a[22m|[1m--access-log-path [4m[22m<path>[24m] [[1m-b[22m|[1m--disable-decoders[22m]
        [[1m-c[22m|[1m--sticky-hosts] [22m[[1m-f[22m|[1m--traffic-dump-file  [4m[22mfile>[24m]  [[1m-g[22m|[1m--track-local-[0m
-       [1mhosts[22m]  [[1m-h[22m|[1m--help[22m] [[1m-k[22m|[1m--filter-expression-in-extra-frame[22m] [[1m-l[22m|[1m--pcap-[0m
-       [1mlog   [4m[22m<path>[24m]   [[1m-m[22m|[1m--local-subnets   [4m[22m<addresses>[24m]    [[1m-n[22m|[1m--numeric-ip-[0m
-       [1maddresses[22m]  [[1m-o[22m|[1m--no-mac[22m]  [[1m-p[22m|[1m--protocols  [4m[22m<list>[24m] [[1m-q[22m|[1m--create-suspi-[0m
-       [1mcious-packets[22m]   [[1m-r[22m|[1m--refresh-time   [4m[22m<number>[24m]   [[1m-s[22m|[1m--no-promiscuous[22m]
-       [[1m-t[22m|[1m--trace-level  [4m[22m<number>[24m]  [[1m-x  [4m[22m<max_num_hash_entries>[24m]  [[1m-w[22m|[1m--http-[0m
-       [1mserver [4m[22m<port>[24m] [[1m-z[22m|[1m--disable-sessions[22m]  [[1m-A[22m|[1m--set-admin-password  [4m[22mpass-[0m
-       [4mword[24m]    [[1m-B[22m|[1m--filter-expression    [4m[22mexpression[24m]    [[1m-C    [4m[22m<config[24mmode>[4m][0m
+       [1mhosts[22m] [[1m-h[22m|[1m--help[22m] [[1m-j[22m|[1m--create-other-packets[22m] [[1m-k[22m|[1m--filter-expression-[0m
+       [1min-extra-frame[22m] [[1m-l[22m|[1m--pcap-log [4m[22m<path>[24m] [[1m-m[22m|[1m--local-subnets [4m[22m<addresses>[24m]
+       [[1m-n[22m|[1m--numeric-ip-addresses[22m]   [[1m-o[22m|[1m--no-mac[22m]   [[1m-p[22m|[1m--protocols   [4m[22m<list>[24m]
+       [[1m-q[22m|[1m--create-suspicious-packets[22m] [[1m-r[22m|[1m--refresh-time [4m[22m<number>[24m] [[1m-s[22m|[1m--no-[0m
+       [1mpromiscuous[22m]  [[1m-t[22m|[1m--trace-level  [4m[22m<number>[24m]  [[1m-x [4m[22m<max_num_hash_entries>[24m]
+       [[1m-w[22m|[1m--http-server [4m[22m<port>[24m] [[1m-z[22m|[1m--disable-sessions[22m] [[1m-A[22m|[1m--set-admin-pass-[0m
+       [1mword  [4m[22mpassword[24m]  [[1m-B[22m|[1m--filter-expression  [4m[22mexpression[24m] [[1m-C [4m[22m<config[24mmode>[4m][0m
        [[1m-D[22m|[1m--domain [4m[22m<name>[24m] [[1m-F[22m|[1m--flow-spec [4m[22m<specs>[24m] [[1m-M[22m|[1m--no-interface-merge[22m]
        [[1m-O[22m|[1m----output-packet-path[22m]   [[1m-P[22m|[1m--db-file-path  [4m[22m<path>[24m]  [[1m-Q[22m|[1m--spool-[0m
        [1mfile-path  [4m[22m<path>[24m]  [[1m-R[22m|[1m--filter-rule  [4m[22m<file>[24m]  [4m<number>[24m]  [[1m-U[22m|[1m--mapper[0m
@@ -207,6 +207,14 @@ NTOP(8)                                                                NTOP(8)
         face  or  its name, e.g.  {6252C14C-44C9-49D9-BF59-B2DC18C7B811}.  Run
         [1mntop [22m-h to see a list of interface name-number mappings (at the end of
         the help information).
+
+
+       [1m-j | --create-other-packets[0m
+        This  parameter  causes [1mntop [22mto create a dump file of the 'other' net-
+        work traffic captured.  One file is created for each network interface
+        where <path>/ntop-other-pkts.<device>.pcap, where <path> is defined by
+        the -O | --output-packet-path parameter.   This  file  is  useful  for
+        understanding these unclassifed packets.
 
 
        [1m-k | --filter-expression-in-extra-frame[0m
@@ -459,9 +467,9 @@ NTOP(8)                                                                NTOP(8)
         If  this  parameter is not specified, ntop will try to switch first to
         'nobody' and then to 'anonymous' before giving up.
 
-        NOTE: This should  not  be  root  unless  you  really  understand  the
-        security  risks. In order to prevent this by accident, the only way to
-        run [1mntop [22mas root is to explicitly specify -u root.  [1mDon't do it.[0m
+        NOTE: This should not be root unless you really understand  the  secu-
+        rity  risks. In order to prevent this by accident, the only way to run
+        [1mntop [22mas root is to explicitly specify -u root.  [1mDon't do it.[0m
 
 
        [1m-x[0m
@@ -847,9 +855,9 @@ NTOP(8)                                                                NTOP(8)
 
         [1mgdbm [22mfrom http://www.gnu.org/software/gdbm/gdbm.html
 
-        [1mntop [22mrequires a POSIX threads library. Although a single-threaded ver-
-        sion  of  [1mntop [22mcan be built from the source if requested during ./con-
-        figure, it is not recommended for more than trivial usage.
+        [1mntop [22mrequires a POSIX  threads  library.  Although  a  single-threaded
+        version  of  [1mntop  [22mcan  be  built  from the source if requested during
+        ./configure, it is not recommended for more than trivial usage.
 
         The  [1mgd  [22mlibrary,  for  the  creation  of  png  files,  available   at
         http://www.boutell.com/gd/.  [1mntop [22msupports both gd 1.X and 2.X

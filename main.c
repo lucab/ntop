@@ -75,6 +75,7 @@ static struct option const long_options[] = {
   { "track-local-hosts",                no_argument,       NULL, 'g' },
   { "help",                             no_argument,       NULL, 'h' },
   { "interface",                        required_argument, NULL, 'i' },
+  { "create-other-packets",             no_argument,       NULL, 'j' },
   { "pcap-log",                         required_argument, NULL, 'l' },
   { "local-subnets",                    required_argument, NULL, 'm' },
   { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
@@ -207,6 +208,7 @@ void usage (FILE * fp) {
 #else
   fprintf(fp, "    [-i <number>    | --interface <number|name>]          %sInterface index number (or name) to monitor\n", newLine);
 #endif
+  fprintf(fp, "    [-j             | --create-other-packets]	         %sCreate file ntop-other-pkts.XXX.pcap file\n", newLine);
   fprintf(fp, "    [-o             | --no-mac]                           %sntop will trust just IP addresses (no MACs)\n", newLine);
   fprintf(fp, "    [-k             | --filter-expression-in-extra-frame] %sShow kernel filter expression in extra frame\n", newLine);
   fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  %sDump packets captured to a file (debug only!)\n", newLine);
@@ -422,8 +424,8 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.devices = strdup(optarg);
       break;
 
-    case 'o':                          /* Do not trust MAC addresses */
-      myGlobals.dontTrustMACaddr = 1;
+    case 'j':                          /* save other (unknown) packets in a file */
+      myGlobals.enableOtherPacketDump = 1;
       break;
 
     case 'k':                  /* update info of used kernel filter expression in extra frame */
@@ -442,6 +444,10 @@ static int parseOptions(int argc, char* argv []) {
 
     case 'n':
       myGlobals.numericFlag = 1;
+      break;
+
+    case 'o':                          /* Do not trust MAC addresses */
+      myGlobals.dontTrustMACaddr = 1;
       break;
 
     case 'p':                     /* the TCP/UDP protocols being monitored */

@@ -1645,7 +1645,7 @@
 #define DEFAULT_NTOP_TRAFFICDUMP_FILENAME   NULL      /* -f */
 #define DEFAULT_NTOP_TRACK_ONLY_LOCAL       0         /* -g */
 #define DEFAULT_NTOP_DEVICES                NULL      /* -i */
-#define DEFAULT_NTOP_BORDER_SNIFFER_MODE    0         /* -j */
+#define DEFAULT_NTOP_OTHER_PKT_DUMP         0         /* -j */
 #define DEFAULT_NTOP_FILTER_IN_FRAME        0         /* -k */
 #define DEFAULT_NTOP_PCAP_LOG_FILENAME      NULL      /* -l */
 #define DEFAULT_NTOP_LOCAL_SUBNETS          NULL      /* -m */

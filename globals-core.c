@@ -170,6 +170,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.numericFlag = DEFAULT_NTOP_NUMERIC_IP_ADDRESSES;
   myGlobals.localAddresses = DEFAULT_NTOP_LOCAL_SUBNETS;
   myGlobals.enableSuspiciousPacketDump = DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP;
+  myGlobals.enableOtherPacketDump = DEFAULT_NTOP_OTHER_PKT_DUMP;
   myGlobals.disablePromiscuousMode = DEFAULT_NTOP_DISABLE_PROMISCUOUS;
   myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
   myGlobals.currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;

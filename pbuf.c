@@ -729,6 +729,7 @@ static void processIpPkt(const u_char *bp,
 			 int actualDeviceId,
 			 int vlanId) {
   u_short sport=0, dport=0;
+  int sportIdx, dportIdx;
   struct ip ip;
 #ifdef INET6
   struct ip6_hdr *ip6;
@@ -1197,7 +1198,6 @@ static void processIpPkt(const u_char *bp,
      if((sport > 0) || (dport > 0)) {
 	IPSession *theSession = NULL;
 	u_short isPassiveSess = 0, nonFullyRemoteSession = 1;
-	int sportIdx, dportIdx;
 
 	/* It might be that tcpDataLength is 0 when
 	   the rcvd packet is fragmented and the main
@@ -1249,6 +1249,14 @@ static void processIpPkt(const u_char *bp,
 	    isPassiveSess = theSession->passiveFtpSession;
 	}
 
+	sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
+
+	if ((myGlobals.enableOtherPacketDump) && ((sportIdx == -1) && (dportIdx == -1)))
+	{
+		/* Both source & destination port are unknown. The packet will be counted to "Other TCP/UDP prot." : We dump the packet if requested */
+		dumpOtherPacket(actualDeviceId);
+	}
+
 	/* choose most likely port for protocol traffic accounting
 	 * by trying lower number port first. This is based
 	 * on the assumption that lower port numbers are more likely
@@ -1261,8 +1269,6 @@ static void processIpPkt(const u_char *bp,
 	 *
 	 * Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>
 	 */
-
-	sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
 
 	if((dport < sport)
 	   && ((!((sportIdx != -1) && (dportIdx == -1)))
@@ -1487,6 +1493,15 @@ static void processIpPkt(const u_char *bp,
 	    nonFullyRemoteSession = 0;
 	  }
 	}
+
+        sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
+
+        if ((myGlobals.enableOtherPacketDump) && ((sportIdx == -1) && (dportIdx == -1)))
+        {
+                /* Both source & destination port are unknown. The packet will be counted to "Other TCP/UDP prot." : We dump the packet if requested */
+                dumpOtherPacket(actualDeviceId);
+        }
+
 
         /* Handle UDP traffic like TCP, above -
 	   That is: if we know about the lower# port, even if it's the destination,
@@ -1896,6 +1911,7 @@ static void processIpPkt(const u_char *bp,
      proto = "IP (Other)";
      incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
      sport = dport = 0;
+     if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
      incrementTrafficCounter(&srcHost->otherSent, length);
      incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, nh);
      incrementTrafficCounter(&dstHost->otherRcvd, length);
@@ -2215,6 +2231,13 @@ void updateDevicePacketStats(u_int length, int actualDeviceId) {
 void dumpSuspiciousPacket(int actualDeviceId) {
   if(myGlobals.device[actualDeviceId].pcapErrDumper != NULL)
     pcap_dump((u_char*)myGlobals.device[actualDeviceId].pcapErrDumper, h_save, p_save);
+}
+
+/* ***************************************************** */
+
+void dumpOtherPacket(int actualDeviceId) {
+  if(myGlobals.device[actualDeviceId].pcapOtherDumper != NULL)
+    pcap_dump((u_char*)myGlobals.device[actualDeviceId].pcapOtherDumper, h_save, p_save);
 }
 
 /* ***************************************************** */
@@ -2586,6 +2609,7 @@ void processPacket(u_char *_deviceId,
 	incrementTrafficCounter(&dstHost->otherRcvd, length);
 	incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
 	incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
+	if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
 
 	ctr.value = length;
 
@@ -2886,6 +2910,7 @@ void processPacket(u_char *_deviceId,
 				      llcHeader.ssap /* ssap */, 0 /* ip */);
 		incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				      llcHeader.ssap /* ssap */, 0 /* ip */);
+		if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
 	      }
 	    } else if(myGlobals.enablePacketDecoding
 		      && ((sap_type == 0x06)
@@ -2910,6 +2935,7 @@ void processPacket(u_char *_deviceId,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
 	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
+	      if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
 	    }
 
 	    ctr.value = length;
@@ -3031,6 +3057,7 @@ void processPacket(u_char *_deviceId,
 				0 /* ssap */, 0 /* ip */);
 	  incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */,
 				0 /* ssap */, 0 /* ip */);
+	  if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
 	  break;
 	}
 

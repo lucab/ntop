@@ -1201,6 +1201,19 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	  traceEvent(CONST_TRACE_INFO, "Continuing without suspicious packet dump");
         }
       }
+
+      if(myGlobals.enableOtherPacketDump) {
+	sprintf(myName, "%s/ntop-other-pkts.%s.pcap",
+		myGlobals.pcapLogBasePath,
+		myGlobals.device[deviceId].name);
+	myGlobals.device[deviceId].pcapOtherDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
+
+	if(myGlobals.device[deviceId].pcapOtherDumper == NULL) {
+          myGlobals.enableOtherPacketDump = 0;
+	  traceEvent(CONST_TRACE_ERROR, "pcap_dump_open(..., '%s') failed (other (unknown) packets)", myName);
+	  traceEvent(CONST_TRACE_INFO, "Continuing without other (unknown) packet dump");
+        }
+      }
     } else {
       myGlobals.device[deviceId].virtualDevice = 1;
       if(column != NULL) column[0] = ':';
