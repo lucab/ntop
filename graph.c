@@ -266,6 +266,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
     GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
+    if(num == 1) p[0] = 100; /* just to be safe */
+
     GDC_out_pie(250,			/* width */
 		250,			/* height */
 		fd,			/* open file pointer */
@@ -358,6 +360,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
     GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
+    if(num == 1) p[0] = 100; /* just to be safe */
     GDC_out_pie(250,			/* width */
 		250,			/* height */
 		fd,			/* open file pointer */
@@ -429,6 +432,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
     GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
+    if(num == 1) p[0] = 100; /* just to be safe */
     GDC_out_pie(250,			/* width */
 		250,			/* height */
 		fd,			/* open file pointer */
@@ -526,7 +530,9 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   GDCPIE_BGColor        = 0xFFFFFFL;
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
+  if(num == 1) p[0] = 100;
 
+  if(num == 1) p[0] = 100; /* just to be safe */
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
@@ -615,6 +621,7 @@ void pktSizeDistribPie(void) {
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
+  if(num == 1) p[0] = 100; /* just to be safe */
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
@@ -708,6 +715,7 @@ void pktTTLDistribPie(void) {
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
+  if(num == 1) p[0] = 100; /* just to be safe */
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
@@ -771,6 +779,7 @@ void ipProtoDistribPie(void) {
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
+  if(num == 1) p[0] = 100; /* just to be safe */
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
@@ -839,6 +848,7 @@ void interfaceTrafficPie(void) {
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_RIGHT;
 
+  if(myDevices == 1) p[0] = 100; /* just to be safe */
   GDC_out_pie(250,	/* width */
 	      250,		/* height */
 	      fd,		/* open file pointer */
@@ -912,6 +922,7 @@ void pktCastDistribPie(void) {
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
+  if(num == 1) p[0] = 100; /* just to be safe */
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
@@ -968,6 +979,7 @@ void drawTrafficPie(void) {
   GDCPIE_explode   = expl;    /* default: NULL - no explosion */
   GDCPIE_Color     = clr;
 
+  if(num == 1) p[0] = 100; /* just to be safe */
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */

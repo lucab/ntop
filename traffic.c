@@ -228,29 +228,39 @@ static void updateDeviceThpt(int deviceToUpdate) {
 
 	  if((topSentIdx == NO_PEER) 
 	     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx] == NULL)) {
-	    topSentIdx = idx;
+	    if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx))
+	      topSentIdx = idx;
 	  } else {
 	    if(el->actualSentThpt > myGlobals.device[deviceToUpdate].
 	       hash_hostTraffic[topSentIdx]->actualSentThpt) {
+	      if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
 	      secondSentIdx = topSentIdx;
 	      topSentIdx = idx;
+	      }
 	    } else {
 	      if((secondSentIdx == NO_PEER)
 		 || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondSentIdx] == NULL)) {
-		secondSentIdx = idx;
+		if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx))
+		  secondSentIdx = idx;
 	      } else {
 		if(el->actualSentThpt > myGlobals.device[deviceToUpdate].
 		   hash_hostTraffic[secondSentIdx]->actualSentThpt) {
+		  if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
 		  thirdSentIdx = secondSentIdx;
 		  secondSentIdx = idx;
+		  }
 		} else {
 		  if((thirdSentIdx == NO_PEER)
 		     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdSentIdx] == NULL)) {
+		    if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
 		    thirdSentIdx = idx;
+		    }
 		  } else {
 		    if(el->actualSentThpt > myGlobals.device[deviceToUpdate].
 		       hash_hostTraffic[thirdSentIdx]->actualSentThpt) {
+		      if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
 		      thirdSentIdx = idx;
+		      }
 		    }
 		  }
 		}
@@ -260,29 +270,37 @@ static void updateDeviceThpt(int deviceToUpdate) {
 
 	  if((topRcvdIdx == NO_PEER) 
 	     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topRcvdIdx] == NULL)) {
+	    if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) 
 	    topRcvdIdx = idx;
 	  } else {
 	    if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].
 	       hash_hostTraffic[topRcvdIdx]->actualRcvdThpt) {
-	      secondRcvdIdx = topRcvdIdx;
-	      topRcvdIdx = idx;
+	      if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
+		secondRcvdIdx = topRcvdIdx;
+		topRcvdIdx = idx;
+	      }
 	    } else {
 	      if((secondRcvdIdx == NO_PEER)
 		 || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx] == NULL)) {
-		secondRcvdIdx = idx;
+		if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx))
+		  secondRcvdIdx = idx;
 	      } else {
 		if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].
 		   hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt) {
-		  thirdRcvdIdx = secondRcvdIdx;
-		  secondRcvdIdx = idx;
+		  if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
+		    thirdRcvdIdx = secondRcvdIdx;
+		    secondRcvdIdx = idx;
+		  }
 		} else {
 		  if((thirdRcvdIdx == NO_PEER)
 		     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx] == NULL)) {
-		    thirdRcvdIdx = idx;
+		    if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx))
+		      thirdRcvdIdx = idx;
 		  } else {
 		    if(el->actualRcvdThpt > myGlobals.device[deviceToUpdate].
 		       hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt) {
-		      thirdRcvdIdx = idx;
+		      if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx))
+			thirdRcvdIdx = idx;
 		    }
 		  }
 		}

@@ -22,7 +22,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
+#define USE_CGI
 #include "ntop.h"
 #include "globals-report.h"
 

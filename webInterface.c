@@ -17,6 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#define USE_CGI
 
 #include "ntop.h"
 #include "globals-report.h"
@@ -90,12 +91,12 @@ void execCGI(char* cgiName) {
   putenv("REQUEST_METHOD=GET");
   if(num == 0) putenv("QUERY_STRING=");
 
-  if(snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName) < 0)
+  if(snprintf(line, sizeof(line), "/usr/bin/perl %s/cgi/%s", getenv("PWD"), cgiName) < 0)
     BufferOverflow();
 
   traceEvent(TRACE_INFO, "Executing '%s'", line);
 
-  if((fd = sec_popen(line, "r")) == NULL) {
+  if((fd = popen(line, "r")) == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: unable to exec %s\n", cgiName);
     return;
   } else {
@@ -106,6 +107,7 @@ void execCGI(char* cgiName) {
     }
     pclose(fd);
   }
+  traceEvent(TRACE_INFO, "Execution completed.");
 }
 #endif /* USE_CGI */
 #endif
@@ -233,7 +235,8 @@ char* makeHostLink(HostTraffic *el, short mode,
   accessMutex(&myGlobals.addressResolutionMutex, "makeHostLink");
 #endif
 
-  if((el == myGlobals.otherHostEntry) || (el->hostSerial == myGlobals.otherHostEntryIdx)) {
+  if((el == myGlobals.otherHostEntry)
+     || (el->hostSerial == myGlobals.otherHostEntryIdx)) {
     char *fmt;
 
     if(mode == LONG_FORMAT)
@@ -266,17 +269,16 @@ char* makeHostLink(HostTraffic *el, short mode,
       usedEthAddress = 1;
       specialMacAddress = 1;
     } else {
-	if(cutName
-	   && (symIp[0] != '*')
-	   && strcmp(symIp, el->hostNumIpAddress)) {
-	  int i;
+      if(cutName && (symIp[0] != '*')
+	 && strcmp(symIp, el->hostNumIpAddress)) {
+	int i;
 
-	  for(i=0; symIp[i] != '\0'; i++)
-	    if(symIp[i] == '.') {
-	      symIp[i] = '\0';
-	      break;
-	    }
-	}
+	for(i=0; symIp[i] != '\0'; i++)
+	  if(symIp[i] == '.') {
+	    symIp[i] = '\0';
+	    break;
+	  }
+      }
     }
   } else {
     strncpy(symIp, el->ethAddressString, sizeof(symIp));
@@ -293,7 +295,6 @@ char* makeHostLink(HostTraffic *el, short mode,
     traceEvent(TRACE_INFO, "->'%s/%s'\n", symIp, el->ethAddressString);
 #endif
   } else {
-
     if(usedEthAddress) {
       if(el->nbHostName != NULL) {
 	strncpy(symIp, el->nbHostName, sizeof(linkName));
@@ -371,15 +372,15 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
-		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s</TH>%s",
-		blinkOn, linkName, symIp, dynIp,
+		"<A HREF=\"/%s.html\">%s (%d)</A>%s%s%s%s%s%s%s%s</TH>%s",
+		blinkOn, linkName, symIp, el->numUses, dynIp,
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr,
 		blinkOff, flag) < 0)
       BufferOverflow();
   } else {
-    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s</A>%s%s%s%s%s%s%s%s%s",
-		blinkOn, linkName, symIp,
+    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s (%d)</A>%s%s%s%s%s%s%s%s%s",
+		blinkOn, linkName, symIp, el->numUses,
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0)

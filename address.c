@@ -578,7 +578,10 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
 #ifdef GDBM_DEBUG
     traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]", retrievedAddress->symAddress, tmpBuf);
 #endif
-    strcpy(buffer, retrievedAddress->symAddress);
+
+    if(snprintf(buffer, MAX_HOST_SYM_NAME_LEN, "%s", retrievedAddress->symAddress) < 0)
+      BufferOverflow();
+    
     free(data_data.dptr);
   } else {
 #ifdef GDBM_DEBUG

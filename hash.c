@@ -20,7 +20,7 @@
 
 #include "ntop.h"
 
-#define MIN_NUM_USES   1
+#define MIN_NUM_USES   3
 
 #define MAX_NUM_PURGED_HOSTS  256
 
@@ -829,8 +829,8 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
 #endif
       
     if(data_data.dptr != NULL) {
-      /* memset(el, 0, sizeof(HostTraffic)); */
-      memset(&el->flags, 0, sizeof(fd_set));
+      memset(el, 0, sizeof(HostTraffic));
+      /* memset(&el->flags, 0, sizeof(fd_set)); */
       el->hostSerial = theSerial;
       if(strlen(data_data.dptr) == 17) /* MAC Address */ {
 	strcpy(el->ethAddressString, data_data.dptr);
