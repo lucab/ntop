@@ -129,12 +129,50 @@ AC_CHECK_FILE(aclocal.m4, ,
     aclocal
     echo ""
 )
-AC_CHECK_FILE(depcomp, ,
+AC_CHECK_FILE(depcomp, , [
+
     echo ""
-    echo "Invoking automake to copy depcomp..."
+    echo "depcomp missing... will install it in this ntop directory."
+    echo "  Checking automake version..."
+    automakeversion=`automake --version | grep ^automake | awk '{ print $4 }'`
+    case "${automakeversion}" in
+        *1\.[[45]]*)
+            echo "*******************************************************************"
+            echo "*                                                                 *"
+            echo "*ERROR: ntop requires automake version 1.6 or newer...            *"
+            echo "*                                                                 *"
+            echo "*  You are executing ${automakeversion}"
+            echo "*                                                                 *"
+            echo "*>>>   Unable to proceed with your request, aborting ./configure! *"
+            echo "*                                                                 *"
+            echo "*???    Suggestion - Install a private copy of automake 1.6.3.    *"
+            echo "*???                 It's quite easy and does NOT require root:   *"
+            echo "*                                                                 *"
+            echo "*   Download automake 1.6.3 from gnu                              *"
+            echo "*     $ wget http://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.gz*"
+            echo "*                                                                 *"
+            echo "*   Untar it                                                      *"
+            echo "*     $ tar xfvz automake-1.6.3.tar.gz                            *"
+            echo "*                                                                 *"
+            echo "*   Make it                                                       *"
+            echo "*     $ cd automake-1.6.3                                         *"
+            echo "*     $ ./configure --prefix=/home/<whatever>/automake163         *"
+            echo "*     $ make                                                      *"
+            echo "*     $ make install                                              *"
+            echo "*                                                                 *"
+            echo "*   Add it to your path.  Under bash do this:                     *"
+            echo "*     $ PATH=/home/<whatever>automake163/bin:\$PATH                *"
+            echo "*     $ export PATH                                               *"
+            echo "*                                                                 *"
+            echo "*******************************************************************"
+            exit 1 
+            ;;
+    esac
+
+    echo "  Invoking automake to copy depcomp..."
     automake --gnu --copy --add-missing
     echo ""
-)
+])
 
 dnl> early since we need it for --enable-showoses
 AC_PROG_AWK
