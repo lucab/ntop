@@ -523,7 +523,9 @@ extern int getAllPortByName(char* portName);
 extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
 extern void resetUsageCounter(UsageCounter *counter);
 extern void resetSecurityHostTraffic(HostTraffic *el);
-extern char* mapIcmpType(int icmpType);
+extern char *mapIcmpType(int icmpType);
+extern char *strtolower(char *s);
+extern char *xstrncpy(char *dest, const char *src, size_t n);
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

@@ -44,10 +44,10 @@ void formatUsageCounter(UsageCounter usageCtr,
     float pctg;
 
     pctg = ((float)usageCtr.value/(float)topValue)*100;
-
+    
     if(pctg > 100) pctg = 100; /* This should not happen ! */
 
-    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s [%.0f %%]</TD>",
+    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;[%.0f&nbsp;%%]</TD>",
 		formatPkts(usageCtr.value), pctg) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -2297,21 +2297,21 @@ void printHostContactedPeers(HostTraffic *el) {
 char *getSessionState(IPSession *session) {
   switch (session->sessionState) {
   case STATE_SYN:
-    return("Sent Syn");
+    return("Sent&nbsp;Syn");
   case STATE_SYN_ACK:
-    return("Rcvd Syn/Ack");
+    return("Rcvd&nbsp;Syn/Ack");
   case STATE_ACTIVE:
     return("Active");
   case STATE_FIN1_ACK0:
-    return("Fin1 Ack0");
+    return("Fin1&nbsp;Ack0");
   case STATE_FIN1_ACK1:
-    return("Fin1 Ack1");
+    return("Fin1&nbsp;Ack1");
   case STATE_FIN2_ACK0:
-    return("Fin2 Ack0");
+    return("Fin2&nbsp;Ack0");
   case STATE_FIN2_ACK1:
-    return("Fin2 Ack1");
+    return("Fin2&nbsp;Ack1");
   case STATE_FIN2_ACK2:
-    return("Fin2 Ack2");
+    return("Fin2&nbsp;Ack2");
   case STATE_TIMEOUT:
     return("Timeout");
   case STATE_END:
@@ -2400,7 +2400,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       sendString(buf);
       numSessions++;
 
-      sendString("<TD "TD_BG"><UL>&nbsp;");
+      sendString("<TD "TD_BG"><UL>");
       for(i=0; i < MAX_NUM_CONTACTED_PEERS; i++) {
 	u_int theIdx = scanner->peers.peersIndexes[i];
 

@@ -84,7 +84,7 @@ static u_int32_t networks[MAX_NUM_NETWORKS][3];
 /*
  * secure popen by Thomas Biege <thomas@suse.de>
  *
- * Fixes by Andreas Pfaller <a.pfaller@pop.gun.de>
+
  */
 #define __SEC_POPEN_TOKEN " "
 
@@ -2319,18 +2319,7 @@ int getSniffedDNSName(char *hostNumIpAddress,
 #endif
 
     if(data.dptr) {
-      int i;
-      
-      strncpy(name, data.dptr, maxNameLen-1);
-      name[maxNameLen-1] = 0;
-
-      if((maxNameLen > 5) &&
-	 (strcmp(&name[strlen(name)-5], ".arpa") == 0))
-	return(0); /* Do not return XXXX.in-addr.arpa */
-
-      for(i=0; i<maxNameLen; i++)
-	name[i] = tolower(name[i]);
-
+      xstrncpy(name, data.dptr, maxNameLen);
       free(data.dptr);
       found = 1;
     }
@@ -2339,10 +2328,39 @@ int getSniffedDNSName(char *hostNumIpAddress,
   return(found);
 }
  
+/* ******************************** */
+
+/* Function courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+char *strtolower(char *s) {
+  while (*s) {
+    *s=tolower(*s);
+    s++;
+  }
+
+  return(s);
+}
+
+/* ******************************** */
+
+/* Function courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+/*
+ *  xstrncpy() - similar to strncpy(3) but terminates string always with
+ * '\0' if (n != 0 and dst != NULL),  and doesn't do padding
+ */
+char *xstrncpy(char *dest, const char *src, size_t n) {
+  char *r = dest;
+  if (!n || !dest)
+    return dest;
+  if (src)
+    while (--n != 0 && *src != '\0')
+      *dest++ = *src++;
+  *dest = '\0';
+  return r;
+}
+
 /* *************************************** */
 
 int strOnlyDigits(const char *s) {
-
   if((*s) == '\0')
     return 0;
 
