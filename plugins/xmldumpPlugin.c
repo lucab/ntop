@@ -1,9 +1,9 @@
 /*
  *  Copyright (C) 2003-2004 Burton M. Strausss III <burton@ntopsupport.com>
  *                          Luca Deri <deri@ntop.org>
- *                      
+ *
  *  			    http://www.ntop.org/
- *  					
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -37,7 +37,7 @@
 #else
  /*
   *    Missing header files, disabling xmldump plugin.
-  *   
+  *
   *       FOR MOST USERS THIS IS NOT A PROBLEM
   */
 
@@ -81,7 +81,11 @@
 #define CONST_XMLDUMP_INTERFACES            "interfaces"
 #define CONST_XMLDUMP_TOFILE                "tofile"
 
-/* globals... */	
+/* Forward */
+static int initXmldump(void);
+static void termXmldump(void);
+static void emptyHTTPhandler(char* url);
+
 
 #ifdef MAKE_WITH_XMLDUMP
 
@@ -110,9 +114,6 @@ static int dumpVersioncHeader,
 /* ****************************** */
 
 /* **** f o r w a r d **** */
-
-static int initXmldump(void);
-static void termXmldump(void);
 
 static int dumpXML(char * url);
 static void handleXmldumpHTTPrequest(char* url);
@@ -169,7 +170,7 @@ PluginInfo* myPluginEntryFctn() {
 #else
   PluginInfo* PluginEntryFctn() {
 #endif
-  
+
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "XML: Welcome to %s. (C) 2003-2004 by Burton Strauss",
              pluginInfo->pluginName);
 
@@ -255,7 +256,7 @@ static void emptyHTTPhandler(char* url) {
   XMLSECTIONEND name
 
 
-   Note how the el in the XMLSECTIONBEGIN matches up with the variable in the 
+   Note how the el in the XMLSECTIONBEGIN matches up with the variable in the
 GdomeElement * newxml_xyx() line!
 
    In those places where there is a struct xyx, add the XML line:
@@ -299,21 +300,21 @@ static int initXmldump(void) {
   if(fetchPrefsValue("xmldump.versioncheader", value, sizeof(value)) == -1) {
     snprintf(value, sizeof(value), "%d", TRUE);
     storePrefsValue("xmldump.versioncheader", value);
-    dumpVersioncHeader = TRUE; 
+    dumpVersioncHeader = TRUE;
   } else {
     dumpVersioncHeader = atoi(value);
   }
   if(fetchPrefsValue("xmldump.invoke", value, sizeof(value)) == -1) {
     snprintf(value, sizeof(value), "%d", TRUE);
     storePrefsValue("xmldump.invoke", value);
-    dumpInvoke = TRUE; 
+    dumpInvoke = TRUE;
   } else {
     dumpInvoke = atoi(value);
   }
   if(fetchPrefsValue("xmldump.interfaces", value, sizeof(value)) == -1) {
     snprintf(value, sizeof(value), "%d", TRUE);
     storePrefsValue("xmldump.interfaces", value);
-    dumpInterfaces = TRUE; 
+    dumpInterfaces = TRUE;
   } else {
     dumpInterfaces = atoi(value);
   }
@@ -405,7 +406,7 @@ static void handleXmldumpHTTPrequest(char* url) {
 
   sendString("<tr "TR_ON">\n"
              "<td "TD_BG">Dump version.c header</td>\n"
-             "<td "TD_BG" align=\"center\"><form action=\"/" 
+             "<td "TD_BG" align=\"center\"><form action=\"/"
              CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>"
              "<table border=\"0\"" TABLE_DEFAULTS " width=\"100%\"><tr><th align=\"left\">");
 
@@ -433,7 +434,7 @@ static void handleXmldumpHTTPrequest(char* url) {
 
   sendString("<tr "TR_ON">\n"
              "<td "TD_BG">Dump ntop invocation data</td>\n"
-             "<td "TD_BG" align=\"center\"><form action=\"/" 
+             "<td "TD_BG" align=\"center\"><form action=\"/"
              CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>"
              "<table border=\"0\"" TABLE_DEFAULTS " width=\"100%\"><tr><th align=\"left\">");
 
@@ -461,7 +462,7 @@ static void handleXmldumpHTTPrequest(char* url) {
 
   sendString("<tr "TR_ON">\n"
              "<td "TD_BG">Dump per-interface data</td>\n"
-             "<td "TD_BG" align=\"center\"><form action=\"/" 
+             "<td "TD_BG" align=\"center\"><form action=\"/"
              CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>"
              "<table border=\"0\"" TABLE_DEFAULTS " width=\"100%\"><tr><th align=\"left\">");
 
@@ -514,8 +515,8 @@ static void handleXmldumpHTTPrequest(char* url) {
 #ifdef MAKE_WITH_XMLDUMP
 
 /* internal functions */
-GdomeElement * _newxml(char * filename, int linenum, 
-                       GdomeNodeType nodetype, 
+GdomeElement * _newxml(char * filename, int linenum,
+                       GdomeNodeType nodetype,
                        GdomeElement * parent,
                        char * nodename,
                        GdomeException exc,
@@ -543,14 +544,14 @@ GdomeElement * _newxml(char * filename, int linenum,
             }
             temp_el = gdome_doc_createElement (doc, temp_nodename, &exc);
             if (exc) {
-                traceEvent(CONST_TRACE_ERROR, 
-                           "XMLDUMP:      newxml() at %d(%s), createElement failed, Exception #%d", 
-                           linenum, 
-                           filename, 
+                traceEvent(CONST_TRACE_ERROR,
+                           "XMLDUMP:      newxml() at %d(%s), createElement failed, Exception #%d",
+                           linenum,
+                           filename,
                            &exc);
                 rc=(int) exc;
             }
-            if (temp_nodename != NULL) 
+            if (temp_nodename != NULL)
                 gdome_str_unref(temp_nodename);
             break;
         default:
@@ -569,21 +570,21 @@ GdomeElement * _newxml(char * filename, int linenum,
         while ( (attrname != NULL) && (strcmp(attrname, "__sentinel__") != 0) ) {
 
             attrvalue=va_arg(ap, char *);
-            if ( (attrvalue != NULL) && 
+            if ( (attrvalue != NULL) &&
                  (strcmp(attrvalue, "__sentinel__") == 0) ) {
 #if (XMLDUMP_DEBUG >= 2)
-                traceEvent(CONST_TRACE_INFO, 
-                           "XMLDUMP_DEBUG:       newxml() at %d(%s) attrname __sentinel__", 
+                traceEvent(CONST_TRACE_INFO,
+                           "XMLDUMP_DEBUG:       newxml() at %d(%s) attrname __sentinel__",
                            linenum, filename);
 #endif
                 break;
             }
-            if ( (attrvalue != NULL) && 
-                 (strcmp(attrname, "description") == 0) && 
+            if ( (attrvalue != NULL) &&
+                 (strcmp(attrname, "description") == 0) &&
                  (strcmp(attrvalue, "") == 0) ) {
 #if (XMLDUMP_DEBUG >= 2)
-                traceEvent(CONST_TRACE_INFO, 
-                           "XMLDUMP_DEBUG:       newxml() at %d(%s) skip null description", 
+                traceEvent(CONST_TRACE_INFO,
+                           "XMLDUMP_DEBUG:       newxml() at %d(%s) skip null description",
                            linenum, filename);
 #endif
                 break;
@@ -743,9 +744,9 @@ GdomeElement * newxml_dhcpstats(GdomeElement * parent,
                        char * description);
 
 GdomeElement * newxml_domainstats(GdomeElement * parent,
-                       char * nodename,               
-                       DomainStats * input,           
-                       char * description); 
+                       char * nodename,
+                       DomainStats * input,
+                       char * description);
 
 GdomeElement * newxml_filelist(GdomeElement * parent,
                        char * nodename,
@@ -807,7 +808,7 @@ GdomeElement * newxml_protocolinfo(GdomeElement * parent,
                        ProtocolInfo * input,
                        char * description);
 
-GdomeElement * newxml_prototrafficinfo(GdomeElement * parent,        
+GdomeElement * newxml_prototrafficinfo(GdomeElement * parent,
                        char * nodename,
                        ProtoTrafficInfo * input,
                        char * description);
@@ -995,9 +996,9 @@ GdomeElement * newxml_dhcpstats(GdomeElement * parent,
 }
 
 GdomeElement * newxml_domainstats(GdomeElement * parent,
-                       char * nodename,               
-                       DomainStats * input,           
-                       char * description) {          
+                       char * nodename,
+                       DomainStats * input,
+                       char * description) {
 
     GdomeElement *elWork;
     GdomeException exc;
@@ -1293,11 +1294,11 @@ GdomeElement * newxml_prototrafficinfo(GdomeElement * parent,
 
 #if (XMLDUMP_DEBUG >= 3)
         traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_prototrafficinfo");
-#endif                 
+#endif
 
     /* Insert the generated block of code */
         /* #include "xml_s_prototrafficinfo.inc" */
-                       
+
 #if (XMLDUMP_DEBUG >= 3)
         traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_prototrafficinfo");
 #endif
@@ -1760,7 +1761,7 @@ int dumpXML_writeout(void) {
     traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting dumpXML_writeout");
 #endif
 
-    /* Output the DOM tree 
+    /* Output the DOM tree
      *
      *    What's special here is:
      *
@@ -1770,7 +1771,7 @@ int dumpXML_writeout(void) {
 
     /* Create a unique temp name and have gdome dump the generated xml to it */
 
-    sprintf(tmpFileName, "%s-%lu", CONST_XML_TMP_NAME, 
+    sprintf(tmpFileName, "%s-%lu", CONST_XML_TMP_NAME,
             myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
 #ifdef XMLDUMP_DEBUG
     traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Dumping dom to temp file, '%s'", tmpFileName);
@@ -1784,7 +1785,7 @@ int dumpXML_writeout(void) {
     } else {
         traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Dumping dom, exc=0");
 #endif
-    }       
+    }
 
     /* Open the temp file we created and start echoing it */
     fdTemp = fopen(tmpFileName, "rb");
@@ -1798,7 +1799,7 @@ int dumpXML_writeout(void) {
 #if (XMLDUMP_DEBUG >= 2)
     traceEvent(CONST_TRACE_ERROR, "XMLDUMP_DEBUG: INITIAL fread(), len=%d, '%s'n", len, tmpStr);
 #endif
-    if ( (len > 0) && 
+    if ( (len > 0) &&
          ( (doctypeHeader = strstr(tmpStr, "?>")) != NULL) ) {
         doctypeHeader += 3; /* skip over ?> and the \n */
         sendStringLen(tmpStr, (doctypeHeader-tmpStr));
@@ -1864,26 +1865,26 @@ static int dumpXML(char * url) {
 
     /* **********************************************************************************
      * Skip .xml name (we basically accept ANYTHING) to the options...
-     *    dump.xml?a=b&c=d 
+     *    dump.xml?a=b&c=d
      * ********************************************************************************** */
     urlOptions = strstr(url, "?");
 #if (XMLDUMP_DEBUG >= 2)
     traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Parameters from url are '%s'", urlOptions);
 #endif
 
-    /* ********************************************************************************** 
+    /* **********************************************************************************
      *   Setup the dtd URI
-     * (we don't bother with gdome_di_createDocumentType 'cause it 
+     * (we don't bother with gdome_di_createDocumentType 'cause it
      *  flat out doesn't work)
      */
 /* TODO Schema? */
-    if (snprintf(buf, sizeof(buf), "%s://%s:%d/%s", 
-                                   myGlobals.webPort != 0 ? "http" : 
-                                                            (myGlobals.sslPort != 0 ? "https" : 
+    if (snprintf(buf, sizeof(buf), "%s://%s:%d/%s",
+                                   myGlobals.webPort != 0 ? "http" :
+                                                            (myGlobals.sslPort != 0 ? "https" :
                                                                                       "file"),
                                    hostName,
-                                   myGlobals.webPort != 0 ? myGlobals.webPort : 
-                                                            (myGlobals.sslPort != 0 ? myGlobals.sslPort : 
+                                   myGlobals.webPort != 0 ? myGlobals.webPort :
+                                                            (myGlobals.sslPort != 0 ? myGlobals.sslPort :
                                                                                       0),
                                    CONST_XML_DTD_NAME) < 0)
         BufferTooShort();
@@ -1899,9 +1900,9 @@ static int dumpXML(char * url) {
 #ifdef DEBUG
     snprintf(buf, sizeof(buf), "OTHER(%d)", rc);
     traceEvent(CONST_TRACE_INFO, "DEBUG: set - sigaction(SIGSEGV,,) rc = %s",
-            (rc == 0      ? "OK"     : 
-            (rc == EINVAL ? "EINVAL" : 
-            (rc == EFAULT ? "EFAULT" : 
+            (rc == 0      ? "OK"     :
+            (rc == EINVAL ? "EINVAL" :
+            (rc == EFAULT ? "EFAULT" :
             (rc == EINTR  ? "EINTR"  : buf) ) ) ) );
 #endif
 
@@ -1916,7 +1917,7 @@ static int dumpXML(char * url) {
 
     namespaceURI  = gdome_str_mkref(NULL);
     doc = gdome_di_createDocument(domimpl, namespaceURI, qualifiedName, NULL, &exc);
-    if (namespaceURI != NULL) 
+    if (namespaceURI != NULL)
         gdome_str_unref(namespaceURI);
     if (exc) {
         traceEvent(CONST_TRACE_ERROR, "XMLDUMP: createDocument: failed, Exception #%d", exc);
@@ -1928,9 +1929,9 @@ static int dumpXML(char * url) {
     publicId      = gdome_str_mkref(NULL);
     systemId      = gdome_str_mkref(dtdURI);
     dt = gdome_di_createDocumentType(domimpl, qualifiedName, publicId, systemId, &exc);
-    if (publicId != NULL) 
+    if (publicId != NULL)
         gdome_str_unref(publicId);
-    if (systemId != NULL) 
+    if (systemId != NULL)
         gdome_str_unref(systemId);
     gdome_str_unref(qualifiedName);
     if (exc) {
@@ -1953,29 +1954,29 @@ static int dumpXML(char * url) {
     }
 */
 
-    /* ********************************************************************************** 
+    /* **********************************************************************************
      *   We always dump the header and command line -- the rest is controlled by flags...
      */
 
     if (rc == 0) {
         el = dumpXML_createHeader();
-        if (el == NULL) { 
+        if (el == NULL) {
             traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_createHeader() is NULL");
             rc = 1;
-        } 
+        }
     }
 
     if ( (rc == 0) && (dumpVersioncHeader == TRUE) ) {
         el = dumpXML_versioncHeader();
-        if (el == NULL) { 
+        if (el == NULL) {
             traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_versioncHeader() is NULL");
             rc = 1;
-        } 
+        }
     }
 
     if ( (rc == 0) && (dumpInvoke == TRUE) ) {
         el = dumpXML_invoke();
-        if (el == NULL) { 
+        if (el == NULL) {
             traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_invoke() is NULL");
             rc = 1;
         }
@@ -1987,7 +1988,7 @@ static int dumpXML(char * url) {
             traceEvent(CONST_TRACE_INFO, "XMLDUMP: return from dumpXML_interfaces() is NULL");
             rc = 1;
         }
-    } 
+    }
 
     /* ********************************************************************************** */
 
@@ -2017,9 +2018,9 @@ static int dumpXML(char * url) {
 #ifdef DEBUG
     snprintf(buf, sizeof(buf), "OTHER(%d)", rc);
     traceEvent(CONST_TRACE_INFO, "DEBUG: Restore - sigaction(SIGSEGV,,) rc = %s, SIGSEGV count %d",
-            (rc == 0      ? "OK"     : 
-            (rc == EINVAL ? "EINVAL" : 
-            (rc == EFAULT ? "EFAULT" : 
+            (rc == 0      ? "OK"     :
+            (rc == EINVAL ? "EINVAL" :
+            (rc == EFAULT ? "EFAULT" :
             (rc == EINTR  ? "EINTR"  : buf) ) ) ),
             segv_count);
 #endif
