@@ -426,20 +426,6 @@ typedef struct nonIpProtoTrafficInfo {
   struct nonIpProtoTrafficInfo *next;
 } NonIpProtoTrafficInfo;
 
-typedef struct ipGlobalSession {
-  u_short magic;
-  u_short port;                    /* port (either client or server)           */
-  u_char initiator;                /* FLAG_CLIENT_ROLE/FLAG_SERVER_ROLE                  */
-  time_t firstSeen;                /* time when the session has been initiated */
-  time_t lastSeen;                 /* time when the session has been closed    */
-  u_short sessionCounter;          /* # of sessions we've observed             */
-  TrafficCounter bytesSent;        /* # bytes sent     (peer -> initiator)     */
-  TrafficCounter bytesRcvd;        /* # bytes rcvd (peer -> initiator)         */
-  TrafficCounter bytesFragmentedSent, bytesFragmentedRcvd; /* IP Fragments     */
-  UsageCounter peers;              /* session peers */
-  struct ipGlobalSession  *next;   /* next element (linked list)               */
-} IpGlobalSession;
-
 /* **************************** */
 
 /* Host Traffic */
@@ -742,8 +728,8 @@ typedef struct ntopInterface {
   /* ************************** */
 
   IpFragment *fragmentList;
-  struct ipSession **tcpSession;
-  u_short numTotSessions, numTcpSessions, maxNumTcpSessions;
+  IPSession **tcpSession;
+  u_short numTcpSessions, maxNumTcpSessions;
   TrafficEntry** ipTrafficMatrix; /* Subnet traffic Matrix */
   struct hostTraffic** ipTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
   fd_set ipTrafficMatrixPromiscHosts;

@@ -446,12 +446,10 @@ void initCounters(void) {
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.enableSessionHandling) {
-      myGlobals.device[i].numTotSessions = MAX_TOT_NUM_SESSIONS;
-      len = sizeof(IPSession*)*myGlobals.device[i].numTotSessions;
+      len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
       myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
       memset(myGlobals.device[i].tcpSession, 0, len);
     } else {
-      myGlobals.device[i].numTotSessions = 0;
       myGlobals.device[i].tcpSession     = NULL;
     }
 
@@ -745,13 +743,13 @@ void resetStats(int deviceId) {
 
   resetDevice(deviceId);
 
-  for(j=0; j<myGlobals.device[deviceId].numTotSessions; j++)
-    if(myGlobals.device[deviceId].tcpSession[j] != NULL) {
-      free(myGlobals.device[deviceId].tcpSession[j]);
-      myGlobals.device[deviceId].tcpSession[j] = NULL;
-    }
-
-  myGlobals.device[deviceId].numTcpSessions = 0;
+  if(myGlobals.device[deviceId].tcpSession != NULL) {
+    for(j=0; j<MAX_TOT_NUM_SESSIONS; j++)
+      if(myGlobals.device[deviceId].tcpSession[j] != NULL) {
+	free(myGlobals.device[deviceId].tcpSession[j]);
+	myGlobals.device[deviceId].tcpSession[j] = NULL;
+      }
+  }
 
   myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
   myGlobals.broadcastEntry->next = NULL;

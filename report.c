@@ -564,7 +564,7 @@ void printTrafficStatistics() {
 		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-      updateThpt();
+      updateThpt(0);
 
       sendString("<TR><TH "TH_BG" ALIGN=LEFT>Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
@@ -697,7 +697,7 @@ void printHostsTraffic(int reportType,
 	  continue;
 	}
 
-	tmpTable[numEntries++]=el;
+	tmpTable[numEntries++] = el;
 
 	if(numEntries >= maxHosts)
 	  break;
@@ -2261,7 +2261,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 /* ********************************** */
 
 void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
-  int idx, realNumSessions;
+  int idx;
   char buf[LEN_GENERAL_WORK_BUFFER];
   int numSessions, printedSessions;
 
@@ -2270,24 +2270,16 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     return;
   }
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
-#endif
-
-
-  /* Let's count sessions first */
-  for(idx=1, realNumSessions=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].numTotSessions; idx++)
-    if(myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL) {
-      realNumSessions++;
-    }
-
   /*
     Due to the way sessions are handled, sessions before those to
     display need to be skipped
   */
 
-  for(idx=1, numSessions=0, printedSessions=0;
-      idx<myGlobals.device[myGlobals.actualReportDeviceId].numTotSessions; idx++)
+  for(idx=1, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
+#ifdef CFG_MULTITHREADED
+    accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
+#endif
+
     if(myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL) {
       char *sport, *dport;
       Counter dataSent, dataRcvd;
@@ -2388,6 +2380,10 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	printedSessions++;
       }
     }
+#ifdef CFG_MULTITHREADED
+    releaseMutex(&myGlobals.tcpSessionsMutex);
+#endif
+  }
 
   if(printedSessions > 0) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
@@ -2395,7 +2391,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 
     if(el == NULL)
       addPageIndicator("NetNetstat.html", pageNum,
-		       realNumSessions, myGlobals.maxNumLines, -1, 0);
+		       myGlobals.device[actualDeviceId].numTcpSessions,
+		       myGlobals.maxNumLines, -1, 0);
 
     printFooterHostLink();
   } else {
@@ -2404,10 +2401,6 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
       printFlagedWarning("<I>No Active TCP Sessions</I>");
     }
   }
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.tcpSessionsMutex);
-#endif
 }
 
 
@@ -4491,28 +4484,43 @@ void showPortTraffic(u_short portNr) {
   printHTMLheader(buf, 0);
   sendString("<CENTER>\n");
 
-  sendString("<TABLE BORDER>\n<TR><TH>Client</TH><TH>Server</TH></TR>\n");
-  sendString("<TR>\n<TD>\n");
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-    if(recentlyUsedPort(el, portNr, 0)) {
+    if(recentlyUsedPort(el, portNr, 0)) {      
+      if(numRecords == 0) {
+	sendString("<TABLE BORDER>\n<TR><TH>Client</TH><TH>Server</TH></TR>\n");
+	sendString("<TR>\n<TD>\n");
+      }
+
       sendString("\n<LI> ");
       sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0));
       numRecords++;
     }
   }
 
-  sendString("\n&nbsp;\n</TD><TD>\n");
+  if(numRecords > 0) {
+    sendString("\n&nbsp;\n</TD><TD>\n");
+  }
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(el && recentlyUsedPort(el, portNr, 1)) {
+      if(numRecords == 0) {
+	sendString("<TABLE BORDER>\n<TR><TH>Client</TH><TH>Server</TH></TR>\n");
+	sendString("<TR>\n<TD>\n");
+	sendString("\n&nbsp;\n</TD><TD>\n");
+      }
+
       sendString("\n<LI> ");
       sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0));
       numRecords++;
     }
   }
 
-  sendString("\n&nbsp;\n</TD>\n</TR>\n</TABLE>\n</CENTER>");
+  if(numRecords == 0) {
+    sendString("<P>No hosts found: the information for this port has been purged in the meantime</CENTER><P>\n");
+  } else
+    sendString("\n&nbsp;\n</TD>\n</TR>\n</TABLE>\n</CENTER>");    
+
 }

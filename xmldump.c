@@ -378,11 +378,6 @@ GdomeElement * newxml_icmphostinfo(GdomeElement * parent,
                        IcmpHostInfo * input,
                        char * description);
 
-GdomeElement * newxml_ipglobalsession(GdomeElement * parent,
-                       char * nodename,
-                       IpGlobalSession * input,
-                       char * description);
-
 GdomeElement * newxml_ipsession(GdomeElement * parent,
                        char * nodename,
                        IPSession * input,
@@ -742,28 +737,6 @@ GdomeElement * newxml_icmphostinfo(GdomeElement * parent,
 
 #if (XMLDUMP_DEBUG >= 3)
         traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_icmphostinfo\n");
-#endif
-
-    return elWork;
-}
-
-GdomeElement * newxml_ipglobalsession(GdomeElement * parent,
-                       char * nodename,
-                       IpGlobalSession * input,
-                       char * description) {
-
-    GdomeElement *elWork, *elWork2;
-    GdomeException exc;
-
-#if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Starting newxml_ipglobalsession\n");
-#endif
-
-    /* Insert the generated block of code */
-        /* #include "xml_s_ipglobalsession.inc" */
-
-#if (XMLDUMP_DEBUG >= 3)
-        traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Ending newxml_ipglobalsession\n");
 #endif
 
     return elWork;

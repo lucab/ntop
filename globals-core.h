@@ -280,7 +280,7 @@ extern void termIPServices(void);
 extern void termIPSessions(void);
 
 /* traffic.c */
-extern void updateThpt(void);
+extern void updateThpt(int quickUpdate);
 extern int isMatrixHost(HostTraffic *host, int actualDeviceId);
 extern unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId);
 extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
@@ -289,7 +289,7 @@ extern void updateDbHostsTraffic(int deviceToUpdate);
 extern int isInitialHttpData(char* packetData);
 extern int isInitialSshData(char* packetData);
 extern int isInitialFtpData(char* packetData);
-extern void updateDeviceThpt(int deviceToUpdate);
+extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
 
 /* util.c */
 extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],

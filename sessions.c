@@ -23,6 +23,8 @@
 
 #include "ntop.h"
 
+/* #define SESSION_TRACE_DEBUG 1 */
+
 /* ************************************ */
 
 u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
@@ -378,7 +380,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   {
     char buf[32], buf1[32];
 
-    traceEvent(CONST_TRACE_INFO,i "SESSION_TRACE_DEBUG: Session terminated: %s:%d<->%s:%d (lastSeend=%d) (# sessions = %d)",
+    traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: Session terminated: %s:%d<->%s:%d (lastSeend=%d) (# sessions = %d)",
 	       _intoa(sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
 	       _intoa(sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
 	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numTcpSessions);
@@ -430,7 +432,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
-  for(idx=0; idx<myGlobals.device[actualDeviceId].numTotSessions; idx++) {
+  for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
     IPSession *nextSession, *prevSession, *theSession;
 
     prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
@@ -521,7 +523,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   u_char *rcStr, tmpStr[256];
   int len = 0;
 
-  if((!myGlobals.enableSessionHandling) || (myGlobals.device[actualDeviceId].numTotSessions == 0))
+  if(!myGlobals.enableSessionHandling)
     return(NULL);
 
   if((srcHost == NULL) || (dstHost == NULL)) {
@@ -558,7 +560,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
    */
   idx = (u_int)((srcHost->hostIpAddress.s_addr+
 		 dstHost->hostIpAddress.s_addr+
-		 sport+dport) % myGlobals.device[actualDeviceId].numTotSessions);
+		 sport+dport) % MAX_TOT_NUM_SESSIONS);
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d->%s:%d %d->",
@@ -657,7 +659,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	*/
       } else
 #endif
-	if ( (theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return(NULL);
+	if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return(NULL);
 
       memset(theSession, 0, sizeof(IPSession));
       addedNewEntry = 1;
@@ -1919,7 +1921,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       } else
 	prevSession->next = theSession->next;
 
+#if 0
+      theSession->sessionState = FLAG_STATE_END;
+#else
       freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
+#endif
 #ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif

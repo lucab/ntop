@@ -843,24 +843,6 @@
 #define CONST_IDLE_PURGE_ADJUST_FACTOR       10
 
 /*
- * Determines how often to access/release mutexes in freeHostSessions()
- *   Do it every pow(2, CONST_MUTEX_FHS_GRANULARITY) - 1
- *                                  
- *  0 >= CONST_MUTEX_FHS_GRANULARITY >= 15
- */
-#define CONST_MUTEX_FHS_GRANULARITY         6 
-#define CONST_MUTEX_FHS_MASK                (max(0, min(65535, (1 << CONST_MUTEX_FHS_GRANULARITY) - 1)))
-
-/*
- * Determines how often to access/release mutexes in purgeHostPorts()
- *   Do it every pow(2, CONST_MUTEX_PHP_GRANULARITY) - 1
- *                                  
- *  0 >= CONST_MUTEX_PHP_GRANULARITY >= 15
- */
-#define CONST_MUTEX_PHP_GRANULARITY         6 
-#define CONST_MUTEX_PHP_MASK                (max(0, min(65535, (1 << CONST_MUTEX_PHP_GRANULARITY) - 1)))
-
-/*
  * Size of myGlobals.transTimeHash[], used to produce the "IP Service Stats"
  * in the "Info about host" report.  If you are monitoring a busy server
  * handling lots of long running requests, you might need to up this -

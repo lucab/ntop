@@ -34,8 +34,8 @@ void termIPServices(void) {
     }
 
     if(myGlobals.tcpSvc[i] != NULL) {
-      if (myGlobals.tcpSvc[i]->name != NULL) {
-          free(myGlobals.tcpSvc[i]->name);
+      if(myGlobals.tcpSvc[i]->name != NULL) {
+	free(myGlobals.tcpSvc[i]->name);
       }
       free(myGlobals.tcpSvc[i]);
     }
@@ -52,7 +52,7 @@ void termIPSessions(void) {
   int i, j;
 
   for(j=0; j<myGlobals.numDevices; j++) {
-    for(i=0; i<myGlobals.device[j].numTotSessions; i++) {
+    for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
       IPSession *session = myGlobals.device[j].tcpSession[i];
 
       while(session != NULL) {
@@ -69,8 +69,8 @@ void termIPSessions(void) {
 #endif
 
     myGlobals.device[j].numTcpSessions = 0;
-
-    while (myGlobals.device[j].fragmentList != NULL)
+    
+    while(myGlobals.device[j].fragmentList != NULL)
       deleteFragment(myGlobals.device[j].fragmentList, j);
   }
 }

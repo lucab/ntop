@@ -594,8 +594,7 @@ int mapGlobalToLocalIdx(int port) {
 static void purgeIpPorts(int theDevice) {
   char *marker;
   HostTraffic *el;
-  int i, mutexLocked = 0;
-  static char firstRun = 1;
+  int i;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Calling purgeIpPorts(%d)", theDevice);
@@ -606,13 +605,6 @@ static void purgeIpPorts(int theDevice) {
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
 #endif
-
-  if(firstRun) {
-    traceEvent(CONST_TRACE_INFO, 
-               "PORT_PURGE: purgeIpPorts firstRun (mutex every %d times through the loop)\n",
-               CONST_MUTEX_PHP_MASK+1);
-    firstRun = 0;
-  }
 
   /* **********************************
      Marker used to be defined ad char marker[MAX_IP_PORT];
@@ -635,16 +627,18 @@ static void purgeIpPorts(int theDevice) {
     }
   }
 
+
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.purgeMutex);
+#endif
+  
   /* 
      I know that this semaphore has been designed for other tasks
      however it allows me to save memory/time... 
   */  
   for(i=1; i<MAX_IP_PORT; i++) {
 #ifdef CFG_MULTITHREADED
-    if((i & CONST_MUTEX_PHP_MASK) == 0) {
-      accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
-      mutexLocked = 1;
-    }
+    accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
 #endif
     if((marker[i] == 0) && (myGlobals.device[theDevice].ipPorts[i] != NULL)) {
       free(myGlobals.device[theDevice].ipPorts[i]);
@@ -654,30 +648,14 @@ static void purgeIpPorts(int theDevice) {
 #endif
     }
 #ifdef CFG_MULTITHREADED
-    if (((i+1) & CONST_MUTEX_PHP_MASK) == 0) {
-      if(mutexLocked) {
 	releaseMutex(&myGlobals.purgePortsMutex);
-	mutexLocked = 0;
-      }
 #ifdef MAKE_WITH_SCHED_YIELD
-      sched_yield(); /* Allow other threads to run */
+	sched_yield(); /* Allow other threads to run */
 #endif
-    }
 #endif
   }
   
   free(marker);
-
-#ifdef CFG_MULTITHREADED
-  if(mutexLocked) {
-    releaseMutex(&myGlobals.purgePortsMutex);
-    mutexLocked = 0;
-  }
-#endif
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.purgeMutex);
-#endif
 }
 
 /* **************************************** */
@@ -811,17 +789,17 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
     myGlobals.actTime = time(NULL);
 
     if(myGlobals.actTime > (*lastTime)) {
-        /* So, the clock has ticked... approximately 30 seconds (depends on traffic, the select
-           above could delay 5s
+      /* So, the clock has ticked... approximately 30 seconds (depends on traffic, the select
+	 above could delay 5s
 
-           Let's purge one of the devices...
-         */
-        loopItem++;
-        if (loopItem >= myGlobals.numDevices) {
-            loopItem = 0;
-        }
+	 Let's purge one of the devices...
+      */
+      loopItem++;
+      if (loopItem >= myGlobals.numDevices) {
+	loopItem = 0;
+      }
 
-      updateThpt(); /* Update Throughput */
+      updateThpt(1); /* Update Throughput */
       (*lastTime) = myGlobals.actTime + PARM_THROUGHPUT_REFRESH_INTERVAL;
     }
 

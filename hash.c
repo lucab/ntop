@@ -117,19 +117,16 @@ static u_int hash(struct in_addr *hostIpAddress,  u_char *ether_addr,
 */
 
 static void freeHostSessions(HostTraffic *host, int theDevice) {
-  int i, mutexLocked = 0;
+  int i;
 
-  for(i=0; i<myGlobals.device[theDevice].numTotSessions; i++) {
+  for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
     IPSession *prevSession, *nextSession, *theSession;
 
-#ifdef CFG_MULTITHREADED
-    if(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ ) {
-      if((i & CONST_MUTEX_FHS_MASK) == 0) {
-	accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
-	mutexLocked = 1;
-      }
-    } else
+    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
       return;
+
+#ifdef CFG_MULTITHREADED
+    accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
 #endif
 
     prevSession = theSession = myGlobals.device[theDevice].tcpSession[i];
@@ -158,24 +155,12 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
     } /* while */
 
 #ifdef CFG_MULTITHREADED
-    if (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ ) {
-      if (((i+1) & CONST_MUTEX_FHS_MASK) == 0) {
-	if(mutexLocked) {
-	  releaseMutex(&myGlobals.tcpSessionsMutex);
-	  mutexLocked = 0;
-	}
-#ifdef MAKE_WITH_SCHED_YIELD
-	sched_yield(); /* Allow other threads to run */
-#endif
-      }
-    }
-#endif
-  }
-
-#ifdef CFG_MULTITHREADED
-  if(mutexLocked)
     releaseMutex(&myGlobals.tcpSessionsMutex);
+#ifdef MAKE_WITH_SCHED_YIELD
+    sched_yield(); /* Allow other threads to run */
 #endif
+#endif
+  } /* for */
 }
 
 /* **************************************** */
@@ -458,16 +443,13 @@ void purgeIdleHosts(int actDevice) {
   if(myGlobals.rFileName != NULL) return;
 
   if(firstRun) {
-    traceEvent(CONST_TRACE_INFO,
-	       "IDLE_PURGE: purgeIdleHosts firstRun (mutex every %d times through the loop)\n",
-	       CONST_MUTEX_FHS_MASK+1);
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
   }
 
   gettimeofday(&hiresTimeStart, NULL);
 
-  updateDeviceThpt(actDevice);
+  updateDeviceThpt(actDevice, 1 /* quick update */);
 
   if(startTime < (lastPurgeTime[actDevice]+PARM_HOST_PURGE_INTERVAL))
     return; /* Too short */

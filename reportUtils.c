@@ -706,7 +706,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       BufferTooShort();
     sendString(buf);
 
-    updateThpt();
+    updateThpt(0);
     if(abs(column) == 1) { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
     else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
     if(abs(column) == 2) { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor; }
