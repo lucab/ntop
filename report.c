@@ -4745,8 +4745,9 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   sendString(buf);
 
   sendString( "<TR "TR_ON" "DARK_BG">"
-              "<TH "TH_BG" colspan=\"4\">TCP</A></TH>"
-              "<TH "TH_BG" colspan=\"4\">UDP</A></TH>"
+              "<TH "TH_BG" colspan=\"4\">Total</A></TH>"
+              "<TH "TH_BG" colspan=\"2\">TCP</A></TH>"
+              "<TH "TH_BG" colspan=\"2\">UDP</A></TH>"
               "<TH "TH_BG" colspan=\"2\">IPv4</A></TH>"
               "<TH "TH_BG" colspan=\"2\">IPv6</A></TH></TR>\n");
 
