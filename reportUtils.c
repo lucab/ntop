@@ -591,53 +591,22 @@ void printHeader(int reportType, int revertOrder, u_int column,
       BufferTooShort();
     sendString(buf);
 
-    if(abs(column) == 1)
-      { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
-    else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
-    if(abs(column) == 2)
-      { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
-    else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
-    if(abs(column) == 3)
-      { arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
-    if(abs(column) == 4)
-      { arrow[3] = arrowGif; theAnchor[3] = htmlAnchor;  }
-    else { arrow[3] = ""; theAnchor[3] = htmlAnchor1; }
-    if(abs(column) == 5)
-      { arrow[4] = arrowGif; theAnchor[4] = htmlAnchor;  }
-    else { arrow[4] = ""; theAnchor[4] = htmlAnchor1; }
-    if(abs(column) == 6)
-      { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor;  }
-    else { arrow[5] = ""; theAnchor[5] = htmlAnchor1;  }
-    if(abs(column) == 7)
-      { arrow[6] = arrowGif; theAnchor[6] = htmlAnchor;  }
-    else { arrow[6] = ""; theAnchor[6] = htmlAnchor1;  }
-    if(abs(column) == 8)
-      { arrow[7] = arrowGif; theAnchor[7] = htmlAnchor1;  }
-    else { arrow[7] = ""; theAnchor[7] = htmlAnchor; }
-    if(abs(column) == 9)
-      { arrow[8] = arrowGif; theAnchor[8] = htmlAnchor;  }
-    else { arrow[8] = ""; theAnchor[8] = htmlAnchor1;  }
-    if(abs(column) == 10)
-      { arrow[9] = arrowGif; theAnchor[9] = htmlAnchor;  }
-    else { arrow[9] = ""; theAnchor[9] = htmlAnchor1; }
-    if(abs(column) == 11)
-      { arrow[10] = arrowGif; theAnchor[10] = htmlAnchor;  }
-    else { arrow[10] = ""; theAnchor[10] = htmlAnchor1; }
-    if(abs(column) == 12)
-      { arrow[11] = arrowGif; theAnchor[11] = htmlAnchor;  }
-    else { arrow[11] = "";  theAnchor[11] = htmlAnchor1;}
-    if(abs(column) == 13)
-      { arrow[12] = arrowGif; theAnchor[12] = htmlAnchor;  }
-    else { arrow[12] = "";theAnchor[12] = htmlAnchor1; }
-    if(abs(column) == 14)
-      { arrow[13] = arrowGif; theAnchor[13] = htmlAnchor;  }
-    else { arrow[13] = "";  theAnchor[13] = htmlAnchor1;  }
-    if(abs(column) == 15)
-      { arrow[14] = arrowGif; theAnchor[14] = htmlAnchor;  }
-    else { arrow[14] = "";  theAnchor[14] = htmlAnchor1;  }
-    if(abs(column) == 16)
-      { arrow[15] = arrowGif; theAnchor[15] = htmlAnchor;  }
-    else { arrow[15] = "";  theAnchor[15] = htmlAnchor1;  }
+    if(abs(column) == 1)  { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; } else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
+    if(abs(column) == 2)  { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  } else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
+    if(abs(column) == 3)  { arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  } else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
+    if(abs(column) == 4)  { arrow[3] = arrowGif; theAnchor[3] = htmlAnchor;  } else { arrow[3] = ""; theAnchor[3] = htmlAnchor1; }
+    if(abs(column) == 5)  { arrow[4] = arrowGif; theAnchor[4] = htmlAnchor;  } else { arrow[4] = ""; theAnchor[4] = htmlAnchor1; }
+    if(abs(column) == 6)  { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor;  } else { arrow[5] = ""; theAnchor[5] = htmlAnchor1;  }
+    if(abs(column) == 7)  { arrow[6] = arrowGif; theAnchor[6] = htmlAnchor;  } else { arrow[6] = ""; theAnchor[6] = htmlAnchor1;  }
+    if(abs(column) == 8)  { arrow[7] = arrowGif; theAnchor[7] = htmlAnchor1; } else { arrow[7] = ""; theAnchor[7] = htmlAnchor; }
+    if(abs(column) == 9)  { arrow[8] = arrowGif; theAnchor[8] = htmlAnchor;  } else { arrow[8] = ""; theAnchor[8] = htmlAnchor1;  }
+    if(abs(column) == 10) { arrow[9] = arrowGif; theAnchor[9] = htmlAnchor; } else { arrow[9] = ""; theAnchor[9] = htmlAnchor1; }
+    if(abs(column) == 11) { arrow[10] = arrowGif; theAnchor[10] = htmlAnchor;  } else { arrow[10] = ""; theAnchor[10] = htmlAnchor1; }
+    if(abs(column) == 12) { arrow[11] = arrowGif; theAnchor[11] = htmlAnchor;  } else { arrow[11] = "";  theAnchor[11] = htmlAnchor1;}
+    if(abs(column) == 13) { arrow[12] = arrowGif; theAnchor[12] = htmlAnchor;  } else { arrow[12] = "";theAnchor[12] = htmlAnchor1; }
+    if(abs(column) == 14) { arrow[13] = arrowGif; theAnchor[13] = htmlAnchor;  } else { arrow[13] = "";  theAnchor[13] = htmlAnchor1;  }
+    if(abs(column) == 15) { arrow[14] = arrowGif; theAnchor[14] = htmlAnchor;  } else { arrow[14] = "";  theAnchor[14] = htmlAnchor1;  }
+    if(abs(column) == 16) { arrow[15] = arrowGif; theAnchor[15] = htmlAnchor;  } else { arrow[15] = "";  theAnchor[15] = htmlAnchor1;  }
 
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1>TCP%s</A></TH>"
 		"<TH "TH_BG">%s2>UDP%s</A></TH><TH "TH_BG">%s3>ICMP%s</A></TH>""<TH "TH_BG">%s4>ICMPv6%s</A></TH>"
