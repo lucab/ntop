@@ -207,24 +207,22 @@ char* makeHostLink(HostTraffic *el, short mode,
   accessMutex(&addressResolutionMutex, "makeHostLink");
 #endif
 
-  switch(numericFlag) {
-  case 0: /* symbolic */
-    tmpStr = el->hostSymIpAddress;
-
-    if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
-      /* The DNS is still getting the entry name */
-      if(el->hostNumIpAddress[0] != '\0')
-	strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
-      else {
-	strncpy(symIp, el->ethAddressString, sizeof(symIp)); 
-	usedEthAddress = 1;
-      }
-    } else if(tmpStr[0] != '\0') {
-      strncpy(symIp, tmpStr, sizeof(symIp));
-      if(tmpStr[strlen(tmpStr)-1] == ']') /* "... [MAC]" */ {
-	usedEthAddress = 1;
-	specialMacAddress = 1;
-      } else {
+  tmpStr = el->hostSymIpAddress;
+  
+  if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
+    /* The DNS is still getting the entry name */
+    if(el->hostNumIpAddress[0] != '\0')
+      strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
+    else {
+      strncpy(symIp, el->ethAddressString, sizeof(symIp)); 
+      usedEthAddress = 1;
+    }
+  } else if(tmpStr[0] != '\0') {
+    strncpy(symIp, tmpStr, sizeof(symIp));
+    if(tmpStr[strlen(tmpStr)-1] == ']') /* "... [MAC]" */ {
+      usedEthAddress = 1;
+      specialMacAddress = 1;
+    } else {
 	if(cutName && (symIp[0] != '*') 
 	   && strcmp(symIp, el->hostNumIpAddress)) {
 	  int i;
@@ -235,31 +233,10 @@ char* makeHostLink(HostTraffic *el, short mode,
 	      break;
 	    }
 	}
-      }      
-    } else {
-      strncpy(symIp, el->ethAddressString, sizeof(symIp)); 
-      usedEthAddress = 1;
-    }
-    break;
-  case 1:   /* numeric */
-    if(el->hostNumIpAddress[0] != '\0')
-      strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
-    else {
-      strncpy(symIp, el->ethAddressString, sizeof(symIp));
-      usedEthAddress = 1;
-    }
-    break;
-  case 2: /* ethernet address */
-    strncpy(symIp, el->ethAddressString, sizeof(symIp));
+    }      
+  } else {
+    strncpy(symIp, el->ethAddressString, sizeof(symIp)); 
     usedEthAddress = 1;
-    if(symIp[0] == '\0') strncpy(symIp, separator, sizeof(symIp));
-    break;
-  case 3: /* ethernet constructor */
-    strncpy(symIp, getVendorInfo(el->ethAddress, 1), sizeof(symIp));
-    usedEthAddress = 1;
-    if(symIp[0] == '\0') strncpy(symIp, el->ethAddressString, sizeof(symIp));
-    if(symIp[0] == '\0') strncpy(symIp, separator, sizeof(symIp));
-    break;
   }
 
 #ifdef MULTITHREADED
@@ -321,7 +298,15 @@ char* makeHostLink(HostTraffic *el, short mode,
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
-  if(isDHCPClient(el))   dynIp = "&nbsp;(dyn)"; else dynIp = "";
+  if(isDHCPClient(el))
+    dynIp = "&nbsp;(dyn)"; 
+  else { 
+    if(isDHCPServer(el))
+      dynIp = "&nbsp;<IMG SRC=/wheel.gif BORDER=0>&nbsp;"; 
+    else
+      dynIp = ""; 
+  }
+  
   if(isMultihomed(el))   multihomed = "&nbsp;<IMG SRC=/multihomed.gif BORDER=0>&nbsp;"; else multihomed = "";
   if(gatewayHost(el))    gwStr = "&nbsp;<IMG SRC=/router.gif BORDER=0>&nbsp;"; else gwStr = "";
   if(nameServerHost(el)) dnsStr = "&nbsp;<IMG SRC=/dns.gif BORDER=0>&nbsp;"; else dnsStr = "";
@@ -342,13 +327,13 @@ char* makeHostLink(HostTraffic *el, short mode,
  
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
-		"<A HREF=\"/%s.html\">%s%s</A>%s%s%s%s%s%s%s</TH>%s",
+		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s</TH>%s",
 		blinkOn, linkName, symIp, dynIp, 
 		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s</A>%s%s%s%s%s%s%s%s",
+    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s</A>%s%s%s%s%s%s%s%s%s",
 		blinkOn, linkName, symIp, 
 		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0) 
@@ -374,53 +359,31 @@ char* getHostName(HostTraffic *el, short cutName) {
   accessMutex(&addressResolutionMutex, "getHostName");
 #endif
 
-  switch(numericFlag) {
-  case 0: /* symbolic */
-    tmpStr = el->hostSymIpAddress;
-
-    if(tmpStr == NULL) {
-      /* The DNS is still getting the entry name */
-      if(el->hostNumIpAddress[0] == '\0')
-	strncpy(buf[bufIdx], el->hostNumIpAddress, 80);
-      else
-	strncpy(buf[bufIdx], el->ethAddressString, 80);
-    } else if(tmpStr[0] != '\0') {
-      strncpy(buf[bufIdx], tmpStr, 80);
-      if(cutName) {
-	int i;
-
-	for(i=0; buf[bufIdx][i] != '\0'; i++)
-	  if((buf[bufIdx][i] == '.')
-	     && (!(isdigit(buf[bufIdx][i-1])
-		   && isdigit(buf[bufIdx][i+1]))
-		 )) {
-	    buf[bufIdx][i] = '\0';
-	    break;
-	  }
-      }
-    } else
-      strncpy(buf[bufIdx], el->ethAddressString, 80);
-    break;
-  case 1:   /* numeric */
-    if(el->hostNumIpAddress[0] != '\0')
+  tmpStr = el->hostSymIpAddress;
+  
+  if(tmpStr == NULL) {
+    /* The DNS is still getting the entry name */
+    if(el->hostNumIpAddress[0] == '\0')
       strncpy(buf[bufIdx], el->hostNumIpAddress, 80);
     else
       strncpy(buf[bufIdx], el->ethAddressString, 80);
-    break;
-  case 2: /* ethernet address */
-    if(el->ethAddressString[0] != '\0')
-      strncpy(buf[bufIdx], el->ethAddressString, 80);
-    else
-      strncpy(buf[bufIdx], el->hostNumIpAddress, 80);
-    break;
-  case 3: /* ethernet constructor */
-    if(el->ethAddressString[0] != '\0')
-      strncpy(buf[bufIdx], getVendorInfo(el->ethAddress, 1), 80);
-    else
-      strncpy(buf[bufIdx], el->hostNumIpAddress, 80);
-    break;
-  }
-
+  } else if(tmpStr[0] != '\0') {
+    strncpy(buf[bufIdx], tmpStr, 80);
+    if(cutName) {
+      int i;
+      
+      for(i=0; buf[bufIdx][i] != '\0'; i++)
+	if((buf[bufIdx][i] == '.')
+	   && (!(isdigit(buf[bufIdx][i-1])
+		 && isdigit(buf[bufIdx][i+1]))
+	       )) {
+	  buf[bufIdx][i] = '\0';
+	  break;
+	}
+    }
+  } else
+    strncpy(buf[bufIdx], el->ethAddressString, 80);
+  
 #ifdef MULTITHREADED
   releaseMutex(&addressResolutionMutex);
 #endif

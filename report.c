@@ -633,7 +633,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	TrafficCounter dummyCounter;
 
 #ifdef HAVE_GDCHART
-	sendString("<TR BGCOLOR=white><TH ALIGN=CENTER COLSPAN=3>"
+	sendString("<TR><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		   "<IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
@@ -717,7 +717,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	sendString(buf2);
 
 #ifdef HAVE_GDCHART
-	sendString("<TR BGCOLOR=white><TH ALIGN=CENTER COLSPAN=3>"
+	sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
 		   "<IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
@@ -775,8 +775,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	sendString(buf2);
 
 #ifdef HAVE_GDCHART
-	sendString("<TR BGCOLOR=white><TH ALIGN=CENTER COLSPAN=2>"
-		   "<IMG SRC=ipTrafficPie"CHART_FORMAT"></TH></TR>\n");
+	sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=2><IMG SRC=ipTrafficPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
 	updateThpt();
@@ -1158,8 +1157,8 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	    short numAddresses = 0;
 
 	    if(el->nbHostName && el->nbDomainName) {	      
-	      if(el->nbAccountName) {
-		if(el->nbDomainName != NULL) {
+	      if((el->nbAccountName != NULL) && ((el->nbAccountName[0] != '0'))) {
+		if((el->nbDomainName != NULL) && (el->nbDomainName[0] != '0')) {
 		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag("Windows", 0),
 			      el->nbAccountName, el->nbHostName, el->nbDomainName) < 0)
 		 traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -1169,7 +1168,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 		    traceEvent(TRACE_ERROR, "Buffer overflow!");
 		}
 	      } else {
-		if(el->nbDomainName != NULL) {
+		if((el->nbDomainName != NULL) && (el->nbDomainName[0] != '0')) {
 		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
 			      el->nbHostName, el->nbDomainName) < 0)
 		    traceEvent(TRACE_ERROR, "Buffer overflow!");

@@ -1074,7 +1074,8 @@ void parseTrafficFilter(char *argv[], int optind) {
 	    traceEvent(TRACE_ERROR,
 		   "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
 		   currentFilterExpression,
-		   pcap_geterr(device[i].pcapPtr), device[i].name);
+		   pcap_geterr(device[i].pcapPtr), 
+	       device[i].name[0] == '0' ? "<pcap file>" : device[i].name);
 	    exit(-1);
 	  } else
 	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", currentFilterExpression, device[i].name);

@@ -1164,6 +1164,10 @@ static void handleBootp(HostTraffic *srcHost,
 
 	For more info see http://www.dhcp.org/
       */
+
+      FD_SET(HOST_SVC_DHCP_CLIENT, &srcHost->flags);
+      FD_SET(HOST_SVC_DHCP_SERVER, &dstHost->flags);
+
       if(packetDataLength >= sizeof(BootProtocol))
 	len = sizeof(BootProtocol);
       else
@@ -3446,11 +3450,13 @@ static void processIpPkt(const u_char *bp,
   if(rFileName != NULL) {
     static int numPkt=1;
 
+#ifdef DEBUG
     traceEvent(TRACE_INFO, "%d) %s -> %s",
 	       numPkt++,
 	       srcHost->hostNumIpAddress,
 	       dstHost->hostNumIpAddress);
     fflush(stdout);
+#endif
   }
 
   if(ip.ip_ttl != 255) {
@@ -3877,7 +3883,58 @@ static void processIpPkt(const u_char *bp,
 
 	    free(data);
 	  }
+	} else if((dport == 137 /*  NETBIOS */)
+		  && ((srcHost->nbHostName == NULL)
+		      || (srcHost->nbDomainName == NULL))) {
+	  char *name, nbName[64], domain[64], *data;
+	  int nodeType, i, udpDataLen;
+	  char *tmpdata = (char*)bp + (hlen + sizeof(struct udphdr));
+	  u_char *p;
+	  int offset=0, displ, notEnoughData = 0;
+
+	  udpDataLen = length - (hlen + sizeof(struct udphdr));
+
+	  if(udpDataLen > 32) {
+	    /* 32 bytes or less is not enough */
+	    data = (char*)malloc(udpDataLen);
+	    memcpy(data, tmpdata, udpDataLen);
+
+	    name = data + 12;
+	    p = (u_char*)name;
+	    if ((*p & 0xC0) == 0xC0) {
+	      displ = p[1] + 255 * (p[0] & ~0xC0);
+	      if((displ + 14) >= udpDataLen)
+		notEnoughData = 1;
+	      else {
+		name = data + displ;
+		displ += 14;
+		offset = 2;
+	      }
+	    } else {
+	      displ = 14;
+
+	      while ((displ < udpDataLen) && (*p)) {
+		p += (*p)+1;
+		displ++;
+	      }
+
+	      if(displ < udpDataLen)
+		offset = ((char*)p - (char*)data) + 1;
+	      else
+		notEnoughData = 1;
+	    }
+
+	    if(!notEnoughData) {
+	      nodeType = name_interpret(name, nbName, udpDataLen-displ);
+
+	      traceEvent(TRACE_INFO, "Found: %s", nbName);
+	      setNBnodeNameType(srcHost, (char)nodeType, nbName);
+	    }
+
+	    free(data);
+	  }
 	}
+
       }
 
       if(udpChain) {
@@ -3977,6 +4034,7 @@ static void processIpPkt(const u_char *bp,
       /* ************************************************************* */
 
       if(icmpPkt.icmp_type <= ICMP_MAXTYPE) {
+	short dumpPacket = 1;
 	if(srcHost->icmpInfo == NULL) {
 	  srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
 	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
@@ -3995,6 +4053,7 @@ static void processIpPkt(const u_char *bp,
 	case ICMP_ECHOREPLY:
 	case ICMP_ECHO:
 	  /* Do not log anything */
+	  dumpPacket = 0;
 	  break;
 
 	case ICMP_UNREACH:
@@ -4015,7 +4074,7 @@ static void processIpPkt(const u_char *bp,
 	  break;
 	}
 
-	if(enableSuspiciousPacketDump) {
+	if(enableSuspiciousPacketDump && dumpPacket) {
 	  if(!((icmpPkt.icmp_type == 3) && (icmpPkt.icmp_code == 3))) {
 	    /*
 	      Avoid to print twice the same message:
@@ -4486,6 +4545,7 @@ void processPacket(u_char *_deviceId,
     printf("isPseudoLocalAddress=%d\n", isPseudoLocalAddress(&addr));
     printf("isBroadcastAddress=%d\n",   isBroadcastAddress(&addr));
   }
+
   /* **************************** */
 
   if(!capturePackets)
@@ -4493,10 +4553,12 @@ void processPacket(u_char *_deviceId,
 
   h_save = h, p_save = p;
 
+#ifdef DEBUG
   if(rFileName != NULL) {
     traceEvent(TRACE_INFO, ".");
     fflush(stdout);
   }
+#endif
 
   /* 
      This allows me to fetch the time from
@@ -4515,17 +4577,20 @@ void processPacket(u_char *_deviceId,
 
   updateDevicePacketStats(length);
 
+  device[actualDeviceId].ethernetPkts++;
+  device[actualDeviceId].ethernetBytes += h->len;
+
   if(device[actualDeviceId].pcapDumper != NULL)
     pcap_dump((u_char*)device[actualDeviceId].pcapDumper, h, p);
 
   if(length > mtuSize[device[deviceId].datalink]) {
     /* Sanity check */
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Wrong packet length (%lu on %s (deviceId=%d) [too long]!\n",
-	       (unsigned long)length,
-	       device[actualDeviceId].name, deviceId);
-#endif
-    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+    if(enableSuspiciousPacketDump) {
+      traceEvent(TRACE_INFO, "Packet # %u too long (len = %d)!\n", 
+		 (unsigned long)device[deviceId].ethernetPkts, length);
+      dumpSuspiciousPacket();
+    }
+
     /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
     length = mtuSize[device[deviceId].datalink];
     device[actualDeviceId].rcvdPktStats.tooLong++;
@@ -4564,9 +4629,6 @@ void processPacket(u_char *_deviceId,
   memcpy(&lastPktTime, &h->ts, sizeof(lastPktTime));
 
   fd = device[deviceId].fdv;
-
-  device[actualDeviceId].ethernetPkts++;
-  device[actualDeviceId].ethernetBytes += h->len;
 
   /*
    * Show a hash character for each packet captured
@@ -4940,6 +5002,9 @@ void processPacket(u_char *_deviceId,
 
 		if(strlen(serverName) >= (MAX_HOST_SYM_NAME_LEN-1)) serverName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
 		srcHost->ipxHostName = strdup(serverName);
+		for(i=0; srcHost->ipxHostName[i] != '\0'; i++)
+		  srcHost->ipxHostName[i] = tolower(srcHost->ipxHostName[i]);
+
 		updateHostName(srcHost);
 	      }
 #ifdef DEBUG

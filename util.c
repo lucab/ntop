@@ -1548,6 +1548,10 @@ char* decodeNBstring(char* theString, char *theBuffer) {
   }
   
   theBuffer[j] = '\0';
+
+  for(i=0; i<j; i++)
+    theBuffer[i] = (char)tolower(theBuffer[i]);
+
   return(theBuffer);
 }
 
@@ -2167,6 +2171,7 @@ void traceEvent(int eventTraceLevel, char* file,
       } 
 #ifndef WIN32
       else {
+#if 0 
 	switch(traceLevel) {
 	case 0:
 	  syslog(LOG_ERR, buf);
@@ -2181,6 +2186,9 @@ void traceEvent(int eventTraceLevel, char* file,
 	  syslog(LOG_INFO, buf);
 	  break;
 	}
+#else
+	syslog(LOG_ERR, buf);
+#endif
       }
 #endif
 
@@ -2575,43 +2583,41 @@ void setNBnodeNameType(HostTraffic *theHost,
   theHost->nbNodeType = (char)nodeType;
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
 
+  theHost->nbNodeType = (char)nodeType;
+
   switch(nodeType) {
   case 0x0:  /* Workstation */
   case 0x20: /* Server */
-  case 0x1B: /* Master Browser */
-  case 0x1E: /* Domain */
-
-    theHost->nbNodeType = (char)nodeType;
-
-    if(nodeType != 0x1E /* Domain */) {
-      if(theHost->nbHostName == NULL) {
-	theHost->nbHostName = strdup(nbName);
-       	updateHostName(theHost);
-
-	if(theHost->hostSymIpAddress[0] == '\0') {
-	  strcpy(theHost->hostSymIpAddress, nbName); /* See up (**) */
-	}
-
+    if(theHost->nbHostName == NULL) {
+      theHost->nbHostName = strdup(nbName);
+      updateHostName(theHost);
+      
+      if(theHost->hostSymIpAddress[0] == '\0')
+	strcpy(theHost->hostSymIpAddress, nbName); /* See up (**) */
+            
 #ifdef DEBUG
-	printf("nbHostName=%s [0x%X]\n", nbName, nodeType);
+      printf("nbHostName=%s [0x%X]\n", nbName, nodeType);
 #endif
-      }
-    } else {
-      if(theHost->nbDomainName == NULL) {
-	if(strcmp(nbName, "__MSBROWSE__") && strncmp(&nbName[2], "__", 2)) {
-	  theHost->nbDomainName = strdup(nbName);
-	}
-      }
-
-      switch(nodeType) {
-      case 0x0:  /* Workstation */
-	FD_SET(HOST_TYPE_WORKSTATION, &theHost->flags);
-      case 0x20: /* Server */
-	FD_SET(HOST_TYPE_SERVER, &theHost->flags);
-      case 0x1B: /* Master Browser */
-	FD_SET(HOST_TYPE_MASTER_BROWSER, &theHost->flags);
-      }
     }
+    break;
+  case 0x1C: /* Domain Controller */
+  case 0x1E: /* Domain */
+  case 0x1D: /* Workgroup (I think) */
+    if(theHost->nbDomainName == NULL) {
+      if(strcmp(nbName, "__MSBROWSE__") && strncmp(&nbName[2], "__", 2)) {
+	theHost->nbDomainName = strdup(nbName);
+      }
+      break;      
+    }
+  }
+
+  switch(nodeType) {
+  case 0x0:  /* Workstation */
+    FD_SET(HOST_TYPE_WORKSTATION, &theHost->flags);
+  case 0x20: /* Server */
+    FD_SET(HOST_TYPE_SERVER, &theHost->flags);
+  case 0x1B: /* Master Browser */
+    FD_SET(HOST_TYPE_MASTER_BROWSER, &theHost->flags);
   }
 }
 
