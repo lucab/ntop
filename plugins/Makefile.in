@@ -1,6 +1,6 @@
-# Makefile.in generated automatically by automake 1.4 from Makefile.am
+# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
 
-# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -144,12 +144,18 @@ INCLUDES = -I.. @INCS@
 #
 # The meat for ntop
 #
-noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so                   netflowPlugin.so nfsPlugin.so                    pdaPlugin.so  		  sflowPlugin.so
+noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so \
+                  netflowPlugin.so nfsPlugin.so  \
+                  pdaPlugin.so  \
+		  sflowPlugin.so
 
 #		  rrdPlugin.so
 #		  rmonPlugin.so wapPlugin.so
 
-lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la                   libnetflowPlugin.la  libnfsPlugin.la                    libpdaPlugin.la  		  libsflowPlugin.la
+lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
+                  libnetflowPlugin.la  libnfsPlugin.la  \
+                  libpdaPlugin.la  \
+		  libsflowPlugin.la
 
 #		  librrdPlugin.la
 #		  librmonPlugin.la libwapPlugin.la
@@ -233,7 +239,7 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/icmpPlugin.P .deps/icmpPlugin.so.P \
 .deps/lastSeenPlugin.P .deps/lastSeenPlugin.so.P .deps/netflowPlugin.P \
@@ -374,7 +380,7 @@ maintainer-clean-recursive:
 	dot_seen=no; \
 	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
 	  rev="$$subdir $$rev"; \
-	  test "$$subdir" = "." && dot_seen=yes; \
+	  test "$$subdir" != "." || dot_seen=yes; \
 	done; \
 	test "$$dot_seen" = "no" && rev=". $$rev"; \
 	target=`echo $@ | sed s/-recursive//`; \
@@ -440,7 +446,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
