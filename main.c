@@ -126,7 +126,7 @@ static struct option const long_options[] = {
 #ifndef WIN32
   { "no-nmap",                          no_argument,       NULL, 'N' },
 #endif
-  { "pcap-file-path",                   required_argument, NULL, 'O' },
+  { "output-packet-path",               required_argument, NULL, 'O' },
   { "db-file-path",                     required_argument, NULL, 'P' },
   { "filter-rule",                      required_argument, NULL, 'R' },
   { "store-mode",                       required_argument, NULL, 'S' },
