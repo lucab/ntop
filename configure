@@ -2,67 +2,6 @@
 
 # From configure.in 1.0
 
-CONFIGURE_PARAMETERS=$*
-
-NTOP_MAJOR_VERSION=2
-NTOP_MINOR_VERSION=1
-NTOP_MICRO_VERSION=50
-NTOP_INTERFACE_AGE=0
-NTOP_BINARY_AGE=0
-NTOP_VERSION=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION.$NTOP_MICRO_VERSION
-NTOP_VERSION_EXTRA=""
-
-LT_RELEASE=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION
-LT_CURRENT=`expr $NTOP_MICRO_VERSION - $NTOP_INTERFACE_AGE`
-LT_REVISION=$NTOP_INTERFACE_AGE
-LT_AGE=`expr $NTOP_BINARY_AGE - $NTOP_INTERFACE_AGE`
-
-NTOP_VERSION_INFO=$LT_CURRENT:$LT_REVISION:$LT_AGE
-NTOP_RELEASE=$LT_RELEASE
-
-
-
-
-
-
-PACKAGE=ntop
-VERSION=$NTOP_VERSION
-
-
-echo
-echo "Welcome to $PACKAGE, Version $VERSION"
-echo "Copyright (c) 1998-2002 Luca Deri <deri@ntop.org>"
-echo
-
-
-ac_disable_multithread=no
-ac_disable_async_resolution=no
-multithread_mode=yes
-
-ac_disable_openssl=no
-
-ac_disable_readline=no
-ac_disable_curses=no
-
-ac_disable_gdchart=no
-
-ac_enable_tcpwrap=no
-
-ac_ignore_sigpipe=no
-
-PLUGINS=plugins
-ac_disable_plugins=no
-
-INTOP=intop
-ac_disable_intop=no
-
-ac_enable_showopenssltests=no
-
-ac_enable_rrd=no
-
-
-ac_enable_sslv3=no
-
 
 
 
@@ -797,6 +736,67 @@ fi
 
 
 echo
+
+CONFIGURE_PARAMETERS=$*
+
+NTOP_MAJOR_VERSION=2
+NTOP_MINOR_VERSION=1
+NTOP_MICRO_VERSION=50
+NTOP_INTERFACE_AGE=0
+NTOP_BINARY_AGE=0
+NTOP_VERSION=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION.$NTOP_MICRO_VERSION
+NTOP_VERSION_EXTRA=""
+
+LT_RELEASE=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION
+LT_CURRENT=`expr $NTOP_MICRO_VERSION - $NTOP_INTERFACE_AGE`
+LT_REVISION=$NTOP_INTERFACE_AGE
+LT_AGE=`expr $NTOP_BINARY_AGE - $NTOP_INTERFACE_AGE`
+
+NTOP_VERSION_INFO=$LT_CURRENT:$LT_REVISION:$LT_AGE
+NTOP_RELEASE=$LT_RELEASE
+
+
+
+
+
+
+PACKAGE=ntop
+VERSION=$NTOP_VERSION
+
+
+echo
+echo "Welcome to $PACKAGE, Version $VERSION"
+echo "Copyright (c) 1998-2002 Luca Deri <deri@ntop.org>"
+echo
+
+
+ac_disable_multithread=no
+ac_disable_async_resolution=no
+multithread_mode=yes
+
+ac_disable_openssl=no
+
+ac_disable_readline=no
+ac_disable_curses=no
+
+ac_disable_gdchart=no
+
+ac_enable_tcpwrap=no
+
+ac_ignore_sigpipe=no
+
+PLUGINS=plugins
+ac_disable_plugins=no
+
+INTOP=intop
+ac_disable_intop=no
+
+ac_enable_showopenssltests=no
+
+ac_enable_rrd=no
+
+
+ac_enable_sslv3=no
 
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
@@ -7841,9 +7841,6 @@ sed 's/%@/@@/; s/@%/@@/; s/%g\$/@g/; /@g\$/s/[\\\\&%]/\\\\&/g;
  s/@@/%@/; s/@@/@%/; s/@g\$/%g/' > conftest.subs <<\\CEOF
 $ac_vpsub
 $extrasub
-s%@NTOP_VERSION_INFO@%$NTOP_VERSION_INFO%g
-s%@SO_VERSION_PATCH@%$SO_VERSION_PATCH%g
-s%@NTOP_RELEASE@%$NTOP_RELEASE%g
 s%@SHELL@%$SHELL%g
 s%@CFLAGS@%$CFLAGS%g
 s%@CPPFLAGS@%$CPPFLAGS%g
@@ -7867,6 +7864,9 @@ s%@includedir@%$includedir%g
 s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
+s%@NTOP_VERSION_INFO@%$NTOP_VERSION_INFO%g
+s%@SO_VERSION_PATCH@%$SO_VERSION_PATCH%g
+s%@NTOP_RELEASE@%$NTOP_RELEASE%g
 s%@host@%$host%g
 s%@host_alias@%$host_alias%g
 s%@host_cpu@%$host_cpu%g

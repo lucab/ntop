@@ -29,6 +29,13 @@ dnl>
 AC_PREREQ(2.13)
 AC_REVISION([1.0])
 
+dnl>
+dnl> look for an unique ntop's source file in the distribution
+dnl> and perform initialization steps, such as loading the cache
+dnl>
+AC_INIT(ntop.c)
+echo
+
 CONFIGURE_PARAMETERS=$*
 
 dnl>
@@ -133,13 +140,6 @@ dnl>
 dnl> By default only enable SSLv2.  This allows for v3.
 dnl> The choice to enable this feature is left to the user.
 ac_enable_sslv3=no
-
-dnl>
-dnl> look for an unique ntop's source file in the distribution
-dnl> and perform initialization steps, such as loading the cache
-dnl>
-AC_INIT(ntop.c)
-echo
 
 dnl>
 dnl> canonicalize the host, target, and build system types
