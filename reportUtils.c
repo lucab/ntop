@@ -3398,13 +3398,16 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     struct stat statbuf;
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-    snprintf(buf, sizeof(buf), "%s/hosts/%s", myGlobals.rrdPath, el->hostNumIpAddress);
+    snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s", myGlobals.rrdPath, 
+	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+	     el->hostNumIpAddress);
 
     if(stat(buf, &statbuf) == 0) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-                  "[ <A HREF=\"/plugins/rrdPlugin?action=list&key=hosts/%s&title=host %s\">"
+                  "[ <A HREF=\"/plugins/rrdPlugin?action=list&key=interfaces/%s/hosts/%s&title=host %s\">"
                    "<IMG BORDER=0 SRC=/graph.gif TITLE=\"link to rrd graphs\"></A> ]</TD></TR>\n",
-		  getRowColor(), "RRD Stats", el->hostNumIpAddress,
+		  getRowColor(), "RRD Stats", 
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, el->hostNumIpAddress,
 		  el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
 	BufferTooShort();
       sendString(buf);

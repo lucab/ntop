@@ -2868,11 +2868,6 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	PortCounter **ipPorts;
 	int idx = 0;
 	
-	printSectionTitle("TCP/UDP Traffic Port Distribution");
-	
-	sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
-		   "<TH "TH_BG" COLSPAN=2>TCP/UDP&nbsp;Port</TH>"
-		   "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
 
 	ipPorts = (PortCounter**)calloc(MAX_IP_PORT, sizeof(PortCounter*));
 
@@ -2886,37 +2881,47 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	  }
 	}
 
-	quicksort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
+	if(idx > 0) {
+	  printSectionTitle("TCP/UDP Traffic Port Distribution");
+	
+	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
+		     "<TH "TH_BG" COLSPAN=2>TCP/UDP&nbsp;Port</TH>"
+		     "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
 
-	if(idx > 32) idx = 32; /* Limit to 32 entries max */
+	  quicksort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
 
-	for(i=0; i<idx; i++) {
-	  if(ipPorts[i] != NULL) {
-	    char *symPort = getAllPortByNum(ipPorts[i]->port);
+	  if(idx > 32) idx = 32; /* Limit to 32 entries max */
 
-	    if(symPort == NULL) symPort = "";
+	  for(i=0; i<idx; i++) {
+	    if(ipPorts[i] != NULL) {
+	      char *symPort = getAllPortByNum(ipPorts[i]->port);
 
-	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</td>"
-			"<TH "TH_BG" ALIGN=RIGHT><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%d</A></TH>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"</TR>\n",
-			getRowColor(), symPort, 
-			ipPorts[i]->port, ipPorts[i]->port,
-			formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1),
-			formatBytes(ipPorts[i]->sent, 1),
-			formatBytes(ipPorts[i]->rcvd, 1)
-			) < 0) BufferTooShort();
-	    sendString(buf);
-	  }
-	} /* for */
+	      if(symPort == NULL) symPort = "";
+
+	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</td>"
+			  "<TH "TH_BG" ALIGN=RIGHT><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%d</A></TH>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "</TR>\n",
+			  getRowColor(), symPort, 
+			  ipPorts[i]->port, ipPorts[i]->port,
+			  formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1),
+			  formatBytes(ipPorts[i]->sent, 1),
+			  formatBytes(ipPorts[i]->rcvd, 1)
+			  ) < 0) BufferTooShort();
+	      sendString(buf);
+	    }
+	  } /* for */
+
+	}
 
 #ifdef CFG_MULTITHREADED
 	releaseMutex(&myGlobals.gdbmMutex);
 #endif
 	free(ipPorts);
 	sendString("</TABLE>"TABLE_OFF"<P>\n");	
+	sendString("<p><H5>The above table does not contain absolute values as it is periodically reset every minute.</H5>\n");
       }
 
       /* ********************** */

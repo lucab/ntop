@@ -652,7 +652,7 @@ static void handleNetflowHTTPrequest(char* url) {
       BufferTooShort();
     sendString(buf);
 
-    sendString("\"><br>Format: digit.digit.digit.digit/ digit.digit.digit.digit</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+    sendString("\"><br>Format: digit.digit.digit.digit/digit.digit.digit.digit</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
   }
 
   /* *************************************** */
@@ -746,7 +746,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	BufferTooShort();
       sendString(buf);
 
-      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD "TD_BG" ALIGN=LEFT>");
+      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD "TD_BG" ALIGN=RIGHT>");
 
       for(i=0; i<MAX_NUM_PROBES; i++) {
 	if(probeList[i].probeAddr.s_addr == 0) break;
