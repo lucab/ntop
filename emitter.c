@@ -463,8 +463,8 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 	  }
 	}
       }
-    
-    
+
+
 
   if(numEntries > 0) endWriteArray(fDescr, lang);
 }
@@ -541,7 +541,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
   initWriteArray(fDescr, lang);
 
-  for(el=getFirstHost(actualDeviceId); 
+  for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
 
 #ifdef CFG_MULTITHREADED
@@ -555,7 +555,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
     strncpy(workSymIpAddress, el->hostResolvedName, MAX_LEN_SYM_HOST_NAME_HTML);
 
     if((angleLocation = strchr(workSymIpAddress, '<')) != NULL)
-      angleLocation[0] = '\0';   
+      angleLocation[0] = '\0';
 
     if(key[0] != '\0') {
       if(strcmp(el->hostNumIpAddress, key)
@@ -738,12 +738,12 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       wrtLlongItm(fDescr, lang, "\t", "ipBytesSent", el->ipBytesSent, ',', numEntries);
     if(checkFilter(filter, "ipBytesRcvd"))
       wrtLlongItm(fDescr, lang, "\t", "ipBytesRcvd", el->ipBytesRcvd, ',', numEntries);
-    
+
     if(checkFilter(filter, "ipv6Sent"))
       wrtLlongItm(fDescr, lang, "\t", "ipv6Sent", el->ipv6Sent, ',', numEntries);
     if(checkFilter(filter, "ipv6Rcvd"))
       wrtLlongItm(fDescr, lang, "\t", "ipv6Rcvd", el->ipv6Rcvd, ',', numEntries);
-    
+
     ctr.value = el->tcpSentLoc.value+el->tcpSentRem.value;
     if(checkFilter(filter, "tcpBytesSent"))
       wrtLlongItm(fDescr, lang, "\t", "tcpBytesSent", ctr, ',', numEntries);
@@ -797,7 +797,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	wrtLlongItm(fDescr, lang, "\t", "icmpFragmentsRcvd", el->icmpFragmentsRcvd, ',', numEntries);
 
       /* ***************************** */
-      
+
       if(el->nonIPTraffic != NULL) {
 	if(checkFilter(filter, "stpSent"))
 	  wrtLlongItm(fDescr, lang, "\t", "stpSent", el->nonIPTraffic->stpSent, ',', numEntries);
@@ -860,9 +860,10 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       initWriteKey(fDescr, lang, "\t", "IP", numEntries);
 
       for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
-	if(myGlobals.protoIPTrafficInfos[j] != NULL) {
+	if((myGlobals.protoIPTrafficInfos[j] != NULL)
+	   && (el->protoIPTrafficInfos[j] != NULL)) {
 	  if(j > 0) { endWriteKey(fDescr, lang,"\t\t", lastKey, ','); }
-	  
+
 	  initWriteKey(fDescr, lang, "\t\t", (lastKey = myGlobals.protoIPTrafficInfos[j]), numEntries);
 	  wrtLlongItm(fDescr, lang,"\t\t\t","sentLoc",
 		    el->protoIPTrafficInfos[j]->sentLoc, ',', numEntries);
@@ -1071,7 +1072,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
     if((lang == FLAG_NO_LANGUAGE) && (numEntries == 1)) goto REPEAT_HOSTS;
 
-    decrementRefCount(el);    
+    decrementRefCount(el);
   } /* for */
 
   if(numEntries > 0) endWriteKey(fDescr, lang,"", (lang == FLAG_XML_LANGUAGE) ? "host-information" : hostKey, ' ');
@@ -1116,25 +1117,25 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
 
   initWriteArray(fDescr, lang);
 
-  for(el=getFirstHost(actualDeviceId); 
+  for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
-    
+
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
 #endif
 
     if(!broadcastHost(el)) {
       char *hostKey;
-      
+
       if(el->hostNumIpAddress[0] != '\0')
 	hostKey = el->hostNumIpAddress;
       else
 	hostKey = el->ethAddressString;
-      
+
       wrtIntStrItm(fDescr, lang, "", 0, hostKey,'\n', numEntries);
-      
+
       numEntries++;
-    }    
+    }
 
 #ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.hostsHashMutex);
