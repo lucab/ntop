@@ -505,7 +505,7 @@ void addDefaultProtocols(void) {
   handleProtocolList("DHCP-BOOTP", "67-68|");
   handleProtocolList("SNMP",     "snmp|snmp-trap|");
   handleProtocolList("NNTP",     "nntp|");
-  handleProtocolList("NFS",      "mount|pcnfs|bwnfs|nfsd|nfsd-status|");
+  handleProtocolList("NFS/AFS",      "mount|pcnfs|bwnfs|nfsd|nfs|nfsd-status|7000-7009");
   handleProtocolList("X11",      "6000-6010|");
   /* 22 == ssh (just to make sure the port is defined) */
   handleProtocolList("SSH",      "22|");

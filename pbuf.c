@@ -1136,10 +1136,8 @@ static void processIpPkt(const u_char *bp,
       sport = ntohs(up.uh_sport);
       dport = ntohs(up.uh_dport);
 
-      updateInterfacePorts(actualDeviceId, sport, dport, length);
-      updateUsedPorts(srcHost, dstHost, sport, dport, udpDataLength);
-
       if(!(off & 0x3fff)) {
+	/* Not fragmented */      
 	if(((sport == 53) || (dport == 53) /* domain */)) {
 	  short isRequest = 0, positiveReply = 0;
 	  u_int16_t transactionId = 0;
@@ -1268,11 +1266,14 @@ static void processIpPkt(const u_char *bp,
 	/* Handle fragmented packets */
 	length = handleFragment(srcHost, dstHost, &sport, &dport,
 				ntohs(ip.ip_id), off, length,
-				ntohs(ip.ip_len) - hlen, actualDeviceId);
+				ntohs(ip.ip_len) - hlen, actualDeviceId);	
       }
 
       if((sport > 0) && (dport > 0)) {
 	u_short nonFullyRemoteSession = 1;
+
+	updateInterfacePorts(actualDeviceId, sport, dport, length);
+	updateUsedPorts(srcHost, dstHost, sport, dport, udpDataLength);
 
 	/* It might be that udpBytes is 0 when
 	   the rcvd packet is fragmented and the main
