@@ -39,6 +39,7 @@
  */
 #define NTOP_DEFAULT_CONFFILE    "ntop.conf"
 #define NTOP_DEFAULT_PIDFILE     "ntop.pid"
+#define NTOP_DEFAULT_PID_DIRECTORY "/var/run"
 #define NTOP_DEFAULT_LOGFILE     "ntop.log"
 #define NTOP_DEFAULT_ACCESSFILE  "ntop.last"
 
@@ -238,6 +239,8 @@ typedef struct ntopGlobals {
   char **dataFileDirs;
   char **pluginDirs;
   char **configFileDirs;
+
+  int basentoppid;         /* Used for writing to /var/run/ntop.pid (or whatever) */
 
   /* NICs */
   int numDevices;          /* # of Network interfaces enabled for sniffing */

@@ -172,6 +172,8 @@ RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
 
 void daemonize(void) {
   int childpid;
+  FILE *fd;
+  char pidFileName[NAME_MAX];
 
   signal(SIGHUP, SIG_IGN);
 #ifndef WIN32
@@ -184,6 +186,18 @@ void daemonize(void) {
     traceEvent(TRACE_ERROR, "An error occurred while daemonizing ntop (errno=%d)...\n", errno);
   else {
     if(!childpid) { /* child */
+
+      myGlobals.basentoppid = getpid();
+      sprintf(pidFileName, "%s/%s", NTOP_DEFAULT_PID_DIRECTORY, NTOP_DEFAULT_PIDFILE);
+      fd = fopen(pidFileName, "wb");
+
+      if(fd == NULL) {
+          traceEvent(TRACE_WARNING, "Unable to create pid (%s). ", pidFileName);
+      } else {
+          fprintf(fd, "%d\n", myGlobals.basentoppid);
+          fclose(fd);
+      }
+
       traceEvent(TRACE_INFO, "Bye bye: I'm becoming a daemon...\n");
       detachFromTerminal();
     } else { /* father */

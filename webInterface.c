@@ -1964,8 +1964,16 @@ void printNtopConfigInfo(int textPrintFlag) {
  {
    char pid[16];
 
-   sprintf(pid, "%d", getppid());
-   printFeatureConfigInfo(textPrintFlag, "Process Id", pid);
+   if (myGlobals.daemonMode == 1) {
+       sprintf(pid, "%d", myGlobals.basentoppid);
+       printFeatureConfigInfo(textPrintFlag, "ntop Process Id", pid);
+       sprintf(pid, "%d", getppid());
+       printFeatureConfigInfo(textPrintFlag, "http Process Id", pid);
+   } else {
+       sprintf(pid, "%d", getppid());
+       printFeatureConfigInfo(textPrintFlag, "Process Id", pid);
+   }
+
  }
 #endif
 
