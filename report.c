@@ -1832,10 +1832,10 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	       "</TR>\n");
     
     sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
-
+    
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->recentlyUsedClientPorts[idx] > 0) {
-	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s<?A>\n",
+	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
 		    el->recentlyUsedClientPorts[idx],
 		    getAllPortByNum(el->recentlyUsedClientPorts[idx])) < 0)
 	  BufferTooShort();
