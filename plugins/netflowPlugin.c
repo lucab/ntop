@@ -368,7 +368,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   u_char buffer[2048];
   struct sockaddr_in fromHost;
 
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS
   traceEvent(TRACE_INFO, "netflowMainLoop()");
 #endif
 
@@ -388,8 +388,10 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
       rc = recvfrom(myGlobals.netFlowInSocket, (char*)&buffer, sizeof(buffer),
 		    0, (struct sockaddr*)&fromHost, &len);
 
+#ifdef DEBUG_FLOWS
       traceEvent(TRACE_INFO, "Received NetFlow packet (len=%d) (deviceId=%d)",
 		 rc,  myGlobals.netFlowDeviceId);
+#endif
 
       if(rc > 0) {
 	int i;
