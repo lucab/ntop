@@ -1,0 +1,247 @@
+#!/bin/sh
+
+#  Copyright (c) 2003, Burton M. Strauss III - Burton@ntopsupport.com
+
+#
+#  Return the distro name, release # or both...
+#
+#    Crude, but marginally effective, uses the /etc/xxxxxx-release file.
+#
+#    Tested:   RH 7.2 7.3, 8.0, 9, 2.1AS 2.1ES
+#              Mandrake 9.1
+#              Debian 2.2 3.0(Woody)
+#              Gentoo 
+#              Slackware 8.1.01
+#              SuSE 7.1 7.2a 8.0ES 8.2
+#
+
+#  Released under GPL...
+
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#   
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#   
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software Foundation,
+#    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+debug="N"
+if test "x${1}" = "x--debug"; then
+    debug="Y"
+    shift
+fi
+
+# Is this even Linux??
+case `uname -s` in
+  [Ll]inux*)
+    kernel=`uname -r`
+
+    # First, check for a /etc/xxxxx-release file...
+    releaseFile=`find /etc -type f -name "*-release" -maxdepth 1 2> /dev/null | \
+                 grep -v lsb | \
+                 grep -v UnitedLinux | \
+                 head -n 1`
+    if test "x${debug}" = "xY"; then
+        echo "DEBUG01: /etc/xxxxx-release found ${releaseFile}"
+    fi
+    
+    # Not found?  Maybe there's a /etc/xxxxxx-version file (Slackware)
+    if test "x${releaseFile}" = "x"; then
+        releaseFile=`find /etc -type f -name "*-version" -maxdepth 1 2> /dev/null | \
+                     head -n 1`
+        if test "x${debug}" = "xY"; then
+            echo "DEBUG02: /etc/xxxxx-version found ${releaseFile}"
+        fi
+    fi
+    # Not found?  Maybe there's a /etc/xxxxxx_version file (Debian)
+    if test "x${releaseFile}" = "x"; then
+        releaseFile=`find /etc -type f -name "*_version" -maxdepth 1 2> /dev/null | \
+                     head -n 1`
+        if test "x${debug}" = "xY"; then
+            echo "DEBUG03: /etc/xxxxx_version found ${releaseFile}"
+        fi
+    fi
+    
+    # Check for the 'standards' bodies id files...
+    lsbFile=`find /etc -type f -name "lsb-release" -maxdepth 1 2> /dev/null | \
+             head -n 1`
+    if test "x${debug}" = "xY"; then
+        echo "DEBUG04: /etc/lsb-release found ${lsbFile}"
+    fi
+    if test "x${lsbFile}" != "x"; then
+        if test -f ${lsbFile}; then
+            # Grab the release name
+            . ${lsbFile}
+            lsbrelease=${LSB_VERSION}
+            if test "x${debug}" = "xY"; then
+                echo "DEBUG05: lsb release is ${lsbrelease}"
+            fi
+        else
+            lsbrelease="LSB release unavailable"
+        fi
+    else
+        lsbrelease="Not identified as LSB compliant"
+    fi
+    
+    unitedFile=`find /etc -type f -name "UnitedLinux-release" -maxdepth 1 | \
+                head -n 1`
+    if test "x${debug}" = "xY"; then
+        echo "DEBUG06: /etc/UnitedLinux-release found ${unitedFile}"
+    fi
+    if test "x${unitedFile}" != "x"; then
+        if test -f ${unitedFile}; then
+            # Grab the release name
+            unitedrelease=`cat ${unitedFile} | \
+                           head -n 1 | \
+                           awk '{ for (i=1; i<=NF; i++) { if (0 + $i != 0) { print $i } } }'`
+            if test "x${debug}" = "xY"; then
+                echo "DEBUG07: UnitedLinux release is ${unitedrelease}"
+            fi
+        else
+            unitedrelease="United Linux release unavailable"
+        fi
+    else
+        unitedrelease="Not identified as UnitedLinux compliant"
+    fi
+    
+    # Now if we're still not found, let's use the standards bodies files... if we have 'em
+    if test "x${releaseFile}" = "x"; then
+        if test "x${unitedFile}" != "x"; then
+            releaseFile="${unitedFile}"
+            if test "x${debug}" = "xY"; then
+                echo "DEBUG08: Using UnitedLinux file for release"
+            fi
+        elif test "x${lsbFile}" != "x"; then
+            releaseFile="${lsbFile}"
+            if test "x${debug}" = "xY"; then
+                echo "DEBUG09: Using LSB file for release"
+            fi
+        fi
+    fi
+    
+    # Still not found?  Um... unknown...
+    if test "x${releaseFile}" = "x"; then
+        distro="Linux"
+        release="unknown"
+        if test "x${debug}" = "xY"; then
+            echo "DEBUG10: Unknown linux release"
+        fi
+    else
+        # Grab the distro name...
+        distro=`echo ${releaseFile} | \
+                awk '{ i=index($0, "_"); \
+                       if (i == 0) { \
+                           i=index($0, "-") \
+                       }; \
+                       print tolower(substr($0, 6, i-6)) \
+                     }'`
+        if test "x${debug}" = "xY"; then
+            echo "DEBUG11: Distribution is ${distro}"
+        fi
+    
+        # Check if the file is readable for a release name?
+        if test -f ${releaseFile}; then
+    
+            # Grab the full release name text
+            fullrelease=`cat ${releaseFile} | \
+                         head -n 1`
+            if test "x${debug}" = "xY"; then
+                echo "DEBUG12: fullrelease is ${fullrelease}"
+            fi
+    
+    
+            # Grab the release name
+            release=`cat ${releaseFile} | \
+                     head -n 1 | \
+                     awk '{ for (i=1; i<=NF; i++) { if (0 + $i != 0) { print $i } } }'`
+    
+            if test "x${release}" = "x"; then
+                if test "x${debug}" = "xY"; then
+                    echo "DEBUG13: (alt) Scanning for VERSION in ${releaseFile}"
+                fi
+                release=`cat ${releaseFile} | \
+                         grep -i VERSION | \
+                         head -n 1 | \
+                         awk '{ for (i=1; i<=NF; i++) { if (0 + $i != 0) { print $i } } }'`
+            fi
+    
+            if test "x${release}" = "x"; then
+                if test "x${debug}" = "xY"; then
+                    echo "DEBUG14: (alt) Executing set commands in ${releaseFile}"
+                fi
+                . ${releaseFile} 2> /dev/null
+                release="${VERSION}"
+            fi
+    
+            if test "x${release}" = "x"; then
+                release="unknown"
+                if test "x${debug}" = "xY"; then
+                    echo "DEBUG15: Unable to identify release"
+                fi
+            else
+                if test "x${debug}" = "xY"; then
+                    echo "DEBUG16: Release is ${release}"
+                fi
+            fi
+    
+        else
+    
+            # Can't grab the release name, so return unknown
+            release="unknown"
+            if test "x${debug}" = "xY"; then
+                echo "DEBUG17: File unreadable, release unknown"
+            fi
+        fi
+    fi
+    ;;
+  *)
+    # Not Linux - oops
+    echo "WARNING: This routine only works under Linux.  We'll fake it as best we can!"
+    distro=`uname -s`
+    kernel=`uname -r`
+    release="unknown"
+    fullrelease="unknown"
+    lsbrelease="Not Linux - not LSB compliant"
+    unitedrelease="Not Linux - not UnitedLinux compliant"
+    ;;
+esac
+
+case "${1}" in
+  *-d*)
+    echo ${distro}
+    ;;
+  *-r*)
+    echo ${release}
+    ;;
+  *-k*)
+    echo ${kernel}
+    ;;
+  *-f*)
+    echo ${fullrelease}
+    ;;
+  *-l*)
+    echo ${lsbrelease}
+    ;;
+  *-u*)
+    echo ${unitedrelease}
+    ;;
+  -*)
+       echo
+       echo "Usage: linuxrelease [--distro] [--[united|lsb|full]release] [--kernel] [--help]"
+       echo
+       echo "  Uses the /etc/xxxxx-release or /etc/xxxxx_version file to figure out "
+       echo "  a decent guess as to which Linux distro and release this is..."
+       echo
+    ;;
+  *)
+    echo ${distro} ${release} ${kernel}
+    ;;
+esac
+
