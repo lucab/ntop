@@ -686,7 +686,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
   }
 
   for(;;) {
-    short justRefreshed;
+    short loopItem = -1;
     int rc;
 
     if(!myGlobals.capturePackets) break;
@@ -714,17 +714,19 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
     myGlobals.actTime = time(NULL);
 
     if(myGlobals.actTime > (*lastTime)) {
-      if(myGlobals.nextSessionTimeoutScan < myGlobals.actTime) {
-	/* It's time to check for timeout sessions */
-	scanTimedoutTCPSessions(0);
-	myGlobals.nextSessionTimeoutScan = myGlobals.actTime+PURGE_HOSTS_DELAY;
-      }
+        /* So, the clock has ticked... approximately 30 seconds (depends on traffic, the select
+           above could delay 5s 
+
+           Let's purge one of the devices...
+         */
+        loopItem++;
+        if (loopItem >= myGlobals.numDevices) {
+            loopItem = 0;
+        }
 
       updateThpt(); /* Update Throughput */
       (*lastTime) = myGlobals.actTime + THROUGHPUT_REFRESH_TIME;
-      justRefreshed=1;
-    } else
-      justRefreshed=0;
+    }
 
     handleWebConnections(NULL);
   } /* for(;;) */

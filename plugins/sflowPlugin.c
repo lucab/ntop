@@ -1631,7 +1631,9 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
   traceEvent(TRACE_INFO, "sFlowMainLoop()");
 #endif
 
+#ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "Started thread (%ld) for sFlow.\n", sFlowThread);
+#endif
   
   for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&sFlowMask);
@@ -1663,7 +1665,9 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
     }
   }
 
+#ifdef MULTITHREADED
   threadActive = 0;
+#endif
   return(0);
 }
 
@@ -1873,7 +1877,9 @@ static void handleSflowPacket(u_char *_deviceId,
 static void initsFlowFunct(void) {
   char value[32];
 
+#ifdef MULTITHREADED
   threadActive = 0;
+#endif
   myGlobals.sflowInSocket = 0, debug = 0;
   myGlobals.numSamplesReceived = 0,
     myGlobals.initialPool = 0,

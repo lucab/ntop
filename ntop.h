@@ -660,17 +660,6 @@ typedef struct packetInformation {
 				    TODO (ASAP!) **/
 } PacketInformation;
 
-typedef struct hash_list {
-  u_int16_t idx;          /* Index of this entry in hostTraffic */
-  struct hash_list *next;
-} HashList;
-
-#ifdef MEMORY_DEBUG
-#define HASH_LIST_SIZE    256
-#else
-#define HASH_LIST_SIZE    ((u_int16_t)-1) /* Static hash size */
-#endif
-
 # if defined(HAVE_OPENSSL)
 #  define THREAD_MODE "MT (SSL)"
 # else
@@ -695,6 +684,17 @@ typedef struct hash_list {
 #endif  /* ASYNC_ADDRESS_RESOLUTION */
 
 #endif /* ! MULTITHREADED */
+
+typedef struct hash_list {
+  u_int16_t idx;          /* Index of this entry in hostTraffic */
+  struct hash_list *next;
+} HashList;
+
+#ifdef MEMORY_DEBUG
+#define HASH_LIST_SIZE    256
+#else
+#define HASH_LIST_SIZE    ((u_int16_t)-1) /* Static hash size */
+#endif
 
 
 #define PACKET_QUEUE_LENGTH     2048
