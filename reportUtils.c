@@ -2312,11 +2312,12 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
     numSessions++;
 
     sendString("<TD "TD_BG"><UL>");
-    for(i=0; i < MAX_NUM_SESSION_PEERS; i++) {
-      if((scanner->peersIdx[i] != NO_PEER)
-	 && (device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])] != NULL)) {
-	HostTraffic *host = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])];
+    for(i=0; i < MAX_NUM_CONTACTED_PEERS; i++) {
+      u_int theIdx = scanner->peers.peersIndexes[i];
 
+      if((theIdx != NO_PEER)
+	 && (device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)] != NULL)) {
+	HostTraffic *host = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)];
 
 	if(host != NULL) {
 #ifdef MULTITHREADED

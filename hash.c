@@ -32,20 +32,19 @@ static u_char printedHashWarning = 0;
 static void purgeIdleHostSessions(u_char *flaggedHosts, u_int flaggedHostsLen,
                                   IpGlobalSession **sessionScanner) {
   u_int i, peerFound;
-  u_int *scanner;
   IpGlobalSession *theScanner = *sessionScanner,
     *prevScanner = *sessionScanner;
 
   while(theScanner != NULL) {
-    scanner = theScanner->peersIdx;
-    for(i=0, peerFound=0; i<MAX_NUM_SESSION_PEERS; i++) {
-      if(scanner[i] != NO_PEER) {
-	if(scanner[i] > flaggedHostsLen) {
-	  traceEvent(TRACE_INFO, "WARNING: Index %u out of range [0..%d]", scanner[i], flaggedHostsLen);
+    for(i=0, peerFound=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+      if(theScanner->peers.peersIndexes[i] != NO_PEER) {
+	if(theScanner->peers.peersIndexes[i] > flaggedHostsLen) {
+	  traceEvent(TRACE_INFO, "WARNING: Index %u out of range [0..%d]", 
+		     theScanner->peers.peersIndexes[i], flaggedHostsLen);
 	} else {
-	  if(flaggedHosts[scanner[i]])
-	    scanner[i] = NO_PEER;
-	  if(scanner[i] != NO_PEER)
+	  if(flaggedHosts[theScanner->peers.peersIndexes[i]])
+	    theScanner->peers.peersIndexes[i] = NO_PEER;
+	  if(theScanner->peers.peersIndexes[i] != NO_PEER)
 	    peerFound++;
 	}
       }
@@ -327,11 +326,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
       scanner = device[deviceToExtend].hash_hostTraffic[j]->tcpSessionList;
 
       while(scanner != NULL) {
-	for(i=0; i<MAX_NUM_SESSION_PEERS; i++)
-	  if(scanner->peersIdx[i] != NO_PEER) {
-	    scanner->peersIdx[i] = mapIdx(scanner->peersIdx[i]);
-	  }
-
+	mapUsageCounter(&scanner->peers);
 	scanner = (IpGlobalSession*)(scanner->next);
       }
     }

@@ -644,56 +644,57 @@ void dumpNtopHashes(char* options) {
       sendString(buf);
     }
 
-    for(j=0; j<numIpProtosToMonitor; j++) {
-      if(j > 0) {
-	if(languageType == PERL_LANGUAGE)
-	  sendString("\t\t},\n\n");
+    if(el->protoIPTrafficInfos != NULL) {
+      for(j=0; j<numIpProtosToMonitor; j++) {
+	if(j > 0) {
+	  if(languageType == PERL_LANGUAGE)
+	    sendString("\t\t},\n\n");
+	  else
+	    sendString("\t\t),\n\n");
+	}
+
+	if(languageType == PERL_LANGUAGE) {
+	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => {\n",
+		      protoIPTrafficInfos[j]) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
+	} else {
+	  if(snprintf(buf, sizeof(buf), "\t\t'%s' => array(\n",
+		      protoIPTrafficInfos[j]) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
+	}
+
+	if(snprintf(buf, sizeof(buf), "\t\t\t'sentLocally' => '%llu',\n",
+		    el->protoIPTrafficInfos[j].sentLocally) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	else
-	  sendString("\t\t),\n\n");
+	  sendString(buf);
+
+	if(snprintf(buf, sizeof(buf), "\t\t\t'sentRemotely' => '%llu',\n",
+		    el->protoIPTrafficInfos[j].sentRemotely) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	else
+	  sendString(buf);
+
+	if(snprintf(buf, sizeof(buf), "\t\t\t'receivedLocally' => '%llu',\n",
+		    el->protoIPTrafficInfos[j].receivedLocally) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	else
+	  sendString(buf);
+
+	if(snprintf(buf, sizeof(buf), "\t\t\t'receivedFromRemote' => '%llu'\n",
+		    el->protoIPTrafficInfos[j].receivedFromRemote) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	else
+	  sendString(buf);
       }
 
-      if(languageType == PERL_LANGUAGE) {
-	if(snprintf(buf, sizeof(buf), "\t\t'%s' => {\n",
-		    protoIPTrafficInfos[j]) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      } else {
-	if(snprintf(buf, sizeof(buf), "\t\t'%s' => array(\n",
-		    protoIPTrafficInfos[j]) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-
-      if(snprintf(buf, sizeof(buf), "\t\t\t'sentLocally' => '%llu',\n",
-		  el->protoIPTrafficInfos[j].sentLocally) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      if(languageType == PERL_LANGUAGE)
+	sendString("\t\t}\n");
       else
-	sendString(buf);
-
-      if(snprintf(buf, sizeof(buf), "\t\t\t'sentRemotely' => '%llu',\n",
-		  el->protoIPTrafficInfos[j].sentRemotely) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
-
-      if(snprintf(buf, sizeof(buf), "\t\t\t'receivedLocally' => '%llu',\n",
-		  el->protoIPTrafficInfos[j].receivedLocally) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
-
-      if(snprintf(buf, sizeof(buf), "\t\t\t'receivedFromRemote' => '%llu'\n",
-		  el->protoIPTrafficInfos[j].receivedFromRemote) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      else
-	sendString(buf);
+	sendString("\t\t)\n");
     }
-
-    if(languageType == PERL_LANGUAGE)
-      sendString("\t\t}\n");
-    else
-      sendString("\t\t)\n");
-
 
     if(languageType == PERL_LANGUAGE)
       sendString("\t},\n\n");

@@ -439,12 +439,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 				    IPSession *theSession,
 				    u_short sessionType,
 				    u_char initiator,
-				    int role)
- {
+				    int role) {
    /* This is a known port hence we're interested in */
    IpGlobalSession *scanner=NULL, *prevScanner;
    HostTraffic *theHost, *theRemHost;
-   int i, found;
+   int i;
 
    if((theHostIdx == broadcastEntryIdx)
       || (remotePeerIdx == broadcastEntryIdx)
@@ -496,7 +495,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
      scanner->initiator = role;
      scanner->firstSeen = actTime;
 
-     for(i=0; i<MAX_NUM_SESSION_PEERS; i++) scanner->peersIdx[i] = NO_PEER;
+     resetUsageCounter(&scanner->peers);
 
      /* Add the session to the session list */
      switch(sessionType) {
@@ -514,25 +513,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
    scanner->lastSeen = actTime;
    scanner->sessionCounter++;
 
- #ifdef DEBUG
+#ifdef DEBUG
    printSession(theSession, sessionType, scanner->sessionCounter);
- #endif
-
-   for(i=0, found = -1; i<MAX_NUM_SESSION_PEERS; i++)
-     if((scanner->peersIdx[i] == NO_PEER)
-	|| (scanner->peersIdx[i] == remotePeerIdx)) {
-       found = i;
-       break;
-     }
-
-   /* Patch below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-   if(found == -1)
-     found = scanner->lastPeer; /* (*) */
-
-   scanner->peersIdx[found] = remotePeerIdx; /* Note found == scanner->lastPeer (*) */
-
-   if(found == scanner->lastPeer)
-     scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
+#endif
 
    switch(sessionType) {
    case IPPROTO_TCP:
@@ -564,7 +547,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
      scanner->bytesReceived       += theSession->bytesReceived;
      scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
      scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived;
-    break;
+     break;
    }
  }
 

@@ -1278,9 +1278,6 @@ typedef struct {
 #define SHORT_REPORT        1
 #define LONG_REPORT         2
 
-
-#define MAX_NUM_SESSION_PEERS 5
-
 #define CLIENT_TO_SERVER       1
 #define CLIENT_FROM_SERVER     2
 #define SERVER_TO_CLIENT       3
@@ -1324,8 +1321,7 @@ typedef struct ipGlobalSession {
   TrafficCounter bytesSent;        /* # bytes sent     (peer -> initiator)     */
   TrafficCounter bytesReceived;    /* # bytes received (peer -> initiator)     */
   TrafficCounter bytesFragmentedSent, bytesFragmentedReceived; /* IP Fragments */
-  u_int lastPeer;                  /* idx of the last peer added to the list   */
-  u_int peersIdx[MAX_NUM_SESSION_PEERS]; /* session peers idx          */
+  UsageCounter peers;              /* session peers */
   struct ipGlobalSession  *next;   /* next element (linked list)               */
 } IpGlobalSession;
 
