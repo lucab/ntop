@@ -296,18 +296,6 @@
 #endif
 
 /*
- * Do we have the stuff we need for XMLDUMP?
- *   ./configure sets MAKE_WITH_XMLDUMP - that's the reliable one
- */
-#ifndef MAKE_WITH_XMLDUMP
- #undef HAVE_XMLVERSION_H
- #undef HAVE_LIBXML2
- #undef HAVE_GLIB_H
- #undef HAVE_GLIBCONFIG_H
- #undef HAVE_GDOME_H
- #undef HAVE_LIBGDOME
-#endif
-/*
  * Do we have the stuff we need for i18n?
  */
 #ifdef MAKE_WITH_I18N
@@ -519,14 +507,6 @@
 /* VENDOR_DEBUG debugs the vendor table stuff in vendor.c
  */
 /* #define VENDOR_DEBUG */
-
-/* XMLDUMP_DEBUG causes xmldump.c to output debug information.
-     define it as 0 for the minimal - enter/exit routine
-     define it as 1 a little more
-     define it as 2 to enable the trap, plus put out bunches of info lines...
-     define it as 3 ... even more stuff...
- */
-#define XMLDUMP_DEBUG 1
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* SSLWATCHDOG - this crosses the line.                                            */
@@ -1011,38 +991,6 @@
 /* #define CONST_RRD_DEFAULT_FONT_NAME      "ArialNarrow-Bold.ttf"
 
 /*
- * dumpXML.c constants...
- *     <!DOCTYPE -name- SYSTEM \"-dtd-uri-\">
- *
- *  CONST_XML_DOCTYPE_NAME
- *     Is the name used in the <!DOCTYPE> line.
- *
- *  CONST_XML_DTD_NAME
- *     Is the name of the dtd in the <!DOCTYPE> line.
- *
- *  CONST_XML_TMP_NAME
- *     Is the prefix for a unique temp name used to dump the generated xml
- *
- *  CONST_XML_VERSION
- *     Is the value used in the <ntop_dump_header ... xml_version=n ...> tag.
- *     This MUST be incremented for each major (incompatible) change in the xml formats
- */
-#define CONST_XML_DOCTYPE_NAME              "ntop_dump"
-#define CONST_XML_DTD_NAME                  "ntopdump.dtd"
-#define CONST_XML_TMP_NAME                  "/tmp/ntopxml"
-#define CONST_XML_VERSION                   "0"
-
-/*
- * Define the parm values for xmldump and the # of characters to test
- *  (e.g. with a TEST_LEN of 3, interference and interface both work)
- */
-#define CONST_XMLDUMP_TEST_LEN              3
-#define CONST_XMLDUMP_INVOKE                "invoke"
-#define CONST_XMLDUMP_VERSION               "version"
-#define CONST_XMLDUMP_INTERFACES            "interfaces"
-#define CONST_XMLDUMP_TOFILE                "tofile"
-
-/*
  * How many dummy files to create for the HAVE_FILEDESCRIPTORBUG fix
  */
 #define CONST_FILEDESCRIPTORBUG_COUNT       3
@@ -1153,6 +1101,7 @@
 #define CONST_VIEW_LOG_HTML                 "viewLog.html"
 #define CONST_VLAN_LIST_HTML                "vlanList.html"
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
+#define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.
@@ -1323,6 +1272,24 @@
  * of a device name.  Remember, WIN32 names are long, but not that long!
  */
 #define MAX_DEVICE_NAME_LEN                 64
+
+/*
+ * dumpXML.c constants...
+ *     <!DOCTYPE -name- SYSTEM \"-dtd-uri-\">
+ *
+ *  CONST_XML_DOCTYPE_NAME
+ *     Is the name used in the <!DOCTYPE> line.
+ *
+ *  CONST_XML_DTD_NAME
+ *     Is the name of the dtd in the <!DOCTYPE> line.
+ *
+ *  CONST_XML_TMP_NAME
+ *     Is the prefix for a unique temp name used to dump the generated xml
+ *
+ */
+#define CONST_XML_DOCTYPE_NAME              "ntop_dump"
+#define CONST_XML_DTD_NAME                  "ntopdump.dtd"
+#define CONST_XML_TMP_NAME                  "/tmp/ntopxml"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  These are just useful things, shorthand, etc.  Don't change 'em
@@ -1498,6 +1465,12 @@
 #define FLAG_INTERFACE_DOWN      0   /* not yet enabled via LBNL */
 #define FLAG_INTERFACE_READY     1   /* ready for packet sniffing */
 #define FLAG_INTERFACE_ENABLED   2   /* packet capturing currently active */
+
+/*
+ * This is the strftime() specification to match the ISO 8601 format
+ * used in html, xml, etc.
+ */
+#define CONST_ISO8601_TIMESPEC              "%Y-%m-%dT%H:%M:%S"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* F L A G  and  B I T F L A G  items                                              */

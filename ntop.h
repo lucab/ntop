@@ -500,6 +500,18 @@ ntop.h
 #error DEFAULT_SNAPLEN > MAX_PACKET_LEN
 #endif
 
+/* XML dump plugin...
+ * Check if we have the required headers... 
+ * otherwise all the code becomes nops
+ */
+#undef MAKE_WITH_XMLDUMP
+#if defined(HAVE_GLIBCONFIG_H) &&             \
+    defined(HAVE_GLIB_H) &&                   \
+    defined(HAVE_GDOME_H) &&                  \
+    defined(HAVE_XMLVERSION_H) &&             \
+    defined(CONST_XMLDUMP_PLUGIN_NAME)
+ #define MAKE_WITH_XMLDUMP
+#endif
 
 /* *************************************************************** */
 

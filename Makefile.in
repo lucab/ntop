@@ -124,7 +124,6 @@ SCRIPTVER = @SCRIPTVER@
 SO_VERSION_PATCH = @SO_VERSION_PATCH@
 STRIP = @STRIP@
 VERSION = @PACKAGE_VERSION@
-XMLDUMP = @XMLDUMP@
 am__include = @am__include@
 am__quote = @am__quote@
 install_sh = @install_sh@
@@ -264,7 +263,7 @@ libntop_la_LDFLAGS = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAG
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
                            http.c          netflow.c         \
                            report.c        reportUtils.c     ssl.c   \
-                           webInterface.c  xmldump.c
+                           webInterface.c
 
 
 libntopreport_la_DEPENDENCIES = myrrd/libmyrrd.a config.h
@@ -287,7 +286,7 @@ am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo fcUtils.lo \
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
 	http.lo netflow.lo report.lo reportUtils.lo ssl.lo \
-	webInterface.lo xmldump.lo
+	webInterface.lo
 libntopreport_la_OBJECTS = $(am_libntopreport_la_OBJECTS)
 EXTRA_PROGRAMS = ntops$(EXEEXT) sntop$(EXEEXT)
 bin_PROGRAMS = ntop$(EXEEXT)
@@ -333,8 +332,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/term.Plo ./$(DEPDIR)/traffic.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/util.Plo ./$(DEPDIR)/vendor.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/version.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/webInterface.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/xmldump.Plo
+@AMDEP_TRUE@	./$(DEPDIR)/webInterface.Plo
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -552,7 +550,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vendor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/webInterface.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmldump.Plo@am__quote@
 
 distclean-depend:
 	-rm -rf ./$(DEPDIR)
@@ -1095,17 +1092,6 @@ uninstall-man: uninstall-man8
 
 myrrd/libmyrrd.a:
 	cd myrrd; make
-
-#
-# Special stuff for xml auto-generation of code from the "doc":
-#
-xmldump.$(OBJEXT): xml_g_cmdopt.inc
-
-xmldump.c: xml_*.inc globals-structtypes.h
-
-xml_*.inc: globals-structtypes.h
-	@echo "Processing globals-structtypes.h to make xml_*.inc..."
-	@@AWK@ -f utils/xmldump.awk globals-structtypes.h
 
 .PHONY: snapshot
 

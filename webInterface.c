@@ -790,20 +790,6 @@ void shutdownNtop(void) {
   closeNwSocket(&myGlobals.newSock);
   termAccessLog();
 
-#ifdef MAKE_WITH_XMLDUMP
-  if(myGlobals.xmlFileOut != NULL) {
-    int rc;
-
-    traceEvent(CONST_TRACE_INFO, "Saving ntop data (xml) to %s...", myGlobals.xmlFileOut);
-
-    /* Take the shutdown dump */
-    rc = dumpXML(1, NULL);
-    if(rc != 0) {
-      traceEvent(CONST_TRACE_ERROR, "xml save, rc %d", rc);
-    }
-  }
-#endif
-
   cleanup(0);
 }
 
@@ -3426,18 +3412,6 @@ void printNtopConfigInfo(int textPrintFlag) {
                             (myGlobals.P3Puri[0] == '\0')) ? "none" :
                            myGlobals.P3Puri,
                            "none");
-
-#ifdef MAKE_WITH_XMLDUMP
-  printParameterConfigInfo(textPrintFlag, "--xmlfileout",
-                           myGlobals.xmlFileOut == NULL ? "(none)" : myGlobals.xmlFileOut,
-                           "(none)");
-  printParameterConfigInfo(textPrintFlag, "--xmlfilesnap",
-                           myGlobals.xmlFileSnap == NULL ? "(none)" : myGlobals.xmlFileSnap,
-                           "(none)");
-  printParameterConfigInfo(textPrintFlag, "--xmlfilein",
-                           myGlobals.xmlFileIn == NULL ? "(none)" : myGlobals.xmlFileIn,
-                           "(none)");
-#endif
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
   printParameterConfigInfo(textPrintFlag, "--disable-schedYield",

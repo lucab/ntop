@@ -218,12 +218,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
 
-#ifdef MAKE_WITH_XMLDUMP
-  myGlobals.xmlFileOut      = NULL;
-  myGlobals.xmlFileSnap     = NULL;
-  myGlobals.xmlFileIn       = NULL;
-#endif
-
   /* the table of enabled NICs */
   myGlobals.numDevices = 0;
   myGlobals.device = NULL;
@@ -563,27 +557,6 @@ void initNtop(char *devices) {
   if(myGlobals.daemonMode) {
     daemonize();
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as a daemon");
-  }
-#endif
-
-#ifdef MAKE_WITH_XMLDUMP
-  if (myGlobals.xmlFileOut) {
-    traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Removing old xml output file, %s", myGlobals.xmlFileOut);
-    /* Delete the old one (if present) */
-    int rc = unlink(myGlobals.xmlFileOut);
-    if ( (rc != 0) && (errno != ENOENT) ) {
-      traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml output file, %s, failed, errno=%d",
-		 myGlobals.xmlFileOut, errno);
-    }
-  }
-  if (myGlobals.xmlFileSnap) {
-    traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Removing old xml snapshot file, %s", myGlobals.xmlFileSnap);
-    /* Delete the old one (if present) */
-    rc = unlink(myGlobals.xmlFileSnap);
-    if ( (rc != 0) && (errno != ENOENT) ) {
-      traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml snapshot file, %s, failed, errno=%d",
-		 myGlobals.xmlFileSnap, errno);
-    }
   }
 #endif
 

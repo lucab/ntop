@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE CPP LN_S RANLIB ac_ct_RANLIB LD NM LIBTOOL ac_ct_LIBTOOL ac_ct_AUTOHEADER ac_ct_ACLOCAL ac_ct_AUTOMAKE ac_ct_AUTOCONF EGREP ALLOCA LIBOBJS AS CCLD XMLDUMP CFG_CONFIGFILE_DIR CFG_DATAFILE_DIR CFG_DBFILE_DIR DLLTOOL DYN_FLAGS INCS LIBTOOL_DEPS MAKE_SHARED_LIBRARY_PARM NTOP_VERSION_EXTRA OBJDUMP CFG_PLUGIN_DIR PLUGINS CFG_RUN_DIR SCRIPTVER SO_VERSION_PATCH LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE CPP LN_S RANLIB ac_ct_RANLIB LD NM LIBTOOL ac_ct_LIBTOOL ac_ct_AUTOHEADER ac_ct_ACLOCAL ac_ct_AUTOMAKE ac_ct_AUTOCONF EGREP ALLOCA LIBOBJS AS CCLD CFG_CONFIGFILE_DIR CFG_DATAFILE_DIR CFG_DBFILE_DIR DLLTOOL DYN_FLAGS INCS LIBTOOL_DEPS MAKE_SHARED_LIBRARY_PARM NTOP_VERSION_EXTRA OBJDUMP CFG_PLUGIN_DIR PLUGINS CFG_RUN_DIR SCRIPTVER SO_VERSION_PATCH LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -867,7 +867,6 @@ Optional Features:
   --enable-static-plugins     Enable static linked plugins sntop, default=dynamic]
   --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]
   --enable-i18n               Enable (limited) internationalization [default=disabled]
-  --enable-xmldump            Enable xml-based data dump [default=disabled]
  --disable-ipv6              use IPv6 [default=enabled]
   --enable-showoses           display OS Support information.
   +----------------------------------------------------------------------------+
@@ -900,16 +899,6 @@ Optional Packages:
   --with-ossl-lib=DIR          or libssl located in DIR
   --with-ossl-include=DIR      or ssl.h located in DIR
   --with-localedir=DIR        LOCALE files located in DIR (i18n)
-  --with-xml2-root=DIR        libxml2 located in DIR
-  --with-xml2-lib=DIR          or libxml2 located in DIR
-  --with-xml2-include=DIR      or .h located in DIR
-  --with-gdome-root=DIR       libgdome located in DIR
-  --with-gdome-lib=DIR         or libgdome located in DIR
-  --with-gdome-include=DIR     or .h located in DIR
-  --with-glib-root=DIR        libglib located in DIR
-  --with-glib-lib=DIR           or libglib located in DIR
-  --with-glib-include=DIR       or .h located in DIR
-  --with-glibconfig-root=DIR  glibconfig.h source in DIR
   +----------------------------------------------------------------------------+
 
 Some influential environment variables:
@@ -1340,7 +1329,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.98.009-2003-12-28"
+SCRIPTVER="v2.2.98.010-2004-01-16"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -1357,7 +1346,7 @@ NTOP_VERSION_EXTRA=""
 
 echo
 echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
-echo "  copyright (c) 1998-2003 Luca Deri <deri@ntop.org>"
+echo "  copyright (c) 1998-2004 Luca Deri <deri@ntop.org>"
 echo
 echo          "Configuration script version $SCRIPTVER"
 echo
@@ -4512,7 +4501,7 @@ test x"$silent" = xyes && libtool_flags="$libtool_flags --silent"
 case "$host" in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4515 "configure"' > conftest.$ac_ext
+  echo '#line 4504 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5703,13 +5692,6 @@ else
   ac_enable_i18n="no"
 fi;
 
-# Check whether --enable-xmldump or --disable-xmldump was given.
-if test "${enable_xmldump+set}" = set; then
-  enableval="$enable_xmldump"
-  ac_enable_xmldump="yes"
-else
-  ac_enable_xmldump="no"
-fi;
 # Check whether --enable-ipv6 or --disable-ipv6 was given.
 if test "${enable_ipv6+set}" = set; then
   enableval="$enable_ipv6"
@@ -5882,90 +5864,6 @@ if test "${with_localedir+set}" = set; then
   LOCALEDIR="$withval"
 else
   LOCALEDIR=
-fi;
-
-
-# Check whether --with-xml2-root or --without-xml2-root was given.
-if test "${with_xml2_root+set}" = set; then
-  withval="$with_xml2_root"
-  XML2_DIRECTORY="$withval"
-else
-  XML2_DIRECTORY=
-fi;
-
-# Check whether --with-xml2-lib or --without-xml2-lib was given.
-if test "${with_xml2_lib+set}" = set; then
-  withval="$with_xml2_lib"
-  XML2_LIB="$withval"
-else
-  XML2_LIB=
-fi;
-
-# Check whether --with-xml2-include or --without-xml2-include was given.
-if test "${with_xml2_include+set}" = set; then
-  withval="$with_xml2_include"
-  XML2_INCLUDE="$withval"
-else
-  XML2_INCLUDE=
-fi;
-
-
-# Check whether --with-gdome-root or --without-gdome-root was given.
-if test "${with_gdome_root+set}" = set; then
-  withval="$with_gdome_root"
-  GDOME_DIRECTORY="$withval"
-else
-  GDOME_DIRECTORY=
-fi;
-
-# Check whether --with-gdome-lib or --without-gdome-lib was given.
-if test "${with_gdome_lib+set}" = set; then
-  withval="$with_gdome_lib"
-  GDOME_LIB="$withval"
-else
-  GDOME_LIB=
-fi;
-
-# Check whether --with-gdome-include or --without-gdome-include was given.
-if test "${with_gdome_include+set}" = set; then
-  withval="$with_gdome_include"
-  GDOME_INCLUDE="$withval"
-else
-  GDOME_INCLUDE=
-fi;
-
-
-# Check whether --with-glib-root or --without-glib-root was given.
-if test "${with_glib_root+set}" = set; then
-  withval="$with_glib_root"
-  GLIB_DIRECTORY="$withval"
-else
-  GLIB_DIRECTORY=
-fi;
-
-# Check whether --with-glib-lib or --without-glib-lib was given.
-if test "${with_glib_lib+set}" = set; then
-  withval="$with_glib_lib"
-  GLIB_LIB="$withval"
-else
-  GLIB_LIB=
-fi;
-
-# Check whether --with-glib-include or --without-glib-include was given.
-if test "${with_glib_include+set}" = set; then
-  withval="$with_glib_include"
-  GLIB_INCLUDE="$withval"
-else
-  GLIB_INCLUDE=
-fi;
-
-
-# Check whether --with-glibconfig-root or --without-glibconfig-root was given.
-if test "${with_glibconfig_root+set}" = set; then
-  withval="$with_glibconfig_root"
-  GLIBCONFIG_DIRECTORY="$withval"
-else
-  GLIBCONFIG_DIRECTORY=
 fi;
 
 # Check whether --enable-showoses or --disable-showoses was given.
@@ -6176,65 +6074,6 @@ if test ".${OSSL_DIRECTORY}" != "."; then
             OSSL_INCLUDE="${OSSL_DIRECTORY}/include"
         else
             OSSL_INCLUDE="${OSSL_DIRECTORY}"
-        fi
-    fi
-fi
-# Finished expansion of NTOP_SET_LIBINC()
-
-fi
-if test ".${ac_enable_xmldump}" = ".yes"; then
-  # Expansion of NTOP_SET_LIBINC(XML2)
-if test ".${XML2_DIRECTORY}" != "."; then
-    if test ".${XML2_LIB}" = "."; then
-        if test -d ${XML2_DIRECTORY}/lib; then
-            XML2_LIB="${XML2_DIRECTORY}/lib"
-        else
-            XML2_LIB="${XML2_DIRECTORY}"
-        fi
-    fi
-    if test ".${XML2_INCLUDE}" = "."; then
-        if test -d ${XML2_DIRECTORY}/include; then
-            XML2_INCLUDE="${XML2_DIRECTORY}/include"
-        else
-            XML2_INCLUDE="${XML2_DIRECTORY}"
-        fi
-    fi
-fi
-# Finished expansion of NTOP_SET_LIBINC()
-
-  # Expansion of NTOP_SET_LIBINC(GDOME)
-if test ".${GDOME_DIRECTORY}" != "."; then
-    if test ".${GDOME_LIB}" = "."; then
-        if test -d ${GDOME_DIRECTORY}/lib; then
-            GDOME_LIB="${GDOME_DIRECTORY}/lib"
-        else
-            GDOME_LIB="${GDOME_DIRECTORY}"
-        fi
-    fi
-    if test ".${GDOME_INCLUDE}" = "."; then
-        if test -d ${GDOME_DIRECTORY}/include; then
-            GDOME_INCLUDE="${GDOME_DIRECTORY}/include"
-        else
-            GDOME_INCLUDE="${GDOME_DIRECTORY}"
-        fi
-    fi
-fi
-# Finished expansion of NTOP_SET_LIBINC()
-
-  # Expansion of NTOP_SET_LIBINC(GLIB)
-if test ".${GLIB_DIRECTORY}" != "."; then
-    if test ".${GLIB_LIB}" = "."; then
-        if test -d ${GLIB_DIRECTORY}/lib; then
-            GLIB_LIB="${GLIB_DIRECTORY}/lib"
-        else
-            GLIB_LIB="${GLIB_DIRECTORY}"
-        fi
-    fi
-    if test ".${GLIB_INCLUDE}" = "."; then
-        if test -d ${GLIB_DIRECTORY}/include; then
-            GLIB_INCLUDE="${GLIB_DIRECTORY}/include"
-        else
-            GLIB_INCLUDE="${GLIB_DIRECTORY}"
         fi
     fi
 fi
@@ -10001,50 +9840,6 @@ else
 fi
 
 echo
-echo "XML Dump?"
-if test ".${ac_enable_xmldump}" = ".yes"; then
-    echo "    ...Requested if available."
-else
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-xmldump."
-        touch xml_s_ntopinterface.inc
-    if test ".${XML2_LIB}" != "."  ||
-       test ".${XML2_INCLUDE}" != "."  ||
-       test ".${GDOME_LIB}" != "." ||
-       test ".${GDOME_INCLUDE}" != "." ||
-       test ".${GLIB_LIB}" != "." ||
-       test ".${GLIB_INCLUDE}" != "."; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:  You didn't ./configure --enable-xmldump"
-        echo "*           so the following explicit or implied options are "
-        echo "*           irrelevant and will be ignored:"
-        echo "*                  --with-xml2-lib=${XML2_LIB}"
-        echo "*                  --with-xml2-include=${XML2_INCLUDE}"
-        echo "*                  --with-gdome-lib=${GDOME_LIB}"
-        echo "*                  --with-gdome-include=${GDOME_INCLUDE}"
-        echo "*                  --with-glib-lib=${GLIB_LIB}"
-        echo "*                  --with-glib-include=${GLIB_INCLUDE}"
-        echo "*"
-        echo "*>>> Ignoring meaningless request(s)."
-        echo "*"
-        echo "*???     1. Add the --enable-xmldump option"
-        echo "*??? or  2. Remove the conflicting option(s)"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        XML2_LIB=
-        GDOME_LIB=
-        GLIB_LIB=
-        XML2_INCLUDE=
-        GDOME_INCLUDE=
-        GLIB_INCLUDE=
-        HAS_WARNING="yes"
-    fi
-fi
-
-
-echo
 echo "Processing the rest of the ROOT/DIRECTORY entries"
 echo
 
@@ -10210,150 +10005,6 @@ if test ".${LOCALEDIR}" != "." &&
     echo "*******************************************************************"
     echo
     HAS_WARNING="yes"
-fi
-
-if test ".${ac_enable_xmldump}" = ".yes"; then
-    if test ! -d ${XML2_LIB} ||
-       test ! -d ${XML2_INCLUDE} ||
-       test ! -d ${GDOME_LIB} ||
-       test ! -d ${GDOME_INCLUDE} ||
-       test ! -d ${GLIB_LIB} ||
-       test ! -d ${GLIB_INCLUDE}; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You specified or implied non-existent directories"
-        echo "*             for libraries required for XMLdump:"
-        echo "*               --with-xml2-lib=${XML2_LIB}"
-        echo "*               --with-xml2-include=${XML2_INCLUDE}"
-        echo "*               --with-gdome-lib=${GDOME_LIB}"
-        echo "*               --with-gdome-include=${GDOME_INCLUDE}"
-        echo "*               --with-glib-lib=${GLIB_LIB}"
-        echo "*               --with-glib-include=${GLIB_INCLUDE}"
-        echo "*"
-        echo "*>>> Continuing without the --with-xxxxx-xxxxx values"
-        echo "*"
-        echo "*        ./configure should complete 'successfully'"
-        echo "*"
-        echo "*        ntop may find the XMLdump libraries installed in standard"
-        echo "*        locations."
-        echo "*"
-        echo "*        If not found, ntop will disable the XML dump feature."
-        echo "*"
-        echo "*    Read the remaining messages carefully!"
-        echo "*"
-        echo "*???     1. Install the XMLdump libraries and rerun ./configure"
-        echo "*??? or  2. Correct the --with-xxxxx-xxxxx values and rerun"
-        echo "*???        ./configure"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        XML2_LIB=
-        XML2_INCLUDE=
-        GDOME_LIB=
-        GDOME_INCLUDE=
-        GLIB_LIB=
-        GLIB_INCLUDE=
-        ac_enable_xmldump="no"
-        HAS_WARNING="yes"
-    else
-        # Expansion of NTOP_APPENDS(${XML2_INCLUDE}, ${XML2_LIB}, xml2)
-    if test ".${XML2_INCLUDE}" != "."; then
-        rc=`(echo $CPPFLAGS | grep '${XML2_INCLUDE} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-           CPPFLAGS="$CPPFLAGS -I${XML2_INCLUDE}"
-        fi
-        rc=`(echo $INCS | grep '${XML2_INCLUDE}' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            INCS="$INCS -I${XML2_INCLUDE}"
-        fi
-    fi
-    if test ".${XML2_LIB}" != "."; then
-        rc=`(echo $LDFLAGS | grep '${XML2_LIB} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            case "${DEFINEOS}" in
-              DARWIN )
-                LDFLAGS="$LDFLAGS -L${XML2_LIB} -L${XML2_LIB}/lib"
-                ;;
-              * )
-                LDFLAGS="$LDFLAGS -L${XML2_LIB}"
-                ;;
-            esac
-        fi
-    fi
-    if test ".xml2" != "."; then
-        rc=`(echo $LIBS | grep '\-lxml2 ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            LIBS="$LIBS -lxml2"
-        fi
-    fi
-# Finished expansion of NTOP_APPENDS()
-
-        # Expansion of NTOP_APPENDS(${GDOME_INCLUDE}, ${GDOME_LIB}, gdome)
-    if test ".${GDOME_INCLUDE}" != "."; then
-        rc=`(echo $CPPFLAGS | grep '${GDOME_INCLUDE} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-           CPPFLAGS="$CPPFLAGS -I${GDOME_INCLUDE}"
-        fi
-        rc=`(echo $INCS | grep '${GDOME_INCLUDE}' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            INCS="$INCS -I${GDOME_INCLUDE}"
-        fi
-    fi
-    if test ".${GDOME_LIB}" != "."; then
-        rc=`(echo $LDFLAGS | grep '${GDOME_LIB} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            case "${DEFINEOS}" in
-              DARWIN )
-                LDFLAGS="$LDFLAGS -L${GDOME_LIB} -L${GDOME_LIB}/lib"
-                ;;
-              * )
-                LDFLAGS="$LDFLAGS -L${GDOME_LIB}"
-                ;;
-            esac
-        fi
-    fi
-    if test ".gdome" != "."; then
-        rc=`(echo $LIBS | grep '\-lgdome ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            LIBS="$LIBS -lgdome"
-        fi
-    fi
-# Finished expansion of NTOP_APPENDS()
-
-        # Expansion of NTOP_APPENDS(${GLIB_INCLUDE}, ${GLIB_LIB}, glib)
-    if test ".${GLIB_INCLUDE}" != "."; then
-        rc=`(echo $CPPFLAGS | grep '${GLIB_INCLUDE} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-           CPPFLAGS="$CPPFLAGS -I${GLIB_INCLUDE}"
-        fi
-        rc=`(echo $INCS | grep '${GLIB_INCLUDE}' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            INCS="$INCS -I${GLIB_INCLUDE}"
-        fi
-    fi
-    if test ".${GLIB_LIB}" != "."; then
-        rc=`(echo $LDFLAGS | grep '${GLIB_LIB} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            case "${DEFINEOS}" in
-              DARWIN )
-                LDFLAGS="$LDFLAGS -L${GLIB_LIB} -L${GLIB_LIB}/lib"
-                ;;
-              * )
-                LDFLAGS="$LDFLAGS -L${GLIB_LIB}"
-                ;;
-            esac
-        fi
-    fi
-    if test ".glib" != "."; then
-        rc=`(echo $LIBS | grep '\-lglib ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            LIBS="$LIBS -lglib"
-        fi
-    fi
-# Finished expansion of NTOP_APPENDS()
-
-    fi
 fi
 
 # Expansion of NTOPCONFIGDEBUG_SETTINGS()
@@ -17601,8 +17252,6 @@ done
 esac
 
 
-if test ".${ac_enable_xmldump}" = ".yes"; then
-
 
 for ac_header in glib.h glibconfig.h
 do
@@ -18029,7 +17678,6 @@ fi
 
 done
 
-fi
 
 echo "$as_me:$LINENO: checking for pid_t" >&5
 echo $ECHO_N "checking for pid_t... $ECHO_C" >&6
@@ -20060,7 +19708,6 @@ fi
 
 
 
-if test ".${ac_enable_xmldump}" = ".yes"; then
 
 echo "$as_me:$LINENO: checking for g_date_julian in -lglib" >&5
 echo $ECHO_N "checking for g_date_julian in -lglib... $ECHO_C" >&6
@@ -20253,7 +19900,6 @@ _ACEOF
 
 fi
 
-fi
 
 # The Ultrix 4.2 mips builtin alloca declared by alloca.h only works
 # for constant arguments.  Useless!
@@ -24657,52 +24303,6 @@ echo "$as_me: WARNING: error" >&2;}
 fi
 
 
-if test ".${ac_enable_xmldump}" = ".yes"; then
-    echo "$as_me:$LINENO: checking for xmldump" >&5
-echo $ECHO_N "checking for xmldump... $ECHO_C" >&6
-    if test ".${ac_cv_header_glib_h}" = ".yes"            &&
-       test ".${ac_cv_header_glibconfig_h}" = ".yes"      &&
-       test ".${ac_cv_header_xmlversion_h}" = ".yes"      &&
-       test ".${ac_cv_header_gdome_h}" = ".yes"           &&
-       test ".${ac_cv_lib_glib_g_date_julian}" = ".yes"   &&
-       test ".${ac_cv_lib_xml2_xmlCheckVersion}" = ".yes" &&
-       test ".${ac_cv_lib_gdome_gdome_di_saveDocToFile}" = ".yes"; then
-        echo "$as_me:$LINENO: result: ok" >&5
-echo "${ECHO_T}ok" >&6
-
-cat >>confdefs.h <<_ACEOF
-#define MAKE_WITH_XMLDUMP 1
-_ACEOF
-
-    else
-        { echo "$as_me:$LINENO: WARNING: error" >&5
-echo "$as_me: WARNING: error" >&2;}
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:  One or more items required for xmldump are missing:"
-        echo "*           (yes means it was found, no means it was not found)"
-        echo "*"
-        echo "*                  xmlversion.h...${ac_cv_header_xmlversion_h}"
-        echo "*                  libxml2.so or libxml2.a...${ac_cv_lib_xml2_xmlCheckVersion}"
-        echo "*                  gdome.h...${ac_cv_header_gdome_h}"
-        echo "*                  libgdome.so or libgdome.a...${ac_cv_lib_gdome_gdome_di_saveDocToFile}"
-        echo "*                  glib.h...${ac_cv_header_glib_h}"
-        echo "*                  libglib.so or libglib.a...${ac_cv_lib_glib_g_date_julian}"
-        echo "*                  glibconfig.h...${ac_cv_header_glibconfig_h}"
-        echo "*"
-        echo "*>>>    ntop will be built without xmldump"
-        echo "*"
-        echo "*???     1. Install the necessary headers and libraries."
-        echo "*???    and rerun ./configure"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        HAS_WARNING="yes"
-    fi
-fi
-
-
 if test ".${ac_enable_tcpwrap}" = ".yes"; then
     echo "$as_me:$LINENO: checking for tcp wrappers" >&5
 echo $ECHO_N "checking for tcp wrappers... $ECHO_C" >&6
@@ -24800,6 +24400,49 @@ echo "$as_me: WARNING: error" >&2;}
         HAS_WARNING="yes"
     fi
 fi
+
+echo "$as_me:$LINENO: checking for xmldump" >&5
+echo $ECHO_N "checking for xmldump... $ECHO_C" >&6
+if test ".${ac_cv_header_glib_h}" = ".yes"            &&
+   test ".${ac_cv_header_glibconfig_h}" = ".yes"      &&
+   test ".${ac_cv_header_xmlversion_h}" = ".yes"      &&
+   test ".${ac_cv_header_gdome_h}" = ".yes"           &&
+   test ".${ac_cv_lib_glib_g_date_julian}" = ".yes"   &&
+   test ".${ac_cv_lib_xml2_xmlCheckVersion}" = ".yes" &&
+   test ".${ac_cv_lib_gdome_gdome_di_saveDocToFile}" = ".yes"; then
+    echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6
+else
+    { echo "$as_me:$LINENO: WARNING: error" >&5
+echo "$as_me: WARNING: error" >&2;}
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* WARNING:  One or more items required for the xmldump plugin are "
+    echo "*           missing:"
+    echo "*"
+    echo "*                  xmlversion.h...${ac_cv_header_xmlversion_h}"
+    echo "*                  libxml2.so or libxml2.a...${ac_cv_lib_xml2_xmlCheckVersion}"
+    echo "*                  gdome.h...${ac_cv_header_gdome_h}"
+    echo "*                  libgdome.so or libgdome.a...${ac_cv_lib_gdome_gdome_di_saveDocToFile}"
+    echo "*                  glib.h...${ac_cv_header_glib_h}"
+    echo "*                  libglib.so or libglib.a...${ac_cv_lib_glib_g_date_julian}"
+    echo "*                  glibconfig.h...${ac_cv_header_glibconfig_h}"
+    echo "*"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*       ntop will run just fine without this plugin."
+    echo "*"
+    echo "*>>>    If you want to use the xmldump plugin,"
+    echo "*"
+    echo "*???     1. Install the necessary headers and libraries."
+    echo "*???    and rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    HAS_WARNING="yes"
+fi
+
 
 if test ".${ac_cv_header_pthread_h}" = ".yes"; then
     echo "$as_me:$LINENO: checking pthread_atfork" >&5
@@ -25265,48 +24908,6 @@ fi
 # Finished expansion of NTOP_RPT_LOC()
 
 fi
-if test ".${ac_enable_xmldump}" = ".yes"; then
-  # Expansion of NTOP_RPT_LOC(xml2     ${XML2_LIB} ${XML2_INCLUDE})
-if test ".${XML2_INCLUDE}" = "."; then
-    echo "xml2     .h             : standard system headers"
-else
-    echo "xml2     .h             : ${XML2_INCLUDE}"
-fi
-if test ".${XML2_LIB}" = "."; then
-    echo "xml2     library        : standard system libraries"
-else
-    echo "xml2     library        : ${XML2_LIB}"
-fi
-# Finished expansion of NTOP_RPT_LOC()
-
-  # Expansion of NTOP_RPT_LOC(gdome    ${GDOME_LIB} ${GDOME_INCLUDE})
-if test ".${GDOME_INCLUDE}" = "."; then
-    echo "gdome    .h             : standard system headers"
-else
-    echo "gdome    .h             : ${GDOME_INCLUDE}"
-fi
-if test ".${GDOME_LIB}" = "."; then
-    echo "gdome    library        : standard system libraries"
-else
-    echo "gdome    library        : ${GDOME_LIB}"
-fi
-# Finished expansion of NTOP_RPT_LOC()
-
-  # Expansion of NTOP_RPT_LOC(gdome    ${GLIB_LIB} ${GLIB_INCLUDE})
-if test ".${GLIB_INCLUDE}" = "."; then
-    echo "gdome    .h             : standard system headers"
-else
-    echo "gdome    .h             : ${GLIB_INCLUDE}"
-fi
-if test ".${GLIB_LIB}" = "."; then
-    echo "gdome    library        : standard system libraries"
-else
-    echo "gdome    library        : ${GLIB_LIB}"
-fi
-# Finished expansion of NTOP_RPT_LOC()
-
-  echo "GlibConfig      : ${GLIBCONFIG_DIRECTORY}"
-fi
 
 echo
 echo "Install directories:"
@@ -25381,7 +24982,6 @@ echo "-------------------------------------------------------------------"
 echo
 echo "Creating files..."
 echo
-
 
 
 
@@ -26104,7 +25704,6 @@ s,@ALLOCA@,$ALLOCA,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@AS@,$AS,;t t
 s,@CCLD@,$CCLD,;t t
-s,@XMLDUMP@,$XMLDUMP,;t t
 s,@CFG_CONFIGFILE_DIR@,$CFG_CONFIGFILE_DIR,;t t
 s,@CFG_DATAFILE_DIR@,$CFG_DATAFILE_DIR,;t t
 s,@CFG_DBFILE_DIR@,$CFG_DBFILE_DIR,;t t

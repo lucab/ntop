@@ -1139,6 +1139,17 @@ static int checkURLsecurity(char *url) {
     return(0);
   }
 
+#ifdef MAKE_WITH_XMLDUMP
+  /* Special cases for plugins/xmldump/xxxx.xml... */
+  if((strncmp(workURL, 
+             "/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME, 
+             strlen("/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME)) == 0) ||
+    (strncmp(workURL, "/" CONST_XML_DTD_NAME, strlen("/" CONST_XML_DTD_NAME)) == 0)) {
+    free(workURL);
+    return(0);
+  }
+#endif
+
   /* Find the terminal . for checking the extension */
 
   for(i=strlen(workURL)-1; i >= 0; i--)

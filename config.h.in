@@ -625,9 +625,6 @@
 /* Enable SSL Watchdog */
 #undef MAKE_WITH_SSLWATCHDOG_COMPILETIME
 
-/* Enable XMLDUMP */
-#undef MAKE_WITH_XMLDUMP
-
 /* ZLIB is available */
 #undef MAKE_WITH_ZLIB
 

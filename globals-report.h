@@ -328,8 +328,3 @@ extern void drawArea(short width, short height, FILE* filepointer,
 extern void drawPie(short width, short height, FILE* filepointer,
 		    int   num_points, char  *labels[], float data[]);
 
-/* xmldump.c */
-#ifndef MAKE_WITH_XMLDUMP
-extern int dumpXML(int dumpToFile, char * parms);
-#endif
-

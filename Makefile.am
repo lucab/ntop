@@ -166,7 +166,7 @@ libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
                            http.c          netflow.c         \
                            report.c        reportUtils.c     ssl.c   \
-                           webInterface.c  xmldump.c
+                           webInterface.c
 
 
 libntopreport_la_DEPENDENCIES = myrrd/libmyrrd.a config.h
@@ -177,17 +177,6 @@ man_MANS = ntop.8
 
 myrrd/libmyrrd.a:
 	cd myrrd; make
-
-#
-# Special stuff for xml auto-generation of code from the "doc":
-#
-xmldump.$(OBJEXT): xml_g_cmdopt.inc
-
-xmldump.c: xml_*.inc globals-structtypes.h
-
-xml_*.inc: globals-structtypes.h
-	@echo "Processing globals-structtypes.h to make xml_*.inc..."
-	@@AWK@ -f utils/xmldump.awk globals-structtypes.h
 
 .PHONY: snapshot
 

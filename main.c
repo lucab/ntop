@@ -142,12 +142,6 @@ static struct option const long_options[] = {
   { "p3p-cp",                           required_argument, NULL, 137 },
   { "p3p-uri",                          required_argument, NULL, 138 },
 
-#ifdef MAKE_WITH_XMLDUMP
-  { "xmlfileout",                       required_argument, NULL, 139 },
-  { "xmlfilesnap",                      required_argument, NULL, 140 },
-  { "xmlfilein",                        required_argument, NULL, 141 },
-#endif
-
   { "disable-stopcap",                  no_argument,       NULL, 142 },
   { "log-extra",                        required_argument, NULL, 143 },
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
@@ -275,12 +269,6 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
   fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
-
-#ifdef MAKE_WITH_XMLDUMP
-  fprintf(fp, "    [--xmlfileout]                                        %sFile name for saving internal data during shutdown (xml)\n", newLine);
-  fprintf(fp, "    [--xmlfilesnap]                                       %sFile name for snapshot internal data save (xml)\n", newLine);
-  fprintf(fp, "    [--xmlfilein]    ***FUTURE***                         %sFile name to reload ntop internal data from (xml)\n", newLine);
-#endif
 
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
 
@@ -714,21 +702,6 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.P3Puri = strdup(optarg);
       break;
 
-#ifdef MAKE_WITH_XMLDUMP
-      /* --xmlfilexxxx options - Burton M. Strauss III (Burton@ntopsupport.com) Jan2003 */
-    case 139: /* xmlfileout */
-      myGlobals.xmlFileOut = strdup(optarg);
-      break;
-
-    case 140: /* xmlfilesnap */
-      myGlobals.xmlFileSnap = strdup(optarg);
-      break;
-
-    case 141: /* xmlfilein */
-      myGlobals.xmlFileIn = strdup(optarg);
-      break;
-#endif
-
     case 142: /* disable-stopcap */
       myGlobals.disableStopcap = TRUE;
       break;
@@ -930,14 +903,6 @@ static int parseOptions(int argc, char* argv []) {
   /*
    * Perform here all the initialization steps required by the ntop engine to run
    */
-
-#ifdef MAKE_WITH_XMLDUMP
-  /* Here is where we place the divergent path for (FUTURE) xmlFileIn */
-  if (myGlobals.xmlFileIn != NULL) {
-      traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Processing xml input file, %s", myGlobals.xmlFileIn);
-      traceEvent(CONST_TRACE_ERROR, "XMLDUMP: SORRY, but that function does not yet exist. Continuing normally.");
-   }
-#endif
 
   return(userSpecified);
 }
