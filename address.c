@@ -1225,6 +1225,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 
       if(a && b && c && d) {
 	theDNSaddr = htonl(atoi(a)*(256*256*256)+atoi(b)*(256*256)+atoi(c)*256+atoi(d));
+	if(addr_list_idx >= MAX_ADDRESSES) break; /* Further check */
 	memcpy(&addr_list[addr_list_idx++], (char*)&theDNSaddr, sizeof(char*));
 	hostPtr->addrLen = INADDRSZ;
 	hostPtr->addrList[0] = theDNSaddr;
