@@ -1,0 +1,54 @@
+#! /bin/sh
+#
+# ntop script
+#
+# NOTE: Copy this script in /etc/init.d/ntop
+#
+# Author:
+# Paul Mansfield <paul.mansfield@uk.worldpay.com>
+# Worldpay - 20020218
+#
+
+set -e
+
+NAME=ntop
+DIR=/usr/local/bin
+DAEMON=/usr/local/bin/ntop
+test -x $DAEMON || exit 0
+
+case "$1" in
+  start)
+    update-inetd --disable smtp
+    echo -n "Starting NTOP, note this will create a listener on UDP:6343 "
+    cd $DIR
+    $DAEMON -u nobody -E -w 0 -W 8080 -S 2 > /var/log/ntop.out &
+    echo " ...done"
+    ;;
+
+  stop)
+    PIDS=`ps -ef | grep $DAEMON | grep -v grep | awk '{print $2 }'`
+    if [ "$PIDS" = "" ] ; then
+        echo "ntop is not running"
+    else
+        echo "ntop processes are $PIDS"
+        kill $PIDS
+    fi
+    ;;
+
+  kill9)
+    PIDS=`ps -ef | grep $DAEMON | grep -v grep | awk '{print $2 }'`
+    if [ "$PIDS" = "" ] ; then
+        echo "ntop is not running"
+    else
+        echo "killing -9 ntop processes $PIDS"
+        kill -9 $PIDS
+    fi
+    ;;
+
+  *)
+    echo "Usage: /etc/init.d/$NAME {start}"
+    exit 1
+    ;;
+esac
+
+exit 0
