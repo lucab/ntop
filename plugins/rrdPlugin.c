@@ -1597,12 +1597,16 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     /* ****************************************************** */
 
-    DomainStats **stats, *tmpStats, *statsEntry;
-    u_int maxHosts, len = 0;
-    Counter totBytesSent = 0;
-    Counter totBytesRcvd = 0;
-
     if(dumpDomains) {
+
+      DomainStats **stats, *tmpStats, *statsEntry;
+      u_int maxHosts, len = 0;
+      Counter totBytesSent = 0;
+      Counter totBytesRcvd = 0;
+      HostTraffic *el;
+      u_int numEntries = 0;
+      u_short keyValue=0;
+
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
 
 	// save this as it may change
@@ -1614,9 +1618,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	len = sizeof(DomainStats**)*maxHosts;
 	stats = (DomainStats**)malloc(len);
 	memset(stats, 0, len);
-
-        HostTraffic *el;
-	u_int numEntries = 0;
 
 	// walk through all hosts, getting their domain names and counting stats
 	for (el = getFirstHost(devIdx);
@@ -1633,8 +1634,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	       ) {
 	      continue;
 	    }
-
-            u_short keyValue=0;
 
 	    for(keyValue=0, idx=0; el->fullDomainName[idx] != '\0'; idx++)
 	      keyValue += (idx+1)*(u_short)el->fullDomainName[idx];
