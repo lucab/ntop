@@ -408,12 +408,13 @@ void freeHostInstances(int actualDeviceId) {
       HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
       while(el != NULL) {
+	HostTraffic *nextEl = el->next;
 	num++;
 	freeHostInfo(el, actualDeviceId);
 #ifdef MAKE_WITH_SCHED_YIELD
 	sched_yield(); /* Allow other threads to run */
 #endif
-	el = el->next;
+	el = nextEl;
       }
 
       myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;

@@ -1043,6 +1043,10 @@ int main(int argc, char *argv[]) {
   userSpecified = parseOptions(argc, argv);
 #endif
 
+#ifndef WIN32
+  freeargv(effective_argv);
+#endif
+
 /* Above here, the -L value wasn't set, so we use printf(). */
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s [%s] (%s build)",
 	     version, THREAD_MODE, osName, buildDate);
