@@ -222,9 +222,7 @@ static void resetDevice(int devIdx) {
   int len;
   void *ptr;
 
-  myGlobals.device[devIdx].actualHashSize = myGlobals.topHashSize = HASH_INITIAL_SIZE;
-  myGlobals.device[devIdx].hashThreshold = (unsigned int)(myGlobals.device[devIdx].actualHashSize*0.5);
-  myGlobals.device[devIdx].topHashThreshold = (unsigned int)(myGlobals.device[devIdx].actualHashSize*0.75);
+  myGlobals.device[devIdx].actualHashSize = HASH_INITIAL_SIZE;
 
   ptr = calloc(HASH_INITIAL_SIZE, sizeof(HostTraffic*));
   myGlobals.device[devIdx].hash_hostTraffic = ptr;

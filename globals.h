@@ -126,8 +126,6 @@ typedef struct ntopGlobals {
 
   /* administrative */
   char *shortDomainName;
-  u_int topHashSize;
-
 
 #ifdef MULTITHREADED
 

@@ -1828,15 +1828,6 @@ void processPacket(u_char *_deviceId,
 
   hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? NULL_HDRLEN : sizeof(struct ether_header);
 
-#ifndef MULTITHREADED
-  /*
-   * Let's check whether it's time to free up
-   * some space before to continue....
-   */
-  if(myGlobals.device[actualDeviceId].hostsno > myGlobals.device[actualDeviceId].topHashThreshold)
-    purgeIdleHosts(0 /* Delete only idle hosts */, actualDeviceId);
-#endif
-
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
 
   fd = myGlobals.device[deviceId].fdv;

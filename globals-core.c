@@ -177,7 +177,6 @@ void initNtopGlobals(int argc, char * argv[])
 
   /* administrative */
   myGlobals.shortDomainName = NULL;
-  myGlobals.topHashSize = 0;
 
 #ifdef MULTITHREADED
   myGlobals.numThreads = 0;            /* # of running threads */

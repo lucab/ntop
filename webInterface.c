@@ -705,6 +705,7 @@ void printNtopConfigInfo(void) {
   printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Absent");
 #endif
 
+/*
 #ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
   printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP</A>",
 			 (char*)VersionInfo);
@@ -712,6 +713,7 @@ void printNtopConfigInfo(void) {
   printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP </A>",
 			 "Absent");
 #endif
+*/
 
 #ifdef HAVE_LIBWRAP
   printFeatureConfigInfo("TCP Wrappers", "Present");
@@ -755,11 +757,6 @@ void printNtopConfigInfo(void) {
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Actual Hash Size</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
 	      (int)myGlobals.device[actualReportDeviceId].actualHashSize) < 0)
-    BufferOverflow();
-  sendString(buf);
-
-  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Top Hash Size</TH>"
-	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.topHashSize) < 0)
     BufferOverflow();
   sendString(buf);
 
