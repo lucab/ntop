@@ -659,18 +659,20 @@ void scanTimedoutTCPSessions(void) {
 	      HostTraffic *theHost, *theRemHost;
 	      char *fmt = "WARNING: detected TCP connection with no data exchanged "
 		"[%s:%d] -> [%s:%d] (network mapping attempt?)";
-	      
+
 	      theHost = device[i].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
 	      theRemHost = device[i].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
-	      
+
 	      if((theHost != NULL) && (theRemHost != NULL)) {
-		incrementUsageCounter(&theHost->securityHostPkts.closedEmptyTCPConnSent, 
+		incrementUsageCounter(&theHost->securityHostPkts.closedEmptyTCPConnSent,
 				      sessionToPurge->remotePeerIdx);
-		incrementUsageCounter(&theRemHost->securityHostPkts.closedEmptyTCPConnRcvd, 
+		incrementUsageCounter(&theRemHost->securityHostPkts.closedEmptyTCPConnRcvd,
 				      sessionToPurge->initiatorIdx);
+
 		traceEvent(TRACE_WARNING, fmt,
 			   theHost->hostSymIpAddress, sessionToPurge->sport,
 			   theRemHost->hostSymIpAddress, sessionToPurge->dport);
+
 	      }
 	    }
 
@@ -1372,13 +1374,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    if(extendTcpSessionsHash() == 0) {
 	      /* The table has been extended successfully */
 
-	      /* A goto il necessary as when the hash is extended all 
+	      /* A goto il necessary as when the hash is extended all
 		 the pointers changed hence some references (eg. sessions[])
-		 are no longer valid) */	      
+		 are no longer valid) */
 	      goto RESCAN_LIST;
 	    }
 	  }
-	  
+
 	  if(device[actualDeviceId].numTcpSessions >
 	     (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
 	    /* The hash table is getting large: let's replace the oldest session
@@ -1416,10 +1418,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    theSession->magic = MAGIC_NUMBER;
 	    device[actualDeviceId].numTcpSessions++;
 
+#ifdef TRACE_TRAFFIC_INFO
 	    traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       device[actualDeviceId].numTcpSessions);
+#endif
 
 	    /* Let's check whether this is a Napster session */
 	    if(numNapsterSvr > 0) {
@@ -1727,12 +1731,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    /* printf("==>\n\n%s\n\n", rcStr); */
 
 	  } else {
-	    traceEvent(TRACE_WARNING, "WARNING: unknown protocol (no HTTP) detected (trojan?) "
-		       "at port 80 %s:%d->%s:%d [%s]\n",
-		       srcHost->hostSymIpAddress, sport,
-		       dstHost->hostSymIpAddress, dport,
-		       rcStr);
-	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) {
+	      traceEvent(TRACE_WARNING, "WARNING: unknown protocol (no HTTP) detected (trojan?) "
+			 "at port 80 %s:%d->%s:%d [%s]\n",
+			 srcHost->hostSymIpAddress, sport,
+			 dstHost->hostSymIpAddress, dport,
+			 rcStr);
+
+	      dumpSuspiciousPacket();
+	    }
 	  }
 
 	  free(rcStr);
@@ -1806,40 +1813,50 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     && (dport != 3000  /* ntop  */)
 	     && (dport != 3128  /* squid */)
 	     && isInitialHttpData(rcStr)) {
-	    traceEvent(TRACE_WARNING, "WARNING: HTTP detected at wrong port (trojan?) "
-		       "%s:%d -> %s:%d [%s]",
-		       srcHost->hostSymIpAddress, sport,
-		       dstHost->hostSymIpAddress, dport,
-		       rcStr);
-	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) {
+	      traceEvent(TRACE_WARNING, "WARNING: HTTP detected at wrong port (trojan?) "
+			 "%s:%d -> %s:%d [%s]",
+			 srcHost->hostSymIpAddress, sport,
+			 dstHost->hostSymIpAddress, dport,
+			 rcStr);
+	      dumpSuspiciousPacket();
+	    }
 	  } else if((sport != 21) && (sport != 25) && isInitialFtpData(rcStr)) {
-	    traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
-		       "%s:%d -> %s:%d [%s]",
-		       dstHost->hostSymIpAddress, dport,
-		       srcHost->hostSymIpAddress, sport,
-		       rcStr);
-	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) {
+	      traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
+			 "%s:%d -> %s:%d [%s]",
+			 dstHost->hostSymIpAddress, dport,
+			 srcHost->hostSymIpAddress, sport,
+			 rcStr);
+	      dumpSuspiciousPacket();
+	    }
 	  } else if(((sport == 21) || (sport == 25)) && (!isInitialFtpData(rcStr))) {
-	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
-		       "at port %d %s:%d -> %s:%d [%s]", sport,
-		       dstHost->hostSymIpAddress, dport,
-		       srcHost->hostSymIpAddress, sport,
-		       rcStr);
-	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) {
+	      traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
+			 "at port %d %s:%d -> %s:%d [%s]", sport,
+			 dstHost->hostSymIpAddress, dport,
+			 srcHost->hostSymIpAddress, sport,
+			 rcStr);
+	      dumpSuspiciousPacket();
+	    }
 	  } else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr)) {
-	    traceEvent(TRACE_WARNING, "WARNING: SSH detected at wrong port (trojan?) "
-		       "%s:%d -> %s:%d [%s]  ",
-		       dstHost->hostSymIpAddress, dport,
-		       srcHost->hostSymIpAddress, sport,
-		       rcStr);
-	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) {
+	      traceEvent(TRACE_WARNING, "WARNING: SSH detected at wrong port (trojan?) "
+			 "%s:%d -> %s:%d [%s]  ",
+			 dstHost->hostSymIpAddress, dport,
+			 srcHost->hostSymIpAddress, sport,
+			 rcStr);
+	      dumpSuspiciousPacket();
+	    }
 	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr))) {
-	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no SSH) detected (trojan?) "
-		       "at port 22 %s:%d -> %s:%d [%s]",
-		       dstHost->hostSymIpAddress, dport,
-		       srcHost->hostSymIpAddress, sport,
-		       rcStr);
-	    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	    if(enableSuspiciousPacketDump) {
+	      traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no SSH) detected (trojan?) "
+			 "at port 22 %s:%d -> %s:%d [%s]",
+			 dstHost->hostSymIpAddress, dport,
+			 srcHost->hostSymIpAddress, sport,
+			 rcStr);
+	      dumpSuspiciousPacket();
+	    }
 	  }
 	} else if(theSession->bytesProtoRcvd == 0) {
 	  /* Uncomment when necessary
@@ -2233,10 +2250,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     && (theSession->bytesReceived == 0))) {
 	incrementUsageCounter(&srcHost->securityHostPkts.ackScanRcvd, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.ackScanSent, srcHostIdx);
-	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
-		   dstHost->hostSymIpAddress, dport,
-		   srcHost->hostSymIpAddress, sport);
-	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) {
+	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
+		     dstHost->hostSymIpAddress, dport,
+		     srcHost->hostSymIpAddress, sport);
+	  dumpSuspiciousPacket();
+	}
       }
       /* Connection terminated */
       incrementUsageCounter(&srcHost->securityHostPkts.rstPktsSent, dstHostIdx);
@@ -2268,9 +2287,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     */
     if((srcHostIdx == dstHostIdx)
        && (sport == dport) && (tp->th_flags == TH_SYN)) {
-      traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
-		 srcHost->hostSymIpAddress, sport);
-      if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+      if(enableSuspiciousPacketDump) {
+	traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
+		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
+      }
     }
 
     if(tp->th_flags == (TH_RST|TH_ACK)) {
@@ -2292,10 +2313,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&dstHost->securityHostPkts.xmasScanSent, srcHostIdx);
 	incrementUsageCounter(&srcHost->securityHostPkts.xmasScanRcvd, dstHostIdx);
 
-	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
-		   dstHost->hostSymIpAddress, dport,
-		   srcHost->hostSymIpAddress, sport);
-	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) {
+	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
+		     dstHost->hostSymIpAddress, dport,
+		     srcHost->hostSymIpAddress, sport);
+	  dumpSuspiciousPacket();
+	}
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
 		|| ((theSession->initiatorIdx == dstHostIdx)
@@ -2303,10 +2326,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&dstHost->securityHostPkts.finScanSent, srcHostIdx);
 	incrementUsageCounter(&srcHost->securityHostPkts.finScanRcvd, dstHostIdx);
 
-	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
-		   dstHost->hostSymIpAddress, dport,
-		   srcHost->hostSymIpAddress, sport);
-	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) {
+	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
+		     dstHost->hostSymIpAddress, dport,
+		     srcHost->hostSymIpAddress, sport);
+	  dumpSuspiciousPacket();
+	}
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRemote2InitiatorFlags[0] == 0)
 		 && (theSession->bytesReceived > 0))
@@ -2316,10 +2341,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&srcHost->securityHostPkts.nullScanRcvd, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.nullScanSent, srcHostIdx);
 
-	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
-		   dstHost->hostSymIpAddress, dport,
-		   srcHost->hostSymIpAddress, sport);
-	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) {
+	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
+		     dstHost->hostSymIpAddress, dport,
+		     srcHost->hostSymIpAddress, sport);
+	  dumpSuspiciousPacket();
+	}
       }
     }
 
@@ -2411,16 +2438,18 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
      || (sport == 13) || (dport == 13) /* daytime */
      || (sport == 19) || (dport == 19) /* chargen */
      ) {
-    char *fmt = "WARNING: detected traffic [%s:%d] -> [%s:%d] on a diagnostic port (network mapping attempt?)";
+    char *fmt = "WARNING: detected traffic [%s:%d] -> [%s:%d] on "
+      "a diagnostic port (network mapping attempt?)";
 
-    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
-
-    traceEvent(TRACE_WARNING, fmt,
-	       srcHost->hostSymIpAddress, sport,
-	       dstHost->hostSymIpAddress, dport);
+    if(enableSuspiciousPacketDump) {
+      traceEvent(TRACE_WARNING, fmt,
+		 srcHost->hostSymIpAddress, sport,
+		 dstHost->hostSymIpAddress, dport);
+      dumpSuspiciousPacket();
+    }
 
     if((dport == 7)
-       || (dport == 9) 
+       || (dport == 9)
        || (dport == 13)
        || (dport == 19)) {
       if(sessionType == IPPROTO_UDP) {
@@ -2442,14 +2471,17 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   }
 
   if(fragmentedData && (packetDataLength <= 128)) {
-    char *fmt = "WARNING: detected tiny fragment (%d bytes) [%s:%d] -> [%s:%d] (network mapping attempt?)";
+    char *fmt = "WARNING: detected tiny fragment (%d bytes) "
+      "[%s:%d] -> [%s:%d] (network mapping attempt?)";
 
     incrementUsageCounter(&srcHost->securityHostPkts.tinyFragmentSent, dstHostIdx);
     incrementUsageCounter(&dstHost->securityHostPkts.tinyFragmentRcvd, srcHostIdx);
-    traceEvent(TRACE_WARNING, fmt, packetDataLength,
-	       srcHost->hostSymIpAddress, sport,
-	       dstHost->hostSymIpAddress, dport);
-    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+    if(enableSuspiciousPacketDump) {
+      traceEvent(TRACE_WARNING, fmt, packetDataLength,
+		 srcHost->hostSymIpAddress, sport,
+		 dstHost->hostSymIpAddress, dport);
+      dumpSuspiciousPacket();
+    }
   }
 
   return(theSession);
@@ -2838,7 +2870,10 @@ static u_int handleFragment(HostTraffic *srcHost,
 		 fragment->lastOffset)  < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-	logMessage(buf, NTOP_WARNING_MSG);
+	if(enableSuspiciousPacketDump) {
+	  logMessage(buf, NTOP_WARNING_MSG);
+	  dumpSuspiciousPacket();
+	}
 
 	incrementUsageCounter(&srcHost->securityHostPkts.overlappingFragmentSent, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.overlappingFragmentRcvd, srcHostIdx);
@@ -2854,7 +2889,10 @@ static u_int handleFragment(HostTraffic *srcHost,
 		 fragmentId, fragmentOffset,
 		 fragment->lastOffset);
 
-	logMessage(buf, NTOP_WARNING_MSG);
+	if(enableSuspiciousPacketDump) {
+	  logMessage(buf, NTOP_WARNING_MSG);
+	  dumpSuspiciousPacket();
+	}
 	incrementUsageCounter(&srcHost->securityHostPkts.overlappingFragmentSent, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.overlappingFragmentRcvd, srcHostIdx);
       }
@@ -3317,8 +3355,8 @@ static void processIpPkt(const u_char *bp,
     }
 
     if(off & 0x3fff)  /* Handle fragmented packets */
-      length = handleFragment(srcHost, srcHostIdx, 
-			      dstHost, dstHostIdx, 
+      length = handleFragment(srcHost, srcHostIdx,
+			      dstHost, dstHostIdx,
 			      &sport, &dport,
 			      ntohs(ip.ip_id), off, length,
 			      ntohs(ip.ip_len) - hlen);
@@ -3594,7 +3632,7 @@ static void processIpPkt(const u_char *bp,
     }
 
     if (off & 0x3fff)  /* Handle fragmented packets */
-      length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx, 
+      length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
 			      &sport, &dport,
 			      ntohs(ip.ip_id), off, length,
 			      ntohs(ip.ip_len) - hlen);
@@ -3650,9 +3688,11 @@ static void processIpPkt(const u_char *bp,
 
       incrementUsageCounter(&srcHost->securityHostPkts.icmpFragmentSent, dstHostIdx);
       incrementUsageCounter(&dstHost->securityHostPkts.icmpFragmentRcvd, srcHostIdx);
-      traceEvent(TRACE_WARNING, fmt,
-		 srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
-      if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+      if(enableSuspiciousPacketDump) {
+	traceEvent(TRACE_WARNING, fmt,
+		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+	dumpSuspiciousPacket();
+      }
     }
 
     /* ************************************************************* */
@@ -3726,25 +3766,27 @@ static void processIpPkt(const u_char *bp,
     else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
       u_int16_t dport;
       struct ip *oip = &icmpPkt.icmp_ip;
-	
+
       switch(icmpPkt.icmp_code) {
-      case ICMP_UNREACH_PORT: /* Port Unreachable */	
+      case ICMP_UNREACH_PORT: /* Port Unreachable */
 	memcpy(&dport, ((u_char *)bp+hlen+30), sizeof(dport));
 	dport = ntohs(dport);
 	switch (oip->ip_p) {
 	case IPPROTO_TCP:
-	  traceEvent(TRACE_WARNING,
-		     "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
-		     dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	  if(enableSuspiciousPacketDump)
+	    traceEvent(TRACE_WARNING,
+		       "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
+		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	  /* Simulation of rejected TCP connection */
 	  incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnSent, dstHostIdx);
 	  incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnRcvd, srcHostIdx);
 	  break;
 
 	case IPPROTO_UDP:
-	  traceEvent(TRACE_WARNING,
-		     "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
-		     dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	  if(enableSuspiciousPacketDump)
+	    traceEvent(TRACE_WARNING,
+		       "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
+		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
 	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
 	  break;
@@ -3753,29 +3795,31 @@ static void processIpPkt(const u_char *bp,
 	incrementUsageCounter(&srcHost->securityHostPkts.icmpPortUnreachSent, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.icmpPortUnreachRcvd, srcHostIdx);
 	break;
-	
+
       case ICMP_UNREACH_NET:
       case ICMP_UNREACH_HOST:
 	incrementUsageCounter(&srcHost->securityHostPkts.icmpHostNetUnreachSent, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.icmpHostNetUnreachRcvd, srcHostIdx);
 	break;
- 
+
       case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
-	traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
-		   "Host [%s] received a ICMP protocol Unreachable from host [%s]"
-		   " (Firewalking scan attempt?)",
-		   dstHost->hostSymIpAddress, 
-		   srcHost->hostSymIpAddress);
+	if(enableSuspiciousPacketDump)
+	  traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
+		     "Host [%s] received a ICMP protocol Unreachable from host [%s]"
+		     " (Firewalking scan attempt?)",
+		     dstHost->hostSymIpAddress,
+		     srcHost->hostSymIpAddress);
 	incrementUsageCounter(&srcHost->securityHostPkts.icmpProtocolUnreachSent, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.icmpProtocolUnreachRcvd, srcHostIdx);
 	break;
       case ICMP_UNREACH_NET_PROHIB:    /* Net Administratively Prohibited */
       case ICMP_UNREACH_HOST_PROHIB:   /* Host Administratively Prohibited */
       case ICMP_UNREACH_FILTER_PROHIB: /* Access Administratively Prohibited */
-	traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
-		   "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
-		   " (Firewalking scan attempt?)",
-		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
+	if(enableSuspiciousPacketDump)
+	  traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
+		     "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
+		     " (Firewalking scan attempt?)",
+		     dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
 	incrementUsageCounter(&srcHost->securityHostPkts.icmpAdminProhibitedSent, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.icmpAdminProhibitedRcvd, srcHostIdx);
 	break;

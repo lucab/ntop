@@ -469,10 +469,10 @@ void smurfAlert(u_int srcHostIdx, u_int dstHostIdx) {
 	    device[actualDeviceId].hash_hostTraffic[dstHostIdx],
 	    dstHostIdx, ICMP_ECHO, 0, 0);
 
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "WARNING: smurfing detected (%s->%s)\n",
-	     device[actualDeviceId].hash_hostTraffic[srcHostIdx]->hostSymIpAddress,
-	     device[actualDeviceId].hash_hostTraffic[dstHostIdx]->hostSymIpAddress);
-#endif
-  if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+  if(enableSuspiciousPacketDump) {
+    traceEvent(TRACE_INFO, "WARNING: smurfing detected (%s->%s)\n",
+	       device[actualDeviceId].hash_hostTraffic[srcHostIdx]->hostSymIpAddress,
+	       device[actualDeviceId].hash_hostTraffic[dstHostIdx]->hostSymIpAddress);
+    dumpSuspiciousPacket();
+  }
 }
