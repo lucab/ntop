@@ -61,7 +61,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = myrrd . @PLUGINS@ @NTCSH@
 
-ETTER_PASSIVE = etter.passive.os.fp
+ETTER_PASSIVE = etter.passive.os.fp.gz
 
 DIST_COMMON =
 DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
@@ -70,10 +70,10 @@ DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
               ntop.8 ntop.txt ntop.html \
               faq.html \
               ntop-cert.pem \
-              p2c.opt.table \
+              p2c.opt.table.gz \
               $(ETTER_PASSIVE) \
-              oui.txt \
-              specialMAC.txt
+              oui.txt.gz \
+              specialMAC.txt.gz
 
 NTOPDATA = ntop-cert.pem \
            p2c.opt.table \

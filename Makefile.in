@@ -155,7 +155,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = myrrd . @PLUGINS@ @NTCSH@
 
-ETTER_PASSIVE = etter.passive.os.fp
+ETTER_PASSIVE = etter.passive.os.fp.gz
 
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
@@ -163,10 +163,10 @@ DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               ntop.8 ntop.txt ntop.html \
               faq.html \
               ntop-cert.pem \
-              p2c.opt.table \
+              p2c.opt.table.gz \
               $(ETTER_PASSIVE) \
-              oui.txt \
-              specialMAC.txt
+              oui.txt.gz \
+              specialMAC.txt.gz
 
 
 NTOPDATA = ntop-cert.pem \
@@ -364,7 +364,7 @@ DIST_COMMON = README $(ETTER_PASSIVE) $(noinst_HEADERS) AUTHORS \
 	aclocal.m4 config.guess config.h.in config.sub configure \
 	configure.in depcomp faq.html install-sh ltconfig ltmain.sh \
 	missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html ntop.txt \
-	oui.txt p2c.opt.table specialMAC.txt\
+	oui.txt.gz p2c.opt.table.gz specialMAC.txt.gz\
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES) $(sntop_SOURCES)
 
