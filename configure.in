@@ -40,6 +40,7 @@ NTOP_MICRO_VERSION=0
 NTOP_INTERFACE_AGE=0
 NTOP_BINARY_AGE=0
 NTOP_VERSION=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION.$NTOP_MICRO_VERSION
+NTOP_VERSION_EXTRA=""
 
 dnl>
 dnl> standard libtool versioning
@@ -1355,7 +1356,7 @@ dnl> versioning
 dnl>
 echo "creating version.c"
 /bin/rm -f version.c
-echo $VERSION  | sed -e 's/.*/char * version   = "&";/' > version.c
+echo $NTOP_VERSION $NTOP_VERSION_EXTRA  | sed -e 's/.*/char * version   = "&";/' > version.c
 ./config.guess | sed -e 's/.*/char * osName    = "&";/' >> version.c
 echo "char * author    = \"Luca Deri <deri@ntop.org>\";" >> version.c
 date +"%D %r" | sed -e 's/.*/char * buildDate = "&";/' >> version.c
