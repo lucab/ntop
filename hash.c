@@ -20,8 +20,14 @@
 
 #include "ntop.h"
 
+#ifdef EXPERIMENTAL
+#include "experimental.c"
+#endif /* EXPERIMENTAL */
+
+#ifndef EXPERIMENTAL
 /* Static */
 static u_char printedHashWarning = 0;
+#endif
 
 /* ******************************* */
 
@@ -96,6 +102,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   return((u_int)idx);
 }
 
+#ifndef EXPERIMENTAL
 /* ******************************* */
 
 static int _mapIdx(u_int* mappings, u_int mappingsSize, u_int idx,
@@ -200,7 +207,6 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
   } else
     purgeIdleHosts(0, actualDeviceId); /* Delete only idle hosts */
 #else
-
   if(newSize > myGlobals.maxHashSize) /* Hard Limit */ {
     if(!printedHashWarning) {
       traceEvent(TRACE_WARNING, "Unable to extend the hash: hard limit (%d) reached",
@@ -570,6 +576,7 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
   traceEvent(TRACE_INFO, "Hash extended succesfully\n");
 #endif
 }
+#endif /* EXPERIMENTAL */
 
 /* ************************************ */
 
@@ -807,7 +814,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualD
   host = myGlobals.device[theDevice].hash_hostTraffic[checkSessionIdx(hostIdx)];
 
   if(host == NULL)
-    return;
+    return;  
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)",
@@ -1005,6 +1012,10 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualD
 	   ))
       storeHostTrafficInstance(host);
   }
+
+#ifdef EXPERIMENTAL
+  purgeHostIdx(theDevice, hostIdx);
+#endif /* EXPERIMENTAL */
 
   free(host);
 

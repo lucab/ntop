@@ -645,6 +645,11 @@ typedef struct packetInformation {
 				 */
 } PacketInformation;
 
+
+#ifdef EXPERIMENTAL
+#include "experimental.h"
+#endif /* EXPERIMENTAL */
+
 # if defined(HAVE_OPENSSL)
 #  define THREAD_MODE "MT (SSL)"
 # else
@@ -831,6 +836,7 @@ typedef struct serviceEntry {
   char* name;
 } ServiceEntry;
 
+
 /* ************************************* */
 
 typedef struct ntopInterface {
@@ -947,6 +953,10 @@ typedef struct ntopInterface {
   u_int  hostsno;        /* # of valid entries in the following table */
   u_int  actualHashSize, hashThreshold, topHashThreshold;
   struct hostTraffic **hash_hostTraffic;
+
+#ifdef EXPERIMENTAL
+  HashList **hashList;
+#endif
 
   /* ************************** */
 
@@ -1662,6 +1672,9 @@ typedef struct storedAddress {
 
 /* Host Traffic */
 typedef struct hostTraffic {
+#ifdef EXPERIMENTAL
+  u_int hashListBucket;
+#endif /* EXPERIMENTAL */
   struct in_addr   hostIpAddress;
   time_t           firstSeen;
   time_t           lastSeen; /* time when this host has sent/rcvd some data  */

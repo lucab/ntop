@@ -83,6 +83,7 @@ u_int findHostInfo(struct in_addr *hostIpAddress, int actualDeviceId) {
 
 /* ******************************* */
 
+#ifndef EXPERIMENTAL
 u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char *ether_addr,
 		  u_char checkForMultihoming,
@@ -470,6 +471,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
   return(idx);
 }
+#endif
 
 /* ************************************ */
 
@@ -2225,11 +2227,13 @@ void processPacket(u_char *_deviceId,
     myGlobals.device[actualDeviceId].rcvdPktStats.tooLong++;
   }
 
+#ifndef EXPERIMENTAL
   if(myGlobals.device[actualDeviceId].hostsno > myGlobals.device[actualDeviceId].topHashThreshold)
     resizeHostHash(actualDeviceId, EXTEND_HASH, actualDeviceId); /* Extend table */
   else if((myGlobals.device[actualDeviceId].actualHashSize != HASH_INITIAL_SIZE)
 	  && (myGlobals.device[actualDeviceId].hostsno < (myGlobals.device[actualDeviceId].topHashThreshold/2)))
     resizeHostHash(actualDeviceId, RESIZE_HASH, actualDeviceId); /* Shrink table */
+#endif
 
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "processPacket");
