@@ -68,9 +68,7 @@ static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int 
 /* **************************************** */
 
 static void updateHostNameInfo(unsigned long numeric, char* symbolic) {
-  int i;
-  
-  return; /* CHECK/TEST/FIX - L.Deri */
+  int i; 
 
   for(i=0; i<myGlobals.numDevices; i++)
     updateDeviceHostNameInfo(numeric, symbolic, i);
