@@ -232,6 +232,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
     fd = fdopen(abs(newSock), "ab");
+
     GDCPIE_LineColor = 0x000000L;
     GDCPIE_explode   = expl;    /* default: NULL - no explosion */
     GDCPIE_Color     = clr;
@@ -690,8 +691,6 @@ void ipProtoDistribPie(void) {
   int num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
 
-  fd = fdopen(abs(newSock), "ab");
-
   p[num] = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local+
 		   myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
   if(p[num] > 0) {
@@ -713,6 +712,8 @@ void ipProtoDistribPie(void) {
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "ipProtoDistribPie");
 #endif
+
+  fd = fdopen(abs(newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */

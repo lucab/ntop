@@ -776,6 +776,7 @@ typedef struct securityHostProbes {
   UsageCounter nullScanSent, nullScanRcvd;
   UsageCounter rejectedTCPConnSent, rejectedTCPConnRcvd;
   UsageCounter establishedTCPConnSent, establishedTCPConnRcvd;
+  UsageCounter terminatedTCPConnServer, terminatedTCPConnClient;
   /* ********* */
   UsageCounter udpToClosedPortSent, udpToClosedPortRcvd;
 

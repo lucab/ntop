@@ -607,6 +607,11 @@ void dumpNtopHashes(char* options, int actualDeviceId) {
 	  wrtLlongItm(lang,"\t\t","establishedTCPConnRcvd",
 		      el->secHostPkts->establishedTCPConnRcvd.value,',');
 
+	  wrtLlongItm(lang,"\t\t","terminatedTCPConnServer",
+		      el->secHostPkts->terminatedTCPConnServer.value,',');
+	  wrtLlongItm(lang,"\t\t","terminatedTCPConnClient",
+		      el->secHostPkts->terminatedTCPConnClient.value,',');
+
 	  wrtLlongItm(lang,"\t\t","udpToClosedPortSent",
 		      el->secHostPkts->udpToClosedPortSent.value,',');
 	  wrtLlongItm(lang,"\t\t","udpToClosedPortRcvd",

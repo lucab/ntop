@@ -29,20 +29,20 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 			    short* useIPAddressForSearching,
 			    int actualDeviceId) {
   u_int idx = 0;
- 
+
   if(myGlobals.borderSnifferMode)  /* MAC addresses don't make sense here */
       (*useIPAddressForSearching) = 1;
 
-  if(((*useIPAddressForSearching) == 1)     
-     || ((ether_addr == NULL) 
+  if(((*useIPAddressForSearching) == 1)
+     || ((ether_addr == NULL)
 	 && (hostIpAddress != NULL))) {
-      if(myGlobals.trackOnlyLocalHosts 
+      if(myGlobals.trackOnlyLocalHosts
 	 && (!isLocalAddress(hostIpAddress))
 	 && (!_pseudoLocalAddress(hostIpAddress)))
 	idx = myGlobals.otherHostEntryIdx;
-      else 
+      else
 	  memcpy(&idx, &hostIpAddress->s_addr, 4);
-      
+
       (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, /* 0 doesn't matter */
 		   myGlobals.device[0].hash_hostTraffic[myGlobals.broadcastEntryIdx]->ethAddress,
@@ -54,29 +54,29 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
     (*useIPAddressForSearching) = 0;
   } else if ((hostIpAddress->s_addr == 0x0)
 	     || (hostIpAddress->s_addr == 0x1)) {
-    if(myGlobals.trackOnlyLocalHosts) 
+    if(myGlobals.trackOnlyLocalHosts)
       idx = myGlobals.otherHostEntryIdx;
-    else 
+    else
       memcpy(&idx, &hostIpAddress->s_addr, 4);
-    
+
     (*useIPAddressForSearching) = 1;
   } else if(isBroadcastAddress(hostIpAddress)) {
     idx = myGlobals.broadcastEntryIdx;
     (*useIPAddressForSearching) = 1;
   } else if(isPseudoLocalAddress(hostIpAddress)) {
-    memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));    
+    memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
   } else {
     if(hostIpAddress != NULL) {
       if(myGlobals.trackOnlyLocalHosts && (!isPseudoLocalAddress(hostIpAddress)))
 	idx = myGlobals.otherHostEntryIdx;
-      else 
-	memcpy(&idx, &hostIpAddress->s_addr, 4);     
+      else
+	memcpy(&idx, &hostIpAddress->s_addr, 4);
     } else {
       idx = NO_PEER;
       traceEvent(TRACE_WARNING, "WARNING: Index calculation problem");
     }
-        
+
     (*useIPAddressForSearching) = 1;
   }
 
@@ -102,20 +102,20 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
   for(i=0; i<myGlobals.device[theDevice].numTotSessions; i++) {
     IPSession *prevSession, *nextSession, *theSession = myGlobals.device[theDevice].tcpSession[i];
-    
+
     prevSession = theSession;
-    
+
     while(theSession != NULL) {
       nextSession = theSession->next;
 
-      if((theSession->initiatorIdx == hostIdx) || (theSession->remotePeerIdx == hostIdx)) {	
+      if((theSession->initiatorIdx == hostIdx) || (theSession->remotePeerIdx == hostIdx)) {
        if(myGlobals.device[theDevice].tcpSession[i] == theSession) {
 	 myGlobals.device[theDevice].tcpSession[i] = theSession->next;
 	 prevSession = myGlobals.device[theDevice].tcpSession[i];
        } else {
 	 prevSession->next = nextSession;
        }
-       
+
         freeSession(theSession, theDevice);
 	theSession = prevSession;
       } else {
@@ -133,11 +133,11 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 /* **************************************** */
 
 void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDeviceId) {
-  u_int j, i;  
+  u_int j, i;
   IpGlobalSession *nextElement, *element;
 
   if(host == NULL)
-    return;  
+    return;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)", host->hostNumIpAddress, hostIdx);
@@ -391,7 +391,7 @@ void purgeIdleHosts(int actDevice) {
       if((idx != myGlobals.otherHostEntryIdx)
 	 && (myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses < MIN_NUM_USES)
 	 && (!subnetPseudoLocalHost(myGlobals.device[actDevice].hash_hostTraffic[idx]))) {
-	
+
 	if(!myGlobals.stickyHosts) {
 	    theFlaggedHosts[maxBucket++] = myGlobals.device[actDevice].hash_hostTraffic[idx];
 	    myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
@@ -408,10 +408,10 @@ void purgeIdleHosts(int actDevice) {
   /* Now free the entries */
   for(idx=0; idx<maxBucket; idx++) {
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Purging host (idx=%d/%s) (%d hosts purged)", 
+      traceEvent(TRACE_INFO, "Purging host (idx=%d/%s) (%d hosts purged)",
 		 idx, theFlaggedHosts[idx]->hostSymIpAddress, numFreedBuckets);
 #endif
-      
+
       freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
       numFreedBuckets++;
   }
@@ -425,7 +425,7 @@ void purgeIdleHosts(int actDevice) {
   }
 #endif
 }
-#undef DEBUG 
+#undef DEBUG
 
 /* **************************************************** */
 
@@ -433,7 +433,7 @@ static void addSerialMapping(HostTraffic *el) {
   datum key_data;
   datum data_data;
   char tmpBuf[16];
-  
+
   if(el->hostNumIpAddress[0] != '\0')
     data_data.dptr = el->hostNumIpAddress;
   else
@@ -594,25 +594,25 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	      el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
 	  } else
 	    el = NULL;
-	    
+
 	  if(el == NULL) {
 	    el = (HostTraffic*)malloc(sizeof(HostTraffic));
 	    memset(el, 0, sizeof(HostTraffic));
 	    el->firstSeen = myGlobals.actTime;
 	  }
-	    
-	  resetHostsVariables(el);	      
+
+	  resetHostsVariables(el);
 	  el->hostSerial = myGlobals.serialCounter++;
 
 	  if(isMultihomed)
 	    FD_SET(HOST_MULTIHOMED, &el->flags);
-	    
+
 	  el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
-	    
+
 	  len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
 	  el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
 	  memset(el->protoIPTrafficInfos, 0, len);
-	    
+
 	  list = malloc(sizeof(HashList));
 	  list->next = myGlobals.device[actualDeviceId].hashList[idx];
 	  myGlobals.device[actualDeviceId].hashList[idx] = list;
@@ -625,10 +625,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	      break;
 	    }
 	  }
-	    
+
 	  if(!hostFound) {
 	    int sz;
-	      
+
 	    list->idx = myGlobals.device[actualDeviceId].actualHashSize;
 	    myGlobals.device[actualDeviceId].actualHashSize *= 2; /* Double */
 	    sz = myGlobals.device[actualDeviceId].actualHashSize*sizeof(struct hostTraffic*);
@@ -639,7 +639,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		       myGlobals.device[actualDeviceId].actualHashSize);
 	  } else
 	    list->idx = hostFound;
-	    
+
 	  myGlobals.device[actualDeviceId].insertIdx = list->idx + 1;
 	  myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx] = el; /* Insert a new entry */
 	  myGlobals.device[actualDeviceId].hostsno++;
@@ -757,7 +757,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		     el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
 		     myGlobals.device[actualDeviceId].actualHashSize);
 #endif
-	    
+
 	  addSerialMapping(el);
 	}
 
@@ -799,10 +799,10 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
     if((el = myGlobals.device[actualDeviceId].hash_hostTraffic[checkedIdx]) != NULL) {
       if(el->hashListBucket < HASH_LIST_SIZE) {
 	HashList *list, *prevList;
-	  
+
 	if((list = myGlobals.device[actualDeviceId].hashList[el->hashListBucket]) != NULL) {
 	  prevList = list;
-	    
+
 	  while(list != NULL) {
 	    if(list->idx == hostIdx) {
 	      allRight = 1;
@@ -812,14 +812,14 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
 	      list = list->next;
 	    }
 	  }
-	    
+
 	  if(allRight) {
 	    if(list == myGlobals.device[actualDeviceId].hashList[el->hashListBucket])
 	      myGlobals.device[actualDeviceId].hashList[el->hashListBucket] =
 		list->next;
 	    else
 	      prevList->next = list->next;
-	      
+
 	    if(myGlobals.device[actualDeviceId].insertIdx > el->hashListBucket)
 	      myGlobals.device[actualDeviceId].insertIdx = el->hashListBucket;
 	    free(list);

@@ -2874,6 +2874,8 @@ void resetSecurityHostTraffic(HostTraffic *el) {
   resetUsageCounter(&el->secHostPkts->nullScanSent);
   resetUsageCounter(&el->secHostPkts->rejectedTCPConnSent);
   resetUsageCounter(&el->secHostPkts->establishedTCPConnSent);
+  resetUsageCounter(&el->secHostPkts->terminatedTCPConnServer);
+  resetUsageCounter(&el->secHostPkts->terminatedTCPConnClient);
   resetUsageCounter(&el->secHostPkts->udpToClosedPortSent);
   resetUsageCounter(&el->secHostPkts->udpToDiagnosticPortSent);
   resetUsageCounter(&el->secHostPkts->tcpToDiagnosticPortSent);

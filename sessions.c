@@ -291,9 +291,15 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
 	allocateSecurityHostPkts(theHost);
 	incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
 			      sessionToPurge->remotePeerIdx, actualDeviceId);
+	incrementUsageCounter(&theHost->secHostPkts->terminatedTCPConnServer,
+			      sessionToPurge->remotePeerIdx, actualDeviceId);
+
 	allocateSecurityHostPkts(theRemHost);
 	incrementUsageCounter(&theRemHost->secHostPkts->closedEmptyTCPConnRcvd,
 			      sessionToPurge->initiatorIdx, actualDeviceId);
+	incrementUsageCounter(&theRemHost->secHostPkts->terminatedTCPConnClient,
+			      sessionToPurge->initiatorIdx, actualDeviceId);
+	
 
 	if(myGlobals.enableSuspiciousPacketDump)
 	  traceEvent(TRACE_WARNING, fmt,

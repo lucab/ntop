@@ -1280,6 +1280,13 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	sendString("</TR>\n");
       }
 
+      if((el->secHostPkts->terminatedTCPConnServer.value+el->secHostPkts->terminatedTCPConnClient.value) > 0) {
+	sendString("<TR><TH "TH_BG" ALIGN=LEFT>Terminated</TH>");
+	formatUsageCounter(el->secHostPkts->terminatedTCPConnServer, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->terminatedTCPConnClient, 0, actualDeviceId);
+	sendString("</TR>\n");
+      }
+
       if((el->secHostPkts->rejectedTCPConnSent.value+el->secHostPkts->rejectedTCPConnRcvd.value) > 0) {
 	sendString("<TR><TH "TH_BG" ALIGN=LEFT>Rejected</TH>");
 	formatUsageCounter(el->secHostPkts->rejectedTCPConnSent, el->secHostPkts->synPktsSent.value, actualDeviceId);
