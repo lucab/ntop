@@ -1973,6 +1973,7 @@ static void termNetflowFunct(void) {
     killThread(&netFlowThread);
     threadActive = 0;
   }
+  tryLockMutex(&whiteblackListMutex, "termNetflow");
   deleteMutex(&whiteblackListMutex);
 #endif
 
