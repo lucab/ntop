@@ -33,7 +33,7 @@
 #define TD_BG     ""
 #define TR_ON     ""
 #define TABLE_DEFAULTS " CELLSPACING=0 CELLPADDING=2"
-#define DARK_BG   "BGCOLOR=\"#E7E9F2\"" /* If you change it change it into the
+#define DARK_BG   "BGCOLOR=\"#F3F3F3\"" /* If you change it change it into the
                                          * stylesheet too */
 #define TOMATO_BG "BGCOLOR=\"#FF6347\""
 #define GOLD_BG   "BGCOLOR=\"#FFD700\""

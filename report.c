@@ -2613,7 +2613,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
    * send 404 if we cannot generate the requested page
    */
   if((el == NULL) || (!found)) {
-    char errorAdditionalText[512], whois[256];
+    char errorAdditionalText[1024], whois[256];
 
     safe_snprintf(__FILE__, __LINE__, whois, sizeof(whois), 
 		  "[ <A HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
@@ -3230,16 +3230,22 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     formatBuf4[32], formatBuf5[32], formatBuf6[32];
 
   if(!myGlobals.runningPref.enableSessionHandling) {
-    printHTMLheader("Active TCP Sessions", NULL, 0);
+    if(el == NULL)
+      printHTMLheader("Active TCP Sessions", NULL, 0);
+    else
+      printSectionTitle("Active TCP Sessions");
     printNotAvailable("-z or --disable-sessions");
     return;
   }
-
+  
   if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
      (myGlobals.device[actualDeviceId].numTcpSessions == 0)) {
-    printHTMLheader("Active TCP Sessions", NULL, 0);
-     printNoDataYet();
-     return;
+    if(el == NULL)
+      printHTMLheader("Active TCP Sessions", NULL, 0);
+    else
+      printSectionTitle("Active TCP Sessions");
+    printNoDataYet();
+    return;
   }
 
   /*
@@ -3276,7 +3282,11 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	}
 
 	if(printedSessions == 0) {
-	  printHTMLheader("Active TCP Sessions", NULL, 0);
+	  if(el == NULL)
+	    printHTMLheader("Active TCP Sessions", NULL, 0);
+	  else
+	    printSectionTitle("Active TCP Sessions");
+
 	  sendString("<CENTER>\n");
 	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG">Client</TH>"

@@ -599,9 +599,107 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   sendString("<SCRIPT SRC=\"/functions.js\" TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
 
-  sendString("</HEAD>\n");
+  /* ******************************************************* */
+
+  sendString("<script language=\"JavaScript\" SRC=\"/JSCookMenu.js\"></script>\n");
+  sendString("<link rel=\"stylesheet\" href=\"/style.css\" TYPE=\"text/css\">\n");
+  sendString("<link rel=\"stylesheet\" href=\"/theme.css\" TYPE=\"text/css\">\n");
+  sendString("<script language=\"JavaScript\" src=\"/theme.js\"></script>\n");
+  sendString("<script language=\"JavaScript\"><!--\n");
+  sendString("var ntopMenu =\n");
+  sendString("[\n");
+  sendString("	[null,'About',null,null,null,\n");
+  sendString("		[null,'What is ntop?','aboutNtop.html',null,null],\n");
+  sendString("		[null,'Configuration','info.html',null,null],\n");
+  sendString("		[null,'Credits','Credits.html',null,null],\n");
+  sendString("		[null,'Man Page','ntop.html',null,null],\n");
+  sendString("		['<IMG SRC=help.png>','Help','ntophelp.html',null,null],\n");
+  sendString("		['<IMG SRC=bug.png>','Report a Problem','ntopProblemReport.html',null,null],\n");
+  sendString("		],\n");
+  sendString("	[null,'Summary',null,null,null,\n");
+  sendString("		[null,'Traffic','trafficStats.html',null,null],\n");
+  sendString("		[null,'Hosts','hostsInfo.html',null,null],\n");
+  sendString("		[null,'Network Load','thptStats.html',null,null],\n");
+  sendString("		[null,'ASN Info','asList.html',null,null],\n");
+  sendString("		[null,'VLAN Info','vlanList.html',null,null],\n");
+  sendString("		[null,'Network Flows','NetFlows.html',null,null],\n");
+  sendString("		],\n");
+  sendString("	[null,'IP',null,null,null,\n");
+  sendString("		[null,'Summary',null,null,null,\n");
+  sendString("				[null,'Traffic','sortDataIP.html',null,null],\n");
+  sendString("				[null,'Multicast','multicastStats.html',null,null],\n");
+  sendString("				[null,'Internet Domain','domainStats.html',null,null],\n");
+  sendString("				[null,'Distribution','ipProtoDistrib.html',null,null],\n");
+  sendString("		],\n");
+  sendString("		[null,'Traffic Directions',null,null,null,\n");
+  sendString("				[null,'Local to Local','IpL2L.html',null,null],\n");
+  sendString("				[null,'Local to Remote','IpL2R.html',null,null],\n");
+  sendString("				[null,'Remote to Local','IpR2L.html',null,null],\n");
+  sendString("				[null,'Remote to Remote','IpR2R.html',null,null],\n");
+  sendString("		],\n");
+  sendString("		[null,'Local',null,null,null,\n");
+  sendString("				[null,'Routers','localRoutersList.html',null,null],\n");
+  sendString("				[null,'Ports Used','ipProtoUsage.html',null,null],\n");
+  sendString("				[null,'Active TCP Sessions','NetNetstat.html',null,null],\n");
+  sendString("				[null,'Host Fingerprint','localHostsFingerprint.html',null,null],\n");
+  sendString("				[null,'Host Characterization','localHostsCharacterization.html',null,null],\n");
+  sendString("				[null,'Local Matrix','ipTrafficMatrix.html',null,null],\n");
+  sendString("		],\n");
+  sendString("	],\n");
+  sendString("	[null,'Media',null,null,null,\n");
+  sendString("		[null,'Fibre Channel',null,null,null,\n");
+  sendString("				[null,'Traffic','FcData.html',null,null],\n");
+  sendString("				[null,'Throughput','FcThpt.html',null,null],\n");
+  sendString("				[null,'Activity','FcActivity.html',null,null],\n");
+  sendString("				[null,'Hosts','FcHostsInfo.html',null,null],\n");
+  sendString("				[null,'Traffic Per Port','FcShowStats.html',null,null],\n");
+  sendString("				[null,'Sessions','FcSessions',null,null],\n");
+  sendString("				[null,'VSANs','vsanList.html',null,null],\n");
+  sendString("				[null,'VSAN Summary','vsanDistrib.html',null,null],\n");
+  sendString("		],\n");
+  sendString("		[null,'SCSI Sessions',null,null,null,\n");
+  sendString("				[null,'Bytes','ScsiBytes.html',null,null],\n");
+  sendString("				[null,'Times','ScsiTimes.html',null,null],\n");
+  sendString("				[null,'Status','ScsiStatus.html',null,null],\n");
+  sendString("				[null,'Task Management','ScsiTMInfo.html',null,null],\n");
+  sendString("		],\n");
+  sendString("	],\n");
+  sendString("	[null,'Admin',null,null,null,\n");
+  sendString("		[null,'Plugins','showPlugins.html',null,null],\n");
+  sendString("		[null,'Switch NIC','switch.html',null,null],\n");
+  sendString("		['<IMG SRC=lock.png>','Configure',null,null,null,\n");
+  sendString("			['<IMG SRC=lock.png>','Startup Options','configNtop.html',null,null],\n");
+  sendString("			['<IMG SRC=lock.png>','Packet Filter','changeFilter.html',null,null],\n");
+  sendString("			['<IMG SRC=lock.png>','Reset Stats','resetStats.html',null,null],\n");
+  sendString("			['<IMG SRC=lock.png>','Web Users','showUsers.html',null,null],\n");
+  sendString("			['<IMG SRC=lock.png>','Protect URLs','showURLs.html',null,null],\n");
+  sendString("		],\n");
+  sendString("		['<IMG SRC=lock.png>','Shutdown','shutdown.html',null,null],\n");
+  sendString("	],\n");
+  sendString("	[null,'Utils',null,null,null,\n");
+  sendString("		[null,'Data Dump','dump.html',null,null],\n");
+  sendString("		[null,'View Log','viewLog.html',null,null]\n");
+  sendString("		]\n");
+  sendString("];\n");
+  sendString("--></script>\n");
+  sendString("</head>");
+
+  /* ******************************************************* */
+
   if((headerFlags & BITFLAG_HTML_NO_BODY) == 0) {
-    sendString("<BODY BACKGROUND=\"/white_bg.gif\" BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
+    sendString("<BODY LINK=blue VLINK=blue>\n\n");
+    
+    sendString("<table border=0 width=100% cellpadding=0 cellspacing=0>\n");
+    sendString("<tr><td colspan=2 align=left><img src=ntop_logo.gif></td></tr>\n");
+    sendString("<tr><th class=\"leftmenuitem\">\n");
+    sendString("<div id=ntopMenuID>xxx</div>\n");
+    sendString("<script language=\"JavaScript\"><!--\n");
+    sendString("	cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n");
+    sendString("--></script>\n");
+    sendString("</th><th class=\"leftmenuitem\" align=right>(C) 1998-2004 - "
+	       "<a href=\"mailto:deri@ntop.org\" title=\"Email Luca\">L. Deri</a>&nbsp;&nbsp;</th></tr>\n");
+    sendString("</table>\n");
+    
     if((theTitle != NULL) && ((headerFlags & BITFLAG_HTML_NO_HEADING) == 0))
       printSectionTitle(theTitle);
   }
@@ -616,19 +714,19 @@ void printHTMLtrailer(void) {
   switch (myGlobals.capturePackets) {
       case FLAG_NTOPSTATE_RUN:
           break;
-          ;;
+          ;
       case FLAG_NTOPSTATE_STOPCAP:
           sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
                      "Packet capture stopped"
                      "</B></FONT></CENTER>");
           break;
-          ;;
+          ;
       case FLAG_NTOPSTATE_TERM:
           sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
                      "ntop stopped"
                      "</B></FONT></CENTER>");
           break;
-          ;;
+          ;
   }
 
   sendString("\n<HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><H5><B>\n");
@@ -2148,7 +2246,7 @@ static int returnHTTPPage(char* pageName,
         mimeType = FLAG_HTTP_TYPE_CSS;
       else if(strcasecmp(&pageURI[len-4], ".ico") == 0)
         mimeType = FLAG_HTTP_TYPE_ICO;
-      else if(strcasecmp(&pageURI[len-4], ".js") == 0)
+      else if(strcasecmp(&pageURI[len-3], ".js") == 0)
         mimeType = FLAG_HTTP_TYPE_JS;
       else if(strcasecmp(&pageURI[len-4], ".xml") == 0)
         /* w3c/p3p.xml */
