@@ -21,7 +21,7 @@
 
 <hr>
 <!-- Creator     : groff version 1.18 -->
-<!-- CreationDate: Fri Sep  5 16:57:21 2003 -->
+<!-- CreationDate: Tue Sep 16 11:27:55 2003 -->
 <a name="NAME"></a>
 <h2>NAME</h2>
 <!-- INDENTATION -->
@@ -1081,9 +1081,9 @@ powerful applications such as NeTraMet. A flow is a stream
 of captured packets that match a specified rule. The format
 is</p>
 <!-- INDENTATION -->
-<p><b>&lt;flow-label&gt;=&rsquo;&lt;matching
+<p>&quot; <b>&lt;flow-label&gt;=&rsquo;&lt;matching
 expression&gt;&rsquo;[,&lt;flow-label&gt;=&rsquo;&lt;matching
-expression&gt;&rsquo;]</b></p>
+expression&gt;&rsquo;]</b> &quot;</p>
 <!-- INDENTATION -->
 <p>, where the label is used to symbolically identify the
 flow specified by the expression. The expression format is
@@ -1093,9 +1093,10 @@ following the HTML link named &rsquo;List
 NetFlows&rsquo;.</p>
 <!-- INDENTATION -->
 <p>For instance define two flows with the following
-expression <b>LucaHosts=&rsquo;host jake.unipi.it or host
+expression &quot; <b>LucaHosts=&rsquo;host jake.unipi.it or
+host
 pisanino.unipi.it&rsquo;,GatewayRoutedPkts=&rsquo;gateway
-gateway.unipi.it&rsquo; .</b></p>
+gateway.unipi.it&rsquo;</b> &quot;.</p>
 <!-- INDENTATION -->
 <p>All the traffic sent/received by hosts jake.unipi.it or
 pisanino.unipi.it is collected by <b>ntop</b> and added to
@@ -1105,6 +1106,9 @@ flow. If the flows list is very long you may store in a file
 (for instance flows.list) and specify the file name instead
 of the actual flows list (in the above example, this would
 be &rsquo;ntop -F flows.list&rsquo;).</p>
+<!-- INDENTATION -->
+<p>Note that the double quotations around the entire flow
+expression are required.</p>
 </td>
 </table>
 <!-- INDENTATION -->

@@ -691,7 +691,7 @@ is having difficulty determining it from the interface.
 It is used to specify network flows similar to more powerful applications such as NeTraMet. 
 A flow is a stream of captured packets that match a specified rule. The format is 
 
-.B <flow-label>='<matching expression>'[,<flow-label>='<matching expression>']
+.B "<flow-label>='<matching expression>'[,<flow-label>='<matching expression>']"
 
 , where the label is used to symbolically identify the flow specified by the expression. 
 The expression format is specified in the appendix. If an expression is specified, then 
@@ -706,6 +706,8 @@ and added to the LucaHosts flow, whereas all the packet routed by the gateway ga
 are added to the GatewayRoutedPkts flow. If the flows list is very long you may store in a 
 file (for instance flows.list) and specify the file name instead of the actual flows list 
 (in the above example, this would be 'ntop -F flows.list').
+
+Note that the double quotations around the entire flow expression are required.
 
 .It2 -K --enable-debug
 Use this parameter to simplify application debug.  It does three things:
