@@ -2829,7 +2829,7 @@ struct tm *localtime_r(const time_t *t, struct tm *tp) {
   struct tm *theTime;
 
 #if defined(MULTITHREADED)
-  if(!) {
+  if(!localtimeMutexInitialized) {
     createMutex(&localtimeMutex);
     localtimeMutexInitialized = 1;
   }
