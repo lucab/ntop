@@ -522,7 +522,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   unsigned char buf[MAX_HOST_SYM_NAME_LEN_HTML];
   short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
-  u_char setSpoofingFlag = 0, hostFound = 0;
+  u_char setSpoofingFlag = 0;
+  u_int hostFound = 0;
   HashList *list = NULL;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
@@ -798,7 +799,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       } else {
 	/* el->hostNumIpAddress == "" */
 	if(symEthName[0] != '\0') {
-	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=\"/card.gif\" ALT=\"NIC\"  BORDER=0>", symEthName) < 0)
+	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
 	    BufferTooShort();
 
 	  buf[MAX_HOST_SYM_NAME_LEN-1] = '\0';
@@ -808,9 +809,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       }
 
 #ifdef HASH_DEBUG
-      traceEvent(TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d]\n",
+      traceEvent(TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]\n",
 		 el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
-		 myGlobals.device[actualDeviceId].actualHashSize);
+		 myGlobals.device[actualDeviceId].actualHashSize, myGlobals.device[actualDeviceId].hostsno);
 #endif
 
       {
