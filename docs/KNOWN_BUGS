@@ -10,7 +10,7 @@
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 v2.1 (Jun 2002)
 
-1. https:// & tcp wrappers
+B1. https:// & tcp wrappers
 
      If you compile ntop with tcp wrappers and attempt to access an 
      https:// url, it will fail with
@@ -51,7 +51,7 @@ v2.1 (Jun 2002)
 
 ========================================
 
-2. https:// & Opera
+B2. https:// & Opera
 
      With fixes through 25Jun2002, this works, albeit VERY SLOWLY on the handshake.
      Sometimes as much as two minutes.  After that, clicking around through the 
@@ -72,74 +72,15 @@ v2.1 (Jun 2002)
 
 ========================================
 
-3. ntop hangs during termination.
-
-    Linux only.  Known on RedHat 7.2, glibc 2.2.4-13. Reported from Debian (Potato) too.
-
-    Last messages in the log are:
-
-    Jun 16 17:20:12 localhost ntop[5093]: Unloading plugins (if any)... 
-    Jun 16 17:20:12 localhost ntop[5093]: Thanks for using icmpWatch...
-    Jun 16 17:20:12 localhost ntop[5093]: Done. 
-    Jun 16 17:20:12 localhost ntop[5093]: Thanks for using LsWatch...
-    Jun 16 17:20:12 localhost ntop[5093]: Done. 
-
-    If you use gdb, you will find that the thread (#7) is suspended and the last part of ntop
-    code executed was termIPservices() in term.c (Sometimes it will seg fault at this point):
-
-    (gdb) info thread
-      7 Thread 5126 (LWP 5125)  0x405a657e in chunk_free (ar_ptr=0x4065a2a0, p=0x82241f8)
-        at malloc.c:3252
-    * 6 Thread 4101 (LWP 5124)  0x405e05a1 in __libc_nanosleep () from /lib/i686/libc.so.6
-      5 Thread 3076 (LWP 5123)  0x40553ba5 in __sigsuspend (set=0x41fea93c)
-        at ../sysdeps/unix/sysv/linux/sigsuspend.c:45
-      4 Thread 2051 (LWP 5122)  0x405e05a1 in __libc_nanosleep () from /lib/i686/libc.so.6
-      3 Thread 1026 (LWP 5121)  0x40553ba5 in __sigsuspend (set=0x40fea63c)
-        at ../sysdeps/unix/sysv/linux/sigsuspend.c:45
-      2 Thread 2049 (LWP 5120)  0x4060b3e7 in __poll (fds=0x82c4d6c, nfds=1, timeout=2000)
-        at ../sysdeps/unix/sysv/linux/poll.c:63
-      1 Thread 1024 (LWP 5113)  0x405e05a1 in __libc_nanosleep () from /lib/i686/libc.so.6
-    (gdb) thread 7
-    [Switching to thread 7 (Thread 5126 (LWP 5125))]#0  0x405a657e in chunk_free (ar_ptr=0x4065a2a0, 
-        p=0x82241f8) at malloc.c:3252
-    3252        frontlink(ar_ptr, p, sz, idx, bck, fwd);
-    (gdb) info stack
-    #0  0x405a657e in chunk_free (ar_ptr=0x4065a2a0, p=0x82241f8) at malloc.c:3252
-    #1  0x405a63e4 in __libc_free (mem=0x8224840) at malloc.c:3154
-    #2  0x4028f7c1 in ntop_safefree (ptr=0x82233e0, file=0x402ab00c "term.c", line=42) at leaks.c:508
-    #3  0x402a0299 in termIPServices () at term.c:42
-    #4  0x40292f95 in cleanup (signo=0) at ntop.c:873
-    #5  0x40060a12 in shutdownNtop () at webInterface.c:685
-    #6  0x400409e6 in returnHTTPPage (pageName=0x42fea6fd "shutdown.html", postLen=-1, 
-    from=0x42fea91c, httpRequestedAt=0x42fea6b4, usedFork=0x42fea6b0) at http.c:1184
-    #7  0x40042fef in handleHTTPrequest (from={s_addr = 3232235560}) at http.c:2067
-    #8  0x40064401 in handleSingleWebConnection (fdmask=0x42feaa0c) at webInterface.c:2666
-    #9  0x400642cb in handleWebConnections (notUsed=0x0) at webInterface.c:2597
-    #10 0x404eac6f in pthread_start_thread (arg=0x42feabe0) at manager.c:284
-    #11 0x404ead5f in pthread_start_thread_event (arg=0x42feabe0) at manager.c:308
-    (gdb) frame 3
-    #3  0x402a0299 in termIPServices () at term.c:42
-    42            free(myGlobals.tcpSvc[i]);
-    (gdb) print i
-    $1 = 70
-    (gdb) print myGlobals.tcpSvc[i]
-    $2 = (ServiceEntry *) 0x8224840
-    (gdb) print *myGlobals.tcpSvc[i]
-    $3 = {port = 70, name = 0x0}
-
-
-========================================
-
-4. sflowPlugin.c will not compile in single threaded mode
+B3. sflowPlugin.c will not compile in single threaded mode
 
    (it uses queuePacket, which is #ifdef ed out in pbuf.c)
-
 
 ================================================================================
 ISSUES - not bugs per se, but worth a comment...
 ================================================================================
 
-5. https:// & Netscape 6.2.2 et al
+I1. https:// & Netscape 6.2.2 et al
 
      Hangs the ntop web server thread.  It goes into the ssl_accept() routine and
      never comes back.  ntop continues processing packets, but there is no way to
@@ -191,7 +132,7 @@ ISSUES - not bugs per se, but worth a comment...
 
 ========================================
 
-6. SIGPIPE - primarilly under gdb in Win2K environment.
+I2. SIGPIPE - primarilly under gdb in Win2K environment.
 
    The problem is that Internet Explorer (and other browsers) seem to close
    the connection when they receive an unknown certificate in response to
@@ -227,7 +168,7 @@ Older bugs (v1.3) - Unknown if these are still current
   ==========
 
 
-1. Linux Sockets Bug (Platform Linux/i386)
+O1. Linux Sockets Bug (Platform Linux/i386)
    [Alan.Cox@linux.org is aware of the above issue. Status: no reply]
 
 Below you can find the packetLogger code that can be used to
@@ -378,7 +319,7 @@ int main(int argc, char* argv[]) {
 
 ========================================
 
-2. iPPP (Linux)
+O2. iPPP (Linux)
    [iPPP guys have been informed. Status: no reply]
 
 ntop works with PPP but it presents some problems with iPPP (ISDN PPP). Some packets cannot 
