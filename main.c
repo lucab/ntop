@@ -807,6 +807,11 @@ static int parseOptions(int argc, char* argv []) {
       /* exit(-1); */
   }
 
+  if((myGlobals.rFileName != NULL) && (myGlobals.localAddresses == NULL)) {
+    traceEvent(CONST_TRACE_ERROR, "When -f is used you need to set -m. Please try again.\n");
+    exit(-1);
+  }
+  
 #ifndef WIN32
   /*
     The user has not specified the uid using the -u flag.
