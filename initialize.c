@@ -436,7 +436,11 @@ void initGdbm(void) {
 #endif
   if(gdbm_file == NULL) {
     traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
-	       tmpBuf, gdbm_strerror(gdbm_errno));
+#if defined(WIN32) && defined(__GNUC__)
+	       tmpBuf, "unknown gdbm errno");
+#else
+    tmpBuf, gdbm_strerror(gdbm_errno));
+#endif
 
     traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
     exit(-1);

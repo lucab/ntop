@@ -22,6 +22,11 @@
 
 #include <winsock2.h> /* winsock.h is included automatically */
 
+#if defined(WIN32) && defined(__GNUC__)
+/* on mingw, the definitions we need are in pcap.h - Scott Renfro <scott@renfro.org> */
+#include "pcap.h"
+#endif
+
 #define HAVE_GDBM_H
 #define HAVE_GDCHART
 #define MULTITHREADED
@@ -45,10 +50,12 @@ typedef int NDIS_STATUS, *PNDIS_STATUS;
 
 /* typedef ULONGLONG TrafficCounter; */
 /* typedef unsigned long TrafficCounter; */
+#if defined (WIN32) && !defined (__GNUC__)
 typedef unsigned char  u_char;
 typedef unsigned short u_short;
 typedef unsigned int   u_int;
 typedef unsigned long  u_long;
+#endif
 typedef unsigned int   tcp_seq;
 
 typedef u_char  uint8_t;
@@ -63,7 +70,12 @@ typedef long int32_t;
 #define strcasecmp _stricmp
 
 extern int getopt(int num, char *const *argv, const char *opts);
+#if defined(WIN32) && defined(__GNUC__)
+/* on mingw, struct timezone isn't defined so s/struct timezone/void/ - Scott Renfro <scott@renfro.org> */
+extern int gettimeofday(struct timeval*, void*);
+#else
 extern int gettimeofday(struct timeval*, struct timezone*);
+#endif
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 
 extern ULONG GetHostIPAddr();
@@ -84,10 +96,27 @@ extern ULONG GetHostIPAddr();
 #define DLT_SLIP	8	/* Serial Line IP */
 #define DLT_PPP		9	/* Point-to-point Protocol */
 #define DLT_FDDI	10	/* FDDI */
+
+/* 
+ *
+ * these are defined in more recent versions of winpcap, so wrap them
+ * in conditionals to prevent redefinition
+ *
+ * Scott Renfro <scott@renfro.org>
+ *
+ */
+#if !defined(DLT_ATM_RFC1483)
 #define DLT_ATM_RFC1483	11	/* LLC/SNAP encapsulated atm */
+#endif
+#if !defined(DLT_RAW)
 #define DLT_RAW		12	/* raw IP */
+#endif
+#if !defined(DLT_SLIP_BSDOS)
 #define DLT_SLIP_BSDOS	13	/* BSD/OS Serial Line IP */
+#endif
+#if !defined(DLT_PPP_BSDOS)
 #define DLT_PPP_BSDOS	14	/* BSD/OS Point-to-point Protocol */
+#endif
 
 /*
  * Ethernet address - 6 octets
@@ -113,7 +142,11 @@ struct	ether_header {
 
 /************************************************************************/
 
+/* on mingw, tcp_seq is defined - Scott Renfro <scott@renfro.org> */
+#if defined (WIN32) && !defined (__GNUC__)
 typedef	u_int	tcp_seq;
+#endif
+
 /*
  * TCP header.
  * Per RFC 793, September, 1981.
@@ -361,7 +394,14 @@ extern void sniffSinglePacket(void(*pbuf_process)(u_char *unused,
 		  const struct pcap_pkthdr *h, 
 		  const u_char *p));
 
+/*
+ * on mingw, call closesocket, not close, at least on win2k (the args
+ * have different types: int vs. SOCKET
+ *
+ */
+#if defined (WIN32) && !defined (__GNUC__)
 #define close(fd) closesocket(fd)
+#endif
 
 /* ********* MULTITHREAD STUFF ********* */
 

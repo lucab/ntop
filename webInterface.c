@@ -652,8 +652,12 @@ void printNtopConfigInfo(void) {
 #ifdef HAVE_PCAP_VERSION
   printFeatureConfigInfo("Libpcap version", pcap_version);
 #endif /* HAVE_PCAP_VERSION */
+#if defined(WIN32) && defined(__GNUC__)
+  /* on mingw, gdbm_version not exported by library */
+#else
   printFeatureConfigInfo("GDBM version", gdbm_version);
-
+#endif
+  
 #ifdef HAVE_OPENSSL
   printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", 
 			 (char*)SSLeay_version(0));

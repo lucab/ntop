@@ -38,7 +38,7 @@ static char sccsid[] = "@(#)qsort.c	8.1 (Berkeley) 6/4/93";
 #include <sys/types.h>
 #include <stdlib.h>
 
-#ifndef WIN32
+#if !defined (WIN32) || !defined (min)
 #define min(a, b)	(a) < (b) ? a : b
 #endif
 

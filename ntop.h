@@ -35,6 +35,11 @@
 #include "config.h"
 #endif
 
+#if defined(WIN32) && defined(__GNUC__)
+/* on mingw, the definitions we want are in bpf.h - Scott Renfro <scott@renfro.org>*/
+#include "bpf.h"
+#endif
+
 /*
  * fallbacks for essential typedefs
  */
@@ -1850,7 +1855,7 @@ typedef struct logMessage {
 
 /* ******** Token Ring ************ */
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined (__GNUC__)
 typedef unsigned char u_int8_t;
 typedef unsigned short u_int16_t;
 #endif /* WIN32 */

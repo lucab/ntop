@@ -43,8 +43,22 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+#if defined(WIN32)
+ /* we're using the winpcap getopt() implementation
+  * which has the globals inside the dll, so a simple
+  * extern declaration is insufficient on win32
+  *
+  * Scott Renfro <scott@renfro.org>
+  *
+  */
+#if defined(__GNUC__)		/* mingw compiler */
+extern __attribute__((dllimport)) char *optarg;
+#else /* assume msvc */
+extern __dllspec(dllimport) char *optarg;
+#endif
+#else  /* not win32 */
 extern char *optarg;
-
+#endif
 
 #if defined(NEED_INET_ATON)
 /*

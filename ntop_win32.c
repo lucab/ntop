@@ -43,6 +43,10 @@ char* getNwBoardMacAddress(char *deviceName); /* forward */
 
 ULONG GetHostIPAddr(); /* forward declaration */
 
+#if defined(WIN32) && defined(__GNUC__) && !defined(SIZE_BUF)
+/* on mingw, this isn't defined anywhere - Scott Renfro <scott@renfro.org> */
+int SIZE_BUF;
+#endif
 
 #ifdef ORIGINAL_NTOP
 
@@ -668,7 +672,12 @@ int ffs (int i)
 
 /* ****************************************************** */
 
+#if defined(WIN32) && defined(__GNUC__)
+/* on mingw, struct timezone isn't defined so s/struct timezone/void/ - Scott Renfro <scott@renfro.org> */
+int gettimeofday(struct timeval *tv, void *notUsed) {
+#else
 int gettimeofday(struct timeval *tv, struct timezone *notUsed) {
+#endif
   tv->tv_sec = time(NULL);
   tv->tv_usec = 0;
   return(0);

@@ -1929,23 +1929,26 @@ void printIpProtocolUsage(void) {
   hosts = (HostTraffic**)malloc(device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
   memset(hosts, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
-  for(i=0; i<device[actualReportDeviceId].actualHashSize; i++)
-    if((device[actualReportDeviceId].hash_hostTraffic[i] != NULL)
-       && subnetPseudoLocalHost(device[actualReportDeviceId].hash_hostTraffic[i])
-       && (device[actualReportDeviceId].hash_hostTraffic[i]->hostNumIpAddress[0] != '\0')) {
-      hosts[hostsNum++] = device[actualReportDeviceId].hash_hostTraffic[i];
-
-      if(device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage != NULL) {
-	for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++) {
-	  if(device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j] != NULL)  {
-	    clientPorts[j] += device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->clientUses;
-	    serverPorts[j] += device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->serverUses;
-	    numPorts++;
+  /* Further checks courtesy of Scott Renfro <scott@renfro.org> */
+  if(device[actualReportDeviceId].hash_hostTraffic != NULL) {
+    for(i=0; i<device[actualReportDeviceId].actualHashSize; i++)
+      if((device[actualReportDeviceId].hash_hostTraffic[i] != NULL)
+	 && subnetPseudoLocalHost(device[actualReportDeviceId].hash_hostTraffic[i])
+	 && (device[actualReportDeviceId].hash_hostTraffic[i]->hostNumIpAddress[0] != '\0')) {
+	hosts[hostsNum++] = device[actualReportDeviceId].hash_hostTraffic[i];
+	
+	if(device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage != NULL) {
+	  for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++) {
+	    if(device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j] != NULL)  {
+	      clientPorts[j] += device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->clientUses;
+	      serverPorts[j] += device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->serverUses;
+	      numPorts++;
+	    }
 	  }
 	}
       }
-    }
-
+  }
+  
   if(numPorts == 0) {
     printNoDataYet();
     free(hosts);

@@ -712,6 +712,7 @@ void dumpNtopTrafficInfo(char* options) {
   struct re_pattern_buffer filterPattern;
 
   memset(key, 0, sizeof(key));
+  memset(filter, 0, sizeof(filter));
 
   if(options != NULL) {
     /* language=[perl|php] */
@@ -773,7 +774,7 @@ void dumpNtopTrafficInfo(char* options) {
     if(device[i].virtualDevice) continue;
 
 
-    if( i > 0) { endWriteKey(lang,"",','); }
+    if(i > 0) { endWriteKey(lang,"",','); }
 
     if((key[0] != '\0') &&(strcmp(key, device[i].name) != 0))
       continue;
