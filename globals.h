@@ -257,6 +257,9 @@ typedef struct ntopGlobals {
 
   int reuseRRDgraphics;              /* '136' */
 
+  char *P3Pcp;                       /* '137' */
+  char *P3Puri;                      /* '138' */
+
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
 

@@ -879,6 +879,8 @@ typedef struct portMapper {
 #define HTTP_TYPE_TEXT	6
 #define HTTP_TYPE_ICO	7
 #define HTTP_TYPE_JS	8
+#define HTTP_TYPE_XML  9
+#define HTTP_TYPE_P3P 10
 
 #define HTTP_FLAG_IS_CACHEABLE		(1<<0)
 #define HTTP_FLAG_NO_CACHE_CONTROL	(1<<1)

@@ -2258,6 +2258,18 @@ void printNtopConfigInfo(int textPrintFlag) {
                            "No");
 #endif
 
+  printParameterConfigInfo(textPrintFlag, "--p3p-cp",
+                           ((myGlobals.P3Pcp == NULL) ||
+                            (myGlobals.P3Pcp[0] == '\0')) ? "none" :
+                           myGlobals.P3Pcp,
+                           "none");
+
+  printParameterConfigInfo(textPrintFlag, "--p3p-uri",
+                           ((myGlobals.P3Puri == NULL) ||
+                            (myGlobals.P3Puri[0] == '\0')) ? "none" :
+                           myGlobals.P3Puri,
+                           "none");
+
   sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
   sendString("Note: " REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");

@@ -785,6 +785,23 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
       BufferTooShort();
   sendString(tmpStr);
 
+  if ( (myGlobals.P3Pcp != NULL) || (myGlobals.P3Puri != NULL) ) {
+      sendString("P3P: ");
+      if (myGlobals.P3Pcp != NULL) {
+          if(snprintf(tmpStr, sizeof(tmpStr), "cp=\"%s\"%s", 
+                              myGlobals.P3Pcp, myGlobals.P3Puri != NULL ? ", " : "") < 0)
+              BufferTooShort();
+          sendString(tmpStr);
+      }
+    
+      if (myGlobals.P3Puri != NULL) {
+          if(snprintf(tmpStr, sizeof(tmpStr), "policyref=\"%s\"", myGlobals.P3Puri) < 0)
+              BufferTooShort();
+          sendString(tmpStr);
+       }
+       sendString("\r\n");
+  }
+
   strftime(theDate, sizeof(theDate)-1, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
   theDate[sizeof(theDate)-1] = '\0';
   if(snprintf(tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate) < 0)
@@ -834,6 +851,12 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
       break;
     case HTTP_TYPE_JS:
       sendString("Content-Type: text/javascript\r\n");
+      break;
+    case HTTP_TYPE_XML:
+      sendString("Content-Type: text/xml\r\n");
+      break;
+    case HTTP_TYPE_P3P:
+      sendString("Content-Type: text/xml\r\n");
       break;
     case HTTP_TYPE_NONE:
       break;
@@ -972,6 +995,17 @@ static int checkURLsecurity(char *url) {
     return(4);
   }
 
+/* allow w3c/p3p.xml...
+ *   NOTE that we don't allow general .p3p and .xml requests
+ *        Those are bounced below...
+ */
+  if (strncmp(url, STR_W3C_P3P_XML, strlen(STR_W3C_P3P_XML)) == 0) {
+      return(0);
+  }
+  if (strncmp(url, STR_NTOP_P3P, strlen(STR_NTOP_P3P)) == 0) {
+      return(0);
+  }
+
   /*
     We can't simply find the "." and test the extension, as
     we have to allow urls of the following special forms:
@@ -1102,6 +1136,10 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
   if(pageName[0] == '\0')
     strncpy(pageName, STR_INDEX_HTML, sizeof(STR_INDEX_HTML));
 
+  /* Generic w3c p3p request? force it to ours... */
+  if (strncmp(pageName, STR_W3C_P3P_XML, strlen(STR_W3C_P3P_XML)) == 0)
+    strncpy(pageName, STR_NTOP_P3P, sizeof(STR_NTOP_P3P));
+
   /* Search in the local directory first... */
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
     int j;
@@ -1152,6 +1190,9 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
         mimeType = HTTP_TYPE_ICO;
       else if(strcmp(&pageName[len-4], ".js") == 0)
         mimeType = HTTP_TYPE_JS;
+      else if(strcmp(&pageName[len-4], ".xml") == 0)
+        /* w3c/p3p.xml */
+        mimeType = HTTP_TYPE_XML;
     }
 
     sendHTTPHeader(mimeType, HTTP_FLAG_IS_CACHEABLE | HTTP_FLAG_MORE_FIELDS);

@@ -155,6 +155,9 @@ static struct option const long_options[] = {
   { "reuse-rrd-graphics",               no_argument,       NULL, 136 },
 #endif
 
+  { "p3p-cp",                           required_argument, NULL, 137 },
+  { "p3p-uri",                          required_argument, NULL, 138 },
+
   {NULL, 0, NULL, 0}
 };
 
@@ -611,6 +614,18 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.reuseRRDgraphics = 1;
       break;
 #endif
+
+    case 137:
+      stringSanityCheck(optarg);
+      if(myGlobals.P3Pcp != NULL) free(myGlobals.P3Pcp);
+      myGlobals.P3Pcp = strdup(optarg);
+      break;
+
+    case 138:
+      stringSanityCheck(optarg);
+      if(myGlobals.P3Puri != NULL) free(myGlobals.P3Puri);
+      myGlobals.P3Puri = strdup(optarg);
+      break;
 
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);

@@ -202,6 +202,9 @@ extern int out_graph(short gifwidth,
 #define SORT_DATA_THPT                  11
 #define SORT_DATA_HOST_TRAFFIC          12
 
+#define STR_W3C_P3P_XML                 "w3c/p3p.xml"
+#define STR_NTOP_P3P                    "ntop.p3p"
+
 #define STR_SORT_DATA_RECEIVED_PROTOS   "sortDataReceivedProtos.html"
 #define STR_SORT_DATA_RECEIVED_IP       "sortDataReceivedIP.html"
 #define STR_SORT_DATA_RECEIVED_THPT     "sortDataReceivedThpt.html"
