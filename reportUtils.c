@@ -2574,9 +2574,9 @@ void printHostDetailedInfo(HostTraffic *el) {
     char *vendorName;
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	    "%s%s</TD></TR>\n",
-	    getRowColor(), "MAC&nbsp;Address",
-	    el->ethAddressString,
+		"%s%s</TD></TR>\n",
+		getRowColor(), "MAC&nbsp;Address",
+		el->ethAddressString,
 		separator /* it avoids empty cells not to be rendered */) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -2601,11 +2601,19 @@ void printHostDetailedInfo(HostTraffic *el) {
       || (el->lastEthAddress[5] != 0) /* The address isn't empty */)
      && (memcmp(el->lastEthAddress, el->ethAddress, ETHERNET_ADDRESS_LEN) != 0)) {
     /* Different MAC addresses */
+    char *symMacAddr, symLink[32];
+    int i;
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-		"%s%s</TD></TR>\n",
+    symMacAddr = etheraddr_string(el->lastEthAddress);
+    strcpy(symLink, symMacAddr);
+    for(i=0; symLink[i] != '\0'; i++)
+      if(symLink[i] == ':') 
+	symLink[i] = '_';
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		"<A HREF=%s.html>%s</A>%s</TD></TR>\n",
 		getRowColor(), "Last MAC Address",
-		etheraddr_string(el->lastEthAddress),
+		symLink, symMacAddr,
 		separator /* it avoids empty cells not to be rendered */) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);    
@@ -2616,9 +2624,9 @@ void printHostDetailedInfo(HostTraffic *el) {
 
     if((el->osName != NULL) && (el->osName[0] != '\0')) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	      "%s%s</TD></TR>\n",
-	      getRowColor(), "OS&nbsp;Name",
-	      getOSFlag(el->osName, 1),
+		  "%s%s</TD></TR>\n",
+		  getRowColor(), "OS&nbsp;Name",
+		  getOSFlag(el->osName, 1),
 		  separator /* it avoids empty cells not to be rendered */) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);

@@ -289,7 +289,8 @@ char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
   datum key_data, data_data;
   static char tmpBuf[96];
 #endif
-  char* ret = getMacInfo(specialMacHash, el->ethAddress, SHORTHASHNAMESIZE, encodeString);
+  char* ret = getMacInfo(specialMacHash, el->ethAddress, 
+			 SHORTHASHNAMESIZE, encodeString);
 
   if((ret != NULL) && (ret[0] != '\0'))
     return(ret);

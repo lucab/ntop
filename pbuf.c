@@ -539,7 +539,7 @@
    /* This is a known port hence we're interested in */
    IpGlobalSession *scanner=NULL, *prevScanner;
    HostTraffic* theHost;
-   u_int i;
+   int i, found;
 
    if((theHostIdx == broadcastEntryIdx)
       || (remotePeerIdx == broadcastEntryIdx)
@@ -613,29 +613,30 @@
    printSession(theSession, sessionType, scanner->sessionCounter);
  #endif
 
-   for(i=0; i<MAX_NUM_SESSION_PEERS; i++)
-     if((scanner->peersIdx[i] == NO_PEER)
-	|| (scanner->peersIdx[i] == remotePeerIdx))
+   for(i=0, found = -1; i<MAX_NUM_SESSION_PEERS; i++)
+     if((scanner->peersIdx[i] == NO_PEER) 
+	|| (scanner->peersIdx[i] == remotePeerIdx)) {
+       found = i;
        break;
+     }
 
    /* Patch below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-   if(i>=MAX_NUM_SESSION_PEERS)
-     i = scanner->lastPeer; /* (*) */
+   if(found == -1)
+     found = scanner->lastPeer; /* (*) */
 
-   if((i<MAX_NUM_SESSION_PEERS)
-      && (((scanner->peersIdx[i] != NO_PEER)
-	   && (scanner->peersIdx[i] != remotePeerIdx)
-	   && (device[actualDeviceId].hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])] != NULL)
-	   && (device[actualDeviceId].hash_hostTraffic[remotePeerIdx] != NULL)
-	   && (strcmp(device[actualDeviceId].
-		      hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])]->hostNumIpAddress,
-		      device[actualDeviceId].
-		      hash_hostTraffic[checkSessionIdx(remotePeerIdx)]->hostNumIpAddress)))
-	  || (scanner->peersIdx[i] == NO_PEER))) {
-     scanner->peersIdx[scanner->lastPeer] = remotePeerIdx; /* Note i == scanner->lastPeer (*) */
+   if(((scanner->peersIdx[found] != NO_PEER)
+       && (scanner->peersIdx[found] != remotePeerIdx)
+       && (device[actualDeviceId].hash_hostTraffic[checkSessionIdx(scanner->peersIdx[found])] != NULL)
+       && (device[actualDeviceId].hash_hostTraffic[remotePeerIdx] != NULL)
+       && (strcmp(device[actualDeviceId].
+		  hash_hostTraffic[checkSessionIdx(scanner->peersIdx[found])]->hostNumIpAddress,
+		  device[actualDeviceId].
+		  hash_hostTraffic[checkSessionIdx(remotePeerIdx)]->hostNumIpAddress)))
+      || (scanner->peersIdx[found] == NO_PEER)) {
+     scanner->peersIdx[scanner->lastPeer] = remotePeerIdx; /* Note found == scanner->lastPeer (*) */
      scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
    }
-
+   
    switch(sessionType) {
    case IPPROTO_TCP:
      /*

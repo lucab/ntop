@@ -167,7 +167,7 @@ static void resolveAddress(char* symAddr,
       FILE* fd;
       char buffer[64];
       struct in_addr myAddr;
-      int i;
+      int i, len;
 
       myAddr.s_addr = hostAddr->s_addr;
       if(snprintf(buffer, sizeof(buffer), "/usr/bin/host %s", intoa(myAddr)) < 0)
@@ -188,11 +188,14 @@ static void resolveAddress(char* symAddr,
 	#
       */
 
-      for(i=strlen(tmpBuf); i>0; i--)
-	if(tmpBuf[i] == ' ')
-	  break;
-
-      if(tmpBuf[i] == ' ') {
+      len = strlen(tmpBuf);
+      if(len > 0) {
+	for(i=len; i>0; i--)
+	  if(tmpBuf[i] == ' ')
+	    break;
+      }
+      
+      if((len > 0) && (i > 0) && (tmpBuf[i] == ' ')) {
 	res = &tmpBuf[i+1];
 	numResolvedWithDNSAddresses++;
       } else {
