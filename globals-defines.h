@@ -1298,7 +1298,7 @@
  * The (internal) name of the plugin function itself.
  * courtesy of Tanner Lovelace <lovelace@opennms.org>
  */
-#if defined(DARWIN) || defined(OPENBSD)
+#if (defined(DARWIN) && (!defined(TIGER))) || defined(OPENBSD)
 #define CONST_PLUGIN_ENTRY_FCTN_NAME        "_PluginEntryFctn"
 #else
 #define CONST_PLUGIN_ENTRY_FCTN_NAME        "PluginEntryFctn"
@@ -1306,7 +1306,7 @@
 
 /*
  * This is the 2MSL timeout as defined in the TCP standard (RFC 761).
- *  Used in sessions.c and pbuf.c
+ * Used in sessions.c and pbuf.c
  */
 #define CONST_TWO_MSL_TIMEOUT          120      /* 2 minutes */
 #define CONST_DOUBLE_TWO_MSL_TIMEOUT   (2*CONST_TWO_MSL_TIMEOUT)

@@ -547,7 +547,7 @@ static void handleFTPSession(const struct pcap_pkthdr *h,
 			     IPSession *theSession,
 			     int actualDeviceId)
 {
-  u_char *rcStr;
+  char *rcStr;
 
   if(sport == IP_TCP_PORT_FTP)
     FD_SET(FLAG_HOST_TYPE_SVC_FTP, &srcHost->flags);
@@ -596,7 +596,7 @@ static void handleSMTPSession (const struct pcap_pkthdr *h,
                                IPSession *theSession,
                                int actualDeviceId)
 {
-  u_char *rcStr;
+  char *rcStr;
 
   if(sport == IP_TCP_PORT_SMTP)
     FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &srcHost->flags);
@@ -663,7 +663,7 @@ static void handlePOPSession (const struct pcap_pkthdr *h,
                               u_char* packetData,
                               IPSession *theSession,
                               int actualDeviceId) {
-  u_char *rcStr;
+  char *rcStr;
 
   if((sport == IP_TCP_PORT_POP2) || (sport == IP_TCP_PORT_POP3))
     FD_SET(FLAG_HOST_TYPE_SVC_POP, &srcHost->flags);
@@ -711,7 +711,7 @@ static void handleIMAPSession (const struct pcap_pkthdr *h,
                                u_char* packetData,
                                IPSession *theSession,
                                int actualDeviceId) {
-  u_char *rcStr;
+  char *rcStr;
 
   if(sport == IP_TCP_PORT_IMAP)
     FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &srcHost->flags);
@@ -769,9 +769,10 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
                                   u_char* packetData,
                                   IPSession *theSession,
                                   int actualDeviceId) {
-  u_char *rcStr, *row;
+  u_char *rcStr;
+  char *row;
 
-  if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+  if ((rcStr = (u_char*)malloc(packetDataLength+1)) == NULL) {
     traceEvent (CONST_TRACE_WARNING, "handleMsnMsgrSession: Unable to "
 		"allocate memory, MsnMsgr Session handling incomplete\n");
     return;
@@ -779,7 +780,7 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
   memcpy(rcStr, packetData, packetDataLength);
   rcStr[packetDataLength] = '\0';
 
-  if((dport == IP_TCP_PORT_MSMSGR) && (strncmp(rcStr, "USR 6 TWN I ", 12) == 0)) {
+  if((dport == IP_TCP_PORT_MSMSGR) && (strncmp((char*)rcStr, "USR 6 TWN I ", 12) == 0)) {
     row = strtok(&rcStr[12], "\n\r");
     if(strstr(row, "@")) {
       /* traceEvent(CONST_TRACE_INFO, "User='%s'@[%s/%s]", row, srcHost->hostResolvedName, srcHost->hostNumIpAddress); */
@@ -937,7 +938,7 @@ static void handleKazaaSession(const struct pcap_pkthdr *h,
                                u_char* packetData,
                                IPSession *theSession,
                                int actualDeviceId) {
-  u_char *rcStr;
+  char *rcStr;
   char tmpStr[256];
 
   if(theSession->bytesProtoSent.value == 0) {
@@ -1051,7 +1052,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
                               u_char* packetData,
                               IPSession *theSession,
                               int actualDeviceId) {
-  u_char *rcStr, tmpStr[256];
+  char *rcStr, tmpStr[256];
   struct timeval tvstrct;
 
   if (sport == IP_TCP_PORT_HTTP) FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
@@ -1604,7 +1605,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   char addedNewEntry = 0;
   u_short check, found=0;
   HostTraffic *hostToUpdate = NULL;
-  u_char *rcStr, tmpStr[256];
+  char *rcStr, tmpStr[256];
   int len = 0;
 
 #ifdef CFG_MULTITHREADED

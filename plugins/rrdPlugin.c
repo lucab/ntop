@@ -1632,7 +1632,7 @@ static void arbitraryAction(char *rrdName,
 
       if(_val > 0) {
         countOK++;
-        strftime(rptTime, sizeof(rptTime), CONST_LOCALE_TIMESPEC, localtime_r(&ii, &workT));
+        strftime(rptTime, sizeof(rptTime), CONST_LOCALE_TIMESPEC, localtime_r((time_t *)&ii, &workT));
         if(_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) {
           safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                         "<tr><td>%s</td><td align=\"right\">%u</td><td align=\"right\">%.6g</td></tr>\n", 

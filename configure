@@ -7394,9 +7394,11 @@ _ACEOF
 
     *-*-darwin*:* )
 	VERIFIED1="2.2.98:2003-12-30:Luca Deri:MAC OS X 10.3 (Panther)"
+	VERIFIED2="3.1.1:2005-03-24:Luca Deri:MAC OS X 10.4 (Tiger)"
         NOTE1="'Darwin 5.5' is the kernel of the os known as MAC OS X 10.1"
         NOTE2="'Darwin 6.1' is the kernel of the os known as MAC OS X 10.2 (Jaguar)"
         NOTE3="'Darwin 7.2' is the kernel of the os known as MAC OS X 10.3 (Panther)"
+        NOTE3="'Darwin 8.0' is the kernel of the os known as MAC OS X 10.4 (Tiger)"
         UNVERIFIED1="3.0pre1:2004-02-24:Darwin 6.8"
         UNVERIFIED2="3.0pre1:2004-02-24:Darwin 7.2.0"
         DEFINEOS="DARWIN";    STATUS="SUPPORTED"
@@ -21958,9 +21960,6 @@ echo "${ECHO_T}no" >&6
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-
-
-
 
 if test ".${ac_disable_zlib}" != ".yes"; then
 

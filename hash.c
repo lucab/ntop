@@ -791,7 +791,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
   u_int run=0;
 #endif
   HostTraffic *el=NULL;
-  u_char buf[MAX_LEN_SYM_HOST_NAME_HTML];
+  char buf[MAX_LEN_SYM_HOST_NAME_HTML];
   short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
   u_char setSpoofingFlag = 0;
@@ -1306,7 +1306,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
       if(fcnsEntry->alias != NULL)
 	setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS);
       else
-	setResolvedName(el, fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
+	setResolvedName(el, (char*)fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
 
       memcpy (el->fcCounters->pWWN.str, fcnsEntry->pWWN.str, LEN_WWN_ADDRESS);
       memcpy (el->fcCounters->nWWN.str, fcnsEntry->nWWN.str, LEN_WWN_ADDRESS);

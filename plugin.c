@@ -168,7 +168,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 #ifdef AIX
   pluginEntryFctnPtr = pluginPtr;
 #else
-  pluginEntryFctnPtr = (void*)dlsym(pluginPtr, CONST_PLUGIN_ENTRY_FCTN_NAME);
+  pluginEntryFctnPtr = (void*)dlsym(pluginPtr, "PluginEntryFctn" /* CONST_PLUGIN_ENTRY_FCTN_NAME */);
 #endif /* AIX */
 #endif /* HPUX */
 

@@ -222,7 +222,7 @@ HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
   }
   else {
     /* MAC */
-    return(findHostByMAC(theSerial.value.ethSerial.ethAddress,
+    return(findHostByMAC((char*)theSerial.value.ethSerial.ethAddress,
 			 theSerial.value.ethSerial.vlanId,
 			 actualDeviceId));
   }
@@ -233,7 +233,7 @@ HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
 HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId) {
   HostTraffic *el;
   short dummyShort = 0;
-  u_int idx = hashHost(NULL, macAddr, &dummyShort, &el, actualDeviceId);
+  u_int idx = hashHost(NULL, (u_char*)macAddr, &dummyShort, &el, actualDeviceId);
 
   if(el != NULL)
     return(el); /* Found */
@@ -243,7 +243,7 @@ HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId) {
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-    if(!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)) {
+    if(!strncmp((char*)el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)) {
       if((vlanId > 0) && (el->vlanId != vlanId))
 	continue;
       else
@@ -6060,7 +6060,7 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
 
     if (updateType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
       safe_snprintf(__FILE__, __LINE__, el->hostResolvedName, sizeof(el->hostResolvedName),
-		    fcwwn_to_str (updateValue));
+		    fcwwn_to_str ((u_int8_t*)updateValue));
       el->hostResolvedName[LEN_WWN_ADDRESS_DISPLAY] = '\0';
     }
     else {

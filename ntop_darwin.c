@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2001-04  Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2001-05  Luca Deri <deri@ntop.org>
  *
  *  			   http://www.ntop.org/
  *
@@ -23,7 +23,7 @@
    ntop to run on Darwin/MacOS X
 */
 
-#ifdef DARWIN
+#if defined(DARWIN) && (!defined(TIGER))
 
 /* ***************************************************************** */
 

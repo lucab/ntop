@@ -125,7 +125,7 @@ void handleBootp(HostTraffic *srcHost,
 	      dstHost is a broadcast address
 	    */
 
-	    realDstHost = findHostByMAC(bootProto.bp_chaddr, dstHost->vlanId, actualDeviceId);
+	    realDstHost = findHostByMAC((char*)bootProto.bp_chaddr, dstHost->vlanId, actualDeviceId);
 	    if(realDstHost == NULL) {
 	      realDstHost = lookupHost(/* &bootProto.bp_yiaddr */ NULL, bootProto.bp_chaddr, 
 				       srcHost->vlanId, 0, 0, actualDeviceId);
@@ -248,7 +248,7 @@ void handleBootp(HostTraffic *srcHost,
 		    tmpHostName[i] = '\0';
 
 		    /* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */
-		    strncpy(tmpDomainName, &bootProto.bp_vend[idx], len);
+		    strncpy(tmpDomainName, (char*)&bootProto.bp_vend[idx], len);
 		    tmpDomainName[len] = '\0';
 
 		    if(strcmp(tmpHostName, tmpDomainName) != 0) {
@@ -469,7 +469,7 @@ void handleBootp(HostTraffic *srcHost,
 	      dstHost is a broadcast address
 	    */
 
-	    realClientHost = findHostByMAC(bootProto.bp_chaddr, srcHost->vlanId, actualDeviceId);
+	    realClientHost = findHostByMAC((char*)bootProto.bp_chaddr, srcHost->vlanId, actualDeviceId);
 	    if(realClientHost == NULL) {
 	      realClientHost = lookupHost(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr,
 					  srcHost->vlanId, 0, 0, actualDeviceId);
@@ -507,7 +507,7 @@ void handleBootp(HostTraffic *srcHost,
 		    len = MAX_LEN_SYM_HOST_NAME-1;
 		  }
 
-                  setResolvedName(realClientHost, &bootProto.bp_vend[idx], FLAG_HOST_SYM_ADDR_TYPE_NAME);
+                  setResolvedName(realClientHost, (char*)&bootProto.bp_vend[idx], FLAG_HOST_SYM_ADDR_TYPE_NAME);
 		  realClientHost->hostResolvedName[len] = '\0';
 		  bootProto.bp_vend[idx+len] = savechar;
 		  idx += len;
@@ -670,10 +670,10 @@ void handleNetbios(HostTraffic *srcHost,
 		   const u_char* packetData,
 		   u_int length,
 		   u_int hlen) {
-  u_char *name, nbName[64], domain[64], *data;
+  u_char *data, *name, *p;
   int nodeType, i, udpDataLen;
   char *tmpdata = (char*)packetData + (hlen + sizeof(struct udphdr));
-  u_char *p;
+  char nbName[64], domain[64];
   int offset=0, displ, notEnoughData = 0;
 
   if((!myGlobals.runningPref.enablePacketDecoding) ||
@@ -690,11 +690,11 @@ void handleNetbios(HostTraffic *srcHost,
 
       opcode = (tmpdata[2] >> 3) & 0x0F;
 
-      data = (char*)malloc(udpDataLen);
+      data = (u_char*)malloc(udpDataLen);
       memcpy(data, tmpdata, udpDataLen);
 
       name = data + 12;
-      p = (u_char*)name;
+      p = name;
       if ((*p & 0xC0) == 0xC0) {
 	displ = p[1] + 255 * (p[0] & ~0xC0);
 	if((displ + 14) >= udpDataLen)
@@ -720,7 +720,7 @@ void handleNetbios(HostTraffic *srcHost,
 
       if(!notEnoughData) {      
 	u_int8_t doDecode = 0;
-	nodeType = name_interpret(name, nbName, udpDataLen-displ);
+	nodeType = name_interpret((char*)name, nbName, udpDataLen-displ);
 
 	switch(opcode) {
 	case 0: /* Query */
@@ -752,11 +752,11 @@ void handleNetbios(HostTraffic *srcHost,
   } else if(dport == 138 /*  NetBIOS */) {
     if(udpDataLen > 32) {
       /* 32 bytes or less is not enough */
-      data = (char*)malloc(udpDataLen);
+      data = (u_char*)malloc(udpDataLen);
       memcpy(data, tmpdata, udpDataLen);
 
       name = data + 14;
-      p = (u_char*)name;
+      p = name;
       if ((*p & 0xC0) == 0xC0) {
 	displ = p[1] + 255 * (p[0] & ~0xC0);
 	if((displ + 14) >= udpDataLen)
@@ -781,7 +781,7 @@ void handleNetbios(HostTraffic *srcHost,
       }
 
       if(!notEnoughData) {
-	nodeType = name_interpret(name, nbName, udpDataLen-displ);
+	nodeType = name_interpret((char*)name, nbName, udpDataLen-displ);
 
 	if(nodeType != -1) {
 	  setNBnodeNameType(srcHost, (char)nodeType, 0, nbName);
@@ -790,18 +790,18 @@ void handleNetbios(HostTraffic *srcHost,
 
 	  if(displ < udpDataLen) {
 	    name = data + offset; /* ** */
-	    p = (u_char*)name;
+	    p = name;
 	    if ((*p & 0xC0) == 0xC0) {
 	      displ = hlen + 8 + (p[1] + 255 * (p[0] & ~0xC0));
 
 	      if(displ < length)
-		name = ((char*)packetData+displ);
+		name = (u_char*)((char*)packetData+displ);
 	      else
 		notEnoughData = 1;
 	    }
 
 	    if(!notEnoughData) {
-	      nodeType = name_interpret(name, domain, length-displ);
+	      nodeType = name_interpret((char*)name, domain, length-displ);
 
 	      if(nodeType != -1) {
 		for(i=0; domain[i] != '\0'; i++)
@@ -810,7 +810,7 @@ void handleNetbios(HostTraffic *srcHost,
 		setNBnodeNameType(dstHost, (char)nodeType, 0, domain);
 
 		if(udpDataLen > 200) {
-		  char *tmpBuffer = &data[151];
+		  char *tmpBuffer = (char*)&data[151];
 
 		  /*
 		    We'll check if this this is
@@ -850,7 +850,7 @@ void handleNetbios(HostTraffic *srcHost,
 
     if(udpDataLen > 32) {
       /* 32 bytes or less is not enough */
-      data = (char*)malloc(udpDataLen);
+      data = (u_char*)malloc(udpDataLen);
       memcpy(data, tmpdata, udpDataLen);
 
       if(data[0] == 0x81) /* Session request */ {
@@ -858,7 +858,7 @@ void handleNetbios(HostTraffic *srcHost,
 	int pos;
 
 	pos = 5;
-	decodeNBstring(&data[5], decodedStr);
+	decodeNBstring((char*)&data[5], decodedStr);
 
 	if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
@@ -867,7 +867,7 @@ void handleNetbios(HostTraffic *srcHost,
 	  dstHost->nonIPTraffic->nbHostName = strdup(decodedStr); /* dst before src */
 
 	pos = 5+(2*strlen(decodedStr))+2;
-	decodeNBstring(&data[pos], decodedStr);
+	decodeNBstring((char*)&data[pos], decodedStr);
 
 	if((decodedStr[0] != '\0') && (srcHost->nonIPTraffic->nbHostName == NULL))
 	  srcHost->nonIPTraffic->nbHostName = strdup(decodedStr);
@@ -901,7 +901,7 @@ void handleNetbios(HostTraffic *srcHost,
 	  i = 65+len;
 
 	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	  if(srcHost->nonIPTraffic->nbAccountName == NULL) srcHost->nonIPTraffic->nbAccountName = strdup(&data[i]);
+	  if(srcHost->nonIPTraffic->nbAccountName == NULL) srcHost->nonIPTraffic->nbAccountName = strdup((char*)&data[i]);
 #ifdef DEBUG
 	  printf("Account Name: %s\n", &data[i]);
 #endif
@@ -910,7 +910,7 @@ void handleNetbios(HostTraffic *srcHost,
 #ifdef DEBUG
 	  printf("Domain: %s\n", &data[i]);
 #endif
-	  if(srcHost->nonIPTraffic->nbDomainName == NULL) srcHost->nonIPTraffic->nbDomainName = strdup(&data[i]);
+	  if(srcHost->nonIPTraffic->nbDomainName == NULL) srcHost->nonIPTraffic->nbDomainName = strdup((char*)&data[i]);
 	  while((data[i] != 0) && (i < sizeof(data))) i++;
 	  i++;
 #ifdef DEBUG

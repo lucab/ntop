@@ -32,7 +32,7 @@ void welcome (FILE * fp) {
   fprintf (fp, "Welcome to %s v.%s %s\n[Configured on %s, built on %s]\n",
 	   myGlobals.program_name, version, THREAD_MODE, configureDate, buildDate);
   
-  fprintf (fp, "Copyright 1998-2004 by %s.\n", author);
+  fprintf (fp, "Copyright 1998-2005 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
 }
 
@@ -451,7 +451,7 @@ int main(int argc, char *argv[]) {
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s", version, THREAD_MODE);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2004 by %s", author);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2005 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
  
 #ifndef WIN32

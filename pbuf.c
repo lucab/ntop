@@ -3051,7 +3051,7 @@ void processPacket(u_char *_deviceId,
 		  case 0x0001: /* Device Id */
 		    if((srcHost->hostResolvedName[0] == '\0') || (strcmp(srcHost->hostResolvedName, srcHost->hostNumIpAddress))) {
 		      u_short tmpStrLen = min(ntohs(element->cdp_len)-4, MAX_LEN_SYM_HOST_NAME-1);
-		      strncpy(srcHost->hostResolvedName, element->cdp_content, tmpStrLen);
+		      strncpy(srcHost->hostResolvedName, (char*)element->cdp_content, tmpStrLen);
 		      srcHost->hostResolvedName[tmpStrLen] = '\0';
 		    }
 		    break;
@@ -3889,7 +3889,7 @@ static void processFcPkt(const u_char *bp,
              */
             switch(nsOpcode) {
             case FCDNS_RNN_ID:
-	      strncpy (srcHost->fcCounters->nWWN.str, &bp[offset+24+16+4], LEN_WWN_ADDRESS);
+	      strncpy ((char*)srcHost->fcCounters->nWWN.str, (char*)&bp[offset+24+16+4], LEN_WWN_ADDRESS);
 	      break;
             }
 
