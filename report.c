@@ -4517,73 +4517,19 @@ void printHostHourlyTraffic(HostTraffic *el) {
     tcRcvd += el->trafficDistribution->last24HoursBytesRcvd[i].value;
   }
 
-#if 0  
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>12 PM - 1 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 0, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>1 - 2 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 1, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>2 - 3 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 2, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>3 - 4 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 3, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>4 - 5 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 4, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>5 - 6 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 5, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>6 - 7 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 6, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>7 - 8 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 7, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>8 - 9 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 8, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>9 - 10 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 9, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>10 - 11 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 10, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>11 - 12 AM</TH>\n");
-  printHostHourlyTrafficEntry(el, 11, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>12 AM - 1 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 12, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>1 - 2 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 13, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>2 - 3 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 14, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>3 - 4 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 15, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>4 - 5 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 16, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>5 - 6 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 17, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>6 - 7 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 18, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>7 - 8 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 19, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>8 - 9 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 20, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>9 - 10 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 21, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>10 - 11 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 22, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>11 - 12 PM</TH>\n");
-  printHostHourlyTrafficEntry(el, 23, tcSent, tcRcvd);
-#else
   for (i = 0, j = hourId; i < 24; i++) {
-      j = j%24;
-      if (snprintf (buf, sizeof (buf), "<TR><TH "TH_BG" ALIGN=RIGHT>%s</TH>\n",
-                    hours[j]) < 0)
-          BufferTooShort();
-      sendString(buf);
-      printHostHourlyTrafficEntry(el, j, tcSent, tcRcvd);
-      if (!j) {
-          j = 23;
-      }
-      else {
-          j--;
-      }
+    j = j%24;
+    if (snprintf (buf, sizeof (buf), "<TR><TH "TH_BG" ALIGN=RIGHT "DARK_BG">%s</TH>\n", hours[j]) < 0)
+      BufferTooShort();
+    sendString(buf);
+    printHostHourlyTrafficEntry(el, j, tcSent, tcRcvd);
+    if(!j)
+      j = 23;
+    else
+      j--;
   }
-#endif  
-
-  sendString("<TR><TH "TH_BG">Total</TH>\n");
+  
+  sendString("<TR><TH "TH_BG" "DARK_BG">Total</TH>\n");
 
   if (isFcHost (el)) {
       targetStr = el->hostNumFcAddress;
@@ -4836,7 +4782,7 @@ void showPortTraffic(u_short portNr) {
   recentlyUsedPortRcvd:
     if(recentlyUsedPort(el, portNr, 1)) {
       if(numRecords == 0) {
-	sendString("<TABLE BORDER>\n<TR><TH "DARK_BG">Client</TH><TH>Server</TH></TR>\n");
+	sendString("<TABLE BORDER>\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
 	sendString("<TR>\n<TD>\n");
 	sendString("\n&nbsp;\n</TD><TD>\n");
       }

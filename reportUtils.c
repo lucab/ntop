@@ -141,21 +141,21 @@ void printTableDoubleEntry(char *buf, int bufLen,
 
   switch(int_perc) {
   case 0:
-    if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
+    if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
            "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
            "<TD WIDTH=100 "TD_BG">&nbsp;</TD>\n",
            getRowColor(), label, formatKBytes(totalS, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     break;
   case 100:
-    if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
+    if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		"<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100><IMG ALT=\"100%%\"ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=100 HEIGHT=12></TD>\n",
 		getRowColor(), label, formatKBytes(totalS, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     break;
   default:
-    if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
+    if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		"<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
 		"<TR "TR_ON"><TD><IMG  ALT=\"%d%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12></TD>"
@@ -1850,28 +1850,28 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		 "<TH "TH_BG" COLSPAN=2>Rcvd From</TH></TR>\n");
 
       if((el->secHostPkts->synPktsSent.value.value+el->secHostPkts->synPktsRcvd.value.value) > 0) {
-	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Attempted</TH>");
+	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Attempted</TH>");
 	formatUsageCounter(el->secHostPkts->synPktsSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->synPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
       if((el->secHostPkts->establishedTCPConnSent.value.value+el->secHostPkts->establishedTCPConnRcvd.value.value) > 0) {
-	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Established</TH>");
+	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Established</TH>");
 	formatUsageCounter(el->secHostPkts->establishedTCPConnSent, el->secHostPkts->synPktsSent.value.value, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->establishedTCPConnRcvd, el->secHostPkts->synPktsRcvd.value.value, actualDeviceId);
 	sendString("</TR>\n");
       }
 
       if((el->secHostPkts->terminatedTCPConnServer.value.value + el->secHostPkts->terminatedTCPConnClient.value.value) > 0) {
-	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Terminated</TH>");
+	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Terminated</TH>");
 	formatUsageCounter(el->secHostPkts->terminatedTCPConnServer, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->terminatedTCPConnClient, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
       if((el->secHostPkts->rejectedTCPConnSent.value.value+el->secHostPkts->rejectedTCPConnRcvd.value.value) > 0) {
-	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Rejected</TH>");
+	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Rejected</TH>");
 	formatUsageCounter(el->secHostPkts->rejectedTCPConnSent, el->secHostPkts->synPktsSent.value.value, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->rejectedTCPConnRcvd, el->secHostPkts->synPktsRcvd.value.value, actualDeviceId);
 	sendString("</TR>\n");
@@ -1898,7 +1898,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd</TH></TR>\n");
 
       if((el->secHostPkts->synPktsSent.value.value+el->secHostPkts->synPktsRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>SYN</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">SYN</TH>",
 		    getRowColor()) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1908,7 +1908,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if((el->secHostPkts->rstAckPktsSent.value.value+el->secHostPkts->rstAckPktsRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>RST|ACK</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">RST|ACK</TH>",
 		    getRowColor()) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1918,7 +1918,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if((el->secHostPkts->rstPktsSent.value.value+el->secHostPkts->rstPktsRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>RST</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">RST</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->rstPktsSent, 0, actualDeviceId);
@@ -1927,7 +1927,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if((el->secHostPkts->synFinPktsSent.value.value+el->secHostPkts->synFinPktsRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>SYN|FIN</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">SYN|FIN</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->synFinPktsSent, 0, actualDeviceId);
@@ -1936,7 +1936,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if((el->secHostPkts->finPushUrgPktsSent.value.value+el->secHostPkts->finPushUrgPktsRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>FIN|PUSH|URG</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">FIN|PUSH|URG</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->finPushUrgPktsSent, 0, actualDeviceId);
@@ -1945,7 +1945,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if((el->secHostPkts->nullPktsSent.value.value+el->secHostPkts->nullPktsRcvd.value.value) > 0) {
-	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>NULL</TH>");
+	sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">NULL</TH>");
 	formatUsageCounter(el->secHostPkts->nullPktsSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->nullPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
@@ -1993,7 +1993,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		 "</TR>\n");
 
       if((el->secHostPkts->ackXmasFinSynNullScanSent.value.value+el->secHostPkts->ackXmasFinSynNullScanRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ACK/XMAS/SYN/FIN/NULL Scan</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ACK/XMAS/SYN/FIN/NULL Scan</TH>",
 		    getRowColor()) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -2004,7 +2004,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->udpToClosedPortSent.value.value+
 	  el->secHostPkts->udpToClosedPortRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>UDP Pkt to Closed Port</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">UDP Pkt to Closed Port</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->udpToClosedPortSent, 0, actualDeviceId);
@@ -2014,7 +2014,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->udpToDiagnosticPortSent.value.value+
 	  el->secHostPkts->udpToDiagnosticPortRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>UDP Pkt Disgnostic Port</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">UDP Pkt Disgnostic Port</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->udpToDiagnosticPortSent, 0, actualDeviceId);
@@ -2024,7 +2024,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->tcpToDiagnosticPortSent.value.value+
 	  el->secHostPkts->tcpToDiagnosticPortRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>TCP Pkt Disgnostic Port</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">TCP Pkt Disgnostic Port</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->tcpToDiagnosticPortSent, 0, actualDeviceId);
@@ -2034,7 +2034,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->tinyFragmentSent.value.value+
 	  el->secHostPkts->tinyFragmentRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Tiny Fragments</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Tiny Fragments</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->tinyFragmentSent, 0, actualDeviceId);
@@ -2044,7 +2044,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpFragmentSent.value.value+
 	  el->secHostPkts->icmpFragmentRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ICMP Fragments</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Fragments</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpFragmentSent, 0, actualDeviceId);
@@ -2054,7 +2054,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->overlappingFragmentSent.value.value+
 	  el->secHostPkts->overlappingFragmentRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Overlapping Fragments</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Overlapping Fragments</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->overlappingFragmentSent, 0, actualDeviceId);
@@ -2064,7 +2064,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->closedEmptyTCPConnSent.value.value+
 	  el->secHostPkts->closedEmptyTCPConnRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Closed Empty TCP Conn.</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Closed Empty TCP Conn.</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->closedEmptyTCPConnSent, 0, actualDeviceId);
@@ -2075,7 +2075,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpPortUnreachSent.value.value+
 	  el->secHostPkts->icmpPortUnreachRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ICMP Port Unreachable</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Port Unreachable</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpPortUnreachSent, 0, actualDeviceId);
@@ -2085,7 +2085,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpHostNetUnreachSent.value.value+
 	  el->secHostPkts->icmpHostNetUnreachRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ICMP Net Unreachable</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Net Unreachable</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpHostNetUnreachSent, 0, actualDeviceId);
@@ -2095,7 +2095,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpProtocolUnreachSent.value.value+
 	  el->secHostPkts->icmpProtocolUnreachRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ICMP Protocol Unreachable</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Protocol Unreachable</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpProtocolUnreachSent, 0, actualDeviceId);
@@ -2105,7 +2105,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpAdminProhibitedSent.value.value+
 	  el->secHostPkts->icmpAdminProhibitedRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ICMP Administratively Prohibited</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Administratively Prohibited</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpAdminProhibitedSent, 0, actualDeviceId);
@@ -2113,14 +2113,9 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	sendString("</TR>\n");
       }
 
-
-
-
-
-
       if((el->secHostPkts->malformedPktsSent.value.value+
 	  el->secHostPkts->malformedPktsRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Malformed Pkts</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Malformed Pkts</TH>",
 		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->malformedPktsSent, 0, actualDeviceId);
@@ -2513,7 +2508,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     }
 
     if((totalSent > 0) || (totalRcvd > 0)) {
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Protocol Distribution</TH>",
 		  getRowColor()) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -2557,7 +2552,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value
 	  +el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+el->udpRcvdLoc.value+el->udpRcvdFromRem.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">IP Distribution</TH>",
 		    getRowColor()) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -3031,7 +3026,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 				 "<TH "TH_BG">IP Address</TH></TR>\n");
 		  }
 
-		  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 			      "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
 			      getRowColor(), makeHostLink(el2, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			      el2->hostNumIpAddress) < 0)
@@ -3043,8 +3038,8 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	  }
 
       if(numEntries > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Contacts</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%lu</TD></TR>\n",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Total Contacts</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT "DARK_BG">%lu</TD></TR>\n",
 		    getRowColor(), (unsigned long)el->totContactedSentPeers) < 0)
 	  BufferTooShort();
        sendString(buf);
@@ -3069,7 +3064,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	      }
 
 	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
+			  "<TD "TD_BG" ALIGN=RIGHT "DARK_BG">%s&nbsp;</TD></TR>\n",
 			  getRowColor(), makeHostLink(el2, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			  el2->hostNumIpAddress) < 0)
 		BufferTooShort();
@@ -3081,8 +3076,8 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
 
       if(numEntries > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Contacts</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%lu</TD></TR>\n",
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Total Contacts</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT "DARK_BG">%lu</TD></TR>\n",
 		    getRowColor(), (unsigned long)el->totContactedRcvdPeers) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -3249,12 +3244,12 @@ static void checkHostHealthness(HostTraffic *el) {
 	   || (el->secHostPkts->malformedPktsRcvd.value.value > 0))) {
       sendString("<LI>" CONST_IMG_MEDIUM_RISK "<A HREF=/" CONST_NTOP_HELP_HTML "#5>"
 		 "Unexpected packets (e.g. traffic to closed port or connection reset)</A>:<br>\n");
-      if(el->secHostPkts->synFinPktsSent.value.value > 0) sendString("(Sent:syn-fin)&nbsp;");
-      if(el->secHostPkts->ackXmasFinSynNullScanSent.value.value > 0) sendString("(Sent:xmas)&nbsp;");
-      if(el->secHostPkts->tinyFragmentSent.value.value > 0) sendString("(Sent:Tiny frag)&nbsp;");
-      if(el->secHostPkts->icmpFragmentSent.value.value > 0) sendString("(Sent:icmp frag)&nbsp;");
-      if(el->secHostPkts->overlappingFragmentSent.value.value > 0) sendString("(Sent: overlapfrag)&nbsp;");
-      if(el->secHostPkts->malformedPktsRcvd.value.value > 0) sendString("(Rcvd:malformed)&nbsp;");
+      if(el->secHostPkts->synFinPktsSent.value.value > 0) sendString("[Sent: syn-fin]&nbsp;");
+      if(el->secHostPkts->ackXmasFinSynNullScanSent.value.value > 0) sendString("[Sent: xmas]&nbsp;");
+      if(el->secHostPkts->tinyFragmentSent.value.value > 0) sendString("[Sent: Tiny frag]&nbsp;");
+      if(el->secHostPkts->icmpFragmentSent.value.value > 0) sendString("[Sent: icmp frag]&nbsp;");
+      if(el->secHostPkts->overlappingFragmentSent.value.value > 0) sendString("[Sent: overlapfrag]&nbsp;");
+      if(el->secHostPkts->malformedPktsRcvd.value.value > 0) sendString("[Rcvd: malformed]&nbsp;");
     }
 
     if((el->secHostPkts != NULL)
@@ -3269,15 +3264,15 @@ static void checkHostHealthness(HostTraffic *el) {
 	   || (el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0))) {
       sendString("<LI>" CONST_IMG_LOW_RISK "<A HREF=/" CONST_NTOP_HELP_HTML "#6>"
 		 "Unexpected packets (e.g. traffic to closed port or connection reset)</A>:<br>\n");
-      if(el->secHostPkts->rejectedTCPConnRcvd.value.value > 0) sendString("(Rcvd:rejected)&nbsp;");
-      if(el->secHostPkts->udpToClosedPortRcvd.value.value > 0) sendString("(Sent:udp to closed)&nbsp;");
-      if(el->secHostPkts->udpToDiagnosticPortSent.value.value > 0) sendString("(Sent:udp to diag)&nbsp;");
-      if(el->secHostPkts->rstPktsRcvd.value.value > 0) sendString("(Rcvd:rst)&nbsp;");
-      if(el->secHostPkts->closedEmptyTCPConnSent.value.value > 0) sendString("(Sent:closed-empty)&nbsp;");
-      if(el->secHostPkts->icmpPortUnreachRcvd.value.value > 0) sendString("(Rcvd:port unreac)&nbsp;");
-      if(el->secHostPkts->icmpHostNetUnreachRcvd.value.value > 0) sendString("(Rcvd:hostnet unreac)&nbsp;");
-      if(el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0) sendString("(Rcvd:proto unreac)&nbsp;");
-      if(el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0) sendString("(Rcvd:admin prohib)&nbsp;");
+      if(el->secHostPkts->rejectedTCPConnRcvd.value.value > 0) sendString("[Rcvd: rejected]&nbsp;");
+      if(el->secHostPkts->udpToClosedPortRcvd.value.value > 0) sendString("[Sent: udp to closed]&nbsp;");
+      if(el->secHostPkts->udpToDiagnosticPortSent.value.value > 0) sendString("[Sent: udp to diag]&nbsp;");
+      if(el->secHostPkts->rstPktsRcvd.value.value > 0) sendString("[Rcvd: rst]&nbsp;");
+      if(el->secHostPkts->closedEmptyTCPConnSent.value.value > 0) sendString("[Sent: closed-empty]&nbsp;");
+      if(el->secHostPkts->icmpPortUnreachRcvd.value.value > 0) sendString("[Rcvd: port unreac]&nbsp;");
+      if(el->secHostPkts->icmpHostNetUnreachRcvd.value.value > 0) sendString("[Rcvd: hostnet unreac]&nbsp;");
+      if(el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0) sendString("[Rcvd: proto unreac]&nbsp;");
+      if(el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0) sendString("[Rcvd: admin prohib]&nbsp;");
     }
 
     sendString("</OL></TD></TR>\n");
@@ -4092,7 +4087,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
       }
 
       if((tot > 0) || (tot1 > 0)) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG">%s</TH>"
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG">%s</TH>"
 		    "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
 		    "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
 		    "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
