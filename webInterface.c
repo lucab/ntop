@@ -25,6 +25,13 @@
 #include <pwd.h>
 #endif
 
+#if defined(HAVE_MALLOC_H) && defined(__GNUC__)
+ #include <malloc.h>
+ #ifdef HAVE_SYS_RESOURCE_H
+  #include <sys/resource.h>
+ #endif
+#endif
+
 #ifdef MAKE_WITH_SSLWATCHDOG
 /* Stuff for the watchdog */
 #include <setjmp.h>
@@ -2438,6 +2445,56 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Devices (Network Interfaces)", buf);
 
   printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
+
+#if defined(HAVE_MALLOC_H) && defined(__GNUC__)
+  {
+    struct mallinfo memStats;
+ #ifdef HAVE_SYS_RESOURCE_H
+    struct rlimit rlim;
+ #endif
+
+    memStats = mallinfo();
+
+    sendString(texthtml("\n\nMemory allocation - data segment\n\n", "<tr><th colspan=\"2\">Memory allocation - data segment</th></tr>\n"));
+
+ #ifdef HAVE_SYS_RESOURCE_H
+    getrlimit(RLIMIT_DATA, &rlim);
+    if(snprintf(buf, sizeof(buf), "%d", rlim.rlim_cur) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "arena limit, getrlimit(RLIMIT_DATA, ...)", buf);
+ #endif
+
+    if(snprintf(buf, sizeof(buf), "%d", memStats.ordblks) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Allocated blocks (ordblks)", buf);
+
+    if(snprintf(buf, sizeof(buf), "%d", memStats.arena) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Allocated (arena)", buf);
+
+    if(snprintf(buf, sizeof(buf), "%d", memStats.uordblks) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Used (uordblks)", buf);
+
+    if(snprintf(buf, sizeof(buf), "%d", memStats.fordblks) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Free (fordblks)", buf);
+
+    if (memStats.uordblks + memStats.fordblks != memStats.arena)
+      printFeatureConfigInfo(textPrintFlag, "WARNING:", "Used+Free != Allocated");
+
+    sendString(texthtml("\n\nMemory allocation - mmapped\n\n", "<tr><th colspan=\"2\">Memory allocation - mmapped</th></tr>\n"));
+
+    if(snprintf(buf, sizeof(buf), "%d", memStats.hblks) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Allocated blocks (hblks)", buf);
+
+    if(snprintf(buf, sizeof(buf), "%d", memStats.hblkhd) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Allocated bytes (hblkhd)", buf);
+
+  }
+#endif
 
   sendString(texthtml("\n\nHost Memory Cache\n\n", "<tr><th colspan=\"2\">Host Memory Cache</th></tr>\n"));
 

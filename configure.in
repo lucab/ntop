@@ -1109,6 +1109,9 @@ AC_CHECK_HEADERS([sys/un.h])
 AC_CHECK_HEADERS([sys/wait.h])
 AC_CHECK_HEADERS([zlib.h])
 
+AC_CHECK_HEADERS([malloc.h])
+AC_CHECK_HEADERS([sys/resource.h])
+
 dnl> syslog
 AC_CHECK_HEADERS([sys/syslog.h syslog.h])
 
