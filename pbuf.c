@@ -2065,6 +2065,7 @@ void processPacket(u_char *_deviceId,
 	traceEvent(CONST_TRACE_INFO, "VLAN Id: %d", vlanId);
 #endif
 	eth_type = ntohs(qType.protoType);
+	hlen += 4; /* Skip the 802.1q header */
       }
     } /* switch(myGlobals.device[deviceId].datalink) */
 

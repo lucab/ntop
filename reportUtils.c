@@ -3784,30 +3784,30 @@ static char* formatElementData(ElementHash *hash, u_char dataSent, char *buf, in
 
 /* ******************************** */
 
-void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraffic) {
+void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraffic, u_char vlanHash) {
   u_char entries[MAX_HASHDUMP_ENTRY];
   ElementHash *hashList[MAX_HASHDUMP_ENTRY];
   char buf[LEN_GENERAL_WORK_BUFFER], buf1[96];
   ElementHash *hash, hashListEntry;
-  int i, j;
+  int i, j, vlanId;
 
   if(theHash == NULL) return;
 
   /* *********** */
 
 #ifdef DEBUG
-    for(i=0; i<MAX_ELEMENT_HASH; i++)
-      if(theHash[i] != NULL) {
-	printf("[%d] ", theHash[i]->id);
-	hash = theHash[i]->next;
+  for(i=0; i<MAX_ELEMENT_HASH; i++)
+    if(theHash[i] != NULL) {
+      printf("[%d] ", theHash[i]->id);
+      hash = theHash[i]->next;
 
-	while(hash != NULL) {
-	  printf("%d ", hash->id);
-	  hash = hash->next;
-	}
-
-	printf("\n");
+      while(hash != NULL) {
+	printf("%d ", hash->id);
+	hash = hash->next;
       }
+
+      printf("\n");
+    }
 #endif
 
   /* *********** */
@@ -3832,7 +3832,11 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
   sendString("<CENTER><TABLE BORDER>\n<TR><TH>");
   sendString(label);
 
-  sendString("</TH><TH>Data Sent</TH><TH>Data Rcvd</TH><TH>Peers</TH></TR>\n");
+  sendString("</TH><TH>Data Sent</TH><TH>Data Rcvd</TH><TH>");
+  sendString(label);
+  sendString(" Peers</TH>");
+  if(vlanHash) sendString("<TH>Hosts</TH>");
+  sendString("</TR>\n");
 
   /* ****************** */
 
@@ -3906,14 +3910,29 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 	}
       }
 
-      sendString("&nbsp;</TR>\n");
+      sendString("&nbsp;");
+
+      if(vlanHash) {
+	HostTraffic *el;
+	int idx;
+
+	sendString("<TD>\n");
+	
+	for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++) {
+	  if(((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+	     && (el->vlanId == i)) {
+	   sendString("<li>"); sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)); sendString("<br>\n");
+	  }
+	}
+	sendString("</TD>\n");
+      }
+
+      sendString("</TR>\n");
     }
   }
 
   sendString("</TR>\n</TABLE>\n</CENTER>\n");
 }
-
-/* ************************************************ */
 
 /* ************************************ */
 

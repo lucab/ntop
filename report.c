@@ -131,7 +131,8 @@ void printTrafficStatistics() {
 	     "<TD "TD_BG" ALIGN=RIGHT>");
 
   sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR "TR_ON"><TH "TH_BG">Name</TH>"
-	     "<TH "TH_BG">Device</TH><TH "TH_BG">Type</TH><TH "TH_BG">Speed</TH><TH "TH_BG">MTU</TH><TH "TH_BG">Header</TH><TH "TH_BG">Address</TH></TR>\n");
+	     "<TH "TH_BG">Device</TH><TH "TH_BG">Type</TH><TH "TH_BG">Speed</TH><TH "TH_BG">MTU</TH>"
+	     "<TH "TH_BG">Header</TH><TH "TH_BG">Address</TH></TR>\n");
 
   if(myGlobals.rFileName == NULL) {
     for(i=0; i<myGlobals.numDevices; i++) {
@@ -154,10 +155,10 @@ void printTrafficStatistics() {
 
 	sendString("<TD "TD_BG" ALIGN=RIGHT nowrap>&nbsp;");
 	if(myGlobals.device[i].deviceSpeed > 0) {
-		/* The speed is known */
-		sendString(formatAdapterSpeed(myGlobals.device[i].deviceSpeed));
+	  /* The speed is known */
+	  sendString(formatAdapterSpeed(myGlobals.device[i].deviceSpeed));
 	} else
-		sendString("&nbsp;");
+	  sendString("&nbsp;");
 	sendString("</TD>");
 
 	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.mtuSize[myGlobals.device[i].datalink]) < 0)
@@ -176,17 +177,18 @@ void printTrafficStatistics() {
       }
     }
   } else {
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG">&nbsp;</TD>", CONST_PCAP_NW_INTERFACE_FILE) < 0)
-	BufferTooShort();
-      sendString(buf);
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG">&nbsp;</TD>", CONST_PCAP_NW_INTERFACE_FILE) < 0)
+      BufferTooShort();
+    sendString(buf);
 
-      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", myGlobals.rFileName) < 0)
-	BufferTooShort();
-      sendString(buf);
+    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", myGlobals.rFileName) < 0)
+      BufferTooShort();
+    sendString(buf);
 
-      sendString("<TD "TD_BG">&nbsp;</TD>");
-      sendString("<TD "TD_BG">&nbsp;</TD>");
-      sendString("<TD "TD_BG">&nbsp;</TD></TR>\n");
+    sendString("<TD "TD_BG">&nbsp;</TD>");
+    sendString("<TD "TD_BG">&nbsp;</TD>");
+    sendString("<TD "TD_BG">&nbsp;</TD>");
+    sendString("<TD "TD_BG">&nbsp;</TD></TR>\n");
   }
 
   sendString("</TABLE>"TABLE_OFF);
@@ -4359,7 +4361,7 @@ void printASList(unsigned int deviceId) {
     return;
   }
 
-  dumpElementHash(myGlobals.device[deviceId].asHash, "AS", 1);
+  dumpElementHash(myGlobals.device[deviceId].asHash, "AS", 1, 0);
 }
 
 /* ******************************* */
@@ -4375,7 +4377,7 @@ void printVLANList(unsigned int deviceId) {
     return;
   }
 
-  dumpElementHash(myGlobals.device[deviceId].vlanHash, "VLAN", 0);
+  dumpElementHash(myGlobals.device[deviceId].vlanHash, "VLAN", 0, 1);
 }
 
 /* ******************************************* */

@@ -216,7 +216,7 @@ static void initIPCountryTable(void) {
   int idx, rc;
   u_char compressedFormat;
   struct stat statBuf;
-  
+
   traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <-> Country code mapping file");
 
   myGlobals.ipCountryCount = 0;
@@ -229,7 +229,7 @@ static void initIPCountryTable(void) {
   strcpy(myGlobals.countryFlagHead->cc, "***");
 
   myGlobals.countryFlagHead->b[0]=NULL;
-  myGlobals.countryFlagHead->b[1]=NULL;  
+  myGlobals.countryFlagHead->b[1]=NULL;
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     char tmpStr[256];
@@ -269,11 +269,11 @@ static void initIPCountryTable(void) {
 	    continue;
 
 	  strtolower(cc);
-        
+
 	  addNodeInternal(xaton(ip), atoi(prefix), cc);
 	  recordsRead++;
 	}
-	
+
 	myGlobals.ipCountryCount += recordsRead;
 
 	if(!(compressedFormat ? gzeof(fd) : feof(fd))) {
@@ -289,17 +289,17 @@ static void initIPCountryTable(void) {
 	else
 	  fclose(fd);
 	traceEvent(CONST_TRACE_NOISY, "IP2CC: ......%d records read", recordsRead);
-      } else 
+      } else
 	traceEvent(CONST_TRACE_WARNING, "IP2CC: unable to open file at %s", tmpStr);
-    } else 
+    } else
       traceEvent(CONST_TRACE_NOISY, "IP2CC: ...does not exist");
   }
   if(myGlobals.ipCountryCount == 0) {
-    traceEvent(CONST_TRACE_WARNING, 
+    traceEvent(CONST_TRACE_WARNING,
 	       "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data).\n");
-    traceEvent(CONST_TRACE_INFO, 
+    traceEvent(CONST_TRACE_INFO,
 	       "IP2CC: ntop will perform correctly but without this minor feature.\n");
-  } else 
+  } else
     traceEvent(CONST_TRACE_INFO, "IP2CC: %d records read", myGlobals.ipCountryCount);
 }
 
@@ -369,22 +369,22 @@ void resetDevice(int devIdx) {
   memset(&myGlobals.device[devIdx].rcvdPktStats, 0, sizeof(PacketStats));
   memset(&myGlobals.device[devIdx].rcvdPktTTLStats, 0, sizeof(TTLstats));
   myGlobals.device[devIdx].peakThroughput = 0;
-  myGlobals.device[devIdx].actualThpt = 0; 
-  myGlobals.device[devIdx].lastMinThpt = 0; 
+  myGlobals.device[devIdx].actualThpt = 0;
+  myGlobals.device[devIdx].lastMinThpt = 0;
   myGlobals.device[devIdx].lastFiveMinsThpt = 0;
-  myGlobals.device[devIdx].peakPacketThroughput = 0; 
-  myGlobals.device[devIdx].actualPktsThpt = 0; 
+  myGlobals.device[devIdx].peakPacketThroughput = 0;
+  myGlobals.device[devIdx].actualPktsThpt = 0;
   myGlobals.device[devIdx].lastMinPktsThpt = 0;
   myGlobals.device[devIdx].lastFiveMinsPktsThpt = 0;
   myGlobals.device[devIdx].lastThptUpdate = 0;
   myGlobals.device[devIdx].lastMinThptUpdate = 0;
-  myGlobals.device[devIdx].lastHourThptUpdate = 0; 
+  myGlobals.device[devIdx].lastHourThptUpdate = 0;
   myGlobals.device[devIdx].lastFiveMinsThptUpdate = 0;
   myGlobals.device[devIdx].throughput = 0;
   myGlobals.device[devIdx].packetThroughput = 0;
   myGlobals.device[devIdx].numThptSamples = 0;
-  myGlobals.device[devIdx].last60MinutesThptIdx = 0; 
-  myGlobals.device[devIdx].last24HoursThptIdx = 0; 
+  myGlobals.device[devIdx].last60MinutesThptIdx = 0;
+  myGlobals.device[devIdx].last24HoursThptIdx = 0;
   myGlobals.device[devIdx].last30daysThptIdx = 0;
   resetTrafficCounter(&myGlobals.device[devIdx].numEstablishedTCPConnections);
   myGlobals.device[devIdx].hostsno = 0;
@@ -504,7 +504,7 @@ void initCounters(void) {
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
 
     snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_OSFINGERPRINT_FILE);
-    
+
     traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'\n", buf);
     fd = gzopen(buf, "r");
 
@@ -530,16 +530,16 @@ void initCounters(void) {
   if(workLanguage != NULL ) {
 #ifdef I18N_DEBUG
     traceEvent(CONST_TRACE_NOISY,
-	       "I18N: Default language (from ntop host) is '%s' (raw)\n", 
+	       "I18N: Default language (from ntop host) is '%s' (raw)\n",
 	       workLanguage);
 #endif
     myGlobals.defaultLanguage = i18n_xvert_locale2common(workLanguage);
     traceEvent(CONST_TRACE_INFO,
-	       "I18N: Default language (from ntop host) is '%s'\n", 
+	       "I18N: Default language (from ntop host) is '%s'\n",
 	       myGlobals.defaultLanguage);
   } else {
     traceEvent(CONST_TRACE_INFO,
-	       "I18N: Default language (from ntop host) is unspecified\n"); 
+	       "I18N: Default language (from ntop host) is unspecified\n");
     myGlobals.defaultLanguage = NULL;
   }
 
@@ -562,7 +562,7 @@ void initCounters(void) {
   nLang = scandir(locale_dir, &dirList, NULL, alphasort);
   if(nLang < 0) {
     traceEvent(CONST_TRACE_WARNING,
-	       "I18N: Error obtaining locale list, scandir(%s,...) errno is %d\n", 
+	       "I18N: Error obtaining locale list, scandir(%s,...) errno is %d\n",
 	       locale_dir,
 	       errno);
     traceEvent(CONST_TRACE_NOISY, "continues without multiple language support");
@@ -596,7 +596,7 @@ void initCounters(void) {
 	found=0;
 	for (i=0; (!found) && i<myGlobals.maxSupportedLanguages; i++) {
 	  if(!strcmp(tmpStr, myGlobals.supportedLanguages[i])) {
-	    traceEvent(CONST_TRACE_NOISY, 
+	    traceEvent(CONST_TRACE_NOISY,
 		       "I18N_DEBUG: Skipping already supported language, '%s'\n",
 		       dirList[iLang]->d_name);
 #ifdef I18N_DEBUG
@@ -606,7 +606,7 @@ void initCounters(void) {
 	  }
 	}
 	if(!found) {
-	  traceEvent(CONST_TRACE_NOISY, 
+	  traceEvent(CONST_TRACE_NOISY,
 		     "I18N: Testing locale '%s' (from '%s')\n",
 		     tmpStr,
 		     dirList[iLang]->d_name);
@@ -625,7 +625,7 @@ void initCounters(void) {
 #endif
 
 #ifdef I18N_DEBUG
-	    traceEvent(CONST_TRACE_NOISY, 
+	    traceEvent(CONST_TRACE_NOISY,
 		       "I18N_DEBUG: Looking for directory '%s'\n",
 		       buf);
 #endif
@@ -657,7 +657,7 @@ void initCounters(void) {
 
 #ifdef I18N_DEBUG
 	} else {
-	  traceEvent(CONST_TRACE_NOISY, 
+	  traceEvent(CONST_TRACE_NOISY,
 		     "I18N_DEBUG: Skipping duplicate locale '%s'\n",
 		     dirList[iLang]->d_name);
 #endif
@@ -665,7 +665,7 @@ void initCounters(void) {
 
 #ifdef I18N_DEBUG
       } else {
-	traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: Skipping file '%s' (type %d)\n", 
+	traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: Skipping file '%s' (type %d)\n",
 		   dirList[iLang]->d_name,
 		   dirList[iLang]->d_type);
 #endif
@@ -678,15 +678,15 @@ void initCounters(void) {
   }
 
 #else
-  traceEvent(CONST_TRACE_WARNING, 
+  traceEvent(CONST_TRACE_WARNING,
              "I18N: Unable to scan locales (missing dirent.h at compile time) - ntop continues\n");
 #endif /* HAVE_DIRENT_H */
 
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY,
              "I18N: This instance of ntop supports %d additional language(s)\n",
              myGlobals.maxSupportedLanguages);
 #else
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY,
              "I18N: This instance of ntop does not support multiple languages\n");
 #endif /* MAKE_WITH_I18N */
 
@@ -699,7 +699,7 @@ void initCounters(void) {
 void resetStats(int deviceId) {
   u_int j;
 
-  traceEvent(CONST_TRACE_INFO, "Resetting traffic statistics for device %s", 
+  traceEvent(CONST_TRACE_INFO, "Resetting traffic statistics for device %s",
 	     myGlobals.device[deviceId].humanFriendlyName);
 
 #ifdef CFG_MULTITHREADED
@@ -738,7 +738,7 @@ void resetStats(int deviceId) {
 
 /* ******************************* */
 
-void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory, 
+void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 		    int doUnlink, struct stat *statbuf) {
   char tmpBuf[200];
 
@@ -746,9 +746,9 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
   /* directory is used by intop to specify where to open the files.
      If called with NULL, use the myGlobals.dbPath value instead
      (Minor fix for intop - Burton Strauss (BStrauss@acm.org) - Apr2002)
-  */  
+  */
 
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/%s", 
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/%s",
 	      directory != NULL ? directory : myGlobals.dbPath,
 	      dbName) < 0)
     BufferTooShort();
@@ -928,7 +928,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   NtopInterface *tmpDevice;
   char *workDevices;
   char myName[80], *column;
-  char ebuf[CONST_SIZE_PCAP_ERR_BUF];  
+  char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
   if(deviceName == NULL) {
     traceEvent(CONST_TRACE_WARNING, "WARNING: attempt to add a NULL device");
@@ -938,13 +938,13 @@ void addDevice(char* deviceName, char* deviceDescr) {
   traceEvent(CONST_TRACE_NOISY, "Adding network device %s", deviceName);
 
   if((deviceName != NULL) && (strcmp(deviceName, "none") == 0)) {
-    deviceId = createDummyInterface("none");    
+    deviceId = createDummyInterface("none");
     traceEvent(CONST_TRACE_INFO, "-i none, so initialized only a dummy device");
   } else {
     mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
     tmpDevice = (NtopInterface*)malloc(mallocLen);
     memset(tmpDevice, 0, mallocLen);
-    memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*(myGlobals.numDevices));  
+    memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*(myGlobals.numDevices));
     myGlobals.device = tmpDevice;
     deviceId = myGlobals.numDevices;
     myGlobals.device[deviceId].humanFriendlyName = strdup(deviceDescr);
@@ -969,7 +969,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     /*
       The timeout below for packet capture
       has been set to 100ms.
-    
+
       Courtesy of: Nicolai Petri <Nicolai@atomic.dk>
     */
     if((!myGlobals.device[deviceId].dummyDevice)
@@ -977,7 +977,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
        && (column == NULL)) {
 #ifdef WIN32
       NetType adapter;
-    
+
       LPADAPTER a = PacketOpenAdapter((LPTSTR)myGlobals.device[deviceId].name);
       if(PacketGetNetType (a,&adapter)) {
 	myGlobals.device[deviceId].deviceSpeed = adapter.LinkSpeed;
@@ -991,14 +991,14 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
       myGlobals.device[deviceId].pcapPtr =
 	pcap_open_live(myGlobals.device[deviceId].name,
-		       myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN, 
-		       myGlobals.disablePromiscuousMode == 1 ? 0 : 1, 
+		       myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN,
+		       myGlobals.disablePromiscuousMode == 1 ? 0 : 1,
 		       100 /* ms */, ebuf);
-    
+
       if(myGlobals.device[deviceId].pcapPtr == NULL) {
 	traceEvent(CONST_TRACE_FATALERROR, "pcap_open_live(): '%s'", ebuf);
 	if(myGlobals.disablePromiscuousMode == 1)
-	  traceEvent(CONST_TRACE_INFO, 
+	  traceEvent(CONST_TRACE_INFO,
 		     "Sorry, but on this system, even with -s, it appears that ntop must be started as root");
 	traceEvent(CONST_TRACE_INFO, "Please correct the problem or select a different interface using the -i flag");
 	exit(-1);
@@ -1008,29 +1008,29 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	if(strlen(myGlobals.pcapLog) > 64)
 	  myGlobals.pcapLog[64] = '\0';
 #ifdef WIN32
-	sprintf(myName, "%s/%s.pcap", 
+	sprintf(myName, "%s/%s.pcap",
 		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 		myGlobals.pcapLog);
 #else
-	sprintf(myName, "%s/%s.%s.pcap", 
+	sprintf(myName, "%s/%s.%s.pcap",
 		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 		myGlobals.pcapLog, myGlobals.device[deviceId].name);
 #endif
 	myGlobals.device[deviceId].pcapDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
-      
+
 	if(myGlobals.device[deviceId].pcapDumper == NULL) {
 	  traceEvent(CONST_TRACE_FATALERROR, "pcap_dump_open(): '%s'", ebuf);
 	  exit(-1);
 	} else
-	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);	
+	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
       }
-    
+
       if(myGlobals.enableSuspiciousPacketDump) {
-	sprintf(myName, "%s/ntop-suspicious-pkts.%s.pcap", 
+	sprintf(myName, "%s/ntop-suspicious-pkts.%s.pcap",
 		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 		myGlobals.device[deviceId].name);
 	myGlobals.device[deviceId].pcapErrDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
-      
+
 	if(myGlobals.device[deviceId].pcapErrDumper == NULL)
 	  traceEvent(CONST_TRACE_FATALERROR, "pcap_dump_open() for suspicious packets: '%s'", ebuf);
       }
@@ -1059,7 +1059,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
       /* In this case we are using a dump file */
       myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFF00; /* dummy */
     }
-  
+
     if((myGlobals.device[deviceId].network.s_addr == 0) &&
        (myGlobals.device[deviceId].netmask.s_addr == 0xFFFFFFFF) ) { /* Unnumbered interface... */
       myGlobals.device[deviceId].numHosts = MAX_SUBNET_HOSTS;
@@ -1069,7 +1069,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
       /* Add some room for multicast hosts in the ipTrafficMatrix
        * This is an arbitrary guess.
        * We use the log function to limit growth for large networks, while the factor of 50
-       * is designed to ensure a certain minimal # even for smaller networks 
+       * is designed to ensure a certain minimal # even for smaller networks
        */
       myGlobals.device[deviceId].numHosts +=
 	ceil(log((double)(0xFFFFFFFF - myGlobals.device[deviceId].netmask.s_addr + 1))+1.0)*50;
@@ -1078,7 +1078,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     if(myGlobals.device[deviceId].numHosts > MAX_SUBNET_HOSTS) {
       myGlobals.device[deviceId].numHosts = MAX_SUBNET_HOSTS;
       traceEvent(CONST_TRACE_WARNING, "Truncated network size (device %s) to %d hosts (real netmask %s)",
-		 myGlobals.device[deviceId].name, myGlobals.device[deviceId].numHosts, 
+		 myGlobals.device[deviceId].name, myGlobals.device[deviceId].numHosts,
 		 intoa(myGlobals.device[deviceId].netmask));
     } else {
       traceEvent(CONST_TRACE_NOISY, "Interface '%s' (netmask %s) computed network size is %d hosts",
@@ -1115,14 +1115,14 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
   if(!(myGlobals.device[deviceId].dummyDevice || myGlobals.device[deviceId].virtualDevice))
     getLocalHostAddress(&myGlobals.device[deviceId].network, myGlobals.device[deviceId].name);
-  
+
   mallocLen = 2;
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].name != NULL)
       mallocLen += strlen(myGlobals.device[i].name) + 2;
   }
   workDevices = malloc(mallocLen);
-  memset(workDevices, 0, mallocLen);    
+  memset(workDevices, 0, mallocLen);
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].name != NULL) {
@@ -1130,14 +1130,14 @@ void addDevice(char* deviceName, char* deviceDescr) {
       strcat(workDevices, myGlobals.device[i].name);
     }
   }
-  
+
   if(myGlobals.devices != NULL) free(myGlobals.devices);
   myGlobals.devices = workDevices;
 
   /* ********************************************** */
 
 #ifndef WIN32
-  if(strncmp(myGlobals.device[deviceId].name, "lo", 2)) { 
+  if(strncmp(myGlobals.device[deviceId].name, "lo", 2)) {
     /* Do not care of virtual loopback interfaces */
     int k;
     char tmpDeviceName[64];
@@ -1194,16 +1194,18 @@ void initDevices(char* devices) {
 #endif
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
-  ebuf[0] = '\0';	
+  ebuf[0] = '\0';
 
 
   traceEvent(CONST_TRACE_NOISY, "Initializing network devices");
 
   if(myGlobals.rFileName != NULL) {
+    createDummyInterface("none");
+    myGlobals.device[0].dummyDevice = 0;
     myGlobals.device[0].pcapPtr = pcap_open_offline(myGlobals.rFileName, ebuf);
     strcpy(myGlobals.device[0].name, "pcap-file");
     myGlobals.numDevices = 1;
-    
+
     if(myGlobals.device[0].pcapPtr == NULL) {
       traceEvent(CONST_TRACE_FATALERROR, "pcap_open_offline(): '%s'", ebuf);
       exit(-1);
@@ -1237,7 +1239,7 @@ void initDevices(char* devices) {
 	  if(descr[i] == '(') {
 	    descr[i] = '\0';
 	    break;
-	  }	
+	  }
 	while(descr[strlen(descr)-1] == ' ')
 	  descr[strlen(descr)-1] = '\0';
 
@@ -1271,7 +1273,7 @@ void initDevices(char* devices) {
     */
 #else
     tmpDev = pcap_lookupdev(ebuf);
-    
+
     if(tmpDev == NULL) {
       traceEvent(CONST_TRACE_FATALERROR, "Unable to locate default interface (%s)", ebuf);
       exit(-1);
@@ -1322,7 +1324,7 @@ void initDevices(char* devices) {
       addDevice(tmpDev, tmpDescr == NULL ? tmpDev : tmpDescr);
       tmpDev = strtok_r(NULL, ",", &strtokState);
     } /* while */
-  }      
+  }
 }
 
 /* ******************************* */
@@ -1338,19 +1340,19 @@ void initDeviceDatalink(int deviceId) {
   switch(myGlobals.device[deviceId].name[0]) {
   case 't': /* TokenRing */
     myGlobals.device[deviceId].datalink = DLT_IEEE802;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is \"t...\", treating as DLT_IEEE802 (TokenRing)", 
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is \"t...\", treating as DLT_IEEE802 (TokenRing)",
 	       i,
 	       myGlobals.device[deviceId].name);
     break;
   case 'l': /* Loopback */
     myGlobals.device[deviceId].datalink = DLT_NULL;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is loopback, treating as DLT_NULL", 
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is loopback, treating as DLT_NULL",
 	       i,
 	       myGlobals.device[deviceId].name);
     break;
   default:
     myGlobals.device[deviceId].datalink = DLT_EN10MB; /* Ethernet */
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s), treating as DLT_EN10MB (10/100/1000 Ethernet)", 
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s), treating as DLT_EN10MB (10/100/1000 Ethernet)",
 	       i,
 	       myGlobals.device[deviceId].name);
   }
@@ -1358,7 +1360,7 @@ void initDeviceDatalink(int deviceId) {
 #if defined(__FreeBSD__)
   if(strncmp(myGlobals.device[deviceId].name, "tun", 3) == 0) {
     myGlobals.device[deviceId].datalink = DLT_PPP;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is \"tun\", treating as DLT_PPP", 
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is \"tun\", treating as DLT_PPP",
 	       i,
 	       myGlobals.device[deviceId].name);
   }
@@ -1366,7 +1368,7 @@ void initDeviceDatalink(int deviceId) {
   if((myGlobals.device[deviceId].name[0] == 'l') /* loopback check */
      && (myGlobals.device[deviceId].name[1] == 'o')) {
     myGlobals.device[deviceId].datalink = DLT_NULL;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is loopback, treating as DLT_NULL", 
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is loopback, treating as DLT_NULL",
 	       deviceId,
 	       myGlobals.device[deviceId].name);
   }
@@ -1382,7 +1384,7 @@ void initDeviceDatalink(int deviceId) {
     traceEvent(CONST_TRACE_NOISY, "DLT: Please report this to the ntop-dev list.");
   } else {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) DLT_ is %d, assuming mtu %d, header %d", 
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) DLT_ is %d, assuming mtu %d, header %d",
 	       i,
 	       myGlobals.device[deviceId].name,
 	       myGlobals.device[deviceId].datalink,
@@ -1471,7 +1473,7 @@ void initSignals(void) {
   signal(SIGPIPE, ignoreThisSignal);
   signal(SIGABRT, ignoreThisSignal);
 #if 0
-  if(myGlobals.debugMode) { 
+  if(myGlobals.debugMode) {
     /* Activate backtrace trap on -K flag */
     signal(SIGSEGV, cleanup);
   }
@@ -1504,17 +1506,17 @@ void startSniffer(void) {
 u_int createDummyInterface(char *ifName) {
   u_int mallocLen, deviceId = myGlobals.numDevices;
   NtopInterface *tmpDevice;
-  
+
   mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
   tmpDevice = (NtopInterface*)malloc(mallocLen);
-  memset(tmpDevice, 0, mallocLen);    
+  memset(tmpDevice, 0, mallocLen);
   if(myGlobals.numDevices > 0) {
-    memcpy(tmpDevice, myGlobals.device, 
+    memcpy(tmpDevice, myGlobals.device,
 	   sizeof(NtopInterface)*myGlobals.numDevices);
     free(myGlobals.device);
   }
-  
-  myGlobals.device = tmpDevice;    
+
+  myGlobals.device = tmpDevice;
   myGlobals.numDevices++;
   memset(&myGlobals.device[deviceId], 0, sizeof(NtopInterface));
 
@@ -1531,7 +1533,7 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.device[deviceId].activeDevice  = 0;
 
   if(myGlobals.otherHostEntry != NULL)
-    myGlobals.device[deviceId].hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntry;    
+    myGlobals.device[deviceId].hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntry;
 
   return(deviceId);
 }

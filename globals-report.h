@@ -92,7 +92,7 @@ extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
 extern void dumpNtopTrafficInfo(FILE*, char* options);
 extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
 extern void checkHostProvidedServices(HostTraffic *el);
-extern void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraffic);
+extern void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraffic, u_char vlanHash);
 extern void printLocalHostsStats();
 #ifdef CFG_MULTITHREADED
 extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName);
