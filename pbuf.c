@@ -1900,7 +1900,7 @@ void processPacket(u_char *_deviceId,
   AnyHeader *anyHeader;
 #endif
 
-#ifndef MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
   if(0) {
     static long numPkt=0;
 
