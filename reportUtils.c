@@ -903,8 +903,27 @@ int cmpFctn(const void *_a, const void *_b) {
       }
     }
     break;
-  case 2: /* STR_SORT_DATA_RECEIVED_THPT */
-    fa_ = (*a)->actualRcvdThpt, fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
+  case 2: /* STR_SORT_DATA_RECEIVED_THPT */    
+    switch(myGlobals.columnSort) {
+    case 1:
+      fa_ = (*a)->actualRcvdThpt, fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
+      break;
+    case 2:
+      fa_ = (*a)->averageRcvdThpt, fb_ = (*b)->averageRcvdThpt, floatCompare = 1;
+      break;
+    case 3:
+      fa_ = (*a)->peakRcvdThpt, fb_ = (*b)->peakRcvdThpt, floatCompare = 1;
+      break;
+    case 4:
+      fa_ = (*a)->actualRcvdPktThpt, fb_ = (*b)->actualRcvdPktThpt, floatCompare = 1;
+      break;
+    case 5:
+      fa_ = (*a)->averageRcvdPktThpt, fb_ = (*b)->averageRcvdPktThpt, floatCompare = 1;
+      break;
+    case 6:
+      fa_ = (*a)->peakRcvdPktThpt, fb_ = (*b)->peakRcvdPktThpt, floatCompare = 1;
+      break;
+    }
     break;
   case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
   case 4: /* STR_SORT_DATA_SENT_HOST_TRAFFIC */
@@ -1008,7 +1027,26 @@ int cmpFctn(const void *_a, const void *_b) {
     }
     break;
   case 7: /* STR_SORT_DATA_SENT_THPT */
-    fa_ = (*a)->actualSentThpt, fb_ = (*b)->actualSentThpt, floatCompare = 1;
+    switch(myGlobals.columnSort) {
+    case 1:
+      fa_ = (*a)->actualRcvdThpt, fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
+      break;
+    case 2:
+      fa_ = (*a)->averageRcvdThpt, fb_ = (*b)->averageRcvdThpt, floatCompare = 1;
+      break;
+    case 3:
+      fa_ = (*a)->peakRcvdThpt, fb_ = (*b)->peakRcvdThpt, floatCompare = 1;
+      break;
+    case 4:
+      fa_ = (*a)->actualRcvdPktThpt, fb_ = (*b)->actualRcvdPktThpt, floatCompare = 1;
+      break;
+    case 5:
+      fa_ = (*a)->averageRcvdPktThpt, fb_ = (*b)->averageRcvdPktThpt, floatCompare = 1;
+      break;
+    case 6:
+      fa_ = (*a)->peakRcvdPktThpt, fb_ = (*b)->peakRcvdPktThpt, floatCompare = 1;
+      break;
+    }
     break;
   case 8: /* TRAFFIC_STATS_HTML */
     /* Nothing */

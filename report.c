@@ -415,8 +415,10 @@ void printTrafficStatistics() {
     }
 
     /* Just in case... */
-    if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes > myGlobals.device[myGlobals.actualReportDeviceId].ipBytes)
-      dummyCounter = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes-myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes > 
+       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes)
+      dummyCounter = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes-
+	myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
     else
       dummyCounter = 0;
 
