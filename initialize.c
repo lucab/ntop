@@ -584,8 +584,7 @@ void initDevices(char* devices) {
       exit(-1);
     } else {
 #ifdef WIN32
-      if(isWinNT())
-	{
+      if(isWinNT()) {
 	  static char tmpString[128];
 	  int i, j;
 
@@ -690,7 +689,6 @@ void initDevices(char* devices) {
     getLocalHostAddress(&device[i].network, device[i].name);
   }
 }
-
 
 /* ******************************* */
 

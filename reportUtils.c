@@ -155,16 +155,17 @@ void printTableEntryPercentage(char *buf, int bufLen,
 
   switch(int_perc) {
   case 0:
-    if(total == -1)
+    if(total == -1) {
       if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-             getRowColor(), label, COLOR_2, label_2) < 0) 
+		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+		  getRowColor(), label, COLOR_2, label_2) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
-    else
+    } else {
       if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-             getRowColor(), label, formatKBytes(total), COLOR_2, label_2) < 0) 
+		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+		  getRowColor(), label, formatKBytes(total), COLOR_2, label_2) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
+    }
     break;
   case 100:
     if(total == -1) {
@@ -1399,7 +1400,7 @@ void printHostThtpShort(HostTraffic *el, short dataSent) {
     } else
       pctg = 0;
 
-    if(snprintf(buf, sizeof(buf), "<TD ALIGN=RIGHT BGCOLOR=%s>&nbsp;</TD>",
+    if(snprintf(buf, sizeof(buf), "<TD ALIGN=RIGHT %s>&nbsp;</TD>",
 		getBgPctgColor(pctg)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }

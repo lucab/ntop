@@ -1316,7 +1316,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
   return(NULL);
 #else
   FILE *fd;
-  char line[384], *operatingSystem=NULL;
+  char line[512], *operatingSystem=NULL;
   static char staticOsName[96];
   int len, found=0, grabData=0, sockFd;
   fd_set mask;
@@ -1361,7 +1361,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
       break; /* Timeout */
     }
 
-    if((operatingSystem = fgets(line, 383, fd)) == NULL)
+    if((operatingSystem = fgets(line, sizeof(line)-1, fd)) == NULL)
       break;
 
     if(strncmp(operatingSystem, OS_GUESS, strlen(OS_GUESS)) == 0) {

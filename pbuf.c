@@ -204,7 +204,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   short useIPAddressForSearching;
   char* symEthName = NULL, *ethAddr;
 
-  idx = computeInitialHashIdx(hostIpAddress, 
+  idx = computeInitialHashIdx(hostIpAddress,
 			      ether_addr, &useIPAddressForSearching);
   idx = (u_int)((idx*3) % device[actualDeviceId].actualHashSize);
 
@@ -239,7 +239,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    if(el->hostNumIpAddress[0] == '\0') {
 	      /* This entry didn't have IP fields set: let's set them now */
 	      el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-	      strncpy(el->hostNumIpAddress, 
+	      strncpy(el->hostNumIpAddress,
 		      _intoa(*hostIpAddress, buf, sizeof(buf)),
 		      sizeof(el->hostNumIpAddress));
 
@@ -263,13 +263,13 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
     } else {
       /* ************************
 
-	 This code needs to be optimised. In fact everytime a 
+	 This code needs to be optimised. In fact everytime a
 	 new host is added to the hash, the whole hash has to
 	 be scan. This shouldn't happen with hashes. Unfortunately
 	 due to the way ntop works, a entry can appear and
 	 disappear several times from the hash, hence its position
 	 in the hash might change.
-	 
+
 	 Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
 
        ************************ */
@@ -293,7 +293,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
       } else
 	el = NULL;
-      
+
       if(el == NULL) {
 	el = (HostTraffic*)malloc(sizeof(HostTraffic));
 	memset(el, 0, sizeof(HostTraffic));
@@ -323,12 +323,12 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
       memset(el->protoIPTrafficInfos, 0, len);
 
-      device[actualDeviceId].hash_hostTraffic[firstEmptySlot] = 
+      device[actualDeviceId].hash_hostTraffic[firstEmptySlot] =
 	el; /* Insert a new entry */
       device[actualDeviceId].hostsno++;
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Adding idx=%d on device=%d\n", 
+      traceEvent(TRACE_INFO, "Adding idx=%d on device=%d\n",
 		 firstEmptySlotx, actualDeviceId);
 #endif
 
@@ -365,40 +365,40 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  */
 	  el->hostIpAddress.s_addr = INADDR_BROADCAST;
 	  FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	  if(isMulticastAddress(&el->hostIpAddress)) 
+	  if(isMulticastAddress(&el->hostIpAddress))
 	    FD_SET(MULTICAST_HOST_FLAG, &el->flags);
-	  strncpy(el->hostNumIpAddress, 
+	  strncpy(el->hostNumIpAddress,
 		  _intoa(el->hostIpAddress, buf, sizeof(buf)),
 		  strlen(el->hostNumIpAddress));
-	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, 
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
 		  MAX_HOST_SYM_NAME_LEN);
 	} else if(hostIpAddress != NULL) {
 	  el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-	  strncpy(el->hostNumIpAddress, 
+	  strncpy(el->hostNumIpAddress,
 		  _intoa(*hostIpAddress, buf, sizeof(buf)),
 		  sizeof(el->hostNumIpAddress));
-	  if(isBroadcastAddress(&el->hostIpAddress)) 
+	  if(isBroadcastAddress(&el->hostIpAddress))
 	    FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	  if(isMulticastAddress(&el->hostIpAddress)) 
+	  if(isMulticastAddress(&el->hostIpAddress))
 	    FD_SET(MULTICAST_HOST_FLAG, &el->flags);
 
 	  /* Trick to fill up the address cache */
 	  if(numericFlag == 0)
-	    ipaddr2str(el->hostIpAddress, 
+	    ipaddr2str(el->hostIpAddress,
 		       el->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
 	  else
-	    strncpy(el->hostSymIpAddress, 
+	    strncpy(el->hostSymIpAddress,
 		    el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
 	} else {
 	  /* el->hostNumIpAddress == "" */
 	  if(symEthName[0] != '\0') {
 	    char buf[255];
 
-	    if(snprintf(buf, sizeof(buf), "%s [MAC]", symEthName) < 0) 
+	    if(snprintf(buf, sizeof(buf), "%s [MAC]", symEthName) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
 	  } else
-	    strncpy(el->hostSymIpAddress, 
+	    strncpy(el->hostSymIpAddress,
 		    el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
 	}
 
@@ -426,7 +426,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	for(i=0; i<device[actualDeviceId].actualHashSize; i++)
 	  if(device[actualDeviceId].hash_hostTraffic[i] != NULL) {
 	    if((candidate == 0)
-	       || (device[actualDeviceId].hash_hostTraffic[idx]->lastSeen 
+	       || (device[actualDeviceId].hash_hostTraffic[idx]->lastSeen
 		   < lastSeenCandidate)) {
 	      candidate = i;
 	      if((device[actualDeviceId].hash_hostTraffic[idx]->lastSeen
@@ -445,7 +445,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       }
 
       run++;
-      goto HASH_SLOT_FOUND;    
+      goto HASH_SLOT_FOUND;
     }
   }
 
@@ -476,7 +476,7 @@ char* getNamedPort(int port) {
     svcName = getPortByNum(port, IPPROTO_UDP);
 
   if(svcName == NULL) {
-    if(snprintf(outStr[portBufIdx], 8, "%d", port) < 0) 
+    if(snprintf(outStr[portBufIdx], 8, "%d", port) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
     strncpy(outStr[portBufIdx], svcName, 8);
@@ -609,20 +609,20 @@ static void updateHostSessionsList(u_int theHostIdx,
        || (initiator == CLIENT_TO_SERVER)) {
       scanner->bytesSent += theSession->bytesSent;
       scanner->bytesReceived += theSession->bytesReceived;
-      scanner->bytesFragmentedSent += theSession->bytesFragmentedSent; 
-      scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived; 
+      scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
+      scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived;
     } else {
       scanner->bytesSent += theSession->bytesReceived;
       scanner->bytesReceived += theSession->bytesSent;
-      scanner->bytesFragmentedSent += theSession->bytesFragmentedReceived; 
-      scanner->bytesFragmentedReceived += theSession->bytesFragmentedSent; 
+      scanner->bytesFragmentedSent += theSession->bytesFragmentedReceived;
+      scanner->bytesFragmentedReceived += theSession->bytesFragmentedSent;
     }
     break;
   case IPPROTO_UDP:
     scanner->bytesSent           += theSession->bytesSent;
     scanner->bytesReceived       += theSession->bytesReceived;
-    scanner->bytesFragmentedSent += theSession->bytesFragmentedSent; 
-    scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived; 
+    scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
+    scanner->bytesFragmentedReceived += theSession->bytesFragmentedReceived;
    break;
   }
 }
@@ -710,7 +710,7 @@ static void updateUsedPorts(HostTraffic *srcHost,
 			    u_short sport,
 			    u_short dport,
 			    u_int length) {
-  
+
   /* traceEvent(TRACE_INFO, "%d\n", length); */
 
   if(srcHostIdx != broadcastEntryIdx) {
@@ -901,17 +901,17 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  sessions[usedIdx] = NULL;
 	} else {
 	  int i;
-	  
+
 	  /* There's enough space left in the hashtable */
 	  theSession = (IPSession*)malloc(sizeof(IPSession));
 	  memset(theSession, 0, sizeof(IPSession));
 	  theSession->magic = MAGIC_NUMBER;
 	  (*numSessions)++;
-	  
+
 	  /* Let's check whether this is a Napster session */
 	  if(numNapsterSvr > 0) {
 	    for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
-	      if((napsterSvr[i].serverPort == sport) 
+	      if((napsterSvr[i].serverPort == sport)
 		 && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr)
 		 || ((napsterSvr[i].serverPort == dport)
 		     && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
@@ -920,7 +920,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 		numNapsterSvr--;
 		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
 		FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
-		
+
 		traceEvent(TRACE_INFO, "NAPSTER new download session: %s -> %s\n",
 			   srcHost->hostSymIpAddress,
 			   dstHost->hostSymIpAddress);
@@ -929,16 +929,16 @@ static void handleSession(const struct pcap_pkthdr *h,
 		  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
 		  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
 		}
-		
+
 		if(dstHost->napsterStats == NULL) {
 		  dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
 		  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
 		}
-		
+
 		srcHost->napsterStats->numDownloadsRequested++,
-		  dstHost->napsterStats->numDownloadsServed++;		  
+		  dstHost->napsterStats->numDownloadsServed++;
 	      }
-	    }	 	  
+	    }
 	  }
 	}
 
@@ -975,7 +975,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	int i;
 
 	for(i=0; i<tcpDataLength; i++) {
-	  if((!isprint(packetData[i])) 
+	  if((!isprint(packetData[i]))
 	     && (!isspace(packetData[i])))
 	    break;
 	  printf("%c", packetData[i]);
@@ -983,8 +983,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 	printf("\n");
       }
-      
-      if((sport == 80 /* HTTP */) 
+
+      if((sport == 80 /* HTTP */)
 	 && (theSession->bytesProtoRcvd == 0)) {
 	char rcStr[18];
 
@@ -1063,7 +1063,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 #endif
 	  }
 	}
-      } else if((dport == 80 /* HTTP */) 
+      } else if((dport == 80 /* HTTP */)
 		&& (theSession->bytesProtoSent == 0)) {
 	char rcStr[18];
 
@@ -1119,7 +1119,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 		     dstHost->hostSymIpAddress,
 		     rcStr);
 	}
-      } else if((sport == 8875 /* Napster Redirector */) 
+      } else if((sport == 8875 /* Napster Redirector */)
 		&& (tcpDataLength > 0)) {
 	char address[64];
 	struct in_addr svrAddr;
@@ -1145,7 +1145,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	napsterSvr[napsterSvrInsertIdx].serverPort = atoi(&address[i+1]);
 	napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
 	numNapsterSvr++;
-	
+
 	if(srcHost->napsterStats == NULL) {
 	  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
 	  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
@@ -1156,8 +1156,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 	}
 
 	srcHost->napsterStats->numConnectionsServed++,
-	  dstHost->napsterStats->numConnectionsRequested++;	  
-	srcHost->napsterStats->bytesSent += tcpDataLength, 
+	  dstHost->napsterStats->numConnectionsRequested++;
+	srcHost->napsterStats->bytesSent += tcpDataLength,
 	dstHost->napsterStats->bytesRcvd += tcpDataLength;
       }
     }
@@ -1172,16 +1172,16 @@ static void handleSession(const struct pcap_pkthdr *h,
 
     /* Let's decode some Napster packets */
     if((!theSession->napsterSession)
-       && (tcpDataLength == 1) 
+       && (tcpDataLength == 1)
        && (theSession->bytesProtoRcvd == 0) /* This condition will not hold if you
 					       move this line of code down this
 					       function */
        ) {
-      /* 
+      /*
 	 If this is a Napster Download then it should
 	 look like "0x31 GET username song ...."
       */
-      
+
       if(packetData[0] == 0x31) {
 	theSession->napsterSession = 1;
 	napsterDownload = 1;
@@ -1214,56 +1214,58 @@ static void handleSession(const struct pcap_pkthdr *h,
 	memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
       }
 
-      srcHost->napsterStats->bytesSent += tcpDataLength, 
+      srcHost->napsterStats->bytesSent += tcpDataLength,
 	dstHost->napsterStats->bytesRcvd += tcpDataLength;
 
 #ifdef DEBUG
       printf("%x %x %x\n",  packetData[1], packetData[2], packetData[3]);
 #endif
-      
+
       if(napsterDownload) {
 	FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
 	FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
-		
+
 	traceEvent(TRACE_INFO, "NAPSTER new download session: %s -> %s\n",
 		   dstHost->hostSymIpAddress,
 		   srcHost->hostSymIpAddress);
-	dstHost->napsterStats->numDownloadsRequested++, 
-	  srcHost->napsterStats->numDownloadsServed++;	
+	dstHost->napsterStats->numDownloadsRequested++,
+	  srcHost->napsterStats->numDownloadsServed++;
       } else if((packetData[1] == 0x0) && (packetData[2] == 0xC8) && (packetData[3] == 0x00)) {
 	srcHost->napsterStats->numSearchSent++, dstHost->napsterStats->numSearchRcvd++;
-	
+
 	traceEvent(TRACE_INFO, "NAPSTER search: %s -> %s\n",
 		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress);	
+		   dstHost->hostSymIpAddress);
       } else if((packetData[1] == 0x0) && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
 	char tmpBuf[64], *remoteHost, *remotePort;
 	int i, j;
 
 	struct in_addr shost;
-	
+
 	srcHost->napsterStats->numDownloadsRequested++,
 	  dstHost->napsterStats->numDownloadsServed++;
-	
-	/* 
-	   LEN 00 CC 00 <remote user name> 
-	   <remote user IP> <remote user port> <payload> 
+
+	/*
+	   LEN 00 CC 00 <remote user name>
+	   <remote user IP> <remote user port> <payload>
 	*/
 
 	memcpy(tmpBuf, &packetData[4], (tcpDataLength<64) ? tcpDataLength : 63);
 	strtok(tmpBuf, " "); /* remote user */
-	remoteHost = strtok(NULL, " ");
-	remotePort = strtok(NULL, " ");
+	if((remoteHost = strtok(NULL, " ")) != NULL) {
+	  if((remotePort = strtok(NULL, " ")) != NULL) {
 
-	napsterSvr[napsterSvrInsertIdx].serverPort = atoi(remotePort);
-	if(napsterSvr[napsterSvrInsertIdx].serverPort != 0) {
-	  napsterSvr[napsterSvrInsertIdx].serverAddress.s_addr = inet_addr(remoteHost);
-	  napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
-	  numNapsterSvr++;
-	  shost.s_addr = inet_addr(remoteHost);
-	  traceEvent(TRACE_INFO, "NAPSTER: %s requested download from %s:%s",
-		     srcHost->hostSymIpAddress, remoteHost, remotePort);
-	} 
+	    napsterSvr[napsterSvrInsertIdx].serverPort = atoi(remotePort);
+	    if(napsterSvr[napsterSvrInsertIdx].serverPort != 0) {
+	      napsterSvr[napsterSvrInsertIdx].serverAddress.s_addr = inet_addr(remoteHost);
+	      napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
+	      numNapsterSvr++;
+	      shost.s_addr = inet_addr(remoteHost);
+	      traceEvent(TRACE_INFO, "NAPSTER: %s requested download from %s:%s",
+			 srcHost->hostSymIpAddress, remoteHost, remotePort);
+	    }
+	  }
+	}
       }
     }
 
@@ -1477,7 +1479,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 /* ************************************ */
 
-static void addLsofContactedPeers(ProcessInfo *process, 
+static void addLsofContactedPeers(ProcessInfo *process,
 				  u_int peerHostIdx) {
   u_int i;
 
@@ -1541,7 +1543,7 @@ static void handleLsof(u_int srcHostIdx,
 /* *********************************** */
 
 static void handleTCPSession(const struct pcap_pkthdr *h,
-			     u_short fragmentedData, 
+			     u_short fragmentedData,
 			     u_int tcpWin,
 			     u_int srcHostIdx,
 			     u_short sport,
@@ -1583,11 +1585,11 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
 			     u_int dstHostIdx,
 			     u_short dport,
 			     u_int length,
-			     u_char* packetData) {  
+			     u_char* packetData) {
   handleSession(h, udpSession,
 		&numUdpSessions, fragmentedData, 0,
 		srcHostIdx, sport,
-		dstHostIdx, dport, length, 
+		dstHostIdx, dport, length,
 		NULL, 0, packetData);
 
   if(isLsofPresent)
@@ -1835,7 +1837,7 @@ static u_int handleFragment(HostTraffic *srcHost,
 		 srcHost->hostSymIpAddress,
 		 dstHost->hostSymIpAddress,
 		 fragmentId, fragmentOffset,
-		 fragment->lastOffset)  < 0) 
+		 fragment->lastOffset)  < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	logMessage(buf, NTOP_WARNING_MSG);
@@ -2146,7 +2148,7 @@ static void processIpPkt(const u_char *bp,
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   u_char etherAddrSrc[ETHERNET_ADDRESS_LEN+1], etherAddrDst[ETHERNET_ADDRESS_LEN+1];
   struct timeval tvstrct;
-  
+
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
    * Paul D. Smith <psmith@baynetworks.com>
@@ -2159,9 +2161,9 @@ static void processIpPkt(const u_char *bp,
   }
 
   if(ip.ip_p == GRE_PROTOCOL_TYPE) {
-    /* 
+    /*
        Cisco GRE (Generic Routing Encapsulation)
-       Tunnels (RFC 1701, 1702) 
+       Tunnels (RFC 1701, 1702)
     */
     GreTunnel tunnel;
 
@@ -2219,8 +2221,8 @@ static void processIpPkt(const u_char *bp,
 
   if(rFileName != NULL) {
     static int numPkt=1;
-    
-    traceEvent(TRACE_INFO, "%d) %s -> %s", 
+
+    traceEvent(TRACE_INFO, "%d) %s -> %s",
 	       numPkt++,
 	       srcHost->hostNumIpAddress,
 	       srcHost->hostNumIpAddress);
@@ -2365,7 +2367,7 @@ static void processIpPkt(const u_char *bp,
 		       srcHostIdx, sport, dstHostIdx,
 		       dport, length, &tp, tcpDataLength,
 		       (u_char*)(bp+hlen+(tp.th_off * 4)));
-      
+
       if(grabSessionInformation) {
 	grabSession(srcHost, sport, dstHost, dport,
 		    (char*)(bp+hlen+(tp.th_off * 4)), tcpDataLength);
@@ -2426,7 +2428,7 @@ static void processIpPkt(const u_char *bp,
           tvstrct.tv_sec = h->ts.tv_sec;
           tvstrct.tv_usec = h->ts.tv_usec;
           addTimeMapping(transactionId, tvstrct);
-	  
+
           if(subnetLocalHost(dstHost))
             srcHost->dnsStats->numLocalReqSent++;
           else
@@ -2512,7 +2514,7 @@ static void processIpPkt(const u_char *bp,
 
         for(i=0; nbName[i] != '\0'; i++)
 	  if(nbName[i] == ' ') { nbName[i] = '\0'; break; }
-        
+
 	if(srcHost->nbHostName == NULL)
 	  srcHost->nbHostName = strdup(nbName);
 
@@ -2607,7 +2609,7 @@ static void processIpPkt(const u_char *bp,
       if(handleIP(dport, srcHostIdx, dstHostIdx, length) == -1)
 	handleIP(sport, srcHostIdx, dstHostIdx, length);
 
-      handleUDPSession(h, (off & 0x3fff), 
+      handleUDPSession(h, (off & 0x3fff),
 		       srcHostIdx, sport, dstHostIdx,
 		       dport, length, (u_char*)(bp+length));
     }
@@ -2902,10 +2904,10 @@ static char* timestamp(const struct timeval* t, int fmt) {
     default:
     case DELTA_FMT:
       /*
-       * calculate the difference in milliseconds since		
+       * calculate the difference in milliseconds since
        * the previous packet was displayed
        */
-      if(snprintf(buf, 16, "%10ld ms", 
+      if(snprintf(buf, 16, "%10ld ms",
 	       delta_time_in_milliseconds(&current_pkt, &last_pkt)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       break;
@@ -2918,11 +2920,11 @@ static char* timestamp(const struct timeval* t, int fmt) {
 
     case RELATIVE_FMT:
       /*
-       * calculate the difference in milliseconds 
+       * calculate the difference in milliseconds
        * since the previous packet was displayed
        */
-      if(snprintf(buf, 16, "%10ld ms", 
-	       delta_time_in_milliseconds(&current_pkt, &first_pkt)) < 0) 
+      if(snprintf(buf, 16, "%10ld ms",
+	       delta_time_in_milliseconds(&current_pkt, &first_pkt)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       break;
     }
@@ -3019,7 +3021,7 @@ void processPacket(u_char *_deviceId,
     u_int srcHostIdx, dstHostIdx;
 
     memcpy(&ehdr, p, sizeof(struct ether_header));
-    
+
     switch(device[deviceId].datalink) {
     case DLT_FDDI:
       fddip = (struct fddi_header *)p;
@@ -3044,8 +3046,8 @@ void processPacket(u_char *_deviceId,
 	    if(EXTRACT_16BITS(&llc.ethertype[0]) == ETHERTYPE_IP) {
 	      /* encapsulated IP packet */
 	      processIpPkt(p, h, length, ether_src, ether_dst);
-	      /* 
-		 Patch below courtesy of 
+	      /*
+		 Patch below courtesy of
 		 Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>
 	      */
 #ifdef MULTITHREADED
@@ -3188,7 +3190,7 @@ void processPacket(u_char *_deviceId,
 	    || (sap_type == 0x42)) {
 	  /* IPX */
 	  unsigned char ipxBuffer[128];
-	  
+
 	  /* IPX packet beginning */
 	  if(length > 128)
 	    memcpy(ipxBuffer, p1, 128);
@@ -3219,7 +3221,7 @@ void processPacket(u_char *_deviceId,
 		found = 1;
 		break;
 	      }
-	    
+
 	    if((!found) && (srcHost->numIpxNodeTypes < MAX_NODE_TYPES)) {
 	      srcHost->ipxNodeType[srcHost->numIpxNodeTypes] = serverType;
 	      srcHost->numIpxNodeTypes++;
@@ -3267,7 +3269,7 @@ void processPacket(u_char *_deviceId,
 
 	      case 0x0133: /* NetWare Name Service */
 		FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
-		break;	       
+		break;
 	      }
 	    }
 
@@ -3275,7 +3277,7 @@ void processPacket(u_char *_deviceId,
 	      srcHost->ipxHostName = strdup(serverName);
 	    }
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName, 
+	    traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName,
 		       getSAPInfo(serverType, 0), serverType);
 #endif
 	  }
@@ -3325,17 +3327,17 @@ void processPacket(u_char *_deviceId,
 
 	      memcpy(nodeName, &p1[7+p1[5]], p1[6+p1[5]]);
 	      nodeName[p1[6+p1[5]]] = '\0';
-	      
+
 	      for(i=0; i<MAX_NODE_TYPES; i++)
-		if((srcHost->atNodeType[i] == NULL) 
+		if((srcHost->atNodeType[i] == NULL)
 		   || (strcmp(srcHost->atNodeType[i], nodeName) == 0))
 		  break;
 
-	      if(srcHost->atNodeType[i] == NULL) 
+	      if(srcHost->atNodeType[i] == NULL)
 		srcHost->atNodeType[i] = strdup(nodeName);
 	    }
-	  } 
-	  
+	  }
+
 	  srcHost->appletalkSent += length;
 	  dstHost->appletalkReceived += length;
 	  device[actualDeviceId].atalkBytes += length;
@@ -3492,7 +3494,7 @@ void updateOSName(HostTraffic *el) {
 #endif
 
 #ifdef HAVE_GDBM_H
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0) 
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     key_data.dptr = tmpBuf;
     key_data.dsize = strlen(tmpBuf)+1;
@@ -3527,7 +3529,7 @@ void updateOSName(HostTraffic *el) {
       updateDBOSname(el);
 
 #ifdef HAVE_GDBM_H
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0) 
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       key_data.dptr = tmpBuf;
       key_data.dsize = strlen(tmpBuf)+1;
