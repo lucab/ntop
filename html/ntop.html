@@ -21,7 +21,7 @@
 
 <hr>
 <!-- Creator     : groff version 1.18 -->
-<!-- CreationDate: Mon Dec  1 10:47:16 2003 -->
+<!-- CreationDate: Wed Dec 10 18:23:55 2003 -->
 <a name="NAME"></a>
 <h2>NAME</h2>
 <!-- INDENTATION -->
@@ -48,6 +48,7 @@
 [<b>-f</b>|<b>--traffic-dump-file</b> <i>file&gt;</i>]
 [<b>-g</b>|<b>--track-local-hosts</b>]
 [<b>-h</b>|<b>--help</b>]
+[<b>-j</b>|<b>--create-other-packets</b>]
 [<b>-k</b>|<b>--filter-expression-in-extra-frame</b>]
 [<b>-l</b>|<b>--pcap-log</b> <i>&lt;path&gt;</i>]
 [<b>-m</b>|<b>--local-subnets</b> <i>&lt;addresses&gt;</i>]
@@ -436,6 +437,29 @@ of the interface or its name, e.g.
 {6252C14C-44C9-49D9-BF59-B2DC18C7B811}. Run <b>ntop</b> -h
 to see a list of interface name-number mappings (at the end
 of the help information).</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-j | --create-other-packets</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p>This parameter causes <b>ntop</b> to create a dump file
+of the &rsquo;other&rsquo; network traffic captured. One
+file is created for each network interface where
+&lt;path&gt;/ntop-other-pkts.&lt;device&gt;.pcap, where
+&lt;path&gt; is defined by the -O | --output-packet-path
+parameter. This file is useful for understanding these
+unclassifed packets.</p>
 </td>
 </table>
 <!-- INDENTATION -->
