@@ -549,7 +549,7 @@ dnl> if the user decided to compile without curses support.
 dnl>
 LIBCURSES=
 if test ".$ac_disable_curses" = ".no"; then
-  AC_CHECK_LIB(ncurses, initscr, LIBCURSES="-lncurses", ac_disable_intop=yes)
+  AC_CHECK_LIB(ncurses, initscr, LIBCURSES="-lncurses")
   if test ".`echo $LIBCURSES | grep curses`" = .; then
       AC_CHECK_LIB(curses, initscr, LIBCURSES="-lcurses", ac_disable_intop=yes)
   fi
