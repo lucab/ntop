@@ -2,12 +2,28 @@
 Quick Instructions
 ==================
 
-1. Get mandatory packages/tools
-   - gdbm       http://www.gnu.org/
-   - libpcap    http://www.tcpdump.org/
-   
+1. Get and install mandatory packages/tools
+
+      These instructions assume your system is already provided with
+      the normal source compile tools.  Most are gnu packages, available 
+      through http://www.gnu.org or your favorite prebuilt package source.
+
+      Using their RedHat package names, these are:
+
+         - glibc, glibc-devel, gcc, cpp
+         - gawk
+         - autoconf, automake
+         - openssl, openssl-devel (http://www.openssl.org)
+         - gdbm, gdbm-devel
+         - libpcap (http://www.tcpdump.org)
+
+      Also, one additional package, which used only for intop:
+
+         - ncurses
+
 
 2. Build chart libraries
+
    - cd gdchart0.94c/
    - ./configure
    - cd gd-1.8.3/libpng-1.2.1
@@ -23,15 +39,84 @@ Quick Instructions
    - cd gdchart0.94c/
    - ./buildAll.sh
 
+   Note: It MAY be necessary for some of these packages on some systems
+         to do a "make install".  If you get error messages concerning 
+         missing libraries at run time, then try doing the make install 
+         from the appropriate subdirectory.
+
 3. Build ntop
+
    - cd ntop
    - ./configure
    - make
+   - make install
 
-4. Run ntop
-   - ntop -P [directory where ntop will store temporary files]
+4. Run ntop (See 1STRUN.txt)
+
+   - /usr/local/bin/ntop -A -u userid -P directory
+
+          where  userid is the *nix userid you've created - with minimal
+                 permissions - to run ntop
+                 directory is the directory path where ntop will store
+                 it's databases
+
+   - /usr/local/bin/ntop -u userid -P directory ...other parameters...
+
+Note: Following these instructions builds static linked versions of
+      required libraries (gdchart, gd, libpng and libz), so that
+      ntop doesn't care about other versions installed on your system.
+      It may not be optimal, but it will get you started.
+
+      The problem is that across the universe of *nix systems, libraries
+      get installed in many different locations, making the Makefile
+      incredibly complex. 
+
+      What really needs to happen is that the makefiles need to search 
+      for AND USE the .a static libraries if they exist, otherwise, 
+      search for and use .so (shared) libraries - and to do so looking 
+      in all the usual places (/usr /usr/local /opt etc.).  This change
+      will NOT be part of ntop 2.1.
+
+      The following patch to configure.in will change ./configure's
+      behavior to look for .so libraries in the location you define
+      via --with-gdchart-root=/usr or --with-gdchart-root=/usr/local
+      (or whatever is appropriate to your situation).
+
+      Note the limitations of this patch - it still doesn't handle 
+      libpng (beyond assuming it's in the /etc/ld.so.conf locations as 
+      a .so or in gd-1.8.3/libpng-1.2.1), etc.
+
+      This patch is NOT supported or guaranteed, use it as a starting point
+      for your unique situation.  It's been MINIMALLY tested on RedHat Linux,
+      but not under Solaris or other *nixes.
 
 
----------------------------------------
+--- ntop/configure.in~  Thu Dec 27 11:40:55 2001
++++ ntop/configure.in   Fri Dec 28 07:53:54 2001
+@@ -876,12 +876,12 @@
+   if test ".${GDCHART_ROOT}" != .; then
+     if test -d $GDCHART_ROOT &&
+-       test -r $GDCHART_ROOT/libgdchart.a &&
+-       test -r $GDCHART_ROOT/gdc.h &&
+-       test -r $GDCHART_ROOT/gd-1.8.3/libgd.a &&
+-       test -r $GDCHART_ROOT/gd-1.8.3/gd.h &&
+-       test -r $GDCHART_ROOT/zlib-1.1.4/libz.a; then
++       test -r $GDCHART_ROOT/lib/libgdchart.a &&
++       test -r $GDCHART_ROOT/include/gdc.h &&
++       test -r $GDCHART_ROOT/lib/libgd.a &&
++       test -r $GDCHART_ROOT/include/gd.h &&
++       test -r $GDCHART_ROOT/lib/libz.so; then
+          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
+-         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart
+          -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.1
+-lpng -L$GDCHART_ROOT/zlib-1.1.4 -lz"
+-         INCS="${INCS} -I$GDCHART_ROOT -I$GDCHART_ROOT/zlib-1.1.4"
++         MORELIBS="${MORELIBS} -L$GDCHART_ROOT/lib -lgdchart -lgd -lpng -lz"
++         INCS="${INCS} -I$GDCHART_ROOT/include -I$GDCHART_ROOT/zlib-1.1.4"
+          AC_DEFINE(HAVE_GDCHART)
+          AC_MSG_RESULT([found in $GDCHART_ROOT])
+
+----------------------------------------
 Luca Deri <deri@ntop.org> - January 2001
-Updated zlib and libpng - June 2002
+Updated - June 2002
+
