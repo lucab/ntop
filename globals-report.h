@@ -97,9 +97,9 @@ extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 					TrafficCounter tcSent, 
 					TrafficCounter tcRcvd);
 extern char* getNbNodeType(char nodeType);
-extern void dumpNtopHashes(char*, int actualDeviceId);
-extern void dumpNtopHashIndexes(char* options, int actualDeviceId);
-extern void dumpNtopTrafficInfo(char* options);
+extern void dumpNtopHashes(FILE*, char*, int actualDeviceId);
+extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
+extern void dumpNtopTrafficInfo(FILE*, char* options);
 
 /* report.c */
 extern void initReports(void);

@@ -1612,23 +1612,23 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
-	  dumpNtopHashes(NULL, myGlobals.actualReportDeviceId);
+	  dumpNtopHashes(NULL, NULL, myGlobals.actualReportDeviceId);
 	else
-	  dumpNtopHashes(&questionMark[1], myGlobals.actualReportDeviceId);
+	  dumpNtopHashes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_HOSTS_INDEXES_HTML, strlen(DUMP_HOSTS_INDEXES_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
-	  dumpNtopHashIndexes(NULL, myGlobals.actualReportDeviceId);
+	  dumpNtopHashIndexes(NULL, NULL, myGlobals.actualReportDeviceId);
 	else
-	  dumpNtopHashIndexes(&questionMark[1], myGlobals.actualReportDeviceId);
+	  dumpNtopHashIndexes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_TRAFFIC_DATA_HTML, strlen(DUMP_TRAFFIC_DATA_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
-	  dumpNtopTrafficInfo(NULL);
+	  dumpNtopTrafficInfo(NULL, NULL);
 	else
-	  dumpNtopTrafficInfo(&questionMark[1]);
+	  dumpNtopTrafficInfo(NULL, &questionMark[1]);
 	printTrailer = 0;
       }
 #ifndef MICRO_NTOP
