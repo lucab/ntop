@@ -899,7 +899,7 @@ dnl>
        test -r $GDCHART_ROOT/zlib-1.1.4/libz.a; then
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
          MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.1 -lpng -L$GDCHART_ROOT/zlib-1.1.4 -lz"
-         INCS="${INCS} -I$GDCHART_ROOT"
+         INCS="${INCS} -I$GDCHART_ROOT -I$GDCHART_ROOT/zlib-1.1.4"
          AC_DEFINE(HAVE_GDCHART)
 	 AC_DEFINE(HAVE_ZLIB)
          AC_MSG_RESULT([found in $GDCHART_ROOT])
