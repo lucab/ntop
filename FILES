@@ -16,13 +16,9 @@
 
 ChangeLog
 COPYING
-FAQ
 FILES
-INSTALL
 Makefile.in
 MANIFESTO
-README
-TODO
 
 acconfig.h      - local configuration options for the GNU autoheader tool
 acinclude.m4.in - local definitions for the GNU automake tool

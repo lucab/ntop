@@ -1,0 +1,48 @@
+
+   _   _ _
+  | \ | | |_ ___  _ __
+  |  \| | __/ _ \| '_ \
+  | |\  | || (_) | |_) |
+  |_| \_|\__\___/| .__/
+                 |_|
+
+             Network Top
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+  README
+  ======
+
+Written by Luca Deri <deri@ntop.org>
+Portions by Stefano Suin <stefano@ntop.org>
+Centro SERRA, University of Pisa
+http://www.ntop.org/
+
+
+ntop is a tool that shows the network usage, similar to what the
+popular top Unix command does. ntop is based on pcapture
+(ftp://ftp.ee.lbl.gov/pcapture.tar.Z) and it has been written in
+a portable way in order to virtually run on every Unix platform.
+
+ntop can be used in both interactive or web mode. In the first case,
+ntop displays the network status on the user's terminal whereas in
+web mode a web browser (e.g. netscape) can attach to ntop (that acts
+as a web server) and get a dump of the network status. In the latter
+case, ntop can be seen as a simple RMON-like agent with an embedded
+web interface.
+
+ntop uses libpcap, a system-independent interface for user-level
+packet capture.  Before building ntop, you must first retrieve and
+build libpcap, from ftp://ftp.ee.lbl.gov/libpcap.tar.Z
+
+Once libpcap is built (either install it or make sure it's in
+../libpcap), you can build ntop using the procedure in the INSTALL
+file.
+
+ntop is distributed under the GNU GPL (see the COPYING file).
+
+Problems, bugs, questions, desirable enhancements, source code
+contributions, etc., should be sent to the email address
+"ntop@ntop.org".
+
+- Luca Deri <deri@ntop.org>, December 1998.
