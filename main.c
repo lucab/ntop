@@ -109,7 +109,7 @@ static struct option const long_options[] = {
 #endif
 
   { "http-server",                      required_argument, NULL, 'w' },
-  { "set-admin-password",               no_argument,       NULL, 'A' },
+  { "set-admin-password",               optional_argument, NULL, 135 },
   { "filter-expression",                required_argument, NULL, 'B' },
   { "domain",                           required_argument, NULL, 'D' },
 
@@ -226,7 +226,8 @@ void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
-  fprintf(fp, "    [-A             | --set-admin-password]               Set password for the admin user and exit\n");
+  fprintf(fp, "    [-A                                                   Ask admin user password and exit\n");
+  fprintf(fp, "    [                 --set-admin-password <pass>]        Set password for the admin user to <pass>\n");
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 Packet filter expression, like tcpdump\n");
   fprintf(fp, "    [-D <name>      | --domain <name>]                    Internet domain name\n");
 
@@ -306,7 +307,7 @@ void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-w <HTTP port>]\n");
-  fprintf(fp, "    [-A <Set password for the admin user and exit]\n");
+  fprintf(fp, "    [-A <Ask for admin user password and exit]\n");
   fprintf(fp, "    [-B <filter expression (like tcpdump)>]\n");
   fprintf(fp, "    [-D <Internet domain name>]\n");
 
@@ -666,6 +667,19 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
+    case 135:
+      /* Dennis Schoen (dennis@cns.dnsalias.org) allow --set-admin-password=<password> */
+      if (optarg) {
+        stringSanityCheck(optarg);
+        initGdbm(NULL);
+        initThreads();
+        setAdminPassword(optarg);
+        exit(0);
+      } else {
+        setAdminPw = 1;
+      }
+      break;
+
     default:
       printf("FATAL ERROR: unknown ntop option, '%s'\n", argv[optind-1]);
 #ifdef DEBUG
@@ -680,7 +694,7 @@ static int parseOptions(int argc, char* argv []) {
   if(setAdminPw) {
     initGdbm(NULL);
     initThreads();
-    setAdminPassword();
+    setAdminPassword(NULL);
     exit(0);
   }
 

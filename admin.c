@@ -933,29 +933,29 @@ static void addKeyIfMissing(char* key, char* value,
   if((return_data.dptr == NULL) || (existingOK != 0)) {
     char *thePw, pw1[16], pw2[16];
 
-    /* If not existing, the add user 'admin', pw 'admin' */
+    /* If not existing, then add user 'admin' and ask for password  */
 
     if(userQuestion != NULL) {
       memset(pw1, 0, sizeof(pw1)); memset(pw2, 0, sizeof(pw2));
 
       while(pw1[0] == '\0') {
-	thePw = getpass(userQuestion);
+        thePw = getpass(userQuestion);
 
-	if(thePw[0] != '\0') {
-	  if(strlen(thePw) > (sizeof(pw1)-1)) thePw[sizeof(pw1)-1] = '\0';
-	  strcpy(pw1, thePw);
+        if(thePw[0] != '\0') {
+          if(strlen(thePw) > (sizeof(pw1)-1)) thePw[sizeof(pw1)-1] = '\0';
+          strcpy(pw1, thePw);
 
-	  thePw = getpass("Please enter the password again: ");
+          thePw = getpass("Please enter the password again: ");
 
-	  if(strlen(thePw) > (sizeof(pw2)-1)) thePw[sizeof(pw2)-1] = '\0';
-	  strcpy(pw2, thePw);
+          if(strlen(thePw) > (sizeof(pw2)-1)) thePw[sizeof(pw2)-1] = '\0';
+            strcpy(pw2, thePw);
 
-	  if(strcmp(pw1, pw2)) {
-	    printf("Passwords don't match. Please try again.\n");
-	    memset(pw1, 0, sizeof(pw1)); memset(pw2, 0, sizeof(pw2));
-	    sleep(1); /* It avoids message loops */
-	  }
-	}
+          if(strcmp(pw1, pw2)) {
+            printf("Passwords don't match. Please try again.\n");
+            memset(pw1, 0, sizeof(pw1)); memset(pw2, 0, sizeof(pw2));
+            sleep(1); /* It avoids message loops */
+          }
+        }
       }
 
       value = pw1;
@@ -984,20 +984,28 @@ static void addKeyIfMissing(char* key, char* value,
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
+
+    /* print notice to the user */
+    if(memcmp(key,"1admin",6) == 0)
+      traceEvent(TRACE_INFO, "Admin user password has been set.\n");
+
   } else
     free(return_data.dptr);
 }
 
 /* *******************************/
 
-void setAdminPassword(void) {
-  addKeyIfMissing("1admin", NULL, 1, 1, "\nPlease enter the password for the admin user: ");
+void setAdminPassword(char* pass) {
+  if (pass == NULL)
+    addKeyIfMissing("1admin", NULL, 1, 1, "\nPlease enter the password for the admin user: ");
+  else
+    addKeyIfMissing("1admin", pass, 1, 1, NULL);
 }
 
 /* *******************************/
 
 void addDefaultAdminUser(void) {
-  /* Add user 'admin/admin' if not existing */
+  /* Add user 'admin' and ask for password if not existing */
   addKeyIfMissing("1admin", NULL, 1, 0, "\nPlease enter the password for the admin user: ");
 
   /* Add user 'admin' for URL 'show...' if not existing */
