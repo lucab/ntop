@@ -125,7 +125,7 @@ libntop_la_SOURCES = address.c       dataFormat.c  event.c            \
                      regex.c         rules.c       sql.c              \
                      ssl.c           term.c        traffic.c          \
                      util.c          vendor.c      version.c          \
-                     vendortable.h @MORESOURCES@
+                     vendortable.h   ntop_darwin.c
 
 libntop_la_DEPENDENCIES = config.h
 libntop_la_LIBADD       = $(CORELIBS)
