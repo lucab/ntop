@@ -228,7 +228,7 @@ extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 extern void resizeHostHash(int deviceToExtend, short action);
 extern void freeHostInfo(int theDevice, u_int hostIdx);
 extern void freeHostInstances(void);
-extern void purgeIdleHosts(int ignoreIdleTime);
+extern void purgeIdleHosts(int ignoreIdleTime, int devId);
 extern void extendTcpSessionsHash();
 
 /* http.c */

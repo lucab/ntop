@@ -168,10 +168,10 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
   /* FIXME (DL): purgeIdleHosts() acts on actualDeviceId instead of deviceToExtend */
   if(newSize > maxHashSize) /* Hard Limit */ {
-    purgeIdleHosts(1);
+    purgeIdleHosts(1, actualDeviceId);
     return;
   } else
-    purgeIdleHosts(0); /* Delete only idle hosts */
+    purgeIdleHosts(0, actualDeviceId); /* Delete only idle hosts */
 
 #if defined(MULTITHREADED)
   if(device[actualDeviceId].hostsno < (device[deviceToExtend].actualHashSize*HASH_EXTEND_THRESHOLD)) {
@@ -1090,39 +1090,51 @@ void freeHostInstances(void) {
 
 /* ************************************ */
 
-void purgeIdleHosts(int ignoreIdleTime) {
+void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   u_int idx, numFreedBuckets=0, freeEntry=0;
 
-#ifdef PURGE_DEBUG
-  traceEvent(TRACE_INFO, "Purging (%d)....\n", ignoreIdleTime);
+  traceEvent(TRACE_INFO, "Purging Idle Hosts...");
+
+#ifdef MULTITHREADED
+  accessMutex(&hostsHashMutex, "scanIdleLoop");
 #endif
-
   purgeOldFragmentEntries(); /* let's do this too */
-
-  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
-    if((device[actualDeviceId].hash_hostTraffic[idx] != NULL)
-       && (device[actualDeviceId].hash_hostTraffic[idx]->instanceInUse == 0)
-       && (!subnetPseudoLocalHost(device[actualDeviceId].hash_hostTraffic[idx]))) {
+#ifdef MULTITHREADED
+  releaseMutex(&hostsHashMutex);
+#endif
+      
+  for(idx=1; idx<device[actDevice].actualHashSize; idx++) {
+#ifdef MULTITHREADED
+    accessMutex(&hostsHashMutex, "scanIdleLoop");
+#endif
+    if((device[actDevice].hash_hostTraffic[idx] != NULL)
+       && (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
+       && (!subnetPseudoLocalHost(device[actDevice].hash_hostTraffic[idx]))) {
 
       if(ignoreIdleTime)
 	freeEntry=1;
-      else if(((device[actualDeviceId].hash_hostTraffic[idx]->lastSeen+
-		IDLE_HOST_PURGE_TIMEOUT) < actTime)
-	      && (!stickyHosts))
+      else if(((device[actDevice].hash_hostTraffic[idx]->lastSeen+
+		IDLE_HOST_PURGE_TIMEOUT) < actTime) && (!stickyHosts))
 	freeEntry=1;
       else
 	freeEntry=0;
 
       if(freeEntry) {
-	/* updateHostTraffic(device[actualDeviceId].hash_hostTraffic[idx]); */
-	freeHostInfo(actualDeviceId, idx);
+	/* updateHostTraffic(device[actDevice].hash_hostTraffic[idx]); */
+	freeHostInfo(actDevice, idx);
 	numFreedBuckets++;
 
-	if((device[actualDeviceId].hostsno < device[actualDeviceId].hashThreshold)
+	if((device[actDevice].hostsno < device[actDevice].hashThreshold)
 	   || (numFreedBuckets > MIN_NUM_FREED_BUCKETS))
 	  break; /* We freed enough space */
       }
     }
+#ifdef MULTITHREADED
+    releaseMutex(&hostsHashMutex);
+#endif
+  }
+
+  traceEvent(TRACE_INFO, "Purging completed.");
 }
 
 /* ******************************************** */

@@ -355,7 +355,7 @@ static const u_char *p_save;
      } else {
        /* The hashtable is full */
        if(run == 0) {
-	 purgeIdleHosts(1);
+	 purgeIdleHosts(1, actualDeviceId);
        } else {
 	 /* No space yet: let's delete the oldest table entry */
 	 int candidate = 0;
@@ -4185,7 +4185,7 @@ void processPacket(u_char *_deviceId,
    * some space before to continue....
    */
   if(device[actualDeviceId].hostsno > device[actualDeviceId].topHashThreshold)
-    purgeIdleHosts(0 /* Delete only idle hosts */);
+    purgeIdleHosts(0 /* Delete only idle hosts */, actualDeviceId);
 
   memcpy(&lastPktTime, &h->ts, sizeof(lastPktTime));
 

@@ -592,6 +592,8 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
     /* Don't purge hosts if the traffic is high */
     /* if(packetQueueLen < (PACKET_QUEUE_LENGTH/3)) */ {
+      int i;
+      
 #ifdef MULTITHREADED
       accessMutex(&hostsHashMutex, "scanIdleLoop");
 #endif
@@ -611,13 +613,11 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
       sleep(1); /* Give some time to others... */
 
-#ifdef MULTITHREADED
-      accessMutex(&hostsHashMutex, "scanIdleLoop");
-#endif
-      purgeIdleHosts(0 /* Delete only idle hosts */);
-#ifdef MULTITHREADED
-      releaseMutex(&hostsHashMutex);
-#endif
+
+      for(i=0; i<numDevices; i++)
+	if(!device[i].virtualDevice) {
+	  purgeIdleHosts(0 /* Delete only idle hosts */, i);
+	}
     }
 
     if(handleRules)
@@ -819,6 +819,7 @@ RETSIGTYPE cleanup(int signo) {
 
   termIPServices();
   termIPSessions();
+  termNetFlowExporter();
 
 #ifndef WIN32
   endservent();
