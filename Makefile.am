@@ -37,8 +37,8 @@ AS        = @AS@
 AWK       = @AWK@
 CC        = @CC@
 CCLD      = @CCLD@
-CFLAGS    = @CFLAGS@
-LDFLAGS   = @LDFLAGS@
+AM_CFLAGS = @CFLAGS@
+AM_LDFLAGS= @LDFLAGS@
 
 DISTCLEANFILES = *.db #* *~ *.log
 CLEANFILES     = $(DISTCLEANFILES)
@@ -64,7 +64,7 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
 EXTRA_DIST = Makefile.am Makefile.in \
-             acconfig.h acinclude.m4 acinclude.m4.in \
+             acconfig.h acinclude.m4 acinclude.m4.ntop \
              autogen.sh config.guess config.h.in config.sub \
              configure configure.in \
              install-sh libtool ltconfig ltmain.sh \
@@ -98,7 +98,7 @@ ntop_SOURCES   = main.c admin.c
 
 ntop_DEPENDENCIES = libntopreport.la libntop.la
 ntop_LDADD        = libntopreport.la libntop.la
-ntop_LDFLAGS      = $(LDFLAGS)
+ntop_LDFLAGS      = $(AM_LDFLAGS)
 
 noinst_HEADERS     = globals-core.h globals-report.h ntop.h regex.h
 
@@ -118,7 +118,7 @@ libntop_la_SOURCES = address.c       dataFormat.c  \
 
 libntop_la_DEPENDENCIES = config.h
 libntop_la_LIBADD       = 
-libntop_la_LDFLAGS      = $(LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
+libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c \
@@ -132,16 +132,15 @@ libntopreport_la_SOURCES = emitter.c \
 
 libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD       = 
-libntopreport_la_LDFLAGS      = $(LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
+libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
 man_MANS = ntop.8
 
 .PHONY: snapshot
 
 
-aclocal.m4: acinclude.m4
-	@aclocal
-
+acinclude.m4: acinclude.m4.ntop libtool.m4.in
+	@cat acinclude.m4.ntop libtool.m4.in >acinclude.m4
 
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
