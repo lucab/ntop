@@ -560,6 +560,11 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
   fillDomainName(el);
 
+  if(el ->fullDomainName == NULL) {
+    ret = "&nbsp;";
+    return(ret);
+  }
+
   if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
 	      CFG_DATAFILE_DIR, el->fullDomainName) < 0)
     BufferTooShort();
