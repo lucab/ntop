@@ -601,9 +601,7 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
 #endif
 
     if(!myGlobals.capturePackets) break; /* Before */
-
     sleep(60);
-
     if(!myGlobals.capturePackets) break; /* After */
 
 #ifdef DEBUG
@@ -615,6 +613,7 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
     minuteId = atoi(theDate);
     strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
     hourId = atoi(theDate);
+
     if((minuteId <= 1) && (hourId != lastUpdatedHour)) {
       lastUpdatedHour = hourId;
       accessMutex(&myGlobals.hashResizeMutex, "updateHostTrafficStatsThptLoop");

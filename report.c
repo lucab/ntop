@@ -133,7 +133,7 @@ void printTrafficStatistics() {
       if(i > 0) sendString("<br>");
 
       if(myGlobals.rFileName == NULL) {
-	char buf[32], buf1[32];
+	char buf[64], buf1[64];
 
 	if(snprintf(buf, sizeof(buf), "%s (%s%s) [%s/%s]",
 		    myGlobals.device[i].name, getNwInterfaceType(i),

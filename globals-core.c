@@ -128,7 +128,7 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.mergeInterfaces = 1;     /* by default ntop will merge network interfaces */
   myGlobals.isNmapPresent = 0;
 
-  if (! myGlobals.dbPath)
+  if(!myGlobals.dbPath)
     myGlobals.dbPath = strdup(DBFILE_DIR);   /* a NULL pointer will break the logic */
 
   myGlobals.usePersistentStorage = 0;
@@ -163,7 +163,6 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.hostsInfoFile = NULL;
   myGlobals.addressCache = NULL;
 
-
   /* the table of broadcast entries */
   myGlobals.broadcastEntryIdx = 0;
   myGlobals.broadcastEntry = NULL;
@@ -171,7 +170,6 @@ void initNtopGlobals(int argc, char * argv[])
   /* the table of other hosts entries */
   myGlobals.otherHostEntryIdx = 0;
   myGlobals.otherHostEntry = NULL;
-
 
   /* administrative */
   myGlobals.shortDomainName = NULL;
@@ -189,11 +187,12 @@ void initNtopGlobals(int argc, char * argv[])
 
 #endif /* MULTITHREADED */
 
-
 #ifdef HAVE_OPENSSL
   myGlobals.sslInitialized = 0;
   myGlobals.sslPort = 0;           /* Disabled by default: it can enabled using -W <SSL port> */
 #endif
+
+  myGlobals.webPort = 3000;
 
   /* Termination flags */
   myGlobals.capturePackets = 1;    /* By default data are collected into internal variables */
@@ -286,4 +285,7 @@ void initNtopGlobals(int argc, char * argv[])
 #ifdef MEMORY_DEBUG
   myGlobals.allocatedMemory = 0;
 #endif
+
+  myGlobals.enableThUpdate  = 1;
+  myGlobals.enableIdleHosts = 1;
 }
