@@ -525,7 +525,7 @@ void addDefaultProtocols(void) {
   handleProtocolList("Telnet",   "telnet|login|");
   handleProtocolList("NBios-IP", "netbios-ns|netbios-dgm|netbios-ssn|");
   handleProtocolList("Mail",     "pop-2|pop-3|pop3|kpop|smtp|imap|imap2|");
-  handleProtocolList("DHCP/BOOTP", "67-68|");
+  handleProtocolList("DHCP-BOOTP", "67-68|");
   handleProtocolList("SNMP",     "snmp|snmp-trap|");
   handleProtocolList("NNTP",     "nntp|");
   handleProtocolList("NFS",      "mount|pcnfs|bwnfs|nfsd|nfsd-status|");
