@@ -1339,7 +1339,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.91.110-2003-08-16"
+SCRIPTVER="v2.2.91.111-2003-08-18"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -6113,7 +6113,8 @@ RELEASE=""
 
 case "${target}:${CC}" in
     *-*-mingw32*:gcc* )
-        DEFINEOS="MINGW";     STATUS="SUPPORTED";
+        VNOTES  ="Used to (2.1.3) work, but needs somebody to fix lots of problems"
+        DEFINEOS="MINGW";     STATUS="WILLFAIL";
       ;;
 
     *-*-cygwin*:* )
@@ -12921,7 +12922,8 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-net/if.h netinet/if_ether.h
+#include <net/if.h>
+#include <netinet/if_ether.h>
 
 #include <$ac_header>
 _ACEOF

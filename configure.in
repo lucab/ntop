@@ -54,7 +54,7 @@ AC_INIT([ntop],[2.2.91])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.91.110-2003-08-16"
+SCRIPTVER="v2.2.91.111-2003-08-18"
 
 dnl>
 dnl> generate the config header
@@ -881,7 +881,8 @@ RELEASE=""
 
 case "${target}:${CC}" in
     *-*-mingw32*:gcc* )
-        DEFINEOS="MINGW";     STATUS="SUPPORTED";
+        VNOTES  ="Used to (2.1.3) work, but needs somebody to fix lots of problems"
+        DEFINEOS="MINGW";     STATUS="WILLFAIL";
       ;;
 
     *-*-cygwin*:* )
@@ -1948,7 +1949,9 @@ AC_CHECK_HEADERS([netinet/tcp.h])
 AC_CHECK_HEADERS([netinet/udp.h])
 dnl>  Note - if ethertype is missing, ntop.h has the critical #defines extracted...
 AC_CHECK_HEADERS([ethertype.h])
-AC_CHECK_HEADERS([linux/if_pppox.h], [], [], [net/if.h netinet/if_ether.h])
+AC_CHECK_HEADERS([linux/if_pppox.h], [], [], 
+[#include <net/if.h>
+#include <netinet/if_ether.h>])
 
 dnl> OpenSSL ... if not disabled...
 if test ".${ac_disable_openssl}" != ".yes"; then
