@@ -635,9 +635,6 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 
   sendString("</TABLE>\n<p></CENTER>\n");
 
-  sendString("<p><b>NOTE</b>:<ul>"
-	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> for more information about host sorting."
-	     "</ul><p>\n");
 }
 
 /* ******************************* */
