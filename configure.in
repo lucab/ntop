@@ -144,9 +144,6 @@ if test "x${ac_cv_prog_AUTOHEADER}" = "x"; then
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
-dnl>  mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
-dnl>   cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
- dnl>  rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for aclocal ..."
@@ -162,9 +159,6 @@ if test "x${ac_cv_prog_ACLOCAL}" = "x"; then
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
-dnl>   mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
-dnl>   cat ntcsh/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
-dnl>   rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for automake ..."
@@ -221,9 +215,6 @@ else
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
-dnl>   mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
-dnl>   cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
-dnl>   rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for autoconf ..."
@@ -274,9 +265,6 @@ else
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
-dnl>   mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
-dnl>   cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
-dnl>   rm -f ntcsh/Makefile.in.tmp
 fi
 
 dnl> Then check for a match with the scripts...
@@ -499,11 +487,6 @@ AC_ARG_ENABLE(  static-plugins,
               ac_enable_static_plugins="yes",
 	      ac_enable_static_plugins="no")
 
-dnl>  AC_ARG_ENABLE(ntcsh,
-dnl>                [  --enable-ntcsh              enable ntcsh command line version [[default=enabled]]],
-dnl>                ac_disable_ntcsh="yes",
-dnl>                ac_disable_ntcsh="no")
-
 AC_ARG_ENABLE(ignoresigpipe,
               [  --enable-ignoresigpipe      Ignore SIGPIPE errors [[default=do not ignore]]],
               ac_enable_ignoresigpipe="yes",
@@ -678,7 +661,6 @@ DYN_FLAGS=
 EXEEXT=
 INCS=-I$MYRRD
 LIBS=
-dnl>  NTCSH=
 OBJDUMP=
 OBJEXT=o
 SO_VERSION_PATCH=
@@ -879,6 +861,8 @@ case "${target}:${CC}" in
       ;;
 esac
 
+CFLAGS="${CFLAGS} -D${DEFINEOS}"
+
 dnl> Last chance default (if there is an os-specific value, set it above)
 if test ".${LOCALEDIR}" = "."; then
     LOCALEDIR="/usr/lib/locale"
@@ -1077,22 +1061,11 @@ else
     NTOP_APPEND_INCS([${GDBM_INCLUDE}])
 fi
 
-NTOP_RPT_LOC([LBL pcap], [${PCAP_LIB}], [${PCAP_INCLUDE}])
+
+dnl> gdbm
 NTOP_RPT_LOC([GNU gdbm], [${GDBM_LIB}], [${GDBM_INCLUDE}])
-
-AC_CHECK_HEADERS([gdbm.h])
-AC_CHECK_HEADERS([pcap.h])
-
-
-dnl> Graphics
-AC_CHECK_HEADERS(gd.h png.h)
-AC_CHECK_LIB([gd], [gdImageDestroy])
-AC_CHECK_LIB([png], [png_read_info])
-
-
 AC_CHECK_LIB([gdbm], [gdbm_open])
-AC_CHECK_LIB([pcap], [pcap_open_live])
-
+AC_CHECK_HEADERS([gdbm.h])
 AC_MSG_CHECKING([for gdbm])
 if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
    test ".${ac_cv_lib_gdbm_gdbm_open}" != ".yes"; then
@@ -1119,6 +1092,10 @@ else
     AC_MSG_RESULT(ok)
 fi
 
+dnl> pcap
+NTOP_RPT_LOC([LBL pcap], [${PCAP_LIB}], [${PCAP_INCLUDE}])
+AC_CHECK_LIB([pcap], [pcap_open_live])
+AC_CHECK_HEADERS([pcap.h])
 AC_MSG_CHECKING([for pcap])
 if test ".${ac_cv_header_pcap_h}" != ".yes" ||
    test ".${ac_cv_lib_pcap_pcap_open_live}" != ".yes"; then
@@ -1143,57 +1120,14 @@ if test ".${ac_cv_header_pcap_h}" != ".yes" ||
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
 
-AC_MSG_CHECKING([for png])
-if test ".${ac_cv_header_png_h}" != ".yes" ||
-   test ".${ac_cv_lib_png_png_read_info}" != ".yes"; then
-    AC_MSG_WARN(error)
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR: png header or library routines are missing"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*              png.h...${ac_cv_header_png_h}"
-    echo "*              png_read_info() in -lpng...${ac_cv_lib_png_png_read_info}"
-    echo "*"
-    echo "*>>> No way to proceed."
-    echo "*"
-    echo "*???        Install libpng (also called png and png-devel)"
-    echo "*???    and Rerun ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    AC_MSG_ERROR(Unable to continue... aborting ./configure)
-else
-    AC_MSG_RESULT(ok)
-fi
 
-AC_MSG_CHECKING([for gd])
-if test ".${ac_cv_header_gd_h}" != ".yes" ||
-   test ".${ac_cv_lib_gd_gdImageDestroy}" != ".yes"; then
-    AC_MSG_WARN(error)
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR: gd header or library routines are missing"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*              gd.h...${ac_cv_header_gd_h}"
-    echo "*              gdImageDestroy() in -lgd...${ac_cv_lib_gd_gdImageDestroy}"
-    echo "*"
-    echo "*>>> No way to proceed."
-    echo "*"
-    echo "*???        Install gd (and/or gd-devel)"
-    echo "*???    and Rerun ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    AC_MSG_ERROR(Unable to continue... aborting ./configure)
-else
-    AC_MSG_RESULT(ok)
-fi
+dnl> libpng
+AC_CHECK_HEADERS(png.h)
+AC_CHECK_LIB([png], [main],,AC_MSG_ERROR(libpng not found: check www.libpng.org.))
 
-
+dnl> gd
+AC_CHECK_HEADERS(gd.h)
+AC_CHECK_LIB([gd], [gdImageDestroy],,AC_MSG_ERROR(libgd not found: check www.boutell.com/gd.))
 
 
 
@@ -1793,9 +1727,7 @@ esac
 AC_CHECK_LIB([c], [backtrace])
 AC_CHECK_LIB([c], [crypt], , [AC_CHECK_LIB([crypt], [crypt])])
 AC_CHECK_LIB([c], [getopt_long])
-AC_CHECK_LIB([c], [gethostbyaddr_r], , [
-    AC_CHECK_LIB([nsl], [gethostbyaddr_r])
-])
+
 dnl> Plugin load routine...
 dnl>    Most systems... special cases in the platform specific...
 AC_CHECK_LIB([c], [dlopen], , [AC_CHECK_LIB([dl], [dlopen])])
@@ -1807,9 +1739,10 @@ AC_CHECK_LIB([c], [sin], , [AC_CHECK_LIB([m], [sin])])
 AC_CHECK_LIB([c], [ceil], , [AC_CHECK_LIB([m], [ceil])])
 
 dnl> Networking libraries
-AC_CHECK_LIB([nsl], [gethostname], , [AC_CHECK_LIB([nsl], [gethostbyname])])
-AC_CHECK_LIB([socket], [accept])
-AC_CHECK_LIB([resolv], [inet_aton])
+AC_CHECK_LIB([nsl],    [main])
+AC_CHECK_LIB([xnet],   [main])
+AC_CHECK_LIB([socket], [main])
+AC_CHECK_LIB([resolv], [main])
 
 dnl> Multithreading libraries
 AC_CHECK_LIB(pthread, pthread_create, , [
@@ -2542,8 +2475,6 @@ AC_SUBST(DLLTOOL)
 AC_SUBST(DYN_FLAGS)
 AC_SUBST(EXEEXT)
 AC_SUBST(INCS)
-
-dnl> AC_SUBST(NTCSH)
 AC_SUBST(LIBTOOL_DEPS)
 AC_SUBST(NTOP_VERSION_EXTRA)
 AC_SUBST(OBJDUMP)
@@ -2556,10 +2487,6 @@ AC_SUBST(SO_VERSION_PATCH)
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([myrrd/Makefile])
-
-dnl> if test ".${ac_enable_ntcsh}" = ".yes"; then
-dnl>     AC_CONFIG_FILES([ntcsh/Makefile])
-dnl> fi
 
 if test ".${ac_disable_plugins}" != ".yes"; then
     AC_CONFIG_FILES([plugins/Makefile])
