@@ -1328,6 +1328,62 @@ A. They are set in reportUtils.c based on fairly self-obvious functions:
    or if you have cloned MAC addresses for, say, a home Firewall box.
 
 
+Q. What does the "Users" flag mean on a host?
+A. If you go to the "Info about host xxxx" page, there will be data
+   in the "Known Users" section, if it's acting as a server for certain
+   protocols.
+
+   In sessions.c, the function updateHostUsers() is used to maintain the list
+   of "users" of a host.  In handleSession(), as part of the protocol level
+   analysis, the "user" information for various protocols is pulled out of the
+   packets.  Stuff like the "X-Kazaa-Username" header, the "MAIL FROM:" header,
+   etc.  
+
+   We tag users as one or more of the following types:
+        P2P_USER, SMTP_USER, FTP_USER, POP_USER, IMAP_USER
+
+   Note that for P2P, we also record - where possible - whether this user is
+   in P2P_UPLOAD_MODE and/or P2P_DOWNLOAD_MODE.
+   (Added 27Sep2002, Burton)
+
+Q. What about protocol XYZZY?
+A. The analysis of protocols is very limited and unsophisticated.  But,
+   theoretically, if it's there in plain text, we could report on it.
+   The more work you can do up front in identifying the protocol (e.g. port #s,
+   header structure, etc.), the easier it would be to add.
+   (Added 27Sep2002, Burton)
+
+Q. What does the P2P flag mean on a host?
+A. If ntop knows enough to tag you as a P2P user, it's also looking at the
+   other headers to see if it can track what files you're exchanging.  If a host 
+   (i.e. a workstation) downloads a file from another host ("server"), the file
+   name is recorded in the list ntop maintains for both of them.
+
+   If a host has at least one file name recorded, it's tagged with the "P2P" 
+   flag.
+   (Added 27Sep2002, Burton)
+
+Q. Why did you do this (P2P tracking) instead of feature "x"?
+A. Don't know.  I could guess...
+
+   Imagined you are the network manager for a large University network and have
+   to crack down on users who are illegally exchanging copyrighted files or
+   using University resources to run a businesses without paying for the resources
+   being consumed...
+
+   Then again, it could just be because it's cool...
+   (Added 27Sep2002, Burton)
+
+
+Q. What does a "Virtual Host" mean.
+A. If a single instance of a web server handles many web sites, all of the 
+   references resolve to the same name.  The web server uses the "Host:" 
+   header to determine which "index.html" page to serve up.
+
+   ntop monitors port 80 (http:) exchanges and looks for the Host: which allows
+   it to build a list of virtual hosts being handled by the web server.
+   (Added 27Sep2002, Burton)
+
 Q. Why create Userids
 A. Multiple users allow you to control who can alter ntop's performance and/or
    view specific information. If you look on the "Admin" tab, you will see that you can 
