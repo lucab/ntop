@@ -547,7 +547,8 @@ typedef struct {
 #define HTTP_TYPE_JPEG	3
 #define HTTP_TYPE_PNG	4
 #define HTTP_TYPE_CSS	5
- 
+#define HTTP_TYPE_TEXT	6
+
 #define HTTP_FLAG_IS_CACHEABLE		(1<<0)
 #define HTTP_FLAG_NO_CACHE_CONTROL	(1<<1)
 #define HTTP_FLAG_KEEP_OPEN		(1<<2)

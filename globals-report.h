@@ -122,7 +122,7 @@ extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 					TrafficCounter tcSent, 
 					TrafficCounter tcRcvd);
 extern char* getNbNodeType(char nodeType);
-extern void dumpNtopHashes();
+extern void dumpNtopHashes(char*);
 
 /* report.c */
 extern void initReports(void);

@@ -820,6 +820,9 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
     case HTTP_TYPE_CSS:
       sendString("Content-Type: text/css\n");
       break;
+    case HTTP_TYPE_TEXT:
+      sendString("Content-Type: text/plain\n");
+      break;
     case HTTP_TYPE_NONE:
       break;
 #ifdef DEBUG
@@ -1362,9 +1365,12 @@ static int returnHTTPPage(char* pageName, int postLen) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printNtopConfigInfo();
   } else if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    dumpNtopHashes();
-    printTrailer=0;
+    sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+    if((questionMark == NULL) || (questionMark[0] == '\0'))
+      dumpNtopHashes(NULL);
+    else
+      dumpNtopHashes(&questionMark[1]);
+    printTrailer = 0;
   } else if(strlen(pageName) > 5) {
     int i;
     char hostName[32];
