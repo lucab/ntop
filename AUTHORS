@@ -166,6 +166,37 @@ Contributors for ntop 3.0:
          Sumit Pandya <sumit at elitecore.com>
 
 
+Contributors for ntop 3.1:
+
+         (First off the usual suspects)
+                   Luca
+                   Burton/Dinesh/Robbert/Rocco
+
+         Alberto Ornaghi (ALoR) / Marco Valleri (NaGA) -- Ettercap
+
+         David J. Bianco <bianco@jlab.org
+         Joshua Cowan <jcowan@pobox.com>
+         Gino Dion <gino.dion@alcatel.com>
+         Nathan G. Grennan <ntop-dev@cygnusx-1.org>
+         Bret Jordan <bret.jordan@utah.edu>
+         Leo
+         Carlo Luchetti <cluchetti@toplan.it>
+         Tony Nelson <tnelson@starpoint.com>
+         Abraham Saad Porto <sistemas@anpala.com.co>
+         Bill Robbins <robbins@hostopia.com>
+         Ralf Stodt <rstodt@magellan-net.de>
+         Julian Touche <julien.touche@lycos.com>
+         Gilse Vanem <giva@bgnett.no>
+         J.P. Van Oyen
+         Jakub Walczak <jaqb@jaqb.int.pl>
+         Andy Wood <andy.wood@sptrm.com>
+         
+         And an international organization which wishes to remain anonymous.
+         
+         AND: The Don Quixote prize (for tilting at Windmills) goes to...
+              Julien Touche for his attack on OpenBSD!
+
+
 If you've been left off the list, it's not intentional.  Please let us know!
 
 Thanks!
