@@ -48,7 +48,7 @@ dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.1.58pre])
 AC_PREREQ([2.50])
-SCRIPTVER="v1.101-2003-01-31"
+SCRIPTVER="v1.102-2003-02-10"
 
 dnl>
 dnl> generate the config header
@@ -1891,6 +1891,13 @@ dnl> last test line and the various actions if true...
                 AC_MSG_RESULT([ok, found in /usr/local/lib])
                 LIBS="${LIBS} -L/usr/local/lib -lssl"
                 AC_DEFINE_UNQUOTED(HAVE_OPENSSL, 1, [Show we found -lssl and set LIBS])
+            elif test -d /usr &&
+                 test -d /usr/lib64 &&
+                 (test -r /usr/lib64/libssl.so ||
+                  test -r /usr/lib64/libssl.a); then
+                AC_MSG_RESULT([ok, using multi arch location /usr/lib64])
+                LIBS="${LIBS} -L/usr/lib64 -lssl"
+                AC_DEFINE_UNQUOTED(HAVE_OPENSSL, 1, [Show we found -lssl and set LIBS])
             else
                 AC_MSG_RESULT(error)
                 echo
@@ -1907,6 +1914,7 @@ dnl> last test line and the various actions if true...
                 echo "*"
                 echo "*                /usr/lib"
                 echo "*                /usr/local/lib"
+                echo "*                /usr/lib64"
                 echo "*"
                 echo "*>>> Continuing without openSSL."
                 echo "*       (https requests will not be supported)."
@@ -2440,6 +2448,13 @@ if test ".${ac_disable_gdchart}" != ".yes"; then
                    AC_MSG_RESULT([ok, found in ${GD_DIRECTORY}])
                    LIBS="${LIBS} -L${GD_DIRECTORY} -lgd"
                    AC_DEFINE_UNQUOTED([HAVE_GD], 1, [Enable GD])
+               elif test -d /usr &&
+                  test -d /usr/lib64 &&
+                  (test -r /usr/lib64/libgd.so ||
+                   test -r /usr/lib64/libgd.a); then
+                   AC_MSG_RESULT([ok, found in /usr/lib64])
+                   LIBS="${LIBS} -L/usr/lib64 -lgd"
+                   AC_DEFINE_UNQUOTED([HAVE_GD], 1, [Enable GD])
                else
                    AC_MSG_RESULT(error)
                    echo
@@ -2458,6 +2473,7 @@ if test ".${ac_disable_gdchart}" != ".yes"; then
                    echo "*                /usr/lib"
                    echo "*                /usr/local/lib"
                    echo "*                ${GD_DIRECTORY} (ntop source tree)"
+                   echo "*                /usr/lib64"
                    echo "*"
                    echo "*>>> ./configure continues, charts will not be available."
                    echo "*"
@@ -2641,6 +2657,14 @@ if test ".${ac_disable_gdchart}" != ".yes"; then
                     LIBS="${LIBS} -L${LIBPNG_DIRECTORY} -lpng"
                     AC_MSG_RESULT([ok, found in ${LIBPNG_DIRECTORY}])
                     AC_DEFINE_UNQUOTED([HAVE_PNG], 1, [Enable libpng])
+                elif test -d /usr &&
+                   test -d /usr/lib64 &&
+                   (test -r /usr/lib64/libpng.so ||
+                    test -r /usr/lib64/libpng.a); then
+                    LIBS="${LIBS} -L/usr/lib64 -lpng"
+                    AC_MSG_RESULT([ok, found in /usr/lib64])
+                    LIBS="${LIBS} -L/usr/lib64 -lpng"
+                    AC_DEFINE_UNQUOTED([HAVE_PNG], 1, [Enable libpng])
                 else
                     AC_MSG_RESULT(error)
                     echo
@@ -2659,6 +2683,7 @@ if test ".${ac_disable_gdchart}" != ".yes"; then
                     echo "*                /usr/lib"
                     echo "*                /usr/local/lib"
                     echo "*                ${LIBPNG_DIRECTORY}"
+                    echo "*                /usr/lib64"
                     echo "*                                         (ntop source tree)"
                     echo "*"
                     echo "*>>> ./configure continues, charts will not be available."
@@ -2844,6 +2869,13 @@ elif test ".${ZLIB_ROOT}" = "."; then
              LIBS="${LIBS} -L${ZLIB_DIRECTORY} -lz"
              AC_MSG_RESULT([ok, found in ${ZLIB_DIRECTORY}])
              AC_DEFINE_UNQUOTED([HAVE_ZLIB], 1, [Enable compression - zlib])
+         elif test -d /usr &&
+            test -d /usr/lib64 &&
+            (test -r /usr/lib64/libz.so ||
+             test -r /usr/lib64/libz.a); then
+             LIBS="${LIBS} -L/usr/lib64 -lz"
+             AC_MSG_RESULT([ok, found in /usr/lib64])
+             AC_DEFINE_UNQUOTED([HAVE_ZLIB], 1, [Enable compression - zlib])
          else
              AC_MSG_RESULT(error)
              echo
@@ -2861,6 +2893,7 @@ elif test ".${ZLIB_ROOT}" = "."; then
              echo "*                /usr/lib"
              echo "*                /usr/local/lib"
              echo "*                ${ZLIB_DIRECTORY} (ntop source tree)"
+             echo "*                /usr/lib64"
              echo "*"
              echo "*>>> Continuing without zlib."
              echo "*       (http requests will not be compressed for transmission)."
@@ -3128,6 +3161,13 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
                AC_MSG_RESULT([ok, library found in /usr/local/lib])
                LIBS="${LIBS} -L/usr/local/lib -lxmldump"
                AC_DEFINE_UNQUOTED(HAVE_LIBXML2, 1)
+           elif test -d /usr &&
+                test -d /usr/lib64 &&
+                (test -r /usr/lib64/libxml2.so ||
+                 test -r /usr/lib64/libxml2.a); then
+               AC_MSG_RESULT([ok, library found in /usr/lib64])
+               LIBS="${LIBS} -L/usr/lib64 -lxmldump"
+               AC_DEFINE_UNQUOTED(HAVE_LIBXML2, 1)
            else
                AC_MSG_RESULT(error)
                echo
@@ -3143,6 +3183,7 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
                echo "*"
                echo "*                /usr/lib"
                echo "*                /usr/local/lib"
+               echo "*                /usr/lib64"
                echo "*"
                echo "*>>> ./configure continues, xml dump will not be available."
                echo "*"
@@ -3302,6 +3343,13 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
                    AC_MSG_RESULT([ok, found in /usr/local/lib])
                    LIBS="${LIBS} -L/usr/local/lib -lglib"
                    AC_DEFINE_UNQUOTED(HAVE_LIBGLIB, 1)
+               elif test -d /usr &&
+                  test -d /usr/lib64 &&
+                  (test -r /usr/lib64/libglib.so ||
+                   test -r /usr/lib64/libglib.a); then
+                   AC_MSG_RESULT([ok, found in /usr/lib64])
+                   LIBS="${LIBS} -L/usr/lib64 -lglib"
+                   AC_DEFINE_UNQUOTED(HAVE_LIBGLIB, 1)
                else
                    AC_MSG_RESULT(error)
                    echo
@@ -3318,6 +3366,7 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
                    echo "*"
                    echo "*                /usr/lib"
                    echo "*                /usr/local/lib"
+                   echo "*                /usr/lib64"
                    echo "*"
                    echo "*>>> ./configure continues, xml dump will not be available."
                    echo "*"
@@ -3626,6 +3675,13 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
                     LIBS="${LIBS} -L/usr/local/lib -lgdome"
                     AC_MSG_RESULT([ok, found in /usr/local/lib])
                     AC_DEFINE_UNQUOTED(HAVE_LIBGDOME, 1)
+                elif test -d /usr &&
+                     test -d /usr/lib64 &&
+                     (test -r /usr/lib64/libgdome.so ||
+                      test -r /usr/lib64/libgdome.a); then
+                    LIBS="${LIBS} -L/usr/lib64 -lgdome"
+                    AC_MSG_RESULT([ok, found in /usr/lib64])
+                    AC_DEFINE_UNQUOTED(HAVE_LIBGDOME, 1)
                 else
                     AC_MSG_RESULT(error)
                     echo
@@ -3642,6 +3698,7 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
                     echo "*"
                     echo "*                /usr/lib"
                     echo "*                /usr/local/lib"
+                    echo "*                /usr/lib64"
                     echo "*"
                     echo "*>>> ./configure continues, xml dump will not be available."
                     echo "*"
@@ -3892,6 +3949,13 @@ elif test ".${RRD_ROOT}" = "."; then
             AC_MSG_RESULT([ok, found in /usr/local/lib])
             RRDLIB="${RRDLIB} -L/usr/local/lib -lrrd"
             AC_DEFINE_UNQUOTED([HAVE_RRD], 1, [Enable RRD])
+        elif test -d /usr &&
+           test -d /usr/lib64 &&
+           (test -r /usr/lib64/librrd.so ||
+            test -r /usr/lib64/librrd.a); then
+            AC_MSG_RESULT([ok, found in /usr/lib64])
+            RRDLIB="${RRDLIB} -L/usr/lib64 -lrrd"
+            AC_DEFINE_UNQUOTED([HAVE_RRD], 1, [Enable RRD])
         else
             AC_MSG_RESULT(error)
             echo
@@ -3908,6 +3972,7 @@ elif test ".${RRD_ROOT}" = "."; then
             echo "*"
             echo "*                /usr/lib"
             echo "*                /usr/local/lib"
+            echo "*                /usr/lib64"
             echo "*"
             echo "*>>> ./configure continues, rrd will not be available."
             echo "*"

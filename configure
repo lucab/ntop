@@ -1421,7 +1421,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v1.101-2003-01-31"
+SCRIPTVER="v1.102-2003-02-10"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -25563,6 +25563,18 @@ cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
+            elif test -d /usr &&
+                 test -d /usr/lib64 &&
+                 (test -r /usr/lib64/libssl.so ||
+                  test -r /usr/lib64/libssl.a); then
+                echo "$as_me:$LINENO: result: ok, using multi arch location /usr/lib64" >&5
+echo "${ECHO_T}ok, using multi arch location /usr/lib64" >&6
+                LIBS="${LIBS} -L/usr/lib64 -lssl"
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_OPENSSL 1
+_ACEOF
+
             else
                 echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
@@ -25580,6 +25592,7 @@ echo "${ECHO_T}error" >&6
                 echo "*"
                 echo "*                /usr/lib"
                 echo "*                /usr/local/lib"
+                echo "*                /usr/lib64"
                 echo "*"
                 echo "*>>> Continuing without openSSL."
                 echo "*       (https requests will not be supported)."
@@ -26795,6 +26808,18 @@ cat >>confdefs.h <<_ACEOF
 #define HAVE_GD 1
 _ACEOF
 
+               elif test -d /usr &&
+                  test -d /usr/lib64 &&
+                  (test -r /usr/lib64/libgd.so ||
+                   test -r /usr/lib64/libgd.a); then
+                   echo "$as_me:$LINENO: result: ok, found in /usr/lib64" >&5
+echo "${ECHO_T}ok, found in /usr/lib64" >&6
+                   LIBS="${LIBS} -L/usr/lib64 -lgd"
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_GD 1
+_ACEOF
+
                else
                    echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
@@ -26814,6 +26839,7 @@ echo "${ECHO_T}error" >&6
                    echo "*                /usr/lib"
                    echo "*                /usr/local/lib"
                    echo "*                ${GD_DIRECTORY} (ntop source tree)"
+                   echo "*                /usr/lib64"
                    echo "*"
                    echo "*>>> ./configure continues, charts will not be available."
                    echo "*"
@@ -27125,6 +27151,19 @@ cat >>confdefs.h <<_ACEOF
 #define HAVE_PNG 1
 _ACEOF
 
+                elif test -d /usr &&
+                   test -d /usr/lib64 &&
+                   (test -r /usr/lib64/libpng.so ||
+                    test -r /usr/lib64/libpng.a); then
+                    LIBS="${LIBS} -L/usr/lib64 -lpng"
+                    echo "$as_me:$LINENO: result: ok, found in /usr/lib64" >&5
+echo "${ECHO_T}ok, found in /usr/lib64" >&6
+                    LIBS="${LIBS} -L/usr/lib64 -lpng"
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_PNG 1
+_ACEOF
+
                 else
                     echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
@@ -27144,6 +27183,7 @@ echo "${ECHO_T}error" >&6
                     echo "*                /usr/lib"
                     echo "*                /usr/local/lib"
                     echo "*                ${LIBPNG_DIRECTORY}"
+                    echo "*                /usr/lib64"
                     echo "*                                         (ntop source tree)"
                     echo "*"
                     echo "*>>> ./configure continues, charts will not be available."
@@ -27463,6 +27503,18 @@ cat >>confdefs.h <<_ACEOF
 #define HAVE_ZLIB 1
 _ACEOF
 
+         elif test -d /usr &&
+            test -d /usr/lib64 &&
+            (test -r /usr/lib64/libz.so ||
+             test -r /usr/lib64/libz.a); then
+             LIBS="${LIBS} -L/usr/lib64 -lz"
+             echo "$as_me:$LINENO: result: ok, found in /usr/lib64" >&5
+echo "${ECHO_T}ok, found in /usr/lib64" >&6
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_ZLIB 1
+_ACEOF
+
          else
              echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
@@ -27481,6 +27533,7 @@ echo "${ECHO_T}error" >&6
              echo "*                /usr/lib"
              echo "*                /usr/local/lib"
              echo "*                ${ZLIB_DIRECTORY} (ntop source tree)"
+             echo "*                /usr/lib64"
              echo "*"
              echo "*>>> Continuing without zlib."
              echo "*       (http requests will not be compressed for transmission)."
@@ -27861,6 +27914,17 @@ echo "${ECHO_T}ok, library found in /usr/local/lib" >&6
 #define HAVE_LIBXML2 1
 _ACEOF
 
+           elif test -d /usr &&
+                test -d /usr/lib64 &&
+                (test -r /usr/lib64/libxml2.so ||
+                 test -r /usr/lib64/libxml2.a); then
+               echo "$as_me:$LINENO: result: ok, library found in /usr/lib64" >&5
+echo "${ECHO_T}ok, library found in /usr/lib64" >&6
+               LIBS="${LIBS} -L/usr/lib64 -lxmldump"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXML2 1
+_ACEOF
+
            else
                echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
@@ -27877,6 +27941,7 @@ echo "${ECHO_T}error" >&6
                echo "*"
                echo "*                /usr/lib"
                echo "*                /usr/local/lib"
+               echo "*                /usr/lib64"
                echo "*"
                echo "*>>> ./configure continues, xml dump will not be available."
                echo "*"
@@ -28149,6 +28214,17 @@ echo "${ECHO_T}ok, found in /usr/local/lib" >&6
 #define HAVE_LIBGLIB 1
 _ACEOF
 
+               elif test -d /usr &&
+                  test -d /usr/lib64 &&
+                  (test -r /usr/lib64/libglib.so ||
+                   test -r /usr/lib64/libglib.a); then
+                   echo "$as_me:$LINENO: result: ok, found in /usr/lib64" >&5
+echo "${ECHO_T}ok, found in /usr/lib64" >&6
+                   LIBS="${LIBS} -L/usr/lib64 -lglib"
+                   cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGLIB 1
+_ACEOF
+
                else
                    echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
@@ -28166,6 +28242,7 @@ echo "${ECHO_T}error" >&6
                    echo "*"
                    echo "*                /usr/lib"
                    echo "*                /usr/local/lib"
+                   echo "*                /usr/lib64"
                    echo "*"
                    echo "*>>> ./configure continues, xml dump will not be available."
                    echo "*"
@@ -28608,6 +28685,17 @@ echo "${ECHO_T}ok, found in /usr/local/lib" >&6
 #define HAVE_LIBGDOME 1
 _ACEOF
 
+                elif test -d /usr &&
+                     test -d /usr/lib64 &&
+                     (test -r /usr/lib64/libgdome.so ||
+                      test -r /usr/lib64/libgdome.a); then
+                    LIBS="${LIBS} -L/usr/lib64 -lgdome"
+                    echo "$as_me:$LINENO: result: ok, found in /usr/lib64" >&5
+echo "${ECHO_T}ok, found in /usr/lib64" >&6
+                    cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGDOME 1
+_ACEOF
+
                 else
                     echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
@@ -28625,6 +28713,7 @@ echo "${ECHO_T}error" >&6
                     echo "*"
                     echo "*                /usr/lib"
                     echo "*                /usr/local/lib"
+                    echo "*                /usr/lib64"
                     echo "*"
                     echo "*>>> ./configure continues, xml dump will not be available."
                     echo "*"
@@ -29395,6 +29484,18 @@ cat >>confdefs.h <<_ACEOF
 #define HAVE_RRD 1
 _ACEOF
 
+        elif test -d /usr &&
+           test -d /usr/lib64 &&
+           (test -r /usr/lib64/librrd.so ||
+            test -r /usr/lib64/librrd.a); then
+            echo "$as_me:$LINENO: result: ok, found in /usr/lib64" >&5
+echo "${ECHO_T}ok, found in /usr/lib64" >&6
+            RRDLIB="${RRDLIB} -L/usr/lib64 -lrrd"
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_RRD 1
+_ACEOF
+
         else
             echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
@@ -29412,6 +29513,7 @@ echo "${ECHO_T}error" >&6
             echo "*"
             echo "*                /usr/lib"
             echo "*                /usr/local/lib"
+            echo "*                /usr/lib64"
             echo "*"
             echo "*>>> ./configure continues, rrd will not be available."
             echo "*"

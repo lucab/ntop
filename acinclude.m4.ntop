@@ -202,6 +202,13 @@ elif test ".${$5_ROOT}" = "."; then
         AC_MSG_RESULT([ok, found in /usr/local/lib])
         LIBS="${LIBS} -L/usr/local/lib -l$1"
         AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])
+    elif test -d /usr &&
+         test -d /usr/lib64 &&
+         (test -r /usr/lib64/lib$1.so ||
+          test -r /usr/lib64/lib$1.a); then
+        AC_MSG_RESULT([ok, found in /usr/lib64])
+        LIBS="${LIBS} -L/usr/lib64 -l$1"
+        AC_DEFINE_UNQUOTED(HAVE_$5, 1, [Show we found -l$1 and set LIBS])
     elif test ".${DEFINEOS}" = ".SOLARIS" &&
          test -d /usr/local/tools/SunOS &&
          test -d /usr/local/tools/SunOS/lib &&
