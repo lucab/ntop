@@ -3819,19 +3819,49 @@ char *i18n_xvert_acceptlanguage2common(const char *input) {
 
 void setHostFingerprint(HostTraffic *srcHost) {
   FILE *fd = NULL;
-  char *WIN, *MSS, *WSS, *ttl, *flags;
+  char *WIN, *MSS, *WSS, *ttl, *flags, *work;
   int S, N, D, T, done = 0, idx;
   char fingerprint[32];
   char *strtokState;
   u_char compressedFormat;
 
-  if((srcHost->fingerprint == NULL)       /* No fingerprint yet    */
-     || (srcHost->fingerprint[0] == ':')  /* OS already calculated */
-     || (strlen(srcHost->fingerprint) < 28))
-    return;
+#ifdef FINGERPRINT_DEBUG
+  traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint(0x%08x)", srcHost);
+#endif
 
-  if(myGlobals.childntoppid != 0)
+  if(srcHost->fingerprint == NULL) {
+    /* No fingerprint yet    */
+#ifdef FINGERPRINT_DEBUG
+    traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint() failed test 1");
+#endif
+    return;
+}
+
+#ifdef FINGERPRINT_DEBUG
+  traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint() '%s'(%d)",
+             srcHost->fingerprint, strlen(srcHost->fingerprint));
+#endif
+
+  if(srcHost->fingerprint[0] == ':') {
+    /* OS already calculated */
+#ifdef FINGERPRINT_DEBUG
+    traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint() failed test 2");
+#endif
+    return;
+}
+  if(strlen(srcHost->fingerprint) < 28) {
+#ifdef FINGERPRINT_DEBUG
+    traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint() failed test 3");
+#endif
+    return;
+}
+
+  if(myGlobals.childntoppid != 0) {
+#ifdef FINGERPRINT_DEBUG
+    traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint() failed test 4");
+#endif
     return; /* Reporting fork()ed child, don't update! */
+  }
 
   accessAddrResMutex("makeHostLink");
 
@@ -3841,11 +3871,20 @@ void setHostFingerprint(HostTraffic *srcHost) {
   MSS = strtok_r(NULL, ":", &strtokState);     if(!MSS)    goto unknownFingerprint;
   ttl = strtok_r(NULL, ":", &strtokState);     if(!ttl)    goto unknownFingerprint;
   WSS = strtok_r(NULL, ":", &strtokState);     if(!WSS)    goto unknownFingerprint;
-  S = atoi(strtok_r(NULL, ":", &strtokState)); if(!S)      goto unknownFingerprint;
-  N = atoi(strtok_r(NULL, ":", &strtokState)); if(!N)      goto unknownFingerprint;
-  D = atoi(strtok_r(NULL, ":", &strtokState)); if(!D)      goto unknownFingerprint;
-  T = atoi(strtok_r(NULL, ":", &strtokState)); if(!T)      goto unknownFingerprint;
+  work = strtok_r(NULL, ":", &strtokState);    if(!work)   goto unknownFingerprint;
+  S = atoi(work);
+  work = strtok_r(NULL, ":", &strtokState);    if(!work)   goto unknownFingerprint;
+  N = atoi(work);
+  work = strtok_r(NULL, ":", &strtokState);    if(!work)   goto unknownFingerprint;
+  D = atoi(work);
+  work = strtok_r(NULL, ":", &strtokState);    if(!work)   goto unknownFingerprint;
+  T = atoi(work);
   flags = strtok_r(NULL, ":", &strtokState);   if(!flags)  goto unknownFingerprint;
+
+#ifdef FINGERPRINT_DEBUG
+  traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: WIN%s MSS%s ttl%s WSS%s S%d N%d D%d T%s FLAGS%s",
+             WIN, MSS, ttl, WSS, S, N, D, T, flags);
+#endif
 
   fd=checkForInputFile(NULL, NULL, CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
 
@@ -3906,12 +3945,21 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
       } /* while ! eof */
   }
+#ifdef FINGERPRINT_DEBUG
+    else 
+      traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: Unable to open file");
+#endif
+
 
   if(!done) {
     /* Unknown fingerprint */
   unknownFingerprint: /* Empty OS name */
     srcHost->fingerprint[0] = ':', srcHost->fingerprint[1] = '\0';
   }
+#ifdef FINGERPRINT_DEBUG
+    else 
+      traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: match! %s", srcHost->fingerprint);
+#endif
 
   releaseAddrResMutex();
 }
