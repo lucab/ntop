@@ -1095,6 +1095,7 @@ AC_OUTPUT([
 Makefile
 plugins/Makefile
 plugins/pep/Makefile
+intop/Makefile
 ntop-config
 ], [
 case "$CONFIG_FILES" in
@@ -1102,10 +1103,6 @@ case "$CONFIG_FILES" in
     chmod +x ntop-config
     ;;
 esac])
-
-if test ".$ac_disable_intop" = ".no"; then
-AC_OUTPUT([intop/Makefile])
-fi
 
 dnl>
 dnl> versioning
