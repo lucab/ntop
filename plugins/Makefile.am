@@ -24,7 +24,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
 
-SUBDIRS = . pep
+SUBDIRS = . #pep
 
 DIST_COMMON = Makefile.am Makefile.in
 CLEANFILES  =
@@ -43,12 +43,12 @@ INCLUDES = -I.. @INCS@
 # The meat for ntop
 #
 noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so \
-                  nfsPlugin.so \
-		  rmonPlugin.so wapPlugin.so
+                  nfsPlugin.so 
+#		  rmonPlugin.so wapPlugin.so
 
 lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
-                  libnfsPlugin.la \
-		  librmonPlugin.la libwapPlugin.la
+                  libnfsPlugin.la 
+#		  librmonPlugin.la libwapPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
@@ -59,11 +59,11 @@ liblastSeenPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FL
 libnfsPlugin_la_SOURCES = nfsPlugin.c
 libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
-librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
-librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+#librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
+#librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
-libwapPlugin_la_SOURCES = wapPlugin.c
-libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+#libwapPlugin_la_SOURCES = wapPlugin.c
+#libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 
 #
@@ -90,17 +90,17 @@ lastSeenPlugin.so: .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 nfsPlugin.so: .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
 
-.libs/librmonPlugin.so@SO_VERSION_PATCH@:
-	cc -bundle -flat_namespace -undefined suppress -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
+#.libs/librmonPlugin.so@SO_VERSION_PATCH@:
+#	cc -bundle -flat_namespace -undefined suppress -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
 
-rmonPlugin.so: .libs/librmonPlugin.so@SO_VERSION_PATCH@
-	@ln -s .libs/librmonPlugin.so rmonPlugin.so
+#rmonPlugin.so: .libs/librmonPlugin.so@SO_VERSION_PATCH@
+#	@ln -s .libs/librmonPlugin.so rmonPlugin.so
 
-.libs/libwapPlugin.so@SO_VERSION_PATCH@:
-	cc -bundle -flat_namespace -undefined suppress -o .libs/libwapPlugin.so@SO_VERSION_PATCH@ wapPlugin.o
+#.libs/libwapPlugin.so@SO_VERSION_PATCH@:
+#	cc -bundle -flat_namespace -undefined suppress -o .libs/libwapPlugin.so@SO_VERSION_PATCH@ wapPlugin.o
 
-wapPlugin.so: .libs/libwapPlugin.so@SO_VERSION_PATCH@
-	@ln -s .libs/libwapPlugin.so wapPlugin.so
+#wapPlugin.so: .libs/libwapPlugin.so@SO_VERSION_PATCH@
+#	@ln -s .libs/libwapPlugin.so wapPlugin.so
 
 install-data-local:
 	@$(top_srcdir)/mkinstalldirs $(plugindir);
