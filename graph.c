@@ -172,7 +172,8 @@ void drawBar(short width,
 	     char  *labels[],              /* slice labels */
 	     float data[]) { 
   gdImagePtr im;
-  int black, white, colors[64], numColors, i, maxval=0;
+  int black, white, colors[64], numColors, i;
+  float maxval=0;
   int center_x, center_y;
   float total, yscale, txtsz, txtht;
   int vmargin, hmargin, base, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
@@ -290,7 +291,8 @@ void drawArea(short width,
 	      char *xtitle,
 	      char *ytitle) {
   gdImagePtr im;
-  int black, white, colors[64], numColors, i, maxval=0;
+  int black, white, colors[64], numColors, i;
+  float maxval=0;
   int center_x, center_y, base;
   float total, yscale, txtsz, txtht;
   float vmargin, hmargin, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
