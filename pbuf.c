@@ -3424,12 +3424,12 @@ static void processIpPkt(const u_char *bp,
   off = ntohs(ip.ip_off);
 
   tcpUdpLen = ntohs(ip.ip_len) - hlen;
-
+  
   switch(ip.ip_p) {
   case IPPROTO_TCP:
     if(tcpUdpLen < sizeof(struct tcphdr)) {
       if(enableSuspiciousPacketDump) {
-	traceEvent(TRACE_WARNING, "WARNING: Malformed TCP pkt %s->%s detected",
+	traceEvent(TRACE_WARNING, "WARNING: Malformed TCP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket();
@@ -3551,7 +3551,7 @@ static void processIpPkt(const u_char *bp,
 
     if(tcpUdpLen < sizeof(struct udphdr)) {
       if(enableSuspiciousPacketDump) {
-	traceEvent(TRACE_WARNING, "WARNING: Malformed UDP pkt %s->%s detected",
+	traceEvent(TRACE_WARNING, "WARNING: Malformed UDP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket();
@@ -3853,7 +3853,7 @@ static void processIpPkt(const u_char *bp,
   case IPPROTO_ICMP:
     if(tcpUdpLen < sizeof(struct icmp)) {
       if(enableSuspiciousPacketDump) {
-	traceEvent(TRACE_WARNING, "WARNING: Malformed ICMP pkt %s->%s detected",
+	traceEvent(TRACE_WARNING, "WARNING: Malformed ICMP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket();

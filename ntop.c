@@ -821,12 +821,6 @@ RETSIGTYPE cleanup(int signo) {
   termLogger();
   (void)fflush(stdout);
 
-  if(device[actualDeviceId].pcapDumper != NULL)
-    pcap_dump_close(device[actualDeviceId].pcapDumper);
-
-  if(device[actualDeviceId].pcapErrDumper != NULL)
-    pcap_dump_close(device[actualDeviceId].pcapErrDumper);
-
   termIPServices();
   termIPSessions();
   termNetFlowExporter();
@@ -876,54 +870,64 @@ RETSIGTYPE cleanup(int signo) {
   deleteMutex(&gdbmMutex);
 #endif
 #endif
-
-  if(rFileName == NULL)
-    for(i=0; i<numDevices; i++) {
-      int j;
+  
+  for(i=0; i<numDevices; i++) {
+    int j;
       
-      if(!device[i].virtualDevice) {
-	if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
-	  printf("%s packets received by filter on %s\n",
-		 formatPkts((TrafficCounter)stat.ps_recv), device[i].name);
-	  printf("%s packets dropped by kernel\n",
-		 formatPkts((TrafficCounter)(stat.ps_drop)));
+    traceEvent(TRACE_INFO, "Freeing device %s (idx=%d)...", device[i].name, i);
+
+    if(!device[i].virtualDevice) {
+      if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
+	printf("%s packets received by filter on %s\n",
+	       formatPkts((TrafficCounter)stat.ps_recv), device[i].name);
+	printf("%s packets dropped by kernel\n",
+	       formatPkts((TrafficCounter)(stat.ps_drop)));
 #ifdef MULTITHREADED
-	  printf("%s packets dropped by ntop\n",
-		 formatPkts(device[i].droppedPackets));
+	printf("%s packets dropped by ntop\n",
+	       formatPkts(device[i].droppedPackets));
 #endif
-	}
       }
-
-      if(device[i].ipTrafficMatrix != NULL) {
-	for(j=0; j<device[i].numHosts*device[i].numHosts; j++) 
-	  if(device[i].ipTrafficMatrix[j] != NULL)
-	    free(device[i].ipTrafficMatrix[j]);
-	
-	free(device[i].ipTrafficMatrix);
-      }
-      
-      if(device[i].ipTrafficMatrix != NULL) 
-	free(device[i].ipTrafficMatrix);
-
-      for(j=0; j<device[i].numHosts; j++) {
-	if(device[i].ipTrafficMatrixHosts[j] != NULL) 
-	  free(device[i].ipTrafficMatrixHosts[j]);
-      }
-
-      if(device[i].ipTrafficMatrixHosts != NULL) 
-	free(device[i].ipTrafficMatrixHosts);
-
-      if(device[i].ipProtoStats != NULL)
-	free(device[i].ipProtoStats);
-      
-      if(device[i].hash_hostTraffic != NULL)
-	free(device[i].hash_hostTraffic);
-      
-      if(device[i].tcpSession != NULL)
-	free(device[i].tcpSession);
-
-      free(device[i].name);
     }
+
+    if(device[i].ipTrafficMatrix != NULL) {
+      for(j=0; j<device[i].numHosts*device[i].numHosts; j++) 
+	if(device[i].ipTrafficMatrix[j] != NULL)
+	  free(device[i].ipTrafficMatrix[j]);
+	
+      free(device[i].ipTrafficMatrix);
+    }
+      
+    if(device[i].ipTrafficMatrix != NULL) 
+      free(device[i].ipTrafficMatrix);
+
+    for(j=0; j<device[i].numHosts; j++) {
+      if(device[i].ipTrafficMatrixHosts[j] != NULL) 
+	free(device[i].ipTrafficMatrixHosts[j]);
+    }
+
+    if(device[i].ipTrafficMatrixHosts != NULL) 
+      free(device[i].ipTrafficMatrixHosts);
+
+    if(device[i].ipProtoStats != NULL)
+      free(device[i].ipProtoStats);
+      
+    if(device[i].hash_hostTraffic != NULL)
+      free(device[i].hash_hostTraffic);
+      
+    if(device[i].tcpSession != NULL)
+      free(device[i].tcpSession);
+
+    free(device[i].name);
+
+    if(device[i].pcapDumper != NULL)
+      pcap_dump_close(device[i].pcapDumper);
+      
+    if(device[i].pcapErrDumper != NULL)
+      pcap_dump_close(device[i].pcapErrDumper);
+      
+    if(device[i].pcapPtr != NULL)
+      free(device[i].pcapPtr);
+  }
 
 
   free(device);
