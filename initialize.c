@@ -457,7 +457,8 @@ void initGdbm(void) {
 
 /* ******************************* */
 
-void initThreads(int enableDBsupport) {
+void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
+
 #ifdef HAVE_GDBM_H
 #ifdef MULTITHREADED
   createMutex(&gdbmMutex);
@@ -478,24 +479,64 @@ void initThreads(int enableDBsupport) {
   createCondvar(&queueAddressCondvar);
 #endif
 #endif
+
   createMutex(&packetQueueMutex);
   createMutex(&addressResolutionMutex);
   createMutex(&hashResizeMutex);
-  if(isLsofPresent) createMutex(&lsofMutex);
+
+  if (isLsofPresent)
+    createMutex(&lsofMutex);
+
   createMutex(&hostsHashMutex);
   createMutex(&graphMutex);
+
+  /*
+   * (1) - NPA - Network Packet Analyzer (main thread)
+   */
   createThread(&dequeueThreadId, dequeuePacket, NULL);
-  createThread(&thptUpdateThreadId, updateThptLoop, NULL);
+  traceEvent (TRACE_INFO, "Thread %d for Network Packet Capturing started (_main_ thread).\n",
+	      dequeueThreadId);
+
+  /*
+   * (2) - HTS - Host Traffic Statistics
+   */
   createThread(&hostTrafficStatsThreadId, updateHostTrafficStatsThptLoop, NULL);
-  createThread(&scanIdleThreadId, scanIdleLoop, NULL);
-  if(enableDBsupport)
+  traceEvent (TRACE_INFO, "Thread %d for Host Traffic Statistics started.\n",
+	      hostTrafficStatsThreadId);
+
+  /*
+   * (3) - TU - Throughput Update - optional
+   */
+  if (enableThUpdate) {
+    createThread(&thptUpdateThreadId, updateThptLoop, NULL);
+    traceEvent (TRACE_INFO, "Thread %d for Throughput Update started.\n", thptUpdateThreadId);
+  }
+
+  /*
+   * (4) - SIH - Scan Idle Hosts - optional
+   */
+  if (enableIdleHosts) {
+    createThread(&scanIdleThreadId, scanIdleLoop, NULL);
+    traceEvent (TRACE_INFO, "Thread %d for Scan Idle Host started.\n", scanIdleThreadId);
+  }
+
+  /*
+   * (5) - DBU - DB Update - optional
+   */
+  if (enableDBsupport) {
     createThread(&dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
+    traceEvent (TRACE_INFO, "Thread %d for DB Update started.\n", dbUpdateThreadId);
+  }
 
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(numericFlag == 0) {
     memset(addressQueue, 0, sizeof(addressQueue));
     createMutex(&addressQueueMutex);
+    /*
+     * (6) - DNSAR - DNS Address Resolution - optional
+     */
     createThread(&dequeueAddressThreadId, dequeueAddress, NULL);
+    traceEvent (TRACE_INFO, "Thread %d for DNS Address Resolution started.\n", dequeueAddressThreadId);
   }
 #endif
 #endif
@@ -508,7 +549,11 @@ void initApps(void) {
 #ifdef MULTITHREADED
     updateLsof = 1;
     memset(localPorts, 0, sizeof(localPorts)); /* localPorts is used by lsof */
+    /*
+     * (7) - LSOF - optional
+     */
     createThread(&lsofThreadId, periodicLsofLoop, NULL);
+    traceEvent (TRACE_INFO, "Thread %d for  LSOF support started.\n", lsofThreadId);
 #else
     if(isLsofPresent) readLsofInfo();
     if(isNepedPresent) readNepedInfo();
@@ -852,7 +897,13 @@ void startSniffer(void) {
   int i; 
 
 #ifdef MULTITHREADED
-  for(i=0; i<numDevices; i++)
+  for(i=0; i<numDevices; i++) {
+    /*
+     * (8) - NPS - Network Packet Sniffer (main thread)
+     */
     createThread(&device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
+    traceEvent (TRACE_INFO, "Thread %d for Network Packet Sniffing started (_main_ thread).\n",
+		device[i].pcapDispatchThreadId);
+  }
 #endif
 }
