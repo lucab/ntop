@@ -5,16 +5,20 @@ LDFLAGS=
 .PHONY: clean install all p2c mac
 
 # Programs
-PROGRAMS=addMacAddress inetnum2countryalloc lookuptest p2clib prefixtablegen
-OBJECTS=addMacAddress.o inetnum2countryalloc.o lookuptest.o p2clib.o prefixtablegen.o 
-SOURCES=addMacAddress.c inetnum2countryalloc.c lookuptest.c p2clib.c prefixtablegen.c 
+PROGRAMS=addMacAddress addVlanName inetnum2countryalloc lookuptest p2clib prefixtablegen
+OBJECTS=addMacAddress.o addVlanName.o inetnum2countryalloc.o lookuptest.o p2clib.o prefixtablegen.o 
+SOURCES=addMacAddress.c addVlanName.c inetnum2countryalloc.c lookuptest.c p2clib.c prefixtablegen.c 
 
-all: p2c mac
+all: p2c mac vlan
 mac: addMacAddress
+vlan: addVlanName
 p2c: p2clib inetnum2countryalloc lookuptest prefixtablegen
 
 addMacAddress: addMacAddress.c
 	$(CC) $(CFLAGS) addMacAddress.c -lgdbm -o addMacAddress
+
+addVlanName: addVlanName.c
+	$(CC) $(CFLAGS) addVlanName.c -lgdbm -o addVlanName
 
 inetnum2countryalloc: inetnum2countryalloc.c p2clib.h p2clib.o
 	$(CC) $(CFLAGS) inetnum2countryalloc.c p2clib.o -o inetnum2countryalloc
