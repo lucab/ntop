@@ -144,16 +144,19 @@ INCLUDES = -I.. @INCS@
 #
 # The meat for ntop
 #
-noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so                   nfsPlugin.so 
+noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so                   nfsPlugin.so  sflowPlugin.so
 
 #		  rmonPlugin.so wapPlugin.so
 
-lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la                   libnfsPlugin.la 
+lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la                   libnfsPlugin.la  libsflowPlugin.la
 
 #		  librmonPlugin.la libwapPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+
+libsflowPlugin_la_SOURCES = sflowPlugin.c
+libsflowPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
 liblastSeenPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
@@ -174,6 +177,8 @@ liblastSeenPlugin_la_LIBADD =
 liblastSeenPlugin_la_OBJECTS =  lastSeenPlugin.lo
 libnfsPlugin_la_LIBADD = 
 libnfsPlugin_la_OBJECTS =  nfsPlugin.lo
+libsflowPlugin_la_LIBADD = 
+libsflowPlugin_la_OBJECTS =  sflowPlugin.lo
 PROGRAMS =  $(noinst_PROGRAMS)
 
 icmpPlugin_so_SOURCES = icmpPlugin.so.c
@@ -191,6 +196,11 @@ nfsPlugin_so_OBJECTS =  nfsPlugin.so.o
 nfsPlugin_so_LDADD = $(LDADD)
 nfsPlugin_so_DEPENDENCIES = 
 nfsPlugin_so_LDFLAGS = 
+sflowPlugin_so_SOURCES = sflowPlugin.so.c
+sflowPlugin_so_OBJECTS =  sflowPlugin.so.o
+sflowPlugin_so_LDADD = $(LDADD)
+sflowPlugin_so_DEPENDENCIES = 
+sflowPlugin_so_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -202,9 +212,9 @@ TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/icmpPlugin.P .deps/icmpPlugin.so.P \
 .deps/lastSeenPlugin.P .deps/lastSeenPlugin.so.P .deps/nfsPlugin.P \
-.deps/nfsPlugin.so.P
-SOURCES = $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) icmpPlugin.so.c lastSeenPlugin.so.c nfsPlugin.so.c
-OBJECTS = $(libicmpPlugin_la_OBJECTS) $(liblastSeenPlugin_la_OBJECTS) $(libnfsPlugin_la_OBJECTS) icmpPlugin.so.o lastSeenPlugin.so.o nfsPlugin.so.o
+.deps/nfsPlugin.so.P .deps/sflowPlugin.P .deps/sflowPlugin.so.P
+SOURCES = $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) $(libsflowPlugin_la_SOURCES) icmpPlugin.so.c lastSeenPlugin.so.c nfsPlugin.so.c sflowPlugin.so.c
+OBJECTS = $(libicmpPlugin_la_OBJECTS) $(liblastSeenPlugin_la_OBJECTS) $(libnfsPlugin_la_OBJECTS) $(libsflowPlugin_la_OBJECTS) icmpPlugin.so.o lastSeenPlugin.so.o nfsPlugin.so.o sflowPlugin.so.o
 
 all: all-redirect
 .SUFFIXES:
@@ -282,6 +292,9 @@ liblastSeenPlugin.la: $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_DEP
 
 libnfsPlugin.la: $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libnfsPlugin_la_LDFLAGS) $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_LIBADD) $(LIBS)
+
+libsflowPlugin.la: $(libsflowPlugin_la_OBJECTS) $(libsflowPlugin_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(libsflowPlugin_la_LDFLAGS) $(libsflowPlugin_la_OBJECTS) $(libsflowPlugin_la_LIBADD) $(LIBS)
 
 mostlyclean-noinstPROGRAMS:
 
@@ -550,6 +563,12 @@ maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
+
+.libs/libsflowPlugin.so@SO_VERSION_PATCH@:
+	cc -bundle -flat_namespace -undefined suppress -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
+
+sflowPlugin.so: .libs/libsflowPlugin.so@SO_VERSION_PATCH@
+	@ln -s .libs/libfslowPlugin.so sflowPlugin.so
 
 .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
 	cc -bundle -flat_namespace -undefined suppress -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
