@@ -67,10 +67,6 @@ static int inet_aton(const char *cp, struct in_addr *addr) {
 
 #endif /* CFG_NEED_INET_ATON */
 
-#ifdef HAVE_FILEDESCRIPTORBUG
-static int tempFilesCreated=0;
-#endif
-
 /* ************************************* */
 
 #if !defined(WIN32) && defined(PARM_USE_CGI)
@@ -2906,14 +2902,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 			 "unknown"
 #endif
 			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_FILEDESCRIPTORBUG",
-#ifdef HAVE_FILEDESCRIPTORBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
 
   /* semi auto generated from globals-defines.h */
 
@@ -7198,10 +7186,6 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   struct sockaddr_in sockIn;
 #endif
 
-#ifdef HAVE_FILEDESCRIPTORBUG
-  int i;
-#endif
-
   if(*port <= 0) {
     *sock = 0;
     return;
@@ -7265,36 +7249,6 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
              ntohs(sockIn.sin_port));
 #endif
 #endif /* INET6 */
-#ifdef HAVE_FILEDESCRIPTORBUG
-  /* Burton - Aug2003
-   *   Work-around for file descriptor bug (FreeBSD PR51535 et al)
-   *   - burn some file descriptors so the socket() call doesn't get a dirty one.
-   *   - it's not pretty, but it works...
-   */
-  if(tempFilesCreated == 0) {
-    tempFilesCreated = 1;
-    myGlobals.tempFpid=getpid();
-    traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Work-around activated");
-    for(i=0; i<CONST_FILEDESCRIPTORBUG_COUNT; i++) {
-      myGlobals.tempF[i]=0;
-      memset(&myGlobals.tempFname[i], 0, LEN_MEDIUM_WORK_BUFFER);
-
-      safe_snprintf(__FILE__, __LINE__, myGlobals.tempFname[i], LEN_MEDIUM_WORK_BUFFER, "/tmp/ntop-%09u-%d", myGlobals.tempFpid, i);
-      traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Creating %d, '%s'", i, myGlobals.tempFname[i]);
-      errno = 0;
-      myGlobals.tempF[i]=open(myGlobals.tempFname[i], O_CREAT|O_TRUNC|O_RDWR);
-      if(errno != 0) {
-        traceEvent(CONST_TRACE_ERROR,
-                   "FILEDESCRIPTORBUG: Unable to create file - may cause problems later - '%s'(%d)",
-                   strerror(errno), errno);
-      } else {
-        traceEvent(CONST_TRACE_NOISY,
-                   "FILEDESCRIPTORBUG: Created file %d - '%s'(%d)",
-                   i, myGlobals.tempFname[i], myGlobals.tempF[i]);
-      }
-    }
-  }
-#endif /* FILEDESCRIPTORBUG */
 
     errno = 0;
 #if defined(INET6) && !defined(WIN32)

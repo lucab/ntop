@@ -3526,7 +3526,7 @@ int _incrementUsageCounter(UsageCounter *counter,
 
 /* **************************************************** */
 
-static void checkUserIdentity(int userSpecified) {
+void checkUserIdentity(int userSpecified) {
   /*
     Code fragment below courtesy of
     Andreas Pfaller <apfaller@yahoo.com.au>
@@ -4050,25 +4050,30 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
 
 /* ******************************** */
 
-void loadPrefs (int argc, char *argv[])
+int loadPrefs (int argc, char *argv[])
 {
     datum key, nextkey;
     char buf[1024];
     int opt_index, opt;
     char *theOpts, *adminPw = NULL;
+    int userSpecified = 0;
 #ifdef WIN32
     int optind=0;
-#else
-    bool userSpecified = FALSE;
+#endif
+    
+    struct option const long_options[] = {
+      { "db-file-path",                     required_argument, NULL, 'P' },
+      { "help",                             no_argument,       NULL, 'h' },
+
+      { "http-server",                      required_argument, NULL, 'w' },
+#ifdef HAVE_OPENSSL
+      { "https-server",                     required_argument, NULL, 'W' },
 #endif
 
-    struct option const long_options[] = {
-        { "db-file-path",                     required_argument, NULL, 'P' },
-        { "help",                             no_argument,       NULL, 'h' },
 #ifndef WIN32
-        { "user",                             required_argument, NULL, 'u' },
+      { "user",                             required_argument, NULL, 'u' },
 #endif
-	{ "trace-level",                      required_argument, NULL, 't' },
+      { "trace-level",                      required_argument, NULL, 't' },
     };
     
     /* Retrieve the name of the global database file from the command line, if
@@ -4084,33 +4089,13 @@ void loadPrefs (int argc, char *argv[])
     traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
     while ((opt = getopt_long(argc, argv, theOpts, long_options, &opt_index)) != EOF) {
 #ifdef DEBUG
-        traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering storePrefsValue()");
+        traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering loadPrefs()");
 #endif
         switch (opt) {
         case 'h':                                /* help */
             usage(stdout);
             exit(0);
 
-#ifndef WIN32
-        case 'u':
-            stringSanityCheck(optarg);
-            myGlobals.effectiveUserName = strdup(optarg);
-            if(strOnlyDigits(optarg))
-                myGlobals.userId = atoi(optarg);
-            else {
-                struct passwd *pw;
-                pw = getpwnam(optarg);
-                if(pw == NULL) {
-                    printf("FATAL ERROR: Unknown user %s.\n", optarg);
-                    exit(-1);
-                }
-                myGlobals.userId = pw->pw_uid;
-                myGlobals.groupId = pw->pw_gid;
-                endpwent();
-            }
-            userSpecified = TRUE;
-            break;
-#endif /* WIN32 */
 
 	case 't':
 	  /* Trace Level Initialization */
@@ -4119,77 +4104,50 @@ void loadPrefs (int argc, char *argv[])
 	  /* DETAILED is NOISY + FileLine stamp, unless already set */
 	  break;
 	  
-        case 'P':
-            stringSanityCheck(optarg);
-            if(myGlobals.dbPath != NULL)
-                free(myGlobals.dbPath);
+    case 'w':
+      stringSanityCheck(optarg);
+      if(!isdigit(optarg[0])) {
+	printf("FATAL ERROR: flag -w expects a numeric argument.\n");
+	exit(-1);
+      }
 
-            myGlobals.dbPath = strdup(optarg);
-            break;
-        }
-    }
-        
-#ifndef WIN32
-    /*
-      The user has not specified the uid using the -u flag.
-      We try to locate a user with no privileges
-    */
+      /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+      if((myGlobals.runningPref.webAddr = strchr(optarg,':'))) {
+	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
+	/* This code is to be able to bind to a particular interface */
+	*myGlobals.runningPref.webAddr = '\0';
+	myGlobals.runningPref.webPort = atoi(myGlobals.runningPref.webAddr+1);
+	myGlobals.runningPref.webAddr = optarg;
+      } else
+	myGlobals.runningPref.webPort = atoi(optarg);
+      break;
 
-    if(!userSpecified) {
-        struct passwd *pw = NULL;
-        
-        if(getuid() == 0) {
-            /* We're root */
-            char *user;
 
-            pw = getpwnam(user = "nobody");
-            if(pw == NULL) pw = getpwnam(user = "anonymous");
-     
-            if(pw != NULL) {
-                myGlobals.userId  = pw->pw_uid;
-                myGlobals.groupId = pw->pw_gid;
-                myGlobals.effectiveUserName = strdup(user);
-                traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop will be started as user %s", user);
-            }
-        }
-      
-        if(pw == NULL) {
-            myGlobals.userId  = getuid();
-            myGlobals.groupId = getgid();
-        }
-    }
+#ifdef HAVE_OPENSSL
+    case 'W':
+      stringSanityCheck(optarg);
+      if(!isdigit(optarg[0])) {
+	printf("FATAL ERROR: flag -W expects a numeric argument.\n");
+	exit(-1);
+      }
+
+      /*
+	lets swipe the same address binding code from -w above
+	Curtis Doty <Curtis@GreenKey.net>
+      */
+      if((myGlobals.runningPref.sslAddr = strchr(optarg,':'))) {
+	*myGlobals.runningPref.sslAddr = '\0';
+	myGlobals.runningPref.sslPort = atoi(myGlobals.runningPref.sslAddr+1);
+	myGlobals.runningPref.sslAddr = optarg;
+      } else {
+	myGlobals.runningPref.sslPort = atoi(optarg);
+      }
+
+      break;
 #endif
-    
-    /* ******************************* */
-    
-    checkUserIdentity(userSpecified);
-
-    /* ******************************* */
-
-    /* open/create all the databases */
-    initGdbm(NULL, NULL, 1);
-    
-    if(myGlobals.prefsFile == NULL) {
-#ifdef DEBUG
-        traceEvent(CONST_TRACE_INFO, "DEBUG: No preferences file to read from()");
-#endif
-        return;
-    }
-
-    /* Read preferences and store them in memory */
-    key = gdbm_firstkey (myGlobals.prefsFile);
-    while (key.dptr) {
-        if (fetchPrefsValue (key.dptr, buf, sizeof (buf)) == 0) {
-            processNtopPref (key.dptr, buf, FALSE, &myGlobals.runningPref);
         }
-      
-        nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
-        free (key.dptr);
-        key = nextkey;
     }
-
-    myGlobals.savedPref = myGlobals.runningPref;
-    return;
+    
 }
 
 /* ******************************** */

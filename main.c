@@ -281,8 +281,8 @@ void usage(FILE * fp) {
 /*
  * Parse the command line options
  */
-static void parseOptions(int argc, char* argv []) {
-  int setAdminPw = 0, opt;
+static int parseOptions(int argc, char* argv []) {
+  int setAdminPw = 0, opt, userSpecified = 0;
   int opt_index;
   char *theOpts, *adminPw = NULL;
 #ifdef WIN32
@@ -291,29 +291,23 @@ static void parseOptions(int argc, char* argv []) {
 
   /*
    * Please keep the array sorted;
-   * Options 'P' and 'u' are processed in loadPrefs. We assume that
-   * user preferences are prioritized in the order:
-   *        - command-line specified (highest pref)
-   *        - saved preferences
-   *        - default
-   *
    * However, locating the preferences file and userID are done only via the
    * command line and processing of the configured preference (via the web) is
    * dependent on the values of user ('u') and location of the preference file
    * ('P' option) and so these are processed separately.
    */
 #ifdef WIN32
-  theOpts = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MN:O:Q:S:U:VX:W:";
+  theOpts = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MN:O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:w:x:zAB:D:F:IKLMN:O:Q:S:U:VX:W:";
+  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKLMN:O:P:Q:S:U:VX:W:";
 #else
-  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:w:x:zAB:D:F:IKMN:O:Q:S:U:VX:W:";
+  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKMN:O:P:Q:S:U:VX:W:";
 #endif
 
   /* * * * * * * * * * */
   
   for(opt_index=0; opt_index<argc; opt_index++)
-     traceEvent(CONST_TRACE_NOISY, "PARAM_DEBUG: argv[%d]: %s", opt_index, argv[opt_index]);
+    traceEvent(CONST_TRACE_NOISY, "PARAM_DEBUG: argv[%d]: %s", opt_index, argv[opt_index]);
 
   /*
    * Parse command line options to the application via standard system calls
@@ -363,9 +357,13 @@ static void parseOptions(int argc, char* argv []) {
       myGlobals.runningPref.trackOnlyLocalHosts    = 1;
       break;
 
-    case 'i':                          /* More than one interface may be specified in a comma separated list */
+    case 'h':                                /* help */
+      usage(stdout);
+      exit(0);
+      
+    case 'i': /* More than one interface may be specified in a comma separated list */
 #ifndef WIN32
-	  stringSanityCheck(optarg);
+      stringSanityCheck(optarg);
 #endif
       myGlobals.runningPref.devices = strdup(optarg);
       break;
@@ -424,6 +422,27 @@ static void parseOptions(int argc, char* argv []) {
       /* DETAILED is NOISY + FileLine stamp, unless already set */
       break;
 
+#ifndef WIN32
+    case 'u':
+      stringSanityCheck(optarg);
+      myGlobals.effectiveUserName = strdup(optarg);
+      if(strOnlyDigits(optarg))
+	myGlobals.userId = atoi(optarg);
+      else {
+	struct passwd *pw;
+	pw = getpwnam(optarg);
+	if(pw == NULL) {
+	  printf("FATAL ERROR: Unknown user %s.\n", optarg);
+	  exit(-1);
+	}
+	myGlobals.userId = pw->pw_uid;
+	myGlobals.groupId = pw->pw_gid;
+	endpwent();
+      }
+      userSpecified = 1;
+      break;
+#endif /* WIN32 */
+
     case 'w':
       stringSanityCheck(optarg);
       if(!isdigit(optarg[0])) {
@@ -450,9 +469,9 @@ static void parseOptions(int argc, char* argv []) {
       myGlobals.runningPref.enableSessionHandling = 0;
       break;
 
-     case 'A':
-       setAdminPw = 1;
-       break;
+    case 'A':
+      setAdminPw = 1;
+      break;
 
     case 'B':
       stringSanityCheck(optarg);
@@ -486,23 +505,31 @@ static void parseOptions(int argc, char* argv []) {
       break;
 
     case 'N':
-        stringSanityCheck(optarg);
-        if (myGlobals.runningPref.fcNSCacheFile != NULL)
-            free (myGlobals.runningPref.fcNSCacheFile);
-        myGlobals.runningPref.fcNSCacheFile = strdup (optarg);
-        break;
+      stringSanityCheck(optarg);
+      if (myGlobals.runningPref.fcNSCacheFile != NULL)
+	free (myGlobals.runningPref.fcNSCacheFile);
+      myGlobals.runningPref.fcNSCacheFile = strdup (optarg);
+      break;
 
     case 'O': /* pcap log path - Ola Lundqvist <opal@debian.org> */
       stringSanityCheck(optarg);
       if(myGlobals.runningPref.pcapLogBasePath != NULL)
-          free(myGlobals.runningPref.pcapLogBasePath);
+	free(myGlobals.runningPref.pcapLogBasePath);
       myGlobals.runningPref.pcapLogBasePath = strdup(optarg);
       break;
-
+      
+    case 'P':
+      stringSanityCheck(optarg);
+      if(myGlobals.dbPath != NULL)
+	free(myGlobals.dbPath);
+      
+      myGlobals.dbPath = strdup(optarg);
+      break;
+      
     case 'Q': /* Spool Path (ntop's spool directory) */
       stringSanityCheck(optarg);
       if(myGlobals.runningPref.spoolPath != NULL)
-          free(myGlobals.runningPref.spoolPath);
+	free(myGlobals.runningPref.spoolPath);
       myGlobals.runningPref.spoolPath = strdup(optarg);
       break;
 
@@ -620,25 +647,25 @@ static void parseOptions(int argc, char* argv []) {
     case 137:
       stringSanityCheck(optarg);
       if(myGlobals.runningPref.P3Pcp != NULL)
-          free(myGlobals.runningPref.P3Pcp);
+	free(myGlobals.runningPref.P3Pcp);
       myGlobals.runningPref.P3Pcp = strdup(optarg);
       break;
 
     case 138:
       stringSanityCheck(optarg);
       if(myGlobals.runningPref.P3Puri != NULL)
-          free(myGlobals.runningPref.P3Puri);
+	free(myGlobals.runningPref.P3Puri);
       myGlobals.runningPref.P3Puri = strdup(optarg);
       break;
 
 #ifndef WIN32
     case 139:
- #ifdef HAVE_PCAP_SETNONBLOCK
+#ifdef HAVE_PCAP_SETNONBLOCK
       myGlobals.runningPref.setNonBlocking = TRUE;
- #else
+#else
       printf("FATAL ERROR: --set-pcap-nonblocking invalid - pcap_setnonblock() unavailable\n");
       exit(-1);
- #endif
+#endif
       break;
 #endif
 
@@ -660,12 +687,12 @@ static void parseOptions(int argc, char* argv []) {
       break;
       
     case 148:
-        myGlobals.runningPref.printIpOnly = TRUE;
-        break;
+      myGlobals.runningPref.printIpOnly = TRUE;
+      break;
 
     case 149:
-        myGlobals.runningPref.noInvalidLunDisplay = TRUE;
-        break;
+      myGlobals.runningPref.noInvalidLunDisplay = TRUE;
+      break;
 
     case 150:
       myGlobals.runningPref.skipVersionCheck = TRUE;
@@ -695,15 +722,15 @@ static void parseOptions(int argc, char* argv []) {
   if(optind < argc) {
     int i;
 
-      printf("FATAL ERROR: Unrecognized/unprocessed ntop options...\n     ");
-      for(i=optind; i<argc; i++) {
-          printf(" %s", argv[i]);
-      }
-      printf("\n\nrun %s --help for usage information\n\n", argv[0]);
-      printf("    Common problems:\n");
-      printf("        -B \"filter expressions\" (quotes are required)\n");
-      printf("        --use-syslog=facilty (the = is required)\n\n");
-      exit(-1);
+    printf("FATAL ERROR: Unrecognized/unprocessed ntop options...\n     ");
+    for(i=optind; i<argc; i++) {
+      printf(" %s", argv[i]);
+    }
+    printf("\n\nrun %s --help for usage information\n\n", argv[0]);
+    printf("    Common problems:\n");
+    printf("        -B \"filter expressions\" (quotes are required)\n");
+    printf("        --use-syslog=facilty (the = is required)\n\n");
+    exit(-1);
   }
 #endif /* WIN32 */
 
@@ -719,11 +746,46 @@ static void parseOptions(int argc, char* argv []) {
 
   /* If not set we set it to the same directory of dbPath */
   if(myGlobals.runningPref.spoolPath[0] == '\0') {
-      free(myGlobals.runningPref.spoolPath);
-      myGlobals.runningPref.spoolPath = strdup(myGlobals.dbPath);
+    free(myGlobals.runningPref.spoolPath);
+    myGlobals.runningPref.spoolPath = strdup(myGlobals.dbPath);
   }
 
+#ifndef WIN32
+  /*
+    The user has not specified the uid using the -u flag.
+    We try to locate a user with no privileges
+  */
+
+  if(!userSpecified) {
+    struct passwd *pw = NULL;
+        
+    if(getuid() == 0) {
+      /* We're root */
+      char *user;
+
+      pw = getpwnam(user = "nobody");
+      if(pw == NULL) pw = getpwnam(user = "anonymous");
+     
+      if(pw != NULL) {
+	myGlobals.userId  = pw->pw_uid;
+	myGlobals.groupId = pw->pw_gid;
+	myGlobals.effectiveUserName = strdup(user);
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop will be started as user %s", user);
+      }
+    }
+      
+    if(pw == NULL) {
+      myGlobals.userId  = getuid();
+      myGlobals.groupId = getgid();
+    }
+  }
+#endif   
+
+  
+  return(userSpecified);
 }
+
+/* *********************************** */
 
 static int verifyOptions (void)
 {
@@ -772,7 +834,7 @@ static int verifyOptions (void)
             spw = getspnam("root");
             if(spw == NULL) {
                 traceEvent(CONST_TRACE_INFO, "Unable to read shadow passwords. Become root first and start ntop again");
-                return (FLAG_NTOPSTATE_NOTINIT);
+                exit (-1);
             } else
                 correct = spw->sp_pwdp;
 #else
@@ -823,7 +885,7 @@ int ntop_main(int argc, char *argv[]) {
 #else
 int main(int argc, char *argv[]) {
 #endif
-  int i, rc;
+  int i, rc, userSpecified;
 #ifndef WIN32
   int effective_argc;
   char **effective_argv;
@@ -1010,21 +1072,15 @@ int main(int argc, char *argv[]) {
 
   /* Above here, the -L value wasn't set, so we use printf(). */
   /* Below here, we use our traceEvent() function to print or log as requested. */
-
-#ifndef WIN32
-  loadPrefs (effective_argc, effective_argv);
-#else
-  loadPrefs (argc, argv);
-#endif
   
   /*
    * Parse command line options to the application via standard system calls
    * Command-line options take precedence over saved preferences. 
    */
 #ifndef WIN32
-  parseOptions(effective_argc, effective_argv);
+  userSpecified = parseOptions(effective_argc, effective_argv);
 #else
-  parseOptions(argc, argv);
+  userSpecified = parseOptions(argc, argv);
 #endif
 
   myGlobals.capturePackets = verifyOptions ();
@@ -1049,11 +1105,11 @@ int main(int argc, char *argv[]) {
       processFcNSCacheFile (myGlobals.runningPref.fcNSCacheFile);
   }
   
+  initNtop(myGlobals.runningPref.devices);
+
   /* create the main listener */
   if(!myGlobals.webInterfaceDisabled)
       initWeb();
-
-  initNtop(myGlobals.runningPref.devices);
 
   /* ******************************* */
 
@@ -1080,6 +1136,12 @@ int main(int argc, char *argv[]) {
   else {
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
   }
+
+  /* ******************************* */
+  
+  checkUserIdentity(userSpecified);
+
+/* ******************************* */
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Loading Plugins");
   loadPlugins();

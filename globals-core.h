@@ -100,6 +100,7 @@ extern int cmpFctnLocationName(const void *_a, const void *_b);
 extern void unescape_url(char *url);
 extern void revertSlash(char *str, int mode);
 extern void revertDoubleColumn(char *str);
+extern void checkUserIdentity(int userSpecified);
 
 /****** function declarations ***** */
 
@@ -518,7 +519,7 @@ extern char *xstrncpy(char *dest, const char *src, size_t n);
 extern int fetchPrefsValue(char *key, char *value, int valueLen);
 extern void storePrefsValue(char *key, char *value);
 extern void delPrefsValue(char *key);
-extern void loadPrefs (int argc, char *argv[]);
+extern int loadPrefs (int argc, char *argv[]);
 extern int guessHops(HostTraffic *el);
 extern unsigned int ntop_sleep(unsigned int secs);
 extern void unescape(char *dest, int destLen, char *url);

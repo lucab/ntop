@@ -111,83 +111,6 @@ static char* nfValue(int deviceId, char *name, int appendDeviceId) {
 
 /* ****************************** */
 
-#ifdef HAVE_FILEDESCRIPTORBUG
-
-/* Burton - Aug2003
- *   Work-around for file descriptor bug (FreeBSD PR51535 et al)
- *   - burn some file descriptors so the socket() call doesn't get a dirty one.
- *   - it's not pretty, but it works...
- */
-
-static void wasteFileDescriptors(int deviceId) {
-  int i;
-
-  if(myGlobals.device[deviceId].netflowGlobals->tempNFFilesCreated == 0) {
-    myGlobals.device[deviceId].netflowGlobals->tempNFFilesCreated = 1;
-    myGlobals.device[deviceId].netflowGlobals->tempNFFpid=getpid();
-    traceEvent(CONST_TRACE_INFO, "NETFLOW: FILEDESCRIPTORBUG: Work-around activated");
-    for(i=0; i<CONST_FILEDESCRIPTORBUG_COUNT; i++) {
-      myGlobals.device[deviceId].netflowGlobals->tempNFF[i]=0;
-      memset(&myGlobals.device[deviceId].netflowGlobals->tempNFFname[i], 0, LEN_MEDIUM_WORK_BUFFER);
-
-      safe_snprintf(__FILE__, __LINE__, myGlobals.device[deviceId].netflowGlobals->tempNFFname[i], LEN_MEDIUM_WORK_BUFFER, 
-		  "/tmp/ntop-nf-%d-%09u-%d", deviceId, 
-		  myGlobals.device[deviceId].netflowGlobals->tempNFFpid, i);
-      traceEvent(CONST_TRACE_NOISY, "NETFLOW: FILEDESCRIPTORBUG: Creating %d, '%s'", i, 
-		 myGlobals.device[deviceId].netflowGlobals->tempNFFname[i]);
-      errno = 0;
-      myGlobals.device[deviceId].netflowGlobals->tempNFF[i] =
-	open(myGlobals.device[deviceId].netflowGlobals->tempNFFname[i],
-	     O_CREAT|O_TRUNC|O_RDWR);
-      if(errno != 0) {
-        traceEvent(CONST_TRACE_ERROR,
-                   "NETFLOW: FILEDESCRIPTORBUG: Unable to create file - may cause problems later - '%s'(%d)",
-                   strerror(errno), errno);
-      } else {
-        traceEvent(CONST_TRACE_NOISY,
-                   "NETFLOW: FILEDESCRIPTORBUG: Created file %d - '%s'(%d)",
-                   i, myGlobals.device[deviceId].netflowGlobals->tempNFFname[i],
-		   myGlobals.device[deviceId].netflowGlobals->tempNFF[i]);
-      }
-    }
-  }
-}
-
-/* *********************************************** */
-
-static void unwasteFileDescriptors(int deviceId) {
-  int i;
-
-  /* Close and delete the temporary - junk - files */
-  traceEvent(CONST_TRACE_INFO, "NETFLOW: FILEDESCRIPTORBUG: Bug work-around cleanup");
-  for(i=CONST_FILEDESCRIPTORBUG_COUNT-1; i>=0; i--) {
-    if(myGlobals.device[deviceId].netflowGlobals->tempNFF[i] >= 0) {
-      traceEvent(CONST_TRACE_NOISY, "NETFLOW: FILEDESCRIPTORBUG: Removing %d, '%s'(%d)",
-		 i, myGlobals.device[deviceId].netflowGlobals->tempNFFname[i], 
-		 myGlobals.device[deviceId].netflowGlobals->tempNFF[i]);
-      if(close(myGlobals.device[deviceId].netflowGlobals->tempNFF[i])) {
-        traceEvent(CONST_TRACE_ERROR,
-                   "NETFLOW: FILEDESCRIPTORBUG: Unable to close file %d - '%s'(%d)",
-                   i,
-                   strerror(errno), errno);
-      } else {
-        if(unlink(myGlobals.device[deviceId].netflowGlobals->tempNFFname[i]))
-          traceEvent(CONST_TRACE_ERROR,
-                     "NETFLOW: FILEDESCRIPTORBUG: Unable to delete file '%s' - '%s'(%d)",
-                     myGlobals.device[deviceId].netflowGlobals->tempNFFname[i],
-                     strerror(errno), errno);
-        else
-          traceEvent(CONST_TRACE_NOISY,
-                     "NETFLOW: FILEDESCRIPTORBUG: Removed file '%s'",
-                     myGlobals.device[deviceId].netflowGlobals->tempNFFname[i]);
-      }
-    }
-  }
-}
-#endif
-
-/* ****************************** */
-
 static void freeNetFlowMatrixMemory(int deviceId) {
   /*
     NOTE: wee need to lock something here(TBD)
@@ -1460,10 +1383,6 @@ static void initNetFlowDevice(int deviceId) {
     myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = 0;
   } else
     myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
-
-#ifdef HAVE_FILEDESCRIPTORBUG
-  wasteFileDescriptors(deviceId);
-#endif
 
   if(setNetFlowInSocket(deviceId) != 0)  return;
 
@@ -2800,10 +2719,6 @@ static void termNetflowDevice(int deviceId) {
       closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
 #endif
     }
-
-#ifdef HAVE_FILEDESCRIPTORBUG
-    unwasteFileDescriptors(deviceId);
-#endif
 
     while(myGlobals.device[deviceId].netflowGlobals->templates != NULL) {
       FlowSetV9 *temp = myGlobals.device[deviceId].netflowGlobals->templates->next;

@@ -99,7 +99,7 @@ char x2c(char *what);
 void unescape_url(char *url);
 void mkdir_p(char *path);
 static int initRRDfunct(void);
-static void termRRDfunct(void);
+static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void handleRRDHTTPrequest(char* url);
 static void addRrdDelay();
 
@@ -2689,7 +2689,7 @@ static int initRRDfunct(void) {
 
 /* ****************************** */
 
-static void termRRDfunct(void) {
+static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
 #ifdef CFG_MULTITHREADED
   int count=0, rc;
 

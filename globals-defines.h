@@ -1009,11 +1009,6 @@
 #define MAX_WEBSERVER_REQUEST_QUEUE_LEN     20
 
 /*
- * How many dummy files to create for the HAVE_FILEDESCRIPTORBUG fix
- */
-#define CONST_FILEDESCRIPTORBUG_COUNT       3
-
-/*
  * FibreChannel/SCSI constants
  */
 

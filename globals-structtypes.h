@@ -1250,12 +1250,6 @@ typedef struct netFlowGlobals {
   int threadActive;
   PthreadMutex whiteblackListMutex;
 #endif
-  
-#ifdef HAVE_FILEDESCRIPTORBUG
-  int tempNFFilesCreated;
-  int  tempNFF[CONST_FILEDESCRIPTORBUG_COUNT], tempNFFpid;
-  char tempNFFname[CONST_FILEDESCRIPTORBUG_COUNT][LEN_MEDIUM_WORK_BUFFER];
-#endif
 } NetFlowGlobals;
 
 /* *********************************** */
@@ -2245,13 +2239,6 @@ typedef struct ntopGlobals {
   unsigned long numHTTPSrequestTimeouts;
 #endif
   u_short webServerRequestQueueLength;
-
-  /* webInterface.c */
-#ifdef HAVE_FILEDESCRIPTORBUG
-  int  tempF[CONST_FILEDESCRIPTORBUG_COUNT],
-       tempFpid;
-  char tempFname[CONST_FILEDESCRIPTORBUG_COUNT][LEN_MEDIUM_WORK_BUFFER];
-#endif
 
   /* Memory cache */
   HostTraffic *hostsCache[MAX_HOSTS_CACHE_LEN];
