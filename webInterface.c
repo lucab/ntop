@@ -209,7 +209,7 @@ void showPluginsList(char* pluginName) {
 	printHTMLheader("Available Plugins", 0);
  	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1><TR>\n"
-		   "<TR><TH "TH_BG">Name</TH><TH "TH_BG">Description</TH>"
+		   "<TR><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH><TH "TH_BG">Description</TH>"
 		   "<TH "TH_BG">Version</TH>"
 		   "<TH "TH_BG">Author</TH>"
 		   "<TH "TH_BG">Active</TH>"
@@ -221,13 +221,38 @@ void showPluginsList(char* pluginName) {
 		  flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname) < 0)
 	BufferTooShort();
 
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT %s>%s</TH>\n",
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT %s>",
 		  getRowColor(),
-                  flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ? "rowspan=\"2\"" : "",
-		  (flows->pluginStatus.activePlugin || 
-	           flows->pluginStatus.pluginPtr->inactiveSetup) ? tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname) < 0)
+                  flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
+                      "rowspan=\"2\"" :
+                      "") < 0)
 	BufferTooShort();
       sendString(tmpBuf);
+
+      if(flows->pluginStatus.pluginPtr->inactiveSetup) {
+          sendString("&nbsp;</TH>\n");
+      } else {
+          if(snprintf(tmpBuf, sizeof(tmpBuf), "%s</TH>\n",
+                      flows->pluginStatus.activePlugin ?
+                          tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname) < 0)
+            BufferTooShort();
+          sendString(tmpBuf);
+      } 
+
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TH "TH_BG" ALIGN=LEFT %s>",
+                  flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
+                      "rowspan=\"2\"" :
+                      "") < 0)
+	BufferTooShort();
+      sendString(tmpBuf);
+
+      if(flows->pluginStatus.pluginPtr->inactiveSetup) {
+          if(snprintf(tmpBuf, sizeof(tmpBuf), "%s</TH>\n", tmpBuf1) < 0)
+            BufferTooShort();
+          sendString(tmpBuf);
+      } else {
+          sendString("&nbsp;</TH>\n");
+      } 
 
       if(flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL) {
 	if(snprintf(tmpBuf, sizeof(tmpBuf), "<TD colspan=\"4\"><font COLOR=\"#FF0000\">%s</font></TD></TR>\n<TR "TR_ON" %s>\n",
