@@ -938,9 +938,12 @@ RETSIGTYPE cleanup(int signo) {
     }
 
     if(device[i].ipTrafficMatrix != NULL) {
-      for(j=0; j<device[i].numHosts*device[i].numHosts; j++) 
-	if(device[i].ipTrafficMatrix[j] != NULL)
-	  free(device[i].ipTrafficMatrix[j]);
+      /*
+	Do not free device[i].ipTrafficMatrix[j] as they are
+	pointers to other hosts stored by updateTrafficMatrix()
+	
+	Courtesy of Francis Pintos <francis@arhl.com.hk>
+      */
 	
       free(device[i].ipTrafficMatrix);
     }
