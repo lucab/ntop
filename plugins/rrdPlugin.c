@@ -593,7 +593,19 @@ static void termRrdFunct(void) {
   fflush(stdout);
 }
 
-/* ****************************** */
+#else /* HAVE_LIBRRD */
+
+static void initRrdFunct(void) { }
+static void termRrdFunct(void) { }
+static void handleRRDHTTPrequest(char* url) {
+  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  printHTMLheader("RRD Preferences", 0);
+  printFlagedWarning("<I>This plugin is disabled as ntop has not been compiled with RRD support</I>");
+}
+
+#endif /* HAVE_LIBRRD */
+
+/* ************************************* */
 
 static PluginInfo rrdPluginInfo[] = {
   { "rrdPlugin",
@@ -610,7 +622,7 @@ static PluginInfo rrdPluginInfo[] = {
   }
 };
 
-/* ***************************************** */
+/* ****************************** */
 
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
@@ -625,4 +637,3 @@ PluginInfo* PluginEntryFctn(void)
   return(rrdPluginInfo);
 }
 
-#endif /* HAVE_LIBRRD */
