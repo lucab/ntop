@@ -800,7 +800,9 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifdef CFG_MULTITHREADED
   /* Prevents the web interface from running */
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "CLEANUP: Locking purge mutex (may block for a little while)");
   accessMutex(&myGlobals.purgeMutex, "cleanup");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "CLEANUP: Locked purge mutex, continuing shutdown");
 #endif
 
   for(i=0; i<myGlobals.numDevices; i++) {

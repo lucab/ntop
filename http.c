@@ -1455,9 +1455,16 @@ static int returnHTTPPage(char* pageName,
     has been send back to the user in the meantime
   */
   if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Shutdown request has been received");
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     sendString("<P>Your shutdown request is being processed</P>\n");
+#ifdef CFG_MULTITHREADED
+    releaseMutex(&myGlobals.purgeMutex);
+#endif
     shutdownNtop();
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Shutdown request FAILED");
+    sendString("<P>ERROR: Your shutdown seems to have failed...</P>\n");
+    printTrailer=0;
   } else if(strncmp(pageName, CHANGE_FILTER_HTML, strlen(CHANGE_FILTER_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     changeFilter();
