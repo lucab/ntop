@@ -163,7 +163,7 @@ void handleBootp(HostTraffic *srcHost,
 		strncpy(realDstHost->hostNumIpAddress,
 			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
-		ipaddr2str(realDstHost->hostIpAddress, actualDeviceId);
+		if(myGlobals.numericFlag == 0) ipaddr2str(realDstHost->hostIpAddress, actualDeviceId);
 		realDstHost->fullDomainName = realDstHost->dotDomainName = "";
 		if(isBroadcastAddress(&realDstHost->hostIpAddress))
 		  FD_SET(FLAG_BROADCAST_HOST, &realDstHost->flags);

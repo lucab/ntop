@@ -35,7 +35,9 @@ u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
 	       short* useIPAddressForSearching, HostTraffic **el,
 	       int actualDeviceId) {
     u_int idx = 0;
-    
+
+    *el = NULL;
+
     if(myGlobals.dontTrustMACaddr)  /* MAC addresses don't make sense here */
 	(*useIPAddressForSearching) = 1;
 
@@ -685,7 +687,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 				    sizeof(el->hostNumIpAddress));
 
 			    if(myGlobals.numericFlag == 0)
-				ipaddr2str(el->hostIpAddress, actualDeviceId);
+			      ipaddr2str(el->hostIpAddress, actualDeviceId);
 
 			    /* else el->hostSymIpAddress = el->hostNumIpAddress;
 			       The line below isn't necessary because (**) has
@@ -886,9 +888,9 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 
 	    /* Trick to fill up the address cache */
 	    if(myGlobals.numericFlag == 0)
-		ipaddr2str(el->hostIpAddress, actualDeviceId);
+	      ipaddr2str(el->hostIpAddress, actualDeviceId);
 	    else
-		strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
+	      strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
 	} else {
 	    /* el->hostNumIpAddress == "" */
 	    if(symEthName[0] != '\0') {

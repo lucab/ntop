@@ -508,7 +508,7 @@ static void queueAddress(struct in_addr elem) {
 #ifdef MAKE_WITH_SEMAPHORES
   incrementSem(&myGlobals.queueAddressSem);
 #else
-    signalCondvar(&myGlobals.queueAddressCondvar);
+  signalCondvar(&myGlobals.queueAddressCondvar);
 #endif
 }
 
