@@ -285,12 +285,13 @@ char* formatPkts(Counter pktNr, char* outStr, int outStrLen) {
 
 /* ************************************ */
 
-char* formatTime(time_t *theTime, char* outStr, int outStrLen) {
+char* _formatTime(time_t *theTime, char* outStr, int outStrLen, char* file, int line) {
   struct tm *locTime;
   struct tm myLocTime;
 
   locTime = localtime_r(theTime, &myLocTime);
-  strftime(outStr, outStrLen, CONST_LOCALE_TIMESPEC, locTime);
+  if(strftime(outStr, outStrLen, CONST_LOCALE_TIMESPEC, locTime) == 0)
+    traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d for formatTime()", file, line);
 
   return(outStr);
 }

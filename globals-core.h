@@ -159,8 +159,9 @@ extern char* formatThroughput(float numBytes, u_char htmlFormat, char *outStr, i
 extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
                              unsigned int nminutes, char *outStr, int outStrLen);
 extern char* formatPkts(Counter pktNr, char *outStr, int outStrLen);
-extern char* formatTime(time_t *theTime, char *outStr, int outStrLen);
 extern void clearUserUrlList(void);
+extern char* _formatTime(time_t *theTime, char *outStr, int outStrLen, char *file, int line);
+#define formatTime(t, o, l) _formatTime(t, o, l, __FILE__, __LINE__)
 
 /* fcUtils.c */
 extern HostTraffic* allocFcScsiCounters(HostTraffic *host);
