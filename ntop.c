@@ -570,6 +570,8 @@ static void purgeIpPorts(int theDevice) {
   traceEvent(TRACE_INFO, "Calling purgeIpPorts(%d)", theDevice);
 #endif
   
+  if(myGlobals.device[myGlobals.actualReportDeviceId].numHosts == 0) return;
+
   /* **********************************
 
   marker used to be defined ad char marker[TOP_IP_PORT];

@@ -1325,6 +1325,7 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.device[deviceId].network.s_addr = 0xFFFFFFFF;
   myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFFFF;
   myGlobals.device[deviceId].name = strdup(ifName);
+  myGlobals.device[deviceId].humanFriendlyName = strdup(ifName);
   myGlobals.device[deviceId].virtualDevice = 0;
   myGlobals.device[deviceId].datalink = DLT_EN10MB;
   myGlobals.device[deviceId].hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.broadcastEntry;
