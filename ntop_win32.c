@@ -79,9 +79,9 @@ void initWinsock32() {
     exit(-1);
   }
 
-  version = "2.1.57";
+  version = "2.1.58pre";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "2003-02-08";
+  buildDate = "2003-02-xx";
 
   if(!isWinNT()) {
     osName = "Win95/98/ME";
