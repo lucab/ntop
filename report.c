@@ -711,9 +711,10 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		   "<IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
-	if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long</th>"
+	if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*device[actualReportDeviceId].rcvdPktStats.tooLong)/
+		    getRowColor(), mtuSize[device[actualReportDeviceId].datalink],
+		    (float)(100*device[actualReportDeviceId].rcvdPktStats.tooLong)/
 		    (float)device[actualReportDeviceId].ethernetPkts,
 		    formatPkts(device[actualReportDeviceId].rcvdPktStats.tooLong)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -2310,7 +2311,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 /* ************************ */
 
 void printProtoTraffic(void) {
-  float total;
+  float total, perc;
   char buf[BUF_SIZE];
 
   total = device[actualReportDeviceId].ethernetBytes/1024; /* total is expressed in KBytes */
@@ -2322,14 +2323,17 @@ void printProtoTraffic(void) {
   sendString("<CENTER>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+
+  perc = 100*((float)device[actualReportDeviceId].ipBytes/device[actualReportDeviceId].ethernetBytes);
+  if(perc > 100) perc = 100;
+
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH>"
 	      "<TD "TD_BG" WIDTH=100 ALIGN=RIGHT>%s"
 	      "&nbsp;(%.1f%%)</TD><TD "TD_BG" WIDTH=250>"
 	      "<TABLE BORDER=1 WIDTH=\"100%%\">", 
 	      getRowColor(),
 	      formatBytes(device[actualReportDeviceId].ipBytes, 1),
-	      100*((float)device[actualReportDeviceId].ipBytes/
-		   device[actualReportDeviceId].ethernetBytes)) < 0) 
+	      perc) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
   

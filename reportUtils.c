@@ -2672,6 +2672,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 void printHostDetailedInfo(HostTraffic *el) {
   char buf[BUF_SIZE], buf1[64], sniffedName[MAXDNAME];
   float percentage;
+  TrafficCounter total;
   int printedHeader, i;
   char *dynIp, *multihomed;
 
@@ -3196,15 +3197,21 @@ void printHostDetailedInfo(HostTraffic *el) {
   if(el->hostNumIpAddress[0] != '\0')
     printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Received&nbsp;Stats",
 			      "Local", "Remote", -1, percentage);
-
-  if(el->bytesReceived == 0)
-    percentage = 100;
-  else
-    percentage = ((float)el->bytesSent*100)/el->bytesReceived;
   
-  printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vd.&nbsp;Rcvd&nbsp;Data",
-			    "Sent", "Rcvd", -1, percentage);
+  total = el->pktSent+el->pktReceived;
+  if(total > 0) {
+    percentage = ((float)el->pktSent*100)/((float)total);    
+    printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Pkts",
+			      "Sent", "Rcvd", -1, percentage);
+  }
 
+  total = el->bytesSent+el->bytesReceived;
+  if(total > 0) {
+    percentage = ((float)el->bytesSent*100)/((float)total);    
+    printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Data",
+			      "Sent", "Rcvd", -1, percentage);
+  }
+  
   /* ******************** */
 
   printedHeader=0;
