@@ -2118,9 +2118,9 @@ void traceEvent(int eventTraceLevel, char* file,
     memset(bufTime, 0, sizeof(bufTime));
     strftime(bufTime, sizeof(bufTime), "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
 
-    /* The 'MSGID' tag, only at the DETAIL level */
+    /* The file/line or 'MSGID' tag, depends on logExtra */
     memset(bufMsgID, 0, sizeof(bufMsgID));
-    if(myGlobals.traceLevel == CONST_DETAIL_TRACE_LEVEL) {
+    if(myGlobals.logExtra) {
       mFile = strdup(file);
       for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
 	if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
@@ -2130,7 +2130,17 @@ void traceEvent(int eventTraceLevel, char* file,
 	if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
 #endif
       }
-      snprintf(bufMsgID, sizeof(bufMsgID), "[%s:%d]", &mFile[beginFileIdx], line);
+      if(myGlobals.logExtra == CONST_EXTRA_TRACE_FILELINE)
+        snprintf(bufMsgID, sizeof(bufMsgID), "[%s:%d]", &mFile[beginFileIdx], line);
+      else {
+        unsigned int messageid = 0;
+        int i;
+        /* Hash the message format into an id */
+        for (i=0; i<=strlen(format); i++) {
+            messageid = (messageid << 1) ^ max(0,format[i]-32);
+        }
+        snprintf(bufMsgID, sizeof(bufMsgID), " [MSGID%07d]", (messageid & 0x8fffff));
+      }
       free(mFile);
     }
 
@@ -2141,17 +2151,17 @@ void traceEvent(int eventTraceLevel, char* file,
     if(bufMsg[strlen(bufMsg)-1] == '\n')
       bufMsg[strlen(bufMsg)-1] = 0;
 
-    /* Second we prepare the complete log message into buf, which is:
-     *
-     *    (time)(msgtag)(the actual message)(msgid)
+    /* Second we prepare the complete log message into buf
      */
     memset(buf, 0, sizeof(buf));
-    snprintf(buf, sizeof(buf), "%s %s %s%s",
-	     bufTime, bufMsgID,
+    snprintf(buf, sizeof(buf), "%s %s %s%s%s",
+	     bufTime, 
+             myGlobals.logExtra == CONST_EXTRA_TRACE_FILELINE ? bufMsgID : "",
 	     eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
 	     eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
 	     eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
-	     bufMsg);
+	     bufMsg,
+             myGlobals.logExtra == CONST_EXTRA_TRACE_MSGID ? bufMsgID : "");
 
     /* Finished preparing message fields */
 

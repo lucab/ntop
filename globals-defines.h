@@ -1155,10 +1155,13 @@
 #define CONST_INFO_TRACE_LEVEL              3
 #define CONST_NOISY_TRACE_LEVEL             4
     /*
-     * Used as both the limiting value (http.c) and (util.c) to define which
-     * traceEvent level gets the file/line info reported in addition to the date/time.
+     * Used as the limiting value (http.c) and (util.c).
+     *   DETAILED is NOISY + EXTRA FILELINE
      */
 #define CONST_DETAIL_TRACE_LEVEL            5
+
+#define CONST_EXTRA_TRACE_FILELINE          1
+#define CONST_EXTRA_TRACE_MSGID             2
 
 #define CONST_TRACE_ALWAYSDISPLAY           CONST_ALWAYSDISPLAY_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_FATALERROR              CONST_FATALERROR_TRACE_LEVEL, __FILE__, __LINE__
@@ -1166,7 +1169,6 @@
 #define CONST_TRACE_WARNING                 CONST_WARNING_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_INFO                    CONST_INFO_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_NOISY                   CONST_NOISY_TRACE_LEVEL, __FILE__, __LINE__
-#define CONST_TRACE_DETAIL                  CONST_DETAIL_TRACE_LEVEL, __FILE__, __LINE__
 
 
 /*

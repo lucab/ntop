@@ -143,6 +143,7 @@ static struct option const long_options[] = {
 #endif
 
   { "disable-stopcap",                  no_argument,       NULL, 142 },
+  { "log-extra",                        required_argument, NULL, 143 },
 
   {NULL, 0, NULL, 0}
 };
@@ -442,6 +443,9 @@ static int parseOptions(int argc, char* argv []) {
     case 't':
       /* Trace Level Initialization */
       myGlobals.traceLevel = min(max(1, atoi(optarg)), CONST_DETAIL_TRACE_LEVEL);
+      /* DETAILED is NOISY + FileLine stamp */
+      if (myGlobals.traceLevel >= CONST_DETAIL_TRACE_LEVEL)
+          myGlobals.logExtra = CONST_EXTRA_TRACE_FILELINE;
       break;
 
 #ifndef WIN32
@@ -673,6 +677,10 @@ static int parseOptions(int argc, char* argv []) {
 
     case 142: /* disable-stopcap */
       myGlobals.disableStopcap = TRUE;
+      break;
+
+    case 143: /* log-extra */
+      myGlobals.logExtra = min(max(0, atoi(optarg)), CONST_EXTRA_TRACE_MSGID);
       break;
 
     default:

@@ -1570,6 +1570,9 @@ XML*/
   u_char disableStopcap;             /* '142' */
                                      /*XML b disableStopcap       Options    "--disable-stopcap" */
 
+  short logExtra;                    /* '143' */
+                                     /*XML n logExtra             Options    "--log-extra" */
+
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
                                      /*XML b enableFragmentHandling Options  "" */

@@ -62,6 +62,8 @@ ntop \- display top network users
 .IR <URL> ]
 .RB [ -V | --version]
 .RB [ --disable-stopcap ]
+.RB [ --log-extra
+.IR <number> ]
 
 Unix options:
 
@@ -289,6 +291,8 @@ Trace level 1 is used to print errors only, level 2 for both warnings and errors
 Trace level 4 is called 'noisy' and it is.  It also enables a tag on every
 message, which may be useful for log watchers.
 
+Trace level 5 is 'noisy' plus --log-extra 1, i.e. with a file:line tag on every message.
+
 .It2 -u --user
 Specifies the user
 .B ntop
@@ -483,6 +487,13 @@ The default of stopcap enabled makes the web interface available albeit with sta
 content until 
 .B ntop
 is shutdown.
+
+.It --log-extra
+Setting 1 adds a [file:line] to the beginning of every log message.
+Setting 2 adds a [MSGIDnnnnnnn] tag at the end of every log message.
+The nnnnnnn value should be unique number for every message and should be stable across 
+.B ntop
+releases.  Both are useful for debugging and for using log watching and filtering packages.
 
 .SH "WEB VIEWS"
 While

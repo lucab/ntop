@@ -2945,6 +2945,12 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.disableStopcap == TRUE ? "Yes" : "No",
                            "No");
 
+  if(snprintf(buf, sizeof(buf), "%s%d",
+	      myGlobals.logExtra == 0 ? CONST_REPORT_ITS_DEFAULT : "",
+	      myGlobals.logExtra) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "--log-extra", buf);
+
   sendString(texthtml("\n\n", "<tr><th colspan=2>"));
   sendString("Note: " CONST_REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");
