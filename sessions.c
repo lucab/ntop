@@ -249,7 +249,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 /* ************************************ */
 
 void scanTimedoutTCPSessions(int actualDeviceId) {
-  u_int idx, i, freeSessionCount =0;
+  u_int idx, freeSessionCount =0;
 
   if(!myGlobals.enableSessionHandling) return;
 #ifdef DEBUG
@@ -453,9 +453,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "TCP hash [act size: %d][max size: %d]",
-		 myGlobals.device[actualDeviceId].numTcpSessions,
-		 (myGlobals.device[actualDeviceId].numTotSessions*AVERAGE_BUCKET_FILL));
+      traceEvent(TRACE_INFO, "TCP hash [act size: %d]\n",
+		 myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
       /* We don't check for space here as the datastructure allows

@@ -772,7 +772,7 @@ int cmpFctn(const void *_a, const void *_b) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO,
 	     "reportKind=%d/columnSort=%d/sortSendMode=%d/numIpProtosToMonitor=%d\n",
-	     reportKind, columnSort, sortSendMode, myGlobals.numIpProtosToMonitor);
+	     myGlobals.reportKind, myGlobals.columnSort, myGlobals.sortSendMode, myGlobals.numIpProtosToMonitor);
 #endif
 
 
@@ -2112,7 +2112,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 
       if(numSessions == 0) {
 	sendString("<CENTER>\n");
-	if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n<TR>"
+	if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
 		    "<TH "TH_BG" COLSPAN=2>%s&nbsp;Service</TH>"
 		    "<TH "TH_BG">Role</TH><TH "TH_BG">"
 		    "#&nbsp;Sessions</TH>"
@@ -3307,7 +3307,7 @@ void printTableEntry(char *buf, int bufLen,
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
-		"<TD ALIGN=CENTER WIDTH=250><IMG ALT=\"100%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
+		"<TD ALIGN=CENTER WIDTH=250><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
 		"</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)
       BufferTooShort();

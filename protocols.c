@@ -824,7 +824,7 @@ void handleNetbios(HostTraffic *srcHost,
 	int i;
 
 #ifdef DEBUG
-	for(i=0; i<len; i++)
+	for(i=0; i<udpDataLen; i++)
 	  printf("0x%X (%d)\n", data[i], i);
 #endif
 

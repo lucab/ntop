@@ -933,13 +933,13 @@ void printNtopConfigInfo(void) {
   sendString("<P>"TABLE_ON"<TABLE BORDER=1>\n");
   sendString("<TR><TH>Mutex Name</TH><TH>State</TH><TH>Last Lock</TH><TH>Last UnLock</TH>"
 	     "<TH COLSPAN=2># Locks/Releases</TH><TH>Max Lock</TH></TR>");
-  printMutexStatus(&gdbmMutex, "gdbmMutex");
-  printMutexStatus(&packetQueueMutex, "packetQueueMutex");
-  printMutexStatus(&addressResolutionMutex, "addressResolutionMutex");
-  printMutexStatus(&hashResizeMutex, "hashResizeMutex");
-  if(isLsofPresent) printMutexStatus(&lsofMutex, "lsofMutex");
-  printMutexStatus(&hostsHashMutex, "hostsHashMutex");
-  printMutexStatus(&graphMutex, "graphMutex");
+  printMutexStatus(&myGlobals.gdbmMutex, "gdbmMutex");
+  printMutexStatus(&myGlobals.packetQueueMutex, "packetQueueMutex");
+  printMutexStatus(&myGlobals.addressResolutionMutex, "addressResolutionMutex");
+  printMutexStatus(&myGlobals.hashResizeMutex, "hashResizeMutex");
+  if(myGlobals.isLsofPresent) printMutexStatus(&myGlobals.lsofMutex, "lsofMutex");
+  printMutexStatus(&myGlobals.hostsHashMutex, "hostsHashMutex");
+  printMutexStatus(&myGlobals.graphMutex, "graphMutex");
   sendString("</TABLE>"TABLE_OFF"\n");
 #endif /* MULTITHREADED && DEBUG */
 

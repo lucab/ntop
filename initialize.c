@@ -269,7 +269,7 @@ void resetDevice(int devIdx) {
 
 /* ******************************* */
 
-void initCounters() {
+void initCounters(void) {
   int len, i;
 
   myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
@@ -567,10 +567,6 @@ void initGdbm(char *directory) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
       exit(-1);
     }
-
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "The ntop.db database contains %d entries.\n", numDbEntries);
-#endif
   }
 }
 
@@ -583,7 +579,7 @@ void initGdbm(char *directory) {
  * c) collect data
  * d) display/emitt information
  */
-void initThreads() {
+void initThreads(void) {
   int i;
 
 #ifdef MULTITHREADED
@@ -848,12 +844,12 @@ void initDevices(char* devices) {
 
       if((nwInterface = strchr(tmpDev, ':')) != NULL) {
  	/* This is a virtual nwInterface */
- 	int i, found=0;
+ 	int intfc, found=0;
 
  	nwInterface[0] = 0;
 
- 	for(i=0; i<myGlobals.numDevices; i++)
- 	  if(myGlobals.device[i].name && (strcmp(myGlobals.device[i].name, tmpDev) == 0)) {
+ 	for(intfc=0; intfc<myGlobals.numDevices; intfc++)
+ 	  if(myGlobals.device[intfc].name && (strcmp(myGlobals.device[intfc].name, tmpDev) == 0)) {
  	    found = 1;
  	    break;
  	  }
@@ -953,7 +949,7 @@ void initDevices(char* devices) {
 
 /* ******************************* */
 
-void initLibpcap() {
+void initLibpcap(void) {
   char ebuf[PCAP_ERRBUF_SIZE];
 
   if(myGlobals.rFileName == NULL) {
@@ -1174,7 +1170,7 @@ void initDeviceDatalink(void) {
 
 /* ******************************* */
 
-void parseTrafficFilter() {
+void parseTrafficFilter(void) {
   /* Construct, compile and set filter */
   if(myGlobals.currentFilterExpression != NULL) {
     int i;

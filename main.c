@@ -610,8 +610,8 @@ static int parseOptions(int argc, char* argv []) {
     default:
       printf("FATAL ERROR: unknown ntop option, '%s'\n", argv[optind-1]);
 #ifdef DEBUG
-      if(op != '?')
-	printf("             getopt return value is '%c', %d\n", op, op);
+      if(opt != '?')
+	printf("             getopt return value is '%c', %d\n", opt, opt);
 #endif
       usage(stdout);
       exit(-1);
