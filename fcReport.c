@@ -1586,8 +1586,7 @@ void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId)
 
 void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
 {
-    char buf[LEN_GENERAL_WORK_BUFFER], buf1[64],
-         hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], buf1[64];
     float percentage;
     Counter total, tot1;
     char *vendorName;

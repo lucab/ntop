@@ -3836,7 +3836,6 @@ void printThptStatsMatrix(int sortedColumn) {
   time_t tmpTime;
   struct tm t;
   HostTraffic *el;
-  FcScsiCounters *fcCntrs;
   HostTraffic tmpEl;
 
   printHTMLheader("Network Load Statistics Matrix", NULL, 0);

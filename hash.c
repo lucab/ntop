@@ -1309,7 +1309,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 
     resetHostsVariables(el);
         
-    if(allocFcScsiCounters(el) == NULL) return;
+    if(allocFcScsiCounters(el) == NULL) return(NULL);
     el->l2Family = FLAG_HOST_TRAFFIC_AF_FC;
     el->fcCounters->devType = SCSI_DEV_UNINIT;
     el->magic = CONST_MAGIC_NUMBER;
@@ -1329,12 +1329,11 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 
     /* If there is a cache entry, use it */
     if((fcnsEntry = findFcHostNSCacheEntry (&el->fcCounters->hostFcAddress, vsanId)) != NULL) {
-        if (fcnsEntry->alias != NULL) {
-            setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS);
-        }
-        else {
-            setResolvedName(el, fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
-        }
+      if(fcnsEntry->alias != NULL)
+	setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS);
+      else
+	setResolvedName(el, fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
+      
         memcpy (el->fcCounters->pWWN.str, fcnsEntry->pWWN.str, LEN_WWN_ADDRESS);
         memcpy (el->fcCounters->nWWN.str, fcnsEntry->nWWN.str, LEN_WWN_ADDRESS);
     }

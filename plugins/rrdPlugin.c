@@ -613,12 +613,10 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN],
-    buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN],
-    buf4[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf5[MAX_NUM_ENTRIES][MAX_BUF_LEN];
+    buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char fname[384], *label;
-  char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
+  char **rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0;
-  DIR* directoryPointer;
 
   path[0] = '\0';
 
@@ -1878,221 +1876,213 @@ RETSIGTYPE rrdcleanup(int signo) {
 
 /* ****************************** */
 
-static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx)
-{
-  char value[512 /* leave it big for hosts filter */];
+static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
   u_int32_t networks[32][3];
   u_short numLocalNets;
-  int sleep_tm, idx;
+  int idx;
   char rrdPath[512];
   int cycleCount=0;
   char *adjHostName;
-  ProtocolsList *protoList;
+  ProtocolsList *protoList;  
+  char *hostKey;
+  int j;
+  
+  if((el == myGlobals.otherHostEntry) || (el == myGlobals.broadcastEntry)
+     || broadcastHost(el) || (myGlobals.trackOnlyLocalHosts && (!subnetPseudoLocalHost(el)))) {
+    return;
+  }
 
-    char *hostKey;
-    int i, j;
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
+#endif
 
-    if((el == myGlobals.otherHostEntry) || (el == myGlobals.broadcastEntry)
-       || broadcastHost(el) || (myGlobals.trackOnlyLocalHosts && (!subnetPseudoLocalHost(el)))) {
-        return;
+  if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
+    if(el->hostNumIpAddress[0] != '\0') {
+      hostKey = el->hostNumIpAddress;
+
+      if((numLocalNets > 0)
+	 && (el->hostIpAddress.hostFamily == AF_INET) /* IPv4 ONLY <-- FIX */
+	 && (!__pseudoLocalAddress(&el->hostIpAddress.Ip4Address, networks, numLocalNets))) {
+#ifdef CFG_MULTITHREADED
+	releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+	return;
+      }
+
+      if((!myGlobals.dontTrustMACaddr)
+	 && subnetPseudoLocalHost(el)
+	 && (el->ethAddressString[0] != '\0')) /*
+						 NOTE:
+						 MAC address is empty even
+						 for local hosts if this host has
+						 been learnt on a virtual interface
+						 such as the NetFlow interface
+					       */
+	hostKey = el->ethAddressString;
+    } else {
+      /* For the time being do not save IP-less hosts */
+
+#ifdef CFG_MULTITHREADED
+      releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+      return;
     }
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
-#endif
+    adjHostName = dotToSlash(hostKey);
 
-    if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
-        if(el->hostNumIpAddress[0] != '\0') {
-            hostKey = el->hostNumIpAddress;
-
-            if((numLocalNets > 0)
-               && (el->hostIpAddress.hostFamily == AF_INET) /* IPv4 ONLY <-- FIX */
-               && (!__pseudoLocalAddress(&el->hostIpAddress.Ip4Address, networks, numLocalNets))) {
-#ifdef CFG_MULTITHREADED
-                releaseMutex(&myGlobals.hostsHashMutex);
-#endif
-                return;
-            }
-
-            if((!myGlobals.dontTrustMACaddr)
-               && subnetPseudoLocalHost(el)
-               && (el->ethAddressString[0] != '\0')) /*
-                                                       NOTE:
-                                                       MAC address is empty even
-                                                       for local hosts if this host has
-                                                       been learnt on a virtual interface
-                                                       such as the NetFlow interface
-                                                     */
-                hostKey = el->ethAddressString;
-        } else {
-            /* For the time being do not save IP-less hosts */
-
-#ifdef CFG_MULTITHREADED
-            releaseMutex(&myGlobals.hostsHashMutex);
-#endif
-            return;
-        }
-
-        adjHostName = dotToSlash(hostKey);
-
-        safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
-                      myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
-                      adjHostName);
-        mkdir_p(rrdPath);
+    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
+		  myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
+		  adjHostName);
+    mkdir_p(rrdPath);
 
 #if RRD_DEBUG >= 2
-        traceEvent(CONST_TRACE_INFO, "RRD: Updating %s [%s/%s]",
-                   hostKey, el->hostNumIpAddress, el->ethAddressString);
+    traceEvent(CONST_TRACE_INFO, "RRD: Updating %s [%s/%s]",
+	       hostKey, el->hostNumIpAddress, el->ethAddressString);
 #endif
 
-        updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
-        updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
-        updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
-        updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd);
+    updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
+    updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
+    updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
+    updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd);
 
-        if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-            updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent);
-            updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd);
-            updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent);
-            updateTrafficCounter(rrdPath, "bytesBroadcastSent", &el->bytesBroadcastSent);
-            updateTrafficCounter(rrdPath, "pktMulticastSent", &el->pktMulticastSent);
-            updateTrafficCounter(rrdPath, "bytesMulticastSent", &el->bytesMulticastSent);
-            updateTrafficCounter(rrdPath, "pktMulticastRcvd", &el->pktMulticastRcvd);
-            updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd);
+    if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
+      updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent);
+      updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd);
+      updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent);
+      updateTrafficCounter(rrdPath, "bytesBroadcastSent", &el->bytesBroadcastSent);
+      updateTrafficCounter(rrdPath, "pktMulticastSent", &el->pktMulticastSent);
+      updateTrafficCounter(rrdPath, "bytesMulticastSent", &el->bytesMulticastSent);
+      updateTrafficCounter(rrdPath, "pktMulticastRcvd", &el->pktMulticastRcvd);
+      updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd);
 
-            updateTrafficCounter(rrdPath, "bytesSentLoc", &el->bytesSentLoc);
-            updateTrafficCounter(rrdPath, "bytesSentRem", &el->bytesSentRem);
-            updateTrafficCounter(rrdPath, "bytesRcvdLoc", &el->bytesRcvdLoc);
-            updateTrafficCounter(rrdPath, "bytesRcvdFromRem", &el->bytesRcvdFromRem);
-            updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent);
-            updateTrafficCounter(rrdPath, "ipBytesRcvd", &el->ipBytesRcvd);
-            updateTrafficCounter(rrdPath, "tcpSentLoc", &el->tcpSentLoc);
-            updateTrafficCounter(rrdPath, "tcpSentRem", &el->tcpSentRem);
-            updateTrafficCounter(rrdPath, "udpSentLoc", &el->udpSentLoc);
-            updateTrafficCounter(rrdPath, "udpSentRem", &el->udpSentRem);
-            updateTrafficCounter(rrdPath, "icmpSent", &el->icmpSent);
-            updateTrafficCounter(rrdPath, "tcpRcvdLoc", &el->tcpRcvdLoc);
-            updateTrafficCounter(rrdPath, "tcpRcvdFromRem", &el->tcpRcvdFromRem);
-            updateTrafficCounter(rrdPath, "udpRcvdLoc", &el->udpRcvdLoc);
-            updateTrafficCounter(rrdPath, "udpRcvdFromRem", &el->udpRcvdFromRem);
-            updateTrafficCounter(rrdPath, "icmpRcvd", &el->icmpRcvd);
-            updateTrafficCounter(rrdPath, "tcpFragmentsSent", &el->tcpFragmentsSent);
-            updateTrafficCounter(rrdPath, "tcpFragmentsRcvd", &el->tcpFragmentsRcvd);
-            updateTrafficCounter(rrdPath, "udpFragmentsSent", &el->udpFragmentsSent);
-            updateTrafficCounter(rrdPath, "udpFragmentsRcvd", &el->udpFragmentsRcvd);
-            updateTrafficCounter(rrdPath, "icmpFragmentsSent", &el->icmpFragmentsSent);
-            updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd);
-            updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent);
-            updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd);
+      updateTrafficCounter(rrdPath, "bytesSentLoc", &el->bytesSentLoc);
+      updateTrafficCounter(rrdPath, "bytesSentRem", &el->bytesSentRem);
+      updateTrafficCounter(rrdPath, "bytesRcvdLoc", &el->bytesRcvdLoc);
+      updateTrafficCounter(rrdPath, "bytesRcvdFromRem", &el->bytesRcvdFromRem);
+      updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent);
+      updateTrafficCounter(rrdPath, "ipBytesRcvd", &el->ipBytesRcvd);
+      updateTrafficCounter(rrdPath, "tcpSentLoc", &el->tcpSentLoc);
+      updateTrafficCounter(rrdPath, "tcpSentRem", &el->tcpSentRem);
+      updateTrafficCounter(rrdPath, "udpSentLoc", &el->udpSentLoc);
+      updateTrafficCounter(rrdPath, "udpSentRem", &el->udpSentRem);
+      updateTrafficCounter(rrdPath, "icmpSent", &el->icmpSent);
+      updateTrafficCounter(rrdPath, "tcpRcvdLoc", &el->tcpRcvdLoc);
+      updateTrafficCounter(rrdPath, "tcpRcvdFromRem", &el->tcpRcvdFromRem);
+      updateTrafficCounter(rrdPath, "udpRcvdLoc", &el->udpRcvdLoc);
+      updateTrafficCounter(rrdPath, "udpRcvdFromRem", &el->udpRcvdFromRem);
+      updateTrafficCounter(rrdPath, "icmpRcvd", &el->icmpRcvd);
+      updateTrafficCounter(rrdPath, "tcpFragmentsSent", &el->tcpFragmentsSent);
+      updateTrafficCounter(rrdPath, "tcpFragmentsRcvd", &el->tcpFragmentsRcvd);
+      updateTrafficCounter(rrdPath, "udpFragmentsSent", &el->udpFragmentsSent);
+      updateTrafficCounter(rrdPath, "udpFragmentsRcvd", &el->udpFragmentsRcvd);
+      updateTrafficCounter(rrdPath, "icmpFragmentsSent", &el->icmpFragmentsSent);
+      updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd);
+      updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent);
+      updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd);
 
-	    if(el->nonIPTraffic) {
-	      updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent);
-	      updateTrafficCounter(rrdPath, "stpRcvd", &el->nonIPTraffic->stpRcvd);
-	      updateTrafficCounter(rrdPath, "ipxSent", &el->nonIPTraffic->ipxSent);
-	      updateTrafficCounter(rrdPath, "ipxRcvd", &el->nonIPTraffic->ipxRcvd);
-	      updateTrafficCounter(rrdPath, "osiSent", &el->nonIPTraffic->osiSent);
-	      updateTrafficCounter(rrdPath, "osiRcvd", &el->nonIPTraffic->osiRcvd);
-	      updateTrafficCounter(rrdPath, "dlcSent", &el->nonIPTraffic->dlcSent);
-	      updateTrafficCounter(rrdPath, "dlcRcvd", &el->nonIPTraffic->dlcRcvd);
-	      updateTrafficCounter(rrdPath, "arp_rarpSent", &el->nonIPTraffic->arp_rarpSent);
-	      updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->nonIPTraffic->arp_rarpRcvd);
-	      updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->nonIPTraffic->arpReqPktsSent);
-	      updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->nonIPTraffic->arpReplyPktsSent);
-	      updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->nonIPTraffic->arpReplyPktsRcvd);
-	      updateTrafficCounter(rrdPath, "decnetSent", &el->nonIPTraffic->decnetSent);
-	      updateTrafficCounter(rrdPath, "decnetRcvd", &el->nonIPTraffic->decnetRcvd);
-	      updateTrafficCounter(rrdPath, "appletalkSent", &el->nonIPTraffic->appletalkSent);
-	      updateTrafficCounter(rrdPath, "appletalkRcvd", &el->nonIPTraffic->appletalkRcvd);
-	      updateTrafficCounter(rrdPath, "netbiosSent", &el->nonIPTraffic->netbiosSent);
-	      updateTrafficCounter(rrdPath, "netbiosRcvd", &el->nonIPTraffic->netbiosRcvd);
-	      updateTrafficCounter(rrdPath, "otherSent", &el->nonIPTraffic->otherSent);
-	      updateTrafficCounter(rrdPath, "otherRcvd", &el->nonIPTraffic->otherRcvd);
-	    }
+      if(el->nonIPTraffic) {
+	updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent);
+	updateTrafficCounter(rrdPath, "stpRcvd", &el->nonIPTraffic->stpRcvd);
+	updateTrafficCounter(rrdPath, "ipxSent", &el->nonIPTraffic->ipxSent);
+	updateTrafficCounter(rrdPath, "ipxRcvd", &el->nonIPTraffic->ipxRcvd);
+	updateTrafficCounter(rrdPath, "osiSent", &el->nonIPTraffic->osiSent);
+	updateTrafficCounter(rrdPath, "osiRcvd", &el->nonIPTraffic->osiRcvd);
+	updateTrafficCounter(rrdPath, "dlcSent", &el->nonIPTraffic->dlcSent);
+	updateTrafficCounter(rrdPath, "dlcRcvd", &el->nonIPTraffic->dlcRcvd);
+	updateTrafficCounter(rrdPath, "arp_rarpSent", &el->nonIPTraffic->arp_rarpSent);
+	updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->nonIPTraffic->arp_rarpRcvd);
+	updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->nonIPTraffic->arpReqPktsSent);
+	updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->nonIPTraffic->arpReplyPktsSent);
+	updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->nonIPTraffic->arpReplyPktsRcvd);
+	updateTrafficCounter(rrdPath, "decnetSent", &el->nonIPTraffic->decnetSent);
+	updateTrafficCounter(rrdPath, "decnetRcvd", &el->nonIPTraffic->decnetRcvd);
+	updateTrafficCounter(rrdPath, "appletalkSent", &el->nonIPTraffic->appletalkSent);
+	updateTrafficCounter(rrdPath, "appletalkRcvd", &el->nonIPTraffic->appletalkRcvd);
+	updateTrafficCounter(rrdPath, "netbiosSent", &el->nonIPTraffic->netbiosSent);
+	updateTrafficCounter(rrdPath, "netbiosRcvd", &el->nonIPTraffic->netbiosRcvd);
+	updateTrafficCounter(rrdPath, "otherSent", &el->nonIPTraffic->otherSent);
+	updateTrafficCounter(rrdPath, "otherRcvd", &el->nonIPTraffic->otherRcvd);
+      }
 
-            protoList = myGlobals.ipProtosList, idx=0;
-            while(protoList != NULL) {
-                char buf[64];
+      protoList = myGlobals.ipProtosList, idx=0;
+      while(protoList != NULL) {
+	char buf[64];
 
-                safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sSent", protoList->protocolName);
-                updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx].sent);
-                safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sRcvd", protoList->protocolName);
-                updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx].rcvd);
-                idx++, protoList = protoList->next;
-            }
-        }
-
-        if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
-            updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers);
-            updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers);
-
-            if((hostKey == el->hostNumIpAddress) && el->protoIPTrafficInfos) {
-#ifdef RRD_DEBUG
-                traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
-#endif
-
-                safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/IP_",
-                              myGlobals.rrdPath,
-                              myGlobals.device[devIdx].humanFriendlyName,
-                              adjHostName
-                    );
-
-                for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
-		    char key[128];
-		    safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sSentBytes",
-                                  myGlobals.protoIPTrafficInfos[j]);
-		    updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].sentLoc.value+
-				  el->protoIPTrafficInfos[j].sentRem.value);
-
-		    safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sRcvdBytes",
-                                  myGlobals.protoIPTrafficInfos[j]);
-		    updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].rcvdLoc.value+
-				  el->protoIPTrafficInfos[j].rcvdFromRem.value);
-                }
-            }
-        }
-
-        if(adjHostName != NULL)
-            free(adjHostName);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sSent", protoList->protocolName);
+	updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx].sent);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sRcvd", protoList->protocolName);
+	updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx].rcvd);
+	idx++, protoList = protoList->next;
+      }
     }
 
+    if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
+      updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers);
+      updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers);
+
+      if((hostKey == el->hostNumIpAddress) && el->protoIPTrafficInfos) {
+#ifdef RRD_DEBUG
+	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
+#endif
+
+	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/IP_",
+		      myGlobals.rrdPath,
+		      myGlobals.device[devIdx].humanFriendlyName,
+		      adjHostName
+		      );
+
+	for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
+	  char key[128];
+	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sSentBytes",
+			myGlobals.protoIPTrafficInfos[j]);
+	  updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].sentLoc.value+
+			el->protoIPTrafficInfos[j].sentRem.value);
+
+	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sRcvdBytes",
+			myGlobals.protoIPTrafficInfos[j]);
+	  updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].rcvdLoc.value+
+			el->protoIPTrafficInfos[j].rcvdFromRem.value);
+	}
+      }
+    }
+
+    if(adjHostName != NULL)
+      free(adjHostName);
+  }
+
 #ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.hostsHashMutex);
+  releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 #ifdef MAKE_WITH_SCHED_YIELD
-    sched_yield(); /* Allow other threads to run */
+  sched_yield(); /* Allow other threads to run */
 #endif
     
-    return;
+  return;
 }
-
 
 /* ****************************** */
 
-static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx)
-{
-  char value[512 /* leave it big for hosts filter */];
+static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
   char rrdPath[512];
   int cycleCount=0;
   char *adjHostName;
   char hostKey[128];
-  int i, j;
 
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
 #endif
-
+    
     if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
-        if(el->fcCounters->hostNumFcAddress[0] != '\0') {
-            safe_snprintf (hostKey, sizeof (hostKey), "%s-%d",
-                           el->fcCounters->hostNumFcAddress,
-                           el->fcCounters->vsanId);
+      if(el->fcCounters->hostNumFcAddress[0] != '\0') {
+	  safe_snprintf(__FILE__, __LINE__, hostKey, sizeof (hostKey), "%s-%d",
+			el->fcCounters->hostNumFcAddress,
+			el->fcCounters->vsanId);
         } else {
             /* For the time being do not save IP-less hosts */
-
 #ifdef CFG_MULTITHREADED
-            releaseMutex(&myGlobals.hostsHashMutex);
+	  releaseMutex(&myGlobals.hostsHashMutex);
 #endif
-            return;
+	  return;
         }
 
         adjHostName = dotToSlash(hostKey);

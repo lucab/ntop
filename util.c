@@ -3921,7 +3921,6 @@ void setHostFingerprint(HostTraffic *srcHost) {
   int S, N, D, T, done = 0, numEntries=0;
   char fingerprint[32];
   char *strtokState;
-  u_char compressedFormat;
 
 #ifdef FINGERPRINT_DEBUG
   traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: setHostFingerprint(0x%08x)", srcHost);

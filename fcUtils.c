@@ -136,8 +136,8 @@ int fillFcpInfo (const u_char *bp, HostTraffic *srcHost, HostTraffic *dstHost)
 
   fcpDl = ntohl (*(u_int32_t *)&bp[offset+28]);
 
-  if(allocFcScsiCounters(srcHost) == NULL) return;
-  if(allocFcScsiCounters(dstHost) == NULL) return;
+  if(allocFcScsiCounters(srcHost) == NULL) return(0);
+  if(allocFcScsiCounters(dstHost) == NULL) return(0);
 
   if (bp[offset+11] & 0x1) {
     incrementTrafficCounter (&srcHost->fcCounters->scsiWriteBytes, fcpDl);

@@ -3623,8 +3623,8 @@ static void processFcPkt(const u_char *bp,
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcFcpBytes, fcFrameLen);
 
         if ((fchdr.r_ctl & 0xF) == FCP_IU_CMD) {
-            /* We deal with command frames only for now */
-            fillFcpInfo (&bp[offset+24], srcHost, dstHost);
+	  /* We deal with command frames only for now */
+	  fillFcpInfo (&bp[offset+24], srcHost, dstHost);
         }
         break;
     case FC_FTYPE_ELS:
