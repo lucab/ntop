@@ -1,3 +1,11 @@
+Please note that ntop appears to have stopped being compilable
+under MinGW after 2.1.3.  These instructions are retained for
+historical usage. If somebody wants to attempt to revise them
+for 2.2.1+, we would love the contribution.
+
+
+
+
 This note describes how to build ntop on win2k using the MinGW
 toolchain (MinGW allows you to build native win32 binaries linked
 against the Microsoft runtime and not the cygwin runtime).

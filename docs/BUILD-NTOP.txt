@@ -12,13 +12,38 @@ Quick Instructions
 
          - glibc, glibc-devel, gcc, cpp
          - gawk
-         - autoconf (2.51+), automake (1.6+), libtool (1.4+)
+               Note that mawk is also ok.
+               If all you have is nawk or original awk, you will get a warning
+               message from ./configure and some options will not work.
+         - libtool (1.4+)
                Note that there are reports of success with libtool 1.3.x
-               Also note that there is special handling required
-                   for automake 1.7.1+ - read the ./configure output.
-         - openssl, openssl-devel (http://www.openssl.org)
+
          - gdbm, gdbm-devel
          - libpcap (http://www.tcpdump.org)
+         - gd, gd-devel
+         - libpng, libpng-devel
+
+1b. Optional packages
+
+         - openssl, openssl-devel (http://www.openssl.org)
+         - zlib, zlib-devel
+
+      Sometimes having these help because they allow ./configure to
+      rebuild the scripts to better match your system:
+
+         - autoconf (2.51+), automake (1.6+)
+
+1c. pep Plugin
+
+      If you are interested in pep (a plugin to use the Perl to build
+      your own reports), you'll need Perl.
+
+      If pep causes a compile error and you're not interested in it, you
+      can, after ./configure, edit the line in plugins/Makefile:
+
+          SUBDIRS = . pep
+
+      and remove the 'pep'.
 
 
 2. Build ntop
@@ -52,19 +77,70 @@ Quick Instructions
 
    - /usr/local/bin/ntop -u userid -P directory ...other parameters...
 
-Note: Following these instructions builds static linked versions of
-      required libraries (gdchart, gd, libpng and libz).  If other versions
-      are already installed, you'll see messages in the ./configure output.
+Compile problems
+================
+
+      First off, READ the output from ./configure - many issues and
+      problems are reported there.  If you ignore this and blythly try
+      to run make, well, things might be broken.
+
+      The most common problem is an inability to find critical libraries
+      such as libpcap, libpng, etc.
 
       The problem is that across the universe of *nix systems, libraries
       get installed in many different locations, making the Makefile
-      incredibly complex.  If ntop can't find things, you will have to
-      explicitly tell ./configure where to find them via a series of
-      --with-xxxx-root=dir parameters. 
+      incredibly complex.
+
+      Starting with 2.2, ntop no longer goes to extreme lengths to find
+      the .h and lib files.  2.2.1 continues this evolution, to the extent
+      that if a header or library isn't in the standard locations, you
+      MUST tell ntop where to find it.
+
+      (Note that standard locations differ across systems and may not
+       include the common installation location for packages such as
+       /usr/local - consult the OS documentation!)
+
+      You have two choices...
+
+      1. explicitly tell ./configure where to find them via a series of
+      --with-xxxx-root=dir parameters (./configure --help will show you
+      the available parameters)
+
+          Note that if you give both --with-xxxx-lib and --with-xxxx-include,
+          the --with-xxxx-root is ignored.  If you give --with-xxxx-root=xyzzy,
+          it is equivalent to giving --with-xxxx-lib=xyzzy/lib and
+          --with-xxxx-include=xyzzy/include.
+
+      2. Use the LDFLAGS and CPPFLAGS variables, e.g.:
+
+          $ export CPPFLAGS="-lm"
+          $ export LDFLAGS="-L/usr/local/lib"
+          $ ./configure ...
+          $ make
+
+         which adds /usr/local/lib to the loader path and libm (math library
+         in some flavors of *nix) to the list of libraries.
+
+Notes
+=====
+
+   ntop 2.2.1+
+
+      A frozen version of rrd is in the myrrd subdirectory and used
+      by ntop.
+
+      gdchart has been replaced entirely by code in graph.c
+
+      Graphics are no longer optional.
+
+      We no longer include static versions of the helper libraries
+      (gd, libpng and libz).  Instead we use the installed versions,
+      hence the 'increase' in the # of required packages.  
 
 ----------------------------------------
 Luca Deri <deri@ntop.org> - January 2001
 Updated - June 2002
 Updated - October 2002 (new ./configure scripts)
 Updated - January 2003 (automake 1.6+ vs. 1.5+)
+Updated - July 2003 (2.2.1+ changes)
 
