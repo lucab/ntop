@@ -638,9 +638,6 @@ RETSIGTYPE (*setsignal(int, RETSIGTYPE (*)(int)))(int);
 #endif
 
 #if defined(WIN32) && !defined(__GNUC__)
-#define n_short short
-#define n_time time_t
-
 #define HAVE_GDBM_H
 #include <gdbmerrno.h>
 extern const char *gdbm_strerror (int);
