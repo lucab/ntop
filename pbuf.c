@@ -1739,9 +1739,11 @@ static void processIpPkt(const u_char *bp,
 
         sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
 
-        if ((myGlobals.runningPref.enableOtherPacketDump) && ((sportIdx == -1) && (dportIdx == -1)))
-	  {
-	    /* Both source & destination port are unknown. The packet will be counted to "Other TCP/UDP prot." : We dump the packet if requested */
+        if((myGlobals.runningPref.enableOtherPacketDump) && ((sportIdx == -1) && (dportIdx == -1))) {
+	    /* 
+	       Both source & destination port are unknown. 
+	       The packet will be counted to "Other TCP/UDP prot.".
+	       We dump the packet if requested */
 	    dumpOtherPacket(actualDeviceId);
 	  }
 
@@ -1763,7 +1765,9 @@ static void processIpPkt(const u_char *bp,
                              dport, ip_len, NULL, udpDataLength,
                              (u_char*)(bp+hlen+sizeof(struct udphdr)),
                              actualDeviceId, &newSession);
-	}
+	} 
+
+	newSession = 1; /* Trick to account flows anyway */
 
         /* Handle UDP traffic like TCP, above -
 	   That is: if we know about the lower# port, even if it's the destination,

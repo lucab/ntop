@@ -3077,13 +3077,18 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      TrafficCounter ctr;
 	      char tmpStr[128];
 
+	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sFlows", 
+			    myGlobals.protoIPTrafficInfos[j]);	      
+	      updateCounter(rrdPath, tmpStr, myGlobals.device[devIdx].
+			    ipProtoStats[j].totalFlows.value);	      
 	      ctr.value =
 		myGlobals.device[devIdx].ipProtoStats[j].local.value+
 		myGlobals.device[devIdx].ipProtoStats[j].local2remote.value+
 		myGlobals.device[devIdx].ipProtoStats[j].remote2local.value+
 		myGlobals.device[devIdx].ipProtoStats[j].remote.value;
 
-	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sBytes", myGlobals.protoIPTrafficInfos[j]);
+	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sBytes", 
+			    myGlobals.protoIPTrafficInfos[j]);
 	      updateCounter(rrdPath, tmpStr, ctr.value);
 	    }
 	  }

@@ -2902,14 +2902,17 @@ static int returnHTTPPage(char* pageName,
         urlFixupFromRFC1945Inplace(hostName);
 
 #ifdef URL_DEBUG
-        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName);
+        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s' [%d]\r\n", hostName, vlanId);
 #endif
+
+        printf("->> Searching hostname: '%s' [%d]\r\n", hostName, vlanId);
 
         for(el=getFirstHost(myGlobals.actualReportDeviceId);
             el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 	  if(!isFcHost(el)) {
 	    if((el != myGlobals.broadcastEntry)
 	       && (el->hostNumIpAddress != NULL)
+	       && ((vlanId == -1) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))
 	       && ((el->vlanId <= 0) || (el->vlanId == vlanId))
 	       && ((strcmp(el->hostNumIpAddress, hostName) == 0)
 		   || (strcmp(el->ethAddressString, hostName) == 0))) {
@@ -3793,8 +3796,7 @@ void handleHTTPrequest(HostAddr from) {
 
 /* *******************************/
 
-int readHTTPpostData(int len, char *buf, int buflen)
-{
+int readHTTPpostData(int len, char *buf, int buflen) {
   int rc, idx=0;
 
 #ifdef HAVE_OPENSSL

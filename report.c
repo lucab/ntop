@@ -2378,7 +2378,6 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
     sendString("<P ALIGN=LEFT>");
 
-
     if(vlanId > 0)
       safe_snprintf(__FILE__, __LINE__, (char*)vlanStr, sizeof(vlanStr), "&vlan=%d", vlanId);
     else
@@ -2751,7 +2750,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
     if(((strcmp(el->hostNumIpAddress, host) == 0) || (strcmp(el->ethAddressString, host) == 0))
-       && (el->vlanId == vlanId)) {
+       && ((vlanId == -1) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
       found = 1;
       break;
     } else if((el->fcCounters != NULL)
@@ -3932,7 +3931,8 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
 
-      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote.value/1024;
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].
+	tcpGlobalTrafficStats.local2remote.value/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage, 0, 0);
@@ -3944,7 +3944,8 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 		 "<TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value/1024;
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].
+	  ipProtoStats[i].local2remote.value/1024;
 
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
@@ -3993,7 +3994,8 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       printSectionTitle("Global TCP/UDP Protocol Distribution");
 
       sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">"
+		 "<TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
 		 "TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG">Flows</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
 		 "Percentage</TH></TR>\n");
@@ -4045,8 +4047,11 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       }
 #endif
       sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=LEFT "DARK_BG">"
-		 "What is a flow?<br><ul><li>TCP: a flows is a TCP connection"
-		 "<li>UDP: a flow is a packet</ul>"
+		 "Note:\n"
+		 "<ul><li>What is a flow?<br><ul><li>TCP: a flows is a TCP connection."
+		 "<li>UDP: a flow is a packet.</ul>"
+		 "<li>TCP flows are not accounted for fully (sender and recipient) remote peers."
+		 "</ul>"
 		 "</TD></TR>\n");
       sendString("</TABLE>"TABLE_OFF"<P>\n");
 

@@ -209,7 +209,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
 			       float percentage,
 			       u_int showFlows, Counter flows) {
   int int_perc;
-  char formatBuf[32], flowBuf[64];
+  char formatBuf[32], flowBuf[64], tmpBuf[32];
 
   if(percentage < 0.5)
     int_perc = 0;
@@ -222,7 +222,8 @@ void printTableEntryPercentage(char *buf, int bufLen,
     flowBuf[0] = '\0';
   else
     safe_snprintf(__FILE__, __LINE__, flowBuf, sizeof(flowBuf), 
-		  "</TD><TD "TD_BG" ALIGN=RIGHT>%u", flows);
+		  "</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s", 
+		  formatPkts(flows, tmpBuf, sizeof(tmpBuf)));
 
   switch(int_perc) {
   case 0:
@@ -235,10 +236,8 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		    "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
 		    "</TR></TABLE></TD>"
 		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
-		    getRowColor(), label,
-		    CONST_COLOR_1, label_1,
-		    CONST_COLOR_2,
-		    CONST_COLOR_2, label_2);
+		    getRowColor(), label, CONST_COLOR_1, flowBuf, /* label_1, */
+		    CONST_COLOR_2, CONST_COLOR_2, label_2);
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
@@ -251,9 +250,8 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
 		    getRowColor(), label,
 		    formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf,
-		    CONST_COLOR_1, label_1,
-		    CONST_COLOR_2,
-		    CONST_COLOR_2, label_2);
+		    CONST_COLOR_1, label_1, CONST_COLOR_2,
+		    CONST_COLOR_1, label_2);
     }
     break;
   case 100:
@@ -304,7 +302,8 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		    (100-int_perc), CONST_COLOR_2,
 		    CONST_COLOR_2, label_2, (100-percentage));
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen,
+		    "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
 		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		    "<TR><TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD>"
 		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
@@ -4238,7 +4237,7 @@ void printTableEntry(char *buf, int bufLen,
 		     float total, float percentage,
 		     u_int showFlows, Counter flows) {
   int int_perc;
-  char formatBuf[32], flowBuf[64];
+  char formatBuf[32], flowBuf[64], tmpBuf[32];
 
   if(total == 0) return;
 
@@ -4257,7 +4256,8 @@ void printTableEntry(char *buf, int bufLen,
     flowBuf[0] = '\0';
   else
     safe_snprintf(__FILE__, __LINE__, flowBuf, sizeof(flowBuf), 
-		  "</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%u", flows);
+		  "</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s", 
+		  formatPkts(flows, tmpBuf, sizeof(tmpBuf)));
 
   switch(int_perc) {
   case 0:
@@ -4275,14 +4275,14 @@ void printTableEntry(char *buf, int bufLen,
     break;
   default:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
-		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%d%%</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%.1f%%</TD>"
 		  "<TD "TD_BG" WIDTH=200><TABLE BORDER=0 "TABLE_DEFAULTS" CELLPADDING=0 CELLSPACING=0 WIDTH=200>"
-		  "<TR "TR_ON"><TD><IMG ALIGN=MIDDLE ALT=\"%d%%\" SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12>"
+		  "<TR "TR_ON"><TD><IMG ALIGN=MIDDLE ALT=\"%.1f%%\" SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12>"
 		  "</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
 		  "<P>&nbsp;</TD></TR></TABLE>"TABLE_OFF"</TD></TR>\n",
 		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), 
-		  flowBuf, int_perc,
-		  int_perc, (200*int_perc)/100,
+		  flowBuf, percentage,
+		  percentage, (200*int_perc)/100,
 		  (200*(100-int_perc))/100, getActualRowColor());
   }
   

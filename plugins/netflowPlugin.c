@@ -286,8 +286,7 @@ static int setNetFlowInSocket(int deviceId) {
 
 /* *************************** */
 
-static int handleGenericFlow(time_t recordActTime,
-			     time_t recordSysUpTime,
+static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
 			     int deviceId) {
   int actualDeviceId;
@@ -308,8 +307,8 @@ static int handleGenericFlow(time_t recordActTime,
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd++;
 
-  numPkts  = ntohl(record->dPkts);
-  len      = (Counter)ntohl(record->dOctets);
+  numPkts = ntohl(record->dPkts);
+  len     = (Counter)ntohl(record->dOctets);
 
   /* Bad flow(zero packets) */
   if(numPkts == 0) {
@@ -525,24 +524,24 @@ static int handleGenericFlow(time_t recordActTime,
 
   if((sport != 0) && (dport != 0)) {
     if(dport < sport) {
-      if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession) == -1) {
-	if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession) == -1) {
+      if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId, 1) == -1) {
+	if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId, 1) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
-	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession);
+	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId, 1);
 	  }
 	}
       }
     } else {
-      if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession) == -1) {
-	if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession) == -1) {
+      if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId, 1) == -1) {
+	if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId, 1) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
-	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId, newSession);
+	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId, 1);
 	  }
 	}
       }
@@ -622,7 +621,8 @@ static int handleGenericFlow(time_t recordActTime,
 
     tp.th_sport = htons(sport), tp.th_dport = htons(dport);
     tp.th_flags = record->tcp_flags;
-    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, &tp, 0, NULL, actualDeviceId, &newSession);
+    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len,
+			    &tp, 0, NULL, actualDeviceId, &newSession);
     break;
 
   case 17: /* UDP */
@@ -656,7 +656,8 @@ static int handleGenericFlow(time_t recordActTime,
       }
     }
 
-    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, NULL, 0, NULL, actualDeviceId, &newSession);
+    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, 
+			    len, NULL, 0, NULL, actualDeviceId, &newSession);
     break;
 
   default:
