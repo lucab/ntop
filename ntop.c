@@ -988,7 +988,6 @@ RETSIGTYPE cleanup(int signo) {
   deleteMutex(&myGlobals.purgeMutex);
 #endif
 
-traceEvent(CONST_TRACE_INFO, "TEMP: %05d %d", __LINE__, myGlobals.numDevices);
   for(i=0; i<myGlobals.numDevices; i++) {
     int j;
 
