@@ -603,6 +603,13 @@ Q. How do you reset Admin password if we lost it?
 A. Delete ntop_pw.db and follow the procedure in docs/1STRUN.txt
 
 
+Q. I'm being prompted for a userid/password, what do I enter.
+A. The default admin userid is 'Admin' (without the quotes) and the password
+   is whatever you set on the 1st run of ntop (look in this FAQ for 
+   --set-admin-password).
+(Added 04May2003, at the suggestion of Julian Buckley [caniffe@caniffe.net])
+
+
 Q. How does the @filename option work e.g. /usr/bin/ntop ... @filename ...
 A. The text of 'filename', is copied - ignoring line breaks and 
    comments (anything following a #) - into the command line.
@@ -1694,7 +1701,7 @@ A. If a single instance of a web server handles many web sites, all of the
    it to build a list of virtual hosts being handled by the web server.
    (Added 27Sep2002, Burton)
 
-Q. Why create Userids
+Q. Why create Userids (beyond the Admin id created by --set-admin-password)
 A. Multiple users allow you to control who can alter ntop's performance and/or
    view specific information. If you look on the "Admin" tab, you will see that you can 
    create additional users and also control which URLs can be executed by whom.
@@ -1713,7 +1720,7 @@ A. Multiple users allow you to control who can alter ntop's performance and/or
    2nd add "multicast" to the list of controlled screens and allow admin 
        and the new user to access it (note the * wildcard is automatically added)
 
-   Try an access the screen and you are prompted for a userid/password... 
+   Try and access the screen and you are prompted for a userid/password... 
 
    Look in http.c for all the names and #defines used... 
 
