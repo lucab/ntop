@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.18.1 -->
-<!-- CreationDate: Thu Jan 22 13:04:01 2004 -->
+<!-- CreationDate: Mon Feb  2 11:29:17 2004 -->
 <html>
 <head>
 <meta name="generator" content="groff -Thtml, see www.gnu.org">
@@ -75,19 +75,19 @@
 [<b>-U</b>|<b>--mapper</b> <i>&lt;URL&gt;</i>]
 [<b>-V</b>|<b>--version]</b> [<b>-X</b>
 <i>&lt;max_num_TCP_sessions&gt;</i>]
-[<b>--disable-stopcap</b>] [<b>--log-extra</b>
-<i>&lt;number&gt;</i>]
 [<b>--disable-instantsessionpurge</b>]
-[<b>--disable-schedyield</b>]
-[<b>--disable-mutexextrainfo</b>]
-[<b>--skip-version-check</b>] [<b>--w3c</b>]</p>
+[<b>--disable-schedyield</b>] [<b>--disable-stopcap</b>]
+[<b>--disable-mutexextrainfo</b>] [<b>--log-extra</b>
+<i>&lt;number&gt;</i>] [<b>--skip-version-check</b>]
+[<b>--w3c</b>]</p>
 <!-- INDENTATION -->
 <p>Unix options:</p>
 <!-- INDENTATION -->
 <p>[<b>-d</b>|<b>--daemon</b>] [<b>-i</b>|<b>--interface</b>
 <i>&lt;name&gt;</i>] [<b>-u</b>|<b>--user</b>
 <i>&lt;user&gt;</i>] [<b>-K</b>|<b>--enable-debug</b>]
-[<b>-L</b>] [<b>-use-syslog=</b> <i>&lt;facility&gt;</i>]
+[<b>-L</b>] [<b>--pcap_setnonblock</b>]
+[<b>--use-syslog=</b> <i>&lt;facility&gt;</i>]
 [<b>--webserver-queue</b> <i>&lt;number&gt;</i>]</p>
 <!-- INDENTATION -->
 <p>Windows option:</p>
@@ -1467,6 +1467,78 @@ above)</p>
 <tr valign="top" align="left">
 <td width="10%"></td>
 <td width="89%">
+<p><b>--disable-instantsessionpurge</b></p></td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p><b>ntop</b> sets completed sessions as &rsquo;timed
+out&rsquo; and then purge them almost instantly, which is
+not the behavior you might expect from the discussions about
+purge timeouts. This switch makes ntop respect the timeouts
+for completed sessions. It is NOT the default because a busy
+web server may have 100s or 1000s of completed sessions and
+this would significantly increase the amount of memory
+<b>ntop</b> uses.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--disable-mutexextrainfo</b></p></td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p><b>ntop</b> stores extra information about the locks and
+unlocks of the protective mutexes it uses. Since <b>ntop</b>
+uses fine-grained locking, this information is updated
+frequently. On some OSes, the system calls used to collect
+this informatio (getpid() and gettimeofday()) are expensive.
+This option disables the extra information. It should have
+no processing impact on <b>ntop</b> - however should
+<b>ntop</b> actually deadlock, we would lose the information
+that sometimes tells us why.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--disable-schedyield</b></p></td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p><b>ntop</b> uses sched_yield() calls for better
+interactive performance. Under some situations, primarily
+under RedHat Linux 8.0, this can deadlock, causing the
+<b>ntop</b> web server to stop responding, although
+<b>ntop</b> appears to still be operational according to the
+ps command. Use this switch to disable these calls, IF you
+are seeing deadlocks.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
 <p><b>--disable-stopcap</b></p></td>
 </table>
 <!-- INDENTATION -->
@@ -1513,7 +1585,7 @@ releases.</p>
 <tr valign="top" align="left">
 <td width="10%"></td>
 <td width="89%">
-<p><b>--disable-instantsessionpurge</b></p></td>
+<p><b>--pcap_setnonblock</b></p></td>
 </table>
 <!-- INDENTATION -->
 <table width="100%" border=0 rules="none" frame="void"
@@ -1521,62 +1593,15 @@ releases.</p>
 <tr valign="top" align="left">
 <td width="13%"></td>
 <td width="86%">
-<p><b>ntop</b> sets completed sessions as &rsquo;timed
-out&rsquo; and then purge them almost instantly, which is
-not the behavior you might expect from the discussions about
-purge timeouts. This switch makes ntop respect the timeouts
-for completed sessions. It is NOT the default because a busy
-web server may have 100s or 1000s of completed sessions and
-this would significantly increase the amount of memory
-<b>ntop</b> uses.</p>
-</td>
-</table>
-<!-- INDENTATION -->
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td>
-<td width="89%">
-<p><b>--disable-schedyield</b></p></td>
-</table>
-<!-- INDENTATION -->
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="13%"></td>
-<td width="86%">
-<p><b>ntop</b> uses sched_yield() calls for better
-interactive performance. Under some situations, primarily
-under RedHat Linux 8.0, this can deadlock, causing the
-<b>ntop</b> web server to stop responding, although
-<b>ntop</b> appears to still be operational according to the
-ps command. Use this switch to disable these calls, IF you
-are seeing deadlocks.</p>
-</td>
-</table>
-<!-- INDENTATION -->
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="10%"></td>
-<td width="89%">
-<p><b>--disable-mutexextrainfo</b></p></td>
-</table>
-<!-- INDENTATION -->
-<table width="100%" border=0 rules="none" frame="void"
-       cols="2" cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="13%"></td>
-<td width="86%">
-<p><b>ntop</b> stores extra information about the locks and
-unlocks of the protective mutexes it uses. Since <b>ntop</b>
-uses fine-grained locking, this information is updated
-frequently. On some OSes, the system calls used to collect
-this informatio (getpid() and gettimeofday()) are expensive.
-This option disables the extra information. It should have
-no processing impact on <b>ntop</b> - however should
-<b>ntop</b> actually deadlock, we would lose the information
-that sometimes tells us why.</p>
+<p>On some platforms, the select() call <b>ntop</b> uses to
+wait for web server requests will hang. This option sets the
+non-blocking option (assuming it&rsquo;s available in the
+version of libpcap that is installed). While this fixes the
+problem, it also signifcantly increases the cpu usage of
+<b>ntop</b> (by turing an interupt driven process into a
+poll). If the web server hangs, but the rest of <b>ntop</b>
+seems to keep runing just fine, try this option. It&rsquo;s
+know to be an issue under FreeBSD 4.9.</p>
 </td>
 </table>
 <!-- INDENTATION -->
