@@ -31,18 +31,7 @@
   -- if getopt_long isn't provided by the compiler (glibc), we have our own version in util.c
 */
 
-#if defined(WIN32) && defined(__GNUC__)	/* mingw compiler */
- /* we're using the winpcap getopt() implementation
-  * which has the globals inside the dll, so a simple
-  * extern declaration is insufficient on win32
-  *
-  * Scott Renfro <scott@renfro.org>
-  *
-  */
-extern __attribute__((dllimport)) char *optarg;
-#else  /* !WIN32 */
 extern char *optarg;
-#endif
 
 static char __free__ []   =
 "  This program is free software; you can redistribute it and/or modify\n\
