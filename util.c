@@ -157,7 +157,7 @@ HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
 
 HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId) {
   HostTraffic *el;
-  short dummyShort;
+  short dummyShort = 0;
   u_int idx = hashHost(NULL, macAddr, &dummyShort, &el, actualDeviceId);
 
   if(el != NULL)

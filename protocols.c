@@ -50,7 +50,7 @@ void handleBootp(HostTraffic *srcHost,
 		 u_int packetDataLength,
 		 u_char* packetData,
 		 int actualDeviceId) {
-  BootProtocol bootProto = { 0 };
+  BootProtocol bootProto;
   u_int len;
   char savechar; /* Courtesy of
 		    Axel Thimm <Axel.Thimm+ntop@physik.fu-berlin.de>
@@ -60,6 +60,8 @@ void handleBootp(HostTraffic *srcHost,
      || (packetData == NULL) /* packet too short ? */
      || (myGlobals.dontTrustMACaddr))
     return;
+
+  memset(&bootProto, 0, sizeof(BootProtocol));
 
   switch(sport) {
   case 67: /* BOOTP/DHCP: server -> client*/
@@ -571,6 +573,8 @@ u_int16_t processDNSPacket(const u_char *packetData,
   char tmpBuf[96];
   u_int16_t transactionId = 0;
   int i, queryNameLength;
+
+  memset(tmpBuf, 0, sizeof(tmpBuf)); /* quiet Valgrind */
 
   if(myGlobals.dnsCacheFile == NULL) return(-1); /* ntop is quitting... */
 

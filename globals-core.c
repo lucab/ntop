@@ -453,7 +453,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   strncpy(myGlobals.broadcastEntry->hostNumIpAddress, "broadcast",
 	  sizeof(myGlobals.broadcastEntry->hostNumIpAddress));
   strncpy(myGlobals.broadcastEntry->hostSymIpAddress, myGlobals.broadcastEntry->hostNumIpAddress,
-	  sizeof(myGlobals.broadcastEntry->hostSymIpAddress));
+	  sizeof(myGlobals.broadcastEntry->hostNumIpAddress));
   strcpy(myGlobals.broadcastEntry->ethAddressString, "FF:FF:FF:FF:FF:FF");
   FD_SET(FLAG_SUBNET_LOCALHOST, &myGlobals.broadcastEntry->flags);
   FD_SET(FLAG_BROADCAST_HOST, &myGlobals.broadcastEntry->flags);

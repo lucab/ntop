@@ -257,7 +257,7 @@ static void initIPCountryTable(void) {
 	char *strtokState, *cc, *ip, *prefix;
 	int recordsRead=0;
 
-	traceEvent(CONST_TRACE_NOISY, "IP2CC: ...found - reading data");
+	traceEvent(CONST_TRACE_INFO, "IP2CC: reading file '%s'", tmpStr);
 
 	while ((compressedFormat ? gzgets(fd, buff, sizeof(buff)) : fgets(buff, sizeof(buff), fd)) != NULL) {
 
@@ -277,7 +277,6 @@ static void initIPCountryTable(void) {
 	myGlobals.ipCountryCount += recordsRead;
 
 	if(!(compressedFormat ? gzeof(fd) : feof(fd))) {
-	  traceEvent(CONST_TRACE_ERROR, "IP2CC: reading file '%s'", tmpStr);
 	  traceEvent(CONST_TRACE_ERROR, "IP2CC: problem is %s(%d)", strerror(errno), errno);
 	  traceEvent(CONST_TRACE_INFO,
 		     "IP2CC: ntop continues OK, but with %s data from file",
@@ -915,6 +914,8 @@ void reinitMutexes (void) {
 void initThreads(void) {
   int i;
 
+  traceEvent(CONST_TRACE_INFO, "Initializing semaphores, mutexes and threads");
+
 #ifdef CFG_MULTITHREADED
  #ifdef HAVE_PTHREAD_ATFORK
   i = pthread_atfork(NULL, NULL, &reinitMutexes);
@@ -991,7 +992,7 @@ void initThreads(void) {
   if(myGlobals.useSSLwatchdog == 1)
 #endif
     {
-      traceEvent(CONST_TRACE_NOISY, "Initializing Condvar for ssl watchdog.");
+      traceEvent(CONST_TRACE_NOISY, "Initializing Condvar for ssl watchdog");
       createCondvar(&myGlobals.sslwatchdogCondvar);
       myGlobals.sslwatchdogCondvar.predicate = FLAG_SSLWATCHDOG_UNINIT;
     }
@@ -1003,6 +1004,7 @@ void initThreads(void) {
  * Initialize helper applications
  */
 void initApps(void) {
+  traceEvent(CONST_TRACE_INFO, "Initializing external applications");
   /* Nothing to do at the moment */
 }
 

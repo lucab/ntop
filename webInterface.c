@@ -2631,7 +2631,13 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 #endif
 
-  printHTMLheader("ntop Configuration", 0);
+  if(textPrintFlag)
+    sendString("<pre>");
+
+  if(textPrintFlag)
+      sendString("ntop Configuration\n\n");
+  else
+      printHTMLheader("ntop Configuration", 0);
 
   printHostColorCode(textPrintFlag, 1);
   sendString(texthtml("\n", 
@@ -3148,6 +3154,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Bytes per entry", buf);
     }
+
+    if(snprintf(buf, sizeof(buf), "%d (%.1f MB)", myGlobals.asMem, (float)myGlobals.asMem/(1024.0*1024.0)) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "IP to AS (Autonomous System) number table (bytes)", buf);
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
 
@@ -3891,6 +3901,10 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 
   sendString(texthtml("\n", "</CENTER>\n"));
+
+  if(textPrintFlag)
+    sendString("</pre>");
+
 }
 
 /* ******************************* */
@@ -3953,6 +3967,8 @@ void printNtopProblemReport(void) {
   struct pcap_stat pcapStats;
   unsigned int v, scramble, raw;
   int i, j;
+
+  memset(&pcapStats, 0, sizeof(struct pcap_stat));
 
   t = time(NULL);
 
@@ -4189,7 +4205,8 @@ void printNtopProblemReport(void) {
 
     }
 
-    if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0) {
+    if((myGlobals.device[i].pcapPtr != NULL) && 
+       (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0)) {
       snprintf(buf, sizeof(buf), "          pcap stats: Received %u Dropped %u", 
                                  pcapStats.ps_recv,
                                  pcapStats.ps_drop);
