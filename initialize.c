@@ -591,11 +591,11 @@ int i;
    * (4) - SIH - Scan Idle Hosts - optional
    */
   if (enableIdleHosts && (myGlobals.rFileName == NULL)) {
-/* if(!myGlobals.borderSnifferMode) */ {
+#if 0 /* Luca's test */
     createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
-		myGlobals.scanIdleThreadId);
-     }
+    traceEvent(TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
+	       myGlobals.scanIdleThreadId);
+#endif
   }
 
 #ifndef MICRO_NTOP

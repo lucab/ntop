@@ -88,7 +88,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char checkForMultihoming,
 		  u_char forceUsingIPaddress,
 		  int actualDeviceId) {
-  u_int idx, i, isMultihomed = 0, numRuns=0, initialIdx;
+  u_int idx, i, isMultihomed = 0, numRuns=0, initialIdx, numFreedHosts = 0;
 #ifndef MULTITHREADED
   u_int run=0;
 #endif
@@ -131,78 +131,96 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   } else {
     for(i=0; i<myGlobals.device[actualDeviceId].actualHashSize; i++) {
     HASH_SLOT_FOUND:
-      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx]; /* (**) */
+
+      if((idx != myGlobals.broadcastEntryIdx)
+	 && (idx != myGlobals.otherHostEntryIdx)) {
+	el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx]; /* (**) */
 #ifdef HASH_DEBUG
-      numRuns++;
+	numRuns++;
 #endif
-      if(el != NULL) {
-	if(useIPAddressForSearching == 0) {
-	  /* compare with the ethernet-address */
-	  if (memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
-	    if(hostIpAddress != NULL) {
-	      if((!isMultihomed) && checkForMultihoming) {
-		/*
-		  This is a local address hence this is
-		  a potential multihomed host.
-		*/
+	if(el != NULL) {
+	  if(useIPAddressForSearching == 0) {
+	    /* compare with the ethernet-address */
+	    if (memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
+	      if(hostIpAddress != NULL) {
+		if((!isMultihomed) && checkForMultihoming) {
+		  /*
+		    This is a local address hence this is
+		    a potential multihomed host.
+		  */
 
-		if((el->hostIpAddress.s_addr != 0x0)
-		   && (el->hostIpAddress.s_addr != hostIpAddress->s_addr)) {
-		  isMultihomed = 1;
-		  FD_SET(HOST_MULTIHOMED, &el->flags);
-		}
+		  if((el->hostIpAddress.s_addr != 0x0)
+		     && (el->hostIpAddress.s_addr != hostIpAddress->s_addr)) {
+		    isMultihomed = 1;
+		    FD_SET(HOST_MULTIHOMED, &el->flags);
+		  }
 
-		if(el->hostNumIpAddress[0] == '\0') {
-		  /* This entry didn't have IP fields set: let's set them now */
-		  el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-		  strncpy(el->hostNumIpAddress,
-			  _intoa(*hostIpAddress, buf, sizeof(buf)),
-			  sizeof(el->hostNumIpAddress));
+		  if(el->hostNumIpAddress[0] == '\0') {
+		    /* This entry didn't have IP fields set: let's set them now */
+		    el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+		    strncpy(el->hostNumIpAddress,
+			    _intoa(*hostIpAddress, buf, sizeof(buf)),
+			    sizeof(el->hostNumIpAddress));
 
-		  if(myGlobals.numericFlag == 0)
-		    ipaddr2str(el->hostIpAddress, actualDeviceId);
+		    if(myGlobals.numericFlag == 0)
+		      ipaddr2str(el->hostIpAddress, actualDeviceId);
 
-		  /* else el->hostSymIpAddress = el->hostNumIpAddress;
-		     The line below isn't necessary because (**) has
-		     already set the pointer */
-		  if(isBroadcastAddress(&el->hostIpAddress))
-		    FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+		    /* else el->hostSymIpAddress = el->hostNumIpAddress;
+		       The line below isn't necessary because (**) has
+		       already set the pointer */
+		    if(isBroadcastAddress(&el->hostIpAddress))
+		      FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+		  }
 		}
 	      }
-	    }
 	  
-	    hostFound = 1;
-	    break;
-	  } else if((hostIpAddress != NULL)
-		    && (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
-	    /* Spoofing or duplicated MAC address:
-	       two hosts with the same IP address and different MAC
-	       addresses
-	    */
+	      hostFound = 1;
+	      break;
+	    } else if((hostIpAddress != NULL)
+		      && (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
+	      /* Spoofing or duplicated MAC address:
+		 two hosts with the same IP address and different MAC
+		 addresses
+	      */
 
-	    setSpoofingFlag = 1;
+	      setSpoofingFlag = 1;
 
-	    if(!hasDuplicatedMac(el)) {
-	      FD_SET(HOST_DUPLICATED_MAC, &el->flags);
+	      if(!hasDuplicatedMac(el)) {
+		FD_SET(HOST_DUPLICATED_MAC, &el->flags);
 
-	      if(myGlobals.enableSuspiciousPacketDump) {
-		traceEvent(TRACE_WARNING,
-			   "Two MAC addresses found for the same IP address "
-			   "%s: [%s/%s] (spoofing detected?)",
-			   el->hostNumIpAddress,
-			   etheraddr_string(ether_addr), el->ethAddressString);
-		dumpSuspiciousPacket(actualDeviceId);
+		if(myGlobals.enableSuspiciousPacketDump) {
+		  traceEvent(TRACE_WARNING,
+			     "Two MAC addresses found for the same IP address "
+			     "%s: [%s/%s] (spoofing detected?)",
+			     el->hostNumIpAddress,
+			     etheraddr_string(ether_addr), el->ethAddressString);
+		  dumpSuspiciousPacket(actualDeviceId);
+		}
 	      }
 	    }
+	  } else {       	
+	    if(el->hostIpAddress.s_addr == hostIpAddress->s_addr) {
+	      hostFound = 1;
+	      break;
+	    }
 	  }
-	} else {       	
-	  if(el->hostIpAddress.s_addr == hostIpAddress->s_addr) {
-	    hostFound = 1;
-	    break;
+
+	  /* The entry is not the one we expect */
+	  if((!myGlobals.stickyHosts)
+	     && (numFreedHosts < 7) /* Don't free too many buckets per run ! */
+	     && ((el->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)) {
+	    freeHostInfo(actualDeviceId, idx, 0, actualDeviceId);
+
+	    if(firstEmptySlot == NO_PEER) 
+	      firstEmptySlot = idx;
+
+	    numFreedHosts++;
+
+	    traceEvent(TRACE_INFO, "Freed host %s (idx=%d)",
+		       el->hostNumIpAddress, idx);
 	  }
-	}
-      } else {
-	/* ************************
+	} else {
+	  /* ************************
 
 	   -- 1 --
 
@@ -219,8 +237,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	   ************************ */
 
-	if(firstEmptySlot == NO_PEER) 
-	  firstEmptySlot = idx;
+	  if(firstEmptySlot == NO_PEER) 
+	    firstEmptySlot = idx;
+	}
       }
 
       idx = (idx+1) % myGlobals.device[actualDeviceId].actualHashSize;
