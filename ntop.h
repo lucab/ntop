@@ -31,6 +31,7 @@
    Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
 */
 #define _REENTRANT
+#define _THREAD_SAFE
 
 #if defined(HAVE_CONFIG_H)
 # include "config.h"
