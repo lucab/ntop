@@ -2161,7 +2161,7 @@ void traceEvent(int eventTraceLevel, char* file,
       
 #ifdef CFG_MULTITHREADED
       if(myGlobals.logViewMutex.isInitialized)
-	accessMutex(&myGlobals.logViewMutex, "reporting");
+	pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
 #endif
 
       if (myGlobals.logView[myGlobals.logViewNext] != NULL)
@@ -2173,7 +2173,7 @@ void traceEvent(int eventTraceLevel, char* file,
 
 #ifdef CFG_MULTITHREADED
       if(myGlobals.logViewMutex.isInitialized)
-	releaseMutex(&myGlobals.logViewMutex);
+	pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
 #endif
 
     }
