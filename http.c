@@ -2094,7 +2094,7 @@ static int returnHTTPPage(char* pageName,
       printTrailer = 0;
     } else if(strncmp(pageName, STR_VIEW_LOG_HTML, strlen(STR_VIEW_LOG_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printNtopLogReport();
+      printNtopLogReport(FALSE);
       printTrailer = 0;
     } else
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {

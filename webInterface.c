@@ -2937,9 +2937,6 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 
   if(textPrintFlag)
-    sendString("<pre>");
-
-  if(textPrintFlag)
       sendString("ntop Configuration\n\n");
   else
       printHTMLheader("ntop Configuration", 0);
@@ -4212,10 +4209,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 
   sendString(texthtml("\n", "</CENTER>\n"));
-
-  if(textPrintFlag)
-    sendString("</pre>");
-
 }
 
 /* ******************************* */
@@ -4228,22 +4221,24 @@ static void initializeWeb(void) {
 
 /* *************************** */
 
-void printNtopLogReport(void) {
-    int i, j;
+int printNtopLogReport(int printAsText) {
+    int i, j, lines = 0;
     char buf[LEN_GENERAL_WORK_BUFFER];
 
     if (myGlobals.logView == NULL) return;
 
-    printHTMLheader("ntop Log", BITFLAG_HTTP_NO_CACHE_CONTROL);
-    sendString("<HR>");
-    if(snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\"><center>"
-              "This is a rolling display of upto the last %d ntop log messages "
-              "of priority INFO or higher.  Click on the \"log\" option, above, to refresh."
-              "</center></font></p>", CONST_LOG_VIEW_BUFFER_SIZE) < 0)
-        BufferTooShort();
-    sendString(buf);
-    sendString("<HR>");
-    sendString("<pre>");
+    if(!printAsText) {
+      printHTMLheader("ntop Log", BITFLAG_HTTP_NO_CACHE_CONTROL);
+      sendString("<HR>");
+      if(snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\"><center>"
+                "This is a rolling display of upto the last %d ntop log messages "
+                "of priority INFO or higher.  Click on the \"log\" option, above, to refresh."
+                "</center></font></p>", CONST_LOG_VIEW_BUFFER_SIZE) < 0)
+          BufferTooShort();
+      sendString(buf);
+      sendString("<HR>");
+      sendString("<pre>");
+    }
 
 #ifdef CFG_MULTITHREADED
     pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
@@ -4254,6 +4249,7 @@ void printNtopLogReport(void) {
         
         if (myGlobals.logView[j] != NULL) {
             sendString(myGlobals.logView[j]);
+            lines++;
             if (myGlobals.logView[j][strlen(myGlobals.logView[j])-1] != '\n');
                 sendString("\n");
         }
@@ -4263,7 +4259,11 @@ void printNtopLogReport(void) {
     pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
 #endif
 
-    sendString("</pre>");
+    if(!printAsText) {
+      sendString("</pre>");
+    }
+
+    return(lines);
 }
 
 /* *************************** */
@@ -4542,7 +4542,14 @@ void printNtopProblemReport(void) {
   }
 
   sendString("----------------------------------------------------------------------------\n");
-  sendString("Log extract\n\n\n\n\n\n");
+  sendString("Log extract\n\n");
+  if(myGlobals.traceLevel >= CONST_NOISY_TRACE_LEVEL) {
+    sendString("  (Please cut and paste actual log lines)\n");
+  } else {
+    if(printNtopLogReport(TRUE) == 0) 
+      sendString("  (automated extract unavailable - please cut and paste actual log lines)\n");
+  }
+  sendString("\n\n\n\n");
   sendString("----------------------------------------------------------------------------\n");
   sendString("Problem Description\n\n\n\n\n\n\n\n\n\n");
   sendString("----------------------------------------------------------------------------\n");
