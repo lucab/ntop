@@ -6,7 +6,10 @@ dnl>   Solaris 8 -- libgcc_s -- need test
 
 dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
-dnl> Copyright (c) 1998 - 2003 Luca Deri <deri@ntop.org> and Rocco Carbone <rocco@ntop.org>
+dnl> Copyright (c) 1998 - 2003 Luca Deri <deri@ntop.org>
+dnl>                           Rocco Carbone <rocco@ntop.org>
+dnl>                       and Burton M. Strauss III <burton@ntopsupport.com>
+dnl>
 dnl> Written Oct2002 by Burton M. Strauss III <burton@ntopsupport.com>
 dnl>     (Loosely based on the earlier ntop version)
 dnl>
@@ -44,7 +47,7 @@ dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.2.1])
 AC_PREREQ([2.50])
-SCRIPTVER="v2.2.001-2003-04-14"
+SCRIPTVER="v2.2.502-2003-04-23"
 
 dnl>
 dnl> generate the config header
@@ -1634,6 +1637,7 @@ AC_CHECK_HEADERS([netinet/udp.h])
 dnl>  Note - if ethertype is missing, ntop.h has the critical #defines extracted...
 AC_CHECK_HEADERS([ethertype.h])
 AC_CHECK_HEADERS([pcap.h])
+AC_CHECK_HEADERS([linux/if_pppox.h])
 
 dnl> Security related
 dnl> Note: on some systems, e.g. FreeBSD, crypt() is defined in unistd.

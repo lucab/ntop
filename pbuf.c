@@ -24,10 +24,11 @@
 #include "ntop.h"
 
 /* PPPoE - Courtesy of Andreas Pfaller Feb2003 */
-#ifdef LINUX
+#ifdef HAVE_LINUX_IF_PPPOX_H
  #include <linux/if_pppox.h>
 #else
  /* Extracted and modified from the Linux header for other systems - BMS Mar2003 */
+ /* And for Linux systems without if_pppox.h - BMS Apr2003 */
  struct pppoe_tag {
          u_int16_t tag_type;
          u_int16_t tag_len;
