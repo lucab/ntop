@@ -2987,8 +2987,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     if(isMultihomed(el)) {
       char *symMacAddr, symLink[32];
+      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
-      symMacAddr = etheraddr_string(el->ethAddress);
+      symMacAddr = etheraddr_string(el->ethAddress, etherbuf);
       strcpy(symLink, symMacAddr);
       for(i=0; symLink[i] != '\0'; i++)
 	if(symLink[i] == ':')
@@ -3033,8 +3034,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
      && (memcmp(el->lastEthAddress, el->ethAddress, LEN_ETHERNET_ADDRESS) != 0)) {
     /* Different MAC addresses */
     char *symMacAddr, symLink[32], shortBuf[64];
+    char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
-    symMacAddr = etheraddr_string(el->lastEthAddress);
+    symMacAddr = etheraddr_string(el->lastEthAddress, etherbuf);
     strcpy(symLink, symMacAddr);
     for(i=0; symLink[i] != '\0'; i++)
       if(symLink[i] == ':')
@@ -3797,7 +3799,7 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
   ElementHash *hashList[MAX_HASHDUMP_ENTRY];
   char buf[LEN_GENERAL_WORK_BUFFER], buf1[96];
   ElementHash *hash, hashListEntry;
-  int i, j, vlanId;
+  int i, j;
 
   if(theHash == NULL) return;
 
@@ -3948,13 +3950,10 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 
 void printLocalHostsStats() {
   u_int idx, numEntries=0;
-  int printedEntries=0;
   HostTraffic *el, **tmpTable;
   OsNumInfo theOSs[256];
-  int numOSs = 0, i, j;
-  char buf[LEN_GENERAL_WORK_BUFFER], *str=NULL, *title=NULL;
-  Counter a=0, b=0;
-  time_t timeDiff = time(NULL)-myGlobals.initialSniffTime;
+  int i, j;
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
   memset(theOSs, 0, sizeof(theOSs));
 

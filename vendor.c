@@ -269,8 +269,9 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
   datum key_data, data_data;
   static char tmpBuf[96];
   char *workBuf;
+  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
-  workBuf = etheraddr_string(ethAddress);
+  workBuf = etheraddr_string(ethAddress, etherbuf);
   memcpy(&tmpBuf, workBuf, LEN_ETHERNET_ADDRESS_DISPLAY+1);
 #ifdef VENDOR_DEBUG
   traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: %slookup '%s'\n",
@@ -338,7 +339,7 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
     return("Multicast");
   }
 
-  if(ethAddress[0] & 0x02 != 0) {
+  if((ethAddress[0] & 0x02) != 0) {
     myGlobals.numVendorLookupFoundLAA++;
     return("LAA (Locally assigned address)");
   }

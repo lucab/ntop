@@ -420,15 +420,15 @@ ntop.h
 
 /* The WIN32 specific stuff */
 #ifdef WIN32
- #include "ntop_win32.h"
+#include "ntop_win32.h"
 #endif
 
 /*
  * i18n
  */
 #ifdef MAKE_WITH_I18N
- #include <locale.h>
- #include <langinfo.h>
+#include <locale.h>
+#include <langinfo.h>
 #endif
 
 /* Now the external functions, using the above... */

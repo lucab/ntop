@@ -78,7 +78,7 @@ extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
 extern char* intoa(struct in_addr addr);
 extern void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer);
 extern void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId);
-extern char* etheraddr_string(const u_char *ep);
+extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
                                char *fdst);

@@ -104,7 +104,7 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 
 /* ******************************* */
 
-void allocateOtherHosts() {
+static void allocateOtherHosts() {
   if(myGlobals.otherHostEntry != NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call twice allocateOtherHosts()");
     return;

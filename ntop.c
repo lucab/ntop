@@ -73,7 +73,6 @@ void* pcapDispatch(void *_i) {
   int i = (int)_i;
   int pcap_fd;
   fd_set readMask;
-  struct timeval timeout;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread started...\n");
 
@@ -101,9 +100,7 @@ void* pcapDispatch(void *_i) {
     FD_ZERO(&readMask);
     FD_SET(pcap_fd, &readMask);
 
-    /* timeout.tv_sec  = 5, timeout.tv_usec = 0; */
-
-    if(select(pcap_fd+1, &readMask, NULL, NULL, NULL /* &timeout */ ) > 0) {
+    if(select(pcap_fd+1, &readMask, NULL, NULL, NULL) > 0) {
       if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
       HEARTBEAT(2, "pcapDispatch()", NULL);
       rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, processPacket, (u_char*)_i);

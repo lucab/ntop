@@ -714,9 +714,10 @@ static void processIpPkt(const u_char *bp,
       if(vlanId != -1) srcHost->vlanId = vlanId;
       if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
 	/* Dump the first packet only */
+	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
 	traceEvent(CONST_TRACE_WARNING, "Host %s has a wrong netmask",
-		   etheraddr_string(ether_src));
+		   etheraddr_string(ether_src, etherbuf));
 	dumpSuspiciousPacket(actualDeviceId);
       }
       FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost->flags);
@@ -903,7 +904,7 @@ static void processIpPkt(const u_char *bp,
 	int WIN=0, MSS=-1, WS=-1, S=0, N=0, D=0, T=0;
 	int ttl;
 	char WSS[3], _MSS[5];
-	struct tcphdr *tcp = bp+hlen;
+	struct tcphdr *tcp = (struct tcphdr*)(bp+hlen);
 	u_char *tcp_opt = (u_char *)(tcp + 1);
 	u_char *tcp_data = (u_char *)((int)tcp + tcp->th_off * 4);
 
@@ -1040,10 +1041,11 @@ static void processIpPkt(const u_char *bp,
 	
 	sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
 
-	if((dport < sport) && (! ((sportIdx != -1) && (dportIdx == -1)))
-	    || ((sportIdx == -1) && (dportIdx != -1))) {
+	if((dport < sport) 
+	   && ((!((sportIdx != -1) && (dportIdx == -1)))
+	       || ((sportIdx == -1) && (dportIdx != -1)))) {
 	  /* traceEvent(CONST_TRACE_INFO, "[1] sportIdx(%d)=%d - dportIdx(%d)=%d", sport, sportIdx, dport, dportIdx); */
-
+	  
 	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, 
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId) == -1)
 	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, 
@@ -1592,7 +1594,6 @@ void cleanupPacketQueue(void) {
 
 
 void* dequeuePacket(void* notUsed _UNUSED_) {
-  PacketInformation pktInfo;
   unsigned short deviceId;
   struct pcap_pkthdr h;
   u_char p[MAX_PACKET_LEN];
@@ -2091,15 +2092,18 @@ void processPacket(u_char *_deviceId,
     /*
      * Time to show the Ethernet Packet Header (when enabled).
      */
-    if(fd && myGlobals.device [deviceId].ethv)
-        fprintf (fd, "PACKET_DEBUG: ETHER:  ----- Ether Header -----\n\n"),
-	fprintf (fd, "                      Packet %ld\n",
-		 myGlobals.device [actualDeviceId].ethernetPkts);
-	fprintf (fd, "                      Total size  = %d : header = %d : data = %d\n",
-		 length, hlen, length - hlen),
-	fprintf (fd, "                      Source      = %s\n", etheraddr_string (ether_src)),
-	fprintf (fd, "                      Destination = %s\n", etheraddr_string (ether_dst));
-    fflush (fd);
+    if(fd && myGlobals.device [deviceId].ethv) {
+      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+      
+      fprintf (fd, "PACKET_DEBUG: ETHER:  ----- Ether Header -----\n\n");
+      fprintf (fd, "                      Packet %ld\n",
+	       myGlobals.device [actualDeviceId].ethernetPkts);
+      fprintf (fd, "                      Total size  = %d : header = %d : data = %d\n",
+	       length, hlen, length - hlen);
+      fprintf (fd, "                      Source      = %s\n", etheraddr_string (ether_src, etherbuf));
+      fprintf (fd, "                      Destination = %s\n", etheraddr_string (ether_dst, etherbuf));
+      fflush (fd);
+    }
 #endif
 
     if((myGlobals.device[deviceId].datalink != DLT_PPP)
@@ -2176,10 +2180,11 @@ void processPacket(u_char *_deviceId,
 	/* The code below has been taken from tcpdump */
 	u_char sap_type;
 	struct llc llcHeader;
+	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
 	if((ether_dst != NULL)
 	   && (!myGlobals.dontTrustMACaddr)
-	   && (strcmp(etheraddr_string(ether_dst), "FF:FF:FF:FF:FF:FF") == 0)
+	   && (strcmp(etheraddr_string(ether_dst, etherbuf), "FF:FF:FF:FF:FF:FF") == 0)
 	   && (p[sizeof(struct ether_header)] == 0xff)
 	   && (p[sizeof(struct ether_header)+1] == 0xff)
 	   && (p[sizeof(struct ether_header)+4] == 0x0)) {
@@ -2465,9 +2470,9 @@ void processPacket(u_char *_deviceId,
 #ifdef UNKNOWN_PACKET_DEBUG
 	      traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: [%u] [%x] %s %s > %s\n", 
 			 (u_short)sap_type,(u_short)sap_type,
-			 etheraddr_string(ether_src),
+			 etheraddr_string(ether_src, etherbuf),
 			 llcsap_string(llcHeader.ssap & ~CONST_LLC_GSAP),
-			 etheraddr_string(ether_dst));
+			 etheraddr_string(ether_dst, etherbuf));
 #endif
 	      incrementTrafficCounter(&srcHost->otherSent, length);
 	      incrementTrafficCounter(&dstHost->otherRcvd, length);

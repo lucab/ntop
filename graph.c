@@ -453,8 +453,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40,
-				 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+  int num=0;
   FILE *fd;
   TrafficCounter totTraffic;
   int useFdOpen = 0;
@@ -674,8 +673,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40,
-				 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+  int num=0;
   FILE *fd;
   TrafficCounter totTraffic;
   int useFdOpen = 0;
@@ -760,8 +758,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40,
-				 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+  int num=0;
   FILE *fd;
   TrafficCounter totFragmentedTraffic, totTraffic;
   int useFdOpen = 0;
@@ -918,7 +915,7 @@ void pktSizeDistribPie(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[7];
   char	*lbl[] = { "", "", "", "", "", "", "" };
-  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35 };
+  int num=0;
   FILE *fd;
   int useFdOpen = 0;
 
@@ -1000,7 +997,7 @@ void pktTTLDistribPie(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[8];
   char	*lbl[] = { "", "", "", "", "", "", "" };
-  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
+  int num=0;
   FILE *fd;
   int useFdOpen = 0;
 
@@ -1087,7 +1084,7 @@ void ipProtoDistribPie(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
-  int num=0, explodePieces[] = { 0, 20, 30 };
+  int num=0;
   FILE *fd;
   int useFdOpen = 0;
 
@@ -1208,7 +1205,7 @@ void pktCastDistribPie(void) {
   char fileName[64] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "", "", "" };
-  int num=0, explodePieces[] = { 0, 20, 30 }, useFdOpen = 0;
+  int num=0, useFdOpen = 0;
   FILE *fd;
   TrafficCounter unicastPkts;
 
@@ -1274,7 +1271,7 @@ void drawTrafficPie(void) {
   TrafficCounter ip;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
-  int num=0, explodePieces[] = { 5, 5 };
+  int num=0;
   FILE *fd;
   int useFdOpen = 0;
 

@@ -1120,7 +1120,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	}
       } else if(((sport == 1863) ||(dport == 1863)) /* MS Messenger */
 		&& (packetDataLength > 0)) {
-	  char *strtokState, *row;
+	  char *row;
 
 	  rcStr = (char*)malloc(packetDataLength+1);
 	  memcpy(rcStr, packetData, packetDataLength);

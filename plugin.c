@@ -380,7 +380,6 @@ void unloadPlugins(void) {
 /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 
 void startPlugins(void) {
-  int rc;
   FlowFilterList *flows = myGlobals.flowsList;
 
   traceEvent(CONST_TRACE_INFO, "Calling plugin start functions (if any)");
@@ -390,10 +389,11 @@ void startPlugins(void) {
       traceEvent(CONST_TRACE_NOISY, "Starting '%s'",
 		 flows->pluginStatus.pluginPtr->pluginName);
       if((flows->pluginStatus.pluginPtr->startFunct != NULL)
-	 && (flows->pluginStatus.activePlugin))
-	rc = flows->pluginStatus.pluginPtr->startFunct();
-        if (rc != 0)
+	 && (flows->pluginStatus.activePlugin)) {
+	int rc = flows->pluginStatus.pluginPtr->startFunct();
+	if(rc != 0)
 	  flows->pluginStatus.activePlugin = 0;
+      }
     }
     flows = flows->next;
   }

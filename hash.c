@@ -81,15 +81,20 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   }
 
 #ifdef DEBUG
-  if(hostIpAddress != NULL)
+  if(hostIpAddress != NULL) {
+    char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
     traceEvent(CONST_TRACE_INFO, "computeInitialHashIdx(%s/%s/%d) = %u\n",
 	       intoa(*hostIpAddress),
-	       etheraddr_string(ether_addr),
+	       etheraddr_string(ether_addr, buf),
 	       (*useIPAddressForSearching), idx);
-  else
+  } else {
+    char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
     traceEvent(CONST_TRACE_INFO, "computeInitialHashIdx(%s/%d) = %u\n",
-	       etheraddr_string(ether_addr),
+	       etheraddr_string(ether_addr, buf),
 	       (*useIPAddressForSearching), idx);
+  }
 #endif
 
   return((u_int)idx);
@@ -217,7 +222,6 @@ static void purgeHostIdx(int actualDeviceId, HostTraffic *el) {
 
 void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   u_int j, i;
-  IpGlobalSession *nextElement, *element;
 
   if((host == NULL) || myGlobals.device[actualDeviceId].dummyDevice)
     return;
@@ -445,8 +449,6 @@ void purgeIdleHosts(int actDevice) {
   HostTraffic **theFlaggedHosts = NULL;
   u_int len;
   int newHostsToPurgePerCycle;
-  char purgeStats[128];
-
   float hiresDeltaTime;
   struct timeval hiresTimeStart, hiresTimeEnd;
 
@@ -735,11 +737,13 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
 
 		if(myGlobals.enableSuspiciousPacketDump) {
+		  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+		  
 		  traceEvent(CONST_TRACE_WARNING,
 			     "Two MAC addresses found for the same IP address "
 			     "%s: [%s/%s] (spoofing detected?)",
 			     el->hostNumIpAddress,
-			     etheraddr_string(ether_addr), el->ethAddressString);
+			     etheraddr_string(ether_addr, etherbuf), el->ethAddressString);
 		  dumpSuspiciousPacket(actualDeviceId);
 		}
 	      }
@@ -775,9 +779,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    traceEvent(CONST_TRACE_INFO, "Fetched host from pointers cache (len=%d)",
 	    (int)myGlobals.hostsCacheLen);
 	*/
-      } else
-	if ( (el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) return;
-      
+      } else {
+	if ((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) 
+	  return(FLAG_NO_PEER);
+      }
+
       memset(el, 0, sizeof(HostTraffic));
       el->firstSeen = myGlobals.actTime;
             
@@ -789,7 +795,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
 
       len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
-      if ( (el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len)) == NULL) return;
+      if((el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len)) == NULL) return(FLAG_NO_PEER);
       memset(el->protoIPTrafficInfos, 0, len);
 
       list = malloc(sizeof(HashList));
@@ -844,7 +850,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	}
 
         ptrLen = sizeof(struct hostTraffic*) * newHashSize;
-        if((newPtr = (struct hostTraffic**)malloc(ptrLen)) == NULL) return;
+        if((newPtr = (struct hostTraffic**)malloc(ptrLen)) == NULL) return(FLAG_NO_PEER);
 
         myGlobals.device[actualDeviceId].actualHashSize = newHashSize;
         
@@ -868,9 +874,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	       && isPseudoLocalAddress(hostIpAddress, actualDeviceId)
 	       /* && (!isBroadcastAddress(hostIpAddress))*/
 	       )) {
+	  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
 	  /* This is a local address and then the
 	     ethernet address does make sense */
-	  ethAddr = etheraddr_string(ether_addr);
+	  ethAddr = etheraddr_string(ether_addr, etherbuf);
 
 	  memcpy(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 	  strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
@@ -929,11 +937,15 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	}
 
 #ifdef DEBUG
-	/*if((strcmp(etheraddr_string(ether_addr), "08:00:20:89:79:D7") == 0)
-	  || (strcmp(el->hostSymIpAddress, "more") == 0))*/
-	printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
-	       etheraddr_string(ether_addr), el->hostSymIpAddress,
-	       el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno);
+	{
+	  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+	  
+	  /*if((strcmp(etheraddr_string(ether_addr, etherbuf), "08:00:20:89:79:D7") == 0)
+	    || (strcmp(el->hostSymIpAddress, "more") == 0))*/
+	  printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
+		 etheraddr_string(ether_addr, etherbuf), el->hostSymIpAddress,
+		 el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno);
+	}
 #endif
 
 	el->lastSeen = myGlobals.actTime;
@@ -1009,11 +1021,14 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
 
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
-		 list->idx, actualDeviceId,
-		 etheraddr_string(ether_addr), el->hostSymIpAddress,
-		 el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,
-		 useIPAddressForSearching);
+      {
+	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+	traceEvent(CONST_TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
+		   list->idx, actualDeviceId,
+		   etheraddr_string(ether_addr, etherbuf), el->hostSymIpAddress,
+		   el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,
+		   useIPAddressForSearching);
+      }
 #endif
     }
   } else
@@ -1123,7 +1138,9 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
       }
 
       if(!found) {
-	ethAddr = etheraddr_string(el->ethAddress);
+	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
+	ethAddr = etheraddr_string(el->ethAddress, etherbuf);
 	strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
 	el->hostIpAddress.s_addr = 0x1234; /* dummy */
       } else {

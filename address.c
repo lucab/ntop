@@ -83,13 +83,8 @@ static void resolveAddress(struct in_addr *hostAddr,
 			   short keepAddressNumeric, int actualDeviceId) {
   char symAddr[MAX_LEN_SYM_HOST_NAME];
   StoredAddress storedAddress;
-  int addr, i, addToCacheFlag;
+  int addr, i, addToCacheFlag=0;
   struct hostent *hp = NULL;
-  int h_errnop;
-#ifdef HAVE_GETHOSTBYADDR_R
-  struct hostent _hp, *__hp;
-  char buffer[512];
-#endif
   char* res;
   char keyBuf[16];
   char tmpBuf[96];
@@ -259,6 +254,10 @@ static void resolveAddress(struct in_addr *hostAddr,
 #if defined(HAVE_GETHOSTBYADDR_R) && !defined(LINUX)
     /* Linux seems to ha some problems with gethostbyaddr_r */
 #ifdef SOLARIS
+ {
+  struct hostent _hp, *__hp;
+  char buffer[512];
+  
     hp = gethostbyaddr_r((const char*)&theAddr, sizeof(struct in_addr), 
 			 AF_INET,
                          &_hp,
@@ -270,7 +269,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 	       hp, hp != NULL ? (char*)hp->h_name : "");
 #endif
 
-#else
+#else /* SOLARIS */
     hp = gethostbyaddr_r((const char*)&theAddr, sizeof(struct in_addr),
                          AF_INET,
                          &_hp,
@@ -281,9 +280,9 @@ static void resolveAddress(struct in_addr *hostAddr,
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr_r(): RC=%d 0x%X [%s]", 
                h_errnop,
 	       hp, hp != NULL ? (char*)hp->h_name : "");
-#endif
-
-#endif
+#endif /* DNS_DEBUG */
+#endif  /* SOLARIS */
+ }
 #else
     hp = (struct hostent*)gethostbyaddr((char*)&theAddr, sizeof(struct in_addr), AF_INET);
 #ifdef DNS_DEBUG
@@ -722,12 +721,7 @@ void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
 
 /* ************************************ */
 
-/* WARNING: This is not re-entrant nor multi-thread safe.
-            it returns the address of it's own static buffer.
-            Don't use it for long...
- */
-char* etheraddr_string(const u_char *ep) {
-  static char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
+char* etheraddr_string(const u_char *ep, char *buf) {
   u_int i, j;
   char *cp;
 
@@ -750,7 +744,6 @@ char* etheraddr_string(const u_char *ep) {
   }
 
   *cp = '\0';
-
   return (buf);
 }
 

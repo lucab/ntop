@@ -95,10 +95,13 @@ void handleBootp(HostTraffic *srcHost,
 	if((bootProto.bp_yiaddr.s_addr != 0)
 	   && (dummyMac != 0) /* MAC address <> 00:00:00:..:00 */
 	   ) {
+	  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
 	  NTOHL(bootProto.bp_yiaddr.s_addr);
 #ifdef DHCP_DEBUG
 	  traceEvent(CONST_TRACE_INFO, "%s@%s",
-		     intoa(bootProto.bp_yiaddr), etheraddr_string(bootProto.bp_chaddr));
+		     intoa(bootProto.bp_yiaddr),
+		     etheraddr_string(bootProto.bp_chaddr, etherbuf));
 #endif
 	  /* Let's check whether this is a DHCP packet [DHCP magic cookie] */
 	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
@@ -113,12 +116,12 @@ void handleBootp(HostTraffic *srcHost,
 	    u_int hostIdx;
 	    struct in_addr hostIpAddress;
 	    HostTraffic *trafficHost, *realDstHost;
-
 	    /*
 	      This is the real address of the recipient because
 	      dstHost is a broadcast address
 	    */
-	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr), actualDeviceId);
+
+	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr, etherbuf), actualDeviceId);
 	    if(realDstHost == NULL) {
 	      hostIdx = getHostInfo(/* &bootProto.bp_yiaddr */ NULL,
 				    bootProto.bp_chaddr, 0, 0, actualDeviceId);
@@ -443,9 +446,11 @@ void handleBootp(HostTraffic *srcHost,
 
 	memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
 	if((dummyMac != 0) /* MAC address <> 00:00:00:..:00 */) {
+	  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
 	  NTOHL(bootProto.bp_yiaddr.s_addr);
 #ifdef FLAG_DHCP_DEBUG
-	  traceEvent(CONST_TRACE_INFO, "%s", etheraddr_string(bootProto.bp_chaddr));
+	  traceEvent(CONST_TRACE_INFO, "%s", etheraddr_string(bootProto.bp_chaddr, etherbuf));
 #endif
 	  /* Let's check whether this is a DHCP packet [DHCP magic cookie] */
 	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
@@ -458,12 +463,12 @@ void handleBootp(HostTraffic *srcHost,
 	    */
 	    int idx = 4;
 	    HostTraffic *realClientHost;
-
 	    /*
 	      This is the real address of the recipient because
 	      dstHost is a broadcast address
 	    */
-	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr), actualDeviceId);
+
+	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr, etherbuf), actualDeviceId);
 	    if(realClientHost == NULL) {
 	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL,
 					  bootProto.bp_chaddr, 0, 0, actualDeviceId);

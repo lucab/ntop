@@ -343,8 +343,8 @@
 
 /* EXPERIMENTAL */
 /* Define MAKE_WITH_LOG_XXXXXX if you want log messages to use more than just
- * LOG_ERR for ntop's messages.
-/* EXPERIMENTAL */
+ * LOG_ERR for ntop's messages. */
+ 
 /* Define MAKE_WITH_LOG_XXXXXX if you want log messages to use more than just
  * LOG_ERR for ntop's messages.
  *

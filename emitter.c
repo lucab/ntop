@@ -299,7 +299,7 @@ static void wrtLlongItm(FILE *fDescr, int lang, char* indent, char* name,
 			TrafficCounter value, char last, int numEntriesSent) {
   char buf[80];
 
-  sprintf(buf, "%lu", value.value);
+  sprintf(buf, "%lu", (long unsigned int)value.value);
   wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 

@@ -685,24 +685,24 @@ int32_t gmt2local(time_t t) {
 /* ********************************* */
 
 char *dotToSlash(char *name) {
-    /*
-     *  Convert a dotted quad ip address name a.b.c.d to a/b/c/d or a\b\c\d
-     */
-    char* localBuffer;
-    int i, len;
-
-    localBuffer = strdup(name);
-
-    for (i=0; i<strlen(localBuffer); i++) {
-        if (localBuffer[i] == '.')
- #ifdef WIN32
-            localBuffer[i]='\\';
- #else
-            localBuffer[i]='/';
- #endif
-    }
-    localBuffer[i]='\0';
-    return localBuffer;
+  /*
+   *  Convert a dotted quad ip address name a.b.c.d to a/b/c/d or a\b\c\d
+   */
+  char* localBuffer;
+  int i;
+    
+  localBuffer = strdup(name);
+    
+  for (i=0; i<strlen(localBuffer); i++) {
+    if (localBuffer[i] == '.')
+#ifdef WIN32
+      localBuffer[i]='\\';
+#else
+    localBuffer[i]='/';
+#endif
+  }
+  localBuffer[i]='\0';
+  return localBuffer;
 }
 
 /* ********************************* */
@@ -1383,8 +1383,7 @@ int checkCommand(char* commandName) {
 
   if(fd == NULL) {
     traceEvent(CONST_TRACE_ERROR,
-               "External tool test failed(code=%d1%d). Disabling %s function (popen failed).\n",
-               rc,
+               "External tool test failed(code=%d). Disabling %s function (popen failed).\n",
                errno,
                commandName);
     return 0;
@@ -1471,7 +1470,9 @@ void readLsofInfo(void) {
   struct timeval wait_time;
   char fileName[NAME_MAX] = "/tmp/lsof-XXXXXX";
   FILE *fd1;
+#ifdef LSOF_DEBUG
   time_t startTime = time(NULL);
+#endif
 
   fd1 = getNewRandomFile(fileName, NAME_MAX);
 
@@ -2026,7 +2027,7 @@ void traceEvent(int eventTraceLevel, char* file,
     char buf[LEN_GENERAL_WORK_BUFFER];
     time_t theTime = time(NULL);
     struct tm t;
-    int beginFileIdx;
+    int beginFileIdx=0;
     char *mFile = NULL;
 
     /* We have three paths - one if we're logging, two if we aren't
@@ -3250,8 +3251,7 @@ u_int32_t xaton(char *s) {
 /* ******************************************************************* */
   
 void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
-  IPNode *p1;
-  IPNode *p2;
+  IPNode *p1 = NULL, *p2 = NULL;
   int i, b;
 
   if(country)
@@ -3758,8 +3758,6 @@ pcap_t *pcap_open_dead(int linktype, int snaplen)
 
 int setSpecifiedUser() {
 #ifndef WIN32
-  int rc;
-  
   /*
    * set user to be as inoffensive as possible
    */
@@ -3771,23 +3769,23 @@ int setSpecifiedUser() {
 
   if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
 #ifdef DARWIN
-  unsigned long p;
+    unsigned long p;
   
-  /*
-    This is dead code but it's necessary under OSX. In fact the linker
-    notices that the RRD stuff is not used in the main code so it is
-    ignored. At runtime when the RRD plugin comes up, the dynamic linker
-    failes because the rrd_* are not found.
+    /*
+      This is dead code but it's necessary under OSX. In fact the linker
+      notices that the RRD stuff is not used in the main code so it is
+      ignored. At runtime when the RRD plugin comes up, the dynamic linker
+      failes because the rrd_* are not found.
     */
   
-  p = (unsigned long) rrd_fetch;  
-  p += (unsigned long) rrd_graph;  
-  p += (unsigned long) rrd_create; 
-  p += (unsigned long) rrd_last;  
-  p += (unsigned long) rrd_update; 
-  return(p);
+    p =  (unsigned long)rrd_fetch;  
+    p += (unsigned long)rrd_graph;  
+    p += (unsigned long)rrd_create; 
+    p += (unsigned long)rrd_last;  
+    p += (unsigned long)rrd_update; 
+    return(p);
 #else
-  return(1);
+    return(1);
 #endif
   } else
     return(0);
