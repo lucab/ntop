@@ -246,12 +246,13 @@ void drawBar(short width,
  
   // columns and x labels
   padding = 3; // half of spacing between columns
-  yscale = (float)ysize / ((ngrid+1) * dydat); // pixels per data unit
+  yscale = (float)ysize/((ngrid+1) * dydat); // pixels per data unit
 
   for (i = 0; i<num_points; i++) { 
     // vertical columns
     ymax = vmargin + ysize; 
     ymin = ymax - (int)(data[i]*yscale); 
+    if(ymin < vmargin) ymin = vmargin;
     xmax = hmargin + (i+1)*base - padding; 
     xmin = hmargin + i*base + padding; 
 
