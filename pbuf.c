@@ -1485,10 +1485,11 @@ static void processIpPkt(const u_char *bp,
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "IP=%d TCP=%d UDP=%d ICMP=%d (len=%d)\n",
-	     (int)myGlobals.device[actualDeviceId].ipBytes,
-	     (int)myGlobals.device[actualDeviceId].tcpBytes,
-	     (int)myGlobals.device[actualDeviceId].udpBytes,
-	     (int)myGlobals.device[actualDeviceId].icmpBytes, length);
+	     (int)myGlobals.device[actualDeviceId].ipBytes.value,
+	     (int)myGlobals.device[actualDeviceId].tcpBytes.value,
+	     (int)myGlobals.device[actualDeviceId].udpBytes.value,
+	     (int)myGlobals.device[actualDeviceId].icmpBytes.value,
+	     length);
 #endif
 }
 

@@ -179,7 +179,7 @@ unsigned short isLocalAddress(struct in_addr *addr, u_int deviceId) {
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: %s is %s\n", intoa(*addr),
-	     isLocalAddress(addr) ? "pseudolocal" : "remote");
+	     isBroadcastAddress(addr) ? "pseudolocal" : "remote");
 #endif
   /* Broadcast is considered a local address */
   return(isBroadcastAddress(addr));

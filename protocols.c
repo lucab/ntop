@@ -816,7 +816,7 @@ void handleNetbios(HostTraffic *srcHost,
 
 		      srcHost->nonIPTraffic->nbDescr = strdup(&tmpBuffer[49]);
 #ifdef DEBUG
-		      traceEvent(CONST_TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
+		      traceEvent(CONST_TRACE_INFO, "Computer Info: '%s'", srcHost->nonIPTraffic->nbDescr);
 #endif
 		    }
 		  }

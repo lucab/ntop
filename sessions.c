@@ -107,12 +107,13 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "updateHTTPVirtualHosts: %s for host %s [s=%u,r=%u]",
 	       virtualHostName, theRemHost->hostNumIpAddress,
-	       (unsigned int)bytesSent, (unsigned int)bytesRcvd);
+	       (unsigned int)bytesSent.value, (unsigned int)bytesRcvd.value);
 #endif
 
     while(list != NULL) {
       if(strcmp(list->virtualHostName, virtualHostName) == 0) {
-	incrementTrafficCounter(&list->bytesSent, bytesSent.value), incrementTrafficCounter(&list->bytesRcvd, bytesRcvd.value);
+	incrementTrafficCounter(&list->bytesSent, bytesSent.value), 
+	  incrementTrafficCounter(&list->bytesRcvd, bytesRcvd.value);
 	break;
       } else {
 	list = list->next;
@@ -1662,7 +1663,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
 	  traceEvent(CONST_TRACE_INFO, "DEBUG: Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
 		     ack, theSession->numDuplicatedAckI2R,
-		     (int)theSession->bytesRetranI2R);
+		     (int)theSession->bytesRetranI2R.value);
 #endif
 	} else {
 	  theSession->numDuplicatedAckR2I++;
@@ -1672,7 +1673,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
 	  traceEvent(CONST_TRACE_INFO, "Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
 		     ack, theSession->numDuplicatedAckR2I,
-		     (int)theSession->bytesRetranR2I);
+		     (int)theSession->bytesRetranR2I.value);
 #endif
 	}
 
