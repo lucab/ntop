@@ -195,7 +195,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
   NetFlow5Record the5Record;
   NetFlow7Record the7Record;
   int skipSRC=0, skipDST=0;
-  
+
 #ifdef DEBUG
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
 #endif
@@ -315,7 +315,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
       if(myGlobals.netFlowDebug) {
 	theFlags[0] = '\0';
-	
+
 	if(the5Record.flowRecord[i].tcp_flags & TH_SYN)  strcat(theFlags, "SYN ");
 	if(the5Record.flowRecord[i].tcp_flags & TH_FIN)  strcat(theFlags, "FIN ");
 	if(the5Record.flowRecord[i].tcp_flags & TH_RST)  strcat(theFlags, "RST ");
@@ -354,7 +354,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
 
       if(!skipSRC) {
-	switch((skipSRC = isOKtoSave(ntohl(the5Record.flowRecord[i].srcaddr), 
+	switch((skipSRC = isOKtoSave(ntohl(the5Record.flowRecord[i].srcaddr),
 				     whiteNetworks, blackNetworks,
 				     numWhiteNets, numBlackNets)) ) {
 	case 1:
@@ -369,7 +369,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
       }
 
       if(!skipDST) {
-	switch((skipDST = isOKtoSave(ntohl(the5Record.flowRecord[i].dstaddr), 
+	switch((skipDST = isOKtoSave(ntohl(the5Record.flowRecord[i].dstaddr),
 				      whiteNetworks, blackNetworks,
 				      numWhiteNets, numBlackNets)) ) {
 	case 1:
@@ -382,7 +382,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	  myGlobals.numDstNetFlowsEntryAccepted++;
 	}
       }
-      
+
 #ifdef DEBUG
       traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - src - returned %s",
                  ntohl(the5Record.flowRecord[i].srcaddr),
@@ -431,12 +431,12 @@ static void dissectFlow(char *buffer, int bufferLen) {
       /* traceEvent(CONST_TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
 #endif
 
-      if((sport != 0) &&(dport != 0)) {
+      if((sport != 0) && (dport != 0)) {
 	if(dport < sport) {
 	  if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1)
 	    if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
               flowIgnoredInHandleIP++;
-              ignoreFlow(&nextFlowIgnored, 
+              ignoreFlow(&nextFlowIgnored,
                          ntohl(the5Record.flowRecord[i].srcaddr), sport,
                          ntohl(the5Record.flowRecord[i].dstaddr), dport,
                          len);
@@ -453,7 +453,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	}
       } else {
         flowIgnoredZeroPort++;
-        ignoreFlow(&nextFlowIgnored, 
+        ignoreFlow(&nextFlowIgnored,
                    ntohl(the5Record.flowRecord[i].srcaddr), sport,
                    ntohl(the5Record.flowRecord[i].dstaddr), dport,
                    len);
@@ -648,6 +648,8 @@ static int initNetFlowFunct(void) {
 
   setPluginStatus(NULL);
 
+  myGlobals.netFlowDeviceId = -1;
+
 #ifdef CFG_MULTITHREADED
   threadActive = 0;
   createMutex(&whiteblackListMutex);
@@ -683,7 +685,7 @@ static int initNetFlowFunct(void) {
   if(fetchPrefsValue("netFlow.whiteList", value, sizeof(value)) == -1) {
     storePrefsValue("netFlow.whiteList", "");
     myGlobals.netFlowWhiteList = strdup("");
-  } else 
+  } else
     myGlobals.netFlowWhiteList = strdup(value);
 
   if(fetchPrefsValue("netFlow.netFlowAggregation", value, sizeof(value)) == -1)
@@ -705,11 +707,11 @@ static int initNetFlowFunct(void) {
   releaseMutex(&whiteblackListMutex);
 #endif
   traceEvent(CONST_TRACE_INFO, "NETFLOW: White list initialized to '%s'", myGlobals.netFlowWhiteList);
-  
+
   if(fetchPrefsValue("netFlow.blackList", value, sizeof(value)) == -1) {
     storePrefsValue("netFlow.blackList", "");
     myGlobals.netFlowBlackList=strdup("");
-  } else  
+  } else
     myGlobals.netFlowBlackList=strdup(value);
 
 #ifdef CFG_MULTITHREADED
@@ -903,7 +905,8 @@ static void handleNetflowHTTPrequest(char* url) {
     }
   }
 
-  sendString("<table border=0>\n<tr><td><table border>");
+
+  sendString("<center><table border=0>\n<tr><td><table border>");
 
   sendString("<tr><th colspan=4 "DARK_BG">Incoming Flows</th></tr>");
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Collection</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
@@ -916,7 +919,7 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("> <br>[default port is "DEFAULT_NETFLOW_PORT_STR"]</td><td>"
 	     "<INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Virtual NetFlow<br>Collector Interface</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Virtual NetFlow Interface<br>Network Address</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	       "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
 
   if(snprintf(buf, sizeof(buf), "%s/%s",
@@ -941,7 +944,7 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>White list</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
                "IP Address/Mask(s) we store data from:</td><td "TD_BG"><INPUT NAME=whiteList SIZE=60 VALUE=\"");
 
-  if(snprintf(buf, sizeof(buf), "%s", myGlobals.netFlowWhiteList == NULL ? " " : myGlobals.netFlowWhiteList) < 0) 
+  if(snprintf(buf, sizeof(buf), "%s", myGlobals.netFlowWhiteList == NULL ? " " : myGlobals.netFlowWhiteList) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -950,7 +953,7 @@ static void handleNetflowHTTPrequest(char* url) {
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Black list</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
                "IP Address/Mask(s) we reject data from:</td><td "TD_BG"><INPUT NAME=blackList SIZE=60 VALUE=\"");
 
-  if(snprintf(buf, sizeof(buf), "%s", myGlobals.netFlowBlackList == NULL ? " " : myGlobals.netFlowBlackList) < 0) 
+  if(snprintf(buf, sizeof(buf), "%s", myGlobals.netFlowBlackList == NULL ? " " : myGlobals.netFlowBlackList) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -1059,10 +1062,10 @@ static void handleNetflowHTTPrequest(char* url) {
     sendString("<hr>\n");
     printHTMLheader("Incoming Flow Statistics", 0);
     sendString("<TABLE BORDER>\n");
-    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
+    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Flow Statistics</TH></TR>\n");
 
     if(myGlobals.numNetFlowsPktsRcvd > 0) {
-      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD "TD_BG" ALIGN=RIGHT>");
+      sendString("<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>");
 
       for(i=0; i<MAX_NUM_PROBES; i++) {
 	if(probeList[i].probeAddr.s_addr == 0) break;
@@ -1076,28 +1079,28 @@ static void handleNetflowHTTPrequest(char* url) {
 
       sendString("</TD></TR>\n");
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Gives: # Pkts Received</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Gives: # Pkts Received</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsPktsRcvd)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Less: # Pkts with bad version</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Pkts with bad version</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadNetFlowsVersionsRcvd)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Gives: # Pkts processed</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Gives: # Pkts processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd > 0) {
           if(snprintf(buf, sizeof(buf),
-                      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flows per packet(avg)</TH>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%.1f</TD></TR>\n",
-    		     (float) myGlobals.numNetFlowsRcvd / 
+                      "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT># Flows per packet(avg)</TH>"
+                      "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%.1f</TD></TR>\n",
+    		     (float) myGlobals.numNetFlowsRcvd /
                        (float)(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd)
             ) < 0)
               BufferTooShort();
@@ -1105,29 +1108,29 @@ static void handleNetflowHTTPrequest(char* url) {
       }
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flows received</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT># Flows received</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsRcvd)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Less: # Flows with zero packet count</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Flows with zero packet count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowPkts)) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Less: # Flows with zero byte count</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Flows with zero byte count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowBytes)) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Less: # Flows with bad data</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Flows with bad data</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowReality)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Gives: # Flows processed</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Gives: # Flows processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsProcessed)) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1137,9 +1140,10 @@ static void handleNetflowHTTPrequest(char* url) {
           myGlobals.numDstNetFlowsEntryFailedWhiteList +
           myGlobals.numDstNetFlowsEntryFailedBlackList > 0) {
 
-          sendString("<TR><TD COLSPAN=\"2\" ALIGN=\"CENTER\"><TABLE BORDER=\"1\">");
+          sendString("<TR><TH COLSPAN=4 "DARK_BG">Accepted/Rejected Flows</TH></TR>");
+          sendString("<TR><TD COLSPAN=4 ALIGN=\"CENTER\"><TABLE BORDER=\"1\" width=100%>");
 
-          sendString("<TR><TD>&nbsp;</TD><TD>Source</TD><TD>Destination</TD></TR>\n");
+          sendString("<TR><TD>&nbsp;</TD><TH>Source</TH><TH>Destination</TH></TR>\n");
 
           sendString("<TR><TH ALIGN=\"LEFT\">Rejected - Black list</TH>");
           if(snprintf(buf, sizeof(buf),
@@ -1266,51 +1270,47 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString("</TD></TR>\n");
 #endif
 
-      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Ignored Flows</TH></TR>\n");
+      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Ignored Flows</TH></TR>\n");
 
       if(snprintf(buf, sizeof(buf),
-                  "<TR><TH ALIGN=\"LEFT\">port zero</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">Zero Port</TH>\n"
+                      "<TD colspan=2 ALIGN=\"RIGHT\">%u</TD></TR>\n",
                       flowIgnoredZeroPort
         ) < 0)
           BufferTooShort();
       sendString(buf);
- 
+
       if(snprintf(buf, sizeof(buf),
-                  "<TR><TH ALIGN=\"LEFT\">in handleIP()</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">in handleIP()</TH>\n"
+                      "<TD colspan=2 ALIGN=\"RIGHT\">%u</TD></TR>\n",
                       flowIgnoredInHandleIP
         ) < 0)
           BufferTooShort();
       sendString(buf);
 
-      sendString("<TR><TD COLSPAN=\"2\" ALIGN=\"CENTER\">Most recent problem flows<br>"
-                                                        "(n) is consecutive count<br>"
-                                                        "{n} is bytes</TD></TR>\n");
-
+      sendString("<TR><TH COLSPAN=4 ALIGN=\"CENTER\" "DARK_BG">Most Recent Discarded Flows</th></tr>\n");
+      sendString("<TR><TH COLSPAN=2>Flow</TH><TH>Bytes</TH><TH># Consecutive<br>Counts</TH></TR>\n");
       for (i=nextFlowIgnored; i<nextFlowIgnored+MAX_NUM_IGNOREDFLOWS; i++) {
           if ((flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
               (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
              if(flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
                  snprintf(buf1, sizeof(buf1), "(%d) ", flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
              } else {
-                 buf1[0]='\0';
+	       snprintf(buf1, sizeof(buf1), "&nbsp;");
              }
-             if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) { 
-                 snprintf(buf2, sizeof(buf2), "%.1fGB", 
+             if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) {
+                 snprintf(buf2, sizeof(buf2), "%.1fGB",
                           (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
-             } else if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) { 
-                 snprintf(buf2, sizeof(buf2), "%.1fMB", 
+             } else if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) {
+                 snprintf(buf2, sizeof(buf2), "%.1fMB",
                           (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
              } else {
-                 snprintf(buf2, sizeof(buf2), "%u", 
+                 snprintf(buf2, sizeof(buf2), "%u",
                           flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
              }
              if(snprintf(buf, sizeof(buf),
-                         "<TR><TD COLSPAN=\"2\" ALIGN=\"RIGHT\">"
-                             "%s%d.%d.%d.%d:%d -> %d.%d.%d.%d:%d {%s}</TD>"
-                         "</TR>\n",
-                         buf1,
+                         "<TR><TD align=right>%d.%d.%d.%d:%d</TD><TD align=left>-> %d.%d.%d.%d:%d</TD>"
+			 "<TD align=right>%s</TD></TD><TD align=right>%s</TD></TR>\n",
                          (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 24) & 0xff,
                          (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 16) & 0xff,
                          (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >>  8) & 0xff,
@@ -1321,7 +1321,7 @@ static void handleNetflowHTTPrequest(char* url) {
                          (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >>  8) & 0xff,
                          (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2]      ) & 0xff,
                          flowIgnored[i%MAX_NUM_IGNOREDFLOWS][3],
-                         buf2
+                         buf2, buf1
                ) < 0)
                  BufferTooShort();
              sendString(buf);
@@ -1348,7 +1348,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
     sendString("</TABLE>\n");
 
-    sendString("<P><CENTER>Clich <A HREF=\"/plugins/NetFlow\">here</A> to refresh this data.</CENTER></P>\n");
+    sendString("<P>Click <A HREF=\"/plugins/NetFlow\">here</A> to refresh this data.</CENTER></P>\n");
   }
 
 
@@ -1439,7 +1439,7 @@ static PluginInfo netflowPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate ntop's NetFlow support.<br>"
       "ntop can both collect and receive NetFlow data. Received NetFlow data is "
       "reported as a separate 'NIC' in the regular ntop reports.",
-    "2.2", /* version */
+    "2.3", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
