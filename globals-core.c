@@ -531,7 +531,7 @@ void initNtop(char *devices) {
   
   /* ********************************** */
 
-  initGdbm(NULL, NULL);
+  initGdbm(myGlobals.dbPath, myGlobals.dbPath);
 
 #ifndef WIN32
   if(myGlobals.daemonMode) {
