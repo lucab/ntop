@@ -647,8 +647,6 @@ NTCSH=
 OBJDUMP=
 OBJEXT=o
 SO_VERSION_PATCH=
-NTOP_APPEND_INCS([/usr/local/include])
-NTOP_APPEND_LIBS([/usr/local/lib])
 
 dnl>
 dnl> Yes, we want to minimize the amount of work before we tell
@@ -851,7 +849,11 @@ if test ".${LOCALEDIR}" = "."; then
     LOCALEDIR="/usr/lib/locale"
 fi
 
-CFLAGS="-D${DEFINEOS} ${CFLAGS}"
+NTOP_APPEND_INCS([/usr/local/include])
+NTOP_APPEND_LIBS([/usr/local/lib])
+CFLAGS="-${CFLAGS} -I/usr/local/include"
+CPPFLAGS="${CPPFLAGS} -I/usr/local/include"
+LDFLAGS="${LDFLAGS} -L/usr/local/include"
 
 dnl> Leave this: it causes showoses to print it's footer
 dnl> showoses TERMS
