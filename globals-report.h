@@ -85,18 +85,16 @@ extern int cmpUsersTraffic(const void *_a, const void *_b);
 extern int cmpProcesses(const void *_a, const void *_b);
 extern int cmpFctn(const void *_a, const void *_b);
 extern int cmpMulticastFctn(const void *_a, const void *_b);
-extern void getProtocolDataSent(TrafficCounter *c,
-				TrafficCounter *d,
-				TrafficCounter *e,
-				HostTraffic *el);
-extern void getProtocolDataReceived(TrafficCounter *c,
-				    TrafficCounter *d,
-				    TrafficCounter *e,
-				    HostTraffic *el);
+extern void getProtocolDataSent(TrafficCounter *c, TrafficCounter *d,
+				TrafficCounter *e, HostTraffic *el);
+extern void getProtocolDataReceived(TrafficCounter *c, TrafficCounter *d,
+				    TrafficCounter *e,  HostTraffic *el);
 extern void printHostThtpShort(HostTraffic *el, short dataSent);
 extern int cmpHostsFctn(const void *_a, const void *_b);
 extern void printPacketStats(HostTraffic *el);
 extern void printHostTrafficStats(HostTraffic *el);
+extern void printHostFragmentStats(HostTraffic *el);
+extern void printTotalFragmentStats(HostTraffic *el);
 extern void printHostContactedPeers(HostTraffic *el);
 extern char *getSessionState(IPSession *session);
 extern void printHostSessions(HostTraffic *el, u_int elIdx);

@@ -3464,6 +3464,8 @@ static void processIpPkt(const u_char *bp,
   updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)h->len);
   updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length);
 
+  srcHost->ipBytesSent += length, dstHost->ipBytesReceived += length;
+
   if(subnetPseudoLocalHost(srcHost)) {
     if(subnetPseudoLocalHost(dstHost)) {
       srcHost->bytesSentLocally += length;
@@ -3503,10 +3505,34 @@ static void processIpPkt(const u_char *bp,
 
   off = ntohs(ip.ip_off);
 
+  if (off & 0x3fff) {
+    /* Handle fragmented packets */
+    length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
+			    &sport, &dport,
+			    ntohs(ip.ip_id), off, length,
+			    ntohs(ip.ip_len) - hlen);
+    
+    device[actualDeviceId].fragmentedIpBytes += length;
+    
+    switch(ip.ip_p) {
+    case IPPROTO_TCP:
+      srcHost->tcpFragmentsSent += length, dstHost->tcpFragmentsReceived += length;
+      break;
+    case IPPROTO_UDP:
+      srcHost->udpFragmentsSent += length, dstHost->udpFragmentsReceived += length;
+      break;
+    case IPPROTO_ICMP:
+      srcHost->icmpFragmentsSent += length, dstHost->icmpFragmentsReceived += length;
+      break;
+    }
+  }
+  
   tcpUdpLen = ntohs(ip.ip_len) - hlen;
 
   switch(ip.ip_p) {
   case IPPROTO_TCP:
+    device[actualDeviceId].tcpBytes += tcpUdpLen;
+
     if(tcpUdpLen < sizeof(struct tcphdr)) {
       if(enableSuspiciousPacketDump) {
 	traceEvent(TRACE_WARNING, "WARNING: Malformed TCP pkt %s->%s detected (packet too short)",
@@ -3531,8 +3557,6 @@ static void processIpPkt(const u_char *bp,
 	theData = NULL;
       }
 
-      device[actualDeviceId].tcpBytes += tcpUdpLen;
-
       sport = ntohs(tp.th_sport);
       dport = ntohs(tp.th_dport);
 
@@ -3555,13 +3579,6 @@ static void processIpPkt(const u_char *bp,
 			 bp, /* pointer to packet content */
 			 tcpChain, TCP_RULE);
       }
-
-      if(off & 0x3fff)  /* Handle fragmented packets */
-	length = handleFragment(srcHost, srcHostIdx,
-				dstHost, dstHostIdx,
-				&sport, &dport,
-				ntohs(ip.ip_id), off, length,
-				ntohs(ip.ip_len) - hlen);
 
       if((sport > 0) && (dport > 0)) {
 	IPSession *theSession;
@@ -3628,6 +3645,7 @@ static void processIpPkt(const u_char *bp,
 
   case IPPROTO_UDP:
     proto = "UDP";
+    device[actualDeviceId].udpBytes += tcpUdpLen;
 
     if(tcpUdpLen < sizeof(struct udphdr)) {
       if(enableSuspiciousPacketDump) {
@@ -3642,8 +3660,6 @@ static void processIpPkt(const u_char *bp,
       }
     } else {
       udpDataLength = tcpUdpLen - sizeof(struct udphdr);
-
-      device[actualDeviceId].udpBytes += tcpUdpLen;
       memcpy(&up, bp+hlen, sizeof(struct udphdr));
 
 #ifdef SLACKWARE
@@ -3884,12 +3900,6 @@ static void processIpPkt(const u_char *bp,
 			 udpChain, UDP_RULE);
       }
 
-      if (off & 0x3fff)  /* Handle fragmented packets */
-	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
-				&sport, &dport,
-				ntohs(ip.ip_id), off, length,
-				ntohs(ip.ip_len) - hlen);
-
       if((sport > 0) && (dport > 0)) {
 	/* It might be that udpBytes is 0 when
 	   the received packet is fragmented and the main
@@ -3931,6 +3941,8 @@ static void processIpPkt(const u_char *bp,
     break;
 
   case IPPROTO_ICMP:
+    device[actualDeviceId].icmpBytes += length;
+
     if(tcpUdpLen < sizeof(struct icmp)) {
       if(enableSuspiciousPacketDump) {
 	traceEvent(TRACE_WARNING, "WARNING: Malformed ICMP pkt %s->%s detected (packet too short)",
@@ -3945,12 +3957,13 @@ static void processIpPkt(const u_char *bp,
     } else {
       proto = "ICMP";
       memcpy(&icmpPkt, bp+hlen, sizeof(struct icmp));
-      device[actualDeviceId].icmpBytes += length;
+
       srcHost->icmpSent += length;
       dstHost->icmpReceived += length;
 
       if(off & 0x3fff) {
 	char *fmt = "WARNING: detected ICMP fragment [%s -> %s] (network attack attempt?)";
+
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->securityHostPkts->icmpFragmentSent, dstHostIdx, actualDeviceId);
 	incrementUsageCounter(&dstHost->securityHostPkts->icmpFragmentRcvd, srcHostIdx, actualDeviceId);

@@ -372,10 +372,14 @@ void dumpNtopHashes(char* options) {
       if(checkFilter(filter, &filterPattern, "averageRcvdPktThpt")) wrtFloatItm(lang, "\t", "averageRcvdPktThpt",el->averageRcvdPktThpt,',');
       if(checkFilter(filter, &filterPattern, "peakRcvdPktThpt")) wrtFloatItm(lang, "\t", "peakRcvdPktThpt",   el->peakRcvdPktThpt,',');
       if(checkFilter(filter, &filterPattern, "actualSentPktThpt")) wrtFloatItm(lang, "\t", "actualSentPktThpt", el->actualSentPktThpt,',');
-      if(checkFilter(filter, &filterPattern, "averageSentPktThpt")) wrtFloatItm(lang, "\t", "averageSentPktThpt",el->tcpSentLocally,',');
-      if(checkFilter(filter, &filterPattern, "tcpSentRemotely")) wrtLlongItm(lang, "\t", "tcpSentRemotely",   el->tcpSentRemotely,',');
-      if(checkFilter(filter, &filterPattern, "udpSentLocally")) wrtLlongItm(lang, "\t", "udpSentLocally",    el->udpSentLocally,',');
-      if(checkFilter(filter, &filterPattern, "udpSentRemotely")) wrtLlongItm(lang, "\t", "udpSentRemotely",   el->udpSentRemotely,',');
+      if(checkFilter(filter, &filterPattern, "averageSentPktThpt")) wrtFloatItm(lang, "\t", "averageSentPktThpt", el->averageSentPktThpt,',');
+
+      if(checkFilter(filter, &filterPattern, "ipBytesSent")) wrtLlongItm(lang, "\t", "ipBytesSent", el->ipBytesSent,',');
+      if(checkFilter(filter, &filterPattern, "ipBytesReceived")) wrtLlongItm(lang, "\t", "ipBytesReceived", el->ipBytesReceived,',');
+ 
+      if(checkFilter(filter, &filterPattern, "tcpSentRemotely")) wrtLlongItm(lang, "\t", "tcpSentRemotely", el->tcpSentRemotely,',');
+      if(checkFilter(filter, &filterPattern, "udpSentLocally")) wrtLlongItm(lang, "\t", "udpSentLocally", el->udpSentLocally,',');
+      if(checkFilter(filter, &filterPattern, "udpSentRemotely")) wrtLlongItm(lang, "\t", "udpSentRemotely", el->udpSentRemotely,',');
       if(checkFilter(filter, &filterPattern, "icmpSent")) wrtLlongItm(lang, "\t", "icmpSent",          el->icmpSent,',');
       if(checkFilter(filter, &filterPattern, "ospfSent")) wrtLlongItm(lang, "\t", "ospfSent",          el->ospfSent,',');
       if(checkFilter(filter, &filterPattern, "igmpSent")) wrtLlongItm(lang, "\t", "igmpSent",          el->igmpSent,',');
@@ -386,6 +390,15 @@ void dumpNtopHashes(char* options) {
       if(checkFilter(filter, &filterPattern, "icmpReceived")) wrtLlongItm(lang, "\t", "icmpReceived",      el->icmpReceived,',');
       if(checkFilter(filter, &filterPattern, "ospfReceived")) wrtLlongItm(lang, "\t", "ospfReceived",      el->ospfReceived,',');
       if(checkFilter(filter, &filterPattern, "igmpReceived")) wrtLlongItm(lang, "\t", "igmpReceived",      el->igmpReceived,',');
+
+      /* ***************************** */
+
+      if(checkFilter(filter, &filterPattern, "tcpFragmentsSent")) wrtLlongItm(lang, "\t", "tcpFragmentsSent", el->tcpFragmentsSent,',');
+      if(checkFilter(filter, &filterPattern, "tcpFragmentsReceived")) wrtLlongItm(lang, "\t", "tcpFragmentsReceived", el->tcpFragmentsReceived,',');
+      if(checkFilter(filter, &filterPattern, "udpFragmentsSent")) wrtLlongItm(lang, "\t", "udpFragmentsSent", el->udpFragmentsSent,',');
+      if(checkFilter(filter, &filterPattern, "udpFragmentsReceived")) wrtLlongItm(lang, "\t", "udpFragmentsReceived", el->udpFragmentsReceived,',');
+      if(checkFilter(filter, &filterPattern, "icmpFragmentsSent")) wrtLlongItm(lang, "\t", "icmpFragmentsSent", el->icmpFragmentsSent,',');
+      if(checkFilter(filter, &filterPattern, "icmpFragmentsReceived")) wrtLlongItm(lang, "\t", "icmpFragmentsReceived", el->icmpFragmentsReceived,',');
 
       /* ***************************** */
 
@@ -807,6 +820,7 @@ void dumpNtopTrafficInfo(char* options) {
     if(checkFilter(filter, &filterPattern, "multicastPkts")) wrtLlongItm(lang, "\t", "multicastPkts",device[i].multicastPkts,',');
     if(checkFilter(filter, &filterPattern, "ethernetBytes")) wrtLlongItm(lang, "\t", "ethernetBytes",device[i].ethernetBytes,',');
     if(checkFilter(filter, &filterPattern, "ipBytes")) wrtLlongItm(lang, "\t", "ipBytes",device[i].ipBytes,',');
+    if(checkFilter(filter, &filterPattern, "fragmentedIpBytes")) wrtLlongItm(lang, "\t", "fragmentedIpBytes",device[i].fragmentedIpBytes,',');
     if(checkFilter(filter, &filterPattern, "tcpBytes")) wrtLlongItm(lang, "\t", "tcpBytes",device[i].tcpBytes,',');
     if(checkFilter(filter, &filterPattern, "udpBytes")) wrtLlongItm(lang, "\t", "udpBytes",device[i].udpBytes,',');
     if(checkFilter(filter, &filterPattern, "otherIpBytes")) wrtLlongItm(lang, "\t", "otherIpBytes",device[i].otherIpBytes,',');

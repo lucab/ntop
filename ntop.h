@@ -865,6 +865,7 @@ typedef struct {
    */
   TrafficCounter ethernetBytes;  /* # bytes captured */
   TrafficCounter ipBytes;
+  TrafficCounter fragmentedIpBytes;
   TrafficCounter tcpBytes;
   TrafficCounter udpBytes;
   TrafficCounter otherIpBytes;
@@ -1684,11 +1685,16 @@ typedef struct hostTraffic {
 
   /* IP */
   PortUsage        **portsUsage; /* 0...TOP_ASSIGNED_IP_PORTS */
+  TrafficCounter   ipBytesSent, ipBytesReceived;
   TrafficCounter   tcpSentLocally, tcpSentRemotely, udpSentLocally,
                    udpSentRemotely, icmpSent, ospfSent, igmpSent;
   TrafficCounter   tcpReceivedLocally, tcpReceivedFromRemote, udpReceivedLocally,
                    udpReceivedFromRemote, icmpReceived, ospfReceived, igmpReceived;
 
+  TrafficCounter   tcpFragmentsSent,  tcpFragmentsReceived,
+                   udpFragmentsSent,  udpFragmentsReceived,
+                   icmpFragmentsSent, icmpFragmentsReceived;
+    
   /* Interesting Packets */  
   SecurityHostProbes *securityHostPkts;  
 

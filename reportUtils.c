@@ -1906,6 +1906,108 @@ void printPacketStats(HostTraffic *el) {
 
 /* ************************************ */
 
+void printHostFragmentStats(HostTraffic *el) {
+  TrafficCounter totalSent, totalReceived;
+  char buf[BUF_SIZE];
+
+  totalSent = el->tcpFragmentsSent + el->udpFragmentsSent + el->icmpFragmentsSent;
+  totalReceived = el->tcpFragmentsReceived + el->udpFragmentsReceived + el->icmpFragmentsReceived;
+  
+ if((totalSent == 0) && (totalReceived == 0))
+    return;
+
+  printSectionTitle("IP Fragments Distribution");
+
+  sendString("<CENTER>\n"
+	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Received</TH></TR>\n");
+
+  printTableDoubleEntry(buf, sizeof(buf), "TCP", COLOR_1, (float)el->tcpFragmentsSent/1024,
+			100*((float)SD(el->tcpFragmentsSent, totalSent)),
+			(float)el->tcpFragmentsReceived/1024,
+			100*((float)SD(el->tcpFragmentsReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "UDP", COLOR_1, (float)el->udpFragmentsSent/1024,
+			100*((float)SD(el->udpFragmentsSent, totalSent)),
+			(float)el->udpFragmentsReceived/1024,
+			100*((float)SD(el->udpFragmentsReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "ICMP", COLOR_1, (float)el->icmpFragmentsSent/1024,
+			100*((float)SD(el->icmpFragmentsSent, totalSent)),
+			(float)el->icmpFragmentsReceived/1024,
+			100*((float)SD(el->icmpFragmentsReceived, totalReceived)));
+
+#ifdef HAVE_GDCHART
+  {
+    if((totalSent > 0) || (totalReceived > 0)) {
+      if(snprintf(buf, sizeof(buf), 
+		  "<TR %s><TH "TH_BG" ALIGN=LEFT>Fragment Distribution</TH>",
+		  getRowColor()) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      
+      if(totalSent > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"?1></TD>",
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      } else {
+	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
+      }
+
+      if(totalReceived > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"></TD>",
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      } else {
+	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
+      }
+
+      sendString("</TD></TR>");
+
+      /* ***************************************** */
+
+      if(snprintf(buf, sizeof(buf), 
+		  "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Fragment Distribution</TH>",
+		  getRowColor()) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      
+      if(totalSent > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"?1></TD>",
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      } else {
+	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
+      }
+
+      if(totalReceived > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"></TD>",
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      } else {
+	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
+      }
+
+      sendString("</TD></TR>");
+    }
+  }
+#endif
+
+  sendString("</TABLE>"TABLE_OFF"<P>\n");
+  sendString("</CENTER>\n");  
+}
+
+/* ************************************ */
+
 void printHostTrafficStats(HostTraffic *el) {
   int i, a, b;
   TrafficCounter totalSent, totalReceived;
@@ -1932,7 +2034,7 @@ void printHostTrafficStats(HostTraffic *el) {
   printHostHourlyTraffic(el);
   printPacketStats(el);
 
-  if((totalSent == 0 ) && (totalReceived == 0))
+  if((totalSent == 0) && (totalReceived == 0))
     return;
 
   printSectionTitle("Protocol Distribution");
@@ -2067,33 +2169,6 @@ void printHostTrafficStats(HostTraffic *el) {
 
       sendString("</TD></TR>");
     }
-
-#if 0
-  if(((el->tcpSentLocally+el->tcpSentRemotely+
-       el->udpSentLocally+el->udpSentRemotely+
-       el->icmpSent+el->ospfSent+el->igmpSent+el->stpSent
-       +el->ipxSent+el->osiSent+el->dlcSent+
-       el->arp_rarpSent+el->decnetSent+el->appletalkSent+
-       el->netbiosSent+el->qnxSent+el->otherSent) > 0)
-     && ((el->tcpReceivedLocally+el->tcpReceivedFromRemote+
-      el->udpReceivedLocally+el->udpReceivedFromRemote+
-      el->icmpReceived+el->ospfReceived+el->igmpReceived+el->stpReceived
-      +el->ipxReceived+el->osiReceived+el->dlcReceived+
-      el->arp_rarpReceived+el->decnetReceived+el->appletalkReceived+
-	  el->netbiosReceived+el->qnxReceived+el->otherReceived) > 0)) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>"
-		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1>"
-		"</TD>"
-		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT">"
-		"</TD></TR>",
-		getRowColor(),
-		el->hostNumIpAddress,
-		el->hostNumIpAddress) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-  }
-#endif
-
   }
 #endif
 
@@ -3180,6 +3255,12 @@ void printHostDetailedInfo(HostTraffic *el) {
 			      "Local", "Remote", -1, percentage);
   }
 
+  if(el->bytesSent > 0) {
+    percentage = (((float)el->ipBytesSent*100)/el->bytesSent);    
+    printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Sent",
+			      "IP", "Non-IP", -1, percentage);
+  }
+
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
 	  "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	  getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
@@ -3198,6 +3279,12 @@ void printHostDetailedInfo(HostTraffic *el) {
     printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Received&nbsp;Stats",
 			      "Local", "Remote", -1, percentage);
   
+  if(el->bytesReceived > 0) {
+    percentage = (((float)el->ipBytesReceived*100)/el->bytesReceived);    
+    printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Received",
+			      "IP", "Non-IP", -1, percentage);
+  }
+
   total = el->pktSent+el->pktReceived;
   if(total > 0) {
     percentage = ((float)el->pktSent*100)/((float)total);    

@@ -750,6 +750,17 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
 
+	if(device[actualReportDeviceId].ipBytes > 0) {
+	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>Fragmented IP Traffic</th>"
+		      "<TD "TD_BG" align=right>%s [%.1f%%]</td></TR>\n",
+		      getRowColor(), 
+		      formatBytes(device[actualReportDeviceId].fragmentedIpBytes, 1),
+		      (float)(100*device[actualReportDeviceId].fragmentedIpBytes)/
+		      (float)device[actualReportDeviceId].ipBytes) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf2);
+	}
+
 	/* Just in case... */
 	if(device[actualReportDeviceId].ethernetBytes > device[actualReportDeviceId].ipBytes)
 	  dummyCounter = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
@@ -1300,6 +1311,7 @@ void printAllSessionsHTML(char* host) {
 
   printHostDetailedInfo(el);
   printHostTrafficStats(el);
+  printHostFragmentStats(el);
   printHostContactedPeers(el);
   printHostUsedServices(el);
 

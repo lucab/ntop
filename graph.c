@@ -71,8 +71,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   FILE *fd;
   TrafficCounter totTraffic;
 
-  fd = getNewRandomFile(fileName, NAME_MAX);
-
   if(dataSent) {
     totTraffic = theHost->tcpSentLocally+theHost->tcpSentRemotely+
       theHost->udpSentLocally+theHost->udpSentRemotely+
@@ -247,7 +245,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 0) {
-      unlink(fileName);
       return; /* TODO: this has to be handled better */
     }
 
@@ -255,11 +252,161 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     accessMutex(&graphMutex, "pktHostTrafficDistrib");
 #endif
 
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+
     GDCPIE_LineColor = 0x000000L;
     GDCPIE_explode   = expl;    /* default: NULL - no explosion */
     GDCPIE_Color     = clr;
     GDCPIE_BGColor   = 0xFFFFFFL;
     GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+    GDCPIE_percent_labels = GDCPIE_PCT_NONE;
+    
+    GDC_out_pie(250,			/* width */
+		250,			/* height */
+		fd,			/* open file pointer */
+		GDC_3DPIE,		/* or GDC_2DPIE */
+		num,			/* number of slices */
+		lbl,			/* slice labels (unlike out_png(), can be NULL */
+		p);			/* data array */
+
+    fclose(fd);
+
+#ifdef MULTITHREADED
+    releaseMutex(&graphMutex);
+#endif
+
+    sendGraphFile(fileName);
+  }
+}
+
+/* ************************ */
+
+void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  float p[20];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
+		   "", "", "", "", "", "", "", "", "", "" };
+  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
+			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+  FILE *fd;
+  TrafficCounter totTraffic;
+
+  if(dataSent)
+    totTraffic = theHost->tcpFragmentsSent+theHost->udpFragmentsSent+theHost->icmpFragmentsSent;
+  else
+    totTraffic = theHost->tcpFragmentsReceived+theHost->udpFragmentsReceived+theHost->icmpFragmentsReceived;
+
+  if(totTraffic > 0) {
+    if(dataSent) {
+      if(theHost->tcpFragmentsSent > 0) {
+	p[num] = (float)((100*(theHost->tcpFragmentsSent))/totTraffic);
+	lbl[num++] = "TCP";
+      }
+
+      if(theHost->udpFragmentsSent > 0) {
+	p[num] = (float)((100*(theHost->udpFragmentsSent))/totTraffic);
+	lbl[num++] = "UDP";
+      }
+
+      if(theHost->icmpFragmentsSent > 0) {
+	p[num] = (float)((100*(theHost->icmpFragmentsSent))/totTraffic);
+	lbl[num++] = "ICMP";
+      }
+    } else {
+      if(theHost->tcpFragmentsReceived > 0) {
+	p[num] = (float)((100*(theHost->tcpFragmentsReceived))/totTraffic);
+	lbl[num++] = "TCP";
+      }
+
+      if(theHost->udpFragmentsReceived > 0) {
+	p[num] = (float)((100*(theHost->udpFragmentsReceived))/totTraffic);
+	lbl[num++] = "UDP";
+      }
+
+      if(theHost->icmpFragmentsReceived > 0) {
+	p[num] = (float)((100*(theHost->icmpFragmentsReceived))/totTraffic);
+	lbl[num++] = "ICMP";
+      }
+    }
+
+    if(num == 0) {
+      return; /* TODO: this has to be handled better */
+    }
+
+#ifdef MULTITHREADED
+    accessMutex(&graphMutex, "pktHostFragmentDistrib");
+#endif
+
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+
+    GDCPIE_LineColor = 0x000000L;
+    GDCPIE_explode   = expl;    /* default: NULL - no explosion */
+    GDCPIE_Color     = clr;
+    GDCPIE_BGColor   = 0xFFFFFFL;
+    GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+    GDCPIE_percent_labels = GDCPIE_PCT_NONE;
+    
+    GDC_out_pie(250,			/* width */
+		250,			/* height */
+		fd,			/* open file pointer */
+		GDC_3DPIE,		/* or GDC_2DPIE */
+		num,			/* number of slices */
+		lbl,			/* slice labels (unlike out_png(), can be NULL */
+		p);			/* data array */
+
+    fclose(fd);
+
+#ifdef MULTITHREADED
+    releaseMutex(&graphMutex);
+#endif
+
+    sendGraphFile(fileName);
+  }
+}
+
+/* ************************ */
+
+void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  float p[20];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
+		   "", "", "", "", "", "", "", "", "", "" };
+  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
+			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+  FILE *fd;
+  TrafficCounter totFragmentedTraffic, totTraffic;
+
+  if(dataSent) {
+    totTraffic = theHost->ipBytesSent;
+    totFragmentedTraffic = theHost->tcpFragmentsSent+theHost->udpFragmentsSent
+      +theHost->icmpFragmentsSent;
+  } else {
+    totTraffic = theHost->ipBytesReceived;
+    totFragmentedTraffic = theHost->tcpFragmentsReceived+theHost->udpFragmentsReceived
+      +theHost->icmpFragmentsReceived;
+  }
+
+  if(totTraffic > 0) {
+    p[num] = (float)((100*totFragmentedTraffic)/totTraffic);
+    lbl[num++] = "Frag";
+      
+    p[num] = 100-((float)(100*totFragmentedTraffic)/totTraffic);
+    if(p[num] > 0) { lbl[num++] = "Non Frag"; }
+
+    if(num == 0)
+      return; /* TODO: this has to be handled better */     
+
+#ifdef MULTITHREADED
+    accessMutex(&graphMutex, "pktHostFragmentDistrib");
+#endif
+
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+
+    GDCPIE_LineColor      = 0x000000L;
+    GDCPIE_explode        = expl;      /* default: NULL - no explosion */
+    GDCPIE_Color          = clr;
+    GDCPIE_BGColor        = 0xFFFFFFL;
+    GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
     GDCPIE_percent_labels = GDCPIE_PCT_NONE;
     
     GDC_out_pie(250,			/* width */
@@ -292,9 +439,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   TrafficCounter traffic, totalIPTraffic;
 
   if(theHost->protoIPTrafficInfos == NULL)
-    return;
-  
-  fd = getNewRandomFile(fileName, NAME_MAX);
+    return; 
 
 #ifdef ENABLE_NAPSTER
   if(theHost->napsterStats == NULL)
@@ -362,13 +507,14 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   } 
 
   if(num == 0) {
-    unlink(fileName);
     return; /* TODO: this has to be handled better */
   }
 
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "pktHostTrafficDistrib");
 #endif
+
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -402,8 +548,6 @@ void pktSizeDistribPie(void) {
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
   FILE *fd;
-
-  fd = getNewRandomFile(fileName, NAME_MAX);
 
   if(device[actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
     p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo64)/
@@ -452,6 +596,8 @@ void pktSizeDistribPie(void) {
   accessMutex(&graphMutex, "pktSizeDistrib");
 #endif
 
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
   GDCPIE_Color          = clr;
@@ -485,7 +631,7 @@ void ipProtoDistribPie(void) {
   int num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
 
-  fd = getNewRandomFile(fileName, NAME_MAX);
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 
   p[num] = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.local+
 		   device[actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
@@ -545,8 +691,6 @@ void interfaceTrafficPie(void) {
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0;
 
-  fd = getNewRandomFile(fileName, NAME_MAX);
-
   for(i=0; i<numDevices; i++)     
     if(!device[i].virtualDevice) {
       if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
@@ -570,6 +714,8 @@ void interfaceTrafficPie(void) {
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "interfaceTrafficPie");
 #endif
+
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;
@@ -605,8 +751,6 @@ void pktCastDistribPie(void) {
   FILE *fd;
   TrafficCounter unicastPkts;
 
-  fd = getNewRandomFile(fileName, NAME_MAX);
-
   unicastPkts = device[actualReportDeviceId].ethernetPkts
     - device[actualReportDeviceId].broadcastPkts
     - device[actualReportDeviceId]. multicastPkts;
@@ -637,6 +781,8 @@ void pktCastDistribPie(void) {
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "pktCastDistribPie");
 #endif
+
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -672,8 +818,6 @@ void drawTrafficPie(void) {
   int num=0, expl[] = { 5, 5 };
   FILE *fd;
 
-  fd = getNewRandomFile(fileName, NAME_MAX);
-
   ip = device[actualReportDeviceId].ipBytes;
   nonIp = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
 
@@ -686,6 +830,8 @@ void drawTrafficPie(void) {
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawTrafficPie");
 #endif
+
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 
   GDCPIE_LineColor = 0x000000L;
   GDCPIE_BGColor   = 0xFFFFFFL;
@@ -723,12 +869,12 @@ void drawThptGraph(int sortedColumn) {
   struct tm t;
 
   memset(graphData, 0, sizeof(graphData));
-
-  fd = getNewRandomFile(fileName, NAME_MAX);
   
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawThptGraph");
 #endif
+
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 
   GDC_BGColor    = 0xFFFFFFL;                  /* backgound color (white) */
   GDC_LineColor  = 0x000000L;                  /* line color      (black) */
@@ -876,8 +1022,6 @@ void drawGlobalProtoDistribution(void) {
   ip = device[actualReportDeviceId].ipBytes;
   nonIp = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
 
-  fd = getNewRandomFile(fileName, NAME_MAX);
-
   if(device[actualReportDeviceId].tcpBytes > 0) {
     p[idx] = device[actualReportDeviceId].tcpBytes; lbl[idx] = "TCP";  idx++; }
   if(device[actualReportDeviceId].udpBytes > 0) {
@@ -912,6 +1056,8 @@ void drawGlobalProtoDistribution(void) {
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawGlobalProtoDistribution");
 #endif
+
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 
   GDC_LineColor      = 0x000000L;
   GDC_BGColor        = 0xFFFFFFL;
@@ -959,12 +1105,12 @@ void drawGlobalIpProtoDistribution(void) {
       idx++;
     }
   }
-
-  fd = getNewRandomFile(fileName, NAME_MAX);
   
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawGlobalIpProtoDistribution");
 #endif
+
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 
   GDC_LineColor = 0x000000L;
   GDC_BGColor   = 0xFFFFFFL;
