@@ -936,7 +936,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("</TD></tr>\n");
 
   if(dumpHosts) {
-    sendString("<TR><TH ALIGN=LEFT>Hosts Filter</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+    sendString("<TR><TH ALIGN=LEFT>Hosts Filter</TH><TD>"
 	       "<INPUT NAME=hostsFilter VALUE=\"");
 
     sendString(hostsFilter);
@@ -964,7 +964,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString(buf);
   sendString("</TD></TR>\n");
 
-  sendString("<TR><TH ALIGN=LEFT>RRD Files Path</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+  sendString("<TR><TH ALIGN=LEFT>RRD Files Path</TH><TD>"
              "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
   sendString(myGlobals.rrdPath);
   sendString("\"></TD></tr>\n");
