@@ -1123,6 +1123,7 @@ struct pbuf {
 typedef struct badGuysAddr {
   struct in_addr addr;
   time_t         lastBadAccess;
+  u_int16_t      count;
 } BadGuysAddr;
 
 /* *************************** */

@@ -2269,8 +2269,8 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
   if(gzflush(compressFileFd, Z_FINISH) != Z_OK) {
     int err;
-    traceEvent(CONST_TRACE_WARNING, "WARNING: gzflush error (%s)\n",
-	       gzerror(compressFileFd, &err));
+    traceEvent(CONST_TRACE_WARNING, "gzflush error %d(%s)\n",
+	       err, gzerror(compressFileFd, &err));
   }
 
   gzclose(compressFileFd);
@@ -2339,17 +2339,22 @@ void handleHTTPrequest(struct in_addr from) {
 
   for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
     if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr == from.s_addr) {
-      myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.actTime;
-      traceEvent(CONST_TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
-		 _intoa(from, requestedURL, sizeof(requestedURL)));
-      return;
-    } else if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess+ PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < myGlobals.actTime) {
-      /*
-	We 'forget' the address of this nasty guy after 5 minutes
-	since its last bad access as we hope that he will be nicer
-	with ntop in the future.
-      */
-      memset(&myGlobals.weDontWantToTalkWithYou[i], 0, sizeof(BadGuysAddr));
+       if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess +
+           PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < myGlobals.actTime) {
+         /*
+          * We 'forget' the address of this nasty guy after 5 minutes
+          * since its last bad access as we hope that he will be nicer
+          * with ntop in the future.
+          */
+         memset(&myGlobals.weDontWantToTalkWithYou[i], 0, sizeof(BadGuysAddr));
+         traceEvent(CONST_TRACE_INFO, "clearing lockout for address %s",
+                    _intoa(from, requestedURL, sizeof(requestedURL)));
+       } else {
+         myGlobals.weDontWantToTalkWithYou[i].count++;
+         traceEvent(CONST_TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
+                    _intoa(from, requestedURL, sizeof(requestedURL)));
+         return;
+       }
     }
   }
 #endif
@@ -2524,10 +2529,12 @@ void handleHTTPrequest(struct in_addr from) {
       for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++) {
 	myGlobals.weDontWantToTalkWithYou[i].addr.s_addr   = myGlobals.weDontWantToTalkWithYou[i+1].addr.s_addr;
 	myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.weDontWantToTalkWithYou[i+1].lastBadAccess;
+	myGlobals.weDontWantToTalkWithYou[i].count = myGlobals.weDontWantToTalkWithYou[i+1].count;
       }
 
       myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr = from.s_addr;
       myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].lastBadAccess = myGlobals.actTime;
+      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].count = 1;
     }
 #endif
 

@@ -1031,11 +1031,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Bad IP Address table size", buf);
 
-  if(snprintf(buf, sizeof(buf), 
-              "#define PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL %d", 
-              PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Bad IP Address timeout (seconds)", buf);
 
   if(snprintf(buf, sizeof(buf), 
               "#define PARM_MIN_WEBPAGE_AUTOREFRESH_TIME %d", PARM_MIN_WEBPAGE_AUTOREFRESH_TIME) < 0)
@@ -3776,6 +3771,74 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Children (active)", buf);
 #endif
 
+  /* **** */
+
+#if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
+{
+  struct tm t;
+  char buf3[64], buf4[64];
+  time_t lockoutExpires;
+  int countBadGuys;
+
+  for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
+    if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr != 0) {
+      if (++countBadGuys == 1) {
+        sendString(texthtml("\n\nIP Address reject list\n\n",
+                            "<tr><th colspan=\"2\">IP Address reject list</th></tr>\n"));
+        sendString(texthtml("\nAddress ... Count ... Last Bad Access ... Lockout Expires\n",
+                            "<tr><th>Rejects</th>"
+                                "<td><table border=\"1\">"
+                                      "<tr><th>Address</th><th>Count</th>"
+                                      "<th>Last Bad Access</th><th>Lockout Expires</th></tr>"));
+      }
+      
+      if(snprintf(buf, sizeof(buf), "%s", 
+                  _intoa(myGlobals.weDontWantToTalkWithYou[i].addr, buf3, sizeof(buf3))) < 0)
+        BufferTooShort();
+      if(snprintf(buf2, sizeof(buf2), "%d", myGlobals.weDontWantToTalkWithYou[i].count) < 0)
+        BufferTooShort();
+      strftime(buf3, sizeof(buf3), "%c", 
+               localtime_r(&myGlobals.weDontWantToTalkWithYou[i].lastBadAccess, &t));
+      lockoutExpires = myGlobals.weDontWantToTalkWithYou[i].lastBadAccess + 
+                       PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL;
+      strftime(buf4, sizeof(buf4), "%c", localtime_r(&lockoutExpires, &t));
+      if (textPrintFlag) {
+        sendString("    ");
+        sendString(buf);
+        sendString("... ");
+        sendString(buf2);
+        sendString("... ");
+        sendString(buf3);
+        sendString("... ");
+        sendString(buf4);
+        sendString("\n");
+      } else {
+        sendString("<tr><td>");
+        sendString(buf);
+        sendString("</td><td>");
+        sendString(buf2);
+        sendString("</td><td>");
+        sendString(buf3);
+        sendString("</td><td>");
+        sendString(buf4);
+        sendString("</td></tr>\n");
+      }
+    }
+  }
+  if (countBadGuys > 0) {
+  
+    sendString(texthtml("\n", "</table></td>\n"));
+
+    if(snprintf(buf, sizeof(buf), "%d", PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Reject duration (seconds)", buf);
+  
+    strftime(buf, sizeof(buf), "%c", localtime_r(&myGlobals.actTime, &t));
+    printFeatureConfigInfo(textPrintFlag, "It is now", buf);
+  }
+
+}
+#endif
   /* **** */
 
 #ifdef MEMORY_DEBUG
