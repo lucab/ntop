@@ -689,8 +689,8 @@ void dumpNtopHashes(char* options, int actualDeviceId) {
 
   endWriteArray(lang);
 
-  if(filterPattern.fastmap)
-    free(filterPattern.fastmap);
+  if((filter[0] != '\0') && (filterPattern.fastmap))
+      free(filterPattern.fastmap);
 }
 
 /* ********************************** */
@@ -1015,8 +1015,8 @@ void dumpNtopTrafficInfo(char* options) {
   if(num > 0) endWriteKey(lang,"",' ');
   endWriteArray(lang);
 
-  if(filterPattern.fastmap)
-    free(filterPattern.fastmap);
+  if((filter[0] != '\0') && (filterPattern.fastmap))
+      free(filterPattern.fastmap);
 }
 
 
