@@ -155,19 +155,6 @@ extern char* printSSLError(int errorId);
 #endif /* HAVE_OPENSSL */
 extern void sendHTTPHeader(int mimeType, int headerFlags);
 
-#define STR_FAVICON_ICO                 "favicon.ico"
-#define STR_INDEX_HTML                  "index.html"
-#define PLUGINS_HEADER                  "plugins/"
-#define DUMP_DATA_HTML                  "dumpData.html"
-#define DUMP_TRAFFIC_DATA_HTML          "dumpTrafficData.html"
-#define DUMP_HOSTS_INDEXES_HTML         "dumpDataIndexes.html"
-#define DUMP_NTOP_FLOWS_HTML            "dumpFlows.html"
-#define DUMP_NTOP_HOSTS_MATRIX_HTML     "dumpHostsMatrix.html"
-
-#ifdef MAKE_WITH_XMLDUMP
- #define DUMP_NTOP_XML                  "dump.xml"
-#endif
-
 /* report.c */
 extern void initReports(void);
 extern int reportValues(time_t *lastTime);
@@ -289,69 +276,10 @@ extern int printNtopLogReport(int printAsText);
 #define SORT_DATA_RECEIVED_FC           14
 #define SORT_DATA_SENT_FC               15
 
-#define STR_SORT_DATA_RECEIVED_PROTOS   "sortDataReceivedProtos.html"
-#define STR_SORT_DATA_RECEIVED_IP       "sortDataReceivedIP.html"
-#define STR_SORT_DATA_RECEIVED_THPT     "sortDataReceivedThpt.html"
-#define STR_SORT_DATA_RCVD_HOST_TRAFFIC "dataRcvdHostTraffic.html"
-#define STR_SORT_DATA_SENT_PROTOS       "sortDataSentProtos.html"
-#define STR_SORT_DATA_SENT_IP           "sortDataSentIP.html"
-#define STR_SORT_DATA_SENT_THPT         "sortDataSentThpt.html"
-#define STR_SORT_DATA_SENT_HOST_TRAFFIC "dataSentHostTraffic.html"
-#define STR_SORT_DATA_PROTOS            "sortDataProtos.html"
-#define STR_SORT_DATA_IP                "sortDataIP.html"
-#define STR_SORT_DATA_THPT              "sortDataThpt.html"
-#define STR_SORT_DATA_HOST_TRAFFIC      "dataHostTraffic.html"
-#define STR_SORT_DATA_RECEIVED_FC       "sortDataReceivedFC.html"
-#define STR_SORT_DATA_SENT_FC           "sortDataSentFC.html"
-#define STR_SORT_DATA_FC                "sortDataFC.html"
-
-#define STR_SORT_DATA_THPT_STATS        "thptStats.html"
-#define STR_THPT_STATS_MATRIX           "thptStatsMatrix.html"
-#define STR_DOMAIN_STATS                "domainTrafficStats.html"
-#define STR_MULTICAST_STATS             "multicastStats.html"
-#define HOSTS_INFO_HTML                 "hostsInfo.html"
-#define HOSTS_FC_INFO_HTML              "fcHostsInfo.html"
-#define HOSTS_LOCAL_INFO_HTML           "localHostsInfo.html"
-#define SHOW_PORT_TRAFFIC               "showPortTraffic.html"
-#define IP_R_2_L_HTML                   "IpR2L.html"
-#define IP_L_2_R_HTML                   "IpL2R.html"
-#define IP_L_2_L_HTML                   "IpL2L.html"
-#define IP_R_2_R_HTML                   "IpR2R.html"
-#define FC_TRAFFIC_HTML                 "fcShowStats.html"
-#define FC_PROTOS_HTML                  "fcProtos.html"
-#define DOMAIN_INFO_HTML                "domainInfo"
-#define CGI_HEADER                      "ntop-bin/"
-#define STR_SHOW_PLUGINS                "showPlugins.html"
-#define SHUTDOWN_NTOP_HTML              "shutdown.html"
-#define INFO_NTOP_HTML                  "info.html"
-#define TEXT_INFO_NTOP_HTML             "textinfo.html"
-#define TRAFFIC_STATS_HTML              "trafficStats.html"
-#define NW_EVENTS_HTML                  "networkEvents.html"
-#define SWITCH_NIC_HTML                 "switch.html"
-#define CHANGE_FILTER_HTML              "changeFilter.html"
-#define FILTER_INFO_HTML                "filterInfo.html"
-#define STR_PROBLEMRPT_HTML             "ntopProblemReport.html"
-#define STR_VIEW_LOG_HTML               "viewLog.html"
-#define SCSI_NET_STAT_BYTES_HTML        "ScsiNetstatBytes.html"
-#define SCSI_NET_STAT_TIMES_HTML        "ScsiNetstatTimes.html"
-#define SCSI_NET_STAT_STATUS_HTML       "ScsiNetstatStatus.html"
-#define SCSI_NET_STAT_TM_HTML           "ScsiNetstatTMInfo.html"
-#define FC_NET_STAT_HTML                "FcNetstat.html"
-#define DISPLAY_OPTS                    "DisplayOptions.html"
-#define DISPLAY_FC_BY_FCID              "DisplayFcid.html"
-#define DISPLAY_FC_BY_WWN               "DisplayWWN.html"
-#define DISPLAY_FC_BY_ALIAS             "DisplayAlias.html"
-
 #define DISPLAY_FC_FCID                 0
 #define DISPLAY_FC_WWN                  1
 #define DISPLAY_FC_ALIAS                2
 #define DISPLAY_FC_DEFAULT              DISPLAY_FC_ALIAS
-
-/* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-#define RESET_STATS_HTML              "resetStats.html"
-
-#define STR_W3C_P3P_XML                 "w3c/p3p.xml"
-#define STR_NTOP_P3P                    "ntop.p3p"
 
 /* webInterface.c */
 extern void *handleWebConnections(void* notUsed);
@@ -404,3 +332,4 @@ extern void drawPie(short width, short height, FILE* filepointer,
 #ifndef MAKE_WITH_XMLDUMP
 extern int dumpXML(int dumpToFile, char * parms);
 #endif
+

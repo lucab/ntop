@@ -96,7 +96,7 @@
 /* #define PARM_ENABLE_EXPERIMENTAL */
 
 /*
- * Controls whether to make a fork() call in http.c and xmldump.c
+ * Controls whether to make a fork() call in http.c and others
  */
 #define PARM_FORK_CHILD_PROCESS
 
@@ -318,9 +318,8 @@
 
 /*
  * This flag indicates that fork() is implemented with copy-on-write.
- * This means that the set of tables reported on in xmldump.c (and other
- * fork()ed processes) will be complete and unchanged as of the instant
- * of the fork.
+ * This means that the set of tables reported on in fork()ed processes
+ * will be complete and unchanged as of the instant of the fork.
  */
 #if defined(LINUX)
  #define MAKE_WITH_FORK_COPYONWRITE
@@ -1039,6 +1038,110 @@
  * How many dummy files to create for the HAVE_FILEDESCRIPTORBUG fix
  */
 #define CONST_FILEDESCRIPTORBUG_COUNT       3
+
+/*
+ * These are the constants used by the ntop web server to match requests and
+ * to generate links in generated pages.  Look in http.c, plugins, etc.
+ *
+ *  1.  Keep this list sorted by the defined value (e.g. the xxxx.html)
+ *  2.  Add to it INSTEAD of using inline constants.
+ *  3.  If the text ends .html, end the CONST_ constant with _HTML
+ *      that keeps the full names different from the partials
+ *      (similarly .xml .p3p, etc.)
+ *      If it's a header (ends /), end the CONST_ with _HEADER
+ */
+
+#define CONST_ADD_URLS_HTML                 "addURLs.html"
+#define CONST_ADD_USERS_HTML                "addUsers.html"
+#define CONST_AS_LIST_HTML                  "asList.html"
+#define CONST_CHANGE_FILTER_HTML            "changeFilter.html"
+#define CONST_CREDITS_HTML                  "Credits.html"
+#define CONST_SORT_DATA_HOST_TRAFFIC_HTML   "dataHostTraffic.html"
+#define CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML "dataRcvdHostTraffic.html"
+#define CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML "dataSentHostTraffic.html"
+#define CONST_DELETE_URL                    "deleteURL"
+#define CONST_DELETE_USER                   "deleteUser"
+#define CONST_DISPLAY_FC_BY_ALIAS_HTML      "DisplayAlias.html"
+#define CONST_DISPLAY_FC_BY_FCID_HTML       "DisplayFcid.html"
+#define CONST_DISPLAY_OPTS_HTML             "DisplayOptions.html"
+#define CONST_DISPLAY_FC_BY_WWN_HTML        "DisplayWWN.html"
+#define CONST_DO_ADD_URL                    "doAddURL"
+#define CONST_DO_ADD_USER                   "doAddUser"
+#define CONST_DOMAIN_INFO_HTML              "domainInfo.html"
+#define CONST_DOMAIN_STATS_HTML             "domainTrafficStats.html"
+#define CONST_DUMP_DATA_HTML                "dumpData.html"
+#define CONST_DUMP_HOSTS_INDEXES_HTML       "dumpDataIndexes.html"
+#define CONST_DUMP_NTOP_FLOWS_HTML          "dumpFlows.html"
+#define CONST_DUMP_NTOP_HOSTS_MATRIX_HTML   "dumpHostsMatrix.html"
+#define CONST_DUMP_TRAFFIC_DATA_HTML        "dumpTrafficData.html"
+#define CONST_DUMP_NTOP_XML                 "dump.xml"
+#define CONST_FAVICON_ICO                   "favicon.ico"
+#define CONST_HOSTS_FC_INFO_HTML            "fcHostsInfo.html"
+#define CONST_FC_NET_STAT_HTML              "FcNetstat.html"
+#define CONST_FC_PROTOS_HTML                "fcProtos.html"
+#define CONST_FC_TRAFFIC_HTML               "fcShowStats.html"
+#define CONST_FILTER_INFO_HTML              "filterInfo.html"
+#define CONST_NTOP_HELP_HTML                "help.html"
+#define CONST_HOME_HTML                     "home.html"
+#define CONST_HOME_UNDERSCORE_HTML          "home_.html"
+#define CONST_HOST_HTML                     "host.html"
+#define CONST_HOSTS_INFO_HTML               "hostsInfo.html"
+#define CONST_INDEX_HTML                    "index.html"
+#define CONST_INFO_NTOP_HTML                "info.html"
+#define CONST_IP_L_2_L_HTML                 "IpL2L.html"
+#define CONST_IP_L_2_R_HTML                 "IpL2R.html"
+#define CONST_IP_PROTO_DISTRIB_HTML         "ipProtoDistrib.html"
+#define CONST_IP_PROTO_USAGE_HTML           "ipProtoUsage.html"
+#define CONST_IP_R_2_L_HTML                 "IpR2L.html"
+#define CONST_IP_R_2_R_HTML                 "IpR2R.html"
+#define CONST_IP_TRAFFIC_MATRIX_HTML        "ipTrafficMatrix.html"
+#define CONST_LEFTMENU_HTML                 "leftmenu.html"
+#define CONST_LEFTMENU_NOJS_HTML            "leftmenu-nojs.html"
+#define CONST_HOSTS_LOCAL_INFO_HTML         "localHostsInfo.html"
+#define CONST_LOCAL_ROUTERS_LIST_HTML       "localRoutersList.html"
+#define CONST_MODIFY_URL                    "modifyURL"
+#define CONST_MODIFY_USERS                  "modifyUsers"
+#define CONST_MULTICAST_STATS_HTML          "multicastStats.html"
+#define CONST_NET_FLOWS_HTML                "NetFlows.html"
+#define CONST_ACTIVE_TCP_SESSIONS_HTML      "NetNetstat.html"
+#define CONST_NW_EVENTS_HTML                "networkEvents.html"
+#define CONST_CGI_HEADER                    "ntop-bin/"
+#define CONST_MAN_NTOP_HTML                 "ntop.html"
+#define CONST_NTOP_P3P                      "ntop.p3p"
+#define CONST_PROBLEMRPT_HTML               "ntopProblemReport.html"
+#define CONST_PLUGINS_HEADER                "plugins/"
+#define CONST_RESET_STATS_HTML              "resetStats.html"
+#define CONST_SCSI_NET_STAT_BYTES_HTML      "ScsiNetstatBytes.html"
+#define CONST_SCSI_NET_STAT_STATUS_HTML     "ScsiNetstatStatus.html"
+#define CONST_SCSI_NET_STAT_TIMES_HTML      "ScsiNetstatTimes.html"
+#define CONST_SCSI_NET_STAT_TM_HTML         "ScsiNetstatTMInfo.html"
+#define CONST_SHOW_MUTEX_HTML               "showMutex.html"
+#define CONST_SHOW_PLUGINS_HTML             "showPlugins.html"
+#define CONST_SHOW_PORT_TRAFFIC_HTML        "showPortTraffic.html"
+#define CONST_SHOW_URLS_HTML                "showURLs.html"
+#define CONST_SHOW_USERS_HTML               "showUsers.html"
+#define CONST_SHUTDOWN_NTOP_HTML            "shutdown.html"
+#define CONST_SORT_DATA_FC_HTML             "sortDataFC.html"
+#define CONST_SORT_DATA_IP_HTML             "sortDataIP.html"
+#define CONST_SORT_DATA_PROTOS_HTML         "sortDataProtos.html"
+#define CONST_SORT_DATA_RECEIVED_FC_HTML    "sortDataReceivedFC.html"
+#define CONST_SORT_DATA_RECEIVED_IP_HTML    "sortDataReceivedIP.html"
+#define CONST_SORT_DATA_RECEIVED_PROTOS_HTML "sortDataReceivedProtos.html"
+#define CONST_SORT_DATA_RECEIVED_THPT_HTML  "sortDataReceivedThpt.html"
+#define CONST_SORT_DATA_SENT_FC_HTML        "sortDataSentFC.html"
+#define CONST_SORT_DATA_SENT_IP_HTML        "sortDataSentIP.html"
+#define CONST_SORT_DATA_SENT_PROTOS_HTML    "sortDataSentProtos.html"
+#define CONST_SORT_DATA_SENT_THPT_HTML      "sortDataSentThpt.html"
+#define CONST_SORT_DATA_THPT_HTML           "sortDataThpt.html"
+#define CONST_SWITCH_NIC_HTML               "switch.html"
+#define CONST_TEXT_INFO_NTOP_HTML           "textinfo.html"
+#define CONST_THROUGHPUT_GRAPH              "thptGraph"
+#define CONST_SORT_DATA_THPT_STATS_HTML     "thptStats.html"
+#define CONST_THPT_STATS_MATRIX_HTML        "thptStatsMatrix.html"
+#define CONST_TRAFFIC_STATS_HTML            "trafficStats.html"
+#define CONST_VIEW_LOG_HTML                 "viewLog.html"
+#define CONST_VLAN_LIST_HTML                "vlanList.html"
+#define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.

@@ -424,19 +424,19 @@ void printHeader(int reportType, int revertOrder, u_int column,
   memset(buf, 0, sizeof(buf));
 
   switch(reportType) {
-  case SORT_DATA_RECEIVED_PROTOS:   url = STR_SORT_DATA_RECEIVED_PROTOS;   break;
-  case SORT_DATA_RECEIVED_IP:       url = STR_SORT_DATA_RECEIVED_IP;       break;
-  case SORT_DATA_RECEIVED_THPT:     url = STR_SORT_DATA_RECEIVED_THPT;     break;
-  case SORT_DATA_RCVD_HOST_TRAFFIC: url = STR_SORT_DATA_RCVD_HOST_TRAFFIC; break;
-  case SORT_DATA_SENT_HOST_TRAFFIC: url = STR_SORT_DATA_SENT_HOST_TRAFFIC; break;
-  case SORT_DATA_SENT_PROTOS:       url = STR_SORT_DATA_SENT_PROTOS;       break;
-  case SORT_DATA_SENT_IP:           url = STR_SORT_DATA_SENT_IP;           break;
-  case SORT_DATA_SENT_THPT:         url = STR_SORT_DATA_SENT_THPT;         break;
-  case TRAFFIC_STATS:               url = TRAFFIC_STATS_HTML;              break;
-  case SORT_DATA_PROTOS:            url = STR_SORT_DATA_PROTOS;            break;
-  case SORT_DATA_IP:                url = STR_SORT_DATA_IP;                break;
-  case SORT_DATA_THPT:              url = STR_SORT_DATA_THPT;              break;
-  case SORT_DATA_HOST_TRAFFIC:      url = STR_SORT_DATA_HOST_TRAFFIC;      break;
+  case SORT_DATA_RECEIVED_PROTOS:   url = CONST_SORT_DATA_RECEIVED_PROTOS_HTML;   break;
+  case SORT_DATA_RECEIVED_IP:       url = CONST_SORT_DATA_RECEIVED_IP_HTML;       break;
+  case SORT_DATA_RECEIVED_THPT:     url = CONST_SORT_DATA_RECEIVED_THPT_HTML;     break;
+  case SORT_DATA_RCVD_HOST_TRAFFIC: url = CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML; break;
+  case SORT_DATA_SENT_HOST_TRAFFIC: url = CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML; break;
+  case SORT_DATA_SENT_PROTOS:       url = CONST_SORT_DATA_SENT_PROTOS_HTML;       break;
+  case SORT_DATA_SENT_IP:           url = CONST_SORT_DATA_SENT_IP_HTML;           break;
+  case SORT_DATA_SENT_THPT:         url = CONST_SORT_DATA_SENT_THPT_HTML;         break;
+  case TRAFFIC_STATS:               url = CONST_TRAFFIC_STATS_HTML;               break;
+  case SORT_DATA_PROTOS:            url = CONST_SORT_DATA_PROTOS_HTML;            break;
+  case SORT_DATA_IP:                url = CONST_SORT_DATA_IP_HTML;                break;
+  case SORT_DATA_THPT:              url = CONST_SORT_DATA_THPT_HTML;              break;
+  case SORT_DATA_HOST_TRAFFIC:      url = CONST_SORT_DATA_HOST_TRAFFIC_HTML;      break;
   }
 
   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?showH=%d&col=%s", url, showHostsMode, sign) < 0)
@@ -3022,20 +3022,20 @@ static void checkHostHealthness(HostTraffic *el) {
     sendString(buf);
 
     if(hasWrongNetmask(el))
-      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/help.html#1>"
+      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/" CONST_NTOP_HELP_HTML "#1>"
 		 "Wrong network mask or bridging enabled</A>\n");
 
     if(hasDuplicatedMac(el))
-      sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/help.html#2>"
+      sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/" CONST_NTOP_HELP_HTML "#2>"
 		 "Duplicated MAC found for this IP address (spoofing?)</A>\n");
 
     if(hasSentIpDataOnZeroPort(el))
-      sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/help.html#3>"
+      sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/" CONST_NTOP_HELP_HTML "#3>"
 		 "Traffic on suspicious IP ports</A>\n");
 
     if((el->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD)
        || (el->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD)) {
-      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/help.html#4>"
+      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/" CONST_NTOP_HELP_HTML "#4>"
 		 "Suspicious activities: too many host contacts</A>\n");
     }
 
@@ -3056,7 +3056,7 @@ static void checkHostHealthness(HostTraffic *el) {
 	   || (el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0)
 	   || (el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0)
 	   || (el->secHostPkts->malformedPktsRcvd.value.value > 0))) {
-      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/help.html#5>"
+      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/" CONST_NTOP_HELP_HTML "#5>"
 		 "Unexpected packets (e.g. traffic to closed port or connection reset)</A>\n");
     }
 

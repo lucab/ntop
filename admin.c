@@ -161,7 +161,7 @@ void addUser(char* user) {
 void deleteUser(char* user) {
 
   if(user == NULL) {
-    returnHTTPredirect("showUsers.html");
+    returnHTTPredirect(CONST_SHOW_USERS_HTML);
     return;
   } else if((strlen(user) < 2) || (user[0] != '1')) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
@@ -187,7 +187,7 @@ void deleteUser(char* user) {
       sendString("<P><HR><P>\n");
       printFlagedWarning("<B>ERROR:</B> <I>unable to delete specified user.</I>");
     } else {
-      returnHTTPredirect("showUsers.html");
+      returnHTTPredirect(CONST_SHOW_USERS_HTML);
       return;
     }
 
@@ -282,7 +282,7 @@ void doAddUser(int len) {
     sendMenuFooter(1, 2);
     printHTMLtrailer();
   } else {
-    returnHTTPredirect("showUsers.html");
+    returnHTTPredirect(CONST_SHOW_USERS_HTML);
   }
 }
 
@@ -453,7 +453,7 @@ void addURL(char* url) {
 void deleteURL(char* url) {
 
   if(url == NULL) {
-    returnHTTPredirect("showURLs.html");
+    returnHTTPredirect(CONST_SHOW_URLS_HTML);
     return;
   } else if((strlen(url) < 1) || (url[0] != '2')) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
@@ -479,7 +479,7 @@ void deleteURL(char* url) {
       sendString("<P><HR><P>\n");
       printFlagedWarning("<B>ERROR:</B> <I>unable to delete specified URL.</I>");
     } else {
-      returnHTTPredirect("showURLs.html");
+      returnHTTPredirect(CONST_SHOW_URLS_HTML);
       return;
     }
 
@@ -572,7 +572,7 @@ void doAddURL(int len) {
     sendMenuFooter(3, 0);
     printHTMLtrailer();
   } else {
-    returnHTTPredirect("showURLs.html");
+    returnHTTPredirect(CONST_SHOW_URLS_HTML);
   }
 }
 
@@ -654,7 +654,7 @@ int doChangeFilter(int len) {
     sendString("  Frame.location.href = URI;\n");
     sendString("}\n//-->\n</SCRIPT>");
     sendString("</HEAD>\n");
-    sendString("<BODY ONLOAD=\"UpdateFrame('"FILTER_INFO_HTML"','filterinfo')\" ");
+    sendString("<BODY ONLOAD=\"UpdateFrame('" CONST_FILTER_INFO_HTML "','filterinfo')\" ");
     sendString("BACKGROUND=/white_bg.gif BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
     printSectionTitle("Change kernel (libpcap) filter expression");
   } else {
@@ -677,7 +677,7 @@ int doChangeFilter(int len) {
       sendString("<NOSCRIPT>\n<P>You've got JavaScript disabled. Therefore ");
       sendString("your extra frame with the filter expression isn't updated ");
       sendString("automatically. No problem, you can update it here ");
-      sendString("<A HREF=\""FILTER_INFO_HTML"\" target=\"filterinfo\">");
+      sendString("<A HREF=\"" CONST_FILTER_INFO_HTML "\" target=\"filterinfo\">");
       sendString("manually</A>.</NOSCRIPT></P>");
       sendString("</BODY>\n</HTML>\n");
     } else {
@@ -744,7 +744,7 @@ void changeFilter(void) {
   sendString("like the ones you pass to tcpdump.<BR>\n");
   sendString("If \"new filter expression\" is left empty, no filtering is performed.<BR>\n");
   sendString("If you want the statistics to be reset, you have to do that manually ");
-  sendString("with <A HREF=\"resetStats.html\">Reset Stats</A>.<BR>\n");
+  sendString("with <A HREF=\"" CONST_RESET_STATS_HTML "\">Reset Stats</A>.<BR>\n");
   sendString("<B>Be careful</B>: That can take quite a long time!");
   sendString("<BR><B></FONT>\n");
 }
@@ -756,10 +756,10 @@ struct _menuData {
 };
 
 static struct _menuData menuItem[] = {
-  { "Show Users", "showUsers" },
-  { "Add User",   "addUser" },
-  { "Show URLs",  "showURLs" },
-  { "Add URL",    "addURL" }
+  { "Show Users", CONST_SHOW_USERS_HTML },
+  { "Add User",   CONST_ADD_USERS_HTML },
+  { "Show URLs",  CONST_SHOW_URLS_HTML },
+  { "Add URL",    CONST_ADD_URLS_HTML }
 };
 
 /* *******************************/
@@ -770,7 +770,7 @@ static void sendMenuFooter(int itm1Idx, int itm2Idx) {
   sendString("<CENTER>\n");
   sendString("<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
   if(snprintf(buf, sizeof(buf),
-	     "[ <A HREF=/%s.html>%s</A> ]&nbsp;[ <A HREF=/%s.html>%s</A> ]\n",
+	     "[ <A HREF=/%s>%s</A> ]&nbsp;[ <A HREF=/%s>%s</A> ]\n",
 	     menuItem[itm1Idx].anchor, menuItem[itm1Idx].text,
 	     menuItem[itm2Idx].anchor, menuItem[itm2Idx].text) < 0)
 	 BufferTooShort();

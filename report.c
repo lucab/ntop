@@ -1447,9 +1447,9 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   if(numEntries > 0) {
     myGlobals.columnSort = sortedColumn; /* Host name */
 
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", STR_MULTICAST_STATS, sign) < 0)
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", CONST_MULTICAST_STATS_HTML, sign) < 0)
       BufferTooShort();
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", STR_MULTICAST_STATS) < 0)
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", CONST_MULTICAST_STATS_HTML) < 0)
       BufferTooShort();
 
     for(i=0; i<=5; i++)
@@ -1505,7 +1505,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
 
-    addPageIndicator(STR_MULTICAST_STATS, pageNum, numEntries, myGlobals.maxNumLines,
+    addPageIndicator(CONST_MULTICAST_STATS_HTML, pageNum, numEntries, myGlobals.maxNumLines,
 		     revertOrder, abs(sortedColumn));
 
     printFooterHostLink();
@@ -1572,9 +1572,9 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
 
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", HOSTS_INFO_HTML, sign) < 0)
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", CONST_HOSTS_INFO_HTML, sign) < 0)
       BufferTooShort();
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", HOSTS_INFO_HTML) < 0)
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", CONST_HOSTS_INFO_HTML) < 0)
       BufferTooShort();
 
     for(i=1; i<=NUM_ANCHORS; i++) {
@@ -1897,7 +1897,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     printFooterHostLink();
 
-    addPageIndicator(HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.maxNumLines,
+    addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.maxNumLines,
 		     revertOrder, abs(sortedColumn));
   }
 
@@ -2053,7 +2053,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->otherIpPortsSent[idx] >= 0) {
-	if(snprintf(buf, sizeof(buf), "<LI><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
+	if(snprintf(buf, sizeof(buf), "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		    el->otherIpPortsSent[idx],
 		    getAllPortByNum(el->otherIpPortsSent[idx], portBuf, sizeof(portBuf))) < 0)
 	  BufferTooShort();
@@ -2067,7 +2067,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->otherIpPortsRcvd[idx] >= 0) {
-	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
+	if(snprintf(buf, sizeof(buf), "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		    el->otherIpPortsRcvd[idx],
 		    getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, sizeof(portBuf))) < 0)
 	  BufferTooShort();
@@ -2097,7 +2097,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->recentlyUsedClientPorts[idx] >= 0) {
-	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
+	if(snprintf(buf, sizeof(buf), "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		    el->recentlyUsedClientPorts[idx],
 		    getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, sizeof(portBuf))) < 0)
 	  BufferTooShort();
@@ -2112,7 +2112,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->recentlyUsedServerPorts[idx] >= 0) {
-	if(snprintf(buf, sizeof(buf), "<LI><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
+	if(snprintf(buf, sizeof(buf), "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		    el->recentlyUsedServerPorts[idx],
 		    getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, sizeof(portBuf))) < 0)
 	  BufferTooShort();
@@ -2322,19 +2322,19 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
   switch(remoteToLocal) {
   case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
-    str = IP_R_2_L_HTML;
+    str = CONST_IP_R_2_L_HTML;
     title = "Remote to Local IP Traffic";
     break;
   case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
-    str = IP_R_2_R_HTML;
+    str = CONST_IP_R_2_R_HTML;
     title = "Remote to Remote IP Traffic";
     break;
   case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
-    str = IP_L_2_R_HTML;
+    str = CONST_IP_L_2_R_HTML;
     title = "Local to Remote IP Traffic";
     break;
   case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
-    str = IP_L_2_L_HTML;
+    str = CONST_IP_L_2_L_HTML;
     title = "Local IP Traffic";
     break;
   }
@@ -2624,7 +2624,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     sendString("</CENTER>\n");
 
     if(el == NULL)
-      addPageIndicator("NetNetstat.html", pageNum,
+      addPageIndicator(CONST_ACTIVE_TCP_SESSIONS_HTML, pageNum,
 		       myGlobals.device[actualDeviceId].numTcpSessions,
 		       myGlobals.maxNumLines, -1, 0);
 
@@ -3128,7 +3128,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	      if(symPort == NULL) symPort = "";
 
 	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
-                          "<TH "TH_BG" ALIGN=LEFT><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A></th><td align=right>%d</td>"
+                          "<TH "TH_BG" ALIGN=LEFT><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A></th><td align=right>%d</td>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -3733,8 +3733,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
   sendString("<CENTER>\n");
 
 #ifndef EMBEDDED
-  sendString("<A HREF=\"thptStatsMatrix.html?col=1\" BORDER=0>"
-	     "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=1\"></A><BR>\n");
+  sendString("<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=1\" BORDER=0>"
+	     "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=1\"></A><BR>\n");
 #endif
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
@@ -3745,8 +3745,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 60) {
 #ifndef EMBEDDED
-    sendString("<P><A HREF=\"thptStatsMatrix.html?col=2\" BORDER=0>"
-	       "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=2\"></A><BR>\n");
+    sendString("<P><A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=2\" BORDER=0>"
+	       "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=2\"></A><BR>\n");
 #endif
     if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 		formatTimeStamp(0, 0, 0, formatBuf, sizeof(formatBuf)),
@@ -3756,7 +3756,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
-      sendString("<P><IMG SRC=\"thptGraph"CHART_FORMAT"?col=3\"><BR>\n");
+      sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\"><BR>\n");
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 		  formatTimeStamp(0, 0, 0, formatBuf, sizeof(formatBuf)),
 		  formatTimeStamp(30, 0, 0, formatBuf1, sizeof(formatBuf1))) < 0)
@@ -3954,16 +3954,16 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     totBytesRcvd = 1;
 
   if(domainName == NULL) {
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", STR_DOMAIN_STATS, sign) < 0)
+    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", CONST_DOMAIN_STATS_HTML, sign) < 0)
       BufferTooShort();
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", STR_DOMAIN_STATS) < 0)
+    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", CONST_DOMAIN_STATS_HTML) < 0)
       BufferTooShort();
   } else {
     if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s&col=%s",
-		DOMAIN_INFO_HTML, domainName, sign) < 0)
+		CONST_DOMAIN_INFO_HTML, domainName, sign) < 0)
       BufferTooShort();
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?dom=%s&col=",
-		DOMAIN_INFO_HTML, domainName) < 0)
+		CONST_DOMAIN_INFO_HTML, domainName) < 0)
       BufferTooShort();
   }
    
@@ -4016,7 +4016,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 
     if(domainName == NULL) {
       if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s>%s</A>",
-		  DOMAIN_INFO_HTML, statsEntry->domainHost->fullDomainName,
+		  CONST_DOMAIN_INFO_HTML, statsEntry->domainHost->fullDomainName,
 		  statsEntry->domainHost->fullDomainName) < 0)
 	BufferTooShort();
     } else {
@@ -4076,10 +4076,10 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   sendString("</CENTER>\n");
 
   if(domainName != NULL) {
-    if(snprintf(buf, sizeof(buf), "%s?dom=%s", DOMAIN_INFO_HTML, domainName) < 0)
+    if(snprintf(buf, sizeof(buf), "%s?dom=%s", CONST_DOMAIN_INFO_HTML, domainName) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf, sizeof(buf), "%s", STR_DOMAIN_STATS) < 0)
+    if(snprintf(buf, sizeof(buf), "%s", CONST_DOMAIN_STATS_HTML) < 0)
       BufferTooShort();
   }
 
@@ -4148,7 +4148,7 @@ void listNetFlows(void) {
 
   if(numEntries == 0) {
     sendString("<CENTER><P><H1>No Available/Active Network Flows</H1><p>"
-	       " (see <A HREF=ntop.html>man</A> page)</CENTER>\n");
+	       " (see <A HREF=" CONST_MAN_NTOP_HTML ">man</A> page)</CENTER>\n");
   }
 }
 
