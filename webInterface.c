@@ -2633,6 +2633,8 @@ void printNtopConfigInfo(int textPrintFlag) {
   int i;
   int bufLength, bufPosition, bufUsed;
 
+  printHTMLheader("ntop Configuration", 0);
+
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
   struct mallinfo memStats;
   int totalHostsMonitored = 0;
@@ -3324,11 +3326,36 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
 
-    if(snprintf(buf, sizeof(buf), "%d [%d %%]", (int)myGlobals.device[i].hostsno,
-		(((int)myGlobals.device[i].hostsno*100)/
-		 (int)myGlobals.device[i].actualHashSize)) < 0)
+    if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.device[i].hostsno) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
+    
+    {
+      unsigned int idx, minLen=-1, maxLen=0;
+      unsigned long totBuckets=0, nonEmptyBuckets=0;
+
+      for(idx=0; idx<myGlobals.device[i].actualHashSize; idx++) {
+	HostTraffic *el;
+
+	if((el = myGlobals.device[i].hash_hostTraffic[idx]) != NULL) {	
+	  unsigned int len=0;
+	  
+	  nonEmptyBuckets++;
+
+	  for(; el != NULL; el = el->next) {
+	    totBuckets++, len++;
+	  }
+
+	  if(minLen > len) minLen = len;
+	  if(maxLen < len) maxLen = len;
+	}
+      }      
+      
+      if(snprintf(buf, sizeof(buf), "[min %u][max %u][avg %.1f]", 
+		  minLen, maxLen, (float)totBuckets/(float)nonEmptyBuckets) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Bucket List Length", buf);
+    }
 
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].hashListMaxLookups) < 0)
       BufferTooShort();
