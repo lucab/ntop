@@ -27,6 +27,12 @@
 
 NtopGlobals myGlobals;
 
+#ifndef HAVE_GETOPT_H
+char *optarg;
+int optind;
+int opterr;
+int optopt;
+#endif
 
 #ifdef WIN32
 char *version, *osName, *author, *buildDate,

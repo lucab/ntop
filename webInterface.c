@@ -1171,6 +1171,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
+  printFeatureConfigInfo(textPrintFlag, "HAVE_GETOPT_H",
+#ifdef HAVE_GETOPT_H
+			 "present"
+#else
+			 "absent - provided in util.c"
+#endif
+			 );
+
   printFeatureConfigInfo(textPrintFlag, "HAVE_GETOPT_LONG",
 #ifdef HAVE_GETOPT_LONG
 			 "present"

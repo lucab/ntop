@@ -371,9 +371,32 @@ extern void updateElementHash(ElementHash **list, u_short srcId, u_short dstId,
 			      u_int32_t numPkts, u_int32_t numBytes);
 extern void allocateElementHash(int deviceId, u_short hashType);
 extern u_int numActiveSenders(int deviceId);
-#ifndef HAVE_GETOPT_LONG
+#ifdef HAVE_GETOPT_H
 #include "getopt.h"
-#endif
+#else
+/* Our own, minimal extract from getopt.h */
+extern char *optarg;
+extern int optind;
+extern int opterr;
+extern int optopt;
+struct option
+{
+  char *name;
+  int has_arg;
+  int *flag;
+  int val;
+};
+
+# define no_argument            0
+# define required_argument      1
+# define optional_argument      2
+
+extern int getopt_long (int ___argc, char *const *___argv,
+                        const char *__shortopts,
+                        const struct option *__longopts, int *__longind);
+extern int getopt_long_only ();
+
+#endif /* HAVE_GETOPT_H */
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

@@ -49,7 +49,7 @@ dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.1.52])
 AC_PREREQ([2.50])
-SCRIPTVER="v1.0-2002-11-07"
+SCRIPTVER="v1.001-2002-11-19"
 
 dnl>
 dnl> generate the config header
@@ -1021,6 +1021,7 @@ AC_CHECK_HEADERS([crypt.h pwd.h security/pam_appl.h shadow.h])
 AC_CHECK_HEADERS([dirent.h])
 AC_CHECK_HEADERS([dlfcn.h dl.h])
 AC_CHECK_HEADERS([gdbm.h])
+AC_CHECK_HEADERS([getopt.h])
 AC_CHECK_HEADERS([if.h])
 AC_CHECK_HEADERS([inttypes.h])
 AC_CHECK_HEADERS([memory.h])
@@ -1169,7 +1170,7 @@ AC_FUNC_ALLOCA
 
 AC_FUNC_FORK
 AC_PROG_GCC_TRADITIONAL
-AC_FUNC_MALLOC
+dnl> do not use AC_FUNC_MALLOC ... because we have our own replacement...
 AC_FUNC_MEMCMP
 AC_FUNC_SETVBUF_REVERSED
 AC_TYPE_SIGNAL

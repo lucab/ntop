@@ -31,8 +31,6 @@
   -- if getopt_long isn't provided by the compiler (glibc), we have our own version in util.c
 */
 
-#include <getopt.h>
-
 #if defined(WIN32) && defined(__GNUC__)	/* mingw compiler */
  /* we're using the winpcap getopt() implementation
   * which has the globals inside the dll, so a simple

@@ -31,10 +31,6 @@
 #include "leaks.h"
 #endif
 
-#ifndef HAVE_GETOPT_LONG
-#include "getopt.h"
-#endif
-
 /* Local */
 #define NETWORK                0
 #define NETMASK                1

@@ -126,6 +126,9 @@
 /* Define to 1 if you have the `getipnodebyaddr' function. */
 #undef HAVE_GETIPNODEBYADDR
 
+/* Define to 1 if you have the <getopt.h> header file. */
+#undef HAVE_GETOPT_H
+
 /* getopt_long() is available */
 #undef HAVE_GETOPT_LONG
 
@@ -231,9 +234,6 @@
 /* Define to 1 if long double works and has more range or precision than
    double. */
 #undef HAVE_LONG_DOUBLE
-
-/* Define to 1 if your system has a working `malloc' function. */
-#undef HAVE_MALLOC
 
 /* Define to 1 if you have the `memchr' function. */
 #undef HAVE_MEMCHR
@@ -343,7 +343,10 @@
 /* Define to 1 if you have the `re_comp' function. */
 #undef HAVE_RE_COMP
 
-/* Define to 1 if you have the <rrd.h> header file. */
+/* Enable RRD */
+#undef HAVE_RRD
+
+/* Show we found rrd.h and set INCS */
 #undef HAVE_RRD_H
 
 /* Show we found rsa.h and set INCS */
