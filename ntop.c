@@ -624,7 +624,9 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
         purgeIdleHosts(i);
+#if !defined(__FreeBSD__)
 	purgeIpPorts(i);
+#endif
 #ifdef HAVE_SCHED_H
 	sched_yield(); /* Allow other threads to run */
 #endif

@@ -164,7 +164,7 @@
   patch is needed.
  */
 #if defined(__FreeBSD__)
-#define USE_HOST
+/* #define USE_HOST */ /* BSD seems to have fixed the problem */
 #endif
 
 /*
