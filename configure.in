@@ -49,7 +49,7 @@ dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.1.52])
 AC_PREREQ([2.50])
-SCRIPTVER="vBETA-2002-10-21"
+SCRIPTVER="v1.0-2002-11-07"
 
 dnl>
 dnl> generate the config header
@@ -447,11 +447,13 @@ case "${target}:${CC}" in
 
     *-*-hpux11*:gcc* )
         DEFINEOS="HPUX";      STATUS="SUPPORTED"
+        CFLAGS="-DHPUX ${CFLAGS}"
       ;;
 
     *-*-hpux10*:gcc* )
         NOTE1="Single Threaded only."
         DEFINEOS="HPUX"
+        CFLAGS="-DHPUX ${CFLAGS}"
         if test ".${ac_disable_multithread}" = ".yes"; then
             STATUS="UNTESTED"
         else

@@ -1412,7 +1412,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="vBETA-2002-10-21"
+SCRIPTVER="v1.0-2002-11-07"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -3426,11 +3426,13 @@ case "${target}:${CC}" in
 
     *-*-hpux11*:gcc* )
         DEFINEOS="HPUX";      STATUS="SUPPORTED"
+        CFLAGS="-DHPUX ${CFLAGS}"
       ;;
 
     *-*-hpux10*:gcc* )
         NOTE1="Single Threaded only."
         DEFINEOS="HPUX"
+        CFLAGS="-DHPUX ${CFLAGS}"
         if test ".${ac_disable_multithread}" = ".yes"; then
             STATUS="UNTESTED"
         else
@@ -6312,7 +6314,7 @@ test "x$enable_libtool_lock" != xno && enable_libtool_lock=yes
 case $host in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6315 "configure"' > conftest.$ac_ext
+  echo '#line 6317 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6848,7 +6850,7 @@ chmod -w .
 save_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -o out/conftest2.$ac_objext"
 compiler_c_o=no
-if { (eval echo configure:6851: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
+if { (eval echo configure:6853: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
   # The compiler can only warn and ignore the option if not recognized
   # So say no if there are warnings
   if test -s out/conftest.err; then
@@ -8641,7 +8643,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8644 "configure"
+#line 8646 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8739,7 +8741,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8742 "configure"
+#line 8744 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -22848,16 +22850,16 @@ else
 echo "${ECHO_T}ok" >&6
 fi
 
-# Expansion of NTOP_NTOP_TEST_MUSTHAVE(pcap, pcap.h, pcap_open, pcap_version)
+# Expansion of NTOP_NTOP_TEST_MUSTHAVE(pcap, pcap.h, pcap_open, pcap_version, PCAP)
 nt_ac_header=`echo "ac_cv_header_pcap.h" | $as_tr_sh`
 nt_ac_lib=`echo "ac_cv_lib_pcap_open_pcap.h" | $as_tr_sh`
 
 echo "$as_me:$LINENO: checking for pcap" >&5
 echo $ECHO_N "checking for pcap... $ECHO_C" >&6
 
-if eval "test \"\${$nt_ac_lib}\" = yes" &&
-   eval "test \"\${$nt_ac_header}\" = yes"; then
-    if test ".${pcap_version_ROOT}" != "."; then
+if eval "test ""$${$nt_ac_lib}"" = yes" &&
+   eval "test ""$${$nt_ac_header}"" = yes"; then
+    if test ".${PCAP_ROOT}" != "."; then
         echo "$as_me:$LINENO: result: ok" >&5
 echo "${ECHO_T}ok" >&6
         echo
@@ -22871,17 +22873,17 @@ echo "${ECHO_T}ok" >&6
         echo "*"
         echo "******************************************************************"
         echo
-        pcap_version=
+        PCAP=
     else
         echo "$as_me:$LINENO: result: ok (standard location)" >&5
 echo "${ECHO_T}ok (standard location)" >&6
     fi
-elif test ".${pcap_version_ROOT}" = "."; then
+elif test ".${PCAP_ROOT}" = "."; then
     echo "$as_me:$LINENO: result: not found in standard location, no --with-pcap-root, testing further..." >&5
 echo "${ECHO_T}not found in standard location, no --with-pcap-root, testing further..." >&6
     echo "$as_me:$LINENO: checking for pcap header pcap.h" >&5
 echo $ECHO_N "checking for pcap header pcap.h... $ECHO_C" >&6
-    if eval "test \"\${$nt_ac_header}\" = yes"; then
+    if eval "test ""$${$nt_ac_header}"" = yes"; then
          echo "$as_me:$LINENO: result: ok, found in standard location" >&5
 echo "${ECHO_T}ok, found in standard location" >&6
     elif test -d /usr &&
@@ -22892,7 +22894,7 @@ echo "${ECHO_T}ok, found in /usr/include" >&6
          INCS="${INCS} -I/usr/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
     elif test -d /usr &&
@@ -22904,7 +22906,7 @@ echo "${ECHO_T}ok, found in /usr/include/pcap" >&6
          INCS="${INCS} -I/usr/include/pcap"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
     elif test -d /usr &&
@@ -22916,7 +22918,7 @@ echo "${ECHO_T}ok, found in /usr/local/include" >&6
          INCS="${INCS} -I/usr/local/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
     elif test ".${DEFINEOS}" = ".SOLARIS" &&
@@ -22928,7 +22930,7 @@ echo "${ECHO_T}ok, found in /usr/local/tools/SunOS/include" >&6
          INCS="${INCS} -I/usr/local/tools/SunOS/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
     elif test ".${DEFINEOS}" = ".DARWIN" &&
@@ -22940,7 +22942,7 @@ echo "${ECHO_T}ok, found in /sw/include" >&6
          INCS="${INCS} -I/sw/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
     elif test -r pcap.h; then
@@ -22948,7 +22950,7 @@ _ACEOF
 echo "${ECHO_T}ok, found in ntop directory" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
     else
@@ -22989,12 +22991,12 @@ echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
     fi
     echo "$as_me:$LINENO: checking for pcap library libpcap" >&5
 echo $ECHO_N "checking for pcap library libpcap... $ECHO_C" >&6
-    if eval "test \"\${$nt_ac_lib}\" = yes"; then
+    if eval "test ""$${$nt_ac_lib}"" = yes"; then
         echo "$as_me:$LINENO: result: ok, found in standard location, -lpcap" >&5
 echo "${ECHO_T}ok, found in standard location, -lpcap" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version 1
+#define HAVE_PCAP 1
 _ACEOF
 
     elif test -d /usr &&
@@ -23006,7 +23008,7 @@ echo "${ECHO_T}ok, found in /usr/lib" >&6
         LIBS="${LIBS} -L/usr/lib -lpcap"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version 1
+#define HAVE_PCAP 1
 _ACEOF
 
     elif test -d /usr &&
@@ -23019,7 +23021,7 @@ echo "${ECHO_T}ok, found in /usr/local/lib" >&6
         LIBS="${LIBS} -L/usr/local/lib -lpcap"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version 1
+#define HAVE_PCAP 1
 _ACEOF
 
     elif test ".${DEFINEOS}" = ".SOLARIS" &&
@@ -23032,7 +23034,7 @@ _ACEOF
 echo "${ECHO_T}ok, found in /usr/local/tools/SunOS/lib" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version 1
+#define HAVE_PCAP 1
 _ACEOF
 
     elif test ".${DEFINEOS}" = ".DARWIN" &&
@@ -23044,7 +23046,7 @@ _ACEOF
 echo "${ECHO_T}ok, found in /sw/lib" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version 1
+#define HAVE_PCAP 1
 _ACEOF
 
     elif test -r pcap.h.so ||
@@ -23053,7 +23055,7 @@ _ACEOF
 echo "${ECHO_T}ok, found in ntop directory" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
     else
@@ -23097,40 +23099,40 @@ else
 echo "${ECHO_T}not found in standard location, testing --with-pcap-root..." >&6
     echo "$as_me:$LINENO: checking for pcap header, pcap.h" >&5
 echo $ECHO_N "checking for pcap header, pcap.h... $ECHO_C" >&6
-    if eval "test \"\${$nt_ac_header}\" = yes"; then
+    if eval "test ""$${$nt_ac_header}"" = yes"; then
          echo "$as_me:$LINENO: result: ok, found in standard location" >&5
 echo "${ECHO_T}ok, found in standard location" >&6
-        elif test -d ${pcap_version_ROOT} &&
-         test -r ${pcap_version_ROOT}/pcap.h; then
-         echo "$as_me:$LINENO: result: ok, found in \${pcap_version_ROOT}" >&5
-echo "${ECHO_T}ok, found in \${pcap_version_ROOT}" >&6
-         INCS="${INCS} -I\${pcap_version_ROOT}"
+        elif test -d ${PCAP_ROOT} &&
+         test -r ${PCAP_ROOT}/pcap.h; then
+         echo "$as_me:$LINENO: result: ok, found in \${PCAP_ROOT}" >&5
+echo "${ECHO_T}ok, found in \${PCAP_ROOT}" >&6
+         INCS="${INCS} -I\${PCAP_ROOT}"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
-    elif test -d ${pcap_version_ROOT} &&
-       test -d ${pcap_version_ROOT}/include &&
-       test -r ${pcap_version_ROOT}/include/pcap.h; then
-         echo "$as_me:$LINENO: result: ok, found in \${pcap_version_ROOT}/include" >&5
-echo "${ECHO_T}ok, found in \${pcap_version_ROOT}/include" >&6
-         INCS="${INCS} -I${pcap_version_ROOT}/include"
+    elif test -d ${PCAP_ROOT} &&
+       test -d ${PCAP_ROOT}/include &&
+       test -r ${PCAP_ROOT}/include/pcap.h; then
+         echo "$as_me:$LINENO: result: ok, found in \${PCAP_ROOT}/include" >&5
+echo "${ECHO_T}ok, found in \${PCAP_ROOT}/include" >&6
+         INCS="${INCS} -I${PCAP_ROOT}/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
-    elif test -d ${pcap_version_ROOT} &&
-       test -d ${pcap_version_ROOT}/include &&
-       test -d ${pcap_version_ROOT}/include/pcap &&
-       test -r ${pcap_version_ROOT}/include/pcap/pcap.h; then
-         echo "$as_me:$LINENO: result: ok, found in ${pcap_version_ROOT}/include/pcap" >&5
-echo "${ECHO_T}ok, found in ${pcap_version_ROOT}/include/pcap" >&6
-         INCS="${INCS} -I${pcap_version_ROOT}/include/pcap"
+    elif test -d ${PCAP_ROOT} &&
+       test -d ${PCAP_ROOT}/include &&
+       test -d ${PCAP_ROOT}/include/pcap &&
+       test -r ${PCAP_ROOT}/include/pcap/pcap.h; then
+         echo "$as_me:$LINENO: result: ok, found in ${PCAP_ROOT}/include/pcap" >&5
+echo "${ECHO_T}ok, found in ${PCAP_ROOT}/include/pcap" >&6
+         INCS="${INCS} -I${PCAP_ROOT}/include/pcap"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version_H 1
+#define HAVE_PCAP_H 1
 _ACEOF
 
     else
@@ -23156,23 +23158,23 @@ echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
     fi
     echo "$as_me:$LINENO: checking for pcap library libpcap" >&5
 echo $ECHO_N "checking for pcap library libpcap... $ECHO_C" >&6
-    if eval "test \"\${$nt_ac_lib}\" = yes"; then
+    if eval "test ""$${$nt_ac_lib}"" = yes"; then
         echo "$as_me:$LINENO: result: ok, found in standard location, -lpcap" >&5
 echo "${ECHO_T}ok, found in standard location, -lpcap" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version 1
+#define HAVE_PCAP 1
 _ACEOF
 
     else
         oLIBS="${LIBS}"
-        # Expansion of NTOP_APPEND_LIBS(${pcap_version_ROOT}, )
+        # Expansion of NTOP_APPEND_LIBS(${PCAP_ROOT}, )
     case "${DEFINEOS}" in
       DARWIN )
-          LIBS="$LIBS -L${pcap_version_ROOT} -L${pcap_version_ROOT}/lib"
+          LIBS="$LIBS -L${PCAP_ROOT} -L${PCAP_ROOT}/lib"
           ;;
       * )
-          LIBS="$LIBS -L${pcap_version_ROOT}"
+          LIBS="$LIBS -L${PCAP_ROOT}"
           ;;
     esac
     if test "." != "."; then
@@ -23180,6 +23182,7 @@ _ACEOF
     fi
 # Finished expansion of NTOP_APPEND_LIBS()
 
+        LIBS="${LIBS} -lgdbm"
         echo "$as_me:$LINENO: checking for pcap_open in -lpcap" >&5
 echo $ECHO_N "checking for pcap_open in -lpcap... $ECHO_C" >&6
 if test "${ac_cv_lib_pcap_pcap_open+set}" = set; then
@@ -23238,57 +23241,131 @@ echo "${ECHO_T}$ac_cv_lib_pcap_pcap_open" >&6
 if test $ac_cv_lib_pcap_pcap_open = yes; then
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version 1
+#define HAVE_PCAP 1
+_ACEOF
+
+else
+  LIBS="${oLIBS}"
+            # Expansion of NTOP_APPEND_LIBS(${PCAP_ROOT}/lib, )
+    case "${DEFINEOS}" in
+      DARWIN )
+          LIBS="$LIBS -L${PCAP_ROOT}/lib -L${PCAP_ROOT}/lib/lib"
+          ;;
+      * )
+          LIBS="$LIBS -L${PCAP_ROOT}/lib"
+          ;;
+    esac
+    if test "." != "."; then
+        LIBS="$LIBS -l"
+    fi
+# Finished expansion of NTOP_APPEND_LIBS()
+
+            LIBS="${LIBS} -lgdbm"
+            echo "$as_me:$LINENO: checking for pcap_version in -lpcap" >&5
+echo $ECHO_N "checking for pcap_version in -lpcap... $ECHO_C" >&6
+if test "${ac_cv_lib_pcap_pcap_version+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpcap  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char pcap_version ();
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+pcap_version ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_pcap_pcap_version=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_cv_lib_pcap_pcap_version=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_pcap_pcap_version" >&5
+echo "${ECHO_T}$ac_cv_lib_pcap_pcap_version" >&6
+if test $ac_cv_lib_pcap_pcap_version = yes; then
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_PCAP 1
 _ACEOF
 
 else
   echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
-            LIBS="${oLIBS}"
-            echo
-            echo "******************************************************************"
-            echo ""
-            echo "* ERROR:  1. We were unable to compile a test program"
-            echo "*            against -lpcap in the standard location"
-            echo ""
-            echo "*     and 2. We were unable to compile a test program for"
-            echo "*            pcap_open() against -lpcap in the alternate"
-            echo "*            location specified by --with-pcap-root."
-            echo ""
-            echo "*>>> No way to proceed."
-            echo ""
-            echo "*???     1. Rerun ./configure with a corrected --with-pcap-root"
-            echo "*???  or 2. Install libpcap and rerun ./configure"
-            echo ""
-            echo "*****************************************************************"
-            echo
-            { { echo "$as_me:$LINENO: error: Unable to continue... aborting ./configure" >&5
+                LIBS="${oLIBS}"
+                echo
+                echo "******************************************************************"
+                echo ""
+                echo "* ERROR:  1. We were unable to compile a test program"
+                echo "*            against -lpcap in the standard location"
+                echo ""
+                echo "*     and 2. We were unable to compile a test program for"
+                echo "*            pcap_open() against -lpcap in the alternate"
+                echo "*            location specified by --with-pcap-root."
+                echo ""
+                echo "*>>> No way to proceed."
+                echo ""
+                echo "*???     1. Rerun ./configure with a corrected --with-pcap-root"
+                echo "*???  or 2. Install libpcap and rerun ./configure"
+                echo ""
+                echo "*****************************************************************"
+                echo
+                { { echo "$as_me:$LINENO: error: Unable to continue... aborting ./configure" >&5
 echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
    { (exit 1); exit 1; }; }
 
 fi
 
-        echo "$as_me:$LINENO: result: ok, library found in ${pcap_version_ROOT}" >&5
-echo "${ECHO_T}ok, library found in ${pcap_version_ROOT}" >&6
 
-cat >>confdefs.h <<_ACEOF
-#define HAVE_pcap_version 1
-_ACEOF
+fi
 
     fi
 fi
 # Finished expansion of NTOP_TEST_MUSTHAVE()
 
-# Expansion of NTOP_NTOP_TEST_MUSTHAVE(gdbm, gdbm.h, gdbm_close, gdbm_version)
+# Expansion of NTOP_NTOP_TEST_MUSTHAVE(gdbm, gdbm.h, gdbm_close, gdbm_version, GDBM)
 nt_ac_header=`echo "ac_cv_header_gdbm.h" | $as_tr_sh`
 nt_ac_lib=`echo "ac_cv_lib_gdbm_close_gdbm.h" | $as_tr_sh`
 
 echo "$as_me:$LINENO: checking for gdbm" >&5
 echo $ECHO_N "checking for gdbm... $ECHO_C" >&6
 
-if eval "test \"\${$nt_ac_lib}\" = yes" &&
-   eval "test \"\${$nt_ac_header}\" = yes"; then
-    if test ".${gdbm_version_ROOT}" != "."; then
+if eval "test ""$${$nt_ac_lib}"" = yes" &&
+   eval "test ""$${$nt_ac_header}"" = yes"; then
+    if test ".${GDBM_ROOT}" != "."; then
         echo "$as_me:$LINENO: result: ok" >&5
 echo "${ECHO_T}ok" >&6
         echo
@@ -23302,17 +23379,17 @@ echo "${ECHO_T}ok" >&6
         echo "*"
         echo "******************************************************************"
         echo
-        gdbm_version=
+        GDBM=
     else
         echo "$as_me:$LINENO: result: ok (standard location)" >&5
 echo "${ECHO_T}ok (standard location)" >&6
     fi
-elif test ".${gdbm_version_ROOT}" = "."; then
+elif test ".${GDBM_ROOT}" = "."; then
     echo "$as_me:$LINENO: result: not found in standard location, no --with-gdbm-root, testing further..." >&5
 echo "${ECHO_T}not found in standard location, no --with-gdbm-root, testing further..." >&6
     echo "$as_me:$LINENO: checking for gdbm header gdbm.h" >&5
 echo $ECHO_N "checking for gdbm header gdbm.h... $ECHO_C" >&6
-    if eval "test \"\${$nt_ac_header}\" = yes"; then
+    if eval "test ""$${$nt_ac_header}"" = yes"; then
          echo "$as_me:$LINENO: result: ok, found in standard location" >&5
 echo "${ECHO_T}ok, found in standard location" >&6
     elif test -d /usr &&
@@ -23323,7 +23400,7 @@ echo "${ECHO_T}ok, found in /usr/include" >&6
          INCS="${INCS} -I/usr/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
     elif test -d /usr &&
@@ -23335,7 +23412,7 @@ echo "${ECHO_T}ok, found in /usr/include/gdbm" >&6
          INCS="${INCS} -I/usr/include/gdbm"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
     elif test -d /usr &&
@@ -23347,7 +23424,7 @@ echo "${ECHO_T}ok, found in /usr/local/include" >&6
          INCS="${INCS} -I/usr/local/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
     elif test ".${DEFINEOS}" = ".SOLARIS" &&
@@ -23359,7 +23436,7 @@ echo "${ECHO_T}ok, found in /usr/local/tools/SunOS/include" >&6
          INCS="${INCS} -I/usr/local/tools/SunOS/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
     elif test ".${DEFINEOS}" = ".DARWIN" &&
@@ -23371,7 +23448,7 @@ echo "${ECHO_T}ok, found in /sw/include" >&6
          INCS="${INCS} -I/sw/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
     elif test -r gdbm.h; then
@@ -23379,7 +23456,7 @@ _ACEOF
 echo "${ECHO_T}ok, found in ntop directory" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
     else
@@ -23420,12 +23497,12 @@ echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
     fi
     echo "$as_me:$LINENO: checking for gdbm library libgdbm" >&5
 echo $ECHO_N "checking for gdbm library libgdbm... $ECHO_C" >&6
-    if eval "test \"\${$nt_ac_lib}\" = yes"; then
+    if eval "test ""$${$nt_ac_lib}"" = yes"; then
         echo "$as_me:$LINENO: result: ok, found in standard location, -lgdbm" >&5
 echo "${ECHO_T}ok, found in standard location, -lgdbm" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version 1
+#define HAVE_GDBM 1
 _ACEOF
 
     elif test -d /usr &&
@@ -23437,7 +23514,7 @@ echo "${ECHO_T}ok, found in /usr/lib" >&6
         LIBS="${LIBS} -L/usr/lib -lgdbm"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version 1
+#define HAVE_GDBM 1
 _ACEOF
 
     elif test -d /usr &&
@@ -23450,7 +23527,7 @@ echo "${ECHO_T}ok, found in /usr/local/lib" >&6
         LIBS="${LIBS} -L/usr/local/lib -lgdbm"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version 1
+#define HAVE_GDBM 1
 _ACEOF
 
     elif test ".${DEFINEOS}" = ".SOLARIS" &&
@@ -23463,7 +23540,7 @@ _ACEOF
 echo "${ECHO_T}ok, found in /usr/local/tools/SunOS/lib" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version 1
+#define HAVE_GDBM 1
 _ACEOF
 
     elif test ".${DEFINEOS}" = ".DARWIN" &&
@@ -23475,7 +23552,7 @@ _ACEOF
 echo "${ECHO_T}ok, found in /sw/lib" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version 1
+#define HAVE_GDBM 1
 _ACEOF
 
     elif test -r gdbm.h.so ||
@@ -23484,7 +23561,7 @@ _ACEOF
 echo "${ECHO_T}ok, found in ntop directory" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
     else
@@ -23528,40 +23605,40 @@ else
 echo "${ECHO_T}not found in standard location, testing --with-gdbm-root..." >&6
     echo "$as_me:$LINENO: checking for gdbm header, gdbm.h" >&5
 echo $ECHO_N "checking for gdbm header, gdbm.h... $ECHO_C" >&6
-    if eval "test \"\${$nt_ac_header}\" = yes"; then
+    if eval "test ""$${$nt_ac_header}"" = yes"; then
          echo "$as_me:$LINENO: result: ok, found in standard location" >&5
 echo "${ECHO_T}ok, found in standard location" >&6
-        elif test -d ${gdbm_version_ROOT} &&
-         test -r ${gdbm_version_ROOT}/gdbm.h; then
-         echo "$as_me:$LINENO: result: ok, found in \${gdbm_version_ROOT}" >&5
-echo "${ECHO_T}ok, found in \${gdbm_version_ROOT}" >&6
-         INCS="${INCS} -I\${gdbm_version_ROOT}"
+        elif test -d ${GDBM_ROOT} &&
+         test -r ${GDBM_ROOT}/gdbm.h; then
+         echo "$as_me:$LINENO: result: ok, found in \${GDBM_ROOT}" >&5
+echo "${ECHO_T}ok, found in \${GDBM_ROOT}" >&6
+         INCS="${INCS} -I\${GDBM_ROOT}"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
-    elif test -d ${gdbm_version_ROOT} &&
-       test -d ${gdbm_version_ROOT}/include &&
-       test -r ${gdbm_version_ROOT}/include/gdbm.h; then
-         echo "$as_me:$LINENO: result: ok, found in \${gdbm_version_ROOT}/include" >&5
-echo "${ECHO_T}ok, found in \${gdbm_version_ROOT}/include" >&6
-         INCS="${INCS} -I${gdbm_version_ROOT}/include"
+    elif test -d ${GDBM_ROOT} &&
+       test -d ${GDBM_ROOT}/include &&
+       test -r ${GDBM_ROOT}/include/gdbm.h; then
+         echo "$as_me:$LINENO: result: ok, found in \${GDBM_ROOT}/include" >&5
+echo "${ECHO_T}ok, found in \${GDBM_ROOT}/include" >&6
+         INCS="${INCS} -I${GDBM_ROOT}/include"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
-    elif test -d ${gdbm_version_ROOT} &&
-       test -d ${gdbm_version_ROOT}/include &&
-       test -d ${gdbm_version_ROOT}/include/gdbm &&
-       test -r ${gdbm_version_ROOT}/include/gdbm/gdbm.h; then
-         echo "$as_me:$LINENO: result: ok, found in ${gdbm_version_ROOT}/include/gdbm" >&5
-echo "${ECHO_T}ok, found in ${gdbm_version_ROOT}/include/gdbm" >&6
-         INCS="${INCS} -I${gdbm_version_ROOT}/include/gdbm"
+    elif test -d ${GDBM_ROOT} &&
+       test -d ${GDBM_ROOT}/include &&
+       test -d ${GDBM_ROOT}/include/gdbm &&
+       test -r ${GDBM_ROOT}/include/gdbm/gdbm.h; then
+         echo "$as_me:$LINENO: result: ok, found in ${GDBM_ROOT}/include/gdbm" >&5
+echo "${ECHO_T}ok, found in ${GDBM_ROOT}/include/gdbm" >&6
+         INCS="${INCS} -I${GDBM_ROOT}/include/gdbm"
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version_H 1
+#define HAVE_GDBM_H 1
 _ACEOF
 
     else
@@ -23587,23 +23664,23 @@ echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
     fi
     echo "$as_me:$LINENO: checking for gdbm library libgdbm" >&5
 echo $ECHO_N "checking for gdbm library libgdbm... $ECHO_C" >&6
-    if eval "test \"\${$nt_ac_lib}\" = yes"; then
+    if eval "test ""$${$nt_ac_lib}"" = yes"; then
         echo "$as_me:$LINENO: result: ok, found in standard location, -lgdbm" >&5
 echo "${ECHO_T}ok, found in standard location, -lgdbm" >&6
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version 1
+#define HAVE_GDBM 1
 _ACEOF
 
     else
         oLIBS="${LIBS}"
-        # Expansion of NTOP_APPEND_LIBS(${gdbm_version_ROOT}, )
+        # Expansion of NTOP_APPEND_LIBS(${GDBM_ROOT}, )
     case "${DEFINEOS}" in
       DARWIN )
-          LIBS="$LIBS -L${gdbm_version_ROOT} -L${gdbm_version_ROOT}/lib"
+          LIBS="$LIBS -L${GDBM_ROOT} -L${GDBM_ROOT}/lib"
           ;;
       * )
-          LIBS="$LIBS -L${gdbm_version_ROOT}"
+          LIBS="$LIBS -L${GDBM_ROOT}"
           ;;
     esac
     if test "." != "."; then
@@ -23611,6 +23688,7 @@ _ACEOF
     fi
 # Finished expansion of NTOP_APPEND_LIBS()
 
+        LIBS="${LIBS} -lgdbm"
         echo "$as_me:$LINENO: checking for gdbm_close in -lgdbm" >&5
 echo $ECHO_N "checking for gdbm_close in -lgdbm... $ECHO_C" >&6
 if test "${ac_cv_lib_gdbm_gdbm_close+set}" = set; then
@@ -23669,42 +23747,116 @@ echo "${ECHO_T}$ac_cv_lib_gdbm_gdbm_close" >&6
 if test $ac_cv_lib_gdbm_gdbm_close = yes; then
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version 1
+#define HAVE_GDBM 1
+_ACEOF
+
+else
+  LIBS="${oLIBS}"
+            # Expansion of NTOP_APPEND_LIBS(${GDBM_ROOT}/lib, )
+    case "${DEFINEOS}" in
+      DARWIN )
+          LIBS="$LIBS -L${GDBM_ROOT}/lib -L${GDBM_ROOT}/lib/lib"
+          ;;
+      * )
+          LIBS="$LIBS -L${GDBM_ROOT}/lib"
+          ;;
+    esac
+    if test "." != "."; then
+        LIBS="$LIBS -l"
+    fi
+# Finished expansion of NTOP_APPEND_LIBS()
+
+            LIBS="${LIBS} -lgdbm"
+            echo "$as_me:$LINENO: checking for gdbm_version in -lgdbm" >&5
+echo $ECHO_N "checking for gdbm_version in -lgdbm... $ECHO_C" >&6
+if test "${ac_cv_lib_gdbm_gdbm_version+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgdbm  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char gdbm_version ();
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+gdbm_version ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_gdbm_gdbm_version=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_cv_lib_gdbm_gdbm_version=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_gdbm_gdbm_version" >&5
+echo "${ECHO_T}$ac_cv_lib_gdbm_gdbm_version" >&6
+if test $ac_cv_lib_gdbm_gdbm_version = yes; then
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_GDBM 1
 _ACEOF
 
 else
   echo "$as_me:$LINENO: result: error" >&5
 echo "${ECHO_T}error" >&6
-            LIBS="${oLIBS}"
-            echo
-            echo "******************************************************************"
-            echo ""
-            echo "* ERROR:  1. We were unable to compile a test program"
-            echo "*            against -lgdbm in the standard location"
-            echo ""
-            echo "*     and 2. We were unable to compile a test program for"
-            echo "*            gdbm_close() against -lgdbm in the alternate"
-            echo "*            location specified by --with-gdbm-root."
-            echo ""
-            echo "*>>> No way to proceed."
-            echo ""
-            echo "*???     1. Rerun ./configure with a corrected --with-gdbm-root"
-            echo "*???  or 2. Install libgdbm and rerun ./configure"
-            echo ""
-            echo "*****************************************************************"
-            echo
-            { { echo "$as_me:$LINENO: error: Unable to continue... aborting ./configure" >&5
+                LIBS="${oLIBS}"
+                echo
+                echo "******************************************************************"
+                echo ""
+                echo "* ERROR:  1. We were unable to compile a test program"
+                echo "*            against -lgdbm in the standard location"
+                echo ""
+                echo "*     and 2. We were unable to compile a test program for"
+                echo "*            gdbm_close() against -lgdbm in the alternate"
+                echo "*            location specified by --with-gdbm-root."
+                echo ""
+                echo "*>>> No way to proceed."
+                echo ""
+                echo "*???     1. Rerun ./configure with a corrected --with-gdbm-root"
+                echo "*???  or 2. Install libgdbm and rerun ./configure"
+                echo ""
+                echo "*****************************************************************"
+                echo
+                { { echo "$as_me:$LINENO: error: Unable to continue... aborting ./configure" >&5
 echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
    { (exit 1); exit 1; }; }
 
 fi
 
-        echo "$as_me:$LINENO: result: ok, library found in ${gdbm_version_ROOT}" >&5
-echo "${ECHO_T}ok, library found in ${gdbm_version_ROOT}" >&6
 
-cat >>confdefs.h <<_ACEOF
-#define HAVE_gdbm_version 1
-_ACEOF
+fi
 
     fi
 fi
