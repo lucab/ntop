@@ -1456,7 +1456,8 @@ typedef struct pluginStatus {
 
 #define PLUGIN_EXTENSION                  ".so"
 
-#ifdef DARWIN
+/* Patch below courtesy of Tanner Lovelace <lovelace@opennms.org> */
+#if defined(DARWIN) || defined(__OpenBSD__)
 #define PLUGIN_ENTRY_FCTN_NAME "_PluginEntryFctn"
 #else
 #define PLUGIN_ENTRY_FCTN_NAME "PluginEntryFctn"
