@@ -4499,10 +4499,20 @@ void printLocalHostsStats(void) {
   u_int idx, numEntries=0, maxHosts;
   HostTraffic *el, **tmpTable;
   OsNumInfo theOSs[MAX_NUM_OS];
-  int i;
+  int i, 
+      countScanned=0,
+      countWithoutFP=0,
+      countBroadcast=0,
+      countMulticast=0,
+      countRemote=0,
+      countNotIP=0,
+      countUnknownFP=0;
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char unknownFPs[LEN_GENERAL_WORK_BUFFER];
+  int unknownFPsEtc=0;
 
   memset(theOSs, 0, sizeof(theOSs));
+  memset(unknownFPs, 0, sizeof(unknownFPs));
 
   printHTMLheader("OS Summary", NULL, BITFLAG_HTML_NO_REFRESH);
 
@@ -4519,41 +4529,121 @@ void printLocalHostsStats(void) {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-    if((broadcastHost(el) == 0) /* No broadcast addresses please */
-       && (multicastHost(el) == 0) /* No multicast addresses please */
-       && (((el->hostNumIpAddress[0] != '\0') && (!addrnull(&el->hostIpAddress)) /* This host speaks IP */
-	    && subnetPseudoLocalHost(el))
-	   || ((el->fingerprint != NULL) && (el->fingerprint[0] == ':'))) /* This host does not speak IP but its
-									     fingerprint has been computed */
-       ) {
+    countScanned++;
+    if(el->fingerprint == NULL) {
+      countWithoutFP++;
+      continue;
+    }
+    if(broadcastHost(el)) {
+      /* No broadcast addresses please */
+      countBroadcast++;
+      continue;
+    }
+    if(multicastHost(el)) {
+      /* No multicast addresses please */
+      countMulticast++;
+      continue;
+    }
+    if(!subnetPseudoLocalHost(el)) {
+      /* Local only */
+      countRemote++;
+      continue;
+    }
+    if((el->fingerprint[0] != ':') /* fingerprint has not been computed */ &&
+       ((el->hostNumIpAddress[0] == '\0') ||
+        (addrnull(&el->hostIpAddress)))) {
+      countNotIP++;
+      continue;
+    }
 
-      if(el->fingerprint == NULL)   { continue; }
-      if(el->fingerprint[0] != ':') setHostFingerprint(el);
-      if(el->fingerprint[0] != ':') { continue; }
-      if(strlen(el->fingerprint) < 3) { continue; } /* Too short */
-      tmpTable[numEntries++] = el;
+    if(el->fingerprint[0] != ':') setHostFingerprint(el);
+    if(el->fingerprint[0] != ':') {
+      countUnknownFP++;
+      if(strstr(unknownFPs, el->fingerprint) == NULL) {
+          if(strlen(unknownFPs) + strlen(el->fingerprint) > (sizeof(unknownFPs) - 5)) {
+            unknownFPsEtc=1;
+          } else {
+            strcat(unknownFPs, ", ");
+            strcat(unknownFPs, el->fingerprint);
+          }
+      }
+      continue;
+    }
 
-      for(i=0; i<MAX_NUM_OS; i++) {
-	if(theOSs[i].name == NULL) break;
-	if(strcmp(theOSs[i].name, &el->fingerprint[1]) == 0) {
+    if(strlen(el->fingerprint) < 3) { 
+      /* Too short */
+      countUnknownFP++;
+      continue;
+    }
+
+    tmpTable[numEntries++] = el;
+
+    for(i=0; i<MAX_NUM_OS; i++) {
+      if(theOSs[i].name == NULL) break;
+      if(strcmp(theOSs[i].name, &el->fingerprint[1]) == 0) {
 	  theOSs[i].num++;
 	  break;
-	}
       }
-
-      if(theOSs[i].name == NULL) {
-	theOSs[i].name = strdup(&el->fingerprint[1]);
-	theOSs[i].num++;
-      }
-
-      if(numEntries >= maxHosts)
-	break;
     }
+
+    if(theOSs[i].name == NULL) {
+      theOSs[i].name = strdup(&el->fingerprint[1]);
+      theOSs[i].num++;
+    }
+
+    if(numEntries >= maxHosts)
+      break;
   }
 
   if(numEntries <= 0) {
       printNoDataYet();
+
       free(tmpTable);
+
+      if(snprintf(buf, sizeof(buf), 
+                  "<center>\n<table>\n"
+                  "<tr><th colspan=\"2\"><i>Scanned</i></th></tr>\n"
+                  "<tr><td>Hosts</td><td align=\"right\">%d</td></tr>\n"
+                  "<tr><th colspan=\"2\"><i>less:</i></th></tr>\n"
+                  "<tr><td>No fingerprint</td><td align=\"right\">%d</td></tr>\n"
+                  "<tr><td>Broadcast</td><td align=\"right\">%d</td></tr>\n"
+                  "<tr><td>Multicast</td><td align=\"right\">%d</td></tr>\n"
+                  "<tr><td>Remote</td><td align=\"right\">%d</td></tr>\n"
+                  "<tr><td>Non IP host</td><td align=\"right\">%d</td></tr>\n"
+                  "<tr><th colspan=\"2\"><i>gives:</i></th></tr>\n"
+                  "<tr><td>Possible to report</td><td align=\"right\">%d</td></tr>\n"
+                  "<tr><td>Less: Unknown Fingerprint<sup>*</sup></td>"
+                      "<td align=\"right\">%d</td></tr>\n",
+                  countScanned,
+                  countWithoutFP,
+                  countBroadcast,
+                  countMulticast,
+                  countRemote,
+                  countNotIP,
+                  countScanned - countWithoutFP - countBroadcast - countMulticast
+                               - countRemote - countNotIP,
+                  countUnknownFP) < 0)
+        BufferTooShort();
+      sendString(buf);
+
+      sendString("</table>\n</center>\n");
+
+      if(unknownFPs[0] != '\0') {
+        unknownFPs[0]=' ';
+        if(snprintf(buf, sizeof(buf), 
+                  "<center><p><i>Unknown Fingerprints are:</i>&nbsp;%s%s</p></center>\n",
+                  unknownFPs,
+                  unknownFPsEtc == 1 ? " ..." : "") < 0)
+          BufferTooShort();
+        sendString(buf);
+        sendString("<p align=\"right\">Click "
+                   "<a href=\"http://ettercap.sourceforge.net/index.php?s=stuff&p=fingerprint\" "
+                   "alt=\"Ettercap page at SourceForge\">here</a> to visit Ettercap's home "
+                   "page at SourceForge and<br>upload new fingerprints, or download additional, "
+                   "unverified, ones.</p>\n");
+      }
+
+
       return;
   }
 
