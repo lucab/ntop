@@ -2442,28 +2442,27 @@ static int returnHTTPPage(char* pageName,
  *   see http://www.wbwip.com/wbw/emailencoder.html 
  */
       sendString("<ul><li><a href=\"mailto:&#115;&#116;&#101;&#102;&#097;&#110;&#111;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"");
-      sendString(" title=\"Send mail to Stefano\">Stefano Suin</a>");
+      sendString(" title=\"Send mail to Stefano\">Stefano Suin</a> ");
       sendString("has contributed several ideas and comments</li>");
       sendString("<li><a href=\"mailto:&#097;&#098;&#100;&#101;&#108;&#107;&#097;&#100;&#101;&#114;&#046;&#108;&#097;&#104;&#109;&#097;&#100;&#105;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\"");
       sendString(" title=\"Send mail to Abdelkader\">Abdelkader Lahmadi</a>");
-      sendString("and <a href=\"mailto:&#111;&#108;&#105;&#118;&#105;&#101;&#114;&#046;&#102;&#101;&#115;&#116;&#111;&#114;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\"");
+      sendString(" and <a href=\"mailto:&#111;&#108;&#105;&#118;&#105;&#101;&#114;&#046;&#102;&#101;&#115;&#116;&#111;&#114;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\"");
       sendString(" title=\"Send mail to Olivier\">Olivier Festor</a> provided IPv6 support</li>");
       sendString("<li><a href=\"mailto:&#100;&#100;&#117;&#116;&#116;&#064;&#099;&#105;&#115;&#099;&#111;&#046;&#099;&#111;&#109;\"");
       sendString(" title=\"Send mail to Dinesh\">Dinesh G. Dutt</a> for iSCSI/FiberChannel support</li>");
       sendString("<li><a href=\"mailto:&#098;&#117;&#114;&#116;&#111;&#110;&#064;&#110;&#116;&#111;&#112;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#046;&#099;&#111;&#109;\"");
-      sendString(" title=\"Send mail to Burton\">Burton Strauss</a>");
+      sendString(" title=\"Send mail to Burton\">Burton Strauss</a> ");
       sendString("the ntop factotum (user support, bug fixing, testing, packaging).</li></ul>");
       sendString("<p>In addition, many other people downloaded this program, tested it,");
       sendString("joined the <a href=\"http://lists.ntop.org/mailman/listinfo/ntop\"");
-      sendString(" title=\"ntop mailing list signup page\">ntop</a>");
+      sendString(" title=\"ntop mailing list signup page\">ntop</a> ");
       sendString("and <a href=\"http://lists.ntop.org/mailman/listinfo/ntop-dev\"");
       sendString(" title=\"ntop-dev mailing list signup page\">ntop-dev</a> mailing lists,");
       sendString("reported problems, changed it and improved significantly. This is because");
       sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its author,");
-      sendString("but to the whole Internet community. Their names are throught the <b>ntop</b>");
-      sendString("code.</p>");
+      sendString("but to the whole Internet community. Their names are throught the <b>ntop</b> code.</p>");
       sendString("<p>The author would like to thank all these people who contributed to <b>ntop</b>");
-      sendString("and turned it into a first class network monitoring tool. Many thanks guys!</p>");
+      sendString(" and turned it into a first class network monitoring tool. Many thanks guys!</p>");
     } else if(strncasecmp(pageName, CONST_INFO_NTOP_HTML, strlen(CONST_INFO_NTOP_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printNtopConfigInfo(FALSE);
