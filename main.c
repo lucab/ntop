@@ -249,8 +249,10 @@ int main(int argc, char *argv[]) {
 
       case 's':
 	maxHashSize = atoi(optarg);
-	if(maxHashSize < 64)
+	if(maxHashSize < 64) {
 	  maxHashSize = 64;
+	  traceEvent(TRACE_INFO, "Max hash size set to 64 (minimum hash size)");
+	}
 	break;
 
       case 'i':

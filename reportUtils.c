@@ -2569,10 +2569,12 @@ static void checkHostHealthness(HostTraffic *el) {
     sendString(buf);
 
     if(hasWrongNetmask(el)) 
-      sendString("<LI><IMG SRC=/Risk_medium.gif> Wrong network mask or bridging enabled\n");
+      sendString("<LI><IMG SRC=/Risk_medium.gif><A HREF=/help.html#1>"
+		 "Wrong network mask or bridging enabled</A>\n");
 
     if(hasDuplicatedMac(el)) 
-      sendString("<LI><IMG SRC=/Risk_high.gif> Duplicated MAC found for this IP address (spoofing?)\n");
+      sendString("<LI><IMG SRC=/Risk_high.gif><A HREF=/help.html#2>"
+		 "Duplicated MAC found for this IP address (spoofing?)</A>\n");
 
     sendString("</OL></TD></TR>\n");
   }

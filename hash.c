@@ -25,7 +25,7 @@
 #define FREE_LIST_LEN   32
 static HostTraffic *freeHostList[FREE_LIST_LEN];
 static int nextIdxToFree=0, freeListLen=0;
-
+static u_char printedHashWarning = 0;
 
 /* ************************************ */
 
@@ -175,6 +175,15 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   } else
     purgeIdleHosts(0, actualDeviceId); /* Delete only idle hosts */
 #else
+  if(newSize > maxHashSize) /* Hard Limit */ {
+    if(!printedHashWarning) {
+      traceEvent(TRACE_WARNING, "Unable to extend the hash: hard limit (%d) reached", 
+		 maxHashSize);
+      printedHashWarning = 1;
+    }
+    return; 
+  }
+  printedHashWarning = 0;
   accessMutex(&hostsHashMutex, "resizeHostHash(processPacket)");
   accessMutex(&hashResizeMutex, "resizeHostHash");
 #endif
