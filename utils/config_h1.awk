@@ -46,6 +46,8 @@
 /CONST_FDDIFC_/ { next }
 /CONST_[^_]*_TRACE_/ { next }
 / DLT_/ { next }
+/atoi\(/ { next }
+$2 ~ /\(/ { next } # Skip true macro defines
 
 $2 == "PACKAGE" { next }
 
@@ -80,7 +82,14 @@ $2 == "PACKAGE" { next }
       tag = "*"
   } else if ($i == "*/") {
       tag = "*"
-  } else if ($i == "1") {
+  } else if ( ($i == "1") && ( (sortname ~ /ENABLE/) ||
+                               (sortname ~ /DISABLE/) ||
+                               (sortname ~ /SHOW/) ||
+                               (sortname ~ /PRINT/) ||
+                               (sortname ~ /MAKE/) ||
+                               (sortname ~ /HANDLE/) ||
+                               (sortname ~ /DEFAULT/) ||
+                               (sortname ~ /DEBUG/) ) ) {
       tag = "*"
   } else if ($i == "NULL") {
       tag = "NULL"
@@ -90,5 +99,6 @@ $2 == "PACKAGE" { next }
       tag = "#" field
   }
   print sortname " " tag
+
 }
 
