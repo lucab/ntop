@@ -3174,107 +3174,6 @@ void resetTrafficCounter(TrafficCounter *ctr) {
   ctr->value = 0, ctr->modified = 0;
 }
 
-/* ******************************** */
-
-static void updateElementHashItem(ElementHash **theHash,
-				  u_short srcId, u_short dstId,
-				  Counter numPkts, Counter numBytes, u_char dataSent) {
-  u_int myIdx = 0, idx = srcId % MAX_ELEMENT_HASH;
-  ElementHash *hash, *prev;
-
-  while(1) {
-    if((theHash[idx] == NULL) || (theHash[idx]->id == srcId))
-      break;
-
-    idx = (idx+1) % MAX_ELEMENT_HASH;
-    if(++myIdx == MAX_ELEMENT_HASH) {
-      traceEvent(CONST_TRACE_WARNING, "updateElementHash(): hash full!");
-      return;
-    }
-  }
-
-  if(theHash[idx] == NULL) {
-    theHash[idx] = (ElementHash*)calloc(1, sizeof(ElementHash));
-    theHash[idx]->id = srcId;
-  }
-
-  /* ************************** */
-
-  hash = theHash[idx]->next, prev = theHash[idx];
-
-  while(hash != NULL) {
-    /* Keep the list sorted */
-    if(hash->id >= dstId) {
-      break;
-    } else {
-      prev = hash;
-      hash = hash->next;
-    }
-  }
-
-  if((hash == NULL) || (hash->id != dstId)) {
-    ElementHash *bucket = (ElementHash*)calloc(1, sizeof(ElementHash));
-    bucket->id = dstId;
-
-    if(hash == NULL) {
-      bucket->next = prev->next;
-    } else {
-      bucket->next = hash;
-    }
-
-    prev->next = bucket;
-    hash = bucket;
-  }
-
-  if(dataSent) {
-    incrementTrafficCounter(&theHash[idx]->bytesSent, numBytes);
-    incrementTrafficCounter(&theHash[idx]->pktsSent,  numPkts);
-    incrementTrafficCounter(&hash->bytesSent, numBytes);
-    incrementTrafficCounter(&hash->pktsSent,  numPkts);
-  }
-
-  if((!dataSent)
-     || (dataSent && (srcId == dstId) /* sender and receiver are the same */)) {
-    incrementTrafficCounter(&theHash[idx]->bytesRcvd, numBytes);
-    incrementTrafficCounter(&theHash[idx]->pktsRcvd,  numPkts);
-    incrementTrafficCounter(&hash->bytesRcvd, numBytes);
-    incrementTrafficCounter(&hash->pktsRcvd,  numPkts);
-  }
-}
-
-/* ********************************** */
-
-void updateElementHash(ElementHash **theHash,
-		       u_short srcId, u_short dstId,
-		       u_int32_t numPkts, u_int32_t numBytes) {
-
-  if(srcId <= dstId)
-    updateElementHashItem(theHash, srcId, dstId, (Counter)numPkts, (Counter)numBytes, 1);
-  else
-    updateElementHashItem(theHash, dstId, srcId, (Counter)numPkts, (Counter)numBytes, 0);
-}
-
-/* ********************************** */
-
-void allocateElementHash(int deviceId, u_short hashType) {
-  int memLen = sizeof(ElementHash*)*MAX_ELEMENT_HASH;
-
-  switch(hashType) {
-  case 0: /* AS */
-    if(myGlobals.device[deviceId].asHash == NULL) {
-      myGlobals.device[deviceId].asHash = (ElementHash**)malloc(memLen);
-      memset(myGlobals.device[deviceId].asHash, 0, memLen);
-    }
-    break;
-  case 1: /* VLAN */
-    if(myGlobals.device[deviceId].vlanHash == NULL) {
-      myGlobals.device[deviceId].vlanHash = (ElementHash**)malloc(memLen);
-      memset(myGlobals.device[deviceId].vlanHash, 0, memLen);
-    }
-    break;
-  }
-}
-
 /* *************************************************** */
 
 u_int numActiveSenders(u_int deviceId) {
@@ -3885,6 +3784,12 @@ u_short ip2AS(u_int32_t ip) {
 #endif
 
   return as;
+}
+
+/* ************************************ */
+
+u_int16_t getHostAS(HostTraffic *el) {
+  return(el->hostAS || (el->hostAS = ip2AS(el->hostIpAddress.s_addr)));
 }
 
 /* ************************************ */
