@@ -1414,7 +1414,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v1.001-2002-11-19"
+SCRIPTVER="v1.002-2002-11-25"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -3520,8 +3520,8 @@ case "${target}:${CC}" in
         DEFINEOS="CYGWIN";    STATUS="WILLFAIL"
       ;;
 
-    *-*-linux*:gcc* )
-        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com:RedHat7.2 w/ updates"
+    *-*-linux*:*gcc* )
+        VERIFIED1="2.1.51:2002-11-24:Burton Strauss <burton@ntopsupport.com>:RedHat 7.2, 7.3 and 8.0"
         VERIFIED2="2.1.51:2002-10-24:Peter Sinoros-Szabo Peter <sini@cs.bme.hu>:Suse i686, 2.4.18-4GB-SMP"
         DEFINEOS="LINUX";     STATUS="SUPPORTED"
       ;;
@@ -3556,7 +3556,7 @@ case "${target}:${CC}" in
         CFLAGS="-no-cpp-precomp $CFLAGS"
       ;;
 
-    *-*-freebsd4*:gcc* )
+    *-*-freebsd4*:*gcc* )
         VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.2-RELEASE"
         VERIFIED2="2.1.51:2002-10-25:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
@@ -3566,7 +3566,7 @@ case "${target}:${CC}" in
         DEFINEOS="FREEBSD";   STATUS="UNTESTED"
       ;;
 
-    *-*-openbsd3.1*:gcc* )
+    *-*-openbsd3.1*:*gcc* )
         DEFINEOS="OPENBSD";   STATUS="WILLFAIL"
       ;;
 
