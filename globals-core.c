@@ -109,6 +109,7 @@ static void allocateOtherHosts() {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call twice allocateOtherHosts()");
     return;
   }
+
   myGlobals.otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
   memset(myGlobals.otherHostEntry, 0, sizeof(HostTraffic));
 
@@ -118,8 +119,6 @@ static void allocateOtherHosts() {
   strncpy(myGlobals.otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
 	  sizeof(myGlobals.otherHostEntry->hostSymIpAddress));
   strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
-  myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
-  myGlobals.otherHostEntry->hostSerial = myGlobals.otherHostEntryIdx;
   myGlobals.otherHostEntry->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*),
 							     MAX_ASSIGNED_IP_PORTS);
 }
@@ -231,11 +230,9 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.addressQueueFile = NULL;
 
   /* the table of broadcast entries */
-  myGlobals.broadcastEntryIdx = 0;
   myGlobals.broadcastEntry = NULL;
 
   /* the table of other hosts entries */
-  myGlobals.otherHostEntryIdx = 0;
   myGlobals.otherHostEntry = NULL;
 
   /* administrative */
@@ -459,7 +456,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   /* ********************************** */
 
-  myGlobals.hashListSize = MAX_PER_DEVICE_HASH_LIST;
   myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
   myGlobals.maximumHostsToPurgePerCycle = DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE;
 
@@ -481,8 +477,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   FD_SET(FLAG_BROADCAST_HOST, &myGlobals.broadcastEntry->flags);
   FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &myGlobals.broadcastEntry->flags);
   myGlobals.broadcastEntry->hostSerial = 0;
-
-  myGlobals.broadcastEntryIdx = 0;
 
   allocateOtherHosts();
 

@@ -1328,14 +1328,14 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
 	for(i=1; i<myGlobals.device[devIdx].actualHashSize; i++) {
-	  HostTraffic *el;
+	  HostTraffic *el = myGlobals.device[devIdx].hash_hostTraffic[i];
 
-	  if((i == myGlobals.otherHostEntryIdx) || (i == myGlobals.broadcastEntryIdx)
-	     || ((el = myGlobals.device[devIdx].hash_hostTraffic[i]) == NULL)
-	     || broadcastHost(el))
-	    continue;
-
-	  /* if(((!subnetPseudoLocalHost(el)) && (!multicastHost(el)))) continue; */
+	  while(el != NULL) {
+	    if((el == myGlobals.otherHostEntry) || (el == myGlobals.broadcastEntry)
+	       || broadcastHost(el)) {
+	      el = el->next; 
+	      continue;
+	    }
 
 	  if (!mutexLocked) {
 #ifdef CFG_MULTITHREADED
@@ -1354,6 +1354,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    } else {
 	      /* hostKey = el->ethAddressString; */
 	      /* For the time being do not save IP-less hosts */
+	      el = el->next;
 	      continue;
 	    }
 
@@ -1473,7 +1474,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    sched_yield(); /* Allow other threads to run */
 #endif
 	  }
+
+	  el = el->next;
 	}
+      }
 
 	if(mutexLocked) {
 #ifdef CFG_MULTITHREADED
@@ -1580,12 +1584,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
       for(k=0; k<myGlobals.numDevices; k++)
 	for(i=1; i<myGlobals.device[k].numHosts; i++)
-	  if(i != myGlobals.otherHostEntryIdx) {
 	    for(j=1; j<myGlobals.device[k].numHosts; j++) {
 	      if(i != j) {
 		int idx = i*myGlobals.device[k].numHosts+j;
-
-		if(idx == myGlobals.otherHostEntryIdx) continue;
 
 		if(myGlobals.device[k].ipTrafficMatrix[idx] == NULL)
 		  continue;
@@ -1606,7 +1607,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		}
 	      }
 	    }
-	  }
     }
 
 #ifdef RRD_DEBUG

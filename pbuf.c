@@ -174,22 +174,23 @@ int handleIP(u_short port,
 
 static void addContactedPeers(HostTraffic *sender, HostTraffic *receiver,
 			      int actualDeviceId) {
-  if((sender == NULL)
-     || (receiver == NULL)
-     || (sender->hostTrafficBucket == receiver->hostTrafficBucket)) {
-    if((sender != NULL) && (sender->hostTrafficBucket == 0)) return; /* This is not a problem */
-    traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (0x%X, 0x%X)", sender, receiver);
+  if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
+    if((sender != NULL)
+       && ((sender == myGlobals.broadcastEntry) || (sender == myGlobals.otherHostEntry)))
+      return; /* This is not a problem */
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (0x%X, 0x%X)",
+	       sender, receiver);
     return;
   }
 
   if((!broadcastHost(sender))
-     && (sender->hostTrafficBucket != myGlobals.otherHostEntryIdx)
+     && (sender != myGlobals.otherHostEntry)
      && !broadcastHost(receiver)
-     && (receiver->hostTrafficBucket != myGlobals.otherHostEntryIdx)) {
+     && (receiver != myGlobals.otherHostEntry)) {
     sender->totContactedSentPeers += incrementUsageCounter(&sender->contactedSentPeers,
-							   receiver->hostTrafficBucket, actualDeviceId);
+							   receiver, actualDeviceId);
     receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers,
-							     sender->hostTrafficBucket, actualDeviceId);
+							     sender, actualDeviceId);
   }
 }
 
@@ -279,8 +280,8 @@ void deleteFragment(IpFragment *fragment, int actualDeviceId) {
 /* ************************************ */
 
 /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
-static void checkFragmentOverlap(u_int srcHostIdx,
-                                 u_int dstHostIdx,
+static void checkFragmentOverlap(HostTraffic *srcHost,
+                                 HostTraffic *dstHost,
                                  IpFragment *fragment,
                                  u_int fragmentOffset,
                                  u_int dataLength,
@@ -311,18 +312,16 @@ static void checkFragmentOverlap(u_int srcHostIdx,
 
     allocateSecurityHostPkts(fragment->src); allocateSecurityHostPkts(fragment->dest);
     incrementUsageCounter(&fragment->src->secHostPkts->overlappingFragmentSent,
-			  dstHostIdx, actualDeviceId);
+			  dstHost, actualDeviceId);
     incrementUsageCounter(&fragment->dest->secHostPkts->overlappingFragmentRcvd,
-			  srcHostIdx, actualDeviceId);
+			  srcHost, actualDeviceId);
   }
 }
 
 /* ************************************ */
 
 static u_int handleFragment(HostTraffic *srcHost,
-			    u_int srcHostIdx,
                             HostTraffic *dstHost,
-			    u_int dstHostIdx,
                             u_short *sport,
                             u_short *dport,
                             u_int fragmentId,
@@ -355,7 +354,7 @@ static u_int handleFragment(HostTraffic *srcHost,
     fragment->prev = NULL;
     myGlobals.device[actualDeviceId].fragmentList = fragment;
   } else
-    checkFragmentOverlap(srcHostIdx, dstHostIdx, fragment,
+    checkFragmentOverlap(srcHost, dstHost, fragment,
 			 fragmentOffset, dataLength, actualDeviceId);
 
   fragment->lastOffset = fragmentOffset;
@@ -432,12 +431,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
       && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
      || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost))
 	 && (!broadcastHost(srcHost)) && (!multicastHost(srcHost)))) {
-    HostSerial routerIdx;
-    HostTraffic *router;
-
-    routerIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
-
-    router = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
+   HostTraffic *router = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 
     if(((router->hostNumIpAddress[0] != '\0')
 	&& (broadcastHost(router)
@@ -448,7 +442,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
        )
       return;
 
-    incrementUsageCounter(&srcHost->contactedRouters, router->hostTrafficBucket, actualDeviceId);
+    incrementUsageCounter(&srcHost->contactedRouters, router, actualDeviceId);
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",
@@ -478,8 +472,8 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   }
 
   if((srcHost == dstHost)
-     || ((srcHost->hostTrafficBucket == myGlobals.otherHostEntryIdx)
-	 && (dstHost->hostTrafficBucket == myGlobals.otherHostEntryIdx)))
+     || ((srcHost == myGlobals.otherHostEntry)
+	 && (dstHost == myGlobals.otherHostEntry)))
     return;
 
   thisTime = localtime_r(&myGlobals.actTime, &t);
@@ -636,118 +630,113 @@ static void processIpPkt(const u_char *bp,
   struct icmp icmpPkt;
   u_int hlen, tcpDataLength, udpDataLength, off, tcpUdpLen;
   char *proto;
-  u_int srcHostIdx, dstHostIdx;
-  HostTraffic *srcHost=NULL, *dstHost=NULL;
-  u_char forceUsingIPaddress = 0;
-  struct timeval tvstrct;
-  u_char *theData;
-  TrafficCounter ctr;
+   HostTraffic *srcHost=NULL, *dstHost=NULL;
+   u_char forceUsingIPaddress = 0;
+   struct timeval tvstrct;
+   u_char *theData;
+   TrafficCounter ctr;
 
-  /* Need to copy this over in case bp isn't properly aligned.
-   * This occurs on SunOS 4.x at least.
-   * Paul D. Smith <psmith@baynetworks.com>
-   */
-  memcpy(&ip, bp, sizeof(struct ip));
-  hlen = (u_int)ip.ip_hl * 4;
-
-  if(vlanId != -1) {
-    allocateElementHash(actualDeviceId, 1 /* VLAN hash */);
-    updateElementHash(myGlobals.device[actualDeviceId].vlanHash,
-		      vlanId, vlanId,  1 /* 1 packet */, length);
-  }
-
-  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipPkts, 1);
-
-  if((bp != NULL) && (in_cksum((const u_short *)bp, hlen, 0) != 0)) {
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum, 1);
-    return;
-  }
-
-  /*
-     Fix below courtesy of
-     Christian Hammers <ch@westend.com>
-  */
-  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipBytes, length /* ntohs(ip.ip_len) */);
-
-  if(ip.ip_p == CONST_GRE_PROTOCOL_TYPE) {
-    /*
-      Cisco GRE (Generic Routing Encapsulation) Tunnels (RFC 1701, 1702)
+   /* Need to copy this over in case bp isn't properly aligned.
+    * This occurs on SunOS 4.x at least.
+    * Paul D. Smith <psmith@baynetworks.com>
     */
-    GreTunnel tunnel;
-    PPPTunnelHeader pppTHeader;
+   memcpy(&ip, bp, sizeof(struct ip));
+   hlen = (u_int)ip.ip_hl * 4;
 
-    memcpy(&tunnel, bp+hlen, sizeof(GreTunnel));
+   if(vlanId != -1) {
+     allocateElementHash(actualDeviceId, 1 /* VLAN hash */);
+     updateElementHash(myGlobals.device[actualDeviceId].vlanHash,
+		       vlanId, vlanId,  1 /* 1 packet */, length);
+   }
 
-    switch(ntohs(tunnel.protocol)) {
-    case CONST_PPP_PROTOCOL_TYPE:
-      memcpy(&pppTHeader, bp+hlen+sizeof(GreTunnel), sizeof(PPPTunnelHeader));
+   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipPkts, 1);
 
-      if(ntohs(pppTHeader.protocol) == 0x21 /* IP */) {
-	memcpy(&ip, bp+hlen+sizeof(GreTunnel)+sizeof(PPPTunnelHeader), sizeof(struct ip));
-	hlen = (u_int)ip.ip_hl * 4;
-	ether_src = NULL, ether_dst = NULL;
-      }
-      break;
-    case ETHERTYPE_IP:
-      memcpy(&ip, bp+hlen+4 /* 4 is the size of the GRE header */, sizeof(struct ip));
-      hlen = (u_int)ip.ip_hl * 4;
-      ether_src = NULL, ether_dst = NULL;
-      break;
-    }
-  }
+   if((bp != NULL) && (in_cksum((const u_short *)bp, hlen, 0) != 0)) {
+     incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum, 1);
+     return;
+   }
 
-  if((ether_src == NULL) && (ether_dst == NULL)) {
-    /* Ethernet-less protocols (e.g. PPP/RAW IP) */
-    forceUsingIPaddress = 1;
-  }
+   /*
+      Fix below courtesy of
+      Christian Hammers <ch@westend.com>
+   */
+   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipBytes, length /* ntohs(ip.ip_len) */);
 
-  NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
+   if(ip.ip_p == CONST_GRE_PROTOCOL_TYPE) {
+     /*
+       Cisco GRE (Generic Routing Encapsulation) Tunnels (RFC 1701, 1702)
+     */
+     GreTunnel tunnel;
+     PPPTunnelHeader pppTHeader;
 
-  if((!myGlobals.dontTrustMACaddr)
-     && isBroadcastAddress(&ip.ip_dst)
-     && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
-    /* forceUsingIPaddress = 1; */
+     memcpy(&tunnel, bp+hlen, sizeof(GreTunnel));
 
-    srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
-    srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-    if(srcHost != NULL) {
-      if(vlanId != -1) srcHost->vlanId = vlanId;
-      if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
-	/* Dump the first packet only */
-	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+     switch(ntohs(tunnel.protocol)) {
+     case CONST_PPP_PROTOCOL_TYPE:
+       memcpy(&pppTHeader, bp+hlen+sizeof(GreTunnel), sizeof(PPPTunnelHeader));
 
-	traceEvent(CONST_TRACE_WARNING, "Host %s has a wrong netmask",
-		   etheraddr_string(ether_src, etherbuf));
-	dumpSuspiciousPacket(actualDeviceId);
-      }
-      FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost->flags);
-    }
-  }
+       if(ntohs(pppTHeader.protocol) == 0x21 /* IP */) {
+	 memcpy(&ip, bp+hlen+sizeof(GreTunnel)+sizeof(PPPTunnelHeader), sizeof(struct ip));
+	 hlen = (u_int)ip.ip_hl * 4;
+	 ether_src = NULL, ether_dst = NULL;
+       }
+       break;
+     case ETHERTYPE_IP:
+       memcpy(&ip, bp+hlen+4 /* 4 is the size of the GRE header */, sizeof(struct ip));
+       hlen = (u_int)ip.ip_hl * 4;
+       ether_src = NULL, ether_dst = NULL;
+       break;
+     }
+   }
 
-  /*
-    IMPORTANT:
-    do NOT change the order of the lines below (see isBroadcastAddress call)
-  */
-  dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst, 1, 0, actualDeviceId);
-  dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+   if((ether_src == NULL) && (ether_dst == NULL)) {
+     /* Ethernet-less protocols (e.g. PPP/RAW IP) */
+     forceUsingIPaddress = 1;
+   }
 
-  srcHostIdx = getHostInfo(&ip.ip_src, ether_src,
-			   /*
-			     Don't check for multihoming when
-			     the destination address is a broadcast address
-			   */
-			   (!isBroadcastAddress(&dstHost->hostIpAddress)),
-			   forceUsingIPaddress, actualDeviceId);
-  srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+   NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
-  if(srcHost == NULL) {
-    /* Sanity check */
-    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (1) [Low memory?] (idx=%d)", srcHostIdx);
-    return; /* It might be that there's not enough memory that that
-	       dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst) caused
-	       srcHost to be freed */
-  }
+   if((!myGlobals.dontTrustMACaddr)
+      && isBroadcastAddress(&ip.ip_dst)
+      && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
+     /* forceUsingIPaddress = 1; */
 
+     srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
+     if(srcHost != NULL) {
+       if(vlanId != -1) srcHost->vlanId = vlanId;
+       if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
+	 /* Dump the first packet only */
+	 char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
+	 traceEvent(CONST_TRACE_WARNING, "Host %s has a wrong netmask",
+		    etheraddr_string(ether_src, etherbuf));
+	 dumpSuspiciousPacket(actualDeviceId);
+       }
+       FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost->flags);
+     }
+   }
+
+   /*
+     IMPORTANT:
+     do NOT change the order of the lines below (see isBroadcastAddress call)
+   */
+   dstHost = getHostInfo(&ip.ip_dst, ether_dst, 1, 0, actualDeviceId);
+   srcHost = getHostInfo(&ip.ip_src, ether_src,
+			 /*
+			   Don't check for multihoming when
+			   the destination address is a broadcast address
+			 */
+			 (!isBroadcastAddress(&dstHost->hostIpAddress)),
+			 forceUsingIPaddress, actualDeviceId);
+
+   if(srcHost == NULL) {
+     /* Sanity check */
+     traceEvent(CONST_TRACE_ERROR, "Sanity check failed (1) [Low memory?]");
+     return; /* It might be that there's not enough memory that that
+		dstHost = getHostInfo(&ip.ip_dst, ether_dst) caused
+		srcHost to be freed */
+   }
+   
   if(dstHost == NULL) {
     /* Sanity check */
     traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
@@ -866,8 +855,8 @@ static void processIpPkt(const u_char *bp,
 	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHost, actualDeviceId);
       }
     } else {
       proto = "TCP";
@@ -893,8 +882,7 @@ static void processIpPkt(const u_char *bp,
       */
       if(myGlobals.enableFragmentHandling && (off & 0x3fff)) {
 	/* Handle fragmented packets */
-	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
-				&sport, &dport,
+	length = handleFragment(srcHost, dstHost, &sport, &dport,
 				ntohs(ip.ip_id), off, length,
 				ntohs(ip.ip_len) - hlen, actualDeviceId);
       }
@@ -1017,7 +1005,7 @@ static void processIpPkt(const u_char *bp,
 
 	if(nonFullyRemoteSession) {
 	  theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
-					srcHostIdx, sport, dstHostIdx,
+					srcHost, sport, dstHost,
 					dport, ntohs(ip.ip_len), &tp, tcpDataLength,
 					theData, actualDeviceId);
 	  if(theSession == NULL)
@@ -1074,8 +1062,8 @@ static void processIpPkt(const u_char *bp,
 	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHost, actualDeviceId);
       }
     } else {
       udpDataLength = tcpUdpLen - sizeof(struct udphdr);
@@ -1214,8 +1202,7 @@ static void processIpPkt(const u_char *bp,
       */
       if(myGlobals.enableFragmentHandling && (off & 0x3fff)) {
 	/* Handle fragmented packets */
-	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
-				&sport, &dport,
+	length = handleFragment(srcHost, dstHost, &sport, &dport,
 				ntohs(ip.ip_id), off, length,
 				ntohs(ip.ip_len) - hlen, actualDeviceId);
       }
@@ -1266,8 +1253,7 @@ static void processIpPkt(const u_char *bp,
 
 	if(nonFullyRemoteSession)
 	  handleUDPSession(h, (off & 0x3fff),
-			   srcHostIdx, sport, dstHostIdx,
-			   dport, udpDataLength,
+			   srcHost, sport, dstHost, dport, udpDataLength,
 			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
 	sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);
       }
@@ -1285,8 +1271,8 @@ static void processIpPkt(const u_char *bp,
 	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHost, actualDeviceId);
       }
     } else {
       proto = "ICMP";
@@ -1301,8 +1287,8 @@ static void processIpPkt(const u_char *bp,
 	incrementTrafficCounter(&srcHost->icmpFragmentsSent, length),
 	  incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHost, actualDeviceId);
 	if(myGlobals.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, fmt,
 		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
@@ -1402,8 +1388,8 @@ static void processIpPkt(const u_char *bp,
 			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	    /* Simulation of rejected TCP connection */
 	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	    incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnSent, dstHostIdx, actualDeviceId);
-	    incrementUsageCounter(&dstHost->secHostPkts->rejectedTCPConnRcvd, srcHostIdx, actualDeviceId);
+	    incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnSent, dstHost, actualDeviceId);
+	    incrementUsageCounter(&dstHost->secHostPkts->rejectedTCPConnRcvd, srcHost, actualDeviceId);
 	    break;
 
 	  case IPPROTO_UDP:
@@ -1412,20 +1398,20 @@ static void processIpPkt(const u_char *bp,
 			 "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
 			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	    incrementUsageCounter(&dstHost->secHostPkts->udpToClosedPortSent, srcHostIdx, actualDeviceId);
-	    incrementUsageCounter(&srcHost->secHostPkts->udpToClosedPortRcvd, dstHostIdx, actualDeviceId);
+	    incrementUsageCounter(&dstHost->secHostPkts->udpToClosedPortSent, srcHost, actualDeviceId);
+	    incrementUsageCounter(&srcHost->secHostPkts->udpToClosedPortRcvd, dstHost, actualDeviceId);
 	    break;
 	  }
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&srcHost->secHostPkts->icmpPortUnreachSent, dstHostIdx, actualDeviceId);
-	  incrementUsageCounter(&dstHost->secHostPkts->icmpPortUnreachRcvd, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->icmpPortUnreachSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->icmpPortUnreachRcvd, srcHost, actualDeviceId);
 	  break;
 
 	case ICMP_UNREACH_NET:
 	case ICMP_UNREACH_HOST:
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&srcHost->secHostPkts->icmpHostNetUnreachSent, dstHostIdx, actualDeviceId);
-	  incrementUsageCounter(&dstHost->secHostPkts->icmpHostNetUnreachRcvd, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->icmpHostNetUnreachSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->icmpHostNetUnreachRcvd, srcHost, actualDeviceId);
 	  break;
 
 	case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
@@ -1436,8 +1422,8 @@ static void processIpPkt(const u_char *bp,
 		       dstHost->hostSymIpAddress,
 		       srcHost->hostSymIpAddress);
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&srcHost->secHostPkts->icmpProtocolUnreachSent, dstHostIdx, actualDeviceId);
-	  incrementUsageCounter(&dstHost->secHostPkts->icmpProtocolUnreachRcvd, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->icmpProtocolUnreachSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->icmpProtocolUnreachRcvd, srcHost, actualDeviceId);
 	  break;
 	case ICMP_UNREACH_NET_PROHIB:    /* Net Administratively Prohibited */
 	case ICMP_UNREACH_HOST_PROHIB:   /* Host Administratively Prohibited */
@@ -1448,8 +1434,8 @@ static void processIpPkt(const u_char *bp,
 		       " (Firewalking scan attempt?)",
 		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&srcHost->secHostPkts->icmpAdminProhibitedSent, dstHostIdx, actualDeviceId);
-	  incrementUsageCounter(&dstHost->secHostPkts->icmpAdminProhibitedRcvd, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->icmpAdminProhibitedSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->icmpAdminProhibitedRcvd, srcHost, actualDeviceId);
 	  break;
 	}
 	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
@@ -1970,7 +1956,6 @@ void processPacket(u_char *_deviceId,
   /* ethernet assumed */
   if(caplen >= hlen) {
     HostTraffic *srcHost=NULL, *dstHost=NULL;
-    u_int srcHostIdx, dstHostIdx;
 
     memcpy(&ehdr, p, sizeof(struct ether_header));
 
@@ -2154,16 +2139,14 @@ void processPacket(u_char *_deviceId,
 	/* IPX */
 	IPXpacket ipxPkt;
 
-	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
-	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (5) [Low memory?]");
 	  return;
 	}
 
-	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
-	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (6) [Low memory?]");
@@ -2194,16 +2177,14 @@ void processPacket(u_char *_deviceId,
 
 	trp = (struct tokenRing_header*)orig_p;
 	ether_src = (u_char*)trp->trn_shost, ether_dst = (u_char*)trp->trn_dhost;
-	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
-	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (7) [Low memory?]");
 	  return;
 	}
 
-	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
-	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (8) [Low memory?]");
@@ -2231,16 +2212,14 @@ void processPacket(u_char *_deviceId,
 	   && (p[sizeof(struct ether_header)+4] == 0x0)) {
 	  /* IPX */
 
-	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
-	  srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	  srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	  if(srcHost == NULL) {
 	    /* Sanity check */
 	    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (9) [Low memory?]");
 	    return;
 	  }
 
-	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
-	  dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	  dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 	  if(dstHost == NULL) {
 	    /* Sanity check */
 	    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (10) [Low memory?]");
@@ -2252,19 +2231,11 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	} else if(!myGlobals.dontTrustMACaddr) {
 	  /* MAC addresses are meaningful here */
-	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
-	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
+	  srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
+	  dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 
-	  if((srcHostIdx != FLAG_NO_PEER) && (dstHostIdx != FLAG_NO_PEER)) {
+	  if((srcHost != NULL) && (dstHost != NULL)) {
 	    TrafficCounter ctr;
-
-	    srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-	    dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-
-	    if((srcHost == NULL) || (dstHost == NULL)) {
-	      traceEvent(CONST_TRACE_ERROR, "Sanity check failed (13) [Low memory?]");
-	      return;
-	    }
 
 	    if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 	    p1 = (u_char*)(p+hlen);
@@ -2557,16 +2528,14 @@ void processPacket(u_char *_deviceId,
 	else
 	  length = 0;
 
-	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
-	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	srcHost = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (11) [Low memory?]");
 	  return;
 	}
 
-	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
-	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	dstHost = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
@@ -2585,20 +2554,17 @@ void processPacket(u_char *_deviceId,
 	    case ARPOP_REPLY: /* ARP REPLY */
 	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      dstHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_tha, 0, 0, actualDeviceId);
-	      dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	      dstHost = getHostInfo(&addr, (u_char*)&arpHdr.arp_tha, 0, 0, actualDeviceId);
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
-	      srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	      srcHost = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      if(srcHost != NULL) incrementTrafficCounter(&srcHost->arpReplyPktsSent, 1);
 	      if(dstHost != NULL) incrementTrafficCounter(&dstHost->arpReplyPktsRcvd, 1);
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
-	      srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	      srcHost = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) incrementTrafficCounter(&srcHost->arpReqPktsSent, 1);
 	    }
 	  }

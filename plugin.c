@@ -147,7 +147,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 #ifdef AIX
   pluginPtr = load(pluginName, 1, dirName); /* Load the library */
 #else
-  pluginPtr = dlopen(pluginPath, RTLD_NOW /* RTLD_LAZY */); /* Load the library */
+  pluginPtr = (void*)dlopen(pluginPath, RTLD_NOW /* RTLD_LAZY */); /* Load the library */
 #endif /* AIX */
 #endif /* HPUX  */
 
@@ -171,7 +171,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 #ifdef AIX
   pluginEntryFctnPtr = pluginPtr;
 #else
-  pluginEntryFctnPtr = dlsym(pluginPtr, CONST_PLUGIN_ENTRY_FCTN_NAME);
+  pluginEntryFctnPtr = (void*)dlsym(pluginPtr, CONST_PLUGIN_ENTRY_FCTN_NAME);
 #endif /* AIX */
 #endif /* HPUX */
 

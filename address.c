@@ -43,7 +43,7 @@ static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int 
   char *hostName;
   struct in_addr addr;
   char buf[32];
-  u_int idx;
+  HostTraffic *el;
 
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
@@ -54,16 +54,14 @@ static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int 
 
   accessAddrResMutex("updateHostNameInfo");
     
-  idx = findHostIdxByNumIP(addr, actualDeviceId);
+  el = findHostByNumIP(addr, actualDeviceId);
 
-  if(idx != FLAG_NO_PEER) {
-    if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL) {
-
-      if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1)) 
-	symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-      strcpy(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostSymIpAddress, symbolic);
-    }
+  if(el != NULL) {    
+    if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1)) 
+      symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
+    strcpy(el->hostSymIpAddress, symbolic);
   }
+
   releaseAddrResMutex();
 }
 
@@ -1457,35 +1455,28 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 
 /* **************************************** */
 
-void checkSpoofing(u_int idxToCheck, int actualDeviceId) {
-  u_int i;
+void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
   HostTraffic *el;
 
-  for(i=1; i<myGlobals.device[actualDeviceId].actualHashSize; i++) {
-    if((i != idxToCheck)
-       && (i != myGlobals.otherHostEntryIdx)
-       && ((el = myGlobals.device[actualDeviceId].hash_hostTraffic[i]) != NULL)) {
-      if((el->hostIpAddress.s_addr != 0x0)
-	 && (myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck] != NULL)
-	 && (el->hostIpAddress.s_addr ==
-	     myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->hostIpAddress.s_addr)) {
-	/* Spoofing detected */
-	if((!hasDuplicatedMac(el))
-	   && (!hasDuplicatedMac(myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]))) {
-	  FD_SET(FLAG_HOST_DUPLICATED_MAC, &myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->flags);
-	  FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
+  for(el=getFirstHost(actualDeviceId); 
+      el != NULL; el = getNextHost(actualDeviceId, el)) {
+    if((el->hostIpAddress.s_addr != 0x0)
+       && (el->hostIpAddress.s_addr == hostToCheck->hostIpAddress.s_addr)) {
+      /* Spoofing detected */
+      if((!hasDuplicatedMac(el))
+	 && (!hasDuplicatedMac(hostToCheck))) {
+	FD_SET(FLAG_HOST_DUPLICATED_MAC, &hostToCheck->flags);
+	FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
 
-	  if(myGlobals.enableSuspiciousPacketDump) {
-	    traceEvent(CONST_TRACE_WARNING,
-		       "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)",
-		       el->hostNumIpAddress,
-		       myGlobals.device[actualDeviceId].hash_hostTraffic[idxToCheck]->ethAddressString,
-		       el->ethAddressString);
-	    dumpSuspiciousPacket(actualDeviceId);
-	  }
+	if(myGlobals.enableSuspiciousPacketDump) {
+	  traceEvent(CONST_TRACE_WARNING,
+		     "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)",
+		     el->hostNumIpAddress, hostToCheck->ethAddressString, el->ethAddressString);
+	  dumpSuspiciousPacket(actualDeviceId);
 	}
       }
     }
   }
+
 }
 

@@ -1586,6 +1586,7 @@ int drawHostsDistanceGraph(int checkOnly) {
   FILE *fd;
   float graphData[60];
   int useFdOpen = 0;
+  HostTraffic *el;
 
   memset(graphData, 0, sizeof(graphData));
 
@@ -1595,22 +1596,16 @@ int drawHostsDistanceGraph(int checkOnly) {
     graphData[i] = 0;
   }
 
-  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
-    struct hostTraffic *el;
-
-    if(i == myGlobals.otherHostEntryIdx)
-      continue;
-
-    el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
-
-    if((el != NULL) && (!subnetPseudoLocalHost(el))) {
+  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    if(!subnetPseudoLocalHost(el)) {
       j = guessHops(el);
       if((j > 0) && (j <= 30)) {
 	graphData[j]++;
 	numPoints++;
       }
     }
-  }
+  } /* for */
 
   if(checkOnly)
     return(numPoints);

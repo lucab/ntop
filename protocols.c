@@ -123,12 +123,7 @@ void handleBootp(HostTraffic *srcHost,
 
 	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr, etherbuf), actualDeviceId);
 	    if(realDstHost == NULL) {
-	      hostIdx = getHostInfo(/* &bootProto.bp_yiaddr */ NULL,
-				    bootProto.bp_chaddr, 0, 0, actualDeviceId);
-#ifdef DHCP_DEBUG
-	      traceEvent(CONST_TRACE_INFO, "=>> %d", hostIdx);
-#endif
-	      realDstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+	      realDstHost = getHostInfo(/* &bootProto.bp_yiaddr */ NULL, bootProto.bp_chaddr, 0, 0, actualDeviceId);
 	    } else {
 #ifdef DHCP_DEBUG
 	      traceEvent(CONST_TRACE_INFO, "<<=>> %s (%d)",
@@ -200,14 +195,10 @@ void handleBootp(HostTraffic *srcHost,
 #endif
 		  /* *************** */
 
-		  hostIdx = findHostIdxByNumIP(hostIpAddress, actualDeviceId);
-		  if(hostIdx != FLAG_NO_PEER) {
-		    incrementUsageCounter(&realDstHost->contactedRouters, hostIdx, actualDeviceId);
-
-		    trafficHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-		    if(trafficHost != NULL) {
-		      FD_SET(FLAG_GATEWAY_HOST, &trafficHost->flags);
-		    }
+		  trafficHost = findHostByNumIP(hostIpAddress, actualDeviceId);
+		  if(trafficHost != NULL) {
+		    incrementUsageCounter(&realDstHost->contactedRouters, trafficHost, actualDeviceId);
+		    FD_SET(FLAG_GATEWAY_HOST, &trafficHost->flags);
 		  }
 
 		  /* *************** */
@@ -303,13 +294,12 @@ void handleBootp(HostTraffic *srcHost,
 			     intoa(hostIpAddress));
 #endif
 		  idx += len;
+
 		  /* *************** */
 
-		  hostIdx = findHostIdxByNumIP(hostIpAddress, actualDeviceId);
-		  if(hostIdx != FLAG_NO_PEER){
-		    trafficHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-		    if(trafficHost != NULL)
-		      FD_SET(FLAG_HOST_TYPE_SVC_WINS, &trafficHost->flags);
+		  trafficHost = findHostByNumIP(hostIpAddress, actualDeviceId);
+		  if(trafficHost != NULL) {
+		    FD_SET(FLAG_HOST_TYPE_SVC_WINS, &trafficHost->flags);
 		  }
 
 		  /* *************** */
@@ -470,12 +460,7 @@ void handleBootp(HostTraffic *srcHost,
 
 	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr, etherbuf), actualDeviceId);
 	    if(realClientHost == NULL) {
-	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL,
-					  bootProto.bp_chaddr, 0, 0, actualDeviceId);
-#ifdef FLAG_DHCP_DEBUG
-	      traceEvent(CONST_TRACE_INFO, "=>> %d", hostIdx);
-#endif
-	      realClientHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+	      realClientHost = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr, 0, 0, actualDeviceId);
 	    } else {
 #ifdef FLAG_DHCP_DEBUG
 	      traceEvent(CONST_TRACE_INFO, "<<=>> %s (%d)",

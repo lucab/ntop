@@ -238,7 +238,7 @@ sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
 sntop_LDADD = $(ntop_LDADD)
 sntop_LDFLAGS = $(ntop_LDFLAGS) -static
 
-noinst_HEADERS = getopt.h globals-core.h globals-report.h ntop.h regex.h
+noinst_HEADERS = getopt.h globals-core.h globals-report.h ntop.h
 
 # all the Archives
 lib_LTLIBRARIES = libntop.la libntopreport.la
@@ -260,7 +260,7 @@ libntop_la_LDFLAGS = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAG
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
-                           http.c          netflow.c         regex.c \
+                           http.c          netflow.c         \
                            report.c        reportUtils.c     ssl.c   \
                            webInterface.c  xmldump.c
 
@@ -274,7 +274,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = ntcsh/Makefile
+CONFIG_CLEAN_FILES = myrrd/Makefile ntcsh/Makefile
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
 am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo getopt.lo \
@@ -284,7 +284,7 @@ am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo getopt.lo \
 	ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
-	http.lo netflow.lo regex.lo report.lo reportUtils.lo ssl.lo \
+	http.lo netflow.lo report.lo reportUtils.lo ssl.lo \
 	webInterface.lo xmldump.lo
 libntopreport_la_OBJECTS = $(am_libntopreport_la_OBJECTS)
 EXTRA_PROGRAMS = ntops$(EXEEXT) sntop$(EXEEXT)
@@ -325,8 +325,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/ntop_darwin.Plo ./$(DEPDIR)/pbuf.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/pdaPlugin.Po ./$(DEPDIR)/plugin.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/protocols.Plo ./$(DEPDIR)/qsort.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/regex.Plo ./$(DEPDIR)/report.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/reportUtils.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/report.Plo ./$(DEPDIR)/reportUtils.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/rrdPlugin.Po ./$(DEPDIR)/sessions.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/sflowPlugin.Po ./$(DEPDIR)/ssl.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/term.Plo ./$(DEPDIR)/traffic.Plo \
@@ -401,6 +400,8 @@ $(srcdir)/config.h.in:  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
+myrrd/Makefile: $(top_builddir)/config.status $(top_srcdir)/myrrd/Makefile.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 ntcsh/Makefile: $(top_builddir)/config.status $(top_srcdir)/ntcsh/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 libLTLIBRARIES_INSTALL = $(INSTALL)
@@ -538,7 +539,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocols.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qsort.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/regex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/report.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reportUtils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdPlugin.Po@am__quote@
@@ -901,7 +901,7 @@ distcleancheck_listfiles = find . -type f -print
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/ntcsh
+	$(mkinstalldirs) $(distdir)/myrrd $(distdir)/ntcsh
 	@list='$(DISTFILES)'; for file in $$list; do \
 	  if test -f $$file || test -d $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \

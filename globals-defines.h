@@ -612,26 +612,8 @@
  */
 #define MAX_NUM_PROCESSES_READLSOFINFO      1024
 
-/*
- * Hash table sizing gets confusing... see the code in hash.c for the
- * actual details, but here is what's what as of May2002...
- *
- * The table is created of size CONST_HASH_INITIAL_SIZE...
- * When first extended, it grows to CONST_HASH_MINIMUM_SIZE
- * Between CONST_HASH_MINIMUM_SIZE and CONST_HASH_FACTOR_MAXIMUM,
- *           it grows by a multiplier, CONST_HASH_INCREASE_FACTOR
- * After growing to CONST_HASH_FACTOR_MAXIMUM it begins to grow by CONST_HASH_TERMINAL_INCREASE
- *
- * So, the pattern is:
- *
- * 32, 512, 1024, 2048, 4069, 8192, 12288 ...
- */
- 
-#define CONST_HASH_INITIAL_SIZE             32
-#define CONST_HASH_MINIMUM_SIZE             512   /* Minimum after 1st extend */
-#define CONST_HASH_FACTOR_MAXIMUM           4096  /* After it gets this big */
-#define CONST_HASH_TERMINAL_INCREASE        4096  /*      grow by */
-#define CONST_HASH_INCREASE_FACTOR          2     /* Between MINIMUM and TERMINAL, grow by... */
+/* Hash size */
+#define CONST_HASH_INITIAL_SIZE             4096
 
 /*
  * These change the break points for the "Network Traffic: xxxx" reports
@@ -672,19 +654,13 @@
 #define CONST_COLOR_3                       "#EEEECC"
 #define CONST_COLOR_4                       "#FF0000"
 
-/*
- * Sets myGlobals.hashListSize in initCounters().  This is the per-device
- *   "hash list" size.
- *
- *  If we're doing memory debug, we scale this way down for managability sake.
- *  At one point, there were some short int's set from this, which is why
- *   it MAY be limited to the given size.  Change at your own risk...
- */
 #ifdef MEMORY_DEBUG
- #define MAX_PER_DEVICE_HASH_LIST           256
+#define MAX_PER_DEVICE_HASH_LIST           256
 #else
- #define MAX_PER_DEVICE_HASH_LIST           ((u_int16_t)-1) /* Static hash size */
+#define MAX_PER_DEVICE_HASH_LIST           ((u_int16_t)-1) /* Static hash size */
 #endif
+
+#define MAX_TOT_NUM_SESSIONS MAX_PER_DEVICE_HASH_LIST
 
 /*
  * This is the theoretical upper limit on "NIC"s.  This must be large enough to include
@@ -782,7 +758,7 @@
 
 /*
  * This is the maximum number of entries in the contacted peers tables,
- * peersIndexes[] in UsageCounter, and contactedIpPeersIndexes[] in ProcessInfo.
+ * peersSerials[] in UsageCounter, and contactedIpPeersIndexes[] in ProcessInfo.
  * These tables maintain the host to host contact information for various reports.
  */
 #define MAX_NUM_CONTACTED_PEERS             8

@@ -77,8 +77,8 @@ void formatUsageCounter(UsageCounter usageCtr,
   }
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(usageCtr.peersIndexes[i] != FLAG_NO_PEER) {
-      if(retrieveHost(usageCtr.peersIndexes[i], &el) == 0) {
+    if(usageCtr.peersSerials[i] != FLAG_NO_PEER) {
+      if(retrieveHost(usageCtr.peersSerials[i], &el) == 0) {
 	if(!sendHeader) {
 	  sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
 	  sendHeader = 1;
@@ -88,7 +88,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 	sendString(makeHostLink(&el, 0, 0, 0));
       } else
 	traceEvent(CONST_TRACE_WARNING, "Unable to find serial %u - host skipped",
-		   (unsigned int)usageCtr.peersIndexes[i]);
+		   (unsigned int)usageCtr.peersSerials[i]);
     }
   }
 
@@ -2561,10 +2561,10 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
     int ok =0;
 
     for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-      if(((el->contactedSentPeers.peersIndexes[i] != FLAG_NO_PEER)
-	  && (el->contactedSentPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx))
-	 || ((el->contactedRcvdPeers.peersIndexes[i] != FLAG_NO_PEER)
-	     && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx))) {
+      if(((el->contactedSentPeers.peersSerials[i] != FLAG_NO_PEER)
+	  && (el->contactedSentPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial))
+	 || ((el->contactedRcvdPeers.peersSerials[i] != FLAG_NO_PEER)
+	     && (el->contactedRcvdPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial))) {
 	  ok = 1;
 	  break;
 	}
@@ -2574,10 +2574,10 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       int numEntries;
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	  if((el->contactedSentPeers.peersIndexes[i] != FLAG_NO_PEER)
-	     && (el->contactedSentPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
+	  if((el->contactedSentPeers.peersSerials[i] != FLAG_NO_PEER)
+	     && (el->contactedSentPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial)) {
 
-	    if(retrieveHost(el->contactedSentPeers.peersIndexes[i], &el2) == 0) {
+	    if(retrieveHost(el->contactedSentPeers.peersSerials[i], &el2) == 0) {
 	      if(numEntries == 0) {
 		printSectionTitle("Last Contacted Peers");
 		titleSent = 1;
@@ -2614,10 +2614,10 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       /* ***************************************************** */
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if((el->contactedRcvdPeers.peersIndexes[i] != FLAG_NO_PEER)
-	   && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
+	if((el->contactedRcvdPeers.peersSerials[i] != FLAG_NO_PEER)
+	   && (el->contactedRcvdPeers.peersSerials[i] != myGlobals.otherHostEntry->hostSerial)) {
 
-	  if(retrieveHost(el->contactedRcvdPeers.peersIndexes[i], &el2) == 0) {
+	  if(retrieveHost(el->contactedRcvdPeers.peersSerials[i], &el2) == 0) {
 	      if(numEntries == 0) {
 		if(!titleSent) printSectionTitle("Last Contacted Peers");
 		sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>"
@@ -2818,6 +2818,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   int printedHeader, i;
   char *dynIp, *multihomed;
   u_short as;
+  HostTraffic *theHost;
 
   accessAddrResMutex("printAllSessionsHTML");
 
@@ -2889,23 +2890,17 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	BufferTooShort();
       sendString(buf);
 
-      for(elIdx=1; elIdx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; elIdx++) {
-	HostTraffic *theHost;
-
-	if(elIdx == myGlobals.otherHostEntryIdx) continue;
-
-	theHost = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[elIdx];
-
-	if((theHost != NULL)
-	   && (theHost != el)
+      for(theHost=getFirstHost(actualDeviceId); 
+	  theHost != NULL; theHost = getNextHost(actualDeviceId, theHost)) {
+	if((theHost != el)
 	   && (memcmp(theHost->ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS) == 0)) {
 	  if(snprintf(buf, sizeof(buf), "<LI><A HREF=/%s.html>%s</A>",
 		      theHost->hostNumIpAddress, theHost->hostNumIpAddress) < 0)
 	    BufferTooShort();
 	  sendString(buf);
-	}
-      }
-
+	}	 
+      } /* for */
+      
       sendString("</TD></TR>");
     }
 
@@ -3401,8 +3396,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   printedHeader=0;
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(el->contactedRouters.peersIndexes[i] != FLAG_NO_PEER) {
-      HostSerial routerIdx = el->contactedRouters.peersIndexes[i];
+    if(el->contactedRouters.peersSerials[i] != FLAG_NO_PEER) {
+      HostSerial routerIdx = el->contactedRouters.peersSerials[i];
 
       if(routerIdx != FLAG_NO_PEER) {
 	HostTraffic router;
@@ -4009,13 +4004,16 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 	int idx;
 
 	sendString("<TD>\n");
-	
-	for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++) {
-	  if(((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
-	     && (el->vlanId == i)) {
-	   sendString("<li>"); sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)); sendString("<br>\n");
+
+	for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+	    el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+	  if(el->vlanId == i) {
+	    sendString("<li>");
+	    sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)); 
+	    sendString("<br>\n");
 	  }
-	}
+	} /* for */
+
 	sendString("</TD>\n");
       }
 
@@ -4046,21 +4044,21 @@ void printLocalHostsStats() {
     return;
   }
 
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
+  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*));
 
-  for(idx=1, numEntries=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++)
-    if(/* (idx != myGlobals.otherHostEntryIdx) && */
-       ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
-       && (broadcastHost(el) == 0) /* No broadcast addresses please */
+  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+
+    if((broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
        && ((el->hostNumIpAddress[0] != '\0') && (el->hostIpAddress.s_addr != '0' /* 0.0.0.0 */) /* This host speaks IP */)
        && subnetPseudoLocalHost(el)) {
 
-      if(el->fingerprint == NULL)   continue;
+      if(el->fingerprint == NULL)   { continue; }
       if(el->fingerprint[0] != ':') setHostFingerprint(el);
-      if(el->fingerprint[0] != ':') continue;
-      if(strlen(el->fingerprint) < 3) continue; /* Too short */
+      if(el->fingerprint[0] != ':') { continue; }
+      if(strlen(el->fingerprint) < 3) { continue; } /* Too short */
       tmpTable[numEntries++] = el;
 
       for(i=0; i<MAX_NUM_OS; i++) {
@@ -4076,6 +4074,7 @@ void printLocalHostsStats() {
 	theOSs[i].num++;
       }
     }
+  }
 
   myGlobals.columnSort = 0;
   quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);

@@ -188,14 +188,20 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   i = sizeof(HostTraffic*)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   hosts = (HostTraffic**)malloc(i);
 
-  for(i=0, num=0; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++)
-    if((i != myGlobals.broadcastEntryIdx) 
-       && (i != myGlobals.otherHostEntryIdx)
-       && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i] != NULL)
-       && (!broadcastHost(myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]))
-       && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]->icmpInfo != NULL)) {
-      hosts[num++] = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
+  for(i=0, num=0; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
+    HostTraffic *el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
+    
+    while(el != NULL) {
+      if((el != myGlobals.broadcastEntry) 
+	 && (el != myGlobals.otherHostEntry)
+	 && (!broadcastHost(el))
+	 && (el->icmpInfo != NULL)) {
+	hosts[num++] = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
+      }
+      
+      el = el->next;
     }
+  }
 
   hostIpAddress.s_addr = 0;
 

@@ -139,7 +139,7 @@ sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
 sntop_LDADD        = $(ntop_LDADD)
 sntop_LDFLAGS      = $(ntop_LDFLAGS) -static
 
-noinst_HEADERS     =  getopt.h globals-core.h globals-report.h ntop.h regex.h
+noinst_HEADERS     =  getopt.h globals-core.h globals-report.h ntop.h
 
 # all the Archives
 lib_LTLIBRARIES    = libntop.la libntopreport.la
@@ -160,7 +160,7 @@ libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
-                           http.c          netflow.c         regex.c \
+                           http.c          netflow.c         \
                            report.c        reportUtils.c     ssl.c   \
                            webInterface.c  xmldump.c
 

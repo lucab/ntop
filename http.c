@@ -1138,10 +1138,9 @@ RETSIGTYPE httpcleanup(int signo) {
   traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:     backtrace is:\n");
   if (size < 2)
       traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:         **unavailable!\n");
-  else 
-      /* Ignore the 0th entry, that's our cleanup() */
-      for (i=1; i<size; i++)
-          traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:          %2d. %s\n", i, strings[i]);
+  else /* Ignore the 0th entry, that's our cleanup() */
+    for(i=1; i<size; i++)
+      traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:          %2d. %s\n", i, strings[i]);
 
   exit(0);
  #endif
@@ -1952,11 +1951,9 @@ static int returnHTTPPage(char* pageName,
 
       /* printf("HostName: '%s'\r\n", hostName); */
 
-      for(elIdx=1; elIdx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; elIdx++) {
-	el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[elIdx];
-
-	if((elIdx != myGlobals.broadcastEntryIdx)
-	   && (el != NULL)
+      for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+	  el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+	if((el != myGlobals.broadcastEntry)
 	   && (el->hostNumIpAddress != NULL)
 	   && ((strcmp(el->hostNumIpAddress, hostName) == 0)
 	       || (strcmp(el->ethAddressString, hostName) == 0)))

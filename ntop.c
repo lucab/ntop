@@ -626,14 +626,10 @@ static void purgeIpPorts(int theDevice) {
   ********************************** */
 
   marker = (char*)calloc(1, MAX_IP_PORT);
-  
-  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
+
+  for(el=getFirstHost(theDevice); 
+      el != NULL; el = getNextHost(theDevice, el)) {
     int k;
-
-    if(i == myGlobals.otherHostEntryIdx)
-      continue;
-
-    if((el = myGlobals.device[theDevice].hash_hostTraffic[i]) == NULL) continue;   
     
     for(k=0; i<MAX_NUM_RECENT_PORTS; i++) {
       marker[el->recentlyUsedServerPorts[k]] = 1;
@@ -946,9 +942,9 @@ RETSIGTYPE cleanup(int signo) {
     freeHostInstances(i);
 
     if(myGlobals.broadcastEntry != NULL)
-      freeHostInfo(i, myGlobals.broadcastEntry, i);
+      freeHostInfo(myGlobals.broadcastEntry, i);
     if(myGlobals.otherHostEntry != NULL)
-      freeHostInfo(i, myGlobals.otherHostEntry, i);
+      freeHostInfo(myGlobals.otherHostEntry, i);
 
     while(myGlobals.device[i].fragmentList != NULL) {
       IpFragment *fragment = myGlobals.device[i].fragmentList->next;
@@ -1074,9 +1070,6 @@ RETSIGTYPE cleanup(int signo) {
       */
       myGlobals.device[i].pcapPtr = NULL;
     }
-
-    if(myGlobals.device[i].hashList)
-      free(myGlobals.device[i].hashList);
   }
   
   free(myGlobals.device);

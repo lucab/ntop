@@ -322,13 +322,6 @@ void resetDevice(int devIdx) {
   memset(ptr, 0, len);
   myGlobals.device[devIdx].hash_hostTraffic = ptr;
 
-  len = sizeof(struct HashList*)*myGlobals.hashListSize;
-  /* printf("sizeof(u_int16_t)=%d /size=%u/len=%d\n",
-     sizeof(u_int16_t), myGlobals.hashListSize, len); */
-  myGlobals.device[devIdx].hashList = (HashList**)malloc(len);
-  memset(myGlobals.device[devIdx].hashList, 0, len);
-  myGlobals.device[devIdx].insertIdx = 0;
-
   resetTrafficCounter(&myGlobals.device[devIdx].droppedPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].ethernetPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].broadcastPkts);
@@ -388,7 +381,6 @@ void resetDevice(int devIdx) {
   myGlobals.device[devIdx].last30daysThptIdx = 0;
   resetTrafficCounter(&myGlobals.device[devIdx].numEstablishedTCPConnections);
   myGlobals.device[devIdx].hostsno = 0;
-  myGlobals.device[devIdx].insertIdx = 0;
 
   myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
     myGlobals.device[devIdx].lastHourThptUpdate = myGlobals.device[devIdx].lastFiveMinsThptUpdate = time(NULL);
@@ -454,7 +446,7 @@ void initCounters(void) {
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.enableSessionHandling) {
-      myGlobals.device[i].numTotSessions = myGlobals.hashListSize;
+      myGlobals.device[i].numTotSessions = MAX_TOT_NUM_SESSIONS;
       len = sizeof(IPSession*)*myGlobals.device[i].numTotSessions;
       myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
       memset(myGlobals.device[i].tcpSession, 0, len);
@@ -527,7 +519,6 @@ void initCounters(void) {
   traceEvent(CONST_TRACE_NOISY, "OSFP: Looking for AS list file, %s\n", CONST_ASLIST_FILE);
 
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
-
     snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_ASLIST_FILE);
 
     traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'\n", buf);
@@ -540,6 +531,7 @@ void initCounters(void) {
       break;
     }
   }
+
   if(configFileFound == 0) {
     traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.\n", CONST_ASLIST_FILE);
     traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without AS information.\n");
@@ -731,14 +723,18 @@ void resetStats(int deviceId) {
     accessMutex(&myGlobals.hostsHashMutex, "resetStats");
 #endif
 
-  /* Do not reset the first entry (myGlobals.broadcastEntry) */
-  for(j=1; j<myGlobals.device[deviceId].actualHashSize; j++)
-    if(myGlobals.device[deviceId].hash_hostTraffic[j] != NULL) {
-      if(j != myGlobals.otherHostEntryIdx) {
-	freeHostInfo(deviceId, myGlobals.device[deviceId].hash_hostTraffic[j], deviceId);
-	myGlobals.device[deviceId].hash_hostTraffic[j] = NULL;
-      }
+  for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].actualHashSize; j++) {
+    HostTraffic *el = myGlobals.device[deviceId].hash_hostTraffic[j];
+    
+    while(el != NULL) {
+      if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
+	freeHostInfo(el, deviceId);      
+      
+      el = el->next;
     }
+    
+    myGlobals.device[deviceId].hash_hostTraffic[j] = NULL;
+  }
 
   resetDevice(deviceId);
 
@@ -750,9 +746,12 @@ void resetStats(int deviceId) {
 
   myGlobals.device[deviceId].numTcpSessions = 0;
 
-  myGlobals.device[deviceId].hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.broadcastEntry;
-  if(myGlobals.otherHostEntryIdx != myGlobals.broadcastEntryIdx) {
-    myGlobals.device[deviceId].hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntry;
+  myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
+  myGlobals.broadcastEntry->next = NULL;
+
+  if(myGlobals.otherHostEntry != myGlobals.broadcastEntry) {
+    myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
+    myGlobals.otherHostEntry->next = NULL;
   }
 
 #ifdef CFG_MULTITHREADED
@@ -1150,7 +1149,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   /* ********************************************* */
 
   if(!(myGlobals.device[deviceId].dummyDevice || myGlobals.device[deviceId].virtualDevice))
-    getLocalHostAddress(&myGlobals.device[deviceId].network, myGlobals.device[deviceId].name);
+    getLocalHostAddress(&myGlobals.device[deviceId].ifAddr, myGlobals.device[deviceId].name);
 
   mallocLen = 2;
   for(i=0; i<myGlobals.numDevices; i++) {
@@ -1571,13 +1570,16 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.device[deviceId].name = strdup(ifName);
   myGlobals.device[deviceId].humanFriendlyName = strdup(ifName);
   myGlobals.device[deviceId].datalink = DLT_EN10MB;
-  myGlobals.device[deviceId].hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.broadcastEntry;
+  myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
+  myGlobals.broadcastEntry->next = NULL;
   myGlobals.device[deviceId].dummyDevice   = 1; /* This is basically a fake device */
   myGlobals.device[deviceId].virtualDevice = 0;
   myGlobals.device[deviceId].activeDevice  = 0;
 
-  if(myGlobals.otherHostEntry != NULL)
-    myGlobals.device[deviceId].hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntry;
+  if(myGlobals.otherHostEntry != NULL) {
+    myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
+    myGlobals.otherHostEntry->next = NULL;    
+  }
 
   return(deviceId);
 }

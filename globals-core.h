@@ -60,9 +60,6 @@ extern int optind;
 extern int opterr;
 extern int optopt;
 #endif /* HAVE_GETOPT_H */
-extern int setSpecifiedUser();
-extern u_short ip2AS(u_int32_t ip);
-extern void readASs(FILE *fd);
 
 /****** function declarations ***** */
 
@@ -85,7 +82,7 @@ extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
 extern u_int16_t handleDNSpacket(const u_char *ipPtr, 
                                  DNSHostInfo *hostPtr, short length,
                                  short *isRequest, short *positiveReply);
-extern void checkSpoofing(u_int idxToCheck, int actualDeviceId);
+extern void checkSpoofing(HostTraffic *el, int actualDeviceId);
 extern void cleanupHostEntries();
 
 /* admin.c */
@@ -116,10 +113,7 @@ extern char* formatPkts(Counter pktNr);
 
 /* hash.c */
 extern int retrieveHost(HostSerial theSerial, HostTraffic *el);
-extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
-                                   u_char *ether_addr,
-                                   short* useIPAddressForSearching, int actualDeviceId);
-extern void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId);
+extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
 
@@ -139,7 +133,6 @@ extern void deviceSanityCheck(char* string);
 extern u_int createDummyInterface(char *ifName);
 extern void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 			   int doUnlink, struct stat *statbuf);
-extern void allocateOtherHosts();
 extern void initGdbm(char *prefDirectory, char *spoolDirectory);
 extern void addDevice(char* deviceName, char* deviceDescr);
 
@@ -231,9 +224,9 @@ extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 			      TrafficCounter length,
 			      Counter pktCount,
 			      int actualDeviceId);
-extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
-			 u_char checkForMultihoming,
-			 u_char forceUsingIPaddress, int actualDeviceId);
+extern HostTraffic* getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
+				u_char checkForMultihoming,
+				u_char forceUsingIPaddress, int actualDeviceId);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
 extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,
@@ -298,16 +291,21 @@ extern int isInitialFtpData(char* packetData);
 extern void updateDeviceThpt(int deviceToUpdate);
 
 /* util.c */
-extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId);
 extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
-				u_short *numNetworks, char *localAddresses, 
-				int localAddressesLen, int flagWhat);
+			       u_short *numNetworks, char *localAddresses, 
+			       int localAddressesLen, int flagWhat);
 extern void handleFlowsSpecs();
 extern void initPassiveSessions();
 extern void termPassiveSessions();
 extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
 extern void resetTrafficCounter(TrafficCounter *ctr);
-extern HostTraffic* findHostByNumIP(char* numIPaddr, u_int actualDeviceId);
+extern int setSpecifiedUser();
+extern u_short ip2AS(u_int32_t ip);
+extern void readASs(FILE *fd);
+extern HostTraffic* getFirstHost(u_int actualDeviceId);
+extern HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host);
+extern HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId);
+extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId);
 extern char* copy_argv(register char **argv);
 extern unsigned short isPrivateAddress(struct in_addr *addr);
@@ -414,8 +412,8 @@ extern void resetUsageCounter(UsageCounter *counter);
 extern void resetSecurityHostTraffic(HostTraffic *el);
 extern char *mapIcmpType(int icmpType);
 extern int _incrementUsageCounter(UsageCounter *counter,
-				   u_int peerIdx, int deviceId,
-				   char* file, int line);
+				  HostTraffic *peer, int deviceId,
+				  char* file, int line);
 extern char *strtolower(char *s);
 extern char *xstrncpy(char *dest, const char *src, size_t n);
 extern int fetchPrefsValue(char *key, char *value, int valueLen);
@@ -521,15 +519,15 @@ extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 
 extern IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 				   u_short fragmentedData, u_int tcpWin,
-				   u_int srcHostIdx, u_short sport,
-				   u_int dstHostIdx, u_short dport,
+				   HostTraffic *srcHost, u_short sport,
+				   HostTraffic *dstHost, u_short dport,
 				   u_int length, struct tcphdr *tp,
 				   u_int tcpDataLength, u_char* packetData, 
 				   int actualDeviceId);
 
 extern IPSession* handleUDPSession(const struct pcap_pkthdr *h,
-				   u_short fragmentedData, u_int srcHostIdx,
-				   u_short sport, u_int dstHostIdx,
+				   u_short fragmentedData, HostTraffic *srcHost,
+				   u_short sport, HostTraffic *dstHost,
 				   u_short dport, u_int length,
 				   u_char* packetData, int actualDeviceId);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
@@ -642,7 +640,7 @@ int getdomainname(char *name, size_t len);
 #define theDomainHasBeenComputed(a) FD_ISSET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &(a->flags))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(FLAG_SUBNET_LOCALHOST, &(a->flags)))
 #define privateIPAddress(a)         ((a != NULL) && FD_ISSET(FLAG_PRIVATE_IP_ADDRESS, &(a->flags)))
-#define broadcastHost(a)            ((a != NULL) && ((a->hostTrafficBucket == myGlobals.broadcastEntryIdx) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))))
+#define broadcastHost(a)            ((a != NULL) && ((a->hostSerial == myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))))
 #define multicastHost(a)            ((a != NULL) && FD_ISSET(FLAG_MULTICAST_HOST, &(a->flags)))
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(FLAG_GATEWAY_HOST, &(a->flags)))
 #define nameServerHost(a)           ((a != NULL) && FD_ISSET(FLAG_NAME_SERVER_HOST, &(a->flags)))
@@ -674,7 +672,7 @@ int getdomainname(char *name, size_t len);
 #define ISBLANK(ch) ((ch) == ' ' || (ch) == '\t')
 
 /* Shorthand, used in traffic.c */
-#define getSerial(a) myGlobals.device[deviceToUpdate].hash_hostTraffic[a]->hostSerial
+/* #define getSerial(a) myGlobals.device[deviceToUpdate].hash_hostTraffic[a]->hostSerial */
 
 #ifdef SSLWATCHDOG_DEBUG
 #define sslwatchdogDebug(text, bpcFlag, note) { \

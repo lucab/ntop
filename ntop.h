@@ -63,17 +63,25 @@ ntop.h
 #define NTOP_H
 
 #ifdef HAVE_CONFIG_H
- #include "config.h"
+#include "config.h"
 #endif
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*  Standard header expansion control items                                */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+#if defined(__linux__)
+#ifndef LINUX
+#define LINUX
+#endif
+#endif
 
 #ifdef LINUX
 /*
  * This allows to hide the (minimal) differences between linux and BSD
  */
+
+#include <features.h>
+
 #define __FAVOR_BSD
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE
@@ -343,8 +351,6 @@ ntop.h
  * Network Research Group
  */
 #include "pcap.h"
-
-#include "regex.h"
 
 #ifdef HAVE_OPENSSL
 #include <openssl/rsa.h>

@@ -264,16 +264,16 @@ void updateUsedPorts(HostTraffic *srcHost,
   if(sport > dport) {
     clientPort = sport, serverPort = dport;
 
-    if(srcHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
+    if(srcHost != myGlobals.otherHostEntry)
       updatePortList(srcHost, clientPort, 0);
-    if(dstHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
+    if(dstHost != myGlobals.otherHostEntry)
       updatePortList(dstHost, 0, serverPort);
   } else {
     clientPort = dport, serverPort = sport;
 
-    if(srcHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
+    if(srcHost != myGlobals.otherHostEntry)
       updatePortList(srcHost, 0, serverPort);
-    if(dstHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
+    if(dstHost != myGlobals.otherHostEntry)
       updatePortList(dstHost, clientPort, 0);
   }
 
@@ -352,21 +352,16 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     char *fmt = "Detected TCP connection with no data exchanged "
       "[%s:%d] -> [%s:%d] (pktSent=%d/pktRcvd=%d) (network mapping attempt?)";
 
-    theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
-    theRemHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
+    theHost = sessionToPurge->initiator, theRemHost = sessionToPurge->remotePeer;
 
     if((theHost != NULL) && (theRemHost != NULL) && allocateMemoryIfNeeded) {
       allocateSecurityHostPkts(theHost);
-      incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
-			    sessionToPurge->remotePeerIdx, actualDeviceId);
-      incrementUsageCounter(&theHost->secHostPkts->terminatedTCPConnServer,
-			    sessionToPurge->remotePeerIdx, actualDeviceId);
+      incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent, theRemHost, actualDeviceId);
+      incrementUsageCounter(&theHost->secHostPkts->terminatedTCPConnServer, theRemHost, actualDeviceId);
 
       allocateSecurityHostPkts(theRemHost);
-      incrementUsageCounter(&theRemHost->secHostPkts->closedEmptyTCPConnRcvd,
-			    sessionToPurge->initiatorIdx, actualDeviceId);
-      incrementUsageCounter(&theRemHost->secHostPkts->terminatedTCPConnClient,
-			    sessionToPurge->initiatorIdx, actualDeviceId);
+      incrementUsageCounter(&theRemHost->secHostPkts->closedEmptyTCPConnRcvd, theHost, actualDeviceId);
+      incrementUsageCounter(&theRemHost->secHostPkts->terminatedTCPConnClient, theHost, actualDeviceId);
 
       if(myGlobals.enableSuspiciousPacketDump)
 	traceEvent(CONST_TRACE_WARNING, fmt,
@@ -412,7 +407,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     free(sessionToPurge); /* No inner pointers to free */
   }
 #else
-	free(sessionToPurge);
+  free(sessionToPurge);
 #endif
 }
 
@@ -505,9 +500,9 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 static IPSession* handleSession(const struct pcap_pkthdr *h,
 				u_short fragmentedData,
 				u_int tcpWin,
-				u_int srcHostIdx,
+				HostTraffic *srcHost,
 				u_short sport,
-				u_int dstHostIdx,
+				HostTraffic *dstHost,
 				u_short dport,
 				u_int length,
 				struct tcphdr *tp,
@@ -520,16 +515,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   char addedNewEntry = 0;
   u_short sessionType, check, found=0;
   u_short sessSport, sessDport;
-  HostTraffic *srcHost, *dstHost, *hostToUpdate = NULL;
+  HostTraffic *hostToUpdate = NULL;
   struct timeval tvstrct;
   u_char *rcStr, tmpStr[256];
   int len = 0;
 
   if((!myGlobals.enableSessionHandling) || (myGlobals.device[actualDeviceId].numTotSessions == 0))
     return(NULL);
-
-  srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-  dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(CONST_TRACE_ERROR, "Sanity check failed (3) [Low memory?]");
@@ -588,15 +580,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	theSession->next = NULL;
       }
 
-      if((theSession->initiatorIdx == srcHostIdx)
-	 && (theSession->remotePeerIdx == dstHostIdx)
+      if((theSession->initiator == srcHost)
+	 && (theSession->remotePeer == dstHost)
 	 && (theSession->sport == sport)
 	 && (theSession->dport == dport)) {
 	found = 1;
 	flowDirection = FLAG_CLIENT_TO_SERVER;
 	break;
-      } else if((theSession->initiatorIdx == dstHostIdx)
-		&& (theSession->remotePeerIdx == srcHostIdx)
+      } else if((theSession->initiator == dstHost)
+		&& (theSession->remotePeer == srcHost)
 		&& (theSession->sport == dport)
 		&& (theSession->dport == sport)) {
 	found = 1;
@@ -697,8 +689,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
       myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
 
-      theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
-      theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
+      theSession->initiator  = srcHost;
+      theSession->remotePeer = dstHost;
       theSession->sport = sport;
       theSession->dport = dport;
       theSession->passiveFtpSession = isPassiveSession(dstHost->hostIpAddress.s_addr, dport);
@@ -1557,8 +1549,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
 
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHostIdx, actualDeviceId);
-      incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
+      incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHost, actualDeviceId);
+      incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHost, actualDeviceId);
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     } else if((addedNewEntry == 0)
 	      && ((theSession->sessionState == FLAG_STATE_SYN) || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
@@ -1584,17 +1576,17 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
       if(sport > dport) {
-	incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHost, actualDeviceId);
 	/* This simulates a connection establishment */
-	incrementUsageCounter(&srcHost->secHostPkts->synPktsSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->synPktsRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->synPktsSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->synPktsRcvd, srcHost, actualDeviceId);
       } else {
-	incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnRcvd, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnSent, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnRcvd, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnSent, srcHost, actualDeviceId);
 	/* This simulates a connection establishment */
-	incrementUsageCounter(&dstHost->secHostPkts->synPktsSent, srcHostIdx, actualDeviceId);
-	incrementUsageCounter(&srcHost->secHostPkts->synPktsRcvd, dstHostIdx, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->synPktsSent, srcHost, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->synPktsRcvd, dstHost, actualDeviceId);
       }
 
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
@@ -1654,11 +1646,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       u_int32_t ack = ntohl(tp->th_ack);
 
       if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
-	if(theSession->initiatorIdx == srcHostIdx) {
+	if(theSession->initiator == srcHost) {
 	  theSession->numDuplicatedAckI2R++;
 	  incrementTrafficCounter(&theSession->bytesRetranI2R, length);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->initiatorIdx]->pktDuplicatedAckSent, 1);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->remotePeerIdx]->pktDuplicatedAckRcvd, 1);
+	  incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckSent, 1);
+	  incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckRcvd, 1);
 
 #ifdef DEBUG
 	  traceEvent(CONST_TRACE_INFO, "DEBUG: Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
@@ -1668,8 +1660,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	} else {
 	  theSession->numDuplicatedAckR2I++;
 	  incrementTrafficCounter(&theSession->bytesRetranR2I, length);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->remotePeerIdx]->pktDuplicatedAckSent, 1);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].hash_hostTraffic[theSession->initiatorIdx]->pktDuplicatedAckRcvd, 1);
+	  incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckSent, 1);
+	  incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckRcvd, 1);
 #ifdef DEBUG
 	  traceEvent(CONST_TRACE_INFO, "Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
 		     ack, theSession->numDuplicatedAckR2I,
@@ -1687,7 +1679,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
       }
 
-      if(theSession->initiatorIdx == srcHostIdx)
+      if(theSession->initiator == srcHost)
 	theSession->lastAckIdI2R = ack;
       else
 	theSession->lastAckIdR2I = ack;
@@ -1776,18 +1768,18 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     if(tp->th_flags == (TH_RST|TH_ACK)) {
       /* RST|ACK is sent when a connection is refused */
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      incrementUsageCounter(&srcHost->secHostPkts->rstAckPktsSent, dstHostIdx, actualDeviceId);
-      incrementUsageCounter(&dstHost->secHostPkts->rstAckPktsRcvd, srcHostIdx, actualDeviceId);
+      incrementUsageCounter(&srcHost->secHostPkts->rstAckPktsSent, dstHost, actualDeviceId);
+      incrementUsageCounter(&dstHost->secHostPkts->rstAckPktsRcvd, srcHost, actualDeviceId);
     } else if(tp->th_flags & TH_RST) {
-      if(((theSession->initiatorIdx == srcHostIdx)
+      if(((theSession->initiator == srcHost)
 	  && (theSession->lastRem2InitiatorFlags[0] == TH_ACK)
 	  && (theSession->bytesSent.value == 0))
-	 || ((theSession->initiatorIdx == dstHostIdx)
+	 || ((theSession->initiator == dstHost)
 	     && (theSession->lastInitiator2RemFlags[0] == TH_ACK)
 	     && (theSession->bytesRcvd.value == 0))) {
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->secHostPkts->ackScanRcvd, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->ackScanSent, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->ackScanRcvd, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->ackScanSent, srcHost, actualDeviceId);
 	if(myGlobals.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed ACK scan of host [%s:%d]",
 		     dstHost->hostSymIpAddress, dport,
@@ -1797,24 +1789,24 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
       /* Connection terminated */
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      incrementUsageCounter(&srcHost->secHostPkts->rstPktsSent, dstHostIdx, actualDeviceId);
-      incrementUsageCounter(&dstHost->secHostPkts->rstPktsRcvd, srcHostIdx, actualDeviceId);
+      incrementUsageCounter(&srcHost->secHostPkts->rstPktsSent, dstHost, actualDeviceId);
+      incrementUsageCounter(&dstHost->secHostPkts->rstPktsRcvd, srcHost, actualDeviceId);
     } else if(tp->th_flags == (TH_SYN|TH_FIN)) {
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      incrementUsageCounter(&srcHost->secHostPkts->synFinPktsSent, dstHostIdx, actualDeviceId);
-      incrementUsageCounter(&dstHost->secHostPkts->synFinPktsRcvd, srcHostIdx, actualDeviceId);
+      incrementUsageCounter(&srcHost->secHostPkts->synFinPktsSent, dstHost, actualDeviceId);
+      incrementUsageCounter(&dstHost->secHostPkts->synFinPktsRcvd, srcHost, actualDeviceId);
     } else if(tp->th_flags == (TH_FIN|TH_PUSH|TH_URG)) {
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      incrementUsageCounter(&srcHost->secHostPkts->finPushUrgPktsSent, dstHostIdx, actualDeviceId);
-      incrementUsageCounter(&dstHost->secHostPkts->finPushUrgPktsRcvd, srcHostIdx, actualDeviceId);
+      incrementUsageCounter(&srcHost->secHostPkts->finPushUrgPktsSent, dstHost, actualDeviceId);
+      incrementUsageCounter(&dstHost->secHostPkts->finPushUrgPktsRcvd, srcHost, actualDeviceId);
     } else if(tp->th_flags == TH_SYN) {
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      incrementUsageCounter(&srcHost->secHostPkts->synPktsSent, dstHostIdx, actualDeviceId);
-      incrementUsageCounter(&dstHost->secHostPkts->synPktsRcvd, srcHostIdx, actualDeviceId);
+      incrementUsageCounter(&srcHost->secHostPkts->synPktsSent, dstHost, actualDeviceId);
+      incrementUsageCounter(&dstHost->secHostPkts->synPktsRcvd, srcHost, actualDeviceId);
     } else if(tp->th_flags == 0x0 /* NULL */) {
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      incrementUsageCounter(&srcHost->secHostPkts->nullPktsSent, dstHostIdx, actualDeviceId);
-      incrementUsageCounter(&dstHost->secHostPkts->nullPktsRcvd, srcHostIdx, actualDeviceId);
+      incrementUsageCounter(&srcHost->secHostPkts->nullPktsSent, dstHost, actualDeviceId);
+      incrementUsageCounter(&dstHost->secHostPkts->nullPktsRcvd, srcHost, actualDeviceId);
     }
 
     /* **************************** */
@@ -1824,7 +1816,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	For more info about checks below see
 	http://www.synnergy.net/Archives/Papers/dethy/host-detection.txt
       */
-      if((srcHostIdx == dstHostIdx)
+      if((srcHost == dstHost)
 	 /* && (sport == dport)  */ /* Caveat: what about Win NT 3.51 ? */
 	 && (tp->th_flags == TH_SYN)) {
 	traceEvent(CONST_TRACE_WARNING, "Detected Land Attack against host %s:%d",
@@ -1833,14 +1825,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
 
       if(tp->th_flags == (TH_RST|TH_ACK)) {
-	if((((theSession->initiatorIdx == srcHostIdx)
+	if((((theSession->initiator == srcHost)
 	     && (theSession->lastRem2InitiatorFlags[0] == TH_SYN))
-	    || ((theSession->initiatorIdx == dstHostIdx)
+	    || ((theSession->initiator == dstHost)
 		&& (theSession->lastInitiator2RemFlags[0] == TH_SYN)))
 	   ) {
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&dstHost->secHostPkts->rejectedTCPConnSent, srcHostIdx, actualDeviceId);
-	  incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnRcvd, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->rejectedTCPConnSent, srcHost, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnRcvd, dstHost, actualDeviceId);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_INFO, "Host %s rejected TCP session from %s [%s:%d]<->[%s:%d] (port closed?)",
@@ -1849,13 +1841,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
-	} else if(((theSession->initiatorIdx == srcHostIdx)
+	} else if(((theSession->initiator == srcHost)
 		   && (theSession->lastRem2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
-		  || ((theSession->initiatorIdx == dstHostIdx)
+		  || ((theSession->initiator == dstHost)
 		      && (theSession->lastInitiator2RemFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))) {
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&dstHost->secHostPkts->xmasScanSent, srcHostIdx, actualDeviceId);
-	  incrementUsageCounter(&srcHost->secHostPkts->xmasScanRcvd, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->xmasScanSent, srcHost, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->xmasScanRcvd, dstHost, actualDeviceId);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed XMAS scan of host [%s:%d]",
@@ -1863,13 +1855,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
-	} else if(((theSession->initiatorIdx == srcHostIdx)
+	} else if(((theSession->initiator == srcHost)
 		   && ((theSession->lastRem2InitiatorFlags[0] & TH_FIN) == TH_FIN))
-		  || ((theSession->initiatorIdx == dstHostIdx)
+		  || ((theSession->initiator == dstHost)
 		      && ((theSession->lastInitiator2RemFlags[0] & TH_FIN) == TH_FIN))) {
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&dstHost->secHostPkts->finScanSent, srcHostIdx, actualDeviceId);
-	  incrementUsageCounter(&srcHost->secHostPkts->finScanRcvd, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->finScanSent, srcHost, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->finScanRcvd, dstHost, actualDeviceId);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed FIN scan of host [%s:%d]",
@@ -1877,15 +1869,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport);
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
-	} else if(((theSession->initiatorIdx == srcHostIdx)
+	} else if(((theSession->initiator == srcHost)
 		   && (theSession->lastRem2InitiatorFlags[0] == 0)
 		   && (theSession->bytesRcvd.value > 0))
-		  || ((theSession->initiatorIdx == dstHostIdx)
+		  || ((theSession->initiator == dstHost)
 		      && ((theSession->lastInitiator2RemFlags[0] == 0))
 		      && (theSession->bytesSent.value > 0))) {
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&srcHost->secHostPkts->nullScanRcvd, dstHostIdx, actualDeviceId);
-	  incrementUsageCounter(&dstHost->secHostPkts->nullScanSent, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->nullScanRcvd, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->nullScanSent, srcHost, actualDeviceId);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed NULL scan of host [%s:%d]",
@@ -1899,7 +1891,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       /* **************************** */
 
       /* Save session flags */
-      if(theSession->initiatorIdx == srcHostIdx) {
+      if(theSession->initiator == srcHost) {
 	int i;
 
 	for(i=0; i<MAX_NUM_STORED_FLAGS-1; i++)
@@ -1951,12 +1943,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     IPSession tmpSession;
 
     memset(&tmpSession, 0, sizeof(IPSession));
-
     updateUsedPorts(srcHost, dstHost, sport, dport, length);
-
     tmpSession.lastSeen = myGlobals.actTime;
-    tmpSession.initiatorIdx = checkSessionIdx(srcHostIdx),
-      tmpSession.remotePeerIdx = checkSessionIdx(dstHostIdx);
+    tmpSession.initiator = srcHost, tmpSession.remotePeer = dstHost;
     tmpSession.bytesSent.value = length, tmpSession.bytesRcvd.value = 0;
     tmpSession.sport = sport, tmpSession.dport = dport;
     if(fragmentedData) incrementTrafficCounter(&tmpSession.bytesFragmentedSent, packetDataLength);
@@ -1993,20 +1982,20 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
        || (dport == 19)) {
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
       if(sessionType == IPPROTO_UDP) {
-	incrementUsageCounter(&srcHost->secHostPkts->udpToDiagnosticPortSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->udpToDiagnosticPortRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->udpToDiagnosticPortSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->udpToDiagnosticPortRcvd, srcHost, actualDeviceId);
       } else {
-	incrementUsageCounter(&srcHost->secHostPkts->tcpToDiagnosticPortSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->tcpToDiagnosticPortRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->tcpToDiagnosticPortSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->tcpToDiagnosticPortRcvd, srcHost, actualDeviceId);
       }
     } else /* sport == 7 */ {
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
       if(sessionType == IPPROTO_UDP) {
-	incrementUsageCounter(&srcHost->secHostPkts->udpToDiagnosticPortSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->udpToDiagnosticPortRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->udpToDiagnosticPortSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->udpToDiagnosticPortRcvd, srcHost, actualDeviceId);
       } else {
-	incrementUsageCounter(&srcHost->secHostPkts->tcpToDiagnosticPortSent, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->tcpToDiagnosticPortRcvd, srcHostIdx, actualDeviceId);
+	incrementUsageCounter(&srcHost->secHostPkts->tcpToDiagnosticPortSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->tcpToDiagnosticPortRcvd, srcHost, actualDeviceId);
       }
     }
   }
@@ -2015,8 +2004,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     char *fmt = "Detected tiny fragment (%d bytes) "
       "[%s:%d] -> [%s:%d] (network mapping attempt?)";
     allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-    incrementUsageCounter(&srcHost->secHostPkts->tinyFragmentSent, dstHostIdx, actualDeviceId);
-    incrementUsageCounter(&dstHost->secHostPkts->tinyFragmentRcvd, srcHostIdx, actualDeviceId);
+    incrementUsageCounter(&srcHost->secHostPkts->tinyFragmentSent, dstHost, actualDeviceId);
+    incrementUsageCounter(&dstHost->secHostPkts->tinyFragmentRcvd, srcHost, actualDeviceId);
     if(myGlobals.enableSuspiciousPacketDump) {
       traceEvent(CONST_TRACE_WARNING, fmt, packetDataLength,
 		 srcHost->hostSymIpAddress, sport,
@@ -2031,19 +2020,17 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 /* ************************************ */
 
 #ifndef WIN32
-static void addLsofContactedPeers(ProcessInfo *process, u_int peerHostIdx, int actualDeviceId) {
+static void addLsofContactedPeers(ProcessInfo *process, HostTraffic *peerHost, int actualDeviceId) {
   u_int i;
 
-  if((process == NULL)
-     || (peerHostIdx == FLAG_NO_PEER)
-     || broadcastHost(myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(peerHostIdx)]))
+  if((process == NULL) || (peerHost == NULL) || broadcastHost(peerHost))
     return;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-    if(process->contactedIpPeersIndexes[i] == peerHostIdx)
+    if(process->contactedIpPeersSerials[i] == peerHost->hostSerial)
       return;
 
-  process->contactedIpPeersIndexes[process->contactedIpPeersIdx] = peerHostIdx;
+  process->contactedIpPeersSerials[process->contactedIpPeersIdx] = peerHost->hostSerial;
   process->contactedIpPeersIdx = (process->contactedIpPeersIdx+1) % MAX_NUM_CONTACTED_PEERS;
 }
 #endif /* WIN32 */
@@ -2051,20 +2038,15 @@ static void addLsofContactedPeers(ProcessInfo *process, u_int peerHostIdx, int a
 /* ************************************ */
 
 #ifndef WIN32
-static void handleLsof(u_int srcHostIdx,
+static void handleLsof(HostTraffic *srcHost,
 		       u_short sport,
-		       u_int dstHostIdx,
+		       HostTraffic *dstHost,
 		       u_short dport,
 		       u_int length,
 		       int actualDeviceId) {
-  HostTraffic *srcHost, *dstHost;
-
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.lsofMutex, "readLsofInfo-3");
 #endif
-
-  srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-  dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
   if(subnetLocalHost(srcHost))
     if((sport < MAX_IP_PORT) && (myGlobals.localPorts[sport] != NULL)) {
@@ -2073,7 +2055,7 @@ static void handleLsof(u_int srcHostIdx,
       while(scanner != NULL) {
 	incrementTrafficCounter(&scanner->element->bytesSent, length);
 	scanner->element->lastSeen   = myGlobals.actTime;
-	addLsofContactedPeers(scanner->element, dstHostIdx, actualDeviceId);
+	addLsofContactedPeers(scanner->element, dstHost, actualDeviceId);
 	scanner = scanner->next;
       }
     }
@@ -2085,7 +2067,7 @@ static void handleLsof(u_int srcHostIdx,
       while(scanner != NULL) {
 	incrementTrafficCounter(&scanner->element->bytesRcvd, length);
 	scanner->element->lastSeen   = myGlobals.actTime;
-	addLsofContactedPeers(scanner->element, srcHostIdx, actualDeviceId);
+	addLsofContactedPeers(scanner->element, srcHost, actualDeviceId);
 	scanner = scanner->next;
       }
     }
@@ -2100,9 +2082,9 @@ static void handleLsof(u_int srcHostIdx,
 IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 			    u_short fragmentedData,
 			    u_int tcpWin,
-			    u_int srcHostIdx,
+			    HostTraffic *srcHost,
 			    u_short sport,
-			    u_int dstHostIdx,
+			    HostTraffic *dstHost,
 			    u_short dport,
 			    u_int length,
 			    struct tcphdr *tp,
@@ -2112,15 +2094,15 @@ IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   IPSession* theSession;
 
   theSession = handleSession(h, fragmentedData, tcpWin,
-			     srcHostIdx, sport,
-			     dstHostIdx, dport,
+			     srcHost, sport,
+			     dstHost, dport,
 			     length, tp,
 			     tcpDataLength, packetData,
 			     actualDeviceId);
 
 #ifndef WIN32
   if(myGlobals.isLsofPresent)
-    handleLsof(srcHostIdx, sport, dstHostIdx, dport, length, actualDeviceId);
+    handleLsof(srcHost, sport, dstHost, dport, length, actualDeviceId);
 #endif
 
   return(theSession);
@@ -2130,9 +2112,9 @@ IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 
 IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 			    u_short fragmentedData,
-			    u_int srcHostIdx,
+			    HostTraffic *srcHost,
 			    u_short sport,
-			    u_int dstHostIdx,
+			    HostTraffic *dstHost,
 			    u_short dport,
 			    u_int length,
 			    u_char* packetData,
@@ -2140,13 +2122,13 @@ IPSession* handleUDPSession(const struct pcap_pkthdr *h,
   IPSession* theSession;
 
   theSession = handleSession(h, fragmentedData, 0,
-			     srcHostIdx, sport,
-			     dstHostIdx, dport, length,
+			     srcHost, sport,
+			     dstHost, dport, length,
 			     NULL, length, packetData, actualDeviceId);
 
 #ifndef WIN32
   if(myGlobals.isLsofPresent)
-    handleLsof(srcHostIdx, sport, dstHostIdx, dport, length, actualDeviceId);
+    handleLsof(srcHost, sport, dstHost, dport, length, actualDeviceId);
 #endif
 
   return(theSession);

@@ -36,13 +36,12 @@
  * fallbacks for essential typedefs
  */
 #ifdef WIN32
- #ifndef __GNUC__
+#ifndef __GNUC__
   typedef unsigned char  u_char;
   typedef unsigned short u_short;
   typedef unsigned int   u_int;
   typedef unsigned long  u_long;
- #endif
- typedef unsigned int   tcp_seq;
+#endif
  typedef u_char  uint8_t;
  typedef u_short uint16_t;
  typedef u_int   uint32_t;
@@ -275,7 +274,7 @@ typedef struct simpleProtoTrafficInfo {
 
 typedef struct usageCounter {
   TrafficCounter value;
-  HostSerial peersIndexes[MAX_NUM_CONTACTED_PEERS]; /* host serial */
+  HostSerial peersSerials[MAX_NUM_CONTACTED_PEERS]; /* host serial */
 } UsageCounter;
 
 /* *********************** */
@@ -440,7 +439,6 @@ typedef struct ipGlobalSession {
 /* Host Traffic */
 typedef struct hostTraffic {
   u_short          hostTrafficBucket /* Index in the **hash_hostTraffic list */;
-  u_short          hashListBucket    /* Index in the **hashList         list */;
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;
@@ -514,7 +512,7 @@ typedef struct hostTraffic {
   TrafficCounter   appletalkSent, appletalkRcvd;
   TrafficCounter   netbiosSent, netbiosRcvd;
   TrafficCounter   ipv6Sent, ipv6Rcvd;
-  TrafficCounter   otherSent, otherRcvd;
+  TrafficCounter   otherSent, otherRcvd; /* Other traffic we cannot classify */
   
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */
 
@@ -522,15 +520,7 @@ typedef struct hostTraffic {
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */
   UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */
   UsageCounter     contactedRouters;     /* routers contacted by this host */
-
-  /* *************** IMPORTANT ***************
-
-     If you add a pointer to this struct please
-     go to resetHostsVariables() and
-     add a NULL to each pointer you added in the
-     newly resurrected.
-
-     *************** IMPORTANT *************** */
+  struct hostTraffic *next;              /* pointer to the next element */
 } HostTraffic;
 
 /* **************************** */
@@ -578,10 +568,10 @@ typedef struct portCounter {
 typedef struct ipSession {
   u_short magic;
   u_char isP2P;                     /* Set to 1 if this is a P2P session          */
-  u_int initiatorIdx;               /* initiator address   (IP address)           */
+  HostTraffic* initiator;           /* initiator address                          */
   struct in_addr initiatorRealIp;   /* Real IP address (if masqueraded and known) */
-  u_short sport;                    /* initiator address   (port)                 */
-  u_int remotePeerIdx;              /* remote peer address (IP address)           */
+  u_short sport;                    /* initiator address (port)                   */
+  HostTraffic *remotePeer;          /* remote peer address                        */
   struct in_addr remotePeerRealIp;  /* Real IP address (if masqueraded and known) */
   char *virtualPeerName;            /* Name of a virtual host (e.g. HTTP virtual host) */
   u_short dport;                    /* remote peer address (port)                       */
@@ -598,13 +588,13 @@ typedef struct ipSession {
   struct timeval nwLatency;         /* Network Latency                          */
   u_short numFin;                   /* # FIN pkts rcvd                          */
   u_short numFinAcked;              /* # ACK pkts rcvd                          */
-  tcp_seq lastAckIdI2R;             /* ID of the last ACK rcvd                  */
-  tcp_seq lastAckIdR2I;             /* ID of the last ACK rcvd                  */
+  u_int32_t lastAckIdI2R;           /* ID of the last ACK rcvd                  */
+  u_int32_t lastAckIdR2I;           /* ID of the last ACK rcvd                  */
   u_short numDuplicatedAckI2R;      /* # duplicated ACKs                        */
   u_short numDuplicatedAckR2I;      /* # duplicated ACKs                        */
   TrafficCounter bytesRetranI2R;    /* # bytes retransmitted (due to duplicated ACKs) */
   TrafficCounter bytesRetranR2I;    /* # bytes retransmitted (due to duplicated ACKs) */
-  tcp_seq finId[MAX_NUM_FIN];       /* ACK ids we're waiting for                */
+  u_int32_t finId[MAX_NUM_FIN];     /* ACK ids we're waiting for                */
   u_long lastFlags;                 /* flags of the last TCP packet             */
   u_int32_t lastCSAck, lastSCAck;   /* they store the last ACK ids C->S/S->C    */
   u_int32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
@@ -737,8 +727,7 @@ typedef struct ntopInterface {
   u_int  hostsno;        /* # of valid entries in the following table */
   u_int  actualHashSize, hashThreshold, topHashThreshold;
   struct hostTraffic **hash_hostTraffic;
-  u_int16_t  insertIdx;
-  HashList** hashList;
+
   u_short hashListMaxLookups;
   ElementHash **asHash;   /* Autonomous System */
   ElementHash **vlanHash; /* VLAN - Virtual LAN */
@@ -917,8 +906,6 @@ XML*/
   /*XML n:u            hashThreshold        parent        "" */
   /*XML n:u            topHashThreshold     parent        "" */
 
-  /*XML n:u            insertIdx            parent        "" */
-
   /*XMLNOTE Special handling for the big sub-structures */
   /*XMLNOTE ipSession ... */
   /*XMLNOTE ipTrafficMatrix ... */
@@ -934,7 +921,7 @@ typedef struct processInfo {
   int pid;
   TrafficCounter bytesSent, bytesRcvd;
   /* peers that talked with this process */
-  u_int contactedIpPeersIndexes[MAX_NUM_CONTACTED_PEERS];
+  u_int contactedIpPeersSerials[MAX_NUM_CONTACTED_PEERS];
   u_int contactedIpPeersIdx;
 } ProcessInfo;
 
@@ -1374,6 +1361,10 @@ typedef enum {
 
 /* *************************************************************** */
 
+#define BROADCAST_HOSTS_ENTRY    0
+#define OTHER_HOSTS_ENTRY        1
+#define FIRST_HOSTS_ENTRY        2 /* first available host entry */
+
 typedef struct ntopGlobals {
 
     /*XMLNOTE
@@ -1568,9 +1559,6 @@ XML*/
   u_short numDevices;                    /* total network interfaces */
   u_short numRealDevices;                /* # of network interfaces enabled for sniffing */
                                      /*XML n numDevices           Interfaces "" */
-  u_int16_t hashListSize;  /* set from MAX_PER_DEVICE_HASH_LIST
-                              Please don't change the type */
-                                     /*XML n:u hashListSize       Interfaces "" */
   NtopInterface *device;   /* pointer to the table of Network interfaces */
     /*XMLFOR i 0 myGlobals.numDevices */
       /*XML *   device          Interfaces            ""
@@ -1590,11 +1578,9 @@ XML*/
   GDBM_FILE dnsCacheFile, pwFile, eventFile, hostsInfoFile, addressQueueFile, prefsFile, macPrefixFile;
 
   /* the table of broadcast entries */
-  u_int broadcastEntryIdx;
   HostTraffic *broadcastEntry;
 
   /* the table of other hosts entries */
-  u_int otherHostEntryIdx;
   HostTraffic *otherHostEntry;
 
   /* Administrative */

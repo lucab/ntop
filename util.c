@@ -29,6 +29,17 @@
 #include "leaks.h"
 #endif
 
+#ifdef DARWINS
+extern void* perl_alloc();
+extern void* perl_parse();
+extern void* perl_get_hv();
+extern void* perl_get_av();
+extern void* perl_run();
+extern void* perl_construct();
+extern void* perl_destruct();
+extern void* perl_free();
+#endif
+
 #ifdef CFG_MULTITHREADED
 static char stateChangeMutexInitialized = 0;
 static pthread_mutex_t stateChangeMutex;
@@ -39,43 +50,84 @@ static u_short passiveSessionsLen;
 
 /* ************************************ */
 
-u_int findHostIdxByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId) {
+static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
   u_int idx;
 
-  for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++)
-    if((myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL)
-       && (myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress != NULL)
-       && (myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostIpAddress.s_addr == hostIpAddress.s_addr))
-      return(idx);
+  for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
+    HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
-  return(FLAG_NO_PEER);
-}
-
-/* ************************************ */
-
-HostTraffic* findHostByNumIP(char* numIPaddr, u_int actualDeviceId) {
-  u_int idx;
-
-  for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++)
-    if((myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL)
-       && (myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress != NULL)
-       && (!strcmp(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress, numIPaddr)))
-      return(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+    if(el != NULL)
+      return(el);
+  }
 
   return(NULL);
 }
 
 /* ************************************ */
 
+HostTraffic* getFirstHost(u_int actualDeviceId) {
+  return(_getFirstHost(actualDeviceId, FIRST_HOSTS_ENTRY));
+}
+
+/* ************************************ */
+
+HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {  
+  if(host->next != NULL)
+    return(host->next);
+  else {
+    u_int nextIdx = host->hostTrafficBucket+1;
+
+    if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
+      return(_getFirstHost(actualDeviceId, nextIdx));
+    else
+      return(NULL);
+  }
+}
+
+/* ************************************ */
+
+HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId) {
+  HostTraffic *el;
+  int idx;
+
+  for(el=getFirstHost(actualDeviceId); 
+      el != NULL; el = getNextHost(actualDeviceId, el)) {
+    if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))	
+      return(el);
+  }
+  
+  return(NULL);
+}
+
+/* ************************************ */
+
+HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId) {
+  HostTraffic *el;
+  int idx;
+
+  for(el=getFirstHost(actualDeviceId); 
+      el != NULL; el = getNextHost(actualDeviceId, el)) {
+    
+    if(el->hostSerial == serial)
+      return(el);
+  }
+  
+  return(NULL);
+}
+
+/* ************************************ */
+
 HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId) {
-  u_int idx;
+  HostTraffic *el;
+  int idx;
 
-  for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++)
-    if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]
-       && myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->hostNumIpAddress
-       && (!strcmp(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]->ethAddressString, macAddr)))
-      return(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
-
+  for(el=getFirstHost(actualDeviceId); 
+      el != NULL; el = getNextHost(actualDeviceId, el)) {
+    if((el->hostNumIpAddress != NULL) 
+       && (!strcmp(el->ethAddressString, macAddr)))
+      return(el);
+  }
+  
   return(NULL);
 }
 
@@ -166,6 +218,12 @@ unsigned short isLocalAddress(struct in_addr *addr, u_int deviceId) {
 	       deviceId, myGlobals.numDevices); 
     return(0);
   }
+
+#if DEBUG
+  traceEvent(CONST_TRACE_INFO, "Address: %s", intoa(*addr));
+  traceEvent(CONST_TRACE_INFO, "Network: %s", intoa(myGlobals.device[deviceId].network));
+  traceEvent(CONST_TRACE_INFO, "NetMask: %s", intoa(myGlobals.device[deviceId].netmask));
+#endif
 
   if((addr->s_addr & myGlobals.device[deviceId].netmask.s_addr) == myGlobals.device[deviceId].network.s_addr) {
 #ifdef ADDRESS_DEBUG
@@ -1652,7 +1710,7 @@ void readLsofInfo(void) {
 	myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersIdx = 0;
 
 	for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
-	  myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersIndexes[floater] = FLAG_NO_PEER;
+	  myGlobals.processes[myGlobals.numProcesses]->contactedIpPeersSerials[floater] = FLAG_NO_PEER;
       }
 
       idx = myGlobals.numProcesses;
@@ -2781,7 +2839,7 @@ void resetUsageCounter(UsageCounter *counter) {
   memset(counter, 0, sizeof(UsageCounter));
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-    counter->peersIndexes[i] = FLAG_NO_PEER;
+    counter->peersSerials[i] = FLAG_NO_PEER;
 }
 
 /* ************************************ */
@@ -2892,44 +2950,25 @@ char* mapIcmpType(int icmpType) {
 #undef incrementUsageCounter
 
 int _incrementUsageCounter(UsageCounter *counter,
-			   u_int peerIdx, int actualDeviceId,
+			   HostTraffic *theHost, int actualDeviceId,
 			   char* file, int line) {
   u_int i, found=0;
-  HostTraffic *theHost;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: incrementUsageCounter(%u) @ %s:%d",
 	     peerIdx, file, line);
 #endif
 
-  if(peerIdx == FLAG_NO_PEER) return(0);
-
-  if(peerIdx >= myGlobals.device[actualDeviceId].actualHashSize) {
-    traceEvent(CONST_TRACE_WARNING, "Index %u out of range [0..%u] @ %s:%d",
-	       peerIdx, myGlobals.device[actualDeviceId].actualHashSize-1, file, line);
-    return(0);
-  }
-
-  if((peerIdx == myGlobals.broadcastEntryIdx)
-     || (peerIdx == myGlobals.otherHostEntryIdx)) {
-    return(0);
-  }
-
-  if((theHost = myGlobals.device[actualDeviceId].
-      hash_hostTraffic[checkSessionIdx(peerIdx)]) == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "wrong Index %u @ %s:%d",
-	       peerIdx, file, line);
-    return(0);
-  }
+  if(theHost == NULL) return(0);
 
   counter->value.value++;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(counter->peersIndexes[i] == FLAG_NO_PEER) {
-      counter->peersIndexes[i] = theHost->hostSerial;
+    if(counter->peersSerials[i] == FLAG_NO_PEER) {
+      counter->peersSerials[i] = theHost->hostSerial;
       return(1);
       break;
-    } else if(counter->peersIndexes[i] == theHost->hostSerial) {
+    } else if(counter->peersSerials[i] == theHost->hostSerial) {
       found = 1;
       break;
     }
@@ -2937,10 +2976,10 @@ int _incrementUsageCounter(UsageCounter *counter,
 
   if(!found) {
     for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
-      counter->peersIndexes[i] = counter->peersIndexes[i+1];
+      counter->peersSerials[i] = counter->peersSerials[i+1];
 
     /* Add host serial and not it's index */
-    counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = theHost->hostSerial;
+    counter->peersSerials[MAX_NUM_CONTACTED_PEERS-1] = theHost->hostSerial;
     return(1); /* New entry added */
   }
 
@@ -3230,16 +3269,14 @@ void allocateElementHash(int deviceId, u_short hashType) {
 u_int numActiveSenders(u_int deviceId) {
   u_int numSenders = 0;
   int i;
-
-  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
-    HostTraffic *el;
-
-    if((i == myGlobals.otherHostEntryIdx) || (i == myGlobals.broadcastEntryIdx)
-       || ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]) == NULL)
-       || broadcastHost(el)
-       || (el->pktSent.value == 0))
+  HostTraffic *el;
+  
+  for(el=getFirstHost(deviceId); 
+      el != NULL; el = getNextHost(deviceId, el)) {
+    if(broadcastHost(el) || (el->pktSent.value == 0))
       continue;
-    numSenders++;
+    else
+      numSenders++;
   }
 
   return(numSenders);

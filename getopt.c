@@ -971,7 +971,7 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 }
 
 int
-getopt (argc, argv, optstring)
+getopt____ (argc, argv, optstring)
      int argc;
      char *const *argv;
      const char *optstring;
@@ -1055,3 +1055,4 @@ main (argc, argv)
 }
 
 #endif /* TEST */
+

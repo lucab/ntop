@@ -200,6 +200,7 @@ static void handleLsHTTPrequest(char* url) {
   sendString("<CENTER><TABLE BORDER>\n");
   sendString("<TR "TR_ON"><TH "TH_BG">Host</TH><TH "TH_BG">Address</TH><TH "TH_BG">LastSeen</TH><TH "TH_BG">Comments</TH><TH "TH_BG">Options</TH></TR>\n");
   while ( entry >= 0 ) {
+    struct in_addr addr;
 
     /* Getting notes from the DN */
 
@@ -218,7 +219,8 @@ static void handleLsHTTPrequest(char* url) {
     }
     /* ================================================================== */
 
-    HostT = findHostByNumIP(intoa(tablehost[entry].HostIpAddress), myGlobals.actualReportDeviceId);
+    addr.s_addr = intoa(tablehost[entry].HostIpAddress);
+    HostT = findHostByNumIP(addr, myGlobals.actualReportDeviceId);
     if ( HostT )
       tmp = makeHostLink(HostT,FLAG_HOSTLINK_HTML_FORMAT,0,0);
     else

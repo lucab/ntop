@@ -320,7 +320,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     return("&nbsp;");
 
   if((broadcastHost(el) && (el->hostIpAddress.s_addr == 0))
-     || (el->hostSerial == myGlobals.broadcastEntryIdx)
+     || (el == myGlobals.broadcastEntry)
      || ((el->hostIpAddress.s_addr == 0) && (el->ethAddressString[0] == '\0'))) {
     if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
       return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
@@ -335,7 +335,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   accessAddrResMutex("makeHostLink");
 
   if((el == myGlobals.otherHostEntry)
-     || (el->hostSerial == myGlobals.otherHostEntryIdx)) {
+     || (el->hostSerial == myGlobals.otherHostEntry->hostSerial)) {
     char *fmt;
 
     if(mode == FLAG_HOSTLINK_HTML_FORMAT)
@@ -1088,27 +1088,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
   if(snprintf(buf, sizeof(buf), 
               "#define CONST_HASH_INITIAL_SIZE %d", CONST_HASH_INITIAL_SIZE) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Initial size", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "#define CONST_HASH_MINIMUM_SIZE %d", CONST_HASH_MINIMUM_SIZE) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "After 1st extend", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "#define CONST_HASH_INCREASE_FACTOR %d", CONST_HASH_INCREASE_FACTOR) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Intermediate increase factor", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "#define CONST_HASH_FACTOR_MAXIMUM %d", CONST_HASH_FACTOR_MAXIMUM) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Factor growth until", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "#define CONST_HASH_TERMINAL_INCREASE %d", CONST_HASH_TERMINAL_INCREASE) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Then grow (linearly) by", buf);
+  printFeatureConfigInfo(textPrintFlag, "Size", buf);
 
   sendString(texthtml("\n\nCompile Time: globals-define.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-define.h</tr>\n"));
@@ -4294,7 +4274,7 @@ void initWeb() {
     }
   }
   traceEvent(CONST_TRACE_INFO,
-	     "Note: Reporting device set to %d[%s]",
+	     "Note: Reporting device set to %d [%s]",
 	     myGlobals.actualReportDeviceId,
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName != NULL ?
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName :
