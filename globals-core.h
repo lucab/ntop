@@ -658,7 +658,7 @@ extern unsigned short isOKtoSave(u_int32_t addr,
 				 u_int32_t blackNetworks[MAX_NUM_NETWORKS][3],
 				 u_short numWhiteNets, u_short numBlackNets);
 extern float timeval_subtract(struct timeval x, struct timeval y);
-extern void freePortsUsage(PortUsage *ports);
+extern void freePortsUsage(HostTraffic *el);
 extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
 extern char* vlan2name(int vlanId, char *buf, int buf_len);
 extern void mkdir_p(char *tag, char *path, int permission);

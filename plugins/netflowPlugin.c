@@ -1496,8 +1496,7 @@ static void initNetFlowDevice(int deviceId) {
   myGlobals.device[deviceId].netflowGlobals->dummyHost->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
   strcpy(myGlobals.device[deviceId].netflowGlobals->dummyHost->ethAddressString, "00:00:00:00:00:00");
   setEmptySerial(&myGlobals.device[deviceId].netflowGlobals->dummyHost->hostSerial);
-  myGlobals.device[deviceId].netflowGlobals->dummyHost->portsUsage = (PortUsage*)calloc(sizeof(PortUsage*),
-											 MAX_ASSIGNED_IP_PORTS);
+  myGlobals.device[deviceId].netflowGlobals->dummyHost->portsUsage = NULL;
   myGlobals.device[deviceId].activeDevice = 1;
   myGlobals.device[deviceId].samplingRate = 1;
   myGlobals.device[deviceId].mtuSize    = myGlobals.mtuSize[myGlobals.device[deviceId].datalink];

@@ -426,7 +426,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   if(host->routedTraffic != NULL) free(host->routedTraffic);
 
-  freePortsUsage(host->portsUsage); host->portsUsage = NULL;
+  if(host->portsUsage != NULL) freePortsUsage(host);
 
   if(myGlobals.runningPref.enablePacketDecoding && (host->protocolInfo != NULL)) {
     if(host->protocolInfo->httpVirtualHosts != NULL) {
@@ -988,7 +988,8 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
     if(isMultihomed)
       FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
 
-    el->portsUsage = NULL;
+    if(el->portsUsage != NULL)
+      freePortsUsage(el);
 
     len = (size_t)myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**);
     if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) return(NULL);

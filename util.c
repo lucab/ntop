@@ -2334,8 +2334,7 @@ void resetHostsVariables(HostTraffic* el) {
   el->nonIPTraffic = NULL;
   if (el->routedTraffic != NULL)       free(el->routedTraffic);
   el->routedTraffic = NULL;
-  if (el->portsUsage != NULL)          freePortsUsage(el->portsUsage);
-  el->portsUsage = NULL;
+  if (el->portsUsage != NULL)          freePortsUsage(el);
   if (el->protoIPTrafficInfos != NULL) {
     int i;
 
@@ -6527,17 +6526,18 @@ float timeval_subtract (struct timeval x, struct timeval y) {
 
 /* ************************************ */
 
-void freePortsUsage(PortUsage *ports) {
+void freePortsUsage(HostTraffic *el) {
   PortUsage *act, *next;
   
-  if(ports == NULL) return;
-  
-  act = ports;
+  if(el->portsUsage == NULL) return;
+
+  act = el->portsUsage;
   while(act) {
     next = act->next;
     free(act);
     act = next;
   } 
+  el->portsUsage = NULL;
 }
 
 /* ************************************ */
@@ -6557,7 +6557,14 @@ static PortUsage* allocatePortUsage(void) {
 
 /* ************************************ */
 
-/* Keep the list sorted */
+/* Chain looks like this:
+ *     el(portsUsage) -> PortUsage -> PortUsage -> NULL
+ *
+ * Here, we:
+ * 1. Scan list upto found/end/port > what we care about
+ * 2. (not found and createIfNecessary), allocate new one and insert 
+ *    into chain, thus keeping the list sorted.
+ */
 PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) {
   PortUsage *ports = el->portsUsage, *prev = NULL, *newPort;
 
@@ -6572,10 +6579,15 @@ PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) 
   newPort = allocatePortUsage();
   newPort->port = portIdx;
 
-  if(prev == NULL) {
+  if(el->portsUsage == NULL) {
+    /* Previously empty chain */
     el->portsUsage = newPort;
-    newPort->next = NULL;
+  } else if (ports == el->portsUsage) { 
+    /* 1st in chain */
+    newPort->next = el->portsUsage;
+    el->portsUsage = newPort;
   } else {
+    /* Insert in chain */
     newPort->next = prev->next;
     prev->next = newPort;
   }
