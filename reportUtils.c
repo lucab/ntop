@@ -1701,7 +1701,7 @@ void printPacketStats(HostTraffic *el) {
     sendString("<CENTER>\n"
 	       ""TABLE_ON"<TABLE BORDER=1 WIDTH=100%><TR><TH "TH_BG">Anomaly</TH>"
 	       "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent&nbsp;to</TH>"
-	       "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Received&nbsp;by</TH>"
+	       "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Received&nbsp;from</TH>"
 	       "</TR>\n");
     
     if((el->securityHostPkts.ackScanSent.value+el->securityHostPkts.ackScanRcvd.value) > 0) {
@@ -2186,7 +2186,8 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 	}
 
 	remotePeer = makeHostLink(device[actualReportDeviceId].
-				  hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].tcpSession[idx]->initiatorIdx)],
+				  hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].
+								   tcpSession[idx]->initiatorIdx)],
 				  SHORT_FORMAT, 0, 0);
 	dataSent     = device[actualReportDeviceId].tcpSession[idx]->bytesReceived;
 	dataReceived = device[actualReportDeviceId].tcpSession[idx]->bytesSent;
