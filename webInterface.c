@@ -710,7 +710,7 @@ void switchNwInterface(int _interface) {
 	sendString(buf);
       }
 
-    sendString("<p><INPUT TYPE=submit>&nbsp;<INPUT TYPE=reset>\n</FORM>\n");
+    sendString("<p><INPUT TYPE=submit VALUE=\"Switch NIC\">&nbsp;<INPUT TYPE=reset VALUE=Reset>\n</FORM>\n");
     sendString("<B>");
   }
 

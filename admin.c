@@ -120,7 +120,7 @@ void addUser(char* user) {
     sendString("</TABLE>"TABLE_OFF"\n");
 
     if(snprintf(tmpStr, sizeof(tmpStr),
-		"<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset>\n",
+		"<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset VALUE=Reset>\n",
 		(user != NULL) ? "Modify User" : "Add User") < 0)
       BufferTooShort();
     sendString(tmpStr);
@@ -400,7 +400,7 @@ void addURL(char* url) {
 		 "</DIV>\n</BLOCKQUOTE>\n");
 
     if(snprintf(tmpStr, sizeof(tmpStr),
-	     "<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset>\n",
+	     "<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset VALUE=Reset>\n",
 	     (url != NULL) ? "Modify URL" : "Add URL") < 0)
 	 BufferTooShort();
     sendString(tmpStr);
@@ -695,7 +695,7 @@ void changeFilter(void) {
   sendString("<TD ALIGN=left><INPUT TYPE=text NAME=filter SIZE=40>\n");
   sendString("</TD>\n</TR>\n</TABLE>"TABLE_OFF"\n<CENTER>");
   sendString("<INPUT TYPE=submit VALUE=\"Change Filter\">&nbsp;&nbsp;&nbsp;");
-  sendString("<INPUT TYPE=reset></FORM>");
+  sendString("<INPUT TYPE=reset  VALUE=Reset></FORM>");
 
   sendString("</CENTER></P><P></B>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
   sendString("You can use all filter expressions libpcap can handle, \n");
