@@ -2832,6 +2832,43 @@ void deleteFragment(IpFragment *fragment) {
 
 /* ************************************ */
 
+/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+static void checkFragmentOverlap(u_int srcHostIdx,
+                                 u_int dstHostIdx,
+                                 IpFragment *fragment,
+                                 u_int fragmentOffset,
+                                 u_int dataLength) {
+  if (fragment->fragmentOrder == UNKNOWN_FRAGMENT_ORDER) {
+    if(fragment->lastOffset > fragmentOffset)
+      fragment->fragmentOrder = DECREASING_FRAGMENT_ORDER;
+    else
+      fragment->fragmentOrder = INCREASING_FRAGMENT_ORDER;
+  }
+  
+  if ( (fragment->fragmentOrder == INCREASING_FRAGMENT_ORDER
+        && fragment->lastOffset+fragment->lastDataLength > fragmentOffset)
+       ||
+       (fragment->fragmentOrder == DECREASING_FRAGMENT_ORDER
+        && fragment->lastOffset < fragmentOffset+dataLength)) {
+    if(enableSuspiciousPacketDump) {
+      char buf[BUF_SIZE];
+      snprintf(buf, BUF_SIZE, "Detected overlapping packet fragment [%s->%s]: "
+               "fragment id=%d, actual offset=%d, previous offset=%d\n",
+               fragment->src->hostSymIpAddress,
+               fragment->dest->hostSymIpAddress,
+               fragment->fragmentId, fragmentOffset,
+               fragment->lastOffset);
+
+      logMessage(buf, NTOP_WARNING_MSG);
+      dumpSuspiciousPacket();
+    }
+
+    incrementUsageCounter(&fragment->src->securityHostPkts.overlappingFragmentSent, dstHostIdx);
+    incrementUsageCounter(&fragment->dest->securityHostPkts.overlappingFragmentRcvd, srcHostIdx);
+  }
+}
+                                
+/* ************************************ */
 static u_int handleFragment(HostTraffic *srcHost,
 			    u_int srcHostIdx,
                             HostTraffic *dstHost,
@@ -2859,66 +2896,17 @@ static u_int handleFragment(HostTraffic *srcHost,
     fragment->dest = dstHost;
     fragment->fragmentId = fragmentId;
     fragment->firstSeen = actTime;
+    fragment->fragmentOrder = UNKNOWN_FRAGMENT_ORDER;
     fragment->next = device[actualDeviceId].fragmentList;
     fragment->prev = NULL;
-    fragment->fragmentOrder = UNKNOWN_FRAGMENT_ORDER;
     device[actualDeviceId].fragmentList = fragment;
-  } else {
-    if(fragment->fragmentOrder == UNKNOWN_FRAGMENT_ORDER) {
-      if(fragment->lastOffset > fragmentOffset)
-	fragment->fragmentOrder = DECREASING_FRAGMENT_ORDER;
-      else
-	fragment->fragmentOrder = INCREASING_FRAGMENT_ORDER;
-    }
-  }
-
-  switch(fragment->fragmentOrder)
-    {
-    case UNKNOWN_FRAGMENT_ORDER:
-      break;
-    case INCREASING_FRAGMENT_ORDER:
-      if((fragment->lastOffset+fragment->totalDataLength) > fragmentOffset) {
-	char buf[BUF_SIZE];
-	if(snprintf(buf, BUF_SIZE, "Detected overlapping packet fragment [%s->%s]: "
-		 "fragment id=%d, actual offset=%d, previous offset=%d\n",
-		 srcHost->hostSymIpAddress,
-		 dstHost->hostSymIpAddress,
-		 fragmentId, fragmentOffset,
-		 fragment->lastOffset)  < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-	if(enableSuspiciousPacketDump) {
-	  logMessage(buf, NTOP_WARNING_MSG);
-	  dumpSuspiciousPacket();
-	}
-
-	incrementUsageCounter(&srcHost->securityHostPkts.overlappingFragmentSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.overlappingFragmentRcvd, srcHostIdx);
-      }
-      break;
-    case DECREASING_FRAGMENT_ORDER:
-      if(fragment->lastOffset < (fragmentOffset+fragment->totalDataLength)) {
-	char buf[BUF_SIZE];
-	snprintf(buf, BUF_SIZE, "Detected overlapping packet fragment [%s->%s]: "
-		 "fragment id=%d, actual offset=%d, previous offset=%d\n",
-		 srcHost->hostSymIpAddress,
-		 dstHost->hostSymIpAddress,
-		 fragmentId, fragmentOffset,
-		 fragment->lastOffset);
-
-	if(enableSuspiciousPacketDump) {
-	  logMessage(buf, NTOP_WARNING_MSG);
-	  dumpSuspiciousPacket();
-	}
-	incrementUsageCounter(&srcHost->securityHostPkts.overlappingFragmentSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.overlappingFragmentRcvd, srcHostIdx);
-      }
-      break;
-    }
-
+  } else
+    checkFragmentOverlap(srcHostIdx, dstHostIdx, fragment, fragmentOffset, dataLength);
+ 
   fragment->lastOffset = fragmentOffset;
   fragment->totalPacketLength += packetLength;
   fragment->totalDataLength += dataLength;
+  fragment->lastDataLength = dataLength;
 
   if (fragmentOffset == 0) {
     /* first fragment contains port numbers */

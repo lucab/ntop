@@ -132,7 +132,7 @@ extern struct timeval lastPktTime;
    threads deviceId is a bad idea */
 extern int deviceId; /* Set by processPacket() */
 extern int numDevices, actualDeviceId;
-extern ntopInterface_t device[MAX_NUM_DEVICES];
+extern ntopInterface_t *device;
 
 /* Monitored Protocols */
 extern char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS]; /* array 0-numIpProtosToMonitor */

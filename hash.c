@@ -654,21 +654,21 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 	  accessMutex(&lsofMutex, "processes Map");
 	#endif
 	  for(j=0; j<MAX_NUM_PROCESSES; j++) {
-		if(processes[j] != NULL) {
-		  int i;
-
-		  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+	    if(processes[j] != NULL) {
+	      int i;
+	      
+	      for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
 		if(processes[j]->contactedIpPeersIndexes[i] != NO_PEER)
 		  processes[j]->contactedIpPeersIndexes[i] =
-			mapIdx(processes[j]->contactedIpPeersIndexes[i]);
-		  }
-		}
+		    mapIdx(processes[j]->contactedIpPeersIndexes[i]);
+	      }
+	    }
 	  }
-	#ifdef MULTITHREADED
+#ifdef MULTITHREADED
 	  releaseMutex(&lsofMutex);
-	#endif
+#endif
   }
-
+  
   for(j=0; j<device[deviceToExtend].numTotSessions; j++) {
     if(device[deviceToExtend].tcpSession[j] != NULL) {
       device[deviceToExtend].tcpSession[j]->initiatorIdx  =

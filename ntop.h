@@ -764,7 +764,7 @@ struct hostTraffic;
 typedef struct ipFragment {
   struct hostTraffic *src, *dest;
   char fragmentOrder;
-  u_int fragmentId, lastOffset;
+  u_int fragmentId, lastOffset, lastDataLength;
   u_int totalDataLength, expectedDataLength;
   u_int totalPacketLength;
   u_short sport, dport;
@@ -820,7 +820,7 @@ typedef struct {
 
   struct in_addr network;        /* network number associated to this interface */
   struct in_addr netmask;        /* netmask associated to this interface */
-
+  u_int          numHosts;       /* # hosts of the subnet */
   struct in_addr ifAddr;         /* network number associated to this interface */
                                  /* local domainname */
 
@@ -867,7 +867,7 @@ typedef struct {
   TrafficCounter icmpBytes;
   TrafficCounter dlcBytes;
   TrafficCounter ipxBytes;
-  TrafficCounter stpBytes; /* Spanning Tree */
+  TrafficCounter stpBytes;        /* Spanning Tree */
   TrafficCounter decnetBytes;
   TrafficCounter netbiosBytes;
   TrafficCounter arpRarpBytes;
@@ -895,7 +895,7 @@ typedef struct {
   TrafficCounter lastIpBytes;
   TrafficCounter lastNonIpBytes;
 
-  PacketStats rcvdPktStats;      /* statistics from start of the run to time of call */
+  PacketStats rcvdPktStats; /* statistics from start of the run to time of call */
 
   float peakThroughput, actualThpt, lastMinThpt, lastFiveMinsThpt;
   float peakPacketThroughput, actualPktsThpt, lastMinPktsThpt, lastFiveMinsPktsThpt;
@@ -929,8 +929,8 @@ typedef struct {
   IpFragment *fragmentList;
   struct ipSession **tcpSession;
   u_short numTotSessions, numTcpSessions;
-  TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
-  struct hostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */
+  TrafficEntry* ipTrafficMatrix; /* Subnet traffic Matrix */
+  struct hostTraffic** ipTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
   fd_set ipTrafficMatrixPromiscHosts;
 } ntopInterface_t;
 
@@ -950,10 +950,7 @@ typedef struct processInfoList {
   struct processInfoList *next;
 } ProcessInfoList;
 
-
-#define MAX_NUM_SHARED_PORTS         16
 #define MAX_NUM_PROCESSES          1024
-#define MAX_NUM_LSOF_ENTRIES        512
 #define MAX_NUM_EVENTS              512
 #define MAX_NUM_EVENTS_TO_DISPLAY    32
 #define MIN_NUM_FREED_BUCKETS       128
@@ -1375,8 +1372,8 @@ typedef struct pluginStatus {
 /* Flow Filter List */
 typedef struct flowFilterList {
   char* flowName;
-  struct bpf_program fcode[MAX_NUM_DEVICES]; /* compiled filter code       */
-  struct flowFilterList *next;               /* next element (linked list) */
+  struct bpf_program *fcode;     /* compiled filter code one for each device  */
+  struct flowFilterList *next;   /* next element (linked list) */
   TrafficCounter bytes, packets;
   PluginStatus pluginStatus;
 } FlowFilterList;

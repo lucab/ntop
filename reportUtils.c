@@ -3265,36 +3265,37 @@ void printTableEntry(char *buf, int bufLen,
 
 char* buildHTMLBrowserWindowsLabel(int i, int j) {
   static char buf[BUF_SIZE];
-
+  int idx = i*device[actualReportDeviceId].numHosts + j;
+  
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
 #endif
 
-  if((device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent == 0)
-     && (device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived == 0))
+  if((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent == 0)
+     && (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived == 0))
     buf[0]='\0';
-  else if ((device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent > 0)
-	   && (device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived == 0)) {
+  else if ((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent > 0)
+	   && (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived == 0)) {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s",
 		device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
 		device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent, 1)) < 0)
+		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent, 1)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-  } else if ((device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent == 0)
-	     && (device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived > 0)) {
+  } else if ((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent == 0)
+	     && (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived > 0)) {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s",
 		device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
 		device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived, 1)) < 0)
+		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived, 1)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s, (%s->%s)=%s",
 		device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
 		device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent, 1),
+		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent, 1),
 		device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
 		device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived, 1)) < 0)
+		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived, 1)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 

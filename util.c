@@ -243,8 +243,7 @@ HostTraffic* findHostByMAC(char* macAddr) {
 /*
  * Copy arg vector into a new buffer, concatenating arguments with spaces.
  */
-char* copy_argv(register char **argv)
-{
+char* copy_argv(register char **argv) {
   register char **p;
   register u_int len = 0;
   char *buf;
@@ -336,8 +335,10 @@ unsigned short isLocalAddress(struct in_addr *addr) {
 }
 
 /* **********************************************
+ *
  * Description:
- *  Converts an integer in the range
+ *
+ *  It converts an integer in the range
  *  from  0 to 255 in number of bits
  *  useful for netmask  calculation.
  *  The conversion is  valid if there
@@ -395,7 +396,9 @@ static int int2bits(int number) {
 }
 
 /* ***********************************************
+ *
  * Description:
+ *
  *  Converts a dotted quad notation
  *  netmask  specification  to  the
  *  equivalent number of bits.
@@ -418,6 +421,7 @@ static int int2bits(int number) {
  * Courtesy of Antonello Maiorca <marty@tai.it>
  *
  *********************************************** */
+
 int dotted2bits(char *mask) {
   int		fields[4];
   int		fields_num, field_bits;
@@ -462,7 +466,9 @@ int dotted2bits(char *mask) {
 }
 
 /* ********************************* */
+
 /* Example: "131.114.0.0/16,193.43.104.0/255.255.255.0" */
+
 void handleLocalAddresses(char* addresses) {
   char *strtokState, *address = strtok_r(addresses, ",", &strtokState);
   int i;
@@ -471,7 +477,8 @@ void handleLocalAddresses(char* addresses) {
     char *mask = strchr(address, '/');
 
     if(mask == NULL)
-      traceEvent(TRACE_INFO, "Unknown network '%s' (empty mask!). It has been ignored.\n", address);
+      traceEvent(TRACE_INFO, "Unknown network '%s' (empty mask!). It has been ignored.\n", 
+		 address);
     else {
       u_int32_t network, networkMask, broadcast;
       int bits, a, b, c, d;
@@ -524,7 +531,8 @@ void handleLocalAddresses(char* addresses) {
 		   a, b, c, d, bits, network, networkMask);
       }
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "%d.%d.%d.%d/%d [0x%08x/0x%08x]\n", a, b, c, d, bits, network, networkMask);
+      traceEvent(TRACE_INFO, "%d.%d.%d.%d/%d [0x%08x/0x%08x]\n", 
+		 a, b, c, d, bits, network, networkMask);
 #endif
 
       broadcast = network | (~networkMask);
@@ -747,6 +755,8 @@ void handleFlowsSpecs(char* flows) {
           } else {
             int i;
 
+	    newFlow->fcode = (struct bpf_program*)calloc(numDevices, sizeof(struct bpf_program));
+
             for(i=0; i<numDevices; i++) {
               rc = pcap_compile(device[i].pcapPtr, &newFlow->fcode[i],
                                 flowSpec, 1, device[i].netmask.s_addr);
@@ -761,7 +771,7 @@ void handleFlowsSpecs(char* flows) {
 
             newFlow->flowName = strdup(flowName);
             newFlow->pluginStatus.activePlugin = 1;
-            newFlow->pluginStatus.pluginPtr = NULL; /* added by Jacques Le Rest <jlerest@ifremer.fr> */
+            newFlow->pluginStatus.pluginPtr = NULL; /* Added by Jacques Le Rest <jlerest@ifremer.fr> */
             newFlow->next = flowsList;
             flowsList = newFlow;
           }
@@ -778,8 +788,7 @@ void handleFlowsSpecs(char* flows) {
 
 /* ********************************* */
 
-int getLocalHostAddress(struct in_addr *hostAddress, char* device)
-{
+int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
   int rc = 0;
 #ifdef WIN32
   hostAddress->s_addr = GetHostIPAddr();
@@ -797,6 +806,7 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device)
     traceEvent(TRACE_INFO, "socket error: %d", errno);
     return(-1);
   }
+
   memset(&ifr, 0, sizeof(ifr));
 
 #ifdef linux
@@ -820,7 +830,25 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device)
   traceEvent(TRACE_INFO, "Local address is: %s\n", intoa(*hostAddress));
 #endif
 
-  close(fd);
+  /* ******************************* */
+
+#ifdef DEBUG
+  {
+    int numHosts;
+    
+    if(ioctl(fd, SIOCGIFNETMASK, (char*)&ifr) >= 0) {
+      sin = (struct sockaddr_in *)&ifr.ifr_broadaddr;  
+      numHosts = 0xFFFFFFFF - ntohl(sin->sin_addr.s_addr)+1;
+    } else 
+      numHosts = 256; /* default C class */
+    
+    traceEvent(TRACE_INFO, "Num subnet hosts: %d\n", numHosts);
+  }
+#endif
+    
+  /* ******************************* */
+
+close(fd);
 #endif
 
   return(rc);
@@ -1213,7 +1241,6 @@ void readLsofInfo(void) {
     return;
   }
 
-
   /* ****************************************** */
 
 #ifdef MULTITHREADED
@@ -1301,7 +1328,8 @@ void readLsofInfo(void) {
     if(!found) {
       int floater;
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", numProcesses, command, user, portNr, portNumber);
+      traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", 
+		 numProcesses, command, user, portNr, portNumber);
 #endif
       processes[numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
       processes[numProcesses]->command             = strdup(command);

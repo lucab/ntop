@@ -2586,11 +2586,13 @@ void printIpTrafficMatrix(void) {
 
   printHTMLheader("IP Subnet Traffic Matrix", 0);
 
-  for(i=1; i<255; i++) {
+  for(i=1; i<device[actualReportDeviceId].numHosts-1; i++) {
     activeHosts[i] = 0;
-    for(j=1; j<255; j++) {
-      if((device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent != 0)
-	 || (device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived != 0)) {
+    for(j=1; j<device[actualReportDeviceId].numHosts-1; j++) {
+      if((device[actualReportDeviceId].
+	  ipTrafficMatrix[i*device[actualReportDeviceId].numHosts+j].bytesSent != 0)
+	 || (device[actualReportDeviceId].
+	     ipTrafficMatrix[i*device[actualReportDeviceId].numHosts+j].bytesReceived != 0)) {
 	activeHosts[i] = 1;
 	numEntries++;
 	break;
@@ -2617,26 +2619,29 @@ void printIpTrafficMatrix(void) {
   } else
     sendString("</TR>\n");
 
-  for(i=1; i<255; i++)
-    for(j=1; j<255; j++)
-      if((device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent != 0)
-	 || (device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived != 0)) {
-	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent)
-	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent;
-	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived)
-	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived;
-	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent)
-	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent;
-	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived)
-	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived;
+  for(i=1; i<device[actualReportDeviceId].numHosts-1; i++)
+    for(j=1; j<device[actualReportDeviceId].numHosts-1; j++) {
+      int idx = i*device[actualReportDeviceId].numHosts+j;
+	
+      if((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent != 0)
+	 || (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived != 0)) {
+	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent)
+	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent;
+	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived)
+	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived;
+	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent)
+	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent;
+	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived)
+	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived;
       }
+    }
 
   avgTraffic = (TrafficCounter)(((float)minTraffic+(float)maxTraffic)/2);
   avgTrafficLow  = (avgTraffic*15)/100; /* 15% of the average */
   avgTrafficHigh = 2*(maxTraffic/3);   /* 75% of max traffic */
 
 
-  for(i=1; i<255; i++)
+  for(i=1; i<device[actualReportDeviceId].numHosts; i++)
     if(activeHosts[i] == 1) {
       numConsecutiveEmptyCells=0;
 
@@ -2645,12 +2650,14 @@ void printIpTrafficMatrix(void) {
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
-      for(j=1; j<255; j++) {
+      for(j=1; j<device[actualReportDeviceId].numHosts; j++) {
+	int idx = i*device[actualReportDeviceId].numHosts+j;
+	
 	if((i == j) && strcmp(device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress, "127.0.0.1"))
 	  numConsecutiveEmptyCells++;
 	else if(activeHosts[j] == 1) {
-	  if((device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived == 0) 
-	     && (device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent == 0))
+	  if((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived == 0) 
+	     && (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent == 0))
 	    numConsecutiveEmptyCells++;
 	  else {
 	    if(numConsecutiveEmptyCells > 0) {
@@ -2660,8 +2667,8 @@ void printIpTrafficMatrix(void) {
 	      numConsecutiveEmptyCells = 0;
 	    }
 
-	    tmpCounter = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent+
-	      device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived;
+	    tmpCounter = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent+
+	      device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived;
 	    /* Fix below courtesy of Danijel Doriae <danijel.doric@industrogradnja.tel.hr> */
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER %s>"
 			"<A HREF=# onMouseOver=\"window.status='"

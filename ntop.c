@@ -762,7 +762,8 @@ RETSIGTYPE cleanup(int signo) {
   struct pcap_stat stat;
   int i;
 
-  /* traceEvent(TRACE_INFO, "Cleanup called.\n"); */
+  traceEvent(TRACE_INFO, "Cleaning up...");
+
   if(unloaded)
     return;
   else
@@ -867,12 +868,9 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
   if(rFileName == NULL)
-    for(i=0; i<numDevices; i++)
+    for(i=0; i<numDevices; i++) {
       if(!device[i].virtualDevice) {
-	if (pcap_stats(device[i].pcapPtr, &stat) < 0) {
-	  /*traceEvent(TRACE_INFO, "\n\npcap_stats: %s\n",
-	    pcap_geterr(device[i].pcapPtr)); */
-	} else {
+	if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
 	  printf("%s packets received by filter on %s\n",
 		 formatPkts((TrafficCounter)stat.ps_recv), device[i].name);
 	  printf("%s packets dropped by kernel\n",
@@ -883,6 +881,12 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 	}
       }
+
+      free(device[i].ipTrafficMatrix);
+      free(device[i].ipTrafficMatrixHosts);
+    }
+
+  free(device);
 
   if(enableDBsupport) {
     closeSQLsocket(); /* *** SQL Engine *** */

@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   int userId=0, groupId=0;
 #endif
   int op, mergeInterfaces=1;
-  int enableDBsupport=0;  
+  int enableDBsupport=0;
   int enableThUpdate=1;
   int enableIdleHosts=1;
   char *cp, *localAddresses=NULL, *webAddr=NULL, *devices, *sslAddr=NULL;
@@ -82,17 +82,16 @@ int main(int argc, char *argv[]) {
   time_t lastTime;
 
   printf("Wait please: ntop is coming up...\n");
-  initLogger();
 
 #ifndef WIN32
   if (freopen("/dev/null", "w", stderr) == NULL) {
-    traceEvent(TRACE_WARNING, 
+    traceEvent(TRACE_WARNING,
 	       "ntop: unable to replace stderr with /dev/null: %s\n",
 	       strerror(errno));
   }
 #endif
 
-#ifdef MEMORY_DEBUG 
+#ifdef MEMORY_DEBUG
   initLeaks();
 #endif
 
@@ -104,7 +103,7 @@ int main(int argc, char *argv[]) {
   enableSuspiciousPacketDump = 0;
   usePersistentStorage = 0;
   stickyHosts = 0;
-  enableNetFlowSupport = 0; 
+  enableNetFlowSupport = 0;
 
   /* Initialization of local variables */
   isLsofPresent  = checkCommand("lsof");
@@ -139,15 +138,15 @@ int main(int argc, char *argv[]) {
 
   initIPServices();
 
-  traceEvent(TRACE_INFO, "Parsing command line options...");
+  printf("Parsing command line options...\n");
 
 #ifdef WIN32
   theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:q";
 #else
   theOpts = "cIde:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:q";
 #endif
-  
-  while((op = getopt(argc, argv, theOpts)) != EOF)
+
+  while((op = getopt(argc, argv, theOpts)) != EOF) {
       switch (op) {
 	/* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
 
@@ -163,7 +162,7 @@ int main(int argc, char *argv[]) {
 
       case 'a': /* ntop access log path */
 	stringSanityCheck(optarg);
-	strncpy(accessLogPath, optarg, 
+	strncpy(accessLogPath, optarg,
 		sizeof(accessLogPath)-1)[sizeof(accessLogPath)-1] = '\0';
 	break;
 
@@ -173,8 +172,8 @@ int main(int argc, char *argv[]) {
 	break;
 
       case 'I': /* Interactive mode */
-	traceEvent(TRACE_INFO, "intop provides you curses support. "
-		   "ntop -I is no longer used.\n");
+	printf("intop provides you curses support. "
+	       "ntop -I is no longer used.\n");
 	return(-1);
 #endif
 
@@ -201,7 +200,7 @@ int main(int argc, char *argv[]) {
 	stringSanityCheck(optarg);
 	pcapLog = optarg;
 	break;
-	
+
       case 'b': /* host:port */
 	stringSanityCheck(optarg);
 	handleDbSupport(optarg, &enableDBsupport);
@@ -218,7 +217,7 @@ int main(int argc, char *argv[]) {
 	handlemySQLSupport(optarg, &enableDBsupport);
         break;
 #endif
-	
+
       case 'D': /* domain */
 	stringSanityCheck(optarg);
 	strncpy(domainName, optarg,
@@ -232,8 +231,7 @@ int main(int argc, char *argv[]) {
 
     case 'r':
 	if(!isdigit(optarg[0])) {
-	  traceEvent(TRACE_ERROR, 
-		     "FATAL ERROR: flag -r expects a numeric argument.\n");
+	  printf("FATAL ERROR: flag -r expects a numeric argument.\n");
 	  exit(-1);
 	}
 	refreshRate = atoi(optarg);
@@ -283,8 +281,7 @@ int main(int argc, char *argv[]) {
       case 'w':
 	stringSanityCheck(optarg);
 	if(!isdigit(optarg[0])) {
-	  traceEvent(TRACE_ERROR, 
-		     "FATAL ERROR: flag -w expects a numeric argument.\n");
+	  printf("FATAL ERROR: flag -w expects a numeric argument.\n");
 	  exit(-1);
 	}
 
@@ -292,7 +289,7 @@ int main(int argc, char *argv[]) {
 	if ((webAddr = strchr(optarg,':'))) {
 	  /* DS: Search for : to find xxx.xxx.xxx.xxx:port */
 	  /* This code is to be able to bind to a particular interface */
-	  *webAddr = '\0'; 
+	  *webAddr = '\0';
 	  webPort = atoi(webAddr+1);
 	  webAddr = optarg;
 	} else {
@@ -304,13 +301,12 @@ int main(int argc, char *argv[]) {
       case 'W':
 	stringSanityCheck(optarg);
 	if(!isdigit(optarg[0])) {
-	  traceEvent(TRACE_ERROR, 
-		     "FATAL ERROR: flag -W expects a numeric argument.\n");
+	  printf("FATAL ERROR: flag -W expects a numeric argument.\n");
 	  exit(-1);
 	}
 
-	/* 
-	   lets swipe the same address binding code from -w above 
+	/*
+	   lets swipe the same address binding code from -w above
 	   Curtis Doty <Curtis@GreenKey.net>
 	*/
 	if((sslAddr = strchr(optarg,':'))) {
@@ -320,13 +316,13 @@ int main(int argc, char *argv[]) {
 	} else {
 	  sslPort = atoi(optarg);
        }
- 
+
 	break;
 #endif
 
       case 'R':
 	stringSanityCheck(optarg);
-	strncpy(rulesFile, optarg, 
+	strncpy(rulesFile, optarg,
 		sizeof(rulesFile)-1)[sizeof(rulesFile)-1] = '\0';
 	break;
 
@@ -335,19 +331,18 @@ int main(int argc, char *argv[]) {
 	break;
 
       case 'S':
-	/* 
-	   Persitent storage only for 'local' machines 
+	/*
+	   Persitent storage only for 'local' machines
 	   Courtesy of Joel Crisp <jcrisp@dyn21-126.trilogy.com>
 
 	   0 = no storage
 	   1 = store all hosts
 	   2 = store only local hosts
-	*/	
+	*/
 	usePersistentStorage = atoi(optarg);
 	if((usePersistentStorage > 2)
 	   || (usePersistentStorage < 0)){
-	  traceEvent(TRACE_ERROR, 
-		     "FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
+	  printf("FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
 	  exit(-1);
 	}
 	break;
@@ -368,8 +363,7 @@ int main(int argc, char *argv[]) {
           struct passwd *pw;
           pw = getpwnam(optarg);
           if(pw == NULL) {
-            traceEvent(TRACE_ERROR, "FATAL ERROR: Unkown user %s.\n",
-                       optarg);
+            printf("FATAL ERROR: Unkown user %s.\n", optarg);
             exit(-1);
           }
           userId = pw->pw_uid;
@@ -378,26 +372,32 @@ int main(int argc, char *argv[]) {
         }
         break;
 #endif /* WIN32 */
-       
+
       default:
 	usage();
 	exit(-1);
 	/* NOTREACHED */
       }
- 
-  snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s", dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
+  }
 
+  snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s",
+	   dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
+
+  initLogger(); /* Do not call this function before dbPath
+		   is initialized */
   if(webPort == 0) {
 #ifdef HAVE_OPENSSL
     if(sslPort == 0) {
-      traceEvent(TRACE_ERROR, "FATAL ERROR: both -W and -w can't be set to 0.\n");
+      traceEvent(TRACE_ERROR,
+		 "FATAL ERROR: both -W and -w can't be set to 0.\n");
       exit(-1);
     }
 #else
-    traceEvent(TRACE_ERROR, "FATAL ERROR: -w can't be set to 0.\n");
+    traceEvent(TRACE_ERROR,
+	       "FATAL ERROR: -w can't be set to 0.\n");
     exit(-1);
 #endif
-  } 
+  }
 
   /* ***************************** */
 
@@ -426,12 +426,12 @@ int main(int argc, char *argv[]) {
   else
     for(i=0; i<numDevices; i++) {
       char tmpBuf[48];
-      
+
       if(i>0) {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", device[i].name)  < 0) 
+	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", device[i].name)  < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       } else {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", device[i].name) < 0) 
+	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", device[i].name) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
@@ -448,20 +448,20 @@ int main(int argc, char *argv[]) {
 #endif
 
   /*
-    Code fragment below courtesy of 
-    Andreas Pfaller <a.pfaller@pop.gun.de> 
+    Code fragment below courtesy of
+    Andreas Pfaller <a.pfaller@pop.gun.de>
   */
-  
+
 #ifndef WIN32
   if((getuid() != geteuid()) || (getgid() != getegid())) {
     /* setuid binary, drop privileges */
     if (setgid(getgid())!=0 || setuid(getuid())!=0) {
-      traceEvent(TRACE_ERROR, 
+      traceEvent(TRACE_ERROR,
 		 "FATAL ERROR: Unable to drop privileges.\n");
       exit(-1);
     }
   }
-  
+
   if((userId != 0) || (groupId != 0)){
     /* user id specified on commandline */
     if ((setgid(groupId) != 0) || (setuid(userId) != 0)) {
@@ -469,7 +469,7 @@ int main(int argc, char *argv[]) {
       exit(-1);
     }
   }
-  
+
   if((geteuid() == 0) || (getegid() == 0)) {
     traceEvent(TRACE_INFO, "WARNING: For security reasons it is STRONGLY recommended to");
     traceEvent(TRACE_INFO, "WARNING: run ntop as unprivileged user by using the -u option!");
@@ -500,14 +500,14 @@ int main(int argc, char *argv[]) {
   initWeb(webPort, webAddr, sslAddr);
 
   traceEvent(TRACE_INFO, "Sniffying...\n");
- 
-#ifdef MEMORY_DEBUG 
+
+#ifdef MEMORY_DEBUG
   ResetLeaks();
 #endif
-  
-  /* 
-     In multithread mode, a separate thread handles 
-     packet sniffing 
+
+  /*
+    In multithread mode, a separate thread handles
+    packet sniffing
   */
 #ifndef MULTITHREADED
   packetCaptureLoop(&lastTime, refreshRate);
@@ -518,7 +518,8 @@ int main(int argc, char *argv[]) {
 #ifndef WIN32
   pause();
 #endif
-  while(!endNtop) sleep(1);
+  while(!endNtop) 
+    sleep(30);
 
   return(0);
 }

@@ -474,13 +474,14 @@ void updateTrafficMatrix(HostTraffic *srcHost,
 			 HostTraffic *dstHost,
 			 TrafficCounter length) {
   if(subnetLocalHost(srcHost) && subnetLocalHost(dstHost)) {
-    unsigned long a = (unsigned long)(srcHost->hostIpAddress.s_addr) % 256 /* C-class */;
-    unsigned long b = (unsigned long)(dstHost->hostIpAddress.s_addr) % 256 /* C-class */;
+    unsigned long a, b;
+    a = (unsigned long)(srcHost->hostIpAddress.s_addr) % device[actualDeviceId].numHosts;
+    b = (unsigned long)(dstHost->hostIpAddress.s_addr) % device[actualDeviceId].numHosts;
 
     device[actualDeviceId].ipTrafficMatrixHosts[a] = srcHost, 
       device[actualDeviceId].ipTrafficMatrixHosts[b] = dstHost;
-    device[actualDeviceId].ipTrafficMatrix[a][b].bytesSent += length,
-      device[actualDeviceId].ipTrafficMatrix[b][a].bytesReceived += length;
+    device[actualDeviceId].ipTrafficMatrix[a*device[actualDeviceId].numHosts+b].bytesSent += length,
+      device[actualDeviceId].ipTrafficMatrix[b*device[actualDeviceId].numHosts+a].bytesReceived += length;
   }
 }
 

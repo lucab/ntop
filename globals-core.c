@@ -134,7 +134,7 @@ struct timeval lastPktTime;
 /* NICs */
 int deviceId; /* Set by processPacket() */
 int numDevices, actualDeviceId;
-ntopInterface_t device[MAX_NUM_DEVICES];
+ntopInterface_t *device;
 
 /* Monitored Protocols */
 char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS];

@@ -250,11 +250,12 @@ static void loadPlugin(char* dirName, char* pluginName) {
   }
 
   newFlow = (FlowFilterList*)calloc(1, sizeof(FlowFilterList));
-
+  
   if(newFlow == NULL) {
     traceEvent(TRACE_ERROR, "Fatal error: not enough memory. Bye!\n");
     exit(-1);
   } else {
+    newFlow->fcode = (struct bpf_program*)calloc(numDevices, sizeof(struct bpf_program));
     newFlow->flowName = strdup(pluginInfo->pluginName);
 
     if((pluginInfo->bpfFilter == NULL)

@@ -1,9 +1,9 @@
 /*
  *  Copyright (C) 1998-99 Luca Deri <deri@ntop.org>
  *                        Portions by Stefano Suin <stefano@ntop.org>
- *                      
+ *
  *  			  http://www.ntop.org/
- *  					
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -34,7 +34,7 @@ extern char domainName[];
 char *buildDate;
 
 /*
-extern char* device; 
+extern char* device;
 extern int datalink;
 extern unsigned int localnet, netmask;
 */
@@ -48,8 +48,8 @@ ULONG GetHostIPAddr(); /* forward declaration */
 
 TCHAR	       AdapterName[64];
 FRAMEETH       ethernetFrame;
-ULONG		   NameLength=64, FrameLength;
-LPADAPTER	   Adapter;
+ULONG	       NameLength=64, FrameLength;
+LPADAPTER      Adapter;
 LPPACKET       Packet;
 
 /* ************************************************** */
@@ -62,15 +62,15 @@ void initSniffer() {
   datalink = DLT_EN10MB;
 
 	/* ****************** */
-	
+
   PacketGetAdapterNames(AdapterName, &NameLength);
 
   Adapter = PacketOpenAdapter(AdapterName);
   if(Adapter == NULL) {
-   traceEvent(TRACE_ERROR, "FATAL ERROR: please install MS NDIS 3.0 driver. Bye...\n");
+    traceEvent(TRACE_ERROR, "FATAL ERROR: please install MS NDIS 3.0 driver. Bye...\n");
     exit(-1);
   }
-  PacketSetFilter(Adapter, NDIS_PACKET_TYPE_PROMISCUOUS);	
+  PacketSetFilter(Adapter, NDIS_PACKET_TYPE_PROMISCUOUS);
   Packet = PacketAllocatePacket();
   PacketInitPacket(Packet, (PVOID)(&ethernetFrame), sizeof(FRAMEETH));
 }
@@ -84,9 +84,9 @@ void terminateSniffer() {
 
 /* ********************************** */
 
-void sniffSinglePacket(void(*pbuf_process)(u_char *unused, 
-					   const struct pcap_pkthdr *h, 
-					   const u_char *p)) 
+void sniffSinglePacket(void(*pbuf_process)(u_char *unused,
+					   const struct pcap_pkthdr *h,
+					   const u_char *p))
 {
   struct pcap_pkthdr hdr;
   static int numPkts = 0;
@@ -124,14 +124,14 @@ short isWinNT() {
 void initWinsock32() {
   WORD wVersionRequested;
   WSADATA wsaData;
-  int err; 
+  int err;
 
-  wVersionRequested = MAKEWORD(2, 0); 
+  wVersionRequested = MAKEWORD(2, 0);
   err = WSAStartup( wVersionRequested, &wsaData );
   if( err != 0 ) {
     /* Tell the user that we could not find a usable */
-    /* WinSock DLL.                                  */    
-   traceEvent(TRACE_ERROR, "FATAL ERROR: unable to initialise Winsock 2.x.\n");
+    /* WinSock DLL.                                  */
+    traceEvent(TRACE_ERROR, "FATAL ERROR: unable to initialise Winsock 2.x.\n");
     exit(-1);
   }
 
@@ -146,12 +146,12 @@ void initWinsock32() {
     osName = "Win95/98/ME";
 
 #ifdef WIN32_DEMO
- traceEvent(TRACE_INFO, "\n-----------------------------------------------------------\n");
- traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop version able to\n");
- traceEvent(TRACE_INFO, "capture up to %d packets. If you are interested\n", MAX_NUM_PACKETS);
- traceEvent(TRACE_INFO, "in the full version please have a look at the ntop\n");
- traceEvent(TRACE_INFO, "home page http://www.ntop.org/.\n");
- traceEvent(TRACE_INFO, "-----------------------------------------------------------\n\n");
+  traceEvent(TRACE_INFO, "\n-----------------------------------------------------------\n");
+  traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop version able to\n");
+  traceEvent(TRACE_INFO, "capture up to %d packets. If you are interested\n", MAX_NUM_PACKETS);
+  traceEvent(TRACE_INFO, "in the full version please have a look at the ntop\n");
+  traceEvent(TRACE_INFO, "home page http://www.ntop.org/.\n");
+  traceEvent(TRACE_INFO, "-----------------------------------------------------------\n\n");
 #endif
 }
 
@@ -172,12 +172,12 @@ ULONG GetHostIPAddr () {
   int nAddrSize = sizeof(SOCKADDR);
   SOCKET hSock;
   int nRet;
-    
+
   /* Init local address (to zero) */
   stLclAddr.sin_addr.s_addr = INADDR_ANY;
-    
+
   /* Get the local hostname */
-  nRet = gethostname(szLclHost, 64); 
+  nRet = gethostname(szLclHost, 64);
   if(nRet != SOCKET_ERROR) {
     /* Resolve hostname for local address */
     lpstHostent = gethostbyname((LPSTR)szLclHost);
@@ -187,9 +187,9 @@ ULONG GetHostIPAddr () {
       stLclAddr.sin_addr.s_addr = *((u_long FAR*) (lpstHostent->h_addr));
 
       hp = (struct hostent*)gethostbyaddr((char*)&stLclAddr.sin_addr.s_addr, 4, AF_INET);
-	  
+
       if(hp && (hp->h_name)) {
-	char *dotp = (char*)hp->h_name;    
+	char *dotp = (char*)hp->h_name;
 	int i;
 
 	for(i=0; (dotp[i] != '\0') && (dotp[i] != '.'); i++)
@@ -198,8 +198,8 @@ ULONG GetHostIPAddr () {
 	if(dotp[i] == '.') strncpy(domainName, &dotp[i+1], sizeof(domainName));
       }
     }
-  } 
-    
+  }
+
   /* If still not resolved, then try second strategy */
   if(stLclAddr.sin_addr.s_addr == INADDR_ANY) {
     /* Get a UDP socket */
@@ -214,10 +214,10 @@ ULONG GetHostIPAddr () {
 		     sizeof(SOCKADDR));
       if(nRet != SOCKET_ERROR)
 	/* Get local address */
-	getsockname(hSock, 
-		    (LPSOCKADDR)&stLclAddr, 
+	getsockname(hSock,
+		    (LPSOCKADDR)&stLclAddr,
 		    (int FAR*)&nAddrSize);
-        
+
       closesocket(hSock);   /* we're done with the socket */
     }
   }
@@ -229,21 +229,21 @@ ULONG GetHostIPAddr () {
 }
 
 /* **************************************
-   
+
    	       WIN32 MULTITHREAD STUFF
-   
+
    ************************************** */
 
 int createThread(pthread_t *threadId,
 		 void *(*__start_routine) (void *), char* userParm) {
-  DWORD dwThreadId, dwThrdParam = 1; 
+  DWORD dwThreadId, dwThrdParam = 1;
 
-  (*threadId) = CreateThread(NULL, /* no security attributes */ 
-			     0,            /* use default stack size */ 
-			     (LPTHREAD_START_ROUTINE)__start_routine, /* thread function */ 
-			     NULL, /* argument to thread function */ 
-			     0,            /* use default creation flags */ 
-			     &dwThreadId); /* returns the thread identifier */ 
+  (*threadId) = CreateThread(NULL, /* no security attributes */
+			     0,            /* use default stack size */
+			     (LPTHREAD_START_ROUTINE)__start_routine, /* thread function */
+			     NULL, /* argument to thread function */
+			     0,            /* use default creation flags */
+			     &dwThreadId); /* returns the thread identifier */
 
   if(*threadId != NULL)
     return(1);
@@ -276,10 +276,10 @@ void deleteMutex(PthreadMutex *mutexId) {
 
 /* ************************************ */
 
-int _accessMutex(PthreadMutex *mutexId, char* where, 
+int _accessMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n", 
+  traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
 	     mutexId->mutex, where, fileName, fileLine);
 #endif
 
@@ -288,10 +288,10 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   mutexId->numLocks++;
   mutexId->isLocked = 1;
   mutexId->lockTime = time(NULL);
-  
+
   if(fileName != NULL) {
-      strcpy(mutexId->lockFile, fileName);
-      mutexId->lockLine = fileLine;
+    strcpy(mutexId->lockFile, fileName);
+    mutexId->lockLine = fileLine;
   }
 
   return(1);
@@ -300,24 +300,24 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 /* ************************************ */
 
 int _tryLockMutex(PthreadMutex *mutexId, char* where,
-		 char* fileName, int fileLine) {
+		  char* fileName, int fileLine) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
 	     mutexId->mutex, where, fileName, fileLine);
   fflush(stdout);
 #endif
-  
+
   if(WaitForSingleObject(mutexId->mutex, 0) == WAIT_FAILED)
     return(0);
   else {
-	  mutexId->numLocks++;
-	  mutexId->isLocked = 1;
-	  mutexId->lockTime = time(NULL);
-  
-	  if(fileName != NULL) {
-		strcpy(mutexId->lockFile, fileName);
-		mutexId->lockLine = fileLine;
-	  }
+    mutexId->numLocks++;
+    mutexId->isLocked = 1;
+    mutexId->lockTime = time(NULL);
+
+    if(fileName != NULL) {
+      strcpy(mutexId->lockFile, fileName);
+      mutexId->lockLine = fileLine;
+    }
 
     return(1);
   }
@@ -325,45 +325,45 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
 /* ************************************ */
 
-int _releaseMutex(PthreadMutex *mutexId, 
+int _releaseMutex(PthreadMutex *mutexId,
 		  char* fileName, int fileLine) {
 
   time_t lockDuration;
   BOOL rc;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n", 
-	     mutexId->mutex, fileName, fileLine); 
+  traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
+	     mutexId->mutex, fileName, fileLine);
 #endif
   rc = ReleaseMutex(mutexId->mutex);
 
   if(rc == 0) {
-	traceEvent(TRACE_ERROR, "ERROR while unlocking 0x%X [%s:%d] (LastError=%d)\n", 
-	     mutexId->mutex, fileName, fileLine, GetLastError()); 
+    traceEvent(TRACE_ERROR, "ERROR while unlocking 0x%X [%s:%d] (LastError=%d)\n",
+	       mutexId->mutex, fileName, fileLine, GetLastError());
   }
 
   lockDuration = time(NULL) - mutexId->lockTime;
 
   if((mutexId->maxLockedDuration < lockDuration)
-       || (mutexId->maxLockedDurationUnlockLine == 0 /* Never set */)) {
-      mutexId->maxLockedDuration = lockDuration;
+     || (mutexId->maxLockedDurationUnlockLine == 0 /* Never set */)) {
+    mutexId->maxLockedDuration = lockDuration;
 
-      if(fileName != NULL) {
-	strcpy(mutexId->maxLockedDurationUnlockFile, fileName);
-	mutexId->maxLockedDurationUnlockLine = fileLine;
-      }
-
-      traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
-		 &(mutexId->mutex), fileName, fileLine,
-		 mutexId->maxLockedDuration);
-   }
-
-    mutexId->isLocked = 0;
-    mutexId->numReleases++;
     if(fileName != NULL) {
-      strcpy(mutexId->unlockFile, fileName);
-      mutexId->unlockLine = fileLine;
-	}
+      strcpy(mutexId->maxLockedDurationUnlockFile, fileName);
+      mutexId->maxLockedDurationUnlockLine = fileLine;
+    }
+
+    traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
+	       &(mutexId->mutex), fileName, fileLine,
+	       mutexId->maxLockedDuration);
+  }
+
+  mutexId->isLocked = 0;
+  mutexId->numReleases++;
+  if(fileName != NULL) {
+    strcpy(mutexId->unlockFile, fileName);
+    mutexId->unlockLine = fileLine;
+  }
 
   return(1);
 }
@@ -391,13 +391,13 @@ void deleteCondvar(ConditionalVariable *condvarId) {
 int waitCondvar(ConditionalVariable *condvarId) {
   int rc;
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "Wait (%x)...\n", condvarId->condVar);
+  traceEvent(TRACE_INFO, "Wait (%x)...\n", condvarId->condVar);
 #endif
   EnterCriticalSection(&condvarId->criticalSection);
   rc = WaitForSingleObject(condvarId->condVar, INFINITE);
   LeaveCriticalSection(&condvarId->criticalSection);
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "Got signal (%d)...\n", rc);
+  traceEvent(TRACE_INFO, "Got signal (%d)...\n", rc);
 #endif
   return(rc);
 }
@@ -406,7 +406,7 @@ int waitCondvar(ConditionalVariable *condvarId) {
 
 int signalCondvar(ConditionalVariable *condvarId) {
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "Signaling (%x)...\n", condvarId->condVar);
+  traceEvent(TRACE_INFO, "Signaling (%x)...\n", condvarId->condVar);
 #endif
   return((int)PulseEvent(condvarId->condVar));
 }
@@ -417,7 +417,7 @@ int signalCondvar(ConditionalVariable *condvarId) {
 void printAvailableInterfaces() {
   ULONG nameLength = 128;
   WCHAR adaptersName[128];
-	
+
   PacketGetAdapterNames (adaptersName, &nameLength);
 
   if(isWinNT())
@@ -578,7 +578,7 @@ getnetent()
   net.n_net = inet_network(cp);
   net.n_addrtype = AF_INET;
   q = net.n_aliases = net_aliases;
-  if(p != NULL) 
+  if(p != NULL)
     cp = p;
   while (cp && *cp) {
     if(*cp == ' ' || *cp == '\t') {
@@ -616,7 +616,7 @@ struct netent *getnetbyname(const char *name)
 
 
 /* Find the first bit set in I.  */
-int ffs (int i) 
+int ffs (int i)
 {
   static const unsigned char table[] =
   {
@@ -644,5 +644,3 @@ int gettimeofday(struct timeval *tv, struct timezone *notUsed) {
   tv->tv_usec = 0;
   return(0);
 }
-
-

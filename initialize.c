@@ -53,8 +53,6 @@ void initIPServices(void) {
 
   traceEvent(TRACE_INFO, "Initializing IP services...");
 
-  memset(device, 0, sizeof(device));
-
   memset(protoIPTrafficInfos, 0, sizeof(protoIPTrafficInfos));
   ipPortMapper = (int*)malloc(sizeof(int)*TOP_IP_PORT);
 
@@ -83,7 +81,7 @@ void initIPServices(void) {
     }
   }
 
-  if(numSlots == 0) numSlots = 32;    
+  if(numSlots == 0) numSlots = 32;
   numActServices = 2*numSlots; /* Double the hash */
 
   /* ************************************* */
@@ -202,7 +200,7 @@ static void resetDevice(int deviceId) {
 
   len = (size_t)numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
 
-  if(device[deviceId].ipProtoStats == NULL)   
+  if(device[deviceId].ipProtoStats == NULL)
     device[deviceId].ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
 
   memset(device[deviceId].ipProtoStats, 0, len);
@@ -363,8 +361,8 @@ void resetStats(void) {
       }
 
     resetDevice(i);
-  
-    for(j=0; i<device[i].numTotSessions; i++)
+
+    for(j=0; j<device[i].numTotSessions; j++)
       if(device[i].tcpSession[j] != NULL) {
 	free(device[i].tcpSession[j]);
 	device[i].tcpSession[j] = NULL;
@@ -372,7 +370,7 @@ void resetStats(void) {
 
     device[i].numTcpSessions = 0;
   }
-  
+
 #ifdef MULTITHREADED
   if(threadsInitialized)
     releaseMutex(&hostsHashMutex);
@@ -570,7 +568,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
 		scanIdleThreadId);
 
     createThread(&scanIdleSessionsThreadId, scanIdleSessionsLoop, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%ld) for idle TCP sessions detection.\n", 
+    traceEvent (TRACE_INFO, "Started thread (%ld) for idle TCP sessions detection.\n",
 		scanIdleSessionsThreadId);
   }
 
@@ -593,7 +591,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
      * (6) - DNSAR - DNS Address Resolution - optional
      */
     createThread(&dequeueAddressThreadId, dequeueAddress, NULL);
-    traceEvent (TRACE_INFO, "Started thread (%ld) for DNS address resolution.\n", 
+    traceEvent (TRACE_INFO, "Started thread (%ld) for DNS address resolution.\n",
 		dequeueAddressThreadId);
   }
 #endif
@@ -627,10 +625,13 @@ void initApps(void) {
 void initDevices(char* devices) {
   char ebuf[PCAP_ERRBUF_SIZE];
   int i, j;
+  ntopInterface_t *tmpDevice;
 
   traceEvent(TRACE_INFO, "Initializing network devices...");
 
-  memset(device, 0, sizeof(device));
+  i = sizeof(ntopInterface_t)*MAX_NUM_DEVICES;
+  device = (ntopInterface_t*)malloc(i);
+  memset(device, 0, i);
 
   /* Determine the device name if not specified */
   ebuf[0] = '\0';
@@ -643,11 +644,11 @@ void initDevices(char* devices) {
     if(!isWinNT()) {
       for(i=0;; i++) {
 	if(tmpDev[i] == 0) {
-	  if(ifName[0] == '\0') 
+	  if(ifName[0] == '\0')
 	    break;
 	  else {
 	    traceEvent(TRACE_INFO, "Found interface '%s'", ifName);
-	    ifName = &tmpDev[i+1]; 
+	    ifName = &tmpDev[i+1];
 	  }
 	}
       }
@@ -699,7 +700,8 @@ void initDevices(char* devices) {
 	nwInterface[0] = 0;
 
 	for(i=0; i<numDevices; i++)
-	  if(device[i].name && (strcmp(device[i].name, tmpDev) == 0)) {
+	  if(device[i].name
+	     && (strcmp(device[i].name, tmpDev) == 0)) {
 	    found = 1;
 	    break;
 	  }
@@ -721,6 +723,12 @@ void initDevices(char* devices) {
 	break;
       }
 #endif
+
+      if(numDevices >= MAX_NUM_DEVICES) {
+	traceEvent(TRACE_INFO, "WARNING: ntop can handle up to %d interfaces.",
+		   numDevices);
+	break;
+      }
     }
   }
 
@@ -759,9 +767,16 @@ void initDevices(char* devices) {
     }
   }
 
-  for(i=0; i<numDevices; i++) {
+  for(i=0; i<numDevices; i++)
     getLocalHostAddress(&device[i].network, device[i].name);
-  }
+
+  /* As numDevices is finally calculated 'device' can now
+     be finally resized */
+  i = sizeof(ntopInterface_t)*numDevices;
+  tmpDevice = (ntopInterface_t*)malloc(i);
+  memcpy(tmpDevice, device, i);
+  free(device);
+  device = tmpDevice;
 }
 
 /* ******************************* */
@@ -812,19 +827,19 @@ void initLibpcap(char* rulesFile, int numDevices) {
       */
       if(column == NULL) {
 	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1,
-					   100 /* ms */, ebuf);	
+					   100 /* ms */, ebuf);
 
 	if(device[i].pcapPtr == NULL) {
 	  traceEvent(TRACE_INFO, ebuf);
 	  exit(-1);
 	}
 
-	
+
 	if(pcapLog != NULL) {
 	  if(strlen(pcapLog) > 64)
 	    pcapLog[64] = '\0';
 
-	  sprintf(myName, "%s.%s.pcap", pcapLog, device[i].name);	  
+	  sprintf(myName, "%s.%s.pcap", pcapLog, device[i].name);
 	  device[i].pcapDumper = pcap_dump_open(device[i].pcapPtr, myName);
 
 	  if(device[i].pcapDumper == NULL) {
@@ -832,11 +847,11 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	    exit(-1);
 	  }
 	}
-		
+
 	if(enableSuspiciousPacketDump) {
-	  sprintf(myName, "ntop-suspicious-pkts.%s.pcap", device[i].name);	  
+	  sprintf(myName, "ntop-suspicious-pkts.%s.pcap", device[i].name);
 	  device[i].pcapErrDumper = pcap_dump_open(device[i].pcapPtr, myName);
-	
+
 	  if(device[i].pcapErrDumper == NULL)
 	    traceEvent(TRACE_INFO, ebuf);
 	}
@@ -848,7 +863,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
     }
 
     for(i=0; i<numDevices; i++) {
-      if (pcap_lookupnet(device[i].name, &device[i].network.s_addr,
+      if(pcap_lookupnet(device[i].name, &device[i].network.s_addr,
 			 &device[i].netmask.s_addr, ebuf) < 0) {
 	/* Fix for IP-less interfaces (e.g. bridge)
 	   Courtesy of Diana Eichert <deicher@sandia.gov>
@@ -904,6 +919,50 @@ void initLibpcap(char* rulesFile, int numDevices) {
     device[0].localnet = localHostAddress[0].s_addr & device[0].netmask;
   } */
 #endif
+
+  {
+    int i;
+    
+    for(i=0; i<numDevices; i++) {
+      int memlen;
+
+#define MAX_SUBNET_HOSTS 1024
+
+      device[i].numHosts = 0xFFFFFFFF - device[i].netmask.s_addr + 1;
+      if(device[i].numHosts > MAX_SUBNET_HOSTS) {
+	device[i].numHosts = MAX_SUBNET_HOSTS;	
+	traceEvent(TRACE_WARNING, "Truncated network size to %d hosts (real netmask %s)", 
+		   device[i].numHosts, intoa(device[i].netmask));  
+      }
+
+      memlen = sizeof(TrafficEntry)*device[i].numHosts*device[i].numHosts;
+      device[i].ipTrafficMatrix = (TrafficEntry*)calloc(device[i].numHosts*device[i].numHosts, 
+							sizeof(TrafficEntry));
+#ifdef DEBUG
+      traceEvent(TRACE_WARNING, "ipTrafficMatrix memlen=%.1f Mbytes", 
+		 (float)memlen/(float)(1024*1024));
+#endif
+      
+      if(device[i].ipTrafficMatrix == NULL) {
+	traceEvent(TRACE_ERROR, "FATAL error: malloc() failed (size %d bytes)", memlen);
+	exit(-1);
+      }
+      
+      memlen = sizeof(struct hostTraffic*)*device[i].numHosts;
+      device[i].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*), 
+								    device[i].numHosts);
+
+#ifdef DEBUG
+      traceEvent(TRACE_WARNING, "ipTrafficMatrixHosts memlen=%.1f Mbytes", 
+		 (float)memlen/(float)(1024*1024));
+#endif
+
+      if(device[i].ipTrafficMatrixHosts == NULL) {
+	traceEvent(TRACE_ERROR, "FATAL error: malloc() failed (size %d bytes)", memlen);
+	exit(-1);
+      }
+    }
+  }
 }
 
 /* ******************************* */
