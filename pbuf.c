@@ -3224,7 +3224,7 @@ void processPacket(u_char *_deviceId,
 	    }
 	  /* DO NOT ADD A break ABOVE ! */
 	case ETHERTYPE_REVARP: /* Reverse ARP */
-	  srcHost->arp_rarpSent += length;
+	  if(srcHost != NULL) srcHost->arp_rarpSent += length;
 	  if(dstHost != NULL) dstHost->arp_rarpReceived += length;
 	  device[actualDeviceId].arpRarpBytes += length;
 	  break;
