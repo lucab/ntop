@@ -413,11 +413,6 @@ static void dissectFlow(char *buffer, int bufferLen) {
       if(srcAS != 0) srcHost->hostAS = srcAS;
       if(dstAS != 0) dstHost->hostAS = dstAS;
 
-      if((srcAS != 0) && (dstAS != 0)) {
-	allocateElementHash(actualDeviceId, 0 /* AS hash */);
-	updateElementHash(myGlobals.device[actualDeviceId].asHash, srcAS, dstAS, numPkts, len);
-      }
-
 #ifdef DEBUG_FLOWS
       /* traceEvent(CONST_TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
 #endif

@@ -1550,20 +1550,6 @@ static void receiveSflowSample(SFSample *sample)
 		 (u_char *)datap - startOfSample);
     }
   }
-
-  if((sample->src_as != 0) && (sample->dst_as_path_len > 0)) {
-    allocateElementHash(myGlobals.sflowDeviceId, 0 /* AS hash */);
-    updateElementHash(myGlobals.device[myGlobals.sflowDeviceId].asHash,
-		      sample->src_as, sample->dst_as_path[0 /* The first AS is taken */],
-		      1 /* 1 packet */, sample->sampledPacketSize);
-  }
-
-  if((sample->in_vlan != 0) || (sample->out_vlan != 0)) {
-    allocateElementHash(myGlobals.sflowDeviceId, 1 /* VLAN hash */);
-    updateElementHash(myGlobals.device[myGlobals.sflowDeviceId].vlanHash,
-		      sample->in_vlan, sample->out_vlan,
-		      1 /* 1 packet */, sample->sampledPacketSize);
-  }
 }
 
 /* ****************************** */
