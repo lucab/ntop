@@ -504,7 +504,9 @@ void updateTrafficMatrix(HostTraffic *srcHost,
 			 TrafficCounter length, 
 			 int actualDeviceId) {
   if((subnetLocalHost(srcHost) || multicastHost(srcHost))
-     && (subnetLocalHost(dstHost) || multicastHost(dstHost))) {
+     && (subnetLocalHost(dstHost) || multicastHost(dstHost))
+     && (!broadcastHost(srcHost))
+     && (!broadcastHost(dstHost))) {
     unsigned long a, b, id;    
 
     a = (unsigned long)(srcHost->hostIpAddress.s_addr) % myGlobals.device[actualDeviceId].numHosts;
