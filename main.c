@@ -130,6 +130,10 @@ static struct option const long_options[] = {
   { "ssl-watchdog",                     no_argument,       NULL, 133 },
 #endif
 
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+  { "disable-schedyield",               optional_argument, NULL, 134 },
+#endif
+
   { "set-admin-password",               optional_argument, NULL, 135 },
 
   { "p3p-cp",                           required_argument, NULL, 137 },
@@ -245,6 +249,10 @@ void usage (FILE * fp) {
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
+#endif
+
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+  fprintf(fp, "    [--disable-schedyield]                                %sTurn off sched_yield() calls, if ntop is deadlocking on them\n", newLine);
 #endif
 
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
@@ -622,6 +630,12 @@ static int parseOptions(int argc, char* argv []) {
     case 133:
       /* Burton M. Strauss III - Jun 2002 */
       myGlobals.useSSLwatchdog = 1;
+      break;
+#endif
+
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+    case 134: /* disable-schedyield */
+      myGlobals.disableSchedYield = TRUE;
       break;
 #endif
 

@@ -65,6 +65,7 @@ ntop \- display top network users
 .RB [ --log-extra
 .IR <number> ]
 .RB [ --disable-instantsessionpurge ]
+.RB [ --disable-schedyield ]
 
 Unix options:
 
@@ -498,6 +499,15 @@ increase the amount of memory
 .B ntop
 uses.
 
+.It --disable-schedyield
+.B ntop
+uses sched_yield() calls for better interactive performance.  Under some situations, primarily
+under RedHat Linux 8, this can deadlock, causing the 
+.B ntop
+web server to stop responding, although
+.B ntop
+appears to still be operational according to the ps command. Use this switch to disable
+these calls, IF you are seeing deadlocks.
 
 
 .SH "WEB VIEWS"

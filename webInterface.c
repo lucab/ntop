@@ -3234,6 +3234,12 @@ void printNtopConfigInfo(int textPrintFlag) {
                            "(none)");
 #endif
 
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+  printParameterConfigInfo(textPrintFlag, "--disable-schedYield",
+                           myGlobals.disableSchedYield == TRUE ? "Yes" : "No",
+                           "No");
+#endif
+
   printParameterConfigInfo(textPrintFlag, "--disable-stopcap",
                            myGlobals.disableStopcap == TRUE ? "Yes" : "No",
                            "No");

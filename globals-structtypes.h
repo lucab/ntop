@@ -1550,6 +1550,11 @@ typedef struct ntopGlobals {
                                      /*XML b useSSLwatchdog       Options    "--ssl-watchdog" */
 #endif
 
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+  short disableSchedYield;            /* '134' */
+                                     /*XML b disableSchedYield    Options    "--disable-schedyield" */
+#endif
+
   char *P3Pcp;                       /* '137' */
                                      /*XML s P3Pcp                Options    "--p3p-cp" */
   char *P3Puri;                      /* '138' */

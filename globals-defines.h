@@ -1559,11 +1559,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * File used to indicate to the user that an error occured in gdc_out.
- */
-#define HTML_GDC_OUT_PIE_ERROR_FILE        "pie-error.png"
-
-/*
  * External URLs...
  */
 #define HTML_OPENSSL_URL                    "http://www.openssl.org/"

@@ -64,6 +64,9 @@ extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
 extern int copySerial(HostSerial *a, HostSerial *b);
 extern void setEmptySerial(HostSerial *a);
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+extern int ntop_sched_yield(char *file, int line);
+#endif
 
 /****** function declarations ***** */
 
@@ -734,3 +737,9 @@ int getdomainname(char *name, size_t len);
    ********************************************************** */
 #define texthtml(a, b) (textPrintFlag == TRUE ? a : b)
 
+/* ********************************************************** 
+   invoke our sched_yield routine
+   ********************************************************** */
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#define sched_yield() ntop_sched_yield(__FILE__, __LINE__)
+#endif

@@ -3691,3 +3691,26 @@ void removeNtopPid(void) {
 
 #endif
 
+/* ************************************ */
+
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+
+#undef sched_yield
+
+/* BStrauss - August 2003 - Check the flag and skip the call... */
+extern int ntop_sched_yield(char *file, int line) {
+  static int firstTime=0;
+
+  if(firstTime) {
+    traceEvent(CONST_TRACE_INFO, "TEMP: firstTime in ntop_sched_yield()");
+    firstTime = 1;
+  }
+
+  if(!myGlobals.disableSchedYield) {
+      sched_yield();
+  } else {
+      traceEvent(CONST_TRACE_INFO, "TEMP: skipping sched_yield()");
+  }
+}
+
+#endif

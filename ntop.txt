@@ -18,7 +18,7 @@ NTOP(8)                                                                NTOP(8)
        [1minterface-merge[22m] [[1m-O[22m|[1m----output-packet-path[22m] [[1m-P[22m|[1m--db-file-path [4m[22m<path>[24m]
        [[1m-Q[22m|[1m--spool-file-path   [4m[22m<path>[24m]   [[1m-R[22m|[1m--filter-rule  [4m[22m<file>[24m]  [4m<number>[24m]
        [[1m-U[22m|[1m--mapper  [4m[22m<URL>[24m]  [[1m-V[22m|[1m--version]  [22m[[1m--disable-stopcap[22m]  [[1m--log-extra[0m
-       [4m<number>[24m] [[1m--disable-instantsessionpurge[22m]
+       [4m<number>[24m] [[1m--disable-instantsessionpurge[22m] [[1m--disable-schedyield[22m]
 
        Unix options:
 
@@ -436,6 +436,13 @@ NTOP(8)                                                                NTOP(8)
         web server may have 100s or 1000s of completed sessions and this would
         significantly increase the amount of memory [1mntop [22muses.
 
+
+       [1m--disable-schedyield[0m
+        [1mntop [22muses sched_yield()  calls  for  better  interactive  performance.
+        Under  some situations, primarily under RedHat Linux 8, this can dead-
+        lock, causing the [1mntop [22mweb server to stop  responding,  although  [1mntop[0m
+        appears  to still be operational according to the ps command. Use this
+        switch to disable these calls, IF you are seeing deadlocks.
 
 
 
