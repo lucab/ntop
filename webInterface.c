@@ -859,7 +859,7 @@ void usage(void) {
   char buf[80];
 
   if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
-	  program_name, version, THREAD_MODE, osName, buildDate) < 0) 
+	      program_name, version, THREAD_MODE, osName, buildDate) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   traceEvent(TRACE_INFO, "%s\n", buf);
 
@@ -875,48 +875,49 @@ void usage(void) {
 
   traceEvent(TRACE_INFO, "%s\n", buf);
 
+  traceEvent(TRACE_INFO, "    %s\n",   "[-c <sticky hosts: idle hosts are not purged from hash>]");
 #ifdef WIN32
-    traceEvent(TRACE_INFO, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
+  traceEvent(TRACE_INFO, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
 #else
-    traceEvent(TRACE_INFO, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
-	       ALARM_TIME, REFRESH_TIME);
+  traceEvent(TRACE_INFO, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
+	     ALARM_TIME, REFRESH_TIME);
 #endif
-    traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
 #ifdef WIN32
-    traceEvent(TRACE_INFO, "    %s%d KB)>]\n", "[-B <NDIS buffer in Kbytes (default ",
-	       (int)(SIZE_BUF/1024));
+  traceEvent(TRACE_INFO, "    %s%d KB)>]\n", "[-B <NDIS buffer in Kbytes (default ",
+	     (int)(SIZE_BUF/1024));
 #endif
 #ifndef WIN32
-    traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
 #endif
-    traceEvent(TRACE_INFO, "    %s\n",   "[-S <store mode> (store persistently host stats)]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-S <store mode> (store persistently host stats)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
 #ifdef HAVE_OPENSSL
-    traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
 #endif
-    traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows"
+  traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows"
 #ifndef WIN32
-		" (use only with -w)>"
+	     " (use only with -w)>"
 #endif
-	       );
+	     );
 #ifndef WIN32
-    traceEvent(TRACE_INFO, "    %s\n",   "[-d (daemon mode (use only with -w))]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-d (daemon mode (use only with -w))]");
 #endif
-    traceEvent(TRACE_INFO, "    %s\n",   "[-m <local addresses (see man page)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-F <flow specs (see man page)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-b <client:port (ntop DB client)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-R <matching rules file>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-N <don't use nmap if installed>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-g (grab session data on screen)]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
-    traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-m <local addresses (see man page)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-F <flow specs (see man page)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-b <client:port (ntop DB client)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-R <matching rules file>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-N <don't use nmap if installed>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-g (grab session data on screen)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
+  traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
 }
 
 /* ******************************************* */

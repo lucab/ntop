@@ -1539,7 +1539,7 @@ typedef struct hostTraffic
   u_short        minTTL, maxTTL; /* IP TTL (Time-To-Live) */
 
   /* NetBIOS */
-  char           nbNodeType, *nbHostName, *nbDomainName;
+  char           nbNodeType, *nbHostName, *nbDomainName, *nbDescr;
 
   /* AppleTalk*/
   u_short        atNetwork;

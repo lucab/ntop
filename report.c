@@ -1109,6 +1109,12 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	      numAddresses++;
 	    }
 
+	    if(el->nbDescr) {
+	      if(snprintf(buf, sizeof(buf), ":&nbsp;%s", el->nbDescr) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      sendString(buf);
+	    }
+
 	    if(el->atNetwork) {
 	      char *nodeName = el->atNodeName;
 

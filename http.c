@@ -1247,7 +1247,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
     printHTMLheader("Credits", HTML_FLAG_NO_REFRESH);
     sendString("<FONT FACE=Helvetica>\n");
     sendString("<p><hr><br><b>ntop</b> has been created by\n");
-    sendString("<A HREF=\"http://jake.unipi.it/~deri/\">Luca Deri</A> while studying how to model\n");
+    sendString("<A HREF=\"http://luca.ntop.org/\">Luca Deri</A> while studying how to model\n");
     sendString("network traffic. He was unsatisfied of the many network traffic analysis tools\n");
     sendString("he had access to, and decided to write a new application able to report network\n");
     sendString("traffic information in a way similar to the popular Unix top command. At that \n");

@@ -660,6 +660,7 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
   free(host->protoIPTrafficInfos);
   if(host->nbHostName != NULL)   free(host->nbHostName);
   if(host->nbDomainName != NULL) free(host->nbDomainName);
+  if(host->nbDescr != NULL)      free(host->nbDescr);
   if(host->atNodeName != NULL)   free(host->atNodeName);
   for(i=0; i<MAX_NODE_TYPES; i++)
     if(host->atNodeType[i] != NULL)   

@@ -2069,7 +2069,7 @@ static void handleSession(const struct pcap_pkthdr *h,
     theSession->lastFlags = tp->th_flags;
 
     if((theSession->sessionState == STATE_FIN2_ACK2)
-       || ((tp->th_flags & TH_RST) != 0)) /* abortive release */ {
+       || (tp->th_flags & TH_RST)) /* abortive release */ {
       theSession->sessionState = STATE_TIMEOUT;
       updateUsedPorts(srcHost, srcHostIdx, dstHost, dstHostIdx, sport, dport,
 		      (u_int)(theSession->bytesSent+theSession->bytesReceived));
@@ -2084,16 +2084,16 @@ static void handleSession(const struct pcap_pkthdr *h,
       device[actualDeviceId].securityPkts.rstAckPkts++;
     } else if(tp->th_flags & TH_RST) {
       if(((theSession->initiatorIdx == srcHostIdx)
-	  && ((theSession->lastRemote2InitiatorFlags[0] & TH_ACK) == TH_ACK)
+	  && (theSession->lastRemote2InitiatorFlags[0] == TH_ACK)
 	  && (theSession->bytesSent == 0))
 	 || ((theSession->initiatorIdx == dstHostIdx)
-	     && ((theSession->lastInitiator2RemoteFlags[0] & TH_ACK) == TH_ACK)
+	     && (theSession->lastInitiator2RemoteFlags[0] == TH_ACK)
 	     && (theSession->bytesReceived == 0))) {
-	incrementUsageCounter(&srcHost->securityHostPkts.ackScanSent, dstHostIdx);
-	incrementUsageCounter(&dstHost->securityHostPkts.ackScanRcvd, srcHostIdx);
-	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
-		   srcHost->hostSymIpAddress, sport,
-		   dstHost->hostSymIpAddress, dport);
+	incrementUsageCounter(&srcHost->securityHostPkts.ackScanRcvd, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.ackScanSent, srcHostIdx);
+	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",		   
+		   dstHost->hostSymIpAddress, dport, 
+		   srcHost->hostSymIpAddress, sport);
       }
       /* Connection terminated */
       incrementUsageCounter(&srcHost->securityHostPkts.rstPktsSent, dstHostIdx);
@@ -2120,37 +2120,38 @@ static void handleSession(const struct pcap_pkthdr *h,
     /* **************************** */
 
     /*
-      For more info aboutchecks below see
-       http://www.synnergy.net/Archives/Papers/dethy/host-detection.txt
-
+      For more info about checks below see
+      http://www.synnergy.net/Archives/Papers/dethy/host-detection.txt      
     */
-    if((((theSession->initiatorIdx == srcHostIdx)
-	 && ((theSession->lastRemote2InitiatorFlags[0] & TH_SYN) == TH_SYN))
-	|| ((theSession->initiatorIdx == dstHostIdx)
-	    && ((theSession->lastInitiator2RemoteFlags[0] & TH_SYN) == TH_SYN)))
-       && (tp->th_flags == (TH_SYN|TH_ACK)))
+    if((srcHostIdx == dstHostIdx)
+       && (sport == dport) && (tp->th_flags == TH_SYN)) {
+      traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
+		 srcHost->hostSymIpAddress, sport);
+    }
 
-      {
-	traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d]",
-		   dstHost->hostSymIpAddress, dport,
-		   srcHost->hostSymIpAddress, sport);
-      }
-
-    if((((theSession->initiatorIdx == srcHostIdx)
-	 && ((theSession->lastRemote2InitiatorFlags[0] & TH_SYN) == TH_SYN))
-	|| ((theSession->initiatorIdx == dstHostIdx)
-	    && ((theSession->lastInitiator2RemoteFlags[0] & TH_SYN) == TH_SYN)))
+    if(((theSession->initiatorIdx == srcHostIdx) && (theSession->lastRemote2InitiatorFlags[0] == TH_SYN))
+       || ((theSession->initiatorIdx == dstHostIdx) && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN))
+       && (tp->th_flags == (TH_SYN|TH_ACK)))  {
+      traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d]",
+		 dstHost->hostSymIpAddress, dport,
+		 srcHost->hostSymIpAddress, sport);
+    }
+    
+    if((((theSession->initiatorIdx == srcHostIdx) && (theSession->lastRemote2InitiatorFlags[0] == TH_SYN))
+	|| ((theSession->initiatorIdx == dstHostIdx) && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN)))
        && (tp->th_flags == (TH_RST|TH_ACK))) {
-	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx);
-	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
-
-	traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
-		   dstHost->hostSymIpAddress, dport,
-		   srcHost->hostSymIpAddress, sport);
-      }
-
-    if(((theSession->initiatorIdx == srcHostIdx) && (theSession->lastRemote2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
-	 || ((theSession->initiatorIdx == dstHostIdx) && (theSession->lastInitiator2RemoteFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
+      incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
+      
+      traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
+		 dstHost->hostSymIpAddress, dport,
+		 srcHost->hostSymIpAddress, sport);
+    }
+    
+    if(((theSession->initiatorIdx == srcHostIdx) 
+	&& (theSession->lastRemote2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
+       || ((theSession->initiatorIdx == dstHostIdx) 
+	   && (theSession->lastInitiator2RemoteFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
        && (tp->th_flags == (TH_RST|TH_ACK))) {
       incrementUsageCounter(&dstHost->securityHostPkts.xmasScanSent, srcHostIdx);
       incrementUsageCounter(&srcHost->securityHostPkts.xmasScanRcvd, dstHostIdx);
@@ -2172,18 +2173,17 @@ static void handleSession(const struct pcap_pkthdr *h,
 		 srcHost->hostSymIpAddress, sport);
     } else if((((theSession->initiatorIdx == srcHostIdx)
 		&& (theSession->lastRemote2InitiatorFlags[0] == 0)
-		    && (theSession->bytesReceived > 0)
-		    ))
+		    && (theSession->bytesReceived > 0)))
 		  || ((theSession->initiatorIdx == dstHostIdx)
 		      && ((theSession->lastInitiator2RemoteFlags[0] == 0))
 		      && (theSession->bytesSent > 0))
 		  && (tp->th_flags == (TH_RST|TH_ACK))) {
-      incrementUsageCounter(&srcHost->securityHostPkts.nullScanSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->securityHostPkts.nullScanRcvd, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.nullScanRcvd, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.nullScanSent, srcHostIdx);
 
       traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
-		 srcHost->hostSymIpAddress, sport,
-		 dstHost->hostSymIpAddress, dport);
+		 dstHost->hostSymIpAddress, dport,
+		 srcHost->hostSymIpAddress, sport);
     }
 
    /* **************************** */
@@ -3344,10 +3344,12 @@ static void processIpPkt(const u_char *bp,
                 && ((srcHost->nbHostName == NULL)
                     || (srcHost->nbDomainName == NULL))) {
         char *name, nbName[64], domain[64];
-        int nodeType, i;
+        int nodeType, i, udpDataLen;
 	char *data = (char*)bp + (hlen + sizeof(struct udphdr));
 	u_char *p;
 	int offset;
+
+	udpDataLen =  length - (hlen + sizeof(struct udphdr));
 
         name = data + 14;
  	p = (u_char*)name;
@@ -3411,6 +3413,39 @@ static void processIpPkt(const u_char *bp,
 	  }
 	  break;
 #endif
+	}
+
+	if(udpDataLen > 200) {
+	  char tmpBuffer[256];
+	  int remainingLength;
+	  
+	  /* 
+	     We'll check if this this is
+	     a browser announcments so we can
+	     know more about this host
+	  */
+
+	  remainingLength = udpDataLen-151;
+
+	  if(remainingLength > sizeof(tmpBuffer))
+	    remainingLength = sizeof(tmpBuffer);
+
+	  memcpy(tmpBuffer, &data[151], remainingLength);
+
+	  if(strcmp(tmpBuffer, "\\MAILSLOT\\BROWSE") == 0) {
+	    /* Good: this looks like a browser announcement */
+	    
+	    if(tmpBuffer[49] != '\0') {
+
+	      if(srcHost->nbDescr != NULL)
+		free(srcHost->nbDescr);
+	      
+	      srcHost->nbDescr = strdup(&tmpBuffer[49]);
+#ifdef DEBUG
+	      traceEvent(TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
+#endif
+	    }
+	  }
 	}
       } else if((sport == 7) || (dport == 7) /* echo */) {
 	char *fmt = "WARNING: host [%s] sent a UDP packet to host [%s:echo] (network mapping attempt?)";

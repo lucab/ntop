@@ -2234,7 +2234,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       }
 
       if(tcpSession[idx]->napsterSession)
-	napsterSession = " [Napster]";
+	napsterSession = "&nbsp;[Napster]";
       else
 	napsterSession = "";
 
@@ -2591,16 +2591,19 @@ void printHostDetailedInfo(HostTraffic *el) {
 
   if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	    "%s&nbsp;[domain %s] (%s)</TD></TR>\n",
-	    getRowColor(), "NetBios&nbsp;Name",
-	    el->nbHostName, el->nbDomainName, getNbNodeType(el->nbNodeType)) < 0)
+		"%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
+		getRowColor(), "NetBios&nbsp;Name",
+		el->nbHostName, el->nbDomainName, 
+		getNbNodeType(el->nbNodeType), 
+		el->nbDescr ? el->nbDescr : "") < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else if(el->nbHostName != NULL) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	     "%s&nbsp;(%s)</TD></TR>\n",
-	     getRowColor(), "NetBios&nbsp;Name",
-	     el->nbHostName, getNbNodeType(el->nbNodeType)) < 0)
+		"%s&nbsp;(%s) %s</TD></TR>\n",
+		getRowColor(), "NetBios&nbsp;Name",
+		el->nbHostName, getNbNodeType(el->nbNodeType),
+		el->nbDescr ? el->nbDescr : "") < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
@@ -2920,7 +2923,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 
 static void printNapsterStats(HostTraffic *el) {
 
-  sendString("<P><H1>Napster &nbsp;Stats</H1><P>\n");
+  printSectionTitle("Napster Stats");
 
   sendString(""TABLE_ON"<TABLE BORDER=1>\n");
   sendString("<TR><TH "TH_BG" ALIGN=LEFT># Connections Requested</TH><TD ALIGN=RIGHT>");
