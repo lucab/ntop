@@ -2050,7 +2050,7 @@ static int returnHTTPPage(char* pageName,
       printNtopProblemReport();
       printTrailer = 0;
     } else if(strncmp(pageName, STR_VIEW_LOG_HTML, strlen(STR_VIEW_LOG_HTML)) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printNtopLogReport();
       printTrailer = 0;
     } else

@@ -2270,9 +2270,6 @@ void fillDomainName(HostTraffic *el) {
     el->dotDomainName = "";
   }
 
-  traceEvent(CONST_TRACE_WARNING, "ip2CountryCode(%s/%s) => %s",
-	     el->hostNumIpAddress, el->hostSymIpAddress, el->dotDomainName == NULL ? "NULL" : el->dotDomainName);
-
   if((el->hostSymIpAddress[0] == '*')
      || (el->hostNumIpAddress[0] == '\0')
      || (isdigit(el->hostSymIpAddress[strlen(el->hostSymIpAddress)-1]) &&

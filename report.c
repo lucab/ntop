@@ -619,10 +619,10 @@ void printTrafficStatistics(void) {
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
   snprintf(buf, sizeof(buf), "%s/interfaces/%s", myGlobals.rrdPath,
 	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-
+  
   if((i = stat(buf, &statbuf)) == 0) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"[ <A HREF=\"/plugins/rrdPlugin?action=list&key=interfaces/%s&title=interface %s\">"
+		"[ <A HREF=\"/plugins/rrdPlugin?action=list&key=interfaces/%s&title=interface%%20%s\">"
 		"<IMG BORDER=0 SRC=/graph.gif></A> ]</TD></TR>\n",
 		getRowColor(), "RRD Stats", myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
