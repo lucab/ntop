@@ -528,11 +528,21 @@ void printTrafficStatistics() {
       }
     }
 
+    sendString("</TABLE></TR>");
+
+    /* ************************ */
+
+#ifdef HAVE_GDCHART
+    if(!myGlobals.borderSnifferMode)
+      sendString("<TR><TH "TH_BG">Remote Hosts Distance</TH><TD "TH_BG">"
+		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
+#endif /* HAVE_GDCHART */
+
     /* ********************* */
 
     updateThpt();
 
-    sendString("</TABLE></TR><TR><TH "TH_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
+    sendString("<TR><TH "TH_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt),
@@ -572,6 +582,7 @@ void printTrafficStatistics() {
 		((float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts/(float)(myGlobals.actTime-myGlobals.initialSniffTime))) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
+    
   }
 
   sendString("</TABLE></TR></TABLE></CENTER>\n");

@@ -1062,7 +1062,7 @@ void drawThptGraph(int sortedColumn) {
 	      fd,          /* open FILE pointer       */
 	      myGlobals.throughput_chart_type,    /* chart type              */
 	      60,          /* num points per data set */
-	      lbls,        /* X labels array of char* */
+	      (char**)lbls,        /* X labels array of char* */
 	      1,           /* number of data sets     */
 	      graphData);  /* dataset 1               */
     break;
@@ -1153,7 +1153,6 @@ void drawThptGraph(int sortedColumn) {
   sendGraphFile(fileName);
 #endif
 }
-
 
 /* ************************ */
 
@@ -1292,6 +1291,86 @@ void drawGlobalIpProtoDistribution(void) {
   sendGraphFile(fileName);
 #endif
 }
+
+/* ******************************** */
+
+void drawHostsDistanceGraph() {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  int i, j, len;
+  char  *lbls[32], labels[32][8];
+  FILE *fd;
+  float graphData[60];
+
+  memset(graphData, 0, sizeof(graphData));
+
+#ifdef MULTITHREADED
+  accessMutex(&myGlobals.graphMutex, "drawThptGraph");
+#endif
+
+#ifndef WIN32
+  fd = fdopen(abs(myGlobals.newSock), "ab");
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  GDC_BGColor    = 0xFFFFFFL;                  /* backgound color (white) */
+  GDC_LineColor  = 0x000000L;                  /* line color      (black) */
+  GDC_SetColor   = &(clr[1]);                   /* assign set colors */
+  GDC_xtitle     = "Hops (TTL)";
+  GDC_ytitle     = "Hosts";
+  GDC_yaxis      = 1;
+  /* GDC_ylabel_fmt = "%d"; */
+
+  for(i=0; i<=30; i++) {
+    sprintf(labels[i], "%d", i);
+    lbls[i] = labels[i];
+    graphData[i] = 0;
+  }
+
+#ifdef MULTITHREADED
+  accessMutex(&myGlobals.hostsHashMutex, "drawHostsDistanceGraph");
+#endif
+
+  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
+    struct hostTraffic *el;
+
+    if(i == myGlobals.otherHostEntryIdx)
+      continue;
+
+    el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
+
+    if((el != NULL) && (!subnetPseudoLocalHost(el))) {
+      j = guessHops(el);
+      if((j > 0) && (j <= 30))
+	graphData[j]++;
+    }
+  }
+
+#ifdef MULTITHREADED
+  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+
+  GDC_title = "";
+  out_graph(300, 250,    /* width, height           */
+	    fd,          /* open FILE pointer       */
+	    myGlobals.throughput_chart_type,    /* chart type              */
+	    30,          /* num points per data set */
+	    lbls,        /* X labels array of char* */
+	    1,           /* number of data sets     */
+	    graphData);  /* dataset 1               */
+
+  fclose(fd);
+
+#ifdef MULTITHREADED
+  releaseMutex(&myGlobals.graphMutex);
+#endif
+
+#ifdef WIN32
+  sendGraphFile(fileName);
+#endif
+}
+
+/* ************************ */
 
 #endif /* HAVE_GDCHART */
 #endif /* MICRO_NTOP   */

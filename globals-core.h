@@ -81,6 +81,7 @@ extern void drawTrafficPie(void);
 extern void drawThptGraph(int sortedColumn);
 extern void drawGlobalProtoDistribution(void);
 extern void drawGlobalIpProtoDistribution(void);
+extern void drawHostsDistanceGraph();
 
 /* hash.c */
 extern int retrieveHost(HostSerial theSerial, HostTraffic *el);

@@ -3102,7 +3102,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(haveTrafficHistory()) {
     if(el->hostNumIpAddress[0] != '\0') {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "[ <A HREF=\"/ntop-bin/netTraf.pl?host=%s\">History</A> ]</TD></TR>\n",
+		  "[ <A HREF=\"/ntop-bin/hostTraf.pl?host=%s\">History</A> ]</TD></TR>\n",
 		  getRowColor(), "Traffic Information", el->hostNumIpAddress) < 0)
 	BufferTooShort();
       sendString(buf);
