@@ -125,7 +125,6 @@ struct _HTTPstatus HTTPstatus[] = {
 static u_int httpBytesSent;
 static char httpRequestedURL[512], theUser[32];
 static struct in_addr *requestFrom;
-static FILE *accessLogFd=NULL;
 
 /* ************************* */
 
@@ -567,8 +566,8 @@ void printHTMLtrailer(void) {
 void initAccessLog(void) {
 
   if(myGlobals.accessLogPath) {
-    accessLogFd = fopen(myGlobals.accessLogPath, "a");
-    if(accessLogFd == NULL) {
+    myGlobals.accessLogFd = fopen(myGlobals.accessLogPath, "a");
+    if(myGlobals.accessLogFd == NULL) {
       traceEvent(TRACE_ERROR, "Unable to create file %s. Access log is disabled.",
 		 myGlobals.accessLogPath);
     }
@@ -578,8 +577,8 @@ void initAccessLog(void) {
 /* ******************************* */
 
 void termAccessLog(void) {
-  if(accessLogFd != NULL)
-    fclose(accessLogFd);
+  if(myGlobals.accessLogFd != NULL)
+    fclose(myGlobals.accessLogFd);
 }
 
 /* ************************* */
@@ -593,7 +592,7 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
  unsigned long gmtoffset;
   struct tm t;
 
- if(accessLogFd != NULL) {
+  if(myGlobals.accessLogFd != NULL) {
    gettimeofday(&loggingAt, NULL);
 
    if(httpRequestedAt != NULL)
@@ -620,25 +619,25 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
 
 #ifdef HAVE_ZLIB
    if(gzipBytesSent > 0)
-     fprintf(accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u/%u %lu\n",
+     fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u/%u %lu\n",
 	     _intoa(*requestFrom, buf, sizeof(buf)),
 	     myUser, theDate, theZone,
 	     httpRequestedURL, rc, gzipBytesSent, httpBytesSent,
 	     msSpent);
    else
-     fprintf(accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u %lu\n",
+     fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u %lu\n",
 	     _intoa(*requestFrom, buf, sizeof(buf)),
 	     myUser, theDate, theZone,
 	     httpRequestedURL, rc, httpBytesSent,
 	     msSpent);
 #else
-   fprintf(accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %d %lu\n",
+   fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %d %lu\n",
 	   _intoa(*requestFrom, buf, sizeof(buf)),
 	   myUser, theDate, theZone,
 	   httpRequestedURL, rc, httpBytesSent,
 	   msSpent);
 #endif
-   fflush(accessLogFd);
+   fflush(myGlobals.accessLogFd);
  }
 }
 

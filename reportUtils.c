@@ -143,7 +143,7 @@ void printTableDoubleEntry(char *buf, int bufLen,
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
            "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
-           "<TD WIDTH=100><IMG ALT=\"100%%\"ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
+           "<TD WIDTH=100><IMG ALT=\"100%\"ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
            getRowColor(), label, formatKBytes(totalS)) < 0)
       BufferOverflow();
     break;
@@ -246,7 +246,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
   default:
     if(total == -1) {
       if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%\">"
              "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
              "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
              "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
@@ -256,7 +256,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
              label_2, (100-percentage)) < 0) BufferOverflow();
     } else {
       if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%\">"
              "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
              "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
              "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
@@ -1929,7 +1929,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
       printSectionTitle("Last Contacted Peers");
       sendString("<CENTER>\n"
-		 "<TABLE BORDER=0 WIDTH=100%%><TR><TD "TD_BG" VALIGN=TOP>\n");
+		 "<TABLE BORDER=0 WIDTH=100%><TR><TD "TD_BG" VALIGN=TOP>\n");
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
@@ -1939,7 +1939,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
 	      if(el1 != NULL) {
 		  if(numEntries == 0) {
-		      sendString(""TABLE_ON"<TABLE BORDER=1 VALIGN=TOP WIDTH=100%%>"
+		      sendString(""TABLE_ON"<TABLE BORDER=1 VALIGN=TOP WIDTH=100%>"
 				 "<TR><TH "TH_BG">Receiver Name</TH>"
 				 "<TH "TH_BG">Receiver Address</TH></TR>\n");
 		  }
@@ -1968,7 +1968,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
 	  if(el1 != NULL) {
 	    if(numEntries == 0) {
-	      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>"
+	      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
 			 "<TR><TH "TH_BG">Sender Name</TH>"
 			 "<TH "TH_BG">Sender Address</TH></TR>\n");
 	    }
@@ -2078,7 +2078,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 
       if(numSessions == 0) {
 	sendString("<CENTER>\n");
-	if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
+	if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n<TR>"
 		    "<TH "TH_BG" COLSPAN=2>%s&nbsp;Service</TH>"
 		    "<TH "TH_BG">Role</TH><TH "TH_BG">"
 		    "#&nbsp;Sessions</TH>"
@@ -2161,7 +2161,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	    if(numSessions == 0) {
 	      printSectionTitle("Active TCP Sessions");
 	      sendString("<CENTER>\n");
-	      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+	      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
 			 "<TH "TH_BG">Local&nbsp;Port</TH>"
 			 "<TH "TH_BG">Rem&nbsp;Peer:Port</TH>"
 			 "<TH "TH_BG">Data&nbsp;Sent</TH>"
@@ -2500,7 +2500,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   printHTMLheader(buf, 0);
   sendString("<CENTER>\n");
-  sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n");
+  sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n");
 
   if(el->hostNumIpAddress[0] != '\0') {
     char *countryIcon, *hostType;
@@ -2581,7 +2581,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	BufferOverflow();
       sendString(buf);
 
-      sendString("<TD "TD_BG"><TABLE BORDER WIDTH=100%%>\n");
+      sendString("<TD "TD_BG"><TABLE BORDER WIDTH=100%>\n");
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "DHCP Server",
@@ -3252,7 +3252,7 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
   if(tot > 0) {
     printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role");
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
+    sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n<TR>"
 	       "<TH "TH_BG">&nbsp;</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Sent</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Sent</TH>"
@@ -3282,7 +3282,7 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
   if(tot > 0) {
     printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role");
     sendString("<CENTER>\n");
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n<TR>"
 	       "<TH "TH_BG">&nbsp;</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Rcvd</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Rcvd</TH>"
@@ -3331,7 +3331,7 @@ void printTableEntry(char *buf, int bufLen,
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
-		"<TD ALIGN=CENTER WIDTH=250><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
+		"<TD ALIGN=CENTER WIDTH=250><IMG ALT=\"100%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
 		"</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)
       BufferOverflow();

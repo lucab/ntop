@@ -317,6 +317,10 @@ typedef struct ntopGlobals {
   struct sockaddr_in dest;
   u_int32_t destAddr, globalFlowSequence, globalFlowPktCount;
   NetFlow5Record theRecord;
+
+  /* http.c */
+  FILE *accessLogFd;
+
 } NtopGlobals;
 
 #endif /* GLOBALS_H */

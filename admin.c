@@ -103,8 +103,7 @@ void addUser(char* user) {
   } else {
     sendString("<CENTER>\n");
     
-    sendString("<script Language=\"JavaScript\">
-function CheckForm(theForm) {\nif (theForm.pw.value != theForm.pw1.value) {\n    alert(\"Passwords do not match. Please try again.\");\n    theForm.pw1.focus();\n    return(false);\n  }\n  return (true);\n}\n</script>\n");
+    sendString("<script Language=\"JavaScript\">\nfunction CheckForm(theForm) {\nif (theForm.pw.value != theForm.pw1.value) {\n    alert(\"Passwords do not match. Please try again.\");\n    theForm.pw1.focus();\n    return(false);\n  }\n  return (true);\n}\n</script>\n");
     
     sendString("<FORM METHOD=POST ACTION=/doAddUser onsubmit=\"return CheckForm(this)\">\n");
     

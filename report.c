@@ -198,7 +198,7 @@ void printTrafficStatistics() {
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts > 0) {
     TrafficCounter dummyCounter;
-    sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
+    sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
 
 #ifdef HAVE_GDCHART
     if(myGlobals.mergeInterfaces && (myGlobals.numDevices > 1)) {
@@ -387,7 +387,7 @@ void printTrafficStatistics() {
 
     /* ****************** */
 
-    sendString("</TABLE></TR><TR><TH "TH_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
+    sendString("</TABLE></TR><TR><TH "TH_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Total</th>"
 		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
 		getRowColor(), 
@@ -521,7 +521,7 @@ void printTrafficStatistics() {
 
     updateThpt();
 
-    sendString("</TABLE></TR><TR><TH "TH_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
+    sendString("</TABLE></TR><TR><TH "TH_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt),
@@ -1436,7 +1436,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	if(i == 0) {
 	  printSectionTitle("TCP/UDP&nbsp;Service/Port&nbsp;Usage\n");
 	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
+	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n<TR>"
 		     "<TH "TH_BG">IP&nbsp;Service</TH>"
 		     "<TH "TH_BG">Port</TH>"
 		     "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
@@ -1722,7 +1722,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     }
 
     sendString("<CENTER>\n");
-    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR><TH "TH_BG">"
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n<TR><TH "TH_BG">"
 	    "%s1>Host%s</A></TH>"
 	    "<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
 	    "<TH "TH_BG" COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
@@ -1796,7 +1796,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     addPageIndicator(str, pageNum, numEntries, myGlobals.maxNumLines, 
 		     revertOrder, abs(sortedColumn));   
 
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n<TR>"
 	       "<TH "TH_BG">Total Traffic</TH><TH "TH_BG">Data Sent</TH>\n"
 	       "<TH "TH_BG">Data Rcvd</TH><TH "TH_BG">Used Bandwidth</TH></TR>\n");
 
@@ -1873,7 +1873,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 	
 	if(printedSessions == 0) {
 	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
 		     "<TH "TH_BG">Client</TH>"
 		     "<TH "TH_BG">Server</TH>"
 		     "<TH "TH_BG">Data&nbsp;Sent</TH>"
@@ -2169,7 +2169,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     if(total == 0)
       printNoDataYet();
     else {
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
 		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
@@ -2182,7 +2182,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 				"TCP", "UDP", total, percentage);
 
       sendString("</TABLE>"TABLE_OFF"\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
                   "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
                  "Percentage</TH></TR>\n");
@@ -2224,7 +2224,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printNoDataYet();
     else {
       sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
 		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
@@ -2238,7 +2238,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 				"TCP", "UDP", total, percentage);
 
       sendString("</TABLE>"TABLE_OFF);
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
@@ -2279,7 +2279,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     if(total == 0)
       printNoDataYet();
     else {
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
                  "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
                  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
                  "Percentage</TH></TR>\n");
@@ -2292,7 +2292,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
                                 "TCP", "UDP", total, percentage);
 
       sendString("</TABLE>"TABLE_OFF"\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
                  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
                  "Percentage</TH></TR>\n");
@@ -2337,7 +2337,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printNoDataYet();
     else {
       sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
 		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH>"
 		 "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
@@ -2351,7 +2351,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 				"TCP", "UDP", total, percentage);
 
       sendString("</TABLE>"TABLE_OFF);
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR>"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH>"
 		 "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
@@ -2450,7 +2450,7 @@ void printProtoTraffic(void) {
 
   printSectionTitle("Global Protocol Distribution");
   sendString("<CENTER>\n");
-  sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR><TH "TH_BG" WIDTH=150>Protocol</TH>"
+  sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
 
   perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes);
@@ -2459,7 +2459,7 @@ void printProtoTraffic(void) {
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH>"
 	      "<TD "TD_BG" WIDTH=100 ALIGN=RIGHT>%s"
 	      "&nbsp;(%.1f%%)</TD><TD "TD_BG" WIDTH=250>"
-	      "<TABLE BORDER=1 WIDTH=\"100%%\">",
+	      "<TABLE BORDER=1 WIDTH=\"100%\">",
 	      getRowColor(),
 	      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes, 1),
 	      perc) < 0)
@@ -2973,7 +2973,7 @@ void printThptStatsMatrix(int sortedColumn) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG" ALIGN=CENTER>"
 		  "<B>%s&nbsp;-&nbsp;%s</B></TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"
-		  "<TABLE BORDER=1 WIDTH=100%%>",
+		  "<TABLE BORDER=1 WIDTH=100%>",
 		  getRowColor(), label1, label,
 		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				   last60MinutesThpt[i].trafficValue)) < 0)
@@ -3029,7 +3029,7 @@ void printThptStatsMatrix(int sortedColumn) {
       } else
 	sendString("&nbsp;");
 
-      sendString("</TABLE></TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>\n");
+      sendString("</TABLE></TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%>\n");
 
       /* *************************************** */
 
@@ -3992,7 +3992,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   printSectionTitle("Host Traffic Stats");
   sendString("<CENTER>\n");
-  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>");
+  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n<TR>");
   sendString("<TH "TH_BG">Time</TH>");
   sendString("<TH "TH_BG">Tot. Traffic Sent</TH>");
   sendString("<TH "TH_BG">% Traffic Sent</TH>");
