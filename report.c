@@ -702,9 +702,26 @@ void printHostsTraffic(int reportType,
 	el = tmpTable[idx];
 
       if(el != NULL) {
-	sentPercent = (100*(float)el->bytesSent)/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes;
-	rcvdPercent = (100*(float)el->bytesRcvd)/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes;
-
+	switch(reportType) {
+        case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
+        case 5: /* STR_SORT_DATA_SENT_PROTOS */
+	  sentPercent = (100*(float)el->bytesSent)/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes;
+	  rcvdPercent = (100*(float)el->bytesRcvd)/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes;
+	  break;
+	case 1: /* STR_SORT_DATA_RECEIVED_IP */
+        case 6: /* STR_SORT_DATA_SENT_IP */
+	  sentPercent = (100*(float)el->ipBytesSent)/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
+	  rcvdPercent = (100*(float)el->ipBytesRcvd)/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
+	  break;
+	case 2: /* STR_SORT_DATA_RECEIVED_THPT */
+	case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
+	case 4: /* STR_SORT_DATA_SENT_HOST_TRAFFIC */
+        case 7: /* STR_SORT_DATA_SENT_THPT */
+        case 8: /* TRAFFIC_STATS_HTML */
+	  sentPercent = rcvdPercent = 0;
+	  break;
+	}
+	
 	/* Fixed buffer overflow.
 	   Courtesy of Rainer Tammer <rainer.tammer@spg.schulergroup.com>
 	*/
@@ -3019,7 +3036,7 @@ void printThptStatsMatrix(int sortedColumn) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG" ALIGN=CENTER>"
 		  "<B>%s&nbsp;-&nbsp;%s</B></TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"
-		  "<TABLE BORDER=1 WIDTH=100%>",
+		  "<TABLE BORDER=1 WIDTH=100%%>",
 		  getRowColor(), label1, label,
 		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				   last60MinutesThpt[i].trafficValue)) < 0)
@@ -3069,7 +3086,7 @@ void printThptStatsMatrix(int sortedColumn) {
       /* ************************* */
 
       if(!dataSent) sendString("&nbsp;");
-      sendString("</TABLE></TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%>\n");
+      sendString("</TABLE></TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>\n");
       dataSent = 0;
 
       /* ************************* */
@@ -3823,7 +3840,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   printSectionTitle("Host Traffic Stats");
   sendString("<CENTER>\n");
-  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n<TR>");
+  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>");
   sendString("<TH "TH_BG">Time</TH>");
   sendString("<TH "TH_BG">Tot. Traffic Sent</TH>");
   sendString("<TH "TH_BG">% Traffic Sent</TH>");

@@ -1820,30 +1820,33 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       sendString("</TD></TR>");
 
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>", 
-		  getRowColor()) < 0)
-	BufferTooShort();
-      sendString(buf);
-
-      if((el->tcpSentLoc+el->tcpSentRem+el->udpSentLoc+el->udpSentRem) > 0) {
-	if(snprintf(buf, sizeof(buf),
-		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1></TD>",
-		    el->hostNumIpAddress) < 0)
+      if((el->tcpSentLoc+el->tcpSentRem+el->udpSentLoc+el->udpSentRem
+	  +el->tcpRcvdLoc+el->tcpRcvdFromRem+el->udpRcvdLoc+el->udpRcvdFromRem) > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>", 
+		    getRowColor()) < 0)
 	  BufferTooShort();
 	sendString(buf);
-      } else
-	sendString("<TD COLSPAN=2 WIDTH=250>&nbsp;</TD>");
 
-      if((el->tcpRcvdLoc+el->tcpRcvdFromRem+el->udpRcvdLoc+el->udpRcvdFromRem) > 0) {
-	if(snprintf(buf, sizeof(buf),
-		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"></TD></TR>",
-		    el->hostNumIpAddress) < 0)
-	  BufferTooShort();
-	sendString(buf);
-      } else
-	sendString("<TD COLSPAN=2 WIDTH=250>&nbsp;</TD>");
+	if((el->tcpSentLoc+el->tcpSentRem+el->udpSentLoc+el->udpSentRem) > 0) {
+	  if(snprintf(buf, sizeof(buf),
+		      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1></TD>",
+		      el->hostNumIpAddress) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+	} else
+	  sendString("<TD COLSPAN=2 WIDTH=250>&nbsp;</TD>");
 
-      sendString("</TR>");
+	if((el->tcpRcvdLoc+el->tcpRcvdFromRem+el->udpRcvdLoc+el->udpRcvdFromRem) > 0) {
+	  if(snprintf(buf, sizeof(buf),
+		      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"></TD></TR>",
+		      el->hostNumIpAddress) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+	} else
+	  sendString("<TD COLSPAN=2 WIDTH=250>&nbsp;</TD>");
+
+	sendString("</TR>");
+      }
     }
   }
 #endif
