@@ -1,7 +1,5 @@
-
-
-
 NTOP(8)                                                   NTOP(8)
+
 
 
 NAME
@@ -9,20 +7,19 @@ NAME
 
 SYNOPSIS
        ntop   [-a|--access-log-path  <path>]  [-c|--sticky-hosts]
-       [-f|--traffic-dump-file  file>]   [-g|--cisco-netflow-host
-       <host:port>]     [-h|--help]    [-j|--border-sniffer-mode]
-       [-k|--filter-expression-in-extra-frame]     [-l|--pcap-log
-       <path>] [-m|--local-subnets <addresses>] [-n|--numeric-ip-
-       addresses]  [-p|--protocols  <list>]   [-q|--create-suspi-
-       cious-packets]   [-r|--refresh-time   <number>]  [-s|--no-
-       promiscuous] [-t|--trace-level <number>] [-w|--http-server
-       <port>]  [-B|--filter-expression  expression] [-D|--domain
-       <name>] [-F|--flow-spec <specs>] [-M|--no-interface-merge]
-       [-N|--no-nmap]  [-O|----output-packet-path] [-P|--db-file-
-       path <path>]  [-R|--filter-rule  <file>]  [-S|--store-mode
-       <number>]  [-U|--mapper  <URL>]  [-V|--version]  [-1|--no-
-       throughput-update] [-2|--no-idle-hosts] [--throughput-bar-
-       chart] [--no-admin-password-hint]
+       [-f|--traffic-dump-file file>]  [-h|--help]  [-j|--border-
+       sniffer-mode]      [-k|--filter-expression-in-extra-frame]
+       [-l|--pcap-log  <path>]  [-m|--local-subnets  <addresses>]
+       [-n|--numeric-ip-addresses]     [-p|--protocols    <list>]
+       [-q|--create-suspicious-packets] [-r|--refresh-time  <num-
+       ber>]  [-s|--no-promiscuous]  [-t|--trace-level  <number>]
+       [-w|--http-server <port>] [-B|--filter-expression  expres-
+       sion]   [-D|--domain   <name>]   [-F|--flow-spec  <specs>]
+       [-M|--no-interface-merge]  [-N|--no-nmap]  [-O|----output-
+       packet-path]  [-P|--db-file-path <path>] [-R|--filter-rule
+       <file>]  [-S|--store-mode  <number>]  [-U|--mapper  <URL>]
+       [-V|--version]  [--throughput-bar-chart] [--no-admin-pass-
+       word-hint]
 
        Not available on micro-ntop:
 
@@ -30,9 +27,9 @@ SYNOPSIS
 
        Unix options:
 
-       [-d|--daemon]  [-i|--interface  <name>] [-u|--user <user>]
-       [-E|--enable-external-tools]           [-K|--enable-debug]
-       [-L] [--use-syslog=<facility>]
+       [-d|--daemon] [-i|--interface <name>]  [-u|--user  <user>]
+       [-E|--enable-external-tools]    [-K|--enable-debug]   [-L]
+       [-use-syslog <facility>]
 
        Win32 option:
 
@@ -40,7 +37,7 @@ SYNOPSIS
 
        mySQL options:
 
-       [-b|--sql-host    <host:port>]   [-v|--mysql-host   <user-
+       [-b|--sql-host   <host:port>]   [-v|--mysql-host    <user-
        name:password:dbName>]
 
        OpenSSL option:
@@ -49,91 +46,60 @@ SYNOPSIS
 
 
 DESCRIPTION
-       ntop shows the current network usage. It displays  a  list
-       of  hosts that are currently using the network and reports
-       information concerning the (IP and non-IP) traffic  gener-
+       ntop  shows  the current network usage. It displays a list
+       of hosts that are currently using the network and  reports
+       information  concerning the (IP and non-IP) traffic gener-
        ated by each host.  ntop can be started either in a termi-
-       nal window (see intop ) or in  web  mode.  In  the  latter
+       nal  window  (see  intop  )  or in web mode. In the latter
        case, a web browser is needed to use the program.
 
 
 
-
-
-
-                            March 2002                          1
-
-
-
-
-
-NTOP(8)                                                   NTOP(8)
-
-
 COMMAND-LINE OPTIONS
        -a | --access-log-path
-        By   default   ntop   logs  HTTP  accesses  in  the  file
-        ntop.access.log in the current directory. Use  this  flag
-        to  specify the path of the file where HTTP accesses will
-        be logged. Each log entry is in  Apache-like  style.  The
-        only  difference  between Apache and ntop is that .B ntop
-        added a new column has been added. Such  column  contains
-        the  time  (in milliseconds) that ntop needed in order to
+        By  default  ntop  logs  HTTP  accesses   in   the   file
+        ntop.access.log  in  the current directory. Use this flag
+        to specify the path of the file where HTTP accesses  will
+        be  logged.  Each  log entry is in Apache-like style. The
+        only difference between Apache  and  ntop  is  that  ntop
+        added  a  new column has been added. Such column contains
+        the time (in milliseconds) that ntop needed in  order  to
         serve the request.
 
 
        -b | --sql-host
         Exports ntop traffic information into a SQL database. The
-        flag  specifies  (in  http-like  host format) the address
-        (IP:port) of a SQL client. The database/  directory  part
-        of  ntop contains a few clients. Please use one of those.
+        flag specifies (in http-like  host  format)  the  address
+        (IP:port)  of  a SQL client. The database/ directory part
+        of ntop contains a few clients. Please use one of  those.
 
 
        -c | --sticky-hosts
-        By default idle hosts are periodically purged  from  mem-
-        ory.  Use  this  flag  to  prevent  idle hosts from being
-        purged from memory. NOTE: if idle hosts are kept in  mem-
+        By  default  idle hosts are periodically purged from mem-
+        ory. Use this flag  to  prevent  idle  hosts  from  being
+        purged  from memory. NOTE: if idle hosts are kept in mem-
         ory you can experience severe memory usage.
 
 
        -d | --daemon
-        This  flag  causes  ntop  to  become a daemon, i.e. it is
+        This flag causes ntop to become  a  daemon,  i.e.  it  is
         started in background and detached from the terminal.
 
 
        -e | --max-table-rows
-        Is the maximum number of HTML table rows that  ntop  will
+        Is  the  maximum number of HTML table rows that ntop will
         display.
 
 
        -f | --traffic-dump-file
-        Specifies  the  file  containing tcpdump captured traffic
+        Specifies the file containing  tcpdump  captured  traffic
         that has to be used by ntop. Note: if you specify -f ntop
-        will  not  capture  any  traffic  after the file has been
+        will not capture any traffic  after  the  file  has  been
         read. This option is mostly used for debug purposes.
-
-
-       -g | --cisco-netflow-host
-        Exports ntop traffic  information  in  Cisco  NetFlow  V5
-        (http://www.cisco.com/warp/pub-
-        lic/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm) format. The
-        flag  specifies  (in  http-like  host format) the address
-        (IP:port) of a NetFlow client such as ftp://ftp.net.ohio-
-        state.edu/users/maf/cisco/.
 
 
        -h | --help
         Print help information for ntop , including usage.
-
-
-
-                            March 2002                          2
-
-
-
-
-
-NTOP(8)                                                   NTOP(8)
 
 
        -i | --interface
@@ -190,18 +156,6 @@ NTOP(8)                                                   NTOP(8)
         either  a  valid  protocol specified inside the /etc/ser-
         vices  file  or  a  numeric  port  range  (e.g.  80,   or
         6000-6500).  If  the  -p  flag  is  omitted the following
-
-
-
-                            March 2002                          3
-
-
-
-
-
-NTOP(8)                                                   NTOP(8)
-
-
         default      value      is      used:       "FTP=ftp|ftp-
         data,HTTP=http|www|https,DNS=name|domain,Telnet=tel-
         net|login,NBios-IP=netbios-ns|netbios-dgm|netbios-
@@ -237,7 +191,9 @@ NTOP(8)                                                   NTOP(8)
         to the ethernet broadcast address). Note that even if you
         use  this flag, the interface could well be in  promiscu-
         ous mode as other  applications  can  have  enabled  this
-        functionality.
+        functionality.   *****NOTE:  This  is  not  functional in
+        v2.0/2.1 of ntop.  It  is  a  future  place-holder  ONLY.
+        *****
 
 
        -t | --trace-level
@@ -256,25 +212,13 @@ NTOP(8)                                                   NTOP(8)
         group of the user specified.
 
 
-
-
-
-                            March 2002                          4
-
-
-
-
-
-NTOP(8)                                                   NTOP(8)
-
-
        -v | --mysql-host
         Specifies   the  mySQL  database  connection  information
         (user:password:database:host).
 
 
        -w | --http-server
-        ntop sports and embedded web server  so  that  users  can
+        ntop sports an embedded web  server  so  that  users  can
         attach  their  web  browsers  to  the  specified port and
         browse traffic information remotely. Supposing  to  start
         ntop  at  the port 3000 (default port), the URL to access
@@ -290,6 +234,9 @@ NTOP(8)                                                   NTOP(8)
         been  started with '-W 0' [see below]).  You can also use
         the IP:Port notation to bind ntop to  the  specified  IP-
         Address, e.g.  -w 127.0.0.1:3000
+
+
+       -A | --set-admin-password
 
 
        -B | --filter-expression
@@ -322,18 +269,6 @@ NTOP(8)                                                   NTOP(8)
         of captured packets that match a specified rule. The for-
         mat   is   <flow-label>='<matching   expression>'[,<flow-
         label>='<matching  expression>'], where the label is used
-
-
-
-                            March 2002                          5
-
-
-
-
-
-NTOP(8)                                                   NTOP(8)
-
-
         to  symbolically  identify  the  flow  specified  by  the
         expression.  The  expression  format  is specified in the
         appendix. If an expression is specified, then the  infor-
@@ -354,19 +289,30 @@ NTOP(8)                                                   NTOP(8)
 
 
        -K | --enable-debug
-        Use this flag to simplify application debug  (eg.  fork()
-        is not used etc.)
+        Use this flag to simplify  application  debug.   It  does
+        three  things: 1. Does not fork() on the "read only" html
+        pages.  2. Displays mutex  values  on  the  configuration
+        (info.html)  page.   3.  (If available - glibc/gcc) Acti-
+        vates an automated backtrace on application errors.
 
 
-       -L | --enable-syslog
-        Use  this  flag  for  using the syslog instead of stdout.
-        Please note that if ntop (ever) forks  a  child,  in  any
+       -L
+        Use this flag for using the  syslog  instead  of  stdout.
+        Please  note  that  if  ntop (ever) forks a child, in any
         case the syslog will be used for this child.
 
 
+       --use-syslog=facility
+        Use this flag for using the syslog instead of stdout. The
+        parameter  value  indicates  the  facility  (e.g. daemon,
+        security) to be used for logging.  Please  note  that  if
+        ntop (ever) forks a child, in any case the syslog will be
+        used for this child.
+
+
        -M | --no-interface-merge
-        Forces  ntop  not  to  merge network interfaces together.
-        This means that ntop will  collect  statistics  for  each
+        Forces ntop not to  merge  network  interfaces  together.
+        This  means  that  ntop  will collect statistics for each
         interface and will not merge data together.
 
 
@@ -375,44 +321,31 @@ NTOP(8)                                                   NTOP(8)
 
 
        -O | --output-packet-path
-        Base  path for the ntop-suspicious-pkts.XXX.pcap and nor-
-        mal packet log file (tcpdump). If  the  base  path  is  a
-        directory  you  have to append a / to the string for this
+        Base path for the ntop-suspicious-pkts.XXX.pcap and  nor-
+        mal  packet  log  file  (tcpdump).  If the base path is a
+        directory you have to append a / to the string  for  this
         to work fine.
 
 
        -P | --db-file-path
-        This allows to specify where  db-files  are  searched  or
-        created  (default  "."). In addition DBPATH/html is added
+        This  allows  to  specify  where db-files are searched or
+        created (default "."). In addition DBPATH/html  is  added
         to the searchlist for the WEB-files
 
 
-
-
-
-
-                            March 2002                          6
-
-
-
-
-
-NTOP(8)                                                   NTOP(8)
-
-
        -S | --store-mode
-        Use this flag for telling ntop to save information  about
-        host  traffic  on  shutdown.  Valid values are: 0 = don't
-        store hosts, 1 = store all hosts, 2 =  store  only  local
-        hosts.  This  flag allows ntop not to loose traffic stats
-        across multiple ntop sessions. Please note that  informa-
+        Use  this flag for telling ntop to save information about
+        host traffic on shutdown. Valid values  are:  0  =  don't
+        store  hosts,  1  = store all hosts, 2 = store only local
+        hosts. This flag allows ntop not to loose  traffic  stats
+        across  multiple ntop sessions. Please note that informa-
         tion about TCP session is (obviously) lost.
 
 
        -U | --mapper
-        It  specifies the UTR of the mapper.pl utility (it's part
-        of the ntop distribution  [see  www/Perl/mapper.pl])  for
-        displaying  host location. If you don't want to install a
+        It specifies the UTR of the mapper.pl utility (it's  part
+        of  the  ntop  distribution [see www/Perl/mapper.pl]) for
+        displaying host location. If you don't want to install  a
         mapper use http://jake.ntop.org/cgi-bin/mapper.pl
 
 
@@ -422,61 +355,39 @@ NTOP(8)                                                   NTOP(8)
 
        -W | --https-server
         If  ntop  has  been  compiled  with  HTTPS  support  (via
-        OpenSSL),  this  flag  can  be used to set the HTTPS port
+        OpenSSL), this flag can be used to  set  the  HTTPS  port
         (default 3001 ). If the user specifies '-W 0', HTTPS sup-
-        port  is  disabled.  Some examples: 1.  ntop -w 80 -W 443
-        (both HTTP and HTTPS have been enabled at  their  default
+        port is disabled. Some examples: 1.  ntop -w  80  -W  443
+        (both  HTTP  and HTTPS have been enabled at their default
         ports) 2.  ntop -w 0 -W 443 (HTTP disabled, HTTPS enabled
         at the default port).  You can also use the IP:Port nota-
-        tion  to  bind ntop to the specified IP-Address, e.g.  -w
+        tion to bind ntop to the specified IP-Address,  e.g.   -w
         127.0.0.1:3001
 
 
-       -1 | --no-throughput-update
-        Turns off the calculation by ntop of the minute by minute
-        throughput of the network(s).
-
-
-       -2 | --no-idle-hosts
-        Turns  off  the  periodic  purging of idle hosts from the
-        tables.
-
-
        --throughput-bar-chart
-        Format the throughput charts with bars instead of  as  an
+        Format  the  throughput charts with bars instead of as an
         area chart.
 
 
        --no-admin-password-hint
-        Supppresses  the  hint about the (default) admin password
+        Supppresses the hint about the (default)  admin  password
         in the dialog boxes.
 
 
 WEB VIEWS
-       While ntop is  running,  multiple  users  can  access  the
-
-
-
-                            March 2002                          7
-
-
-
-
-
-NTOP(8)                                                   NTOP(8)
-
-
-       traffic  information  using conventional web browsers. The
-       main HTML page, is divided is two frames. The  left  frame
-       allows  users to select the traffic view that will be dis-
-       played in the right frame. Available  sections  are:  sort
-       traffic by data sent, sort traffic by data received, traf-
-       fic statistics, active hosts list, remote to  local  (i.e.
-       inside the subnet defined for the network board from which
-       the program is currently sniffing) IP  traffic,  local  to
-       remote  IP  traffic,  local  to  local IP traffic, list of
-       active TCP sessions, IP protocol distribution  statistics,
-       IP protocol usage, IP traffic matrix.
+       While ntop is running, multiple users can access the traf-
+       fic information using conventional web browsers. The  main
+       HTML page, is divided is two frames. The left frame allows
+       users to select the traffic view that will be displayed in
+       the  right  frame. Available sections are: sort traffic by
+       data sent, sort traffic by data received, traffic  statis-
+       tics,  active hosts list, remote to local (i.e. inside the
+       subnet defined for the network board from which  the  pro-
+       gram is currently sniffing) IP traffic, local to remote IP
+       traffic, local to local IP traffic,  list  of  active  TCP
+       sessions, IP protocol distribution statistics, IP protocol
+       usage, IP traffic matrix.
 
 
 NOTES
@@ -485,27 +396,27 @@ NOTES
 
 
        Operating system header files and the Gnu gcc compiler and
-       glibc  libraries (http://www.gnu.org), including the glibc
+       glibc libraries (http://www.gnu.org), including the  glibc
        development libraries.
 
-       Required libraries include (see the output of  ./configure
+       Required  libraries include (see the output of ./configure
        for a fuller listing) Posix threads, ncrypt, readline and:
 
-       libpcap from http://www.tcpdump.org/  (The  Win32  version
-       makes  use  of  libpcap  for Win32 which may be downloaded
+       libpcap  from  http://www.tcpdump.org/  (The Win32 version
+       makes use of libpcap for Win32  which  may  be  downloaded
        from http://www.netgroup.polito.it/WinPcap/install/).
 
        gdb from http://www.gnu.org/software/gdbm/gdbm.html
 
        Optional libraries include:
 
-       The       gdchart       library,       available        at
+       The        gdchart       library,       available       at
        http://www.fred.net/brv/chart/.
 
-       The  gd  library, for the creation of gif files, available
+       The gd library, for the creation of gif  files,  available
        at http://www.boutell.com/gd/ (included with gdchart).
 
-       The libpng library, for the creation of png files,  avail-
+       The  libpng library, for the creation of png files, avail-
        able at
 
        mySQL available at http://www.mysql.com/
@@ -513,82 +424,25 @@ NOTES
        openSSL from the OpenSSL project, if an https:// server is
        desired, available at http://www.openssl.org.
 
-       The sflow Plugin is courtesy of  and  supported  by  InMon
+       The  sflow  Plugin  is  courtesy of and supported by InMon
        Corporation, http://www.inmon.com/sflowTools.htm.
 
-       Options  tools  -  which  ntop will utilize if available -
-       include   nmap    (http://www.insecure.org)    and    lsof
+       Options tools - which ntop will  utilize  if  available  -
+       include    nmap    (http://www.insecure.org)    and   lsof
        (ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/README).
-
-
-
-
-                            March 2002                          8
-
-
-
-
-
-NTOP(8)                                                   NTOP(8)
 
 
 SEE ALSO
        intop(1), top(1), tcpdump(8).
 
 AUTHOR
-       Please   send   bug  reports  to  the  ntop  mailing  list
+       Please  send  bug  reports  to  the  ntop   mailing   list
        <ntop@ntop.org>.  Please code patched to <patch@ntop.org>.
-       ntop's   author  is  Luca  Deri  and  can  be  reached  at
-       deri@ntop.org.  Tool locations are current as of  February
-       2002  -  please send email to report new locations or dead
+       ntop's  author  is  Luca  Deri  and  can  be  reached   at
+       deri@ntop.org.   Tool locations are current as of February
+       2002 - please send email to report new locations  or  dead
        links.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                            March 2002                          9
-
-
+                            March 2002                    NTOP(8)

@@ -1,9 +1,23 @@
-Content-type: text/html
-
-<HTML><HEAD><TITLE>Manpage of NTOP</TITLE>
-</HEAD><BODY>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<!-- Manually updated with these headers from generated version by Burton Strauss, July 2002 -->
+<!-- Validated as HTML 4.01 Transitional by Burton Strauss, July 2002 -->
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Window-target" content="_top">
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<meta name="description" content="ntop (http://www.ntop.org) status for a network.">
+<meta name="author" content="ntop">
+<meta name="generator" content="ntop v2.0">
+<link rel="stylesheet" type="text/css" href="style.css">
+<title>ntop man page</title>
+</head>
+<BODY>
 <H1>NTOP</H1>
-Section: Maintenance Commands (8)<BR>Updated: December 2001<BR><A HREF="#index">Index</A>
+Section: Maintenance Commands (8)<BR>Updated: March 2002<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -24,10 +38,6 @@ ntop - display top network users
 [<B>-f</B>|<B>--traffic-dump-file</B>
 
 <I>file&gt;</I>]
-
-[<B>-g</B>|<B>--cisco-netflow-host</B>
-
-<I>&lt;host:port&gt;</I>]
 
 [<B>-h</B>|<B>--help</B>]
 
@@ -55,9 +65,7 @@ ntop - display top network users
 
 <I>&lt;number&gt;</I>]
 
-[<B>-s</B>|<B>--max-hash-size</B>
-
-<I>&lt;number&gt;</I>]
+[<B>-s</B>|<B>--no-promiscuous</B>]
 
 [<B>-t</B>|<B>--trace-level</B>
 
@@ -66,10 +74,6 @@ ntop - display top network users
 [<B>-w</B>|<B>--http-server</B>
 
 <I>&lt;port&gt;</I>]
-
-[<B>-A</B>|<B>--accuracy-level</B>
-
-<I>&lt;number&gt;</I>]
 
 [<B>-B</B>|<B>--filter-expression</B>
 
@@ -86,6 +90,8 @@ ntop - display top network users
 [<B>-M</B>|<B>--no-interface-merge</B>]
 
 [<B>-N</B>|<B>--no-nmap</B>]
+
+[<B>-O</B>|<B>----output-packet-path</B>]
 
 [<B>-P</B>|<B>--db-file-path</B>
 
@@ -104,10 +110,6 @@ ntop - display top network users
 <I>&lt;URL&gt;</I>]
 
 [<B>-V</B>|<B>--version]</B>
-
-[<B>-1</B>|<B>--no-throughput-update</B>]
-
-[<B>-2</B>|<B>--no-idle-hosts</B>]
 
 [<B>--throughput-bar-chart</B>]
 
@@ -138,7 +140,11 @@ Unix options:
 
 [<B>-K</B>|<B>--enable-debug</B>]
 
-[<B>-L</B>|<B>--enable-syslog</B>]
+[<B>-L</B>]
+
+[<B>-use-syslog</B>
+
+<I>&lt;facility&gt;</I>]
 
 <P>
 Win32 option:
@@ -159,7 +165,7 @@ mySQL options:
 <I>&lt;username:password:dbName&gt;</I>]
 
 <P>
-openSSL option:
+OpenSSL option:
 <P>
 [<B>-W</B>|<B>--https-server</B>
 
@@ -197,7 +203,9 @@ By default
 logs HTTP accesses in the file ntop.access.log in the current directory. Use this flag to specify the path of the file where HTTP accesses will be logged. Each log entry is in Apache-like style. The only difference between Apache and 
 <B>ntop</B>
 
-is that .B ntop
+is that
+<B>ntop</B>
+
 added a new column has been added. Such column contains the time (in milliseconds) that ntop needed in order to serve the request. 
 <P>
 
@@ -225,13 +233,6 @@ will display.
 
 2 -f --traffic-dump-file
 Specifies the file containing tcpdump captured traffic that has to be used by ntop. Note: if you specify -f ntop will not capture any traffic after the file has been read. This option is mostly used for debug purposes.
-<P>
-
-2 -g --cisco-netflow-host
-Exports
-<B>ntop</B>
-
-traffic information in Cisco NetFlow V5 (<A HREF="http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm)">http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm)</A> format. The flag specifies (in http-like host format) the address (IP:port) of a NetFlow client such as <A HREF="ftp://ftp.net.ohio-state.edu/users/maf/cisco/.">ftp://ftp.net.ohio-state.edu/users/maf/cisco/.</A>
 <P>
 
 2 -h --help
@@ -302,12 +303,9 @@ note that if the delay is very short (1 second for instance), ntop might not
 be able to process all the network traffic.
 <P>
 
-2 -s --max-hash-size
-The maximum hash size can be adjusted to values below the default value of 32,768 if desired.  This will limit the maximum
-amount of memory
-<B>ntop</B>
-
-will use.  The value must be greater than or equal to 64.
+2 -s --no-promiscuous
+Use this flag for disabling interface promiscuous mode (i.e. the ability to capture ethernet frames regardless whether they are directed to the local ethernet card or to the ethernet broadcast address). Note that even if you use this flag, the interface could well be in  promiscuous mode as other applications can have enabled this functionality.
+*****NOTE: This is not functional in v2.0/2.1 of ntop.  It is a future place-holder ONLY. *****
 <P>
 
 2 -t --trace-level
@@ -333,7 +331,7 @@ Specifies the mySQL database connection information (user:password:database:host
 2 -w --http-server
 <B>ntop</B>
 
-sports and embedded web server so that users can attach their web browsers to the specified port and browse 
+sports an embedded web server so that users can attach their web browsers to the specified port and browse 
 traffic information remotely. Supposing to start
 <B>ntop</B>
 
@@ -364,11 +362,8 @@ You can also use the IP:Port notation to bind ntop to the specified IP-Address, 
 
 <P>
 
-2 -A --accuracy-level
-This flag specifies the level of
-<B>ntop's</B>
+2 -A --set-admin-password
 
-traffic analysis accuracy. Level 2 (high accuracy) is full accuracy. Level 1 (medium accuracy): ntop filters out non-local traffic and disables protocol decoding. Level 0 (low accuracy): ntop acts as level 1 and also disables TCP session handling. This flag has to be used when the network is overloaded and ntop can't keep up with the current traffic.
 <P>
 
 2 -B --filter-expression
@@ -410,11 +405,18 @@ and added to the LucaHosts flow, whereas all the packet routed by the gateway ga
 <P>
 
 2 -K --enable-debug
-Use this flag to simplify application debug (eg. fork() is not used etc.)
+Use this flag to simplify application debug.  It does three things:
+1. Does not fork() on the &quot;read only&quot; html pages.
+2. Displays mutex values on the configuration (info.html) page.
+3. (If available - glibc/gcc) Activates an automated backtrace on application errors.
 <P>
 
-2 -L --enable-syslog
+-L
 Use this flag for using the syslog instead of stdout. Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
+<P>
+
+--use-syslog=facility
+Use this flag for using the syslog instead of stdout. The parameter value indicates the facility (e.g. daemon, security) to be used for logging.  Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
 <P>
 
 2 -M --no-interface-merge
@@ -425,12 +427,13 @@ Forces ntop not to merge network interfaces together. This means that ntop will 
 Forces ntop not to use nmap (if it is installed).
 <P>
 
-2 -P --db-file-path
-This allows to specify where db-files are searched or created (default &quot;.&quot;). In addition DBPATH/html is added to the searchlist for the WEB-files
+2 -O --output-packet-path
+Base path for the ntop-suspicious-pkts.XXX.pcap and normal packet log file (tcpdump). If the base
+path is a directory you have to append a / to the string for this to work fine.
 <P>
 
-2 -R --filter-rule
-Specifies the filter rules used by ntop for emitting alerts and warnings when the traffic matches the specified rules. Shall you need further details about filter rules, please refer to ntop-rules (8) man page.
+2 -P --db-file-path
+This allows to specify where db-files are searched or created (default &quot;.&quot;). In addition DBPATH/html is added to the searchlist for the WEB-files
 <P>
 
 2 -S --store-mode
@@ -465,17 +468,6 @@ has been compiled with HTTPS support (via OpenSSL), this flag can be used to set
 You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
 <B>-w 127.0.0.1:3001</B>
 
-<P>
-
-2 -1 --no-throughput-update
-Turns off the calculation by 
-<B>ntop</B>
-
-of the minute by minute throughput of the network(s).
-<P>
-
-2 -2 --no-idle-hosts
-Turns off the periodic purging of idle hosts from the tables.
 <P>
 
 --throughput-bar-chart
@@ -558,8 +550,6 @@ and
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+intop">intop</A></B>(1),
 
-<B><A HREF="http://localhost/cgi-bin/man/man2html?8+ntop-rules">ntop-rules</A></B>(8),
-
 <B><A HREF="http://localhost/cgi-bin/man/man2html?1+top">top</A></B>(1),
 
 <B><A HREF="http://localhost/cgi-bin/man/man2html?8+tcpdump">tcpdump</A></B>(8).
@@ -568,6 +558,7 @@ and
 <H2>AUTHOR</H2>
 
 Please send bug reports to the ntop mailing list &lt;<A HREF="mailto:ntop@ntop.org">ntop@ntop.org</A>&gt;.
+Please code patched to &lt;<A HREF="mailto:patch@ntop.org">patch@ntop.org</A>&gt;.
 ntop's author is Luca Deri and can be reached at <A HREF="mailto:deri@ntop.org">deri@ntop.org</A>.
 Tool locations are current as of February 2002 - please send email to report new locations or dead links.
 <P>
@@ -588,7 +579,6 @@ Tool locations are current as of February 2002 - please send email to report new
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 23:13:29 GMT, February 16, 2002
+Time: 14:44:04 GMT, July 02, 2002
 </BODY>
 </HTML>
-

@@ -191,6 +191,7 @@ be able to process all the network traffic.
 
 .It2 -s --no-promiscuous
 Use this flag for disabling interface promiscuous mode (i.e. the ability to capture ethernet frames regardless whether they are directed to the local ethernet card or to the ethernet broadcast address). Note that even if you use this flag, the interface could well be in  promiscuous mode as other applications can have enabled this functionality.
+*****NOTE: This is not functional in v2.0/2.1 of ntop.  It is a future place-holder ONLY. *****
 
 .It2 -t --trace-level
 This flag specifies the level of
@@ -265,7 +266,10 @@ For instance suppose to define two flows with the following expression "LucaHost
 and added to the LucaHosts flow, whereas all the packet routed by the gateway gateway.unipi.it are added to the GatewayRoutedPkts flow. If the flows list is very long you may store in a file (for instance flows.list) the list of flows and specify the file name instead of the flows list (in above example you will invoke 'ntop -F flows.list').
 
 .It2 -K --enable-debug
-Use this flag to simplify application debug (eg. fork() is not used etc.)
+Use this flag to simplify application debug.  It does three things:
+1. Does not fork() on the "read only" html pages.
+2. Displays mutex values on the configuration (info.html) page.
+3. (If available - glibc/gcc) Activates an automated backtrace on application errors.
 
 .It -L
 Use this flag for using the syslog instead of stdout. Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
