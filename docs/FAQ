@@ -1557,6 +1557,28 @@ A. Multiple users allow you to control who can alter ntop's performance and/or
 
    Look in http.c for all the names and #defines used... 
 
+Q. So, How do I restrict access to the main http or https ntop web page?
+A. To stop everyone from logging into ntop, do the following:
+   Select ADMIN tab 
+   Select URL's then "Add Url"
+   Don't fill in anything (the wildcard * is implied)
+   Select only the users who you want to authorise (hold cntrl key and 
+   click on user to add more users if you added users) 
+
+   and click on "Add Url"
+
+   You will see URL '*' is added, e.g.
+
+     'showU*'
+     '*'
+     'shutdown*'
+     'deleteU*'
+     'modifyU*'
+
+   Then only users who know the user id and password (remember to keep the .db 
+   file secure!) will have access.
+(Added 17Dec2002, thanks to Jac Engle for suggesting it)
+
  
 Q. SSL is not working! I have the following error in the log/terminal:
      10/Jun/2002 22:58:17 Started thread (6151) for network packet sniffing on 
