@@ -1,8 +1,8 @@
 /*
  *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
- *                      
+ *
  * 			    http://www.ntop.org/
- *  					
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -28,13 +28,13 @@
  *       While there is Makefile code to download and rebuild the structure (make dnsapt sapt),
  *       as of 01-2003, it doesn't work.
  *
- *       The file format has been changed, the sapt.sed file is lost, and besides it builds a 
+ *       The file format has been changed, the sapt.sed file is lost, and besides it builds a
  *       saptable.h file which you would manually have to insert into vendor.c.
  *
  *       OTOP, Novell doesn't change things very often.
  *
  *   Vendor
- *       The official list is updated daily at http://standards.ieee.org/regauth/oui/oui.txt  
+ *       The official list is updated daily at http://standards.ieee.org/regauth/oui/oui.txt
  *       The vendor table data does change, frequently, albeit irrelevantly to most of us.
  *       The ntop version of oui.txt is updated infrequently.
  *
@@ -42,15 +42,15 @@
  *
  *           $ make dnvt
  *
- *       Warning: the mac address list frequently discussed on the 'net at 
- *       http://www.cavebear.com/CaveBear/Ethernet/vendor.html hasn't been 
+ *       Warning: the mac address list frequently discussed on the 'net at
+ *       http://www.cavebear.com/CaveBear/Ethernet/vendor.html hasn't been
  *       updated since 1999.
  *
  *       If you want to save (disk) space, an oui.txt customized with only the ones
  *       you really need is certainly possible.
  *
  *   Special MAC
- *       The special mac table is referenced - getHostInfo() in hash.c calls 
+ *       The special mac table is referenced - getHostInfo() in hash.c calls
  *       getSpecialMacInfo() in util.c - each time a new (pseudo) local host
  *       is found.
  *
@@ -62,11 +62,11 @@
  *
  *       It's a mess...
  *
- *       For example, 0x0180C2-000000 through -00000f, are reserved in 
- *       "ANSI/IEEE Standard 802.1D (1998 edition)".  See page 70 in 
+ *       For example, 0x0180C2-000000 through -00000f, are reserved in
+ *       "ANSI/IEEE Standard 802.1D (1998 edition)".  See page 70 in
  *       http://standards.ieee.org/getieee802/download/802.1D-1998.pdf
  *
- *       For example, the 2nd bit of a MAC address denotes an LAA, a Locally Assigned 
+ *       For example, the 2nd bit of a MAC address denotes an LAA, a Locally Assigned
  *       Address value.  See IEEE 802.3-2002 (or earlier versions).
  *       Because bits are xmitted low to high , this stream, 0100000000000000...
  *       is MAC address 0x02000000.  (See RFC 1638)
@@ -173,8 +173,8 @@ IPXSAPInfo* ipxSAPhash[MAX_IPXSAP_NAME_HASH];
 
 /* *********************************** */
 
-static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[], 
-                               IPXSAPInfo* entry, 
+static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[],
+                               IPXSAPInfo* entry,
                                u_int tableLen) {
   u_int idx;
   unsigned long ipxsapValue;
@@ -190,7 +190,7 @@ static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[],
   idx = (u_int)((u_int)ipxsapValue % tableLen);
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: addIPXSAPTableEntry(%06x, %s) gives %ld (mod %d = %d)\n", 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: addIPXSAPTableEntry(%06x, %s) gives %ld (mod %d = %d)\n",
 	 entry->ipxsapId,
 	 entry->ipxsapName,
          ipxsapValue,
@@ -202,16 +202,16 @@ static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[],
   if(theMacHash[idx] != NULL) {
       hashLoadCollisions++;
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: HashLoad Collision - %d %x '%s\n", 
+      traceEvent(CONST_TRACE_INFO, "DEBUG: HashLoad Collision - %d %x '%s\n",
                                    idx, entry->ipxsapId, entry->ipxsapName);
 #endif
   }
 
   for(;;) {
-    if(theMacHash[idx] == NULL) {      
+    if(theMacHash[idx] == NULL) {
       theMacHash[idx] = entry;
       break;
-    }    
+    }
     idx = (idx+1)%tableLen;
   }
 
@@ -229,7 +229,7 @@ char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
 
   for(;;) {
     cursor = ipxSAPhash[idx];
-    
+
     if(ipxSAPhash[idx] == NULL) {
       /* Unknown vendor */
       return("");
@@ -250,11 +250,10 @@ char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
 	    } else
 	      ipxsapName[b++] = ipxSAPhash[idx]->ipxsapName[a];
 
-	  ipxsapName[b] = '\0';	    
+	  ipxsapName[b] = '\0';
 	  return(ipxsapName);
 	} else
 	  return(ipxSAPhash[idx]->ipxsapName);
-
       }
     }
 
@@ -266,7 +265,6 @@ char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
 
 /* *********************************** */
 
-
 char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
   datum key_data, data_data;
   static char tmpBuf[96];
@@ -275,9 +273,8 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
   workBuf = etheraddr_string(ethAddress);
   memcpy(&tmpBuf, workBuf, LEN_ETHERNET_ADDRESS_DISPLAY+1);
 #ifdef VENDOR_DEBUG
-  traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: %slookup '%s'\n", 
-                               special == 1 ? "special " : "",
-                               tmpBuf);
+  traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: %slookup '%s'\n",
+                               special == 1 ? "special " : "", tmpBuf);
 #endif
 
   if(special == TRUE) {
@@ -312,7 +309,7 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
 #endif
 
   data_data = gdbm_fetch(myGlobals.macPrefixFile, key_data);
-  
+
   if(data_data.dptr != NULL) {
     if(((special == TRUE)  && (((MACInfo*)data_data.dptr)->isSpecial = 's')) ||
        ((special == FALSE) && (((MACInfo*)data_data.dptr)->isSpecial != 's'))) {
@@ -323,13 +320,13 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
     }
   }
 
- 
+
   /* Hand coded for LAA/Multicast */
   if(((ethAddress[5] & 0x01) == 0) && ((ethAddress[6] & 0x01) == 0)) {
     /*
       This is a dummy MAC that instead contains an IP addresses
       in the first four bytes
-      
+
       Example: 0D:68:2B:C1:00:00
     */
     return("");
@@ -383,14 +380,16 @@ char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
 
 /* *********************************** */
 
-void createVendorTable(void) {
+void createVendorTable(struct stat *dbStat) {
   int idx, idx2, configFileFound, numRead, numLoaded;
   FILE *fd = NULL;
+  char loadFile;
   char tmpLine[LEN_GENERAL_WORK_BUFFER];
   char tmpMACkey[LEN_ETHERNET_ADDRESS_DISPLAY+1];
   char *tmpMAC, *tmpTag1, *tmpTag2, *tmpVendor, *strtokState;
   struct macInfo macInfoEntry;
   datum data_data, key_data;
+  struct stat vendorStat;
 
 #ifdef TEST_HASHSIZE_IPXSAP
   {
@@ -427,7 +426,7 @@ void createVendorTable(void) {
   myGlobals.ipxsapHashLoadSize = sizeof(ipxSAPhash);
   for(idx=0; ipxSAP[idx].ipxsapName != NULL; idx++) {
     myGlobals.ipxsapHashLoadSize += sizeof(IPXSAPInfo) + strlen(ipxSAP[idx].ipxsapName);
-    myGlobals.ipxsapHashLoadCollisions += 
+    myGlobals.ipxsapHashLoadCollisions +=
       addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], MAX_IPXSAP_NAME_HASH);
   }
 
@@ -457,7 +456,7 @@ void createVendorTable(void) {
    *  We use the (base 16) as our key and add similar values for special
    *  mac entries so we could co-mingled them.
    *
-   *  Note that any line without the 2nd word of '(base' or '(special' is 
+   *  Note that any line without the 2nd word of '(base' or '(special' is
    *  simply ignored - allows comments if you're careful.
    *
    */
@@ -468,16 +467,24 @@ void createVendorTable(void) {
     for(idx2=0; myGlobals.configFileDirs[idx2] != NULL; idx2++) {
       u_char compressedFormat;
 
+      loadFile = 1;
       compressedFormat = 1;
       snprintf(tmpLine, sizeof(tmpLine), "%s/%s.gz", myGlobals.configFileDirs[idx2], macInputFiles[idx]);
       traceEvent(CONST_TRACE_INFO, "VENDOR: Checking '%s'\n", tmpLine);
       fd = gzopen(tmpLine, "r");
-	 
+
       if(fd == NULL) {
 	compressedFormat = 0;
 	snprintf(tmpLine, sizeof(tmpLine), "%s/%s", myGlobals.configFileDirs[idx2], macInputFiles[idx]);
-	traceEvent(CONST_TRACE_INFO, "VENDOR: Checking '%s'\n", tmpLine);
 	fd = fopen(tmpLine, "r");
+      }
+
+      if(dbStat && (!stat(tmpLine, &vendorStat))) {
+	if(dbStat->st_mtime >= vendorStat.st_mtime) {
+	  traceEvent(CONST_TRACE_INFO, "VENDOR: File '%s' does not need to be reloaded", tmpLine);
+	  loadFile = 0;
+	} else
+	  traceEvent(CONST_TRACE_INFO, "VENDOR: Loading file '%s'\n", tmpLine);
       }
 
       if(fd != NULL) {
@@ -485,65 +492,66 @@ void createVendorTable(void) {
 	numRead=0;
 	numLoaded=0;
 
-	while (compressedFormat ? gzgets(fd, tmpLine, sizeof(tmpLine)) : fgets(tmpLine, sizeof(tmpLine), fd)) {
-	  numRead++;
-	  myGlobals.numVendorLookupRead++;
-	  if( (strstr(tmpLine, "(base") == NULL) &&
-	       (strstr(tmpLine, "(special") == NULL) ) {
-	    continue;
-	  }
-	  tmpMAC = strtok_r(tmpLine, " \t", &strtokState);
-	  if(tmpMAC == NULL) continue;
-	  tmpTag1 = strtok_r(NULL, " \t", &strtokState);
-	  if(tmpTag1 == NULL) continue;
-	  if( (strcmp(tmpTag1, "(base") == 0) || 
-	       (strcmp(tmpTag1, "(special") == 0) ) { 
-	    tmpTag2 = strtok_r(NULL, " \t", &strtokState);
-	    if(tmpTag2 == NULL) continue;
-	    tmpVendor = strtok_r(NULL, "\n", &strtokState);
-	    if(tmpVendor == NULL) continue;
-	    /* Skip leading blanks and tabs*/
-	    while ( (tmpVendor[0] == ' ') || (tmpVendor[0] == '\t') ) tmpVendor++;
-	    memset(&macInfoEntry, 0, sizeof(macInfoEntry));
-	    if(strcmp(tmpTag1, "(special") == 0) {
-	      macInfoEntry.isSpecial = 's';
-	    } else {
-	      macInfoEntry.isSpecial = 'r';
+	if(loadFile) {
+	  while (compressedFormat ? gzgets(fd, tmpLine, sizeof(tmpLine)) : fgets(tmpLine, sizeof(tmpLine), fd)) {
+	    numRead++;
+	    myGlobals.numVendorLookupRead++;
+	    if( (strstr(tmpLine, "(base") == NULL) &&
+		(strstr(tmpLine, "(special") == NULL) ) {
+	      continue;
 	    }
-	    memcpy(&(macInfoEntry.vendorName[0]),
-		   tmpVendor,
-		   min(strlen(tmpVendor)+1, sizeof(macInfoEntry.vendorName)-1));
-	    data_data.dptr = (void*)(&macInfoEntry);
-	    data_data.dsize = sizeof(macInfoEntry);
-	    tmpMACkey[0]='\0';
-	    strncat(tmpMACkey, tmpMAC, 2);
-	    strcat(tmpMACkey, ":");
-	    strncat(tmpMACkey, tmpMAC+2, 2);
-	    strcat(tmpMACkey, ":");
-	    strncat(tmpMACkey, tmpMAC+4, 2);
-	    if(strcmp(tmpTag2, "48)") == 0) {
-	      /* special 48 - full tag */
+	    tmpMAC = strtok_r(tmpLine, " \t", &strtokState);
+	    if(tmpMAC == NULL) continue;
+	    tmpTag1 = strtok_r(NULL, " \t", &strtokState);
+	    if(tmpTag1 == NULL) continue;
+	    if((strcmp(tmpTag1, "(base") == 0) || (strcmp(tmpTag1, "(special") == 0)) {
+	      tmpTag2 = strtok_r(NULL, " \t", &strtokState);
+	      if(tmpTag2 == NULL) continue;
+	      tmpVendor = strtok_r(NULL, "\n", &strtokState);
+	      if(tmpVendor == NULL) continue;
+	      /* Skip leading blanks and tabs*/
+	      while ( (tmpVendor[0] == ' ') || (tmpVendor[0] == '\t') ) tmpVendor++;
+	      memset(&macInfoEntry, 0, sizeof(macInfoEntry));
+	      if(strcmp(tmpTag1, "(special") == 0) {
+		macInfoEntry.isSpecial = 's';
+	      } else {
+		macInfoEntry.isSpecial = 'r';
+	      }
+	      memcpy(&(macInfoEntry.vendorName[0]),
+		     tmpVendor,
+		     min(strlen(tmpVendor)+1, sizeof(macInfoEntry.vendorName)-1));
+	      data_data.dptr = (void*)(&macInfoEntry);
+	      data_data.dsize = sizeof(macInfoEntry);
+	      tmpMACkey[0]='\0';
+	      strncat(tmpMACkey, tmpMAC, 2);
 	      strcat(tmpMACkey, ":");
-	      strncat(tmpMACkey, tmpMAC+6, 2);
+	      strncat(tmpMACkey, tmpMAC+2, 2);
 	      strcat(tmpMACkey, ":");
-	      strncat(tmpMACkey, tmpMAC+8, 2);
-	      strcat(tmpMACkey, ":");
-	      strncat(tmpMACkey, tmpMAC+10, 2);
-	    }
-	    key_data.dptr = tmpMACkey;
-	    key_data.dsize = strlen(tmpMACkey)+1;
-	    if(gdbm_store(myGlobals.macPrefixFile, key_data, data_data, GDBM_REPLACE) != 0) {
-	      traceEvent(CONST_TRACE_WARNING, "VENDOR: unable to add record '%s': {%d, %s} - skipped",
-			 tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
-	    } else {
-	      numLoaded++;
-	      myGlobals.numVendorLookupAdded++;
-	      if(macInfoEntry.isSpecial == 's')
-		myGlobals.numVendorLookupAddedSpecial++;
+	      strncat(tmpMACkey, tmpMAC+4, 2);
+	      if(strcmp(tmpTag2, "48)") == 0) {
+		/* special 48 - full tag */
+		strcat(tmpMACkey, ":");
+		strncat(tmpMACkey, tmpMAC+6, 2);
+		strcat(tmpMACkey, ":");
+		strncat(tmpMACkey, tmpMAC+8, 2);
+		strcat(tmpMACkey, ":");
+		strncat(tmpMACkey, tmpMAC+10, 2);
+	      }
+	      key_data.dptr = tmpMACkey;
+	      key_data.dsize = strlen(tmpMACkey)+1;
+	      if(gdbm_store(myGlobals.macPrefixFile, key_data, data_data, GDBM_REPLACE) != 0) {
+		traceEvent(CONST_TRACE_WARNING, "VENDOR: unable to add record '%s': {%d, %s} - skipped",
+			   tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
+	      } else {
+		numLoaded++;
+		myGlobals.numVendorLookupAdded++;
+		if(macInfoEntry.isSpecial == 's')
+		  myGlobals.numVendorLookupAddedSpecial++;
 #ifdef VENDOR_DEBUG
-	      traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}\n",
-			 tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
+		traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}\n",
+			   tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
 #endif
+	      }
 	    }
 	  }
 	}
@@ -552,8 +560,9 @@ void createVendorTable(void) {
 	  gzclose(fd);
 	else
 	  fclose(fd);
-	traceEvent(CONST_TRACE_INFO, "VENDOR: ...found, %d lines, loaded %d records!\n",
-		   numRead, numLoaded);
+
+	if(loadFile)
+	  traceEvent(CONST_TRACE_INFO, "VENDOR: ...found, %d lines, loaded %d records!\n", numRead, numLoaded);
 	break;
       }
     }
@@ -562,6 +571,6 @@ void createVendorTable(void) {
       traceEvent(CONST_TRACE_WARNING, "VENDOR: Unable to open file '%s'", macInputFiles[idx]);
       traceEvent(CONST_TRACE_INFO, "VENDOR: ntop continues ok, but without or with partial MAC->Vendor mapping");
     }
-  }      
+  }
 }
 

@@ -481,7 +481,6 @@ void initCounters(void) {
   myGlobals.numVendorLookupFoundMulticast = 0;
   myGlobals.numVendorLookupFoundLAA = 0;
 
-  createVendorTable();
   myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
   myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
 
@@ -739,7 +738,8 @@ void resetStats(int deviceId) {
 
 /* ******************************* */
 
-void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory, int doUnlink) {
+void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory, 
+		    int doUnlink, struct stat *statbuf) {
   char tmpBuf[200];
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
@@ -755,6 +755,14 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory, int doUn
 
   if(doUnlink == TRUE) {
     unlink(tmpBuf); /* Delete the old one (if present) */
+  }
+
+  if(statbuf) {
+    if(stat(tmpBuf, statbuf) == 0) {
+      /* File already exists */
+    } else {
+      memset(statbuf, 0, sizeof(struct stat));
+    }
   }
 
   traceEvent(CONST_TRACE_NOISY, "%s database '%s'",

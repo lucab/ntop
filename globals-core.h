@@ -134,7 +134,8 @@ extern void initSignals(void);
 extern void startSniffer(void);
 extern void deviceSanityCheck(char* string);
 extern u_int createDummyInterface(char *ifName);
-extern void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory, int doUnlink);
+extern void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
+			   int doUnlink, struct stat *statbuf);
 extern void allocateOtherHosts();
 extern void initGdbm(char *prefDirectory, char *spoolDirectory);
 extern void addDevice(char* deviceName, char* deviceDescr);
@@ -496,7 +497,7 @@ unsigned short isOKtoSave(u_int32_t addr,
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);
 extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
 extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
-extern void createVendorTable(void);
+extern void createVendorTable(struct stat *statbuf);
 
 /* netflow.c */
 extern void termNetFlowExporter();

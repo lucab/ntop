@@ -88,14 +88,17 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
 void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 	      char *spoolDirectory  /* Directory with temporary files (that can be deleted when ntop is not running) */
 	      ) {
+  struct stat statbuf;
+
   traceEvent(CONST_TRACE_INFO, "Initializing gdbm databases");
 
-  initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE);
-  initSingleGdbm(&myGlobals.prefsFile,        "prefsCache.db",   prefDirectory, FALSE);
-  initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, TRUE);
-  initSingleGdbm(&myGlobals.pwFile,           "ntop_pw.db",      prefDirectory, FALSE);
-  initSingleGdbm(&myGlobals.hostsInfoFile,    "hostsInfo.db",    spoolDirectory, FALSE);
-  initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, TRUE);
+  initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
+  initSingleGdbm(&myGlobals.prefsFile,        "prefsCache.db",   prefDirectory,  FALSE, NULL);
+  initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, TRUE,  NULL);
+  initSingleGdbm(&myGlobals.pwFile,           "ntop_pw.db",      prefDirectory,  FALSE, NULL);
+  initSingleGdbm(&myGlobals.hostsInfoFile,    "hostsInfo.db",    spoolDirectory, FALSE, NULL);
+  initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
+  createVendorTable(&statbuf);
 }
 
 /* ******************************* */
