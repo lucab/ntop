@@ -393,6 +393,9 @@ void sendStringLen(char *theString, unsigned int len) {
   RESEND:
     errno=0;
 
+  if(newSock == DUMMY_SOCKET_VALUE)
+    return;
+
 #ifdef HAVE_OPENSSL
     if(newSock < 0) {
       rc = SSL_write(getSSLsocket(-newSock), &buffer[bytesSent], len);
