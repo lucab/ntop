@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Note this is a guess, based on email from Marc Mazuhelli [Marc.Mazuhelli@USherbrooke.ca]
+
+#  It turns out that -I/usr/kerberos/include is present in RedHat9, and it's not there on RHAS 3.
+#  
+#  I traced it back to configureextra/LINUXredhat9 which contains these lines:
+#  
+#  # If we have krb5.h and openssl was compiled with it...
+#  if test -d /usr/kerberos/include &&
+#     test -f /usr/kerberos/include/krb5.h; then
+#      CPPFLAGS="-I/usr/kerberos/include/ ${CPPFLAGS}"
+#  fi
+#  
+#  These lines are also necessary for RedHad [sic] Advanced Server 3 but there doesn't seem to 
+#  be a configureextra for RHAS 3...
+
+echo "        Setting RedHat AS/ES3 specific flag values"
+
+# If we have krb5.h and openssl was compiled with it, we need the -I setting
+# since there's no way to easily test the latter and no harm from an extra -I,
+# just do it...
+if test -d /usr/kerberos/include &&
+   test -f /usr/kerberos/include/krb5.h; then
+    CPPFLAGS="-I/usr/kerberos/include/ ${CPPFLAGS}"
+fi
+

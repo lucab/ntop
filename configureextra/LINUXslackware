@@ -1,8 +1,6 @@
 #!/bin/sh
 
 echo "        Setting Slackware specific flag values"
-# Hmm, don't think so...
-# CPPFLAGS="-DHAVE_FILEDESCRIPTORBUG ${CPPFLAGS}"
 
 # XML Dump plugin stuff... leeched from Burton
 #  Note - this assumes you've installed the packages that include:

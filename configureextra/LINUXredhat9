@@ -1,7 +1,6 @@
 #!/bin/sh
 
 echo "        Setting RedHat 9 specific flag values"
-CPPFLAGS="-DHAVE_FILEDESCRIPTORBUG ${CPPFLAGS}"
 
 # If we have krb5.h and openssl was compiled with it, we need the -I setting
 # since there's no way to easily test the latter and no harm from an extra -I,
