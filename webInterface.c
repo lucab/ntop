@@ -1010,6 +1010,8 @@ void usage(void) {
 #endif
 #ifndef WIN32
   traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
+#else
+  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface index>]");
 #endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-S <store mode> (store persistently host stats)]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");

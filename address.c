@@ -1156,6 +1156,20 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   buflen = sizeof(hostbuf);
   cp	   = (u_char *) &answer+HFIXEDSZ;
 
+  /* Process first question section. */
+  if (qdcount-- > 0) {
+    n = (short)dn_expand_(answer.qb2, eom, cp, hostPtr->queryName, MAXDNAME);
+    if (n<0)
+      return(transactionId);
+    cp += n;
+    if (cp + INT16SZ >eom)
+      return(transactionId);
+    hostPtr->queryType = GetShort(cp);
+    cp += INT16SZ;
+    if (cp > eom)
+      return(transactionId);
+  }
+  
   /* Skip over question section. */
   while (qdcount-- > 0) {
     n = (short)_dn_skipname(cp, eom);
@@ -1357,8 +1371,8 @@ void checkSpoofing(u_int idxToCheck) {
 	  FD_SET(HOST_DUPLICATED_MAC, &el->flags);
 
 	  memset(&spoofing, 0, sizeof(FilterRule));
-	  spoofing.ruleId = 999;
-	  spoofing.ruleLabel = "spoofing";
+	  spoofing.ruleId     = 999;
+	  spoofing.ruleLabel  = "spoofing";
 	  spoofing.actionType = ACTION_ALARM;
 
 	  emitEvent(&spoofing, el, i,
@@ -1368,7 +1382,7 @@ void checkSpoofing(u_int idxToCheck) {
 	  if(enableSuspiciousPacketDump) {
 	    traceEvent(TRACE_WARNING, 
 		       "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)", 
-		       el->hostIpAddresses,
+		       el->hostNumIpAddress,
 		       device[actualDeviceId].hash_hostTraffic[idxToCheck]->ethAddressString,
 		       el->ethAddressString);
 	    dumpSuspiciousPacket();

@@ -993,6 +993,8 @@ typedef union {
 #endif
 
 typedef struct {
+  char      queryName[MAXDNAME];           /* original name queried */
+  int       queryType;                     /* type of original query */
   char      name[MAXDNAME];                /* official name of host */
   char      aliases[MAXALIASES][MAXDNAME]; /* alias list */
   u_int32_t addrList[MAXADDRS]; /* list of addresses from name server */

@@ -2581,7 +2581,7 @@ static void checkHostHealthness(HostTraffic *el) {
 /* ************************************ */
 
 void printHostDetailedInfo(HostTraffic *el) {
-  char buf[BUF_SIZE], buf1[64];
+  char buf[BUF_SIZE], buf1[64], sniffedName[MAXDNAME];
   float percentage;
   int printedHeader, i;
 
@@ -2589,22 +2589,28 @@ void printHostDetailedInfo(HostTraffic *el) {
   accessMutex(&addressResolutionMutex, "printAllSessionsHTML");
 #endif
 
+  buf1[0]=0;
+  if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
+    if(el->hostSymIpAddress[0] == '\0' || strcmp(sniffedName, el->hostSymIpAddress))
+      snprintf(buf1, sizeof(buf1), " (%s)", sniffedName);
+  }
+
   if(el->hostSymIpAddress[0] == '\0') {
     if(snprintf(buf, sizeof(buf), "Info about %s",
 	    el->ethAddressString) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
     if(snprintf(buf, sizeof(buf), "Info about"
-	     " <A HREF=http://%s/>%s</A>\n",
-	     el->hostNumIpAddress, el->hostSymIpAddress) < 0)
+		" <A HREF=http://%s/>%s %s</A>\n",
+		el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
-
-  printHTMLheader(buf, 0);
 
 #ifdef MULTITHREADED
   releaseMutex(&addressResolutionMutex);
 #endif
+
+  printHTMLheader(buf, 0);
 
   sendString("<CENTER>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n");

@@ -233,18 +233,18 @@ void initCounters(int _mergeInterfaces) {
     if((getdomainname(domainName, MAXHOSTNAMELEN) != 0)
        || (domainName[0] == '\0')
        || (strcmp(domainName, "(none)") == 0)) {
-	if((gethostname(domainName, MAXHOSTNAMELEN) == 0)
-	    && ((p = memchr(domainName, '.', MAXHOSTNAMELEN)) != NULL)) {
-	  domainName[MAXHOSTNAMELEN - 1] = '\0';
-	  /*
-	   * Replaced memmove with memcpy
-	   * Igor Schein <igor@txc.com>
-	   */
-	  memcpy(domainName, ++p, (MAXHOSTNAMELEN+domainName-p));
+      if((gethostname(domainName, MAXHOSTNAMELEN) == 0)
+	 && ((p = memchr(domainName, '.', MAXHOSTNAMELEN)) != NULL)) {
+	domainName[MAXHOSTNAMELEN - 1] = '\0';
+	/*
+	 * Replaced memmove with memcpy
+	 * Igor Schein <igor@txc.com>
+	 */
+	memcpy(domainName, ++p, (MAXHOSTNAMELEN+domainName-p));
 
-	} else
-	  domainName[0] = '\0';
-      }
+      } else
+	domainName[0] = '\0';
+    }
 
     if(domainName[0] == '\0') {
       char szLclHost[64];
@@ -319,7 +319,7 @@ void initCounters(int _mergeInterfaces) {
     broadcastEntry.ethAddress[i] = 255;
   broadcastEntry.hostIpAddress.s_addr = 0xFFFFFFFF;
   strncpy(broadcastEntry.hostNumIpAddress, "broadcast",
-	 sizeof(broadcastEntry.hostNumIpAddress));
+	  sizeof(broadcastEntry.hostNumIpAddress));
   strncpy(broadcastEntry.hostSymIpAddress, broadcastEntry.hostNumIpAddress,
 	  sizeof(broadcastEntry.hostSymIpAddress));
   FD_SET(SUBNET_LOCALHOST_FLAG, &broadcastEntry.flags);
@@ -329,7 +329,6 @@ void initCounters(int _mergeInterfaces) {
   broadcastEntryIdx = 0;
 
   numProcesses = 0;
-  numProcesses = NULL;
   
   resetStats();
   createVendorTable();
@@ -600,7 +599,7 @@ void initApps(void) {
   if(isLsofPresent) {
 #ifdef MULTITHREADED
 #ifndef WIN32
-	updateLsof = 1;
+    updateLsof = 1;
     memset(localPorts, 0, sizeof(localPorts)); /* localPorts is used by lsof */
     /*
      * (7) - LSOF - optional
@@ -617,121 +616,168 @@ void initApps(void) {
 /* ******************************* */
 
 void initDevices(char* devices) {
-  char ebuf[PCAP_ERRBUF_SIZE];
+  char ebuf[PCAP_ERRBUF_SIZE], *myDevices;
   int i, j, mallocLen;
   ntopInterface_t *tmpDevice;
+  char *tmpDev;
+#ifdef WIN32
+  char *ifName, intNames[32][256];
+  int ifIdx = 0, defaultIdx = -1;
+#endif
 
   traceEvent(TRACE_INFO, "Initializing network devices...");
 
+  myDevices = devices;
   device = NULL;
 
   /* Determine the device name if not specified */
   ebuf[0] = '\0';
 
-  if (devices == NULL) {
-    char *tmpDev = pcap_lookupdev(ebuf);
 #ifdef WIN32
-    char *ifName = tmpDev;
+  memset(intNames, 0, sizeof(intNames));
 
-    if(!isWinNT()) {
-      for(i=0;; i++) {
-	if(tmpDev[i] == 0) {
-	  if(ifName[0] == '\0')
-	    break;
-	  else {
-	    traceEvent(TRACE_INFO, "Found interface '%s'", ifName);
-	    ifName = &tmpDev[i+1];
+  tmpDev = pcap_lookupdev(ebuf);
+
+  if(tmpDev == NULL) {
+    traceEvent(TRACE_INFO, "Unable to locate default interface (%s)", ebuf);
+    exit(-1);
+  }
+
+  ifName = tmpDev;
+
+  if(!isWinNT()) {
+    for(i=0;; i++) {
+      if(tmpDev[i] == 0) {
+	if(ifName[0] == '\0')
+	  break;
+	else {
+	  traceEvent(TRACE_INFO, "Found interface [index=%d] '%s'", ifIdx, ifName);
+
+	  if(ifIdx < 32) {
+	    strcpy(intNames[ifIdx], ifName);
+	    if(defaultIdx == -1) {
+	      if(strncmp(intNames[ifIdx], "PPP", 3) /* Avoid to use the PPP interface */
+		 && strncmp(intNames[ifIdx], "ICSHARE", 6)) { /* Avoid to use the internet sharing interface */
+		defaultIdx = ifIdx;
+	      }
+	    }
 	  }
+
+	  ifIdx++;
+	  ifName = &tmpDev[i+1];
 	}
       }
     }
+
+    tmpDev = intNames[defaultIdx];
+  } else {
+    /* WinNT/2K */
+    static char tmpString[128];
+    int i, j;
+
+    while(tmpDev[0] != '\0') {
+      for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
+	if(tmpDev[i] != 0)
+	  tmpString[j++] = tmpDev[i];
+      }
+
+      tmpString[j++] = 0;
+      traceEvent(TRACE_INFO, "Found interface [index=%d] '%s'", ifIdx, tmpString);
+      tmpDev = &tmpDev[i+3];
+      strcpy(intNames[ifIdx++], tmpString);
+    }
+
+  }
 #endif
 
+  if (myDevices == NULL) {
+    /* No default device selected */
+#ifndef WIN32
+    tmpDev = pcap_lookupdev(ebuf);
+     
     if(tmpDev == NULL) {
       traceEvent(TRACE_INFO, "Unable to locate default interface (%s)\n", ebuf);
       exit(-1);
-    } else {
-#ifdef WIN32
-      if(isWinNT()) {
-	  static char tmpString[128];
-	  int i, j;
-
-	  for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
-	    if(tmpDev[i] != 0)
-	      tmpString[j++] = tmpDev[i];
-	  }
-
-	  tmpString[j++] = 0;
-	  tmpDev = tmpString;
-	} else { /* WIN95/98 */
-	  if(strncmp(tmpDev, "PPP", 3) == 0) {
-	    /* Ethernet is the only handled interface
-	       at the moment */
-	    tmpDev = &tmpDev[strlen(tmpDev)+1];
-	  }
-	}
+    }
 #endif
 
-      device = (ntopInterface_t*)malloc(sizeof(ntopInterface_t));
-      memset(device, 0, sizeof(ntopInterface_t));
-      device[0].name = strdup(tmpDev);
-      numDevices=1;
-    }
+    device = (ntopInterface_t*)malloc(sizeof(ntopInterface_t));
+    memset(device, 0, sizeof(ntopInterface_t));
+    device[0].name = strdup(tmpDev);
+    numDevices=1;
   } else {
-    char *strtokState, *tmpDev;
+#ifdef WIN32
+    u_int selectedDevice = atoi(devices);
 
-    tmpDev = strtok_r(devices, ",", &strtokState);
+    if(selectedDevice < ifIdx) {
+      tmpDev = intNames[selectedDevice];
+    } else {
+      traceEvent(TRACE_INFO, "Index out of range [0..%d]", ifIdx);
+      exit(-1);
+    }
+#else
+    char *strtokState;
+
+    tmpDev = strtok_r(myDevices, ",", &strtokState);
+#endif
     numDevices = 0;
-
+ 
     while(tmpDev != NULL) {
+#ifndef WIN32
       char *nwInterface;
-
+#endif
       deviceSanityCheck(tmpDev);
-
+#ifndef WIN32
       if((nwInterface = strchr(tmpDev, ':')) != NULL) {
-	/* This is a virtual nwInterface */
-	int i, found=0;
-
-	nwInterface[0] = 0;
-
-	for(i=0; i<numDevices; i++)
-	  if(device[i].name && (strcmp(device[i].name, tmpDev) == 0)) {
-	    found = 1;
-	    break;
-	  }
-
-	if(found) {
-	  tmpDev = strtok_r(NULL, ",", &strtokState);
-	  continue;
-	}
+ 	/* This is a virtual nwInterface */
+ 	int i, found=0;
+ 
+ 	nwInterface[0] = 0;
+ 
+ 	for(i=0; i<numDevices; i++)
+ 	  if(device[i].name && (strcmp(device[i].name, tmpDev) == 0)) {
+ 	    found = 1;
+ 	    break;
+ 	  }
+ 
+ 	if(found) {
+ 	  tmpDev = strtok_r(NULL, ",", &strtokState);
+ 	  continue;
+ 	}
       }
-
-
+#endif
+ 
       mallocLen = sizeof(ntopInterface_t)*(numDevices+1);
       tmpDevice = (ntopInterface_t*)malloc(mallocLen);
       memset(tmpDevice, 0, mallocLen);
       memcpy(tmpDevice, device, sizeof(ntopInterface_t)*numDevices);
       free(device);
       device = tmpDevice;
-
+ 
       device[numDevices++].name = strdup(tmpDev);
-
+ 
+#ifndef WIN32
       tmpDev = strtok_r(NULL, ",", &strtokState);
+#else
+      break;
+#endif
+
 #ifndef MULTITHREADED
       if(tmpDev != NULL) {
 	traceEvent(TRACE_WARNING, "WARNING: ntop can handle multiple interfaces only\n"
-	       "         if thread support is enabled. Only interface\n"
-	       "         '%s' will be used.\n", device[0].name);
+		   "         if thread support is enabled. Only interface\n"
+		   "         '%s' will be used.\n", device[0].name);
 	break;
       }
 #endif
-
+ 
       if(numDevices >= MAX_NUM_DEVICES) {
 	traceEvent(TRACE_INFO, "WARNING: ntop can handle up to %d interfaces.",
 		   numDevices);
 	break;
       }
     }
+
   }
 
   /* ******************************************* */
@@ -833,6 +879,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
 	if(device[i].pcapPtr == NULL) {
 	  traceEvent(TRACE_INFO, ebuf);
+	  traceEvent(TRACE_INFO, "Please select another interface using the -i flag.");
 	  exit(-1);
 	}
 
@@ -866,7 +913,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
     for(i=0; i<numDevices; i++) {
       if(pcap_lookupnet(device[i].name, &device[i].network.s_addr,
-			 &device[i].netmask.s_addr, ebuf) < 0) {
+			&device[i].netmask.s_addr, ebuf) < 0) {
 	/* Fix for IP-less interfaces (e.g. bridge)
 	   Courtesy of Diana Eichert <deicher@sandia.gov>
 	*/
@@ -913,13 +960,13 @@ void initLibpcap(char* rulesFile, int numDevices) {
     traceEvent(TRACE_WARNING, ", network %s\ndo not match.\n", intoa(addr1));
     device[0].network = localHostAddress[0].s_addr & device[0].netmask;
     traceEvent(TRACE_WARNING, "ntop will use: IP address (%s), ",
-	   intoa(localHostAddress[0]));
+    intoa(localHostAddress[0]));
     addr1.s_addr = netmask[0];
     traceEvent(TRACE_WARNING, "netmask %s", intoa(addr1));
     addr1.s_addr = device[0].localnet;
     traceEvent(TRACE_WARNING, ", network %s.\n", intoa(addr1));
     device[0].localnet = localHostAddress[0].s_addr & device[0].netmask;
-  } */
+    } */
 #endif
 
   {
@@ -944,7 +991,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
       memlen = sizeof(TrafficEntry*)*device[i].numHosts*device[i].numHosts;
       device[i].ipTrafficMatrix = (TrafficEntry**)calloc(device[i].numHosts*device[i].numHosts, 
-							sizeof(TrafficEntry*));
+							 sizeof(TrafficEntry*));
 #ifdef DEBUG
       traceEvent(TRACE_WARNING, "ipTrafficMatrix memlen=%.1f Mbytes", 
 		 (float)memlen/(float)(1024*1024));
@@ -1049,20 +1096,20 @@ void parseTrafficFilter(char *argv[], int optind) {
 
 void initSignals(void) {
 #ifndef WIN32
-/*  RETSIGTYPE (*oldhandler)(int); */
+  /*  RETSIGTYPE (*oldhandler)(int); */
 #endif
 
 #ifndef WIN32
-    (void)setsignal(SIGALRM, dontFreeze);
+  (void)setsignal(SIGALRM, dontFreeze);
 #endif
-    /*
-      The handler below has been restored due to compatibility
-      problems with om:
-      Courtesy of Martin Lucina <mato@kotelna.sk>
-    */
+  /*
+    The handler below has been restored due to compatibility
+    problems with om:
+    Courtesy of Martin Lucina <mato@kotelna.sk>
+  */
 #ifndef WIN32
-    (void)setsignal(SIGCHLD, handleDiedChild);
-    /* signal(SIGCHLD, SIG_IGN); */
+  (void)setsignal(SIGCHLD, handleDiedChild);
+  /* signal(SIGCHLD, SIG_IGN); */
 #endif
 
 #ifndef WIN32
@@ -1072,10 +1119,10 @@ void initSignals(void) {
   (void)setsignal(SIGHUP,  handleSigHup);
 
   /* Cooperate with nohup(1) */
-/*
-  if ((oldhandler = setsignal(SIGHUP, cleanup)) != SIG_DFL)
+  /*
+    if ((oldhandler = setsignal(SIGHUP, cleanup)) != SIG_DFL)
     (void)setsignal(SIGHUP, oldhandler);
-*/
+  */
 #endif
 }
 

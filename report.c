@@ -630,6 +630,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	sendString(buf2);
       }
 
+	  if(device[actualReportDeviceId].ethernetPkts > 0) {
+
 #ifdef HAVE_GDCHART
       sendString("<TR><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
@@ -715,10 +717,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString(buf2);
 
 #ifdef HAVE_GDCHART
-      if(device[actualReportDeviceId].ethernetPkts > 0) {
 	sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
 		   "<IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
-      }
 #endif
 
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long</th>"
@@ -802,6 +802,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		  device[actualReportDeviceId].peakPacketThroughput) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
+	}
 
       sendString("</TABLE></TR></TABLE></CENTER>\n");
     }
@@ -1096,7 +1097,8 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	el = tmpTable[idx];
 
       if(el != NULL) {
-	char *tmpName1, *tmpName2, *tmpName3;
+	char *tmpName1, *tmpName2, *tmpName3, sniffedName[MAXDNAME];
+	int displaySniffedName=0;
 
 	if(broadcastHost(el) == 0) {
 	  tmpName1 = el->hostNumIpAddress;
@@ -1122,11 +1124,17 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	  sendString(buf);
 
 	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
+
+	  if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) 
+            if((el->hostSymIpAddress[0] == '\0')
+	       || strcmp(sniffedName, el->hostSymIpAddress)) 
+              displaySniffedName=1;
+
+
 	  if(el->nbHostName || el->atNetwork || el->ipxHostName) {
 	    short numAddresses = 0;
 
-	    if(el->nbHostName && el->nbDomainName) {
-	      
+	    if(el->nbHostName && el->nbDomainName) {	      
 	      if(el->nbAccountName) {
 		if(el->nbDomainName != NULL) {
 		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag("Windows", 0),
@@ -1162,7 +1170,14 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	    }
-
+	    
+	    if (displaySniffedName) {
+	      if(numAddresses > 0) sendString("/");
+              snprintf(buf, sizeof(buf), "%s", sniffedName);
+	      sendString(buf);
+	      numAddresses++;
+            }
+	    
 	    if(el->atNetwork) {
 	      char *nodeName = el->atNodeName;
 

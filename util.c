@@ -658,7 +658,10 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
  */
 int32_t gmt2local(time_t t) {
   int dt, dir;
-  struct tm *gmt, loc, *myloc;
+  struct tm *gmt, *myloc;
+#ifdef HAVE_LOCALTIME_R
+    struct tm loc;
+#endif
 
   if(t == 0)
     t = time(NULL);
@@ -1768,7 +1771,10 @@ char* formatTime(time_t *theTime, short encodeString) {
 #define TIME_LEN    48
   static char outStr[2][TIME_LEN];
   static short timeBufIdx=0;
-  struct tm *locTime, myLocTime;
+  struct tm *locTime;
+#ifdef HAVE_LOCALTIME_R
+    struct tm myLocTime;
+#endif
 
   locTime = localtime_r(theTime, &myLocTime);
 
@@ -1863,6 +1869,12 @@ static void resetHostsVariables(HostTraffic* el) {
   el->napsterStats = NULL;
 #endif
   el->dhcpStats = NULL;
+
+  memset(el->contactedSentPeersIndexes, 0, sizeof(el->contactedSentPeersIndexes));
+  el->contactedSentPeersIdx = 0;
+  memset(el->contactedRcvdPeersIndexes, 0, sizeof(el->contactedRcvdPeersIndexes));
+  el->contactedRcvdPeersIdx = 0;
+  memset(el->contactedRouters, 0, sizeof(el->contactedRouters));
 }
 
 /* ************************************ */
@@ -2166,6 +2178,41 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
 /* ********************************** */
 
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+
+
+int getSniffedDNSName(char *hostNumIpAddress, 
+		      char *name, int maxNameLen) {
+  int found=0;
+  
+  name[0]=0;
+#if HAVE_GDBM_H
+  if(hostNumIpAddress[0] != '\0' && gdbm_file) {
+    datum key;
+    datum data;
+
+    key.dptr=hostNumIpAddress;
+    key.dsize=strlen(key.dptr)+1;
+
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "printHostDetailedInfo");
+#endif
+    data=gdbm_fetch(gdbm_file, key);
+#ifdef MULTITHREADED
+    releaseMutex(&gdbmMutex);
+#endif
+
+    if (data.dptr) {
+      strncpy(name, data.dptr, maxNameLen-1);
+      name[maxNameLen-1]=0;
+      free(data.dptr);
+      found=1;
+    }
+  }
+#endif
+  return found;
+}
+ 
+/* *************************************** */
 
 int strOnlyDigits(const char *s) {
 

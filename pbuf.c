@@ -3046,66 +3046,60 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
   struct in_addr hostIpAddress;
 #ifdef HAVE_GDBM_H
   datum key_data, data_data;
+  char tmpBuf[96];
 #endif
   u_int16_t transactionId;
-  char tmpBuf[96];
+  int i;
 
   memset(&hostPtr, 0, sizeof(DNSHostInfo));
 
   transactionId = handleDNSpacket(bp, (u_short)(hlen+sizeof(struct udphdr)),
 				  &hostPtr, (short)(length-(hlen+sizeof(struct udphdr))),
 				  isRequest, positiveReply);
-
-  if((hostPtr.name[0] != '\0') && (hostPtr.addrList[0] != 0)) {
+  
+  if((hostPtr.queryType == T_A)
+     && hostPtr.queryName[0] 
+     && hostPtr.addrList[0]) {
     int i;
 
-    hostIpAddress.s_addr = ntohl(hostPtr.addrList[0]);
-
-#ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "processDNSPacket");
-#endif
-
+    traceEvent(TRACE_INFO, "DNS %s for %s type %d\n", *isRequest ? "request" : "reply", 
+	       hostPtr.queryName, hostPtr.queryType);
+    
     for(i=0; i<MAXALIASES; i++)
       if(hostPtr.aliases[i][0] != '\0') {
 #ifdef DNS_SNIFF_DEBUG
-	printf("%s alias of %s\n",
-	       hostPtr.aliases[i], hostPtr.name);
-#endif
-#ifdef HAVE_GDBM_H
-	key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
-	key_data.dsize = strlen(key_data.dptr)+1;
-	data_data.dptr = hostPtr.aliases[0]; /* Let's take the first one */
-	data_data.dsize = strlen(data_data.dptr)+1;
-	if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
-	gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
-#endif
-      } else
-	break;
-
-#ifdef HAVE_GDBM_H
-    data_data.dptr = hostPtr.name;
-    data_data.dsize = strlen(data_data.dptr)+1;
-#endif
-
-    for(i=0; i<MAXADDRS; i++)
-      if(hostPtr.addrList[i] != 0){
-	hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
-#ifdef DNS_SNIFF_DEBUG
-	printf("%s <->%s\n",
-	       hostPtr.name, intoa(hostIpAddress));
-#endif
-#ifdef HAVE_GDBM_H
-	key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
-	key_data.dsize = strlen(key_data.dptr)+1;
-	if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
-	gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
+	traceEvent(TRACE_INFO, "%s is alias of %s\n", hostPtr.aliases[i], hostPtr.name);
 #endif
       }
+  }
+  
+#ifdef HAVE_GDBM_H
+  data_data.dptr = hostPtr.queryName;
+  data_data.dsize = strlen(data_data.dptr)+1;
+#endif
 
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+  accessMutex(&gdbmMutex, "processDNSPacket");
 #endif
-  }
+
+  for(i=0; i<MAXADDRS; i++)
+    if(hostPtr.addrList[i] != 0) {
+      hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
+#ifdef DNS_SNIFF_DEBUG
+      traceEvent(TRACE_INFO, "%s <->%s\n",
+		 hostPtr.queryName, intoa(hostIpAddress));
+#endif
+#ifdef HAVE_GDBM_H
+      key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
+      key_data.dsize = strlen(key_data.dptr)+1;
+      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
+      gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
+#endif
+    }
+
+#ifdef MULTITHREADED
+  releaseMutex(&gdbmMutex);
+#endif
 
   return(transactionId);
 }
@@ -3552,7 +3546,7 @@ static void processIpPkt(const u_char *bp,
 	transactionId = processDNSPacket(bp, udpDataLength, hlen, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
-	traceEvent(TRACE_INFO, "%s:%d->%s:d [request: %d][positive reply: %d]\n",
+	traceEvent(TRACE_INFO, "%s:%d->%s:%d [request: %d][positive reply: %d]\n",
 		   srcHost->hostSymIpAddress, sport,
 		   dstHost->hostSymIpAddress, dport,
 		   isRequest, positiveReply);
