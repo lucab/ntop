@@ -585,17 +585,8 @@ static void removeGlobalHostPeers(HostTraffic *el,
 
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRouters);
 
-    for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++)
-      if(el->portsUsage[j] != NULL) {
-	if((checkIndex(el->portsUsage[j]->clientUsesLastPeer))
-	   || (checkIndex(el->portsUsage[j]->serverUsesLastPeer))) {
-	  free(el->portsUsage[j]);
-	  el->portsUsage[j] = NULL;
-	}
-      }
-
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Leaving removeGlobalHostPeers()");
+  traceEvent(TRACE_INFO, "Leaving removeGlobalHostPeers()");
 #endif
 }
 
@@ -604,8 +595,10 @@ static void removeGlobalHostPeers(HostTraffic *el,
 /* Delayed free */
 void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   u_int j, i;
-  HostTraffic *host = device[theDevice].hash_hostTraffic[checkSessionIdx(hostIdx)];
+  HostTraffic *host;
   IpGlobalSession *nextElement, *element;
+
+  host = device[theDevice].hash_hostTraffic[checkSessionIdx(hostIdx)];
 
   if(host == NULL)
     return;
@@ -728,7 +721,6 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
       }
     }
     
-    removeGlobalHostPeers(host, myflaggedHosts, len);
     free(myflaggedHosts);
   }
 
