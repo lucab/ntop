@@ -307,7 +307,7 @@ static void resolveAddress(char* symAddr,
   updateHostNameInfo(addr, symAddr);
 #ifdef HAVE_MYSQL
   traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostNameInfo");
-  mySQLupdateHostNameInfo(hostIpAddress.s_addr, data_data.dptr);
+  mySQLupdateHostNameInfo(addr, data_data.dptr);
 #endif
 
 #ifdef MULTITHREADED
