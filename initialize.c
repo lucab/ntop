@@ -335,6 +335,8 @@ void resetStats(void) {
     }
   }
 
+  numTcpSessions = numUdpSessions = 0;
+
  #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);
 #endif

@@ -1098,19 +1098,21 @@ typedef struct pluginStatus {
 typedef struct flowFilterList {
   char* flowName;
   struct bpf_program fcode[MAX_NUM_DEVICES]; /* compiled filter code       */
-  struct flowFilterList *next;   /* next element (linked list) */
+  struct flowFilterList *next;               /* next element (linked list) */
   TrafficCounter bytes, packets;
   PluginStatus pluginStatus;
 } FlowFilterList;
 
-#define MAGIC_NUMBER 1968
+#define MAGIC_NUMBER                1968 /* Magic year actually */
 
 /* IP Session Information */
 typedef struct ipSession {
   u_short magic;
   u_int initiatorIdx;               /* initiator address   (IP address)         */
+  struct in_addr initiatorRealIp;   /* Real IP address (if masqueraded and known) */
   u_short sport;                    /* initiator address   (port)               */
   u_int remotePeerIdx;              /* remote peer address (IP address)         */
+  struct in_addr remotePeerRealIp;  /* Real IP address (if masqueraded and known) */
   u_short dport;                    /* remote peer address (port)               */
   time_t firstSeen;                 /* time when the session has been initiated */
   time_t lastSeen;                  /* time when the session has been closed    */
@@ -1118,7 +1120,8 @@ typedef struct ipSession {
   TrafficCounter bytesReceived;     /* # bytes received (peer -> initiator)[IP] */
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
-  TrafficCounter bytesFragmentedSent, bytesFragmentedReceived;  /* IP Fragments */
+  TrafficCounter bytesFragmentedSent;     /* IP Fragments */
+  TrafficCounter bytesFragmentedReceived; /* IP Fragments */
   u_int minWindow, maxWindow;       /* TCP window size */
   u_short numFin;                   /* # FIN pkts received                      */
   u_short numFinAcked;              /* # ACK pkts received                      */
@@ -1139,14 +1142,12 @@ typedef struct ipSession {
 
 #define MAX_NUM_TABLE_ROWS      384
 
-typedef struct hostAddress
-{
+typedef struct hostAddress {
   unsigned int numAddr;
   char* symAddr;
 } HostAddress;
 
-typedef struct portUsage
-{
+typedef struct portUsage {
   u_short        clientUses, serverUses;
   u_int          clientUsesLastPeer, serverUsesLastPeer;
   TrafficCounter clientTraffic, serverTraffic;
@@ -1159,7 +1160,7 @@ typedef struct portUsage
 #define GATEWAY_HOST_FLAG                 6 /* indicates whether this is used as a gateway */
 #define NAME_SERVER_HOST_FLAG             7 /* indicates whether this is used as a name server (e.g. DNS) */
 #define SUBNET_PSEUDO_LOCALHOST_FLAG      8 /* indicates whether the host is local
-                      					       (with respect to the specified subnets) */
+                      			       (with respect to the specified subnets) */
 /* Host Type */
 #define HOST_TYPE_SERVER				  9
 #define HOST_TYPE_WORKSTATION			         10
@@ -1218,8 +1219,7 @@ NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
 /* *********************** */
 
 /* Appletalk Datagram Delivery Protocol */
-typedef struct atDDPheader
-{
+typedef struct atDDPheader {
   u_int16_t       datagramLength, ddpChecksum;
   u_int16_t       dstNet, srcNet;
   u_char          dstNode, srcNode;

@@ -463,6 +463,7 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 	/* Session to purge */
 	notifyTCPSession(tcpSession[j]);
 	free(tcpSession[j]); /* No inner pointers to free */
+	numTcpSessions--;
 	tcpSession[j] = NULL;
       }
     }
@@ -475,6 +476,7 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 	 || (udpSession[j]->remotePeerIdx == NO_PEER)) {
 	/* Session to purge */
 	free(udpSession[j]); /* No inner pointers to free */
+	numUdpSessions--;
 	udpSession[j] = NULL;
       }
     }

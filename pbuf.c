@@ -970,6 +970,20 @@ static void handleSession(const struct pcap_pkthdr *h,
     /* ***************************************** */
 
     if(tcpDataLength > 0) {
+
+      if((sport == 80) || (dport == 80)) {
+	int i;
+
+	for(i=0; i<tcpDataLength; i++) {
+	  if((!isprint(packetData[i])) 
+	     && (!isspace(packetData[i])))
+	    break;
+	  printf("%c", packetData[i]);
+	}
+
+	printf("\n");
+      }
+      
       if((sport == 80 /* HTTP */) 
 	 && (theSession->bytesProtoRcvd == 0)) {
 	char rcStr[18];
