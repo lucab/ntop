@@ -2132,6 +2132,8 @@ void drawGlobalFcProtoDistribution(void) {
     sendGraphFile(fileName, 0);
 }
 
+/* *******************************************************/
+
 void drawLunStatsBytesDistribution (HostTraffic *el) {
   char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int lun, numEntries, idx=0;
@@ -2200,6 +2202,8 @@ void drawLunStatsBytesDistribution (HostTraffic *el) {
     sendGraphFile(fileName, 0);
 }
 
+/* *******************************************************/
+
 void drawLunStatsPktsDistribution (HostTraffic *el) {
   char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int lun, numEntries, idx=0;
@@ -2266,6 +2270,8 @@ void drawLunStatsPktsDistribution (HostTraffic *el) {
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
 }
+
+/* *******************************************************/
 
 void drawVsanStatsBytesDistribution (int deviceId) {
   char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
@@ -2347,6 +2353,8 @@ void drawVsanStatsBytesDistribution (int deviceId) {
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
 }
+
+/* *******************************************************/
 
 void drawVsanStatsPktsDistribution (int deviceId) {
   char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
@@ -2430,6 +2438,8 @@ void drawVsanStatsPktsDistribution (int deviceId) {
     sendGraphFile(fileName, 0);
 }
 
+/* *******************************************************/
+
 void drawVsanSwilsProtoDistribution(u_short vsanId) {
   char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int idx=0;
@@ -2512,6 +2522,8 @@ void drawVsanSwilsProtoDistribution(u_short vsanId) {
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
 }
+
+/* *******************************************************/
 
 void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
   char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";

@@ -55,6 +55,7 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 
 static void setPluginStatus(char * status);
 static void addRrdDelay();
+static char* spacer(char* str, char *tmpStr);
 
 #ifdef CFG_MULTITHREADED
 static PthreadMutex rrdMutex;
@@ -75,7 +76,8 @@ static time_t start_tm, end_tm, rrdTime;
 pthread_t rrdThread;
 #endif
 
-static u_short dumpDomains, dumpFlows, dumpHosts, dumpInterfaces, dumpMatrix, shownCreate=0;
+static u_short dumpDomains, dumpFlows, dumpHosts, 
+  dumpInterfaces, dumpMatrix, shownCreate=0;
 #ifndef WIN32
 static u_short dumpPermissions;
 #endif
@@ -112,7 +114,7 @@ static PluginInfo rrdPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
     "This plugin also produces the graphs of rrd data, available via a "
     "link from the various 'Info about host xxxxx' reports.",
-    "2.5", /* version */
+    "2.6", /* version */
     "<a HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
     1, /* Active by default */
@@ -134,14 +136,14 @@ static char **calcpr=NULL;
 static void calfree (void) {
   if(calcpr) {
     long i;
+
     for(i=0;calcpr[i];i++){
-      if(calcpr[i]){
+      if(calcpr[i])
 	free(calcpr[i]);
-      }
     }
-    if(calcpr) {
+
+    if(calcpr)
       free(calcpr);
-    }
   }
 }
 
@@ -355,9 +357,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
     }
     
     for(i=min; i<=max; i++) {
-      sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
+      sendString("<TR><TD COLSPAN=1 ALIGN=CENTER>");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary"
-		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
+		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD><TD>&nbsp;</TD></TR>\n",
 		    i, rrdPath, startTime, endTime);
       sendString(buf);
     }
@@ -497,7 +499,7 @@ static int endsWith(char* label, char* pattern) {
 
 void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 		  char *startTime, char* endTime, char *rrdPrefix) {
-  char path[512], *argv[32], buf[384], buf1[384], fname[384], *label;
+  char path[512], *argv[32], buf[384], buf1[384], fname[384], *label, tmpStr[32];
 #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
   char buf2[384], buf3[384], buf4[384];
 #endif
@@ -548,7 +550,8 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 #endif
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
     argv[argc++] = buf;
-    safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle);
+    safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "AREA:ctr#00a000:%s",
+		  spacer(rrdTitle, tmpStr));
     argv[argc++] = buf1;
     argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
@@ -618,7 +621,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
 void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
-  char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN],
+  char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32],
     buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char fname[384], *label;
   char **rrds = NULL;
@@ -689,7 +692,7 @@ void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, 
       argv[argc++] = buf[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		  entryId, rrd_colors[entryId], &rrds[i][3]); 
+		  entryId, rrd_colors[entryId], spacer(&rrds[i][3], tmpStr)); 
       argv[argc++] = buf1[entryId];
 
 
@@ -752,8 +755,38 @@ void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, 
 
 /* ******************************* */
 
+static char* spacer(char* _str, char *tmpStr) {
+  int len = strlen(_str), i;
+  char *str, *token;
+
+  if((len > 3) && (strncmp(_str, "IP_", 3) == 0)) {
+    str = &_str[3];
+    len -= 3;
+  } else
+    str = _str;
+
+  if(((token = strstr(str, "Bytes")) != NULL)
+     || ((token = strstr(str, "Pkts")) != NULL)
+     || ((token = strstr(str, "Num")) != NULL)
+     ) {
+    /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: '%s'", token);  */
+    len -= strlen(token)-1;
+  }
+
+  if(len > 15) len = 15;
+  snprintf(tmpStr, len, "% -15s", str);
+  for(i=len-1; i<15; i++) tmpStr[i] = ' ';
+  tmpStr[15] = '\0';
+  
+  /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: '%s' [len=%d]", tmpStr, len); */
+
+  return(tmpStr);
+}
+
+/* ******************************* */
+
 void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
-  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
+  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], tmpStr[32];
   char buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], fname[384], *label;
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0;
@@ -865,7 +898,8 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
       argv[argc++] = buf[entryId];
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN, 
 		    "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		    entryId, rrd_colors[entryId], rrds[i]); 
+		    entryId, rrd_colors[entryId], 
+		    spacer(rrds[i], tmpStr)); 
       argv[argc++] = buf1[entryId];
       entryId++;
     }
@@ -968,8 +1002,11 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     if(isCounter) {
       safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue);
     } else {
-      /* Unlimited */
-      safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr), "DS:counter:GAUGE:%d:0:U", step);
+      /* 
+	 Unlimited (sort of)
+	 Well I have decided to add a limit too in order to avoid crazy values.
+      */
+      safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr), "DS:counter:GAUGE:%d:0:%u", step, topValue);
     }
     argv[argc++] = counterStr;
 

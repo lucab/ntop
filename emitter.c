@@ -174,9 +174,29 @@ static void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, cha
 
 /* *************************** */
 
+static char* sanitize(char *value, char *buf, int buf_len) {
+  int i, j = 0;
+
+  for(i=0, j; (i<strlen(value)) && (i<buf_len); i++) {
+    switch(value[i]) {
+    case '\'':
+    case '\"':
+      break;
+    default:
+      buf[j++] = value[i];
+      break;
+    }
+  }
+
+  buf[j] = '\0';
+  return(buf);
+}
+
+/* *************************** */
+
 static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
 		      char *value, char last, int numEntriesSent) {
-  char buf[256];
+  char buf[256], buf1[256];
 
   validateString(name);
 
@@ -187,32 +207,36 @@ static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
        the pointer is not null, but the string is empty.
        In that case, don't create the key in the array.
     */
-    if((value != NULL) && (value[0] != '\0'))
-      {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s' => '%s'%c\n", indent,name,value,last);
+    if((value != NULL) && (value[0] != '\0')) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s' => '%s'%c\n",
+		      indent, name, sanitize(value, buf1, sizeof(buf1)), last);
 	sendEmitterString(fDescr, buf);
       }
     break ;
   case FLAG_XML_LANGUAGE:
     if((value != NULL) && (value[0] != '\0'))
       {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s<%s>%s</%s>\n", indent, name, value, name);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s<%s>%s</%s>\n", 
+		      indent, name, sanitize(value, buf1, sizeof(buf1)), name);
 	sendEmitterString(fDescr, buf);
       }
     break ;
   case FLAG_PYTHON_LANGUAGE:
     if((value != NULL) && (value[0] != '\0'))
       {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s': '%s'%c\n", indent,name,value,last);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s': '%s'%c\n", 
+		      indent, name, sanitize(value, buf1, sizeof(buf1)), last);
  	sendEmitterString(fDescr, buf);
        }
      break ;
   case FLAG_NO_LANGUAGE:
     if(value != NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s|", numEntriesSent == 0 ? name : value);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s|", 
+		    numEntriesSent == 0 ? name : value);
       sendEmitterString(fDescr, buf);
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s|", numEntriesSent == 0 ? name : "");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s|", 
+		    numEntriesSent == 0 ? name : "");
       sendEmitterString(fDescr, buf);
     }
     break ;

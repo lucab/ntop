@@ -3241,11 +3241,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     Due to the way sessions are handled, sessions before those to
     display need to be skipped
   */
-
   for(idx=1, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
-
     if(el && (printedSessions >= el->numHostSessions)) break;
-
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
 #endif
