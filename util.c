@@ -163,7 +163,12 @@ HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
     return(findHostByNumIP(theSerial.value.ipSerial.ipAddress,
 			   theSerial.value.ipSerial.vlanId,
 			   actualDeviceId));
-  } else {
+  } else if (theSerial.serialType == SERIAL_FC) {
+      return (findHostByFcAddress (&theSerial.value.fcSerial.fcAddress,
+                                   theSerial.value.fcSerial.vsanId,
+                                   actualDeviceId));
+  }
+  else {
     /* MAC */
     return(findHostByMAC(theSerial.value.ethSerial.ethAddress,
 			 theSerial.value.ethSerial.vlanId,
@@ -4702,8 +4707,7 @@ u_int numActiveNxPorts (u_int deviceId) {
 
 /* *************************************** */
 
-#if 0 /* Not used */
-HostTraffic* findHostByFcAddr(FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId) {
+HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId) {
   HostTraffic *el;
   u_int idx = hashFcHost(fcAddr, vsanId, &el, actualDeviceId);
 
@@ -4715,13 +4719,12 @@ HostTraffic* findHostByFcAddr(FcAddress *fcAddr, u_short vsanId, u_int actualDev
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-    if((el->hostFcAddress.domain != 0) && (!memcmp(&el->hostFcAddress, &fcAddr, LEN_FC_ADDRESS)))
+    if((el->fcCounters->hostFcAddress.domain != 0) && (!memcmp(&el->fcCounters->hostFcAddress, &fcAddr, LEN_FC_ADDRESS)))
       return(el);
   }
 
   return(NULL);
 }
-#endif
 
 /* *************************************** */
 
