@@ -385,19 +385,6 @@ dnl> MANDATORY general purpose headers
 AC_HAVE_HEADERS(pwd.h stdio.h errno.h stdlib.h unistd.h string.h signal.h fcntl.h dnl
                 sys/types.h sys/time.h sys/wait.h sys/stat.h sys/ioctl sys/un.h)
 
-dnl> MANDATORY the GNU database manager gdbm
-AC_HAVE_HEADERS(gdbm.h)
-
-
-if test "$ac_cv_header_gdbm_h" = no ; then
-    AC_MSG_RESULT([             *** FATAL ERROR ***             ])
-    AC_MSG_RESULT([ It looks that you don't have some files needed to use the GDBM library.])
-    AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
-    AC_MSG_RESULT([ When finished please re-run this program.])
-    AC_MSG_ERROR([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
-fi
-
-
 dnl> OPTIONAL general purpose headers
 AC_CHECK_HEADERS(sys/select.h sys/ldr.h sys/sockio.h dl.h dirent.h dlfcn.h)
 
@@ -844,24 +831,6 @@ if test ".`echo $CORELIBS | grep gdbm`" = .; then
          CORELIBS="${CORELIBS} -lgdbm"
          AC_DEFINE(HAVE_GDBM_H)
          AC_MSG_RESULT([found in $GDBM_ROOT])
-  elif test -d ../gdbm-1.7.3 &&
-       test -r ../gdbm-1.7.3/libgdbm.a &&
-       test -r ../gdbm-1.7.3/gdbm.h; then
-         GDBM_ROOT="../gdbm-1.7.3"
-         GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
-         CORELIBS="${CORELIBS} -L$GDBM_ROOT -lgdbm"
-         INCS="${INCS} -I$GDBM_ROOT"
-         AC_DEFINE(HAVE_GDBM_H)
-         AC_MSG_RESULT([found in $GDBM_ROOT])
-  elif test -d gdbm-1.7.3 &&
-       test -r gdbm-1.7.3/libgdbm.a &&
-       test -r gdbm-1.7.3/gdbm.h; then
-         GDBM_ROOT="gdbm-1.7.3"
-         GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
-         CORELIBS="${CORELIBS} -L$GDBM_ROOT -lgdbm"
-         INCS="${INCS} -I$GDBM_ROOT"
-         AC_DEFINE(HAVE_GDBM_H)
-         AC_MSG_RESULT([found in $GDBM_ROOT])
   else
        AC_CHECK_LIB(gdbm, gdbm_close)
        if test "$ac_tr_lib" != "HAVE_LIBGDBM"; then
@@ -875,6 +844,25 @@ if test ".`echo $CORELIBS | grep gdbm`" = .; then
          GDBM_ROOT="standard installation"
        fi
   fi
+fi
+
+
+dnl> MANDATORY the GNU database manager gdbm
+AC_HAVE_HEADERS(gdbm.h)
+
+
+if test "$ac_cv_header_gdbm_h" = no ; then
+     if test -r /usr/include/gdbm.h; then
+         GDBM_ROOT="/usr"
+         CORELIBS="${CORELIBS} -lgdbm"
+         AC_DEFINE(HAVE_GDBM_H)
+  else
+    AC_MSG_RESULT([             *** FATAL ERROR ***             ])
+    AC_MSG_RESULT([ It looks that you don't have some files needed to use the GDBM library.])
+    AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
+    AC_MSG_RESULT([ When finished please re-run this program.])
+    AC_MSG_ERROR([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
+fi
 fi
 
 
