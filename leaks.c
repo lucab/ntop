@@ -609,7 +609,7 @@ char* ntop_safestrdup(char *ptr, char* file, int line) {
     int len = strlen(ptr);
     
 #ifndef USE_GC
-    theOut = (char*)malloc_atomic((len+1)*sizeof(char));
+    theOut = (char*)malloc((len+1)*sizeof(char));
 #else
     theOut = (char*)GC_malloc_atomic((len+1)*sizeof(char));
 #endif
