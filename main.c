@@ -467,6 +467,10 @@ int main(int argc, char *argv[]) {
   initNtop(myGlobals.runningPref.devices);
 
   /* create the main listener */
+#ifdef HAVE_OPENSSL
+  init_ssl();
+#endif
+
   if(!myGlobals.webInterfaceDisabled)
       initWeb();
 
@@ -513,10 +517,6 @@ int main(int argc, char *argv[]) {
 
   initSignals();
 
-#ifdef HAVE_OPENSSL
-  init_ssl();
-#endif
-  
   addDefaultAdminUser();
 
   if (myGlobals.capturePackets != FLAG_NTOPSTATE_NOTINIT)
