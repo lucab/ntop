@@ -4455,6 +4455,30 @@ void initWeb() {
 #endif /* MAKE_WITH_SSLWATCHDOG */
 }
 
+
+/* ************************************* */
+
+void closeNwSocket(int *sockId) {
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Closing socket %d...\n", *sockId);
+#endif
+
+  if(*sockId == FLAG_DUMMY_SOCKET)
+    return;
+
+#ifdef HAVE_OPENSSL
+  if(*sockId < 0)
+    term_ssl_connection(-(*sockId));
+  else
+    closesocket(*sockId);
+#else
+  closesocket(*sockId);
+#endif
+
+  *sockId = FLAG_DUMMY_SOCKET;
+}
+
+
 /* **************************************** */
 
 #ifndef WIN32
