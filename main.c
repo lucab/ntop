@@ -63,8 +63,7 @@ static int inet_aton(const char *cp, struct in_addr *addr)
   addr->s_addr = inet_addr(cp);
   return (addr->s_addr == INADDR_NONE) ? 0 : 1;
 }
-#else
-int inet_aton(const char *cp, struct in_addr *addr);
+
 #endif
 
 /* That's the meat */
@@ -75,7 +74,12 @@ int main(int argc, char *argv[]) {
 #else
   int userId=0, groupId=0;
 #endif
-  int op, enableDBsupport=0, mergeInterfaces=1;
+  int op, mergeInterfaces=1;
+
+  int enableDBsupport=0;
+  int enableThUpdate=1;
+  int enableIdleHosts=1;
+
   char *cp, *localAddresses=NULL, *webAddr=NULL, *devices;
   char flowSpecs[2048], rulesFile[128], ifStr[196], *theOpts;
   time_t lastTime;
@@ -136,9 +140,9 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "e:F:hr:p:l:nw:m:b:B:D:s:P:R:Sgt:a:W:";
+  theOpts = "e:F:hr:p:l:nw:m:b:B:D:s:P:R:Sgt:a:W:12";
 #else
-  theOpts = "Ide:f:F:hr:i:p:l:nNw:m:b:D:s:P:R:MSgt:a:u:W:";
+  theOpts = "Ide:f:F:hr:i:p:l:nNw:m:b:D:s:P:R:MSgt:a:u:W:12";
 #endif
   
   while((op = getopt(argc, argv, theOpts)) != EOF)
@@ -168,6 +172,14 @@ int main(int argc, char *argv[]) {
 	SIZE_BUF=atoi(optarg)*1024;
 	break;
 #endif
+
+      case '1': /* disable throughput update */
+	enableThUpdate=0;
+	break;
+
+      case '2': /* disable purgin of idle hosts */
+	enableIdleHosts=0;
+	break;
 
       case 'b': /* host:port */
 	handleDbSupport(optarg, &enableDBsupport);
@@ -426,7 +438,7 @@ int main(int argc, char *argv[]) {
   initLogger();
   initSignals();
 
-  initThreads(enableDBsupport);
+  initThreads(enableThUpdate, enableIdleHosts, enableDBsupport);
   startPlugins();
   initWeb(webPort, webAddr);
 
