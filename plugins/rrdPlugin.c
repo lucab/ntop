@@ -2162,6 +2162,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   char rrdPath[512];
   int cycleCount=0;
   ProtocolsList *protoList;
+  char dname[256];
+  int i;
 
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) started", rrdThread);
@@ -2200,6 +2202,39 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 #endif
 #endif /* MAKE_WITH_RRDSIGTRAP */
 
+
+  /* Wait until the main thread changed privileges */
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds", 10);
+  sleep(10);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleept");
+
+  safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s", myGlobals.rrdPath);
+  if(_mkdir(dname) == -1) {
+    if(errno != EEXIST) {
+      traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)",
+		 errno, dname);
+      setPluginStatus("Disabled - unable to create rrd base directory.");
+      /* Return w/o creating the rrd thread ... disabled */
+      return;
+    }
+  } else {
+    traceEvent(CONST_TRACE_INFO, "RRD: Created base directory (%s)", dname);
+  }
+
+  for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
+    safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
+    if(_mkdir(dname) == -1) {
+      if(errno != EEXIST) {
+	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
+        setPluginStatus("Disabled - unable to create rrd subdirectory.");
+	/* Return w/o creating the rrd thread ... disabled */
+	return;
+      }
+    } else {
+      traceEvent(CONST_TRACE_INFO, "RRD: Created directory (%s)", dname);
+    }
+  }
+
   if(initialized == 0)
     commonRRDinit();
 
@@ -2211,7 +2246,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   active = 1;
 
   for(;myGlobals.capturePackets != FLAG_NTOPSTATE_TERM;) {
-    int i, j;
+    int j;
 
 #if RRD_DEBUG >= 1
     char endTime[32];
@@ -2646,7 +2681,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 /* ****************************** */
 
 static int initRRDfunct(void) {
-  char dname[256];
   int i;
 
 #ifdef CFG_MULTITHREADED
@@ -2672,37 +2706,7 @@ static int initRRDfunct(void) {
   /* This plugin works only with threads */
   setPluginStatus("Disabled - requires POSIX thread support.");
   return(-1);
-#endif
-
-  safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s", myGlobals.rrdPath);
-  if(_mkdir(dname) == -1) {
-    if(errno != EEXIST) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)",
-		 errno, dname);
-      setPluginStatus("Disabled - unable to create rrd base directory.");
-      /* Return w/o creating the rrd thread ... disabled */
-      return(-1);
-    }
-  } else {
-    traceEvent(CONST_TRACE_INFO, "RRD: Created base directory (%s)", dname);
-  }
-
-  for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
-
-    safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
-    if(_mkdir(dname) == -1) {
-      if(errno != EEXIST) {
-	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
-        setPluginStatus("Disabled - unable to create rrd subdirectory.");
-	/* Return w/o creating the rrd thread ... disabled */
-	return(-1);
-      }
-    } else {
-      traceEvent(CONST_TRACE_INFO, "RRD: Created directory (%s)", dname);
-    }
-  }
-
-#ifdef CFG_MULTITHREADED
+#else
   createThread(&rrdThread, rrdMainLoop, NULL);
   traceEvent(CONST_TRACE_INFO, "RRD: Started thread (%ld) for data collection.", rrdThread);
 #endif
