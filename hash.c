@@ -275,7 +275,8 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     
     while(list != NULL) {
       VirtualHostList *next = list->next;
-      free(list->virtualHostName);
+      if(list->virtualHostName != NULL) /* This is a silly check as it should be true all the time */
+	free(list->virtualHostName);
       free(list);
       list = next;
     }

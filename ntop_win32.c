@@ -447,10 +447,10 @@ int signalCondvar(ConditionalVariable *condvarId) {
 
 void printAvailableInterfaces() {
   char ebuf[PCAP_ERRBUF_SIZE];
-  int ifIdx=0, defaultIdx, i;
+  int ifIdx=0, defaultIdx, i, numInterfaces = 0;
   char intNames[32][256];
- char *tmpDev = pcap_lookupdev(ebuf);
-
+  char *tmpDev = pcap_lookupdev(ebuf);
+  
   if(tmpDev == NULL) {
     traceEvent(TRACE_INFO, "Unable to locate default interface (%s)", ebuf);
     exit(-1);
@@ -459,14 +459,15 @@ void printAvailableInterfaces() {
   printf("\nAvailable interfaces (-i <interface index>):\n");
 
   if(!isWinNT()) {
-     char *ifName = tmpDev;
+    char *ifName = tmpDev;
 
-	 for(i=0;; i++) {
+    for(i=0;; i++) {
       if(tmpDev[i] == 0) {
 	if(ifName[0] == '\0')
 	  break;
 	else {
 	  printf("   [index=%d] '%s'\n", ifIdx, ifName);
+	  numInterfaces++;
 
 	  if(ifIdx < 32) {
 	    strcpy(intNames[ifIdx], ifName);
@@ -490,35 +491,41 @@ void printAvailableInterfaces() {
     static char tmpString[128];
     int i, j,ifDescrPos = 0;
     unsigned short *ifName; /* UNICODE */
-	char *ifDescr;
+    char *ifDescr;
 
     ifName = tmpDev;
 
-	while(*(ifName+ifDescrPos) || *(ifName+ifDescrPos-1))
-		ifDescrPos++;
-	  ifDescrPos++;	/* Step over the extra '\0' */
-	ifDescr = (char*)(ifName + ifDescrPos); /* cast *after* addition */
+    while(*(ifName+ifDescrPos) || *(ifName+ifDescrPos-1))
+      ifDescrPos++;
+    ifDescrPos++;	/* Step over the extra '\0' */
+    ifDescr = (char*)(ifName + ifDescrPos); /* cast *after* addition */
 
     while(tmpDev[0] != '\0') {
 
-		for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
-		  if(tmpDev[i] != 0)
-			tmpString[j++] = tmpDev[i];
-		  }
+      for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
+	if(tmpDev[i] != 0)
+	  tmpString[j++] = tmpDev[i];
+      }
 
-		  tmpString[j++] = 0;
-		  printf("   [index=%d] %s\n             (%s)\n", ifIdx, ifDescr, tmpString);
-		  ifDescr += strlen(ifDescr)+1;
+      tmpString[j++] = 0;
+      printf("   [index=%d] %s\n             (%s)\n", ifIdx, ifDescr, tmpString);
+      numInterfaces++;
+      ifDescr += strlen(ifDescr)+1;
 		 
-		  tmpDev = &tmpDev[i+3];
-		  strcpy(intNames[ifIdx++], tmpString);
-		  defaultIdx = 0;
-		}
-		if(defaultIdx != -1)
-		  tmpDev = intNames[defaultIdx]; /* Default */
+      tmpDev = &tmpDev[i+3];
+      strcpy(intNames[ifIdx++], tmpString);
+      defaultIdx = 0;
+    }
+    if(defaultIdx != -1)
+      tmpDev = intNames[defaultIdx]; /* Default */
   } /* while */
-}
 
+  if(numInterfaces == 0) {
+    traceEvent(TRACE_WARNING, "WARNING: no interfaces available! This application cannot work");
+    traceEvent(TRACE_WARNING, "         Make sure that winpcap is installed properly");
+    traceEvent(TRACE_WARNING, "         and that you have network interfaces installed.");
+  }
+}
 
 /* ************************************ */
 
