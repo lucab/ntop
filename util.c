@@ -5895,7 +5895,7 @@ FILE* checkForInputFile(char* logTag, char* descr,
   char tmpFile[LEN_GENERAL_WORK_BUFFER];
   FILE* fd;
   struct tm t;
-  char bufTime[LEN_TIMEFORMAT_BUFFER], bufTime2[LEN_TIMEFORMAT_BUFFER];
+  char bufTime[LEN_TIMEFORMAT_BUFFER];
 
   /*
    * This is a common routine to look for a data file, compressed or not,
@@ -5952,12 +5952,13 @@ FILE* checkForInputFile(char* logTag, char* descr,
 
     if(logTag != NULL) {
       memset(bufTime, 0, sizeof(bufTime));
-      memset(bufTime2, 0, sizeof(bufTime2));
-      strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
-	       localtime_r(&(dbStat->st_ctime), &t));
-      strftime(bufTime2, sizeof(bufTime2), CONST_LOCALE_TIMESPEC,
-	       localtime_r(&(dbStat->st_mtime), &t));
-      traceEvent(CONST_TRACE_NOISY, "%s: Database created %s, last modified %s", logTag, bufTime, bufTime2);
+      if(dbStat->st_ctime > dbStat->st_mtime)
+        strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
+	         localtime_r(&(dbStat->st_ctime), &t));
+      else
+        strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
+  	         localtime_r(&(dbStat->st_mtime), &t));
+      traceEvent(CONST_TRACE_NOISY, "%s: Database created/last modified %s", logTag, bufTime);
     }
 
     /* Check time stamps... */
