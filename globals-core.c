@@ -157,72 +157,44 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.ntop_argc = argc;
   myGlobals.ntop_argv = argv;
 
-  myGlobals.runningPref.accessLogFile = DEFAULT_NTOP_ACCESS_LOG_FILE;
-  myGlobals.runningPref.stickyHosts = DEFAULT_NTOP_STICKY_HOSTS;
+  initUserPrefs(&myGlobals.runningPref);
 
-  myGlobals.runningPref.daemonMode = DEFAULT_NTOP_DAEMON_MODE;
+  /* Overrides for above */
   if (strcmp(myGlobals.program_name, "ntopd") == 0) {
     myGlobals.runningPref.daemonMode = 1;
   }
 
-  myGlobals.runningPref.rFileName = DEFAULT_NTOP_TRAFFICDUMP_FILENAME;
-  myGlobals.runningPref.devices = DEFAULT_NTOP_DEVICES;
-  myGlobals.runningPref.dontTrustMACaddr = DEFAULT_NTOP_DONT_TRUST_MAC_ADDR;
-  myGlobals.runningPref.trackOnlyLocalHosts    = DEFAULT_NTOP_TRACK_ONLY_LOCAL;
-  myGlobals.runningPref.enableSessionHandling  = DEFAULT_NTOP_ENABLE_SESSIONHANDLE;
-  myGlobals.runningPref.enablePacketDecoding   = DEFAULT_NTOP_PACKET_DECODING;
-  myGlobals.runningPref.filterExpressionInExtraFrame = DEFAULT_NTOP_FILTER_IN_FRAME;
-  myGlobals.runningPref.pcapLog = DEFAULT_NTOP_PCAP_LOG_FILENAME;
-  myGlobals.runningPref.numericFlag = DEFAULT_NTOP_NUMERIC_IP_ADDRESSES;
-  myGlobals.runningPref.localAddresses = DEFAULT_NTOP_LOCAL_SUBNETS;
-  myGlobals.runningPref.enableSuspiciousPacketDump = DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP;
-  myGlobals.runningPref.enableOtherPacketDump = DEFAULT_NTOP_OTHER_PKT_DUMP;
-  myGlobals.runningPref.disablePromiscuousMode = DEFAULT_NTOP_DISABLE_PROMISCUOUS;
-  myGlobals.runningPref.traceLevel = DEFAULT_TRACE_LEVEL;
-  myGlobals.runningPref.currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;
-  strncpy((char *) &myGlobals.runningPref.domainName,
-          DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.runningPref.domainName));
-  myGlobals.runningPref.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
-  myGlobals.runningPref.maxNumHashEntries = myGlobals.runningPref.maxNumSessions = (u_int)-1;
-  myGlobals.runningPref.skipVersionCheck = FALSE;
+  /* note that by default ntop will merge network interfaces */
+  if(myGlobals.runningPref.mergeInterfaces == 0)
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge disabled by default");
+  else
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge enabled by default");
+
   myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCHECKED;
   myGlobals.checkVersionStatusAgain = 0;
 
-#ifndef WIN32
-  myGlobals.runningPref.debugMode = DEFAULT_NTOP_DEBUG_MODE;
-  myGlobals.runningPref.useSyslog = DEFAULT_NTOP_SYSLOG;
-#ifdef HAVE_LIBWRAP
+#if !defined(WIN32) && defined(HAVE_LIBWRAP)
   allow_severity = DEFAULT_TCPWRAP_ALLOW;
   deny_severity = DEFAULT_TCPWRAP_DENY;
 #endif
-#endif
-
-  myGlobals.runningPref.mergeInterfaces = DEFAULT_NTOP_MERGE_INTERFACES;
-  /* note that by default ntop will merge network interfaces */
-  myGlobals.runningPref.mapperURL = DEFAULT_NTOP_MAPPER_URL;
 
 #ifdef MAKE_WITH_GDCHART
   myGlobals.throughput_chart_type = DEFAULT_NTOP_CHART_TYPE;
 #endif
 
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-   myGlobals.runningPref.useSSLwatchdog = 0;
-#endif
-
   /* Other flags (to be set via command line options one day) */
   myGlobals.enableFragmentHandling = 1;
+
+  /* Search paths */
+  myGlobals.dataFileDirs    = _dataFileDirs;
+  myGlobals.pluginDirs      = _pluginDirs;
+  myGlobals.configFileDirs  = _configFileDirs;
 
 #ifdef WIN32
   defaultPath = _wdir;
 #else
   defaultPath = CFG_DBFILE_DIR;
 #endif
-
-  /* Search paths */
-  myGlobals.dataFileDirs    = _dataFileDirs;
-  myGlobals.pluginDirs      = _pluginDirs;
-  myGlobals.configFileDirs  = _configFileDirs;
-  myGlobals.runningPref.pcapLogBasePath = strdup(defaultPath);     /* a NULL pointer will break the logic */
   myGlobals.dbPath          = strdup(defaultPath);     /* a NULL pointer will break the logic */
 
   /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
@@ -261,10 +233,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.sslInitialized = 0;
   myGlobals.runningPref.sslPort = 0; /* Disabled by default: enabled via -W */
 #endif
-
-  myGlobals.runningPref.webAddr = DEFAULT_NTOP_WEB_ADDR;
-  myGlobals.runningPref.webPort = DEFAULT_NTOP_WEB_PORT;
-  myGlobals.runningPref.ipv4or6 = DEFAULT_NTOP_FAMILY;
 
   /* Termination flags */
   myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT;

@@ -2012,8 +2012,8 @@
 
 #define DEFAULT_NTOP_MAPPER_URL             NULL     /* -U */
 
-#define DEFAULT_NTOP_MAX_HASH_ENTRIES       16384    /* -x */
-#define DEFAULT_NTOP_MAX_NUM_SESSIONS       32768    /* -X */
+#define DEFAULT_NTOP_MAX_HASH_ENTRIES       (u_int)-1 /* -x */
+#define DEFAULT_NTOP_MAX_NUM_SESSIONS       (u_int)-1 /* -X */
 
 /*
  * What should we set tracing to unless we have a parameter?

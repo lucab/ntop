@@ -456,10 +456,10 @@ int main(int argc, char *argv[]) {
  
 #ifndef WIN32
   if(getDynamicLoadPaths(main_buf, sizeof(main_buf), lib, sizeof(lib), env, sizeof(env)) == 0) {
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop is running from '%s'\n", main_buf);
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: (but see warning on man page for the --instance parameter)\n");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop is running from '%s'", main_buf);
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: (but see warning on man page for the --instance parameter)");
     if(strcmp(main_buf, lib) != 0) 
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop libraries are in '%s'\n", lib);
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop libraries are in '%s'", lib);
   } else {
     traceEvent(CONST_TRACE_NOISY, "NOTE: Unable to establish where ntop is running from");
   }

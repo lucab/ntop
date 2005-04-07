@@ -1369,6 +1369,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 
 	if (restoreDef) {
 	  initUserPrefs (&defaults);
+          defaults.samplingRate =  myGlobals.savedPref.samplingRate;
 	  pref = &defaults;
 	}
 	else {

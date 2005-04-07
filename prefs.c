@@ -173,15 +173,13 @@ void loadPrefs(int argc, char* argv[]) {
 #ifndef WIN32
   bool userSpecified = FALSE;
 #endif
+  bool mergeInterfacesSave = myGlobals.runningPref.mergeInterfaces;
 
   memset(&buf, 0, sizeof(buf));
 
-  traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
+  traceEvent(CONST_TRACE_NOISY, "NOTE: Processing parameters (pass1)");
   opt_index = 0, optind = 0;
   while ((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering loadPrefs()");
-#endif
     switch (opt) {
     case 'h':                                /* help */
       usage(stdout);
@@ -232,13 +230,11 @@ void loadPrefs(int argc, char* argv[]) {
   initGdbm(NULL, NULL, 1);
 
   if(myGlobals.prefsFile == NULL) {
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: No preferences file to read from()");
-#endif
+    traceEvent(CONST_TRACE_NOISY, "NOTE: No preferences file to read from - continuing");
     return;
   }
 
-  /* Read preferences and store them in memory */
+  traceEvent(CONST_TRACE_NOISY, "NOTE: Reading preferences file entries");
   key = gdbm_firstkey(myGlobals.prefsFile);
   while (key.dptr) {
 
@@ -253,6 +249,12 @@ void loadPrefs(int argc, char* argv[]) {
     free (key.dptr);
     key = nextkey;
   }
+
+  if(myGlobals.runningPref.mergeInterfaces != mergeInterfacesSave)
+    if(myGlobals.runningPref.mergeInterfaces = 0)
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge disabled from prefs file");
+    else
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge enabled from prefs file");
 
   myGlobals.savedPref = myGlobals.runningPref;
 }
@@ -277,7 +279,7 @@ int parseOptions(int argc, char* argv[]) {
   /*
    * Parse command line options to the application via standard system calls
    */
-  traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
+  traceEvent(CONST_TRACE_NOISY, "NOTE: Processing parameters (pass2)");
   opt_index = 0, optind = 0;
   while((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
 #ifdef PARAM_DEBUG
@@ -476,6 +478,7 @@ int parseOptions(int argc, char* argv[]) {
 
     case 'M':
       myGlobals.runningPref.mergeInterfaces = 0;
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge disabled due to command line switch");
       break;
 
     case 'N':
@@ -1239,8 +1242,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 /*
  * Initialize all preferences to their default values
  */
-void initUserPrefs (UserPref *pref)
-{
+void initUserPrefs(UserPref *pref) {
   pref->accessLogFile = DEFAULT_NTOP_ACCESS_LOG_FILE;
   pref->enablePacketDecoding   = DEFAULT_NTOP_PACKET_DECODING;
   pref->stickyHosts = DEFAULT_NTOP_STICKY_HOSTS;
@@ -1264,7 +1266,6 @@ void initUserPrefs (UserPref *pref)
   pref->webAddr = DEFAULT_NTOP_WEB_ADDR;
   pref->webPort = DEFAULT_NTOP_WEB_PORT;
   pref->ipv4or6 = DEFAULT_NTOP_FAMILY;
-  pref->samplingRate =  myGlobals.savedPref.samplingRate;
   pref->enableSessionHandling  = DEFAULT_NTOP_ENABLE_SESSIONHANDLE;
   pref->currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;
   strncpy((char *) &pref->domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(pref->domainName));
@@ -1283,10 +1284,10 @@ void initUserPrefs (UserPref *pref)
   pref->fcNSCacheFile   = DEFAULT_NTOP_FCNS_FILE;
   /* note that by default ntop will merge network interfaces */
   pref->mapperURL = DEFAULT_NTOP_MAPPER_URL;
-#ifdef HAVE_OPENSSL
-  pref->sslAddr = DEFAULT_NTOP_WEB_ADDR;
-  pref->sslPort = DEFAULT_NTOP_WEB_PORT+1;
-#endif
+// #ifdef HAVE_OPENSSL
+//   pref->sslAddr = DEFAULT_NTOP_WEB_ADDR;
+//   pref->sslPort = DEFAULT_NTOP_WEB_PORT+1;
+// #endif
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
    pref->useSSLwatchdog = 0;
 #endif
