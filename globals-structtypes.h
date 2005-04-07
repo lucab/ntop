@@ -2352,8 +2352,15 @@ typedef struct ntopGlobals {
 
   int multipleVLANedHostCount;
 
+#ifdef MAX_ARRIVAL_BUFFER
+  float arrivalBuffer[MAX_ARRIVAL_BUFFER];
+  int arrivalBufferInit,
+      arrivalBufferCount;
+#endif
+
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
 #endif
+
 } NtopGlobals;
 

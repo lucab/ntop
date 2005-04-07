@@ -1029,6 +1029,14 @@
 #define MAX_MULTIPLE_VLAN_WARNINGS         10
 
 /*
+ * How many packets to track for the delay stats - undef means don't do it...
+ *
+ *   Value MUST BE a power of 2!
+ *   undef this to disable feature
+ */
+#define MAX_ARRIVAL_BUFFER                  1024
+
+/*
  * FibreChannel/SCSI constants
  */
 

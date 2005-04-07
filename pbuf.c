@@ -2223,6 +2223,14 @@ void queuePacket(u_char *_deviceId,
      until a slot is freed
      **************************** */
 
+#ifdef MAX_ARRIVAL_BUFFER
+ if(myGlobals.arrivalBufferInit == 0) {
+   myGlobals.arrivalBufferCount = 0;
+   myGlobals.arrivalBufferInit = 1;
+   memset(&myGlobals.arrivalBuffer, 0, sizeof(myGlobals.arrivalBuffer));
+ }
+#endif
+
   myGlobals.receivedPackets++;
 
   if((p == NULL) || (h == NULL)) {
@@ -2635,6 +2643,14 @@ void processPacket(u_char *_deviceId,
 
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN)
     return;
+
+#ifdef MAX_ARRIVAL_BUFFER
+{
+  struct timeval y;
+  gettimeofday(&y, NULL);
+  myGlobals.arrivalBuffer[++myGlobals.arrivalBufferCount & (MAX_ARRIVAL_BUFFER - 1)] = timeval_subtract (y, h->ts);
+}
+#endif
 
   h_save = h, p_save = p;
 

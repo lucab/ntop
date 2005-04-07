@@ -936,7 +936,7 @@ static void printInfoSectionNote(int textPrintFlag, char* note) {
   if(textPrintFlag != TRUE) {
     sendString("<tr><td "TD_BG" colspan=\"3\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"
                "<table "TABLE_DEFAULTS" border=\"0\" width=\"85%\" align=\"right\"><tr><td "TD_BG" valign=\"top\">NOTE:</td>\n"
-               "<td class=\"wrap\"><i>");
+               "<td class=\"wrap\" align=\"left\"><i>");
     sendString(note);
     sendString("</i></td></tr>\n</table>\n</td></tr>\n");
   }
@@ -7182,16 +7182,17 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #ifdef CFG_MULTITHREADED
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPackets);
   printFeatureConfigInfo(textPrintFlag, "Received", buf);
-#endif
 
-#ifdef CFG_MULTITHREADED
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPacketsProcessed);
-  printFeatureConfigInfo(textPrintFlag, "Processed Immediately", buf);
-#endif
-
-#ifdef CFG_MULTITHREADED
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPacketsQueued);
-  printFeatureConfigInfo(textPrintFlag, "Queued", buf);
+  if(myGlobals.receivedPackets > 0) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "(%.1f %%) %d",
+                  100.0*myGlobals.receivedPacketsProcessed  / myGlobals.receivedPackets,
+                  myGlobals.receivedPacketsProcessed);
+    printFeatureConfigInfo(textPrintFlag, "Processed Immediately", buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "(%.1f %%) %d", 
+                  100.0*myGlobals.receivedPacketsQueued / myGlobals.receivedPackets,
+                  myGlobals.receivedPacketsQueued);
+    printFeatureConfigInfo(textPrintFlag, "Queued", buf);
+  }
 
   if(myGlobals.receivedPacketsLostQ > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPacketsLostQ);
@@ -7201,9 +7202,51 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.packetQueueLen);
   printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.maxPacketQueueLen);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "(Limit " xstr(CONST_PACKET_QUEUE_LENGTH) ") %d",
+                myGlobals.maxPacketQueueLen);
   printFeatureConfigInfo(textPrintFlag, "Maximum Queue", buf);
+#endif
 
+#ifdef MAX_ARRIVAL_BUFFER
+{
+  float minDelay=99999.0, maxDelay=0.0, /*stddev:*/ M, T, Q, R, SD, XBAR;
+  if(myGlobals.arrivalBufferCount >= MAX_ARRIVAL_BUFFER) {
+    for(i=0; i<MAX_ARRIVAL_BUFFER; i++) {
+      if(myGlobals.arrivalBuffer[i] > maxDelay) maxDelay = myGlobals.arrivalBuffer[i];
+      if(myGlobals.arrivalBuffer[i] < minDelay) minDelay = myGlobals.arrivalBuffer[i];
+      if(i==0) { 
+        M = myGlobals.arrivalBuffer[0];
+        T = 0.0;
+      } else {
+        Q = myGlobals.arrivalBuffer[i] - M;
+        R = Q / (float)(i+1);
+        M += R;
+        T = T + i * Q * R;
+      }
+    }
+    SD = sqrtf(T / (MAX_ARRIVAL_BUFFER - 1));
+    XBAR /*average*/ = M;
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f", minDelay);
+    printFeatureConfigInfo(textPrintFlag, "Minimum Delay", buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f", XBAR);
+    printFeatureConfigInfo(textPrintFlag, "Average Delay", buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f", maxDelay);
+    printFeatureConfigInfo(textPrintFlag, "Maximum Delay", buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f", SD);
+    printFeatureConfigInfo(textPrintFlag, "Standard Deviation", buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+                   "The delay is the elapsed time between the packet arrival timestamp (set by "
+                   "libpcap) and the gettimeofday() value just as the packet begins to be processed "
+                   "in processPacket(). Thus for a queued packet, this includes the time in queue."
+                   "<br<br>A small average is good, especially if the standard deviation is small "
+                   "(standard deviation is a measurement of the variability of the actual values "
+                   "around the average). 1/average (%.1f) gives a very rough indication of the packet "
+                   "per second rate ntop can handle."
+                   "<br><br>The computation is based only on the most recent " xstr(MAX_ARRIVAL_BUFFER) " "
+                   "packets processed.", 1.0 / XBAR);
+    printInfoSectionNote(textPrintFlag, buf);
+  }
+}
 #endif
 
   /* **** */
