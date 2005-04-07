@@ -3437,8 +3437,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	  else
 	    printSectionTitle("Active TCP Sessions");
 
-	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+	  sendString("<CENTER>\n"
+                     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG">Client</TH>"
 		     "<TH "TH_BG">Server</TH>"
 		     "<TH "TH_BG">Data&nbsp;Sent</TH>"
@@ -3447,11 +3447,11 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		     "<TH "TH_BG">Duration</TH>"
 		     "<TH "TH_BG">Inactive</TH>"
-		     "<TH "TH_BG">Latency</TH>"
+		     "<TH "TH_BG">Latency</TH>");
 #ifdef PARM_PRINT_ALL_SESSIONS
-		     "<TH "TH_BG">State</TH>"
+          sendString("<TH "TH_BG">State</TH>");
 #endif
-		     "</TR>\n");
+          sendString("</TR>\n");
 	}
 
 	sport = getPortByNum(session->sport, IPPROTO_TCP);

@@ -1605,6 +1605,12 @@ static void printNetFlowDeviceConfiguration(void) {
 static void printNetFlowConfiguration(int deviceId) {
   char buf[512], buf1[32], buf2[32];
 
+#ifdef HAVE_SCPT
+ #define UDPSLASHSCPT "UDP/SCTP"
+#else
+ #define UDPSLASHSCPT "UDP"
+#endif
+
   sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
   sendString("<tr><th colspan=\"4\" "DARK_BG">Incoming Flows</th></tr>\n");
 
@@ -1629,11 +1635,8 @@ static void printNetFlowConfiguration(int deviceId) {
 
   sendString("<tr><th rowspan=\"2\" "DARK_BG">Flow<br>Collection</th>\n");
 
-  sendString("<th "DARK_BG">Local<br>Collector<br>UDP"
-#ifdef HAVE_SCTP
-	     "/SCTP"
-#endif
-	     "<br>Port</th>\n");
+  sendString("<th "DARK_BG">Local<br>Collector<br>" UDPSLASHSCPT "<br>Port</th>\n");
+
   sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
@@ -1650,21 +1653,14 @@ static void printNetFlowConfiguration(int deviceId) {
 	     "<input type=\"submit\" value=\"Set Port\">"
 	     "</p>\n</form>\n\n"
              "<p>If you want <b>ntop</b> to display NetFlow data it receives from other "
-             "hosts, i.e. act as a collector, you must specify the UDP"
-#ifdef HAVE_SCTP
-	     "/SCTP"
-#endif
+             "hosts, i.e. act as a collector, you must specify the " UDPSLASHSCPT
 	     " port to listen to. "
              "The default port used for NetFlow is " DEFAULT_NETFLOW_PORT_STR ".</p>\n"
 	     "<p align=\"right\"></p>\n");
 
   if(myGlobals.device[deviceId].netflowGlobals->netFlowInPort == 0)
     sendString("<p><font color=red>WARNING</font>: "
-	       "The 'Local Collector UDP"
-#ifdef HAVE_SCTP
-	       "/SCTP"
-#endif
-	       " Port' is zero (none). "
+	       "The 'Local Collector " UDPSLASHSCPT  "Port' is zero (none). "
                "Even if this plugin is ACTIVE, you must still enter a port number for "
                "<b>ntop</b> to receive and process NetFlow data.</p>\n");
 
@@ -1954,6 +1950,7 @@ static void printNetFlowConfiguration(int deviceId) {
 
   sendString("</table>\n</center>\n");
 }
+#undef UDPSLASHSCPT
 
 /* ****************************** */
 
