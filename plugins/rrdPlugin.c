@@ -2278,8 +2278,8 @@ static void handleRRDHTTPrequest(char* url) {
                "<tr><th width=\"250\" align=\"left\" "DARK_BG">Host IP address</th>\n<td align=\"left\">"
                "<input name=\"" CONST_ARBITRARY_IP "\" size=\"20\" value=\"\">"
                "&nbsp;&nbsp;Leave blank to create a per-interface graph.</td></tr>\n"
-               "<tr><th align=\"center\" "DARK_BG" colspan=\"2\">\n<table border=\"0\" width=\"80%\"><tr><td>"
-               "<p><i>A note about time specification</i>: You may specify time in a number of ways - please "
+               "<tr><td align=\"left\" "DARK_BG" colspan=\"2\">\n"
+               "<i>A note about time specification</i>: You may specify time in a number of ways - please "
                "see \"AT-STYLE TIME SPECIFICATION\" in the rrdfetch man page for the full details. Here "
                "are some examples:</p>\n<ul>\n"
                "<li>Specific values: Most common formats are understood, including numerical and character "
@@ -2304,7 +2304,7 @@ static void handleRRDHTTPrequest(char* url) {
                "counter for the entire interval, you need to multipy the per-second rate by the number of "
                "seconds in the interval (this is the step, reported at the bottom of the output page).</p>\n"
                "<p>If start time is left blank, the default is --start end-1d. To force a dump from the "
-               "earliest detail point in the rrd, use the special value 0.</th></tr>\n</table>\n</td></tr>\n"
+               "earliest detail point in the rrd, use the special value 0.</td></tr>\n"
                "<tr><th align=\"left\" "DARK_BG">Start</th>\n<td align=\"left\">"
                "<input name=\"start\" size=\"20\" value=\"");
     sendString(startTime);
