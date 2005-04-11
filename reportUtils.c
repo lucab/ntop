@@ -4276,7 +4276,7 @@ void printTableEntry(char *buf, int bufLen,
 		    label, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
     } else {
       rrdBuf[0] = '\0';
-      traceEvent(CONST_TRACE_INFO,  "-> Unable to find file '%s'", buf);
+      /* traceEvent(CONST_TRACE_INFO,  "-> Unable to find file '%s'", rrdBuf); */
     }
   }
 
