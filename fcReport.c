@@ -2473,39 +2473,39 @@ void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId)
                "<TH "TH_BG" WIDTH=200 COLSPAN=3 "DARK_BG">Total&nbsp;Bytes</TH></TR>\n");
 
     if(hash->fcFcpBytes.value) {
-        printTableEntry(buf, sizeof(buf), "SCSI", CONST_COLOR_1,
-			(float)hash->fcFcpBytes.value/1024,
-			100*((float)SD(hash->fcFcpBytes.value, total)), 0, 0);
+      printTableEntry(buf, sizeof(buf), "SCSI", CONST_COLOR_1,
+		      (float)hash->fcFcpBytes.value/1024,
+		      100*((float)SD(hash->fcFcpBytes.value, total)), 0, 0, 0);
     }
 
     if(hash->fcElsBytes.value) {
-        printTableEntry(buf, sizeof(buf), "ELS", CONST_COLOR_1,
-			(float)hash->fcElsBytes.value/1024,
-			100*((float)SD(hash->fcElsBytes.value, total)), 0, 0);
+      printTableEntry(buf, sizeof(buf), "ELS", CONST_COLOR_1,
+		      (float)hash->fcElsBytes.value/1024,
+		      100*((float)SD(hash->fcElsBytes.value, total)), 0, 0, 0);
     }
 
     if(hash->fcDnsBytes.value) {
-        printTableEntry(buf, sizeof (buf), "NS", CONST_COLOR_1,
-			(float)hash->fcDnsBytes.value/1024,
-			100*((float)SD(hash->fcDnsBytes.value, total)), 0, 0);
+      printTableEntry(buf, sizeof (buf), "NS", CONST_COLOR_1,
+		      (float)hash->fcDnsBytes.value/1024,
+		      100*((float)SD(hash->fcDnsBytes.value, total)), 0, 0, 0);
     }
     
     if(hash->fcIpfcBytes.value) {
       printTableEntry(buf, sizeof (buf), "IP/FC", CONST_COLOR_1,
 		      (float)hash->fcIpfcBytes.value/1024,
-		      100*((float)SD(hash->fcIpfcBytes.value, total)), 0, 0);
+		      100*((float)SD(hash->fcIpfcBytes.value, total)), 0, 0, 0);
     }
     
     if(hash->fcSwilsBytes.value) {
       printTableEntry(buf, sizeof (buf), "SWILS", CONST_COLOR_1,
 		      (float)hash->fcSwilsBytes.value/1024,
-		      100*((float)SD(hash->fcSwilsBytes.value, total)), 0, 0);
+		      100*((float)SD(hash->fcSwilsBytes.value, total)), 0, 0, 0);
     }
     
     if(hash->otherFcBytes.value) {
       printTableEntry(buf, sizeof (buf), "Others", CONST_COLOR_1,
 		      (float)hash->otherFcBytes.value/1024,
-		      100*((float)SD(hash->otherFcBytes.value, total)), 0, 0);
+		      100*((float)SD(hash->otherFcBytes.value, total)), 0, 0, 0);
     }
     
     sendString("</TABLE>"TABLE_OFF"<P>\n");
@@ -4387,7 +4387,7 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
             percentage = ((float)(partialTotal*100))/((float)total);
             numProtosFound++;
             printTableEntry(buf, sizeof(buf), "SCSI",
-                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0);
+                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0, 0);
         }
 
         partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcFiconBytes.value;
@@ -4396,7 +4396,7 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
             percentage = ((float)(partialTotal*100))/((float)total);
             numProtosFound++;
             printTableEntry(buf, sizeof(buf), "FICON",
-                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0);
+                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0, 0);
         }
         
         partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcElsBytes.value;
@@ -4405,7 +4405,7 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
             percentage = ((float)(partialTotal*100))/((float)total);
             numProtosFound++;
             printTableEntry(buf, sizeof(buf), "ELS",
-                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0);
+                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0, 0);
         }
 
         partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcDnsBytes.value;
@@ -4414,7 +4414,7 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
             percentage = ((float)(partialTotal*100))/((float)total);
             numProtosFound++;
             printTableEntry(buf, sizeof(buf), "NS",
-                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0);
+                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0, 0);
         }
 
         
@@ -4424,7 +4424,7 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
             percentage = ((float)(partialTotal*100))/((float)total);
             numProtosFound++;
             printTableEntry(buf, sizeof(buf), "IP/FC",
-                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0);
+                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0, 0);
         }
         
         partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcSwilsBytes.value;
@@ -4433,7 +4433,7 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
             percentage = ((float)(partialTotal*100))/((float)total);
             numProtosFound++;
             printTableEntry(buf, sizeof(buf), "SWILS",
-                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0);
+                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0, 0);
         }
 
         partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].otherFcBytes.value;
@@ -4442,7 +4442,7 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
             percentage = ((float)(partialTotal*100))/((float)total);
             numProtosFound++;
             printTableEntry(buf, sizeof(buf), "Others",
-                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0);
+                            CONST_COLOR_1, partialTotal/1024, percentage, 0, 0, 0);
         }
         
         if ((numProtosFound > 0) && printGraph)
@@ -4696,7 +4696,7 @@ void drawVsanStatsGraph (unsigned int deviceId)
             printTableEntry(buf, sizeof (buf), vsanLabel, CONST_COLOR_1,
 			    (float) tmpTable[i]->totBytes.value/1024,
 			    100*((float)SD(tmpTable[i]->totBytes.value,
-					   myGlobals.device[deviceId].fcBytes.value)), 0, 0);
+					   myGlobals.device[deviceId].fcBytes.value)), 0, 0, 0);
 	    
         }
         
@@ -4763,7 +4763,7 @@ void printFcTrafficSummary (u_short vsanId)
             printTableEntry(buf, sizeof (buf), vsanLabel, CONST_COLOR_1,
 			    (float) tmpTable[i]->totBytes.value/1024,
 			    100*((float)SD(tmpTable[i]->totBytes.value,
-					   myGlobals.device[deviceId].fcBytes.value)), 0, 0);
+					   myGlobals.device[deviceId].fcBytes.value)), 0, 0, 0);
 	    
         }
         

@@ -4235,9 +4235,11 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
 void printTableEntry(char *buf, int bufLen,
 		     char *label, char* color,
 		     float total, float percentage,
-		     u_int showFlows, Counter flows) {
+		     u_int showFlows, Counter flows,
+		     u_int showRRD) {
   int int_perc;
-  char formatBuf[32], flowBuf[64], tmpBuf[32];
+  char formatBuf[32], flowBuf[64], tmpBuf[32], rrdBuf[256];
+  struct stat statbuf;
 
   if(total == 0) return;
 
@@ -4259,30 +4261,49 @@ void printTableEntry(char *buf, int bufLen,
 		  "</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s", 
 		  formatPkts(flows, tmpBuf, sizeof(tmpBuf)));
 
+  if(!showRRD)
+    rrdBuf[0] = '\0';
+  else {
+    safe_snprintf(__FILE__, __LINE__, rrdBuf, sizeof(rrdBuf), "%s/interfaces/%s/IP_%sBytes.rrd",
+		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		  label);
+    
+    if(stat(rrdBuf, &statbuf) == 0) {      
+      safe_snprintf(__FILE__, __LINE__, rrdBuf, sizeof(rrdBuf), 
+		    "<p><IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=IP_%sBytes"
+		    "&arbiface=%s&arbip=&start=now-12h&end=now&counter=&title=\" BORDER=0>", 
+		    label, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+    } else {
+      rrdBuf[0] = '\0';
+      traceEvent(CONST_TRACE_INFO,  "-> Unable to find file '%s'", buf);
+    }
+  }
+
   switch(int_perc) {
   case 0:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>0%%</TD>"
-		  "<TD "TD_BG" WIDTH=200>&nbsp;</TD></TR>\n",
-		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf);
+		  "<TD "TD_BG" WIDTH=200>&nbsp;%s</TD></TR>\n",
+		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf, rrdBuf);
     break;
   case 100:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>100%%</TD>"
-		  "<TD "TD_BG" WIDTH=200><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=200 HEIGHT=12>"
+		  "<TD "TD_BG" WIDTH=200><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=200 HEIGHT=12>%s"
 		  "</TD></TR>\n",
-		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf);
+		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf, rrdBuf);
     break;
   default:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%.1f%%</TD>"
 		  "<TD "TD_BG" WIDTH=200><TABLE BORDER=0 "TABLE_DEFAULTS" CELLPADDING=0 CELLSPACING=0 WIDTH=200>"
-		  "<TR "TR_ON"><TD><IMG ALIGN=MIDDLE ALT=\"%.1f%%\" SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12>"
+		  "<TR "TR_ON"><TD><IMG ALIGN=MIDDLE ALT=\"%.1f%%\" SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12>%s"
 		  "</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
 		  "<P>&nbsp;</TD></TR></TABLE>"TABLE_OFF"</TD></TR>\n",
 		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), 
 		  flowBuf, percentage,
-		  percentage, (200*int_perc)/100,
+		  percentage, (200*int_perc)/100, rrdBuf,
 		  (200*(100-int_perc))/100, getActualRowColor());
   }
   

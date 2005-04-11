@@ -793,6 +793,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
 	if(dp->d_name[0] == '.') continue;
 	else if(len < 7 /* IP_ + .rrd */ ) continue;
 	else if(strncmp(dp->d_name, "IP_", 3)) continue;
+	else if(strstr(dp->d_name, "Flows")) continue;
 
 	len -= 4; if(len > MAX_BUF_LEN) len = MAX_BUF_LEN-1;
 	dp->d_name[len] = '\0';
