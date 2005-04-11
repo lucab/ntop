@@ -131,7 +131,8 @@ extern void printHostIcmpStats(HostTraffic *el);
 extern void printTableEntry(char *buf, int bufLen,
 			    char *label, char* color,
 			    float total, float percentage,
-			    u_int showFlows, Counter flows);
+			    u_int showFlows, Counter flows,
+			    u_int showRRD);
 extern char* buildHTMLBrowserWindowsLabel(int i, int j, u_short forIpTraffic);
 extern int cmpEventsFctn(const void *_a, const void *_b);
 extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
