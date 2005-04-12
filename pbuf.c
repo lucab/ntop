@@ -3098,6 +3098,9 @@ void processPacket(u_char *_deviceId,
 		cdp_idx = 4;
 		while(cdp_idx < length) {
 		  struct cdp_element *element = (struct cdp_element*)&cdp[cdp_idx];
+		  u_short len = ntohs(element->cdp_len);
+
+		  if(len == 0) break; /* Sanity check */
 		  
 		  switch(ntohs(element->cdp_type)) {
 		  case 0x0001: /* Device Id */
@@ -3143,7 +3146,7 @@ void processPacket(u_char *_deviceId,
 		    break;
 		  }
 
-		  cdp_idx += ntohs(element->cdp_len);
+		     cdp_idx += len;
 		}
 
 
