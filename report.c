@@ -3998,7 +3998,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 		 "<TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
 		 "TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG">Flows</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
-		 "Percentage</TH></TR>\n");
+		 "Accumulated Percentage / Historical Protocol View</TH></TR>\n");
 
       remainingTraffic = 0;
 
@@ -4044,9 +4044,9 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       if ((numProtosFound > 0) && printGraph) {
 	struct stat statbuf;
 
-	sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=CENTER BGCOLOR=white>"
+	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 		   "<IMG SRC=\"" CONST_BAR_IPPROTO_DIST CHART_FORMAT "\" "
-		   "alt=\"Global ipProtocol distribution chart\">");
+		   "alt=\"Global ipProtocol distribution chart\"></TD></TR>");
 	
 	/* RRD */
 	/* Do NOT add a '/' at the end of the path because Win32 will complain about it */
@@ -4058,8 +4058,9 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	
 	if((i = stat(buf, &statbuf)) == 0) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+			"<TR "TR_ON" "DARK_BG"><TH "TH_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 			"<p><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
-			"key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
+			"key=interfaces/%s/&start=now-12h&end=now\" BORDER=0></TD></TR>",
 			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
 	  sendString(buf);
 	}
