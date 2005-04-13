@@ -53,9 +53,11 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 
 #include "rrdPlugin.h"
 
+#define _GETOPT_H
 #include "myrrd/rrd.h"
 #include "myrrd/rrd_tool.h"
 #include "myrrd/rrd_format.h"
+
 
 #if defined(RRD_DEBUG) && (RRD_DEBUG > 0)
  #define traceEventRRDebug(level, ...) { if(RRD_DEBUG >= level) \
@@ -69,9 +71,10 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
                                          } \
                                        }
 #else
- #define traceEventRRDebug(level, ...) {}
- #define traceEventRRDebugARGV(level)  {}
+ #define traceEventRRDebug 
+ #define traceEventRRDebugARGV 
 #endif
+
 
 #ifdef WIN32
 int optind, opterr;

@@ -203,6 +203,8 @@ ULONG GetHostIPAddr () {
 
 WIN32 MULTITHREAD STUFF
 
+http://www-128.ibm.com/developerworks/eserver/articles/es-MigratingWin32toLinux.html
+
 ************************************** */
 
 int createThread(pthread_t *threadId,
@@ -285,13 +287,11 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   WaitForSingleObject(mutexId->mutex, INFINITE);
 
   mutexId->numLocks++;
-  mutexId->isLocked = 1;
-  mutexId->lockTime = time(NULL);
-
-  if(fileName != NULL) {
-    strcpy(mutexId->lockFile, fileName);
-    mutexId->lockLine = fileLine;
-  }
+    mutexId->isLocked = 1;
+    if(!myGlobals.runningPref.disableMutexExtraInfo) {
+      memcpy(&(mutexId->lock), &(mutexId->attempt), sizeof(Holder));
+      memset(&(mutexId->attempt), 0, sizeof(Holder));
+    }
 
   return(0);
 }
@@ -316,12 +316,10 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   else {
     mutexId->numLocks++;
     mutexId->isLocked = 1;
-    mutexId->lockTime = time(NULL);
-
-    if(fileName != NULL) {
-      strcpy(mutexId->lockFile, fileName);
-      mutexId->lockLine = fileLine;
-    }
+    if(!myGlobals.runningPref.disableMutexExtraInfo) {
+      memcpy(&(mutexId->lock), &(mutexId->attempt), sizeof(Holder));
+      memset(&(mutexId->attempt), 0, sizeof(Holder));
+	}
 
     return(0);
   }
@@ -329,8 +327,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
 /* ************************************ */
 
-int _releaseMutex(PthreadMutex *mutexId,
-		  char* fileName, int fileLine) {
+int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   time_t lockDuration;
   BOOL rc;
@@ -345,16 +342,19 @@ int _releaseMutex(PthreadMutex *mutexId,
     traceEvent(CONST_TRACE_WARNING, "Unlock failed for 0x%X [%s:%d] (LastError=%d)",
 	       mutexId->mutex, fileName, fileLine, GetLastError());
   }
+   mutexId->isLocked = 0;
+    mutexId->numReleases++;
 
-  lockDuration = time(NULL) - mutexId->lockTime;
+    if(!myGlobals.runningPref.disableMutexExtraInfo) {
 
-  if((mutexId->maxLockedDuration < lockDuration)
-     || (mutexId->maxLockedDurationUnlockLine == 0 /* Never set */)) {
-    mutexId->maxLockedDuration = lockDuration;
+      setHolder(mutexId->unlock);
+      lockDuration = timeval_subtract(mutexId->unlock.time, mutexId->lock.time);
 
-    if(fileName != NULL) {
-      strcpy(mutexId->maxLockedDurationUnlockFile, fileName);
-      mutexId->maxLockedDurationUnlockLine = fileLine;
+      if((mutexId->maxLockedDuration < lockDuration)
+         || (mutexId->max.line == 0 /* Never set */)) {
+        memcpy(&(mutexId->max), &(mutexId->lock), sizeof(Holder));
+        mutexId->maxLockedDuration = lockDuration;
+      }
     }
 
 #ifdef DEBUG
@@ -362,16 +362,8 @@ int _releaseMutex(PthreadMutex *mutexId,
 	       &(mutexId->mutex), fileName, fileLine,
 	       mutexId->maxLockedDuration);
 #endif
-  }
 
-  mutexId->isLocked = 0;
-  mutexId->numReleases++;
-  if(fileName != NULL) {
-    strcpy(mutexId->unlockFile, fileName);
-    mutexId->unlockLine = fileLine;
-  }
-
-  return(0);
+   return(0);
 }
 
 /* ************************************ */

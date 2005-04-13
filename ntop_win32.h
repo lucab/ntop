@@ -80,6 +80,9 @@ extern ULONG GetHostIPAddr();
 #define INET6
 #define in6_addr in_addr6
 
+#define pthread_self GetCurrentThreadId
+#define sqrtf(x) ((float)(sqrt((double)x)))
+
 /* *************************************************************** */
 
 /*
