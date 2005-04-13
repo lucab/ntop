@@ -2159,7 +2159,7 @@ static int returnHTTPPage(char* pageName,
   }
 
   if(pageName[0] == '\0')
-    strncpy(pageName, CONST_INDEX_HTML, sizeof(CONST_INDEX_HTML));
+    strncpy(pageName, CONST_TRAFFIC_STATS_HTML, sizeof(CONST_TRAFFIC_STATS_HTML));
 
   /* Generic w3c p3p request? force it to ours... */
   if(strncmp(pageName, CONST_W3C_P3P_XML, strlen(CONST_W3C_P3P_XML)) == 0)
@@ -2337,6 +2337,7 @@ static int returnHTTPPage(char* pageName,
     return(0);
   }
 
+#if 0  
   if ((strncasecmp(pageName, CONST_INDEX_HTML, strlen(CONST_INDEX_HTML)) == 0)
       || (strncasecmp(pageName, CONST_LEFTMENU_HTML,
                       strlen(CONST_LEFTMENU_HTML)) == 0)) {
@@ -2347,7 +2348,8 @@ static int returnHTTPPage(char* pageName,
     }
     return (0);
   }
-
+#endif
+  
   /*
     Putting this here (and not on top of this function)
     helps because at least a partial respose
@@ -2484,9 +2486,13 @@ static int returnHTTPPage(char* pageName,
       into the main one.
     */
     printTrafficSummary(revertOrder);
-  } else if(strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
-			strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+  } else if ((strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
+                          strlen(CONST_TRAFFIC_STATS_HTML)) == 0)
+             || (strncasecmp(pageName, CONST_INDEX_HTML,
+                          strlen(CONST_INDEX_HTML)) == 0)
+             || (strncasecmp(pageName, CONST_LEFTMENU_HTML,
+                             strlen(CONST_LEFTMENU_HTML)) == 0)) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
     if((myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT)
        || ((myGlobals.numDevices == 1) && (!strcmp(myGlobals.device[0].name, "none")))) {
