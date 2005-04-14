@@ -53,7 +53,10 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 
 #include "rrdPlugin.h"
 
+#ifndef _GETOPT_H
 #define _GETOPT_H
+#endif
+
 #include "myrrd/rrd.h"
 #include "myrrd/rrd_tool.h"
 #include "myrrd/rrd_format.h"
