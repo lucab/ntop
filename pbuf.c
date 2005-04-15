@@ -2223,11 +2223,16 @@ void queuePacket(u_char *_deviceId,
      until a slot is freed
      **************************** */
 
-#ifdef MAX_ARRIVAL_BUFFER
- if(myGlobals.arrivalBufferInit == 0) {
-   myGlobals.arrivalBufferCount = 0;
-   myGlobals.arrivalBufferInit = 1;
-   memset(&myGlobals.arrivalBuffer, 0, sizeof(myGlobals.arrivalBuffer));
+#ifdef MAX_PROCESS_BUFFER
+ if(myGlobals.queueBufferInit == 0) {
+   myGlobals.queueBufferCount = 0;
+   myGlobals.queueBufferInit = 1;
+   memset(&myGlobals.queueBuffer, 0, sizeof(myGlobals.queueBuffer));
+ }
+ if(myGlobals.processBufferInit == 0) {
+   myGlobals.processBufferCount = 0;
+   myGlobals.processBufferInit = 1;
+   memset(&myGlobals.processBuffer, 0, sizeof(myGlobals.processBuffer));
  }
 #endif
 
@@ -2618,6 +2623,10 @@ void processPacket(u_char *_deviceId,
 #ifdef LINUX
   AnyHeader *anyHeader;
 #endif
+#ifdef MAX_PROCESS_BUFFER
+  struct timeval pktStartOfProcessing,
+                 pktEndOfProcessing;
+#endif
 
 #ifdef MEMORY_DEBUG
   if(0) {
@@ -2644,12 +2653,10 @@ void processPacket(u_char *_deviceId,
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN)
     return;
 
-#ifdef MAX_ARRIVAL_BUFFER
-{
-  struct timeval y;
-  gettimeofday(&y, NULL);
-  myGlobals.arrivalBuffer[++myGlobals.arrivalBufferCount & (MAX_ARRIVAL_BUFFER - 1)] = timeval_subtract (y, h->ts);
-}
+#ifdef MAX_PROCESS_BUFFER
+  gettimeofday(&pktStartOfProcessing, NULL);
+  myGlobals.queueBuffer[++myGlobals.queueBufferCount & (MAX_PROCESS_BUFFER - 1)] = 
+      timeval_subtract(pktStartOfProcessing, h->ts);
 #endif
 
   h_save = h, p_save = p;
@@ -3671,6 +3678,12 @@ void processPacket(u_char *_deviceId,
 
 #ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+
+#ifdef MAX_PROCESS_BUFFER
+  gettimeofday(&pktEndOfProcessing, NULL);
+  myGlobals.processBuffer[++myGlobals.processBufferCount & (MAX_PROCESS_BUFFER - 1)] =
+      timeval_subtract(pktEndOfProcessing, pktStartOfProcessing);
 #endif
 
   if (myGlobals.runningPref.rFileName != NULL) {

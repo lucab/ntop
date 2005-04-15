@@ -2368,10 +2368,13 @@ typedef struct ntopGlobals {
 
   int multipleVLANedHostCount;
 
-#ifdef MAX_ARRIVAL_BUFFER
-  float arrivalBuffer[MAX_ARRIVAL_BUFFER];
-  int arrivalBufferInit,
-      arrivalBufferCount;
+#ifdef MAX_PROCESS_BUFFER
+  float queueBuffer[MAX_PROCESS_BUFFER],
+        processBuffer[MAX_PROCESS_BUFFER];
+  int queueBufferInit,
+      queueBufferCount,
+      processBufferInit,
+      processBufferCount;
 #endif
 
 #ifdef PARM_ENABLE_EXPERIMENTAL

@@ -1023,6 +1023,36 @@ static void printFeatureConfigInfo3ColInt(int textPrintFlag,
   sendString(texthtml("\n", "</td></tr>\n"));
 }
 
+#ifdef MAX_PROCESS_BUFFER
+static void printFeatureConfigInfo3ColFlt6(int textPrintFlag,
+                                           char* feature,
+                                           int flag1, float value1,
+                                           int flag2, float value2,
+                                           int mustShow) {
+  char tmpBuf[LEN_GENERAL_WORK_BUFFER];
+
+  if((mustShow == FALSE) && (value1 == 0.0) && (value2 == 0.0)) { return; }
+
+  sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
+  sendString(feature);
+  sendString(texthtml(".....", "</th>\n<td "TD_BG" align=\"right\" width=\"" xstr(CONST_INFOHTML_COL2_WIDTH) "\">"));
+  if (flag1) {
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.6f", value1);
+    sendString(tmpBuf);
+  } else {
+    sendString("-");
+  }
+  sendString(texthtml(".....", "</td>\n<td "TD_BG" align=\"right\" width=\"" xstr(CONST_INFOHTML_COL3_WIDTH) "\">"));
+  if (flag2) {
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.6f", value2);
+    sendString(tmpBuf);
+  } else {
+    sendString("-");
+  }
+  sendString(texthtml("\n", "</td></tr>\n"));
+}
+#endif
+
 /* ******************************** */
 
 static void printParameterConfigInfo(int textPrintFlag, char* feature, char* status, char* defaultValue) {
@@ -6404,7 +6434,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* This prints either as text or html, but no header so it can be included in bug reports */
 
-  char buf[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
+  char buf[2*LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
   char main[LEN_GENERAL_WORK_BUFFER], lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
   const char *_env = NULL;
   int i, rc, bufLength, bufPosition, bufUsed;
@@ -7210,43 +7240,80 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "Maximum Queue", buf);
 #endif
 
-#ifdef MAX_ARRIVAL_BUFFER
+#ifdef MAX_PROCESS_BUFFER
 {
-  float minDelay=99999.0, maxDelay=0.0, /*stddev:*/ M, T, Q, R, SD, XBAR;
-  if(myGlobals.arrivalBufferCount >= MAX_ARRIVAL_BUFFER) {
-    for(i=0; i<MAX_ARRIVAL_BUFFER; i++) {
-      if(myGlobals.arrivalBuffer[i] > maxDelay) maxDelay = myGlobals.arrivalBuffer[i];
-      if(myGlobals.arrivalBuffer[i] < minDelay) minDelay = myGlobals.arrivalBuffer[i];
+  float qminDelay=99999.0, qmaxDelay=0.0, 
+        /*stddev:*/ qM, qT, qQ, qR, qSD, qXBAR,
+        pminDelay=99999.0, pmaxDelay=0.0, 
+        /*stddev:*/ pM, pT, pQ, pR, pSD, pXBAR;
+
+  if(myGlobals.queueBufferCount >= MAX_PROCESS_BUFFER) {
+
+    for(i=0; i<MAX_PROCESS_BUFFER; i++) {
+      if(myGlobals.queueBuffer[i] > qmaxDelay) qmaxDelay = myGlobals.queueBuffer[i];
+      if(myGlobals.queueBuffer[i] < qminDelay) qminDelay = myGlobals.queueBuffer[i];
+      if(myGlobals.processBuffer[i] > pmaxDelay) pmaxDelay = myGlobals.processBuffer[i];
+      if(myGlobals.processBuffer[i] < pminDelay) pminDelay = myGlobals.processBuffer[i];
       if(i==0) { 
-        M = myGlobals.arrivalBuffer[0];
-        T = 0.0;
+        qM = myGlobals.queueBuffer[0];
+        qT = 0.0;
+        pM = myGlobals.processBuffer[0];
+        pT = 0.0;
       } else {
-        Q = myGlobals.arrivalBuffer[i] - M;
-        R = Q / (float)(i+1);
-        M += R;
-        T = T + i * Q * R;
+        qQ = myGlobals.queueBuffer[i] - qM;
+        qR = qQ / (float)(i+1);
+        qM += qR;
+        qT = qT + i * qQ * qR;
+        pQ = myGlobals.processBuffer[i] - pM;
+        pR = pQ / (float)(i+1);
+        pM += pR;
+        pT = pT + i * pQ * pR;
       }
     }
-    SD = sqrtf(T / (MAX_ARRIVAL_BUFFER - 1));
-    XBAR /*average*/ = M;
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f", minDelay);
-    printFeatureConfigInfo(textPrintFlag, "Minimum Delay", buf);
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f", XBAR);
-    printFeatureConfigInfo(textPrintFlag, "Average Delay", buf);
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f", maxDelay);
-    printFeatureConfigInfo(textPrintFlag, "Maximum Delay", buf);
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f", SD);
-    printFeatureConfigInfo(textPrintFlag, "Standard Deviation", buf);
+    qSD = sqrtf(qT / (MAX_PROCESS_BUFFER - 1));
+    qXBAR /*average*/ = qM;
+    pSD = sqrtf(pT / (MAX_PROCESS_BUFFER - 1));
+    pXBAR /*average*/ = pM;
+
+    printFeatureConfigTitle3Col(textPrintFlag,
+                                "Packet processing:....Queue (pre-process).......Processing\n",
+                                "Packet Processing", "Queue (pre-process)", "Processing");
+      
+    printFeatureConfigInfo3ColFlt6(textPrintFlag,
+                                  "Minimum",
+                                  TRUE, qminDelay, TRUE, pminDelay,
+                                  TRUE);
+    printFeatureConfigInfo3ColFlt6(textPrintFlag,
+                                  "Average",
+                                  TRUE, qXBAR, TRUE, pXBAR,
+                                  TRUE);
+    printFeatureConfigInfo3ColFlt6(textPrintFlag,
+                                  "Maximum",
+                                  TRUE, qmaxDelay, TRUE, pmaxDelay,
+                                  TRUE);
+    printFeatureConfigInfo3ColFlt6(textPrintFlag,
+                                  "Standard Deviation",
+                                  TRUE, qSD, TRUE, pSD,
+                                  TRUE);
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-                   "The delay is the elapsed time between the packet arrival timestamp (set by "
-                   "libpcap) and the gettimeofday() value just as the packet begins to be processed "
-                   "in processPacket(). Thus for a queued packet, this includes the time in queue."
-                   "<br<br>A small average is good, especially if the standard deviation is small "
+                   "'Queue' time is the elapsed time between the packet arrival (libpcap) "
+                   "and the gettimeofday() value as the packet starts processPacket(). For a queued "
+                   "packet, this includes the time in queue. "
+                   "<br><br>'Processing' time is the elapsed time between starting and finishing "
+                   "processPacket().  Errors and/or unrecognized packets may cause processing to be "
+                   "abandoned and those packets are not counted in the 'processing' averages. This means "
+                   "that the " xstr(MAX_PROCESS_BUFFER) " packets for the 'queue' and 'processing' "
+                   "calculations are not necessarily the same physical packets, and may lead to over "
+                   "estimation of the per-packet 'processing' time."
+                   "<br><br>Small averages are good, especially if the standard deviation is small "
                    "(standard deviation is a measurement of the variability of the actual values "
-                   "around the average). 1/average (%.1f) gives a very rough indication of the packet "
-                   "per second rate ntop can handle."
-                   "<br><br>The computation is based only on the most recent " xstr(MAX_ARRIVAL_BUFFER) " "
-                   "packets processed.", 1.0 / XBAR);
+                   "around the average). The computations are based only on the most recent " 
+                   xstr(MAX_PROCESS_BUFFER) " packets processed."
+                   "<br><br>What does this mean? Not much.  Still, 1/(queue-average+process-average) "
+                   "(i.e. %.1f) gives a very rough indication of the packet per second rate this "
+                   "instance of ntop can handle.",
+                   1.0 / (qXBAR+pXBAR));
     printInfoSectionNote(textPrintFlag, buf);
   }
 }

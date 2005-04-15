@@ -1034,7 +1034,7 @@
  *   Value MUST BE a power of 2!
  *   undef this to disable feature
  */
-#define MAX_ARRIVAL_BUFFER                  1024
+#define MAX_PROCESS_BUFFER                  1024
 
 /*
  * FibreChannel/SCSI constants
