@@ -154,9 +154,9 @@ RETSIGTYPE xml_sighandler(int signo);
 
 static PluginInfo pluginInfo[] = {
   { VERSION, /* current ntop version */
-    "xmldump plugin",
+    "XML data dump",
     "Dumps ntop internal table structures in an xml format",
-    "1.0", /* plugin version */
+    "1.0a", /* plugin version */
     "<A HREF=\"http://www.ntopsupport.com\">B.Strauss</A>",
 #ifdef CONST_XMLDUMP_PLUGIN_NAME
 //This seems odd, but we need CONST_XMLDUMP_PLUGIN_NAME in http.c's URLsecurity
@@ -166,6 +166,7 @@ static PluginInfo pluginInfo[] = {
     "xmldump",                 /* http://<host>:<port>/plugins/shortPluginName */
 #endif
     0, /* Active by default */
+    ConfigureOnly,
     1, /* Inactive setup */
     initXmldump, /* InitFunc   */
     termXmldump, /* TermFunc   */
@@ -177,7 +178,8 @@ static PluginInfo pluginInfo[] = {
 #endif
     NULL, /* no host creation/deletion handle */
     NULL, /* no capture */
-    NULL  /* no status */
+    NULL, /* no status */
+    NULL  /* no extra pages */
   }
 };
 

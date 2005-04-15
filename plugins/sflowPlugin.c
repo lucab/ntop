@@ -1255,10 +1255,11 @@ static PluginInfo sflowPluginInfo[] = {
     "Note that ntop.org is a member of the <A HREF=http://www.sflow.org/organization/>sFlow consortium</A>.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports.<br><em>Remember to <A HREF=/switch.html>switch</A> the reporting NIC.</em>",
-    "2.99", /* version */
+    "2.99a", /* version */
     "<A HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "sFlow", /* http://<host>:<port>/plugins/sFlow */
     0, /* Active by default */
+    ViewConfigure,
     1, /* Inactive setup */
     initsFlowFunct, /* InitFunc */
     termsFlowFunct, /* TermFunc */
@@ -1274,7 +1275,8 @@ static PluginInfo sflowPluginInfo[] = {
 #else
     NULL, /* no capture */
 #endif
-    NULL  /* no status */
+    NULL, /* no status */
+    NULL  /* no extra pages */
   }
 };
 

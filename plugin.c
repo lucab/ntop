@@ -130,7 +130,9 @@ static void loadPlugin(char* dirName, char* pluginName) {
 #ifndef WIN32
   PluginInfo* (*pluginJumpFunc)();
 #endif
-  FlowFilterList *newFlow;
+  FlowFilterList *newFlow,
+                 *work,
+                 *prev;
 
   safe_snprintf(__FILE__, __LINE__, pluginPath, sizeof(pluginPath), "%s/%s", dirName != NULL ? dirName : ".", pluginName);
 
@@ -287,8 +289,25 @@ static void loadPlugin(char* dirName, char* pluginName) {
 	newFlow->pluginStatus.activePlugin = 0;
     }
 
-    newFlow->next = myGlobals.flowsList;
-    myGlobals.flowsList = newFlow;
+    /* Find where to insert */
+    if((work = myGlobals.flowsList) == NULL) {
+      myGlobals.flowsList = newFlow;
+    } else {
+      while((work != NULL) && (strcasecmp(newFlow->flowName, work->flowName) > 0)) {
+        prev = work;
+        work = work->next;
+      }
+      if (work == myGlobals.flowsList) {
+        /* 1st in chain */
+        newFlow->next = myGlobals.flowsList;
+        myGlobals.flowsList = newFlow;
+      } else {
+        /* Insert in chain */
+        newFlow->next = prev->next;
+        prev->next = newFlow;
+      }
+    }
+
     /* traceEvent(CONST_TRACE_INFO, "Adding: %s", pluginInfo->pluginName); */
   }
 

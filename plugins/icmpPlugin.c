@@ -59,13 +59,14 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder, u_int num, Host
 
 static PluginInfo icmpPluginInfo[] = {
   { VERSION, /* current ntop version */
-    "icmpWatchPlugin",
+    "ICMP Watch",
     "This plugin produces a report about the ICMP packets that ntop has seen.<br>"
     "The report includes each host, byte and per-type counts (sent/received).",
-    "2.4", /* version */
+    "2.4a", /* version */
     "<A HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "icmpWatch", /* http://<host>:<port>/plugins/icmpWatch */
     0, /* Active by default */
+    ViewOnly,
     0, /* Inactive setup */
     NULL, /* no special startup after init */
     termIcmpFunct, /* TermFunc   */
@@ -73,7 +74,8 @@ static PluginInfo icmpPluginInfo[] = {
     handleIcmpWatchHTTPrequest,
     NULL, /* no host creation/deletion handle */
     NULL /* no capture */,
-    NULL /* no status */
+    NULL, /* no status */
+    NULL /* no extra pages */
   }
 };
 

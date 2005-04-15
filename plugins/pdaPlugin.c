@@ -35,12 +35,13 @@ static void handlePDArequest(char* url);
 static PluginInfo PDAPluginInfo[] = {
   {
     VERSION, /* current ntop version */
-    "PDAPlugin",
+    "PDA",
     "This plugin produces a minimal ntop report, suitable for display on a pda",
-    "2.2",            /* version */
+    "2.2a",            /* version */
     "<a href=\"mailto:&#119;&#097;&#108;&#116;&#101;&#114;&#098;&#114;&#111;&#099;&#107;&#064;&#110;&#101;&#116;&#115;&#099;&#097;&#112;&#101;&#046;&#110;&#101;&#116;\">W. Brock</A>", 
     "PDAPlugin",      /* http://<host>:<port>/plugins/PDAPlugin */
     0,                /* Active by default */
+    ViewOnly,
     0,                /* Inactive setup */
     NULL,             /* no special startup after init */
     termPdaFunct,     /* TermFunc   */
@@ -48,7 +49,8 @@ static PluginInfo PDAPluginInfo[] = {
     handlePDArequest, /* http request handler */
     NULL,             /* no host creation/deletion handle */
     NULL,             /* BPF Filter */
-    NULL              /* no status */
+    NULL,             /* no status */
+    NULL              /* no extra pages */
   }
 };
 

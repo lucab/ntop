@@ -105,6 +105,9 @@ static Counter rrdGraphicRequests=0;
 /* forward */
 static void setPluginStatus(char * status);
 static int initRRDfunct(void);
+static void arbitraryActionPage(void);
+static void statisticsPage(void);
+static void printRRDPluginTrailer(void);
 static void handleRRDHTTPrequest(char* url);
 #ifdef CFG_MULTITHREADED
 static char* spacer(char* str, char *tmpStr);
@@ -124,17 +127,24 @@ static void addRrdDelay();
 
 /* ************************************* */
 
+static ExtraPage rrdExtraPages[] = {
+  { NULL, CONST_RRD_STATISTICS_HTML, "Statistics" },
+  { "graph.gif", CONST_RRD_ARBGRAPH_HTML, "Arbitrary Graphs" },
+  { NULL, NULL, NULL }
+};
+
 static PluginInfo rrdPluginInfo[] = {
   {
     VERSION, /* current ntop version */
-    "rrdPlugin",
+    "Round-Robin Databases",
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
     "This plugin also produces the graphs of rrd data, available via a<br>"
     "link from the various 'Info about host xxxxx' reports.",
-    "2.7", /* version */
+    "2.7a", /* version */
     "<a HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
     1, /* Active by default */
+    ConfigureOnly, /* use extra pages for the views */
     1, /* Inactive setup */
     initRRDfunct, /* TermFunc   */
 #ifdef CFG_MULTITHREADED
@@ -146,7 +156,8 @@ static PluginInfo rrdPluginInfo[] = {
     handleRRDHTTPrequest,
     NULL, /* no host creation/deletion handle */
     NULL, /* no capture */
-    NULL  /* no status */
+    NULL, /* no status */
+    rrdExtraPages  /* no extra pages */
   }
 };
 
@@ -309,7 +320,8 @@ static void listResource(char *rrdPath, char *rrdTitle,
   sendString("<CENTER>\n<p ALIGN=right>\n");
 
   safe_snprintf(__FILE__, __LINE__, url, sizeof(url),
-              "/plugins/rrdPlugin?action=list&key=%s&title=%s&end=now",
+              "/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=now",
+              rrdPluginInfo->pluginURLname,
               rrdPath, rrdTitle);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<b>View:</b> [ <A HREF=\"%s&start=now-1y\">year</A> ]", url);
@@ -341,8 +353,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
     for(i=min; i<=max; i++) {
       sendString("<TR><TD COLSPAN=1 ALIGN=CENTER>");
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary"
 		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
+                    rrdPluginInfo->pluginURLname,
 		    i, rrdPath, startTime, endTime);
       sendString(buf);
     }
@@ -375,8 +388,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
     for(i=0; i<=2; i++) {
       sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=netflowSummary"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=netflowSummary"
 		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
+                    rrdPluginInfo->pluginURLname,
 		    i, rrdPath, startTime, endTime);
       sendString(buf);
     }
@@ -430,8 +444,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	if(strstr(rsrcName, "Sent")) {
 	  sendString("<TR><TD>\n");
 
-	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?"
-			"action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\"><P>\n",
+	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<img src=\"/" CONST_PLUGINS_HEADER "%s?"
+			"action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\"><p>\n",
+                        rrdPluginInfo->pluginURLname,
 			rrdPath, rsrcName, rsrcName, startTime, endTime);
 	  sendString(path);
 
@@ -1549,7 +1564,7 @@ static void arbitraryAction(char *rrdName,
     escape(buf1, sizeof(buf1), rrdCounter);
     escape(buf2, sizeof(buf2), rrdTitle);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                  "<p>/plugins/%s?action=" CONST_ARBITRARY_RRDREQUEST
+                  "<p>/" CONST_PLUGINS_HEADER "%s?action=" CONST_ARBITRARY_RRDREQUEST
                                 "&" CONST_ARBITRARY_IP "=%s"
                                 "&" CONST_ARBITRARY_INTERFACE "=%s"
                                 "&" CONST_ARBITRARY_FILE "=%s"
@@ -1746,30 +1761,237 @@ static void arbitraryAction(char *rrdName,
   return;
 }
 
+
+/* ****************************** */
+
+static void statisticsPage(void) {
+  char buf[1024];
+  memset(&buf, 0, sizeof(buf));
+
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+  printHTMLheader("RRD Statistics", NULL, 0);
+
+  sendString("<center><table border=\"1\""TABLE_DEFAULTS">\n"
+             "<tr><th align=\"center\" "DARK_BG">Item</th>"
+                 "<th align=\"center\" "DARK_BG">Count</th></tr>\n");
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Cycles</th><td align=\"right\">");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDCycles);
+  sendString(buf);
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Files Updated</th><td align=\"right\">");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numTotalRRDUpdates);
+  sendString(buf);
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Update Errors</th><td align=\"right\">");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDerrors);
+  sendString(buf);
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Graphic Requests</th><td align=\"right\">");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)rrdGraphicRequests);
+  sendString(buf);
+
+  sendString("</table>\n</center>\n");
+}
+
+
+/* ****************************** */
+
+static void arbitraryActionPage(void) {
+  int idx, count, rc;
+  char buf[1024],
+       dirPath[256],
+       rrdPath[512],
+       startTime[32],
+       endTime[32];
+  DIR* directoryPointer=NULL;
+  struct dirent* dp;
+  struct stat statBuf;
+
+  memset(&buf, 0, sizeof(buf));
+  memset(&dirPath, 0, sizeof(dirPath));
+  memset(&rrdPath, 0, sizeof(rrdPath));
+  memset(&startTime, 0, sizeof(startTime));
+  memset(&endTime, 0, sizeof(endTime));
+
+  strcpy(startTime, "now-12h");
+  strcpy(endTime, "now");
+
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+  printHTMLheader("Arbitrary RRD Actions", NULL, 0);
+
+  safe_snprintf(__FILE__, __LINE__, dirPath, sizeof(dirPath), "%s/interfaces", myGlobals.rrdPath);
+  directoryPointer = opendir(dirPath);
+  if(directoryPointer == NULL) {
+    sendString("<p>No rrds found - check configuration.</p>\n");
+    return;
+  }
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+                "<center>"
+                "<p>This allows you to see and/or create a graph of an arbitrary rrd file.</p>\n"
+                "<form action=\"/" CONST_PLUGINS_HEADER "%s\" method=GET>\n"
+                "<input type=hidden name=action value=\"" CONST_ARBITRARY_RRDREQUEST "\">\n"
+                "<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
+                "<tr><th width=\"250\" align=\"left\" "DARK_BG">Action</th>\n"
+                "<td align=\"left\">"
+                  "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_GRAPHME "\" CHECKED>"
+                    "&nbsp;Create the graph - this is returned as a png file and will display ONLY the graph, "
+                    "without any html headings.<br>\n"
+                  "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_SHOWME "\">"
+                    "&nbsp;Display the url to request the graph<br>\n"
+                  "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_FETCHME "\">"
+                    "&nbsp;Retrieve rrd data in table form<br>\n"
+                  "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_FETCHMECSV "\">"
+                    "&nbsp;Retrieve rrd data as CSV"
+                "</td></tr>\n"
+                "<tr><th align=\"left\" "DARK_BG">File</th>\n<td align=\"left\">"
+                "<select name=\"" CONST_ARBITRARY_FILE "\">",
+                rrdPluginInfo->pluginURLname);
+  sendString(buf);
+
+  for(idx=0; rrdNames[idx] != NULL; idx++) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s\">%s</option>\n",
+                  rrdNames[idx],
+                  rrdNames[idx]);
+    sendString(buf);
+  }
+
+  if(myGlobals.device[0].ipProtoStats != NULL) {
+    for(idx=0; idx<myGlobals.numIpProtosToMonitor; idx++) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"IP_%sSentBytes\">%s Sent Bytes</option>\n"
+                                                          "<option value=\"IP_%sRcvdBytes\">%s Rcvd Bytes</option>\n"
+                                                          "<option value=\"IP_%sBytes\">%s Bytes (interface level)</option>\n",
+                    myGlobals.protoIPTrafficInfos[idx],
+                    myGlobals.protoIPTrafficInfos[idx],
+                    myGlobals.protoIPTrafficInfos[idx],
+                    myGlobals.protoIPTrafficInfos[idx],
+                    myGlobals.protoIPTrafficInfos[idx],
+                    myGlobals.protoIPTrafficInfos[idx]);
+      sendString(buf);
+    } 
+  } 
+
+  sendString("</select>"
+             "<br>\n<p>Note: The drop down list shows all possible files - many (most) (all) "
+             "of which may not be available for a specific host. Further, the list is "
+             "based on the -p | --protocols parameter of this ntop run and may not "
+             "include files created during ntop runs with other -p | --protocols "
+             "parameter settings.</p>\n</td></tr>\n"
+             "<tr><th align=\"left\" "DARK_BG">Interface</th>\n<td align=\"left\">");
+
+  count = 0;
+  while((dp = readdir(directoryPointer)) != NULL) {
+
+    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts", myGlobals.rrdPath, dp->d_name);
+    rc = stat(rrdPath, &statBuf);
+    if((rc == 0) && ((statBuf.st_mode & S_IFDIR) == S_IFDIR)) {
+      count++;
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                    "<input type=radio name=\"" CONST_ARBITRARY_INTERFACE "\" value=\"%s\" %s>%s<br>\n",
+                    dp->d_name,
+                    count == 1 ? "CHECKED" : "",
+                    dp->d_name);
+      sendString(buf);
+    }
+  }
+
+  closedir(directoryPointer);
+
+  sendString("</td></tr>\n"
+             "<tr><th width=\"250\" align=\"left\" "DARK_BG">Host IP address</th>\n<td align=\"left\">"
+             "<input name=\"" CONST_ARBITRARY_IP "\" size=\"20\" value=\"\">"
+             "&nbsp;&nbsp;Leave blank to create a per-interface graph.</td></tr>\n"
+             "<tr><th align=\"center\" "DARK_BG" colspan=\"2\">\n<table border=\"0\" width=\"80%\"><tr><td>"
+             "<p><i>A note about time specification</i>: You may specify time in a number of ways - please "
+             "see \"AT-STYLE TIME SPECIFICATION\" in the rrdfetch man page for the full details. Here "
+             "are some examples:</p>\n<ul>\n"
+             "<li>Specific values: Most common formats are understood, including numerical and character "
+             "date formats, such as Oct 12 - October 12th of "
+             "the current year, 10/12/2005, etc.</li>\n"
+             "<li>Relative time:  now-1d  (now minus one day) Several time units can be combined together, "
+             "such as -5mon1w2d</li>\n"
+             "<li>Seconds since epoch: 1110286800 (this specific value is equivalent to "
+             "Tue 08 Mar 2005 07:00:00 AM CST</li>\n"
+             "</ul>\n"
+             "<p>Don't bother trying to break these - we just pass it through to rrdtool. If you want to "
+             "play, there are a thousand lines in parsetime.c just waiting for you.</p>\n"
+             "<p><i>A note about RRD files</i>: You may remember that the rrd file contains data stored "
+             "at different resolutions - for ntop this is typically every 5 minutes, hourly, and daily. "
+             "rrdfetch automatically picks the RRA (Round-Robin Archive) which provides the 'best' coverage "
+             "of the time span you request.  Thus, if you request a start time which is before the number "
+             "of 5 minute samples stored in RRA[0], you will 'magically' see the data from RRA[1], the "
+             "hourly samples. Other than changing the start/end times, there is no way to force rrdfetch "
+             "to select a specific RRA.</p>\n"
+             "<p><i>Two notes for the fetch options</i>:</p>\n"
+             "<p>Counter values are normalized to per-second rates. To get the (approximate) value of a "
+             "counter for the entire interval, you need to multipy the per-second rate by the number of "
+             "seconds in the interval (this is the step, reported at the bottom of the output page).</p>\n"
+             "<p>If start time is left blank, the default is --start end-1d. To force a dump from the "
+             "earliest detail point in the rrd, use the special value 0.</th></tr>\n</table>\n</td></tr>\n"
+             "<tr><th align=\"left\" "DARK_BG">Start</th>\n<td align=\"left\">"
+             "<input name=\"start\" size=\"20\" value=\"");
+  sendString(startTime);
+  sendString("\"><br>\n"
+             "<tr><th align=\"left\" "DARK_BG">End</th>\n<td align=\"left\">"
+             "<input name=\"end\" size=\"20\" value=\"");
+  sendString(endTime);
+  sendString("\"></td></tr>\n"
+             "<tr><th align=\"center\" "DARK_BG" colspan=\"2\">For graphs only</th></tr>\n"
+             "<tr><th align=\"left\" "DARK_BG">Legend</th>\n<td align=\"left\">"
+             "<input name=\"counter\" size=\"64\" value=\"\"><br>\n"
+             "This is the 'name' of the counter being displayed, e.g. eth1 Mail bytes. "
+             "It appears at the bottom left as the legend for the colored bars</td></tr>\n"
+             "<tr><th align=\"left\" "DARK_BG">(optional) Title to appear above the graph</th>\n"
+             "<td align=\"left\"><input name=\"title\" size=\"128\" value=\"\"></td></tr>\n"
+             "<tr><td colspan=\"2\" align=\"center\">&nbsp;<br>"
+             "<input type=submit value=\"Make Request\"><br>&nbsp;</td></tr>\n"
+             "</table>\n</form>\n</center>\n");
+}
+
+/* ****************************** */
+
+static void printRRDPluginTrailer(void) {
+  printPluginTrailer(NULL,
+                     "<a href=\"http://www.rrdtool.org/\" title=\"rrd home page\">RRDtool</a> "
+                     "was created by "
+                     "<a href=\"http://ee-staff.ethz.ch/~oetiker/\" title=\"Tobi's home page\">"
+                     "Tobi Oetiker</a>");
+
+  printHTMLtrailer();
+}
+
 /* ****************************** */
 
 static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[128], rrdCounter[64], startTime[32], endTime[32],
-    rrdPrefix[32], rrdIP[32], rrdInterface[32],
-    dirPath[256], rrdPath[512];
+    rrdPrefix[32], rrdIP[32], rrdInterface[32], rrdPath[512];
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
   int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces,
     _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
-  int i, len, rc, idx, count;
+  int i, len, rc, idx;
   char * _hostsFilter;
 #ifndef WIN32
   int _dumpPermissions;
 #endif
-  struct dirent* dp;
-  DIR* directoryPointer=NULL;
-  struct stat statBuf;
   ProtocolsList *protoList;
 
 
   if(initialized == 0)
     commonRRDinit();
+
+  /* Specialty pages */
+  if(strncasecmp(url, CONST_RRD_STATISTICS_HTML, strlen(CONST_RRD_STATISTICS_HTML)) == 0) {
+    statisticsPage();
+    printRRDPluginTrailer();
+    return;
+  } else if(strncasecmp(url, CONST_RRD_ARBGRAPH_HTML, strlen(CONST_RRD_ARBGRAPH_HTML)) == 0) {
+    arbitraryActionPage();
+    printRRDPluginTrailer();
+    return;
+  }
 
   /* Initial values - remember, for checkboxes these need to be OFF (there's no html UNCHECKED option) */
   _dumpDomains=0;
@@ -1798,7 +2020,6 @@ static void handleRRDHTTPrequest(char* url) {
   memset(&rrdPrefix, 0, sizeof(rrdPrefix));
   memset(&rrdIP, 0, sizeof(rrdIP));
   memset(&rrdInterface, 0, sizeof(rrdInterface));
-  memset(&dirPath, 0, sizeof(dirPath));
   memset(&rrdPath, 0, sizeof(rrdPath));
 
   strcpy(startTime, "now-12h");
@@ -2039,12 +2260,15 @@ static void handleRRDHTTPrequest(char* url) {
   else
     sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
 
-  sendString("<center><form action=\"/plugins/rrdPlugin\" method=GET>\n"
-             "<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
-             "<tr><th align=\"center\" "DARK_BG">Item</th>"
-                 "<th align=\"center\" "DARK_BG">Description and Notes</th></tr>\n"
-             "<tr><th align=\"left\" "DARK_BG">Dump Interval</th><td>"
-	     "<INPUT NAME=interval SIZE=5 VALUE=");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                "<center><form action=\"/" CONST_PLUGINS_HEADER "%s\" method=GET>\n"
+                "<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
+                "<tr><th align=\"center\" "DARK_BG">Item</th>"
+                    "<th align=\"center\" "DARK_BG">Description and Notes</th></tr>\n"
+                "<tr><th align=\"left\" "DARK_BG">Dump Interval</th><td>"
+	        "<INPUT NAME=interval SIZE=5 VALUE=",
+                rrdPluginInfo->pluginURLname);
+  sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpInterval);
   sendString(buf);
   sendString("> seconds<br>Specifies how often data is stored permanently.</td></tr>\n");
@@ -2182,163 +2406,18 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<br><input type=submit value=\"Save Preferences\"><br>&nbsp;</td></tr>\n"
              "</table>\n</form>\n</center>\n");
 
-  printSectionTitle("RRD Statistics");
-
-  sendString("<center><table border=\"1\""TABLE_DEFAULTS">\n"
-             "<tr><th align=\"center\" "DARK_BG">Item</th>"
-                 "<th align=\"center\" "DARK_BG">Count</th></tr>\n");
-
-  sendString("<tr><th align=\"left\" "DARK_BG">Cycles</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDCycles);
-  sendString(buf);
-
-  sendString("<tr><th align=\"left\" "DARK_BG">Files Updated</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numTotalRRDUpdates);
-  sendString(buf);
-
-  sendString("<tr><th align=\"left\" "DARK_BG">Update Errors</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDerrors);
-  sendString(buf);
-
-  sendString("<tr><th align=\"left\" "DARK_BG">Graphic Requests</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)rrdGraphicRequests);
-  sendString(buf);
-
-  sendString("</table>\n</center>\n");
-
-  safe_snprintf(__FILE__, __LINE__, dirPath, sizeof(dirPath), "%s/interfaces", myGlobals.rrdPath);
-  directoryPointer = opendir(dirPath);
-  if(directoryPointer != NULL) {
-
-    sendString("<br><hr><br>\n");
-    printSectionTitle("Arbitrary RRD Actions");
-
-    sendString("<center>"
-               "<p>This allows you to see and/or create a graph of an arbitrary rrd file.</p>\n"
-               "<form action=\"/plugins/rrdPlugin\" method=GET>\n"
-               "<input type=hidden name=action value=\"" CONST_ARBITRARY_RRDREQUEST "\">\n"
-               "<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
-               "<tr><th width=\"250\" align=\"left\" "DARK_BG">Action</th>\n"
-               "<td align=\"left\">"
-                 "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_GRAPHME "\" CHECKED>"
-                   "&nbsp;Create the graph - this is returned as a png file and will display ONLY the graph, "
-                   "without any html headings.<br>\n"
-                 "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_SHOWME "\">"
-                   "&nbsp;Display the url to request the graph<br>\n"
-                 "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_FETCHME "\">"
-                   "&nbsp;Retrieve rrd data in table form<br>\n"
-                 "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_FETCHMECSV "\">"
-                   "&nbsp;Retrieve rrd data as CSV"
-               "</td></tr>\n"
-               "<tr><th align=\"left\" "DARK_BG">File</th>\n<td align=\"left\">"
-               "<select name=\"" CONST_ARBITRARY_FILE "\">");
-
-    for(idx=0; rrdNames[idx] != NULL; idx++) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s\">%s</option>\n",
-                    rrdNames[idx],
-                    rrdNames[idx]);
-      sendString(buf);
-    }
-
-    if(myGlobals.device[0].ipProtoStats != NULL) {
-      for(idx=0; idx<myGlobals.numIpProtosToMonitor; idx++) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"IP_%sSentBytes\">%s Sent Bytes</option>\n"
-                                                            "<option value=\"IP_%sRcvdBytes\">%s Rcvd Bytes</option>\n"
-                                                            "<option value=\"IP_%sBytes\">%s Bytes (interface level)</option>\n",
-                      myGlobals.protoIPTrafficInfos[idx],
-                      myGlobals.protoIPTrafficInfos[idx],
-                      myGlobals.protoIPTrafficInfos[idx],
-                      myGlobals.protoIPTrafficInfos[idx],
-                      myGlobals.protoIPTrafficInfos[idx],
-                      myGlobals.protoIPTrafficInfos[idx]);
-        sendString(buf);
-      } 
-    } 
-
-    sendString("</select>"
-               "<br>\n<p>Note: The drop down list shows all possible files - many (most) (all) "
-               "of which may not be available for a specific host. Further, the list is "
-               "based on the -p | --protocols parameter of this ntop run and may not "
-               "include files created during ntop runs with other -p | --protocols "
-               "parameter settings.</p>\n</td></tr>\n"
-               "<tr><th align=\"left\" "DARK_BG">Interface</th>\n<td align=\"left\">");
-
-    count = 0;
-    while((dp = readdir(directoryPointer)) != NULL) {
-
-      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts", myGlobals.rrdPath, dp->d_name);
-      rc = stat(rrdPath, &statBuf);
-      if((rc == 0) && ((statBuf.st_mode & S_IFDIR) == S_IFDIR)) {
-        count++;
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                      "<input type=radio name=\"" CONST_ARBITRARY_INTERFACE "\" value=\"%s\" %s>%s<br>\n",
-                      dp->d_name,
-                      count == 1 ? "CHECKED" : "",
-                      dp->d_name);
-        sendString(buf);
-      }
-    }
-
-    closedir(directoryPointer);
-
-    sendString("</td></tr>\n"
-               "<tr><th width=\"250\" align=\"left\" "DARK_BG">Host IP address</th>\n<td align=\"left\">"
-               "<input name=\"" CONST_ARBITRARY_IP "\" size=\"20\" value=\"\">"
-               "&nbsp;&nbsp;Leave blank to create a per-interface graph.</td></tr>\n"
-               "<tr><td align=\"left\" "DARK_BG" colspan=\"2\">\n"
-               "<i>A note about time specification</i>: You may specify time in a number of ways - please "
-               "see \"AT-STYLE TIME SPECIFICATION\" in the rrdfetch man page for the full details. Here "
-               "are some examples:</p>\n<ul>\n"
-               "<li>Specific values: Most common formats are understood, including numerical and character "
-               "date formats, such as Oct 12 - October 12th of "
-               "the current year, 10/12/2005, etc.</li>\n"
-               "<li>Relative time:  now-1d  (now minus one day) Several time units can be combined together, "
-               "such as -5mon1w2d</li>\n"
-               "<li>Seconds since epoch: 1110286800 (this specific value is equivalent to "
-               "Tue 08 Mar 2005 07:00:00 AM CST</li>\n"
-               "</ul>\n"
-               "<p>Don't bother trying to break these - we just pass it through to rrdtool. If you want to "
-               "play, there are a thousand lines in parsetime.c just waiting for you.</p>\n"
-               "<p><i>A note about RRD files</i>: You may remember that the rrd file contains data stored "
-               "at different resolutions - for ntop this is typically every 5 minutes, hourly, and daily. "
-               "rrdfetch automatically picks the RRA (Round-Robin Archive) which provides the 'best' coverage "
-               "of the time span you request.  Thus, if you request a start time which is before the number "
-               "of 5 minute samples stored in RRA[0], you will 'magically' see the data from RRA[1], the "
-               "hourly samples. Other than changing the start/end times, there is no way to force rrdfetch "
-               "to select a specific RRA.</p>\n"
-               "<p><i>Two notes for the fetch options</i>:</p>\n"
-               "<p>Counter values are normalized to per-second rates. To get the (approximate) value of a "
-               "counter for the entire interval, you need to multipy the per-second rate by the number of "
-               "seconds in the interval (this is the step, reported at the bottom of the output page).</p>\n"
-               "<p>If start time is left blank, the default is --start end-1d. To force a dump from the "
-               "earliest detail point in the rrd, use the special value 0.</td></tr>\n"
-               "<tr><th align=\"left\" "DARK_BG">Start</th>\n<td align=\"left\">"
-               "<input name=\"start\" size=\"20\" value=\"");
-    sendString(startTime);
-    sendString("\"><br>\n"
-               "<tr><th align=\"left\" "DARK_BG">End</th>\n<td align=\"left\">"
-               "<input name=\"end\" size=\"20\" value=\"");
-    sendString(endTime);
-    sendString("\"></td></tr>\n"
-               "<tr><th align=\"center\" "DARK_BG" colspan=\"2\">For graphs only</th></tr>\n"
-               "<tr><th align=\"left\" "DARK_BG">Legend</th>\n<td align=\"left\">"
-               "<input name=\"counter\" size=\"64\" value=\"\"><br>\n"
-               "This is the 'name' of the counter being displayed, e.g. eth1 Mail bytes. "
-               "It appears at the bottom left as the legend for the colored bars</td></tr>\n"
-               "<tr><th align=\"left\" "DARK_BG">(optional) Title to appear above the graph</th>\n"
-               "<td align=\"left\"><input name=\"title\" size=\"128\" value=\"\"></td></tr>\n"
-               "<tr><td colspan=\"2\" align=\"center\">&nbsp;<br>"
-               "<input type=submit value=\"Make Request\"><br>&nbsp;</td></tr>\n"
-               "</table>\n</form>\n</center>\n");
+  sendString("<hr>\n<p>Also:</p>\n<ul>");
+  for(i=0; rrdExtraPages[i].url != NULL; i++) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+                  "<li><a href=\"/" CONST_PLUGINS_HEADER "%s/%s\">%s</a></li>\n",
+                  rrdPluginInfo->pluginURLname,
+                  rrdExtraPages[i].url,
+                  rrdExtraPages[i].descr);
+    sendString(buf);
   }
+  sendString("</ul>\n");
 
-  printPluginTrailer(NULL,
-                     "<a href=\"http://www.rrdtool.org/\" title=\"rrd home page\">RRDtool</a> "
-                     "was created by "
-                     "<a href=\"http://ee-staff.ethz.ch/~oetiker/\" title=\"Tobi's home page\">"
-                     "Tobi Oetiker</a>");
-
-  printHTMLtrailer();
+  printRRDPluginTrailer();
 }
 
 /* ****************************** */

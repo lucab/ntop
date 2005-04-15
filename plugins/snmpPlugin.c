@@ -213,12 +213,13 @@ static void simplehandlePluginHostCreationDeletion(HostTraffic * el,
 static PluginInfo snmpPluginInfo[] = {
   {
    VERSION,			/* current ntop version */
-   "snmpPlugin",
+   "SNMP",
    "This plugin is used to monitor host traffic using the SNMP protocol.",
-   "0.1",			/* version */
+   "0.1a",			/* version */
    "<a href=mailto:fuscof@cli.di.unipi.it>F.Fusco</a><br><a href=mailto:giardina@cli.di.unipi.it>G.Giardina</a>",
    "snmpPlugin",
    0,				/* Not active by default */
+   ConfigureOnly,
    1,				/* Inactive setup */
    initSnmpFunct,		/* InitFunc */
    termSnmpFunct,		/* TermFunc */
@@ -226,7 +227,8 @@ static PluginInfo snmpPluginInfo[] = {
    handleSnmpHTTPrequest,
    simplehandlePluginHostCreationDeletion,	/* host creation/deletion handle */
    NULL,			/* no capture */
-   NULL				/* no status */
+   NULL,			/* no status */
+   NULL				/* no extra pages */
    }
 };
 

@@ -92,10 +92,11 @@ static PluginInfo netflowPluginInfo[] = {
     "V1/V5/V7/V9 and <A HREF=http://ipfix.doit.wisc.edu/>IPFIX</A> data.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports.<br><em>Remember to <A HREF=/switch.html>switch</A> the reporting NIC.</em>",
-    "3.99", /* version */
+    "3.99a", /* version */
     "<a href=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
+    ConfigureOnly,
     1, /* Inactive setup */
     initNetFlowFunct, /* InitFunc */
     termNetflowFunct, /* TermFunc */
@@ -111,7 +112,8 @@ static PluginInfo netflowPluginInfo[] = {
 #else
     NULL, /* no capture */
 #endif
-    NULL  /* no status */
+    NULL, /* no status */
+    NULL  /* no extra pages */
   }
 };
 

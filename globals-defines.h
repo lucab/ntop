@@ -1202,6 +1202,18 @@
 #define CONST_SSI_MENUHEAD_HTML             "menuHead.html"
 #define CONST_SSI_MENUBODY_HTML             "menuBody.html"
 
+/*
+ * Prevent harvesting...
+ */
+#define CONST_MAILTO_LIST                   "<a href=\"mailto:&#110;&#116;&#111;&#112;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\" title=\"Send email to ntop mailing list\">mailing list</a>"
+#define CONST_MAILTO_LUCA                   "<a href=\"mailto:&#100;&#101;&#114;&#105;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\" title=\"Send email to Luca Deri\">Luca Deri</a>"
+#define CONST_MAILTO_STEFANO                "<a href=\"mailto:&#115;&#116;&#101;&#102;&#097;&#110;&#111;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\" title=\"Send email to Stefano Suin\">Stefano Suin</a>"
+#define CONST_MAILTO_ABDELKADER             "<a href=\"mailto:&#097;&#098;&#100;&#101;&#108;&#107;&#097;&#100;&#101;&#114;&#046;&#108;&#097;&#104;&#109;&#097;&#100;&#105;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\" title=\"Send email to Abdelkader Lahmadi\">Abdelkader Lahmadi</a>"
+#define CONST_MAILTO_OLIVIER                "<a href=\"mailto:&#111;&#108;&#105;&#118;&#105;&#101;&#114;&#046;&#102;&#101;&#115;&#116;&#111;&#114;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\" title=\"Send email to Olivier Festor\">Olivier Festor</a>"
+#define CONST_MAILTO_DINESH                 "<a href=\"mailto:&#100;&#100;&#117;&#116;&#116;&#064;&#099;&#105;&#115;&#099;&#111;&#046;&#099;&#111;&#109;\" title=\"Send email to Dinesh G. Dutt\">>Dinesh G. Dutt</a>"
+#define CONST_MAILTO_BURTON                 "<li><a href=\"mailto:&#098;&#117;&#114;&#116;&#111;&#110;&#064;&#110;&#116;&#111;&#112;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#046;&#099;&#111;&#109;\" title=\"Send email to Burton Strauss\">Burton Strauss</a>"
+
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.
  */

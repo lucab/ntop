@@ -24,6 +24,12 @@
 #include <rrd.h>
 
 /*
+ * Extra pages
+ */
+#define CONST_RRD_STATISTICS_HTML           "statistics.html"
+#define CONST_RRD_ARBGRAPH_HTML             "arbgraph.html"
+
+/*
  * Flags for rrd plugin settings...
  */
 #define FLAG_RRD_DETAIL_LOW                 0

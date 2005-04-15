@@ -498,6 +498,13 @@ static int decodeString(char *bufcoded,
 /* ************************* */
 
 static void ssiMenu_Head() {
+  FlowFilterList *flows = myGlobals.flowsList;
+  short foundAplugin = 0;
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  ExtraPage *ep;
+
+  memset(&buf, 0, sizeof(buf));
+
   sendStringWOssi(
              "<link rel=\"stylesheet\" href=\"/theme.css\" TYPE=\"text/css\">\n"
              "<script language=\"JavaScript\" src=\"/theme.js\"></script>\n"
@@ -589,8 +596,94 @@ static void ssiMenu_Head() {
              "	],\n");
   }
   sendStringWOssi(
-             "	[null,'Admin',null,null,null,\n"
-             "		[null,'Plugins','/" CONST_SHOW_PLUGINS_HTML "',null,null],\n");
+             "	[null,'Utils',null,null,null,\n"
+             "		[null,'Data Dump','/dump.html',null,null],\n"
+             "		[null,'View Log','/" CONST_VIEW_LOG_HTML "',null,null],\n"
+             "		],\n");
+
+  while(flows != NULL) {
+    if((flows->pluginStatus.pluginPtr != NULL) && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)) {
+      if(foundAplugin == 0) {
+        sendStringWOssi(
+               "	[null,'Plugins',null,null,null,\n");
+        foundAplugin = 1;
+      }
+    }
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+                  "		[null,'%s',null,null,null,\n",
+                  flows->pluginStatus.pluginPtr->pluginName);
+    sendStringWOssi(buf);
+
+   
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+                  "				[null,'%sctivate','/" CONST_SHOW_PLUGINS_HTML "?%s=%d',null,null],\n",
+                  flows->pluginStatus.activePlugin ? "Dea" : "A",
+                  flows->pluginStatus.pluginPtr->pluginURLname,
+                  flows->pluginStatus.activePlugin ? 0: 1);
+    sendStringWOssi(buf);
+
+    switch(flows->pluginStatus.pluginPtr->viewConfigureFlag) {
+      case NoViewNoConfigure:
+        break;
+      case ViewOnly:
+        if(flows->pluginStatus.activePlugin) {
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                        "				[null,'View','/" CONST_PLUGINS_HEADER "%s',null,null],\n",
+                        flows->pluginStatus.pluginPtr->pluginURLname);
+          sendStringWOssi(buf);
+        }
+        break;
+      case ConfigureOnly:
+        if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
+           (flows->pluginStatus.activePlugin)) {
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                        "				[null,'Configure','/" CONST_PLUGINS_HEADER "%s',null,null],\n",
+                        flows->pluginStatus.pluginPtr->pluginURLname);
+          sendStringWOssi(buf);
+        }
+        break;
+      default:
+        if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
+           (flows->pluginStatus.activePlugin)) {
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                        "				[null,'View/Configure','/" CONST_PLUGINS_HEADER "%s',null,null],\n",
+                        flows->pluginStatus.pluginPtr->pluginURLname);
+          sendStringWOssi(buf);
+        }
+        break;
+    }
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+                  "				[null,'Describe','/" CONST_SHOW_PLUGINS_HTML "?%s',null,null],\n",
+                  flows->pluginStatus.pluginPtr->pluginURLname);
+    sendStringWOssi(buf);
+
+    ep = flows->pluginStatus.pluginPtr->extraPages;
+    while((ep != NULL) && (ep->url != NULL)) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+                    "				[%s%s%s,'%s','/" CONST_PLUGINS_HEADER "%s/%s',null,null],\n",
+                    ep->icon != NULL ? "'<img src=\"/" : "",
+                    ep->icon != NULL ? ep->icon : "null",
+                    ep->icon != NULL ? "\">'" : "",
+                    ep->descr,
+                    flows->pluginStatus.pluginPtr->pluginURLname,
+                    ep->url);
+      sendStringWOssi(buf);
+      ep++;
+    }
+
+    sendStringWOssi(
+                  "             ],\n");
+    flows = flows->next;
+  }
+  if(foundAplugin != 0)
+    sendStringWOssi(
+             "		[null,'All','/" CONST_SHOW_PLUGINS_HTML "',null,null],\n"
+             "		],\n");
+
+  sendStringWOssi(
+             "	[null,'Admin',null,null,null,\n");
   if(!myGlobals.runningPref.mergeInterfaces)
     sendStringWOssi(
              "		[null,'Switch NIC','/" CONST_SWITCH_NIC_HTML "',null,null],\n");
@@ -604,11 +697,7 @@ static void ssiMenu_Head() {
              "			['<img src=\"/lock.png\">','Protect URLs','/" CONST_SHOW_URLS_HTML "',null,null],\n"
              "		],\n"
              "		['<img src=\"/lock.png\">','Shutdown','/" CONST_SHUTDOWN_NTOP_HTML "',null,null],\n"
-             "	],\n"
-             "	[null,'Utils',null,null,null,\n"
-             "		[null,'Data Dump','/dump.html',null,null],\n"
-             "		[null,'View Log','/" CONST_VIEW_LOG_HTML "',null,null]\n"
-             "		]\n"
+             "	]\n"
              "];\n"
              "--></script>\n");
 }
@@ -649,7 +738,7 @@ static void ssiMenu_Body() {
              "        cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n"
              "-->\n"
              "</script></th>\n"
-             "  <th class=\"leftmenuitem\" align=\"right\">(C) 1998-2005 - <a href=\"mailto:deri@ntop.org\" title=\"Email Luca\">L. Deri</A>&nbsp;&nbsp;</th>\n"
+             "  <th class=\"leftmenuitem\" align=\"right\">(C) 1998-2005 - " CONST_MAILTO_LUCA "&nbsp;&nbsp;</th>\n"
              " </tr>\n"
              "</table>\n"
              "<p>&nbsp;</p>\n");
@@ -1036,8 +1125,8 @@ void printHTMLtrailer(void) {
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
-		"Generated by <a href=\"http://www.ntop.org/\">ntop</a> v.%s %s \n[%s]<br>"
-		"Build: %s.\n",
+		"Generated by <a href=\"http://www.ntop.org/\">ntop</a> v.%s %s \n[%s]"
+                "&copy; 1998-2005 by " CONST_MAILTO_LUCA ", built: %s.<br>\n",
 		version, THREAD_MODE, osName, buildDate);
   sendString(buf);
 
@@ -1090,20 +1179,23 @@ void printHTMLtrailer(void) {
   if ((myGlobals.runningPref.currentFilterExpression != NULL) &&
       (*myGlobals.runningPref.currentFilterExpression != '\0')) {
     safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER-len,
-		"with kernel (libpcap) filtering expression </b>\"%s\"<b>\n",
+		"with kernel (libpcap) filtering expression </b>\"%s\"<b><br>\n",
 		myGlobals.runningPref.currentFilterExpression);
   } else {
     safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER-len,
-		"without a kernel (libpcap) filtering expression\n");
+		"for all packets (i.e. without a filtering expression)\n<br>");
   }
 
   sendString(buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<br>Web report active on interface %s",
-		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-  sendString(buf);
+  if(!myGlobals.runningPref.mergeInterfaces) {
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Web reports include only interface \"%s\"",
+                  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+    sendString(buf);
+  } else {
+    sendString("Web reports include all interfaces (merged)");
+  }
 
-  sendString("<br>\n&copy; 1998-2005 by <a href=\"mailto:&#100;&#101;&#114;&#105;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\">Luca Deri</a>\n");
   sendString("</b></font></h5>\n</BODY>\n</HTML>\n");
 }
 
@@ -1818,7 +1910,7 @@ static int generateNewInternalPages(char* pageName) {
       sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
       sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
       sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
-      sendString("<A HREF=\"mailto:&#110;&#116;&#111;&#112;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"> mailing list</A>.</p>\n");
+      sendString(CONST_MAILTO_LIST ".</p>\n");
       sendString("<p>For information on <b>ntop</b> and information privacy, see ");
       sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
       return 0;
@@ -2012,7 +2104,7 @@ int generateNew1InternalPages(char* pageName) {
       sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
       sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
       sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
-      sendString("<A HREF=\"mailto:&#110;&#116;&#111;&#112;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"> mailing list</A>.</p>\n");
+      sendString(CONST_MAILTO_LIST ".</p>\n");
       sendString("<p>For information on <b>ntop</b> and information privacy, see ");
       sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
       return 0;
@@ -3122,18 +3214,11 @@ static int returnHTTPPage(char* pageName,
 	/* Addresses are blinded to prevent easy spam harvest -
 	 *   see http://www.wbwip.com/wbw/emailencoder.html
 	 */
-	sendString("<ul><li><a href=\"mailto:&#115;&#116;&#101;&#102;&#097;&#110;&#111;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"");
-	sendString(" title=\"Send mail to Stefano\">Stefano Suin</a> ");
-	sendString("has contributed several ideas and comments</li>");
-	sendString("<li><a href=\"mailto:&#097;&#098;&#100;&#101;&#108;&#107;&#097;&#100;&#101;&#114;&#046;&#108;&#097;&#104;&#109;&#097;&#100;&#105;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\"");
-	sendString(" title=\"Send mail to Abdelkader\">Abdelkader Lahmadi</a>");
-	sendString(" and <a href=\"mailto:&#111;&#108;&#105;&#118;&#105;&#101;&#114;&#046;&#102;&#101;&#115;&#116;&#111;&#114;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\"");
-	sendString(" title=\"Send mail to Olivier\">Olivier Festor</a> provided IPv6 support</li>");
-	sendString("<li><a href=\"mailto:&#100;&#100;&#117;&#116;&#116;&#064;&#099;&#105;&#115;&#099;&#111;&#046;&#099;&#111;&#109;\"");
-	sendString(" title=\"Send mail to Dinesh\">Dinesh G. Dutt</a> for SCSI & FiberChannel support</li>");
-	sendString("<li><a href=\"mailto:&#098;&#117;&#114;&#116;&#111;&#110;&#064;&#110;&#116;&#111;&#112;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#046;&#099;&#111;&#109;\"");
-	sendString(" title=\"Send mail to Burton\">Burton Strauss</a> ");
-	sendString("the ntop factotum (user support, bug fixing, testing, packaging).</li></ul>");
+
+	sendString("<ul><li>" CONST_MAILTO_STEFANO " has contributed several ideas and comments</li>");
+	sendString("<li>" CONST_MAILTO_ABDELKADER " and " CONST_MAILTO_OLIVIER " provided IPv6 support</li>");
+	sendString("<li>" CONST_MAILTO_DINESH " for SCSI & FiberChannel support</li>");
+	sendString("<li>" CONST_MAILTO_BURTON " the ntop factotum (user support, bug fixing, testing, packaging).</li></ul>");
 	sendString("<p>In addition, many other people downloaded this program, tested it,");
 	sendString("joined the <a href=\"http://lists.ntop.org/mailman/listinfo/ntop\"");
 	sendString(" title=\"ntop mailing list signup page\">ntop</a> ");

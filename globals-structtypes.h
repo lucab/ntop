@@ -1614,6 +1614,20 @@ typedef void(*PluginFunct)(u_char *_deviceId, const struct pcap_pkthdr *h, const
 typedef void(*PluginHTTPFunct)(char* url);
 typedef void(*PluginCreateDeleteFunct)(HostTraffic*, u_short, u_char);
 
+typedef struct extraPage {
+  /* url and description of extra page (if any) for a plugin */
+  char *icon;
+  char *url;
+  char *descr;
+} ExtraPage;
+
+typedef enum {
+  NoViewNoConfigure = 0,
+  ViewOnly,
+  ConfigureOnly,
+  ViewConfigure
+} PluginViewConfigure;
+
 typedef struct pluginInfo {
   /* Plugin Info */
   char *pluginNtopVersion;   /* Version of ntop for which the plugin was compiled */
@@ -1623,6 +1637,7 @@ typedef struct pluginInfo {
   char *pluginAuthor;
   char *pluginURLname;       /* Set it to NULL if the plugin doesn't speak HTTP */
   char activeByDefault;      /* Set it to 1 if this plugin is active by default */
+  PluginViewConfigure viewConfigureFlag;
   char inactiveSetup;        /* Set it to 1 if this plugin can be called inactive for setup */
   IntFunct startFunct;
   VoidFunct termFunct;
@@ -1632,6 +1647,7 @@ typedef struct pluginInfo {
   char* bpfFilter;           /* BPF filter for selecting packets that
 				will be routed to the plugin */
   char *pluginStatusMessage;
+  ExtraPage *extraPages;     /* other pages this responds to */
 } PluginInfo;
 
 typedef struct pluginStatus {

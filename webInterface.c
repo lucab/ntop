@@ -202,17 +202,20 @@ void showPluginsList(char* pluginName) {
 
 	storePrefsValue(key, newPluginStatus ? "1" : "0");
       }
+    }
 
-      if(!doPrintHeader) {
-	printHTMLheader("Available Plugins", NULL, 0);
- 	sendString("<CENTER>\n"
-		   ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
+    if(!thePlugin || (strcmp(flows->pluginStatus.pluginPtr->pluginURLname, thePlugin) == 0)) {
+
+      if(doPrintHeader == 0) {
+        printHTMLheader(thePlugin == NULL ? "Available Plugins" : thePlugin, NULL, 0);
+        sendString("<CENTER>\n"
+	  	   ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
 		   "<TR "DARK_BG"><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH>\n"
                    "<TH "TH_BG">Description</TH>\n"
 		   "<TH "TH_BG">Version</TH><TH "TH_BG">Author</TH>\n"
 		   "<TH "TH_BG">Active<br>[click to toggle]</TH>"
 		   "</TR>\n");
-	doPrintHeader = 1;
+        doPrintHeader = 1;
       }
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf1, sizeof(tmpBuf1), "<A HREF=\"/plugins/%s\" title=\"Invoke plugin\">%s</A>",
@@ -270,7 +273,7 @@ void showPluginsList(char* pluginName) {
     }
 
     flows = flows->next;
-  }
+  } /* while */
 
   if(!doPrintHeader) {
     printHTMLheader("No Plugins available", NULL, 0);
