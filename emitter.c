@@ -1347,8 +1347,19 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	wrtLlongItm(fDescr, lang, "\t", "upTo1024",myGlobals.device[i].rcvdPktStats.upTo1024, ',', numEntries);
       if(checkFilter(filter, "upTo1518"))
 	wrtLlongItm(fDescr, lang, "\t", "upTo1518",myGlobals.device[i].rcvdPktStats.upTo1518, ',', numEntries);
+#ifdef MAKE_WITH_JUMBO_FRAMES
+      if(checkFilter(filter, "upTo2500"))
+	wrtLlongItm(fDescr, lang, "\t", "upTo2500",myGlobals.device[i].rcvdPktStats.upTo2500, ',', numEntries);
+      if(checkFilter(filter, "upTo6500"))
+	wrtLlongItm(fDescr, lang, "\t", "upTo6500",myGlobals.device[i].rcvdPktStats.upTo6500, ',', numEntries);
+      if(checkFilter(filter, "upTo9000"))
+	wrtLlongItm(fDescr, lang, "\t", "upTo9000",myGlobals.device[i].rcvdPktStats.upTo9000, ',', numEntries);
+      if(checkFilter(filter, "above9000"))
+	wrtLlongItm(fDescr, lang, "\t", "above9000",myGlobals.device[i].rcvdPktStats.above9000, ',', numEntries);
+#else
       if(checkFilter(filter, "above1518"))
 	wrtLlongItm(fDescr, lang, "\t", "above1518",myGlobals.device[i].rcvdPktStats.above1518, ',', numEntries);
+#endif
       if(checkFilter(filter, "shortest"))
 	wrtLlongItm(fDescr, lang, "\t", "shortest",myGlobals.device[i].rcvdPktStats.shortest, ',', numEntries);
       if(checkFilter(filter, "longest"))

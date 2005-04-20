@@ -658,6 +658,9 @@
 /* Define for internationalization */
 #undef MAKE_WITH_I18N
 
+/* Define for Jumbo (9k) Ethernet Frames */
+#undef MAKE_WITH_JUMBO_FRAMES
+
 /* SNMP is available */
 #undef MAKE_WITH_SNMP
 

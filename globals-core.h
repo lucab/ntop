@@ -111,6 +111,7 @@ extern int getDynamicLoadPaths(char *main, int mainLen, char *lib, int libLen, c
 /****** function declarations ***** */
 
 /* globals-core.c */
+extern void extend8021Qmtu(void);
 extern void initNtopGlobals(int argc, char * argv[], int argc_started, char * argv_started[]);
 extern void initNtop(char *devices);
 

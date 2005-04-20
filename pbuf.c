@@ -772,13 +772,13 @@ void updateHostName(HostTraffic *el) {
 /* ************************************ */
 
 static void updateDevicePacketTTLStats(u_int ttl, int actualDeviceId) {
-  if(ttl < 32)       incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo32, 1);
-  else if(ttl < 64)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo64, 1);
-  else if(ttl < 96)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo96, 1);
-  else if(ttl < 128) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo128, 1);
-  else if(ttl < 160) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo160, 1);
-  else if(ttl < 192) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo192, 1);
-  else if(ttl < 224) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo224, 1);
+  if(ttl <= 32)       incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo32, 1);
+  else if(ttl <= 64)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo64, 1);
+  else if(ttl <= 96)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo96, 1);
+  else if(ttl <= 128) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo128, 1);
+  else if(ttl <= 160) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo160, 1);
+  else if(ttl <= 192) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo192, 1);
+  else if(ttl <= 224) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo224, 1);
   else               incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo255, 1);
 }
 
@@ -2565,13 +2565,20 @@ static void addNonIpTrafficInfo(HostTraffic *el, u_int16_t proto,
 /* ************************************ */
 
 void updateDevicePacketStats(u_int length, int actualDeviceId) {
-  if(length < 64)        incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo64, 1);
-  else if(length < 128)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo128, 1);
-  else if(length < 256)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo256, 1);
-  else if(length < 512)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo512, 1);
-  else if(length < 1024) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo1024, 1);
-  else if(length < 1518) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo1518, 1);
+  if(length <= 64)        incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo64, 1);
+  else if(length <= 128)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo128, 1);
+  else if(length <= 256)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo256, 1);
+  else if(length <= 512)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo512, 1);
+  else if(length <= 1024) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo1024, 1);
+  else if(length <= 1518) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo1518, 1);
+#ifdef MAKE_WITH_JUMBO_FRAMES
+  else if(length <= 2500) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo2500, 1);
+  else if(length <= 6500) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo6500, 1);
+  else if(length <= 9000) incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo9000, 1);
+  else                   incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.above9000, 1);
+#else
   else                   incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.above1518, 1);
+#endif
 
   if((myGlobals.device[actualDeviceId].rcvdPktStats.shortest.value == 0)
      || (myGlobals.device[actualDeviceId].rcvdPktStats.shortest.value > length))
@@ -2892,6 +2899,18 @@ void processPacket(u_char *_deviceId,
 #endif
 	eth_type = ntohs(qType.protoType);
 	hlen += 4; /* Skip the 802.1q header */
+
+        if(myGlobals.device[deviceId].hasVLANs != TRUE) {
+          myGlobals.device[deviceId].hasVLANs = TRUE;
+#ifndef MAKE_WITH_JUMBO_FRAMES
+          traceEvent(CONST_TRACE_NOISY,
+                     "Device %s(%d) MTU adjusted for 802.1q VLAN",
+                     myGlobals.device[deviceId].name,
+                     deviceId);
+          extend8021Qmtu();
+          myGlobals.device[deviceId].rcvdPktStats.tooLong.value = 0l;
+#endif
+        }
       } else if((ether_dst[0] == 0x01)    && (ether_dst[1] == 0x00)
 		&& (ether_dst[2] == 0x0C) && (ether_dst[3] == 0x00)
 		&& (ether_dst[4] == 0x00) && (ether_dst[5] == 0x00)) {

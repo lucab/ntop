@@ -807,48 +807,79 @@ void printTrafficStatistics(int revertOrder) {
 					    rcvdPktStats.longest.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;64&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;=&nbsp;64&nbsp;bytes</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo64.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;128&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">64&nbsp;to&nbsp;128&nbsp;bytes</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo128.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;256&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">129&nbsp;to&nbsp;256&nbsp;bytes</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo256.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;512&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">257&nbsp;to&nbsp;512&nbsp;bytes</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo512.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;1024&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">513&nbsp;to&nbsp;1024&nbsp;bytes</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo1024.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;&nbsp;1518&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">1025&nbsp;to&nbsp;1518&nbsp;bytes</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo1518.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
+
+#ifdef MAKE_WITH_JUMBO_FRAMES
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">1519&nbsp;to&nbsp;2500&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.upTo2500.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo2500.value, formatBuf, sizeof(formatBuf)));
+      sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">2501&nbsp;to&nbsp;6500&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.upTo6500.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo6500.value, formatBuf, sizeof(formatBuf)));
+      sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">6501&nbsp;to&nbsp;9000&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.upTo9000.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo9000.value, formatBuf, sizeof(formatBuf)));
+      sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&gt;&nbsp;9000&nbsp;bytes</th>"
+		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+					 rcvdPktStats.above9000.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above9000.value, formatBuf, sizeof(formatBuf)));
+      sendString(buf);
+#else
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&gt;&nbsp;1518&nbsp;bytes</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
@@ -856,6 +887,7 @@ void printTrafficStatistics(int revertOrder) {
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
+#endif /* MAKE_WITH_JUMBO_FRAMES */
 
 #ifndef EMBEDDED
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
@@ -1112,7 +1144,7 @@ void printTrafficStatistics(int revertOrder) {
 		    "<TD "TD_BG" align=right COLSPAN=2>%d</td></TR>\n",
 		    getRowColor(), avgPktTTL);
 	sendString(buf);
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">TTL &lt; 32</th>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">TTL &lt;= 32</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo32.value)/
@@ -1120,7 +1152,7 @@ void printTrafficStatistics(int revertOrder) {
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value,
 			       formatBuf, sizeof(formatBuf)));
 	sendString(buf);
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">32 &lt; TTL &lt; 64</th>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">32 &lt; TTL &lt;= 64</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo64.value)/
@@ -1128,7 +1160,7 @@ void printTrafficStatistics(int revertOrder) {
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value,
 			       formatBuf, sizeof(formatBuf)));
 	sendString(buf);
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">64 &lt; TTL &lt; 96</th>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">64 &lt; TTL &lt;= 96</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo96.value)/
@@ -1136,7 +1168,7 @@ void printTrafficStatistics(int revertOrder) {
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value,
 			       formatBuf, sizeof(formatBuf)));
 	sendString(buf);
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">96 &lt; TTL &lt; 128</th>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">96 &lt; TTL &lt;= 128</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo128.value)/
@@ -1144,7 +1176,7 @@ void printTrafficStatistics(int revertOrder) {
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value,
 			       formatBuf, sizeof(formatBuf)));
 	sendString(buf);
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">128 &lt; TTL &lt; 160</th>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">128 &lt; TTL &lt;= 160</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo160.value)/
@@ -1152,7 +1184,7 @@ void printTrafficStatistics(int revertOrder) {
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value,
 			       formatBuf, sizeof(formatBuf)));
 	sendString(buf);
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">160 &lt; TTL &lt; 192</th>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">160 &lt; TTL &lt;= 192</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo192.value)/
@@ -1160,7 +1192,7 @@ void printTrafficStatistics(int revertOrder) {
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value,
 			       formatBuf, sizeof(formatBuf)));
 	sendString(buf);
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">192 &lt; TTL &lt; 224</th>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">192 &lt; TTL &lt;= 224</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo224.value)/
@@ -1168,7 +1200,7 @@ void printTrafficStatistics(int revertOrder) {
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value,
 			       formatBuf, sizeof(formatBuf)));
 	sendString(buf);
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">224 &lt; TTL &lt; 256</th>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">224 &lt; TTL &lt;= 256</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo255.value)/

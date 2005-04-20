@@ -393,7 +393,12 @@ typedef struct thptEntry {
 
 typedef struct packetStats {
   TrafficCounter upTo64, upTo128, upTo256;
-  TrafficCounter upTo512, upTo1024, upTo1518, above1518;
+  TrafficCounter upTo512, upTo1024, upTo1518;
+#ifdef MAKE_WITH_JUMBO_FRAMES
+  TrafficCounter upTo2500, upTo6500, upTo9000, above9000;
+#else
+  TrafficCounter above1518;
+#endif
   TrafficCounter shortest, longest;
   TrafficCounter badChecksum, tooLong;
 } PacketStats;
@@ -1354,6 +1359,7 @@ typedef struct ntopInterface {
   char virtualDevice;            /* set to 1 for virtual devices (e.g. eth0:1) */
   char activeDevice;             /* Is the interface active (useful for virtual interfaces) */
   char dummyDevice;              /* set to 1 for 'artificial' devices (e.g. sFlow-device) */
+  bool hasVLANs;                 /* Have we seen 802.1q stuff */
   u_int32_t deviceSpeed;         /* Device speed (0 if speed is unknown) */
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */

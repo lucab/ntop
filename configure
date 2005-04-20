@@ -869,6 +869,7 @@ Optional Features:
   --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]
   --disable-snmp              Disable SNMP support [default=disable]
   --enable-i18n               Enable (limited) internationalization [default=disabled]
+  --enable-jumbo-frames       Enable Jumbo (9K) Ethernet frames [default=disabled]
   --disable-ipv6              use IPv6 [default=enabled]
   --enable-showoses           display OS Support information and exit.
   +----------------------------------------------------------------------------+
@@ -4789,7 +4790,7 @@ test x"$silent" = xyes && libtool_flags="$libtool_flags --silent"
 case "$host" in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4792 "configure"' > conftest.$ac_ext
+  echo '#line 4793 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6005,6 +6006,14 @@ if test "${enable_i18n+set}" = set; then
   ac_enable_i18n="yes"
 else
   ac_enable_i18n="no"
+fi;
+
+# Check whether --enable-jumbo-frames or --disable-jumbo-frames was given.
+if test "${enable_jumbo_frames+set}" = set; then
+  enableval="$enable_jumbo_frames"
+  ac_enable_jumbo_frames="yes"
+else
+  ac_enable_jumbo_frames="no"
 fi;
 
 # Check whether --enable-ipv6 or --disable-ipv6 was given.
@@ -11418,6 +11427,19 @@ _ACEOF
     esac
 else
     echo "    ...(Default) Disabled. Request via ./configure command line option --enable-i18n"
+fi
+
+echo
+echo "Jumbo (9k) Ethernet Frames?"
+if test ".$ac_enable_jumbo_frames" = ".yes"; then
+    echo "    ...Requested via ./configure command line option --enable-jumbo-frames."
+
+cat >>confdefs.h <<_ACEOF
+#define MAKE_WITH_JUMBO_FRAMES 1
+_ACEOF
+
+else
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-jumbo-frames."
 fi
 
 echo

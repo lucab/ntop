@@ -1214,44 +1214,67 @@ void pktSizeDistribPie(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "< 64";
+    lbl[num++] = "<= 64";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "< 128";
+    lbl[num++] = "<= 128";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "< 256";
+    lbl[num++] = "<= 256";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "< 512";
+    lbl[num++] = "<= 512";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "< 1024";
+    lbl[num++] = "<= 1024";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "< 1518";
+    lbl[num++] = "<= 1518";
   };
 
+#ifdef MAKE_WITH_JUMBO_FRAMES
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo2500.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo2500.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 2500";
+  };
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo6500.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo6500.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 6500";
+  };
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo9000.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo9000.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "<= 9000";
+  };
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above9000.value > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above9000.value)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
+    lbl[num++] = "> 9000";
+  };
+#else
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
     lbl[num++] = "> 1518";
   };
+#endif
 
 
 #ifndef WIN32
@@ -1296,43 +1319,43 @@ void pktTTLDistribPie(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "< 32";
+    lbl[num++] = "<= 32";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "< 64";
+    lbl[num++] = "<= 64";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "< 96";
+    lbl[num++] = "<= 96";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "< 128";
+    lbl[num++] = "<= 128";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "< 160";
+    lbl[num++] = "<= 160";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "< 192";
+    lbl[num++] = "<= 192";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "< 224";
+    lbl[num++] = "<= 224";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value > 0) {

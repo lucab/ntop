@@ -135,6 +135,15 @@ static void allocateOtherHosts() {
 
 /* ************************************ */
 
+void extend8021Qmtu(void) {
+#ifndef MAKE_WITH_JUMBO_FRAMES                                  
+  /* 1500 + 14 bytes header + 4 VLAN */
+  _mtuSize[DLT_EN10MB] = 1500+sizeof(struct ether_header)+4;
+#endif
+}
+
+/* ************************************ */
+
 /*
  * Initialize all global run-time parameters to default (reasonable!!!) values
  */
@@ -405,9 +414,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
        *     of packets as "too long", 2) the suspicious packet file, if one, may have
        *     extra or missing entries, and 3) an erroneous line in the report.
        *
-       *     If headerSize is wrong, the only problem will be in nfsPlugin.c, but this may
-       *     cause problems, as it uses the value to strip off the header so it can analyze
-       *     the nfs packet.
+       *     If headerSize is wrong, there are no known problems.
        *
        *  Remember that for most protocols, mtu isn't fixed - it's set by the routers
        *  and can be tuned by the sysadmin, isp, et al for "best results".
@@ -429,8 +436,12 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   _mtuSize[DLT_NULL] = 8232                                    /* no link-layer encapsulation */;
   _headerSize[DLT_NULL] = CONST_NULL_HDRLEN;
 
+#ifdef MAKE_WITH_JUMBO_FRAMES
+  _mtuSize[DLT_EN10MB] = 9000                                  /* Ethernet (1000Mb+ Jumbo Frames) */;
+#else
       /* 1500 + 14 bytes header Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
   _mtuSize[DLT_EN10MB] = 1500+sizeof(struct ether_header)      /* Ethernet (10Mb) */;
+#endif
   _headerSize[DLT_EN10MB] = sizeof(struct ether_header);
 
   _mtuSize[DLT_PRONET] = 17914                                 /* Proteon ProNET Token Ring */;
