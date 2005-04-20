@@ -1,4 +1,25 @@
 #!/bin/sh
+#  Copyright (c) 2004-2005, Burton M. Strauss III - Burton@ntopsupport.com
+
+# Download the registry data and build an updated p2c table
+
+#  Released under GPL...
+
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#   
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#   
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software Foundation,
+#    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
 echo ""
 echo "Making p2c table..."
 echo ""
@@ -35,6 +56,12 @@ fi
 echo ""
 echo " Retrieving data for ${month} ${year}"
 
+# Temporary - use the official launch day file for April 2005
+if [ "x${year}${month}" = "x200504" ]; then
+  afrinic="ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-20050415"
+else
+  afrinic="ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-${year}${month}01"
+fi
 apnic="ftp://ftp.apnic.net/pub/stats/apnic/delegated-apnic-${year}${month}01"
 arin="ftp://ftp.arin.net/pub/stats/arin/delegated-arin-${year}${month}01"
 lacnic="ftp://ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-${year}${month}01"
@@ -94,6 +121,7 @@ gcc -c -o p2clib.o p2clib.c
 gcc -lm -o prefixtablegen prefixtablegen.c p2clib.o
 gcc -o inetnum2countryalloc inetnum2countryalloc.c p2clib.o
 
+wget -O 1_afrinic.data $afrinic
 wget -O 1_apnic.data $apnic
 wget -O 1_arin.data $arin
 wget -O 1_lacnic.data $lacnic
@@ -125,19 +153,27 @@ echo "  Downloading Cable and Wireless data..."
 echo ""
 wget -O cwdata.data.gz $cwdata
 
-echo ""
-echo "  Processing Cable and Wireless data..."
-echo ""
-zcat cwdata.data.gz | ./inetnum2countryalloc > 3_cwdata.data
+if [ -r cwdata.data.gz ]; then
+  echo ""
+  echo "  Processing Cable and Wireless data..."
+  echo ""
+  zcat cwdata.data.gz | ./inetnum2countryalloc > 3_cwdata.data
+else
+  touch 3_cwdata.data
+fi
 
 echo ""
 echo "  Checking data..."
 echo ""
 err="N"
 for i in `ls *.data`; do
-    if test ! -s ${i} ; then
-        echo "ERROR: $i is empty..."
+    if test ! -r ${i} ; then
+        echo "ERROR: $i is missing..."
         err="Y"
+    else
+      if test ! -s ${i} ; then
+          echo "WARNING: $i is empty...continuing anyway..."
+      fi
     fi
 done
 if test "${err}" = "Y"; then
