@@ -608,60 +608,58 @@ static void ssiMenu_Head() {
                "	[null,'Plugins',null,null,null,\n");
         foundAplugin = 1;
       }
-    }
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
                   "		[null,'%s',null,null,null,\n",
                   flows->pluginStatus.pluginPtr->pluginName);
-    sendStringWOssi(buf);
-
+      sendStringWOssi(buf);
    
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
                   "				[null,'%sctivate','/" CONST_SHOW_PLUGINS_HTML "?%s=%d',null,null],\n",
                   flows->pluginStatus.activePlugin ? "Dea" : "A",
                   flows->pluginStatus.pluginPtr->pluginURLname,
                   flows->pluginStatus.activePlugin ? 0: 1);
-    sendStringWOssi(buf);
+      sendStringWOssi(buf);
 
-    switch(flows->pluginStatus.pluginPtr->viewConfigureFlag) {
-      case NoViewNoConfigure:
-        break;
-      case ViewOnly:
-        if(flows->pluginStatus.activePlugin) {
-          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+      switch(flows->pluginStatus.pluginPtr->viewConfigureFlag) {
+        case NoViewNoConfigure:
+          break;
+        case ViewOnly:
+          if(flows->pluginStatus.activePlugin) {
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                         "				[null,'View','/" CONST_PLUGINS_HEADER "%s',null,null],\n",
                         flows->pluginStatus.pluginPtr->pluginURLname);
-          sendStringWOssi(buf);
-        }
-        break;
-      case ConfigureOnly:
-        if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
-           (flows->pluginStatus.activePlugin)) {
-          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+            sendStringWOssi(buf);
+          }
+          break;
+        case ConfigureOnly:
+          if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
+             (flows->pluginStatus.activePlugin)) {
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                         "				[null,'Configure','/" CONST_PLUGINS_HEADER "%s',null,null],\n",
                         flows->pluginStatus.pluginPtr->pluginURLname);
-          sendStringWOssi(buf);
-        }
-        break;
-      default:
-        if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
-           (flows->pluginStatus.activePlugin)) {
-          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+            sendStringWOssi(buf);
+          }
+          break;
+        default:
+          if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
+             (flows->pluginStatus.activePlugin)) {
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                         "				[null,'View/Configure','/" CONST_PLUGINS_HEADER "%s',null,null],\n",
                         flows->pluginStatus.pluginPtr->pluginURLname);
-          sendStringWOssi(buf);
-        }
-        break;
-    }
+            sendStringWOssi(buf);
+          }
+          break;
+      }
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
                   "				[null,'Describe','/" CONST_SHOW_PLUGINS_HTML "?%s',null,null],\n",
                   flows->pluginStatus.pluginPtr->pluginURLname);
-    sendStringWOssi(buf);
+      sendStringWOssi(buf);
 
-    ep = flows->pluginStatus.pluginPtr->extraPages;
-    while((ep != NULL) && (ep->url != NULL)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      ep = flows->pluginStatus.pluginPtr->extraPages;
+      while((ep != NULL) && (ep->url != NULL)) {
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
                     "				[%s%s%s,'%s','/" CONST_PLUGINS_HEADER "%s/%s',null,null],\n",
                     ep->icon != NULL ? "'<img src=\"/" : "",
                     ep->icon != NULL ? ep->icon : "null",
@@ -669,12 +667,14 @@ static void ssiMenu_Head() {
                     ep->descr,
                     flows->pluginStatus.pluginPtr->pluginURLname,
                     ep->url);
-      sendStringWOssi(buf);
-      ep++;
-    }
+        sendStringWOssi(buf);
+        ep++;
+      }
 
-    sendStringWOssi(
+      sendStringWOssi(
                   "             ],\n");
+    } /* true plugin */
+
     flows = flows->next;
   }
   if(foundAplugin != 0)
