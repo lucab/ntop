@@ -110,7 +110,7 @@ static void statisticsPage(void);
 static void printRRDPluginTrailer(void);
 static void handleRRDHTTPrequest(char* url);
 #ifdef CFG_MULTITHREADED
-static char* spacer(char* str, char *tmpStr);
+static char* spacer(char* str, char *tmpStr, int tmpStrLen);
 
 static int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average);
@@ -557,7 +557,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
     argv[argc++] = buf;
     safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "AREA:ctr#00a000:%s",
-		  spacer(rrdCounter, tmpStr));
+		  spacer(rrdCounter, tmpStr, sizeof(tmpStr)));
     argv[argc++] = buf1;
     argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
@@ -690,7 +690,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
       argv[argc++] = buf[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		  entryId, rrd_colors[entryId], spacer(&rrds[i][3], tmpStr));
+		  entryId, rrd_colors[entryId], spacer(&rrds[i][3], tmpStr, sizeof(tmpStr)));
       argv[argc++] = buf1[entryId];
 
 
@@ -750,9 +750,11 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 
 /* ******************************* */
 
-static char* spacer(char* _str, char *tmpStr) {
+static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
   int len = strlen(_str), i;
   char *str, *token;
+
+  memset(tmpStr, 0, tmpStrLen);
 
   if((len > 3) && (strncmp(_str, "IP_", 3) == 0))
     str = &_str[3], len -= 3;
@@ -939,7 +941,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 		    "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
 		    entryId, rrd_colors[entryId],
-		    spacer(rrds[i], tmpStr));
+		    spacer(rrds[i], tmpStr, sizeof(tmpStr)));
       argv[argc++] = buf1[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf2[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MIN:Min\\: %3.1lf%s");
@@ -975,6 +977,14 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
   addRrdDelay();
+
+  if(0) {
+    int j;
+
+    for(j=0; j<argc; j++)
+      traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
+  }
+
   rc = rrd_graph(argc, argv, &calcpr, &x, &y);
   calfree();
 
