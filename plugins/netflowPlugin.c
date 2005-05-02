@@ -526,24 +526,24 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 
   if((sport != 0) && (dport != 0)) {
     if(dport < sport) {
-      if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId, 1) == -1) {
-	if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId, 1) == -1) {
+      if(handleIP(dport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1) == -1) {
+	if(handleIP(sport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
-	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId, 1);
+	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1);
 	  }
 	}
       }
     } else {
-      if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId, 1) == -1) {
-	if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId, 1) == -1) {
+      if(handleIP(sport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1) == -1) {
+	if(handleIP(dport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
-	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId, 1);
+	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1);
 	  }
 	}
       }

@@ -42,8 +42,14 @@ extern void* perl_destruct();
 extern void* perl_free();
 #endif
 
-static SessionInfo *passiveSessions;
+/* FTP */
+static SessionInfo *passiveSessions = NULL;
 static u_short passiveSessionsLen;
+
+/* VoIP */
+static SessionInfo *voipSessions = NULL;
+static u_short voipSessionsLen;
+
 
 static char *versionSite[]   = {
   CONST_VERSIONCHECK_SITE,
@@ -3434,7 +3440,7 @@ void setNBnodeNameType(HostTraffic *theHost, char nodeType,
 
 /* ******************************************* */
 
-void addPassiveSessionInfo(HostAddr *theHost, u_short thePort) {
+static void addSessionInfo(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost, u_short thePort) {
   int i;
   time_t timeoutTime = myGlobals.actTime - PARM_PASSIVE_SESSION_MINIMUM_IDLE;
 
@@ -3442,48 +3448,63 @@ void addPassiveSessionInfo(HostAddr *theHost, u_short thePort) {
   traceEvent(CONST_TRACE_INFO, "DEBUG: Adding %ld:%d", theHost, thePort);
 #endif
 
-  for(i=0; i<passiveSessionsLen; i++) {
-    if((passiveSessions[i].sessionPort == 0)
-       || (passiveSessions[i].creationTime < timeoutTime)) {
-      addrcpy(&passiveSessions[i].sessionHost,theHost),
-	passiveSessions[i].sessionPort = thePort,
-	passiveSessions[i].creationTime = myGlobals.actTime;
+  for(i=0; i<ptr_len; i++) {
+    if((ptr[i].sessionPort == 0)
+       || (ptr[i].creationTime < timeoutTime)) {
+      /* Autopurge */
+      addrcpy(&ptr[i].sessionHost,theHost),
+	ptr[i].sessionPort = thePort,
+	ptr[i].creationTime = myGlobals.actTime;
       break;
     }
   }
 
-  if(i == passiveSessionsLen) {
+  if(i == ptr_len) {
     /* Slot Not found */
-    traceEvent(CONST_TRACE_INFO, "Info: passiveSessions[size=%d] is full", passiveSessionsLen);
+    traceEvent(CONST_TRACE_INFO, "Info: ptr[size=%d] is full", ptr_len);
 
     /* Shift table entries */
-    for(i=1; i<passiveSessionsLen; i++) {
-      passiveSessions[i-1].sessionHost = passiveSessions[i].sessionHost,
-	passiveSessions[i-1].sessionPort = passiveSessions[i].sessionPort;
+    for(i=1; i<ptr_len; i++) {
+      ptr[i-1].sessionHost = ptr[i].sessionHost,
+	ptr[i-1].sessionPort = ptr[i].sessionPort;
     }
-    addrcpy(&passiveSessions[passiveSessionsLen-1].sessionHost,theHost),
-      passiveSessions[passiveSessionsLen-1].sessionPort = thePort;
+    addrcpy(&ptr[ptr_len-1].sessionHost,theHost),
+      ptr[ptr_len-1].sessionPort = thePort;
   }
 }
 
 /* ******************************************* */
 
-int isPassiveSession(HostAddr *theHost, u_short thePort) {
+void addPassiveSessionInfo(HostAddr *theHost, u_short thePort) {
+  addSessionInfo(passiveSessions, passiveSessionsLen, theHost, thePort);
+}
+
+/* ******************************************* */
+
+void addVoipSessionInfo(HostAddr *theHost, u_short thePort) {
+#ifdef DEBUG_VOIP
+  traceEvent(CONST_TRACE_INFO, "DEBUG: addVoipSessionInfo(%s:%d)", addrtostr(theHost), thePort); 
+#endif
+  addSessionInfo(voipSessions, voipSessionsLen, theHost, thePort);
+}
+
+/* ******************************************* */
+
+static int isKnownSession(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost, u_short thePort) {
   int i;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Searching for %ld:%d",
-	     theHost, thePort);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Searching for %ld:%d", theHost, thePort);
 #endif
 
-  for(i=0; i<passiveSessionsLen; i++) {
-    if((addrcmp(&passiveSessions[i].sessionHost,theHost) == 0)
-       && (passiveSessions[i].sessionPort == thePort)) {
-      addrinit(&passiveSessions[i].sessionHost),
-	passiveSessions[i].sessionPort = 0,
-	passiveSessions[i].creationTime = 0;
+  for(i=0; i<ptr_len; i++) {
+    if((addrcmp(&ptr[i].sessionHost,theHost) == 0)
+       && (ptr[i].sessionPort == thePort)) {
+      addrinit(&ptr[i].sessionHost),
+	ptr[i].sessionPort = 0,
+	ptr[i].creationTime = 0;
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Found passive FTP session");
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Found session");
 #endif
       return(1);
     }
@@ -3494,20 +3515,49 @@ int isPassiveSession(HostAddr *theHost, u_short thePort) {
 
 /* ******************************************* */
 
-void initPassiveSessions(void) {
-  int len;
+int isPassiveSession(HostAddr *theHost, u_short thePort) {
+  return(isKnownSession(passiveSessions, passiveSessionsLen, theHost, thePort));
+}
 
-  len = sizeof(SessionInfo)*MAX_PASSIVE_FTP_SESSION_TRACKER;
-  passiveSessions = (SessionInfo*)malloc(len);
-  memset(passiveSessions, 0, len);
-  passiveSessionsLen = MAX_PASSIVE_FTP_SESSION_TRACKER;
+/* ******************************************* */
+
+int isVoipSession(HostAddr *theHost, u_short thePort) {
+  int rc = isKnownSession(voipSessions, voipSessionsLen, theHost, thePort);
+
+#ifdef DEBUG_VOIP
+  traceEvent(CONST_TRACE_INFO, "DEBUG: isVoipSession(%s:%d)=%d", addrtostr(theHost), thePort, rc); 
+#endif
+  return(rc);
+}
+
+/* ******************************************* */
+
+static void initSessionInfo(SessionInfo **ptr, u_short *ptr_len) {
+  int len = sizeof(SessionInfo)*MAX_PASSIVE_FTP_SESSION_TRACKER;
+  *ptr = (SessionInfo*)malloc(len);
+  memset(*ptr, 0, len);
+  *ptr_len = MAX_PASSIVE_FTP_SESSION_TRACKER;
+}
+
+/* ******************************************* */
+
+void initPassiveSessions(void) {
+  initSessionInfo(&passiveSessions, &passiveSessionsLen);
+  initSessionInfo(&voipSessions, &voipSessionsLen);
 }
 
 /* ******************************* */
 
 void termPassiveSessions(void) {
-  if(myGlobals.runningPref.enableSessionHandling)
+  if(passiveSessions) {
     free(passiveSessions);
+    passiveSessions = NULL;
+  }
+
+  if(voipSessions) {
+    free(voipSessions);
+    voipSessions = NULL;
+  }
 }
 
 /* ******************************* */

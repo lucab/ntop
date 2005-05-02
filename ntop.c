@@ -565,6 +565,7 @@ void addDefaultProtocols(void) {
   handleProtocolList("SNMP",     "snmp|snmp-trap|");
   handleProtocolList("NNTP",     "nntp|");
   handleProtocolList("NFS/AFS",      "mount|pcnfs|bwnfs|nfsd|nfs|nfsd-status|7000-7009");
+  myGlobals.VoipIdx = handleProtocolList("SIP/VoIP", "5060|");
   handleProtocolList("X11",      "6000-6010|");
   /* 22 == ssh (just to make sure the port is defined) */
   handleProtocolList("SSH",      "22|");

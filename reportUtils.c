@@ -3334,6 +3334,7 @@ static void printUserList(HostTraffic *el) {
     if(FD_ISSET(BITFLAG_P2P_USER, &(list->userFlags))) sendString("&nbsp;P2P&nbsp;");
     if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
     if(FD_ISSET(BITFLAG_MESSENGER_USER, &(list->userFlags))) sendString("&nbsp;MSG&nbsp;");
+    if(FD_ISSET(BITFLAG_SIP_USER, &(list->userFlags))) sendString("&nbsp;VoIP&nbsp;");
 
     sendString("]\n");
     list = list->next;
@@ -3352,7 +3353,7 @@ void checkHostProvidedServices(HostTraffic *el) {
      || isPrinter(el)
      || isBridgeHost(el)
      || nameServerHost(el) || isNtpServer(el)
-     || gatewayHost(el)
+     || gatewayHost(el) || isSIPHost(el)
      || isSMTPhost(el) || isIMAPhost(el) || isPOPhost(el)
      || isDirectoryHost(el)
      || isFTPhost(el)
@@ -3374,6 +3375,7 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(nameServerHost(el))     sendString("Name Server&nbsp;" CONST_IMG_DNS_SERVER "<BR>\n");
     if(isNtpServer(el))        sendString("NTP Server&nbsp;" CONST_IMG_NTP_SERVER "<BR>\n");
     if(gatewayHost(el))        sendString("<A HREF="CONST_LOCAL_ROUTERS_LIST_HTML">Gateway/Router</A>&nbsp;" CONST_IMG_ROUTER "<BR>\n");
+    if(isSIPHost(el))          sendString("SIP Host&nbsp;" CONST_IMG_SIP_HOST "<BR>\n");
     if(isSMTPhost(el))         sendString("SMTP (Mail) Server&nbsp;" CONST_IMG_SMTP_SERVER "<BR>\n");
     if(isPOPhost(el))          sendString("POP Server&nbsp;" CONST_IMG_POP_SERVER "<BR>\n");
     if(isIMAPhost(el))         sendString("IMAP Server&nbsp;" CONST_IMG_IMAP_SERVER "<BR>\n");
@@ -4472,7 +4474,7 @@ void printHostsCharacterization(void) {
       if(isPrinter(el)
 	 || isBridgeHost(el)
 	 || nameServerHost(el) || isNtpServer(el)
-	 || gatewayHost(el)
+	 || gatewayHost(el) || isSIPHost(el)
 	 || isSMTPhost(el) || isIMAPhost(el) || isPOPhost(el)
 	 || isDirectoryHost(el)
 	 || isFTPhost(el)
@@ -4483,11 +4485,11 @@ void printHostsCharacterization(void) {
 	 || (isHostHealthy(el) != 0)
 	 ) {
 	if(!headerSent) {
-
 	  sendString("<center>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG">Host</TH>"
 		     "<TH>Unhealthy<br>Host</TH>"
 		     "<TH>L2 Switch<br>Bridge</TH>"
 		     "<TH>Gateway</TH>"
+		     "<TH>SIP Gateway</TH>"
 		     "<TH>Printer</TH>"
 		     "<TH>NTP/DNS<br>Server</TH>"
 		     "<TH>SMTP/POP/IMAP<br>Server</TH>"
@@ -4509,6 +4511,7 @@ void printHostsCharacterization(void) {
 	if(isHostHealthy(el) != 0) { sendString("<TD ALIGN=CENTER>X</TD>"); unhealthy++; } else sendString("<TD>&nbsp;</TD>");
 	if(isBridgeHost(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); a++; } else sendString("<TD>&nbsp;</TD>");
 	if(gatewayHost(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); b++; } else sendString("<TD>&nbsp;</TD>");
+	if(isSIPHost(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); b++; } else sendString("<TD>&nbsp;</TD>");
 	if(isPrinter(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); c++; } else sendString("<TD>&nbsp;</TD>");
 	if(nameServerHost(el) || isNtpServer(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); d++; } else sendString("<TD>&nbsp;</TD>");
 	if(isSMTPhost(el) || isIMAPhost(el) || isPOPhost(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); e++; } else sendString("<TD>&nbsp;</TD>");

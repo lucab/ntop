@@ -1591,6 +1591,7 @@
 #define CONST_IMG_IMAP_SERVER          "" /* No icon, yet */
 #define CONST_IMG_DIRECTORY_SERVER     "" /* No icon, yet */
 #define CONST_IMG_FTP_SERVER           "" /* No icon, yet */
+#define CONST_IMG_SIP_HOST             "<img src=\"/phone.gif\" border=\"0\" alt=\"VoIP (SIP)\" title=\"VoIP (SIP)\">"
 #define CONST_IMG_HTTP_SERVER          "<img src=\"/web.gif\" border=\"0\" alt=\"HTTP Server\" title=\"HTTP Server\">"
 #define CONST_IMG_NTP_SERVER           "<img src=\"/clock.gif\" border=\"0\" alt=\"NTP Server\" title=\"NTP Server\">"
 #define CONST_IMG_HAS_P2P              "<img src=\"/p2p.gif\" border=\"0\" alt=\"P2P Server\" title=\"P2P Server\">"
@@ -1727,6 +1728,8 @@
 #define FLAG_HOST_TYPE_MULTIHOMED           26
 #define FLAG_HOST_TYPE_SVC_NTP_SERVER       27
 #define FLAG_HOST_TYPE_MULTIVLANED          28
+#define FLAG_HOST_TYPE_SVC_SIP_CLIENT       29
+#define FLAG_HOST_TYPE_SVC_SIP_GATEWAY      30
 
 /* Flags for possible error codes */
 #define FLAG_HOST_WRONG_NETMASK             65
@@ -1743,6 +1746,7 @@
 #define BITFLAG_P2P_USER                    4
 #define BITFLAG_FTP_USER                    5
 #define BITFLAG_MESSENGER_USER              6
+#define BITFLAG_SIP_USER                    7
 
 #define BITFLAG_P2P_UPLOAD_MODE             1
 #define BITFLAG_P2P_DOWNLOAD_MODE           2
@@ -1761,6 +1765,7 @@
 #define FLAG_P2P_FASTTRACK                  6
 #define FLAG_P2P_BITTORRENT                 7
 #define FLAG_P2P_OTHER_PROTOCOL             8
+#define FLAG_VOIP                           9
 
 #define UNKNOWN_P2P_FILE                    "&lt;unknown&nbsp;file&gt;"
 
@@ -2734,6 +2739,7 @@ struct ip6_hdr
 #define IP_TCP_PORT_MSMSGR         1863
 #define IP_TCP_PORT_NTOP           3000
 #define IP_TCP_PORT_SQUID          3128
+#define IP_UDP_PORT_SIP            5060
 #define IP_TCP_PORT_GNUTELLA1      6346
 #define IP_TCP_PORT_GNUTELLA2      6347
 #define IP_TCP_PORT_GNUTELLA3      6348

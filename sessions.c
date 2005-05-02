@@ -743,6 +743,112 @@ static void handleIMAPSession (const struct pcap_pkthdr *h,
 
 /* *********************************** */
 
+#define SIP_INVITE        "INVITE" /* User Info */
+#define SIP_OK            "SIP/2.0 200 Ok" /* Stream Info */
+
+static void handleSIPSession(const struct pcap_pkthdr *h,
+			     HostTraffic *srcHost, u_short sport,
+			     HostTraffic *dstHost, u_short dport,
+			     u_int packetDataLength, u_char* packetData,
+			     IPSession *theSession, int actualDeviceId) {
+  char *rcStr;
+ 
+  if(packetDataLength > 64) {
+    if((!strncasecmp(packetData, SIP_INVITE, strlen(SIP_INVITE)))
+       || (!strncasecmp(packetData, SIP_OK, strlen(SIP_OK)))) {
+      char *row, *strtokState, *from = NULL, *to = NULL,
+	*server = NULL, *audio = NULL, *video = NULL;
+
+      if((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+	traceEvent(CONST_TRACE_WARNING, "handleSIPSession: Unable to "
+		   "allocate memory, SIP Session handling incomplete\n");
+	return;
+      }
+
+      memcpy(rcStr, packetData, packetDataLength);
+      rcStr[packetDataLength-1] = '\0';
+
+      if(0) {
+	traceEvent(CONST_TRACE_WARNING, "-------------------------");
+	traceEvent(CONST_TRACE_WARNING, rcStr);
+	traceEvent(CONST_TRACE_WARNING, "-------------------------");
+      }
+
+      row = strtok_r((char*)rcStr, "\r\n", &strtokState);
+      while(row != NULL) {
+	if((from == NULL)
+	   && ((!strncmp(row, "From: ", 6))  || (!strncmp(row, "f: ", 3)))) {
+	  from = row;
+	} else if((to == NULL)
+		  && ((!strncmp(row, "To: ", 4)) || (!strncmp(row, "t: ", 3)))) {
+	  to = row;
+	} else if((server == NULL) && (!strncmp(row, "Server: ", 8))) {
+	  server = row;
+	} else if((audio == NULL) && (!strncmp(row, "m=audio ", 8))) {
+	  audio = row;
+	} else if((video == NULL) && (!strncmp(row, "m=video ", 8))) {
+	  video = row;
+	}
+
+	row = strtok_r(NULL, "\r\n", &strtokState);
+      }
+
+      if(server) {
+	strtok_r(server, ":", &strtokState);
+	server = strtok_r(NULL, ":", &strtokState);
+#ifdef SIP_DEBUG
+	traceEvent (CONST_TRACE_WARNING, "Server '%s'", server);
+#endif
+      }
+
+      if(audio) {
+	strtok_r(audio, " ", &strtokState);
+	audio = strtok_r(NULL, " ", &strtokState);
+#ifdef SIP_DEBUG
+	traceEvent (CONST_TRACE_WARNING, "RTP '%s:%s'", srcHost->hostNumIpAddress, audio);
+#endif
+	/* FIX: we need to handle IPv6 at some point */
+	addVoipSessionInfo(&srcHost->hostIpAddress, atoi(audio));
+      }
+
+      if(video) {
+	strtok_r(video, " ", &strtokState);
+	video = strtok_r(NULL, " ", &strtokState);
+#ifdef SIP_DEBUG
+	traceEvent (CONST_TRACE_WARNING, "RTP '%s:%s'", srcHost->hostNumIpAddress, video);
+#endif
+	/* FIX: we need to handle IPv6 at some point */
+	addVoipSessionInfo(&srcHost->hostIpAddress, atoi(video));
+      }
+
+      if(from && to && (!strncasecmp(packetData, SIP_INVITE, strlen(SIP_INVITE)))) {
+	strtok_r(from, ":", &strtokState);
+	strtok_r(NULL, ":\"", &strtokState);
+	from = strtok_r(NULL, "\"@>", &strtokState);
+
+	strtok_r(to, ":", &strtokState);
+	strtok_r(NULL, "\":", &strtokState);
+	to = strtok_r(NULL, "\"@>", &strtokState);
+
+#ifdef SIP_DEBUG
+	traceEvent (CONST_TRACE_WARNING, "'%s'->'%s'", from, to);
+#endif
+	updateHostUsers(from, BITFLAG_SIP_USER, srcHost);	
+	updateHostUsers(to, BITFLAG_SIP_USER, dstHost);
+      }
+
+      if(server != NULL) 
+	FD_SET(FLAG_HOST_TYPE_SVC_SIP_GATEWAY, &srcHost->flags);
+      else
+	FD_SET(FLAG_HOST_TYPE_SVC_SIP_CLIENT, &srcHost->flags);
+
+      free(rcStr);
+    }
+  }
+}
+
+/* *********************************** */
+
 static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
                                   HostTraffic *srcHost, u_short sport,
                                   HostTraffic *dstHost, u_short dport,
@@ -1611,8 +1717,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #endif
 
     (*newSession) = 1; /* This is a new session */
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.totalFlows, 
-			    2 /* 2 x monodirectional flows */);  
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.totalFlows,
+			    2 /* 2 x monodirectional flows */);
 
     if(myGlobals.device[actualDeviceId].numTcpSessions >= myGlobals.runningPref.maxNumSessions) {
       static char messageShown = 0;
@@ -1682,6 +1788,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     theSession->sport = sport;
     theSession->dport = dport;
     theSession->passiveFtpSession = isPassiveSession(&dstHost->hostIpAddress, dport);
+    theSession->voipSession       = isVoipSession(&srcHost->hostIpAddress, sport)
+      || isVoipSession(&dstHost->hostIpAddress, dport);
     theSession->firstSeen = myGlobals.actTime;
     flowDirection = FLAG_CLIENT_TO_SERVER;
   }
@@ -1925,8 +2033,12 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	traceEvent(CONST_TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",
 		   inet_addr(tmpStr), a, b, c, d, (e*256+f));
 #endif
-	/*addPassiveSessionInfo(htonl((unsigned long)inet_addr(tmpStr)), (e*256+f));*/
+	addPassiveSessionInfo(&srcHost->hostIpAddress, (e*256+f));
       }
+    } else if((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)) {
+      handleSIPSession(h, srcHost, sport, dstHost, dport,
+		       packetDataLength, packetData, theSession,
+		       actualDeviceId);
     }
   } /* len > 0 */
 
@@ -2250,7 +2362,7 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
 			     int actualDeviceId, u_short *newSession) {
   /*
   IPSession tmpSession;
-  
+
   memset(&tmpSession, 0, sizeof(IPSession));
   tmpSession.lastSeen = myGlobals.actTime;
   tmpSession.initiator = srcHost, tmpSession.remotePeer = dstHost;
@@ -2273,10 +2385,11 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
                          int actualDeviceId, u_short *newSession) {
   IPSession *theSession = NULL;
   u_short sessionType = 0;
+  struct tcphdr static_tp;
 
   (*newSession) = 0; /* Default */
 
-  if((!myGlobals.runningPref.enableSessionHandling) 
+  if((!myGlobals.runningPref.enableSessionHandling)
      || (myGlobals.device[actualDeviceId].tcpSession == NULL))
     return(NULL);
 
@@ -2301,7 +2414,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
   if(tp == NULL)
     sessionType = IPPROTO_UDP;
   else
-    sessionType = IPPROTO_TCP;  
+    sessionType = IPPROTO_TCP;
 
 #ifdef SESSION_TRACE_DEBUG
   {
@@ -2324,8 +2437,17 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
   }
 #endif
 
-  if(sessionType == IPPROTO_TCP) {
-    theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
+  if((sessionType == IPPROTO_UDP) && (tp == NULL)) {
+    tp = &static_tp;
+    memset(tp, 0, sizeof(struct tcphdr));
+  }
+
+  if((sessionType == IPPROTO_TCP)
+     /* Simulate a TCP connection for the SIP protocol */
+     || (((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)
+	  || ((sport > 1024) && (dport > 1024)) /* Needed for SIP */
+	  ))) {
+     theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
 				   dstHost, dport, length, tp, packetDataLength,
 				   packetData, actualDeviceId, newSession);
   } else if(sessionType == IPPROTO_UDP) {

@@ -147,7 +147,8 @@ static void updateRoutedTraffic(HostTraffic *router) {
 /* ************************************ */
 
 int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
-	     const u_int _length,  u_short isPassiveSess,
+	     const u_int _length, u_short isPassiveSess,
+	     u_short isVoipSess,
 	     u_short p2pSessionIdx, int actualDeviceId, 
 	     u_short newSession) {
   int idx;
@@ -162,6 +163,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
   if(isPassiveSess) {
     /* Emulate non passive session */
     idx = myGlobals.FTPIdx;
+  } else if(isVoipSess) {
+    /* Emulate VoIP session */
+    idx = myGlobals.VoipIdx;
   } else {
     if(p2pSessionIdx) {
       switch(p2pSessionIdx) {
@@ -199,8 +203,8 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
   }
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "port=%d - isPassiveSess=%d - p2pSessionIdx=%d - idx=%d",
-	     port, isPassiveSess, p2pSessionIdx, idx);
+  traceEvent(CONST_TRACE_INFO, "port=%d - isPassiveSess=%d - isVoipSess=%d - p2pSessionIdx=%d - idx=%d",
+	     port, isPassiveSess, isVoipSess, p2pSessionIdx, idx);
 #endif
 
   if(idx != FLAG_NO_PEER) {
@@ -958,6 +962,8 @@ static void processIpPkt(const u_char *bp,
   TrafficCounter ctr;
   ProtocolsList *protoList;
   u_short newSession = 0;
+  IPSession *theSession = NULL;
+  u_short isPassiveSess = 0, nonFullyRemoteSession = 1, isVoipSess = 0;
 
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
@@ -1413,9 +1419,6 @@ static void processIpPkt(const u_char *bp,
       }
 
       if((sport > 0) || (dport > 0)) {
-	IPSession *theSession = NULL;
-	u_short isPassiveSess = 0, nonFullyRemoteSession = 1;
-
 	/* It might be that tcpDataLength is 0 when
 	   the rcvd packet is fragmented and the main
 	   packet has not yet been rcvd */
@@ -1468,9 +1471,11 @@ static void processIpPkt(const u_char *bp,
 				       tcpDataLength,
 				       theData, actualDeviceId, &newSession);
 	  if(theSession == NULL)
-	    isPassiveSess = 0;
-	  else
+	    isPassiveSess = isVoipSess = 0;
+	  else {
 	    isPassiveSess = theSession->passiveFtpSession;
+	    isVoipSess    = theSession->voipSession;
+	  }
 	}
 
 	sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
@@ -1503,18 +1508,18 @@ static void processIpPkt(const u_char *bp,
 	  /* traceEvent(CONST_TRACE_INFO, "[1] sportIdx(%d)=%d - dportIdx(%d)=%d", sport,
 	     sportIdx, dport, dportIdx); */
 
-	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess,
+	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession) == -1)
-	    handleIP(sport, srcHost, dstHost, length, isPassiveSess,
+	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
 		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession);
 	} else {
 	  /*
 	    traceEvent(CONST_TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d",
 	    sport, sportIdx, dport, dportIdx); */
 
-	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess,
+	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession) == -1)
-	    handleIP(dport, srcHost, dstHost, length, isPassiveSess,
+	    handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
 		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession);
 	}
       }
@@ -1704,8 +1709,6 @@ static void processIpPkt(const u_char *bp,
       }
 
       if((sport > 0) || (dport > 0)) {
-	u_short nonFullyRemoteSession = 1;
-
 	updateInterfacePorts(actualDeviceId, sport, dport, length);
 	updateUsedPorts(srcHost, dstHost, sport, dport, udpDataLength);
 
@@ -1748,24 +1751,31 @@ static void processIpPkt(const u_char *bp,
 	  }
 
 
-	if(nonFullyRemoteSession) {
+	if(1 /* nonFullyRemoteSession */) {
             /* There is no session structure returned for UDP sessions */
 #ifdef INET6
 	  if(ip6)
-              handleSession(h, fragmented, 0,
-			    srcHost, sport, dstHost,
-			    dport, ntohs(ip6->ip6_plen), NULL,
-			    udpDataLength,
-			    (u_char*)(bp+hlen+sizeof(struct udphdr)),
-			    actualDeviceId, &newSession);
+	    theSession =  handleSession(h, fragmented, 0,
+					srcHost, sport, dstHost,
+					dport, ntohs(ip6->ip6_plen), NULL,
+					udpDataLength,
+					(u_char*)(bp+hlen+sizeof(struct udphdr)),
+					actualDeviceId, &newSession);
 	  else
 #endif
-              handleSession (h, (off & 0x3fff), 0,
-                             srcHost, sport, dstHost,
-                             dport, ip_len, NULL, udpDataLength,
-                             (u_char*)(bp+hlen+sizeof(struct udphdr)),
-                             actualDeviceId, &newSession);
+	    theSession =  handleSession (h, (off & 0x3fff), 0,
+					 srcHost, sport, dstHost,
+					 dport, ip_len, NULL, udpDataLength,
+					 (u_char*)(bp+hlen+sizeof(struct udphdr)),
+					 actualDeviceId, &newSession);
 	} 
+
+	isPassiveSess = 0;
+
+	if(theSession == NULL)
+	  isVoipSess = 0;
+	else
+	  isVoipSess = theSession->voipSession;	
 
 	newSession = 1; /* Trick to account flows anyway */
 
@@ -1775,11 +1785,11 @@ static void processIpPkt(const u_char *bp,
 	   (BMS 12-2001)
 	*/
         if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId, newSession) == -1)
-	    handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId, newSession);
+	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 0, actualDeviceId, newSession) == -1)
+	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 0, actualDeviceId, newSession);
         } else {
-	  if(handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId, newSession) == -1)
-	    handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId, newSession);
+	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 0, actualDeviceId, newSession) == -1)
+	    handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 0, actualDeviceId, newSession);
         }
       }
     }

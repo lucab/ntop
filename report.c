@@ -3454,7 +3454,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 
   if(!myGlobals.runningPref.enableSessionHandling) {
     if(el != NULL) return;
-    printHTMLheader("Active TCP Sessions", NULL, 0);
+    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
     printNotAvailable("-z or --disable-sessions");
     return;
   }
@@ -3462,7 +3462,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
      (myGlobals.device[actualDeviceId].numTcpSessions == 0)) {
     if(el != NULL) return;
-    printHTMLheader("Active TCP Sessions", NULL, 0);
+    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
     printNoDataYet();
     return;
   }
@@ -3502,9 +3502,9 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 
 	if(printedSessions == 0) {
 	  if(el == NULL)
-	    printHTMLheader("Active TCP Sessions", NULL, 0);
+	    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
 	  else
-	    printSectionTitle("Active TCP Sessions");
+	    printSectionTitle("Active TCP/UDP Sessions");
 
 	  sendString("<CENTER>\n"
                      ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
@@ -3604,8 +3604,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     printFooterHostLink();
   } else {
     if(el == NULL) {
-      printHTMLheader("Active TCP Sessions", NULL, 0);
-      printFlagedWarning("<I>No Active TCP Sessions</I>");
+      printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
+      printFlagedWarning("<I>No Active TCP/UDP Sessions</I>");
     }
   }
 }

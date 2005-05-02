@@ -947,6 +947,7 @@ typedef struct ipSession {
   u_char lastRem2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags             */
   u_char sessionState;              /* actual session state                     */
   u_char  passiveFtpSession;        /* checked if this is a passive FTP session */
+  u_char  voipSession;              /* checked if this is a VoIP session */
   struct ipSession *next;
 } IPSession;
 
@@ -2323,7 +2324,7 @@ typedef struct ntopGlobals {
 #endif
 
   /* Peer2Peer Protocol Indexes */
-  u_short GnutellaIdx, KazaaIdx, WinMXIdx, DirectConnectIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx;
+  u_short GnutellaIdx, KazaaIdx, WinMXIdx, DirectConnectIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, VoipIdx;
 
   /* Hash table collisions - counted during load */
   int ipxsapHashLoadCollisions;

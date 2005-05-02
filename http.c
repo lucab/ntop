@@ -556,7 +556,7 @@ static void ssiMenu_Head() {
              "				[null,'Ports Used','/" CONST_IP_PROTO_USAGE_HTML "',null,null],\n");
   if(myGlobals.runningPref.enableSessionHandling)
     sendStringWOssi(
-             "				[null,'Active TCP Sessions','/" CONST_ACTIVE_TCP_SESSIONS_HTML "',null,null],\n");
+             "				[null,'Active TCP/UDP Sessions','/" CONST_ACTIVE_TCP_SESSIONS_HTML "',null,null],\n");
   sendStringWOssi(
              "				[null,'Host Fingerprint','/" CONST_HOSTS_LOCAL_FINGERPRINT_HTML "',null,null],\n"
              "				[null,'Host Characterization','/" CONST_HOSTS_LOCAL_CHARACT_HTML "',null,null],\n");
