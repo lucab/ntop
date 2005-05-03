@@ -540,10 +540,10 @@ extern char *strtok_r(char *s, const char *delim, char **save_ptr);
 #endif
 extern int getSniffedDNSName(char *hostNumIpAddress, char *name, int maxNameLen);
 extern int strOnlyDigits(const char *s);
-extern void addPassiveSessionInfo(HostAddr *theHost, u_short thePort);
-extern int isPassiveSession(HostAddr *theHost, u_short thePort);
-extern void addVoipSessionInfo(HostAddr *theHost, u_short thePort);
-extern int isVoipSession(HostAddr *theHost, u_short thePort);
+extern void addPassiveSessionInfo(HostAddr *theHost, u_short thePort, char *notes);
+extern int isPassiveSession(HostAddr *theHost, u_short thePort, char **notes);
+extern void addVoIPSessionInfo(HostAddr *theHost, u_short thePort, char *notes);
+extern int isVoIPSession(HostAddr *theHost, u_short thePort, char **notes);
 extern void initPassiveSessions();
 extern void termPassiveSessions();
 extern int getPortByName(ServiceEntry **theSvc, char* portName);
@@ -851,8 +851,9 @@ int getdomainname(char *name, size_t len);
 #define isHTTPhost(a)               ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_HTTP, &(a->flags)))
 #define isWINShost(a)               ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_WINS, &(a->flags)))
 #define isBridgeHost(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_BRIDGE, &(a->flags)))
-#define isSIPHost(a)                ((a != NULL) && (FD_ISSET(FLAG_HOST_TYPE_SVC_SIP_CLIENT, &(a->flags)) \
-                                                     || FD_ISSET(FLAG_HOST_TYPE_SVC_SIP_GATEWAY, &(a->flags))))
+#define isVoIPClient(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, &(a->flags)))
+#define isVoIPGateway(a)            ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, &(a->flags)))
+#define isVoIPHost(a)               (isVoIPClient(a) || isVoIPGateway(a))
 
 						     
 

@@ -1455,7 +1455,7 @@ static void processIpPkt(const u_char *bp,
 	  }
 	}
 
-	if(1 /* nonFullyRemoteSession */) {
+	if(nonFullyRemoteSession) {
 #ifdef INET6
 	  if(ip6)
 	    theSession = handleSession(h, fragmented, tp.th_win,
@@ -1750,8 +1750,7 @@ static void processIpPkt(const u_char *bp,
 	    dumpOtherPacket(actualDeviceId);
 	  }
 
-
-	if(1 /* nonFullyRemoteSession */) {
+	if(nonFullyRemoteSession) {
             /* There is no session structure returned for UDP sessions */
 #ifdef INET6
 	  if(ip6)
@@ -1785,11 +1784,15 @@ static void processIpPkt(const u_char *bp,
 	   (BMS 12-2001)
 	*/
         if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 0, actualDeviceId, newSession) == -1)
-	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 0, actualDeviceId, newSession);
+	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 
+		      0, actualDeviceId, newSession) == -1)
+	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 
+		     0, actualDeviceId, newSession);
         } else {
-	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 0, actualDeviceId, newSession) == -1)
-	    handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 0, actualDeviceId, newSession);
+	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 
+		      0, actualDeviceId, newSession) == -1)
+	    handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess, 
+		     0, actualDeviceId, newSession);
         }
       }
     }

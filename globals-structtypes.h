@@ -948,6 +948,7 @@ typedef struct ipSession {
   u_char sessionState;              /* actual session state                     */
   u_char  passiveFtpSession;        /* checked if this is a passive FTP session */
   u_char  voipSession;              /* checked if this is a VoIP session */
+  char *session_info;               /* Info about this sessio (if any) */
   struct ipSession *next;
 } IPSession;
 
@@ -1673,9 +1674,10 @@ typedef struct flowFilterList {
 } FlowFilterList;
 
 typedef struct sessionInfo {
-  HostAddr sessionHost;
-  u_short sessionPort;
-  time_t  creationTime;
+  HostAddr  sessionHost;
+  u_short   sessionPort;
+  time_t    creationTime;
+  char     *session_info;
 } SessionInfo;
 
 typedef struct hostAddress {

@@ -3516,7 +3516,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		     "<TH "TH_BG">Duration</TH>"
 		     "<TH "TH_BG">Inactive</TH>"
-		     "<TH "TH_BG">Latency</TH>");
+		     "<TH "TH_BG">Latency</TH>"
+		     "<TH "TH_BG">Note</TH>");
 #ifdef PARM_PRINT_ALL_SESSIONS
           sendString("<TH "TH_BG">State</TH>");
 #endif
@@ -3557,6 +3558,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
 		      getRowColor(),
 		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
@@ -3570,7 +3572,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      formatTime(&(session->lastSeen), formatBuf3, sizeof(formatBuf3)),
 		      formatSeconds(session->lastSeen-session->firstSeen, formatBuf4, sizeof(formatBuf4)),
 		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
-		      formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6)));
+		      formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6)),
+		      session->session_info ? session->session_info : "&nbsp;");
 	sendString(buf);
 
 #ifdef PARM_PRINT_ALL_SESSIONS

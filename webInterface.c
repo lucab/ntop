@@ -330,7 +330,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8];
   char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64];
   char *dhcpBootpStr, *p2pStr, *multihomedStr, *multivlanedStr, *gwStr, *brStr, *dnsStr, *printStr,
-       *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr, *sipHostStr;
+       *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr, *voipHostStr;
   short usedEthAddress=0;
   int i;
 
@@ -553,7 +553,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(isMultivlaned(el))     multivlanedStr = "&nbsp;" CONST_IMG_MULTIVLANED ; else multivlanedStr = "";
   if(isBridgeHost(el))     brStr = "&nbsp;" CONST_IMG_BRIDGE ; else brStr = "";
   if(gatewayHost(el))      gwStr = "&nbsp;" CONST_IMG_ROUTER ; else gwStr = "";
-  if(isSIPHost(el))        sipHostStr = "&nbsp;" CONST_IMG_SIP_HOST ; else sipHostStr = "";
+  if(isVoIPHost(el))       voipHostStr = "&nbsp;" CONST_IMG_VOIP_HOST ; else voipHostStr = "";
   if(nameServerHost(el))   dnsStr = "&nbsp;" CONST_IMG_DNS_SERVER ; else dnsStr = "";
   if(isPrinter(el))        printStr = "&nbsp;" CONST_IMG_PRINTER ; else printStr = "";
   if(isSMTPhost(el))       smtpStr = "&nbsp;" CONST_IMG_SMTP_SERVER ; else smtpStr = "";
@@ -653,7 +653,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)),
                 dhcpBootpStr, multihomedStr, multivlanedStr,
 		usedEthAddress ? CONST_IMG_NIC_CARD : "",
-		gwStr, sipHostStr, brStr, dnsStr,
+		gwStr, voipHostStr, brStr, dnsStr,
                 printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
   } else if(mode == FLAG_HOSTLINK_TEXT_LITE_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "/%s%s.html", linkName, vlanStr);
@@ -667,7 +667,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		noteBuf,
 		dhcpBootpStr, multihomedStr, multivlanedStr,
 		usedEthAddress ? CONST_IMG_NIC_CARD : "",
-		gwStr, sipHostStr, brStr, dnsStr,
+		gwStr, voipHostStr, brStr, dnsStr,
 		printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
   }
 

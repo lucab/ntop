@@ -3440,7 +3440,8 @@ void setNBnodeNameType(HostTraffic *theHost, char nodeType,
 
 /* ******************************************* */
 
-static void addSessionInfo(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost, u_short thePort) {
+static void addSessionInfo(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost,
+			   u_short thePort, char *notes) {
   int i;
   time_t timeoutTime = myGlobals.actTime - PARM_PASSIVE_SESSION_MINIMUM_IDLE;
 
@@ -3455,6 +3456,12 @@ static void addSessionInfo(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost,
       addrcpy(&ptr[i].sessionHost,theHost),
 	ptr[i].sessionPort = thePort,
 	ptr[i].creationTime = myGlobals.actTime;
+
+      if(ptr[i].session_info != NULL) free(ptr[i].session_info);
+      if(notes)
+	ptr[i].session_info = strdup(notes);
+      else
+	ptr[i].session_info = NULL;
       break;
     }
   }
@@ -3466,43 +3473,59 @@ static void addSessionInfo(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost,
     /* Shift table entries */
     for(i=1; i<ptr_len; i++) {
       ptr[i-1].sessionHost = ptr[i].sessionHost,
-	ptr[i-1].sessionPort = ptr[i].sessionPort;
+	ptr[i-1].sessionPort = ptr[i].sessionPort,
+	ptr[i-1].session_info = ptr[i].session_info;
     }
-    addrcpy(&ptr[ptr_len-1].sessionHost,theHost),
-      ptr[ptr_len-1].sessionPort = thePort;
+
+    addrcpy(&ptr[ptr_len-1].sessionHost,theHost);
+    ptr[ptr_len-1].sessionPort = thePort;
+
+    if(ptr[ptr_len-1].session_info != NULL) free(ptr[ptr_len-1].session_info);
+    if(notes)
+      ptr[ptr_len-1].session_info = strdup(notes);
+    else
+      ptr[ptr_len-1].session_info = NULL;
   }
 }
 
 /* ******************************************* */
 
-void addPassiveSessionInfo(HostAddr *theHost, u_short thePort) {
-  addSessionInfo(passiveSessions, passiveSessionsLen, theHost, thePort);
+void addPassiveSessionInfo(HostAddr *theHost, u_short thePort, char *notes) {
+  addSessionInfo(passiveSessions, passiveSessionsLen, theHost, thePort, notes);
 }
 
 /* ******************************************* */
 
-void addVoipSessionInfo(HostAddr *theHost, u_short thePort) {
+void addVoIPSessionInfo(HostAddr *theHost, u_short thePort, char *notes) {
 #ifdef DEBUG_VOIP
-  traceEvent(CONST_TRACE_INFO, "DEBUG: addVoipSessionInfo(%s:%d)", addrtostr(theHost), thePort); 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: addVoIPSessionInfo(%s:%d) [%s]", 
+	     addrtostr(theHost), thePort, notes); 
 #endif
-  addSessionInfo(voipSessions, voipSessionsLen, theHost, thePort);
+  addSessionInfo(voipSessions, voipSessionsLen, theHost, thePort, notes);
 }
 
 /* ******************************************* */
 
-static int isKnownSession(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost, u_short thePort) {
+static int isKnownSession(SessionInfo *ptr, u_short ptr_len, 
+			  HostAddr *theHost, u_short thePort, char **notes) {
   int i;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Searching for %ld:%d", theHost, thePort);
 #endif
 
+  (*notes) = NULL;
+
   for(i=0; i<ptr_len; i++) {
     if((addrcmp(&ptr[i].sessionHost,theHost) == 0)
        && (ptr[i].sessionPort == thePort)) {
-      addrinit(&ptr[i].sessionHost),
-	ptr[i].sessionPort = 0,
-	ptr[i].creationTime = 0;
+      addrinit(&ptr[i].sessionHost);
+      ptr[i].sessionPort = 0, ptr[i].creationTime = 0;
+      (*notes) = ptr[i].session_info;
+
+      /* NOTE: this memory will be freed by freeSessionInfo */
+      ptr[i].session_info = NULL;
+
 #ifdef DEBUG
       traceEvent(CONST_TRACE_INFO, "DEBUG: Found session");
 #endif
@@ -3515,14 +3538,14 @@ static int isKnownSession(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost, 
 
 /* ******************************************* */
 
-int isPassiveSession(HostAddr *theHost, u_short thePort) {
-  return(isKnownSession(passiveSessions, passiveSessionsLen, theHost, thePort));
+int isPassiveSession(HostAddr *theHost, u_short thePort, char **notes) {
+  return(isKnownSession(passiveSessions, passiveSessionsLen, theHost, thePort, notes));
 }
 
 /* ******************************************* */
 
-int isVoipSession(HostAddr *theHost, u_short thePort) {
-  int rc = isKnownSession(voipSessions, voipSessionsLen, theHost, thePort);
+int isVoIPSession(HostAddr *theHost, u_short thePort, char **notes) {
+  int rc = isKnownSession(voipSessions, voipSessionsLen, theHost, thePort, notes);
 
 #ifdef DEBUG_VOIP
   traceEvent(CONST_TRACE_INFO, "DEBUG: isVoipSession(%s:%d)=%d", addrtostr(theHost), thePort, rc); 

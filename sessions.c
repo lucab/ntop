@@ -364,6 +364,9 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   if(sessionToPurge->virtualPeerName != NULL)
     free(sessionToPurge->virtualPeerName);
 
+  if(sessionToPurge->session_info != NULL)
+    free(sessionToPurge->session_info);
+
   myGlobals.numTerminatedSessions++;
   myGlobals.device[actualDeviceId].numTcpSessions--;
 
@@ -752,7 +755,7 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
 			     u_int packetDataLength, u_char* packetData,
 			     IPSession *theSession, int actualDeviceId) {
   char *rcStr;
- 
+
   if(packetDataLength > 64) {
     if((!strncasecmp(packetData, SIP_INVITE, strlen(SIP_INVITE)))
        || (!strncasecmp(packetData, SIP_OK, strlen(SIP_OK)))) {
@@ -801,26 +804,6 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
 #endif
       }
 
-      if(audio) {
-	strtok_r(audio, " ", &strtokState);
-	audio = strtok_r(NULL, " ", &strtokState);
-#ifdef SIP_DEBUG
-	traceEvent (CONST_TRACE_WARNING, "RTP '%s:%s'", srcHost->hostNumIpAddress, audio);
-#endif
-	/* FIX: we need to handle IPv6 at some point */
-	addVoipSessionInfo(&srcHost->hostIpAddress, atoi(audio));
-      }
-
-      if(video) {
-	strtok_r(video, " ", &strtokState);
-	video = strtok_r(NULL, " ", &strtokState);
-#ifdef SIP_DEBUG
-	traceEvent (CONST_TRACE_WARNING, "RTP '%s:%s'", srcHost->hostNumIpAddress, video);
-#endif
-	/* FIX: we need to handle IPv6 at some point */
-	addVoipSessionInfo(&srcHost->hostIpAddress, atoi(video));
-      }
-
       if(from && to && (!strncasecmp(packetData, SIP_INVITE, strlen(SIP_INVITE)))) {
 	strtok_r(from, ":", &strtokState);
 	strtok_r(NULL, ":\"", &strtokState);
@@ -833,14 +816,118 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
 #ifdef SIP_DEBUG
 	traceEvent (CONST_TRACE_WARNING, "'%s'->'%s'", from, to);
 #endif
-	updateHostUsers(from, BITFLAG_SIP_USER, srcHost);	
-	updateHostUsers(to, BITFLAG_SIP_USER, dstHost);
+	updateHostUsers(from, BITFLAG_VOIP_USER, srcHost);
+	updateHostUsers(to, BITFLAG_VOIP_USER, dstHost);
+
+	if(theSession->session_info == NULL) {
+	  char tmpStr[256];
+	  
+	  snprintf(tmpStr, sizeof(tmpStr), "%s called %s", from, to);
+	  theSession->session_info = strdup(tmpStr);
+	}	
       }
 
-      if(server != NULL) 
-	FD_SET(FLAG_HOST_TYPE_SVC_SIP_GATEWAY, &srcHost->flags);
+      if(audio) {
+	strtok_r(audio, " ", &strtokState);
+	audio = strtok_r(NULL, " ", &strtokState);
+#ifdef SIP_DEBUG
+	traceEvent (CONST_TRACE_WARNING, "RTP '%s:%s'", srcHost->hostNumIpAddress, audio);
+#endif
+	/* FIX: we need to handle IPv6 at some point */
+	addVoIPSessionInfo(&srcHost->hostIpAddress, atoi(audio), theSession->session_info);
+      }
+
+      if(video) {
+	strtok_r(video, " ", &strtokState);
+	video = strtok_r(NULL, " ", &strtokState);
+#ifdef SIP_DEBUG
+	traceEvent (CONST_TRACE_WARNING, "RTP '%s:%s'", srcHost->hostNumIpAddress, video);
+#endif
+	addVoIPSessionInfo(&srcHost->hostIpAddress, atoi(video), theSession->session_info);
+      }
+
+      if(server != NULL)
+	FD_SET(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, &srcHost->flags);
       else
-	FD_SET(FLAG_HOST_TYPE_SVC_SIP_CLIENT, &srcHost->flags);
+	FD_SET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, &srcHost->flags);
+
+      free(rcStr);
+    }
+  }
+}
+
+/* *********************************** */
+
+static void handleSCCPSession(const struct pcap_pkthdr *h,
+			      HostTraffic *srcHost, u_short sport,
+			      HostTraffic *dstHost, u_short dport,
+			      u_int packetDataLength, u_char* packetData,
+			      IPSession *theSession, int actualDeviceId) {
+  char *rcStr;
+
+  if(packetDataLength > 64) {
+    u_int16_t message_id;
+    /* NOTE: message_id is coded in little endian */
+    memcpy(&message_id, &packetData[8], sizeof(message_id)); 
+#ifdef CFG_BIG_ENDIAN
+    message_id = ntohs(message_id);
+#endif
+
+
+    if((message_id == 0x8F /* CallInfoMessage */)
+    && (packetDataLength > 200)) {
+      char *calling_party_name, *calling_party;
+      char *called_party_name, *called_party;
+      char caller[64], called[64];
+
+      if((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+	traceEvent(CONST_TRACE_WARNING, "handleSCCPSession: Unable to "
+		   "allocate memory, SCCP Session handling incomplete\n");
+	return;
+      }
+
+      memcpy(rcStr, packetData, packetDataLength);
+      rcStr[packetDataLength-1] = '\0';
+
+      calling_party_name = &rcStr[12];
+      calling_party      = &rcStr[12+40];
+      called_party_name = &rcStr[12+40+24];
+      called_party      = &rcStr[12+40+24+40];
+
+#ifdef SCCP_DEBUG
+      traceEvent(CONST_TRACE_WARNING, "SCCP: msg_id='%u'", message_id);
+      traceEvent(CONST_TRACE_WARNING, "SCCP: calling_party_name='%s'", calling_party_name);
+      traceEvent(CONST_TRACE_WARNING, "SCCP: calling_party='%s'", calling_party);
+      traceEvent(CONST_TRACE_WARNING, "SCCP: called_party_name='%s'", called_party_name);
+      traceEvent(CONST_TRACE_WARNING, "SCCP: called_party='%s'", called_party);
+#endif
+
+      if(calling_party_name[0] != '\0')
+	snprintf(caller, sizeof(caller), "%s <%s>", calling_party_name, calling_party);
+      else
+	snprintf(caller, sizeof(caller), "%s", calling_party);
+      
+      if(called_party_name[0] != '\0')
+	snprintf(called, sizeof(called), "%s <%s>", called_party_name, called_party);
+      else
+	snprintf(called, sizeof(called), "%s", called_party);
+
+      if(theSession->session_info == NULL) {
+	char tmpStr[256];
+
+	snprintf(tmpStr, sizeof(tmpStr), "%s called %s", caller, called);
+	theSession->session_info = strdup(tmpStr);
+      }
+
+      if(sport == IP_TCP_PORT_SCCP)
+	addVoIPSessionInfo(&srcHost->hostIpAddress, sport, theSession->session_info);
+      else if(dport == IP_TCP_PORT_SCCP)
+	addVoIPSessionInfo(&dstHost->hostIpAddress, dport, theSession->session_info);
+
+      FD_SET(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, &dstHost->flags);
+      FD_SET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, &srcHost->flags);
+      
+      updateHostUsers(caller, BITFLAG_VOIP_USER, srcHost);
 
       free(rcStr);
     }
@@ -1669,6 +1756,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   HostTraffic *hostToUpdate = NULL;
   u_char *rcStr, tmpStr[256];
   int len = 0;
+  char *pnotes, *snotes, *dnotes;
 
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.tcpSessionsMutex, "handleTCPSession");
@@ -1787,9 +1875,15 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     theSession->initiator->numHostSessions++, theSession->remotePeer->numHostSessions++;
     theSession->sport = sport;
     theSession->dport = dport;
-    theSession->passiveFtpSession = isPassiveSession(&dstHost->hostIpAddress, dport);
-    theSession->voipSession       = isVoipSession(&srcHost->hostIpAddress, sport)
-      || isVoipSession(&dstHost->hostIpAddress, dport);
+    theSession->passiveFtpSession = isPassiveSession(&dstHost->hostIpAddress, dport, &pnotes);
+    theSession->voipSession       = isVoIPSession(&srcHost->hostIpAddress, sport, &snotes)
+      || isVoIPSession(&dstHost->hostIpAddress, dport, &dnotes);
+
+    if(pnotes) theSession->session_info = pnotes;
+    else if(snotes) theSession->session_info = snotes;
+    else if(dnotes) theSession->session_info = dnotes;
+    else theSession->session_info = NULL;
+
     theSession->firstSeen = myGlobals.actTime;
     flowDirection = FLAG_CLIENT_TO_SERVER;
   }
@@ -2027,18 +2121,18 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	} else {
 	  sscanf((char*)&tmpStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
 	}
-	safe_snprintf(__FILE__, __LINE__, (char*)tmpStr, sizeof(tmpStr), "%d.%d.%d.%d", a, b, c, d);
-
-#ifdef FTP_DEBUG
-	traceEvent(CONST_TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",
-		   inet_addr(tmpStr), a, b, c, d, (e*256+f));
-#endif
-	addPassiveSessionInfo(&srcHost->hostIpAddress, (e*256+f));
+	
+	addPassiveSessionInfo(&srcHost->hostIpAddress, (e*256+f), "Passive FTP session");
       }
     } else if((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)) {
       handleSIPSession(h, srcHost, sport, dstHost, dport,
 		       packetDataLength, packetData, theSession,
 		       actualDeviceId);
+    } else if(((sport == IP_TCP_PORT_SCCP) && (dport > 1024))
+	      || ((dport == IP_TCP_PORT_SCCP) && (sport > 1024))) {
+      handleSCCPSession(h, srcHost, sport, dstHost, dport,
+			packetDataLength, packetData, theSession,
+			actualDeviceId);
     }
   } /* len > 0 */
 
@@ -2445,8 +2539,10 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
   if((sessionType == IPPROTO_TCP)
      /* Simulate a TCP connection for the SIP protocol */
      || (((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)
-	  || ((sport > 1024) && (dport > 1024)) /* Needed for SIP */
-	  ))) {
+	  || ((sport > 1024) && (dport > 1024)) /* Needed for SIP */))
+     || (((sport == IP_TCP_PORT_SCCP) && (dport > 1024)
+	  || ((sport > 1024) && (dport == IP_TCP_PORT_SCCP)) /* Needed for SCCP */))
+     ) {
      theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
 				   dstHost, dport, length, tp, packetDataLength,
 				   packetData, actualDeviceId, newSession);
