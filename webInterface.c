@@ -6657,6 +6657,12 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   printFeatureConfigInfo(textPrintFlag, "-w | --http-server", buf);
 
+  if(pref->maxNumHashEntries != DEFAULT_NTOP_MAX_HASH_ENTRIES) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
+                pref->maxNumHashEntries);
+    printFeatureConfigInfo(textPrintFlag, "-x", buf);
+  }
+
   printParameterConfigInfo(textPrintFlag, "-z | --disable-sessions",
                            pref->enableSessionHandling == 1 ? "No" : "Yes",
                            DEFAULT_NTOP_ENABLE_SESSIONHANDLE == 1 ? "No" : "Yes");
@@ -6745,6 +6751,12 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   }
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
 #endif
+
+  if(pref->maxNumHashEntries != DEFAULT_NTOP_MAX_NUM_SESSIONS) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
+                pref->maxNumSessions);
+    printFeatureConfigInfo(textPrintFlag, "-X", buf);
+  }
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
   printParameterConfigInfo(textPrintFlag, "--disable-schedYield",
