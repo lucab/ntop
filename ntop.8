@@ -741,7 +741,7 @@ A flow is a stream of captured packets that match a specified rule. The format i
 .B "<flow-label>='<matching expression>'[,<flow-label>='<matching expression>']"
 
 , where the label is used to symbolically identify the flow specified by the expression. 
-The expression format is specified in the appendix. If an expression is specified, then 
+The expression is a bpf (Berkeley Packet Filter) expression. If an expression is specified, then 
 the information concerning flows can be accessed following the HTML link named 'List NetFlows'.
 
 For instance define two flows with the following expression 
