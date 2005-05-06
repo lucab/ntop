@@ -2242,11 +2242,6 @@ void queuePacket(u_char *_deviceId,
    myGlobals.queueBufferInit = 1;
    memset(&myGlobals.queueBuffer, 0, sizeof(myGlobals.queueBuffer));
  }
- if(myGlobals.processBufferInit == 0) {
-   myGlobals.processBufferCount = 0;
-   myGlobals.processBufferInit = 1;
-   memset(&myGlobals.processBuffer, 0, sizeof(myGlobals.processBuffer));
- }
 #endif
 
   myGlobals.receivedPackets++;
