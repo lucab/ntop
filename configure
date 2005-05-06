@@ -6011,9 +6011,9 @@ fi;
 # Check whether --enable-jumbo-frames or --disable-jumbo-frames was given.
 if test "${enable_jumbo_frames+set}" = set; then
   enableval="$enable_jumbo_frames"
-  ac_enable_jumbo_frames="yes"
+  ac_enable_jumbo-frames="yes"
 else
-  ac_enable_jumbo_frames="no"
+  ac_enable_jumbo-frames="no"
 fi;
 
 # Check whether --enable-ipv6 or --disable-ipv6 was given.
