@@ -820,7 +820,11 @@
  * Note that this is the SIZE of the buffer, the actual # of bytes copied is
  * set by DEFAULT_SNAPLEN.
  */
+#ifdef MAKE_WITH_JUMBO_FRAMES
+#define MAX_PACKET_LEN                      9000
+#else
 #define MAX_PACKET_LEN                      8232
+#endif
 
 /*
  * Maximum number of protocols for graphs - hostIPTrafficDistrib()
