@@ -892,9 +892,12 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
       /* 1st byte */
       if(buffer[displ] == 0) {
+	u_char isOptionTemplate = (u_char)buffer[displ+1];
+
 	/* Template */
 #ifdef DEBUG_FLOWS
-	if(0) traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
+	traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
+	traceEvent(CONST_TRACE_INFO, "Found Template Type: %d", isOptionTemplate);
 #endif
 
 	myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9TemplRcvd++;
@@ -902,77 +905,88 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	if(bufferLen > (displ+sizeof(V9Template))) {
 	  FlowSetV9 *cursor = myGlobals.device[deviceId].netflowGlobals->templates;
 	  u_char found = 0;
-	  u_short len = sizeof(V9Template);
+	  u_short len;
 	  int fieldId;
 
-	  memcpy(&template, &buffer[displ], sizeof(V9Template));
+	  if(!isOptionTemplate) {
+	    len = sizeof(V9Template);
 
-	  template.templateId = ntohs(template.templateId);
-	  template.fieldCount = ntohs(template.fieldCount);
-	  template.flowsetLen = ntohs(template.flowsetLen);
+	    memcpy(&template, &buffer[displ], sizeof(V9Template));
+
+	    template.templateId = ntohs(template.templateId);
+	    template.fieldCount = ntohs(template.fieldCount);
+	    template.flowsetLen = ntohs(template.flowsetLen);
 
 #ifdef DEBUG_FLOWS
-	  if(0)
-	    traceEvent(CONST_TRACE_INFO, "Template [id=%d] fields: %d",
-		       template.templateId, template.fieldCount);
+	    if(1)
+	      traceEvent(CONST_TRACE_INFO, "Template [id=%d] fields: %d",
+			 template.templateId, template.fieldCount);
 #endif
 
-	  /* Check the template before to handle it */
-	  for(fieldId=0; (fieldId<template.fieldCount)
-		&& (len < template.flowsetLen); fieldId++) {
-	    V9FlowSet *set = (V9FlowSet*)&buffer[displ+sizeof(V9Template)+fieldId*sizeof(V9FlowSet)];
+	    /* Check the template before to handle it */
+	    for(fieldId=0; (fieldId < template.fieldCount)
+		  && (len < template.flowsetLen); fieldId++) {
+	      V9FlowSet *set = (V9FlowSet*)&buffer[displ+sizeof(V9Template)+fieldId*sizeof(V9FlowSet)];
 
-	    len += htons(set->flowsetLen);
+	      len += 4; /* Field Type (2) + Field Length (2) */
 #ifdef DEBUG_FLOWS
-	    if(0)
-	      traceEvent(CONST_TRACE_INFO, "[%d] fieldLen=%d/len=%d",
-			 1+fieldId, htons(set->flowsetLen), len);
+	      if(1)
+		traceEvent(CONST_TRACE_INFO, "[%d] fieldLen=%d/len=%d",
+			   1+fieldId, htons(set->flowsetLen), len);
 #endif
-	  }
-
-	  if(len > template.flowsetLen) {
-	    static u_short lastBadTemplate = 0;
-
-	    if(template.templateId != lastBadTemplate) {
-	      traceEvent(CONST_TRACE_WARNING, "Template %d has wrong size [actual=%d/expected=%d]: skipped",
-			 template.templateId, len, template.flowsetLen);
-	      lastBadTemplate = template.templateId;
-	    }
-	    myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9BadTemplRcvd++;
-	  } else {
-	    while(cursor != NULL) {
-	      if(cursor->templateInfo.templateId == template.templateId) {
-		found = 1;
-		break;
-	      } else
-		cursor = cursor->next;
 	    }
 
-	    if(found) {
+	    if(len > template.flowsetLen) {
+	      static u_short lastBadTemplate = 0;
+
+	      if(template.templateId != lastBadTemplate) {
+		traceEvent(CONST_TRACE_WARNING, "Template %d has wrong size [actual=%d/expected=%d]: skipped",
+			   template.templateId, len, template.flowsetLen);
+		lastBadTemplate = template.templateId;
+	      }
+	      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9BadTemplRcvd++;
+	    } else {
+	      while(cursor != NULL) {
+		if(cursor->templateInfo.templateId == template.templateId) {
+		  found = 1;
+		  break;
+		} else
+		  cursor = cursor->next;
+	      }
+
+	      if(found) {
 #ifdef DEBUG_FLOWS
-	      if(0)
 		traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]", template.templateId);
 #endif
 
-	      free(cursor->fields);
-	    } else {
+		free(cursor->fields);
+	      } else {
 #ifdef DEBUG_FLOWS
-	      if(0)
 		traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]", template.templateId);
 #endif
 
-	      cursor = (FlowSetV9*)malloc(sizeof(FlowSetV9));
-	      cursor->next = myGlobals.device[deviceId].netflowGlobals->templates;
-	      myGlobals.device[deviceId].netflowGlobals->templates = cursor;
-	    }
+		cursor = (FlowSetV9*)malloc(sizeof(FlowSetV9));
+		cursor->next = myGlobals.device[deviceId].netflowGlobals->templates;
+		myGlobals.device[deviceId].netflowGlobals->templates = cursor;
+	      }
 
-	    memcpy(&cursor->templateInfo, &buffer[displ], sizeof(V9Template));
-	    cursor->templateInfo.flowsetLen = ntohs(cursor->templateInfo.flowsetLen);
-	    cursor->templateInfo.templateId = ntohs(cursor->templateInfo.templateId);
-	    cursor->templateInfo.fieldCount = ntohs(cursor->templateInfo.fieldCount);
-	    cursor->fields = (V9TemplateField*)malloc(cursor->templateInfo.flowsetLen-sizeof(V9Template));
-	    memcpy(cursor->fields, &buffer[displ+sizeof(V9Template)], cursor->templateInfo.flowsetLen-sizeof(V9Template));
+	      memcpy(&cursor->templateInfo, &buffer[displ], sizeof(V9Template));
+	      cursor->templateInfo.flowsetLen = ntohs(cursor->templateInfo.flowsetLen);
+	      cursor->templateInfo.templateId = ntohs(cursor->templateInfo.templateId);
+	      cursor->templateInfo.fieldCount = ntohs(cursor->templateInfo.fieldCount);
+	      cursor->fields = (V9TemplateField*)malloc(cursor->templateInfo.flowsetLen-sizeof(V9Template));
+	      memcpy(cursor->fields, &buffer[displ+sizeof(V9Template)], cursor->templateInfo.flowsetLen-sizeof(V9Template));
+	    }
+	  } else {
+	    u_short move_ahead;
+
+	    memcpy(&move_ahead, &buffer[displ+2], 2);
+	    template.flowsetLen = ntohs(move_ahead);
 	  }
+
+#ifdef DEBUG_FLOWS
+	  traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes", template.flowsetLen);
+#endif
 
 	  /* Skip template definition */
 	  displ += template.flowsetLen;
@@ -982,8 +996,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	}
       } else {
 #ifdef DEBUG_FLOWS
-	if(0)
-	  traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
+	traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
 #endif
 	foundRecord = 1;
       }
@@ -1016,81 +1029,84 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	    record.dst_as = 0;
 
 #ifdef DEBUG_FLOWS
-	    if(0)
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d", fs.templateId);
+	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d", fs.templateId);
 #endif
 	    displ += sizeof(V9FlowSet);
 
 	    while(displ < fs.flowsetLen) {
-#ifdef DEBUG_FLOWS
-	      if(0)
-		traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow pdu [displ=%d][template=%d]",
-			   displ, fs.templateId);
-#endif
-
 	      /* Defaults */
 	      record.nw_latency_sec = record.nw_latency_usec = htonl(0);
 
 	      for(fieldId=0; fieldId<cursor->templateInfo.fieldCount; fieldId++) {
+
+#ifdef DEBUG_FLOWS
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow field [displ=%d/%d][template=%d][fieldType=%d][field=%d/%d]",
+			 displ, fs.flowsetLen,
+			 fs.templateId, ntohs(fields[fieldId].fieldType),
+			 fieldId, cursor->templateInfo.fieldCount);
+#endif
+
 		switch(ntohs(fields[fieldId].fieldType)) {
 		case 21: /* LAST_SWITCHED */
-		  memcpy(&record.Last, &buffer[displ], 4); displ += 4;
+		  memcpy(&record.Last, &buffer[displ], 4);
 		  break;
 		case 22: /* FIRST SWITCHED */
-		  memcpy(&record.First, &buffer[displ], 4); displ += 4;
+		  memcpy(&record.First, &buffer[displ], 4); 
 		  break;
 		case 1: /* BYTES */
-		  memcpy(&record.dOctets, &buffer[displ], 4); displ += 4;
+		  memcpy(&record.dOctets, &buffer[displ], 4); 
 		  break;
 		case 2: /* PKTS */
-		  memcpy(&record.dPkts, &buffer[displ], 4); displ += 4;
+		  memcpy(&record.dPkts, &buffer[displ], 4); 
 		  break;
 		case 10: /* INPUT SNMP */
-		  memcpy(&record.input, &buffer[displ], 2); displ += 2;
+		  memcpy(&record.input, &buffer[displ], 2); 
 		  break;
 		case 14: /* OUTPUT SNMP */
-		  memcpy(&record.output, &buffer[displ], 2); displ += 2;
+		  memcpy(&record.output, &buffer[displ], 2); 
 		  break;
 		case 8: /* IP_SRC_ADDR */
-		  memcpy(&record.srcaddr, &buffer[displ], 4); displ += 4;
+		  memcpy(&record.srcaddr, &buffer[displ], 4); 
 		  break;
 		case 12: /* IP_DST_ADDR */
-		  memcpy(&record.dstaddr, &buffer[displ], 4); displ += 4;
+		  memcpy(&record.dstaddr, &buffer[displ], 4); 
 		  break;
 		case 4: /* PROT */
-		  memcpy(&record.prot, &buffer[displ], 1); displ += 1;
+		  memcpy(&record.prot, &buffer[displ], 1); 
 		  break;
 		case 5: /* TOS */
-		  memcpy(&record.tos, &buffer[displ], 1); displ += 1;
+		  memcpy(&record.tos, &buffer[displ], 1); 
 		  break;
 		case 7: /* L4_SRC_PORT */
-		  memcpy(&record.srcport, &buffer[displ], 2); displ += 2;
+		  memcpy(&record.srcport, &buffer[displ], 2); 
 		  break;
 		case 11: /* L4_DST_PORT */
-		  memcpy(&record.dstport, &buffer[displ], 2); displ += 2;
+		  memcpy(&record.dstport, &buffer[displ], 2); 
 		  break;
 		case 15: /* IP_NEXT_HOP */
-		  memcpy(&record.nexthop, &buffer[displ], 4); displ += 4;
+		  memcpy(&record.nexthop, &buffer[displ], 4); 
 		  break;
 		case 13: /* DST_MASK */
-		  memcpy(&record.dst_mask, &buffer[displ], 1); displ += 1;
+		  memcpy(&record.dst_mask, &buffer[displ], 1); 
 		  break;
 		case 9: /* SRC_MASK */
-		  memcpy(&record.src_mask, &buffer[displ], 1); displ += 1;
+		  memcpy(&record.src_mask, &buffer[displ], 1); 
 		  break;
 		case 6: /* TCP_FLAGS */
-		  memcpy(&record.tcp_flags, &buffer[displ], 1); displ += 1;
+		  memcpy(&record.tcp_flags, &buffer[displ], 1); 
 		  break;
 		case 17: /* DST_AS */
-		  memcpy(&record.dst_as, &buffer[displ], 2); displ += 2;
+		  memcpy(&record.dst_as, &buffer[displ], 2); 
 		  break;
 		case 92: /* NW_LATENCY_SEC */
-		  memcpy(&record.nw_latency_sec, &buffer[displ], 4); displ += 4;
+		  memcpy(&record.nw_latency_sec, &buffer[displ], 4); 
 		  break;
 		case 93: /* NW_LATENCY_USEC */
-		  memcpy(&record.nw_latency_usec, &buffer[displ], 4); displ += 4;
+		  memcpy(&record.nw_latency_usec, &buffer[displ], 4); 
 		  break;
 		}
+		
+		displ += ntohs(fields[fieldId].fieldLen);
 	      }
 
 	      handleGenericFlow(recordActTime, recordSysUpTime, &record, deviceId);
@@ -1098,10 +1114,11 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	    }
 	  } else {
 #ifdef DEBUG_FLOWS
-	    if(0)
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d", fs.templateId);
+	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d [displ=%d][len=%d]",
+		       fs.templateId, displ, fs.flowsetLen);
 #endif
 	    myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd++;
+	    displ += fs.flowsetLen;
 	  }
 	}
       }
@@ -1115,7 +1132,6 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
 
 #ifdef DEBUG_FLOWS
-    if(0)
       traceEvent(CONST_TRACE_INFO, "dissectFlow(%d flows)", numFlows);
 #endif
 
