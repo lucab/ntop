@@ -46,7 +46,15 @@
 #/*XMLNOTE ...whatever... */
 #  --Is a comment, but one that we are indicating is related to the xml stuff.
 #
-#/*XMLSECTIONBEGIN filename parent prefix */
+#/*XMLSTRUCT structurename [additional vars] */
+#  --Causes both a forward declaration and normal code block to be generated 
+
+#/*XMLDEFINEBEGIN filename */
+#/*XMLDEFINE name value */
+#/*XMLDEFINEEND */
+#  --Creates a file with #define lines
+
+#/*XMLSECTIONBEGIN filename parent prefix extrabufs */
 #  --Causes new file to be created, and to start creating xml statements under
 #    the node [el]parent, pulling data from prefix.whatever
 #
@@ -98,9 +106,19 @@
 #  -- becomes if (test) { ...
 #             }
 #
+#/*XMLSWITCH value */
+#/*XMLCASE value */
+#/*XMLHCTIWS */
+#  -- becomes switch (value) {
+#               case value: ...; break;
+#             }
+#
 #/*XMLINLINE name   
 #   ... source ... with $x variables substituted ...
 #XML*/
+#
+#/*XMLLINKEDLIST type name base link parent
+#   ... follows a linked list creating entries of 'type'
 #
 
 function insert_nodes(value, tag) {
@@ -122,7 +140,7 @@ function process_parent() {
      } else {
          if (debug != "") printf("    /*XMLNOTE Generating node %s, child of root\n", parent)
          printf("/* *via XMLPARENT********************************Assume root* */\n" \
-                "%s%s = newxmlna(GDOME_ELEMENT_NODE, root, \"%s\");\n\n",
+                "%s%s = newxmlna(root, \"%s\");\n\n",
                 indent,
                 parentnodename,
                 parent) >>outputname
@@ -173,9 +191,9 @@ BEGIN {
     type_macroname_conversion["e"]              = "newxml_empty"
     type_macroname_conversion["n"]              = "newxml_simplenumeric"
     type_macroname_conversion["nc"]             = "newxml_namednumeric"
-    type_macroname_conversion["s"]              = "newxml_simplestring"
+    type_macroname_conversion["f"]              = "newxml_simplefloat"
+    type_macroname_conversion["s"]              = "newxml_smartstring"
     type_macroname_conversion["sc"]             = "newxml_namedstring"
-    type_macroname_conversion["si"]             = "newxml_simplestringindex"
     type_macroname_conversion["*"]              = "special-inline-code"
     type_macroname_conversion["SPECIAL1"]       = "special-output-coding"
 
@@ -218,6 +236,25 @@ BEGIN {
 
     system("rm -f /tmp/xmldump[12]")
 
+    printf("/* Created by xmldump.awk\n" \
+           " *\n" \
+           " * part of and licensed the same as ntop, http://www.ntop.org\n" \
+           " *\n" \
+           " * WARNING: Changes made here will be lost the next time this\n" \
+           " * file is recreated, which can happen automatically during\n" \
+           " * a 'make'.\n" \
+           " *\n" \
+           " */\n\n\n") > "xml_s_simple_forward.inc"
+    printf("/* Created by xmldump.awk\n" \
+           " *\n" \
+           " * part of and licensed the same as ntop, http://www.ntop.org\n" \
+           " *\n" \
+           " * WARNING: Changes made here will be lost the next time this\n" \
+           " * file is recreated, which can happen automatically during\n" \
+           " * a 'make'.\n" \
+           " *\n" \
+           " */\n\n\n") > "xml_s_simple.inc"
+
     indent = "    "
     inlineline = 0
 }
@@ -233,6 +270,98 @@ $1 == "/*XMLNOTE" {
      if (debug != "") print "    " $0
      next
 }
+
+
+$1 == "/*XMLSTRUCT" {
+#  --Causes both a forward declaration and normal code block to be generated 
+     if (debug != "") print "    " $0
+
+     structure = $2
+     sname = tolower($2)
+
+     printf("GdomeElement * newxml_%s(GdomeElement * parent,\n" \
+            "                       char * nodename,\n" \
+            "                       %s * input,\n" \
+            "                       char * description);\n\n",
+            sname,
+            structure) >> "xml_s_simple_forward.inc"
+
+     additionalvars = ""
+     for (i=3; i<NF; i++) {
+       additionalvars = additionalvars ", *el" $i
+     }      
+
+     printf("GdomeElement * newxml_%s(GdomeElement * parent,\n" \
+            "                       char * nodename,\n" \
+            "                       %s * input,\n" \
+            "                       char * description) {\n\n" \
+            "    GdomeElement *elWork%s;\n" \
+            "    GdomeException exc;\n\n" \
+            "#if (XMLDUMP_DEBUG >= 3)\n" \
+            "        traceEvent(CONST_TRACE_INFO, \"XMLDUMP_DEBUG: Starting newxml_%s\");\n" \
+            "#endif\n\n" \
+            "    /* Insert the generated block of code */\n" \
+            "        #include \"xml_s_%s.inc\"\n\n" \
+            "#if (XMLDUMP_DEBUG >= 3)\n" \
+            "        traceEvent(CONST_TRACE_INFO, \"XMLDUMP_DEBUG: Ending newxml_%s\");\n" \
+            "#endif\n\n" \
+            "    return elWork;\n" \
+            "}\n\n",
+            sname,
+            structure,
+            additionalvars,
+            sname,
+            sname,
+            sname) >> "xml_s_simple.inc"
+
+     type_macroname_conversion[sname] = "newxml_" sname
+
+     next
+}
+
+$1 == "/*XMLDEFINEBEGIN" {
+     # Handle (close) prior section...
+     if ( (outputname != "") && (outputname != "/dev/null") ) {
+         if (debug != "") printf("    /*XMLNOTE Closing %s */\n", outputname)
+         print "" >>outputname
+         close(outputname)
+     }
+
+     sectionhead=""
+     outputname = $2
+     if (outputname in sections) {
+         if (debug != "") print "    /*XMLNOTE Resuming " outputname " */"
+     } else {
+         sectionhead="y"
+         if (debug != "") print "    /*XMLNOTE Begining " outputname " */"
+         sections[outputname]="Yes"
+         printf("/* Created by xmldump.awk\n" \
+                " *\n" \
+                " * part of and licensed the same as ntop, http://www.ntop.org\n" \
+                " *\n" \
+                " * WARNING: Changes made here will be lost the next time this\n" \
+                " * file is recreated, which can happen automatically during\n" \
+                " * a 'make'.  Y'all been warned, now!\n" \
+                " *\n" \
+                " */\n\n\n") >outputname
+     }
+     next
+}
+
+$1 == "/*XMLDEFINE" {
+  print "#define " $2 " " $3 >>outputname
+  next
+}
+
+$1 == "/*XMLDEFINEEND" {
+     if (outputname != "") {
+         if (debug != "") print "    /*XMLNODE Suspending " outputname " */"
+         print "" >>outputname
+         close(outputname)
+     }
+     outputname = "/dev/null"
+     next
+} 
 
 $1 == "/*XMLSECTIONBEGIN" {
      # Handle (close) prior section...
@@ -268,6 +397,12 @@ $1 == "/*XMLSECTIONBEGIN" {
      prefix     = $4
      process_prefix()
 
+     printf("unsigned char buf[LEN_GENERAL_WORK_BUFFER]") >>outputname
+     for(i=5; i<NF; i++) {
+       printf(",\n             %s[LEN_GENERAL_WORK_BUFFER]", $i) >>outputname
+     }
+     printf(";\n\n") >>outputname
+ 
      if (sectionhead == "y") {
          if (stripedprefix != "myGlobals") {
              printf("    if (%s == NULL) { return NULL; };\n", stripedprefix) >>outputname
@@ -275,6 +410,12 @@ $1 == "/*XMLSECTIONBEGIN" {
          printf("    if (%s == NULL) { return NULL; };\n\n\n", parentnodename) >>outputname
      }
 
+     printf("    memset(&buf, 0, sizeof(buf));\n") >>outputname
+     for(i=5; i<NF; i++) {
+       printf("    memset(&%s, 0, sizeof(%s));\n", $i, $i) >>outputname
+     }
+     printf("\n") >>outputname
+ 
      next
 }
 
@@ -322,6 +463,71 @@ $1 == "/*XMLINLINE" {
      }
      inlinecode_end[inlinename] = inlineline
 }
+
+$1 == "/*XMLLINKEDLIST" {
+     type=$2
+     name=$3
+     base=$4
+     link=$5
+     parent=$6
+     
+     printf("%s{ GdomeElement *llWork;\n" \
+            "%s  int indexLL = 0;\n" \
+            "%s  %s *ptr = myGlobals.%s;\n" \
+            "%s  while (ptr != NULL) {\n" \
+            "%s    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), \"%%d\", indexLL++);\n" \
+            "%s    llWork = newxml(el%s, \"index\", \"value\", buf, \"\");\n" \
+            "%s    newxml_%s(llWork, \"%s\", ptr, \"\");\n" \
+            "%s    ptr = ptr->%s;\n" \
+            "%s} }\n",
+            indent,
+            indent,
+            indent, type, base,
+            indent,
+            indent,
+            indent, parent,
+            indent, tolower(type), type,
+            indent, link,
+            indent) >>outputname
+
+     next
+}
+
+# EXPERIMENTAL
+$1 == "/*XMLPTR" {
+     next
+}
+
+$1 == "/*XMLSET" {
+     next
+}
+
+$1 == "/*XMLWHILE" {
+
+     if (substr($2, 1, 1) == "\"") {
+         compare = $2
+         for (i=3; i<NF; i++) {
+             compare = compare " " $i
+         }  
+         gsub(/\"/, "", compare)
+     } else if ($3 == "*/") {
+         compare = $2 "<" $3
+     } else {
+         compare = $2 " " $3 " " $4
+     } 
+
+     printf("%swhile (%s) {\n", indent, compare) >>outputname
+     indent = indent "\t"
+     next
+}
+
+(($1 == "/*XMLELIHE") || ($1 == "/*XMLELIHE*/")) {
+     indent = substr(indent, 1, length(indent)-1)
+     printf("%s} }\n\n", indent) >>outputname
+     next
+}
+
+#END EXPERIMENTAL 
 
 $1 == "/*XMLFOR" {
 
@@ -379,6 +585,39 @@ $1 == "/*XMLIF" {
      printf("%s}\n\n", indent) >>outputname
      next
 }
+
+$1 == "/*XMLSWITCH" {
+     printf("%sswitch (%s) {\n", indent, $2) >>outputname
+     indent = indent "\t"
+     forceBreak="n"
+     next
+}
+
+(($1 == "/*XMLCASE") || ($1 == "/*XMLCASE*/")) {
+     if(forceBreak == "y") {
+       printf("%s    break;\n", indent) >>outputname
+     }
+     if(tolower($2) == "default") {
+       printf("%s  default:\n", indent) >>outputname
+     } else {
+       printf("%s  case %s:\n", indent, $2) >>outputname
+     }
+     if(tolower($3) == "withnext") {
+       forceBreak="n"
+     } else {
+       forceBreak="y"
+     }
+     next
+}    
+
+(($1 == "/*XMLHCTIWS") || ($1 == "/*XMLHCTIWS*/")) {
+     indent = substr(indent, 1, length(indent)-1)
+     printf("%s}\n\n", indent) >>outputname
+     inCase="n"
+     next
+}
+
+
 
 substr($1, 1, 3) == "#if" {
      print "\n" $0 >>outputname
@@ -529,7 +768,13 @@ $1 == "/*XML" {
      while ((i=index(itemname, "->")) > 0) {
          itemname=substr(itemname, i+2)
      }
+     if ((i=index(itemname, "_")) > 0) {
+         itemname=substr(itemname, i+1)
+     }
      if ((i=index(itemname, "[")) > 0) {
+         itemname=substr(itemname, 1, i-1)
+     }
+     if ((i=index(itemname, "(")) > 0) {
          itemname=substr(itemname, 1, i-1)
      }
      if (debug > "1") { printf("        /*XMLNOTE itemname........'%s' (xml) */\n", itemname) }
@@ -543,6 +788,9 @@ $1 == "/*XML" {
          fieldname=substr(fieldname, i+2)
      }
      while ((i=index(fieldname, "&")) > 0) {
+         fieldname=substr(fieldname, i+1)
+     }
+     while ((i=index(fieldname, "_")) > 0) {
          fieldname=substr(fieldname, i+1)
      }
      if ((i=index(fieldname, "[")) > 0) {
@@ -562,6 +810,12 @@ $1 == "/*XML" {
              itemref= "&" prefix connect item
 #         } else if (prefix == "myGlobals") {
 #             itemref= "&" prefix connect item
+         } else if ( (index(item, ".") > 0) ||
+                     (index(item, "->") > 0) ) {
+             itemref=item
+         } else if ( (index(item, "(") > 0) &&
+                     (index(item, ")") > 0) ) {
+             itemref=item
          } else {
              itemref= prefix connect item
          }
@@ -628,6 +882,10 @@ $1 == "/*XML" {
          format="d"
          if (debug > "1") printf("      /*XMLNOTE format set to %s */\n", format)
      }
+     if ( (typeflag == "f") && (format == "") ) {
+         format="f"
+         if (debug > "1") printf("      /*XMLNOTE format set to %s */\n", format)
+     }
      if (debug > "1") { printf("        /*XMLNOTE macro...........'%s' */\n", macro)
                         printf("        /*XMLNOTE ..appendvalue...'%s' */\n", macroappendvalue)
                         printf("        /*XMLNOTE format..........'%s' */\n", format) }
@@ -636,15 +894,15 @@ $1 == "/*XML" {
          # Since this is dependent on the xmldumpPlugin.c macros, we hardcode their names here...
      buftext=""
      if ( (macro=="newxml_simplenumeric") && (result != "") ) {
-         if (debug != "") printf("      /*XMLNOTE numeric+result - macroname was %s, set to newxml_simplestring */\n", macro)
-         macro="newxml_simplestring"
-         buftext=sprintf("if (snprintf(buf, sizeof(buf), \"%%%s\", %s) < 0) BufferTooShort();", 
+         if (debug != "") printf("      /*XMLNOTE numeric+result - macroname was %s, set to newxml_smartstring */\n", macro)
+         macro="newxml_smartstring"
+         buftext=sprintf("safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), \"%%%s\", %s);", 
                          format, itemref)
          format=""
          itemref="buf"
          typeflag="s"
      } else if ( (macro=="newxml_namednumeric") && (result != "") ) {
-         if (debug != "") printf("      /*XMLNOTE numeric+result - macroname was %s, set to newxml_simplestring */\n", macro)
+         if (debug != "") printf("      /*XMLNOTE numeric+result - macroname was %s, set to newxml_smartstring */\n", macro)
          typeflag="SPECIAL1"
      }
      if (debug > "1") { printf("        /*XMLNOTE macro...........'%s' */\n", macro)
@@ -660,7 +918,7 @@ $1 == "/*XML" {
          if (debug != "") printf("    /*XMLNOTE (auto) generating node %s, child of %s */\n",
                                  childnodename, parentnodename)
          printf("%s/* *****************************************Auto create node** */\n" \
-                "%s%s = newxmlna(GDOME_ELEMENT_NODE, %s, \"%s\");\n", 
+                "%s%s = newxmlna(%s, \"%s\");\n", 
                 indent,
                 indent, 
                 childnodename, 
@@ -738,9 +996,9 @@ $1 == "/*XML" {
      if (typeflag == "SPECIAL1") {
          # Special case for simplenumeric with result
          if (debug != "") printf("    /*XMLNOTE SPECIAL1 */\n")
-         printf("%sif (snprintf(buf, sizeof(buf), \"%%%s\", %s) < 0) BufferTooShort();\n",
+         printf("%ssafe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), \"%%%s\", %s);\n",
                         indent, format, itemref) >> outputname
-         printf("%s%s = newxml(GDOME_ELEMENT_NODE, %s, \"%s\", \n" \
+         printf("%s%s = newxml(%s, \"%s\", \n" \
                 "%s                \"%s\", buf,\n" \
                 "%s                \"description\", %s);\n\n\n",
                 indent, result, childnodename, itemname,
@@ -885,3 +1143,4 @@ END {
     }
     print "xmldump.awk finished!"
 }
+

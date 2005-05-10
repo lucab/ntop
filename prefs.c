@@ -335,6 +335,7 @@ int parseOptions(int argc, char* argv[]) {
 #ifndef WIN32
       stringSanityCheck(optarg, "-i | --interface");
 #endif
+      if(myGlobals.runningPref.devices != NULL) free(myGlobals.runningPref.devices);
       myGlobals.runningPref.devices = strdup(optarg);
       break;
 
@@ -1046,6 +1047,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
       } else {
 	processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
       }
+      free(tmpStr);
     }
     if (value == NULL) {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",

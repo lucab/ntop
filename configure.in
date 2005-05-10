@@ -2128,7 +2128,6 @@ AC_CHECK_FUNCS(isinf, ,
 
 dnl> XML dump (plugin)
 AC_CHECK_HEADERS(glib.h glibconfig.h)
-AC_CHECK_HEADERS(xmlversion.h)
 AC_CHECK_HEADERS(gdome.h)
 
 AC_TYPE_PID_T
@@ -2703,7 +2702,6 @@ dnl> xmldump:
 AC_MSG_CHECKING([for xmldump])
 if test ".${ac_cv_header_glib_h}" = ".yes"            &&
    test ".${ac_cv_header_glibconfig_h}" = ".yes"      &&
-   test ".${ac_cv_header_xmlversion_h}" = ".yes"      &&
    test ".${ac_cv_header_gdome_h}" = ".yes"           &&
    test ".${ac_cv_lib_glib_g_date_julian}" = ".yes"   &&
    test ".${ac_cv_lib_xml2_xmlCheckVersion}" = ".yes" &&
@@ -2717,7 +2715,6 @@ else
     echo "* WARNING:  One or more items required for the xmldump plugin are "
     echo "*           missing:"
     echo "*"
-    echo "*                  xmlversion.h...${ac_cv_header_xmlversion_h}"
     echo "*                  libxml2.so or libxml2.a...${ac_cv_lib_xml2_xmlCheckVersion}"
     echo "*                  gdome.h...${ac_cv_header_gdome_h}"
     echo "*                  libgdome.so or libgdome.a...${ac_cv_lib_gdome_gdome_di_saveDocToFile}"

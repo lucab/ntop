@@ -349,13 +349,13 @@ static int handleProtocolList(char* protoName, char *protocolList) {
 
   if(increment == 1) {
     if(myGlobals.numIpProtosToMonitor == 0)
-      myGlobals.protoIPTrafficInfos = (char**)malloc(sizeof(char*));
+      myGlobals.ipTrafficProtosNames = (char**)malloc(sizeof(char*));
     else
-      myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos,
+      myGlobals.ipTrafficProtosNames = (char**)realloc(myGlobals.ipTrafficProtosNames,
 						      sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
 
     rc = myGlobals.numIpProtosToMonitor;
-    myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
+    myGlobals.ipTrafficProtosNames[myGlobals.numIpProtosToMonitor] = strdup(protoName);
     myGlobals.numIpProtosToMonitor++;
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "%d) %s - %s",
@@ -381,7 +381,7 @@ void addNewIpProtocolToHandle(char* name, u_int16_t id, u_int16_t idAlias) {
     proto = proto->next;
   }
 
-  proto = malloc(sizeof(ProtocolsList));
+  proto = calloc(1, sizeof(ProtocolsList));
   proto->next = myGlobals.ipProtosList;
   proto->protocolName = strdup(name);
   proto->protocolId = id, proto->protocolIdAlias = idAlias;
@@ -649,7 +649,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
              getpid(), pthread_self());
 
   for(;;) {
-    int i;
+    int i, purged=0;
 
     HEARTBEAT(0, "scanIdleLoop(), sleep(60)...", NULL);
     sleep(60 /* do not change */);
@@ -661,7 +661,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
-        if(!myGlobals.runningPref.stickyHosts) purgeIdleHosts(i);
+        if(!myGlobals.runningPref.stickyHosts) purged += purgeIdleHosts(i);
 #if !defined(__FreeBSD__)
 	purgeIpPorts(i);
 #endif
@@ -1128,9 +1128,9 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
-    free(myGlobals.protoIPTrafficInfos[i]);
+    free(myGlobals.ipTrafficProtosNames[i]);
 
-  free(myGlobals.protoIPTrafficInfos);
+  free(myGlobals.ipTrafficProtosNames);
   free(myGlobals.ipPortMapper.theMapper);
 
   if(myGlobals.runningPref.currentFilterExpression != NULL)

@@ -667,7 +667,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 	theAnchor[0] = htmlAnchor1;
       }
       safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d\">%s%s</A></TH>",
-		  theAnchor[0], i+2, myGlobals.protoIPTrafficInfos[i], arrow[0]);
+		  theAnchor[0], i+2, myGlobals.ipTrafficProtosNames[i], arrow[0]);
       sendString(buf);
       soFar++;
     }

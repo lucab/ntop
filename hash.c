@@ -573,7 +573,7 @@ void freeHostInstances(int actualDeviceId) {
 
 /* ************************************ */
 
-void purgeIdleHosts(int actDevice) {
+int purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, numHosts = 0;
   time_t startTime = time(NULL), noSessionPurgeTime, withSessionPurgeTime;
   static time_t lastPurgeTime[MAX_NUM_DEVICES];
@@ -598,13 +598,13 @@ void purgeIdleHosts(int actDevice) {
   gettimeofday(&hiresTimeStart, NULL);
 
   if(startTime < (lastPurgeTime[actDevice]+PARM_HOST_PURGE_INTERVAL))
-    return; /* Too short */
+    return(0); /* Too short */
   else
     lastPurgeTime[actDevice] = startTime;
 
   maxHosts = myGlobals.device[actDevice].hostsno; /* save it as it can change */
-  theFlaggedHosts = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
-  memset(theFlaggedHosts, 0, maxHosts*sizeof(HostTraffic*));
+  myGlobals.piMem = maxHosts*sizeof(HostTraffic*);
+  theFlaggedHosts = (HostTraffic**)calloc(1, myGlobals.piMem);
 
   /* Time used to decide whether a host need to be purged */
   noSessionPurgeTime   = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES;
@@ -741,6 +741,8 @@ void purgeIdleHosts(int actDevice) {
   else
     traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %s: no hosts [out of %d] deleted",
 	       myGlobals.device[actDevice].name, maxHosts);
+
+  return(numFreedBuckets);
 }
 
 /* **************************************************** */
@@ -974,11 +976,10 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
       */
     } else
 #endif
-      {
-	if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL)
-	  return(NULL);
+      {   
+        if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL)
+          return(NULL);
       }
-
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
 

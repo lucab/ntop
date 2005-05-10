@@ -403,7 +403,7 @@ typedef struct packetStats {
   TrafficCounter badChecksum, tooLong;
 } PacketStats;
 
-typedef struct fcpacketStats {
+typedef struct fcPacketStats {
   TrafficCounter upTo36, upTo48, upTo52, upTo68, upTo104;
   TrafficCounter upTo548, upTo1060, upTo2136, above2136;
   TrafficCounter shortest, longest;
@@ -799,7 +799,8 @@ typedef struct hostTraffic {
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
   char             hostNumIpAddress[20] /* xxx.xxx.xxx.xxx */, *dnsDomainValue, *dnsTLDValue;
   char             *hwModel, *description;
-  char             *ip2ccValue, hostResolvedName[MAX_LEN_SYM_HOST_NAME], *fingerprint;
+  char             *ip2ccValue, *fingerprint;
+  char             hostResolvedName[MAX_LEN_SYM_HOST_NAME];
   short            hostResolvedNameType;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
@@ -2209,9 +2210,6 @@ typedef struct ntopGlobals {
     numResolveNoCacheDB,
     numResolveCacheDBLookups,
     numResolvedFromCache,
-#ifdef PARM_USE_HOST
-    numResolvedFromHostAddresses,
-#endif
     dnsCacheStoredLookup,
     numAttemptingResolutionWithDNS,
     numResolvedWithDNSAddresses,
@@ -2221,6 +2219,9 @@ typedef struct ntopGlobals {
     numDNSErrorTryAgain,
     numDNSErrorOther,
     numKeptNumericAddresses;
+#ifdef PARM_USE_HOST
+  u_long  numResolvedFromHostAddresses;
+#endif
 
   /* Misc */
   char *separator;         /* html separator */
@@ -2242,7 +2243,7 @@ typedef struct ntopGlobals {
   ServiceEntry **udpSvc, **tcpSvc;   /* the pointers to the tables of TCP/UDP Protocols to monitor */
 
   u_short numIpProtosToMonitor;
-  char **protoIPTrafficInfos;
+  char **ipTrafficProtosNames;
 
   /* Protocols */
   u_short numIpProtosList;
@@ -2361,6 +2362,9 @@ typedef struct ntopGlobals {
   /* AS */
   IPNode *asHead;
   int    asMem, asCount;
+
+  /* Memory usage */
+  int piMem, ippmtmMem;
 
   /* LogView */
   char ** logView;         /* vector of log messages */

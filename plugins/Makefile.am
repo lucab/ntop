@@ -195,7 +195,7 @@ install-data-local:
 #
 # Special stuff for xml auto-generation of code from the "doc":
 #
-xmldumpPlugin.$(OBJEXT): xml_g_cmdopt.inc
+xmldumpPlugin.$(OBJEXT): xml_g_intf.inc
 
 xmldumpPlugin.c: xml_*.inc globals-structtypes.xml
 

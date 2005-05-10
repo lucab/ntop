@@ -23,6 +23,7 @@
 
 
 #include "ntop.h"
+#include <openssl/rand.h>
 
 
 #ifdef HAVE_OPENSSL

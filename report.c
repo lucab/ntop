@@ -3852,7 +3852,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
-	  printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
+	  printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
 			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
 	}
       }
@@ -3908,7 +3908,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
-	  printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
+	  printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
 			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
 	}
       }
@@ -3964,7 +3964,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
 	  printTableEntry(buf, sizeof(buf),
-			  myGlobals.protoIPTrafficInfos[i],
+			  myGlobals.ipTrafficProtosNames[i],
 			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
 	}
       }
@@ -4022,7 +4022,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
-	  printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
+	  printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
 			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
 	}
       }
@@ -4086,7 +4086,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	  percentage = ((float)(partialTotal*100))/((float)total);
 	  numProtosFound++;
 	  printTableEntry(buf, sizeof(buf), 
-			  myGlobals.protoIPTrafficInfos[i], CONST_COLOR_1, 
+			  myGlobals.ipTrafficProtosNames[i], CONST_COLOR_1, 
 			  partialTotal/1024, percentage,
 			  1, myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].totalFlows.value, 1);
 	}

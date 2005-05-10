@@ -512,7 +512,6 @@ ntop.h
 #if defined(HAVE_GLIBCONFIG_H) &&             \
     defined(HAVE_GLIB_H) &&                   \
     defined(HAVE_GDOME_H) &&                  \
-    defined(HAVE_XMLVERSION_H) &&             \
     defined(CONST_XMLDUMP_PLUGIN_NAME)
  #define MAKE_WITH_XMLDUMP
 #endif

@@ -1872,12 +1872,12 @@ static void arbitraryActionPage(void) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"IP_%sSentBytes\">%s Sent Bytes</option>\n"
                                                           "<option value=\"IP_%sRcvdBytes\">%s Rcvd Bytes</option>\n"
                                                           "<option value=\"IP_%sBytes\">%s Bytes (interface level)</option>\n",
-                    myGlobals.protoIPTrafficInfos[idx],
-                    myGlobals.protoIPTrafficInfos[idx],
-                    myGlobals.protoIPTrafficInfos[idx],
-                    myGlobals.protoIPTrafficInfos[idx],
-                    myGlobals.protoIPTrafficInfos[idx],
-                    myGlobals.protoIPTrafficInfos[idx]);
+                    myGlobals.ipTrafficProtosNames[idx],
+                    myGlobals.ipTrafficProtosNames[idx],
+                    myGlobals.ipTrafficProtosNames[idx],
+                    myGlobals.ipTrafficProtosNames[idx],
+                    myGlobals.ipTrafficProtosNames[idx],
+                    myGlobals.ipTrafficProtosNames[idx]);
       sendString(buf);
     } 
   } 
@@ -2658,12 +2658,12 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 
 	    if(el->protoIPTrafficInfos[j] != NULL) {
 	      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sSentBytes",
-			    myGlobals.protoIPTrafficInfos[j]);
+			    myGlobals.ipTrafficProtosNames[j]);
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->sentLoc.value+
 			    el->protoIPTrafficInfos[j]->sentRem.value);
 
 	      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sRcvdBytes",
-			    myGlobals.protoIPTrafficInfos[j]);
+			    myGlobals.ipTrafficProtosNames[j]);
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
 			    el->protoIPTrafficInfos[j]->rcvdFromRem.value);
 	    }
@@ -3174,7 +3174,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      char tmpStr[128];
 
 	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sFlows", 
-			    myGlobals.protoIPTrafficInfos[j]);	      
+			    myGlobals.ipTrafficProtosNames[j]);	      
 	      updateCounter(rrdPath, tmpStr, myGlobals.device[devIdx].
 			    ipProtoStats[j].totalFlows.value);	      
 	      ctr.value =
@@ -3184,7 +3184,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		myGlobals.device[devIdx].ipProtoStats[j].remote.value;
 
 	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sBytes", 
-			    myGlobals.protoIPTrafficInfos[j]);
+			    myGlobals.ipTrafficProtosNames[j]);
 	      updateCounter(rrdPath, tmpStr, ctr.value);
 	    }
 	  }

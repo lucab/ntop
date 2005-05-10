@@ -303,7 +303,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.udpSvc = NULL;
   myGlobals.tcpSvc = NULL;
 
-  myGlobals.protoIPTrafficInfos = NULL;
+  myGlobals.ipTrafficProtosNames = NULL;
   myGlobals.numIpProtosToMonitor = 0;
   myGlobals.ipPortMapper.numElements = 0;
   myGlobals.ipPortMapper.theMapper = NULL;

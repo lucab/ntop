@@ -1152,7 +1152,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
       if(traffic.value > 0) {
 	p[num] = (float)((100*traffic.value)/totalIPTraffic.value);
 	diffTraffic.value += traffic.value;
-	lbl[num++] = myGlobals.protoIPTrafficInfos[i];
+	lbl[num++] = myGlobals.ipTrafficProtosNames[i];
       }
 
       if(num >= MAX_NUM_PROTOS) break; /* Too much stuff */
@@ -1857,7 +1857,7 @@ void drawGlobalIpProtoDistribution(void) {
       +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
     if((p[idx] > 0) && ((p[idx]*100/total) > 1 /* the proto is at least 1% */)) {
       partialTotal += p[idx];
-      lbl[idx] = myGlobals.protoIPTrafficInfos[i];
+      lbl[idx] = myGlobals.ipTrafficProtosNames[i];
       idx++;
     }
 

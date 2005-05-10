@@ -105,6 +105,9 @@
 
 #include "getopt.h"
 
+/* ntop addition to quiet warning from -Wmissing-prototypes */
+int getopt____ (int argc, char *const *argv, const char *optstring);
+
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
    the argument value is returned here.
