@@ -78,7 +78,7 @@
 /* Define to 1 if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
 
-/* dladdr is defined inside -lld */
+/* dladdr is defined */
 #undef HAVE_DLADDR
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
@@ -638,9 +638,6 @@
 
 /* Define to 1 if `vfork' works. */
 #undef HAVE_WORKING_VFORK
-
-/* Define to 1 if you have the <xmlversion.h> header file. */
-#undef HAVE_XMLVERSION_H
 
 /* Define to 1 if you have the <zlib.h> header file. */
 #undef HAVE_ZLIB_H
