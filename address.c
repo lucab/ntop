@@ -151,7 +151,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
   myGlobals.numResolveCacheDBLookups++;
   /* First check whether the address we search for is cached... */
   if((data_data.dptr != NULL) &&
-     (data_data.dsize == (sizeof(StoredAddress)+1)) &&
+     (data_data.dsize == (sizeof(StoredAddress))) &&
      (myGlobals.actTime - ((StoredAddress*)data_data.dptr)->recordCreationTime < CONST_DNSCACHE_LIFETIME) ) {
     StoredAddress *retrievedAddress;
 
@@ -184,7 +184,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
   } else {
     if(data_data.dptr != NULL) {
 #ifdef GDBM_DEBUG
-      if (data_data.dsize == (sizeof(StoredAddress)+1))
+      if (data_data.dsize == (sizeof(StoredAddress)))
         traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Dropped data for %s [wrong data size]", keyBuf);
       else
         traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Ignored old record for %s", keyBuf);
@@ -460,7 +460,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 
       /* key_data has been set already */
       data_data.dptr = (void*)&storedAddress;
-      data_data.dsize = sizeof(storedAddress)+1;
+      data_data.dsize = sizeof(storedAddress) /* Remember, StoredAddress has 1 byte padding so don't add more here */;
 
       if(updateRecord) {
 	updateHostNameInfo(*hostAddr, symAddr, symAddrType);
@@ -815,7 +815,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
   
   data_data = gdbm_fetch(myGlobals.dnsCacheFile, key_data);
 
-  if((data_data.dptr != NULL) && (data_data.dsize == (sizeof(StoredAddress)+1)) ) {
+  if((data_data.dptr != NULL) && (data_data.dsize == (sizeof(StoredAddress))) ) {
     StoredAddress *retrievedAddress;
     
     retrievedAddress = (StoredAddress*)data_data.dptr;
