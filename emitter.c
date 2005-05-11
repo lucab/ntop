@@ -878,25 +878,25 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       }
     } /* shortView */
 
-    if((!shortView) && (el->protoIPTrafficInfos && checkFilter(filter, "IP"))) {
+    if((!shortView) && (el->ipTrafficProtosNames && checkFilter(filter, "IP"))) {
       char *lastKey = NULL;
 
       initWriteKey(fDescr, lang, "\t", "IP", numEntries);
 
       for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
-	if((myGlobals.protoIPTrafficInfos[j] != NULL)
-	   && (el->protoIPTrafficInfos[j] != NULL)) {
+	if((myGlobals.ipTrafficProtosNames[j] != NULL)
+	   && (el->ipTrafficProtosNames[j] != NULL)) {
 	  if(j > 0) { endWriteKey(fDescr, lang,"\t\t", lastKey, ','); }
 
-	  initWriteKey(fDescr, lang, "\t\t", (lastKey = myGlobals.protoIPTrafficInfos[j]), numEntries);
+	  initWriteKey(fDescr, lang, "\t\t", (lastKey = myGlobals.ipTrafficProtosNames[j]), numEntries);
 	  wrtLlongItm(fDescr, lang,"\t\t\t","sentLoc",
-		    el->protoIPTrafficInfos[j]->sentLoc, ',', numEntries);
+		    el->ipTrafficProtosNames[j]->sentLoc, ',', numEntries);
 	  wrtLlongItm(fDescr, lang,"\t\t\t","sentRem",
-		      el->protoIPTrafficInfos[j]->sentRem, ',', numEntries);
+		      el->ipTrafficProtosNames[j]->sentRem, ',', numEntries);
 	  wrtLlongItm(fDescr, lang,"\t\t\t","rcvdLoc",
-		      el->protoIPTrafficInfos[j]->rcvdLoc, ',', numEntries);
+		      el->ipTrafficProtosNames[j]->rcvdLoc, ',', numEntries);
 	  wrtLlongItm(fDescr, lang,"\t\t\t","rcvdFromRem",
-		      el->protoIPTrafficInfos[j]->rcvdFromRem, ' ', numEntries);
+		      el->ipTrafficProtosNames[j]->rcvdFromRem, ' ', numEntries);
 	}
       } /* for */
 
@@ -1434,9 +1434,9 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	if(!shortView) { initWriteKey(fDescr, lang, "\t", "IP", numEntries); }
 
 	for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
-	  if((myGlobals.protoIPTrafficInfos[j] != NULL) && (!shortView)) {
+	  if((myGlobals.ipTrafficProtosNames[j] != NULL) && (!shortView)) {
 	    if(j > 0) endWriteKey(fDescr, lang, "\t\t", hostKey, ',');
-	    initWriteKey(fDescr, lang, "\t\t", (hostKey = myGlobals.protoIPTrafficInfos[j]), numEntries);
+	    initWriteKey(fDescr, lang, "\t\t", (hostKey = myGlobals.ipTrafficProtosNames[j]), numEntries);
 	    wrtLlongItm(fDescr, lang,"\t\t\t","local",
 			myGlobals.device[i].ipProtoStats[j].local, ',', numEntries);
 	    wrtLlongItm(fDescr, lang,"\t\t\t","local2remote",
@@ -1454,7 +1454,7 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	      myGlobals.device[i].ipProtoStats[j].remote2local.value+
 	      myGlobals.device[i].ipProtoStats[j].remote.value;
 
-	    wrtLlongItm(fDescr, lang, "\t", myGlobals.protoIPTrafficInfos[j], ctr, ',', numEntries);
+	    wrtLlongItm(fDescr, lang, "\t", myGlobals.ipTrafficProtosNames[j], ctr, ',', numEntries);
 	  }
 	}
 
