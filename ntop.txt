@@ -9,19 +9,19 @@ SSYYNNOOPPSSIISS
        nnttoopp  [@@ffiilleennaammee] [--aa|----aacccceessss--lloogg--ffiillee _<_p_a_t_h_>] [--bb|----ddiissaabbllee--ddeeccooddeerrss]
        [--cc|----ssttiicckkyy--hhoossttss]    [--ee|----mmaaxx--ttaabbllee--rroowwss]    [--ff|----ttrraaffffiicc--dduummpp--ffiillee
        _f_i_l_e_>] [--gg|----ttrraacckk--llooccaall--hhoossttss] [--hh|----hheellpp] [--jj|----ccrreeaattee--ootthheerr--ppaacckkeettss]
-       [--kk|----ffiilltteerr--eexxpprreessssiioonn--iinn--eexxttrraa--ffrraammee]     [--ll|----ppccaapp--lloogg      _<_p_a_t_h_>]
-       [--mm|----llooccaall--ssuubbnneettss  _<_a_d_d_r_e_s_s_e_s_>] [--nn|----nnuummeerriicc--iipp--aaddddrreesssseess] [--oo|----nnoo--
-       mmaacc]    [--pp|----pprroottooccoollss    _<_l_i_s_t_>]     [--qq|----ccrreeaattee--ssuussppiicciioouuss--ppaacckkeettss]
-       [--rr|----rreeffrreesshh--ttiimmee  _<_n_u_m_b_e_r_>]  [--ss|----nnoo--pprroommiissccuuoouuss]  [--tt|----ttrraaccee--lleevveell
-       _<_n_u_m_b_e_r_>]   [--xx   _<_m_a_x___n_u_m___h_a_s_h___e_n_t_r_i_e_s_>]   [--ww|----hhttttpp--sseerrvveerr   _<_p_o_r_t_>]
-       [--zz|----ddiissaabbllee--sseessssiioonnss]  [--AA|----sseett--aaddmmiinn--ppaasssswwoorrdd  _p_a_s_s_w_o_r_d] [--BB|----ffiill--
-       tteerr--eexxpprreessssiioonn  _e_x_p_r_e_s_s_i_o_n]  [--CC  _<_c_o_n_f_i_gmode>_]  [--DD|----ddoommaaiinn   _<_n_a_m_e_>]
-       [--FF|----ffllooww--ssppeecc   _<_s_p_e_c_s_>]   [--MM|----nnoo--iinntteerrffaaccee--mmeerrggee]  [--OO|--------oouuttppuutt--
-       ppaacckkeett--ppaatthh] [--PP|----ddbb--ffiillee--ppaatthh _<_p_a_t_h_>]  [--QQ|----ssppooooll--ffiillee--ppaatthh  _<_p_a_t_h_>]
-       [--UU|----mmaappppeerr  _<_U_R_L_>] [--VV|----vveerrssiioonn]] [--XX _<_m_a_x___n_u_m___T_C_P___s_e_s_s_i_o_n_s_>] [----ddiiss--
-       aabbllee--iinnssttaannttsseessssiioonnppuurrggee]  [----ddiissaabbllee--sscchheeddyyiieelldd]   [----ddiissaabbllee--ssttooppccaapp]
-       [----ddiissaabbllee--mmuutteexxeexxttrraaiinnffoo]  [----ffcc--oonnllyy]  [----iinnssttaannccee]  [----nnoo--ffcc] [----nnoo--
-       iinnvvaalliidd--lluunn] [----pp33pp--ccpp] [----pp33pp--uurrii] [----sskkiipp--vveerrssiioonn--cchheecckk] [----ww33cc]
+       [--ll|----ppccaapp--lloogg _<_p_a_t_h_>] [--mm|----llooccaall--ssuubbnneettss _<_a_d_d_r_e_s_s_e_s_>]  [--nn|----nnuummeerriicc--
+       iipp--aaddddrreesssseess] [--oo|----nnoo--mmaacc] [--pp|----pprroottooccoollss _<_l_i_s_t_>] [--qq|----ccrreeaattee--ssuussppii--
+       cciioouuss--ppaacckkeettss]   [--rr|----rreeffrreesshh--ttiimmee   _<_n_u_m_b_e_r_>]   [--ss|----nnoo--pprroommiissccuuoouuss]
+       [--tt|----ttrraaccee--lleevveell  _<_n_u_m_b_e_r_>]  [--xx  _<_m_a_x___n_u_m___h_a_s_h___e_n_t_r_i_e_s_>]  [--ww|----hhttttpp--
+       sseerrvveerr _<_p_o_r_t_>] [--zz|----ddiissaabbllee--sseessssiioonnss]  [--AA|----sseett--aaddmmiinn--ppaasssswwoorrdd  _p_a_s_s_-
+       _w_o_r_d]    [--BB|----ffiilltteerr--eexxpprreessssiioonn    _e_x_p_r_e_s_s_i_o_n]    [--CC    _<_c_o_n_f_i_gmode>_]
+       [--DD|----ddoommaaiinn _<_n_a_m_e_>] [--FF|----ffllooww--ssppeecc _<_s_p_e_c_s_>] [--MM|----nnoo--iinntteerrffaaccee--mmeerrggee]
+       [--OO|--------oouuttppuutt--ppaacckkeett--ppaatthh]   [--PP|----ddbb--ffiillee--ppaatthh  _<_p_a_t_h_>]  [--QQ|----ssppooooll--
+       ffiillee--ppaatthh    _<_p_a_t_h_>]    [--UU|----mmaappppeerr    _<_U_R_L_>]    [--VV|----vveerrssiioonn]]    [--XX
+       _<_m_a_x___n_u_m___T_C_P___s_e_s_s_i_o_n_s_>]   [----ddiissaabbllee--iinnssttaannttsseessssiioonnppuurrggee]   [----ddiissaabbllee--
+       sscchheeddyyiieelldd] [----ddiissaabbllee--ssttooppccaapp] [----ddiissaabbllee--mmuutteexxeexxttrraaiinnffoo]  [----ffcc--oonnllyy]
+       [----iinnssttaannccee]   [----nnoo--ffcc]   [----nnoo--iinnvvaalliidd--lluunn]   [----pp33pp--ccpp]  [----pp33pp--uurrii]
+       [----sskkiipp--vveerrssiioonn--cchheecckk] [----ww33cc]
 
        Unix options:
 
@@ -223,99 +223,92 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
         understanding these unclassifed packets.
 
 
-       --kk || ----ffiilltteerr--eexxpprreessssiioonn--iinn--eexxttrraa--ffrraammee
-        When  this  parameter  is  used, the current filter expression is dis-
-        played in an extra frame and thus is always visible.  This extra frame
-        contains  other  information, including the report creation date, nnttoopp
-        version information and the active interfaces.
-
-
        --ll || ----ppccaapp--lloogg
         This parameter causes a dump file to be created of the network traffic
-        captured  by  nnttoopp  in tcpdump (pcap) format.  This file is useful for
-        debug, and may be read back into nnttoopp by the -f |  --traffic-dump-file
-        parameter.   The dump is made after processing any filter expression (
+        captured by nnttoopp in tcpdump (pcap) format.  This file  is  useful  for
+        debug,  and may be read back into nnttoopp by the -f | --traffic-dump-file
+        parameter.  The dump is made after processing any filter expression  (
         never even sees filtered packets).
 
-        The output file will  be  named  _<_p_a_t_h_>_/_<_l_o_g_>_._<_d_e_v_i_c_e_>_._p_c_a_p  (Windows:
-        _<_p_a_t_h_>_/_<_l_o_g_>_._p_c_a_p  ),  where  <path>  is defined by the -O | --output-
-        packet-path parameter and <log> is defined by  this  -l  |  --pcap-log
+        The  output  file  will  be named _<_p_a_t_h_>_/_<_l_o_g_>_._<_d_e_v_i_c_e_>_._p_c_a_p (Windows:
+        _<_p_a_t_h_>_/_<_l_o_g_>_._p_c_a_p ), where <path> is defined by  the  -O  |  --output-
+        packet-path  parameter  and  <log>  is defined by this -l | --pcap-log
         parameter.
 
 
        --mm || ----llooccaall--ssuubbnneettss
-        nnttoopp  determines  the ip addresses and netmasks for each active inter-
+        nnttoopp determines the ip addresses and netmasks for each  active  inter-
         face.  Any traffic on those networks is considered local.  This param-
-        eter  allows  the  user  to define additional networks and subnetworks
-        whose traffic is also considered local  in  nnttoopp  reports.  All  other
+        eter allows the user to define  additional  networks  and  subnetworks
+        whose  traffic  is  also  considered  local in nnttoopp reports. All other
         hosts are considered remote.
 
-        Commas  separate multiple network values.  Both netmask and CIDR nota-
-        tion   may   be   used,   even   mixed    together,    for    instance
+        Commas separate multiple network values.  Both netmask and CIDR  nota-
+        tion    may    be    used,   even   mixed   together,   for   instance
         "131.114.21.0/24,10.0.0.0/255.0.0.0".
 
-        The  local  subnet  - as defined by the interface address(es) - is/are
+        The local subnet - as defined by the interface  address(es)  -  is/are
         always local and do not need to be specified.  If you do give the same
-        value  as a NIC's local address, a harmless warning message is issued.
+        value as a NIC's local address, a harmless warning message is  issued.
 
 
        --nn || ----nnuummeerriicc--iipp--aaddddrreesssseess
-        By default, nnttoopp resolves IP addresses using a combination  of  active
-        (explicit)   DNS  queries  and  passive  sniffing.   Sniffing  of  DNS
-        responses occurs when nnttoopp receives a network  packet  containing  the
-        response  to some other user's DNS query.  nnttoopp captures this informa-
-        tion and enters it into nnttoopp''ss DNS cache, in  expectation  of  shortly
-        seeing  traffic  addressed  to  that host. This way nnttoopp significantly
+        By  default,  nnttoopp resolves IP addresses using a combination of active
+        (explicit)  DNS  queries  and  passive  sniffing.   Sniffing  of   DNS
+        responses  occurs  when  nnttoopp receives a network packet containing the
+        response to some other user's DNS query.  nnttoopp captures this  informa-
+        tion  and  enters  it into nnttoopp''ss DNS cache, in expectation of shortly
+        seeing traffic addressed to that host.  This  way  nnttoopp  significantly
         reduces the number of DNS queries it makes.
 
-        This parameter causes  nnttoopp  to  skip  DNS  resolution,  showing  only
-        numeric  IP  addresses instead of the symbolic names.  This option can
+        This  parameter  causes  nnttoopp  to  skip  DNS  resolution, showing only
+        numeric IP addresses instead of the symbolic names.  This  option  can
         useful when the DNS is not present or quite slow.
 
 
        --oo || ----nnoo--mmaacc
         nnttoopp is a hybrid layer 2/3 network monitor.  That is, it uses both the
-        lower  level, physical device address - the MAC (Media Access Control)
-        address - and the higher level, logical, tcp/ip address (the  familiar
-        www.ntop.org  or  131.114.21.9 address).  This allows nnttoopp to link the
-        logical addresses to a physical machine with multiple addresses  (This
-        occurs  with  virtual  hosts  or  additional addresses assigned to the
+        lower level, physical device address - the MAC (Media Access  Control)
+        address  - and the higher level, logical, tcp/ip address (the familiar
+        www.ntop.org or 131.114.21.9 address).  This allows nnttoopp to  link  the
+        logical  addresses to a physical machine with multiple addresses (This
+        occurs with virtual hosts or  additional  addresses  assigned  to  the
         interface, etc.)  to present consolidated reporting.
 
-        This parameter specifies that nnttoopp should not trust the MAC  addresses
+        This  parameter specifies that nnttoopp should not trust the MAC addresses
         but just use the IP addresses.
 
-        Normally,  since  the  MAC  address  must be globally unique, the dual
-        nature of nnttoopp is a benefit and provides far better information  about
+        Normally, since the MAC address must  be  globally  unique,  the  dual
+        nature  of nnttoopp is a benefit and provides far better information about
         the network than is available via a pure layer 2 or pure layer 3 moni-
         tor.
 
         Under certain circumstances - whenever nnttoopp is started on an interface
-        where  MAC  addresses  cannot be really trusted - you may require this
+        where MAC addresses cannot be really trusted - you  may  require  this
         option.
 
-        Situations which may require this  option  include  port/VLAN  mirror,
-        some  cases with switches and spanning tree protocol, and (reportedly)
+        Situations  which  may  require  this option include port/VLAN mirror,
+        some cases with switches and spanning tree protocol, and  (reportedly)
         some specific models of Ethernet switches which re-write MAC addresses
-        of  the packets they process.  Normally, you discover that this option
-        is necessary  when  you  observe  that  hosts  seem  to  change  their
+        of the packets they process.  Normally, you discover that this  option
+        is  necessary  when  you  observe  that  hosts  seem  to  change their
         addresses or information about different machines get lumped together.
 
-        Note that with this option, information which is  dependent  upon  the
-        MAC  addresses  (non  tcp/ip protocols like IPX) will not be collected
+        Note  that  with  this option, information which is dependent upon the
+        MAC addresses (non tcp/ip protocols like IPX) will  not  be  collected
         nor displayed.
 
 
        --pp || ----pprroottooccoollss
         This parameter is used to specify the TCP/UDP protocols that nnttoopp will
-        monitor.  The  format  is <label>=<protocol list> [, <label>=<protocol
-        list>], where label is used to  symbolically  identify  the  <protocol
+        monitor. The format is <label>=<protocol  list>  [,  <label>=<protocol
+        list>],  where  label  is  used to symbolically identify the <protocol
         list>. The format of <protocol list> is <protocol>[|<protocol>], where
-        <protocol> is either a valid protocol specified inside  the  /etc/ser-
+        <protocol>  is  either a valid protocol specified inside the /etc/ser-
         vices file or a numeric port range (e.g. 80, or 6000-6500).
 
         A simple example is --protocols="HTTP=http|www|https|3128,FTP=ftp|ftp-
-        data", which reduces the protocols displayed  on  the  "IP"  pages  to
+        data",  which  reduces  the  protocols  displayed on the "IP" pages to
         three:
 
         Host                      Domain Data          HTTP   FTP   Other IP
@@ -324,8 +317,8 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
         64.124.83.99.akamai.com   <flag>  240 16.1 %    240     0          0
         toolbarqueries.google.com <flag>   60 4.0 %      60     0          0
 
-        If  the  <protocol  list> is very long you may store it in a file (for
-        instance protocol.list).  To do so, specify the file name  instead  of
+        If the <protocol list> is very long you may store it in  a  file  (for
+        instance  protocol.list).   To do so, specify the file name instead of
         the <protocol list> on the command line.  e.g.  nnttoopp --pp pprroottooccooll..lliisstt
 
         If the -p parameter is omitted the following default value is used:
@@ -355,21 +348,21 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
           -----------------
           Messenger=1863|5000|5001|5190-5193
 
-        NOTE:  To  resolve protocol names to port numbers, they must be speci-
-        fied in the system file used to  list  tcp/udp  protocols  and  ports,
-        which  is  typically  /etc/services  file.  You will have to match the
-        names in that file, exactly.  Missing  or  unspecified  (non-standard)
+        NOTE: To resolve protocol names to port numbers, they must  be  speci-
+        fied  in  the  system  file  used to list tcp/udp protocols and ports,
+        which is typically /etc/services file.  You will  have  to  match  the
+        names  in  that  file, exactly.  Missing or unspecified (non-standard)
         ports must be specified by number, such as 3128 in our examples above.
 
-        If you have a file named /etc/protocols, don't get confused by it,  as
-        that's  the Ethernet protocol numbers, which are not what you're look-
+        If  you have a file named /etc/protocols, don't get confused by it, as
+        that's the Ethernet protocol numbers, which are not what you're  look-
         ing for.
 
 
        --qq || ----ccrreeaattee--ssuussppiicciioouuss--ppaacckkeettss
         This parameter tells nnttoopp to create a dump file of suspicious packets.
 
-        There  are  many,  many,  things  that cause a packet to be labeled as
+        There are many, many, things that cause a  packet  to  be  labeled  as
         'suspicious', including:
 
           Detected ICMP fragment
@@ -391,66 +384,66 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
           Unknown protocol (no HTTP/FTP/SMTP/SSH) detected (on port 80/21/25/22)
           Unusual ICMP options
 
-        When this parameter is used, one file  is  created  for  each  network
-        interface  where  suspicious packets are found. The file is in tcpdump
-        (pcap) format and is named  <path>/ntop-suspicious-pkts.<device>.pcap,
+        When  this  parameter  is  used,  one file is created for each network
+        interface where suspicious packets are found. The file is  in  tcpdump
+        (pcap)  format and is named <path>/ntop-suspicious-pkts.<device>.pcap,
         where <path> is defined by the -O | --output-packet-path parameter.
 
 
        --rr || ----rreeffrreesshh--ttiimmee
-        Specifies  the delay (in seconds) between automatic screen updates for
-        those generated HTML pages which support them.  This parameter  allows
-        you  to  leave  your browser window open and have it always displaying
+        Specifies the delay (in seconds) between automatic screen updates  for
+        those  generated HTML pages which support them.  This parameter allows
+        you to leave your browser window open and have  it  always  displaying
         nearly real-time data from nnttoopp..
 
         The default is 3 seconds.  Please note that if the delay is very short
-        (1  second for instance), nnttoopp might not be able to process all of the
+        (1 second for instance), nnttoopp might not be able to process all of  the
         network traffic.
 
 
        --ss || ----nnoo--pprroommiissccuuoouuss
-        Use this parameter to  prevent  from  setting  the  interface(s)  into
+        Use  this  parameter  to  prevent  from  setting the interface(s) into
         promiscuous mode.
 
-        An  interface  in  promiscuous  mode  will accept ALL Ethernet frames,
-        regardless of whether they directed (addressed) to the  specific  net-
-        work  interface  (NIC)  or not.  This is an essential part of enabling
-        nnttoopp to monitor an entire network.  (Without  promiscuous  mode,  nnttoopp
-        will  only see traffic directed to the specific host it is running on,
+        An interface in promiscuous mode  will  accept  ALL  Ethernet  frames,
+        regardless  of  whether they directed (addressed) to the specific net-
+        work interface (NIC) or not.  This is an essential  part  of  enabling
+        nnttoopp  to  monitor  an entire network.  (Without promiscuous mode, nnttoopp
+        will only see traffic directed to the specific host it is running  on,
         plus broadcast traffic such as the arp and dhcp protocols.
 
         Even if you use this parameter, the interface could well be in promis-
         cuous mode if another application enabled it.
 
-        nnttoopp  passes  this  setting on to libpcap, the packet capture library.
-        On many systems, a non-promiscuous open of the network interface  will
+        nnttoopp passes this setting on to libpcap, the  packet  capture  library.
+        On  many systems, a non-promiscuous open of the network interface will
         fail, since the libpcap function on most systems require it to capture
-        raw packets ( nnttoopp captures raw packets so that we may view  and  ana-
+        raw  packets  ( nnttoopp captures raw packets so that we may view and ana-
         lyze the layer 2 - MAC - information).
 
         Thus on most systems, nnttoopp must probably still be started as root, and
-        this option is largely ornamental.   If  it  fails,  you  will  see  a
-        ***FATALERROR***  message  referring  to  pcap_open_live() and then an
-        information message, "Sorry, but on this  system,  even  with  -s,  it
+        this  option  is  largely  ornamental.   If  it  fails, you will see a
+        ***FATALERROR*** message referring to  pcap_open_live()  and  then  an
+        information  message,  "Sorry,  but  on  this system, even with -s, it
         appears that ntop must be started as root".
 
 
        --tt || ----ttrraaccee--lleevveell
-        This  parameter specifies the 'information' level of messages that you
-        wish nnttoopp to display (on stdout or to the log).  The higher the  trace
-        level  number the more information that is displayed.  The trace level
+        This parameter specifies the 'information' level of messages that  you
+        wish  nnttoopp to display (on stdout or to the log).  The higher the trace
+        level number the more information that is displayed.  The trace  level
         ranges between 0 (no trace) and 5 (full debug tracings).
 
         The default trace value is 3.
 
-        Trace level 0 is not quite zero messages.  Fatal  errors  and  certain
+        Trace  level  0  is  not quite zero messages. Fatal errors and certain
         startup/shutdown messages are always displayed.  Trace level 1 is used
-        to display errors only, level 2 for  both  errors  and  warnings,  and
+        to  display  errors  only,  level  2 for both errors and warnings, and
         level 3 displays error, warning and informational messages.
 
-        Trace  level  4 is called 'noisy' and it is - generating many messages
-        about the internal functioning of nnttoopp..  Trace level 5 and  above  are
-        'noisy'  plus extra logs, i.e. all possible messages, with a file:line
+        Trace level 4 is called 'noisy' and it is - generating  many  messages
+        about  the  internal functioning of nnttoopp..  Trace level 5 and above are
+        'noisy' plus extra logs, i.e. all possible messages, with a  file:line
         tag prepended to every message.
 
 
@@ -458,23 +451,23 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
         Specifies the user nnttoopp should run as after it initializes.
 
         nnttoopp must normally be started as root so that it has sufficient privi-
-        leges  to  open  the  network  interfaces  in  promiscuous mode and to
-        receive raw frames.  See  the  discussion  of  -s  |  --no-promiscuous
+        leges to open the  network  interfaces  in  promiscuous  mode  and  to
+        receive  raw  frames.   See  the  discussion  of -s | --no-promiscuous
         above, if you wish to try starting nnttoopp as a non-root user.
 
-        Shortly  after  starting  up,  nnttoopp becomes the user you specify here,
-        which normally has substantially reduced privileges, such as no  login
-        shell.   This  is  the  userid  which  owns nnttoopp''ss database and output
+        Shortly after starting up, nnttoopp becomes the  user  you  specify  here,
+        which  normally has substantially reduced privileges, such as no login
+        shell.  This is the userid  which  owns  nnttoopp''ss  database  and  output
         files.
 
-        The value specified may be either a username or  a  numeric  user  id.
+        The  value  specified  may  be either a username or a numeric user id.
         The group id used will be the primary group of the user specified.
 
-        If  this  parameter is not specified, ntop will try to switch first to
+        If this parameter is not specified, ntop will try to switch  first  to
         'nobody' and then to 'anonymous' before giving up.
 
-        NOTE: This should not be root unless you really understand  the  secu-
-        rity  risks. In order to prevent this by accident, the only way to run
+        NOTE:  This  should not be root unless you really understand the secu-
+        rity risks. In order to prevent this by accident, the only way to  run
         nnttoopp as root is to explicitly specify -u root.  DDoonn''tt ddoo iitt..
 
 
@@ -482,9 +475,9 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
 
        --XX
         nnttoopp creates a new hash/list entry for each new host/TCP session seen.
-        In  case of DOS (Denial Of Service) an attacker can easily exhaust all
-        the host available memory because ntop is creating entries  for  dummy
-        hosts.  In  order to avoid this you can set an upper limit in order to
+        In case of DOS (Denial Of Service) an attacker can easily exhaust  all
+        the  host  available memory because ntop is creating entries for dummy
+        hosts. In order to avoid this you can set an upper limit in  order  to
         limit the memory ntop can use.
 
 
@@ -492,85 +485,85 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
 
        --WW || ----hhttttppss--sseerrvveerr
         nnttoopp offers an embedded web server to present the information that has
-        been  so  painstakingly  gathered.   An  external  HTTP  server is NOT
-        required NOR supported.  The nnttoopp web  server  is  embedded  into  the
-        application.   These  parameters  specify the port (and optionally the
+        been so painstakingly  gathered.   An  external  HTTP  server  is  NOT
+        required  NOR  supported.   The  nnttoopp  web server is embedded into the
+        application.  These parameters specify the port  (and  optionally  the
         address (i.e. interface)) of the nnttoopp web server.
 
-        For example, if started with -w 3000 (the default port),  the  URL  to
+        For  example,  if  started with -w 3000 (the default port), the URL to
         access nnttoopp is http://hostname:3000/.  If started with a full specifi-
-        cation,  e.g.  -w  192.168.1.1:3000,  nnttoopp  listens   on   only   that
+        cation,   e.g.   -w   192.168.1.1:3000,  nnttoopp  listens  on  only  that
         address/port combination.
 
-        If  -w  is set to 0 the web server will not listen for http:// connec-
+        If -w is set to 0 the web server will not listen for  http://  connec-
         tions.
 
-        -W operates similarly, but controls the port for the https://  connec-
+        -W  operates similarly, but controls the port for the https:// connec-
         tions.
 
         Some examples:
 
-        nnttoopp  --ww 33000000 --WW 00 (this is the default setting) HTTP requests on port
+        nnttoopp --ww 33000000 --WW 00 (this is the default setting) HTTP requests on  port
         3000 and no HTTPS.
 
-        nnttoopp --ww 8800 --WW 444433 Both HTTP and HTTPS have been enabled on their  most
+        nnttoopp  --ww 8800 --WW 444433 Both HTTP and HTTPS have been enabled on their most
         common ports.
 
         nnttoopp --ww 00 --WW 444433 HTTP disabled, HTTPS enabled on the common port.
 
         Certain sensitive, configuration pages of the nnttoopp web server are pro-
-        tected by a userid/password.   By  default,  these  are  the  user/URL
-        administration,  filter,  shutdown  and  reset stats are password pro-
+        tected  by  a  userid/password.   By  default,  these are the user/URL
+        administration, filter, shutdown and reset  stats  are  password  pro-
         tected
-         and are accessible initially only to user aaddmmiinn with a  password  set
+         and  are  accessible initially only to user aaddmmiinn with a password set
         during the first run of nnttoopp..
 
-        Users  can  modify/add/delete  users/URLs  using ntop itself - see the
+        Users can modify/add/delete users/URLs using ntop  itself  -  see  the
         Admin tab.
 
-        The passwords, userids and URLs to protect with passwords  are  stored
-        in  a database file.  Passwords are stored in an encrypted form in the
-        database for further security.  Best practices call for securing  that
+        The  passwords,  userids and URLs to protect with passwords are stored
+        in a database file.  Passwords are stored in an encrypted form in  the
+        database  for further security.  Best practices call for securing that
         database so that only the nnttoopp user can read it.
 
-        There  is  a  discussion  in  docs/FAQ about further securing the nnttoopp
+        There is a discussion in docs/FAQ  about  further  securing  the  nnttoopp
         environment.
 
 
        --zz || ----ddiissaabbllee--sseessssiioonnss
-        This parameter disables TCP session tracking.  Use it for better  per-
+        This  parameter disables TCP session tracking.  Use it for better per-
         formance or when you don't really need/care to track sessions.
 
 
        --AA || ----sseett--aaddmmiinn--ppaasssswwoorrdd
-        This  parameter  is  used  to  start nnttoopp , set the admin password and
+        This parameter is used to start nnttoopp ,  set  the  admin  password  and
         quit. It is quite useful for installers that need to automatically set
         the password for the admin user.
 
         -A and --set-admin-password (without a value) will prompt the user for
         the password.
 
-        You may also use this parameter to set a specific value  using  --set-
-        admin-password=value.   TThhee == iiss RREEQQUUIIRREEDD aanndd nnoo ssppaacceess aarree ppeerrmmiitttteedd!!
+        You  may  also use this parameter to set a specific value using --set-
+        admin-password=value.  TThhee == iiss RREEQQUUIIRREEDD aanndd nnoo ssppaacceess aarree  ppeerrmmiitttteedd!!
 
-        If you attempt to run nnttoopp as a daemon without setting a  password,  a
+        If  you  attempt to run nnttoopp as a daemon without setting a password, a
         FATAL ERROR message is generated and nnttoopp stops.
 
 
        --BB || ----ffiilltteerr--eexxpprreessssiioonn
-        Filters  allows  the user to restrict the traffic seen by nnttoopp on just
+        Filters allows the user to restrict the traffic seen by nnttoopp  on  just
         about any imaginable item.
 
         The filter expression is set at run time by this parameter, but it may
-        be  changed during the nnttoopp run on the Admin | Change Filter web page.
+        be changed during the nnttoopp run on the Admin | Change Filter web  page.
 
         The basic format is --BB ffiilltteerr , where the quotes are RREEQQUUIIRREEDD
 
         The syntax of the filter expression uses the same BPF (Berkeley Packet
         Filter) expressions used by other packages such as tcpdump
 
-        For  instance,  suppose  you are interested only in the traffic gener-
-        ated/received by the host jake.unipi.it.  nnttoopp  can  then  be  started
+        For instance, suppose you are interested only in  the  traffic  gener-
+        ated/received  by  the  host  jake.unipi.it.  nnttoopp can then be started
         with the following filter:
 
         nnttoopp --BB ssrrcc hhoosstt jjaakkee..uunniippii..iitt oorr ddsstt hhoosstt jjaakkee..uunniippii..iitt
@@ -579,129 +572,129 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
 
         nnttoopp --BB hhoosstt jjaakkee..uunniippii..iitt oorr hhoosstt jjaakkee..uunniippii..iitt
 
-        See  the 'expression' section of the ttccppdduummpp man page - usually avail-
+        See the 'expression' section of the ttccppdduummpp man page - usually  avail-
         able at http://www.tcpdump.org/tcpdump_man.html - for further informa-
         tion and the best quick guide to BPF filters currently available.
 
         WARNING: If you are using complex filter expressions, especially those
-        with =s or meaningful spaces in them, be sure and use the long  option
+        with  =s or meaningful spaces in them, be sure and use the long option
         format, --filter-expression="xxxx" and not -B "xxxx".
 
 
 
        --CC ||
-        This  instruments ntop to be used in two configurations: host and net-
-        work mode. In  host  mode  (default)  ntop  works  as  usual:  the  IP
-        addresses  received  are  those  of  real  hosts.  In host mode the IP
-        addresses received are those of  the  C-class  network  to  which  the
-        address  belongs.  Using ntop in network mode is extremely useful when
-        installed in a traffic exchange (e.g. in the middle of  the  Internet)
-        whereas  the  host  mode  should be used when ntop is installed on the
-        edge of a network (e.g. inside a company). The network  mode  signifi-
+        This instruments ntop to be used in two configurations: host and  net-
+        work  mode.  In  host  mode  (default)  ntop  works  as  usual: the IP
+        addresses received are those of  real  hosts.  In  host  mode  the  IP
+        addresses  received  are  those  of  the  C-class network to which the
+        address belongs. Using ntop in network mode is extremely  useful  when
+        installed  in  a traffic exchange (e.g. in the middle of the Internet)
+        whereas the host mode should be used when ntop  is  installed  on  the
+        edge  of  a network (e.g. inside a company). The network mode signifi-
         cantly reduces the amount of work ntop has to perform and it has to be
-        used whenever ntop is used to find out how the network  traffic  flows
+        used  whenever  ntop is used to find out how the network traffic flows
         and not to pin-point specific hosts.
 
 
 
        --DD || ----ddoommaaiinn
-        This  identifies  the  local  domain suffix, e.g. ntop.org.  It may be
+        This identifies the local domain suffix, e.g.  ntop.org.   It  may  be
         necessary, if nnttoopp is having difficulty determining it from the inter-
         face.
 
 
        --FF || ----ffllooww--ssppeecc
-        It  is used to specify network flows similar to more powerful applica-
-        tions such as NeTraMet.  A flow is a stream of captured  packets  that
+        It is used to specify network flows similar to more powerful  applica-
+        tions  such  as NeTraMet.  A flow is a stream of captured packets that
         match a specified rule. The format is
 
-        <<ffllooww--llaabbeell>>==''<<mmaattcchhiinngg  eexxpprreessssiioonn>>''[[,,<<ffllooww--llaabbeell>>==''<<mmaattcchhiinngg eexxpprreess--
+        <<ffllooww--llaabbeell>>==''<<mmaattcchhiinngg eexxpprreessssiioonn>>''[[,,<<ffllooww--llaabbeell>>==''<<mmaattcchhiinngg  eexxpprreess--
         ssiioonn>>'']]
 
-        , where the label is used to symbolically identify the flow  specified
-        by  the  expression.  The expression is a bpf (Berkeley Packet Filter)
-        expression. If an expression is specified, then the  information  con-
+        ,  where the label is used to symbolically identify the flow specified
+        by the expression.  The expression is a bpf (Berkeley  Packet  Filter)
+        expression.  If  an expression is specified, then the information con-
         cerning flows can be accessed following the HTML link named 'List Net-
         Flows'.
 
-        For instance define two flows  with  the  following  expression  LLuuccaa--
-        HHoossttss==''hhoosstt  jjaakkee..uunniippii..iitt  oorr hhoosstt ppiissaanniinnoo..uunniippii..iitt'',,GGaatteewwaayyRRoouutteeddPP--
+        For  instance  define  two  flows  with the following expression LLuuccaa--
+        HHoossttss==''hhoosstt jjaakkee..uunniippii..iitt oorr  hhoosstt  ppiissaanniinnoo..uunniippii..iitt'',,GGaatteewwaayyRRoouutteeddPP--
         kkttss==''ggaatteewwaayy ggaatteewwaayy..uunniippii..iitt'' ..
 
-        All   the   traffic   sent/received   by   hosts   jake.unipi.it    or
-        pisanino.unipi.it  is  collected  by  nnttoopp  and added to the LucaHosts
-        flow, whereas all the packet routed by  the  gateway  gateway.unipi.it
-        are  added  to  the  GatewayRoutedPkts flow. If the flows list is very
+        All    the   traffic   sent/received   by   hosts   jake.unipi.it   or
+        pisanino.unipi.it is collected by nnttoopp  and  added  to  the  LucaHosts
+        flow,  whereas  all  the packet routed by the gateway gateway.unipi.it
+        are added to the GatewayRoutedPkts flow. If the  flows  list  is  very
         long you may store in a file (for instance flows.list) and specify the
         file name instead of the actual flows list (in the above example, this
         would be 'ntop -F flows.list').
 
-        Note that the double quotations around the entire flow expression  are
+        Note  that the double quotations around the entire flow expression are
         required.
 
 
        --KK || ----eennaabbllee--ddeebbuugg
-        Use  this  parameter  to  simplify  application  debug.  It does three
+        Use this parameter to  simplify  application  debug.   It  does  three
         things: 1. Does not fork() on the "read only" html pages.  2. Displays
-        mutex  values on the configuration (info.html) page.  3. (If available
+        mutex values on the configuration (info.html) page.  3. (If  available
         - glibc/gcc) Activates an automated backtrace on application errors.
 
 
        --LL || ----uussee--ssyysslloogg==ffaacciilliittyy
-        Use this parameter to send log messages to the system log  instead  of
+        Use  this  parameter to send log messages to the system log instead of
         stdout.
 
-        -L  and  the  simple  form  --use-syslog use the default log facility,
+        -L and the simple form --use-syslog  use  the  default  log  facility,
         defined as LOG_DAEMON in the #define symbol DEFAULT_SYSLOG_FACILITY in
         globals-defines.h.
 
-        The  complex  form, --use-syslog=facility will set the log facility to
+        The complex form, --use-syslog=facility will set the log  facility  to
         whatever value (e.g. local3, security) you specify.  TThhee == iiss RREEQQUUIIRREEDD
         aanndd nnoo ssppaacceess aarree aalllloowweedd!!
 
-        This  setting  applies  both  to  nnttoopp  and  to any child fork()ed for
-        reporting.  If this parameter is not  specified,  any  fork()ed  child
-        will  use  the  default value and will log it's messages to the system
-        log (this occurs because the fork()ed child must give up  it's  access
+        This setting applies both to  nnttoopp  and  to  any  child  fork()ed  for
+        reporting.   If  this  parameter  is not specified, any fork()ed child
+        will use the default value and will log it's messages  to  the  system
+        log  (this  occurs because the fork()ed child must give up it's access
         to the parents stdout).
 
-        Because  various  systems do not make the permissible names available,
-        we have a table at the end of globals-core.c.   Look  for  myFacility-
+        Because various systems do not make the permissible  names  available,
+        we  have  a  table at the end of globals-core.c.  Look for myFacility-
         Names.
 
 
        --MM || ----nnoo--iinntteerrffaaccee--mmeerrggee
-        By  default, nnttoopp merges the data collected from all of the interfaces
+        By default, nnttoopp merges the data collected from all of the  interfaces
         (NICs) it is monitoring into a single set of counters.
 
         If you have a simple network, say a small LAN with a connection to the
         internet, merging data is good as it gives you a better picture of the
-        whole network.  For larger, more complex networks,  this  may  not  be
-        desirable.   You  may  also  have other reasons for wishing to monitor
+        whole  network.   For  larger,  more complex networks, this may not be
+        desirable.  You may also have other reasons  for  wishing  to  monitor
         each interface separately, for example DMZ vs. LAN traffic.
 
-        This option instructs nnttoopp not to merge network  interfaces  together.
-        This  means  that  nnttoopp will collect statistics for each interface and
+        This  option  instructs nnttoopp not to merge network interfaces together.
+        This means that nnttoopp will collect statistics for  each  interface  and
         report them separately.
 
-        Only ONE interface may be reported on at a time  -  use  the  AAddmmiinn  ||
-        SSwwiittcchh  NNIICC  option  on  the  web  server to select which interface to
+        Only  ONE  interface  may  be  reported on at a time - use the AAddmmiinn ||
+        SSwwiittcchh NNIICC option on the web  server  to  select  which  interface  to
         report upon.
 
-        Note that activating either the  netFlow  and/or  sFlow  plugins  will
+        Note  that  activating  either  the  netFlow and/or sFlow plugins will
         force the setting of -M.  Once enabled, you cannot go back.
 
 
        --OO || ----oouuttppuutt--ppaacckkeett--ppaatthh
-        This   parameter  defines  the  base  path  for  the  ntop-suspicious-
+        This  parameter  defines  the  base  path  for  the   ntop-suspicious-
         pkts.XXX.pcap and normal packet dump files.
 
-        If this parameter is not specified, the default value is the  config.h
-        parameter  CFG_DBFILE_DIR,  which  is  set during ./configure from the
-        --localstatedir= parameter.  If --localstatedir is not  specified,  it
+        If  this parameter is not specified, the default value is the config.h
+        parameter CFG_DBFILE_DIR, which is set  during  ./configure  from  the
+        --localstatedir=  parameter.   If --localstatedir is not specified, it
         defaults to the --prefix value plus /var (e.g. /usr/local/var).
 
-        Be  aware  that this may not be what you expect when running nnttoopp as a
+        Be aware that this may not be what you expect when running nnttoopp  as  a
         daemon or Windows service. Setting an explicit and absolute path value
         is SSTTRROONNGGLLYY recommended if you use this facility.
 
@@ -711,41 +704,41 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
        --QQ || ----ssppooooll--ffiillee--ppaatthh
         These parameters specify where nnttoopp stores database files.
 
-        There  are  two  types,  'temporary'  - that is ones which need not be
-        retained from nnttoopp run to nnttoopp run, and  'permanent',  which  must  be
+        There are two types, 'temporary' - that is  ones  which  need  not  be
+        retained  from  nnttoopp  run  to nnttoopp run, and 'permanent', which must be
         retained (or recreated).
 
         The 'permanent' databases are the preferences, "prefsCache.db" and the
-        password file, "ntop_pw.db".  These are stored in the -P |  --db-file-
+        password  file, "ntop_pw.db".  These are stored in the -P | --db-file-
         path specified location.
 
-        Certain  plugins  use  the  -P | --db-file-path specified location for
-        their database ("LsWatch.db")  or  (as  a  default  value)  for  files
+        Certain plugins use the -P |  --db-file-path  specified  location  for
+        their  database  ("LsWatch.db")  or  (as  a  default  value) for files
         (.../rrd/...).
 
-        The  'temporary'  databases  are the address queue, "addressQueue.db",
-        the cached DNS resolutions, "dnsCache.db" and the MAC  prefix  (vendor
+        The 'temporary' databases are the  address  queue,  "addressQueue.db",
+        the  cached  DNS resolutions, "dnsCache.db" and the MAC prefix (vendor
         table), "macPrefix.db".
 
         If only -P | --db-file-path is specified, it is used for both types of
         databases.
 
-        The directories named must allow read/write and file creation  by  the
-        nnttoopp  user.  For security, nobody else should have even read access to
+        The  directories  named must allow read/write and file creation by the
+        nnttoopp user.  For security, nobody else should have even read access  to
         these files.
 
-        Note that the default value is the config.h parameter  CFG_DBFILE_DIR.
-        This  is  set  during ./configure from the --localstatedir= parameter.
+        Note  that the default value is the config.h parameter CFG_DBFILE_DIR.
+        This is set during ./configure from  the  --localstatedir=  parameter.
         If --localstatedir is not specified, it defaults to the --prefix value
         plus /var (e.g. /usr/local/var).
 
-        This  may not be what you expect when running nnttoopp as a daemon or Win-
+        This may not be what you expect when running nnttoopp as a daemon or  Win-
         dows service.
 
         Note that on versions of nnttoopp prior to 2.3, these parameters defaulted
         to "." (the current working directory, e.g.  the value returned by the
-        pwd command) and caused havoc as it was different when  nnttoopp  was  run
-        from  the  command line, vs. run via cron, vs. run from an initializa-
+        pwd  command)  and  caused havoc as it was different when nnttoopp was run
+        from the command line, vs. run via cron, vs. run from  an  initializa-
         tion script.
 
         Setting an explicit and absolute path value is SSTTRROONNGGLLYY recommended.
@@ -754,9 +747,9 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
        --UU || ----mmaappppeerr
         Specifies the URL of the mapper.pl utility.
 
-        If provided, nnttoopp creates a clickable hyperlink  on  the  'Info  about
-        host  xxxxxx'  page to this URL by appending ?host=xxxxx.  Any type of
-        host lookup could be performed, but this is  intended  to  lookup  the
+        If  provided,  nnttoopp  creates  a clickable hyperlink on the 'Info about
+        host xxxxxx' page to this URL by appending ?host=xxxxx.  Any  type  of
+        host  lookup  could  be  performed, but this is intended to lookup the
         geographical location of the host.
 
         A cgi-based mapper interface to http://www.multimap.com is part of the
@@ -774,34 +767,34 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
        ----ddiissaabbllee--iinnssttaannttsseessssiioonnppuurrggee
         nnttoopp sets completed sessions as 'timed out' and then purge them almost
         instantly, which is not the behavior you might expect from the discus-
-        sions about purge timeouts.  This switch makes ntop respect the  time-
+        sions  about purge timeouts.  This switch makes ntop respect the time-
         outs for completed sessions.  It is NOT the default because a busy web
-        server may have 100s or 1000s of completed  sessions  and  this  would
+        server  may  have  100s  or 1000s of completed sessions and this would
         significantly increase the amount of memory nnttoopp uses.
 
 
        ----ddiissaabbllee--mmuutteexxeexxttrraaiinnffoo
-        nnttoopp  stores extra information about the locks and unlocks of the pro-
-        tective mutexes it uses. Since nnttoopp uses  fine-grained  locking,  this
-        information  is  updated  frequently.   On some OSes, the system calls
-        used to collect this  informatio  (getpid()  and  gettimeofday())  are
-        expensive.   This  option  disables  the extra information.  It should
+        nnttoopp stores extra information about the locks and unlocks of the  pro-
+        tective  mutexes  it  uses. Since nnttoopp uses fine-grained locking, this
+        information is updated frequently.  On some  OSes,  the  system  calls
+        used  to  collect  this  informatio  (getpid() and gettimeofday()) are
+        expensive.  This option disables the  extra  information.   It  should
         have no processing impact on nnttoopp
-         - however should nnttoopp actually deadlock, we would lose  the  informa-
+         -  however  should nnttoopp actually deadlock, we would lose the informa-
         tion that sometimes tells us why.
 
 
        ----ddiissaabbllee--sscchheeddyyiieelldd
-        nnttoopp  uses  sched_yield()  calls  for  better interactive performance.
-        Under some situations, primarily under  RedHat  Linux  8.0,  this  can
-        deadlock,  causing  the  nnttoopp  web server to stop responding, although
-        nnttoopp appears to still be operational according to the ps command.  Use
+        nnttoopp uses sched_yield()  calls  for  better  interactive  performance.
+        Under  some  situations,  primarily  under  RedHat Linux 8.0, this can
+        deadlock, causing the nnttoopp web server  to  stop  responding,  although
+        nnttoopp  appears to still be operational according to the ps command. Use
         this switch to disable these calls, IF you are seeing deadlocks.
 
 
        ----ddiissaabbllee--ssttooppccaapp
         Return nnttoopp to the old (v2.1) behavior on a memory error.  The default
-        of stopcap enabled makes  the  web  interface  available  albeit  with
+        of  stopcap  enabled  makes  the  web  interface available albeit with
         static content until nnttoopp is shutdown.
 
 
@@ -812,13 +805,13 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
 
        ----iinnssttaannccee
 
-        You  can  run  multiple instances of nnttoopp simultaneously by specifying
-        different -P values (typically through separate ntop.conf files).   If
-        you  set  a  value  for  this parameter (available only on the command
-        line), you (1) display the 'instance' name on every web page  and  (2)
+        You can run multiple instances of nnttoopp  simultaneously  by  specifying
+        different  -P values (typically through separate ntop.conf files).  If
+        you set a value for this parameter  (available  only  on  the  command
+        line),  you  (1) display the 'instance' name on every web page and (2)
         alter the log prefix from "NTOP" to your chosen value.
 
-        If  you want to make the tag more obvious, create a .instance class in
+        If you want to make the tag more obvious, create a .instance class  in
         style.css, e.g.:
 
            .instance {
@@ -826,25 +819,25 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
              font-size: 18pt;
            }
 
-        Note (UNIX): To run completely different versions of the nnttoopp  binary,
+        Note  (UNIX): To run completely different versions of the nnttoopp binary,
         you need to compile and install into a different library (using ./con-
         figure --prefix) and then specify the LD_LIBRARY_PATH before invoking,
         e.g.
 
         LD_LIBRARY_PATH=/devel/lib/ntop/:... /devel/bin/ntop ...args...
 
-        If  present,  a file of the form <instance>_ntop_logo.gif will be used
+        If present, a file of the form <instance>_ntop_logo.gif will  be  used
         instead of the normal ntop_logo.gif.  This is tested for ONLY once, at
-        the  beginning  of  the run.  The EXACT word(s) of the --instance flag
-        are used, without testing if they make a proper file name.  If  -  for
+        the beginning of the run.  The EXACT word(s) of  the  --instance  flag
+        are  used,  without testing if they make a proper file name.  If - for
         any reason - the file is not found, an informational message is logged
         and the normal logo file is used.  To construct your own logo, make it
         a 300x40 transparent gif.
 
         NOTE: On the web pages, nnttoopp uses the dladdr() function.  The original
-        Solaris routine had a bug, replicated in FreeBSD (and  possibly  other
-        places)  where  it uses the ARGV[0] value - which might be erroneous -
-        instead of the actual file name.  If the 'running  from'  value  looks
+        Solaris  routine  had a bug, replicated in FreeBSD (and possibly other
+        places) where it uses the ARGV[0] value - which might be  erroneous  -
+        instead  of  the  actual file name.  If the 'running from' value looks
         bogus but the 'libaries in' value looks ok, go with the libarary.
 
 
@@ -862,25 +855,25 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
 
        ----pp33pp--uurrii
 
-        P3P is a W3C recommendation - http://www.w3.org/TR/P3P/ - for specify-
-        ing personal information a site collects and what  it  does  with  the
-        information.  These parameters allow to return P3P information.  We do
-        not supply samples.
+        P3P  is  a  W3C  recommendation  -  http://www.w3.org/TR/P3P/  -   for
+        specifying  personal information a site collects and what it does with
+        the information.  These parameters allow to  return  P3P  information.
+        We do not supply samples.
 
 
        ----ppccaapp__sseettnnoonnbblloocckk
         On some platforms, the nnttoopp web server will hang or appear to hang (it
-        actually  just  responds incredibly slowly to the first request from a
+        actually just responds incredibly slowly to the first request  from  a
         browser session), while the rest of nnttoopp runs just fine. This is known
         to be an issue under FreeBSD 4.x.
 
-        This  option  sets the non-blocking option (assuming it's available in
+        This option sets the non-blocking option (assuming it's  available  in
         the version of libpcap that is installed).
 
         While this works around the problem (by turing an interupt driven pro-
         cess into a poll), it also MAY signifcantly increases the cpu usage of
         nnttoopp..  Although it does not actually interfere with other work, seeing
-        nnttoopp  use  80-90%  or  more  of the cpu is not uncommon - don't say we
+        nnttoopp use 80-90% or more of the cpu is not  uncommon  -  don't  say  we
         didn't warn you.
 
         TTHHIISS OOPPTTIIOONN IISS OOFFFFIICCIIAALLLLYY UUNNSSUUPPPPOORRTTEEDD and used at your own risk.  Read
@@ -888,14 +881,14 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
 
 
        ----sskkiipp--vveerrssiioonn--cchheecckk
-        By  default,  nnttoopp accesses a remote file to periodically check if the
-        most current version is running.  This  option  disables  that  check.
-        Please  review  the privacy notice at the bottom of this page for more
-        information.  By default, the recheck period is slightly more than  15
-        days.   This  can be adjusted via a constant in globals-defines.h.  If
-        the result of the initial check indicates that the nnttoopp version  is  a
-        'new  development'  version  (that  is newer than the latest published
-        development version), the recheck is disabled.  This is because  which
+        By default, nnttoopp accesses a remote file to periodically check  if  the
+        most  current  version  is  running.  This option disables that check.
+        Please review the privacy notice at the bottom of this page  for  more
+        information.   By default, the recheck period is slightly more than 15
+        days.  This can be adjusted via a constant in  globals-defines.h.   If
+        the  result  of the initial check indicates that the nnttoopp version is a
+        'new development' version (that is newer  than  the  latest  published
+        development  version), the recheck is disabled.  This is because which
         fixes and enhancements were present/absent from the code.
 
         NOTE: At present, the recheck does not work under Windows.
@@ -903,57 +896,57 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
 
        ----ssssll--wwaattcchhddoogg
 
-        Enable  a watchdog for webserver hangs. These usually happen when con-
-        necting with older browsers. The user  gets  nothing  back  and  other
+        Enable a watchdog for webserver hangs. These usually happen when  con-
+        necting  with  older  browsers.  The  user gets nothing back and other
         users can't connect. Internally, packet processing continues but there
-        is no way to access the data through the web server or  shutdown  ntop
-        cleanly.   With  the  watchdog,  a timeout occurs after 3 seconds, and
-        processing continues with a log message. Unfortunately, the user  sees
+        is  no  way to access the data through the web server or shutdown ntop
+        cleanly.  With the watchdog, a timeout occurs  after  3  seconds,  and
+        processing  continues with a log message. Unfortunately, the user sees
         nothing - it just looks like a failed connection. (also available as a
         ./configure option, --enable-sslwatchdog)
 
 
        ----ww33cc
-        By default, nnttoopp generates displayable but not great html.  There  are
-        a  number  of tags we do not generate because they cause problems with
-        older browsers which are still commonly used or are important to  look
-        good  on  real-world browsers.  This flag tells nnttoopp to generate 'BET-
-        TER' (but not perfect) w3c compliant html 4.01 output. This in no  way
-        addresses  all  of the compatibility and markup issues.  Over time, we
-        would like to make nnttoopp more compatible, but it will  never  be  100%.
+        By  default, nnttoopp generates displayable but not great html.  There are
+        a number of tags we do not generate because they cause  problems  with
+        older  browsers which are still commonly used or are important to look
+        good on real-world browsers.  This flag tells nnttoopp to  generate  'BET-
+        TER'  (but not perfect) w3c compliant html 4.01 output. This in no way
+        addresses all of the compatibility and markup issues.  Over  time,  we
+        would  like  to  make nnttoopp more compatible, but it will never be 100%.
         If you find any issues, please report them to ntop-dev.
 
 
 WWEEBB VVIIEEWWSS
-       While  nnttoopp  is running, multiple users can access the traffic informa-
+       While nnttoopp is running, multiple users can access the  traffic  informa-
        tion using their web browsers.  nnttoopp does not generate 'fancy' or 'com-
-       plex'  html,  although  it does use frames, shallowly nested tables and
+       plex' html, although it does use frames, shallowly  nested  tables  and
        makes some use of JavaScript and Cascading Style Sheets.
 
-       Beginning with release 3.1,  the  menus  are  cascading  dropdowns  via
+       Beginning  with  release  3.1,  the  menus  are cascading dropdowns via
        JSCookMenu.
 
        We do not expect problems with any current web browser, but our ability
-       to test with less common ones is very limited.   Testing  has  included
-       most  current  common  browsers  Gecko (Firefox, Netscape), KHTML (Kon-
+       to  test  with  less common ones is very limited.  Testing has included
+       most current common browsers Gecko  (Firefox,  Netscape),  KHTML  (Kon-
        queror), Opera and Internet Explorer.
 
-       In documentation and this man page, when we refer to  a  page  such  as
+       In  documentation  and  this  man page, when we refer to a page such as
        Admin | Switch NIC, we mean the Broad category "Admin" and the detailed
        item "Switch NIC" on that Admin menu.
 
 
 NNOOTTEESS
-       nnttoopp requires a number of external  tools  and  libraries  to  operate.
-       Certain  other  tools  are optional, but add to the program's capabili-
+       nnttoopp  requires  a  number  of  external tools and libraries to operate.
+       Certain other tools are optional, but add to  the  program's  capabili-
        ties.
 
 
        ----wweebbsseerrvveerr--qquueeuuee
-        Specifies the maximum number of web server  requests  for  the  tcp/ip
-        stack  to  retain  in  it's  queue  awaiting  delivery to the nnttoopp web
+        Specifies  the  maximum  number  of web server requests for the tcp/ip
+        stack to retain in it's  queue  awaiting  delivery  to  the  nnttoopp  web
         server.  Requests in excess of this queue may be dropped (allowing for
-        retransmission)  or rejected at the tcp/ip stack level, depending upon
+        retransmission) or rejected at the tcp/ip stack level, depending  upon
         the OS.  Whatever happens, happens at the OS level, without any infor-
         mation being delivered to nnttoopp
 
@@ -961,7 +954,7 @@ NNOOTTEESS
 
         lliibbppccaapp from http://www.tcpdump.org/, version 0.7.2 or newer.
 
-        The  Windows  version makes use of WWiinnPPccaapp (libpcap for Windows) which
+        The Windows version makes use of WWiinnPPccaapp (libpcap for  Windows)  which
         may be downloaded from http://winpcap.polito.it/install/default.htm.
 
         WARNING: The 2.x releases of WWiinnPPccaapp will NOT support SMP machines.
@@ -969,39 +962,39 @@ NNOOTTEESS
         ggddbbmm from http://www.gnu.org/software/gdbm/gdbm.html
 
         nnttoopp requires a POSIX threads library. Although a single-threaded ver-
-        sion  of  nnttoopp can be built from the source if requested during ./con-
+        sion of nnttoopp can be built from the source if requested  during  ./con-
         figure, it is not recommended for more than trivial usage.
 
-        The  ggdd  library,  for  the  creation  of  png  files,  available   at
+        The   ggdd  library,  for  the  creation  of  png  files,  available  at
         http://www.boutell.com/gd/.  nnttoopp supports both gd 1.X and 2.X
 
-        The  lliibbppnngg  library,  for  the  creation  of  png files, available at
+        The lliibbppnngg library, for  the  creation  of  png  files,  available  at
         http://www.libpng.org/pub/png/libpng.html.   nnttoopp  supports  both  the
-        1.0.x  series  and the 1.2.x series of libpng, but cautions users that
-        there are incompatibilities if you compile with one and run  with  the
-        other.   Please  read  the discussion in docs/FAQ before reporting ANY
+        1.0.x series and the 1.2.x series of libpng, but cautions  users  that
+        there  are  incompatibilities if you compile with one and run with the
+        other.  Please read the discussion in docs/FAQ  before  reporting  ANY
         problem with libpng.
 
-        (if an https:// server is desired) ooppeennSSSSLL from  the  OpenSSL  project
+        (if  an  https://  server is desired) ooppeennSSSSLL from the OpenSSL project
         available at http://www.openssl.org.
 
-        The  rrrrddttooooll  library  is required by the rrd plugin.  rrdtool creates
-        'Round-Robin databases' which are used to store and  graph  historical
-        data  in a format that permits long duration retention without growing
-        larger  over   time.    The   rrdtool   home   page   is   http://peo-
+        The rrrrddttooooll library is required by the rrd  plugin.   rrdtool  creates
+        'Round-Robin  databases'  which are used to store and graph historical
+        data in a format that permits long duration retention without  growing
+        larger   over   time.    The   rrdtool   home   page   is  http://peo-
         ple.ee.ethz.ch/~oetiker/webtools/rrdtool/
 
         nnttoopp includes a limited version of rrdtool 1.0.49 in the myrrd/ direc-
         tory.  Users of nnttoopp v3.1 should not need to specifically install rrd-
         tool.
 
-        The  ssffllooww  Plugin  is courtesy of and supported by InMon Corporation,
+        The ssffllooww Plugin is courtesy of and supported  by  InMon  Corporation,
         http://www.inmon.com/sflowTools.htm.
 
         There are other optional libraries.  See the output of ./configure for
         a fuller listing.
 
-        Tool  locations are current as of December 2004 - please send email to
+        Tool locations are current as of December 2004 - please send email  to
         report new locations or dead links.
 
 
@@ -1010,36 +1003,36 @@ SSEEEE AALLSSOO
 
 
 PPRRIIVVAACCYY NNOOTTIICCEE
-       By default at startup and at periodic intervals, the nnttoopp program  will
-       retrieve  a  file  containing current ntop program version information.
-       Retrieving this file allows this nnttoopp instance to confirm  that  it  is
+       By  default at startup and at periodic intervals, the nnttoopp program will
+       retrieve a file containing current ntop  program  version  information.
+       Retrieving  this  file  allows this nnttoopp instance to confirm that it is
        running the most current version.
 
-       The  retrieval is done using standard http:// requests, which will cre-
-       ate log records on the hosting system.  These log  records  do  contain
-       information  which  identifies  a specific nnttoopp site.  Accordingly, you
-       are being notified that this individually identifiable  information  is
+       The retrieval is done using standard http:// requests, which will  cre-
+       ate  log  records  on the hosting system.  These log records do contain
+       information which identifies a specific nnttoopp  site.   Accordingly,  you
+       are  being  notified that this individually identifiable information is
        being transmitted and recorded.
 
-       You  may  request - via the ----sskkiipp--vveerrssiioonn--cchheecckk run-time option - that
-       this check be eliminated.  If you  use  this  option,  no  individually
+       You may request - via the ----sskkiipp--vveerrssiioonn--cchheecckk run-time option  -  that
+       this  check  be  eliminated.   If  you use this option, no individually
        identifiable information is transmitted or recorded, because the entire
        retrieval and check is skipped.
 
-       We ask you to allow this retrieval and check, because it benefits  both
+       We  ask you to allow this retrieval and check, because it benefits both
        you and the nnttoopp developers.  It benefits you because you will be auto-
-       matically notified if the nnttoopp program  version  is  obsolete,  becomes
-       unsupported  or  is  no  longer current.  It benefits the developers of
-       nnttoopp because it allows us  to  determine  the  number  of  active  nnttoopp
-       instances,  and  the  operating  system/versions that users are running
-       nnttoopp under.  This allows us to focus development resources  on  systems
+       matically  notified  if  the  nnttoopp program version is obsolete, becomes
+       unsupported or is no longer current.  It  benefits  the  developers  of
+       nnttoopp  because  it  allows  us  to  determine  the number of active nnttoopp
+       instances, and the operating system/versions  that  users  are  running
+       nnttoopp  under.   This allows us to focus development resources on systems
        like those our users are using nnttoopp on.
 
-       The  individually  identifiable  information  is  contained  in the web
-       server log records which are automatically created each time  the  ver-
-       sion  file  is retrieved.  This is a function of the web server and not
-       of nnttoopp , but we do take advantage of it.  The log record shows the  IP
-       address  of  the  requestor (the nnttoopp instance) and a User-Agent header
+       The individually identifiable  information  is  contained  in  the  web
+       server  log  records which are automatically created each time the ver-
+       sion file is retrieved.  This is a function of the web server  and  not
+       of  nnttoopp , but we do take advantage of it.  The log record shows the IP
+       address of the requestor (the nnttoopp instance) and  a  User-Agent  header
        field.  We place information in the User-Agent header as follows:
 
            ntop/<version>
@@ -1059,61 +1052,61 @@ PPRRIIVVAACCYY NNOOTTIICCEE
 
        For example:
 
-           ntop/2.2.98 host/i686-pc-linux-gnu  distro/redhat  release/9  kern-
+           ntop/2.2.98  host/i686-pc-linux-gnu  distro/redhat  release/9 kern-
        rlse/2.4.20-8smp
-           GCC/3.2.2  config(i18n) run(i; u; P; w; t; logextra; m; instantses-
+           GCC/3.2.2 config(i18n) run(i; u; P; w; t; logextra; m;  instantses-
        sionpurge;
            schedyield; d; usesyslog=; t) gdbm/1.8.0 openssl/0.9.7a zlib/1.1.4
            access/http interfaces(eth0,eth1)
 
-       Distro and release information is determined at compile time  and  con-
-       sists  of  information typically found in the /etc/release (or similar)
+       Distro  and  release information is determined at compile time and con-
+       sists of information typically found in the /etc/release  (or  similar)
        file. See the nnttoopp tool linuxrelease for how this is determined.
 
-       gcc compiler version (if available) is the internal version #s for  the
+       gcc  compiler version (if available) is the internal version #s for the
        gcc compiler, e.g. 3.2.3.
 
-       kernrlse  is  the  Linux  Kernel  version or the xBSD 'release' such as
-       4.9-RELEASE and is determined from the uname data (if it's  available).
+       kernrlse is the Linux Kernel version or  the  xBSD  'release'  such  as
+       4.9-RELEASE  and is determined from the uname data (if it's available).
 
        The ./configure parameters are stripped of directory paths, leading -s,
-       etc. to create a short form that shows us what  ./configure  parameters
+       etc.  to  create a short form that shows us what ./configure parameters
        people are using.
 
        Similarly, the run time parameters are stripped of data and paths, just
        showing which flags are being used.
 
-       The libpcap, gdbm, openssl and zlib  versions  come  from  the  strings
+       The  libpcap,  gdbm,  openssl  and  zlib versions come from the strings
        returned by the various inquiry functions (if they're availabe).
 
        Here's a sample log record:
 
        67.xxx.xxx.xxx  -  -  [28/Dec/2003:12:11:46  -0500]  "GET  /version.xml
        HTTP/1.0"
-         200 1568 www.burtonstrauss.com "-"  "ntop/2.2.98  host/i686-pc-linux-
+         200  1568  www.burtonstrauss.com "-" "ntop/2.2.98 host/i686-pc-linux-
        gnu
          distro/redhat release/9 kernrlse/2.4.20-8smp GCC/3.2.2 config(i18n)
          run(i; u; P; w; t; logextra; m; instantsessionpurge; schedyield; d;
-         usesyslog=)    libpcap/0.8   gdbm/1.8.0   openssl/0.9.7a   zlib/1.1.4
+         usesyslog=)   libpcap/0.8   gdbm/1.8.0   openssl/0.9.7a    zlib/1.1.4
        access/http
          interfaces(eth0,eth1,eth2)" "-"
 
 
 UUSSEERR SSUUPPPPOORRTT
-       Please send bug reports to  the  ntop-dev  <ntop-dev@ntop.org>  mailing
+       Please  send  bug  reports  to the ntop-dev <ntop-dev@ntop.org> mailing
        list. The ntop <ntop@ntop.org> mailing list is used for discussing ntop
        usage issues. In order to post messages on the lists a (free) subscrip-
-       tion  is required to limit/avoid spam. Please do NOT contact the author
+       tion is required to limit/avoid spam. Please do NOT contact the  author
        directly unless this is a personal question.
 
-       Commercial support is available upon request. Please see the ntop  site
+       Commercial  support is available upon request. Please see the ntop site
        for further info.
 
        Please send code patches to <patch@ntop.org>.
 
 
 AAUUTTHHOORR
-       ntop's  author  is Luca Deri (http://luca.ntop.org/) who can be reached
+       ntop's author is Luca Deri (http://luca.ntop.org/) who can  be  reached
        at <deri@ntop.org>.
 
 
@@ -1122,11 +1115,11 @@ LLIICCEENNCCEE
 
 
 AACCKKNNOOWWLLEEDDGGMMEENNTTSS
-       The author acknowledges the Centro Serra of  the  University  of  Pisa,
+       The  author  acknowledges  the  Centro Serra of the University of Pisa,
        Italy (http://www-serra.unipi.it/) for hosting the ntop sites (both web
        and mailing lists), and Burton Strauss <burton@ntopsupport.com> for his
-       help   and   user   assistance.  Many  thanks  to  Stefano  Suin  <ste-
-       fano@ntop.org> and Rocco Carbone <rocco@ntop.org> for  contributing  to
+       help  and  user  assistance.  Many  thanks  to   Stefano   Suin   <ste-
+       fano@ntop.org>  and  Rocco Carbone <rocco@ntop.org> for contributing to
        the project.
 
 

@@ -638,6 +638,7 @@ int doChangeFilter(int len) {
   } else err = "ERROR: The HTTP Post Data was invalid.";
   if(badChar)
     err = "ERROR: the specified filter expression contains invalid characters.";
+
   if(err==NULL) {
     traceEvent(CONST_TRACE_INFO, "Changing the kernel (libpcap) filter...");
 
@@ -659,7 +660,7 @@ int doChangeFilter(int len) {
 	 if(*myGlobals.runningPref.currentFilterExpression!='\0'){
 	   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Set filter \"%s\" on interface %s",
 		      myGlobals.runningPref.currentFilterExpression, myGlobals.device[i].name);
-	 }else{
+	 } else {
 	   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Set no kernel (libpcap) filtering on interface %s",
 		      myGlobals.device[i].name);
 	 }
@@ -670,25 +671,8 @@ int doChangeFilter(int len) {
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
-  if(myGlobals.runningPref.filterExpressionInExtraFrame) {
-    sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE "\n" : "");
-    sendString("<HTML>\n<HEAD>\n");
-    sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "");
-    sendString("<LINK REL=stylesheet HREF=\"/style.css\" type=\"text/css\">\n");
-    sendString("<SCRIPT TYPE=\"text/javascript\">\n");
-    sendString("<!--\nfunction UpdateFrame(URI,F) {\n");
-    sendString("  Frame=eval(\"parent.\"+F);\n");
-    sendString("  Frame.location.href = URI;\n");
-    sendString("}\n//-->\n</SCRIPT>");
-    sendString("</HEAD>\n");
-    sendString("<BODY ONLOAD=\"UpdateFrame('" CONST_FILTER_INFO_HTML "','filterinfo')\" ");
-    sendString("BACKGROUND=/white_bg.gif BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
-    printSectionTitle("Change kernel (libpcap) filter expression");
-  } else {
-    printHTMLheader("changing kernel (libpcap) filter expression", NULL, BITFLAG_HTML_NO_REFRESH);
-    sendString("<P><HR></P>\n<P><CENTER>");
-  }
-
+  printHTMLheader("changing kernel (libpcap) filter expression", NULL, BITFLAG_HTML_NO_REFRESH);
+  sendString("<P><HR></P>\n<P><CENTER>");
   sendString("<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
 
   if(err == NULL) {
@@ -697,51 +681,46 @@ int doChangeFilter(int len) {
 		  "<B>Filter changed to <I>%s</I>.</B></FONT>\n",
 		 myGlobals.runningPref.currentFilterExpression);
       sendString(buf);
-    } else sendString("<B>Kernel (libpcap) filtering disabled.</B></FONT>\n");
-
-    if(myGlobals.runningPref.filterExpressionInExtraFrame) {
-      sendString("<NOSCRIPT>\n<P>You've got JavaScript disabled. Therefore ");
-      sendString("your extra frame with the filter expression isn't updated ");
-      sendString("automatically. No problem, you can update it here ");
-      sendString("<A HREF=\"" CONST_FILTER_INFO_HTML "\" target=\"filterinfo\">");
-      sendString("manually</A>.</NOSCRIPT></P>");
-      sendString("</BODY>\n</HTML>\n");
     } else {
-      sendString("</CENTER></P>\n");
-      /* sendString("<P><CENTER>The statistics are also reset.</CENTER></P>\n"); */
-      printHTMLtrailer();
+      sendString("<B>Kernel (libpcap) filtering disabled.</B></FONT>\n");
     }
 
-    if(currentFilterExpressionSav != NULL) free(currentFilterExpressionSav);
-    return 0; /* -> Statistics are reset (if uncommented) */
-  } else {
-    if(myGlobals.runningPref.currentFilterExpression != NULL)
-        free(myGlobals.runningPref.currentFilterExpression);
-    myGlobals.runningPref.currentFilterExpression = currentFilterExpressionSav;
-    for(i=0; i<myGlobals.numDevices; i++) {      /* restore old filter expression */
-      if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice) && (err==NULL)) {
-	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode,
-                         myGlobals.runningPref.currentFilterExpression, 1,
-			myGlobals.device[i].netmask.s_addr) < 0)) {
-	  if((pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
-	    traceEvent(CONST_TRACE_ERROR,
-	  	    "Wrong filter '%s' (%s) on interface %s - using old filter",
-		    myGlobals.runningPref.currentFilterExpression,
-                       pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
-	  }
+    sendString("</CENTER></P>\n");
+    printHTMLtrailer();
+
+    if(currentFilterExpressionSav != NULL)
+      free(currentFilterExpressionSav);
+
+    return 0;
+  }
+
+  if(myGlobals.runningPref.currentFilterExpression != NULL)
+    free(myGlobals.runningPref.currentFilterExpression);
+
+  myGlobals.runningPref.currentFilterExpression = currentFilterExpressionSav;
+  for(i=0; i<myGlobals.numDevices; i++) {      /* restore old filter expression */
+    if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice) && (err==NULL)) {
+      if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode,
+                       myGlobals.runningPref.currentFilterExpression, 1,
+                       myGlobals.device[i].netmask.s_addr) < 0)) {
+        if((pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
+          traceEvent(CONST_TRACE_ERROR,
+                     "Wrong filter '%s' (%s) on interface %s - using old filter",
+                     myGlobals.runningPref.currentFilterExpression,
+                     pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
+	  
+        }
 #ifdef HAVE_PCAP_FREECODE
-          pcap_freecode(&fcode);
+        pcap_freecode(&fcode);
 #endif
-	}
       }
     }
 
-    printFlagedWarning(err);
-    if(myGlobals.runningPref.filterExpressionInExtraFrame)
-        sendString("</BODY>\n</HTML>\n");
-    else printHTMLtrailer();
-    return 2;
   }
+
+  printFlagedWarning(err);
+  printHTMLtrailer();
+  return 2;
 }
 
 /* ******************************* */
@@ -1036,7 +1015,6 @@ int processNtopConfigData (char *buf, int savePref)
     tmpPrefs.disablePromiscuousMode = tmpPrefs.disableMutexExtraInfo = 0;
     tmpPrefs.disableInstantSessionPurge = tmpPrefs.disableStopcap = 0;
     tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
-    tmpPrefs.noInvalidLunDisplay = tmpPrefs.filterExpressionInExtraFrame = 0;
     tmpPrefs.numericFlag = tmpPrefs.mergeInterfaces = 0;
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
     tmpPrefs.setNonBlocking = 0;
@@ -1123,12 +1101,6 @@ int processNtopConfigData (char *buf, int savePref)
     if (myGlobals.savedPref.noInvalidLunDisplay &&
         !tmpPrefs.noInvalidLunDisplay) {
         processNtopPref (NTOP_PREF_NO_INVLUN, FALSE, savePref, &tmpPrefs);
-    }
-
-    if (myGlobals.savedPref.filterExpressionInExtraFrame &&
-        !myGlobals.savedPref.filterExpressionInExtraFrame) {
-        processNtopPref (NTOP_PREF_FILTER_EXTRA_FRM, FALSE, savePref,
-                         &tmpPrefs);
     }
 
     if (myGlobals.savedPref.w3c && !tmpPrefs.w3c) {
@@ -1539,12 +1511,6 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 			 NTOP_PREF_NO_INVLUN,
 			 pref->noInvalidLunDisplay,
 			 "Don't display info about non-existent LUNs");
-
-    CONFIG_RADIO_ENTRY (DARK_BG, "Show Filter In Separate Frame (-k)",
-			 NTOP_PREF_FILTER_EXTRA_FRM,
-			 pref->filterExpressionInExtraFrame,
-			 "Filter expression is in a separate frame and so "
-			 "always visible");
 
     CONFIG_RADIO_ENTRY (DARK_BG, "Use W3C", NTOP_PREF_W3C,
 			 pref->w3c,

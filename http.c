@@ -520,6 +520,7 @@ static void ssiMenu_Head() {
              "		['<img src=\"/help.png\">','Help','/ntop" CONST_NTOP_HELP_HTML "',null,null],\n"
              "		['<img src=\"/bug.png\">','Report a Problem','/" CONST_PROBLEMRPT_HTML "',null,null],\n"
              "		[null,'FAQ','/faq.html',null,null],\n"
+             "		['<img src=\"/Risk_high.gif\">','Risk Flags','/" CONST_NTOP_HELP_HTML "',null,null],\n"
              "		],\n"
              "	[null,'Summary',null,null,null,\n"
              "		[null,'Traffic','/" CONST_TRAFFIC_STATS_HTML "',null,null],\n"
@@ -1794,107 +1795,37 @@ RETSIGTYPE httpcleanup(int signo) {
    * There are also a few real pages        *
    * in here.                               *
    *                                        *
-   * Please keep these menus up to date...  *
-   *                                        *
    * Return 0 if you generated the page     *
    *        1 if not                        *
    *                                        *
    **************************************** */
 
 static int generateNewInternalPages(char* pageName) {
-  if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
-      sendString("<!-- Internally generated page -->\n");
-      sendString("<frameset cols=160,* framespacing=\"0\" border=\"0\" frameborder=\"0\">\n");
-      sendString("    <frame src=\"" CONST_LEFTMENU_HTML "\" name=\"Menu\" "
-                 "marginwidth=\"0\" marginheight=\"0\">\n");
-      if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
-          sendString("    <frame src=\"" CONST_CONFIG_NTOP_HTML "\" name=\"area\" "
-                     "marginwidth=\"5\" marginheight=\"0\">\n");
-      }
-      else {
-          sendString("    <frame src=\"" CONST_TRAFFIC_STATS_HTML "\" name=\"area\" "
-                     "marginwidth=\"5\" marginheight=\"0\">\n");
-      }
-      sendString("    <noframes>\n");
-      sendString("    <body>\n\n");
-      sendString("    </body>\n");
-      sendString("    </noframes>\n");
-      sendString("</frameset>\n");
-      sendString("</html>\n");
-      return 0;
-    }
 
-  if(strcasecmp(pageName, CONST_INDEX_INNER_HTML) == 0) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
-
-      sendString("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">\n<html>\n<head>\n"
-		 "<meta http-equiv=\"Expires\" content=\"0\">\n"
-		 "<meta http-equiv=\"Pragma\" content=\"no-cache\">\n"
-		 "<meta http-equiv=\"Content-Style-Type\" content=\"text/css\">\n"
-		 "<meta http-equiv=\"Window-target\" content=\"_top\">\n"
-		 "<meta name=\"ROBOTS\" content=\"NOINDEX,NOFOLLOW\">\n"
-		 "<meta name=\"description\" content=\"ntop (http://www.ntop.org) status for a network.\">\n"
-		 "<meta name=\"author\" content=\"ntop\">\n"
-                 "<meta name=\"generator\" content=\"ntop v");
-      sendString(version);
-      sendString("\"\n"
-                 "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">\n"
-		 "<title>ntop frameset inner index</title>\n"
-		 "</head>\n"
-		 "<frameset rows=\"40,1*\" framespacing=\"0\" border=\"0\" frameborder=\"0\" title=\"ntop contents area\">\n"
-		 "<frame src=\"index_left.html\" marginwidth=\"0\" marginheight=\"0\" title=\"ntop display selection area\">\n");
-
-      if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT)
-	sendString("    <frame src=\"" CONST_CONFIG_NTOP_HTML "\" name=\"area\" "
-		   "marginwidth=\"0\" marginheight=\"0\">\n");
-      else
-	sendString("    <frame src=\"" CONST_TRAFFIC_STATS_HTML "\" name=\"area\" "
-		   "marginwidth=\"0\" marginheight=\"0\">\n");
-
-      sendString("<noframes>\n<body>\n<p>We're sorry, but ntop requires a browser which supports frames.</p>\n"
-		 "</body>\n</noframes>\n</frameset>\n</html>");
-      return 0;
-    }
-
-
-    if((strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
-       (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
+/* Note we do not have CONST_INDEX_HTML nor CONST_LEFTMENU_HTML here.
+ *
+ * They are special cased with CONST_TRAFFIC_STATS_HTML, below, so old-style
+ * URLs probably still work...
+ *
+ *TODO: This stuff is just to warn the user ... and both chunks should probably be
+ * removed around 3.4...
+ */
+ 
+    if((strcasecmp(pageName, CONST_INDEX_INNER_HTML) == 0) ||
+       (strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
+       (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0) ||
+       (strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0)) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<!-- Internally generated page -->\n");
-      sendString("<!-- This is a menu for the internally generated frameset and is"
-                 "     usable for those whose browsers do not support frames... -->\n");
-      ssiMenu_Body();
-      sendString("</body>\n</html>\n");
-      return 0;
-    }
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
+      sendString("<h1>Problem</h1>\n"
+                 "<p>The page you have requested (either explicitly or implicitly),</p>\n<pre>");
 
-    if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
-      if(myGlobals.runningPref.filterExpressionInExtraFrame){
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-        sendString("<!-- Internally generated page -->\n");
-        sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
-        sendString("border=\"0\" frameborder=\"0\">\n");
-        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"2\" ");
-        sendString("marginheight=\"2\" name=\"area\">\n");
-        sendString("    <frame src=\"" CONST_FILTER_INFO_HTML"\" marginwidth=\"0\" ");
-        sendString("marginheight=\"0\" name=\"filterinfo\">\n");
-        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
-        sendString("  </frameset>\n</html>\n");
-      } else {	/* frame so that "area" is defined */
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-        sendString("<!-- Internally generated page -->\n");
-        sendString("<html>\n  <frameset rows=\"100%,*\" framespacing=\"0\" ");
-        sendString("border=\"0\" frameborder=\"0\">\n");
-        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"0\" ");
-        sendString("marginheight=\"0\" name=\"area\">\n");
-        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
-        sendString("  </frameset>\n</html>\n");
-      }
-      return 0;
+      sendString(pageName);
+      sendString("</pre>\n<p>Is one which used to be part of <b>ntop</b>, but is no longer available.</p>\n"
+                 "<p>The framesets used in versions 3.1 and earlier have been removed. "
+                 "Please update your bookmarks or contact your system's administrator for help.</p>\n");
+      return(0);
     }
 
     if(strcasecmp(pageName, CONST_ABTNTOP_HTML) == 0) {
@@ -1923,201 +1854,6 @@ static int generateNewInternalPages(char* pageName) {
     }
     return 1; /* Not in this bunch, boss */
 }
-
-/* **************************************** */
-
-#if 0
-int generateNew1InternalPages(char* pageName) {
-  if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
-      sendString("<!-- Internally generated page -->\n");
-      sendString("<frameset cols=160,* framespacing=\"0\" border=\"0\" frameborder=\"0\">\n");
-      sendString("    <frame src=\"" CONST_LEFTMENU_HTML "\" name=\"Menu\" "
-                     "marginwidth=\"0\" marginheight=\"0\">\n");
-      sendString("    <frame src=\"" CONST_TRAFFIC_STATS_HTML "\" name=\"area\" "
-                     "marginwidth=\"5\" marginheight=\"0\">\n");
-      sendString("    <noframes>\n");
-      sendString("    <body>\n\n");
-      sendString("    </body>\n");
-      sendString("    </noframes>\n");
-      sendString("</frameset>\n");
-      sendString("</html>\n");
-      return 0;
-    }
-
-#define menuitem(const,title,img) sendString("<li><a href=\"" const "\" alt=\"" title "\" target=\"area\">" img title "</a></li>\n");
-
-    if((strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
-       (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
-      sendString("<!-- Internally generated page -->\n");
-      sendString("<!-- This is a menu for the internally generated frameset and is"
-                 "     usable for those whose browsers do not support frames... -->\n");
-      sendString("<h3>Welcome to ntop!</h3>\n");
-      sendString("<ol>\n");
-
-      sendString("<p><b>Summary</b></p>\n");
-      menuitem(CONST_TRAFFIC_STATS_HTML, "Traffic", "");
-      menuitem(CONST_SORT_DATA_THPT_STATS_HTML, "Network Load", "");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_HOSTS_INFO_HTML, "Hosts", "");
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_FC_HOSTS_INFO_HTML, "FC_Ports", "");
-      }
-
-      sendString("<p><b>Network</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_VLAN_LIST_HTML, "VLAN Info", "");
-          menuitem(CONST_AS_LIST_HTML, "ASN Info", "");
-          menuitem(CONST_DOMAIN_STATS_HTML, "Domain", "");
-      }
-
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
-      }
-
-      sendString("<p><b>Protocols</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_SORT_DATA_PROTOS_HTML, "All Protocols", "");
-          /* menuitem(CONST_SORT_DATA_ETH_PROTOS_HTML, "Ethernet", ""); */
-          menuitem(CONST_IP_PROTO_DISTRIB_HTML, "IP", "");
-          menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_FC_DATA_HTML, "Fibre Channel", "");
-      }
-
-      if (!myGlobals.runningPref.printFcOnly) {
-          sendString("<p><b>IP Hosts</b></p>\n");
-          menuitem(CONST_SORT_DATA_IP_HTML, "Traffic", "");
-          menuitem(CONST_SORT_DATA_THPT_HTML, "Throuhhput", "");
-          menuitem(CONST_SORT_DATA_HOST_TRAFFIC_HTML, "Activity", "");
-          menuitem(CONST_IP_L_2_L_HTML, "Local &raquo; Local", "");
-          menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
-          menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
-          menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
-
-          sendString ("<p><b>Local IP</b></p>\n");
-          menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
-          menuitem(CONST_IP_PROTO_USAGE_HTML, "Local Ports Used", "");
-          menuitem(CONST_HOSTS_LOCAL_FINGERPRINT_HTML, "Hosts Fingerprint", "");
-          menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Traffic Matrix", "");
-      }
-
-      if (!myGlobals.runningPref.printIpOnly) {
-          sendString("<p><b>FC_Ports</b></p>\n");
-          menuitem(CONST_FC_TRAFFIC_HTML, "FC_Ports", "");
-          menuitem(CONST_FC_THPT_HTML, "Throughput", "");
-          menuitem(CONST_FC_ACTIVITY_HTML, "Activity", "");
-      }
-
-      sendString("<p><b>Sessions</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-          menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Local Active TCP Sessions", "");
-          if(myGlobals.flowsList != NULL)
-              menuitem(CONST_NET_FLOWS_HTML, "Net Flows", "");
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_FC_SESSIONS_HTML, "FC Sessions", "");
-          menuitem(CONST_SCSI_BYTES_HTML, "SCSI Sessions", "");
-          menuitem(CONST_SCSI_STATUS_HTML, "SCSI Status", "");
-          menuitem(CONST_SCSI_TM_HTML, "SCSI Task Management", "");
-      }
-
-      sendString("<p><b>Latencies</b></p>\n");
-      if (!myGlobals.runningPref.printFcOnly) {
-      }
-      if (!myGlobals.runningPref.printIpOnly) {
-          menuitem(CONST_SCSI_TIMES_HTML, "SCSI", "");
-      }
-
-      sendString("<p><b>Admin</b></p>\n");
-      menuitem(CONST_SHOW_PLUGINS_HTML, "Plugins", "");
-      if(!myGlobals.runningPref.mergeInterfaces)
-          menuitem(CONST_SWITCH_NIC_HTML, "Switch NIC", "");
-      menuitem("dump.html", "Dump Data", "");
-      menuitem(CONST_VIEW_LOG_HTML, "Log", "");
-      menuitem(CONST_CHANGE_FILTER_HTML, "Change Filter", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_RESET_STATS_HTML, "Reset Statistics", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHOW_USERS_HTML, "show Users", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHOW_URLS_HTML, "show URLs", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHUTDOWN_NTOP_HTML, "Shutdown", CONST_IMG_LOCK "&nbsp;");
-
-      sendString("<p><b>About</b></p>\n");
-      menuitem(CONST_ABTNTOP_HTML,  "What's ntop?", "");
-      menuitem(CONST_INFO_NTOP_HTML, "Show Configuration", "");
-      menuitem(CONST_CREDITS_HTML, "Credits", "");
-      menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
-      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report",
-               "<img src=\"/bug.png\" alt=\"create ntop problem report\" "
-                "width=\"23\" height=\"20\" border=\"0\" align=\"middle\">");
-      menuitem("ntophelp.html", "Help Me!",
-               "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
-                 "border=\"0\" align=\"middle\">");
-
-      sendString("</ol>\n"
-`                 "<p><center><b>&copy; 1998-2005 by "
-                 "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
-                 "</body>\n</html>\n");
-      return 0;
-    }
-#undef menuitem
-
-    if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
-      if(myGlobals.runningPref.filterExpressionInExtraFrame){
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-        sendString("<!-- Internally generated page -->\n");
-        sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
-        sendString("border=\"0\" frameborder=\"0\">\n");
-        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"2\" ");
-        sendString("marginheight=\"2\" name=\"area\">\n");
-        sendString("    <frame src=\"" CONST_FILTER_INFO_HTML"\" marginwidth=\"0\" ");
-        sendString("marginheight=\"0\" name=\"filterinfo\">\n");
-        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
-        sendString("  </frameset>\n</html>\n");
-      } else {	/* frame so that "area" is defined */
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-        sendString("<!-- Internally generated page -->\n");
-        sendString("<html>\n  <frameset rows=\"100%,*\" framespacing=\"0\" ");
-        sendString("border=\"0\" frameborder=\"0\">\n");
-        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"0\" ");
-        sendString("marginheight=\"0\" name=\"area\">\n");
-        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
-        sendString("  </frameset>\n</html>\n");
-      }
-      return 0;
-    }
-
-    if(strcasecmp(pageName, CONST_ABTNTOP_HTML) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      sendString("<!-- Internally generated page -->\n");
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
-      sendString("<FONT FACE=Helvetica>\n<HR>\n");
-      sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
-      sendString("currently using the network and reports information concerning the IP\n");
-      sendString("(Internet Protocol) and Fibre Channel (FC) traffic generated by each host. The traffic is \n");
-      sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
-      sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
-		 "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
-		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
-      sendString("NFS<li>X11</ul>\n<p>\n");
-      sendString("<li>Fibre Channel<ul><li>Control Traffic - SW2,GS3,ELS<li>SCSI</ul></ul><p>\n");
-      sendString("<p><b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
-      sendString("open source software</A> and encourages everyone to modify, improve\n ");
-      sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
-      sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
-      sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
-      sendString(CONST_MAILTO_LIST ".</p>\n");
-      sendString("<p>For information on <b>ntop</b> and information privacy, see ");
-      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
-      return 0;
-    }
-    return 1; /* Not in this bunch, boss */
-}
-#endif
 
 /* **************************************** */
 
@@ -2435,19 +2171,6 @@ static int returnHTTPPage(char* pageName,
     return(0);
   }
 
-#if 0  
-  if ((strncasecmp(pageName, CONST_INDEX_HTML, strlen(CONST_INDEX_HTML)) == 0)
-      || (strncasecmp(pageName, CONST_LEFTMENU_HTML,
-                      strlen(CONST_LEFTMENU_HTML)) == 0)) {
-    if (generateNewInternalPages(pageName) == 0) {
-      /* We did the work in the function except for this */
-      if(strcasecmp(pageName, CONST_HOME_HTML) != 0)
-	printTrailer=0;
-    }
-    return (0);
-  }
-#endif
-  
   /*
     Putting this here (and not on top of this function)
     helps because at least a partial respose

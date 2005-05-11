@@ -1814,9 +1814,6 @@ A. There are a couple of options that appear only if they're not compiled in,
     -o             | --no-mac
                              ntop will trust just IP addresses (no MACs)
 
-    -k             | --filter-expression-in-extra-frame
-                             Show kernel filter expression in extra frame
-
     -l <path>      | --pcap-log <path>
                              Dump packets captured to a file (debug only!)
 
@@ -4027,40 +4024,6 @@ A. There are other sets available on the web, of different quality and size.
 Q. What pages can be customized?
 A. ls /usr/share/ntop/html/*.html (or wherever the ntop pages are installed):
 
-   frameset
-   --------
-
-       Note: There is no real benefit, except maybe the title in index.html so
-             you can see that it really does work!
-
-   index.html
-   index_inner.html
-   index_left.html
-   index_top.html
-   top.html
-
-   Navigation
-   ----------
-   About.html
-   Admin.html
-   All.html
-   FibreChannel.html
-   IP.html
-   Local.html
-   SCSI.html
-   Summary.html
-
-   Misc data
-   ---------
-   Copyright.html
-   dump.html
-   faq.html - lots of work
-   help.html - good candidate
-   ntop.html - splash page
-   ntophelp.html
-   privacyNotice.html
-
-
    Also, remember that a file overrides ntop's internal page generation, so you
    can also use this facility to override ANY of ntop's pages and return a
    customized page (perhaps you don't want users seeing them?).
@@ -5490,6 +5453,8 @@ During the 2.2 development cycle, some work was done to make ntop work under
 HP-UX 11 without breaking the HP-UX 10.20 support (limited as it was). During
 the 3.0 development cycle, HP-UX was not considered.
 
+The #ifdef lines in the source were removed prior to ntop 3.2's release.
+
 It will almost certainly fail.
 
 
@@ -5513,6 +5478,7 @@ During the ntop 2.2 and 3.0 development cycles, AIX was not considered.
 
 It will almost certainly fail.
 
+The #ifdef lines in the source were removed prior to ntop 3.2's release.
 
 --------------------------------------------------------------------------------
 -----Libpng---------------------------------------------------------------------

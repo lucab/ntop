@@ -1939,7 +1939,6 @@ typedef struct _userPref {
   bool trackOnlyLocalHosts;     /* -g | --track-local-hosts */
   char *devices;                /* -i | --interface */
   bool enableOtherPacketDump;   /* -j | --create-other-packets */
-  bool filterExpressionInExtraFrame; /* -k | --filter-expression-in-extra-frame */
   char *pcapLog;                /* -l | --pcap-log */
   char *localAddresses;         /* -m | --local-subnets */
   bool numericFlag;             /* -n | --numeric-ip-addresses */

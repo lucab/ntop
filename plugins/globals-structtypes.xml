@@ -419,7 +419,6 @@ typedef struct _userPref {
   bool trackOnlyLocalHosts;     /* -g | --track-local-hosts */
   char *devices;                /* -i | --interface */
   bool enableOtherPacketDump;   /* -j | --create-other-packets */
-  bool filterExpressionInExtraFrame; /* -k | --filter-expression-in-extra-frame */
   char *pcapLog;                /* -l | --pcap-log */
   char *localAddresses;         /* -m | --local-subnets */
   bool numericFlag;             /* -n | --numeric-ip-addresses */
@@ -503,7 +502,6 @@ typedef struct _userPref {
 /*XML b trackOnlyLocalHosts  Work    "-g | --track-local-hosts" */
 /*XML s devices              Work    "-i | --interface" */
 /*XML b enableOtherPacketDump Work "-j | --create-other-packets" */
-/*XML b filterExpressionInExtraFrame Work "-k | --filter-expression-in-extra-frame" */
 /*XML s pcapLog              Work    "-l | --pcap-log" */
 /*XML s localAddresses       Work    "-m | --local-subnets" */
 /*XML b numericFlag          Work    "-n | --numeric-ip-addresses" */

@@ -56,11 +56,11 @@ static char __see__ []    =
    * ('P' option) and so these are processed separately.
    */
 #ifdef WIN32
-static char*  short_options = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:C:D:F:MN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "4:6:a:bce:f:ghi:jl:m:nop:qr:st:w:x:zAB:C:D:F:MN:O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLMN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "4:6:a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLMN:O:P:Q:S:U:VX:W:";
 #else
-static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKMN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "4:6:a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKMN:O:P:Q:S:U:VX:W:";
 #endif
 
 static struct option const long_options[] = {
@@ -79,7 +79,6 @@ static struct option const long_options[] = {
   { "help",                             no_argument,       NULL, 'h' },
   { "interface",                        required_argument, NULL, 'i' },
   { "create-other-packets",             no_argument,       NULL, 'j' },
-  { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
   { "pcap-log",                         required_argument, NULL, 'l' },
   { "local-subnets",                    required_argument, NULL, 'm' },
   { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
@@ -341,10 +340,6 @@ int parseOptions(int argc, char* argv[]) {
 
     case 'j': /* save other (unknown) packets in a file */
       myGlobals.runningPref.enableOtherPacketDump = 1;
-      break;
-
-    case 'k': /* update info of used kernel filter expression in extra frame */
-      myGlobals.runningPref.filterExpressionInExtraFrame = 1;
       break;
 
     case 'l':
@@ -1143,9 +1138,6 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
   } else if(strcmp (key, NTOP_PREF_NO_INVLUN) == 0) {
     processBoolPref (NTOP_PREF_NO_INVLUN, value2bool(value),
 		     &pref->noInvalidLunDisplay, savePref);
-  } else if(strcmp (key, NTOP_PREF_FILTER_EXTRA_FRM) == 0) {
-    processBoolPref (NTOP_PREF_FILTER_EXTRA_FRM, value2bool(value),
-		     &pref->filterExpressionInExtraFrame, savePref);
   } else if(strcmp (key, NTOP_PREF_W3C) == 0) {
     processBoolPref (NTOP_PREF_W3C, value2bool(value), &pref->w3c, savePref);
   } else if(strcmp (key, NTOP_PREF_IPV4V6) == 0) {
@@ -1284,7 +1276,6 @@ void initUserPrefs(UserPref *pref) {
   pref->trackOnlyLocalHosts    = DEFAULT_NTOP_TRACK_ONLY_LOCAL;
   pref->devices = DEFAULT_NTOP_DEVICES;
   pref->enableOtherPacketDump = DEFAULT_NTOP_OTHER_PKT_DUMP;
-  pref->filterExpressionInExtraFrame = DEFAULT_NTOP_FILTER_IN_FRAME;
   pref->pcapLog = DEFAULT_NTOP_PCAP_LOG_FILENAME;
   pref->localAddresses = DEFAULT_NTOP_LOCAL_SUBNETS;
   pref->numericFlag = DEFAULT_NTOP_NUMERIC_IP_ADDRESSES;

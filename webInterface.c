@@ -4506,12 +4506,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_FILTER_EXPRESSION", "(null)");
 
-#ifdef DEFAULT_NTOP_FILTER_IN_FRAME
-  printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_FILTER_IN_FRAME", DEFAULT_NTOP_FILTER_IN_FRAME);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_FILTER_IN_FRAME", "undefined");
-#endif
-
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_FLOW_SPECS", "(null)");
 
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_LOCAL_SUBNETS", "(null)");
@@ -5450,12 +5444,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_EN_SESSION", NTOP_PREF_EN_SESSION);
 #else
   printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_EN_SESSION", "undefined");
-#endif
-
-#ifdef NTOP_PREF_FILTER_EXTRA_FRM
-  printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_FILTER_EXTRA_FRM", NTOP_PREF_FILTER_EXTRA_FRM);
-#else
-  printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_FILTER_EXTRA_FRM", "undefined");
 #endif
 
 #ifdef NTOP_PREF_FILTER
@@ -6583,10 +6571,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            pref->enableOtherPacketDump == 1 ? "Enabled" : "Disabled",
                            DEFAULT_NTOP_OTHER_PKT_DUMP == 1 ? "Enabled" : "Disabled");
 
-  printParameterConfigInfo(textPrintFlag, "-k | --filter-expression-in-extra-frame",
-                           pref->filterExpressionInExtraFrame == 1 ? "Yes" : "No",
-                           DEFAULT_NTOP_FILTER_IN_FRAME == 1 ? "Yes" : "No");
-
   if(pref->pcapLog == NULL) {
     printParameterConfigInfo(textPrintFlag, "-l | --pcap-log",
 			     pref->pcapLog,
@@ -7075,7 +7059,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printInfoSectionNote(textPrintFlag,
                      "</i><ul>\n"
                      "<li><i>Counts may not total because of in-process requests.</i></li>\n"
-                     "<li><i>Each request to the ntop web server - frameset, individual "
+                     "<li><i>Each request to the ntop web server - "
                      "page, chart, etc. is counted separately</i></li></ul>\n<i>");
   }
 

@@ -2000,7 +2000,6 @@
 #define DEFAULT_NTOP_TRACK_ONLY_LOCAL       0         /* -g */
 #define DEFAULT_NTOP_DEVICES                NULL      /* -i */
 #define DEFAULT_NTOP_OTHER_PKT_DUMP         0         /* -j */
-#define DEFAULT_NTOP_FILTER_IN_FRAME        0         /* -k */
 #define DEFAULT_NTOP_PCAP_LOG_FILENAME      NULL      /* -l */
 #define DEFAULT_NTOP_LOCAL_SUBNETS          NULL      /* -m */
 #define DEFAULT_NTOP_NUMERIC_IP_ADDRESSES   0         /* -n */
@@ -2762,7 +2761,6 @@ struct ip6_hdr
 #define NTOP_PREF_MAXLINES         "ntop.maxNumLines"
 #define NTOP_PREF_PRINT_FCORIP     "ntop.printFcOrIp"
 #define NTOP_PREF_NO_INVLUN        "ntop.noInvalidLunDisplay"
-#define NTOP_PREF_FILTER_EXTRA_FRM "ntop.filterExpressionInExtraFrame"
 #define NTOP_PREF_W3C              "ntop.w3c"
 #define NTOP_PREF_IPV4             "ntop.ipv4"
 #define NTOP_PREF_IPV6             "ntop.ipv6"
