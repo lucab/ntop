@@ -103,7 +103,6 @@ static void traceEvent_forked(int eventTraceLevel, char* file, int line, char * 
 static void xmlDebug(char* file, int line, int level, char *format, ...);
 
 #ifdef MAKE_WITH_XMLDUMP
-
 GdomeDOMImplementation *domimpl;
 GdomeDocument *doc;
 GdomeElement *root,
@@ -128,8 +127,7 @@ static int dumpHosts,
 static int debugLevel=0;
 #endif
 
-static unsigned short inTraceEventForked=0,
-                      initialized = 0;
+static unsigned short inTraceEventForked=0;
 
 jmp_buf siglongjmpEnv, siglongjmpBasicEnv;
 
@@ -153,6 +151,8 @@ int dumpXML_writeout(void);
 RETSIGTYPE xml_sighandler(int signo, siginfo_t *siginfo, void *ptr);
 
 #endif
+
+static unsigned short initialized = 0;
 
 /* ****************************** */
 #define CONST_XML_DUMP_XML                  "dump.xml"

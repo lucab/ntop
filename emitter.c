@@ -878,25 +878,25 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       }
     } /* shortView */
 
-    if((!shortView) && (el->ipTrafficProtosNames && checkFilter(filter, "IP"))) {
+    if((!shortView) && (el->protoIPTrafficInfos && checkFilter(filter, "IP"))) {
       char *lastKey = NULL;
 
       initWriteKey(fDescr, lang, "\t", "IP", numEntries);
 
       for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 	if((myGlobals.ipTrafficProtosNames[j] != NULL)
-	   && (el->ipTrafficProtosNames[j] != NULL)) {
+	   && (el->protoIPTrafficInfos[j] != NULL)) {
 	  if(j > 0) { endWriteKey(fDescr, lang,"\t\t", lastKey, ','); }
-
+ 
 	  initWriteKey(fDescr, lang, "\t\t", (lastKey = myGlobals.ipTrafficProtosNames[j]), numEntries);
 	  wrtLlongItm(fDescr, lang,"\t\t\t","sentLoc",
-		    el->ipTrafficProtosNames[j]->sentLoc, ',', numEntries);
+		      el->protoIPTrafficInfos[j]->sentLoc, ',', numEntries);
 	  wrtLlongItm(fDescr, lang,"\t\t\t","sentRem",
-		      el->ipTrafficProtosNames[j]->sentRem, ',', numEntries);
+		      el->protoIPTrafficInfos[j]->sentRem, ',', numEntries);
 	  wrtLlongItm(fDescr, lang,"\t\t\t","rcvdLoc",
-		      el->ipTrafficProtosNames[j]->rcvdLoc, ',', numEntries);
+		      el->protoIPTrafficInfos[j]->rcvdLoc, ',', numEntries);
 	  wrtLlongItm(fDescr, lang,"\t\t\t","rcvdFromRem",
-		      el->ipTrafficProtosNames[j]->rcvdFromRem, ' ', numEntries);
+		      el->protoIPTrafficInfos[j]->rcvdFromRem, ' ', numEntries);
 	}
       } /* for */
 
