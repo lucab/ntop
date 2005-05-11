@@ -477,6 +477,7 @@ typedef struct _userPref {
 #endif
 
   char *instance;               /* --instance '140' */
+  char *logo;
 
   bool disableStopcap;          /* --disable-stopcap '142' */
   bool disableInstantSessionPurge; /* --disable-instantsessionpurge '144' */
@@ -565,6 +566,7 @@ typedef struct _userPref {
 #endif
 
 /*XML s instance             Work    "--instance" */
+/*XML s logo                 Work    "" */
 
 /*XML b disableStopcap       Work    "--disable-stopcap" */
 /*XML b disableInstantSessionPurge Work "--disable-instantsessionpurge" */

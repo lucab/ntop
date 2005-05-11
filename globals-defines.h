@@ -1200,6 +1200,8 @@
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
 #define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
 
+#define CONST_NTOP_LOGO_GIF                 "ntop_logo.gif"
+
 /*
  *  SSI names
  */

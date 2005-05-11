@@ -649,11 +649,42 @@ int parseOptions(int argc, char* argv[]) {
 #endif
 
     case 140: /* instance */
+    {
+      int idx, i, found;
+      struct stat statbuf;
+      char fileName[64], tmpStr[512];
+      FILE *fd;
+
       stringSanityCheck(optarg, "--instance");
       if(myGlobals.runningPref.instance != NULL)
         free(myGlobals.runningPref.instance);
       myGlobals.runningPref.instance = strdup(optarg);
+
+      memset(&tmpStr, 0, sizeof(tmpStr)); 
+      memset(&fileName, 0, sizeof(fileName)); 
+      for(found=0, idx=0; (found != 1) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
+        safe_snprintf(__FILE__, __LINE__, fileName, sizeof(fileName),
+                      "%s_" CONST_NTOP_LOGO_GIF,
+                      myGlobals.runningPref.instance);
+        safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+                      "%s/html/%s",
+                      myGlobals.dataFileDirs[idx],
+                      fileName);
+        revertSlashIfWIN32(tmpStr, 0);
+
+        if((stat(tmpStr, &statbuf) == 0) && ((fd = fopen(tmpStr, "rb")) != NULL)) {
+          found = 1;
+          fclose(fd);
+          myGlobals.runningPref.logo = strdup(fileName);
+          break;
+        }
+      }
+
+      if(found != 1)
+        traceEvent(CONST_TRACE_WARNING, "Cannot find per-instance logo '%s', ignored...", fileName);
+
       break;
+    }
 
     case 142: /* disable-stopcap */
       myGlobals.runningPref.disableStopcap = TRUE;

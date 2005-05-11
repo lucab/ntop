@@ -1,10 +1,12 @@
 <!-- Creator     : groff version 1.18.1 -->
-<!-- CreationDate: Sat Apr  2 17:55:09 2005 -->
+<!-- CreationDate: Wed May 11 14:42:29 2005 -->
 <html>
 <head>
 <meta name="generator" content="groff -Thtml, see www.gnu.org">
 <meta name="Content-Style" content="text/css">
 <title>NTOP</title>
+<!-- Added by insertssi -->
+<link rel=stylesheet href="/style.css" type="text/css">
 <!--#include virtual="/menuHead.html" -->
 </head>
 <body>
@@ -1192,10 +1194,10 @@ expression&gt;&rsquo;[,&lt;flow-label&gt;=&rsquo;&lt;matching
 expression&gt;&rsquo;]</b></p>
 <!-- INDENTATION -->
 <p>, where the label is used to symbolically identify the
-flow specified by the expression. The expression format is
-specified in the appendix. If an expression is specified,
-then the information concerning flows can be accessed
-following the HTML link named &rsquo;List
+flow specified by the expression. The expression is a bpf
+(Berkeley Packet Filter) expression. If an expression is
+specified, then the information concerning flows can be
+accessed following the HTML link named &rsquo;List
 NetFlows&rsquo;.</p>
 <!-- INDENTATION -->
 <p>For instance define two flows with the following
@@ -1622,6 +1624,16 @@ specify the LD_LIBRARY_PATH before invoking, e.g.</p>
 <!-- INDENTATION -->
 <p>LD_LIBRARY_PATH=/devel/lib/ntop/:... /devel/bin/ntop
 ...args...</p>
+<!-- INDENTATION -->
+<p>If present, a file of the form
+&lt;instance&gt;_ntop_logo.gif will be used instead of the
+normal ntop_logo.gif. This is tested for ONLY once, at the
+beginning of the run. The EXACT word(s) of the --instance
+flag are used, without testing if they make a proper file
+name. If - for any reason - the file is not found, an
+informational message is logged and the normal logo file is
+used. To construct your own logo, make it a 300x40
+transparent gif.</p>
 <!-- INDENTATION -->
 <p>NOTE: On the web pages, <b>ntop</b> uses the dladdr()
 function. The original Solaris routine had a bug, replicated

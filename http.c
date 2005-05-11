@@ -715,7 +715,13 @@ static void ssiMenu_Body() {
     sendStringWOssi(
              "      <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
              "       <tr>"
-             "        <td><img src=\"/ntop_logo.gif\"></td>\n"
+             "        <td><img src=\"/");
+    if(myGlobals.runningPref.logo != NULL) {
+      sendStringWOssi(myGlobals.runningPref.logo);
+    } else {
+      sendStringWOssi(CONST_NTOP_LOGO_GIF);
+    }
+    sendStringWOssi("\"></td>\n"
              "        <td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
     sendStringWOssi(myGlobals.runningPref.instance);
     sendStringWOssi(
@@ -724,7 +730,7 @@ static void ssiMenu_Body() {
              "      </table>");
   } else {
     sendStringWOssi(
-             "      <img src=\"/ntop_logo.gif\">");
+             "      <img src=\"/" CONST_NTOP_LOGO_GIF "\">");
   }
   sendStringWOssi(
              "     </td>\n"

@@ -1997,6 +1997,7 @@ typedef struct _userPref {
 #endif
 
   char *instance;               /* --instance '140' */
+  char *logo;
 
   bool disableStopcap;          /* --disable-stopcap '142' */
 
