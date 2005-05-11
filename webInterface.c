@@ -155,7 +155,7 @@ int execCGI(char* cgiName) {
 
 /* **************************************** */
 
-#if(defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX) || defined(DARWIN)
+#if(defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
 void showPluginsList(char* pluginName) {
   FlowFilterList *flows = myGlobals.flowsList;
   short doPrintHeader = 0;

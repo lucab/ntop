@@ -607,7 +607,7 @@ extern void saveNtopPid(void);
 extern void removeNtopPid(void);
 #endif
 
-#if defined(AIX) || defined(WIN32)
+#ifdef WIN32
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
 #endif
 

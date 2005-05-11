@@ -163,11 +163,11 @@ ntop.h
 #endif
 
 #ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>      /* AIX has it */
+#include <sys/select.h>
 #endif
 
 #ifdef HAVE_SYS_LDR_H
-#include <sys/ldr.h>         /* AIX has it */
+#include <sys/ldr.h>
 #endif
 
 #ifdef HAVE_SYS_SOCKIO_H
@@ -175,7 +175,7 @@ ntop.h
 #endif
 
 #ifdef HAVE_DL_H
-#include <dl.h>              /* HPUX has it */
+#include <dl.h>
 #endif
 
 #ifdef HAVE_DIRENT_H

@@ -2621,11 +2621,6 @@
 /* Other, OS specific stuff                                                        */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#if defined(HAVE_NETDB_H) && defined(HPUX) && !defined(NETDB_SUCCESS)
- /* Handle HP-UX 10.20 and 11's retarded netdb.h */
- #define NETDB_SUCCESS h_NETDB_SUCCESS
-#endif
-
 /*
  * On FreeBSD gethostbyaddr() sometimes loops and uses all the available memory.
  * Hence this patch is needed.
@@ -2680,15 +2675,6 @@ struct ip6_hdr
 #define ip6_nxt   ip6_ctlun.ip6_un1.ip6_un1_nxt
 #define ip6_hlim  ip6_ctlun.ip6_un1.ip6_un1_hlim
 #define ip6_hops  ip6_ctlun.ip6_un1.ip6_un1_hlim
-#endif
-
-/*
- * Somehow, gcc under HPUX decides to build a c++ version of malloc.h
- *   Disable the malloc.h stuff.
- */
-#ifdef HPUX
- #undef HAVE_MALLINFO_MALLOC_H
- #undef HAVE_MALLOC_H
 #endif
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

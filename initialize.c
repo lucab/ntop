@@ -1664,38 +1664,14 @@ void initDeviceDatalink(int deviceId) {
   if(myGlobals.device[deviceId].virtualDevice) return;
 
   /* get datalink type */
-#ifdef AIX
-  /* This is a bug of libpcap on AIX - so we totally ignore libpcap */
-  switch(myGlobals.device[deviceId].name[0]) {
-  case 't': /* TokenRing */
-    myGlobals.device[deviceId].datalink = DLT_IEEE802;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] is \"t...\", treating as DLT_IEEE802 (TokenRing)",
-	      deviceId,
-	       myGlobals.device[deviceId].name);
-    break;
-  case 'l': /* Loopback */
-    myGlobals.device[deviceId].datalink = DLT_NULL;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] is loopback, treating as DLT_NULL",
-	       deviceId,
-	       myGlobals.device[deviceId].name);
-    break;
-  default:
-    myGlobals.device[deviceId].datalink = DLT_EN10MB; /* Ethernet */
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s], treating as DLT_EN10MB (10/100/1000 Ethernet)",
-	       deviceId,
-	       myGlobals.device[deviceId].name);
-  }
-#else
-  /* Other OSes have SOME issues, but if we don't recognize the special device,
-   * use libpcap */
- #if defined(__FreeBSD__)
+#if defined(__FreeBSD__)
   if(strncmp(myGlobals.device[deviceId].name, "tun", 3) == 0) {
     myGlobals.device[deviceId].datalink = DLT_PPP;
     traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] is \"tun\", treating as DLT_PPP",
 	       deviceId,
 	       myGlobals.device[deviceId].name);
   } else
- #else /* Not AIX or FreeBSD */
+#else /* Not FreeBSD */
   if((myGlobals.device[deviceId].name[0] == 'l') /* loopback check */
      && (myGlobals.device[deviceId].name[1] == 'o')) {
     myGlobals.device[deviceId].datalink = DLT_NULL;
@@ -1703,11 +1679,10 @@ void initDeviceDatalink(int deviceId) {
 	       deviceId,
 	       myGlobals.device[deviceId].name);
   } else
- #endif
-
-    myGlobals.device[deviceId].datalink = pcap_datalink(myGlobals.device[deviceId].pcapPtr);
-
 #endif
+  /* Other OSes have SOME issues, but if we don't recognize the special device,
+   * use libpcap */
+    myGlobals.device[deviceId].datalink = pcap_datalink(myGlobals.device[deviceId].pcapPtr);
 
   if(myGlobals.device[deviceId].datalink > MAX_DLT_ARRAY) {
     traceEvent(CONST_TRACE_WARNING,

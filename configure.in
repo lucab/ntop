@@ -6,7 +6,7 @@ dnl>   Solaris 8 -- libgcc_s -- need test
 
 dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
-dnl> Copyright (c) 1998 - 2004 Luca Deri <deri@ntop.org>
+dnl> Copyright (c) 1998 - 2005 Luca Deri <deri@ntop.org>
 dnl>                           Rocco Carbone <rocco@ntop.org>
 dnl>                       and Burton M. Strauss III <burton@ntopsupport.com>
 dnl>
@@ -50,7 +50,7 @@ AC_INIT([ntop],[3.1.2])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.1.004-2005-04-02"
+SCRIPTVER="v3.1.005-2005-05-11"
 
 dnl>
 dnl> generate the config header
@@ -65,7 +65,7 @@ NTOP_VERSION_EXTRA=""
 
 echo
 echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
-echo "  copyright (c) 1998-2004 Luca Deri <deri@ntop.org>"
+echo "  copyright (c) 1998-2005 Luca Deri <deri@ntop.org>"
 echo
 echo          "Configuration script version $SCRIPTVER"
 echo
@@ -1027,51 +1027,6 @@ dnl> To be listed, must be in top 10 of www.distrowatch.org's 6 months charts
 
     *-*-netbsd*:* )
         DEFINEOS="NETBSD";    STATUS="UNTESTED"
-      ;;
-
-    *-*-hpux11*:gcc* )
-        DEFINEOS="HPUX";      STATUS="WILLFAIL"
-        dnl> plugin load function unique to HPUX
-        AC_CHECK_LIB([dld], [shl_load])
-
-        dnl> thread library
-        dnl> test for their "special" function and library with the non-standard names
-        AC_CHECK_LIB(pthread, __pthread_create_system)
-        AC_CHECK_LIB(posix4, sem_init, , [AC_CHECK_LIB(rt, sem_init)])
-      ;;
-
-    *-*-hpux10*:gcc* )
-        NOTE1="Single Threaded only."
-        DEFINEOS="HPUX"
-        if test ".${ac_disable_multithread}" = ".yes"; then
-            STATUS="UNTESTED"
-        else
-            STATUS="WILLFAIL"
-        fi
-        dnl> plugin load function unique to HPUX
-        AC_CHECK_LIB([dld], [shl_load])
-
-        dnl> thread library
-        dnl> test for their "special" function and library with the non-standard names
-        AC_CHECK_LIB(pthread, __pthread_create_system)
-        AC_CHECK_LIB(rt, sem_init)
-      ;;
-
-    *-*-aix*:* )
-        DEFINEOS="AIX";       STATUS="UNTESTED"
-
-        NOTE1="Unsupported/untested, but trying configuration stuff from ntop 1.3."
-
-        case "${target}:${CC}" in
-            *-*-aix[[45]]*:gcc* )
-                AC_DEFINE_UNQUOTED(CFG_NEED_GETDOMAINNAME,
-                                   1,
-                                   [OS lacks getdomainname function.])
-
-                dnl> plugin load function unique to AIX
-                AC_CHECK_LIB([c], [open])
-              ;;
-        esac
       ;;
 
     * )
@@ -2419,17 +2374,7 @@ elif test ".${ac_cv_lib_dl_dlopen}"    != ".yes" &&
     echo "* ERROR: Critical c library routine is missing."
     echo "*           (yes means it was found, no means it was not found)"
     echo "*"
-    case "$target" in
-      *-hpux* )
-        echo "*              shl_load() in -ldld...${ac_cv_lib_dld_shl_load}   (HPUX specific)"  
-        ;;
-      *-aix* )
-        echo "*              load() in -lc...${ac_cv_lib_c_load}         (IBM AIX specific)"  
-        ;;
-      * )
-        echo "*              dlopen() in -ldl...${ac_cv_lib_dl_dlopen} or -lc...${ac_cv_lib_c_dlopen}"
-        ;;
-    esac
+    echo "*              dlopen() in -ldl...${ac_cv_lib_dl_dlopen} or -lc...${ac_cv_lib_c_dlopen}"
     echo "*"
     echo "*>>> No way to proceed."
     echo "*"
@@ -2453,72 +2398,34 @@ dnl> Multithreaded:
 if test ".${ac_disable_multithread}" != ".yes"; then
     AC_MSG_CHECKING([for Multithreading])
 
-    case "$target" in
-      dnl> HPUX 11, deal with their "special" (retarded) library with the non-standard name
-      *-hpux11* )
-        if test ".${ac_cv_header_pthread_h}"                    != ".yes" ||
-           test ".${ac_cv_lib_pthread___pthread_create_system}" != ".yes" ||
-           (test ".${ac_cv_lib_posix4_sem_init}"                != ".yes" &&
-            test ".${ac_cv_lib_rt_sem_init}"                    != ".yes") then
-            AC_MSG_WARN(error)
-            dnl> Missing a library?  Can't multithread...
-            ac_disable_multithread="yes"
-            echo
-            echo "*******************************************************************"
-            echo "*                                                           HPUX11*"
-            echo "*"
-            echo "* WARNING:  We are unable to find a header/library required"
-            echo "*           to support multi-threading."
-            echo "*"
-            echo "*>>>    ntop will be built single threaded."
-            echo "*       This is only minimally supported."
-            echo "*"
-            echo "*    Missing:"
-            echo "*           (yes means it was found, no means it was not found)"
-            echo "*"
-            echo "*              pthread.h...${ac_cv_header_pthread_h}"
-            echo "*              __pthread_create_system() in -lpthread...${ac_cv_lib_pthread___pthread_create_system}"
-            echo "*              sem_init() in -lposix4...${ac_cv_lib_posix4_sem_init} or -lrt...${ac_cv_lib_rt_sem_init}"
-            echo "*"
-            echo "*???     1. Install the necessary headers and libraries."
-            echo "*???    and rerun ./configure"
-            echo "*"
-            echo "*******************************************************************"
-            echo
-            HAS_WARNING="yes"
-        fi
-        ;;
-      * )
-        if test ".${ac_cv_header_pthread_h}"             != ".yes" ||
-           (test ".${ac_cv_lib_pthread_pthread_create}"  != ".yes" &&
-            test ".${ac_cv_lib_pthreads_pthread_create}" != ".yes" &&
-            test ".${ac_cv_lib_c_r_pthread_create}"      != ".yes"); then
-            AC_MSG_WARN(error)
-            ac_disable_multithread="yes"
-            echo
-            echo "*******************************************************************"
-            echo "*"
-            echo "* WARNING:  We are unable to find a header/library required"
-            echo "*           to support multi-threading."
-            echo "*"
-            echo "*>>>    ntop will be built single threaded."
-            echo "*       This is only minimally supported."
-            echo "*"
-            echo "*    Missing:"
-            echo "*           (yes means it was found, no means it was not found)"
-            echo "*"
-            echo "*              pthread.h...${ac_cv_header_pthread_h}"
-            echo "*              pthread_create() in -lpthread...${ac_cv_lib_pthread_pthread_create} -lpthreads...${ac_cv_lib_pthreads_pthread_create} -lc_r...${ac_cv_lib_c_r_pthread_create}"
-            echo "*"
-            echo "*???     1. Install the necessary headers and libraries."
-            echo "*???    and rerun ./configure"
-            echo "*"
-            echo "*******************************************************************"
-            echo
-            HAS_WARNING="yes"
-        fi
-        ;;
-    esac
+    if test ".${ac_cv_header_pthread_h}"             != ".yes" ||
+       (test ".${ac_cv_lib_pthread_pthread_create}"  != ".yes" &&
+        test ".${ac_cv_lib_pthreads_pthread_create}" != ".yes" &&
+        test ".${ac_cv_lib_c_r_pthread_create}"      != ".yes"); then
+        AC_MSG_WARN(error)
+        ac_disable_multithread="yes"
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* WARNING:  We are unable to find a header/library required"
+        echo "*           to support multi-threading."
+        echo "*"
+        echo "*>>>    ntop will be built single threaded."
+        echo "*       This is only minimally supported."
+        echo "*"
+        echo "*    Missing:"
+        echo "*           (yes means it was found, no means it was not found)"
+        echo "*"
+        echo "*              pthread.h...${ac_cv_header_pthread_h}"
+        echo "*              pthread_create() in -lpthread...${ac_cv_lib_pthread_pthread_create} -lpthreads...${ac_cv_lib_pthreads_pthread_create} -lc_r...${ac_cv_lib_c_r_pthread_create}"
+        echo "*"
+        echo "*???     1. Install the necessary headers and libraries."
+        echo "*???    and rerun ./configure"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        HAS_WARNING="yes"
+    fi
 
     if test ".${ac_disable_multithread}" != ".yes"; then
         AC_MSG_RESULT(ok)

@@ -34,94 +34,13 @@ extern PluginInfo* netflowPluginEntryFctn(void);
 
 /* ******************* */
 
-#ifdef AIX
-
-static char* dlerror() {
-  char *errMsg[768];
-  static char tmpStr[256];
-
-  if(loadquery(L_GETMESSAGES, &errMsg, 768) != -1) {
-    int i, j, errCode;
-    char* errName;
-
-    for(i=0; errMsg[i] != NULL; i++){
-      errCode=atoi(errMsg[i]);
-      errName = "";
-	  
-      for(j=1; errMsg[i][j] != '\0'; j++)
-	if(errMsg[i][j] != ' ') {
-	  errName = &errMsg[i][j];
-	  break;
-	}
-	  
-      switch(errCode) {
-	/* sys/ldr.h */
-      case 1:
-	return("Too many errors, rest skipped");
-	break;
-      case 2:
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Can't load library [%s]", errName); 
-	break;
-      case 3:
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Can't find symbol in library [%s]", errName); 
-	break;
-      case 4:
-	return("Rld data offset or symbol index out of range or bad relocation type");
-	break;
-      case 5:
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "File not valid, executable xcoff [%s]", errName);
-	return(tmpStr);
-	break;
-      case 6:
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "The errno associated with the failure if not ENOEXEC,"
-		" it indicates the underlying error, such as no memory [%s][errno=%d]", 
-		errName, errno);
-	return(tmpStr);
-	break;
-      case 7:
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
-		    "Member requested from a file which is not an archive or does not"
-		    "contain the member [%s]", errName);
-	return(tmpStr);
-	break;
-      case 8:
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Symbol type mismatch [%s]", errName);
-	return(tmpStr);
-	break;
-      case 9:
-	return("Text alignment in file is wrong");
-	break;
-      case 10:
-	return("Insufficient permission to create a loader domain");
-	break;
-      case 11:
-	return("Insufficient permission to add entries to a loader domain");
-	break;
-      default:
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Unknown error [%d]", errCode);
-	return(tmpStr);
-      }
-    }
-  }
-}
-
-#endif /* AIX */
-
-/* ******************* */
-
 #if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
 static void loadPlugin(char* dirName, char* pluginName) {
   char pluginPath[256];
   char tmpBuf[LEN_GENERAL_WORK_BUFFER];
   int i;
-#ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-  shl_t pluginPtr;
-#else
 #ifndef WIN32
   void *pluginPtr = NULL;
-#endif
-#endif
-#ifndef WIN32
   void *pluginEntryFctnPtr;
 #endif
   PluginInfo* pluginInfo;
@@ -139,46 +58,17 @@ static void loadPlugin(char* dirName, char* pluginName) {
   traceEvent(CONST_TRACE_NOISY, "Loading plugin '%s'", pluginPath);
 
 #ifndef MAKE_STATIC_PLUGIN
-#ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-  /* Load the library */
-  pluginPtr = shl_load(pluginPath, BIND_IMMEDIATE|BIND_VERBOSE|BIND_NOSTART ,0L);
-#else
-#ifdef AIX
-  pluginPtr = load(pluginName, 1, dirName); /* Load the library */
-#else
   pluginPtr = (void*)dlopen(pluginPath, RTLD_NOW /* RTLD_LAZY */); /* Load the library */
-#endif /* AIX */
-#endif /* HPUX  */
 
   if(pluginPtr == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Unable to load plugin '%s'", pluginPath);
-    traceEvent(CONST_TRACE_WARNING, "Message is '%s'", 
-#if HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-	                            strerror(errno)
-#else
-	                            dlerror()
-#endif
-              );
+    traceEvent(CONST_TRACE_WARNING, "Message is '%s'", dlerror());
     return;
   }
 
-#ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-  if(shl_findsym(&pluginPtr ,CONST_PLUGIN_ENTRY_FCTN_NAME,
-		 TYPE_PROCEDURE, &pluginEntryFctnPtr) == -1)
-    pluginEntryFctnPtr = NULL;
-#else
-#ifdef AIX
-  pluginEntryFctnPtr = pluginPtr;
-#else
   pluginEntryFctnPtr = (void*)dlsym(pluginPtr, "PluginEntryFctn" /* CONST_PLUGIN_ENTRY_FCTN_NAME */);
-#endif /* AIX */
-#endif /* HPUX */
 
   if(pluginEntryFctnPtr == NULL) {
-#ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-    traceEvent(CONST_TRACE_WARNING, "Unable to locate plugin '%s' entry function [%s]",
-	       pluginPath, strerror(errno));
-#else
 #ifdef WIN32
     traceEvent(CONST_TRACE_WARNING, "Unable to locate plugin '%s' entry function [%li]", 
 	       pluginPath, GetLastError());
@@ -186,7 +76,6 @@ static void loadPlugin(char* dirName, char* pluginName) {
     traceEvent(CONST_TRACE_WARNING, "Unable to locate plugin '%s' entry function [%s]",
 	       pluginPath, dlerror());
 #endif /* WIN32 */
-#endif /* HPUX */
     return;
   }
 
@@ -384,19 +273,11 @@ void unloadPlugins(void) {
 	flows->pluginStatus.pluginPtr->termFunct(1 /* term ntop */);
 
 #ifndef MAKE_STATIC_PLUGIN
-#ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-      shl_unload((shl_t)flows->pluginStatus.pluginMemoryPtr);
-#else
 #ifdef WIN32
       FreeLibrary((HANDLE)flows->pluginStatus.pluginMemoryPtr);
 #else
-#ifdef AIX
-      unload(flows->pluginStatus.pluginMemoryPtr);
-#else
       dlclose(flows->pluginStatus.pluginMemoryPtr);
-#endif /* AIX */
 #endif /* WIN32 */
-#endif /* HPUX */
 #endif
       flows->pluginStatus.pluginPtr       = NULL;
       flows->pluginStatus.pluginMemoryPtr = NULL;
