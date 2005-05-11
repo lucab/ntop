@@ -26,6 +26,7 @@
 #include "globals-report.h"
 #include <stdarg.h>
 #include <setjmp.h>
+#include <execinfo.h>
 
 #ifdef MAKE_WITH_XMLDUMP
 #include <glibconfig.h>
@@ -768,7 +769,7 @@ GdomeElement * _newxml(char * filename, int linenum,
     GdomeDOMString *temp_nodename, *temp_attrname, *temp_attrvalue;
     GdomeException exc;
     char *attrname, *attrvalue;
-    unsigned char buf[LEN_GENERAL_WORK_BUFFER];
+    char buf[LEN_GENERAL_WORK_BUFFER];
     int siglongjmpReturnValue;
 
     va_list ap;
@@ -796,7 +797,7 @@ GdomeElement * _newxml(char * filename, int linenum,
 
             strncpy(buf, nodename, sizeof(buf)-1);
             for(i=0; i<strlen(buf); i++) {
-              if(buf[i] > '\x7f' /* Invalid for UTF-8 string */) {
+              if(buf[i] < 0 /* \x7f and above are invalid for UTF-8 string, but this is signed char */) {
                 buf[i]='.';
                 adjCntTotal++;
                 adjCnt++;
@@ -874,7 +875,7 @@ GdomeElement * _newxml(char * filename, int linenum,
 
                 strncpy(buf, attrvalue, sizeof(buf)-1);
                 for(i=0; i<strlen(buf); i++) {
-                  if(buf[i] > '\x7f' /* Invalid for UTF-8 string */) {
+                  if(buf[i] < 0 /* \x7f and above are invalid for UTF-8 string, but this is signed char */) {
                     buf[i]='.';
                     adjCntTotal++;
                     adjCnt++;
@@ -976,6 +977,9 @@ GdomeElement * _newxml(char * filename, int linenum,
 #define newxml_smartstring(parent, name, stringvar, description) \
   _newxml_smartstring(__FILE__, __LINE__, parent, name, stringvar, sizeof(stringvar), description)
 
+#define newxml_smartstring_u(parent, name, stringvar, description) \
+  _newxml_smartstring_u(__FILE__, __LINE__, parent, name, stringvar, sizeof(stringvar), description)
+
 #define newxml_namedstring(parent, name, stringvar, description, stringname) \
   newxml(parent, name, \
          stringname, stringvar, \
@@ -1028,6 +1032,14 @@ GdomeElement * _newxml_smartstring(char * filename,
                      GdomeElement * parent,
                       char * nodename,
                      char * stringvar,
+                     int sizeofstringvar,
+                      char * description);
+
+GdomeElement * _newxml_smartstring_u(char * filename,
+                     int linenum,
+                     GdomeElement * parent,
+                      char * nodename,
+                     u_char * stringvar,
                      int sizeofstringvar,
                       char * description);
 
@@ -1169,7 +1181,7 @@ GdomeElement * _newxml_smartstring(char * filename,
                      int sizeofstringvar,
                       char * description) {
 int i;
-unsigned char buf[LEN_GENERAL_WORK_BUFFER];
+char buf[LEN_GENERAL_WORK_BUFFER];
 
 /* 'Strings' can be arrays of chars or pointers to chars (null terminated)
  figure which it is and handle it smartly! */
@@ -1206,6 +1218,55 @@ _newxml(filename, linenum,
 
 #if (XMLDUMP_DEBUG >= 3)
 traceEvent_forked(CONST_TRACE_INFO, "XMLDUMP_DEBUG: newxml_smartstring() OK");
+#endif
+
+}
+
+GdomeElement * _newxml_smartstring_u(char * filename,
+                     int linenum,
+                     GdomeElement * parent,
+                      char * nodename,
+                     u_char * stringvar,
+                     int sizeofstringvar,
+                      char * description) {
+int i;
+char buf[LEN_GENERAL_WORK_BUFFER];
+
+/* 'Strings' can be arrays of chars or pointers to chars (null terminated)
+ figure which it is and handle it smartly! */
+
+
+#if (XMLDUMP_DEBUG >= 3)
+traceEvent_forked(CONST_TRACE_INFO,
+                  "XMLDUMP_DEBUG: newxml_smartstring_u(... 0x%08x(%d), '%s') from %s(%d)",
+                  stringvar, sizeofstringvar, description, filename, linenum);
+#endif
+
+memset(&buf, 0, sizeof(buf));
+
+if(sizeofstringvar == sizeof(char *)) {
+  if(stringvar == NULL) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "(NULL)");
+  } else {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", stringvar);
+  }
+} else {
+  if(stringvar[0] == '\0') {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "(empty)");
+  } else {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", stringvar);
+  }
+}
+
+/* Use _newxml not the define so we pass file/line from OUR caller */
+_newxml(filename, linenum,
+        parent, nodename,
+                            "value", buf,
+                            "description", description,
+                            "__sentinel__");
+
+#if (XMLDUMP_DEBUG >= 3)
+traceEvent_forked(CONST_TRACE_INFO, "XMLDUMP_DEBUG: newxml_smartstring_u() OK");
 #endif
 
 }

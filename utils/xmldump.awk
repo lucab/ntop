@@ -397,7 +397,7 @@ $1 == "/*XMLSECTIONBEGIN" {
      prefix     = $4
      process_prefix()
 
-     printf("unsigned char buf[LEN_GENERAL_WORK_BUFFER]") >>outputname
+     printf("char buf[LEN_GENERAL_WORK_BUFFER]") >>outputname
      for(i=5; i<NF; i++) {
        printf(",\n             %s[LEN_GENERAL_WORK_BUFFER]", $i) >>outputname
      }
@@ -1045,6 +1045,11 @@ $1 == "/*XML" {
            printf("%s = ", result) >>outputname
        }
      # Now the function
+       if((macro == "newxml_smartstring") && (format == "u")) {
+         macro = "newxml_smartstring_u"
+         format=""
+       }
+
        printf("%s(%s%s,\n",
               macro, (gdomenode != "" ? gdomenode ", " : ""), childnodename) >>outputname
        printf("%s                        %s%s%s,\n",

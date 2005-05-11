@@ -782,7 +782,7 @@ typedef struct hostTraffic {
 /*XML time_t firstSeen                      parent              "" */
 /*XML time_t lastSeen                       parent              "" */
 /*XML ethaddress ethAddress                 parent              "" */
-/*XML s lastEthAddress                      parent              "" */
+/*XML s:u lastEthAddress                    parent              "" */
 /*XML s ethAddressString                    parent              "" */
 /*XML s hostNumIpAddress                    parent              "" */
 /*XML s hwModel                             parent              "" */
