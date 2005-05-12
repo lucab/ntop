@@ -757,8 +757,8 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
   char *rcStr;
 
   if(packetDataLength > 64) {
-    if((!strncasecmp(packetData, SIP_INVITE, strlen(SIP_INVITE)))
-       || (!strncasecmp(packetData, SIP_OK, strlen(SIP_OK)))) {
+    if((!strncasecmp((char*)packetData, SIP_INVITE, strlen(SIP_INVITE)))
+       || (!strncasecmp((char*)packetData, SIP_OK, strlen(SIP_OK)))) {
       char *row, *strtokState, *from = NULL, *to = NULL,
 	*server = NULL, *audio = NULL, *video = NULL;
 
@@ -804,7 +804,7 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
 #endif
       }
 
-      if(from && to && (!strncasecmp(packetData, SIP_INVITE, strlen(SIP_INVITE)))) {
+      if(from && to && (!strncasecmp((char*)packetData, SIP_INVITE, strlen(SIP_INVITE)))) {
 	strtok_r(from, ":", &strtokState);
 	strtok_r(NULL, ":\"", &strtokState);
 	from = strtok_r(NULL, "\"@>", &strtokState);
