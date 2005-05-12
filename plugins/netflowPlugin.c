@@ -27,7 +27,10 @@
 static void* netflowMainLoop(void* _deviceId);
 #endif
 
-/* #define DEBUG_FLOWS  */
+/* #define DEBUG_FLOWS   */
+
+#define valueOf(a) (a == NULL ? "" : a)
+#define isEmpty(a) (a == NULL ? 1 : 0)
 
 /* ********************************* */
 
@@ -76,6 +79,9 @@ struct generic_netflow_record {
 
   /* nFlow Extensions */
   u_int32_t nw_latency_sec, nw_latency_usec;
+
+  /* VoIP Extensions */
+  char *sip_call_id, *sip_calling_party, *sip_called_party;
 };
 
 /* ****************************** */
@@ -353,7 +359,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   srcAS    = ntohs(record->src_as);
   dstAS    = ntohs(record->dst_as);
 
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS  
   {
     char buf1[256], buf[256];
 
@@ -478,7 +484,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
     }
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS
   traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - src - returned %s",
 	     ntohl(record->srcaddr),
 	     skipSRC == 0 ? "OK" : skipSRC == 1 ? "failed White list" : "failed Black list");
@@ -486,6 +492,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 	     ntohl(record->dstaddr),
 	     skipDST == 0 ? "OK" : skipDST == 1 ? "failed White list" : "failed Black list");
 #endif
+
   addrput(AF_INET,&addr1,&b);
   addrput(AF_INET,&addr2,&a);
   if(!skipDST)
@@ -498,14 +505,20 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   else
     srcHost = myGlobals.device[deviceId].netflowGlobals->dummyHost;
 
-  if((srcHost == NULL) ||(dstHost == NULL)) return(0);
+  if((srcHost == NULL) ||(dstHost == NULL)) {
+#ifdef DEBUG_FLOWS
+    traceEvent(CONST_TRACE_INFO, "DEBUG: srcHost=%x, dstHost=%x\n",
+	       srcHost, dstHost);
+#endif
+    return(0);
+  }
 
   if(srcHost->firstSeen > firstSeen) srcHost->firstSeen = firstSeen;
   if(srcHost->lastSeen < lastSeen)   srcHost->lastSeen = lastSeen;
   if(dstHost->firstSeen > firstSeen) dstHost->firstSeen = firstSeen;
   if(dstHost->lastSeen < lastSeen)   dstHost->lastSeen = lastSeen;
 
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [last=%d][first=%d][last-first=%d]",
 	       srcHost->hostNumIpAddress, sport,
 	       dstHost->hostNumIpAddress, dport, ntohl(record->Last), ntohl(record->First),
@@ -623,6 +636,9 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 
     tp.th_sport = htons(sport), tp.th_dport = htons(dport);
     tp.th_flags = record->tcp_flags;
+#ifdef DEBUG_FLOWS
+    traceEvent(CONST_TRACE_INFO, "handleSession(TCP)");
+#endif
     session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len,
 			    &tp, 0, NULL, actualDeviceId, &newSession);
     break;
@@ -658,6 +674,9 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
       }
     }
 
+#ifdef DEBUG_FLOWS
+    traceEvent(CONST_TRACE_INFO, "handleSession(UDP)");
+#endif
     session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, 
 			    len, NULL, 0, NULL, actualDeviceId, &newSession);
     break;
@@ -671,7 +690,28 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   if(session) {
     time_t timeDiff = recordActTime - (lastSeen - firstSeen);
 
-#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO,
+	       "callId=%s/calling party=%s/called party=%s",
+	       valueOf(record->sip_call_id), valueOf(record->sip_calling_party),
+	       valueOf(record->sip_called_party));
+
+    if(session->session_info == NULL) {
+      if((!isEmpty(record->sip_call_id))
+	 || (!isEmpty(record->sip_calling_party))
+	 || (!isEmpty(record->sip_called_party))) {
+	char tmpStr[256];
+	
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+		      "callId=%s<br>calling party=%s<br>called party=%s",
+		      valueOf(record->sip_call_id), valueOf(record->sip_calling_party),
+		      valueOf(record->sip_called_party));
+
+	traceEvent(CONST_TRACE_INFO, "DEBUG: ->>>>>>>> '%s'", tmpStr);
+	session->session_info = strdup(tmpStr);
+      }
+    }
+
+#ifdef DEBUG_FLOWS
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [diff=%d][recordActTime=%d][last-first=%d]",
 	       srcHost->hostNumIpAddress, sport,
 	       dstHost->hostNumIpAddress, dport,
@@ -769,7 +809,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
   time_t recordActTime = 0, recordSysUpTime = 0;
   struct generic_netflow_record record;
 
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
 #endif
 
@@ -1025,8 +1065,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	    V9TemplateField *fields = cursor->fields;
 
             /* initialize to zero */
-	    record.src_as = 0;
-	    record.dst_as = 0;
+	    memset(&record, 0, sizeof(record));
 
 #ifdef DEBUG_FLOWS
 	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d", fs.templateId);
@@ -1040,7 +1079,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	      for(fieldId=0; fieldId<cursor->templateInfo.fieldCount; fieldId++) {
 
 #ifdef DEBUG_FLOWS
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow field [displ=%d/%d][template=%d][fieldType=%d][field=%d/%d]",
+		traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow field [displ=%d/%d][template=%d][fieldType=%d][field=%d/%d]",
 			 displ, fs.flowsetLen,
 			 fs.templateId, ntohs(fields[fieldId].fieldType),
 			 fieldId, cursor->templateInfo.fieldCount);
@@ -1104,6 +1143,17 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		case 93: /* NW_LATENCY_USEC */
 		  memcpy(&record.nw_latency_usec, &buffer[displ], 4); 
 		  break;
+
+		  /* VoIP Extensions */
+		case 130: /* SIP_CALL_ID */
+		  record.sip_call_id = strdup(&buffer[displ]);
+		  break;
+		case 134: /* SIP_CALLING_PARTY */
+		  record.sip_calling_party = strdup(&buffer[displ]);
+		  break;
+		case 135: /* SIP_CALLED_PARTY */
+		  record.sip_called_party = strdup(&buffer[displ]);
+		  break;
 		}
 		
 		displ += ntohs(fields[fieldId].fieldLen);
@@ -1111,6 +1161,10 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
 	      handleGenericFlow(recordActTime, recordSysUpTime, &record, deviceId);
 	      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
+
+	      if(record.sip_call_id)       free(record.sip_call_id);
+	      if(record.sip_calling_party) free(record.sip_calling_party);
+	      if(record.sip_called_party)  free(record.sip_called_party);
 	    }
 	  } else {
 #ifdef DEBUG_FLOWS
@@ -2219,7 +2273,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
     sendString(buf);
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON ">\n"
              "<th colspan=\"2\" "DARK_BG">Debug></th>\n"
@@ -2228,36 +2282,36 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
              "<th " TH_BG " align=\"left\" "DARK_BG ">White net list</th>\n"
              "<td " TD_BG ">");
 
-  if(numWhiteNets == 0) {
+  if(myGlobals.device[deviceId].netflowGlobals->numWhiteNets == 0) {
     sendString("none");
   } else {
     sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                "Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                "Hostmask<br>\n");
 
-    for(i=0; i<numWhiteNets; i++) {
+    for(i=0; i<myGlobals.device[deviceId].netflowGlobals->numWhiteNets; i++) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
                   "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
-                  i,
-                  whiteNetworks[i][0],
-                  ((whiteNetworks[i][0] >> 24) & 0xff),
-                  ((whiteNetworks[i][0] >> 16) & 0xff),
-                  ((whiteNetworks[i][0] >>  8) & 0xff),
-                  ((whiteNetworks[i][0]      ) & 0xff),
-                  whiteNetworks[i][1],
-                  ((whiteNetworks[i][1] >> 24) & 0xff),
-                  ((whiteNetworks[i][1] >> 16) & 0xff),
-                  ((whiteNetworks[i][1] >>  8) & 0xff),
-                  ((whiteNetworks[i][1]      ) & 0xff),
-                  whiteNetworks[i][2],
-                  ((whiteNetworks[i][2] >> 24) & 0xff),
-                  ((whiteNetworks[i][2] >> 16) & 0xff),
-                  ((whiteNetworks[i][2] >>  8) & 0xff),
-                  ((whiteNetworks[i][2]      ) & 0xff)
+                  i, 
+		    myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][0],
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][0] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][0] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][0] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][0]      ) & 0xff),
+                  myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][1],
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][1] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][1] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][1] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][1]      ) & 0xff),
+                  myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][2],
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][2] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][2] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][2] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][2]      ) & 0xff)
                   );
       sendString(buf);
-      if(i<numWhiteNets) sendString("<br>\n");
+      if(i<myGlobals.device[deviceId].netflowGlobals->numWhiteNets) sendString("<br>\n");
     }
   }
 
@@ -2267,36 +2321,36 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
              "<th " TH_BG " align=\"left\" "DARK_BG ">Black net list</th>\n"
              "<td " TD_BG ">");
 
-  if(numBlackNets == 0) {
+  if(myGlobals.device[deviceId].netflowGlobals->numBlackNets == 0) {
     sendString("none");
   } else {
     sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                "Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                "Hostmask<br>\n");
 
-    for(i=0; i<numBlackNets; i++) {
+    for(i=0; i<myGlobals.device[deviceId].netflowGlobals->numBlackNets; i++) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
                   "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
                   i,
-                  blackNetworks[i][0],
-                  ((blackNetworks[i][0] >> 24) & 0xff),
-                  ((blackNetworks[i][0] >> 16) & 0xff),
-                  ((blackNetworks[i][0] >>  8) & 0xff),
-                  ((blackNetworks[i][0]      ) & 0xff),
-                  blackNetworks[i][1],
-                  ((blackNetworks[i][1] >> 24) & 0xff),
-                  ((blackNetworks[i][1] >> 16) & 0xff),
-                  ((blackNetworks[i][1] >>  8) & 0xff),
-                  ((blackNetworks[i][1]      ) & 0xff),
-                  blackNetworks[i][2],
-                  ((blackNetworks[i][2] >> 24) & 0xff),
-                  ((blackNetworks[i][2] >> 16) & 0xff),
-                  ((blackNetworks[i][2] >>  8) & 0xff),
-                  ((blackNetworks[i][2]      ) & 0xff)
+                  myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][0],
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][0] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][0] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][0] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][0]      ) & 0xff),
+                  myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][1],
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][1] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][1] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][1] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][1]      ) & 0xff),
+                  myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][2],
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][2] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][2] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][2] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].netflowGlobals->blackNetworks[i][2]      ) & 0xff)
                   );
       sendString(buf);
-      if(i<numBlackNets) sendString("<br>\n");
+      if(i<myGlobals.device[deviceId].netflowGlobals->numBlackNets) sendString("<br>\n");
     }
   }
 
@@ -2355,19 +2409,19 @@ static int mapNetFlowDeviceToNtopDevice(int netFlowDeviceId) {
   for(i=0; i<myGlobals.numDevices; i++)
     if((myGlobals.device[i].netflowGlobals != NULL)
        && (myGlobals.device[i].netflowGlobals->netFlowDeviceId == netFlowDeviceId)) {
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS
       traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice(%d) = %d",
 		 netFlowDeviceId, i);
 #endif
       return(i);
     } else if(myGlobals.device[i].netflowGlobals != NULL) {
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS
       traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice (id=%d) <=> (netFlowDeviceId=%d)",
 		 i, myGlobals.device[i].netflowGlobals->netFlowDeviceId);
 #endif
     }
 
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS
   traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice(%d) failed\n",
 	     netFlowDeviceId);
 #endif
@@ -2545,7 +2599,7 @@ static void handleNetflowHTTPrequest(char* _url) {
     }
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_FLOWS
   traceEvent(CONST_TRACE_INFO, "NETFLOW: deviceId=%d", deviceId);
 #endif
 

@@ -3559,7 +3559,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
+		      "<TD "TD_BG" ALIGN=LEFT NOWRAP>%s</TD>",
 		      getRowColor(),
 		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      sport,

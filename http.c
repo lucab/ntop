@@ -25,10 +25,10 @@
 #include "globals-report.h"
 
 
-/*
-  #define URL_DEBUG 
-  #define HTTP_DEBUG 
-*/
+#if 0
+#define URL_DEBUG 
+#define HTTP_DEBUG 
+#endif
 
 /* Private structure definitions */
 
@@ -281,7 +281,7 @@ static int readHTTPheader(char* theRequestedURL,
 #endif
     } else {
 #ifdef URL_DEBUG
-      traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Rcvd char '%c' [%d/0x%x]", aChar[0], aChar[0], aChar[0]);
+      if(0) traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Rcvd char '%c' [%d/0x%x]", aChar[0], aChar[0], aChar[0]);
 #endif
       if(aChar[0] == '\r') {
 	/* <CR> is ignored as recommended in section 19.3 of RFC 2068 */

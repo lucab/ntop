@@ -1793,7 +1793,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     }
   } /* while */
 
-#ifdef DEBUG
+#ifndef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Search for session: %d (%d <-> %d)",
 	     found, sport, dport);
 #endif
@@ -2616,7 +2616,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 
 /* ******************* */
 
-static int getScsiCmdType (u_char scsiCmd, u_int32_t *ioSize, const u_char *bp) {
+static int getScsiCmdType(u_char scsiCmd, u_int32_t *ioSize, const u_char *bp) {
   int cmdType;
 
   *ioSize = 0;
