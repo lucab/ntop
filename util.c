@@ -2895,8 +2895,6 @@ void stringSanityCheck(char* string, char* parm) {
     traceEvent(CONST_TRACE_WARNING, "Trailing slash removed from argument for option %s", parm);
     string[strlen(string)-1] = '\0';
   }
-
-  return(0);
 }
 
 /* ************************** */
@@ -2964,8 +2962,6 @@ void uriSanityCheck(char* string, char* parm, int allowParms) {
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
     exit(-1);
   }
-
-  return(0);
 }
 
 /* ************************** */
@@ -3032,8 +3028,6 @@ void pathSanityCheck(char* string, char* parm) {
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
     exit(-1);
   }
-
-  return(0);
 }
 
 /* ************************** */
@@ -3193,8 +3187,6 @@ void deviceSanityCheck(char* string) {
     traceEvent(CONST_TRACE_FATALERROR, "Invalid device specified");
     exit(-1);
   }
-
-  return(0);
 }
 
 /* ****************************************************** */
