@@ -177,7 +177,7 @@ static int initRRDfunct(void) {
 static void handleRRDHTTPrequest(char* url) {
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-  printHTMLheader("Sorry");
+  printHTMLheader("Sorry", NULL, 0);
   sendString("<p>The rrd plugin requires POSIX threads.</p>\n");
   printHTMLtrailer();
 }
