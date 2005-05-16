@@ -1793,7 +1793,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     }
   } /* while */
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Search for session: %d (%d <-> %d)",
 	     found, sport, dport);
 #endif
