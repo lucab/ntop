@@ -1117,10 +1117,10 @@ struct flow_ver5_rec {
   u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
   u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
   u_int8_t  tos;        /* IP Type-of-Service */
-  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
   u_int16_t src_as;     /* source peer/origin Autonomous System */
-  u_int8_t  dst_mask;   /* destination route's mask bits */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
   u_int8_t  src_mask;   /* source route's mask bits */
+  u_int8_t  dst_mask;   /* destination route's mask bits */  
   u_int16_t pad2;       /* pad to word boundary */
 };
 
