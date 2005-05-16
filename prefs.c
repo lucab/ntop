@@ -250,7 +250,7 @@ void loadPrefs(int argc, char* argv[]) {
   }
 
   if(myGlobals.runningPref.mergeInterfaces != mergeInterfacesSave)
-    if(myGlobals.runningPref.mergeInterfaces = 0)
+    if(myGlobals.runningPref.mergeInterfaces == 0)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge disabled from prefs file");
     else
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge enabled from prefs file");
