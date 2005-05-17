@@ -1557,14 +1557,15 @@ static void processIpPkt(const u_char *bp,
 
       if(!(fragmented)) {
 	/* Not fragmented */
-	if(((sport == 53) || (dport == 53) /* domain */)) {
+	if(((sport == 53) || (dport == 53) /* domain */)
+	   || ((sport == 5353) && (dport == 5353)) /* Multicast DNS */) {
 	  short isRequest = 0, positiveReply = 0;
 	  u_int16_t transactionId = 0;
-
+	  
 	  if(myGlobals.runningPref.enablePacketDecoding
 	     && (bp != NULL) /* packet long enough */) {
 	    /* The DNS chain will be checked here */
-	    transactionId = processDNSPacket(bp+hlen+sizeof(struct udphdr),
+	    transactionId = processDNSPacket(srcHost, sport, bp+hlen+sizeof(struct udphdr),
 					     udpDataLength, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
@@ -1658,7 +1659,7 @@ static void processIpPkt(const u_char *bp,
 	      }
 
 	      /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	      FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
+	      if(sport != 5353) FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 
 	      if(positiveReply) {
 		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numPositiveReplSent, 1);
@@ -1670,7 +1671,7 @@ static void processIpPkt(const u_char *bp,
 	    }
 	  } else {
 	    /* no packet decoding (let's speculate a bit) */
-	    FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
+	    if(sport != 5353) FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 	  }
 	} else if(sport == 123) /* NTP */ {
 	  if(myGlobals.runningPref.enablePacketDecoding) {

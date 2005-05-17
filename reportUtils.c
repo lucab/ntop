@@ -3335,6 +3335,7 @@ static void printUserList(HostTraffic *el) {
     if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
     if(FD_ISSET(BITFLAG_MESSENGER_USER, &(list->userFlags))) sendString("&nbsp;MSG&nbsp;");
     if(FD_ISSET(BITFLAG_VOIP_USER, &(list->userFlags))) sendString("&nbsp;VoIP&nbsp;");
+    if(FD_ISSET(BITFLAG_DAAP_USER, &(list->userFlags))) sendString("&nbsp;DAAP&nbsp;");
 
     sendString("]\n");
     list = list->next;

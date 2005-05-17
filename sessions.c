@@ -146,7 +146,7 @@ static void updateFileList(char *fileName, u_char upDownloadMode, HostTraffic *t
 
 /* ************************************ */
 
-static void updateHostUsers(char *userName, int userType, HostTraffic *theHost) {
+void updateHostUsers(char *userName, int userType, HostTraffic *theHost) {
   int i;
 
   if(userName[0] == '\0') return;
@@ -2536,15 +2536,16 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
     memset(tp, 0, sizeof(struct tcphdr));
   }
 
-  if((sessionType == IPPROTO_TCP)
-     /* Simulate a TCP connection for the SIP protocol */
-     || (((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)
-	  || ((sport > 1024) && (dport > 1024)) /* Needed for SIP */))
-     || (((sport == IP_TCP_PORT_SCCP) && (dport > 1024)
-	  || ((sport > 1024) && (dport == IP_TCP_PORT_SCCP)) /* Needed for SCCP */))
-     ) {
-     theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
-				   dstHost, dport, length, tp, packetDataLength,
+  if((!multicastHost(dstHost))
+     && ((sessionType == IPPROTO_TCP)
+	 /* Simulate a TCP connection for the SIP protocol */
+	 || (((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)
+	      || ((sport > 1024) && (dport > 1024)) /* Needed for SIP */))
+	 || (((sport == IP_TCP_PORT_SCCP) && (dport > 1024)
+	      || ((sport > 1024) && (dport == IP_TCP_PORT_SCCP)) /* Needed for SCCP */))
+	 )) {
+    theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
+				  dstHost, dport, length, tp, packetDataLength,
 				   packetData, actualDeviceId, newSession);
   } else if(sessionType == IPPROTO_UDP) {
     /* We don't create any permanent structures for UDP sessions */

@@ -1753,6 +1753,7 @@
 #define BITFLAG_FTP_USER                    5
 #define BITFLAG_MESSENGER_USER              6
 #define BITFLAG_VOIP_USER                   7
+#define BITFLAG_DAAP_USER                   8
 
 #define BITFLAG_P2P_UPLOAD_MODE             1
 #define BITFLAG_P2P_DOWNLOAD_MODE           2
@@ -1863,7 +1864,7 @@
 #define FLAG_HOST_SYM_ADDR_TYPE_ATALK       21
 #define FLAG_HOST_SYM_ADDR_TYPE_NETBIOS     27
 #define FLAG_HOST_SYM_ADDR_TYPE_NAME        29
-
+#define FLAG_HOST_SYM_ADDR_TYPE_MDNS        30 /* Multicast DNS */
 /*
  * SSLWATCHDOG stuff
  */

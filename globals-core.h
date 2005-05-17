@@ -134,7 +134,8 @@ extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
                                char *fdst);
-extern u_int16_t handleDNSpacket(const u_char *ipPtr,
+extern u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
+				 const u_char *ipPtr,
                                  DNSHostInfo *hostPtr, short length,
                                  short *isRequest, short *positiveReply);
 extern void checkSpoofing(HostTraffic *el, int actualDeviceId);
@@ -341,7 +342,8 @@ extern void addNewIpProtocolToHandle(char* name, u_int16_t id, u_int16_t idAlias
 extern void handleBootp(HostTraffic *srcHost, HostTraffic *dstHost,
 			u_short sport, u_short dport,
 			u_int packetDataLength, u_char* packetData, int actualDeviceId);
-extern u_int16_t processDNSPacket(const u_char *bp, u_int length,
+extern u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
+				  const u_char *bp, u_int length,
 				  short *isRequest, short *positiveReply);
 extern void handleNetbios(HostTraffic *srcHost, HostTraffic *dstHost,
 			  u_short sport, u_short dport,
@@ -694,7 +696,7 @@ extern IPSession* handleSession(const struct pcap_pkthdr *h,
                                 u_int length, struct tcphdr *tp,
                                 u_int tcpDataLength, u_char* packetData,
                                 int actualDeviceId, u_short *newSession);
-
+extern void updateHostUsers(char *userName, int userType, HostTraffic *theHost);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
 
 extern FCSession* handleFcSession(const struct pcap_pkthdr *h,

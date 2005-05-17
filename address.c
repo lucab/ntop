@@ -38,6 +38,7 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 static void updateHostNameInfo(HostAddr addr, char* symbolic, int type);
 
 /* #define DNS_DEBUG */
+/* #define MDNS_DEBUG */
 
 /* **************************************** */
 
@@ -47,25 +48,25 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
   /* Search the instance and update its name */
-    
+
   if(myGlobals.device[actualDeviceId].virtualDevice) return;
 
   for(el=getFirstHost(actualDeviceId); el != NULL; el = getNextHost(actualDeviceId, el)) {
     if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress, &addr) == 0)) {
       accessAddrResMutex("updateHostNameInfo");
-      
-      if(el != NULL) {    
+
+      if(el != NULL) {
 	unsigned short i;
-	
-	if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1)) 
+
+	if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1))
 	  symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-	
+
 	for(i=0; i<strlen(symbolic); i++)
 	  if(isupper(symbolic[i])) tolower(symbolic[i]);
-	
+
 	setResolvedName(el, symbolic, type);
       }
-      
+
       releaseAddrResMutex();
     }
   }
@@ -74,7 +75,7 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 /* **************************************** */
 
   static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
-  int i; 
+  int i;
 
   for(i=0; i<myGlobals.numDevices; i++)
     updateDeviceHostNameInfo(addr, symbolic, i, type);
@@ -82,7 +83,7 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
 /* ************************************ */
 
-static int validDNSChar(char c) {  
+static int validDNSChar(char c) {
   if((c == '-') || (c == '_') || (c == '.')) return(1);
   if((c >= '0') && (c <= '9')) return(1);
   if((c >= 'a') && (c <= 'z')) return(1);
@@ -96,15 +97,15 @@ static int validDNSChar(char c) {
 static int validDNSName(char *name) {
   int i, len;
 
-  if(name == NULL) 
-    return(0); 
-  else 
+  if(name == NULL)
+    return(0);
+  else
     len = strlen(name);
-  
+
   for(i=0; i<len; i++)
     if(!validDNSChar(name[i]))
       return(0);
-  
+
   return(1);
 }
 
@@ -137,7 +138,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 
   key_data.dptr = _addrtonum(hostAddr, keyBuf, sizeof(keyBuf));
   key_data.dsize = strlen(keyBuf)+1;
-  
+
   if(myGlobals.dnsCacheFile == NULL) {
 #ifdef DNS_DEBUG
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress(), dnsCacheFile NULL");
@@ -201,7 +202,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
   if((!keepAddressNumeric) && (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN)) {
     char theAddr[17];
     int family, size;
-    
+
 #ifdef HAVE_GETIPNODEBYADDR
     int error_num;
 #endif
@@ -219,7 +220,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
       FILE* fd;
       char buffer[64];
       int i, len;
-      
+
       if (hostAddr->hostFamily == AF_INET)
 	cwd = "/usr/bin/host";
       else (hostAddr->hostFamily == AF_INET6)
@@ -227,7 +228,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
       safe_snprintf(__FILE__, __LINE__, buffer, sizeof(buffer),
 		  "%s %s",
 		  cwd,theAddr);
-      
+
       fd = popen(buffer, "r");
 
       if(fd == NULL) {
@@ -284,7 +285,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called getipnodebyaddr(): RC=%d 0x%X [%s]",      error_num,
 	       hp, hp != NULL ? (char*)hp->h_name : "");
 #endif
-    
+
 #else /* default */
 #if defined(HAVE_GETHOSTBYADDR_R) && !defined(LINUX)
     /* Linux seems to ha some problems with gethostbyaddr_r */
@@ -292,14 +293,14 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
     {
    struct hostent _hp, *__hp;
    char buffer[512];
-  
-  hp = gethostbyaddr_r((const char*)theAddr, size, 
+
+  hp = gethostbyaddr_r((const char*)theAddr, size,
 			 family,
                          &_hp,
                          buffer, sizeof(buffer),
                          &h_errnop);
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr_r(): RC=%d 0x%X [%s]", 
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr_r(): RC=%d 0x%X [%s]",
                h_errnop,
 	       hp, hp != NULL ? (char*)hp->h_name : "");
 #endif
@@ -312,7 +313,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
                          &__hp,
                          &h_errnop);
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr_r(): RC=%d 0x%X [%s]", 
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr_r(): RC=%d 0x%X [%s]",
                h_errnop,
 	       hp, hp != NULL ? (char*)hp->h_name : "");
 #endif /* DNS_DEBUG */
@@ -321,14 +322,14 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 #else
     hp = (struct hostent*)gethostbyaddr((char*)theAddr,size,family);
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr(): RC=%d 0x%X [%s]", 
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr(): RC=%d 0x%X [%s]",
                h_errno,
 	       hp, hp != NULL ? (char*)hp->h_name : "not meaningful, hp is null");
 #endif
 //
 #endif
 #endif
-    
+
     if (
 #ifdef HAVE_NETDB_H
 	(h_errno == NETDB_SUCCESS) &&
@@ -336,7 +337,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 #ifdef WIN32
 	(WSAGetLastError() == 0 /* OK */) &&
 #endif
-	(hp != NULL) && 
+	(hp != NULL) &&
         (hp->h_name != NULL) &&
 	validDNSName(hp->h_name) &&
         (strcmp(hp->h_name, addrtostr(hostAddr)) != 0)) {
@@ -434,7 +435,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 #endif
     resolvedAddress = _addrtostr(hostAddr, dataBuf, sizeof(dataBuf));
   }
-  
+
 #ifdef HAVE_GETIPNODEBYADDR
   if(hp != NULL)
     freehostent(hp);
@@ -515,7 +516,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   int rc;
 
   if((!forceResolution)
-     && myGlobals.runningPref.trackOnlyLocalHosts 
+     && myGlobals.runningPref.trackOnlyLocalHosts
      && (!_pseudoLocalAddress(&elem)))
     return;
 
@@ -528,7 +529,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 
     if(!shownMsg) {
       shownMsg = 1;
-      traceEvent(CONST_TRACE_WARNING, "Address resolution queue is full [%u slots]", 
+      traceEvent(CONST_TRACE_WARNING, "Address resolution queue is full [%u slots]",
 		 MAX_NUM_QUEUED_ADDRESSES);
       traceEvent(CONST_TRACE_INFO, "Addresses in excess won't be resolved - ntop continues");
     }
@@ -562,7 +563,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
     myGlobals.addressQueuedCurrent++, myGlobals.addressQueuedCount++;
     if (myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
       myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
-    
+
 #ifdef DNS_DEBUG
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Queued address '%s' [addr queue=%d/max=%d]",
 	       dataBuf, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
@@ -676,17 +677,17 @@ void* dequeueAddress(void *_i) {
 
 /* ************************************ */
 
-char* _intop(struct in6_addr *addr, char *buf, u_short buflen) {  
-  return (char *)inet_ntop(AF_INET6, addr, buf, buflen); 
+char* _intop(struct in6_addr *addr, char *buf, u_short buflen) {
+  return (char *)inet_ntop(AF_INET6, addr, buf, buflen);
 }
 
 /* ************************************ */
 
 char* intop(struct in6_addr *addr) {
   static char  ntop_buf[INET6_ADDRSTRLEN+1];
-  
+
   memset(ntop_buf, 0, INET6_ADDRSTRLEN);
-  return (char *)_intop(addr, ntop_buf,sizeof(ntop_buf)); 
+  return (char *)_intop(addr, ntop_buf,sizeof(ntop_buf));
 }
 
 #endif /*INET6 */
@@ -807,23 +808,23 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
     *type = FLAG_HOST_SYM_ADDR_TYPE_IP;
     return(0);
   }
-     
+
   key_data.dptr = _addrtonum(&hostIpAddress,keyBuf, sizeof(keyBuf));
   key_data.dsize = strlen(key_data.dptr)+1;
 
   if(myGlobals.dnsCacheFile == NULL) return(0); /* ntop is quitting... */
-  
+
   data_data = gdbm_fetch(myGlobals.dnsCacheFile, key_data);
 
   if((data_data.dptr != NULL) && (data_data.dsize == (sizeof(StoredAddress))) ) {
     StoredAddress *retrievedAddress;
-    
+
     retrievedAddress = (StoredAddress*)data_data.dptr;
     *type = retrievedAddress->symAddressType;
 
 #ifdef GDBM_DEBUG
     traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: gdbm_fetch(..., {%s, %d}) = %s, age %d",
-               key_data.dptr, key_data.dsize, 
+               key_data.dptr, key_data.dsize,
                retrievedAddress->symAddress,
                myGlobals.actTime - retrievedAddress->recordCreationTime);
 #endif
@@ -1246,6 +1247,55 @@ static int _dn_skipname(const u_char *ptr, const u_char *eom) {
 
 /* ************************************ */
 
+static void msdns_filter_name(char *msg) {
+  int i, j, max = strlen(msg);
+
+  for(i=0, j=0; i<max; i++) {
+#ifdef MDNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i, msg[i], msg[i]);
+#endif
+
+    if(msg[i] != '\\') {
+      if(msg[i] > 0) /* FIX: can we do better? */
+	msg[j++] = msg[i];
+    } else {
+      char tmpStr[8], tmpStr2[8];
+      int id;
+
+      if((msg[i+1] >= '0') && (msg[i+1] <= '9')) {
+#ifdef MDNS_DEBUG
+	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i+1, msg[i+1], msg[i+1]);
+	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i+2, msg[i+2], msg[i+2]);
+	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i+3, msg[i+3], msg[i+3]);
+#endif
+
+	tmpStr[0] = msg[i+1];
+	tmpStr[1] = msg[i+2];
+	tmpStr[2] = msg[i+3];
+	tmpStr[3] = '\0';
+
+	id = atoi(tmpStr);
+
+	if(id == 128)
+	  msg[j++] = '\'';
+	else if(id < 128) {
+	  snprintf(tmpStr2, sizeof(tmpStr2), "%c", id);
+	  msg[j++] = tmpStr2[0];
+	}
+
+	i += 3;
+      } else {
+	i++;
+	msg[j++] = msg[i];
+      }
+    }
+  }
+
+  msg[j] = '\0';
+}
+
+/* ************************************ */
+
 static char* _res_skip(char *msg,
 		      int numFieldsToSkip,
 		      char *eom) {
@@ -1314,12 +1364,80 @@ static char* _res_skip(char *msg,
 }
 
 /* ************************************ */
+
+static void setHostName(HostTraffic *srcHost, char *name) {
+  u_short tmpStrLen = min(strlen(name), MAX_LEN_SYM_HOST_NAME);
+  strncpy(srcHost->hostResolvedName, name, tmpStrLen);
+  srcHost->hostResolvedName[tmpStrLen] = '\0';
+}
+
+/* ************************************ */
+
+static void handleMdnsName(HostTraffic *srcHost, u_short sport, u_char *mdns_name) {
+  char *mdnsStrtokState, *name = NULL, *appl = NULL, *proto = NULL, *domain = NULL;
+  char *tmpStr = strdup((char*)mdns_name);
+
+  if(tmpStr != NULL) {
+    msdns_filter_name(tmpStr);
+    /* S's Music._daap._tcp.localcal */
+
+#ifdef MDNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: (1) [%s]", tmpStr);
+#endif
+
+    name = strtok_r(tmpStr, "._", &mdnsStrtokState);
+    if(name) {
+      appl = strtok_r(NULL, "._", &mdnsStrtokState);
+      if(appl) {
+	proto = strtok_r(NULL, "._", &mdnsStrtokState);
+	if(proto) {
+	  domain = strtok_r(NULL, "._", &mdnsStrtokState);
+	}
+      }
+    }
+
+    if((domain != NULL)
+       && ((!strcmp(domain, "local"))
+	   || (!strcmp(domain, "localafpovertcp"))
+	   )) {
+
+#ifdef MDNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: (2) [%s] [%s][%s][%s][%s]",
+	       srcHost->hostNumIpAddress,
+	       name, appl, proto, domain);
+#endif
+
+      if((!strcmp(appl, "ipp")) || (!strcmp(appl, "printer"))) {
+	/* Printer */
+	FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
+	setHostName(srcHost, name);
+      } else if(!strcmp(appl, "afpovertcp")) {
+	/* Sharing name under MacOS */
+	setHostName(srcHost, name);
+      } else if(!strcmp(appl, "workstation")) {
+	/* Host name under MacOS */	
+	setHostName(srcHost, strtok(name, "["));
+      } else if(!strcmp(appl, "http")) {
+	/* HTTP server */
+	FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
+      } else if(!strcmp(appl, "daap")) {
+	/* Digital Audio Access Protocol (daap.sourceforge.net) */
+	updateHostUsers(name, BITFLAG_DAAP_USER, srcHost);
+      }
+    }
+
+     free(tmpStr);
+  }
+}
+
+/* ************************************ */
 /*
    This function needs to be rewritten from scratch
    as it does not check boundaries (see ** below)
 */
 
-u_int16_t handleDNSpacket(const u_char *ipPtr,
+u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
+			  const u_char *ipPtr,
 			  DNSHostInfo *hostPtr,
 			  short length,
 			  short *isRequest,
@@ -1398,7 +1516,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   }
 
   bp	   = hostbuf;
-  buflen = sizeof(hostbuf);
+  buflen   = sizeof(hostbuf);
   cp	   = (u_char *) &answer+HFIXEDSZ;
 
   /* Process first question section. */
@@ -1464,34 +1582,51 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
        * E.g. : 89.10.67.213.in-addr.arpa
        *
        */
-      char *a, *b, *c, *d, dnsBuf[48], *strtokState;
+      char *a, *b, *c, *d, dnsBuf[128], *strtokState;
       unsigned long theDNSaddr;
 
-      len = strlen((char*)bp); 
-      if(len >= (sizeof(dnsBuf)-1)) len = sizeof(dnsBuf)-2;
-      xstrncpy(dnsBuf, (char*)bp, len);
+      len = strlen((char*)bp);
 
-      d = strtok_r(dnsBuf, ".", &strtokState);
-      c = strtok_r(NULL, ".", &strtokState);
-      b = strtok_r(NULL, ".", &strtokState);
-      a = strtok_r(NULL, ".", &strtokState);
-
-      if(a && b && c && d) {
-	theDNSaddr = htonl(atoi(a)*(256*256*256)+atoi(b)*(256*256)+atoi(c)*256+atoi(d));
-	if(addr_list_idx >= MAX_ADDRESSES) break; /* Further check */
-	memcpy(&addr_list[addr_list_idx++], (char*)&theDNSaddr, sizeof(char*));
-	hostPtr->addrLen = INADDRSZ;
-	hostPtr->addrList[0] = theDNSaddr;
+      if(bp[0] == '_') {
+	/* Multicast DNS */
 
 	n = (short)dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
 	if (n < 0) {
 	  cp += n;
 	  continue;
 	}
+
 	cp += n;
-	len = strlen((char *)bp) + 1;
-	memcpy(hostPtr->name, bp, len);
+
+	handleMdnsName(srcHost, sport, bp);
 	haveAnswer = TRUE;
+	continue;
+      } else {
+	if(len >= (sizeof(dnsBuf)-1)) len = sizeof(dnsBuf)-2;
+	xstrncpy(dnsBuf, (char*)bp, len);
+
+	d = strtok_r(dnsBuf, ".", &strtokState);
+	c = strtok_r(NULL, ".", &strtokState);
+	b = strtok_r(NULL, ".", &strtokState);
+	a = strtok_r(NULL, ".", &strtokState);
+
+	if(a && b && c && d) {
+	  theDNSaddr = htonl(atoi(a)*(256*256*256)+atoi(b)*(256*256)+atoi(c)*256+atoi(d));
+	  if(addr_list_idx >= MAX_ADDRESSES) break; /* Further check */
+	  memcpy(&addr_list[addr_list_idx++], (char*)&theDNSaddr, sizeof(char*));
+	  hostPtr->addrLen = INADDRSZ;
+	  hostPtr->addrList[0] = theDNSaddr;
+
+	  n = (short)dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
+	  if (n < 0) {
+	    cp += n;
+	    continue;
+	  }
+	  cp += n;
+	  len = strlen((char *)bp) + 1;
+	  memcpy(hostPtr->name, bp, len);
+	  haveAnswer = TRUE;
+	}
       }
       break;
     } else if (type != T_A) {
@@ -1554,28 +1689,30 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   }
 
   if ((queryType == T_A || queryType == T_PTR) && haveAnswer) {
-
-    /*
-     *  Go through the alias and address lists and return them
-     *  in the hostPtr variable.
-     */
-
-    if (numAliases > 0) {
-      for (i = 0; i < numAliases; i++) {
-	if(host_aliases[i] != NULL)
-	  memcpy(hostPtr->aliases[i], host_aliases[i], host_aliases_len[i]);
-	else break;
+    if(sport == 53 /* DNS */) {
+      /*
+       *  Go through the alias and address lists and return them
+       *  in the hostPtr variable.
+       */
+      if (numAliases > 0) {
+	for (i = 0; i < numAliases; i++) {
+	  if(host_aliases[i] != NULL)
+	    memcpy(hostPtr->aliases[i], host_aliases[i], host_aliases_len[i]);
+	  else break;
+	}
+	hostPtr->aliases[i][0] = '\0';
       }
-      hostPtr->aliases[i][0] = '\0';
-    }
-    if (numAddresses > 0) {
-      for (i = 0; i < numAddresses; i++) {
-	if(addr_list[i] != NULL)
-	  memcpy(&hostPtr->addrList[i], addr_list[i], hostPtr->addrLen);
-	else break;
+
+      if (numAddresses > 0) {
+	for (i = 0; i < numAddresses; i++) {
+	  if(addr_list[i] != NULL)
+	    memcpy(&hostPtr->addrList[i], addr_list[i], hostPtr->addrLen);
+	  else break;
+	}
+	hostPtr->addrList[i] = 0;
       }
-      hostPtr->addrList[i] = 0;
     }
+
     return(transactionId);
   }
 
@@ -1603,6 +1740,10 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     if (n < 0) {
       return(transactionId);
     }
+
+    if(sport == 5353 /* mDNS */)
+      handleMdnsName(srcHost, sport, bp);
+
     cp += n;
     len = strlen((char *)bp) + 1;
 
@@ -1629,7 +1770,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
   HostTraffic *el;
 
-  for(el=getFirstHost(actualDeviceId); 
+  for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
     if((!addrnull(&el->hostIpAddress))
        && (addrcmp(&el->hostIpAddress,&hostToCheck->hostIpAddress) == 0)) {

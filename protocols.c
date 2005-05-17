@@ -569,7 +569,8 @@ void handleBootp(HostTraffic *srcHost,
 
 /* ************************************ */
 
-u_int16_t processDNSPacket(const u_char *packetData,
+u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
+			   const u_char *packetData,
 			   u_int length,
 			   short *isRequest,
 			   short *positiveReply) {
@@ -590,7 +591,8 @@ u_int16_t processDNSPacket(const u_char *packetData,
   myGlobals.dnsSniffCount++;
   memset(&hostPtr, 0, sizeof(DNSHostInfo));
 
-  transactionId = handleDNSpacket(packetData, &hostPtr, length,
+  transactionId = handleDNSpacket(srcHost, sport,
+				  packetData, &hostPtr, length,
 				  isRequest, positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
@@ -626,7 +628,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
   }
 
   for(i=0; i<MAX_ADDRESSES; i++) {
-  	/* Symbolic => Numeric */
+    /* Symbolic => Numeric */
 
     if(hostPtr.addrList[i] != 0) {
       StoredAddress storedAddress;
