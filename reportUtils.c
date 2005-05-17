@@ -4495,7 +4495,7 @@ void printHostsCharacterization(void) {
 		     "<TH>Unhealthy<br>Host</TH>"
 		     "<TH>L2 Switch<br>Bridge</TH>"
 		     "<TH>Gateway</TH>"
-		     "<TH>SIP Gateway</TH>"
+		     "<TH>VoIP<br>Host</TH>"
 		     "<TH>Printer</TH>"
 		     "<TH>NTP/DNS<br>Server</TH>"
 		     "<TH>SMTP/POP/IMAP<br>Server</TH>"
