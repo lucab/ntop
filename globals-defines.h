@@ -2739,6 +2739,7 @@ struct ip6_hdr
 #define IP_TCP_PORT_GNUTELLA3      6348
 #define IP_TCP_PORT_WINMX          6699
 #define IP_TCP_PORT_JETDIRECT      9100
+#define IP_TCP_PORT_SKYPE          54045
 
 #define NULL_VALUE                 "(null)"
 

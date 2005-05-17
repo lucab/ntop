@@ -3550,7 +3550,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	  session->lastSeen = myGlobals.actTime;
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
@@ -3564,6 +3564,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      sport,
 		      session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
+		      session->voipSession == 1 ? "&nbsp&lt;VoIP&gt;" : "",
 		      makeHostLink(session->remotePeer, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf1, sizeof(hostLinkBuf1)),
 		      dport,
 		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),

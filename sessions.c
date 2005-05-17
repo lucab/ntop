@@ -2003,9 +2003,16 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	  updateFileList(file, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	} else if(portRange(sport, dport, 4661, 4665)
 		  || (rcStr[0] == 0xE3) || (rcStr[0] == 0xC5)) {
-	  theSession->isP2P = FLAG_P2P_EDONKEY;
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	  /* Skype uses the eDonkey protocol so we must male sure that 
+	     we don't mix them */
+
+	  if((sport == IP_TCP_PORT_SKYPE) || (dport == IP_TCP_PORT_SKYPE)) {
+	    theSession->voipSession = 1;
+	  } else {
+	    theSession->isP2P = FLAG_P2P_EDONKEY;
+	    updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+	    updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
+	  }
 	} else if(portRange(sport, dport, 6881, 6889)
 		  || (!strncmp((char*)rcStr, "GET /announce?info_hash", 23))
 		  || (!strncmp((char*)rcStr, "GET /torrents/", 14))
