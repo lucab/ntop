@@ -23,10 +23,9 @@
 
 
 #include "ntop.h"
-#include <openssl/rand.h>
-
 
 #ifdef HAVE_OPENSSL
+#include <openssl/rand.h>
 
 int verify_callback(int ok, X509_STORE_CTX *ctx);
 
