@@ -196,6 +196,7 @@ extern void resetStats(int);
 extern void reinitMutexes(void);
 extern void initThreads(void);
 extern void initApps(void);
+extern int validInterface(char *name);
 extern void initDevices(char* devices);
 extern void initDeviceDatalink(int);
 extern void parseTrafficFilter(void);

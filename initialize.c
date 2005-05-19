@@ -1440,6 +1440,16 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
 /* ******************************* */
 
+int validInterface(char *name) {
+  if(strstr(name, "PPP") /* Avoid to use the PPP interface */
+	 || strstr(name, "ICSHARE")  /* Avoid to use the internet sharing interface */
+	 || strstr(name, "NdisWan")) { /* Avoid to use the internet sharing interface */
+		return(0);
+	 }
+
+	return(1);
+}
+
 #define MAX_IF_NAME    256
 
 /*
@@ -1518,6 +1528,7 @@ void initDevices(char* devices) {
       if(ifIdx < 32) {
 	char *descr;
 
+	if(validInterface(devpointer->description)) {
 	descr = devpointer->description;
 
 	if(descr != NULL) {
@@ -1538,17 +1549,14 @@ void initDevices(char* devices) {
 	strncpy(intNames[ifIdx], devpointer->name, MAX_IF_NAME);
 
 	if(defaultIdx == -1) {
-	  if((!strstr(intNames[ifIdx], "PPP")) /* Avoid to use the PPP interface */
-	     && (!strstr(intNames[ifIdx], "ICSHARE"))  /* Avoid to use the internet sharing interface */
-	     && (!strstr(intNames[ifIdx], "NdisWan"))) { /* Avoid to use the internet sharing interface */
-	    defaultIdx = ifIdx;
-	    tmpDev = devpointer->name;
-	    tmpDescr = devpointer->description;
-	  }
+		defaultIdx = ifIdx;
+		tmpDev = devpointer->name;
+		tmpDescr = devpointer->description;
 	}
 
 	ifIdx++;
       }
+	  }
 
       devpointer = devpointer->next;
     }

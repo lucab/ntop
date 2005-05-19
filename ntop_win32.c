@@ -426,8 +426,10 @@ void printAvailableInterfaces() {
     ;
   } else {
     for (i = 0; devpointer != 0; i++) {
-      printf("   [index=%d] %s\n             (%s)\n",
-	     numInterfaces++, devpointer->description, devpointer->name);
+		if(validInterface(devpointer->description)) {
+		printf("   [index=%d] %s\n             (%s)\n",
+			numInterfaces++, devpointer->description, devpointer->name);
+		}
 
       devpointer = devpointer->next;
     } /* for */
