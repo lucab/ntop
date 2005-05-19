@@ -1441,13 +1441,14 @@ void addDevice(char* deviceName, char* deviceDescr) {
 /* ******************************* */
 
 int validInterface(char *name) {
-  if(strstr(name, "PPP") /* Avoid to use the PPP interface */
-	 || strstr(name, "ICSHARE")  /* Avoid to use the internet sharing interface */
-	 || strstr(name, "NdisWan")) { /* Avoid to use the internet sharing interface */
-		return(0);
-	 }
-
-	return(1);
+  if(name && 
+     (strstr(name, "PPP") /* Avoid to use the PPP interface */
+      || strstr(name, "ICSHARE")  /* Avoid to use the internet sharing interface */
+      || strstr(name, "NdisWan"))) { /* Avoid to use the internet sharing interface */
+    return(0);
+  }
+  
+  return(1);
 }
 
 #define MAX_IF_NAME    256
