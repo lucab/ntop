@@ -76,6 +76,9 @@ struct generic_netflow_record {
   u_int16_t src_as;     /* source peer/origin Autonomous System */
   u_int8_t  dst_mask;   /* destination route's mask bits */
   u_int8_t  src_mask;   /* source route's mask bits */
+  
+  /* v9 */
+  u_int16_t vlanId;
 
   /* nFlow Extensions */
   u_int32_t nw_latency_sec, nw_latency_usec;
@@ -496,12 +499,12 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   addrput(AF_INET,&addr1,&b);
   addrput(AF_INET,&addr2,&a);
   if(!skipDST)
-    dstHost = lookupHost(&addr1, NULL, -1 /* no VLAN */, 0, 1, deviceId);
+    dstHost = lookupHost(&addr1, NULL, record->vlanId, 0, 1, deviceId);
   else
     dstHost = myGlobals.device[deviceId].netflowGlobals->dummyHost;
 
   if(!skipSRC)
-    srcHost = lookupHost(&addr2, NULL, -1 /* no VLAN */, 0, 1, deviceId);
+    srcHost = lookupHost(&addr2, NULL, record->vlanId, 0, 1, deviceId);
   else
     srcHost = myGlobals.device[deviceId].netflowGlobals->dummyHost;
 
@@ -690,11 +693,6 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   if(session) {
     time_t timeDiff = recordActTime - (lastSeen - firstSeen);
 
-    traceEvent(CONST_TRACE_INFO,
-	       "callId=%s/calling party=%s/called party=%s",
-	       valueOf(record->sip_call_id), valueOf(record->sip_calling_party),
-	       valueOf(record->sip_called_party));
-
     if(session->session_info == NULL) {
       if((!isEmpty(record->sip_call_id))
 	 || (!isEmpty(record->sip_calling_party))
@@ -706,7 +704,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 		      valueOf(record->sip_call_id), valueOf(record->sip_calling_party),
 		      valueOf(record->sip_called_party));
 
-	traceEvent(CONST_TRACE_INFO, "DEBUG: ->>>>>>>> '%s'", tmpStr);
+	/* traceEvent(CONST_TRACE_INFO, "DEBUG: ->>>>>>>> '%s'", tmpStr); */
 	session->session_info = strdup(tmpStr);
       }
     }
@@ -1066,6 +1064,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
             /* initialize to zero */
 	    memset(&record, 0, sizeof(record));
+	    record.vlanId = -1; /* No VLAN */
 
 #ifdef DEBUG_FLOWS
 	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d", fs.templateId);
@@ -1136,6 +1135,11 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		  break;
 		case 17: /* DST_AS */
 		  memcpy(&record.dst_as, &buffer[displ], 2); 
+		  break;
+		case 58: /* SRC_VLAN */
+		case 59: /* DST_VLAN */
+		  memcpy(&record.vlanId, &buffer[displ], 2); 
+		  record.vlanId = ntohs(record.vlanId);
 		  break;
 		case 92: /* NW_LATENCY_SEC */
 		  memcpy(&record.nw_latency_sec, &buffer[displ], 4); 
