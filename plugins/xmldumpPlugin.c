@@ -24,11 +24,12 @@
 
 #include "ntop.h"
 #include "globals-report.h"
+
+#ifdef MAKE_WITH_XMLDUMP
 #include <stdarg.h>
 #include <setjmp.h>
 #include <execinfo.h>
 
-#ifdef MAKE_WITH_XMLDUMP
 #include <glibconfig.h>
 #warning
 #warning ===========================================================
@@ -86,8 +87,9 @@
        0 - ntop 3.0
        1 - ntop 3.1 (major reorg)
      */
-
+#ifdef MAKE_WITH_XMLDUMP
 #include  "xml_g_subversion.inc"
+#endif
 
 /*
  * Define the parm values for xmldump and the # of characters to test
