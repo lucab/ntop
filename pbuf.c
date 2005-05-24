@@ -163,7 +163,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
   if(isPassiveSess) {
     /* Emulate non passive session */
     idx = myGlobals.FTPIdx;
-  } else if(isVoipSess) {
+  } else if(isVoipSess || (port == 54045 /* Skype default port */)) {
     /* Emulate VoIP session */
     idx = myGlobals.VoipIdx;
   } else {

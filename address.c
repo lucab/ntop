@@ -38,7 +38,7 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 static void updateHostNameInfo(HostAddr addr, char* symbolic, int type);
 
 /* #define DNS_DEBUG */
-/* #define MDNS_DEBUG */
+/* #define MDNS_DEBUG  */
 
 /* **************************************** */
 
@@ -1252,7 +1252,7 @@ static void msdns_filter_name(char *msg) {
 
   for(i=0, j=0; i<max; i++) {
 #ifdef MDNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i, msg[i], msg[i]);
+    if(0) traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i, msg[i], msg[i]);
 #endif
 
     if(msg[i] != '\\') {
@@ -1264,9 +1264,11 @@ static void msdns_filter_name(char *msg) {
 
       if((msg[i+1] >= '0') && (msg[i+1] <= '9')) {
 #ifdef MDNS_DEBUG
-	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i+1, msg[i+1], msg[i+1]);
-	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i+2, msg[i+2], msg[i+2]);
-	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i+3, msg[i+3], msg[i+3]);
+	if(0){
+	  traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i+1, msg[i+1], msg[i+1]);
+	  traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i+2, msg[i+2], msg[i+2]);
+	  traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: [i=%d][%c][%d]", i+3, msg[i+3], msg[i+3]);
+	}
 #endif
 
 	tmpStr[0] = msg[i+1];

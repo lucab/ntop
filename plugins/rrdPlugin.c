@@ -20,7 +20,7 @@
 
 /* This plugin works only with threads */
 
-/* #define RRD_DEBUG  8 */
+#define RRD_DEBUG  8 
 
 /*
 
@@ -32,7 +32,7 @@ Plugin History
 1.0.3
 2.0     Rolled major version due to new interface parameter.
 2.1     Added tests/creates for rrd and subdirectories, fixed timer,
-        --reuse-rrd-graphics etc.
+--reuse-rrd-graphics etc.
 2.1.1   Fixed hosts / interface bug (Luca)
 2.1.2   Added status message
 2.2     Version roll (preparatory) for ntop 2.2
@@ -63,10 +63,10 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 
 
 #if defined(RRD_DEBUG) && (RRD_DEBUG > 0)
- #define traceEventRRDebug(level, ...) { if(RRD_DEBUG >= level) \
+#define traceEventRRDebug(level, ...) { if(RRD_DEBUG >= level) \
                                            traceEvent(CONST_TRACE_NOISY, "RRD_DEBUG: " __VA_ARGS__); \
                                        }
- #define traceEventRRDebugARGV(level)  { if(RRD_DEBUG >= level) { \
+#define traceEventRRDebugARGV(level)  { if(RRD_DEBUG >= level) { \
                                            int _iARGV; \
                                            for(_iARGV=0; _iARGV<argc; _iARGV++) { \
                                              traceEvent(CONST_TRACE_NOISY, "RRD_DEBUG: argv[%d] = %s", _iARGV, argv[_iARGV]); \
@@ -74,8 +74,8 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
                                          } \
                                        }
 #else
- #define traceEventRRDebug 
- #define traceEventRRDebugARGV 
+#define traceEventRRDebug
+#define traceEventRRDebugARGV
 #endif
 
 
@@ -87,9 +87,9 @@ static u_short dumpPermissions;
 
 #ifdef CFG_MULTITHREADED
 static PthreadMutex rrdMutex;
-static pthread_t rrdThread;
+static pthread_t rrdThread, rrdTrafficThread;
 
-static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount = 0, dumpInterval, dumpDetail;
+static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount = 0, dumpInterval, shortDumpInterval = 10, dumpDetail;
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
 static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
@@ -113,13 +113,13 @@ static void handleRRDHTTPrequest(char* url);
 static char* spacer(char* str, char *tmpStr, int tmpStrLen);
 
 static int sumCounter(char *rrdPath, char *rrdFilePath,
-	       char *startTime, char* endTime, Counter *total, float *average);
+		      char *startTime, char* endTime, Counter *total, float *average);
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter, char *startTime, char* endTime, char* rrdPrefix);
 static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
-static void updateCounter(char *hostPath, char *key, Counter value);
-static void updateGauge(char *hostPath, char *key, Counter value);
-static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter);
+static void updateCounter(char *hostPath, char *key, Counter value, char short_step);
+static void updateGauge(char *hostPath, char *key, Counter value, char short_step);
+static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter, char short_step);
 char x2c(char *what);
 static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void addRrdDelay();
@@ -243,7 +243,7 @@ static void addRrdDelay() {
 /* ******************************************* */
 
 static int sumCounter(char *rrdPath, char *rrdFilePath,
-	       char *startTime, char* endTime, Counter *total, float *average) {
+		      char *startTime, char* endTime, Counter *total, float *average) {
   char *argv[32], path[512];
   int argc = 0, rc;
   time_t        start,end;
@@ -252,7 +252,7 @@ static int sumCounter(char *rrdPath, char *rrdFilePath,
   char          **ds_namv;
 
   safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s",
-	      myGlobals.rrdPath, rrdPath, rrdFilePath);
+		myGlobals.rrdPath, rrdPath, rrdFilePath);
 
   revertSlashIfWIN32(path, 0);
 
@@ -320,24 +320,24 @@ static void listResource(char *rrdPath, char *rrdTitle,
   sendString("<CENTER>\n<p ALIGN=right>\n");
 
   safe_snprintf(__FILE__, __LINE__, url, sizeof(url),
-              "/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=now",
-              rrdPluginInfo->pluginURLname,
-              rrdPath, rrdTitle);
+		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=now",
+		rrdPluginInfo->pluginURLname,
+		rrdPath, rrdTitle);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<b>View:</b> [ <A HREF=\"%s&start=now-1y\">year</A> ]", url);
-    sendString(buf);
+  sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1m\">month</A> ]", url);
-    sendString(buf);
+  sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1w\">week</A> ]", url);
-    sendString(buf);
+  sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1d\">day</A> ]", url);
-    sendString(buf);
+  sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-12h\">last 12h</A> ]\n", url);
-    sendString(buf);
+  sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-6h\">last 6h</A> ]\n", url);
-    sendString(buf);
+  sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1h\">last hour</A> ]&nbsp;\n", url);
-    sendString(buf);
+  sendString(buf);
 
   sendString("</p>\n<p>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
@@ -452,7 +452,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
 	  sendString("</TD></TR>\n");
 	}
-      } 
+      }
     }
   } /* while */
 
@@ -463,7 +463,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   }
 
   sendString("</CENTER>");
-  
+
   /*
     sendString("<br><b>NOTE: total and average values are NOT absolute but "
     "calculated on the specified time interval.</b>\n");
@@ -488,7 +488,7 @@ static int endsWith(char* label, char* pattern) {
 /* ******************************************* */
 
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter,
-		  char *startTime, char* endTime, char *rrdPrefix) {
+			char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[32], buf[384], buf1[384], buf2[384], fname[384], *label, tmpStr[32];
 #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
   char bufa1[384], bufa2[384], bufa3[384];
@@ -497,7 +497,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   int argc = 0, rc, x, y;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "graphCounter(%s, %s, %s, %s, %s, %s...)", 
+  traceEvent(CONST_TRACE_INFO, "graphCounter(%s, %s, %s, %s, %s, %s...)",
 	     rrdPath, rrdName, rrdTitle, rrdCounter, startTime, endTime);
 #endif
 
@@ -514,8 +514,8 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%s%s",
-	   myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
-	   CHART_FORMAT);
+		myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
+		CHART_FORMAT);
 
   revertSlashIfWIN32(path, 0);
   revertSlashIfWIN32(fname, 0);
@@ -595,14 +595,14 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     } else {
       traceEventRRDebugARGV(3);
 
-      if(++graphErrCount < 50) 
+      if(++graphErrCount < 50)
         traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
 
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("RRD Graph", NULL, 0);
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
-                  "<I>Error while building graph of the requested file. %s</I>",
-	          rrd_get_error());
+		    "<I>Error while building graph of the requested file. %s</I>",
+		    rrd_get_error());
       printFlagedWarning(path);
       rrd_clear_error();
     }
@@ -641,9 +641,9 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%d%s",
-	  myGlobals.rrdPath, rrd_subdirs[0],
-	      startTime, rrdPrefix, graphId,
-	      CHART_FORMAT);
+		myGlobals.rrdPath, rrd_subdirs[0],
+		startTime, rrdPrefix, graphId,
+		CHART_FORMAT);
 
   revertSlashIfWIN32(fname, 0);
 
@@ -690,7 +690,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
       argv[argc++] = buf[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		  entryId, rrd_colors[entryId], spacer(&rrds[i][3], tmpStr, sizeof(tmpStr)));
+		    entryId, rrd_colors[entryId], spacer(&rrds[i][3], tmpStr, sizeof(tmpStr)));
       argv[argc++] = buf1[entryId];
 
 
@@ -733,14 +733,14 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   } else {
     traceEventRRDebugARGV(3);
 
-    if(++graphErrCount < 50) 
+    if(++graphErrCount < 50)
       traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("RRD Graph Summary", NULL, 0);
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
-		"<I>Error while building graph of the requested file. %s</I>",
-		rrd_get_error());
+		  "<I>Error while building graph of the requested file. %s</I>",
+		  rrd_get_error());
     printFlagedWarning(path);
     rrd_clear_error();
   }
@@ -863,7 +863,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
 	if(peers == NULL) peers = "";
 
 	if(strstr(rrdName, "bytes") && (rem || loc)) {
-	  
+
 	  snprintf(file_a, sizeof(file_a), "%s%sLoc", rrdName, sent ? "Sent" : "Rcvd");
 	  snprintf(file_b, sizeof(file_b), "%s%sRem", rrdName, sent ? "Sent" : "Rcvd");
 	} else {
@@ -876,7 +876,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
 	rrd_custom[2] = NULL;
 	rrds = (char**)rrd_custom;
 
-	if(pkts) label = "Packets/sec"; else label = "Bytes/sec"; 
+	if(pkts) label = "Packets/sec"; else label = "Bytes/sec";
 	/* traceEvent(CONST_TRACE_INFO, "RRD: [%s][%s]", file_a, file_b); */
       } else {
 	/* traceEvent(CONST_TRACE_INFO, "RRD: Not found [%s]", rrdName); */
@@ -889,9 +889,9 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
 
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%d%s",
-	  myGlobals.rrdPath, rrd_subdirs[0],
-	      startTime, rrdPrefix, graphId,
-	      CHART_FORMAT);
+		myGlobals.rrdPath, rrd_subdirs[0],
+		startTime, rrdPrefix, graphId,
+		CHART_FORMAT);
 
   revertSlashIfWIN32(fname, 0);
 
@@ -995,14 +995,14 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
   } else {
     traceEventRRDebugARGV(3);
 
-    if(++graphErrCount < 50) 
+    if(++graphErrCount < 50)
       traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("RRD Graph Summary", NULL, 0);
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
-		"<I>Error while building graph of the requested file. %s</I>",
-		rrd_get_error());
+		  "<I>Error while building graph of the requested file. %s</I>",
+		  rrd_get_error());
     printFlagedWarning(path);
     rrd_clear_error();
   }
@@ -1011,6 +1011,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
 }
 
 /* ******************************* */
+
 static time_t checkLast(char *rrd) {
   time_t lastTime;
   char *argv[32];
@@ -1034,11 +1035,10 @@ static time_t checkLast(char *rrd) {
   return(lastTime);
 }
 
-
 /* ******************************* */
 
-static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
-    char path[512], *argv[32], cmd[64];
+static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, char short_step) {
+  char path[512], *argv[32], cmd[64];
   struct stat statbuf;
   int argc = 0, rc, createdCounter = 0, i;
 
@@ -1058,9 +1058,12 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
     char tempStr[64];
 #endif
-    int step = dumpInterval;
-    int value1, value2;
+    int step;
+    int value1, value2, rrdDumpInterval;
     unsigned long topValue;
+
+    rrdDumpInterval = short_step ? (2*shortDumpInterval) : dumpInterval;
+    step = rrdDumpInterval;
 
     topValue = 1000000000 /* 1 Gbit/s */;
 
@@ -1074,57 +1077,62 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     argv[argc++] = path;
     argv[argc++] = "--start";
     safe_snprintf(__FILE__, __LINE__, startStr, sizeof(startStr), "%u",
-	     rrdTime-1 /* -1 avoids subsequent rrd_update call problems */);
+		  rrdTime-1 /* -1 avoids subsequent rrd_update call problems */);
     argv[argc++] = startStr;
 
     argv[argc++] = "--step";
-    safe_snprintf(__FILE__, __LINE__, stepStr, sizeof(stepStr), "%u", dumpInterval);
+    safe_snprintf(__FILE__, __LINE__, stepStr, sizeof(stepStr), "%u", rrdDumpInterval);
     argv[argc++] = stepStr;
 
     if(isCounter) {
-      safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue);
+      safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
+		    "DS:counter:COUNTER:%d:0:%u", step, topValue);
     } else {
       /*
-	 Unlimited (sort of)
-	 Well I have decided to add a limit too in order to avoid crazy values.
+	Unlimited (sort of)
+	Well I have decided to add a limit too in order to avoid crazy values.
       */
-      safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr), "DS:counter:GAUGE:%d:0:%u", step, topValue);
+      safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
+		    "DS:counter:GAUGE:%d:0:%u", step, topValue);
     }
     argv[argc++] = counterStr;
 
-    /* dumpInterval is in seconds.  There are 60m*60s = 3600s in an hour.
-     * value1 is the # of dumpIntervals per hour
+    /* rrdDumpInterval is in seconds.  There are 60m*60s = 3600s in an hour.
+     * value1 is the # of rrdDumpIntervals per hour
      */
-    value1 = (60*60 + dumpInterval - 1) / dumpInterval;
+    value1 = (60*60 + rrdDumpInterval - 1) / rrdDumpInterval;
     /* value2 is the # of value1 (hours) for dumpHours hours */
     value2 = value1 * dumpHours;
-    safe_snprintf(__FILE__, __LINE__, intervalStr, sizeof(intervalStr), "RRA:AVERAGE:%.1f:1:%d", 0.5, value2);
+    safe_snprintf(__FILE__, __LINE__, intervalStr, sizeof(intervalStr),
+		  "RRA:AVERAGE:%.1f:1:%d", 0.5, value2);
     argv[argc++] = intervalStr;
 
     /* Store the MIN/MAX 5m value for a # of hours */
     safe_snprintf(__FILE__, __LINE__, minStr, sizeof(minStr), "RRA:MIN:%.1f:1:%d",
-                0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+		  0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
     argv[argc++] = minStr;
     safe_snprintf(__FILE__, __LINE__, maxStr, sizeof(maxStr), "RRA:MAX:%.1f:1:%d",
-               0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+		  0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
     argv[argc++] = maxStr;
 
     if(dumpDays > 0) {
       safe_snprintf(__FILE__, __LINE__, daysStr, sizeof(daysStr), "RRA:AVERAGE:%.1f:%d:%d",
-                  0.5, value1, dumpDays * 24);
+		    0.5, value1, dumpDays * 24);
       argv[argc++] = daysStr;
     }
 
-    /* Compute the rollup - how many dumpInterval seconds interval are in a day */
-    value1 = (24*60*60 + dumpInterval - 1) / dumpInterval;
+    /* Compute the rollup - how many rrdDumpInterval seconds interval are in a day */
+    value1 = (24*60*60 + rrdDumpInterval - 1) / rrdDumpInterval;
     if(dumpMonths > 0) {
-      safe_snprintf(__FILE__, __LINE__, monthsStr, sizeof(monthsStr), "RRA:AVERAGE:%.1f:%d:%d",
-                  0.5, value1, dumpMonths * 30);
+      safe_snprintf(__FILE__, __LINE__, monthsStr, sizeof(monthsStr),
+		    "RRA:AVERAGE:%.1f:%d:%d",
+		    0.5, value1, dumpMonths * 30);
       argv[argc++] = monthsStr;
     }
 
 #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
-    safe_snprintf(__FILE__, __LINE__, tempStr, sizeof(tempStr), "RRA:HWPREDICT:1440:0.1:0.0035:20");
+    safe_snprintf(__FILE__, __LINE__, tempStr, sizeof(tempStr),
+		  "RRA:HWPREDICT:1440:0.1:0.0035:20");
     argv[argc++] = tempStr;
 #endif
 
@@ -1160,21 +1168,21 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     if(rrd_test_error()) {
       traceEventRRDebugARGV(3);
 
-      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s", path, rrd_get_error());
+      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
+		 path, rrd_get_error());
       rrd_clear_error();
       numRRDerrors++;
     }
 
     releaseMutex(&rrdMutex);
 
-    traceEventRRDebug("rrd_create(%s, %s)=%d", hostPath, key, rc);
+    /* traceEventRRDebug("rrd_create(%s, %s)=%d", hostPath, key, rc); */
     createdCounter = 1;
   }
 
 #if RRD_DEBUG > 0
   {
-    time_t rc = checkLast(path);
-    if(rc >= rrdTime)
+    if(checkLast(path) >= rrdTime)
       traceEventRRDebug(0, "WARNING rrd_update not performed (RRD already updated)");
   }
 #endif
@@ -1183,9 +1191,12 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   argv[argc++] = "rrd_update";
   argv[argc++] = path;
 
+#if 0 /* Luca: what's this code about ? */
   if((!createdCounter) && (numRuns == 1)) {
     return;
-  } else {
+  } else 
+#endif
+    {
 #ifdef WIN32
     safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%I64u", rrdTime, value);
 #else
@@ -1251,23 +1262,23 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
 /* ******************************* */
 
-static void updateCounter(char *hostPath, char *key, Counter value) {
+static void updateCounter(char *hostPath, char *key, Counter value, char short_step) {
   /* traceEvent(CONST_TRACE_INFO, "updateCounter: [%s][%s]", hostPath, key); */
-  updateRRD(hostPath, key, value, 1);
+  updateRRD(hostPath, key, value, 1, short_step);
 }
 
 /* ******************************* */
 
-static void updateGauge(char *hostPath, char *key, Counter value) {
+static void updateGauge(char *hostPath, char *key, Counter value, char short_step) {
   /* traceEvent(CONST_TRACE_INFO, "RRD: %s = %u", key, (unsigned long)value); */
-  updateRRD(hostPath, key, value, 0);
+  updateRRD(hostPath, key, value, 0, short_step);
 }
 
 /* ******************************* */
 
-static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter) {
+static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter, char short_step) {
   if(counter->modified) {
-    updateCounter(hostPath, key, counter->value);
+    updateCounter(hostPath, key, counter->value, short_step);
     counter->modified = 0;
   }
 }
@@ -1277,18 +1288,18 @@ static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *coun
 #ifndef WIN32
 static void setGlobalPermissions(int permissionsFlag) {
   switch (permissionsFlag) {
-    case CONST_RRD_PERMISSIONS_GROUP:
-      myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_GROUP;
-      myGlobals.rrdUmask = CONST_RRD_UMASK_GROUP;
-      break;
-    case CONST_RRD_PERMISSIONS_EVERYONE:
-      myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_EVERYONE;
-      myGlobals.rrdUmask = CONST_RRD_UMASK_EVERYONE;
-      break;
-    default:
-      myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_PRIVATE;
-      myGlobals.rrdUmask = CONST_RRD_UMASK_PRIVATE;
-      break;
+  case CONST_RRD_PERMISSIONS_GROUP:
+    myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_GROUP;
+    myGlobals.rrdUmask = CONST_RRD_UMASK_GROUP;
+    break;
+  case CONST_RRD_PERMISSIONS_EVERYONE:
+    myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_EVERYONE;
+    myGlobals.rrdUmask = CONST_RRD_UMASK_EVERYONE;
+    break;
+  default:
+    myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_PRIVATE;
+    myGlobals.rrdUmask = CONST_RRD_UMASK_PRIVATE;
+    break;
   }
 }
 #endif
@@ -1298,7 +1309,7 @@ static void setGlobalPermissions(int permissionsFlag) {
 static void commonRRDinit(void) {
   char value[1024];
 
-  shownCreate=0;
+  shownCreate = 0;
 
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
     safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", DEFAULT_RRD_INTERVAL);
@@ -1427,7 +1438,7 @@ static void commonRRDinit(void) {
       RRD does not accept ':' in path names as this
       char is used as separator.
     */
-    
+
     if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
 #endif
 
@@ -1496,27 +1507,27 @@ static void commonRRDinit(void) {
  */
 
 static time_t rrd_first(char *path) {
-    FILE *in_file;
-    time_t now;
-    long timer=0, rra_start;
-    rrd_t rrd;
+  FILE *in_file;
+  time_t now;
+  long timer=0, rra_start;
+  rrd_t rrd;
 
-    if(path == NULL) {
-        return(-1);
-    }
-    if(rrd_open(path, &in_file, &rrd, RRD_READONLY)==-1){
-        return(-1);
-    }
+  if(path == NULL) {
+    return(-1);
+  }
+  if(rrd_open(path, &in_file, &rrd, RRD_READONLY)==-1){
+    return(-1);
+  }
 
-    rra_start = ftell(in_file);
-    fseek(in_file,(rra_start +(rrd.rra_ptr[0].cur_row+1) * rrd.stat_head->ds_cnt * sizeof(rrd_value_t)), SEEK_SET);
-    timer = - (rrd.rra_def[0].row_cnt-1);
-    now = (rrd.live_head->last_up - 
-           rrd.live_head->last_up % (rrd.rra_def[0].pdp_cnt*rrd.stat_head->pdp_step)) +
-          (timer*rrd.rra_def[0].pdp_cnt*rrd.stat_head->pdp_step);
-    rrd_free(&rrd);
-    fclose(in_file);
-    return(now);
+  rra_start = ftell(in_file);
+  fseek(in_file,(rra_start +(rrd.rra_ptr[0].cur_row+1) * rrd.stat_head->ds_cnt * sizeof(rrd_value_t)), SEEK_SET);
+  timer = - (rrd.rra_def[0].row_cnt-1);
+  now = (rrd.live_head->last_up -
+	 rrd.live_head->last_up % (rrd.rra_def[0].pdp_cnt*rrd.stat_head->pdp_step)) +
+    (timer*rrd.rra_def[0].pdp_cnt*rrd.stat_head->pdp_step);
+  rrd_free(&rrd);
+  fclose(in_file);
+  return(now);
 }
 
 /* ****************************** */
@@ -1531,7 +1542,7 @@ static void arbitraryAction(char *rrdName,
                             char _which) {
   int i, len, rc=0, argc = 0, countOK=0, countZERO=0;
   char buf[LEN_GENERAL_WORK_BUFFER],
-       rrdKey[64];
+    rrdKey[64];
 
   memset(&buf, 0, sizeof(buf));
   memset(&rrdKey, 0, sizeof(rrdKey));
@@ -1552,8 +1563,8 @@ static void arbitraryAction(char *rrdName,
   } else {
     /* Security check... it's an ip - 0..9 a..f . and :   ONLY */
     if(ipSanityCheck(rrdIP, "arbitrary rrd request", 1) != 0) {
-        traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(ip)... ignored (sanitized: %s)", rrdIP);
-        return;
+      traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(ip)... ignored (sanitized: %s)", rrdIP);
+      return;
     }
     len=strlen(rrdIP);
     for(i=0; i<len; i++) if(rrdIP[i] == '.') rrdIP[i] = CONST_PATH_SEP;
@@ -1564,7 +1575,7 @@ static void arbitraryAction(char *rrdName,
 
   if(_which == CONST_ARBITRARY_RRDREQUEST_SHOWME[0]) {
     char buf1[LEN_GENERAL_WORK_BUFFER],
-         buf2[LEN_GENERAL_WORK_BUFFER];
+      buf2[LEN_GENERAL_WORK_BUFFER];
 
     memset(&buf1, 0, sizeof(buf1));
     memset(&buf2, 0, sizeof(buf2));
@@ -1575,13 +1586,13 @@ static void arbitraryAction(char *rrdName,
     escape(buf2, sizeof(buf2), rrdTitle);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<p>/" CONST_PLUGINS_HEADER "%s?action=" CONST_ARBITRARY_RRDREQUEST
-                                "&" CONST_ARBITRARY_IP "=%s"
-                                "&" CONST_ARBITRARY_INTERFACE "=%s"
-                                "&" CONST_ARBITRARY_FILE "=%s"
-                                "&start=%s"
-                                "&end=%s"
-                                "&counter=%s"
-                                "&title=%s</p>\n",
+		  "&" CONST_ARBITRARY_IP "=%s"
+		  "&" CONST_ARBITRARY_INTERFACE "=%s"
+		  "&" CONST_ARBITRARY_FILE "=%s"
+		  "&start=%s"
+		  "&end=%s"
+		  "&counter=%s"
+		  "&title=%s</p>\n",
                   rrdPluginInfo->pluginURLname,
                   rrdIP,
                   rrdInterface,
@@ -1598,10 +1609,10 @@ static void arbitraryAction(char *rrdName,
   if((_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) ||
      (_which == CONST_ARBITRARY_RRDREQUEST_FETCHMECSV[0])) {
     char *argv[32],
-         rptTime[32],
-         startWorkTime[32],
-         path[128],
-         **ds_namv;
+      rptTime[32],
+      startWorkTime[32],
+      path[128],
+      **ds_namv;
     time_t start=0,end=time(NULL)+1, startTimeFound;
     unsigned long step=0, ds_cnt, ii;
     rrd_value_t   *data,*datai, _val;
@@ -1658,8 +1669,8 @@ static void arbitraryAction(char *rrdName,
 
     if(rc == -1) {
       traceEventRRDebugARGV(3);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-                    "%sError retrieving rrd data, %s%s\n", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                    "%sError retrieving rrd data, %s%s\n",
                     rrd_get_error(),
                     (_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) ? "<p>" : "",
                     (_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) ? "</p>" : "");
@@ -1684,11 +1695,11 @@ static void arbitraryAction(char *rrdName,
         strftime(rptTime, sizeof(rptTime), CONST_LOCALE_TIMESPEC, localtime_r((time_t *)&ii, &workT));
         if(_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) {
           safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                        "<tr><td>%s</td><td align=\"right\">%u</td><td align=\"right\">%.6g</td></tr>\n", 
+                        "<tr><td>%s</td><td align=\"right\">%u</td><td align=\"right\">%.6g</td></tr>\n",
                         rptTime, ii, _val);
         } else {
           safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                        "\"%s\",%u,%.6g\n", 
+                        "\"%s\",%u,%.6g\n",
                         rptTime, ii, _val);
         }
         sendString(buf);
@@ -1783,7 +1794,7 @@ static void statisticsPage(void) {
 
   sendString("<center><table border=\"1\""TABLE_DEFAULTS">\n"
              "<tr><th align=\"center\" "DARK_BG">Item</th>"
-                 "<th align=\"center\" "DARK_BG">Count</th></tr>\n");
+	     "<th align=\"center\" "DARK_BG">Count</th></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Cycles</th><td align=\"right\">");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDCycles);
@@ -1810,10 +1821,10 @@ static void statisticsPage(void) {
 static void arbitraryActionPage(void) {
   int idx, count, rc;
   char buf[1024],
-       dirPath[256],
-       rrdPath[512],
-       startTime[32],
-       endTime[32];
+    dirPath[256],
+    rrdPath[512],
+    startTime[32],
+    endTime[32];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   struct stat statBuf;
@@ -1837,7 +1848,7 @@ static void arbitraryActionPage(void) {
     return;
   }
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<center>"
                 "<p>This allows you to see and/or create a graph of an arbitrary rrd file.</p>\n"
                 "<form action=\"/" CONST_PLUGINS_HEADER "%s\" method=GET>\n"
@@ -1845,15 +1856,15 @@ static void arbitraryActionPage(void) {
                 "<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
                 "<tr><th width=\"250\" align=\"left\" "DARK_BG">Action</th>\n"
                 "<td align=\"left\">"
-                  "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_GRAPHME "\" CHECKED>"
-                    "&nbsp;Create the graph - this is returned as a png file and will display ONLY the graph, "
-                    "without any html headings.<br>\n"
-                  "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_SHOWME "\">"
-                    "&nbsp;Display the url to request the graph<br>\n"
-                  "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_FETCHME "\">"
-                    "&nbsp;Retrieve rrd data in table form<br>\n"
-                  "<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_FETCHMECSV "\">"
-                    "&nbsp;Retrieve rrd data as CSV"
+		"<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_GRAPHME "\" CHECKED>"
+		"&nbsp;Create the graph - this is returned as a png file and will display ONLY the graph, "
+		"without any html headings.<br>\n"
+		"<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_SHOWME "\">"
+		"&nbsp;Display the url to request the graph<br>\n"
+		"<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_FETCHME "\">"
+		"&nbsp;Retrieve rrd data in table form<br>\n"
+		"<input type=radio name=\"which\" value=\"" CONST_ARBITRARY_RRDREQUEST_FETCHMECSV "\">"
+		"&nbsp;Retrieve rrd data as CSV"
                 "</td></tr>\n"
                 "<tr><th align=\"left\" "DARK_BG">File</th>\n<td align=\"left\">"
                 "<select name=\"" CONST_ARBITRARY_FILE "\">",
@@ -1870,8 +1881,8 @@ static void arbitraryActionPage(void) {
   if(myGlobals.device[0].ipProtoStats != NULL) {
     for(idx=0; idx<myGlobals.numIpProtosToMonitor; idx++) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"IP_%sSentBytes\">%s Sent Bytes</option>\n"
-                                                          "<option value=\"IP_%sRcvdBytes\">%s Rcvd Bytes</option>\n"
-                                                          "<option value=\"IP_%sBytes\">%s Bytes (interface level)</option>\n",
+		    "<option value=\"IP_%sRcvdBytes\">%s Rcvd Bytes</option>\n"
+		    "<option value=\"IP_%sBytes\">%s Bytes (interface level)</option>\n",
                     myGlobals.ipTrafficProtosNames[idx],
                     myGlobals.ipTrafficProtosNames[idx],
                     myGlobals.ipTrafficProtosNames[idx],
@@ -1879,8 +1890,8 @@ static void arbitraryActionPage(void) {
                     myGlobals.ipTrafficProtosNames[idx],
                     myGlobals.ipTrafficProtosNames[idx]);
       sendString(buf);
-    } 
-  } 
+    }
+  }
 
   sendString("</select>"
              "<br>\n<p>Note: The drop down list shows all possible files - many (most) (all) "
@@ -2141,8 +2152,8 @@ static void handleRRDHTTPrequest(char* url) {
 
 #ifdef WIN32
 	  /*
-		RRD does not accept ':' in path names as this
-		char is used as separator.
+	    RRD does not accept ':' in path names as this
+	    char is used as separator.
 	  */
 
 	  if(value[1] == ':') idx = 2; /* e.g. c:/... */
@@ -2220,7 +2231,7 @@ static void handleRRDHTTPrequest(char* url) {
       storePrefsValue("rrd.dataDumpMatrix", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDetail);
       storePrefsValue("rrd.dataDumpDetail", buf);
-      
+
       if(_hostsFilter != NULL) {
 	if(hostsFilter != NULL) free(hostsFilter);
 	hostsFilter = _hostsFilter;
@@ -2274,7 +2285,7 @@ static void handleRRDHTTPrequest(char* url) {
                 "<center><form action=\"/" CONST_PLUGINS_HEADER "%s\" method=GET>\n"
                 "<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
                 "<tr><th align=\"center\" "DARK_BG">Item</th>"
-                    "<th align=\"center\" "DARK_BG">Description and Notes</th></tr>\n"
+		"<th align=\"center\" "DARK_BG">Description and Notes</th></tr>\n"
                 "<tr><th align=\"left\" "DARK_BG">Dump Interval</th><td>"
 	        "<INPUT NAME=interval SIZE=5 VALUE=",
                 rrdPluginInfo->pluginURLname);
@@ -2314,23 +2325,23 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<tr><th align=\"left\" "DARK_BG">Data to Dump</th><td>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpDomains VALUE=1 %s> Domains<br>\n",
-	      dumpDomains ? "CHECKED" : "" );
+		dumpDomains ? "CHECKED" : "" );
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpFlows VALUE=1 %s> Flows<br>\n",
-	      dumpFlows ? "CHECKED" : "" );
+		dumpFlows ? "CHECKED" : "" );
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpHosts VALUE=1 %s> Hosts<br>\n",
-	      dumpHosts ? "CHECKED" : "");
+		dumpHosts ? "CHECKED" : "");
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpInterfaces VALUE=1 %s> Interfaces<br>\n",
-	      dumpInterfaces ? "CHECKED" : "");
+		dumpInterfaces ? "CHECKED" : "");
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpMatrix VALUE=1 %s> Matrix<br>\n",
-	      dumpMatrix ? "CHECKED" : "");
+		dumpMatrix ? "CHECKED" : "");
   sendString(buf);
 
   sendString("</td></tr>\n");
@@ -2349,15 +2360,15 @@ static void handleRRDHTTPrequest(char* url) {
 
   sendString("<tr><th align=\"left\" "DARK_BG">RRD Detail</th><td>");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Low\n",
-	      FLAG_RRD_DETAIL_LOW, (dumpDetail == FLAG_RRD_DETAIL_LOW) ? "CHECKED" : "");
+		FLAG_RRD_DETAIL_LOW, (dumpDetail == FLAG_RRD_DETAIL_LOW) ? "CHECKED" : "");
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Medium\n",
-	      FLAG_RRD_DETAIL_MEDIUM, (dumpDetail == FLAG_RRD_DETAIL_MEDIUM) ? "CHECKED" : "");
+		FLAG_RRD_DETAIL_MEDIUM, (dumpDetail == FLAG_RRD_DETAIL_MEDIUM) ? "CHECKED" : "");
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Full\n",
-	      FLAG_RRD_DETAIL_HIGH, (dumpDetail == FLAG_RRD_DETAIL_HIGH) ? "CHECKED" : "");
+		FLAG_RRD_DETAIL_HIGH, (dumpDetail == FLAG_RRD_DETAIL_HIGH) ? "CHECKED" : "");
   sendString(buf);
   sendString("</td></tr>\n");
 
@@ -2368,12 +2379,12 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<br>NOTE:<ul><li>The rrd files will be in a subdirectory structure, e.g.\n");
 #ifdef WIN32
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-	       "%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
-               myGlobals.rrdPath);
+		"%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
+		myGlobals.rrdPath);
 #else
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-	       "%s/interfaces/interface-name/12/239/98/199/xxxxx.rrd ",
-               myGlobals.rrdPath);
+		"%s/interfaces/interface-name/12/239/98/199/xxxxx.rrd ",
+		myGlobals.rrdPath);
 #endif
   sendString(buf);
   sendString("to limit the number of files per subdirectory.");
@@ -2383,21 +2394,21 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<tr><th align=\"left\" "DARK_BG">File/Directory Permissions</th><td>");
   sendString("<ul>\n");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Private - ",
-              CONST_RRD_PERMISSIONS_PRIVATE,
-              (dumpPermissions == CONST_RRD_PERMISSIONS_PRIVATE) ? "CHECKED" : "");
+		CONST_RRD_PERMISSIONS_PRIVATE,
+		(dumpPermissions == CONST_RRD_PERMISSIONS_PRIVATE) ? "CHECKED" : "");
   sendString(buf);
   sendString("means that ONLY the ntop userid will be able to view the files</li>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Group - ",
-              CONST_RRD_PERMISSIONS_GROUP,
-              (dumpPermissions == CONST_RRD_PERMISSIONS_GROUP) ? "CHECKED" : "");
+		CONST_RRD_PERMISSIONS_GROUP,
+		(dumpPermissions == CONST_RRD_PERMISSIONS_GROUP) ? "CHECKED" : "");
   sendString(buf);
   sendString("means that all users in the same group as the ntop userid will be able to view the rrd files.\n");
   sendString("<br><i>(this is a bad choice if ntop's group is 'nobody' along with many other service ids)</i></li>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Everyone - ",
-              CONST_RRD_PERMISSIONS_EVERYONE,
-              (dumpPermissions == CONST_RRD_PERMISSIONS_EVERYONE) ? "CHECKED" : "");
+		CONST_RRD_PERMISSIONS_EVERYONE,
+		(dumpPermissions == CONST_RRD_PERMISSIONS_EVERYONE) ? "CHECKED" : "");
   sendString(buf);
   sendString("means that everyone on the ntop host system will be able to view the rrd files.</li>\n");
 
@@ -2418,7 +2429,7 @@ static void handleRRDHTTPrequest(char* url) {
 
   sendString("<hr>\n<p>Also:</p>\n<ul>");
   for(i=0; rrdExtraPages[i].url != NULL; i++) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<li><a href=\"/" CONST_PLUGINS_HEADER "%s/%s\">%s</a></li>\n",
                   rrdPluginInfo->pluginURLname,
                   rrdExtraPages[i].url,
@@ -2561,68 +2572,68 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 
     traceEventRRDebug(2, "Updating %s [%s/%s]", hostKey, el->hostNumIpAddress, el->ethAddressString);
 
-    updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
-    updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
-    updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
-    updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd);
+    updateTrafficCounter(rrdPath, "pktSent", &el->pktSent, 0);
+    updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd, 0);
+    updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
+    updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
 
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-      updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent);
-      updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd);
-      updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent);
-      updateTrafficCounter(rrdPath, "bytesBroadcastSent", &el->bytesBroadcastSent);
-      updateTrafficCounter(rrdPath, "pktMulticastSent", &el->pktMulticastSent);
-      updateTrafficCounter(rrdPath, "bytesMulticastSent", &el->bytesMulticastSent);
-      updateTrafficCounter(rrdPath, "pktMulticastRcvd", &el->pktMulticastRcvd);
-      updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd);
+      updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent, 0);
+      updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd, 0);
+      updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent, 0);
+      updateTrafficCounter(rrdPath, "bytesBroadcastSent", &el->bytesBroadcastSent, 0);
+      updateTrafficCounter(rrdPath, "pktMulticastSent", &el->pktMulticastSent, 0);
+      updateTrafficCounter(rrdPath, "bytesMulticastSent", &el->bytesMulticastSent, 0);
+      updateTrafficCounter(rrdPath, "pktMulticastRcvd", &el->pktMulticastRcvd, 0);
+      updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd, 0);
 
-      updateTrafficCounter(rrdPath, "bytesSentLoc", &el->bytesSentLoc);
-      updateTrafficCounter(rrdPath, "bytesSentRem", &el->bytesSentRem);
-      updateTrafficCounter(rrdPath, "bytesRcvdLoc", &el->bytesRcvdLoc);
-      updateTrafficCounter(rrdPath, "bytesRcvdFromRem", &el->bytesRcvdFromRem);
-      updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent);
-      updateTrafficCounter(rrdPath, "ipBytesRcvd", &el->ipBytesRcvd);
-      updateTrafficCounter(rrdPath, "tcpSentLoc", &el->tcpSentLoc);
-      updateTrafficCounter(rrdPath, "tcpSentRem", &el->tcpSentRem);
-      updateTrafficCounter(rrdPath, "udpSentLoc", &el->udpSentLoc);
-      updateTrafficCounter(rrdPath, "udpSentRem", &el->udpSentRem);
-      updateTrafficCounter(rrdPath, "icmpSent", &el->icmpSent);
-      updateTrafficCounter(rrdPath, "tcpRcvdLoc", &el->tcpRcvdLoc);
-      updateTrafficCounter(rrdPath, "tcpRcvdFromRem", &el->tcpRcvdFromRem);
-      updateTrafficCounter(rrdPath, "udpRcvdLoc", &el->udpRcvdLoc);
-      updateTrafficCounter(rrdPath, "udpRcvdFromRem", &el->udpRcvdFromRem);
-      updateTrafficCounter(rrdPath, "icmpRcvd", &el->icmpRcvd);
-      updateTrafficCounter(rrdPath, "tcpFragmentsSent", &el->tcpFragmentsSent);
-      updateTrafficCounter(rrdPath, "tcpFragmentsRcvd", &el->tcpFragmentsRcvd);
-      updateTrafficCounter(rrdPath, "udpFragmentsSent", &el->udpFragmentsSent);
-      updateTrafficCounter(rrdPath, "udpFragmentsRcvd", &el->udpFragmentsRcvd);
-      updateTrafficCounter(rrdPath, "icmpFragmentsSent", &el->icmpFragmentsSent);
-      updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd);
-      updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent);
-      updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd);
+      updateTrafficCounter(rrdPath, "bytesSentLoc", &el->bytesSentLoc, 0);
+      updateTrafficCounter(rrdPath, "bytesSentRem", &el->bytesSentRem, 0);
+      updateTrafficCounter(rrdPath, "bytesRcvdLoc", &el->bytesRcvdLoc, 0);
+      updateTrafficCounter(rrdPath, "bytesRcvdFromRem", &el->bytesRcvdFromRem, 0);
+      updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent, 0);
+      updateTrafficCounter(rrdPath, "ipBytesRcvd", &el->ipBytesRcvd, 0);
+      updateTrafficCounter(rrdPath, "tcpSentLoc", &el->tcpSentLoc, 0);
+      updateTrafficCounter(rrdPath, "tcpSentRem", &el->tcpSentRem, 0);
+      updateTrafficCounter(rrdPath, "udpSentLoc", &el->udpSentLoc, 0);
+      updateTrafficCounter(rrdPath, "udpSentRem", &el->udpSentRem, 0);
+      updateTrafficCounter(rrdPath, "icmpSent", &el->icmpSent, 0);
+      updateTrafficCounter(rrdPath, "tcpRcvdLoc", &el->tcpRcvdLoc, 0);
+      updateTrafficCounter(rrdPath, "tcpRcvdFromRem", &el->tcpRcvdFromRem, 0);
+      updateTrafficCounter(rrdPath, "udpRcvdLoc", &el->udpRcvdLoc, 0);
+      updateTrafficCounter(rrdPath, "udpRcvdFromRem", &el->udpRcvdFromRem, 0);
+      updateTrafficCounter(rrdPath, "icmpRcvd", &el->icmpRcvd, 0);
+      updateTrafficCounter(rrdPath, "tcpFragmentsSent", &el->tcpFragmentsSent, 0);
+      updateTrafficCounter(rrdPath, "tcpFragmentsRcvd", &el->tcpFragmentsRcvd, 0);
+      updateTrafficCounter(rrdPath, "udpFragmentsSent", &el->udpFragmentsSent, 0);
+      updateTrafficCounter(rrdPath, "udpFragmentsRcvd", &el->udpFragmentsRcvd, 0);
+      updateTrafficCounter(rrdPath, "icmpFragmentsSent", &el->icmpFragmentsSent, 0);
+      updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd, 0);
+      updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent, 0);
+      updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd, 0);
 
       if(el->nonIPTraffic) {
-	updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent);
-	updateTrafficCounter(rrdPath, "stpRcvd", &el->nonIPTraffic->stpRcvd);
-	updateTrafficCounter(rrdPath, "ipxSent", &el->nonIPTraffic->ipxSent);
-	updateTrafficCounter(rrdPath, "ipxRcvd", &el->nonIPTraffic->ipxRcvd);
-	updateTrafficCounter(rrdPath, "osiSent", &el->nonIPTraffic->osiSent);
-	updateTrafficCounter(rrdPath, "osiRcvd", &el->nonIPTraffic->osiRcvd);
-	updateTrafficCounter(rrdPath, "dlcSent", &el->nonIPTraffic->dlcSent);
-	updateTrafficCounter(rrdPath, "dlcRcvd", &el->nonIPTraffic->dlcRcvd);
-	updateTrafficCounter(rrdPath, "arp_rarpSent", &el->nonIPTraffic->arp_rarpSent);
-	updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->nonIPTraffic->arp_rarpRcvd);
-	updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->nonIPTraffic->arpReqPktsSent);
-	updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->nonIPTraffic->arpReplyPktsSent);
-	updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->nonIPTraffic->arpReplyPktsRcvd);
-	updateTrafficCounter(rrdPath, "decnetSent", &el->nonIPTraffic->decnetSent);
-	updateTrafficCounter(rrdPath, "decnetRcvd", &el->nonIPTraffic->decnetRcvd);
-	updateTrafficCounter(rrdPath, "appletalkSent", &el->nonIPTraffic->appletalkSent);
-	updateTrafficCounter(rrdPath, "appletalkRcvd", &el->nonIPTraffic->appletalkRcvd);
-	updateTrafficCounter(rrdPath, "netbiosSent", &el->nonIPTraffic->netbiosSent);
-	updateTrafficCounter(rrdPath, "netbiosRcvd", &el->nonIPTraffic->netbiosRcvd);
-	updateTrafficCounter(rrdPath, "otherSent", &el->nonIPTraffic->otherSent);
-	updateTrafficCounter(rrdPath, "otherRcvd", &el->nonIPTraffic->otherRcvd);
+	updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent, 0);
+	updateTrafficCounter(rrdPath, "stpRcvd", &el->nonIPTraffic->stpRcvd, 0);
+	updateTrafficCounter(rrdPath, "ipxSent", &el->nonIPTraffic->ipxSent, 0);
+	updateTrafficCounter(rrdPath, "ipxRcvd", &el->nonIPTraffic->ipxRcvd, 0);
+	updateTrafficCounter(rrdPath, "osiSent", &el->nonIPTraffic->osiSent, 0);
+	updateTrafficCounter(rrdPath, "osiRcvd", &el->nonIPTraffic->osiRcvd, 0);
+	updateTrafficCounter(rrdPath, "dlcSent", &el->nonIPTraffic->dlcSent, 0);
+	updateTrafficCounter(rrdPath, "dlcRcvd", &el->nonIPTraffic->dlcRcvd, 0);
+	updateTrafficCounter(rrdPath, "arp_rarpSent", &el->nonIPTraffic->arp_rarpSent, 0);
+	updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->nonIPTraffic->arp_rarpRcvd, 0);
+	updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->nonIPTraffic->arpReqPktsSent, 0);
+	updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->nonIPTraffic->arpReplyPktsSent, 0);
+	updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->nonIPTraffic->arpReplyPktsRcvd, 0);
+	updateTrafficCounter(rrdPath, "decnetSent", &el->nonIPTraffic->decnetSent, 0);
+	updateTrafficCounter(rrdPath, "decnetRcvd", &el->nonIPTraffic->decnetRcvd, 0);
+	updateTrafficCounter(rrdPath, "appletalkSent", &el->nonIPTraffic->appletalkSent, 0);
+	updateTrafficCounter(rrdPath, "appletalkRcvd", &el->nonIPTraffic->appletalkRcvd, 0);
+	updateTrafficCounter(rrdPath, "netbiosSent", &el->nonIPTraffic->netbiosSent, 0);
+	updateTrafficCounter(rrdPath, "netbiosRcvd", &el->nonIPTraffic->netbiosRcvd, 0);
+	updateTrafficCounter(rrdPath, "otherSent", &el->nonIPTraffic->otherSent, 0);
+	updateTrafficCounter(rrdPath, "otherRcvd", &el->nonIPTraffic->otherRcvd, 0);
       }
 
       protoList = myGlobals.ipProtosList, idx=0;
@@ -2631,17 +2642,17 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 
 	if(el->ipProtosList[idx] != NULL) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sSent", protoList->protocolName);
-	  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->sent);
+	  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->sent, 0);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sRcvd", protoList->protocolName);
-	  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->rcvd);
+	  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->rcvd, 0);
 	}
 	idx++, protoList = protoList->next;
       }
     }
 
     if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
-      updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers);
-      updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers);
+      updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers, 0);
+      updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers, 0);
 
       if(el->protoIPTrafficInfos) {
 	traceEventRRDebug(0, "Updating host %s", hostKey);
@@ -2660,12 +2671,12 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 	      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sSentBytes",
 			    myGlobals.ipTrafficProtosNames[j]);
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->sentLoc.value+
-			    el->protoIPTrafficInfos[j]->sentRem.value);
+			    el->protoIPTrafficInfos[j]->sentRem.value, 0);
 
 	      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sRcvdBytes",
 			    myGlobals.ipTrafficProtosNames[j]);
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
-			    el->protoIPTrafficInfos[j]->rcvdFromRem.value);
+			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
 	    }
 	  }
 	}
@@ -2692,85 +2703,112 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
   char *adjHostName;
   char hostKey[128];
 
-    accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
+  accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
 
-    if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
-      if(el->fcCounters->hostNumFcAddress[0] != '\0') {
-	  safe_snprintf(__FILE__, __LINE__, hostKey, sizeof (hostKey), "%s-%d",
-			el->fcCounters->hostNumFcAddress,
-			el->fcCounters->vsanId);
-        } else {
-            /* For the time being do not save IP-less hosts */
-	  releaseMutex(&myGlobals.hostsHashMutex);
-	  return;
-        }
-
-        adjHostName = dotToSlash(hostKey);
-
-        safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
-                      myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
-                      adjHostName);
-        mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
-
-        traceEventRRDebug(2, "Updating %s [%s/%d]", hostKey, el->fcCounters->hostNumFcAddress, el->fcCounters->vsanId);
-
-        updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
-        updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
-        updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
-        updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd);
-
-        if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-            updateTrafficCounter(rrdPath, "fcFcpBytesSent", &el->fcCounters->fcFcpBytesSent);
-            updateTrafficCounter(rrdPath, "fcFcpBytesRcvd", &el->fcCounters->fcFcpBytesRcvd);
-            updateTrafficCounter(rrdPath, "fcFiconBytesSent", &el->fcCounters->fcFiconBytesSent);
-            updateTrafficCounter(rrdPath, "fcFiconBytesRcvd", &el->fcCounters->fcFiconBytesRcvd);
-            updateTrafficCounter(rrdPath, "fcElsBytesSent", &el->fcCounters->fcElsBytesSent);
-            updateTrafficCounter(rrdPath, "fcElsBytesRcvd", &el->fcCounters->fcElsBytesRcvd);
-            updateTrafficCounter(rrdPath, "fcDnsBytesSent", &el->fcCounters->fcDnsBytesSent);
-            updateTrafficCounter(rrdPath, "fcDnsBytesRcvd", &el->fcCounters->fcDnsBytesRcvd);
-            updateTrafficCounter(rrdPath, "fcSwilsBytesSent", &el->fcCounters->fcSwilsBytesSent);
-            updateTrafficCounter(rrdPath, "fcSwilsBytesRcvd", &el->fcCounters->fcSwilsBytesRcvd);
-            updateTrafficCounter(rrdPath, "fcIpfcBytesSent", &el->fcCounters->fcIpfcBytesSent);
-            updateTrafficCounter(rrdPath, "fcIpfcBytesRcvd", &el->fcCounters->fcIpfcBytesRcvd);
-            updateTrafficCounter(rrdPath, "otherFcBytesSent", &el->fcCounters->otherFcBytesSent);
-            updateTrafficCounter(rrdPath, "otherFcBytesRcvd", &el->fcCounters->otherFcBytesRcvd);
-            updateTrafficCounter(rrdPath, "fcRscnsRcvd", &el->fcCounters->fcRscnsRcvd);
-            updateTrafficCounter(rrdPath, "scsiReadBytes", &el->fcCounters->scsiReadBytes);
-            updateTrafficCounter(rrdPath, "scsiWriteBytes", &el->fcCounters->scsiWriteBytes);
-            updateTrafficCounter(rrdPath, "scsiOtherBytes", &el->fcCounters->scsiOtherBytes);
-            updateTrafficCounter(rrdPath, "class2Sent", &el->fcCounters->class2Sent);
-            updateTrafficCounter(rrdPath, "class2Rcvd", &el->fcCounters->class2Rcvd);
-            updateTrafficCounter(rrdPath, "class3Sent", &el->fcCounters->class3Sent);
-            updateTrafficCounter(rrdPath, "class3Rcvd", &el->fcCounters->class3Rcvd);
-            updateTrafficCounter(rrdPath, "classFSent", &el->fcCounters->classFSent);
-            updateTrafficCounter(rrdPath, "classFRcvd", &el->fcCounters->classFRcvd);
-        }
-
-        if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
-            updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers);
-            updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers);
-        }
-
-        if(adjHostName != NULL)
-            free(adjHostName);
+  if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
+    if(el->fcCounters->hostNumFcAddress[0] != '\0') {
+      safe_snprintf(__FILE__, __LINE__, hostKey, sizeof (hostKey), "%s-%d",
+		    el->fcCounters->hostNumFcAddress,
+		    el->fcCounters->vsanId);
+    } else {
+      /* For the time being do not save IP-less hosts */
+      releaseMutex(&myGlobals.hostsHashMutex);
+      return;
     }
 
-    releaseMutex(&myGlobals.hostsHashMutex);
+    adjHostName = dotToSlash(hostKey);
+
+    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
+		  myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
+		  adjHostName);
+    mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
+
+    traceEventRRDebug(2, "Updating %s [%s/%d]", hostKey, el->fcCounters->hostNumFcAddress, el->fcCounters->vsanId);
+
+    updateTrafficCounter(rrdPath, "pktSent", &el->pktSent, 0);
+    updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd, 0);
+    updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
+    updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
+
+    if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
+      updateTrafficCounter(rrdPath, "fcFcpBytesSent", &el->fcCounters->fcFcpBytesSent, 0);
+      updateTrafficCounter(rrdPath, "fcFcpBytesRcvd", &el->fcCounters->fcFcpBytesRcvd, 0);
+      updateTrafficCounter(rrdPath, "fcFiconBytesSent", &el->fcCounters->fcFiconBytesSent, 0);
+      updateTrafficCounter(rrdPath, "fcFiconBytesRcvd", &el->fcCounters->fcFiconBytesRcvd, 0);
+      updateTrafficCounter(rrdPath, "fcElsBytesSent", &el->fcCounters->fcElsBytesSent, 0);
+      updateTrafficCounter(rrdPath, "fcElsBytesRcvd", &el->fcCounters->fcElsBytesRcvd, 0);
+      updateTrafficCounter(rrdPath, "fcDnsBytesSent", &el->fcCounters->fcDnsBytesSent, 0);
+      updateTrafficCounter(rrdPath, "fcDnsBytesRcvd", &el->fcCounters->fcDnsBytesRcvd, 0);
+      updateTrafficCounter(rrdPath, "fcSwilsBytesSent", &el->fcCounters->fcSwilsBytesSent, 0);
+      updateTrafficCounter(rrdPath, "fcSwilsBytesRcvd", &el->fcCounters->fcSwilsBytesRcvd, 0);
+      updateTrafficCounter(rrdPath, "fcIpfcBytesSent", &el->fcCounters->fcIpfcBytesSent, 0);
+      updateTrafficCounter(rrdPath, "fcIpfcBytesRcvd", &el->fcCounters->fcIpfcBytesRcvd, 0);
+      updateTrafficCounter(rrdPath, "otherFcBytesSent", &el->fcCounters->otherFcBytesSent, 0);
+      updateTrafficCounter(rrdPath, "otherFcBytesRcvd", &el->fcCounters->otherFcBytesRcvd, 0);
+      updateTrafficCounter(rrdPath, "fcRscnsRcvd", &el->fcCounters->fcRscnsRcvd, 0);
+      updateTrafficCounter(rrdPath, "scsiReadBytes", &el->fcCounters->scsiReadBytes, 0);
+      updateTrafficCounter(rrdPath, "scsiWriteBytes", &el->fcCounters->scsiWriteBytes, 0);
+      updateTrafficCounter(rrdPath, "scsiOtherBytes", &el->fcCounters->scsiOtherBytes, 0);
+      updateTrafficCounter(rrdPath, "class2Sent", &el->fcCounters->class2Sent, 0);
+      updateTrafficCounter(rrdPath, "class2Rcvd", &el->fcCounters->class2Rcvd, 0);
+      updateTrafficCounter(rrdPath, "class3Sent", &el->fcCounters->class3Sent, 0);
+      updateTrafficCounter(rrdPath, "class3Rcvd", &el->fcCounters->class3Rcvd, 0);
+      updateTrafficCounter(rrdPath, "classFSent", &el->fcCounters->classFSent, 0);
+      updateTrafficCounter(rrdPath, "classFRcvd", &el->fcCounters->classFRcvd, 0);
+    }
+
+    if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
+      updateCounter(rrdPath, "totContactedSentPeers", el->totContactedSentPeers, 0);
+      updateCounter(rrdPath, "totContactedRcvdPeers", el->totContactedRcvdPeers, 0);
+    }
+
+    if(adjHostName != NULL)
+      free(adjHostName);
+  }
+
+  releaseMutex(&myGlobals.hostsHashMutex);
 
 #ifdef MAKE_WITH_SCHED_YIELD
-    sched_yield(); /* Allow other threads to run */
+  sched_yield(); /* Allow other threads to run */
 #endif
 
-    return;
+  return;
+}
+
+/* ****************************** */
+
+static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
+  for(;myGlobals.capturePackets != FLAG_NTOPSTATE_TERM;) {
+    int devIdx;
+    char rrdPath[512];
+    
+    sleep(shortDumpInterval);
+    rrdTime =  time(NULL);
+
+    for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
+      if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
+	 || (!myGlobals.device[devIdx].activeDevice))
+	continue;
+
+      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath,
+                    myGlobals.device[devIdx].humanFriendlyName);
+      mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
+
+      updateCounter(rrdPath, "throughput", myGlobals.device[devIdx].ethernetBytes.value*8, 1);
+      /* traceEvent(CONST_TRACE_INFO, "RRD: [idx=%d][%lu]", devIdx, c); */
+    }
+  }
+
+  rrdTrafficThread = 0;
 }
 
 /* ****************************** */
 
 static void* rrdMainLoop(void* notUsed _UNUSED_) {
   char value[512 /* leave it big for hosts filter */],
-       rrdPath[512],
-       dname[256],
-       endTime[32];
+    rrdPath[512],
+    dname[256],
+    endTime[32];
   int i, j, sleep_tm, devIdx, idx;
   u_int32_t networks[32][3];
   u_short numLocalNets;
@@ -2847,6 +2885,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
      so that it expires once everything is up and running. */
   end_tm = myGlobals.actTime - dumpInterval + 15;
 
+  createThread(&rrdTrafficThread, rrdTrafficThreadLoop, NULL);
+
   for(;myGlobals.capturePackets != FLAG_NTOPSTATE_TERM;) {
 
     numRRDCycles++;
@@ -2858,9 +2898,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     strftime(endTime, sizeof(endTime), CONST_LOCALE_TIMESPEC, localtime_r(&end_tm, &workT));
     traceEventRRDebug(0, "Sleeping for %d seconds (interval %d, end at %s)",
-               sleep_tm,
-               dumpInterval,
-               endTime);
+		      sleep_tm,
+		      dumpInterval,
+		      endTime);
 
     HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...", sleep_tm);
     sleep(sleep_tm);
@@ -2877,7 +2917,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     numLocalNets = 0;
     /* Avoids strtok to blanks into hostsFilter */
     safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s", hostsFilter);
-    handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value), CONST_HANDLEADDRESSLISTS_RRD);
+    handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value),
+		       CONST_HANDLEADDRESSLISTS_RRD);
 
     /* ****************************************************** */
 
@@ -2912,90 +2953,89 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	/* walk through all hosts, getting their domain names and counting stats */
 	for (el = getFirstHost(devIdx);
-	  el != NULL; el = getNextHost(devIdx, el)) {
+	     el != NULL; el = getNextHost(devIdx, el)) {
+	  if (el->l2Family != FLAG_HOST_TRAFFIC_AF_ETH)
+	    continue;
 
-            if (el->l2Family != FLAG_HOST_TRAFFIC_AF_ETH)
-                continue;
+	  fillDomainName(el);
 
-	    fillDomainName(el);
+	  /* if we didn't get a domain name, bail out */
+	  if ((el->dnsDomainValue == NULL)
+	      || (el->dnsDomainValue[0] == '\0')
+	      || (el->ip2ccValue == NULL)
+	      || (el->hostResolvedName[0] == '\0')
+	      || broadcastHost(el)
+	      ) {
+	    continue;
+	  }
 
-	    /* if we didn't get a domain name, bail out */
-	    if ((el->dnsDomainValue == NULL)
-	       || (el->dnsDomainValue[0] == '\0')
-	       || (el->ip2ccValue == NULL)
-	       || (el->hostResolvedName[0] == '\0')
-	       || broadcastHost(el)
-	       ) {
-	      continue;
-	    }
+	  for(keyValue=0, idx=0; el->dnsDomainValue[idx] != '\0'; idx++)
+	    keyValue += (idx+1)*(u_short)el->dnsDomainValue[idx];
 
-	    for(keyValue=0, idx=0; el->dnsDomainValue[idx] != '\0'; idx++)
-	      keyValue += (idx+1)*(u_short)el->dnsDomainValue[idx];
+	  keyValue %= maxHosts;
 
-	    keyValue %= maxHosts;
+	  while((stats[keyValue] != NULL)
+		&& (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue,
+			       el->dnsDomainValue) != 0))
+	    keyValue = (keyValue+1) % maxHosts;
 
-	    while((stats[keyValue] != NULL)
-	      && (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue,
-	      el->dnsDomainValue) != 0))
-		keyValue = (keyValue+1) % maxHosts;
+	  /* if we just start counting for this domain... */
+	  if(stats[keyValue] != NULL)
+	    statsEntry = stats[keyValue];
+	  else {
+	    statsEntry = &tmpStats[numEntries++];
+	    memset(statsEntry, 0, sizeof(DomainStats));
+	    statsEntry->domainHost = el;
+	    stats[keyValue] = statsEntry;
+	    traceEventRRDebug(2, "[%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue);
+	  }
 
-	    /* if we just start counting for this domain... */
-	    if(stats[keyValue] != NULL)
-	      statsEntry = stats[keyValue];
-	    else {
-	      statsEntry = &tmpStats[numEntries++];
-	      memset(statsEntry, 0, sizeof(DomainStats));
-	      statsEntry->domainHost = el;
-	      stats[keyValue] = statsEntry;
-	      traceEventRRDebug(2, "[%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue);
-	    }
+	  /* count this host's stats in the domain stats */
+	  totBytesSent += el->bytesSent.value;
+	  statsEntry->bytesSent.value += el->bytesSent.value;
+	  statsEntry->bytesRcvd.value += el->bytesRcvd.value;
+	  totBytesRcvd          += el->bytesRcvd.value;
+	  statsEntry->tcpSent.value   += el->tcpSentLoc.value + el->tcpSentRem.value;
+	  statsEntry->udpSent.value   += el->udpSentLoc.value + el->udpSentRem.value;
+	  statsEntry->icmpSent.value  += el->icmpSent.value;
+	  statsEntry->icmp6Sent.value  += el->icmp6Sent.value;
+	  statsEntry->tcpRcvd.value   += el->tcpRcvdLoc.value + el->tcpRcvdFromRem.value;
+	  statsEntry->udpRcvd.value   += el->udpRcvdLoc.value + el->udpRcvdFromRem.value;
+	  statsEntry->icmpRcvd.value  += el->icmpRcvd.value;
+	  statsEntry->icmp6Rcvd.value  += el->icmp6Rcvd.value;
 
-	    /* count this host's stats in the domain stats */
-	    totBytesSent += el->bytesSent.value;
-	    statsEntry->bytesSent.value += el->bytesSent.value;
-	    statsEntry->bytesRcvd.value += el->bytesRcvd.value;
-	    totBytesRcvd          += el->bytesRcvd.value;
-	    statsEntry->tcpSent.value   += el->tcpSentLoc.value + el->tcpSentRem.value;
-	    statsEntry->udpSent.value   += el->udpSentLoc.value + el->udpSentRem.value;
-	    statsEntry->icmpSent.value  += el->icmpSent.value;
-	    statsEntry->icmp6Sent.value  += el->icmp6Sent.value;
-	    statsEntry->tcpRcvd.value   += el->tcpRcvdLoc.value + el->tcpRcvdFromRem.value;
-	    statsEntry->udpRcvd.value   += el->udpRcvdLoc.value + el->udpRcvdFromRem.value;
-	    statsEntry->icmpRcvd.value  += el->icmpRcvd.value;
-	    statsEntry->icmp6Rcvd.value  += el->icmp6Rcvd.value;
-
-	    if(numEntries >= maxHosts) break;
+	  if(numEntries >= maxHosts) break;
 	}
 
 	/* if we didn't find a single domain, continue with the next interface */
 	if (numEntries == 0) {
-	    free(tmpStats); free(stats);
-	    continue;
+	  free(tmpStats); free(stats);
+	  continue;
 	}
 
 	/* insert all domain data for this interface into the RRDs */
 	for (idx=0; idx < numEntries; idx++) {
-	    statsEntry = &tmpStats[idx];
+	  statsEntry = &tmpStats[idx];
 
-	    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
-		myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
-		statsEntry->domainHost->dnsDomainValue);
-	    mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
+	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
+			myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
+			statsEntry->domainHost->dnsDomainValue);
+	  mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
-	    traceEventRRDebug(2, "Updating %s", rrdPath);
+	  traceEventRRDebug(2, "Updating %s", rrdPath);
 
-	    updateCounter(rrdPath, "bytesSent", statsEntry->bytesSent.value);
-	    updateCounter(rrdPath, "bytesRcvd", statsEntry->bytesRcvd.value);
+	  updateCounter(rrdPath, "bytesSent", statsEntry->bytesSent.value, 0);
+	  updateCounter(rrdPath, "bytesRcvd", statsEntry->bytesRcvd.value, 0);
 
-	    updateCounter(rrdPath, "tcpSent", statsEntry->tcpSent.value);
-	    updateCounter(rrdPath, "udpSent", statsEntry->udpSent.value);
-	    updateCounter(rrdPath, "icmpSent", statsEntry->icmpSent.value);
-	    updateCounter(rrdPath, "icmp6Sent", statsEntry->icmp6Sent.value);
+	  updateCounter(rrdPath, "tcpSent", statsEntry->tcpSent.value, 0);
+	  updateCounter(rrdPath, "udpSent", statsEntry->udpSent.value, 0);
+	  updateCounter(rrdPath, "icmpSent", statsEntry->icmpSent.value, 0);
+	  updateCounter(rrdPath, "icmp6Sent", statsEntry->icmp6Sent.value, 0);
 
-	    updateCounter(rrdPath, "tcpRcvd", statsEntry->tcpRcvd.value);
-	    updateCounter(rrdPath, "udpRcvd", statsEntry->udpRcvd.value);
-	    updateCounter(rrdPath, "icmpRcvd", statsEntry->icmpRcvd.value);
-	    updateCounter(rrdPath, "icmp6Rcvd", statsEntry->icmp6Rcvd.value);
+	  updateCounter(rrdPath, "tcpRcvd", statsEntry->tcpRcvd.value, 0);
+	  updateCounter(rrdPath, "udpRcvd", statsEntry->udpRcvd.value, 0);
+	  updateCounter(rrdPath, "icmpRcvd", statsEntry->icmpRcvd.value, 0);
+	  updateCounter(rrdPath, "icmp6Rcvd", statsEntry->icmp6Rcvd.value, 0);
 	}
 
 	free(tmpStats); free(stats);
@@ -3010,12 +3050,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  HostTraffic *el = myGlobals.device[devIdx].hash_hostTraffic[i];
 
 	  while(el != NULL) {
-              if (el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH)
-                  rrdUpdateIPHostStats (el, devIdx);
-              else if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
-                  rrdUpdateFcHostStats (el, devIdx);
+	    if (el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH)
+	      rrdUpdateIPHostStats (el, devIdx);
+	    else if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
+	      rrdUpdateFcHostStats (el, devIdx);
 
-              el = el->next;
+	    el = el->next;
           }
         }
       }
@@ -3029,11 +3069,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       while(list != NULL) {
 	if(list->pluginStatus.activePlugin) {
 	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/flows/%s/",
-                      myGlobals.rrdPath, list->flowName);
+			myGlobals.rrdPath, list->flowName);
 	  mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
-	  updateCounter(rrdPath, "packets", list->packets.value);
-	  updateCounter(rrdPath, "bytes",   list->bytes.value);
+	  updateCounter(rrdPath, "packets", list->packets.value, 0);
+	  updateCounter(rrdPath, "bytes",   list->bytes.value, 0);
 	}
 
 	list = list->next;
@@ -3050,71 +3090,71 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  continue;
 
 	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath,
-                    myGlobals.device[devIdx].humanFriendlyName);
+		      myGlobals.device[devIdx].humanFriendlyName);
 	mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
-	updateCounter(rrdPath, "ethernetPkts",  myGlobals.device[devIdx].ethernetPkts.value);
-	updateCounter(rrdPath, "broadcastPkts", myGlobals.device[devIdx].broadcastPkts.value);
-	updateCounter(rrdPath, "multicastPkts", myGlobals.device[devIdx].multicastPkts.value);
-	updateCounter(rrdPath, "ethernetBytes", myGlobals.device[devIdx].ethernetBytes.value);
-	updateGauge(rrdPath,   "knownHostsNum", myGlobals.device[devIdx].hostsno);
-	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(devIdx));
-	updateCounter(rrdPath, "ipBytes",       myGlobals.device[devIdx].ipBytes.value);
+	updateCounter(rrdPath, "ethernetPkts",  myGlobals.device[devIdx].ethernetPkts.value, 0);
+	updateCounter(rrdPath, "broadcastPkts", myGlobals.device[devIdx].broadcastPkts.value, 0);
+	updateCounter(rrdPath, "multicastPkts", myGlobals.device[devIdx].multicastPkts.value, 0);
+	updateCounter(rrdPath, "ethernetBytes", myGlobals.device[devIdx].ethernetBytes.value, 0);
+	updateGauge(rrdPath,   "knownHostsNum", myGlobals.device[devIdx].hostsno, 0);
+	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(devIdx), 0);
+	updateCounter(rrdPath, "ipBytes",       myGlobals.device[devIdx].ipBytes.value, 0);
 
 	updateCounter(rrdPath, "ipLocalToLocalBytes",  myGlobals.device[devIdx].tcpGlobalTrafficStats.local.value +
-						myGlobals.device[devIdx].udpGlobalTrafficStats.local.value +
-						myGlobals.device[devIdx].icmpGlobalTrafficStats.local.value );
+		      myGlobals.device[devIdx].udpGlobalTrafficStats.local.value +
+		      myGlobals.device[devIdx].icmpGlobalTrafficStats.local.value, 0);
 	updateCounter(rrdPath, "ipLocalToRemoteBytes",    myGlobals.device[devIdx].tcpGlobalTrafficStats.local2remote.value +
-						myGlobals.device[devIdx].udpGlobalTrafficStats.local2remote.value +
-						myGlobals.device[devIdx].icmpGlobalTrafficStats.local2remote.value );
+		      myGlobals.device[devIdx].udpGlobalTrafficStats.local2remote.value +
+		      myGlobals.device[devIdx].icmpGlobalTrafficStats.local2remote.value, 0);
 	updateCounter(rrdPath, "ipRemoteToLocalBytes", myGlobals.device[devIdx].tcpGlobalTrafficStats.remote2local.value +
-						myGlobals.device[devIdx].udpGlobalTrafficStats.remote2local.value +
-						myGlobals.device[devIdx].icmpGlobalTrafficStats.remote2local.value );
+		      myGlobals.device[devIdx].udpGlobalTrafficStats.remote2local.value +
+		      myGlobals.device[devIdx].icmpGlobalTrafficStats.remote2local.value, 0);
 	updateCounter(rrdPath, "ipRemoteToRemoteBytes", myGlobals.device[devIdx].tcpGlobalTrafficStats.remote.value +
-						myGlobals.device[devIdx].udpGlobalTrafficStats.remote.value +
-						myGlobals.device[devIdx].icmpGlobalTrafficStats.remote.value );
+		      myGlobals.device[devIdx].udpGlobalTrafficStats.remote.value +
+		      myGlobals.device[devIdx].icmpGlobalTrafficStats.remote.value, 0);
 
 	if(myGlobals.device[devIdx].netflowGlobals != NULL) {
-	  updateCounter(rrdPath, "NF_numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd);
-	  updateCounter(rrdPath, "NF_numFlows", myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd);
+	  updateCounter(rrdPath, "NF_numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd, 0);
+	  updateCounter(rrdPath, "NF_numFlows", myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd, 0);
 	  updateCounter(rrdPath, "NF_numDiscardedFlows",
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowPkts+
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowBytes+
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowReality+
-			myGlobals.device[devIdx].netflowGlobals->numNetFlowsV9UnknTemplRcvd);
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsV9UnknTemplRcvd, 0);
 
 	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd > 0)
 	    updateGauge(rrdPath, "NF_avgTcpNewFlowSize",
 			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize/
-			myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd, 0);
 
 	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd > 0)
 	    updateGauge(rrdPath, "NF_avgUdpNewFlowSize",
 			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize/
-			myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd, 0);
 
 	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd > 0)
 	    updateGauge(rrdPath, "NF_avgICMPNewFlowSize",
-		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize/
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
+			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize/
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd, 0);
 
 	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd > 0)
 	    updateGauge(rrdPath, "NF_avgOtherFlowSize",
-		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize/
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
+			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize/
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd, 0);
 
 	  updateGauge(rrdPath, "NF_newTcpNetFlows",
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd, 0);
 	  updateGauge(rrdPath, "NF_newUdpNetFlows",
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd, 0);
 	  updateGauge(rrdPath, "NF_newIcmpNetFlows",
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd, 0);
 	  updateGauge(rrdPath, "NF_newOtherNetFlows",
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd, 0);
 
 	  updateGauge(rrdPath, "NF_numNetFlows",
-			myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd-
-			myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd);
+		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd-
+		      myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd, 0);
 
 	  /* Update Counters */
 	  myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd =
@@ -3131,35 +3171,35 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	}
 
 	if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-	  updateCounter(rrdPath, "droppedPkts", myGlobals.device[devIdx].droppedPkts.value);
-	  updateCounter(rrdPath, "fragmentedIpBytes", myGlobals.device[devIdx].fragmentedIpBytes.value);
-	  updateCounter(rrdPath, "tcpBytes", myGlobals.device[devIdx].tcpBytes.value);
-	  updateCounter(rrdPath, "udpBytes", myGlobals.device[devIdx].udpBytes.value);
-	  updateCounter(rrdPath, "otherIpBytes", myGlobals.device[devIdx].otherIpBytes.value);
-	  updateCounter(rrdPath, "icmpBytes", myGlobals.device[devIdx].icmpBytes.value);
-	  updateCounter(rrdPath, "dlcBytes", myGlobals.device[devIdx].dlcBytes.value);
-	  updateCounter(rrdPath, "ipxBytes", myGlobals.device[devIdx].ipxBytes.value);
-	  updateCounter(rrdPath, "stpBytes", myGlobals.device[devIdx].stpBytes.value);
-	  updateCounter(rrdPath, "decnetBytes", myGlobals.device[devIdx].decnetBytes.value);
-	  updateCounter(rrdPath, "netbiosBytes", myGlobals.device[devIdx].netbiosBytes.value);
-	  updateCounter(rrdPath, "arpRarpBytes", myGlobals.device[devIdx].arpRarpBytes.value);
-	  updateCounter(rrdPath, "atalkBytes", myGlobals.device[devIdx].atalkBytes.value);
-	  updateCounter(rrdPath, "egpBytes", myGlobals.device[devIdx].egpBytes.value);
-	  updateCounter(rrdPath, "osiBytes", myGlobals.device[devIdx].osiBytes.value);
-	  updateCounter(rrdPath, "ipv6Bytes", myGlobals.device[devIdx].ipv6Bytes.value);
-	  updateCounter(rrdPath, "otherBytes", myGlobals.device[devIdx].otherBytes.value);
-	  updateCounter(rrdPath, "upTo64Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo64.value);
-	  updateCounter(rrdPath, "upTo128Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo128.value);
-	  updateCounter(rrdPath, "upTo256Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo256.value);
-	  updateCounter(rrdPath, "upTo512Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo512.value);
-	  updateCounter(rrdPath, "upTo1024Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo1024.value);
-	  updateCounter(rrdPath, "upTo1518Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo1518.value);
-	  updateCounter(rrdPath, "badChecksumPkts", myGlobals.device[devIdx].rcvdPktStats.badChecksum.value);
-	  updateCounter(rrdPath, "tooLongPkts", myGlobals.device[devIdx].rcvdPktStats.tooLong.value);
+	  updateCounter(rrdPath, "droppedPkts", myGlobals.device[devIdx].droppedPkts.value, 0);
+	  updateCounter(rrdPath, "fragmentedIpBytes", myGlobals.device[devIdx].fragmentedIpBytes.value, 0);
+	  updateCounter(rrdPath, "tcpBytes", myGlobals.device[devIdx].tcpBytes.value, 0);
+	  updateCounter(rrdPath, "udpBytes", myGlobals.device[devIdx].udpBytes.value, 0);
+	  updateCounter(rrdPath, "otherIpBytes", myGlobals.device[devIdx].otherIpBytes.value, 0);
+	  updateCounter(rrdPath, "icmpBytes", myGlobals.device[devIdx].icmpBytes.value, 0);
+	  updateCounter(rrdPath, "dlcBytes", myGlobals.device[devIdx].dlcBytes.value, 0);
+	  updateCounter(rrdPath, "ipxBytes", myGlobals.device[devIdx].ipxBytes.value, 0);
+	  updateCounter(rrdPath, "stpBytes", myGlobals.device[devIdx].stpBytes.value, 0);
+	  updateCounter(rrdPath, "decnetBytes", myGlobals.device[devIdx].decnetBytes.value, 0);
+	  updateCounter(rrdPath, "netbiosBytes", myGlobals.device[devIdx].netbiosBytes.value, 0);
+	  updateCounter(rrdPath, "arpRarpBytes", myGlobals.device[devIdx].arpRarpBytes.value, 0);
+	  updateCounter(rrdPath, "atalkBytes", myGlobals.device[devIdx].atalkBytes.value, 0);
+	  updateCounter(rrdPath, "egpBytes", myGlobals.device[devIdx].egpBytes.value, 0);
+	  updateCounter(rrdPath, "osiBytes", myGlobals.device[devIdx].osiBytes.value, 0);
+	  updateCounter(rrdPath, "ipv6Bytes", myGlobals.device[devIdx].ipv6Bytes.value, 0);
+	  updateCounter(rrdPath, "otherBytes", myGlobals.device[devIdx].otherBytes.value, 0);
+	  updateCounter(rrdPath, "upTo64Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo64.value, 0);
+	  updateCounter(rrdPath, "upTo128Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo128.value, 0);
+	  updateCounter(rrdPath, "upTo256Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo256.value, 0);
+	  updateCounter(rrdPath, "upTo512Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo512.value, 0);
+	  updateCounter(rrdPath, "upTo1024Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo1024.value, 0);
+	  updateCounter(rrdPath, "upTo1518Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo1518.value, 0);
+	  updateCounter(rrdPath, "badChecksumPkts", myGlobals.device[devIdx].rcvdPktStats.badChecksum.value, 0);
+	  updateCounter(rrdPath, "tooLongPkts", myGlobals.device[devIdx].rcvdPktStats.tooLong.value, 0);
 
 	  protoList = myGlobals.ipProtosList, idx=0;
 	  while(protoList != NULL) {
-	    updateCounter(rrdPath, protoList->protocolName, myGlobals.device[devIdx].ipProtosList[idx].value);
+	    updateCounter(rrdPath, protoList->protocolName, myGlobals.device[devIdx].ipProtosList[idx].value, 0);
 	    idx++, protoList = protoList->next;
 	  }
 	}
@@ -3167,25 +3207,25 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
 	  if(myGlobals.device[devIdx].ipProtoStats != NULL) {
 	    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_",
-                       myGlobals.rrdPath,  myGlobals.device[devIdx].humanFriendlyName);
+			  myGlobals.rrdPath,  myGlobals.device[devIdx].humanFriendlyName);
 
 	    for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 	      TrafficCounter ctr;
 	      char tmpStr[128];
 
-	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sFlows", 
-			    myGlobals.ipTrafficProtosNames[j]);	      
+	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sFlows",
+			    myGlobals.ipTrafficProtosNames[j]);
 	      updateCounter(rrdPath, tmpStr, myGlobals.device[devIdx].
-			    ipProtoStats[j].totalFlows.value);	      
+			    ipProtoStats[j].totalFlows.value, 0);
 	      ctr.value =
 		myGlobals.device[devIdx].ipProtoStats[j].local.value+
 		myGlobals.device[devIdx].ipProtoStats[j].local2remote.value+
 		myGlobals.device[devIdx].ipProtoStats[j].remote2local.value+
 		myGlobals.device[devIdx].ipProtoStats[j].remote.value;
 
-	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sBytes", 
+	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sBytes",
 			    myGlobals.ipTrafficProtosNames[j]);
-	      updateCounter(rrdPath, tmpStr, ctr.value);
+	      updateCounter(rrdPath, tmpStr, ctr.value, 0);
 	    }
 	  }
 	}
@@ -3204,19 +3244,19 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			    myGlobals.device[devIdx].humanFriendlyName, i);
 	      mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
 
-	      updateCounter(rrdIfPath, "ifInOctets", ifName->ifInOctets);
-	      updateCounter(rrdIfPath, "ifInUcastPkts", ifName->ifInUcastPkts);
-	      updateCounter(rrdIfPath, "ifInMulticastPkts", ifName->ifInMulticastPkts);
-	      updateCounter(rrdIfPath, "ifInBroadcastPkts", ifName->ifInBroadcastPkts);
-	      updateCounter(rrdIfPath, "ifInDiscards", ifName->ifInDiscards);
-	      updateCounter(rrdIfPath, "ifInErrors", ifName->ifInErrors);
-	      updateCounter(rrdIfPath, "ifInUnknownProtos", ifName->ifInUnknownProtos);
-	      updateCounter(rrdIfPath, "ifOutOctets", ifName->ifOutOctets);
-	      updateCounter(rrdIfPath, "ifOutUcastPkts", ifName->ifOutUcastPkts);
-	      updateCounter(rrdIfPath, "ifOutMulticastPkts", ifName->ifOutMulticastPkts);
-	      updateCounter(rrdIfPath, "ifOutBroadcastPkts", ifName->ifOutBroadcastPkts);
-	      updateCounter(rrdIfPath, "ifOutDiscards", ifName->ifOutDiscards);
-	      updateCounter(rrdIfPath, "ifOutErrors", ifName->ifOutErrors);
+	      updateCounter(rrdIfPath, "ifInOctets", ifName->ifInOctets, 0);
+	      updateCounter(rrdIfPath, "ifInUcastPkts", ifName->ifInUcastPkts, 0);
+	      updateCounter(rrdIfPath, "ifInMulticastPkts", ifName->ifInMulticastPkts, 0);
+	      updateCounter(rrdIfPath, "ifInBroadcastPkts", ifName->ifInBroadcastPkts, 0);
+	      updateCounter(rrdIfPath, "ifInDiscards", ifName->ifInDiscards, 0);
+	      updateCounter(rrdIfPath, "ifInErrors", ifName->ifInErrors, 0);
+	      updateCounter(rrdIfPath, "ifInUnknownProtos", ifName->ifInUnknownProtos, 0);
+	      updateCounter(rrdIfPath, "ifOutOctets", ifName->ifOutOctets, 0);
+	      updateCounter(rrdIfPath, "ifOutUcastPkts", ifName->ifOutUcastPkts, 0);
+	      updateCounter(rrdIfPath, "ifOutMulticastPkts", ifName->ifOutMulticastPkts, 0);
+	      updateCounter(rrdIfPath, "ifOutBroadcastPkts", ifName->ifOutBroadcastPkts, 0);
+	      updateCounter(rrdIfPath, "ifOutDiscards", ifName->ifOutDiscards, 0);
+	      updateCounter(rrdIfPath, "ifOutErrors", ifName->ifOutErrors, 0);
 	    }
 	  }
 	}
@@ -3250,10 +3290,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
 		updateCounter(rrdPath, "pkts",
-			      myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value);
+			      myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value, 0);
 
 		updateCounter(rrdPath, "bytes",
-			      myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value);
+			      myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value, 0);
 	      }
 	    }
 	  }
@@ -3289,11 +3329,11 @@ static int initRRDfunct(void) {
   setPluginStatus(NULL);
 
   if (myGlobals.runningPref.rFileName != NULL) {
-      /* Don't start RRD Plugin for capture files as it doesn't work */
-      traceEvent(CONST_TRACE_INFO, "RRD: RRD plugin disabled on capture files");
+    /* Don't start RRD Plugin for capture files as it doesn't work */
+    traceEvent(CONST_TRACE_INFO, "RRD: RRD plugin disabled on capture files");
 
-      active = 0;
-      return (TRUE);            /* 0 indicates success */
+    active = 0;
+    return (TRUE);            /* 0 indicates success */
   }
 
   traceEvent(CONST_TRACE_INFO, "RRD: Welcome to the RRD plugin");
@@ -3320,7 +3360,7 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Shutting down, locking mutex (may block for a little while)");
 
   while ((count++ < 5) && (tryLockMutex(&rrdMutex, "Termination") != 0)) {
-      sleep(3);
+    sleep(3);
   }
   if(rrdMutex.isLocked) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Locked mutex, continuing shutdown");
@@ -3331,9 +3371,17 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   if(active) {
     rc = killThread(&rrdThread);
     if (rc == 0)
-      traceEvent(CONST_TRACE_INFO, "RRD: killThread() succeeded");
+      traceEvent(CONST_TRACE_INFO, "RRD: killThread(rrdThread) succeeded");
     else
-      traceEvent(CONST_TRACE_ERROR, "RRD: killThread() failed, rc %s(%d)", strerror(rc), rc);
+      traceEvent(CONST_TRACE_ERROR, "RRD: killThread(rrdThread) failed, rc %s(%d)", strerror(rc), rc);
+
+    if(rrdTrafficThread) {
+      rc = killThread(&rrdTrafficThread);
+      if (rc == 0)
+	traceEvent(CONST_TRACE_INFO, "RRD: killThread(rrdTrafficThread) succeeded");
+      else
+	traceEvent(CONST_TRACE_ERROR, "RRD: killThreadrrdTrafficThread() failed, rc %s(%d)", strerror(rc), rc);
+    }
   }
 
   if(hostsFilter != NULL) free(hostsFilter);
