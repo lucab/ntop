@@ -24656,6 +24656,111 @@ _ACEOF
 
 fi
 
+echo "$as_me:$LINENO: checking for pcap_findalldevs in -lpcap" >&5
+echo $ECHO_N "checking for pcap_findalldevs in -lpcap... $ECHO_C" >&6
+if test "${ac_cv_lib_pcap_pcap_findalldevs+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpcap  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char pcap_findalldevs ();
+int
+main ()
+{
+pcap_findalldevs ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_pcap_pcap_findalldevs=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_pcap_pcap_findalldevs=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_pcap_pcap_findalldevs" >&5
+echo "${ECHO_T}$ac_cv_lib_pcap_pcap_findalldevs" >&6
+if test $ac_cv_lib_pcap_pcap_findalldevs = yes; then
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_PCAP_FINDALLDEVS 1
+_ACEOF
+
+fi
+
+
+if test ".${ac_cv_header_pcap_h}" != ".yes" ||
+   (test ".${ac_cv_header_net_bpf_h}" != ".yes" &&
+    test ".${ac_cv_header_pcap_bpf_h}" != ".yes" ) ||
+   (test ".${ac_cv_lib_pcap_pcap_open_live}" != ".yes") ||
+   (test ".${ac_cv_lib_pcap_pcap_findalldevs}" != ".yes"); then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: pcap header, bpf or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              pcap.h...${ac_cv_header_pcap_h}"
+    echo "*              net/bpf.h...${ac_cv_header_net_bpf_h}"
+    echo "*              pcap-bpf.h...${ac_cv_header_pcap_bpf_h}"
+    echo "*              pcap_open_live() in -lpcap...${ac_cv_lib_pcap_pcap_open_live}"
+    echo "*              pcap_findalldevs() in -lpcap...${ac_cv_lib_pcap_pcap_findalldevs}"
+    echo "*"
+    echo "*  (One of the bpf files is required, but either will do)"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???     1. Install libpcap (http://www.tcpdump.org/)"
+    echo "*???    and Rerun ./configure"
+    echo "*???  or 2. Use the --with-pcap-root= option"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    { { echo "$as_me:$LINENO: error: Unable to continue... aborting ./configure" >&5
+echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
 echo "$as_me:$LINENO: checking for pcap_open_dead in -lpcap" >&5
 echo $ECHO_N "checking for pcap_open_dead in -lpcap... $ECHO_C" >&6
 if test "${ac_cv_lib_pcap_pcap_open_dead+set}" = set; then
@@ -24800,9 +24905,9 @@ _ACEOF
 
 fi
 
-echo "$as_me:$LINENO: checking for pcap_findalldevs in -lpcap" >&5
-echo $ECHO_N "checking for pcap_findalldevs in -lpcap... $ECHO_C" >&6
-if test "${ac_cv_lib_pcap_pcap_findalldevs+set}" = set; then
+echo "$as_me:$LINENO: checking for pcap_freealldevs in -lpcap" >&5
+echo $ECHO_N "checking for pcap_freealldevs in -lpcap... $ECHO_C" >&6
+if test "${ac_cv_lib_pcap_pcap_freealldevs+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -24820,11 +24925,11 @@ extern "C"
 #endif
 /* We use char because int might match the return type of a gcc2
    builtin and then its argument prototype would still apply.  */
-char pcap_findalldevs ();
+char pcap_freealldevs ();
 int
 main ()
 {
-pcap_findalldevs ();
+pcap_freealldevs ();
   ;
   return 0;
 }
@@ -24851,23 +24956,23 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_lib_pcap_pcap_findalldevs=yes
+  ac_cv_lib_pcap_pcap_freealldevs=yes
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-ac_cv_lib_pcap_pcap_findalldevs=no
+ac_cv_lib_pcap_pcap_freealldevs=no
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_pcap_pcap_findalldevs" >&5
-echo "${ECHO_T}$ac_cv_lib_pcap_pcap_findalldevs" >&6
-if test $ac_cv_lib_pcap_pcap_findalldevs = yes; then
+echo "$as_me:$LINENO: result: $ac_cv_lib_pcap_pcap_freealldevs" >&5
+echo "${ECHO_T}$ac_cv_lib_pcap_pcap_freealldevs" >&6
+if test $ac_cv_lib_pcap_pcap_freealldevs = yes; then
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_PCAP_FINDALLDEVS 1
+#define HAVE_PCAP_FREEALLDEVS 1
 _ACEOF
 
 fi
@@ -24943,40 +25048,6 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 fi
-
-
-if test ".${ac_cv_header_pcap_h}" != ".yes" ||
-   (test ".${ac_cv_header_net_bpf_h}" != ".yes" &&
-    test ".${ac_cv_header_pcap_bpf_h}" != ".yes" ) ||
-   (test ".${ac_cv_lib_pcap_pcap_open_live}" != ".yes") ||
-   (test ".${ac_cv_lib_pcap_pcap_findalldevs}" != ".yes"); then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR: pcap header, bpf or library routines are missing"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*              pcap.h...${ac_cv_header_pcap_h}"
-    echo "*              net/bpf.h...${ac_cv_header_net_bpf_h}"
-    echo "*              pcap-bpf.h...${ac_cv_header_pcap_bpf_h}"
-    echo "*              pcap_open_live() in -lpcap...${ac_cv_lib_pcap_pcap_open_live}"
-    echo "*              pcap_findalldevs() in -lpcap...${ac_cv_lib_pcap_pcap_findalldevs}"
-    echo "*"
-    echo "*  (One of the bpf files is required, but either will do)"
-    echo "*"
-    echo "*>>> No way to proceed."
-    echo "*"
-    echo "*???     1. Install libpcap (http://www.tcpdump.org/)"
-    echo "*???    and Rerun ./configure"
-    echo "*???  or 2. Use the --with-pcap-root= option"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    { { echo "$as_me:$LINENO: error: Unable to continue... aborting ./configure" >&5
-echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
 
 
 echo "$as_me:$LINENO: checking for gdbm" >&5
@@ -44291,7 +44362,7 @@ _ASBOX
 } >&5
 cat >&5 <<_CSEOF
 
-This file was extended by ntop $as_me 3.1.2, which was
+This file was extended by ntop $as_me 3.1.050, which was
 generated by GNU Autoconf 2.59.  Invocation command line was
 
   CONFIG_FILES    = $CONFIG_FILES

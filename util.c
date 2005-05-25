@@ -1542,9 +1542,7 @@ void handleFlowsSpecs(void) {
         else {
           FlowFilterList *newFlow;
 
-#ifdef HAVE_PCAP_FREECODE
           pcap_freecode(&fcode);
-#endif
           newFlow = (FlowFilterList*)calloc(1, sizeof(FlowFilterList));
 
           if(newFlow == NULL) {
@@ -4555,84 +4553,6 @@ unsigned short isOKtoSave(u_int32_t addr,
   return(0 /* SAVE */);
 }
 
-#ifndef HAVE_PCAP_OPEN_DEAD
-
-struct pcap_sf {
-  FILE *rfile;
-  int swapped;
-  int hdrsize;
-  int version_major;
-  int version_minor;
-  u_char *base;
-};
-
-struct pcap_md {
-  struct pcap_stat stat;
-  /*XXX*/
-  int use_bpf;		/* using kernel filter */
-  u_long	TotPkts;	/* can't oflow for 79 hrs on ether */
-  u_long	TotAccepted;	/* count accepted by filter */
-  u_long	TotDrops;	/* count of dropped packets */
-  long	TotMissed;	/* missed by i/f during this run */
-  long	OrigMissed;	/* missed by i/f before this run */
-#ifdef linux
-  int	sock_packet;	/* using Linux 2.0 compatible interface */
-  int	timeout;	/* timeout specified to pcap_open_live */
-  int	clear_promisc;	/* must clear promiscuous mode when we close */
-  int	cooked;		/* using SOCK_DGRAM rather than SOCK_RAW */
-  int	lo_ifindex;	/* interface index of the loopback device */
-  char 	*device;	/* device name */
-  struct pcap *next;	/* list of open promiscuous sock_packet pcaps */
-#endif
-};
-
-struct pcap {
-  int fd;
-  int snapshot;
-  int linktype;
-  int tzoff;		/* timezone offset */
-  int offset;		/* offset for proper alignment */
-
-  struct pcap_sf sf;
-  struct pcap_md md;
-
-  /*
-   * Read buffer.
-   */
-  int bufsize;
-  u_char *buffer;
-  u_char *bp;
-  int cc;
-
-  /*
-   * Place holder for pcap_next().
-   */
-  u_char *pkt;
-
-
-  /*
-   * Placeholder for filter code if bpf not in kernel.
-   */
-  struct bpf_program fcode;
-
-  char errbuf[PCAP_ERRBUF_SIZE];
-};
-
-pcap_t *pcap_open_dead(int linktype, int snaplen)
-{
-  pcap_t *p;
-
-  p = malloc(sizeof(*p));
-  if (p == NULL)
-    return NULL;
-  memset (p, 0, sizeof(*p));
-  p->fd = -1;
-  p->snapshot = snaplen;
-  p->linktype = linktype;
-  return p;
-}
-#endif
-
 /* ******************************** */
 
 int setSpecifiedUser(void) {
@@ -6724,3 +6644,120 @@ void mkdir_p(char *tag, char *path, int permission) {
 	       errno,
 	       strerror(errno));
 }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/*
+    Work-Arounds.  For things we just HAVE to have, code the work-around
+                   so we don't clutter mainline with #ifdef logic.
+ */
+
+#ifndef HAVE_PCAP_OPEN_DEAD
+
+ #warning using ntop work-around for missing pcap_open_dead ... strongly suggest upgrading!
+
+struct pcap_sf {
+  FILE *rfile;
+  int swapped;
+  int hdrsize;
+  int version_major;
+  int version_minor;
+  u_char *base;
+};
+
+struct pcap_md {
+  struct pcap_stat stat;
+  /*XXX*/
+  int use_bpf;		/* using kernel filter */
+  u_long	TotPkts;	/* can't oflow for 79 hrs on ether */
+  u_long	TotAccepted;	/* count accepted by filter */
+  u_long	TotDrops;	/* count of dropped packets */
+  long	TotMissed;	/* missed by i/f during this run */
+  long	OrigMissed;	/* missed by i/f before this run */
+#ifdef linux
+  int	sock_packet;	/* using Linux 2.0 compatible interface */
+  int	timeout;	/* timeout specified to pcap_open_live */
+  int	clear_promisc;	/* must clear promiscuous mode when we close */
+  int	cooked;		/* using SOCK_DGRAM rather than SOCK_RAW */
+  int	lo_ifindex;	/* interface index of the loopback device */
+  char 	*device;	/* device name */
+  struct pcap *next;	/* list of open promiscuous sock_packet pcaps */
+#endif
+};
+
+struct pcap {
+  int fd;
+  int snapshot;
+  int linktype;
+  int tzoff;		/* timezone offset */
+  int offset;		/* offset for proper alignment */
+
+  struct pcap_sf sf;
+  struct pcap_md md;
+
+  /*
+   * Read buffer.
+   */
+  int bufsize;
+  u_char *buffer;
+  u_char *bp;
+  int cc;
+
+  /*
+   * Place holder for pcap_next().
+   */
+  u_char *pkt;
+
+
+  /*
+   * Placeholder for filter code if bpf not in kernel.
+   */
+  struct bpf_program fcode;
+
+  char errbuf[PCAP_ERRBUF_SIZE];
+};
+
+pcap_t *pcap_open_dead(int linktype, int snaplen)
+{
+  pcap_t *p;
+
+  p = malloc(sizeof(*p));
+  if (p == NULL)
+    return NULL;
+  memset (p, 0, sizeof(*p));
+  p->fd = -1;
+  p->snapshot = snaplen;
+  p->linktype = linktype;
+  return p;
+}
+#endif
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/*
+    Dummies.  Instead of cluttering ntop with a bunch of #ifdef logic,
+              just define the function here and in globals-core.h if we
+              don't have it.
+ */
+
+#ifndef HAVE_PCAP_FREECODE
+ #warning using ntop work-around for missing pcap_freecode ... no worries
+void pcap_freecode(struct bpf_program *pgm) {
+}
+#endif
+
+#ifndef HAVE_PCAP_FINDALLDEVS
+ #warning using ntop work-around for missing pcap_findalldevs... suggest you upgrade libpcap!
+int pcap_findalldevs(pcap_if_t **alldevsp, char *errbuf) {
+  return(-1); /* failed */
+}
+#endif
+
+#ifndef HAVE_PCAP_FREEALLDEVS
+ #warning using ntop work-around for missing pcap_freealldevs ... suggest you upgrade libpcap!
+void pcap_freealldevs(pcap_if_t *alldevs) {
+  return;
+}
+#endif
+
+

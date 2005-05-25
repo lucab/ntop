@@ -2265,6 +2265,38 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_FREEALLDEVS",
+#ifdef HAVE_PCAP_FREEALLDEVS
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_FREECODE",
+#ifdef HAVE_PCAP_FREECODE
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_FREEALLDEVS",
+#ifdef HAVE_PCAP_FREEALLDEVS
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_FREECODE",
+#ifdef HAVE_PCAP_FREECODE
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
   printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_H",
 #ifdef HAVE_PCAP_H
                          "yes"

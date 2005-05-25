@@ -653,10 +653,11 @@ int doChangeFilter(int len) {
 		     pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 
 	  err="The syntax of the defined filter is wrong.";
-	} else{
-#ifdef HAVE_PCAP_FREECODE
+
+	} else {
+
          pcap_freecode(&fcode);
-#endif
+
 	 if(*myGlobals.runningPref.currentFilterExpression!='\0'){
 	   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Set filter \"%s\" on interface %s",
 		      myGlobals.runningPref.currentFilterExpression, myGlobals.device[i].name);
@@ -710,9 +711,8 @@ int doChangeFilter(int len) {
                      pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 	  
         }
-#ifdef HAVE_PCAP_FREECODE
+
         pcap_freecode(&fcode);
-#endif
       }
     }
 
@@ -1392,6 +1392,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 	}
 
 	pcap_freealldevs(devpointer);
+
       } else {
 	/*
 	  traceEvent(CONST_TRACE_INFO, "pcap_findalldevs failed [rc=%d][%s]\n",

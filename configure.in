@@ -1377,10 +1377,7 @@ dnl> libpcap >= 0.8
 AC_CHECK_HEADERS([pcap-bpf.h])
 
 AC_CHECK_LIB([pcap], [pcap_open_live])
-AC_CHECK_LIB([pcap], [pcap_open_dead], AC_DEFINE_UNQUOTED(HAVE_PCAP_OPEN_DEAD, 1, [libpcap has pcap_open_dead]))
-AC_CHECK_LIB([pcap], [pcap_lib_version], AC_DEFINE_UNQUOTED(HAVE_PCAP_LIB_VERSION, 1, [libpcap has pcap_lib_version]))
 AC_CHECK_LIB([pcap], [pcap_findalldevs], AC_DEFINE_UNQUOTED(HAVE_PCAP_FINDALLDEVS, 1, [libpcap has pcap_findalldevs]))
-AC_CHECK_LIB([pcap], [pcap_setnonblock], AC_DEFINE_UNQUOTED(HAVE_PCAP_SETNONBLOCK, 1, [libpcap has pcap_setnonblock]))
 
 if test ".${ac_cv_header_pcap_h}" != ".yes" ||
    (test ".${ac_cv_header_net_bpf_h}" != ".yes" &&
@@ -1412,7 +1409,10 @@ if test ".${ac_cv_header_pcap_h}" != ".yes" ||
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
 
-
+AC_CHECK_LIB([pcap], [pcap_open_dead], AC_DEFINE_UNQUOTED(HAVE_PCAP_OPEN_DEAD, 1, [libpcap has pcap_open_dead]))
+AC_CHECK_LIB([pcap], [pcap_lib_version], AC_DEFINE_UNQUOTED(HAVE_PCAP_LIB_VERSION, 1, [libpcap has pcap_lib_version]))
+AC_CHECK_LIB([pcap], [pcap_freealldevs], AC_DEFINE_UNQUOTED(HAVE_PCAP_FREEALLDEVS, 1, [libpcap has pcap_freealldevs]))
+AC_CHECK_LIB([pcap], [pcap_setnonblock], AC_DEFINE_UNQUOTED(HAVE_PCAP_SETNONBLOCK, 1, [libpcap has pcap_setnonblock]))
 
 AC_MSG_CHECKING([for gdbm])
 AC_MSG_RESULT([])

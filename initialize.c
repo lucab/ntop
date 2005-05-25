@@ -1752,9 +1752,7 @@ void parseTrafficFilter(void) {
 	} else
 	  traceEvent(CONST_TRACE_NOISY, "Setting filter to \"%s\" on device %s.",
 		     myGlobals.runningPref.currentFilterExpression, myGlobals.device[i].name);
-#ifdef HAVE_PCAP_FREECODE
-	pcap_freecode(&fcode);
-#endif
+          pcap_freecode(&fcode);
       }
     }
   } else

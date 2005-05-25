@@ -103,6 +103,20 @@ extern void revertSlashIfWIN32(char *str, int mode);
 extern void revertDoubleColumnIfWIN32(char *str);
 extern void checkUserIdentity(int userSpecified);
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    Work-arounds.  Instead of cluttering ntop with a bunch of #ifdef logic,
+   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+#ifndef HAVE_PCAP_OPEN_DEAD
+extern pcap_t *pcap_open_dead(int linktype, int snaplen);
+#endif
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    Dummies.  Instead of cluttering ntop with a bunch of #ifdef logic,
+   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+#ifndef HAVE_PCAP_FREECODE
+extern void pcap_freecode(struct bpf_program *pgm);
+#endif
+
 #ifndef WIN32
 /* utildl.c */
 extern int getDynamicLoadPaths(char *main, int mainLen, char *lib, int libLen, char *env, int envLen);
@@ -594,9 +608,6 @@ char *i18n_xvert_locale2common(const char *input);
 char *i18n_xvert_acceptlanguage2common(const char *input);
 #endif /* MAKE_WITH_I18N */
 
-#ifndef HAVE_PCAP_OPEN_DEAD
-extern pcap_t *pcap_open_dead(int linktype, int snaplen);
-#endif
 extern int setSpecifiedUser(void);
 extern u_short ip2AS(HostAddr ip);
 extern u_int16_t getHostAS(HostTraffic *el);
