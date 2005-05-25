@@ -2047,6 +2047,10 @@ typedef struct ntopGlobals {
   int securityItemsLoaded;
   char *securityItems[MAX_NUM_PWFILE_ENTRIES];
 
+  /* Results flags - something we've learned */
+  bool haveASN,
+       haveVLANs;
+
   /* Physical and Logical network interfaces */
 
   u_short numDevices;      /* total network interfaces */

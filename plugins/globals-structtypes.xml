@@ -1222,6 +1222,8 @@ typedef struct hostTraffic {
 
 /*XML e WebServer                           Internals:Work      "" */
 /*XML b securityItemsLoaded                 Work                "" */
+/*XML b haveASN                             Work                "" */
+/*XML b haveVLANs                           Work                "" */
 /*XML e I18N                                Work:Work2          "" */
 #ifdef MAKE_WITH_I18N
 /*XML s defaultLanguage                     Work2               "" */

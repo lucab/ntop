@@ -5626,6 +5626,11 @@ void printASList(unsigned int deviceId) {
     return;
   }
 
+  if(myGlobals.haveASN == FALSE) {
+    printFlagedWarning("<I>ASN data was not loaded</I>");
+    return;
+  }
+
   dumpHostsCriteria(&myGlobals.device[deviceId], 0 /* AS */);
 }
 
@@ -5636,6 +5641,11 @@ void printVLANList(unsigned int deviceId) {
 
   if(deviceId > myGlobals.numDevices) {
     printFlagedWarning("<I>Invalid device specified</I>");
+    return;
+  }
+
+  if(myGlobals.haveVLANs == FALSE) {
+    printFlagedWarning("<I>No VLANs found (yet)</I>");
     return;
   }
 

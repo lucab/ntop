@@ -525,9 +525,14 @@ static void ssiMenu_Head() {
              "	[null,'Summary',null,null,null,\n"
              "		[null,'Traffic','/" CONST_TRAFFIC_STATS_HTML "',null,null],\n"
              "		[null,'Hosts','/" CONST_HOSTS_INFO_HTML "',null,null],\n"
-             "		[null,'Network Load','/" CONST_SORT_DATA_THPT_STATS_HTML "',null,null],\n"
-             "		[null,'ASN Info','/" CONST_AS_LIST_HTML "',null,null],\n"
-             "		[null,'VLAN Info','/" CONST_VLAN_LIST_HTML "',null,null],\n"
+             "		[null,'Network Load','/" CONST_SORT_DATA_THPT_STATS_HTML "',null,null],\n");
+  if(myGlobals.haveASN == TRUE)
+    sendStringWOssi(
+             "		[null,'ASN Info','/" CONST_AS_LIST_HTML "',null,null],\n");
+  if(myGlobals.haveVLANs == TRUE)
+    sendStringWOssi(
+             "		[null,'VLAN Info','/" CONST_VLAN_LIST_HTML "',null,null],\n");
+  sendStringWOssi(
              "		[null,'Network Flows','/" CONST_NET_FLOWS_HTML "',null,null],\n"
              "		],\n"
              "  [null,'All Protocols',null,null,null,\n"

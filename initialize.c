@@ -530,6 +530,7 @@ void initCounters(void) {
    * Process ASN file
    */
   numRead=0;
+  myGlobals.haveASN = FALSE;
   if (!myGlobals.runningPref.printFcOnly) {
       fd=checkForInputFile("ASN",
                            "Autonomous System Number table",
@@ -563,6 +564,7 @@ void initCounters(void) {
           }
           traceEvent(CONST_TRACE_INFO, "ASN: ....Used %d KB of memory (%d per entry)",
                      ((myGlobals.asMem+512)/1024), sizeof(IPNode));
+          myGlobals.haveASN = TRUE;
       } else
           traceEvent(CONST_TRACE_NOISY, "ASN: ntop continues ok, but without ASN information.");
   }

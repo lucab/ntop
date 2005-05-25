@@ -2919,6 +2919,7 @@ void processPacket(u_char *_deviceId,
 
         if(myGlobals.device[deviceId].hasVLANs != TRUE) {
           myGlobals.device[deviceId].hasVLANs = TRUE;
+          myGlobals.haveVLANs = TRUE;
 #ifndef MAKE_WITH_JUMBO_FRAMES
           traceEvent(CONST_TRACE_NOISY,
                      "Device %s(%d) MTU adjusted for 802.1q VLAN",
