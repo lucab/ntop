@@ -2299,6 +2299,9 @@ void makeDot() {
 
     snprintf(path, sizeof(path), "%s -Tpng -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP " 2>&1 ",
 	     dotPath, myGlobals.spoolPath, myGlobals.spoolPath);
+    sendString("<!-- dot(generate) command is ");
+    sendString(path);
+    sendString(" -->\n");
     errno = 0;
     make = popen(path, "r");
     if(make == NULL) {
