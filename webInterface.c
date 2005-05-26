@@ -7271,6 +7271,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
 #ifdef MAX_PROCESS_BUFFER
 {
+  static float _qmaxDelay = 0, _pmaxDelay = 0;
+
   float qminDelay=99999.0, qmaxDelay=0.0, 
         /*stddev:*/ qM, qT, qQ, qR, qSD, qXBAR,
         pminDelay=99999.0, pmaxDelay=0.0, 
@@ -7283,6 +7285,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
       if(myGlobals.queueBuffer[i] < qminDelay) qminDelay = myGlobals.queueBuffer[i];
       if(myGlobals.processBuffer[i] > pmaxDelay) pmaxDelay = myGlobals.processBuffer[i];
       if(myGlobals.processBuffer[i] < pminDelay) pminDelay = myGlobals.processBuffer[i];
+
+      if(qmaxDelay > _qmaxDelay) _qmaxDelay = qmaxDelay;
+      if(pmaxDelay > _pmaxDelay) _pmaxDelay = pmaxDelay;
+
       if(i==0) { 
         qM = myGlobals.queueBuffer[0];
         qT = 0.0;
@@ -7323,6 +7329,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printFeatureConfigInfo3ColFlt6(textPrintFlag,
                                   "Standard Deviation",
                                   TRUE, qSD, TRUE, pSD,
+                                  TRUE);
+
+    printFeatureConfigInfo3ColFlt6(textPrintFlag,
+                                  "Accumulated Maximum",
+                                  TRUE, _qmaxDelay, TRUE, _pmaxDelay,
                                   TRUE);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
