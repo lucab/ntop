@@ -679,17 +679,24 @@ unsigned short in_isBroadcastAddress(struct in_addr *addr) {
   else {
     for(i=0; i<myGlobals.numDevices; i++) {
       if(!myGlobals.device[i].virtualDevice) {
-	if(myGlobals.device[i].netmask.s_addr == 0xFFFFFFFF) /* PPP */
-	  return 0;
-	else if(((addr->s_addr | myGlobals.device[i].netmask.s_addr) ==  addr->s_addr)
-		|| ((addr->s_addr & 0x000000FF) == 0x000000FF)
-		|| ((addr->s_addr & 0x000000FF) == 0x00000000) /* Network address */
-		) {
+
+        if(myGlobals.device[i].netmask.s_addr == 0xFFFFFFFF) /* PPP */
+          return 0;
+
+        if((addr->s_addr | myGlobals.device[i].netmask.s_addr) ==  addr->s_addr) {
 #ifdef DEBUG
-	  traceEvent(CONST_TRACE_INFO, "DEBUG: %s is a broadcast address", intoa(*addr));
+          traceEvent(CONST_TRACE_INFO, "DEBUG: %s is a broadcast address", intoa(*addr));
 #endif
-	  return 1;
-	}
+          return 1;
+        }
+
+        if((addr->s_addr & ~myGlobals.device[i].netmask.s_addr) ==  ~myGlobals.device[i].netmask.s_addr) {
+#ifdef DEBUG
+          traceEvent(CONST_TRACE_INFO, "DEBUG: %s is a network address", intoa(*addr));
+#endif
+          return 1;
+        }
+
       }
     }
 
