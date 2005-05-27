@@ -7271,8 +7271,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
 #ifdef MAX_PROCESS_BUFFER
 {
-  static float _qmaxDelay = 0, _pmaxDelay = 0;
-
   float qminDelay=99999.0, qmaxDelay=0.0, 
         /*stddev:*/ qM, qT, qQ, qR, qSD, qXBAR,
         pminDelay=99999.0, pmaxDelay=0.0, 
@@ -7285,9 +7283,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
       if(myGlobals.queueBuffer[i] < qminDelay) qminDelay = myGlobals.queueBuffer[i];
       if(myGlobals.processBuffer[i] > pmaxDelay) pmaxDelay = myGlobals.processBuffer[i];
       if(myGlobals.processBuffer[i] < pminDelay) pminDelay = myGlobals.processBuffer[i];
-
-      if(qmaxDelay > _qmaxDelay) _qmaxDelay = qmaxDelay;
-      if(pmaxDelay > _pmaxDelay) _pmaxDelay = pmaxDelay;
 
       if(i==0) { 
         qM = myGlobals.queueBuffer[0];
@@ -7332,8 +7327,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                                   TRUE);
 
     printFeatureConfigInfo3ColFlt6(textPrintFlag,
-                                  "Accumulated Maximum",
-                                  TRUE, _qmaxDelay, TRUE, _pmaxDelay,
+                                  "Maximum ever",
+                                  TRUE, myGlobals.qmaxDelay, TRUE, myGlobals.pmaxDelay,
                                   TRUE);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
@@ -7350,6 +7345,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                    "(standard deviation is a measurement of the variability of the actual values "
                    "around the average). The computations are based only on the most recent " 
                    xstr(MAX_PROCESS_BUFFER) " packets processed."
+                   "<br><br>Maximum ever ignores the first 100 packets for each device - this lets "
+                   "<b>ntop</b> get over startup agony."
                    "<br><br>What does this mean? Not much.  Still, 1/(queue-average+process-average) "
                    "(i.e. %.1f) gives a very rough indication of the packet per second rate this "
                    "instance of ntop can handle.",

@@ -2392,6 +2392,8 @@ typedef struct ntopGlobals {
       queueBufferCount,
       processBufferInit,
       processBufferCount;
+  float qmaxDelay,
+        pmaxDelay;
 #endif
 
 #ifdef PARM_ENABLE_EXPERIMENTAL

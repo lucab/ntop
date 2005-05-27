@@ -2677,21 +2677,6 @@ void processPacket(u_char *_deviceId,
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN)
     return;
 
-#ifdef MAX_PROCESS_BUFFER
-  gettimeofday(&pktStartOfProcessing, NULL);
-  myGlobals.queueBuffer[++myGlobals.queueBufferCount & (MAX_PROCESS_BUFFER - 1)] = 
-      timeval_subtract(pktStartOfProcessing, h->ts);
-#endif
-
-  h_save = h, p_save = p;
-
-#ifdef DEBUG
-  if(myGlobals.runningPref.rFileName != NULL) {
-    traceEvent(CONST_TRACE_INFO, ".");
-    fflush(stdout);
-  }
-#endif
-
   /*
     This allows me to fetch the time from
     the captured packet instead of calling
@@ -2705,6 +2690,26 @@ void processPacket(u_char *_deviceId,
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "deviceId=%d - actualDeviceId=%ld", deviceId, actualDeviceId);
+#endif
+
+#ifdef MAX_PROCESS_BUFFER
+  {
+    float elapsed;
+    gettimeofday(&pktStartOfProcessing, NULL);
+    elapsed = timeval_subtract(pktStartOfProcessing, h->ts);
+    myGlobals.queueBuffer[++myGlobals.queueBufferCount & (MAX_PROCESS_BUFFER - 1)] = elapsed;
+    if((myGlobals.device[actualDeviceId].ethernetPkts.value > 100) && (elapsed > myGlobals.qmaxDelay))
+      myGlobals.qmaxDelay = elapsed;
+  }
+#endif
+
+  h_save = h, p_save = p;
+
+#ifdef DEBUG
+  if(myGlobals.runningPref.rFileName != NULL) {
+    traceEvent(CONST_TRACE_INFO, ".");
+    fflush(stdout);
+  }
 #endif
 
   updateDevicePacketStats(length, actualDeviceId);
@@ -3718,9 +3723,14 @@ void processPacket(u_char *_deviceId,
 #endif
 
 #ifdef MAX_PROCESS_BUFFER
-  gettimeofday(&pktEndOfProcessing, NULL);
-  myGlobals.processBuffer[++myGlobals.processBufferCount & (MAX_PROCESS_BUFFER - 1)] =
-      timeval_subtract(pktEndOfProcessing, pktStartOfProcessing);
+  {
+    float elapsed;
+    gettimeofday(&pktEndOfProcessing, NULL);
+    elapsed = timeval_subtract(pktEndOfProcessing, pktStartOfProcessing);
+    myGlobals.processBuffer[++myGlobals.processBufferCount & (MAX_PROCESS_BUFFER - 1)] = elapsed;
+    if(elapsed > myGlobals.pmaxDelay)
+      myGlobals.pmaxDelay = elapsed;
+  }
 #endif
 
   if (myGlobals.runningPref.rFileName != NULL) {
