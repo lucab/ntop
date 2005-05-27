@@ -151,9 +151,14 @@ A. The correct user to specify for the ntop web server is admin.
    The -u value in the command line or parameter file is the account ntop runs under.
 
 
-Q10. TBD.
-A. Nominate your favorite - visit the ntop mail list!
- 
+Q10. I'm not getting any rrd output.
+A. First, make sure that the plugin is installed (you should see it in the web interface
+   under plugins).  Make sure it is configured and active.
+
+   The default configuration does NOT include per-host .rrd files, because these can take
+   up a lot of space.  But you probably want them and at the medium or high level of detail.
+
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -4590,12 +4595,14 @@ A. RRD stands for "round-robin database". It is a special type of database desig
 
    (Read the paper - it goes on from here, with specific details on how ntop uses RRDs). 
 
-
 Q. What's myrrd?
-A. ntop includes a frozen and slightly patched version of rrd 1.0.42 in the
+A. ntop includes a frozen and slightly patched version of rrd 1.0.49 in the
    ntop source tree.  This is called myrrd.
 
-   As of rrdtool 1.0.46 was released 04-Jan-2004.
+   rrdtool 1.0.49 was released 08-Aug-2004.
+           1.0.50 was released 25-Apr-2005.
+
+   rrdtool 1.2.x began to be released in Apr 2005.
 
 
 Q. What's rrdtool? 
@@ -4606,13 +4613,13 @@ Q. How do I get it?
 A. The myrrd version included with ntop doesn't have rrdtool. Assuming you haven't installed 
    an rrdtools package (which ntop ignores), here is how to get rrdtool: 
 
-   The myrrd version is a frozen copy of rrdtool 1.0.42, so your best bet is to go to the 
+   The myrrd version is a frozen copy of rrdtool 1.0.49, so your best bet is to go to the 
    rrdtool home page, http://www.rrdtool.com/ or the download page, 
-   http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/ and download rrdtool-1.0.42.tar.gz. 
+   http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/ and download rrdtool-1.0.49.tar.gz. 
 
    Once you have it, it's pretty standard. 
 
-   $ tar xfvz rrdtool-1.0.42.tar.gz $ cd rrdtool-1.0.42 $ ./configure 
+   $ tar xfvz rrdtool-1.0.49.tar.gz $ cd rrdtool-1.0.49 $ ./configure 
 
    (You can add --prefix=/usr if you want) 
 
@@ -4640,8 +4647,15 @@ A. Unless you need rrdtool, you should not need to do anything to get rrd (see m
 
 
 Q. What about the multi-threaded development version?
-A. Stay away.  I only experimented with it a little bit, but it was not
-   stable.  Use 1.0.42.
+A. Stay away.
+
+   (UPDATED) I was able to patch ntop to work with 1.2.7+ and experimented with it a little bit.
+   
+   The binary .rrd file formats are different, so if you try 1.2.x, any new .rrd files which are 
+   created are incompatible.
+
+   The new version doesn't use freetype, it uses libart, which introduces a different (not better,
+   nor worse) chain of dependencies.
 
 
 Q: I've enabled the rrd plugin and there's no data ... there are messages in the log:
@@ -4655,6 +4669,48 @@ Q: I've enabled the rrd plugin and there's no data ... there are messages in the
 
 A: Create the rrd directory and make sure that the -u userid has read/write
    access to it (typically /usr/share/ntop/rrd).
+
+
+Q: Still nothing...
+A: Remember to activate the plugin.  You will need to configure it, and remember that
+   the default configuration does not include per-host data.
+
+
+Q. What's the difference in the Host Detail Level for RRDs?
+A. Low is just the bare counts, pktSent/pktRcvd and bytesSent/bytesRcvd.
+
+   Medium adds:
+
+     pktDuplicatedAckSent/pktDuplicatedAckRcvd,
+     pktBroadcastSent, bytesBroadcastSent,
+     pktMulticastSent, bytesMulticastSent,
+     pktMulticastRcvd, bytesMulticastRcvd, 
+     bytesSentLoc, bytesSentRem, bytesRcvdLoc, bytesRcvdFromRem, 
+     ipBytesSent, ipBytesRcvd, 
+     tcpSentLoc, tcpSentRem, tcpRcvdLoc, tcpRcvdFromRem, tcpFragmentsSent, tcpFragmentsRcvd, 
+     udpSentLoc, udpSentRem, udpRcvdLoc, udpRcvdFromRem, udpFragmentsSent, udpFragmentsRcvd, 
+     icmpSent, icmpRcvd, icmpFragmentsSent, icmpFragmentsRcvd, 
+     ipv6Sent, ipv6Rcvd
+
+    NonIP:
+
+     stpSent, stpRcvd,
+     ipxSent, ipxRcvd,
+     osiSent, osiRcvd,
+     dlcSent, dlcRcvd,
+     arp_rarpSent, arp_rarpRcvd, arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd,
+     decnetSent, decnetRcvd,
+     appletalkSent, appletalkRcvd,
+     netbiosSent, netbiosRcvd,
+     otherSent, otherRcvd
+
+    And the per-protocol Sent/Rcvd
+
+   High adds:
+
+     totContactedSentPeers, totContactedRcvdPeers
+
+    And the per-IP-protocol Sent/Rcvd, e.g. IP_HTTP...
 
 
 Q. rrdPlugin - problem with rrd/myrrd?
